@@ -36,7 +36,7 @@ fun AegisNavHost() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val topLevelRoutes = setOf(NavRoutes.GALLERY, NavRoutes.VAULT_GATE, NavRoutes.UTILITIES, NavRoutes.SETTINGS)
+    val topLevelRoutes = setOf(NavRoutes.GALLERY, NavRoutes.VAULT_GATE, NavRoutes.VAULT, NavRoutes.UTILITIES, NavRoutes.SETTINGS)
 
     Scaffold(
         bottomBar = {

@@ -16,11 +16,21 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
-private data class BottomNavItem(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+private data class BottomNavItem(
+    val route: String,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val highlightRoutes: Set<String> = setOf(route),
+)
 
 private val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.GALLERY, "Gallery", Icons.Filled.PhotoLibrary),
-    BottomNavItem(NavRoutes.VAULT_GATE, "Vault", Icons.Filled.Lock),
+    BottomNavItem(
+        NavRoutes.VAULT_GATE,
+        "Vault",
+        Icons.Filled.Lock,
+        highlightRoutes = setOf(NavRoutes.VAULT_GATE, NavRoutes.VAULT, NavRoutes.VAULT_DETAIL),
+    ),
     BottomNavItem(NavRoutes.UTILITIES, "Utilities", Icons.Filled.Build),
     BottomNavItem(NavRoutes.SETTINGS, "Settings", Icons.Filled.Settings),
 )
@@ -32,7 +42,7 @@ fun AegisBottomNavBar(navController: NavHostController) {
 
     NavigationBar {
         bottomNavItems.forEach { item ->
-            val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+            val selected = currentDestination?.hierarchy?.any { it.route in item.highlightRoutes } == true
             NavigationBarItem(
                 selected = selected,
                 onClick = {

@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -28,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aegisvault.app.MainActivity
 import com.aegisvault.app.ui.components.EmptyState
@@ -115,7 +118,7 @@ fun GalleryScreen(
                     title = { Text("Gallery") },
                     actions = {
                         IconButton(onClick = onOpenVault) {
-                            Icon(Icons.Filled.PhotoLibrary, contentDescription = "Open vault")
+                            Icon(Icons.Filled.Lock, contentDescription = "Open vault")
                         }
                     },
                 )
@@ -124,6 +127,15 @@ fun GalleryScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             FilterChipRow(selected = uiState.filter, onSelected = viewModel::setFilter)
+
+            if (uiState.mediaItems.isNotEmpty() && !uiState.selectionModeActive) {
+                Text(
+                    text = "Long-press a photo or video to select it, then move it to your Vault",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
 
             if (uiState.mediaItems.isEmpty() && !uiState.isLoading) {
                 EmptyState(
