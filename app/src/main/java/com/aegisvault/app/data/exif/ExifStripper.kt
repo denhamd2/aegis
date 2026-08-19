@@ -46,11 +46,35 @@ class ExifStripper @Inject constructor(
             outFile.outputStream().use { output -> input.copyTo(output) }
         } ?: error("Unable to open input stream for $sourceUri")
 
-        val exif = ExifInterface(outFile.absolutePath)
+        stripInPlace(outFile)
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", outFile)
+    }
+
+    /**
+     * Same as [stripToCache] but for bytes that are already in memory (e.g. decrypted vault
+     * items, which have no content Uri of their own to read from).
+     */
+    suspend fun stripBytesToCache(bytes: ByteArray, displayName: String): Uri = withContext(ioDispatcher) {
+        val extension = displayName.substringAfterLast('.', "jpg")
+        val outFile = File(sharedDir, "${UUID.randomUUID()}.$extension")
+        outFile.outputStream().use { it.write(bytes) }
+
+        stripInPlace(outFile)
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", outFile)
+    }
+
+    /** Writes [bytes] to the shared cache unmodified — for file types EXIF stripping doesn't apply to (e.g. video). */
+    suspend fun copyBytesToCache(bytes: ByteArray, displayName: String): Uri = withContext(ioDispatcher) {
+        val extension = displayName.substringAfterLast('.', "bin")
+        val outFile = File(sharedDir, "${UUID.randomUUID()}.$extension")
+        outFile.outputStream().use { it.write(bytes) }
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", outFile)
+    }
+
+    private fun stripInPlace(file: File) {
+        val exif = ExifInterface(file.absolutePath)
         STRIPPED_TAGS.forEach { tag -> exif.setAttribute(tag, null) }
         exif.saveAttributes()
-
-        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", outFile)
     }
 
     /** Reads the human-readable values of the tags [stripToCache] would remove, for display before stripping. */

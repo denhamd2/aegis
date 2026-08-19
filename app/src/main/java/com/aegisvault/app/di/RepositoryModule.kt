@@ -2,11 +2,17 @@ package com.aegisvault.app.di
 
 import com.aegisvault.app.data.repository.BillingRepositoryImpl
 import com.aegisvault.app.data.repository.GalleryRepositoryImpl
+import com.aegisvault.app.data.repository.IntruderCaptureRepositoryImpl
 import com.aegisvault.app.data.repository.SettingsRepositoryImpl
 import com.aegisvault.app.data.repository.VaultRepositoryImpl
 import com.aegisvault.app.domain.repository.BillingRepository
 import com.aegisvault.app.domain.repository.GalleryRepository
+import com.aegisvault.app.domain.repository.IntruderCaptureRepository
 import com.aegisvault.app.domain.repository.PinCredentialStore
+import com.aegisvault.app.data.security.AutoLockSignalSource
+import com.aegisvault.app.data.security.AutoLockSignalSourceImpl
+import com.aegisvault.app.data.security.IntruderCaptureService
+import com.aegisvault.app.data.security.IntruderCaptureServiceImpl
 import com.aegisvault.app.data.security.PinCredentialStoreImpl
 import com.aegisvault.app.domain.repository.SettingsRepository
 import com.aegisvault.app.domain.repository.VaultRepository
@@ -38,4 +44,16 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPinCredentialStore(impl: PinCredentialStoreImpl): PinCredentialStore
+
+    @Binds
+    @Singleton
+    abstract fun bindAutoLockSignalSource(impl: AutoLockSignalSourceImpl): AutoLockSignalSource
+
+    @Binds
+    @Singleton
+    abstract fun bindIntruderCaptureRepository(impl: IntruderCaptureRepositoryImpl): IntruderCaptureRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindIntruderCaptureService(impl: IntruderCaptureServiceImpl): IntruderCaptureService
 }

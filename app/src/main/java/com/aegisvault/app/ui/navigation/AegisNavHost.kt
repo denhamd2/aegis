@@ -18,6 +18,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.aegisvault.app.ui.screens.billing.PaywallScreen
 import com.aegisvault.app.ui.screens.gallery.GalleryScreen
+import com.aegisvault.app.ui.screens.security.IntruderLogScreen
+import com.aegisvault.app.ui.screens.security.VerifyOfflineScreen
 import com.aegisvault.app.ui.screens.settings.SettingsScreen
 import com.aegisvault.app.ui.screens.utilities.UtilitiesScreen
 import com.aegisvault.app.ui.screens.utilities.exif.ExifStripperScreen
@@ -114,11 +116,23 @@ fun AegisNavHost() {
             }
 
             composable(NavRoutes.SETTINGS) {
-                SettingsScreen(onOpenPaywall = { navController.navigate(NavRoutes.PAYWALL) })
+                SettingsScreen(
+                    onOpenPaywall = { navController.navigate(NavRoutes.PAYWALL) },
+                    onOpenIntruderLog = { navController.navigate(NavRoutes.INTRUDER_LOG) },
+                    onOpenVerifyOffline = { navController.navigate(NavRoutes.VERIFY_OFFLINE) },
+                )
             }
 
             composable(NavRoutes.PAYWALL) {
                 PaywallScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(NavRoutes.INTRUDER_LOG) {
+                IntruderLogScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(NavRoutes.VERIFY_OFFLINE) {
+                VerifyOfflineScreen(onBack = { navController.popBackStack() })
             }
         }
     }

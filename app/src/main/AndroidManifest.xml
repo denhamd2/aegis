@@ -24,6 +24,17 @@
     <!-- Vault biometric gate -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
+    <!--
+        CAMERA is local-only: used solely to capture a single front-camera frame, on-device,
+        when Intruder Alerts (Settings, opt-in) are enabled and a PIN entry fails. The photo is
+        written straight into the same on-device encrypted vault storage as regular vault items
+        and never touches the network — consistent with the zero-network-access design above.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
+
     <application
         android:name=".AegisApplication"
         android:allowBackup="false"
@@ -40,12 +51,55 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AegisVault"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!--
+            Disguised launcher icon (Settings, opt-in): exactly one of these aliases is enabled
+            at a time via PackageManager.setComponentEnabledSetting — a purely local, on-device
+            PackageManager operation, not related to the app's network-access stance above.
+            The default "Aegis" alias ships enabled; disguise aliases ship disabled.
+        -->
+        <activity-alias
+            android:name=".alias.AegisLauncher"
+            android:targetActivity=".MainActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".alias.CalculatorLauncher"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_calculator"
+            android:roundIcon="@mipmap/ic_launcher_calculator"
+            android:label="@string/app_name_calculator">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".alias.NotesLauncher"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_notes"
+            android:roundIcon="@mipmap/ic_launcher_notes"
+            android:label="@string/app_name_notes">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <provider
             android:name="androidx.core.content.FileProvider"

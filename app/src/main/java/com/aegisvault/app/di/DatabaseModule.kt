@@ -3,6 +3,7 @@ package com.aegisvault.app.di
 import android.content.Context
 import androidx.room.Room
 import com.aegisvault.app.data.local.db.AegisDatabase
+import com.aegisvault.app.data.local.db.dao.IntruderCaptureDao
 import com.aegisvault.app.data.local.db.dao.VaultItemDao
 import com.aegisvault.app.util.Constants
 import dagger.Module
@@ -18,8 +19,13 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AegisDatabase =
-        Room.databaseBuilder(context, AegisDatabase::class.java, Constants.VAULT_DATABASE_NAME).build()
+        Room.databaseBuilder(context, AegisDatabase::class.java, Constants.VAULT_DATABASE_NAME)
+            .addMigrations(AegisDatabase.MIGRATION_1_2)
+            .build()
 
     @Provides
     fun provideVaultItemDao(database: AegisDatabase): VaultItemDao = database.vaultItemDao()
+
+    @Provides
+    fun provideIntruderCaptureDao(database: AegisDatabase): IntruderCaptureDao = database.intruderCaptureDao()
 }

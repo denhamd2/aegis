@@ -49,6 +49,12 @@ class EncryptedFileManager @Inject constructor(
         } ?: error("Unable to open input stream for $sourceUri")
     }
 
+    suspend fun encryptBytes(bytes: ByteArray, storageFileName: String) = withContext(ioDispatcher) {
+        val destination = File(vaultDir, storageFileName)
+        if (destination.exists()) destination.delete()
+        encryptedFileFor(storageFileName).openFileOutput().use { it.write(bytes) }
+    }
+
     suspend fun decryptToBytes(storageFileName: String): ByteArray = withContext(ioDispatcher) {
         encryptedFileFor(storageFileName).openFileInput().use { it.readBytes() }
     }

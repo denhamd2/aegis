@@ -2,6 +2,7 @@ package com.aegisvault.app
 
 import android.app.Application
 import com.aegisvault.app.data.exif.ExifStripper
+import com.aegisvault.app.data.security.IntruderAlertWatcher
 import com.aegisvault.app.domain.repository.BillingRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -15,6 +16,7 @@ class AegisApplication : Application() {
 
     @Inject lateinit var exifStripper: ExifStripper
     @Inject lateinit var billingRepository: BillingRepository
+    @Inject lateinit var intruderAlertWatcher: IntruderAlertWatcher
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -22,5 +24,6 @@ class AegisApplication : Application() {
         super.onCreate()
         applicationScope.launch { exifStripper.purgeStaleCache() }
         billingRepository.startConnection()
+        intruderAlertWatcher.start(applicationScope)
     }
 }

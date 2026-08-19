@@ -11,6 +11,9 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 /**
  * Stores only a salted PBKDF2 hash of the PIN, never the raw digits, inside an
@@ -30,6 +33,9 @@ class PinCredentialStoreImpl @Inject constructor(
         const val PBKDF2_ITERATIONS = 120_000
         const val KEY_LENGTH_BITS = 256
     }
+
+    private val _failures = MutableSharedFlow<PinValidationResult>(extraBufferCapacity = 1)
+    override fun observeFailures(): Flow<PinValidationResult> = _failures.asSharedFlow()
 
     override fun isPinConfigured(): Boolean = prefs.contains(KEY_HASH)
 
@@ -60,7 +66,7 @@ class PinCredentialStoreImpl @Inject constructor(
             PinValidationResult.Success
         } else {
             val attempts = prefs.getInt(KEY_ATTEMPTS, 0) + 1
-            if (attempts >= Constants.MAX_PIN_ATTEMPTS) {
+            val result = if (attempts >= Constants.MAX_PIN_ATTEMPTS) {
                 val unlockAt = now + Constants.PIN_LOCKOUT_MILLIS
                 prefs.edit { putInt(KEY_ATTEMPTS, 0); putLong(KEY_LOCKOUT_UNTIL, unlockAt) }
                 PinValidationResult.LockedOut(unlockAt)
@@ -68,6 +74,8 @@ class PinCredentialStoreImpl @Inject constructor(
                 prefs.edit { putInt(KEY_ATTEMPTS, attempts) }
                 PinValidationResult.Failure(Constants.MAX_PIN_ATTEMPTS - attempts)
             }
+            _failures.tryEmit(result)
+            result
         }
     }
 

@@ -1,5 +1,10 @@
 package com.aegisvault.app.ui.screens.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,22 +27,39 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material3.SnackbarHostState
+import com.aegisvault.app.domain.repository.AppIconDisguise
 import com.aegisvault.app.domain.repository.AppTheme
 import com.aegisvault.app.ui.components.ProStatusCard
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onOpenPaywall: () -> Unit,
+    onOpenIntruderLog: () -> Unit,
+    onOpenVerifyOffline: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> viewModel.setIntruderAlertsEnabled(granted) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { innerPadding ->
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("Settings") }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             ProStatusCard(
                 purchaseState = uiState.purchaseState,
@@ -85,6 +108,100 @@ fun SettingsScreen(
                         onCheckedChange = viewModel::setAutoStripExif,
                     )
                 },
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("Lock on screen off") },
+                supportingContent = { Text("Re-lock the Vault whenever the screen turns off") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.settings.lockOnScreenOff,
+                        onCheckedChange = viewModel::setLockOnScreenOff,
+                    )
+                },
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("Lock when face down") },
+                supportingContent = { Text("Re-lock the Vault when you flip the phone face down") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.settings.lockOnFaceDown,
+                        onCheckedChange = viewModel::setLockOnFaceDown,
+                    )
+                },
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("Intruder alerts") },
+                supportingContent = { Text("Snap a front-camera photo after a failed PIN attempt") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.settings.intruderAlertsEnabled,
+                        onCheckedChange = { enabled ->
+                            if (!enabled) {
+                                viewModel.setIntruderAlertsEnabled(false)
+                                return@Switch
+                            }
+                            val alreadyGranted = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CAMERA,
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (alreadyGranted) {
+                                viewModel.setIntruderAlertsEnabled(true)
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        },
+                    )
+                },
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("App icon") },
+                supportingContent = { Text("Disguise the home screen icon and app name") },
+                trailingContent = {
+                    var expanded by remember { mutableStateOf(false) }
+                    Row {
+                        TextButton(onClick = { expanded = true }) {
+                            Text(uiState.settings.iconDisguise.name)
+                        }
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            AppIconDisguise.entries.forEach { disguise ->
+                                DropdownMenuItem(
+                                    text = { Text(disguise.name) },
+                                    onClick = {
+                                        viewModel.setIconDisguise(disguise)
+                                        expanded = false
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                "Icon updated — you may need to check your home screen",
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
+                },
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("Intruder log") },
+                supportingContent = { Text("View or clear captured intruder photos") },
+                modifier = Modifier.clickable(onClick = onOpenIntruderLog),
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("Verify we're offline") },
+                supportingContent = { Text("Prove this app has never requested network access") },
+                modifier = Modifier.clickable(onClick = onOpenVerifyOffline),
             )
             Divider()
 

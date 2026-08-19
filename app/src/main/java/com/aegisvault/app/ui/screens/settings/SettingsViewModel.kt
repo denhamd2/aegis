@@ -2,7 +2,9 @@ package com.aegisvault.app.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aegisvault.app.data.security.AppIconController
 import com.aegisvault.app.domain.model.PurchaseState
+import com.aegisvault.app.domain.repository.AppIconDisguise
 import com.aegisvault.app.domain.repository.AppSettings
 import com.aegisvault.app.domain.repository.AppTheme
 import com.aegisvault.app.domain.repository.SettingsRepository
@@ -30,6 +32,7 @@ class SettingsViewModel @Inject constructor(
     private val observeSettingsUseCase: ObserveSettingsUseCase,
     private val updateThemeSettingUseCase: UpdateThemeSettingUseCase,
     private val observePurchaseStateUseCase: ObservePurchaseStateUseCase,
+    private val appIconController: AppIconController,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -51,5 +54,24 @@ class SettingsViewModel @Inject constructor(
 
     fun setAutoStripExif(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.updateAutoStripExif(enabled) }
+    }
+
+    fun setLockOnScreenOff(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.updateLockOnScreenOff(enabled) }
+    }
+
+    fun setLockOnFaceDown(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.updateLockOnFaceDown(enabled) }
+    }
+
+    fun setIntruderAlertsEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.updateIntruderAlertsEnabled(enabled) }
+    }
+
+    fun setIconDisguise(disguise: AppIconDisguise) {
+        viewModelScope.launch {
+            settingsRepository.updateIconDisguise(disguise)
+            appIconController.setIcon(disguise)
+        }
     }
 }

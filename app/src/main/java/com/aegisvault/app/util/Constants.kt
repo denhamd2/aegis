@@ -12,4 +12,5 @@ object Constants {
     const val PIN_BILLING_PREFS_FILE_NAME = "aegis_pin_billing_prefs"
     const val VAULT_DATABASE_NAME = "aegis_vault.db"
     const val STALE_CACHE_MAX_AGE_MILLIS = 60 * 60 * 1000L // 1 hour
+    const val MAX_INTRUDER_CAPTURES = 20
 }
