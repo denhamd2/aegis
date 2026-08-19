@@ -1,6 +1,7 @@
 package com.aegisvault.app.ui.navigation
 
 object NavRoutes {
+    const val LANDING = "landing"
     const val GALLERY = "gallery"
     const val VAULT_GATE = "vault_gate"
     const val VAULT = "vault"

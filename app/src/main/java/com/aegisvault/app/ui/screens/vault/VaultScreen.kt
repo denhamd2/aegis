@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aegisvault.app.domain.model.MediaType
 import com.aegisvault.app.domain.model.VaultItem
+import com.aegisvault.app.ui.components.BrandedTitle
 import com.aegisvault.app.ui.components.EmptyState
 import com.aegisvault.app.ui.components.ProStatusCard
 
@@ -63,7 +64,7 @@ fun VaultScreen(
     if (!uiState.unlocked) return
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Vault") }) },
+        topBar = { TopAppBar(title = { BrandedTitle("Vault") }) },
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             if (uiState.vaultFull) {

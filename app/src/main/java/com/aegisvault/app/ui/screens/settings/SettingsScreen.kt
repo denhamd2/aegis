@@ -39,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.material3.SnackbarHostState
 import com.aegisvault.app.domain.repository.AppIconDisguise
 import com.aegisvault.app.domain.repository.AppTheme
+import com.aegisvault.app.ui.components.BrandedTitle
 import com.aegisvault.app.ui.components.ProStatusCard
 import kotlinx.coroutines.launch
 
@@ -59,7 +60,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Settings") }) },
+        topBar = { TopAppBar(title = { BrandedTitle("Settings") }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(

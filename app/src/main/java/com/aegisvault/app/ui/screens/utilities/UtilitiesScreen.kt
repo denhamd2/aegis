@@ -15,6 +15,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.aegisvault.app.ui.components.BrandedTitle
 import com.aegisvault.app.ui.components.ToolCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,7 +25,7 @@ fun UtilitiesScreen(
     onOpenPdfViewer: () -> Unit,
     onOpenStorageAnalyzer: () -> Unit,
 ) {
-    Scaffold(topBar = { TopAppBar(title = { Text("Utilities") }) }) { innerPadding ->
+    Scaffold(topBar = { TopAppBar(title = { BrandedTitle("Utilities") }) }) { innerPadding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(innerPadding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

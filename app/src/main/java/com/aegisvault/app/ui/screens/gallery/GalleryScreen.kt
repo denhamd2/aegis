@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aegisvault.app.MainActivity
+import com.aegisvault.app.ui.components.BrandedTitle
 import com.aegisvault.app.ui.components.EmptyState
 import com.aegisvault.app.ui.components.FilterChipRow
 import com.aegisvault.app.ui.components.MasonryGrid
@@ -128,7 +129,7 @@ fun GalleryScreen(
                 )
             } else {
                 TopAppBar(
-                    title = { Text("Gallery") },
+                    title = { BrandedTitle("Gallery") },
                     actions = {
                         IconButton(onClick = onOpenVault) {
                             Icon(Icons.Filled.Lock, contentDescription = "Open vault")

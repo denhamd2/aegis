@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.aegisvault.app.ui.screens.billing.PaywallScreen
 import com.aegisvault.app.ui.screens.gallery.GalleryScreen
+import com.aegisvault.app.ui.screens.landing.LandingScreen
 import com.aegisvault.app.ui.screens.security.IntruderLogScreen
 import com.aegisvault.app.ui.screens.security.VerifyOfflineScreen
 import com.aegisvault.app.ui.screens.settings.SettingsScreen
@@ -47,13 +48,23 @@ fun AegisNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = NavRoutes.GALLERY,
+            startDestination = NavRoutes.LANDING,
             modifier = Modifier.padding(innerPadding),
             enterTransition = { fadeIn(tween(ANIM_DURATION_MILLIS)) + slideInHorizontally(tween(ANIM_DURATION_MILLIS)) { it / 8 } },
             exitTransition = { fadeOut(tween(ANIM_DURATION_MILLIS)) },
             popEnterTransition = { fadeIn(tween(ANIM_DURATION_MILLIS)) },
             popExitTransition = { fadeOut(tween(ANIM_DURATION_MILLIS)) + slideOutHorizontally(tween(ANIM_DURATION_MILLIS)) { it / 8 } },
         ) {
+            composable(NavRoutes.LANDING) {
+                LandingScreen(
+                    onGetStarted = {
+                        navController.navigate(NavRoutes.GALLERY) {
+                            popUpTo(NavRoutes.LANDING) { inclusive = true }
+                        }
+                    },
+                )
+            }
+
             composable(NavRoutes.GALLERY) {
                 GalleryScreen(
                     onOpenVault = { navController.navigate(NavRoutes.VAULT_GATE) },
