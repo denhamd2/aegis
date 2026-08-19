@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ fun MediaGridItem(
     item: MediaItem,
     isSelected: Boolean,
     selectionModeActive: Boolean,
+    isPendingRemoval: Boolean = false,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -61,6 +63,25 @@ fun MediaGridItem(
                     tint = Color.White,
                     modifier = Modifier.align(Alignment.Center),
                 )
+            }
+
+            if (isPendingRemoval) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(6.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(50),
+                        ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.HourglassTop,
+                        contentDescription = "Waiting to remove original from Gallery",
+                        tint = Color.White,
+                        modifier = Modifier.padding(2.dp),
+                    )
+                }
             }
 
             if (selectionModeActive) {

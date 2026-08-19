@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -101,5 +102,44 @@ class GalleryViewModelTest {
         advanceUntilIdle()
 
         assertTrue(firstEvent.await() is GalleryEvent.MovedToVault)
+    }
+
+    @Test
+    fun `pending removal id is added on delete consent and cleared on resolution`() = runTest(mainDispatcherRule.testDispatcher) {
+        mockkStatic(Uri::class)
+        val parsedUri = io.mockk.mockk<Uri>()
+        io.mockk.every { parsedUri.toString() } returns "content://media/1"
+        io.mockk.every { Uri.parse(any()) } returns parsedUri
+        val galleryRepository = FakeGalleryRepository()
+        val item = mediaItem(1)
+        galleryRepository.setMedia(listOf(item))
+        val vaultRepository = FakeVaultRepository()
+        val intentSender = io.mockk.mockk<android.content.IntentSender>()
+        vaultRepository.forcedWriteResult = com.aegisvault.app.domain.repository.VaultWriteResult.RequiresDeleteConsent(
+            intentSender = intentSender,
+            pendingItem = com.aegisvault.app.domain.model.VaultItem(
+                id = 1,
+                storageFileName = "vault_1.enc",
+                originalDisplayName = item.displayName,
+                mimeType = item.mimeType,
+                mediaType = item.mediaType,
+                sizeBytes = 100,
+                dateAdded = 0L,
+            ),
+        )
+        val viewModel = buildViewModel(galleryRepository, vaultRepository)
+        advanceUntilIdle()
+
+        viewModel.toggleSelection(item)
+        val firstEvent = async { viewModel.events.first() }
+        viewModel.moveSelectedToVault()
+        advanceUntilIdle()
+
+        val event = firstEvent.await()
+        assertTrue(event is GalleryEvent.RequestDeleteConsent)
+        assertTrue(viewModel.uiState.value.pendingRemovalIds.contains(1L))
+
+        viewModel.onDeleteConsentResolved(1L, granted = true)
+        assertFalse(viewModel.uiState.value.pendingRemovalIds.contains(1L))
     }
 }

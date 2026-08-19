@@ -111,7 +111,8 @@ class GalleryViewModel @Inject constructor(
                     }
                     is MoveToVaultResult.RequiresDeleteConsent -> {
                         movedCount++
-                        _events.emit(GalleryEvent.RequestDeleteConsent(result.intentSender))
+                        _uiState.update { it.copy(pendingRemovalIds = it.pendingRemovalIds + next.id) }
+                        _events.emit(GalleryEvent.RequestDeleteConsent(result.intentSender, next.id))
                         // Consent IntentSender performs the actual system delete on confirmation;
                         // no need to block the rest of the queue on the user's response.
                         processMoveQueue()
@@ -130,6 +131,12 @@ class GalleryViewModel @Inject constructor(
                 processMoveQueue()
             }
         }
+    }
+
+    /** Called once the delete-consent flow resolves, whichever way — granted, declined, or
+     * the prompt itself failed to launch — so the "pending removal" badge never gets stuck. */
+    fun onDeleteConsentResolved(itemId: Long, granted: Boolean) {
+        _uiState.update { it.copy(pendingRemovalIds = it.pendingRemovalIds - itemId) }
     }
 
     fun shareSelectedStripped() {

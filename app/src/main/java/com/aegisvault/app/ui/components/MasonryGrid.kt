@@ -17,6 +17,7 @@ fun MasonryGrid(
     onItemClick: (MediaItem) -> Unit,
     onItemLongClick: (MediaItem) -> Unit,
     modifier: Modifier = Modifier,
+    pendingRemovalIds: Set<Long> = emptySet(),
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Adaptive(minSize = 110.dp),
@@ -29,6 +30,7 @@ fun MasonryGrid(
                 item = item,
                 isSelected = selectedIds.contains(item.id),
                 selectionModeActive = selectionModeActive,
+                isPendingRemoval = pendingRemovalIds.contains(item.id),
                 onClick = { onItemClick(item) },
                 onLongClick = { onItemLongClick(item) },
             )

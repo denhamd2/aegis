@@ -72,7 +72,8 @@ fun GalleryScreen(
             when (event) {
                 is GalleryEvent.RequestDeleteConsent -> {
                     try {
-                        (context as? MainActivity)?.requestDeleteConsent(event.intentSender) { granted ->
+                        val launched = (context as? MainActivity)?.requestDeleteConsent(event.intentSender) { granted ->
+                            viewModel.onDeleteConsentResolved(event.itemId, granted)
                             scope.launch {
                                 snackbarHostState.showSnackbar(
                                     if (granted) {
@@ -83,7 +84,11 @@ fun GalleryScreen(
                                 )
                             }
                         }
+                        if (launched == null) {
+                            viewModel.onDeleteConsentResolved(event.itemId, granted = false)
+                        }
                     } catch (e: Exception) {
+                        viewModel.onDeleteConsentResolved(event.itemId, granted = false)
                         scope.launch { snackbarHostState.showSnackbar("Moved to vault, but couldn't prompt to delete the original.") }
                     }
                 }
@@ -174,6 +179,7 @@ fun GalleryScreen(
                     onItemClick = viewModel::toggleSelection,
                     onItemLongClick = viewModel::toggleSelection,
                     modifier = Modifier.fillMaxSize(),
+                    pendingRemovalIds = uiState.pendingRemovalIds,
                 )
             }
         }

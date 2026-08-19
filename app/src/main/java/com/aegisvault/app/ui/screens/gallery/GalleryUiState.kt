@@ -8,6 +8,7 @@ data class GalleryUiState(
     val filter: MediaFilter = MediaFilter.ALL,
     val mediaItems: List<MediaItem> = emptyList(),
     val selectedIds: Set<Long> = emptySet(),
+    val pendingRemovalIds: Set<Long> = emptySet(),
     val isLoading: Boolean = true,
     val hasMediaPermission: Boolean = false,
 ) {
@@ -15,7 +16,7 @@ data class GalleryUiState(
 }
 
 sealed interface GalleryEvent {
-    data class RequestDeleteConsent(val intentSender: IntentSender) : GalleryEvent
+    data class RequestDeleteConsent(val intentSender: IntentSender, val itemId: Long) : GalleryEvent
     data class CapacityExceeded(val limit: Int) : GalleryEvent
     data class MovedToVault(val count: Int) : GalleryEvent
     data class ShareUris(val uris: List<String>) : GalleryEvent
