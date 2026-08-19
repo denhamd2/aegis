@@ -4,11 +4,13 @@ import com.aegisvault.app.data.repository.BillingRepositoryImpl
 import com.aegisvault.app.data.repository.GalleryRepositoryImpl
 import com.aegisvault.app.data.repository.IntruderCaptureRepositoryImpl
 import com.aegisvault.app.data.repository.SettingsRepositoryImpl
+import com.aegisvault.app.data.repository.VaultBackupManagerImpl
 import com.aegisvault.app.data.repository.VaultRepositoryImpl
 import com.aegisvault.app.domain.repository.BillingRepository
 import com.aegisvault.app.domain.repository.GalleryRepository
 import com.aegisvault.app.domain.repository.IntruderCaptureRepository
 import com.aegisvault.app.domain.repository.PinCredentialStore
+import com.aegisvault.app.domain.repository.VaultBackupManager
 import com.aegisvault.app.data.security.AutoLockSignalSource
 import com.aegisvault.app.data.security.AutoLockSignalSourceImpl
 import com.aegisvault.app.data.security.IntruderCaptureService
@@ -56,4 +58,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindIntruderCaptureService(impl: IntruderCaptureServiceImpl): IntruderCaptureService
+
+    @Binds
+    @Singleton
+    abstract fun bindVaultBackupManager(impl: VaultBackupManagerImpl): VaultBackupManager
 }

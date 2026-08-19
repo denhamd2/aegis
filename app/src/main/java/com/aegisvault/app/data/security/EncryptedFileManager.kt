@@ -10,6 +10,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -62,5 +64,20 @@ class EncryptedFileManager @Inject constructor(
     suspend fun delete(storageFileName: String) = withContext(ioDispatcher) {
         File(vaultDir, storageFileName).takeIf(File::exists)?.delete()
         Unit
+    }
+
+    /** Streaming counterpart to [decryptToBytes] — for vault export, where buffering a large
+     * video fully in memory (on top of the re-encryption buffering it would also need) is
+     * wasteful. Caller is responsible for closing the returned stream. */
+    suspend fun openReadStream(storageFileName: String): InputStream = withContext(ioDispatcher) {
+        encryptedFileFor(storageFileName).openFileInput()
+    }
+
+    /** Streaming counterpart to [encryptBytes]/[encryptContentUri] — for vault import, writing
+     * decrypted archive content straight into on-device vault storage without a full-buffer copy. */
+    suspend fun writeFromStream(storageFileName: String, input: InputStream) = withContext(ioDispatcher) {
+        val destination = File(vaultDir, storageFileName)
+        if (destination.exists()) destination.delete()
+        encryptedFileFor(storageFileName).openFileOutput().use { output: OutputStream -> input.copyTo(output) }
     }
 }
