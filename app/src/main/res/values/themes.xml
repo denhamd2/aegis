@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Minimal XML theme: the app's real theming happens in Compose (ui/theme/Theme.kt).
+         This only needs to exist for the manifest/launch-window before Compose takes over. -->
+    <style name="Theme.AegisVault" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/aegis_amoled_black</item>
+        <item name="android:statusBarColor">@color/aegis_amoled_black</item>
+        <item name="android:navigationBarColor">@color/aegis_amoled_black</item>
+    </style>
+</resources>
