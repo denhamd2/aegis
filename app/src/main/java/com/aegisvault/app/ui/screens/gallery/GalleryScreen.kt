@@ -36,6 +36,7 @@ import com.aegisvault.app.MainActivity
 import com.aegisvault.app.ui.components.EmptyState
 import com.aegisvault.app.ui.components.FilterChipRow
 import com.aegisvault.app.ui.components.MasonryGrid
+import com.aegisvault.app.ui.components.SelectionActionBar
 import com.aegisvault.app.ui.components.SelectionTopBar
 import com.aegisvault.app.ui.screens.permissions.PermissionRequestScreen
 import kotlinx.coroutines.launch
@@ -110,8 +111,6 @@ fun GalleryScreen(
                 SelectionTopBar(
                     selectedCount = uiState.selectedIds.size,
                     onClose = viewModel::clearSelection,
-                    onShareStripped = viewModel::shareSelectedStripped,
-                    onMoveToVault = viewModel::moveSelectedToVault,
                 )
             } else {
                 TopAppBar(
@@ -121,6 +120,15 @@ fun GalleryScreen(
                             Icon(Icons.Filled.Lock, contentDescription = "Open vault")
                         }
                     },
+                )
+            }
+        },
+        bottomBar = {
+            if (uiState.selectionModeActive) {
+                SelectionActionBar(
+                    selectedCount = uiState.selectedIds.size,
+                    onShareStripped = viewModel::shareSelectedStripped,
+                    onMoveToVault = viewModel::moveSelectedToVault,
                 )
             }
         },
