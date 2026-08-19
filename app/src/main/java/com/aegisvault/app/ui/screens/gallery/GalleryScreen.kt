@@ -71,7 +71,17 @@ fun GalleryScreen(
             when (event) {
                 is GalleryEvent.RequestDeleteConsent -> {
                     try {
-                        (context as? MainActivity)?.requestDeleteConsent(event.intentSender) { }
+                        (context as? MainActivity)?.requestDeleteConsent(event.intentSender) { granted ->
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (granted) {
+                                        "Original removed from Gallery"
+                                    } else {
+                                        "Kept a copy in Gallery too — approve the next prompt to remove it from there"
+                                    },
+                                )
+                            }
+                        }
                     } catch (e: Exception) {
                         scope.launch { snackbarHostState.showSnackbar("Moved to vault, but couldn't prompt to delete the original.") }
                     }
@@ -79,7 +89,7 @@ fun GalleryScreen(
                 is GalleryEvent.CapacityExceeded ->
                     scope.launch { snackbarHostState.showSnackbar("Vault is full (${event.limit} items). Upgrade to Pro for unlimited storage.") }
                 is GalleryEvent.MovedToVault ->
-                    scope.launch { snackbarHostState.showSnackbar("${event.count} item(s) moved to vault") }
+                    scope.launch { snackbarHostState.showSnackbar("${event.count} item(s) copied to vault — confirm the next prompt to remove the originals from Gallery") }
                 is GalleryEvent.ShareUris -> {
                     val uris = event.uris.map { Uri.parse(it) }
                     val shareIntent = if (uris.size == 1) {
