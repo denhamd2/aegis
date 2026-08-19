@@ -25,8 +25,9 @@ import com.aegisvault.app.domain.model.PinValidationResult
 import com.aegisvault.app.domain.usecase.BiometricAvailability
 import com.aegisvault.app.ui.components.BiometricPromptHost
 import com.aegisvault.app.ui.components.PinEntryPad
+import com.aegisvault.app.ui.components.VaultEducationContent
 
-private enum class GateStage { CHECKING, BIOMETRIC, PIN_SETUP, PIN_ENTRY }
+private enum class GateStage { CHECKING, VAULT_EDUCATION, BIOMETRIC, PIN_SETUP, PIN_ENTRY }
 
 @Composable
 fun VaultGateScreen(
@@ -38,15 +39,23 @@ fun VaultGateScreen(
     var pinError by remember { mutableStateOf<String?>(null) }
     var settingUpFirstPin by remember { mutableStateOf<String?>(null) }
 
+    fun stageAfterEducation(): GateStage = when (viewModel.biometricAvailability()) {
+        BiometricAvailability.AVAILABLE -> GateStage.BIOMETRIC
+        else -> if (viewModel.isPinConfigured()) GateStage.PIN_ENTRY else GateStage.PIN_SETUP
+    }
+
     LaunchedEffect(Unit) {
-        stage = when (viewModel.biometricAvailability()) {
-            BiometricAvailability.AVAILABLE -> GateStage.BIOMETRIC
-            else -> if (viewModel.isPinConfigured()) GateStage.PIN_ENTRY else GateStage.PIN_SETUP
-        }
+        stage = if (viewModel.hasSeenVaultEducation()) stageAfterEducation() else GateStage.VAULT_EDUCATION
     }
 
     when (stage) {
         GateStage.CHECKING -> Unit
+        GateStage.VAULT_EDUCATION -> VaultEducationContent(
+            onAcknowledge = {
+                viewModel.markVaultEducationSeen()
+                stage = stageAfterEducation()
+            },
+        )
         GateStage.BIOMETRIC -> BiometricPromptHost(
             onSuccess = { viewModel.unlock(); onUnlocked() },
             onNegativeOrError = {

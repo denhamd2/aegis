@@ -14,6 +14,7 @@ object NavRoutes {
     const val PAYWALL = "paywall"
     const val INTRUDER_LOG = "security/intruder_log"
     const val VERIFY_OFFLINE = "security/verify_offline"
+    const val DATA_SAFETY = "security/data_safety"
 
     fun vaultDetail(vaultItemId: Long) = "vault_detail/$vaultItemId"
 

@@ -49,6 +49,7 @@ fun SettingsScreen(
     onOpenPaywall: () -> Unit,
     onOpenIntruderLog: () -> Unit,
     onOpenVerifyOffline: () -> Unit,
+    onOpenDataSafety: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -210,6 +211,13 @@ fun SettingsScreen(
                 headlineContent = { Text("Verify we're offline") },
                 supportingContent = { Text("Prove this app has never requested network access") },
                 modifier = Modifier.clickable(onClick = onOpenVerifyOffline),
+            )
+            Divider()
+
+            ListItem(
+                headlineContent = { Text("Data Safety") },
+                supportingContent = { Text("What happens if you lose this device, and how to back up your Vault") },
+                modifier = Modifier.clickable(onClick = onOpenDataSafety),
             )
             Divider()
 

@@ -88,6 +88,10 @@ class VaultViewModel @Inject constructor(
 
     fun isPinConfigured(): Boolean = pinCredentialStore.isPinConfigured()
 
+    fun hasSeenVaultEducation(): Boolean = pinCredentialStore.hasSeenVaultEducation()
+
+    fun markVaultEducationSeen() = pinCredentialStore.markVaultEducationSeen()
+
     fun setPin(pin: String): SetPinResult = setPinUseCase(pin)
 
     fun validatePin(pin: String): PinValidationResult {

@@ -11,4 +11,8 @@ interface PinCredentialStore {
 
     /** Emits every time [validatePin] returns [PinValidationResult.Failure] or [PinValidationResult.LockedOut]. */
     fun observeFailures(): Flow<PinValidationResult>
+
+    /** Whether the one-time "your vault has no cloud backup" education screen has been shown. */
+    fun hasSeenVaultEducation(): Boolean
+    fun markVaultEducationSeen()
 }

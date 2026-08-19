@@ -30,6 +30,7 @@ class PinCredentialStoreImpl @Inject constructor(
         const val KEY_HASH = "pin_hash"
         const val KEY_ATTEMPTS = "pin_failed_attempts"
         const val KEY_LOCKOUT_UNTIL = "pin_lockout_until"
+        const val KEY_SEEN_VAULT_EDUCATION = "seen_vault_education"
         const val PBKDF2_ITERATIONS = 120_000
         const val KEY_LENGTH_BITS = 256
     }
@@ -83,6 +84,12 @@ class PinCredentialStoreImpl @Inject constructor(
         prefs.edit {
             remove(KEY_SALT); remove(KEY_HASH); remove(KEY_ATTEMPTS); remove(KEY_LOCKOUT_UNTIL)
         }
+    }
+
+    override fun hasSeenVaultEducation(): Boolean = prefs.getBoolean(KEY_SEEN_VAULT_EDUCATION, false)
+
+    override fun markVaultEducationSeen() {
+        prefs.edit { putBoolean(KEY_SEEN_VAULT_EDUCATION, true) }
     }
 
     private fun deriveHash(pin: String, salt: ByteArray): ByteArray {
