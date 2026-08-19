@@ -6,7 +6,9 @@ import com.aegisvault.app.domain.model.VaultItem
 import kotlinx.coroutines.flow.Flow
 
 sealed interface VaultWriteResult {
-    data class Success(val item: VaultItem) : VaultWriteResult
+    /** [warning] is set when the vault copy succeeded but requesting deletion of the original
+     * could not even be attempted (as opposed to the user simply declining the delete prompt). */
+    data class Success(val item: VaultItem, val warning: String? = null) : VaultWriteResult
     data object CapacityExceeded : VaultWriteResult
     data class RequiresDeleteConsent(val intentSender: android.content.IntentSender, val pendingItem: VaultItem) :
         VaultWriteResult

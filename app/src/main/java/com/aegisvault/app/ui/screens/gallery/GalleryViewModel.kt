@@ -106,6 +106,7 @@ class GalleryViewModel @Inject constructor(
                 when (result) {
                     is MoveToVaultResult.Success -> {
                         movedCount++
+                        if (result.warning != null) _events.emit(GalleryEvent.Error(result.warning))
                         processMoveQueue()
                     }
                     is MoveToVaultResult.RequiresDeleteConsent -> {

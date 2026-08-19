@@ -88,7 +88,11 @@ class VaultRepositoryImpl @Inject constructor(
         when (deleteResult) {
             is MediaDeleteResult.Deleted -> VaultWriteResult.Success(vaultItem)
             is MediaDeleteResult.ConsentRequired -> VaultWriteResult.RequiresDeleteConsent(deleteResult.intentSender, vaultItem)
-            is MediaDeleteResult.Failed -> VaultWriteResult.Success(vaultItem) // encrypted copy is safe even if original cleanup failed
+            // Encrypted copy is safe even if requesting deletion of the original failed outright —
+            // but that's a real, unexpected failure (not the user simply declining a prompt), so
+            // it must be surfaced rather than silently look identical to a full success.
+            is MediaDeleteResult.Failed ->
+                VaultWriteResult.Success(vaultItem, warning = "Copied to vault, but couldn't request removal of the original: ${deleteResult.message}")
         }
     }
 

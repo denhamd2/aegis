@@ -9,7 +9,7 @@ import com.aegisvault.app.domain.repository.VaultWriteResult
 import javax.inject.Inject
 
 sealed interface MoveToVaultResult {
-    data class Success(val item: VaultItem) : MoveToVaultResult
+    data class Success(val item: VaultItem, val warning: String? = null) : MoveToVaultResult
     data class CapacityExceeded(val limit: Int) : MoveToVaultResult
     data class RequiresDeleteConsent(val intentSender: IntentSender, val pendingItem: VaultItem) : MoveToVaultResult
     data class Error(val message: String) : MoveToVaultResult
@@ -35,7 +35,7 @@ class MoveToVaultUseCase @Inject constructor(
             return MoveToVaultResult.CapacityExceeded(capacity.limit)
         }
         return when (val result = vaultRepository.moveToVault(sourceUri, displayName, mimeType, mediaType)) {
-            is VaultWriteResult.Success -> MoveToVaultResult.Success(result.item)
+            is VaultWriteResult.Success -> MoveToVaultResult.Success(result.item, result.warning)
             is VaultWriteResult.CapacityExceeded ->
                 MoveToVaultResult.CapacityExceeded(com.aegisvault.app.util.Constants.FREE_TIER_VAULT_LIMIT)
             is VaultWriteResult.RequiresDeleteConsent ->
