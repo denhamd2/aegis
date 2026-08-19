@@ -171,9 +171,7 @@ fun GalleryScreen(
                     items = uiState.mediaItems,
                     selectedIds = uiState.selectedIds,
                     selectionModeActive = uiState.selectionModeActive,
-                    onItemClick = { item ->
-                        if (uiState.selectionModeActive) viewModel.toggleSelection(item)
-                    },
+                    onItemClick = viewModel::toggleSelection,
                     onItemLongClick = viewModel::toggleSelection,
                     modifier = Modifier.fillMaxSize(),
                 )

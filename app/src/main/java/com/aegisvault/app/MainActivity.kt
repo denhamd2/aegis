@@ -7,9 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.fragment.app.FragmentActivity
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.aegisvault.app.domain.repository.AppTheme
 import com.aegisvault.app.ui.navigation.AegisNavHost
 import com.aegisvault.app.ui.theme.AegisTheme
+import com.aegisvault.app.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -34,7 +40,14 @@ class MainActivity : FragmentActivity() {
         }
 
         setContent {
-            AegisTheme {
+            val themeViewModel: ThemeViewModel = hiltViewModel()
+            val theme by themeViewModel.theme.collectAsState()
+            val darkTheme = when (theme) {
+                AppTheme.LIGHT -> false
+                AppTheme.DARK -> true
+                AppTheme.SYSTEM -> isSystemInDarkTheme()
+            }
+            AegisTheme(darkTheme = darkTheme) {
                 AegisNavHost()
             }
         }

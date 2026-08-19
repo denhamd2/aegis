@@ -72,8 +72,13 @@ fun PdfViewerScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
             when {
-                uiState.uri == null -> Column {
-                    EmptyState(icon = Icons.Filled.PictureAsPdf, title = "No PDF open", subtitle = "Choose a local PDF file to view")
+                uiState.uri == null -> Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    EmptyState(
+                        icon = Icons.Filled.PictureAsPdf,
+                        title = "No PDF open",
+                        subtitle = "Choose a local PDF file to view",
+                        modifier = Modifier.weight(1f),
+                    )
                     Button(onClick = { picker.launch("application/pdf") }, modifier = Modifier.padding(16.dp)) {
                         Text("Choose a PDF")
                     }
