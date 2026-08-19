@@ -100,7 +100,14 @@ class MediaStoreSource @Inject constructor(
                 val id = cursor.getLong(idCol)
                 val mediaTypeInt = cursor.getInt(typeCol)
                 val mediaType = if (mediaTypeInt == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) MediaType.VIDEO else MediaType.IMAGE
-                val contentUri = ContentUris.withAppendedId(queryUri, id)
+                // MediaStore.createDeleteRequest (and other MediaStore write/delete APIs) reject
+                // the generic Files collection URI with "All requested items must be Media
+                // items" — they require the per-type collection URI instead.
+                val typedCollection = when (mediaType) {
+                    MediaType.IMAGE -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    MediaType.VIDEO -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                }
+                val contentUri = ContentUris.withAppendedId(typedCollection, id)
                 items += MediaItem(
                     id = id,
                     contentUri = contentUri.toString(),
