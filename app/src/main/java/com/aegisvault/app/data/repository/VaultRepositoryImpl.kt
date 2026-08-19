@@ -53,12 +53,20 @@ class VaultRepositoryImpl @Inject constructor(
             return@withContext VaultWriteResult.Error(e.message ?: "Failed to encrypt file")
         }
 
+        // Best-effort metadata only — a failure to read the original file's size must never
+        // abort a move whose encrypted copy has already been written successfully.
+        val sizeBytes = try {
+            context.contentResolver.openAssetFileDescriptor(sourceUri, "r")?.use { it.length } ?: 0L
+        } catch (e: Exception) {
+            0L
+        }
+
         val entity = VaultItemEntity(
             storageFileName = storageFileName,
             originalDisplayName = displayName,
             mimeType = mimeType,
             mediaType = mediaType.toEntity(),
-            sizeBytes = context.contentResolver.openAssetFileDescriptor(sourceUri, "r")?.use { it.length } ?: 0L,
+            sizeBytes = sizeBytes,
             dateAdded = System.currentTimeMillis(),
         )
         val id = try {
@@ -69,7 +77,15 @@ class VaultRepositoryImpl @Inject constructor(
         }
         val vaultItem = entity.copy(id = id).toDomain()
 
-        when (val deleteResult = deleteHandler.requestDelete(sourceUri)) {
+        // The vault copy is already safely written and recorded at this point, so any failure
+        // requesting deletion of the original must not be surfaced as an overall failure.
+        val deleteResult = try {
+            deleteHandler.requestDelete(sourceUri)
+        } catch (e: Exception) {
+            MediaDeleteResult.Failed(e.message ?: "Failed to request deletion of the original")
+        }
+
+        when (deleteResult) {
             is MediaDeleteResult.Deleted -> VaultWriteResult.Success(vaultItem)
             is MediaDeleteResult.ConsentRequired -> VaultWriteResult.RequiresDeleteConsent(deleteResult.intentSender, vaultItem)
             is MediaDeleteResult.Failed -> VaultWriteResult.Success(vaultItem) // encrypted copy is safe even if original cleanup failed

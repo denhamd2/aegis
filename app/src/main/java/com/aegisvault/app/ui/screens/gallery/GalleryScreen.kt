@@ -70,7 +70,11 @@ fun GalleryScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is GalleryEvent.RequestDeleteConsent -> {
-                    (context as? MainActivity)?.requestDeleteConsent(event.intentSender) { }
+                    try {
+                        (context as? MainActivity)?.requestDeleteConsent(event.intentSender) { }
+                    } catch (e: Exception) {
+                        scope.launch { snackbarHostState.showSnackbar("Moved to vault, but couldn't prompt to delete the original.") }
+                    }
                 }
                 is GalleryEvent.CapacityExceeded ->
                     scope.launch { snackbarHostState.showSnackbar("Vault is full (${event.limit} items). Upgrade to Pro for unlimited storage.") }

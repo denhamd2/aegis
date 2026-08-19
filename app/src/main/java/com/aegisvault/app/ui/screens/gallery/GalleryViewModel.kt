@@ -93,32 +93,40 @@ class GalleryViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            val result = moveToVaultUseCase(
-                sourceUri = Uri.parse(next.contentUri),
-                displayName = next.displayName,
-                mimeType = next.mimeType,
-                mediaType = next.mediaType,
-            )
-            when (result) {
-                is MoveToVaultResult.Success -> {
-                    movedCount++
-                    processMoveQueue()
+            // Defense in depth: MoveToVaultUseCase/VaultRepositoryImpl already catch their own
+            // failure points, but nothing here may ever let an exception escape uncaught — an
+            // unhandled throw inside a ViewModel coroutine takes the whole app down with it.
+            try {
+                val result = moveToVaultUseCase(
+                    sourceUri = Uri.parse(next.contentUri),
+                    displayName = next.displayName,
+                    mimeType = next.mimeType,
+                    mediaType = next.mediaType,
+                )
+                when (result) {
+                    is MoveToVaultResult.Success -> {
+                        movedCount++
+                        processMoveQueue()
+                    }
+                    is MoveToVaultResult.RequiresDeleteConsent -> {
+                        movedCount++
+                        _events.emit(GalleryEvent.RequestDeleteConsent(result.intentSender))
+                        // Consent IntentSender performs the actual system delete on confirmation;
+                        // no need to block the rest of the queue on the user's response.
+                        processMoveQueue()
+                    }
+                    is MoveToVaultResult.CapacityExceeded -> {
+                        moveQueue.clear()
+                        _events.emit(GalleryEvent.CapacityExceeded(result.limit))
+                    }
+                    is MoveToVaultResult.Error -> {
+                        _events.emit(GalleryEvent.Error(result.message))
+                        processMoveQueue()
+                    }
                 }
-                is MoveToVaultResult.RequiresDeleteConsent -> {
-                    movedCount++
-                    _events.emit(GalleryEvent.RequestDeleteConsent(result.intentSender))
-                    // Consent IntentSender performs the actual system delete on confirmation;
-                    // no need to block the rest of the queue on the user's response.
-                    processMoveQueue()
-                }
-                is MoveToVaultResult.CapacityExceeded -> {
-                    moveQueue.clear()
-                    _events.emit(GalleryEvent.CapacityExceeded(result.limit))
-                }
-                is MoveToVaultResult.Error -> {
-                    _events.emit(GalleryEvent.Error(result.message))
-                    processMoveQueue()
-                }
+            } catch (e: Exception) {
+                _events.emit(GalleryEvent.Error(e.message ?: "Failed to move item to vault"))
+                processMoveQueue()
             }
         }
     }
