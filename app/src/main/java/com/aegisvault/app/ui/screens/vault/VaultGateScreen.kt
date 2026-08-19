@@ -48,7 +48,7 @@ fun VaultGateScreen(
     when (stage) {
         GateStage.CHECKING -> Unit
         GateStage.BIOMETRIC -> BiometricPromptHost(
-            onSuccess = onUnlocked,
+            onSuccess = { viewModel.unlock(); onUnlocked() },
             onNegativeOrError = {
                 stage = if (viewModel.isPinConfigured()) GateStage.PIN_ENTRY else GateStage.PIN_SETUP
             },
@@ -82,6 +82,7 @@ fun VaultGateScreen(
                                     pinInput = ""
                                 } else if (firstEntry == pinInput) {
                                     viewModel.setPin(pinInput)
+                                    viewModel.unlock()
                                     onUnlocked()
                                 } else {
                                     pinError = "PINs didn't match. Try again."
