@@ -39,7 +39,11 @@ fun AegisNavHost() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val topLevelRoutes = setOf(NavRoutes.GALLERY, NavRoutes.VAULT_GATE, NavRoutes.VAULT, NavRoutes.UTILITIES, NavRoutes.SETTINGS)
+    val topLevelRoutes = setOf(
+        NavRoutes.GALLERY, NavRoutes.VAULT_GATE, NavRoutes.VAULT, NavRoutes.UTILITIES, NavRoutes.SETTINGS,
+        // Utilities sub-screens keep the bottom nav too, rather than hiding it like Vault detail does.
+        NavRoutes.EXIF_STRIPPER, "${NavRoutes.PDF_VIEWER}?uri={uri}", NavRoutes.STORAGE_ANALYZER,
+    )
 
     Scaffold(
         bottomBar = {
