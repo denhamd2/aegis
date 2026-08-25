@@ -1,0 +1,14 @@
+# Godot 4
+game/.godot/
+game/export_presets.cfg
+*.translation
+
+# Capture output (large, regenerated)
+gauntlet/refs/raw/*
+!gauntlet/refs/raw/README.md
+tools/capture/out/
+*.avi
+*.mp4
+
+# OS
+.DS_Store

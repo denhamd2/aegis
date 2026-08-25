@@ -1,0 +1,8 @@
+{
+  "expected_frame_count": 5,
+  "actual_frame_count": 3,
+  "non_black_frame_ratio": 0.4,
+  "hud_present": false,
+  "replay_end_state_hash": "",
+  "beat_labels": ["tie_up", "apex", "impact", "pin_start", "three_count"]
+}
