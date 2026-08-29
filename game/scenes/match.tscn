@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
 [ext_resource type="Resource" path="res://resources/moves/grapple_suplex.tres" id="8"]
 [ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
+[ext_resource type="AnimationLibrary" path="res://resources/animations/grapple_suplex.tres" id="10"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -58,10 +59,18 @@ light_energy = 2.2
 spot_range = 10.0
 spot_angle = 45.0
 
-[node name="GrappleRig" type="Node3D" parent="."]
+[node name="GrappleRig" type="Node3D" parent="." node_paths=PackedStringArray("anchor", "animation_player")]
 script = ExtResource("6")
+anchor = NodePath("GrappleAnchor")
+animation_player = NodePath("AnimationPlayer")
 
 [node name="GrappleAnchor" type="Marker3D" parent="GrappleRig"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="GrappleRig"]
+callback_mode_process = 0
+libraries = {
+"": ExtResource("10")
+}
 
 [node name="WrestlerA" parent="." instance=ExtResource("3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)

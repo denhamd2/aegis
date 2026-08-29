@@ -31,6 +31,8 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
+	_set_pose_override(attacker, true)
+	_set_pose_override(defender, true)
 	_align_to_anchor(attacker, defender)
 
 	_active = true
@@ -60,8 +62,20 @@ func _resume(body: CharacterBody3D) -> void:
 	if body:
 		body.set_physics_process(true)
 
+## Each wrestler drives its own single-character AnimationTree every idle
+## frame (see wrestler_controller.gd). Left active during a paired move,
+## it would keep overwriting the same Skeleton3D bones this rig's
+## AnimationPlayer is animating, right after this rig sets them — whichever
+## processes later in scene-tree order wins, silently. This hands full
+## control of both skeletons to this rig for the move's duration.
+func _set_pose_override(wrestler: Node3D, active: bool) -> void:
+	if wrestler.has_method("set_grapple_animation_override"):
+		wrestler.set_grapple_animation_override(active)
+
 func _on_animation_finished(_anim_name: StringName) -> void:
 	_apply_root_motion()
+	_set_pose_override(_attacker, false)
+	_set_pose_override(_defender, false)
 	_resume(_attacker_body)
 	_resume(_defender_body)
 	_active = false

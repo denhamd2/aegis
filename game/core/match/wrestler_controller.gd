@@ -163,6 +163,13 @@ func _build_animation_tree() -> void:
 	add_child(anim_tree)
 	anim_tree.tree_root = state_machine
 	anim_tree.anim_player = anim_tree.get_path_to(anim_player)
+	# Advance on the physics tick, not idle/wall-clock frames (the default) —
+	# animation is presentation-only and doesn't feed gameplay state, but an
+	# idle-clocked tree would still make playback speed (and therefore what a
+	# given tick *looks like*) depend on render framerate, which undermines
+	# frame-labeled captures (ARCHITECTURE.md's capture/evidence pipeline)
+	# expecting a specific tick to reliably show a specific pose.
+	anim_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
 	anim_tree.active = true
 	_anim_playback = anim_tree["parameters/playback"]
 	var idle_name: String = WrestlerFSM.State.keys()[WrestlerFSM.State.IDLE]
@@ -176,6 +183,16 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 	if not (anim_tree.tree_root as AnimationNodeStateMachine).has_node(state_name):
 		return
 	_anim_playback.travel(state_name)
+
+## Called by GrappleRig, which owns both skeletons' poses for the duration
+## of a paired move — our own per-wrestler AnimationTree runs every idle
+## frame same as GrappleRig's paired AnimationPlayer, so without this both
+## would fight over the same Skeleton3D bones and whichever processes last
+## in scene-tree order would silently win, leaving the paired move
+## invisible. Restored (re-activated) once GrappleRig hands control back.
+func set_grapple_animation_override(active: bool) -> void:
+	if anim_tree:
+		anim_tree.active = not active
 
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():

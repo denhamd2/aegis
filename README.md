@@ -97,9 +97,10 @@ Known Phase 2 gaps, honestly:
   still deadlock in a mutual-knockout loop — confirmed separately from the
   real one-AI-vs-one-passive-player scenario above, which does complete.
   Not fixed; noted as a real gap for whenever match-vs-match AI matters.
-- `GrappleRig` has no paired animation library yet (Phase 3), so it falls
-  back to resolving on the move's frame count via a timer instead of an
-  `AnimationPlayer` signal — replace once paired clips exist.
+- `GrappleRig` has one paired animation now (`grapple_suplex`, see Phase 3
+  progress below) but 17 more moves' worth of clips still fall back to
+  resolving on the move's frame count via a timer instead of an
+  `AnimationPlayer` signal.
 - Irish whip, running attacks, reversals, and submissions have FSM states
   and (for submission) a minigame, but aren't yet driven by the referee or
   AI — pin/kickout is the only win-condition path wired end to end.
@@ -178,9 +179,75 @@ Still open before the gauntlet (Phase 4) can start:
   package, explicitly not used), ring-crossing run speed, and all of
   `feel.md` (input latency needs a visible input overlay, which broadcast-
   style gameplay footage doesn't have) — more clips would help most here.
-- **Phase 3 (remainder)** — the paired grapple/reversal animation authoring
-  above (the `AnimationTree` blend graph and a first pass at ring/arena art
-  are now done).
+- **Phase 3 (remainder)** — 17 of the 18 paired grapple/reversal moves
+  (see below: one, the suplex, has a real first-pass paired animation;
+  the AI/tie-up path to actually reach it in a live match is a separate,
+  still-open gap).
+
+## Phase 3 progress: first paired grapple animation (suplex)
+
+`grapple_suplex.tres` (`resources/animations/`, an `AnimationLibrary`) is
+the first real two-skeleton paired animation for `GrappleRig` — no
+Blender (unavailable in this environment; confirmed installable via `apt`
+but not attempted at that scale), authored directly as a Godot `Animation`
+resource via script: `POSITION_3D`/`ROTATION_3D` tracks on both wrestlers'
+root transforms for the whole-body throw arc, plus `ROTATION_3D` tracks on
+a handful of arm/spine bones (`upperarm_l/r`, `lowerarm_l/r`, `spine_01`)
+for the grab/lift posing. `scenes/match.tscn` wires it into `GrappleRig`'s
+`animation_player`/`anchor` exports (via the `node_paths` mechanism, not
+a plain `NodePath` literal — this project's own README already documents
+that pattern once being necessary for typed-`Node` exports).
+
+Getting this actually visible took two real bug fixes, not just content
+authoring:
+- **Each wrestler's own single-character `AnimationTree` (built in
+  `_build_animation_tree()`, added in the previous `AnimationTree` commit)
+  keeps driving its `Skeleton3D` every idle frame regardless of what
+  `GrappleRig` is doing** — with both active, whichever processes later in
+  scene-tree order silently wins each frame, and the paired animation was
+  invisible even though it was genuinely playing. Fixed with
+  `WrestlerController.set_grapple_animation_override()`
+  (`anim_tree.active = false`/`true`), called by `GrappleRig.begin()` /
+  `_on_animation_finished()` — `GrappleRig` now owns both skeletons' poses
+  for the move's duration, not just their physics processing, matching the
+  ownership boundary `ARCHITECTURE.md` already states for transforms.
+- **`AnimationPlayer` defaults to idle/wall-clock-paced playback, not the
+  physics tick** — cosmetic-only, so it can't desync a replay's gameplay
+  state, but it does mean a captured tick wouldn't reliably show the same
+  pose across different render framerates, undermining frame-labeled
+  captures. Set `callback_mode_process` to
+  `ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS` on both this rig's
+  `AnimationPlayer` and (while already in the area) each wrestler's own
+  `AnimationTree`, which had the same latent gap from the earlier commit.
+
+Verified against the real Godot binary: 7/7 unit tests and full-match
+pinfall completion hold across 11 different match seeds (1, 2, 3, 4, 5, 7,
+9, 11, 13, 17, 19) with zero script errors. A direct-invocation test
+harness (bypassing AI/RNG — see gap below) confirmed the animation
+actually renders: real OpenGL captures at three ticks through the move
+show a genuine two-body arc — attacker lifting, defender airborne with
+real separation at some ticks, both near-fully occluded at the literal
+apex (physically expected: the defender is directly over/in front of the
+attacker at that instant from this fixed camera angle, not a bug), then
+separating again as they come down.
+
+Honest gaps, not smoothed over:
+- **This is 1 of 18 required moves** (12 grapple + 6 reversal per
+  `ARCHITECTURE.md`'s scope) and the biomechanics are a first-pass
+  grey-box, not a good suplex — some rotation timing looks off (the
+  defender reads as further into the "falling" rotation earlier than
+  intended), most likely from chaining several large-angle Euler-derived
+  quaternion keyframes without visually iterating in a real editor. Not
+  fixed here; this is exactly the kind of curve a gauntlet builder tunes
+  with the animation actually visible, not blind.
+- **No live match currently reaches this animation.** Testing across 11
+  seeds with a temporary counter confirmed `GrappleRig.begin()` is never
+  called naturally by any of them — `WrestlerController._process_tie_up()`'s
+  placeholder resolution and the AI's tie-up-seeking behavior are rare/
+  fragile enough (a pre-existing gap this README already flagged) that no
+  real match exercises the grapple path at all in this sample. The
+  animation and its wiring are real and directly verified; a live match
+  actually playing it is a separate, still-open problem.
 
 ## Phase 3 progress: ring/arena art
 
