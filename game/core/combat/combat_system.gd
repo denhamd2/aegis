@@ -18,11 +18,22 @@ var limb_damage := {
 }
 var momentum: float = 0.0
 
+## Damage and momentum go to different wrestlers on a landed move — the
+## defender takes the damage, the attacker builds the momentum. Call
+## apply_damage() on the defender's CombatSystem and apply_momentum() on
+## the attacker's; apply_move() (both, on one instance) only makes sense
+## for tests/tools that don't model two separate wrestlers.
 func apply_move(move: MoveDef) -> void:
+	apply_damage(move)
+	apply_momentum(move)
+
+func apply_damage(move: MoveDef) -> void:
 	limb_damage[Limb.HEAD] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.HEAD] + move.damage_head)
 	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso)
 	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms)
 	limb_damage[Limb.LEGS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.LEGS] + move.damage_legs)
+
+func apply_momentum(move: MoveDef) -> void:
 	momentum = clamp(momentum - move.momentum_cost + move.momentum_gain, 0.0, MOMENTUM_MAX)
 
 func total_damage() -> float:

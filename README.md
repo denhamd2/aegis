@@ -39,33 +39,70 @@ wires two capsule wrestlers (`wrestler.tscn`), a box ring (`ring.tscn`),
 tie-up → grapple → move → hit-react/down, pin cover → kickout minigame →
 three-count win, and one scripted AI opponent (`WrestlerAI`).
 
-This has been verified against a real Godot 4.6.3-stable binary (headless):
-the project imports cleanly, `game/scenes/match.tscn` runs with zero script
-errors, and all 7 gdUnit4 tests pass (0 errors, 0 failures, 0 orphans). That
-pass caught and fixed several real bugs — untyped-Variant compile errors,
-exported `Node`-typed fields silently staying null when assigned via
-`NodePath` in a flat `.tscn` (fixed by resolving explicit `NodePath` exports
-in `_ready()`), `GrappleRig` never resolving without a paired animation
-clip, the grapple move resolver discarding the attacker's chosen move, an
-`AI` range-priority bug that meant tie-ups never triggered, and `CombatSystem`
-leaking orphan `Node` instances because it extended `Node` with no scene-tree
-need (now `RefCounted`). `gdUnit4` v5.0.0 (the tag CI originally pinned)
-doesn't compile against Godot 4.6 — CI now pins v6.2.1, confirmed working.
+This has been verified against a real Godot 4.6.3-stable binary (headless),
+including running full matches under `--fixed-fps` (which decouples
+simulation from wall-clock time — ~27x faster than real time here) to
+actually watch matches play out rather than guess from reading code. That
+process is what caught every bug below; each was found by an actual
+contradiction in simulated match state, not by inspection.
+
+**A full match now reaches a three-count.** `godot4 --headless --path game
+--fixed-fps 6000 scenes/match.tscn` prints `Match won by WrestlerB via
+pinfall` in a couple of real seconds. Getting there required fixing, in
+order of discovery:
+- Untyped-Variant compile errors, and exported `Node`-typed fields silently
+  staying null when assigned via `NodePath` in a flat `.tscn` (fixed by
+  resolving explicit `NodePath` exports in `_ready()` — this also caught
+  `WrestlerController.ai` never actually being wired to its `AI` child node).
+- `GrappleRig` never resolving without a paired animation clip; the grapple
+  move resolver discarding the attacker's chosen move; an AI range-priority
+  bug that meant tie-ups never triggered; `CombatSystem` leaking orphan
+  `Node` instances (now `RefCounted`).
+- A striking wrestler could keep re-hitting an already-`DOWN` opponent,
+  re-triggering `_go_down()` and resetting the getup timer forever — added
+  an `UNHITTABLE_STATES` gate.
+- The AI never sought a pin cover at all — added "opponent is down, walk
+  in" behavior.
+- The actual root cause of one wrestler never taking damage: `strike_move`
+  is one shared `MoveDef` **resource** loaded once from a `.tres` and
+  referenced by both wrestlers, and the code was tracking "has this attack
+  already landed" via `move.set_meta("applied", ...)` on that shared
+  resource — both wrestlers were fighting over the same flag. Fixed by
+  moving that flag onto the wrestler instance instead of the resource.
+- Momentum ("→ signature → finisher") was being applied to the defender
+  taking damage instead of the attacker landing the hit — split
+  `CombatSystem.apply_move()` into `apply_damage()` (defender) and
+  `apply_momentum()` (attacker).
+- `PinMinigame`'s kickout marker sweeps its entire range once per attempt,
+  so "marker enters the window" as a bare win condition meant every pin
+  auto-kicked-out before a three-count could land, regardless of window
+  size. Replaced with a fill-meter: kickout progress only accumulates on
+  ticks where the window is entered *and* the defender is actually
+  pressing, and must cross a threshold — so window width (driven by
+  attacker momentum and defender damage) now actually matters.
+- Wrestlers kept processing input after the match ended and threw an
+  illegal FSM transition trying to act from `PIN_DEFENDER` — both freeze
+  (`set_physics_process(false)`) on `match_won`.
+
+`gdUnit4` v5.0.0 (the tag CI originally pinned) doesn't compile against
+Godot 4.6 — CI now pins v6.2.1, confirmed working (7/7 tests, 0 errors, 0
+failures, 0 orphans).
 
 Known Phase 2 gaps, honestly:
-- Not played by a human yet — verification above is import + headless
-  script-error-free execution + unit tests, not a playtest. Whether the
-  match *feels* right (and whether a full match reaches a three-count in
-  reasonable time against the AI) is still unconfirmed.
+- Not played by a human yet — verification above is scripted/AI-vs-passive
+  simulation, not a playtest with a gamepad. Whether the match *feels*
+  right is unconfirmed regardless of whether it mechanically completes.
+- Two identical AI opponents (same stats, same seed, no tie-breaker) can
+  still deadlock in a mutual-knockout loop — confirmed separately from the
+  real one-AI-vs-one-passive-player scenario above, which does complete.
+  Not fixed; noted as a real gap for whenever match-vs-match AI matters.
 - `GrappleRig` has no paired animation library yet (Phase 3), so it falls
   back to resolving on the move's frame count via a timer instead of an
   `AnimationPlayer` signal — replace once paired clips exist.
 - Irish whip, running attacks, reversals, and submissions have FSM states
   and (for submission) a minigame, but aren't yet driven by the referee or
   AI — pin/kickout is the only win-condition path wired end to end.
-- Tie-up resolution and pin-kickout timing are placeholder rules (lower
-  player index wins tie-up; kickout triggers automatically when the
-  marker enters the window, no dedicated input prompt yet).
+- Tie-up resolution is still a placeholder rule (lower player index wins).
 
 Still open before the gauntlet (Phase 4) can start:
 

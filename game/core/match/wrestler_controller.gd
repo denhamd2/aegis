@@ -17,6 +17,10 @@ signal move_landed(attacker: WrestlerController, defender: WrestlerController, m
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
 const TIE_UP_RANGE := 1.4
+## Reach for a strike/running-attack to connect. Must stay >= WrestlerAI's
+## default strike_range (1.6m) — an AI that throws from further out than
+## this can land is a strike that always whiffs.
+const STRIKE_HIT_RANGE := 1.8
 const GETUP_TICKS := 90 # 1.5s
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
@@ -29,10 +33,10 @@ const TIE_UP_RESOLVE_TICKS := 30
 @export var signature_move: MoveDef
 @export var finisher_move: MoveDef
 @export var weight_class: int = 1
-@export var ai: WrestlerAI
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
+var ai: WrestlerAI
 var opponent: WrestlerController
 var fsm: WrestlerFSM
 var combat: CombatSystem
@@ -45,10 +49,32 @@ var _is_grapple_attacker: bool = false
 var _pin_minigame: PinMinigame
 var _submission_minigame: SubmissionMinigame
 
+## Hits queued against this wrestler this tick, resolved by MatchReferee
+## after every wrestler has run its own _physics_process. Godot processes
+## scene-tree children in a fixed order every tick (WrestlerA before
+## WrestlerB), so applying a hit synchronously — mid opponent's own strike
+## resolution — let whichever wrestler updates first always land first and
+## silently overwrite the other's in-flight attack. Queuing defers the
+## effect to end-of-tick so both wrestlers' decisions this tick are made
+## from the same starting state, regardless of node order.
+var _pending_hits: Array[MoveDef] = []
+
+## Whether the current _active_move has already landed its hit this
+## attempt. This must live here, not on the MoveDef resource (previously
+## tracked via _active_move.set_meta("applied", ...)) — a MoveDef loaded
+## from a .tres is one shared Resource instance referenced by both
+## wrestlers (e.g. both assigned the same strike_jab.tres), so metadata
+## set on it was a single flag fought over by both attackers: whichever
+## wrestler's strike landed first marked it "applied" and permanently
+## blocked the other wrestler's independent attack from ever landing.
+var _active_move_hit_applied: bool = false
+var _kickout_input_this_tick: bool = false
+
 func _ready() -> void:
 	fsm = WrestlerFSM.new()
 	add_child(fsm)
 	combat = CombatSystem.new()
+	ai = get_node_or_null("AI")
 	if ai:
 		ai.controller = self
 
@@ -84,8 +110,16 @@ func _physics_process(delta: float) -> void:
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.RUNNING_ATTACK:
 			_process_active_move(input)
-		WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.PIN_DEFENDER:
+		WrestlerFSM.State.PIN_ATTACKER:
 			pass # driven by MatchReferee
+		WrestlerFSM.State.PIN_DEFENDER:
+			# MatchReferee reads this each tick against PinMinigame's target
+			# window — a kickout needs the button pressed AND the marker in
+			# the window at that instant, not just the marker passing
+			# through the window on its own (the marker sweeps the whole
+			# range every cycle, so without an input gate every pin would
+			# resolve as an automatic kickout before reaching a three-count).
+			_kickout_input_this_tick = input.get("strike", false)
 		WrestlerFSM.State.SUBMISSION_ATTACKER, WrestlerFSM.State.SUBMISSION_DEFENDER:
 			pass # driven by MatchReferee
 
@@ -131,7 +165,24 @@ func _in_range(range_m: float) -> bool:
 func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
 	_active_move = move
 	_move_ticks_remaining = move.total_frames()
+	_active_move_hit_applied = false
 	fsm.transition_to(state)
+
+## States a wrestler cannot be struck out of by an opposing strike/grapple —
+## already down, mid-getup, or committed to a pin/submission/finisher
+## sequence. Without this gate a standing opponent can keep striking a
+## downed wrestler and re-trigger _go_down() every hit, permanently
+## resetting the getup timer so the match can never reach a pin.
+const UNHITTABLE_STATES: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.DOWN,
+	WrestlerFSM.State.GETUP,
+	WrestlerFSM.State.PIN_ATTACKER,
+	WrestlerFSM.State.PIN_DEFENDER,
+	WrestlerFSM.State.SUBMISSION_ATTACKER,
+	WrestlerFSM.State.SUBMISSION_DEFENDER,
+	WrestlerFSM.State.FINISHER,
+	WrestlerFSM.State.MOVE_EXEC,
+]
 
 func _process_active_move(input: Dictionary) -> void:
 	if not _active_move:
@@ -141,23 +192,46 @@ func _process_active_move(input: Dictionary) -> void:
 	var in_active_frames := frame_offset >= _active_move.startup_frames \
 		and frame_offset < _active_move.startup_frames + _active_move.active_frames
 
-	if in_active_frames and opponent and _in_range(TIE_UP_RANGE) and not _active_move.get_meta("applied", false):
+	if in_active_frames and opponent and _in_range(STRIKE_HIT_RANGE) \
+			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
+			and not _active_move_hit_applied:
 		_apply_move_to_opponent(_active_move)
-		_active_move.set_meta("applied", true)
+		_active_move_hit_applied = true
 
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
-		_active_move.set_meta("applied", false)
+		_active_move_hit_applied = false
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 		_active_move = null
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
-	opponent.combat.apply_move(move)
 	move_landed.emit(self, opponent, move)
-	if opponent.combat.total_damage() >= CombatSystem.MAX_LIMB_DAMAGE * 2.0:
-		opponent._go_down()
+	# Momentum belongs to whoever lands the hit (self), not the wrestler
+	# taking it — applied immediately since it's this wrestler's own
+	# CombatSystem, not shared, so there's no cross-wrestler race here.
+	# The damage itself still goes through the deferred queue below.
+	combat.apply_momentum(move)
+	opponent._pending_hits.append(move)
+
+## Called by MatchReferee once every wrestler has finished its own
+## _physics_process for this tick.
+func _resolve_pending_hits() -> void:
+	if _pending_hits.is_empty():
+		return
+	# The wrestler may have moved into an unhittable state (e.g. its own
+	# pin cover) between when this hit was queued and now — drop the
+	# reaction (not the damage numbers, which are harmless) rather than
+	# force an illegal FSM transition.
+	var moves := _pending_hits.duplicate()
+	_pending_hits.clear()
+	if UNHITTABLE_STATES.has(fsm.current_state):
+		return
+	for move in moves:
+		combat.apply_damage(move)
+	if combat.total_damage() >= CombatSystem.MAX_LIMB_DAMAGE * 2.0:
+		_go_down()
 	else:
-		opponent._start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
 
 func _timed_stub(ticks: int) -> MoveDef:
 	var stub := MoveDef.new()

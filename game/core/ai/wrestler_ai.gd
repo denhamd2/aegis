@@ -21,6 +21,10 @@ func _physics_process(_delta: float) -> void:
 func poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
+	if controller.fsm.current_state == WrestlerFSM.State.PIN_DEFENDER:
+		# Mash to kick out every tick — grey-box stand-in for a timed
+		# button prompt (see WrestlerController's PIN_DEFENDER handling).
+		return {"strike": true}
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 
@@ -34,6 +38,15 @@ func poll_input() -> Dictionary:
 		"grapple": false,
 		"run": false,
 	}
+
+	# Opponent is down: walk in for the cover instead of continuing to
+	# strike/grapple decisions below. MatchReferee triggers the pin once
+	# this wrestler is within its cover range and idle/moving.
+	if target.fsm.current_state == WrestlerFSM.State.DOWN:
+		if distance > 0.3:
+			var dir := to_target.normalized()
+			input["move"] = Vector2(dir.x, dir.z)
+		return input
 
 	if distance <= tie_up_range:
 		input["grapple"] = true

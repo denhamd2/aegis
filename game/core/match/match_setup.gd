@@ -19,3 +19,9 @@ func _ready() -> void:
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("Match won by %s via %s" % [winner.name, method])
+	# Freeze both wrestlers immediately — without this they keep polling
+	# input and trying to act next tick, and a defender left mid-pin
+	# (PIN_DEFENDER only legally leads to DOWN/GETUP) throws an illegal
+	# FSM transition the moment it tries to do anything else post-match.
+	wrestler_a.set_physics_process(false)
+	wrestler_b.set_physics_process(false)

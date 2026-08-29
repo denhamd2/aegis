@@ -30,6 +30,15 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if _match_over:
 		return
+
+	# MatchReferee runs after both wrestlers in the scene tree, so this is
+	# the single point each tick where queued hits (see
+	# WrestlerController._pending_hits) are resolved — after every
+	# wrestler has made its own decision for the tick, symmetrically,
+	# regardless of node order.
+	wrestler_a._resolve_pending_hits()
+	wrestler_b._resolve_pending_hits()
+
 	if _pinning:
 		_tick_pin()
 		return
@@ -51,11 +60,7 @@ func _check_for_cover() -> void:
 
 func _tick_pin() -> void:
 	_pin_ticks += 1
-	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.is_kickout(_pin_ticks):
-		# Defender's kickout input timing is validated against the
-		# minigame's target window by the input layer; grey-box treats
-		# "in window at count" as automatic kickout to keep the loop
-		# playable without a dedicated prompt UI yet.
+	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
 		_end_pin(false)
 		return
 	if _pin_ticks >= PIN_COUNT_TICKS:
