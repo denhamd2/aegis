@@ -19,18 +19,32 @@ mid-grapple cut jumps to an entirely different match) — always confirm a
 measured sequence doesn't straddle a cut before citing a number from it.
 
 ## Getup duration
-- **~2.10s (63 frames @ 30fps)**, rise-start to standing/fight-ready —
-  `wwe2k26_footage_01.mp4`, 366.07s (`frames/getup_rise_start.jpg`, first
-  visible push-off-the-mat frame) to 368.20s (`frames/getup_standing.jpg`,
-  first frame both feet planted in a fighting stance), Goldberg vs. Brock
-  Lesnar, SmackDown. This is the *animation* duration only — the wrestler
-  was actually prone from ~358.6s to 366.07s (~7.5s), but most of that gap
-  is the attacker's own taunt animation playing out, not a fixed
-  knockdown timer, so it isn't cited as "getup duration" here.
+- **Instance 1 — ~2.10s (63 frames @ 30fps)**, rise-start to
+  standing/fight-ready — `wwe2k26_footage_01.mp4`, 366.07s
+  (`frames/getup_rise_start.jpg`, first visible push-off-the-mat frame) to
+  368.20s (`frames/getup_standing.jpg`, first frame both feet planted in a
+  fighting stance), Goldberg vs. Brock Lesnar, SmackDown. This is the
+  *animation* duration only — the wrestler was actually prone from ~358.6s
+  to 366.07s (~7.5s), but most of that gap is the attacker's own taunt
+  animation playing out, not a fixed knockdown timer, so it isn't cited as
+  "getup duration" here.
+- **Instance 2 — ~1.14s (34 frames @ 30fps)**, same match, ~35s earlier:
+  330.43s (`frames/getup_rise_start_2.jpg`, first hand-plant/push-up frame)
+  to 331.57s (`frames/getup_standing_2.jpg`, upright fighting stance).
+  **`frames/getup_rise_start_2.jpg` shows why this one's faster:** an
+  on-screen "R1 INSTANT RECOVERY" prompt is visible right at rise-start —
+  this is a confirmed *player-input-driven* quick recovery, not just
+  natural variance. Instance 1 shows no such prompt at its own rise-start.
+- **So this isn't two random samples of one fixed animation — it's the
+  default getup (~2.10s) vs. an input-triggered fast getup (~1.14s), a
+  real two-speed mechanic.** Any getup-duration constant this project
+  tunes later should probably be two numbers, not one, if it wants to
+  match this.
 - Compare: `WrestlerController.GETUP_TICKS = 90` (1.5s @ 60Hz) in
-  `game/core/match/wrestler_controller.gd` is faster than this one
-  measurement — worth another data point before retuning, but a real gap
-  worth flagging for whoever owns that constant later.
+  `game/core/match/wrestler_controller.gd` is a single fixed value sitting
+  between the two measured speeds — currently slower than the input-driven
+  fast getup and faster than the default one, closer to a middle ground
+  than either alone suggested.
 
 ## Tie-up → move start
 - **Lower bound only, not a full measurement:** lock-up contact at 226.07s,
@@ -57,8 +71,12 @@ measured sequence doesn't straddle a cut before citing a number from it.
   attacking a non-retaliating or blocking opponent) from another clip.
 
 ## Reversal window length
-- (pending — needs a frame-stepped reversal input-to-window sequence, not
-  found yet in this clip)
+- (pending — searched several strike/grapple sequences in this clip for a
+  dedicated reversal-timing indicator; the only persistent icon found near
+  the HUD top during strikes is the star/match-quality meter, not a
+  reversal prompt. Either this clip's UI doesn't surface reversal timing
+  visually, or it wasn't in a sequence reviewed. Needs a clip with a
+  confirmed reversal happening on camera.)
 
 ## Submission hold duration (single attempt, to referee intervention)
 - **~2.5s (673.00s–675.5s)** — `wwe2k26_footage_01.mp4`, hold applied at
@@ -81,5 +99,9 @@ measured sequence doesn't straddle a cut before citing a number from it.
   on-screen pinfall count that isn't inside a replay package.)
 
 ## Ring-crossing run speed
-- (pending — needs a running sequence across a known ring dimension; not
-  yet isolated from this clip)
+- (pending — surveyed roughly 400s–600s of this clip at 1fps looking for a
+  corner-to-corner sprint/Irish whip rebound; this match reads as
+  grapple/strike-heavy with big aerial/outside-the-ring spots rather than
+  running offense, so no clean instance turned up in the portion reviewed.
+  Needs either more of this clip reviewed at finer granularity or a
+  different clip with a clearer running spot.)
