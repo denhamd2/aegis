@@ -165,12 +165,17 @@ Still open before the gauntlet (Phase 4) can start:
   Mercy emulator, as fallback) footage. Now has both stills and one real
   frame-stepped gameplay clip: `camera.md`/`hud.md` cite labeled crops from
   user-provided WWE 2K25/2K26 screenshots (framing/composition, HUD layout
-  and color), and `timings.md` has two real frame-stepped measurements from
-  a downloaded WWE 2K26 gameplay clip (`gauntlet/refs/raw/video/`,
-  gitignored) — a getup animation duration (~2.10s, faster than this
-  project's current `GETUP_TICKS` placeholder) and a tie-up-engaged lower
-  bound. Still pending: strike startup/active/recovery, reversal window
-  length, three-count cadence, ring-crossing run speed, and all of
+  and color), and `timings.md` has four real frame-stepped measurements
+  from a downloaded WWE 2K26 gameplay clip (`gauntlet/refs/raw/video/`,
+  gitignored) — a getup animation duration (~2.10s, slower than this
+  project's `GETUP_TICKS` placeholder), a strike startup (~8 ticks @ 60Hz,
+  close to `strike_jab.tres`'s 6), a submission hold-to-break duration
+  (~2.5s), and a tie-up-engaged lower bound. `hud.md` also gained a
+  gameplay-confirmed element the screenshots missed: a red/blue submission
+  "HOLD" contest meter. Still pending: strike active/recovery (couldn't
+  isolate a single non-mutual strike), reversal window length, three-count
+  cadence (this clip's only visible finish is inside a slow-motion replay
+  package, explicitly not used), ring-crossing run speed, and all of
   `feel.md` (input latency needs a visible input overlay, which broadcast-
   style gameplay footage doesn't have) — more clips would help most here.
 - **Phase 3 (remainder)** — the paired grapple/reversal animation authoring
