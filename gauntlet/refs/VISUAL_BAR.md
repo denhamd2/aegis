@@ -4,8 +4,12 @@ The single page every visual-quality gauntlet critic holds in mind. Keep it
 short. Update it only from measured reference material (`gauntlet/refs/`),
 never from memory of "what WWE games look like."
 
-**Status: placeholder — fill in once `gauntlet/refs/frames/` has labeled
-reference frames from Phase 1.**
+**Status: placeholder, partially informed.** `gauntlet/refs/frames/` and
+`gauntlet/refs/hud/` now have labeled reference stills (see `camera.md` /
+`hud.md`) — enough to ground the priorities below, not enough to close
+Phase 1: those are individual screenshots, not frame-stepped clips, so
+nothing timing-based (`timings.md`, `feel.md`) is covered yet. Treat this
+bar as informed-placeholder, not final, until real footage lands.
 
 ## What "ours" must match, in priority order
 

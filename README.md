@@ -162,7 +162,13 @@ Blender as two-rig scenes, which is Blender work I haven't attempted.
 Still open before the gauntlet (Phase 4) can start:
 
 - **Phase 1** — populate `gauntlet/refs/` from real WWE 2K (or WWF No
-  Mercy emulator, as fallback) footage. Currently placeholder/pending.
+  Mercy emulator, as fallback) footage. Partially seeded: `camera.md` and
+  `hud.md` now cite labeled crops (`gauntlet/refs/frames/`,
+  `gauntlet/refs/hud/`) from user-provided WWE 2K25/2K26 screenshots —
+  framing/composition and HUD layout/color observations only, since stills
+  can't give timing data. `timings.md` and `feel.md` (and everything
+  time-based in `camera.md`/`hud.md`) still need real frame-stepped
+  footage or a No Mercy emulator capture.
 - **Phase 3 (remainder)** — the paired grapple/reversal animation authoring
   above (the `AnimationTree` blend graph and a first pass at ring/arena art
   are now done).
