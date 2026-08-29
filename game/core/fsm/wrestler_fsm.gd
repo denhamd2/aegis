@@ -29,8 +29,8 @@ enum State {
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
 const LEGAL_TRANSITIONS := {
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER],
 	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.IDLE, State.HIT_REACT, State.STUNNED],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT],
@@ -58,6 +58,9 @@ func _physics_process(_delta: float) -> void:
 	ticks_in_state += 1
 
 func transition_to(next_state: State) -> void:
+	if next_state == current_state:
+		ticks_in_state = 0
+		return
 	var legal: Array = LEGAL_TRANSITIONS.get(current_state, [])
 	assert(legal.has(next_state),
 		"Illegal FSM transition: %s -> %s" % [State.keys()[current_state], State.keys()[next_state]])

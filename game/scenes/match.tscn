@@ -1,0 +1,57 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/wrestler.tscn" id="3"]
+[ext_resource type="Script" path="res://core/camera/match_camera.gd" id="4"]
+[ext_resource type="Script" path="res://core/match/match_referee.gd" id="5"]
+[ext_resource type="Script" path="res://core/grapple/grapple_rig.gd" id="6"]
+[ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_suplex.tres" id="8"]
+[ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
+
+[node name="Match" type="Node3D"]
+script = ExtResource("1")
+match_seed = 1
+
+[node name="Ring" parent="." instance=ExtResource("2")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.5, 0.5, 0, 0.7, 0.7, -0.7, -0.5, 0.5, 0, 6, 0)
+shadow_enabled = true
+
+[node name="GrappleRig" type="Node3D" parent="."]
+script = ExtResource("6")
+
+[node name="GrappleAnchor" type="Marker3D" parent="GrappleRig"]
+
+[node name="WrestlerA" parent="." instance=ExtResource("3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
+player_index = 0
+is_ai = false
+strike_move = ExtResource("7")
+grapple_move = ExtResource("8")
+signature_move = ExtResource("9")
+opponent_path = NodePath("../WrestlerB")
+grapple_rig_path = NodePath("../GrappleRig")
+
+[node name="WrestlerB" parent="." instance=ExtResource("3")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1.5, 0, 0)
+player_index = 1
+is_ai = true
+strike_move = ExtResource("7")
+grapple_move = ExtResource("8")
+signature_move = ExtResource("9")
+opponent_path = NodePath("../WrestlerA")
+grapple_rig_path = NodePath("../GrappleRig")
+
+[node name="MatchCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 0, 1.8, 6)
+script = ExtResource("4")
+wrestler_a = NodePath("../WrestlerA")
+wrestler_b = NodePath("../WrestlerB")
+
+[node name="MatchReferee" type="Node" parent="."]
+script = ExtResource("5")
+wrestler_a = NodePath("../WrestlerA")
+wrestler_b = NodePath("../WrestlerB")

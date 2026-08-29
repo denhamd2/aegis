@@ -36,9 +36,15 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_active = true
 	grapple_started.emit(attacker, defender, move)
 
-	if animation_player and move.animation_pair_id != &"":
+	if animation_player and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
 		animation_player.play(move.animation_pair_id)
 		animation_player.animation_finished.connect(_on_animation_finished, CONNECT_ONE_SHOT)
+	else:
+		# Grey-box fallback (Phase 2/3 gap): no paired animation library yet,
+		# so resolve on the move's own frame count instead of an anim signal.
+		var ticks_to_wait := move.total_frames() if move else 1
+		await Engine.get_main_loop().create_timer(ticks_to_wait / float(Engine.physics_ticks_per_second)).timeout
+		_on_animation_finished(&"")
 
 func _align_to_anchor(attacker: Node3D, defender: Node3D) -> void:
 	if not anchor:
@@ -62,7 +68,7 @@ func _on_animation_finished(_anim_name: StringName) -> void:
 	grapple_finished.emit(_attacker, _defender)
 
 func _apply_root_motion() -> void:
-	if not animation_player:
+	if not animation_player or not animation_player.has_animation(_move.animation_pair_id if _move else &""):
 		return
 	var root_delta := animation_player.get_root_motion_position()
 	if _attacker_body:

@@ -33,11 +33,31 @@ enter this repo.
 system stubs, replay/determinism plumbing, capture harness, evidence gate,
 CI, and the architecture contract.
 
+**Phase 2 (grey-box MVP)** is scaffolded on top of it: `game/scenes/match.tscn`
+wires two capsule wrestlers (`wrestler.tscn`), a box ring (`ring.tscn`),
+`MatchCamera`, and `MatchReferee` into a playable loop — locomotion, strikes,
+tie-up → grapple → move → hit-react/down, pin cover → kickout minigame →
+three-count win, and one scripted AI opponent (`WrestlerAI`).
+
+Known Phase 2 gaps, honestly:
+- Not run inside the Godot editor — this environment has no Godot binary,
+  so the scenes/scripts above are hand-authored and logic-traced but
+  unverified at runtime. Opening the project in Godot 4.6.3 and playtesting
+  is the first thing to do before trusting this further.
+- `GrappleRig` has no paired animation library yet (Phase 3), so it falls
+  back to resolving on the move's frame count via a timer instead of an
+  `AnimationPlayer` signal — replace once paired clips exist.
+- Irish whip, running attacks, reversals, and submissions have FSM states
+  and (for submission) a minigame, but aren't yet driven by the referee or
+  AI — pin/kickout is the only win-condition path wired end to end.
+- Tie-up resolution and pin-kickout timing are placeholder rules (lower
+  player index wins tie-up; kickout triggers automatically when the
+  marker enters the window, no dedicated input prompt yet).
+
 Still open before the gauntlet (Phase 4) can start:
 
 - **Phase 1** — populate `gauntlet/refs/` from real WWE 2K (or WWF No
   Mercy emulator, as fallback) footage. Currently placeholder/pending.
-- **Phase 2** — grey-box MVP: mechanically complete, visually ugly match.
 - **Phase 3** — CC0 asset retargeting + paired grapple/reversal animation
   authoring in Blender.
 
