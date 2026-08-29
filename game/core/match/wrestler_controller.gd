@@ -44,15 +44,19 @@ var grapple_rig: GrappleRig
 ## Retargeted CC0 base mesh's own AnimationPlayer (see
 ## assets/characters/CREDITS.md).
 var anim_player: AnimationPlayer
+## Drives anim_player through an AnimationNodeStateMachine built in
+## _build_animation_tree() — one state-machine node per WrestlerFSM state,
+## wired with a transition for every LEGAL_TRANSITIONS edge, cross-fading
+## over ANIMATION_BLEND_TICKS. This is the real ARCHITECTURE.md blend graph
+## (not a direct AnimationPlayer.play() switch): _on_fsm_state_changed()
+## calls playback.travel() so xfades and state ordering are the engine's
+## job, not hand-rolled here.
+var anim_tree: AnimationTree
+var _anim_playback: AnimationNodeStateMachinePlayback
 
-## FSM state -> clip from the base mesh's library. This is a direct
-## AnimationPlayer.play() switch keyed off WrestlerFSM.state_changed, not
-## the AnimationTree + AnimationNodeStateMachine ARCHITECTURE.md describes
-## as the long-term design — that's real remaining work (blend graph,
-## transition curves). This gets every state showing *something* plausible
-## with the single-character clips on hand.
-##
-## No paired grapple animation exists yet (see README's Phase 3 notes), so
+## FSM state -> clip from the base mesh's library. Every state gets *some*
+## plausible clip from the single-character library on hand — no paired
+## grapple animation exists yet (see README's Phase 3 notes), so
 ## grapple-adjacent states borrow the closest single-character clip as a
 ## placeholder rather than left in bind pose:
 ## TIE_UP/GRAPPLE_HOLD -> Interact, MOVE_EXEC -> Punch_Cross,
@@ -121,17 +125,57 @@ func _ready() -> void:
 
 	anim_player = find_child("AnimationPlayer", true, false) as AnimationPlayer
 	fsm.state_changed.connect(_on_fsm_state_changed)
-	if anim_player and anim_player.has_animation("Idle"):
-		anim_player.play("Idle")
+	if anim_player:
+		_build_animation_tree()
+
+## Builds the AnimationNodeStateMachine blend graph: one AnimationNodeAnimation
+## per WrestlerFSM state that has a usable clip (STATE_ANIMATIONS), and one
+## AnimationNodeStateMachineTransition per WrestlerFSM.LEGAL_TRANSITIONS edge
+## between two such states, cross-fading over ANIMATION_BLEND_TICKS. Runtime-
+## built rather than authored as a .tscn sub-resource graph so it always
+## matches WrestlerFSM's state/transition tables instead of drifting from
+## them by hand.
+func _build_animation_tree() -> void:
+	var state_machine := AnimationNodeStateMachine.new()
+	for state_id in STATE_ANIMATIONS:
+		var clip_name: String = STATE_ANIMATIONS[state_id]
+		if not anim_player.has_animation(clip_name):
+			continue
+		var anim_node := AnimationNodeAnimation.new()
+		anim_node.animation = clip_name
+		state_machine.add_node(WrestlerFSM.State.keys()[state_id], anim_node)
+
+	var blend_seconds := ANIMATION_BLEND_TICKS / float(Engine.physics_ticks_per_second)
+	for from_id in WrestlerFSM.LEGAL_TRANSITIONS:
+		var from_name: String = WrestlerFSM.State.keys()[from_id]
+		if not state_machine.has_node(from_name):
+			continue
+		for to_id in WrestlerFSM.LEGAL_TRANSITIONS[from_id]:
+			var to_name: String = WrestlerFSM.State.keys()[to_id]
+			if to_name == from_name or not state_machine.has_node(to_name):
+				continue
+			var transition := AnimationNodeStateMachineTransition.new()
+			transition.xfade_time = blend_seconds
+			transition.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
+			state_machine.add_transition(from_name, to_name, transition)
+
+	anim_tree = AnimationTree.new()
+	add_child(anim_tree)
+	anim_tree.tree_root = state_machine
+	anim_tree.anim_player = anim_tree.get_path_to(anim_player)
+	anim_tree.active = true
+	_anim_playback = anim_tree["parameters/playback"]
+	var idle_name: String = WrestlerFSM.State.keys()[WrestlerFSM.State.IDLE]
+	if state_machine.has_node(idle_name):
+		_anim_playback.start(idle_name)
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
-	if not anim_player:
+	if not _anim_playback:
 		return
-	var clip_name: String = STATE_ANIMATIONS.get(current, "")
-	if clip_name == "" or not anim_player.has_animation(clip_name):
+	var state_name: String = WrestlerFSM.State.keys()[current]
+	if not (anim_tree.tree_root as AnimationNodeStateMachine).has_node(state_name):
 		return
-	var blend_seconds := ANIMATION_BLEND_TICKS / float(Engine.physics_ticks_per_second)
-	anim_player.play(clip_name, blend_seconds)
+	_anim_playback.travel(state_name)
 
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():

@@ -125,23 +125,33 @@ still completes via pinfall with the mesh wired in — 7/7 unit tests still
 pass. See `game/assets/characters/CREDITS.md` for attribution and the IP
 guardrail note (stand-in mesh only — no WWE-derived assets).
 
-**Per-state animation switching now works.** `WrestlerController` listens
-to `WrestlerFSM.state_changed` and calls `AnimationPlayer.play()` with a
-state → clip table (`STATE_ANIMATIONS`), cross-fading over 6 ticks. This
-is a direct `play()` switch, not the `AnimationTree` +
-`AnimationNodeStateMachine` blend graph `ARCHITECTURE.md` describes as the
-long-term design (that's still real remaining work — transition curves,
-proper blending) — but it's functioning today: verified with a real
-OpenGL render captured at the exact tick a wrestler entered `STRIKE`,
-showing it genuinely mid-`Punch_Jab` (fists up, weight shifted), not
-idling. `WrestlerFSM.State.keys()`-driven mapping covers every state that
-has *a* usable clip on this rig — most are close matches (`HIT_REACT` →
-`Hit_Chest`, `DOWN`/`PIN_DEFENDER` → `Death01`); a few are honest
-placeholders standing in for content that doesn't exist yet
-(`TIE_UP`/`GRAPPLE_HOLD` → `Interact`, `FINISHER` → `Sword_Attack`,
-`GETUP` → `Roll`, the closest-available ground-to-standing clip in this
-library, not a real getup animation). 7/7 unit tests and full-match
-completion still hold with this wired in.
+**Per-state animation switching now goes through a real `AnimationTree`
+blend graph**, the long-term design `ARCHITECTURE.md` calls for — not a
+direct `AnimationPlayer.play()` switch anymore. `WrestlerController`
+builds an `AnimationNodeStateMachine` at runtime in `_build_animation_tree()`:
+one `AnimationNodeAnimation` per `WrestlerFSM.State` that has a usable clip
+(`STATE_ANIMATIONS`), and one `AnimationNodeStateMachineTransition` per
+`WrestlerFSM.LEGAL_TRANSITIONS` edge between two such states, cross-fading
+over 6 ticks. Built from those two tables at runtime rather than hand-authored
+as a `.tscn` sub-resource graph, so it can't drift from the FSM's actual
+state/transition set. `_on_fsm_state_changed` now calls
+`AnimationNodeStateMachinePlayback.travel()` instead of `play()` directly —
+xfade sequencing and state ordering are the engine's job.
+
+Verified against the real Godot binary: 7/7 unit tests and full-match
+pinfall completion still hold with the tree wired in, and a real OpenGL
+render captured 12 ticks into `STRIKE` shows the wrestler genuinely
+mid-`Punch_Jab` (fists up, weight forward, arm extended) — confirming the
+state machine is actually driving the blended pose, not just leaving the
+player on its previous clip. `WrestlerFSM.State.keys()`-driven mapping
+still covers every state that has *a* usable clip on this rig — most are
+close matches (`HIT_REACT` → `Hit_Chest`, `DOWN`/`PIN_DEFENDER` →
+`Death01`); a few are honest placeholders standing in for content that
+doesn't exist yet (`TIE_UP`/`GRAPPLE_HOLD` → `Interact`, `FINISHER` →
+`Sword_Attack`, `GETUP` → `Roll`, the closest-available ground-to-standing
+clip in this library, not a real getup animation). Transition curves
+beyond a flat cross-fade, and the paired grapple animations below, are
+still real remaining work.
 
 Critically, **no paired grapple animations exist yet** — this
 single-character rig covers locomotion, strikes, and getups, but the
@@ -153,8 +163,8 @@ Still open before the gauntlet (Phase 4) can start:
 
 - **Phase 1** — populate `gauntlet/refs/` from real WWE 2K (or WWF No
   Mercy emulator, as fallback) footage. Currently placeholder/pending.
-- **Phase 3 (remainder)** — a real `AnimationTree` blend graph, ring/arena
-  art, and the paired grapple/reversal animation authoring above.
+- **Phase 3 (remainder)** — ring/arena art and the paired grapple/reversal
+  animation authoring above (the `AnimationTree` blend graph is now done).
 
 See `gauntlet/anchor/ARCHITECTURE.md` for the full contract and
 `gauntlet/refs/VISUAL_BAR.md` / `FEEL_BAR.md` for the anchor docs each
