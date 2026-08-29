@@ -14,7 +14,8 @@ enter this repo.
 - `game/` — the Godot project. Core systems live in `game/core/`
   (`fsm/`, `grapple/`, `combat/`, `minigames/`, `camera/`, `replay/`,
   `capture/`); `game/resources/` holds the `MoveDef` tuning surface;
-  `game/tests/` holds gdUnit4 tests.
+  `game/assets/characters/` holds the CC0 retargeting base mesh (see its
+  `CREDITS.md`); `game/tests/` holds gdUnit4 tests.
 - `gauntlet/anchor/ARCHITECTURE.md` — the contract gauntlet builders may
   not violate. Read this first.
 - `gauntlet/refs/` — the reference corpus: measured timings, camera
@@ -104,12 +105,42 @@ Known Phase 2 gaps, honestly:
   AI — pin/kickout is the only win-condition path wired end to end.
 - Tie-up resolution is still a placeholder rule (lower player index wins).
 
+## Phase 3 progress: retargeting base mesh
+
+`game/assets/characters/wrestler_base.glb` (and `_root_motion` variant) is
+Quaternius's **Universal Animation Library** (Standard, CC0) — a 65-bone
+skinned humanoid rig with 43 animations (`Idle`, `Walk`, `Jog_Fwd`,
+`Sprint_Loop`, `Punch_Jab`, `Punch_Cross`, `Hit_Chest`, `Hit_Head`,
+`Death01`, `Roll`, …). `wrestler_bone_map.tres` maps 52 of its bones onto
+Godot's `SkeletonProfileHumanoid` (fingers/root partially unmapped — no
+equivalent bones on this rig or no canonical slot). `scenes/wrestler.tscn`
+now instances this mesh as the visual, with the original `CapsuleShape3D`
+kept for collision only; `WrestlerController` autoplays `Idle` on ready so
+it doesn't sit in bind pose.
+
+Verified against the real Godot binary: imports cleanly, a real
+(non-headless, OpenGL/llvmpipe) render shows the mesh in a proper idle
+pose at ring scale (not a capsule, not a T-pose), and the full match
+still completes via pinfall with the mesh wired in — 7/7 unit tests still
+pass. See `game/assets/characters/CREDITS.md` for attribution and the IP
+guardrail note (stand-in mesh only — no WWE-derived assets).
+
+Not yet done: per-state animation switching (an `AnimationTree` +
+`AnimationNodeStateMachine` mirroring `WrestlerFSM`, per
+`ARCHITECTURE.md`) — the model plays one static `Idle` clip regardless of
+what the wrestler is actually doing. And critically, **no paired grapple
+animations exist yet** — this single-character rig covers locomotion,
+strikes, and getups, but the plan's "no free CC0 paired grapple
+animations exist" constraint still holds: those 12 grapple + 6 reversal
+moves still need authoring in Blender as two-rig scenes, which is Blender
+work I haven't attempted.
+
 Still open before the gauntlet (Phase 4) can start:
 
 - **Phase 1** — populate `gauntlet/refs/` from real WWE 2K (or WWF No
   Mercy emulator, as fallback) footage. Currently placeholder/pending.
-- **Phase 3** — CC0 asset retargeting + paired grapple/reversal animation
-  authoring in Blender.
+- **Phase 3 (remainder)** — animation-state wiring, ring/arena art, and
+  the paired grapple/reversal animation authoring above.
 
 See `gauntlet/anchor/ARCHITECTURE.md` for the full contract and
 `gauntlet/refs/VISUAL_BAR.md` / `FEEL_BAR.md` for the anchor docs each

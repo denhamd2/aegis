@@ -41,6 +41,11 @@ var opponent: WrestlerController
 var fsm: WrestlerFSM
 var combat: CombatSystem
 var grapple_rig: GrappleRig
+## Retargeted CC0 base mesh's own AnimationPlayer (see
+## assets/characters/CREDITS.md). Phase 2 just plays "Idle" as a static
+## default so the model isn't stuck in bind pose — per-state animation
+## driven by an AnimationTree mirroring the FSM is Phase 3/4 work.
+var anim_player: AnimationPlayer
 
 var _move_ticks_remaining: int = 0
 var _active_move: MoveDef
@@ -77,6 +82,10 @@ func _ready() -> void:
 	ai = get_node_or_null("AI")
 	if ai:
 		ai.controller = self
+
+	anim_player = find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if anim_player and anim_player.has_animation("Idle"):
+		anim_player.play("Idle")
 
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():
