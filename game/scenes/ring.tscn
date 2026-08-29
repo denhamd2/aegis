@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=16 format=3]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(6, 0.2, 6)
@@ -7,15 +7,86 @@ size = Vector3(6, 0.2, 6)
 size = Vector3(6, 0.2, 6)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.7, 0.7, 0.75, 1)
+albedo_color = Color(0.65, 0.68, 0.74, 1)
+roughness = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_rope"]
 size = Vector3(6.2, 0.05, 0.05)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope"]
-albedo_color = Color(0.9, 0.85, 0.1, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope_top"]
+albedo_color = Color(0.85, 0.1, 0.12, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope_mid"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope_bottom"]
+albedo_color = Color(0.1, 0.15, 0.7, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_post"]
+top_radius = 0.08
+bottom_radius = 0.1
+height = 1.5
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_post"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+metallic = 0.3
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_pad"]
+size = Vector3(0.28, 0.5, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pad"]
+albedo_color = Color(0.1, 0.15, 0.7, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_apron"]
+size = Vector3(6.6, 0.9, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_apron"]
+albedo_color = Color(0.08, 0.08, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_arena_floor"]
+size = Vector3(24, 0.2, 24)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_arena_floor"]
+albedo_color = Color(0.03, 0.03, 0.035, 1)
+roughness = 0.95
 
 [node name="Ring" type="Node3D"]
+
+[node name="ArenaFloor" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_arena_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_arena_floor")
+position = Vector3(0, -1.1, 0)
+
+[node name="Apron" type="Node3D" parent="."]
+
+[node name="ApronNorth" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(0, -0.55, 3.15)
+
+[node name="ApronSouth" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(0, -0.55, -3.15)
+
+[node name="ApronEast" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(3.15, -0.55, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="ApronWest" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(-3.15, -0.55, 0)
+rotation = Vector3(0, 1.5708, 0)
 
 [node name="Floor" type="StaticBody3D" parent="."]
 
@@ -26,24 +97,112 @@ shape = SubResource("BoxShape3D_floor")
 mesh = SubResource("BoxMesh_floor")
 surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 
-[node name="RopeTop" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 1.0, 3.1)
+[node name="Posts" type="Node3D" parent="."]
 
-[node name="RopeBottom" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 1.0, -3.1)
+[node name="PostNE" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("CylinderMesh_post")
+surface_material_override/0 = SubResource("StandardMaterial3D_post")
+position = Vector3(3.0, 0.85, 3.0)
 
-[node name="RopeLeft" type="MeshInstance3D" parent="."]
+[node name="PadNE" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+position = Vector3(3.0, 1.45, 3.0)
+
+[node name="PostNW" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("CylinderMesh_post")
+surface_material_override/0 = SubResource("StandardMaterial3D_post")
+position = Vector3(-3.0, 0.85, 3.0)
+
+[node name="PadNW" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+position = Vector3(-3.0, 1.45, 3.0)
+
+[node name="PostSE" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("CylinderMesh_post")
+surface_material_override/0 = SubResource("StandardMaterial3D_post")
+position = Vector3(3.0, 0.85, -3.0)
+
+[node name="PadSE" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+position = Vector3(3.0, 1.45, -3.0)
+
+[node name="PostSW" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("CylinderMesh_post")
+surface_material_override/0 = SubResource("StandardMaterial3D_post")
+position = Vector3(-3.0, 0.85, -3.0)
+
+[node name="PadSW" type="MeshInstance3D" parent="Posts"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+position = Vector3(-3.0, 1.45, -3.0)
+
+[node name="Ropes" type="Node3D" parent="."]
+
+[node name="RopeTopNorth" type="MeshInstance3D" parent="Ropes"]
 mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(-3.1, 1.0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_top")
+position = Vector3(0, 1.2, 3.1)
+
+[node name="RopeMidNorth" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_mid")
+position = Vector3(0, 0.85, 3.1)
+
+[node name="RopeBottomNorth" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_bottom")
+position = Vector3(0, 0.5, 3.1)
+
+[node name="RopeTopSouth" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_top")
+position = Vector3(0, 1.2, -3.1)
+
+[node name="RopeMidSouth" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_mid")
+position = Vector3(0, 0.85, -3.1)
+
+[node name="RopeBottomSouth" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_bottom")
+position = Vector3(0, 0.5, -3.1)
+
+[node name="RopeTopEast" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_top")
+position = Vector3(3.1, 1.2, 0)
 rotation = Vector3(0, 1.5708, 0)
 
-[node name="RopeRight" type="MeshInstance3D" parent="."]
+[node name="RopeMidEast" type="MeshInstance3D" parent="Ropes"]
 mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(3.1, 1.0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_mid")
+position = Vector3(3.1, 0.85, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="RopeBottomEast" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_bottom")
+position = Vector3(3.1, 0.5, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="RopeTopWest" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_top")
+position = Vector3(-3.1, 1.2, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="RopeMidWest" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_mid")
+position = Vector3(-3.1, 0.85, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="RopeBottomWest" type="MeshInstance3D" parent="Ropes"]
+mesh = SubResource("BoxMesh_rope")
+surface_material_override/0 = SubResource("StandardMaterial3D_rope_bottom")
+position = Vector3(-3.1, 0.5, 0)
 rotation = Vector3(0, 1.5708, 0)

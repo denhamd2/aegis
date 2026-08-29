@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -10,15 +10,53 @@
 [ext_resource type="Resource" path="res://resources/moves/grapple_suplex.tres" id="8"]
 [ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
 
+[sub_resource type="Environment" id="Environment_arena"]
+background_mode = 1
+background_color = Color(0.02, 0.02, 0.025, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.58, 0.65, 1)
+ambient_light_energy = 0.35
+
 [node name="Match" type="Node3D"]
 script = ExtResource("1")
 match_seed = 1
 
 [node name="Ring" parent="." instance=ExtResource("2")]
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.7, -0.5, 0.5, 0, 0.7, 0.7, -0.7, -0.5, 0.5, 0, 6, 0)
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_arena")
+
+[node name="LightRig" type="Node3D" parent="."]
+
+[node name="RigNE" type="SpotLight3D" parent="LightRig"]
+transform = Transform3D(1, 0, 0, 0, 0.6, 0.8, 0, -0.8, 0.6, 3.5, 5.5, 3.5)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 2.2
 shadow_enabled = true
+spot_range = 10.0
+spot_angle = 45.0
+
+[node name="RigNW" type="SpotLight3D" parent="LightRig"]
+transform = Transform3D(1, 0, 0, 0, 0.6, 0.8, 0, -0.8, 0.6, -3.5, 5.5, 3.5)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 2.2
+shadow_enabled = true
+spot_range = 10.0
+spot_angle = 45.0
+
+[node name="RigSE" type="SpotLight3D" parent="LightRig"]
+transform = Transform3D(1, 0, 0, 0, 0.6, -0.8, 0, 0.8, 0.6, 3.5, 5.5, -3.5)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 2.2
+spot_range = 10.0
+spot_angle = 45.0
+
+[node name="RigSW" type="SpotLight3D" parent="LightRig"]
+transform = Transform3D(1, 0, 0, 0, 0.6, -0.8, 0, 0.8, 0.6, -3.5, 5.5, -3.5)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 2.2
+spot_range = 10.0
+spot_angle = 45.0
 
 [node name="GrappleRig" type="Node3D" parent="."]
 script = ExtResource("6")

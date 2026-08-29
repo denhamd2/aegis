@@ -163,8 +163,35 @@ Still open before the gauntlet (Phase 4) can start:
 
 - **Phase 1** — populate `gauntlet/refs/` from real WWE 2K (or WWF No
   Mercy emulator, as fallback) footage. Currently placeholder/pending.
-- **Phase 3 (remainder)** — ring/arena art and the paired grapple/reversal
-  animation authoring above (the `AnimationTree` blend graph is now done).
+- **Phase 3 (remainder)** — the paired grapple/reversal animation authoring
+  above (the `AnimationTree` blend graph and a first pass at ring/arena art
+  are now done).
+
+## Phase 3 progress: ring/arena art
+
+`scenes/ring.tscn` replaced the single box-and-tape grey-box with actual
+ring geometry, still built entirely from primitives (no Blender, no
+external textures — everything's a `StandardMaterial3D` on a `BoxMesh` /
+`CylinderMesh`): four corner posts with turnbuckle pads, three-tier ropes
+(top/middle/bottom, each its own color) instead of one bare strand, a dark
+apron skirt around the mat, and an arena floor extending beyond the ring
+into darkness. `scenes/match.tscn` swapped the single `DirectionalLight3D`
+for a four-point overhead `SpotLight3D` rig (consistent warm-white color
+and energy across all four, two shadow-casting) plus a `WorldEnvironment`
+for ambient fill — aimed at `VISUAL_BAR.md`'s "ring lighting reads as one
+scene, not independently-lit props," even though that bar itself is still
+a placeholder pending Phase 1 reference footage.
+
+Verified against the real Godot binary: imports cleanly, 7/7 unit tests
+and full-match pinfall completion still hold (this is pure visual/lighting
+geometry with no `StaticBody3D` changes to the collidable mat), and a real
+OpenGL render shows both wrestlers clearly legible inside the roped ring
+against the dark arena, not a bare box.
+
+Explicitly not attempted here: entrance ramp/stage, crowd, ringside
+barricades, or any GPU-only material work (normal maps, canvas texture) —
+those are further art passes, not required to clear "ring/arena art" as a
+grey-box step.
 
 See `gauntlet/anchor/ARCHITECTURE.md` for the full contract and
 `gauntlet/refs/VISUAL_BAR.md` / `FEEL_BAR.md` for the anchor docs each
