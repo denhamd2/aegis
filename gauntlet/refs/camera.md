@@ -1,10 +1,14 @@
 # camera.md — measured, not remembered
 
-Status: **partially seeded from static reference screenshots** (WWE 2K25/2K26,
-user-provided, no timestamps or source clip — see caveat below). Frame-stepped
-video is still needed for anything time-based (cut *duration*, ease curves);
-stills can only give framing/composition, not timing. See `timings.md` for the
-footage-drop / No Mercy fallback note that still applies to everything else.
+Status: **partially seeded from static reference screenshots, plus one real
+gameplay clip** (`gauntlet/refs/raw/video/wwe2k26_footage_01.mp4` — see
+`timings.md` for its citation format and the multi-match-compilation
+caveat). The clip's continuous camera behavior during the tie-up/getup
+sequences cited in `timings.md` broadly confirms the standoff/mid-fight
+framing described below, but cut *duration* and ease curves for
+finisher/three-count cuts specifically haven't been isolated from it yet —
+still pending. See `timings.md` for the footage-drop / No Mercy fallback
+note that still applies to everything else.
 
 **Caveat on this source material:** these are individual promotional/gameplay
 screenshots, not a frame-stepped clip — there's no timestamp, source video, or

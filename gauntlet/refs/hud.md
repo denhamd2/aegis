@@ -1,12 +1,17 @@
 # hud.md — measured, not remembered
 
-Status: **partially seeded from static reference screenshots** (WWE 2K25/2K26,
-user-provided — same caveat as `camera.md`: these are stills, not a
-frame-stepped clip, so fill *animation* (easing, flash-on-threshold,
-damage-tick delay) is still unconfirmed and marked pending below). Reference
+Status: **seeded from static reference screenshots, plus one real gameplay
+clip** (`gauntlet/refs/raw/video/wwe2k26_footage_01.mp4`, WWE 2K26, 30fps —
+see `timings.md`). The clip confirms the promotional-still HUD layout below
+matches actual gameplay (`hud/gameplay_hud_full.jpg`, a frame pulled
+straight from the clip: star-rating meter top-left, corner vitality bars,
+same green/red-segment damage rule) — but *fill animation* (easing,
+flash-on-threshold, damage-tick delay) still needs frame-stepping a visible
+damage event, not just a static pull, and stays pending below. Reference
 crops: `gauntlet/refs/hud/vitality_bar_full_health.png`,
 `vitality_bar_damaged.png`, `vitality_stamina_stacked.png`,
-`match_quality_meter.png`, `tag_movelist_panel.png`.
+`match_quality_meter.png`, `tag_movelist_panel.png`,
+`gameplay_hud_full.jpg`.
 
 ## Meter positions
 - Health/vitality: bottom-left corner for the player-1-side wrestler,

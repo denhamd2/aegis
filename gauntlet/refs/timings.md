@@ -4,24 +4,57 @@ Every number here must trace to a frame-stepped source clip under
 `gauntlet/refs/raw/`. Format: `value — source clip, timestamp, frame-step
 method (e.g. "ffmpeg -vf select, 30fps source")`.
 
-Status: **empty — waiting on reference footage.** Drop WWE 2K clips into
-`gauntlet/refs/raw/`, or say so and we fall back to WWF No Mercy under an
-emulator (frame-steppable directly, no drop needed).
+Status: **seeded with real frame-stepped measurements.** Source clip:
+`gauntlet/refs/raw/video/wwe2k26_footage_01.mp4` (WWE 2K26 gameplay,
+640x360 30fps, ~13min, user-supplied download — gitignored, stays local).
+Method throughout: `ffmpeg -ss <t> -to <t> -vf fps=30 out%04d.png`, then
+visual inspection frame-by-frame. Timestamps below are absolute position in
+that file. **This file is one clip's worth of measurement, not a
+cross-checked corpus** — treat single-instance numbers as a first data
+point to refine with more clips/matches, not a settled constant.
 
-## Tie-up → move start
-- (pending)
-
-## Reversal window length
-- (pending)
-
-## Strike startup / active / recovery
-- (pending)
+**Note on clip structure:** this file is a multi-match compilation with
+hard cuts between different pairings (confirmed at ~227.2s, where a visible
+mid-grapple cut jumps to an entirely different match) — always confirm a
+measured sequence doesn't straddle a cut before citing a number from it.
 
 ## Getup duration
-- (pending)
+- **~2.10s (63 frames @ 30fps)**, rise-start to standing/fight-ready —
+  `wwe2k26_footage_01.mp4`, 366.07s (`frames/getup_rise_start.jpg`, first
+  visible push-off-the-mat frame) to 368.20s (`frames/getup_standing.jpg`,
+  first frame both feet planted in a fighting stance), Goldberg vs. Brock
+  Lesnar, SmackDown. This is the *animation* duration only — the wrestler
+  was actually prone from ~358.6s to 366.07s (~7.5s), but most of that gap
+  is the attacker's own taunt animation playing out, not a fixed
+  knockdown timer, so it isn't cited as "getup duration" here.
+- Compare: `WrestlerController.GETUP_TICKS = 90` (1.5s @ 60Hz) in
+  `game/core/match/wrestler_controller.gd` is faster than this one
+  measurement — worth another data point before retuning, but a real gap
+  worth flagging for whoever owns that constant later.
+
+## Tie-up → move start
+- **Lower bound only, not a full measurement:** lock-up contact at 226.07s,
+  grapple-contest reticle UI visible continuously from 226.13s through at
+  least 227.20s (`frames/tieup_engaged_reticle.jpg`, mid-sequence) — the
+  clip hard-cuts to a different match before the tie-up resolves, so the
+  full tie-up → move-start duration is still **(pending — need a tie-up
+  that resolves on-camera in this clip or another one).**
+
+## Strike startup / active / recovery
+- (pending — this clip's compilation cuts made it hard to isolate one
+  clean, uninterrupted strike within the time spent; the getup and tie-up
+  measurements above were prioritized as the two most directly load-bearing
+  numbers against this project's existing placeholder constants)
+
+## Reversal window length
+- (pending — needs a frame-stepped reversal input-to-window sequence, not
+  found yet in this clip)
 
 ## Three-count cadence
-- (pending)
+- (pending — this clip's visible finish (~750s) cuts to a slow-motion
+  finisher replay rather than showing a three-count on camera; need a
+  clip with an on-screen pinfall count)
 
 ## Ring-crossing run speed
-- (pending)
+- (pending — needs a running sequence across a known ring dimension; not
+  yet isolated from this clip)
