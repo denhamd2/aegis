@@ -42,10 +42,46 @@ var fsm: WrestlerFSM
 var combat: CombatSystem
 var grapple_rig: GrappleRig
 ## Retargeted CC0 base mesh's own AnimationPlayer (see
-## assets/characters/CREDITS.md). Phase 2 just plays "Idle" as a static
-## default so the model isn't stuck in bind pose — per-state animation
-## driven by an AnimationTree mirroring the FSM is Phase 3/4 work.
+## assets/characters/CREDITS.md).
 var anim_player: AnimationPlayer
+
+## FSM state -> clip from the base mesh's library. This is a direct
+## AnimationPlayer.play() switch keyed off WrestlerFSM.state_changed, not
+## the AnimationTree + AnimationNodeStateMachine ARCHITECTURE.md describes
+## as the long-term design — that's real remaining work (blend graph,
+## transition curves). This gets every state showing *something* plausible
+## with the single-character clips on hand.
+##
+## No paired grapple animation exists yet (see README's Phase 3 notes), so
+## grapple-adjacent states borrow the closest single-character clip as a
+## placeholder rather than left in bind pose:
+## TIE_UP/GRAPPLE_HOLD -> Interact, MOVE_EXEC -> Punch_Cross,
+## PIN_ATTACKER -> Crouch_Idle, PIN_DEFENDER/DOWN -> Death01,
+## SUBMISSION_ATTACKER -> Crouch_Idle, SUBMISSION_DEFENDER -> Death01,
+## FINISHER -> Sword_Attack, GETUP -> Roll (imperfect — the only
+## on-the-ground-to-standing clip in this library).
+const STATE_ANIMATIONS := {
+	WrestlerFSM.State.IDLE: "Idle",
+	WrestlerFSM.State.LOCOMOTION: "Walk",
+	WrestlerFSM.State.RUN: "Sprint",
+	WrestlerFSM.State.STRIKE: "Punch_Jab",
+	WrestlerFSM.State.TIE_UP: "Interact",
+	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
+	WrestlerFSM.State.MOVE_EXEC: "Punch_Cross",
+	WrestlerFSM.State.HIT_REACT: "Hit_Chest",
+	WrestlerFSM.State.DOWN: "Death01",
+	WrestlerFSM.State.GETUP: "Roll",
+	WrestlerFSM.State.IRISH_WHIP: "Push",
+	WrestlerFSM.State.RUNNING_ATTACK: "Punch_Cross",
+	WrestlerFSM.State.STUNNED: "Hit_Head",
+	WrestlerFSM.State.PIN_ATTACKER: "Crouch_Idle",
+	WrestlerFSM.State.PIN_DEFENDER: "Death01",
+	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
+	WrestlerFSM.State.SUBMISSION_DEFENDER: "Death01",
+	WrestlerFSM.State.FINISHER: "Sword_Attack",
+}
+## Ticks (at 60Hz) to cross-fade between clips.
+const ANIMATION_BLEND_TICKS := 6
 
 var _move_ticks_remaining: int = 0
 var _active_move: MoveDef
@@ -84,8 +120,18 @@ func _ready() -> void:
 		ai.controller = self
 
 	anim_player = find_child("AnimationPlayer", true, false) as AnimationPlayer
+	fsm.state_changed.connect(_on_fsm_state_changed)
 	if anim_player and anim_player.has_animation("Idle"):
 		anim_player.play("Idle")
+
+func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if not anim_player:
+		return
+	var clip_name: String = STATE_ANIMATIONS.get(current, "")
+	if clip_name == "" or not anim_player.has_animation(clip_name):
+		return
+	var blend_seconds := ANIMATION_BLEND_TICKS / float(Engine.physics_ticks_per_second)
+	anim_player.play(clip_name, blend_seconds)
 
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():

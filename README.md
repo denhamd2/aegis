@@ -125,22 +125,36 @@ still completes via pinfall with the mesh wired in — 7/7 unit tests still
 pass. See `game/assets/characters/CREDITS.md` for attribution and the IP
 guardrail note (stand-in mesh only — no WWE-derived assets).
 
-Not yet done: per-state animation switching (an `AnimationTree` +
-`AnimationNodeStateMachine` mirroring `WrestlerFSM`, per
-`ARCHITECTURE.md`) — the model plays one static `Idle` clip regardless of
-what the wrestler is actually doing. And critically, **no paired grapple
-animations exist yet** — this single-character rig covers locomotion,
-strikes, and getups, but the plan's "no free CC0 paired grapple
-animations exist" constraint still holds: those 12 grapple + 6 reversal
-moves still need authoring in Blender as two-rig scenes, which is Blender
-work I haven't attempted.
+**Per-state animation switching now works.** `WrestlerController` listens
+to `WrestlerFSM.state_changed` and calls `AnimationPlayer.play()` with a
+state → clip table (`STATE_ANIMATIONS`), cross-fading over 6 ticks. This
+is a direct `play()` switch, not the `AnimationTree` +
+`AnimationNodeStateMachine` blend graph `ARCHITECTURE.md` describes as the
+long-term design (that's still real remaining work — transition curves,
+proper blending) — but it's functioning today: verified with a real
+OpenGL render captured at the exact tick a wrestler entered `STRIKE`,
+showing it genuinely mid-`Punch_Jab` (fists up, weight shifted), not
+idling. `WrestlerFSM.State.keys()`-driven mapping covers every state that
+has *a* usable clip on this rig — most are close matches (`HIT_REACT` →
+`Hit_Chest`, `DOWN`/`PIN_DEFENDER` → `Death01`); a few are honest
+placeholders standing in for content that doesn't exist yet
+(`TIE_UP`/`GRAPPLE_HOLD` → `Interact`, `FINISHER` → `Sword_Attack`,
+`GETUP` → `Roll`, the closest-available ground-to-standing clip in this
+library, not a real getup animation). 7/7 unit tests and full-match
+completion still hold with this wired in.
+
+Critically, **no paired grapple animations exist yet** — this
+single-character rig covers locomotion, strikes, and getups, but the
+plan's "no free CC0 paired grapple animations exist" constraint still
+holds: those 12 grapple + 6 reversal moves still need authoring in
+Blender as two-rig scenes, which is Blender work I haven't attempted.
 
 Still open before the gauntlet (Phase 4) can start:
 
 - **Phase 1** — populate `gauntlet/refs/` from real WWE 2K (or WWF No
   Mercy emulator, as fallback) footage. Currently placeholder/pending.
-- **Phase 3 (remainder)** — animation-state wiring, ring/arena art, and
-  the paired grapple/reversal animation authoring above.
+- **Phase 3 (remainder)** — a real `AnimationTree` blend graph, ring/arena
+  art, and the paired grapple/reversal animation authoring above.
 
 See `gauntlet/anchor/ARCHITECTURE.md` for the full contract and
 `gauntlet/refs/VISUAL_BAR.md` / `FEEL_BAR.md` for the anchor docs each
