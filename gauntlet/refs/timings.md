@@ -41,19 +41,44 @@ measured sequence doesn't straddle a cut before citing a number from it.
   that resolves on-camera in this clip or another one).**
 
 ## Strike startup / active / recovery
-- (pending — this clip's compilation cuts made it hard to isolate one
-  clean, uninterrupted strike within the time spent; the getup and tie-up
-  measurements above were prioritized as the two most directly load-bearing
-  numbers against this project's existing placeholder constants)
+- **Startup (windup-begin to first contact): ~4 frames (0.13s @ 30fps)** —
+  `wwe2k26_footage_01.mp4`, 668.300s (`frames/strike_windup_start.jpg`, arm
+  first pulls back) to 668.433s (`frames/strike_contact.jpg`, fists
+  connect), Goldberg vs. Brock Lesnar, same match as the getup measurement
+  above but later in. Converted to this project's 60Hz tick basis:
+  ~8 ticks, vs. `strike_jab.tres`'s `startup_frames = 6` — close, on the
+  same order, current placeholder reads slightly fast but not by much.
+- **Active/recovery: not cleanly separable from this instance.** The
+  observed exchange was two wrestlers trading rapid jabs — the attacker's
+  own recovery pose overlaps the opponent's counter-strike startup, so
+  there's no clean single-wrestler "back to neutral" frame to cite.
+  `strike_jab.tres` (`active_frames = 4`, `recovery_frames = 10`) stays
+  unconfirmed for now — needs an isolated single strike (one wrestler
+  attacking a non-retaliating or blocking opponent) from another clip.
 
 ## Reversal window length
 - (pending — needs a frame-stepped reversal input-to-window sequence, not
   found yet in this clip)
 
+## Submission hold duration (single attempt, to referee intervention)
+- **~2.5s (673.00s–675.5s)** — `wwe2k26_footage_01.mp4`, hold applied at
+  673.00s (`frames/submission_hold_applied.jpg`, hold-progress gauge
+  appears) to the referee raising both arms at 675.5s
+  (`frames/submission_ref_break_signal.jpg`), same match, ~5 minutes after
+  the strike measurement above. Read as a rope-break signal (the hold was
+  applied near the ropes) rather than a submission win, so this measures
+  one hold-to-break cycle, not a full submission-to-tap-out. Not directly
+  cited by any existing constant in this project (`SubmissionMinigame`'s
+  `attacker_rate`/`defender_rate` in `wrestler_controller.gd` are per-tick
+  rates, not a fixed duration this number converts cleanly against) — logged
+  as a real data point for whoever tunes that minigame later.
+
 ## Three-count cadence
 - (pending — this clip's visible finish (~750s) cuts to a slow-motion
-  finisher replay rather than showing a three-count on camera; need a
-  clip with an on-screen pinfall count)
+  finisher **replay package** — confirmed by an on-screen "REPLAY" badge,
+  which is broadcast-edited slow-motion, not the actual live pace, so it's
+  explicitly excluded rather than mismeasured. Need a clip with an
+  on-screen pinfall count that isn't inside a replay package.)
 
 ## Ring-crossing run speed
 - (pending — needs a running sequence across a known ring dimension; not

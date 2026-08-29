@@ -64,6 +64,18 @@ crops: `gauntlet/refs/hud/vitality_bar_full_health.png`,
   bar in miniature (small supporting evidence, not a full verification —
   that still needs real in-match lighting range footage).
 
+## Submission/hold contest meter
+- One new element confirmed from the gameplay clip (`hud/submission_hold_meter.jpg`,
+  also `frames/submission_hold_applied.jpg` — see `timings.md`'s submission
+  measurement): during a submission/rope-adjacent hold, a horizontal
+  two-color bar appears center-bottom labeled "HOLD", split red
+  (attacker side) / blue (defender side) — reads as a tug-of-war contest
+  meter, distinct from either wrestler's corner vitality bar. A button
+  prompt (L1 / CANCEL) sits just above it. Not seen in any of the static
+  promotional screenshots — this project's `SubmissionMinigame` doesn't
+  currently render anything like this on-screen; worth considering once
+  submissions get UI.
+
 ## Fill animation behavior
 - Easing, flash-on-threshold, damage-tick delay: **(pending — needs
   frame-stepped video.)** A still can show that damage is a revealed
