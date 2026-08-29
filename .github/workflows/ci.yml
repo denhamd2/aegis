@@ -20,7 +20,9 @@ jobs:
       - name: Install gdUnit4
         run: |
           mkdir -p game/addons
-          git clone --depth 1 --branch v5.0.0 \
+          # v5.0.0 does not compile against Godot 4.6 (GDScript API changes);
+          # v6.2.1 is the newest tag confirmed to import and run cleanly.
+          git clone --depth 1 --branch v6.2.1 \
             https://github.com/MikeSchulze/gdUnit4.git /tmp/gdUnit4
           cp -r /tmp/gdUnit4/addons/gdUnit4 game/addons/gdUnit4
 
@@ -31,7 +33,7 @@ jobs:
         run: |
           godot --headless --path game \
             -s addons/gdUnit4/bin/GdUnitCmdTool.gd \
-            -a run -c -rd res://tests
+            -a res://tests -c --ignoreHeadlessMode
 
   evidence-gate-smoke:
     runs-on: ubuntu-latest

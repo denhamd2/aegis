@@ -48,10 +48,10 @@ grapple_rig_path = NodePath("../GrappleRig")
 [node name="MatchCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 0, 1.8, 6)
 script = ExtResource("4")
-wrestler_a = NodePath("../WrestlerA")
-wrestler_b = NodePath("../WrestlerB")
+wrestler_a_path = NodePath("../WrestlerA")
+wrestler_b_path = NodePath("../WrestlerB")
 
 [node name="MatchReferee" type="Node" parent="."]
 script = ExtResource("5")
-wrestler_a = NodePath("../WrestlerA")
-wrestler_b = NodePath("../WrestlerB")
+wrestler_a_path = NodePath("../WrestlerA")
+wrestler_b_path = NodePath("../WrestlerB")

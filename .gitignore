@@ -3,6 +3,10 @@ game/.godot/
 game/export_presets.cfg
 *.translation
 
+# gdUnit4 is fetched by CI (see .github/workflows/ci.yml), not vendored
+game/addons/gdUnit4/
+game/reports/
+
 # Capture output (large, regenerated)
 gauntlet/refs/raw/*
 !gauntlet/refs/raw/README.md

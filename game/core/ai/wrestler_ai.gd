@@ -35,11 +35,11 @@ func poll_input() -> Dictionary:
 		"run": false,
 	}
 
-	if distance <= strike_range and _cooldown <= 0:
+	if distance <= tie_up_range:
+		input["grapple"] = true
+	elif distance <= strike_range and _cooldown <= 0:
 		input["strike"] = true
 		_cooldown = strike_cooldown_ticks
-	elif distance <= tie_up_range:
-		input["grapple"] = true
 	elif distance > strike_range:
 		var dir := to_target.normalized()
 		input["move"] = Vector2(dir.x, dir.z)

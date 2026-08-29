@@ -10,15 +10,22 @@ signal match_won(winner: WrestlerController, method: String)
 const PIN_COUNT_TICKS := 180 # three-count at 60Hz, one count per 60 ticks
 const COVER_RANGE := 1.2
 
-@export var wrestler_a: WrestlerController
-@export var wrestler_b: WrestlerController
+@export var wrestler_a_path: NodePath
+@export var wrestler_b_path: NodePath
 @export var match_seed: int = 0
+
+var wrestler_a: WrestlerController
+var wrestler_b: WrestlerController
 
 var _pin_ticks: int = 0
 var _pinning: bool = false
 var _pin_attacker: WrestlerController
 var _pin_defender: WrestlerController
 var _match_over: bool = false
+
+func _ready() -> void:
+	wrestler_a = get_node(wrestler_a_path)
+	wrestler_b = get_node(wrestler_b_path)
 
 func _physics_process(_delta: float) -> void:
 	if _match_over:

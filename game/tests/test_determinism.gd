@@ -26,7 +26,7 @@ func test_different_seed_hash_differs() -> void:
 	assert_str(_simulate_and_hash(replay_a)).is_not_equal(_simulate_and_hash(replay_b))
 
 func _simulate_and_hash(replay: ReplayResource) -> String:
-	var rs := load("res://core/replay/replay_system.gd").new()
+	var rs: Node = auto_free((load("res://core/replay/replay_system.gd") as GDScript).new())
 	rs.start_playback(replay)
 	var snapshot := {
 		"seed": replay.match_seed,

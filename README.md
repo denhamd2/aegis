@@ -39,11 +39,24 @@ wires two capsule wrestlers (`wrestler.tscn`), a box ring (`ring.tscn`),
 tie-up → grapple → move → hit-react/down, pin cover → kickout minigame →
 three-count win, and one scripted AI opponent (`WrestlerAI`).
 
+This has been verified against a real Godot 4.6.3-stable binary (headless):
+the project imports cleanly, `game/scenes/match.tscn` runs with zero script
+errors, and all 7 gdUnit4 tests pass (0 errors, 0 failures, 0 orphans). That
+pass caught and fixed several real bugs — untyped-Variant compile errors,
+exported `Node`-typed fields silently staying null when assigned via
+`NodePath` in a flat `.tscn` (fixed by resolving explicit `NodePath` exports
+in `_ready()`), `GrappleRig` never resolving without a paired animation
+clip, the grapple move resolver discarding the attacker's chosen move, an
+`AI` range-priority bug that meant tie-ups never triggered, and `CombatSystem`
+leaking orphan `Node` instances because it extended `Node` with no scene-tree
+need (now `RefCounted`). `gdUnit4` v5.0.0 (the tag CI originally pinned)
+doesn't compile against Godot 4.6 — CI now pins v6.2.1, confirmed working.
+
 Known Phase 2 gaps, honestly:
-- Not run inside the Godot editor — this environment has no Godot binary,
-  so the scenes/scripts above are hand-authored and logic-traced but
-  unverified at runtime. Opening the project in Godot 4.6.3 and playtesting
-  is the first thing to do before trusting this further.
+- Not played by a human yet — verification above is import + headless
+  script-error-free execution + unit tests, not a playtest. Whether the
+  match *feels* right (and whether a full match reaches a three-count in
+  reasonable time against the AI) is still unconfirmed.
 - `GrappleRig` has no paired animation library yet (Phase 3), so it falls
   back to resolving on the move's frame count via a timer instead of an
   `AnimationPlayer` signal — replace once paired clips exist.

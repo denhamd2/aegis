@@ -1,5 +1,5 @@
 class_name CombatSystem
-extends Node
+extends RefCounted
 ## Per-limb damage accumulation, momentum, and derived gates
 ## (submission effectiveness, kickout difficulty).
 
@@ -48,5 +48,5 @@ func kickout_window_fraction(opponent_momentum: float) -> float:
 ## the defender's ring shrink faster (closer to tapping).
 func submission_break_rate(target_limb: Limb) -> float:
 	var base_rate := 1.0
-	var limb_factor := 1.0 + (limb_damage[target_limb] / MAX_LIMB_DAMAGE)
+	var limb_factor: float = 1.0 + (float(limb_damage[target_limb]) / MAX_LIMB_DAMAGE)
 	return base_rate * limb_factor
