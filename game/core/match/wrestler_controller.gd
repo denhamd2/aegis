@@ -25,6 +25,13 @@ const GETUP_TICKS := 90 # 1.5s
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
 const TIE_UP_RESOLVE_TICKS := 30
+## States WrestlerFSM.LEGAL_TRANSITIONS actually allows a TIE_UP transition
+## from — both sides of a grapple attempt must be in one of these, or the
+## attempt is silently dropped (see the gate in _process_free_movement()).
+const _CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.IDLE,
+	WrestlerFSM.State.LOCOMOTION,
+]
 
 @export var player_index: int = 0
 @export var is_ai: bool = false
@@ -270,7 +277,24 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 
 	if input.get("strike", false) and strike_move:
 		_start_move(WrestlerFSM.State.STRIKE, strike_move)
-	elif input.get("grapple", false) and opponent and _in_range(TIE_UP_RANGE):
+	elif input.get("grapple", false) and opponent and _in_range(TIE_UP_RANGE) \
+			and _CAN_ENTER_TIE_UP.has(fsm.current_state) \
+			and _CAN_ENTER_TIE_UP.has(opponent.fsm.current_state):
+		# Forcing the opponent into TIE_UP without checking its state is
+		# illegal whenever it's mid-strike, reacting to a hit, running, etc.
+		# (only IDLE/LOCOMOTION legally transition into TIE_UP per
+		# WrestlerFSM.LEGAL_TRANSITIONS) — WrestlerFSM.transition_to()'s
+		# assert() logs but does not actually block the illegal transition,
+		# so an unguarded call here left the opponent's FSM state and its
+		# _is_grapple_attacker bookkeeping permanently desynced: the
+		# opponent's state silently failed to change, but _process_tie_up()
+		# still later assigned it the attacker/defender role and tried to
+		# push it into GRAPPLE_HOLD from whatever unrelated state it was
+		# actually stuck in — itself illegal and silently dropped, so
+		# neither wrestler's _physics_process match statement ever routed
+		# to _process_grapple_hold() again. A real deadlock, not a rare
+		# one: any grapple attempted while the opponent is mid-anything-else
+		# hits it, so gate here instead of after the fact.
 		fsm.transition_to(WrestlerFSM.State.TIE_UP)
 		opponent.fsm.transition_to(WrestlerFSM.State.TIE_UP)
 		_tie_up_ticks = 0

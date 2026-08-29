@@ -50,11 +50,18 @@ func poll_input() -> Dictionary:
 
 	if distance <= tie_up_range:
 		input["grapple"] = true
-	elif distance <= strike_range and _cooldown <= 0:
-		input["strike"] = true
-		_cooldown = strike_cooldown_ticks
-	elif distance > strike_range:
+	else:
+		# Keep closing all the way to tie_up_range even once already inside
+		# strike_range — tie_up_range < strike_range, so a wrestler that
+		# stopped advancing the moment it could strike would settle at
+		# strike_range forever and never reach tie_up_range at all. Strike
+		# opportunistically while still approaching (matches this class's
+		# own doc comment: "strikes when not in [tie-up] range"), not as a
+		# reason to stop.
 		var dir := to_target.normalized()
 		input["move"] = Vector2(dir.x, dir.z)
+		if distance <= strike_range and _cooldown <= 0:
+			input["strike"] = true
+			_cooldown = strike_cooldown_ticks
 
 	return input

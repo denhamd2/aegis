@@ -106,6 +106,71 @@ Known Phase 2 gaps, honestly:
   AI — pin/kickout is the only win-condition path wired end to end.
 - Tie-up resolution is still a placeholder rule (lower player index wins).
 
+## Bugfix: the AI never actually grappled, and why
+
+A 45-second real capture (`godot4 --write-movie`, real OpenGL render) turned
+up something the earlier "Match won by pinfall" checks never caught: an
+AI-vs-passive match is just an infinite strike loop. Frame-stepping the
+capture and cross-checking it against an instrumented headless run (state
+transitions + landed hits + position, logged every tick) found the real
+cause in `WrestlerAI.poll_input()`: the only branch that produces movement
+was `distance > strike_range`, so the moment the AI closed to strike range
+(1.6m) it stopped advancing forever — `tie_up_range` (1.3m) is *closer*
+than `strike_range`, so it never had a reason to cover the remaining 0.3m.
+This is deterministic, not unlucky: any AI using that decision order
+settles at strike range and never ties up, every time — which is exactly
+why grapples never fired naturally in any of the 11 seeds tested in an
+earlier session, or in the seed used for the capture.
+
+Fixed by making the AI keep closing all the way to `tie_up_range`
+regardless of whether it's already in strike range, striking
+opportunistically while still approaching rather than treating a strike as
+a reason to stop (`core/ai/wrestler_ai.gd`) — matching the class's own
+pre-existing doc comment ("strikes when not in [tie-up] range") that the
+old code didn't actually implement.
+
+That fix immediately exposed a second, more serious pre-existing bug it
+had never been able to reach before: `WrestlerController._process_free_movement()`
+force-transitions the *opponent* into `TIE_UP` with no check on the
+opponent's current state. The first real tie-up attempt fired while the
+opponent was still in `HIT_REACT` — an illegal transition per
+`WrestlerFSM.LEGAL_TRANSITIONS` — and `WrestlerFSM.transition_to()`'s
+`assert()` only *logs* an illegal transition, it doesn't block it, except
+the state assignment lines never execute (an assert failure aborts the
+rest of the function in this Godot version), so the opponent's FSM state
+silently failed to change while `_process_tie_up()` went on to assign it
+the attacker role and shove it toward `GRAPPLE_HOLD` anyway — from a state
+that transition was *also* illegal, and *also* silently dropped. Net
+effect: a permanent deadlock, both wrestlers frozen, the instant a grapple
+was ever attempted while the opponent wasn't idle/walking. Fixed by gating
+the tie-up attempt on both wrestlers actually being in a state
+`LEGAL_TRANSITIONS` allows into `TIE_UP` (`IDLE`/`LOCOMOTION`) before
+touching either FSM.
+
+Verified against the real Godot binary: 7/7 unit tests hold, and a fresh
+instrumented run (same method as above) now shows a real, varied match —
+repeated tie-up → grapple_suplex/signature_backbreaker → hit-react cycles,
+a real knockdown, and the referee correctly starting a pin sequence — with
+zero illegal-transition errors across 8 different seeds (1, 2, 3, 4, 5, 7,
+9, 11).
+
+**This surfaced a third, real gap, left as-is rather than silently
+rebalanced:** the pin sequence now genuinely starts, but the AI-controlled
+defender mashes the kickout input every single tick (its documented
+grey-box behavior for `PIN_DEFENDER`) and the kickout window is generous
+enough at realistic damage levels that it escapes essentially every
+attempt — so the match can loop through pin attempts indefinitely without
+ever reaching a three-count. The referee's count/reset logic is correct
+(checked directly, not assumed); this is a balance question about
+`CombatSystem.kickout_window_fraction()` and the AI's kickout behavior,
+which `ARCHITECTURE.md` explicitly reserves for gauntlet-round tuning, not
+something to fix incidentally while chasing a logic bug. Also worth
+noting: `WrestlerController._process_tie_up()`'s "lower player index wins"
+placeholder rule means whichever wrestler is index 0 wins *every* tie-up
+deterministically — combined with the fix above, this means the passive
+"player" slot (`player_index = 0`) will now always end up as the grapple
+attacker in an AI-vs-passive match, not the AI.
+
 ## Phase 3 progress: retargeting base mesh
 
 `game/assets/characters/wrestler_base.glb` (and `_root_motion` variant) is
