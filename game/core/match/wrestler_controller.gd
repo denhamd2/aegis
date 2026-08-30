@@ -191,16 +191,6 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 		return
 	_anim_playback.travel(state_name)
 
-## Called by GrappleRig, which owns both skeletons' poses for the duration
-## of a paired move — our own per-wrestler AnimationTree runs every idle
-## frame same as GrappleRig's paired AnimationPlayer, so without this both
-## would fight over the same Skeleton3D bones and whichever processes last
-## in scene-tree order would silently win, leaving the paired move
-## invisible. Restored (re-activated) once GrappleRig hands control back.
-func set_grapple_animation_override(active: bool) -> void:
-	if anim_tree:
-		anim_tree.active = not active
-
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():
 		opponent = get_node(opponent_path)

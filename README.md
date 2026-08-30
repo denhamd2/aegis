@@ -343,3 +343,50 @@ grey-box step.
 See `gauntlet/anchor/ARCHITECTURE.md` for the full contract and
 `gauntlet/refs/VISUAL_BAR.md` / `FEEL_BAR.md` for the anchor docs each
 gauntlet round is judged against.
+
+## Phase 3 fix: the suplex's bind-pose limbs, and a retimed arc
+
+The first paired-animation pass (above) silenced each wrestler's own
+`AnimationTree` for the move's duration and hand-authored a handful of arm/
+spine bone tracks on top of the root-transform throw arc, to avoid the two
+fighting over the same `Skeleton3D` bones. That traded one bug for a worse
+one: every bone the clip *didn't* cover (legs, remaining spine, head, the
+other arm) had nothing driving it once the `AnimationTree` went inactive,
+so both wrestlers snapped to bind pose — arms straight out, legs straight —
+for the whole move, visible in a real render even though the throw arc
+itself was correct.
+
+Root cause: the conflict was never inherent to having both systems active,
+only to both writing the *same data*. `GrappleRig`'s paired clip only ever
+needs to own the whole-body root transform (the throw trajectory); it never
+needed the individual bones at all. Removed the bone tracks from
+`grapple_suplex.tres` and `set_grapple_animation_override()` /
+`_set_pose_override()` entirely — each wrestler's `AnimationTree` now stays
+active throughout a grapple, continuously posing its own skeleton (idle/
+strike-adjacent pose, not a real grab/lift pose yet — a separate, honest
+gap, not one this fix claims to close), while `GrappleRig` drives only the
+root transforms both wrestlers are parented under. Two systems, disjoint
+data, no ownership hack required.
+
+While already touching the clip, retimed the throw arc: the original had
+the defender already well into the inverted/falling rotation by ~40% of
+the clip and reaching peak height at 70%, which read as too fast a
+"falling" read before the lift had visually finished. Re-keyed both
+position and rotation tracks so the defender's rise, apex (peak height
+~2.4 units, hit at 53% of the clip), and descent are each a clearer,
+separated beat.
+
+Verified against the real Godot binary: 7/7 unit tests still pass. A
+direct instrumented run (same tick-logging method as earlier verifications)
+confirms the grapple now fires *naturally* from a live match's own AI/tie-up
+path (not just the earlier direct-invocation harness that bypassed AI/RNG)
+— tie-up → grapple_suplex fires at tick 725, root positions and rotations
+follow the retimed curve exactly (apex at animpos≈0.53), the animation
+finishes cleanly (`animplaying` false, both wrestlers back to independent
+FSM states), and a second natural grapple fires later in the same run with
+zero script errors or warnings across the whole capture. Full-match
+pinfall completion (`scenes/match.tscn` under `--fixed-fps 6000`) was not
+re-confirmed this pass — it now runs long enough to exceed a 60s wall-clock
+check, consistent with the already-documented kickout-escapes-every-attempt
+gap above, not a regression from this change (the grapple/animation path
+that changed here has no interaction with pin/kickout logic).
