@@ -244,9 +244,10 @@ Still open before the gauntlet (Phase 4) can start:
   package, explicitly not used), ring-crossing run speed, and all of
   `feel.md` (input latency needs a visible input overlay, which broadcast-
   style gameplay footage doesn't have) — more clips would help most here.
-- **Phase 3 (remainder)** — 17 of the 18 paired grapple/reversal moves
-  (see below: one, the suplex, has a real first-pass paired animation;
-  the AI/tie-up path to actually reach it in a live match is a separate,
+- **Phase 3 (remainder)** — 16 of the 18 paired grapple/reversal moves
+  (see below: three so far — suplex, signature backbreaker, finisher
+  piledriver — have real first-pass paired animations; the AI/tie-up path
+  to actually reach them in a live match is a separate,
   still-open gap).
 
 ## Phase 3 progress: first paired grapple animation (suplex)
@@ -390,3 +391,85 @@ re-confirmed this pass — it now runs long enough to exceed a 60s wall-clock
 check, consistent with the already-documented kickout-escapes-every-attempt
 gap above, not a regression from this change (the grapple/animation path
 that changed here has no interaction with pin/kickout logic).
+
+## Phase 3 progress: two more paired moves (backbreaker, piledriver)
+
+`resources/animations/paired_moves.tres` replaces `grapple_suplex.tres` as
+`GrappleRig`'s single `AnimationLibrary` — same "" (default) library key so
+`animation_player.has_animation(move.animation_pair_id)` keeps working by
+bare name, now holding three clips instead of one: `grapple_suplex`
+(unchanged), and two new ones, `signature_backbreaker` and
+`finisher_piledriver`, filling in the animations for `MoveDef` resources
+that already existed and were already wired into `match.tscn`'s
+`signature_move`/`finisher_move` exports but had no clip to play (falling
+back to `GrappleRig`'s grey-box timer path — no visible animation).
+`finisher_move` itself wasn't wired into `match.tscn` at all before this;
+it is now, on both wrestlers. **2 of 18 required moves now have real
+animations, up from 1.**
+
+Built with the same script-authored, root-transforms-only approach as the
+suplex (`../WrestlerA`/`../WrestlerB` `POSITION_3D`/`ROTATION_3D` tracks
+only, no bone tracks — see `grapple_rig.gd`'s class doc for why bone
+tracks on a paired clip are a trap). Backbreaker: pulled in, hoisted across
+a raised knee (peak height ~1.55, well below the suplex's ~2.4 overhead
+hold — this move never lifts higher than shoulder height), arched, then
+lowered flat onto the mat past the attacker's far side. Piledriver: pulled
+in, hoisted fully inverted (peak height ~2.2, same order as the suplex's
+overhead hold), driven down between the attacker's legs, then rolled out
+flat.
+
+**A real geometry bug, caught and fixed before shipping, not smoothed
+over:** the root sits at the wrestler's feet, so a rotated body's far end
+(the head, `BODY_HEIGHT` = 1.8 units away) sits at world height `root_y +
+BODY_HEIGHT * cos(flip)` — whenever that's negative, the far end is below
+the mat, not just clipped into it but fully invisible (backface-culled by
+the floor). A first-draft backbreaker curve dropped the root height to
+near-zero *before* its rotation had finished swinging through the
+vertical-inverted range, so most of the defender's body computed to a
+negative world height every frame during the back half of the drop — direct
+OpenGL captures (`xvfb-run --rendering-driver opengl3`, a temporary
+in-scene harness calling `GrappleRig.begin()` directly, same verification
+method as the suplex) showed only the attacker standing alone, with a
+single stray limb fragment on the mat where the rest of the body should
+have been — not a bind pose this time, a body that had gone almost
+entirely below the floor. The piledriver's descent had the identical bug
+for the same reason (its own height curve dropped below the clearance
+`BODY_HEIGHT * |cos(flip)|` needs at that instant). Fixed by keeping each
+move's height key at or above that clearance requirement at every sampled
+point — for the backbreaker, by never rotating past ~115° off horizontal
+in the first place (it's a knee-height rack, not an overhead hold, so nothing
+requires it to swing through a full inversion); for the piledriver, by
+matching the suplex's own already-proven height/rotation pairing instead of
+inventing a steeper new one. Re-verified with the same direct-capture method
+after the fix: both moves now show a fully separated, fully visible
+defender at every sampled tick from grab to landing.
+
+Verified against the real Godot binary: 7/7 unit tests still pass with the
+new scene wiring (renamed `AnimationLibrary` resource, added `finisher_move`
+export on both wrestlers). Direct-invocation OpenGL captures (bypassing
+AI/RNG, same method noted above) confirm both new clips render correctly
+mid-move — no bind-pose limbs, no invisible/underground body parts — at
+15%, 50%, and 85% through each animation.
+
+Honest gaps, not smoothed over:
+- **This is 2 more of 18 required moves** (12 grapple + 6 reversal per
+  `ARCHITECTURE.md`'s scope), same first-pass grey-box caveat as the
+  suplex: biomechanics are plausible, not motion-captured, and a gauntlet
+  builder should expect to retune the curves with the animation visible,
+  not blind.
+- **Not verified firing naturally from a live match.** Like the suplex
+  before its own follow-up fix, these were verified via direct
+  `GrappleRig.begin()` invocation, not by a real match's AI reaching
+  `GRAPPLE_HOLD` with enough momentum for `can_signature()`/`can_finisher()`
+  to pick them over the base grapple. The suplex's own "AI rarely reaches
+  a grapple at all" gap (documented above) applies here too, compounded by
+  needing the momentum thresholds (60/100) actually met first.
+- **What happens in the few ticks right after each animation ends, once
+  `GrappleRig` hands control back to each `WrestlerController`'s own
+  physics, was not verified end-to-end** — only checked here via the same
+  direct-invocation harness that bypasses the controller's own
+  `_resolve_grapple_move()` FSM handoff, so it doesn't exercise the real
+  post-move transition path. The suplex's existing live-match path (once
+  it fires) already goes through that handoff correctly; these two moves
+  should too by the same wiring, but it wasn't independently re-confirmed
+  this pass.
