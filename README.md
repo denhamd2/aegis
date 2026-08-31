@@ -451,6 +451,33 @@ AI/RNG, same method noted above) confirm both new clips render correctly
 mid-move — no bind-pose limbs, no invisible/underground body parts — at
 15%, 50%, and 85% through each animation.
 
+Honest gaps, not smoothed over:
+- **This is 2 more of 18 required moves** (12 grapple + 6 reversal per
+  `ARCHITECTURE.md`'s scope), same first-pass grey-box caveat as the
+  suplex: biomechanics are plausible, not motion-captured, and a gauntlet
+  builder should expect to retune the curves with the animation visible,
+  not blind.
+- **Not directly confirmed firing via their own momentum-gated path in a
+  live match** (i.e. specifically observed as the clip `GrappleRig` played,
+  not just that damage/momentum totals climbed) — verified here only via
+  direct `GrappleRig.begin()` invocation. The follow-up fix below confirms
+  grapples in general now fire rapidly and reliably in a live match and
+  push a real match all the way to a knockdown/pin, which makes it very
+  likely `can_signature()`/`can_finisher()` do eventually pick these over
+  the base grapple (momentum passes both the 60 and 100 thresholds within
+  the first several landed grapples at `grapple_suplex.tres`'s own 18
+  momentum-gain per hit), but that specific selection wasn't independently
+  logged and confirmed this pass.
+- **What happens in the few ticks right after each animation ends, once
+  `GrappleRig` hands control back to each `WrestlerController`'s own
+  physics, was not verified end-to-end** — only checked here via the same
+  direct-invocation harness that bypasses the controller's own
+  `_resolve_grapple_move()` FSM handoff, so it doesn't exercise the real
+  post-move transition path. The suplex's existing live-match path (once
+  it fires) already goes through that handoff correctly; these two moves
+  should too by the same wiring, but it wasn't independently re-confirmed
+  this pass.
+
 ## Bugfix: every landed grapple dealt zero damage
 
 Went looking for why a live match still didn't seem to progress even after
@@ -498,13 +525,21 @@ the same instrumented method: `b_dmg` now climbs `28.0 -> 56.0 -> 84.0 ->
 112.0` across four consecutive landed grapples (28 = `grapple_suplex.tres`'s
 `damage_head + damage_torso + damage_arms + damage_legs`, exactly as
 expected), with the defender correctly cycling `MOVE_EXEC -> HIT_REACT ->
-IDLE` each time instead of snapping straight back to `IDLE` untouched. A
-longer run to directly confirm a full knockdown -> pin sequence with this
-fix in place was started but not completed this pass (real-wall-clock-paced
-headless physics makes a 90-second match's worth of ticks slow to simulate
-without `--fixed-fps`); the per-cycle damage accumulation above makes the
-outcome arithmetically certain (~8 landed grapples clears 200) but isn't
-the same as watching it happen.
+IDLE` each time instead of snapping straight back to `IDLE` untouched.
+
+**Follow-up: confirmed end-to-end, not just arithmetically likely.** The
+first pass at a longer run timed out (real-wall-clock-paced headless
+physics makes a 90-second match's worth of ticks slow to simulate without
+`--fixed-fps`) — re-ran the same instrumented match with `--fixed-fps 600`,
+which decouples physics from wall-clock pacing (5 seeds x 90 game-seconds
+completed in ~16 real seconds). **All 5 seeds (1-5)** reached a real
+knockdown and a correctly-started pin: `b_dmg` crossed the 200 threshold
+(204.0 in every seed tested) and both wrestlers landed in
+`PIN_ATTACKER`/`PIN_DEFENDER`, not stuck looping. None reached a full
+pinfall *win* inside the 90s window — expected, not a new gap: this is the
+already-documented, separately-scoped kickout-escapes-nearly-every-attempt
+balance issue (`ARCHITECTURE.md` reserves that kind of tuning for gauntlet
+rounds), not something this fix touches.
 
 **Also worth flagging:** an earlier commit's own verification note (the
 "AI never actually grappled" bugfix above) claims a confirmed "real
@@ -518,26 +553,3 @@ more than a short pre-tie-up approach produces. Left as-is rather than
 edited after the fact — flagging the discrepancy here instead, since this
 session's own re-verification is what should be trusted going forward, not
 retroactively rewriting what an earlier one claimed.
-
-Honest gaps, not smoothed over:
-- **This is 2 more of 18 required moves** (12 grapple + 6 reversal per
-  `ARCHITECTURE.md`'s scope), same first-pass grey-box caveat as the
-  suplex: biomechanics are plausible, not motion-captured, and a gauntlet
-  builder should expect to retune the curves with the animation visible,
-  not blind.
-- **Not verified firing naturally from a live match.** Like the suplex
-  before its own follow-up fix, these were verified via direct
-  `GrappleRig.begin()` invocation, not by a real match's AI reaching
-  `GRAPPLE_HOLD` with enough momentum for `can_signature()`/`can_finisher()`
-  to pick them over the base grapple. The suplex's own "AI rarely reaches
-  a grapple at all" gap (documented above) applies here too, compounded by
-  needing the momentum thresholds (60/100) actually met first.
-- **What happens in the few ticks right after each animation ends, once
-  `GrappleRig` hands control back to each `WrestlerController`'s own
-  physics, was not verified end-to-end** — only checked here via the same
-  direct-invocation harness that bypasses the controller's own
-  `_resolve_grapple_move()` FSM handoff, so it doesn't exercise the real
-  post-move transition path. The suplex's existing live-match path (once
-  it fires) already goes through that handoff correctly; these two moves
-  should too by the same wiring, but it wasn't independently re-confirmed
-  this pass.
