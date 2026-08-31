@@ -35,6 +35,12 @@ func poll_input() -> Dictionary:
 		return {"strike": _should_press_kickout(_pin_defender_tick, controller._pin_minigame)}
 	_pin_defender_tick = 0
 	_last_kickout_press_tick = -1000
+	if controller.fsm.current_state == WrestlerFSM.State.SUBMISSION_DEFENDER:
+		# Held every tick, not rate-limited: SubmissionMinigame is a genuine
+		# continuous-hold rate race (see submission_minigame.gd), unlike
+		# PinMinigame's press-limited fill-meter, so there's no discrete-press
+		# semantic to model here.
+		return {"submission_hold": true}
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 

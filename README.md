@@ -101,9 +101,11 @@ Known Phase 2 gaps, honestly:
   progress below) but 17 more moves' worth of clips still fall back to
   resolving on the move's frame count via a timer instead of an
   `AnimationPlayer` signal.
-- Irish whip, running attacks, reversals, and submissions have FSM states
-  and (for submission) a minigame, but aren't yet driven by the referee or
-  AI — pin/kickout is the only win-condition path wired end to end.
+- Irish whip, running attacks, and reversals have FSM states but aren't yet
+  driven by the referee or AI. Submission was in the same boat as of this
+  writing, but is now wired end to end (see "Feature: wire submissions into
+  the referee and AI" below) — pin/kickout and submission/tap-out are both
+  real, reachable win-condition paths now.
 - Tie-up resolution is still a placeholder rule (lower player index wins).
 
 ## Bugfix: the AI never actually grappled, and why
@@ -657,3 +659,89 @@ long coin-flip grind. Full unit suite (12/12, including the new kickout
 tests above) still passes unmodified; this fix touches
 `match_referee.gd`/`wrestler_controller.gd` state handling only, not
 `combat_system.gd`'s formula or the kickout-minigame calibration.
+
+## Feature: wire submissions into the referee and AI
+
+Submission code has existed for a while — `WrestlerFSM.State.SUBMISSION_ATTACKER`/
+`SUBMISSION_DEFENDER`, `SubmissionMinigame` (a deterministic dual-ring
+break-point race), `CombatSystem.submission_break_rate()`, and
+`WrestlerController.begin_submission()` — but nothing ever called it.
+`MatchReferee`'s own doc comment claimed it drove "pin or submission
+resolution"; in reality it had zero references to submission anywhere.
+Previously logged as a known Phase 2 gap: "submissions have FSM states and a
+minigame, but aren't yet driven by the referee or AI." This pass wires it up
+end to end and, in the process, found and fixed two real bugs verification
+turned up rather than guessed at.
+
+**Bug 1 — dead on arrival:** `WrestlerFSM.LEGAL_TRANSITIONS` had no entry
+transitioning *into* `SUBMISSION_ATTACKER` from any state. The first time
+anything called `begin_submission()`, its own `fsm.transition_to(SUBMISSION_ATTACKER)`
+would have hit the `assert()` in `WrestlerFSM.transition_to()`. Never caught
+because nothing had ever exercised the path. Fixed by adding
+`SUBMISSION_ATTACKER` to `LEGAL_TRANSITIONS[IDLE]` and `[LOCOMOTION]`, in the
+same place `PIN_ATTACKER` already sits in both.
+
+**Bug 2 — a guaranteed-loss race, same category as the kickout bug above:**
+`submission_break_rate()`'s `limb_factor` is `1.0 + limb_damage/100`, so the
+attacker's rate is always >= 1.0 even on a fully undamaged limb. The
+existing `defender_rate := 0.9` constant loses that race unconditionally —
+attacker reaches the break point at `100/1.0 = 100` ticks worst case,
+defender at `100/0.9 = 111` — the attacker always arrives first, regardless
+of which limb or how damaged it was. Deciding *when* to attempt a submission
+also needed a rule: added `CombatSystem.most_damaged_limb()` and a
+`SUBMISSION_LIMB_THRESHOLD = 70` (70% of `MAX_LIMB_DAMAGE`) gate in
+`MatchReferee` — a downed opponent's most-damaged limb crossing that
+threshold triggers a submission attempt on that limb instead of a pin. That
+gate means the attacker's *realistic* rate at the moment a submission can
+even start is never below `1.0 + 0.70 = 1.7`, so `defender_rate` was
+retuned to `1.8` — inside the actual reachable band, not the theoretical one
+— to make it a genuine contest instead of another guaranteed one-way race.
+
+New `test_submission_minigame.gd` (4 cases) confirms the retuned rates
+produce a real contest across that band (defender favored at the threshold
+floor, attacker favored at a fully-capped limb, not flat one way across
+it) and that the defender's hold input is load-bearing (never holding never
+escapes). `CombatSystem.most_damaged_limb()` got its own 2 cases in
+`test_combat_system.gd`. Full suite: 18/18, 0 errors, 0 failures.
+
+**Bug 3, caught only by the live probe, not the unit tests:** the unit
+tests exercise `SubmissionMinigame`'s rate math directly and passed cleanly
+— but the first live 5-seed `--fixed-fps 600` run showed every single
+submission attempt ending in an escape, regardless of how damaged the
+targeted limb actually was. Root cause: `begin_submission()`'s
+`combat.submission_break_rate(target_limb)` reads `combat` unqualified,
+which is `self` — the **attacker's own** `CombatSystem`, not the
+defender's. The attacker's own limb is rarely damaged on the same limb it's
+targeting, so `attacker_rate` was silently floored near 1.0 every time,
+regardless of the defender's real damage. Fixed by calling it on
+`defender.combat` instead. This is exactly why this project verifies
+against the real Godot binary rather than trusting a plan and unit tests
+alone — this bug lived entirely in *which instance* a correct-looking method
+call was made on, invisible to both.
+
+Live 5-seed verification after the fix: no illegal-FSM-transition
+assertions fire, and every seed reaches a genuine submission win
+(`Match won by WrestlerA via submission`) around t699. Honest gap, not
+smoothed over: all 5 seeds play out identically, and pin never triggers in
+this default match. Both are explained, not mysterious — this project's
+tie-up resolution is a known placeholder ("lower player index always
+wins," already logged as a Phase 2 gap), so the same wrestler is
+deterministically the grapple attacker every match regardless of which
+side is AI-controlled; and the current 4-move default roster (jab, suplex,
+backbreaker, piledriver) damages torso hardest across the board, so torso
+reliably saturates to its own 100-damage cap before total damage ever
+reaches the 200 needed for a knockdown — meaning `SUBMISSION_LIMB_THRESHOLD`
+is always crossed at torso's absolute ceiling in this specific roster, not
+at some mid-range value, and `SubmissionMinigame` has no RNG of its own to
+vary that fixed outcome. To confirm the pin branch (unchanged by this
+pass, just moved into the same decision function,
+`_check_for_downed_opponent_action()`) was not broken by the refactor, it
+was independently re-verified with `SUBMISSION_LIMB_THRESHOLD` temporarily
+forced unreachable: all 5 seeds still reach a real pinfall, at the same
+`dmg=204.0 -> 218.0` progression already confirmed above, then reverted.
+Whether submissions should be reachable at less-than-fully-capped limb
+damage in real play is a moveset-tuning question (`MoveDef` damage ratios
+across limbs, `ARCHITECTURE.md`'s designated tuning surface), not a code
+question — left as an open gauntlet-round gap alongside
+`SUBMISSION_LIMB_THRESHOLD`/`defender_rate` themselves, both still
+first-pass values.

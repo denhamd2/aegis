@@ -9,6 +9,11 @@ signal match_won(winner: WrestlerController, method: String)
 
 const PIN_COUNT_TICKS := 180 # three-count at 60Hz, one count per 60 ticks
 const COVER_RANGE := 1.2
+## Attacking a downed opponent's most-damaged limb becomes a submission
+## attempt instead of a pin once that limb's damage crosses this fraction of
+## CombatSystem.MAX_LIMB_DAMAGE (70%). First-pass value; confirm/retune via
+## test_submission_minigame.gd and a live multi-seed probe, not by feel.
+const SUBMISSION_LIMB_THRESHOLD := 70.0
 
 @export var wrestler_a_path: NodePath
 @export var wrestler_b_path: NodePath
@@ -21,6 +26,9 @@ var _pin_ticks: int = 0
 var _pinning: bool = false
 var _pin_attacker: WrestlerController
 var _pin_defender: WrestlerController
+var _submissioning: bool = false
+var _submission_attacker: WrestlerController
+var _submission_defender: WrestlerController
 var _match_over: bool = false
 
 func _ready() -> void:
@@ -42,9 +50,15 @@ func _physics_process(_delta: float) -> void:
 	if _pinning:
 		_tick_pin()
 		return
-	_check_for_cover()
+	if _submissioning:
+		_tick_submission()
+		return
+	_check_for_downed_opponent_action()
 
-func _check_for_cover() -> void:
+## Kept as one function rather than two independent scans so a given
+## attacker/defender pair can't match both a pin and a submission check the
+## same tick — each pair gets exactly one decision.
+func _check_for_downed_opponent_action() -> void:
 	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
 		var attacker: WrestlerController = pair[0]
 		var defender: WrestlerController = pair[1]
@@ -52,11 +66,18 @@ func _check_for_cover() -> void:
 				and defender._cover_eligible \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE:
-			_pinning = true
-			_pin_ticks = 0
-			_pin_attacker = attacker
-			_pin_defender = defender
-			attacker.begin_pin(defender, match_seed + Engine.get_physics_frames())
+			var worst_limb: CombatSystem.Limb = defender.combat.most_damaged_limb()
+			if defender.combat.limb_damage[worst_limb] >= SUBMISSION_LIMB_THRESHOLD:
+				_submissioning = true
+				_submission_attacker = attacker
+				_submission_defender = defender
+				attacker.begin_submission(defender, worst_limb)
+			else:
+				_pinning = true
+				_pin_ticks = 0
+				_pin_attacker = attacker
+				_pin_defender = defender
+				attacker.begin_pin(defender, match_seed + Engine.get_physics_frames())
 			return
 
 func _tick_pin() -> void:
@@ -78,9 +99,34 @@ func _end_pin(three_count_reached: bool) -> void:
 		# Not cover-eligible again until this wrestler actually reaches IDLE
 		# (DOWN -> GETUP -> IDLE) — otherwise, since the attacker is also
 		# reset to IDLE right where it was standing (already in cover
-		# range), _check_for_cover() would re-match on the very next tick,
-		# forever, with no time for a getup or a fresh hit to ever land.
+		# range), _check_for_downed_opponent_action() would re-match on the
+		# very next tick, forever, with no time for a getup or a fresh hit
+		# to ever land.
 		_pin_defender._cover_eligible = false
+
+## Attacker's side of the race needs no continued input (mirrors
+## PIN_ATTACKER's automatic three-count) — only the defender's hold state,
+## captured each tick by WrestlerController, matters.
+func _tick_submission() -> void:
+	var minigame: SubmissionMinigame = _submission_defender._submission_minigame
+	minigame.tick(true, _submission_defender._submission_defender_input_this_tick)
+	if minigame.attacker_wins():
+		_end_submission(true)
+	elif minigame.defender_escapes():
+		_end_submission(false)
+
+func _end_submission(tapped_out: bool) -> void:
+	_submissioning = false
+	_submission_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
+	if tapped_out:
+		_declare_winner(_submission_attacker, "submission")
+	else:
+		_submission_defender.fsm.transition_to(WrestlerFSM.State.DOWN)
+		_submission_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
+		# Same re-cover-exploit protection proven for kickouts (see _end_pin)
+		# — an escaped submission must not instantly re-trigger a new
+		# pin/submission on the very next tick either.
+		_submission_defender._cover_eligible = false
 
 func _declare_winner(winner: WrestlerController, method: String) -> void:
 	_match_over = true

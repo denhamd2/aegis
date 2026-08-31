@@ -121,6 +121,7 @@ var _pending_hits: Array[MoveDef] = []
 ## blocked the other wrestler's independent attack from ever landing.
 var _active_move_hit_applied: bool = false
 var _kickout_input_this_tick: bool = false
+var _submission_defender_input_this_tick: bool = false
 
 ## Whether MatchReferee._check_for_cover() may start a new pin on this
 ## wrestler right now. True by default and after a genuine knockdown (an
@@ -245,8 +246,15 @@ func _physics_process(delta: float) -> void:
 			# range every cycle, so without an input gate every pin would
 			# resolve as an automatic kickout before reaching a three-count).
 			_kickout_input_this_tick = input.get("strike", false)
-		WrestlerFSM.State.SUBMISSION_ATTACKER, WrestlerFSM.State.SUBMISSION_DEFENDER:
-			pass # driven by MatchReferee
+		WrestlerFSM.State.SUBMISSION_ATTACKER:
+			pass # driven by MatchReferee; no continued attacker input needed,
+			# same as PIN_ATTACKER's three-count
+		WrestlerFSM.State.SUBMISSION_DEFENDER:
+			# Mirrors the PIN_DEFENDER case above, but held rather than
+			# just-pressed — SubmissionMinigame is a genuine continuous-hold
+			# rate race, not a press-limited fill-meter, so no input gating
+			# is needed here beyond reading the raw hold state each tick.
+			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
 	move_and_slide()
 
@@ -481,6 +489,24 @@ func begin_pin(defender: WrestlerController, seed_value: int) -> void:
 func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:
 	fsm.transition_to(WrestlerFSM.State.SUBMISSION_ATTACKER)
 	defender.fsm.transition_to(WrestlerFSM.State.SUBMISSION_DEFENDER)
-	var attacker_rate := combat.submission_break_rate(target_limb)
-	var defender_rate := 0.9 # baseline escape rate; tuned in gauntlet rounds
-	_submission_minigame = SubmissionMinigame.new(attacker_rate, defender_rate)
+	# submission_break_rate() reads whichever CombatSystem it's called on —
+	# it must be the defender's (the limb actually being locked), not the
+	# attacker's own. Calling it on `combat` (self, the attacker) silently
+	# ignored the defender's real damage entirely, since an attacker's own
+	# limbs are rarely damaged on the same limb it's targeting: caught live,
+	# not by the unit tests below (which exercise SubmissionMinigame's rate
+	# math directly, not this call site) — every attempt escaped regardless
+	# of how hurt the targeted limb actually was.
+	var attacker_rate := defender.combat.submission_break_rate(target_limb)
+	# MatchReferee only ever starts a submission once the targeted limb is at
+	# or above SUBMISSION_LIMB_THRESHOLD (70), so attacker_rate here is never
+	# actually as low as its theoretical floor of 1.0 — it's really gated to
+	# [1.7, 2.0] (1.0 + threshold/100 .. 1.0 + MAX_LIMB_DAMAGE/100). A flat
+	# 0.9 defender_rate loses that race every time (100/1.0=100 ticks for the
+	# attacker's absolute floor vs 100/0.9=111 for the defender — the
+	# attacker always arrives first), so it's retuned to sit inside the
+	# realistic gated band: defender-favored just above the threshold floor,
+	# attacker-favored near a fully-damaged limb. First-pass value, open to
+	# retuning like PROGRESS_THRESHOLD was (see test_submission_minigame.gd).
+	var defender_rate := 1.8
+	defender._submission_minigame = SubmissionMinigame.new(attacker_rate, defender_rate)

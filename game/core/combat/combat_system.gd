@@ -61,3 +61,12 @@ func submission_break_rate(target_limb: Limb) -> float:
 	var base_rate := 1.0
 	var limb_factor: float = 1.0 + (float(limb_damage[target_limb]) / MAX_LIMB_DAMAGE)
 	return base_rate * limb_factor
+
+## Limb with the highest accumulated damage — used to decide whether a
+## downed opponent is a submission target (see MatchReferee).
+func most_damaged_limb() -> Limb:
+	var worst: Limb = Limb.HEAD
+	for limb in limb_damage:
+		if limb_damage[limb] > limb_damage[worst]:
+			worst = limb
+	return worst

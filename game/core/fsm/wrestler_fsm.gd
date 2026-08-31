@@ -29,8 +29,8 @@ enum State {
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
 const LEGAL_TRANSITIONS := {
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER],
 	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.IDLE, State.HIT_REACT, State.STUNNED],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT],
