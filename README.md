@@ -612,20 +612,48 @@ non-degenerate press counts (11-12 out of a 180-tick pin, never 0 and never
 ~180), confirming the AI is actually playing the rate-limited minigame
 rather than trivially winning or losing it.
 
-**Honest gap, found by the same probe, not smoothed over:** every pin
-attempt across an entire match logged the *same* `window=0.40`, seed after
-seed — `kickout_window_fraction()` isn't narrowing round over round the way
-the design intends (progressively harder pins as damage piles up). At
-`window=0.40` with the calibration above, the defender escapes with almost
-no margin (11-12 presses against a threshold of 12) essentially every time,
-so matches reach their eventual pinfall by accumulating enough escapes to
-hit an unlucky RNG draw rather than by genuinely wearing the defender down
-— one seed took 88 escaped pin attempts (~243 game-seconds) before finally
-losing. That match-length variance (3 to 88 attempts across the 5 seeds
-tested) is real and wide. Why the window doesn't move round over round
-looks like a deeper question about how `total_damage()`/momentum accumulate
-across repeated knockdown cycles in the current AI-vs-AI script, not the
-input/threshold mismatch this fix targeted — left open rather than chased
-here, since `combat_system.gd`'s formula itself is unmodified and
-untouched by this fix, and per `ARCHITECTURE.md`, that kind of tuning is
-gauntlet-round work.
+**Follow-up: the flat-0.40-forever gap noted above was a second, separate
+bug — not a deeper tuning question.** Traced it by logging every FSM state
+change around a pin cycle instead of guessing: on a kickout, `_end_pin()`
+resets the defender straight to `DOWN` and the attacker straight to `IDLE`
+— and since they're still standing right next to each other from the pin
+that just ended, `MatchReferee._check_for_cover()` (which only checks
+current state and distance, nothing else) re-matched and started a *new*
+pin on the very next physics tick, every time:
+```
+t803 A: PIN_ATTACKER -> IDLE        B: PIN_DEFENDER -> DOWN   (kickout succeeds)
+t804 A: IDLE -> PIN_ATTACKER        B: DOWN -> PIN_DEFENDER   (pin_started again — same numbers)
+```
+The defender's `GETUP_TICKS` timer got set but never once ran down —
+`DOWN`'s own per-tick countdown (`_process_down()`) never got a second tick
+before the referee already restarted the pin — and the attacker's AI never
+got a chance to throw a new strike or grapple either, since its own
+`poll_input()` sees the opponent as still `DOWN` and just walks in for
+another cover. So `combat.total_damage()` and attacker `combat.momentum`
+were frozen at whatever they were at the *original* knockdown for the rest
+of the match: not a saturation or formula issue, a state-machine one — the
+`DOWN -> GETUP -> IDLE` recovery sequence those constants clearly intend
+was being skipped entirely after every kickout.
+
+Fixed with a `_cover_eligible` flag on `WrestlerController` (default
+`true`, so a genuine fresh knockdown is still immediately coverable, which
+is correct): `MatchReferee._end_pin()` clears it on a kickout, and
+`_process_timed_state()` restores it once the wrestler actually reaches
+`IDLE` again (the shared handler for both `GETUP -> IDLE` and
+`HIT_REACT`/`STUNNED -> IDLE`, harmless to set unconditionally there since
+it's already `true` in the latter two cases). `_check_for_cover()` now
+requires it alongside its existing checks.
+
+Re-ran the same live 5-seed probe after this fix: the window now genuinely
+moves between attempts instead of repeating —
+`t648 dmg=204.0 window=0.396 ... -> KICKOUT` then
+`t991 dmg=218.0 window=0.335 ... -> PINFALL`, in every one of the 5 seeds —
+confirming a real hit lands (`dmg` 204.0 → 218.0) and narrows the window in
+the gap between pin attempts, exactly as `kickout_window_fraction()`
+intends. All 5 matches now resolve in **2 pin attempts** instead of the
+previous run's 2-88, and finish by roughly t1150-1172 instead of dragging
+out to t7000-14700 — a real near-fall followed by a real finish, not a
+long coin-flip grind. Full unit suite (12/12, including the new kickout
+tests above) still passes unmodified; this fix touches
+`match_referee.gd`/`wrestler_controller.gd` state handling only, not
+`combat_system.gd`'s formula or the kickout-minigame calibration.

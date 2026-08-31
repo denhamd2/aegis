@@ -49,6 +49,7 @@ func _check_for_cover() -> void:
 		var attacker: WrestlerController = pair[0]
 		var defender: WrestlerController = pair[1]
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
+				and defender._cover_eligible \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE:
 			_pinning = true
@@ -74,6 +75,12 @@ func _end_pin(three_count_reached: bool) -> void:
 	else:
 		_pin_defender.fsm.transition_to(WrestlerFSM.State.DOWN)
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
+		# Not cover-eligible again until this wrestler actually reaches IDLE
+		# (DOWN -> GETUP -> IDLE) — otherwise, since the attacker is also
+		# reset to IDLE right where it was standing (already in cover
+		# range), _check_for_cover() would re-match on the very next tick,
+		# forever, with no time for a getup or a fresh hit to ever land.
+		_pin_defender._cover_eligible = false
 
 func _declare_winner(winner: WrestlerController, method: String) -> void:
 	_match_over = true

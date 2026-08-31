@@ -122,6 +122,18 @@ var _pending_hits: Array[MoveDef] = []
 var _active_move_hit_applied: bool = false
 var _kickout_input_this_tick: bool = false
 
+## Whether MatchReferee._check_for_cover() may start a new pin on this
+## wrestler right now. True by default and after a genuine knockdown (an
+## attacker walking over to cover a freshly-downed opponent is intended to
+## work immediately) — but a kickout resets straight back to DOWN with the
+## same attacker already standing in cover range, so without this gate
+## _check_for_cover() re-matches the very next tick, before GETUP_TICKS or
+## the GETUP state ever run, and the wrestler is re-covered forever without
+## a real chance to recover or take a fresh hit. Cleared by
+## MatchReferee._end_pin() on a kickout, restored once this wrestler
+## actually reaches IDLE again (see _process_timed_state()).
+var _cover_eligible: bool = true
+
 func _ready() -> void:
 	fsm = WrestlerFSM.new()
 	add_child(fsm)
@@ -439,6 +451,7 @@ func _go_down() -> void:
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	_move_ticks_remaining = GETUP_TICKS
+	_cover_eligible = true
 	knocked_down.emit(self)
 
 func _process_down(input: Dictionary) -> void:
@@ -450,6 +463,11 @@ func _process_down(input: Dictionary) -> void:
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
+		# Also covers GETUP -> IDLE, the only place a wrestler that lost
+		# _cover_eligible to a kickout (see the field's own doc comment)
+		# gets it back — harmless to set unconditionally for the
+		# HIT_REACT/STUNNED -> IDLE case too, since it's already true there.
+		_cover_eligible = true
 		fsm.transition_to(next_state)
 
 ## Called by MatchReferee when the attacker covers a downed opponent.
