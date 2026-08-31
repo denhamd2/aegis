@@ -17,9 +17,16 @@ extends Node
 @export var kickout_reaction_ticks: int = 10
 @export var kickout_press_interval_ticks: int = 5
 
+## Tie-up mashing: same reaction-delay/press-interval shape as the kickout
+## tunables above. First-pass values; see test_tie_up_minigame.gd.
+@export var tie_up_reaction_ticks: int = 10
+@export var tie_up_press_interval_ticks: int = 8
+
 var _cooldown: int = 0
 var _pin_defender_tick: int = 0
 var _last_kickout_press_tick: int = -1000
+var _tie_up_tick: int = 0
+var _last_tie_up_press_tick: int = -1000
 
 func _physics_process(_delta: float) -> void:
 	if not controller or not target:
@@ -41,6 +48,11 @@ func poll_input() -> Dictionary:
 		# PinMinigame's press-limited fill-meter, so there's no discrete-press
 		# semantic to model here.
 		return {"submission_hold": true}
+	if controller.fsm.current_state == WrestlerFSM.State.TIE_UP:
+		_tie_up_tick += 1
+		return {"grapple": _should_press_tie_up(_tie_up_tick)}
+	_tie_up_tick = 0
+	_last_tie_up_press_tick = -1000
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 
@@ -95,4 +107,16 @@ func _should_press_kickout(tick: int, minigame: PinMinigame) -> bool:
 	if minigame == null or not minigame.marker_in_window(tick):
 		return false
 	_last_kickout_press_tick = tick
+	return true
+
+## Whether to press "grapple" this TIE_UP tick — same rate-limited mash
+## policy as _should_press_kickout(), minus the marker-window check (there's
+## no target zone here, just a race of qualifying press counts; see
+## tie_up_minigame.gd).
+func _should_press_tie_up(tick: int) -> bool:
+	if tick <= tie_up_reaction_ticks:
+		return false
+	if tick - _last_tie_up_press_tick < tie_up_press_interval_ticks:
+		return false
+	_last_tie_up_press_tick = tick
 	return true

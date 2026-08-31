@@ -106,7 +106,9 @@ Known Phase 2 gaps, honestly:
   writing, but is now wired end to end (see "Feature: wire submissions into
   the referee and AI" below) — pin/kickout and submission/tap-out are both
   real, reachable win-condition paths now.
-- Tie-up resolution is still a placeholder rule (lower player index wins).
+- Tie-up resolution was a placeholder rule (lower player index wins) as of
+  this writing; now a real mash contest — see "Feature: fix the tie-up
+  resolution placeholder" below.
 
 ## Bugfix: the AI never actually grappled, and why
 
@@ -745,3 +747,62 @@ across limbs, `ARCHITECTURE.md`'s designated tuning surface), not a code
 question — left as an open gauntlet-round gap alongside
 `SUBMISSION_LIMB_THRESHOLD`/`defender_rate` themselves, both still
 first-pass values.
+
+## Feature: fix the tie-up resolution placeholder
+
+`WrestlerController._process_tie_up()` resolved every single tie-up with a
+hardcoded rule: "whichever wrestler entered the tie-up first (lower
+player_index...) wins" — in practice `WrestlerA` won every tie-up in the
+game, regardless of anything either wrestler did. Already a named Phase 2
+gap, and it became directly visible this session: the submission-wiring
+live probe above showed all 5 seeds playing out byte-identically, entirely
+because of this rule.
+
+The placeholder's own comment already named the intended replacement — "a
+stand-in for a reaction-time contest" — and `gauntlet/refs/timings.md`'s
+tie-up section backs that up: the reference footage shows a "grapple-contest
+reticle UI visible continuously" for at least 1.07s before the clip cuts
+away unresolved (a lower bound only, explicitly caveated as not a full
+measurement). So the real reference game treats this as an active,
+on-screen contest, not an instant lookup.
+
+Built a real interactive mash contest: new `TieUpMinigame` — unlike
+`PinMinigame`/`SubmissionMinigame` (each has one automatic side and one
+mashing/holding side), this one is symmetric: **both** wrestlers press
+`grapple`, and whichever accumulates `PROGRESS_THRESHOLD` (10) qualifying
+presses first becomes the grapple attacker. Since it's a shared two-party
+contest with no natural single owner, resolution moved off the individual
+wrestlers' own `_physics_process()` (which only worked by both wrestlers'
+identical timers happening to stay in lockstep) and into `MatchReferee`,
+matching the same pattern already established for pin/submission
+(`_tick_pin()`/`_tick_submission()`) — both sides' input is read from one
+shared tick, not two independent ones. `WrestlerAI` got a rate-limited mash
+policy (`_should_press_tie_up()`, same reaction-delay/press-interval shape
+as the kickout one) so it presses `grapple` at a human-plausible rate
+during the contest, not held every tick.
+
+New `test_tie_up_minigame.gd` (3 cases) confirms the more-frequent presser
+wins, a single press alone isn't enough, and the contest is fully
+deterministic (no RNG anywhere in `TieUpMinigame` — a pure function of both
+sides' press ticks). Full suite: 21/21, 0 errors, 0 failures.
+
+Live 5-seed `--fixed-fps 600` verification: no illegal-FSM-transition
+assertions anywhere in any of the 5 runs. In the project's default match
+config (`WrestlerA` passive, `WrestlerB` AI-controlled — the same config
+every live probe this session has used), `WrestlerB` now wins every tie-up
+(`a_progress=0.0 b_progress=10.0`, resolved at tick 83, ~1.4s) —
+**flipping** the old bug (a fixed, unconditional `WrestlerA` win) into a
+*causally real* one: whoever actually contests wins, and here that's the
+only side that ever presses anything. Matches still resolve correctly
+end-to-end afterward (grapple → damage → eventual submission win, same
+shape as the prior section, just with the winning side now flipped to
+match who's actually fighting). Honest note, not smoothed over: this
+config still produces identical results across all 5 seeds, for the same
+reason already documented above — a fully passive wrestler and a
+deterministic AI leave nothing for `match_seed` to actually vary here.
+`TieUpMinigame`'s own unit tests (above) already confirm the mechanism
+supports either side winning, symmetrically; the live match's one-sided
+result is a property of this specific default config, not of the fix.
+`PROGRESS_THRESHOLD`, `tie_up_reaction_ticks`, and
+`tie_up_press_interval_ticks` are all first-pass values, open to later
+gauntlet-round retuning like the kickout/submission constants before them.

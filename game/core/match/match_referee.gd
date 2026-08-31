@@ -14,6 +14,10 @@ const COVER_RANGE := 1.2
 ## CombatSystem.MAX_LIMB_DAMAGE (70%). First-pass value; confirm/retune via
 ## test_submission_minigame.gd and a live multi-seed probe, not by feel.
 const SUBMISSION_LIMB_THRESHOLD := 70.0
+## Absolute safety cap on a tie-up contest, not the primary mechanism (see
+## _tick_tie_up()) — TieUpMinigame.PROGRESS_THRESHOLD is what actually
+## decides it in practice.
+const TIE_UP_MAX_TICKS := 200
 
 @export var wrestler_a_path: NodePath
 @export var wrestler_b_path: NodePath
@@ -29,6 +33,9 @@ var _pin_defender: WrestlerController
 var _submissioning: bool = false
 var _submission_attacker: WrestlerController
 var _submission_defender: WrestlerController
+var _tying_up: bool = false
+var _tie_up_ticks: int = 0
+var _tie_up_minigame: TieUpMinigame
 var _match_over: bool = false
 
 func _ready() -> void:
@@ -52,6 +59,15 @@ func _physics_process(_delta: float) -> void:
 		return
 	if _submissioning:
 		_tick_submission()
+		return
+	if _tying_up:
+		_tick_tie_up()
+		return
+	if wrestler_a.fsm.current_state == WrestlerFSM.State.TIE_UP \
+			and wrestler_b.fsm.current_state == WrestlerFSM.State.TIE_UP:
+		_tying_up = true
+		_tie_up_ticks = 0
+		_tie_up_minigame = TieUpMinigame.new()
 		return
 	_check_for_downed_opponent_action()
 
@@ -127,6 +143,31 @@ func _end_submission(tapped_out: bool) -> void:
 		# — an escaped submission must not instantly re-trigger a new
 		# pin/submission on the very next tick either.
 		_submission_defender._cover_eligible = false
+
+## Both sides mash "grapple" (captured per-tick by WrestlerController);
+## whoever accumulates more qualifying presses first becomes the grapple
+## attacker. Unlike pin/submission there's no pre-existing attacker/defender
+## role here — the contest itself decides it.
+func _tick_tie_up() -> void:
+	_tie_up_ticks += 1
+	_tie_up_minigame.tick(wrestler_a._tie_up_input_this_tick, wrestler_b._tie_up_input_this_tick)
+	if _tie_up_minigame.a_wins():
+		_resolve_tie_up(wrestler_a, wrestler_b)
+	elif _tie_up_minigame.b_wins():
+		_resolve_tie_up(wrestler_b, wrestler_a)
+	elif _tie_up_ticks >= TIE_UP_MAX_TICKS:
+		# Backstop only — distinct AI/press policies make an exact tie
+		# between two independent deterministic mash rates unlikely, but
+		# this guarantees the match can't stall here forever.
+		var attacker := wrestler_a if _tie_up_minigame.a_progress >= _tie_up_minigame.b_progress else wrestler_b
+		_resolve_tie_up(attacker, wrestler_b if attacker == wrestler_a else wrestler_a)
+
+func _resolve_tie_up(attacker: WrestlerController, defender: WrestlerController) -> void:
+	_tying_up = false
+	attacker._is_grapple_attacker = true
+	defender._is_grapple_attacker = false
+	attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 
 func _declare_winner(winner: WrestlerController, method: String) -> void:
 	_match_over = true

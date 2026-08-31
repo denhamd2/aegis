@@ -24,7 +24,6 @@ const STRIKE_HIT_RANGE := 1.8
 const GETUP_TICKS := 90 # 1.5s
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
-const TIE_UP_RESOLVE_TICKS := 30
 ## States WrestlerFSM.LEGAL_TRANSITIONS actually allows a TIE_UP transition
 ## from — both sides of a grapple attempt must be in one of these, or the
 ## attempt is silently dropped (see the gate in _process_free_movement()).
@@ -96,7 +95,6 @@ const ANIMATION_BLEND_TICKS := 6
 
 var _move_ticks_remaining: int = 0
 var _active_move: MoveDef
-var _tie_up_ticks: int = 0
 var _is_grapple_attacker: bool = false
 var _pin_minigame: PinMinigame
 var _submission_minigame: SubmissionMinigame
@@ -122,6 +120,7 @@ var _pending_hits: Array[MoveDef] = []
 var _active_move_hit_applied: bool = false
 var _kickout_input_this_tick: bool = false
 var _submission_defender_input_this_tick: bool = false
+var _tie_up_input_this_tick: bool = false
 
 ## Whether MatchReferee._check_for_cover() may start a new pin on this
 ## wrestler right now. True by default and after a genuine knockdown (an
@@ -223,7 +222,9 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.STRIKE:
 			_process_active_move(input)
 		WrestlerFSM.State.TIE_UP:
-			_process_tie_up()
+			# MatchReferee drives the actual contest (TieUpMinigame) once both
+			# wrestlers are in TIE_UP — mirrors PIN_DEFENDER's input capture.
+			_tie_up_input_this_tick = input.get("grapple", false)
 		WrestlerFSM.State.GRAPPLE_HOLD:
 			_process_grapple_hold(input)
 		WrestlerFSM.State.MOVE_EXEC:
@@ -297,17 +298,16 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		# assert() logs but does not actually block the illegal transition,
 		# so an unguarded call here left the opponent's FSM state and its
 		# _is_grapple_attacker bookkeeping permanently desynced: the
-		# opponent's state silently failed to change, but _process_tie_up()
-		# still later assigned it the attacker/defender role and tried to
-		# push it into GRAPPLE_HOLD from whatever unrelated state it was
-		# actually stuck in — itself illegal and silently dropped, so
-		# neither wrestler's _physics_process match statement ever routed
-		# to _process_grapple_hold() again. A real deadlock, not a rare
-		# one: any grapple attempted while the opponent is mid-anything-else
+		# opponent's state silently failed to change, but MatchReferee would
+		# still later assign it the attacker/defender role and try to push
+		# it into GRAPPLE_HOLD from whatever unrelated state it was actually
+		# stuck in — itself illegal and silently dropped, so neither
+		# wrestler's _physics_process match statement ever routed to
+		# _process_grapple_hold() again. A real deadlock, not a rare one:
+		# any grapple attempted while the opponent is mid-anything-else
 		# hits it, so gate here instead of after the fact.
 		fsm.transition_to(WrestlerFSM.State.TIE_UP)
 		opponent.fsm.transition_to(WrestlerFSM.State.TIE_UP)
-		_tie_up_ticks = 0
 
 func _in_range(range_m: float) -> bool:
 	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m
@@ -389,19 +389,6 @@ func _timed_stub(ticks: int) -> MoveDef:
 	stub.active_frames = 0
 	stub.recovery_frames = 0
 	return stub
-
-func _process_tie_up() -> void:
-	_tie_up_ticks += 1
-	if _tie_up_ticks < TIE_UP_RESOLVE_TICKS:
-		return
-	# Deterministic resolution: whichever wrestler entered the tie-up first
-	# (lower player_index, as a stand-in for a reaction-time contest) wins.
-	var attacker := self if player_index < opponent.player_index else opponent
-	var defender := opponent if attacker == self else self
-	attacker._is_grapple_attacker = true
-	defender._is_grapple_attacker = false
-	attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
-	defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 
 func _process_grapple_hold(input: Dictionary) -> void:
 	if not _is_grapple_attacker:
