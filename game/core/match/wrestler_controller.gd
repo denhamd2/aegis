@@ -412,8 +412,27 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# lockstep) so it must also be in MOVE_EXEC before taking a hit reaction —
 	# GRAPPLE_HOLD -> HIT_REACT/DOWN is not a legal transition on its own.
 	opponent.fsm.transition_to(WrestlerFSM.State.MOVE_EXEC)
-	_apply_move_to_opponent(move)
+	move_landed.emit(self, opponent, move)
+	combat.apply_momentum(move)
+	# Applied directly rather than through _apply_move_to_opponent's
+	# _pending_hits queue: that queue exists so MatchReferee can arbitrate
+	# two wrestlers striking each other the *same* tick regardless of
+	# scene-tree node order — irrelevant here, a grapple has one
+	# deterministic attacker already fully resolved. Routing through it
+	# broke every grapple: _resolve_pending_hits() checks the defender's
+	# *own* current state before applying, and the MOVE_EXEC transition
+	# just above (required to legally reach HIT_REACT/DOWN from
+	# GRAPPLE_HOLD) is also, for an unrelated reason, in UNHITTABLE_STATES
+	# (protecting a wrestler already mid-strike-startup from a second
+	# simultaneous hit) — so every queued grapple hit was silently dropped
+	# the instant it was queued, damage never accumulated, and a match
+	# never progressed past tie-up -> grapple -> repeat.
+	opponent.combat.apply_damage(move)
 	fsm.transition_to(WrestlerFSM.State.IDLE)
+	if opponent.combat.total_damage() >= CombatSystem.MAX_LIMB_DAMAGE * 2.0:
+		opponent._go_down()
+	else:
+		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
 
 func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):

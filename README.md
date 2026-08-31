@@ -451,6 +451,74 @@ AI/RNG, same method noted above) confirm both new clips render correctly
 mid-move — no bind-pose limbs, no invisible/underground body parts — at
 15%, 50%, and 85% through each animation.
 
+## Bugfix: every landed grapple dealt zero damage
+
+Went looking for why a live match still didn't seem to progress even after
+the AI/tie-up fix above, expecting to find grapples firing rarely. An
+instrumented run of the real match scene (state transitions + `_pending_hits`
+size + total damage, logged every tick — not a direct `GrappleRig.begin()`
+harness this time, the ordinary AI/physics path) found the opposite: the AI
+reaches a tie-up almost immediately (~t44) and a grapple resolves roughly
+every 65 ticks after that, forever — 3600 ticks logged, seed after seed,
+without a single knockdown. The tie-up→grapple cadence itself was never the
+problem.
+
+The actual bug, confirmed by logging `_pending_hits` and `combat.total_damage()`
+side by side: `WrestlerController._resolve_grapple_move()` puts the defender
+into `MOVE_EXEC` (required — `GRAPPLE_HOLD` can't legally reach `HIT_REACT`/
+`DOWN` directly per `WrestlerFSM.LEGAL_TRANSITIONS`), then applies the hit
+through the same deferred `_pending_hits` queue strikes use.
+`MatchReferee._resolve_pending_hits()` checks the *target's own current
+state* against `UNHITTABLE_STATES` before applying damage — and `MOVE_EXEC`
+is on that list, for an unrelated reason (stopping a wrestler already
+mid-strike-startup from taking a second simultaneous hit same-tick). Since
+the defender is sitting in the `MOVE_EXEC` we *just put them in*, every
+queued grapple hit was silently dropped the instant it was queued: logged
+data showed `b_pending` cycling `1 -> 0` every cycle while `b_dmg` stayed
+`0.0` for the full 3600-tick run. With grapple damage never landing, and the
+AI permanently within `tie_up_range` after the first successful tie-up (so
+`WrestlerAI` never has a distance-triggered reason to strike again either —
+see its own `distance > tie_up_range` gate), nothing after the first tie-up
+could ever push total damage toward the 200 needed for `_go_down()`. Every
+match was a closed loop by design of the two fixes interacting, not a rare
+edge case.
+
+Fixed by having `_resolve_grapple_move()` apply the defender's damage
+directly (`opponent.combat.apply_damage(move)`) and drive the
+`HIT_REACT`/`DOWN` follow-up itself, instead of routing through
+`_pending_hits`. That queue exists specifically so `MatchReferee` can
+arbitrate two wrestlers landing hits on each other in the *same* tick
+regardless of scene-tree node order (see its own doc comment) — a grapple
+has exactly one deterministic attacker already fully resolved by the time
+`_resolve_grapple_move()` runs, so there's no ordering race to arbitrate and
+no reason to pay the `UNHITTABLE_STATES` cost that queue carries.
+
+Verified against the real Godot binary: 7/7 unit tests still pass. Re-ran
+the same instrumented method: `b_dmg` now climbs `28.0 -> 56.0 -> 84.0 ->
+112.0` across four consecutive landed grapples (28 = `grapple_suplex.tres`'s
+`damage_head + damage_torso + damage_arms + damage_legs`, exactly as
+expected), with the defender correctly cycling `MOVE_EXEC -> HIT_REACT ->
+IDLE` each time instead of snapping straight back to `IDLE` untouched. A
+longer run to directly confirm a full knockdown -> pin sequence with this
+fix in place was started but not completed this pass (real-wall-clock-paced
+headless physics makes a 90-second match's worth of ticks slow to simulate
+without `--fixed-fps`); the per-cycle damage accumulation above makes the
+outcome arithmetically certain (~8 landed grapples clears 200) but isn't
+the same as watching it happen.
+
+**Also worth flagging:** an earlier commit's own verification note (the
+"AI never actually grappled" bugfix above) claims a confirmed "real
+knockdown" across 8 seeds. Given `UNHITTABLE_STATES` (with `MOVE_EXEC` on
+it) predates that commit — `git log -S` traces it to `812c7d3`, well before
+`7072628` — that specific knockdown claim looks hard to reconcile with what
+this session found: no code path available at that time could have pushed
+damage to 200 through grapples (they were broken the same way), and reaching
+it through strikes alone would need ~40 landed jabs at 5 damage each, far
+more than a short pre-tie-up approach produces. Left as-is rather than
+edited after the fact — flagging the discrepancy here instead, since this
+session's own re-verification is what should be trusted going forward, not
+retroactively rewriting what an earlier one claimed.
+
 Honest gaps, not smoothed over:
 - **This is 2 more of 18 required moves** (12 grapple + 6 reversal per
   `ARCHITECTURE.md`'s scope), same first-pass grey-box caveat as the
