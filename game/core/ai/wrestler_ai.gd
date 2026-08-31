@@ -10,7 +10,16 @@ extends Node
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
 
+## Kickout mashing: reaction delay before the first press attempt, and the
+## minimum ticks between two presses — a stand-in for physical mash-rate
+## limits (an engineering judgment call, not a cited realism claim).
+## First-pass values; see test_pin_minigame_kickout.gd.
+@export var kickout_reaction_ticks: int = 10
+@export var kickout_press_interval_ticks: int = 5
+
 var _cooldown: int = 0
+var _pin_defender_tick: int = 0
+var _last_kickout_press_tick: int = -1000
 
 func _physics_process(_delta: float) -> void:
 	if not controller or not target:
@@ -22,9 +31,10 @@ func poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
 	if controller.fsm.current_state == WrestlerFSM.State.PIN_DEFENDER:
-		# Mash to kick out every tick — grey-box stand-in for a timed
-		# button prompt (see WrestlerController's PIN_DEFENDER handling).
-		return {"strike": true}
+		_pin_defender_tick += 1
+		return {"strike": _should_press_kickout(_pin_defender_tick, controller._pin_minigame)}
+	_pin_defender_tick = 0
+	_last_kickout_press_tick = -1000
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 
@@ -65,3 +75,18 @@ func poll_input() -> Dictionary:
 			_cooldown = strike_cooldown_ticks
 
 	return input
+
+## Whether to press the kickout button this PIN_DEFENDER tick. Rate-limited
+## to mirror a human's Input.is_action_just_pressed semantics (a real press
+## every tick isn't physically achievable) rather than the AI simply
+## holding the button, and only presses when the marker is actually inside
+## the target window — the same information a human sees on the minigame UI.
+func _should_press_kickout(tick: int, minigame: PinMinigame) -> bool:
+	if tick <= kickout_reaction_ticks:
+		return false
+	if tick - _last_kickout_press_tick < kickout_press_interval_ticks:
+		return false
+	if minigame == null or not minigame.marker_in_window(tick):
+		return false
+	_last_kickout_press_tick = tick
+	return true

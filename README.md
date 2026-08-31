@@ -553,3 +553,79 @@ more than a short pre-tie-up approach produces. Left as-is rather than
 edited after the fact — flagging the discrepancy here instead, since this
 session's own re-verification is what should be trusted going forward, not
 retroactively rewriting what an earlier one claimed.
+
+## Bugfix: kickout escaped nearly every pin attempt
+
+Picked up the balance gap the previous entry deliberately left alone: once a
+pin genuinely starts, the match should sometimes end in a real pinfall. The
+prior 5-seed `--fixed-fps 600` run confirmed pins were starting correctly but
+never once closed out within 90 seconds.
+
+Root cause, found by reading the actual mechanics rather than guessing at
+numbers: `PinMinigame` (`game/core/minigames/pin_minigame.gd`) is a timed
+fill-meter — a marker sweeps `[0,1]` twice across the 180-tick pin
+(`MatchReferee.PIN_COUNT_TICKS`), and the defender needed 30 accumulated
+ticks of "input held AND marker inside the target window" to escape. That
+was designed assuming a press-limited, human-speed input signal (a human's
+`strike` only reads `true` on the exact tick of a *new* press —
+`Input.is_action_just_pressed`). But `WrestlerAI.poll_input()`
+(`game/core/ai/wrestler_ai.gd:24-27`) returned a literal `true` held for
+*every* tick of `PIN_DEFENDER`, with no reaction delay and no re-press
+requirement — the AI was never actually playing the timing minigame, just
+banking every qualifying tick the marker happened to sweep through. Doing
+the math on what a correctly rate-limited input could achieve against a
+30-tick threshold showed it would need 20-33 presses/second sustained for
+3 seconds — not achievable by a human or a reasonable AI stand-in, so this
+wasn't a single-file fix: the input model and the threshold were two
+independently-authored pieces that had never actually been exercised
+together.
+
+Fixed both sides together:
+- `WrestlerAI` now presses like a human would: a `kickout_reaction_ticks`
+  delay (10 ticks) before the first attempt, then re-presses no faster than
+  `kickout_press_interval_ticks` apart (5 ticks), and only when the marker
+  is actually in the target window at that tick — the same information a
+  human sees on the minigame's own marker/target-zone UI, not omniscience.
+  No RNG involved, so `ReplaySystem`/capture-harness determinism is
+  unaffected.
+- `PinMinigame.PROGRESS_THRESHOLD` dropped from 30 to 12 — calibrated
+  against the rate-limited policy above, not picked in isolation.
+
+Verified two ways. A new `game/tests/test_pin_minigame_kickout.gd` (5 new
+unit tests, 12/12 total passing alongside the existing suite) drives
+`WrestlerAI._should_press_kickout()` directly against `PinMinigame.tick()`
+across the window fractions `kickout_window_fraction()` actually produces:
+a badly damaged defender (window 0.05) essentially never escapes, a
+high-momentum-attacker pin (window 0.3) rarely does, and the band
+0.3→0.35→0.4→0.45→0.5 is neither flat-0% nor flat-100% and never gets
+*easier* as the window narrows — the direct regression check for the
+original bug, which made every window in that band ~100%. A separate test
+locks in the actual mechanism fix: presses are provably rate-limited, never
+held every tick.
+
+Then a live-match probe (`--fixed-fps 600`, same wrapper-scene pattern as
+the prior entry, extended to a 300s-per-seed budget) against real
+`match.tscn`, all 5 seeds (1-5): **every seed now reaches a genuine pinfall
+win** (`match_won` fires with `method="pinfall"`), something no seed did
+before this fix at any tested duration. Per-attempt logs show plausible,
+non-degenerate press counts (11-12 out of a 180-tick pin, never 0 and never
+~180), confirming the AI is actually playing the rate-limited minigame
+rather than trivially winning or losing it.
+
+**Honest gap, found by the same probe, not smoothed over:** every pin
+attempt across an entire match logged the *same* `window=0.40`, seed after
+seed — `kickout_window_fraction()` isn't narrowing round over round the way
+the design intends (progressively harder pins as damage piles up). At
+`window=0.40` with the calibration above, the defender escapes with almost
+no margin (11-12 presses against a threshold of 12) essentially every time,
+so matches reach their eventual pinfall by accumulating enough escapes to
+hit an unlucky RNG draw rather than by genuinely wearing the defender down
+— one seed took 88 escaped pin attempts (~243 game-seconds) before finally
+losing. That match-length variance (3 to 88 attempts across the 5 seeds
+tested) is real and wide. Why the window doesn't move round over round
+looks like a deeper question about how `total_damage()`/momentum accumulate
+across repeated knockdown cycles in the current AI-vs-AI script, not the
+input/threshold mismatch this fix targeted — left open rather than chased
+here, since `combat_system.gd`'s formula itself is unmodified and
+untouched by this fix, and per `ARCHITECTURE.md`, that kind of tuning is
+gauntlet-round work.

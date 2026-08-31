@@ -19,7 +19,18 @@ extends RefCounted
 
 const TICKS_PER_ATTEMPT := 90 # 1.5s at 60 Hz
 ## Ticks of held in-window input needed to kick out.
-const PROGRESS_THRESHOLD := 30.0
+const PROGRESS_THRESHOLD := 12.0  # was 30.0 — unreachable by any
+# human-plausible discrete-press policy at the window fractions
+# kickout_window_fraction() actually produces at a real knockdown
+# (~0.3-0.5). Confirmed against test_pin_minigame_kickout.gd and a live
+# multi-seed probe: paired with WrestlerAI's rate-limited kickout press
+# policy, a fresh knockdown at low-to-moderate attacker momentum (window
+# ~0.4-0.5) is usually escapable, at high attacker momentum (window ~0.3)
+# the defender is usually caught, and heavy cumulative damage (window
+# near the 0.05 floor) is essentially unescapable — matching a match arc
+# of early near-falls followed by an eventual real pin. A first-pass
+# calibration, not a final balance claim; open to later gauntlet-round
+# refinement.
 
 var target_start: float
 var target_width: float
@@ -37,13 +48,13 @@ static func marker_position(tick: int) -> float:
 	var t := float(tick % TICKS_PER_ATTEMPT) / float(TICKS_PER_ATTEMPT)
 	return 0.5 - 0.5 * cos(t * TAU)
 
-func _marker_in_window(tick: int) -> bool:
+func marker_in_window(tick: int) -> bool:
 	var pos := marker_position(tick)
 	return pos >= target_start and pos <= target_start + target_width
 
 ## Advances the fill meter for one tick and returns true once the
 ## defender has kicked out (crossed PROGRESS_THRESHOLD).
 func tick(tick_index: int, input_pressed: bool) -> bool:
-	if input_pressed and _marker_in_window(tick_index):
+	if input_pressed and marker_in_window(tick_index):
 		progress += 1.0
 	return progress >= PROGRESS_THRESHOLD
