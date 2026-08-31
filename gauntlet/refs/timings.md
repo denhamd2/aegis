@@ -4,14 +4,20 @@ Every number here must trace to a frame-stepped source clip under
 `gauntlet/refs/raw/`. Format: `value — source clip, timestamp, frame-step
 method (e.g. "ffmpeg -vf select, 30fps source")`.
 
-Status: **seeded with real frame-stepped measurements.** Source clip:
+Status: **seeded with real frame-stepped measurements.** Two source clips:
 `gauntlet/refs/raw/video/wwe2k26_footage_01.mp4` (WWE 2K26 gameplay,
-640x360 30fps, ~13min, user-supplied download — gitignored, stays local).
-Method throughout: `ffmpeg -ss <t> -to <t> -vf fps=30 out%04d.png`, then
-visual inspection frame-by-frame. Timestamps below are absolute position in
-that file. **This file is one clip's worth of measurement, not a
-cross-checked corpus** — treat single-instance numbers as a first data
-point to refine with more clips/matches, not a settled constant.
+640x360 30fps, ~13min, user-supplied download — gitignored, stays local)
+and `gauntlet/refs/raw/video/wwe2k26_footage_02.mp4` (WWE 2K26 gameplay,
+640x360 30fps, ~18.8min, WrestleMania-branded hardcore/weapons match,
+user-supplied download — gitignored, stays local). Method throughout:
+`ffmpeg -ss <t> -to <t> -vf fps=30 out%04d.png`, then visual inspection
+frame-by-frame (footage_02's three-count measurement used the same method
+at native 30fps with no gaps, i.e. every frame in the window was checked,
+not sampled). Timestamps below are absolute position in the clip named
+alongside each measurement. **This file is two clips' worth of
+measurement, not a cross-checked corpus** — treat single-instance numbers
+as a first data point to refine with more clips/matches, not a settled
+constant.
 
 **Note on clip structure:** this file is a multi-match compilation with
 hard cuts between different pairings (confirmed at ~227.2s, where a visible
@@ -69,14 +75,24 @@ measured sequence doesn't straddle a cut before citing a number from it.
   `strike_jab.tres` (`active_frames = 4`, `recovery_frames = 10`) stays
   unconfirmed for now — needs an isolated single strike (one wrestler
   attacking a non-retaliating or blocking opponent) from another clip.
+  Checked `wwe2k26_footage_02.mp4` 829s–834s (a standing exchange near a
+  dropped weapon) frame-by-frame at native 30fps as a candidate — same
+  problem as footage_01: it's continuous mutual trading with no isolated
+  single-attacker window, so it doesn't resolve this either. Still needs a
+  clip with one wrestler striking a non-retaliating/blocking opponent.
 
 ## Reversal window length
-- (pending — searched several strike/grapple sequences in this clip for a
-  dedicated reversal-timing indicator; the only persistent icon found near
-  the HUD top during strikes is the star/match-quality meter, not a
-  reversal prompt. Either this clip's UI doesn't surface reversal timing
-  visually, or it wasn't in a sequence reviewed. Needs a clip with a
-  confirmed reversal happening on camera.)
+- (pending — searched several strike/grapple sequences in `wwe2k26_footage_01.mp4`
+  for a dedicated reversal-timing indicator; the only persistent icon found
+  near the HUD top during strikes is the star/match-quality meter, not a
+  reversal prompt. `wwe2k26_footage_02.mp4` didn't add a confirmed instance
+  either — it's a two-player hardcore match with continuous mutual
+  strike-trading (see the strike-recovery note below) rather than isolated
+  attacker/defender exchanges where a reversal prompt would be easy to
+  isolate on camera, and no distinct reversal UI cue was spotted in the
+  portions reviewed (0–350s, 800–865s). Needs a clip with a confirmed
+  reversal happening on camera, ideally one with a visible on-screen
+  reversal prompt.)
 
 ## Submission hold duration (single attempt, to referee intervention)
 - **~2.5s (673.00s–675.5s)** — `wwe2k26_footage_01.mp4`, hold applied at
@@ -92,16 +108,47 @@ measured sequence doesn't straddle a cut before citing a number from it.
   as a real data point for whoever tunes that minigame later.
 
 ## Three-count cadence
-- (pending — this clip's visible finish (~750s) cuts to a slow-motion
-  finisher **replay package** — confirmed by an on-screen "REPLAY" badge,
-  which is broadcast-edited slow-motion, not the actual live pace, so it's
-  explicitly excluded rather than mismeasured. Need a clip with an
-  on-screen pinfall count that isn't inside a replay package.)
+- **Filled from footage_02** (`wwe2k26_footage_02.mp4`, Byron Breakker vs.
+  Oba Femi, WrestleMania-branded hardcore match, live/non-replay pinfall
+  finish at ~1093s). Method: extracted every frame at native 30fps across
+  the whole count (`ffmpeg -ss 1086 -to 1096 -vf fps=30`, no sampling gaps)
+  and located the exact frame each count digit pops onto the HUD (referee's
+  hand-slap count, top-center of screen). Digits appear as an instant pop-in
+  (no fade), so onset is bounded to a single 1/30s frame each time:
+  - **Count "1" onset: t=1091.000s** (frame index 150 of the 30fps extract;
+    still absent one frame earlier at 1090.967s) —
+    `frames/count_none_pre1.jpg` (last clean frame, no digit) vs.
+    `frames/count_one.jpg` (first frame, "1" fully visible).
+  - **Count "1" visible through t=1091.633s**, gone by 1091.667s — on-screen
+    duration ≈0.63–0.67s.
+  - **Count "2" onset: t≈1092.25s** (faint at frame 187/t=1092.233s, fully
+    solid by frame 188/t=1092.267s) — `frames/count_two.jpg`.
+  - **Count "2" visible through t=1092.633s**, gone by 1092.667s — on-screen
+    duration ≈0.37–0.43s.
+  - **Count "3" onset: t≈1093.25s** (absent at frame 217/t=1093.233s, fully
+    solid by frame 218/t=1093.267s) — `frames/count_three.jpg`. The
+    "WINNER OBA FEMI" banner begins fading in on the very next sampled
+    frame (1093.3s), i.e. essentially simultaneous with the "3".
+  - **Measured intervals (onset-to-onset): "1"→"2" ≈1.25s, "2"→"3" ≈1.00s.**
+    Each digit is also on-screen for noticeably less than the full interval
+    (there's a silent ~0.55–0.6s gap between one digit disappearing and the
+    next appearing) — so the visible-count time and the count-to-count
+    cadence are two different numbers; don't conflate them if tuning a
+    three-count timer off this. Onset timestamps carry ±1 frame (±0.033s)
+    uncertainty from the frame-step method itself.
+  - Not directly comparable to a single constant in this project yet — no
+    referee/pinfall-count system exists in code to compare against
+    (Phase 3 gap, not this file's job to flag beyond noting it).
 
 ## Ring-crossing run speed
-- (pending — surveyed roughly 400s–600s of this clip at 1fps looking for a
-  corner-to-corner sprint/Irish whip rebound; this match reads as
-  grapple/strike-heavy with big aerial/outside-the-ring spots rather than
+- (pending — surveyed roughly 400s–600s of `wwe2k26_footage_01.mp4` at 1fps
+  looking for a corner-to-corner sprint/Irish whip rebound; this match reads
+  as grapple/strike-heavy with big aerial/outside-the-ring spots rather than
   running offense, so no clean instance turned up in the portion reviewed.
-  Needs either more of this clip reviewed at finer granularity or a
-  different clip with a clearer running spot.)
+  Also checked `wwe2k26_footage_02.mp4` 320s–350s at 5fps (a candidate
+  corner sequence) — turned out to be a top-rope/apron dive with a weapon,
+  not a ground sprint. footage_02 is a hardcore/weapons match end-to-end
+  (confirmed via a 10s-interval survey across its full ~1126s runtime) and
+  reads as mat-and-weapons-heavy throughout, not running-offense-heavy, so
+  it's a poor candidate for this measurement specifically. Needs a
+  non-hardcore clip with a clearer running spot.)
