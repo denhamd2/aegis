@@ -28,6 +28,29 @@ var _last_kickout_press_tick: int = -1000
 var _tie_up_tick: int = 0
 var _last_tie_up_press_tick: int = -1000
 
+## Max ticks setup_jitter() may shift tie_up_reaction_ticks/
+## tie_up_press_interval_ticks by, either direction.
+const TIE_UP_JITTER_TICKS := 2
+
+## Applies a small, deterministic per-instance timing offset to the tie-up
+## mash tunables, derived from (match_seed, player_index) rather than raw
+## RNG — so two AI opponents with identical exported defaults don't mash on
+## the exact same ticks forever (see match_referee.gd's tie-break comment:
+## with zero jitter, two such opponents tie on literally every single
+## tie-up, and only an explicit rule decides it — this makes that the rare
+## case instead of the only case). Deterministic per (match_seed,
+## player_index): the same match replays identically (ReplaySystem
+## contract), only the seed/slot combination varies. Call once at setup,
+## not per-tick — this is a fixed instance property, not live randomness.
+## Not called by match_setup.gd for a non-AI wrestler, and not called at all
+## by direct WrestlerAI.new() construction (e.g. in unit tests), which is
+## intentional — tests get the un-jittered baseline tunables.
+func setup_jitter(match_seed: int, player_index: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 4096 + player_index
+	tie_up_reaction_ticks = max(1, tie_up_reaction_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
+	tie_up_press_interval_ticks = max(1, tie_up_press_interval_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
+
 func _physics_process(_delta: float) -> void:
 	if not controller or not target:
 		return

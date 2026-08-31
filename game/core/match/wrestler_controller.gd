@@ -27,7 +27,10 @@ const STUNNED_TICKS := 45
 ## States WrestlerFSM.LEGAL_TRANSITIONS actually allows a TIE_UP transition
 ## from — both sides of a grapple attempt must be in one of these, or the
 ## attempt is silently dropped (see the gate in _process_free_movement()).
-const _CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
+## Public (not underscore-prefixed) so MatchReferee can gate its own
+## tie-up-entry decision with the same legality check — see
+## _wants_tie_up_this_tick's doc comment for why entry moved there.
+const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 	WrestlerFSM.State.IDLE,
 	WrestlerFSM.State.LOCOMOTION,
 ]
@@ -121,6 +124,25 @@ var _active_move_hit_applied: bool = false
 var _kickout_input_this_tick: bool = false
 var _submission_defender_input_this_tick: bool = false
 var _tie_up_input_this_tick: bool = false
+## Set by _process_free_movement() whenever this wrestler pressed grapple
+## this tick; consumed by MatchReferee (which runs after every wrestler's
+## own _physics_process, see _resolve_pending_hits()'s doc comment for why
+## that ordering matters) to decide whether to start a tie-up. Entry used to
+## happen inline here via a direct opponent.fsm.transition_to(TIE_UP) call —
+## but since only one wrestler's _process_free_movement() actually executes
+## that branch each tick (whichever comes first in the scene tree), the
+## *other* wrestler's FSM state changed mid-tick, before its own
+## _physics_process() ran — so its WrestlerAI.poll_input() saw TIE_UP
+## already in effect and started counting tie-up mash ticks one tick early,
+## every single time, regardless of either wrestler's actual behavior. In an
+## AI-vs-AI match with identical, jitter-free mash timing (no RNG in that
+## policy by design) that one-tick head start silently decided every single
+## tie-up — confirmed live: TieUpMinigame progress at resolution was always
+## exactly (9.0, 10.0), the "loser" one tick behind, never closer. Deferring
+## the actual transition to MatchReferee (which runs strictly after both
+## wrestlers this tick) makes entry happen on a fresh tick for both sides
+## uniformly, the same fix shape already used for pin/submission entry.
+var _wants_tie_up_this_tick: bool = false
 
 ## Whether MatchReferee._check_for_cover() may start a new pin on this
 ## wrestler right now. True by default and after a genuine knockdown (an
@@ -286,28 +308,11 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	elif fsm.current_state != WrestlerFSM.State.IDLE:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
+	_wants_tie_up_this_tick = false
 	if input.get("strike", false) and strike_move:
 		_start_move(WrestlerFSM.State.STRIKE, strike_move)
-	elif input.get("grapple", false) and opponent and _in_range(TIE_UP_RANGE) \
-			and _CAN_ENTER_TIE_UP.has(fsm.current_state) \
-			and _CAN_ENTER_TIE_UP.has(opponent.fsm.current_state):
-		# Forcing the opponent into TIE_UP without checking its state is
-		# illegal whenever it's mid-strike, reacting to a hit, running, etc.
-		# (only IDLE/LOCOMOTION legally transition into TIE_UP per
-		# WrestlerFSM.LEGAL_TRANSITIONS) — WrestlerFSM.transition_to()'s
-		# assert() logs but does not actually block the illegal transition,
-		# so an unguarded call here left the opponent's FSM state and its
-		# _is_grapple_attacker bookkeeping permanently desynced: the
-		# opponent's state silently failed to change, but MatchReferee would
-		# still later assign it the attacker/defender role and try to push
-		# it into GRAPPLE_HOLD from whatever unrelated state it was actually
-		# stuck in — itself illegal and silently dropped, so neither
-		# wrestler's _physics_process match statement ever routed to
-		# _process_grapple_hold() again. A real deadlock, not a rare one:
-		# any grapple attempted while the opponent is mid-anything-else
-		# hits it, so gate here instead of after the fact.
-		fsm.transition_to(WrestlerFSM.State.TIE_UP)
-		opponent.fsm.transition_to(WrestlerFSM.State.TIE_UP)
+	elif input.get("grapple", false):
+		_wants_tie_up_this_tick = true
 
 func _in_range(range_m: float) -> bool:
 	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m

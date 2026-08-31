@@ -93,10 +93,11 @@ Known Phase 2 gaps, honestly:
 - Not played by a human yet — verification above is scripted/AI-vs-passive
   simulation, not a playtest with a gamepad. Whether the match *feels*
   right is unconfirmed regardless of whether it mechanically completes.
-- Two identical AI opponents (same stats, same seed, no tie-breaker) can
-  still deadlock in a mutual-knockout loop — confirmed separately from the
-  real one-AI-vs-one-passive-player scenario above, which does complete.
-  Not fixed; noted as a real gap for whenever match-vs-match AI matters.
+- Two identical AI opponents (same stats, same seed, no tie-breaker) used to
+  be flagged as a mutual-knockout deadlock risk; investigating it found the
+  real mechanism was different (a scene-tree-order bug in tie-up entry, not
+  a hang) — fixed, see "Fix: AI-vs-AI tie-ups were decided by scene order,
+  not contest" below.
 - `GrappleRig` has one paired animation now (`grapple_suplex`, see Phase 3
   progress below) but 17 more moves' worth of clips still fall back to
   resolving on the move's frame count via a timer instead of an
@@ -806,3 +807,85 @@ result is a property of this specific default config, not of the fix.
 `PROGRESS_THRESHOLD`, `tie_up_reaction_ticks`, and
 `tie_up_press_interval_ticks` are all first-pass values, open to later
 gauntlet-round retuning like the kickout/submission constants before them.
+
+## Fix: AI-vs-AI tie-ups were decided by scene order, not contest
+
+README's own "Known Phase 2 gaps" named a real risk: "two identical AI
+opponents, same stats, same seed, no tie-breaker, can deadlock in a
+mutual-knockout loop." Testing it directly (both wrestlers set `is_ai =
+true`, live 5-seed `--fixed-fps 600` probe against real `match.tscn`) found
+matches do complete every time — no hang — but every single tie-up was won
+by the same wrestler (`WrestlerB`), every seed, by exactly one tick
+(`TieUpMinigame` progress at resolution was always `(a=9.0, b=10.0)`, never
+closer). Not a coincidence: `WrestlerController._process_free_movement()`
+used to force the *opponent* directly into `TIE_UP` via
+`opponent.fsm.transition_to(...)`, called from whichever wrestler's own
+`_physics_process()` happens to run first in the scene tree (always
+`WrestlerA`, first child under `Match`). The forced wrestler's FSM state
+changes mid-tick, before its own `_physics_process()` has run — so if it's
+later in the scene tree, its `WrestlerAI.poll_input()` sees `TIE_UP`
+already in effect and starts counting mash ticks one tick early, every
+time. With two AI instances using identical, jitter-free mash timing (no
+RNG in that policy, by design), that one-tick head start was the entire
+contest.
+
+Fixed in two parts, matching the pattern already used for pin/submission
+entry:
+- **Entry moved into `MatchReferee`.** Wrestlers now just record intent
+  (`_wants_tie_up_this_tick`, mirroring `_kickout_input_this_tick`); a new
+  `MatchReferee._try_start_tie_up()` — running after both wrestlers'
+  `_physics_process()` for the tick, same reasoning already established for
+  `_resolve_pending_hits()`'s deferred-hit queue — decides when to actually
+  transition both wrestlers into `TIE_UP`, uniformly, on a tick where
+  neither side has already acted. This also keeps the illegal-transition
+  guard the old inline version had (both wrestlers must already be in a
+  state `WrestlerFSM.LEGAL_TRANSITIONS` allows into `TIE_UP`), just
+  relocated to the new call site.
+- **`WrestlerAI.setup_jitter(match_seed, player_index)`** applies a small
+  (±2 tick), deterministic per-instance offset to `tie_up_reaction_ticks`/
+  `tie_up_press_interval_ticks`, derived from `(match_seed, player_index)` —
+  not per-tick RNG, so `ReplaySystem` determinism is unaffected. Wired in by
+  `match_setup.gd` for any wrestler with `is_ai = true`. Without it, two
+  identical AI configs tie on literally every single tie-up even after the
+  ordering fix above (confirmed: reran the fix with jitter disabled first,
+  saw exact `a_prog == b_prog` ties every time). With it, two AI opponents
+  now genuinely diverge per match seed.
+- **Explicit, seeded tie-break** (`MatchReferee._break_tie_up_tie()`) for
+  the case both sides still cross `PROGRESS_THRESHOLD` on the exact same
+  tick — now a real, reachable case rather than a hypothetical, since
+  jitter narrows but doesn't eliminate it. Resolved with a seeded coin flip
+  (`match_seed` + the current tie-up's tick count), not by which branch an
+  `if`/`elif` happens to check first — that was the original placeholder
+  bug's own shape, and leaving it implicit here would have just relocated
+  it rather than fixed it.
+
+New tests: `test_wrestler_ai_jitter.gd` (3 cases — jitter is deterministic
+per `(match_seed, player_index)`, two different `player_index` values
+diverge across a range of seeds, jitter never produces a non-positive
+interval) and `test_match_referee_tie_break.gd` (2 cases — the tie-break is
+deterministic per `(match_seed, tick)`, and both wrestlers can win it across
+a range of seeds). Full suite: 26/26, 0 errors, 0 failures.
+
+Live verification, real Godot binary, both wrestlers `is_ai = true`, 5
+distinct match seeds (previously-undiscovered bug: the existing probe
+pattern's `-- --match-seed=N` CLI flag was never actually read by
+`match_setup.gd`, so every earlier "multi-seed" run in this session,
+including the original tie-up fix above, silently ran the same seed=1 five
+times — harmless for those fixes since they weren't testing seed-driven
+variance, but worth naming since it's exactly the kind of stale assumption
+this fix depends on getting right; the wrapper `.tscn` now sets `match_seed`
+directly as a scene-property override instead):
+- All 5 seeds resolved (no timeout, no illegal-FSM-transition assertions),
+  with genuinely different match lengths (1107–1226 ticks) — no longer
+  byte-identical.
+- The winner varies by seed: `WrestlerB` won 3/5, `WrestlerA` won 2/5 — the
+  direct confirmation the outcome is no longer pinned to one side by scene
+  order.
+- Confirmed the default human-vs-AI `match.tscn` config (only `WrestlerB` is
+  AI) still resolves correctly after the refactor — unaffected by this fix
+  in practice (a passive player never presses grapple), but the entry path
+  it depends on changed, so this was checked directly rather than assumed.
+
+`TIE_UP_JITTER_TICKS` (±2) is a first-pass value, same caveat as the other
+tuning constants above — open to retuning once this matters for real
+gauntlet-round balance rather than just breaking a deterministic tie.

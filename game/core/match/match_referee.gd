@@ -63,13 +63,34 @@ func _physics_process(_delta: float) -> void:
 	if _tying_up:
 		_tick_tie_up()
 		return
-	if wrestler_a.fsm.current_state == WrestlerFSM.State.TIE_UP \
-			and wrestler_b.fsm.current_state == WrestlerFSM.State.TIE_UP:
-		_tying_up = true
-		_tie_up_ticks = 0
-		_tie_up_minigame = TieUpMinigame.new()
+	if _try_start_tie_up():
 		return
 	_check_for_downed_opponent_action()
+
+## Starts a tie-up once either wrestler pressed grapple this tick (captured
+## by WrestlerController._wants_tie_up_this_tick — see its doc comment for
+## why entry lives here rather than inline in the wrestler, mirroring
+## PIN_DEFENDER/SUBMISSION_DEFENDER's "driven by MatchReferee" pattern: this
+## runs strictly after both wrestlers' own _physics_process for the tick, so
+## neither side gets a scene-tree-order head start on the mash contest that
+## follows. Also the sole gate against an illegal TIE_UP transition (only
+## legal from IDLE/LOCOMOTION per WrestlerFSM.LEGAL_TRANSITIONS) — checked
+## for both wrestlers before touching either FSM, same protection the old
+## inline version had.
+func _try_start_tie_up() -> bool:
+	if not (wrestler_a._wants_tie_up_this_tick or wrestler_b._wants_tie_up_this_tick):
+		return false
+	if wrestler_a.global_position.distance_to(wrestler_b.global_position) > WrestlerController.TIE_UP_RANGE:
+		return false
+	if not WrestlerController.CAN_ENTER_TIE_UP.has(wrestler_a.fsm.current_state) \
+			or not WrestlerController.CAN_ENTER_TIE_UP.has(wrestler_b.fsm.current_state):
+		return false
+	wrestler_a.fsm.transition_to(WrestlerFSM.State.TIE_UP)
+	wrestler_b.fsm.transition_to(WrestlerFSM.State.TIE_UP)
+	_tying_up = true
+	_tie_up_ticks = 0
+	_tie_up_minigame = TieUpMinigame.new()
+	return true
 
 ## Kept as one function rather than two independent scans so a given
 ## attacker/defender pair can't match both a pin and a submission check the
@@ -151,9 +172,24 @@ func _end_submission(tapped_out: bool) -> void:
 func _tick_tie_up() -> void:
 	_tie_up_ticks += 1
 	_tie_up_minigame.tick(wrestler_a._tie_up_input_this_tick, wrestler_b._tie_up_input_this_tick)
-	if _tie_up_minigame.a_wins():
+	var a_won := _tie_up_minigame.a_wins()
+	var b_won := _tie_up_minigame.b_wins()
+	if a_won and b_won:
+		# Both sides crossed PROGRESS_THRESHOLD on the exact same tick — now
+		# a real, reachable case (not just a hypothetical) once entry-order
+		# bias is fixed and two AI opponents mash on genuinely equal
+		# footing (see _try_start_tie_up()'s doc comment and
+		# WrestlerAI.setup_jitter(), which makes an exact tie rare but not
+		# impossible). Resolved with an explicit, seeded coin flip rather
+		# than silently falling out of an if/elif's checking order — that
+		# was the original bug's own shape (the old placeholder's "lower
+		# player_index wins" rule), just relocated, not fixed, if left
+		# implicit here too.
+		var winner := _break_tie_up_tie()
+		_resolve_tie_up(winner, wrestler_b if winner == wrestler_a else wrestler_a)
+	elif a_won:
 		_resolve_tie_up(wrestler_a, wrestler_b)
-	elif _tie_up_minigame.b_wins():
+	elif b_won:
 		_resolve_tie_up(wrestler_b, wrestler_a)
 	elif _tie_up_ticks >= TIE_UP_MAX_TICKS:
 		# Backstop only — distinct AI/press policies make an exact tie
@@ -161,6 +197,15 @@ func _tick_tie_up() -> void:
 		# this guarantees the match can't stall here forever.
 		var attacker := wrestler_a if _tie_up_minigame.a_progress >= _tie_up_minigame.b_progress else wrestler_b
 		_resolve_tie_up(attacker, wrestler_b if attacker == wrestler_a else wrestler_a)
+
+## Seeded, not random-random: same (match_seed, _tie_up_ticks) pair always
+## picks the same winner (ReplaySystem determinism), but varies across
+## matches/seeds and across repeated ties within one match, unlike a bare
+## "lower index wins" rule.
+func _break_tie_up_tie() -> WrestlerController:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 4096 + _tie_up_ticks
+	return wrestler_a if rng.randi_range(0, 1) == 0 else wrestler_b
 
 func _resolve_tie_up(attacker: WrestlerController, defender: WrestlerController) -> void:
 	_tying_up = false

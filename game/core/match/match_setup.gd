@@ -14,6 +14,13 @@ func _ready() -> void:
 	wrestler_b._resolve_paths()
 	referee.match_seed = match_seed
 	referee.match_won.connect(_on_match_won)
+	# Only matters once both wrestlers are AI (e.g. an AI-vs-AI match) — with
+	# a single AI opponent the other side's input is either a human or idle,
+	# already naturally distinct. See WrestlerAI.setup_jitter()'s doc comment.
+	if wrestler_a.is_ai and wrestler_a.ai:
+		wrestler_a.ai.setup_jitter(match_seed, wrestler_a.player_index)
+	if wrestler_b.is_ai and wrestler_b.ai:
+		wrestler_b.ai.setup_jitter(match_seed, wrestler_b.player_index)
 	if ReplaySystem:
 		ReplaySystem.start_recording(match_seed)
 
