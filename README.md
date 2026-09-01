@@ -98,12 +98,14 @@ Known Phase 2 gaps, honestly:
   real mechanism was different (a scene-tree-order bug in tie-up entry, not
   a hang) — fixed, see "Fix: AI-vs-AI tie-ups were decided by scene order,
   not contest" below.
-- `GrappleRig` has 4 real paired animations now (`grapple_suplex`,
-  `signature_backbreaker`, `finisher_piledriver`, `power_bodyslam` — see
-  "Feature: a power-tier grapple move, and a hidden attacker/defender bug"
-  below) out of the 18 moves (12 grapple + 6 reversal) `ARCHITECTURE.md`
-  scopes; the rest still fall back to resolving on the move's frame count
-  via a timer instead of an `AnimationPlayer` signal.
+- `GrappleRig` has 5 real paired animations now (`grapple_suplex`,
+  `signature_backbreaker`, `finisher_piledriver`, `power_bodyslam`,
+  `reversal_counter` — see "Feature: a power-tier grapple move, and a
+  hidden attacker/defender bug" and "Feature: a paired reversal-counter
+  animation, and a physics-capsule bug it exposed" below) out of the 18
+  moves (12 grapple + 6 reversal) `ARCHITECTURE.md` scopes; the rest still
+  fall back to resolving on the move's frame count via a timer instead of
+  an `AnimationPlayer` signal.
 - Irish whip, running attacks, and reversals had FSM states but nothing
   drove them, as of this writing — now wired end to end with real rope
   collision physics, see "Feature: irish whip, running attacks, and a
@@ -1210,3 +1212,90 @@ citation to tune against yet. This closes the "AI never initiates a whip or
 attempts a reversal" gap the base feature flagged; the AI still doesn't
 attempt a grapple-move reversal specifically, but per that feature's own
 writeup, no wrestler (human or AI) can — it's structurally unreachable.
+
+## Feature: a paired reversal-counter animation, and a physics-capsule bug it exposed
+
+Continuing the "one more paired move" pattern: reversal previously just
+snapped the countered attacker straight to `HIT_REACT` with no distinct
+visual — a real, working mechanic (see the base feature above) with no
+payoff to look at. `reversal_counter` fills that in: the reverser braces
+and shoves, the countered attacker stumbles backward and dips toward the
+mat before recovering, authored the same script-driven way as the other
+four paired clips (`Quaternion` composition, root-transform-only tracks).
+Unlike those four, there's no fixed "attacker"/"defender" MoveDef slot for
+it — a reversal can be thrown by either wrestler against either move type —
+so `MatchReferee._apply_reversal()` now calls the *reverser's own*
+`GrappleRig` reference directly (reverser in the "attacker"/lifter role,
+countered wrestler in the "defender"/thrown role), the same
+`GrappleRig.begin()` entry point every other paired move already uses.
+Finalizing `HIT_REACT`/momentum now waits for `grapple_finished` (the same
+async shape `_process_grapple_hold()`/`_on_grapple_finished()` already use)
+instead of resolving immediately — added `MatchReferee._reversing`, guarding
+`_check_for_reversal()` from re-triggering on a later tick against the same
+still-`STRIKE`/`RUNNING_ATTACK`-state attacker before the animation finishes
+(would otherwise hit `GrappleRig.begin()`'s "already active" assert on the
+very next referee tick).
+
+**A real bug found live, not introduced by the content itself:** the first
+AI-vs-AI probe with this move wired in hung on 2 of 5 seeds, always right
+after a reversal landed. Instrumented per-tick logging during the
+`HIT_REACT` window found the countered wrestler drifting ~0.74m downward in
+Y over 20 ticks — with `velocity` reading exactly `(0,0,0)` on *every
+single tick* of the drift, ruling out the first, more obvious suspect
+(leftover velocity from the whip-return autopilot or a rope bounce, which
+got fixed anyway — see below). The real cause: this clip's original final
+keyframe left the countered wrestler's rotation tipped ~90° (representing
+"knocked flat"), and paired clips retarget directly onto the
+`CharacterBody3D` root, so that rotation carries the wrestler's own
+collision *capsule* along with it — tipped that far, the capsule partly
+submerges in the floor collider once physics resumes, and Jolt's
+de-penetration response drags the whole body downward hunting for a new
+resting position, exactly matching the observed zero-velocity drift.
+Fixed by having the final keyframes recover back toward upright (peaking
+near -90° mid-fall, same as `power_bodyslam`'s own momentary peak, but
+settling around -30° by the end) rather than staying tipped over — the
+same "peak-then-recover" shape `power_bodyslam` already used safely,
+which this draft's tail hadn't followed.
+
+**A second, real but ultimately unrelated bug fixed along the way:**
+while chasing the above, found `WrestlerController._start_move()` (backing
+`STRIKE`/`MOVE_EXEC`/`RUNNING_ATTACK`/`HIT_REACT`) never reset `velocity`
+on entry — any of those states can be entered with stale velocity still
+sitting on the body from whatever came before (most concretely, the
+whip-return autopilot's `RUN_SPEED` steering, or a rope bounce's
+`velocity.bounce(normal)`, which can carry a small off-axis component if
+the collision isn't a clean face hit), silently consumed by
+`move_and_slide()` on every subsequent tick in a state that never manages
+velocity itself. Didn't turn out to be this bug's cause (velocity was
+confirmed zero throughout), but it's a real latent hazard independent of
+the animation fix — fixed by zeroing `velocity` in `_start_move()` itself,
+and kept even though the specific hang it was first suspected of causing
+turned out to have a different root cause.
+
+Verified against the real Godot binary:
+- Extended `test_match_referee_reversal.gd` with
+  `test_reverses_via_paired_animation_when_grapple_rig_present` (4 cases
+  covering the no-`grapple_rig` synchronous fallback already existed; this
+  adds the async path: `_reversing` is true and the attacker hasn't moved
+  to `HIT_REACT` yet immediately after `_check_for_reversal()`, then
+  resolves correctly once `grapple_finished` fires). Full suite: 50/50, 0
+  errors, 0 failures.
+- Direct-invocation OpenGL capture (same method as every prior paired-move
+  pass), both reverser-identity directions: clean posing throughout, no
+  bind-pose or invisible-limb bugs, matching motion regardless of which
+  wrestler reverses (confirming `_play_retargeted()`'s fix from the
+  power-tier pass still holds here too).
+- Live AI-vs-AI probe, 5 seeds, `--fixed-fps`: reversals landed in 3/5
+  seeds, all 5 matches resolved cleanly to a submission win with no
+  illegal-FSM assertions and no hangs, after both fixes above.
+- Regression check against the default human-vs-AI `match.tscn` config:
+  same clean resolution as before this pass (submission win, ~1150-1270
+  ticks depending on seed), confirming the `_start_move()` velocity-reset
+  change didn't disturb normal play.
+
+This brings the paired-move count to 5 of the 18 `ARCHITECTURE.md` scopes
+(12 grapple + 6 reversal) — 13 remain. `reversal_counter.tres`'s frame data
+is a first-pass placeholder like every other `MoveDef` constant in this
+project; it's cosmetic-timing-only here since `_apply_reversal()` doesn't
+read its damage/momentum fields at all (the reversed move's own momentum is
+what the reverser keeps, per the base feature).

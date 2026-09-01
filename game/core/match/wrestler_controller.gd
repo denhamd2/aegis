@@ -435,6 +435,18 @@ func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
 	_active_move = move
 	_move_ticks_remaining = move.total_frames()
 	_active_move_hit_applied = false
+	# None of _start_move()'s states (STRIKE/MOVE_EXEC/RUNNING_ATTACK/
+	# HIT_REACT) manage velocity themselves once entered -- _process_
+	# active_move()/_process_timed_state() never touch it, so whatever was
+	# left over from before (e.g. the irish-whip return autopilot's RUN_SPEED
+	# steering, or a rope bounce's velocity.bounce(normal), which can carry a
+	# small off-axis Y component if the collision wasn't a clean face hit)
+	# just sits there and gets silently consumed by move_and_slide() on
+	# every subsequent tick. Confirmed live: a wrestler reversed straight out
+	# of a post-whip RUNNING_ATTACK drifted ~0.74m in Y over its 20-tick
+	# HIT_REACT window with no other cause -- stale velocity, not gravity
+	# (there isn't any) or the reversal animation (which ends at y=0.0).
+	velocity = Vector3.ZERO
 	fsm.transition_to(state)
 
 ## States a wrestler cannot be struck out of by an opposing strike/grapple —

@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -13,6 +13,7 @@
 [ext_resource type="Resource" path="res://resources/moves/finisher_piledriver.tres" id="11"]
 [ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="12"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_counter.tres" id="14"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -111,3 +112,4 @@ wrestler_b_path = NodePath("../WrestlerB")
 script = ExtResource("5")
 wrestler_a_path = NodePath("../WrestlerA")
 wrestler_b_path = NodePath("../WrestlerB")
+reversal_counter_move = ExtResource("14")

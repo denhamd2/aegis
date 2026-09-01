@@ -22,6 +22,7 @@ const TIE_UP_MAX_TICKS := 200
 @export var wrestler_a_path: NodePath
 @export var wrestler_b_path: NodePath
 @export var match_seed: int = 0
+@export var reversal_counter_move: MoveDef
 
 var wrestler_a: WrestlerController
 var wrestler_b: WrestlerController
@@ -37,6 +38,14 @@ var _tying_up: bool = false
 var _tie_up_ticks: int = 0
 var _tie_up_minigame: TieUpMinigame
 var _match_over: bool = false
+## True while a reversal's paired counter animation is playing -- guards
+## _check_for_reversal() from re-triggering on a later tick against the
+## same attacker, who's still sitting in STRIKE/RUNNING_ATTACK (not yet
+## moved to HIT_REACT) for the animation's duration. Without this, a stale
+## _wants_reversal_this_tick surviving the reverser's own suspended
+## _physics_process() would hit GrappleRig.begin()'s "not _active" assert
+## on the very next tick.
+var _reversing: bool = false
 
 func _ready() -> void:
 	wrestler_a = get_node(wrestler_a_path)
@@ -115,6 +124,8 @@ func _try_start_tie_up() -> bool:
 ## for a reversal to observe. strike_jab.tres already has a real
 ## reversal_window_start/end (6-9) waiting on exactly this consumer, though.
 func _check_for_reversal() -> void:
+	if _reversing:
+		return
 	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
 		var reverser: WrestlerController = pair[0]
 		var attacker: WrestlerController = pair[1]
@@ -135,7 +146,29 @@ func _check_for_reversal() -> void:
 ## system: the reverser doesn't deal the move's damage back, just avoids it
 ## and gets the momentum, matching how much of a mechanic gauntlet/refs'
 ## still-pending reversal-window research actually justifies right now.
+##
+## Plays a real paired counter animation (reversal_counter.tres) via the
+## reverser's own GrappleRig reference -- reused exactly like a normal
+## grapple move, with the reverser in the "attacker" role (the one whose
+## motion track drives the counter) and the original attacker in the
+## "defender" role (the one getting countered). Finalizing HIT_REACT/
+## momentum waits for the animation to actually finish (grapple_finished)
+## rather than happening immediately, the same async shape
+## _process_grapple_hold()/_on_grapple_finished() already use for normal
+## grapple moves.
 func _apply_reversal(reverser: WrestlerController, attacker: WrestlerController) -> void:
+	_reversing = true
+	var grapple_rig := reverser.grapple_rig
+	if grapple_rig and reversal_counter_move:
+		grapple_rig.grapple_finished.connect(_on_reversal_finished.bind(reverser, attacker), CONNECT_ONE_SHOT)
+		grapple_rig.begin(reverser, attacker, reversal_counter_move)
+	else:
+		_finish_reversal(reverser, attacker)
+
+func _on_reversal_finished(_attacker: Node3D, _defender: Node3D, reverser: WrestlerController, attacker: WrestlerController) -> void:
+	_finish_reversal(reverser, attacker)
+
+func _finish_reversal(reverser: WrestlerController, attacker: WrestlerController) -> void:
 	var reversed_move := attacker._active_move
 	# _start_move() below immediately overwrites _active_move with the
 	# HIT_REACT timed stub anyway (same as _go_down()/_resolve_pending_hits()
@@ -145,6 +178,7 @@ func _apply_reversal(reverser: WrestlerController, attacker: WrestlerController)
 	# again.
 	attacker._start_move(WrestlerFSM.State.HIT_REACT, attacker._timed_stub(WrestlerController.HIT_REACT_TICKS))
 	reverser.combat.apply_momentum(reversed_move)
+	_reversing = false
 
 ## Kept as one function rather than two independent scans so a given
 ## attacker/defender pair can't match both a pin and a submission check the

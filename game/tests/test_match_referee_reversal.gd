@@ -101,3 +101,38 @@ func test_does_not_reverse_out_of_range() -> void:
 	referee._check_for_reversal()
 
 	assert_int(attacker.fsm.current_state).is_equal(WrestlerFSM.State.RUNNING_ATTACK)
+
+## When the reverser has a real GrappleRig, _apply_reversal() plays a paired
+## counter animation asynchronously (see its own doc comment) instead of
+## resolving immediately -- the other tests above all exercise the
+## no-grapple_rig fallback (bare WrestlerController.new() never gets one),
+## so this covers the async path directly. A bare, unparented GrappleRig
+## has no animation_player, so begin() takes its grey-box timer fallback
+## (see grapple_rig.gd) rather than needing a real AnimationPlayer/library
+## in this unit test.
+func test_reverses_via_paired_animation_when_grapple_rig_present() -> void:
+	var setup := _make_referee_with_pair()
+	var referee: MatchReferee = setup[0]
+	var reverser: WrestlerController = setup[1]
+	var attacker: WrestlerController = setup[2]
+	reverser.grapple_rig = auto_free(GrappleRig.new())
+	var counter_move := MoveDef.new()
+	counter_move.startup_frames = 1
+	counter_move.active_frames = 0
+	counter_move.recovery_frames = 0
+	referee.reversal_counter_move = counter_move
+	var move := _make_move()
+	_put_in_running_attack(attacker, move, 9)
+	reverser._wants_reversal_this_tick = true
+
+	referee._check_for_reversal()
+
+	# Not resolved yet -- still mid-animation.
+	assert_bool(referee._reversing).is_true()
+	assert_int(attacker.fsm.current_state).is_equal(WrestlerFSM.State.RUNNING_ATTACK)
+
+	await reverser.grapple_rig.grapple_finished
+
+	assert_bool(referee._reversing).is_false()
+	assert_int(attacker.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
+	assert_float(reverser.combat.momentum).is_equal(10.0)
