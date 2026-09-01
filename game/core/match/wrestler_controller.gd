@@ -39,6 +39,7 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 @export var is_ai: bool = false
 @export var strike_move: MoveDef
 @export var grapple_move: MoveDef
+@export var power_move: MoveDef
 @export var signature_move: MoveDef
 @export var finisher_move: MoveDef
 @export var weight_class: int = 1
@@ -405,6 +406,8 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		move = finisher_move
 	elif combat.can_signature() and signature_move:
 		move = signature_move
+	elif combat.can_power() and power_move:
+		move = power_move
 
 	_active_move = move
 	if grapple_rig:

@@ -30,3 +30,15 @@ func test_most_damaged_limb_picks_the_higher_damage_limb() -> void:
 	move.damage_arms = 10.0
 	combat.apply_move(move)
 	assert_int(combat.most_damaged_limb()).is_equal(CombatSystem.Limb.LEGS)
+
+func test_can_power_is_false_below_threshold() -> void:
+	var combat := CombatSystem.new()
+	combat.momentum = CombatSystem.POWER_THRESHOLD - 1.0
+	assert_bool(combat.can_power()).is_false()
+
+func test_can_power_is_true_at_and_above_threshold() -> void:
+	var combat := CombatSystem.new()
+	combat.momentum = CombatSystem.POWER_THRESHOLD
+	assert_bool(combat.can_power()).is_true()
+	combat.momentum = CombatSystem.SIGNATURE_THRESHOLD - 1.0
+	assert_bool(combat.can_power()).is_true()

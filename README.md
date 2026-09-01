@@ -98,10 +98,12 @@ Known Phase 2 gaps, honestly:
   real mechanism was different (a scene-tree-order bug in tie-up entry, not
   a hang) — fixed, see "Fix: AI-vs-AI tie-ups were decided by scene order,
   not contest" below.
-- `GrappleRig` has one paired animation now (`grapple_suplex`, see Phase 3
-  progress below) but 17 more moves' worth of clips still fall back to
-  resolving on the move's frame count via a timer instead of an
-  `AnimationPlayer` signal.
+- `GrappleRig` has 4 real paired animations now (`grapple_suplex`,
+  `signature_backbreaker`, `finisher_piledriver`, `power_bodyslam` — see
+  "Feature: a power-tier grapple move, and a hidden attacker/defender bug"
+  below) out of the 18 moves (12 grapple + 6 reversal) `ARCHITECTURE.md`
+  scopes; the rest still fall back to resolving on the move's frame count
+  via a timer instead of an `AnimationPlayer` signal.
 - Irish whip, running attacks, and reversals have FSM states but aren't yet
   driven by the referee or AI. Submission was in the same boat as of this
   writing, but is now wired end to end (see "Feature: wire submissions into
@@ -889,3 +891,90 @@ directly as a scene-property override instead):
 `TIE_UP_JITTER_TICKS` (±2) is a first-pass value, same caveat as the other
 tuning constants above — open to retuning once this matters for real
 gauntlet-round balance rather than just breaking a deterministic tie.
+
+## Feature: a power-tier grapple move, and a hidden attacker/defender bug
+
+Continuing the "one more paired move" pattern from the backbreaker/
+piledriver pass: the existing three paired moves (`grapple_suplex`,
+`signature_backbreaker`, `finisher_piledriver`) turned out not to be
+interchangeable options but a strict momentum-gated priority ladder inside
+`WrestlerController._process_grapple_hold()` — `finisher_move` if
+`combat.can_finisher()` (momentum >= 100), else `signature_move` if
+`combat.can_signature()` (momentum >= 60), else the ungated base
+`grapple_move`. There was no rung between the base grapple and signature
+tiers, so a fourth `grapple_*.tres` file on its own would have been
+unreachable content, the same "no live match currently reaches this"
+gap already flagged for the original suplex before referee wiring fixed
+it. Making a new move actually playable meant extending the ladder, not
+just authoring a clip: added `CombatSystem.POWER_THRESHOLD := 30.0` /
+`can_power()`, a new `@export var power_move: MoveDef` on
+`WrestlerController`, and one more rung in `_process_grapple_hold()`
+between the base grapple and signature checks. `power_bodyslam` fills it —
+attacker lifts the defender to a shoulder-height carry (peak ~1.25, well
+below the suplex's ~2.4 overhead hold or even the backbreaker's ~1.55) and
+slams flat. Deliberately kept the swing angle capped at 90° (never
+inverted), the same geometry-bug class the backbreaker pass already caught
+once (`grapple_rig.gd`'s class doc: a rotated body's far end sits at
+`root_y + BODY_HEIGHT * cos(flip)`, negative once flip passes 90°) — capping
+the swing avoids it outright rather than tuning around it. Authored the
+same script-driven way as the other three (`Quaternion` composition rather
+than hand-typed components, to build correct unit quaternions by
+construction instead of by arithmetic care), root-transform-only tracks, no
+bone tracks.
+
+**A real bug found while verifying it, not specific to this move:**
+`GrappleRig`'s paired clips are authored once against fixed node names —
+every existing clip's tracks target the literal `../WrestlerA` (always the
+grounded/lifting role) and `../WrestlerB` (always the thrown role), not
+"attacker"/"defender". A direct-invocation probe running the new move twice
+— once with `WrestlerA` as the real attacker, once with `WrestlerB` — found
+the unmodified clip always applied the lifter's motion to whichever node is
+literally named `WrestlerA`, regardless of who was actually attacking: with
+`WrestlerB` as the real attacker, the clip lifted the *attacker* into the
+air and left the defender standing on the mat, exactly backwards. This
+isn't new to `power_bodyslam` — it's latent in all three prior clips too —
+and it's no longer a hypothetical: this session's earlier tie-up fix made
+`WrestlerB` (the AI in the default match config) a genuine, reachable
+grapple attacker, not just `WrestlerA`.
+
+Fixed in `GrappleRig`: `begin()` now calls `_play_retargeted()`, which
+duplicates the clip's `Animation` resource, rewrites its two wrestler
+tracks' `NodePath`s to point at the real attacker/defender nodes for this
+call (`WrestlerA`-named track → attacker, `WrestlerB`-named track →
+defender), swaps the duplicate into the shared `AnimationLibrary` under the
+same name for the duration of the move, and restores the original
+afterward. Never mutates the original `Animation` in place — it's one
+`Resource` instance shared by every match/replay, the same shared-Resource
+hazard `MoveDef`'s own doc comment already flags elsewhere in this
+codebase. Confirmed fixed via the same direct-invocation probe, both
+attacker/defender directions: the lifter's motion now always follows the
+real attacker regardless of which physical node that is, with matching
+OpenGL-captured poses either way (see `_apply_root_motion()`'s neighboring
+code — root motion itself remains a no-op either way, since no
+`root_motion_track` is configured on this project's `AnimationPlayer`, an
+existing, unrelated detail this fix didn't touch).
+
+Verified against the real Godot binary:
+- New `test_grapple_move_selection.gd` (5 cases: each momentum tier boundary
+  selects the right move, and a missing `power_move` falls back to the base
+  grapple) plus 2 new `can_power()` boundary tests in
+  `test_combat_system.gd`. Full suite: 33/33, 0 errors, 0 failures.
+- Direct-invocation OpenGL capture (`xvfb-run --rendering-driver opengl3`,
+  same method as the suplex/backbreaker/piledriver passes) at 4 ticks
+  through the move, both attacker directions: no bind-pose or negative-
+  height invisibility bugs, correct lift/carry/slam posing throughout, and
+  (after the fix above) motion correctly follows the real attacker either
+  way.
+- Live 5-seed `--fixed-fps 600` probe against real `match.tscn` (default
+  config, `WrestlerB` AI): `power_bodyslam` is reached and selected in
+  every seed at momentum 40–50, sitting cleanly between `grapple_suplex`
+  (momentum 4–22) and `signature_backbreaker` (momentum 60) in the observed
+  move sequence, with matches still resolving cleanly to a submission win
+  and no illegal-FSM assertions.
+
+`power_bodyslam.tres`'s frame/damage/momentum values are a first-pass
+estimate, same caveat as every other `MoveDef` constant in this project —
+open to retuning once this matters for real gauntlet-round balance. This
+brings the paired-move count to 4 of the 18 `ARCHITECTURE.md` scopes (12
+grapple + 6 reversal) — 14 remain, all still on `GrappleRig`'s grey-box
+frame-count fallback.

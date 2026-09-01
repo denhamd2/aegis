@@ -7,6 +7,7 @@ enum Limb { HEAD, TORSO, ARMS, LEGS }
 
 const MAX_LIMB_DAMAGE := 100.0
 const MOMENTUM_MAX := 100.0
+const POWER_THRESHOLD := 30.0
 const SIGNATURE_THRESHOLD := 60.0
 const FINISHER_THRESHOLD := 100.0
 
@@ -41,6 +42,9 @@ func total_damage() -> float:
 	for v in limb_damage.values():
 		sum += v
 	return sum
+
+func can_power() -> bool:
+	return momentum >= POWER_THRESHOLD
 
 func can_signature() -> bool:
 	return momentum >= SIGNATURE_THRESHOLD
