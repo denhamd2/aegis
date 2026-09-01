@@ -70,6 +70,7 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_align_to_pair(attacker, defender)
 
 	_active = true
+	_play_role_poses(attacker, defender, move)
 	grapple_started.emit(attacker, defender, move)
 
 	if animation_player and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
@@ -81,6 +82,28 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 		var ticks_to_wait := move.total_frames() if move else 1
 		await Engine.get_main_loop().create_timer(ticks_to_wait / float(Engine.physics_ticks_per_second)).timeout
 		_on_animation_finished(&"")
+
+## Starts each wrestler's half of the move's authored bone-level performance.
+##
+## Done here rather than at either call site because there are two of them --
+## WrestlerController._process_grapple_hold() and
+## MatchReferee._apply_reversal() -- and both must start the poses on the same
+## physics tick as the root trajectory or the halves drift apart. It also
+## keeps to ARCHITECTURE.md's rule that GrappleRig is the system that drives
+## both bodies of a paired move in lockstep.
+##
+## Duck-typed rather than typed against WrestlerController so GrappleRig stays
+## free of a dependency on it, matching how it already takes Node3D bodies. A
+## move with no authored performance simply gets no call-through: both
+## wrestlers keep the borrowed single-character clip
+## WrestlerController.clip_for_state() gave them.
+func _play_role_poses(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
+	if not move:
+		return
+	for pair: Array in [[attacker, true], [defender, false]]:
+		var body: Node3D = pair[0]
+		if body and body.has_method("play_paired_pose"):
+			body.play_paired_pose(move, pair[1])
 
 func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D) -> void:
 	var library := animation_player.get_animation_library("")
@@ -169,6 +192,23 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 func _align_to_pair(attacker: Node3D, defender: Node3D) -> void:
 	attacker.global_transform = _pair_transform
 	defender.global_transform = _pair_transform.rotated_local(Vector3.UP, PI)
+
+## Keeps both wrestlers' grip IK and grip countdown ticking while their own
+## _physics_process is suspended.
+##
+## _suspend() switches physics processing off on both bodies for the whole
+## paired move, which is exactly the stretch during which the grip targets
+## most need to follow the opponent -- he is being lifted and thrown through
+## a metre of arc. Without this the IK freezes on the pose and target it held
+## at the last tie-up tick and the hands stay pointed at where the opponent
+## used to be, for the whole throw. GrappleRig is not itself suspended, so it
+## drives the pair's presentation the same way it drives their transforms.
+func _physics_process(_delta: float) -> void:
+	if not _active:
+		return
+	for body: Node3D in [_attacker, _defender]:
+		if body and body.has_method("update_paired_presentation"):
+			body.update_paired_presentation()
 
 func _suspend(body: CharacterBody3D) -> void:
 	if body:

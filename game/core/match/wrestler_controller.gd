@@ -155,6 +155,21 @@ const ATTACKER_STATE_ANIMATIONS := {
 const DEFENDER_STATE_ANIMATIONS := {
 	WrestlerFSM.State.GRAPPLE_HOLD: "Death01", # limp, being thrown
 }
+
+## Real bone-level performances for the moves that have one, generated from
+## resources/animations/paired_recipes.gd by tools/anim/build_paired_poses.gd.
+## These supersede the borrowed clips above, which remain the fallback for a
+## move with no recipe.
+##
+## Delivered through *this* wrestler's own AnimationTree rather than added to
+## the paired clip on GrappleRig's AnimationPlayer, because two
+## AnimationMixers must never write the same Skeleton3D. So the paired clip
+## keeps doing only what it always did -- the two CharacterBody3D root
+## transforms, the throw's trajectory -- and the bodies inside them are posed
+## here. The two halves are started on the same physics tick and are
+## generated to the same length; that is the whole of the synchronisation.
+const PairedRecipes := preload("res://resources/animations/paired_recipes.gd")
+const PAIRED_POSES := preload("res://resources/animations/paired_poses.tres")
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
 
@@ -254,6 +269,11 @@ func _ready() -> void:
 	anim_player = find_child("AnimationPlayer", true, false) as AnimationPlayer
 	fsm.state_changed.connect(_on_fsm_state_changed)
 	if anim_player:
+		# Registered under its own library name so the generated clips can
+		# never collide with the .glb's own 43, and so a missing generated
+		# clip reads as "paired/x is absent" rather than shadowing something.
+		if not anim_player.has_animation_library(PairedRecipes.LIBRARY):
+			anim_player.add_animation_library(PairedRecipes.LIBRARY, PAIRED_POSES)
 		_build_animation_tree()
 	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton:
@@ -389,16 +409,32 @@ func _is_gripping_state() -> bool:
 		WrestlerFSM.State.TIE_UP:
 			return true
 		WrestlerFSM.State.GRAPPLE_HOLD:
-			return _is_grapple_attacker
+			# The attacker holds his opponent for the whole move. The
+			# defender holds *back* only while he is still on his feet or
+			# being loaded -- past the recipe's defender_grips_until he has
+			# been thrown, and arms still reaching for the man who threw him
+			# read as him hanging in mid-air by them. A move nobody is
+			# lifted in (a reversal shove) keeps him gripping throughout.
+			return _is_grapple_attacker or _paired_grip_ticks > 0
 		_:
 			return false
 
 ## Aims both grip targets at the opponent and blends the IK in or out.
 ## Presentation only -- writes bone poses and marker positions, never
 ## position, velocity or FSM state, so it cannot change a match outcome.
+## Presentation tick for a wrestler whose own _physics_process is suspended
+## because GrappleRig is driving him through a paired move. GrappleRig calls
+## this from its own _physics_process; nothing else should, and while a
+## grapple is active the wrestler's _physics_process is by definition not
+## running, so the two paths can never both fire on one tick.
+func update_paired_presentation() -> void:
+	_update_grip_ik()
+
 func _update_grip_ik() -> void:
 	if _arm_ik.is_empty():
 		return
+	if _paired_grip_ticks > 0:
+		_paired_grip_ticks -= 1
 	var engaged := _is_gripping_state() and _aim_grip_targets()
 	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
 	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
@@ -419,8 +455,13 @@ func _aim_grip_targets() -> bool:
 		return false
 	if not opponent.skeleton or not skeleton:
 		return false
-	var anchor_name := GRIP_BONE_LIFT if fsm.current_state == \
-			WrestlerFSM.State.GRAPPLE_HOLD else GRIP_BONE
+	# The attacker holds his opponent's hips to lift him; everyone else --
+	# a tie-up, or a defender holding on to the man lifting him -- holds the
+	# chest. Reaching for a lifted victim's chest puts the arms overhead and
+	# behind, which reads as nothing at all.
+	var lifting := fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
+			and _is_grapple_attacker
+	var anchor_name := GRIP_BONE_LIFT if lifting else GRIP_BONE
 	var anchor_bone := opponent.skeleton.find_bone(anchor_name)
 	if anchor_bone < 0:
 		return false
@@ -450,6 +491,45 @@ func _reachable(shoulder_bone_name: String, target: Vector3) -> Vector3:
 	if offset.length() <= span or offset.length() < 0.001:
 		return target
 	return shoulder + offset.normalized() * span
+
+## Ticks this wrestler has left of holding on to his opponent during the
+## current paired move. Counted down rather than read off the paired
+## AnimationPlayer's position so it stays a whole number of physics ticks,
+## the same determinism rule TURN_RATE_PER_TICK and IK_BLEND_PER_TICK follow.
+var _paired_grip_ticks: int = 0
+
+## Switches this wrestler into his half of `move`'s authored performance, and
+## returns whether the move actually had one. Called by GrappleRig.begin()
+## for both wrestlers on the same physics tick, which is what keeps the two
+## halves and the root trajectory in step.
+##
+## Restarted with start() rather than travel(): both wrestlers are already in
+## GRAPPLE_HOLD by the time the attacker picks a move (_process_grapple_hold
+## runs *inside* that state), so travelling to it again is a no-op and the
+## pose would inherit the tie-up's playback position instead of beginning at
+## the throw's first frame.
+func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
+	if not move or not anim_player or not _anim_playback:
+		return false
+	var clip := PairedRecipes.role_clip(move.animation_pair_id, is_attacker)
+	if clip == "" or not anim_player.has_animation(clip):
+		return false
+	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var state_name: String = WrestlerFSM.State.keys()[WrestlerFSM.State.GRAPPLE_HOLD]
+	if not state_machine.has_node(state_name):
+		return false
+	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
+	if not anim_node:
+		return false
+	anim_node.animation = clip
+	_anim_playback.start(state_name, true)
+
+	var length := anim_player.get_animation(clip).length
+	var grip_fraction := 1.0 if is_attacker \
+			else PairedRecipes.defender_grip_until(move.animation_pair_id)
+	_paired_grip_ticks = int(round(length * grip_fraction
+			* Engine.physics_ticks_per_second))
+	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
 	if not _anim_playback:
