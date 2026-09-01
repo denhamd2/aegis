@@ -24,6 +24,19 @@ const STRIKE_HIT_RANGE := 1.8
 const GETUP_TICKS := 90 # 1.5s
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
+## Irish whip tuning. First-pass values, same caveat as every other tuning
+## constant in this project: gauntlet/refs/timings.md marks both reversal-
+## window length and ring-crossing run speed "pending" (no reference
+## footage found), so these aren't cited, just chosen to land somewhere
+## contested rather than degenerate. Confirm/retune via a live probe and
+## later reference capture, not by feel.
+const IRISH_WHIP_LAUNCH_SPEED := 9.0
+const IRISH_WHIP_REBOUND_DAMPING := 0.85
+const IRISH_WHIP_RETURN_TICKS := 45 # ~0.75s of autopilot return run
+## Group name (see scenes/ring.tscn) the rope StaticBody3D colliders are in
+## — lets _process_irish_whip() recognize a rope hit without depending on
+## specific node names.
+const RING_ROPE_GROUP := "ring_ropes"
 ## States WrestlerFSM.LEGAL_TRANSITIONS actually allows a TIE_UP transition
 ## from — both sides of a grapple attempt must be in one of these, or the
 ## attempt is silently dropped (see the gate in _process_free_movement()).
@@ -42,6 +55,7 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 @export var power_move: MoveDef
 @export var signature_move: MoveDef
 @export var finisher_move: MoveDef
+@export var running_attack_move: MoveDef
 @export var weight_class: int = 1
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
@@ -144,6 +158,31 @@ var _tie_up_input_this_tick: bool = false
 ## wrestlers this tick) makes entry happen on a fresh tick for both sides
 ## uniformly, the same fix shape already used for pin/submission entry.
 var _wants_tie_up_this_tick: bool = false
+
+## Set true once this wrestler's IRISH_WHIP flight has hit a rope this whip
+## (see _process_irish_whip()) -- guards against reflecting velocity again
+## on a later tick's residual collision report, and is reset to false at
+## the start of every fresh _begin_irish_whip() call.
+var _irish_whip_rebounded: bool = false
+## Ticks remaining in the post-rebound "run back toward the original
+## attacker" autopilot phase (see _process_irish_whip_return()). While
+## positive, RUN is physics-driven (the rebound), not player/AI-steered --
+## handing control back immediately would let normal _process_free_movement()
+## overwrite the bounce's velocity with whatever the move input says
+## (usually zero) the very next tick, killing the rebound instantly.
+var _irish_whip_return_ticks_remaining: int = 0
+## Who to auto-steer back toward during the whip-return phase -- the
+## original attacker, set by _begin_irish_whip().
+var _irish_whip_target: WrestlerController
+## Whether this wrestler pressed "reversal" this tick. Captured here (same
+## shape as _wants_tie_up_this_tick) and consumed by
+## MatchReferee._check_for_reversal() after every wrestler's own
+## _physics_process for the tick -- a reversal's outcome depends on reading
+## the *opponent's* same-tick _active_move/_move_ticks_remaining, exactly
+## the class of scene-order bug this session already fixed twice for tie-up
+## entry and pending-hit resolution, so it gets the same deferred-to-referee
+## treatment rather than being resolved inline here.
+var _wants_reversal_this_tick: bool = false
 
 ## Whether MatchReferee._check_for_cover() may start a new pin on this
 ## wrestler right now. True by default and after a genuine knockdown (an
@@ -260,6 +299,8 @@ func _physics_process(delta: float) -> void:
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.RUNNING_ATTACK:
 			_process_active_move(input)
+		WrestlerFSM.State.IRISH_WHIP:
+			_process_irish_whip()
 		WrestlerFSM.State.PIN_ATTACKER:
 			pass # driven by MatchReferee
 		WrestlerFSM.State.PIN_DEFENDER:
@@ -295,6 +336,11 @@ func _poll_live_input() -> Dictionary:
 	}
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
+	_wants_reversal_this_tick = input.get("reversal", false)
+	if fsm.current_state == WrestlerFSM.State.RUN and _irish_whip_return_ticks_remaining > 0:
+		_process_irish_whip_return(input)
+		return
+
 	var move_vec: Vector2 = input.get("move", Vector2.ZERO)
 	var running: bool = input.get("run", false) and move_vec.length() > 0.1
 	var speed := RUN_SPEED if running else MOVE_SPEED
@@ -310,13 +356,80 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 	_wants_tie_up_this_tick = false
-	if input.get("strike", false) and strike_move:
+	if fsm.current_state == WrestlerFSM.State.RUN:
+		_maybe_start_running_attack(input)
+	elif input.get("strike", false) and strike_move:
 		_start_move(WrestlerFSM.State.STRIKE, strike_move)
 	elif input.get("grapple", false):
 		_wants_tie_up_this_tick = true
 
 func _in_range(range_m: float) -> bool:
 	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m
+
+## RUN -> RUNNING_ATTACK is the only legal way into RUNNING_ATTACK, so this
+## is only ever called while already in RUN (both the player/AI-steered
+## case, from _process_free_movement(), and the post-whip autopilot case,
+## from _process_irish_whip_return()).
+func _maybe_start_running_attack(input: Dictionary) -> void:
+	if input.get("strike", false) and running_attack_move and opponent \
+			and _in_range(STRIKE_HIT_RANGE) and not UNHITTABLE_STATES.has(opponent.fsm.current_state):
+		_start_move(WrestlerFSM.State.RUNNING_ATTACK, running_attack_move)
+
+## Called by the attacker's own _process_grapple_hold() when it chooses to
+## whip instead of resolving a normal grapple move. Launches the defender
+## (this call's `opponent`, from the defender's own perspective once we
+## reach into it below) toward the ropes with real velocity -- the actual
+## flight and rebound are handled by _process_irish_whip() once physics
+## carries the body into a rope collider, not scripted here.
+func _begin_irish_whip() -> void:
+	var launch_dir := opponent.global_position - global_position
+	launch_dir.y = 0.0
+	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
+	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
+	opponent._irish_whip_target = self
+	opponent._irish_whip_rebounded = false
+	fsm.transition_to(WrestlerFSM.State.IDLE)
+	opponent.fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
+
+## Checks the *previous* tick's move_and_slide() collision report (the
+## standard CharacterBody3D pattern -- move_and_slide() itself runs
+## unconditionally at the end of _physics_process(), after this match-
+## statement dispatch, so a collision from tick T is read here at the top
+## of tick T+1) for a hit against a real rope collider (scenes/ring.tscn's
+## RING_ROPE_GROUP StaticBody3Ds). On the first such hit, reflects velocity
+## off the rope's normal -- a genuine physics bounce, not a scripted
+## teleport -- and hands off to RUN, which _process_irish_whip_return()
+## then auto-steers back toward the original attacker.
+func _process_irish_whip() -> void:
+	if _irish_whip_rebounded:
+		return
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		var collider := collision.get_collider()
+		if collider is Node and (collider as Node).is_in_group(RING_ROPE_GROUP):
+			velocity = velocity.bounce(collision.get_normal()) * IRISH_WHIP_REBOUND_DAMPING
+			_irish_whip_rebounded = true
+			_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
+			fsm.transition_to(WrestlerFSM.State.RUN)
+			break
+
+## Autopilot phase right after a rope rebound -- see
+## _irish_whip_return_ticks_remaining's doc comment for why this can't just
+## hand control to normal _process_free_movement() immediately. Steers
+## deterministically toward _irish_whip_target at RUN_SPEED (no player/AI
+## input drives direction here, matching a real rebound's momentum), while
+## still allowing a running attack the moment it's in range.
+func _process_irish_whip_return(input: Dictionary) -> void:
+	_irish_whip_return_ticks_remaining -= 1
+	if _irish_whip_target and is_instance_valid(_irish_whip_target):
+		var dir := _irish_whip_target.global_position - global_position
+		dir.y = 0.0
+		if dir.length() > 0.1:
+			dir = dir.normalized()
+			velocity.x = dir.x * RUN_SPEED
+			velocity.z = dir.z * RUN_SPEED
+			look_at(global_position + dir, Vector3.UP)
+	_maybe_start_running_attack(input)
 
 func _start_move(state: WrestlerFSM.State, move: MoveDef) -> void:
 	_active_move = move
@@ -398,6 +511,15 @@ func _timed_stub(ticks: int) -> MoveDef:
 
 func _process_grapple_hold(input: Dictionary) -> void:
 	if not _is_grapple_attacker:
+		# The defender sits in GRAPPLE_HOLD, not a free-movement state, while
+		# the attacker's paired move plays -- capture reversal intent here so
+		# MatchReferee._check_for_reversal() can still see it (free-movement
+		# states capture it via _process_free_movement(), which never runs
+		# for a GRAPPLE_HOLD defender).
+		_wants_reversal_this_tick = input.get("reversal", false)
+		return
+	if input.get("run", false):
+		_begin_irish_whip()
 		return
 	var move := grapple_move
 	if not move or opponent.weight_class < move.weight_class_min or opponent.weight_class > move.weight_class_max:

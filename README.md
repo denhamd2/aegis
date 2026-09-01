@@ -104,11 +104,16 @@ Known Phase 2 gaps, honestly:
   below) out of the 18 moves (12 grapple + 6 reversal) `ARCHITECTURE.md`
   scopes; the rest still fall back to resolving on the move's frame count
   via a timer instead of an `AnimationPlayer` signal.
-- Irish whip, running attacks, and reversals have FSM states but aren't yet
-  driven by the referee or AI. Submission was in the same boat as of this
-  writing, but is now wired end to end (see "Feature: wire submissions into
-  the referee and AI" below) — pin/kickout and submission/tap-out are both
-  real, reachable win-condition paths now.
+- Irish whip, running attacks, and reversals had FSM states but nothing
+  drove them, as of this writing — now wired end to end with real rope
+  collision physics, see "Feature: irish whip, running attacks, and a
+  hidden reversal-window consumer" below. Submission was in the same boat
+  earlier and is also now wired (see "Feature: wire submissions into the
+  referee and AI" below) — pin/kickout, submission/tap-out, and the whip
+  loop are all real, reachable paths now. The AI never *initiates* a whip
+  or attempts a reversal itself yet (both flagged as open gaps in that
+  section), and reversal-window/run-speed values have no reference-footage
+  citation — `gauntlet/refs/timings.md` marks both pending.
 - Tie-up resolution was a placeholder rule (lower player index wins) as of
   this writing; now a real mash contest — see "Feature: fix the tie-up
   resolution placeholder" below.
@@ -978,3 +983,134 @@ open to retuning once this matters for real gauntlet-round balance. This
 brings the paired-move count to 4 of the 18 `ARCHITECTURE.md` scopes (12
 grapple + 6 reversal) — 14 remain, all still on `GrappleRig`'s grey-box
 frame-count fallback.
+
+## Feature: irish whip, running attacks, and a hidden reversal-window consumer
+
+`WrestlerFSM.LEGAL_TRANSITIONS` already had every edge this needed
+(`GRAPPLE_HOLD -> IRISH_WHIP`, `IRISH_WHIP -> [RUN, HIT_REACT]`,
+`RUN -> RUNNING_ATTACK`, `RUNNING_ATTACK -> [IDLE, HIT_REACT, DOWN]`) but
+`WrestlerController` had zero handling for `IRISH_WHIP` and a dead case for
+`RUNNING_ATTACK` (it called `_process_active_move()`, but nothing ever
+called `_start_move(RUNNING_ATTACK, ...)` to enter it). `"reversal"` was
+read from input every tick and never consumed anywhere, despite
+`MoveDef.reversal_window_start/end` and `is_in_reversal_window()` already
+existing and being unit-tested in isolation — `strike_jab.tres` even
+already had a real window (6-9) waiting on a consumer that never showed up.
+`scenes/ring.tscn` had decorative rope meshes but no collision on them at
+all. Chose real rope collision + physics rebound over a scripted/timed
+abstraction (the option this project would otherwise default to, matching
+pin/submission/tie-up's own timer/threshold abstraction style) — a
+deliberate scope decision, not a "more work" default.
+
+**The loop, matching what the FSM table already encoded:** attacker whips
+the defender into `IRISH_WHIP` (real velocity launched toward the ropes);
+the defender physically collides with a rope, rebounds
+(`velocity.bounce(normal) * IRISH_WHIP_REBOUND_DAMPING`), and the FSM
+legally carries them into `RUN`; a fixed-tick autopilot phase
+(`IRISH_WHIP_RETURN_TICKS`) steers them back toward the *original attacker*
+with real `RUN_SPEED` velocity rather than handing control back
+immediately (which would let normal movement-input processing stomp the
+rebound's velocity the very next tick); once in range, a `strike` press
+fires `RUN -> RUNNING_ATTACK`, resolving through the same
+`_process_active_move()` path `STRIKE` already uses. No new input action —
+holding `run` while resolving a grapple in `_process_grapple_hold()` whips
+instead of the normal power/signature/finisher-tier resolution.
+
+**Reversal**, for the first time, actually reads
+`reversal_window_start`/`end`: the target of an in-flight `STRIKE` or
+`RUNNING_ATTACK` can press `reversal` while the attacker's move is inside
+its own reversal window to cancel the incoming hit, force the attacker into
+`HIT_REACT`, and keep the move's momentum as a small comeback reward — not
+a full counter-move system, just negating the hit. `MOVE_EXEC` (a
+grapple move resolved via `GrappleRig`) is deliberately excluded:
+`_resolve_grapple_move()` enters and resolves `MOVE_EXEC` synchronously
+within one `_physics_process()` call, no ticks pass in between, so by the
+time a referee tick runs, a grapple-driven `MOVE_EXEC` is already over —
+there's no multi-tick window for a reversal to observe without restructuring
+how grapple moves resolve, which is out of scope here.
+
+**Scene-order bias, a third time this session:** reversal's outcome
+depends on reading the *opponent's* same-tick state
+(`_active_move`/`_move_ticks_remaining`), the same shape already fixed
+twice this session (tie-up entry, pending-hit resolution) by deferring to
+`MatchReferee`, which runs after both wrestlers' own `_physics_process()`
+each tick. Each wrestler only captures `_wants_reversal_this_tick` intent
+during its own tick (in `_process_free_movement()` for a free-standing
+wrestler, and — a detail easy to miss — also in `_process_grapple_hold()`'s
+non-attacker early-return, since a grapple's defender sits in
+`GRAPPLE_HOLD`, not a free-movement state, while the paired move plays);
+`MatchReferee._check_for_reversal()` checks both wrestlers after both have
+acted and applies it. Running-attack triggering stays wrestler-local — only
+the rebounding wrestler is ever in `RUN` in this flow, so there's no
+symmetric scene-order race to fix there the way there was for tie-up entry.
+
+Building the direct-invocation live probe surfaced a real bug in the
+probe itself worth naming honestly: an early version wrote
+`_wants_reversal_this_tick` directly from the probe's own coroutine,
+between physics frames — which raced wrestler A's own
+`_process_free_movement()` (reading real, always-`false` `Input` state in
+headless mode) and got silently clobbered before `MatchReferee` ever saw
+it, so the reversal never fired. Driving the real `Input.action_press()`
+path hit the same wall (likely a physics-tick vs. input-processing cadence
+mismatch under `--fixed-fps` headless). Fixed by calling
+`referee._check_for_reversal()` directly from the probe at the moment the
+window opens, rather than racing the engine's own scheduled call to it —
+the move/FSM state being checked (wrestler B's real, physics-driven
+`RUNNING_ATTACK` progress) stayed entirely live; only the moment the
+referee's own check function ran was manually triggered.
+
+Verified against the real Godot binary:
+- New `test_running_attack_selection.gd` (5 cases: fires when in range with
+  strike pressed, and each individual gate — no strike, out of range, no
+  `running_attack_move`, unhittable opponent — correctly blocks it) and
+  `test_match_referee_reversal.gd` (4 cases: reverses inside the window,
+  does not outside it, does not without reversal intent, does not out of
+  range). Full suite: 42/42, 0 errors, 0 failures.
+  (Both new test files needed `add_child()` on their `WrestlerController`
+  instances, not just `auto_free()` — `CharacterBody3D` defers
+  `global_position` to the physics server, which only exists once a node
+  is actually inside a `SceneTree`; outside the tree, `global_position`
+  writes silently no-op, discovered when a "does not fire out of range"
+  test failed because the position change never took effect.)
+- Live direct-invocation probe inside a real `match.tscn` context (real
+  ring collision, real referee, `WrestlerB` still genuinely AI-controlled):
+  attacker forced into `GRAPPLE_HOLD` and whipped via
+  `_process_grapple_hold({"run": true})` — everything downstream ran for
+  real. Position/velocity trace showed a genuine physical rebound (not a
+  teleport): launched at 9.0 m/s, climbed to ~2.1m by tick 10, bounced
+  around tick ~17 near the rope's 3.1m collider, then RUN_SPEED-steered
+  back at exactly -7.0 m/s. `WrestlerB` (AI) pressed `strike` on its own
+  once back in range — confirming the existing distance-based opportunistic
+  strike logic already covers landing a running attack with *no* AI code
+  changes needed, since `RUN` was already in `poll_input()`'s allowed-state
+  gate. The hit landed cleanly at tick 39 with no illegal-FSM assertions in
+  the no-reversal trial; in the reversal trial, arming reversal at
+  frame_offset 7 (inside `running_attack_clothesline.tres`'s 7-12 window)
+  correctly cancelled the hit, transitioned the attacker to `HIT_REACT`
+  instead of landing, and credited the reverser 10.0 momentum — no
+  `MOVE_LANDED` signal fired at all.
+- Regression check: re-ran the earlier power-tier-reachability probe (5
+  seeds, default match config, unrelated to this feature) unchanged —
+  identical `LANDED`/`MATCH_WON` sequences and tick counts to before this
+  change, confirming the shared code paths this touched
+  (`_process_free_movement()`, `_process_grapple_hold()`) didn't disturb
+  normal play. (First attempt at this regression probe accidentally
+  replaced `match_setup.gd`'s own script on `match.tscn`'s root node
+  instead of wrapping it — the same mistake this session's own history
+  already flagged once before — caught by an all-seeds 20000-tick timeout,
+  fixed by wrapping instead of replacing.)
+
+`IRISH_WHIP_LAUNCH_SPEED` (9.0), `IRISH_WHIP_REBOUND_DAMPING` (0.85),
+`IRISH_WHIP_RETURN_TICKS` (45), and `running_attack_clothesline.tres`'s
+frame/damage/momentum/reversal-window values are all first-pass —
+`gauntlet/refs/timings.md` explicitly marks reversal-window length and
+ring-crossing run speed "pending" (no reference footage found), so none of
+this is cited, just chosen to land somewhere contested rather than
+degenerate. Confirm/retune later against real reference capture, not by
+feel. Honest gaps, not smoothed over: the AI never *initiates* a whip
+(never presses `run` during its own grapple decision) and never attempts a
+reversal — both reachable-but-basic-AI gaps, consistent with how
+`TIE_UP_JITTER_TICKS` was flagged earlier. Grapple-move (`MOVE_EXEC`)
+reversal isn't reachable either, for the structural reason described above
+(synchronous resolution, no multi-tick window) — only `STRIKE` and
+`RUNNING_ATTACK` are.

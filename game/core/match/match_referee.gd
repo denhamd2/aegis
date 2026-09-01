@@ -53,6 +53,7 @@ func _physics_process(_delta: float) -> void:
 	# regardless of node order.
 	wrestler_a._resolve_pending_hits()
 	wrestler_b._resolve_pending_hits()
+	_check_for_reversal()
 
 	if _pinning:
 		_tick_pin()
@@ -91,6 +92,59 @@ func _try_start_tie_up() -> bool:
 	_tie_up_ticks = 0
 	_tie_up_minigame = TieUpMinigame.new()
 	return true
+
+## Consumes MoveDef.reversal_window_start/end -- and the "reversal" input,
+## plumbed since day one but never read anywhere -- for the first time: the
+## target of an in-flight STRIKE or RUNNING_ATTACK can cancel the incoming
+## hit by pressing reversal while the attacker's move is inside its own
+## reversal window. Runs here (after both wrestlers' _physics_process for
+## the tick, before _resolve_pending_hits() would ever see a hit this
+## reversal is meant to cancel) for the same reason tie-up entry and
+## pending-hit resolution already do: whether a reversal lands depends on
+## reading the *opponent's* same-tick state
+## (_active_move/_move_ticks_remaining), and resolving that inline in
+## either wrestler's own _physics_process() would make the outcome depend
+## on scene-tree node order -- the exact bug class already fixed twice this
+## session for tie-up entry and pending hits.
+##
+## MOVE_EXEC (a grapple move resolved via GrappleRig) is deliberately not
+## included here: _resolve_grapple_move() enters and resolves MOVE_EXEC
+## synchronously within the attacker's own single _physics_process() call
+## (no ticks pass in between), so by the time this referee tick runs, a
+## grapple-driven MOVE_EXEC is already over -- there's no multi-tick window
+## for a reversal to observe. strike_jab.tres already has a real
+## reversal_window_start/end (6-9) waiting on exactly this consumer, though.
+func _check_for_reversal() -> void:
+	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
+		var reverser: WrestlerController = pair[0]
+		var attacker: WrestlerController = pair[1]
+		if not reverser._wants_reversal_this_tick:
+			continue
+		if not attacker._active_move or not attacker.fsm.is_in([WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]):
+			continue
+		var frame_offset := attacker._active_move.total_frames() - attacker._move_ticks_remaining
+		if not attacker._active_move.is_in_reversal_window(frame_offset):
+			continue
+		if reverser.global_position.distance_to(attacker.global_position) > WrestlerController.STRIKE_HIT_RANGE:
+			continue
+		_apply_reversal(reverser, attacker)
+
+## Negates the incoming hit and gives the attacker a taste of their own
+## medicine -- HIT_REACT, plus the reverser (not the attacker) keeps the
+## move's momentum, a small comeback reward. Not a full "counter move"
+## system: the reverser doesn't deal the move's damage back, just avoids it
+## and gets the momentum, matching how much of a mechanic gauntlet/refs'
+## still-pending reversal-window research actually justifies right now.
+func _apply_reversal(reverser: WrestlerController, attacker: WrestlerController) -> void:
+	var reversed_move := attacker._active_move
+	# _start_move() below immediately overwrites _active_move with the
+	# HIT_REACT timed stub anyway (same as _go_down()/_resolve_pending_hits()
+	# already do), so there's no separate "clear it first" step needed here
+	# -- the stub itself is what blocks the active-frame hit-application
+	# branch in _process_active_move() from ever seeing the reversed move
+	# again.
+	attacker._start_move(WrestlerFSM.State.HIT_REACT, attacker._timed_stub(WrestlerController.HIT_REACT_TICKS))
+	reverser.combat.apply_momentum(reversed_move)
 
 ## Kept as one function rather than two independent scans so a given
 ## attacker/defender pair can't match both a pin and a submission check the

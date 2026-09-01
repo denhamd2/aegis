@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -12,6 +12,7 @@
 [ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/moves/finisher_piledriver.tres" id="11"]
 [ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="12"]
+[ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -83,6 +84,7 @@ grapple_move = ExtResource("8")
 power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
+running_attack_move = ExtResource("13")
 opponent_path = NodePath("../WrestlerB")
 grapple_rig_path = NodePath("../GrappleRig")
 
@@ -95,6 +97,7 @@ grapple_move = ExtResource("8")
 power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
+running_attack_move = ExtResource("13")
 opponent_path = NodePath("../WrestlerA")
 grapple_rig_path = NodePath("../GrappleRig")
 
