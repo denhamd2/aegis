@@ -121,6 +121,14 @@ Known Phase 2 gaps, honestly:
 - Tie-up resolution was a placeholder rule (lower player index wins) as of
   this writing; now a real mash contest — see "Feature: fix the tie-up
   resolution placeholder" below.
+- Grapples are mechanically frequent but visually unreadable: the paired
+  clips animate only the two root transforms, and the FSM sits in
+  `GRAPPLE_HOLD` (mapped to the `Interact` placeholder clip) for the whole
+  throw, so the skeletons never do anything grapple-shaped. Same root gap as
+  the 13 unwritten paired moves — see "Fix: four defects a real capture
+  showed, and the one that wasn't a bug" below, which also covers the spawn
+  facing, mat-height, capsule-rotation and missing-gravity bugs the same
+  capture exposed.
 
 ## Bugfix: the AI never actually grappled, and why
 
@@ -1299,3 +1307,112 @@ is a first-pass placeholder like every other `MoveDef` constant in this
 project; it's cosmetic-timing-only here since `_apply_reversal()` doesn't
 read its damage/momentum fields at all (the reversed move's own momentum is
 what the reverser keeps, per the base feature).
+
+## Fix: four defects a real capture showed, and the one that wasn't a bug
+
+A 15-second AI-vs-AI capture reviewed on video turned up four complaints —
+the wrestlers start facing away from each other, they never grapple, they
+"point at each other," one "clichés into a fall to the mat," and one partly
+sinks into the ring. Chasing each one against the running engine (a live
+instrumented probe over 6 seeds, plus frame-stepped OpenGL captures) found
+three real bugs, one already-documented placeholder, and one confidently-
+argued diagnosis that measurement flatly disproved.
+
+**The wrong one, recorded because it nearly shipped.** The obvious cause for
+"pointing" looked like `STATE_ANIMATIONS`: the table asks for `Idle`, `Walk`,
+`Sprint`, `Push` and `Crouch_Idle`, and parsing `wrestler_base.glb`'s JSON
+chunk directly shows the library containing `Idle_Loop`, `Walk_Loop`,
+`Sprint_Loop`, `Push_Loop`, `Crouch_Idle_Loop`. Since `_build_animation_tree()`
+skipped a missing clip with a bare `continue`, that would have silently
+de-animated IDLE/LOCOMOTION/RUN — most of a match's runtime — which fit the
+symptom exactly. It is also wrong: Godot's glTF importer strips the `_Loop`
+suffix on import (it marks the clip as looping), so all 18 mappings resolve.
+Writing the guard test *before* the fix is what caught it — the test passed
+on the unmodified code. `tests/test_state_animations.gd` is kept as the
+regression guard, and the silent `continue` is now a `push_error()`, since
+the failure mode it hides is real even though it wasn't happening here.
+
+**1. Spawn facing (real).** `match.tscn` had `WrestlerA` at `(-1.5,0,0)` with
+an identity basis (forward `-Z`) and `WrestlerB` at `(+1.5,0,0)` yawed 180°
+(forward `+Z`), while their separation runs along **X** — both perpendicular
+to the line between them. Measured live: forward dotted with the direction to
+the opponent was exactly `0.0` on tick 1. Nothing corrected it, because
+`_process_free_movement()` only called `look_at()` inside
+`if direction.length() > 0.1`, aiming at the *movement* vector, and hits and
+tie-ups gate on distance with no facing term. Fixed by rotating both spawn
+transforms to face along X, and by adding
+`WrestlerController._turn_toward_opponent()` — a fixed-rate yaw toward the
+opponent on any tick with no movement input, stepped per physics tick rather
+than by wall clock so `ReplaySystem` determinism is unaffected. Both spawns
+now measure `1.0`.
+
+**2. "They never grapple" (not a bug — a legibility problem).** The
+instrumented run shows the opposite of what the video suggests: tie-up at
+tick 45, `GRAPPLE_HOLD` at 120, then six completed paired moves (suplex ×3,
+bodyslam ×2, backbreaker) before a submission finish. They grapple
+constantly. What's missing is that the FSM stays in `GRAPPLE_HOLD` for the
+whole throw and `GRAPPLE_HOLD` maps to the `Interact` placeholder clip, so
+both wrestlers hold a one-armed reaching pose — which is also the literal
+source of complaint 3, "they point at each other." The paired clips carry
+only `position_3d`/`rotation_3d` tracks on the two root nodes (by design, see
+`grapple_rig.gd`'s header — an earlier attempt at bone tracks left every
+un-animated bone stuck in bind pose), so a suplex moves the bodies through a
+correct arc while the skeletons never do anything grapple-shaped. Left as-is:
+this is the 13-remaining-paired-moves content gap, not a logic fault.
+
+**3. "Clichés into a fall to the mat" (working as coded).** `DOWN` and
+`PIN_DEFENDER` map to `Death01`. Already flagged as a placeholder above;
+unchanged this round.
+
+**4. Sinking into the ring (real, three compounding causes).** Measured
+before the fix: the defender spent **1536 of 1800 ticks** off the mat, and
+the post-whip low point was **y = -0.50**.
+- *The mat wasn't at y=0.* The ring `Floor` box is 0.2 thick centred at the
+  origin, putting its top surface at `y = +0.1`, while the wrestler capsule's
+  bottom — the feet — sits at the body origin `y = 0`. Everything that placed
+  a wrestler at `y=0` (spawns, `GrappleAnchor`, every baked paired-move
+  position track) put it 0.1 m under the mat. Fixed with a single
+  `position = Vector3(0, -0.1, 0)` on the `Ring` root, which moves floor,
+  ropes, colliders, posts and apron together and makes `y = 0` mean "standing
+  on the mat" everywhere.
+- *Paired clips left the body rotated.* `grapple_suplex` ends with the thrown
+  wrestler at **pitch 90°**, and the collision capsule is rigidly attached to
+  the `CharacterBody3D` — so an upright capsule ends up lying horizontal, half
+  of it below the mat, and the floor depenetrates it upward by exactly one
+  radius. Confirmed live: the defender rose from `y=0` to `y=0.400127` over
+  three ticks with **zero velocity**, contact normal straight up, collider
+  named `Floor`. `GrappleRig._level_bodies()` now rebuilds both bases from
+  yaw alone before resuming physics — lying down is a *pose* (DOWN's clip),
+  never a body orientation. README already records this same mechanism biting
+  `reversal_counter`, where it was worked around by re-authoring that one
+  clip; this handles it for every clip including the unwritten ones.
+- *Nothing ever pulled anyone back down.* `move_and_slide()` ran every tick
+  but `velocity.y` was never written anywhere in the codebase — there was no
+  gravity at all — so any vertical displacement was permanent. That is why
+  the older post-whip drift persisted instead of self-correcting.
+  `_apply_gravity()` now applies Godot's default 9.8 m/s² whenever the body
+  is off the floor. Paired moves are unaffected, since `GrappleRig._suspend()`
+  disables `_physics_process` on both bodies for the duration.
+
+Also fixed alongside: `GrappleRig._separate_bodies()` pushes the pair apart to
+their combined capsule radii plus a 0.15 m margin before physics resumes — 4
+of the 5 paired clips finish closer together than one capsule diameter
+(`finisher_piledriver` ends 0.14 m apart, `signature_backbreaker` 0.28 m).
+Exact tangency was measured to be insufficient on its own: at precisely 0.8 m
+the defender still climbed to `y=0.4`, because `move_and_slide()` treats the
+shallow upper part of the attacker's lower capsule cap as walkable floor.
+
+Verified against the real Godot binary: 58/58 unit tests pass (8 of them new,
+across `test_state_animations.gd` and `test_wrestler_facing.gd`, both with
+zero orphans); 6 seeds (1, 2, 3, 5, 7, 11) all complete with zero script
+errors and a min Y of -0.026 m; off-mat ticks dropped from 1536 to ~254, and
+those remaining are legitimate mid-throw airborne arcs. A fresh 1280×720
+OpenGL capture shows the pair squared up and standing on the mat at tick 0,
+and suplexes that read as throws.
+
+**Still open, named rather than quietly dropped:** `GrappleRig._align_to_anchor()`
+teleports both wrestlers to the anchor — the world origin — for every paired
+move, wherever they were standing. Fixing it means making the paired clips'
+position tracks relative to the anchor instead of absolute in `Match` space,
+which is a change to the animation authoring convention rather than a code
+fix.

@@ -21,6 +21,12 @@ const TIE_UP_RANGE := 1.4
 ## default strike_range (1.6m) — an AI that throws from further out than
 ## this can land is a strike that always whiffs.
 const STRIKE_HIT_RANGE := 1.8
+## Downward acceleration (m/s^2) applied whenever a wrestler is off the mat.
+## The project sets no custom gravity, so this matches Godot's own 3D default
+## rather than inventing a value -- ARCHITECTURE.md's "Reference-driven
+## tuning" rule applies here as much as anywhere, and no reference footage
+## covers fall speed.
+const GRAVITY := 9.8
 const GETUP_TICKS := 90 # 1.5s
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
@@ -221,6 +227,16 @@ func _build_animation_tree() -> void:
 	for state_id in STATE_ANIMATIONS:
 		var clip_name: String = STATE_ANIMATIONS[state_id]
 		if not anim_player.has_animation(clip_name):
+			# Loud on purpose. A missing clip used to be a bare `continue`,
+			# which silently drops that state from the blend graph: the FSM
+			# still transitions correctly and the match still completes, so
+			# every headless check passes while the wrestler just stops being
+			# animated in that state. Renaming a clip in the .glb is exactly
+			# the kind of change that would trip this, and it should fail
+			# where it happens rather than turn up in a capture later.
+			# tests/test_state_animations.gd guards the table statically too.
+			push_error("STATE_ANIMATIONS[%s] names a clip the rig doesn't have: '%s'"
+					% [WrestlerFSM.State.keys()[state_id], clip_name])
 			continue
 		var anim_node := AnimationNodeAnimation.new()
 		anim_node.animation = clip_name
@@ -321,7 +337,31 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
+	_apply_gravity(delta)
 	move_and_slide()
+
+## Pull a wrestler back down to the mat.
+##
+## Nothing in this controller ever wrote velocity.y before: move_and_slide()
+## ran every tick, but with a permanently-zero vertical velocity, so a
+## wrestler was free to *stay* at whatever height something else left it at.
+## Confirmed live -- a defender nudged up onto the attacker's capsule cap
+## settled at y=0.400127 and held that value, unchanged, for the next 1600
+## ticks and through several more states, visibly hovering above the mat. The
+## same mechanism made the older post-whip drift permanent instead of
+## self-correcting.
+##
+## Paired grapple moves are unaffected: GrappleRig._suspend() turns
+## _physics_process off for both bodies, so this never fights a clip that
+## deliberately puts a wrestler in the air mid-throw.
+func _apply_gravity(delta: float) -> void:
+	if is_on_floor():
+		# Zero rather than leave it accumulating -- otherwise velocity.y grows
+		# unboundedly while grounded and the first airborne tick launches the
+		# body downward through the mat.
+		velocity.y = 0.0
+		return
+	velocity.y -= GRAVITY * delta
 
 func _poll_live_input() -> Dictionary:
 	if is_ai:
@@ -352,8 +392,10 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	if direction.length() > 0.1:
 		look_at(global_position + direction, Vector3.UP)
 		fsm.transition_to(WrestlerFSM.State.RUN if running else WrestlerFSM.State.LOCOMOTION)
-	elif fsm.current_state != WrestlerFSM.State.IDLE:
-		fsm.transition_to(WrestlerFSM.State.IDLE)
+	else:
+		_turn_toward_opponent()
+		if fsm.current_state != WrestlerFSM.State.IDLE:
+			fsm.transition_to(WrestlerFSM.State.IDLE)
 
 	_wants_tie_up_this_tick = false
 	if fsm.current_state == WrestlerFSM.State.RUN:
@@ -362,6 +404,37 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		_start_move(WrestlerFSM.State.STRIKE, strike_move)
 	elif input.get("grapple", false):
 		_wants_tie_up_this_tick = true
+
+## Yaw toward the opponent while standing still. Facing used to be produced
+## *only* as a side effect of movement (look_at() on the input direction, and
+## only on a tick with input), so a wrestler that wasn't walking never turned
+## — including at match start, where the authored spawn transforms had both
+## wrestlers facing along Z while standing apart along X. Measured live: the
+## forward vector dotted against the direction to the opponent was exactly
+## 0.0 on tick 1, i.e. perfectly perpendicular. Nothing in the match ever
+## corrected it, because hits and tie-ups are gated on distance alone.
+##
+## Turns at a fixed angle per physics tick rather than a wall-clock lerp, so
+## the result is identical under ReplaySystem playback at any render
+## framerate (same reasoning as anim_tree's physics callback mode).
+const TURN_RATE_PER_TICK := 0.12 # radians/tick — ~7deg, a 180 in ~26 ticks
+
+func _turn_toward_opponent() -> void:
+	if not opponent or not is_instance_valid(opponent):
+		return
+	var to_opponent := opponent.global_position - global_position
+	to_opponent.y = 0.0
+	if to_opponent.length() < 0.01:
+		return
+	var desired := atan2(-to_opponent.x, -to_opponent.z)
+	rotation.y = _step_angle(rotation.y, desired, TURN_RATE_PER_TICK)
+
+## Shortest-arc step from `from` toward `to`, capped at `max_step`.
+static func _step_angle(from: float, to: float, max_step: float) -> float:
+	var diff := wrapf(to - from, -PI, PI)
+	if absf(diff) <= max_step:
+		return to
+	return from + signf(diff) * max_step
 
 func _in_range(range_m: float) -> bool:
 	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m

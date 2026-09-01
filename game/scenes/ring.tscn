@@ -61,6 +61,7 @@ albedo_color = Color(0.03, 0.03, 0.035, 1)
 roughness = 0.95
 
 [node name="Ring" type="Node3D"]
+position = Vector3(0, -0.1, 0)
 
 [node name="ArenaFloor" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_arena_floor")
