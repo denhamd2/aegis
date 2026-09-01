@@ -110,10 +110,12 @@ Known Phase 2 gaps, honestly:
   hidden reversal-window consumer" below. Submission was in the same boat
   earlier and is also now wired (see "Feature: wire submissions into the
   referee and AI" below) — pin/kickout, submission/tap-out, and the whip
-  loop are all real, reachable paths now. The AI never *initiates* a whip
-  or attempts a reversal itself yet (both flagged as open gaps in that
-  section), and reversal-window/run-speed values have no reference-footage
-  citation — `gauntlet/refs/timings.md` marks both pending.
+  loop are all real, reachable paths now. The AI didn't *initiate* a whip
+  or attempt a reversal itself when the base feature shipped; it now does
+  both (see "Feature: AI whip and reversal decisions" below) — first-pass,
+  seeded, momentum-gated and reaction-delay-gated respectively, not tuned
+  against any reference data (`gauntlet/refs/timings.md` marks both
+  reversal-window length and run speed "pending").
 - Tie-up resolution was a placeholder rule (lower player index wins) as of
   this writing; now a real mash contest — see "Feature: fix the tie-up
   resolution placeholder" below.
@@ -1114,3 +1116,97 @@ reversal — both reachable-but-basic-AI gaps, consistent with how
 reversal isn't reachable either, for the structural reason described above
 (synchronous resolution, no multi-tick window) — only `STRIKE` and
 `RUNNING_ATTACK` are.
+
+## Feature: AI whip and reversal decisions
+
+The irish whip feature above deliberately scoped the AI out: `WrestlerAI.
+poll_input()` never set `"run": true` during its own `GRAPPLE_HOLD` (so it
+never whipped) and never set `"reversal": true` (so it never attempted a
+reversal) — confirmed directly: `poll_input()` had no `GRAPPLE_HOLD` case at
+all, falling through the generic `if not controller.fsm.is_in([IDLE,
+LOCOMOTION, RUN]): return {}` guard, and nothing in the free-movement branch
+ever set `"reversal"`.
+
+**Whip decision:** a new `GRAPPLE_HOLD` case in `poll_input()`, attacker-only
+(mirrors `WrestlerController._process_grapple_hold()`'s own early return for
+the non-attacker side — the defender has nothing to press mid-grapple, and
+grapple-move (`MOVE_EXEC`) reversal is structurally unreachable regardless,
+per the base feature's own writeup). Never whips once
+`combat.can_power()` is already true — spending a grapple on a whip (no
+direct damage) instead of the stronger power/signature/finisher escalation
+would waste earned momentum. Below that threshold, a seeded coin flip
+(`whip_chance`, default 0.3) deterministic per `(match_seed, player_index,
+_grapple_attempts)` — a new per-instance counter, incremented each grapple
+attempt, giving each one its own reproducible-but-varying roll rather than
+repeating the same outcome all match (same shape as
+`MatchReferee._break_tie_up_tie()`'s `match_seed * 4096 + tick` seeding,
+keyed off an attempt counter since a whip decision is one-shot per grapple,
+not per-tick).
+
+**Reversal decision:** a new per-tick check in the free-movement branch
+reads the opponent's `_active_move`/`fsm.current_state`/
+`_move_ticks_remaining` (already public fields) and, when the opponent is
+in `STRIKE` or `RUNNING_ATTACK` with the computed frame offset inside
+`is_in_reversal_window()`, tracks how long the window has been open. Only
+presses `"reversal"` once that exceeds `reversal_reaction_ticks` (default
+2) — the same reaction-delay shape as `kickout_reaction_ticks`/
+`tie_up_reaction_ticks` (a stand-in for human reaction time), sized small
+on purpose: existing windows are only 4-6 ticks wide (`strike_jab.tres`
+6-9, `running_attack_clothesline.tres` 7-12), so the AI can plausibly still
+land it before the window closes, not so it's guaranteed. A real but
+imperfect response, not a trivial dominant strategy.
+
+**A real bug found by turning this on, not introduced by it:** the first
+live AI-vs-AI probe hung on 4 of 5 seeds (20000-tick timeout, no match
+ever completing) once whips started happening. Instrumented position/state
+logging traced it to `scenes/ring.tscn`'s rope `CollisionShape3D`s: sized
+to match only the *visual* rope height (0.25-1.45) when they were added,
+which was never actually tested against a wrestler at anything but a
+freshly-reset Y position. Live play found wrestlers can settle at a
+noticeably drifted Y position after certain paired-move hit-reactions
+(observed as low as -0.5) — the paired clips' final keyframes aren't
+necessarily a standing pose, and nothing resets root height afterward (a
+pre-existing gap this pass doesn't fix at the source, just works around).
+A wrestler whipped from that drifted height flew straight underneath the
+rope collider forever — confirmed via a direct position/velocity trace
+showing X growing unbounded tick after tick while Y stayed pinned at the
+drifted value. Fixed by making the collider generously tall (8.0m,
+centered on the rope's existing y=0.85 anchor) rather than chasing the
+exact drift range. All 5 seeds resolved cleanly afterward.
+
+Verified against the real Godot binary:
+- New `test_wrestler_ai_whip.gd` (3 cases: never whips at/above
+  `POWER_THRESHOLD`, deterministic per `(match_seed, player_index,
+  attempt)`, both outcomes occur across a range of attempts — the direct
+  regression guard against an always-on/always-off degenerate roll) and
+  `test_wrestler_ai_reversal.gd` (4 cases: no press before the reaction
+  delay elapses, presses once past it inside the window, resets when the
+  opponent leaves the move state, never presses outside the window at
+  all). Full suite: 49/49, 0 errors, 0 failures.
+- Live AI-vs-AI probe (both wrestlers `is_ai = true`, matching the method
+  established for the earlier tie-up work), 5 seeds, `--fixed-fps`: whips
+  happened in 4/5 seeds (0-2 per match), reversals landed in 3/5 seeds,
+  normal power/signature/finisher escalation happened in all 5 — not
+  degenerate either direction. All 5 matches resolved cleanly (no
+  illegal-FSM assertions) after the rope-collider fix above.
+- Regression check against the *default* human-vs-AI `match.tscn` config
+  (the baseline used throughout this session): match length and exact
+  landed-move sequence changed from before this pass (e.g. seed 1: 970 ->
+  1168 ticks) — traced this down before accepting it, since a silent
+  length change is exactly the kind of thing worth double-checking rather
+  than shrugging off. Confirmed it's the AI legitimately choosing to whip
+  the passive `WrestlerA` sometimes now (previously impossible), not a
+  bug: `WrestlerA` gets thrown, has no AI/reversal/running-attack logic of
+  its own (passive), settles somewhere near `WrestlerB` once the whip's
+  return-autopilot phase ends, and `WrestlerB` re-approaches and strikes
+  again before resuming its normal escalation — a real, expected behavior
+  change, not a regression, and both wrestlers still resolve to a clean
+  submission win with no errors either way.
+
+`whip_chance` (0.3) and `reversal_reaction_ticks` (2) are first-pass values,
+same caveat as every other tuning constant in this project —
+`gauntlet/refs/timings.md` has no whip-decision or reversal-reaction-time
+citation to tune against yet. This closes the "AI never initiates a whip or
+attempts a reversal" gap the base feature flagged; the AI still doesn't
+attempt a grapple-move reversal specifically, but per that feature's own
+writeup, no wrestler (human or AI) can — it's structurally unreachable.

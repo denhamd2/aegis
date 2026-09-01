@@ -14,7 +14,7 @@ roughness = 0.85
 size = Vector3(6.2, 0.05, 0.05)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
-size = Vector3(6.2, 1.2, 0.3)
+size = Vector3(6.2, 8.0, 0.3)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope_top"]
 albedo_color = Color(0.85, 0.1, 0.12, 1)
