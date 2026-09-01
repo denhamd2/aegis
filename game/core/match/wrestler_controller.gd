@@ -83,6 +83,19 @@ var anim_player: AnimationPlayer
 ## job, not hand-rolled here.
 var anim_tree: AnimationTree
 var _anim_playback: AnimationNodeStateMachinePlayback
+## The retargeted mesh's Skeleton3D. Public so the *opponent* can read this
+## wrestler's chest/hip bones when aiming its grip IK — a grapple needs to
+## know where the other torso actually is, which the root position doesn't
+## say (mid-throw the body can be upside down a metre off its own origin).
+var skeleton: Skeleton3D
+## One SkeletonIK3D per arm (index 0 = left, 1 = right) pulling the hands onto
+## the opponent while gripping. See _build_ik_rig().
+var _arm_ik: Array[SkeletonIK3D] = []
+var _grip_targets: Array[Marker3D] = []
+## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
+var _grip_blend: float = 0.0
+## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
+var _arm_reach: float = 0.0
 
 ## FSM state -> clip from the base mesh's library. Every state gets *some*
 ## plausible clip from the single-character library on hand — no paired
@@ -242,6 +255,9 @@ func _ready() -> void:
 	fsm.state_changed.connect(_on_fsm_state_changed)
 	if anim_player:
 		_build_animation_tree()
+	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton:
+		_build_ik_rig()
 
 ## Builds the AnimationNodeStateMachine blend graph: one AnimationNodeAnimation
 ## per WrestlerFSM state that has a usable clip (STATE_ANIMATIONS), and one
@@ -300,6 +316,140 @@ func _build_animation_tree() -> void:
 	var idle_name: String = WrestlerFSM.State.keys()[WrestlerFSM.State.IDLE]
 	if state_machine.has_node(idle_name):
 		_anim_playback.start(idle_name)
+
+## Builds the grip IK: one SkeletonIK3D per arm, solving upperarm -> hand.
+##
+## The paired grapple clips animate only the two root transforms, and each
+## wrestler's skeleton is posed by its own single-character clip, which has no
+## idea another body exists. So the attacker performed a lifting motion *near*
+## the defender and never touched him -- the "I don't see him lifting him up"
+## complaint, which no amount of clip-swapping fixes.
+##
+## SkeletonIK3D derives from SkeletonModifier3D, so it runs after the
+## AnimationMixer writes the pose: the clip supplies the body, this pulls the
+## arms onto the opponent on top of it. Contact is therefore emergent and
+## holds for every move, including the 13 paired clips still unwritten,
+## instead of being keyframed one clip at a time.
+##
+## Built at runtime for the same reason _build_animation_tree() is: it stays
+## derived from the bone names here rather than drifting from them, and it
+## avoids needing editable children on the instanced .glb.
+##
+## Note SkeletonIK3D is Godot's older IK node and marked deprecated. The
+## modern replacement, TwoBoneIK3D, was tried first and does nothing on this
+## build: in an isolated three-bone skeleton with the chain resolved, the
+## target set and influence at 1, the tip bone never leaves its rest pose,
+## while SkeletonIK3D lands it within 0.005m of the same target. Measure with
+## a BoneAttachment3D if you re-test -- Skeleton3D.get_bone_global_pose()
+## returns the *pre-modifier* pose and reports no movement even when a
+## modifier is demonstrably working.
+func _build_ik_rig() -> void:
+	for chain in ARM_CHAINS:
+		for role in ["root", "tip"]:
+			if skeleton.find_bone(chain[role]) < 0:
+				push_error("Grip IK: rig has no bone '%s'; arm IK disabled" % chain[role])
+				return
+
+	for chain in ARM_CHAINS:
+		var ik := SkeletonIK3D.new()
+		# Configure before entering the tree: each of root_bone/tip_bone
+		# rebuilds the solver chain the moment it's assigned, so setting them
+		# on an already-parented node makes the first assignment resolve the
+		# other end to -1 and log a build_chain error.
+		ik.root_bone = chain["root"]
+		ik.tip_bone = chain["tip"]
+		var target := Marker3D.new()
+		ik.add_child(target)
+		ik.target_node = ik.get_path_to(target)
+		skeleton.add_child(ik)
+		# interpolation is SkeletonIK3D's own blend, 0 = pure animation pose.
+		# Starts fully off so a wrestler who never grapples is posed exactly as
+		# he was before this existed.
+		ik.interpolation = 0.0
+		# Deferred: start() resolves root_bone/tip_bone against the parent
+		# skeleton, which SkeletonIK3D only caches in its own _ready(). Called
+		# inline right after add_child() it resolves them to -1 and the solver
+		# reports "Condition -1 == p_task->root_bone is true" every frame
+		# thereafter, doing nothing.
+		ik.start.call_deferred()
+		_arm_ik.append(ik)
+		_grip_targets.append(target)
+
+	_arm_reach = _measure_arm_reach(ARM_CHAINS[0])
+
+## Shoulder-to-hand span in the rest pose — ~0.55m on this 1.83m rig.
+func _measure_arm_reach(chain: Dictionary) -> float:
+	var shoulder := skeleton.get_bone_global_rest(skeleton.find_bone(chain["root"])).origin
+	var hand := skeleton.get_bone_global_rest(skeleton.find_bone(chain["tip"])).origin
+	return shoulder.distance_to(hand)
+
+## True while this wrestler should have hands on the opponent.
+func _is_gripping_state() -> bool:
+	match fsm.current_state:
+		WrestlerFSM.State.TIE_UP:
+			return true
+		WrestlerFSM.State.GRAPPLE_HOLD:
+			return _is_grapple_attacker
+		_:
+			return false
+
+## Aims both grip targets at the opponent and blends the IK in or out.
+## Presentation only -- writes bone poses and marker positions, never
+## position, velocity or FSM state, so it cannot change a match outcome.
+func _update_grip_ik() -> void:
+	if _arm_ik.is_empty():
+		return
+	var engaged := _is_gripping_state() and _aim_grip_targets()
+	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
+	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
+	for ik in _arm_ik:
+		ik.interpolation = _grip_blend
+
+## Places the two targets on either side of the part of the opponent this
+## wrestler is holding. Returns false only when there is nothing to grip, so
+## the caller blends back out and leaves the clip's own arm pose alone.
+##
+## Each target is clamped onto its arm's reach sphere rather than rejected
+## when too far: measured, an arm spans 0.547m while the paired clips hold the
+## bodies 0.8-1.2m apart, so a hard reach test would never engage at all.
+## Clamping gives the honest in-between -- arms fully extended toward the
+## opponent when he's beyond reach, hands genuinely on him once he isn't.
+func _aim_grip_targets() -> bool:
+	if _grip_targets.size() < 2 or not opponent or not is_instance_valid(opponent):
+		return false
+	if not opponent.skeleton or not skeleton:
+		return false
+	var anchor_name := GRIP_BONE_LIFT if fsm.current_state == \
+			WrestlerFSM.State.GRAPPLE_HOLD else GRIP_BONE
+	var anchor_bone := opponent.skeleton.find_bone(anchor_name)
+	if anchor_bone < 0:
+		return false
+	# Position from the bone, lateral axis from the opponent's body: the
+	# bone's own basis is a rest-pose artifact of this rig (arms along X) and
+	# doesn't track the torso the way the node transform does.
+	var anchor := opponent.skeleton.global_transform \
+			* opponent.skeleton.get_bone_global_pose(anchor_bone).origin
+	var lateral := opponent.global_transform.basis.x.normalized() * GRIP_HALF_WIDTH
+
+	# Godot forward is -Z, so +X is this wrestler's right: index 1 (right arm)
+	# takes the +X side of the grip, index 0 (left arm) the -X side.
+	_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], anchor - lateral)
+	_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], anchor + lateral)
+	return true
+
+## Nearest point to `target` the named shoulder's arm can actually straighten
+## to, stopping just short of full extension.
+func _reachable(shoulder_bone_name: String, target: Vector3) -> Vector3:
+	var shoulder_bone := skeleton.find_bone(shoulder_bone_name)
+	if shoulder_bone < 0:
+		return target
+	var shoulder := skeleton.global_transform \
+			* skeleton.get_bone_global_pose(shoulder_bone).origin
+	var offset := target - shoulder
+	var span := _arm_reach * MAX_EXTENSION
+	if offset.length() <= span or offset.length() < 0.001:
+		return target
+	return shoulder + offset.normalized() * span
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
 	if not _anim_playback:
@@ -388,6 +538,9 @@ func _physics_process(delta: float) -> void:
 
 	_apply_gravity(delta)
 	move_and_slide()
+	# After move_and_slide(), so the grip is aimed at where the bodies have
+	# actually ended up this tick rather than where they started it.
+	_update_grip_ik()
 
 ## Pull a wrestler back down to the mat.
 ##
@@ -467,6 +620,30 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 ## the result is identical under ReplaySystem playback at any render
 ## framerate (same reasoning as anim_tree's physics callback mode).
 const TURN_RATE_PER_TICK := 0.12 # radians/tick — ~7deg, a 180 in ~26 ticks
+
+## Grip IK tuning. Bone on the *opponent* the hands reach for while squared
+## up: spine_03 is this rig's upper chest (wrestler_bone_map.tres maps it to
+## the humanoid UpperChest slot).
+const GRIP_BONE := "spine_03"
+## What a lifting attacker holds instead — the hips of the man he's carrying.
+## During a throw the victim's chest is overhead and behind, and reaching for
+## it puts the arms somewhere that reads as nothing at all.
+const GRIP_BONE_LIFT := "pelvis"
+## Arm chains, index-matched to _arm_ik / _grip_targets.
+const ARM_CHAINS := [
+	{"root": "upperarm_l", "tip": "hand_l"},
+	{"root": "upperarm_r", "tip": "hand_r"},
+]
+## Half a torso width, so the hands land on the opponent's sides rather than
+## converging inside him. The rig's shoulders sit at x=+-0.192.
+const GRIP_HALF_WIDTH := 0.22
+## Fraction of full arm span a grip target may sit at. A fully straightened
+## chain is singular and reads as a locked-out arm.
+const MAX_EXTENSION := 0.95
+## Blend added per physics tick, so a grip fades in over ~7 ticks rather than
+## snapping. Fixed per tick, never a wall-clock lerp — same determinism
+## requirement as TURN_RATE_PER_TICK above.
+const IK_BLEND_PER_TICK := 0.15
 
 func _turn_toward_opponent() -> void:
 	if not opponent or not is_instance_valid(opponent):

@@ -122,8 +122,9 @@ Known Phase 2 gaps, honestly:
   this writing; now a real mash contest — see "Feature: fix the tie-up
   resolution placeholder" below.
 - Grapples are posed with borrowed single-character clips (attacker lifts,
-  defender goes limp, tie-up is a two-armed push) rather than two rigs
-  genuinely gripping each other: the paired clips still animate only the two
+  defender goes limp, tie-up is a two-armed push) plus runtime grip IK that
+  puts the hands on the opponent — but not two rigs genuinely gripping each
+  other with weight transfer: the paired clips still animate only the two
   root transforms. Same root gap as the 13 unwritten paired moves — see "Fix: four defects a real capture
   showed, and the one that wasn't a bug" below, which also covers the spawn
   facing, mat-height, capsule-rotation and missing-gravity bugs the same
@@ -1490,3 +1491,70 @@ the opponent, weight transferring between them — still needs bone tracks
 authored in Blender against two rigs, which is the same content gap as the
 13 unwritten paired moves. `grapple_rig.gd`'s header records why bone tracks
 can't simply be added to the existing clips.
+
+## Feature: grip IK, so the hands actually land on the opponent
+
+The paired grapple clips animate only the two root transforms, and each
+wrestler's skeleton is posed by its own single-character clip, which has no
+idea another body exists. So an attacker performed a lifting motion *near*
+the defender and never touched him — the "I don't see the attacker hitting
+him or lifting him up" complaint, which no amount of clip-swapping fixes.
+
+Two `SkeletonIK3D` chains per wrestler (`upperarm_* -> hand_*`) now pull the
+hands onto the opponent while gripping. `SkeletonIK3D` derives from
+`SkeletonModifier3D`, so it runs *after* the `AnimationMixer` writes the pose:
+the clip supplies the body, IK places the arms on top. Contact is therefore
+emergent, and holds for every move including the 13 paired clips still
+unwritten, instead of being keyframed one clip at a time. The rig is built at
+runtime next to `_build_animation_tree()`, for the same reason that is —
+derived from the bone names rather than drifting from them, and no editable
+children needed on the instanced `.glb`.
+
+Targeting: a squared-up wrestler grips the opponent's `spine_03` (upper
+chest); a lifting attacker grips `pelvis` instead, because mid-throw the
+victim's chest is overhead and behind and reaching for it puts the arms
+nowhere useful. Each target is *clamped* onto its arm's reach sphere rather
+than rejected when out of range — measured, an arm spans 0.547 m while the
+paired clips hold the two bodies 0.8–1.2 m apart, so a hard reach test never
+engages at all. Clamping gives the honest in-between: arms fully extended
+toward the opponent when he's beyond reach, hands genuinely on him once he
+isn't. Blend ramps by a fixed step per physics tick, never a wall-clock lerp,
+so `ReplaySystem` determinism is unaffected.
+
+### Three engine traps this hit, all worth knowing
+
+- **`TwoBoneIK3D` does nothing on this build.** It is the modern,
+  non-deprecated node and was the first choice. In an isolated three-bone
+  skeleton with the chain resolved, the target set, `influence` at 1 and
+  `active` true, the tip bone never leaves its rest pose. `SkeletonIK3D`
+  lands the same tip within 0.005 m of the same target. Hence the deprecated
+  node.
+- **`Skeleton3D.get_bone_global_pose()` returns the *pre-modifier* pose.** A
+  custom `SkeletonModifier3D` that demonstrably rotates a bone still reports
+  its rest position through that call, while a `BoneAttachment3D` on the same
+  bone reads the real, post-modifier position. This very nearly buried the
+  whole approach: it made a working modifier look broken. Measure modifier
+  output with a `BoneAttachment3D`, or by rendering.
+- **`BoneAttachment3D` deadlocks against an IK modifier on the same
+  skeleton.** Fine for the isolated diagnosis above; adding one to a wrestler
+  that has grip IK hangs the process. So the unit tests cover the rig and the
+  targeting maths only, and the pose itself is verified by rendering.
+
+Also: configure `root_bone`/`tip_bone` *before* adding the `SkeletonIK3D` to
+the tree. Each assignment rebuilds the solver chain immediately, so setting
+them on an already-parented node makes the first one resolve the other end to
+`-1` and log `build_chain` errors every frame while doing nothing.
+
+Verified against the real Godot binary: 82/82 unit tests pass (13 new, zero
+orphans); seeds 1, 2, 3, 5, 7 and 11 all produce **identical** match outcomes
+to the build without IK — same winners, same finishes, same min Y (-0.026 m),
+same off-mat tick counts — confirming this is presentation-only and cannot
+change a match. And checked on the pixels: close-up renders show the hands
+interlocked in a tie-up and the attacker's arms wrapped round the victim's
+waist during a lift, where the same frames without IK show arms hanging in
+the clip's own pose.
+
+**Still not a full two-body performance.** IK places the hands; it doesn't
+produce weight transfer, counter-balance, or a defender who grips back.
+Genuinely interlocked paired animation remains the content gap, and is the
+same work as the 13 unwritten paired moves.
