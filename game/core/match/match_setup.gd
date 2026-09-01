@@ -13,6 +13,8 @@ func _ready() -> void:
 	wrestler_a._resolve_paths()
 	wrestler_b._resolve_paths()
 	referee.match_seed = match_seed
+	wrestler_a.match_seed = match_seed
+	wrestler_b.match_seed = match_seed
 	referee.match_won.connect(_on_match_won)
 	# Only matters once both wrestlers are AI (e.g. an AI-vs-AI match) — with
 	# a single AI opponent the other side's input is either a human or idle,

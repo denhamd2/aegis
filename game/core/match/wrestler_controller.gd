@@ -62,7 +62,21 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 @export var signature_move: MoveDef
 @export var finisher_move: MoveDef
 @export var running_attack_move: MoveDef
+## Extra moves at each grapple tier, picked between by a seeded draw at the
+## moment the attacker commits (see _pick_tier_move()). The single slot
+## above stays the tier's guaranteed entry -- an empty pool means that one
+## move every time, which is exactly the behaviour before pools existed.
+@export var grapple_move_pool: Array[MoveDef] = []
+@export var power_move_pool: Array[MoveDef] = []
+@export var signature_move_pool: Array[MoveDef] = []
+@export var finisher_move_pool: Array[MoveDef] = []
 @export var weight_class: int = 1
+## Set by MatchSetup so _pick_tier_move()'s draw is seeded per match rather
+## than by the global RNG. Same reasoning as WrestlerAI.setup_jitter().
+var match_seed: int = 0
+## Incremented on every tier draw so two grapples in one match don't have to
+## resolve to the same move. Part of the RNG's seed, never of gameplay state.
+var _tier_draws: int = 0
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
@@ -916,11 +930,13 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if not move or opponent.weight_class < move.weight_class_min or opponent.weight_class > move.weight_class_max:
 		return
 	if combat.can_finisher() and finisher_move:
-		move = finisher_move
+		move = _pick_tier_move(finisher_move, finisher_move_pool)
 	elif combat.can_signature() and signature_move:
-		move = signature_move
+		move = _pick_tier_move(signature_move, signature_move_pool)
 	elif combat.can_power() and power_move:
-		move = power_move
+		move = _pick_tier_move(power_move, power_move_pool)
+	else:
+		move = _pick_tier_move(grapple_move, grapple_move_pool)
 
 	_active_move = move
 	if grapple_rig:
@@ -928,6 +944,33 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
 	else:
 		_resolve_grapple_move(move)
+
+## Draws one move from a tier: the tier's guaranteed move plus whatever its
+## pool adds, filtered to what this opponent's weight class allows.
+##
+## Seeded rather than random, because a paired move's outcome feeds damage
+## and momentum and therefore the match: the same (match_seed, player_index,
+## draw count) must always produce the same move, or replays stop matching.
+## The multipliers are deliberately different from WrestlerAI._should_whip()'s
+## so the two decisions don't move in lockstep across a match.
+func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
+	if pool.is_empty():
+		return primary
+	var choices: Array[MoveDef] = [primary]
+	for candidate: MoveDef in pool:
+		if not candidate:
+			continue
+		if opponent.weight_class < candidate.weight_class_min:
+			continue
+		if opponent.weight_class > candidate.weight_class_max:
+			continue
+		choices.append(candidate)
+	if choices.size() == 1:
+		return primary
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 8192 + player_index * 131 + _tier_draws
+	_tier_draws += 1
+	return choices[rng.randi_range(0, choices.size() - 1)]
 
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move

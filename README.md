@@ -98,14 +98,15 @@ Known Phase 2 gaps, honestly:
   real mechanism was different (a scene-tree-order bug in tie-up entry, not
   a hang) — fixed, see "Fix: AI-vs-AI tie-ups were decided by scene order,
   not contest" below.
-- `GrappleRig` has 5 real paired animations now (`grapple_suplex`,
-  `signature_backbreaker`, `finisher_piledriver`, `power_bodyslam`,
-  `reversal_counter` — see "Feature: a power-tier grapple move, and a
-  hidden attacker/defender bug" and "Feature: a paired reversal-counter
-  animation, and a physics-capsule bug it exposed" below) out of the 18
-  moves (12 grapple + 6 reversal) `ARCHITECTURE.md` scopes; the rest still
-  fall back to resolving on the move's frame count via a timer instead of
-  an `AnimationPlayer` signal.
+- `GrappleRig` now has all 18 paired moves `ARCHITECTURE.md` scopes (12
+  grapple + 6 reversal), each with a root trajectory and both role pose
+  clips, reachable through per-tier seeded move pools — see "Feature: the
+  moveset ARCHITECTURE.md scopes, all 18 of it" below. Nothing falls back
+  to the grey-box timer any more. They are authored but **not tuned**:
+  frame data, damage and momentum are internally consistent by tier and
+  trace to no reference measurement, which under `ARCHITECTURE.md`'s
+  reference-driven-tuning rule means none of the numbers may be defended
+  as "how it should feel" yet.
 - Irish whip, running attacks, and reversals had FSM states but nothing
   drove them, as of this writing — now wired end to end with real rope
   collision physics, see "Feature: irish whip, running attacks, and a
@@ -129,7 +130,8 @@ Known Phase 2 gaps, honestly:
   the clip library" below, which also covers the two live bugs it exposed
   (grip IK frozen for every paired move; thrown bodies ending half a metre
   under the mat). The remaining 13 moves are still unwritten, so the depth
-  is there and the breadth is not.
+  is there, and the breadth followed in "Feature: the moveset
+  ARCHITECTURE.md scopes, all 18 of it".
 
 ## Bugfix: the AI never actually grappled, and why
 
@@ -1682,3 +1684,102 @@ with contact maintained, impact, and the victim flat on the mat.
 **What is still missing** is breadth, not depth: 5 of the 18 moves
 `ARCHITECTURE.md` scopes have this treatment. The other 13 still have neither
 a `MoveDef` nor an animation and resolve on a timer.
+
+## Feature: the moveset ARCHITECTURE.md scopes, all 18 of it
+
+The section above closed the depth half of the paired-animation gap for the
+five moves that existed. This closes the breadth half. `ARCHITECTURE.md`
+scopes **12 grapple + 6 reversal** paired moves; there were 5, and the other
+13 had neither a `MoveDef` nor an animation, so they fell through
+`GrappleRig.begin()`'s grey-box branch and resolved on a bare timer.
+
+New: `grapple_hiptoss`, `grapple_snapmare`, `grapple_armdrag`,
+`power_spinebuster`, `power_gutwrench_slam`, `power_fireman_carry_drop`,
+`signature_neckbreaker`, `finisher_facebuster`, and the reversals
+`reversal_hiptoss_counter`, `reversal_arm_wringer`, `reversal_duck_under`,
+`reversal_back_body_drop`, `reversal_go_behind`. Each is a `MoveDef`, a root
+trajectory, and attacker/defender pose recipes.
+
+### One move slot per tier was the actual blocker
+
+Authoring 13 moves would have produced 13 unreachable files: a wrestler had
+exactly one `MoveDef` per tier (`grapple_move`, `power_move`,
+`signature_move`, `finisher_move`), and `MatchReferee` one
+`reversal_counter_move`. So each tier gained a pool alongside its slot, and
+the attacker draws from `[the tier's move] + pool` at the moment he commits.
+
+The draw is **seeded, not random** — `match_seed * 8192 + player_index * 131
++ draw count`, following `WrestlerAI.setup_jitter()`'s established shape and
+deliberately using different multipliers so the two decisions don't move in
+lockstep. Which move plays feeds damage and momentum and therefore the match
+result, so an unseeded draw would break replay determinism outright. An
+empty pool returns the tier's own move every time, which is exactly the
+behaviour before pools existed; a pooled move whose weight-class range
+excludes this opponent is skipped.
+
+### Trajectories are generated too, and in degrees
+
+`paired_moves.tres` holds each move's *root* half: a position and rotation
+track on each of the two `CharacterBody3D` nodes. Hand-keying 13 more of
+those as quaternion arrays was not reviewable, so
+**`tools/anim/build_paired_moves.gd`** bakes them from a `TRAJECTORIES`
+block in `paired_recipes.gd` where a rotation key is `[t, pitch, yaw, roll]`
+in **degrees**. A full flip is then a legible run of pitch values
+(`0, -90, -200, -310, -360`) instead of a column nobody can retune.
+
+The generator only writes the clips named in `TRAJECTORIES`. The original
+five arcs stay hand-keyed and untouched, verified byte-identical after a
+run — a re-run cannot perturb an arc a shipped match outcome depends on.
+
+It also enforces two invariants that exist because both were violated in
+practice:
+
+- **A thrown wrestler must land upright.** Any arc peaking at y >= 0.30 must
+  end at the rotation it started at. This is the suplex bug from the section
+  above, now impossible to reintroduce.
+- **No root key may sit below the mat.** Discovered here, the hard way. The
+  first generated pass took the match's minimum body height from -0.026 m to
+  **-0.260 m** across every seed, because the new arcs expressed crouches,
+  knee-drops and kneeling finishes as *root dips* — and the model's origin is
+  at its feet, so a negative root y is not a crouch, it is his feet through
+  the canvas. Those all belong in the bone recipe, where the pelvis drops
+  inside a body whose feet stay planted. With the arcs flattened to mat level
+  and the crouch left to the poses, minimum height is back to -0.024 m.
+
+  Enforcing that invariant then failed on **`finisher_piledriver`**, which
+  ships with the attacker's knee-drop authored as a root dip to -0.15 m. It
+  had never shown up in a seeded run because a finisher needs momentum no
+  AI-vs-AI match reaches before a submission ends it. Fixed rather than
+  excused: the test asserts the invariant across every clip, including the
+  hand-keyed ones.
+
+### Verification
+
+**109/109 unit tests pass** (13 new in `game/tests/test_paired_moveset.gd`),
+orphans unchanged at the pre-existing baseline of 105. The new suite covers
+the moveset matching ARCHITECTURE.md's count, every animation having a
+`MoveDef` and every paired `MoveDef` having both recipes, trajectories keying
+both roots and spanning their whole clip, the mat-level invariant, the draw
+being reproducible from the seed and reaching more than one move, weight-class
+filtering, and — the one that would have caught the unreachable-files
+mistake — every authored move actually being reachable from `match.tscn`.
+
+Unlike the previous commit this one is **expected to change match outcomes**,
+because moves that used to resolve on a grey-box timer now resolve on an
+animation signal, and because the draw introduces variety where there was
+one move per tier. Checked accordingly, over seeds 1, 2, 3, 5, 7 and 11:
+every match completes, no script errors, no wrestler leaves the mat, minimum
+body height back at baseline, and each match now draws **4-8 distinct moves**
+where it previously replayed the same handful.
+
+Rendered all 13 at six beats. The throws read as throws — clinch, load,
+inverted apex with contact kept, descent, impact, victim flat — and the
+reversals read as reversals, with both men staying on their feet through a
+turn, a duck-under or a go-behind.
+
+**What is honestly still missing** at the end of all this: the moves are
+authored, not *tuned*. Frame data, damage and momentum values are internally
+consistent by tier but trace to no reference measurement —
+`gauntlet/refs/timings.md` still marks the relevant entries pending, and
+`ARCHITECTURE.md`'s reference-driven-tuning rule means none of these numbers
+may be defended as "how it should feel" until they do.

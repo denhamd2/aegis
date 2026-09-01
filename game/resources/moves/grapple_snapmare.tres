@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+animation_pair_id = &"grapple_snapmare"
+startup_frames = 16
+active_frames = 8
+recovery_frames = 24
+reversal_window_start = 10
+reversal_window_end = 15
+damage_head = 3.0
+damage_torso = 8.0
+damage_arms = 3.0
+damage_legs = 2.0
+momentum_cost = 0.0
+momentum_gain = 11.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1

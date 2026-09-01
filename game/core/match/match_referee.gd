@@ -23,6 +23,12 @@ const TIE_UP_MAX_TICKS := 200
 @export var wrestler_b_path: NodePath
 @export var match_seed: int = 0
 @export var reversal_counter_move: MoveDef
+## Extra counters drawn between by a seeded pick when a reversal lands, in
+## the same shape as WrestlerController's grapple tier pools. Empty means
+## reversal_counter_move every time.
+@export var reversal_move_pool: Array[MoveDef] = []
+## Incremented per reversal so successive counters in a match can differ.
+var _reversal_draws: int = 0
 
 var wrestler_a: WrestlerController
 var wrestler_b: WrestlerController
@@ -159,11 +165,31 @@ func _check_for_reversal() -> void:
 func _apply_reversal(reverser: WrestlerController, attacker: WrestlerController) -> void:
 	_reversing = true
 	var grapple_rig := reverser.grapple_rig
-	if grapple_rig and reversal_counter_move:
+	var counter := _pick_counter()
+	if grapple_rig and counter:
 		grapple_rig.grapple_finished.connect(_on_reversal_finished.bind(reverser, attacker), CONNECT_ONE_SHOT)
-		grapple_rig.begin(reverser, attacker, reversal_counter_move)
+		grapple_rig.begin(reverser, attacker, counter)
 	else:
 		_finish_reversal(reverser, attacker)
+
+## Seeded draw across reversal_counter_move plus reversal_move_pool. A
+## counter negates a hit and hands the reverser momentum, so which one plays
+## is gameplay, not decoration -- it has to be reproducible from the seed.
+func _pick_counter() -> MoveDef:
+	if reversal_move_pool.is_empty():
+		return reversal_counter_move
+	var choices: Array[MoveDef] = []
+	if reversal_counter_move:
+		choices.append(reversal_counter_move)
+	for candidate: MoveDef in reversal_move_pool:
+		if candidate:
+			choices.append(candidate)
+	if choices.is_empty():
+		return reversal_counter_move
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 8192 + 7919 + _reversal_draws
+	_reversal_draws += 1
+	return choices[rng.randi_range(0, choices.size() - 1)]
 
 func _on_reversal_finished(_attacker: Node3D, _defender: Node3D, reverser: WrestlerController, attacker: WrestlerController) -> void:
 	_finish_reversal(reverser, attacker)
