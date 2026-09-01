@@ -121,11 +121,10 @@ Known Phase 2 gaps, honestly:
 - Tie-up resolution was a placeholder rule (lower player index wins) as of
   this writing; now a real mash contest — see "Feature: fix the tie-up
   resolution placeholder" below.
-- Grapples are mechanically frequent but visually unreadable: the paired
-  clips animate only the two root transforms, and the FSM sits in
-  `GRAPPLE_HOLD` (mapped to the `Interact` placeholder clip) for the whole
-  throw, so the skeletons never do anything grapple-shaped. Same root gap as
-  the 13 unwritten paired moves — see "Fix: four defects a real capture
+- Grapples are posed with borrowed single-character clips (attacker lifts,
+  defender goes limp, tie-up is a two-armed push) rather than two rigs
+  genuinely gripping each other: the paired clips still animate only the two
+  root transforms. Same root gap as the 13 unwritten paired moves — see "Fix: four defects a real capture
   showed, and the one that wasn't a bug" below, which also covers the spawn
   facing, mat-height, capsule-rotation and missing-gravity bugs the same
   capture exposed.
@@ -1416,3 +1415,78 @@ move, wherever they were standing. Fixing it means making the paired clips'
 position tracks relative to the anchor instead of absolute in `Match` space,
 which is a change to the animation authoring convention rather than a code
 fix.
+
+## Fix: the rig was mounted backwards, and grapples had no poses
+
+A second video review of the same capture still reported no facing, no
+grappling, "one keeps falling whilst the other one is pointing," intermittent
+stacking, and — the useful detail — *"when the other falls I don't see the
+attacker hitting him or lifting him up."* Three real causes, all confirmed
+against the running engine and against rendered frames.
+
+**The measurement lesson first, because it caused a wrong "fixed" claim.**
+The previous round reported facing solved on a measured
+`forward · to-opponent = 1.0`. That number was correct and the conclusion was
+wrong: it measures the `CharacterBody3D` node, and the *rendered character*
+disagreed with the node by 180°. A transform-space assertion cannot verify
+what the camera sees. Anything about how the game *looks* now has to be
+checked by opening rendered frames.
+
+**1. The character model faced backwards.** Parsing
+`assets/characters/wrestler_base_root_motion.glb` directly, the rig's own
+forward-locomotion clips translate its `root` node along **+Z**: `Walk_Loop`
+`dZ=+1.3`, `Jog_Fwd_Loop` `dZ=+5.0`, `Sprint_Loop` `dZ=+5.5`, all with
+`dX=0`. Godot treats **-Z** as forward, which is what every `look_at()` and
+`-basis.z` in this project assumes. `scenes/wrestler.tscn` had no
+compensating rotation on `CharacterModel`, so aiming a wrestler at his
+opponent rendered him facing exactly away — visible in the capture as both
+wrestlers extending an arm *outward, past each other* during a tie-up, and as
+the "attacker" standing pointing away from the man he had just thrown. Fixed
+with a 180° yaw on `CharacterModel`, guarded by
+`tests/test_wrestler_model_orientation.gd` so it doesn't get tidied away.
+
+**2. Both roles played the same clip through a grapple.** Paired clips
+animate only the two root transforms, and the FSM stays in `GRAPPLE_HOLD` for
+a whole rig-driven move (`MOVE_EXEC` never fires — confirmed live), where
+`STATE_ANIMATIONS` mapped both wrestlers to the `Interact` one-armed reach.
+So the attacker did an idle gesture while the victim's rigid body arced past
+him: mechanically a suplex, visually nobody grappling anybody. Added
+`ATTACKER_STATE_ANIMATIONS` / `DEFENDER_STATE_ANIMATIONS` overrides on top of
+the shared table — attacker `PickUp_Table` (a real bend-and-lift), defender
+`Death01` (limp) — resolved through `clip_for_state()` and applied by
+pointing the state-machine node at the right clip just before travelling.
+Each wrestler builds its own `AnimationNodeStateMachine`, so this is
+instance-local and needs no duplicated transition edges;
+`MatchReferee._resolve_tie_up()` already assigns `_is_grapple_attacker`
+before transitioning either FSM, so the role is known when the signal fires.
+`TIE_UP` also moved from `Interact` to `Push`, a two-armed shove that reads
+as a collar-and-elbow lock-up.
+
+**3. Every paired move teleported the pair to ring centre.**
+`GrappleRig` aligned both wrestlers onto `GrappleAnchor`, which has no
+transform override in `match.tscn` and therefore sits at the world origin.
+`_compute_pair_transform()` now builds a per-call frame at the pair's own
+midpoint, yawed along the attacker's facing and clamped inside the mat (a
+suspended body ignores collision for the clip's duration, so a throw started
+against the ropes would sweep through them). `_play_retargeted()` bakes that
+frame into the duplicated clip's keys — positions by the transform, rotations
+by its yaw — so the animation doesn't drag the pair back to the origin on its
+first frame. Baking into the copy the rig already duplicates keeps playback
+deterministic and avoids a post-animation hook that would have to run after
+the `AnimationPlayer` child updates, which node order doesn't give us.
+
+Verified against the real Godot binary: 69/69 unit tests pass (11 new across
+`test_state_animations.gd`, `test_wrestler_model_orientation.gd` and
+`test_grapple_rig_placement.gd`, all with zero orphans); seeds 1, 2, 3, 5, 7
+and 11 all complete with zero script errors and no Y regression (min
+-0.026 m, off-mat ticks unchanged at ~250-300, all mid-throw arcs). And
+this time **checked on the pixels**: a fresh 1280x720 capture shows a genuine
+collar-and-elbow tie-up with hands meeting and feet braced, an attacker bent
+under the victim mid-lift, and moves playing where the wrestlers stand.
+
+**Still the real gap:** these are borrowed single-character clips, not two
+rigs gripping each other. Genuinely interlocked paired animation — hands on
+the opponent, weight transferring between them — still needs bone tracks
+authored in Blender against two rigs, which is the same content gap as the
+13 unwritten paired moves. `grapple_rig.gd`'s header records why bone tracks
+can't simply be added to the existing clips.

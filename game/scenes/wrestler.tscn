@@ -16,6 +16,7 @@ shape = SubResource("CapsuleShape3D_1")
 position = Vector3(0, 0.9, 0)
 
 [node name="CharacterModel" parent="." instance=ExtResource("3")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
 
 [node name="AI" type="Node" parent="."]
 script = ExtResource("2")

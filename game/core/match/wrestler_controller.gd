@@ -99,7 +99,13 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.LOCOMOTION: "Walk",
 	WrestlerFSM.State.RUN: "Sprint",
 	WrestlerFSM.State.STRIKE: "Punch_Jab",
-	WrestlerFSM.State.TIE_UP: "Interact",
+	# "Push" (Push_Loop on the rig -- the importer strips the _Loop suffix) is
+	# a two-armed forward shove, which reads as a collar-and-elbow lock-up.
+	# This was "Interact", a one-armed reach-and-point: with both wrestlers
+	# playing it, a tie-up rendered as two men standing apart pointing past
+	# each other, which is the single most-complained-about thing in a
+	# captured match.
+	WrestlerFSM.State.TIE_UP: "Push",
 	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
 	WrestlerFSM.State.MOVE_EXEC: "Punch_Cross",
 	WrestlerFSM.State.HIT_REACT: "Hit_Chest",
@@ -113,6 +119,28 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
 	WrestlerFSM.State.SUBMISSION_DEFENDER: "Death01",
 	WrestlerFSM.State.FINISHER: "Sword_Attack",
+}
+## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
+## wrestler is in a grapple and its role is known.
+##
+## A paired grapple clip animates only the two root transforms -- the throw
+## trajectory -- and both wrestlers sit in GRAPPLE_HOLD for its whole
+## duration (MOVE_EXEC never fires for a rig-driven move; confirmed live).
+## With one clip for both roles, that meant the attacker played the same
+## idle-ish gesture as the man he was supposedly throwing: an instrumented
+## capture showed the "attacker" standing with an arm out while the
+## defender's rigid body arced past him, which reads as nobody grappling
+## anybody. Splitting by role gives the attacker a lifting motion and the
+## defender a limp one, so the throw at least reads as a throw.
+##
+## Still borrowed single-character animation, not two rigs actually gripping
+## each other -- that needs paired bone tracks (see grapple_rig.gd's header
+## for why those aren't simply added to the existing clips).
+const ATTACKER_STATE_ANIMATIONS := {
+	WrestlerFSM.State.GRAPPLE_HOLD: "PickUp_Table", # bend-and-lift
+}
+const DEFENDER_STATE_ANIMATIONS := {
+	WrestlerFSM.State.GRAPPLE_HOLD: "Death01", # limp, being thrown
 }
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
@@ -276,10 +304,31 @@ func _build_animation_tree() -> void:
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
 	if not _anim_playback:
 		return
+	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
 	var state_name: String = WrestlerFSM.State.keys()[current]
-	if not (anim_tree.tree_root as AnimationNodeStateMachine).has_node(state_name):
+	if not state_machine.has_node(state_name):
 		return
+	# Point the state's node at whichever clip this wrestler's current role
+	# calls for, before travelling into it. Each wrestler builds its own
+	# AnimationNodeStateMachine in _build_animation_tree(), so mutating a node
+	# here is instance-local -- it can't leak across wrestlers or matches, and
+	# it avoids duplicating every LEGAL_TRANSITIONS edge for role variants.
+	# MatchReferee._resolve_tie_up() assigns _is_grapple_attacker *before*
+	# transitioning either FSM, so the role is already correct by the time
+	# this fires.
+	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
+	if anim_node:
+		anim_node.animation = clip_for_state(current, _is_grapple_attacker)
 	_anim_playback.travel(state_name)
+
+## Clip this state should play, honouring the per-role overrides. Public so
+## tests can assert the tables resolve to clips the rig actually has.
+static func clip_for_state(state: WrestlerFSM.State, is_attacker: bool) -> String:
+	var overrides: Dictionary = ATTACKER_STATE_ANIMATIONS if is_attacker \
+			else DEFENDER_STATE_ANIMATIONS
+	if overrides.has(state):
+		return overrides[state]
+	return STATE_ANIMATIONS.get(state, "")
 
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():

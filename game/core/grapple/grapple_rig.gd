@@ -49,6 +49,12 @@ var _active: bool = false
 ## already flags elsewhere in this codebase).
 var _retargeted_anim_name: StringName
 var _original_anim: Animation
+## Frame the current move plays in — see _compute_pair_transform().
+var _pair_transform: Transform3D = Transform3D()
+
+## Half-width of the mat (scenes/ring.tscn's floor is 6m square), minus room
+## for a body. Clamps where a paired move is allowed to play out.
+const RING_HALF_EXTENT := 2.0
 
 func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	assert(not _active, "GrappleRig.begin() called while a grapple is already active")
@@ -60,7 +66,8 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
-	_align_to_anchor(attacker, defender)
+	_pair_transform = _compute_pair_transform(attacker, defender)
+	_align_to_pair(attacker, defender)
 
 	_active = true
 	grapple_started.emit(attacker, defender, move)
@@ -87,11 +94,37 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 			retargeted.track_set_path(i, root.get_path_to(attacker))
 		elif node_name == "WrestlerB":
 			retargeted.track_set_path(i, root.get_path_to(defender))
+		else:
+			continue
+		_transform_track_into_pair_frame(retargeted, i)
 	_original_anim = source
 	_retargeted_anim_name = anim_name
 	library.remove_animation(anim_name)
 	library.add_animation(anim_name, retargeted)
 	animation_player.play(anim_name)
+
+## Rewrite one wrestler track's keys from the authored origin frame into
+## _pair_transform.
+##
+## The clips write absolute node positions in Match space, so without this
+## the move would snap back to the origin on the animation's first frame no
+## matter where _align_to_pair() put the wrestlers. Baking the frame into the
+## duplicated copy (which _play_retargeted() already makes, and
+## _restore_original_animation() already puts back) keeps playback
+## deterministic and needs no per-frame hook -- a post-animation offset would
+## have to run after the AnimationPlayer child updates, which node order does
+## not give us.
+func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
+	var track_type := anim.track_get_type(track)
+	if track_type == Animation.TYPE_POSITION_3D:
+		for k in anim.track_get_key_count(track):
+			var pos: Vector3 = anim.track_get_key_value(track, k)
+			anim.track_set_key_value(track, k, _pair_transform * pos)
+	elif track_type == Animation.TYPE_ROTATION_3D:
+		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
+		for k in anim.track_get_key_count(track):
+			var rot: Quaternion = anim.track_get_key_value(track, k)
+			anim.track_set_key_value(track, k, yaw * rot)
 
 func _restore_original_animation() -> void:
 	if not _original_anim:
@@ -102,11 +135,40 @@ func _restore_original_animation() -> void:
 	library.add_animation(_retargeted_anim_name, _original_anim)
 	_original_anim = null
 
-func _align_to_anchor(attacker: Node3D, defender: Node3D) -> void:
-	if not anchor:
-		return
-	attacker.global_transform = anchor.global_transform
-	defender.global_transform = anchor.global_transform.rotated_local(Vector3.UP, PI)
+## Frame the current paired move plays in: positioned at the pair's own
+## midpoint and yawed along the attacker's facing.
+##
+## Paired clips are authored around the origin, and this used to align both
+## wrestlers straight onto the GrappleAnchor -- which has no transform
+## override in match.tscn and therefore sits at the world origin. Every
+## grapple teleported both wrestlers to the middle of the ring, wherever they
+## had been standing, which reads on camera as the pair repeatedly snapping
+## together and stacking up. Building a per-call frame instead lets the same
+## authored clip play wherever the wrestlers actually are, and along the
+## direction the attacker is actually facing.
+func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
+	var midpoint := (attacker.global_position + defender.global_position) * 0.5
+	# Y comes from the anchor, not the pair: a clip's vertical keys are
+	# authored against mat level, and either wrestler may be mid-drift.
+	midpoint.y = anchor.global_position.y if anchor else 0.0
+	# Keep the move inside the ring. A suspended body ignores collision for
+	# the whole clip, so a throw started against the ropes would otherwise
+	# sweep straight through them.
+	midpoint.x = clampf(midpoint.x, -RING_HALF_EXTENT, RING_HALF_EXTENT)
+	midpoint.z = clampf(midpoint.z, -RING_HALF_EXTENT, RING_HALF_EXTENT)
+
+	var facing := defender.global_position - attacker.global_position
+	facing.y = 0.0
+	if facing.length() < 0.001:
+		facing = -attacker.global_transform.basis.z
+		facing.y = 0.0
+	if facing.length() < 0.001:
+		return Transform3D(Basis(), midpoint)
+	return Transform3D(Basis(Vector3.UP, atan2(-facing.x, -facing.z)), midpoint)
+
+func _align_to_pair(attacker: Node3D, defender: Node3D) -> void:
+	attacker.global_transform = _pair_transform
+	defender.global_transform = _pair_transform.rotated_local(Vector3.UP, PI)
 
 func _suspend(body: CharacterBody3D) -> void:
 	if body:

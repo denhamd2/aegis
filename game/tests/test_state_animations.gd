@@ -43,6 +43,48 @@ func test_every_state_animation_exists_on_the_rig() -> void:
 		"STATE_ANIMATIONS names clips that don't exist on the rig: %s" % [missing]
 	).is_empty()
 
+## The per-role override tables are looked up ahead of STATE_ANIMATIONS, so a
+## bad name there de-animates a role without touching the base table.
+func test_every_role_override_animation_exists_on_the_rig() -> void:
+	var wrestler := _make_wrestler()
+	var player := wrestler.anim_player
+
+	var tables := {
+		"ATTACKER_STATE_ANIMATIONS": WrestlerController.ATTACKER_STATE_ANIMATIONS,
+		"DEFENDER_STATE_ANIMATIONS": WrestlerController.DEFENDER_STATE_ANIMATIONS,
+	}
+	var missing: Array[String] = []
+	for table_name in tables:
+		var table: Dictionary = tables[table_name]
+		for state_id in table:
+			var clip_name: String = table[state_id]
+			if not player.has_animation(clip_name):
+				missing.append("%s[%s] -> %s" % [
+					table_name, WrestlerFSM.State.keys()[state_id], clip_name
+				])
+
+	assert_array(missing).override_failure_message(
+		"Role override tables name clips that don't exist on the rig: %s" % [missing]
+	).is_empty()
+
+## The whole point of the split: during a grapple the two roles must not be
+## playing the same clip, or the throw reads as nobody grappling anybody.
+func test_grapple_roles_resolve_to_different_clips() -> void:
+	var attacker_clip := WrestlerController.clip_for_state(
+		WrestlerFSM.State.GRAPPLE_HOLD, true
+	)
+	var defender_clip := WrestlerController.clip_for_state(
+		WrestlerFSM.State.GRAPPLE_HOLD, false
+	)
+	assert_str(attacker_clip).is_not_equal(defender_clip)
+
+## States with no role entry must fall through to the shared table for both
+## roles, rather than resolving to "" and silently animating nothing.
+func test_states_without_a_role_override_fall_back() -> void:
+	for is_attacker in [true, false]:
+		assert_str(WrestlerController.clip_for_state(WrestlerFSM.State.IDLE, is_attacker)) \
+			.is_equal(WrestlerController.STATE_ANIMATIONS[WrestlerFSM.State.IDLE])
+
 ## Every state with a clip must end up as a real node in the blend graph --
 ## the table being correct is only half of it, the tree has to actually be
 ## built from it.
