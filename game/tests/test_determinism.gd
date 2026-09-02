@@ -1,6 +1,18 @@
 extends GdUnitTestSuite
-## Same seed + replay yields an identical end-state hash across runs —
-## the property the whole capture/evidence-gate pipeline depends on.
+## compute_end_state_hash() itself: same inputs hash the same, different
+## seeds hash differently.
+##
+## ARCHITECTURE.md names this suite as the enforcement of its hard
+## determinism requirement ("same seed + same replay must always produce the
+## same compute_end_state_hash()"). It is not, and never was: both cases
+## below build a ReplayResource by hand and hash a two-key dictionary. No
+## match runs, nothing is recorded, and nothing is played back — so they
+## passed happily while ReplaySystem.advance_tick() had no callers at all
+## and the replay system could not record or replay anything.
+##
+## They are kept, because the hash function is worth pinning down, but the
+## requirement itself is enforced by tests/test_replay_roundtrip.gd, which
+## records a real match and replays it.
 
 func test_same_seed_and_replay_hash_matches() -> void:
 	var replay := ReplayResource.new()

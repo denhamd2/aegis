@@ -60,7 +60,29 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if _match_over:
 		return
+	_resolve_tick()
+	# Closes the tick for the replay. This is the one place in the frame
+	# where every wrestler has already read its input for tick N (they run
+	# earlier in the scene tree; that ordering is load-bearing enough to
+	# have its own doc comment on _try_start_tie_up()), so it is the only
+	# correct place to move the counter to N+1.
+	#
+	# Nothing called this before, anywhere, so ReplaySystem.current_tick sat
+	# at 0 for entire matches: a recording overwrote frame 0 thousands of
+	# times and kept only the last tick's input, and playback fed that one
+	# frame to every tick of the match. The replay system has never actually
+	# recorded or replayed a match, despite ARCHITECTURE.md making
+	# same-seed-same-replay a hard requirement.
+	#
+	# Gameplay is untouched by this: in LIVE and RECORDING mode
+	# ReplaySystem.get_input() returns the live input regardless of
+	# current_tick. Only the recorded data changes -- from wrong to right.
+	if ReplaySystem:
+		ReplaySystem.advance_tick()
 
+## The tick's actual decisions, split out from _physics_process so its
+## several early returns can't skip closing the tick above.
+func _resolve_tick() -> void:
 	# MatchReferee runs after both wrestlers in the scene tree, so this is
 	# the single point each tick where queued hits (see
 	# WrestlerController._pending_hits) are resolved — after every
@@ -228,8 +250,27 @@ func _check_for_downed_opponent_action() -> void:
 				_pin_ticks = 0
 				_pin_attacker = attacker
 				_pin_defender = defender
-				attacker.begin_pin(defender, match_seed + Engine.get_physics_frames())
+				attacker.begin_pin(defender, _pin_seed())
 			return
+
+## Seed for this pin's kickout minigame. Every pin in a match needs its own
+## target window, so the seed has to vary -- but only with match state.
+##
+## This used to be `match_seed + Engine.get_physics_frames()`, and
+## get_physics_frames() is a *process*-global counter, not a per-match one.
+## Replay the same recording in a process that reaches the pin at a
+## different global frame -- a capture that plays a replay after a menu, or
+## simply the second match run in one process -- and the defender gets a
+## different kickout window, so the same inputs produce a different match.
+## That is precisely the guarantee ARCHITECTURE.md calls a hard requirement,
+## and the capture pipeline is built on top of it.
+##
+## ReplaySystem.current_tick is the same quantity the seed wanted (how far
+## into the match this pin is) except that it resets with the match and is
+## reproduced exactly by playback.
+func _pin_seed() -> int:
+	var tick: int = ReplaySystem.current_tick if ReplaySystem else _pin_ticks
+	return match_seed + tick
 
 func _tick_pin() -> void:
 	_pin_ticks += 1

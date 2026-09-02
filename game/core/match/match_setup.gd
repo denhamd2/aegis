@@ -5,11 +5,32 @@ extends Node3D
 
 @export var match_seed: int = 1
 
+## Where to write this match's ReplayResource once it ends. Empty in normal
+## play; set from the command line by CaptureHarness so a capture can record
+## the match it is about to replay. Nothing saved a recording before this
+## existed, so there was no replay anywhere in the repo for the capture
+## pipeline to consume.
+@export var record_replay_path: String = ""
+
+## A ReplayResource to play back instead of recording a fresh match. The
+## match seed comes from the replay when one is supplied -- every seeded
+## decision in the match (AI jitter, tie-up tie-breaks, grapple tier draws)
+## derives from it, so replaying with a different seed would reproduce the
+## inputs against a different world.
+@export var playback_replay_path: String = ""
+
 @onready var wrestler_a: WrestlerController = $WrestlerA
 @onready var wrestler_b: WrestlerController = $WrestlerB
 @onready var referee: MatchReferee = $MatchReferee
 
 func _ready() -> void:
+	var replay: ReplayResource = null
+	if playback_replay_path != "":
+		replay = load(playback_replay_path) as ReplayResource
+		if replay:
+			match_seed = replay.match_seed
+		else:
+			push_error("Cannot load replay: %s" % playback_replay_path)
 	wrestler_a._resolve_paths()
 	wrestler_b._resolve_paths()
 	referee.match_seed = match_seed
@@ -24,7 +45,10 @@ func _ready() -> void:
 	if wrestler_b.is_ai and wrestler_b.ai:
 		wrestler_b.ai.setup_jitter(match_seed, wrestler_b.player_index)
 	if ReplaySystem:
-		ReplaySystem.start_recording(match_seed)
+		if replay:
+			ReplaySystem.start_playback(replay)
+		else:
+			ReplaySystem.start_recording(match_seed)
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("Match won by %s via %s" % [winner.name, method])
@@ -34,3 +58,17 @@ func _on_match_won(winner: WrestlerController, method: String) -> void:
 	# FSM transition the moment it tries to do anything else post-match.
 	wrestler_a.set_physics_process(false)
 	wrestler_b.set_physics_process(false)
+	_save_replay()
+
+## Writes the recording out, if this run was asked for one. Saved after the
+## freeze above so the resource holds exactly the ticks the match ran and
+## not a trailing frame from a wrestler still polling.
+func _save_replay() -> void:
+	if record_replay_path == "" or not ReplaySystem or not ReplaySystem.replay:
+		return
+	var err := ResourceSaver.save(ReplaySystem.replay, record_replay_path)
+	if err != OK:
+		push_error("Saving replay to %s failed: %d" % [record_replay_path, err])
+		return
+	print("Replay saved: %s (%d ticks)"
+			% [record_replay_path, ReplaySystem.replay.duration_ticks()])
