@@ -7,9 +7,46 @@ enum Limb { HEAD, TORSO, ARMS, LEGS }
 
 const MAX_LIMB_DAMAGE := 100.0
 const MOMENTUM_MAX := 100.0
-const POWER_THRESHOLD := 30.0
-const SIGNATURE_THRESHOLD := 60.0
-const FINISHER_THRESHOLD := 100.0
+
+## Momentum a winner actually earns over one match. Measured across seven
+## AI-vs-AI seeds: 59, 63, 64, 64, 64, 75, 64 -- so 64 is both the median
+## and the mode, off 7-13 landed moves.
+##
+## The ladder used to be scaled to MOMENTUM_MAX instead, and that is the
+## same mistake the kickout window had before KICKOUT_DAMAGE_REFERENCE: a
+## scale no match ever occupies. SIGNATURE_THRESHOLD was 60, which a winner
+## crosses on the move that finishes the fight, and FINISHER_THRESHOLD was
+## 100 -- the meter's ceiling, unreachable by definition once a signature
+## costing 60 is checked one branch below it.
+##
+## Measured before the change, over those same seven seeds: peak momentum
+## equalled total momentum earned in every single one, which means nothing
+## was ever spent. Both top rungs of the ladder, four authored moves and
+## their paired animations, never fired in a match.
+##
+## 64 is the *pre-change* figure and it is kept as the denominator because
+## that is the economy the fractions below were derived against. The economy
+## feeds back on itself -- firing the ladder shortens the match, so a winner
+## now earns 40-55 rather than 59-75 -- and the thresholds were re-verified
+## against that narrower range rather than re-derived from it, which would
+## chase its own tail.
+const MOMENTUM_REFERENCE := 64.0
+
+## The ladder, as fractions of what a match affords rather than of a ceiling
+## nobody reaches. These are *reachability* values, chosen so all three tiers
+## fire in a real match: gauntlet/refs/ measures nothing about how often a
+## wrestler should hit a signature or a finisher, so none of them may be
+## defended as how it should feel.
+const POWER_THRESHOLD := MOMENTUM_REFERENCE * 0.1875     # 12
+const SIGNATURE_THRESHOLD := MOMENTUM_REFERENCE * 0.375  # 24
+## Late, but inside a winner's earnings rather than past them: the finisher
+## should be the move that ends the match, not one that unlocks after it.
+##
+## Set by iteration against a measurement, because the economy feeds back on
+## itself: firing the ladder shortens the match, which lowers the momentum
+## the match earns. At 45 the signature fired in all ten seeds and the
+## finisher in none -- peak momentum landed at 27-44, one point short.
+const FINISHER_THRESHOLD := MOMENTUM_REFERENCE * 0.5  # 32
 
 var limb_damage := {
 	Limb.HEAD: 0.0,

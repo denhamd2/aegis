@@ -2293,8 +2293,17 @@ built. The ring/arena slice's recorded gap says so.
 
 Unit tests cover the mode logic. What they cannot show is whether a live
 match ever *reaches* a cut — and this repo's history is a list of systems
-that were correct and never called, so a probe ran five seeds of real
-AI-vs-AI matches and logged every mode transition.
+that were correct and never called, so a probe ran five seeds and logged
+every mode transition.
+
+**Correction, found by the next section's probe:** those five runs loaded
+`match.tscn` directly, which leaves `WrestlerA` on the human slot with
+nothing driving it — `MatchSetup` only forces both sides onto the AI when
+it is recording a replay. They were AI-vs-*passive* matches, not AI-vs-AI,
+and WrestlerA landed zero moves in all five. The conclusions below hold and
+were re-confirmed on real AI-vs-AI matches, but the momentum figure quoted
+here was measured one-sided; see the corrected numbers in the next
+section.
 
 `THREE_COUNT_CUT` fires in four of five seeds, and the camera **moves while
 cut** — the freeze is genuinely gone.
@@ -2344,3 +2353,92 @@ estimate.
   around the axis, and no reference measurement covers when it should.
 - The bottom near rope is out of frame at every framing the fill
   measurement permits.
+
+## Fix: the move ladder was scaled to a meter no match fills
+
+`ARCHITECTURE.md` names "momentum → signature → finisher" as part of the
+core loop. It was not in the loop. Four authored moves —
+`signature_backbreaker`, `signature_neckbreaker`, `finisher_piledriver`,
+`finisher_facebuster` — and their paired animations could not appear in a
+match, and the HUD's momentum threshold ticks marked two rungs nobody
+reached.
+
+### What was actually wrong
+
+Found by the camera slice's probe, then measured properly. First, a
+correction to how that probe ran: loading `match.tscn` directly leaves
+`WrestlerA` on the human slot with nothing driving it — `MatchSetup` only
+forces both sides onto the AI when recording a replay — so the first runs
+were AI-vs-**passive**, and WrestlerA landed zero moves in all seven seeds.
+Re-run with both sides on the AI:
+
+| | winner's momentum earned | landed moves |
+| --- | --- | --- |
+| seven AI-vs-AI seeds | 59, 63, 64, 64, 64, 75, 64 | 7–13 |
+
+`SIGNATURE_THRESHOLD` was **60** and `FINISHER_THRESHOLD` was **100**.
+
+Two things follow, and the second is the real bug:
+
+- A winner crosses 60 on the move that *finishes the fight*. In all seven
+  seeds **peak momentum equalled total momentum earned**, which means
+  nothing was ever spent: the meter passed the signature gate and the match
+  ended before another grapple could draw on it.
+- `FINISHER_THRESHOLD` was `MOMENTUM_MAX`. A finisher needed the meter
+  pinned at its ceiling, while a signature costing 60 sat one branch below
+  it in `_pick_tier_move()` — so any wrestler who used his moveset spent the
+  meter before it could fill. The top rung was unreachable by construction,
+  not by tuning.
+
+This is the same mistake the kickout window had before
+`KICKOUT_DAMAGE_REFERENCE`: a scale no match ever occupies.
+
+### The fix
+
+The ladder is expressed against `MOMENTUM_REFERENCE` — the momentum a match
+actually affords a winner — instead of against the meter's ceiling:
+
+| | was | now |
+| --- | --- | --- |
+| power | 30 | 12 |
+| signature | 60 | 24 (costs 8) |
+| finisher | 100 (= ceiling) | 32 (costs 32) |
+
+The economy feeds back on itself, which took two measured iterations rather
+than one: firing the ladder shortens the match, so a winner now earns 40–55
+instead of 59–75. At a finisher threshold of 45 the signature fired in all
+ten seeds and the finisher in **none** — peak momentum landed at 27–44, one
+point short. At 32 it fires.
+
+Over ten AI-vs-AI seeds, where the top two tiers previously fired in zero:
+
+| tier | matches it fires in |
+| --- | --- |
+| power | 9 / 10 |
+| signature | 6 / 10 |
+| finisher | 5 / 10 |
+
+Finishes stay varied — 4 pinfalls, 6 submissions — and matches run
+629–1899 ticks.
+
+### Invariants, so this fails loudly next time
+
+`test_momentum_ladder.gd` asserts the shape rather than the feel: no tier
+sits at the meter's ceiling; the tiers are ordered; the whole climb
+(signature + finisher) fits inside what a match affords — the check that
+would have caught 60 + 100 against 64 earned; no move costs more than the
+tier that unlocks it; and a signature must not price the finisher out of the
+rest of the match.
+
+### What this did not settle
+
+- Every number here is a **reachability** value. `gauntlet/refs/` measures
+  nothing about how often a wrestler should hit a signature or a finisher,
+  so none of them may be defended as how it should feel.
+- A match reaches a signature **or** a finisher, rarely both: the two gates
+  sit 8 apart, so a wrestler who passes 24 without grappling sails to 32 and
+  takes the finisher instead. Real matches usually build through one to the
+  other.
+- `MOMENTUM_REFERENCE` is kept at the pre-change 64 because that is the
+  economy the fractions were derived against; post-change earnings settle at
+  40–55. Re-deriving it from the new figure would chase its own tail.
