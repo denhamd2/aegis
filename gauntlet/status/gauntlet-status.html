@@ -24,24 +24,24 @@
 <tbody>
 <tr>
 <td>ring/arena presentation</td>
-<td>0</td>
-<td class="verdict-pending">not started</td>
-<td>-/10</td>
-<td>phase 4 not yet started</td>
+<td>1</td>
+<td class="verdict-theirs">reference wins</td>
+<td>4/10</td>
+<td>the ring no longer floats in nothing (flat-void fraction 0.618 -&gt; 0.289 against a 0.010-0.066 reference band, measure_frame.py --void), but the arena is grey-box geometry: stands are raked boxes with a noise albedo, there is no entrance stage, no ring skirt branding, no crowd motion. Lighting consistency (bar priority 2) is UNJUDGED -- both captures were llvmpipe and evidence_gate.py --visual now voids them for this slice.</td>
 </tr>
 <tr>
 <td>wrestler look &amp; materials</td>
-<td>0</td>
-<td class="verdict-pending">not started</td>
-<td>-/10</td>
-<td>phase 4 not yet started</td>
+<td>1</td>
+<td class="verdict-theirs">reference wins</td>
+<td>4/10</td>
+<td>silhouette separation from the mat went 0.014 -&gt; 0.172 dL, still short of the reference&#x27;s 0.24-0.31, and the two wrestlers now separate by hue as the reference does. What is left is the model itself: one CC0 mannequin at two tints, no distinct body types, no faces, no attire geometry, one material per man. Material believability (bar priority 3) is UNJUDGED pending a GPU capture.</td>
 </tr>
 <tr>
 <td>HUD/UI</td>
-<td>0</td>
-<td class="verdict-pending">not started</td>
-<td>-/10</td>
-<td>phase 4 not yet started</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>the vitality bar was reading against a 400-damage scale while the match is played on a 200 one, so a wrestler one hit from losing showed 54-75% health; fixed, and each plate now carries its wrestler&#x27;s own attire accent. Still missing against hud.md: portraits, the fill-animation behaviour hud.md marks pending (easing, flash-on-threshold, damage-tick delay), and legibility across a lighting range the game does not yet have.</td>
 </tr>
 <tr>
 <td>entrance sequence</td>
@@ -83,7 +83,7 @@
 <td>0</td>
 <td class="verdict-pending">not started</td>
 <td>-/10</td>
-<td>phase 4 not yet started</td>
+<td>not opened, but round 1 on the visual slices found the bug it starts from: MatchCamera.cut_to_finisher()/cut_to_three_count() have no callers anywhere, and both set a mode whose only effect is to make _physics_process return early -- so the scripted cuts camera.md measures are not merely unimplemented, calling one would freeze the camera for the rest of the match.</td>
 </tr>
 <tr>
 <td>pin/kickout minigame</td>

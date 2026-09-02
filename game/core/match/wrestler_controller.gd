@@ -114,6 +114,26 @@ var match_seed: int = 0
 ## Incremented on every tier draw so two grapples in one match don't have to
 ## resolve to the same move. Part of the RNG's seed, never of gameplay state.
 var _tier_draws: int = 0
+## Attire colourway. Two identical wrestlers were the largest measured gap
+## in VISUAL_BAR.md's first priority ("silhouette readability at
+## match-camera distance"): both wrestlers instanced the same .glb with the
+## same CC0 placeholder materials, so at match-camera distance the frame
+## held two interchangeable orange figures and a paired move read as one
+## blob.
+##
+## Measured, not chosen -- see gauntlet/refs/VISUAL_BAR.md's "Silhouette
+## separation" section and tools/refs/measure_frame.py. On the reference
+## still the two wrestlers sit 0.24-0.31 in relative luminance *below* the
+## mat, and only 0.07 apart from each other: the mat separates them by
+## value, and they separate from each other by hue. These colourways
+## reproduce that relationship rather than an idea of what looks good.
+##
+## Applied as surface overrides so the shared .glb is never mutated -- both
+## wrestlers load the same Mesh resource, and writing to its own surface
+## materials would colour both of them (the same shared-resource trap that
+## made strike_move's "applied" flag leak between wrestlers).
+@export var attire_body: Color = Color(0.13, 0.24, 0.55)
+@export var attire_accent: Color = Color(0.30, 0.58, 0.95)
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
@@ -350,6 +370,45 @@ func _ready() -> void:
 	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton:
 		_build_ik_rig()
+	_apply_colorway()
+
+## Surface 0 of the CC0 base mesh is the body ("M_Main"), surface 1 the
+## joint bands ("M_Joints") -- confirmed off the .glb, not assumed. The
+## bands take the accent, which is what carries this wrestler's identity
+## through to the HUD plate that draws in the same colour.
+func _apply_colorway() -> void:
+	# Nothing renders under the headless display server CI runs tests on,
+	# and assigning a material there logs `Parameter "material" is null`
+	# once per surface: the dummy renderer never compiles the shader, so the
+	# material has no RID for it to query instance uniforms from. Skipping
+	# costs nothing headless (there is no image) and never fires during a
+	# capture, which runs under xvfb with the opengl3 driver rather than
+	# --headless. The colourways themselves are asserted in
+	# tests/test_wrestler_colorway.gd, which does not need a renderer.
+	if DisplayServer.get_name() == "headless":
+		return
+	var mesh_instance := find_child("Mannequin", true, false) as MeshInstance3D
+	if not mesh_instance or not mesh_instance.mesh:
+		return
+	var colors := [attire_body, attire_accent]
+	for surface in mini(mesh_instance.mesh.get_surface_count(), colors.size()):
+		# Duplicated from the mesh's own material rather than built from a
+		# bare StandardMaterial3D.new(): a fresh material has no valid RID
+		# under the dummy (headless) renderer CI runs tests on, and every
+		# instance of one logged `Parameter "material" is null` on load.
+		# Duplicating keeps the .glb's material untouched -- both wrestlers
+		# share that resource, so writing to it would colour both.
+		var source := mesh_instance.mesh.surface_get_material(surface)
+		if source == null:
+			continue
+		var material: StandardMaterial3D = source.duplicate()
+		material.albedo_color = colors[surface]
+		# Ring lighting is the arena's job, not the attire's: a low
+		# specular keeps the four spot rigs from blowing the body back out
+		# to the near-white value this is here to fix.
+		material.roughness = 0.72
+		material.metallic = 0.0
+		mesh_instance.set_surface_override_material(surface, material)
 
 ## Builds the AnimationNodeStateMachine blend graph: one AnimationNodeAnimation
 ## per WrestlerFSM state that has a usable clip (STATE_ANIMATIONS), and one

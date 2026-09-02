@@ -49,6 +49,19 @@ jobs:
             echo "evidence gate should have rejected the failing fixture" >&2
             exit 1
           fi
+      - name: A GPU-backed capture is admissible for a visual slice
+        run: |
+          python3 tools/capture/evidence_gate.py --visual \
+            tools/capture/fixtures/manifest_pass.json
+      - name: A software render is good evidence for timing, void for visuals
+        run: |
+          python3 tools/capture/evidence_gate.py \
+            tools/capture/fixtures/manifest_software_render.json
+          if python3 tools/capture/evidence_gate.py --visual \
+            tools/capture/fixtures/manifest_software_render.json; then
+            echo "a software render must not be admissible for a visual slice" >&2
+            exit 1
+          fi
 
   status-page:
     runs-on: ubuntu-latest

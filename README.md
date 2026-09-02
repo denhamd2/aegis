@@ -2075,3 +2075,133 @@ is *not* settled: the split between the two finishes, `PIN_PREFERENCE_DAMAGE`,
 `SUBMISSION_ESCAPE_LIMB` and the 50/50 draw are all reachability values
 chosen so both endings occur, and `gauntlet/refs/` has nothing measuring how
 often a real match should end each way.
+
+## Gauntlet: opening the visual slices (round 1)
+
+Twelve gauntlet slices had sat at round 0 since Phase 0 with the same
+largest gap — "phase 4 not yet started." This opens three of them:
+**ring/arena presentation**, **wrestler look & materials**, and **HUD/UI**.
+
+Two things had to happen before a visual round could mean anything.
+
+### The rule about software renders had nothing enforcing it
+
+`ARCHITECTURE.md` says llvmpipe captures are good for timing and feel
+slices only, and `VISUAL_BAR.md` says to "confirm the capture was
+GPU-backed before citing a visual gap." Nothing recorded which renderer
+produced a capture, so there was no way to confirm it: the rule rested
+entirely on whoever ran the capture remembering how they ran it, and the
+evidence gate — the thing that stands between a capture and a critic —
+could not tell a GPU frame from an llvmpipe one.
+
+Every manifest now records `video_adapter` and `gpu_backed`, and
+`evidence_gate.py --visual` (`VISUAL_SLICE=1 tools/capture/run_capture.sh`)
+voids a software-rendered capture for a visual slice. Void, not lost: the
+ratchet does not move and the round is re-run on hardware with a GPU. CI
+covers both directions against fixtures.
+
+**This applies to the round below.** Every capture here is llvmpipe, so
+lighting consistency and material believability — priorities 2 and 3 of the
+visual bar — are **not judged**, and the slices record them as unjudged
+rather than passed.
+
+### "Silhouette readability" was not a measurable claim
+
+The bar's first priority is "silhouette readability at match-camera
+distance," which is exactly the kind of thing `ARCHITECTURE.md`'s
+reference-driven-tuning rule exists to stop a critic asserting from taste.
+`tools/refs/measure_frame.py` makes it a number: relative luminance
+(Rec. 709, linearised sRGB) of named regions, plus a `void_fraction` for
+how much of a frame is flat, featureless background. The same code reads a
+reference still and one of our own captures, so the two are comparable.
+
+Measured off `frames/wide_standoff_broadcast_angle.jpg`, and this shaped
+everything below: a wrestler separates **from the mat by value** (ΔL
+0.24–0.31, both wrestlers darker than the mat) and **from the other
+wrestler by hue** — the reference's two wrestlers are only 0.070 apart in
+value. Those are two different mechanisms and copying one for the other
+gets it wrong.
+
+### What the first real look at the game found
+
+Nobody had looked at a rendered frame of this project against that bar. The
+baseline capture, measured:
+
+| | baseline | after round 1 | reference |
+| --- | --- | --- | --- |
+| ΔL wrestler A ↔ mat | **0.014** | 0.172 | 0.240–0.310 |
+| ΔL wrestler B ↔ mat | 0.156 | 0.170 | 0.240–0.310 |
+| ΔL wrestler ↔ wrestler | 0.142 | 0.002 (by design — hue instead) | 0.070 |
+| flat-void fraction | **0.618** | 0.289 | 0.010–0.066 |
+
+- **Both wrestlers were the same man.** They instance the same `.glb` with
+  the same CC0 placeholder materials, so the apex frame of a paired move —
+  the money shot of the whole grapple system — was a single orange blob.
+  One of them was also 0.014 in luminance from the mat he was standing on,
+  which is no silhouette at all.
+- **62% of the frame was flat nothing**, at standard deviation 0.000 across
+  the entire upper third. Not "dark" — the reference is dark up there too —
+  but empty: no arena was modelled above mat level.
+- **The vitality bar was measuring a match this game does not play.** It
+  divided damage by `MAX_LIMB_DAMAGE * 4.0` (400) while
+  `kickout_window_fraction()` had been rescaled to
+  `KICKOUT_DAMAGE_REFERENCE` (200), so a wrestler at the 101–184 damage a
+  knockdown actually happens at showed **54–75% health**. Its own comment
+  claimed the two shared a denominator, and the test asserting that passed
+  anyway — at 400 damage the kickout window is clamped to its floor either
+  way, so both halves were true of different scales. A test that cannot
+  fail when its property becomes false is not testing it.
+
+### What round 1 changed
+
+- Per-wrestler attire colourways (`attire_body` / `attire_accent` on
+  `WrestlerController`), applied as **surface overrides duplicated from the
+  mesh's own materials** — both wrestlers share one `Mesh` resource, so
+  writing to its materials colours both, the same shared-resource trap that
+  once made a `MoveDef`'s "applied" flag leak between wrestlers. There is a
+  test that the shared material is still the `.glb`'s own.
+- The mat holds its value but is tinted, so the darkened attire has
+  something to read against — the reference's mat/wrestler relationship,
+  not a colour preference.
+- A grey-box arena: barricades, two raked crowd tiers with a generated
+  noise albedo (generated, not captured — IP guardrail), hall walls and
+  rafters. House light on the crowd is carried by the material rather than
+  by lights aimed at the stands, because a fill rig out there would spill
+  onto the mat and ring lighting belongs to a different slice.
+- The HUD divides by `KICKOUT_DAMAGE_REFERENCE`, and each plate carries a
+  flash of its wrestler's own `attire_accent` — read off the wrestler, not
+  copied into the HUD, so the man in the ring and the bar in the corner
+  cannot drift apart. The reference plates carry a portrait in that slot;
+  there are no portraits yet, so it holds something the game can source.
+
+`test_wrestler_colorway.gd` asserts both halves of the measured
+relationship against the shipped match scene, on albedo, so it needs no
+renderer — which is the point, given the renderer rule above.
+
+### Verification
+
+**156/156 tests pass**, orphans unchanged at the pre-existing baseline of
+105. Three captures were run end to end through `run_capture.sh` and the
+evidence gate; the numbers in the table above are `measure_frame.py` output
+on their `tie_up` beat frames, not estimates.
+
+### What this round did not settle
+
+- Every capture was llvmpipe, so **lighting consistency and material
+  believability are unjudged**, by the rule this round added enforcement
+  for. Those need a GPU round on real hardware.
+- Silhouette separation improved twelvefold and is still **below the
+  reference band** (0.17 against 0.24–0.31). Closing it further means
+  changing ring lighting, which is the unjudged variable above — so it
+  stops here rather than being tuned blind on a software render.
+- The void fraction is 0.289 against a 0.010–0.066 reference. The arena is
+  no longer nothing; it is grey-box boxes. No entrance stage, no ring skirt,
+  no crowd motion.
+- **Camera framing is still at round 0, and round 1 found the bug it starts
+  from:** `MatchCamera.cut_to_finisher()` and `cut_to_three_count()` have no
+  callers anywhere in the project, and both set a mode whose only effect is
+  to make `_physics_process` return early. So the scripted cuts `camera.md`
+  measures are not merely unimplemented — calling one would freeze the
+  camera for the rest of the match.
+- The wrestlers are one CC0 mannequin at two tints. No distinct body types,
+  no faces, no attire geometry.

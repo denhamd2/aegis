@@ -33,7 +33,12 @@ const PLATE_BG := Color(0.06, 0.06, 0.08, 0.82)
 const PLATE_EDGE := Color(0.0, 0.0, 0.0, 0.55)
 const NAME_COLOR := Color(0.96, 0.96, 0.96)
 
-## Per-wrestler accent for the momentum bar. hud.md has exactly one
+## Fallback per-wrestler accent for the momentum bar and the plate flash.
+## The colour actually drawn is the wrestler's own attire_accent -- read off
+## him rather than duplicated here, so the plate and the man in the ring
+## cannot drift apart; these are only used for a wrestler that has none.
+##
+## hud.md has exactly one
 ## reference showing a second stacked bar (blue on one wrestler, orange on
 ## the other) and explicitly declines to call it a rule -- so this is a
 ## project choice consistent with one observation, not a measured fact.
@@ -89,25 +94,49 @@ func _draw() -> void:
 		_draw_hold(view)
 
 func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
-		accent: Color, mirrored: bool) -> void:
+		fallback_accent: Color, mirrored: bool) -> void:
+	var accent: Color = wrestler.attire_accent if "attire_accent" in wrestler \
+			else fallback_accent
 	draw_rect(Rect2(origin, plate), PLATE_BG)
 	draw_rect(Rect2(origin, plate), PLATE_EDGE, false, maxf(1.0, plate.y * 0.03))
+	# A colourway flash on the plate's outer edge, in this wrestler's own
+	# attire accent. Two wrestlers used to share one placeholder material,
+	# so a plate could only be matched to a man by reading his name; the
+	# accent is the same colour he is wearing in the ring, which is what
+	# makes "who is that, and which bar is his" answerable at a glance.
+	# Every reference plate in gauntlet/refs/hud.md carries a portrait in
+	# this position -- there are no portraits yet, and this occupies the
+	# slot with something the game can actually source.
+	var flash_w := plate.x * 0.045
+	var flash_x := origin.x + plate.x - flash_w if mirrored else origin.x
+	draw_rect(Rect2(flash_x, origin.y, flash_w, plate.y), accent)
+
 
 	var pad := plate.y * 0.14
+	origin.x += 0.0 if mirrored else plate.x * 0.045
+	var content_w := plate.x - plate.x * 0.045
 	var font := ThemeDB.fallback_font
 	var name_size := int(maxf(10.0, plate.y * 0.26))
 	draw_string(font, origin + Vector2(pad, pad + name_size * 0.85),
 			wrestler.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT,
-			plate.x - pad * 2.0, name_size, NAME_COLOR)
+			content_w - pad * 2.0, name_size, NAME_COLOR)
 
 	var bar_x := origin.x + pad
-	var bar_w := plate.x - pad * 2.0
+	var bar_w := content_w - pad * 2.0
 	var vit_h := plate.y * 0.26
 	var vit_y := origin.y + pad + name_size * 1.15
 	# Denominator matches CombatSystem.kickout_window_fraction()'s, so the
 	# bar and the kickout difficulty can never tell different stories.
+	#
+	# This said the same thing while dividing by MAX_LIMB_DAMAGE * 4.0 --
+	# 400, every limb destroyed -- which stopped being the kickout
+	# denominator when that was rescaled to KICKOUT_DAMAGE_REFERENCE (200,
+	# the range matches actually occupy). Measured off a real capture: at
+	# the impact beat both bars read full green, and wrestlers are knocked
+	# down between 101 and 184 damage, so a man one hit from losing showed
+	# 54-75% health. The bar was describing a match this game does not play.
 	var damage: float = wrestler.combat.total_damage() \
-			/ (CombatSystem.MAX_LIMB_DAMAGE * 4.0) if wrestler.combat else 0.0
+			/ CombatSystem.KICKOUT_DAMAGE_REFERENCE if wrestler.combat else 0.0
 	_draw_vitality(Rect2(bar_x, vit_y, bar_w, vit_h), clampf(damage, 0.0, 1.0), mirrored)
 
 	var mom_y := vit_y + vit_h + plate.y * 0.07

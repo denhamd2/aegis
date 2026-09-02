@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=27 format=3]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(6, 0.2, 6)
@@ -7,7 +7,14 @@ size = Vector3(6, 0.2, 6)
 size = Vector3(6, 0.2, 6)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.65, 0.68, 0.74, 1)
+; Measured relationship, not a colour preference: on
+; gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg the mat renders at
+; relative luminance 0.46 and both wrestlers sit 0.24-0.31 below it (see
+; tools/refs/measure_frame.py and VISUAL_BAR.md). Holding the mat's value
+; while tinting it is what gives the darkened attire something to read
+; against; a neutral grey of the same value did the same job for silhouette
+; but read as concrete rather than canvas.
+albedo_color = Color(0.6, 0.7, 0.82, 1)
 roughness = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_rope"]
@@ -59,6 +66,67 @@ size = Vector3(24, 0.2, 24)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_arena_floor"]
 albedo_color = Color(0.03, 0.03, 0.035, 1)
 roughness = 0.95
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_crowd"]
+noise_type = 2
+frequency = 0.28
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_crowd"]
+width = 256
+height = 256
+seamless = true
+noise = SubResource("FastNoiseLite_crowd")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crowd"]
+; A crowd bank, not a wall. The void measurement that opened this slice was
+; not "the background is too dark" -- the reference frame's crowd is dark
+; too (relative luminance 0.014) -- it was that our background had a
+; standard deviation of 0.000 across the entire upper third of frame:
+; nothing was modelled there at all. Dark geometry with high-frequency
+; variance is what a crowd reads as at match-camera distance, and it is
+; generated noise rather than any captured image (IP guardrail).
+albedo_color = Color(0.34, 0.33, 0.38, 1)
+albedo_texture = SubResource("NoiseTexture2D_crowd")
+uv1_scale = Vector3(9, 3, 1)
+roughness = 0.95
+; House light on the crowd, carried by the material rather than by lights
+; aimed at the stands. A real fill rig out there would also spill onto the
+; mat, and ring lighting is a different slice's variable -- this lifts the
+; stands off the Environment's background value without touching how the
+; ring itself is lit. Measured: without it the arena shell rendered at
+; roughly the background's own luminance and the void fraction barely moved.
+emission_enabled = true
+emission = Color(0.19, 0.18, 0.22, 1)
+emission_energy_multiplier = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_crowd_lower"]
+size = Vector3(26, 0.35, 6.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_crowd_upper"]
+size = Vector3(34, 0.35, 7.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_barricade"]
+size = Vector3(22, 1.1, 0.16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_barricade"]
+albedo_color = Color(0.16, 0.17, 0.2, 1)
+metallic = 0.2
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall"]
+size = Vector3(46, 13, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_roof"]
+size = Vector3(44, 0.4, 44)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_roof"]
+; The rafters. Without something above the light rig the camera's upper
+; third is the Environment's flat background colour and nothing else.
+albedo_color = Color(0.1, 0.1, 0.12, 1)
+roughness = 1.0
+emission_enabled = true
+emission = Color(0.09, 0.09, 0.11, 1)
+emission_energy_multiplier = 0.35
 
 [node name="Ring" type="Node3D"]
 position = Vector3(0, -0.1, 0)
@@ -236,3 +304,102 @@ rotation = Vector3(0, 1.5708, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RopeCollisionWest"]
 shape = SubResource("BoxShape3D_rope")
+
+[node name="Arena" type="Node3D" parent="."]
+
+[node name="Barricades" type="Node3D" parent="Arena"]
+
+[node name="BarricadeNorth" type="MeshInstance3D" parent="Arena/Barricades"]
+mesh = SubResource("BoxMesh_barricade")
+surface_material_override/0 = SubResource("StandardMaterial3D_barricade")
+position = Vector3(0, -0.45, 9)
+
+[node name="BarricadeSouth" type="MeshInstance3D" parent="Arena/Barricades"]
+mesh = SubResource("BoxMesh_barricade")
+surface_material_override/0 = SubResource("StandardMaterial3D_barricade")
+position = Vector3(0, -0.45, -9)
+
+[node name="BarricadeEast" type="MeshInstance3D" parent="Arena/Barricades"]
+mesh = SubResource("BoxMesh_barricade")
+surface_material_override/0 = SubResource("StandardMaterial3D_barricade")
+position = Vector3(9, -0.45, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="BarricadeWest" type="MeshInstance3D" parent="Arena/Barricades"]
+mesh = SubResource("BoxMesh_barricade")
+surface_material_override/0 = SubResource("StandardMaterial3D_barricade")
+position = Vector3(-9, -0.45, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="CrowdLower" type="Node3D" parent="Arena"]
+
+[node name="LowerNorth" type="MeshInstance3D" parent="Arena/CrowdLower"]
+mesh = SubResource("BoxMesh_crowd_lower")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(1, 0, 0, 0, 0.906, -0.423, 0, 0.423, 0.906, 0, 0.6, 12.2)
+
+[node name="LowerSouth" type="MeshInstance3D" parent="Arena/CrowdLower"]
+mesh = SubResource("BoxMesh_crowd_lower")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(-1, 0, 0, 0, 0.906, 0.423, 0, 0.423, 0.906, 0, 0.6, -12.2)
+
+[node name="LowerEast" type="MeshInstance3D" parent="Arena/CrowdLower"]
+mesh = SubResource("BoxMesh_crowd_lower")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(0, 0, 1, -0.423, 0.906, 0, -0.906, -0.423, 0, 12.2, 0.6, 0)
+
+[node name="LowerWest" type="MeshInstance3D" parent="Arena/CrowdLower"]
+mesh = SubResource("BoxMesh_crowd_lower")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(0, 0, -1, 0.423, 0.906, 0, 0.906, -0.423, 0, -12.2, 0.6, 0)
+
+[node name="CrowdUpper" type="Node3D" parent="Arena"]
+
+[node name="UpperNorth" type="MeshInstance3D" parent="Arena/CrowdUpper"]
+mesh = SubResource("BoxMesh_crowd_upper")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(1, 0, 0, 0, 0.906, -0.423, 0, 0.423, 0.906, 0, 4.4, 17.5)
+
+[node name="UpperSouth" type="MeshInstance3D" parent="Arena/CrowdUpper"]
+mesh = SubResource("BoxMesh_crowd_upper")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(-1, 0, 0, 0, 0.906, 0.423, 0, 0.423, 0.906, 0, 4.4, -17.5)
+
+[node name="UpperEast" type="MeshInstance3D" parent="Arena/CrowdUpper"]
+mesh = SubResource("BoxMesh_crowd_upper")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(0, 0, 1, -0.423, 0.906, 0, -0.906, -0.423, 0, 17.5, 4.4, 0)
+
+[node name="UpperWest" type="MeshInstance3D" parent="Arena/CrowdUpper"]
+mesh = SubResource("BoxMesh_crowd_upper")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+transform = Transform3D(0, 0, -1, 0.423, 0.906, 0, 0.906, -0.423, 0, -17.5, 4.4, 0)
+
+[node name="Roof" type="MeshInstance3D" parent="Arena"]
+mesh = SubResource("BoxMesh_roof")
+surface_material_override/0 = SubResource("StandardMaterial3D_roof")
+position = Vector3(0, 9.5, 0)
+
+[node name="Walls" type="Node3D" parent="Arena"]
+
+[node name="WallNorth" type="MeshInstance3D" parent="Arena/Walls"]
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+position = Vector3(0, 5.4, 21)
+
+[node name="WallSouth" type="MeshInstance3D" parent="Arena/Walls"]
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+position = Vector3(0, 5.4, -21)
+
+[node name="WallEast" type="MeshInstance3D" parent="Arena/Walls"]
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+position = Vector3(21, 5.4, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="WallWest" type="MeshInstance3D" parent="Arena/Walls"]
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("StandardMaterial3D_crowd")
+position = Vector3(-21, 5.4, 0)
+rotation = Vector3(0, 1.5708, 0)

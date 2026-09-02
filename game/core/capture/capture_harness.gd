@@ -262,11 +262,49 @@ func finish() -> void:
 		"skipped_labels": applicable["skipped"],
 		"finish_method": _finish_method,
 	}
+	manifest.merge(renderer_provenance())
 	var manifest_path := "%s/capture_manifest.json" % _output_dir
 	var f := FileAccess.open(manifest_path, FileAccess.WRITE)
 	f.store_string(JSON.stringify(manifest, "\t"))
 	f.close()
 	capture_finished.emit(manifest_path)
+
+## Which renderer produced this capture, and whether a visual-quality critic
+## may look at it.
+##
+## ARCHITECTURE.md: "llvmpipe captures are sufficient for timing and feel
+## slices only. Ring/materials/lighting critics need GPU-backed captures."
+## VISUAL_BAR.md repeats it as "confirm the capture was GPU-backed before
+## citing a visual gap." Nothing recorded the renderer, so there was no way
+## to confirm it -- the whole rule rested on whoever ran the capture
+## remembering how they ran it. A manifest that cannot answer the question
+## cannot enforce the rule, so it answers it here and
+## tools/capture/evidence_gate.py --visual enforces it.
+##
+## Software rasterisers name themselves in the adapter string (Mesa's
+## llvmpipe and softpipe, and swiftshader), and DEVICE_TYPE_CPU is the
+## driver's own admission that it has no GPU. Anything that is neither is
+## treated as GPU-backed.
+static func renderer_provenance() -> Dictionary:
+	var adapter := RenderingServer.get_video_adapter_name()
+	var device_type := RenderingServer.get_video_adapter_type()
+	return {
+		"rendering_driver": str(ProjectSettings.get_setting(
+				"rendering/renderer/rendering_method", "")),
+		"video_adapter": adapter,
+		"gpu_backed": is_gpu_backed(adapter, device_type),
+	}
+
+const SOFTWARE_ADAPTERS := ["llvmpipe", "softpipe", "swiftshader", "swrast"]
+
+static func is_gpu_backed(adapter: String, device_type: int) -> bool:
+	if device_type == RenderingDevice.DEVICE_TYPE_CPU:
+		return false
+	var lowered := adapter.to_lower()
+	for name: String in SOFTWARE_ADAPTERS:
+		if lowered.contains(name):
+			return false
+	return adapter != ""
 
 func _end_state_hash() -> String:
 	if not ReplaySystem or not ReplaySystem.replay or not _match:

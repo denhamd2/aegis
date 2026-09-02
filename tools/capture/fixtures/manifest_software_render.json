@@ -1,0 +1,11 @@
+{
+  "_comment": "A capture that is perfectly good evidence for a timing or feel slice and void for a visual one. Passes the plain gate, fails evidence_gate.py --visual. This is the case ARCHITECTURE.md's llvmpipe rule is about, and until the manifest recorded a renderer nothing could tell it apart from the fixture above.",
+  "expected_frame_count": 3,
+  "actual_frame_count": 3,
+  "non_black_frame_ratio": 1.0,
+  "hud_present": true,
+  "replay_end_state_hash": "deadbeefcafef00d",
+  "beat_labels": ["tie_up", "apex", "impact", "pin_start", "three_count"],
+  "video_adapter": "llvmpipe (LLVM 15.0.7, 256 bits)",
+  "gpu_backed": false
+}

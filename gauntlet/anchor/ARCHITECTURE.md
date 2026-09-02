@@ -75,7 +75,10 @@ on them holding.
 - **llvmpipe captures are sufficient for timing and feel slices only.**
   Ring/materials/lighting critics need GPU-backed captures — run those on
   real hardware, not CI. Do not judge visual-quality slices on software
-  renders.
+  renders. Every manifest records `video_adapter` and `gpu_backed`, and
+  `evidence_gate.py --visual` (`VISUAL_SLICE=1 run_capture.sh`) voids a
+  software-rendered capture for a visual slice rather than leaving the rule
+  to whoever remembers how the capture was run.
 
 ## Reference-driven tuning
 
@@ -83,6 +86,10 @@ on them holding.
   cites as "how WWE 2K does it" must trace to a file under `gauntlet/refs/`
   (`timings.md`, `camera.md`, `hud.md`, `feel.md`, or a labeled frame under
   `refs/frames/`). No citation, no claim.
+- Where a bar can be stated as a number, state it as a number:
+  `tools/refs/measure_frame.py` measures a reference still and one of our
+  own captures the same way, so "silhouette readability" and "the
+  background is empty" are gaps with sizes rather than opinions.
 - `gauntlet/refs/VISUAL_BAR.md` and `FEEL_BAR.md` are the one-page anchor
   docs every visual/feel slice is judged against. Keep them short enough
   that a fresh-context critic can hold the whole bar in mind.

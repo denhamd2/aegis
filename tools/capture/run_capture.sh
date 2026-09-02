@@ -59,7 +59,15 @@ if [ ! -f "$MANIFEST" ]; then
 	exit 2
 fi
 
-python3 "$REPO_ROOT/tools/capture/evidence_gate.py" "$MANIFEST"
+# A visual-quality slice (ring/arena, wrestler look, HUD legibility) needs a
+# GPU-backed capture; VISUAL_SLICE=1 makes the gate enforce that rather than
+# leaving it to whoever reads the frames. See ARCHITECTURE.md.
+GATE_ARGS=()
+if [ "${VISUAL_SLICE:-0}" = "1" ]; then
+	GATE_ARGS+=(--visual)
+fi
+
+python3 "$REPO_ROOT/tools/capture/evidence_gate.py" "${GATE_ARGS[@]}" "$MANIFEST"
 
 if command -v ffmpeg >/dev/null 2>&1; then
 	ffmpeg -y -pattern_type glob -i "$OUTPUT_DIR/*_tick*.png" \

@@ -40,19 +40,44 @@ func test_the_hud_covers_the_whole_viewport() -> void:
 
 ## The vitality bar and the kickout difficulty must not be able to tell the
 ## player different stories, so they share a denominator.
+##
+## This test used to assert that with a hardcoded MAX_LIMB_DAMAGE * 4.0 on
+## the HUD's side, and stayed green after kickout_window_fraction() was
+## rescaled to KICKOUT_DAMAGE_REFERENCE (200) -- because at 400 damage the
+## window is clamped to its floor either way, so both halves passed while
+## describing different scales. A test that cannot fail when the property
+## it names becomes false is not testing it. It reads the constant now, and
+## checks the scales agree somewhere they can actually disagree: partway
+## along, where the clamp is not hiding the difference.
 func test_the_vitality_bar_uses_the_same_scale_as_the_kickout_window() -> void:
 	var combat := CombatSystem.new()
 	var move := MoveDef.new()
-	move.damage_head = CombatSystem.MAX_LIMB_DAMAGE
-	move.damage_torso = CombatSystem.MAX_LIMB_DAMAGE
-	move.damage_arms = CombatSystem.MAX_LIMB_DAMAGE
-	move.damage_legs = CombatSystem.MAX_LIMB_DAMAGE
+	# Half of the scale the kickout window is measured against.
+	move.damage_torso = CombatSystem.KICKOUT_DAMAGE_REFERENCE * 0.5
 	combat.apply_damage(move)
-	# Fully damaged on every limb is a full bar, and the kickout window is
-	# at its floor -- the two ends of the same scale.
-	assert_float(combat.total_damage() / (CombatSystem.MAX_LIMB_DAMAGE * 4.0)) \
-		.is_equal_approx(1.0, 0.0001)
-	assert_float(combat.kickout_window_fraction(0.0)).is_equal_approx(0.05, 0.0001)
+	var bar := combat.total_damage() / CombatSystem.KICKOUT_DAMAGE_REFERENCE
+	assert_float(bar).is_equal_approx(0.5, 0.0001)
+	# The window's damage term is 1 - damage/KICKOUT_DAMAGE_REFERENCE, with
+	# no momentum pressure and short of the clamp, so a half-depleted bar is
+	# exactly a half-shrunk window. Against the old denominator the bar reads
+	# 0.25 while the window reads 0.5, and the two openly disagree.
+	assert_float(combat.kickout_window_fraction(0.0)).is_equal_approx(1.0 - bar, 0.0001)
+
+## The bar has to move over the damage a match actually reaches, not over a
+## range no wrestler ever occupies. Measured: wrestlers are knocked down
+## between 101 and 184 total damage, and against the old 400 denominator
+## that whole span rendered as 75%-54% health -- a man one hit from losing
+## looked over half fit. Against the scale the match is really played on it
+## reads 50%-92% depleted.
+func test_the_bar_is_mostly_gone_by_the_time_a_wrestler_is_knocked_down() -> void:
+	var combat := CombatSystem.new()
+	var move := MoveDef.new()
+	move.damage_torso = WrestlerController.KNOCKDOWN_DAMAGE
+	combat.apply_damage(move)
+	var depleted := combat.total_damage() / CombatSystem.KICKOUT_DAMAGE_REFERENCE
+	assert_float(depleted).override_failure_message(
+		"At the knockdown threshold the bar shows %.0f%% depleted." % (depleted * 100.0)
+	).is_greater_equal(0.4)
 
 func test_no_count_is_shown_outside_a_pin() -> void:
 	assert_int(_make_referee().pin_count()).is_equal(0)
