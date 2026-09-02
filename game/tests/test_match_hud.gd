@@ -57,18 +57,45 @@ func test_the_vitality_bar_uses_the_same_scale_as_the_kickout_window() -> void:
 func test_no_count_is_shown_outside_a_pin() -> void:
 	assert_int(_make_referee().pin_count()).is_equal(0)
 
-func test_the_count_advances_once_per_sixty_ticks() -> void:
+## The count follows timings.md's frame-stepped schedule, which is uneven:
+## "1" to "2" is ~1.25s and "2" to "3" ~1.00s. An evenly divided count is
+## the one shape the reference says a real one does not have.
+func test_the_count_follows_the_measured_cadence() -> void:
 	var referee := _make_referee()
 	referee._pinning = true
 	referee._pin_defender = _make_wrestler()
 	var seen: Array[int] = []
 	for tick in MatchReferee.PIN_COUNT_TICKS:
 		referee._pin_ticks += 1
-		referee._pin_count_shown = mini(3, referee._pin_ticks / MatchReferee.TICKS_PER_COUNT)
+		referee._update_count()
 		seen.append(referee.pin_count())
-	assert_int(seen[MatchReferee.TICKS_PER_COUNT - 1]).is_equal(1)
-	assert_int(seen[MatchReferee.TICKS_PER_COUNT * 2 - 1]).is_equal(2)
-	assert_int(seen[MatchReferee.TICKS_PER_COUNT * 3 - 1]).is_equal(3)
+	for i in MatchReferee.COUNT_TICKS.size():
+		var at: int = MatchReferee.COUNT_TICKS[i]
+		assert_int(seen[at - 1]).override_failure_message(
+			"Count %d should be up at tick %d" % [i + 1, at]).is_equal(i + 1)
+
+## Each digit pops in, holds for its measured time, then goes away before
+## the next arrives -- "1" for ~0.65s, "2" for ~0.40s, with a silent gap.
+func test_each_digit_goes_away_before_the_next_arrives() -> void:
+	var referee := _make_referee()
+	referee._pinning = true
+	referee._pin_defender = _make_wrestler()
+	var blanks := 0
+	for tick in MatchReferee.COUNT_TICKS[1]:
+		referee._pin_ticks += 1
+		referee._update_count()
+		if referee._pin_ticks > MatchReferee.COUNT_TICKS[0] and referee.pin_count() == 0:
+			blanks += 1
+	assert_int(blanks).override_failure_message(
+		"The first digit never leaves the screen before the second"
+	).is_greater(0)
+
+## The intervals themselves, against the measurement rather than the code.
+func test_the_measured_intervals_are_uneven() -> void:
+	var first: int = MatchReferee.COUNT_TICKS[1] - MatchReferee.COUNT_TICKS[0]
+	var second: int = MatchReferee.COUNT_TICKS[2] - MatchReferee.COUNT_TICKS[1]
+	assert_float(first / 60.0).is_equal_approx(1.25, 0.02)
+	assert_float(second / 60.0).is_equal_approx(1.00, 0.02)
 
 ## The third count and the end of the pin land on the same tick: _tick_pin()
 ## sees 180 ticks, declares the pinfall and clears _pinning in one call. A

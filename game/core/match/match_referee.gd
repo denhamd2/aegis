@@ -7,21 +7,45 @@ extends Node
 
 signal match_won(winner: WrestlerController, method: String)
 
-## Ticks between the referee's hand-slaps. gauntlet/refs/timings.md measures
-## a real three-count as *uneven* -- "1" to "2" is ~1.25s and "2" to "3"
-## ~1.00s, frame-stepped with no sampling gaps -- so this even 1.00s spacing
-## is known to be wrong against the reference. Changing it changes how long
-## a pin lasts, which is a gameplay change and belongs to a tuning slice;
-## it is left alone here and recorded so the next one inherits the finding
-## rather than rediscovering it.
-const TICKS_PER_COUNT := 60
-const PIN_COUNT_TICKS := TICKS_PER_COUNT * 3
+## Tick each hand-slap lands on, measured rather than divided evenly.
+##
+## gauntlet/refs/timings.md frame-stepped a real three-count at native 30fps
+## with no sampling gaps (Byron Breakker vs Oba Femi, ~1093s): "1" to "2" is
+## ~1.25s and "2" to "3" ~1.00s. A real count is *uneven* -- the referee
+## hangs on the first slap and speeds up into the third -- and this was an
+## even 1.00s apart, which is the one thing the reference says it is not.
+##
+## The lead-in from the cover to "1" is not in that measurement (the clip's
+## count starts on-camera at "1"), so it keeps its existing 60 ticks and is
+## the one number here still owed a measurement.
+const COUNT_TICKS: Array[int] = [60, 135, 195]
+const PIN_COUNT_TICKS := 195
+
+## How long each digit stays on screen, also frame-stepped: "1" is visible
+## ~0.63-0.67s and "2" ~0.37-0.43s, with a silent gap of ~0.55s before the
+## next one pops in. So the count is not a number that sits there changing
+## -- it flashes, goes away, and comes back, which is most of what makes a
+## three-count tense to watch.
+const COUNT_VISIBLE_TICKS: Array[int] = [39, 24, 999]
 const COVER_RANGE := 1.2
-## Attacking a downed opponent's most-damaged limb becomes a submission
-## attempt instead of a pin once that limb's damage crosses this fraction of
-## CombatSystem.MAX_LIMB_DAMAGE (70%). First-pass value; confirm/retune via
-## test_submission_minigame.gd and a live multi-seed probe, not by feel.
-const SUBMISSION_LIMB_THRESHOLD := 70.0
+## Total damage past which a downed opponent is covered rather than locked
+## in a submission. See _check_for_downed_opponent_action().
+const PIN_PREFERENCE_DAMAGE := 140.0
+## How often the attacker reaches for a submission when both finishes are
+## available. A reachability value, not a feel claim -- refs have nothing on
+## how often a wrestler should pick one over the other.
+const SUBMISSION_PREFERENCE := 0.5
+## Counts finish decisions so successive ones can differ; seed input only.
+var _finish_choices: int = 0
+## Limb damage past which a submission is worth attempting at all.
+##
+## Was 70. The worst limb tracks total damage at a near-constant ~0.49
+## (measured at every knockdown of a full match), so 70 is reached at ~143
+## total -- past PIN_PREFERENCE_DAMAGE, which left no range where both
+## finishes were legal and made the seeded choice below dead code. At 55
+## the overlap opens at ~112 total, which is a couple of knockdowns before
+## a wrestler is finishable, so a match can go either way.
+const SUBMISSION_LIMB_THRESHOLD := 55.0
 ## Absolute safety cap on a tie-up contest, not the primary mechanism (see
 ## _tick_tie_up()) — TieUpMinigame.PROGRESS_THRESHOLD is what actually
 ## decides it in practice.
@@ -250,7 +274,27 @@ func _check_for_downed_opponent_action() -> void:
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE:
 			var worst_limb: CombatSystem.Limb = defender.combat.most_damaged_limb()
-			if defender.combat.limb_damage[worst_limb] >= SUBMISSION_LIMB_THRESHOLD:
+			# A worn-down opponent gets covered, not stretched. The rule used
+			# to be "worst limb past 70 -> submission" with no upper bound,
+			# which sent every late knockdown to a submission -- precisely
+			# when the man is most pinnable -- so a pinfall could never
+			# happen. Measured over a match: knockdowns at 101..136 total
+			# damage all became pins the defender escaped, and the first one
+			# at 146 became the submission that ended it.
+			#
+			# Below PIN_PREFERENCE_DAMAGE, with a limb worked past the
+			# submission threshold, either finish is on -- and which one he
+			# reaches for is a seeded choice, so a match is not the same
+			# script every time. A hard threshold on total damage is not a
+			# decision, it is a schedule: the worst limb tracks total damage
+			# at a near-constant ~0.49 (measured across every knockdown in a
+			# match), so any pair of fixed thresholds either makes one
+			# finish unreachable or the other inevitable. Both extremes were
+			# measured here: 12 of 12 seeds submission before, 12 of 12
+			# pinfall after the first attempt at this.
+			if defender.combat.total_damage() < PIN_PREFERENCE_DAMAGE \
+					and defender.combat.limb_damage[worst_limb] >= SUBMISSION_LIMB_THRESHOLD \
+					and _prefers_submission():
 				_submissioning = true
 				_submission_attacker = attacker
 				_submission_defender = defender
@@ -282,6 +326,18 @@ func _check_for_downed_opponent_action() -> void:
 func _pin_seed() -> int:
 	var tick: int = ReplaySystem.current_tick if ReplaySystem else _pin_ticks
 	return match_seed + tick
+
+## Whether this attacker reaches for the submission rather than the cover,
+## when the defender's state allows either.
+##
+## Seeded like every other decision that changes a match, and deliberately
+## using different multipliers from the counter draw so the two do not move
+## together.
+func _prefers_submission() -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 4099 + _finish_choices * 37
+	_finish_choices += 1
+	return rng.randf() < SUBMISSION_PREFERENCE
 
 ## Read-only views of referee state, for the HUD.
 ##
@@ -327,9 +383,21 @@ func _tick_pin() -> void:
 	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
 		_end_pin(false)
 		return
-	_pin_count_shown = mini(3, _pin_ticks / TICKS_PER_COUNT)
+	_update_count()
 	if _pin_ticks >= PIN_COUNT_TICKS:
 		_end_pin(true)
+
+## Which digit is on screen this tick, from the measured schedule: a slap
+## lands at COUNT_TICKS[i] and its digit is up for COUNT_VISIBLE_TICKS[i],
+## then nothing until the next one.
+func _update_count() -> void:
+	_pin_count_shown = 0
+	for i in COUNT_TICKS.size():
+		if _pin_ticks < COUNT_TICKS[i]:
+			break
+		if _pin_ticks < COUNT_TICKS[i] + COUNT_VISIBLE_TICKS[i]:
+			_pin_count_shown = i + 1
+			break
 
 func _end_pin(three_count_reached: bool) -> void:
 	_pinning = false

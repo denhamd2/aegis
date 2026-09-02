@@ -52,10 +52,21 @@ func can_signature() -> bool:
 func can_finisher() -> bool:
 	return momentum >= FINISHER_THRESHOLD
 
+## Total damage at which the kickout window is fully closed.
+##
+## This used to be MAX_LIMB_DAMAGE * 4.0 -- 400, every limb destroyed --
+## which is a number no match ever approaches. Measured over a real match:
+## wrestlers are knocked down between 101 and 184 total damage, and across
+## that whole range the window only moved from 0.59 to 0.46. So every pin
+## was escaped, and the pinfall -- minigame, three-count and all -- had
+## never decided a match in this project's history. Scaled to the range
+## matches actually occupy, the same span now runs 0.39 down to 0.05.
+const KICKOUT_DAMAGE_REFERENCE := 200.0
+
 ## Kickout target zone shrinks as total damage and opponent momentum rise.
 ## Returns a [0, 1] fraction of full-size window; 1.0 = easiest kickout.
 func kickout_window_fraction(opponent_momentum: float) -> float:
-	var damage_factor := 1.0 - (total_damage() / (MAX_LIMB_DAMAGE * 4.0))
+	var damage_factor := 1.0 - (total_damage() / KICKOUT_DAMAGE_REFERENCE)
 	var momentum_factor := 1.0 - (opponent_momentum / MOMENTUM_MAX) * 0.4
 	return clamp(damage_factor * momentum_factor, 0.05, 1.0)
 

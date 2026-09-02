@@ -56,6 +56,11 @@ const GRAVITY := 9.8
 const KNOCKDOWN_DAMAGE := 100.0
 
 const GETUP_TICKS := 90 # 1.5s
+## Damage the targeted limb must pass before a submission hold can get a
+## tap-out; below it the defender works free. Sits inside the band
+## MatchReferee.SUBMISSION_LIMB_THRESHOLD opens, so early holds are escapes
+## and late ones finish. A reachability value, not a feel claim.
+const SUBMISSION_ESCAPE_LIMB := 60.0
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
@@ -1158,15 +1163,17 @@ func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Li
 	# math directly, not this call site) — every attempt escaped regardless
 	# of how hurt the targeted limb actually was.
 	var attacker_rate := defender.combat.submission_break_rate(target_limb)
-	# MatchReferee only ever starts a submission once the targeted limb is at
-	# or above SUBMISSION_LIMB_THRESHOLD (70), so attacker_rate here is never
-	# actually as low as its theoretical floor of 1.0 — it's really gated to
-	# [1.7, 2.0] (1.0 + threshold/100 .. 1.0 + MAX_LIMB_DAMAGE/100). A flat
-	# 0.9 defender_rate loses that race every time (100/1.0=100 ticks for the
-	# attacker's absolute floor vs 100/0.9=111 for the defender — the
-	# attacker always arrives first), so it's retuned to sit inside the
-	# realistic gated band: defender-favored just above the threshold floor,
-	# attacker-favored near a fully-damaged limb. First-pass value, open to
-	# retuning like PROGRESS_THRESHOLD was (see test_submission_minigame.gd).
-	var defender_rate := 1.8
+	# The defender wins the race whenever his rate is the higher one, so this
+	# number alone decides how hurt a limb has to be before a hold gets a
+	# tap-out: the attacker's rate is 1.0 + limb/MAX_LIMB_DAMAGE, so he wins
+	# exactly when the targeted limb is past SUBMISSION_ESCAPE_LIMB.
+	#
+	# It used to be a flat 1.8, chosen when MatchReferee only started a hold
+	# above 70 limb damage (a [1.7, 2.0] attacker band, so 1.8 sat in the
+	# middle of it). Lowering that threshold to 55 moved the band to
+	# [1.55, 2.0] and left 1.8 above almost all of it -- so every submission
+	# the referee actually started was one the defender was guaranteed to
+	# escape. Derived from the constant now, so moving the threshold again
+	# cannot silently make one side unbeatable.
+	var defender_rate := 1.0 + SUBMISSION_ESCAPE_LIMB / CombatSystem.MAX_LIMB_DAMAGE
 	defender._submission_minigame = SubmissionMinigame.new(attacker_rate, defender_rate)

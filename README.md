@@ -95,16 +95,11 @@ Known Phase 2 gaps, honestly:
   strikes that connected with air, and the kick the rig didn't have" below.
   The kick is also a posed leg on a borrowed stance, not an animation
   anyone authored.
-- A pin is now reachable but a **pinfall** is not: kickouts are easy enough
-  that every pin is escaped and every seeded AI match ends by submission
-  (0 pinfalls in 24 seeds). Making a pinfall a realistic finish is kickout
-  balance — see "Fix: the evidence gate, the replay chain, and the HUD were
-  all fiction" below.
-- The three-count is spaced evenly at 1.00s per count, and
-  `gauntlet/refs/timings.md` measures a real one as uneven (1→2 ≈1.25s,
-  2→3 ≈1.00s, frame-stepped). `MatchReferee.PIN_COUNT_TICKS` carries the
-  finding; correcting it changes how long a pin lasts and belongs to a
-  tuning slice.
+- Both finishes are reachable now and the three-count follows the measured
+  cadence — see "Fix: the match could only end one way" below. What is not
+  settled is the *split*: how often a real match should end by pinfall
+  rather than submission traces to no measurement, so the constants that
+  decide it were chosen to make both happen, not to match anything.
 - Not played by a human yet — verification above is scripted/AI-vs-passive
   simulation, not a playtest with a gamepad. Whether the match *feels*
   right is unconfirmed regardless of whether it mechanically completes.
@@ -1995,3 +1990,88 @@ longer (1500–3100 ticks against 1000–1700), because a strike does less
 damage than the grapple it replaces. Whether that trade is the right one is
 a feel question, and `gauntlet/refs/timings.md` has nothing to settle it
 with: the strike-to-grapple ratio traces to no reference measurement.
+
+## Fix: the match could only end one way
+
+Every match ended by submission — **twelve of twelve seeds, zero pinfalls**.
+The pin path had a kickout minigame, a three-count, a HUD count, its own
+tests and its own tuning notes, and had never once decided a match. Three
+separate things were wrong, each found by instrumenting a real match rather
+than reading the code.
+
+### The kickout curve was calibrated for damage no match reaches
+
+`kickout_window_fraction()` scaled against `MAX_LIMB_DAMAGE * 4.0` — 400,
+every limb destroyed. Measured: wrestlers are knocked down between **101 and
+184** total damage, and across that entire range the window only moved from
+0.59 to 0.46. So every pin was escaped. Scaled to the range matches actually
+occupy (`KICKOUT_DAMAGE_REFERENCE = 200`), the same span now runs 0.39 down
+to 0.05 — early covers are kicked out, late ones are not.
+
+### The referee sent a spent wrestler to a submission
+
+The rule was "worst limb past 70 → submission", with no upper bound — so a
+knockdown became a submission exactly when the man was most pinnable. Traced
+over one match: knockdowns at 101, 111, 121 and 136 all became pins the
+defender escaped, and the first at 146 became the submission that ended it.
+A worn-down opponent is now covered instead (`PIN_PREFERENCE_DAMAGE`).
+
+### Two fixed thresholds cannot produce two finishes
+
+Flipping the rule flipped the outcome — **12 of 12 pinfalls, no
+submissions**. The reason is measurable: the worst limb tracks total damage
+at a near-constant **~0.49** at every knockdown, so any pair of fixed
+thresholds on those two quantities is really one threshold, and whichever
+finish it selects is the only one that ever happens. A hard threshold on a
+monotonically rising quantity is not a decision, it is a schedule.
+
+So the thresholds now deliberately *overlap*, and inside the overlap a
+seeded draw decides whether the attacker covers or reaches for the hold —
+the same shape as the grapple-tier and counter draws, and reproducible from
+the match seed like everything else that changes a result.
+
+That exposed one more stale number: `defender_rate` was a flat **1.8**,
+chosen when holds only started above 70 limb damage (an attacker band of
+[1.7, 2.0], so 1.8 sat inside it). Lowering the threshold to 55 moved the
+band to [1.55, 2.0] and left 1.8 above almost all of it, so every submission
+the referee started was one the defender was guaranteed to escape — the old
+pin bug, exactly mirrored. It is derived from the constant now, so moving
+the threshold again cannot silently make one side unbeatable.
+
+### The three-count was evenly spaced, and a real one isn't
+
+`gauntlet/refs/timings.md` frame-stepped a real three-count at native 30 fps
+with no sampling gaps: **"1"→"2" ≈ 1.25 s, "2"→"3" ≈ 1.00 s**. The referee
+hangs on the first slap and speeds up into the third. This was an even
+1.00 s apart — the one shape the reference says it does not have. The count
+now follows the measured schedule.
+
+The same measurement also caught how the digits *render*: "1" is on screen
+~0.63–0.67 s and "2" ~0.37–0.43 s, with a silent gap of ~0.55 s before the
+next pops in. So the count is not a number sitting there incrementing — it
+flashes, disappears, and comes back, which is most of what makes a
+three-count tense to watch. The HUD does that now.
+
+The lead-in from the cover to "1" is still 60 ticks and is the one number
+here that no measurement covers — the reference clip's count starts
+on-camera at "1".
+
+### Verification
+
+**151/151 unit tests pass**, orphans unchanged at the pre-existing baseline
+of 105. The reachability test was rewritten: it used to assert a wrestler
+goes down *before* any limb qualifies for a submission — the property that
+made pins possible at all — and now asserts the stronger one that both
+finishes are reachable, deriving the crossing point from the move's damage
+split rather than stepping to it in 28-damage chunks, which is too coarse
+to separate two thresholds twelve apart.
+
+Over sixteen seeds: **11 pinfalls and 5 submissions**, no timeouts, with 0–3
+near-falls per match and matches running 747–2052 ticks (12–34 s). Before
+this it was 12 submissions, 0 pinfalls, 0 near-falls that mattered.
+
+Outcomes change throughout — this is the finish, so that is the point. What
+is *not* settled: the split between the two finishes, `PIN_PREFERENCE_DAMAGE`,
+`SUBMISSION_ESCAPE_LIMB` and the 50/50 draw are all reachability values
+chosen so both endings occur, and `gauntlet/refs/` has nothing measuring how
+often a real match should end each way.
