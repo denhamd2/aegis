@@ -48,8 +48,17 @@ const HUD_PROBE_WIDTH := 0.14
 const HUD_PROBE_HEIGHT := 0.07
 const HUD_PROBE_MARGIN := 0.03
 ## What the probe looks for: pixels of MatchHUD's vitality green, which is
-## strongly green-dominant and appears nowhere in the ring (the mat is grey,
-## the ropes red/white/blue, the wrestlers orange).
+## strongly green-dominant and appears nowhere else the probe can see. The
+## bottom corners hold the mat (a desaturated blue-grey), the white ropes, the
+## ring apron, and the wrestlers' blue and red colourways -- no green among
+## them. The arena bowl and crowd behind them are dark and near-neutral by
+## design (core/arena/arena_builder.gd's palette), which is what keeps this
+## probe honest now that there is a hall out there at all.
+##
+## This is a standing constraint on arena art, not just a description: a
+## green-dominant element added anywhere the corner probes reach would make
+## `hud_present` true for the wrong reason, and the gate would stop catching a
+## missing HUD.
 ##
 ## The first version of this looked for luma *variance* instead, reasoning
 ## that a dark plate with bright bars stands out against a flat background.

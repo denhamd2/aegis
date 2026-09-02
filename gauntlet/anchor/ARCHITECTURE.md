@@ -100,6 +100,23 @@ on them holding.
   references are for **measurement** (frame timings, camera framing, HUD
   layout) — never for extracted models, textures, audio, or likenesses.
   Ripped-asset sources are off-limits, full stop.
+- "Free to download" is not a licence. Extracted game assets and replicas of
+  a real promotion's trade dress circulate freely and are still infringing;
+  availability is not the test, the licence is.
+
+## Third-party assets
+
+- **Permitted: CC0 and CC-BY.** CC0 needs nothing; CC-BY needs an entry in a
+  `CREDITS.md` next to the asset naming the source, author and licence. This
+  widened from CC0-only: nothing worth having in the arena/environment space
+  is CC0, and an attribution line is a cheap price for a usable asset.
+- Anything more restrictive (CC-BY-SA, CC-BY-NC, "free for personal use",
+  no stated licence at all) needs a decision from the repo owner before it
+  lands, not after.
+- Record provenance at import time, in the `CREDITS.md` beside the files —
+  see `game/assets/characters/CREDITS.md` and
+  `game/assets/environment/CREDITS.md`. An asset whose origin nobody wrote
+  down cannot be audited later, which in practice means it has to be removed.
 
 ## Scope
 

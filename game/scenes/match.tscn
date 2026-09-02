@@ -1,7 +1,8 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/arena.tscn" id="31"]
 [ext_resource type="PackedScene" path="res://scenes/wrestler.tscn" id="3"]
 [ext_resource type="Script" path="res://core/camera/match_camera.gd" id="4"]
 [ext_resource type="Script" path="res://core/match/match_referee.gd" id="5"]
@@ -40,6 +41,11 @@ ambient_light_energy = 0.35
 [node name="Match" type="Node3D"]
 script = ExtResource("1")
 match_seed = 1
+
+; The hall the ring stands in. Split out of ring.tscn so the ring itself --
+; whose 6m mat and 3.1m ropes camera.md derives the 41-degree lens from --
+; stays a scene nobody has a reason to edit while working on arena art.
+[node name="Arena" parent="." instance=ExtResource("31")]
 
 [node name="Ring" parent="." instance=ExtResource("2")]
 
