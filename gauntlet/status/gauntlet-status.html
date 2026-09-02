@@ -27,7 +27,7 @@
 <td>1</td>
 <td class="verdict-theirs">reference wins</td>
 <td>4/10</td>
-<td>the ring no longer floats in nothing (flat-void fraction 0.618 -&gt; 0.289 against a 0.010-0.066 reference band, measure_frame.py --void), but the arena is grey-box geometry: stands are raked boxes with a noise albedo, there is no entrance stage, no ring skirt branding, no crowd motion. Lighting consistency (bar priority 2) is UNJUDGED -- both captures were llvmpipe and evidence_gate.py --visual now voids them for this slice.</td>
+<td>flat-void fraction 0.618 -&gt; 0.110, but read that carefully: most of the later drop came from the camera slice&#x27;s 41-degree lens cropping the hall out of frame, not from more arena being built. The shell is still grey-box -- raked boxes with a noise albedo, no entrance stage, no ring skirt, no crowd motion -- and lighting consistency (bar priority 2) remains UNJUDGED: every capture is llvmpipe and evidence_gate.py --visual voids them for this slice.</td>
 </tr>
 <tr>
 <td>wrestler look &amp; materials</td>
@@ -69,7 +69,7 @@
 <td>0</td>
 <td class="verdict-pending">not started</td>
 <td>-/10</td>
-<td>phase 4 not yet started</td>
+<td>phase 4 not yet started, but the camera slice&#x27;s live-match probe found something this slice owns: across five seeds peak momentum was 50-59 against SIGNATURE_THRESHOLD 60 and FINISHER_THRESHOLD 100, so the top two rungs of the move ladder never fired. A signature costs exactly 60 and is checked just below the finisher, so a wrestler who reaches 60 spends it at his next grapple and the remaining 40 needs ~7 strikes landed with no grapple between. Left as-is rather than rebalanced from inside a camera slice.</td>
 </tr>
 <tr>
 <td>reversal windows</td>
@@ -80,10 +80,10 @@
 </tr>
 <tr>
 <td>camera framing</td>
-<td>0</td>
-<td class="verdict-pending">not started</td>
-<td>-/10</td>
-<td>not opened, but round 1 on the visual slices found the bug it starts from: MatchCamera.cut_to_finisher()/cut_to_three_count() have no callers anywhere, and both set a mode whose only effect is to make _physics_process return early -- so the scripted cuts camera.md measures are not merely unimplemented, calling one would freeze the camera for the rest of the match.</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>the follow-cam is solved from measurement now -- subject fill 0.29 -&gt; inside the reference&#x27;s own bands, and the dead cut modes (which froze the camera permanently if ever called) are driven off the match&#x27;s events. What is not measured: FOV is DERIVED (41 deg, from fill plus &#x27;just outside the near ropes&#x27;), the fit&#x27;s separations are derived from that same FOV rather than observed, and ease curves plus cut duration stay pending real footage per camera.md. The containment guard&#x27;s width limit is an engineering value, not a reference number.</td>
 </tr>
 <tr>
 <td>pin/kickout minigame</td>

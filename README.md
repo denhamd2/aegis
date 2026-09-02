@@ -2205,3 +2205,142 @@ on their `tie_up` beat frames, not estimates.
   camera for the rest of the match.
 - The wrestlers are one CC0 mannequin at two tints. No distinct body types,
   no faces, no attire geometry.
+
+## Gauntlet: camera framing (round 1)
+
+The visual round left camera framing at round 0 with the bug it starts from
+already found: `MatchCamera.cut_to_finisher()` and `cut_to_three_count()`
+had **no callers anywhere**, and both set a mode whose only effect was an
+early `return` at the top of `_physics_process`. The scripted cuts
+`camera.md` measures were not merely unimplemented — calling either one
+would have frozen the shot for the rest of the match.
+
+The framing was worse than the cuts. `distance = clamp(separation * 1.6,
+4.0, 9.0)` evaluates to 2.24m at tie-up range, which clamps to the 4.0m
+floor, so the camera sat at its minimum through every grapple in the match
+and a wrestler filled **0.29** of the frame. Measured against the
+reference, that is *wider than its widest shot* at the closest moment of
+the fight.
+
+### Fill is the measurement; distance is what gets solved
+
+`gauntlet/refs/camera.md` gained numbers a still can actually give up —
+read off the frames with a pixel grid:
+
+| framing | subject fill | far mat edge |
+| --- | --- | --- |
+| strike exchange (`mid_strike_exchange.jpg`) | 0.675, 0.708 | ~0.59 |
+| wide standoff (`wide_standoff_broadcast_angle.jpg`) | 0.32, 0.41 | ~0.66 |
+| impact spot (`close_impact_table_spot.jpg`) | — (prone) | ~0.49 |
+
+This also **corrects** that file's earlier reading, which called the strike
+exchange "roughly half the frame height." Measured, it is closer to
+two-thirds.
+
+FOV is not derivable from a still, and fill does not settle it either —
+fill is a function of *both* focal length and distance. One more measured
+statement pins the pair: the standoff camera sits "just outside the near
+ropes", which in this ring is ~3.2m from centre. The lens that puts a 1.8m
+subject at 0.69 fill from ~3.5m is **41° vertical**, and Godot's 75°
+default cannot reach the measured fill without putting the camera 1.7m from
+the wrestlers — inside the ring.
+
+Running the projection backwards through both frames at that lens gives
+(0.74m apart → 3.49m out) and (2.58m → 6.73m), so the camera's response to
+separation is the line through them:
+
+```
+distance = 2.19 + 1.76 * separation
+```
+
+Two points, two parameters, nothing free. Worth being clear about what that
+is worth: the separations are *derived*, not observed — they depend on the
+fill measurement and on a FOV that is itself derived. It is defended as
+reproducing two measured frames, not as a measurement of how a real camera
+tracks. A separate containment guard keeps both men on screen past the
+distance the fit can reach (corner to corner is 8.49m in this ring, where
+the fit wants 17.1m against a 9.0m ceiling); its width limit is labelled in
+the source as an engineering value, explicitly not a reference number.
+
+### The ropes
+
+All twelve rope segments were red/white/blue — a boxing convention. Every
+rope in every reference frame is white, clearest in the near-rope foreground
+of the standoff shot, so they are white now, and they read as a framing
+element instead of three coloured stripes competing with the wrestlers'
+colourways.
+
+Camera height was then set by what it puts in frame rather than picked off
+`camera.md`'s "chest-to-head" range. Measured by unprojecting the near ropes
+at a range of heights: at 1.65m only the top rope lands inside the frame; at
+**1.45m** the top and middle both do. The bottom rope sits 24° below the
+view axis and cannot be recovered without backing off further than the
+measured fill allows. The trade is the horizon — 0.622 of frame height
+against 0.599 at 1.65m — which sits between the reference's 0.59 and 0.66,
+where an intermediate shot should be.
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| subject fill, tie-up range | 0.29 | 0.51 | — (interpolated) |
+| subject fill, measured separations | 0.29 | 0.66 / 0.36 | 0.675–0.708 / 0.32–0.41 |
+| flat-void fraction | 0.618 | **0.110** | 0.010–0.066 |
+
+Note what that last row now means: most of the drop from 0.289 came from
+the 41° lens cropping the hall out of frame, not from more arena being
+built. The ring/arena slice's recorded gap says so.
+
+### The cuts fire, and one of them cannot
+
+Unit tests cover the mode logic. What they cannot show is whether a live
+match ever *reaches* a cut — and this repo's history is a list of systems
+that were correct and never called, so a probe ran five seeds of real
+AI-vs-AI matches and logged every mode transition.
+
+`THREE_COUNT_CUT` fires in four of five seeds, and the camera **moves while
+cut** — the freeze is genuinely gone.
+
+`FINISHER_CUT` fired **zero times**, and the reason is not the camera:
+
+- Peak momentum across those five matches was **50–59**.
+  `SIGNATURE_THRESHOLD` is 60 and `FINISHER_THRESHOLD` is 100, so neither
+  the signature nor the finisher tier fired in any match.
+- Reaching a finisher needs momentum at its absolute ceiling. A signature
+  costs exactly 60 and is checked immediately below the finisher in
+  `_pick_tier_move()`, so a wrestler who reaches 60 spends it at his next
+  grapple; closing the remaining 40 needs roughly seven strikes landed with
+  no grapple in between.
+
+So **the top two rungs of the move ladder do not fire in a real match**.
+That is a combat-tuning finding, not a camera one, and it is left as-is
+rather than quietly rebalanced from inside a camera slice — but it means the
+finisher cut is wired and unobservable, and the HUD's momentum threshold
+ticks mark two rungs nobody reaches.
+
+The return to `FOLLOW` after a three-count cut is unit-tested but not
+observed live either: every pin in those seeds was the winning one, so the
+cut correctly persisted to the end of the match and never had a kickout to
+return from.
+
+### Verification
+
+**166/166 tests pass**, orphans unchanged at the pre-existing baseline of
+105. Framing assertions go through `Camera3D.unproject_position()` —
+projection maths, no renderer — so they hold under the headless CI run that
+`ARCHITECTURE.md` forbids judging visual slices on. Three captures were run
+end to end through `run_capture.sh` and the evidence gate; every number
+above is `tools/refs/measure_frame.py` output or a pixel-grid read, not an
+estimate.
+
+### What this round did not settle
+
+- FOV is derived, not measured, and the fit's separations are derived from
+  that same FOV. A frame-stepped clip with a known render resolution could
+  measure both properly.
+- Cut *duration* is not invented — a finisher cut lasts as long as its
+  paired move, a three-count cut as long as the pin — but `follow_speed`,
+  `cut_speed` and the cut's aim point are project values, and `camera.md`
+  still marks ease curves pending.
+- The camera holds whichever side of the ring it started on; nothing cuts
+  around the axis, and no reference measurement covers when it should.
+- The bottom near rope is out of frame at every framing the fill
+  measurement permits.

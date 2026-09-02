@@ -1126,6 +1126,17 @@ func _process_grapple_hold(input: Dictionary) -> void:
 ## draw count) must always produce the same move, or replays stop matching.
 ## The multipliers are deliberately different from WrestlerAI._should_whip()'s
 ## so the two decisions don't move in lockstep across a match.
+## Whether a move is one of this wrestler's finishers. There is no tier
+## field on MoveDef -- a move's tier is which slot it was drawn from -- so
+## MatchCamera asks the man who threw it rather than trying to read a tier
+## off the resource.
+func is_finisher(move: MoveDef) -> bool:
+	if move == null:
+		return false
+	if move == finisher_move:
+		return true
+	return finisher_move_pool.has(move)
+
 func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	if pool.is_empty():
 		return primary

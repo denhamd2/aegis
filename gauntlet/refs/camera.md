@@ -20,8 +20,53 @@ Frames cited: `gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg`,
 `mid_strike_exchange.jpg`, `close_impact_table_spot.jpg`,
 `wide_establishing_stage.jpg`.
 
+## Subject fill (measured)
+
+The one framing quantity a still *can* give up, and the one that makes "at
+match-camera distance" mean something: how much of the frame's height a
+standing wrestler covers. Read off the frames with a pixel grid (the method
+is reproducible — `tools/refs/measure_frame.py` shares the luminance
+helpers, and the row coordinates below are from a 20px grid overlaid on the
+source frame at its native size):
+
+| framing | frame | subject fill |
+| --- | --- | --- |
+| strike exchange | `mid_strike_exchange.jpg` (739x415) | 0.675, 0.708 |
+| wide standoff | `wide_standoff_broadcast_angle.jpg` (640x480, active rows 48–412) | 0.32, 0.41 |
+
+The standoff's two wrestlers differ because one stands further from camera;
+both are quoted rather than averaged.
+
+Note this **corrects** the "Distance" section's older reading below, which
+called the strike-exchange framing "both figures fill roughly half the
+frame height". Measured, it is closer to two-thirds.
+
 ## FOV
-- (pending — not derivable from a still without known sensor/lens metadata)
+- Not derivable from a still on its own — and fill does not settle it
+  either, because fill is a function of *both* focal length and distance.
+  One measured statement pins the pair: the standoff camera sits "just
+  outside the near ropes" (see Height below), which in this project's ring
+  is ~3.2m from centre. Solving for the lens that puts a 1.8m subject at
+  0.69 fill from ~3.5m gives a **vertical FOV of ~41°**, and that is what
+  `match.tscn` sets. Godot's 75° default cannot reach the measured fill
+  without putting the camera 1.7m from the wrestlers — inside the ring.
+- The 41° is therefore *derived from two measurements plus this ring's own
+  dimensions*, not measured directly. A frame-stepped clip with a known
+  render resolution could measure it properly and should replace it.
+
+## Horizon height (measured)
+
+Where the far edge of the mat sits in frame, which is a proxy for camera
+height that a still can actually give up:
+
+| framing | far mat edge |
+| --- | --- |
+| wide standoff | ~0.66 of frame height |
+| strike exchange | ~0.59 |
+| impact / spot (`close_impact_table_spot.jpg`) | ~0.49 |
+
+The horizon rises toward frame centre as the camera drops, which is the
+measurable form of "the impact framing is lower".
 
 ## Height
 - Default "standoff" framing (`wide_standoff_broadcast_angle.jpg`): camera
@@ -61,9 +106,16 @@ Frames cited: `gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg`,
   Contextual UI (a move-list overlay, top-left) appears during this framing
   without displacing the HUD corners — see `hud.md`.
 
-Placeholder constants currently live in `game/core/camera/match_camera.gd`
-(`min_distance`, `max_distance`, `height`, `follow_speed`) — the *shape* of
-the current implementation (midpoint follow, distance scales with
-separation) now has weak screenshot-level support; the actual numbers still
-need real footage before replacing the placeholders, and this file should be
-re-cited once frame-stepped clips exist.
+`game/core/camera/match_camera.gd` no longer scales separation by a
+multiplier. It solves for the distance that produces the measured subject
+fill above, taking whichever is further out of "one wrestler fills 0.69 of
+the frame" and "both wrestlers fit across 0.55 of its width" — so the
+standoff framing is reached by the camera opening out to contain the pair,
+not by interpolating toward a separation this file never measured.
+`game/tests/test_camera_framing.gd` asserts the achieved fill through
+`unproject_position()`, which needs no renderer.
+
+Still placeholder, and marked as such in the source: `follow_speed`,
+`cut_speed`, and the cut's aim point. Cut *duration* is not invented — a
+finisher cut lasts as long as its paired move and a three-count cut as long
+as the pin — but the ease curves this file marks pending are still pending.
