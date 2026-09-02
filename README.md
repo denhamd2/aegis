@@ -90,6 +90,16 @@ Godot 4.6 — CI now pins v6.2.1, confirmed working (7/7 tests, 0 errors, 0
 failures, 0 orphans).
 
 Known Phase 2 gaps, honestly:
+- A pin is now reachable but a **pinfall** is not: kickouts are easy enough
+  that every pin is escaped and every seeded AI match ends by submission
+  (0 pinfalls in 24 seeds). Making a pinfall a realistic finish is kickout
+  balance — see "Fix: the evidence gate, the replay chain, and the HUD were
+  all fiction" below.
+- The three-count is spaced evenly at 1.00s per count, and
+  `gauntlet/refs/timings.md` measures a real one as uneven (1→2 ≈1.25s,
+  2→3 ≈1.00s, frame-stepped). `MatchReferee.PIN_COUNT_TICKS` carries the
+  finding; correcting it changes how long a pin lasts and belongs to a
+  tuning slice.
 - Not played by a human yet — verification above is scripted/AI-vs-passive
   simulation, not a playtest with a gamepad. Whether the match *feels*
   right is unconfirmed regardless of whether it mechanically completes.
@@ -129,8 +139,7 @@ Known Phase 2 gaps, honestly:
   pipeline — see "Feature: real bone-level paired performance, stitched from
   the clip library" below, which also covers the two live bugs it exposed
   (grip IK frozen for every paired move; thrown bodies ending half a metre
-  under the mat). The remaining 13 moves are still unwritten, so the depth
-  is there, and the breadth followed in "Feature: the moveset
+  under the mat). The breadth followed in "Feature: the moveset
   ARCHITECTURE.md scopes, all 18 of it".
 
 ## Bugfix: the AI never actually grappled, and why
@@ -1783,3 +1792,97 @@ consistent by tier but trace to no reference measurement —
 `gauntlet/refs/timings.md` still marks the relevant entries pending, and
 `ARCHITECTURE.md`'s reference-driven-tuning rule means none of these numbers
 may be defended as "how it should feel" until they do.
+
+## Fix: the evidence gate, the replay chain, and the HUD were all fiction
+
+`ARCHITECTURE.md` has two sections describing machinery this repo did not
+have. Reading the call graph rather than the prose:
+
+| The contract says | What was there |
+| --- | --- |
+| "Same seed + same replay must always produce the same `compute_end_state_hash()`", enforced by `test_determinism.gd` | `ReplaySystem.advance_tick()` had **no callers** — `current_tick` sat at 0, so a recording overwrote frame 0 every tick and playback fed that one frame to the whole match. `test_determinism.gd` hashed a hand-built dictionary twice and never ran a match |
+| "Every capture produces `capture_manifest.json`… validated **before any critic sees the capture**" | `CaptureHarness.configure/on_tick/finish` had **no callers**; nothing parsed `run_capture.sh`'s `--capture-replay`/`--capture-output`; no manifest was ever written |
+| The gate checks "HUD presence" | There was **no HUD** — no `CanvasLayer`, `Control` or `Label` in any scene — though `gauntlet/refs/hud.md` sat measured and unused |
+| `run_capture.sh` drives Movie Maker mode | It passed `--headless` alongside `--write-movie`. Headless renders nothing |
+
+So `run_capture.sh` exited 2 ("round is void") on every invocation it had
+ever had. Three commits, in dependency order, make it real. The replay and
+HUD halves have their own sections above; this one is the gate.
+
+### Beats come from the match, not from a table
+
+`configure(output_dir, replay, beat_frames)` wanted a `label -> tick` map,
+which nothing could ever have supplied: no one knows before a match which
+tick its apex or its pinfall lands on. Each beat is now taken the first time
+its event fires — `tie_up` when both wrestlers are in `TIE_UP`, `apex` half
+a clip after `grapple_started`, `impact` on `move_landed`, `pin_start` on
+`pin_started`, `three_count` on a pinfall.
+
+### The pin path was unreachable, which is why no capture could pass
+
+Two of the five beats are pin beats, and **zero of 24 seeded AI-vs-AI
+matches ever attempted a pin.** Not luck — structure. A wrestler was knocked
+down at 200 total damage (`MAX_LIMB_DAMAGE * 2.0`); `MatchReferee` routes a
+downed opponent to a submission once his worst limb passes 70 and to a pin
+otherwise; and every `MoveDef` loads torso damage heaviest, so torso was far
+past 70 long before the total reached 200. Every knockdown was therefore a
+submission, and the entire pin/kickout system — minigame, three-count,
+tuning notes, tests — was reachable only by forcing it.
+
+Knockdown is now its own constant, `WrestlerController.KNOCKDOWN_DAMAGE`,
+set below the damage at which one limb crosses the submission threshold, so
+an early knockdown is a pin and a late one is a submission. Measured across
+twelve seeds: 0 pin attempts before, 1–2 per match after. This is a
+*reachability* value and the code says so — `gauntlet/refs/timings.md` has
+nothing to measure it against, and it is chosen as what makes both finishes
+occur, not as a claim about feel.
+
+A pin**fall** still never happens: kickouts remain easy by design
+(`PinMinigame.PROGRESS_THRESHOLD` was deliberately lowered to 12 in an
+earlier round so kickouts were achievable at all), so every pin is escaped
+and the match goes on to a submission. Making a pinfall a realistic finish
+is kickout balance, which is a tuning slice, not this one.
+
+### So the manifest expects what the match could reach
+
+Demanding all five beats from every capture would void every capture this
+project can produce — not because the capture is broken but because the
+match legitimately had no pinfall in it, and a gate that fails on correct
+input is not a gate. `tie_up`, `apex` and `impact` are always required; the
+two pin beats are required only if a pin or a pinfall actually happened, and
+skipped ones are named in the manifest with their reason so a critic can see
+what the capture does and does not show.
+
+### `hud_present` is measured, and the first version of it was wrong
+
+The gate exists to catch a capture that *claims* a HUD, so this had to come
+off the pixels. The first version sampled the two bottom corners for luma
+variance, reasoning that a dark plate with bright bars stands out.
+
+The negative test — hide the HUD, re-run, the gate must fail — **passed
+anyway**. At the apex beat the bottom corners hold the bright ring mat
+against the dark hall and measure 0.61 range with no HUD at all. Measured
+across every beat frame of both runs, the real separator is the vitality
+bar's green: 41–42% of each corner probe with the HUD, **0.0% without it, on
+every frame**. That is what it keys on now.
+
+### Verification
+
+**136/136 unit tests pass** (10 new in `game/tests/test_capture_gate.gd`),
+orphans unchanged at the pre-existing baseline of 105. The reachability test
+fails against the old knockdown threshold with the diagnosis printed in
+full, and the two `hud_present` tests use the exact synthetic frame that
+fooled the variance check.
+
+End to end, for real: `tools/capture/run_capture.sh` records a replay,
+replays it under `xvfb-run` with the OpenGL3 driver, dumps four labelled
+beat frames, writes a manifest, and `evidence_gate.py` prints **`EVIDENCE
+GATE: PASS`** — the first time in this project's history. Hiding the HUD and
+re-running prints **`EVIDENCE GATE: FAIL (round is void) — hud_present is
+false`**.
+
+Unlike the two commits before it, this one **changes match outcomes**, because
+`KNOCKDOWN_DAMAGE` is a gameplay value. Checked accordingly over seeds 1, 2,
+3, 5, 7 and 11: every match completes, no script errors, nobody leaves the
+mat, minimum body height no worse than baseline, and pins now occur in every
+match.

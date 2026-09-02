@@ -27,6 +27,26 @@ const STRIKE_HIT_RANGE := 1.8
 ## tuning" rule applies here as much as anywhere, and no reference footage
 ## covers fall speed.
 const GRAVITY := 9.8
+## Total accumulated damage at which a wrestler is knocked off his feet.
+##
+## This was MAX_LIMB_DAMAGE * 2.0 (200), which made the pin path
+## unreachable: MatchReferee routes a downed opponent to a submission once
+## his worst limb passes SUBMISSION_LIMB_THRESHOLD (70) and to a pin
+## otherwise, but every MoveDef loads torso damage heaviest, so torso is
+## far past 70 long before the total reaches 200. Measured over twelve
+## seeds before the change: zero pin attempts, every match a submission,
+## with the whole pin/kickout system -- minigame, three-count, tests --
+## reachable only by forcing it. Two of the five capture beats
+## ARCHITECTURE.md requires are pin beats, so it also voided every capture.
+##
+## Set below the damage at which one limb crosses the submission threshold,
+## so an early knockdown is a pin and a late one, after a limb has been
+## worked over, is a submission. This is a *reachability* value, not a feel
+## claim: gauntlet/refs/timings.md has nothing to measure it against, and
+## it is chosen as the value that produces both finishes across the seeds
+## rather than one that traces to reference footage.
+const KNOCKDOWN_DAMAGE := 100.0
+
 const GETUP_TICKS := 90 # 1.5s
 const HIT_REACT_TICKS := 20
 const STUNNED_TICKS := 45
@@ -902,7 +922,7 @@ func _resolve_pending_hits() -> void:
 		return
 	for move in moves:
 		combat.apply_damage(move)
-	if combat.total_damage() >= CombatSystem.MAX_LIMB_DAMAGE * 2.0:
+	if combat.total_damage() >= KNOCKDOWN_DAMAGE:
 		_go_down()
 	else:
 		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
@@ -1000,7 +1020,7 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# never progressed past tie-up -> grapple -> repeat.
 	opponent.combat.apply_damage(move)
 	fsm.transition_to(WrestlerFSM.State.IDLE)
-	if opponent.combat.total_damage() >= CombatSystem.MAX_LIMB_DAMAGE * 2.0:
+	if opponent.combat.total_damage() >= KNOCKDOWN_DAMAGE:
 		opponent._go_down()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))

@@ -24,6 +24,27 @@ extends Node3D
 @onready var referee: MatchReferee = $MatchReferee
 
 func _ready() -> void:
+	# A capture run supplies its replay paths on the command line;
+	# CaptureHarness parses them and is inert without them, so this is a
+	# no-op in normal play.
+	if CaptureHarness and CaptureHarness.is_capturing():
+		if CaptureHarness.replay_to_play() != "":
+			playback_replay_path = CaptureHarness.replay_to_play()
+		if CaptureHarness.replay_to_record() != "":
+			record_replay_path = CaptureHarness.replay_to_record()
+	elif CaptureHarness and CaptureHarness.replay_to_record() != "":
+		# --record-replay on its own records a match without capturing it,
+		# which is how run_capture.sh produces the replay it then captures.
+		record_replay_path = CaptureHarness.replay_to_record()
+
+	# A recorded match has to finish. The shipped scene leaves WrestlerA as
+	# the human slot, and an AI-vs-passive match is an infinite strike loop
+	# that never reaches a finish (see the README's first capture), so a
+	# recording run puts both sides on the AI.
+	if record_replay_path != "":
+		wrestler_a.is_ai = true
+		wrestler_b.is_ai = true
+
 	var replay: ReplayResource = null
 	if playback_replay_path != "":
 		replay = load(playback_replay_path) as ReplayResource
@@ -49,6 +70,8 @@ func _ready() -> void:
 			ReplaySystem.start_playback(replay)
 		else:
 			ReplaySystem.start_recording(match_seed)
+	if CaptureHarness:
+		CaptureHarness.attach(self)
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("Match won by %s via %s" % [winner.name, method])
@@ -59,6 +82,10 @@ func _on_match_won(winner: WrestlerController, method: String) -> void:
 	wrestler_a.set_physics_process(false)
 	wrestler_b.set_physics_process(false)
 	_save_replay()
+	# A recording run has nothing more to do once the match is decided, and
+	# a capture run's harness has already written its manifest.
+	if record_replay_path != "" or (CaptureHarness and CaptureHarness.is_capturing()):
+		get_tree().quit()
 
 ## Writes the recording out, if this run was asked for one. Saved after the
 ## freeze above so the resource holds exactly the ticks the match ran and

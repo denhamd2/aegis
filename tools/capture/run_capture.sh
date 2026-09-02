@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
-# Runs a headless, frame-stable capture of one replay for gauntlet critics.
+# Runs a frame-stable capture of one replay for gauntlet critics.
 #
 # Usage: tools/capture/run_capture.sh <replay.tres> <output_dir> [fps]
 #
-# Wraps Godot's Movie Maker mode (--write-movie, constant delta) under
-# xvfb-run with the OpenGL3 (llvmpipe) driver so it runs in CI without a
-# GPU. Software rendering is fine for timing/feel captures; GPU-backed
+# If the replay does not exist yet it is recorded first, by running an
+# AI-vs-AI match headless and saving the ReplayResource. Nothing in the repo
+# saved a replay before, so there was never one to hand this script.
+#
+# The capture itself runs under xvfb-run with the OpenGL3 (llvmpipe) driver
+# and *not* --headless: headless renders nothing, so the previous
+# --headless --write-movie combination could only ever have produced empty
+# frames. Software rendering is fine for timing/feel captures; GPU-backed
 # visual-quality captures must be run on real hardware (see ARCHITECTURE.md).
 set -euo pipefail
 
 REPLAY_PATH="${1:?usage: run_capture.sh <replay.tres> <output_dir> [fps]}"
 OUTPUT_DIR="${2:?usage: run_capture.sh <replay.tres> <output_dir> [fps]}"
 FPS="${3:-60}"
+RESOLUTION="${CAPTURE_RESOLUTION:-1280x720}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GODOT_BIN="${GODOT_BIN:-godot4}"
@@ -23,20 +29,29 @@ if ! command -v "$GODOT_BIN" >/dev/null 2>&1; then
 	exit 1
 fi
 
-CAPTURE_CMD=(
-	"$GODOT_BIN"
-	--headless
-	--path "$REPO_ROOT/game"
-	--fixed-fps "$FPS"
-	--write-movie "$OUTPUT_DIR/capture.avi"
-	-- --capture-replay "$REPLAY_PATH" --capture-output "$OUTPUT_DIR"
-)
-
-if command -v xvfb-run >/dev/null 2>&1; then
-	xvfb-run -a "${CAPTURE_CMD[@]}"
-else
-	"${CAPTURE_CMD[@]}"
+if ! command -v xvfb-run >/dev/null 2>&1; then
+	echo "error: xvfb-run not found. A capture must render, so it needs a display." >&2
+	exit 1
 fi
+
+if [ ! -f "$REPLAY_PATH" ]; then
+	echo "recording $REPLAY_PATH (no replay supplied)..."
+	"$GODOT_BIN" --headless --path "$REPO_ROOT/game" --fixed-fps 600 \
+		-- --record-replay "$REPLAY_PATH"
+	if [ ! -f "$REPLAY_PATH" ]; then
+		echo "error: recording produced no replay at $REPLAY_PATH" >&2
+		exit 2
+	fi
+fi
+
+xvfb-run -a --server-args="-screen 0 ${RESOLUTION}x24" \
+	"$GODOT_BIN" \
+	--path "$REPO_ROOT/game" \
+	--rendering-driver opengl3 \
+	--resolution "$RESOLUTION" \
+	--fixed-fps "$FPS" \
+	--write-movie "$OUTPUT_DIR/capture.avi" \
+	-- --capture-replay "$REPLAY_PATH" --capture-output "$OUTPUT_DIR"
 
 MANIFEST="$OUTPUT_DIR/capture_manifest.json"
 if [ ! -f "$MANIFEST" ]; then
