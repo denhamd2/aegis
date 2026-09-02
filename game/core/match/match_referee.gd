@@ -7,7 +7,15 @@ extends Node
 
 signal match_won(winner: WrestlerController, method: String)
 
-const PIN_COUNT_TICKS := 180 # three-count at 60Hz, one count per 60 ticks
+## Ticks between the referee's hand-slaps. gauntlet/refs/timings.md measures
+## a real three-count as *uneven* -- "1" to "2" is ~1.25s and "2" to "3"
+## ~1.00s, frame-stepped with no sampling gaps -- so this even 1.00s spacing
+## is known to be wrong against the reference. Changing it changes how long
+## a pin lasts, which is a gameplay change and belongs to a tuning slice;
+## it is left alone here and recorded so the next one inherits the finding
+## rather than rediscovering it.
+const TICKS_PER_COUNT := 60
+const PIN_COUNT_TICKS := TICKS_PER_COUNT * 3
 const COVER_RANGE := 1.2
 ## Attacking a downed opponent's most-damaged limb becomes a submission
 ## attempt instead of a pin once that limb's damage crosses this fraction of
@@ -34,6 +42,8 @@ var wrestler_a: WrestlerController
 var wrestler_b: WrestlerController
 
 var _pin_ticks: int = 0
+## Which count is on screen; see pin_count().
+var _pin_count_shown: int = 0
 var _pinning: bool = false
 var _pin_attacker: WrestlerController
 var _pin_defender: WrestlerController
@@ -248,6 +258,7 @@ func _check_for_downed_opponent_action() -> void:
 			else:
 				_pinning = true
 				_pin_ticks = 0
+				_pin_count_shown = 0
 				_pin_attacker = attacker
 				_pin_defender = defender
 				attacker.begin_pin(defender, _pin_seed())
@@ -272,11 +283,51 @@ func _pin_seed() -> int:
 	var tick: int = ReplaySystem.current_tick if ReplaySystem else _pin_ticks
 	return match_seed + tick
 
+## Read-only views of referee state, for the HUD.
+##
+## The HUD polls these in _process rather than being pushed to, so it stays
+## entirely off the physics tick -- it can never change what a tick does,
+## which is the whole reason it is allowed to read gameplay state at all.
+
+## Which hand-slap the referee is on: 0 before the first, up to 3. Digits
+## pop in with no fade (gauntlet/refs/hud.md, frame-stepped), so this is a
+## plain step function and the HUD needs no easing.
+## Latched rather than derived from _pin_ticks, because the third count and
+## the end of the pin land on the same tick: _tick_pin() sees 180 ticks,
+## declares the pinfall and clears _pinning in one call, so a count computed
+## live would blink "3" for zero frames and the winning count -- the one
+## moment the number matters most -- would never be on screen. Cleared when
+## a new pin starts or the defender kicks out; held afterwards, the way a
+## broadcast leaves the count up over the finish.
+func pin_count() -> int:
+	return _pin_count_shown
+
+func is_pin_active() -> bool:
+	return _pinning
+
+func is_submission_active() -> bool:
+	return _submissioning
+
+## Both sides of the submission tug-of-war as 0..1 fractions: x is the
+## attacker closing on the defender's breaking point, y the defender working
+## free. gauntlet/refs/hud.md confirms this as a real on-screen element (a
+## centre-bottom red/blue "HOLD" bar) that this project never rendered.
+func submission_progress() -> Vector2:
+	if not _submissioning or not _submission_defender:
+		return Vector2.ZERO
+	var minigame: SubmissionMinigame = _submission_defender._submission_minigame
+	if not minigame:
+		return Vector2.ZERO
+	return Vector2(
+		minigame.attacker_progress / SubmissionMinigame.BREAK_POINT,
+		minigame.defender_progress / SubmissionMinigame.BREAK_POINT)
+
 func _tick_pin() -> void:
 	_pin_ticks += 1
 	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
 		_end_pin(false)
 		return
+	_pin_count_shown = mini(3, _pin_ticks / TICKS_PER_COUNT)
 	if _pin_ticks >= PIN_COUNT_TICKS:
 		_end_pin(true)
 
@@ -286,6 +337,7 @@ func _end_pin(three_count_reached: bool) -> void:
 	if three_count_reached:
 		_declare_winner(_pin_attacker, "pinfall")
 	else:
+		_pin_count_shown = 0
 		_pin_defender.fsm.transition_to(WrestlerFSM.State.DOWN)
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
 		# Not cover-eligible again until this wrestler actually reaches IDLE

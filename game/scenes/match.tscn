@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -27,6 +27,7 @@
 [ext_resource type="Resource" path="res://resources/moves/reversal_duck_under.tres" id="25"]
 [ext_resource type="Resource" path="res://resources/moves/reversal_back_body_drop.tres" id="26"]
 [ext_resource type="Resource" path="res://resources/moves/reversal_go_behind.tres" id="27"]
+[ext_resource type="PackedScene" path="res://scenes/match_hud.tscn" id="28"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -135,3 +136,10 @@ wrestler_a_path = NodePath("../WrestlerA")
 wrestler_b_path = NodePath("../WrestlerB")
 reversal_counter_move = ExtResource("14")
 reversal_move_pool = Array[Resource]([ExtResource("23"), ExtResource("24"), ExtResource("25"), ExtResource("26"), ExtResource("27")])
+
+[node name="MatchHUD" parent="." instance=ExtResource("28")]
+
+[node name="Draw" parent="MatchHUD" index="0"]
+wrestler_a_path = NodePath("../../WrestlerA")
+wrestler_b_path = NodePath("../../WrestlerB")
+referee_path = NodePath("../../MatchReferee")
