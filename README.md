@@ -2560,3 +2560,119 @@ gameplay. Capture wall-time went 2m58s → 3m25s on llvmpipe.
   They are coverage decisions, held to the same rule as the momentum ladder.
 - The crowd are two-box impostors: no faces, no limbs, no reaction to the
   match. The stage has no branding and no entrance sequence uses it.
+
+## Gauntlet: wrestler look & materials (round 2)
+
+The only slice still reading "reference wins". Its gap line: *"one CC0
+mannequin at two tints, no distinct body types, no faces, no attire geometry,
+one material per man"*, with silhouette separation at 0.172 dL against the
+reference's 0.24–0.31.
+
+### The measurement was comparing two different things
+
+`test_wrestler_colorway.gd` asserted that a wrestler's **albedo** sat 0.24–0.31
+in relative luminance from the mat's albedo — and passed, at 0.379. But
+0.24–0.31 is a number `tools/refs/measure_frame.py` read off **rendered pixels**
+of a reference still. Albedo and rendered luminance are not the same space, and
+the gap was not small: the shipped build measured **0.161** in its own frames
+while passing a suite that claimed 0.379. A gate reading a different quantity
+from the one it names is not a gate.
+
+So the band moved to where it can be measured. `--silhouette-shot <prefix>` on
+the capture harness renders the standoff plus a segmentation mask keying the
+mat and each wrestler (gear included), and `tools/refs/measure_silhouette.py`
+averages the beauty frame inside each key — the same three pairings
+`VISUAL_BAR.md` tabulates, off our pixels. A mask rather than rectangles,
+because a rectangle over a wrestler also catches mat, rope and shadow.
+
+That tool had to live in the harness, not in a `-s` script: a `-s` SceneTree
+script does not register the project's `class_name` globals, so every script
+with a typed `WrestlerController` field fails to compile there,
+`_apply_colorway()` never runs, and both men render in the .glb's own gold. The
+first version measured exactly that and reported the two wrestlers as
+identical — an artefact of the probe.
+
+### The band was unreachable, not just missed
+
+First measurement of the real build:
+
+| | ours | reference |
+| --- | --- | --- |
+| mat luminance | 0.276 | 0.46 |
+| mat ↔ wrestler A | 0.253 | 0.24–0.31 |
+| mat ↔ wrestler B | 0.137 | 0.24–0.31 |
+| wrestler ↔ wrestler | 0.116 | ≤ 0.07 |
+
+**Our mat rendered at 0.276.** A wrestler cannot sit 0.24–0.31 *below* a mat
+that dark — the ceiling is 0.276. The ring rig went 2.2 → 4.5, which is what
+makes the absolute comparison mean anything at all: these are absolute
+luminances, so a broadcast still and our render are only comparable once the
+brightest surface they share is matched. Spot range is 10m and the arena bowl
+starts at 9m, so the hall is untouched (its void fraction is unchanged at
+0.008).
+
+The blue/red split had its own cause: the ring light is warm (1, 0.96, 0.88),
+so red attire gains and blue loses. The colourway had been chosen in albedo
+space, where that does not show up.
+
+### Skin is the mechanism the reference is describing
+
+The deeper problem was the one the gap line named. The mannequin is a single
+skinned mesh with **one colour over the whole body**, so a wrestler's average
+luminance *was* his attire colour — and an attire colour dark enough to clear
+the mat by 0.24 puts the two men far more than 0.07 apart the moment their
+hues differ. Those two halves of the reference cannot both hold on a
+monochrome body.
+
+A real wrestler is mostly **skin** — a mid value — with saturated gear over
+part of it. That is what lets both men sit at the same luminance while their
+colours differ. So the mannequin's body became skin and the colourway moved
+onto gear that is actually there: `core/match/wrestler_attire.gd` builds 15
+pieces per man — trunks, belt, boots over calf and foot, boot cuffs, kneepads,
+elbow pads, wristbands — as bone attachments.
+
+Geometry rather than a texture because the rig's UV layout is unknown, and
+bone attachments follow the pose through every paired move. Every bone on this
+rig runs **+Y toward its child** (verified off the .glb), so a piece is placed
+by naming its bone and how far along it sits. `BoneAttachment3D` resolves its
+bone from its *parent*, so grouping the pieces under a tidy `Attire` node left
+the whole outfit piled at the wrestler's feet — each attachment has to be a
+direct child of the `Skeleton3D`.
+
+### Measured
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.276 | **0.458** | 0.46 (anchor) |
+| mat ↔ wrestler A | 0.253 | **0.290** | 0.24–0.31 |
+| mat ↔ wrestler B | 0.137 | **0.291** | 0.24–0.31 |
+| wrestler ↔ wrestler | 0.116 | **0.001** | ≤ 0.07 |
+
+All four inside the band. Regression: gdUnit4 **175/175, 0 errors, 0 failures**
+(172 before, plus three new); seeds 1, 2, 3, 5, 7 all finish with **zero
+illegal FSM transitions**; the replay end-state hash is **byte-identical** to
+the pre-arena baseline; and the arena slice's void fraction is unmoved.
+
+`test_wrestler_colorway.gd` now asserts the renderer-independent *mechanisms*
+rather than a number it cannot see: skin darker than the mat (at an albedo
+threshold, explicitly not the reference's rendered 0.24), the two complexions
+within 0.07 of each other, hue separation, that the gear carrying the colourway
+exists, and that the two men are built differently.
+
+### What this did not settle
+
+- **wrestler ↔ wrestler at 0.001 is arguably tuned too flat.** The reference's
+  own two men differ by 0.07; ours now differ by nothing. Inside the band, but
+  it is the edge of it, and it was not aimed at.
+- **No faces, and one body.** Both men are still the same CC0 mannequin; their
+  builds differ only in gear width (`physique_bulk` 0.94 vs 1.12), because
+  `test_wrestler_model_orientation.gd` rightly pins `CharacterModel` to no
+  scale and real proportion work needs Blender.
+- **The gear is untextured cylinders.** Grey-box, and sized against the rig's
+  own proportions — `gauntlet/refs/` measures nothing about gear proportions,
+  so none of it may be defended as how it should look.
+- **Lighting consistency (priority 2) and material believability (priority 3)
+  stay UNJUDGED**, as they were: every capture is llvmpipe and
+  `evidence_gate.py --visual` voids it. Raising the ring rig to 4.5 is a
+  lighting change whose *measurable* consequence is checked and whose
+  appearance is not.

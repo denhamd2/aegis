@@ -1,23 +1,34 @@
 extends GdUnitTestSuite
-## VISUAL_BAR.md's first priority, as a number.
+## VISUAL_BAR.md's first priority, in the parts of it a headless test can
+## honestly check.
 ##
-## "Silhouette readability at match-camera distance (both wrestlers legible
-## mid-grapple, not just in idle poses)" was a phrase a critic had to judge
-## by eye. Both wrestlers instanced the same .glb with the same CC0
-## placeholder materials, so there was nothing to judge: the paired-move
-## apex frame of a real capture held one orange blob, and measured against
-## the mat the attire sat 0.014 apart in relative luminance where the
-## reference still measures 0.24-0.31.
+## A correction first, because the previous version of this suite was
+## measuring the wrong thing and passing. It asserted that a wrestler's
+## *albedo* sat 0.24-0.31 in relative luminance from the mat's albedo -- but
+## 0.24-0.31 is a number read off *rendered pixels* of a reference still.
+## Albedo and rendered luminance are not the same space, and the gap between
+## them here was not small: the shipped build passed this suite at 0.379 in
+## albedo while its actual frames measured 0.161. A gate that reads a
+## different quantity from the one it names is not a gate.
 ##
-## The reference relationship (see VISUAL_BAR.md "Silhouette separation",
-## measured with tools/refs/measure_frame.py) has two halves, and they are
-## different mechanisms:
-##   * wrestler vs. mat -- separated by *value*, 0.24-0.31 apart.
-##   * wrestler vs. wrestler -- only 0.07 apart in value, so they separate
-##     from each other by *hue*, not by brightness.
-## Both are asserted here against the shipped match scene, on albedo, which
-## is renderer-independent: ARCHITECTURE.md forbids judging a visual slice
-## on a software render, and this needs no renderer at all.
+## So the luminance band moved to where it can be measured properly.
+## `tools/refs/measure_silhouette.py`, fed by the capture harness's
+## `--silhouette-shot` mode, renders the standoff plus a segmentation mask and
+## reports the same three pairings VISUAL_BAR.md tabulates, off our own
+## pixels. That needs a renderer, so it cannot live in this suite.
+##
+## What remains here is renderer-independent and still load-bearing: the
+## *mechanisms* the reference describes, which are what make the rendered
+## numbers come out right.
+##
+##   * The reference's two men sit within 0.07 of each other in value and
+##     separate by hue. Both of ours are skin-dominant, so it is their skin
+##     that has to agree in value -- asserted below -- while the gear carries
+##     the hue difference.
+##   * A wrestler has to be darker than the mat. Asserted here in albedo, at
+##     an albedo threshold, explicitly *not* the reference's rendered 0.24.
+##   * The colourway only reaches the frame if the gear it lives on exists,
+##     and if nothing writes to the mesh both wrestlers share.
 
 const MATCH_SCENE := preload("res://scenes/match.tscn")
 
@@ -31,13 +42,20 @@ func _luminance(color: Color) -> float:
 		linear.append(c / 12.92 if c <= 0.04045 else pow((c + 0.055) / 1.055, 2.4))
 	return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
 
-## The floor the reference sets for a wrestler against the mat. Measured at
-## 0.24-0.31 there; this asserts the lower end rather than the mean, so the
-## gate is the reference's own worst case and not an average of it.
-const MIN_MAT_SEPARATION := 0.24
+## An albedo-space floor, and deliberately not the reference's 0.24: that
+## number is rendered luminance and belongs to measure_silhouette.py. This
+## asserts the weaker, renderer-independent thing it still makes sense to
+## assert here -- that a wrestler's dominant surface is meaningfully darker
+## than the surface he is seen against, so no colourway change can quietly
+## put a man at the mat's value. The rendered band is checked separately and
+## recorded in VISUAL_BAR.md.
+const MIN_SKIN_MAT_ALBEDO_GAP := 0.15
+
 ## The reference's two wrestlers are 0.07 apart in luminance, so value is
-## explicitly *not* how they separate from each other. Requiring a hue gap
-## instead is what that measurement says to do.
+## explicitly *not* how they separate from each other. Skin is the dominant
+## surface on both, so skin is what has to hold that together.
+const MAX_SKIN_VALUE_GAP := 0.07
+
 const MIN_HUE_SEPARATION := 0.15
 
 func _wrestlers() -> Array:
@@ -51,17 +69,32 @@ func _mat_albedo(scene: Node) -> Color:
 	var material: StandardMaterial3D = mesh_instance.get_surface_override_material(0)
 	return material.albedo_color
 
-func test_each_wrestler_reads_against_the_mat_by_value() -> void:
+func test_each_wrestlers_skin_is_darker_than_the_mat() -> void:
 	var parts := _wrestlers()
 	var mat := _luminance(_mat_albedo(parts[2]))
 	for wrestler: WrestlerController in [parts[0], parts[1]]:
-		var attire := _luminance(wrestler.attire_body)
-		assert_float(absf(mat - attire)).override_failure_message(
-			"%s's attire is %.3f in relative luminance and the mat is %.3f — %.3f apart. "
-			% [wrestler.name, attire, mat, absf(mat - attire)]
-			+ "The reference still measures 0.24-0.31, and a wrestler this close to "
-			+ "the mat has no silhouette at match-camera distance."
-		).is_greater_equal(MIN_MAT_SEPARATION)
+		var skin := _luminance(wrestler.skin_tone)
+		assert_float(mat - skin).override_failure_message(
+			"%s's skin is %.3f in relative luminance and the mat is %.3f. "
+			% [wrestler.name, skin, mat]
+			+ "Skin is most of what a wrestler renders as, so a wrestler at or "
+			+ "above the mat's value has no silhouette. This is an albedo "
+			+ "check; the rendered band lives in measure_silhouette.py."
+		).is_greater_equal(MIN_SKIN_MAT_ALBEDO_GAP)
+
+## The mechanism behind the reference's "within 0.07 of each other": both men
+## are skin-dominant, so two very different complexions would split their
+## values no matter what the gear does.
+func test_the_two_wrestlers_read_at_the_same_value() -> void:
+	var parts := _wrestlers()
+	var a := _luminance((parts[0] as WrestlerController).skin_tone)
+	var b := _luminance((parts[1] as WrestlerController).skin_tone)
+	assert_float(absf(a - b)).override_failure_message(
+		"The two complexions are %.3f and %.3f in relative luminance, %.3f apart. "
+		% [a, b, absf(a - b)]
+		+ "The reference's two wrestlers are within 0.07; they separate by hue, "
+		+ "not brightness, and skin is what carries that."
+	).is_less_equal(MAX_SKIN_VALUE_GAP)
 
 ## Value is how the reference separates a wrestler from the mat; hue is how
 ## it separates the two wrestlers. Asserting value here would contradict the
@@ -123,3 +156,38 @@ func test_no_wrestler_writes_to_the_shared_mesh_material() -> void:
 		% [shared.albedo_color, GLB_BODY_ALBEDO]
 		+ "something coloured the resource itself, which colours both wrestlers."
 	).is_less(0.001)
+
+
+## The colourway only reaches the frame if the gear it lives on is actually
+## built. Both wrestlers' bodies are skin now, so a silent failure in
+## WrestlerAttire would leave two identical nude mannequins -- which is
+## exactly what the slice's gap line described before this round.
+func test_each_wrestler_wears_the_gear_that_carries_his_colourway() -> void:
+	var parts := _wrestlers()
+	for wrestler: WrestlerController in [parts[0], parts[1]]:
+		var skeleton: Skeleton3D = wrestler.find_child("Skeleton3D", true, false)
+		assert_object(skeleton).is_not_null()
+		var worn := 0
+		for child in skeleton.get_children():
+			if String(child.name).begins_with(WrestlerAttire.PREFIX):
+				worn += 1
+		assert_int(worn).override_failure_message(
+			"%s is wearing %d of %d gear pieces. BoneAttachment3D resolves its "
+			% [wrestler.name, worn, WrestlerAttire.piece_count()]
+			+ "bone from its parent, so every piece must be a direct child of "
+			+ "the Skeleton3D -- grouping them under a tidy node once left the "
+			+ "whole outfit piled at the wrestler's feet."
+		).is_equal(WrestlerAttire.piece_count())
+
+## One mannequin at two tints read as the same body twice, which is half of
+## what the slice was marked down for. Colour is not build.
+func test_the_two_wrestlers_are_built_differently() -> void:
+	var parts := _wrestlers()
+	var a: WrestlerController = parts[0]
+	var b: WrestlerController = parts[1]
+	assert_float(absf(a.physique_bulk - b.physique_bulk)).override_failure_message(
+		"Both wrestlers are built at bulk %.2f/%.2f. They share one CC0 "
+		% [a.physique_bulk, b.physique_bulk]
+		+ "mannequin, so if their gear is the same width too there is nothing "
+		+ "separating their silhouettes but colour."
+	).is_greater_equal(0.1)

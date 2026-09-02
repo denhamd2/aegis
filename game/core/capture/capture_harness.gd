@@ -84,6 +84,21 @@ var _pending_apex_tick: int = -1
 var _match: Node
 var _saw_pin: bool = false
 var _finish_method: String = ""
+## Silhouette-measurement mode: output prefix from --silhouette-shot, or "".
+var _silhouette_prefix: String = ""
+var _silhouette_frames: int = 0
+
+## Frames to let the AnimationTree settle onto its idle pose before the
+## silhouette shot. The wrestlers spawn in bind pose and travel into Idle.
+const SILHOUETTE_SETTLE := 90
+## Frame at which the wrestlers are pinned in place, early enough that the AI
+## has not moved either of them off the symmetric spawn standoff.
+const SILHOUETTE_FREEZE := 4
+
+## Flat, saturated, mutually distant key colours for the segmentation pass.
+const SILHOUETTE_KEYS := {
+	"mat": Color(0, 0, 1), "a": Color(1, 0, 0), "b": Color(0, 1, 0),
+}
 
 
 func _ready() -> void:
@@ -91,6 +106,7 @@ func _ready() -> void:
 	_replay_path = _arg_value(args, "--capture-replay")
 	_output_dir = _arg_value(args, "--capture-output")
 	_record_path = _arg_value(args, "--record-replay")
+	_silhouette_prefix = _arg_value(args, "--silhouette-shot")
 	if _output_dir != "":
 		DirAccess.make_dir_recursive_absolute(_output_dir)
 	_active = _output_dir != ""
@@ -119,6 +135,9 @@ static func _arg_value(args: PackedStringArray, key: String) -> String:
 ## on, which is why the old beat_frames argument could never have been
 ## supplied by anything.
 func attach(match_root: Node) -> void:
+	if _silhouette_prefix != "":
+		_match = match_root
+		return
 	if not _active:
 		return
 	_match = match_root
@@ -134,6 +153,9 @@ func attach(match_root: Node) -> void:
 	referee.match_won.connect(_on_match_won)
 
 func _process(_delta: float) -> void:
+	if _silhouette_prefix != "":
+		_silhouette_step()
+		return
 	if not _active or not _match:
 		return
 	if _pending_apex_tick >= 0 and Engine.get_physics_frames() >= _pending_apex_tick:
@@ -141,6 +163,83 @@ func _process(_delta: float) -> void:
 		_capture("apex")
 	if not _captured.has("tie_up") and _both_tied_up():
 		_capture("tie_up")
+
+## Silhouette-measurement mode (--silhouette-shot <prefix>).
+##
+## Renders the spawn standoff twice: a beauty frame, then a segmentation mask
+## that paints the mat and each wrestler a flat unshaded key colour.
+## tools/refs/measure_silhouette.py averages the beauty frame inside each key
+## and reports the three pairings VISUAL_BAR.md tabulates.
+##
+## This lives in the harness rather than in a `-s` SceneTree script because a
+## `-s` script does not register the project's class_name globals: every
+## script with a typed `WrestlerController`/`MatchReferee` field fails to
+## compile there, `_apply_colorway()` never runs, and both wrestlers render in
+## the .glb's own gold. The first version of this tool measured exactly that
+## and reported the two men as identical -- a artefact of the probe, not of
+## the build. Running inside the real scene is the fix.
+##
+## A mask beats hand-picked rectangles: a rectangle over a wrestler also
+## catches mat, rope and shadow, so it is not the per-subject average the
+## reference table holds, and it silently drifts when a pose or camera moves.
+func _silhouette_step() -> void:
+	if not _match:
+		return
+	_silhouette_frames += 1
+	if _silhouette_frames == SILHOUETTE_FREEZE:
+		# Freeze the wrestlers at their spawn standoff, before the AI walks
+		# them anywhere. Measured at frame 90 instead, the two were 11k and
+		# 33k pixels -- a three-fold difference that is just one man nearer
+		# the camera, which would swamp the material difference being
+		# measured. Physics is what moves them; the AnimationTree is not
+		# physics, so it goes on settling onto Idle while they stand still.
+		for name: String in ["WrestlerA", "WrestlerB"]:
+			var w: Node = _match.get_node(name)
+			w.set_physics_process(false)
+			w.set_process(false)
+	elif _silhouette_frames == SILHOUETTE_SETTLE + 2:
+		_save_viewport(_silhouette_prefix + "_beauty.png")
+	elif _silhouette_frames == SILHOUETTE_SETTLE + 3:
+		_key(_match.get_node("Ring/Floor/MeshInstance3D"), SILHOUETTE_KEYS["mat"])
+		# The whole wrestler, gear included -- WrestlerAttire's trunks, boots
+		# and pads are part of the subject the reference table measures, not
+		# scenery. Keying only the mannequin measured his skin and called it
+		# him.
+		_key(_match.get_node("WrestlerA"), SILHOUETTE_KEYS["a"])
+		_key(_match.get_node("WrestlerB"), SILHOUETTE_KEYS["b"])
+	elif _silhouette_frames == SILHOUETTE_SETTLE + 6:
+		_save_viewport(_silhouette_prefix + "_mask.png")
+		print("silhouette: wrote %s_beauty.png and %s_mask.png"
+				% [_silhouette_prefix, _silhouette_prefix])
+		get_tree().quit(0)
+
+func _save_viewport(path: String) -> void:
+	var viewport := get_viewport()
+	if not viewport:
+		return
+	var img := viewport.get_texture().get_image()
+	if img:
+		img.save_png(path)
+
+## Paints every visible surface in `node`'s subtree (or `node` itself) with a
+## flat unshaded key colour.
+func _key(node: Node, color: Color) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var painted := _paint(node, mat)
+	if painted == 0:
+		push_error("silhouette: nothing to key under %s" % node.name)
+
+func _paint(node: Node, mat: Material) -> int:
+	var count := 0
+	var mesh := node as GeometryInstance3D
+	if mesh:
+		mesh.material_override = mat
+		count += 1
+	for child in node.get_children():
+		count += _paint(child, mat)
+	return count
 
 func _both_tied_up() -> bool:
 	var a: WrestlerController = _match.get_node("WrestlerA")

@@ -31,10 +31,10 @@
 </tr>
 <tr>
 <td>wrestler look &amp; materials</td>
-<td>1</td>
-<td class="verdict-theirs">reference wins</td>
-<td>4/10</td>
-<td>silhouette separation from the mat went 0.014 -&gt; 0.172 dL, still short of the reference&#x27;s 0.24-0.31, and the two wrestlers now separate by hue as the reference does. What is left is the model itself: one CC0 mannequin at two tints, no distinct body types, no faces, no attire geometry, one material per man. Material believability (bar priority 3) is UNJUDGED pending a GPU capture.</td>
+<td>2</td>
+<td class="verdict-pending">contested</td>
+<td>5/10</td>
+<td>Measured properly for the first time, and the previous number was not comparable: the old 0.172 came from asserting *albedo* against a 0.24-0.31 read off rendered reference pixels. tools/refs/measure_silhouette.py now reads our own frames the same way the reference table was read. All four figures are inside the reference band -- mat 0.458 (anchor 0.46), mat&lt;-&gt;A 0.290, mat&lt;-&gt;B 0.291, A&lt;-&gt;B 0.001 (allows 0.07). Getting there needed the ring rig at 4.5 rather than 2.2 (at a mat of 0.276 a 0.24 gap below it was arithmetically impossible) and the colourway moved off the whole body onto 15 pieces of gear, leaving the mannequin as skin. What is still missing: no faces, one CC0 mannequin body for both men (build differs only by gear width, physique_bulk 0.94 vs 1.12), gear is untextured cylinders, and material believability (bar priority 3) plus lighting consistency (priority 2) stay UNJUDGED -- every capture is llvmpipe. A&lt;-&gt;B at 0.001 is arguably tuned too flat; the reference&#x27;s own two men differ by 0.07 and ours now differ by nothing.</td>
 </tr>
 <tr>
 <td>HUD/UI</td>

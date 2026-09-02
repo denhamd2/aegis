@@ -8,10 +8,10 @@
   },
   {
     "name": "wrestler look & materials",
-    "round": 1,
-    "verdict": "reference wins",
-    "trend": 4,
-    "largest_gap": "silhouette separation from the mat went 0.014 -> 0.172 dL, still short of the reference's 0.24-0.31, and the two wrestlers now separate by hue as the reference does. What is left is the model itself: one CC0 mannequin at two tints, no distinct body types, no faces, no attire geometry, one material per man. Material believability (bar priority 3) is UNJUDGED pending a GPU capture."
+    "round": 2,
+    "verdict": "contested",
+    "trend": 5,
+    "largest_gap": "Measured properly for the first time, and the previous number was not comparable: the old 0.172 came from asserting *albedo* against a 0.24-0.31 read off rendered reference pixels. tools/refs/measure_silhouette.py now reads our own frames the same way the reference table was read. All four figures are inside the reference band -- mat 0.458 (anchor 0.46), mat<->A 0.290, mat<->B 0.291, A<->B 0.001 (allows 0.07). Getting there needed the ring rig at 4.5 rather than 2.2 (at a mat of 0.276 a 0.24 gap below it was arithmetically impossible) and the colourway moved off the whole body onto 15 pieces of gear, leaving the mannequin as skin. What is still missing: no faces, one CC0 mannequin body for both men (build differs only by gear width, physique_bulk 0.94 vs 1.12), gear is untextured cylinders, and material believability (bar priority 3) plus lighting consistency (priority 2) stay UNJUDGED -- every capture is llvmpipe. A<->B at 0.001 is arguably tuned too flat; the reference's own two men differ by 0.07 and ours now differ by nothing."
   },
   {
     "name": "HUD/UI",

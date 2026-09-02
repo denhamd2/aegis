@@ -134,6 +134,20 @@ var _tier_draws: int = 0
 ## made strike_move's "applied" flag leak between wrestlers).
 @export var attire_body: Color = Color(0.13, 0.24, 0.55)
 @export var attire_accent: Color = Color(0.30, 0.58, 0.95)
+## Skin, which is now most of what a wrestler renders as -- the colourway
+## lives on the gear WrestlerAttire builds, not on the whole body.
+##
+## Both wrestlers are deliberately close in value here and differ mainly in
+## warmth. VISUAL_BAR.md measures the reference's two men within 0.07 of each
+## other in luminance, separating by hue rather than brightness; skin is what
+## carries that, so a large value gap between the two complexions would break
+## the very relationship the gear colours are there to satisfy.
+@export var skin_tone: Color = Color(0.60, 0.45, 0.35)
+## Widens the gear without lengthening the man. One CC0 mannequin at two
+## tints read as the same body twice; this is what makes the two silhouettes
+## differ in build. Not a reference measurement -- gauntlet/refs/ measures
+## nothing about physique -- so it is an engineering value.
+@export var physique_bulk: float = 1.0
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
@@ -370,12 +384,22 @@ func _ready() -> void:
 	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton:
 		_build_ik_rig()
+		WrestlerAttire.build(skeleton, attire_body, attire_accent, physique_bulk)
 	_apply_colorway()
 
 ## Surface 0 of the CC0 base mesh is the body ("M_Main"), surface 1 the
-## joint bands ("M_Joints") -- confirmed off the .glb, not assumed. The
-## bands take the accent, which is what carries this wrestler's identity
-## through to the HUD plate that draws in the same colour.
+## joint bands ("M_Joints") -- confirmed off the .glb, not assumed.
+##
+## Both surfaces now take *skin*, not the colourway. The colourway moved onto
+## the gear WrestlerAttire builds, because a wrestler whose whole body is one
+## saturated colour cannot sit where VISUAL_BAR.md measures the reference's:
+## 0.24-0.31 below the mat in value while staying within 0.07 of the other
+## man. Skin is the mid value that makes both of those true at once. See
+## wrestler_attire.gd's header for the measurement that forced this.
+##
+## The joint bands take a slightly darker skin rather than the accent: they
+## are elbows, knees and shoulders, and colouring them was only ever standing
+## in for gear that did not exist yet.
 func _apply_colorway() -> void:
 	# Nothing renders under the headless display server CI runs tests on,
 	# and assigning a material there logs `Parameter "material" is null`
@@ -390,7 +414,7 @@ func _apply_colorway() -> void:
 	var mesh_instance := find_child("Mannequin", true, false) as MeshInstance3D
 	if not mesh_instance or not mesh_instance.mesh:
 		return
-	var colors := [attire_body, attire_accent]
+	var colors := [skin_tone, skin_tone.darkened(0.18)]
 	for surface in mini(mesh_instance.mesh.get_surface_count(), colors.size()):
 		# Duplicated from the mesh's own material rather than built from a
 		# bare StandardMaterial3D.new(): a fresh material has no valid RID
