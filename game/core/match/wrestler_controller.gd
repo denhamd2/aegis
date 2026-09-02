@@ -17,10 +17,18 @@ signal move_landed(attacker: WrestlerController, defender: WrestlerController, m
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
 const TIE_UP_RANGE := 1.4
-## Reach for a strike/running-attack to connect. Must stay >= WrestlerAI's
-## default strike_range (1.6m) — an AI that throws from further out than
-## this can land is a strike that always whiffs.
-const STRIKE_HIT_RANGE := 1.8
+## Reach for a strike/running-attack to connect.
+##
+## Measured, not chosen: running forward kinematics over `Punch_Jab`'s own
+## tracks puts the fist 0.76m ahead of the wrestler's origin at its contact
+## frame, and the opponent's capsule radius is 0.4m, so a punch reaches a
+## body whose centre is up to ~1.16m away.
+##
+## This was 1.8m. Strikes therefore connected from 1.6m -- the distance an
+## instrumented match actually recorded them landing at -- which is more
+## than half a metre of clear air between the fist and the man it damaged.
+## That is the single biggest reason strikes read as not connecting.
+const STRIKE_HIT_RANGE := 1.15
 ## Downward acceleration (m/s^2) applied whenever a wrestler is off the mat.
 ## The project sets no custom gravity, so this matches Godot's own 3D default
 ## rather than inventing a value -- ARCHITECTURE.md's "Reference-driven
@@ -86,6 +94,10 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 ## moment the attacker commits (see _pick_tier_move()). The single slot
 ## above stays the tier's guaranteed entry -- an empty pool means that one
 ## move every time, which is exactly the behaviour before pools existed.
+## Extra strikes drawn between alongside strike_move, so a wrestler throws
+## more than one punch for a whole match. Same seeded draw as the grapple
+## tiers.
+@export var strike_move_pool: Array[MoveDef] = []
 @export var grapple_move_pool: Array[MoveDef] = []
 @export var power_move_pool: Array[MoveDef] = []
 @export var signature_move_pool: Array[MoveDef] = []
@@ -130,6 +142,9 @@ var _grip_targets: Array[Marker3D] = []
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
 var _arm_reach: float = 0.0
+## State -> clip, queued by whoever is about to enter that state and
+## consumed by _take_clip_override(). See its doc comment.
+var _state_clip_override: Dictionary = {}
 
 ## FSM state -> clip from the base mesh's library. Every state gets *some*
 ## plausible clip from the single-character library on hand — no paired
@@ -145,7 +160,11 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.IDLE: "Idle",
 	WrestlerFSM.State.LOCOMOTION: "Walk",
 	WrestlerFSM.State.RUN: "Sprint",
-	WrestlerFSM.State.STRIKE: "Punch_Jab",
+	# Generated (see resources/animations/strike_recipes.gd), not the rig's
+	# raw Punch_Jab: the raw clip is 0.87s against a 20-tick move, so 38% of
+	# it played and the arm cross-faded back to idle still travelling
+	# forward. The generated one is cut to the move's own length.
+	WrestlerFSM.State.STRIKE: "strikes/strike_jab",
 	# "Push" (Push_Loop on the rig -- the importer strips the _Loop suffix) is
 	# a two-armed forward shove, which reads as a collar-and-elbow lock-up.
 	# This was "Interact", a one-armed reach-and-point: with both wrestlers
@@ -154,13 +173,20 @@ const STATE_ANIMATIONS := {
 	# captured match.
 	WrestlerFSM.State.TIE_UP: "Push",
 	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
-	WrestlerFSM.State.MOVE_EXEC: "Punch_Cross",
-	WrestlerFSM.State.HIT_REACT: "Hit_Chest",
+	# MOVE_EXEC is the beat where a grapple's throw resolves, not a strike.
+	# It played Punch_Cross, so a wrestler who had just completed a suplex
+	# threw a punch at nothing on the way back to idle.
+	WrestlerFSM.State.MOVE_EXEC: "Jump_Land",
+	# Replaced per hit by _play_hit_reaction() with a head or torso reaction
+	# depending on where the damage landed; this is the fallback.
+	WrestlerFSM.State.HIT_REACT: "strikes/hit_torso",
 	WrestlerFSM.State.DOWN: "Death01",
 	WrestlerFSM.State.GETUP: "Roll",
 	WrestlerFSM.State.IRISH_WHIP: "Push",
 	WrestlerFSM.State.RUNNING_ATTACK: "Punch_Cross",
-	WrestlerFSM.State.STUNNED: "Hit_Head",
+	# Retimed to STUNNED_TICKS. The raw Hit_Head is 0.43s against a 45-tick
+	# (0.75s) state, so the clip ended and the pose froze for 19 ticks.
+	WrestlerFSM.State.STUNNED: "strikes/stunned",
 	WrestlerFSM.State.PIN_ATTACKER: "Crouch_Idle",
 	WrestlerFSM.State.PIN_DEFENDER: "Death01",
 	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
@@ -204,6 +230,11 @@ const DEFENDER_STATE_ANIMATIONS := {
 ## generated to the same length; that is the whole of the synchronisation.
 const PairedRecipes := preload("res://resources/animations/paired_recipes.gd")
 const PAIRED_POSES := preload("res://resources/animations/paired_poses.tres")
+## Strike and hit-reaction clips, cut and stitched from the rig's own by
+## tools/anim/build_strike_clips.gd so each one is exactly as long as the
+## state that plays it.
+const StrikeRecipes := preload("res://resources/animations/strike_recipes.gd")
+const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
 
@@ -308,6 +339,8 @@ func _ready() -> void:
 		# clip reads as "paired/x is absent" rather than shadowing something.
 		if not anim_player.has_animation_library(PairedRecipes.LIBRARY):
 			anim_player.add_animation_library(PairedRecipes.LIBRARY, PAIRED_POSES)
+		if not anim_player.has_animation_library(StrikeRecipes.LIBRARY):
+			anim_player.add_animation_library(StrikeRecipes.LIBRARY, STRIKE_CLIPS)
 		_build_animation_tree()
 	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton:
@@ -582,8 +615,33 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 	# this fires.
 	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
 	if anim_node:
-		anim_node.animation = clip_for_state(current, _is_grapple_attacker)
+		anim_node.animation = _take_clip_override(current)
 	_anim_playback.travel(state_name)
+
+## The clip to enter this state with: a one-shot override if one was queued
+## for it, otherwise the state's standing clip.
+##
+## The override exists because this handler runs *after* whoever asked for a
+## specific clip. _play_strike_clip() and _play_hit_reaction() both set the
+## node's animation and were both silently undone a moment later by the
+## assignment here -- so every kick played the jab and every hit reaction
+## played the torso flinch, which is exactly what the renders showed and
+## what made the generated clips look broken when they were fine.
+##
+## An override applies to the very next state entry and nothing after it:
+## the whole table is cleared here, not just the entry used. A queued
+## request whose transition never happened -- a hit that knocked the
+## wrestler down instead of into HIT_REACT, or a _start_move() the FSM
+## refused -- would otherwise sit there and be spent on an unrelated hit
+## later. Measured across ten landed moves in one match, that mis-picked
+## two of them: a jab to the jaw playing the torso flinch and a gutwrench
+## slam playing the head snap.
+func _take_clip_override(state: WrestlerFSM.State) -> String:
+	var clip: String = _state_clip_override.get(state, "")
+	_state_clip_override.clear()
+	if clip != "":
+		return clip
+	return clip_for_state(state, _is_grapple_attacker)
 
 ## Clip this state should play, honouring the per-role overrides. Public so
 ## tests can assert the tables resolve to clips the rig actually has.
@@ -717,7 +775,9 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	if fsm.current_state == WrestlerFSM.State.RUN:
 		_maybe_start_running_attack(input)
 	elif input.get("strike", false) and strike_move:
-		_start_move(WrestlerFSM.State.STRIKE, strike_move)
+		var strike := _pick_tier_move(strike_move, strike_move_pool)
+		_play_strike_clip(strike)
+		_start_move(WrestlerFSM.State.STRIKE, strike)
 	elif input.get("grapple", false):
 		_wants_tie_up_this_tick = true
 
@@ -925,7 +985,36 @@ func _resolve_pending_hits() -> void:
 	if combat.total_damage() >= KNOCKDOWN_DAMAGE:
 		_go_down()
 	else:
+		_play_hit_reaction(moves[moves.size() - 1])
 		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+
+## Points the STRIKE state at this strike's own clip before entering it.
+##
+## Every strike played the same jab regardless of which MoveDef was thrown,
+## so a kick and a punch were the same animation with different numbers
+## attached. A move with no generated clip keeps whatever the state already
+## had, which is the jab.
+func _play_strike_clip(move: MoveDef) -> void:
+	_set_state_clip(WrestlerFSM.State.STRIKE,
+			StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
+
+## Points the HIT_REACT state at a head or torso reaction before entering
+## it, from where the landed move actually did its damage.
+##
+## Every hit played Hit_Chest before this -- a jab to the jaw and a
+## spinebuster to the ribs produced the same flinch -- which is most of why
+## strikes read as not connecting to anything in particular.
+func _play_hit_reaction(move: MoveDef) -> void:
+	_set_state_clip(WrestlerFSM.State.HIT_REACT, StrikeRecipes.reaction_for(move))
+
+## Swaps which clip a state's node plays, before the FSM enters it. The
+## AnimationTree is built once from STATE_ANIMATIONS, so this is how a state
+## that needs more than one clip gets one -- the same approach
+## play_paired_pose() uses to give each grapple role its own performance.
+func _set_state_clip(state: WrestlerFSM.State, clip: String) -> void:
+	if not anim_tree or clip == "" or not anim_player.has_animation(clip):
+		return
+	_state_clip_override[state] = clip
 
 func _timed_stub(ticks: int) -> MoveDef:
 	var stub := MoveDef.new()

@@ -9,6 +9,16 @@ extends Node
 @export var strike_range: float = 1.6
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
+## How often a close-range decision comes out as a strike instead of a
+## tie-up. First-pass: high enough that punches and kicks are a real part
+## of a match rather than an opening flourish, low enough that the grapple
+## chain -- which is where the damage and the momentum actually are --
+## still drives the match to a finish. Not traced to reference footage;
+## gauntlet/refs/timings.md has nothing on strike-to-grapple ratio.
+@export var close_strike_chance: float = 0.45
+## Counts close-range decisions, so successive ones can differ. Part of the
+## RNG seed only, never of gameplay state.
+var _close_decisions: int = 0
 
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
@@ -144,7 +154,26 @@ func poll_input() -> Dictionary:
 		return input
 
 	if distance <= tie_up_range:
-		input["grapple"] = true
+		# Strike or tie up, rather than always tying up.
+		#
+		# Strikes used to be possible only in the shell between tie_up_range
+		# (1.4m) and strike_range, which a closing wrestler crosses in a
+		# couple of ticks -- and once inside 1.4m it grappled, every time.
+		# An instrumented match bore that out exactly: one strike exchange
+		# at tick 20 during the opening approach, then 20 grapples and not
+		# another punch thrown all match. Strikes also could not land from
+		# out there any more once STRIKE_HIT_RANGE was measured down to the
+		# distance a fist actually reaches.
+		# Only when it can actually connect. tie_up_range (1.3m) reaches
+		# further than a fist does (WrestlerController.STRIKE_HIT_RANGE,
+		# 1.15m, measured off the jab's own contact frame), so a strike
+		# thrown at the edge of tie-up range would swing through air.
+		if _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE \
+				and _should_strike_in_close():
+			input["strike"] = true
+			_cooldown = strike_cooldown_ticks
+		else:
+			input["grapple"] = true
 	else:
 		# Keep closing all the way to tie_up_range even once already inside
 		# strike_range — tie_up_range < strike_range, so a wrestler that
@@ -160,6 +189,18 @@ func poll_input() -> Dictionary:
 			_cooldown = strike_cooldown_ticks
 
 	return input
+
+## Whether this close-range decision is a strike rather than a tie-up.
+##
+## Seeded, like every other AI decision that affects the match: the same
+## (match_seed, player_index, attempt count) must always choose the same
+## way or replays stop reproducing. Deliberately uses different multipliers
+## from _should_whip() so the two decisions don't move in lockstep.
+func _should_strike_in_close() -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 6151 + _player_index * 71 + _close_decisions
+	_close_decisions += 1
+	return rng.randf() < close_strike_chance
 
 ## Whether to press the kickout button this PIN_DEFENDER tick. Rate-limited
 ## to mirror a human's Input.is_action_just_pressed semantics (a real press

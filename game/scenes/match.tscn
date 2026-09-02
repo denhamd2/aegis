@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -28,6 +28,7 @@
 [ext_resource type="Resource" path="res://resources/moves/reversal_back_body_drop.tres" id="26"]
 [ext_resource type="Resource" path="res://resources/moves/reversal_go_behind.tres" id="27"]
 [ext_resource type="PackedScene" path="res://scenes/match_hud.tscn" id="28"]
+[ext_resource type="Resource" path="res://resources/moves/strike_kick.tres" id="29"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -100,6 +101,7 @@ power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
 running_attack_move = ExtResource("13")
+strike_move_pool = Array[Resource]([ExtResource("29")])
 grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
 power_move_pool = Array[Resource]([ExtResource("18"), ExtResource("19"), ExtResource("20")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
@@ -117,6 +119,7 @@ power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
 running_attack_move = ExtResource("13")
+strike_move_pool = Array[Resource]([ExtResource("29")])
 grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
 power_move_pool = Array[Resource]([ExtResource("18"), ExtResource("19"), ExtResource("20")])
 signature_move_pool = Array[Resource]([ExtResource("21")])

@@ -90,6 +90,11 @@ Godot 4.6 — CI now pins v6.2.1, confirmed working (7/7 tests, 0 errors, 0
 failures, 0 orphans).
 
 Known Phase 2 gaps, honestly:
+- Strikes now read and connect properly, but how *often* a wrestler should
+  strike rather than grapple traces to no reference measurement — see "Fix:
+  strikes that connected with air, and the kick the rig didn't have" below.
+  The kick is also a posed leg on a borrowed stance, not an animation
+  anyone authored.
 - A pin is now reachable but a **pinfall** is not: kickouts are easy enough
   that every pin is escaped and every seeded AI match ends by submission
   (0 pinfalls in 24 seeds). Making a pinfall a realistic finish is kickout
@@ -1886,3 +1891,107 @@ Unlike the two commits before it, this one **changes match outcomes**, because
 3, 5, 7 and 11: every match completes, no script errors, nobody leaves the
 mat, minimum body height no worse than baseline, and pins now occur in every
 match.
+
+## Fix: strikes that connected with air, and the kick the rig didn't have
+
+"Still glitchy for the moves" — so this is what measuring the strikes found,
+all of it verified against the running game rather than read off the code.
+
+### Punches landed from well outside a punch's reach
+
+`STRIKE_HIT_RANGE` was **1.8 m**. Running forward kinematics over
+`Punch_Jab`'s own tracks puts the fist **0.76 m** ahead of the wrestler's
+origin at its contact frame, and the opponent's capsule radius is 0.4 m, so
+a punch can honestly reach a body centred up to ~1.16 m away. An
+instrumented match recorded strikes landing at **1.60 m** — more than half a
+metre of clear air between the fist and the man taking the damage. Now
+1.15 m, and the same instrumentation records them landing at 0.95 m.
+
+### The punch was cut off at 38% of itself
+
+`strike_jab.tres` ran 20 ticks (0.333 s) while `Punch_Jab` is 0.87 s, so a
+third of the punch played and the arm cross-faded back to idle still
+travelling forward. Nothing scales an `AnimationNodeAnimation`, so the clip
+and the MoveDef simply disagreed and the FSM won.
+
+Clips are now generated to match the state that plays them
+(`tools/anim/build_strike_clips.gd`, recipes in
+`resources/animations/strike_recipes.gd`), in three kinds: a **trim** (keys
+past a cutoff dropped), a **retime** (all key times scaled), and a
+**stitch** (a pose sequence sampled from other clips, with optional
+per-bone offsets — the same technique the paired grapples use).
+
+The jab is retimed by 0.13/0.22 so its contact frame lands on tick 8. That
+is not arbitrary: `gauntlet/refs/timings.md` measures a real strike's
+startup at ~4 frames of 30 fps footage, 0.13 s, and this clip contacts at
+0.22 s. After the retime the animation and `startup_frames` finally
+describe the same punch. `STUNNED` and both hit reactions are generated the
+same way — `STUNNED` ran 45 ticks against an 0.43 s clip, so the pose froze
+for the last 19.
+
+### Everyone flinched identically
+
+Every hit played `Hit_Chest`, so a jab to the jaw and a spinebuster to the
+ribs produced the same reaction. The reaction is now chosen from where the
+move did its damage — head-dominant hits snap the head, everything else
+folds the body.
+
+Wiring that up exposed why it looked broken even after the clips were
+right: `_on_fsm_state_changed()` **overwrote** the node's clip with the
+static table value immediately after `_play_strike_clip()` and
+`_play_hit_reaction()` set it. Every kick played the jab and every reaction
+played the torso flinch, while the generated clips themselves were fine all
+along. Clip requests are now a one-shot override the handler consumes.
+Making it strictly one-shot mattered too: a first version left a request
+queued when its transition never happened (a hit that knocked the wrestler
+down instead), and it was then spent on an unrelated hit later — measured
+mis-picking 2 of 10 landed moves.
+
+### The rig has no kick, and no pose to build one from
+
+43 clips and not one throws a leg. Measured: the highest a foot ever gets
+*relative to the hips* is **−0.22 m** — `Jump_Start`'s airborne tuck, still
+below the pelvis. `Sprint`'s "raised" foot is a stride at ground level. A
+first attempt stitched from those rendered as a man throwing a punch,
+because the only thing moving was Sprint's arm swing.
+
+So the leg is posed on top of a real stance, with the axis and angles found
+by rotating `thigh_l` about each axis in turn and reading the foot back
+through FK:
+
+| pose | result |
+| --- | --- |
+| `thigh_l −70, calf_l +90` | knee at hip height, heel tucked — the chamber |
+| `thigh_l −75, calf_l 0` | foot 0.80 m high, 0.78 m forward — a front kick to the body |
+| `thigh_l −25, calf_l +25` | foot just off the mat — the step |
+
+Verified on the generated clip itself, independently of rendering: the foot
+rises to 0.70 m high and 0.73 m forward at tick 9, and the hands never move.
+
+### The AI threw one punch per match
+
+Strikes were only possible between `tie_up_range` (1.4 m) and
+`strike_range` (1.6 m) — a 0.2 m shell a closing wrestler crosses in two
+ticks — and once inside 1.4 m it grappled, every time. An instrumented
+match bore that out exactly: one strike exchange at tick 20 during the
+opening approach, then twenty grapples and not another punch thrown. The AI
+now chooses between striking and tying up in close, on a seeded draw, and
+only when the opponent is actually inside a fist's reach — a test caught
+that tie-up range (1.3 m) reaches further than a strike can land (1.15 m),
+which would have put the whiff straight back in.
+
+### Verification
+
+**148/148 unit tests pass** (12 new in `game/tests/test_strike_clips.gd`),
+orphans unchanged at the pre-existing baseline of 105. Rendered side-on at
+3-tick intervals: the jab plays its full arc into the opponent's head, and
+the kick chambers, extends and recovers. Over seeds 1, 2, 3, 5, 7 and 11
+every match completes, no script errors, nobody leaves the mat, minimum
+body height at or better than baseline, and each match now lands **3–10
+jabs and 6–13 kicks** where it previously landed one strike in total.
+
+This changes match outcomes — strikes are gameplay — and makes matches
+longer (1500–3100 ticks against 1000–1700), because a strike does less
+damage than the grapple it replaces. Whether that trade is the right one is
+a feel question, and `gauntlet/refs/timings.md` has nothing to settle it
+with: the strike-to-grapple ratio traces to no reference measurement.
