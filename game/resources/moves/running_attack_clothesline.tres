@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &""
-startup_frames = 14
+startup_frames = 18
 active_frames = 5
-recovery_frames = 16
+recovery_frames = 46
 reversal_window_start = 7
 reversal_window_end = 12
 damage_head = 10.0

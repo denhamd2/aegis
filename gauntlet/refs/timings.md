@@ -46,11 +46,16 @@ measured sequence doesn't straddle a cut before citing a number from it.
   real two-speed mechanic.** Any getup-duration constant this project
   tunes later should probably be two numbers, not one, if it wants to
   match this.
-- Compare: `WrestlerController.GETUP_TICKS = 90` (1.5s @ 60Hz) in
-  `game/core/match/wrestler_controller.gd` is a single fixed value sitting
-  between the two measured speeds — currently slower than the input-driven
-  fast getup and faster than the default one, closer to a middle ground
-  than either alone suggested.
+- Compare: this used to point at `WrestlerController.GETUP_TICKS = 90`
+  (1.5s @ 60Hz) as "a single fixed value sitting between the two measured
+  speeds". **That was the wrong constant.** `GETUP_TICKS` is how long a
+  wrestler lies prone before rising, not how long the rise takes; the rise
+  itself was an unnamed literal `20` (0.33s) inside `_process_down()`,
+  about a sixth of the measured default. Both are named now, and the rise
+  carries the two numbers this entry asked for:
+  `GETUP_RISE_TICKS = 126` (2.10s) when the timer runs out and
+  `GETUP_RISE_FAST_TICKS = 68` (1.14s) when the wrestler presses his way
+  up — which is the same distinction the footage draws.
 
 ## Tie-up → move start
 - **Lower bound only, not a full measurement:** lock-up contact at 226.07s,
@@ -72,14 +77,60 @@ measured sequence doesn't straddle a cut before citing a number from it.
   observed exchange was two wrestlers trading rapid jabs — the attacker's
   own recovery pose overlaps the opponent's counter-strike startup, so
   there's no clean single-wrestler "back to neutral" frame to cite.
-  `strike_jab.tres` (`active_frames = 4`, `recovery_frames = 10`) stays
-  unconfirmed for now — needs an isolated single strike (one wrestler
-  attacking a non-retaliating or blocking opponent) from another clip.
   Checked `wwe2k26_footage_02.mp4` 829s–834s (a standing exchange near a
   dropped weapon) frame-by-frame at native 30fps as a candidate — same
-  problem as footage_01: it's continuous mutual trading with no isolated
-  single-attacker window, so it doesn't resolve this either. Still needs a
-  clip with one wrestler striking a non-retaliating/blocking opponent.
+  problem: continuous mutual trading with no isolated single-attacker
+  window. **Resolved for a different strike, not for this one** — see the
+  isolated heavy strike below. `strike_jab.tres`'s own
+  `active_frames`/`recovery_frames` (4 and 19) still trace to no
+  measurement; a jab's recovery needs a jab, and the isolated instance
+  found is a much heavier blow.
+- **Note on `startup_frames`:** this entry used to compare the measured
+  ~8 ticks against `strike_jab.tres`'s `startup_frames = 6`. It is 8 now —
+  the measurement was adopted. The comparison line is kept only for
+  history.
+
+## Isolated heavy strike (startup and recovery)
+- **The isolated single-attacker window the entry above has been waiting
+  for.** `wwe2k26_footage_01.mp4`, Goldberg vs. Brock Lesnar, 230.3s–231.5s:
+  Lesnar throws a big cocked overhand blow at an opponent who is standing
+  passively and never counters, and the camera holds one continuous shot
+  across the whole action. Method: `ffmpeg -ss 230.20 -to 231.70 -vf
+  fps=30`, every frame inspected.
+  - **Windup start: t=230.333s** (`frames/strike_heavy_windup_start.jpg`,
+    first frame the striking arm leaves a neutral guard; still neutral one
+    frame earlier at 230.300s).
+  - **Contact: t=230.633s** (`frames/strike_heavy_contact.jpg`).
+  - **Guard reset: t≈231.367s** (`frames/strike_heavy_guard_reset.jpg`,
+    first frame the arm is back across the chest in a fight-ready guard);
+    fully settled into a neutral standing stance by ~231.433s.
+  - **So: startup ~0.300s (9 frames), recovery ~0.73–0.80s (22–24
+    frames), whole action ~1.03–1.10s.**
+- **This does not settle the jab, and that is the point.** The jab
+  measured above has a ~4-frame startup; this has ~9. **Strike frame data
+  in the reference is not one number** — a jab and a heavy blow differ by
+  more than 2x in startup, and presumably far more in recovery. Any single
+  startup value shared across strike moves is therefore wrong by
+  construction. This project shares `startup_frames = 8` between
+  `strike_jab.tres` and `strike_kick.tres`; the jab's 8 is the measured
+  one, and the kick's is unexamined.
+- **Comparable constant:** `running_attack_clothesline.tres` is this
+  project's heavy strike. Startup 14 ticks (0.233s) against a measured
+  0.300s (18 ticks) is the same order; recovery 16 ticks (0.267s) against
+  a measured 0.73–0.80s (44–48 ticks) is roughly a third of it.
+- **Caveats.** Single instance, one move, one wrestler. Video cannot
+  separate *active* from *recovery* — a hitbox has no visual signature —
+  so "recovery" here means contact-to-fight-ready, which is
+  `active_frames + recovery_frames` in this project's terms, not
+  `recovery_frames` alone. And read the clip-structure note at the top of
+  this file: `wwe2k26_footage_01.mp4` is a compilation that cuts roughly
+  every two seconds in this region, so the ~1.1s continuous shot this
+  measurement sits in is close to the longest one available.
+- **Defender's stun: lower bound only.** The struck man is doubled over
+  from ~230.700s and still doubled at 231.100s, then straightens as the
+  camera drifts off him — so **≥0.4s**, with no citable end frame.
+  `WrestlerController.STUNNED_TICKS` (45, i.e. 0.75s) is not contradicted
+  by that, but it is not confirmed by it either.
 
 ## Reversal window length
 - (pending — searched several strike/grapple sequences in `wwe2k26_footage_01.mp4`

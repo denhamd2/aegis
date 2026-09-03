@@ -2973,3 +2973,131 @@ changes what a match does — determinism is the contract, not the value.
   reference frames don't settle what that UI should be either — see the
   caveat logged in `hud.md`.
 - **Still AI-vs-AI.** No human has played a match on a gamepad.
+
+## Gauntlet: locomotion & strike feel (round 1)
+
+`gauntlet/refs/timings.md` had carried a "pending" on strike active/recovery
+through two searches. Both had ended the same way: the source clips are
+continuous mutual trading, with no window where one wrestler strikes an
+opponent who isn't striking back. This round went looking a third time, and
+found one.
+
+`game/tools/probe/feel_probe.tscn` measures the cadence side: how long every
+FSM state actually lasts in ticks, how landed strikes are spaced inside an
+exchange, and how far apart the two men are over a whole match.
+
+```
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/feel_probe.tscn -- --seeds 1,2,3 --trace
+```
+
+Durations come from observed state occupancy rather than from reading the
+constants back, so a state that ends early reports what it actually was.
+
+### An isolated strike, at last
+
+`wwe2k26_footage_01.mp4`, 230.3s–231.5s: Lesnar throws a big cocked overhand
+blow at an opponent standing passively who never counters, and the camera
+holds one continuous shot across the whole action — which in this clip is
+close to the longest available, since it cuts roughly every two seconds in
+this region. Every frame inspected at native 30fps:
+
+- **windup start 230.333s** (`frames/strike_heavy_windup_start.jpg`; still
+  neutral one frame earlier)
+- **contact 230.633s** (`frames/strike_heavy_contact.jpg`)
+- **guard reset ~231.367s** (`frames/strike_heavy_guard_reset.jpg`), settled
+  into a neutral stance by ~231.433s
+
+So **startup ~0.300s (9 frames), contact-to-fight-ready ~0.73–0.80s**, whole
+action ~1.03–1.10s.
+
+**The finding is not the numbers, it's that they disagree with the other
+instance.** The jab measured at 668.3s has a ~4-frame startup; this has ~9.
+Strike frame data in the reference is not one number, which means any single
+startup shared across strike moves is wrong by construction. This project
+shares `startup_frames = 8` between `strike_jab.tres` and `strike_kick.tres`.
+The jab's 8 is the measured one — `timings.md` still said it was 6, stale
+since someone already adopted the measurement — and the kick's is unexamined.
+
+`running_attack_clothesline.tres` is this project's heavy strike, and it was
+paced like a light one: startup 14 ticks against a measured 18, and recovery
+16 ticks (0.267s) against a measured 0.73–0.80s — about a third of it. A
+heavy strike whose recovery is a third of the reference's isn't a
+commitment, it's a jab that hurts more. Now 18 and 46.
+
+Video cannot separate *active* from *recovery* — a hitbox has no visual
+signature — so the measured quantity is `active_frames + recovery_frames`
+together, and the test asserts it that way.
+
+### The getup was measured against the wrong constant
+
+`timings.md` measured two getups and was explicit that they are a two-speed
+mechanic rather than sample variance: ~2.10s rising by himself, ~1.14s with
+an "R1 INSTANT RECOVERY" prompt visible at rise-start. It then compared both
+against `WrestlerController.GETUP_TICKS = 90` and concluded the project sat
+"between the two measured speeds".
+
+That was the wrong quantity. `GETUP_TICKS` is how long a wrestler lies
+**prone**; the rise itself was an unnamed literal `20` inside
+`_process_down()` — **0.33s, about a sixth of the measured default rise** —
+applied identically whether he beat the count or the timer simply ran out.
+The project had the two-speed distinction on the prone side (an input cuts
+`DOWN` short) and then threw it away on the rise.
+
+Both are named now, and the rise carries the two numbers the corpus asked
+for: `GETUP_RISE_TICKS = 126` (2.10s) and `GETUP_RISE_FAST_TICKS = 68`
+(1.14s), chosen by whether the wrestler pressed his way up. Measured over
+ten seeds, `GETUP` went from 20 ticks flat to 126.
+
+### Measured
+
+Ten AI-vs-AI seeds, same seeds and budget on both sides.
+
+| | before | after |
+| --- | --- | --- |
+| `GETUP` duration | 20 ticks (0.33s), always | **126 ticks (2.10s)** |
+| heavy strike, contact to fight-ready | 21 ticks (0.35s) | **51 ticks (0.85s)** |
+| `STRIKE` duration | 31.2 ticks mean | 31.2 ticks mean |
+| landed strikes / match | 9.2 | 7.7 |
+| gap between strikes in an exchange | 30.8 ticks (0.51s) | 30.8 ticks (0.51s) |
+
+Regression: gdUnit4 **216/216, 0 errors, 0 failures** (205 before, plus
+eleven new pinning the getup pair and both strikes' frame data to
+`timings.md`). Ten seeds with zero illegal FSM transitions. A recorded replay
+plays back twice to a byte-identical end-state hash
+(`4523f7af52c3f99110629ca4d4593753f5068c24288e4efaf6ad87919b146439`).
+
+### What this did not settle
+
+- **The AI never runs, so the running attack never happens.** `RUN` entered
+  6 times in ten matches and every one of them was the *whipped* wrestler's
+  rebound autopilot; `RUNNING_ATTACK` entered **zero** times. `input["run"]`
+  is only ever set inside `GRAPPLE_HOLD` by the whip decision, so a standing
+  AI has no way to charge. An authored move with its own `MoveDef`, its own
+  reversal window and its own tests never fires in AI-vs-AI play — which
+  also means this round's retune of it is measured against the reference but
+  unexercised in a match. Giving the AI a charge behaviour needs a frequency
+  nobody has measured, so it is named here rather than guessed at.
+- **The fast getup is likewise unexercised.** A human can press up; the AI
+  has no policy for it, so all four rises in ten matches took the default
+  2.10s. How often a wrestler should take the quick recovery is unmeasured.
+- **There is no neutral.** `IDLE` was entered 218 times for a mean of **3.2
+  ticks** — the wrestlers blip through it between actions and never stand
+  in it. Mean separation over whole matches is **0.96m** against a
+  1.15m strike range, and the two never get further apart than 3.29m in a
+  ring several times that wide. So there is no spacing, no circling, no
+  standoff: two men permanently inside punching distance. Whether that is
+  wrong is not measurable against `gauntlet/refs/` — ring-crossing run speed
+  is still marked pending there, after a survey that found no usable sprint
+  — but it is the largest single difference between how this plays and how
+  the footage looks.
+- **`MOVE_SPEED` (3.5) and `RUN_SPEED` (7.0) remain unmeasured**, for the
+  same reason: nothing in the corpus times a wrestler crossing the ring.
+- **The jab's own active/recovery is still unmeasured.** The isolated
+  instance is a heavy blow; a jab's recovery needs a jab, and the two
+  differ by more than 2x in startup so one cannot stand in for the other.
+  `STUNNED_TICKS` (45) gets a lower bound only — the struck man is doubled
+  over for ≥0.4s with no citable end frame.
+- **Still AI-vs-AI, and `FEEL_BAR.md` says that is not enough.** A feel
+  slice is signed off only after a human plays a match on a gamepad. Nobody
+  has.

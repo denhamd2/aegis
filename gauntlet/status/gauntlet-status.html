@@ -59,10 +59,10 @@
 </tr>
 <tr>
 <td>locomotion &amp; strike feel</td>
-<td>0</td>
-<td class="verdict-pending">not started</td>
-<td>-/10</td>
-<td>phase 4 not yet started</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>timings.md had carried a &#x27;pending&#x27; on strike active/recovery through two failed searches (both clips are continuous mutual trading with no single-attacker window). A third search found one: wwe2k26_footage_01.mp4 230.3-231.5s, a big cocked overhand blow at a passive opponent held in one continuous shot -- windup start 230.333s, contact 230.633s, guard reset ~231.367s, so startup ~0.300s (9 frames) and contact-to-fight-ready ~0.73-0.80s. The finding is that it DISAGREES with the other instance: the jab measured at 668.3s starts up in ~4 frames, this in ~9, so strike frame data in the reference is not one number and any single startup shared across strike moves is wrong by construction (this project shares startup_frames = 8 between strike_jab and strike_kick; the jab&#x27;s 8 is measured, the kick&#x27;s is unexamined). running_attack_clothesline, the project&#x27;s heavy strike, was paced like a light one -- startup 14 against 18 measured, recovery 16 ticks (0.267s) against 0.73-0.80s -- now 18 and 46. Separately, the getup was being compared against the wrong constant: timings.md measured a two-speed rise (2.10s default, 1.14s input-driven) and checked it against GETUP_TICKS, which is the PRONE timer; the rise itself was an unnamed literal 20 inside _process_down(), 0.33s, a sixth of the measured default, applied identically whether the wrestler beat the count or not. Now GETUP_RISE_TICKS = 126 and GETUP_RISE_FAST_TICKS = 68, and measured GETUP went 20 -&gt; 126 ticks. What is still missing: the AI never runs, so RUNNING_ATTACK fired ZERO times in ten matches (RUN&#x27;s 6 entries are all the whipped man&#x27;s rebound autopilot) -- an authored move with its own MoveDef, reversal window and tests never happens in AI-vs-AI, so this round&#x27;s retune of it is unexercised in play; the fast getup is likewise never taken by the AI; there is no neutral at all (IDLE entered 218 times for a mean of 3.2 ticks, mean separation 0.96m against a 1.15m strike range, never further apart than 3.29m) so there is no spacing or circling, which is the largest visible difference from the footage and is measurable against nothing, since ring-crossing run speed is still pending; MOVE_SPEED 3.5 and RUN_SPEED 7.0 remain unmeasured for the same reason; the jab&#x27;s own active/recovery is still unmeasured (the isolated instance is a heavy blow); STUNNED_TICKS gets a &gt;=0.4s lower bound only; and FEEL_BAR.md requires a human on a gamepad before a feel slice signs off, which has not happened.</td>
 </tr>
 <tr>
 <td>grapple chain &amp; paired-move quality</td>

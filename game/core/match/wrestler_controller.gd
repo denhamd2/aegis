@@ -57,7 +57,32 @@ const GRAVITY := 9.8
 ## rather than one that traces to reference footage.
 const KNOCKDOWN_DAMAGE := 100.0
 
+## How long a knocked-down wrestler stays prone before rising on his own.
+## Not a getup *animation* duration -- that is GETUP_RISE_TICKS below, and
+## gauntlet/refs/timings.md's getup entry compared its measured animation
+## durations against this constant, which is the wrong quantity. The
+## reference's own prone time was ~7.5s in the one instance it noted, but
+## most of that was the attacker's taunt playing out rather than a fixed
+## timer, so this stays a reachability value.
 const GETUP_TICKS := 90 # 1.5s
+
+## The rise itself: mat to a standing fighting stance.
+##
+## Two numbers rather than one, because gauntlet/refs/timings.md measured
+## two and says so: ~2.10s for the default rise (366.07s -> 368.20s) and
+## ~1.14s when the wrestler triggers a quick recovery himself (330.43s ->
+## 331.57s, with an "R1 INSTANT RECOVERY" prompt visible right at
+## rise-start). That is not sample variance -- it is a two-speed mechanic,
+## and the entry ends by saying any constant this project tunes later
+## should probably be two numbers.
+##
+## Both were an unnamed literal `20` inside _process_down() -- 0.33s, about
+## a sixth of the measured default rise, applied identically whether the
+## wrestler was rising on his own or beating the count. So the project had
+## the two-speed mechanic on the *prone* side (an input cuts DOWN short)
+## and then threw the distinction away on the rise.
+const GETUP_RISE_TICKS := 126 # 2.10s, the measured default rise
+const GETUP_RISE_FAST_TICKS := 68 # 1.14s, the measured input-driven rise
 ## Damage the targeted limb must pass before a submission hold can get a
 ## tap-out; below it the defender works free. Sits inside the band
 ## MatchReferee.SUBMISSION_LIMB_THRESHOLD opens, so early holds are escapes
@@ -1263,9 +1288,13 @@ func _go_down() -> void:
 
 func _process_down(input: Dictionary) -> void:
 	_move_ticks_remaining -= 1
-	if input.get("strike", false) or _move_ticks_remaining <= 0:
+	# Which of the two measured rises this is depends on who ended the
+	# prone state: a wrestler who pressed his way up gets the fast one, a
+	# wrestler whose timer simply ran out gets the default.
+	var pressed_up: bool = input.get("strike", false)
+	if pressed_up or _move_ticks_remaining <= 0:
 		fsm.transition_to(WrestlerFSM.State.GETUP)
-		_move_ticks_remaining = 20
+		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_RISE_TICKS
 
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
 	_move_ticks_remaining -= 1
