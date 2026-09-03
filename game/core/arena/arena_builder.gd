@@ -91,7 +91,6 @@ const CROWD_COLORS: Array[Color] = [
 	Color(0.33, 0.31, 0.33),
 ]
 
-const MAT_DIR := "res://assets/environment/materials/"
 
 var _rng := RandomNumberGenerator.new()
 
@@ -110,27 +109,20 @@ func _ready() -> void:
 # Materials
 # ---------------------------------------------------------------------------
 
-## albedo_color carries the value, the texture carries the variance. Keeping
-## them separate is what lets tools/refs/measure_frame.py go on measuring
-## luminance relationships while the surface stops being flat.
-func _textured(asset: String, tint: Color, uv_scale: float,
-		rough_fallback: float = 0.9, metalness: bool = false) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = tint
-	mat.roughness = rough_fallback
-	var color_path := MAT_DIR + asset + "_Color.jpg"
-	if ResourceLoader.exists(color_path):
-		mat.albedo_texture = load(color_path)
-	var rough_path := MAT_DIR + asset + "_Roughness.jpg"
-	if ResourceLoader.exists(rough_path):
-		mat.roughness_texture = load(rough_path)
-	if metalness:
-		var metal_path := MAT_DIR + asset + "_Metalness.jpg"
-		if ResourceLoader.exists(metal_path):
-			mat.metallic = 1.0
-			mat.metallic_texture = load(metal_path)
-	mat.uv1_scale = Vector3(uv_scale, uv_scale, 1.0)
-	return mat
+## Named materials come from core/materials/material_library.gd, which owns
+## the full map set (albedo/normal/roughness/AO/metalness), the sRGB-vs-linear
+## slotting, the PBR-correctness rules, and the texel density. This is the one
+## line of adapter that keeps the hall's call sites reading as art direction.
+##
+## Every hall material is `house_lit` in the library, meaning it carries its
+## albedo map as a multiplied emission map -- emission is unlit, so without
+## that the maps below would be invisible no matter how good they are. The
+## multiply darkens the mean, which is why each call site wraps `_house_lit()`
+## in `MaterialLibrary.house_compensate()`: that divides the map's own mean
+## back out of the emission energy, so the house *level* this file solves for
+## is preserved and only its *variance* changes.
+func _textured(key: String) -> StandardMaterial3D:
+	return MaterialLibrary.resolve(key)
 
 
 ## House light, carried by the materials rather than by lights aimed at the
@@ -254,7 +246,7 @@ func _build_floor() -> void:
 	_add_box(st, Vector3(0.0, FLOOR_Y - 0.1, 0.0),
 			Vector3(WALL_EXTENT * 2.0, 0.2, WALL_EXTENT * 2.0))
 	add_child(_mesh_instance("Floor", st,
-			_house_lit(_textured("Concrete034", Color(0.10, 0.10, 0.11), 12.0, 0.95), 0.7)))
+			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 0.7))))
 
 
 func _build_barricades() -> void:
@@ -267,7 +259,8 @@ func _build_barricades() -> void:
 		_add_box(st, Vector3(BARRICADE_RADIUS * sign, y, 0.0),
 				Vector3(0.16, BARRICADE_HEIGHT, span))
 	add_child(_mesh_instance("Barricades", st,
-			_house_lit(_textured("Metal032", Color(0.16, 0.17, 0.2), 6.0, 0.55, true), 0.8)))
+			MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_barricade"), 0.8))))
 
 
 # ---------------------------------------------------------------------------
@@ -296,8 +289,8 @@ func _build_bowl() -> void:
 			_seat_row(inner, outer, tread_y, seats, colors)
 			inner = outer
 
-	add_child(_mesh_instance("SeatingBowl", steps, _house_lit(
-			_textured("Carpet012", Color(0.30, 0.31, 0.36), 3.0, 0.95))))
+	add_child(_mesh_instance("SeatingBowl", steps, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_bowl")))))
 	add_child(_build_crowd(seats, colors))
 
 
@@ -478,8 +471,8 @@ func _build_stage() -> void:
 				float(i + 1) / float(steps))
 		_add_box(deck, Vector3(0.0, (FLOOR_Y + y) * 0.5, (z0 + z1) * 0.5),
 				Vector3(RAMP_HALF_WIDTH * 2.0, y - FLOOR_Y, absf(z1 - z0)))
-	add_child(_mesh_instance("EntranceStage", deck, _house_lit(
-			_textured("Concrete034", Color(0.14, 0.14, 0.16), 8.0, 0.9), 1.1)))
+	add_child(_mesh_instance("EntranceStage", deck, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_stage_deck"), 1.1))))
 
 	# Backdrop behind the stage, at house level. Without it the tunnel is a
 	# hole onto the Environment's background colour -- which measure_frame.py
@@ -489,8 +482,8 @@ func _build_stage() -> void:
 	var backdrop := _new_surface()
 	_add_box(backdrop, Vector3(0.0, (FLOOR_Y + WALL_TOP) * 0.5, STAGE_BACK - 0.4),
 			Vector3(STAGE_HALF_WIDTH * 2.4, WALL_TOP - FLOOR_Y, 0.4))
-	add_child(_mesh_instance("StageBackdrop", backdrop, _house_lit(
-			_textured("Concrete034", Color(0.12, 0.12, 0.14), 10.0, 0.95), 0.8)))
+	add_child(_mesh_instance("StageBackdrop", backdrop, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_stage_backdrop"), 0.8))))
 
 	var portal := _new_surface()
 	# Tunnel mouth: a recessed frame standing proud of the backdrop, so the
@@ -502,19 +495,19 @@ func _build_stage() -> void:
 	_add_box(portal, Vector3(0.0, STAGE_DECK_Y + 5.2, STAGE_BACK + 0.6),
 			Vector3(11.9, 0.8, 1.2))
 	add_child(_mesh_instance("TunnelMouth", portal,
-			_house_lit(_textured("Metal032", Color(0.09, 0.09, 0.11), 4.0, 0.7, true), 0.6)))
+			MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_tunnel"), 0.6))))
 
 	var screen := _new_surface()
 	_add_box(screen, Vector3(0.0, STAGE_DECK_Y + 8.4, STAGE_BACK + 0.9),
 			Vector3(14.0, 5.4, 0.4))
-	var screen_mat := StandardMaterial3D.new()
 	# Bright enough to read as a video wall, dark enough not to be the subject.
 	# The albedo is deliberately not near-black: _house_lit divides the target
 	# by the linear albedo, so a very dark panel asks for an absurd emission
 	# energy (this was 7.6 before, and blew the screen out to flat pale blue).
-	screen_mat.albedo_color = Color(0.28, 0.30, 0.38)
-	screen_mat.roughness = 0.35
-	screen_mat.metallic = 0.1
+	# metallic was 0.1, which is not a material -- a glass-fronted LED wall is
+	# a dielectric, so the library's entry is 0.0 with specular 0.5.
+	var screen_mat := MaterialLibrary.resolve("arena_screen")
 	add_child(_mesh_instance("StageScreen", screen,
 			_house_lit(screen_mat, 2.4)))
 
@@ -546,9 +539,8 @@ func _build_truss() -> void:
 		for z: float in [-7.5, 7.5]:
 			_add_box(st, Vector3(x, (TRUSS_Y + ROOF_Y) * 0.5, z),
 					Vector3(0.16, ROOF_Y - TRUSS_Y, 0.16))
-	add_child(_mesh_instance("Truss", st, _house_lit(
-			_textured("Metal032", Color(0.14, 0.145, 0.16), 3.0, 0.5, true),
-			0.9)))
+	add_child(_mesh_instance("Truss", st, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_truss"), 0.9))))
 
 
 func _build_shell() -> void:
@@ -562,6 +554,5 @@ func _build_shell() -> void:
 		_add_box(st, Vector3(WALL_EXTENT * sign, mid_y, 0.0),
 				Vector3(0.4, height, span))
 	_add_box(st, Vector3(0.0, ROOF_Y, 0.0), Vector3(span, 0.4, span))
-	add_child(_mesh_instance("Shell", st, _house_lit(
-			_textured("Concrete034", Color(0.13, 0.13, 0.145), 14.0, 1.0),
-			0.85)))
+	add_child(_mesh_instance("Shell", st, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_shell"), 0.85))))

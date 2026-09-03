@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddujrlv4a3q22"
-path="res://.godot/imported/Fabric063_Color.jpg-32d7cd36fc1331a0d6ed3605b5cfa537.ctex"
+uid="uid://dbrvw50ewuro4"
+path="res://.godot/imported/Concrete033_1K-PNG_AmbientOcclusion.png-c46a62b7d7f360296b782a7f7da96173.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/materials/Fabric063_Color.jpg"
-dest_files=["res://.godot/imported/Fabric063_Color.jpg-32d7cd36fc1331a0d6ed3605b5cfa537.ctex"]
+source_file="res://assets/environment/materials/Concrete033_1K-PNG_AmbientOcclusion.png"
+dest_files=["res://.godot/imported/Concrete033_1K-PNG_AmbientOcclusion.png-c46a62b7d7f360296b782a7f7da96173.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddujrlv4a3q22"
-path="res://.godot/imported/Fabric063_Color.jpg-32d7cd36fc1331a0d6ed3605b5cfa537.ctex"
+uid="uid://cif5v6gwg43gb"
+path="res://.godot/imported/Concrete033_1K-PNG_NormalGL.png-ccda1de69af45616eab148b45c1befe8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/materials/Fabric063_Color.jpg"
-dest_files=["res://.godot/imported/Fabric063_Color.jpg-32d7cd36fc1331a0d6ed3605b5cfa537.ctex"]
+source_file="res://assets/environment/materials/Concrete033_1K-PNG_NormalGL.png"
+dest_files=["res://.godot/imported/Concrete033_1K-PNG_NormalGL.png-ccda1de69af45616eab148b45c1befe8.ctex"]
 
 [params]
 
@@ -21,7 +21,7 @@ compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

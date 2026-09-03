@@ -1,0 +1,5 @@
+{
+  "role": "metalness",
+  "srgb": false,
+  "note": "data map: import as linear (Normal Map for a normal), NOT sRGB"
+}
