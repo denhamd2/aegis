@@ -3101,3 +3101,128 @@ plays back twice to a byte-identical end-state hash
 - **Still AI-vs-AI, and `FEEL_BAR.md` says that is not enough.** A feel
   slice is signed off only after a human plays a match on a gamepad. Nobody
   has.
+
+## Gauntlet: the renderer every visual number was measured on
+
+Two visual slices had sat at "contested" for two rounds with the same
+sentence in each gap line: *lighting consistency and material believability
+remain UNJUDGED — every capture is llvmpipe and `evidence_gate.py --visual`
+voids them for this slice.* That reads like a hardware problem waiting on
+better hardware. It was not.
+
+### The rule was aimed at the wrong thing
+
+`ARCHITECTURE.md` barred software renders from visual slices. But two
+different things had been rolled into one word:
+
+- **The pipeline** decides what the renderer can do at all. Forward+ has
+  SSAO, SSR, SDFGI and volumetric fog and tonemaps one way; Compatibility
+  has none of them and tonemaps another. Its pixels are not the game's
+  pixels.
+- **The rasteriser** decides how fast those pixels arrive. A CPU is slow.
+  It is not wrong.
+
+`project.godot` ships `forward_plus`. `run_capture.sh` forced
+`--rendering-driver opengl3`. So every capture this project has ever taken
+went through the pipeline the game does not ship — and the ban on software
+rendering, which was about the *other* variable, is what stopped anyone
+noticing, because it meant no visual capture was ever examined closely.
+
+The manifest could not have caught it either. `rendering_driver` was read
+from `ProjectSettings`, which reports `forward_plus` during a Compatibility
+run too. It is now `RenderingServer.get_current_rendering_method()`, which
+reports what actually ran.
+
+### What the shipping renderer measures
+
+Same scene, same `measure_silhouette.py`, one frame apart:
+
+| pair | `gl_compatibility` | `forward_plus` (ships) | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.458 | **0.172** | 0.43–0.49 |
+| mat ↔ wrestler A | 0.290 | **0.094** | 0.24–0.31 |
+| mat ↔ wrestler B | 0.291 | **0.044** | 0.24–0.31 |
+| wrestler ↔ wrestler | 0.001 | **0.050** | 0.00–0.07 |
+
+Round 2's headline — *all four figures inside the reference band* — was
+true of a renderer nobody plays on. On the shipping one, three of the four
+are outside it and the mat sits at 37% of its exposure anchor. `void_fraction`
+moves the same way: 0.008 on Compatibility, **0.063** on Forward+, which
+retires round 2's warning that the number had gone below the reference floor
+and must not be pushed further. It had not.
+
+One figure got *better*. A↔B is 0.050 against the reference's own 0.070,
+where Compatibility flattened it to 0.001 — so round 2's note that the two
+men were "arguably tuned too flat" was an artefact of the renderer, not of
+the colourway.
+
+And one thing only Forward+ shows: `_house_lit()`'s emission compensation
+**over-returns**, so the crowd is now the brightest thing in the frame. The
+reference's crowd sits at 0.014, *behind* bright ropes.
+
+`test_wrestler_colorway.gd` never failed through any of this, and was right
+not to: it asserts renderer-independent albedo mechanisms. That is exactly
+why it kept passing while the rendered numbers were wrong. A test that
+cannot see the defect is not a broken test; it is a test of something else.
+
+### The rule now
+
+`forward_plus` is admissible for a visual slice **whatever rasterised it**,
+carrying a recorded `software_rasterised` caveat. `gl_compatibility` stays
+void. And **no software capture of either pipeline may support a performance
+claim** — frame cost is precisely what a CPU rasteriser gets wrong, so the
+gate grew `--performance` for that half. CI asserts all four cases.
+
+Nothing here says the game looks good. It says the game can now be looked at.
+
+### Three tools the loop did not have
+
+Every measurement in the repo read *named regions* — this mat, that
+wrestler. Nothing compared a whole frame to a reference frame, which is
+what priorities 2 and 3 of `VISUAL_BAR.md` actually are.
+
+- **`tools/refs/compare_frame.py`** compares the statistics a look is made
+  of — tone percentiles, local contrast, saturation, warm/cool balance, edge
+  density at two scales — rather than pixels, because our frame and a
+  broadcast still share no geometry, pose or camera, so a pixel diff would
+  measure the framing and nothing else. It letterboxes-crops first; the wide
+  standoff reference is mostly black bars.
+- **`--art-shots`**, six fixed cameras (wide broadcast, ringside low, ring
+  corner, mat close, stage wide, crowd bank). A beat capture frames whatever
+  the match was doing, so two rounds of a slice never look at the same
+  pixels and "did this round improve the ring" is not answerable from them.
+- **`tools/gauntlet/round_check.sh`** — suite, evidence gate and replay hash
+  as hard gates, every measured bar reported against a stored baseline.
+
+Priorities 2 and 3 have numbers for the first time, and they are not close:
+
+| | ours | reference |
+| --- | --- | --- |
+| fine detail (edge density) | 0.145 | 0.567 |
+| coarse detail | 0.097 | 0.312 |
+| highlights (p95) | 0.206 | 0.427 |
+| saturation | 0.218 | 0.306 |
+| mean luminance | 0.083 | 0.168 |
+
+The highlight figure is the one to read twice: at p95 0.206 against 0.427,
+essentially nothing in our frame carries a specular highlight.
+
+### Verification
+
+gdUnit4 **216/216, 0 errors, 0 failures**. The capture passes
+`evidence_gate.py --visual` under the amended rule and prints its caveat.
+`replay_end_state_hash` is recorded as the baseline for every round that
+follows, which is how a cosmetic change proves it stayed cosmetic.
+
+### What this did not settle
+
+- **Nothing about how the game looks has changed yet.** This round moved the
+  measuring apparatus, not the pixels. Every gap above is still open.
+- **The exposure anchor has to be re-solved on Forward+**, and that is a
+  lighting job. The ring rig going 2.2 → 4.5 in round 2 solved a
+  Compatibility exposure problem.
+- **No performance claim is available from this machine at all**, and none
+  is made. Volumetric fog, lightmaps and crowd LODs all cost real frame time
+  that is unmeasured here.
+- `compare_frame.py`'s tolerances are engineering values chosen to flag
+  roughly the right things. They trace to no reference measurement.
