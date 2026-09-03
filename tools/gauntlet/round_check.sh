@@ -50,7 +50,54 @@ note() { printf '  %-28s %s\n' "$1" "$2"; }
 echo "== round check =="
 
 # ---------------------------------------------------------------- suite
+# gdUnit4 is deliberately not vendored (.gitignore: "fetched by CI"), so it
+# exists only in whichever checkout someone installed it into. A git worktree
+# therefore has no runner, and this script's first version read that as a
+# failing suite -- reporting "round is void" at every builder in the fleet for
+# a reason that had nothing to do with their work. A gate that fails on
+# correct input is not a gate.
+#
+# So: borrow the runner from any sibling worktree that has one, else clone the
+# version CI pins. If neither is possible the round still fails, but it says
+# what actually happened instead of blaming the build.
+RUNNER="addons/gdUnit4/bin/GdUnitCmdTool.gd"
+if [ ! -f "$REPO_ROOT/game/$RUNNER" ]; then
+	for candidate in $(git -C "$REPO_ROOT" worktree list --porcelain 2>/dev/null \
+			| awk '/^worktree /{print $2}'); do
+		if [ -f "$candidate/game/$RUNNER" ]; then
+			ln -sfn "$candidate/game/addons/gdUnit4" \
+				"$REPO_ROOT/game/addons/gdUnit4"
+			echo "  (borrowed gdUnit4 from $candidate)"
+			break
+		fi
+	done
+fi
+if [ ! -f "$REPO_ROOT/game/$RUNNER" ] && command -v git >/dev/null 2>&1; then
+	mkdir -p "$REPO_ROOT/game/addons"
+	if git clone --depth 1 --branch v6.2.1 \
+			https://github.com/MikeSchulze/gdUnit4.git "$WORK/gdUnit4" \
+			>/dev/null 2>&1; then
+		cp -r "$WORK/gdUnit4/addons/gdUnit4" "$REPO_ROOT/game/addons/gdUnit4"
+		echo "  (cloned gdUnit4 v6.2.1, the version CI pins)"
+	fi
+fi
+# A runner that has just appeared is not yet usable: its own class_name
+# globals live in .godot/global_script_class_cache.cfg, which was written
+# before the addon existed, so GdUnitCmdTool.gd fails to parse with
+# "Could not find type GdUnitTestCIRunner". One import registers them.
+if [ -f "$REPO_ROOT/game/$RUNNER" ] \
+		&& ! grep -qs "GdUnitTestCIRunner" \
+			"$REPO_ROOT/game/.godot/global_script_class_cache.cfg"; then
+	"$GODOT_BIN" --headless --path "$REPO_ROOT/game" --import >/dev/null 2>&1
+fi
+if [ ! -f "$REPO_ROOT/game/$RUNNER" ]; then
+	note "suite" "UNAVAILABLE  no gdUnit4 runner and could not fetch one --"
+	note "" "this is an environment failure, not a build failure"
+	FAILED=1
+fi
+
 SUITE_LOG="$WORK/suite.log"
+if [ -f "$REPO_ROOT/game/$RUNNER" ]; then
 "$GODOT_BIN" --headless --path "$REPO_ROOT/game" \
 	-s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests -c \
 	--ignoreHeadlessMode >"$SUITE_LOG" 2>&1
@@ -61,6 +108,7 @@ else
 	note "suite" "FAIL  ${SUITE_LINE:-no summary line; see $SUITE_LOG}"
 	cp "$SUITE_LOG" "$OUT_DIR/suite.log"
 	FAILED=1
+fi
 fi
 
 # ------------------------------------------------------- capture + gate
