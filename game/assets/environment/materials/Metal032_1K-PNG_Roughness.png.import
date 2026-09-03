@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddujrlv4a3q22"
-path="res://.godot/imported/Fabric063_Color.jpg-32d7cd36fc1331a0d6ed3605b5cfa537.ctex"
+uid="uid://bnm5puwxo3oih"
+path="res://.godot/imported/Metal032_1K-PNG_Roughness.png-8345365b217608a869b81437f354ef52.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/materials/Fabric063_Color.jpg"
-dest_files=["res://.godot/imported/Fabric063_Color.jpg-32d7cd36fc1331a0d6ed3605b5cfa537.ctex"]
+source_file="res://assets/environment/materials/Metal032_1K-PNG_Roughness.png"
+dest_files=["res://.godot/imported/Metal032_1K-PNG_Roughness.png-8345365b217608a869b81437f354ef52.ctex"]
 
 [params]
 
