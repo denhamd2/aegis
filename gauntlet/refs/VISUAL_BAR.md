@@ -61,18 +61,28 @@ script averages the beauty frame inside each key and reports the same three
 pairings. A mask rather than rectangles, because a rectangle over a wrestler
 also catches mat, rope and shadow.
 
-    xvfb-run -a godot4 --path game --rendering-driver opengl3 \
+    xvfb-run -a godot4 --path game --rendering-driver vulkan \
         --resolution 1280x720 scenes/match.tscn -- --silhouette-shot /tmp/shot
     python3 tools/refs/measure_silhouette.py /tmp/shot
 
-Measured on the current build:
+**Read the driver flag above carefully, and do not change it back.** That
+command said `opengl3` for two rounds, and the numbers it produced were
+`gl_compatibility` numbers -- a renderer `project.godot` does not ship. The
+same scene, measured the same way, one frame apart:
 
-| pair | ours | reference |
-| --- | --- | --- |
-| mat luminance | 0.458 | 0.46 |
-| mat <-> wrestler A | 0.290 | 0.24-0.31 |
-| mat <-> wrestler B | 0.291 | 0.24-0.31 |
-| wrestler <-> wrestler | 0.001 | 0.00-0.07 |
+| pair | `gl_compatibility` | `forward_plus` (ships) | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.458 | **0.172** | 0.46 |
+| mat <-> wrestler A | 0.290 | **0.094** | 0.24-0.31 |
+| mat <-> wrestler B | 0.291 | **0.044** | 0.24-0.31 |
+| wrestler <-> wrestler | 0.001 | **0.050** | 0.00-0.07 |
+
+So the round-2 result -- "all four figures inside the reference band" -- was
+true of a renderer nobody plays on. On the shipping one, three of the four
+are outside it and the mat is at 37% of its anchor. The exposure anchor has
+to be re-solved on `forward_plus`, and that is a lighting job, not a
+material one. One thing did get *better*: A<->B is 0.050 against the
+reference's own 0.070, where `gl_compatibility` flattened it to 0.001.
 
 **The mat's own number is an exposure anchor, not a bar.** The wrestler
 figures are absolute luminances, and comparing those between a broadcast
@@ -107,6 +117,8 @@ the few visual numbers a software render can legitimately move.
 
 ## Known gap sources to check first
 
-- Software-rendered (llvmpipe) captures cannot judge this bar — see
-  ARCHITECTURE.md. Confirm the capture was GPU-backed before citing a
-  visual gap.
+- **Check the pipeline, not the rasteriser** — see ARCHITECTURE.md. A
+  `gl_compatibility` capture cannot judge this bar (no SSAO/SSR/SDFGI/
+  volumetric fog, different tonemapping); a `forward_plus` capture can, even
+  if a CPU rasterised it. Confirm `pipeline` in the manifest before citing a
+  visual gap, and never cite a software capture for frame cost.

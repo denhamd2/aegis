@@ -88,6 +88,11 @@ var _finish_method: String = ""
 var _silhouette_prefix: String = ""
 var _silhouette_frames: int = 0
 
+## Art-shotlist mode: output directory from --art-shots, or "".
+var _art_dir: String = ""
+var _art_frames: int = 0
+var _art_index: int = 0
+
 ## Frames to let the AnimationTree settle onto its idle pose before the
 ## silhouette shot. The wrestlers spawn in bind pose and travel into Idle.
 const SILHOUETTE_SETTLE := 90
@@ -100,6 +105,61 @@ const SILHOUETTE_KEYS := {
 	"mat": Color(0, 0, 1), "a": Color(1, 0, 0), "b": Color(0, 1, 0),
 }
 
+## The art shotlist (--art-shots <dir>).
+##
+## A beat capture frames whatever the match happened to be doing, which is
+## the right thing for judging a beat and the wrong thing for judging a
+## surface: two rounds of the same slice never look at the same pixels, so
+## "did this round improve the ring" is not answerable from them. These six
+## cameras are fixed, so round N and round N-1 are comparable frame for
+## frame, and every agent in a wave is looking at the same arena.
+##
+## Chosen to put each subsystem in front of a camera at the distance the bar
+## cares about: wide_broadcast is the framing
+## refs/frames/wide_standoff_broadcast_angle.jpg was shot at (and the frame
+## compare_frame.py defaults to), and the other five are the ones a critic
+## would otherwise have to ask for by hand.
+##
+## Positions are in ring space: the mat spans +/-3.0, the ropes sit at
+## +/-3.1, the entrance stage is on -Z, and the seating bowl starts at 9m.
+const ART_SHOTS := [
+	{
+		"name": "wide_broadcast",
+		"position": Vector3(0.0, 2.55, 8.20), "target": Vector3(0.0, 1.05, 0.0),
+		"fov": 41.0,
+	},
+	{
+		"name": "ringside_low",
+		"position": Vector3(4.10, 0.62, 5.20), "target": Vector3(0.0, 1.10, 0.0),
+		"fov": 50.0,
+	},
+	{
+		"name": "ring_corner",
+		"position": Vector3(1.45, 1.70, 1.45), "target": Vector3(3.05, 1.15, 3.05),
+		"fov": 45.0,
+	},
+	{
+		"name": "mat_close",
+		"position": Vector3(0.55, 0.85, 1.75), "target": Vector3(-0.30, 0.02, -0.60),
+		"fov": 40.0,
+	},
+	{
+		"name": "stage_wide",
+		"position": Vector3(0.0, 3.20, 5.60), "target": Vector3(0.0, 3.40, -18.0),
+		"fov": 58.0,
+	},
+	{
+		"name": "crowd_bank",
+		"position": Vector3(0.0, 2.40, 0.0), "target": Vector3(2.5, 5.20, 13.0),
+		"fov": 60.0,
+	},
+]
+
+## Frames to let the renderer settle before each art shot is saved. The
+## first frame after a camera jump can still carry the previous view's
+## temporal state, and a shot saved into that is not the shot asked for.
+const ART_SETTLE_FRAMES := 3
+
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -107,6 +167,9 @@ func _ready() -> void:
 	_output_dir = _arg_value(args, "--capture-output")
 	_record_path = _arg_value(args, "--record-replay")
 	_silhouette_prefix = _arg_value(args, "--silhouette-shot")
+	_art_dir = _arg_value(args, "--art-shots")
+	if _art_dir != "":
+		DirAccess.make_dir_recursive_absolute(_art_dir)
 	if _output_dir != "":
 		DirAccess.make_dir_recursive_absolute(_output_dir)
 	_active = _output_dir != ""
@@ -135,7 +198,7 @@ static func _arg_value(args: PackedStringArray, key: String) -> String:
 ## on, which is why the old beat_frames argument could never have been
 ## supplied by anything.
 func attach(match_root: Node) -> void:
-	if _silhouette_prefix != "":
+	if _silhouette_prefix != "" or _art_dir != "":
 		_match = match_root
 		return
 	if not _active:
@@ -153,6 +216,9 @@ func attach(match_root: Node) -> void:
 	referee.match_won.connect(_on_match_won)
 
 func _process(_delta: float) -> void:
+	if _art_dir != "":
+		_art_step()
+		return
 	if _silhouette_prefix != "":
 		_silhouette_step()
 		return
@@ -163,6 +229,51 @@ func _process(_delta: float) -> void:
 		_capture("apex")
 	if not _captured.has("tie_up") and _both_tied_up():
 		_capture("tie_up")
+
+## Art-shotlist mode (--art-shots <dir>).
+##
+## Freezes the spawn standoff, then walks ART_SHOTS, parking the match
+## camera on each and saving <dir>/<name>.png. Runs in the real match scene
+## for the same reason the silhouette shot does -- a `-s` script does not
+## register the project's class_name globals, so the colourway never applies
+## and both wrestlers render in the .glb's own gold.
+##
+## MatchCamera drives itself every physics frame off the wrestlers'
+## positions, so it has to be switched off before it is posed; left running,
+## it lerps back toward its follow solve between the pose and the save and
+## every shot comes out framed on the ring regardless of what was asked for.
+func _art_step() -> void:
+	if not _match:
+		return
+	_art_frames += 1
+	if _art_frames == SILHOUETTE_FREEZE:
+		for wrestler_name: String in ["WrestlerA", "WrestlerB"]:
+			var w: Node = _match.get_node(wrestler_name)
+			w.set_physics_process(false)
+			w.set_process(false)
+		var camera: Camera3D = _match.get_node("MatchCamera")
+		camera.set_physics_process(false)
+		camera.set_process(false)
+		return
+	if _art_frames <= SILHOUETTE_FREEZE:
+		return
+
+	var step := _art_frames - SILHOUETTE_FREEZE - 1
+	var shot_index := step / (ART_SETTLE_FRAMES + 1)
+	if shot_index >= ART_SHOTS.size():
+		print("art-shots: wrote %d shots to %s" % [ART_SHOTS.size(), _art_dir])
+		get_tree().quit(0)
+		return
+
+	var phase := step % (ART_SETTLE_FRAMES + 1)
+	var shot: Dictionary = ART_SHOTS[shot_index]
+	var camera: Camera3D = _match.get_node("MatchCamera")
+	if phase == 0:
+		camera.fov = float(shot["fov"])
+		camera.global_position = shot["position"]
+		camera.look_at(shot["target"], Vector3.UP)
+	elif phase == ART_SETTLE_FRAMES:
+		_save_viewport("%s/%s.png" % [_art_dir, shot["name"]])
 
 ## Silhouette-measurement mode (--silhouette-shot <prefix>).
 ##
@@ -389,18 +500,30 @@ func finish() -> void:
 ## cannot enforce the rule, so it answers it here and
 ## tools/capture/evidence_gate.py --visual enforces it.
 ##
+## `pipeline` is the field that decides a visual slice, and it comes from
+## RenderingServer.get_current_rendering_method() rather than the project
+## setting. That distinction is not pedantry: the setting reads
+## "forward_plus" even during a --rendering-driver opengl3 run, so the
+## manifest used to claim the shipping pipeline for captures that were not
+## rendered on it, and every visual number this project recorded was in fact
+## read off gl_compatibility (see ARCHITECTURE.md's table).
+##
 ## Software rasterisers name themselves in the adapter string (Mesa's
 ## llvmpipe and softpipe, and swiftshader), and DEVICE_TYPE_CPU is the
 ## driver's own admission that it has no GPU. Anything that is neither is
-## treated as GPU-backed.
+## treated as GPU-backed. gpu_backed no longer gates visual slices on its
+## own -- it gates performance claims, and annotates a visual capture with
+## the caveat it has earned.
 static func renderer_provenance() -> Dictionary:
 	var adapter := RenderingServer.get_video_adapter_name()
 	var device_type := RenderingServer.get_video_adapter_type()
+	var gpu := is_gpu_backed(adapter, device_type)
 	return {
-		"rendering_driver": str(ProjectSettings.get_setting(
-				"rendering/renderer/rendering_method", "")),
+		"pipeline": RenderingServer.get_current_rendering_method(),
+		"rendering_driver": RenderingServer.get_current_rendering_driver_name(),
 		"video_adapter": adapter,
-		"gpu_backed": is_gpu_backed(adapter, device_type),
+		"gpu_backed": gpu,
+		"software_rasterised": not gpu,
 	}
 
 const SOFTWARE_ADAPTERS := ["llvmpipe", "softpipe", "swiftshader", "swrast"]

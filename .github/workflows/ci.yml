@@ -49,17 +49,28 @@ jobs:
             echo "evidence gate should have rejected the failing fixture" >&2
             exit 1
           fi
-      - name: A GPU-backed capture is admissible for a visual slice
+      - name: A GPU-backed forward_plus capture is admissible for anything
         run: |
           python3 tools/capture/evidence_gate.py --visual \
             tools/capture/fixtures/manifest_pass.json
-      - name: A software render is good evidence for timing, void for visuals
+          python3 tools/capture/evidence_gate.py --performance \
+            tools/capture/fixtures/manifest_pass.json
+      - name: The wrong pipeline is void for a visual slice, whatever ran it
         run: |
           python3 tools/capture/evidence_gate.py \
             tools/capture/fixtures/manifest_software_render.json
           if python3 tools/capture/evidence_gate.py --visual \
             tools/capture/fixtures/manifest_software_render.json; then
-            echo "a software render must not be admissible for a visual slice" >&2
+            echo "a gl_compatibility capture must not be admissible for a visual slice" >&2
+            exit 1
+          fi
+      - name: Software forward_plus judges visuals, but never performance
+        run: |
+          python3 tools/capture/evidence_gate.py --visual \
+            tools/capture/fixtures/manifest_software_forward_plus.json
+          if python3 tools/capture/evidence_gate.py --performance \
+            tools/capture/fixtures/manifest_software_forward_plus.json; then
+            echo "a CPU-rasterised capture must not support a performance claim" >&2
             exit 1
           fi
 

@@ -63,8 +63,9 @@ on them holding.
 ## Capture and evidence gate
 
 - `tools/capture/run_capture.sh` drives Godot's Movie Maker mode
-  (`--write-movie --fixed-fps`) headless under `xvfb-run` with the OpenGL3
-  (llvmpipe) driver, plus `CaptureHarness` (`game/core/capture/capture_harness.gd`)
+  (`--write-movie --fixed-fps`) headless under `xvfb-run` on the **same
+  rendering method the game ships** (Forward+, via the Vulkan driver — see
+  the renderer rule below), plus `CaptureHarness` (`game/core/capture/capture_harness.gd`)
   dumping labeled PNG frames at beat offsets (`tie_up`, `apex`, `impact`,
   `pin_start`, `three_count`).
 - Every capture produces `capture_manifest.json`. `tools/capture/evidence_gate.py`
@@ -72,13 +73,43 @@ on them holding.
   end-state hash — **before any critic sees the capture**. A manifest that
   fails the gate voids the round; it does not count as a loss, and the
   ratchet does not move.
-- **llvmpipe captures are sufficient for timing and feel slices only.**
-  Ring/materials/lighting critics need GPU-backed captures — run those on
-  real hardware, not CI. Do not judge visual-quality slices on software
-  renders. Every manifest records `video_adapter` and `gpu_backed`, and
-  `evidence_gate.py --visual` (`VISUAL_SLICE=1 run_capture.sh`) voids a
-  software-rendered capture for a visual slice rather than leaving the rule
-  to whoever remembers how the capture was run.
+- **The renderer rule is about the pipeline, not the rasteriser.** This
+  replaces the earlier flat ban on llvmpipe for visual slices, which
+  conflated two different defects and blocked the visual slices outright:
+  under it, priorities 2 and 3 of `VISUAL_BAR.md` went unjudged for two full
+  rounds because no admissible capture could be produced at all.
+
+  What actually invalidates a visual judgement is rendering through a
+  **different pipeline than the game ships**. `project.godot` ships
+  `forward_plus`; a `gl_compatibility` capture has no SSAO, no SSR, no
+  SDFGI, no volumetric fog, and tonemaps differently, so its pixels are not
+  the game's pixels. Whether a *GPU* or a CPU rasterised those pixels
+  changes their speed, not their values.
+
+  This was measured before it was written down. The same scene, the same
+  `measure_silhouette.py`, one frame apart:
+
+  | | mat | mat↔A | mat↔B | A↔B |
+  | --- | --- | --- | --- | --- |
+  | `gl_compatibility` | 0.458 | 0.292 | 0.291 | 0.001 |
+  | `forward_plus` | 0.172 | 0.094 | 0.044 | 0.050 |
+
+  Every visual number this project recorded before that measurement was
+  read off `gl_compatibility` — a renderer the game does not ship.
+
+  So: **`forward_plus` captures are admissible for visual slices whatever
+  rasterised them**, carrying a recorded `software_rasterised` caveat when a
+  CPU did. `gl_compatibility` captures stay void for a visual slice. And
+  **no software capture, of either pipeline, may support a performance
+  claim** — frame cost is exactly the thing a CPU rasteriser gets wrong.
+
+  Every manifest records `pipeline` (from
+  `RenderingServer.get_current_rendering_method()` — the project *setting*
+  is not evidence, it reads `forward_plus` even during a Compatibility run),
+  `rendering_driver`, `video_adapter`, `gpu_backed` and `software_rasterised`.
+  `evidence_gate.py --visual` (`VISUAL_SLICE=1 run_capture.sh`) enforces all
+  of it, so the rule does not rest on whoever remembers how the capture was
+  run.
 
 ## Reference-driven tuning
 

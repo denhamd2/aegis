@@ -7,14 +7,24 @@ costs nothing (per gauntlet/anchor/ARCHITECTURE.md).
 Usage: evidence_gate.py [--visual] <capture_manifest.json>
 Exit code 0 = pass, 1 = fail (with reasons on stderr).
 
---visual additionally enforces ARCHITECTURE.md's renderer rule: "llvmpipe
-captures are sufficient for timing and feel slices only. Ring/materials/
-lighting critics need GPU-backed captures." That rule had nothing enforcing
-it -- the manifest did not record which renderer produced the capture, so
-"confirm the capture was GPU-backed" (VISUAL_BAR.md) rested entirely on
-whoever ran it remembering how they ran it. A software-rendered capture is
-void for a visual slice, not a loss: the ratchet does not move, and the
-round is re-run on hardware that has a GPU.
+--visual enforces ARCHITECTURE.md's renderer rule, which is about the
+*pipeline*, not the rasteriser: a visual slice may only cite a capture
+rendered through the rendering method the game ships (forward_plus). A
+gl_compatibility capture has no SSAO, SSR, SDFGI or volumetric fog and
+tonemaps differently, so its pixels are not the game's pixels and it is
+void for a visual slice -- not a loss: the ratchet does not move and the
+round is re-run on the right pipeline.
+
+Whether a GPU or a CPU rasterised those pixels changes their speed, not
+their values, so a software forward_plus capture passes --visual carrying a
+recorded caveat. It does NOT support a performance claim: --performance
+requires gpu_backed, because frame cost is precisely what a CPU rasteriser
+gets wrong.
+
+The earlier rule banned llvmpipe outright for visual slices. It conflated
+those two defects, and the cost was measurable: priorities 2 and 3 of
+VISUAL_BAR.md went unjudged for two full rounds because no admissible
+capture could be produced at all.
 """
 import argparse
 import json
@@ -22,8 +32,13 @@ import sys
 
 MIN_NON_BLACK_RATIO = 0.9
 
+# The rendering method the game ships, per project.godot. A visual slice may
+# only cite a capture rendered through it.
+SHIPPING_PIPELINE = "forward_plus"
 
-def check(manifest: dict, visual: bool = False) -> list[str]:
+
+def check(manifest: dict, visual: bool = False,
+          performance: bool = False) -> list[str]:
     failures = []
 
     expected = manifest.get("expected_frame_count")
@@ -46,17 +61,28 @@ def check(manifest: dict, visual: bool = False) -> list[str]:
         failures.append("manifest missing replay_end_state_hash")
 
     if visual:
-        if "gpu_backed" not in manifest:
+        pipeline = manifest.get("pipeline")
+        if pipeline is None:
             failures.append(
-                "manifest does not record a renderer, so it cannot be judged "
-                "against VISUAL_BAR.md — re-capture with a harness that does"
+                "manifest does not record a pipeline, so it cannot be judged "
+                "against VISUAL_BAR.md — re-capture with a harness that "
+                "records RenderingServer.get_current_rendering_method()"
             )
-        elif not manifest["gpu_backed"]:
+        elif pipeline != SHIPPING_PIPELINE:
+            failures.append(
+                f"capture rendered on {pipeline!r}, but the game ships "
+                f"{SHIPPING_PIPELINE!r}: different tonemapping and no "
+                "SSAO/SSR/SDFGI/volumetric fog, so these are not the game's "
+                "pixels and this is void for a visual-quality slice"
+            )
+
+    if performance:
+        if not manifest.get("gpu_backed", False):
             adapter = manifest.get("video_adapter", "unknown adapter")
             failures.append(
-                f"software-rendered capture ({adapter}): "
-                "ARCHITECTURE.md allows llvmpipe for timing and feel slices "
-                "only, so this is void for a visual-quality slice"
+                f"software-rasterised capture ({adapter}) cannot support a "
+                "performance claim — frame cost is exactly what a CPU "
+                "rasteriser gets wrong"
             )
 
     return failures
@@ -66,26 +92,38 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest")
     parser.add_argument("--visual", action="store_true",
-                        help="also require a GPU-backed capture "
+                        help="also require the shipping pipeline "
                              "(ring/materials/lighting slices)")
+    parser.add_argument("--performance", action="store_true",
+                        help="also require a GPU-backed capture "
+                             "(any frame-cost claim)")
     args = parser.parse_args()
 
     with open(args.manifest) as f:
         manifest = json.load(f)
 
-    failures = check(manifest, visual=args.visual)
+    failures = check(manifest, visual=args.visual,
+                     performance=args.performance)
     if failures:
         print("EVIDENCE GATE: FAIL (round is void)", file=sys.stderr)
         for reason in failures:
             print(f"  - {reason}", file=sys.stderr)
         return 1
 
-    if manifest.get("gpu_backed"):
-        print("EVIDENCE GATE: PASS (GPU-backed — visual slices may cite this)")
-    elif "gpu_backed" in manifest:
-        print("EVIDENCE GATE: PASS (software render — timing/feel slices only)")
+    pipeline = manifest.get("pipeline")
+    if pipeline == SHIPPING_PIPELINE and manifest.get("gpu_backed"):
+        print("EVIDENCE GATE: PASS (GPU-backed forward_plus — "
+              "visual and performance claims may cite this)")
+    elif pipeline == SHIPPING_PIPELINE:
+        adapter = manifest.get("video_adapter", "unknown adapter")
+        print(f"EVIDENCE GATE: PASS (forward_plus, software-rasterised on "
+              f"{adapter} — visual slices may cite this; NO performance "
+              f"claim may)")
+    elif pipeline:
+        print(f"EVIDENCE GATE: PASS ({pipeline} — timing/feel slices only)")
     else:
-        print("EVIDENCE GATE: PASS")
+        print("EVIDENCE GATE: PASS (no pipeline recorded — "
+              "timing/feel slices only)")
     return 0
 
 
