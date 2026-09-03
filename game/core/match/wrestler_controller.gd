@@ -35,7 +35,9 @@ const STRIKE_HIT_RANGE := 1.15
 ## tuning" rule applies here as much as anywhere, and no reference footage
 ## covers fall speed.
 const GRAVITY := 9.8
-## Total accumulated damage at which a wrestler is knocked off his feet.
+## Damage a wrestler must take *since his last knockdown* to be knocked off
+## his feet again -- see _damage_at_last_knockdown, which is the half of this
+## that makes a knockdown an event rather than a latch on a rising total.
 ##
 ## This was MAX_LIMB_DAMAGE * 2.0 (200), which made the pin path
 ## unreachable: MatchReferee routes a downed opponent to a submission once
@@ -361,6 +363,25 @@ var _wants_reversal_this_tick: bool = false
 ## MatchReferee._end_pin() on a kickout, restored once this wrestler
 ## actually reaches IDLE again (see _process_timed_state()).
 var _cover_eligible: bool = true
+
+## Total damage this wrestler had taken the last time he was knocked down.
+##
+## Knockdown used to be `total_damage() >= KNOCKDOWN_DAMAGE`, which is a
+## test on a number that only ever rises: the first time a wrestler crossed
+## 100 it became true and it stayed true for the rest of the match, so every
+## subsequent hit -- a 4-damage jab included -- put him back on the mat.
+##
+## Measured across five AI-vs-AI seeds: both wrestlers entered GRAPPLE_HOLD
+## exactly three times, in every single seed, and the whole late match was
+## strike -> knockdown -> cover -> kickout -> getup -> strike. That is the
+## reason the grapple chain this slice is about barely ran: a match played
+## two or three of the eighteen authored paired moves and then stopped
+## producing tie-ups at all, because the AI's "opponent is down, walk in"
+## branch owns every tick a wrestler spends on the mat.
+##
+## A knockdown is an event, so it is measured from the last one: a wrestler
+## goes down again once he has taken another KNOCKDOWN_DAMAGE *since*.
+var _damage_at_last_knockdown: float = 0.0
 
 func _ready() -> void:
 	fsm = WrestlerFSM.new()
@@ -1055,6 +1076,10 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
 
+## Whether this hit knocks the wrestler down, rather than staggering him.
+func _would_be_knocked_down() -> bool:
+	return combat.total_damage() - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
+
 ## Called by MatchReferee once every wrestler has finished its own
 ## _physics_process for this tick.
 func _resolve_pending_hits() -> void:
@@ -1070,7 +1095,7 @@ func _resolve_pending_hits() -> void:
 		return
 	for move in moves:
 		combat.apply_damage(move)
-	if combat.total_damage() >= KNOCKDOWN_DAMAGE:
+	if _would_be_knocked_down():
 		_go_down()
 	else:
 		_play_hit_reaction(moves[moves.size() - 1])
@@ -1142,6 +1167,28 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	else:
 		_resolve_grapple_move(move)
 
+## Which rung of the grapple chain a move belongs to, or -1 for anything
+## that isn't one (a strike, a running attack, a reversal). There is no tier
+## field on MoveDef -- a move's tier is which slot it was drawn from -- so
+## the man who threw it is the one who can say.
+func tier_of(move: MoveDef) -> int:
+	if move == null:
+		return -1
+	if move == finisher_move or finisher_move_pool.has(move):
+		return CombatSystem.Tier.FINISHER
+	if move == signature_move or signature_move_pool.has(move):
+		return CombatSystem.Tier.SIGNATURE
+	if move == power_move or power_move_pool.has(move):
+		return CombatSystem.Tier.POWER
+	if move == grapple_move or grapple_move_pool.has(move):
+		return CombatSystem.Tier.GRAPPLE
+	return -1
+
+## Whether a move is one of this wrestler's finishers — asked by MatchCamera
+## to know whether a cut is worth taking.
+func is_finisher(move: MoveDef) -> bool:
+	return tier_of(move) == CombatSystem.Tier.FINISHER
+
 ## Draws one move from a tier: the tier's guaranteed move plus whatever its
 ## pool adds, filtered to what this opponent's weight class allows.
 ##
@@ -1150,17 +1197,6 @@ func _process_grapple_hold(input: Dictionary) -> void:
 ## draw count) must always produce the same move, or replays stop matching.
 ## The multipliers are deliberately different from WrestlerAI._should_whip()'s
 ## so the two decisions don't move in lockstep across a match.
-## Whether a move is one of this wrestler's finishers. There is no tier
-## field on MoveDef -- a move's tier is which slot it was drawn from -- so
-## MatchCamera asks the man who threw it rather than trying to read a tier
-## off the resource.
-func is_finisher(move: MoveDef) -> bool:
-	if move == null:
-		return false
-	if move == finisher_move:
-		return true
-	return finisher_move_pool.has(move)
-
 func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	if pool.is_empty():
 		return primary
@@ -1193,6 +1229,9 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	opponent.fsm.transition_to(WrestlerFSM.State.MOVE_EXEC)
 	move_landed.emit(self, opponent, move)
 	combat.apply_momentum(move)
+	# Recorded on landing rather than on selection: a grapple that gets
+	# reversed was never thrown, so it must not unlock the rung above it.
+	combat.record_tier(tier_of(move))
 	# Applied directly rather than through _apply_move_to_opponent's
 	# _pending_hits queue: that queue exists so MatchReferee can arbitrate
 	# two wrestlers striking each other the *same* tick regardless of
@@ -1208,7 +1247,7 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# never progressed past tie-up -> grapple -> repeat.
 	opponent.combat.apply_damage(move)
 	fsm.transition_to(WrestlerFSM.State.IDLE)
-	if opponent.combat.total_damage() >= KNOCKDOWN_DAMAGE:
+	if opponent._would_be_knocked_down():
 		opponent._go_down()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
@@ -1217,6 +1256,7 @@ func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
+	_damage_at_last_knockdown = combat.total_damage()
 	_move_ticks_remaining = GETUP_TICKS
 	_cover_eligible = true
 	knocked_down.emit(self)

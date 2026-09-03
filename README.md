@@ -2676,3 +2676,136 @@ exists, and that the two men are built differently.
   `evidence_gate.py --visual` voids it. Raising the ring rig to 4.5 is a
   lighting change whose *measurable* consequence is checked and whose
   appearance is not.
+
+## Gauntlet: the grapple chain (round 1)
+
+The slice's gap line had sat at "phase 4 not yet started" since Phase 0, with
+one concrete complaint appended after the momentum ladder was rescaled:
+
+> a match reaches a signature OR a finisher rather than both: they sit 8
+> apart, so a wrestler who passes the signature gate without grappling sails
+> to the finisher instead
+
+That is exactly what a probe found, and two mechanisms behind it — neither of
+them the threshold arithmetic the gap line blamed.
+
+`game/tools/probe/ladder_probe.tscn` runs AI-vs-AI matches headless and
+records, per seed, which tier every landed move was drawn from, the momentum
+trace, FSM state entries, and how the match ended:
+
+```
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/ladder_probe.tscn -- --seeds 1,2,3 --trace
+```
+
+A wrapper scene rather than a `-s` script, for the reason the wrestler-look
+round documented: a `-s` SceneTree script does not register the project's
+`class_name` globals, so every script with a typed `WrestlerController` field
+fails to compile there.
+
+### Both rungs never fired, and the reason was not the 8-point gap
+
+Ten seeds on the shipped build: a signature fired in **3**, a finisher in
+**7**, and **both in 0**. Every one of those seven finishers was thrown by a
+wrestler who had never landed a signature — the rung was skipped, not spent.
+
+The gap line's arithmetic is right as far as it goes. The signature band is
+`SIGNATURE_THRESHOLD`..`FINISHER_THRESHOLD`, 24 to 32, eight points wide. But
+a tier gate is only ever *read* at a grapple, and momentum keeps rising
+between grapples: a power move gains 10–12 and strikes gain 4–6 apiece, so a
+wrestler earns 10–20 between two consecutive grapples. Seed 2's trace shows it
+plainly — a jab carried him from 32 to 36, and the next grapple resolved as a
+finisher from a man who had thrown no signature.
+
+A band narrower than the momentum earned between two reads cannot be observed.
+Widening it would be tuning a number nobody measured to paper over that, and
+the same class of bug would come back the moment any gain changed.
+
+**Ordering is a property of the chain, so the chain records it.**
+`CombatSystem.tier_reached` holds the highest rung a wrestler has actually
+*landed* this match, and each gate now asks for the rung below it as well as
+the momentum to pay: a power move needs a landed grapple, a signature needs a
+landed power move, a finisher needs a landed signature. Recorded on landing
+rather than on selection — a grapple that gets reversed was never thrown.
+
+A move's tier is still which slot it was drawn from (`MoveDef` carries no tier
+field), so `WrestlerController.tier_of()` reads it back off the pools, and
+`is_finisher()` — which `MatchCamera` uses to decide whether a cut is worth
+taking — is now one case of it rather than a second, separate answer to the
+same question.
+
+### The chain barely ran at all, because knockdown was a latch
+
+The bigger finding was in the state-entry counts. Both wrestlers entered
+`GRAPPLE_HOLD` **exactly three times, in every single seed** — a suspiciously
+flat number for a system with seeded per-match variation — while 6 to 13
+strikes landed. A match was playing two or three of the eighteen authored
+paired moves and then producing no more tie-ups at all.
+
+The cause: knockdown was `combat.total_damage() >= KNOCKDOWN_DAMAGE`. That is
+a test on a quantity that only ever rises, so the first crossing latched it
+true for the rest of the match and **every later hit, a 4-damage jab
+included, put the man back on the mat**. From ~100 damage onward the match was
+strike → knockdown → cover → kickout → getup → strike, because the AI's
+"opponent is down, walk in" branch owns every tick a wrestler spends down.
+
+This is the same shape as the bug the previous round fixed in the kickout
+window and the one before it in the momentum ceiling: a *scale* or an *event*
+expressed as a bare comparison against a running total. A knockdown is an
+event, so it is now measured from the last one — `_damage_at_last_knockdown`,
+and a wrestler goes down again once he has taken another `KNOCKDOWN_DAMAGE`
+*since*. Damage itself still accumulates untouched, so the pin and submission
+gates that read it are unaffected.
+
+### Measured
+
+Ten AI-vs-AI seeds (1–10), same seeds and same budget before and after:
+
+| | before | after |
+| --- | --- | --- |
+| seeds where a signature fired | 3 | **9** |
+| seeds where a finisher fired | 7 | **4** |
+| seeds where both fired | **0** | **4** |
+| seeds where the chain skipped a rung | 7 | **0** |
+| grapple moves per match (mean) | 2.8 | **3.6** |
+| strikes per match (mean) | 6.6 | 9.2 |
+| knockdowns per match (mean) | 1.3 | 0.6 |
+
+All ten seeds still reach a real finish (pinfall or submission), both finishes
+still occur, and the chain is walked in order in every seed that climbs it.
+The finisher becoming *rarer* is the honest consequence of no longer being
+reachable by skipping: it is now the fourth grapple of a chain rather than a
+gate a jab can cross.
+
+Regression: gdUnit4 **190/190, 0 errors, 0 failures** (175 before, plus
+fifteen new); seeds 1, 2, 3, 5, 7 all finish with **zero illegal FSM
+transitions**; and a recorded replay played back twice produces a
+byte-identical end-state hash
+(`83ae893794d5f9ea8a2b26feb45460d5e18c596c50cde7a4acc49d1b083219db`). The
+hash *changed* against the pre-round baseline, which is expected and not
+hidden — this round deliberately changes what a match does; determinism is the
+contract, not the value.
+
+### What this did not settle
+
+- **The chain is tight against what a match affords.** A full climb needs four
+  grapple resolutions and a match now affords 3.6 on average, which is why the
+  finisher lands in 4 seeds of 10 rather than most. That ratio is an artefact
+  of the constants, not a measured target: `gauntlet/refs/` says nothing about
+  how often a real match should reach a finisher.
+- **Nothing here is reference-tuned.** `POWER_THRESHOLD`, `SIGNATURE_THRESHOLD`
+  and `FINISHER_THRESHOLD` are unchanged and remain reachability values; the
+  frame data, damage and momentum on all 18 paired moves still trace to no
+  measurement. `timings.md` marks strike active/recovery and reversal-window
+  length pending, and has nothing at all on strike-to-grapple ratio.
+- **A match can still be won almost entirely with jabs.** Seed 8's winner
+  finished on 66 unspent momentum having landed one grapple and one power
+  move, taking the match with 8 strikes. Strikes feed the same meter the
+  grapple chain spends, and `close_strike_chance` (0.45) is an unmeasured
+  first-pass value.
+- **Paired-move *quality* is untouched.** This round is about whether the
+  chain runs and in what order. Whether the 18 moves read well — the other
+  half of the slice's name — needs a GPU-backed capture, and every capture
+  here is llvmpipe, which `evidence_gate.py --visual` voids for exactly that
+  judgement.
+- **Still AI-vs-AI.** No human has played a match on a gamepad.

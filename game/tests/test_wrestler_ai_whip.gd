@@ -10,6 +10,11 @@ func _make_ai(momentum: float, match_seed: int, player_index: int, attempts: int
 	ai.controller = auto_free(WrestlerController.new())
 	ai.controller.combat = CombatSystem.new()
 	ai.controller.combat.momentum = momentum
+	# _should_whip() asks can_power(), which is gated on the rung below it as
+	# well as the meter -- without a landed grapple on the record the power
+	# tier is shut whatever the momentum, and this suite would be testing the
+	# chain rather than the whip roll.
+	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
 	ai._match_seed = match_seed
 	ai._player_index = player_index
 	ai._grapple_attempts = attempts

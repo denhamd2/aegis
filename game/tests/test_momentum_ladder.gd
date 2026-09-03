@@ -83,3 +83,29 @@ func test_each_tier_has_moves() -> void:
 		assert_object(w.finisher_move).is_not_null()
 		assert_bool(w.is_finisher(w.finisher_move)).is_true()
 		assert_bool(w.is_finisher(w.signature_move)).is_false()
+
+## A move's tier is which slot it was drawn from, so the slots have to be
+## unambiguous: tier_of() reads them back, and a move wired into two pools
+## would answer with whichever is checked first. The chain gate
+## (CombatSystem.tier_reached) is only as ordered as this mapping is.
+func test_every_wired_move_reports_the_tier_it_was_wired_into() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	add_child(scene)
+	for who: String in ["WrestlerA", "WrestlerB"]:
+		var w: WrestlerController = scene.get_node(who)
+		var slots := {
+			CombatSystem.Tier.GRAPPLE: [w.grapple_move] + w.grapple_move_pool,
+			CombatSystem.Tier.POWER: [w.power_move] + w.power_move_pool,
+			CombatSystem.Tier.SIGNATURE: [w.signature_move] + w.signature_move_pool,
+			CombatSystem.Tier.FINISHER: [w.finisher_move] + w.finisher_move_pool,
+		}
+		for tier: int in slots:
+			for move: MoveDef in slots[tier]:
+				assert_int(w.tier_of(move)).override_failure_message(
+					"%s reports tier %d but is wired into tier %d"
+					% [move.resource_path, w.tier_of(move), tier]
+				).is_equal(tier)
+		# A strike is not a rung of the grapple chain, so it must not
+		# advance it -- the meter it feeds is shared, the chain is not.
+		assert_int(w.tier_of(w.strike_move)).is_equal(-1)
+		assert_int(w.tier_of(w.running_attack_move)).is_equal(-1)

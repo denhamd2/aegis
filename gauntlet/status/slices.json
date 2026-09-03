@@ -43,10 +43,10 @@
   },
   {
     "name": "grapple chain & paired-move quality",
-    "round": 0,
-    "verdict": "not started",
-    "trend": "-",
-    "largest_gap": "phase 4 not yet started. The move ladder ARCHITECTURE.md scopes now runs -- all three tiers fire across ten AI-vs-AI seeds where the top two fired in none -- but the thresholds are reachability values, not measured ones, and a match reaches a signature OR a finisher rather than both: they sit 8 apart, so a wrestler who passes the signature gate without grappling sails to the finisher instead. Frame data, damage and momentum across the 18 paired moves still trace to no reference measurement."
+    "round": 1,
+    "verdict": "contested",
+    "trend": 6,
+    "largest_gap": "The chain now runs in order and both top rungs fire in the same match, which neither did before: over ten AI-vs-AI seeds a signature fired in 9 (was 3), a finisher in 4 (was 7), both in 4 (was 0), and the chain skipped a rung in 0 seeds (was 7). Two mechanisms, neither of them the threshold arithmetic the old gap line blamed. First, a tier gate is only read at a grapple while momentum keeps rising between grapples, so the 8-wide signature band was narrower than the 10-20 a wrestler earns between two reads and a jab could carry him past it -- ordering is now a property of the chain (CombatSystem.tier_reached: each rung needs the one below it landed), not of arithmetic on a rising meter. Second, and larger: knockdown was total_damage() >= KNOCKDOWN_DAMAGE, a latch on a quantity that only rises, so past ~100 damage every later jab re-downed the opponent and tie-ups stopped -- both wrestlers entered GRAPPLE_HOLD exactly three times in every seed and a match played two or three of the eighteen authored paired moves. It is now measured from the last knockdown, and grapple moves per match went 2.8 -> 3.6. What is still missing: the chain is tight against what a match affords (a full climb needs four grapples, a match affords 3.6, hence a finisher in 4 seeds of 10 -- an artefact of the constants, not a measured target); the three thresholds remain reachability values and the frame data, damage and momentum across all 18 paired moves still trace to no reference measurement; a match can still be won almost entirely with jabs (seed 8's winner finished on 66 unspent momentum and 8 strikes) since strikes feed the meter the grapple chain spends; and paired-move *quality* -- the other half of this slice's name -- stays UNJUDGED, because every capture is llvmpipe and evidence_gate.py --visual voids it for that judgement."
   },
   {
     "name": "reversal windows",
