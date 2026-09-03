@@ -155,7 +155,12 @@ func test_the_hold_meter_reports_both_sides_as_fractions() -> void:
 	var referee := _make_referee()
 	var defender := _make_wrestler()
 	defender._submission_minigame = SubmissionMinigame.new(1.0, 2.0)
-	defender._submission_minigame.tick(true, true, 25)
+	# Ticked to a quarter of the break point rather than a fixed 25 ticks:
+	# BREAK_POINT is derived from a measured hold duration (see
+	# submission_minigame.gd) and moved once already, which broke this
+	# assertion. The fractions the HUD reports are what is under test here,
+	# not how long a hold runs.
+	defender._submission_minigame.tick(true, true, int(SubmissionMinigame.BREAK_POINT / 4.0))
 	referee._submissioning = true
 	referee._submission_defender = defender
 	var progress := referee.submission_progress()

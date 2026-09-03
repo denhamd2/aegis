@@ -1309,5 +1309,25 @@ func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Li
 	# the referee actually started was one the defender was guaranteed to
 	# escape. Derived from the constant now, so moving the threshold again
 	# cannot silently make one side unbeatable.
-	var defender_rate := 1.0 + SUBMISSION_ESCAPE_LIMB / CombatSystem.MAX_LIMB_DAMAGE
+	#
+	# It was then a *flat* 1.0 + SUBMISSION_ESCAPE_LIMB/MAX, which put the
+	# crossover in the right place but made the race a knife-edge
+	# everywhere: the attacker's rate rises with the limb and the
+	# defender's did not move at all, and MatchReferee only starts a hold
+	# in a narrow band around the crossover, so the two rates were always
+	# within a couple of percent of each other. Measured over ten seeds,
+	# every hold in the project ended with the loser's ring at 0.96-0.99 of
+	# its break point -- a photo finish every single time, which is not a
+	# contest but a comparison of the targeted limb against 60.0 dressed up
+	# as one.
+	#
+	# Mirroring the attacker's slope around the same crossover keeps the
+	# "he wins exactly past SUBMISSION_ESCAPE_LIMB" property above and
+	# gives the result a margin that grows with the damage: at a limb of 55
+	# the defender is 6% faster and works free, at 80 the attacker is 29%
+	# faster, at a destroyed limb 67% faster. How hurt a limb has to be is
+	# still SUBMISSION_ESCAPE_LIMB's reachability value; only the
+	# steepness either side of it is new.
+	var limb_damage: float = defender.combat.limb_damage[target_limb]
+	var defender_rate := 1.0 + (2.0 * SUBMISSION_ESCAPE_LIMB - limb_damage) / CombatSystem.MAX_LIMB_DAMAGE
 	defender._submission_minigame = SubmissionMinigame.new(attacker_rate, defender_rate)

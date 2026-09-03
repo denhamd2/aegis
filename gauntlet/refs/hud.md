@@ -76,6 +76,30 @@ crops: `gauntlet/refs/hud/vitality_bar_full_health.png`,
   currently render anything like this on-screen; worth considering once
   submissions get UI.
 
+## Pin / kickout UI
+- Frame-stepped across the whole of footage_02's pinfall (the same
+  1087-1093s sequence `timings.md` measures the count and lead-in from),
+  the pin puts exactly **two** things on screen, and neither is a kickout
+  meter:
+  - **The count digit**, top-center, popping in with no fade (see Colors
+    and `timings.md`'s three-count cadence).
+  - **An "L1 / CANCEL" button prompt**, top-center, appearing at
+    **t≈1089.067s** (`frames/pin_cancel_prompt.jpg`; absent one frame
+    earlier at 1089.033s). That is ~1.67s after the cover is applied and
+    ~1.93s before the "1" — it arrives with the referee, not with the
+    cover. Same prompt shape as the one sitting above the submission HOLD
+    meter above, so read it as the attacker's "abandon this" option in
+    both cases rather than anything the defender presses.
+- **No marker, no target window, no fill bar for the defender anywhere in
+  the sequence.** This project's `PinMinigame` is a shrinking-target-zone
+  contest — a marker sweeping [0,1] against a target window — and nothing
+  resembling that is on screen here.
+- **Read that as one instance, not a rule.** This cover ended in a clean
+  three-count with no kickout, so a defender-side meter that only appears
+  once the defender is actually contesting would be absent for exactly
+  that reason. Settling it needs a clip with a *kickout* on camera, which
+  neither source clip has yet.
+
 ## Fill animation behavior
 - Easing, flash-on-threshold, damage-tick delay: **(pending — needs
   frame-stepped video.)** A still can show that damage is a revealed

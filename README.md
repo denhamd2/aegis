@@ -2809,3 +2809,167 @@ contract, not the value.
   here is llvmpipe, which `evidence_gate.py --visual` voids for exactly that
   judgement.
 - **Still AI-vs-AI.** No human has played a match on a gamepad.
+
+## Gauntlet: the pin and the kickout (round 1)
+
+This slice had never had a round — its gap line was still Phase 0's "phase 4
+not yet started" — but the code was further along than that implied, and the
+reference corpus already held a frame-exact three-count. So the round started
+by measuring both sides of that comparison rather than either alone.
+
+`game/tools/probe/pin_probe.tscn` runs AI-vs-AI matches headless and
+reconstructs every fall and every hold: the count each cover reached, whether
+the defender kicked out and how much of the meter he filled, the window he was
+given and the damage and momentum that produced it, both submission rates, and
+the method the match ended on.
+
+```
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/pin_probe.tscn -- --seeds 1,2,3 --trace
+```
+
+`MatchReferee` exposes no signal for a fall ending, so episodes are rebuilt by
+polling `is_pin_active()`/`pin_count()` once per physics frame — enough,
+because the referee latches the count for exactly the reason the HUD needs it
+latched.
+
+### The count was already measured; the lead-in into it was not
+
+`COUNT_TICKS = [60, 135, 195]` puts the slaps 1.25s and 1.00s apart, which is
+the cadence `timings.md` frame-stepped at native 30fps with no sampling gaps.
+That half was right, and the entry in `timings.md` claiming "no
+referee/pinfall-count system exists in code to compare against" was simply out
+of date — corrected in this round.
+
+The first number was not measured. `match_referee.gd` said so itself: the
+lead-in from the cover to "1" "keeps its existing 60 ticks and is the one
+number here still owed a measurement". So this round measured it, walking the
+same pinfall backwards from the known "1" onset at 1091.000s:
+
+- **cover applied — 1087.400s** (`frames/pin_cover_applied.jpg`)
+- **referee settles into counting position — ~1089.467s**
+  (`frames/pin_ref_in_position.jpg`)
+- **count "1" — 1091.000s**
+
+That is **3.60s** cover-to-"1", and the interesting part is the split:
+**~2.07s of it is the referee walking across the ring.** This project has no
+referee actor — nobody crosses anything, a cover starts where the footage has
+him already down — so the comparable half is the **~1.53s** from
+referee-in-position to the first slap, i.e. 92 ticks. `COUNT_TICKS[0]` is now
+92, and the count no longer starts half a second early. Adopting the whole
+3.60s would have imported two seconds of an actor that does not exist here.
+
+While frame-stepping that window, the pin's on-screen UI got recorded into
+`hud.md` too: the cover puts exactly two things on screen, the count digit and
+an "L1 / CANCEL" prompt that arrives at 1089.067s — with the referee, not with
+the cover. **No marker, no target window, no defender-side fill bar anywhere
+in the sequence**, which is what this project's `PinMinigame` is built out of.
+That is one instance and it is logged as one: this cover ended in a clean
+three-count with no kickout, so a defender-side meter that only appears when
+the defender is contesting would be absent for exactly that reason.
+
+### Lengthening the count moved the kickouts, which is the real finding
+
+Making the fall 227 ticks instead of 195 without touching anything else made
+every kickout land *before* the referee's first slap instead of after his
+second. `PROGRESS_THRESHOLD` (12.0) had been calibrated against a 195-tick
+fall — its own comment says as much — so a longer count with an unchanged bar
+is simply an easier one, and an escape stopped reading as a near-fall at all.
+
+The bar is rescaled by the same 227/195 the fall grew by (12.0 → 14.0) and
+`test_pin_count_schedule.gd` now guards the coupling rather than either
+number, because this is the same shape of defect the previous two rounds
+found: two constants that must move together, with nothing making them.
+
+### The submission was a comparison wearing a contest's clothes
+
+Ten seeds, five holds, every single one resolving in **61–63 ticks** with the
+loser's ring at **0.96–0.99** of its break point. A photo finish every time is
+not a close contest; it is a tell.
+
+The mechanism: `attacker_rate` rose with the targeted limb (`1.0 + limb/100`)
+while `defender_rate` was **flat** (`1.0 + SUBMISSION_ESCAPE_LIMB/100` = 1.6),
+and the referee only starts a hold in a narrow band of limb damage straddling
+that same crossover. So the two rates were always within a couple of percent
+of each other, both bars climbed monotonically to the same break point, and
+the outcome was `limb > 60.0` — a threshold comparison, decided before the
+first tick, with the defender's input contributing nothing but "held".
+
+Two changes, both keeping the crossover the old code was built around:
+
+- **The defender's rate now mirrors the attacker's around
+  `SUBMISSION_ESCAPE_LIMB`** instead of sitting flat. He still wins exactly
+  when the limb is under 60 — that property has its own doc comment and is
+  preserved — but the margin now grows with the damage instead of being the
+  same sliver everywhere.
+- **A dead heat is resolved by a seeded flip.** With mirrored rates a limb
+  sitting exactly on the crossover makes them identical, and 2 of 10 seeds
+  landed there. `_tick_submission()`'s `if/elif` was quietly awarding those to
+  the attacker — "the attacker wins ties" as a rule nobody chose, hidden in
+  the checking order. That is the tie-up bug this project already fixed once,
+  and it is fixed the same way.
+
+`BREAK_POINT` moved 100 → 240, which is the one number here with a
+measurement behind it: 240 at the crossover rate is 150 ticks, and
+`timings.md` frame-stepped a real hold at **~2.5s** (673.00s → 675.5s) from
+applied to the referee's break signal. Holds now run 146–151 ticks. Read the
+caveat in `timings.md` before treating that as settled — it is a rope-break
+cycle rather than a hold played to a tap, and it is a single instance.
+
+### Measured
+
+Ten AI-vs-AI seeds, same seeds and budget on both sides.
+
+| | before | after |
+| --- | --- | --- |
+| kickouts landing at the "2" or later | 3 of 3 | 3 of 3 |
+| falls reaching a three-count | 6 | 6 |
+| hold duration | 61–63 ticks (1.02s) | **146–151 ticks (2.44s)** |
+| loser's ring at the end of a hold | 0.96–0.99 | **0.94–1.00** |
+| dead heats resolved by `if/elif` order | 2 | **0** |
+| pinfall / submission / unfinished | 6 / 4 / 0 | 6 / 4 / 0 |
+
+The count schedule is the part that actually moved against the reference:
+the lead-in went from 1.00s to the measured 1.53s, and a fall from 3.25s to
+4.53s in total.
+
+Regression: gdUnit4 **205/205, 0 errors, 0 failures** (190 before, plus
+fifteen new — a suite pinning the count schedule to `timings.md`, a suite for
+the submission tie-break, and a rewritten submission-race suite). Ten seeds
+finish with zero illegal FSM transitions. A recorded replay played back twice
+gives a byte-identical end-state hash
+(`4523f7af52c3f99110629ca4d4593753f5068c24288e4efaf6ad87919b146439`); it
+differs from the previous round's, as it must, since this round deliberately
+changes what a match does — determinism is the contract, not the value.
+
+### What this did not settle
+
+- **The submission still isn't a contest, it's a steeper comparison.** Both
+  rings climb monotonically off constant rates; the defender's only input is
+  "held", which the AI holds every tick and a human would too. There is no
+  decision in it — no timing, no target, nothing like `PinMinigame`'s window
+  or `TieUpMinigame`'s press race. The slope makes the *result* legible; it
+  does not make the hold playable.
+- **The referee's own gating band is what flattens it.** Holds start only
+  where `SUBMISSION_LIMB_THRESHOLD` (55) and `PIN_PREFERENCE_DAMAGE` (140)
+  allow, which is a limb band of roughly 55–65 straddling the crossover — so
+  however steep the slope, every hold in practice starts near the tie. Both
+  of those constants are reachability values.
+- **Four of ten matches still end on the first knockdown**, ~10s in, because
+  a submission is available there and resolves the moment it starts. Nothing
+  in `gauntlet/refs/` measures how long a match should run or how many
+  near-falls it should have, so this round did not touch it.
+- **A match still has one or two covers, and a kickout only in 3 of 10
+  seeds.** The second fall of a match is always at the 0.05 window floor
+  (damage past `KICKOUT_DAMAGE_REFERENCE`), so it is arithmetically
+  unescapable — the fall is a formality. Whether that is right is not
+  measurable against anything in the corpus.
+- **`PROGRESS_THRESHOLD`'s base 12.0 is still unmeasured.** What changed is
+  that it can no longer drift when the count length does; how hard a kickout
+  should be remains a first-pass value.
+- **The kickout minigame has no UI.** The HUD draws the count and the hold
+  meter and nothing the defender could play a kickout against, so the
+  minigame in this slice's name is currently unplayable by a human. The
+  reference frames don't settle what that UI should be either — see the
+  caveat logged in `hud.md`.
+- **Still AI-vs-AI.** No human has played a match on a gamepad.

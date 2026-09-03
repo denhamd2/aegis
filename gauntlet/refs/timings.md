@@ -136,9 +136,41 @@ measured sequence doesn't straddle a cut before citing a number from it.
     cadence are two different numbers; don't conflate them if tuning a
     three-count timer off this. Onset timestamps carry ±1 frame (±0.033s)
     uncertainty from the frame-step method itself.
-  - Not directly comparable to a single constant in this project yet — no
-    referee/pinfall-count system exists in code to compare against
-    (Phase 3 gap, not this file's job to flag beyond noting it).
+  - The "no pinfall system exists to compare against" note this entry
+    used to carry is **out of date**: `core/match/match_referee.gd` now
+    counts, and its `COUNT_TICKS = [60, 135, 195]` puts "1"->"2" at 1.25s
+    and "2"->"3" at 1.00s, i.e. the measured cadence, with
+    `COUNT_VISIBLE_TICKS = [39, 24, ...]` matching the measured
+    ~0.65s/~0.40s on-screen durations.
+
+## Cover -> count "1" (the pin lead-in)
+- **~3.60s (1087.400s -> 1091.000s)** — same pinfall as the three-count
+  above (`wwe2k26_footage_02.mp4`, Byron Breakker vs Oba Femi, ~1093s
+  finish). Method: `ffmpeg -ss 1082 -to 1088 -vf fps=30` walking back from
+  the known "1" onset to the cover. Cover applied at **1087.400s**
+  (`frames/pin_cover_applied.jpg`, first frame the attacker is settled
+  across the opponent in a lateral press with the opponent flat; the slam
+  itself lands 4 frames earlier at 1087.267s, so read this as ±4 frames
+  depending on whether you date the cover from impact or from the settled
+  press).
+- **Most of that 3.60s is the referee walking.** He is standing on the far
+  side of the ring when the cover goes on and only settles into counting
+  position at **~1089.467s** (`frames/pin_ref_in_position.jpg`, first
+  frame his hand is down on the mat; he is still dropping at 1089.333s, so
+  ±4 frames again). Split:
+  - cover -> referee in position: **~2.07s**
+  - referee in position -> "1": **~1.53s**
+- **Only the second half is comparable to this project.** `MatchReferee`
+  has no referee actor — nobody crosses the ring, so a cover here starts
+  at what the footage calls "referee in position". The comparable number
+  is therefore ~1.53s (~92 ticks at 60Hz), not 3.60s; `COUNT_TICKS[0]`
+  was 60 (1.00s), i.e. the count started faster than the reference by
+  about half a second. Adopting the full 3.60s would import ~2s of a
+  referee's travel time this project does not simulate.
+- Single instance, one pinfall. A referee who happens to be standing next
+  to the cover would produce a much shorter lead-in, and nothing here
+  measures how much of that ~2.07s is travel versus a fixed pre-count
+  beat — that needs a second pinfall with the referee already close.
 
 ## Ring-crossing run speed
 - (pending — surveyed roughly 400s–600s of `wwe2k26_footage_01.mp4` at 1fps

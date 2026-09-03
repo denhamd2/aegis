@@ -19,7 +19,22 @@ extends RefCounted
 
 const TICKS_PER_ATTEMPT := 90 # 1.5s at 60 Hz
 ## Ticks of held in-window input needed to kick out.
-const PROGRESS_THRESHOLD := 12.0  # was 30.0 — unreachable by any
+const PROGRESS_THRESHOLD := 14.0  # was 12.0, and before that 30.0.
+# 12.0 was calibrated against a fall that lasted MatchReferee.
+# PIN_COUNT_TICKS = 195. That number is now 227, measured (see
+# match_referee.gd's COUNT_TICKS), and a longer fall with the same
+# threshold is a straightforwardly easier one: the defender gets 32 extra
+# ticks of mashing against an unchanged bar. Measured over ten seeds, that
+# is not hypothetical -- every kickout moved from landing after the
+# referee's second slap to landing before his first, so an escape stopped
+# reading as a near-fall at all. Rescaled by the same 227/195 the fall grew
+# by (12.0 * 1.164 = 13.97), which puts kickouts back at the "2".
+#
+# The 12.0 it is scaled from is still a reachability value and not a
+# measured one -- nothing in gauntlet/refs measures how hard a kickout
+# should be. What this constant now guarantees is only that it cannot
+# silently drift when the count length changes again.
+# was 30.0 — unreachable by any
 # human-plausible discrete-press policy at the window fractions
 # kickout_window_fraction() actually produces at a real knockdown
 # (~0.3-0.5). Confirmed against test_pin_minigame_kickout.gd and a live

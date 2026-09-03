@@ -15,11 +15,15 @@ signal match_won(winner: WrestlerController, method: String)
 ## hangs on the first slap and speeds up into the third -- and this was an
 ## even 1.00s apart, which is the one thing the reference says it is not.
 ##
-## The lead-in from the cover to "1" is not in that measurement (the clip's
-## count starts on-camera at "1"), so it keeps its existing 60 ticks and is
-## the one number here still owed a measurement.
-const COUNT_TICKS: Array[int] = [60, 135, 195]
-const PIN_COUNT_TICKS := 195
+## The lead-in from the cover to "1" is measured now too, by walking the
+## same pinfall backwards to the cover (timings.md, "Cover -> count '1'"):
+## 3.60s in the footage, of which ~2.07s is the referee walking across the
+## ring. There is no referee actor here -- a cover in this project starts
+## at what the footage calls "referee in position" -- so the comparable
+## half is the ~1.53s from there to the first slap, i.e. 92 ticks. It was
+## 60, so the count used to start about half a second early.
+const COUNT_TICKS: Array[int] = [92, 167, 227]
+const PIN_COUNT_TICKS := 227
 
 ## How long each digit stays on screen, also frame-stepped: "1" is visible
 ## ~0.63-0.67s and "2" ~0.37-0.43s, with a silent gap of ~0.55s before the
@@ -422,10 +426,30 @@ func _end_pin(three_count_reached: bool) -> void:
 func _tick_submission() -> void:
 	var minigame: SubmissionMinigame = _submission_defender._submission_minigame
 	minigame.tick(true, _submission_defender._submission_defender_input_this_tick)
-	if minigame.attacker_wins():
+	var tapped := minigame.attacker_wins()
+	var escaped := minigame.defender_escapes()
+	if tapped and escaped:
+		# Both rings break on the same tick. Not hypothetical: the referee
+		# only starts a hold in a narrow band of limb damage around
+		# WrestlerController.SUBMISSION_ESCAPE_LIMB, where the two rates
+		# are close, and a limb sitting exactly on the crossover makes them
+		# identical -- 2 of 10 measured seeds landed there. Resolved with
+		# an explicit seeded flip for the same reason _tick_tie_up() does:
+		# left to the if/elif's ordering, "the attacker wins ties" is a
+		# rule nobody chose, hidden in the checking order.
+		_end_submission(_break_submission_tie())
+	elif tapped:
 		_end_submission(true)
-	elif minigame.defender_escapes():
+	elif escaped:
 		_end_submission(false)
+
+## Seeded, like the tie-up's own tie-break: same (match_seed, hold count)
+## always resolves the same way, so a replay reproduces it, but successive
+## dead heats in a match and across seeds do not all go one way.
+func _break_submission_tie() -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 6143 + _finish_choices * 41
+	return rng.randi_range(0, 1) == 0
 
 func _end_submission(tapped_out: bool) -> void:
 	_submissioning = false
