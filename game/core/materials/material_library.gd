@@ -186,9 +186,10 @@ const SPECS := {
 	#   ring_canvas            the mat
 	#   ring_apron             the skirt hanging off the mat edge
 	#   ring_rope              all four sides, all three heights
-	#   ring_post              the corner posts
-	#   ring_turnbuckle_pad    the corner pads
-	#   ring_steel             steps, frame, anything painted steel
+	#   ring_post              the corner posts and their rope fittings
+	#   ring_steel             frame and anything painted steel
+	#   ring_steps             the ring steps, bare unpainted metal
+	#   ring_turnbuckle_pad    UNUSED -- see its own note
 	#
 	# Two things a caller has to know:
 	#
@@ -210,6 +211,15 @@ const SPECS := {
 	## holds the value; `preserve_albedo_mean` is what keeps it holding it once
 	## a map multiplies in.
 	##
+	## The tint is near-white and near-neutral rather than the pale blue it
+	## was, matching gauntlet/refs/ring.md's unbranded canvas. That serves the
+	## number above rather than fighting it: the build measured the mat at
+	## 0.359 -- below its own 0.43-0.49 anchor, which capped the wrestler
+	## deltas at 0.208/0.199 against a 0.24-0.31 band. Raising the mat raises
+	## the ceiling those deltas live under. Held neutral rather than warmed
+	## because compare_frame.py reads warm/cool -0.311 against the reference
+	## still's -0.333, so ours is already the warmer of the two.
+	##
 	## Coverage decision on the map: Fabric036 is a plain linen weave, chosen
 	## by measurement rather than by eye. Rescaled to the pixel size its tile
 	## occupies, it scores 0.617 edge density in the `wide_broadcast` framing
@@ -221,7 +231,7 @@ const SPECS := {
 	## minifies below the pixel in the wide shot, which is the failure mode
 	## this whole entry exists to avoid.
 	"ring_canvas": {
-		"asset": "Fabric036", "tint": Color(0.60, 0.70, 0.82),
+		"asset": "Fabric036", "tint": Color(0.975, 0.975, 0.972),
 		"tile_metres": 0.5, "roughness": 0.95, "preserve_albedo_mean": true,
 		"normal_scale": 0.8,
 	},
@@ -229,19 +239,36 @@ const SPECS := {
 	## canvas, and hangs out of the ring lights. Fabric030 scores 0.877 close
 	## up; at match distance the apron is a 40px band where the map cannot
 	## read whatever it is, so the close shot is what chose it.
+	## Retinted neutral for gauntlet/refs/ring.md: the reference's skirt is a
+	## flat unbranded grey sheet. Its job in the frame is unchanged -- it is
+	## the value step between the near-white mat above and the darker arena
+	## floor below -- and that job is about ordering, not hue.
 	"ring_apron": {
-		"asset": "Fabric030", "tint": Color(0.13, 0.15, 0.28),
+		"asset": "Fabric030", "tint": Color(0.105, 0.105, 0.112),
 		"tile_metres": 0.45, "roughness": 0.95, "albedo_map": false,
 	},
-	## TRACED: every rope in every reference frame is white (clearest in the
-	## near-rope foreground of wide_standoff_broadcast_angle.jpg).
-	## Coverage decision: no map. A rope is 5cm across and never covers enough
-	## pixels for a tiled map to be anything but noise. Roughness 0.45 because
-	## a taped rope is semi-gloss, and because the ropes are the surface
-	## closest to the spot rig -- if anything in this scene returns a specular
-	## highlight it is these.
+	## TRACED, THEN OVERRULED, and the history stays because the contradiction
+	## is real rather than a mistake being tidied away.
+	##
+	## The tracing was: every rope in every WWE 2K reference frame is white,
+	## clearest in the near-rope foreground of
+	## wide_standoff_broadcast_angle.jpg. That is still true of those frames.
+	##
+	## It is charcoal here because the ring the project is now matched to
+	## (gauntlet/refs/ring.md) is a different ring, with black cable ropes, and
+	## matching it is the instruction. The split that resolves it: the ring
+	## reference governs the ring's LOOK, the 2K frames keep governing the
+	## measured RELATIONSHIPS in VISUAL_BAR.md. Nothing in that file reads a
+	## rope.
+	##
+	## Coverage decision: no map. A rope is under 4cm across and never covers
+	## enough pixels for a tiled map to be anything but noise. Roughness 0.30 --
+	## lower than the 0.45 a taped rope wanted -- because a dark rope cannot
+	## separate from a dark hall by value, so the specular return has to do it.
+	## These are the surface closest to the spot rig; if anything in this scene
+	## returns a highlight it is these.
 	"ring_rope": {
-		"tint": Color(0.93, 0.93, 0.91), "roughness": 0.45,
+		"tint": Color(0.085, 0.085, 0.090), "roughness": 0.30,
 	},
 	## Coverage decision, and a correction: the post shipped at metallic 0.3,
 	## which is not a material -- it has neither a dielectric's white specular
@@ -256,9 +283,21 @@ const SPECS := {
 	## `ring_corner` (see the round report). A painted steel post is a
 	## dielectric anyway, so 0.0 is both correct and visible. Flip it to
 	## `ring_post_chrome` the day a sky/HDRI radiance source lands.
+	## Near-black for gauntlet/refs/ring.md, whose posts are matte black slabs.
+	## Also carries the corner rope fittings, at a lifted tint per call site.
+	##
+	## NO MAP, deliberately, where this carried Metal032. Two reasons, and the
+	## first is what actually forced it: Metal032 brings a roughness map as well
+	## as a colour one, that map is polished metal, and it multiplies the
+	## scalar -- so raising `roughness` to 0.94 did not stop the posts carrying
+	## a hard vertical specular streak down each face and reading as moulded
+	## plastic. The second is that it should not have had one anyway: the
+	## reference's posts are flat black padding over a steel core and return
+	## almost nothing. A featureless surface is the correct answer here, not a
+	## texturing failure.
 	"ring_post": {
-		"asset": "Metal032", "tint": Color(0.22, 0.23, 0.26),
-		"tile_metres": 0.35, "roughness": 0.9, "metallic": 0.0,
+		"tint": Color(0.075, 0.075, 0.080), "roughness": 0.94,
+		"metallic": 0.0,
 	},
 	## The same post as a conductor. Correct PBR for bare chrome and currently
 	## unusable: with no radiance map it renders black. Kept named so the
@@ -267,6 +306,15 @@ const SPECS := {
 		"asset": "Metal032", "tint": Color(0.55, 0.56, 0.60),
 		"tile_metres": 0.35, "roughness": 1.0, "metallic": 1.0,
 	},
+	## UNUSED as of the ring-reference round, and kept rather than deleted.
+	##
+	## gauntlet/refs/ring.md's corners are bare -- a sleeve and a clevis per
+	## rope, no pad -- so `ring_builder.gd` no longer resolves this key. It
+	## stays defined because a padded corner is a legitimate thing for this
+	## ring to grow back (a branded ring for a different card, say), and
+	## rediscovering the tile size and the per-corner tint override would be
+	## work already done here. It resolves correctly; nothing calls it.
+	##
 	## Coverage decision: padded vinyl turnbuckle cover, Fabric061's dotted
 	## weave at a small tile so the pad reads as padded up close in
 	## `ring_corner`. Override `tint` per corner.
@@ -275,11 +323,29 @@ const SPECS := {
 		"tile_metres": 0.30, "roughness": 0.9, "normal_scale": 1.2,
 		"albedo_map": false,
 	},
-	## Coverage decision: painted steel -- ring steps, frame, apron edge.
-	## Painted, so dielectric: the paint is what you see, not the steel.
+	## Coverage decision: painted steel -- ring frame and apron edge. Painted,
+	## so dielectric: the paint is what you see, not the steel. Neutral now,
+	## with the rest of the ring.
 	"ring_steel": {
-		"asset": "DiamondPlate009", "tint": Color(0.30, 0.32, 0.38),
+		"asset": "DiamondPlate009", "tint": Color(0.29, 0.29, 0.30),
 		"tile_metres": 1.0, "roughness": 1.0, "normal_scale": 1.2,
+	},
+	## Bare unpainted steel, and the ring steps are the only thing wearing it.
+	##
+	## Split out of `ring_steel` rather than brightening it, because the two
+	## want opposite things. In gauntlet/refs/ring.md the steps are the
+	## second-brightest surface in the frame after the canvas, while the apron
+	## rail -- `ring_steel`'s other consumer -- hangs in the strip under the
+	## ring that `ring_builder.gd`'s apron note says to leave dark, on a
+	## measurement: a bright surface there took void_fraction from 0.023 to
+	## 0.002, outside VISUAL_BAR.md's 0.010-0.066.
+	##
+	## Dielectric despite being bare metal, for the reason `ring_post` gives at
+	## length: this scene has no radiance map, so a conductor renders black.
+	"ring_steps": {
+		"asset": "DiamondPlate009", "tint": Color(0.62, 0.62, 0.63),
+		"tile_metres": 0.8, "roughness": 0.42, "normal_scale": 1.2,
+		"metallic": 0.0,
 	},
 
 	# --- Arena hall (consumed by core/arena/arena_builder.gd) -------------
@@ -297,10 +363,29 @@ const SPECS := {
 	# Their *hue* is free, though, because `_house_lit()` reads only the
 	# tint's luminance. compare_frame.py measures the reference still at
 	# saturation 0.306 and warm/cool -0.333 against our 0.239 / -0.181, so
-	# every hall tint below is pushed cool and away from neutral grey at
-	# constant linear luminance -- red down, blue up, green held. That moves
-	# two measured statistics and moves neither the house level nor the
+	# every hall tint below was pushed cool and away from neutral grey at
+	# constant linear luminance -- red down, blue up, green held. That moved
+	# two measured statistics and moved neither the house level nor the
 	# silhouette relationships measured off luminance.
+	#
+	# The ringside tints -- `arena_floor`, `arena_barricade` and the new
+	# `arena_chair` -- are pulled PART of the way back toward neutral, because
+	# gauntlet/refs/ring.md's ringside is grey concrete and grey steel. Their
+	# linear luminance is identical to what it was (0.00985 and 0.02407),
+	# solved rather than eyeballed, so `_house_lit()` returns the same energy
+	# and the house level is untouched; only saturation moves, 0.52 -> 0.356.
+	#
+	# Halfway rather than all the way, and that split is measured. Taking them
+	# fully neutral (saturation 0.107) was tried first: with the mat going
+	# from pale blue to white in the same round, compare_frame.py read the
+	# frame at saturation 0.195 and warm/cool -0.138 against the reference
+	# still's 0.306 / -0.333 -- where the pre-round build had been dead on at
+	# 0.311 / -0.337. The mat is the bigger cause and the mat is not
+	# negotiable, so ringside gives back what it can without stopping looking
+	# like concrete.
+	#
+	# The bowl, stage, shell and truss keep their full cool push: they are
+	# outside what the ring reference covers at all.
 
 	## Coverage decision, scored not guessed. Six candidate colour maps were
 	## rescaled to the pixel size their tile actually occupies in
@@ -311,7 +396,7 @@ const SPECS := {
 	## behind them. PavingStones150 measured 0.862 and DiamondPlate009 0.872.
 	## The venue floor is paved slab; ringside dressing is a later slice's job.
 	"arena_floor": {
-		"asset": "PavingStones150", "tint": Color(0.070, 0.100, 0.150),
+		"asset": "PavingStones150", "tint": Color(0.0826, 0.1000, 0.1283),
 		"tile_metres": 2.0, "roughness": 1.0, "house_lit": true,
 	},
 	## Coverage decision: painted steel crowd barricade. Painted, so it is a
@@ -320,7 +405,7 @@ const SPECS := {
 	## density of anything imported here, which is why it is on the geometry
 	## that rings the whole frame at ringside.
 	"arena_barricade": {
-		"asset": "DiamondPlate009", "tint": Color(0.120, 0.170, 0.250),
+		"asset": "DiamondPlate009", "tint": Color(0.1404, 0.1700, 0.2181),
 		"tile_metres": 2.0, "roughness": 1.0, "house_lit": true,
 		"normal_scale": 1.4,
 	},
@@ -366,6 +451,19 @@ const SPECS := {
 	"arena_tunnel": {
 		"asset": "DiamondPlate009", "tint": Color(0.070, 0.090, 0.130),
 		"tile_metres": 1.5, "roughness": 1.0, "house_lit": true,
+	},
+	## The ringside folding chairs, instanced a few hundred times behind the
+	## barricade. Matte black powder-coated steel in gauntlet/refs/ring.md, and
+	## darker than the barricade in front of them so the two rows of geometry
+	## do not merge into one grey band at match distance.
+	##
+	## No map: a chair is a few dozen pixels from the match camera and a tiled
+	## map on it is noise. What makes a chair read at that size is its
+	## silhouette -- the gap between seat and back -- and the mesh carries
+	## that.
+	"arena_chair": {
+		"tint": Color(0.0586, 0.0710, 0.0911), "roughness": 0.85,
+		"house_lit": true,
 	},
 	## Coverage decision: the video wall is deliberately blank -- a logo there
 	## would be branding, which ARCHITECTURE.md's IP guardrail scopes out.

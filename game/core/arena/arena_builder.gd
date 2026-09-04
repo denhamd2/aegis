@@ -38,6 +38,19 @@ const FLOOR_Y := -1.1
 ## Barricade line. Everything between the ring and this is open ringside floor.
 const BARRICADE_RADIUS := 9.0
 const BARRICADE_HEIGHT := 1.1
+## The barricade is a RUN OF PANELS, not one long wall, because that is what
+## gauntlet/refs/ring.md shows and because the joins are the only thing giving
+## a 36m band of geometry any scale. Each panel is this wide, with a visible
+## gap at each join and a leg raking outward behind it.
+const BARRICADE_PANEL := 2.4
+const BARRICADE_JOIN := 0.05
+
+## Floor panel seams. The reference's ringside floor is a poured slab scored
+## into large panels, and those lines are most of what stops it reading as one
+## flat grey field from the wide camera -- which is coarse detail, on the
+## second-largest surface in the frame after the mat.
+const FLOOR_SEAM_PITCH := 4.0
+const FLOOR_SEAM_WIDTH := 0.05
 
 # --- Seating bowl -----------------------------------------------------------
 ## Row geometry. RUN is tread depth, RISE is step height; a real bowl rakes at
@@ -48,6 +61,15 @@ const ROW_RUN := 0.95
 const ROW_RISE := 0.48
 const LOWER_ROWS := 12
 const UPPER_ROWS := 8
+## How many of LOWER_ROWS sit FLAT on the ringside slab rather than raking, and
+## carry folding chairs rather than spectators.
+##
+## This is the ringside of gauntlet/refs/ring.md: rows of empty black folding
+## chairs on the flat floor behind the barricade, with the raked bowl starting
+## behind them. They are taken off the front of the lower tier rather than
+## added in front of it, so the bowl's overall footprint, the concourse and
+## the upper tier are all where they were.
+const FLAT_CHAIR_ROWS := 4
 ## Walkway between the two tiers.
 const CONCOURSE_DEPTH := 2.6
 
@@ -238,6 +260,18 @@ static func _add_box(st: SurfaceTool, center: Vector3, size: Vector3) -> void:
 				st.add_vertex(corners[i])
 
 
+## `_add_box` in the local frame of one side of the hall: `along` runs down the
+## side, `out` points away from the ring, and `size` is (width, height, depth)
+## in that frame. Both vectors are axis-aligned everywhere this is used, so it
+## resolves to a permutation of `_add_box`'s size rather than a rotation --
+## which is what keeps the world-metre UVs `_add_box` generates.
+static func _add_oriented(st: SurfaceTool, center: Vector3, along: Vector3,
+		out: Vector3, size: Vector3) -> void:
+	var world: Vector3 = along.abs() * size.x + Vector3.UP * size.y \
+			+ out.abs() * size.z
+	_add_box(st, center, world)
+
+
 static func _mesh_instance(name: String, st: SurfaceTool,
 		mat: Material) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
@@ -265,21 +299,68 @@ func _build_floor() -> void:
 	_add_box(st, Vector3(0.0, FLOOR_Y - 0.1, 0.0),
 			Vector3(WALL_EXTENT * 2.0, 0.2, WALL_EXTENT * 2.0))
 	add_child(_mesh_instance("Floor", st,
-			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 0.7))))
+			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 1.0))))
+	_build_floor_seams()
 
 
+## The scored panel lines in the ringside slab. Drawn as their own darker
+## surface a hair above the floor rather than cut into it: a seam is 5cm wide
+## and modelling it as a groove would need three faces where one flat strip is
+## visually identical from every camera in the shotlist.
+##
+## `reach` is well under the floor's own, so a seam reads as a shadow line
+## rather than as a painted marking -- which is the difference between a
+## scored slab and a car park.
+func _build_floor_seams() -> void:
+	var st := _new_surface()
+	var reach := BARRICADE_RADIUS + ROW_RUN * float(FLAT_CHAIR_ROWS) + 1.0
+	var lines := int(reach / FLOOR_SEAM_PITCH)
+	for i: int in range(-lines, lines + 1):
+		var at := float(i) * FLOOR_SEAM_PITCH
+		_add_box(st, Vector3(at, FLOOR_Y + 0.004, 0.0),
+				Vector3(FLOOR_SEAM_WIDTH, 0.008, reach * 2.0))
+		_add_box(st, Vector3(0.0, FLOOR_Y + 0.004, at),
+				Vector3(reach * 2.0, 0.008, FLOOR_SEAM_WIDTH))
+	add_child(_mesh_instance("FloorSeams", st,
+			MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_floor"), 0.35))))
+
+
+## Four runs of discrete panels, each with a capping rail along its top and a
+## leg raking outward behind it. It was one continuous box per side, which from
+## the wide camera is a featureless band with nothing in it to read scale off.
 func _build_barricades() -> void:
 	var st := _new_surface()
 	var y := FLOOR_Y + BARRICADE_HEIGHT * 0.5
+	var top := FLOOR_Y + BARRICADE_HEIGHT
 	var span := BARRICADE_RADIUS * 2.0
-	for sign: float in [1.0, -1.0]:
-		_add_box(st, Vector3(0.0, y, BARRICADE_RADIUS * sign),
-				Vector3(span, BARRICADE_HEIGHT, 0.16))
-		_add_box(st, Vector3(BARRICADE_RADIUS * sign, y, 0.0),
-				Vector3(0.16, BARRICADE_HEIGHT, span))
+	var panels := int(span / BARRICADE_PANEL)
+	var pitch := span / float(panels)
+	var width := pitch - BARRICADE_JOIN
+	for side: int in range(4):
+		# `out` points away from the ring, `along` runs down the barricade.
+		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1),
+				Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
+		var along := Vector3(out.z, 0.0, -out.x)
+		var line: Vector3 = out * BARRICADE_RADIUS
+		for i: int in range(panels):
+			var t := (float(i) + 0.5) / float(panels) - 0.5
+			var at: Vector3 = line + along * (t * span)
+			_add_oriented(st, at + Vector3(0.0, y, 0.0), along, out,
+					Vector3(width, BARRICADE_HEIGHT, 0.14))
+			# The cap rail, proud of the panel on both faces.
+			_add_oriented(st, at + Vector3(0.0, top - 0.035, 0.0), along, out,
+					Vector3(width, 0.07, 0.20))
+			# One leg per panel, behind it, raking out to the floor. Boxed
+			# rather than angled: at ringside distance the leg is three pixels
+			# wide and its silhouette is the whole of what it contributes.
+			_add_oriented(st, at + out * 0.22
+					+ Vector3(0.0, FLOOR_Y + BARRICADE_HEIGHT * 0.28, 0.0),
+					along, out,
+					Vector3(0.05, BARRICADE_HEIGHT * 0.56, 0.42))
 	add_child(_mesh_instance("Barricades", st,
 			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_barricade"), 0.8))))
+			_house_lit(_textured("arena_barricade"), 1.5))))
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +374,8 @@ func _build_bowl() -> void:
 	var steps := _new_surface()
 	var seats: Array[Transform3D] = []
 	var colors: Array[Color] = []
+	var chairs: Array[Transform3D] = []
+	var chair_colors: Array[Color] = []
 
 	var inner := BARRICADE_RADIUS
 	var tread_y := FLOOR_Y
@@ -303,13 +386,22 @@ func _build_bowl() -> void:
 			_add_concourse(steps, inner - CONCOURSE_DEPTH, inner, tread_y)
 		for r: int in rows:
 			var outer := inner + ROW_RUN
-			tread_y += ROW_RISE
+			# The first rows of the lower tier stay on the slab. _add_row is
+			# still called and still no-ops on zero height, so the flat rows
+			# cost no geometry -- the floor already under them is the tread.
+			var flat := tier == 0 and r < FLAT_CHAIR_ROWS
+			if not flat:
+				tread_y += ROW_RISE
 			_add_row(steps, inner, outer, tread_y)
-			_seat_row(inner, outer, tread_y, seats, colors)
+			if flat:
+				_seat_row(inner, outer, tread_y, chairs, chair_colors, true)
+			else:
+				_seat_row(inner, outer, tread_y, seats, colors)
 			inner = outer
 
 	add_child(_mesh_instance("SeatingBowl", steps, MaterialLibrary.house_compensate(
 			_house_lit(_textured("arena_bowl")))))
+	add_child(_build_chairs(chairs))
 	add_child(_build_crowd(seats, colors))
 
 
@@ -358,40 +450,146 @@ func _ring_band(st: SurfaceTool, inner: float, outer: float, base_y: float,
 
 
 ## Seats along one row's tread, on whichever banks that row actually has.
+##
+## `neat` switches the run from a crowd to a rank of empty chairs: every
+## position filled, near-square, no size variance. An unoccupied row is set
+## out in a grid and a crowd never is, and the difference is most of what
+## tells the two apart at this distance.
 func _seat_row(inner: float, outer: float, y: float,
-		out_seats: Array[Transform3D], out_colors: Array[Color]) -> void:
+		out_seats: Array[Transform3D], out_colors: Array[Color],
+		neat: bool = false) -> void:
 	var seat_r := inner + (outer - inner) * 0.45
-	# +Z bank faces -Z, and so on: every spectator looks at the ring.
+	# +Z bank faces -Z, and so on: every seat looks at the ring.
 	_seat_run(Vector3(-outer, y, seat_r), Vector3(outer, y, seat_r), PI,
-			out_seats, out_colors)
+			out_seats, out_colors, 0.0, neat)
 	_seat_run(Vector3(-inner, y, -seat_r), Vector3(inner, y, -seat_r), 0.0,
-			out_seats, out_colors, STAGE_HALF_WIDTH)
+			out_seats, out_colors, STAGE_HALF_WIDTH, neat)
 	_seat_run(Vector3(seat_r, y, -inner), Vector3(seat_r, y, inner), -PI * 0.5,
-			out_seats, out_colors)
+			out_seats, out_colors, 0.0, neat)
 	_seat_run(Vector3(-seat_r, y, -inner), Vector3(-seat_r, y, inner), PI * 0.5,
-			out_seats, out_colors)
+			out_seats, out_colors, 0.0, neat)
 
 
 func _seat_run(from: Vector3, to: Vector3, facing: float,
 		out_seats: Array[Transform3D], out_colors: Array[Color],
-		skip_abs_x: float = 0.0) -> void:
+		skip_abs_x: float = 0.0, neat: bool = false) -> void:
 	var span := from.distance_to(to)
 	var count := int(span / seat_pitch)
 	if count <= 0:
 		return
+	var fill := 1.0 if neat else crowd_fill
+	var wobble := 0.012 if neat else 0.06
+	var yaw := 0.035 if neat else 0.25
 	for i: int in count:
 		var t := (float(i) + 0.5) / float(count)
 		var at := from.lerp(to, t)
 		if skip_abs_x > 0.0 and absf(at.x) < skip_abs_x:
 			continue
-		if _rng.randf() > crowd_fill:
+		if _rng.randf() > fill:
 			continue
-		var jitter := Vector3(_rng.randf_range(-0.06, 0.06), 0.0,
-				_rng.randf_range(-0.06, 0.06))
-		var basis := Basis(Vector3.UP, facing + _rng.randf_range(-0.25, 0.25))
-		basis = basis.scaled(Vector3.ONE * _rng.randf_range(0.9, 1.08))
+		var jitter := Vector3(_rng.randf_range(-wobble, wobble), 0.0,
+				_rng.randf_range(-wobble, wobble))
+		var basis := Basis(Vector3.UP, facing + _rng.randf_range(-yaw, yaw))
+		if not neat:
+			basis = basis.scaled(Vector3.ONE * _rng.randf_range(0.9, 1.08))
 		out_seats.append(Transform3D(basis, at + jitter))
 		out_colors.append(CROWD_COLORS[_rng.randi() % CROWD_COLORS.size()])
+
+
+# ---------------------------------------------------------------------------
+# Ringside chairs
+# ---------------------------------------------------------------------------
+
+## The empty folding chairs on the flat rows behind the barricade.
+##
+## Its own MultiMesh rather than a second colour on the crowd's, for one
+## non-negotiable reason: `_crowd_material()` is a vertex shader that bobs
+## every instance it is applied to, and a breathing chair is worse than no
+## chair at all. This takes a plain material and does not move.
+func _build_chairs(chairs: Array[Transform3D]) -> MultiMeshInstance3D:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = _chair_mesh()
+	mm.instance_count = chairs.size()
+	for i: int in chairs.size():
+		mm.set_instance_transform(i, chairs[i])
+
+	var node := MultiMeshInstance3D.new()
+	node.name = "RingsideChairs"
+	node.multimesh = mm
+	# `reach` is high for a hall surface. Ringside is nearly the only part of
+	# the frame gauntlet/refs/ring.md shows lit at all -- its chairs read
+	# clearly against a grey floor -- and at the 0.55 this started on they were
+	# indistinguishable from the black under the ring. The headroom to do it
+	# is measured: wide_broadcast reads void_fraction 0.026 against
+	# VISUAL_BAR.md's 0.010-0.066, and brightening ringside spends that
+	# downward. Re-measure after touching this; the floor is what voids a
+	# round, not the ceiling.
+	node.material_override = MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_chair"), 2.5))
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return node
+
+
+## The chair, baked once.
+##
+## The source is an imported FBX, and it arrives with its correction living in
+## the node transforms above the mesh -- Blender exports Z-up at 1/100 scale,
+## so Godot's importer parents the mesh under a scale-100, rotate-X--90 chain.
+## A MultiMesh takes a bare Mesh and no hierarchy, so that chain is folded into
+## the vertices here rather than repeated in every instance transform. Baked
+## once and cached: `match.tscn` is built by several test suites and by every
+## capture.
+##
+## The armature comes off in the same step. The rig exists so the chair can
+## fold; nothing here ever folds one, and a skinned mesh cannot go into a
+## MultiMesh regardless.
+##
+## What comes out is 1448 triangles, 0.50 x 0.90 x 0.60m, feet on y = 0, facing
+## +Z -- which is already the facing convention `_seat_run` assumes, so no yaw
+## correction is applied and none should be added.
+const CHAIR_SCENE := "res://assets/environment/props/MetalFoldingChair.fbx"
+
+static var _chair_cache: ArrayMesh
+
+
+static func _chair_mesh() -> ArrayMesh:
+	if _chair_cache != null:
+		return _chair_cache
+	var packed: PackedScene = load(CHAIR_SCENE)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load." % CHAIR_SCENE)
+		return _new_surface().commit()
+	var root := packed.instantiate()
+	var source: MeshInstance3D = root.find_child("MetalFoldingChair", true, false)
+	if source == null or source.mesh == null:
+		push_error("ArenaBuilder: no MetalFoldingChair mesh in %s." % CHAIR_SCENE)
+		root.free()
+		return _new_surface().commit()
+
+	# Accumulate the transform the importer put above the mesh.
+	var bake := Transform3D()
+	var node := source as Node3D
+	while node != null:
+		bake = node.transform * bake
+		node = node.get_parent() as Node3D
+
+	var st := _new_surface()
+	var normal_basis := bake.basis.inverse().transposed()
+	for surface: int in source.mesh.get_surface_count():
+		var arrays := source.mesh.surface_get_arrays(surface)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		if indices.is_empty():
+			indices = PackedInt32Array(range(vertices.size()))
+		for i: int in indices:
+			if i < normals.size():
+				st.set_normal((normal_basis * normals[i]).normalized())
+			st.add_vertex(bake * vertices[i])
+	root.free()
+	_chair_cache = st.commit()
+	return _chair_cache
 
 
 # ---------------------------------------------------------------------------

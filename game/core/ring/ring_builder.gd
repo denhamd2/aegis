@@ -1,15 +1,23 @@
 extends Node3D
 class_name RingBuilder
 ## Generates every cosmetic surface of the ring: the canvas, the ropes, the
-## turnbuckles, the posts, the apron detail and the steel steps.
+## turnbuckle fittings, the posts, the apron frame and the steel steps.
 ##
 ## Why generated rather than authored in scenes/ring.tscn, following the same
-## reasoning as core/arena/arena_builder.gd: a sagging rope is 24 segments of
-## swept tube per span and there are twelve spans, a turnbuckle is a pad plus
-## three straps plus three buckles per corner, and a canvas is a texture. None
-## of that is hand-typeable as transforms, and expressed as a .tscn it would be
-## exactly the transform soup nobody can review. Expressed as the constants
-## below it is reviewable.
+## reasoning as core/arena/arena_builder.gd: a rope is 28 segments of swept
+## tube per span and there are twelve spans, a corner carries six rope
+## terminations, and a canvas is a texture. None of that is hand-typeable as
+## transforms, and expressed as a .tscn it would be exactly the transform soup
+## nobody can review. Expressed as the constants below it is reviewable.
+##
+## THE RING THIS IS MATCHED TO is gauntlet/refs/ring.md -- a plain, unbranded
+## ring: white canvas with wear only, thin dark ropes, square black posts, bare
+## turnbuckle fittings, a flat dark skirt, bright bare-metal steps. That
+## reference governs the ring's LOOK. gauntlet/refs/VISUAL_BAR.md, measured off
+## the WWE 2K stills, still governs the measured RELATIONSHIPS (the mat's
+## exposure anchor, silhouette separation, void_fraction). Where the two touch
+## -- rope colour, most obviously -- the call sites below say which won and
+## why.
 ##
 ## EVERYTHING HERE IS COSMETIC. This file creates no CollisionObject3D, joins
 ## no physics layer, and is read by no gameplay system. The ring's colliders --
@@ -35,52 +43,56 @@ const ROPE_HEIGHTS := [0.5, 0.85, 1.2]
 const POST_XZ := 3.0
 
 # --- Ropes -------------------------------------------------------------------
-## Rope radius. The reference's ropes read as thin bright lines
-## (gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg); the outgoing
-## BoxMesh was 0.05 square, which at match-camera distance is a plank. A real
-## ring rope is a steel cable inside a tape wrap, roughly 4-5cm over the wrap.
-## COVERAGE DECISION -- gauntlet/refs/ measures no rope diameter.
-const ROPE_RADIUS := 0.024
+## Rope radius. The ring reference (refs/ring.md) shows thin dark cable, and
+## thinner than what stood here: these are the finest lines in the frame, not
+## a structural element. COVERAGE DECISION -- neither reference measures a
+## rope diameter.
+const ROPE_RADIUS := 0.018
 const ROPE_RINGS := 8
 const ROPE_SEGMENTS := 28
-## Sag at midspan, per rope, top to bottom. Ropes are tensioned turnbuckle to
-## turnbuckle and the lower ones are slacker. COVERAGE DECISION -- the
-## reference frames show sag but gauntlet/refs/ measures no depth for it.
-## These are ~0.5-0.8% of the 6.1m span, which is what reads as tension rather
-## than as washing line.
-const ROPE_SAG := {1.2: 0.030, 0.85: 0.040, 0.5: 0.048}
-## How far past the post centre a rope runs before the turnbuckle pad swallows
-## its end. The pad is 0.30 deep on the diagonal, so 0.075 puts the cut face
-## inside it.
-const ROPE_OVERRUN := 0.060
+## Sag at midspan, per rope, top to bottom. The lower ropes are slacker, but
+## all three are far tauter than they were: the ring reference's ropes read as
+## near-straight lines between the posts, where the outgoing 3-4.8cm was a
+## visible curve. COVERAGE DECISION -- the reference shows tension, it does not
+## measure a depth.
+const ROPE_SAG := {1.2: 0.010, 0.85: 0.014, 0.5: 0.018}
+## How far past the post centre a rope runs before its turnbuckle nub swallows
+## the end. The nub is small now that the branded pad is gone, so this is small
+## too -- overrun the pad used to hide would now hang in open air.
+const ROPE_OVERRUN := 0.022
 
 # --- Turnbuckles -------------------------------------------------------------
-## The corner pad wraps the post, rotated 45 degrees to face ring centre, and
-## is deep enough on the diagonal to swallow both rope ends (which pass the
-## post centre 0.1m to the outside). COVERAGE DECISION -- proportions.
-const PAD_WIDTH := 0.37
-const PAD_DEPTH := 0.24
-const PAD_BOTTOM := 0.33
-const PAD_TOP := 1.46
-## Straps: two flat bands per rope height, wrapping the pad.
-const STRAP_HEIGHT := 0.035
-const STRAP_GAP := 0.055
-const BUCKLE := Vector3(0.075, 0.065, 0.05)
+## No pads. The ring reference (refs/ring.md) has bare corners: each rope ends
+## in a short dark sleeve clamped to the post, with a small clevis behind it,
+## and nothing else. What was here -- a 0.37 x 1.13m padded vinyl slab per
+## corner carrying a stacked-bar mark -- is gone entirely, and with it
+## _pad_vinyl() and the PAD_* palette.
+##
+## Worth saying plainly, because it inverts an earlier round's reasoning: that
+## mark was added under the IP guardrail (a chevron group read as a
+## letterform, so it became stacked bars). Deleting the pad deletes the
+## guardrail problem rather than managing it. A bare corner cannot resemble
+## anyone's trade dress.
+const NUB_LENGTH := 0.115
+const NUB_RADIUS := 0.038
+const CLEVIS := Vector3(0.05, 0.055, 0.07)
 
 # --- Posts -------------------------------------------------------------------
-const POST_RADIUS := 0.085
+## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
+## are axis-aligned to the ring sides rather than turned to the diagonal -- the
+## flat face reads straight down the camera's line on a side-on shot, which is
+## most of the shotlist. The outgoing cylinder, its steel cap and the lace
+## collar under the pad all go with the pad they were dressed for.
+const POST_SECTION := 0.155
 const POST_BOTTOM := -0.10
-const POST_TOP := 1.60
-const CAP_HEIGHT := 0.07
-const CAP_RADIUS := 0.115
+## Taller than the outgoing 1.60: in the reference the post stands well clear
+## of the top rope, which is what gives the corner its vertical line.
+const POST_TOP := 1.78
 
 # --- Apron -------------------------------------------------------------------
 const APRON_OUT := 3.20
 const APRON_TOP := -0.10
 const APRON_BOTTOM := -1.00
-## Vertical folds per side. A hanging skirt is not a flat board; the ribs are
-## what stop it reading as one. COVERAGE DECISION.
-const APRON_FOLDS := 9
 
 # --- Steel steps -------------------------------------------------------------
 const STEP_TREADS := 3
@@ -97,11 +109,39 @@ const CANVAS_PANEL := 1.2
 const CANVAS_SEED := 20260903
 ## The mat's palette, as effective albedo (albedo_color is CANVAS_WHITE, so a
 ## texel is very nearly the surface's albedo outright).
-const CANVAS_WHITE := Color(0.97, 0.98, 1.0)
-const CANVAS_FIELD := Color(0.50, 0.69, 0.94)
-const CANVAS_DISC := Color(0.30, 0.44, 0.70)
-const CANVAS_DISC_RIM := Color(0.24, 0.34, 0.56)
-const CANVAS_MARK := Color(0.99, 0.99, 1.0)
+##
+## Near-neutral and near-white, because the ring reference (refs/ring.md) is a
+## plain unbranded canvas: no blue field, no centre mark, no painted border.
+## Two consequences worth stating rather than discovering later:
+##
+##  * The mat gets BRIGHTER, and that is wanted. VISUAL_BAR.md's mat figure is
+##    an exposure anchor at 0.43-0.49 and the build measured 0.359 before this
+##    change -- below its own anchor, which also capped how far a wrestler
+##    could sit below it (0.208/0.199 against a 0.24-0.31 band). A white
+##    canvas raises the ceiling those deltas live under.
+##  * It is deliberately NOT warmed toward cream. compare_frame.py reads
+##    warm/cool -0.311 against the reference still's -0.333, so ours is
+##    already the warmer of the two, and the mat is 212k of 921k pixels in
+##    that frame. A warm mat would widen a gap that is already open.
+const CANVAS_WHITE := Color(0.975, 0.975, 0.972)
+## The canvas body, multiplied into CANVAS_WHITE.
+##
+## SOLVED, not picked. The first pass at this put the field at 0.93 and the mat
+## rendered at 0.590 -- overshooting the 0.43-0.49 anchor as badly as the blue
+## mat undershot it at 0.359, and dragging mat<->wrestler to 0.438/0.429
+## against a 0.24-0.31 band. Two measured points are enough to fit the curve
+## between linear albedo and rendered luminance through this tonemap
+## (rendered ~= 0.692 * L**0.719, from L 0.402 -> 0.359 and L 0.801 -> 0.590),
+## and 0.46 comes back as L 0.567, i.e. effective albedo ~0.78 sRGB. That is
+## what these are, net of the mean the wear below subtracts.
+##
+## The slight cool cast is the one concession to a second measurement:
+## compare_frame.py reads saturation 0.306 and warm/cool -0.333 on the
+## reference still, and a large neutral-white mat pulls both toward zero
+## (0.195 / -0.077 on the first pass). This is far too weak to read as a
+## coloured mat -- it is white canvas under cool light, which is what it is --
+## but it is not nothing.
+const CANVAS_FIELD := Color(0.770, 0.792, 0.830)
 
 ## Generated once per process. match.tscn is instantiated by several test
 ## suites and by every capture; regenerating a 512-square canvas each time is
@@ -111,9 +151,6 @@ static var _canvas_normal_texture: ImageTexture
 ## The canvas height field, kept so the normal map is derived from the same
 ## weave the albedo was drawn from rather than from a second, disagreeing one.
 static var _canvas_height: PackedFloat32Array
-static var _rope_texture: ImageTexture
-static var _apron_texture: ImageTexture
-static var _pad_texture: ImageTexture
 
 var _ring: Node3D
 
@@ -212,31 +249,35 @@ func _steel() -> StandardMaterial3D:
 	return _resolve("ring_steel", _mat(Color(0.60, 0.61, 0.65), 0.28))
 
 
-## The canvas -- the one material that cannot come wholesale from the library,
-## and the reason is the mark on it. `ring_canvas` is a tinted fabric with no
-## logo, and a StandardMaterial3D has exactly one albedo slot, so a library
-## albedo and a mat logo cannot both occupy it. What the library still supplies
-## here is everything else it is good for: the fabric's normal and roughness
-## maps at its world-metre texel density. Only albedo is overridden.
+## Bare, unpainted steel: the ring steps and nothing else. Bright, because in
+## the ring reference the steps are the second-lightest surface in the frame
+## after the canvas -- diamond plate catching the house rig. Still a dielectric
+## for exactly the reason _steel()'s note above gives: with no radiance map in
+## this scene a conductor renders black, and a bright black step is worse than
+## a slightly wrong one.
+func _bare_steel() -> StandardMaterial3D:
+	return _resolve("ring_steps", _mat(Color(0.62, 0.62, 0.63), 0.42))
+
+
+## The canvas. Takes the library's `ring_canvas` fabric for its normal and
+## roughness maps at their world-metre texel density, and overrides albedo
+## only, because the generated weave/seam/scuff texture above and a library
+## albedo cannot both occupy StandardMaterial3D's single albedo slot.
 ##
-## Why the blue is entirely in the texture and albedo_color is near-white: a
-## texture cannot brighten past albedo_color, so albedo_color has to be the
-## LIGHTEST value on the mat, and on the reference mat that is the mark, not
-## the field. Round 1 set albedo_color to the field's own blue instead, and the
-## arithmetic consequence was measurable: the mark's strokes could only reach
-## relative luminance 0.573 against a 0.430 field, a ratio of 1.33, where the
-## reference's white-on-blue mark is roughly 4. Cropping the wide frame in half
-## found the ring half at coarse detail 0.114 against the reference's 0.438 --
-## so a low-contrast mark on the frame's largest surface was most of that gap,
-## and this is the fix for it. The field's effective albedo is unchanged
-## (0.52,0.70,0.93), relative luminance 0.430 against the outgoing flat mat's
-## 0.434; only the mark moved, to 0.96.
+## albedo_color is near-white and the texture is near-white too, which is a
+## simplification over what stood here before. The old arrangement had a blue
+## field in the texture and a white albedo_color, because a texture cannot
+## brighten past albedo_color and the mark had to be the lightest thing on the
+## mat. With no mark, there is nothing to hold headroom for: the mat is one
+## near-white surface with wear multiplied into it.
 ##
-## test_wrestler_colorway.gd's albedo check still passes and still means
-## something -- it asserts the mat is far above either wrestler's skin, and
-## near-white is further above, not less. The mat's RENDERED value is an
-## exposure anchor being re-solved in lighting and is deliberately not chased
-## here.
+## test_wrestler_colorway.gd reads this albedo and asserts the mat sits far
+## above either wrestler's skin. Near-white is further above, not less.
+##
+## The mat's RENDERED value is VISUAL_BAR.md's exposure anchor and measured
+## 0.359 against a 0.43-0.49 band before this change. Brightening the canvas is
+## the one lever the ring owns there; the rest is lighting's, and lighting is
+## deliberately untouched in this round.
 func _canvas_material() -> StandardMaterial3D:
 	var m := _resolve("ring_canvas", _mat(CANVAS_WHITE, 0.86))
 	m.albedo_color = CANVAS_WHITE
@@ -253,25 +294,38 @@ func _canvas_material() -> StandardMaterial3D:
 	if m.normal_texture == null:
 		m.normal_enabled = true
 		m.normal_texture = _canvas_normal()
-		m.normal_scale = 1.0
+		# 0.75 rather than the 1.0 this shipped at: enough relief to keep the
+		# weave re-lit (fine detail is 0.31 against the reference's 0.61 and
+		# needs everything it can get) without returning to the corduroy that
+		# CANVAS_RELIEF's note describes.
+		m.normal_scale = 0.75
 	m.uv1_scale = Vector3.ONE
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return m
 
 
-## Rope. Bright and slightly glossy: in the reference these are the strongest
-## lines in the frame and the brightest surface in it, and the outgoing
-## material (0.93 albedo at roughness 0.6) rendered at the mat's own value, so
-## the ropes read as grey scaffolding. Value alone is not the fix -- a diffuse
-## white at this exposure lands where the mat lands. Dropping roughness gives
-## them a specular return the flat mat does not have, which is the mechanism
-## that separates them. The tape wrap is generated here because the library has
-## no helical wrap and a rope without one is a white pipe.
+## Rope. DARK, thin and semi-gloss.
+##
+## This is a reversal of what stood here, and the reason is which reference
+## governs what. material_library.gd's `ring_rope` was TRACED to the WWE 2K
+## stills, where every rope is white -- and that tracing was correct for those
+## frames. The ring reference this round is matched to (refs/ring.md) is a
+## different ring: its ropes are black cable, and matching it is the explicit
+## instruction. So the 2K frames keep governing the measured *relationships*
+## VISUAL_BAR.md holds (mat exposure anchor, silhouette separation), and the
+## ring reference governs the ring's *look*. The library key carries the same
+## note so the contradiction is visible there too, not just here.
+##
+## Value alone cannot separate a dark rope from a dark hall, which is the risk
+## this creates -- so roughness does the work instead. At 0.30 the ropes are
+## the glossiest surface in the ring and the closest to the spot rig, and the
+## specular return is what draws them as lines. The tape wrap is gone with the
+## white: the reference's cable is smooth.
 func _rope_material() -> StandardMaterial3D:
-	var m := _resolve("ring_rope", _mat(Color(0.97, 0.97, 0.94), 0.36))
-	m.albedo_color = Color(0.97, 0.97, 0.94)
-	m.roughness = 0.36
-	m.albedo_texture = _rope_tape()
+	var m := _resolve("ring_rope", _mat(Color(0.085, 0.085, 0.090), 0.30))
+	m.albedo_color = Color(0.085, 0.085, 0.090)
+	m.roughness = 0.30
+	m.albedo_texture = null
 	m.uv1_scale = Vector3.ONE
 	return m
 
@@ -287,9 +341,9 @@ func _build_canvas() -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	# Surface 0 is the mat's top face alone, with a full 0..1 UV over the 6m
-	# square so the canvas texture and its centre mark land where they are
-	# drawn. BoxMesh atlases its six faces into one UV square, which is why
-	# the outgoing mat could not carry a mark at all.
+	# square, so the canvas texture's seams and wear land in world space where
+	# they are drawn rather than tiling arbitrarily. BoxMesh atlases its six
+	# faces into one UV square and cannot do this.
 	_quad(st,
 		Vector3(-MAT_HALF, MAT_TOP_LOCAL, MAT_HALF),
 		Vector3(MAT_HALF, MAT_TOP_LOCAL, MAT_HALF),
@@ -314,19 +368,31 @@ func _build_canvas() -> void:
 
 	floor_mesh.mesh = mesh
 	floor_mesh.set_surface_override_material(0, _canvas_material())
+	# The canvas rolling over the mat edge onto the frame. Dark neutral grey:
+	# in the reference this band is the shadowed lip between a white mat and a
+	# dark skirt, and it is what stops the two reading as one surface.
 	floor_mesh.set_surface_override_material(1, _resolve("ring_apron",
-		_mat(Color(0.40, 0.52, 0.72), 0.85), {"tint": Color(0.40, 0.52, 0.72)}))
+		_mat(Color(0.17, 0.17, 0.175), 0.85), {"tint": Color(0.17, 0.17, 0.175)}))
 
 
-## The canvas texture: weave, panel seams, wear, a border, and an original
-## centre mark. Multiplies into _canvas_material()'s albedo_color.
+## The canvas texture: weave, panel seams, wear and scuff. Multiplies into
+## _canvas_material()'s albedo_color.
 ##
-## The mark is drawn from primitives here and is this project's own: a ringed
-## triple chevron over a bar. ARCHITECTURE.md's IP guardrail bars a real
-## promotion's trade dress, and a logo is the single most trade-dress-shaped
-## thing on a mat, so nothing about it is traced to any reference frame beyond
-## "the reference mat carries a large centre mark". Its geometry is a COVERAGE
-## DECISION.
+## What is NOT here any more, and why. This drew an original centre mark (a
+## ringed triple chevron), two secondary marks on the near and far thirds, and
+## a painted border inside the mat edge. All three are gone, because the ring
+## reference (refs/ring.md) is an unbranded canvas carrying nothing but wear.
+##
+## That has a measured cost and it is booked rather than hidden: the marks were
+## put here to move coarse detail, which is the lever the mat owns by being the
+## largest surface in the frame. The replacement is the streak and traffic
+## fields above plus deeper panel seams -- large-scale incident of the kind the
+## reference actually has. Whether that holds the number is a measurement, not
+## a claim; see the round write-up.
+##
+## The one thing this change makes strictly easier is the IP guardrail: a mat
+## logo is the single most trade-dress-shaped object on a wrestling ring, and
+## there now isn't one.
 static func _canvas() -> ImageTexture:
 	if _canvas_texture != null:
 		return _canvas_texture
@@ -336,6 +402,16 @@ static func _canvas() -> ImageTexture:
 	var fine := FastNoiseLite.new()
 	fine.seed = CANVAS_SEED + 7
 	fine.frequency = 3.2
+	## Scuff streaks. Sampled with the x axis squashed and the z axis stretched,
+	## which turns isotropic noise into long smears running across the mat --
+	## which is what the reference's canvas actually carries, and what has to
+	## hold the coarse-detail end of the frame now the centre mark is gone.
+	var streak := FastNoiseLite.new()
+	streak.seed = CANVAS_SEED + 13
+	streak.frequency = 0.40
+	var streak_b := FastNoiseLite.new()
+	streak_b.seed = CANVAS_SEED + 29
+	streak_b.frequency = 0.32
 
 	var n := CANVAS_SIZE
 	var data := PackedByteArray()
@@ -348,75 +424,71 @@ static func _canvas() -> ImageTexture:
 		for px: int in range(n):
 			var x := (float(px) + 0.5) * metres - MAT_HALF
 			var v := 1.0
-			var col_border := 0
 
-			# Weave. Two interleaved thread directions, near the resolution
-			# floor on purpose -- at match distance this is grain, not pattern.
-			v += 0.044 * float((px % 4) - 1.5) * 0.667 \
-				+ 0.044 * float((py % 4) - 1.5) * 0.667
+			# Weave. Two interleaved thread directions, at the resolution floor
+			# on purpose -- at match distance this is grain, not pattern.
+			#
+			# The amplitude is a third of what it was, and that is a fix rather
+			# than a preference. A 4-texel period sampled through a mip chain
+			# beats against the pixel grid, and the two directions together
+			# resolve into a diagonal herringbone; at 0.050 on a white mat that
+			# read as corduroy across the whole canvas. The blue field used to
+			# hide it. Nothing hides it now, so it comes down to where it is
+			# grain again.
+			# The 0.35 term is a per-thread irregularity, and it is load
+			# bearing rather than garnish: a perfectly periodic 4-texel
+			# pattern is what beats with the pixel grid in the first place.
+			# Jittering each thread's own weight breaks the beat while
+			# leaving the weave a weave.
+			var thread := 0.016 * (1.0 + 0.35 * fine.get_noise_2d(
+				float(px) * 0.37, float(py) * 0.37))
+			v += thread * float((px % 4) - 1.5) * 0.667 \
+				+ thread * float((py % 4) - 1.5) * 0.667
 			# Wear: a low octave for the trodden centre, a higher one for scuff.
 			v += 0.045 * noise.get_noise_2d(x * 4.0, z * 4.0)
 			v += 0.026 * fine.get_noise_2d(x * 4.0, z * 4.0)
 			v += 0.030 * fine.get_noise_2d(x * 19.0, z * 19.0)
 
-			# Panel seams. A sewn seam is a dark valley with a raised lip.
-			var seam := absf(fposmod(z + CANVAS_PANEL * 0.5, CANVAS_PANEL) - CANVAS_PANEL * 0.5)
-			if seam < 0.012:
-				v -= 0.14
-			elif seam < 0.030:
-				v += 0.035
-				if fposmod(x, 0.05) < 0.022:   # the stitch itself
-					v -= 0.07
+			# Scuff streaks, in two directions so the mat does not read as
+			# combed. Biased dark -- a scuff is dirt, it never brightens
+			# canvas -- via the -absf(), which is also what keeps the clean
+			# parts of the mat genuinely clean instead of grey overall.
+			#
+			# Deliberately LOW frequency and long. This is the mat's whole
+			# contribution to coarse detail now that the centre mark is gone,
+			# and coarse detail is measured on a heavily downscaled frame:
+			# anything with a period under about a third of a metre is averaged
+			# out of that measurement before it is taken. The first pass ran
+			# these at z * 7.0, which is fine grain, and coarse detail fell to
+			# 0.202 from the marked mat's 0.276.
+			v -= 0.110 * absf(streak.get_noise_2d(x * 0.45, z * 2.6))
+			v -= 0.085 * absf(streak_b.get_noise_2d(x * 2.4, z * 0.40))
 
-			# Painted border inside the mat edge: a heavy line and a hairline,
-			# which is what gives the mat a readable boundary from the wide
-			# camera instead of ending wherever the canvas happens to stop.
-			var edge_d := maxf(absf(x), absf(z))
-			if edge_d > 2.66 and edge_d < 2.80:
-				col_border = 1
-			elif edge_d > 2.84 and edge_d < 2.88:
-				col_border = 2
+			# Traffic. The middle of a mat is where the match happens and it
+			# is visibly greyer for it; the corners stay near-clean.
+			var traffic := 1.0 - clampf(sqrt(x * x + z * z) / 2.7, 0.0, 1.0)
+			v -= 0.075 * traffic * traffic
+
+			# Panel seams. A sewn seam is a dark valley with a raised lip, and
+			# with the mark gone these are the largest deliberate feature left
+			# on the mat, so they run deeper than they did.
+			var seam := absf(fposmod(z + CANVAS_PANEL * 0.5, CANVAS_PANEL) - CANVAS_PANEL * 0.5)
+			# WIDE, and this is the one number here set by the measurement
+			# rather than by the thing being modelled. From the wide camera the
+			# 6m mat spans about 700px, so a centimetre is roughly a pixel --
+			# and coarse detail is read off a frame downscaled far below that.
+			# A 1.4cm seam is invisible to it no matter how deep it goes. A
+			# 4cm lap is both what a sewn canvas seam actually measures once
+			# the doubled-over lip is counted, and wide enough to survive the
+			# downscale, which is what makes it worth having.
+			if seam < 0.040:
+				v -= 0.26
+			elif seam < 0.075:
+				v += 0.060
+				if fposmod(x, 0.05) < 0.022:   # the stitch itself
+					v -= 0.10
 
 			var col := CANVAS_FIELD * v
-
-			if col_border == 1:
-				col = CANVAS_MARK * v          # the heavy painted boundary line
-			elif col_border == 2:
-				col = CANVAS_DISC_RIM * v      # and its hairline shadow
-
-			# --- centre mark -------------------------------------------------
-			var r := sqrt(x * x + z * z)
-			if r < 1.72:
-				if r > 1.60:
-					col = CANVAS_MARK * v                     # outer ring
-				elif r > 1.54:
-					col = CANVAS_DISC_RIM * v                 # ring shadow
-				else:
-					col = CANVAS_DISC * v                     # seated disc
-					var chev := z - 0.42 * absf(x)
-					for offset: float in [-0.34, -0.02, 0.30]:
-						if absf(chev - offset) < 0.085 and absf(x) < 1.34:
-							col = CANVAS_MARK * v
-					if absf(z - 0.72) < 0.06 and absf(x) < 1.05:
-						col = CANVAS_MARK * v
-
-			# Two secondary marks on the near and far thirds. Real mats carry
-			# more than the centre logo, and from the wide camera these are
-			# large-scale incident on the frame's biggest surface -- which is
-			# the coarse-detail lever the ring actually owns. COVERAGE
-			# DECISION: their placement and size trace to nothing measured.
-			for mark_z: float in [-2.05, 2.05]:
-				var mx := x
-				var mz := (z - mark_z) * (1.0 if mark_z > 0.0 else -1.0)
-				var mr := sqrt(mx * mx + mz * mz)
-				if mr < 0.62:
-					col = CANVAS_DISC * v
-					var mchev := mz - 0.42 * absf(mx)
-					for offset: float in [-0.16, 0.06]:
-						if absf(mchev - offset) < 0.055 and absf(mx) < 0.50:
-							col = CANVAS_MARK * v
-				elif mr < 0.68:
-					col = CANVAS_MARK * v
 
 			_canvas_height[py * n + px] = v
 			var i := (py * n + px) * 3
@@ -428,108 +500,6 @@ static func _canvas() -> ImageTexture:
 	img.generate_mipmaps()
 	_canvas_texture = ImageTexture.create_from_image(img)
 	return _canvas_texture
-
-
-## Rope tape. Diagonal stripes in a tiling square become a helical wrap once
-## the tube's UV runs u around the circumference and v along the span, which is
-## how a taped rope actually looks and is where the ropes' fine detail comes
-## from at this distance.
-static func _rope_tape() -> ImageTexture:
-	if _rope_texture != null:
-		return _rope_texture
-	var n := 64
-	var data := PackedByteArray()
-	data.resize(n * n * 3)
-	for py: int in range(n):
-		for px: int in range(n):
-			var band := fposmod(float(px + py), 16.0) / 16.0
-			var v := 0.94 + 0.06 * cos(band * TAU)
-			if band < 0.06:
-				v -= 0.10                      # the seam where the tape laps
-			var i := (py * n + px) * 3
-			data[i] = _byte(v)
-			data[i + 1] = _byte(v)
-			data[i + 2] = _byte(v * 0.99)
-	var img := Image.create_from_data(n, n, false, Image.FORMAT_RGB8, data)
-	img.generate_mipmaps()
-	_rope_texture = ImageTexture.create_from_image(img)
-	return _rope_texture
-
-
-## The turnbuckle pad's vinyl: quilt seams, stitching, grain and the mark.
-##
-## Every camera in the shotlist that is not looking straight down sees a
-## corner, and ring_corner sees nothing else -- so an untextured slab here is
-## the most-looked-at flat surface in the game after the mat. The palette works
-## the same way the canvas's does and for the same arithmetic reason: the near
-## white lives in albedo_color and the blue in the texture, because a texture
-## cannot brighten past its albedo and a mark that cannot go brighter than its
-## field is not a mark.
-const PAD_FIELD := Color(0.13, 0.20, 0.64)
-const PAD_STITCH := Color(0.07, 0.11, 0.40)
-const PAD_MARK := Color(0.93, 0.94, 0.98)
-const PAD_WHITE := Color(0.97, 0.98, 1.0)
-
-static func _pad_vinyl() -> ImageTexture:
-	if _pad_texture != null:
-		return _pad_texture
-	var n := 256
-	var grain := FastNoiseLite.new()
-	grain.seed = CANVAS_SEED + 31
-	grain.frequency = 0.09
-	var data := PackedByteArray()
-	data.resize(n * n * 3)
-	for py: int in range(n):
-		var ty := (float(py) + 0.5) / float(n)
-		for px: int in range(n):
-			var tx := (float(px) + 0.5) / float(n)
-			var v := 1.0 + 0.05 * grain.get_noise_2d(float(px), float(py))
-			var col := PAD_FIELD
-
-			# Quilting: the pad is panelled, and a panelled vinyl catches the
-			# rig along every seam.
-			var seam_u := absf(fposmod(tx + 0.125, 0.25) - 0.125)
-			var seam_v := absf(fposmod(ty + 0.16, 0.32) - 0.16)
-			if seam_u < 0.008 or seam_v < 0.008:
-				col = PAD_STITCH
-			elif seam_u < 0.018 or seam_v < 0.018:
-				v += 0.10
-			# The stitch itself, dashed along the seam.
-			if (seam_u < 0.008 and fposmod(ty, 0.04) < 0.020) \
-					or (seam_v < 0.008 and fposmod(tx, 0.04) < 0.020):
-				col = PAD_MARK
-
-			# The mark: three stacked bars of decreasing width, once per face.
-			#
-			# This was a chevron group, matching the canvas mark, and it is
-			# deliberately not one any more. Stretched over a pad face three
-			# times taller than it is wide, three converging chevrons resolve
-			# into a single large angular letterform, and a large angular
-			# letterform on a turnbuckle pad is the most recognisable piece of
-			# trade dress in professional wrestling. ARCHITECTURE.md's IP
-			# guardrail is about resemblance, not about intent, so the shape
-			# that could be mistaken is the shape that has to go. Stacked bars
-			# read as branding at ring_corner distance and resemble nobody's.
-			var cx := (tx - 0.5) * 2.0
-			var widths := [0.62, 0.46, 0.30]
-			for bar: int in range(3):
-				# Placed in the clear band between the mid and top straps. The
-				# straps land at v = 0.15 / 0.46 / 0.77 (the three rope heights
-				# mapped onto the pad's own height), and a mark drawn across
-				# one of those is a mark behind a strap.
-				if absf(ty - (0.60 + 0.048 * float(bar))) < 0.020 \
-						and absf(cx) < widths[bar]:
-					col = PAD_MARK
-
-			var out := col * v
-			var i := (py * n + px) * 3
-			data[i] = _byte(out.r)
-			data[i + 1] = _byte(out.g)
-			data[i + 2] = _byte(out.b)
-	var img := Image.create_from_data(n, n, false, Image.FORMAT_RGB8, data)
-	img.generate_mipmaps()
-	_pad_texture = ImageTexture.create_from_image(img)
-	return _pad_texture
 
 
 ## A normal map derived from the canvas's own weave.
@@ -544,7 +514,20 @@ static func _pad_vinyl() -> ImageTexture:
 ##
 ## Derived by central difference from the same height field _canvas() drew the
 ## albedo from, so the two cannot disagree about where a thread is.
-const CANVAS_RELIEF := 4.0
+##
+## RELIEF IS DOWN FROM 4.0, and the reason is the same mechanism this docstring
+## spends its length praising, turned against the mat. The weave has a 4-texel
+## period; a normal ripple at that period is re-lit every frame, which is
+## exactly why it survives where an albedo ripple does not -- and also why, on
+## a white mat, the two thread directions resolved into a diagonal herringbone
+## across the whole canvas. It was there under the blue field too and the blue
+## hid it.
+##
+## So the lever is kept and turned down rather than removed: 1.5 leaves the
+## weave re-lit and legible up close in `mat_close`, without it beating against
+## the pixel grid into corduroy at match distance. The reference's canvas is a
+## smooth surface with soft broad wear on it, not a corded one.
+const CANVAS_RELIEF := 1.5
 
 static func _canvas_normal() -> ImageTexture:
 	if _canvas_normal_texture != null:
@@ -569,41 +552,6 @@ static func _canvas_normal() -> ImageTexture:
 	img.generate_mipmaps()
 	_canvas_normal_texture = ImageTexture.create_from_image(img)
 	return _canvas_normal_texture
-
-
-## The printed band that runs round the skirt. The reference's apron carries
-## large repeated branding; ours carries the same original mark the canvas
-## does, repeated, because that is what the skirt of a real ring is for. Drawn
-## rather than imported for the same IP reason the canvas mark is.
-static func _apron_print() -> ImageTexture:
-	if _apron_texture != null:
-		return _apron_texture
-	var w := 512
-	var h := 64
-	var data := PackedByteArray()
-	data.resize(w * h * 3)
-	for py: int in range(h):
-		var ty := (float(py) + 0.5) / float(h)
-		for px: int in range(w):
-			var tx := fposmod(float(px) / float(w) * 6.0, 1.0)
-			var col := Color(0.16, 0.19, 0.34)
-			if ty < 0.10 or ty > 0.90:
-				col = Color(0.42, 0.48, 0.66)          # piping top and bottom
-			else:
-				var cx := (tx - 0.5) * 2.4
-				var cy := (ty - 0.5) * 2.0
-				var chev := cy - 0.55 * absf(cx)
-				for offset: float in [-0.30, 0.02, 0.34]:
-					if absf(chev - offset) < 0.10 and absf(cx) < 0.62:
-						col = Color(0.86, 0.89, 0.98)
-			var i := (py * w + px) * 3
-			data[i] = _byte(col.r)
-			data[i + 1] = _byte(col.g)
-			data[i + 2] = _byte(col.b)
-	var img := Image.create_from_data(w, h, false, Image.FORMAT_RGB8, data)
-	img.generate_mipmaps()
-	_apron_texture = ImageTexture.create_from_image(img)
-	return _apron_texture
 
 
 static func _byte(f: float) -> int:
@@ -662,108 +610,93 @@ func _sweep_rope(st: SurfaceTool, base: Vector3, along: Vector3, height: float) 
 
 func _build_turnbuckles_and_posts() -> void:
 	var holder := _replace("Posts")
-	var pad := SurfaceTool.new(); pad.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var strap := SurfaceTool.new(); strap.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var steel := SurfaceTool.new(); steel.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var dark := SurfaceTool.new(); dark.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var fitting := SurfaceTool.new(); fitting.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for sx: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
 			var post := Vector3(POST_XZ * sx, 0.0, POST_XZ * sz)
-			# The pad faces ring centre, so its local axes are the diagonal.
-			var inward := Vector3(-sx, 0, -sz).normalized()
-			var tangent := Vector3(inward.z, 0, -inward.x)
+			# Axis-aligned: local X runs along +X, local Z along +Z, so the
+			# post's faces are parallel to the ring's sides.
+			_oriented_box(dark,
+				post + Vector3(0, (POST_BOTTOM + POST_TOP) * 0.5, 0),
+				Vector3(1, 0, 0), Vector3(0, 0, 1),
+				Vector3(POST_SECTION, POST_TOP - POST_BOTTOM, POST_SECTION))
 
-			_cylinder(dark, post + Vector3(0, POST_BOTTOM, 0), POST_TOP - POST_BOTTOM,
-				POST_RADIUS, 12)
-			_cylinder(steel, post + Vector3(0, POST_TOP, 0), CAP_HEIGHT, CAP_RADIUS, 14)
-			# A collar where the pad's laces gather at the foot of the post.
-			_cylinder(steel, post + Vector3(0, PAD_BOTTOM - 0.05, 0), 0.05,
-				POST_RADIUS + 0.02, 12)
-
-			_oriented_box(pad, post + Vector3(0, (PAD_BOTTOM + PAD_TOP) * 0.5, 0),
-				tangent, inward, Vector3(PAD_WIDTH, PAD_TOP - PAD_BOTTOM, PAD_DEPTH))
-
+			# Each rope terminates in its own sleeve, and each sleeve is on the
+			# face its rope runs off. A corner carries two ropes per height --
+			# one down X, one down Z -- so it carries two sleeves per height,
+			# which is what the reference's corners show.
 			for height: float in ROPE_HEIGHTS:
 				var centre: Vector3 = post + Vector3(0, height, 0)
-				for offset: float in [-STRAP_GAP, STRAP_GAP]:
-					_oriented_box(strap, centre + Vector3(0, offset, 0), tangent, inward,
-						Vector3(PAD_WIDTH + 0.012, STRAP_HEIGHT, PAD_DEPTH + 0.012))
-				# The buckle sits on the outward face, where the strap closes.
-				_oriented_box(steel, centre - inward * (PAD_DEPTH * 0.5 + BUCKLE.z * 0.4),
-					tangent, inward, BUCKLE)
+				for out: Vector3 in [Vector3(-sx, 0, 0), Vector3(0, 0, -sz)]:
+					var tangent := Vector3(out.z, 0, -out.x)
+					# The sleeve, lying along the rope, drawn as a box rather
+					# than a cylinder: at this size the silhouette is four
+					# pixels and a box costs a third of the triangles.
+					_oriented_box(fitting,
+						centre + out * (POST_SECTION * 0.5 + NUB_LENGTH * 0.5),
+						tangent, out,
+						Vector3(NUB_RADIUS * 2.0, NUB_RADIUS * 2.0, NUB_LENGTH))
+					# The clevis clamping the sleeve back to the post.
+					_oriented_box(fitting,
+						centre + out * (POST_SECTION * 0.5 + 0.012),
+						tangent, out, CLEVIS)
 
-	_emit(holder, "PostMesh", dark, _resolve("ring_post", _mat(Color(0.30, 0.31, 0.35), 0.38)))
-	_emit(holder, "PostSteel", steel, _steel())
-	var pad_material := _resolve("ring_turnbuckle_pad", _mat(PAD_WHITE, 0.58),
-		{"tint": PAD_WHITE})
-	# Overridden for the same reason the canvas's albedo is: the library key is
-	# a flat tinted fabric and this pad carries a mark. Its normal and
-	# roughness maps are kept.
-	pad_material.albedo_color = PAD_WHITE
-	pad_material.albedo_texture = _pad_vinyl()
-	pad_material.uv1_scale = Vector3.ONE
-	_emit(holder, "TurnbucklePads", pad, pad_material)
-	_emit(holder, "TurnbuckleStraps", strap, _resolve("ring_turnbuckle_pad",
-		_mat(Color(0.94, 0.94, 0.92), 0.42), {"tint": Color(0.94, 0.94, 0.92)}))
+	# Matte, not satin. At roughness 0.55 the posts carried a hard vertical
+	# specular streak down each face and read as moulded plastic; the
+	# reference's posts are flat black padding and return almost nothing.
+	_emit(holder, "PostMesh", dark,
+		_resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)))
+	_emit(holder, "TurnbuckleFittings", fitting,
+		_resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)))
 
 
 # ==================================================================== apron ===
 ## The skirt boxes stay in ring.tscn (they carry the CC0 fabric this file must
-## not re-license). What is added is the structure a hanging skirt has and four
-## flat boards do not: the padded rail it hangs from, a hem, and vertical folds.
+## not re-license). What is added here is the frame the skirt hangs from.
+##
+## What is NOT added any more: the printed chevron band, and the nine vertical
+## folds per side. The ring reference (refs/ring.md) has a flat, unbranded,
+## near-featureless skirt -- a dark grey sheet from the mat edge to the floor
+## with a lip at the top and a hem at the bottom. The band went with the rest
+## of the branding; the folds went because the reference's skirt is drum-tight,
+## not draped.
+##
+## The round note that used to sit on the band is kept, because it is about
+## this strip of frame rather than about the band, and it still binds: a bright
+## surface hung here lit the one strip of the wide frame that was still pure
+## black and took void_fraction from 0.023 to 0.002, outside VISUAL_BAR.md's
+## 0.010-0.066 floor. A real arena is dark under the ring apron. Everything
+## added below is therefore dark, which is also what the reference shows -- the
+## two agree, which is the comfortable case.
 
 func _build_apron_detail() -> void:
 	var holder := _replace("ApronDetail")
 	var rail := SurfaceTool.new(); rail.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var fold := SurfaceTool.new(); fold.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for side: int in range(4):
 		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
 		var tangent := Vector3(out.z, 0, -out.x)
 		var mid: Vector3 = out * APRON_OUT
+		# The lip the skirt hangs off, under the mat edge.
 		_oriented_box(rail, mid + Vector3(0, APRON_TOP + 0.04, 0), tangent, out,
 			Vector3(6.62, 0.13, 0.17))
+		# The hem, weighted so the skirt hangs straight.
 		_oriented_box(rail, mid + Vector3(0, APRON_BOTTOM + 0.03, 0), tangent, out,
 			Vector3(6.58, 0.07, 0.13))
-		for i: int in range(APRON_FOLDS):
-			var t := (float(i) + 0.5) / float(APRON_FOLDS) - 0.5
-			_oriented_box(fold, mid + tangent * (t * 6.3)
-				+ Vector3(0, (APRON_TOP + APRON_BOTTOM) * 0.5, 0), tangent, out,
-				Vector3(0.055, APRON_TOP - APRON_BOTTOM - 0.16, 0.075))
-	var band := SurfaceTool.new(); band.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for side: int in range(4):
-		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
-		var tangent := Vector3(out.z, 0, -out.x)
-		# Hung at the skirt's middle, NOT up under the mat edge where the wide
-		# camera would see more of it. Measured, both ways: raised to -0.36 and
-		# brightened, the band lit the one strip of frame that was still pure
-		# black and took void_fraction from 0.023 to 0.002 -- outside
-		# VISUAL_BAR.md's 0.010-0.066 band, which voids a round. A real arena
-		# is dark under the ring apron; filling that in is not an improvement,
-		# it is the measurement telling me I overlit ringside.
-		_oriented_box(band, out * (APRON_OUT + 0.045) + Vector3(0, -0.50, 0),
-			tangent, out, Vector3(6.30, 0.46, 0.03))
-	# A lit steel frame rail along the mat's edge was built here and then taken
-	# back out, and the reason is worth leaving behind. It bought coarse detail
-	# 0.134 -> 0.138 and cost void_fraction 0.023 -> 0.014, because the only
-	# pure-black pixels left in the wide frame are the strip under the ring and
-	# a rail runs straight through them. VISUAL_BAR.md's floor is 0.010 and
-	# lighting is raising exposure in parallel, which will spend the rest of
-	# that headroom. Four thousandths of coarse detail is not worth being the
-	# agent who put the wave through the floor.
-
-	var band_material := _resolve("ring_apron", _mat(Color(0.90, 0.92, 1.0), 0.70),
-		{"tint": Color(0.90, 0.92, 1.0)})
-	band_material.albedo_color = Color(0.90, 0.92, 1.0)
-	band_material.albedo_texture = _apron_print()
-	band_material.uv1_scale = Vector3.ONE
-	_emit(holder, "ApronBand", band, band_material)
-	_emit(holder, "ApronRail", rail, _resolve("ring_steel", _mat(Color(0.30, 0.34, 0.48), 0.55),
-		{"tint": Color(0.30, 0.34, 0.48)}))
-	_emit(holder, "ApronFolds", fold, _resolve("ring_apron", _mat(Color(0.17, 0.20, 0.34), 0.85)))
+	_emit(holder, "ApronRail", rail,
+		_resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
+			{"tint": Color(0.105, 0.105, 0.112)}))
 
 
 # ============================================================== steel steps ===
+## Geometry unchanged -- three treads at +/-X, offset along Z, which is already
+## where the reference puts them. What changes is the material: in the
+## reference the steps are BARE metal and the second-brightest thing in the
+## frame after the canvas, where here they shared the ring's dark painted
+## `ring_steel` with the apron rail. They get their own key for that reason;
+## brightening `ring_steel` itself would have brightened the apron rail with
+## them, into the strip of frame the note above says to leave dark.
 
 func _build_steps() -> void:
 	var holder := _replace("Steps")
@@ -779,7 +712,7 @@ func _build_steps() -> void:
 				+ Vector3(0, (STEP_FLOOR_Y + top) * 0.5, 0) + tangent * 0.35
 			_oriented_box(st, centre, tangent, out,
 				Vector3(STEP_WIDTH, top - STEP_FLOOR_Y, depth))
-	_emit(holder, "StepsMesh", st, _steel())
+	_emit(holder, "StepsMesh", st, _bare_steel())
 
 
 # ================================================================== helpers ===

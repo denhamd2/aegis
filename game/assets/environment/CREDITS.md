@@ -34,6 +34,37 @@ The albedo textures are still used as *variance* on top of a value the tint
 carries, so `tools/refs/measure_frame.py`'s luminance relationships survive.
 The one exception is documented there as `preserve_albedo_mean`.
 
+## Props
+
+### `props/MetalFoldingChair.fbx` — PROVENANCE UNVERIFIED
+
+The ringside folding chair, instanced 470 times by
+`core/arena/arena_builder.gd`. 1448 triangles, one material, no textures.
+
+**This asset arrived with no licence file, no author, and no source URL**, and
+it is recorded that way rather than quietly filed under the CC0 heading above.
+It was supplied by the project owner, who was shown
+`gauntlet/anchor/ARCHITECTURE.md`'s rule on exactly this case --
+
+> "Free to download" is not a licence. Extracted game assets and replicas of a
+> real promotion's trade dress circulate freely and are still infringing;
+> availability is not the test, the licence is.
+
+-- and decided to use it anyway. That is their call on their own repository;
+this entry exists so the decision is visible to anyone who reads the tree
+later, and so nobody mistakes this file for one of the CC0 scans above.
+
+What is known about it: the FBX is a Blender export whose embedded source path
+is `E:\Applications\Blender\Models\Props\MetalFoldingChair\MetalFoldingChair.blend`,
+which suggests a personal model library rather than a scrape. It is a generic
+folding chair and carries no promotion's trade dress, so the IP guardrail's
+*resemblance* half is not in question -- only its licence is.
+
+If provenance is ever established, replace this section with a proper entry.
+If it is established as unusable, `arena_builder.gd`'s chair can be rebuilt
+from `_add_box()` primitives the way `_spectator_mesh()` is; nothing else
+depends on the file.
+
 ### IP guardrail
 
 Per `gauntlet/anchor/ARCHITECTURE.md`: these are generic CC0 surface scans.

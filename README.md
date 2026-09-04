@@ -20,7 +20,9 @@ enter this repo.
   not violate. Read this first.
 - `gauntlet/refs/` — the reference corpus: measured timings, camera
   behavior, HUD layout, and feel, all traceable to footage under
-  `gauntlet/refs/raw/` (gitignored — drop clips locally).
+  `gauntlet/refs/raw/` (gitignored — drop clips locally). `refs/ring.md`
+  additionally records the external ring the build's *look* is matched to;
+  like the footage, it is reference-only and its asset is not committed.
 - `gauntlet/status/` — `slices.json` + the generated
   `gauntlet-status.html` tracking every gauntlet slice's round count,
   verdict, and current largest gap.
@@ -3322,3 +3324,134 @@ The lower number is the honest one.
   that is unmeasured here.
 - Fixture count, fog density, rope sag depth and turnbuckle proportions trace
   to **no reference measurement**. They are coverage decisions, named as such.
+
+## Match the ring and ringside to an external reference (round 4)
+
+Not a gauntlet round. A direct instruction: make the ring and the ringside
+area look like [this Sketchfab
+model](https://sketchfab.com/3d-models/wrestling-ring-76f8cc19b9ad458685313bad672ea49c)
+as closely as possible.
+
+**The asset is not in this repository and never will be.** Sketchfab's API
+reports `isDownloadable: false` with no licence grant. It is matched by hand as
+a *visual reference*, which is exactly the treatment `gauntlet/refs/` already
+gives the WWE 2K stills, and what `ARCHITECTURE.md`'s IP guardrail requires.
+The observations are written down in `gauntlet/refs/ring.md`; the image is not
+committed, per the convention in `refs/raw/README.md`.
+
+Three decisions were taken with the user before any code moved: ringside is in
+scope but the entrance stage, truss and upper bowl are not; the palette matches
+the reference *fully*, branding included; and the lighting rig is untouched.
+
+### What changed
+
+The ring was a branded broadcast ring and is now a plain one. Canvas: the blue
+field, the chevron centre mark, the two secondary marks and the painted border
+are gone, leaving white canvas with wear, scuff streaks and deep panel seams.
+Ropes: thin, black, near-taut, no tape wrap. Posts: square matte-black slabs,
+axis-aligned, no steel caps. Turnbuckles: the 0.37 × 1.13m branded vinyl pads,
+their straps and buckles and the whole `_pad_vinyl()` texture are deleted, and
+each rope now ends in a sleeve and a clevis. Skirt: flat neutral grey, no print
+band, no folds. Steps: their own `ring_steps` key, bare bright metal.
+
+Ringside: the barricade became a run of discrete panels with cap rails and
+outward legs; the slab got its scored panel grid; and the first four rows of
+the lower bowl were flattened onto the floor and filled with 470 imported
+folding chairs on their own MultiMesh — pointedly *not* sharing the crowd's
+material, because `_crowd_material()` is a vertex shader that bobs whatever it
+touches and a breathing chair is worse than no chair.
+
+### The result: the silhouette bar, finally
+
+All four of `VISUAL_BAR.md`'s figures are inside their bands, for the first
+time on the renderer the game actually ships:
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.359 | **0.456** | 0.43–0.49 |
+| mat ↔ wrestler A | 0.208 | **0.306** | 0.24–0.31 |
+| mat ↔ wrestler B | 0.199 | **0.296** | 0.24–0.31 |
+| wrestler ↔ wrestler | 0.009 | 0.010 | 0.00–0.07 |
+
+This is not a lighting fix and no lighting was touched. It is arithmetic the
+ring owned the whole time: the blue mat rendered *below* its own exposure
+anchor, and a wrestler cannot sit 0.24–0.31 beneath a mat that is only at
+0.359 — the ceiling was the mat. A white canvas raised it.
+
+The value was solved, not picked. Two measured points (linear albedo 0.402 →
+0.359 and 0.801 → 0.590) fit `rendered ≈ 0.692 · L^0.719` through this
+tonemap, and 0.46 comes back as effective albedo ≈ 0.78 sRGB. The first pass
+at a white mat, taken by eye, landed at 0.590 — overshooting as badly as the
+blue one undershot.
+
+### The cost, booked rather than buried
+
+Measured on `wide_broadcast` against the same reference still:
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| saturation | 0.311 | 0.216 | 0.306 |
+| warm/cool | −0.337 | −0.153 | −0.333 |
+| coarse detail | 0.209 | 0.137 | 0.343 |
+| fine detail | 0.361 | 0.320 | 0.614 |
+| void_fraction | 0.015 | 0.024 | 0.010–0.066 |
+
+Saturation and warm/cool went from dead-on to clearly outside. That is the
+instruction, not a slip. The reference is near-monochrome, the mat is 212k of
+921k pixels in that frame, and replacing a blue mat carrying a high-contrast
+mark with a neutral white one carrying wear cannot move those numbers any
+other way.
+
+What could honestly be recovered was recovered. The ringside tints were pulled
+*halfway* back toward the hall's cool push rather than all the way to neutral,
+at identical linear luminance so `_house_lit()` returns the same energy and the
+house level is untouched. And the canvas seams were widened from 1.4cm to 4cm —
+a number set by the measurement rather than by the thing being modelled, since
+coarse detail is read off a heavily downscaled frame in which a 1.4cm seam does
+not exist at all. That bought coarse detail 0.124 → 0.137. Going further would
+mean putting decoration back on the mat, which is the thing the instruction
+removed.
+
+### Two things the white mat exposed
+
+Both were already there and both were hidden by the blue.
+
+The canvas weave has a 4-texel period, and its normal map re-lights it every
+frame — which is precisely what that normal map is *for*, and precisely why the
+two thread directions resolved into diagonal corduroy across the entire mat the
+moment the field went white. Fixed by jittering each thread's own weight so the
+pattern cannot beat with the pixel grid, and by cutting `CANVAS_RELIEF` from
+4.0 to 1.5.
+
+`ring_post` carried Metal032, which brings a *polished-metal roughness map*,
+and a roughness map multiplies the scalar — so raising `roughness` to 0.94 did
+nothing and the posts kept a hard vertical specular streak that read as moulded
+plastic. The key now carries no map at all, which is also what the reference
+shows: flat black padding returns almost nothing.
+
+### Unchanged, and verified so
+
+Suite 216/216, 0 failures, 107 orphans, exit code 101 — byte-identical to the
+pre-round baseline, `test_determinism`, `test_replay_roundtrip`,
+`test_camera_framing` and `test_wrestler_colorway` included. No
+`CollisionObject3D` was created, moved or resized: the four `ring_ropes` bodies
+`wrestler_controller.gd` bounces off, the 6m mat, the mat surface at y = 0 and
+the ropes at ±3.1 are all where the measurement chain left them.
+
+### Not judged here
+
+- **The folding chair has no licence.** It arrived as a bare FBX with no
+  licence file, no author and no source URL. This was raised against
+  `ARCHITECTURE.md`'s "'free to download' is not a licence" rule, and the
+  project owner decided to use it anyway. Recorded in
+  `assets/environment/CREDITS.md` under its own heading rather than filed
+  beside the CC0 scans, so nobody later mistakes it for one.
+- **Material believability** remains UNJUDGED under llvmpipe, as every previous
+  visual round has said.
+- **No performance claim.** 470 chairs at 1448 triangles is 680k triangles in
+  one draw call, on top of everything already in the hall. It was never
+  measured on hardware and nothing here claims it is cheap.
+- **`fine detail` is still far short** (0.320 against 0.614) and this round did
+  not close it. Cutting the weave's relief to kill the corduroy cost some of
+  it; `normal_scale` was returned to 0.75 to get part of that back, which is a
+  compromise between two defects rather than a fix for either.
