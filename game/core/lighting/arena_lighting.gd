@@ -84,6 +84,56 @@ const STAGE_COLOR := Color(0.72, 0.74, 1.0)
 ## no scallops at bowl distance; a coverage decision, not a measurement.
 const HOUSE_FIXTURES := 12
 
+## Fixture-energy gain for renderers without volumetric fog -- in practice the
+## compatibility renderer, which is what Godot's Web platform falls back to.
+##
+## Needed because the two renderers do not accumulate this rig's 22 punctual
+## lights alike, and the difference is not small. Measured with the project's
+## own measure_silhouette.py on the spawn standoff, mat relative luminance
+## against VISUAL_BAR.md's 0.43-0.49 anchor:
+##
+##   forward_plus                        0.456
+##   gl_compatibility, as shipped        0.003   <- the web build's real defect
+##   gl_compatibility, light limit 32    0.995   <- clipped white
+##   gl_compatibility, limit 32 + 0.15   0.465
+##
+## TWO separate faults, found in this order, and the first one masked the
+## second completely.
+##
+## 1. project.godot's limits/opengl/max_lights_per_object was Godot's default
+##    8, and this rig builds 22. The renderer kept 8 per object and did not
+##    keep the four truss keys hanging over the mat, so the mat was lit by
+##    almost nothing -- 0.003, effectively black. Proved by hiding every
+##    fixture except the keys and top fills: with 6 lights, under the limit,
+##    the mat rendered 0.995. The fixtures and their energies were never the
+##    problem. That setting is now 32, with the evidence recorded beside it.
+##
+## 2. With all 22 reaching the mat, the compatibility renderer over-shoots
+##    instead: 0.995, clipped. Hence this gain, which scales the fixtures
+##    this rig creates and nothing else.
+##
+## Why a gain on the fixtures rather than tonemap_exposure, since exposure was
+## tried first: ArenaBuilder._house_lit leaves the bowl, crowd and video wall
+## EMISSIVE, and emission crosses renderers intact. Exposure scales emissive
+## and lit surfaces together, so fitting it to the mat blew the crowd and
+## stage to near-white -- one measured number satisfied and the frame ruined.
+## Only the lit surfaces are wrong, so only the lights are touched.
+##
+## forward_plus never reaches this code (the guard is the same one the fog
+## volumes use), and the OpenGL light limit is a key Vulkan ignores. Both
+## halves of the fix are therefore invisible to the renderer every gauntlet
+## number is measured on; re-measured after the change, forward_plus still
+## reports mat 0.456, gaps 0.306/0.296, wrestler<->wrestler 0.010.
+##
+## KNOWN LIMIT, so nobody reads more into this than it earns. At 0.15 the
+## compatibility renderer reports mat<->wrestler 0.412 and 0.353 against the
+## bar's 0.24-0.31: the mat's LEVEL is matched, the wrestlers still sit
+## further under it than the reference. Its light response differs in kind and
+## no single gain closes that. VISUAL_BAR.md:64-86 already rules
+## gl_compatibility captures void for judging this bar, and that stands -- the
+## web build is for playing, not for measuring.
+const COMPAT_LIGHT_GAIN := 0.15
+
 
 func _ready() -> void:
 	_build_ring_key()
@@ -92,6 +142,7 @@ func _ready() -> void:
 	_build_house()
 	_build_stage_wash()
 	_build_fog_volumes()
+	_compensate_for_renderer()
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +282,17 @@ func _build_fog_volumes() -> void:
 			0.005, Color(0.80, 0.84, 0.95), 0.14)
 	_fog_box("HallHaze", Vector3(0.0, 6.0, 2.0), Vector3(58.0, 15.0, 58.0),
 			0.0012, Color(0.62, 0.68, 0.86), 0.05)
+
+
+## Scale every fixture this rig built, on renderers that over-accumulate them.
+## Runs after the _build_* calls so it catches all of them, and so a fixture
+## added later is covered without having to remember this exists.
+func _compensate_for_renderer() -> void:
+	if _supports_volumetric_fog():
+		return
+	for child in get_children():
+		if child is Light3D:
+			child.light_energy *= COMPAT_LIGHT_GAIN
 
 
 ## Read from RenderingServer, never from the project setting: project.godot

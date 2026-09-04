@@ -85,6 +85,24 @@ common/enable_pause_aware_picking=true
 
 renderer/rendering_method="forward_plus"
 environment/defaults/default_clear_color=Color(0.1, 0.1, 0.12, 1)
+; ArenaLighting builds 22 fixtures and the OpenGL default is 8 lights per
+; object, so on the compatibility renderer the mat was lit by whichever 8 the
+; renderer picked -- and it did not pick the four truss keys hanging directly
+; over it. Measured on the silhouette standoff, mat relative luminance:
+;
+;   forward_plus                          0.456   (anchor 0.43-0.49)
+;   gl_compatibility, limit 8             0.003
+;   gl_compatibility, only 6 fixtures up  0.995   <- proof the lights are fine
+;
+; That last row is the diagnostic: hiding all but the keys and top fills puts
+; the mat at 0.995, so nothing was wrong with the fixtures or their energies.
+; The renderer was dropping them. Raising the limit is the fix; energy gain
+; and tonemap exposure were both tried first and are both wrong, because they
+; scale the emissive hall (ArenaBuilder._house_lit) along with the lit ring.
+;
+; This key is under limits/opengl and Vulkan ignores it, so forward_plus --
+; where every measured number in gauntlet/ was taken -- cannot be affected.
+limits/opengl/max_lights_per_object=32
 
 [display]
 
