@@ -231,6 +231,7 @@ func test_variant_two_specs_denim_shorts_and_steel_chain() -> void:
 	var thigh_fixed := 0
 	var pelvis := 0
 	var steel_collars := 0
+	var steel_tags := 0
 	for piece in WrestlerAttire.all_pieces(2):
 		if String(piece.bone).begins_with("thigh") and piece.fixed.a > 0.0:
 			thigh_fixed += 1
@@ -238,18 +239,24 @@ func test_variant_two_specs_denim_shorts_and_steel_chain() -> void:
 			pelvis += 1
 		if piece.bone == "neck_01" and piece.metal:
 			steel_collars += 1
+		if piece.bone == "spine_03" and piece.metal:
+			steel_tags += 1
 	assert_int(thigh_fixed).override_failure_message(
 		"Variant 2 should wear fixed-colour denim on both thighs, found %d."
 		% thigh_fixed
 	).is_equal(2)
 	assert_int(pelvis).override_failure_message(
-		"Variant 2 should wear one waistband and no trunks, found %d pelvis pieces."
+		"Variant 2 should wear a 3-stripe waistband and no trunks, found %d pelvis pieces."
 		% pelvis
-	).is_equal(1)
+	).is_equal(3)
 	assert_int(steel_collars).override_failure_message(
 		"Variant 2 should wear one steel chain collar, found %d."
 		% steel_collars
 	).is_equal(1)
+	assert_int(steel_tags).override_failure_message(
+		"Variant 2 should wear two steel dog tags, found %d."
+		% steel_tags
+	).is_equal(2)
 
 ## WrestlerB is the brawler: variant 2 with a green accent for the bands.
 func test_wrestler_b_wears_the_brawler_identity() -> void:

@@ -77,6 +77,11 @@ const DENIM := Color(0.36, 0.46, 0.60)
 const BOOT_BLACK := Color(0.08, 0.08, 0.09)
 const BUZZ_DARK := Color(0.13, 0.10, 0.08)
 const STEEL := Color(0.55, 0.57, 0.60)
+## Waistband stripe trio for the variant-2 waistband: blue/white/red stacked
+## rings, after the reference stills' striped waistband. Fixed colours.
+const WAIST_BLUE := Color(0.25, 0.35, 0.60)
+const WAIST_WHITE := Color(0.90, 0.90, 0.90)
+const WAIST_RED := Color(0.70, 0.15, 0.15)
 ## Face palette for the variant-2 close-up bar: eye white, blue-grey iris,
 ## dark brow, nose shadow, mouth.
 const EYE_WHITE := Color(0.92, 0.93, 0.94)
@@ -162,10 +167,22 @@ static func head_pieces(variant: int) -> Array:
 ## with no likeness, no face, no text, no branding.
 static func variant2_body() -> Array:
 	var out: Array = []
-	# Denim shorts: one long cylinder per thigh, waistband in body colour.
+	# Denim shorts: one long cylinder per thigh, striped waistband above.
 	for side: String in ["l", "r"]:
 		out.append(Piece.new("thigh_" + side, 0.16, 0.14, 0.44, false, DENIM))
-	out.append(Piece.new("pelvis", 0.16, 0.192, 0.06, false))
+	out.append(Piece.new("pelvis", 0.135, 0.193, 0.028, false, WAIST_BLUE))
+	out.append(Piece.new("pelvis", 0.160, 0.193, 0.028, false, WAIST_WHITE))
+	out.append(Piece.new("pelvis", 0.185, 0.193, 0.028, false, WAIST_RED))
+	# Dog tags: two staggered steel plates floating off the sternum. The z
+	# sits outside the width-scaled chest (torso_width 1.14 on WrestlerB) by
+	# estimate, not measurement -- if a capture shows them sunk or hovering,
+	# that number is the critic's first dial. A cord would need facing math
+	# along the throat; the collar (below) stands in for it.
+	var f := FACE_FORWARD
+	out.append(Piece.new("spine_03", -0.02, 0.0, 0.0, false, STEEL, true,
+		Vector3(0.0, 0.0, 0.170 * f), Vector3(0.032, 0.050, 0.008)))
+	out.append(Piece.new("spine_03", -0.045, 0.0, 0.0, false, STEEL, true,
+		Vector3(0.014, 0.0, 0.168 * f), Vector3(0.032, 0.050, 0.008))
 	for side: String in ["l", "r"]:
 		# Black boot over the foot, boot shaft, green cuff at the top.
 		out.append(Piece.new("foot_" + side, 0.055, 0.072, 0.20, false,
@@ -255,7 +272,7 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 			push_warning("WrestlerAttire: rig has no bone '%s'" % piece.bone)
 			continue
 		var attachment := BoneAttachment3D.new()
-		if piece.box_size != Vector3.ZERO:
+		if piece.box_size != Vector3.ZERO and piece.bone == "Head":
 			attachment.name = "%sFace_%d" % [PREFIX, built]
 		else:
 			attachment.name = "%s%s_%d" % [PREFIX, piece.bone, built]
