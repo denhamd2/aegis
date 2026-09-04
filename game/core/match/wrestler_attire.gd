@@ -82,6 +82,8 @@ const STEEL := Color(0.55, 0.57, 0.60)
 const WAIST_BLUE := Color(0.25, 0.35, 0.60)
 const WAIST_WHITE := Color(0.90, 0.90, 0.90)
 const WAIST_RED := Color(0.70, 0.15, 0.15)
+## Sneaker white for midsoles and toe caps.
+const SHOE_WHITE := Color(0.88, 0.88, 0.88)
 ## Face palette for the variant-2 close-up bar: eye white, blue-grey iris,
 ## dark brow, nose shadow, mouth.
 const EYE_WHITE := Color(0.92, 0.93, 0.94)
@@ -184,17 +186,26 @@ static func variant2_body() -> Array:
 	out.append(Piece.new("spine_03", -0.045, 0.0, 0.0, false, STEEL, true,
 		Vector3(0.014, 0.0, 0.168 * f), Vector3(0.032, 0.050, 0.008))
 	for side: String in ["l", "r"]:
-		# Black boot over the foot, boot shaft, green cuff at the top.
+		# Black boot over the foot, boot shaft, green cuff at the top. The
+		# foot bone runs +Y toward the toes, so a cylinder along it lies
+		# flat. White midsole ring (proud of the boot wall) and white toe
+		# cap, after the reference sneakers' black/white scheme.
 		out.append(Piece.new("foot_" + side, 0.055, 0.072, 0.20, false,
 			BOOT_BLACK))
+		out.append(Piece.new("foot_" + side, 0.0, 0.078, 0.035, false,
+			SHOE_WHITE))
+		out.append(Piece.new("foot_" + side, 0.14, 0.076, 0.05, false,
+			SHOE_WHITE))
 		out.append(Piece.new("calf_" + side, 0.30, 0.098, 0.27, false,
 			BOOT_BLACK))
 		out.append(Piece.new("calf_" + side, 0.175, 0.107, 0.055, true))
 		# Black knee sleeve sitting on the knee end of the calf bone.
 		out.append(Piece.new("calf_" + side, 0.035, 0.105, 0.13, false,
 			BOOT_BLACK))
-		# Green wristband; bare elbows on this identity.
-		out.append(Piece.new("lowerarm_" + side, 0.225, 0.062, 0.06, true))
+	# Asymmetric wrist wear, after the reference: a long sweatband up the
+	# right forearm, a short band at the left wrist. Bare elbows both sides.
+	out.append(Piece.new("lowerarm_r", 0.14, 0.066, 0.15, true))
+	out.append(Piece.new("lowerarm_l", 0.225, 0.062, 0.06, true))
 	# Single upper-arm band, left arm, in accent.
 	out.append(Piece.new("upperarm_l", 0.10, 0.078, 0.07, true))
 	# Chain collar on the neck base. A hanging pendant would need a forward

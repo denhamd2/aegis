@@ -258,6 +258,39 @@ func test_variant_two_specs_denim_shorts_and_steel_chain() -> void:
 		% steel_tags
 	).is_equal(2)
 
+## Variant-2 extremities, statically: 6 foot pieces per... total (boot +
+## midsole + toe cap per foot) and asymmetric wrist wear (long right
+## sweatband, short left band).
+func test_variant_two_specs_sneakers_and_asymmetric_bands() -> void:
+	var foot := 0
+	var white_foot := 0
+	var right_band := 0.0
+	var left_band := 0.0
+	for piece in WrestlerAttire.all_pieces(2):
+		if String(piece.bone).begins_with("foot"):
+			foot += 1
+			if piece.fixed.a > 0.0:
+				white_foot += 1
+		if piece.bone == "lowerarm_r":
+			right_band = piece.height
+		if piece.bone == "lowerarm_l":
+			left_band = piece.height
+	assert_int(foot).override_failure_message(
+		"Variant 2 should wear 6 foot pieces (boot/midsole/toe per foot), found %d."
+		% foot
+	).is_equal(6)
+	assert_int(white_foot).override_failure_message(
+		"Variant 2 should wear 4 white shoe parts, found %d." % white_foot
+	).is_equal(4)
+	assert_float(right_band).override_failure_message(
+		"Right forearm should wear the long %.2fm sweatband, found %.2f."
+		% [0.15, right_band]
+	).is_equal_approx(0.15, 0.001)
+	assert_float(left_band).override_failure_message(
+		"Left wrist should wear the short %.2fm band, found %.2f."
+		% [0.06, left_band]
+	).is_equal_approx(0.06, 0.001)
+
 ## WrestlerB is the brawler: variant 2 with a green accent for the bands.
 func test_wrestler_b_wears_the_brawler_identity() -> void:
 	var parts := _wrestlers()
