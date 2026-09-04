@@ -31,8 +31,32 @@ class_name MaterialLibrary
 ##     tile_metres     float   real-world size the texture tile represents.
 ##                             uv1_scale is derived from it, so texel density
 ##                             is consistent between materials by construction.
+##                             ASSUMES UVs IN WORLD METRES -- see the ring
+##                             block in SPECS if the mesh is a primitive.
+##     roughness       float   scalar multiplying the roughness map.
+##     metallic        float   0.0 or 1.0. Asserted, not clamped.
+##     albedo_map      bool    false = take the asset's normal/roughness/AO
+##                             but not its colour, so the tint is the value.
+##     preserve_albedo_mean
+##                     bool    hold the rendered mean at the tint, for a
+##                             surface whose value something else measures.
 ##     house_lit       bool    emission carries the albedo map (see below).
-##     emission_tint   Color   emission colour when house_lit; defaults to tint.
+##     normal_scale    float
+##
+## ## The named materials
+##
+## Ring (call these from `core/ring/ring_builder.gd`):
+##
+##     ring_canvas  ring_apron  ring_rope  ring_post  ring_post_chrome
+##     ring_turnbuckle_pad  ring_steel
+##
+## Arena hall (called from `core/arena/arena_builder.gd`):
+##
+##     arena_floor  arena_barricade  arena_bowl  arena_stage_deck
+##     arena_stage_backdrop  arena_shell  arena_truss  arena_tunnel
+##     arena_screen
+##
+## `ALIASES` keeps older names (`ring_mat`, `ring_pad`) working.
 ##
 ## ### Names are a contract
 ##
@@ -89,6 +113,13 @@ class_name MaterialLibrary
 
 const MAT_DIR := "res://assets/environment/materials/"
 
+## Ceiling on `preserve_albedo_mean`'s compensation. Albedo above 1.0 is
+## deliberate there -- the tint is a multiplier on a map, not a colour anyone
+## sees on its own -- but an unbounded gain against a dark map produces a
+## surface that clips wherever the map is light, which is how a ring skirt
+## became a white band across the bottom of the frame.
+const MAX_ALBEDO_GAIN := 2.2
+
 ## Defaults every spec is merged over. Keeping the whole shape in one place
 ## is what lets `resolve(key, overrides)` accept any of these per call.
 const SPEC_DEFAULTS := {
@@ -102,8 +133,45 @@ const SPEC_DEFAULTS := {
 	"normal_scale": 1.0,
 	"ao_light_affect": 1.0,
 	"house_lit": false,
-	"emission_tint": null,    # null = use tint
 	"cull_back": true,
+	## Hold the *rendered* mean at the tint rather than at tint x map.
+	##
+	## An albedo map multiplies the tint, so a map whose mean linear value is
+	## 0.49 renders a surface at 49% of the luminance its tint names. That is
+	## fine for a hall wall and not fine for the ring canvas: VISUAL_BAR.md's
+	## whole silhouette table is anchored on the mat's measured luminance, and
+	## `measure_silhouette.py` reads it off rendered pixels. With this set the
+	## tint is divided by the map's mean, so adding a weave changes the mat's
+	## texture and not its value. The tint can end up above 1.0 -- that is
+	## deliberate and safe, because it is only ever seen multiplied by a map
+	## whose mean brings the product back down.
+	##
+	## The gain is capped (see `MAX_ALBEDO_GAIN`), which a blown-out preview
+	## forced: the apron's map has a linear mean of 0.11, so dividing by it
+	## asked for an albedo of 4.9-7.2 and the apron rendered as a white band
+	## along the bottom of the frame (p95 0.629 against a reference 0.427).
+	## A dark map encodes darkness that belongs to the material -- use
+	## `albedo_map: false` there instead. Only turn this on where the map is
+	## light *and* the tint's value is an anchor something else measures --
+	## in practice, the mat.
+	"preserve_albedo_mean": false,
+	## Take the asset's normal/roughness/AO but *not* its colour map.
+	##
+	## For a surface whose tint is the point -- a blue turnbuckle pad, a ring
+	## skirt carrying the ring's colour -- an albedo map is a liability: it
+	## multiplies, so a map with a linear mean of 0.27 costs the surface
+	## three-quarters of its colour, and `preserve_albedo_mean` cannot buy
+	## that back once a channel clamps at 1.0. Structure without colour is the
+	## right trade there: the normal and roughness maps still break the
+	## surface up under direct light, and the value survives untouched.
+	"albedo_map": true,
+}
+
+## Old names kept pointing at their replacements, so a rename does not break
+## a caller mid-fleet. Resolved before `SPECS` is consulted.
+const ALIASES := {
+	"ring_mat": "ring_canvas",
+	"ring_pad": "ring_turnbuckle_pad",
 }
 
 ## The named materials. Each is `SPEC_DEFAULTS` plus what it changes.
@@ -111,38 +179,107 @@ const SPEC_DEFAULTS := {
 ## Values traced to `gauntlet/refs/VISUAL_BAR.md` are marked TRACED; the rest
 ## are coverage decisions -- an engineering value, chosen and named as such.
 const SPECS := {
-	# --- Ring (consumed by scenes/ring.tscn's owner) ---------------------
+	# --- Ring -------------------------------------------------------------
+	#
+	# Consumed by `core/ring/ring_builder.gd`. These are the keys to call:
+	#
+	#   ring_canvas            the mat
+	#   ring_apron             the skirt hanging off the mat edge
+	#   ring_rope              all four sides, all three heights
+	#   ring_post              the corner posts
+	#   ring_turnbuckle_pad    the corner pads
+	#   ring_steel             steps, frame, anything painted steel
+	#
+	# Two things a caller has to know:
+	#
+	# 1. `uv1_scale` is derived from `tile_metres` on the assumption that the
+	#    mesh's UVs are laid out in **world metres** (which is what
+	#    `ArenaBuilder._add_box` does). A `BoxMesh`'s default UVs run 0-1 per
+	#    face regardless of size, so a 6m mat would get exactly one tile. If
+	#    the ring is built from primitives, either generate UVs in metres or
+	#    pass `{"tile_metres": <face size in metres> / <tiles wanted>}` per
+	#    call. This is the single most likely way these materials land looking
+	#    untextured.
+	# 2. `resolve()` returns a fresh material, so overriding a tint per corner
+	#    (blue corner, red corner) is `resolve("ring_turnbuckle_pad",
+	#    {"tint": Color(...)})` and costs nothing shared.
+
 	## TRACED: VISUAL_BAR.md reads the mat at relative luminance 0.46 on
 	## frames/wide_standoff_broadcast_angle.jpg, with both wrestlers 0.24-0.31
-	## below it. The tint holds that value; the map supplies the weave.
-	"ring_mat": {
-		"asset": "Fabric063", "tint": Color(0.60, 0.70, 0.82),
-		"tile_metres": 1.2, "roughness": 0.95,
+	## below it, and `test_wrestler_colorway.gd` asserts against that. The tint
+	## holds the value; `preserve_albedo_mean` is what keeps it holding it once
+	## a map multiplies in.
+	##
+	## Coverage decision on the map: Fabric036 is a plain linen weave, chosen
+	## by measurement rather than by eye. Rescaled to the pixel size its tile
+	## occupies, it scores 0.617 edge density in the `wide_broadcast` framing
+	## and 0.924 in `mat_close` -- the only candidate fetched that is textured
+	## at *both* distances. The mat previously carried no map at all, and
+	## Fabric063 (the apron's) scores 0.000 at match distance.
+	##
+	## 0.5m tile: 12 repeats across the 6m mat. Finer than that and the weave
+	## minifies below the pixel in the wide shot, which is the failure mode
+	## this whole entry exists to avoid.
+	"ring_canvas": {
+		"asset": "Fabric036", "tint": Color(0.60, 0.70, 0.82),
+		"tile_metres": 0.5, "roughness": 0.95, "preserve_albedo_mean": true,
+		"normal_scale": 0.8,
 	},
-	## Coverage decision: the apron is the same vinyl-over-canvas as the mat,
-	## darker because it hangs out of the ring lights.
+	## Coverage decision: the apron skirt is a darker, tighter weave than the
+	## canvas, and hangs out of the ring lights. Fabric030 scores 0.877 close
+	## up; at match distance the apron is a 40px band where the map cannot
+	## read whatever it is, so the close shot is what chose it.
 	"ring_apron": {
-		"asset": "Fabric063", "tint": Color(0.20, 0.23, 0.30),
-		"tile_metres": 0.9, "roughness": 0.95,
+		"asset": "Fabric030", "tint": Color(0.13, 0.15, 0.28),
+		"tile_metres": 0.45, "roughness": 0.95, "albedo_map": false,
 	},
 	## TRACED: every rope in every reference frame is white (clearest in the
 	## near-rope foreground of wide_standoff_broadcast_angle.jpg).
-	## Coverage decision: roughness 0.45 -- a taped rope is a semi-gloss
-	## dielectric, and it is one of the few ring surfaces inside the spot
-	## rig's reach that can return a highlight at all.
+	## Coverage decision: no map. A rope is 5cm across and never covers enough
+	## pixels for a tiled map to be anything but noise. Roughness 0.45 because
+	## a taped rope is semi-gloss, and because the ropes are the surface
+	## closest to the spot rig -- if anything in this scene returns a specular
+	## highlight it is these.
 	"ring_rope": {
 		"tint": Color(0.93, 0.93, 0.91), "roughness": 0.45,
 	},
-	## Coverage decision, and a correction: this shipped at metallic 0.3,
-	## which is not a material. A chromed ring post is a conductor: 1.0.
+	## Coverage decision, and a correction: the post shipped at metallic 0.3,
+	## which is not a material -- it has neither a dielectric's white specular
+	## nor a conductor's tinted one.
+	##
+	## It is 0.0 here, not 1.0, and the reason is measured rather than
+	## aesthetic. A conductor has no diffuse response at all: everything it
+	## shows is reflected. This scene's Environment is
+	## `ambient_light_source = COLOR` with a flat background, so there is no
+	## radiance map, so a conductor reflects only the four spots and renders
+	## black -- which is exactly what a `metallic 1.0` preview produced in
+	## `ring_corner` (see the round report). A painted steel post is a
+	## dielectric anyway, so 0.0 is both correct and visible. Flip it to
+	## `ring_post_chrome` the day a sky/HDRI radiance source lands.
 	"ring_post": {
+		"asset": "Metal032", "tint": Color(0.22, 0.23, 0.26),
+		"tile_metres": 0.35, "roughness": 0.9, "metallic": 0.0,
+	},
+	## The same post as a conductor. Correct PBR for bare chrome and currently
+	## unusable: with no radiance map it renders black. Kept named so the
+	## switch is one call site, not a rediscovery.
+	"ring_post_chrome": {
 		"asset": "Metal032", "tint": Color(0.55, 0.56, 0.60),
 		"tile_metres": 0.35, "roughness": 1.0, "metallic": 1.0,
 	},
-	## Coverage decision: padded vinyl turnbuckle cover.
+	## Coverage decision: padded vinyl turnbuckle cover, Fabric061's dotted
+	## weave at a small tile so the pad reads as padded up close in
+	## `ring_corner`. Override `tint` per corner.
 	"ring_turnbuckle_pad": {
-		"asset": "Fabric063", "tint": Color(0.10, 0.15, 0.70),
-		"tile_metres": 0.5, "roughness": 0.9,
+		"asset": "Fabric061", "tint": Color(0.10, 0.15, 0.70),
+		"tile_metres": 0.30, "roughness": 0.9, "normal_scale": 1.2,
+		"albedo_map": false,
+	},
+	## Coverage decision: painted steel -- ring steps, frame, apron edge.
+	## Painted, so dielectric: the paint is what you see, not the steel.
+	"ring_steel": {
+		"asset": "DiamondPlate009", "tint": Color(0.30, 0.32, 0.38),
+		"tile_metres": 1.0, "roughness": 1.0, "normal_scale": 1.2,
 	},
 
 	# --- Arena hall (consumed by core/arena/arena_builder.gd) -------------
@@ -164,9 +301,7 @@ const SPECS := {
 	# constant linear luminance -- red down, blue up, green held. That moves
 	# two measured statistics and moves neither the house level nor the
 	# silhouette relationships measured off luminance.
-	## Coverage decision: ringside is a dark rubber event floor laid over the
-	## venue slab, not bare concrete. Rubber004 is dark by scan (mean 0.176
-	## sRGB), so the tint barely has to darken it and the map survives.
+
 	## Coverage decision, scored not guessed. Six candidate colour maps were
 	## rescaled to the pixel size their tile actually occupies in
 	## `wide_broadcast` and run through the same Sobel edge count
@@ -269,20 +404,27 @@ static func keys() -> PackedStringArray:
 
 
 static func has(key: String) -> bool:
-	return SPECS.has(key)
+	return SPECS.has(_canonical(key))
+
+
+## Follow `ALIASES` to the name `SPECS` actually stores.
+static func _canonical(key: String) -> String:
+	return ALIASES.get(key, key)
 
 
 ## A read-only copy of a named spec, merged over the defaults. Useful to a
 ## caller that wants to know a material's tint without building it.
 static func spec(key: String) -> Dictionary:
-	assert(SPECS.has(key), "MaterialLibrary: unknown material %s" % key)
-	return _merged(key, {})
+	var k := _canonical(key)
+	assert(SPECS.has(k), "MaterialLibrary: unknown material %s" % key)
+	return _merged(k, {})
 
 
 ## Build the named material. Returns a fresh `StandardMaterial3D` each call.
 static func resolve(key: String, overrides: Dictionary = {}) -> StandardMaterial3D:
-	assert(SPECS.has(key), "MaterialLibrary: unknown material %s" % key)
-	return _build(_merged(key, overrides))
+	var k := _canonical(key)
+	assert(SPECS.has(k), "MaterialLibrary: unknown material %s" % key)
+	return _build(_merged(k, overrides))
 
 
 ## Build a material straight from a spec dictionary, with no named entry.
@@ -359,9 +501,24 @@ static func _build(s: Dictionary) -> StandardMaterial3D:
 	# grazing angle keeps its texture instead of smearing to grey.
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 
-	var color_tex := _load_map(asset, suffix, "color")
+	var color_tex: Texture2D = null
+	if s["albedo_map"]:
+		color_tex = _load_map(asset, suffix, "color")
 	if color_tex != null:
 		mat.albedo_texture = color_tex
+		if s["preserve_albedo_mean"]:
+			var mean := _mean_linear(color_tex)
+			if mean > 0.0001:
+				# Linear divide on a Color: the tint is a multiplier here, not
+				# a colour to be displayed, so it is allowed above 1.0.
+				# One gain on all three channels, never a per-channel clamp:
+				# clamping channels independently is a hue change, and the
+				# first version of this did exactly that -- the mat's
+				# (0.60, 0.70, 0.82) all clamped to 1.0 and the canvas came
+				# out neutral grey with its blue gone. Capped at MAX_ALBEDO_GAIN.
+				var t: Color = mat.albedo_color
+				var gain := minf(1.0 / mean, MAX_ALBEDO_GAIN)
+				mat.albedo_color = Color(t.r * gain, t.g * gain, t.b * gain, t.a)
 
 	var normal_tex := _load_map(asset, suffix, "normal")
 	if normal_tex != null:

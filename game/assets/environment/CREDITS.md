@@ -20,24 +20,19 @@ if you did it anyways"); this file is that credit.
 
 ### What was taken, and what was left
 
-Only the **Color** and **Roughness** maps (plus **Metalness** for `Metal032`),
-downscaled from the 1K-JPG distribution to 512×512. Normal, ambient-occlusion
-and displacement maps were deliberately not imported.
+**Superseded.** This section used to record that only Color and Roughness
+were imported, at 512px with mipmaps off, because no admissible visual
+capture existed and normal maps could not be shown to buy anything.
+`ARCHITECTURE.md`'s amended renderer rule retired that premise.
 
-That is a capture-cost decision, stated plainly rather than dressed up as an
-art one. Every capture this repo can produce locally is software-rendered
-(llvmpipe), so `evidence_gate.py --visual` voids all of them for a visual
-slice — which means `VISUAL_BAR.md`'s material-believability bar (priority 3)
-is **UNJUDGED** here and normal maps could not be shown to buy anything. What
-they would definitely cost is llvmpipe fill rate on a capture that already
-takes ~3 minutes. Adding them back is a one-line change per material once a
-GPU-backed capture exists to judge the result.
+The current, authoritative record of what is imported and why lives beside
+the files, in `materials/CREDITS.md`. In short: 1K PNG, Color + NormalGL +
+Roughness + AmbientOcclusion (+ Metalness where shipped), mipmaps on, no
+displacement. `core/materials/material_library.gd` resolves all of it.
 
-The albedo textures are used as *variance*, not as value: each material keeps
-an `albedo_color` carrying the measured or chosen luminance, and the texture
-multiplies into it. That preserves the value relationships
-`tools/refs/measure_frame.py` and `test_wrestler_colorway.gd` measure, while
-giving flat surfaces the high-frequency detail that `void_fraction` rewards.
+The albedo textures are still used as *variance* on top of a value the tint
+carries, so `tools/refs/measure_frame.py`'s luminance relationships survive.
+The one exception is documented there as `preserve_albedo_mean`.
 
 ### IP guardrail
 
