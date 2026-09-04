@@ -6,7 +6,7 @@ extends GdUnitTestSuite
 
 func test_more_frequent_presser_wins() -> void:
 	var minigame := TieUpMinigame.new()
-	var a := WrestlerAI.new()
+	var a: WrestlerAI = auto_free(WrestlerAI.new())
 	for t in range(1, 200):
 		var a_pressed := a._should_press_tie_up(t)
 		minigame.tick(a_pressed, false)
@@ -30,8 +30,8 @@ func test_same_input_sequence_is_deterministic() -> void:
 
 func _run_both_mashing() -> Dictionary:
 	var minigame := TieUpMinigame.new()
-	var a := WrestlerAI.new()
-	var b := WrestlerAI.new()
+	var a: WrestlerAI = auto_free(WrestlerAI.new())
+	var b: WrestlerAI = auto_free(WrestlerAI.new())
 	b.tie_up_reaction_ticks = 4 # gives b a head start so the race isn't a tie
 	var t := 0
 	for i in range(1, 200):

@@ -5,9 +5,9 @@ extends GdUnitTestSuite
 ## "AI-vs-AI has no tie-breaker" gap).
 
 func test_same_match_seed_and_player_index_is_deterministic() -> void:
-	var a1 := WrestlerAI.new()
+	var a1: WrestlerAI = auto_free(WrestlerAI.new())
 	a1.setup_jitter(7, 0)
-	var a2 := WrestlerAI.new()
+	var a2: WrestlerAI = auto_free(WrestlerAI.new())
 	a2.setup_jitter(7, 0)
 	assert_int(a1.tie_up_reaction_ticks).is_equal(a2.tie_up_reaction_ticks)
 	assert_int(a1.tie_up_press_interval_ticks).is_equal(a2.tie_up_press_interval_ticks)
@@ -19,9 +19,9 @@ func test_different_player_index_same_seed_usually_diverges() -> void:
 	# AI instances mashed on exactly the same ticks on every seed, always.
 	var any_diverged := false
 	for match_seed in range(1, 30):
-		var a := WrestlerAI.new()
+		var a: WrestlerAI = auto_free(WrestlerAI.new())
 		a.setup_jitter(match_seed, 0)
-		var b := WrestlerAI.new()
+		var b: WrestlerAI = auto_free(WrestlerAI.new())
 		b.setup_jitter(match_seed, 1)
 		if a.tie_up_reaction_ticks != b.tie_up_reaction_ticks \
 				or a.tie_up_press_interval_ticks != b.tie_up_press_interval_ticks:
@@ -32,7 +32,7 @@ func test_different_player_index_same_seed_usually_diverges() -> void:
 func test_jitter_never_produces_a_non_positive_press_interval() -> void:
 	for match_seed in range(1, 30):
 		for player_index in range(2):
-			var a := WrestlerAI.new()
+			var a: WrestlerAI = auto_free(WrestlerAI.new())
 			a.setup_jitter(match_seed, player_index)
 			assert_int(a.tie_up_press_interval_ticks).is_greater(0)
 			assert_int(a.tie_up_reaction_ticks).is_greater(0)

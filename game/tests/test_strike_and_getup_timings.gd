@@ -105,7 +105,7 @@ func test_every_strikes_reversal_window_stays_inside_the_move() -> void:
 
 func _downed_wrestler() -> WrestlerController:
 	var w: WrestlerController = auto_free(WrestlerController.new())
-	w.fsm = WrestlerFSM.new()
+	w.fsm = auto_free(WrestlerFSM.new())
 	w.fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	w.fsm.transition_to(WrestlerFSM.State.DOWN)
 	w._move_ticks_remaining = WrestlerController.GETUP_TICKS

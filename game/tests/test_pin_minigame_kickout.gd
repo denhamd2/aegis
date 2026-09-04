@@ -39,7 +39,7 @@ func test_realistic_knockdown_range_is_not_uniform() -> void:
 		assert_int(successes[i]).is_greater_equal(successes[i - 1])
 
 func test_presses_are_rate_limited_not_held() -> void:
-	var ai := WrestlerAI.new()
+	var ai: WrestlerAI = auto_free(WrestlerAI.new())
 	var minigame := PinMinigame.new(1.0, 1)
 	var last_press := -1000
 	for t in range(1, PIN_TICKS + 1):
@@ -63,7 +63,7 @@ func _successes_across_seeds(window: float) -> int:
 	return successes
 
 func _run(window: float, seed_value: int) -> Dictionary:
-	var ai := WrestlerAI.new()
+	var ai: WrestlerAI = auto_free(WrestlerAI.new())
 	var minigame := PinMinigame.new(window, seed_value)
 	var press_ticks := []
 	var kicked_out := false
