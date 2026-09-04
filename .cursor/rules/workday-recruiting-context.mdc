@@ -1,0 +1,14 @@
+---
+description: >-
+  Baseline product context for Workday Recruiting PM work in this workspace
+  (scope, glossary placeholders, link handling).
+alwaysApply: false
+---
+
+# Workday Recruiting context (stub)
+
+- **Product scope**: Fill in modules and personas you own (e.g., reqs to offer, interview scheduling).
+- **Glossary**: Add internal terms and acronyms customers use.
+- **Links**: Prefer customer-safe language; paste or describe sources instead of assuming private URLs are reachable.
+
+Expand this rule once your team conventions are stable.

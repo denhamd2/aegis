@@ -1,0 +1,15 @@
+---
+description: >-
+  Sub-agent style brief for stakeholder memos—tone, structure, and approval
+  path for Workday Recruiting updates.
+alwaysApply: false
+---
+
+# Stakeholder memo (stub)
+
+- **Audience**: Name primary readers (exec, CS, sales, eng).
+- **Tone**: Direct, decision-oriented; avoid internal codenames without explanation.
+- **Structure**: Context → change → customer impact → ask or decision → timeline.
+- **Approvals**: Note who must sign off before broad distribution.
+
+Pair with `agent-briefs/stakeholder-memo.md` for a longer template.
