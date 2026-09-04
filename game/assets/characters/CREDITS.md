@@ -22,6 +22,18 @@ This is a stand-in reference/base mesh only; the wrestler likenesses,
 movesets and branding built on top of it are original. No WWE-derived
 assets are used here.
 
+## Reference: user-supplied brawler stills (measurement only)
+
+Two user-supplied character stills (full body + head close-up) serve as the
+visual bar for the variant-2 brawler outfit, the same way WWE 2K footage
+serves `gauntlet/refs/` as measurement: framing, palette, and silhouette
+proportions may be matched, but no likeness, face, text, or branding is
+reproduced. Output is procedural BoneAttachment3D geometry + flat materials
+(buzz hair, denim shorts, green bands, steel chain collar, black boots) on
+the CC0 mannequin. The mannequin's blank head is unchanged -- a real face
+needs authored texture/head-mesh work the attachment system cannot do, and a
+real person's face must never be recreated here.
+
 ## Drop-in slot: distinct superhero bodies (not yet downloaded)
 
 `WrestlerController.body_variant` (0 = hair + headband, 1 = mask + eye band)

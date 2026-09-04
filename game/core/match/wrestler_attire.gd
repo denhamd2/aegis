@@ -34,21 +34,38 @@ extends RefCounted
 
 ## One piece of gear. `along` is metres up the bone's +Y from its origin;
 ## `radius`/`height` size a cylinder; `accent` picks the colourway's second
-## colour instead of its first.
+## colour instead of its first. `fixed` overrides the colourway when opaque
+## (denim, boot black, steel -- colours no colourway should ever re-tint);
+## transparent means the colourway. `metal` is full-metallic (chain, tags).
 class Piece:
 	var bone: String
 	var along: float
 	var radius: float
 	var height: float
 	var accent: bool
+	var fixed: Color
+	var metal: bool
 
 	func _init(p_bone: String, p_along: float, p_radius: float,
-			p_height: float, p_accent: bool) -> void:
+			p_height: float, p_accent: bool,
+			p_fixed: Color = Color(0, 0, 0, 0),
+			p_metal: bool = false) -> void:
 		bone = p_bone
 		along = p_along
 		radius = p_radius
 		height = p_height
 		accent = p_accent
+		fixed = p_fixed
+		metal = p_metal
+
+## Fixed palette. Engineering values picked to read at match-camera distance,
+## not reference measurements -- gauntlet/refs/ measures nothing about gear
+## colours. Denim mid-blue, boot/sleeve near-black, buzz-hair dark brown,
+## chain steel.
+const DENIM := Color(0.36, 0.46, 0.60)
+const BOOT_BLACK := Color(0.08, 0.08, 0.09)
+const BUZZ_DARK := Color(0.13, 0.10, 0.08)
+const STEEL := Color(0.55, 0.57, 0.60)
 
 ## Sized against this rig's own proportions (a ~1.8m humanoid whose calf runs
 ## 0.43m and forearm 0.27m), not against any reference measurement --
@@ -101,6 +118,10 @@ static func head_pieces(variant: int) -> Array:
 		# Mask hood over the whole head, body colour; dark eye band as accent.
 		out.append(Piece.new("Head", 0.06, 0.135, 0.24, false))
 		out.append(Piece.new("Head", 0.10, 0.142, 0.06, true))
+	elif variant == 2:
+		# Buzz cut: short dark cap high on the skull. No band -- this
+		# identity wears its colour on the wrists, not the head.
+		out.append(Piece.new("Head", 0.17, 0.128, 0.07, false, BUZZ_DARK))
 	else:
 		# Hair cap in body colour (reads as dyed-to-kit) with a sweat
 		# headband in accent at the brow line.
@@ -108,9 +129,48 @@ static func head_pieces(variant: int) -> Array:
 		out.append(Piece.new("Head", 0.05, 0.132, 0.045, true))
 	return out
 
+## Variant 2 ("brawler") body: denim shorts + waistband instead of trunks,
+## black boots and knee sleeves, green wristbands, a single upper-arm band,
+## and a steel chain collar. An original outfit following the reference
+## stills' formula (bare torso, jean shorts, green bands, chain, buzz hair)
+## with no likeness, no face, no text, no branding.
+static func variant2_body() -> Array:
+	var out: Array = []
+	# Denim shorts: one long cylinder per thigh, waistband in body colour.
+	for side: String in ["l", "r"]:
+		out.append(Piece.new("thigh_" + side, 0.16, 0.14, 0.44, false, DENIM))
+	out.append(Piece.new("pelvis", 0.16, 0.192, 0.06, false))
+	for side: String in ["l", "r"]:
+		# Black boot over the foot, boot shaft, green cuff at the top.
+		out.append(Piece.new("foot_" + side, 0.055, 0.072, 0.20, false,
+			BOOT_BLACK))
+		out.append(Piece.new("calf_" + side, 0.30, 0.098, 0.27, false,
+			BOOT_BLACK))
+		out.append(Piece.new("calf_" + side, 0.175, 0.107, 0.055, true))
+		# Black knee sleeve sitting on the knee end of the calf bone.
+		out.append(Piece.new("calf_" + side, 0.035, 0.105, 0.13, false,
+			BOOT_BLACK))
+		# Green wristband; bare elbows on this identity.
+		out.append(Piece.new("lowerarm_" + side, 0.225, 0.062, 0.06, true))
+	# Single upper-arm band, left arm, in accent.
+	out.append(Piece.new("upperarm_l", 0.10, 0.078, 0.07, true))
+	# Chain collar on the neck base. A hanging pendant would need a forward
+	# offset the attachment system has no facing math for, so the chain
+	# reads as a steel collar until that exists.
+	out.append(Piece.new("neck_01", 0.0, 0.085, 0.03, false, STEEL, true))
+	return out
+
+## Complete outfit for a variant: variant 2 gets its own body plus the buzz
+## cut; every other variant gets the shared trunks-and-boots body gear plus
+## its own head set.
+static func all_pieces(variant: int) -> Array:
+	if variant == 2:
+		return variant2_body() + head_pieces(variant)
+	return pieces() + head_pieces(variant)
+
 ## Full outfit size for a variant: body gear plus that variant's head set.
 static func total_piece_count(variant: int = 0) -> int:
-	return pieces().size() + head_pieces(variant).size()
+	return all_pieces(variant).size()
 
 static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 		bulk: float = 1.0, variant: int = 0) -> int:
@@ -132,10 +192,12 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 	var accent_material: StandardMaterial3D = null if headless else _material(accent)
 
 	# Body gear plus this variant's head set. Head pieces reuse the colourway
-	# (hair/mask in body colour, band in accent) so each man still reads in
-	# his own hue without adding new colours for the critic to chase.
-	var all_pieces: Array = pieces() + head_pieces(variant)
-	for piece: Piece in all_pieces:
+	# (hair/mask in body colour, band in accent) unless they carry a fixed
+	# colour (buzz cut, denim, boots, steel), so each man still reads in
+	# his own hue without new colours for the critic to chase.
+	var kit: Array = all_pieces(variant)
+	var fixed_mats := {}
+	for piece: Piece in kit:
 		var bone_index := skeleton.find_bone(piece.bone)
 		if bone_index < 0:
 			push_warning("WrestlerAttire: rig has no bone '%s'" % piece.bone)
@@ -158,8 +220,14 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 		var instance := MeshInstance3D.new()
 		instance.mesh = mesh
 		if not headless:
-			instance.material_override = \
-					accent_material if piece.accent else body_material
+			if piece.fixed.a > 0.0:
+				var key := piece.fixed.to_html() + ("m" if piece.metal else "p")
+				if not fixed_mats.has(key):
+					fixed_mats[key] = _material(piece.fixed, piece.metal)
+				instance.material_override = fixed_mats[key]
+			else:
+				instance.material_override = \
+						accent_material if piece.accent else body_material
 		# The bone's +Y runs toward its child and CylinderMesh is Y-up, so the
 		# piece needs no rotation -- only a slide along the bone.
 		instance.position = Vector3(0.0, piece.along, 0.0)
@@ -168,11 +236,16 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 	return built
 
 
-static func _material(color: Color) -> StandardMaterial3D:
+static func _material(color: Color, metal: bool = false) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
 	# Matching the body's response so gear and skin read as one lit subject
-	# rather than as separately-lit props (VISUAL_BAR.md priority 2).
-	mat.roughness = 0.72
-	mat.metallic = 0.0
+	# rather than as separately-lit props (VISUAL_BAR.md priority 2) -- except
+	# metal, which needs its specular to read as steel.
+	if metal:
+		mat.roughness = 0.35
+		mat.metallic = 1.0
+	else:
+		mat.roughness = 0.72
+		mat.metallic = 0.0
 	return mat
