@@ -91,7 +91,6 @@ const CROWD_COLORS: Array[Color] = [
 	Color(0.33, 0.31, 0.33),
 ]
 
-const MAT_DIR := "res://assets/environment/materials/"
 
 var _rng := RandomNumberGenerator.new()
 
@@ -110,73 +109,69 @@ func _ready() -> void:
 # Materials
 # ---------------------------------------------------------------------------
 
-## albedo_color carries the value, the texture carries the variance. Keeping
-## them separate is what lets tools/refs/measure_frame.py go on measuring
-## luminance relationships while the surface stops being flat.
-func _textured(asset: String, tint: Color, uv_scale: float,
-		rough_fallback: float = 0.9, metalness: bool = false) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = tint
-	mat.roughness = rough_fallback
-	var color_path := MAT_DIR + asset + "_Color.jpg"
-	if ResourceLoader.exists(color_path):
-		mat.albedo_texture = load(color_path)
-	var rough_path := MAT_DIR + asset + "_Roughness.jpg"
-	if ResourceLoader.exists(rough_path):
-		mat.roughness_texture = load(rough_path)
-	if metalness:
-		var metal_path := MAT_DIR + asset + "_Metalness.jpg"
-		if ResourceLoader.exists(metal_path):
-			mat.metallic = 1.0
-			mat.metallic_texture = load(metal_path)
-	mat.uv1_scale = Vector3(uv_scale, uv_scale, 1.0)
-	return mat
+## Named materials come from core/materials/material_library.gd, which owns
+## the full map set (albedo/normal/roughness/AO/metalness), the sRGB-vs-linear
+## slotting, the PBR-correctness rules, and the texel density. This is the one
+## line of adapter that keeps the hall's call sites reading as art direction.
+##
+## Every hall material is `house_lit` in the library, meaning it carries its
+## albedo map as a multiplied emission map -- emission is unlit, so without
+## that the maps below would be invisible no matter how good they are. The
+## multiply darkens the mean, which is why each call site wraps `_house_lit()`
+## in `MaterialLibrary.house_compensate()`: that divides the map's own mean
+## back out of the emission energy, so the house *level* this file solves for
+## is preserved and only its *variance* changes.
+func _textured(key: String) -> StandardMaterial3D:
+	return MaterialLibrary.resolve(key)
 
 
-## House light, carried by the materials rather than by lights aimed at the
-## stands.
+## Residual bounce, NOT the hall's lighting any more.
 ##
-## Nothing out here is within reach of the four ring spotlights (spot_range 10,
-## and the bowl starts at 9m), and adding real fill lights out in the hall
-## would spill onto the mat -- ring lighting is a different slice's variable
-## and this must not touch it. So the hall lights itself.
+## This function used to make every arena surface self-emissive at a computed
+## level, because the whole rig was four SpotLight3Ds with `spot_range 10` and
+## the seating bowl starts at 9m -- nothing out in the hall was within reach of
+## a light, so the hall lit itself. That worked on `gl_compatibility`, which is
+## the renderer every number in this repo was measured on until yesterday. On
+## `forward_plus`, which the game ships, the same compensation over-returned
+## badly enough that the crowd was the brightest thing in the frame, against a
+## reference whose crowd sits at relative luminance 0.014 (VISUAL_BAR.md).
 ##
-## The level is not a taste call. VISUAL_BAR.md measures the reference
-## footage's crowd at relative luminance 0.014, and measure_frame.py counts a
-## pixel as void below 0.0025 -- so a real arena's stands sit about five times
-## above the void floor, dim but genuinely lit, never black. The first pass
-## here ran the hall at roughly 0.03 sRGB and pushed void_fraction the wrong
-## way (0.125 -> 0.265 across the beat frames): more geometry than before, but
-## most of it too dark to count as anything.
+## It also could not have satisfied VISUAL_BAR.md priority 2 in principle:
+## emission has no falloff, casts no shadow, cuts no shaft and puts no rim on
+## anything, so a hall lit by it reads as independently-lit props -- the exact
+## failure the priority names.
 ##
-## HOUSE_TARGET is that measured 0.014, with headroom. The extra is not
-## padding for its own sake: at exactly 0.0025 a surface *dithers* across the
-## threshold rather than clearing it, which the first fix attempt showed as a
-## speckled void mask over the stage backdrop. Sitting a comfortable margin
-## above the floor is what makes the hall read as lit rather than as noise.
-const HOUSE_TARGET := 0.020
+## core/lighting/arena_lighting.gd now hangs real fixtures: ring key and top
+## fill on the truss, a twelve-fixture house wash aimed outward onto the bowl,
+## a cool rim pair, and a stage wash. What survives here is a floor, for the
+## faces no fixture reaches (the backs of upper risers, the underside of the
+## truss, the roof) -- so they stay dark rather than becoming void.
+##
+## The level is the one number here that is measured. measure_frame.py counts a
+## pixel as void below 0.0025 relative luminance, and VISUAL_BAR.md requires
+## void_fraction to stay in 0.010-0.066: an unreached face must sit ABOVE that
+## floor, and comfortably, because a surface sitting exactly on it dithers
+## across it and shows up as a speckled void mask. It must also sit far enough
+## BELOW the reference crowd's 0.014 that a lit surface and an unreached one
+## are visibly different, or the fixtures are decoration.
+const HOUSE_TARGET := 0.006
 
 ## What the Environment's ambient is assumed to return off a diffuse surface,
-## as a fraction of its linear albedo.
-##
-## Deliberately conservative. Ambient measured far lower on vertical faces than
-## on the treads facing up, so crediting it fully left the bowl's risers below
-## the void floor while its treads sat on target -- the same material reading
-## two ways depending on which way a face pointed. Under-crediting ambient
-## makes emission carry the house level, which is orientation-independent, and
-## is why the hall now lights evenly.
+## as a fraction of its linear albedo. Ambient is down from 0.35 to 0.06 (see
+## match.tscn), so what it returns is now genuinely small and this stays
+## conservative for the same reason it always did: ambient measures far lower
+## on vertical faces than on up-facing treads, and over-crediting it puts the
+## risers under the void floor while the treads sit on target.
 const AMBIENT_RETURN := 0.05
 
-## `reach` scales the target for surfaces that should sit under or over the
-## house level -- the tunnel mouth is meant to read as a recess, the video
-## wall as the brightest thing out there.
+## `reach` scales the floor for surfaces that should sit under or over it.
 ##
-## The arithmetic is done in LINEAR light, which is the correction that made
-## this work. Emission resolves as srgb_to_linear(albedo) * energy, so
-## compensating with the *sRGB* luminance -- as the first version did -- leaves
-## dark albedos far short: at albedo 0.12 the stage backdrop rendered at 0.0026
-## linear against a 0.014 target while the bowl's 0.30 albedo landed on 0.017.
-## Same formula, six-fold different result, purely from the gamma curve.
+## The arithmetic is done in LINEAR light. Emission resolves as
+## srgb_to_linear(albedo) * energy, so compensating with the *sRGB* luminance
+## leaves dark albedos far short: at albedo 0.12 the stage backdrop rendered at
+## 0.0026 linear against a 0.014 target while the bowl's 0.30 albedo landed on
+## 0.017 -- same formula, six-fold different result, purely from the gamma
+## curve.
 func _house_lit(mat: StandardMaterial3D, reach: float = 1.0) -> StandardMaterial3D:
 	mat.emission_enabled = true
 	mat.emission = mat.albedo_color
@@ -185,6 +180,22 @@ func _house_lit(mat: StandardMaterial3D, reach: float = 1.0) -> StandardMaterial
 	var wanted := HOUSE_TARGET * reach
 	mat.emission_energy_multiplier = maxf(
 			wanted / albedo_linear - AMBIENT_RETURN, 0.0)
+	return mat
+
+
+## For the things that genuinely emit. The video wall is the only one in the
+## hall: it is a screen, so it is a light source whether or not a fixture is
+## pointed at it, and retiring the house-emission mechanism must not retire it.
+##
+## `level` is the linear luminance the panel is asked to reach on its own,
+## before any fixture reaches it -- above 1.0 so it crosses the Environment's
+## glow threshold (1.05) and blooms, which is what a video wall does.
+func _self_emissive(mat: StandardMaterial3D, level: float) -> StandardMaterial3D:
+	mat.emission_enabled = true
+	mat.emission = mat.albedo_color
+	var albedo_linear := maxf(mat.albedo_color.srgb_to_linear().get_luminance(),
+			0.0001)
+	mat.emission_energy_multiplier = level / albedo_linear
 	return mat
 
 
@@ -254,7 +265,7 @@ func _build_floor() -> void:
 	_add_box(st, Vector3(0.0, FLOOR_Y - 0.1, 0.0),
 			Vector3(WALL_EXTENT * 2.0, 0.2, WALL_EXTENT * 2.0))
 	add_child(_mesh_instance("Floor", st,
-			_house_lit(_textured("Concrete034", Color(0.10, 0.10, 0.11), 12.0, 0.95), 0.7)))
+			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 0.7))))
 
 
 func _build_barricades() -> void:
@@ -267,7 +278,8 @@ func _build_barricades() -> void:
 		_add_box(st, Vector3(BARRICADE_RADIUS * sign, y, 0.0),
 				Vector3(0.16, BARRICADE_HEIGHT, span))
 	add_child(_mesh_instance("Barricades", st,
-			_house_lit(_textured("Metal032", Color(0.16, 0.17, 0.2), 6.0, 0.55, true), 0.8)))
+			MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_barricade"), 0.8))))
 
 
 # ---------------------------------------------------------------------------
@@ -296,8 +308,8 @@ func _build_bowl() -> void:
 			_seat_row(inner, outer, tread_y, seats, colors)
 			inner = outer
 
-	add_child(_mesh_instance("SeatingBowl", steps, _house_lit(
-			_textured("Carpet012", Color(0.30, 0.31, 0.36), 3.0, 0.95))))
+	add_child(_mesh_instance("SeatingBowl", steps, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_bowl")))))
 	add_child(_build_crowd(seats, colors))
 
 
@@ -429,7 +441,14 @@ render_mode diffuse_lambert, specular_disabled, shadows_disabled;
 
 uniform float bob_amplitude = 0.045;
 uniform float bob_speed = 1.6;
-uniform float house_light = 0.55;
+// Residual bounce only, down from 0.55. At 0.55 this term alone put the
+// impostors at ~0.117 relative luminance -- brighter than the mat's own
+// 0.172 on forward_plus, against a reference crowd of 0.014
+// (VISUAL_BAR.md). The bowl is lit by real fixtures now
+// (core/lighting/arena_lighting.gd), so the crowd's level comes from a
+// light aimed at it; this is only the floor that keeps the back rows off
+// measure_frame.py's 0.0025 void threshold.
+uniform float house_light = 0.03;
 
 varying vec3 seat_color;
 
@@ -478,8 +497,8 @@ func _build_stage() -> void:
 				float(i + 1) / float(steps))
 		_add_box(deck, Vector3(0.0, (FLOOR_Y + y) * 0.5, (z0 + z1) * 0.5),
 				Vector3(RAMP_HALF_WIDTH * 2.0, y - FLOOR_Y, absf(z1 - z0)))
-	add_child(_mesh_instance("EntranceStage", deck, _house_lit(
-			_textured("Concrete034", Color(0.14, 0.14, 0.16), 8.0, 0.9), 1.1)))
+	add_child(_mesh_instance("EntranceStage", deck, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_stage_deck"), 1.1))))
 
 	# Backdrop behind the stage, at house level. Without it the tunnel is a
 	# hole onto the Environment's background colour -- which measure_frame.py
@@ -489,8 +508,8 @@ func _build_stage() -> void:
 	var backdrop := _new_surface()
 	_add_box(backdrop, Vector3(0.0, (FLOOR_Y + WALL_TOP) * 0.5, STAGE_BACK - 0.4),
 			Vector3(STAGE_HALF_WIDTH * 2.4, WALL_TOP - FLOOR_Y, 0.4))
-	add_child(_mesh_instance("StageBackdrop", backdrop, _house_lit(
-			_textured("Concrete034", Color(0.12, 0.12, 0.14), 10.0, 0.95), 0.8)))
+	add_child(_mesh_instance("StageBackdrop", backdrop, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_stage_backdrop"), 0.8))))
 
 	var portal := _new_surface()
 	# Tunnel mouth: a recessed frame standing proud of the backdrop, so the
@@ -502,21 +521,26 @@ func _build_stage() -> void:
 	_add_box(portal, Vector3(0.0, STAGE_DECK_Y + 5.2, STAGE_BACK + 0.6),
 			Vector3(11.9, 0.8, 1.2))
 	add_child(_mesh_instance("TunnelMouth", portal,
-			_house_lit(_textured("Metal032", Color(0.09, 0.09, 0.11), 4.0, 0.7, true), 0.6)))
+			MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_tunnel"), 0.6))))
 
 	var screen := _new_surface()
 	_add_box(screen, Vector3(0.0, STAGE_DECK_Y + 8.4, STAGE_BACK + 0.9),
 			Vector3(14.0, 5.4, 0.4))
-	var screen_mat := StandardMaterial3D.new()
 	# Bright enough to read as a video wall, dark enough not to be the subject.
 	# The albedo is deliberately not near-black: _house_lit divides the target
 	# by the linear albedo, so a very dark panel asks for an absurd emission
 	# energy (this was 7.6 before, and blew the screen out to flat pale blue).
-	screen_mat.albedo_color = Color(0.28, 0.30, 0.38)
-	screen_mat.roughness = 0.35
-	screen_mat.metallic = 0.1
+	# metallic was 0.1, which is not a material -- a glass-fronted LED wall is
+	# a dielectric, so the library's entry is 0.0 with specular 0.5.
+	# 7.6 blew the screen to flat pale blue; 1.35 still owned the frame's top
+	# 5% (p95 0.633 against the reference still's 0.427, with 36.5% of the
+	# blown pixels in the one grid cell the screen occupies). 0.35 is where it
+	# stops driving p95 -- measured, and 0.18 moves the number no further, so
+	# below this the screen is only dimmer, not better behaved.
+	var screen_mat := MaterialLibrary.resolve("arena_screen")
 	add_child(_mesh_instance("StageScreen", screen,
-			_house_lit(screen_mat, 2.4)))
+			_self_emissive(screen_mat, 0.35)))
 
 
 # ---------------------------------------------------------------------------
@@ -546,9 +570,8 @@ func _build_truss() -> void:
 		for z: float in [-7.5, 7.5]:
 			_add_box(st, Vector3(x, (TRUSS_Y + ROOF_Y) * 0.5, z),
 					Vector3(0.16, ROOF_Y - TRUSS_Y, 0.16))
-	add_child(_mesh_instance("Truss", st, _house_lit(
-			_textured("Metal032", Color(0.14, 0.145, 0.16), 3.0, 0.5, true),
-			0.9)))
+	add_child(_mesh_instance("Truss", st, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_truss"), 0.9))))
 
 
 func _build_shell() -> void:
@@ -562,6 +585,5 @@ func _build_shell() -> void:
 		_add_box(st, Vector3(WALL_EXTENT * sign, mid_y, 0.0),
 				Vector3(0.4, height, span))
 	_add_box(st, Vector3(0.0, ROOF_Y, 0.0), Vector3(span, 0.4, span))
-	add_child(_mesh_instance("Shell", st, _house_lit(
-			_textured("Concrete034", Color(0.13, 0.13, 0.145), 14.0, 1.0),
-			0.85)))
+	add_child(_mesh_instance("Shell", st, MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_shell"), 0.85))))

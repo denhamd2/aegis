@@ -1,7 +1,8 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/environment/materials/Fabric063_Color.jpg" id="1_apron_color"]
 [ext_resource type="Texture2D" path="res://assets/environment/materials/Fabric063_Roughness.jpg" id="2_apron_rough"]
+[ext_resource type="Script" path="res://core/ring/ring_builder.gd" id="3_ring_builder"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(6, 0.2, 6)
@@ -20,40 +21,8 @@ size = Vector3(6, 0.2, 6)
 albedo_color = Color(0.6, 0.7, 0.82, 1)
 roughness = 0.85
 
-[sub_resource type="BoxMesh" id="BoxMesh_rope"]
-size = Vector3(6.2, 0.05, 0.05)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
 size = Vector3(6.2, 8.0, 0.3)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope"]
-; All four sides, all three heights, one white rope. These were red/white/
-; blue -- a boxing convention, not a wrestling one. Every rope in every
-; reference frame is white (clearest in the near-rope foreground of
-; gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg), and white is also
-; what makes the ropes read as a framing element against the mat rather than
-; as three coloured stripes competing with the wrestlers' colourways for
-; attention.
-albedo_color = Color(0.93, 0.93, 0.91, 1)
-roughness = 0.6
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_post"]
-top_radius = 0.08
-bottom_radius = 0.1
-height = 1.5
-radial_segments = 12
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_post"]
-albedo_color = Color(0.12, 0.12, 0.14, 1)
-metallic = 0.3
-roughness = 0.5
-
-[sub_resource type="BoxMesh" id="BoxMesh_pad"]
-size = Vector3(0.28, 0.5, 0.28)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pad"]
-albedo_color = Color(0.1, 0.15, 0.7, 1)
-roughness = 0.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_apron"]
 size = Vector3(6.6, 0.9, 0.1)
@@ -75,7 +44,7 @@ albedo_color = Color(0.13, 0.15, 0.28, 1)
 albedo_texture = ExtResource("1_apron_color")
 roughness_texture = ExtResource("2_apron_rough")
 roughness = 0.9
-uv1_scale = Vector3(8, 1.2, 1)
+uv1_scale = Vector3(18, 3.4, 1)
 
 [node name="Ring" type="Node3D"]
 position = Vector3(0, -0.1, 0)
@@ -113,116 +82,6 @@ shape = SubResource("BoxShape3D_floor")
 mesh = SubResource("BoxMesh_floor")
 surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 
-[node name="Posts" type="Node3D" parent="."]
-
-[node name="PostNE" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("CylinderMesh_post")
-surface_material_override/0 = SubResource("StandardMaterial3D_post")
-position = Vector3(3.0, 0.85, 3.0)
-
-[node name="PadNE" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("BoxMesh_pad")
-surface_material_override/0 = SubResource("StandardMaterial3D_pad")
-position = Vector3(3.0, 1.45, 3.0)
-
-[node name="PostNW" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("CylinderMesh_post")
-surface_material_override/0 = SubResource("StandardMaterial3D_post")
-position = Vector3(-3.0, 0.85, 3.0)
-
-[node name="PadNW" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("BoxMesh_pad")
-surface_material_override/0 = SubResource("StandardMaterial3D_pad")
-position = Vector3(-3.0, 1.45, 3.0)
-
-[node name="PostSE" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("CylinderMesh_post")
-surface_material_override/0 = SubResource("StandardMaterial3D_post")
-position = Vector3(3.0, 0.85, -3.0)
-
-[node name="PadSE" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("BoxMesh_pad")
-surface_material_override/0 = SubResource("StandardMaterial3D_pad")
-position = Vector3(3.0, 1.45, -3.0)
-
-[node name="PostSW" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("CylinderMesh_post")
-surface_material_override/0 = SubResource("StandardMaterial3D_post")
-position = Vector3(-3.0, 0.85, -3.0)
-
-[node name="PadSW" type="MeshInstance3D" parent="Posts"]
-mesh = SubResource("BoxMesh_pad")
-surface_material_override/0 = SubResource("StandardMaterial3D_pad")
-position = Vector3(-3.0, 1.45, -3.0)
-
-[node name="Ropes" type="Node3D" parent="."]
-
-[node name="RopeTopNorth" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 1.2, 3.1)
-
-[node name="RopeMidNorth" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 0.85, 3.1)
-
-[node name="RopeBottomNorth" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 0.5, 3.1)
-
-[node name="RopeTopSouth" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 1.2, -3.1)
-
-[node name="RopeMidSouth" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 0.85, -3.1)
-
-[node name="RopeBottomSouth" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(0, 0.5, -3.1)
-
-[node name="RopeTopEast" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(3.1, 1.2, 0)
-rotation = Vector3(0, 1.5708, 0)
-
-[node name="RopeMidEast" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(3.1, 0.85, 0)
-rotation = Vector3(0, 1.5708, 0)
-
-[node name="RopeBottomEast" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(3.1, 0.5, 0)
-rotation = Vector3(0, 1.5708, 0)
-
-[node name="RopeTopWest" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(-3.1, 1.2, 0)
-rotation = Vector3(0, 1.5708, 0)
-
-[node name="RopeMidWest" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(-3.1, 0.85, 0)
-rotation = Vector3(0, 1.5708, 0)
-
-[node name="RopeBottomWest" type="MeshInstance3D" parent="Ropes"]
-mesh = SubResource("BoxMesh_rope")
-surface_material_override/0 = SubResource("StandardMaterial3D_rope")
-position = Vector3(-3.1, 0.5, 0)
-rotation = Vector3(0, 1.5708, 0)
-
 [node name="RopeCollisionNorth" type="StaticBody3D" parent="." groups=["ring_ropes"]]
 position = Vector3(0, 0.85, 3.1)
 
@@ -248,3 +107,14 @@ rotation = Vector3(0, 1.5708, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RopeCollisionWest"]
 shape = SubResource("BoxShape3D_rope")
+
+; Everything cosmetic about the ring -- canvas, ropes, turnbuckles, posts,
+; apron detail, steel steps -- is generated by this, for the reasons its own
+; header gives. What stays authored here is exactly what is NOT cosmetic:
+; Floor/CollisionShape3D, the four RopeCollision* bodies in the group
+; "ring_ropes" that wrestler_controller.gd bounces off, and
+; Floor/MeshInstance3D, whose node path capture_harness.gd keys blue for the
+; silhouette mask and test_wrestler_colorway.gd reads the mat's albedo from.
+; The builder re-meshes that node in place; it never renames or reparents it.
+[node name="RingBuilder" type="Node3D" parent="."]
+script = ExtResource("3_ring_builder")
