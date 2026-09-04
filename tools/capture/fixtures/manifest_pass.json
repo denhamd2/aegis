@@ -1,0 +1,20 @@
+{
+  "expected_frame_count": 5,
+  "actual_frame_count": 5,
+  "non_black_frame_ratio": 0.98,
+  "hud_present": true,
+  "replay_end_state_hash": "deadbeefcafef00d",
+  "beat_labels": [
+    "tie_up",
+    "apex",
+    "impact",
+    "pin_start",
+    "three_count"
+  ],
+  "_comment": "GPU-backed capture on the shipping pipeline. Passes everything, including a performance claim.",
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "video_adapter": "NVIDIA GeForce RTX 3070",
+  "gpu_backed": true,
+  "software_rasterised": false
+}

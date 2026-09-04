@@ -1,0 +1,218 @@
+[gd_scene load_steps=33 format=3]
+
+[ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/arena.tscn" id="31"]
+[ext_resource type="PackedScene" path="res://scenes/wrestler.tscn" id="3"]
+[ext_resource type="Script" path="res://core/camera/match_camera.gd" id="4"]
+[ext_resource type="Script" path="res://core/match/match_referee.gd" id="5"]
+[ext_resource type="Script" path="res://core/grapple/grapple_rig.gd" id="6"]
+[ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_suplex.tres" id="8"]
+[ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
+[ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
+[ext_resource type="Resource" path="res://resources/moves/finisher_piledriver.tres" id="11"]
+[ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="12"]
+[ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_counter.tres" id="14"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_hiptoss.tres" id="15"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_snapmare.tres" id="16"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_armdrag.tres" id="17"]
+[ext_resource type="Resource" path="res://resources/moves/power_spinebuster.tres" id="18"]
+[ext_resource type="Resource" path="res://resources/moves/power_gutwrench_slam.tres" id="19"]
+[ext_resource type="Resource" path="res://resources/moves/power_fireman_carry_drop.tres" id="20"]
+[ext_resource type="Resource" path="res://resources/moves/signature_neckbreaker.tres" id="21"]
+[ext_resource type="Resource" path="res://resources/moves/finisher_facebuster.tres" id="22"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_hiptoss_counter.tres" id="23"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_arm_wringer.tres" id="24"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_duck_under.tres" id="25"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_back_body_drop.tres" id="26"]
+[ext_resource type="Resource" path="res://resources/moves/reversal_go_behind.tres" id="27"]
+[ext_resource type="PackedScene" path="res://scenes/match_hud.tscn" id="28"]
+[ext_resource type="Resource" path="res://resources/moves/strike_kick.tres" id="29"]
+[ext_resource type="Script" path="res://core/lighting/arena_lighting.gd" id="32"]
+
+[sub_resource type="Environment" id="Environment_arena"]
+background_mode = 1
+background_color = Color(0.02, 0.02, 0.025, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.55, 0.68, 1)
+; Ambient was 0.35 and it was the rig. Ambient is direction-blind: it lands the
+; same on a horizontal mat and on a standing torso, so under it a wrestler and
+; the mat render at the ratio of their ALBEDOS and nothing else. That is
+; exactly what measure_silhouette.py was reporting -- mat<->wrestler 0.094 and
+; 0.044 against VISUAL_BAR.md's 0.24-0.31. Cutting ambient to a bounce floor
+; and putting the level into the truss fixtures is what makes the gap exist at
+; all; the top-down key is the only thing in the scene that can tell a floor
+; from a chest.
+ambient_light_energy = 0.06
+; --- Tonemap ---------------------------------------------------------------
+; Filmic (2) rather than the default Linear (0). VISUAL_BAR.md's mat figure is
+; an EXPOSURE ANCHOR, which only means something once there is an exposure to
+; set: with a linear tonemap the only way to reach mat 0.46 is to push the
+; whole scene up until the ropes and the apron clip, and compare_frame.py sees
+; that as highlights that are bright but structureless. A shoulder is what
+; lets the mat sit at 0.46 while the ropes stay above it and still separate.
+; Filmic over ACES: ACES desaturates its top end hardest, and mean_saturation
+; is already 0.218 against the reference's 0.306 -- ACES would widen the gap
+; this project is trying to close.
+tonemap_mode = 2
+; White point. Sets where the shoulder puts pure white, and therefore how much
+; of the curve the mat's 0.46 sits on. 2.0 keeps the mat on the near-linear
+; part while leaving a stop of headroom above it for the ropes and the fixture
+; cones. Coverage decision: gauntlet/refs/ measures no white point.
+tonemap_white = 2.0
+tonemap_exposure = 1.0
+; --- Glow ------------------------------------------------------------------
+; Threshold above 1.0 so only genuinely over-range things bloom -- the video
+; wall, the fixture cones in the haze, the top of the ropes. Broadcast light
+; through arena air is the look this is after; a low threshold instead just
+; puts a halo on everything and costs local contrast, which is already
+; 0.884 against the reference's 0.816 (i.e. ours is too contrasty, not too
+; little).
+glow_enabled = true
+glow_normalized = true
+glow_intensity = 0.35
+glow_strength = 1.0
+glow_bloom = 0.05
+glow_blend_mode = 0
+glow_hdr_threshold = 1.25
+glow_hdr_scale = 2.0
+; --- Ambient occlusion -----------------------------------------------------
+; With ambient down at a bounce floor, contact darkening has to come from
+; somewhere; SSAO is what keeps the wrestlers' feet joined to the mat and the
+; seats joined to the risers now that neither is self-emissive.
+ssao_enabled = true
+ssao_radius = 0.75
+ssao_intensity = 1.7
+ssao_power = 1.4
+ssao_detail = 0.6
+ssao_light_affect = 0.12
+ssao_ao_channel_affect = 0.2
+; SSIL and SDFGI are deliberately OFF, and this is not a cost argument -- no
+; software capture may make one (ARCHITECTURE.md). Both accumulate over
+; frames, and CaptureHarness.ART_SETTLE_FRAMES is 3 while SILHOUETTE_SETTLE is
+; 90. An effect that has converged in one measurement and not the other makes
+; the two disagree about the same scene, which would poison the exposure
+; anchor the whole slice is judged on.
+; --- Volumetric fog --------------------------------------------------------
+; The light shafts. The key fixtures carry light_volumetric_fog_energy, so the
+; four truss cones become visible volumes of air over the ring instead of
+; invisible vectors that only exist where they land. Global density is low;
+; ArenaLighting adds two FogVolumes for the local concentration.
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0015
+volumetric_fog_albedo = Color(0.72, 0.77, 0.9, 1)
+volumetric_fog_anisotropy = 0.35
+volumetric_fog_length = 64.0
+volumetric_fog_detail_spread = 2.0
+volumetric_fog_gi_inject = 0.0
+volumetric_fog_ambient_inject = 0.0
+volumetric_fog_sky_affect = 0.0
+; Temporal reprojection off for the same reason SSIL is off: it converges over
+; frames and the two shot modes settle for different numbers of them.
+volumetric_fog_temporal_reprojection_enabled = false
+; --- Grade -----------------------------------------------------------------
+; A small saturation lift against the tonemap's own desaturation.
+; mean_saturation 0.218 vs the reference's 0.306 (compare_frame.py).
+adjustment_enabled = true
+adjustment_brightness = 1.0
+adjustment_contrast = 1.0
+adjustment_saturation = 1.22
+
+[node name="Match" type="Node3D"]
+script = ExtResource("1")
+match_seed = 1
+
+; The hall the ring stands in. Split out of ring.tscn so the ring itself --
+; whose 6m mat and 3.1m ropes camera.md derives the 41-degree lens from --
+; stays a scene nobody has a reason to edit while working on arena art.
+[node name="Arena" parent="." instance=ExtResource("31")]
+
+[node name="Ring" parent="." instance=ExtResource("2")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_arena")
+
+[node name="LightRig" type="Node3D" parent="."]
+script = ExtResource("32")
+
+[node name="GrappleRig" type="Node3D" parent="." node_paths=PackedStringArray("anchor", "animation_player")]
+script = ExtResource("6")
+anchor = NodePath("GrappleAnchor")
+animation_player = NodePath("AnimationPlayer")
+
+[node name="GrappleAnchor" type="Marker3D" parent="GrappleRig"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="GrappleRig"]
+callback_mode_process = 0
+libraries = {
+"": ExtResource("10")
+}
+
+[node name="WrestlerA" parent="." instance=ExtResource("3")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.5, 0, 0)
+player_index = 0
+is_ai = false
+attire_body = Color(0.42, 0.6, 0.95, 1)
+skin_tone = Color(0.66, 0.5, 0.4, 1)
+physique_bulk = 0.94
+attire_accent = Color(0.46, 0.72, 1, 1)
+strike_move = ExtResource("7")
+grapple_move = ExtResource("8")
+power_move = ExtResource("12")
+signature_move = ExtResource("9")
+finisher_move = ExtResource("11")
+running_attack_move = ExtResource("13")
+strike_move_pool = Array[Resource]([ExtResource("29")])
+grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
+power_move_pool = Array[Resource]([ExtResource("18"), ExtResource("19"), ExtResource("20")])
+signature_move_pool = Array[Resource]([ExtResource("21")])
+finisher_move_pool = Array[Resource]([ExtResource("22")])
+opponent_path = NodePath("../WrestlerB")
+grapple_rig_path = NodePath("../GrappleRig")
+
+[node name="WrestlerB" parent="." instance=ExtResource("3")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.5, 0, 0)
+player_index = 1
+is_ai = true
+attire_body = Color(0.55, 0.12, 0.13, 1)
+skin_tone = Color(0.6, 0.45, 0.36, 1)
+physique_bulk = 1.12
+attire_accent = Color(0.72, 0.38, 0.10, 1)
+strike_move = ExtResource("7")
+grapple_move = ExtResource("8")
+power_move = ExtResource("12")
+signature_move = ExtResource("9")
+finisher_move = ExtResource("11")
+running_attack_move = ExtResource("13")
+strike_move_pool = Array[Resource]([ExtResource("29")])
+grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
+power_move_pool = Array[Resource]([ExtResource("18"), ExtResource("19"), ExtResource("20")])
+signature_move_pool = Array[Resource]([ExtResource("21")])
+finisher_move_pool = Array[Resource]([ExtResource("22")])
+opponent_path = NodePath("../WrestlerA")
+grapple_rig_path = NodePath("../GrappleRig")
+
+[node name="MatchCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 0, 1.65, 3.5)
+fov = 41.0
+script = ExtResource("4")
+wrestler_a_path = NodePath("../WrestlerA")
+wrestler_b_path = NodePath("../WrestlerB")
+grapple_rig_path = NodePath("../GrappleRig")
+referee_path = NodePath("../MatchReferee")
+
+[node name="MatchReferee" type="Node" parent="."]
+script = ExtResource("5")
+wrestler_a_path = NodePath("../WrestlerA")
+wrestler_b_path = NodePath("../WrestlerB")
+reversal_counter_move = ExtResource("14")
+reversal_move_pool = Array[Resource]([ExtResource("23"), ExtResource("24"), ExtResource("25"), ExtResource("26"), ExtResource("27")])
+
+[node name="MatchHUD" parent="." instance=ExtResource("28")]
+
+[node name="Draw" parent="MatchHUD" index="0"]
+wrestler_a_path = NodePath("../../WrestlerA")
+wrestler_b_path = NodePath("../../WrestlerB")
+referee_path = NodePath("../../MatchReferee")

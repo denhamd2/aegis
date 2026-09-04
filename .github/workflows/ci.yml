@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  gdunit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Godot 4.6
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.3-stable
+          use-dotnet: false
+
+      - name: Install gdUnit4
+        run: |
+          mkdir -p game/addons
+          # v5.0.0 does not compile against Godot 4.6 (GDScript API changes);
+          # v6.2.1 is the newest tag confirmed to import and run cleanly.
+          git clone --depth 1 --branch v6.2.1 \
+            https://github.com/MikeSchulze/gdUnit4.git /tmp/gdUnit4
+          cp -r /tmp/gdUnit4/addons/gdUnit4 game/addons/gdUnit4
+
+      - name: Import project
+        run: godot --headless --path game --import
+
+      - name: Run gdUnit4 tests
+        run: |
+          godot --headless --path game \
+            -s addons/gdUnit4/bin/GdUnitCmdTool.gd \
+            -a res://tests -c --ignoreHeadlessMode
+
+  evidence-gate-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Validate evidence gate against fixture manifests
+        run: |
+          python3 tools/capture/evidence_gate.py tools/capture/fixtures/manifest_pass.json
+          if python3 tools/capture/evidence_gate.py tools/capture/fixtures/manifest_fail.json; then
+            echo "evidence gate should have rejected the failing fixture" >&2
+            exit 1
+          fi
+      - name: A GPU-backed forward_plus capture is admissible for anything
+        run: |
+          python3 tools/capture/evidence_gate.py --visual \
+            tools/capture/fixtures/manifest_pass.json
+          python3 tools/capture/evidence_gate.py --performance \
+            tools/capture/fixtures/manifest_pass.json
+      - name: The wrong pipeline is void for a visual slice, whatever ran it
+        run: |
+          python3 tools/capture/evidence_gate.py \
+            tools/capture/fixtures/manifest_software_render.json
+          if python3 tools/capture/evidence_gate.py --visual \
+            tools/capture/fixtures/manifest_software_render.json; then
+            echo "a gl_compatibility capture must not be admissible for a visual slice" >&2
+            exit 1
+          fi
+      - name: Software forward_plus judges visuals, but never performance
+        run: |
+          python3 tools/capture/evidence_gate.py --visual \
+            tools/capture/fixtures/manifest_software_forward_plus.json
+          if python3 tools/capture/evidence_gate.py --performance \
+            tools/capture/fixtures/manifest_software_forward_plus.json; then
+            echo "a CPU-rasterised capture must not support a performance claim" >&2
+            exit 1
+          fi
+
+  status-page:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Regenerate gauntlet-status.html
+        run: python3 tools/capture/generate_status_page.py
+      - name: Fail if status page is stale
+        run: git diff --exit-code gauntlet/status/gauntlet-status.html

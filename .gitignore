@@ -1,0 +1,32 @@
+# Godot 4
+game/.godot/
+*.translation
+
+# export_presets.cfg is normally ignored because it can carry signing
+# keystore paths and passwords. Ours holds one Web preset and no
+# credentials of any kind, and the Pages workflow needs it in the
+# checkout to export at all, so it is tracked deliberately. If a signed
+# Android/iOS preset is ever added, move its secrets to CI variables
+# rather than re-ignoring this file.
+!game/export_presets.cfg
+
+# Build output from the Web export
+build/
+
+# gdUnit4 is fetched by CI (see .github/workflows/ci.yml), not vendored
+game/addons/gdUnit4/
+game/reports/
+
+# Capture output (large, regenerated)
+gauntlet/refs/raw/*
+!gauntlet/refs/raw/README.md
+tools/capture/out/
+*.avi
+*.mp4
+
+# OS
+.DS_Store
+
+# Python bytecode from the tools/ scripts
+__pycache__/
+*.pyc

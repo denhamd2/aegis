@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+animation_pair_id = &"grapple_armdrag"
+startup_frames = 14
+active_frames = 7
+recovery_frames = 22
+reversal_window_start = 9
+reversal_window_end = 14
+damage_head = 2.0
+damage_torso = 7.0
+damage_arms = 6.0
+damage_legs = 2.0
+momentum_cost = 0.0
+momentum_gain = 9.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1

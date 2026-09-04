@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+animation_pair_id = &"power_spinebuster"
+startup_frames = 24
+active_frames = 12
+recovery_frames = 34
+reversal_window_start = 14
+reversal_window_end = 20
+damage_head = 9.0
+damage_torso = 20.0
+damage_arms = 4.0
+damage_legs = 5.0
+momentum_cost = 0.0
+momentum_gain = 11.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1

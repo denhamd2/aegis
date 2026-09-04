@@ -1,0 +1,75 @@
+class_name PinMinigame
+extends RefCounted
+## Deterministic shrinking-target-zone kickout contest.
+##
+## Fully driven by fixed-tick input (device or replay) and a seeded RNG,
+## so identical seed+replay pairs always produce identical outcomes —
+## required for the capture harness's end-state hash check.
+##
+## A single tick of "marker inside window" is not a win condition: the
+## marker sweeps the entire [0,1] range every TICKS_PER_ATTEMPT ticks, so
+## it passes through any nonzero-width window at least once regardless of
+## input — which would make every pin attempt an automatic kickout before
+## a three-count could ever land. Instead this is a fill meter: progress
+## accumulates only on ticks where the marker is in-window AND the
+## defender is pressing, and needs to cross PROGRESS_THRESHOLD. A narrow
+## window (high damage/attacker momentum, see CombatSystem.kickout_window_
+## fraction) means fewer in-window ticks per sweep, so it genuinely takes
+## longer — or fails to fill before MatchReferee.PIN_COUNT_TICKS runs out.
+
+const TICKS_PER_ATTEMPT := 90 # 1.5s at 60 Hz
+## Ticks of held in-window input needed to kick out.
+const PROGRESS_THRESHOLD := 14.0  # was 12.0, and before that 30.0.
+# 12.0 was calibrated against a fall that lasted MatchReferee.
+# PIN_COUNT_TICKS = 195. That number is now 227, measured (see
+# match_referee.gd's COUNT_TICKS), and a longer fall with the same
+# threshold is a straightforwardly easier one: the defender gets 32 extra
+# ticks of mashing against an unchanged bar. Measured over ten seeds, that
+# is not hypothetical -- every kickout moved from landing after the
+# referee's second slap to landing before his first, so an escape stopped
+# reading as a near-fall at all. Rescaled by the same 227/195 the fall grew
+# by (12.0 * 1.164 = 13.97), which puts kickouts back at the "2".
+#
+# The 12.0 it is scaled from is still a reachability value and not a
+# measured one -- nothing in gauntlet/refs measures how hard a kickout
+# should be. What this constant now guarantees is only that it cannot
+# silently drift when the count length changes again.
+# was 30.0 — unreachable by any
+# human-plausible discrete-press policy at the window fractions
+# kickout_window_fraction() actually produces at a real knockdown
+# (~0.3-0.5). Confirmed against test_pin_minigame_kickout.gd and a live
+# multi-seed probe: paired with WrestlerAI's rate-limited kickout press
+# policy, a fresh knockdown at low-to-moderate attacker momentum (window
+# ~0.4-0.5) is usually escapable, at high attacker momentum (window ~0.3)
+# the defender is usually caught, and heavy cumulative damage (window
+# near the 0.05 floor) is essentially unescapable — matching a match arc
+# of early near-falls followed by an eventual real pin. A first-pass
+# calibration, not a final balance claim; open to later gauntlet-round
+# refinement.
+
+var target_start: float
+var target_width: float
+var rng: RandomNumberGenerator
+var progress: float = 0.0
+
+func _init(window_fraction: float, seed_value: int) -> void:
+	rng = RandomNumberGenerator.new()
+	rng.seed = seed_value
+	target_width = clamp(window_fraction, 0.05, 1.0)
+	target_start = rng.randf_range(0.0, 1.0 - target_width)
+
+## marker_position in [0, 1], moving back and forth over TICKS_PER_ATTEMPT.
+static func marker_position(tick: int) -> float:
+	var t := float(tick % TICKS_PER_ATTEMPT) / float(TICKS_PER_ATTEMPT)
+	return 0.5 - 0.5 * cos(t * TAU)
+
+func marker_in_window(tick: int) -> bool:
+	var pos := marker_position(tick)
+	return pos >= target_start and pos <= target_start + target_width
+
+## Advances the fill meter for one tick and returns true once the
+## defender has kicked out (crossed PROGRESS_THRESHOLD).
+func tick(tick_index: int, input_pressed: bool) -> bool:
+	if input_pressed and marker_in_window(tick_index):
+		progress += 1.0
+	return progress >= PROGRESS_THRESHOLD

@@ -1,0 +1,129 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/environment/materials/Fabric063_Color.jpg" id="1_apron_color"]
+[ext_resource type="Texture2D" path="res://assets/environment/materials/Fabric063_Roughness.jpg" id="2_apron_rough"]
+[ext_resource type="Script" path="res://core/ring/ring_builder.gd" id="3_ring_builder"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(6, 0.2, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(6, 0.2, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+; The stand-in the mat wears before RingBuilder re-meshes this node, and what
+; test_wrestler_colorway.gd reads. Near-white and near-neutral now, matching
+; gauntlet/refs/ring.md's unbranded canvas rather than the blue it carried.
+;
+; The measured relationship it exists to serve is unchanged: on
+; frames/wide_standoff_broadcast_angle.jpg the mat renders at relative
+; luminance 0.46 with both wrestlers 0.24-0.31 below it (VISUAL_BAR.md). Our
+; own build measured 0.359 before this round -- BELOW its own anchor, which
+; also capped the wrestler deltas at 0.208/0.199. A white canvas raises that
+; ceiling, so matching the reference and serving the measurement point the
+; same way here.
+albedo_color = Color(0.975, 0.975, 0.972, 1)
+roughness = 0.85
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
+size = Vector3(6.2, 8.0, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_apron"]
+size = Vector3(6.6, 0.9, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_apron"]
+; The skirt. Flat, dark and NEUTRAL, matching gauntlet/refs/ring.md: the
+; reference's apron is an unbranded grey sheet from the mat edge to the floor.
+; It carried the ring's blue before, which was itself a fix for an earlier
+; problem -- at albedo 0.08 against an arena floor of 0.03 the skirt rendered
+; as more void, which is why a slice's gap line said "no ring skirt" about
+; geometry that was present.
+;
+; That fix still has to hold, and it does, because the mechanism was VALUE
+; SEPARATION and not colour: the skirt sits between the white mat above it and
+; the darker arena floor below it. Going neutral moves its hue, not its place
+; in that ordering. What changed alongside it is that the mat above is now
+; near-white rather than pale blue, so the separation is wider than it was.
+;
+; The fabric is CC0 (assets/environment/CREDITS.md). It is here for variance,
+; not for value: albedo_color still holds the luminance and the texture
+; multiplies into it, so the relationships measure_frame.py reads are the ones
+; set here. Material believability is UNJUDGED under llvmpipe either way.
+albedo_color = Color(0.105, 0.105, 0.112, 1)
+albedo_texture = ExtResource("1_apron_color")
+roughness_texture = ExtResource("2_apron_rough")
+roughness = 0.9
+uv1_scale = Vector3(18, 3.4, 1)
+
+[node name="Ring" type="Node3D"]
+position = Vector3(0, -0.1, 0)
+
+[node name="Apron" type="Node3D" parent="."]
+
+[node name="ApronNorth" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(0, -0.55, 3.15)
+
+[node name="ApronSouth" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(0, -0.55, -3.15)
+
+[node name="ApronEast" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(3.15, -0.55, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="ApronWest" type="MeshInstance3D" parent="Apron"]
+mesh = SubResource("BoxMesh_apron")
+surface_material_override/0 = SubResource("StandardMaterial3D_apron")
+position = Vector3(-3.15, -0.55, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="RopeCollisionNorth" type="StaticBody3D" parent="." groups=["ring_ropes"]]
+position = Vector3(0, 0.85, 3.1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RopeCollisionNorth"]
+shape = SubResource("BoxShape3D_rope")
+
+[node name="RopeCollisionSouth" type="StaticBody3D" parent="." groups=["ring_ropes"]]
+position = Vector3(0, 0.85, -3.1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RopeCollisionSouth"]
+shape = SubResource("BoxShape3D_rope")
+
+[node name="RopeCollisionEast" type="StaticBody3D" parent="." groups=["ring_ropes"]]
+position = Vector3(3.1, 0.85, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RopeCollisionEast"]
+shape = SubResource("BoxShape3D_rope")
+
+[node name="RopeCollisionWest" type="StaticBody3D" parent="." groups=["ring_ropes"]]
+position = Vector3(-3.1, 0.85, 0)
+rotation = Vector3(0, 1.5708, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RopeCollisionWest"]
+shape = SubResource("BoxShape3D_rope")
+
+; Everything cosmetic about the ring -- canvas, ropes, turnbuckle fittings,
+; posts, apron frame, steel steps -- is generated by this, for the reasons its
+; own header gives. What stays authored here is exactly what is NOT cosmetic:
+; Floor/CollisionShape3D, the four RopeCollision* bodies in the group
+; "ring_ropes" that wrestler_controller.gd bounces off, and
+; Floor/MeshInstance3D, whose node path capture_harness.gd keys blue for the
+; silhouette mask and test_wrestler_colorway.gd reads the mat's albedo from.
+; The builder re-meshes that node in place; it never renames or reparents it.
+[node name="RingBuilder" type="Node3D" parent="."]
+script = ExtResource("3_ring_builder")

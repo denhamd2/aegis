@@ -1,0 +1,107 @@
+# hud.md — measured, not remembered
+
+Status: **seeded from static reference screenshots, plus one real gameplay
+clip** (`gauntlet/refs/raw/video/wwe2k26_footage_01.mp4`, WWE 2K26, 30fps —
+see `timings.md`). The clip confirms the promotional-still HUD layout below
+matches actual gameplay (`hud/gameplay_hud_full.jpg`, a frame pulled
+straight from the clip: star-rating meter top-left, corner vitality bars,
+same green/red-segment damage rule) — but *fill animation* (easing,
+flash-on-threshold, damage-tick delay) still needs frame-stepping a visible
+damage event, not just a static pull, and stays pending below. Reference
+crops: `gauntlet/refs/hud/vitality_bar_full_health.png`,
+`vitality_bar_damaged.png`, `vitality_stamina_stacked.png`,
+`match_quality_meter.png`, `tag_movelist_panel.png`,
+`gameplay_hud_full.jpg`.
+
+## Meter positions
+- Health/vitality: bottom-left corner for the player-1-side wrestler,
+  bottom-right for the player-2-side wrestler, inset a small margin from
+  the screen edge — consistent across every screenshot in this corpus
+  (2-wrestler singles and a 2v2 tag shot alike). This matches
+  `MatchReferee`/HUD conventions this project should aim for (nothing here
+  contradicts a simple corner-anchored layout).
+- Momentum/finisher: not a separate on-screen meter in most shots — see
+  "Fill animation behavior" below. `vitality_stamina_stacked.png`
+  (Orton vs. Cena) is the one reference showing a second, stacked bar under
+  vitality (blue/orange, partially filled) plus a small colored icon at the
+  plate's bottom-left corner — read as a stamina-or-finisher-charge meter,
+  not confirmed which from a still.
+- Stamina (if present): see above — present in at least one HUD variant,
+  absent (or merged into vitality) in others. The corpus isn't consistent
+  enough to call this settled; likely a mode-dependent HUD (this project's
+  MVP should default to the simpler single-bar-per-wrestler layout seen in
+  `vitality_bar_full_health.png`).
+- A separate **match-quality meter** (5-star rating + fill bar,
+  `match_quality_meter.png`) appears top-left in one shot — a crowd/meta
+  rating system, not a per-wrestler vitality readout. Out of scope for this
+  project's MVP (`ARCHITECTURE.md` scope is the core match loop, not a
+  post-hoc quality score) but noted so it isn't confused with a gameplay
+  meter if it shows up in future footage.
+
+## Sizes
+- Each wrestler's name-plate + bar reads as roughly 15-20% of screen width,
+  proportioned wider than tall (a squat rectangle, not a square icon) —
+  consistent across every corner-HUD shot in the corpus.
+- (pending — exact pixel/DPI-relative sizing needs a known reference
+  resolution and a frame-stepped source, not a scaled promotional still)
+
+## Colors
+- Vitality bar: green when healthy. Damage is shown as a **revealed red
+  segment** at the depleted end of the bar, not a full-bar recolor or
+  gradient — compare `vitality_bar_full_health.png` (solid green) against
+  `vitality_bar_damaged.png` (green remaining, red revealed at the
+  depleted end). This is the one concrete, cross-shot-consistent color rule
+  in this corpus.
+- Secondary stamina/finisher bar: blue in one wrestler's HUD, orange in the
+  other's, in the one shot that has it (`vitality_stamina_stacked.png`) —
+  reads as a per-wrestler accent color rather than a fixed meaning-to-color
+  mapping; not enough samples to call this a rule.
+- Match-quality meter: gold stars on a dark background, gold fill bar.
+- Name-plate background: dark, low-contrast panel behind white name text in
+  every shot — legible against both the light ring mat and the darker
+  crowd/entrance backgrounds seen across this corpus, which is the
+  `VISUAL_BAR.md` "HUD legibility... across a full match's lighting range"
+  bar in miniature (small supporting evidence, not a full verification —
+  that still needs real in-match lighting range footage).
+
+## Submission/hold contest meter
+- One new element confirmed from the gameplay clip (`hud/submission_hold_meter.jpg`,
+  also `frames/submission_hold_applied.jpg` — see `timings.md`'s submission
+  measurement): during a submission/rope-adjacent hold, a horizontal
+  two-color bar appears center-bottom labeled "HOLD", split red
+  (attacker side) / blue (defender side) — reads as a tug-of-war contest
+  meter, distinct from either wrestler's corner vitality bar. A button
+  prompt (L1 / CANCEL) sits just above it. Not seen in any of the static
+  promotional screenshots — this project's `SubmissionMinigame` doesn't
+  currently render anything like this on-screen; worth considering once
+  submissions get UI.
+
+## Pin / kickout UI
+- Frame-stepped across the whole of footage_02's pinfall (the same
+  1087-1093s sequence `timings.md` measures the count and lead-in from),
+  the pin puts exactly **two** things on screen, and neither is a kickout
+  meter:
+  - **The count digit**, top-center, popping in with no fade (see Colors
+    and `timings.md`'s three-count cadence).
+  - **An "L1 / CANCEL" button prompt**, top-center, appearing at
+    **t≈1089.067s** (`frames/pin_cancel_prompt.jpg`; absent one frame
+    earlier at 1089.033s). That is ~1.67s after the cover is applied and
+    ~1.93s before the "1" — it arrives with the referee, not with the
+    cover. Same prompt shape as the one sitting above the submission HOLD
+    meter above, so read it as the attacker's "abandon this" option in
+    both cases rather than anything the defender presses.
+- **No marker, no target window, no fill bar for the defender anywhere in
+  the sequence.** This project's `PinMinigame` is a shrinking-target-zone
+  contest — a marker sweeping [0,1] against a target window — and nothing
+  resembling that is on screen here.
+- **Read that as one instance, not a rule.** This cover ended in a clean
+  three-count with no kickout, so a defender-side meter that only appears
+  once the defender is actually contesting would be absent for exactly
+  that reason. Settling it needs a clip with a *kickout* on camera, which
+  neither source clip has yet.
+
+## Fill animation behavior
+- Easing, flash-on-threshold, damage-tick delay: **(pending — needs
+  frame-stepped video.)** A still can show that damage is a revealed
+  segment (see Colors above) but nothing about how it animates getting
+  there.

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gauntlet Status</title>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 2rem; background: #111; color: #eee; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #333; padding: 0.5rem 0.75rem; text-align: left; }
+  th { background: #1c1c1c; }
+  .verdict-ours { color: #7cd67c; }
+  .verdict-theirs { color: #e08080; }
+  .verdict-pending { color: #ccc; }
+  caption { text-align: left; margin-bottom: 0.5rem; color: #999; }
+</style>
+</head>
+<body>
+<h1>Gauntlet Status</h1>
+<table>
+<caption>Generated from gauntlet/status/slices.json. Ratchet keeps the best candidate; replaced only on head-to-head win.</caption>
+<thead>
+<tr><th>Slice</th><th>Round</th><th>Verdict</th><th>Trend</th><th>Largest gap</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>ring/arena presentation</td>
+<td>4</td>
+<td class="verdict-pending">contested</td>
+<td>5/10</td>
+<td>Round 4, and not a gauntlet round: a direct instruction to match the ring and ringside to a named external reference (gauntlet/refs/ring.md -- a plain unbranded ring, all rights reserved, matched by hand as reference only, no asset imported). The ring was rebuilt to it: white unbranded canvas with wear and deep panel seams only, thin near-taut black ropes, square matte-black post slabs, bare sleeve-and-clevis turnbuckles in place of the branded vinyl pads, a flat grey skirt, bare bright-metal steps on their own material key, panelled barricades with cap rails and legs, a scored ringside slab, and 470 imported folding chairs on four newly flattened front rows. Lighting was explicitly out of scope and is untouched.
+
+THE HEADLINE RESULT IS THE SILHOUETTE BAR, and it is the first time all four of its figures have been inside their bands on the renderer the game ships. Mat luminance 0.359 -&gt; 0.456 against the 0.43-0.49 exposure anchor; mat&lt;-&gt;wrestler 0.208 -&gt; 0.306 and 0.199 -&gt; 0.296 against 0.24-0.31; wrestler&lt;-&gt;wrestler 0.010 inside 0.00-0.07. That was not a lighting fix -- it is arithmetic the ring owned all along. The blue mat rendered BELOW its own anchor, which capped how far a wrestler could sit beneath it; a white canvas raised the ceiling. The value was solved rather than picked: two measured points fit rendered ~= 0.692 * L**0.719 through this tonemap, and 0.46 came back as effective albedo 0.78 sRGB.
+
+THE COST, BOOKED RATHER THAN BURIED. Measured on wide_broadcast against the same still, before -&gt; after: saturation 0.311 -&gt; 0.216 (reference 0.306) and warm/cool -0.337 -&gt; -0.153 (reference -0.333) both went from dead-on to clearly outside, and coarse detail 0.209 -&gt; 0.137 (reference 0.343) regressed. All three are the instruction, not a slip: the reference is near-monochrome and unbranded, the mat is 212k of 921k pixels in that frame, and going from a blue mat with a high-contrast centre mark to a neutral white one with wear can only move those statistics that way. What could be recovered was: ringside tints were pulled halfway back toward the cool push rather than all the way to neutral (at identical linear luminance, so the house level is untouched), and the canvas seams were widened from 1.4cm to 4cm -- set by the measurement, since coarse detail is read off a heavily downscaled frame where a 1.4cm seam does not exist at all. That bought 0.124 -&gt; 0.137. Chasing the rest would mean putting decoration back on the mat, which is the thing the instruction removed.
+
+TWO THINGS THE WHITE MAT EXPOSED. The canvas weave has a 4-texel period and its normal map re-lights it every frame -- which is what that normal map is FOR -- and on white it resolved into diagonal corduroy across the whole mat. It had been there under the blue field the whole time; the blue hid it. Fixed by jittering each thread&#x27;s weight so the pattern cannot beat with the pixel grid, and by cutting CANVAS_RELIEF 4.0 -&gt; 1.5. Separately, ring_post&#x27;s Metal032 brought a polished-metal roughness map that multiplies the scalar, so raising roughness to 0.94 did not stop the posts reading as moulded plastic; the key now carries no map at all, which is also what the reference shows.
+
+UNCHANGED AND VERIFIED: suite 216/216, 0 failures, 107 orphans, exit 101 -- byte-identical to the pre-round baseline, including test_determinism, test_replay_roundtrip, test_camera_framing and test_wrestler_colorway. void_fraction 0.015 -&gt; 0.024, inside 0.010-0.066. No CollisionObject3D was created or moved; the four ring_ropes bodies and the 6m/3.1m frozen dimensions are where they were. NOT JUDGED HERE: the folding chair ships with no licence and no author (see assets/environment/CREDITS.md) -- raised, overruled by the project owner, recorded rather than hidden.</td>
+</tr>
+<tr>
+<td>wrestler look &amp; materials</td>
+<td>2</td>
+<td class="verdict-pending">contested</td>
+<td>5/10</td>
+<td>Unchanged by this round in substance -- no builder owned the wrestlers -- but its numbers move because the lighting under them changed. On the landed build: mat 0.359, mat&lt;-&gt;A 0.208, mat&lt;-&gt;B 0.199 against the 0.24-0.31 band, A&lt;-&gt;B 0.009 against 0.00-0.07. The two value gaps are closer than the 0.094/0.044 the shipping renderer showed before the lighting round and still short of band, and they will keep moving until the exposure anchor is re-solved, so re-measure before acting on them. A&lt;-&gt;B has flattened again to 0.009 against the reference&#x27;s own 0.070. Unchanged and still missing: no faces, one CC0 mannequin body for both men, and gear that is still untextured cylinders -- material_library.gd now exists to fix that last one and nothing consumes it for the wrestlers yet.</td>
+</tr>
+<tr>
+<td>HUD/UI</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>the vitality bar was reading against a 400-damage scale while the match is played on a 200 one, so a wrestler one hit from losing showed 54-75% health; fixed, and each plate now carries its wrestler&#x27;s own attire accent. Still missing against hud.md: portraits, the fill-animation behaviour hud.md marks pending (easing, flash-on-threshold, damage-tick delay), and legibility across a lighting range the game does not yet have.</td>
+</tr>
+<tr>
+<td>entrance sequence</td>
+<td>0</td>
+<td class="verdict-pending">not started</td>
+<td>-/10</td>
+<td>phase 4 not yet started</td>
+</tr>
+<tr>
+<td>audio bed</td>
+<td>0</td>
+<td class="verdict-pending">not started</td>
+<td>-/10</td>
+<td>phase 4 not yet started</td>
+</tr>
+<tr>
+<td>locomotion &amp; strike feel</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>timings.md had carried a &#x27;pending&#x27; on strike active/recovery through two failed searches (both clips are continuous mutual trading with no single-attacker window). A third search found one: wwe2k26_footage_01.mp4 230.3-231.5s, a big cocked overhand blow at a passive opponent held in one continuous shot -- windup start 230.333s, contact 230.633s, guard reset ~231.367s, so startup ~0.300s (9 frames) and contact-to-fight-ready ~0.73-0.80s. The finding is that it DISAGREES with the other instance: the jab measured at 668.3s starts up in ~4 frames, this in ~9, so strike frame data in the reference is not one number and any single startup shared across strike moves is wrong by construction (this project shares startup_frames = 8 between strike_jab and strike_kick; the jab&#x27;s 8 is measured, the kick&#x27;s is unexamined). running_attack_clothesline, the project&#x27;s heavy strike, was paced like a light one -- startup 14 against 18 measured, recovery 16 ticks (0.267s) against 0.73-0.80s -- now 18 and 46. Separately, the getup was being compared against the wrong constant: timings.md measured a two-speed rise (2.10s default, 1.14s input-driven) and checked it against GETUP_TICKS, which is the PRONE timer; the rise itself was an unnamed literal 20 inside _process_down(), 0.33s, a sixth of the measured default, applied identically whether the wrestler beat the count or not. Now GETUP_RISE_TICKS = 126 and GETUP_RISE_FAST_TICKS = 68, and measured GETUP went 20 -&gt; 126 ticks. What is still missing: the AI never runs, so RUNNING_ATTACK fired ZERO times in ten matches (RUN&#x27;s 6 entries are all the whipped man&#x27;s rebound autopilot) -- an authored move with its own MoveDef, reversal window and tests never happens in AI-vs-AI, so this round&#x27;s retune of it is unexercised in play; the fast getup is likewise never taken by the AI; there is no neutral at all (IDLE entered 218 times for a mean of 3.2 ticks, mean separation 0.96m against a 1.15m strike range, never further apart than 3.29m) so there is no spacing or circling, which is the largest visible difference from the footage and is measurable against nothing, since ring-crossing run speed is still pending; MOVE_SPEED 3.5 and RUN_SPEED 7.0 remain unmeasured for the same reason; the jab&#x27;s own active/recovery is still unmeasured (the isolated instance is a heavy blow); STUNNED_TICKS gets a &gt;=0.4s lower bound only; and FEEL_BAR.md requires a human on a gamepad before a feel slice signs off, which has not happened.</td>
+</tr>
+<tr>
+<td>grapple chain &amp; paired-move quality</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>The chain now runs in order and both top rungs fire in the same match, which neither did before: over ten AI-vs-AI seeds a signature fired in 9 (was 3), a finisher in 4 (was 7), both in 4 (was 0), and the chain skipped a rung in 0 seeds (was 7). Two mechanisms, neither of them the threshold arithmetic the old gap line blamed. First, a tier gate is only read at a grapple while momentum keeps rising between grapples, so the 8-wide signature band was narrower than the 10-20 a wrestler earns between two reads and a jab could carry him past it -- ordering is now a property of the chain (CombatSystem.tier_reached: each rung needs the one below it landed), not of arithmetic on a rising meter. Second, and larger: knockdown was total_damage() &gt;= KNOCKDOWN_DAMAGE, a latch on a quantity that only rises, so past ~100 damage every later jab re-downed the opponent and tie-ups stopped -- both wrestlers entered GRAPPLE_HOLD exactly three times in every seed and a match played two or three of the eighteen authored paired moves. It is now measured from the last knockdown, and grapple moves per match went 2.8 -&gt; 3.6. What is still missing: the chain is tight against what a match affords (a full climb needs four grapples, a match affords 3.6, hence a finisher in 4 seeds of 10 -- an artefact of the constants, not a measured target); the three thresholds remain reachability values and the frame data, damage and momentum across all 18 paired moves still trace to no reference measurement; a match can still be won almost entirely with jabs (seed 8&#x27;s winner finished on 66 unspent momentum and 8 strikes) since strikes feed the meter the grapple chain spends; and paired-move *quality* -- the other half of this slice&#x27;s name -- stays UNJUDGED, because every capture is llvmpipe and evidence_gate.py --visual voids it for that judgement.</td>
+</tr>
+<tr>
+<td>reversal windows</td>
+<td>0</td>
+<td class="verdict-pending">not started</td>
+<td>-/10</td>
+<td>phase 4 not yet started</td>
+</tr>
+<tr>
+<td>camera framing</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>the follow-cam is solved from measurement now -- subject fill 0.29 -&gt; inside the reference&#x27;s own bands, and the dead cut modes (which froze the camera permanently if ever called) are driven off the match&#x27;s events. What is not measured: FOV is DERIVED (41 deg, from fill plus &#x27;just outside the near ropes&#x27;), the fit&#x27;s separations are derived from that same FOV rather than observed, and ease curves plus cut duration stay pending real footage per camera.md. The containment guard&#x27;s width limit is an engineering value, not a reference number.</td>
+</tr>
+<tr>
+<td>pin/kickout minigame</td>
+<td>1</td>
+<td class="verdict-pending">contested</td>
+<td>6/10</td>
+<td>First round on this slice, and the code was further along than the Phase 0 gap line implied: MatchReferee already counted on the measured cadence (COUNT_TICKS put the slaps 1.25s and 1.00s apart, which is what timings.md frame-stepped), and timings.md&#x27;s own claim that no pinfall system existed to compare against was stale -- corrected. What was not measured was the lead-in into the count, which match_referee.gd flagged itself. Measured now by walking footage_02&#x27;s pinfall backwards: cover applied 1087.400s, referee settles into counting position ~1089.467s, count &#x27;1&#x27; 1091.000s -- 3.60s in total, of which ~2.07s is the referee walking across the ring. This project has no referee actor, so only the ~1.53s from referee-in-position to the first slap is comparable; COUNT_TICKS[0] moved 60 -&gt; 92 and a fall went 3.25s -&gt; 4.53s. Lengthening it exposed the round&#x27;s real finding: PROGRESS_THRESHOLD was calibrated against a 195-tick fall, so a longer count with an unchanged bar slid every kickout from after the referee&#x27;s second slap to before his first -- rescaled by the same 227/195 and the coupling is now a test, not a coincidence. Separately, the submission was a comparison wearing a contest&#x27;s clothes: attacker rate rose with the targeted limb while the defender&#x27;s was flat, and the referee only starts a hold in a narrow band straddling the crossover, so all ten seeds&#x27; holds resolved in 61-63 ticks with the loser&#x27;s ring at 0.96-0.99 -- a photo finish every time, decided by &#x27;is the limb past 60&#x27;. The defender&#x27;s rate now mirrors the attacker&#x27;s around the same crossover, dead heats (2 of 10 seeds) are a seeded flip instead of if/elif order, and BREAK_POINT 100 -&gt; 240 puts a hold at 146-151 ticks against the one hold timings.md measured (~2.5s, and read its caveat: a rope-break cycle, single instance). What is still missing: the submission is a steeper comparison, not a contest -- both rings climb off constant rates and the defender&#x27;s only input is &#x27;held&#x27;, with no timing or target in it; the referee&#x27;s gating band (55 limb / 140 damage, both reachability values) means every hold still starts near the tie; four of ten matches still end on the first knockdown ~10s in; the second fall of a match is always at the 0.05 window floor and so arithmetically unescapable; PROGRESS_THRESHOLD&#x27;s base 12.0 is still unmeasured; and the kickout minigame HAS NO UI -- the HUD draws the count and the hold meter and nothing a human could play a kickout against, so the minigame this slice is named for is unplayable. hud.md now records that the reference&#x27;s own pinfall shows only a count digit and an L1/CANCEL prompt, with the caveat that that cover was never kicked out of.</td>
+</tr>
+<tr>
+<td>submission minigame</td>
+<td>0</td>
+<td class="verdict-pending">not started</td>
+<td>-/10</td>
+<td>phase 4 not yet started</td>
+</tr>
+<tr>
+<td>final integration critic</td>
+<td>0</td>
+<td class="verdict-pending">not started</td>
+<td>-/10</td>
+<td>Not started as a slice, but the tooling it needs now exists: tools/refs/compare_frame.py compares whole-frame tone, contrast, colour and edge-density statistics against a reference still, and capture_harness.gd&#x27;s --art-shots renders six fixed cameras so two rounds of a slice can be compared frame for frame.</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
