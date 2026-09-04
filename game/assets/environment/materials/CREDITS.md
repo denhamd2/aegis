@@ -40,12 +40,11 @@ rescaled from its own observed range into the band. Generated with Pillow at
 import time; the command is in the round report. A derived work of a CC0
 original is CC0.
 
-### IP guardrail
+### What is in here
 
-Per `gauntlet/anchor/ARCHITECTURE.md`: these are generic CC0 surface scans.
-No WWE-, AEW- or any other promotion-derived geometry, textures, logos,
-trade dress or likenesses are used anywhere in this directory, and none may
-be added.
+These are generic CC0 surface scans. No promotion-derived geometry,
+textures, logos, trade dress or likenesses are used anywhere in this
+directory.
 
 
 ## Carpet012

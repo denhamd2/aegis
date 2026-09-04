@@ -12,8 +12,7 @@ say which won and why.
 
 Sketchfab's API reports `isDownloadable: false` and no licence grant, i.e. all
 rights reserved. **Reference only.** No geometry, textures, materials or UVs
-from it are in this repository, and none may be added — that is
-`ARCHITECTURE.md`'s IP guardrail applied exactly as it is applied to the WWE 2K
+from it are in this repository. It is handled the same way as the WWE 2K
 footage: measurement and observation are committable, the asset is not.
 
 Following the convention in `raw/README.md`, the preview image itself is not

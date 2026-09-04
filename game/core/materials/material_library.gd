@@ -465,8 +465,8 @@ const SPECS := {
 		"tint": Color(0.0586, 0.0710, 0.0911), "roughness": 0.85,
 		"house_lit": true,
 	},
-	## Coverage decision: the video wall is deliberately blank -- a logo there
-	## would be branding, which ARCHITECTURE.md's IP guardrail scopes out.
+	## Coverage decision: the video wall is deliberately blank -- there is no
+	## promotion to put on it, and an invented logo is not worth the pixels.
 	## Kept off near-black on purpose: the house-light compensation divides
 	## by linear albedo, so a very dark panel asks for an absurd energy.
 	"arena_screen": {

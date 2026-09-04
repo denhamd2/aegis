@@ -125,16 +125,6 @@ on them holding.
   docs every visual/feel slice is judged against. Keep them short enough
   that a fresh-context critic can hold the whole bar in mind.
 
-## IP guardrail
-
-- Original wrestlers, movesets, and branding only. WWE 2K/No Mercy
-  references are for **measurement** (frame timings, camera framing, HUD
-  layout) — never for extracted models, textures, audio, or likenesses.
-  Ripped-asset sources are off-limits, full stop.
-- "Free to download" is not a licence. Extracted game assets and replicas of
-  a real promotion's trade dress circulate freely and are still infringing;
-  availability is not the test, the licence is.
-
 ## Third-party assets
 
 - **Permitted: CC0 and CC-BY.** CC0 needs nothing; CC-BY needs an entry in a

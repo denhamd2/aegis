@@ -111,9 +111,10 @@ the few visual numbers a software render can legitimately move.
 
 - Photorealism. The bar is WWE 2K's presentation *language* (framing,
   lighting consistency, HUD clarity), not its polygon/texture budget.
-- Matching any specific WWE 2K wrestler's likeness, moveset, or branding —
-  see the IP guardrail in `gauntlet/anchor/ARCHITECTURE.md`. A critic that
-  flags "doesn't look like [real wrestler]" is out of scope by design.
+- Matching any specific WWE 2K wrestler's likeness, moveset, or branding.
+  The reference frames are here for framing, lighting and HUD measurements;
+  a critic that flags "doesn't look like [real wrestler]" is measuring
+  something this bar does not ask for.
 
 ## Known gap sources to check first
 

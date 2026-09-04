@@ -226,8 +226,8 @@ Verified against the real Godot binary: imports cleanly, a real
 (non-headless, OpenGL/llvmpipe) render shows the mesh in a proper idle
 pose at ring scale (not a capsule, not a T-pose), and the full match
 still completes via pinfall with the mesh wired in — 7/7 unit tests still
-pass. See `game/assets/characters/CREDITS.md` for attribution and the IP
-guardrail note (stand-in mesh only — no WWE-derived assets).
+pass. See `game/assets/characters/CREDITS.md` for attribution and the
+provenance note (stand-in mesh only — no WWE-derived assets).
 
 **Per-state animation switching now goes through a real `AnimationTree`
 blend graph**, the long-term design `ARCHITECTURE.md` calls for — not a

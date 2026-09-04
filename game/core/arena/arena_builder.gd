@@ -10,10 +10,9 @@ class_name ArenaBuilder
 ##   transforms. Expressed as the dozen numbers below it is reviewable and
 ##   tunable; expressed as a .tscn it would be transform soup nobody can check.
 ## - No CC0 wrestling arena exists to download. The ones that do exist are
-##   branded (extracted game assets or trademarked trade dress, both barred by
-##   ARCHITECTURE.md's IP guardrail), and none is an arena *bowl* -- they are
-##   all rings, which scenes/ring.tscn already has. See
-##   assets/environment/CREDITS.md.
+##   branded (extracted game assets or trademarked trade dress), and none is
+##   an arena *bowl* -- they are all rings, which scenes/ring.tscn already
+##   has. See assets/environment/CREDITS.md.
 ##
 ## Everything here is cosmetic. Nothing in this file creates a
 ## CollisionObject3D, joins a physics layer, or is read by gameplay: the ring's

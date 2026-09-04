@@ -18,6 +18,6 @@ included animations (locomotion, strikes, hit reactions, death/roll).
 the non-suffixed file has root motion disabled (in-place animations) for
 use where the game code drives displacement instead.
 
-Per ARCHITECTURE.md's IP guardrail: this is a stand-in reference/base
-mesh only — final wrestler likenesses, movesets, and branding must remain
-fully original. No WWE-derived assets are used here.
+This is a stand-in reference/base mesh only; the wrestler likenesses,
+movesets and branding built on top of it are original. No WWE-derived
+assets are used here.
