@@ -27,12 +27,12 @@ assets are used here.
 Two user-supplied character stills (full body + head close-up) serve as the
 visual bar for the variant-2 brawler outfit, the same way WWE 2K footage
 serves `gauntlet/refs/` as measurement: framing, palette, and silhouette
-proportions may be matched, but no likeness, face, text, or branding is
-reproduced. Output is procedural BoneAttachment3D geometry + flat materials
-(buzz hair, denim shorts, green bands, steel chain collar, black boots) on
-the CC0 mannequin. The mannequin's blank head is unchanged -- a real face
-needs authored texture/head-mesh work the attachment system cannot do, and a
-real person's face must never be recreated here.
+proportions are matched, with no text or branding reproduced. Output is
+procedural BoneAttachment3D geometry + flat materials (buzz hair, procedural
+face boxes, denim shorts, striped waistband, green bands, steel chain collar
++ dog tags, black/white boots) on the CC0 mannequin. Face placement rests on
+one documented assumption (WrestlerAttire.FACE_FORWARD); a capture must
+confirm which way the Head bone faces before the face is judged.
 
 ## Drop-in slot: distinct superhero bodies (not yet downloaded)
 
