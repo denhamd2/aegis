@@ -102,7 +102,7 @@ func test_generated_clips_pose_every_bone_the_rig_animates() -> void:
 func test_generated_track_paths_resolve_against_a_real_wrestler() -> void:
 	var wrestler := _make_wrestler()
 	var root := wrestler.anim_player.get_node(wrestler.anim_player.root_node)
-	var anim := PAIRED_POSES.get_animation("grapple_suplex__attacker")
+	var anim := PAIRED_POSES.get_animation("grapple_hiptoss__attacker")
 	var unresolved: Array[String] = []
 	for i in anim.get_track_count():
 		var path := anim.track_get_path(i)
@@ -117,8 +117,8 @@ func test_generated_track_paths_resolve_against_a_real_wrestler() -> void:
 	).is_empty()
 
 func test_roles_resolve_to_different_clips() -> void:
-	assert_str(PairedRecipes.role_clip(&"grapple_suplex", true)) \
-		.is_not_equal(PairedRecipes.role_clip(&"grapple_suplex", false))
+	assert_str(PairedRecipes.role_clip(&"grapple_hiptoss", true)) \
+		.is_not_equal(PairedRecipes.role_clip(&"grapple_hiptoss", false))
 
 func test_a_move_with_no_recipe_resolves_to_nothing() -> void:
 	assert_str(PairedRecipes.role_clip(&"strike_jab", true)).is_empty()
@@ -140,7 +140,7 @@ func test_defender_grip_windows_are_inside_the_move() -> void:
 func test_a_wrestler_can_play_its_half_of_an_authored_move() -> void:
 	var wrestler := _make_wrestler()
 	var move := MoveDef.new()
-	move.animation_pair_id = &"grapple_suplex"
+	move.animation_pair_id = &"grapple_hiptoss"
 	assert_bool(wrestler.play_paired_pose(move, true)).is_true()
 	assert_bool(wrestler.play_paired_pose(move, false)).is_true()
 

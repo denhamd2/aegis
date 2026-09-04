@@ -5,7 +5,7 @@ extends RefCounted
 ## `resources/animations/paired_moves.tres` animates only the two
 ## CharacterBody3D roots -- the throw *trajectory*. Each wrestler's skeleton
 ## was posed independently by a borrowed single-character clip that has no
-## idea another body exists, so a suplex was two rigid capsules on an arc
+## idea another body exists, so a throw was two rigid capsules on an arc
 ## with an unrelated gesture playing inside each of them.
 ##
 ## This file is the other half: per move, per role, a sequence of poses that
@@ -62,31 +62,6 @@ const DEFENDER_SUFFIX := "__defender"
 const LIBRARY := "paired"
 
 const RECIPES := {
-	# A dips, drives up, arches back; B rises to 2.4m overhead and comes
-	# down behind. Root arc: B peaks at t=0.52, lands by t=0.88.
-	"grapple_suplex": {
-		"attacker": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.18, "clip": "PickUp_Table", "at": 0.25},
-			{"t": 0.32, "clip": "PickUp_Table", "at": 0.45},
-			# Overhead rather than PickUp_Table's waist-height carry: by this
-			# beat the victim's hips are at 1.6m and a carry pose leaves the
-			# attacker's arms clamped at full stretch below him, which reads
-			# as him having let go at the apex.
-			{"t": 0.52, "clip": "Sword_Attack", "at": 0.40},
-			{"t": 0.72, "clip": "Jump_Land", "at": 0.50},
-			{"t": 1.00, "clip": "Idle", "at": 0.00},
-		],
-		"defender": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.30, "clip": "Jump", "at": 0.50},
-			{"t": 0.52, "clip": "Death01", "at": 0.40},
-			{"t": 0.82, "clip": "Death01", "at": 0.90},
-			{"t": 1.00, "clip": "Death01", "at": 1.60},
-		],
-		# Hooked round the attacker's waist on the way up, then let go.
-		"defender_grips_until": 0.45,
-	},
 	# A drops to one knee; B is folded across it. B peaks at 1.55m, lands
 	# forward at +0.65 X.
 	"signature_backbreaker": {

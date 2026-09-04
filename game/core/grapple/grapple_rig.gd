@@ -38,7 +38,7 @@ var _active: bool = false
 ## attacking. Confirmed live with a direct-invocation probe: with WrestlerB
 ## as the real attacker, the unmodified clip lifted the *attacker* into the
 ## air and left the defender standing -- exactly backwards, for every
-## existing paired move (suplex/backbreaker/piledriver), not just a new one.
+## existing paired move (backbreaker/piledriver and the rest), not just a new one.
 ## _play_retargeted() plays a duplicated copy of the clip with its two
 ## wrestler tracks' NodePaths rewritten to the real attacker/defender nodes,
 ## so the authored motion always maps lifter-track -> attacker and
@@ -247,8 +247,8 @@ func _on_animation_finished(_anim_name: StringName) -> void:
 ##
 ## A paired clip rotates the CharacterBody3D root, and the collision capsule
 ## is rigidly attached to it -- so a clip that ends with the thrown wrestler
-## on his back (grapple_suplex finishes at pitch 90deg, measured) leaves an
-## upright capsule lying horizontal, half of it below the mat. The floor then
+## on his back (measured on the old suplex: it finished at pitch 90deg)
+## leaves an upright capsule lying horizontal, half of it below the mat. The floor then
 ## depenetrates it upward by exactly one radius: confirmed live, the defender
 ## popped from y=0 to y=0.400127 over three ticks with zero velocity, the
 ## contact normal straight up and the collider named "Floor".

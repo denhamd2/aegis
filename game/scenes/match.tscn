@@ -8,7 +8,6 @@
 [ext_resource type="Script" path="res://core/match/match_referee.gd" id="5"]
 [ext_resource type="Script" path="res://core/grapple/grapple_rig.gd" id="6"]
 [ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_suplex.tres" id="8"]
 [ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
 [ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/moves/finisher_piledriver.tres" id="11"]
@@ -162,7 +161,7 @@ physique_height = 0.98
 torso_width = 1.0
 attire_accent = Color(0.46, 0.72, 1, 1)
 strike_move = ExtResource("7")
-grapple_move = ExtResource("8")
+grapple_move = ExtResource("15")
 power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
@@ -190,7 +189,7 @@ torso_width = 1.14
 ; calibrated blind, with no Godot in that environment to evaluate Color.h.
 attire_accent = Color(0.12, 0.68, 0.2, 1)
 strike_move = ExtResource("7")
-grapple_move = ExtResource("8")
+grapple_move = ExtResource("15")
 power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")

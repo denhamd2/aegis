@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The full paired moveset: the 18 moves ARCHITECTURE.md scopes (12 grapple
+## The full paired moveset: the 17 moves ARCHITECTURE.md scopes (11 grapple
 ## + 6 reversal), their trajectories, and the seeded pools that let a
 ## wrestler actually reach more than one move per tier.
 ##
@@ -14,8 +14,10 @@ const PairedRecipes := preload("res://resources/animations/paired_recipes.gd")
 const PAIRED_MOVES := preload("res://resources/animations/paired_moves.tres")
 const MOVES_DIR := "res://resources/moves"
 
-## ARCHITECTURE.md's "Scope" section: 12 grapple + 6 reversal paired moves.
-const SCOPED_GRAPPLE := 12
+## ARCHITECTURE.md's "Scope" section: 11 grapple + 6 reversal paired moves
+## (12 grapple until the suplex was cut for looking bad; its slot is held
+## for a motion-captured replacement, not backfilled with a procedural one).
+const SCOPED_GRAPPLE := 11
 const SCOPED_REVERSAL := 6
 
 func _paired_move_names() -> Array[String]:

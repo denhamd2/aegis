@@ -105,7 +105,7 @@ func _frame(with_hud: bool) -> Image:
 ## measured in both directions -- 12 of 12 seeds submission, then 12 of 12
 ## pinfall.
 func test_both_finishes_are_reachable() -> void:
-	var move: MoveDef = load("res://resources/moves/grapple_suplex.tres")
+	var move: MoveDef = load("res://resources/moves/grapple_hiptoss.tres")
 	# The worst limb's share of each hit, so the crossing point can be
 	# derived exactly rather than stepped to in 28-damage chunks -- landing
 	# whole moves is too coarse to tell two thresholds 12 apart from each

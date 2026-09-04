@@ -258,7 +258,7 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.TIE_UP: "Push",
 	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
 	# MOVE_EXEC is the beat where a grapple's throw resolves, not a strike.
-	# It played Punch_Cross, so a wrestler who had just completed a suplex
+	# It played Punch_Cross, so a wrestler who had just completed a throw
 	# threw a punch at nothing on the way back to idle.
 	WrestlerFSM.State.MOVE_EXEC: "Jump_Land",
 	# Replaced per hit by _play_hit_reaction() with a head or torso reaction
