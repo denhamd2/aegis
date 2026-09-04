@@ -162,11 +162,12 @@ static func head_pieces(variant: int) -> Array:
 		out.append(Piece.new("Head", 0.05, 0.132, 0.045, true))
 	return out
 
-## Variant 2 ("brawler") body: denim shorts + waistband instead of trunks,
-## black boots and knee sleeves, green wristbands, a single upper-arm band,
-## and a steel chain collar. An original outfit following the reference
-## stills' formula (bare torso, jean shorts, green bands, chain, buzz hair)
-## with no likeness, no face, no text, no branding.
+## Variant 2 ("brawler") body: denim shorts + striped waistband instead of
+## trunks, black boots and knee sleeves, asymmetric green wrist wear, a
+## single upper-arm band, steel chain collar + dog tags, white shoe accents.
+## An original outfit following the reference stills' formula (bare torso,
+## jean shorts, green bands, chain, buzz hair) with no text or branding; the
+## face itself lives in face_pieces().
 static func variant2_body() -> Array:
 	var out: Array = []
 	# Denim shorts: one long cylinder per thigh, striped waistband above.
@@ -206,8 +207,8 @@ static func variant2_body() -> Array:
 	# right forearm, a short band at the left wrist. Bare elbows both sides.
 	out.append(Piece.new("lowerarm_r", 0.14, 0.066, 0.15, true))
 	out.append(Piece.new("lowerarm_l", 0.225, 0.062, 0.06, true))
-	# Single upper-arm band, left arm, in accent.
-	out.append(Piece.new("upperarm_l", 0.10, 0.078, 0.07, true))
+	# Single upper-arm band, high on the left bicep, in accent.
+	out.append(Piece.new("upperarm_l", 0.06, 0.080, 0.07, true))
 	# Chain collar on the neck base. A hanging pendant would need a forward
 	# offset the attachment system has no facing math for, so the chain
 	# reads as a steel collar until that exists.
