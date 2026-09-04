@@ -176,8 +176,9 @@ var _tier_draws: int = 0
 ## nothing about physique -- so it is an engineering value.
 @export var physique_bulk: float = 1.0
 ## Which head/gear identity this wrestler wears (see WrestlerAttire.head_pieces).
-## 0 = hair + headband, 1 = mask + eye band. The two men in match.tscn use
-## different variants so a paired move reads as two bodies, not one blob.
+## 0 = hair + headband, 1 = mask + eye band, 2 = buzz cut + denim-shorts
+## brawler outfit. The two men in match.tscn use different variants so a
+## paired move reads as two bodies, not one blob.
 @export var body_variant: int = 0
 ## Uniform visual scale on the inner Skeleton3D only. The CharacterBody3D and
 ## its capsule collider are untouched, and CharacterModel keeps its yawed,

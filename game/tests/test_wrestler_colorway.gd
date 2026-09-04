@@ -199,8 +199,8 @@ func test_the_two_wrestlers_are_built_differently() -> void:
 	).is_greater_equal(0.05)
 
 ## Blank heads read as the same head twice at match-camera distance. The two
-## men must wear different head identities (hair vs mask), and each head set
-## must actually be built on the skeleton.
+## men must wear different head identities, and each head set must actually
+## be built on the skeleton.
 func test_the_two_wrestlers_wear_different_heads() -> void:
 	var parts := _wrestlers()
 	var a: WrestlerController = parts[0]
@@ -222,3 +222,43 @@ func test_the_two_wrestlers_wear_different_heads() -> void:
 			% [wrestler.name, head_worn,
 				WrestlerAttire.head_pieces(wrestler.body_variant).size()]
 		).is_equal(WrestlerAttire.head_pieces(wrestler.body_variant).size())
+
+## Variant 2 is specified statically (no renderer needed): denim shorts on
+## both thighs instead of trunks, a single pelvis waistband, and a steel
+## chain collar. If the spec drifts, the scene silently wears something else
+## and only a capture would catch it.
+func test_variant_two_specs_denim_shorts_and_steel_chain() -> void:
+	var thigh_fixed := 0
+	var pelvis := 0
+	var steel_collars := 0
+	for piece in WrestlerAttire.all_pieces(2):
+		if String(piece.bone).begins_with("thigh") and piece.fixed.a > 0.0:
+			thigh_fixed += 1
+		if piece.bone == "pelvis":
+			pelvis += 1
+		if piece.bone == "neck_01" and piece.metal:
+			steel_collars += 1
+	assert_int(thigh_fixed).override_failure_message(
+		"Variant 2 should wear fixed-colour denim on both thighs, found %d."
+		% thigh_fixed
+	).is_equal(2)
+	assert_int(pelvis).override_failure_message(
+		"Variant 2 should wear one waistband and no trunks, found %d pelvis pieces."
+		% pelvis
+	).is_equal(1)
+	assert_int(steel_collars).override_failure_message(
+		"Variant 2 should wear one steel chain collar, found %d."
+		% steel_collars
+	).is_equal(1)
+
+## WrestlerB is the brawler: variant 2 with a green accent for the bands.
+func test_wrestler_b_wears_the_brawler_identity() -> void:
+	var parts := _wrestlers()
+	var b: WrestlerController = parts[1]
+	assert_int(b.body_variant).override_failure_message(
+		"WrestlerB should wear body_variant 2, found %d." % b.body_variant
+	).is_equal(2)
+	assert_float(absf(b.attire_accent.h - 0.33)).override_failure_message(
+		"WrestlerB's bands should read green (hue ~0.33), found hue %.3f."
+		% b.attire_accent.h
+	).is_less_equal(0.05)
