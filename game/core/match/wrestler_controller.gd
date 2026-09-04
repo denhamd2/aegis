@@ -99,6 +99,28 @@ const STUNNED_TICKS := 45
 const IRISH_WHIP_LAUNCH_SPEED := 9.0
 const IRISH_WHIP_REBOUND_DAMPING := 0.85
 const IRISH_WHIP_RETURN_TICKS := 45 # ~0.75s of autopilot return run
+## Hard cap on the outbound flight before a rope is hit.
+##
+## _process_irish_whip() leaves IRISH_WHIP on one thing only: a collision
+## with a RING_ROPE_GROUP body. A whip that never reaches a rope -- launched
+## along the diagonal, into a corner post, or at an opponent who was already
+## against the ropes -- has no other exit, and IRISH_WHIP is not a state
+## anything else can pull a wrestler out of. That is a hung match, not a
+## missed move.
+##
+## Sized off the geometry rather than picked: the ring is 6m across
+## (gauntlet/refs/ring.md), IRISH_WHIP_LAUNCH_SPEED covers it in well under
+## a second, so 120 ticks (2.0s) is far longer than any real crossing and
+## still bounded. Exits to RUN, the same state a real rebound hands off to,
+## so the wrestler simply finishes on his feet.
+const IRISH_WHIP_MAX_TICKS := 120
+## Hard cap on a grapple hold that produces no move -- see
+## _process_grapple_hold()'s weight-class early return. A real hold resolves
+## the same tick the attacker picks a move, so any hold that survives this
+## long has nothing to throw; 120 ticks (2.0s) is well past the ~62 ticks a
+## rig-driven paired move actually occupies (measured by the reachability
+## probe), so it can never cut a legitimate move short.
+const GRAPPLE_HOLD_MAX_TICKS := 120
 ## Group name (see scenes/ring.tscn) the rope StaticBody3D colliders are in
 ## — lets _process_irish_whip() recognize a rope hit without depending on
 ## specific node names.
@@ -1077,6 +1099,8 @@ func _begin_irish_whip() -> void:
 	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
+	# The hold ends here too -- the whip replaces the grapple move.
+	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
 	opponent.fsm.transition_to(WrestlerFSM.State.IRISH_WHIP)
 
@@ -1100,7 +1124,14 @@ func _process_irish_whip() -> void:
 			_irish_whip_rebounded = true
 			_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
 			fsm.transition_to(WrestlerFSM.State.RUN)
-			break
+			return
+	# No rope found in time -- see IRISH_WHIP_MAX_TICKS. Hand back to RUN
+	# without a rebound rather than leaving the wrestler in a state with no
+	# exit; he keeps whatever velocity the launch gave him and
+	# _process_free_movement() takes over from the next tick.
+	if fsm.ticks_in_state >= IRISH_WHIP_MAX_TICKS:
+		_irish_whip_rebounded = true
+		fsm.transition_to(WrestlerFSM.State.RUN)
 
 ## Autopilot phase right after a rope rebound -- see
 ## _irish_whip_return_ticks_remaining's doc comment for why this can't just
@@ -1257,6 +1288,19 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		return
 	var move := grapple_move
 	if not move or opponent.weight_class < move.weight_class_min or opponent.weight_class > move.weight_class_max:
+		# Nothing this attacker can legally throw at this opponent. That was
+		# a bare `return`, retried every tick with no timeout -- both
+		# wrestlers held in GRAPPLE_HOLD forever, and GRAPPLE_HOLD is not a
+		# state anything else pulls them out of. Unreachable in the shipped
+		# scenes (every move ships weight_class_min 0 / max 2 against a
+		# weight_class of 1) but it is one bad .tres away, and Priority 3 of
+		# gauntlet/status/roman_reigns_next.md adds moves.
+		#
+		# Break the hold instead: both sides back to IDLE, which is where a
+		# whip already sends the attacker, so the match carries on and the
+		# tie-up can simply happen again.
+		if fsm.ticks_in_state >= GRAPPLE_HOLD_MAX_TICKS:
+			_release_grapple_hold()
 		return
 	if combat.can_finisher() and finisher_move:
 		move = _pick_tier_move(finisher_move, finisher_move_pool)
@@ -1323,6 +1367,32 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	_tier_draws += 1
 	return choices[rng.randi_range(0, choices.size() - 1)]
 
+## Breaks a grapple hold that produced no move, returning both wrestlers to
+## a legal free state. GRAPPLE_HOLD -> IDLE is already legal for both sides
+## (it is the same exit _begin_irish_whip() gives the attacker).
+func _release_grapple_hold() -> void:
+	_clear_grapple_roles()
+	fsm.transition_to(WrestlerFSM.State.IDLE)
+	if opponent and opponent.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
+		opponent.fsm.transition_to(WrestlerFSM.State.IDLE)
+
+## Drops the attacker/defender roles once a grapple is over.
+##
+## _is_grapple_attacker used to be set only, never cleared: whoever won the
+## last tie-up stayed flagged as the attacker until the *next* one
+## reassigned it (MatchReferee._resolve_tie_up()). Harmless in practice
+## today -- ATTACKER_STATE_ANIMATIONS only reads it inside GRAPPLE_HOLD, and
+## WrestlerAI only acts on it in the same state -- but it is a latch on
+## role state that outlives the role, which is the exact shape of the
+## knockdown bug (a latch on a quantity that only rises; see
+## _damage_at_last_knockdown and test_knockdown_is_an_event.gd). Cleared at
+## the end of the grapple so the flag never describes a grapple that isn't
+## happening.
+func _clear_grapple_roles() -> void:
+	_is_grapple_attacker = false
+	if opponent:
+		opponent._is_grapple_attacker = false
+
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move
 	_active_move = null
@@ -1353,6 +1423,9 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# the instant it was queued, damage never accumulated, and a match
 	# never progressed past tie-up -> grapple -> repeat.
 	opponent.combat.apply_damage(move)
+	# The grapple is over as of here -- drop the roles before the FSM moves
+	# on, so nothing downstream reads an attacker flag for a finished move.
+	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
 	if opponent._would_be_knocked_down():
 		opponent._go_down()

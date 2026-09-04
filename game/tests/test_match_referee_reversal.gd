@@ -136,3 +136,70 @@ func test_reverses_via_paired_animation_when_grapple_rig_present() -> void:
 	assert_bool(referee._reversing).is_false()
 	assert_int(attacker.fsm.current_state).is_equal(WrestlerFSM.State.HIT_REACT)
 	assert_float(reverser.combat.momentum).is_equal(10.0)
+
+## Both wrestlers inside each other's reversal window on the same tick.
+##
+## _check_for_reversal() read _reversing once, above its [[a,b],[b,a]] loop,
+## so the second pair applied a reversal on top of the first. With a real
+## GrappleRig on both sides that is a hard crash, not a cosmetic double-up:
+## the first _apply_reversal() leaves the rig active, and the second call
+## trips GrappleRig.begin()'s own `assert(not _active)`. Mutual windows are
+## not exotic here -- the AI presses reversal off the opponent's window
+## (WrestlerAI._maybe_press_reversal()) and rapid mutual strike-trading is
+## the normal texture of this match loop.
+##
+## Correct behaviour: exactly one reversal lands, and the other wrestler
+## simply doesn't get one this tick.
+func test_mutual_same_tick_reversal_applies_only_one() -> void:
+	var setup := _make_referee_with_pair()
+	var referee: MatchReferee = setup[0]
+	var wrestler_a: WrestlerController = setup[1]
+	var wrestler_b: WrestlerController = setup[2]
+	var move_a := _make_move()
+	var move_b := _make_move()
+	# Each is mid-move inside its own reversal window, and each wants to
+	# reverse the other -- so both pairs of the loop qualify.
+	_put_in_running_attack(wrestler_a, move_a, 9)
+	_put_in_running_attack(wrestler_b, move_b, 9)
+	wrestler_a._wants_reversal_this_tick = true
+	wrestler_b._wants_reversal_this_tick = true
+
+	referee._check_for_reversal()
+
+	# Exactly one of them took the hit reaction; the other kept its move.
+	var a_reversed := wrestler_a.fsm.current_state == WrestlerFSM.State.HIT_REACT
+	var b_reversed := wrestler_b.fsm.current_state == WrestlerFSM.State.HIT_REACT
+	assert_bool(a_reversed != b_reversed) \
+		.override_failure_message("expected exactly one reversal, got a=%s b=%s" % [
+			a_reversed, b_reversed]) \
+		.is_true()
+
+## The same mutual tick with a real GrappleRig on both sides -- the shape
+## that actually crashed. A second _apply_reversal() would reach
+## GrappleRig.begin() while it is still _active.
+func test_mutual_same_tick_reversal_does_not_reenter_the_rig() -> void:
+	var setup := _make_referee_with_pair()
+	var referee: MatchReferee = setup[0]
+	var wrestler_a: WrestlerController = setup[1]
+	var wrestler_b: WrestlerController = setup[2]
+	var rig: GrappleRig = auto_free(GrappleRig.new())
+	wrestler_a.grapple_rig = rig
+	wrestler_b.grapple_rig = rig
+	var counter_move := MoveDef.new()
+	counter_move.startup_frames = 1
+	counter_move.active_frames = 0
+	counter_move.recovery_frames = 0
+	referee.reversal_counter_move = counter_move
+	_put_in_running_attack(wrestler_a, _make_move(), 9)
+	_put_in_running_attack(wrestler_b, _make_move(), 9)
+	wrestler_a._wants_reversal_this_tick = true
+	wrestler_b._wants_reversal_this_tick = true
+
+	referee._check_for_reversal()
+
+	# One reversal is in flight, and the rig was entered exactly once.
+	assert_bool(referee._reversing).is_true()
+
+	await rig.grapple_finished
+
+	assert_bool(referee._reversing).is_false()
