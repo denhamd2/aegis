@@ -29,6 +29,33 @@ Every figure is a distribution over the frame, so a difference in what is
 *in* the frame moves them far less than a difference in how it is lit and
 surfaced -- which is the thing being judged.
 
+Two corrections, both found by a builder challenging this tool's output
+rather than by the tool itself, and both worth stating because the first
+version of this file reported a gap roughly twice its real size:
+
+**Both frames are resampled to a common resolution first.** `edge_density`
+counts pixels whose neighbours differ, so it is a *rate per pixel* and a
+render with four times the reference's pixel count spreads the same incident
+over four times the area. Measured on one unchanged frame: fine detail
+0.147 at our native 1280x720, and 0.315 downscaled to the reference's
+640x364. Nothing about the image changed. The larger frame is always
+downscaled to the smaller -- upscaling invents no detail but does change
+gradient statistics, so it would be the same error with the sign flipped.
+
+**Edges are counted on gamma-encoded luminance, not linear.** The threshold
+is an absolute gradient, and a surface can never produce a gradient larger
+than its own level: at the 0.014-0.020 linear the house-lit arena renders
+at, a 0.010 linear threshold demands 50-70% local contrast just to
+register, while the 0.46 mat clears it with 2%. Measured on our own frame,
+47% of which is below 0.03 linear: 0.089 of dark pixels registered as edges
+against 0.199 of bright ones -- a 2.2x bias against exactly the surfaces the
+arena is made of. Gamma-encoding matches the eye's own compression and
+measures a dim textured surface and a bright one on the same terms.
+
+The deficit survived both corrections: measured like-for-like the reference
+carries about 1.8x our edge density, stable across every threshold tried.
+It was the *size* of the gap that was wrong, not its direction.
+
 Letterboxing is detected and cropped before anything is measured.
 gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg is letterboxed and
 its bars are most of the frame (VISUAL_BAR.md records it reading void 0.251
@@ -66,6 +93,12 @@ LUMA_WEIGHTS = np.array([0.2126, 0.7152, 0.0722])
 # A row/column whose every pixel sits below this (in 0-255 sRGB) is a
 # letterbox bar, not content.
 LETTERBOX_LEVEL = 12
+
+# Edge-detection thresholds, applied to gamma-encoded luminance. Calibrated
+# so the reference still lands mid-range rather than saturated: at these
+# values the wide standoff reads 0.614 fine and 0.343 coarse.
+EDGE_FINE = 0.020
+EDGE_COARSE = 0.060
 
 # Tile grid for local contrast. 12x8 over a 16:9 frame gives roughly square
 # tiles big enough to hold a lighting gradient and small enough that a flat
@@ -117,9 +150,10 @@ def warm_cool(a: np.ndarray) -> float:
 
 
 def edge_density(lum: np.ndarray, threshold: float) -> float:
-    """Fraction of pixels sitting on a luminance edge. Sobel magnitude on the
-    *linear* luminance, so it counts real incident rather than the tonemap's
-    stretching of dark noise."""
+    """Fraction of pixels sitting on a luminance edge, counted on
+    gamma-encoded luminance so a dim surface and a bright one are measured on
+    the same terms -- see the module docstring on why linear was wrong."""
+    lum = np.clip(lum, 0.0, 1.0) ** (1.0 / 2.2)
     gx = np.zeros_like(lum)
     gy = np.zeros_like(lum)
     gx[:, 1:-1] = lum[:, 2:] - lum[:, :-2]
@@ -161,8 +195,21 @@ def histogram_distance(a: np.ndarray, b: np.ndarray, bins: int = 64) -> float:
     return float(np.abs(np.cumsum(ha) - np.cumsum(hb)).sum() / bins)
 
 
-def measure(path: Path) -> dict:
+def common_size(a: Path, b: Path) -> tuple[int, int]:
+    """The smaller of the two frames, post-letterbox-crop. Every metric is
+    read at this size so neither frame's pixel count flatters it."""
+    ra, rb = load(a), load(b)
+    if ra.shape[0] * ra.shape[1] <= rb.shape[0] * rb.shape[1]:
+        return ra.shape[1], ra.shape[0]
+    return rb.shape[1], rb.shape[0]
+
+
+def measure(path: Path, size: tuple[int, int] | None = None) -> dict:
     rgb = load(path)
+    if size and (rgb.shape[1], rgb.shape[0]) != size:
+        rgb = np.asarray(
+            Image.fromarray((rgb * 255).astype(np.uint8)).resize(
+                size, Image.LANCZOS), dtype=np.float64) / 255.0
     lum = luminance(rgb)
     sat = saturation(rgb)
     flat = lum.ravel()
@@ -177,8 +224,8 @@ def measure(path: Path) -> dict:
         "tile_contrast": tile_contrast(lum),
         "mean_saturation": float(sat.mean()),
         "warm_cool": warm_cool(rgb),
-        "edge_density_fine": edge_density(lum, 0.010),
-        "edge_density_coarse": edge_density(lum, 0.050),
+        "edge_density_fine": edge_density(lum, EDGE_FINE),
+        "edge_density_coarse": edge_density(lum, EDGE_COARSE),
     }
 
 
@@ -191,8 +238,8 @@ METRICS = [
     ("tile_contrast", "local contrast", 0.150),
     ("mean_saturation", "saturation", 0.060),
     ("warm_cool", "warm/cool balance", 0.100),
-    ("edge_density_fine", "fine detail", 0.040),
-    ("edge_density_coarse", "coarse detail", 0.020),
+    ("edge_density_fine", "fine detail", 0.060),
+    ("edge_density_coarse", "coarse detail", 0.040),
 ]
 
 
@@ -217,8 +264,9 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     args = ap.parse_args()
 
-    ours = measure(Path(args.ours))
-    ref = measure(Path(args.reference))
+    size = common_size(Path(args.ours), Path(args.reference))
+    ours = measure(Path(args.ours), size)
+    ref = measure(Path(args.reference), size)
     hist = histogram_distance(ours.pop("_lum"), ref.pop("_lum"))
 
     rows = []
@@ -241,6 +289,7 @@ def main() -> int:
 
     print(f"ours      {ours['path']}  {ours['size']}")
     print(f"reference {ref['path']}  {ref['size']}")
+    print(f"          (both measured at {size[0]}x{size[1]})")
     print()
     print(f"  {'':22}{'ours':>9}{'ref':>9}{'delta':>9}")
     for r in rows:
