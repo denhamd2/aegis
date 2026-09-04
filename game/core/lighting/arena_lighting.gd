@@ -206,11 +206,38 @@ func _build_stage_wash() -> void:
 ## The Environment carries a low global density as well; these only add the
 ## local concentration. Density values are a coverage decision -- there is no
 ## reference measurement of haze in gauntlet/refs/.
+##
+## FogVolume is forward_plus only. FogMaterial compiles a `shader_type fog`
+## shader, which the compatibility renderer has no support for, so on that
+## renderer every volume built here raised
+##
+##   ERROR: shader type fog not supported in OpenGL renderer
+##      at: shader_set_code (drivers/gles3/storage/material_storage.cpp:2238)
+##
+## once per volume and then rendered nothing. The Web export is the case that
+## matters: Godot's Web platform falls back to gl_compatibility, so the
+## deployed build logged the error on every boot.
+##
+## Skipping the volumes there is not a downgrade of the shipping look --
+## forward_plus is unaffected and every measured number was taken on it. It
+## drops an error the renderer was always going to raise, for geometry it was
+## always going to ignore. The hall does read flatter without the haze; that
+## is a limitation of the compatibility renderer, not something to work
+## around here, and README.md says so where it warns off Pages screenshots.
 func _build_fog_volumes() -> void:
+	if not _supports_volumetric_fog():
+		return
 	_fog_box("RingHaze", Vector3(0.0, 4.0, 0.0), Vector3(20.0, 9.0, 20.0),
 			0.005, Color(0.80, 0.84, 0.95), 0.14)
 	_fog_box("HallHaze", Vector3(0.0, 6.0, 2.0), Vector3(58.0, 15.0, 58.0),
 			0.0012, Color(0.62, 0.68, 0.86), 0.05)
+
+
+## Read from RenderingServer, never from the project setting: project.godot
+## reports forward_plus even during a compatibility run, which is the same
+## trap ARCHITECTURE.md's capture-pipeline rule exists for.
+static func _supports_volumetric_fog() -> bool:
+	return RenderingServer.get_current_rendering_method() == "forward_plus"
 
 
 func _fog_box(fog_name: String, at: Vector3, size: Vector3, density: float,
