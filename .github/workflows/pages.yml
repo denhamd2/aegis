@@ -75,8 +75,30 @@ jobs:
             fi
           done
 
-      # Pages serves 404 for the directory listing without this, and a plain
-      # index.html at the root is what the deploy action expects.
+      # Keep the build BEFORE anything that can fail on repo settings. The
+      # first two runs of this workflow exported a perfectly good build and
+      # then threw it away, because configure-pages failed and every later
+      # step was skipped. This step makes the run always leave something
+      # downloadable behind, from the run's own page under the Actions tab,
+      # whether or not Pages is switched on.
+      #
+      # To run it: download, unzip, and serve the folder over HTTP --
+      # `python3 -m http.server` in it, then open localhost. Opening
+      # index.html from file:// will not work; browsers refuse the wasm
+      # fetch over that scheme.
+      - name: Keep the build as a downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aegis-web-build
+          path: build/web
+          retention-days: 30
+
+      # Everything below needs GitHub Pages enabled on the repository:
+      # Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+      # Until that is set, these steps fail with "Create Pages site failed:
+      # Resource not accessible by integration" -- the Actions token is not
+      # allowed to create the site, only a repo admin is. That failure is
+      # left loud on purpose; the artifact above is already saved by then.
       - uses: actions/configure-pages@v5
         with:
           enablement: true
