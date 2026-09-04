@@ -263,6 +263,37 @@ func test_wrestler_b_wears_the_brawler_identity() -> void:
 		% b.attire_accent.h
 	).is_less_equal(0.05)
 
+## The face spec, statically: 8 boxes, all on the Head bone, all opaque
+## fixed colours, every z-offset on the FACE_FORWARD side. If the forward
+## assumption is wrong the whole face mirrors with one constant -- this test
+## pins that the spec is at least self-consistent about which side that is.
+func test_face_pieces_are_self_consistent_boxes() -> void:
+	var faces := WrestlerAttire.face_pieces()
+	assert_int(faces.size()).is_equal(8)
+	for piece in faces:
+		assert_string(piece.bone).is_equal("Head")
+		assert_float(piece.fixed.a).is_equal(1.0)
+		assert_bool(piece.box_size != Vector3.ZERO).is_true()
+		assert_float(signf(piece.offset.z)).override_failure_message(
+			"Face piece at z=%.3f disagrees with FACE_FORWARD=%.1f -- "
+			% [piece.offset.z, WrestlerAttire.FACE_FORWARD]
+			+ "the face is split across both sides of the skull."
+		).is_equal(signf(WrestlerAttire.FACE_FORWARD))
+
+## WrestlerB actually wears the 8 face boxes on his skeleton.
+func test_wrestler_b_wears_his_face() -> void:
+	var parts := _wrestlers()
+	var skeleton: Skeleton3D = (parts[1] as Node).find_child(
+		"Skeleton3D", true, false)
+	assert_object(skeleton).is_not_null()
+	var worn := 0
+	for child in skeleton.get_children():
+		if String(child.name).begins_with(WrestlerAttire.PREFIX + "Face"):
+			worn += 1
+	assert_int(worn).override_failure_message(
+		"WrestlerB wears %d of 8 face pieces." % worn
+	).is_equal(WrestlerAttire.face_pieces().size())
+
 ## Bulk widens the gear; the bare chest needs its own width. torso_width
 ## scales only the wrestler's own Mannequin node -- the shared mesh resource
 ## (guarded above) and the skeleton underneath are untouched.
