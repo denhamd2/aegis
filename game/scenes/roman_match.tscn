@@ -9,4 +9,4 @@
 character_model_scene = ExtResource("2")
 
 [node name="WrestlerB" parent="." index="1"]
-character_model_scene = null
+character_model_scene = ExtResource("2")
