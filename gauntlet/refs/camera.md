@@ -78,10 +78,10 @@ measurable form of "the impact framing is lower".
   spot — noticeably lower than the standoff height above.
 
 ## Side (project direction, not a measurement)
-- The money shot sits on the stage side (-Z) looking down +Z at the crowd:
-  the WWE hard-cam convention, stage behind the camera rather than in frame.
-  None of the reference stills pins which side they were shot from, so this
-  is a stated direction, not a cited number — fill, FOV and height above are
+- The money shot sits off-axis on -X/+Z, facing the stage side of the hall:
+  the entrance stage reads frame-left, the crowd at frame center. None of
+  the reference stills pins which side they were shot from, so this is a
+  stated direction, not a cited number — fill, FOV and height above are
   side-agnostic and unaffected.
 
 ## Distance (min/max, and how it scales with wrestler separation)

@@ -73,11 +73,10 @@ const FLAT_CHAIR_ROWS := 4
 const CONCOURSE_DEPTH := 2.6
 
 # --- Entrance stage ---------------------------------------------------------
-## The stage occupies the -Z wedge, behind the hard cam: the default match
-## camera sits on -Z looking down +Z at the crowd, so the stage never lands
-## in the money shot. It is still worth the polygons -- stage_wide and any
-## entrance framing look straight at it -- but the ring/crowd half is the one
-## the broadcast framing judges.
+## The stage occupies the -Z wedge. The default match camera sits off-axis
+## on -X/+Z facing it, so the stage reads frame-left in the money shot with
+## the crowd at frame center -- both halves of the hall earn their polygons,
+## the stage via stage_wide/entrance framings as well as the broadcast edge.
 const STAGE_HALF_WIDTH := 6.0
 const STAGE_DECK_Y := 0.35
 const STAGE_BACK := -24.0

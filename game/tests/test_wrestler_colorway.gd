@@ -269,7 +269,9 @@ func test_variant_two_specs_sneakers_and_asymmetric_bands() -> void:
 	for piece in WrestlerAttire.all_pieces(2):
 		if String(piece.bone).begins_with("foot"):
 			foot += 1
-			if piece.fixed.a > 0.0:
+			# White means white, not merely fixed: the boot leather is an
+			# opaque fixed colour too (BOOT_BLACK) and must not count.
+			if piece.fixed.a > 0.0 and piece.fixed.get_luminance() > 0.5:
 				white_foot += 1
 		if piece.bone == "lowerarm_r":
 			right_band = piece.height
@@ -311,7 +313,7 @@ func test_face_pieces_are_self_consistent_boxes() -> void:
 	var faces := WrestlerAttire.face_pieces()
 	assert_int(faces.size()).is_equal(8)
 	for piece in faces:
-		assert_string(piece.bone).is_equal("Head")
+		assert_str(piece.bone).is_equal("Head")
 		assert_float(piece.fixed.a).is_equal(1.0)
 		assert_bool(piece.box_size != Vector3.ZERO).is_true()
 		assert_float(signf(piece.offset.z)).override_failure_message(

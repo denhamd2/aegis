@@ -122,12 +122,12 @@ const SILHOUETTE_KEYS := {
 ##
 ## Positions are in ring space: the mat spans +/-3.0, the ropes sit at
 ## +/-3.1, the entrance stage is on -Z, and the seating bowl starts at 9m.
-## wide_broadcast sits on -Z with the live hard cam, facing the +Z crowd --
-## the stage is behind it, not in frame.
+## wide_broadcast sits off-axis with the live broadcast cam (-X/+Z): the
+## stage reads frame-left, the crowd at frame center.
 const ART_SHOTS := [
 	{
 		"name": "wide_broadcast",
-		"position": Vector3(0.0, 2.55, -8.20), "target": Vector3(0.0, 1.05, 0.0),
+		"position": Vector3(-5.6, 2.55, 6.5), "target": Vector3(0.0, 1.05, 0.0),
 		"fov": 41.0,
 	},
 	{

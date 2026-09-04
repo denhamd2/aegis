@@ -185,7 +185,7 @@ static func variant2_body() -> Array:
 	out.append(Piece.new("spine_03", -0.02, 0.0, 0.0, false, STEEL, true,
 		Vector3(0.0, 0.0, 0.170 * f), Vector3(0.032, 0.050, 0.008)))
 	out.append(Piece.new("spine_03", -0.045, 0.0, 0.0, false, STEEL, true,
-		Vector3(0.014, 0.0, 0.168 * f), Vector3(0.032, 0.050, 0.008))
+		Vector3(0.014, 0.0, 0.168 * f), Vector3(0.032, 0.050, 0.008)))
 	for side: String in ["l", "r"]:
 		# Black boot over the foot, boot shaft, green cuff at the top. The
 		# foot bone runs +Y toward the toes, so a cylinder along it lies
