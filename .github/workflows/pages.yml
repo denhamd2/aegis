@@ -19,12 +19,23 @@ name: Deploy Web build to Pages
 
 on:
   push:
+    # main ONLY. An earlier version of this file also built the working
+    # branch, "so the site tracks the build under review". That was wrong
+    # twice over, and it cost two runs:
+    #
+    # - The github-pages environment only accepts deployments from the
+    #   default branch, so the working-branch run's deploy job was rejected
+    #   before it started (run 33882559100, failed with no readable logs).
+    # - Worse, pushing both refs at once put two runs in the concurrency
+    #   group below, and cancel-in-progress meant the branch run killed the
+    #   main run two seconds after it started (run 33882555579, cancelled
+    #   at 5s). The one that could have deployed was cancelled by the one
+    #   that could not.
+    #
+    # A branch build is welcome to run for its artifact -- it just cannot be
+    # this workflow, sharing this concurrency group and this deploy job.
     branches:
       - main
-      # Published from the working branch too, so the site tracks the build
-      # under review rather than waiting for a merge. Pages keeps one live
-      # deployment: the most recent push to either branch is what is served.
-      - claude/gauntlet-wrestling-godot-rnf7ej
   workflow_dispatch:
 
 # GITHUB_TOKEN needs to mint an OIDC token for the Pages deployment.
@@ -34,8 +45,12 @@ permissions:
   id-token: write
 
 # Never let two deploys race; let a newer commit supersede an in-flight one.
+# Scoped by ref as well as name: a bare "pages" group is what let a run on
+# another ref cancel the one on main, and it is also the name GitHub's own
+# Jekyll starter workflow uses, so an unscoped group collides with anything
+# added from the Pages settings screen.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
