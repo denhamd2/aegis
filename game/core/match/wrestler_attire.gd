@@ -45,11 +45,20 @@ class Piece:
 	var accent: bool
 	var fixed: Color
 	var metal: bool
+	## Extra nudge applied to the instance position (x/z sideways/forward,
+	## y added to `along`). ZERO for every symmetric gear piece; the face
+	## needs it. Z is already multiplied by FACE_FORWARD at spec time.
+	var offset: Vector3
+	## Non-zero means a BoxMesh of this size instead of a cylinder. Faces
+	## only; boxes ignore `bulk` (heads do not widen with the torso).
+	var box_size: Vector3
 
 	func _init(p_bone: String, p_along: float, p_radius: float,
 			p_height: float, p_accent: bool,
 			p_fixed: Color = Color(0, 0, 0, 0),
-			p_metal: bool = false) -> void:
+			p_metal: bool = false,
+			p_offset: Vector3 = Vector3.ZERO,
+			p_box_size: Vector3 = Vector3.ZERO) -> void:
 		bone = p_bone
 		along = p_along
 		radius = p_radius
@@ -57,6 +66,8 @@ class Piece:
 		accent = p_accent
 		fixed = p_fixed
 		metal = p_metal
+		offset = p_offset
+		box_size = p_box_size
 
 ## Fixed palette. Engineering values picked to read at match-camera distance,
 ## not reference measurements -- gauntlet/refs/ measures nothing about gear
@@ -66,6 +77,21 @@ const DENIM := Color(0.36, 0.46, 0.60)
 const BOOT_BLACK := Color(0.08, 0.08, 0.09)
 const BUZZ_DARK := Color(0.13, 0.10, 0.08)
 const STEEL := Color(0.55, 0.57, 0.60)
+## Face palette for the variant-2 close-up bar: eye white, blue-grey iris,
+## dark brow, nose shadow, mouth.
+const EYE_WHITE := Color(0.92, 0.93, 0.94)
+const IRIS_BLUE := Color(0.25, 0.38, 0.52)
+const BROW_DARK := Color(0.20, 0.15, 0.11)
+const NOSE_TONE := Color(0.55, 0.40, 0.30)
+const MOUTH_TONE := Color(0.45, 0.25, 0.22)
+
+## Which way the Head bone's local +Z points relative to the face. +1.0
+## assumes bone +Z is rig forward (the same convention as the root-motion
+## clips, which translate +Z for forward locomotion). FALSIFIABLE: if a
+## capture shows the face on the back of the skull, flip to -1.0 -- every
+## face offset below is multiplied by this, so one constant mirrors the
+## whole face. The critic checks this before judging anything else.
+const FACE_FORWARD := 1.0
 
 ## Sized against this rig's own proportions (a ~1.8m humanoid whose calf runs
 ## 0.43m and forearm 0.27m), not against any reference measurement --
@@ -161,12 +187,38 @@ static func variant2_body() -> Array:
 	return out
 
 ## Complete outfit for a variant: variant 2 gets its own body plus the buzz
-## cut; every other variant gets the shared trunks-and-boots body gear plus
-## its own head set.
+## cut plus the procedural face; every other variant gets the shared
+## trunks-and-boots body gear plus its own head set.
 static func all_pieces(variant: int) -> Array:
 	if variant == 2:
-		return variant2_body() + head_pieces(variant)
+		return variant2_body() + head_pieces(variant) + face_pieces()
 	return pieces() + head_pieces(variant)
+
+## Procedural face for the variant-2 head close-up bar: eye whites + irises,
+## brows, nose block, mouth slit. All boxes on the Head bone (see
+## FACE_FORWARD for the one assumption this rests on). No ears -- the
+## mannequin's sides give no landmark to seat them against, and floating ear
+## boxes would read worse than none. Empty for every other variant.
+static func face_pieces() -> Array:
+	var out: Array = []
+	var f := FACE_FORWARD
+	for side: float in [-1.0, 1.0]:
+		out.append(Piece.new("Head", 0.03, 0.0, 0.0, false, EYE_WHITE,
+			false, Vector3(0.042 * side, 0.0, 0.100 * f),
+			Vector3(0.036, 0.024, 0.012)))
+		out.append(Piece.new("Head", 0.03, 0.0, 0.0, false, IRIS_BLUE,
+			false, Vector3(0.042 * side, 0.0, 0.107 * f),
+			Vector3(0.016, 0.016, 0.008)))
+		out.append(Piece.new("Head", 0.078, 0.0, 0.0, false, BROW_DARK,
+			false, Vector3(0.048 * side, 0.0, 0.098 * f),
+			Vector3(0.052, 0.012, 0.010)))
+	out.append(Piece.new("Head", -0.015, 0.0, 0.0, false, NOSE_TONE,
+		false, Vector3(0.0, 0.0, 0.108 * f),
+		Vector3(0.026, 0.050, 0.030)))
+	out.append(Piece.new("Head", -0.072, 0.0, 0.0, false, MOUTH_TONE,
+		false, Vector3(0.0, 0.0, 0.098 * f),
+		Vector3(0.058, 0.011, 0.008)))
+	return out
 
 ## Full outfit size for a variant: body gear plus that variant's head set.
 static func total_piece_count(variant: int = 0) -> int:
@@ -203,22 +255,29 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 			push_warning("WrestlerAttire: rig has no bone '%s'" % piece.bone)
 			continue
 		var attachment := BoneAttachment3D.new()
-		attachment.name = "%s%s_%d" % [PREFIX, piece.bone, built]
+		if piece.box_size != Vector3.ZERO:
+			attachment.name = "%sFace_%d" % [PREFIX, built]
+		else:
+			attachment.name = "%s%s_%d" % [PREFIX, piece.bone, built]
 		skeleton.add_child(attachment)
 		attachment.bone_name = piece.bone
 		attachment.bone_idx = bone_index
 
-		var mesh := CylinderMesh.new()
-		# `bulk` widens a wrestler without lengthening him, so two men built
-		# from one mannequin differ in build rather than only in colour.
-		mesh.top_radius = piece.radius * bulk
-		mesh.bottom_radius = piece.radius * bulk
-		mesh.height = piece.height
-		mesh.radial_segments = 12
-		mesh.rings = 1
-
 		var instance := MeshInstance3D.new()
-		instance.mesh = mesh
+		if piece.box_size != Vector3.ZERO:
+			var box := BoxMesh.new()
+			box.size = piece.box_size
+			instance.mesh = box
+		else:
+			var mesh := CylinderMesh.new()
+			# `bulk` widens a wrestler without lengthening him, so two men built
+			# from one mannequin differ in build rather than only in colour.
+			mesh.top_radius = piece.radius * bulk
+			mesh.bottom_radius = piece.radius * bulk
+			mesh.height = piece.height
+			mesh.radial_segments = 12
+			mesh.rings = 1
+			instance.mesh = mesh
 		if not headless:
 			if piece.fixed.a > 0.0:
 				var key := piece.fixed.to_html() + ("m" if piece.metal else "p")
@@ -228,9 +287,11 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 			else:
 				instance.material_override = \
 						accent_material if piece.accent else body_material
-		# The bone's +Y runs toward its child and CylinderMesh is Y-up, so the
-		# piece needs no rotation -- only a slide along the bone.
-		instance.position = Vector3(0.0, piece.along, 0.0)
+		# The bone's +Y runs toward its child and CylinderMesh is Y-up, so a
+		# cylinder piece needs no rotation -- only a slide along the bone.
+		# Box (face) pieces carry their full placement in `offset`.
+		instance.position = Vector3(
+			piece.offset.x, piece.along + piece.offset.y, piece.offset.z)
 		attachment.add_child(instance)
 		built += 1
 	return built
