@@ -187,6 +187,12 @@ var _tier_draws: int = 0
 ## checks -- it is cosmetic, like the gear. Lets two men built from one
 ## mannequin differ in height as well as width.
 @export var physique_height: float = 1.0
+## Widens the rendered body mesh (X/Z) without touching the skeleton, the
+## gear, or the capsule. The mannequin's torso is narrow; the reference
+## brawler is a heavyweight, and gear-radius bulk alone leaves his bare
+## chest narrow. Applied to the Mannequin MeshInstance3D only, so bones,
+## attachments, IK, and shared resources are unaffected -- cosmetic.
+@export var torso_width: float = 1.0
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
@@ -463,6 +469,13 @@ func _ready() -> void:
 ## are elbows, knees and shoulders, and colouring them was only ever standing
 ## in for gear that did not exist yet.
 func _apply_colorway() -> void:
+	# Width is a node scale, not a material: it is headless-safe (no RID
+	# involved) and applies in tests too, so the physique is asserted, not
+	# just rendered. The mesh resource itself is never touched -- both
+	# wrestlers share it.
+	var mesh_instance := find_child("Mannequin", true, false) as MeshInstance3D
+	if mesh_instance and mesh_instance.mesh:
+		mesh_instance.scale = Vector3(torso_width, 1.0, torso_width)
 	# Nothing renders under the headless display server CI runs tests on,
 	# and assigning a material there logs `Parameter "material" is null`
 	# once per surface: the dummy renderer never compiles the shader, so the
@@ -473,7 +486,6 @@ func _apply_colorway() -> void:
 	# tests/test_wrestler_colorway.gd, which does not need a renderer.
 	if DisplayServer.get_name() == "headless":
 		return
-	var mesh_instance := find_child("Mannequin", true, false) as MeshInstance3D
 	if not mesh_instance or not mesh_instance.mesh:
 		return
 	var colors := [skin_tone, skin_tone.darkened(0.18)]

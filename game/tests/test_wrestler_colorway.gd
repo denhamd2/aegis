@@ -262,3 +262,25 @@ func test_wrestler_b_wears_the_brawler_identity() -> void:
 		"WrestlerB's bands should read green (hue ~0.33), found hue %.3f."
 		% b.attire_accent.h
 	).is_less_equal(0.05)
+
+## Bulk widens the gear; the bare chest needs its own width. torso_width
+## scales only the wrestler's own Mannequin node -- the shared mesh resource
+## (guarded above) and the skeleton underneath are untouched.
+func test_each_wrestlers_torso_width_is_applied_to_his_own_mesh() -> void:
+	var parts := _wrestlers()
+	for wrestler: WrestlerController in [parts[0], parts[1]]:
+		var mesh_instance: MeshInstance3D = wrestler.find_child(
+			"Mannequin", true, false)
+		assert_object(mesh_instance).is_not_null()
+		assert_vector(mesh_instance.scale).override_failure_message(
+			"%s's Mannequin scale %v does not carry his torso_width %.2f."
+			% [wrestler.name, mesh_instance.scale, wrestler.torso_width]
+		).is_equal_approx(
+			Vector3(wrestler.torso_width, 1.0, wrestler.torso_width),
+			Vector3.ONE * 0.001)
+	var a: WrestlerController = parts[0]
+	var b: WrestlerController = parts[1]
+	assert_float(b.torso_width - a.torso_width).override_failure_message(
+		"Both wrestlers share torso_width %.2f -- one torso twice."
+		% a.torso_width
+	).is_greater_equal(0.1)
