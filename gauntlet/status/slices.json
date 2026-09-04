@@ -8,10 +8,10 @@
   },
   {
     "name": "wrestler look & materials",
-    "round": 2,
+    "round": 3,
     "verdict": "contested",
-    "trend": 5,
-    "largest_gap": "Unchanged by this round in substance -- no builder owned the wrestlers -- but its numbers move because the lighting under them changed. On the landed build: mat 0.359, mat<->A 0.208, mat<->B 0.199 against the 0.24-0.31 band, A<->B 0.009 against 0.00-0.07. The two value gaps are closer than the 0.094/0.044 the shipping renderer showed before the lighting round and still short of band, and they will keep moving until the exposure anchor is re-solved, so re-measure before acting on them. A<->B has flattened again to 0.009 against the reference's own 0.070. Unchanged and still missing: no faces, one CC0 mannequin body for both men, and gear that is still untextured cylinders -- material_library.gd now exists to fix that last one and nothing consumes it for the wrestlers yet."
+    "trend": 6,
+    "largest_gap": "Builder-owned this round: the two men finally have different heads, builds, and heights. body_variant (0 = hair + headband on WrestlerA, 1 = mask + eye band on WrestlerB) adds two rotationally symmetric Head-bone attachments each via WrestlerAttire.head_pieces(); physique_height (0.98 vs 1.05, uniform scale on the inner Skeleton3D only -- CharacterModel yaw/scale and the capsule collider untouched, replay hashes unaffected) plus the existing bulk split (0.94 vs 1.12) separate the silhouettes in width and height; colourways/skins unchanged so the hue-not-value mechanism the colourway tests guard still holds. Tests: gear-count assertion now expects total_piece_count(variant) per wrestler, plus new variant-differ and head-pieces-present assertions. Honestly not yet judged: no Godot binary in this environment, so no capture, no silhouette re-measure (mat<->A/B still read 0.208/0.199 vs the 0.24-0.31 band last round), and head-attachment proportions are first-pass engineering values never seen in a render. Next: run round_check.sh + --silhouette-shot on forward_plus, have the critic compare blind against VISUAL_BAR.md, then tune radii/heights. CC0 drop-in slot documented in game/assets/characters/CREDITS.md (Quaternius Superhero Male + UAL2); quaternius.itch.io rate-limited (429) at round time so no .glb landed."
   },
   {
     "name": "HUD/UI",

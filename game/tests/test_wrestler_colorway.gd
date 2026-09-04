@@ -171,13 +171,14 @@ func test_each_wrestler_wears_the_gear_that_carries_his_colourway() -> void:
 		for child in skeleton.get_children():
 			if String(child.name).begins_with(WrestlerAttire.PREFIX):
 				worn += 1
+		var expected := WrestlerAttire.total_piece_count(wrestler.body_variant)
 		assert_int(worn).override_failure_message(
 			"%s is wearing %d of %d gear pieces. BoneAttachment3D resolves its "
-			% [wrestler.name, worn, WrestlerAttire.piece_count()]
+			% [wrestler.name, worn, expected]
 			+ "bone from its parent, so every piece must be a direct child of "
 			+ "the Skeleton3D -- grouping them under a tidy node once left the "
 			+ "whole outfit piled at the wrestler's feet."
-		).is_equal(WrestlerAttire.piece_count())
+		).is_equal(expected)
 
 ## One mannequin at two tints read as the same body twice, which is half of
 ## what the slice was marked down for. Colour is not build.
@@ -191,3 +192,33 @@ func test_the_two_wrestlers_are_built_differently() -> void:
 		+ "mannequin, so if their gear is the same width too there is nothing "
 		+ "separating their silhouettes but colour."
 	).is_greater_equal(0.1)
+	assert_float(absf(a.physique_height - b.physique_height)).override_failure_message(
+		"Both wrestlers stand at height %.2f/%.2f. Bulk widens the gear; "
+		% [a.physique_height, b.physique_height]
+		+ "without a height difference two men still share one outline."
+	).is_greater_equal(0.05)
+
+## Blank heads read as the same head twice at match-camera distance. The two
+## men must wear different head identities (hair vs mask), and each head set
+## must actually be built on the skeleton.
+func test_the_two_wrestlers_wear_different_heads() -> void:
+	var parts := _wrestlers()
+	var a: WrestlerController = parts[0]
+	var b: WrestlerController = parts[1]
+	assert_int(a.body_variant).override_failure_message(
+		"WrestlerA and WrestlerB share body_variant %d -- one head twice."
+		% a.body_variant
+	).is_not_equal(b.body_variant)
+	for wrestler: WrestlerController in [parts[0], parts[1]]:
+		var skeleton: Skeleton3D = wrestler.find_child("Skeleton3D", true, false)
+		assert_object(skeleton).is_not_null()
+		var head_worn := 0
+		for child in skeleton.get_children():
+			var n := String(child.name)
+			if n.begins_with(WrestlerAttire.PREFIX) and n.contains("Head"):
+				head_worn += 1
+		assert_int(head_worn).override_failure_message(
+			"%s wears %d of %d head pieces -- a blank mannequin head."
+			% [wrestler.name, head_worn,
+				WrestlerAttire.head_pieces(wrestler.body_variant).size()]
+		).is_equal(WrestlerAttire.head_pieces(wrestler.body_variant).size())

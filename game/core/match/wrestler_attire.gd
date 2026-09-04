@@ -89,8 +89,31 @@ const PREFIX := "Attire_"
 static func piece_count() -> int:
 	return pieces().size()
 
+## Head pieces per body variant. The CC0 mannequin has no face, so at
+## match-camera distance two men read as the same blank head twice. These are
+## rotationally symmetric cylinders on the Head bone (no facing math, no UVs):
+## variant 0 gets hair + headband, variant 1 gets a luchador-style mask + eye
+## band. First-pass engineering values, tunable in a gauntlet round once a
+## capture shows them.
+static func head_pieces(variant: int) -> Array:
+	var out: Array = []
+	if variant == 1:
+		# Mask hood over the whole head, body colour; dark eye band as accent.
+		out.append(Piece.new("Head", 0.06, 0.135, 0.24, false))
+		out.append(Piece.new("Head", 0.10, 0.142, 0.06, true))
+	else:
+		# Hair cap in body colour (reads as dyed-to-kit) with a sweat
+		# headband in accent at the brow line.
+		out.append(Piece.new("Head", 0.14, 0.125, 0.12, false))
+		out.append(Piece.new("Head", 0.05, 0.132, 0.045, true))
+	return out
+
+## Full outfit size for a variant: body gear plus that variant's head set.
+static func total_piece_count(variant: int = 0) -> int:
+	return pieces().size() + head_pieces(variant).size()
+
 static func build(skeleton: Skeleton3D, body: Color, accent: Color,
-		bulk: float = 1.0) -> int:
+		bulk: float = 1.0, variant: int = 0) -> int:
 	if skeleton == null:
 		return 0
 	for child in skeleton.get_children():
@@ -108,7 +131,11 @@ static func build(skeleton: Skeleton3D, body: Color, accent: Color,
 	var body_material: StandardMaterial3D = null if headless else _material(body)
 	var accent_material: StandardMaterial3D = null if headless else _material(accent)
 
-	for piece: Piece in pieces():
+	# Body gear plus this variant's head set. Head pieces reuse the colourway
+	# (hair/mask in body colour, band in accent) so each man still reads in
+	# his own hue without adding new colours for the critic to chase.
+	var all_pieces: Array = pieces() + head_pieces(variant)
+	for piece: Piece in all_pieces:
 		var bone_index := skeleton.find_bone(piece.bone)
 		if bone_index < 0:
 			push_warning("WrestlerAttire: rig has no bone '%s'" % piece.bone)
