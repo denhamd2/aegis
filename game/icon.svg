@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- project.godot has pointed config/icon at res://icon.svg since the
+       project was created, but the file never existed, so every export
+       logged "Error opening file 'res://icon.svg'". A ring seen from the
+       corner: mat, four posts, three rope runs. -->
+  <rect width="128" height="128" rx="14" fill="#151519"/>
+  <path d="M20 78 L64 58 L108 78 L64 98 Z" fill="#f3f3f0"/>
+  <g stroke="#151519" stroke-width="3" stroke-linecap="square">
+    <path d="M20 78 L64 58 L108 78 L64 98 Z" fill="none"/>
+  </g>
+  <g stroke="#e4e4e0" stroke-width="3" stroke-linecap="square">
+    <path d="M20 78 L20 40 M64 58 L64 22 M108 78 L108 40 M64 98 L64 60"/>
+  </g>
+  <g stroke="#9a9aa2" stroke-width="2.5" fill="none">
+    <path d="M20 40 L64 22 L108 40 L64 58 Z"/>
+    <path d="M20 53 L64 34 L108 53 L64 71 Z"/>
+    <path d="M20 66 L64 46 L108 66 L64 84 Z"/>
+  </g>
+</svg>
