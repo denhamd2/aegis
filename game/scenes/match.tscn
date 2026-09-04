@@ -195,7 +195,12 @@ opponent_path = NodePath("../WrestlerA")
 grapple_rig_path = NodePath("../GrappleRig")
 
 [node name="MatchCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 0, 1.65, 3.5)
+; Hard-cam side: parked on -Z (stage side) looking down +Z at the crowd, the
+; WWE broadcast convention -- the stage sits behind this camera, not in its
+; frame. The follow rig preserves whichever side it starts on (it keeps the
+; midpoint->camera direction and only solves distance), so this placement is
+; what puts the whole match on the hard-cam side.
+transform = Transform3D(-1, 0, 0, 0, 0.94, -0.34, 0, -0.34, -0.94, 0, 1.65, -3.5)
 fov = 41.0
 script = ExtResource("4")
 wrestler_a_path = NodePath("../WrestlerA")

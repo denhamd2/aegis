@@ -77,6 +77,13 @@ measurable form of "the impact framing is lower".
   closer to mat height, for a grounded, low-angle look during a table/ground
   spot — noticeably lower than the standoff height above.
 
+## Side (project direction, not a measurement)
+- The money shot sits on the stage side (-Z) looking down +Z at the crowd:
+  the WWE hard-cam convention, stage behind the camera rather than in frame.
+  None of the reference stills pins which side they were shot from, so this
+  is a stated direction, not a cited number — fill, FOV and height above are
+  side-agnostic and unaffected.
+
 ## Distance (min/max, and how it scales with wrestler separation)
 - Standoff framing keeps both wrestlers fully in frame head-to-toe with
   visible headroom and ring rope in the foreground — reads as the *far* end

@@ -206,14 +206,14 @@ func _build_top_fill() -> void:
 				52.0, 0.7, 20.0, false).light_volumetric_fog_energy = 0.8
 
 
-## Back pair, above and behind the entrance side, raking across the ring
-## toward camera. This is the separation light: it puts a cool edge on the
-## side of a wrestler the warm key cannot reach.
+## Back pair, above and behind the crowd side (+Z), raking across the ring
+## toward the hard cam on -Z. This is the separation light: it puts a cool
+## edge on the side of a wrestler the warm key cannot reach.
 func _build_rim() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 6.4, 6.9, -7.2)
+		var at := Vector3(sx * 6.4, 6.9, 7.2)
 		_spot("Rim%s" % ("E" if sx > 0.0 else "W"), at,
-				Vector3(-sx * 0.6, 1.15, 1.4), RIM_COLOR, rim_energy,
+				Vector3(-sx * 0.6, 1.15, -1.4), RIM_COLOR, rim_energy,
 				30.0, 0.4, 26.0, false).light_volumetric_fog_energy = 2.2
 
 
