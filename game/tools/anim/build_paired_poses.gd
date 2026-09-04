@@ -66,7 +66,8 @@ func _build() -> int:
 		var length: float = lengths[move_id]
 		for role in ["attacker", "defender"]:
 			var samples: Array = PairedRecipes.RECIPES[move_id][role]
-			var anim := _bake(player, tracks, samples, length, "%s/%s" % [move_id, role])
+			var anim := _bake(player, tracks, samples, length,
+					"%s/%s" % [move_id, role], role == "defender")
 			if not anim:
 				model.free()
 				return 1
@@ -116,7 +117,7 @@ static func _key(entry: Dictionary) -> String:
 	return "%d:%s" % [entry["type"], entry["path"]]
 
 func _bake(player: AnimationPlayer, tracks: Array[Dictionary], samples: Array,
-		length: float, label: String) -> Animation:
+		length: float, label: String, strip_pelvis_rotation: bool) -> Animation:
 	var anim := Animation.new()
 	anim.length = length
 	anim.loop_mode = Animation.LOOP_NONE
@@ -163,7 +164,9 @@ func _bake(player: AnimationPlayer, tracks: Array[Dictionary], samples: Array,
 				return null
 			var out_track: int = track_index[_key(entry)]
 			if entry["type"] == Animation.TYPE_ROTATION_3D:
-				var rot: Quaternion = source.rotation_track_interpolate(src, at)
+				var rot: Quaternion = Quaternion.IDENTITY if strip_pelvis_rotation \
+						and entry["bone"] == "pelvis" else \
+						source.rotation_track_interpolate(src, at)
 				if offsets.has(entry["bone"]):
 					var deg: Vector3 = offsets[entry["bone"]]
 					rot = rot * Quaternion(Basis.from_euler(Vector3(

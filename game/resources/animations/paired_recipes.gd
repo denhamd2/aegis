@@ -116,7 +116,9 @@ const RECIPES := {
 		"defender": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.18, "clip": "Jump_Start", "at": 0.30},
-			{"t": 0.50, "clip": "Roll", "at": 0.70},
+			# The root trajectory supplies the inversion. Roll is already
+			# inverted and compounded with it into an unreadable double flip.
+			{"t": 0.50, "clip": "Jump", "at": 0.50},
 			{"t": 0.80, "clip": "Death01", "at": 0.90},
 			{"t": 1.00, "clip": "Death01", "at": 1.60},
 		],

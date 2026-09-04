@@ -116,6 +116,34 @@ order of discovery:
 Godot 4.6 — CI now pins v6.2.1, confirmed working (7/7 tests, 0 errors, 0
 failures, 0 orphans).
 
+## Roman Reigns: immediate next implementation block
+
+The Roman variant's new content is real, but the project still has one
+explicit Phase 3 gate to clear before the Roman package can be defended as
+"playable": the live match path must reliably reach the paired moves, not
+just the direct harness path. The immediate execution plan is:
+
+1. Finish the missing Phase 1 reference measurements in `gauntlet/refs/`:
+   - strike active/recovery timing
+   - reversal window length
+   - three-count cadence
+   - ring-crossing run speed
+   - feel/input latency
+2. Stabilize the normal tie-up → grapple path in the live match flow:
+   - AI closing behavior
+   - grapple eligibility checks
+   - move selection and handoff back to the FSM
+3. Complete the remaining paired Roman grapple/reversal moves to bring the
+   library up to the `ARCHITECTURE.md` scope.
+4. Validate each move through the real match loop, not just through direct
+   `GrappleRig.begin()` harnesses.
+5. Tune the move timing and damage/momentum values only after the live path is
+   trustworthy, using the measured corpus as the source of truth.
+
+This is the current Phase 3 bottleneck for Roman Reigns: content exists, but
+it still needs to be proven reachable and calibrated in the actual match
+loop before the build is ready for gauntlet tuning.
+
 Known Phase 2 gaps, honestly:
 - Strikes now read and connect properly, but how *often* a wrestler should
   strike rather than grapple traces to no reference measurement — see "Fix:

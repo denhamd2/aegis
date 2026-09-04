@@ -24,6 +24,37 @@ hard cuts between different pairings (confirmed at ~227.2s, where a visible
 mid-grapple cut jumps to an entirely different match) — always confirm a
 measured sequence doesn't straddle a cut before citing a number from it.
 
+## Phase 1 pending measurements (must be captured before Roman tuning)
+
+The following measurements are still explicitly missing and should be treated
+as the next Phase 1 capture block before any gauntlet-round tuning. Each one
+must trace to a specific clip and timestamp, not a remembered number:
+
+- **Strike active/recovery timing** — isolate a single non-mutual strike and
+  separate startup, active, and recovery windows. Current values are only
+  first-pass placeholders based on a single heavy strike and a jab-like
+  sample, not an authoritative corpus.
+- **Reversal window length** — confirm the exact on-screen cue and the
+  attacker/defender reaction window from a clear reversal event.
+- **Three-count cadence** — a single full clip is already measured, but more
+  examples should be captured to verify whether the cadence is stable across
+  matches and camera angles.
+- **Ring-crossing run speed** — needs a clean sprint or ring-crossing pass
+  without a hard camera cut or weapon-heavy chaos.
+- **Feel/input latency** — requires a visible input overlay or a shot that
+  exposes exact press timing; the current footage lacks enough evidence for
+  a defensible number.
+
+Priority order for collection:
+1. reversal window length
+2. strike active/recovery
+3. ring-crossing run speed
+4. feel/input latency
+5. additional three-count confirmations
+
+When a measurement is captured, it should be added here with the same format
+as the entries below: `value — source clip, timestamp, frame-step method`.
+
 ## Getup duration
 - **Instance 1 — ~2.10s (63 frames @ 30fps)**, rise-start to
   standing/fight-ready — `wwe2k26_footage_01.mp4`, 366.07s

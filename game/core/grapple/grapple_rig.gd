@@ -145,9 +145,14 @@ func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
+		var is_defender_root := String(anim.track_get_path(track)).ends_with(
+				"WrestlerB")
 		for k in anim.track_get_key_count(track):
 			var rot: Quaternion = anim.track_get_key_value(track, k)
-			anim.track_set_key_value(track, k, yaw * rot)
+			# The defender's fall is a skeleton pose. Letting the physics root
+			# pitch and roll as well turns the capsule and compounds the sampled
+			# role pose into the inverted frame seen in piledriver captures.
+			anim.track_set_key_value(track, k, yaw if is_defender_root else yaw * rot)
 
 func _restore_original_animation() -> void:
 	if not _original_anim:
