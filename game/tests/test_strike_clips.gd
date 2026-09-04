@@ -39,10 +39,18 @@ func test_every_source_clip_is_on_the_rig() -> void:
 	var missing: Array[String] = []
 	for name in StrikeRecipes.RECIPES:
 		var recipe: Dictionary = StrikeRecipes.RECIPES[name]
-		if recipe.has("source") and not player.has_animation(String(recipe["source"])):
+		var source_player := player
+		var source_model: Node
+		if recipe.has("file"):
+			var packed: PackedScene = load(recipe["file"])
+			if packed:
+				source_model = auto_free(packed.instantiate())
+				source_player = source_model.find_child("AnimationPlayer", true, false)
+		if recipe.has("source") and (not source_player \
+				or not source_player.has_animation(String(recipe["source"]))):
 			missing.append("%s -> %s" % [name, recipe["source"]])
 		for sample: Dictionary in recipe.get("samples", []):
-			if not player.has_animation(String(sample["clip"])):
+			if not source_player.has_animation(String(sample["clip"])):
 				missing.append("%s -> %s" % [name, sample["clip"]])
 	assert_array(missing).is_empty()
 
@@ -63,6 +71,23 @@ func test_generated_clips_are_the_length_the_recipe_asks_for() -> void:
 		assert_float(STRIKE_CLIPS.get_animation(StringName(name)).length) \
 			.override_failure_message("%s is not %.3fs" % [name, want]) \
 			.is_equal_approx(want, 0.001)
+
+func test_generated_tracks_resolve_on_the_runtime_rig() -> void:
+	var player := _rig_player()
+	var runtime_tracks := {}
+	var template: Animation = player.get_animation("Punch_Cross")
+	for track in template.get_track_count():
+		runtime_tracks["%d:%s" % [template.track_get_type(track),
+				String(template.track_get_path(track).get_concatenated_subnames())]] = true
+	var unresolved: Array[String] = []
+	for name in StrikeRecipes.RECIPES:
+		var clip: Animation = STRIKE_CLIPS.get_animation(StringName(name))
+		for track in clip.get_track_count():
+			var key := "%d:%s" % [clip.track_get_type(track),
+					String(clip.track_get_path(track).get_concatenated_subnames())]
+			if not runtime_tracks.has(key):
+				unresolved.append("%s -> %s" % [name, key])
+	assert_array(unresolved).is_empty()
 
 ## The whole point of generating them: the clip a state plays must be as
 ## long as the state, or the FSM cuts it off mid-motion.

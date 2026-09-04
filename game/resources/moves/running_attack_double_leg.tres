@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+; Second running attack (Motifect double-leg takedown, strikes/running_double_leg).
+; Frame data mirrors the clothesline and damage totals match it (16) with a
+; takedown distribution, so this adds variety without moving any balance
+; number. Contact beat is an estimate -- see the recipe.
+animation_pair_id = &"running_double_leg"
+startup_frames = 18
+active_frames = 5
+recovery_frames = 46
+reversal_window_start = 7
+reversal_window_end = 12
+damage_head = 2.0
+damage_torso = 8.0
+damage_arms = 0.0
+damage_legs = 6.0
+momentum_cost = 0.0
+momentum_gain = 10.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1

@@ -134,6 +134,9 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 @export var power_move_pool: Array[MoveDef] = []
 @export var signature_move_pool: Array[MoveDef] = []
 @export var finisher_move_pool: Array[MoveDef] = []
+## Extra running attacks alongside running_attack_move (double-leg
+## takedown). Same seeded draw as the tiers, so replays still match.
+@export var running_attack_move_pool: Array[MoveDef] = []
 @export var weight_class: int = 1
 ## Set by MatchSetup so _pick_tier_move()'s draw is seeded per match rather
 ## than by the global RNG. Same reasoning as WrestlerAI.setup_jitter().
@@ -1008,7 +1011,13 @@ func _in_range(range_m: float) -> bool:
 func _maybe_start_running_attack(input: Dictionary) -> void:
 	if input.get("strike", false) and running_attack_move and opponent \
 			and _in_range(STRIKE_HIT_RANGE) and not UNHITTABLE_STATES.has(opponent.fsm.current_state):
-		_start_move(WrestlerFSM.State.RUNNING_ATTACK, running_attack_move)
+		var move := _pick_tier_move(running_attack_move, running_attack_move_pool)
+		# One state, potentially two performances: point it at this move's
+		# clip first (a move with no baked clip keeps the Punch_Cross
+		# fallback -- _set_state_clip ignores unknown clips).
+		_set_state_clip(WrestlerFSM.State.RUNNING_ATTACK,
+				StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
+		_start_move(WrestlerFSM.State.RUNNING_ATTACK, move)
 
 ## Called by the attacker's own _process_grapple_hold() when it chooses to
 ## whip instead of resolving a normal grapple move. Launches the defender

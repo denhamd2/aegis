@@ -9,11 +9,13 @@ extends RefCounted
 ## disease the paired moves had: the clip and the MoveDef disagreed about
 ## how long the move takes, and the FSM wins that argument.
 ##
-## strike_jab.tres runs 20 ticks (0.333s) while the rig's `Punch_Jab` clip is
-## 0.87s, so 38% of the punch played and the arm cross-faded back to idle
-## still travelling forward.
+## strike_jab.tres runs 20 ticks (0.333s) while a full punch clip is
+## ~0.87s, so the arm cross-faded back to idle still travelling forward.
+## The jab excerpt is therefore cut to 0.514s (31 ticks) with contact on
+## tick 8, which is then what strike_jab.tres's startup_frames says, so the
+## frame data and the animation finally describe the same punch.
 ##
-## Measured on the rig, by sampling the clip's own tracks and running
+## Measured on the old rig, by sampling the clip's own tracks and running
 ## forward kinematics by hand (neither AnimationPlayer.seek() nor
 ## set_bone_pose_rotation() reaches get_bone_global_pose() in a `-s` script,
 ## so every naive sample reads back identical rest values): the jab is
@@ -23,10 +25,8 @@ extends RefCounted
 ## the cross-fade to IDLE already does.
 ##
 ## gauntlet/refs/timings.md measures a real strike's startup -- windup to
-## contact -- at ~4 frames of 30fps footage, 0.13s. This clip contacts at
-## 0.22s. Retimed by 0.13/0.22 so the two agree: contact lands on tick 8,
-## which is then what strike_jab.tres's startup_frames says, so the frame
-## data and the animation finally describe the same punch.
+## contact -- at ~4 frames of 30fps footage, 0.13s. Every strike excerpt is
+## cut so its contact lands at 0.13s for the same reason.
 ##
 ## Entry kinds:
 ##   trim    -- first `seconds` of the source, keys past it dropped. Keeps
@@ -39,70 +39,37 @@ extends RefCounted
 
 const LIBRARY := "strikes"
 
-const RECIPES := {
-	# 0.87s * (0.13 / 0.22) = 0.514s = 31 ticks, which puts contact on tick 8.
-	"strike_jab": {"kind": "retime", "source": "Punch_Jab", "seconds": 0.514},
+## Motion-captured sources (Motifect Martial Arts pack, retargeted onto the
+## mannequin by retarget.py -- see assets/animations/ for the baked .glb
+## intermediates, raw FBX deliberately not vendored per the pack's licence).
+## A recipe with a "file" key samples the baked clip instead of the rig's
+## own; trim/retime behave exactly as below. Baked excerpts are cut so the
+## strike's contact lands 4 frames (0.133s) in, preserving the tick-8
+## contact contract the Quaternius clips hold.
+const MOTIFECT_JAB := "res://assets/animations/motifect_jab_raw.glb"
+const MOTIFECT_KICK := "res://assets/animations/motifect_kick_raw.glb"
+const MOTIFECT_DOUBLELEG := "res://assets/animations/motifect_doubleleg_raw.glb"
 
-	# The rig has no kick: 43 clips and not one of them throws a leg at
-	# anything. It is assembled from the two poses that come closest,
-	# located by running FK over every clip and reading the foot's height
-	# and its offset ahead of the pelvis:
-	#
-	#   Jump_Start @ 0.33s -- foot at 0.66m, the highest knee lift on the
-	#                         rig, but tucked under the hips (-0.04m fwd)
-	#   Sprint     @ 0.53s -- same (left) leg extended 0.48m ahead of the
-	#                         pelvis at 0.32m high
-	#
-	# One gives the chamber, the other the extension, and they are the same
-	# leg, so together they read as a kick thrown rather than a stride
-	# taken. The first version of this sampled Sprint at 0.57s instead,
-	# which is the *right* foot 0.64m behind the pelvis -- rendering it
-	# showed a man throwing a punch, because the only thing moving was
-	# Sprint's arm swing.
-	# The rig has no kick, and -- measured -- it has no pose to build one
-	# out of either. Running FK over all 43 clips, the highest a foot ever
-	# gets *relative to the hips* is -0.22m: Jump_Start's airborne tuck,
-	# still below the pelvis. Sprint's "raised" foot is a stride at ground
-	# level 0.48m in front. A first attempt stitched from those rendered as
-	# a man throwing a punch, because the only thing that actually moved
-	# was Sprint's arm swing.
-	#
-	# So the leg is posed rather than sampled, on top of a real standing
-	# stance. The axis and angles are measured, not guessed -- rotating
-	# thigh_l about each axis in turn and reading the foot back through FK:
-	#
-	#   thigh_l -70, calf_l +90 -> knee at hip height, foot tucked: chamber
-	#   thigh_l -75, calf_l   0 -> foot 0.80m high and 0.78m forward, level
-	#                              with the hips: a front kick to the body
-	#   thigh_l -25, calf_l +25 -> foot just off the mat: the step
-	#
-	# Positive X on the spine leans the torso back, which is the
-	# counter-balance a thrown leg needs to not read as falling forward.
-	"strike_kick": {
-		"kind": "stitch",
-		"seconds": 0.583,
-		"samples": [
-			{"t": 0.000, "clip": "Idle", "at": 0.00},
-			# Weight shifts onto the standing leg before the other leaves it.
-			{"t": 0.067, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
-			# Chamber: knee up to hip height, heel tucked under.
-			{"t": 0.100, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
-					"spine_01": Vector3(8, 0, 0)}},
-			# Extension -- the contact frame, on tick 8 like the jab's, so
-			# both strikes land exactly on their startup_frames.
-			{"t": 0.133, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-75, 0, 0), "spine_01": Vector3(12, 0, 0)}},
-			# Re-chamber, then the leg comes back down under him.
-			{"t": 0.220, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
-					"spine_01": Vector3(8, 0, 0)}},
-			{"t": 0.360, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
-			{"t": 0.583, "clip": "Idle", "at": 0.00},
-		],
-	},
+const RECIPES := {
+	# Was a retimed Punch_Jab (contact tick 8 via 0.13/0.22). Now a real
+	# punching excerpt: muay_thai_combination's hardest straight, baked
+	# 0.567s with contact at 0.133s, trimmed to the same 0.514s/31 ticks.
+	"strike_jab": {"kind": "trim", "file": MOTIFECT_JAB,
+		"source": "motifect_jab_raw", "seconds": 0.514},
+
+	# Was a stitched posed kick (Idle + thigh_l/calf_l offsets) -- the
+	# "borrowed stance" the README apologises for. Now a real roundhouse
+	# excerpt, baked 0.633s with peak extension at 0.133s, trimmed to the
+	# same 0.583s so strike_kick.tres's tick-8 contact still holds.
+	"strike_kick": {"kind": "trim", "file": MOTIFECT_KICK,
+		"source": "motifect_kick_raw", "seconds": 0.583},
+
+	# Double-leg takedown for the second running attack: first 1.333s of
+	# the 5s clip (stance, level change, penetration), retimed to the
+	# 69-tick (1.15s) running-attack window. Contact beat is an estimate --
+	# the excerpt was aligned by hand-speed peak, not measured footage.
+	"running_double_leg": {"kind": "retime", "file": MOTIFECT_DOUBLELEG,
+		"source": "motifect_doubleleg_raw", "seconds": 1.15},
 
 	# Both reactions are cut to exactly WrestlerController.HIT_REACT_TICKS
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is

@@ -36,16 +36,41 @@ func _build() -> int:
 		return 1
 
 	var out := AnimationLibrary.new()
+	var runtime_paths := _runtime_track_paths(player)
+	var external_players := {}
 	for name in StrikeRecipes.RECIPES:
 		var recipe: Dictionary = StrikeRecipes.RECIPES[name]
+		# A recipe with a "file" key samples a baked third-party clip
+		# (Motifect retargets in assets/animations/) instead of the rig's
+		# own. trim/retime/stitch all work unchanged once the player is
+		# swapped: the recipe only names a source clip and a duration.
+		var source_player := player
+		if recipe.has("file"):
+			var path: String = recipe["file"]
+			if not external_players.has(path):
+				var packed: PackedScene = load(path)
+				if not packed:
+					push_error("%s: cannot load '%s'" % [name, path])
+					model.free()
+					return 1
+				var ext: Node = packed.instantiate()
+				var ext_player: AnimationPlayer = ext.find_child(
+						"AnimationPlayer", true, false)
+				if not ext_player:
+					push_error("%s: '%s' has no AnimationPlayer" % [name, path])
+					ext.free()
+					model.free()
+					return 1
+				external_players[path] = [ext, ext_player]
+			source_player = (external_players[recipe["file"]] as Array)[1]
 		var anim: Animation = null
 		match recipe.get("kind", ""):
 			"trim":
-				anim = _trim(player, recipe, String(name))
+				anim = _trim(source_player, recipe, String(name), runtime_paths)
 			"retime":
-				anim = _retime(player, recipe, String(name))
+				anim = _retime(source_player, recipe, String(name), runtime_paths)
 			"stitch":
-				anim = _stitch(player, recipe, String(name))
+				anim = _stitch(source_player, recipe, String(name), runtime_paths)
 			_:
 				push_error("%s: unknown recipe kind '%s'" % [name, recipe.get("kind", "")])
 		if not anim:
@@ -54,6 +79,8 @@ func _build() -> int:
 		out.add_animation(StringName(name), anim)
 
 	model.free()
+	for entry in external_players.values():
+		(entry as Array)[0].free()
 	var err := ResourceSaver.save(out, OUTPUT)
 	if err != OK:
 		push_error("Saving %s failed: %d" % [OUTPUT, err])
@@ -71,7 +98,8 @@ func _source(player: AnimationPlayer, recipe: Dictionary, label: String) -> Anim
 ## Copies every track, keeping keys at or before the cutoff and adding one
 ## interpolated key exactly at it, so the clip ends mid-motion rather than
 ## snapping to whatever the last surviving key happened to be.
-func _trim(player: AnimationPlayer, recipe: Dictionary, label: String) -> Animation:
+func _trim(player: AnimationPlayer, recipe: Dictionary, label: String,
+		runtime_paths: Dictionary) -> Animation:
 	var source := _source(player, recipe, label)
 	if not source:
 		return null
@@ -82,7 +110,9 @@ func _trim(player: AnimationPlayer, recipe: Dictionary, label: String) -> Animat
 		return null
 	var anim := _empty_like(source, cutoff)
 	for track in source.get_track_count():
-		var out_track := _copy_track_header(anim, source, track)
+		var out_track := _copy_track_header(anim, source, track, runtime_paths)
+		if out_track < 0:
+			continue
 		for key in source.track_get_key_count(track):
 			var t := source.track_get_key_time(track, key)
 			if t > cutoff:
@@ -93,7 +123,8 @@ func _trim(player: AnimationPlayer, recipe: Dictionary, label: String) -> Animat
 
 ## Scales every key time by target/source, so the whole motion plays in the
 ## requested duration.
-func _retime(player: AnimationPlayer, recipe: Dictionary, label: String) -> Animation:
+func _retime(player: AnimationPlayer, recipe: Dictionary, label: String,
+		runtime_paths: Dictionary) -> Animation:
 	var source := _source(player, recipe, label)
 	if not source:
 		return null
@@ -104,7 +135,9 @@ func _retime(player: AnimationPlayer, recipe: Dictionary, label: String) -> Anim
 	var scale := target / source.length
 	var anim := _empty_like(source, target)
 	for track in source.get_track_count():
-		var out_track := _copy_track_header(anim, source, track)
+		var out_track := _copy_track_header(anim, source, track, runtime_paths)
+		if out_track < 0:
+			continue
 		for key in source.track_get_key_count(track):
 			var t := source.track_get_key_time(track, key)
 			_insert(anim, out_track, source, track, t * scale, t)
@@ -112,7 +145,8 @@ func _retime(player: AnimationPlayer, recipe: Dictionary, label: String) -> Anim
 
 ## A pose sequence sampled out of other clips, for a motion the rig does not
 ## contain at all.
-func _stitch(player: AnimationPlayer, recipe: Dictionary, label: String) -> Animation:
+func _stitch(player: AnimationPlayer, recipe: Dictionary, label: String,
+		runtime_paths: Dictionary) -> Animation:
 	var samples: Array = recipe.get("samples", [])
 	if samples.is_empty():
 		push_error("%s: stitch recipe has no samples" % label)
@@ -124,8 +158,11 @@ func _stitch(player: AnimationPlayer, recipe: Dictionary, label: String) -> Anim
 	var anim := _empty_like(template, length)
 	var index := {}
 	for track in template.get_track_count():
-		var out_track := _copy_track_header(anim, template, track)
-		index["%d:%s" % [template.track_get_type(track), template.track_get_path(track)]] = out_track
+		var out_track := _copy_track_header(anim, template, track, runtime_paths)
+		if out_track < 0:
+			continue
+		index["%d:%s" % [template.track_get_type(track),
+				runtime_paths[template.track_get_type(track)][_bone_name(template.track_get_path(track))]]] = out_track
 
 	for sample: Dictionary in samples:
 		var clip_name: String = sample["clip"]
@@ -174,9 +211,32 @@ func _empty_like(source: Animation, length: float) -> Animation:
 	anim.loop_mode = Animation.LOOP_NONE
 	return anim
 
-func _copy_track_header(anim: Animation, source: Animation, track: int) -> int:
-	var out_track := anim.add_track(source.track_get_type(track))
-	anim.track_set_path(out_track, source.track_get_path(track))
+func _runtime_track_paths(player: AnimationPlayer) -> Dictionary:
+	var paths := {}
+	var source := player.get_animation("Punch_Cross")
+	for track in source.get_track_count():
+		var type: int = source.track_get_type(track)
+		var bone := _bone_name(source.track_get_path(track))
+		if not paths.has(type):
+			paths[type] = {}
+		paths[type][bone] = source.track_get_path(track)
+	for type in paths:
+		if paths[type].has("pelvis"):
+			paths[type]["spine_01"] = paths[type]["pelvis"]
+	return paths
+
+func _bone_name(path: NodePath) -> String:
+	var subnames := String(path.get_concatenated_subnames())
+	return subnames if not subnames.is_empty() else String(path).get_file()
+
+func _copy_track_header(anim: Animation, source: Animation, track: int,
+		runtime_paths: Dictionary) -> int:
+	var type: int = source.track_get_type(track)
+	var bone := _bone_name(source.track_get_path(track))
+	if not runtime_paths.has(type) or not runtime_paths[type].has(bone):
+		return -1
+	var out_track := anim.add_track(type)
+	anim.track_set_path(out_track, runtime_paths[type][bone])
 	anim.track_set_interpolation_type(out_track, source.track_get_interpolation_type(track))
 	return out_track
 

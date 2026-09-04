@@ -13,6 +13,7 @@
 [ext_resource type="Resource" path="res://resources/moves/finisher_piledriver.tres" id="11"]
 [ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="12"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
+[ext_resource type="Resource" path="res://resources/moves/running_attack_double_leg.tres" id="30"]
 [ext_resource type="Resource" path="res://resources/moves/reversal_counter.tres" id="14"]
 [ext_resource type="Resource" path="res://resources/moves/grapple_hiptoss.tres" id="15"]
 [ext_resource type="Resource" path="res://resources/moves/grapple_snapmare.tres" id="16"]
@@ -166,6 +167,7 @@ power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
 running_attack_move = ExtResource("13")
+running_attack_move_pool = Array[Resource]([ExtResource("30")])
 strike_move_pool = Array[Resource]([ExtResource("29")])
 grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
 power_move_pool = Array[Resource]([ExtResource("18"), ExtResource("19"), ExtResource("20")])
@@ -194,6 +196,7 @@ power_move = ExtResource("12")
 signature_move = ExtResource("9")
 finisher_move = ExtResource("11")
 running_attack_move = ExtResource("13")
+running_attack_move_pool = Array[Resource]([ExtResource("30")])
 strike_move_pool = Array[Resource]([ExtResource("29")])
 grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
 power_move_pool = Array[Resource]([ExtResource("18"), ExtResource("19"), ExtResource("20")])
