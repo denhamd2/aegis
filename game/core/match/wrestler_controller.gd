@@ -175,6 +175,17 @@ var _tier_draws: int = 0
 ## differ in build. Not a reference measurement -- gauntlet/refs/ measures
 ## nothing about physique -- so it is an engineering value.
 @export var physique_bulk: float = 1.0
+## Which head/gear identity this wrestler wears (see WrestlerAttire.head_pieces).
+## 0 = hair + headband, 1 = mask + eye band. The two men in match.tscn use
+## different variants so a paired move reads as two bodies, not one blob.
+@export var body_variant: int = 0
+## Uniform visual scale on the inner Skeleton3D only. The CharacterBody3D and
+## its capsule collider are untouched, and CharacterModel keeps its yawed,
+## unscaled transform (guarded by test_wrestler_model_orientation), so this
+## never reaches gameplay state, replay hashes, or the referee's distance
+## checks -- it is cosmetic, like the gear. Lets two men built from one
+## mannequin differ in height as well as width.
+@export var physique_height: float = 1.0
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
@@ -429,8 +440,12 @@ func _ready() -> void:
 		_build_animation_tree()
 	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton:
+		# Height lives on the visual skeleton so the yawed CharacterModel node
+		# above it stays exactly as test_wrestler_model_orientation pins it.
+		skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
-		WrestlerAttire.build(skeleton, attire_body, attire_accent, physique_bulk)
+		WrestlerAttire.build(skeleton, attire_body, attire_accent,
+			physique_bulk, body_variant)
 	_apply_colorway()
 
 ## Surface 0 of the CC0 base mesh is the body ("M_Main"), surface 1 the
