@@ -99,6 +99,57 @@ measurement found genuinely broken:
   a landed grapple into a strike on the next tick. No spacing, no circling.
   Measurable against nothing until Priority 1 lands ring-crossing run speed.
 
+## BLOCKER — the Roman model does not render correctly under animation
+
+Found while rendering a shotlist of the Roman variant in play
+(`tools/probe/roman_shots.tscn`). This is not a Priority 2 regression; it is
+the state of the model as committed, and it sits in front of Priority 3.
+
+**The rig is inverted in a match.** Measured world bone heights for WrestlerA
+in `roman_match.tscn` (`tools/probe/roman_diag.tscn`):
+
+| bone | LOCOMOTION | TIE_UP | STRIKE | model alone |
+| --- | --- | --- | --- | --- |
+| `J_Head` | 0.320 | 0.396 | 0.658 | 1.654 |
+| `J_Chest` | 0.599 | — | — | 1.323 |
+| `J_Hips` | 0.909 | 0.702 | 0.562 | 1.012 |
+| `J_Foot_L` | 1.729 | 1.220 | -0.316 | 0.092 |
+
+Head below hips, feet above the head, and in STRIKE a foot 0.32m *below the
+mat*. The wrestlers render boots-up with the torso torn away from the legs.
+
+**The asset is fine.** `tools/probe/roman_bare.tscn` loads `roman_model.tscn`
+alone, with no controller and no AnimationTree, and it stands up correctly:
+feet 0.092, hips 1.012, chest 1.323, head 1.654, overall height 1.927m,
+skeleton scale 1.035. Right proportions, right silhouette, arm tattoo and skin
+tone binding properly.
+
+So the defect is in the **animation retarget**, not the import. `roman_model.gd`
+remaps the base rig's tracks onto Roman's bones through `BONE_MAP`; the moment
+an AnimationTree drives that skeleton it inverts. Worth noting the scale of the
+mismatch: Roman's rig carries **471 bones** and `BONE_MAP` covers roughly 60 of
+them, so most bones receive no track at all and keep whatever the retarget left
+them at — consistent with the mesh tearing rather than merely rotating.
+
+Two further defects, visible in the bare-model shots:
+
+- **Clothing is untextured** — shirt and trousers render pure white. Skin binds
+  correctly, so it is specific to the tops/bottoms materials. Both ship only as
+  `_nrm` (normal) maps with no colour map alongside them.
+- **Hair and beard render magenta/green**, the missing-texture signature, despite
+  three hair textures shipping (`hair_rai`, `hair_rai_4`, `headhair_mask`).
+- Two stray head meshes float either side of him at shoulder height; the model's
+  AABB is 1.66m wide as a result. Probably alternate head/hair variants that
+  should be hidden.
+
+`test_roman_model.gd` passes throughout, because it asserts *structure* — that
+the skeleton keeps its named bones and that animations were remapped — not that
+the result is upright. Same shape of gap as the source-grep assertion in
+`test_strike_clips.gd` that this round replaced with a behavioural sweep.
+
+Authoring more paired moves against an inverted rig means choreographing blind,
+so this should be fixed before Priority 3 starts.
+
 ## Priority 3 — Roman move set
 
 - [ ] Complete the remaining paired grapple/reversal move set to the architecture scope.
