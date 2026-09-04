@@ -39,10 +39,10 @@ UNCHANGED AND VERIFIED: suite 216/216, 0 failures, 107 orphans, exit 101 -- byte
 </tr>
 <tr>
 <td>wrestler look &amp; materials</td>
-<td>2</td>
+<td>9</td>
 <td class="verdict-pending">contested</td>
-<td>5/10</td>
-<td>Unchanged by this round in substance -- no builder owned the wrestlers -- but its numbers move because the lighting under them changed. On the landed build: mat 0.359, mat&lt;-&gt;A 0.208, mat&lt;-&gt;B 0.199 against the 0.24-0.31 band, A&lt;-&gt;B 0.009 against 0.00-0.07. The two value gaps are closer than the 0.094/0.044 the shipping renderer showed before the lighting round and still short of band, and they will keep moving until the exposure anchor is re-solved, so re-measure before acting on them. A&lt;-&gt;B has flattened again to 0.009 against the reference&#x27;s own 0.070. Unchanged and still missing: no faces, one CC0 mannequin body for both men, and gear that is still untextured cylinders -- material_library.gd now exists to fix that last one and nothing consumes it for the wrestlers yet.</td>
+<td>6/10</td>
+<td>Five builder loops against the user-supplied brawler stills (rounds 5-9, all on wrestler-look-r3, all visual-only: capsule, FSM, RNG, and replay hashes untouched). r5: torso_width widens the Mannequin mesh X/Z (B 1.14 vs A 1.0, node scale so bones/IK/shared mesh are unaffected) and B&#x27;s skin warmed toward the stills within the 0.07 inter-wrestler band. r6: procedural face (eye whites + blue irises, brows, nose block, mouth slit as Head-bone boxes) behind one flippable FACE_FORWARD constant. r7: staggered steel dog tags, blue/white/red striped waistband. r8: black/white sneakers (midsole ring + toe cap) and asymmetric wrist wear (long right sweatband, short left band). r9: armband seated high on the bicep. Tests grew each loop (static specs + worn-on-skeleton assertions; counts derive from all_pieces() so spec and build cannot drift). Still contested: NOTHING here has rendered -- no Godot binary in this environment, so no suite run, no silhouette re-measure, no blind critic comparison. Before judging, a capture must confirm (1) which way Head-bone +Z faces (flip FACE_FORWARD if the face is on the skull&#x27;s back), (2) tag depth vs the width-scaled chest, (3) silhouette numbers vs VISUAL_BAR.md. Remaining real gaps: ears, laces, band text/logos, muscle shading.</td>
 </tr>
 <tr>
 <td>HUD/UI</td>
