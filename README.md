@@ -16,6 +16,8 @@ enter this repo.
   `capture/`); `game/resources/` holds the `MoveDef` tuning surface;
   `game/assets/characters/` holds the CC0 retargeting base mesh (see its
   `CREDITS.md`); `game/tests/` holds gdUnit4 tests.
+- `game/scenes/roman_match.tscn` — playable Roman model variant using the
+  supplied character asset and the shared controller/animation systems.
 - `gauntlet/anchor/ARCHITECTURE.md` — the contract gauntlet builders may
   not violate. Read this first.
 - `gauntlet/refs/` — the reference corpus: measured timings, camera

@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/match.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/roman_model.tscn" id="2"]
+
+[node name="Match" instance=ExtResource("1")]
+
+[node name="WrestlerA" parent="." index="0"]
+character_model_scene = ExtResource("2")

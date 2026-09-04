@@ -56,7 +56,7 @@ rig (`pelvis`, `Head`, `calf_l/r`, `foot_l/r`, `lowerarm_l/r` — the names
 point one `match.tscn` wrestler at it. Record the file, source URL, author,
 and licence here at import time per `gauntlet/anchor/ARCHITECTURE.md`.
 
-## roman_reigns.glb (landed, not yet wired)
+## roman_reigns.glb (wired through scenes/roman_match.tscn)
 
 Source: **user-supplied Google Drive file** (a "ROMAN REIGNS" `.blend` +
 texture set, author and licence unknown — supplied by the repo owner, not
@@ -69,8 +69,9 @@ Contents (verified in-engine): 19 skinned meshes (body, head, hair, eyes,
 teeth, top/bottoms, shoes, wrists), **two** armatures — 114 bones and 471
 bones (hair chains) — standing ~1.85m, so scale already matches the game's
 1.8m subject. Bone names are `J_`-prefixed (`J_Hips`, `J_Spine1`, ...), NOT
-the universal rig names above, so this is **not** a drop-in: wiring it as a
-playable wrestler needs rig unification (one armature), a new `BoneMap`,
-and adapting the `WrestlerAttire`/IK bone lookups, plus retargeting the
-game's animation clips (none ship with this model). Nothing references this
-file yet — landing only.
+the universal rig names above. `roman_model.tscn` adapts the two-armature
+asset, maps the `WrestlerAttire`/IK bone lookups, and retargets the game's
+animation clips (none ship with this model). It maps
+the shared animation library onto both Roman skeletons and `roman_match.tscn`
+makes the asset playable. The supplied asset's author and licence remain
+unknown and must be confirmed before redistribution.

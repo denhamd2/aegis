@@ -196,6 +196,8 @@ var _tier_draws: int = 0
 ## chest narrow. Applied to the Mannequin MeshInstance3D only, so bones,
 ## attachments, IK, and shared resources are unaffected -- cosmetic.
 @export var torso_width: float = 1.0
+@export var character_model_scene: PackedScene = preload(
+		"res://assets/characters/wrestler_base.glb")
 @export var opponent_path: NodePath
 @export var grapple_rig_path: NodePath
 
@@ -430,6 +432,7 @@ var _cover_eligible: bool = true
 var _damage_at_last_knockdown: float = 0.0
 
 func _ready() -> void:
+	_install_character_model()
 	fsm = WrestlerFSM.new()
 	add_child(fsm)
 	combat = CombatSystem.new()
@@ -444,19 +447,58 @@ func _ready() -> void:
 		# never collide with the .glb's own 43, and so a missing generated
 		# clip reads as "paired/x is absent" rather than shadowing something.
 		if not anim_player.has_animation_library(PairedRecipes.LIBRARY):
-			anim_player.add_animation_library(PairedRecipes.LIBRARY, PAIRED_POSES)
+			anim_player.add_animation_library(PairedRecipes.LIBRARY,
+					_adapt_animation_library(PAIRED_POSES))
 		if not anim_player.has_animation_library(StrikeRecipes.LIBRARY):
-			anim_player.add_animation_library(StrikeRecipes.LIBRARY, STRIKE_CLIPS)
+			anim_player.add_animation_library(StrikeRecipes.LIBRARY,
+					_adapt_animation_library(STRIKE_CLIPS))
 		_build_animation_tree()
-	skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
+	skeleton = _find_model_skeleton()
 	if skeleton:
 		# Height lives on the visual skeleton so the yawed CharacterModel node
 		# above it stays exactly as test_wrestler_model_orientation pins it.
 		skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
-		WrestlerAttire.build(skeleton, attire_body, attire_accent,
-			physique_bulk, body_variant)
+		if _uses_universal_attire():
+			WrestlerAttire.build(skeleton, attire_body, attire_accent,
+					physique_bulk, body_variant)
 	_apply_colorway()
+
+func _adapt_animation_library(source: AnimationLibrary) -> AnimationLibrary:
+	var model := anim_player.get_parent()
+	if model and model.has_method("adapt_animation_library"):
+		return model.adapt_animation_library(source)
+	return source
+
+func _uses_universal_attire() -> bool:
+	var model := anim_player.get_parent()
+	return not model or not model.has_method("uses_universal_attire") \
+			or model.uses_universal_attire()
+
+func _skeleton_bone_name(game_bone: String) -> String:
+	var model := anim_player.get_parent()
+	if model and model.has_method("game_bone_name"):
+		return model.game_bone_name(game_bone)
+	return game_bone
+
+func _find_model_skeleton() -> Skeleton3D:
+	var model := anim_player.get_parent()
+	if model and model.has_method("get_game_skeleton"):
+		return model.get_game_skeleton()
+	return find_child("Skeleton3D", true, false) as Skeleton3D
+
+func _install_character_model() -> void:
+	var existing := get_node_or_null("CharacterModel")
+	if existing:
+		existing.free()
+	var model: Node3D = character_model_scene.instantiate() as Node3D
+	if not model:
+		push_error("Character model scene did not instantiate as Node3D")
+		return
+	model.name = "CharacterModel"
+	model.transform = Transform3D(Basis.from_euler(Vector3(0.0, PI, 0.0)),
+			Vector3.ZERO)
+	add_child(model)
 
 ## Surface 0 of the CC0 base mesh is the body ("M_Main"), surface 1 the
 ## joint bands ("M_Joints") -- confirmed off the .glb, not assumed.
@@ -598,7 +640,7 @@ func _build_animation_tree() -> void:
 func _build_ik_rig() -> void:
 	for chain in ARM_CHAINS:
 		for role in ["root", "tip"]:
-			if skeleton.find_bone(chain[role]) < 0:
+			if skeleton.find_bone(_skeleton_bone_name(chain[role])) < 0:
 				push_error("Grip IK: rig has no bone '%s'; arm IK disabled" % chain[role])
 				return
 
@@ -608,8 +650,8 @@ func _build_ik_rig() -> void:
 		# rebuilds the solver chain the moment it's assigned, so setting them
 		# on an already-parented node makes the first assignment resolve the
 		# other end to -1 and log a build_chain error.
-		ik.root_bone = chain["root"]
-		ik.tip_bone = chain["tip"]
+		ik.root_bone = _skeleton_bone_name(chain["root"])
+		ik.tip_bone = _skeleton_bone_name(chain["tip"])
 		var target := Marker3D.new()
 		ik.add_child(target)
 		ik.target_node = ik.get_path_to(target)
@@ -631,8 +673,10 @@ func _build_ik_rig() -> void:
 
 ## Shoulder-to-hand span in the rest pose — ~0.55m on this 1.83m rig.
 func _measure_arm_reach(chain: Dictionary) -> float:
-	var shoulder := skeleton.get_bone_global_rest(skeleton.find_bone(chain["root"])).origin
-	var hand := skeleton.get_bone_global_rest(skeleton.find_bone(chain["tip"])).origin
+	var shoulder := skeleton.get_bone_global_rest(
+			skeleton.find_bone(_skeleton_bone_name(chain["root"]))).origin
+	var hand := skeleton.get_bone_global_rest(
+			skeleton.find_bone(_skeleton_bone_name(chain["tip"]))).origin
 	return shoulder.distance_to(hand)
 
 ## True while this wrestler should have hands on the opponent.
@@ -694,7 +738,8 @@ func _aim_grip_targets() -> bool:
 	var lifting := fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
 			and _is_grapple_attacker
 	var anchor_name := GRIP_BONE_LIFT if lifting else GRIP_BONE
-	var anchor_bone := opponent.skeleton.find_bone(anchor_name)
+	var anchor_bone := opponent.skeleton.find_bone(
+		opponent._skeleton_bone_name(anchor_name))
 	if anchor_bone < 0:
 		return false
 	# Position from the bone, lateral axis from the opponent's body: the
@@ -713,7 +758,7 @@ func _aim_grip_targets() -> bool:
 ## Nearest point to `target` the named shoulder's arm can actually straighten
 ## to, stopping just short of full extension.
 func _reachable(shoulder_bone_name: String, target: Vector3) -> Vector3:
-	var shoulder_bone := skeleton.find_bone(shoulder_bone_name)
+	var shoulder_bone := skeleton.find_bone(_skeleton_bone_name(shoulder_bone_name))
 	if shoulder_bone < 0:
 		return target
 	var shoulder := skeleton.global_transform \
