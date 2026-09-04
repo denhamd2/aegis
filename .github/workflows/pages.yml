@@ -1,0 +1,96 @@
+name: Deploy Web build to Pages
+
+# The playable build. Exports the Godot Web preset from game/export_presets.cfg
+# and publishes it to GitHub Pages.
+#
+# Two things about this build that are NOT true of the build the gauntlet
+# measures, and that anyone reading a Pages screenshot needs to know:
+#
+# - It renders through `gl_compatibility`, not `forward_plus`. project.godot
+#   sets forward_plus, but Godot's Web platform falls back to the
+#   compatibility renderer, and gauntlet/refs/VISUAL_BAR.md is explicit that
+#   a gl_compatibility frame cannot judge this project's visual bar -- the
+#   exposure anchor was solved on forward_plus. The Web build is for playing,
+#   never for measuring.
+# - It is single-threaded (`variant/thread_support=false` in the preset).
+#   Godot's threaded Web build needs SharedArrayBuffer, which needs COOP/COEP
+#   response headers, which GitHub Pages does not send. Threads off is what
+#   makes it load on Pages at all.
+
+on:
+  push:
+    branches:
+      - main
+      # Published from the working branch too, so the site tracks the build
+      # under review rather than waiting for a merge. Pages keeps one live
+      # deployment: the most recent push to either branch is what is served.
+      - claude/gauntlet-wrestling-godot-rnf7ej
+  workflow_dispatch:
+
+# GITHUB_TOKEN needs to mint an OIDC token for the Pages deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; let a newer commit supersede an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Godot 4.6 with export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.3-stable
+          use-dotnet: false
+          include-templates: true
+
+      # The export reads .godot/, which a fresh checkout does not have.
+      # Godot exits non-zero on first import while it builds the cache, so
+      # this step is allowed to fail and the export below is the real check.
+      - name: Import project
+        run: godot --headless --path game --import || true
+
+      - name: Export the Web build
+        run: |
+          mkdir -p build/web
+          godot --headless --path game \
+            --export-release "Web" ../build/web/index.html
+
+      # An export can "succeed" having written nothing useful, so check for
+      # the files a Godot Web build cannot run without before publishing.
+      - name: Verify the export produced a loadable build
+        run: |
+          ls -la build/web
+          for f in index.html index.js index.wasm index.pck; do
+            if [ ! -s "build/web/$f" ]; then
+              echo "missing or empty: build/web/$f" >&2
+              exit 1
+            fi
+          done
+
+      # Pages serves 404 for the directory listing without this, and a plain
+      # index.html at the root is what the deploy action expects.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

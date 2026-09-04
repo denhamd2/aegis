@@ -29,6 +29,29 @@ enter this repo.
 - `tools/capture/` — the capture harness driver (`run_capture.sh`), the
   evidence gate (`evidence_gate.py`) that must pass before any critic sees
   a capture, and the status-page generator.
+- `.github/workflows/` — `ci.yml` (gdUnit4 suite, evidence-gate fixtures,
+  status-page staleness) and `pages.yml` (the playable Web build).
+
+## Playing it in a browser
+
+`.github/workflows/pages.yml` exports the `Web` preset from
+`game/export_presets.cfg` and publishes it to GitHub Pages on every push to
+`main` or the active working branch.
+
+**That build is for playing, not for judging.** Two differences from the
+build every measurement in this README was taken on:
+
+- **It renders on `gl_compatibility`.** `project.godot` asks for
+  `forward_plus`, but Godot's Web platform falls back to the compatibility
+  renderer, and `gauntlet/refs/VISUAL_BAR.md:64-86` is explicit that a
+  `gl_compatibility` frame cannot judge this project's visual bar — the
+  exposure anchor and every silhouette number were solved on `forward_plus`.
+  Expect the ring to read differently in the browser than in the captures.
+  Never cite a Pages screenshot as visual evidence.
+- **It is single-threaded.** `variant/thread_support=false` in the preset,
+  because Godot's threaded Web build needs `SharedArrayBuffer`, which needs
+  COOP/COEP response headers, which GitHub Pages does not send. Threads off
+  is what lets it load there at all.
 
 ## Current phase
 
