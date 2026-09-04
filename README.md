@@ -3226,3 +3226,99 @@ follows, which is how a cosmetic change proves it stayed cosmetic.
   that is unmeasured here.
 - `compare_frame.py`'s tolerances are engineering values chosen to flag
   roughly the right things. They trace to no reference measurement.
+
+## Gauntlet: the ring, its lighting and its materials (round 3)
+
+Three builders in parallel, in separate worktrees with disjoint file
+ownership, each running its own bounded loop against `VISUAL_BAR.md`, with
+this session as the standing critic between rounds. The first round of any
+visual slice ever judged on the pipeline the game ships.
+
+### What landed
+
+- **Lighting** (`core/lighting/arena_lighting.gd`, new). A real rig replaces
+  emission-as-lighting: ring key and top fill on the truss, a cool rim pair, a
+  twelve-fixture house wash aimed outward at the bowl, a stage wash, and fog
+  volumes the key fixtures light through. Tonemap, glow and SSAO on the
+  Environment; ambient down from 0.35 to a bounce floor of 0.06.
+  `_house_lit()` survives, demoted from *the* lighting to a floor for faces no
+  fixture reaches — with the argument, which is correct, that emission has no
+  falloff, casts no shadow and puts no rim on anything, so a hall lit by it
+  cannot satisfy priority 2 in principle.
+- **Materials** (`core/materials/material_library.gd`, new). One resolver for
+  named materials: full map sets, texel density expressed as a physical
+  `tile_metres` rather than a repeat count, metallic asserted 0.0 or 1.0 in
+  code, mipmaps back on. Candidate colour maps were *scored* rather than
+  chosen by eye — rescaled to the pixel size their tile actually occupies in
+  the wide shot and run through the edge count — and four of six measured
+  0.000–0.034 at that scale, i.e. flat colours with a file behind them.
+- **The ring** (`core/ring/ring_builder.gd`, new). Sagging rope tubes at three
+  heights, turnbuckle pads with straps and buckles, post caps, a pleated
+  apron, steel steps, and a woven canvas carrying an original centre mark. The
+  frozen dimensions are asserted at runtime rather than merely commented, and
+  the ring's colliders stay authored in `ring.tscn` untouched: rope *sag* is a
+  displacement of the rendered mesh only.
+
+### Measured
+
+Forward+, software-rasterised, against `wide_standoff_broadcast_angle.jpg`:
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| saturation | 0.220 | **0.311** | 0.306 |
+| mat luminance | 0.172 | 0.359 | 0.43–0.49 |
+| highlights p95 | 0.210 | 0.473 | 0.427 |
+| mean luminance | 0.083 | 0.111 | 0.168 |
+| fine detail | 0.327 | 0.273 | 0.614 |
+| coarse detail | 0.212 | 0.202 | 0.343 |
+| void fraction | 0.063 | 0.015 | 0.010–0.066 |
+
+gdUnit4 **216/216**, and `replay_end_state_hash` **byte-identical** — which
+is the whole evidence that three agents rebuilding the look of the game
+touched no gameplay.
+
+### The critic's own tools were wrong twice, and a builder caught both
+
+This is the part worth keeping. `compare_frame.py` was written here to give
+priorities 2 and 3 numbers for the first time. A builder disputed its output
+instead of accepting it, and was right twice:
+
+1. **It compared a 1280×720 render to a 640×364 still without resampling.**
+   Edge density is a rate per pixel, so our frame spread the same incident
+   over four times the area. One unchanged frame measures 0.147 native and
+   0.315 at the reference's size.
+2. **It thresholded an absolute *linear* gradient.** A surface cannot produce
+   a gradient larger than its own level, so at the 0.014–0.020 linear the
+   house-lit hall renders at, the threshold demanded 50–70% local contrast
+   while the mat cleared it with 2%. Measured: edges registered on 0.089 of
+   dark pixels against 0.199 of bright ones — a 2.2× bias against exactly the
+   surfaces the arena is made of.
+
+Both fixed. The deficit survives at about **1.8×**, stable across every
+threshold tried, so the direction was right and only the magnitude was wrong.
+Every number this project published from the broken version — including the
+briefs the builders were working to — was overstated and has been restated.
+
+A third caveat, found while tuning: the video wall owned 36.5% of the
+above-p95 pixels, and dimming it cost fine detail **0.361 → 0.273**. A large
+blown rectangle against a dark backdrop manufactures edges and glow
+gradients, so edge density can be inflated by the very defect being fixed.
+The lower number is the honest one.
+
+### What this did not settle
+
+- **The exposure anchor is still unfinished.** The mat reads 0.359 against a
+  0.43–0.49 band. It moved a long way from 0.172 and it is not there.
+- **Fine detail is 0.273 against 0.614**, the largest open gap on the board,
+  and it went *down* on the landed build for the reason above.
+- **The turnbuckle pads are the wrong shape** — full-height squared-off
+  towers where a real pad is a fat cushion at rope height. They dominate the
+  ring-corner shot.
+- **The crowd is still two-box impostors**, and at ring-corner range they read
+  as flat rectangles. **Ringside is still a black void**: no announce table,
+  no chairs, no barricade detail.
+- **No performance claim is available from this machine**, and none is made.
+  Volumetric fog, a twelve-fixture wash and 1K map sets all cost frame time
+  that is unmeasured here.
+- Fixture count, fog density, rope sag depth and turnbuckle proportions trace
+  to **no reference measurement**. They are coverage decisions, named as such.

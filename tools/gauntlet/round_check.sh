@@ -65,9 +65,19 @@ if [ ! -f "$REPO_ROOT/game/$RUNNER" ]; then
 	for candidate in $(git -C "$REPO_ROOT" worktree list --porcelain 2>/dev/null \
 			| awk '/^worktree /{print $2}'); do
 		if [ -f "$candidate/game/$RUNNER" ]; then
-			ln -sfn "$candidate/game/addons/gdUnit4" \
+			# Copied, never symlinked. A symlink makes Godot see the same
+			# scripts at two resource paths, and every gdUnit4 class then
+			# fails to parse with "hides a global script class" -- 216 green
+			# tests become an abnormal exit with no summary line.
+			# rm first: `cp -r src dest` where dest already exists nests
+			# the copy at addons/gdUnit4/gdUnit4, and Godot then sees every
+			# gdUnit4 class twice -- "hides a global script class", 216
+			# tests replaced by an abnormal exit.
+			mkdir -p "$REPO_ROOT/game/addons"
+			rm -rf "$REPO_ROOT/game/addons/gdUnit4"
+			cp -r "$candidate/game/addons/gdUnit4" \
 				"$REPO_ROOT/game/addons/gdUnit4"
-			echo "  (borrowed gdUnit4 from $candidate)"
+			echo "  (copied gdUnit4 from $candidate)"
 			break
 		fi
 	done
@@ -77,6 +87,7 @@ if [ ! -f "$REPO_ROOT/game/$RUNNER" ] && command -v git >/dev/null 2>&1; then
 	if git clone --depth 1 --branch v6.2.1 \
 			https://github.com/MikeSchulze/gdUnit4.git "$WORK/gdUnit4" \
 			>/dev/null 2>&1; then
+		rm -rf "$REPO_ROOT/game/addons/gdUnit4"
 		cp -r "$WORK/gdUnit4/addons/gdUnit4" "$REPO_ROOT/game/addons/gdUnit4"
 		echo "  (cloned gdUnit4 v6.2.1, the version CI pins)"
 	fi
