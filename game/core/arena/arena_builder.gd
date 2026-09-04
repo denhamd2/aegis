@@ -533,9 +533,14 @@ func _build_stage() -> void:
 	# energy (this was 7.6 before, and blew the screen out to flat pale blue).
 	# metallic was 0.1, which is not a material -- a glass-fronted LED wall is
 	# a dielectric, so the library's entry is 0.0 with specular 0.5.
+	# 7.6 blew the screen to flat pale blue; 1.35 still owned the frame's top
+	# 5% (p95 0.633 against the reference still's 0.427, with 36.5% of the
+	# blown pixels in the one grid cell the screen occupies). 0.35 is where it
+	# stops driving p95 -- measured, and 0.18 moves the number no further, so
+	# below this the screen is only dimmer, not better behaved.
 	var screen_mat := MaterialLibrary.resolve("arena_screen")
 	add_child(_mesh_instance("StageScreen", screen,
-			_self_emissive(screen_mat, 1.35)))
+			_self_emissive(screen_mat, 0.35)))
 
 
 # ---------------------------------------------------------------------------

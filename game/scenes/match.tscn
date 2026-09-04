@@ -101,7 +101,7 @@ ssao_ao_channel_affect = 0.2
 ; invisible vectors that only exist where they land. Global density is low;
 ; ArenaLighting adds two FogVolumes for the local concentration.
 volumetric_fog_enabled = true
-volumetric_fog_density = 0.003
+volumetric_fog_density = 0.0015
 volumetric_fog_albedo = Color(0.72, 0.77, 0.9, 1)
 volumetric_fog_anisotropy = 0.35
 volumetric_fog_length = 64.0

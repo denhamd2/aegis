@@ -208,9 +208,9 @@ func _build_stage_wash() -> void:
 ## reference measurement of haze in gauntlet/refs/.
 func _build_fog_volumes() -> void:
 	_fog_box("RingHaze", Vector3(0.0, 4.0, 0.0), Vector3(20.0, 9.0, 20.0),
-			0.014, Color(0.80, 0.84, 0.95), 0.14)
+			0.005, Color(0.80, 0.84, 0.95), 0.14)
 	_fog_box("HallHaze", Vector3(0.0, 6.0, 2.0), Vector3(58.0, 15.0, 58.0),
-			0.0035, Color(0.62, 0.68, 0.86), 0.05)
+			0.0012, Color(0.62, 0.68, 0.86), 0.05)
 
 
 func _fog_box(fog_name: String, at: Vector3, size: Vector3, density: float,
