@@ -57,11 +57,40 @@ func _ready() -> void:
 	var aabb := _world_aabb(model)
 	print("AABB pos=%.3v size=%.3v centre=%.3v" % [aabb.position, aabb.size, aabb.get_center()])
 
+	print("\n--- mesh instances ---")
+	for vi: VisualInstance3D in _visuals(model):
+		if vi is MeshInstance3D:
+			var mi: MeshInstance3D = vi
+			var wb := mi.global_transform * mi.get_aabb()
+			var mats := ""
+			for s in mi.get_surface_override_material_count():
+				var mat := mi.mesh.surface_get_material(s) if mi.mesh else null
+				var albedo := "none"
+				if mat is BaseMaterial3D:
+					var bm: BaseMaterial3D = mat
+					var tex := bm.get_texture(BaseMaterial3D.TEXTURE_ALBEDO)
+					albedo = tex.resource_path.get_file() if tex else "NO ALBEDO"
+				mats += "%s[%s] " % [mat.resource_name if mat else "null", albedo]
+			print("  %-20s vis=%s centreX=%+.3f size=%.2v  %s" % [
+				mi.name, mi.visible, wb.get_center().x, wb.size, mats])
+
 	var camera := Camera3D.new()
 	add_child(camera)
 	for shot: Array in [["front", Vector3(0, 0.15, 1)], ["side", Vector3(1, 0.15, 0)],
 			["back", Vector3(0, 0.15, -1)], ["high", Vector3(0.7, 0.9, 0.7)]]:
 		await _shoot(camera, aabb, shot[0], shot[1])
+
+	# Head close-ups, framed off the head bone rather than the whole-body
+	# AABB, so the face can actually be judged.
+	if skel:
+		var head_idx := skel.find_bone("J_Head")
+		if head_idx >= 0:
+			var head := (skel.global_transform * skel.get_bone_global_pose(head_idx)).origin
+			var head_aabb := AABB(head - Vector3(0.16, 0.10, 0.16), Vector3(0.32, 0.34, 0.32))
+			for shot: Array in [["face_front", Vector3(0, 0.06, 1)],
+					["face_three_quarter", Vector3(0.7, 0.06, 0.8)],
+					["face_side", Vector3(1, 0.06, 0.05)]]:
+				await _shoot(camera, head_aabb, shot[0], shot[1])
 	print("roman-bare: done -> %s" % _out_dir)
 	get_tree().quit(0)
 

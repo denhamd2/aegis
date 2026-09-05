@@ -267,8 +267,22 @@ const SPECS := {
 	## separate from a dark hall by value, so the specular return has to do it.
 	## These are the surface closest to the spot rig; if anything in this scene
 	## returns a highlight it is these.
+	## WHITE again, by direct instruction from the project owner.
+	##
+	## This value has now been both. It was traced white off the WWE 2K
+	## stills, then taken to near-black (0.085) to match gauntlet/refs/ring.md,
+	## whose ring is strung with black cable. White is what the owner wants the
+	## game to look like, so white governs; refs/ring.md keeps governing the
+	## rest of the ring, and the measured relationships in VISUAL_BAR.md are
+	## unaffected -- a rope is under 4cm across and is not what moves the mat
+	## exposure or the silhouette separation figures.
+	##
+	## Roughness goes back up with the colour. 0.30 existed because a dark
+	## rope cannot separate from a dark hall by value, so the specular return
+	## had to draw the line; a white rope separates by value on its own, and
+	## keeping it that glossy would read as wet plastic under the spot rig.
 	"ring_rope": {
-		"tint": Color(0.085, 0.085, 0.090), "roughness": 0.30,
+		"tint": Color(0.88, 0.88, 0.87), "roughness": 0.45,
 	},
 	## Coverage decision, and a correction: the post shipped at metallic 0.3,
 	## which is not a material -- it has neither a dielectric's white specular

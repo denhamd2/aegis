@@ -32,9 +32,38 @@ const MATCH_SCENE := "res://scenes/roman_match.tscn"
 ## reachability probe measured the opening tie-up landing around tick 51, so
 ## everything here is well past the spawn standoff and into real play.
 const BEATS := [
+	{"tick": 1, "label": "faceoff"},
 	{"tick": 70, "label": "tieup"},
-	{"tick": 150, "label": "grapple"},
+	{"tick": 190, "label": "action"},
 	{"tick": 320, "label": "exchange"},
+	{"tick": 520, "label": "action2"},
+]
+
+## Two-shots framing both wrestlers at once, for the face-off. Placed
+## relative to the midpoint between them and the axis they are squared up
+## on, so the pair stays centred however far apart they have drifted --
+## a fixed world camera would frame the ring, not the confrontation.
+##
+## bearing_deg is measured off the A->B axis: 90 is broadside (both men in
+## profile, the classic stare-down framing), 0 would be looking down the axis
+## with one man hidden behind the other.
+##
+## Swung past 90 toward the west side so these agree with BROADCAST_SHOTS and
+## with the game camera: the lens still faces the crowd, and the entrance
+## stage on -Z comes round to frame-left rather than sitting directly behind
+## the camera. Straight broadside kept the stage out of shot but put it at six
+## o'clock, which is not the framing asked for.
+const PAIR_SHOTS := [
+	{"name": "pair_broadside", "bearing_deg": 118.0, "distance": 4.8,
+		"height": 1.65, "look_height": 1.25, "fov": 38.0},
+	{"name": "pair_broadside_low", "bearing_deg": 118.0, "distance": 4.2,
+		"height": 0.70, "look_height": 1.30, "fov": 42.0},
+	{"name": "pair_three_quarter", "bearing_deg": 138.0, "distance": 4.6,
+		"height": 1.80, "look_height": 1.20, "fov": 40.0},
+	{"name": "pair_over_shoulder", "bearing_deg": 152.0, "distance": 3.6,
+		"height": 1.72, "look_height": 1.55, "fov": 44.0},
+	{"name": "pair_high", "bearing_deg": 110.0, "distance": 4.4,
+		"height": 3.10, "look_height": 1.00, "fov": 44.0},
 ]
 
 ## Frames to let the renderer settle after a camera jump before saving. The
@@ -67,6 +96,23 @@ const SHOTS := [
 		"look_height": 1.45, "fov": 46.0},
 	{"name": "high_over", "yaw_deg": 60.0, "distance": 2.40, "height": 2.85,
 		"look_height": 1.00, "fov": 46.0},
+	# QA framings. Tight on the head from three sides to judge beard, eyes,
+	# nose, brows and hairline, and tight on the legs from two to check
+	# nothing is erupting through the trousers or boots.
+	{"name": "qa_head_front", "yaw_deg": 4.0, "distance": 0.62, "height": 1.66,
+		"look_height": 1.62, "fov": 30.0},
+	{"name": "qa_head_quarter", "yaw_deg": 38.0, "distance": 0.66,
+		"height": 1.65, "look_height": 1.60, "fov": 30.0},
+	{"name": "qa_head_side", "yaw_deg": 92.0, "distance": 0.70, "height": 1.63,
+		"look_height": 1.58, "fov": 32.0},
+	{"name": "qa_head_back", "yaw_deg": 172.0, "distance": 0.74, "height": 1.66,
+		"look_height": 1.60, "fov": 32.0},
+	{"name": "qa_legs_front", "yaw_deg": 10.0, "distance": 1.85, "height": 0.62,
+		"look_height": 0.48, "fov": 40.0},
+	{"name": "qa_legs_side", "yaw_deg": 86.0, "distance": 1.95, "height": 0.60,
+		"look_height": 0.46, "fov": 40.0},
+	{"name": "qa_boots", "yaw_deg": 30.0, "distance": 1.05, "height": 0.42,
+		"look_height": 0.14, "fov": 38.0},
 ]
 
 ## Broadcast framings, in world space and fixed -- this is the angle the
@@ -74,15 +120,40 @@ const SHOTS := [
 ## wide_broadcast matches CaptureHarness.ART_SHOTS' entry of the same name
 ## (the framing refs/frames/wide_standoff_broadcast_angle.jpg was shot at),
 ## so these two are directly comparable; the rest tighten in on the action.
+## These sat on +Z looking toward -Z, which points the lens straight down the
+## entrance ramp: the stage filled the background of every broadcast frame.
+## They are on the west side now, matching the anchor the game's own
+## MatchCamera is parked on in match.tscn -- camera at -X looking toward +X,
+## so the crowd bank fills frame centre and the -Z stage sits off frame-left,
+## at nine o'clock, instead of behind the ring.
 const BROADCAST_SHOTS := [
-	{"name": "broadcast_wide", "position": Vector3(-5.6, 2.55, 6.5),
+	{"name": "broadcast_wide", "position": Vector3(-6.40, 2.55, 1.70),
 		"target": Vector3(0.0, 1.05, 0.0), "fov": 41.0},
-	{"name": "broadcast_mid", "position": Vector3(-3.6, 1.95, 4.6),
+	{"name": "broadcast_mid", "position": Vector3(-5.00, 1.95, 1.30),
 		"target": Vector3(0.0, 1.10, 0.0), "fov": 38.0},
-	{"name": "broadcast_hard_cam", "position": Vector3(0.0, 2.30, 6.40),
+	{"name": "broadcast_hard_cam", "position": Vector3(-6.40, 2.30, 0.0),
 		"target": Vector3(0.0, 1.10, 0.0), "fov": 40.0},
-	{"name": "broadcast_ringside_low", "position": Vector3(4.10, 0.62, 5.20),
+	{"name": "broadcast_ringside_low", "position": Vector3(-5.20, 0.62, 2.60),
 		"target": Vector3(0.0, 1.10, 0.0), "fov": 50.0},
+	# Outside the ropes on the west side, low and close on the steel steps.
+	# The steps straddle both the -X and +X sides at Z ~ +0.35
+	# (ring_builder.gd STEP_* constants), three treads in bare bright metal.
+	{"name": "ringside_steps", "position": Vector3(-6.30, 0.85, 2.90),
+		"target": Vector3(-3.55, -0.45, 0.35), "fov": 46.0},
+	{"name": "ringside_steps_wide", "position": Vector3(-7.40, 1.60, 4.20),
+		"target": Vector3(-3.30, -0.30, 0.35), "fov": 52.0},
+	# Wide enough to read the ring as an object: mat, ropes, posts and the
+	# full branded apron skirt on two sides at once.
+	{"name": "ring_and_apron_wide", "position": Vector3(-8.60, 2.10, 6.40),
+		"target": Vector3(0.0, -0.35, 0.0), "fov": 50.0},
+	{"name": "apron_face_on", "position": Vector3(-7.20, 0.55, 0.0),
+		"target": Vector3(0.0, -0.55, 0.0), "fov": 44.0},
+	# From the entrance stage looking back down the ramp at the ring -- the
+	# reverse of the broadcast angle, which is the shot an entrance uses.
+	{"name": "from_stage", "position": Vector3(0.0, 3.30, -13.5),
+		"target": Vector3(0.0, 0.30, 0.0), "fov": 46.0},
+	{"name": "from_stage_low", "position": Vector3(0.0, 1.30, -8.5),
+		"target": Vector3(0.0, 0.90, 0.0), "fov": 50.0},
 ]
 
 var _out_dir := "/tmp/roman_shots"
@@ -124,8 +195,18 @@ func _ready() -> void:
 		var state: String = WrestlerFSM.State.keys()[a.fsm.current_state]
 		print("beat %s at tick %d -- WrestlerA in %s at %.2v"
 			% [beat["label"], tick, state, a.global_position])
+		for shot: Dictionary in PAIR_SHOTS:
+			await _shoot_pair(camera, a, b, shot, "%s_%s" % [beat["label"], shot["name"]])
 		for shot: Dictionary in SHOTS:
 			await _shoot_subject(camera, a, shot, "%s_%s" % [beat["label"], shot["name"]])
+		# The same head framings on wrestler B. Both wrestlers are the same
+		# model, so any difference between these and A's is a bug in how the
+		# instance is set up rather than in the asset -- which is exactly the
+		# question when one of them keeps his hair and the other does not.
+		for shot: Dictionary in SHOTS:
+			if not String(shot["name"]).begins_with("qa_head"):
+				continue
+			await _shoot_subject(camera, b, shot, "%s_b_%s" % [beat["label"], shot["name"]])
 		for shot: Dictionary in BROADCAST_SHOTS:
 			await _shoot_world(camera, shot, "%s_%s" % [beat["label"], shot["name"]])
 		_freeze(scene, camera, false)
@@ -160,6 +241,23 @@ func _shoot_subject(camera: Camera3D, subject: WrestlerController,
 	var position := feet + bearing * float(shot["distance"])
 	position.y = float(shot["height"])
 	var target := feet
+	target.y = float(shot["look_height"])
+	await _pose_and_save(camera, position, target, float(shot["fov"]), out_name)
+
+## Frames both wrestlers, on a bearing measured off the axis between them.
+func _shoot_pair(camera: Camera3D, a: WrestlerController, b: WrestlerController,
+		shot: Dictionary, out_name: String) -> void:
+	var axis := b.global_position - a.global_position
+	axis.y = 0.0
+	if axis.length() < 0.001:
+		axis = Vector3.RIGHT
+	axis = axis.normalized()
+	var midpoint := (a.global_position + b.global_position) * 0.5
+	midpoint.y = 0.0
+	var bearing := axis.rotated(Vector3.UP, deg_to_rad(float(shot["bearing_deg"])))
+	var position := midpoint + bearing * float(shot["distance"])
+	position.y = float(shot["height"])
+	var target := midpoint
 	target.y = float(shot["look_height"])
 	await _pose_and_save(camera, position, target, float(shot["fov"]), out_name)
 
