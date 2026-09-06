@@ -449,13 +449,32 @@ func _source_skeleton(source_root: Node) -> Skeleton3D:
 ## A key that matches the source's rest pose then lands exactly on Roman's
 ## rest pose instead of somewhere 180 degrees away from it.
 ##
-## Passing null for `source_skeleton` keeps the old verbatim copy. Nothing
-## should rely on that -- it exists so the function stays callable without a
-## rig to compare against.
+## `source_skeleton` defaults to the base rig's own skeleton, loaded on
+## demand, because every library that reaches this method is authored against
+## that rig -- the .glb's 43 clips, the generated paired poses and the
+## imported strike clips alike.
+##
+## It used to default to null, and null meant "skip the conversion and copy
+## verbatim", i.e. exactly the bug this function exists to fix. RomanModel
+## passed a real skeleton so the base library came out upright, while
+## WrestlerController._adapt_animation_library() called the same method with
+## one argument for PAIRED_POSES and STRIKE_CLIPS -- so those two took the
+## null path in silence and stayed inverted, which is why GRAPPLE_HOLD and
+## the mocap strikes played head-down (J_Head 0.385 below J_Hips 0.964, a
+## foot at 1.793) while LOCOMOTION and TIE_UP looked fine. A default that
+## quietly does the broken thing is worse than a required argument, so the
+## fallback now resolves the rig instead of abandoning the conversion.
 func adapt_animation_library(source: AnimationLibrary,
 		source_skeleton: Skeleton3D = null) -> AnimationLibrary:
 	var target := AnimationLibrary.new()
 	var skeletons := _animation_skeletons()
+	# Owned only when we loaded it here, and freed before returning.
+	var owned_source_root: Node = null
+	if source_skeleton == null:
+		owned_source_root = (load(BASE_RIG) as PackedScene).instantiate()
+		source_skeleton = _source_skeleton(owned_source_root)
+		if source_skeleton == null:
+			push_error("RomanModel: base rig has no skeleton to retarget from")
 	for name in source.get_animation_list():
 		var source_animation: Animation = source.get_animation(name)
 		var animation := Animation.new()
@@ -484,6 +503,8 @@ func adapt_animation_library(source: AnimationLibrary,
 									rest),
 							source_animation.track_get_key_transition(track, key))
 		target.add_animation(name, animation)
+	if owned_source_root:
+		owned_source_root.free()
 	return target
 
 ## The two rest transforms a key has to be converted between, or an empty

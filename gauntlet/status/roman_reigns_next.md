@@ -127,7 +127,7 @@ Both probes are kept. `reachability_probe.tscn` reports the contest detail
 (progress pairs, whiff distances, per-handoff states) the defect work above
 needed; `reach_probe.tscn` is the tighter pass/fail gate.
 
-## Model rendering — PARTLY CLEARED, one inversion path still open
+## Model rendering — retarget fixed, two strike beats still float
 
 Rendering a shotlist of the Roman variant in play
 (`tools/probe/roman_shots.tscn`) found the model inverted in a match: head at
@@ -138,31 +138,49 @@ asset itself was never at fault — `tools/probe/roman_bare.tscn` loads
 `roman_model.tscn` with no controller and no AnimationTree and it stands up
 correctly (feet 0.092, hips 1.012, chest 1.323, head 1.654, height 1.927m).
 
-**Still open — read this before trusting the fix below.** The retarget is
-fixed for the base rig's own animation library, and that is all. Measured
-again after the merge, seed 3, `roman_match.tscn`:
+**Second inversion path, found and fixed after the merge.** The retarget
+below was only ever applied to the base rig's own animation library. Measured
+on the merge result (seed 3, `roman_match.tscn`), `GRAPPLE_HOLD` and the mocap
+strikes were still head-down while `LOCOMOTION`, `TIE_UP` and `HIT_REACT` were
+upright — identical tick-for-tick to `f3e4f38`, confirmed by running the same
+probe in a worktree at the pre-merge commit, so this was the original defect
+half-fixed rather than a merge regression.
 
-| tick | state | `J_Hips` | `J_Chest` | `J_Head` | `J_Foot_L` | |
+The cause was `adapt_animation_library()`'s own signature.
+`source_skeleton` is what makes it a retarget rather than a rename, and it
+was optional, with null meaning "copy verbatim" — the bug the function exists
+to fix. `RomanModel` passed a real skeleton, so the base library converted
+properly; `WrestlerController._adapt_animation_library()` called the same
+method with *one* argument for `PAIRED_POSES` and `STRIKE_CLIPS`, so both took
+the null path in silence. A default argument that quietly does the broken
+thing is the whole bug. The fallback now resolves the base rig on demand
+instead of abandoning the conversion.
+
+Result, same seed and ticks:
+
+| tick | state | `J_Hips` | `J_Chest` | `J_Head` | `J_Foot_L` | before → after |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2 | LOCOMOTION | 1.065 | 1.376 | 1.695 | 0.200 | upright |
-| 70 | TIE_UP | 1.341 | 1.586 | 1.768 | 0.733 | upright |
-| 100 | GRAPPLE_HOLD | 0.964 | 0.658 | **0.385** | **1.793** | INVERTED |
-| 140 | STRIKE | 0.934 | 0.678 | **0.515** | **1.680** | INVERTED |
-| 180 | HIT_REACT | 0.926 | 1.235 | 1.530 | 0.046 | upright |
+| 100 | GRAPPLE_HOLD | 0.996 | 1.308 | 1.622 | 0.122 | inverted → upright |
+| 120 | GRAPPLE_HOLD | 1.520 | 1.815 | 2.009 | 1.087 | inverted → upright (lifted) |
+| 140 | STRIKE | 1.064 | 1.375 | 1.694 | 0.199 | inverted → upright |
+| 200 | STRIKE | 1.064 | 1.376 | 1.692 | 0.200 | inverted → upright |
 
-The states that come from the base library are upright; `GRAPPLE_HOLD` and
-the mocap strike clips are still head-down with the feet above the head.
-Identical tick-for-tick before and after the merge, so this is not a merge
-regression — it is the original defect, half-fixed.
+**Still open, and not to be recorded as fixed.** Two strike beats did not come
+back with the rest:
 
-The reason is in `adapt_animation_library()`'s own signature. Its
-`source_skeleton` parameter is what makes it a retarget rather than a rename,
-and it is optional: passing null keeps the old verbatim copy. `RomanModel`
-passes the base rig's skeleton, so the base library is converted properly.
-`WrestlerController._adapt_animation_library()` calls the same method with
-*one* argument for `PAIRED_POSES` and `STRIKE_CLIPS`, so both silently take
-the null path and keep the inversion. A default argument that means "quietly
-do the broken thing" is the whole bug.
+| tick | state | `J_Hips` | `J_Chest` | `J_Head` | `J_Foot_L` | root |
+| --- | --- | --- | --- | --- | --- | --- |
+| 150 | STRIKE | 1.722 | 1.613 | 1.600 | 1.582 | y=0.000, on floor |
+| 160 | STRIKE | 1.854 | 1.638 | 1.535 | 1.881 | y=0.000, on floor |
+
+The whole skeleton is bunched between 1.5m and 1.9m with the head the *lowest*
+joint, while the controller root sits on the mat and reports `is_on_floor()`.
+That is a body floating horizontally at chest height, not a legitimate leap,
+and it is specific to certain frames of certain strike clips — `t140` and
+`t200`, also `STRIKE`, are correct. Whatever remains is in the imported mocap
+clips themselves rather than in the retarget path, which is now uniform for
+every library. Needs a per-clip pass, and a visual one: the numbers can say
+"wrong", but only footage says which clip and which frames.
 
 **Cause and fix.** `adapt_animation_library()` copied the base rig's bone
 rotations onto Roman verbatim. Bone tracks are *local* rotations, meaningful
@@ -281,10 +299,11 @@ Priorities 2, 3 and 4 are all closed on their own terms, but the model does
 not yet render correctly under animation in every state. What each round
 actually established:
 
-- The Roman model still plays `GRAPPLE_HOLD` and the mocap strikes inverted
-  (see "Model rendering" above). Nothing downstream of Priority 3 should be
-  judged visually until that is closed — the moveset round's arc work was
-  choreographed against curves, not against what renders.
+- The Roman model is upright in `GRAPPLE_HOLD` and in most of `STRIKE`, but
+  two strike beats still float horizontally (see "Model rendering" above).
+  The moveset round's arc work was choreographed against curves rather than
+  against what renders, so it is worth re-judging visually once those clips
+  are clean.
 - The live match **reaches** the paired moves and leaves them cleanly, proven
   by two independent probes and held by regression tests that run a real match
   scene rather than calling into the controller.
@@ -296,8 +315,9 @@ actually established:
   schedule, so those numbers trace to nothing and were deliberately left
   alone.
 
-That leaves two gates, not one. The near one is the remaining inversion
-path above, which is a bug with a known cause and no dependency on footage.
+That leaves two gates, not one. The near one is the residual strike-clip
+float above — narrowed to specific frames of specific mocap clips, with the
+retarget path itself now uniform for every animation library.
 The far one is **Priority 1 — reference capture**, which blocks in two
 distinct ways. It blocks tuning, as it always has: the
 explicitly unmeasured surface (kick startup, jab active/recovery, all grapple
