@@ -1,3 +1,4 @@
+class_name RomanModel
 extends Node3D
 ## Adapts the user-supplied Roman model to the game's universal wrestler rig.
 ## The source has no animations, so the base rig's animation library is reused
@@ -7,6 +8,7 @@ const BASE_RIG := "res://assets/characters/wrestler_base.glb"
 
 const BONE_MAP := {
 	"pelvis": "J_Hips",
+	"spine_01": "J_Spine1",
 	"spine_02": "J_Spine2",
 	"spine_03": "J_Chest",
 	"neck_01": "J_Neck",
@@ -89,8 +91,12 @@ const ALBEDO_FIXES := {
 	"Material.006": {"color": Color(0.82, 0.80, 0.76)}, # l_wrist
 	"Material.007": {"color": Color(0.82, 0.80, 0.76)}, # r_wrist
 	"Material.012": {"color": Color(0.10, 0.10, 0.11)}, # r_a_acce
-	# Eye and lash. Small, but white sclera and a black lash beat flat white.
-	"Material.013": {"color": Color(0.085, 0.060, 0.045)},
+	# Eye and lash. Material.013 is the whole eyeball (M_EYE), which ships
+	# untextured -- it held a flat brown here when that tint was the only
+	# iris this model had. It is a white sclera now: the iris and pupil are
+	# real geometry seated on the cornea (_build_eye_details below), and a
+	# brown eyeball behind them reads as an eye with no white at all.
+	"Material.013": {"color": Color(0.90, 0.89, 0.87)},
 	"Material.016": {"color": Color(0.04, 0.04, 0.04)},
 }
 
@@ -181,6 +187,11 @@ func _ready() -> void:
 		return
 	_fix_materials()
 	_copy_base_animation_library()
+	# Iris/pupil geometry is headless-safe (plain nodes); colours need a real
+	# renderer, same split WrestlerAttire uses for the same reason.
+	_build_eye_details(body)
+	if DisplayServer.get_name() != "headless":
+		_normalize_mouth_materials()
 
 ## Repairs the materials the export left unusable. Applied as surface
 ## overrides rather than by editing the .glb: the source asset stays exactly
@@ -255,6 +266,126 @@ func game_bone_name(game_bone: String) -> String:
 
 func uses_universal_attire() -> bool:
 	return false
+
+## Face-material ground truth, measured off the shipped .glb (see
+## assets/characters/CREDITS.md "Roman face findings"), not guessed:
+## - M_Head carries ONLY wrinkles_normal; the face colour map ("Image",
+##   brows/beard-stubble/lips/tattoo layout) is embedded but referenced by
+##   nothing, so the head renders without its colour.
+## - The "beard" material and all four hair materials point their albedo at
+##   *_rai PACKED DATA textures, so the beard renders magenta and the hair
+##   purple.
+## - M_EYE has no texture and no vertex colours: flat glossy white.
+## - M_Teeth/M_Tongue/M_MouthBag have NO material at all: default grey.
+##
+## The first three are repaired by _fix_materials() above, which is the
+## single material authority for this model. Two of those repairs were
+## reconciled against a second, independent pass at the same faults and the
+## measurement decided each:
+##
+## - HEAD. Re-pointing M_Head at roman_reigns_Image.png directly renders a
+##   blue-white face: that file's blue channel is pinned to 255 across 100%
+##   of the image and its red is clipped at both ends across ~26%, so only
+##   green survived the export. ALBEDO_FIXES reconstructs the face from that
+##   green channel instead (build_roman_hair_alpha.py), tinted with the skin
+##   tone measured off the undamaged body_color atlas.
+## - HAIR AND BEARD. Unlinking the _rai maps for a flat colour loses the
+##   strands: the green channel of those maps IS the opacity mask, so the
+##   cards become solid lozenges rather than hair. HAIR_FIXES keeps the mask
+##   as a rebuilt alpha channel and tints the RGB, which is what preserves
+##   the hairline, the beard's jaw edge and the eyebrows.
+##
+## What remains here is the surface the material pass does not reach: the
+## mouth parts, whose meshes carry no material at all to inspect and so must
+## be found by node name, and the eyes, which need geometry rather than a
+## texture. Determinism-safe: visuals only, no FSM/RNG/physics touched.
+const TEETH_COLOR := Color(0.87, 0.85, 0.79)
+const MOUTH_COLOR := Color(0.28, 0.09, 0.08)
+
+## Geometric irises. The eyeballs are untextured, so the iris/pupil are small
+## spheres seated on the cornea, parented to the J_Eye bones (which exist but
+## carry no animation tracks, so the eyes ride the head rigidly -- matching
+## the base rig, which has no eye bones at all). Offsets are in each eye
+## bone's LOCAL space, converted once from the .glb bind pose: eyeballs
+## ~2.5cm, bone ~6mm behind the mesh centroid, cornea apex ~+9mm forward in
+## root space (+Z facial forward). If a re-export moves the bones, re-measure
+## with tools (parse M_EYE centroids vs J_Eye globals) -- do not hand-tune.
+const IRIS_R := 0.006
+const PUPIL_R := 0.0028
+const IRIS_COLOR := Color(0.10, 0.07, 0.05)
+const PUPIL_COLOR := Color(0.012, 0.010, 0.010)
+const EYE_TARGETS := {
+	"J_Eye_L": [Vector3(-0.001077, -0.006686, -0.005771),
+		Vector3(-0.001568, -0.009389, -0.007743)],
+	"J_Eye_R": [Vector3(0.001110, -0.006769, -0.005661),
+		Vector3(0.001613, -0.009503, -0.007587)],
+}
+
+## Supplies the materials the export omitted entirely. M_Teeth, M_Tongue and
+## M_MouthBag carry no material on any surface, so they render default grey
+## and there is nothing to duplicate and repair -- they are found by node
+## name and painted outright. Everything else on the face is handled by
+## _fix_materials(); see the note above for why this pass does not also
+## touch the head, hair or beard.
+func _normalize_mouth_materials() -> void:
+	for mi in find_children("", "MeshInstance3D", true, false):
+		var mesh_instance := mi as MeshInstance3D
+		if not mesh_instance or not mesh_instance.mesh:
+			continue
+		var node_name := String(mesh_instance.name).to_lower()
+		if node_name.contains("teeth"):
+			_paint_all_surfaces(mesh_instance, TEETH_COLOR, 0.35, false)
+		elif node_name.contains("tongue") or node_name.contains("mouthbag"):
+			_paint_all_surfaces(mesh_instance, MOUTH_COLOR, 0.6, false)
+
+func _paint_all_surfaces(mesh_instance: MeshInstance3D, color: Color,
+		roughness: float, metal: bool) -> void:
+	for surface in mesh_instance.mesh.get_surface_count():
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = color
+		mat.roughness = roughness
+		mat.metallic = 1.0 if metal else 0.0
+		mesh_instance.set_surface_override_material(surface, mat)
+
+func _build_eye_details(body: Skeleton3D) -> void:
+	var headless := DisplayServer.get_name() == "headless"
+	for bone in EYE_TARGETS:
+		var bone_idx := body.find_bone(bone)
+		if bone_idx < 0:
+			push_warning("RomanModel: skeleton has no bone '%s'" % bone)
+			continue
+		var targets: Array = EYE_TARGETS[bone]
+		_add_eye_sphere(body, bone, bone_idx, "RomanIris" + bone.right(6),
+			targets[0], IRIS_R, IRIS_COLOR, headless)
+		_add_eye_sphere(body, bone, bone_idx, "RomanPupil" + bone.right(6),
+			targets[1], PUPIL_R, PUPIL_COLOR, headless)
+
+func _add_eye_sphere(body: Skeleton3D, bone: String, bone_idx: int,
+		slot: String, offset: Vector3, radius: float, color: Color,
+		headless: bool) -> void:
+	for child in body.get_children():
+		if String(child.name) == slot:
+			return # already built
+	var attachment := BoneAttachment3D.new()
+	attachment.name = slot
+	body.add_child(attachment)
+	attachment.bone_name = bone
+	attachment.bone_idx = bone_idx
+	var ball := SphereMesh.new()
+	ball.radius = radius
+	ball.height = radius * 2.0
+	ball.radial_segments = 12
+	ball.rings = 6
+	var instance := MeshInstance3D.new()
+	instance.mesh = ball
+	if not headless:
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = color
+		mat.roughness = 0.25
+		mat.metallic = 0.0
+		instance.material_override = mat
+	instance.position = offset
+	attachment.add_child(instance)
 
 func _find_body_skeleton() -> Skeleton3D:
 	for candidate in find_children("", "Skeleton3D", true, false):

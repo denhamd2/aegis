@@ -58,6 +58,7 @@ func _run_match(seed_value: int) -> Dictionary:
 		"peak_momentum": {a.name: 0.0, b.name: 0.0},
 		"tiers": {},
 		"landed": 0,
+		"knockdowns": 0,
 		"earned": {a.name: 0.0, b.name: 0.0},
 		"trace": [],
 		"entries": {},
@@ -83,6 +84,13 @@ func _run_match(seed_value: int) -> Dictionary:
 			defender.combat.total_damage()])
 	a.move_landed.connect(landed)
 	b.move_landed.connect(landed)
+	# State-entry sampling misses knockdowns covered the SAME tick (the
+	# attacker is usually standing right there): DOWN comes and goes between
+	# two samples. The knocked_down signal counts every one exactly.
+	var knocked := func(_wrestler: WrestlerController) -> void:
+		row["knockdowns"] += 1
+	a.knocked_down.connect(knocked)
+	b.knocked_down.connect(knocked)
 	var won := func(winner: WrestlerController, method: String) -> void:
 		row["winner"] = winner.name
 		row["method"] = method
@@ -161,12 +169,14 @@ func _report() -> void:
 	var strikes := 0
 	var ordered := 0
 	for row in _rows:
+		# Signal-counted, not sampled: same-tick covers skip DOWN between
+		# two samples, so the entries dict undercounts knockdowns.
+		downs += int(row["knockdowns"])
 		var seed_ordered := true
 		for who: String in row["tiers"]:
 			var t: Dictionary = row["tiers"][who]
 			grapples += t["grapple"] + t["power"] + t["signature"] + t["finisher"]
 			strikes += t["strike"]
-			downs += row["entries"][who].get("DOWN", 0)
 			# A finisher with no signature behind it is a skipped rung.
 			if t["finisher"] > 0 and t["signature"] == 0:
 				seed_ordered = false

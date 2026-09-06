@@ -99,77 +99,220 @@ measurement found genuinely broken:
   a landed grapple into a strike on the next tick. No spacing, no circling.
   Measurable against nothing until Priority 1 lands ring-crossing run speed.
 
-## BLOCKER — the Roman model does not render correctly under animation
+### Independently re-verified on `roman-reachability-r1`
 
-Found while rendering a shotlist of the Roman variant in play
-(`tools/probe/roman_shots.tscn`). This is not a Priority 2 regression; it is
-the state of the model as committed, and it sits in front of Priority 3.
+The same four boxes were measured a second time, in parallel and with a
+separate instrument (`game/tools/probe/reach_probe.tscn`, Roman vs Roman,
+seeds 1-3, 20000-tick budget, `--fixed-fps 6000`): **PASS on all 3 seeds**,
+zero script errors. Two probes, written independently against the same loop,
+agree — which is worth more than either run alone:
 
-**The rig is inverted in a match.** Measured world bone heights for WrestlerA
-in `roman_match.tscn` (`tools/probe/roman_diag.tscn`):
+- Entry atomic on every tie-up (both FSMs land in `TIE_UP` the same tick,
+  zero SPLIT) and always gated (zero GHOST without a grapple press, zero
+  RANGE beyond 1.4m). Winners vary by seed (B×4, A×5), so no side owns entry
+  order — the same conclusion the per-tie-up re-roll above was written to
+  produce, reached from a different direction.
+- First tie-up at t51/t53/t51 from spawn; no seed exceeded the 3000-tick
+  watch limit.
+- 3/3/5 grapples resolved via `move_landed` with real tiers
+  (signature_neckbreaker, signature_backbreaker, finisher_facebuster among
+  them); `GrappleRig.begin()`'s only gameplay callers remain the controller
+  and the reversal counter.
+- Zero bad handoffs: attacker IDLE (or instantly PIN/SUBMISSION_ATTACKER on a
+  same-tick cover, which is legal), defender in HIT_REACT/DOWN/PIN/
+  SUBMISSION_DEFENDER. All 3 matches completed with real wins
+  (t845/t721/t1602).
 
-| bone | LOCOMOTION | TIE_UP | STRIKE | model alone |
-| --- | --- | --- | --- | --- |
-| `J_Head` | 0.320 | 0.396 | 0.658 | 1.654 |
-| `J_Chest` | 0.599 | — | — | 1.323 |
-| `J_Hips` | 0.909 | 0.702 | 0.562 | 1.012 |
-| `J_Foot_L` | 1.729 | 1.220 | -0.316 | 0.092 |
+Both probes are kept. `reachability_probe.tscn` reports the contest detail
+(progress pairs, whiff distances, per-handoff states) the defect work above
+needed; `reach_probe.tscn` is the tighter pass/fail gate.
 
-Head below hips, feet above the head, and in STRIKE a foot 0.32m *below the
-mat*. The wrestlers render boots-up with the torso torn away from the legs.
+## Model rendering — PARTLY CLEARED, one inversion path still open
 
-**The asset is fine.** `tools/probe/roman_bare.tscn` loads `roman_model.tscn`
-alone, with no controller and no AnimationTree, and it stands up correctly:
-feet 0.092, hips 1.012, chest 1.323, head 1.654, overall height 1.927m,
-skeleton scale 1.035. Right proportions, right silhouette, arm tattoo and skin
-tone binding properly.
+Rendering a shotlist of the Roman variant in play
+(`tools/probe/roman_shots.tscn`) found the model inverted in a match: head at
+0.320m, feet at 1.729m, and in STRIKE a foot 0.316m *below* the mat, with the
+torso torn away from the legs. Measured at three beats
+(`tools/probe/roman_diag.tscn`), and the inversion held in all three. The
+asset itself was never at fault — `tools/probe/roman_bare.tscn` loads
+`roman_model.tscn` with no controller and no AnimationTree and it stands up
+correctly (feet 0.092, hips 1.012, chest 1.323, head 1.654, height 1.927m).
 
-So the defect is in the **animation retarget**, not the import. `roman_model.gd`
-remaps the base rig's tracks onto Roman's bones through `BONE_MAP`; the moment
-an AnimationTree drives that skeleton it inverts. Worth noting the scale of the
-mismatch: Roman's rig carries **471 bones** and `BONE_MAP` covers roughly 60 of
-them, so most bones receive no track at all and keep whatever the retarget left
-them at — consistent with the mesh tearing rather than merely rotating.
+**Still open — read this before trusting the fix below.** The retarget is
+fixed for the base rig's own animation library, and that is all. Measured
+again after the merge, seed 3, `roman_match.tscn`:
 
-Two further defects, visible in the bare-model shots:
+| tick | state | `J_Hips` | `J_Chest` | `J_Head` | `J_Foot_L` | |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2 | LOCOMOTION | 1.065 | 1.376 | 1.695 | 0.200 | upright |
+| 70 | TIE_UP | 1.341 | 1.586 | 1.768 | 0.733 | upright |
+| 100 | GRAPPLE_HOLD | 0.964 | 0.658 | **0.385** | **1.793** | INVERTED |
+| 140 | STRIKE | 0.934 | 0.678 | **0.515** | **1.680** | INVERTED |
+| 180 | HIT_REACT | 0.926 | 1.235 | 1.530 | 0.046 | upright |
 
-- **Clothing is untextured** — shirt and trousers render pure white. Skin binds
-  correctly, so it is specific to the tops/bottoms materials. Both ship only as
-  `_nrm` (normal) maps with no colour map alongside them.
-- **Hair and beard render magenta/green**, the missing-texture signature, despite
-  three hair textures shipping (`hair_rai`, `hair_rai_4`, `headhair_mask`).
-- Two stray head meshes float either side of him at shoulder height; the model's
-  AABB is 1.66m wide as a result. Probably alternate head/hair variants that
-  should be hidden.
+The states that come from the base library are upright; `GRAPPLE_HOLD` and
+the mocap strike clips are still head-down with the feet above the head.
+Identical tick-for-tick before and after the merge, so this is not a merge
+regression — it is the original defect, half-fixed.
 
-`test_roman_model.gd` passes throughout, because it asserts *structure* — that
-the skeleton keeps its named bones and that animations were remapped — not that
-the result is upright. Same shape of gap as the source-grep assertion in
-`test_strike_clips.gd` that this round replaced with a behavioural sweep.
+The reason is in `adapt_animation_library()`'s own signature. Its
+`source_skeleton` parameter is what makes it a retarget rather than a rename,
+and it is optional: passing null keeps the old verbatim copy. `RomanModel`
+passes the base rig's skeleton, so the base library is converted properly.
+`WrestlerController._adapt_animation_library()` calls the same method with
+*one* argument for `PAIRED_POSES` and `STRIKE_CLIPS`, so both silently take
+the null path and keep the inversion. A default argument that means "quietly
+do the broken thing" is the whole bug.
 
-Authoring more paired moves against an inverted rig means choreographing blind,
-so this should be fixed before Priority 3 starts.
+**Cause and fix.** `adapt_animation_library()` copied the base rig's bone
+rotations onto Roman verbatim. Bone tracks are *local* rotations, meaningful
+only against their own skeleton's rest pose, and these two rigs share none.
+They are now converted through global rest space: the delta is taken in the
+parent's frame (`key * rest^-1`, not `rest^-1 * key` — the pre-multiplied
+form measures the offset in the bone's own rotating frame, which straightens
+legs whose rest axes happen to agree while leaving arms folded over the head)
+and carried into the target's frame through both parents' global rests.
+
+The texture faults found alongside it are fixed too, and were reconciled
+against a second, parallel pass at the same surface on `roman-face-r1`; the
+merged result is documented in `roman_model.gd` and keeps whichever fix the
+measurement supports:
+
+- **Head albedo** was orphaned *and* damaged — `roman_reigns_Image.png` has
+  its blue channel pinned to 255 across 100% of the image and its red clipped
+  at both ends across ~26%, so pointing the head at it directly renders a
+  blue-white face. The face is reconstructed from the surviving green channel
+  instead, tinted with the skin tone measured off the undamaged `body_color`
+  atlas.
+- **Hair and beard** rendered magenta because their packed `*_rai` data maps
+  were wired in as base colour (R and B carry identical data; the GREEN
+  channel is the strand opacity mask). Rebuilt as white RGB plus that green
+  channel as alpha, tinted at runtime, with the beard and brows cut at their
+  own lower scissor (their mask is 9.6% opaque against the hair's 32%).
+  Flat-colouring these instead loses the strands entirely, so the alpha maps
+  are what ships.
+- **Eyes** are the one thing the face round solved better and the merge takes
+  wholesale: the eyeball ships untextured, so iris and pupil are now real
+  geometry seated on the cornea and parented to the `J_Eye` bones. `M_EYE`
+  itself is a white sclera behind them rather than the flat brown tint that
+  stood in when no iris existed.
+- **Mouth.** `M_Teeth`, `M_Tongue` and `M_MouthBag` carry no material at all
+  and are painted by node name.
+- **Clothing** (tops/bottoms ship only `_nrm` maps) is coloured to the gear
+  Roman wrestles in, the T-shirt and the duplicate "entrance" hair sets are
+  hidden, and trousers and boots get a few millimetres of grow to stop skin
+  erupting through them.
+
+`test_roman_model.gd` passed throughout the inversion, because it asserts
+*structure* — that the skeleton keeps its named bones and that animations were
+remapped — not that the result is upright. Same shape of gap as the
+source-grep assertion in `test_strike_clips.gd` that this round replaced with
+a behavioural sweep.
 
 ## Priority 3 — Roman move set
 
-- [ ] Complete the remaining paired grapple/reversal move set to the architecture scope.
-- [ ] Keep root-transform-only motion for paired clips unless a real multi-rig requirement is proven.
-- [ ] Re-check move choreography for body clearance and floor-clip errors before tuning.
+Worked 2026-09-06 on `roman-moveset-r1` (suite 236/236 green locally,
+Godot 4.7.1; canonical 4.6.3 in CI). Audit first: content coverage was
+already complete -- all 17 MoveDefs carry a trajectory clip, both role
+recipes, and pools that reach them (proven by test_paired_moveset) -- so
+this round was choreography, not authoring.
+
+- [x] Complete the remaining paired grapple/reversal move set to the architecture scope.
+  Nothing missing: 17/17 trajectories + 34 role clips + MoveDefs + pools.
+  (12th grapple slot stays held for a mocap replacement per the suplex
+  decision, not backfilled.)
+- [x] Keep root-transform-only motion for paired clips unless a real multi-rig requirement is proven.
+  Untouched: rebake via build_paired_moves.gd writes position/rotation root
+  tracks only; bone performance stays in paired_poses.tres.
+- [x] Re-check move choreography for body clearance and floor-clip errors before tuning.
+  New tucked-body clearance gate (test_no_trajectory_buries_even_a_tucked_body:
+  1.15m cannonball, -0.12m floor, sampled at 60Hz off the real curves)
+  caught 5 floor clips the root-only test cannot see (roots never go below
+  the mat; the rotated bodies did, worst -0.21m neckbreaker). Fixed by
+  raising mid-air defender roots (hiptoss, snapmare, spinebuster,
+  neckbreaker) and, for armdrag, retiming the flip to complete at the arc
+  peak -- lifting alone kept losing to cubic overshoot. Verified: gate
+  green, full suite green, rebake deterministic (13 generated, 4 hand-keyed
+  preserved). Remaining judgement is visual (arc character), for a capture
+  critic, not more blind keys.
 
 ## Priority 4 — tuning
 
-- [ ] Tune damage and momentum against the measured reference corpus.
-- [ ] Tune move timing against the live footage and measurements in gauntlet/refs/.
-- [ ] Re-test the Roman v Roman match loop after each tuning pass.
+Worked 2026-09-06 on `roman-tuning-r1`. Method first: every tunable was
+mapped against `gauntlet/refs/timings.md`, and anything without a
+measurement was left alone -- ARCHITECTURE.md's reference-driven-tuning
+rule cuts both ways, and inventing numbers is worse than keeping
+placeholders.
+
+- [x] Tune damage and momentum against the measured reference corpus.
+  Finding: the corpus HAS no damage scale (nothing in footage measures
+  damage) and no momentum schedule, so no damage/momentum number traces to
+  it -- and none was changed. What was verified instead is pacing health,
+  live over seeds 1-5 (ladder probe, 30000-tick budget): 2 submissions +
+  3 pinfalls (both finishes reachable), signature in 5/5, chain ordered
+  5/5, matches ending t721-t1602 with zero timeouts or grind, true
+  knockdowns 1.2/match (signal-counted -- see below). Finisher fired 1/5:
+  inherent to the knockdown-vs-climb race (a full climb needs 4 grapples,
+  a match affords ~3.4 before the first cover usually ends it), NOT
+  retuned blind -- weakening kickouts or stretching matches to force it
+  would trade measured-healthy pacing for an unmeasured ideal. Finisher
+  rate is capture-judgement material, not a headless-tuning item.
+- [x] Tune move timing against the live footage and measurements in gauntlet/refs/.
+  Finding: every measured timing is ALREADY adopted (jab startup 8,
+  clothesline/double-leg 18 startup + 46 recovery, getup 126/68, count
+  60/135/195 + 92 lead-in, submission 240-breakpoint ~2.5s) -- all covered
+  by existing tests. Nothing new traces; nothing changed. Explicitly
+  unmeasured surface (do not tune without footage): kick startup (shares
+  the jab's 8 unexamined), jab active/recovery, all grapple frame data,
+  ALL reversal windows (jab 6-9 included -- timings.md marks reversal
+  length pending), limb damage ratios, momentum thresholds/schedule,
+  match length, finisher rate.
+- [x] Re-test the Roman v Roman match loop after each tuning pass.
+  reach_probe (seeds 1-3): PASS, first tie-ups t51-53, zero violations,
+  real wins. ladder_probe (seeds 1-5): above. Plus a real instrument fix
+  found along the way: ladder counted knockdowns by sampling DOWN entries,
+  but same-tick covers skip DOWN between samples (measured 0.2/match
+  against 5 finishes) -- it now counts the knocked_down signal (true
+  1.2/match).
 
 ## Current gate
 
-Priority 2 is closed: the live match reaches the paired moves and leaves them
-cleanly, and there are now tests that fail if it stops doing either. The gate
-moves to Priority 3 — completing the Roman move set — with the caveat that
-every timing, damage and momentum number in the chain still traces to no
-reference measurement, so Priority 1 remains the real blocker on *tuning* as
-opposed to *reaching*.
+Priorities 2, 3 and 4 are all closed on their own terms, but the model does
+not yet render correctly under animation in every state. What each round
+actually established:
+
+- The Roman model still plays `GRAPPLE_HOLD` and the mocap strikes inverted
+  (see "Model rendering" above). Nothing downstream of Priority 3 should be
+  judged visually until that is closed — the moveset round's arc work was
+  choreographed against curves, not against what renders.
+- The live match **reaches** the paired moves and leaves them cleanly, proven
+  by two independent probes and held by regression tests that run a real match
+  scene rather than calling into the controller.
+- The move set is **complete** (17/17 trajectories, 34 role clips) and its
+  choreography now passes a tucked-body clearance gate, not just a root-only
+  one.
+- Tuning is **method-blocked, not work-blocked**: every measured timing is
+  already adopted, and the corpus contains no damage scale and no momentum
+  schedule, so those numbers trace to nothing and were deliberately left
+  alone.
+
+That leaves two gates, not one. The near one is the remaining inversion
+path above, which is a bug with a known cause and no dependency on footage.
+The far one is **Priority 1 — reference capture**, which blocks in two
+distinct ways. It blocks tuning, as it always has: the
+explicitly unmeasured surface (kick startup, jab active/recovery, all grapple
+frame data, all reversal windows, limb damage ratios, momentum thresholds,
+match length) cannot be touched without footage, and inventing numbers is
+worse than keeping placeholders. It also blocks two open questions that
+headless measurement has now taken as far as it can and that need a capture
+critic rather than another probe run: the arc *character* of the raised move
+trajectories, and the finisher rate (1 in 5 matches — inherent to the
+knockdown-vs-climb race, and not to be retuned blind).
+
+The two locomotion gaps under "Not fixed, still open" above sit behind the
+same gate: there is no neutral or spacing game, and the AI never enters RUN in
+open play, so `RUNNING_ATTACK` never fires in AI-vs-AI. Neither is measurable
+against anything until Priority 1 lands a ring-crossing run speed.
 
 ## Note on the environment
 

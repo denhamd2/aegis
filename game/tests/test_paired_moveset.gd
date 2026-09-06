@@ -239,3 +239,61 @@ func test_no_trajectory_puts_a_wrestler_under_the_mat() -> void:
 	assert_array(sunk).override_failure_message(
 		"Root keys below the mat: %s" % [sunk]
 	).is_empty()
+
+## Full-body clearance, not just root height. The bug that put suplex
+## victims half a metre under the mat passed the test above: every root key
+## sat at y >= 0 while the ROTATED body hung its head (root + 1.8m * cos of
+## the flip) through the canvas. So sample the interpolated trajectory --
+## keys can hide what happens between them -- and bound how far the head end
+## of the body may go under.
+##
+## Deliberately NOT a rigid 1.8m body: roots and bone poses are co-designed,
+## and a mid-flip defender is posed tucked (Roll), not as a rigid plank, so
+## a rigid gate fails moves that render fine. TUCKED_LENGTH 1.15m is the
+## cannonball -- knees to chest, the tightest real tuck -- and anything past
+## -0.12m under it is clipping no pose can explain away. Borderline dips
+## between the rigid and tucked bounds are choreography judgement, not gate
+## material: they belong to a capture critic with the poses visible, and the
+## survey numbers for them live in this file's history, not in an assertion.
+const TUCKED_LENGTH := 1.15
+const CLEARANCE_FLOOR := -0.12
+
+func test_no_trajectory_buries_even_a_tucked_body() -> void:
+	var buried: Array[String] = []
+	for name in PAIRED_MOVES.get_animation_list():
+		var anim := PAIRED_MOVES.get_animation(name)
+		var roles := {}
+		for i in anim.get_track_count():
+			var path := String(anim.track_get_path(i))
+			var role := ""
+			if path.ends_with("WrestlerA") or path.ends_with("WrestlerB"):
+				role = path
+			else:
+				continue
+			if not roles.has(role):
+				roles[role] = {"pos": -1, "rot": -1}
+			if anim.track_get_type(i) == Animation.TYPE_POSITION_3D:
+				roles[role]["pos"] = i
+			elif anim.track_get_type(i) == Animation.TYPE_ROTATION_3D:
+				roles[role]["rot"] = i
+		for role in roles:
+			var pos_i: int = roles[role]["pos"]
+			var rot_i: int = roles[role]["rot"]
+			if pos_i < 0 or rot_i < 0:
+				buried.append("%s %s: missing %s track" % [name, role,
+					"position" if pos_i < 0 else "rotation"])
+				continue
+			var steps := int(anim.length * 60.0)
+			for s in range(steps + 1):
+				var t := anim.length * float(s) / float(steps)
+				var pos: Vector3 = anim.position_track_interpolate(pos_i, t)
+				var quat: Quaternion = anim.rotation_track_interpolate(rot_i, t)
+				var up := (Basis(quat).y).normalized()
+				var head_y := pos.y + TUCKED_LENGTH * up.y
+				if head_y < CLEARANCE_FLOOR:
+					buried.append("%s %s at %.2fs: tucked head y=%.3f (root y=%.2f, up.y=%.2f)"
+							% [name, role, t, head_y, pos.y, up.y])
+					break
+	assert_array(buried).override_failure_message(
+		"Body parts through the mat past any tucked explanation: %s" % [buried]
+	).is_empty()
