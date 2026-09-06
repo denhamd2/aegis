@@ -78,7 +78,9 @@ func _ready() -> void:
 		_normalize_face_materials()
 
 func get_game_skeleton() -> Skeleton3D:
-	return _find_body_skeleton()func game_bone_name(game_bone: String) -> String:
+	return _find_body_skeleton()
+
+func game_bone_name(game_bone: String) -> String:
 	return BONE_MAP.get(game_bone, game_bone)
 
 func uses_universal_attire() -> bool:
