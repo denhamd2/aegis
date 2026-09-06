@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const ROMAN_MODEL := preload("res://scenes/roman_model.tscn")
 const MATCH_SCENE := preload("res://scenes/match.tscn")
+const PAIRED_POSES := preload("res://resources/animations/paired_poses.tres")
 
 func _make_model() -> Node3D:
     var model: Node3D = auto_free(ROMAN_MODEL.instantiate())
@@ -125,3 +126,27 @@ func test_normal_maps_import_as_normal_maps() -> void:
             "%s is not flagged as a normal map -- its vectors decode as "
             % path + "sRGB colour and every light on it is wrong."
         ).is_true()
+
+## Every bone a remapped paired-pose track names must exist on the Roman
+## skeleton. The poses are baked against CC0 bone names and remapped through
+## BONE_MAP at load; a bone the map drops (spine_01 did exactly this)
+## leaves that track pointing at nothing -- no error, just a body part that
+## quietly stops performing mid-throw on Roman while the mannequin dances.
+func test_adapted_poses_reference_real_roman_bones() -> void:
+    var model := _make_model()
+    await await_millis(20)
+    var skeleton := model.get_game_skeleton() as Skeleton3D
+    assert_object(skeleton).is_not_null()
+    var lib: AnimationLibrary = model.adapt_animation_library(PAIRED_POSES)
+    var dangling: Array[String] = []
+    for anim_name in lib.get_animation_list():
+        var anim: Animation = lib.get_animation(anim_name)
+        for track in anim.get_track_count():
+            var bone := String(
+                anim.track_get_path(track).get_concatenated_subnames())
+            if skeleton.find_bone(bone) < 0:
+                dangling.append("%s: %s" % [anim_name, bone])
+    assert_array(dangling).override_failure_message(
+        "Remapped pose tracks pointing at bones Roman does not have: %s"
+        % [dangling]
+    ).is_empty()
