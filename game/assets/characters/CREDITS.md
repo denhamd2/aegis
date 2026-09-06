@@ -75,3 +75,38 @@ animation clips (none ship with this model). It maps
 the shared animation library onto both Roman skeletons and `roman_match.tscn`
 makes the asset playable. The supplied asset's author and licence remain
 unknown and must be confirmed before redistribution.
+
+## Roman face findings (measured off roman_reigns.glb, fixed at runtime)
+
+Parsed the shipped binary rather than guessing from renders (19 meshes,
+16 materials, 14 images, 114-bone body + 471-bone hair rigs):
+
+- `M_Head` carries ONLY `wrinkles_normal`; the face colour map (`Image`:
+  brows, beard stubble, lips, Samoan tattoo layout, verified by viewing)
+  is embedded but referenced by NOTHING. `headhair_mask` is likewise
+  orphaned.
+- The `beard` material and all four hair materials point albedo at
+  `*_rai` PACKED DATA textures (green and alpha channels all zero across
+  all 4M pixels; red/blue hold roughness-ish values). Result: magenta
+  beard, purple hair, and the three BLEND hair masses sample the zero
+  alpha and vanish. (`M_Hair_Entrance` is OPAQUE, so it stays visible.)
+- `M_EYE` has no texture and no vertex colours (all vertex colours in the
+  file are pure white): flat glossy-white eyeballs, roughness 0.
+- `M_Teeth` / `M_Tongue` / `M_MouthBag` have NO material: default grey.
+  Eye bones (`J_Eye_L/R`) and teeth/tongue bones exist; the base animation
+  library drives none of them (the base rig has no such bones either).
+- All seven `*_nrm` textures import without the normal-map flag, so their
+  vectors decode as sRGB colour.
+- `BONE_MAP` had no `spine_01` entry although `J_Spine1` exists, so every
+  base animation driving it was silently discarded.
+
+`roman_model.gd` corrects all of it at runtime (the .glb is user-supplied
+and is never hand-edited): orphan face map restored onto the head,
+data-texture albedo links replaced with flat colours + forced opaque
+double-sided, geometric iris/pupil spheres on the eye bones from
+bind-pose-measured offsets (eyeballs ~2.5cm, bone ~6mm behind mesh
+centroid), flat teeth/mouth materials. `.import` sidecars carry the
+normal-map flags. Covered by `test_roman_model.gd` (BONE_MAP + remapped
+tracks, iris/pupil attachments at measured offsets, import flag contents);
+rendered appearance belongs to the critic with a capture, not to these
+tests.

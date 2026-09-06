@@ -51,3 +51,64 @@ func test_match_wires_roman_to_generated_move_libraries() -> void:
             .override_failure_message(
                 "Roman match model is missing generated animation '%s'" % clip
             ).is_true()
+
+func test_bone_map_covers_the_spine_chain() -> void:
+    assert_string(RomanModel.BONE_MAP.get("spine_01", "")).override_failure_message(
+        "BONE_MAP drops spine_01: every base animation driving it is silently "
+        + "discarded and the torso animates without a joint."
+    ).is_equal("J_Spine1")
+    var model := _make_model()
+    await await_millis(20)
+    var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+    assert_object(player).is_not_null()
+    var idle := player.get_animation("Idle")
+    var spine_tracks := 0
+    for track in idle.get_track_count():
+        if String(idle.track_get_path(track)).contains(":J_Spine1"):
+            spine_tracks += 1
+    assert_int(spine_tracks).override_failure_message(
+        "Adapted Idle carries no J_Spine1 tracks -- the spine_01 mapping "
+        + "is declared but nothing arrives."
+    ).is_greater(0)
+
+func test_eyes_carry_iris_and_pupil_attachments() -> void:
+    var model := _make_model()
+    await await_millis(20)
+    var skeleton := model.get_game_skeleton() as Skeleton3D
+    assert_object(skeleton).is_not_null()
+    for bone in ["J_Eye_L", "J_Eye_R"]:
+        assert_int(skeleton.find_bone(bone)).override_failure_message(
+            "Roman skeleton lost eye bone '%s'" % bone
+        ).is_greater_equal(0)
+    var targets: Dictionary = RomanModel.EYE_TARGETS
+    for bone in targets:
+        for slot_i in [0, 1]:
+            var want: Vector3 = (targets[bone] as Array)[slot_i]
+            var kind := "Iris" if slot_i == 0 else "Pupil"
+            var found: BoneAttachment3D = null
+            for child in skeleton.get_children():
+                if String(child.name) == "Roman" + kind + bone.right(6):
+                    found = child as BoneAttachment3D
+            assert_object(found).override_failure_message(
+                "%s has no %s attachment -- the untextured eyeball renders "
+                % [bone, kind] + "with no iris."
+            ).is_not_null()
+            assert_vector(found.position).override_failure_message(
+                "%s %s sits at %v, not the measured %v -- re-measure from "
+                % [bone, kind, found.position, want]
+                + "the .glb bind pose, do not hand-tune."
+            ).is_equal_approx(want, Vector3.ONE * 0.001)
+
+func test_normal_maps_import_as_normal_maps() -> void:
+    var files := ["bottoms_nrm", "l_wrist_nrm", "r_a_acce_nrm", "r_wrist_nrm",
+        "shoes_nrm", "tops_nrm", "wrinkles_normal"]
+    for stem in files:
+        var path := "res://assets/characters/roman_reigns_%s.png.import" % stem
+        assert_bool(FileAccess.file_exists(path)).override_failure_message(
+            "Import sidecar missing: %s" % path
+        ).is_true()
+        var text := FileAccess.get_file_as_string(path)
+        assert_bool(text.contains("compress/normal_map=1")).override_failure_message(
+            "%s is not flagged as a normal map -- its vectors decode as "
+            % path + "sRGB colour and every light on it is wrong."
+        ).is_true()
