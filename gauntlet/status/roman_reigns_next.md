@@ -12,10 +12,27 @@ This is the active next-step plan for the Roman variant. It follows the project'
 
 ## Priority 2 — live match reachability
 
-- [ ] Confirm tie-up entry happens on a neutral tick for both wrestlers, not one wrestler ahead by scene order.
-- [ ] Verify AI closing logic reaches tie-up range reliably before forcing a strike.
-- [ ] Confirm grapple move selection resolves through the normal referee/controller path, not only via direct harness invocation.
-- [ ] Confirm the move handoff returns both wrestlers cleanly to IDLE or the next legal FSM state.
+Verified live 2026-09-06 by `game/tools/probe/reach_probe.tscn` (Roman vs
+Roman, AI-vs-AI, seeds 1-3, 20000-tick budget, `--fixed-fps 6000`): **PASS
+on all 3 seeds**, zero script errors in the run output.
+
+- [x] Confirm tie-up entry happens on a neutral tick for both wrestlers, not one wrestler ahead by scene order.
+  Every entry atomic (both FSMs land in TIE_UP the same tick, zero SPLIT),
+  always gated (zero GHOST without a grapple press, zero RANGE beyond
+  1.4m). Winners vary by seed (B×4, A×5), so no side owns entry order.
+- [x] Verify AI closing logic reaches tie-up range reliably before forcing a strike.
+  First tie-up at t51/t53/t51 from spawn; no seed exceeded the 3000-tick
+  watch limit.
+- [x] Confirm grapple move selection resolves through the normal referee/controller path, not only via direct harness invocation.
+  3/3/5 grapples resolved via move_landed with real tiers
+  (signature_neckbreaker, signature_backbreaker, finisher_facebuster among
+  them); `GrappleRig.begin()`'s only gameplay callers remain the controller
+  and the reversal counter (grep to re-prove).
+- [x] Confirm the move handoff returns both wrestlers cleanly to IDLE or the next legal FSM state.
+  Zero bad handoffs: attacker IDLE (or instantly PIN/SUBMISSION_ATTACKER
+  on a same-tick cover, which is legal), defender in HIT_REACT/DOWN/
+  PIN/SUBMISSION_DEFENDER. All 3 matches completed with real wins
+  (t845/t721/t1602).
 
 ## Priority 3 — Roman move set
 
