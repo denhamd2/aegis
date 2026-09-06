@@ -63,9 +63,42 @@ this round was choreography, not authoring.
 
 ## Priority 4 — tuning
 
-- [ ] Tune damage and momentum against the measured reference corpus.
-- [ ] Tune move timing against the live footage and measurements in gauntlet/refs/.
-- [ ] Re-test the Roman v Roman match loop after each tuning pass.
+Worked 2026-09-06 on `roman-tuning-r1`. Method first: every tunable was
+mapped against `gauntlet/refs/timings.md`, and anything without a
+measurement was left alone -- ARCHITECTURE.md's reference-driven-tuning
+rule cuts both ways, and inventing numbers is worse than keeping
+placeholders.
+
+- [x] Tune damage and momentum against the measured reference corpus.
+  Finding: the corpus HAS no damage scale (nothing in footage measures
+  damage) and no momentum schedule, so no damage/momentum number traces to
+  it -- and none was changed. What was verified instead is pacing health,
+  live over seeds 1-5 (ladder probe, 30000-tick budget): 2 submissions +
+  3 pinfalls (both finishes reachable), signature in 5/5, chain ordered
+  5/5, matches ending t721-t1602 with zero timeouts or grind, true
+  knockdowns 1.2/match (signal-counted -- see below). Finisher fired 1/5:
+  inherent to the knockdown-vs-climb race (a full climb needs 4 grapples,
+  a match affords ~3.4 before the first cover usually ends it), NOT
+  retuned blind -- weakening kickouts or stretching matches to force it
+  would trade measured-healthy pacing for an unmeasured ideal. Finisher
+  rate is capture-judgement material, not a headless-tuning item.
+- [x] Tune move timing against the live footage and measurements in gauntlet/refs/.
+  Finding: every measured timing is ALREADY adopted (jab startup 8,
+  clothesline/double-leg 18 startup + 46 recovery, getup 126/68, count
+  60/135/195 + 92 lead-in, submission 240-breakpoint ~2.5s) -- all covered
+  by existing tests. Nothing new traces; nothing changed. Explicitly
+  unmeasured surface (do not tune without footage): kick startup (shares
+  the jab's 8 unexamined), jab active/recovery, all grapple frame data,
+  ALL reversal windows (jab 6-9 included -- timings.md marks reversal
+  length pending), limb damage ratios, momentum thresholds/schedule,
+  match length, finisher rate.
+- [x] Re-test the Roman v Roman match loop after each tuning pass.
+  reach_probe (seeds 1-3): PASS, first tie-ups t51-53, zero violations,
+  real wins. ladder_probe (seeds 1-5): above. Plus a real instrument fix
+  found along the way: ladder counted knockdowns by sampling DOWN entries,
+  but same-tick covers skip DOWN between samples (measured 0.2/match
+  against 5 finishes) -- it now counts the knocked_down signal (true
+  1.2/match).
 
 ## Current gate
 
