@@ -102,4 +102,12 @@ placeholders.
 
 ## Current gate
 
-The Roman variant is no longer blocked on “can the model load?” It is blocked on “can the live match actually reach and tune the Roman paired moves in normal play?” That is the correct next milestone for Phase 3.
+Priorities 2-4 are checked and verified live (reachability probe PASS,
+tucked-clearance gate green with 5 arcs corrected, pacing healthy with no
+reference-traceable tuning outstanding). The Roman variant is blocked
+solely on Priority 1: measured reference captures. That needs two things
+this environment cannot supply -- user footage with visible timing cues
+(reversal prompt, isolated strike, sprint, input overlay, second three-count)
+and a render-capable box (captures need xvfb + Vulkan; CI does not render).
+Everything downstream of captures -- visual critics for the face slice and
+the retuned arcs, then feel tuning -- waits on that footage, not on code.
