@@ -36,9 +36,30 @@ on all 3 seeds**, zero script errors in the run output.
 
 ## Priority 3 — Roman move set
 
-- [ ] Complete the remaining paired grapple/reversal move set to the architecture scope.
-- [ ] Keep root-transform-only motion for paired clips unless a real multi-rig requirement is proven.
-- [ ] Re-check move choreography for body clearance and floor-clip errors before tuning.
+Worked 2026-09-06 on `roman-moveset-r1` (suite 236/236 green locally,
+Godot 4.7.1; canonical 4.6.3 in CI). Audit first: content coverage was
+already complete -- all 17 MoveDefs carry a trajectory clip, both role
+recipes, and pools that reach them (proven by test_paired_moveset) -- so
+this round was choreography, not authoring.
+
+- [x] Complete the remaining paired grapple/reversal move set to the architecture scope.
+  Nothing missing: 17/17 trajectories + 34 role clips + MoveDefs + pools.
+  (12th grapple slot stays held for a mocap replacement per the suplex
+  decision, not backfilled.)
+- [x] Keep root-transform-only motion for paired clips unless a real multi-rig requirement is proven.
+  Untouched: rebake via build_paired_moves.gd writes position/rotation root
+  tracks only; bone performance stays in paired_poses.tres.
+- [x] Re-check move choreography for body clearance and floor-clip errors before tuning.
+  New tucked-body clearance gate (test_no_trajectory_buries_even_a_tucked_body:
+  1.15m cannonball, -0.12m floor, sampled at 60Hz off the real curves)
+  caught 5 floor clips the root-only test cannot see (roots never go below
+  the mat; the rotated bodies did, worst -0.21m neckbreaker). Fixed by
+  raising mid-air defender roots (hiptoss, snapmare, spinebuster,
+  neckbreaker) and, for armdrag, retiming the flip to complete at the arc
+  peak -- lifting alone kept losing to cubic overshoot. Verified: gate
+  green, full suite green, rebake deterministic (13 generated, 4 hand-keyed
+  preserved). Remaining judgement is visual (arc character), for a capture
+  critic, not more blind keys.
 
 ## Priority 4 — tuning
 
