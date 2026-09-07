@@ -3619,3 +3619,53 @@ DOWN, GETUP): no clipping through the mat, no detachment, no crown showing.
   `WrestlerFSM.State.keys()`), which meant a background run failed silently
   while the silence was being attributed to a slow rasteriser. Found with
   `--check-only`; fixed in its own commit rather than amended away.
+
+## Fix: the shipped build was neither Roman nor a clean canvas
+
+Two defects reported off the deployed Pages build, both real, both mine.
+
+### The deployed game was not Roman vs Roman
+
+`project.godot` ships `scenes/match.tscn`, and `match.tscn` never set
+`character_model_scene`. So it used `WrestlerController`'s default,
+`wrestler_base.glb` — the box-built mannequin. Every Roman frame in this repo
+came from `scenes/roman_match.tscn`, which overrides that property and which
+**nothing ships**. Ten commits of work on the Roman model reached the
+screenshots and never reached the game.
+
+Both slots in `match.tscn` now point at `scenes/roman_model.tscn`, the same
+override `roman_match.tscn` uses.
+
+One consequence, stated rather than buried: `attire_body`, `attire_accent`
+and `skin_tone` on both wrestlers are now **inert for rendering**. The Roman
+model brings its own textures and nothing in `RomanModel` reads those
+properties. They are kept because `test_wrestler_colorway.gd` asserts on them
+as exported properties — which means that suite now guards a colourway that
+no longer reaches a pixel. It passes, and it is measuring something the frame
+no longer contains. The same applies to the `wrestler ↔ wrestler ≤ 0.07`
+figure in `VISUAL_BAR.md`: two instances of one model are trivially identical,
+so that number stops being evidence of anything. Both want revisiting; neither
+was changed here.
+
+### The canvas had ruled black lines across it
+
+Round 4 widened the panel seams from 1.4cm to 4cm to buy back the coarse
+detail the deleted centre mark had been carrying, and deepened them to a flat
+`-0.26` trench with a flat `+0.060` lip. Two hard steps. On a near-white mat
+that is five black stripes ruled across the largest surface in the frame, and
+that is exactly how it was reported.
+
+The seam is now one smoothed profile — feathered dip, feathered lips — with
+the trench cut from 0.26 to 0.10. Measured on the generated texture, the
+column contrast across a seam falls from **78 to 45** of 255.
+
+`SEAM_HALF` did not move. Round 4's own note says width is the part that
+survives the downscale the coarse-detail metric reads, and depth is the part a
+viewer reads as a painted line; this trades the second and keeps the first.
+
+**Not measured: the coarse-detail figure.** Re-running `compare_frame.py`
+needs a `wide_broadcast` capture, and captures do not complete in this
+environment — the container suspends between turns, so a render that takes
+minutes of CPU never accumulates them. The expectation from round 4's own
+reasoning is that the drop is small, since width is unchanged. That is a
+prediction, not a result, and it is not being recorded as one.

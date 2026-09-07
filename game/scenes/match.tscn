@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=34 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -31,6 +31,7 @@
 [ext_resource type="PackedScene" path="res://scenes/match_hud.tscn" id="28"]
 [ext_resource type="Resource" path="res://resources/moves/strike_kick.tres" id="29"]
 [ext_resource type="Script" path="res://core/lighting/arena_lighting.gd" id="32"]
+[ext_resource type="PackedScene" path="res://scenes/roman_model.tscn" id="33"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -159,6 +160,16 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 player_index = 0
 is_ai = false
+; Both slots render the Roman model. The default is wrestler_base.glb, the
+; box-built mannequin, and it is what the deployed Pages build was showing --
+; the Roman model only ever reached roman_match.tscn, which nothing ships.
+;
+; attire_body / attire_accent / skin_tone below are now INERT for rendering:
+; the Roman model brings its own textures and nothing in RomanModel reads
+; them. They are kept because test_wrestler_colorway.gd asserts on them as
+; exported properties, and because they still drive the mannequin if the
+; model scene is ever swapped back. See the round note in README.
+character_model_scene = ExtResource("33")
 attire_body = Color(0.42, 0.6, 0.95, 1)
 skin_tone = Color(0.66, 0.5, 0.4, 1)
 physique_bulk = 0.94
@@ -185,6 +196,7 @@ grapple_rig_path = NodePath("../GrappleRig")
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 1.5)
 player_index = 1
 is_ai = true
+character_model_scene = ExtResource("33")
 attire_body = Color(0.55, 0.12, 0.13, 1)
 skin_tone = Color(0.7, 0.535, 0.43, 1)
 physique_bulk = 1.12

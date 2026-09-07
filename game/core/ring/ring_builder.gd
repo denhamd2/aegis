@@ -106,6 +106,14 @@ const CANVAS_SIZE := 1024
 ## Canvas panels are sewn in strips. Five seams across 6m is a 1.2m panel,
 ## which is the width canvas is milled at. COVERAGE DECISION.
 const CANVAS_PANEL := 1.2
+## Seam profile. SEAM_HALF is half the full feature width (so 15cm of mat is
+## involved in each seam) and is the figure round 4 set from the downscale;
+## the other three shape it and were cut hard after the stepped version
+## rendered as ruled black lines on the white canvas.
+const SEAM_HALF := 0.075
+const SEAM_DEPTH := 0.10
+const SEAM_LIFT := 0.035
+const SEAM_STITCH := 0.05
 const CANVAS_SEED := 20260903
 ## The mat's palette, as effective albedo (albedo_color is CANVAS_WHITE, so a
 ## texel is very nearly the surface's albedo outright).
@@ -468,24 +476,37 @@ static func _canvas() -> ImageTexture:
 			var traffic := 1.0 - clampf(sqrt(x * x + z * z) / 2.7, 0.0, 1.0)
 			v -= 0.075 * traffic * traffic
 
-			# Panel seams. A sewn seam is a dark valley with a raised lip, and
-			# with the mark gone these are the largest deliberate feature left
-			# on the mat, so they run deeper than they did.
+			# Panel seams. A sewn seam is a shallow valley between two
+			# doubled-over lips.
 			var seam := absf(fposmod(z + CANVAS_PANEL * 0.5, CANVAS_PANEL) - CANVAS_PANEL * 0.5)
-			# WIDE, and this is the one number here set by the measurement
-			# rather than by the thing being modelled. From the wide camera the
-			# 6m mat spans about 700px, so a centimetre is roughly a pixel --
-			# and coarse detail is read off a frame downscaled far below that.
-			# A 1.4cm seam is invisible to it no matter how deep it goes. A
-			# 4cm lap is both what a sewn canvas seam actually measures once
-			# the doubled-over lip is counted, and wide enough to survive the
-			# downscale, which is what makes it worth having.
-			if seam < 0.040:
-				v -= 0.26
-			elif seam < 0.075:
-				v += 0.060
+			# WIDTH is the measurement-driven number and it has not moved.
+			# From the wide camera the 6m mat spans about 700px, so a
+			# centimetre is roughly a pixel, and coarse detail is read off a
+			# frame downscaled far below that: a 1.4cm seam is invisible to it
+			# no matter how deep it goes. SEAM_HALF stays where round 4 put it
+			# because width is what survives the downscale.
+			#
+			# DEPTH and the PROFILE are what changed, and they changed because
+			# of what the mat looks like rather than what it measures. Round 4
+			# ran this as two hard steps -- a flat -0.26 trench with a flat
+			# +0.060 lip beside it -- which on a near-white canvas is five
+			# black stripes ruled across the largest surface in the frame. It
+			# was reported from the deployed build as "weird lines on the ring
+			# canvas", and that is a fair description of a step function.
+			#
+			# A real seam has no edges: it is a smooth dip with smooth lips.
+			# The profile below is feathered end to end, and the trench is
+			# 0.10 rather than 0.26. Depth is the part a viewer reads as a
+			# painted line; width is the part the downscale reads. Trading the
+			# first for none of the second is the whole point.
+			if seam < SEAM_HALF:
+				var t := seam / SEAM_HALF
+				var valley := 1.0 - smoothstep(0.0, 0.55, t)
+				var lip := smoothstep(0.35, 0.75, t) * (1.0 - smoothstep(0.75, 1.0, t))
+				v -= SEAM_DEPTH * valley
+				v += SEAM_LIFT * lip
 				if fposmod(x, 0.05) < 0.022:   # the stitch itself
-					v -= 0.10
+					v -= SEAM_STITCH * lip
 
 			var col := CANVAS_FIELD * v
 
