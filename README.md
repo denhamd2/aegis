@@ -3588,6 +3588,24 @@ before the cache was suspected. `godot4 --headless --path game --import`
 between generating and looking. It is now written at the top of
 `tools/assets/build_roman_hair_alpha.py`.
 
+### The probe earned its keep on its first working frame
+
+`extreme_poses.gd` ran properly for the first time and immediately falsified a
+claim written two commits earlier. The comment above `GROW_FIXES` said the
+0.006 grow "still covers ordinary skinning disagreement in extreme poses". It
+does not: HIT_REACT, WrestlerB, frame 17 has an open hole at the hip with skin
+through it.
+
+That is *not* the scale bug coming back — the systematic 5% mismatch is gone,
+and this residual is ordinary skinning disagreement under deformation. The
+bottoms grow went 0.006 → 0.018, which closes the hole on the same seeded
+frame with no visible inflation at the waistband or knee. 0.018 is not the
+minimum; it was tried first and worked, and the intermediate values were never
+rendered. The comment now says so.
+
+Hair and beard hold up across all three states the probe reached (HIT_REACT,
+DOWN, GETUP): no clipping through the mat, no detachment, no crown showing.
+
 ### What this round did not settle
 
 - **Beard edge definition and the hairline's fringe** are still softer than the

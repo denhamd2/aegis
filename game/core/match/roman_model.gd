@@ -181,12 +181,21 @@ const HIDDEN_MESHES := [
 ## blotched thighs, the bald crown, and a beard that would not sit on the
 ## face.
 ##
-## This grow is kept anyway. It costs nothing, it is invisible, and it still
-## covers ordinary skinning disagreement in extreme poses. It is no longer
-## load-bearing, and if it is ever revisited the thing to check first is that
-## both skeletons are still being scaled together.
+## This grow is kept anyway, and it is no longer load-bearing -- if it is ever
+## revisited the thing to check first is that both skeletons are still being
+## scaled together.
+##
+## It is NOT, however, sufficient. An earlier draft of this comment claimed
+## 0.006 "still covers ordinary skinning disagreement in extreme poses";
+## tools/probe/extreme_poses.gd disproved that on its first working run, with
+## a clear hole at WrestlerB's hip in HIT_REACT and skin through it. 0.006 is
+## roughly a 6mm shell and the hip separation in that pose is wider than that.
+## Raised to 0.018 for the bottoms. That closed the hole in the same seeded
+## frame (HIT_REACT, WrestlerB, frame 17) with no visible inflation at the
+## waistband or the knee. It is NOT claimed to be the minimum -- 0.018 was
+## tried first and worked, and the intermediate values were never rendered.
 const GROW_FIXES := {
-	"Material.004": 0.006, # bottoms
+	"Material.004": 0.018, # bottoms
 	"Material.005": 0.004, # shoes
 }
 
