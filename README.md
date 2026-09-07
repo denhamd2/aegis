@@ -3869,3 +3869,56 @@ to 0.002 against the 0.010–0.066 band, so lifting it is a known-dangerous
 direction, and `void_fraction` needs the silhouette harness, which does not
 complete in this environment. Left alone deliberately rather than changed
 blind.
+
+## Fix: apron logos sized and centred, and the feet question settled properly
+
+### Bigger, and centred on the ink rather than the box
+
+The banner rendered once at the artwork's own proportions, and the logos still
+read small. The cause was not the mesh or the fit: the **supplied image**
+carries wide dark-cloth margins, so the marks occupy only part of a picture
+that already spanned the apron full-height. Bigger therefore meant cropping
+that margin, not stretching.
+
+Measured off the artwork at a threshold that separates the marks from cloth
+highlights: marks span `v 0.246–0.721` (47.4% of image height) and
+`u 0.094–0.913`. Holding the no-distortion ratio `scale.x/scale.y = 2.0681`
+and solving for the marks filling 70% of the apron's height gives
+`scale (1.4012, 0.6775)` — a 1.48× magnification, marks at 70% of height and
+58% of width, `scale.x/scale.y` exactly 2.0681 so nothing is stretched.
+
+The first attempt at centring was **subtly wrong and looked it**. Centring the
+marks' *bounding box* put it at apron `v = 0.5000` exactly — and it still read
+as sitting low, which is what was reported. The reason is that the ink is
+bottom-heavy: "WRESTLING" and the mass of the AEW block sit lower than the
+sparse "ALL ELITE" line above. The bounding box was centred; the visual weight
+was not, landing at `v = 0.5133`. Centring the **brightness-weighted
+centroid** (`v 0.4925`) instead moves the art up 0.0090 in v, about 1.3% of
+the apron height, and puts what the eye reads on the centre line.
+
+### The wrestlers are standing on the canvas
+
+Asked twice, and the first two answers were built on measurements that do not
+support them. Both are recorded in `tools/probe/apron_and_feet.gd` so neither
+gets repeated:
+
+- **Mesh AABB** (`-0.0121` / `-0.0130`, reported earlier as settled). For a
+  *skinned* mesh `get_aabb()` returns the rest pose and does not follow the
+  animation. The tell was there and I missed it: both wrestlers returned the
+  same two numbers in completely different poses, across separate runs.
+- **Bone global pose.** It does move with the animation, but its heights
+  disagree with the rendered frame — during a strike it put `J_Head` *below*
+  `J_Hips` with the feet above both, an upside-down wrestler, while the render
+  of that same frame shows him upright. Whatever space those poses are in, it
+  is not the one the mesh is drawn in.
+
+What settles it is making the question visual: camera above and outside,
+looking down at the feet so the near-white canvas fills the frame behind them.
+A black boot against a white mat shows a centimetre of gap plainly. **In both
+IDLE and STRIKE, for both wrestlers, the soles are in contact.** Supporting
+facts from the scene: the canvas mesh top is at `y = 0.0000` and each
+wrestler's capsule bottom is at `y = 0.0000`.
+
+An intermediate test — camera *at* mat level, so the canvas is edge-on at the
+horizon — appeared to show a 15cm gap and was wrong: at that distance it was
+framing the other wrestler's boot at a different depth. It is not in the probe.
