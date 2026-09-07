@@ -3692,3 +3692,56 @@ environment — the container suspends between turns, so a render that takes
 minutes of CPU never accumulates them. The expectation from round 4's own
 reasoning is that the drop is small, since width is unchanged. That is a
 prediction, not a result, and it is not being recorded as one.
+
+## Feature: depth fog for the browser build (the second attempt)
+
+The hall reads flat in the browser because `FogVolume` is Forward+ only —
+Godot's Web platform falls back to `gl_compatibility`, `_build_fog_volumes()`
+returns early there, and the far stands end up at the same clarity as the
+ropes. `Environment` fog *is* supported on that renderer, so it can put air
+back.
+
+**Attempt one failed and is worth recording.** It used the default
+`FOG_MODE_EXPONENTIAL`, which begins at the near plane: it fogged the mat and
+the wrestlers along with the hall, and the result was a grey wash. It moved
+numbers and it made the frame worse, so it was reverted.
+
+`FOG_MODE_DEPTH` is what that attempt lacked. It takes a begin distance, so
+the fog can start *beyond the ring* and never touch the subjects. The camera
+sits 3.2–9.0m from the pair's midpoint and the far ropes are at most 3.1m past
+it, so no ring geometry is ever more than ~12.1m from the lens. `FOG_BEGIN` is
+13.0.
+
+The first pass at *this* attempt was also wrong, in the opposite direction:
+`fog_light_energy` at 1.0 against a tint of `(0.62, 0.68, 0.86)` made the fog
+**add** light, turning a dark arena milky white. The fog colour is the value
+distant geometry fades toward, so in a dark hall it has to be dark.
+`FOG_ENERGY` is 0.12, landing the tint just under the crowd's own level.
+
+Measured on the same `gl_compatibility` frame, before against after:
+
+| region | before | after | delta |
+| --- | --- | --- | --- |
+| mat centre | 0.4466 | 0.4466 | **+0.0000** |
+| wrestlers | 0.0758 | 0.0761 | +0.0003 |
+| near chairs | 0.0247 | 0.0252 | +0.0005 |
+| mid crowd | 0.0001 | 0.0024 | +0.0023 |
+| upper crowd | 0.0023 | 0.0147 | +0.0125 |
+
+That is the whole claim: nothing in front of the ropes changes, everything
+behind them gains depth. **These are compatibility-renderer numbers and
+`VISUAL_BAR.md` rules those void for judging the bar — that still stands.**
+They are a before/after differential inside one renderer, not a gauntlet
+measurement, and they are not offered as one.
+
+Forward+ is untouched and verified so: instantiating `play.tscn` headless
+(which reports `forward_plus`) leaves `fog_enabled = false` and
+`volumetric_fog_enabled = true`. That same fact means **the test suite never
+exercises this path** — headless is Forward+, so the guard always takes the
+early return. It is covered by rendered frames only, via
+`tools/probe/compat_shot.gd`.
+
+`fog_sky_affect` is 0.0 and that is load-bearing rather than tidiness: the
+background is a flat near-black and `VISUAL_BAR.md` bands `void_fraction` at
+0.010–0.066. Letting fog lift the void would eat that band directly, and
+lifting the void was part of what made both failed passes read as a wash.
