@@ -26,7 +26,7 @@ import pathlib
 import sys
 
 try:
-    from PIL import Image
+    from PIL import Image, ImageFilter
 except ImportError:
     sys.exit("Pillow is required: pip install Pillow")
 
@@ -60,20 +60,66 @@ LIFT = 0.30
 ## artist drew simply render at a weight you can see. The eyebrows live in this
 ## same mask and are sparser than the jaw, which is why they were missing
 ## altogether.
-BEARD_GAMMA = 0.40
+BEARD_GAMMA = 0.55
+
+## Strand dilation for the beard mask, in texels (odd, 0 = off).
+##
+## Gamma alone could not close this. It lifts faint strands to visible but
+## cannot add coverage the mask does not have, and the beard mask has very
+## little: 15.8% non-zero against the scalp mask's 40.9%, drawn by the same
+## artist for the same head. That is why the beard reads as scattered clumps
+## next to a full head of hair no matter what threshold or blend mode it is
+## given.
+##
+## Dilating closes the gap using the artist's own strands rather than invented
+## ones -- each strand widens, neighbours merge, and anywhere with no strand
+## within reach stays bare, so the beard's outline is still exactly where it
+## was drawn. Measured, at or above 0.5 alpha:
+##
+##   hair_alpha (the target)   0.3204
+##   beard, no dilation        0.0963
+##   beard, dilate 3           0.1688
+##   beard, dilate 5           0.2299
+##   beard, dilate 7           0.2820
+##   beard, dilate 9           0.3270   <- matches the scalp
+##
+## 3, not the 9 that matches the scalp's number, and the difference between
+## those is the whole reason this is judged on frames rather than on the table
+## above. 7 was tried and renders the moustache as a solid slab: at 2048 square
+## a 7-texel window fattens a 2-texel beard hair into a blob, and blobs do not
+## read as hair however well they match a coverage figure. 3 roughly doubles
+## the mask (0.096 -> 0.169 at >=0.5) while a strand stays a strand.
+##
+## IMPORTANT when re-tuning this: Godot caches imported textures under
+## game/.godot/imported/, and a plain `godot --path game <scene>` run will
+## happily render the OLD mask after this script has written a new one. Two
+## comparison renders were wasted on that -- 11.9% and 29.6% opaque masks
+## produced near-identical frames -- before the cache was the suspect. Always
+## `godot4 --headless --path game --import` between running this and looking
+## at anything.
+BEARD_DILATE = 3
 
 SOURCES = {
-    "roman_reigns_hair_rai.png": ("roman_reigns_hair_alpha.png", 1.0),
-    "roman_reigns_hair_rai_4.png": ("roman_reigns_hair_4_alpha.png", 1.0),
+    "roman_reigns_hair_rai.png": ("roman_reigns_hair_alpha.png", 1.0, 0),
+    "roman_reigns_hair_rai_4.png": ("roman_reigns_hair_4_alpha.png", 1.0, 0),
     "roman_reigns_combinations_rai.png": (
-        "roman_reigns_beard_alpha.png", BEARD_GAMMA),
+        "roman_reigns_beard_alpha.png", BEARD_GAMMA, BEARD_DILATE),
 }
 
 
-def build(source: pathlib.Path, target: pathlib.Path, gamma: float = 1.0) -> None:
+def build(source: pathlib.Path, target: pathlib.Path, gamma: float = 1.0,
+          dilate: int = 0) -> None:
     image = Image.open(source).convert("RGBA")
     # Green is the strand mask; red and blue are the packed data we discard.
     mask = image.split()[1]
+    if dilate:
+        # Grow each strand into its neighbours. A max filter takes the
+        # brightest texel in the window, so a strand widens and the gaps
+        # between strands close, while a region with no strand in reach stays
+        # empty -- the beard's SHAPE is still the artist's, only its weight
+        # changes. This is the one operation here that adds coverage rather
+        # than redistributing it; see BEARD_DILATE.
+        mask = mask.filter(ImageFilter.MaxFilter(dilate))
     if gamma != 1.0:
         # Thicken what is already there. alpha -> alpha**gamma with gamma < 1
         # lifts partial texels toward opaque and leaves 0 and 255 untouched,
@@ -156,11 +202,11 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
 def main() -> int:
     if not CHARACTERS.is_dir():
         sys.exit(f"not found: {CHARACTERS}")
-    for source_name, (target_name, gamma) in SOURCES.items():
+    for source_name, (target_name, gamma, dilate) in SOURCES.items():
         source = CHARACTERS / source_name
         if not source.exists():
             sys.exit(f"missing source texture: {source}")
-        build(source, CHARACTERS / target_name, gamma)
+        build(source, CHARACTERS / target_name, gamma, dilate)
     build_head(
         CHARACTERS / "roman_reigns_body_color.png",
         CHARACTERS / "roman_reigns_Image.png",
