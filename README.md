@@ -3633,13 +3633,26 @@ came from `scenes/roman_match.tscn`, which overrides that property and which
 **nothing ships**. Ten commits of work on the Roman model reached the
 screenshots and never reached the game.
 
-The first attempt set the model on `match.tscn` directly. **That fixed the
-game and wrecked CI**, and the wreck is the more useful half of this note.
-`roman_reigns.glb` is 52MB; ten test suites instantiate `match.tscn`, several
-of them once per test; so every one of them began loading two Roman models.
-The `gdunit-tests` job went from **31 seconds to over ten minutes without
-finishing**. A test fixture and a shipped scene had been the same file, and
-nothing made that visible until the file got heavy.
+The first attempt set the model on `match.tscn` directly, and CI rejected it:
+**246 tests, 2 errors, 6 failures**, all in `test_wrestler_colorway.gd`, all
+`null instance` on `.mesh` and `.scale`. That suite reaches into the
+*mannequin's* node structure — the gear meshes, the head meshes, the
+`Mannequin` MeshInstance3D — and the Roman model has none of them.
+
+Two corrections belong here, because both were asserted before they were
+checked. The commit that made this change predicted that suite would "pass,
+and measure something the frame no longer contains"; it did not pass, it broke
+outright. And the commit that fixed it blamed a **ten-minute** CI slowdown
+from the 52MB model. There was no slowdown: the tests step ran **42 seconds**
+and failed on assertions. That figure came from polling the GitHub job API
+across container suspensions and reading repeated `in_progress` as elapsed
+time — the same misreading as the `pgrep` one in the round above, one layer
+out.
+
+The split below is still right, and for the reason the failures show rather
+than the one first given: a test fixture and the shipped scene were the same
+file, and the fixture's structure is load-bearing for a suite that the shipped
+scene has no obligation to satisfy.
 
 They are separate now. `scenes/play.tscn` inherits `match.tscn`, attaches the
 Roman model to both slots, keeps `WrestlerA` human, and is what
