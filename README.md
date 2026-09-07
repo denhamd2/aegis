@@ -4083,10 +4083,12 @@ feet is the thing a wrestler is supposed to walk out of.
 The slat fans inside them were wrong twice over. Built `house_lit` first, they
 vanished: at hall level, inside an unlit recess, there is nothing for them to
 catch — they are strip fixtures in the photographs, so they are self-emissive
-now, at 0.34 against the ring's 1.12 so the ring stays clearly the brighter of
-the two and the depth survives. Then they rendered as one solid wedge, because
-13 slats across 52 degrees are 0.15m apart at the outer radius and each was
-0.18m wide.
+now, at 0.26 against the ring's 1.12 so the ring stays clearly the brighter of
+the two and the depth survives. Then they rendered as one solid glowing wedge
+that pulled the eye off the ring, because 13 slats across 52 degrees are 0.15m
+apart at the outer radius and each was 0.18m wide. Narrow strips at a lower
+level is the version that reads as what it is: texture inside the portal, seen
+and not looked at.
 
 ### One thing left alone
 

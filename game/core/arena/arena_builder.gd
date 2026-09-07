@@ -146,7 +146,11 @@ const PORTAL_EMISSION := 1.12
 ## Making the two the same level collapses the depth: the reference photos
 ## read as a lit ring in front of a lit recess, and that only works while the
 ## ring is clearly the brighter of the two.
-const PORTAL_FAN_EMISSION := 0.34
+##
+## 0.34 read as a second light source competing with the ring. 0.26 is the
+## version that reads as what it is -- fine strip fixtures picked out inside
+## the portal, seen and not looked at.
+const PORTAL_FAN_EMISSION := 0.26
 
 # --- Shell ------------------------------------------------------------------
 const WALL_EXTENT := 32.0
