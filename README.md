@@ -3800,9 +3800,25 @@ neither was ever inside that window. The `uv1_scale = (2,1,1)` that was meant
 to fix the aspect just stretched the crop to `u=[0..0.667]`.
 
 The mesh is a `QuadMesh` now — one face, clean `u=[0..1] v=[0..1]`, verified
-the same way. Two full copies of the artwork per side, six complete marks,
-nothing cut. The box's 0.1m of thickness is not missed; `refs/ring.md`
+the same way. The box's 0.1m of thickness is not missed; `refs/ring.md`
 describes a flat hanging skirt.
+
+The first version of this fix then showed the banner **twice** per side, on
+the reasoning that one copy stretched across a 7.333-aspect face would be
+2.07× too wide for a 3.546-aspect image. That reasoning was right and the
+conclusion was not: tiling is not the only way to keep proportions. One copy
+now, fitted rather than stretched or repeated —
+
+```
+scale.x  = 7.3333 / 3.5460 = 2.0681     the face is 2.07 banners wide
+offset.x = -(2.0681 - 1) / 2 = -0.5340  centre it
+texture_repeat = false                  clamp, do not tile
+```
+
+— which works because both edge columns of the supplied artwork are its own
+near-black cloth, sampled rather than assumed: left `(2,2,2)`, right
+`(34,38,37)`. The clamp extends that fabric, so the marks sit centred on an
+unbroken skirt with no visible join.
 
 A second bug came out with it. `ApronEast` and `ApronWest` both carried
 `rotation.y = +1.5708`, which was harmless on a box (all six faces draw) and

@@ -77,11 +77,23 @@ size = Vector2(6.6, 0.9)
 ; original fix depended on still holds -- the banner is near-black against a
 ; near-white mat, a wider separation than the 0.105 grey it replaces.
 ;
-; uv1_scale x=2, not 1: the banner is 1929x544 (aspect 3.55) and one apron
-; face is 6.6m x 0.9m (aspect 7.33), so a single copy stretched across a side
-; would be squashed to half its proper width. Two copies per side land at 3.67
-; each, within 3% of the artwork's own aspect, and repeating the TNT/AEW/TNT
-; block along the side is how a real apron reads anyway.
+; ONE copy per side, at the artwork's own proportions.
+;
+; This was two copies, on the reasoning that the banner is 1929x544 (aspect
+; 3.546) while an apron face is 6.6m x 0.9m (aspect 7.333), so a single copy
+; spread across a whole side would be 2.07x too wide. That reasoning was
+; sound and the conclusion was wrong: the project owner wants the graphic
+; once, and tiling it is not the only way to keep its proportions.
+;
+; Fitting one copy instead of stretching or repeating:
+;   scale.x  = 7.3333 / 3.5460 = 2.0681   (the face is 2.07 banners wide)
+;   offset.x = -(2.0681 - 1) / 2 = -0.5340   (centre it)
+; and texture_repeat OFF, so the 1.07 banner-widths of UV either side clamp
+; to the edge column instead of tiling. That works here because both edge
+; columns of the supplied artwork are its own near-black cloth -- sampled
+; rather than assumed, left (2,2,2)/(7,9,8), right (34,38,37)/(9,9,9) -- so
+; the clamp extends the banner's fabric and the marks sit centred on it, which
+; is how a real apron with a centred banner reads.
 ;
 ; The CC0 fabric roughness map stays: it is the only thing keeping the surface
 ; from reading as flat vinyl, and it carries no colour.
@@ -89,7 +101,9 @@ albedo_color = Color(1, 1, 1, 1)
 albedo_texture = ExtResource("4_apron_banner")
 roughness_texture = ExtResource("2_apron_rough")
 roughness = 0.9
-uv1_scale = Vector3(2, 1, 1)
+texture_repeat = false
+uv1_scale = Vector3(2.0681, 1, 1)
+uv1_offset = Vector3(-0.534, 0, 0)
 
 [node name="Ring" type="Node3D"]
 position = Vector3(0, -0.1, 0)
