@@ -26,7 +26,7 @@ import pathlib
 import sys
 
 try:
-    from PIL import Image, ImageFilter
+    from PIL import Image, ImageChops, ImageFilter
 except ImportError:
     sys.exit("Pillow is required: pip install Pillow")
 
@@ -64,54 +64,73 @@ BEARD_GAMMA = 0.55
 
 ## Strand dilation for the beard mask, in texels (odd, 0 = off).
 ##
-## Gamma alone could not close this. It lifts faint strands to visible but
-## cannot add coverage the mask does not have, and the beard mask has very
-## little: 15.8% non-zero against the scalp mask's 40.9%, drawn by the same
-## artist for the same head. That is why the beard reads as scattered clumps
-## next to a full head of hair no matter what threshold or blend mode it is
-## given.
+## Superseded by BEARD_INTERLEAVE below and left at 0. Kept because the
+## measurement it produced is the reason interleaving exists: dilation makes
+## each strand FATTER, and past a very small radius that is how you get a
+## moustache rendered as a solid slab (7 was tried, and looked exactly like
+## that). It cannot add strands, only weight.
+BEARD_DILATE = 0
+
+## Horizontal offsets, in texels, at which to composite extra copies of the
+## beard mask over itself.
 ##
-## Dilating closes the gap using the artist's own strands rather than invented
-## ones -- each strand widens, neighbours merge, and anywhere with no strand
-## within reach stays bare, so the beard's outline is still exactly where it
-## was drawn. Measured, at or above 0.5 alpha:
+## This is the repaint, done arithmetically rather than by hand. The problem
+## was never that the beard's strands were in the wrong place -- measured
+## against the mouth and eye lines, the mesh spans exactly where a beard,
+## moustache and brow mesh should. The problem is that there are not enough of
+## them: 15.8% of the mask is non-zero against the scalp mask's 40.9%, drawn
+## by the same artist for the same head, so the jaw reads as scattered bristle
+## next to a full head of hair.
 ##
-##   hair_alpha (the target)   0.3204
-##   beard, no dilation        0.0963
-##   beard, dilate 3           0.1688
-##   beard, dilate 5           0.2299
-##   beard, dilate 7           0.2820
-##   beard, dilate 9           0.3270   <- matches the scalp
+## The atlas is a grid of strand cards whose hairs run vertically. Compositing
+## the mask over horizontally-shifted copies of itself therefore lays a new
+## hair into the gap beside each existing one, at the same length, curvature
+## and taper, because it IS the same hair moved sideways. Every strand stays
+## exactly as thin as it was drawn -- which is the difference between this and
+## dilation, and the difference between a beard and a smear.
 ##
-## 3, not the 9 that matches the scalp's number, and the difference between
-## those is the whole reason this is judged on frames rather than on the table
-## above. 7 was tried and renders the moustache as a solid slab: at 2048 square
-## a 7-texel window fattens a 2-texel beard hair into a blob, and blobs do not
-## read as hair however well they match a coverage figure. 3 roughly doubles
-## the mask (0.096 -> 0.169 at >=0.5) while a strand stays a strand.
+## Measured, at or above 0.5 alpha, against the scalp mask as the target:
 ##
-## IMPORTANT when re-tuning this: Godot caches imported textures under
-## game/.godot/imported/, and a plain `godot --path game <scene>` run will
-## happily render the OLD mask after this script has written a new one. Two
-## comparison renders were wasted on that -- 11.9% and 29.6% opaque masks
-## produced near-identical frames -- before the cache was the suspect. Always
-## `godot4 --headless --path game --import` between running this and looking
-## at anything.
-BEARD_DILATE = 3
+##   hair_alpha (target)          0.3204
+##   beard, untouched             0.0963
+##   [-3, 3]                      0.2237
+##   [-5, -2, 2, 5]  (chosen)     0.2917
+##   [-7, -4, -2, 2, 4, 7]        0.3454   <- overshoots the scalp
+##   [-9, -6, -3, 3, 6, 9]        0.3746
+##
+## Chosen to land just UNDER the scalp rather than over it: a beard denser
+## than the head of hair above it reads as painted-on, and the offsets are
+## small enough (max 5 texels of 2048) that bleed across card boundaries stays
+## below one strand width.
+BEARD_INTERLEAVE = (-5, -2, 2, 5)
 
 SOURCES = {
-    "roman_reigns_hair_rai.png": ("roman_reigns_hair_alpha.png", 1.0, 0),
-    "roman_reigns_hair_rai_4.png": ("roman_reigns_hair_4_alpha.png", 1.0, 0),
+    "roman_reigns_hair_rai.png": ("roman_reigns_hair_alpha.png", 1.0, 0, ()),
+    "roman_reigns_hair_rai_4.png": (
+        "roman_reigns_hair_4_alpha.png", 1.0, 0, ()),
     "roman_reigns_combinations_rai.png": (
-        "roman_reigns_beard_alpha.png", BEARD_GAMMA, BEARD_DILATE),
+        "roman_reigns_beard_alpha.png", BEARD_GAMMA, BEARD_DILATE,
+        BEARD_INTERLEAVE),
 }
 
 
 def build(source: pathlib.Path, target: pathlib.Path, gamma: float = 1.0,
-          dilate: int = 0) -> None:
+          dilate: int = 0, interleave: tuple = ()) -> None:
     image = Image.open(source).convert("RGBA")
     # Green is the strand mask; red and blue are the packed data we discard.
     mask = image.split()[1]
+    if interleave:
+        # Add strands BETWEEN the strands, rather than making each one fatter.
+        # The atlas is a grid of strand cards whose hairs run vertically, so
+        # compositing horizontally-shifted copies of the mask (lighter = per
+        # texel max) drops a new hair into each gap while every hair stays as
+        # thin as it was drawn. Shape and direction are the artist's; only the
+        # count changes. See BEARD_INTERLEAVE.
+        combined = mask
+        for dx in interleave:
+            combined = ImageChops.lighter(
+                combined, ImageChops.offset(mask, dx, 0))
+        mask = combined
     if dilate:
         # Grow each strand into its neighbours. A max filter takes the
         # brightest texel in the window, so a strand widens and the gaps
@@ -202,11 +221,11 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
 def main() -> int:
     if not CHARACTERS.is_dir():
         sys.exit(f"not found: {CHARACTERS}")
-    for source_name, (target_name, gamma, dilate) in SOURCES.items():
+    for source_name, (target_name, gamma, dilate, weave) in SOURCES.items():
         source = CHARACTERS / source_name
         if not source.exists():
             sys.exit(f"missing source texture: {source}")
-        build(source, CHARACTERS / target_name, gamma, dilate)
+        build(source, CHARACTERS / target_name, gamma, dilate, weave)
     build_head(
         CHARACTERS / "roman_reigns_body_color.png",
         CHARACTERS / "roman_reigns_Image.png",
