@@ -3619,3 +3619,76 @@ DOWN, GETUP): no clipping through the mat, no detachment, no crown showing.
   `WrestlerFSM.State.keys()`), which meant a background run failed silently
   while the silence was being attributed to a slow rasteriser. Found with
   `--check-only`; fixed in its own commit rather than amended away.
+
+## Fix: the shipped build was neither Roman nor a clean canvas
+
+Two defects reported off the deployed Pages build, both real, both mine.
+
+### The deployed game was not Roman vs Roman
+
+`project.godot` ships `scenes/match.tscn`, and `match.tscn` never set
+`character_model_scene`. So it used `WrestlerController`'s default,
+`wrestler_base.glb` — the box-built mannequin. Every Roman frame in this repo
+came from `scenes/roman_match.tscn`, which overrides that property and which
+**nothing ships**. Ten commits of work on the Roman model reached the
+screenshots and never reached the game.
+
+The first attempt set the model on `match.tscn` directly, and CI rejected it:
+**246 tests, 2 errors, 6 failures**, all in `test_wrestler_colorway.gd`, all
+`null instance` on `.mesh` and `.scale`. That suite reaches into the
+*mannequin's* node structure — the gear meshes, the head meshes, the
+`Mannequin` MeshInstance3D — and the Roman model has none of them.
+
+Two corrections belong here, because both were asserted before they were
+checked. The commit that made this change predicted that suite would "pass,
+and measure something the frame no longer contains"; it did not pass, it broke
+outright. And the commit that fixed it blamed a **ten-minute** CI slowdown
+from the 52MB model. There was no slowdown: the tests step ran **42 seconds**
+and failed on assertions. That figure came from polling the GitHub job API
+across container suspensions and reading repeated `in_progress` as elapsed
+time — the same misreading as the `pgrep` one in the round above, one layer
+out.
+
+The split below is still right, and for the reason the failures show rather
+than the one first given: a test fixture and the shipped scene were the same
+file, and the fixture's structure is load-bearing for a suite that the shipped
+scene has no obligation to satisfy.
+
+They are separate now. `scenes/play.tscn` inherits `match.tscn`, attaches the
+Roman model to both slots, keeps `WrestlerA` human, and is what
+`run/main_scene` points at. `match.tscn` goes back to the mannequin and stays
+the light fixture the suite builds against. It is the same split
+`roman_match.tscn` already used for the AI-vs-AI probes.
+
+One consequence, stated rather than buried: `attire_body`, `attire_accent`
+and `skin_tone` are **inert for rendering in the shipped scene**. The Roman
+model brings its own textures and nothing in `RomanModel` reads those
+properties. `test_wrestler_colorway.gd` still asserts on them, and still
+passes — but it asserts against `match.tscn`, which is no longer what anybody
+plays, so it now guards a colourway that reaches no shipped pixel. The same
+applies to the `wrestler ↔ wrestler ≤ 0.07` figure in `VISUAL_BAR.md`: two
+instances of one model are trivially identical, so that number stops being
+evidence of anything. Both want revisiting; neither was changed here.
+
+### The canvas had ruled black lines across it
+
+Round 4 widened the panel seams from 1.4cm to 4cm to buy back the coarse
+detail the deleted centre mark had been carrying, and deepened them to a flat
+`-0.26` trench with a flat `+0.060` lip. Two hard steps. On a near-white mat
+that is five black stripes ruled across the largest surface in the frame, and
+that is exactly how it was reported.
+
+The seam is now one smoothed profile — feathered dip, feathered lips — with
+the trench cut from 0.26 to 0.10. Measured on the generated texture, the
+column contrast across a seam falls from **78 to 45** of 255.
+
+`SEAM_HALF` did not move. Round 4's own note says width is the part that
+survives the downscale the coarse-detail metric reads, and depth is the part a
+viewer reads as a painted line; this trades the second and keeps the first.
+
+**Not measured: the coarse-detail figure.** Re-running `compare_frame.py`
+needs a `wide_broadcast` capture, and captures do not complete in this
+environment — the container suspends between turns, so a render that takes
+minutes of CPU never accumulates them. The expectation from round 4's own
+reasoning is that the drop is small, since width is unchanged. That is a
+prediction, not a result, and it is not being recorded as one.

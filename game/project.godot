@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Aegis"
 config/description="Original 3D wrestling vertical slice — Gauntlet Loop build."
-run/main_scene="res://scenes/match.tscn"
+run/main_scene="res://scenes/play.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
