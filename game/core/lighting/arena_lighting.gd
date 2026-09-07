@@ -142,6 +142,7 @@ func _ready() -> void:
 	_build_house()
 	_build_stage_wash()
 	_build_fog_volumes()
+	_apply_compat_depth_fog()
 	_compensate_for_renderer()
 
 
@@ -282,6 +283,87 @@ func _build_fog_volumes() -> void:
 			0.005, Color(0.80, 0.84, 0.95), 0.14)
 	_fog_box("HallHaze", Vector3(0.0, 6.0, 2.0), Vector3(58.0, 15.0, 58.0),
 			0.0012, Color(0.62, 0.68, 0.86), 0.05)
+
+
+## Depth fog for the compatibility renderer, which is what the browser build
+## runs and therefore what the Pages build looks like.
+##
+## The hall reads flat there because _build_fog_volumes() returns early --
+## FogVolume is forward_plus only -- so the far stands sit at the same clarity
+## as the ropes. Environment fog IS supported on gl_compatibility, so it can
+## put air back between the ring and the crowd.
+##
+## THIS IS THE SECOND ATTEMPT. The first used the default EXPONENTIAL mode,
+## which begins at the near plane: it tinted the mat and the wrestlers along
+## with everything else, and the result was a grey wash over the whole frame
+## rather than depth. It was measured, it moved numbers, and it was reverted
+## because the frame was worse. What that attempt lacked is the lever below.
+##
+## FOG_MODE_DEPTH takes a begin distance, so the fog can be made to start
+## BEYOND the ring and never touch the subjects at all:
+##
+##   the camera sits 3.2-9.0m from the pair's midpoint (MatchCamera's
+##   min/max_distance) and the far ropes are at most 3.1m past that midpoint,
+##   so no ring geometry is ever more than ~12.1m from the lens.
+##
+## FOG_BEGIN is 13.0, past that worst case with margin. The mat, the ropes,
+## the posts and both wrestlers are outside the fog in every framing the
+## camera can produce; only the barricades, the chairs and the bowl are
+## inside it. That is the difference between depth and a wash.
+##
+## fog_sky_affect is 0.0 and that is load-bearing, not tidiness: the
+## background is a flat near-black (background_mode = 1) and VISUAL_BAR.md
+## bands void_fraction at 0.010-0.066. Letting fog lift the void would eat
+## that band directly, and lifting the void was part of what made attempt one
+## read as a wash.
+##
+## forward_plus never reaches this code -- same guard as the fog volumes -- so
+## the volumetric rig and every number measured on it are untouched. Note also
+## that a headless run reports forward_plus, so THE TEST SUITE NEVER EXERCISES
+## THIS PATH. It is covered by rendered frames, not by tests.
+const FOG_BEGIN := 13.0
+const FOG_END := 52.0
+## Above 1.0 so the onset is gentle at the barricade and the density arrives
+## in the upper bowl, rather than a hard edge at FOG_BEGIN.
+const FOG_CURVE := 1.5
+## Coverage decisions, like the volumetric densities above -- gauntlet/refs/
+## measures no haze. The tint matches HallHaze's albedo so the two renderers
+## disagree about technique rather than about colour.
+const FOG_DENSITY := 0.45
+## The fog colour is the value distant geometry fades TOWARD, so in a dark hall
+## it has to be dark. At energy 1.0 the tint below is far brighter than the
+## arena and the haze ADDED light: the crowd went milky white and the near-black
+## background lifted with it -- the same "wash" failure as attempt one, arrived
+## at from the other direction. VISUAL_BAR.md puts the crowd at 0.014 relative
+## luminance; the tint times this energy lands just under that, so far rows
+## dissolve into the dark instead of glowing out of it.
+const FOG_ENERGY := 0.12
+const FOG_TINT := Color(0.62, 0.68, 0.86)
+
+
+func _apply_compat_depth_fog() -> void:
+	if _supports_volumetric_fog():
+		return
+	var world := get_viewport().find_world_3d() if is_inside_tree() else null
+	if world == null or world.environment == null:
+		return
+	# Duplicated rather than mutated in place: the Environment is a sub-resource
+	# of match.tscn and is shared between instances of it, so writing to the
+	# original would leak this renderer's settings into every other instance
+	# in the process.
+	var env: Environment = world.environment.duplicate()
+	env.fog_enabled = true
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+	env.fog_depth_begin = FOG_BEGIN
+	env.fog_depth_end = FOG_END
+	env.fog_depth_curve = FOG_CURVE
+	env.fog_density = FOG_DENSITY
+	env.fog_light_color = FOG_TINT
+	env.fog_light_energy = FOG_ENERGY
+	env.fog_sun_scatter = 0.0
+	env.fog_aerial_perspective = 0.0
+	env.fog_sky_affect = 0.0
+	world.environment = env
 
 
 ## Scale every fixture this rig built, on renderers that over-accumulate them.
