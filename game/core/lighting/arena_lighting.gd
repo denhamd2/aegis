@@ -142,7 +142,7 @@ func _ready() -> void:
 	_build_house()
 	_build_stage_wash()
 	_build_fog_volumes()
-	_apply_compat_depth_fog()
+	_apply_compat_environment()
 	_compensate_for_renderer()
 
 
@@ -340,8 +340,23 @@ const FOG_DENSITY := 0.45
 const FOG_ENERGY := 0.12
 const FOG_TINT := Color(0.62, 0.68, 0.86)
 
+## Saturation grade, compatibility only.
+##
+## match.tscn sets adjustment_saturation 1.22, and that lift is correct -- for
+## forward_plus, which compare_frame.py measures at mean_saturation 0.201
+## against the reference still's 0.306. It is applied on both renderers, and
+## the compatibility renderer does not need it: measured on the same fixed-park
+## frame it comes out at 0.394, over the reference rather than under. The two
+## renderers were being graded identically while erring in opposite directions.
+##
+## 1.0 is "no grade" rather than a tuned number, and it is what the arithmetic
+## points at: 0.394 / 1.22 is about 0.32, within 0.02 of the reference. This
+## was reported by eye first -- the browser frames looked over-saturated -- and
+## the measurement agreed.
+const COMPAT_SATURATION := 0.82
 
-func _apply_compat_depth_fog() -> void:
+
+func _apply_compat_environment() -> void:
 	if _supports_volumetric_fog():
 		return
 	var world := get_viewport().find_world_3d() if is_inside_tree() else null
@@ -363,6 +378,7 @@ func _apply_compat_depth_fog() -> void:
 	env.fog_sun_scatter = 0.0
 	env.fog_aerial_perspective = 0.0
 	env.fog_sky_affect = 0.0
+	env.adjustment_saturation = COMPAT_SATURATION
 	world.environment = env
 
 

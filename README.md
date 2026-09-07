@@ -3779,3 +3779,93 @@ shotlist number has not been re-measured.
 This is a look decision overriding a measurement, stated as such. If coarse
 detail ever has to be recovered it comes from the weave, the wear and the
 streaks — not from putting lines back.
+
+## Fix: the apron banner was cropped, and the browser was over-saturated
+
+Three things reported off screenshots. Two were real defects; one was a doubt
+that a measurement settled.
+
+### The banner was showing a third of itself
+
+`ApronNorth`/`South`/`East`/`West` used a `BoxMesh`, and Godot unwraps a box
+into a **3x2 atlas** — measured, not assumed:
+
+```
+outer face (normal 0,0,1):  u=[0.000..0.333]  v=[0.000..0.500]
+```
+
+So the apron sampled the **left third, top half** of a 1929x544 banner. The
+AEW mark is centred and the right-hand TNT roundel is at the far edge, so
+neither was ever inside that window. The `uv1_scale = (2,1,1)` that was meant
+to fix the aspect just stretched the crop to `u=[0..0.667]`.
+
+The mesh is a `QuadMesh` now — one face, clean `u=[0..1] v=[0..1]`, verified
+the same way. The box's 0.1m of thickness is not missed; `refs/ring.md`
+describes a flat hanging skirt.
+
+The first version of this fix then showed the banner **twice** per side, on
+the reasoning that one copy stretched across a 7.333-aspect face would be
+2.07× too wide for a 3.546-aspect image. That reasoning was right and the
+conclusion was not: tiling is not the only way to keep proportions. One copy
+now, fitted rather than stretched or repeated —
+
+```
+scale.x  = 7.3333 / 3.5460 = 2.0681     the face is 2.07 banners wide
+offset.x = -(2.0681 - 1) / 2 = -0.5340  centre it
+texture_repeat = false                  clamp, do not tile
+```
+
+— which works because both edge columns of the supplied artwork are its own
+near-black cloth, sampled rather than assumed: left `(2,2,2)`, right
+`(34,38,37)`. The clamp extends that fabric, so the marks sit centred on an
+unbroken skirt with no visible join.
+
+A second bug came out with it. `ApronEast` and `ApronWest` both carried
+`rotation.y = +1.5708`, which was harmless on a box (all six faces draw) and
+would have made West face *into* the ring as a single-sided quad. West is
+`-1.5708` now.
+
+### The browser build really was over-saturated
+
+Reported by eye, confirmed by `compare_frame.py`, and the interesting part is
+that **the two renderers err in opposite directions**:
+
+| | mean_saturation | reference |
+| --- | --- | --- |
+| compatibility (browser) | 0.394 | 0.306 |
+| forward_plus (native) | 0.201 | 0.306 |
+
+`match.tscn` sets `adjustment_saturation = 1.22`. That lift is right for
+Forward+, which sits *under* the reference — and it was being applied to a
+renderer already sitting over it. `COMPAT_SATURATION` now overrides it to
+**0.82** on compatibility only, same guarded pattern as the depth fog, giving
+**0.312 against the reference's 0.306**.
+
+0.82 was solved, not picked, and the first guess was wrong: reasoning that
+`0.394 / 1.22 ≈ 0.32` predicted 1.0 would land it, and 1.0 actually measured
+0.351. The adjustment is not linear in the way that arithmetic assumed.
+
+### The wrestlers are not floating
+
+Raised as a doubt off a screenshot, which cannot settle it — at that distance
+a foot on the canvas and a foot a centimetre above it are the same pixels.
+Reading the lowest vertex of each wrestler's rendered mesh in world space,
+after 90 frames of live match so the pose is real rather than the spawn frame:
+
+```
+WrestlerA  lowest_vertex_y = -0.0121   mesh = shoes_skinned
+WrestlerB  lowest_vertex_y = -0.0130   mesh = shoes_skinned
+```
+
+The mat surface is `y = 0`. Both are ~1.2cm *below* it — sunk very slightly
+into the canvas, not floating above it. That is inside a shoe sole's
+thickness and reads as contact. Not a defect, and now measured rather than
+argued about.
+
+**Still not judged: the apron's brightness.** The artwork is complete but it
+renders dark, because the rig is top-down and the skirt hangs below the mat in
+its shadow. Round 4 recorded that a *bright* apron band took `void_fraction`
+to 0.002 against the 0.010–0.066 band, so lifting it is a known-dangerous
+direction, and `void_fraction` needs the silhouette harness, which does not
+complete in this environment. Left alone deliberately rather than changed
+blind.
