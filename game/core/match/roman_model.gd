@@ -166,6 +166,25 @@ const HIDDEN_MESHES := [
 ## thighs and shins were. A fraction of a centimetre of grow is the cheap fix
 ## and is invisible at any camera distance the game uses; the alternative is
 ## re-weighting someone else's mesh.
+##
+## THE REAL CAUSE OF THOSE BLOTCHES was found later and is fixed elsewhere --
+## see apply_physique_height(). The model splits across two skeletons and it
+## splits BODY from EVERYTHING WORN:
+##
+##   471 bones  bottoms, beard, hair, wrist tape, shoes
+##   114 bones  body, head, eyes, mouth, teeth
+##
+## Only the 114-bone one was being scaled, so a wrestler at physique_height
+## 1.05 had a body inflated 5% inside trousers that stayed at 1.0. The skin
+## erupting through the fabric was not a skinning disagreement at all; it was
+## a body wearing clothes a size too small. One bug, three symptoms -- the
+## blotched thighs, the bald crown, and a beard that would not sit on the
+## face.
+##
+## This grow is kept anyway. It costs nothing, it is invisible, and it still
+## covers ordinary skinning disagreement in extreme poses. It is no longer
+## load-bearing, and if it is ever revisited the thing to check first is that
+## both skeletons are still being scaled together.
 const GROW_FIXES := {
 	"Material.004": 0.006, # bottoms
 	"Material.005": 0.004, # shoes
