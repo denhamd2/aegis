@@ -152,6 +152,8 @@ const HAIR_FIXES := {
 ## complete on its own -- see the QA head shots in the round write-up.
 const HIDDEN_MESHES := [
 	"tops_skinned",
+	"eyelash_skinned",
+	"eye_caruncle_skinned",
 	"hair_ALPHA_skinned_001",
 	"hair_ALPHA_skinned_002",
 	"lambert1_skinned_001",
@@ -250,10 +252,40 @@ func _fix_materials() -> void:
 				mesh_instance.lod_bias = HAIR_LOD_BIAS
 				material.albedo_texture = _texture(HAIR_FIXES[key])
 				material.albedo_color = HAIR_COLOR
-				material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
 					else HAIR_ALPHA_SCISSOR
-				material.alpha_scissor_threshold = scissor
+				if key == "beard":
+					# The beard and brows blend; the scalp still scissors.
+					#
+					# Lowering the beard threshold was the obvious move and it
+					# does nothing, because the mask has almost no partial
+					# coverage to recover. Fraction of beard_alpha's texels at
+					# or above a given alpha:
+					#
+					#   >=0.16 (the old threshold)   0.1195
+					#   >=0.10                       0.1211
+					#   >=0.06                       0.1244
+					#   > 0                          0.1577
+					#
+					# The whole range from 0.16 down to nothing is worth half a
+					# percent of the texture. A scissor can only ever draw the
+					# 12% it already draws, which is why the beard reads as
+					# sparse bristle and the eyebrows -- same mesh, same mask,
+					# and far sparser than the jaw -- barely register at all.
+					#
+					# Blending draws the remaining 4% at its true alpha instead
+					# of discarding it, and softens the 3.9% that is fully
+					# opaque into the 12% that is not. DEPTH_PRE_PASS rather
+					# than plain ALPHA: the pre-pass writes depth first, so
+					# overlapping strands no longer depend on draw order, which
+					# is the halo problem that sent this to a scissor
+					# originally.
+					material.transparency = \
+						BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+				else:
+					material.transparency = \
+						BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					material.alpha_scissor_threshold = scissor
 				# Hair cards are single-sided geometry seen from both faces.
 				material.cull_mode = BaseMaterial3D.CULL_DISABLED
 				# Alpha-to-coverage, because a plain scissor test loses hair
