@@ -40,17 +40,47 @@ CONTRAST = 0.42
 LIFT = 0.30
 
 # source atlas -> generated alpha-masked texture
+## Alpha gamma per generated mask. 1.0 leaves the source untouched.
+##
+## The beard needs it and the scalp does not, and the masks say why. Fraction
+## of texels at or above a given alpha:
+##
+##                  >=0.50   >0      opaque share of what exists
+##   hair_alpha      0.320   0.409   78%
+##   beard_alpha     0.096   0.158   61%
+##
+## Only 9.6% of the beard mask is half-opaque or better against 15.8% that is
+## non-zero: nearly 40% of its strands are ghosts. That is why the beard reads
+## as scattered bristle high on the cheek rather than as the jawline the source
+## model has -- the faint strands ARE in the right places, they are just too
+## transparent to see, so the eye joins up only the strongest clumps.
+##
+## Gamma 0.55 lifts a 0.25 texel to 0.46 and a 0.5 to 0.68 while pinning 0 to 0
+## and 255 to 255. No strand is invented and none is discarded; the ones the
+## artist drew simply render at a weight you can see. The eyebrows live in this
+## same mask and are sparser than the jaw, which is why they were missing
+## altogether.
+BEARD_GAMMA = 0.40
+
 SOURCES = {
-    "roman_reigns_hair_rai.png": "roman_reigns_hair_alpha.png",
-    "roman_reigns_hair_rai_4.png": "roman_reigns_hair_4_alpha.png",
-    "roman_reigns_combinations_rai.png": "roman_reigns_beard_alpha.png",
+    "roman_reigns_hair_rai.png": ("roman_reigns_hair_alpha.png", 1.0),
+    "roman_reigns_hair_rai_4.png": ("roman_reigns_hair_4_alpha.png", 1.0),
+    "roman_reigns_combinations_rai.png": (
+        "roman_reigns_beard_alpha.png", BEARD_GAMMA),
 }
 
 
-def build(source: pathlib.Path, target: pathlib.Path) -> None:
+def build(source: pathlib.Path, target: pathlib.Path, gamma: float = 1.0) -> None:
     image = Image.open(source).convert("RGBA")
     # Green is the strand mask; red and blue are the packed data we discard.
     mask = image.split()[1]
+    if gamma != 1.0:
+        # Thicken what is already there. alpha -> alpha**gamma with gamma < 1
+        # lifts partial texels toward opaque and leaves 0 and 255 untouched,
+        # so no strand is invented and none is lost -- the existing ones just
+        # stop being ghosts. See BEARD_GAMMA for why the beard needs it.
+        lut = [min(255, round(255.0 * ((i / 255.0) ** gamma))) for i in range(256)]
+        mask = mask.point(lut)
     white = Image.new("L", image.size, 255)
     Image.merge("RGBA", (white, white, white, mask)).save(target, optimize=True)
     histogram = mask.histogram()
@@ -126,11 +156,11 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
 def main() -> int:
     if not CHARACTERS.is_dir():
         sys.exit(f"not found: {CHARACTERS}")
-    for source_name, target_name in SOURCES.items():
+    for source_name, (target_name, gamma) in SOURCES.items():
         source = CHARACTERS / source_name
         if not source.exists():
             sys.exit(f"missing source texture: {source}")
-        build(source, CHARACTERS / target_name)
+        build(source, CHARACTERS / target_name, gamma)
     build_head(
         CHARACTERS / "roman_reigns_body_color.png",
         CHARACTERS / "roman_reigns_Image.png",
