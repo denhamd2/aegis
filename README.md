@@ -3745,3 +3745,37 @@ early return. It is covered by rendered frames only, via
 background is a flat near-black and `VISUAL_BAR.md` bands `void_fraction` at
 0.010–0.066. Letting fog lift the void would eat that band directly, and
 lifting the void was part of what made both failed passes read as a wash.
+
+## Fix: no lines on the canvas at all
+
+The softened seams still read as lines, and the project owner asked for a mat
+without any. They are deleted — not softened again. `_canvas()` now draws
+weave, wear noise, the streak fields and the centre traffic darkening, and
+nothing with an edge. The `SEAM_*` constants are gone; `CANVAS_PANEL` stays as
+the documented 1.2m mill width for whatever models panels next, since the next
+attempt should be a normal map or an albedo shift rather than a line.
+
+**The cost, measured rather than warned about.** `compare_frame.py` on the
+same fixed-park Forward+ frame, seams against no seams:
+
+| | with seams | none | delta |
+| --- | --- | --- | --- |
+| edge_density_coarse | 0.1116 | 0.1088 | −0.0028 |
+| edge_density_fine | 0.3222 | 0.3176 | −0.0046 |
+| tile_contrast | 0.8472 | 0.8471 | −0.0001 |
+| mean_luminance | 0.0965 | 0.0968 | +0.0003 |
+
+Far smaller than round 4's framing of the seams would suggest, and the reason
+is that most of their contribution had already gone when the trench was cut
+from 0.26 to 0.10 in the previous change. What was deleted here was the
+remainder.
+
+**These are not comparable to round 4's 0.137.** That figure came from the
+`wide_broadcast` shotlist frame; this is `tools/probe/compat_shot.gd`'s fixed
+park, which sees a different amount of ring and hall. It is a valid
+before/after differential on one identical framing and nothing more. The
+shotlist number has not been re-measured.
+
+This is a look decision overriding a measurement, stated as such. If coarse
+detail ever has to be recovered it comes from the weave, the wear and the
+streaks — not from putting lines back.

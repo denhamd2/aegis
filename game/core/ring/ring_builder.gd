@@ -105,15 +105,11 @@ const STEP_FLOOR_Y := -1.00
 const CANVAS_SIZE := 1024
 ## Canvas panels are sewn in strips. Five seams across 6m is a 1.2m panel,
 ## which is the width canvas is milled at. COVERAGE DECISION.
+## Kept as the documented panel width even though nothing reads it any more:
+## the canvas is milled at 1.2m and the next thing to model panels (a normal
+## map, a subtle albedo shift, anything that is not a line) will want it. The
+## SEAM_* profile constants that used to live here are gone with the seams.
 const CANVAS_PANEL := 1.2
-## Seam profile. SEAM_HALF is half the full feature width (so 15cm of mat is
-## involved in each seam) and is the figure round 4 set from the downscale;
-## the other three shape it and were cut hard after the stepped version
-## rendered as ruled black lines on the white canvas.
-const SEAM_HALF := 0.075
-const SEAM_DEPTH := 0.10
-const SEAM_LIFT := 0.035
-const SEAM_STITCH := 0.05
 const CANVAS_SEED := 20260903
 ## The mat's palette, as effective albedo (albedo_color is CANVAS_WHITE, so a
 ## texel is very nearly the surface's albedo outright).
@@ -476,37 +472,27 @@ static func _canvas() -> ImageTexture:
 			var traffic := 1.0 - clampf(sqrt(x * x + z * z) / 2.7, 0.0, 1.0)
 			v -= 0.075 * traffic * traffic
 
-			# Panel seams. A sewn seam is a shallow valley between two
-			# doubled-over lips.
-			var seam := absf(fposmod(z + CANVAS_PANEL * 0.5, CANVAS_PANEL) - CANVAS_PANEL * 0.5)
-			# WIDTH is the measurement-driven number and it has not moved.
-			# From the wide camera the 6m mat spans about 700px, so a
-			# centimetre is roughly a pixel, and coarse detail is read off a
-			# frame downscaled far below that: a 1.4cm seam is invisible to it
-			# no matter how deep it goes. SEAM_HALF stays where round 4 put it
-			# because width is what survives the downscale.
+			# NO PANEL SEAMS. The mat is unbroken.
 			#
-			# DEPTH and the PROFILE are what changed, and they changed because
-			# of what the mat looks like rather than what it measures. Round 4
-			# ran this as two hard steps -- a flat -0.26 trench with a flat
-			# +0.060 lip beside it -- which on a near-white canvas is five
-			# black stripes ruled across the largest surface in the frame. It
-			# was reported from the deployed build as "weird lines on the ring
-			# canvas", and that is a fair description of a step function.
+			# Three versions of this existed. Round 4 ruled them as two hard
+			# steps -- a flat -0.26 trench beside a flat +0.060 lip -- to buy
+			# back the coarse detail the deleted centre mark had been
+			# carrying. On a near-white canvas that is five black lines ruled
+			# across the biggest surface in the frame, and it was reported as
+			# exactly that from the deployed build. The next version softened
+			# them to a feathered 0.10 dip, which reads as a real sewn seam.
 			#
-			# A real seam has no edges: it is a smooth dip with smooth lips.
-			# The profile below is feathered end to end, and the trench is
-			# 0.10 rather than 0.26. Depth is the part a viewer reads as a
-			# painted line; width is the part the downscale reads. Trading the
-			# first for none of the second is the whole point.
-			if seam < SEAM_HALF:
-				var t := seam / SEAM_HALF
-				var valley := 1.0 - smoothstep(0.0, 0.55, t)
-				var lip := smoothstep(0.35, 0.75, t) * (1.0 - smoothstep(0.75, 1.0, t))
-				v -= SEAM_DEPTH * valley
-				v += SEAM_LIFT * lip
-				if fposmod(x, 0.05) < 0.022:   # the stitch itself
-					v -= SEAM_STITCH * lip
+			# They are gone entirely now because the project owner asked for a
+			# mat with no lines on it, having seen the softened version. That
+			# is a look decision and it overrides the measurement the seams
+			# were serving; the cost is booked in README rather than argued
+			# with.
+			#
+			# What still carries the mat: the weave, the wear noise, the
+			# streak fields and the centre traffic darkening, all above. Those
+			# are the only incident left, and if coarse detail ever has to be
+			# recovered it has to come from them -- NOT from putting lines
+			# back.
 
 			var col := CANVAS_FIELD * v
 
