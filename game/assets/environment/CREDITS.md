@@ -76,3 +76,20 @@ rather than imported as a third-party arena model. That is deliberate:
   its 1.45 m eye height by unprojecting those rope heights, and
   `test_camera_framing.gd` and `grapple_rig.gd` pin constants to the 6 m mat.
   Third-party ring geometry would invalidate that chain.
+
+## ring_apron_banner.png — THIRD-PARTY MARKS, supplied by the project owner
+
+The ring apron artwork (`materials/ring_apron_banner.png`, 1929x544) was
+supplied directly by the project owner and applied to all four apron sides
+(`scenes/ring.tscn`, `StandardMaterial3D_apron`).
+
+It carries **third-party trademarks** — the AEW and TNT logos — and ships with
+no licence, no author and no provenance, exactly like the folding chair
+recorded above. `ARCHITECTURE.md` permits third-party assets without limit, so
+it is in the build by that rule rather than by an exception.
+
+Recorded here rather than left undeclared: it is fine for a prototype and for
+internal capture, and it is **not cleared for distribution**. Anything shipped
+publicly needs this replaced with original or licensed artwork. That is the
+owner's decision to make; this file only makes sure nobody has to discover the
+marks by looking at a screenshot.

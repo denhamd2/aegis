@@ -1,7 +1,8 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/environment/materials/Fabric063_Color.jpg" id="1_apron_color"]
 [ext_resource type="Texture2D" path="res://assets/environment/materials/Fabric063_Roughness.jpg" id="2_apron_rough"]
+[ext_resource type="Texture2D" path="res://assets/environment/materials/ring_apron_banner.png" id="4_apron_banner"]
 [ext_resource type="Script" path="res://core/ring/ring_builder.gd" id="3_ring_builder"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
@@ -49,11 +50,33 @@ size = Vector3(6.6, 0.9, 0.1)
 ; not for value: albedo_color still holds the luminance and the texture
 ; multiplies into it, so the relationships measure_frame.py reads are the ones
 ; set here. Material believability is UNJUDGED under llvmpipe either way.
-albedo_color = Color(0.105, 0.105, 0.112, 1)
-albedo_texture = ExtResource("1_apron_color")
+; BRANDED APRON, by direct instruction from the project owner, replacing the
+; unbranded grey sheet the paragraphs above describe. The banner supplied
+; carries third-party marks (AEW, TNT) -- recorded in
+; assets/environment/CREDITS.md rather than left undeclared. ARCHITECTURE.md's
+; third-party asset rule permits this; it is not cleared for distribution, and
+; that is the owner's call to make, not this file's.
+;
+; albedo_color goes to white because the banner supplies its own colour now.
+; That deliberately gives up the luminance control the old note describes: the
+; apron's value is whatever the artwork is, so any VISUAL_BAR figure measured
+; off apron pixels moves with it. The mat-vs-skirt value ORDERING that the
+; original fix depended on still holds -- the banner is near-black against a
+; near-white mat, a wider separation than the 0.105 grey it replaces.
+;
+; uv1_scale x=2, not 1: the banner is 1929x544 (aspect 3.55) and one apron
+; face is 6.6m x 0.9m (aspect 7.33), so a single copy stretched across a side
+; would be squashed to half its proper width. Two copies per side land at 3.67
+; each, within 3% of the artwork's own aspect, and repeating the TNT/AEW/TNT
+; block along the side is how a real apron reads anyway.
+;
+; The CC0 fabric roughness map stays: it is the only thing keeping the surface
+; from reading as flat vinyl, and it carries no colour.
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("4_apron_banner")
 roughness_texture = ExtResource("2_apron_rough")
 roughness = 0.9
-uv1_scale = Vector3(18, 3.4, 1)
+uv1_scale = Vector3(2, 1, 1)
 
 [node name="Ring" type="Node3D"]
 position = Vector3(0, -0.1, 0)

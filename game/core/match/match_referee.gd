@@ -205,6 +205,16 @@ func _check_for_reversal() -> void:
 		if reverser.global_position.distance_to(attacker.global_position) > WrestlerController.STRIKE_HIT_RANGE:
 			continue
 		_apply_reversal(reverser, attacker)
+		# One reversal per tick, and the first pair in iteration order wins
+		# it. Both wrestlers can legitimately be inside each other's
+		# reversal window on the same tick -- rapid mutual strike-trading is
+		# the norm in this match loop, and gauntlet/refs/timings.md notes
+		# the reference footage is full of it -- and _reversing was only
+		# read once, above the loop, so the second pair applied a reversal
+		# on top of the first: GrappleRig.begin() asserts `not _active` and
+		# the match died there. Breaking is the whole fix; the loser of the
+		# race simply eats the hit, which is what a reversal is for.
+		return
 
 ## Negates the incoming hit and gives the attacker a taste of their own
 ## medicine -- HIT_REACT, plus the reverser (not the attacker) keeps the

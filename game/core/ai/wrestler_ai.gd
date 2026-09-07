@@ -1,12 +1,11 @@
 class_name WrestlerAI
 extends Node
-## Minimal grey-box AI: closes distance, ties up in range, strikes when
-## not in range and off cooldown. Deterministic — driven off the same
+## Minimal grey-box AI: closes distance, then either ties up or strikes
+## once close enough to do either. Deterministic — driven off the same
 ## fixed-tick loop as the player, no bare RNG calls.
 
 @export var controller: WrestlerController
 @export var target: WrestlerController
-@export var strike_range: float = 1.6
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
 ## How often a close-range decision comes out as a strike instead of a
@@ -29,8 +28,23 @@ var _close_decisions: int = 0
 
 ## Tie-up mashing: same reaction-delay/press-interval shape as the kickout
 ## tunables above. First-pass values; see test_tie_up_minigame.gd.
+##
+## These are the *baseline* rates. setup_jitter() shifts them once per match
+## so two identical AI opponents don't mash in lockstep, and
+## _roll_tie_up_timing() then re-rolls around them at every tie-up -- see
+## its doc comment for why once per match was not enough.
 @export var tie_up_reaction_ticks: int = 10
 @export var tie_up_press_interval_ticks: int = 8
+
+## This tie-up's actual reaction delay and press interval, rolled fresh at
+## each tie-up by _roll_tie_up_timing(). -1 means "not rolled" and the
+## exported baselines are used instead, which is what direct
+## WrestlerAI.new() unit tests (test_tie_up_minigame.gd) exercise.
+var _this_tie_up_reaction: int = -1
+var _this_tie_up_interval: int = -1
+## Number of tie-ups this AI has contested this match — seeds the per-tie-up
+## roll, the same way _grapple_attempts seeds the whip roll.
+var _tie_up_attempts: int = 0
 
 ## Whip decision (attacker, resolving a grapple): chance of whipping instead
 ## of taking the normal grapple/power/signature/finisher escalation, rolled
@@ -114,6 +128,9 @@ func poll_input() -> Dictionary:
 		# semantic to model here.
 		return {"submission_hold": true}
 	if controller.fsm.current_state == WrestlerFSM.State.TIE_UP:
+		if _tie_up_tick == 0:
+			_tie_up_attempts += 1
+			_roll_tie_up_timing()
 		_tie_up_tick += 1
 		return {"grapple": _should_press_tie_up(_tie_up_tick)}
 	_tie_up_tick = 0
@@ -156,14 +173,15 @@ func poll_input() -> Dictionary:
 	if distance <= tie_up_range:
 		# Strike or tie up, rather than always tying up.
 		#
-		# Strikes used to be possible only in the shell between tie_up_range
-		# (1.4m) and strike_range, which a closing wrestler crosses in a
-		# couple of ticks -- and once inside 1.4m it grappled, every time.
-		# An instrumented match bore that out exactly: one strike exchange
-		# at tick 20 during the opening approach, then 20 grapples and not
-		# another punch thrown all match. Strikes also could not land from
-		# out there any more once STRIKE_HIT_RANGE was measured down to the
-		# distance a fist actually reaches.
+		# Strikes used to be possible only in the shell outside tie_up_range,
+		# which a closing wrestler crosses in a couple of ticks -- and once
+		# inside it grappled, every time. An instrumented match bore that
+		# out exactly: one strike exchange at tick 20 during the opening
+		# approach, then 20 grapples and not another punch thrown all match.
+		# Strikes also could not land from out there any more once
+		# STRIKE_HIT_RANGE was measured down to the distance a fist actually
+		# reaches -- which is why that shell no longer throws one at all,
+		# and this is now the only branch that strikes.
 		# Only when it can actually connect. tie_up_range (1.3m) reaches
 		# further than a fist does (WrestlerController.STRIKE_HIT_RANGE,
 		# 1.15m, measured off the jab's own contact frame), so a strike
@@ -175,18 +193,35 @@ func poll_input() -> Dictionary:
 		else:
 			input["grapple"] = true
 	else:
-		# Keep closing all the way to tie_up_range even once already inside
-		# strike_range — tie_up_range < strike_range, so a wrestler that
-		# stopped advancing the moment it could strike would settle at
-		# strike_range forever and never reach tie_up_range at all. Strike
-		# opportunistically while still approaching (matches this class's
-		# own doc comment: "strikes when not in [tie-up] range"), not as a
-		# reason to stop.
+		# Outside tie-up range: close, and *only* close.
+		#
+		# This branch used to also throw a strike anywhere inside
+		# strike_range (1.6m). That strike could never connect: a fist
+		# reaches STRIKE_HIT_RANGE (1.15m, measured off the jab's own
+		# contact frame -- see gauntlet/refs/timings.md), which is nearer
+		# than tie_up_range (1.3m), so everything this branch ever sees is
+		# already out of reach. The close-range branch above had been
+		# gated on the measured reach; this one was still gated on
+		# strike_range, and the two disagreed about the same fact.
+		#
+		# The cost was not a wasted press. Entering STRIKE zeroes velocity
+		# (WrestlerController._start_move()) and the STRIKE branch of
+		# _physics_process never processes movement, so every whiff also
+		# *stopped the approach* for the move's whole duration -- 31 ticks
+		# for strike_jab, 35 for strike_kick, roughly half a second of not
+		# closing, up to once per strike_cooldown_ticks. The AI was
+		# interrupting its own walk to punch air. The reachability probe
+		# measured 7 of 31 strikes (23%) thrown from outside hit range
+		# across seeds 1-3 before this change.
+		#
+		# So there is no "strike while approaching" any more, and there is
+		# no range at which one would be legal: strikes belong to the close
+		# branch, which is the only place the opponent is reachable. Note
+		# this is a reachability fix, not a spacing mechanic -- the AI
+		# still has no neutral or circling game (see the locomotion slice
+		# in gauntlet/status/slices.json).
 		var dir := to_target.normalized()
 		input["move"] = Vector2(dir.x, dir.z)
-		if distance <= strike_range and _cooldown <= 0:
-			input["strike"] = true
-			_cooldown = strike_cooldown_ticks
 
 	return input
 
@@ -222,12 +257,44 @@ func _should_press_kickout(tick: int, minigame: PinMinigame) -> bool:
 ## no target zone here, just a race of qualifying press counts; see
 ## tie_up_minigame.gd).
 func _should_press_tie_up(tick: int) -> bool:
-	if tick <= tie_up_reaction_ticks:
+	var reaction := _this_tie_up_reaction if _this_tie_up_reaction >= 0 else tie_up_reaction_ticks
+	var interval := _this_tie_up_interval if _this_tie_up_interval >= 0 else tie_up_press_interval_ticks
+	if tick <= reaction:
 		return false
-	if tick - _last_tie_up_press_tick < tie_up_press_interval_ticks:
+	if tick - _last_tie_up_press_tick < interval:
 		return false
 	_last_tie_up_press_tick = tick
 	return true
+
+## Rolls this tie-up's mash rate, once, as it begins.
+##
+## setup_jitter() alone was not enough. It shifts the two mash tunables once
+## per match from (match_seed, player_index), and _should_press_tie_up()
+## then presses on a fixed cadence forever -- so whoever drew the shorter
+## interval wins *every* tie-up in that match, by an identical margin. The
+## reachability probe measured exactly that: across seeds 1-3, one wrestler
+## took every tie-up in all three matches, and every single resolution
+## reported the same progress pair -- (6,10) four times, (7,10) three times,
+## (10,6) five times. The tie-up was not a contest; it was a coin flipped
+## once at setup and then re-read.
+##
+## That is a different defect from the scene-order bug already fixed in
+## WrestlerController._wants_tie_up_this_tick: *entry* is neutral now, both
+## wrestlers start mashing on the same tick. It is the *outcome* that was
+## constant.
+##
+## So each tie-up gets its own roll around the jittered baseline,
+## deterministic per (match_seed, player_index, _tie_up_attempts) -- the
+## same shape as _should_whip()'s per-attempt seeding, and just as replay-
+## safe: the same match still replays identically, only the contest varies
+## within it.
+func _roll_tie_up_timing() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 8209 + _player_index * 131 + _tie_up_attempts
+	_this_tie_up_reaction = maxi(1,
+		tie_up_reaction_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
+	_this_tie_up_interval = maxi(1,
+		tie_up_press_interval_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
 
 ## Whether to whip instead of taking the normal grapple/power/signature/
 ## finisher escalation this GRAPPLE_HOLD tick. Never whips once already

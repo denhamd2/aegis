@@ -5,7 +5,16 @@
 
 [node name="Match" instance=ExtResource("1")]
 
+; is_ai on WrestlerA overrides match.tscn's human slot. This scene exists to
+; demonstrate that the live match reaches the Roman paired moves (Priority 2
+; of gauntlet/status/roman_reigns_next.md), and it could not: match.tscn
+; leaves WrestlerA as the player, MatchSetup only forces both sides onto the
+; AI when --record-replay is passed, and an AI-vs-passive match is "an
+; infinite strike loop that never reaches a finish" (match_setup.gd). A
+; passive WrestlerA also never presses grapple, so it lost every tie-up 0-10
+; and the Roman grapple chain was unreachable in the one scene named for it.
 [node name="WrestlerA" parent="." index="0"]
+is_ai = true
 character_model_scene = ExtResource("2")
 
 [node name="WrestlerB" parent="." index="1"]

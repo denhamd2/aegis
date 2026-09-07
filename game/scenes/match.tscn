@@ -151,7 +151,12 @@ libraries = {
 }
 
 [node name="WrestlerA" parent="." instance=ExtResource("3")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.5, 0, 0)
+; Squared up along Z, not X. The broadcast camera is anchored west and looks
+; up +X, so wrestlers separated along X sat one behind the other -- near and
+; far, not left and right. Rotating the pair 90 degrees puts them across the
+; frame where a stare-down belongs. This is the authored spawn only; nothing
+; in the match loop depends on which axis they start on.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 player_index = 0
 is_ai = false
 attire_body = Color(0.42, 0.6, 0.95, 1)
@@ -177,7 +182,7 @@ opponent_path = NodePath("../WrestlerB")
 grapple_rig_path = NodePath("../GrappleRig")
 
 [node name="WrestlerB" parent="." instance=ExtResource("3")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.5, 0, 0)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 1.5)
 player_index = 1
 is_ai = true
 attire_body = Color(0.55, 0.12, 0.13, 1)

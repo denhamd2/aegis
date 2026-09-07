@@ -304,27 +304,26 @@ func _canvas_material() -> StandardMaterial3D:
 	return m
 
 
-## Rope. DARK, thin and semi-gloss.
+## Rope. WHITE, thin and semi-gloss.
 ##
-## This is a reversal of what stood here, and the reason is which reference
-## governs what. material_library.gd's `ring_rope` was TRACED to the WWE 2K
-## stills, where every rope is white -- and that tracing was correct for those
-## frames. The ring reference this round is matched to (refs/ring.md) is a
-## different ring: its ropes are black cable, and matching it is the explicit
-## instruction. So the 2K frames keep governing the measured *relationships*
-## VISUAL_BAR.md holds (mat exposure anchor, silhouette separation), and the
-## ring reference governs the ring's *look*. The library key carries the same
-## note so the contradiction is visible there too, not just here.
+## Back to white, by direct instruction from the project owner.
 ##
-## Value alone cannot separate a dark rope from a dark hall, which is the risk
-## this creates -- so roughness does the work instead. At 0.30 the ropes are
-## the glossiest surface in the ring and the closest to the spot rig, and the
-## specular return is what draws them as lines. The tape wrap is gone with the
-## white: the reference's cable is smooth.
+## This has now been both colours, and the note is kept because the reasoning
+## still matters. The value was traced white off the WWE 2K stills; a later
+## round took it to near-black to match gauntlet/refs/ring.md, whose ring is
+## strung with black cable. The owner wants white, so white governs the look.
+## refs/ring.md still governs the rest of the ring, and the measured
+## relationships in VISUAL_BAR.md are untouched -- a rope is under 4cm across
+## and is not what sets the mat exposure anchor or the silhouette separation.
+##
+## Roughness rises with the colour, 0.30 -> 0.45. The low value existed only
+## because a dark rope could not separate from a dark hall by value and the
+## specular return had to draw the line for it; a white rope separates by
+## value on its own, and left at 0.30 it reads as wet plastic under the spots.
 func _rope_material() -> StandardMaterial3D:
-	var m := _resolve("ring_rope", _mat(Color(0.085, 0.085, 0.090), 0.30))
-	m.albedo_color = Color(0.085, 0.085, 0.090)
-	m.roughness = 0.30
+	var m := _resolve("ring_rope", _mat(Color(0.88, 0.88, 0.87), 0.45))
+	m.albedo_color = Color(0.88, 0.88, 0.87)
+	m.roughness = 0.45
 	m.albedo_texture = null
 	m.uv1_scale = Vector3.ONE
 	return m

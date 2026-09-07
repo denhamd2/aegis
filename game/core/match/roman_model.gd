@@ -65,17 +65,313 @@ const BONE_MAP := {
 	"ball_r": "J_Toe_R",
 }
 
+## Materials the supplied .glb ships with no base colour at all, and the
+## colour each should have.
+##
+## Seven of the model's sixteen materials carry only a normal map, so they
+## render flat white -- including `Material.001`, which is the *face*. The
+## missing albedo is not a lost file: the .glb embeds fourteen images, the
+## repo carries the same fourteen as loose PNGs, and no material references a
+## fifteenth. For the head the colour does exist and was simply not wired up
+## (`body_color` already carries the head UVs -- `Material.009`, the eye
+## caruncle, samples it), so that one is a reconnection. For the clothing and
+## the wrist wear no colour texture exists anywhere in the asset, so those get
+## a flat tint chosen to match Roman's actual ring gear rather than an
+## invented texture. Both cases are called out per entry below.
+const ALBEDO_FIXES := {
+	# Face. body_color.png is a 4096x2048 atlas holding skin, the tribal
+	# sleeve, the trunks and the mouth interior; the head UVs are in it.
+	"Material.001": {"texture": "head_color", "color": Color.WHITE},
+	# Ring gear. No colour texture for these exists in the asset -- only
+	# tops_nrm/bottoms_nrm. Black matches the gear Roman actually wrestles in,
+	# and the normal maps still carry the fabric detail.
+	"Material.003": {"color": Color(0.055, 0.055, 0.062)}, # tops
+	"Material.004": {"color": Color(0.045, 0.045, 0.052)}, # bottoms
+	# Wrist tape and the arm accessory: same situation, only normal maps.
+	"Material.006": {"color": Color(0.82, 0.80, 0.76)}, # l_wrist
+	"Material.007": {"color": Color(0.82, 0.80, 0.76)}, # r_wrist
+	"Material.012": {"color": Color(0.10, 0.10, 0.11)}, # r_a_acce
+	# Eye and lash. Material.013 is the whole eyeball (M_EYE), which ships
+	# untextured -- it held a flat brown here when that tint was the only
+	# iris this model had. It is a white sclera now: the iris and pupil are
+	# real geometry seated on the cornea (_build_eye_details below), and a
+	# brown eyeball behind them reads as an eye with no white at all.
+	"Material.013": {"color": Color(0.90, 0.89, 0.87)},
+	"Material.016": {"color": Color(0.04, 0.04, 0.04)},
+}
+
+## Hair and beard cards, and the mask texture each should use.
+##
+## The export wired these meshes' *packed data* maps in as base colour.
+## hair_rai, hair_rai_4 and combinations_rai are not albedo: R and B carry
+## identical data and the green channel is the strand opacity mask, so
+## R=B high against low G renders as solid magenta -- which is exactly what
+## the hair and beard looked like. tools/assets/build_roman_hair_alpha.py
+## rebuilds each as white RGB plus that green channel as alpha; the colour
+## then comes from the tint below, since the asset carries no hair colour.
+const HAIR_FIXES := {
+	"Material.017": "hair_4_alpha",
+	"Material.018": "hair_alpha",
+	"Material.019": "hair_4_alpha",
+	"Material.020": "hair_alpha",
+	"beard": "beard_alpha",
+}
+
+## Meshes hidden outright rather than materialled.
+##
+## The T-shirt goes because Roman wrestles bare-chested: the body mesh
+## underneath is fully textured (body_color carries the torso, the tribal
+## sleeve and the trunks), so removing the shirt reveals finished art rather
+## than a hole. It also removes the worst of the clothing interpenetration --
+## body and shirt are separate meshes with their own skin weights, and the
+## torso was poking through the tee wherever the two disagreed.
+##
+## The model also ships a second, complete set of hair cards -- the source's
+## "entrance" variants (M_Hair_Entrance and S_Hair_Entrance, which arrive as
+## hair_ALPHA_skinned_002 and lambert1_skinned_001). Both sets were visible
+## and occupy nearly the same space, so they z-fought: the two wrestlers use
+## one model but resolved that fight differently, and one of them came out
+## looking bald from the crown while the other had a full head of hair.
+## Keeping one set of each pair fixes that and halves the hair overdraw.
+##
+## hair_ALPHA_skinned_001 was missed by that pass and is the reason the crown
+## went bald ANYWAY, after it was declared fixed. It is a third hair card
+## (1855 tris, material Material.012) and the probe that built this list only
+## looked at the two obvious duplicate pairs. Material.012 carries NO albedo
+## texture at all -- no strand mask, transparency disabled -- so the card
+## cannot render as hair under any threshold: it draws as a solid untextured
+## slab wherever its geometry sits, z-fighting the real hair above the ear.
+## Whichever surface won the depth test decided whether that head read as a
+## black helmet or as bare scalp, which is why it differed between the two
+## wrestlers and between camera angles on the same wrestler.
+##
+## Hidden rather than repaired because there is nothing to repair it with:
+## the other four hair materials each name a *_rai packed map that
+## build_roman_hair_alpha.py can rebuild into a mask, and this one names
+## nothing. The remaining set (hair_ALPHA_skinned + lambert1_skinned) is
+## complete on its own -- see the QA head shots in the round write-up.
+const HIDDEN_MESHES := [
+	"tops_skinned",
+	"eyelash_skinned",
+	"eye_caruncle_skinned",
+	"hair_ALPHA_skinned_001",
+	"hair_ALPHA_skinned_002",
+	"lambert1_skinned_001",
+]
+
+## Materials nudged outward along their normals to stop the body mesh poking
+## through them. The body and the clothing are separate meshes with their own
+## skin weights, so wherever the two disagree under animation the skin wins
+## and erupts through the fabric -- which is what the tan blotches on the
+## thighs and shins were. A fraction of a centimetre of grow is the cheap fix
+## and is invisible at any camera distance the game uses; the alternative is
+## re-weighting someone else's mesh.
+##
+## THE REAL CAUSE OF THOSE BLOTCHES was found later and is fixed elsewhere --
+## see apply_physique_height(). The model splits across two skeletons and it
+## splits BODY from EVERYTHING WORN:
+##
+##   471 bones  bottoms, beard, hair, wrist tape, shoes
+##   114 bones  body, head, eyes, mouth, teeth
+##
+## Only the 114-bone one was being scaled, so a wrestler at physique_height
+## 1.05 had a body inflated 5% inside trousers that stayed at 1.0. The skin
+## erupting through the fabric was not a skinning disagreement at all; it was
+## a body wearing clothes a size too small. One bug, three symptoms -- the
+## blotched thighs, the bald crown, and a beard that would not sit on the
+## face.
+##
+## This grow is kept anyway, and it is no longer load-bearing -- if it is ever
+## revisited the thing to check first is that both skeletons are still being
+## scaled together.
+##
+## It is NOT, however, sufficient. An earlier draft of this comment claimed
+## 0.006 "still covers ordinary skinning disagreement in extreme poses";
+## tools/probe/extreme_poses.gd disproved that on its first working run, with
+## a clear hole at WrestlerB's hip in HIT_REACT and skin through it. 0.006 is
+## roughly a 6mm shell and the hip separation in that pose is wider than that.
+## Raised to 0.018 for the bottoms. That closed the hole in the same seeded
+## frame (HIT_REACT, WrestlerB, frame 17) with no visible inflation at the
+## waistband or the knee. It is NOT claimed to be the minimum -- 0.018 was
+## tried first and worked, and the intermediate values were never rendered.
+const GROW_FIXES := {
+	"Material.004": 0.018, # bottoms
+	"Material.005": 0.004, # shoes
+}
+
+const TEXTURE_DIR := "res://assets/characters/roman_reigns_%s.png"
+## Roman's hair and beard are near-black; kept slightly warm so they don't
+## read as a flat silhouette under the arena's key light.
+const HAIR_COLOR := Color(0.075, 0.062, 0.055)
+## Alpha below this is cut away. Hair cards need a scissor rather than
+## blending: sorted transparency on overlapping strands produces halos.
+##
+## Low, and that is the fix for the wrestler who kept going bald in wide
+## shots. Every mip level averages a mostly-transparent mask further toward
+## zero, so a threshold that looks right in close-up rejects the whole card a
+## few metres out -- the near wrestler kept his hair and the far one lost it,
+## from one model. Alpha-to-coverage is declared below and would normally
+## soften exactly this, but it needs MSAA to do anything and this project
+## renders without it, so the threshold has to carry it alone.
+const HAIR_ALPHA_SCISSOR := 0.14
+## The beard and brows are cut at their own, much lower threshold.
+##
+## They share one mesh and one mask (combinations_rai) whose strands are far
+## sparser than the scalp's -- only 9.6% of its texels are opaque against the
+## hair's 32%. At the scalp's 0.35 the sparse ends of the beard were cut away
+## and it survived only where it was densest: a patch floating on the cheek
+## with the jawline bare beneath it, and no eyebrows at all, because the brow
+## cards live in the same sparse mask.
+const BEARD_ALPHA_SCISSOR := 0.16
+## Multiplier on the distance at which the hair meshes drop a LOD level.
+## Large on purpose: a head of hair is a few thousand triangles on two
+## characters, and losing it entirely is a far worse trade than drawing it.
+const HAIR_LOD_BIAS := 16.0
+
+## Scalp materials that blend rather than scissor, for the hairline.
+##
+## Same argument as the beard, and the mask supports it better. Fraction of
+## hair_alpha's texels at or above a given alpha:
+##
+##   >=0.14 (HAIR_ALPHA_SCISSOR)   0.3538
+##   > 0                           0.4094
+##
+## Five and a half percent of the texture is fine strand ends that a scissor
+## throws away, and they are not spread evenly -- they are the soft edge of
+## every card, which is concentrated at the HAIRLINE. Cutting them is why the
+## forehead reads higher and barer than the source model's, where the hair
+## comes down to a fringe.
+##
+## Only the two scalp materials. lambert1_skinned's side strands (Material.019)
+## are left on the scissor: they are thin, isolated and seen edge-on, which is
+## the case where blending shows its sorting seams worst and where there is no
+## hairline to recover.
+const SCALP_BLEND := ["Material.018", "Material.020"]
+
 func _ready() -> void:
 	var body: Skeleton3D = _find_body_skeleton()
 	if not body:
 		push_error("Roman model has no body Skeleton3D")
 		return
+	_fix_materials()
 	_copy_base_animation_library()
 	# Iris/pupil geometry is headless-safe (plain nodes); colours need a real
 	# renderer, same split WrestlerAttire uses for the same reason.
 	_build_eye_details(body)
 	if DisplayServer.get_name() != "headless":
-		_normalize_face_materials()
+		_normalize_mouth_materials()
+
+## Repairs the materials the export left unusable. Applied as surface
+## overrides rather than by editing the .glb: the source asset stays exactly
+## as supplied, and every fix is visible here as code with its reason next to
+## it. Safe to call once at _ready -- it only touches the materials it names.
+func _fix_materials() -> void:
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		if not mesh_instance or not mesh_instance.mesh:
+			continue
+		if HIDDEN_MESHES.has(mesh_instance.name):
+			mesh_instance.visible = false
+			continue
+		for surface in mesh_instance.mesh.get_surface_count():
+			var source := mesh_instance.mesh.surface_get_material(surface)
+			if source == null:
+				continue
+			var key := source.resource_name
+			if not (ALBEDO_FIXES.has(key) or HAIR_FIXES.has(key)
+					or GROW_FIXES.has(key)):
+				continue
+			var material := source.duplicate() as BaseMaterial3D
+			if material == null:
+				continue
+			if GROW_FIXES.has(key):
+				material.grow = true
+				material.grow_amount = GROW_FIXES[key]
+			if HAIR_FIXES.has(key):
+				# Hold the hair at full detail well past its normal LOD range.
+				# roman_reigns.glb is imported with generate_lods on, and a
+				# decimated hair card is not a smaller hair card -- it is a
+				# card whose alpha mask has been averaged toward transparent,
+				# so the scissor takes the whole thing. That is why the two
+				# wrestlers, one model, looked like different men: the near
+				# one kept a full head of hair at LOD0 while the far one went
+				# bald the moment it dropped a level. Alpha-to-coverage helps
+				# the mip chain but cannot help a mesh that is no longer there.
+				mesh_instance.lod_bias = HAIR_LOD_BIAS
+				material.albedo_texture = _texture(HAIR_FIXES[key])
+				material.albedo_color = HAIR_COLOR
+				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
+					else HAIR_ALPHA_SCISSOR
+				if key == "beard" or key in SCALP_BLEND:
+					# The beard and brows blend; the scalp still scissors.
+					#
+					# Lowering the beard threshold was the obvious move and it
+					# does nothing, because the mask has almost no partial
+					# coverage to recover. Fraction of beard_alpha's texels at
+					# or above a given alpha:
+					#
+					#   >=0.16 (the old threshold)   0.1195
+					#   >=0.10                       0.1211
+					#   >=0.06                       0.1244
+					#   > 0                          0.1577
+					#
+					# The whole range from 0.16 down to nothing is worth half a
+					# percent of the texture. A scissor can only ever draw the
+					# 12% it already draws, which is why the beard reads as
+					# sparse bristle and the eyebrows -- same mesh, same mask,
+					# and far sparser than the jaw -- barely register at all.
+					#
+					# Blending draws the remaining 4% at its true alpha instead
+					# of discarding it, and softens the 3.9% that is fully
+					# opaque into the 12% that is not. DEPTH_PRE_PASS rather
+					# than plain ALPHA: the pre-pass writes depth first, so
+					# overlapping strands no longer depend on draw order, which
+					# is the halo problem that sent this to a scissor
+					# originally.
+					material.transparency = \
+						BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+				else:
+					material.transparency = \
+						BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					material.alpha_scissor_threshold = scissor
+				# Hair cards are single-sided geometry seen from both faces.
+				material.cull_mode = BaseMaterial3D.CULL_DISABLED
+				# Alpha-to-coverage, because a plain scissor test loses hair
+				# with distance: the mip chain averages a mostly-transparent
+				# mask down toward zero, more of it falls under the threshold
+				# every mip level, and the crown thins out until the wrestler
+				# reads as bald from the broadcast camera while looking fine
+				# in close-up. That is what made the two wrestlers -- one
+				# model, two distances -- look like different men.
+				material.alpha_antialiasing_mode = \
+					BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+				material.alpha_antialiasing_edge = scissor
+			elif ALBEDO_FIXES.has(key):
+				var fix: Dictionary = ALBEDO_FIXES[key]
+				if fix.has("texture"):
+					material.albedo_texture = _texture(fix["texture"])
+				material.albedo_color = fix["color"]
+			mesh_instance.set_surface_override_material(surface, material)
+
+func _texture(suffix: String) -> Texture2D:
+	return load(TEXTURE_DIR % suffix) as Texture2D
+
+## Height, applied to EVERY skeleton this model is rigged on.
+##
+## The model has two: a 114-bone body-and-head skeleton and a 471-bone one
+## carrying the hair and beard. WrestlerController used to scale only the one
+## get_game_skeleton() hands back, which is the 114-bone body -- so a wrestler
+## whose physique_height was not exactly 1.0 got a head resized inside hair
+## that was not. At 1.05 the scalp came through the crown and the wrestler
+## rendered bald; at 0.98 it did not, which is why the two wrestlers looked
+## like different men from one model and why it changed with camera angle.
+##
+## Scaling both keeps the head and the hair the same size as each other at any
+## height, which is the invariant that was actually broken.
+func apply_physique_height(height: float) -> void:
+	for skeleton in _animation_skeletons():
+		skeleton.scale = Vector3.ONE * height
+
 
 func get_game_skeleton() -> Skeleton3D:
 	return _find_body_skeleton()
@@ -92,19 +388,32 @@ func uses_universal_attire() -> bool:
 ##   brows/beard-stubble/lips/tattoo layout) is embedded but referenced by
 ##   nothing, so the head renders without its colour.
 ## - The "beard" material and all four hair materials point their albedo at
-##   *_rai PACKED DATA textures (green+alpha channels all zero, red/blue
-##   hold roughness-ish values), so the beard renders magenta and the hair
-##   purple -- and the three BLEND hair materials read the all-zero alpha
-##   and vanish entirely.
+##   *_rai PACKED DATA textures, so the beard renders magenta and the hair
+##   purple.
 ## - M_EYE has no texture and no vertex colours: flat glossy white.
 ## - M_Teeth/M_Tongue/M_MouthBag have NO material at all: default grey.
-## The fix below re-points all of it at runtime (the .glb is user-supplied
-## and must not be hand-edited in the repo): orphan colour map restored,
-## data textures unlinked in favour of flat colours, missing materials
-## supplied. Determinism-safe: visuals only, no FSM/RNG/physics touched.
-const FACE_ALBEDO := "res://assets/characters/roman_reigns_Image.png"
-const BEARD_COLOR := Color(0.07, 0.055, 0.045)
-const HAIR_COLOR := Color(0.05, 0.042, 0.038)
+##
+## The first three are repaired by _fix_materials() above, which is the
+## single material authority for this model. Two of those repairs were
+## reconciled against a second, independent pass at the same faults and the
+## measurement decided each:
+##
+## - HEAD. Re-pointing M_Head at roman_reigns_Image.png directly renders a
+##   blue-white face: that file's blue channel is pinned to 255 across 100%
+##   of the image and its red is clipped at both ends across ~26%, so only
+##   green survived the export. ALBEDO_FIXES reconstructs the face from that
+##   green channel instead (build_roman_hair_alpha.py), tinted with the skin
+##   tone measured off the undamaged body_color atlas.
+## - HAIR AND BEARD. Unlinking the _rai maps for a flat colour loses the
+##   strands: the green channel of those maps IS the opacity mask, so the
+##   cards become solid lozenges rather than hair. HAIR_FIXES keeps the mask
+##   as a rebuilt alpha channel and tints the RGB, which is what preserves
+##   the hairline, the beard's jaw edge and the eyebrows.
+##
+## What remains here is the surface the material pass does not reach: the
+## mouth parts, whose meshes carry no material at all to inspect and so must
+## be found by node name, and the eyes, which need geometry rather than a
+## texture. Determinism-safe: visuals only, no FSM/RNG/physics touched.
 const TEETH_COLOR := Color(0.87, 0.85, 0.79)
 const MOUTH_COLOR := Color(0.28, 0.09, 0.08)
 
@@ -127,59 +436,22 @@ const EYE_TARGETS := {
 		Vector3(0.001613, -0.009503, -0.007587)],
 }
 
-func _normalize_face_materials() -> void:
-	var face_tex: Texture2D = load(FACE_ALBEDO)
+## Supplies the materials the export omitted entirely. M_Teeth, M_Tongue and
+## M_MouthBag carry no material on any surface, so they render default grey
+## and there is nothing to duplicate and repair -- they are found by node
+## name and painted outright. Everything else on the face is handled by
+## _fix_materials(); see the note above for why this pass does not also
+## touch the head, hair or beard.
+func _normalize_mouth_materials() -> void:
 	for mi in find_children("", "MeshInstance3D", true, false):
 		var mesh_instance := mi as MeshInstance3D
 		if not mesh_instance or not mesh_instance.mesh:
 			continue
 		var node_name := String(mesh_instance.name).to_lower()
-		# Unmaterialed mouth parts first: their surfaces carry no material to
-		# inspect, so they are found by node name only.
 		if node_name.contains("teeth"):
 			_paint_all_surfaces(mesh_instance, TEETH_COLOR, 0.35, false)
-			continue
-		if node_name.contains("tongue") or node_name.contains("mouthbag"):
+		elif node_name.contains("tongue") or node_name.contains("mouthbag"):
 			_paint_all_surfaces(mesh_instance, MOUTH_COLOR, 0.6, false)
-			continue
-		for surface in mesh_instance.mesh.get_surface_count():
-			var source := mesh_instance.mesh.surface_get_material(surface)
-			if not (source is StandardMaterial3D):
-				continue
-			var normal_path := ""
-			var albedo_path := ""
-			var normal_tex := (source as StandardMaterial3D).normal_texture
-			if normal_tex:
-				normal_path = normal_tex.resource_path
-			var albedo_tex := (source as StandardMaterial3D).albedo_texture
-			if albedo_tex:
-				albedo_path = albedo_tex.resource_path
-			if normal_path.contains("wrinkles_normal"):
-				# The head: keep its wrinkle normals, restore the orphan
-				# face colour map (brows, stubble, lips, tattoo).
-				var head_mat := (source as StandardMaterial3D).duplicate()
-				head_mat.albedo_texture = face_tex
-				mesh_instance.set_surface_override_material(surface, head_mat)
-			elif String(
-					(source as StandardMaterial3D).resource_name) == "beard":
-				# Beard mass: flat dark colour, opaque, visible from both
-				# sides. The linked data texture is never sampled again.
-				var beard_mat := (source as StandardMaterial3D).duplicate()
-				beard_mat.albedo_texture = null
-				beard_mat.albedo_color = BEARD_COLOR
-				beard_mat.roughness = 0.65
-				beard_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh_instance.set_surface_override_material(surface, beard_mat)
-			elif albedo_path.contains("hair_rai"):
-				# Hair mass or cards: flat near-black, forced opaque (the
-				# all-zero alpha channel makes BLEND vanish), double-sided
-				# so cards survive from behind.
-				var hair_mat := (source as StandardMaterial3D).duplicate()
-				hair_mat.albedo_texture = null
-				hair_mat.albedo_color = HAIR_COLOR
-				hair_mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
-				hair_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh_instance.set_surface_override_material(surface, hair_mat)
 
 func _paint_all_surfaces(mesh_instance: MeshInstance3D, color: Color,
 		roughness: float, metal: bool) -> void:
@@ -256,12 +528,68 @@ func _copy_base_animation_library() -> void:
 		source_root.free()
 		return
 	target_player.add_animation_library("", adapt_animation_library(
-			source_player.get_animation_library("")))
+			source_player.get_animation_library(""),
+			_source_skeleton(source_root)))
 	source_root.free()
 
-func adapt_animation_library(source: AnimationLibrary) -> AnimationLibrary:
+## The base rig's own skeleton, needed for its bone rest poses -- see
+## adapt_animation_library().
+func _source_skeleton(source_root: Node) -> Skeleton3D:
+	for candidate in source_root.find_children("", "Skeleton3D", true, false):
+		var skeleton := candidate as Skeleton3D
+		if skeleton and skeleton.find_bone("pelvis") >= 0:
+			return skeleton
+	return null
+
+## Retargets the base rig's animation library onto Roman's bones.
+##
+## `source_skeleton` is the base rig's own Skeleton3D, and it is what makes
+## this a retarget rather than a rename. A bone track stores a rotation in the
+## bone's *local* space, which is only meaningful relative to that skeleton's
+## rest pose -- and these two rigs do not share one. Copying keys across
+## verbatim (which this did) hands Roman's bones rotations authored against a
+## different set of rest orientations, and the result was not subtly off: he
+## played every animation upside down, head at 0.32m and feet at 1.73m, with
+## the mesh torn apart. Measured by tools/probe/roman_diag.tscn; the model
+## itself stands up correctly with nothing driving it
+## (tools/probe/roman_bare.tscn), which is what localised the fault here.
+##
+## The fix is the standard rest-relative conversion: take the key's offset
+## from the *source* rest orientation, and re-apply that offset to the
+## *target* rest orientation.
+##
+##     delta  = src_rest^-1 * key
+##     output = tgt_rest * delta
+##
+## A key that matches the source's rest pose then lands exactly on Roman's
+## rest pose instead of somewhere 180 degrees away from it.
+##
+## `source_skeleton` defaults to the base rig's own skeleton, loaded on
+## demand, because every library that reaches this method is authored against
+## that rig -- the .glb's 43 clips, the generated paired poses and the
+## imported strike clips alike.
+##
+## It used to default to null, and null meant "skip the conversion and copy
+## verbatim", i.e. exactly the bug this function exists to fix. RomanModel
+## passed a real skeleton so the base library came out upright, while
+## WrestlerController._adapt_animation_library() called the same method with
+## one argument for PAIRED_POSES and STRIKE_CLIPS -- so those two took the
+## null path in silence and stayed inverted, which is why GRAPPLE_HOLD and
+## the mocap strikes played head-down (J_Head 0.385 below J_Hips 0.964, a
+## foot at 1.793) while LOCOMOTION and TIE_UP looked fine. A default that
+## quietly does the broken thing is worse than a required argument, so the
+## fallback now resolves the rig instead of abandoning the conversion.
+func adapt_animation_library(source: AnimationLibrary,
+		source_skeleton: Skeleton3D = null) -> AnimationLibrary:
 	var target := AnimationLibrary.new()
 	var skeletons := _animation_skeletons()
+	# Owned only when we loaded it here, and freed before returning.
+	var owned_source_root: Node = null
+	if source_skeleton == null:
+		owned_source_root = (load(BASE_RIG) as PackedScene).instantiate()
+		source_skeleton = _source_skeleton(owned_source_root)
+		if source_skeleton == null:
+			push_error("RomanModel: base rig has no skeleton to retarget from")
 	for name in source.get_animation_list():
 		var source_animation: Animation = source.get_animation(name)
 		var animation := Animation.new()
@@ -273,17 +601,109 @@ func adapt_animation_library(source: AnimationLibrary) -> AnimationLibrary:
 			var bone := String(path.get_concatenated_subnames())
 			if not BONE_MAP.has(bone):
 				continue
+			var track_type := source_animation.track_get_type(track)
 			for skeleton in skeletons:
-				var output_track := animation.add_track(
-						source_animation.track_get_type(track))
+				var target_bone: String = BONE_MAP[bone]
+				var output_track := animation.add_track(track_type)
 				animation.track_set_path(output_track, NodePath("%s:%s" % [
-						get_path_to(skeleton), BONE_MAP[bone]]))
+						get_path_to(skeleton), target_bone]))
 				animation.track_set_interpolation_type(output_track,
 						source_animation.track_get_interpolation_type(track))
+				var rest := _rest_pair(source_skeleton, bone, skeleton, target_bone)
 				for key in source_animation.track_get_key_count(track):
 					animation.track_insert_key(output_track,
 							source_animation.track_get_key_time(track, key),
-							source_animation.track_get_key_value(track, key),
+							_retarget_key(track_type,
+									source_animation.track_get_key_value(track, key),
+									rest),
 							source_animation.track_get_key_transition(track, key))
 		target.add_animation(name, animation)
+	if owned_source_root:
+		owned_source_root.free()
 	return target
+
+## The two rest transforms a key has to be converted between, or an empty
+## dictionary when either bone is missing (then the key passes through).
+func _rest_pair(source_skeleton: Skeleton3D, source_bone: String,
+		target_skeleton: Skeleton3D, target_bone: String) -> Dictionary:
+	if source_skeleton == null:
+		return {}
+	var source_index := source_skeleton.find_bone(source_bone)
+	var target_index := target_skeleton.find_bone(target_bone)
+	if source_index < 0 or target_index < 0:
+		return {}
+	# Parent global rest rotations, defaulting to identity at a root bone.
+	# These are what let a key be rotated *into* the target's frame rather
+	# than merely rebased onto its rest -- see _retarget_key().
+	var source_parent := Quaternion.IDENTITY
+	var source_parent_index := source_skeleton.get_bone_parent(source_index)
+	if source_parent_index >= 0:
+		source_parent = source_skeleton.get_bone_global_rest(
+				source_parent_index).basis.get_rotation_quaternion()
+	var target_parent := Quaternion.IDENTITY
+	var target_parent_index := target_skeleton.get_bone_parent(target_index)
+	if target_parent_index >= 0:
+		target_parent = target_skeleton.get_bone_global_rest(
+				target_parent_index).basis.get_rotation_quaternion()
+	return {
+		"source": source_skeleton.get_bone_rest(source_index),
+		"target": target_skeleton.get_bone_rest(target_index),
+		"source_parent": source_parent,
+		"target_parent": target_parent,
+	}
+
+func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant:
+	if rest.is_empty():
+		return value
+	var source_rest: Transform3D = rest["source"]
+	var target_rest: Transform3D = rest["target"]
+	var source_parent: Quaternion = rest["source_parent"]
+	var target_parent: Quaternion = rest["target_parent"]
+	match track_type:
+		Animation.TYPE_ROTATION_3D:
+			var source_basis := source_rest.basis.get_rotation_quaternion()
+			var target_basis := target_rest.basis.get_rotation_quaternion()
+			# Rebasing a key onto the target's rest -- target * source^-1 * key
+			# -- fixes a difference in rest *orientation* but not one in bone
+			# *roll*, because it never leaves local space: a rotation about
+			# the source bone's own axis stays about that axis, whatever the
+			# target's axis happens to be. That is why the gross inversion
+			# went away while the arms stayed folded across the face.
+			#
+			# So take the key's offset from the source's rest, carry it out to
+			# world space through the source parent's global rest, back into
+			# the target's local space through the target parent's, and only
+			# then apply it to the target's rest. Now a bend is a bend about
+			# the same world axis on both rigs regardless of how either
+			# skeleton names or rolls that bone.
+			# The delta is taken in the *parent's* frame, not the bone's own.
+			# A bone's global orientation is parent_global * local, so its
+			# offset from rest in global terms is
+			#     P * (key * rest^-1) * P^-1
+			# -- key post-multiplied by the inverse rest, not pre-multiplied.
+			# Pre-multiplying (rest^-1 * key) measures the offset in the
+			# bone's own rotating frame, which conjugating by P then carries
+			# to the wrong place: it straightened the legs, whose rest axes
+			# happen to agree between the rigs, and left the arms folded up
+			# over the head, whose do not.
+			var delta := (value as Quaternion) * source_basis.inverse()
+			var world := source_parent * delta * source_parent.inverse()
+			var local := target_parent.inverse() * world * target_parent
+			return (local * target_basis).normalized()
+		Animation.TYPE_POSITION_3D:
+			# Position tracks are the translation part of the same pose, so
+			# they get the same treatment: the offset the key makes from the
+			# source's rest position, rotated into the target's frame and
+			# scaled by the two bones' rest lengths, then applied to the
+			# target's rest position. Without the scale a taller rig inherits
+			# a shorter one's stride and the feet slide.
+			var offset := (value as Vector3) - source_rest.origin
+			var rotation := target_rest.basis.get_rotation_quaternion() \
+					* source_rest.basis.get_rotation_quaternion().inverse()
+			var source_length := source_rest.origin.length()
+			var scale := 1.0
+			if source_length > 0.0001:
+				scale = target_rest.origin.length() / source_length
+			return target_rest.origin + (rotation * offset) * scale
+		_:
+			return value

@@ -144,6 +144,18 @@ func test_strikes_cannot_land_from_further_than_a_fist_reaches() -> void:
 ## happens inside tie_up_range (1.3m), which reaches further than a fist
 ## does (1.15m), so the decision is additionally gated on the reach -- this
 ## is the assertion that caught that gap.
+##
+## This used to assert that the *source text* of wrestler_ai.gd contained
+## the gate. That passed as soon as any one branch had it, which is exactly
+## how the bug it was written to catch survived in the other branch:
+## poll_input() has two distance branches, only the close one was gated on
+## the measured reach, and the closing one still fired a strike anywhere
+## inside a 1.6m strike_range that nothing could connect from. A grep for a
+## fix cannot tell you the fix is applied everywhere it is needed.
+##
+## So it is a behavioural sweep now: walk the opponent in from well outside
+## tie-up range to contact and assert poll_input() never once asks for a
+## strike while out of reach, whichever branch it took to decide.
 func test_the_ai_never_strikes_from_beyond_a_fists_reach() -> void:
 	var ai: WrestlerAI = auto_free(WrestlerAI.new())
 	assert_bool(ai.tie_up_range > WrestlerController.STRIKE_HIT_RANGE) \
@@ -151,7 +163,35 @@ func test_the_ai_never_strikes_from_beyond_a_fists_reach() -> void:
 			"This test guards a gap that no longer exists; if tie-up range "
 			+ "is now within a fist's reach the gate below is redundant."
 		).is_true()
-	# The source of truth is the gate itself: poll_input() may only return a
-	# strike when the opponent is inside STRIKE_HIT_RANGE.
-	var source := FileAccess.get_file_as_string("res://core/ai/wrestler_ai.gd")
-	assert_str(source).contains("distance <= WrestlerController.STRIKE_HIT_RANGE")
+
+	var attacker: WrestlerController = auto_free(WrestlerController.new())
+	var defender: WrestlerController = auto_free(WrestlerController.new())
+	for w in [attacker, defender]:
+		add_child(w)
+		w.fsm = auto_free(WrestlerFSM.new())
+		w.combat = CombatSystem.new()
+	attacker.global_position = Vector3.ZERO
+	ai.controller = attacker
+	ai.target = defender
+
+	# Sweep in from 3.0m to contact in 1cm steps. The cooldown is cleared
+	# each step so every distance gets a genuine chance to ask for a strike
+	# -- otherwise one early press would mask the whole rest of the sweep.
+	var offenders: Array[String] = []
+	for step in range(300, -1, -1):
+		defender.global_position = Vector3(step * 0.01, 0.0, 0.0)
+		ai._cooldown = 0
+		var input := ai.poll_input()
+		# Read the distance back off the transforms rather than trusting the
+		# loop variable: the AI measures with Vector3.length() through the
+		# physics server, and a step like 115 * 0.01 differs from that in the
+		# last bit -- enough to report a strike thrown at exactly the reach
+		# limit as an offender.
+		var distance := attacker.global_position.distance_to(defender.global_position)
+		if input.get("strike", false) and distance > WrestlerController.STRIKE_HIT_RANGE:
+			offenders.append("%.3fm" % distance)
+
+	assert_array(offenders).override_failure_message(
+		"AI asked for a strike from beyond a fist's reach (%.2fm) at: %s"
+		% [WrestlerController.STRIKE_HIT_RANGE, ", ".join(offenders)]
+	).is_empty()
