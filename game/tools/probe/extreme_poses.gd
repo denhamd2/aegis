@@ -62,7 +62,7 @@ func _ready() -> void:
 			var w: Node = _scene.get_node_or_null(slot)
 			if w == null or w.fsm == null:
 				continue
-			var name_of: String = String(WrestlerFSM.State.keys()[w.fsm.state])
+			var name_of: String = String(WrestlerFSM.State.keys()[w.fsm.current_state])
 			if not WANTED.has(name_of) or _seen.has(name_of):
 				continue
 			var head: Variant = _head_aabb(w)
