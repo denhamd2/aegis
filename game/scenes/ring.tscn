@@ -85,15 +85,48 @@ size = Vector2(6.6, 0.9)
 ; sound and the conclusion was wrong: the project owner wants the graphic
 ; once, and tiling it is not the only way to keep its proportions.
 ;
-; Fitting one copy instead of stretching or repeating:
-;   scale.x  = 7.3333 / 3.5460 = 2.0681   (the face is 2.07 banners wide)
-;   offset.x = -(2.0681 - 1) / 2 = -0.5340   (centre it)
-; and texture_repeat OFF, so the 1.07 banner-widths of UV either side clamp
-; to the edge column instead of tiling. That works here because both edge
-; columns of the supplied artwork are its own near-black cloth -- sampled
-; rather than assumed, left (2,2,2)/(7,9,8), right (34,38,37)/(9,9,9) -- so
-; the clamp extends the banner's fabric and the marks sit centred on it, which
-; is how a real apron with a centred banner reads.
+; ZOOMED INTO THE ARTWORK, because fitting the whole image left the marks
+; small. The first fit put the banner on the apron at full height with
+; scale (2.0681, 1) -- correct, undistorted, and still too small, because the
+; SUPPLIED IMAGE carries wide dark-cloth margins: thresholded at 170 to
+; separate the marks from cloth highlights, the TNT roundels and the AEW
+; block occupy only
+;
+;   rows 134..392   -> v 0.2463..0.7206   47.4% of the image height
+;   cols 182..1761  -> u 0.0943..0.9129   81.9% of the image width
+;   centre          -> u 0.5036  v 0.4835
+;
+; so the logos were 47% of the apron's height with cloth above and below.
+; Bigger therefore means cropping that margin, NOT stretching: hold the
+; no-distortion ratio and shrink the sampled region.
+;
+;   ratio    = (6.6/0.9) / (1929/544) = 2.0681   scale.x / scale.y, fixed
+;   scale.y  = 0.4743 / 0.70          = 0.6775   marks fill 70% of the height
+;   scale.x  = 2.0681 * 0.6775        = 1.4012
+;   offset.y = 0.4925 - 0.6775/2      = 0.1537
+;   offset.x = 0.5036 - 1.4012/2      = -0.1970
+;
+; Centred on the artwork's own centre rather than the image's (0.5, 0.5) --
+; it is not centred within its own file -- and VERTICALLY on the ink's
+; BRIGHTNESS-WEIGHTED CENTROID (v 0.4925) rather than its bounding box
+; (v 0.4835). That distinction is not pedantry: the first version centred the
+; bbox, which put it at apron v=0.5000 exactly and still read as sitting low,
+; because the ink is bottom-heavy -- "WRESTLING" and the mass of the AEW
+; block sit lower than the sparse "ALL ELITE" line above it. The bbox was
+; centred and the visual weight was not, landing at apron v=0.5133. Centring
+; the centroid moves the art up 0.0090 in v, about 1.3% of the apron height,
+; and puts what the eye actually reads on the centre line.
+;
+; Result: marks at 70.0% of apron height and 58.4% of its width, a 1.48x
+; magnification, scale.x/scale.y still exactly 2.0681 so nothing is stretched.
+;
+; The vertical range 0.1537..0.8312 stays INSIDE 0..1, so the crop only ever
+; removes the artwork's own cloth and never clamps. The horizontal range
+; -0.1970..1.2042 falls outside, and texture_repeat OFF makes those sides
+; clamp to the edge column rather than tile -- which works because both edge
+; columns are near-black cloth, sampled rather than assumed: left (2,2,2) and
+; (7,9,8), right (34,38,37) and (9,9,9). The clamp extends the banner's own
+; fabric, so the marks sit centred on an unbroken skirt.
 ;
 ; The CC0 fabric roughness map stays: it is the only thing keeping the surface
 ; from reading as flat vinyl, and it carries no colour.
@@ -102,8 +135,8 @@ albedo_texture = ExtResource("4_apron_banner")
 roughness_texture = ExtResource("2_apron_rough")
 roughness = 0.9
 texture_repeat = false
-uv1_scale = Vector3(2.0681, 1, 1)
-uv1_offset = Vector3(-0.534, 0, 0)
+uv1_scale = Vector3(1.4012, 0.6775, 1)
+uv1_offset = Vector3(-0.197, 0.1537, 0)
 
 [node name="Ring" type="Node3D"]
 position = Vector3(0, -0.1, 0)
