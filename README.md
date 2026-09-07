@@ -3923,7 +3923,7 @@ An intermediate test — camera *at* mat level, so the canvas is edge-on at the
 horizon — appeared to show a 15cm gap and was wrong: at that distance it was
 framing the other wrestler's boot at a different depth. It is not in the probe.
 
-## The entrance set: a curved video wall, two omega portals, a floor that reflects
+## The entrance set: a curved video wall, two lit rings, a floor that reflects
 
 The entrance end of the hall was grey-box, and honestly labelled as such: a
 flat 14 x 5.4 box called `StageScreen` with a doc comment explaining that it
@@ -4073,12 +4073,30 @@ frames, and a wider chord bowed by the same amount is a **different circle**:
 the two arcs cross mid-panel. `_sagitta_for()` inverts `_arc_radius()` so the
 bezel is built on the picture's own circle, and stays behind it everywhere.
 
-**The portals were closed rings**, which the owner caught on the first render:
-the reference portals are an **omega**. The tube arches over the top, comes
-down both sides, stops 38 degrees short of the bottom either side, and the two
-ends splay outward onto the deck as feet. A closed circle reads as a neon hoop
-hung on a wall — a different piece of set entirely, and the 3m gap between the
-feet is the thing a wrestler is supposed to walk out of.
+**The portals were the wrong shape three times**, each caught by the owner off
+the render, and the sequence is worth recording because every wrong one was a
+plausible reading of the same photograph.
+
+They were **closed rings** first: no doorway, and a closed circle reads as a
+neon hoop hung on a wall. Then an **omega** — which is simply what you get by
+opening a ring with a gap at the bottom, because the curve carries past the
+sides and round toward the floor, the ends finish pointing inward, and the
+outward feet needed to plant them are exactly an omega's serifs. Then an
+**arch on two straight legs**, which fixes the serifs by stopping the curve at
+the sides and in doing so stops it reading as a circle at all.
+
+It is **a circle with the bottom cut off by the deck**. The fix was to stop
+describing the shape and describe the *situation*: place the circle so its
+lowest point sits 0.25m below the deck, and let the tube end wherever it meets
+the floor. `_portal_cut_angle()` derives the crossing from that one number, so
+the ends cannot float above the deck or bury themselves in it, and the result
+is a circle by construction rather than by resemblance — 308 degrees of it,
+with a 2.2m opening at deck level.
+
+`test_stage_set.gd` asserts the situation rather than the silhouette: the
+tube's lowest geometry sits one tube-radius below the deck, the sweep is
+between 280 and 330 degrees, and the deck crossing is below the horizontal on
+both sides — which an arch's is not.
 
 The slat fans inside them were wrong twice over. Built `house_lit` first, they
 vanished: at hall level, inside an unlit recess, there is nothing for them to

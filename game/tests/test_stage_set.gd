@@ -93,26 +93,43 @@ func test_the_curved_face_is_wound_front_out() -> void:
 		assert_float(normals[i].z).is_greater(0.0)
 
 
-## The portals are an OMEGA, not a ring: the tube stops short of the bottom so
-## the entrance has something to walk out of. A closed circle reads as a neon
-## hoop hung on a wall.
-func test_the_portal_arc_leaves_a_gap_at_the_bottom() -> void:
-	var st := ArenaBuilder._new_surface()
-	var from_angle := -PI * 0.5 + ArenaBuilder.PORTAL_GAP
-	ArenaBuilder._add_arc_tube(st, Vector3.ZERO, ArenaBuilder.PORTAL_MAJOR,
-			ArenaBuilder.PORTAL_MINOR, from_angle,
-			from_angle + TAU - ArenaBuilder.PORTAL_GAP * 2.0,
-			ArenaBuilder.PORTAL_RING_SEGMENTS, ArenaBuilder.PORTAL_TUBE_SIDES)
-	var verts: PackedVector3Array = st.commit().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	# Nothing may sit inside the wedge the gap occupies, which is the cone
-	# around straight down of half-angle PORTAL_GAP.
-	var down := Vector3.DOWN
+## The portal is a CIRCLE with the bottom cut off by the deck -- not a ring
+## (no doorway), not an arch on legs, and not an omega (whose ends turn back
+## inward and need outward feet). It was built as each of those first, which
+## is why the shape is asserted rather than left to the render.
+##
+## Two properties say it: the tube stops exactly at the deck, and it is still
+## a circle everywhere it exists.
+func test_the_portal_tube_stops_where_the_deck_cuts_it() -> void:
+	var verts := _portal_arc_vertices()
+	var lowest := INF
 	for v: Vector3 in verts:
-		var radial := Vector3(v.x, v.y, 0.0)
-		if radial.length() < 0.001:
-			continue
-		var angle_from_down := acos(clampf(radial.normalized().dot(down), -1.0, 1.0))
-		assert_float(angle_from_down).is_greater(ArenaBuilder.PORTAL_GAP * 0.85)
+		lowest = minf(lowest, v.y)
+	# The lowest geometry is the deck crossing, give or take the tube's own
+	# radius -- the centreline ends on the deck, so the tube's skin reaches
+	# PORTAL_MINOR below it.
+	assert_float(lowest).is_equal_approx(
+			ArenaBuilder.STAGE_DECK_Y - ArenaBuilder.PORTAL_MINOR, 0.05)
+
+
+## Almost all of the circle survives the cut. A shallow cut is what keeps it
+## reading as a circle: take too much and it becomes an arch instead.
+func test_the_cut_removes_only_the_bottom_of_the_circle() -> void:
+	var cut := ArenaBuilder._portal_cut_angle()
+	var swept := PI - cut * 2.0
+	assert_float(rad_to_deg(swept)).is_between(280.0, 330.0)
+	# The deck crossing is below the horizontal on both sides, i.e. the tube
+	# comes down past its own widest point before it stops. An arch does not.
+	assert_float(cut).is_less(0.0)
+
+
+## The centre is placed so the circle sinks exactly PORTAL_CUT_DEPTH into the
+## deck. Derived, not typed, so moving one number cannot leave the ends
+## floating above the floor or buried under it.
+func test_the_circle_sinks_the_stated_depth_into_the_deck() -> void:
+	var lowest_point := ArenaBuilder.PORTAL_CENTER_Y - ArenaBuilder.PORTAL_MAJOR
+	assert_float(ArenaBuilder.STAGE_DECK_Y - lowest_point) \
+			.is_equal_approx(ArenaBuilder.PORTAL_CUT_DEPTH, 0.001)
 
 
 ## Every vertex of the tube lies on the tube: distance from the ring's
@@ -178,6 +195,19 @@ func test_a_missing_clip_leaves_the_wall_on_its_own_material() -> void:
 	assert_int(_count_collision_objects(video)).is_equal(0)
 	video.queue_free()
 	screen.queue_free()
+
+
+## The portal arc as the builder makes it: swept between the two deck
+## crossings, about a centre at the height the builder places it.
+func _portal_arc_vertices() -> PackedVector3Array:
+	var st := ArenaBuilder._new_surface()
+	var cut := ArenaBuilder._portal_cut_angle()
+	ArenaBuilder._add_arc_tube(st,
+			Vector3(0.0, ArenaBuilder.PORTAL_CENTER_Y, 0.0),
+			ArenaBuilder.PORTAL_MAJOR, ArenaBuilder.PORTAL_MINOR,
+			cut, PI - cut, ArenaBuilder.PORTAL_RING_SEGMENTS,
+			ArenaBuilder.PORTAL_TUBE_SIDES)
+	return st.commit().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 
 
 func _face_arrays() -> Array:

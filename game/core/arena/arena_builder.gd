@@ -118,18 +118,31 @@ const SCREEN_BLANK_EMISSION := 0.35
 const PORTAL_MAJOR := 2.45
 const PORTAL_MINOR := 0.22
 const PORTAL_OFFSET_X := 3.3
-const PORTAL_CENTER_Y := STAGE_DECK_Y + 2.9
+## How far the circle's lowest point sits BELOW the deck.
+##
+## This is the whole shape: the portal is a circle, and the deck cuts the
+## bottom off it. Nothing else defines where the tube stops -- the two ends
+## are wherever the circle crosses the deck, which is why this is the constant
+## and the cut angle is derived rather than typed.
+##
+## 0.25 leaves a 2.2m opening at deck level. Larger cuts a wider doorway and
+## less circle; at about 0.9 it stops reading as a circle at all and starts
+## reading as an arch, which is a different piece of set.
+const PORTAL_CUT_DEPTH := 0.25
+const PORTAL_CENTER_Y := STAGE_DECK_Y + PORTAL_MAJOR - PORTAL_CUT_DEPTH
 const PORTAL_FACE_Z := STAGE_BACK + 1.3
 const PORTAL_RING_SEGMENTS := 48
 const PORTAL_TUBE_SIDES := 8
-## Half-width of the gap at the bottom of the omega, in radians. 0.66 rad is
-## 38 degrees either side of straight down, so the tube covers 284 degrees and
-## the opening between the two feet is 3.0m -- wide enough to walk a wrestler
-## and their entrance through, which is what the gap is for.
-const PORTAL_GAP := 0.66
-## How far outboard and how far down each foot splays from where the arc ends.
-const PORTAL_FOOT_SPREAD := 0.95
-const PORTAL_FOOT_Y := STAGE_DECK_Y + 0.18
+## The angle, measured from +X counter-clockwise, at which the portal circle
+## crosses the deck on its right-hand side. Negative: it is below the
+## horizontal. The left-hand crossing is its mirror, PI minus this.
+##
+## Derived from PORTAL_CUT_DEPTH rather than typed, so the tube always stops
+## exactly where the deck is and moving one number cannot leave the ends
+## floating above the floor or buried under it.
+static func _portal_cut_angle() -> float:
+	return asin(clampf((STAGE_DECK_Y - PORTAL_CENTER_Y) / PORTAL_MAJOR,
+			-1.0, 1.0))
 const PORTAL_SLATS := 13
 const PORTAL_RECESS_DEPTH := 3.2
 ## Linear luminance each ring is asked to reach on its own. Above the
@@ -514,10 +527,10 @@ static func _arc_rim(st: SurfaceTool, center: Vector3, radius: float,
 ## portal.
 ##
 ## Swept between two angles rather than closed, because the reference portals
-## are an OMEGA, not a ring: the tube arches over the top, comes down both
-## sides, and stops short of the bottom, leaving the gap the entrance actually
-## walks out of. A closed circle reads as a neon hoop hung on a wall, which is
-## a different piece of set entirely.
+## are a circle with the bottom cut off by the deck: the tube runs from where
+## it meets the floor one side, the long way over the top, to where it meets
+## it on the other. A fully closed circle reads as a neon hoop hung on a wall
+## -- there is no doorway in it.
 ##
 ##     p(theta, phi) = C + (major + minor cos phi) (cos theta, sin theta, 0)
 ##                       + (0, 0, minor sin phi)
@@ -550,34 +563,6 @@ static func _add_arc_tube(st: SurfaceTool, center: Vector3, major: float,
 				point.call(ti, pi + 1), point.call(ti + 1, pi + 1),
 				point.call(ti + 1, pi), point.call(ti, pi),
 			])
-
-
-## A straight length of tube between two points -- the splayed foot each end
-## of an omega drops to the deck on.
-##
-## Deliberately not tangential to the arc it continues. The tangent at the
-## arc's end points down and *inward*, and the reference set's feet turn
-## outward and plant wider than the arc: that flare is what stops the portal
-## reading as a hoop someone cut a piece out of.
-static func _add_tube_along(st: SurfaceTool, from: Vector3, to: Vector3,
-		minor: float, sides: int) -> void:
-	var axis := to - from
-	if axis.length() < 0.0001:
-		return
-	var forward := axis.normalized()
-	var up := Vector3.BACK if absf(forward.dot(Vector3.BACK)) < 0.9 else Vector3.UP
-	var u := forward.cross(up).normalized()
-	var v := forward.cross(u).normalized()
-	var rim := func(base: Vector3, pi: int) -> Array:
-		var phi := TAU * float(pi) / float(sides)
-		var normal := u * cos(phi) + v * sin(phi)
-		return [base + normal * minor, normal,
-				Vector2(float(pi) / float(sides), base.distance_to(from))]
-	for pi: int in sides:
-		_add_quad(st, [
-			rim.call(from, pi + 1), rim.call(to, pi + 1),
-			rim.call(to, pi), rim.call(from, pi),
-		])
 
 
 ## The radial slat fan inside a portal: `count` tapered planks swept between
@@ -1147,20 +1132,15 @@ func _build_entrance_portals() -> void:
 		var sx: float = side["x"]
 		var at := Vector3(sx * PORTAL_OFFSET_X, PORTAL_CENTER_Y, PORTAL_FACE_Z)
 
-		# The omega. Bottom of the circle is -PI/2; the sweep runs from just
-		# past it, the long way round, to just short of it again.
+		# A circle with the bottom cut off by the deck. The sweep runs from
+		# where the circle meets the deck on the right, the long way over the
+		# top, to where it meets it on the left -- 308 degrees of it. There
+		# are no legs and no feet: the tube simply stops at the floor, which
+		# is what a circle sunk a quarter of a metre into a stage does.
 		var ring := _new_surface()
-		var from_angle := -PI * 0.5 + PORTAL_GAP
-		var to_angle := from_angle + TAU - PORTAL_GAP * 2.0
-		_add_arc_tube(ring, at, PORTAL_MAJOR, PORTAL_MINOR, from_angle,
-				to_angle, PORTAL_RING_SEGMENTS, PORTAL_TUBE_SIDES)
-		# A foot off each end, splayed outward and planted on the deck.
-		for end_angle: float in [from_angle, to_angle]:
-			var tip := at + Vector3(cos(end_angle), sin(end_angle), 0.0) * PORTAL_MAJOR
-			var outward := signf(tip.x - at.x)
-			_add_tube_along(ring, tip, Vector3(
-					tip.x + outward * PORTAL_FOOT_SPREAD, PORTAL_FOOT_Y, tip.z),
-					PORTAL_MINOR, PORTAL_TUBE_SIDES)
+		var cut := _portal_cut_angle()
+		_add_arc_tube(ring, at, PORTAL_MAJOR, PORTAL_MINOR, cut, PI - cut,
+				PORTAL_RING_SEGMENTS, PORTAL_TUBE_SIDES)
 		add_child(_mesh_instance("PortalRing%s" % side["name"], ring,
 				_self_emissive(MaterialLibrary.resolve(side["key"]),
 				PORTAL_EMISSION)))
@@ -1174,14 +1154,17 @@ func _build_entrance_portals() -> void:
 		# entrance walks through. A full lower half would fill the doorway
 		# with slats.
 		var fan := _new_surface()
-		var wedge_from := PI if sx < 0.0 else TAU - (PI * 0.5 - PORTAL_GAP)
+		# Centred on the outboard horizontal, reaching down toward the cut but
+		# stopping clear of the doorway the entrance walks through.
+		var wedge_from := (PI - 0.30) if sx < 0.0 else _portal_cut_angle() + 0.30
 		# Slat half-widths are what make a fan read as separate strips rather
 		# than as a filled wedge: 13 slats across 52 degrees are 0.15m apart
 		# at the outer radius, so anything over about 0.06 half-width closes
 		# the gaps and the whole thing renders as one solid triangle. It did,
 		# at 0.09.
 		_add_fan(fan, at - Vector3(0.0, 0.0, 0.12), 0.55, 2.2, PORTAL_SLATS,
-				0.012, 0.035, wedge_from, wedge_from + PI * 0.5 - PORTAL_GAP)
+				0.012, 0.035, wedge_from,
+				wedge_from + (-_portal_cut_angle() - 0.30) + 0.30)
 		add_child(_mesh_instance("PortalFan%s" % side["name"], fan,
 				_self_emissive(MaterialLibrary.resolve(side["key"]),
 				PORTAL_FAN_EMISSION)))
