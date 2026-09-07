@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3]
+
+; THE SHIPPED SCENE. project.godot's run/main_scene points here, not at
+; match.tscn.
+;
+; Why this exists rather than setting the model on match.tscn directly: the
+; deployed Pages build was rendering the box mannequin, because match.tscn
+; never set character_model_scene and so fell through to
+; WrestlerController's wrestler_base.glb default. Setting it on match.tscn
+; fixes the game and wrecks the test suite -- roman_reigns.glb is 52MB, ten
+; test suites instantiate match.tscn, several of them per test, and the
+; gdunit job went from 31 seconds to over ten minutes without finishing.
+;
+; So match.tscn stays the light fixture the suite builds against, and the
+; heavy model is attached here, in the scene a player actually loads. Same
+; split roman_match.tscn already used; that scene stays for the AI-vs-AI
+; probes, which need is_ai on both slots.
+;
+; WrestlerA keeps is_ai = false. This is the playable scene.
+
+[ext_resource type="PackedScene" path="res://scenes/match.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/roman_model.tscn" id="2"]
+
+[node name="Match" instance=ExtResource("1")]
+
+[node name="WrestlerA" parent="." index="0"]
+character_model_scene = ExtResource("2")
+
+[node name="WrestlerB" parent="." index="1"]
+character_model_scene = ExtResource("2")

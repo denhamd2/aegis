@@ -3633,19 +3633,29 @@ came from `scenes/roman_match.tscn`, which overrides that property and which
 **nothing ships**. Ten commits of work on the Roman model reached the
 screenshots and never reached the game.
 
-Both slots in `match.tscn` now point at `scenes/roman_model.tscn`, the same
-override `roman_match.tscn` uses.
+The first attempt set the model on `match.tscn` directly. **That fixed the
+game and wrecked CI**, and the wreck is the more useful half of this note.
+`roman_reigns.glb` is 52MB; ten test suites instantiate `match.tscn`, several
+of them once per test; so every one of them began loading two Roman models.
+The `gdunit-tests` job went from **31 seconds to over ten minutes without
+finishing**. A test fixture and a shipped scene had been the same file, and
+nothing made that visible until the file got heavy.
+
+They are separate now. `scenes/play.tscn` inherits `match.tscn`, attaches the
+Roman model to both slots, keeps `WrestlerA` human, and is what
+`run/main_scene` points at. `match.tscn` goes back to the mannequin and stays
+the light fixture the suite builds against. It is the same split
+`roman_match.tscn` already used for the AI-vs-AI probes.
 
 One consequence, stated rather than buried: `attire_body`, `attire_accent`
-and `skin_tone` on both wrestlers are now **inert for rendering**. The Roman
+and `skin_tone` are **inert for rendering in the shipped scene**. The Roman
 model brings its own textures and nothing in `RomanModel` reads those
-properties. They are kept because `test_wrestler_colorway.gd` asserts on them
-as exported properties — which means that suite now guards a colourway that
-no longer reaches a pixel. It passes, and it is measuring something the frame
-no longer contains. The same applies to the `wrestler ↔ wrestler ≤ 0.07`
-figure in `VISUAL_BAR.md`: two instances of one model are trivially identical,
-so that number stops being evidence of anything. Both want revisiting; neither
-was changed here.
+properties. `test_wrestler_colorway.gd` still asserts on them, and still
+passes — but it asserts against `match.tscn`, which is no longer what anybody
+plays, so it now guards a colourway that reaches no shipped pixel. The same
+applies to the `wrestler ↔ wrestler ≤ 0.07` figure in `VISUAL_BAR.md`: two
+instances of one model are trivially identical, so that number stops being
+evidence of anything. Both want revisiting; neither was changed here.
 
 ### The canvas had ruled black lines across it
 
