@@ -29,8 +29,21 @@ roughness = 0.85
 [sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
 size = Vector3(6.2, 8.0, 0.3)
 
-[sub_resource type="BoxMesh" id="BoxMesh_apron"]
-size = Vector3(6.6, 0.9, 0.1)
+; A QUAD, NOT A BOX, and that is the fix for the banner being cropped.
+;
+; Godot's BoxMesh unwraps its six faces into a 3x2 atlas, so the outward face
+; sampled u=[0.000..0.333] v=[0.000..0.500] -- the left third and top half of
+; the artwork. The AEW mark sits in the centre of the banner and the right-hand
+; TNT roundel at its far edge, so both were outside that window entirely. The
+; uv1_scale x=2 below then stretched the crop to u=[0..0.667] rather than
+; fixing it, which is why the apron read as a sliver of the supplied image.
+;
+; A QuadMesh has one face with clean 0..1 UVs, measured rather than assumed:
+;   QUAD uv u=[0.000..1.000] v=[0.000..1.000] normal=(0,0,1)
+; The 0.1m of thickness the box gave is not missed -- gauntlet/refs/ring.md
+; describes a flat hanging skirt, and nothing reads the apron's depth.
+[sub_resource type="QuadMesh" id="QuadMesh_apron"]
+size = Vector2(6.6, 0.9)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_apron"]
 ; The skirt. Flat, dark and NEUTRAL, matching gauntlet/refs/ring.md: the
@@ -84,26 +97,30 @@ position = Vector3(0, -0.1, 0)
 [node name="Apron" type="Node3D" parent="."]
 
 [node name="ApronNorth" type="MeshInstance3D" parent="Apron"]
-mesh = SubResource("BoxMesh_apron")
+mesh = SubResource("QuadMesh_apron")
 surface_material_override/0 = SubResource("StandardMaterial3D_apron")
 position = Vector3(0, -0.55, 3.15)
 
 [node name="ApronSouth" type="MeshInstance3D" parent="Apron"]
-mesh = SubResource("BoxMesh_apron")
+mesh = SubResource("QuadMesh_apron")
 surface_material_override/0 = SubResource("StandardMaterial3D_apron")
 position = Vector3(0, -0.55, -3.15)
+rotation = Vector3(0, 3.14159, 0)
 
 [node name="ApronEast" type="MeshInstance3D" parent="Apron"]
-mesh = SubResource("BoxMesh_apron")
+mesh = SubResource("QuadMesh_apron")
 surface_material_override/0 = SubResource("StandardMaterial3D_apron")
 position = Vector3(3.15, -0.55, 0)
 rotation = Vector3(0, 1.5708, 0)
 
+; -1.5708, not +1.5708. Both East and West carried +1.5708 when these were
+; boxes, which was harmless because a box draws all six faces. A quad has one,
+; so West would have faced into the ring and rendered as a hole from outside.
 [node name="ApronWest" type="MeshInstance3D" parent="Apron"]
-mesh = SubResource("BoxMesh_apron")
+mesh = SubResource("QuadMesh_apron")
 surface_material_override/0 = SubResource("StandardMaterial3D_apron")
 position = Vector3(-3.15, -0.55, 0)
-rotation = Vector3(0, 1.5708, 0)
+rotation = Vector3(0, -1.5708, 0)
 
 [node name="Floor" type="StaticBody3D" parent="."]
 
