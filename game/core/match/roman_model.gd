@@ -200,6 +200,26 @@ const BEARD_ALPHA_SCISSOR := 0.16
 ## characters, and losing it entirely is a far worse trade than drawing it.
 const HAIR_LOD_BIAS := 16.0
 
+## Scalp materials that blend rather than scissor, for the hairline.
+##
+## Same argument as the beard, and the mask supports it better. Fraction of
+## hair_alpha's texels at or above a given alpha:
+##
+##   >=0.14 (HAIR_ALPHA_SCISSOR)   0.3538
+##   > 0                           0.4094
+##
+## Five and a half percent of the texture is fine strand ends that a scissor
+## throws away, and they are not spread evenly -- they are the soft edge of
+## every card, which is concentrated at the HAIRLINE. Cutting them is why the
+## forehead reads higher and barer than the source model's, where the hair
+## comes down to a fringe.
+##
+## Only the two scalp materials. lambert1_skinned's side strands (Material.019)
+## are left on the scissor: they are thin, isolated and seen edge-on, which is
+## the case where blending shows its sorting seams worst and where there is no
+## hairline to recover.
+const SCALP_BLEND := ["Material.018", "Material.020"]
+
 func _ready() -> void:
 	var body: Skeleton3D = _find_body_skeleton()
 	if not body:
@@ -254,7 +274,7 @@ func _fix_materials() -> void:
 				material.albedo_color = HAIR_COLOR
 				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
 					else HAIR_ALPHA_SCISSOR
-				if key == "beard":
+				if key == "beard" or key in SCALP_BLEND:
 					# The beard and brows blend; the scalp still scissors.
 					#
 					# Lowering the beard threshold was the obvious move and it
