@@ -120,8 +120,12 @@ ssr_enabled = true
 ; 32 steps reaches roughly 20m of deck at this grazing angle. 64 doubles the
 ; trace for reflections that are off the bottom of the frame anyway.
 ssr_max_steps = 32
-ssr_fade_in = 0.15
-ssr_fade_out = 2.0
+; Fade the reflection in over a longer run and out sooner, so the deck holds
+; the portals nearest it and lets go of everything further away. The first
+; pass ran 0.15/2.0 and carried a sharp reflection the full length of the
+; deck, which is more mirror than a stage floor has.
+ssr_fade_in = 0.4
+ssr_fade_out = 1.2
 ssr_depth_tolerance = 0.2
 ; --- Volumetric fog --------------------------------------------------------
 ; The light shafts. The key fixtures carry light_volumetric_fog_energy, so the

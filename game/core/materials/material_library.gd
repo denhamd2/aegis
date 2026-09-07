@@ -455,6 +455,12 @@ const SPECS := {
 	## reflection lobe, so this is the one hall material deliberately below
 	## the 0.30-0.90 band the rest of the file holds to.
 	##
+	## 0.14 was the first value and it made a mirror: the portals came back off
+	## the deck at nearly their own intensity, which is a wet floor rather than
+	## a lacquered one and pulled as much attention as the fixtures themselves.
+	## 0.26 keeps the reflection legible and blurs it enough to read as a
+	## surface property rather than as a second set of lights.
+	##
 	## `roughness_map: false` goes with it. DiamondPlate009's rebanded scan
 	## runs 0.30-0.90 and multiplying 0.14 by it gives a deck that mirrors in
 	## patches -- polished where the plate scan is dark, matte where it is
@@ -467,7 +473,7 @@ const SPECS := {
 	## the Environment, not a bug in the material.
 	"arena_stage_deck": {
 		"asset": "DiamondPlate009", "tint": Color(0.062, 0.078, 0.118),
-		"tile_metres": 2.5, "roughness": 0.14, "roughness_map": false,
+		"tile_metres": 2.5, "roughness": 0.26, "roughness_map": false,
 		"house_lit": true,
 	},
 	## Coverage decision: poured concrete wall. Concrete033 measures near-zero

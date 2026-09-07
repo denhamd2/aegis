@@ -4034,8 +4034,23 @@ without the thought.
 ### SSR is on, where SSIL and SDFGI stay off
 
 The deck reflects. That needed two edits that are really one: `ssr_enabled` on
-the Environment, and `arena_stage_deck` dropped from roughness 1.0 to 0.14 —
-SSR shows nothing on a matte floor. The deck also sets `roughness_map: false`,
+the Environment, and `arena_stage_deck` dropped from roughness 1.0 to 0.26 —
+SSR shows nothing on a matte floor.
+
+0.14 was the first value, with `ssr_fade_in/out` at 0.15/2.0, and it was a
+mirror: the portals came back off the deck with their shapes still legible,
+which is a wet floor rather than a lacquered one and pulled as much attention
+as the fixtures casting it. 0.26 with 0.4/1.2 blurs the return and lets the
+deck hold what is nearest it rather than the whole length of the stage.
+Measured over the deck band of `stage_wide`:
+
+| | mean | p95 |
+| --- | --- | --- |
+| 0.14, fade 0.15/2.0 | 0.068 | 0.255 |
+| 0.26, fade 0.4/1.2 | 0.043 | 0.122 |
+
+Still glossy enough for the reflection to exist, which is the property
+`test_stage_set.gd` guards rather than the exact value. The deck also sets `roughness_map: false`,
 a new `MaterialLibrary` spec flag, because DiamondPlate009's rebanded scan
 multiplies the scalar and a deck that mirrors in patches is a floor nobody has
 ever mopped.
