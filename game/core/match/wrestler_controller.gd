@@ -479,7 +479,21 @@ func _ready() -> void:
 	if skeleton:
 		# Height lives on the visual skeleton so the yawed CharacterModel node
 		# above it stays exactly as test_wrestler_model_orientation pins it.
-		skeleton.scale = Vector3.ONE * physique_height
+		#
+		# Applied through the model when it offers apply_physique_height,
+		# because a model may be rigged on MORE THAN ONE skeleton and scaling
+		# only the one _find_model_skeleton() returns then resizes part of the
+		# character inside the rest of it. The Roman model is: body and head on
+		# a 114-bone skeleton, hair and beard on a 471-bone one. Scaling only
+		# the first inflated WrestlerB's head 5% inside hair that stayed at
+		# 1.0, which pushed his scalp through the crown -- he rendered bald
+		# while WrestlerA, scaled DOWN to 0.98, kept his hair. Same model, two
+		# heights, and it read as two different men.
+		var model := anim_player.get_parent() if anim_player else null
+		if model and model.has_method("apply_physique_height"):
+			model.apply_physique_height(physique_height)
+		else:
+			skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
 		if _uses_universal_attire():
 			WrestlerAttire.build(skeleton, attire_body, attire_accent,

@@ -328,6 +328,23 @@ func _fix_materials() -> void:
 func _texture(suffix: String) -> Texture2D:
 	return load(TEXTURE_DIR % suffix) as Texture2D
 
+## Height, applied to EVERY skeleton this model is rigged on.
+##
+## The model has two: a 114-bone body-and-head skeleton and a 471-bone one
+## carrying the hair and beard. WrestlerController used to scale only the one
+## get_game_skeleton() hands back, which is the 114-bone body -- so a wrestler
+## whose physique_height was not exactly 1.0 got a head resized inside hair
+## that was not. At 1.05 the scalp came through the crown and the wrestler
+## rendered bald; at 0.98 it did not, which is why the two wrestlers looked
+## like different men from one model and why it changed with camera angle.
+##
+## Scaling both keeps the head and the hair the same size as each other at any
+## height, which is the invariant that was actually broken.
+func apply_physique_height(height: float) -> void:
+	for skeleton in _animation_skeletons():
+		skeleton.scale = Vector3.ONE * height
+
+
 func get_game_skeleton() -> Skeleton3D:
 	return _find_body_skeleton()
 
