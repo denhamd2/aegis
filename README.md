@@ -3508,3 +3508,96 @@ the ropes at ±3.1 are all where the measurement chain left them.
   not close it. Cutting the weave's relief to kill the corduroy cost some of
   it; `normal_scale` was returned to 0.75 to get part of that back, which is a
   compromise between two defects rather than a fix for either.
+
+## Gauntlet: the Roman model's face and hair (round 2)
+
+Not a scheduled round either. The user looked at a pair of art shots and asked
+why one of the two Roman Reigns was bald and appeared to have holes in his
+trousers, then — after a Sketchfab reference of the source model — why the
+hair, beard, eyes and eyebrows were all sitting in the wrong place. Seven
+passes.
+
+### One bug was behind three of the four complaints
+
+The model is rigged on **two** skeletons, and the split is not head-vs-body,
+it is **body against everything worn**: 114 bones drive body, head, eyes, mouth
+and teeth; 471 bones drive bottoms, beard, hair, wrist tape and shoes.
+
+`WrestlerController` applied `physique_height` to `get_game_skeleton()`, and
+`_find_body_skeleton()` selects `bone_count < 200` *by design* — so the
+471-bone skeleton was never scaled at all. Measured on a live match:
+
+| | body skeleton | worn skeleton |
+| --- | --- | --- |
+| WrestlerA | 0.98 | 1.00 |
+| WrestlerB | 1.05 | 1.00 |
+
+That single line explains all three reported defects at once. B's head was
+inflated 5% inside hair that stayed at 1.0, so his scalp pushed through the
+crown and he rendered bald while A, at 0.98, did not — one model, two heights,
+reported as "they look like different men". The same mismatch pushed the body
+through the trousers, which is the tan blotching on the thighs and shins that
+had previously been patched with `GROW_FIXES` as though it were a skinning
+disagreement. And it sat the beard on a face 5% larger than the beard was
+fitted to.
+
+The fix is `RomanModel.apply_physique_height()`, which scales every skeleton
+the model is rigged on. `WrestlerController` falls back to the old
+single-skeleton path when the model does not implement it, so the base rig is
+untouched.
+
+### The user was right twice, and I said otherwise twice
+
+A drift test showed the beard-to-head offset was **constant**, and I read
+"constant" as "correct" and reported back, twice, that the beard was not
+misplaced. It was constant *and* wrong: a fixed offset is exactly what a
+5%-larger head under an unscaled beard produces. Both times the user said it
+still looked wrong, and both times they were describing the real bug. The
+measurement was sound; the inference from it was not.
+
+### The rest of the face
+
+- `hair_ALPHA_skinned_001` (`Material.012`) had **no albedo texture at all**
+  and drew as a solid slab z-fighting the real hair. Hidden — and confirmed to
+  render nothing even when un-hidden and handed a mask.
+- `eyelash_skinned` had no mask and was the black bar across the eyeball;
+  `eye_caruncle_skinned` was sampling the *body* atlas and was the pink
+  crescent under the lid. Both hidden. The eye reads correctly on the existing
+  iris and pupil geometry.
+- Beard and scalp moved from `ALPHA_SCISSOR` to `ALPHA_DEPTH_PRE_PASS`. A
+  scissor threshold is a binary keep/drop; strand cards need the gradient.
+- The beard mask was repainted by **interleaving horizontally-shifted copies**
+  of itself, taking ≥0.5 alpha coverage from 0.0963 to ≈0.29 against the scalp
+  mask's 0.3204. That adds strands *between* strands. Dilation was tried first
+  and is wrong: at radius 7 it fattens each existing strand until the moustache
+  renders as a slab.
+
+### Verified
+
+Hair- and beard-to-head offsets are constant to four decimal places across 200
+frames of live match (the change at frame 200 is a yaw permuting x and z at
+identical magnitude, not drift). QA leg shots are clean front and side, both
+wrestlers, across faceoff, tie-up and action. Suite 246/246 throughout.
+
+### Process note worth keeping
+
+Godot serves textures from `.godot/imported/`, so a plain run renders the
+**old** mask after the generator has written a new one. Two comparison renders
+were wasted and a wrong conclusion nearly published — "dilation does nothing" —
+before the cache was suspected. `godot4 --headless --path game --import`
+between generating and looking. It is now written at the top of
+`tools/assets/build_roman_hair_alpha.py`.
+
+### What this round did not settle
+
+- **Beard edge definition and the hairline's fringe** are still softer than the
+  reference. Both are strand-card *geometry*: no threshold, blend mode or mask
+  edit reaches them, so closing the gap means editing the cards themselves.
+- **Pin and submission poses are unverified.** `tools/probe/extreme_poses.gd`
+  covers DOWN, MOVE_EXEC, HIT_REACT and GETUP — the states a match reaches
+  early. The pin states need the momentum ladder climbed first, which does not
+  finish under a software rasteriser.
+- The probe was committed once **with a parse error** (Variant inference on
+  `WrestlerFSM.State.keys()`), which meant a background run failed silently
+  while the silence was being attributed to a slow rasteriser. Found with
+  `--check-only`; fixed in its own commit rather than amended away.
