@@ -3922,3 +3922,176 @@ wrestler's capsule bottom is at `y = 0.0000`.
 An intermediate test — camera *at* mat level, so the canvas is edge-on at the
 horizon — appeared to show a 15cm gap and was wrong: at that distance it was
 framing the other wrestler's boot at a different depth. It is not in the probe.
+
+## The entrance set: a curved video wall, two omega portals, a floor that reflects
+
+The entrance end of the hall was grey-box, and honestly labelled as such: a
+flat 14 x 5.4 box called `StageScreen` with a doc comment explaining that it
+was *deliberately* blank ("a logo there would be branding"), two plain boxes
+and a lintel for `TunnelMouth`, and a matte deck. The note above at
+"Gauntlet: the arena the ring stands in" listed the missing entrance sequence
+under what that round did not settle. This round settles the set, though not
+the sequence — there is still no walk-out.
+
+The owner supplied five photographs of the AEW *Dynamite* set and the
+graphics-package clip that plays on its wall, and asked for the stage to match
+them. `gauntlet/refs/ring.md` is explicit that the entrance stage, ramp, truss
+and video wall "have no counterpart in the reference", so this work was
+unconstrained by the ring reference; the photographs become its reference
+instead, and they are committed with the rest of the corpus at
+`gauntlet/refs/stage/`, recorded in a new `gauntlet/refs/stage.md`.
+
+The clip is third-party broadcast material carrying a real promotion's marks.
+It is filed in `game/assets/environment/CREDITS.md` under provenance
+UNVERIFIED, beside the folding chair and for the same reason: the owner's call
+on the owner's repository, recorded so nobody reading the tree later mistakes
+it for something licensed.
+
+### Godot cannot play MP4, and the fix has a second job
+
+Godot's built-in video backend is Ogg Theora and nothing else, so the supplied
+MP4 had to be transcoded. `tools/assets/build_stage_video.sh` is that
+conversion, committed rather than run once by hand. Quality 4, measured: q7
+encodes the 78-second clip at 53MB and q4 at 23MB with no difference this wall
+can show — it is 18m of geometry seen from 28m away through a bloom threshold,
+which is not where a bitrate is worth spending.
+
+The script also cuts one still frame, and that still is the more interesting
+asset of the two, because it does two jobs that turn out to be the same job:
+
+**Captures must be frame-identical.** `CaptureHarness.ART_SHOTS` exists so
+round N and round N-1 can be compared frame for frame, and `stage_wide` looks
+straight at this wall. A freely playing video destroys that — the frame on the
+wall becomes a function of how fast the machine decoded.
+
+The obvious fix is to play and then seek to a fixed position. That is not
+available: **`VideoStreamPlayer.stream_position`'s setter is a no-op for
+Godot's built-in Theora backend.** So `StageVideo` does not start the player
+at all under `--art-shots`, `--silhouette-shot` or `--capture-output`; it
+binds the still through the same code path instead, and every capture then
+renders the same pixels by construction. The same still is the fallback when
+the clip is missing or fails to decode, which is why it is one asset and not
+two.
+
+Verified, by capturing the art shots twice and diffing:
+
+| region of `stage_wide` | pixels differing between two runs | max delta |
+| --- | --- | --- |
+| the video wall | 0.032% | 10/255 |
+| the portal rings | 0.072% | 13/255 |
+| the stage deck | 0.013% | 1/255 |
+
+The wall is stable. The *whole frame* is not byte-identical — 1.3% of it
+differs — and that predates this change: `crowd_bank`, which contains no stage
+geometry at all, differs on 2.6% of its pixels, because the crowd's bob shader
+is driven by `TIME`. Worth stating plainly rather than claiming a determinism
+the shot list never had.
+
+### The screen's brightness cap, revised on purpose
+
+The old flat panel was capped at a self-emissive level of 0.35, and the note
+on it recorded why: at 1.35 the screen owned the frame's top 5% of luminance
+(p95 0.633 against the reference still's 0.427) with 36.5% of the blown pixels
+inside the one grid cell it occupied.
+
+That measurement was taken of a *blank* panel whose whole area sat at one
+value. A picture's mean is far below its peak, and the set is now matched to
+photographs in which the wall is plainly the brightest thing in the building.
+So the cap was revised upward and re-measured rather than inherited. 1.10 was
+tried first and is too much — it clipped the clip's own highlights and the
+logo came back as a white slab with the colour gone, which is the same failure
+1.35 had. 0.55 is where it landed.
+
+Measured on `forward_plus` at 1280x720, before and after this round:
+
+| | `stage_wide` p95 | `wide_broadcast` p95 | `stage_wide` void | `wide_broadcast` void |
+| --- | --- | --- | --- | --- |
+| before | 0.420 | 0.485 | 0.001 | 0.009 |
+| after | 0.484 | 0.501 | 0.001 | 0.009 |
+
+The broadcast framing — the one `compare_frame.py` defaults to — moved by
+0.016 of p95 for a wall that went from blank to carrying a lit picture. The
+void fraction did not move at all, and both frames sit *below*
+`VISUAL_BAR.md`'s 0.010–0.066 band at both ends of the comparison, so that is
+a standing property of these two framings and not something this round did.
+
+The exposure anchor is untouched, which is the number that actually gates the
+round:
+
+    mat luminance          0.472   inside reference 0.43-0.49
+    mat <-> wrestler_a     0.309   inside reference 0.24-0.31
+    mat <-> wrestler_b     0.240   inside reference 0.24-0.31
+    wrestler <-> wrestler  0.069   inside reference 0.00-0.07
+
+That is not luck. Every fixture added for this set is **range-limited**, and
+the range is the safety mechanism rather than the aiming: the nearest mat
+corner to an accent fixture is 18.5m away and every one of them is capped at
+12m, so none of them can reach the mat with six metres to spare.
+`test_stage_set.gd` and the accent constants' own comments carry that
+argument, so a later fixture cannot re-introduce the spill just by being added
+without the thought.
+
+### SSR is on, where SSIL and SDFGI stay off
+
+The deck reflects. That needed two edits that are really one: `ssr_enabled` on
+the Environment, and `arena_stage_deck` dropped from roughness 1.0 to 0.14 —
+SSR shows nothing on a matte floor. The deck also sets `roughness_map: false`,
+a new `MaterialLibrary` spec flag, because DiamondPlate009's rebanded scan
+multiplies the scalar and a deck that mirrors in patches is a floor nobody has
+ever mopped.
+
+The Environment's existing comment block rules SSIL and SDFGI out because they
+**accumulate over frames**, and `ART_SETTLE_FRAMES` is 3 while
+`SILHOUETTE_SETTLE` is 90 — an effect converged in one measurement and not the
+other makes the two disagree about the same scene. Godot's SSR is a
+single-frame screen-space trace with no temporal accumulation, so it is
+identical at frame 3 and frame 90. That is the property that admits it, and
+the double-capture diff above is what verified it rather than assuming it.
+
+`gl_compatibility` has no SSR, so the Web build renders that deck as a
+low-roughness dark floor with tighter specular highlights and no reflection in
+it. `ArenaLighting._apply_compat_environment()` now clears the flag explicitly
+on that path — the flag is inert there anyway, and a duplicated Environment
+that sets things which do nothing is a worse description of what that renderer
+will do. Same class of recorded difference as the fog note above; not a defect
+to paper over with a fake mirrored plane.
+
+### Three ways the geometry was wrong first
+
+**The wall was invisible.** Geometry correct, UVs correct, material correct,
+and nothing on screen — the panel was being culled. Godot's front faces are
+**clockwise** from the front, which `_add_box` has always obeyed without
+saying so (its UP face lists corners that run top-left, top-right,
+bottom-right when viewed from above), and the new curved emitters listed
+theirs the other way. Every one of them now goes through a single `_add_quad`
+that takes corners counter-clockwise and reverses once, so the convention
+lives in one place instead of in six.
+
+**The bezel surfaced through the picture**, as two dark chevrons across the
+top of the wall. The frame was built from the same *sagitta* as the face it
+frames, and a wider chord bowed by the same amount is a **different circle**:
+the two arcs cross mid-panel. `_sagitta_for()` inverts `_arc_radius()` so the
+bezel is built on the picture's own circle, and stays behind it everywhere.
+
+**The portals were closed rings**, which the owner caught on the first render:
+the reference portals are an **omega**. The tube arches over the top, comes
+down both sides, stops 38 degrees short of the bottom either side, and the two
+ends splay outward onto the deck as feet. A closed circle reads as a neon hoop
+hung on a wall — a different piece of set entirely, and the 3m gap between the
+feet is the thing a wrestler is supposed to walk out of.
+
+The slat fans inside them were wrong twice over. Built `house_lit` first, they
+vanished: at hall level, inside an unlit recess, there is nothing for them to
+catch — they are strip fixtures in the photographs, so they are self-emissive
+now, at 0.34 against the ring's 1.12 so the ring stays clearly the brighter of
+the two and the depth survives. Then they rendered as one solid wedge, because
+13 slats across 52 degrees are 0.15m apart at the outer radius and each was
+0.18m wide.
+
+### One thing left alone
+
+The lighting truss crosses the wall from `stage_wide` — the ray from the
+camera through the truss at `z = -11, y = 7.6` lands at `y = 10.75` on the
+screen plane, inside its upper band. It only became visible when the wall got
+bright. It is real geometry in the right place reading as rigging, which is
+what an arena looks like, so it stays.

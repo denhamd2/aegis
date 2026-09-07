@@ -50,6 +50,11 @@ const HANG_Y := TRUSS_Y - 0.35
 ## ArenaBuilder.ROOF_Y / BARRICADE_RADIUS.
 const ROOF_Y := 14.0
 const BOWL_INNER := 9.0
+## ArenaBuilder.STAGE_BACK -- the plane the backdrop and the portals stand on.
+## Mirrored here rather than imported for the same reason TRUSS_Y is: the rig
+## reads the hall's geometry, it never writes it, and a one-way copy makes
+## that direction impossible to get wrong.
+const STAGE_BACK_Z := -24.0
 
 # --- Levels -----------------------------------------------------------------
 ## Ring key. Four fixtures on the truss corners, cross-aimed so each covers
@@ -78,7 +83,42 @@ const KEY_COLOR := Color(1.0, 0.975, 0.93)
 const TOP_COLOR := Color(0.95, 0.965, 1.0)
 const RIM_COLOR := Color(0.66, 0.78, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
-const STAGE_COLOR := Color(0.72, 0.74, 1.0)
+## The stage wash, pushed violet. Hue only: Rec.709 luminance of the old
+## (0.72, 0.74, 1.0) is 0.7581 and of this is 0.7574, a difference of 0.0007,
+## so the level the exposure anchor was solved against has not moved -- only
+## the colour of it has. `test_stage_lighting.gd` asserts that, so a later
+## edit cannot recolour the hall and move the crowd's 0.014 anchor while
+## claiming to have done the first thing only.
+const STAGE_COLOR := Color(0.66, 0.75, 1.0)
+
+## The two accent hues off the reference photographs in
+## `gauntlet/refs/stage.md`: magenta on the frame-left portal, amber on the
+## frame-right one. Warm and cool at the same time is the whole look -- the
+## rings are the source, and these fixtures are what put their colour onto the
+## deck, the slats and the backdrop so the rings read as fixtures rather than
+## as glowing decals.
+##
+## Neither is green-dominant, which matters beyond taste: `capture_harness.gd`
+## records that a green-dominant element inside the HUD corner probes blinds
+## the evidence gate.
+const ACCENT_MAGENTA := Color(0.92, 0.22, 0.66)
+const ACCENT_AMBER := Color(1.0, 0.62, 0.24)
+
+## RANGE IS THE SAFETY MECHANISM HERE, NOT THE AIMING.
+##
+## `gauntlet/refs/VISUAL_BAR.md`'s exposure anchor is the mat at 0.43-0.49
+## relative luminance, and every fixture that reaches the mat spends that
+## budget. The nearest mat corner to an accent fixture at (+-4.6, 6.2, -20.6)
+## is (3.3, 0, -3.3), which is 18.5m away. Every fixture built for the
+## entrance set therefore takes a range of 12m, which cannot reach the mat by
+## more than six metres of margin.
+##
+## `test_stage_lighting.gd` asserts that property over every fixture this file
+## builds behind the stage line, so a later fixture cannot re-introduce the
+## spill simply by being added without the thought.
+const ACCENT_RANGE := 12.0
+@export var accent_energy: float = 3.2
+@export var uplight_energy: float = 2.8
 
 ## How many house fixtures ring the bowl. Twelve is enough that the wash has
 ## no scallops at bowl distance; a coverage decision, not a measurement.
@@ -141,6 +181,8 @@ func _ready() -> void:
 	_build_rim()
 	_build_house()
 	_build_stage_wash()
+	_build_stage_accents()
+	_build_backdrop_uplights()
 	_build_fog_volumes()
 	_apply_compat_environment()
 	_compensate_for_renderer()
@@ -244,6 +286,55 @@ func _build_stage_wash() -> void:
 		_spot("Stage%s" % ("E" if sx > 0.0 else "W"), at,
 				Vector3(sx * 2.0, 0.0, -22.0), STAGE_COLOR, stage_energy,
 				44.0, 0.5, 28.0, false).light_volumetric_fog_energy = 1.2
+
+
+## Four accents on the entrance portals, two per ring, in that ring's colour.
+##
+## Two per side rather than one because a single fixture puts one hot spot on
+## a two-and-a-half-metre ring and leaves the rest of it flat; a pair from
+## either shoulder wraps it.
+##
+## The fog energy is high on purpose. On forward_plus these cones are drawn
+## through `HallHaze`, and the coloured shafts standing in the air around the
+## portals are most of what makes the reference photographs read -- it is the
+## cheapest part of this whole set and the part that carries it.
+func _build_stage_accents() -> void:
+	for sx: float in [-1.0, 1.0]:
+		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
+		var label := "W" if sx < 0.0 else "E"
+		for i: int in 2:
+			var shoulder := 2.1 if i == 0 else 4.6
+			var at := Vector3(sx * shoulder, 6.2, -20.6)
+			var aim := Vector3(sx * 3.3, 3.25, -22.9)
+			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
+					34.0, 0.6, ACCENT_RANGE, false) \
+					.light_volumetric_fog_energy = 2.0
+
+
+## Floor-mounted washes up the perforated backdrop, two either side, each in
+## its own half's accent colour.
+##
+## Without them the backdrop is the one large surface on the stage lit only by
+## house emission, and it reads as a flat card behind a lit set -- the
+## reference photographs have a wall of colour there and it is what the
+## silhouettes of the set read against. Uplighting a perforated panel is also
+## what makes the perforation visible at all: the grazing angle is what casts
+## the texture.
+##
+## Placed OUTBOARD of the portals, at |x| 7.6 and 11.5. The obvious spot --
+## either side of the ramp at |x| 5.4 -- is inside the portal rings, whose
+## outer edge is at 5.97, so a fixture there lights the inside of a ring and
+## the panel behind it gets nothing. That was the first attempt and the
+## backdrop stayed black.
+func _build_backdrop_uplights() -> void:
+	for sx: float in [-1.0, 1.0]:
+		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
+		for i: int in 2:
+			var x := sx * (7.6 if i == 0 else 11.5)
+			var at := Vector3(x, 0.4, STAGE_BACK_Z + 2.6)
+			_spot("Uplight%s%d" % ["W" if sx < 0.0 else "E", i], at,
+					Vector3(x, 10.0, STAGE_BACK_Z), color, uplight_energy,
+					52.0, 0.4, 16.0, false).light_volumetric_fog_energy = 1.6
 
 
 # ---------------------------------------------------------------------------
@@ -379,6 +470,13 @@ func _apply_compat_environment() -> void:
 	env.fog_aerial_perspective = 0.0
 	env.fog_sky_affect = 0.0
 	env.adjustment_saturation = COMPAT_SATURATION
+	# gl_compatibility has no screen-space reflections, so the flag match.tscn
+	# sets is inert here. Clearing it explicitly is documentation: this
+	# duplicated Environment is meant to be an honest description of what that
+	# renderer will actually do, and leaving a flag set that does nothing makes
+	# it a worse one. The entrance deck is a low-roughness dark floor on this
+	# path -- see the note beside `arena_stage_deck` in material_library.gd.
+	env.ssr_enabled = false
 	world.environment = env
 
 

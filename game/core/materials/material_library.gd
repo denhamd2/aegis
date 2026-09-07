@@ -53,8 +53,9 @@ class_name MaterialLibrary
 ## Arena hall (called from `core/arena/arena_builder.gd`):
 ##
 ##     arena_floor  arena_barricade  arena_bowl  arena_stage_deck
-##     arena_stage_backdrop  arena_shell  arena_truss  arena_tunnel
-##     arena_screen
+##     arena_stage_backdrop  arena_stage_panel  arena_shell  arena_truss
+##     arena_tunnel  arena_screen  arena_portal_magenta
+##     arena_portal_amber
 ##
 ## `ALIASES` keeps older names (`ring_mat`, `ring_pad`) working.
 ##
@@ -165,6 +166,16 @@ const SPEC_DEFAULTS := {
 	## right trade there: the normal and roughness maps still break the
 	## surface up under direct light, and the value survives untouched.
 	"albedo_map": true,
+	## Take the asset's roughness map, or hold the scalar flat across the
+	## surface.
+	##
+	## The rebanded scans exist to keep a *scanned* surface inside 0.30-0.90,
+	## which is right for concrete, carpet and steel plate. It is wrong for a
+	## surface whose gloss is the point: a lacquered stage deck is uniformly
+	## polished, and multiplying its 0.14 by a plate scan's variance gives
+	## back a floor that mirrors in patches. Turn this off there and the
+	## normal and colour maps still do their work.
+	"roughness_map": true,
 }
 
 ## Old names kept pointing at their replacements, so a rename does not break
@@ -434,9 +445,30 @@ const SPECS := {
 	},
 	## Coverage decision: staging deck is steel deck plate, which is both what
 	## it would really be and the map that survives the distance.
+	## Coverage decision: a lacquered black stage deck, not bare plate.
+	##
+	## The reference photos the set is matched to show the deck mirroring the
+	## portals and the video wall down its whole length -- it is the single
+	## thing that makes an entrance stage read as a stage rather than as a
+	## raised floor. That reflection is SSR (`ssr_enabled` on the Environment
+	## in match.tscn), and SSR only shows on a surface smooth enough to have a
+	## reflection lobe, so this is the one hall material deliberately below
+	## the 0.30-0.90 band the rest of the file holds to.
+	##
+	## `roughness_map: false` goes with it. DiamondPlate009's rebanded scan
+	## runs 0.30-0.90 and multiplying 0.14 by it gives a deck that mirrors in
+	## patches -- polished where the plate scan is dark, matte where it is
+	## light, which is a floor nobody has ever mopped. The colour and normal
+	## maps stay, so the plate is still visibly plate.
+	##
+	## Note for the browser build: `gl_compatibility` has no SSR, so there
+	## this is simply a dark low-roughness floor with a specular highlight
+	## and no reflection. That is a renderer difference, recorded here and in
+	## the Environment, not a bug in the material.
 	"arena_stage_deck": {
-		"asset": "DiamondPlate009", "tint": Color(0.105, 0.140, 0.205),
-		"tile_metres": 2.5, "roughness": 1.0, "house_lit": true,
+		"asset": "DiamondPlate009", "tint": Color(0.062, 0.078, 0.118),
+		"tile_metres": 2.5, "roughness": 0.14, "roughness_map": false,
+		"house_lit": true,
 	},
 	## Coverage decision: poured concrete wall. Concrete033 measures near-zero
 	## edge density at this distance and is kept anyway -- the backdrop and
@@ -483,8 +515,46 @@ const SPECS := {
 	## promotion to put on it, and an invented logo is not worth the pixels.
 	## Kept off near-black on purpose: the house-light compensation divides
 	## by linear albedo, so a very dark panel asks for an absurd energy.
+	## The video wall. `core/arena/video_wall.gd` binds the Dynamite clip's
+	## frames into this material's albedo and emission at runtime, so the
+	## tint here is a near-white multiplier rather than a colour anyone sees:
+	## the panel's colour is whatever frame is on it. Left unbound (the clip
+	## missing, or a decode failure) the tint is what shows, and it is the
+	## dark violet the wall reads as between cues rather than a grey slab.
+	##
+	## roughness 0.20 because an LED wall is behind glass, and a glass front
+	## catches the stage fixtures at a glancing angle. metallic stays 0.0 --
+	## the argument is the same one the old flat panel carried: a
+	## glass-fronted LED wall is a dielectric, and with no radiance map in
+	## this scene a conductor renders black.
 	"arena_screen": {
-		"tint": Color(0.28, 0.30, 0.38), "roughness": 0.35,
+		"tint": Color(0.62, 0.60, 0.78), "roughness": 0.20,
+	},
+	## The two circular entrance portals. No map on either: the ring is a
+	## metre-thick lit tube seen face-on, its whole read is its colour and its
+	## silhouette, and a tiled scan on it is noise at any distance the shot
+	## list looks at it from. `ArenaBuilder._self_emissive()` supplies the
+	## level at the call site, which is where the other genuinely-emissive
+	## surface in the hall gets its level too.
+	##
+	## The two hues are read off the reference photos: the frame-left portal
+	## is magenta, the frame-right one amber, and the pairing is most of what
+	## makes the set recognisable. They are named by colour rather than by
+	## side so that swapping which side is which stays a one-line change in
+	## the builder.
+	"arena_portal_magenta": {
+		"tint": Color(1.00, 0.24, 0.60), "roughness": 0.35,
+	},
+	"arena_portal_amber": {
+		"tint": Color(1.00, 0.38, 0.06), "roughness": 0.35,
+	},
+	## The perforated panel wall flanking the portals. Fabric063's weave is
+	## the closest thing in the material set to the honeycomb perforation in
+	## the photos at the distance stage_wide reads it from, and it is dark
+	## enough that the panel stays the quiet part of the frame.
+	"arena_stage_panel": {
+		"asset": "Fabric063", "tint": Color(0.150, 0.115, 0.235),
+		"tile_metres": 1.1, "roughness": 0.80, "house_lit": true,
 	},
 }
 
@@ -640,11 +710,12 @@ static func _build(s: Dictionary) -> StandardMaterial3D:
 
 	# The rebanded map wins where one exists: it is the same scan pushed
 	# inside 0.30-0.90, and the raw one is kept only for auditability.
-	var rough_tex := _load_map(asset, suffix, "roughness_band")
-	if rough_tex == null:
-		rough_tex = _load_map(asset, suffix, "roughness")
-	if rough_tex != null:
-		mat.roughness_texture = rough_tex
+	if s["roughness_map"]:
+		var rough_tex := _load_map(asset, suffix, "roughness_band")
+		if rough_tex == null:
+			rough_tex = _load_map(asset, suffix, "roughness")
+		if rough_tex != null:
+			mat.roughness_texture = rough_tex
 
 	var ao_tex := _load_map(asset, suffix, "ao")
 	if ao_tex != null:
@@ -675,6 +746,16 @@ static func _build(s: Dictionary) -> StandardMaterial3D:
 		mat.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
 
 	return mat
+
+
+## Mean linear luminance of a texture.
+##
+## Public because the video wall needs exactly this arithmetic and cannot get
+## it through `house_compensate()`: it is not a hall material, its picture is
+## not an albedo map, and what it is solving for is an emission energy rather
+## than a compensation factor. Same measurement, different caller.
+static func mean_linear(tex: Texture2D) -> float:
+	return _mean_linear(tex)
 
 
 ## Mean linear luminance of a texture, cached by resource path.
