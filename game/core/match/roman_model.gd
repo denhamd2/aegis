@@ -133,8 +133,26 @@ const HAIR_FIXES := {
 ## one model but resolved that fight differently, and one of them came out
 ## looking bald from the crown while the other had a full head of hair.
 ## Keeping one set of each pair fixes that and halves the hair overdraw.
+##
+## hair_ALPHA_skinned_001 was missed by that pass and is the reason the crown
+## went bald ANYWAY, after it was declared fixed. It is a third hair card
+## (1855 tris, material Material.012) and the probe that built this list only
+## looked at the two obvious duplicate pairs. Material.012 carries NO albedo
+## texture at all -- no strand mask, transparency disabled -- so the card
+## cannot render as hair under any threshold: it draws as a solid untextured
+## slab wherever its geometry sits, z-fighting the real hair above the ear.
+## Whichever surface won the depth test decided whether that head read as a
+## black helmet or as bare scalp, which is why it differed between the two
+## wrestlers and between camera angles on the same wrestler.
+##
+## Hidden rather than repaired because there is nothing to repair it with:
+## the other four hair materials each name a *_rai packed map that
+## build_roman_hair_alpha.py can rebuild into a mask, and this one names
+## nothing. The remaining set (hair_ALPHA_skinned + lambert1_skinned) is
+## complete on its own -- see the QA head shots in the round write-up.
 const HIDDEN_MESHES := [
 	"tops_skinned",
+	"hair_ALPHA_skinned_001",
 	"hair_ALPHA_skinned_002",
 	"lambert1_skinned_001",
 ]
