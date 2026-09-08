@@ -1,12 +1,13 @@
 ---
 name: import-wrestler
 description: >
-  Import a new rigged 3D wrestler/character model (.glb, .gltf, .fbx) into the
-  aegis Godot game so it plays as a wrestler — auditing the asset, repairing its
-  materials and textures, mapping its bones, retargeting the base rig's animation
-  libraries onto it, wiring it into WrestlerController, and verifying it on
-  rendered frames. Use this skill whenever the user drops a new character model
-  into the project or mentions importing, adding, wiring up, or "getting in the
+  Import a new 3D wrestler/character model (.glb, .gltf, .fbx) into the aegis
+  Godot game so it plays as a wrestler — auditing the asset, rigging it if it
+  arrives unrigged, repairing its materials and textures, mapping its bones,
+  getting the base rig's animation libraries onto it, wiring it into
+  WrestlerController, and verifying it on rendered frames. Use this skill
+  whenever the user drops a new character model into the project or mentions
+  importing, adding, wiring up, or "getting in the
   game" a wrestler, character, or 3D model — and also when debugging an
   already-imported one that renders magenta, bald, upside-down, backwards,
   T-posed, inverted, with skin poking through clothes, with a floating or
@@ -22,7 +23,7 @@ complaints for faults that were all knowable from the asset in the first hour.
 This skill exists so the next one takes one pass. Work the phases in order —
 each rules out a class of fault so the next phase's evidence means something.
 
-## Three rules that decide almost everything
+## Four rules that decide almost everything
 
 **A transform-space assertion cannot verify what the camera sees.** Facing was
 reported fixed on a measured `forward · to-opponent = 1.0`; the number was right
@@ -43,6 +44,13 @@ produce every symptom at once.
 **Audit the asset before writing adapter code.** Nearly every bug below was
 visible in a dump of the model's meshes, materials, textures and skeletons. They
 were instead discovered one render at a time.
+
+**Check the model is rigged at all, before planning anything.** The Cody Rhodes
+model arrived as a *statue*: 14 flat sibling meshes, no `skins` array, no
+`JOINTS_0`/`WEIGHTS_0` on any primitive, no node with children, no animations.
+Nothing in the game could pose it, and Phases 3–5 had nothing to operate on. It
+is one line of the audit's output and it decides whether this is an import or a
+rigging job. See **Phase 0.5**.
 
 ## Phase 0 — audit, before anything else
 
@@ -75,6 +83,36 @@ What to extract, and why each matters:
   mat when pitched flat at `y = 0` — the "he sinks into the ring" report.
 - **Which axis its own locomotion clips call forward.** Godot's forward is −Z.
 - **Its bone names**, against the base rig's, which is what `BONE_MAP` is.
+
+## Phase 0.5 — is it rigged? If not, rig it
+
+The audit prints `!! no Skeleton3D at all -- this is not a rigged model` when the
+supplied file is a static mesh. That is not a defect in the asset so much as a
+different job, and it is the user's call how to handle it: ask before spending
+hours. The options, with the trade-off that actually decides it:
+
+- **Rig it onto the base rig** (`tools/assets/rig_static_wrestler.py`). No bone
+  map and no animation retarget are needed afterwards, because the bones it ends
+  up with *are* the base rig's. Quality is good but not hand-rigged.
+- **Get a rigged version of the same model.** Best quality; costs a round-trip.
+- **Mixamo.** Good auto-rigging, but its `mixamorig:` names differ, so it needs a
+  bone map and a real retarget — Phase 4 in full.
+- **Use it as a static prop.** Cheap, and not a playable wrestler.
+
+`tools/assets/rig_static_wrestler.py` runs Blender headless through `bpy`
+(`pip install bpy==4.2.0` — no Blender install needed) and reports every
+measurement it makes. Read its module docstring before running it: it records
+which of the obvious approaches were tried and rendered and do not work.
+Its output is a `.glb` whose skeleton carries the base rig's bone names and
+hierarchy but rests in the supplied model's own pose.
+
+The two things to check on its output, both of which it prints:
+
+- **Every vertex carries a weight.** An unweighted vertex is not merely deformed
+  badly; it stays pinned at the origin while the body walks away.
+- **The fit check** — no bone sitting outside the flesh it drives. It caught a
+  measurement bug of mine (arms reported as pointing straight up) before
+  anything was bound to them.
 
 ## Phase 1 — land the files, unwired
 
@@ -138,12 +176,32 @@ under deformation, but it must never be load-bearing for a scale mismatch — wh
 it is, it hides the real cause for four rounds. If you pick a value that works on
 the first try, say in the comment that it is not a searched minimum.
 
-## Phase 4 — retarget
+## Phase 4 — animations: retarget only if the rig is foreign
 
-This is the phase most likely to produce a spectacular, confusing failure, and
-the maths is short. **Read `references/traps.md` §Retarget before writing it** —
-it has the exact conversion, the multiplication order that looks half-right and
-is wrong, and why the `source_skeleton` parameter must not have a default.
+**First decide whether a retarget is needed at all, because the wrong answer in
+either direction produces a wrestler that looks subtly, confusingly wrong.** The
+question is not "do the rest poses differ" — it is "is this a different rig".
+
+- **Different rig** (different bone names, different hierarchy, different bone
+  rolls — `roman_reigns.glb`, or a Mixamo auto-rig): retarget. **Read
+  `references/traps.md` §Retarget before writing it** — it has the exact
+  conversion, the multiplication order that looks half-right and is wrong, and
+  why the `source_skeleton` parameter must not have a default.
+
+- **Same rig, different bind pose** (the output of `rig_static_wrestler.py`:
+  identical bone names, identical hierarchy, resting in the model's own A-pose):
+  **do not retarget.** Copy the keys verbatim and rewrite only the node paths.
+  In Godot an animation track sets a bone's local pose directly, so identical
+  local poses down an identical hierarchy give identical *global* poses. The rest
+  pose defines the BIND pose, which the mesh's skin already accounts for.
+
+Converting in the second case applies the pose offset twice. Rendered, that is a
+wrestler standing with correct legs and head and his **arms folded across his
+waist** — which reads as a broken retarget and is in fact a retarget that should
+not be there. `CodyModel._install_animations()` carries the worked example.
+
+The tell that distinguishes them, and it is cheap: if the target's bone names are
+the base rig's names, you are in the second case.
 
 Then check the forward axis. If the rig's own forward-locomotion clips translate
 along +Z, yaw the model node 180° and pin it with a test, or every wrestler
@@ -183,11 +241,29 @@ subtly wrong.
    Look at the face close-ups specifically. Every hair, beard and eye defect
    found so far was invisible in a full-body frame.
 
-3. **Then the extreme poses**, with `tools/probe/extreme_poses.tscn`. Standing
-   shots cannot show clipping; a head on the canvas or a body inverted mid-slam
-   is where clothing and hair on a second skeleton push through the mat.
+3. **Then a real match**, which is the only thing that proves the wrestler is
+   playable rather than merely well-formed:
 
-4. **Then the suite**, and prove the change is presentation-only: run seeds 1, 2,
+   ```bash
+   godot4 --headless --path game scenes/<name>_match.tscn --fixed-fps 6000
+   ```
+
+   Expect a finish line and no script errors. Give it 20+ minutes — a match at
+   6000 fps still takes a while, and a short timeout looks exactly like a hang.
+
+4. **Then the extreme poses**:
+
+   ```bash
+   xvfb-run -a --server-args="-screen 0 800x600x24" godot4 --path game \
+       --rendering-driver opengl3 --resolution 800x600 \
+       tools/probe/extreme_poses.tscn -- --scene res://scenes/<name>_match.tscn \
+       --out /tmp/extreme
+   ```
+
+   Standing shots cannot show clipping; a head on the canvas or a body inverted
+   mid-slam is where clothing and hair push through the mat.
+
+5. **Then the suite**, and prove the change is presentation-only: run seeds 1, 2,
    3, 5, 7, 11 and show identical winners, finishes, tick counts and min-Y before
    and after. Determinism is the thing an art change must not touch.
 

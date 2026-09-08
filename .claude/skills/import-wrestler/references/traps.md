@@ -7,10 +7,33 @@ because the symptom is never obviously connected to the cause.
 - [Alpha](#alpha) — read before the mask work in Phase 2
 - [Engine traps](#engine-traps) — IK, poses, the import cache
 - [Origin and landing](#origin-and-landing)
+- [Rigging an unrigged model](#rigging-an-unrigged-model) — read before Phase 0.5
 
 ---
 
 ## Retarget
+
+**First: does this model need a retarget at all?** Two different situations look
+alike and want opposite treatment.
+
+A *foreign rig* — different bone names, hierarchy or bone rolls — needs the
+conversion below. A rig that shares the base rig's bone names and hierarchy and
+differs only in its REST pose does **not**: that is a bind-pose difference, and
+the mesh's skin already accounts for it. In Godot an animation track sets a
+bone's local pose directly, so identical local poses down an identical hierarchy
+give identical global poses. Copy the keys verbatim and rewrite only the node
+paths.
+
+Converting anyway applies the pose offset twice. Rendered, that is a wrestler
+standing with correct legs and head and his **arms folded across his waist** —
+which reads as a subtly broken retarget and is in fact a retarget that should not
+be there. Both halves of this were built and rendered; `CodyModel` is the
+verbatim case, `RomanModel` the converted one.
+
+The cheap tell: if the target's bone names are the base rig's names, it is the
+verbatim case.
+
+---
 
 **Symptom:** the model plays every animation upside down. Head at 0.32 m, feet at
 1.73 m, mesh torn apart. Or a subtler version: legs look fine, arms are folded
@@ -169,3 +192,56 @@ flip.
 
 Guard it with two tests: a strict upright check for bodies that actually leave the
 mat, and a looser 45° invariant that catches the class of bug for everything else.
+
+
+---
+
+## Rigging an unrigged model
+
+Only relevant when the audit says `no Skeleton3D at all`. All of this is measured
+on the Cody Rhodes asset by `tools/assets/rig_static_wrestler.py`, whose module
+docstring carries the full reasoning; this is the short list of what does not
+work, so it is not tried again.
+
+- **Bone-heat ("automatic weights") fails on a supplied model.** It needs a
+  closed volume, and a supplied character is a dozen-plus shells — body,
+  clothing, boots, hair, eyes, mouth — with open boundaries. Measured: 224
+  connected shells, 6251 non-manifold edges of 114445, and 0 of 40448 vertices
+  weighted, reported as a *warning* rather than an error. Transfer weights from
+  the base rig's own mannequin instead; it is already skinned to these bones.
+
+- **Normal projection (`POLYINTERP_VNORPROJ`) destroys the limbs.** It is the
+  textbook mapping when the target is bulkier than the source, and it does fix
+  the chest — whose vertices otherwise find the mannequin's *arm* as their
+  nearest surface. But an arm vertex's normal points radially out of the arm, so
+  its ray crosses open space and lands on the torso or nothing, and the arms come
+  out as ragged sheets. `POLY_NEAREST` plus smoothing is worse at the armpit in
+  theory and better everywhere visible.
+
+- **Weight smoothing cannot cross a seam.** It travels along edges, and abutting
+  shells share no edge — 15588 vertices here sit within 8 mm of a different
+  shell. Average weights by *distance* to reach them. Do not merge vertices to
+  fix this: it alters the supplied mesh and welds surfaces meant to stay
+  separate, such as the lips to the teeth.
+
+- **Do not bake the mesh into the base rig's T-pose.** It is tempting, because
+  then the rest poses match and no retarget is needed anywhere downstream. The
+  mannequin has a hard clavicle/upperarm weight boundary, and driving a
+  61-degree rotation through it tears the deltoids open: 450 vertices on edges
+  stretched past 1.6x, split symmetrically across `upperarm_l/r` and
+  `clavicle_l/r`, rendered as dark torn patches over both shoulders. More
+  smoothing does not touch it (6 passes: 450, 30 passes: 484). Ship the supplied
+  geometry undeformed and resolve the rest-pose difference in the loader.
+
+- **A wrong diagnosis worth not repeating:** that tearing was first blamed on
+  stale custom split normals surviving the bake — glTF carries per-corner
+  normals that Blender does not recompute when a mesh is deformed, which is a
+  real trap and was not this one. Clearing them changed nothing. Measure which
+  vertices actually moved (`--diagnose`) before theorising about shading.
+
+- **Texture budget.** A supplied model is authored for a renderer with no file
+  size limit. A 4096-square skin atlas put this `.glb` at 104 MB, over GitHub's
+  **100 MB per-file hard limit**, so it could not be committed at all. Cap the
+  textures — but exempt atlases carrying logo or text art, where halving the
+  resolution is plainly visible as softened edges while it is invisible on skin
+  and cloth.
