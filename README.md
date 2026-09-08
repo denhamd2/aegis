@@ -61,6 +61,23 @@ xvfb-run -a godot4 --path game --resolution 1280x720 \
     tools/probe/title_launch.tscn -- --out /tmp/launched.png  # pick -> match
 ```
 
+`tools/probe/title_video.tscn` records the whole opening — landing screen,
+select, VS card and the match it launches — as a frame sequence to encode:
+
+```
+xvfb-run -a godot4 --path game --resolution 1280x720 --fixed-fps 30 \
+    tools/probe/title_video.tscn -- --out /tmp/frames --match-seconds 45
+ffmpeg -framerate 30 -i /tmp/frames/f_%05d.jpg -c:v libx264 -crf 21 \
+    -pix_fmt yuv420p out.mp4
+```
+
+`--fixed-fps 30` against the project's 60Hz physics is two physics ticks per
+rendered frame and a fixed delta, so one saved frame is exactly 1/30s of match
+time and encoding at 30 plays back at real speed. Frames are JPEG: a minute of
+720p PNG is over a gigabyte, and the difference does not survive H.264 anyway.
+Recording is far slower than real time under llvmpipe — budget ~20 minutes of
+wall clock for a 50-second capture.
+
 ### The roster is what the AI probes fight
 
 The four AI-vs-AI probes — `ladder_probe`, `pin_probe`, `feel_probe` and
