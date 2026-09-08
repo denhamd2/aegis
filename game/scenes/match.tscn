@@ -95,6 +95,38 @@ ssao_ao_channel_affect = 0.2
 ; 90. An effect that has converged in one measurement and not the other makes
 ; the two disagree about the same scene, which would poison the exposure
 ; anchor the whole slice is judged on.
+; --- Screen-space reflections ----------------------------------------------
+; ON, where SSIL and SDFGI stay off, and the distinction is exactly the one
+; the paragraph above draws. SSIL and SDFGI ACCUMULATE OVER FRAMES. Godot's
+; SSR is a single-frame screen-space trace with no temporal accumulation, so
+; it is identical at settle frame 3 and at settle frame 90 and the two capture
+; modes cannot disagree about it. That property is what admits it -- and it is
+; verified by capturing the art shots twice and byte-diffing stage_wide.png,
+; not assumed.
+;
+; What it buys: the entrance deck is a large, near-horizontal slab directly
+; under a lit video wall and two glowing rings. Without a reflection it is a
+; dark rectangle at the back of every stage framing; with one it carries the
+; set, because SSR reflects the screen buffer and so picks up the wall's
+; emission and the rings' bloom. This and arena_stage_deck's drop to
+; roughness 0.14 are one edit, not two -- SSR shows nothing on a matte floor.
+;
+; gl_compatibility has NO SSR, so the Web build renders that deck as a
+; low-roughness dark floor with tighter specular highlights and no reflection
+; in it. That is a recorded renderer difference of the same kind README.md
+; already keeps for volumetric fog, not a defect to paper over with a fake
+; mirrored plane.
+ssr_enabled = true
+; 32 steps reaches roughly 20m of deck at this grazing angle. 64 doubles the
+; trace for reflections that are off the bottom of the frame anyway.
+ssr_max_steps = 32
+; Fade the reflection in over a longer run and out sooner, so the deck holds
+; the portals nearest it and lets go of everything further away. The first
+; pass ran 0.15/2.0 and carried a sharp reflection the full length of the
+; deck, which is more mirror than a stage floor has.
+ssr_fade_in = 0.4
+ssr_fade_out = 1.2
+ssr_depth_tolerance = 0.2
 ; --- Volumetric fog --------------------------------------------------------
 ; The light shafts. The key fixtures carry light_volumetric_fog_energy, so the
 ; four truss cones become visible volumes of air over the ring instead of
