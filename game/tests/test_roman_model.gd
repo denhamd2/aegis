@@ -150,3 +150,73 @@ func test_adapted_poses_reference_real_roman_bones() -> void:
         "Remapped pose tracks pointing at bones Roman does not have: %s"
         % [dangling]
     ).is_empty()
+
+## --- The position retarget --------------------------------------------------
+
+## Roman floated. Every clip with real root motion put him two metres above
+## the mat -- lying flat in mid-air through his own knockdowns, and through
+## the three-count that pinned him -- while the upright clips looked fine.
+##
+## The cause was in _retarget_key's position branch: it rotated the key's
+## offset by the two bones' OWN rest bases, which is the local-space mistake
+## the rotation branch above it documents at length. Between these two rigs
+## that product is a 180-degree flip (the base rig's pelvis rests at euler
+## (104.5, 0, 0), Roman's J_Hips at (-90, 0, 0)), so it inverted the vertical
+## component of every root translation.
+##
+## Asserted on the maths rather than on a posed model: instantiating
+## roman_reigns.glb costs 52MB per test, which is the whole reason play.tscn
+## exists. The rest transforms below are the two rigs' real ones, read off
+## the skeletons with tools/probe/retarget_diag.tscn.
+const _SOURCE_HIP_REST := Vector3(0.0, 0.0501, 0.9167)
+const _TARGET_HIP_REST := Vector3(0.0, 0.0, 0.97754)
+
+func _hip_rest_pair() -> Dictionary:
+    return {
+        "source": Transform3D(Basis.from_euler(Vector3(deg_to_rad(104.4586),
+                0.0, 0.0)), _SOURCE_HIP_REST),
+        "target": Transform3D(Basis.from_euler(Vector3(deg_to_rad(-90.0),
+                0.0, 0.0)), _TARGET_HIP_REST),
+        # Both rigs' hip parents rest unrotated; the flip came entirely from
+        # the bones' own bases, which is the point.
+        "source_parent": Quaternion.IDENTITY,
+        "target_parent": Quaternion.IDENTITY,
+    }
+
+## Death01's pelvis key at 1.2s, the frame the floating was measured on. The
+## rig is Z-up in rest space, so the height lives in z.
+func test_a_down_pose_retargets_onto_the_mat_not_into_the_air() -> void:
+    var model: RomanModel = auto_free(RomanModel.new())
+    var key := Vector3(0.007216, 0.548235, 0.07876)
+    var out: Vector3 = model._retarget_key(Animation.TYPE_POSITION_3D, key,
+            _hip_rest_pair())
+    # The un-retargeted rig puts this key's hips at 0.079 above the mat; the
+    # broken branch put them at 1.974, which rendered as a man lying flat two
+    # metres up. Anything near the source value is on the mat.
+    assert_float(out.z).override_failure_message(
+            "Death01's hips retargeted to %.3f; the base rig puts them at 0.079"
+            % out.z).is_between(0.0, 0.30)
+
+## The failing signature, stated as its own case so a regression names itself
+## rather than reading as "some number moved".
+func test_the_root_translation_is_not_vertically_inverted() -> void:
+    var model: RomanModel = auto_free(RomanModel.new())
+    var rest := _hip_rest_pair()
+    var source_rest: Transform3D = rest["source"]
+    # A key half a metre BELOW the source's rest hip height must stay below
+    # the target's. Flipping the offset is what sent a falling man upward.
+    var key := source_rest.origin - Vector3(0.0, 0.0, 0.5)
+    var out: Vector3 = model._retarget_key(Animation.TYPE_POSITION_3D, key,
+            rest)
+    assert_bool(out.z < _TARGET_HIP_REST.z).override_failure_message(
+            "a key below the source rest retargeted to %.3f, above the target's rest %.3f -- the offset is inverted"
+            % [out.z, _TARGET_HIP_REST.z]).is_true()
+
+## An upright clip barely moves the root, which is why the fault hid: Idle and
+## the strikes looked correct throughout.
+func test_a_key_at_the_source_rest_lands_on_the_target_rest() -> void:
+    var model: RomanModel = auto_free(RomanModel.new())
+    var rest := _hip_rest_pair()
+    var out: Vector3 = model._retarget_key(Animation.TYPE_POSITION_3D,
+            (rest["source"] as Transform3D).origin, rest)
+    assert_vector(out).is_equal_approx(_TARGET_HIP_REST, Vector3.ONE * 0.001)

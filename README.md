@@ -61,6 +61,44 @@ xvfb-run -a godot4 --path game --resolution 1280x720 \
     tools/probe/title_launch.tscn -- --out /tmp/launched.png  # pick -> match
 ```
 
+`tools/probe/title_video.tscn` records the whole opening — landing screen,
+select, VS card and the match it launches — as a frame sequence to encode:
+
+```
+xvfb-run -a godot4 --path game --resolution 1280x720 --fixed-fps 30 \
+    tools/probe/title_video.tscn -- --out /tmp/frames --match-seconds 45
+ffmpeg -framerate 30 -i /tmp/frames/f_%05d.jpg -c:v libx264 -crf 21 \
+    -pix_fmt yuv420p out.mp4
+```
+
+`--fixed-fps 30` against the project's 60Hz physics is two physics ticks per
+rendered frame and a fixed delta, so one saved frame is exactly 1/30s of match
+time and encoding at 30 plays back at real speed. Frames are JPEG: a minute of
+720p PNG is over a gigabyte, and the difference does not survive H.264 anyway.
+Recording is far slower than real time under llvmpipe — budget ~20 minutes of
+wall clock for a 50-second capture.
+
+### Is anybody floating?
+
+`tools/probe/floating_probe.tscn` takes each wrestler's **lowest bone in world
+space, every tick**, and reports the highest that per-tick minimum ever gets:
+
+```
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/floating_probe.tscn -- --seeds 1,2,3 --budget 20000
+```
+
+A man standing, lying, rolling or being thrown always has some part of him at
+or near the canvas; a man floating has none. Written because the retarget bug
+that parked Roman's whole body at y=2.0 through every knockdown was invisible
+to every other instrument in the repo — `ladder_probe` and `pin_probe` read
+state and signals, and the fault was entirely in where the bones were.
+
+A brief excursion is the game working, so the report distinguishes them: an
+excursion above 1.20m has to last 30 ticks (half a second) to count as a
+float. Measured on seeds 1-3 after the fix, every excursion is inside
+`GRAPPLE_HOLD` and lasts 6-15 ticks — a man in the air mid-throw.
+
 ### The roster is what the AI probes fight
 
 The four AI-vs-AI probes — `ladder_probe`, `pin_probe`, `feel_probe` and
