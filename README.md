@@ -4130,3 +4130,32 @@ camera through the truss at `z = -11, y = 7.6` lands at `y = 10.75` on the
 screen plane, inside its upper band. It only became visible when the wall got
 bright. It is real geometry in the right place reading as rigging, which is
 what an arena looks like, so it stays.
+
+### The wall painted itself over the game
+
+Shipped, deployed, and caught on the live build: the clip was playing across
+the middle of the screen, on top of the 3D, as well as on the wall.
+
+`VideoStreamPlayer` is a `Control`, so it has to be parented somewhere that
+draws. It was in a `CanvasLayer` at `layer = -128`, on the belief that a
+negative layer puts it behind the 3D world. **It does not.** A layer value
+orders a CanvasLayer against *other CanvasLayers*; 3D is always drawn behind
+every canvas item, so there is no layer value that hides a Control behind the
+scene. `expand = false` compounded it: with expand off the player draws at the
+clip's native 1280x720 and ignores the 2x2 rect it was given, which is why the
+overlay was as big as it was.
+
+The player now lives in a `SubViewport` -- 2x2, `disable_3d`, its texture never
+read. That is the only placement that gets both halves: it renders to its own
+target and is never composited into the window unless a `SubViewportContainer`
+asks for it, while its children still process, so the decoder runs and
+`get_video_texture()` fills. Reproduced on `gl_compatibility` before the fix
+and confirmed gone on both renderers after it, with the clip still on the wall.
+
+**Why no test caught it** is the part worth keeping. Every suite runs headless,
+and `StageVideo` skips the player entirely under the headless display server --
+so the branch that shipped the bug was the one branch no test could reach. The
+placement is now built by a static `_make_feed()` that needs no renderer, no
+clip and no display server, and three tests assert it directly: the player is
+under a `SubViewport`, there is no `CanvasLayer` or `SubViewportContainer` in
+that subtree, and `expand` is on.

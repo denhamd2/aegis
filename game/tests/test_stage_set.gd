@@ -210,6 +210,55 @@ func _portal_arc_vertices() -> PackedVector3Array:
 	return st.commit().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 
 
+## The bug that shipped: the video player painted itself over the game.
+##
+## It lived in a `CanvasLayer` at `layer = -128`, on the belief that a negative
+## layer puts it behind the 3D world. It does not -- a layer value orders a
+## CanvasLayer against *other CanvasLayers*, and 3D is always drawn behind
+## every canvas item. `expand = false` compounded it, because the player then
+## draws at the video's native 1280x720 and ignores the 2x2 rect it was given.
+##
+## No test caught it, and the reason is worth keeping: every suite runs
+## headless, and `StageVideo` skips the player entirely under the headless
+## display server. So the placement is built by a static function that needs no
+## renderer, no clip and no display server, and these assert it directly.
+func test_the_player_is_parented_into_an_offscreen_subviewport() -> void:
+	var feed := StageVideo._make_feed(null)
+	assert_object(feed).is_instanceof(SubViewport)
+	var player := feed.get_node_or_null("Feed")
+	assert_object(player).is_instanceof(VideoStreamPlayer)
+	feed.free()
+
+
+## A SubViewport renders to its own target and is never composited into the
+## window unless a SubViewportContainer asks for it. A CanvasLayer anywhere in
+## this subtree would put the player back on the screen.
+func test_the_feed_reaches_the_screen_through_nothing() -> void:
+	var feed := StageVideo._make_feed(null)
+	assert_int(_count_of_type(feed, "CanvasLayer")).is_equal(0)
+	assert_int(_count_of_type(feed, "SubViewportContainer")).is_equal(0)
+	feed.free()
+
+
+## `expand` must be on. With it off the player ignores its rect and draws at
+## the clip's native size, which is half of how the overlay got as large as it
+## did.
+func test_the_player_is_not_left_at_its_native_size() -> void:
+	var feed := StageVideo._make_feed(null)
+	var player: VideoStreamPlayer = feed.get_node("Feed")
+	assert_bool(player.expand).is_true()
+	assert_bool(player.loop).is_true()
+	assert_bool(player.autoplay).is_false()
+	feed.free()
+
+
+func _count_of_type(node: Node, type_name: String) -> int:
+	var found := 1 if node.is_class(type_name) else 0
+	for child: Node in node.get_children():
+		found += _count_of_type(child, type_name)
+	return found
+
+
 func _face_arrays() -> Array:
 	var st := ArenaBuilder._new_surface()
 	ArenaBuilder._add_curved_face(st, Vector3(0.0, 9.35, -22.9), HALF_CHORD * 2.0,
