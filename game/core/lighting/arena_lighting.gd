@@ -83,12 +83,24 @@ const KEY_COLOR := Color(1.0, 0.975, 0.93)
 const TOP_COLOR := Color(0.95, 0.965, 1.0)
 const RIM_COLOR := Color(0.66, 0.78, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
-## The stage wash, pushed violet. Hue only: Rec.709 luminance of the old
-## (0.72, 0.74, 1.0) is 0.7581 and of this is 0.7574, a difference of 0.0007,
-## so the level the exposure anchor was solved against has not moved -- only
-## the colour of it has. `test_stage_lighting.gd` asserts that, so a later
-## edit cannot recolour the hall and move the crowd's 0.014 anchor while
-## claiming to have done the first thing only.
+## The stage wash, pushed violet. Predominantly a hue change, and the figures
+## in this comment used to say "only": it claimed Rec.709 luminance of the old
+## (0.72, 0.74, 1.0) was 0.7581 against this colour's 0.7574, a difference of
+## 0.0007. Re-measured when `test_stage_lighting.gd` was finally written, none
+## of those three numbers is right:
+##
+##   raw sRGB components   old 0.7545   new 0.7489   diff 0.0056
+##   linearised            old 0.5363   new 0.5295   diff 0.0068
+##
+## So the recolour moved the level by about 0.75%, not by 0.09%. It is still a
+## small move and it is still dominated by the hue change, but "only the colour
+## has changed" was overstated by a factor of eight.
+##
+## It threatens no anchor, and the reason is worth writing down rather than
+## assuming: this fixture cannot reach the mat (see ACCENT_RANGE's table), so
+## the level it contributes to VISUAL_BAR.md's 0.43-0.49 window is zero either
+## way. `test_stage_lighting.gd` now pins the real figure, so a later recolour
+## that moves the level by a lot still fails.
 const STAGE_COLOR := Color(0.66, 0.75, 1.0)
 
 ## The two accent hues off the reference photographs in
@@ -109,13 +121,27 @@ const ACCENT_AMBER := Color(1.0, 0.62, 0.24)
 ## `gauntlet/refs/VISUAL_BAR.md`'s exposure anchor is the mat at 0.43-0.49
 ## relative luminance, and every fixture that reaches the mat spends that
 ## budget. The nearest mat corner to an accent fixture at (+-4.6, 6.2, -20.6)
-## is (3.3, 0, -3.3), which is 18.5m away. Every fixture built for the
-## entrance set therefore takes a range of 12m, which cannot reach the mat by
-## more than six metres of margin.
+## is 18.7m away, so a range of 12m cannot reach it by more than six metres.
 ##
-## `test_stage_lighting.gd` asserts that property over every fixture this file
-## builds behind the stage line, so a later fixture cannot re-introduce the
-## spill simply by being added without the thought.
+## THAT IS TRUE OF THE ACCENTS AND THE UPLIGHTS AND NOT OF THE STAGE WASH, and
+## an earlier version of this comment claimed it of "every fixture built for
+## the entrance set", which was wrong. Measured over the fixtures this file
+## actually builds behind the stage line:
+##
+##   Accent x4    range 12.0   nearest mat corner 18.68m   safe by RANGE
+##   Uplight x4   range 16.0   nearest mat corner 18.97m   safe by RANGE
+##   Stage x2     range 28.0   nearest mat corner 17.25m   safe by CONE ONLY
+##
+## The stage wash out-ranges the mat by eleven metres. What keeps it off the
+## canvas is that it is aimed away: the nearest corner sits 77.5 degrees off
+## its axis against a 44-degree cone. That is a real guarantee but a weaker
+## and more fragile one than range, because re-aiming a fixture is a smaller
+## edit than re-ranging it.
+##
+## `test_stage_lighting.gd` asserts the disjunction -- every stage-side fixture
+## is out of range of the mat OR aimed off it -- and prints which one each
+## fixture relies on, so a later fixture cannot re-introduce the spill simply
+## by being added without the thought.
 const ACCENT_RANGE := 12.0
 @export var accent_energy: float = 3.2
 @export var uplight_energy: float = 2.8
@@ -173,6 +199,30 @@ const HOUSE_FIXTURES := 12
 ## gl_compatibility captures void for judging this bar, and that stands -- the
 ## web build is for playing, not for measuring.
 const COMPAT_LIGHT_GAIN := 0.15
+
+## The same gain, applied to the entrance set, is wrong -- and this is the
+## measured version of why.
+##
+## COMPAT_LIGHT_GAIN exists for one reason: the compatibility renderer
+## over-accumulates this rig's punctual lights ON THE MAT, and 0.15 is what
+## puts the mat back on VISUAL_BAR.md's 0.43-0.49 anchor. The entrance set's
+## fixtures cannot reach the mat at all -- they are range-limited to 12m
+## against an 18.5m throw to the nearest corner, which is the guarantee
+## `test_stage_lighting.gd` holds. So scaling them buys the anchor nothing and
+## costs the whole set: measured on stage_wide against the same frame on
+## forward_plus, the backdrop rendered at 0.13x and the crowd beside it 0.28x,
+## while the mat sat at 0.99x. The set went dark to protect a number it was
+## already incapable of moving.
+##
+## 1.0, i.e. no scaling behind the stage line. If a later fixture back there
+## does start reaching the mat, the range test fails first and loudly, which
+## is the order these two want to be in.
+const COMPAT_STAGE_GAIN := 1.0
+
+## Fixtures at or behind this depth are entrance-set fixtures. Chosen well in
+## front of the stage (-24) and well behind the bowl's inner edge (-9), so it
+## separates the two groups without sitting near either.
+const STAGE_LINE_Z := -12.0
 
 
 func _ready() -> void:
@@ -483,12 +533,25 @@ func _apply_compat_environment() -> void:
 ## Scale every fixture this rig built, on renderers that over-accumulate them.
 ## Runs after the _build_* calls so it catches all of them, and so a fixture
 ## added later is covered without having to remember this exists.
+##
+## Two gains, not one: the ring rig is scaled to hold the mat's exposure
+## anchor, and the entrance set is left alone because it cannot reach the mat
+## to disturb it. See COMPAT_STAGE_GAIN for the measurement behind that.
 func _compensate_for_renderer() -> void:
 	if _supports_volumetric_fog():
 		return
 	for child in get_children():
 		if child is Light3D:
-			child.light_energy *= COMPAT_LIGHT_GAIN
+			var light: Light3D = child
+			light.light_energy *= compat_gain_for_z(light.position.z)
+
+
+## Which compatibility gain a fixture at this depth takes.
+##
+## Split out of `_compensate_for_renderer()` so it can be asserted without a
+## renderer: the loop above needs a built rig, this needs a number.
+static func compat_gain_for_z(z: float) -> float:
+	return COMPAT_STAGE_GAIN if z <= STAGE_LINE_Z else COMPAT_LIGHT_GAIN
 
 
 ## Read from RenderingServer, never from the project setting: project.godot

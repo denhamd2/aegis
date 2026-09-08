@@ -37,6 +37,21 @@ func _ready() -> void:
 	for _i in 12:
 		await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(_out)
-	print("COMPAT_SHOT saved ", _out, " method=",
+
+	# The entrance end, framed straight down the ramp. Added because the
+	# emissive gains (ArenaBuilder.COMPAT_EMISSIVE_GAIN,
+	# StageVideo.COMPAT_SCREEN_GAIN) live on surfaces the broadcast park above
+	# cannot see at all -- the wall, the portal rings and the backdrop are all
+	# behind the camera in that shot, so it could never have shown whether
+	# those constants land.
+	cam.global_position = Vector3(0.0, 3.4, 7.0)
+	cam.look_at(Vector3(0.0, 3.0, -21.0), Vector3.UP)
+	cam.fov = 55.0
+	for _i in 12:
+		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png(
+		_out.get_basename() + "_stage." + _out.get_extension())
+
+	print("COMPAT_SHOT saved ", _out, " and _stage, method=",
 		RenderingServer.get_current_rendering_method())
 	get_tree().quit()

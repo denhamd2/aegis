@@ -75,6 +75,14 @@ const SCREEN_LEVEL := 0.55
 ## Applied as uv1_scale/offset rather than by re-encoding, so the committed
 ## clip stays the source as supplied and the crop stays a decision this file
 ## makes and can revise.
+## See `_compat_gain()`. Solved the same way as the portals': at 0.60 the wall
+## measured 1.26x of the forward_plus frame, so 0.48 is 0.60 scaled by that
+## miss. Re-measured before shipping and it holds: the wall reads 0.97x, the
+## closest of the three surfaces. 16.8% of its pixels still clip white on the
+## compatibility renderer, which is the picture's own highlights doing what the
+## comment on `_compat_gain()` says they do, not the level being wrong.
+const COMPAT_SCREEN_GAIN := 0.48
+
 const VIDEO_UV_SCALE := Vector2(1.0, 0.62)
 const VIDEO_UV_OFFSET := Vector2(0.0, 0.19)
 
@@ -228,7 +236,8 @@ func _bind(tex: Texture2D, source: String) -> void:
 	_material.emission = Color(1, 1, 1)
 	_material.emission_texture = tex
 	_material.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
-	_material.emission_energy_multiplier = SCREEN_LEVEL / maxf(_still_mean(), 0.0001)
+	_material.emission_energy_multiplier = (SCREEN_LEVEL * _compat_gain()
+			/ maxf(_still_mean(), 0.0001))
 	_material.uv1_scale = Vector3(VIDEO_UV_SCALE.x, VIDEO_UV_SCALE.y, 1.0)
 	_material.uv1_offset = Vector3(VIDEO_UV_OFFSET.x, VIDEO_UV_OFFSET.y, 0.0)
 	_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
@@ -250,6 +259,22 @@ func _bind_still(reason: String) -> void:
 		return
 	_bind(tex, "still (%s)" % reason)
 	set_process(false)
+
+
+## The wall's own compatibility-renderer gain.
+##
+## Same fault as `ArenaBuilder._emissive_gain()` -- no HDR buffer, so anything
+## over 1.0 clips flat instead of rolling off the Filmic curve -- but a
+## different number, because the two surfaces clip differently. A portal ring
+## is a small, uniformly bright tube and blows out wholesale; the wall carries
+## a picture whose mean sits well under its peak, so only its highlights clip.
+## Measured against the same frame on forward_plus: the ring band was 2.89x and
+## the wall 1.71x. One constant cannot serve both, and pretending it can just
+## moves the error from one surface to the other.
+static func _compat_gain() -> float:
+	if RenderingServer.get_current_rendering_method() == "forward_plus":
+		return 1.0
+	return COMPAT_SCREEN_GAIN
 
 
 ## Mean linear luminance of the still, used to solve the emission energy.
