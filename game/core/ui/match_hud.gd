@@ -117,8 +117,13 @@ func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 	var content_w := plate.x - plate.x * 0.045
 	var font := ThemeDB.fallback_font
 	var name_size := int(maxf(10.0, plate.y * 0.26))
+	# The wrestler's own name when the roster gave him one, and the node name
+	# otherwise -- a fixture scene built straight from match.tscn still reads
+	# "WRESTLERA", which is what the tests and the probes expect to see.
+	var label: String = wrestler.display_name if "display_name" in wrestler \
+			and wrestler.display_name != "" else wrestler.name
 	draw_string(font, origin + Vector2(pad, pad + name_size * 0.85),
-			wrestler.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT,
+			label.to_upper(), HORIZONTAL_ALIGNMENT_LEFT,
 			content_w - pad * 2.0, name_size, NAME_COLOR)
 
 	var bar_x := origin.x + pad

@@ -218,6 +218,10 @@ var _tier_draws: int = 0
 ## chest narrow. Applied to the Mannequin MeshInstance3D only, so bones,
 ## attachments, IK, and shared resources are unaffected -- cosmetic.
 @export var torso_width: float = 1.0
+## What the HUD calls this wrestler. Empty means the node name, which is
+## "WrestlerA"/"WrestlerB" -- fine for a fixture scene, useless on a plate a
+## player reads. TitleScreen fills it from the roster entry he picked.
+@export var display_name: String = ""
 @export var character_model_scene: PackedScene = preload(
 		"res://assets/characters/wrestler_base.glb")
 @export var opponent_path: NodePath

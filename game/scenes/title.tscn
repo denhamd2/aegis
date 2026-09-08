@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3]
+
+; The landing screen, and the project's main scene. It launches
+; scenes/match.tscn itself with the two picked models attached, which is why
+; nothing here loads a character: the roster's .glb files (52MB for Roman
+; alone) are loaded at the moment a player locks a wrestler in, never on boot.
+;
+; scenes/play.tscn stays exactly as it was -- the direct-to-match scene the
+; capture harness and the probes point at.
+
+[ext_resource type="Script" path="res://core/ui/title_screen.gd" id="1"]
+
+[node name="TitleScreen" type="CanvasLayer"]
+
+[node name="Draw" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")

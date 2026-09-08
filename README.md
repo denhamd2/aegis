@@ -34,6 +34,33 @@ enter this repo.
 - `.github/workflows/` — `ci.yml` (gdUnit4 suite, evidence-gate fixtures,
   status-page staleness) and `pages.yml` (the playable Web build).
 
+## The front end
+
+The game boots into `game/scenes/title.tscn` — the landing screen: the
+wordmark, a menu (FIGHT / CONTROLS / QUIT), and the wrestler select that
+picks the two men who walk to the ring. The roster lives in one table,
+`game/core/ui/roster.gd`, and holds the two characters the repo has models
+for; adding a third is an entry plus its model scene, and nothing in the
+screen names a wrestler.
+
+The whole screen is drawn rather than built from themed Control nodes (see
+`game/core/ui/title_screen.gd` for why), so it lays out identically at any
+resolution, including whatever size the browser canvas happens to be. The
+controls card reads the live `InputMap`, so a rebind in `project.godot`
+cannot leave it lying.
+
+`game/scenes/play.tscn` is unchanged and still goes straight to a match with
+no menu — it is what `tools/capture/` and the probes point at.
+
+Two probes cover the screen:
+
+```
+xvfb-run -a godot4 --path game --resolution 1600x900 \
+    tools/probe/title_shots.tscn -- --out /tmp/title.png   # every phase
+xvfb-run -a godot4 --path game --resolution 1280x720 \
+    tools/probe/title_launch.tscn -- --out /tmp/launched.png  # pick -> match
+```
+
 ## Playing it in a browser
 
 `.github/workflows/pages.yml` exports the `Web` preset from
