@@ -47,14 +47,28 @@ func test_can_power_is_true_at_and_above_threshold() -> void:
 	combat.momentum = CombatSystem.SIGNATURE_THRESHOLD - 1.0
 	assert_bool(combat.can_power()).is_true()
 
-## The chain: each rung needs the one below it landed, not just the meter.
+## The chain: a rung needs the one below it landed, not just the meter.
 ## Momentum is only read at a grapple and keeps rising between grapples, so
 ## arithmetic on a rising meter cannot order the chain by itself -- measured
 ## over ten AI-vs-AI seeds, every seed that reached a finisher had skipped
 ## the signature.
-func test_a_full_meter_alone_opens_no_tier() -> void:
+##
+## The signature is the exception, and deliberately so: with only two rungs
+## left in the chain, gating it on a landed rung meant the man who lost the
+## opening tie-up could never throw one (see CombatSystem.can_signature()).
+## Its ordering comes from the meter starting at zero instead.
+func test_a_full_meter_alone_opens_no_tier_but_the_signature() -> void:
 	var combat := CombatSystem.new()
 	combat.momentum = CombatSystem.MOMENTUM_MAX
+	assert_bool(combat.can_power()).is_false()
+	assert_bool(combat.can_finisher()).is_false()
+	assert_bool(combat.can_signature()).is_true()
+
+## And an empty meter opens nothing at all -- which is what keeps a
+## signature from being the first move of a match.
+func test_an_empty_meter_opens_nothing() -> void:
+	var combat := CombatSystem.new()
+	combat.record_tier(CombatSystem.Tier.SIGNATURE)
 	assert_bool(combat.can_power()).is_false()
 	assert_bool(combat.can_signature()).is_false()
 	assert_bool(combat.can_finisher()).is_false()
@@ -64,8 +78,8 @@ func test_each_rung_needs_the_one_below_it() -> void:
 	combat.momentum = CombatSystem.MOMENTUM_MAX
 	combat.record_tier(CombatSystem.Tier.GRAPPLE)
 	assert_bool(combat.can_power()).is_true()
-	assert_bool(combat.can_signature()).is_false()
-	combat.record_tier(CombatSystem.Tier.POWER)
+	# The signature asks the meter alone, so a full one already opened it
+	# above -- what the chain still orders here is the finisher.
 	assert_bool(combat.can_signature()).is_true()
 	assert_bool(combat.can_finisher()).is_false()
 	combat.record_tier(CombatSystem.Tier.SIGNATURE)

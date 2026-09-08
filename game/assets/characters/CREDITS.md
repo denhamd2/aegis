@@ -110,3 +110,45 @@ normal-map flags. Covered by `test_roman_model.gd` (BONE_MAP + remapped
 tracks, iris/pupil attachments at measured offsets, import flag contents);
 rendered appearance belongs to the critic with a capture, not to these
 tests.
+
+## cody_rhodes.glb (wired through scenes/cody_match.tscn)
+
+Source: **user-supplied Google Drive file** (`cody-rhodes.zip`, 180 MB,
+supplied by the repo owner; author and licence unknown, not downloaded from
+a store). The archive holds `source/Cody Rhodes.glb` (100 MB) plus a
+`textures/` folder that duplicates the twelve images already embedded in the
+.glb, so only the .glb was used.
+
+Provenance signals worth recording: the material and image names are content
+hashes (`xmaterial_*`, `ximage_*`) except one, `head_shared_inside_mouth_iw9`
+-- `iw9` is Infinity Ward engine naming. This has the shape of a game rip.
+As with `roman_reigns.glb`, the author and licence are unknown and must be
+confirmed before redistribution.
+
+**The supplied asset is a statue.** Verified in the glTF itself, not inferred
+from a render: no `skins` array, no `JOINTS_0`/`WEIGHTS_0` on any primitive,
+no node with children, and no animations -- 14 flat sibling meshes, 74213
+triangles, in centimetres, in a relaxed A-pose. Nothing in the game could
+pose it.
+
+`tools/assets/rig_static_wrestler.py` produces the committed
+`cody_rhodes.glb` from it: the base rig's own 65-bone hierarchy fitted to the
+A-pose, skin weights transferred from `wrestler_base.glb`'s mannequin, the
+supplied geometry left undeformed, and textures capped at 2048 on a side
+(the source's 4096-square skin atlas put the file at 104 MB, over GitHub's
+100 MB per-file hard limit; the result is 54.7 MB). The script's own log
+records every measurement it made.
+
+What the audit found in the supplied materials: **nothing**. All twelve carry
+their own base colour, none points albedo at a packed data map, none is
+untextured. Both tattoos -- the "Dream" script on the left pec and the
+American-flag skull on the neck -- are in the asset's textures and render.
+`cody_model.gd` therefore has no material-repair pass at all, which is this
+asset being in better shape than `roman_reigns.glb`, not a repair skipped.
+
+The rigged skeleton keeps the base rig's bone names and hierarchy but rests
+in the model's own A-pose. That is a BIND-pose difference, not a retarget
+problem: identical local poses down an identical hierarchy give identical
+global poses, so the animation keys are copied verbatim and only their node
+paths are rebased. See the note on `CodyModel._install_animations()` for why
+converting them through rest space instead is wrong, and what it looks like.

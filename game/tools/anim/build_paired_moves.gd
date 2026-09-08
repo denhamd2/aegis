@@ -59,6 +59,20 @@ func _build() -> int:
 		push_error("Cannot load %s" % PAIRED_MOVES)
 		return 1
 
+	# Clips whose move has been deleted from the recipes go with it.
+	# Without this the library was append-only: the hand-keyed arcs of the
+	# original five were never regenerated, so removing a move from
+	# PairedRecipes left its trajectory sitting in the .tres forever, still
+	# loadable and still nameable by a stale MoveDef. The library's contents
+	# are now a function of the recipe file, which is what every other
+	# generated resource here already promises.
+	var pruned := 0
+	for name in library.get_animation_list():
+		if PairedRecipes.RECIPES.has(String(name)):
+			continue
+		library.remove_animation(name)
+		pruned += 1
+
 	var written := 0
 	for move_id in PairedRecipes.TRAJECTORIES:
 		var spec: Dictionary = PairedRecipes.TRAJECTORIES[move_id]
@@ -75,8 +89,8 @@ func _build() -> int:
 	if err != OK:
 		push_error("Saving %s failed: %d" % [PAIRED_MOVES, err])
 		return 1
-	print("Wrote %s -- %d generated clips, %d in the library"
-			% [PAIRED_MOVES, written, library.get_animation_list().size()])
+	print("Wrote %s -- %d generated clips, %d pruned, %d in the library"
+			% [PAIRED_MOVES, written, pruned, library.get_animation_list().size()])
 	return 0
 
 func _bake(move_id: String, spec: Dictionary) -> Animation:

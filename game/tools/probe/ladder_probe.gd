@@ -59,6 +59,11 @@ func _run_match(seed_value: int) -> Dictionary:
 		"tiers": {},
 		"landed": 0,
 		"knockdowns": 0,
+		# The winner's last landed move before the three-count. The whole
+		# point of the signature finish is that this is a signature: a
+		# match that ends on a jab has the moves but not the shape.
+		"last_move_by_winner": {},
+		"finish": "",
 		"earned": {a.name: 0.0, b.name: 0.0},
 		"trace": [],
 		"entries": {},
@@ -75,6 +80,7 @@ func _run_match(seed_value: int) -> Dictionary:
 		var tier := _tier_of(attacker, move)
 		row["tiers"][attacker.name][tier] += 1
 		row["earned"][attacker.name] += move.momentum_gain
+		row["last_move_by_winner"][attacker.name] = tier
 		# apply_momentum() has already run by the time move_landed reaches
 		# here for a grapple, so recover the pre-move meter arithmetically.
 		var after: float = attacker.combat.momentum
@@ -94,6 +100,7 @@ func _run_match(seed_value: int) -> Dictionary:
 	var won := func(winner: WrestlerController, method: String) -> void:
 		row["winner"] = winner.name
 		row["method"] = method
+		row["finish"] = row["last_move_by_winner"].get(winner.name, "nothing")
 	referee.match_won.connect(won)
 
 	var tick := 0
@@ -173,20 +180,33 @@ func _report() -> void:
 		# two samples, so the entries dict undercounts knockdowns.
 		downs += int(row["knockdowns"])
 		var seed_ordered := true
+		var grapples_this_seed := 0
+		for who: String in row["tiers"]:
+			grapples_this_seed += int((row["tiers"][who] as Dictionary)["grapple"])
 		for who: String in row["tiers"]:
 			var t: Dictionary = row["tiers"][who]
 			grapples += t["grapple"] + t["power"] + t["signature"] + t["finisher"]
 			strikes += t["strike"]
-			# A finisher with no signature behind it is a skipped rung.
+			# A signature with no grapple anywhere behind it in the match
+			# is a skipped rung. The power rung is not checked because it
+			# has no moves in it any more, and the check used to read a
+			# signature thrown over an empty power slot as a skip -- which
+			# reported every seed as out of order while the order was in
+			# fact exactly as intended.
 			if t["finisher"] > 0 and t["signature"] == 0:
 				seed_ordered = false
-			if t["signature"] > 0 and t["power"] == 0:
+			if t["signature"] > 0 and grapples_this_seed == 0:
 				seed_ordered = false
 		if seed_ordered:
 			ordered += 1
 	print("\nseeds: %d   signature fired in %d   finisher fired in %d   both in %d" % [
 		_rows.size(), sig_seeds, fin_seeds, both])
 	print("chain never skipped a rung in %d of %d seeds" % [ordered, _rows.size()])
+	var finishes := {}
+	for row in _rows:
+		var finish: String = row["finish"]
+		finishes[finish] = int(finishes.get(finish, 0)) + 1
+	print("last move the winner landed before the pin: %s" % [finishes])
 	print("per match, mean: grapple moves %.1f   strikes %.1f   knockdowns %.1f" % [
 		float(grapples) / _rows.size(), float(strikes) / _rows.size(),
 		float(downs) / _rows.size()])

@@ -11,10 +11,13 @@ extends GdUnitTestSuite
 ## the checking order: the same shape as the tie-up bug this project
 ## already fixed once (see test_match_referee_tie_break.gd).
 
-func _referee(match_seed: int, finish_choices: int) -> MatchReferee:
+func _referee(match_seed: int, holds: int) -> MatchReferee:
 	var referee: MatchReferee = auto_free(MatchReferee.new())
 	referee.match_seed = match_seed
-	referee._finish_choices = finish_choices
+	# Was _finish_choices, which also counted the referee's pin-versus-
+	# submission decisions. Those are gone -- every finish is a cover now --
+	# so the tie-break counts its own dead heats instead.
+	referee._submission_ties = holds
 	return referee
 
 func test_a_dead_heat_is_reachable_from_the_real_rates() -> void:
@@ -53,8 +56,8 @@ func test_both_outcomes_happen_across_seeds() -> void:
 ## way — that would be the ordering bug again, just seeded.
 func test_successive_holds_in_one_match_can_differ() -> void:
 	var outcomes := {}
-	for finish_choices in range(0, 12):
-		outcomes[_referee(7, finish_choices)._break_submission_tie()] = true
+	for holds in range(0, 12):
+		outcomes[_referee(7, holds)._break_submission_tie()] = true
 	assert_int(outcomes.size()).is_equal(2)
 
 ## The tie-break must not move with the tie-up's own flip: two seeded

@@ -132,7 +132,27 @@ on them holding.
 ## Scope
 
 - Vertical slice: one 1v1 exhibition match, two wrestlers, complete core
-  loop (strikes, tie-up, grapple chains, irish whip, reversals, momentum →
-  signature → finisher, pin kickout, submission, ref, win conditions, AI
-  opponent). Match variety, roster, creation suite, and career are out of
-  scope until this slice is anchored end to end.
+  loop (strikes, tie-up, grapple chains, irish whip, momentum → signature,
+  pin kickout, submission, ref, win conditions, AI opponent). Match
+  variety, roster, creation suite, and career are out of scope until this
+  slice is anchored end to end.
+- The power and finisher rungs of the grapple chain, and the reversal
+  mechanic, were **cut** — not deferred. Their paired animations did not
+  read on screen, and the moves went with them. The slots and the tier
+  gates survive in code (`CombatSystem.Tier`, `WrestlerController`'s
+  per-tier exports) so the rungs can be refilled by a scene that wires
+  moves into them, but nothing ships in them today.
+- An AI-vs-AI match therefore has a fixed shape: the two wrestlers lock up
+  once and throw a grapple, trade strikes through the middle of the match,
+  and finish with a signature into a cover — the AI reaches for its
+  signature only when the man across from it is within one of a knockdown
+  (`WrestlerAI._opponent_is_ripe()`). Measured over twelve seeds: a
+  pinfall in every one, a signature in every one, the winner's last landed
+  move a signature in eleven, ~17 strikes and ~4 grapple-chain moves per
+  match, 25-48 seconds.
+- The signature is gated on the momentum meter alone rather than on a
+  landed rung. With only two rungs left, gating it on the rung below meant
+  the loser of the opening tie-up could never throw one all match, and the
+  AI spent 5.5 tie-ups a match unlocking a rung nobody wanted to watch.
+  What keeps a signature from opening a match is that momentum starts at
+  zero.

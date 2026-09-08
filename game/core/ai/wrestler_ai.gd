@@ -1,24 +1,31 @@
 class_name WrestlerAI
 extends Node
-## Minimal grey-box AI: closes distance, then either ties up or strikes
-## once close enough to do either. Deterministic — driven off the same
+## Minimal grey-box AI: closes distance, ties up once, and then trades
+## strikes until somebody stays down. Deterministic — driven off the same
 ## fixed-tick loop as the player, no bare RNG calls.
+##
+## The shape of an AI match is deliberate. It opens with a grapple: the
+## first time these two are close enough, they lock up, and whoever wins
+## the tie-up throws one grapple move. The middle of the match is punches
+## and kicks (resources/animations/strike_recipes.gd has four). The end is
+## a signature: once the strikes have worn a man down to within one
+## signature of a knockdown, the other reaches for a last tie-up, throws
+## it, and covers him where he lands. That is the whole match: grapple,
+## strikes, signature, pinfall.
+##
+## It used to be the opposite. Every close-range decision was a seeded coin
+## flip between a strike and a tie-up, weighted so the grapple chain -- the
+## power/signature/finisher escalation -- carried the match, and measured
+## matches bore that out: four tie-ups against 4 to 11 strikes apiece, over
+## three seeds. Those escalation moves are gone (see
+## resources/animations/paired_recipes.gd), so the grapple chain has
+## nowhere to escalate to, and a match made of four identical hip tosses is
+## not a better match than one made of strikes.
 
 @export var controller: WrestlerController
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
-## How often a close-range decision comes out as a strike instead of a
-## tie-up. First-pass: high enough that punches and kicks are a real part
-## of a match rather than an opening flourish, low enough that the grapple
-## chain -- which is where the damage and the momentum actually are --
-## still drives the match to a finish. Not traced to reference footage;
-## gauntlet/refs/timings.md has nothing on strike-to-grapple ratio.
-@export var close_strike_chance: float = 0.45
-## Counts close-range decisions, so successive ones can differ. Part of the
-## RNG seed only, never of gameplay state.
-var _close_decisions: int = 0
-
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -43,48 +50,27 @@ var _close_decisions: int = 0
 var _this_tie_up_reaction: int = -1
 var _this_tie_up_interval: int = -1
 ## Number of tie-ups this AI has contested this match — seeds the per-tie-up
-## roll, the same way _grapple_attempts seeds the whip roll.
+## roll.
 var _tie_up_attempts: int = 0
 
-## Whip decision (attacker, resolving a grapple): chance of whipping instead
-## of taking the normal grapple/power/signature/finisher escalation, rolled
-## only when below CombatSystem.POWER_THRESHOLD (see _should_whip()) --
-## first-pass value, no reference data exists (gauntlet/refs/timings.md
-## marks ring-crossing/whip timing "pending"), same caveat as every other
-## tuning constant in this project.
-@export var whip_chance: float = 0.3
-## Reversal reaction delay: ticks the opponent's reversal window must have
-## already been open before this AI presses "reversal" -- same shape as
-## kickout_reaction_ticks/tie_up_reaction_ticks (a stand-in for human
-## reaction time), sized small since the windows this actually has to catch
-## are narrow (strike_jab.tres: 4 ticks: 6-9; running_attack_clothesline.tres:
-## 6 ticks: 7-12) -- a real but imperfect response, not a guaranteed one.
-@export var reversal_reaction_ticks: int = 2
 
 var _cooldown: int = 0
 var _pin_defender_tick: int = 0
 var _last_kickout_press_tick: int = -1000
 var _tie_up_tick: int = 0
 var _last_tie_up_press_tick: int = -1000
-## Number of times this AI has been the grapple attacker this match --
-## gives each grapple's whip roll (see _should_whip()) its own seed rather
-## than repeating the same roll every time.
-var _grapple_attempts: int = 0
-## Ticks the opponent's active move has continuously been inside its own
-## reversal window -- reset the instant it isn't (opponent left
-## STRIKE/RUNNING_ATTACK, or the window closed). See _maybe_press_reversal().
-var _reversal_window_ticks: int = 0
-## Set by setup_jitter() -- stored so _should_whip() can derive its own
-## seed the same deterministic way (match_seed, player_index, ...) without
-## re-plumbing match_seed through poll_input() on every call. Defaults to 0
-## for direct WrestlerAI.new() construction (unit tests), same as every
-## other setup_jitter()-only field.
+## Set by setup_jitter() -- stored so the per-tie-up timing roll can derive
+## its own seed the same deterministic way (match_seed, player_index, ...)
+## without re-plumbing match_seed through poll_input() on every call.
+## Defaults to 0 for direct WrestlerAI.new() construction (unit tests),
+## same as every other setup_jitter()-only field.
 var _match_seed: int = 0
 var _player_index: int = 0
 
 ## Max ticks setup_jitter() may shift tie_up_reaction_ticks/
 ## tie_up_press_interval_ticks by, either direction.
 const TIE_UP_JITTER_TICKS := 2
+
 
 ## Applies a small, deterministic per-instance timing offset to the tie-up
 ## mash tunables, derived from (match_seed, player_index) rather than raw
@@ -136,15 +122,12 @@ func poll_input() -> Dictionary:
 	_tie_up_tick = 0
 	_last_tie_up_press_tick = -1000
 	if controller.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
-		# Only the attacker acts here (mirrors WrestlerController._process_
-		# grapple_hold()'s own early return for the non-attacker side) --
-		# the defender has nothing to press mid-grapple; MOVE_EXEC's own
-		# reversal window is structurally unreachable (see match_referee.gd's
-		# _check_for_reversal() doc comment), so there's no decision to make
-		# here for the defender either.
-		if controller._is_grapple_attacker:
-			_grapple_attempts += 1
-			return {"run": _should_whip()}
+		# Nothing to press either way now. The attacker used to roll here
+		# for an Irish whip instead of a grapple move; with one grapple in
+		# the whole match, spending it on a whip would mean matches that
+		# never show a grapple at all. The whip itself is untouched --
+		# WrestlerController._begin_irish_whip() still runs for a player
+		# who presses run in a hold.
 		return {}
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
@@ -159,8 +142,6 @@ func poll_input() -> Dictionary:
 		"grapple": false,
 		"run": false,
 	}
-	_maybe_press_reversal(input)
-
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
@@ -171,27 +152,28 @@ func poll_input() -> Dictionary:
 		return input
 
 	if distance <= tie_up_range:
-		# Strike or tie up, rather than always tying up.
+		# Grapple, strikes, then a signature to finish him.
 		#
-		# Strikes used to be possible only in the shell outside tie_up_range,
-		# which a closing wrestler crosses in a couple of ticks -- and once
-		# inside it grappled, every time. An instrumented match bore that
-		# out exactly: one strike exchange at tick 20 during the opening
-		# approach, then 20 grapples and not another punch thrown all match.
-		# Strikes also could not land from out there any more once
-		# STRIKE_HIT_RANGE was measured down to the distance a fist actually
-		# reaches -- which is why that shell no longer throws one at all,
-		# and this is now the only branch that strikes.
-		# Only when it can actually connect. tie_up_range (1.3m) reaches
-		# further than a fist does (WrestlerController.STRIKE_HIT_RANGE,
-		# 1.15m, measured off the jab's own contact frame), so a strike
-		# thrown at the edge of tie-up range would swing through air.
-		if _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE \
-				and _should_strike_in_close():
+		# The first time these two are in range they lock up: nobody has
+		# landed a tier yet, so this presses grapple and MatchReferee's
+		# tie-up contest decides who throws the move. After that the match
+		# is punches and kicks -- until the man across from him is worn
+		# down far enough that a signature will put him on the mat, at
+		# which point this reaches for one more tie-up and throws it.
+		#
+		# Strikes only when they can actually connect. tie_up_range (1.3m)
+		# reaches further than a fist does
+		# (WrestlerController.STRIKE_HIT_RANGE, 1.15m, measured off the
+		# jab's own contact frame), so a strike thrown at the edge of
+		# tie-up range would swing through air. A tick inside tie-up range
+		# but outside striking range, or one spent on the strike cooldown,
+		# is a tick of standing squared up -- which is what the cooldown is
+		# for.
+		if _wants_tie_up():
+			input["grapple"] = true
+		elif _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE:
 			input["strike"] = true
 			_cooldown = strike_cooldown_ticks
-		else:
-			input["grapple"] = true
 	else:
 		# Outside tie-up range: close, and *only* close.
 		#
@@ -225,17 +207,72 @@ func poll_input() -> Dictionary:
 
 	return input
 
-## Whether this close-range decision is a strike rather than a tie-up.
+## Whether to reach for a tie-up this tick rather than throw a strike.
 ##
-## Seeded, like every other AI decision that affects the match: the same
-## (match_seed, player_index, attempt count) must always choose the same
-## way or replays stop reproducing. Deliberately uses different multipliers
-## from _should_whip() so the two decisions don't move in lockstep.
-func _should_strike_in_close() -> bool:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = _match_seed * 6151 + _player_index * 71 + _close_decisions
-	_close_decisions += 1
-	return rng.randf() < close_strike_chance
+## Two reasons to lock up, and no others. Everything else in a match is a
+## strike.
+##
+## 1. The opening grapple has not happened yet.
+## 2. The opponent is one signature away from the mat and this wrestler can
+##    afford one -- see _opponent_is_ripe(). This is the finish.
+##
+## There was briefly a third: a wrestler who lost the opening tie-up had
+## landed no rung of the chain, and a signature was gated on the rung below
+## it, so he locked up again purely to earn one. Measured, that cost 5.5
+## tie-ups a match against 8 strikes -- the grapple loop this AI exists to
+## avoid -- and the gate it was serving was the wrong gate.
+## CombatSystem.can_signature() asks the meter now, and that reason is gone
+## with it.
+func _wants_tie_up() -> bool:
+	if not _opening_grapple_done():
+		return true
+	return controller.combat.can_signature() and _opponent_is_ripe()
+
+## Whether a signature thrown now would knock the opponent down.
+##
+## A knockdown is an event measured from the last one
+## (WrestlerController._damage_at_last_knockdown), so what matters is the
+## damage he has taken *since* he was last put down, not his total. Ripe
+## means the weakest signature this wrestler could draw closes the
+## remaining gap by itself.
+##
+## The weakest rather than the likeliest: the move is drawn from the pool
+## by a seeded pick at the moment the grapple resolves, and reaching for a
+## signature that leaves the man standing spends the tie-up for nothing.
+##
+## This is what puts the signature at the end of the match instead of the
+## middle. Momentum crosses SIGNATURE_THRESHOLD after three or four
+## strikes -- long before anybody is hurt enough to pin -- so an AI that
+## simply threw a signature as soon as it could afford one would throw it
+## in the opening exchange and finish the match with jabs.
+func _opponent_is_ripe() -> bool:
+	var remaining := WrestlerController.KNOCKDOWN_DAMAGE \
+			- (target.combat.total_damage() - target._damage_at_last_knockdown)
+	return remaining <= _weakest_signature_damage()
+
+## Total damage of the least damaging signature this wrestler can draw --
+## his own plus his pool, exactly the set WrestlerController._pick_tier_move()
+## picks from.
+func _weakest_signature_damage() -> float:
+	var weakest := INF
+	for move: MoveDef in ([controller.signature_move] + controller.signature_move_pool):
+		if move == null:
+			continue
+		weakest = minf(weakest, move.damage_head + move.damage_torso
+				+ move.damage_arms + move.damage_legs)
+	return 0.0 if weakest == INF else weakest
+
+## Whether the opening grapple has already happened -- see the class
+## comment.
+##
+## Read off the combat record rather than off a state the AI watches go by:
+## WrestlerController records a tier the moment a grapple *lands*
+## (_resolve_grapple_move -> record_tier), which is exactly the event this
+## needs, and unlike a GRAPPLE_HOLD sighting it cannot be missed on a tick
+## this AI did not run. Either man's grapple ends the opening: they were
+## both in the same lock-up, and only one of them could win it.
+func _opening_grapple_done() -> bool:
+	return controller.combat.tier_reached >= 0 or target.combat.tier_reached >= 0
 
 ## Whether to press the kickout button this PIN_DEFENDER tick. Rate-limited
 ## to mirror a human's Input.is_action_just_pressed semantics (a real press
@@ -285,7 +322,7 @@ func _should_press_tie_up(tick: int) -> bool:
 ##
 ## So each tie-up gets its own roll around the jittered baseline,
 ## deterministic per (match_seed, player_index, _tie_up_attempts) -- the
-## same shape as _should_whip()'s per-attempt seeding, and just as replay-
+## same shape as the strike/whip rolls this file used to carry, and just as replay-
 ## safe: the same match still replays identically, only the contest varies
 ## within it.
 func _roll_tie_up_timing() -> void:
@@ -296,38 +333,4 @@ func _roll_tie_up_timing() -> void:
 	_this_tie_up_interval = maxi(1,
 		tie_up_press_interval_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
 
-## Whether to whip instead of taking the normal grapple/power/signature/
-## finisher escalation this GRAPPLE_HOLD tick. Never whips once already
-## able to reach the power tier or above (WrestlerController._process_
-## grapple_hold() would otherwise spend that momentum on a whip that deals
-## no direct damage, instead of the stronger escalating move) -- below that,
-## a seeded coin flip, deterministic per (match_seed, player_index,
-## _grapple_attempts) so each grapple attempt in the match gets its own
-## reproducible-but-varying roll (same shape as MatchReferee.
-## _break_tie_up_tie()'s match_seed * 4096 + tick seeding, keyed off an
-## attempt counter instead since a whip decision is one-shot per grapple,
-## not per-tick).
-func _should_whip() -> bool:
-	if controller.combat.can_power():
-		return false
-	var rng := RandomNumberGenerator.new()
-	rng.seed = _match_seed * 4096 + _player_index * 97 + _grapple_attempts
-	return rng.randf() < whip_chance
 
-## Whether to press "reversal" this tick -- true only once the opponent's
-## STRIKE/RUNNING_ATTACK has already been inside its own reversal window for
-## more than reversal_reaction_ticks, a stand-in for human reaction time
-## (same shape as _should_press_kickout()'s reaction delay). Resets the
-## instant the opponent leaves those states or the window closes, so a
-## fresh move needs its own fresh reaction delay -- this can't just hold
-## the button down and get every window for free.
-func _maybe_press_reversal(input: Dictionary) -> void:
-	if not target._active_move or not target.fsm.is_in([WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]):
-		_reversal_window_ticks = 0
-		return
-	var frame_offset := target._active_move.total_frames() - target._move_ticks_remaining
-	if not target._active_move.is_in_reversal_window(frame_offset):
-		_reversal_window_ticks = 0
-		return
-	_reversal_window_ticks += 1
-	input["reversal"] = _reversal_window_ticks > reversal_reaction_ticks

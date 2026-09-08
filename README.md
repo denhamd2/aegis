@@ -34,6 +34,33 @@ enter this repo.
 - `.github/workflows/` — `ci.yml` (gdUnit4 suite, evidence-gate fixtures,
   status-page staleness) and `pages.yml` (the playable Web build).
 
+## The front end
+
+The game boots into `game/scenes/title.tscn` — the landing screen: the
+wordmark, a menu (FIGHT / CONTROLS / QUIT), and the wrestler select that
+picks the two men who walk to the ring. The roster lives in one table,
+`game/core/ui/roster.gd`, and holds the two characters the repo has models
+for; adding a third is an entry plus its model scene, and nothing in the
+screen names a wrestler.
+
+The whole screen is drawn rather than built from themed Control nodes (see
+`game/core/ui/title_screen.gd` for why), so it lays out identically at any
+resolution, including whatever size the browser canvas happens to be. The
+controls card reads the live `InputMap`, so a rebind in `project.godot`
+cannot leave it lying.
+
+`game/scenes/play.tscn` is unchanged and still goes straight to a match with
+no menu — it is what `tools/capture/` and the probes point at.
+
+Two probes cover the screen:
+
+```
+xvfb-run -a godot4 --path game --resolution 1600x900 \
+    tools/probe/title_shots.tscn -- --out /tmp/title.png   # every phase
+xvfb-run -a godot4 --path game --resolution 1280x720 \
+    tools/probe/title_launch.tscn -- --out /tmp/launched.png  # pick -> match
+```
+
 ## Playing it in a browser
 
 `.github/workflows/pages.yml` exports the `Web` preset from
@@ -4214,3 +4241,139 @@ backdrop's `_house_lit` reach change from 2.6 to 1.1 is renderer-neutral) and
 I could not establish the cause from this frame. It is recorded rather than
 tuned away: re-solving one constant to chase a number while another in the same
 frame is unexplained is how the comments above came to overstate themselves.
+
+## Cut the moves that did not read, and gave the AI match a shape
+
+The finisher, power and reversal moves were removed — all twelve MoveDefs,
+their trajectories, their baked pose clips, and their wiring — because their
+generated performances did not hold up on screen. A paired throw that does not
+read is worse than no paired throw: it costs the match a second of animation
+that says nothing happened. What is left of the paired moveset is three basic
+grapples and two signatures.
+
+Removing them made three consequences that had to be handled rather than
+absorbed:
+
+- **The reversal mechanic went with its animations.** A reversal cancelled an
+  incoming strike and played `reversal_counter.tres` through `GrappleRig`, so
+  with the counters gone there was nothing for it to play. `MatchReferee`'s
+  `_check_for_reversal`/`_apply_reversal`/`_finish_reversal`, the AI's
+  reaction-delay press, and the controller's `_wants_reversal_this_tick` are
+  all gone. `MoveDef.reversal_window_start/end` are **kept**: they are measured
+  frame numbers (the jab's 8-11 came off the clip's own contact frame), and
+  re-measuring them later is more work than carrying them.
+- **A signature became unreachable.** `can_signature()` required
+  `tier_reached >= Tier.POWER`, and nothing can record a power tier any more —
+  so the two signatures still shipped would have been silently dead rather
+  than deliberately retired. The gate now asks for a landed grapple.
+- **`build_paired_moves.gd` was append-only.** The first five moves' arcs were
+  hand-keyed straight into `paired_moves.tres` and the generator only ever
+  added to it, so deleting a recipe left its trajectory in the library
+  forever. It prunes clips with no recipe now, which makes the library a
+  function of the recipe file the way every other generated resource here
+  already is.
+
+### The AI match: one grapple, then punches and kicks, then a pinfall
+
+Every close-range decision used to be a seeded coin flip between a strike and a
+tie-up, weighted so the grapple chain carried the match. Measured before this
+change over three seeds: **four tie-ups and 4 to 11 strikes per match**, and
+two of the three matches ended by submission.
+
+The AI now presses grapple only until a grapple has actually landed — read off
+`CombatSystem.tier_reached`, which is written the moment a grapple resolves —
+and strikes for the rest of the match. The Irish-whip roll in `GRAPPLE_HOLD` is
+gone with it: with one grapple in a match, spending it on a whip means matches
+that never show a grapple at all. `_begin_irish_whip()` itself is untouched for
+a player who presses run in a hold.
+
+The referee no longer chooses between a cover and a submission either. Every
+finish is a cover, because a match is supposed to end with one wrestler pinning
+the other. The submission subsystem — minigame, both states,
+`begin_submission()` — is still wired and still tested; nothing starts one.
+
+Measured after the change, twelve AI-vs-AI seeds, `feel_probe` and
+`ladder_probe`:
+
+| | before (3 seeds) | after (12 seeds) |
+| --- | --- | --- |
+| finishes | 2 submission, 1 pinfall | **12 pinfall** |
+| grapple moves per match | 4 | **1.0** |
+| strikes per match | 4-11 | **16-42** |
+| match length | 673-1679 ticks | 1026-2899 ticks (17-48s) |
+| knockdowns per match | — | 1.9 |
+
+### Two more strikes, so the match is not one punch repeated
+
+A match made of strikes needs more than two of them. Both new ones are cut to
+their own **measured** contact frame rather than to an assumed one, by a new
+`tools/anim/measure_strike_contact.gd` — it rebuilds each frame's pose from the
+clip's own tracks over the rest pose and walks the parent chain by hand, for
+the reason the existing recipes already record: neither `AnimationPlayer.seek()`
+nor `set_bone_pose_rotation()` reaches `get_bone_global_pose()` in a `-s`
+script, so every naive sample reads back identical rest values.
+
+- **`strike_cross`** — the rig's own `Punch_Cross`, the only strike not drawn
+  from the mocap pack, so it is a visibly different punch rather than the jab
+  at another speed. Measured: the right fist peaks **0.683m** in front of the
+  pelvis at **t=0.300s** of the 1.0s clip. Retimed by exactly 2/3, which puts
+  contact on tick 12.
+- **`strike_kick_heavy`** — the same measured roundhouse as `strike_kick` at
+  two thirds speed (1.5x its 0.633s bake). Retiming scales the contact frame
+  with everything else: 0.133 × 1.5 = 0.200s, tick 12.
+
+Neither lands on the 0.133s the jab does, and that is the point: that figure is
+`gauntlet/refs/timings.md`'s measurement of a *jab's* startup, not of every
+strike's. A match whose strikes all share a startup is a match with one strike
+in it.
+
+### The signature is the finish
+
+A follow-up, and the reason the numbers above moved: the AI now hits a
+signature before it covers. It reaches for one — a second tie-up — only when
+the opponent is **within one signature of a knockdown**, measured from his
+last one rather than from his total (`WrestlerAI._opponent_is_ripe()`, against
+the *weakest* move in the signature pool, since the move is drawn by a seeded
+pick when the grapple resolves). Momentum crosses `SIGNATURE_THRESHOLD` after
+four or five strikes, long before anybody is hurt enough to pin, so an AI that
+threw a signature as soon as it could afford one would throw it in the opening
+exchange and finish the match with jabs.
+
+That needed one gate changed. `can_signature()` asked for a landed rung below
+it, and only the winner of a tie-up lands anything — so the man who lost the
+opening lock-up could never throw a signature however long the match ran. The
+first attempt at fixing that had him lock up again purely to earn the rung, and
+it measured **5.5 tie-ups a match against 8 strikes**: the grapple loop this
+whole change exists to get away from. The gate now asks the meter alone. What
+keeps a signature from being the first move of a match is that momentum starts
+at zero, and `test_combat_system.gd` pins both halves of that.
+
+Measured over twelve seeds afterwards:
+
+| | strikes only | with the signature finish |
+| --- | --- | --- |
+| finishes | 12 pinfall | 12 pinfall |
+| signature fired | 0 seeds | **12 of 12** |
+| winner's last move before the pin | strike | **signature in 11 of 12** |
+| grapple-chain moves per match | 1.0 | 4.4 |
+| strikes per match | 16-42 | 16.7 mean |
+| match length | 17-48s | 25-48s |
+
+The twelfth seed ends on a strike, and honestly: that winner had already spent
+his signature on an earlier cover the opponent kicked out of, and was back
+under `SIGNATURE_THRESHOLD` when the knockdown came. Holding the strikes back
+until the meter refilled would stall the match, since landing strikes is where
+momentum comes from.
+
+`ladder_probe.gd` reports that "last move before the pin" figure now, and its
+chain-order check was wrong after the cut in the other direction — it read a
+signature thrown over an empty power slot as a skipped rung, so it reported
+every seed as out of order while the order was exactly as intended.
+
+### Left alone, and why
+
+The **signature** moves were not removed — they were not among the ones called
+out, and both are now the finish of every AI match (see above).
+
+**WrestlerB wins 9 of 12 seeds.** That skew predates this change (the
+before-measurement has him taking 2 of 3) and nothing here addresses it.

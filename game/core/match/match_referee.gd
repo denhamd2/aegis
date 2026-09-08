@@ -1,9 +1,12 @@
 class_name MatchReferee
 extends Node
-## Drives pin/submission resolution and declares the win condition.
-## Grey-box version of the "ref" system: watches for a downed wrestler
-## being covered or locked in a submission, runs the deterministic
-## minigame, and ends the match on a three-count or a tap-out.
+## Drives pin resolution and declares the win condition. Grey-box version
+## of the "ref" system: watches for a downed wrestler being covered, runs
+## the deterministic kickout minigame, and ends the match on a three-count.
+##
+## A match ends on a pinfall. The submission path (_tick_submission and
+## friends below) is still wired and still tested, but nothing starts one
+## any more -- see _check_for_downed_opponent_action().
 
 signal match_won(winner: WrestlerController, method: String)
 
@@ -32,24 +35,6 @@ const PIN_COUNT_TICKS := 227
 ## three-count tense to watch.
 const COUNT_VISIBLE_TICKS: Array[int] = [39, 24, 999]
 const COVER_RANGE := 1.2
-## Total damage past which a downed opponent is covered rather than locked
-## in a submission. See _check_for_downed_opponent_action().
-const PIN_PREFERENCE_DAMAGE := 140.0
-## How often the attacker reaches for a submission when both finishes are
-## available. A reachability value, not a feel claim -- refs have nothing on
-## how often a wrestler should pick one over the other.
-const SUBMISSION_PREFERENCE := 0.5
-## Counts finish decisions so successive ones can differ; seed input only.
-var _finish_choices: int = 0
-## Limb damage past which a submission is worth attempting at all.
-##
-## Was 70. The worst limb tracks total damage at a near-constant ~0.49
-## (measured at every knockdown of a full match), so 70 is reached at ~143
-## total -- past PIN_PREFERENCE_DAMAGE, which left no range where both
-## finishes were legal and made the seeded choice below dead code. At 55
-## the overlap opens at ~112 total, which is a couple of knockdowns before
-## a wrestler is finishable, so a match can go either way.
-const SUBMISSION_LIMB_THRESHOLD := 55.0
 ## Absolute safety cap on a tie-up contest, not the primary mechanism (see
 ## _tick_tie_up()) — TieUpMinigame.PROGRESS_THRESHOLD is what actually
 ## decides it in practice.
@@ -58,13 +43,6 @@ const TIE_UP_MAX_TICKS := 200
 @export var wrestler_a_path: NodePath
 @export var wrestler_b_path: NodePath
 @export var match_seed: int = 0
-@export var reversal_counter_move: MoveDef
-## Extra counters drawn between by a seeded pick when a reversal lands, in
-## the same shape as WrestlerController's grapple tier pools. Empty means
-## reversal_counter_move every time.
-@export var reversal_move_pool: Array[MoveDef] = []
-## Incremented per reversal so successive counters in a match can differ.
-var _reversal_draws: int = 0
 
 var wrestler_a: WrestlerController
 var wrestler_b: WrestlerController
@@ -75,6 +53,11 @@ var _pin_count_shown: int = 0
 var _pinning: bool = false
 var _pin_attacker: WrestlerController
 var _pin_defender: WrestlerController
+## Counts submission dead heats so successive ones can differ; seed input
+## only. Was _finish_choices, which also counted the referee's pin-versus-
+## submission decisions -- those are gone (every finish is a cover now), so
+## this counts the one thing left that needs a varying seed.
+var _submission_ties: int = 0
 var _submissioning: bool = false
 var _submission_attacker: WrestlerController
 var _submission_defender: WrestlerController
@@ -82,14 +65,6 @@ var _tying_up: bool = false
 var _tie_up_ticks: int = 0
 var _tie_up_minigame: TieUpMinigame
 var _match_over: bool = false
-## True while a reversal's paired counter animation is playing -- guards
-## _check_for_reversal() from re-triggering on a later tick against the
-## same attacker, who's still sitting in STRIKE/RUNNING_ATTACK (not yet
-## moved to HIT_REACT) for the animation's duration. Without this, a stale
-## _wants_reversal_this_tick surviving the reverser's own suspended
-## _physics_process() would hit GrappleRig.begin()'s "not _active" assert
-## on the very next tick.
-var _reversing: bool = false
 
 func _ready() -> void:
 	wrestler_a = get_node(wrestler_a_path)
@@ -128,7 +103,6 @@ func _resolve_tick() -> void:
 	# regardless of node order.
 	wrestler_a._resolve_pending_hits()
 	wrestler_b._resolve_pending_hits()
-	_check_for_reversal()
 
 	if _pinning:
 		_tick_pin()
@@ -168,117 +142,21 @@ func _try_start_tie_up() -> bool:
 	_tie_up_minigame = TieUpMinigame.new()
 	return true
 
-## Consumes MoveDef.reversal_window_start/end -- and the "reversal" input,
-## plumbed since day one but never read anywhere -- for the first time: the
-## target of an in-flight STRIKE or RUNNING_ATTACK can cancel the incoming
-## hit by pressing reversal while the attacker's move is inside its own
-## reversal window. Runs here (after both wrestlers' _physics_process for
-## the tick, before _resolve_pending_hits() would ever see a hit this
-## reversal is meant to cancel) for the same reason tie-up entry and
-## pending-hit resolution already do: whether a reversal lands depends on
-## reading the *opponent's* same-tick state
-## (_active_move/_move_ticks_remaining), and resolving that inline in
-## either wrestler's own _physics_process() would make the outcome depend
-## on scene-tree node order -- the exact bug class already fixed twice this
-## session for tie-up entry and pending hits.
+## Why there is no reversal here any more.
 ##
-## MOVE_EXEC (a grapple move resolved via GrappleRig) is deliberately not
-## included here: _resolve_grapple_move() enters and resolves MOVE_EXEC
-## synchronously within the attacker's own single _physics_process() call
-## (no ticks pass in between), so by the time this referee tick runs, a
-## grapple-driven MOVE_EXEC is already over -- there's no multi-tick window
-## for a reversal to observe. strike_jab.tres already has a real
-## reversal_window_start/end (6-9) waiting on exactly this consumer, though.
-func _check_for_reversal() -> void:
-	if _reversing:
-		return
-	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
-		var reverser: WrestlerController = pair[0]
-		var attacker: WrestlerController = pair[1]
-		if not reverser._wants_reversal_this_tick:
-			continue
-		if not attacker._active_move or not attacker.fsm.is_in([WrestlerFSM.State.STRIKE, WrestlerFSM.State.RUNNING_ATTACK]):
-			continue
-		var frame_offset := attacker._active_move.total_frames() - attacker._move_ticks_remaining
-		if not attacker._active_move.is_in_reversal_window(frame_offset):
-			continue
-		if reverser.global_position.distance_to(attacker.global_position) > WrestlerController.STRIKE_HIT_RANGE:
-			continue
-		_apply_reversal(reverser, attacker)
-		# One reversal per tick, and the first pair in iteration order wins
-		# it. Both wrestlers can legitimately be inside each other's
-		# reversal window on the same tick -- rapid mutual strike-trading is
-		# the norm in this match loop, and gauntlet/refs/timings.md notes
-		# the reference footage is full of it -- and _reversing was only
-		# read once, above the loop, so the second pair applied a reversal
-		# on top of the first: GrappleRig.begin() asserts `not _active` and
-		# the match died there. Breaking is the whole fix; the loser of the
-		# race simply eats the hit, which is what a reversal is for.
-		return
-
-## Negates the incoming hit and gives the attacker a taste of their own
-## medicine -- HIT_REACT, plus the reverser (not the attacker) keeps the
-## move's momentum, a small comeback reward. Not a full "counter move"
-## system: the reverser doesn't deal the move's damage back, just avoids it
-## and gets the momentum, matching how much of a mechanic gauntlet/refs'
-## still-pending reversal-window research actually justifies right now.
+## A reversal used to cancel an incoming strike and play a paired counter
+## animation (reversal_counter.tres and five siblings) with the reverser in
+## the attacker role. Those counters were cut along with the power and
+## finisher throws -- they did not read on screen, and a counter that does
+## not read is a strike that simply vanishes. Nothing replaced the
+## mechanic: a strike thrown in this match loop now always resolves, and
+## the answer to being struck is to strike back.
 ##
-## Plays a real paired counter animation (reversal_counter.tres) via the
-## reverser's own GrappleRig reference -- reused exactly like a normal
-## grapple move, with the reverser in the "attacker" role (the one whose
-## motion track drives the counter) and the original attacker in the
-## "defender" role (the one getting countered). Finalizing HIT_REACT/
-## momentum waits for the animation to actually finish (grapple_finished)
-## rather than happening immediately, the same async shape
-## _process_grapple_hold()/_on_grapple_finished() already use for normal
-## grapple moves.
-func _apply_reversal(reverser: WrestlerController, attacker: WrestlerController) -> void:
-	_reversing = true
-	var grapple_rig := reverser.grapple_rig
-	var counter := _pick_counter()
-	if grapple_rig and counter:
-		grapple_rig.grapple_finished.connect(_on_reversal_finished.bind(reverser, attacker), CONNECT_ONE_SHOT)
-		grapple_rig.begin(reverser, attacker, counter)
-	else:
-		_finish_reversal(reverser, attacker)
-
-## Seeded draw across reversal_counter_move plus reversal_move_pool. A
-## counter negates a hit and hands the reverser momentum, so which one plays
-## is gameplay, not decoration -- it has to be reproducible from the seed.
-func _pick_counter() -> MoveDef:
-	if reversal_move_pool.is_empty():
-		return reversal_counter_move
-	var choices: Array[MoveDef] = []
-	if reversal_counter_move:
-		choices.append(reversal_counter_move)
-	for candidate: MoveDef in reversal_move_pool:
-		if candidate:
-			choices.append(candidate)
-	if choices.is_empty():
-		return reversal_counter_move
-	var rng := RandomNumberGenerator.new()
-	rng.seed = match_seed * 8192 + 7919 + _reversal_draws
-	_reversal_draws += 1
-	return choices[rng.randi_range(0, choices.size() - 1)]
-
-func _on_reversal_finished(_attacker: Node3D, _defender: Node3D, reverser: WrestlerController, attacker: WrestlerController) -> void:
-	_finish_reversal(reverser, attacker)
-
-func _finish_reversal(reverser: WrestlerController, attacker: WrestlerController) -> void:
-	var reversed_move := attacker._active_move
-	# _start_move() below immediately overwrites _active_move with the
-	# HIT_REACT timed stub anyway (same as _go_down()/_resolve_pending_hits()
-	# already do), so there's no separate "clear it first" step needed here
-	# -- the stub itself is what blocks the active-frame hit-application
-	# branch in _process_active_move() from ever seeing the reversed move
-	# again.
-	attacker._start_move(WrestlerFSM.State.HIT_REACT, attacker._timed_stub(WrestlerController.HIT_REACT_TICKS))
-	reverser.combat.apply_momentum(reversed_move)
-	_reversing = false
-
-## Kept as one function rather than two independent scans so a given
-## attacker/defender pair can't match both a pin and a submission check the
-## same tick — each pair gets exactly one decision.
+## MoveDef still carries reversal_window_start/end. Those are measured
+## frame numbers, not decoration, so they stay -- but nothing reads them
+## today, and a reversal window without a consumer decides nothing.
+## Covers a downed opponent. One function, one decision per pair: whoever
+## is on his feet and close enough to a downed man goes for the cover.
 func _check_for_downed_opponent_action() -> void:
 	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
 		var attacker: WrestlerController = pair[0]
@@ -287,39 +165,25 @@ func _check_for_downed_opponent_action() -> void:
 				and defender._cover_eligible \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE:
-			var worst_limb: CombatSystem.Limb = defender.combat.most_damaged_limb()
-			# A worn-down opponent gets covered, not stretched. The rule used
-			# to be "worst limb past 70 -> submission" with no upper bound,
-			# which sent every late knockdown to a submission -- precisely
-			# when the man is most pinnable -- so a pinfall could never
-			# happen. Measured over a match: knockdowns at 101..136 total
-			# damage all became pins the defender escaped, and the first one
-			# at 146 became the submission that ended it.
+			# Every finish is a cover. The submission branch that used to
+			# live here is gone from the AI match: a match is meant to end
+			# with one wrestler pinning the other, and a seeded coin flip
+			# between a pinfall and a tap-out meant most matches ended on
+			# the finish nobody asked to watch (measured before this
+			# change: 2 of 3 seeds ended by submission).
 			#
-			# Below PIN_PREFERENCE_DAMAGE, with a limb worked past the
-			# submission threshold, either finish is on -- and which one he
-			# reaches for is a seeded choice, so a match is not the same
-			# script every time. A hard threshold on total damage is not a
-			# decision, it is a schedule: the worst limb tracks total damage
-			# at a near-constant ~0.49 (measured across every knockdown in a
-			# match), so any pair of fixed thresholds either makes one
-			# finish unreachable or the other inevitable. Both extremes were
-			# measured here: 12 of 12 seeds submission before, 12 of 12
-			# pinfall after the first attempt at this.
-			if defender.combat.total_damage() < PIN_PREFERENCE_DAMAGE \
-					and defender.combat.limb_damage[worst_limb] >= SUBMISSION_LIMB_THRESHOLD \
-					and _prefers_submission():
-				_submissioning = true
-				_submission_attacker = attacker
-				_submission_defender = defender
-				attacker.begin_submission(defender, worst_limb)
-			else:
-				_pinning = true
-				_pin_ticks = 0
-				_pin_count_shown = 0
-				_pin_attacker = attacker
-				_pin_defender = defender
-				attacker.begin_pin(defender, _pin_seed())
+			# The submission subsystem itself is untouched --
+			# SubmissionMinigame, the two SUBMISSION_* states and
+			# WrestlerController.begin_submission() all still work, and
+			# their tests still cover them. What changed is that the
+			# referee no longer reaches for it, so nothing in a match
+			# starts one.
+			_pinning = true
+			_pin_ticks = 0
+			_pin_count_shown = 0
+			_pin_attacker = attacker
+			_pin_defender = defender
+			attacker.begin_pin(defender, _pin_seed())
 			return
 
 ## Seed for this pin's kickout minigame. Every pin in a match needs its own
@@ -340,18 +204,6 @@ func _check_for_downed_opponent_action() -> void:
 func _pin_seed() -> int:
 	var tick: int = ReplaySystem.current_tick if ReplaySystem else _pin_ticks
 	return match_seed + tick
-
-## Whether this attacker reaches for the submission rather than the cover,
-## when the defender's state allows either.
-##
-## Seeded like every other decision that changes a match, and deliberately
-## using different multipliers from the counter draw so the two do not move
-## together.
-func _prefers_submission() -> bool:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = match_seed * 4099 + _finish_choices * 37
-	_finish_choices += 1
-	return rng.randf() < SUBMISSION_PREFERENCE
 
 ## Read-only views of referee state, for the HUD.
 ##
@@ -458,7 +310,8 @@ func _tick_submission() -> void:
 ## dead heats in a match and across seeds do not all go one way.
 func _break_submission_tie() -> bool:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = match_seed * 6143 + _finish_choices * 41
+	rng.seed = match_seed * 6143 + _submission_ties * 41
+	_submission_ties += 1
 	return rng.randi_range(0, 1) == 0
 
 func _end_submission(tapped_out: bool) -> void:

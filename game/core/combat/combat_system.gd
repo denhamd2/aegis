@@ -8,6 +8,11 @@ enum Limb { HEAD, TORSO, ARMS, LEGS }
 ## The grapple chain, in the order ARCHITECTURE.md names it ("momentum ->
 ## signature -> finisher"). A move's tier is which slot it was drawn from;
 ## MoveDef carries no tier field (see WrestlerController.tier_of()).
+##
+## POWER and FINISHER are now empty rungs: their moves and paired
+## animations were removed, and no scene wires either slot. The enum keeps
+## them so a tier's ordinal -- and every seeded draw and saved replay that
+## depends on it -- does not shift underneath the two rungs that are left.
 enum Tier { GRAPPLE, POWER, SIGNATURE, FINISHER }
 
 const MAX_LIMB_DAMAGE := 100.0
@@ -106,8 +111,12 @@ func total_damage() -> float:
 	return sum
 
 ## Records a landed rung. Called on the attacker when a grapple move
-## actually resolves, not when it is chosen -- a move that gets reversed
-## was never thrown.
+## actually resolves, not when it is chosen. (It was written that way for
+## reversals, which could cancel a move mid-flight; the reversal mechanic
+## is gone, and landing is still the right moment.)
+##
+## WrestlerAI also reads tier_reached to know the opening grapple has
+## happened -- see WrestlerAI._opening_grapple_done().
 func record_tier(tier: int) -> void:
 	if tier > tier_reached:
 		tier_reached = tier
@@ -115,8 +124,25 @@ func record_tier(tier: int) -> void:
 func can_power() -> bool:
 	return momentum >= POWER_THRESHOLD and tier_reached >= Tier.GRAPPLE
 
+## A signature is gated on the meter alone.
+##
+## It used to need the rung below it landed as well, and that rung was the
+## power move -- then, when the power moves were removed, the grapple. Both
+## readings made the same mistake once the chain shrank to two rungs: only
+## the winner of a tie-up lands anything, so the other man could never
+## throw a signature however long the match ran, and the AI had to spend
+## tie-ups on grapples nobody wanted just to unlock one. Measured with that
+## rule in place: 5.5 tie-ups a match against 8 strikes, which is the
+## grapple loop this AI was rewritten to get away from.
+##
+## The ordering the chain protects still holds, by arithmetic rather than
+## by bookkeeping: momentum starts at zero and a signature needs
+## SIGNATURE_THRESHOLD, which is four or five landed strikes -- so nobody
+## opens a match with one. WrestlerAI supplies the other half, only
+## reaching for a signature when it will finish the man off
+## (_opponent_is_ripe()).
 func can_signature() -> bool:
-	return momentum >= SIGNATURE_THRESHOLD and tier_reached >= Tier.POWER
+	return momentum >= SIGNATURE_THRESHOLD
 
 func can_finisher() -> bool:
 	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE

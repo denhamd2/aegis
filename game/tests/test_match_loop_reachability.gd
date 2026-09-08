@@ -14,8 +14,9 @@ extends GdUnitTestSuite
 ##
 ## Three of the four claims had already been fixed in code by the time they
 ## were measured (tie-up entry, pending-hit resolution and reversal
-## arbitration were moved off the scene-tree-order path into MatchReferee).
-## These tests exist so they stay fixed.
+## arbitration were moved off the scene-tree-order path into MatchReferee;
+## the reversal itself has since been removed). These tests exist so they
+## stay fixed.
 ##
 ## Kept to one live match rather than a sweep of seeds -- the per-seed
 ## survey is the reachability probe's job
@@ -119,8 +120,10 @@ func _match_observations() -> Dictionary:
 	return _observed
 
 ## The AI closes and a tie-up actually happens. This is the floor: without
-## it, every grapple, power, signature and finisher move in the game is
-## unreachable in play, however well its resource is authored.
+## it, no grapple move in the game is reachable in play, however well its
+## resource is authored -- and since the AI opens every match with a
+## tie-up and only strikes afterwards, it is the whole grapple half of the
+## match.
 func test_a_live_match_reaches_a_tie_up() -> void:
 	var observed := await _match_observations()
 	var total: int = 0
@@ -182,9 +185,9 @@ func test_both_wrestlers_leave_a_paired_move_cleanly() -> void:
 ## MOVE_EXEC is entered and left inside a single _physics_process for a
 ## rig-driven move (_resolve_grapple_move() transitions in and straight back
 ## out), so it should never be observable on a frame boundary. If it starts
-## showing up, the synchronous handoff has become asynchronous and the
-## reversal reasoning in MatchReferee._check_for_reversal() -- which skips
-## MOVE_EXEC precisely because it cannot be observed -- no longer holds.
+## showing up, the synchronous handoff has become asynchronous, and every
+## referee check that runs between ticks is suddenly racing a state that
+## used to be over before it looked.
 func test_move_exec_never_survives_a_frame() -> void:
 	var observed := await _match_observations()
 	assert_bool(observed["states_seen"].has("MOVE_EXEC")).override_failure_message(
