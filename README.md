@@ -78,6 +78,27 @@ time and encoding at 30 plays back at real speed. Frames are JPEG: a minute of
 Recording is far slower than real time under llvmpipe — budget ~20 minutes of
 wall clock for a 50-second capture.
 
+### Is anybody floating?
+
+`tools/probe/floating_probe.tscn` takes each wrestler's **lowest bone in world
+space, every tick**, and reports the highest that per-tick minimum ever gets:
+
+```
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/floating_probe.tscn -- --seeds 1,2,3 --budget 20000
+```
+
+A man standing, lying, rolling or being thrown always has some part of him at
+or near the canvas; a man floating has none. Written because the retarget bug
+that parked Roman's whole body at y=2.0 through every knockdown was invisible
+to every other instrument in the repo — `ladder_probe` and `pin_probe` read
+state and signals, and the fault was entirely in where the bones were.
+
+A brief excursion is the game working, so the report distinguishes them: an
+excursion above 1.20m has to last 30 ticks (half a second) to count as a
+float. Measured on seeds 1-3 after the fix, every excursion is inside
+`GRAPPLE_HOLD` and lasts 6-15 ticks — a man in the air mid-throw.
+
 ### The roster is what the AI probes fight
 
 The four AI-vs-AI probes — `ladder_probe`, `pin_probe`, `feel_probe` and
