@@ -15,6 +15,12 @@ extends Node3D
 ##   godot4 --headless --path game tools/probe/bare_render.tscn \
 ##       -- --scene res://scenes/<name>_model.tscn --out /tmp/bare
 ##
+## Add --anim <clip> to pose the model with one of its own animations before
+## looking. A rest-pose render says the mesh and materials are right; only a
+## posed one says the SKIN WEIGHTS are, and bad weights are invisible until
+## something bends. --at <0..1> picks how far through the clip to sample
+## (default 0.5); several values are worth looking at.
+##
 ## Add --bones J_Hips,J_Chest,J_Head,J_Foot_L to name the bones to report; the
 ## defaults are the base rig's. Pass the target model's own names, from the
 ## audit probe's skeleton listing.
@@ -31,6 +37,8 @@ const DEFAULT_BONES := "pelvis,spine_03,Head,foot_l,foot_r,hand_l"
 var _scene_path := ""
 var _out_dir := "/tmp/bare_render"
 var _bones: PackedStringArray = []
+var _anim := ""
+var _at := 0.5
 
 
 func _ready() -> void:
@@ -43,6 +51,10 @@ func _ready() -> void:
 			_out_dir = args[i + 1]
 		elif args[i] == "--bones" and i + 1 < args.size():
 			bones = args[i + 1]
+		elif args[i] == "--anim" and i + 1 < args.size():
+			_anim = args[i + 1]
+		elif args[i] == "--at" and i + 1 < args.size():
+			_at = args[i + 1].to_float()
 	_bones = bones.split(",", false)
 	if _scene_path == "":
 		push_error("bare_render: pass --scene res://scenes/<name>_model.tscn")
@@ -62,6 +74,10 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
+	if _anim != "":
+		_pose(model)
+		await get_tree().process_frame
+
 	_report(model)
 	if DisplayServer.get_name() != "headless":
 		await _shoot_all(model)
@@ -74,6 +90,28 @@ func _ready() -> void:
 		print("the clothes.")
 	print("\nbare_render: done -> %s" % _out_dir)
 	get_tree().quit(0)
+
+
+## Drives the model to one frame of one of its own clips and stops there.
+##
+## seek(..., update = true) rather than play(): the pose has to be settled and
+## static before the camera moves, and a playing AnimationPlayer would advance
+## between the four bearings and render four different poses.
+func _pose(model: Node3D) -> void:
+	var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if player == null:
+		print("!! --anim given but the model has no AnimationPlayer")
+		return
+	if not player.has_animation(_anim):
+		print("!! no clip named '%s'. Available: %s"
+				% [_anim, ", ".join(player.get_animation_list())])
+		return
+	var animation := player.get_animation(_anim)
+	var time := animation.length * clampf(_at, 0.0, 1.0)
+	player.play(_anim)
+	player.seek(time, true)
+	player.pause()
+	print("posed by '%s' at %.3fs of %.3fs" % [_anim, time, animation.length])
 
 
 func _build_studio() -> void:
@@ -227,4 +265,5 @@ func _shoot(camera: Camera3D, aabb: AABB, out_name: String, bearing: Vector3) ->
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	if image:
-		image.save_png("%s/%s.png" % [_out_dir, out_name])
+		var prefix := "" if _anim == "" else "%s_" % _anim
+		image.save_png("%s/%s%s.png" % [_out_dir, prefix, out_name])
