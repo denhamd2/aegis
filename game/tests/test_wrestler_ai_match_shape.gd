@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
-## The shape of an AI match: one grapple to open it, strikes for the rest
-## of it.
+## The shape of an AI match: a grapple to open it, strikes through the
+## middle, and a signature to finish before the cover.
 ##
 ## This replaces the whip and reversal suites, whose mechanics were removed
 ## along with the paired animations they played. What it guards is the
@@ -9,7 +9,8 @@ extends GdUnitTestSuite
 ## being true: an AI that never grapples at all (every match opens with a
 ## jab, and the grapple animations are dead content), or one that keeps
 ## grappling (the old behaviour, measured at four tie-ups and as few as
-## four strikes in a match).
+## four strikes in a match -- and again, at 5.5 tie-ups, when the signature
+## was gated on a landed rung the tie-up loser could not earn).
 
 func _make_pair(distance: float) -> WrestlerAI:
 	var ai: WrestlerAI = auto_free(WrestlerAI.new())
@@ -38,7 +39,8 @@ func test_the_first_close_range_decision_is_a_grapple() -> void:
 	).is_true()
 	assert_bool(input.get("strike", false)).is_false()
 
-## And it is the *only* one: once a grapple has landed, the AI strikes.
+## And it is the *only* one, while the opponent is still fresh: once a
+## grapple has landed the AI strikes.
 func test_after_a_grapple_lands_the_ai_only_strikes() -> void:
 	var ai := _make_pair(1.0)
 	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
@@ -89,3 +91,93 @@ func test_a_grapple_hold_asks_for_nothing() -> void:
 	ai.controller.fsm.current_state = WrestlerFSM.State.GRAPPLE_HOLD
 	ai.controller._is_grapple_attacker = true
 	assert_dict(ai.poll_input()).is_empty()
+
+## The finish. A man worn down to within one signature of a knockdown is
+## locked up rather than jabbed at, so the match ends on a signature and a
+## cover instead of on whichever strike happened to land last.
+func test_a_ripe_opponent_is_locked_up_for_the_signature() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	ai.controller.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	ai.controller.signature_move = _signature()
+	_damage(ai.target, WrestlerController.KNOCKDOWN_DAMAGE - _signature_damage())
+	ai._cooldown = 0
+	var input := ai.poll_input()
+	assert_bool(input.get("grapple", false)).override_failure_message(
+		"A finishable opponent was struck at instead of locked up, so the "
+		+ "match can end on a jab."
+	).is_true()
+	assert_bool(input.get("strike", false)).is_false()
+
+## One point short of ripe is not ripe: a signature thrown there leaves the
+## man standing and spends the tie-up for nothing.
+func test_an_opponent_a_hit_short_of_ripe_is_still_struck() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	ai.controller.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	ai.controller.signature_move = _signature()
+	_damage(ai.target, WrestlerController.KNOCKDOWN_DAMAGE - _signature_damage() - 1.0)
+	ai._cooldown = 0
+	var input := ai.poll_input()
+	assert_bool(input.get("grapple", false)).is_false()
+	assert_bool(input.get("strike", false)).is_true()
+
+## Ripeness is measured from the last knockdown, not from the total. A man
+## who has already been put down once and worked back up is a fresh
+## opponent as far as the next knockdown is concerned.
+func test_ripeness_resets_with_a_knockdown() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	ai.controller.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	ai.controller.signature_move = _signature()
+	_damage(ai.target, WrestlerController.KNOCKDOWN_DAMAGE)
+	ai.target._damage_at_last_knockdown = ai.target.combat.total_damage()
+	ai._cooldown = 0
+	var input := ai.poll_input()
+	assert_bool(input.get("grapple", false)).override_failure_message(
+		"A man who has just been knocked down and got up reads as ripe, so "
+		+ "the AI reaches for a signature that cannot put him down."
+	).is_false()
+
+## And a signature nobody can pay for is not reached for, however worn down
+## the opponent is -- otherwise the tie-up resolves into a plain grapple
+## and the finish is spent on the wrong move.
+func test_a_ripe_opponent_is_struck_when_the_meter_is_short() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	ai.controller.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD - 1.0
+	ai.controller.signature_move = _signature()
+	_damage(ai.target, WrestlerController.KNOCKDOWN_DAMAGE - _signature_damage())
+	ai._cooldown = 0
+	assert_bool(ai.poll_input().get("strike", false)).is_true()
+
+## Ripeness is judged against the *weakest* signature in the pool, not the
+## primary: the move is drawn by a seeded pick at the moment the grapple
+## resolves, so reaching for one that cannot finish him is a coin flip on
+## whether the finish works.
+func test_ripeness_uses_the_weakest_signature_in_the_pool() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	ai.controller.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	ai.controller.signature_move = _signature()
+	var weak := MoveDef.new()
+	weak.damage_torso = 4.0
+	ai.controller.signature_move_pool = [weak]
+	_damage(ai.target, WrestlerController.KNOCKDOWN_DAMAGE - _signature_damage())
+	ai._cooldown = 0
+	assert_bool(ai.poll_input().get("grapple", false)).override_failure_message(
+		"Ripeness was judged on the primary signature, so a draw from the "
+		+ "pool can leave the opponent standing."
+	).is_false()
+
+func _signature() -> MoveDef:
+	return load("res://resources/moves/signature_backbreaker.tres")
+
+func _signature_damage() -> float:
+	var move := _signature()
+	return move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
+
+func _damage(w: WrestlerController, total: float) -> void:
+	var move := MoveDef.new()
+	move.damage_torso = total
+	w.combat.apply_damage(move)

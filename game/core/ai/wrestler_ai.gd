@@ -6,11 +6,12 @@ extends Node
 ##
 ## The shape of an AI match is deliberate. It opens with a grapple: the
 ## first time these two are close enough, they lock up, and whoever wins
-## the tie-up throws one grapple move. After that there are no more
-## tie-ups -- the rest of the match is punches and kicks
-## (resources/animations/strike_recipes.gd has four), the damage from them
-## puts a man down, and a downed man gets covered. That is the whole
-## match: grapple, strikes, pinfall.
+## the tie-up throws one grapple move. The middle of the match is punches
+## and kicks (resources/animations/strike_recipes.gd has four). The end is
+## a signature: once the strikes have worn a man down to within one
+## signature of a knockdown, the other reaches for a last tie-up, throws
+## it, and covers him where he lands. That is the whole match: grapple,
+## strikes, signature, pinfall.
 ##
 ## It used to be the opposite. Every close-range decision was a seeded coin
 ## flip between a strike and a tie-up, weighted so the grapple chain -- the
@@ -69,6 +70,7 @@ var _player_index: int = 0
 ## Max ticks setup_jitter() may shift tie_up_reaction_ticks/
 ## tie_up_press_interval_ticks by, either direction.
 const TIE_UP_JITTER_TICKS := 2
+
 
 ## Applies a small, deterministic per-instance timing offset to the tie-up
 ## mash tunables, derived from (match_seed, player_index) rather than raw
@@ -150,22 +152,24 @@ func poll_input() -> Dictionary:
 		return input
 
 	if distance <= tie_up_range:
-		# One grapple, then strikes for the rest of the match.
+		# Grapple, strikes, then a signature to finish him.
 		#
 		# The first time these two are in range they lock up: nobody has
 		# landed a tier yet, so this presses grapple and MatchReferee's
-		# tie-up contest decides who throws the move. Once any grapple has
-		# landed -- either man's -- this branch only ever strikes, and the
-		# match is punches and kicks from there to the finish.
+		# tie-up contest decides who throws the move. After that the match
+		# is punches and kicks -- until the man across from him is worn
+		# down far enough that a signature will put him on the mat, at
+		# which point this reaches for one more tie-up and throws it.
 		#
-		# Only when it can actually connect. tie_up_range (1.3m) reaches
-		# further than a fist does (WrestlerController.STRIKE_HIT_RANGE,
-		# 1.15m, measured off the jab's own contact frame), so a strike
-		# thrown at the edge of tie-up range would swing through air. A
-		# tick inside tie-up range but outside striking range, or one spent
-		# on the strike cooldown, is a tick of standing squared up -- which
-		# is what the cooldown is for.
-		if not _opening_grapple_done():
+		# Strikes only when they can actually connect. tie_up_range (1.3m)
+		# reaches further than a fist does
+		# (WrestlerController.STRIKE_HIT_RANGE, 1.15m, measured off the
+		# jab's own contact frame), so a strike thrown at the edge of
+		# tie-up range would swing through air. A tick inside tie-up range
+		# but outside striking range, or one spent on the strike cooldown,
+		# is a tick of standing squared up -- which is what the cooldown is
+		# for.
+		if _wants_tie_up():
 			input["grapple"] = true
 		elif _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE:
 			input["strike"] = true
@@ -202,6 +206,61 @@ func poll_input() -> Dictionary:
 		input["move"] = Vector2(dir.x, dir.z)
 
 	return input
+
+## Whether to reach for a tie-up this tick rather than throw a strike.
+##
+## Two reasons to lock up, and no others. Everything else in a match is a
+## strike.
+##
+## 1. The opening grapple has not happened yet.
+## 2. The opponent is one signature away from the mat and this wrestler can
+##    afford one -- see _opponent_is_ripe(). This is the finish.
+##
+## There was briefly a third: a wrestler who lost the opening tie-up had
+## landed no rung of the chain, and a signature was gated on the rung below
+## it, so he locked up again purely to earn one. Measured, that cost 5.5
+## tie-ups a match against 8 strikes -- the grapple loop this AI exists to
+## avoid -- and the gate it was serving was the wrong gate.
+## CombatSystem.can_signature() asks the meter now, and that reason is gone
+## with it.
+func _wants_tie_up() -> bool:
+	if not _opening_grapple_done():
+		return true
+	return controller.combat.can_signature() and _opponent_is_ripe()
+
+## Whether a signature thrown now would knock the opponent down.
+##
+## A knockdown is an event measured from the last one
+## (WrestlerController._damage_at_last_knockdown), so what matters is the
+## damage he has taken *since* he was last put down, not his total. Ripe
+## means the weakest signature this wrestler could draw closes the
+## remaining gap by itself.
+##
+## The weakest rather than the likeliest: the move is drawn from the pool
+## by a seeded pick at the moment the grapple resolves, and reaching for a
+## signature that leaves the man standing spends the tie-up for nothing.
+##
+## This is what puts the signature at the end of the match instead of the
+## middle. Momentum crosses SIGNATURE_THRESHOLD after three or four
+## strikes -- long before anybody is hurt enough to pin -- so an AI that
+## simply threw a signature as soon as it could afford one would throw it
+## in the opening exchange and finish the match with jabs.
+func _opponent_is_ripe() -> bool:
+	var remaining := WrestlerController.KNOCKDOWN_DAMAGE \
+			- (target.combat.total_damage() - target._damage_at_last_knockdown)
+	return remaining <= _weakest_signature_damage()
+
+## Total damage of the least damaging signature this wrestler can draw --
+## his own plus his pool, exactly the set WrestlerController._pick_tier_move()
+## picks from.
+func _weakest_signature_damage() -> float:
+	var weakest := INF
+	for move: MoveDef in ([controller.signature_move] + controller.signature_move_pool):
+		if move == null:
+			continue
+		weakest = minf(weakest, move.damage_head + move.damage_torso
+				+ move.damage_arms + move.damage_legs)
+	return 0.0 if weakest == INF else weakest
 
 ## Whether the opening grapple has already happened -- see the class
 ## comment.

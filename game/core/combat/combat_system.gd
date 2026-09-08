@@ -124,14 +124,25 @@ func record_tier(tier: int) -> void:
 func can_power() -> bool:
 	return momentum >= POWER_THRESHOLD and tier_reached >= Tier.GRAPPLE
 
-## The rung below a signature is a grapple, not a power move, because there
-## are no power moves any more -- those MoveDefs and their paired animations
-## were removed. Left as tier_reached >= Tier.POWER this gate could never
-## open again: nothing in the game can record the rung it asks for, so the
-## two signatures still shipped (backbreaker, neckbreaker) would have been
-## silently unreachable rather than deliberately retired.
+## A signature is gated on the meter alone.
+##
+## It used to need the rung below it landed as well, and that rung was the
+## power move -- then, when the power moves were removed, the grapple. Both
+## readings made the same mistake once the chain shrank to two rungs: only
+## the winner of a tie-up lands anything, so the other man could never
+## throw a signature however long the match ran, and the AI had to spend
+## tie-ups on grapples nobody wanted just to unlock one. Measured with that
+## rule in place: 5.5 tie-ups a match against 8 strikes, which is the
+## grapple loop this AI was rewritten to get away from.
+##
+## The ordering the chain protects still holds, by arithmetic rather than
+## by bookkeeping: momentum starts at zero and a signature needs
+## SIGNATURE_THRESHOLD, which is four or five landed strikes -- so nobody
+## opens a match with one. WrestlerAI supplies the other half, only
+## reaching for a signature when it will finish the man off
+## (_opponent_is_ripe()).
 func can_signature() -> bool:
-	return momentum >= SIGNATURE_THRESHOLD and tier_reached >= Tier.GRAPPLE
+	return momentum >= SIGNATURE_THRESHOLD
 
 func can_finisher() -> bool:
 	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE

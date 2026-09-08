@@ -4300,13 +4300,53 @@ Neither lands on the 0.133s the jab does, and that is the point: that figure is
 strike's. A match whose strikes all share a startup is a match with one strike
 in it.
 
+### The signature is the finish
+
+A follow-up, and the reason the numbers above moved: the AI now hits a
+signature before it covers. It reaches for one — a second tie-up — only when
+the opponent is **within one signature of a knockdown**, measured from his
+last one rather than from his total (`WrestlerAI._opponent_is_ripe()`, against
+the *weakest* move in the signature pool, since the move is drawn by a seeded
+pick when the grapple resolves). Momentum crosses `SIGNATURE_THRESHOLD` after
+four or five strikes, long before anybody is hurt enough to pin, so an AI that
+threw a signature as soon as it could afford one would throw it in the opening
+exchange and finish the match with jabs.
+
+That needed one gate changed. `can_signature()` asked for a landed rung below
+it, and only the winner of a tie-up lands anything — so the man who lost the
+opening lock-up could never throw a signature however long the match ran. The
+first attempt at fixing that had him lock up again purely to earn the rung, and
+it measured **5.5 tie-ups a match against 8 strikes**: the grapple loop this
+whole change exists to get away from. The gate now asks the meter alone. What
+keeps a signature from being the first move of a match is that momentum starts
+at zero, and `test_combat_system.gd` pins both halves of that.
+
+Measured over twelve seeds afterwards:
+
+| | strikes only | with the signature finish |
+| --- | --- | --- |
+| finishes | 12 pinfall | 12 pinfall |
+| signature fired | 0 seeds | **12 of 12** |
+| winner's last move before the pin | strike | **signature in 11 of 12** |
+| grapple-chain moves per match | 1.0 | 4.4 |
+| strikes per match | 16-42 | 16.7 mean |
+| match length | 17-48s | 25-48s |
+
+The twelfth seed ends on a strike, and honestly: that winner had already spent
+his signature on an earlier cover the opponent kicked out of, and was back
+under `SIGNATURE_THRESHOLD` when the knockdown came. Holding the strikes back
+until the meter refilled would stall the match, since landing strikes is where
+momentum comes from.
+
+`ladder_probe.gd` reports that "last move before the pin" figure now, and its
+chain-order check was wrong after the cut in the other direction — it read a
+signature thrown over an empty power slot as a skipped rung, so it reported
+every seed as out of order while the order was exactly as intended.
+
 ### Left alone, and why
 
 The **signature** moves were not removed — they were not among the ones called
-out, and both still play. In an AI match they no longer fire in practice: the
-one grapple a match contains happens at zero momentum, and nothing grapples
-again. They remain reachable for a player, and `test_momentum_ladder.gd` now
-asserts that a landed grapple unlocks them so they cannot go quietly dead.
+out, and both are now the finish of every AI match (see above).
 
 **WrestlerB wins 9 of 12 seeds.** That skew predates this change (the
 before-measurement has him taking 2 of 3) and nothing here addresses it.

@@ -103,14 +103,26 @@ func test_a_landed_grapple_unlocks_the_signature() -> void:
 		CombatSystem.Tier.GRAPPLE)
 	assert_str(id).is_equal(&"signature")
 
-## And the bottom of the chain: a wrestler's first grapple is a grapple,
-## whatever his meter says. Strikes feed the same meter, so without this a
-## match that opened with three jabs opened its grapple chain at the power
-## tier and the four base grapple moves never played.
+## And the bottom of the chain: a wrestler with nothing landed and nothing
+## earned throws a grapple. This used to hold at any meter reading -- the
+## chain gated every tier on the rung below it -- and now the signature is
+## gated on the meter alone (see CombatSystem.can_signature()), so what
+## keeps the first grapple of a match a grapple is that a match starts at
+## zero momentum. Which it does: the opening tie-up happens before anybody
+## has landed anything.
 func test_the_first_grapple_of_a_match_is_a_grapple() -> void:
 	var pair := _make_grappling_pair()
-	var id := _selected_move_id(pair[0], pair[1], CombatSystem.MOMENTUM_MAX, -1)
+	var id := _selected_move_id(pair[0], pair[1], 0.0, -1)
 	assert_str(id).is_equal(&"grapple")
+
+## A wrestler who never won a tie-up can still throw a signature once he
+## has earned one. Gating it on a landed rung meant the loser of the
+## opening tie-up could not, all match -- which cost the AI 5.5 tie-ups a
+## match spent unlocking a rung nobody wanted to see.
+func test_a_signature_does_not_need_a_grapple_on_the_record() -> void:
+	var pair := _make_grappling_pair()
+	var id := _selected_move_id(pair[0], pair[1], CombatSystem.SIGNATURE_THRESHOLD, -1)
+	assert_str(id).is_equal(&"signature")
 
 ## Landing a rung is what unlocks the next one, and it is recorded when the
 ## move resolves rather than when it is chosen -- a grapple that gets

@@ -143,7 +143,16 @@ on them holding.
   per-tier exports) so the rungs can be refilled by a scene that wires
   moves into them, but nothing ships in them today.
 - An AI-vs-AI match therefore has a fixed shape: the two wrestlers lock up
-  once, throw one grapple move, and trade strikes until one of them stays
-  down and is pinned. Measured over twelve seeds after the cut: one
-  grapple per match, 16-42 strikes, 17-48 seconds, and a pinfall in every
-  one.
+  once and throw a grapple, trade strikes through the middle of the match,
+  and finish with a signature into a cover — the AI reaches for its
+  signature only when the man across from it is within one of a knockdown
+  (`WrestlerAI._opponent_is_ripe()`). Measured over twelve seeds: a
+  pinfall in every one, a signature in every one, the winner's last landed
+  move a signature in eleven, ~17 strikes and ~4 grapple-chain moves per
+  match, 25-48 seconds.
+- The signature is gated on the momentum meter alone rather than on a
+  landed rung. With only two rungs left, gating it on the rung below meant
+  the loser of the opening tie-up could never throw one all match, and the
+  AI spent 5.5 tie-ups a match unlocking a rung nobody wanted to watch.
+  What keeps a signature from opening a match is that momentum starts at
+  zero.

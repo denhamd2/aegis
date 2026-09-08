@@ -77,8 +77,8 @@ func test_a_signature_does_not_price_the_finisher_out_of_the_match() -> void:
 ## open onto a tier that is wired. The power and finisher slots are empty
 ## now -- those moves were removed -- so what this asserts is that the two
 ## rungs left are reachable and that nothing gates on the two that are not:
-## a landed grapple has to unlock the signature by itself, or the two
-## signatures still shipped could never be thrown.
+## the meter has to unlock the signature by itself, or the man who lost the
+## opening tie-up -- who carries no rung at all -- could never throw one.
 func test_each_wired_tier_has_moves_and_is_reachable() -> void:
 	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
 	add_child(scene)
@@ -95,10 +95,10 @@ func test_each_wired_tier_has_moves_and_is_reachable() -> void:
 
 		var combat := CombatSystem.new()
 		combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
-		combat.record_tier(w.tier_of(w.grapple_move))
 		assert_bool(combat.can_signature()).override_failure_message(
-			"A landed grapple does not unlock the signature, and no power "
-			+ "move exists to unlock it instead -- so no signature can play."
+			"An earned meter does not unlock the signature on its own, and "
+			+ "no power move exists to unlock it instead -- so a wrestler "
+			+ "who never won a tie-up can never throw one."
 		).is_true()
 
 ## A move's tier is which slot it was drawn from, so the slots have to be
