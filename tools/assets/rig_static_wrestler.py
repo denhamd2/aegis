@@ -312,6 +312,12 @@ def main():
                              "0 leaves them alone. A supplied model often ships "
                              "4096-square atlases that put the .glb over "
                              "GitHub's 100 MB per-file hard limit")
+    parser.add_argument("--texture-keep", default="",
+                        help="comma-separated substrings of image names that "
+                             "are exempt from --max-texture. Use it for atlases "
+                             "carrying crisp logo or text art, where halving the "
+                             "resolution is visible as softened edges while it "
+                             "is invisible on skin and cloth")
     parser.add_argument("--diagnose", action="store_true",
                         help="report which vertices the T-pose bake distorts "
                              "and which bone drives them")
@@ -363,10 +369,15 @@ def main():
     # renderer with no file-size limit. This one ships a 4096-square skin atlas
     # among twelve maps, which puts the .glb at 104 MB -- over GitHub's 100 MB
     # per-file hard limit, so it cannot be committed at all.
+    keep = [k for k in args.texture_keep.split(",") if k]
     if args.max_texture:
         for image in bpy.data.images:
             longest = max(image.size) if len(image.size) else 0
             if longest <= args.max_texture:
+                continue
+            if any(k in image.name for k in keep):
+                log(report, f"  texture {image.name}: kept at "
+                            f"{image.size[0]}x{image.size[1]}")
                 continue
             factor = args.max_texture / longest
             was = tuple(image.size)

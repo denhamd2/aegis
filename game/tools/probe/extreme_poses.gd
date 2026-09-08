@@ -12,7 +12,8 @@ extends Node3D
 ## Usage:
 ##   xvfb-run -a --server-args="-screen 0 800x600x24" godot4 --path game \
 ##       --rendering-driver vulkan --resolution 800x600 \
-##       tools/probe/extreme_poses.tscn -- --out /tmp/extreme
+##       tools/probe/extreme_poses.tscn -- --out /tmp/extreme \
+##       [--scene res://scenes/<name>_match.tscn]
 ##
 ## Slow under a software rasteriser -- it has to play a real match until the
 ## states turn up -- so run it in the background and come back to it.
@@ -24,7 +25,10 @@ extends Node3D
 ## each state on its own and frames the head there rather than posing anything
 ## by hand, so what is captured is what a player would actually see.
 
-const MATCH_SCENE := "res://scenes/roman_match.tscn"
+## Default scene. Override with --scene for another wrestler: the question this
+## probe answers -- does anything clip or detach in the poses a standing shotlist
+## never reaches -- recurs for every model, not just Roman's.
+const DEFAULT_MATCH_SCENE := "res://scenes/roman_match.tscn"
 ## States worth a frame, and all reachable early in a match. The pin and
 ## submission states are deliberately NOT here: they need the momentum ladder
 ## climbed first, which is thousands of frames under a software rasteriser.
@@ -35,6 +39,7 @@ const WANTED := ["DOWN", "MOVE_EXEC", "HIT_REACT", "GETUP"]
 const MAX_FRAMES := 500
 
 var _out := "/tmp/extreme"
+var _match_scene := DEFAULT_MATCH_SCENE
 var _seen := {}
 var _scene: Node
 
@@ -44,8 +49,11 @@ func _ready() -> void:
 	for i in args.size():
 		if args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--scene" and i + 1 < args.size():
+			_match_scene = args[i + 1]
 	DirAccess.make_dir_recursive_absolute(_out)
-	_scene = load(MATCH_SCENE).instantiate()
+	print("extreme_poses: %s" % _match_scene)
+	_scene = load(_match_scene).instantiate()
 	add_child(_scene)
 	await get_tree().process_frame
 
