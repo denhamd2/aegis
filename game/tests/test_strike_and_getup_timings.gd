@@ -27,6 +27,8 @@ const RECOVERY_TOLERANCE := 0.10
 
 const JAB: MoveDef = preload("res://resources/moves/strike_jab.tres")
 const KICK: MoveDef = preload("res://resources/moves/strike_kick.tres")
+const CROSS: MoveDef = preload("res://resources/moves/strike_cross.tres")
+const HEAVY_KICK: MoveDef = preload("res://resources/moves/strike_kick_heavy.tres")
 const HEAVY: MoveDef = preload("res://resources/moves/running_attack_clothesline.tres")
 const DOUBLELEG: MoveDef = preload("res://resources/moves/running_attack_double_leg.tres")
 const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
@@ -72,6 +74,19 @@ func test_the_jabs_startup_matches_the_measured_jab() -> void:
 	assert_float(JAB.startup_frames / TICKS_PER_SECOND) \
 		.is_equal_approx(MEASURED_JAB_STARTUP, TOLERANCE)
 
+## The cross and the heavy kick are paced off their own clips rather than
+## off footage: measure_strike_contact.gd puts Punch_Cross's fist at full
+## extension 0.300s into a 1.0s clip, retimed by 2/3 to land on tick 12,
+## and the roundhouse's measured 0.133s contact scales with the 1.5x
+## retime to the same tick. Both are heavier than a jab and lighter than
+## the clothesline, which is the whole reason they exist.
+func test_the_new_strikes_sit_between_the_jab_and_the_heavy_strike() -> void:
+	for move: MoveDef in [CROSS, HEAVY_KICK]:
+		assert_int(move.startup_frames).override_failure_message(
+			"%s starts up no slower than the jab" % move.resource_path.get_file()
+		).is_greater(JAB.startup_frames)
+		assert_int(move.startup_frames).is_less_equal(HEAVY.startup_frames)
+
 func test_the_heavy_strikes_startup_matches_the_measured_heavy_strike() -> void:
 	assert_float(HEAVY.startup_frames / TICKS_PER_SECOND) \
 		.is_equal_approx(MEASURED_HEAVY_STARTUP, TOLERANCE)
@@ -95,11 +110,13 @@ func test_a_heavy_strike_is_not_paced_like_a_jab() -> void:
 	assert_int(HEAVY.startup_frames).is_greater(JAB.startup_frames)
 	assert_int(HEAVY.recovery_frames).is_greater(JAB.recovery_frames)
 
-## A reversal window has to sit inside the move it belongs to, or the
-## defender is being asked to read a frame that never plays. Both strikes
-## had their startup moved by measurement, so this guards the consequence.
+## A reversal window has to sit inside the move it belongs to. Nothing
+## reads these windows any more -- the reversal mechanic went with the
+## paired counter animations -- but they are measured frame numbers kept
+## against the mechanic coming back, and a window outside its own move
+## would be worthless when it did.
 func test_every_strikes_reversal_window_stays_inside_the_move() -> void:
-	for move: MoveDef in [JAB, HEAVY]:
+	for move: MoveDef in [JAB, HEAVY, CROSS, HEAVY_KICK]:
 		assert_int(move.reversal_window_end).override_failure_message(
 			"%s's reversal window ends at %d but the move is only %d ticks."
 			% [move.resource_path.get_file(), move.reversal_window_end,
@@ -112,6 +129,7 @@ func test_every_strikes_reversal_window_stays_inside_the_move() -> void:
 ## cut off mid-motion by the cross-fade.
 func test_mocap_clips_match_their_move_durations() -> void:
 	for pair in [["strike_jab", JAB], ["strike_kick", KICK],
+			["strike_cross", CROSS], ["strike_kick_heavy", HEAVY_KICK],
 			["running_double_leg", DOUBLELEG]]:
 		var clip: Animation = STRIKE_CLIPS.get_animation(StringName(pair[0] as String))
 		var move: MoveDef = pair[1] as MoveDef

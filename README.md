@@ -4214,3 +4214,99 @@ backdrop's `_house_lit` reach change from 2.6 to 1.1 is renderer-neutral) and
 I could not establish the cause from this frame. It is recorded rather than
 tuned away: re-solving one constant to chase a number while another in the same
 frame is unexplained is how the comments above came to overstate themselves.
+
+## Cut the moves that did not read, and gave the AI match a shape
+
+The finisher, power and reversal moves were removed — all twelve MoveDefs,
+their trajectories, their baked pose clips, and their wiring — because their
+generated performances did not hold up on screen. A paired throw that does not
+read is worse than no paired throw: it costs the match a second of animation
+that says nothing happened. What is left of the paired moveset is three basic
+grapples and two signatures.
+
+Removing them made three consequences that had to be handled rather than
+absorbed:
+
+- **The reversal mechanic went with its animations.** A reversal cancelled an
+  incoming strike and played `reversal_counter.tres` through `GrappleRig`, so
+  with the counters gone there was nothing for it to play. `MatchReferee`'s
+  `_check_for_reversal`/`_apply_reversal`/`_finish_reversal`, the AI's
+  reaction-delay press, and the controller's `_wants_reversal_this_tick` are
+  all gone. `MoveDef.reversal_window_start/end` are **kept**: they are measured
+  frame numbers (the jab's 8-11 came off the clip's own contact frame), and
+  re-measuring them later is more work than carrying them.
+- **A signature became unreachable.** `can_signature()` required
+  `tier_reached >= Tier.POWER`, and nothing can record a power tier any more —
+  so the two signatures still shipped would have been silently dead rather
+  than deliberately retired. The gate now asks for a landed grapple.
+- **`build_paired_moves.gd` was append-only.** The first five moves' arcs were
+  hand-keyed straight into `paired_moves.tres` and the generator only ever
+  added to it, so deleting a recipe left its trajectory in the library
+  forever. It prunes clips with no recipe now, which makes the library a
+  function of the recipe file the way every other generated resource here
+  already is.
+
+### The AI match: one grapple, then punches and kicks, then a pinfall
+
+Every close-range decision used to be a seeded coin flip between a strike and a
+tie-up, weighted so the grapple chain carried the match. Measured before this
+change over three seeds: **four tie-ups and 4 to 11 strikes per match**, and
+two of the three matches ended by submission.
+
+The AI now presses grapple only until a grapple has actually landed — read off
+`CombatSystem.tier_reached`, which is written the moment a grapple resolves —
+and strikes for the rest of the match. The Irish-whip roll in `GRAPPLE_HOLD` is
+gone with it: with one grapple in a match, spending it on a whip means matches
+that never show a grapple at all. `_begin_irish_whip()` itself is untouched for
+a player who presses run in a hold.
+
+The referee no longer chooses between a cover and a submission either. Every
+finish is a cover, because a match is supposed to end with one wrestler pinning
+the other. The submission subsystem — minigame, both states,
+`begin_submission()` — is still wired and still tested; nothing starts one.
+
+Measured after the change, twelve AI-vs-AI seeds, `feel_probe` and
+`ladder_probe`:
+
+| | before (3 seeds) | after (12 seeds) |
+| --- | --- | --- |
+| finishes | 2 submission, 1 pinfall | **12 pinfall** |
+| grapple moves per match | 4 | **1.0** |
+| strikes per match | 4-11 | **16-42** |
+| match length | 673-1679 ticks | 1026-2899 ticks (17-48s) |
+| knockdowns per match | — | 1.9 |
+
+### Two more strikes, so the match is not one punch repeated
+
+A match made of strikes needs more than two of them. Both new ones are cut to
+their own **measured** contact frame rather than to an assumed one, by a new
+`tools/anim/measure_strike_contact.gd` — it rebuilds each frame's pose from the
+clip's own tracks over the rest pose and walks the parent chain by hand, for
+the reason the existing recipes already record: neither `AnimationPlayer.seek()`
+nor `set_bone_pose_rotation()` reaches `get_bone_global_pose()` in a `-s`
+script, so every naive sample reads back identical rest values.
+
+- **`strike_cross`** — the rig's own `Punch_Cross`, the only strike not drawn
+  from the mocap pack, so it is a visibly different punch rather than the jab
+  at another speed. Measured: the right fist peaks **0.683m** in front of the
+  pelvis at **t=0.300s** of the 1.0s clip. Retimed by exactly 2/3, which puts
+  contact on tick 12.
+- **`strike_kick_heavy`** — the same measured roundhouse as `strike_kick` at
+  two thirds speed (1.5x its 0.633s bake). Retiming scales the contact frame
+  with everything else: 0.133 × 1.5 = 0.200s, tick 12.
+
+Neither lands on the 0.133s the jab does, and that is the point: that figure is
+`gauntlet/refs/timings.md`'s measurement of a *jab's* startup, not of every
+strike's. A match whose strikes all share a startup is a match with one strike
+in it.
+
+### Left alone, and why
+
+The **signature** moves were not removed — they were not among the ones called
+out, and both still play. In an AI match they no longer fire in practice: the
+one grapple a match contains happens at zero momentum, and nothing grapples
+again. They remain reachable for a player, and `test_momentum_ladder.gd` now
+asserts that a landed grapple unlocks them so they cannot go quietly dead.
+
+**WrestlerB wins 9 of 12 seeds.** That skew predates this change (the
+before-measurement has him taking 2 of 3) and nothing here addresses it.

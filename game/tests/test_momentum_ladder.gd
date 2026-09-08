@@ -13,6 +13,12 @@ extends GdUnitTestSuite
 ## These are the invariants that make that class of bug fail loudly instead
 ## of silently. They are shape checks, not feel claims: gauntlet/refs/
 ## measures nothing about how often a real wrestler should hit a signature.
+##
+## The power and finisher moves have since been removed for not reading on
+## screen, so two of the four rungs are empty slots. The thresholds stay as
+## they are -- they are the arithmetic of a meter, not of a moveset -- and
+## the reachability checks below now assert that what is still wired can
+## actually be reached.
 
 const MOVES := "res://resources/moves/%s.tres"
 
@@ -52,10 +58,6 @@ func test_no_move_costs_more_than_the_tier_that_unlocks_it() -> void:
 		assert_float(_move(name).momentum_cost).override_failure_message(
 			"%s costs more than SIGNATURE_THRESHOLD" % name
 		).is_less_equal(CombatSystem.SIGNATURE_THRESHOLD)
-	for name: String in ["finisher_piledriver", "finisher_facebuster"]:
-		assert_float(_move(name).momentum_cost).override_failure_message(
-			"%s costs more than FINISHER_THRESHOLD" % name
-		).is_less_equal(CombatSystem.FINISHER_THRESHOLD)
 
 ## Spending a signature must not put the finisher out of reach for the rest
 ## of the match -- that is the shape the original numbers had, where a
@@ -71,18 +73,33 @@ func test_a_signature_does_not_price_the_finisher_out_of_the_match() -> void:
 		% still_needed + "and a match only affords about %.0f more." % affordable
 	).is_less_equal(affordable)
 
-## Every tier must actually have moves behind it, or the gate opens onto
-## nothing.
-func test_each_tier_has_moves() -> void:
+## Every wired tier must actually have moves behind it, and every gate must
+## open onto a tier that is wired. The power and finisher slots are empty
+## now -- those moves were removed -- so what this asserts is that the two
+## rungs left are reachable and that nothing gates on the two that are not:
+## a landed grapple has to unlock the signature by itself, or the two
+## signatures still shipped could never be thrown.
+func test_each_wired_tier_has_moves_and_is_reachable() -> void:
 	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
 	add_child(scene)
 	for who: String in ["WrestlerA", "WrestlerB"]:
 		var w: WrestlerController = scene.get_node(who)
-		assert_object(w.power_move).is_not_null()
+		assert_object(w.grapple_move).is_not_null()
 		assert_object(w.signature_move).is_not_null()
-		assert_object(w.finisher_move).is_not_null()
-		assert_bool(w.is_finisher(w.finisher_move)).is_true()
 		assert_bool(w.is_finisher(w.signature_move)).is_false()
+		assert_object(w.power_move).override_failure_message(
+			"A power move is wired again; the ladder's gates assume that rung "
+			+ "is empty (see CombatSystem.can_signature())."
+		).is_null()
+		assert_object(w.finisher_move).is_null()
+
+		var combat := CombatSystem.new()
+		combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
+		combat.record_tier(w.tier_of(w.grapple_move))
+		assert_bool(combat.can_signature()).override_failure_message(
+			"A landed grapple does not unlock the signature, and no power "
+			+ "move exists to unlock it instead -- so no signature can play."
+		).is_true()
 
 ## A move's tier is which slot it was drawn from, so the slots have to be
 ## unambiguous: tier_of() reads them back, and a move wired into two pools
@@ -95,9 +112,7 @@ func test_every_wired_move_reports_the_tier_it_was_wired_into() -> void:
 		var w: WrestlerController = scene.get_node(who)
 		var slots := {
 			CombatSystem.Tier.GRAPPLE: [w.grapple_move] + w.grapple_move_pool,
-			CombatSystem.Tier.POWER: [w.power_move] + w.power_move_pool,
 			CombatSystem.Tier.SIGNATURE: [w.signature_move] + w.signature_move_pool,
-			CombatSystem.Tier.FINISHER: [w.finisher_move] + w.finisher_move_pool,
 		}
 		for tier: int in slots:
 			for move: MoveDef in slots[tier]:

@@ -25,8 +25,11 @@ extends RefCounted
 ## the cross-fade to IDLE already does.
 ##
 ## gauntlet/refs/timings.md measures a real strike's startup -- windup to
-## contact -- at ~4 frames of 30fps footage, 0.13s. Every strike excerpt is
-## cut so its contact lands at 0.13s for the same reason.
+## contact -- at ~4 frames of 30fps footage, 0.13s. That is a *jab's*
+## startup, and the jab and the roundhouse are cut to land on it. The two
+## heavier strikes added since (strike_cross, strike_kick_heavy) land later
+## on purpose, each at its own measured contact frame: a match made of one
+## startup value is a match made of one strike.
 ##
 ## Entry kinds:
 ##   trim    -- first `seconds` of the source, keys past it dropped. Keeps
@@ -70,6 +73,31 @@ const RECIPES := {
 	# the excerpt was aligned by hand-speed peak, not measured footage.
 	"running_double_leg": {"kind": "retime", "file": MOTIFECT_DOUBLELEG,
 		"source": "motifect_doubleleg_raw", "seconds": 1.15},
+
+	# The second punch, and the only strike drawn from the rig's own
+	# library rather than the mocap pack: Punch_Cross is a real cross, a
+	# visibly different punch from the mocap jab rather than the same
+	# motion replayed at another speed.
+	#
+	# Measured with tools/anim/measure_strike_contact.gd rather than
+	# guessed -- the right fist peaks 0.683m in front of the pelvis at
+	# t=0.300s of the 1.0s clip, and nothing else in it reaches half that.
+	# Retimed by exactly 2/3 (0.667s), which puts that contact frame on
+	# tick 12 and is what strike_cross.tres's startup_frames says. A cross
+	# lands later than the 4-frame jab because it is a bigger punch; the
+	# 0.133s figure in gauntlet/refs/timings.md is a jab's startup, not
+	# every strike's.
+	"strike_cross": {"kind": "retime", "source": "Punch_Cross",
+		"seconds": 0.667},
+
+	# The heavy kick: the same measured roundhouse as strike_kick, played
+	# at two thirds speed (1.5x its 0.633s bake, so 0.950s). Retiming
+	# scales the contact frame with everything else -- 0.133s * 1.5 =
+	# 0.200s, tick 12 -- which is what strike_kick_heavy.tres says. It is
+	# the one strike in the set that is genuinely slow, and it hurts
+	# accordingly.
+	"strike_kick_heavy": {"kind": "retime", "file": MOTIFECT_KICK,
+		"source": "motifect_kick_raw", "seconds": 0.950},
 
 	# Both reactions are cut to exactly WrestlerController.HIT_REACT_TICKS
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is

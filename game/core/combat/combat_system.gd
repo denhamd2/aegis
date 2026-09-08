@@ -8,6 +8,11 @@ enum Limb { HEAD, TORSO, ARMS, LEGS }
 ## The grapple chain, in the order ARCHITECTURE.md names it ("momentum ->
 ## signature -> finisher"). A move's tier is which slot it was drawn from;
 ## MoveDef carries no tier field (see WrestlerController.tier_of()).
+##
+## POWER and FINISHER are now empty rungs: their moves and paired
+## animations were removed, and no scene wires either slot. The enum keeps
+## them so a tier's ordinal -- and every seeded draw and saved replay that
+## depends on it -- does not shift underneath the two rungs that are left.
 enum Tier { GRAPPLE, POWER, SIGNATURE, FINISHER }
 
 const MAX_LIMB_DAMAGE := 100.0
@@ -106,8 +111,12 @@ func total_damage() -> float:
 	return sum
 
 ## Records a landed rung. Called on the attacker when a grapple move
-## actually resolves, not when it is chosen -- a move that gets reversed
-## was never thrown.
+## actually resolves, not when it is chosen. (It was written that way for
+## reversals, which could cancel a move mid-flight; the reversal mechanic
+## is gone, and landing is still the right moment.)
+##
+## WrestlerAI also reads tier_reached to know the opening grapple has
+## happened -- see WrestlerAI._opening_grapple_done().
 func record_tier(tier: int) -> void:
 	if tier > tier_reached:
 		tier_reached = tier
@@ -115,8 +124,14 @@ func record_tier(tier: int) -> void:
 func can_power() -> bool:
 	return momentum >= POWER_THRESHOLD and tier_reached >= Tier.GRAPPLE
 
+## The rung below a signature is a grapple, not a power move, because there
+## are no power moves any more -- those MoveDefs and their paired animations
+## were removed. Left as tier_reached >= Tier.POWER this gate could never
+## open again: nothing in the game can record the rung it asks for, so the
+## two signatures still shipped (backbreaker, neckbreaker) would have been
+## silently unreachable rather than deliberately retired.
 func can_signature() -> bool:
-	return momentum >= SIGNATURE_THRESHOLD and tier_reached >= Tier.POWER
+	return momentum >= SIGNATURE_THRESHOLD and tier_reached >= Tier.GRAPPLE
 
 func can_finisher() -> bool:
 	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE

@@ -132,7 +132,18 @@ on them holding.
 ## Scope
 
 - Vertical slice: one 1v1 exhibition match, two wrestlers, complete core
-  loop (strikes, tie-up, grapple chains, irish whip, reversals, momentum →
-  signature → finisher, pin kickout, submission, ref, win conditions, AI
-  opponent). Match variety, roster, creation suite, and career are out of
-  scope until this slice is anchored end to end.
+  loop (strikes, tie-up, grapple chains, irish whip, momentum → signature,
+  pin kickout, submission, ref, win conditions, AI opponent). Match
+  variety, roster, creation suite, and career are out of scope until this
+  slice is anchored end to end.
+- The power and finisher rungs of the grapple chain, and the reversal
+  mechanic, were **cut** — not deferred. Their paired animations did not
+  read on screen, and the moves went with them. The slots and the tier
+  gates survive in code (`CombatSystem.Tier`, `WrestlerController`'s
+  per-tier exports) so the rungs can be refilled by a scene that wires
+  moves into them, but nothing ships in them today.
+- An AI-vs-AI match therefore has a fixed shape: the two wrestlers lock up
+  once, throw one grapple move, and trade strikes until one of them stays
+  down and is pinned. Measured over twelve seeds after the cut: one
+  grapple per match, 16-42 strikes, 17-48 seconds, and a pinfall in every
+  one.

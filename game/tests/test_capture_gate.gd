@@ -93,53 +93,35 @@ func _frame(with_hud: bool) -> Image:
 				Color(0.24, 0.72, 0.28))
 	return img
 
-## The invariant that makes *both* finishes reachable.
+## The invariant that makes a pinfall reachable, and the only finish.
 ##
-## Originally this asserted a wrestler goes down before any limb qualifies
-## for a submission -- true when the submission threshold was 70, and the
-## fix that made pins happen at all. It is deliberately false now: the
-## thresholds are arranged to overlap, so that between the first knockdown
-## and the point where an attacker just covers a spent opponent there is a
-## range where either finish is legal and a seeded choice decides. Without
-## that overlap one finish is unreachable, which this project has now
-## measured in both directions -- 12 of 12 seeds submission, then 12 of 12
-## pinfall.
-func test_both_finishes_are_reachable() -> void:
-	var move: MoveDef = load("res://resources/moves/grapple_hiptoss.tres")
-	# The worst limb's share of each hit, so the crossing point can be
-	# derived exactly rather than stepped to in 28-damage chunks -- landing
-	# whole moves is too coarse to tell two thresholds 12 apart from each
-	# other.
-	var per_hit := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
-	var worst_share := maxf(maxf(move.damage_head, move.damage_torso),
-			maxf(move.damage_arms, move.damage_legs)) / per_hit
-	var total_when_submissions_open := MatchReferee.SUBMISSION_LIMB_THRESHOLD / worst_share
+## The referee used to choose between a cover and a submission, and the two
+## thresholds it chose between had to overlap or one finish was
+## unreachable -- which this project measured in both directions, 12 of 12
+## seeds submission and then 12 of 12 pinfall. That choice is gone: every
+## finish is a cover now (MatchReferee._check_for_downed_opponent_action),
+## because a match is supposed to end with one wrestler pinning the other.
+##
+## What still has to hold is that a wrestler gets knocked down at all, and
+## that the pin he is then put in is escapable early and winnable late --
+## otherwise the match either never reaches a finish or ends on the first
+## knockdown. KNOCKDOWN_DAMAGE is reached by strikes now rather than by
+## throws (the AI grapples once and strikes thereafter), so it has to be
+## payable in strike-sized bites.
+func test_a_knockdown_is_reachable_by_strikes_alone() -> void:
+	var strikes: Array[String] = ["strike_jab", "strike_kick",
+			"strike_cross", "strike_kick_heavy"]
+	var worst := INF
+	for name in strikes:
+		var move: MoveDef = load("res://resources/moves/%s.tres" % name)
+		var per_hit := move.damage_head + move.damage_torso \
+				+ move.damage_arms + move.damage_legs
+		worst = minf(worst, per_hit)
+	# The weakest strike in the set still has to add up to a knockdown
+	# inside a match, not inside a marathon: 30 of them is already a long
+	# exchange at roughly a strike a second.
+	assert_float(WrestlerController.KNOCKDOWN_DAMAGE / worst).override_failure_message(
+		"The weakest strike deals %.0f, so a knockdown needs %.0f of them"
+		% [worst, WrestlerController.KNOCKDOWN_DAMAGE / worst]
+	).is_less_equal(30.0)
 
-	# A wrestler is knocked down before submissions become an option, so the
-	# earliest knockdowns are covers.
-	assert_float(WrestlerController.KNOCKDOWN_DAMAGE).override_failure_message(
-		("Submissions open at %.0f total damage, at or before the %.0f "
-		+ "knockdown -- so no knockdown is ever just a cover")
-		% [total_when_submissions_open, WrestlerController.KNOCKDOWN_DAMAGE]
-	).is_less(total_when_submissions_open)
-
-	# And submissions become an option before the attacker starts simply
-	# covering a spent opponent, so there is a range where both are legal.
-	assert_float(total_when_submissions_open).override_failure_message(
-		("Submissions only open at %.0f total damage, past the %.0f where "
-		+ "the attacker covers instead -- so a tap-out can never happen")
-		% [total_when_submissions_open, MatchReferee.PIN_PREFERENCE_DAMAGE]
-	).is_less(MatchReferee.PIN_PREFERENCE_DAMAGE)
-
-## And a hold has to be both escapable and winnable inside that range: the
-## defender works free below SUBMISSION_ESCAPE_LIMB and taps above it, so
-## that value must sit above the damage at which holds start being applied.
-## A flat 1.8 defender rate, left over from the old 70 threshold, put it
-## above the whole band and made every hold an escape.
-func test_a_submission_can_both_be_escaped_and_won() -> void:
-	assert_float(WrestlerController.SUBMISSION_ESCAPE_LIMB).override_failure_message(
-		"Every submission is escapable; a tap-out can never happen"
-	).is_greater(MatchReferee.SUBMISSION_LIMB_THRESHOLD)
-	assert_float(WrestlerController.SUBMISSION_ESCAPE_LIMB).override_failure_message(
-		"Every submission is a tap-out; nobody ever works free"
-	).is_less(CombatSystem.MAX_LIMB_DAMAGE)

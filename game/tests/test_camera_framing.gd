@@ -164,11 +164,20 @@ func test_a_finisher_cut_ends_when_the_grapple_does() -> void:
 	camera._on_grapple_finished(null, null)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.FOLLOW)
 
+## The finisher slot is empty in every shipped scene now -- the finisher
+## moves and their paired animations were removed -- so the cut is wired to
+## a slot nothing fills rather than to a move that exists. The camera rule
+## is still the camera's rule, so the finisher here is a synthetic MoveDef
+## dropped into that slot: what is under test is "a finisher cuts and a
+## grapple does not", not which .tres is wired where.
 func test_only_a_finisher_cuts() -> void:
 	var scene := _match()
 	var camera: MatchCamera = scene.get_node("MatchCamera")
 	var a: WrestlerController = scene.get_node("WrestlerA")
+	var finisher := MoveDef.new()
+	finisher.animation_pair_id = &"synthetic_finisher"
+	a.finisher_move = finisher
 	camera._on_grapple_started(a, scene.get_node("WrestlerB"), a.grapple_move)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.FOLLOW)
-	camera._on_grapple_started(a, scene.get_node("WrestlerB"), a.finisher_move)
+	camera._on_grapple_started(a, scene.get_node("WrestlerB"), finisher)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.FINISHER_CUT)

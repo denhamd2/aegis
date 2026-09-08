@@ -4,6 +4,11 @@ extends GdUnitTestSuite
 ## No test previously covered this at all, not even the pre-existing
 ## signature/finisher split -- this is new coverage added alongside the new
 ## power_move rung (see combat_system.gd's POWER_THRESHOLD/can_power()).
+##
+## The moves in the power and finisher slots were later removed and no
+## shipped scene fills those slots any more, but the ladder itself is still
+## the code that picks a grapple move, so these cases still exercise it --
+## with synthetic MoveDefs, which is what they always used.
 
 func _make_move(id: StringName) -> MoveDef:
 	var move := MoveDef.new()
@@ -88,11 +93,15 @@ func test_a_full_meter_does_not_skip_the_signature() -> void:
 		"A wrestler who has never landed a signature selected a finisher."
 	).is_equal(&"signature")
 
-func test_a_full_meter_does_not_skip_the_power_move() -> void:
+## A landed grapple unlocks the signature directly, because the power rung
+## between them no longer has any moves in it (see CombatSystem.
+## can_signature()). With a full meter and a grapple on the record, the
+## highest rung a wrestler can pay for is what he throws.
+func test_a_landed_grapple_unlocks_the_signature() -> void:
 	var pair := _make_grappling_pair()
 	var id := _selected_move_id(pair[0], pair[1], CombatSystem.MOMENTUM_MAX,
 		CombatSystem.Tier.GRAPPLE)
-	assert_str(id).is_equal(&"power")
+	assert_str(id).is_equal(&"signature")
 
 ## And the bottom of the chain: a wrestler's first grapple is a grapple,
 ## whatever his meter says. Strikes feed the same meter, so without this a
@@ -113,8 +122,8 @@ func test_landing_a_rung_unlocks_the_one_above_it() -> void:
 	assert_bool(attacker.combat.can_power()).is_false()
 	attacker.combat.record_tier(attacker.tier_of(attacker.grapple_move))
 	assert_bool(attacker.combat.can_power()).is_true()
-	assert_bool(attacker.combat.can_signature()).is_false()
-	attacker.combat.record_tier(attacker.tier_of(attacker.power_move))
+	# A grapple unlocks the signature too: the power rung it used to have to
+	# climb through has no moves behind it any more.
 	assert_bool(attacker.combat.can_signature()).is_true()
 	assert_bool(attacker.combat.can_finisher()).is_false()
 	attacker.combat.record_tier(attacker.tier_of(attacker.signature_move))

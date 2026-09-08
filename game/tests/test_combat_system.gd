@@ -64,8 +64,9 @@ func test_each_rung_needs_the_one_below_it() -> void:
 	combat.momentum = CombatSystem.MOMENTUM_MAX
 	combat.record_tier(CombatSystem.Tier.GRAPPLE)
 	assert_bool(combat.can_power()).is_true()
-	assert_bool(combat.can_signature()).is_false()
-	combat.record_tier(CombatSystem.Tier.POWER)
+	# A grapple unlocks the signature directly: the power rung between them
+	# has no moves behind it any more, so gating on it would shut the
+	# signature out of the game entirely (see CombatSystem.can_signature()).
 	assert_bool(combat.can_signature()).is_true()
 	assert_bool(combat.can_finisher()).is_false()
 	combat.record_tier(CombatSystem.Tier.SIGNATURE)

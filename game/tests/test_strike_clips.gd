@@ -91,6 +91,36 @@ func test_generated_tracks_resolve_on_the_runtime_rig() -> void:
 
 ## The whole point of generating them: the clip a state plays must be as
 ## long as the state, or the FSM cuts it off mid-motion.
+## Every strike's clip is exactly as long as the move that plays it, for
+## all four of them -- the two mocap excerpts, the retimed cross off the
+## rig's own Punch_Cross, and the slowed roundhouse.
+func test_every_strike_clip_matches_the_move_that_plays_it() -> void:
+	for name: String in ["strike_jab", "strike_kick", "strike_cross",
+			"strike_kick_heavy"]:
+		var move: MoveDef = load("res://resources/moves/%s.tres" % name)
+		var clip := STRIKE_CLIPS.get_animation(StringName(name))
+		var move_seconds := move.total_frames() / float(Engine.physics_ticks_per_second)
+		assert_float(clip.length).override_failure_message(
+			"%s.tres runs %.3fs but its clip is %.3fs, so the strike is "
+			% [name, move_seconds, clip.length] + "cut off or frozen"
+		).is_equal_approx(move_seconds, 0.02)
+
+## The strikes have to be different from each other, or the "variation of
+## punches and kicks" the match is made of is one punch four times. Startup
+## is the frame data a viewer actually sees as a difference in weight.
+func test_the_strikes_are_not_all_paced_the_same() -> void:
+	var startups := {}
+	var lengths := {}
+	for name: String in ["strike_jab", "strike_kick", "strike_cross",
+			"strike_kick_heavy"]:
+		var move: MoveDef = load("res://resources/moves/%s.tres" % name)
+		startups[move.startup_frames] = true
+		lengths[move.total_frames()] = true
+	assert_int(startups.size()).override_failure_message(
+		"All four strikes share a startup, so they are one strike"
+	).is_greater(1)
+	assert_int(lengths.size()).is_equal(4)
+
 func test_the_jab_clip_matches_the_move_that_plays_it() -> void:
 	var move: MoveDef = load("res://resources/moves/strike_jab.tres")
 	var clip := STRIKE_CLIPS.get_animation(&"strike_jab")
@@ -173,6 +203,12 @@ func test_the_ai_never_strikes_from_beyond_a_fists_reach() -> void:
 	attacker.global_position = Vector3.ZERO
 	ai.controller = attacker
 	ai.target = defender
+	# The AI's first close-range decision is the opening tie-up, not a
+	# strike -- it only strikes once a grapple has landed (see
+	# WrestlerAI._opening_grapple_done()). Put one on the record, or this
+	# sweep passes for the wrong reason: no strike asked for at any
+	# distance, including the ones it should be asking from.
+	attacker.combat.record_tier(CombatSystem.Tier.GRAPPLE)
 
 	# Sweep in from 3.0m to contact in 1cm steps. The cooldown is cleared
 	# each step so every distance gets a genuine chance to ask for a strike

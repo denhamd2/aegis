@@ -16,6 +16,12 @@ extends Resource
 
 ## Reversal window, expressed as an inclusive frame range relative to
 ## move start. reversal_window_end must be >= reversal_window_start.
+##
+## Nothing reads these today. The reversal mechanic was removed with the
+## paired counter animations it played (see MatchReferee's note on why),
+## and these are kept because they are measured frame numbers -- the jab's
+## 8-11 came off the clip's own contact frame, not off a preference -- and
+## re-measuring them later is more work than carrying them.
 @export var reversal_window_start: int = 0
 @export var reversal_window_end: int = 0
 

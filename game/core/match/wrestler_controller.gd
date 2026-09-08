@@ -412,15 +412,6 @@ var _irish_whip_return_ticks_remaining: int = 0
 ## Who to auto-steer back toward during the whip-return phase -- the
 ## original attacker, set by _begin_irish_whip().
 var _irish_whip_target: WrestlerController
-## Whether this wrestler pressed "reversal" this tick. Captured here (same
-## shape as _wants_tie_up_this_tick) and consumed by
-## MatchReferee._check_for_reversal() after every wrestler's own
-## _physics_process for the tick -- a reversal's outcome depends on reading
-## the *opponent's* same-tick _active_move/_move_ticks_remaining, exactly
-## the class of scene-order bug this session already fixed twice for tie-up
-## entry and pending-hit resolution, so it gets the same deferred-to-referee
-## treatment rather than being resolved inline here.
-var _wants_reversal_this_tick: bool = false
 
 ## Whether MatchReferee._check_for_cover() may start a new pin on this
 ## wrestler right now. True by default and after a genuine knockdown (an
@@ -991,12 +982,10 @@ func _poll_live_input() -> Dictionary:
 		"strike": Input.is_action_just_pressed("strike"),
 		"grapple": Input.is_action_just_pressed("grapple"),
 		"run": Input.is_action_pressed("run"),
-		"reversal": Input.is_action_just_pressed("reversal"),
 		"submission_hold": Input.is_action_pressed("submission_hold"),
 	}
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
-	_wants_reversal_this_tick = input.get("reversal", false)
 	if fsm.current_state == WrestlerFSM.State.RUN and _irish_whip_return_ticks_remaining > 0:
 		_process_irish_whip_return(input)
 		return
@@ -1290,12 +1279,8 @@ func _timed_stub(ticks: int) -> MoveDef:
 
 func _process_grapple_hold(input: Dictionary) -> void:
 	if not _is_grapple_attacker:
-		# The defender sits in GRAPPLE_HOLD, not a free-movement state, while
-		# the attacker's paired move plays -- capture reversal intent here so
-		# MatchReferee._check_for_reversal() can still see it (free-movement
-		# states capture it via _process_free_movement(), which never runs
-		# for a GRAPPLE_HOLD defender).
-		_wants_reversal_this_tick = input.get("reversal", false)
+		# The defender has nothing to press while the attacker's paired move
+		# plays: he waits it out.
 		return
 	if input.get("run", false):
 		_begin_irish_whip()
@@ -1333,7 +1318,7 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		_resolve_grapple_move(move)
 
 ## Which rung of the grapple chain a move belongs to, or -1 for anything
-## that isn't one (a strike, a running attack, a reversal). There is no tier
+## that isn't one (a strike, a running attack). There is no tier
 ## field on MoveDef -- a move's tier is which slot it was drawn from -- so
 ## the man who threw it is the one who can say.
 func tier_of(move: MoveDef) -> int:
