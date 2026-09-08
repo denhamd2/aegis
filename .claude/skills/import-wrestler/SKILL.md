@@ -52,7 +52,32 @@ Nothing in the game could pose it, and Phases 3–5 had nothing to operate on. I
 is one line of the audit's output and it decides whether this is an import or a
 rigging job. See **Phase 0.5**.
 
-## Phase 0 — audit, before anything else
+## Phase 0 — triage, then audit
+
+**Start with the file itself, before importing anything.** Parsing the glTF's own
+JSON takes a second where a Godot import of a 100 MB model takes minutes, and it
+answers the question that decides the whole job — is this thing even rigged:
+
+```bash
+python3 .claude/skills/import-wrestler/scripts/gltf_triage.py "/path/to/Model.glb"
+```
+
+It reports rigged/statue, units (centimetres vs metres), embedded vs external
+images, materials with no base colour, albedo slots holding packed data maps, and
+the file size against GitHub's 100 MB limit. Run against the Roman asset it names
+all eight untextured materials and all five packed maps — the whole of what took
+seven passes to find — in about a second.
+
+**On acquiring the file.** A Google Drive link over ~100 MB does not download
+directly: the first request returns a virus-scan interstitial, and the real URL
+is the `<form>` action plus its hidden `id`/`confirm`/`uuid` inputs. Parse those
+out and re-request. And if the archive ships a `textures/` folder alongside the
+model, check the triage output before committing it — those images are usually
+already embedded in the .glb, and committing both wastes tens of megabytes.
+
+**Then the in-engine audit**, which adds what only the engine knows: which mesh
+rides which skeleton, per-material texture slots as Godot resolves them, and the
+forward axis read off the rig's own locomotion clips.
 
 ```bash
 godot4 --headless --path game --import
@@ -209,6 +234,15 @@ renders facing away from the man he is aimed at.
 
 ## Phase 5 — wire it into the game
 
+**Animation track paths must resolve, and they fail silently when they do not.**
+The generated libraries name their tracks `Armature/Skeleton3D:<bone>`, relative
+to the model's own `AnimationPlayer`. A model scene that wraps the `.glb` in a
+`Source` node changes that path. A track pointing at nothing is not an error: the
+wrestler simply stands inert through every grapple and strike. Either keep the
+armature node named `Armature` and the depth the same, or rebase the paths in
+`adapt_animation_library()` — `CodyModel` does the latter, and its test asserts
+every track resolves to this model's own skeleton.
+
 The model script is duck-typed: `WrestlerController` probes it for methods and
 falls back when they are absent. The full contract, the scene files to create,
 and the exact controller call sites are in `references/wiring.md`. Read it when
@@ -241,6 +275,13 @@ subtly wrong.
    Look at the face close-ups specifically. Every hair, beard and eye defect
    found so far was invisible in a full-body frame.
 
+   Check the wrestler's identifying marks explicitly — tattoos, scars, gear
+   logos — and check them **in the source textures**, not only in renders. A
+   feature can be present in the asset and simply turned away from the camera:
+   Cody's neck tattoo read as absent from three angles and was there all along.
+   The texture atlas settles it in one look; a render only ever settles the
+   angle you rendered.
+
 3. **Then a real match**, which is the only thing that proves the wrestler is
    playable rather than merely well-formed:
 
@@ -263,7 +304,22 @@ subtly wrong.
    Standing shots cannot show clipping; a head on the canvas or a body inverted
    mid-slam is where clothing and hair push through the mat.
 
-5. **Then the suite**, and prove the change is presentation-only: run seeds 1, 2,
+5. **Then prove the geometry did not change**, if anything reprocessed the mesh
+   (rigging, a re-export, a texture cap):
+
+   ```bash
+   python3 .claude/skills/import-wrestler/scripts/compare_proportions.py \
+       --original "/path/to/Supplied.glb" --original-scale 0.01 \
+       --rigged game/assets/characters/<name>.glb
+   ```
+
+   Expect zeroes: identical vertex count, and identical width and depth at ten
+   heights from ankle to crown. A pipeline that only scales and translates cannot
+   move them. This is also the answer when someone asks whether the proportions
+   still look right — measure it rather than squint at it, then show the
+   side-by-side.
+
+6. **Then the suite**, and prove the change is presentation-only: run seeds 1, 2,
    3, 5, 7, 11 and show identical winners, finishes, tick counts and min-Y before
    and after. Determinism is the thing an art change must not touch.
 
@@ -283,12 +339,46 @@ was sound and the inference from it was not. Go and look at the frame.
 
 ## References
 
-- `references/traps.md` — the retarget maths, the alpha-coverage decision, and
-  the Godot engine traps (IK nodes that silently do nothing, poses that read as
-  rest, the import cache). Read §Retarget before Phase 4 and §Alpha before the
-  mask work in Phase 2.
+Read these when the phase says to, not up front.
+
+- `references/traps.md` — the retarget decision and its maths, the alpha-coverage
+  decision, rigging an unrigged model, the Godot engine traps, and the
+  **measurement traps** (ways the instruments lie, each of which produced a
+  confident wrong statement here). Read §Retarget before Phase 4, §Alpha before
+  the mask work in Phase 2, §Rigging before Phase 0.5.
 - `references/wiring.md` — the model/controller interface contract, scene files,
   and the animation-mixer ownership rule. Read before Phase 5.
+
+Bundled scripts:
+
+- `scripts/gltf_triage.py` — Phase 0. Reads the file's own JSON: rigged or
+  statue, units, embedded images, material faults, size against the 100 MB limit.
 - `scripts/inspect_textures.py` — channel triage and alpha coverage.
-- `game/tools/probe/audit_model.tscn` — the Phase 0 asset audit.
-- `game/tools/probe/bare_render.tscn` — the Phase 6 bisection probe.
+- `scripts/compare_proportions.py` — Phase 6. Proves a reprocessed mesh has the
+  same body proportions as the supplied one.
+
+In the repo, because they need the engine or the project:
+
+- `tools/assets/rig_static_wrestler.py` — Phase 0.5. Rigs a static mesh onto the
+  base rig via headless Blender. Read its module docstring first.
+- `game/tools/probe/audit_model.tscn` — Phase 0, the in-engine audit.
+- `game/tools/probe/bare_render.tscn` — Phase 6, the bisection probe. `--anim`
+  poses it; a rest-pose render says nothing about the weights.
+- `game/tools/probe/extreme_poses.tscn` — Phase 6, clipping in poses a standing
+  shotlist never reaches. `--scene`, `--frames`.
+
+## Worked examples in the codebase
+
+Two imports, deliberately different, and the contrast is the lesson:
+
+- **`roman_reigns.glb` / `RomanModel`** — a foreign rig. Two skeletons, `J_`-named
+  bones, eight materials with no base colour, five packed data maps in albedo
+  slots. Needs a bone map, a real rest-space retarget, and a large
+  `_fix_materials()` pass. Took seven passes.
+- **`cody_rhodes.glb` / `CodyModel`** — arrived as a statue and was rigged onto
+  the base rig. Identical bone names and hierarchy, so no bone map and no
+  retarget; sound materials, so no repair pass. The model script is about
+  a hundred lines, most of them explaining why it does so little.
+
+When a new model looks like neither, say which it is closer to and why before
+writing code.

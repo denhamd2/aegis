@@ -8,6 +8,7 @@ because the symptom is never obviously connected to the cause.
 - [Engine traps](#engine-traps) — IK, poses, the import cache
 - [Origin and landing](#origin-and-landing)
 - [Rigging an unrigged model](#rigging-an-unrigged-model) — read before Phase 0.5
+- [Measurement traps](#measurement-traps) — ways the instruments lie
 
 ---
 
@@ -239,9 +240,76 @@ work, so it is not tried again.
   real trap and was not this one. Clearing them changed nothing. Measure which
   vertices actually moved (`--diagnose`) before theorising about shading.
 
+- **Fit the arm chain shoulder-to-hand, not along its principal axis.** The
+  principal axis of the arm's vertices is the arm *mass's* line, and the mass
+  includes the deltoid, which sits outboard of the shoulder joint. A chain
+  rotated to that direction but rooted at the joint leaves the elbow and hand
+  15-20 cm outside the flesh. Two points the geometry gives reliably — the rig's
+  own shoulder and the mesh's hand — beat one direction it gives approximately.
+  On this asset the resulting reach matched the rig's own arm to 1.5%.
+
+- **Check every bone lands inside the mesh before binding anything.** It is three
+  lines with a KD-tree and it caught a sign error of mine that had the arms
+  measured as pointing straight up. Weights bound to a bone outside the flesh it
+  drives look plausible in a table and tear the mesh on the first frame.
+
 - **Texture budget.** A supplied model is authored for a renderer with no file
   size limit. A 4096-square skin atlas put this `.glb` at 104 MB, over GitHub's
   **100 MB per-file hard limit**, so it could not be committed at all. Cap the
   textures — but exempt atlases carrying logo or text art, where halving the
   resolution is plainly visible as softened edges while it is invisible on skin
   and cloth.
+
+
+---
+
+## Measurement traps
+
+Distinct from the engine traps above: these are ways the *instruments* lie. Each
+produced a confident wrong statement during the Cody import, two of which reached
+the user before being caught.
+
+**Pillow's `resize`/`thumbnail` zeroes RGB wherever alpha is 0.** Downscaling an
+RGBA image as a unit before reading its channels therefore destroys exactly the
+data you are trying to read — and a packed mask's own alpha channel is usually
+empty, so every `*_rai` atlas came back reporting as pure black. Read channels as
+data: split them first and downscale each as a grayscale image.
+
+**Do not compose glTF node transforms by hand.** Adding a node's `translation` to
+its accessor's `min`/`max` double-counts whenever the accessor bounds are already
+in the node's space. Doing that here produced a detached mesh 1.2 m to the side
+of the body, which was reported to the user as a stray piece and does not exist.
+Let Blender or Godot compose the hierarchy; use raw accessor bounds only for
+coarse questions like centimetres-versus-metres, where the error cannot change
+the answer.
+
+**One `bpy` process per model.** `bpy.ops.wm.read_factory_settings(use_empty=True)`
+does not fully clear between two glTF imports in the same process: comparing two
+models in one session surfaced a phantom 42-vertex sphere in the second that was
+not in the file at all, and it was nearly reported as a defect in the asset.
+`compare_proportions.py` shells out per model for this reason.
+
+**`bpy.context.view_layer.objects` yields `None` entries after objects are
+removed.** Iterating it to build a selection crashes with a bare
+`AttributeError` on `NoneType`. Select by name or by held reference.
+
+**A probe keyed on an asset-specific name fails silently on the next asset.**
+`extreme_poses.gd` framed its shots off a mesh literally named `head_skinned` —
+a name the Roman asset happens to use. On a model whose meshes are joined into
+one called `Body`, the lookup returned null every frame, every capture was
+skipped, and the probe reported success having written no files. Key probes on
+the *rig* (bone names, which this project controls) rather than on mesh names,
+which come from whoever exported the asset. And treat "the probe found no
+problems" as suspect until it has produced at least one frame with something in
+it.
+
+**A probe camera loses the viewport to the scene's own camera.** The match scene
+makes its camera current, so a probe camera set current once at startup captures
+the broadcast view of an empty ring. Claim `current` immediately before each
+shot, and await `RenderingServer.frame_post_draw` before reading the image.
+
+**Check the base rig's actual clip names before concluding a round-trip broke
+them.** Clips arriving as `Idle` and `Walk` rather than `Idle_Loop` and
+`Walk_Loop` looked like Blender mangling names on export; the importer strips the
+`_Loop` suffix and the base rig's own library was already named that way. Compare
+against the base rig, not against memory.
