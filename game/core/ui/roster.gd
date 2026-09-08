@@ -83,3 +83,51 @@ static func by_id(id: String) -> Entry:
 		if entry.id == id:
 			return entry
 	return null
+
+
+## --- Probe defaults ---------------------------------------------------------
+
+## The two men an AI-vs-AI probe fights unless it is told otherwise.
+##
+## Roman against Cody rather than either mirror match: a mirror hides
+## everything that depends on which model sits in which slot, and these probes
+## exist to measure the live match rather than a symmetrical fixture. The
+## measurements themselves are unaffected either way -- combat resolves from
+## MoveDefs and the seed, never from the mesh -- so this is about what the
+## probe frames and its output name, not about the numbers.
+const DEFAULT_PAIR := ["roman", "cody"]
+
+
+## Resolves a `--wrestlers roman,cody` spec to two entries; an empty spec
+## gives DEFAULT_PAIR.
+##
+## Returns an empty array on anything it cannot resolve rather than
+## substituting a default, and pushes the reason: a probe that quietly fought
+## somebody other than who it was asked to fight has measured nothing, and
+## every caller here prints the pair it got before it runs.
+static func pair_from_spec(spec: String = "") -> Array:
+	var ids: Array = DEFAULT_PAIR
+	if not spec.strip_edges().is_empty():
+		ids = []
+		for token: String in spec.split(","):
+			ids.append(token.strip_edges())
+	if ids.size() != 2:
+		push_error("--wrestlers wants exactly two ids, got %d: %s"
+				% [ids.size(), ", ".join(ids)])
+		return []
+	var pair: Array = []
+	for id: String in ids:
+		var entry := by_id(id)
+		if entry == null:
+			push_error("no roster entry '%s'; roster is: %s"
+					% [id, ", ".join(ids_on_roster())])
+			return []
+		pair.append(entry)
+	return pair
+
+
+static func ids_on_roster() -> Array:
+	var ids: Array = []
+	for entry: Entry in entries():
+		ids.append(entry.id)
+	return ids

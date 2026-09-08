@@ -61,6 +61,34 @@ xvfb-run -a godot4 --path game --resolution 1280x720 \
     tools/probe/title_launch.tscn -- --out /tmp/launched.png  # pick -> match
 ```
 
+### The roster is what the AI probes fight
+
+The four AI-vs-AI probes — `ladder_probe`, `pin_probe`, `feel_probe` and
+`reachability_probe` — attach roster wrestlers through the same
+`TitleScreen.configure_match()` call the title screen launches a match with.
+They default to **Roman vs Cody**, and take `--wrestlers` to say otherwise:
+
+```
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/ladder_probe.tscn -- --seeds 1,2,3
+godot4 --headless --path game --fixed-fps 6000 \
+    tools/probe/ladder_probe.tscn -- --seeds 1,2,3 --wrestlers cody,roman
+```
+
+Each run prints the pair it fought before its first seed, and an id that is
+not on the roster stops the probe rather than falling back to a default —
+a probe that quietly fought somebody else has measured nothing.
+
+`scenes/match.tscn` stays the light fixture with no model on it: the suite
+instantiates it in ten places, several per test, and `roman_reigns.glb` alone
+is 52MB. The models are attached per run, in the probe.
+
+**This does not move any measurement in this README.** Combat resolves from
+MoveDefs and the seed, never from the mesh, and `ladder_probe --seeds 1,2,3`
+returns byte-identical output before and after the change — same winners,
+tick counts, momentum peaks and state histograms. It costs load time only:
+41s to 54s for three seeds.
+
 ## Playing it in a browser
 
 `.github/workflows/pages.yml` exports the `Web` preset from

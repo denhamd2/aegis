@@ -25,8 +25,17 @@ var _budget: int = 30000
 var _rows: Array[Dictionary] = []
 var _verbose: bool = false
 
+var _wrestlers: String = ""
+var _pair: Array = []
+
+
 func _ready() -> void:
 	_parse_args()
+	if _pair.is_empty():
+		get_tree().quit(1)
+		return
+	print("WRESTLERS %s vs %s" % [_pair[0].display_name(),
+			_pair[1].display_name()])
 	for seed_value in _seeds:
 		_rows.append(await _run_match(seed_value))
 	_report()
@@ -42,11 +51,23 @@ func _parse_args() -> void:
 			_verbose = true
 		elif args[i] == "--budget" and i + 1 < args.size():
 			_budget = int(args[i + 1])
+		elif args[i] == "--wrestlers" and i + 1 < args.size():
+			_wrestlers = args[i + 1]
 	if _seeds.is_empty():
 		_seeds = [1, 2, 3, 4, 5]
+	# Roman vs Cody unless --wrestlers says otherwise. Resolved here rather
+	# than per match so a bad id fails before the first seed runs.
+	_pair = Roster.pair_from_spec(_wrestlers)
 
 func _run_match(seed_value: int) -> Dictionary:
 	var scene: Node = load(MATCH_SCENE).instantiate()
+	# The roster's models, colourways and names, through the same call the
+	# title screen launches a match with -- so a probe fights the men a player
+	# would rather than the box mannequin match.tscn falls back to. Before
+	# add_child(), because WrestlerController installs its model in _ready().
+	# is_ai is overwritten just below: configure_match() assigns a player slot
+	# and these probes are AI on both sides.
+	TitleScreen.configure_match(scene, _pair[0], _pair[1], seed_value)
 	scene.match_seed = seed_value
 	add_child(scene)
 	var a: WrestlerController = scene.get_node("WrestlerA")

@@ -163,3 +163,32 @@ func test_a_plain_match_has_no_display_name() -> void:
 	var plain: Node = auto_free(MATCH_SCENE.instantiate())
 	assert_str((plain.get_node("WrestlerA") as WrestlerController).display_name) \
 			.is_empty()
+
+## --- The pair the AI probes fight ------------------------------------------
+
+## The default the AI-vs-AI probes run on. Pinned because it is a choice, not
+## an accident: a mirror match hides anything that depends on which model sits
+## in which slot, and every probe that measures the live match takes this.
+func test_the_default_probe_pair_is_roman_against_cody() -> void:
+	var pair := Roster.pair_from_spec()
+	assert_int(pair.size()).is_equal(2)
+	assert_str((pair[0] as Roster.Entry).id).is_equal("roman")
+	assert_str((pair[1] as Roster.Entry).id).is_equal("cody")
+
+func test_the_pair_can_be_overridden_and_order_is_kept() -> void:
+	var pair := Roster.pair_from_spec("cody,roman")
+	assert_str((pair[0] as Roster.Entry).id).is_equal("cody")
+	assert_str((pair[1] as Roster.Entry).id).is_equal("roman")
+	# Whitespace around an id is a typo, not a different wrestler.
+	assert_str((Roster.pair_from_spec(" cody , cody ")[1] as Roster.Entry).id) \
+			.is_equal("cody")
+
+## An unresolvable spec returns nothing rather than falling back, so a probe
+## fails before its first seed instead of quietly measuring the wrong match.
+func test_an_unknown_or_malformed_pair_resolves_to_nothing() -> void:
+	assert_array(Roster.pair_from_spec("roman,nobody")).is_empty()
+	assert_array(Roster.pair_from_spec("roman")).is_empty()
+	assert_array(Roster.pair_from_spec("roman,cody,roman")).is_empty()
+
+func test_ids_on_roster_lists_every_entry() -> void:
+	assert_array(Roster.ids_on_roster()).contains_exactly(["roman", "cody"])
