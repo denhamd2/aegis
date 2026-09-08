@@ -287,6 +287,25 @@ func _house_lit(mat: StandardMaterial3D, reach: float = 1.0) -> StandardMaterial
 	return mat
 
 
+## What a self-emissive level is multiplied by on a renderer with no HDR
+## buffer. See `_emissive_gain()` for the measurement.
+##
+## Solved, not guessed: at 0.35 the portal band measured 0.76x of the same
+## frame on forward_plus -- overshot into too dark -- so 0.46 is 0.35 scaled by
+## that miss.
+##
+## RE-MEASURED before shipping, because this comment first said the rings then
+## land "within a few percent". They do not: the portal band reads 0.86x of the
+## forward_plus frame, so 0.46 is still 14% dark. That is a large improvement
+## on the 2.89x this replaced and it keeps the magenta and amber telling the
+## two rings apart instead of clipping both to white, which is the point. It is
+## not parity, and the constant is deliberately NOT re-tuned to 0.535 off a
+## single region's box: the same frame has an unexplained result on the
+## backdrop edges (see README), and chasing one number while another is
+## unaccounted for is how the first version of this comment came to overstate
+## itself.
+const COMPAT_EMISSIVE_GAIN := 0.46
+
 ## For the things that genuinely emit. The video wall is the only one in the
 ## hall: it is a screen, so it is a light source whether or not a fixture is
 ## pointed at it, and retiring the house-emission mechanism must not retire it.
@@ -299,8 +318,28 @@ func _self_emissive(mat: StandardMaterial3D, level: float) -> StandardMaterial3D
 	mat.emission = mat.albedo_color
 	var albedo_linear := maxf(mat.albedo_color.srgb_to_linear().get_luminance(),
 			0.0001)
-	mat.emission_energy_multiplier = level / albedo_linear
+	mat.emission_energy_multiplier = level * _emissive_gain() / albedo_linear
 	return mat
+
+
+## Multiplier on every self-emissive level in the hall, by renderer.
+##
+## The levels above are solved against forward_plus, whose HDR buffer lets the
+## Environment's Filmic curve roll a value above 1.0 back down. The
+## compatibility renderer has no such buffer: anything over 1.0 clips flat to
+## white instead of rolling off, so the same number that blooms on one renderer
+## is a white shape on the other. Measured on stage_wide against the same frame
+## on forward_plus, before this existed: the portal band rendered at 2.89x and
+## the video wall at 1.71x, while everything house-lit around them went darker.
+##
+## This is the opposite correction to ArenaLighting's COMPAT_LIGHT_GAIN and it
+## lives here rather than there because emission is a material property -- no
+## amount of scaling a Light3D touches it. Two separate faults, two separate
+## fixes.
+static func _emissive_gain() -> float:
+	if RenderingServer.get_current_rendering_method() == "forward_plus":
+		return 1.0
+	return COMPAT_EMISSIVE_GAIN
 
 
 # ---------------------------------------------------------------------------
@@ -1095,12 +1134,24 @@ func _build_stage_deck() -> void:
 ## The material is now `arena_stage_panel` rather than poured concrete: the
 ## reference set's backdrop is a perforated panel wall, and at stage distance
 ## what carries that is a fine dark weave rather than a flat slab.
+##
+## The reach is 1.1 -- in band with the shell (0.85) and the deck (0.8) -- and
+## the panel's colour comes from the four uplights aimed at it, which is the
+## way round this file's whole design says it should be: real fixtures, not a
+## surface that lights itself.
+##
+## It was 2.6 for a while, over three times the shell's, and that is a
+## forward_plus-only value dressed up as a material property. The Filmic curve
+## compressed it there; the compatibility renderer has no HDR buffer to roll it
+## back, so the browser build rendered the panel as a flat blown lavender
+## rectangle measuring 3.3x the forward_plus frame. Emission that only works on
+## one renderer is the fixture's job, not the material's.
 func _build_stage_backdrop() -> void:
 	var backdrop := _new_surface()
 	_add_box(backdrop, Vector3(0.0, (FLOOR_Y + WALL_TOP) * 0.5, STAGE_BACK - 0.4),
 			Vector3(STAGE_HALF_WIDTH * 2.4, WALL_TOP - FLOOR_Y, 0.4))
 	add_child(_mesh_instance("StageBackdrop", backdrop, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_stage_panel"), 2.6))))
+			_house_lit(_textured("arena_stage_panel"), 1.1))))
 
 
 ## The two circular entrance portals: a dark recess, a radial slat fan in the

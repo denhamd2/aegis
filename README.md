@@ -4159,3 +4159,58 @@ placement is now built by a static `_make_feed()` that needs no renderer, no
 clip and no display server, and three tests assert it directly: the player is
 under a `SubViewport`, there is no `CanvasLayer` or `SubViewportContainer` in
 that subtree, and `expand` is on.
+
+## Fix: the entrance set on the browser renderer, and a test three comments claimed existed
+
+The compatibility renderer has no HDR buffer, so emission above 1.0 clips flat
+to white instead of rolling off the Filmic curve the levels were solved
+against. Measured before the fix, on the same frame: the portal band rendered
+at **2.89x** of forward_plus and the video wall at **1.71x**, while the
+house-lit surfaces around them went darker. Three corrections, each measured
+separately because the surfaces clip differently:
+
+| | constant | re-measured against forward_plus |
+| --- | --- | --- |
+| video wall | `COMPAT_SCREEN_GAIN` 0.48 | **0.97x** |
+| portal rings | `COMPAT_EMISSIVE_GAIN` 0.46 | **0.86x** |
+| stage fixtures | `COMPAT_STAGE_GAIN` 1.0 | mat control **1.02x** |
+
+`_house_lit()` deliberately takes no gain: it targets ~0.015 linear, well under
+1.0, so it cannot clip and scaling it would only darken the hall.
+
+`COMPAT_STAGE_GAIN` is 1.0 because `COMPAT_LIGHT_GAIN` (0.15) exists to hold
+the mat on `VISUAL_BAR.md`'s 0.43-0.49 anchor, and the entrance fixtures cannot
+reach the mat. Scaling them bought the anchor nothing and cost the whole set.
+
+### Three claims in `arena_lighting.gd` that were not true
+
+The file cited `test_stage_lighting.gd` three times. **It did not exist**, and
+before writing it no test in the suite referenced `Light3D`, `spot_range` or
+`light_energy` at all. Writing it caught two overstatements:
+
+1. *"Every fixture built for the entrance set therefore takes a range of 12m."*
+   False for the stage wash, which takes 28m against a nearest mat corner at
+   17.25m. It is kept off the canvas by being **aimed away** — 77.5 degrees off
+   a 44-degree cone — which is a real guarantee but a weaker one than range,
+   because re-aiming is a smaller edit than re-ranging. The test now asserts
+   the disjunction (out of range **or** off axis) over all ten fixtures and
+   pins the stage wash's reason separately.
+
+2. *"Rec.709 luminance of the old (0.72, 0.74, 1.0) is 0.7581 and of this is
+   0.7574, a difference of 0.0007."* All three figures wrong. Re-measured:
+   0.7545 against 0.7489, a difference of **0.0056** on raw sRGB components
+   (0.0068 linearised) — eight times the claim. It threatens no anchor, because
+   that fixture cannot reach the mat, but "hue only" was overstated.
+
+Both comments now carry the measured numbers, and `COMPAT_EMISSIVE_GAIN`'s
+"within a few percent" is corrected to the 0.86x it actually reads.
+
+### Open, and deliberately not chased
+
+The backdrop's **far edges** render at **0.20-0.22x** of forward_plus, while
+the same panel between the rings — where the accent shafts land — reads 1.09x
+and the truss above it 0.99x. That is not one of the three constants (the
+backdrop's `_house_lit` reach change from 2.6 to 1.1 is renderer-neutral) and
+I could not establish the cause from this frame. It is recorded rather than
+tuned away: re-solving one constant to chase a number while another in the same
+frame is unexplained is how the comments above came to overstate themselves.
