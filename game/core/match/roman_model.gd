@@ -692,18 +692,39 @@ func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant
 			return (local * target_basis).normalized()
 		Animation.TYPE_POSITION_3D:
 			# Position tracks are the translation part of the same pose, so
-			# they get the same treatment: the offset the key makes from the
-			# source's rest position, rotated into the target's frame and
-			# scaled by the two bones' rest lengths, then applied to the
-			# target's rest position. Without the scale a taller rig inherits
-			# a shorter one's stride and the feet slide.
+			# they get the same treatment as the rotation above -- and for the
+			# same reason, that treatment has to go through the PARENT frames.
+			#
+			# This used to rotate the offset by the two bones' own rest bases
+			# (target_rest.basis * source_rest.basis^-1). That is the local
+			# -space mistake the rotation branch documents, and on the hips it
+			# is a 180-degree flip: the base rig's pelvis rests at
+			# euler (104.5, 0, 0) and Roman's J_Hips at (-90, 0, 0), so the
+			# product is (14.5, -180, 180). It inverted the vertical component
+			# of every root translation.
+			#
+			# Measured, on Death01's pelvis key at 1.2s: the offset's vertical
+			# component is -0.838, and flipping it put the retargeted hips at
+			# +1.974 instead of +0.085 in rest space -- J_Hips at world y=2.04
+			# with the feet at 2.37, a man lying flat two metres above the mat.
+			# That is the "Roman floats when he is pinned" report, and it hit
+			# every clip with real root motion (Death01, Roll) while leaving
+			# the upright ones (Idle, the strikes) untouched, because those
+			# barely translate the root at all.
+			#
+			# Carried through the parent global rests the offset arrives at
+			# 0.085 against the 0.079 that the un-retargeted rig produces for
+			# the same key -- the remainder is the height scale below, which is
+			# real: Roman is the taller man.
 			var offset := (value as Vector3) - source_rest.origin
-			var rotation := target_rest.basis.get_rotation_quaternion() \
-					* source_rest.basis.get_rotation_quaternion().inverse()
+			var world := source_parent * offset
+			var local := target_parent.inverse() * world
+			# Scaled by the two bones' rest lengths: without it a taller rig
+			# inherits a shorter one's stride and the feet slide.
 			var source_length := source_rest.origin.length()
 			var scale := 1.0
 			if source_length > 0.0001:
 				scale = target_rest.origin.length() / source_length
-			return target_rest.origin + (rotation * offset) * scale
+			return target_rest.origin + local * scale
 		_:
 			return value
