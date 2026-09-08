@@ -31,6 +31,10 @@ class_name StageVideo
 ##   video texture has no mip chain; asking a mipless texture for mipmapped
 ##   sampling is wasted at best and samples black on some GLES3 drivers -- and
 ##   the Web build is exactly that path.
+## - **The player lives in a SubViewport.** It is a Control, so it draws; the
+##   requirement is that it decode without any of that drawing reaching the
+##   screen. A CanvasLayer cannot do it at any layer value -- see the comment
+##   at the placement itself, which is where that shipped from.
 ## - **The emission energy is solved, not typed.** It is derived from the
 ##   still frame's own mean linear luminance, so the wall lands on the level
 ##   below whatever the clip's exposure happens to be. Same arithmetic
@@ -141,29 +145,56 @@ func _ready() -> void:
 		_bind_still("%s did not load as a VideoStream" % _video_path)
 		return
 
-	# VideoStreamPlayer is a Control, so it needs a canvas. layer -128 puts it
-	# behind the 3D viewport's canvas and behind MatchHUD, so it can never
-	# appear over the game.
-	#
-	# It is deliberately NOT hidden. A hidden Control is the one configuration
-	# where "does it still decode?" depends on engine internals; a 2x2 control
-	# parked off-canvas costs four fragments and is unambiguously processed.
-	var layer := CanvasLayer.new()
-	layer.name = "FeedLayer"
-	layer.layer = -128
-	add_child(layer)
-
-	_player = VideoStreamPlayer.new()
-	_player.name = "Feed"
-	_player.stream = stream
-	_player.loop = true
-	_player.autoplay = false
-	_player.expand = false
-	_player.volume_db = -80.0
-	_player.size = Vector2(2, 2)
-	_player.position = Vector2(-64, -64)
-	layer.add_child(_player)
+	var feed := _make_feed(stream)
+	add_child(feed)
+	_player = feed.get_node("Feed")
 	_player.play()
+
+
+## Builds the off-screen home for the player: a SubViewport with the
+## VideoStreamPlayer inside it.
+##
+## VideoStreamPlayer is a Control, so it has to live somewhere that draws --
+## and the whole trick is that it must decode without any of that drawing
+## reaching the screen. A SubViewport is the only placement that guarantees
+## both: it renders to its own target, is never composited into the window
+## unless a SubViewportContainer asks for it, and its children process
+## normally, so the decoder runs and `get_video_texture()` fills.
+##
+## THIS WAS A CanvasLayer AT layer = -128, AND THAT IS WRONG. A negative layer
+## orders a CanvasLayer against *other CanvasLayers*; it does not put one
+## behind the 3D world, because 3D is always drawn behind every canvas item.
+## On top of that, `expand = false` makes the player draw at the video's native
+## 1280x720 and ignore whatever rect it was given. The two together shipped to
+## the browser build with the clip painted across the middle of the game --
+## decoding perfectly, and displaying itself as well.
+##
+## Split out as a function so `test_stage_set.gd` can assert the placement
+## without a renderer, a clip, or a display server. The bug was invisible to
+## every test that existed because all of them ran headless, where the player
+## is never built at all.
+##
+## The viewport is 2x2 because nothing ever reads its texture: the frames reach
+## the wall through `get_video_texture()`, which hands back the decoder's own
+## texture and does not care what size the viewport around it is.
+static func _make_feed(stream: VideoStream) -> SubViewport:
+	var feed := SubViewport.new()
+	feed.name = "FeedViewport"
+	feed.size = Vector2i(2, 2)
+	feed.disable_3d = true
+	feed.transparent_bg = true
+	feed.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
+	var player := VideoStreamPlayer.new()
+	player.name = "Feed"
+	player.stream = stream
+	player.loop = true
+	player.autoplay = false
+	player.expand = true
+	player.volume_db = -80.0
+	player.size = Vector2(2, 2)
+	feed.add_child(player)
+	return feed
 
 
 func _process(_delta: float) -> void:
