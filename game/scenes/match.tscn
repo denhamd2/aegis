@@ -12,9 +12,7 @@
 [ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_double_leg.tres" id="30"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_hiptoss.tres" id="15"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_snapmare.tres" id="16"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_armdrag.tres" id="17"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_clinch_knee.tres" id="15"]
 [ext_resource type="Resource" path="res://resources/moves/signature_neckbreaker.tres" id="21"]
 [ext_resource type="PackedScene" path="res://scenes/match_hud.tscn" id="28"]
 [ext_resource type="Resource" path="res://resources/moves/strike_kick.tres" id="29"]
@@ -194,7 +192,7 @@ signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
-grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
+grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerB")
 grapple_rig_path = NodePath("../GrappleRig")
@@ -219,7 +217,7 @@ signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
-grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
+grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerA")
 grapple_rig_path = NodePath("../GrappleRig")

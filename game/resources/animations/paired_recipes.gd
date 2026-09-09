@@ -73,6 +73,35 @@ const LIBRARY := "paired"
 ## strike_recipes.gd) rather than escalating a throw ladder -- see
 ## WrestlerAI, which grapples once and then only strikes.
 const RECIPES := {
+	# The one grapple, and deliberately not a throw. The three it replaces
+	# (hiptoss, snapmare, armdrag) all put the victim in the air, and the
+	# altitude was not a bug that could be capped away: the tucked-body
+	# clearance gate requires root_y >= 1.15 * |up.y| - 0.12, so a body that
+	# inverts MUST be lifted clear of the mat or its head goes through the
+	# canvas. The way to stop a man flying is to stop him flipping.
+	#
+	# So nobody flips and nobody leaves the mat. Collar-and-elbow, a short
+	# drag down into the clinch, one knee to the midsection, and a shove off.
+	# Both men finish it on their feet, which is also what makes it a sane
+	# opener for an exchange rather than a match-ending bomb.
+	"grapple_clinch_knee": {
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},          # collar and elbow
+			{"t": 0.30, "clip": "PickUp_Table", "at": 0.25},  # drag him down
+			{"t": 0.52, "clip": "Jump_Start", "at": 0.30},    # load the knee
+			{"t": 0.68, "clip": "Sword_Attack", "at": 0.80},  # drive it in
+			{"t": 0.85, "clip": "Push", "at": 0.80},          # shove off
+			{"t": 1.00, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},          # answering the lock-up
+			{"t": 0.30, "clip": "Sitting_Enter", "at": 0.60}, # bent forward, held
+			{"t": 0.68, "clip": "Hit_Chest", "at": 0.15},     # the knee lands
+			{"t": 0.85, "clip": "Hit_Head", "at": 0.20},      # folded back
+			{"t": 1.00, "clip": "Idle", "at": 0.00},          # back on his feet
+		],
+		"defender_grips_until": 0.68,
+	},
 	# A drops to one knee; B is folded across it. B peaks at 1.55m, lands
 	# forward at +0.65 X.
 	"signature_backbreaker": {
@@ -92,65 +121,6 @@ const RECIPES := {
 			{"t": 1.00, "clip": "Death01", "at": 1.60},
 		],
 		"defender_grips_until": 0.40,
-	},
-	# --- moves authored after the first five ----------------------------
-	# Over the hip: A pivots and drops a shoulder, B goes over and lands
-	# in front. Peak 1.28m at t=0.45 (raised from 1.05: the tucked-body
-	# clearance gate caught the victim's head 0.16m under at t=0.53).
-	"grapple_hiptoss": {
-		"attacker": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.20, "clip": "PickUp_Table", "at": 0.25},
-			{"t": 0.45, "clip": "Punch_Cross", "at": 0.50},
-			{"t": 0.70, "clip": "Sword_Attack", "at": 0.80},
-			{"t": 1.00, "clip": "Idle", "at": 0.00},
-		],
-		"defender": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.25, "clip": "Jump_Start", "at": 0.80},
-			{"t": 0.45, "clip": "Roll", "at": 0.40},
-			{"t": 0.70, "clip": "Death01", "at": 0.40},
-			{"t": 1.00, "clip": "Death01", "at": 1.60},
-		],
-		"defender_grips_until": 0.30,
-	},
-	# Pulled over the shoulder into a seat. B never gets far off the mat,
-	# so he stays braced most of the way rather than going limp early.
-	"grapple_snapmare": {
-		"attacker": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.22, "clip": "PickUp_Table", "at": 0.25},
-			{"t": 0.50, "clip": "PickUp_Table", "at": 0.65},
-			{"t": 0.75, "clip": "Jump_Land", "at": 0.20},
-			{"t": 1.00, "clip": "Idle", "at": 0.00},
-		],
-		"defender": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.25, "clip": "Jump_Start", "at": 0.30},
-			{"t": 0.45, "clip": "Roll", "at": 0.40},
-			{"t": 0.70, "clip": "Sitting_Enter", "at": 0.60},
-			{"t": 1.00, "clip": "Fixing_Kneeling", "at": 2.00},
-		],
-		"defender_grips_until": 0.45,
-	},
-	# Wrist control into a drag past the shoulder. Barely leaves the mat,
-	# so both men stay on their feet the whole way through.
-	"grapple_armdrag": {
-		"attacker": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.25, "clip": "Punch_Cross", "at": 0.50},
-			{"t": 0.55, "clip": "Push", "at": 0.40},
-			{"t": 0.80, "clip": "Jump_Land", "at": 1.00},
-			{"t": 1.00, "clip": "Idle", "at": 0.00},
-		],
-		"defender": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.22, "clip": "Hit_Chest", "at": 0.15},
-			{"t": 0.45, "clip": "Roll", "at": 0.40},
-			{"t": 0.70, "clip": "Death01", "at": 0.40},
-			{"t": 1.00, "clip": "Death01", "at": 0.90},
-		],
-		"defender_grips_until": 0.35,
 	},
 	# Attacker drops backwards and snaps the head down beside him. Both
 	# men finish low, which is what makes it read as a signature rather
@@ -198,69 +168,24 @@ const RECIPES := {
 ## equal its first, so the flip resolves to a full 360 and he lands upright.
 ## That is exactly the bug that put suplex victims half a metre into the mat.
 const TRAJECTORIES := {
-	# --- grapple, basic tier -------------------------------------------
-	# Over the hip and down in front of the attacker. Fast, low-ish arc.
-	"grapple_hiptoss": {
+	# Nobody leaves the mat: every y is 0.00, by design. See the RECIPES entry
+	# above for why a grapple that does not flip is the only kind that can
+	# stay down here.
+	"grapple_clinch_knee": {
 		"length": 1.0,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.36, 0.00, 0.00],
-					[0.45, 0.31, 0.00, 0.00], [0.70, 0.33, 0.00, 0.00],
-					[1.00, 0.36, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [0.45, 0.0, 66.0, 0.0],
-					[0.70, 0.0, 98.0, 0.0], [1.00, 0.0, 90.0, 0.0]],
-		},
-		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.25, -0.18, 0.38, 0.00],
-					[0.45, 0.16, 1.28, 0.00], [0.70, 0.50, 0.75, 0.00],
-					[0.88, 0.70, 0.05, 0.00], [1.00, 0.74, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [0.30, -70.0, -90.0, 0.0],
-					[0.50, -160.0, -90.0, 0.0], [0.70, -260.0, -90.0, 0.0],
-					[0.88, -360.0, -90.0, 0.0], [1.00, -360.0, -90.0, 0.0]],
-		},
-	},
-	# Pulled over the shoulder and dumped seated alongside. Lowest arc of
-	# the basic tier -- it is a transition, not a bomb.
-	"grapple_snapmare": {
-		"length": 1.0,
-		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.22, 0.37, 0.00, 0.00],
-					[0.50, 0.34, 0.00, 0.00], [0.75, 0.35, 0.00, 0.00],
-					[1.00, 0.36, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [0.50, 0.0, 74.0, 0.0],
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.30, 0.34, 0.00, 0.00],
+					[0.68, 0.30, 0.00, 0.00], [0.85, 0.36, 0.00, 0.00],
+					[1.00, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.52, 0.0, 82.0, 0.0],
 					[1.00, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.25, -0.15, 0.65, 0.00],
-					[0.45, 0.20, 1.10, 0.00], [0.53, 0.28, 1.10, 0.00],
-					[0.70, 0.45, 0.53, 0.00],
-					[0.90, 0.55, 0.00, 0.00], [1.00, 0.55, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [0.35, -90.0, -90.0, 0.0],
-					[0.55, -200.0, -90.0, 0.0], [0.78, -320.0, -90.0, 0.0],
-					[0.90, -360.0, -90.0, 0.0], [1.00, -360.0, -90.0, 0.0]],
-		},
-	},
-	# Wrist control into a drag past the shoulder. The flip completes at the
-	# arc's peak (t≈0.47, root ≈1.1) rather than on the way down: a full
-	# inversion finishing at 0.5m of root height puts the head through the
-	# mat no matter how tucked the pose, which is what the clearance gate
-	# kept catching here through two rounds of pure lifting.
-	"grapple_armdrag": {
-		"length": 1.0,
-		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.25, 0.34, 0.00, 0.08],
-					[0.55, 0.30, 0.00, 0.14], [0.80, 0.34, 0.00, 0.06],
-					[1.00, 0.36, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [0.40, 0.0, 118.0, 0.0],
-					[0.75, 0.0, 96.0, 0.0], [1.00, 0.0, 90.0, 0.0]],
-		},
-		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.22, -0.10, 0.60, 0.16],
-					[0.42, 0.10, 1.00, 0.40], [0.48, 0.12, 1.15, 0.45],
-					[0.65, 0.18, 0.55, 0.60],
-					[0.85, 0.20, 0.00, 0.70], [1.00, 0.20, 0.00, 0.70]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [0.35, -80.0, -90.0, 0.0],
-					[0.52, -200.0, -90.0, 0.0], [0.80, -330.0, -90.0, 0.0],
-					[0.90, -360.0, -90.0, 0.0], [1.00, -360.0, -90.0, 0.0]],
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.32, 0.00, 0.00],
+					[0.68, -0.28, 0.00, 0.00], [0.85, -0.46, 0.00, 0.00],
+					[1.00, -0.55, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.52, 0.0, -98.0, 0.0],
+					[1.00, 0.0, -90.0, 0.0]],
 		},
 	},
 

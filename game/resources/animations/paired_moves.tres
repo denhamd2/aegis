@@ -7,88 +7,28 @@ tracks/0/enabled = true
 tracks/0/path = NodePath("../WrestlerA")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.25, 1, 0.34, 0, 0.08, 0.55, 1, 0.3, 0, 0.14, 0.8, 1, 0.34, 0, 0.06, 1, 1, 0.36, 0, 0)
+tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.3, 1, 0.34, 0, 0, 0.68, 1, 0.3, 0, 0, 0.85, 1, 0.36, 0, 0, 1, 1, 0.4, 0, 0)
 tracks/1/type = "rotation_3d"
 tracks/1/imported = false
 tracks/1/enabled = true
 tracks/1/path = NodePath("../WrestlerA")
 tracks/1/interp = 2
 tracks/1/loop_wrap = true
-tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.4, 1, 0, 0.85716736, 0, 0.51503813, 0.75, 1, 0, 0.74314487, 0, 0.6691306, 1, 1, 0, 0.7071068, 0, 0.7071068)
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.52, 1, 0, 0.656059, 0, 0.7547097, 1, 1, 0, 0.7071068, 0, 0.7071068)
 tracks/2/type = "position_3d"
 tracks/2/imported = false
 tracks/2/enabled = true
 tracks/2/path = NodePath("../WrestlerB")
 tracks/2/interp = 2
 tracks/2/loop_wrap = true
-tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.22, 1, -0.1, 0.6, 0.16, 0.42, 1, 0.1, 1, 0.4, 0.48, 1, 0.12, 1.15, 0.45, 0.65, 1, 0.18, 0.55, 0.6, 0.85, 1, 0.2, 0, 0.7, 1, 1, 0.2, 0, 0.7)
+tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.3, 1, -0.32, 0, 0, 0.68, 1, -0.28, 0, 0, 0.85, 1, -0.46, 0, 0, 1, 1, -0.55, 0, 0)
 tracks/3/type = "rotation_3d"
 tracks/3/imported = false
 tracks/3/enabled = true
 tracks/3/path = NodePath("../WrestlerB")
 tracks/3/interp = 2
 tracks/3/loop_wrap = true
-tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.35, 1, -0.45451945, -0.54167527, -0.45451948, 0.5416752, 0.52, 1, 0.6963642, -0.12278781, 0.6963643, 0.1227878, 0.8, 1, 0.18301277, -0.6830127, 0.18301277, 0.68301266, 0.9, 1, -6.181724e-08, -0.7071068, -6.1817246e-08, 0.7071068, 1, 1, -6.181724e-08, -0.7071068, -6.1817246e-08, 0.7071068)
-
-[sub_resource type="Animation" id="Animation_hfdie"]
-tracks/0/type = "position_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("../WrestlerA")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.2, 1, 0.36, 0, 0, 0.45, 1, 0.31, 0, 0, 0.7, 1, 0.33, 0, 0, 1, 1, 0.36, 0, 0)
-tracks/1/type = "rotation_3d"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("../WrestlerA")
-tracks/1/interp = 2
-tracks/1/loop_wrap = true
-tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.45, 1, 0, 0.54463905, 0, 0.83867055, 0.7, 1, 0, 0.7547096, 0, 0.656059, 1, 1, 0, 0.7071068, 0, 0.7071068)
-tracks/2/type = "position_3d"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("../WrestlerB")
-tracks/2/interp = 2
-tracks/2/loop_wrap = true
-tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.25, 1, -0.18, 0.38, 0, 0.45, 1, 0.16, 1.28, 0, 0.7, 1, 0.5, 0.75, 0, 0.88, 1, 0.7, 0.05, 0, 1, 1, 0.74, 0, 0)
-tracks/3/type = "rotation_3d"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("../WrestlerB")
-tracks/3/interp = 2
-tracks/3/loop_wrap = true
-tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.3, 1, -0.4055798, -0.57922804, -0.40557984, 0.5792279, 0.5, 1, 0.6963642, 0.12278783, 0.6963643, -0.122787826, 0.7, 1, 0.5416752, -0.45451954, 0.5416752, 0.4545195, 0.88, 1, -6.181724e-08, -0.7071068, -6.1817246e-08, 0.7071068, 1, 1, -6.181724e-08, -0.7071068, -6.1817246e-08, 0.7071068)
-
-[sub_resource type="Animation" id="Animation_u2ccy"]
-tracks/0/type = "position_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("../WrestlerA")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.22, 1, 0.37, 0, 0, 0.5, 1, 0.34, 0, 0, 0.75, 1, 0.35, 0, 0, 1, 1, 0.36, 0, 0)
-tracks/1/type = "rotation_3d"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("../WrestlerA")
-tracks/1/interp = 2
-tracks/1/loop_wrap = true
-tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.5, 1, 0, 0.601815, 0, 0.79863554, 1, 1, 0, 0.7071068, 0, 0.7071068)
-tracks/2/type = "position_3d"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("../WrestlerB")
-tracks/2/interp = 2
-tracks/2/loop_wrap = true
-tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.25, 1, -0.15, 0.65, 0, 0.45, 1, 0.2, 1.1, 0, 0.53, 1, 0.28, 1.1, 0, 0.7, 1, 0.45, 0.53, 0, 0.9, 1, 0.55, 0, 0, 1, 1, 0.55, 0, 0)
-tracks/3/type = "rotation_3d"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("../WrestlerB")
-tracks/3/interp = 2
-tracks/3/loop_wrap = true
-tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.35, 1, 0.5, 0.5, 0.5, -0.5, 0.55, 1, 0.6963642, -0.12278781, 0.6963643, 0.1227878, 0.78, 1, 0.24184483, -0.66446304, 0.24184483, 0.664463, 0.9, 1, -6.181724e-08, -0.7071068, -6.1817246e-08, 0.7071068, 1, 1, -6.181724e-08, -0.7071068, -6.1817246e-08, 0.7071068)
+tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.52, 1, 0, -0.7547096, 0, 0.656059, 1, 1, 0, -0.7071068, 0, 0.7071068)
 
 [sub_resource type="Animation" id="Animation_086g0"]
 tracks/0/type = "position_3d"
@@ -120,7 +60,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.70710677, 0, 0.70710677, 0.15, 1, -0.061628412, -0.70441604, -0.061628412, 0.70441604, 0.3, 1, -0.32650557, -0.62721133, -0.32650557, 0.62721133, 0.42, 1, -0.47771442, -0.5213338, -0.47771442, 0.5213338, 0.52, 1, -0.5416752, -0.45451948, -0.5416752, 0.45451948, 0.62, 1, -0.59636784, -0.37992817, -0.59636784, 0.37992817, 0.72, 1, -0.5609855, -0.43045932, -0.5609855, 0.43045932, 0.82, 1, -0.5213338, -0.47771442, -0.5213338, 0.47771442, 0.92, 1, 0, -0.70710677, 0, 0.70710677, 1, 1, 0, -0.70710677, 0, 0.70710677)
 
-[sub_resource type="Animation" id="Animation_pd0cl"]
+[sub_resource type="Animation" id="Animation_hfdie"]
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -152,9 +92,7 @@ tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.35, 1, -
 
 [resource]
 _data = {
-&"grapple_armdrag": SubResource("Animation_7b2p4"),
-&"grapple_hiptoss": SubResource("Animation_hfdie"),
-&"grapple_snapmare": SubResource("Animation_u2ccy"),
+&"grapple_clinch_knee": SubResource("Animation_7b2p4"),
 &"signature_backbreaker": SubResource("Animation_086g0"),
-&"signature_neckbreaker": SubResource("Animation_pd0cl")
+&"signature_neckbreaker": SubResource("Animation_hfdie")
 }

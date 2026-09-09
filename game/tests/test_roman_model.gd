@@ -47,7 +47,7 @@ func test_match_wires_roman_to_generated_move_libraries() -> void:
     var wrestler := match.get_node("WrestlerA") as WrestlerController
     assert_object(wrestler.anim_player).is_not_null()
     for clip in ["strikes/strike_jab", "strikes/strike_kick",
-            "strikes/running_double_leg", "paired/grapple_hiptoss__attacker"]:
+            "strikes/running_double_leg", "paired/grapple_clinch_knee__attacker"]:
         assert_bool(wrestler.anim_player.has_animation(clip)) \
             .override_failure_message(
                 "Roman match model is missing generated animation '%s'" % clip
