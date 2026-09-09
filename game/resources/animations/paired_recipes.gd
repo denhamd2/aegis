@@ -109,7 +109,14 @@ const RECIPES := {
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.20, "clip": "PickUp_Table", "at": 0.25},
 			{"t": 0.35, "clip": "PickUp_Table", "at": 0.60},
-			{"t": 0.52, "clip": "PickUp_Table", "at": 0.80},
+			# The kneel is EARLY on purpose. It used to arrive at 0.72, well
+			# after the victim's peak, which was survivable only because the
+			# arc lifted him to 1.55 m -- clear over a standing man's head.
+			# Lowering the arc without moving this put the two bodies through
+			# each other at t=0.35: the height had been clearing the ATTACKER,
+			# not just the mat. He is down on the knee by 0.50 now, so the
+			# victim comes down ACROSS him, which is what a backbreaker is.
+			{"t": 0.50, "clip": "Fixing_Kneeling", "at": 2.00},
 			{"t": 0.72, "clip": "Fixing_Kneeling", "at": 2.00},
 			{"t": 1.00, "clip": "Crouch_Idle", "at": 1.00},
 		],
@@ -136,7 +143,10 @@ const RECIPES := {
 		"defender": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.30, "clip": "Hit_Head", "at": 0.15},
-			{"t": 0.55, "clip": "Roll", "at": 0.70},
+			# Was Roll at 0.70 ("inverted"), which was picked to match the
+			# somersault the trajectory no longer does. Death01 at 0.40 is
+			# "falling", which is what a back-drop looks like.
+			{"t": 0.55, "clip": "Death01", "at": 0.40},
 			{"t": 0.75, "clip": "Death01", "at": 0.90},
 			{"t": 1.00, "clip": "Death01", "at": 1.60},
 		],
@@ -201,14 +211,37 @@ const TRAJECTORIES := {
 			"rot": [[0.00, 0.0, 90.0, 0.0], [0.55, 0.0, 76.0, 0.0],
 					[1.00, 0.0, 88.0, 0.0]],
 		},
+		# A back-drop, not a somersault. The pitch used to run the whole way
+		# round -- 0, -70, -180, -290, -360 -- and a body that passes through
+		# fully inverted (up.y = -1.00) has to be lifted a whole body-length or
+		# its head goes through the canvas: the clearance gate wants
+		# root_y >= 1.15 * |up.y| - 0.12, which is 1.03 m at full inversion.
+		# That is exactly where this move sat, with head_y landing on -0.12,
+		# the floor itself. The altitude was the flip's price.
+		#
+		# A real neckbreaker snaps a standing man down onto his back -- about a
+		# quarter turn. The pitch tips to -85 (just short of horizontal, so
+		# up.y stays near 0 and the gate asks for essentially nothing) and then
+		# RETURNS to 0.
+		#
+		# Returning is not optional and is the reason the original went the
+		# whole way round: build_paired_moves.gd rejects an arc that "ends
+		# rotated away from its start -- a thrown wrestler must land upright or
+		# he sinks through the mat", and -360 satisfies that by coming back to
+		# the same orientation. Ending at -100 does not, and was refused.
+		#
+		# Landing upright costs nothing visually, because the root's rotation is
+		# not what makes a man look prone -- the bone pose is. The defender's
+		# last sample is Death01 at 1.60, "settled prone", and that is what the
+		# camera sees lying on the mat.
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.20, 0.48, 0.00],
-					[0.50, 0.05, 1.01, 0.00], [0.60, 0.12, 1.03, 0.00],
-					[0.72, 0.20, 0.48, 0.00],
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.20, 0.30, 0.00],
+					[0.50, 0.05, 0.45, 0.00], [0.60, 0.12, 0.44, 0.00],
+					[0.72, 0.20, 0.26, 0.00],
 					[0.88, 0.28, 0.00, 0.00], [1.00, 0.30, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [0.35, -70.0, -90.0, 0.0],
-					[0.55, -180.0, -90.0, 0.0], [0.75, -290.0, -90.0, 0.0],
-					[0.88, -360.0, -90.0, 0.0], [1.00, -360.0, -90.0, 0.0]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.35, -55.0, -90.0, 0.0],
+					[0.55, -85.0, -90.0, 0.0], [0.75, -45.0, -90.0, 0.0],
+					[0.88, 0.0, -90.0, 0.0], [1.00, 0.0, -90.0, 0.0]],
 		},
 	},
 }
