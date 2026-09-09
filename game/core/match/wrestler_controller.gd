@@ -302,7 +302,10 @@ const STATE_ANIMATIONS := {
 	# Retimed to STUNNED_TICKS. The raw Hit_Head is 0.43s against a 45-tick
 	# (0.75s) state, so the clip ended and the pose froze for 19 ticks.
 	WrestlerFSM.State.STUNNED: "strikes/stunned",
-	WrestlerFSM.State.PIN_ATTACKER: "Crouch_Idle",
+	# Generated (see resources/animations/strike_recipes.gd), not Crouch_Idle:
+	# that is a man crouching on his own, so the three-count played with the
+	# attacker standing beside the fallen man rather than covering him.
+	WrestlerFSM.State.PIN_ATTACKER: "strikes/pin_cover",
 	WrestlerFSM.State.PIN_DEFENDER: "Death01",
 	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
 	WrestlerFSM.State.SUBMISSION_DEFENDER: "Death01",
@@ -1464,13 +1467,69 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 		_cover_eligible = true
 		fsm.transition_to(next_state)
 
+## Where the coverer kneels, in the DOWNED man's own frame, in metres.
+##
+## Both measured off the prone pose with tools/probe/pin_shot.tscn rather than
+## guessed, because guessing got it wrong: a prone wrestler's node keeps his
+## standing yaw, so which way along z his head lies is not something to reason
+## about from the transform. Printed from the rig while he lay there --
+##
+##   Head   local=(-0.002, +0.174, +1.250)
+##   pelvis local=(-0.010, +0.066, +0.573)
+##   foot_l local=(-0.233, +0.072, -0.257)
+##
+## -- so the body runs up +Z and the chest is near +0.95. The first attempt
+## offset along -Z and put the coverer down by the boots, which the render
+## caught immediately.
+##
+## Neither is a searched minimum, and the lateral one is not a first guess
+## either: at 0.45 the side and three-quarter shots both read fine and the low
+## angle showed the coverer's thigh passing through the prone man's chest. 0.62
+## is the value that came back clean from all three. That is what these answer
+## to -- a rendered frame, from more than one angle, not a distance that sounds
+## about right.
+const COVER_TOWARD_HEAD_M := 0.90
+const COVER_LATERAL_M := 0.62
+
+
 ## Called by MatchReferee when the attacker covers a downed opponent.
 func begin_pin(defender: WrestlerController, seed_value: int) -> void:
 	fsm.transition_to(WrestlerFSM.State.PIN_ATTACKER)
 	defender.fsm.transition_to(WrestlerFSM.State.PIN_DEFENDER)
+	_place_cover(defender)
 	var fraction := defender.combat.kickout_window_fraction(combat.momentum)
 	defender._pin_minigame = PinMinigame.new(fraction, seed_value)
 	pin_started.emit(self, defender)
+
+## Kneels the coverer beside the downed man, facing across him.
+##
+## PIN_ATTACKER's per-tick handler is `pass` -- the state is driven entirely by
+## MatchReferee -- so nothing ever moved the attacker once the pin began. He
+## simply froze wherever the last strike left him, which is how a captured
+## three-count ended up with him standing off to one side, one boot inside the
+## fallen man's head.
+##
+## Placed relative to the DEFENDER's own frame rather than in world axes, so a
+## fall in any corner of the ring covers the same way. Deterministic by
+## construction: fixed offsets off another body's transform, no randomness and
+## no wall-clock, so a replay puts him in the same place.
+##
+## Position only. The pin's outcome is the kickout minigame and the referee's
+## count -- neither reads either man's position -- so this moves what the
+## camera sees without touching what the match decides.
+func _place_cover(defender: WrestlerController) -> void:
+	var basis := defender.global_transform.basis
+	# +Z toward the head, measured (see the constants); +X is his own left.
+	var toward_head := basis.z * COVER_TOWARD_HEAD_M
+	var beside := basis.x * COVER_LATERAL_M
+	global_position = defender.global_position + toward_head + beside
+	# Face back across him, so the cover reads from the hard camera rather
+	# than showing the coverer's back to the man he is pinning.
+	var across := defender.global_position - global_position
+	across.y = 0.0
+	if across.length() > 0.01:
+		rotation.y = atan2(-across.x, -across.z)
+
 
 func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:
 	fsm.transition_to(WrestlerFSM.State.SUBMISSION_ATTACKER)

@@ -111,6 +111,46 @@ const RECIPES := {
 	# trimmed: a stagger is the one case where slowing the motion down is
 	# the point.
 	"stunned": {"kind": "retime", "source": "Hit_Head", "seconds": 0.75},
+
+	# The cover. PIN_ATTACKER played "Crouch_Idle", which is a man crouching
+	# on his own -- so a captured three-count showed the attacker standing
+	# beside the fallen man with a boot through his head while the referee
+	# counted. Nothing about it read as a pin.
+	#
+	# A stitch rather than a clip choice, because the rig has no cover in it.
+	# Sitting_Enter at 0.60 was tried first and rendered as a man bent at the
+	# waist but still standing on both feet, so the base is Fixing_Kneeling at
+	# 2.00 ("kneeling, settled" in the reference table paired_recipes.gd
+	# keeps), which is already down on the mat. The offsets below carry it the
+	# rest of the way -- the spine pitched over the man on the mat and the arms
+	# brought in to press his shoulders.
+	#
+	# One sample, held. PIN_ATTACKER is a state the referee holds for the
+	# whole count rather than a move with a beat, and a stitched clip keeps
+	# its last pose, so a single pose at t=0 is the cover for as long as the
+	# count runs. The 0.6s length only has to outlast the cross-fade in.
+	#
+	# The pose alone is half the fix; without the placement in
+	# WrestlerController.begin_pin() the attacker still covers thin air
+	# wherever he happened to be standing.
+	"pin_cover": {
+		"kind": "stitch", "seconds": 0.6,
+		"samples": [
+			{"t": 0.0, "clip": "Fixing_Kneeling", "at": 2.00, "bones": {
+				# Down over the opponent rather than upright off the mat.
+				"spine_01": Vector3(22.0, 0.0, 0.0),
+				"spine_02": Vector3(18.0, 0.0, 0.0),
+				"spine_03": Vector3(12.0, 0.0, 0.0),
+				# Both arms reaching down to the shoulders he is holding.
+				"upperarm_l": Vector3(0.0, 0.0, -38.0),
+				"upperarm_r": Vector3(0.0, 0.0, 38.0),
+				"lowerarm_l": Vector3(0.0, 0.0, -20.0),
+				"lowerarm_r": Vector3(0.0, 0.0, 20.0),
+				# Watching the shoulders, not the lights.
+				"neck_01": Vector3(12.0, 0.0, 0.0),
+			}},
+		],
+	},
 }
 
 ## Clip name as registered on the wrestler's AnimationPlayer.
