@@ -1333,22 +1333,16 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if input.get("run", false):
 		_begin_irish_whip()
 		return
-	var move := grapple_move
-	if not move or opponent.weight_class < move.weight_class_min or opponent.weight_class > move.weight_class_max:
-		# Nothing this attacker can legally throw at this opponent. That was
-		# a bare `return`, retried every tick with no timeout -- both
-		# wrestlers held in GRAPPLE_HOLD forever, and GRAPPLE_HOLD is not a
-		# state anything else pulls them out of. Unreachable in the shipped
-		# scenes (every move ships weight_class_min 0 / max 2 against a
-		# weight_class of 1) but it is one bad .tres away, and Priority 3 of
-		# gauntlet/status/roman_reigns_next.md adds moves.
-		#
-		# Break the hold instead: both sides back to IDLE, which is where a
-		# whip already sends the attacker, so the match carries on and the
-		# tie-up can simply happen again.
-		if fsm.ticks_in_state >= GRAPPLE_HOLD_MAX_TICKS:
-			_release_grapple_hold()
-		return
+	# Pick the rung FIRST, then ask whether it can be thrown.
+	#
+	# This used to test grapple_move -- the BASE rung -- before choosing a
+	# tier, which quietly made the whole grapple chain depend on the bottom of
+	# it: with no base grapple move the guard returned early every tick, so a
+	# signature or finisher the momentum ladder had earned could never be
+	# thrown either. That is fine while the base rung is always populated and
+	# wrong the moment it is not, which is exactly what removing the three
+	# throw-style grapples does.
+	var move: MoveDef = null
 	if combat.can_finisher() and finisher_move:
 		move = _pick_tier_move(finisher_move, finisher_move_pool)
 	elif combat.can_signature() and signature_move:
@@ -1357,6 +1351,25 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		move = _pick_tier_move(power_move, power_move_pool)
 	else:
 		move = _pick_tier_move(grapple_move, grapple_move_pool)
+
+	if not move or opponent.weight_class < move.weight_class_min \
+			or opponent.weight_class > move.weight_class_max:
+		# Nothing this attacker can legally throw at this opponent. That was
+		# a bare `return`, retried every tick with no timeout -- both
+		# wrestlers held in GRAPPLE_HOLD forever, and GRAPPLE_HOLD is not a
+		# state anything else pulls them out of.
+		#
+		# Reachable by design now rather than "one bad .tres away": with the
+		# grapple rung emptied, a tie-up thrown before the ladder has earned a
+		# signature has nothing to resolve to, and this is the path that ends
+		# it cleanly.
+		#
+		# Break the hold: both sides back to IDLE, which is where a whip
+		# already sends the attacker, so the match carries on and the tie-up
+		# can simply happen again.
+		if fsm.ticks_in_state >= GRAPPLE_HOLD_MAX_TICKS:
+			_release_grapple_hold()
+		return
 
 	_active_move = move
 	if grapple_rig:
