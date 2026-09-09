@@ -201,3 +201,16 @@ and the hair is a solid blob at close range; the lighting of the room it was
 scanned in is baked into the diffuse and will not respond to the arena lights;
 and the figure's pointing right hand is frozen into the mesh, so his fingers
 keep that gesture in every animation.
+
+**One thing the rigging could not close, with the measurement that bounds it.**
+The rigger reports the mesh's arms as 22.0% (left) and 16.9% (right) longer
+than the base rig's arm chain, against an 8% tolerance, and warns that grip IK
+will therefore aim slightly short of the scanned hand. Two things make that
+number larger than the mismatch really is, and neither is worth "fixing" by
+reshaping the rig: the reach is measured to the furthest vertices of the hand,
+and this figure's right hand is frozen mid-point, so an extended index finger
+is being counted as arm; and the CC0 base rig is stylised, with a 0.596 m arm
+on a 1.829 m body (32.6% of height) where this realistic scan is at 41%.
+Lengthening the rig's bones to match would desync Kenny's proportions from
+Cody's and from every clip authored against the rig, so the mismatch is left
+in place and recorded here. The legs, by contrast, fit to +2.0% and +1.2%.
