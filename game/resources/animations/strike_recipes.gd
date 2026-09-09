@@ -133,6 +133,36 @@ const RECIPES := {
 	# The pose alone is half the fix; without the placement in
 	# WrestlerController.begin_pin() the attacker still covers thin air
 	# wherever he happened to be standing.
+	# The getup. GETUP played "Roll", which is a tucked forward roll: measured
+	# against the state it fills, the clip is 1.467s and GETUP_RISE_TICKS is
+	# 126 (2.10s), so the wrestler curled into a ball on the mat and then FROZE
+	# in it for the remaining 0.63s. In a captured match that is a man landing
+	# from a throw, becoming a compact ball for about half a second, and then
+	# popping upright -- which is what "the downed wrestler crumples" turns out
+	# to be. It is the same clip-shorter-than-its-state disease as "stunned"
+	# above, except the pose it freezes in is a ball rather than a stagger.
+	#
+	# Stitched into an actual rise, because the rig has no getup either: prone,
+	# up onto a knee, into a crouch, standing. Every pose is a real frame of a
+	# real clip (see the reference table in paired_recipes.gd).
+	#
+	# Authored at the DEFAULT rise, 2.10s, not the input-driven fast one
+	# (GETUP_RISE_FAST_TICKS, 68 ticks / 1.14s). One clip cannot be both, and
+	# this is the choice that fails better: a fast rise truncates it around the
+	# crouch, which reads as scrambling up quicker, whereas authoring it short
+	# would leave the slow rise frozen standing for a second -- and freezing is
+	# the bug being fixed.
+	"getup_rise": {
+		"kind": "stitch", "seconds": 2.10,
+		"samples": [
+			{"t": 0.00, "clip": "Death01", "at": 1.60},       # settled prone
+			{"t": 0.70, "clip": "Death01", "at": 0.90},       # on the ground
+			{"t": 1.25, "clip": "Fixing_Kneeling", "at": 2.00},  # onto a knee
+			{"t": 1.70, "clip": "Crouch_Idle", "at": 1.00},   # crouched
+			{"t": 2.10, "clip": "Idle", "at": 0.00},          # on his feet
+		],
+	},
+
 	"pin_cover": {
 		"kind": "stitch", "seconds": 0.6,
 		"samples": [

@@ -296,7 +296,9 @@ const STATE_ANIMATIONS := {
 	# depending on where the damage landed; this is the fallback.
 	WrestlerFSM.State.HIT_REACT: "strikes/hit_torso",
 	WrestlerFSM.State.DOWN: "Death01",
-	WrestlerFSM.State.GETUP: "Roll",
+	# Generated: "Roll" is a tucked forward roll and 0.63s shorter than the
+	# state, so the wrestler curled into a ball on the mat and froze in it.
+	WrestlerFSM.State.GETUP: "strikes/getup_rise",
 	WrestlerFSM.State.IRISH_WHIP: "Push",
 	WrestlerFSM.State.RUNNING_ATTACK: "Punch_Cross",
 	# Retimed to STUNNED_TICKS. The raw Hit_Head is 0.43s against a 45-tick
