@@ -374,6 +374,14 @@ var _submission_minigame: SubmissionMinigame
 ## from the same starting state, regardless of node order.
 var _pending_hits: Array[MoveDef] = []
 
+## A hit taken while this wrestler was mid-strike, held until the strike ends.
+##
+## See the deferral in _flush_pending_hits(): the damage is applied
+## immediately, only the HIT_REACT transition is deferred, so nothing about who
+## wins the exchange changes -- what changes is that the punch already in
+## flight is allowed to land instead of being cancelled by the one that beat it.
+var _pending_hit_reaction: MoveDef = null
+
 ## Whether the current _active_move has already landed its hit this
 ## attempt. This must live here, not on the MoveDef resource (previously
 ## tracked via _active_move.set_meta("applied", ...)) — a MoveDef loaded
@@ -1205,6 +1213,7 @@ func _process_active_move(input: Dictionary) -> void:
 	var in_active_frames := frame_offset >= _active_move.startup_frames \
 		and frame_offset < _active_move.startup_frames + _active_move.active_frames
 
+
 	if in_active_frames and opponent and _in_range(STRIKE_HIT_RANGE) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
 			and not _active_move_hit_applied:
@@ -1214,8 +1223,18 @@ func _process_active_move(input: Dictionary) -> void:
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
 		_active_move_hit_applied = false
-		fsm.transition_to(WrestlerFSM.State.IDLE)
 		_active_move = null
+		# A hit taken mid-strike was held back so this punch could land; pay
+		# it now. CONSUMED, not queued -- an unconsumed one-shot request spent
+		# on an unrelated hit later is a bug this project has had once already
+		# (see the note on one-shot clip overrides in references/wiring.md).
+		if _pending_hit_reaction:
+			var taken := _pending_hit_reaction
+			_pending_hit_reaction = null
+			_play_hit_reaction(taken)
+			_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+			return
+		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
 	move_landed.emit(self, opponent, move)
@@ -1246,10 +1265,30 @@ func _resolve_pending_hits() -> void:
 	for move in moves:
 		combat.apply_damage(move)
 	if _would_be_knocked_down():
+		# Dropped mid-swing: the punch dies with him, so nothing is held over.
+		_pending_hit_reaction = null
 		_go_down()
-	else:
-		_play_hit_reaction(moves[moves.size() - 1])
-		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+		return
+	# A punch already thrown lands. Measured with
+	# tools/probe/strike_connect_probe.tscn over seeds 1-3 before this: of 64
+	# strikes thrown, only 33 landed, and the reason was NOT spacing -- zero
+	# were out of range. 22 of them were INTERRUPTED, cancelled mid-wind-up by
+	# taking a hit, so they never reached the frames where contact is tested.
+	# Both men throw at once, the first contact frame to land cancels the
+	# other's punch, and what that looks like on screen is a wrestler winding
+	# up and then nothing happening -- a punch that does not connect, and an
+	# opponent who never reacts because he was never hit.
+	#
+	# So the damage still applies this instant (the exchange is still decided
+	# by who lands first), but the reaction WAITS for the punch to finish
+	# rather than eating it. Both men connect and both then react, which is
+	# what trading blows actually looks like. A knockdown still interrupts --
+	# a man dropped mid-swing is not finishing the swing.
+	if fsm.current_state == WrestlerFSM.State.STRIKE:
+		_pending_hit_reaction = moves[moves.size() - 1]
+		return
+	_play_hit_reaction(moves[moves.size() - 1])
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
 
 ## Points the STRIKE state at this strike's own clip before entering it.
 ##
