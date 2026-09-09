@@ -38,11 +38,12 @@ func test_the_screen_covers_the_whole_viewport() -> void:
 	assert_float(screen.anchor_right).is_equal(1.0)
 	assert_float(screen.anchor_bottom).is_equal(1.0)
 
-## Two wrestlers, because two character models exist. A third entry here with
-## no model behind it would be a menu option that crashes on launch.
+## Three wrestlers, because three character models exist. An entry here with
+## no model behind it would be a menu option that crashes on launch, which is
+## why the count is pinned as well as the scenes checked.
 func test_every_roster_entry_has_a_model_scene_that_exists() -> void:
 	var entries := Roster.entries()
-	assert_int(entries.size()).is_equal(2)
+	assert_int(entries.size()).is_equal(3)
 	for entry: Roster.Entry in entries:
 		assert_bool(ResourceLoader.exists(entry.model_scene)) \
 				.override_failure_message(
@@ -50,13 +51,17 @@ func test_every_roster_entry_has_a_model_scene_that_exists() -> void:
 						% [entry.id, entry.model_scene]).is_true()
 		assert_str(entry.display_name()).is_not_empty()
 
-func test_the_roster_is_roman_and_cody() -> void:
+## Kenny is last, and the order matters: the select cursor starts at 0 and
+## steps to 1 after player 1 picks, so the default two Enters must still be
+## Roman then Cody -- which is what tools/probe/title_video.gd records.
+func test_the_roster_is_roman_cody_and_kenny() -> void:
 	var ids: Array = []
 	for entry: Roster.Entry in Roster.entries():
 		ids.append(entry.id)
-	assert_array(ids).contains(["roman", "cody"])
+	assert_array(ids).is_equal(["roman", "cody", "kenny"])
 	assert_str(Roster.by_id("roman").display_name()).is_equal("ROMAN REIGNS")
 	assert_str(Roster.by_id("cody").display_name()).is_equal("CODY RHODES")
+	assert_str(Roster.by_id("kenny").display_name()).is_equal("KENNY OMEGA")
 
 ## FIGHT is the first row, so the screen opens on the option that starts a
 ## match rather than on a submenu.
@@ -191,4 +196,27 @@ func test_an_unknown_or_malformed_pair_resolves_to_nothing() -> void:
 	assert_array(Roster.pair_from_spec("roman,cody,roman")).is_empty()
 
 func test_ids_on_roster_lists_every_entry() -> void:
-	assert_array(Roster.ids_on_roster()).contains_exactly(["roman", "cody"])
+	assert_array(Roster.ids_on_roster()).contains_exactly(
+			["roman", "cody", "kenny"])
+
+
+## Kenny is reachable from the select screen and launches with his own model.
+##
+## The other pick tests park the cursor on 0 and 1, so before this one nothing
+## exercised the third card at all -- a roster entry can exist, pass the
+## "has a model scene" check, and still be unreachable if the cursor cannot
+## get to it. Here the cursor lands on 2 the way a player's third Right press
+## would, and the pick is carried into a configured match.
+func test_kenny_is_selectable_and_carries_his_own_model() -> void:
+	var screen := _screen()
+	screen._accept()
+	screen.cursor = 2
+	screen._accept()
+	assert_str((screen.picks[0] as Roster.Entry).id).is_equal("kenny")
+	screen._accept()
+	assert_int(screen.picks.size()).is_equal(2)
+	assert_int(screen.phase).is_equal(TitleScreen.Phase.VERSUS)
+
+	var kenny := Roster.by_id("kenny")
+	assert_str(kenny.model_scene).is_equal("res://scenes/kenny_model.tscn")
+	assert_bool(ResourceLoader.exists(kenny.model_scene)).is_true()

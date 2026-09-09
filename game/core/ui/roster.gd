@@ -9,10 +9,18 @@ extends RefCounted
 ## end. Adding a wrestler is one entry plus his model scene; nothing in
 ## TitleScreen names a wrestler.
 ##
-## Two entries today, because two character models exist: the repo ships
-## roman_reigns.glb and cody_rhodes.glb and nothing else that is rigged to the
-## game's wrestler rig. wrestler_base.glb is the CC0 retargeting mannequin, not
-## a character, so it is deliberately not offered here.
+## Three entries today, because three character models exist: the repo ships
+## roman_reigns.glb, cody_rhodes.glb and kenny_omega.glb, and nothing else that
+## is rigged to the game's wrestler rig. wrestler_base.glb is the CC0
+## retargeting mannequin, not a character, so it is deliberately not offered
+## here.
+##
+## Kenny is appended rather than inserted, and that ordering is load-bearing in
+## two places: DEFAULT_PAIR below resolves by id and is unaffected, but the
+## title screen's cursor starts at 0 and steps to 1 after player 1 picks, so
+## the default two Enters are still Roman then Cody. tools/probe/title_video.gd
+## drives exactly those two Enters. Inserting Kenny anywhere earlier would
+## silently change who the recorded video and every unseeded probe fight.
 
 ## One roster slot.
 ##
@@ -75,6 +83,27 @@ static func entries() -> Array:
 			"res://scenes/cody_model.tscn",
 			Color(0.88, 0.86, 0.82), Color(0.86, 0.68, 0.26),
 			0.74, 0.80, 0.86),
+		# The body colour is his scanned vest and tights, sampled from
+		# kenny_omega_tex_u1_v1_diffuse: the gear reads as a dark desaturated
+		# navy-charcoal, around Color(0.12, 0.15, 0.20).
+		#
+		# The accent is NOT sampled, and that is deliberate. The same sample
+		# puts his trim at h=0.10, which is Cody's gold, and his tights within
+		# a hair of Roman's Color(0.07, 0.08, 0.11) body -- so taking the
+		# measured colours would give three cards that do not separate, which
+		# is the one job this pair of fields has on the select screen. Teal is
+		# chosen instead: adjacent to the blue he actually wears rather than
+		# arbitrary, well clear of Cody's gold, and separated from Roman's
+		# desaturated steel blue by being both green-shifted and saturated.
+		#
+		# He does not use the universal attire builder (KennyModel returns
+		# false), so unlike Roman and Cody these two colours drive only his
+		# card and his HUD plate -- never cloth on the model.
+		Entry.new(
+			"kenny", "KENNY", "OMEGA", "THE BEST BOUT MACHINE",
+			"res://scenes/kenny_model.tscn",
+			Color(0.12, 0.15, 0.20), Color(0.20, 0.78, 0.72),
+			0.68, 0.88, 0.94),
 	]
 
 
