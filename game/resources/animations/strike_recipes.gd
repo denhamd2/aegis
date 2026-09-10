@@ -54,19 +54,105 @@ const MOTIFECT_KICK := "res://assets/animations/motifect_kick_raw.glb"
 const MOTIFECT_DOUBLELEG := "res://assets/animations/motifect_doubleleg_raw.glb"
 
 const RECIPES := {
-	# Was a retimed Punch_Jab (contact tick 8 via 0.13/0.22). Now a real
-	# punching excerpt: muay_thai_combination's hardest straight, baked
-	# 0.567s with contact at 0.133s, trimmed to the same 0.514s/31 ticks.
-	"strike_jab": {"kind": "trim", "file": MOTIFECT_JAB,
-		"source": "motifect_jab_raw", "seconds": 0.514},
+	# BACK to the rig's own Punch_Jab, and the mocap excerpt that replaced it
+	# is gone. Measured with tools/probe/strike_clip_probe.tscn on the BASE
+	# rig -- no retarget in the path at all -- the baked jab put the head
+	# BELOW the hips on 21 of its 31 frames, worst 0.258 m under. Rendered,
+	# that frame is a wrestler curled into a ball floating at rope height.
+	# strike_cross, the one strike drawn from the rig's own library, measured
+	# clean through the identical code path, which is what points at the
+	# baked excerpts rather than the pipeline.
+	#
+	# It is a revert rather than a re-bake because a re-bake is not available:
+	# the retarget.py this file used to credit is not in the repo, and the
+	# source FBX was deliberately not vendored. Nothing here can reproduce
+	# those .glb intermediates, so the choice was a broken clip or the plainer
+	# one it replaced.
+	#
+	# Punch_Cross, not Punch_Jab: this rig HAS no Punch_Jab. The measurements
+	# further up this file that name one were taken "on the old rig", and the
+	# current wrestler_base.glb carries exactly one punch in its 42 clips.
+	# Reverting the recipe verbatim from history failed loudly on that --
+	# "source clip 'Punch_Jab' is not on the rig" -- which is the build script
+	# doing its job.
+	#
+	# So the jab and the cross are now the same motion at two speeds, which
+	# this file elsewhere calls out as a thing to avoid, and it is still the
+	# better of the two options available: the alternative on the table was a
+	# clip that renders as a ball of limbs at rope height. Worth replacing if a
+	# real jab is ever sourced -- that is a missing ASSET, not a bug.
+	#
+	# Punch_Cross's contact is measured at t=0.300s of its 1.0s length
+	# (tools/anim/measure_strike_contact.gd). Retimed to 0.514s / 31 ticks that
+	# lands at 0.154s -- tick 9, not the tick 8 the old excerpt hit -- so
+	# strike_jab.tres moves its startup_frames to 9 and gives the tick back out
+	# of recovery, keeping the move 31 ticks and the clip exactly as long as
+	# the state that plays it.
+	"strike_jab": {"kind": "retime", "source": "Punch_Cross", "seconds": 0.514},
 
-	# Was a stitched posed kick (Idle + thigh_l/calf_l offsets) -- the
-	# "borrowed stance" the README apologises for. Now a real roundhouse
-	# excerpt, baked 0.633s with peak extension at 0.133s, trimmed to the
-	# same 0.583s so strike_kick.tres's tick-8 contact still holds.
-	"strike_kick": {"kind": "trim", "file": MOTIFECT_KICK,
-		"source": "motifect_kick_raw", "seconds": 0.583},
+	# BACK to the stitched posed kick, for the same reason as the jab above:
+	# the baked roundhouse put the head below the hips on every one of its 35
+	# frames, worst 0.390 m under, and renders as a collapsed blob on the mat.
+	# This is the "borrowed stance" the README apologises for, and a borrowed
+	# stance that stands upright beats a real one that does not.
+	#
+	# The rig has no kick: 43 clips and not one of them throws a leg at
+	# anything, and -- measured -- it has no pose to build one out of either.
+	# Running FK over all 43, the highest a foot ever gets relative to the
+	# hips is -0.22m (Jump_Start's airborne tuck), still below the pelvis.
+	#
+	# So the leg is posed rather than sampled, on top of a real standing
+	# stance. The axis and angles are measured, not guessed -- rotating
+	# thigh_l about each axis in turn and reading the foot back through FK:
+	#
+	#   thigh_l -70, calf_l +90 -> knee at hip height, foot tucked: chamber
+	#   thigh_l -75, calf_l   0 -> foot 0.80m high and 0.78m forward, level
+	#                              with the hips: a front kick to the body
+	#   thigh_l -25, calf_l +25 -> foot just off the mat: the step
+	#
+	# Positive X on the spine leans the torso back, which is the
+	# counter-balance a thrown leg needs to not read as falling forward.
+	"strike_kick": {
+		"kind": "stitch",
+		"seconds": 0.583,
+		"samples": [
+			{"t": 0.000, "clip": "Idle", "at": 0.00},
+			# Weight shifts onto the standing leg before the other leaves it.
+			{"t": 0.067, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
+			# Chamber: knee up to hip height, heel tucked under.
+			{"t": 0.100, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
+					"spine_01": Vector3(8, 0, 0)}},
+			# Extension -- the contact frame, on tick 8 like the jab's, so
+			# both strikes land exactly on their startup_frames.
+			{"t": 0.133, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-75, 0, 0), "spine_01": Vector3(12, 0, 0)}},
+			# Re-chamber, then the leg comes back down under him.
+			{"t": 0.220, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
+					"spine_01": Vector3(8, 0, 0)}},
+			{"t": 0.360, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
+			{"t": 0.583, "clip": "Idle", "at": 0.00},
+		],
+	},
 
+	# !! KNOWN BROKEN, and left that way deliberately. This is the last recipe
+	# still sourced from the mocap bake, and it has the same fault the three
+	# strikes above were reverted off: measured with
+	# tools/probe/strike_clip_probe.tscn, head below hips on 59 of its 69
+	# frames, worst 0.268 m under.
+	#
+	# Not fixed here for two reasons. It cannot be re-baked -- retarget.py is
+	# not in the repo and the source FBX was never vendored -- and it cannot
+	# currently be SEEN: RUNNING_ATTACK fires zero times in an AI match,
+	# because input["run"] is only ever set by the whip decision inside
+	# GRAPPLE_HOLD (see gauntlet/status/roman_reigns_next.md, "The AI never
+	# runs in open play"). Replacing it means authoring a stitched takedown
+	# blind, against a state nothing reaches. That is its own piece of work,
+	# and it belongs with the fix that makes the AI run.
+	#
 	# Double-leg takedown for the second running attack: first 1.333s of
 	# the 5s clip (stance, level change, penetration), retimed to the
 	# 69-tick (1.15s) running-attack window. Contact beat is an estimate --
@@ -90,14 +176,37 @@ const RECIPES := {
 	"strike_cross": {"kind": "retime", "source": "Punch_Cross",
 		"seconds": 0.667},
 
-	# The heavy kick: the same measured roundhouse as strike_kick, played
-	# at two thirds speed (1.5x its 0.633s bake, so 0.950s). Retiming
-	# scales the contact frame with everything else -- 0.133s * 1.5 =
-	# 0.200s, tick 12 -- which is what strike_kick_heavy.tres says. It is
-	# the one strike in the set that is genuinely slow, and it hurts
-	# accordingly.
-	"strike_kick_heavy": {"kind": "retime", "file": MOTIFECT_KICK,
-		"source": "motifect_kick_raw", "seconds": 0.950},
+	# The heavy kick: the same posed kick as strike_kick, thrown slower. It
+	# used to retime the mocap roundhouse, which measured head-below-hips on
+	# all 57 of its frames -- the worst of the three.
+	#
+	# Written out as its own stitch rather than retimed, because "retime"
+	# scales a clip from the RIG's library and this kick is not one: it is
+	# assembled here. The sample times are stretched so the contact frame
+	# lands at 0.200s -- tick 12, which is what strike_kick_heavy.tres's
+	# startup_frames says -- rather than by scaling everything uniformly,
+	# which would have put it on tick 13.
+	"strike_kick_heavy": {
+		"kind": "stitch",
+		"seconds": 0.950,
+		"samples": [
+			{"t": 0.000, "clip": "Idle", "at": 0.00},
+			{"t": 0.100, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
+			{"t": 0.150, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
+					"spine_01": Vector3(8, 0, 0)}},
+			# Contact, on tick 12.
+			{"t": 0.200, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-75, 0, 0), "spine_01": Vector3(12, 0, 0)}},
+			{"t": 0.360, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
+					"spine_01": Vector3(8, 0, 0)}},
+			{"t": 0.590, "clip": "Idle", "at": 0.00,
+				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
+			{"t": 0.950, "clip": "Idle", "at": 0.00},
+		],
+	},
 
 	# Both reactions are cut to exactly WrestlerController.HIT_REACT_TICKS
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is
