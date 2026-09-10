@@ -128,9 +128,13 @@ func test_every_strikes_reversal_window_stays_inside_the_move() -> void:
 ## A clip shorter than its state freezes on the last pose; a longer one is
 ## cut off mid-motion by the cross-fade.
 func test_mocap_clips_match_their_move_durations() -> void:
+	# The running attacks are absent on purpose: neither has a clip of its
+	# own. The clothesline never did, and the double leg's baked takedown
+	# was deleted for rendering as a ball of limbs, so both fall back to
+	# STATE_ANIMATIONS' RUNNING_ATTACK. A clip/move duration contract only
+	# binds a move that names a clip.
 	for pair in [["strike_jab", JAB], ["strike_kick", KICK],
-			["strike_cross", CROSS], ["strike_kick_heavy", HEAVY_KICK],
-			["running_double_leg", DOUBLELEG]]:
+			["strike_cross", CROSS], ["strike_kick_heavy", HEAVY_KICK]]:
 		var clip: Animation = STRIKE_CLIPS.get_animation(StringName(pair[0] as String))
 		var move: MoveDef = pair[1] as MoveDef
 		assert_float(clip.length).override_failure_message(

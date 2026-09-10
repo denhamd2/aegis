@@ -100,12 +100,14 @@ func _strike_moves() -> Array:
 	for file in dir.get_files():
 		var name := file.get_basename()
 		# running_* too: they are played in a different state, but this is a
-		# test of the CLIP, and running_double_leg is the last recipe still
-		# sourced from the mocap bake that the three strikes were reverted off.
+		# test of the CLIP, and it was this probe that caught the baked
+		# double-leg takedown. Both running attacks now fall back to
+		# STATE_ANIMATIONS' clip, so they are covered here to catch a future
+		# recipe that reintroduces the fault.
 		if not (name.begins_with("strike_") or name.begins_with("running_")):
 			continue
 		moves.append(load("%s/%s" % [_moves_dir, file.replace(".remap", "")]))
-	moves.sort_custom(func(a, b): return String(a.animation_pair_id) < String(b.animation_pair_id))
+	moves.sort_custom(func(a, b): return String(a.resource_path) < String(b.resource_path))
 	return moves
 
 
@@ -134,7 +136,12 @@ func _run_clip(w: WrestlerController, skeleton: Skeleton3D, head: int, hips: int
 				worst_frame = frame
 		frame += 1
 
+	# A move with no clip of its own has an empty pair id (both running
+	# attacks, since the baked double leg was deleted), and an empty label
+	# names nothing -- so fall back to the MoveDef's own file name.
 	var id := String(move.animation_pair_id)
+	if id.is_empty():
+		id = move.resource_path.get_file().get_basename()
 	if bad_frames.is_empty():
 		print("  %-22s %3d frames  clean" % [id, frame])
 		if _out != "":

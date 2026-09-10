@@ -23,6 +23,7 @@ const ROUTES := {
 	"IDLE": [],
 	"LOCOMOTION": ["LOCOMOTION"],
 	"RUN": ["RUN"],
+	"RUNNING_ATTACK": ["RUN"],
 	"STRIKE": ["STRIKE"],
 	"TIE_UP": ["TIE_UP"],
 	"GRAPPLE_HOLD": ["TIE_UP", "GRAPPLE_HOLD"],
@@ -30,6 +31,23 @@ const ROUTES := {
 	"STUNNED": ["STUNNED"],
 	"DOWN": ["STUNNED", "DOWN"],
 	"GETUP": ["STUNNED", "DOWN", "GETUP"],
+}
+
+## States that need a MoveDef as well as a transition, and which one.
+##
+## Walking the route alone is not enough for these: without a move the state
+## has no duration, so it times out on its first tick and every frame after
+## the transition renders IDLE. That is exactly what the first RUNNING_ATTACK
+## run printed -- "at= 2 reached=IDLE" -- and it is a probe fault, not a
+## finding about the pose.
+##
+## The move is started through the same two calls _maybe_start_running_attack()
+## makes, in the same order, so the clip is chosen the way the match chooses
+## it. running_attack_double_leg has no recipe of its own, so this renders
+## STATE_ANIMATIONS' RUNNING_ATTACK fallback -- which is the point of looking
+## at it.
+const MOVES := {
+	"RUNNING_ATTACK": "res://resources/moves/running_attack_double_leg.tres",
 }
 
 var _out := "/tmp/states"
@@ -80,6 +98,14 @@ func _ready() -> void:
 		await get_tree().process_frame
 		for step: String in ROUTES[state_name]:
 			subject.fsm.transition_to(WrestlerFSM.State[step])
+		if MOVES.has(state_name):
+			var move: MoveDef = load(MOVES[state_name])
+			var state: int = WrestlerFSM.State[state_name]
+			subject._set_state_clip(state,
+					StrikeRecipes.clip(String(move.animation_pair_id)))
+			# _start_move() does the transition itself, so the route above
+			# stops one step short of the state and this makes the last hop.
+			subject._start_move(state, move)
 		# Sampled ACROSS the state, not once inside it. A single grab is what
 		# hid this: two frames in, GETUP looks like a man standing up, and the
 		# defect -- he tucks into a ball on the mat for about half a second
@@ -87,10 +113,16 @@ func _ready() -> void:
 		# states that time out into the next one (at 12 frames DOWN reported
 		# GETUP and GETUP reported IDLE), so the reached state is printed with
 		# every frame rather than assumed to still be the one asked for.
+		#
+		# PHYSICS frames, not process frames: every duration in the controller
+		# is counted in physics ticks (MoveDef.total_frames(), the getup
+		# timers), and under a real renderer process frames run at a different
+		# rate entirely, so an offset in process frames names no particular
+		# tick of the move.
 		var elapsed := 0
 		for offset: int in _at_frames:
 			while elapsed < offset:
-				await get_tree().process_frame
+				await get_tree().physics_frame
 				elapsed += 1
 			var reached := String(WrestlerFSM.State.keys()[subject.fsm.current_state])
 			var focus := subject.global_position + Vector3(0.0, 0.6, 0.0)

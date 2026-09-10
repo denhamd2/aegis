@@ -42,16 +42,18 @@ extends RefCounted
 
 const LIBRARY := "strikes"
 
-## Motion-captured sources (Motifect Martial Arts pack, retargeted onto the
-## mannequin by retarget.py -- see assets/animations/ for the baked .glb
-## intermediates, raw FBX deliberately not vendored per the pack's licence).
-## A recipe with a "file" key samples the baked clip instead of the rig's
-## own; trim/retime behave exactly as below. Baked excerpts are cut so the
-## strike's contact lands 4 frames (0.133s) in, preserving the tick-8
-## contact contract the Quaternius clips hold.
-const MOTIFECT_JAB := "res://assets/animations/motifect_jab_raw.glb"
-const MOTIFECT_KICK := "res://assets/animations/motifect_kick_raw.glb"
-const MOTIFECT_DOUBLELEG := "res://assets/animations/motifect_doubleleg_raw.glb"
+## No recipe here samples a file any more, so the "file" key the builder
+## still understands is currently unused: every clip below is cut from the
+## rig's own library.
+##
+## It used to point at the baked Motifect excerpts under assets/animations/.
+## Every one of them measured with the head below the hips on most of its
+## frames (see the reverted strikes below), and none could be re-baked --
+## the retarget.py this file used to credit is not in the repo and the raw
+## FBX was deliberately not vendored per the pack's licence. The three
+## motifect_*_raw.glb files are LEFT IN PLACE rather than deleted: they are
+## the only copy of that motion in the repo, so someone with the pack may
+## yet salvage them.
 
 const RECIPES := {
 	# BACK to the rig's own Punch_Jab, and the mocap excerpt that replaced it
@@ -138,27 +140,25 @@ const RECIPES := {
 		],
 	},
 
-	# !! KNOWN BROKEN, and left that way deliberately. This is the last recipe
-	# still sourced from the mocap bake, and it has the same fault the three
-	# strikes above were reverted off: measured with
-	# tools/probe/strike_clip_probe.tscn, head below hips on 59 of its 69
-	# frames, worst 0.268 m under.
+	# There is deliberately NO recipe for running_double_leg, the second
+	# running attack. There was one -- the last still sourced from the mocap
+	# bake -- and it carried the same fault as the three strikes reverted
+	# above: measured with tools/probe/strike_clip_probe.tscn on the base rig,
+	# head below hips on 59 of its 69 frames, worst 0.268 m under. Rendered,
+	# that is a ball of limbs rather than a takedown.
 	#
-	# Not fixed here for two reasons. It cannot be re-baked -- retarget.py is
-	# not in the repo and the source FBX was never vendored -- and it cannot
-	# currently be SEEN: RUNNING_ATTACK fires zero times in an AI match,
-	# because input["run"] is only ever set by the whip decision inside
-	# GRAPPLE_HOLD (see gauntlet/status/roman_reigns_next.md, "The AI never
-	# runs in open play"). Replacing it means authoring a stitched takedown
-	# blind, against a state nothing reaches. That is its own piece of work,
-	# and it belongs with the fix that makes the AI run.
+	# It is deleted rather than re-cut because it cannot be re-baked (no
+	# retarget.py, no vendored FBX) and cannot be replaced honestly: the rig
+	# has no takedown pose, and stitching one would mean inventing per-bone
+	# angles for a move that fires ZERO times in a match -- input["run"] is
+	# only ever set by the whip decision inside GRAPPLE_HOLD, so the AI never
+	# runs in open play (gauntlet/status/roman_reigns_next.md).
 	#
-	# Double-leg takedown for the second running attack: first 1.333s of
-	# the 5s clip (stance, level change, penetration), retimed to the
-	# 69-tick (1.15s) running-attack window. Contact beat is an estimate --
-	# the excerpt was aligned by hand-speed peak, not measured footage.
-	"running_double_leg": {"kind": "retime", "file": MOTIFECT_DOUBLELEG,
-		"source": "motifect_doubleleg_raw", "seconds": 1.15},
+	# With no recipe, StrikeRecipes.clip() returns "" and _set_state_clip
+	# ignores it, so running_attack_double_leg.tres falls back to
+	# STATE_ANIMATIONS' RUNNING_ATTACK: "Punch_Cross" -- exactly what its
+	# sibling running_attack_clothesline.tres already does. A missing asset,
+	# not a bug.
 
 	# The second punch, and the only strike drawn from the rig's own
 	# library rather than the mocap pack: Punch_Cross is a real cross, a
