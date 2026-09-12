@@ -963,7 +963,9 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.IRISH_WHIP:
 			_process_irish_whip()
 		WrestlerFSM.State.PIN_ATTACKER:
-			pass # driven by MatchReferee
+			# Driven by MatchReferee, except for the last stride into the
+			# cover -- see _place_cover().
+			_tick_cover_slide()
 		WrestlerFSM.State.PIN_DEFENDER:
 			# MatchReferee reads this each tick against PinMinigame's target
 			# window — a kickout needs the button pressed AND the marker in
@@ -1627,13 +1629,51 @@ func _place_cover(defender: WrestlerController) -> void:
 	# +Z toward the head, measured (see the constants); +X is his own left.
 	var toward_head := basis.z * COVER_TOWARD_HEAD_M
 	var beside := basis.x * COVER_LATERAL_M
-	global_position = defender.global_position + toward_head + beside
+	var spot := defender.global_position + toward_head + beside
 	# Face back across him, so the cover reads from the hard camera rather
 	# than showing the coverer's back to the man he is pinning.
-	var across := defender.global_position - global_position
+	var target := global_transform
+	target.origin = spot
+	var across := defender.global_position - spot
 	across.y = 0.0
 	if across.length() > 0.01:
-		rotation.y = atan2(-across.x, -across.z)
+		target.basis = Basis(Vector3.UP, atan2(-across.x, -across.z))
+
+	# He ARRIVES at the cover rather than appearing in it. Measured with
+	# tools/probe/contact_probe.tscn: assigning the transform here was a
+	# one-tick jump of up to 0.622 m for the coverer and 0.870 m for the man
+	# being covered -- the second and third worst teleports left in a match
+	# after the grapple entry snap was fixed.
+	#
+	# There is a measured window to do it in and it was being wasted:
+	# MatchReferee.COUNT_TICKS[0] is 92 ticks (1.53 s) from cover to the first
+	# slap, frame-stepped off real footage. The coverer used to teleport on
+	# tick 0 and then kneel motionless for the whole of it. The slide happens
+	# INSIDE that window and does not move the count.
+	_cover_from = global_transform
+	_cover_to = target
+	_cover_slide_tick = 0
+
+## Where the cover slide starts and ends, and how far through it is. Ticked in
+## _physics_process's PIN_ATTACKER branch, which is otherwise `pass` -- the
+## state is driven by MatchReferee, so this is the only thing that moves him.
+var _cover_from: Transform3D = Transform3D()
+var _cover_to: Transform3D = Transform3D()
+var _cover_slide_tick: int = -1
+
+## Ticks to cover the last stride into the pin. Comfortably inside the 92-tick
+## lead-in, and a presentation value rather than a measured one.
+const COVER_SLIDE_TICKS := 12
+
+func _tick_cover_slide() -> void:
+	if _cover_slide_tick < 0:
+		return
+	_cover_slide_tick += 1
+	var t := clampf(float(_cover_slide_tick) / float(COVER_SLIDE_TICKS), 0.0, 1.0)
+	global_transform = GrappleRig.blend_transforms(_cover_from, _cover_to,
+			1.0 - pow(1.0 - t, 3.0))
+	if t >= 1.0:
+		_cover_slide_tick = -1
 
 
 func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:

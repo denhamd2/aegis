@@ -24,6 +24,28 @@ const DEFAULT_MATCH_SCENE := "res://scenes/match.tscn"
 
 var _out := "/tmp/pin"
 var _scene_path := DEFAULT_MATCH_SCENE
+## --match-camera: judge the shot the MATCH camera actually takes, instead of
+## the three hand-placed angles below.
+##
+## Those three answer "is the cover pose right", which is what this probe was
+## built for and which they still do. They cannot answer "can a viewer SEE the
+## cover", because they are not the camera a player looks through -- and the
+## recorded match showed the three-count shot from under the canvas, with the
+## cover hidden behind the near mat edge for the whole count.
+##
+## In this mode the pin is started by the REFEREE rather than by calling
+## begin_pin() directly, because MatchCamera cuts on referee.is_pin_active()
+## and a hand-driven pin never sets it.
+var _match_camera := false
+## --at-edge: put the cover near the ring edge instead of near centre.
+##
+## Load-bearing, not a nicety. Shot at ring centre the three-count framing is
+## FINE -- the cover is clear and well composed. The defect in the recorded
+## match only appears where that match's pin happened, out by the ropes, where
+## the camera sits at min_distance BEYOND the apron and the near mat edge rises
+## into the sight line. A probe that only ever shoots the middle of the ring
+## would have reported no problem and been believed.
+var _at_edge := false
 
 
 func _ready() -> void:
@@ -33,6 +55,10 @@ func _ready() -> void:
 			_out = args[i + 1]
 		elif args[i] == "--scene" and i + 1 < args.size():
 			_scene_path = args[i + 1]
+		elif args[i] == "--match-camera":
+			_match_camera = true
+		elif args[i] == "--at-edge":
+			_at_edge = true
 	DirAccess.make_dir_recursive_absolute(_out)
 
 	var scene: Node = load(_scene_path).instantiate()
@@ -66,6 +92,11 @@ func _ready() -> void:
 	defender.fsm.transition_to(WrestlerFSM.State.STUNNED)
 	defender.fsm.transition_to(WrestlerFSM.State.DOWN)
 	await get_tree().process_frame
+	if _match_camera:
+		await _shoot_match_camera(scene, attacker, defender)
+		get_tree().quit()
+		return
+
 	attacker.begin_pin(defender, 1)
 	# A few frames so the cross-fade into the cover finishes; a frame grabbed
 	# on the transition tick shows the blend, not the pose.
@@ -113,3 +144,39 @@ func _ready() -> void:
 		image.save_png("%s/pin_%s.png" % [_out, name])
 		print("  wrote %s/pin_%s.png" % [_out, name])
 	get_tree().quit()
+
+
+## Grabs the three-count through the scene's own MatchCamera.
+##
+## The attacker is left standing in cover range and IDLE and the referee's
+## _check_for_downed_opponent_action() starts the pin itself on the next tick,
+## which is what sets _pinning and makes MatchCamera cut to THREE_COUNT_CUT.
+## Frames are taken at the counts themselves (MatchReferee.COUNT_TICKS) so the
+## shot is judged at the moments a viewer is actually looking at it.
+func _shoot_match_camera(scene: Node, attacker: WrestlerController,
+		defender: WrestlerController) -> void:
+	var referee: MatchReferee = scene.get_node("MatchReferee")
+	if _at_edge:
+		# RingBuilder's mat is 6 m square, so 2.6 m out is up against the
+		# ropes -- where a real match's finish often lands, and where the
+		# camera has to shoot across the apron to see anything.
+		var shift := Vector3(2.6 - defender.global_position.x, 0.0, 0.0)
+		defender.global_position += shift
+		attacker.global_position += shift
+	# Inside COVER_RANGE (1.2 m) so the referee's own check fires.
+	attacker.global_position = defender.global_position \
+			+ (attacker.global_position - defender.global_position).normalized() * 0.9
+	var grabbed := 0
+	var tick := 0
+	var counts: Array = [10, 40, 92, 167, 227]
+	while tick <= 240 and grabbed < counts.size():
+		await get_tree().physics_frame
+		tick += 1
+		if tick == counts[grabbed]:
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png(
+					"%s/count_t%03d.png" % [_out, tick])
+			print("  t%03d pinning=%s count=%d -> %s/count_t%03d.png" % [
+					tick, referee.is_pin_active(), referee.pin_count(),
+					_out, tick])
+			grabbed += 1

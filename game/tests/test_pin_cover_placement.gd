@@ -55,6 +55,7 @@ func test_the_coverer_kneels_beside_the_downed_mans_chest() -> void:
 	attacker.global_position = Vector3(-3.0, 0.0, 3.0)
 
 	attacker.begin_pin(defender, 1)
+	_finish_cover_slide(attacker)
 
 	var local: Vector3 = defender.global_transform.affine_inverse() \
 			* attacker.global_position
@@ -66,6 +67,23 @@ func test_the_coverer_kneels_beside_the_downed_mans_chest() -> void:
 			WrestlerController.COVER_LATERAL_M, 0.01)
 
 
+## Runs the cover slide out to its end.
+##
+## begin_pin() used to assign the cover transform outright; it now eases into
+## it over COVER_SLIDE_TICKS, because assigning it was a one-tick jump of up to
+## 0.622 m (measured, tools/probe/contact_probe.tscn) and read on screen as the
+## coverer appearing in position rather than getting there.
+##
+## The assertions below are unchanged and still assert the same landing spot --
+## WHERE he ends up is the contract, and it is only WHEN that moved. Driven by
+## calling the tick directly rather than by awaiting physics frames, because
+## these wrestlers are built by WrestlerController.new() and never enter the
+## PIN_ATTACKER branch of _physics_process that would otherwise drive it.
+func _finish_cover_slide(attacker: WrestlerController) -> void:
+	for _tick in WrestlerController.COVER_SLIDE_TICKS + 1:
+		attacker._tick_cover_slide()
+
+
 ## Facing the man he is covering. Without this he kneels with his back to him,
 ## which reads as two men who happen to be near each other.
 func test_the_coverer_faces_the_downed_man() -> void:
@@ -75,6 +93,7 @@ func test_the_coverer_faces_the_downed_man() -> void:
 	defender.global_position = Vector3(0.0, 0.0, 0.0)
 	defender.rotation.y = 0.0
 	attacker.begin_pin(defender, 1)
+	_finish_cover_slide(attacker)
 
 	var to_defender := defender.global_position - attacker.global_position
 	to_defender.y = 0.0

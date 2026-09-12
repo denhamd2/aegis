@@ -247,10 +247,13 @@ func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 		# together -- a linear slide reads as both being dragged on rails.
 		var t := float(tick) / float(LEAD_IN_TICKS)
 		var eased := 1.0 - pow(1.0 - t, 3.0)
-		attacker.global_transform = _blend(from_attacker, to_attacker, eased)
-		defender.global_transform = _blend(from_defender, to_defender, eased)
+		attacker.global_transform = blend_transforms(from_attacker, to_attacker, eased)
+		defender.global_transform = blend_transforms(from_defender, to_defender, eased)
 
-static func _blend(from: Transform3D, to: Transform3D, t: float) -> Transform3D:
+## Shared with WrestlerController._place_cover(), which has the same problem
+## (a body that appeared at its destination instead of arriving there), so the
+## easing lives in one place rather than being written twice.
+static func blend_transforms(from: Transform3D, to: Transform3D, t: float) -> Transform3D:
 	return Transform3D(
 		Basis(Quaternion(from.basis.orthonormalized()).slerp(
 			Quaternion(to.basis.orthonormalized()), t)),

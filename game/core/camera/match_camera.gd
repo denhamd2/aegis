@@ -103,6 +103,32 @@ const BODY_WIDTH := 0.8
 ## sitting at ~0.49 of frame height there against 0.59 in the strike
 ## framing -- the horizon rises toward centre as the camera drops.
 @export var cut_height: float = 0.55
+## The three-count is its own shot, and it is the one shot in a match that
+## cannot afford the ropes.
+##
+## cut_height above is 0.55 m, which is BELOW the top rope, so a cover shot
+## through it has the near ropes running straight across both bodies. In the
+## recorded match the three count is bisected by three rope lines. (I first
+## read that as the camera being under the canvas -- it is not; the cover is
+## at a sensible height and it is the ropes in front of it that are the
+## problem. Checked by rendering the count at ring centre AND at the ropes:
+## both are legible except for the lines across them.)
+##
+## The geometry, for a cover near the ring edge, which is the bad case: the
+## pair sit ~0.5 m from the near rope and the camera at min_distance 3.2 m, so
+## the rope is 2.7 m of the way to the lens. A sight line from eye height h
+## down to a body at 0.3 m clears a 1.3 m rope at that point only when
+## h > 1.48 m. 1.90 m takes it comfortably over the top rope and looks DOWN at
+## the cover, which is the angle the shot wants anyway.
+##
+## Geometric, not measured: camera.md carries no pin framing, so this is the
+## height that clears a known obstruction rather than a number off a
+## reference frame.
+@export var three_count_height: float = 1.90
+## Aim point for the three-count, in metres above the pair's midpoint. Low,
+## because both men are on the mat -- the 0.45 m used by the finisher cut is
+## for two men standing.
+@export var three_count_aim: float = 0.30
 @export var follow_speed: float = 6.0
 ## A cut snaps harder than the follow-cam drifts. camera.md marks cut
 ## duration and ease curves as pending real footage, so this is a project
@@ -140,13 +166,26 @@ func _physics_process(delta: float) -> void:
 		to_camera = Vector3.BACK
 	to_camera = to_camera.normalized() * distance
 
-	var eye_height := cut_height if mode != Mode.FOLLOW else height
+	# Three heights, not two. The finisher cut's low angle is deliberate --
+	# camera.md: "drops lower, closer to mat height, for a grounded, low-angle
+	# look" -- and it frames two men STANDING, so it keeps cut_height. The
+	# three-count frames two men on the mat behind a set of ropes, and wants
+	# the opposite (see three_count_height).
+	var eye_height := height
+	if mode == Mode.THREE_COUNT_CUT:
+		eye_height = three_count_height
+	elif mode == Mode.FINISHER_CUT:
+		eye_height = cut_height
 	var speed := follow_speed if mode == Mode.FOLLOW else cut_speed
 	var target_position := midpoint + to_camera + Vector3.UP * eye_height
 	global_position = global_position.lerp(target_position, 1.0 - exp(-speed * delta))
 	# A low cut looks *up* the bodies rather than down at the mat, so the
 	# aim point drops with the camera.
-	var aim := 0.45 if mode != Mode.FOLLOW else 1.0
+	var aim := 1.0
+	if mode == Mode.THREE_COUNT_CUT:
+		aim = three_count_aim
+	elif mode == Mode.FINISHER_CUT:
+		aim = 0.45
 	look_at(midpoint + Vector3.UP * aim, Vector3.UP)
 
 ## The distance that frames the shot, in metres from the pair's midpoint.
