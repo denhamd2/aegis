@@ -73,6 +73,9 @@ func test_strikes_are_rate_limited() -> void:
 	).is_false()
 
 ## Out of range it closes, whether or not the opening grapple has happened.
+## Closing now includes running when there is room for it (see the charge
+## tests below), but it still throws nothing on the way in -- a strike from
+## out here could not reach, and entering STRIKE would stop the approach dead.
 func test_out_of_range_it_only_closes() -> void:
 	for landed: bool in [false, true]:
 		var ai := _make_pair(3.0)
@@ -82,6 +85,82 @@ func test_out_of_range_it_only_closes() -> void:
 		assert_bool(input.get("strike", false)).is_false()
 		assert_bool(input.get("grapple", false)).is_false()
 		assert_vector(input.get("move", Vector2.ZERO)).is_not_equal(Vector2.ZERO)
+
+
+## --- the charge -------------------------------------------------------------
+##
+## RUNNING_ATTACK has two MoveDefs, a reversal window and its own suite, and
+## fired ZERO times in a match: nothing ever set input["run"] outside the whip
+## decision in GRAPPLE_HOLD. These pin the decision that makes it reachable.
+
+func test_it_charges_when_there_is_room_to() -> void:
+	var ai := _make_pair(3.0)
+	assert_bool(ai.poll_input().get("run", false)).override_failure_message(
+		"The AI walked in from 3m with the ring's whole width behind it, so "
+		+ "RUN is never entered and the running attack stays unreachable."
+	).is_true()
+
+## Close up there is no run-up, so it closes at a walk and trades as before.
+func test_it_does_not_charge_from_close_range() -> void:
+	var ai := _make_pair(2.0)
+	assert_bool(ai.poll_input().get("run", false)).is_false()
+
+## The latch, which is the whole mechanism. Tested per tick rather than
+## latched, the AI would drop out of RUN at exactly the distance where the
+## running attack becomes possible, and it could never fire at all.
+func test_a_charge_is_held_across_the_engage_threshold() -> void:
+	var ai := _make_pair(3.0)
+	assert_bool(ai.poll_input().get("run", false)).is_true()
+	ai.target.global_position = Vector3(1.8, 0.0, 0.0) # inside engage, outside reach
+	assert_bool(ai.poll_input().get("run", false)).override_failure_message(
+		"The AI stopped running as soon as it was closer than the distance "
+		+ "that started the charge, so it can never arrive still running."
+	).is_true()
+
+## Arrival: still running, and now in reach. In RUN this press becomes
+## _maybe_start_running_attack() rather than a strike.
+func test_arriving_in_reach_presses_the_attack() -> void:
+	var ai := _make_pair(3.0)
+	ai.poll_input()
+	ai.target.global_position = Vector3(WrestlerController.STRIKE_HIT_RANGE - 0.05, 0.0, 0.0)
+	var input := ai.poll_input()
+	assert_bool(input.get("run", false)).is_true()
+	assert_bool(input.get("strike", false)).is_true()
+
+## And it costs a cooldown, so a 69-tick committed move cannot crowd out the
+## strike trading the match is made of.
+func test_charges_are_rate_limited() -> void:
+	var ai := _make_pair(3.0)
+	ai.poll_input()
+	ai.target.global_position = Vector3(WrestlerController.STRIKE_HIT_RANGE - 0.05, 0.0, 0.0)
+	assert_bool(ai.poll_input().get("strike", false)).is_true()
+	ai.target.global_position = Vector3(3.0, 0.0, 0.0)
+	assert_bool(ai.poll_input().get("run", false)).override_failure_message(
+		"The AI started a second charge immediately after landing one."
+	).is_false()
+
+## An opponent who goes down mid-run is not chargeable --
+## _maybe_start_running_attack() refuses an unhittable target, so without this
+## the AI would sprint into him holding the latch open.
+func test_a_charge_is_abandoned_when_the_target_stops_being_hittable() -> void:
+	var ai := _make_pair(3.0)
+	assert_bool(ai.poll_input().get("run", false)).is_true()
+	ai.target.fsm.current_state = WrestlerFSM.State.GETUP
+	assert_bool(ai.poll_input().get("run", false)).is_false()
+
+## The trap this whole decision is placed around: input["run"] means "throw an
+## Irish whip" to _process_grapple_hold() and "sprint" to
+## _process_free_movement(). One key, two unrelated meanings, chosen by state.
+## A charge that could be seen from a hold would turn into a whip.
+func test_a_hold_never_sees_a_run_press() -> void:
+	var ai := _make_pair(3.0)
+	ai.poll_input() # start a charge, so the latch is set
+	ai.controller.fsm.current_state = WrestlerFSM.State.GRAPPLE_HOLD
+	ai.controller._is_grapple_attacker = true
+	assert_dict(ai.poll_input()).override_failure_message(
+		"A latched charge leaked a run press into GRAPPLE_HOLD, where it is "
+		+ "an Irish whip."
+	).is_empty()
 
 ## Nothing is pressed in a hold any more: the attacker used to roll for an
 ## Irish whip here, which would have spent the match's one grapple on a

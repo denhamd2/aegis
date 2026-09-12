@@ -26,6 +26,21 @@ extends Node
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
+## How far away the AI stops walking in and charges instead.
+##
+## A STARTING VALUE, not a searched minimum. Its justification is the ring's
+## geometry rather than tuning: ArenaBuilder.RING_HALF_EXTENT is 3.3m, the two
+## spawn 3.0m apart (scenes/match.tscn), and tie_up_range is 1.3m -- so 2.5m
+## leaves roughly 1.35m of actual sprint at WrestlerController.RUN_SPEED (7.0).
+## That is a short run-up, and it is the most the ring offers: a real charge
+## across the ring needs the AI to make distance first, which is the separate
+## "there is still no neutral" item in gauntlet/status/roman_reigns_next.md.
+@export var run_engage_distance: float = 2.5
+## Ticks after a running attack before another charge may start. A running
+## attack is 69 ticks committed (18 startup + 5 active + 46 recovery) against a
+## strike's 31, so without this it would crowd out the strike trading the
+## match is made of.
+@export var running_attack_cooldown_ticks: int = 90
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -55,6 +70,17 @@ var _tie_up_attempts: int = 0
 
 
 var _cooldown: int = 0
+## Latched while closing at a run, from the moment the charge starts until the
+## running attack fires (or the charge is abandoned).
+##
+## A latch rather than a plain `distance >= run_engage_distance` test, and that
+## is the whole mechanism. Tested per tick, the AI drops back to a walk the
+## instant it crosses the threshold -- which leaves RUN, and
+## WrestlerController._maybe_start_running_attack() is only called while IN
+## RUN (_process_free_movement). It would stop running at exactly the distance
+## where the attack becomes possible, so the attack could never fire at all.
+var _charging: bool = false
+var _run_cooldown: int = 0
 var _pin_defender_tick: int = 0
 var _last_kickout_press_tick: int = -1000
 var _tie_up_tick: int = 0
@@ -98,6 +124,16 @@ func _physics_process(_delta: float) -> void:
 		return
 	if _cooldown > 0:
 		_cooldown -= 1
+	if _run_cooldown > 0:
+		_run_cooldown -= 1
+	# A charge only survives while the man is actually free to run. If he is
+	# struck out of it, poll_input() returns early for the whole of HIT_REACT
+	# and the latch would otherwise still be set when he recovers -- resuming
+	# the charge from close range, with no run-up, as a running attack out of
+	# nowhere.
+	if not controller.fsm.is_in([WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
+		_charging = false
 
 func poll_input() -> Dictionary:
 	if not controller or not target:
@@ -149,6 +185,48 @@ func poll_input() -> Dictionary:
 		if distance > 0.3:
 			var dir := to_target.normalized()
 			input["move"] = Vector2(dir.x, dir.z)
+		return input
+
+	# --- the charge ---------------------------------------------------------
+	#
+	# This is the whole of "the AI runs in open play", and it deliberately sits
+	# BELOW the GRAPPLE_HOLD branch above, which returns {} before the input
+	# dict is ever built.
+	#
+	# That ordering is load-bearing, not incidental: input["run"] means "throw
+	# an Irish whip" to WrestlerController._process_grapple_hold(), and "sprint"
+	# to _process_free_movement(). The same key, two unrelated meanings, chosen
+	# by state. Setting run anywhere that GRAPPLE_HOLD could see it would turn
+	# every charge into a whip. Do not hoist this above that branch.
+	#
+	# Running is not a separate behaviour from closing -- it IS closing, done
+	# faster when there is room for it. The attack at the end is the point:
+	# RUNNING_ATTACK has two MoveDefs, a reversal window and its own test suite,
+	# and before this it fired zero times in a match (measured, ladder_probe
+	# seeds 1-3: "running 0" for both men, with RUN absent from every entries
+	# dict).
+	if _charging and WrestlerController.UNHITTABLE_STATES.has(target.fsm.current_state):
+		# He went down, or into a pin, mid-run. Nothing to charge at, and
+		# _maybe_start_running_attack() would refuse anyway -- so stop running
+		# rather than sprint into him and hold the latch forever.
+		_charging = false
+	elif not _charging and distance >= run_engage_distance and _run_cooldown <= 0:
+		_charging = true
+
+	if _charging:
+		var dir := to_target.normalized()
+		# Both are required to stay in RUN: _process_free_movement() only
+		# transitions there when run is pressed AND there is movement to make.
+		input["move"] = Vector2(dir.x, dir.z)
+		input["run"] = true
+		if distance <= WrestlerController.STRIKE_HIT_RANGE:
+			# In RUN this press becomes _maybe_start_running_attack(), not a
+			# strike -- _process_free_movement() branches on the state before
+			# it looks at the input. The cooldown is spent here, on arrival,
+			# whether or not the attack's own gate lets it through.
+			input["strike"] = true
+			_charging = false
+			_run_cooldown = running_attack_cooldown_ticks
 		return input
 
 	if distance <= tie_up_range:
