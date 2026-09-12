@@ -35,6 +35,22 @@ extends Node
 ## That is a short run-up, and it is the most the ring offers: a real charge
 ## across the ring needs the AI to make distance first, which is the separate
 ## "there is still no neutral" item in gauntlet/status/roman_reigns_next.md.
+## How close the AI is willing to stand. Nearer than this and it gives ground
+## instead of crowding.
+##
+## Measured with tools/probe/contact_probe.tscn: without this the two men
+## spent essentially the whole match at 0.801 m centre-to-centre, against a
+## capsule-touching distance of 0.80 m -- jammed against the floor the physics
+## engine enforces, for 1455 of 1458 free ticks. The capsules never overlap
+## (they cannot), but the capsule is radius 0.4 and models nothing above the
+## waist, so two men at 0.80 m have their arms and shoulders fully inside each
+## other. On footage they read as one body, and a punch thrown at that range
+## goes PAST the opponent rather than into him.
+##
+## 1.05 m sits inside WrestlerController.STRIKE_HIT_RANGE (1.15 m) on purpose:
+## back off any further and the AI could no longer reach with the strike it
+## just stepped away from.
+@export var min_standoff: float = 1.05
 @export var run_engage_distance: float = 2.5
 ## Ticks after a running attack before another charge may start. A running
 ## attack is 69 ticks committed (18 startup + 5 active + 46 recovery) against a
@@ -229,6 +245,24 @@ func poll_input() -> Dictionary:
 			_run_cooldown = running_attack_cooldown_ticks
 		return input
 
+	# Too close: give ground -- but keep deciding. This sets the move vector
+	# and then FALLS THROUGH to the strike/tie-up logic below, rather than
+	# returning, for two reasons. A man can throw a punch while stepping off,
+	# and a lock-up is the one moment two wrestlers are supposed to be chest
+	# to chest: an early version returned here and the AI refused to tie up at
+	# 1.0 m, which broke the opening grapple the whole match is built on.
+	#
+	# It is not a spacing game. There is still no circling and no neutral (see
+	# gauntlet/status/roman_reigns_next.md); this only stops the two standing
+	# inside each other, which they otherwise do for essentially every tick of
+	# the match.
+	if distance < min_standoff and distance > 0.001:
+		var back := (controller.global_position - target.global_position)
+		back.y = 0.0
+		if back.length() > 0.001:
+			back = back.normalized()
+			input["move"] = Vector2(back.x, back.z)
+
 	if distance <= tie_up_range:
 		# Grapple, strikes, then a signature to finish him.
 		#
@@ -252,6 +286,24 @@ func poll_input() -> Dictionary:
 		elif _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE:
 			input["strike"] = true
 			_cooldown = strike_cooldown_ticks
+		elif distance > WrestlerController.STRIKE_HIT_RANGE:
+			# The dead band, and it has to be closed explicitly. tie_up_range
+			# is 1.3 m and STRIKE_HIT_RANGE is 1.15 m, so between those two the
+			# AI used to neither close (the closing branch below only fires
+			# OUTSIDE tie-up range) nor strike (out of reach) -- it just stood
+			# there. This file already admitted as much: "a tick inside tie-up
+			# range but outside striking range ... is a tick of standing
+			# squared up".
+			#
+			# That was survivable only because the two men were jammed
+			# together at 0.801 m for the whole match and never sat in the
+			# band. With min_standoff holding them apart and a landed hit now
+			# shoving the victim ~0.1 m back, they land in it constantly --
+			# and measured, the match STOPPED FINISHING: all three seeds ran
+			# the full 20000-tick budget with 4 hit reactions between them,
+			# against 13 in ~1700 ticks before. So: step back in.
+			var toward := to_target.normalized()
+			input["move"] = Vector2(toward.x, toward.z)
 	else:
 		# Outside tie-up range: close, and *only* close.
 		#

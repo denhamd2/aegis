@@ -67,11 +67,32 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
 	_pair_transform = _compute_pair_transform(attacker, defender)
-	_align_to_pair(attacker, defender)
 
 	_active = true
-	_play_role_poses(attacker, defender, move)
 	grapple_started.emit(attacker, defender, move)
+
+	# The lock-up, before the move. _align_to_pair() below teleports both men
+	# into the pair frame -- it always did, and on footage that is the single
+	# worst thing in a match: measured with tools/probe/contact_probe.tscn,
+	# 16-22 one-tick jumps per match, worst 1.810 m moved in a single 1/60s
+	# tick (108 m/s). What a viewer sees is a standing man becoming a
+	# horizontal man in mid-air between two frames, with nobody touching him.
+	#
+	# So the snap is spread over LEAD_IN_TICKS instead: both bodies slide and
+	# turn from wherever they were standing into the frame the clip is
+	# authored against, and only then does the clip start. Nothing about the
+	# move itself changes -- the trajectory still plays in the same frame,
+	# from the same alignment -- it just stops being instantaneous.
+	#
+	# Suspended for the whole slide, so neither man's own _physics_process
+	# fights the interpolation, and _active is already true so nothing else
+	# can start a second grapple during it.
+	await _lead_in(attacker, defender)
+	if not _active:
+		return # the match ended, or the rig was torn down, mid-lock-up
+
+	_align_to_pair(attacker, defender)
+	_play_role_poses(attacker, defender, move)
 
 	if animation_player and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
 		_play_retargeted(move.animation_pair_id, attacker, defender)
@@ -193,6 +214,47 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	if facing.length() < 0.001:
 		return Transform3D(Basis(), midpoint)
 	return Transform3D(Basis(Vector3.UP, atan2(-facing.x, -facing.z)), midpoint)
+
+## Ticks spent sliding the two bodies into the pair frame before the paired
+## clip starts.
+##
+## 10 ticks is a sixth of a second: long enough to read as closing the last
+## step and taking hold, short enough that it does not feel like a pause in
+## the match. It is a presentation value and is not defended as matching
+## measured footage -- gauntlet/refs/ has no lock-up timing in it.
+const LEAD_IN_TICKS := 10
+
+## Slides both wrestlers from where they are standing into their places in the
+## pair frame, over LEAD_IN_TICKS physics ticks.
+##
+## Interpolated on the transform rather than by driving velocity: the bodies
+## are suspended (their own _physics_process is off, so move_and_slide() never
+## runs) and a paired move must land both men on an exact frame or the
+## authored trajectory starts from the wrong place. Rotation goes through the
+## quaternion so a man who has to turn 170 degrees turns the short way round
+## instead of through his own shoulder.
+func _lead_in(attacker: Node3D, defender: Node3D) -> void:
+	var from_attacker := attacker.global_transform
+	var from_defender := defender.global_transform
+	var to_attacker := _pair_transform
+	var to_defender := _pair_transform.rotated_local(Vector3.UP, PI)
+	for tick in range(1, LEAD_IN_TICKS + 1):
+		await Engine.get_main_loop().physics_frame
+		if not _active:
+			return
+		# Ease out: most of the closing distance is covered early and the last
+		# few centimetres are taken slowly, which is how two men actually come
+		# together -- a linear slide reads as both being dragged on rails.
+		var t := float(tick) / float(LEAD_IN_TICKS)
+		var eased := 1.0 - pow(1.0 - t, 3.0)
+		attacker.global_transform = _blend(from_attacker, to_attacker, eased)
+		defender.global_transform = _blend(from_defender, to_defender, eased)
+
+static func _blend(from: Transform3D, to: Transform3D, t: float) -> Transform3D:
+	return Transform3D(
+		Basis(Quaternion(from.basis.orthonormalized()).slerp(
+			Quaternion(to.basis.orthonormalized()), t)),
+		from.origin.lerp(to.origin, t))
 
 func _align_to_pair(attacker: Node3D, defender: Node3D) -> void:
 	attacker.global_transform = _pair_transform

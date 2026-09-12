@@ -89,6 +89,23 @@ const GETUP_RISE_FAST_TICKS := 68 # 1.14s, the measured input-driven rise
 ## and late ones finish. A reachability value, not a feel claim.
 const SUBMISSION_ESCAPE_LIMB := 60.0
 const HIT_REACT_TICKS := 20
+
+## How hard a landed strike shoves the man who took it, and for how long.
+##
+## Measured with tools/probe/contact_probe.tscn before this existed: across
+## seeds 1-3, ZERO of 40 hit reactions moved the struck wrestler by so much as
+## a centimetre. _process_timed_state() never touches velocity, so a punch
+## landed, a flinch clip played, and the body stayed exactly where it stood --
+## which is most of why strikes read as not connecting to anything.
+##
+## 2.2 m/s decaying by KNOCKBACK_DECAY each tick carries him about 0.13 m over
+## the 8 ticks, a stagger rather than a shove: far enough to see, not far
+## enough to break the spacing the next strike depends on. These are
+## presentation values and are not claimed to match measured footage --
+## gauntlet/refs/timings.md has no knockback distance in it.
+const KNOCKBACK_SPEED := 2.2
+const KNOCKBACK_TICKS := 8
+const KNOCKBACK_DECAY := 0.75
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
 ## constant in this project: gauntlet/refs/timings.md marks both reversal-
@@ -381,6 +398,9 @@ var _pending_hits: Array[MoveDef] = []
 ## wins the exchange changes -- what changes is that the punch already in
 ## flight is allowed to land instead of being cancelled by the one that beat it.
 var _pending_hit_reaction: MoveDef = null
+## Ticks of shove left on a landed hit. Counted down in _process_timed_state(),
+## which is the only place HIT_REACT advances.
+var _knockback_ticks: int = 0
 
 ## Whether the current _active_move has already landed its hit this
 ## attempt. This must live here, not on the MoveDef resource (previously
@@ -1231,8 +1251,7 @@ func _process_active_move(input: Dictionary) -> void:
 		if _pending_hit_reaction:
 			var taken := _pending_hit_reaction
 			_pending_hit_reaction = null
-			_play_hit_reaction(taken)
-			_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+			_begin_hit_reaction(taken)
 			return
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
@@ -1287,8 +1306,32 @@ func _resolve_pending_hits() -> void:
 	if fsm.current_state == WrestlerFSM.State.STRIKE:
 		_pending_hit_reaction = moves[moves.size() - 1]
 		return
-	_play_hit_reaction(moves[moves.size() - 1])
+	_begin_hit_reaction(moves[moves.size() - 1])
+
+## Takes a hit: the reaction clip, the state, and the shove that sells it.
+##
+## The shove is set AFTER _start_move(), which zeroes velocity -- setting it
+## before would be silently thrown away. It then survives because
+## _process_timed_state() leaves velocity alone and move_and_slide() consumes
+## whatever is there, which is the same mechanism that used to let stale
+## velocity leak across states (see _start_move()'s own note) -- used
+## deliberately here, and decayed to nothing rather than left running.
+func _begin_hit_reaction(move: MoveDef) -> void:
+	_play_hit_reaction(move)
 	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+	var away := Vector3.ZERO
+	if opponent:
+		away = global_position - opponent.global_position
+		away.y = 0.0
+	if away.length() < 0.001:
+		# Coincident, or no opponent: shove him onto his own back foot rather
+		# than picking a direction at random.
+		away = global_transform.basis.z
+		away.y = 0.0
+	if away.length() < 0.001:
+		return
+	velocity = away.normalized() * KNOCKBACK_SPEED
+	_knockback_ticks = KNOCKBACK_TICKS
 
 ## Points the STRIKE state at this strike's own clip before entering it.
 ##
@@ -1512,6 +1555,14 @@ func _process_down(input: Dictionary) -> void:
 		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_RISE_TICKS
 
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
+	# Bleed the hit's shove off. Without the decay the velocity set in
+	# _begin_hit_reaction() would be consumed at full speed for the whole
+	# 20-tick reaction and carry the man most of a metre.
+	if _knockback_ticks > 0:
+		_knockback_ticks -= 1
+		velocity *= KNOCKBACK_DECAY
+		if _knockback_ticks == 0:
+			velocity = Vector3.ZERO
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
 		# Also covers GETUP -> IDLE, the only place a wrestler that lost
