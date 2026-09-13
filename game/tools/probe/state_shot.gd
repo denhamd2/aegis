@@ -31,6 +31,8 @@ const ROUTES := {
 	"STUNNED": ["STUNNED"],
 	"DOWN": ["STUNNED", "DOWN"],
 	"GETUP": ["STUNNED", "DOWN", "GETUP"],
+	# Legal from IDLE: the referee can declare a winner from anywhere.
+	"VICTORY": ["VICTORY"],
 }
 
 ## States that need a MoveDef as well as a transition, and which one.

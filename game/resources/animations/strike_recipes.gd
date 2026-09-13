@@ -42,6 +42,14 @@ extends RefCounted
 
 const LIBRARY := "strikes"
 
+## Clips authored on the rig in Blender rather than sampled out of the CC0
+## library. See tools/blender/wrestling_clips.py for why: the 42 source
+## actions are a generic character set (Pistol_*, Sword_*, Swim_*, Sitting_*)
+## with no wrestling in them, so anything wrestling-specific can only be
+## approximated by recombining them -- or authored outright, which is what
+## these are.
+const AUTHORED := "res://assets/animations/wrestling_clips.glb"
+
 ## No recipe here samples a file any more, so the "file" key the builder
 ## still understands is currently unused: every clip below is cut from the
 ## rig's own library.
@@ -173,8 +181,18 @@ const RECIPES := {
 	# lands later than the 4-frame jab because it is a bigger punch; the
 	# 0.133s figure in gauntlet/refs/timings.md is a jab's startup, not
 	# every strike's.
-	"strike_cross": {"kind": "retime", "source": "Punch_Cross",
-		"seconds": 0.667},
+	# Now AUTHORED rather than borrowed. Strike_Forearm is keyframed on the
+	# rig in tools/blender/wrestling_clips.py: a wind-up that twists the
+	# shoulder away, a contact frame driven by spine_03 rotation rather than
+	# the arm alone, and a follow-through PAST the contact point instead of a
+	# stop at it. Punch_Cross, the CC0 library's boxing cross, had none of
+	# that -- it is a guard-to-guard jab with no torso in it.
+	#
+	# Retimed to the same 0.667s as before, so strike_cross.tres's
+	# startup_frames (12) still lands on the contact frame and no MoveDef
+	# timing moves.
+	"strike_cross": {"kind": "retime", "source": "Strike_Forearm",
+		"seconds": 0.667, "file": AUTHORED},
 
 	# The heavy kick: the same posed kick as strike_kick, thrown slower. It
 	# used to retime the mocap roundhouse, which measured head-below-hips on
@@ -212,8 +230,27 @@ const RECIPES := {
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is
 	# already 0.33s and is trimmed by nothing; Hit_Head is 0.43s and loses
 	# its tail.
-	"hit_head": {"kind": "trim", "source": "Hit_Head", "seconds": 0.333},
+	# Authored (tools/blender/wrestling_clips.py). Hit_React_Head snaps the
+	# head first and furthest, then the neck, then the torso a beat behind,
+	# so a hit reads as force arriving rather than the whole body turning as
+	# one board. The rig's Hit_Head moves everything on the same frame.
+	#
+	# Retimed, not trimmed: the authored clip is longer than the state and
+	# its recovery is part of the performance, so cutting the tail would end
+	# it mid-recoil. Hit_Head was trimmed because its tail was surplus.
+	"hit_head": {"kind": "retime", "source": "Hit_React_Head",
+		"seconds": 0.333, "file": AUTHORED},
 	"hit_torso": {"kind": "trim", "source": "Hit_Chest", "seconds": 0.333},
+
+	# The winner's celebration, for WrestlerFSM.State.VICTORY. Authored, and
+	# necessarily so: there is no celebration anywhere in the 42 source
+	# actions, which is half of why this could not be built before -- the
+	# other half being that the FSM had no state to play it in.
+	#
+	# Kept at its authored length. Nothing times out against it: VICTORY is
+	# terminal and the clip holds its last pose.
+	"win_celebrate": {"kind": "retime", "source": "Win_Celebrate",
+		"seconds": 1.300, "file": AUTHORED},
 
 	# STUNNED runs 45 ticks (0.75s) and Hit_Head is 0.43s, so the clip ended
 	# and the pose froze for the remaining 19 ticks. Retimed rather than

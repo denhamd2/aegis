@@ -329,6 +329,11 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
 	WrestlerFSM.State.SUBMISSION_DEFENDER: "Death01",
 	WrestlerFSM.State.FINISHER: "Sword_Attack",
+	# Authored in Blender (tools/blender/wrestling_clips.py) and baked
+	# through strike_recipes.gd like the rest. Nothing in the CC0 library
+	# celebrates, so unlike every other entry here this one could not have
+	# borrowed a clip.
+	WrestlerFSM.State.VICTORY: "strikes/win_celebrate",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -1341,6 +1346,24 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 ## so a kick and a punch were the same animation with different numbers
 ## attached. A move with no generated clip keeps whatever the state already
 ## had, which is the jab.
+## Puts this wrestler into his celebration. Called by MatchSetup off the
+## referee's match_won, for the winner only.
+##
+## VICTORY is terminal in WrestlerFSM, so this is one-way: it stops the AI
+## (there is nobody left to fight), cancels anything in flight, and lets the
+## clip hold its final pose. Idempotent, because the referee guards
+## _match_over but a replay or a probe may call it twice.
+func celebrate() -> void:
+	if fsm.current_state == WrestlerFSM.State.VICTORY:
+		return
+	_active_move = null
+	_pending_hit_reaction = null
+	velocity = Vector3.ZERO
+	if ai:
+		ai.set_physics_process(false)
+	fsm.transition_to(WrestlerFSM.State.VICTORY)
+
+
 func _play_strike_clip(move: MoveDef) -> void:
 	_set_state_clip(WrestlerFSM.State.STRIKE,
 			StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
