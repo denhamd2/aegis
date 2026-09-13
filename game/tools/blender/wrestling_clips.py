@@ -604,6 +604,337 @@ CLIPS = {
                     thigh_l=(-30, -10, 0), calf_l=(40, 0, 0),
                     root=(0, 0, 0, 0.0, 0.06, -0.34))),
     ],
+
+    # --- the grapple family -----------------------------------------------
+    #
+    # These replace the last clips taken straight off the rig, and they are
+    # the ones that were furthest from what they represent: a lock-up
+    # played "Interact" (a one-armed reach-and-point), the attacker in a
+    # hold played "PickUp_Table", and the man being thrown played
+    # "Death01".
+
+    # GRAPPLE_HOLD, no role known. A collar-and-elbow held and worked: both
+    # arms up and engaged, weight driving forward through bent legs.
+    "Grapple_Hold_Neutral": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0), Head=(-5, 0, 0),
+                    thigh_r=(8, 6, 0), thigh_l=(-16, -6, 0),
+                    calf_r=(16, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.03, -0.08))),
+        (15, stance(upperarm_r=(0, -12, 60), lowerarm_r=(0, 0, 44),
+                    upperarm_l=(0, 10, -68), lowerarm_l=(0, 0, -32),
+                    spine_03=(18, 0, 5), Head=(-7, 0, 3),
+                    thigh_r=(10, 6, 0), thigh_l=(-18, -6, 0),
+                    calf_r=(14, 0, 0), calf_l=(32, 0, 0),
+                    root=(0, 0, 0, 0.02, -0.05, -0.085))),
+        (30, stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0), Head=(-5, 0, 0),
+                    thigh_r=(8, 6, 0), thigh_l=(-16, -6, 0),
+                    calf_r=(16, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.03, -0.08))),
+    ],
+
+    # GRAPPLE_HOLD, attacker. A front waistlock: bent at the waist, both
+    # arms wrapped LOW around the other man, legs braced wide and driving.
+    # PickUp_Table is a man lifting furniture with a straight back.
+    "Grapple_Hold_Attacker": [
+        (1,  stance(spine_01=(20, 0, 0), spine_03=(30, 0, 0), Head=(-16, 0, 0),
+                    upperarm_r=(0, -30, 62), lowerarm_r=(0, 0, 58),
+                    upperarm_l=(0, 34, -62), lowerarm_l=(0, 0, -58),
+                    thigh_r=(-14, 12, 0), thigh_l=(-14, -12, 0),
+                    calf_r=(34, 0, 0), calf_l=(34, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.05, -0.14))),
+        (15, stance(spine_01=(24, 0, 0), spine_03=(35, 0, 0), Head=(-18, 0, 0),
+                    upperarm_r=(0, -26, 66), lowerarm_r=(0, 0, 62),
+                    upperarm_l=(0, 30, -66), lowerarm_l=(0, 0, -62),
+                    thigh_r=(-18, 12, 0), thigh_l=(-18, -12, 0),
+                    calf_r=(40, 0, 0), calf_l=(40, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.08, -0.18))),
+        (30, stance(spine_01=(20, 0, 0), spine_03=(30, 0, 0), Head=(-16, 0, 0),
+                    upperarm_r=(0, -30, 62), lowerarm_r=(0, 0, 58),
+                    upperarm_l=(0, 34, -62), lowerarm_l=(0, 0, -58),
+                    thigh_r=(-14, 12, 0), thigh_l=(-14, -12, 0),
+                    calf_r=(34, 0, 0), calf_l=(34, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.05, -0.14))),
+    ],
+
+    # GRAPPLE_HOLD, defender. Bent over and held, hands on the other man's
+    # shoulders, legs braced against being moved -- resisting, not dead.
+    # Death01 is a corpse, which is what this state has played.
+    "Grapple_Hold_Defender": [
+        (1,  stance(spine_01=(26, 0, 0), spine_03=(34, 0, 0), Head=(-20, 0, 0),
+                    upperarm_r=(0, -20, 50), lowerarm_r=(0, 0, 62),
+                    upperarm_l=(0, 24, -50), lowerarm_l=(0, 0, -62),
+                    thigh_r=(-10, 10, 0), thigh_l=(-10, -10, 0),
+                    calf_r=(30, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.04, -0.13))),
+        (15, stance(spine_01=(30, 0, 0), spine_03=(39, 0, 0), Head=(-22, 0, 0),
+                    upperarm_r=(0, -16, 54), lowerarm_r=(0, 0, 66),
+                    upperarm_l=(0, 20, -54), lowerarm_l=(0, 0, -66),
+                    thigh_r=(-14, 10, 0), thigh_l=(-14, -10, 0),
+                    calf_r=(36, 0, 0), calf_l=(36, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.07, -0.17))),
+        (30, stance(spine_01=(26, 0, 0), spine_03=(34, 0, 0), Head=(-20, 0, 0),
+                    upperarm_r=(0, -20, 50), lowerarm_r=(0, 0, 62),
+                    upperarm_l=(0, 24, -50), lowerarm_l=(0, 0, -62),
+                    thigh_r=(-10, 10, 0), thigh_l=(-10, -10, 0),
+                    calf_r=(30, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.04, -0.13))),
+    ],
+
+    # MOVE_EXEC: the beat a throw resolves. Jump_Land is a man landing from
+    # a jump -- knees absorbing a drop he took himself. This is the OTHER
+    # side of that: he has just put someone down and is coming back up out
+    # of the follow-through.
+    "Move_Exec_Impact": [
+        (1,  stance(spine_01=(22, 0, 0), spine_03=(32, 0, 0), Head=(-10, 0, 0),
+                    upperarm_r=(0, -32, 60), lowerarm_r=(0, 0, 40),
+                    upperarm_l=(0, 36, -60), lowerarm_l=(0, 0, -40),
+                    thigh_r=(-26, 10, 0), thigh_l=(-20, -10, 0),
+                    calf_r=(44, 0, 0), calf_l=(38, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.06, -0.20))),
+        (9,  stance(spine_01=(14, 0, 0), spine_03=(22, 0, 0), Head=(-6, 0, 0),
+                    upperarm_r=(0, -40, 46), lowerarm_r=(0, 0, 52),
+                    upperarm_l=(0, 44, -46), lowerarm_l=(0, 0, -52),
+                    thigh_r=(-18, 8, 0), thigh_l=(-14, -8, 0),
+                    calf_r=(34, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.02, -0.13))),
+        (18, stance()),
+    ],
+
+    # IRISH_WHIP: the throw itself. "Push" is a two-armed shove straight
+    # ahead; a whip turns the hips and SLINGS the other man past you, so the
+    # arm finishes across the body and the chest opens after him.
+    "Irish_Whip_Throw": [
+        (1,  stance(upperarm_r=(0, -20, 54), lowerarm_r=(0, 0, 50),
+                    upperarm_l=(0, 14, -58), lowerarm_l=(0, 0, -44),
+                    spine_03=(14, 0, -18), thigh_r=(6, 6, 0),
+                    calf_r=(22, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.02, -0.07))),
+        (7,  stance(upperarm_r=(0, -6, 74), lowerarm_r=(0, 0, 22),
+                    upperarm_l=(0, 20, -40), lowerarm_l=(0, 0, -30),
+                    spine_03=(10, 0, 30), Head=(0, 0, 22),
+                    thigh_r=(-22, 6, 0), calf_r=(16, 0, 0),
+                    thigh_l=(8, -6, 0),
+                    root=(0, 0, 0, 0.0, -0.06, -0.05))),
+        (13, stance(upperarm_r=(0, 4, 86), lowerarm_r=(0, 0, 14),
+                    upperarm_l=(0, 26, -34), lowerarm_l=(0, 0, -26),
+                    spine_03=(6, 0, 40), Head=(0, 0, 28),
+                    thigh_r=(-26, 6, 0), calf_r=(18, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.09, -0.05))),
+        (24, stance()),
+    ],
+
+    # --- paired halves ----------------------------------------------------
+    #
+    # One clip per role per move, 30 frames = the 1.0s every trajectory in
+    # paired_recipes.gd runs for. The two halves of a move are authored
+    # against each other beat for beat: where the attacker's knee drives at
+    # f20, the defender folds at f20.
+
+    # Collar-and-elbow, drag down, knee to the midsection, shove off.
+    # Nobody leaves the mat and nobody inverts, by design.
+    "Clinch_Knee_Attacker": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0), Head=(-5, 0, 0))),
+        # Drag him down into the clinch.
+        (9,  stance(spine_01=(18, 0, 0), spine_03=(28, 0, 0), Head=(-14, 0, 0),
+                    upperarm_r=(0, -28, 64), lowerarm_r=(0, 0, 58),
+                    upperarm_l=(0, 32, -64), lowerarm_l=(0, 0, -58),
+                    thigh_r=(-16, 10, 0), thigh_l=(-16, -10, 0),
+                    calf_r=(36, 0, 0), calf_l=(36, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.04, -0.15))),
+        # Load the knee.
+        (16, stance(spine_01=(16, 0, 0), spine_03=(24, 0, 0), Head=(-12, 0, 0),
+                    upperarm_r=(0, -26, 66), lowerarm_r=(0, 0, 56),
+                    upperarm_l=(0, 30, -66), lowerarm_l=(0, 0, -56),
+                    thigh_r=(-48, 8, 0), calf_r=(84, 0, 0), foot_r=(14, 0, 0),
+                    thigh_l=(-6, -10, 0), calf_l=(18, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.02, -0.08))),
+        # Drive it in -- the action frame.
+        (20, stance(spine_01=(22, 0, 0), spine_03=(30, 0, 0), Head=(-10, 0, 0),
+                    upperarm_r=(0, -30, 70), lowerarm_r=(0, 0, 52),
+                    upperarm_l=(0, 34, -70), lowerarm_l=(0, 0, -52),
+                    thigh_r=(-64, 8, 0), calf_r=(40, 0, 0), foot_r=(20, 0, 0),
+                    thigh_l=(-4, -10, 0), calf_l=(14, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.07, -0.05))),
+        # Shove off.
+        (25, stance(upperarm_r=(0, -14, 72), lowerarm_r=(0, 0, 18),
+                    upperarm_l=(0, 18, -72), lowerarm_l=(0, 0, -18),
+                    spine_03=(12, 0, 0), thigh_r=(-12, 8, 0),
+                    calf_r=(26, 0, 0))),
+        (30, stance()),
+    ],
+
+    "Clinch_Knee_Defender": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0), Head=(-5, 0, 0))),
+        # Bent forward and held.
+        (9,  stance(spine_01=(30, 0, 0), spine_03=(40, 0, 0), Head=(-18, 0, 0),
+                    upperarm_r=(0, -18, 48), lowerarm_r=(0, 0, 64),
+                    upperarm_l=(0, 22, -48), lowerarm_l=(0, 0, -64),
+                    thigh_r=(-12, 10, 0), thigh_l=(-12, -10, 0),
+                    calf_r=(32, 0, 0), calf_l=(32, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.05, -0.16))),
+        (16, stance(spine_01=(32, 0, 0), spine_03=(43, 0, 0), Head=(-16, 0, 0),
+                    upperarm_r=(0, -16, 46), lowerarm_r=(0, 0, 68),
+                    upperarm_l=(0, 20, -46), lowerarm_l=(0, 0, -68),
+                    thigh_r=(-14, 10, 0), thigh_l=(-14, -10, 0),
+                    calf_r=(34, 0, 0), calf_l=(34, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.06, -0.18))),
+        # The knee lands, on the attacker's f20: he folds hard around it.
+        (20, stance(spine_01=(44, 0, 0), spine_03=(56, 0, 0), Head=(10, 0, 0),
+                    upperarm_r=(0, -46, 34), lowerarm_r=(0, 0, 88),
+                    upperarm_l=(0, 50, -34), lowerarm_l=(0, 0, -88),
+                    thigh_r=(-26, 10, 0), thigh_l=(-26, -10, 0),
+                    calf_r=(48, 0, 0), calf_l=(48, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.12, -0.26))),
+        # Shoved off, folded back and staggering upright.
+        (25, stance(spine_01=(12, 0, 0), spine_03=(-6, 0, 0), Head=(-14, 0, 0),
+                    upperarm_r=(0, -58, 10), upperarm_l=(0, 62, -10),
+                    lowerarm_r=(0, 0, 40), lowerarm_l=(0, 0, -40),
+                    root=(0, 0, 0, 0.0, 0.10, -0.09))),
+        (30, stance()),
+    ],
+
+    # A drops to one knee, B folded across it. The attacker's kneel is
+    # EARLY on purpose -- it has to be there before the victim arrives.
+    "Backbreaker_Attacker": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0))),
+        (7,  stance(spine_01=(20, 0, 0), spine_03=(30, 0, 0),
+                    upperarm_r=(0, -28, 64), lowerarm_r=(0, 0, 58),
+                    upperarm_l=(0, 32, -64), lowerarm_l=(0, 0, -58),
+                    thigh_r=(-20, 10, 0), thigh_l=(-20, -10, 0),
+                    calf_r=(40, 0, 0), calf_l=(40, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.04, -0.18))),
+        # The kneel: right knee to the mat, chest up, arms carrying him.
+        (14, stance(spine_01=(-4, 0, 0), spine_03=(-12, 0, 0), Head=(-14, 0, 0),
+                    upperarm_r=(0, -20, 50), lowerarm_r=(0, 0, 54),
+                    upperarm_l=(0, 24, -50), lowerarm_l=(0, 0, -54),
+                    thigh_r=(-76, 10, 0), calf_r=(92, 0, 0), foot_r=(18, 0, 0),
+                    thigh_l=(-34, -12, 0), calf_l=(46, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.36))),
+        # The drop across the knee.
+        (20, stance(spine_01=(-8, 0, 0), spine_03=(-18, 0, 0), Head=(-16, 0, 0),
+                    upperarm_r=(0, -14, 58), lowerarm_r=(0, 0, 44),
+                    upperarm_l=(0, 18, -58), lowerarm_l=(0, 0, -44),
+                    thigh_r=(-78, 10, 0), calf_r=(94, 0, 0), foot_r=(18, 0, 0),
+                    thigh_l=(-36, -12, 0), calf_l=(48, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.40))),
+        (30, stance(spine_03=(6, 0, 0), thigh_r=(-40, 8, 0), calf_r=(60, 0, 0),
+                    thigh_l=(-20, -8, 0), calf_l=(34, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.20))),
+    ],
+
+    "Backbreaker_Defender": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0))),
+        (7,  stance(spine_01=(24, 0, 0), spine_03=(34, 0, 0), Head=(-14, 0, 0),
+                    upperarm_r=(0, -26, 30), lowerarm_r=(0, 0, 58),
+                    upperarm_l=(0, 30, -30), lowerarm_l=(0, 0, -58),
+                    thigh_r=(-16, 10, 0), thigh_l=(-16, -10, 0),
+                    calf_r=(34, 0, 0), calf_l=(34, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.05, -0.14))),
+        # Lifted, body starting to arch back over the knee.
+        (14, stance(spine_01=(-18, 0, 0), spine_03=(-30, 0, 0), Head=(18, 0, 0),
+                    upperarm_r=(0, -8, -20), lowerarm_r=(0, 0, 34),
+                    upperarm_l=(0, 12, 20), lowerarm_l=(0, 0, -34),
+                    thigh_r=(-30, 12, 0), thigh_l=(-26, -12, 0),
+                    calf_r=(40, 0, 0), calf_l=(36, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, 0.10))),
+        # Folded across the knee: the arch is the whole point of the move.
+        (20, stance(spine_01=(-30, 0, 0), spine_03=(-46, 0, 0), Head=(26, 0, 0),
+                    upperarm_r=(0, 16, -40), lowerarm_r=(0, 0, 26),
+                    upperarm_l=(0, -12, 40), lowerarm_l=(0, 0, -26),
+                    thigh_r=(-44, 12, 0), thigh_l=(-40, -12, 0),
+                    calf_r=(54, 0, 0), calf_l=(50, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.06))),
+        # Rolls off onto the mat.
+        (30, {"pelvis": (-80, 0, 0), "root": (0, 0, 0, 0.0, 0.0, -0.80),
+              "spine_01": (-6, 0, 0), "spine_03": (-12, 0, 0),
+              "neck_01": (8, 0, 0), "Head": (12, 0, 0),
+              "thigh_r": (-50, 10, 0), "thigh_l": (-44, -10, 0),
+              "calf_r": (52, 0, 0), "calf_l": (44, 0, 0),
+              "foot_r": (-8, 0, 0), "foot_l": (-8, 0, 0),
+              "upperarm_r": (0, -30, 28), "lowerarm_r": (0, 0, 42),
+              "upperarm_l": (0, 34, -24), "lowerarm_l": (0, 0, -38)}),
+    ],
+
+    # A hooks the head, turns, and drops. No somersault in it -- that was
+    # taken out once already and should not come back.
+    "Neckbreaker_Attacker": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0))),
+        # Hook the head, high and across.
+        (8,  stance(upperarm_r=(0, 10, 52), lowerarm_r=(0, 0, 76),
+                    upperarm_l=(0, 30, -44), lowerarm_l=(0, 0, -54),
+                    spine_03=(10, 0, -16), Head=(0, 0, -12),
+                    thigh_r=(-10, 8, 0), calf_r=(24, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.06))),
+        # Turn through, taking him with it.
+        (16, stance(upperarm_r=(0, 16, 64), lowerarm_r=(0, 0, 70),
+                    upperarm_l=(0, 34, -50), lowerarm_l=(0, 0, -48),
+                    spine_03=(4, 0, 28), Head=(0, 0, 20),
+                    thigh_r=(-18, 8, 0), calf_r=(30, 0, 0),
+                    thigh_l=(-8, -8, 0), calf_l=(22, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.04, -0.11))),
+        # Drop: both men go down, attacker landing seated over him.
+        (23, stance(spine_01=(10, 0, 0), spine_03=(16, 0, 0), Head=(6, 0, 0),
+                    upperarm_r=(0, -6, 58), lowerarm_r=(0, 0, 54),
+                    upperarm_l=(0, 26, -46), lowerarm_l=(0, 0, -44),
+                    thigh_r=(-64, 12, 0), calf_r=(86, 0, 0), foot_r=(16, 0, 0),
+                    thigh_l=(-50, -12, 0), calf_l=(70, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.06, -0.44))),
+        (30, stance(spine_03=(10, 0, 0), thigh_r=(-44, 10, 0), calf_r=(62, 0, 0),
+                    thigh_l=(-34, -10, 0), calf_l=(48, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.02, -0.24))),
+    ],
+
+    "Neckbreaker_Defender": [
+        (1,  stance(upperarm_r=(0, -16, 56), lowerarm_r=(0, 0, 48),
+                    upperarm_l=(0, 6, -64), lowerarm_l=(0, 0, -36),
+                    spine_03=(15, 0, 0))),
+        # Head hooked: chin pulled up and across, arms coming loose.
+        (8,  stance(spine_01=(-10, 0, 0), spine_03=(-18, 0, 0),
+                    neck_01=(-10, 0, 8), Head=(-20, 0, 14),
+                    upperarm_r=(0, -50, 16), lowerarm_r=(0, 0, 46),
+                    upperarm_l=(0, 54, -16), lowerarm_l=(0, 0, -46),
+                    thigh_r=(-8, 10, 0), thigh_l=(-8, -10, 0),
+                    root=(0, 0, 0, 0.0, 0.04, -0.02))),
+        # Dragged backward off his feet.
+        (16, stance(spine_01=(-22, 0, 0), spine_03=(-34, 0, 0),
+                    neck_01=(-14, 0, 12), Head=(-26, 0, 20),
+                    upperarm_r=(0, -34, -14), lowerarm_r=(0, 0, 30),
+                    upperarm_l=(0, 38, 14), lowerarm_l=(0, 0, -30),
+                    thigh_r=(-24, 12, 0), thigh_l=(-20, -12, 0),
+                    calf_r=(30, 0, 0), calf_l=(26, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.10, -0.14))),
+        # Down on his back.
+        (23, {"pelvis": (-78, 0, 0), "root": (0, 0, 0, 0.0, 0.06, -0.78),
+              "spine_01": (-8, 0, 0), "spine_03": (-14, 0, 0),
+              "neck_01": (6, 0, 0), "Head": (10, 0, 0),
+              "thigh_r": (-42, 10, 0), "thigh_l": (-38, -10, 0),
+              "calf_r": (46, 0, 0), "calf_l": (40, 0, 0),
+              "foot_r": (-8, 0, 0), "foot_l": (-8, 0, 0),
+              "upperarm_r": (0, -28, 22), "lowerarm_r": (0, 0, 44),
+              "upperarm_l": (0, 32, -18), "lowerarm_l": (0, 0, -40)}),
+        (30, {"pelvis": (-82, 0, 0), "root": (0, 0, 0, 0.0, 0.04, -0.84),
+              "spine_01": (-6, 0, 0), "spine_03": (-10, 0, 0),
+              "neck_01": (10, 0, 0), "Head": (14, 0, 0),
+              "thigh_r": (-52, 10, 0), "thigh_l": (-46, -10, 0),
+              "calf_r": (54, 0, 0), "calf_l": (46, 0, 0),
+              "foot_r": (-10, 0, 0), "foot_l": (-10, 0, 0),
+              "upperarm_r": (0, -34, 26), "lowerarm_r": (0, 0, 40),
+              "upperarm_l": (0, 38, -22), "lowerarm_l": (0, 0, -36)}),
+    ],
 }
 
 

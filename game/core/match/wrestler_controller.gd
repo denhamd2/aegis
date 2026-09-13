@@ -309,11 +309,12 @@ const STATE_ANIMATIONS := {
 	# each other, which is the single most-complained-about thing in a
 	# captured match.
 	WrestlerFSM.State.TIE_UP: "strikes/tie_up_collar",
-	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
+	WrestlerFSM.State.GRAPPLE_HOLD: "strikes/grapple_hold_neutral",
 	# MOVE_EXEC is the beat where a grapple's throw resolves, not a strike.
 	# It played Punch_Cross, so a wrestler who had just completed a throw
 	# threw a punch at nothing on the way back to idle.
-	WrestlerFSM.State.MOVE_EXEC: "Jump_Land",
+	# Authored. Jump_Land is a man absorbing a drop he took himself.
+	WrestlerFSM.State.MOVE_EXEC: "strikes/move_exec_impact",
 	# Replaced per hit by _play_hit_reaction() with a head or torso reaction
 	# depending on where the damage landed; this is the fallback.
 	WrestlerFSM.State.HIT_REACT: "strikes/hit_torso",
@@ -322,7 +323,7 @@ const STATE_ANIMATIONS := {
 	# Generated: "Roll" is a tucked forward roll and 0.63s shorter than the
 	# state, so the wrestler curled into a ball on the mat and froze in it.
 	WrestlerFSM.State.GETUP: "strikes/getup_rise",
-	WrestlerFSM.State.IRISH_WHIP: "Push",
+	WrestlerFSM.State.IRISH_WHIP: "strikes/irish_whip_throw",
 	# Authored clothesline, cut to the 69 frames both running_attack_*.tres
 	# share. This was Punch_Cross: a wrestler sprinted the width of the ring
 	# and threw a boxing jab, and because neither running-attack MoveDef sets
@@ -365,10 +366,10 @@ const STATE_ANIMATIONS := {
 ## each other -- that needs paired bone tracks (see grapple_rig.gd's header
 ## for why those aren't simply added to the existing clips).
 const ATTACKER_STATE_ANIMATIONS := {
-	WrestlerFSM.State.GRAPPLE_HOLD: "PickUp_Table", # bend-and-lift
+	WrestlerFSM.State.GRAPPLE_HOLD: "strikes/grapple_hold_attacker",
 }
 const DEFENDER_STATE_ANIMATIONS := {
-	WrestlerFSM.State.GRAPPLE_HOLD: "Death01", # limp, being thrown
+	WrestlerFSM.State.GRAPPLE_HOLD: "strikes/grapple_hold_defender",
 }
 
 ## Real bone-level performances for the moves that have one, generated from

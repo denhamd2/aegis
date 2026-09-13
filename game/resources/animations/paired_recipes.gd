@@ -85,6 +85,9 @@ const RECIPES := {
 	# Both men finish it on their feet, which is also what makes it a sane
 	# opener for an exchange rather than a match-ending bomb.
 	"grapple_clinch_knee": {
+		# Authored in Blender: both halves keyframed against each other
+		# beat for beat, rather than stitched out of unrelated clips.
+		"authored": {"attacker": "Clinch_Knee_Attacker", "defender": "Clinch_Knee_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},          # collar and elbow
 			{"t": 0.30, "clip": "PickUp_Table", "at": 0.25},  # drag him down
@@ -105,6 +108,9 @@ const RECIPES := {
 	# A drops to one knee; B is folded across it. B peaks at 1.55m, lands
 	# forward at +0.65 X.
 	"signature_backbreaker": {
+		# Authored in Blender: both halves keyframed against each other
+		# beat for beat, rather than stitched out of unrelated clips.
+		"authored": {"attacker": "Backbreaker_Attacker", "defender": "Backbreaker_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.20, "clip": "PickUp_Table", "at": 0.25},
@@ -133,6 +139,9 @@ const RECIPES := {
 	# men finish low, which is what makes it read as a signature rather
 	# than a basic.
 	"signature_neckbreaker": {
+		# Authored in Blender: both halves keyframed against each other
+		# beat for beat, rather than stitched out of unrelated clips.
+		"authored": {"attacker": "Neckbreaker_Attacker", "defender": "Neckbreaker_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.25, "clip": "PickUp_Table", "at": 0.25},

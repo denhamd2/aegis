@@ -25,7 +25,27 @@ const AUTHORED_LENGTHS := {
 	"stunned": 0.750,             # WrestlerController.STUNNED_TICKS = 45
 	"running_clothesline": 1.150, # both running_attack_*.tres: 69 frames
 	"win_celebrate": 1.300,       # free: VICTORY is terminal
+	"idle_ready": 2.500,          # loops; matches the rig's Idle
+	"walk_stalk": 1.333,          # loops; matches the rig's Walk
+	"run_drive": 0.667,           # loops; matches the rig's Sprint
+	"tie_up_collar": 1.000,
+	"down_supine": 1.333,
+	"finisher_drive": 1.333,
+	"submission_work": 1.000,
+	"grapple_hold_neutral": 1.000,
+	"grapple_hold_attacker": 1.000,
+	"grapple_hold_defender": 1.000,
+	"move_exec_impact": 0.600,
+	"irish_whip_throw": 0.800,
 }
+
+## The clips a wrestler SITS in have to loop. The bake defaults to
+## LOOP_NONE and the rig's own Idle/Walk/Sprint carry LOOP_LINEAR, so a
+## generated replacement that forgets this plays once and freezes -- in the
+## three states that are on screen for most of a match.
+const MUST_LOOP := ["idle_ready", "walk_stalk", "run_drive",
+	"tie_up_collar", "down_supine", "submission_work",
+	"grapple_hold_neutral", "grapple_hold_attacker", "grapple_hold_defender"]
 
 ## Clips still sampled out of the CC0 library rather than authored. Listed so
 ## the migration's remaining work is visible in the suite rather than only in
@@ -116,6 +136,69 @@ func test_the_running_attack_no_longer_throws_a_punch() -> void:
 	assert_str(WrestlerController.clip_for_state(
 			WrestlerFSM.State.RUNNING_ATTACK, true)) \
 		.is_equal("strikes/running_clothesline")
+
+
+func test_the_clips_a_wrestler_sits_in_loop() -> void:
+	for name: String in MUST_LOOP:
+		assert_int(STRIKE_CLIPS.get_animation(name).loop_mode) \
+			.override_failure_message(
+				"%s does not loop: it will freeze on its last frame" % name) \
+			.is_equal(Animation.LOOP_LINEAR)
+
+
+func test_no_clip_carries_a_duplicate_track() -> void:
+	# Authored clips baked TWO pelvis rotation tracks -- the real one plus a
+	# single-key bind pose, 104 deg about X. Both remap onto the same
+	# runtime path and Godot applies whichever it reaches last, so a
+	# wrestler in IDLE rendered lying flat on his back in the middle of the
+	# ring. _dedupe_tracks() in build_strike_clips.gd keeps the longer one.
+	for name: String in AUTHORED_LENGTHS:
+		var anim: Animation = STRIKE_CLIPS.get_animation(name)
+		var seen := {}
+		for t in anim.get_track_count():
+			var key := "%s|%d" % [anim.track_get_path(t), anim.track_get_type(t)]
+			assert_bool(seen.has(key)) \
+				.override_failure_message(
+					"%s has two %s tracks" % [name, anim.track_get_path(t)]) \
+				.is_false()
+			seen[key] = true
+
+
+func test_no_state_still_plays_a_raw_rig_clip() -> void:
+	# Every entry should name a generated library ("strikes/" or "paired/").
+	# A bare name is a clip borrowed straight off wrestler_base.glb, which
+	# is what the migration set out to remove.
+	for state: int in WrestlerController.STATE_ANIMATIONS:
+		var clip: String = WrestlerController.STATE_ANIMATIONS[state]
+		assert_bool(clip.contains("/")) \
+			.override_failure_message(
+				"state %d still plays the rig clip '%s'" % [state, clip]) \
+			.is_true()
+	for table in [WrestlerController.ATTACKER_STATE_ANIMATIONS,
+			WrestlerController.DEFENDER_STATE_ANIMATIONS]:
+		for state: int in table:
+			assert_bool(String(table[state]).contains("/")) \
+				.override_failure_message(
+					"role override for state %d still plays '%s'"
+					% [state, table[state]]) \
+				.is_true()
+
+
+func test_both_halves_of_every_paired_move_are_authored() -> void:
+	# A move with one half authored and one still stitched would drift: the
+	# two are timed against each other beat for beat.
+	var lib: AnimationLibrary = load(
+			"res://resources/animations/paired_poses.tres")
+	for move_id: String in PairedRecipes.RECIPES:
+		var recipe: Dictionary = PairedRecipes.RECIPES[move_id]
+		assert_bool(recipe.has("authored")) \
+			.override_failure_message("%s is still pose-stitched" % move_id) \
+			.is_true()
+		for role: String in ["attacker", "defender"]:
+			assert_str(recipe["authored"][role]).is_not_empty()
+		for suffix: String in [PairedRecipes.ATTACKER_SUFFIX,
+				PairedRecipes.DEFENDER_SUFFIX]:
+			assert_bool(lib.has_animation(move_id + suffix)).is_true()
 
 
 func test_victory_is_terminal() -> void:

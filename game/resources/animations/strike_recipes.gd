@@ -275,6 +275,36 @@ const RECIPES := {
 	"submission_work": {"kind": "retime", "source": "Submission_Work",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},
 
+	# The grapple family: the last clips taken straight off the rig, and the
+	# ones furthest from what they represent.
+
+	# GRAPPLE_HOLD with no role known. "Interact" is a one-armed
+	# reach-and-point: with both wrestlers playing it a lock-up rendered as
+	# two men standing apart pointing past each other.
+	"grapple_hold_neutral": {"kind": "retime", "source": "Grapple_Hold_Neutral",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+
+	# The attacker in a hold played "PickUp_Table" -- a man lifting
+	# furniture with a straight back. A front waistlock bends at the waist
+	# and wraps LOW.
+	"grapple_hold_attacker": {"kind": "retime", "source": "Grapple_Hold_Attacker",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+
+	# The man being held played "Death01": a corpse. He is bent over and
+	# braced, resisting.
+	"grapple_hold_defender": {"kind": "retime", "source": "Grapple_Hold_Defender",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+
+	# MOVE_EXEC played "Jump_Land", a man absorbing a drop he took himself.
+	# This is the other side of it: he has just put someone down.
+	"move_exec_impact": {"kind": "retime", "source": "Move_Exec_Impact",
+		"seconds": 0.600, "file": AUTHORED},
+
+	# IRISH_WHIP played "Push", a shove straight ahead. A whip turns the
+	# hips and slings the other man PAST you.
+	"irish_whip_throw": {"kind": "retime", "source": "Irish_Whip_Throw",
+		"seconds": 0.800, "file": AUTHORED},
+
 	# RUNNING_ATTACK plays Punch_Cross today: a wrestler sprints the width of
 	# the ring and throws a boxing jab. A clothesline does not swing -- the
 	# arm is out and locked before contact and the RUN supplies the force --
