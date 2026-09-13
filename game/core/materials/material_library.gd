@@ -574,11 +574,15 @@ const SPECS := {
 	##
 	## NAVY, not blue, and that is measured rather than chosen:
 	## `gauntlet/refs/arena.md` reads the reference bowl's seating at mean
-	## sRGB (15, 20, 30) and relative luminance 0.0070 -- half the crowd's own
-	## 0.014. A bank of seats is the darkest large surface in a lit arena, and
-	## a seat rail bright enough to see the colour of is a seat rail competing
-	## with the men in the ring. The call site asks `_house_lit` for 0.0070
-	## exactly (`reach` 1.17 on HOUSE_TARGET 0.006).
+	## sRGB (15, 20, 30) and relative luminance 0.0070 -- half the level
+	## VISUAL_BAR.md measures the reference footage's crowd at. A bank of seats
+	## is the darkest large surface in a lit arena, and seats bright enough to
+	## see the colour of are seats competing with the men in the ring. The call
+	## site asks `_house_lit` for 0.0070 exactly (`reach` 1.17 on HOUSE_TARGET
+	## 0.006).
+	##
+	## It dresses ~3,500 individual seats rather than a rail, since the hall
+	## has no crowd in front of them any more -- one material, one draw.
 	##
 	## No map. A seat back is 40cm of geometry seen from 15-35m, and a tiled
 	## weave on it minifies into noise the way `arena_chair`'s would.

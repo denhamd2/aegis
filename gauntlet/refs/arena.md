@@ -84,10 +84,11 @@ does it, so these sit on the same scale as `VISUAL_BAR.md`'s numbers:
 
 Two things come out of that pair, and both are in the build:
 
-1. **The seats are dark navy, not blue.** 0.0070 is half the crowd's own
-   0.014 (`VISUAL_BAR.md`). `arena_seat` is tinted navy and its house-lit
-   floor is set to land on 0.0070 (`reach` 1.17 against `HOUSE_TARGET`
-   0.006), so the seat rail reads as colour without becoming a light source.
+1. **The seats are dark navy, not blue.** 0.0070 is half the level
+   `VISUAL_BAR.md` measures the *reference footage's* crowd at (0.014).
+   `arena_seat` is tinted navy and its house-lit floor is set to land on
+   0.0070 (`reach` 1.17 against `HOUSE_TARGET` 0.006), so the seats read as
+   colour without becoming a light source.
 2. **The nosings are 34x the seats and cover under half a percent of the
    bank.** That ratio is the whole effect: a bank of seats reads as a rake
    with stairs in it because of a very small amount of very bright yellow.
@@ -96,8 +97,23 @@ Two things come out of that pair, and both are in the build:
 
 The photograph is a house-lights-up daylight-white frame and the build's hall
 is a dark show, so the absolute levels above are **not** transferable and are
-not transferred. What is taken from them is the two relationships: navy under
-the crowd, and a thin very bright line up every aisle.
+not transferred. What is taken from them is the two relationships: navy seats
+well under the level a crowd would read at, and a thin very bright line up
+every aisle.
+
+### Seats, not a slope
+
+The reference photographs are of an **empty** bowl, which is also what the
+build is now — there is no crowd in the hall. That makes one more thing
+load-bearing: at the crop above, individual seat backs are legible, separated
+by a dark gap of roughly a sixth of their pitch, and the rows read as
+something countable rather than as a navy ramp.
+
+So the model builds a seat per `SEAT_PITCH` (0.62m) at `SEAT_WIDTH_FRACTION`
+0.84 of it, with the aisles left clear, rather than the continuous rail it
+carried while a crowd sat in front of it. That is ~3,500 seats and it took the
+model from 23.3k to 55.0k triangles — spent where the crowd's own instances
+used to be, in a hall that no longer draws them.
 
 ### What the photographs do not establish
 

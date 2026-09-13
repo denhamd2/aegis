@@ -1,15 +1,16 @@
 extends GdUnitTestSuite
 ## The Blender bowl's invariants, asserted without a renderer.
 ##
-## `tools/blender/arena_bowl.py` builds the bowl mesh and `ArenaBuilder` seats
-## the crowd on it. They are two programs in two languages, and the whole risk
-## of that arrangement is that they stop agreeing -- the exporter reads its
-## constants out of `arena_builder.gd`, which stops them disagreeing about a
-## NUMBER, and this suite stops them disagreeing about what the numbers MEAN.
+## `tools/blender/arena_bowl.py` builds the bowl mesh and `ArenaBuilder` stands
+## the ringside chairs on it. They are two programs in two languages, and the
+## whole risk of that arrangement is that they stop agreeing -- the exporter
+## reads its constants out of `arena_builder.gd`, which stops them disagreeing
+## about a NUMBER, and this suite stops them disagreeing about what the
+## numbers MEAN.
 ##
 ## So every test here measures the committed .glb against arithmetic done in
 ## GDScript. If the model is rebuilt from changed constants and this file still
-## passes, the crowd is still sitting on the treads.
+## passes, every seat and chair is still standing on a tread.
 
 const MODEL := "res://assets/environment/arena_bowl.glb"
 ## Vertex positions come off the mesh through the glTF importer and a float
@@ -50,9 +51,9 @@ func test_the_model_ships_every_part_the_builder_dresses() -> void:
 ##
 ## This is the assertion that catches the failure the two-language split
 ## actually threatens: the exporter growing a row, or the suite storey
-## changing height, without the crowd following it up. The crowd's own top
-## row is placed at `_row_schedule()`'s last tread height, so if the mesh
-## disagrees, the back row of the arena is sitting in mid-air.
+## changing height, without the ringside chairs following it up: they are
+## placed at `_row_schedule()`'s tread heights, so a mesh that disagrees puts
+## a row of chairs in mid-air.
 func test_the_mesh_tops_out_on_the_schedules_last_tread() -> void:
 	var root := _model()
 	var rows := ArenaBuilder._row_schedule()
@@ -127,15 +128,39 @@ func test_the_shell_encloses_the_bowl() -> void:
 ## the stage's own deck height.
 func test_the_bowl_opens_for_the_entrance_set() -> void:
 	var root := _model()
-	var mesh := _part(root, "BowlSteps").mesh
-	var arrays := mesh.surface_get_arrays(0)
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var intruders := 0
-	for v: Vector3 in verts:
-		if v.z < 0.0 and absf(v.x) < ArenaBuilder.STAGE_HALF_WIDTH - 0.5 \
-				and v.y > ArenaBuilder.FLOOR_Y + 0.1:
-			intruders += 1
-	assert_int(intruders).is_equal(0)
+	for part: String in ["BowlSteps", "BowlSeats"]:
+		var arrays := _part(root, part).mesh.surface_get_arrays(0)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var intruders := 0
+		for v: Vector3 in verts:
+			if v.z < 0.0 and absf(v.x) < ArenaBuilder.STAGE_HALF_WIDTH - 0.5 \
+					and v.y > ArenaBuilder.FLOOR_Y + 0.1:
+				intruders += 1
+		assert_int(intruders).is_equal(0)
+	root.free()
+
+
+## The seats stand on the seated treads, at seat-back height.
+##
+## With the hall empty the seats are the bowl's whole read, so their placement
+## is no longer something a crowd sitting in front of them can hide: the
+## lowest seat must be on the first raked row and the highest exactly one
+## SEAT_BACK_HEIGHT above the last tread. A seat sunk into its tread or
+## floating over it is visible from every camera in the shotlist.
+func test_the_seats_stand_on_the_seated_treads() -> void:
+	var root := _model()
+	var first := INF
+	var last := -INF
+	for row: Dictionary in ArenaBuilder._row_schedule():
+		if row["kind"] != "seated":
+			continue
+		first = minf(first, row["tread_y"])
+		last = maxf(last, row["tread_y"])
+
+	var box := _aabb(root, "BowlSeats")
+	assert_float(box.position.y).is_equal_approx(first, TOLERANCE)
+	assert_float(box.position.y + box.size.y) \
+			.is_equal_approx(last + ArenaBuilder.SEAT_BACK_HEIGHT, TOLERANCE)
 	root.free()
 
 

@@ -1,8 +1,17 @@
 extends Node3D
 class_name ArenaBuilder
 ## Builds the hall around the ring: the ringside floor and barricades, the
-## crowd, the entrance stage and its video wall, the overhead truss -- and
-## instances the seating bowl and shell, which are a model.
+## ringside folding chairs, the entrance stage and its video wall, the
+## overhead truss -- and instances the seating bowl and shell, which are a
+## model.
+##
+## The hall is EMPTY. There is no crowd in it, by decision rather than by
+## omission: the seats are the seating now, and what fills the bowl is the
+## model's own seat rails. An empty arena is a thing a wrestling build is
+## routinely shot in -- an empty-arena match, a taping-day walkthrough -- and
+## it is what `gauntlet/refs/arena.md`'s reference photographs are of.
+## Removing the impostors took the only animated geometry in the hall with
+## them; see the cosmetic-motion note below.
 ##
 ## Why none of this is authored in the .tscn, and why none of it is a
 ## downloaded arena, are both still deliberate:
@@ -36,18 +45,22 @@ class_name ArenaBuilder
 ## the entrance set moved, and none of its numbers changed.
 ##
 ## The exporter reads its constants out of THIS FILE (see its `WANTED` list),
-## so the mesh and the crowd sitting on it cannot be edited apart, and
-## `tests/test_arena_bowl.gd` measures the committed .glb against
+## so the mesh and the ringside chairs standing on it cannot be edited apart,
+## and `tests/test_arena_bowl.gd` measures the committed .glb against
 ## `_row_schedule()` to prove they still agree.
 ##
 ## Everything here is cosmetic. Nothing in this file creates a
 ## CollisionObject3D, joins a physics layer, or is read by gameplay: the ring's
-## own colliders in ring.tscn remain the only bodies the match touches. The
-## crowd's idle motion is a vertex shader, so it runs on the render thread and
-## cannot reach MatchReferee.compute_end_state_hash(). ARCHITECTURE.md permits
-## cosmetic motion on exactly that condition.
+## own colliders in ring.tscn remain the only bodies the match touches.
 ##
-## Placement is seeded (CROWD_SEED), so the same build produces the same
+## Nothing here moves at all any more. The hall's one piece of cosmetic
+## motion was the crowd's idle bob, a vertex shader that ARCHITECTURE.md
+## permitted because it ran on the render thread and could not reach
+## MatchReferee.compute_end_state_hash(); it left with the crowd. The video
+## wall's clip (core/arena/video_wall.gd) is the only thing in the arena that
+## changes frame to frame now, and it is a texture, not geometry.
+##
+## Placement is seeded (PLACEMENT_SEED), so the same build produces the same
 ## arena every run and captures stay comparable between rounds.
 
 # --- The ring this hall is built around -------------------------------------
@@ -86,8 +99,8 @@ const ROW_RUN := 0.95
 const ROW_RISE := 0.48
 const LOWER_ROWS := 12
 const UPPER_ROWS := 8
-## How many of LOWER_ROWS sit FLAT on the ringside slab rather than raking, and
-## carry folding chairs rather than spectators.
+## How many of LOWER_ROWS sit FLAT on the ringside slab rather than raking.
+## These are the rows the folding chairs stand on.
 ##
 ## This is the ringside of gauntlet/refs/ring.md: rows of empty black folding
 ## chairs on the flat floor behind the barricade, with the raked bowl starting
@@ -101,7 +114,7 @@ const CONCOURSE_DEPTH := 2.6
 # --- Entrance stage ---------------------------------------------------------
 ## The stage occupies the -Z wedge. The default match camera sits off-axis
 ## on -X/+Z facing it, so the stage reads frame-left in the money shot with
-## the crowd at frame center -- both halves of the hall earn their polygons,
+## the bowl at frame center -- both halves of the hall earn their polygons,
 ## the stage via stage_wide/entrance framings as well as the broadcast edge.
 const STAGE_HALF_WIDTH := 6.0
 const STAGE_DECK_Y := 0.35
@@ -214,17 +227,24 @@ const BOWL_STRAIGHT_Z := 0.0
 ## these two numbers and nothing else.
 const BOWL_CORNER_SEGMENTS := 16
 const BOWL_STRAIGHT_SEGMENTS := 8
-## Aisles cut up the rake. The crowd skips a seat's width either side of each
-## one, and `arena_bowl.py` lays a lit stair nosing on every tread there.
+## Aisles cut up the rake. `arena_bowl.py` lays a lit stair nosing on every
+## tread there and leaves the seat rail broken for them, and the ringside
+## chairs leave the same gaps.
 const BOWL_AISLES := 12
 ## The storey between the two tiers: suite glass with an LED ribbon board
 ## above and below it. The upper tier starts on top of it, which is what gives
 ## the hall two decks rather than one thirty-row rake.
 const SUITE_HEIGHT := 3.6
 const RIBBON_HEIGHT := 0.55
-## Height of the seat-back rail standing on each seated tread.
+## Height of a seat back standing on its tread.
 const SEAT_BACK_HEIGHT := 0.42
-## How wide an aisle is kept clear of crowd, in metres either side.
+## How wide a seat back is as a fraction of SEAT_PITCH. Under 1.0 so there is
+## a visible dark gap between one seat and the next: with the hall empty that
+## gap is the whole read. Built as one continuous rail -- which is what this
+## was while a crowd sat in front of it -- a bank of seats renders as a flat
+## navy slope with nothing in it to count.
+const SEAT_WIDTH_FRACTION := 0.84
+## How wide an aisle is kept clear of seating, in metres either side.
 const AISLE_CLEARANCE := 0.85
 
 # --- Shell ------------------------------------------------------------------
@@ -246,8 +266,8 @@ const TRUSS_Y := 7.6
 ## primitives, and the reference arena is an obround.
 ##
 ## Everything else in the hall -- ring, ramp, stage, video wall, portals,
-## truss, floor, barricades, crowd, ringside chairs -- is still built here and
-## is unchanged by the model.
+## truss, floor, barricades, ringside chairs -- is still built here and is
+## unchanged by the model.
 const BOWL_MODEL := "res://assets/environment/arena_bowl.glb"
 ## Which MaterialLibrary key dresses each object in the model. Every surface
 ## the model ships is overridden: the .glb carries placeholder colours so it
@@ -257,7 +277,7 @@ const BOWL_MODEL := "res://assets/environment/arena_bowl.glb"
 ## generated surfaces do.
 const BOWL_MODEL_MATERIALS := {
 	"BowlSteps": ["arena_bowl", 1.0],
-	"BowlSeatBacks": ["arena_seat", 1.17],
+	"BowlSeats": ["arena_seat", 1.17],
 	"SuiteFascia": ["arena_shell", 0.9],
 	"SuiteGlass": ["arena_suite_glass", 0.5],
 	"Shell": ["arena_shell", 0.85],
@@ -271,36 +291,25 @@ const BOWL_MODEL_EMISSIVE := {
 	"StairNosing": ["arena_nosing", 0.28],
 }
 
-# --- Crowd ------------------------------------------------------------------
+# --- Seating ----------------------------------------------------------------
 ## Distance between seats along a row.
-@export var seat_pitch: float = 0.62
-## Fraction of seats that are actually occupied. A sold-out bowl reads as a
-## solid block; leaving gaps is what makes it read as people.
-@export var crowd_fill: float = 0.86
+##
+## A constant as well as an export, because it is the pitch
+## `tools/blender/arena_bowl.py` divides each row's seats at and the exporter
+## reads constants, not exports. Retuning the export alone moves the ringside
+## chairs and leaves the bowl's seats where they were; move the constant and
+## rebuild the model.
+const SEAT_PITCH := 0.62
+@export var seat_pitch: float = SEAT_PITCH
 ## Fixed so the arena is identical every run.
-const CROWD_SEED := 20260902
-
-## Crowd shirt palette. Deliberately desaturated and dark: the reference
-## frames' crowd sits at relative luminance 0.014 (VISUAL_BAR.md), so a bright
-## crowd would not be closer to the reference, it would be further from it.
-## What the crowd is for here is *variance*, not brightness.
-const CROWD_COLORS: Array[Color] = [
-	Color(0.20, 0.21, 0.26),
-	Color(0.28, 0.24, 0.24),
-	Color(0.17, 0.20, 0.24),
-	Color(0.31, 0.29, 0.27),
-	Color(0.22, 0.26, 0.28),
-	Color(0.26, 0.22, 0.29),
-	Color(0.15, 0.16, 0.19),
-	Color(0.33, 0.31, 0.33),
-]
+const PLACEMENT_SEED := 20260902
 
 
 var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
-	_rng.seed = CROWD_SEED
+	_rng.seed = PLACEMENT_SEED
 	_build_floor()
 	_build_barricades()
 	_build_bowl()
@@ -875,24 +884,16 @@ func _build_barricades() -> void:
 ## here is who sits on it.
 ##
 ## The two halves share `_row_schedule()`, which is the same arithmetic the
-## exporter runs, so a spectator's tread height and the mesh's tread height
-## come from one place. `test_arena_bowl.gd` measures the shipped .glb against
-## this schedule, so the pair cannot drift silently.
+## exporter runs, so a ringside chair's tread height and the mesh's tread
+## height come from one place. `test_arena_bowl.gd` measures the shipped .glb
+## against this schedule, so the pair cannot drift silently.
 func _build_bowl() -> void:
-	var seats: Array[Transform3D] = []
-	var colors: Array[Color] = []
 	var chairs: Array[Transform3D] = []
-	var chair_colors: Array[Color] = []
-
 	add_child(_build_bowl_model())
 	for row: Dictionary in _row_schedule():
-		match row["kind"]:
-			"flat":
-				_seat_row(row, chairs, chair_colors, true)
-			"seated":
-				_seat_row(row, seats, colors)
+		if row["kind"] == "flat":
+			_chair_row(row, chairs)
 	add_child(_build_chairs(chairs))
-	add_child(_build_crowd(seats, colors))
 
 
 ## Instance the exported bowl and dress every part of it.
@@ -976,8 +977,8 @@ static func _row_schedule() -> Array[Dictionary]:
 ## the tread height.
 ##
 ## Mirrors `arena_bowl.py`'s `plan_loop()`, vertex order included, so an index
-## means the same bearing in both -- which is what lets the aisles the crowd
-## leaves clear be the aisles the model puts stair nosings up.
+## means the same bearing in both -- which is what lets the aisles the chairs
+## leave clear be the aisles the model puts stair nosings up.
 static func _plan_loop(offset: float) -> Array:
 	var loop: Array = []
 	var ax := BOWL_STRAIGHT_X
@@ -1025,22 +1026,24 @@ static func _aisle_indices() -> PackedInt32Array:
 
 
 # ---------------------------------------------------------------------------
-# The crowd on it
+# Ringside chairs on it
 # ---------------------------------------------------------------------------
 
-## One row of spectators, walked along the plan curve at a constant pitch.
+## One flat row's folding chairs, walked along the plan curve at a constant
+## pitch.
 ##
 ## Walking arc length rather than lerping a straight run is what keeps the
 ## spacing even through the corners: the old four-straight bowl could space
 ## seats by dividing each side, and a curve cannot be divided that way without
 ## bunching them at the end of every arc.
 ##
-## `neat` switches the run from a crowd to a rank of empty chairs: every
-## position filled, near-square, no size variance. An unoccupied row is set
-## out in a grid and a crowd never is, and the difference is most of what
-## tells the two apart at this distance.
-func _seat_row(row: Dictionary, out_seats: Array[Transform3D],
-		out_colors: Array[Color], neat: bool = false) -> void:
+## Every position is filled and the jitter is small on purpose. These are set
+## out by staff before a show, so they sit in a grid with a few degrees of
+## slop in it -- the looser placement this used to take when it also had to
+## scatter a crowd is not what an unoccupied row looks like.
+func _chair_row(row: Dictionary, out_chairs: Array[Transform3D]) -> void:
+	const WOBBLE := 0.012
+	const YAW_JITTER := 0.035
 	var depth: float = row["outer"] - row["inner"]
 	var y: float = row["tread_y"]
 	var loop := _plan_loop(row["inner"] + depth * 0.45)
@@ -1048,9 +1051,6 @@ func _seat_row(row: Dictionary, out_seats: Array[Transform3D],
 	for index: int in _aisle_indices():
 		avoid.append(loop[index][0])
 
-	var fill := 1.0 if neat else crowd_fill
-	var wobble := 0.012 if neat else 0.06
-	var yaw_jitter := 0.035 if neat else 0.25
 	var carry := 0.0
 	for i: int in loop.size():
 		var here: Vector3 = loop[i][0]
@@ -1071,36 +1071,30 @@ func _seat_row(row: Dictionary, out_seats: Array[Transform3D],
 					break
 			if in_aisle:
 				continue
-			if _rng.randf() > fill:
-				continue
-			# Face the ring: the spectator mesh looks down +Z at yaw 0, so the
-			# yaw that turns it onto the inward normal is atan2(x, z) of that
-			# normal. Taken per seat rather than per side -- on a curve there
+			# Face the ring: the chair mesh looks down +Z at yaw 0, so the yaw
+			# that turns it onto the inward normal is atan2(x, z) of that
+			# normal. Taken per chair rather than per side -- on a curve there
 			# are no sides.
 			var inward: Vector3 = -(loop[i][1] as Vector3)
 			var facing := atan2(inward.x, inward.z)
-			var jitter := Vector3(_rng.randf_range(-wobble, wobble), 0.0,
-					_rng.randf_range(-wobble, wobble))
+			var jitter := Vector3(_rng.randf_range(-WOBBLE, WOBBLE), 0.0,
+					_rng.randf_range(-WOBBLE, WOBBLE))
 			var basis := Basis(Vector3.UP,
-					facing + _rng.randf_range(-yaw_jitter, yaw_jitter))
-			if not neat:
-				basis = basis.scaled(Vector3.ONE * _rng.randf_range(0.9, 1.08))
-			out_seats.append(Transform3D(basis,
+					facing + _rng.randf_range(-YAW_JITTER, YAW_JITTER))
+			out_chairs.append(Transform3D(basis,
 					Vector3(point.x, y, point.z) + jitter))
-			out_colors.append(CROWD_COLORS[_rng.randi() % CROWD_COLORS.size()])
 		carry = span - (at - seat_pitch)
-
-
 # ---------------------------------------------------------------------------
 # Ringside chairs
 # ---------------------------------------------------------------------------
 
 ## The empty folding chairs on the flat rows behind the barricade.
 ##
-## Its own MultiMesh rather than a second colour on the crowd's, for one
-## non-negotiable reason: `_crowd_material()` is a vertex shader that bobs
-## every instance it is applied to, and a breathing chair is worse than no
-## chair at all. This takes a plain material and does not move.
+## One MultiMesh for the lot: a few hundred chairs in one draw call, on a
+## plain material, not moving. They used to need their own MultiMesh to stay
+## off the crowd's bob shader; with the crowd gone they are simply the only
+## instanced thing in the hall, and this is how a few hundred copies of one
+## 1448-triangle mesh get drawn once.
 func _build_chairs(chairs: Array[Transform3D]) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -1185,84 +1179,6 @@ static func _chair_mesh() -> ArrayMesh:
 	root.free()
 	_chair_cache = st.commit()
 	return _chair_cache
-
-
-# ---------------------------------------------------------------------------
-# Crowd
-# ---------------------------------------------------------------------------
-
-## One MultiMesh for the whole bowl: a few thousand seated impostors in one
-## draw call. They are impostors, not characters -- a torso and a head, no
-## faces, no limbs. At bowl distance under the match lens what a crowd reads
-## as is a broken-up silhouette with colour variance, and that is all this is
-## claiming to be.
-func _build_crowd(seats: Array[Transform3D],
-		colors: Array[Color]) -> MultiMeshInstance3D:
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
-	mm.mesh = _spectator_mesh()
-	mm.instance_count = seats.size()
-	for i: int in seats.size():
-		mm.set_instance_transform(i, seats[i])
-		mm.set_instance_color(i, colors[i])
-
-	var node := MultiMeshInstance3D.new()
-	node.name = "Crowd"
-	node.multimesh = mm
-	node.material_override = _crowd_material()
-	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	return node
-
-
-static func _spectator_mesh() -> ArrayMesh:
-	var st := _new_surface()
-	_add_box(st, Vector3(0.0, 0.34, 0.0), Vector3(0.42, 0.58, 0.30))
-	_add_box(st, Vector3(0.0, 0.74, 0.0), Vector3(0.21, 0.23, 0.21))
-	return st.commit()
-
-
-## The idle bob. This is a vertex shader on purpose: it runs on the render
-## thread, reads only TIME and INSTANCE_ID, and writes nothing back, so it
-## cannot feed into gameplay state or change a replay's end-state hash --
-## which is the condition ARCHITECTURE.md puts on cosmetic motion.
-func _crowd_material() -> ShaderMaterial:
-	var shader := Shader.new()
-	shader.code = """
-shader_type spatial;
-render_mode diffuse_lambert, specular_disabled, shadows_disabled;
-
-uniform float bob_amplitude = 0.045;
-uniform float bob_speed = 1.6;
-// Residual bounce only, down from 0.55. At 0.55 this term alone put the
-// impostors at ~0.117 relative luminance -- brighter than the mat's own
-// 0.172 on forward_plus, against a reference crowd of 0.014
-// (VISUAL_BAR.md). The bowl is lit by real fixtures now
-// (core/lighting/arena_lighting.gd), so the crowd's level comes from a
-// light aimed at it; this is only the floor that keeps the back rows off
-// measure_frame.py's 0.0025 void threshold.
-uniform float house_light = 0.03;
-
-varying vec3 seat_color;
-
-void vertex() {
-	seat_color = COLOR.rgb;
-	// Golden-ratio phase spread: adjacent seats never bob together, and the
-	// pattern never repeats along a row.
-	float phase = fract(float(INSTANCE_ID) * 0.6180339887) * 6.2831853;
-	VERTEX.y += (sin(TIME * bob_speed + phase) * 0.5 + 0.5) * bob_amplitude;
-}
-
-void fragment() {
-	ALBEDO = seat_color;
-	EMISSION = seat_color * house_light;
-	ROUGHNESS = 1.0;
-	SPECULAR = 0.0;
-}
-"""
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	return mat
 
 
 # ---------------------------------------------------------------------------

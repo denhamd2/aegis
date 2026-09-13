@@ -2714,8 +2714,14 @@ gameplay. Capture wall-time went 2m58s → 3m25s on llvmpipe.
   seat value and stair nosings to `gauntlet/refs/arena.md` — which is what
   that sentence used to say was missing. Its rake, row counts and tier heights
   are still coverage decisions and are not claimed otherwise.
-- The crowd are two-box impostors: no faces, no limbs, no reaction to the
-  match. The stage has no branding and no entrance sequence uses it.
+- The hall is now **empty** — the two-box crowd impostors were removed on
+  request, and the bowl's own seats (individual, at `SEAT_PITCH`, with the
+  aisles left clear) are what fills it. That closes this bullet's old
+  complaint that the crowd had no faces, no limbs and no reaction to the
+  match by removing the crowd, not by fixing it; a hall with people in it
+  again is a separate slice and would start from
+  `arena_builder.gd`'s history. The stage has no branding and no entrance
+  sequence uses it.
 
 ## Gauntlet: wrestler look & materials (round 2)
 
