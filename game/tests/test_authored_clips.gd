@@ -37,6 +37,8 @@ const AUTHORED_LENGTHS := {
 	"grapple_hold_defender": 1.000,
 	"move_exec_impact": 0.600,
 	"irish_whip_throw": 0.800,
+	"getup_rise": 2.100,          # WrestlerController.GETUP_RISE_TICKS = 126
+	"pin_cover": 0.600,
 }
 
 ## The clips a wrestler SITS in have to loop. The bake defaults to
@@ -47,11 +49,10 @@ const MUST_LOOP := ["idle_ready", "walk_stalk", "run_drive",
 	"tie_up_collar", "down_supine", "submission_work",
 	"grapple_hold_neutral", "grapple_hold_attacker", "grapple_hold_defender"]
 
-## Clips still sampled out of the CC0 library rather than authored. Listed so
-## the migration's remaining work is visible in the suite rather than only in
-## a commit message -- and so this shrinks to empty rather than being
-## forgotten.
-const STILL_BORROWED := ["getup_rise", "pin_cover"]
+## Empty: every clip is authored now. Kept as a list rather than deleted so
+## that adding a borrowed clip back has somewhere honest to go, and so the
+## test below keeps asserting the thing rather than the absence of it.
+const STILL_BORROWED: Array[String] = []
 
 
 func test_the_authored_clips_are_in_the_baked_library() -> void:
@@ -117,16 +118,21 @@ func test_every_authored_clip_poses_the_whole_body() -> void:
 			.is_greater(20)
 
 
-func test_the_borrowed_clips_left_are_the_ones_we_think_they_are() -> void:
-	# Fails when a clip is migrated without updating this file, which is the
-	# moment to move its name out of STILL_BORROWED and into
-	# AUTHORED_LENGTHS.
-	for name: String in STILL_BORROWED:
-		var recipe: Dictionary = StrikeRecipes.RECIPES[name]
-		assert_bool(recipe.has("file")) \
+func test_every_recipe_is_authored() -> void:
+	# The migration is finished, and this is what keeps it finished: a new
+	# recipe that samples the CC0 rig instead of naming an authored clip
+	# fails here rather than quietly reintroducing borrowed motion.
+	for name: String in StrikeRecipes.RECIPES:
+		if STILL_BORROWED.has(name):
+			continue
+		assert_bool(StrikeRecipes.RECIPES[name].has("file")) \
 			.override_failure_message(
-				"%s now reads from a file: migrate it in this test too" % name) \
-			.is_false()
+				"%s is sampled off the rig, not authored" % name) \
+			.is_true()
+
+
+func test_nothing_is_borrowed_any_more() -> void:
+	assert_array(STILL_BORROWED).is_empty()
 
 
 func test_the_running_attack_no_longer_throws_a_punch() -> void:

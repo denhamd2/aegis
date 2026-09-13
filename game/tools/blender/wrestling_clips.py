@@ -935,6 +935,88 @@ CLIPS = {
               "upperarm_r": (0, -34, 26), "lowerarm_r": (0, 0, 40),
               "upperarm_l": (0, 38, -22), "lowerarm_l": (0, 0, -36)}),
     ],
+
+    # --- the last two ------------------------------------------------------
+
+    # GETUP. 63 frames = the 2.10s of GETUP_RISE_TICKS, and the beats sit on
+    # the same times the stitched version used -- prone, off the mat, onto a
+    # knee, crouched, standing. That matters beyond taste: the input-driven
+    # fast rise (GETUP_RISE_FAST_TICKS, 1.14s) plays this same clip and is
+    # cut off partway, so moving a beat changes what a fast getup looks
+    # like. Keeping them puts the cut in the same place it is today.
+    #
+    # Authored at the DEFAULT rise for the same reason the stitch was: one
+    # clip cannot be both speeds, and a clip authored short would leave the
+    # slow rise frozen standing for a second -- freezing being the bug.
+    "Getup_Rise": [
+        # 0.00 -- settled prone, face up, where Down_Supine leaves him.
+        (1,  {"pelvis": (-84, 0, 0), "root": (0, 0, 0, 0.0, 0.0, -0.86),
+              "spine_01": (-6, 0, 0), "spine_03": (-10, 0, 0),
+              "neck_01": (10, 0, 0), "Head": (14, 0, 0),
+              "thigh_r": (-54, 10, 0), "thigh_l": (-48, -10, 0),
+              "calf_r": (56, 0, 0), "calf_l": (44, 0, 0),
+              "foot_r": (-10, 0, 0), "foot_l": (-10, 0, 0),
+              "upperarm_r": (0, -34, 26), "lowerarm_r": (0, 0, 40),
+              "upperarm_l": (0, 38, -22), "lowerarm_l": (0, 0, -36)}),
+        # 0.70 -- rolled onto his side, right arm planted, pushing off.
+        (22, {"pelvis": (-58, 0, 22), "root": (0, 0, 0, 0.0, 0.0, -0.72),
+              "spine_01": (8, 0, 14), "spine_03": (14, 0, 20),
+              "neck_01": (-8, 0, 0), "Head": (-12, 0, 8),
+              "thigh_r": (-72, 16, 0), "thigh_l": (-40, -12, 0),
+              "calf_r": (84, 0, 0), "calf_l": (60, 0, 0),
+              "foot_r": (-4, 0, 0), "foot_l": (-6, 0, 0),
+              "upperarm_r": (0, -14, 54), "lowerarm_r": (0, 0, 66),
+              "upperarm_l": (0, 40, -30), "lowerarm_l": (0, 0, -50)}),
+        # 1.25 -- up onto one knee, hand still on the mat.
+        (38, stance(spine_01=(26, 0, 6), spine_03=(34, 0, 8), Head=(-12, 0, 0),
+                    upperarm_r=(0, -22, 44), lowerarm_r=(0, 0, 70),
+                    upperarm_l=(0, 34, -36), lowerarm_l=(0, 0, -52),
+                    thigh_r=(-80, 10, 0), calf_r=(94, 0, 0), foot_r=(18, 0, 0),
+                    thigh_l=(-36, -12, 0), calf_l=(50, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.05, -0.42))),
+        # 1.70 -- crouched, both feet under him, hands coming up.
+        (52, stance(spine_01=(18, 0, 0), spine_03=(24, 0, 0), Head=(-10, 0, 0),
+                    upperarm_r=(0, -34, 40), lowerarm_r=(0, 0, 62),
+                    upperarm_l=(0, 38, -40), lowerarm_l=(0, 0, -62),
+                    thigh_r=(-38, 10, 0), thigh_l=(-38, -10, 0),
+                    calf_r=(62, 0, 0), calf_l=(62, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.03, -0.24))),
+        # 2.10 -- on his feet, back in the ready stance.
+        (63, stance()),
+    ],
+
+    # PIN_ATTACKER. 18 frames = the 0.6s the cover slide and the three-count
+    # lead-in are built around. Down on both knees over the man, chest low,
+    # both arms pressing his shoulders into the mat, eyes on the shoulders
+    # rather than the lights -- the same read the stitched version aimed at,
+    # authored rather than assembled out of Fixing_Kneeling.
+    #
+    # Barely moves on purpose: a cover is a man holding still and leaning
+    # his weight down, and the referee's count supplies the drama.
+    "Pin_Cover": [
+        (1,  stance(spine_01=(30, 0, 0), spine_03=(40, 0, 0),
+                    neck_01=(-14, 0, 0), Head=(-18, 0, 0),
+                    upperarm_r=(0, -18, 60), lowerarm_r=(0, 0, 30),
+                    upperarm_l=(0, 22, -60), lowerarm_l=(0, 0, -30),
+                    thigh_r=(-84, 12, 0), calf_r=(96, 0, 0), foot_r=(20, 0, 0),
+                    thigh_l=(-84, -12, 0), calf_l=(96, 0, 0), foot_l=(20, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.54))),
+        # Settles his weight down into it.
+        (10, stance(spine_01=(34, 0, 0), spine_03=(45, 0, 0),
+                    neck_01=(-16, 0, 0), Head=(-20, 0, 0),
+                    upperarm_r=(0, -14, 64), lowerarm_r=(0, 0, 24),
+                    upperarm_l=(0, 18, -64), lowerarm_l=(0, 0, -24),
+                    thigh_r=(-86, 12, 0), calf_r=(98, 0, 0), foot_r=(20, 0, 0),
+                    thigh_l=(-86, -12, 0), calf_l=(98, 0, 0), foot_l=(20, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.02, -0.58))),
+        (18, stance(spine_01=(32, 0, 0), spine_03=(43, 0, 0),
+                    neck_01=(-15, 0, 0), Head=(-19, 0, 0),
+                    upperarm_r=(0, -16, 62), lowerarm_r=(0, 0, 27),
+                    upperarm_l=(0, 20, -62), lowerarm_l=(0, 0, -27),
+                    thigh_r=(-85, 12, 0), calf_r=(97, 0, 0), foot_r=(20, 0, 0),
+                    thigh_l=(-85, -12, 0), calf_l=(97, 0, 0), foot_l=(20, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.01, -0.56))),
+    ],
 }
 
 

@@ -367,35 +367,29 @@ const RECIPES := {
 	# crouch, which reads as scrambling up quicker, whereas authoring it short
 	# would leave the slow rise frozen standing for a second -- and freezing is
 	# the bug being fixed.
-	"getup_rise": {
-		"kind": "stitch", "seconds": 2.10,
-		"samples": [
-			{"t": 0.00, "clip": "Death01", "at": 1.60},       # settled prone
-			{"t": 0.70, "clip": "Death01", "at": 0.90},       # on the ground
-			{"t": 1.25, "clip": "Fixing_Kneeling", "at": 2.00},  # onto a knee
-			{"t": 1.70, "clip": "Crouch_Idle", "at": 1.00},   # crouched
-			{"t": 2.10, "clip": "Idle", "at": 0.00},          # on his feet
-		],
-	},
+	# Authored. GETUP played "Roll", a tucked forward roll 1.467s against a
+	# 126-tick (2.10s) state, so the wrestler curled into a ball and FROZE in
+	# it for the remaining 0.63s -- which is what "the downed wrestler
+	# crumples" turned out to be. The stitch that replaced it built a real
+	# rise out of Death01, Fixing_Kneeling and Crouch_Idle; this authors the
+	# same rise on the rig.
+	#
+	# Beats are kept where the stitch had them -- prone, off the mat, onto a
+	# knee, crouched, standing. That is behavioural, not cosmetic: the
+	# input-driven fast rise (GETUP_RISE_FAST_TICKS, 1.14s) plays this clip
+	# and is cut off partway through, so moving a beat changes what a fast
+	# getup looks like.
+	"getup_rise": {"kind": "retime", "source": "Getup_Rise",
+		"seconds": 2.100, "file": AUTHORED},
 
-	"pin_cover": {
-		"kind": "stitch", "seconds": 0.6,
-		"samples": [
-			{"t": 0.0, "clip": "Fixing_Kneeling", "at": 2.00, "bones": {
-				# Down over the opponent rather than upright off the mat.
-				"spine_01": Vector3(22.0, 0.0, 0.0),
-				"spine_02": Vector3(18.0, 0.0, 0.0),
-				"spine_03": Vector3(12.0, 0.0, 0.0),
-				# Both arms reaching down to the shoulders he is holding.
-				"upperarm_l": Vector3(0.0, 0.0, -38.0),
-				"upperarm_r": Vector3(0.0, 0.0, 38.0),
-				"lowerarm_l": Vector3(0.0, 0.0, -20.0),
-				"lowerarm_r": Vector3(0.0, 0.0, 20.0),
-				# Watching the shoulders, not the lights.
-				"neck_01": Vector3(12.0, 0.0, 0.0),
-			}},
-		],
-	},
+	# Authored. PIN_ATTACKER played "Crouch_Idle" -- a man crouching on his
+	# own, so the three-count ran with the attacker standing beside the
+	# fallen man rather than covering him. The stitch that replaced it bent
+	# Fixing_Kneeling down over the opponent with per-bone offsets; this
+	# authors the cover directly: down on both knees, chest low, both arms
+	# pressing the shoulders into the mat, eyes on the shoulders.
+	"pin_cover": {"kind": "retime", "source": "Pin_Cover",
+		"seconds": 0.600, "file": AUTHORED},
 }
 
 ## Clip name as registered on the wrestler's AnimationPlayer.
