@@ -98,7 +98,13 @@ const RECIPES := {
 	# strike_jab.tres moves its startup_frames to 9 and gives the tick back out
 	# of recovery, keeping the move 31 ticks and the clip exactly as long as
 	# the state that plays it.
-	"strike_jab": {"kind": "retime", "source": "Punch_Cross", "seconds": 0.514},
+	# Authored. Punch_Cross retimed to 0.514s had the right duration but
+	# spent it as one slow arc with no snap in it. The authored jab follows
+	# the combat-timing reference -- short anticipation, a 2-frame action
+	# phase, quick recovery -- and throws the LEFT hand, so the jab and the
+	# cross read as different punches rather than the same arm twice.
+	"strike_jab": {"kind": "retime", "source": "Strike_Jab",
+		"seconds": 0.514, "file": AUTHORED},
 
 	# BACK to the stitched posed kick, for the same reason as the jab above:
 	# the baked roundhouse put the head below the hips on every one of its 35
@@ -122,31 +128,12 @@ const RECIPES := {
 	#
 	# Positive X on the spine leans the torso back, which is the
 	# counter-balance a thrown leg needs to not read as falling forward.
-	"strike_kick": {
-		"kind": "stitch",
-		"seconds": 0.583,
-		"samples": [
-			{"t": 0.000, "clip": "Idle", "at": 0.00},
-			# Weight shifts onto the standing leg before the other leaves it.
-			{"t": 0.067, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
-			# Chamber: knee up to hip height, heel tucked under.
-			{"t": 0.100, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
-					"spine_01": Vector3(8, 0, 0)}},
-			# Extension -- the contact frame, on tick 8 like the jab's, so
-			# both strikes land exactly on their startup_frames.
-			{"t": 0.133, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-75, 0, 0), "spine_01": Vector3(12, 0, 0)}},
-			# Re-chamber, then the leg comes back down under him.
-			{"t": 0.220, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
-					"spine_01": Vector3(8, 0, 0)}},
-			{"t": 0.360, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
-			{"t": 0.583, "clip": "Idle", "at": 0.00},
-		],
-	},
+	# Authored, replacing a stitch of Idle frames with hand-written thigh and
+	# calf angles. The stitch could only ever pose the leg, because Idle has
+	# no kick in it to sample -- so the arms, spine and standing leg kept
+	# idling through a boot.
+	"strike_kick": {"kind": "retime", "source": "Strike_Kick",
+		"seconds": 0.583, "file": AUTHORED},
 
 	# There is deliberately NO recipe for running_double_leg, the second
 	# running attack. There was one -- the last still sourced from the mocap
@@ -204,27 +191,11 @@ const RECIPES := {
 	# lands at 0.200s -- tick 12, which is what strike_kick_heavy.tres's
 	# startup_frames says -- rather than by scaling everything uniformly,
 	# which would have put it on tick 13.
-	"strike_kick_heavy": {
-		"kind": "stitch",
-		"seconds": 0.950,
-		"samples": [
-			{"t": 0.000, "clip": "Idle", "at": 0.00},
-			{"t": 0.100, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
-			{"t": 0.150, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
-					"spine_01": Vector3(8, 0, 0)}},
-			# Contact, on tick 12.
-			{"t": 0.200, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-75, 0, 0), "spine_01": Vector3(12, 0, 0)}},
-			{"t": 0.360, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-70, 0, 0), "calf_l": Vector3(90, 0, 0),
-					"spine_01": Vector3(8, 0, 0)}},
-			{"t": 0.590, "clip": "Idle", "at": 0.00,
-				"bones": {"thigh_l": Vector3(-25, 0, 0), "calf_l": Vector3(25, 0, 0)}},
-			{"t": 0.950, "clip": "Idle", "at": 0.00},
-		],
-	},
+	# Authored. The heavy kick is the same boot wound further back and
+	# recovered from properly: its length comes from anticipation and
+	# recovery, never from a slower action phase.
+	"strike_kick_heavy": {"kind": "retime", "source": "Strike_Kick_Heavy",
+		"seconds": 0.950, "file": AUTHORED},
 
 	# Both reactions are cut to exactly WrestlerController.HIT_REACT_TICKS
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is
@@ -240,7 +211,11 @@ const RECIPES := {
 	# it mid-recoil. Hit_Head was trimmed because its tail was surplus.
 	"hit_head": {"kind": "retime", "source": "Hit_React_Head",
 		"seconds": 0.333, "file": AUTHORED},
-	"hit_torso": {"kind": "trim", "source": "Hit_Chest", "seconds": 0.333},
+	# Authored. Hit_Chest flinches; this FOLDS around the hit -- chest
+	# hollows, shoulders close in, knees give -- so a body shot and a head
+	# shot are visibly different things happening to a man.
+	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
+		"seconds": 0.333, "file": AUTHORED},
 
 	# The winner's celebration, for WrestlerFSM.State.VICTORY. Authored, and
 	# necessarily so: there is no celebration anywhere in the 42 source
@@ -252,11 +227,27 @@ const RECIPES := {
 	"win_celebrate": {"kind": "retime", "source": "Win_Celebrate",
 		"seconds": 1.300, "file": AUTHORED},
 
+	# RUNNING_ATTACK plays Punch_Cross today: a wrestler sprints the width of
+	# the ring and throws a boxing jab. A clothesline does not swing -- the
+	# arm is out and locked before contact and the RUN supplies the force --
+	# so no amount of retiming a punch produces one.
+	# 1.150s = the 69 frames both running_attack_*.tres share (they leave
+	# animation_pair_id empty, so both fall through to STATE_ANIMATIONS).
+	# A 0.667s clip here would end 29 ticks early and hold its last pose,
+	# which is the clip-shorter-than-its-state fault this file exists to
+	# prevent.
+	"running_clothesline": {"kind": "retime", "source": "Running_Clothesline",
+		"seconds": 1.150, "file": AUTHORED},
+
 	# STUNNED runs 45 ticks (0.75s) and Hit_Head is 0.43s, so the clip ended
 	# and the pose froze for the remaining 19 ticks. Retimed rather than
 	# trimmed: a stagger is the one case where slowing the motion down is
 	# the point.
-	"stunned": {"kind": "retime", "source": "Hit_Head", "seconds": 0.75},
+	# Authored. A retimed Hit_Head stretched a 0.43s flinch over 0.75s, which
+	# reads as a man moving through treacle. This is a slow unbalanced sway
+	# with the guard dropped: still on his feet, but gone.
+	"stunned": {"kind": "retime", "source": "Stunned_Sway",
+		"seconds": 0.750, "file": AUTHORED},
 
 	# The cover. PIN_ATTACKER played "Crouch_Idle", which is a man crouching
 	# on his own -- so a captured three-count showed the attacker standing

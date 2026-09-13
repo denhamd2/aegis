@@ -93,9 +93,16 @@ def local_rot(arm, bone_name, rx, ry, rz):
 
 
 def author(arm, name, poses):
-    """Keyframe one action from a list of (frame, {bone: (rx, ry, rz)}) poses.
+    """Keyframe one action from a list of (frame, pose) entries.
 
-    Rotations are Euler degrees in ARMATURE space -- see local_rot().
+    A pose maps bone name -> (rx, ry, rz) Euler degrees in ARMATURE space
+    (see local_rot()), or -> (rx, ry, rz, dx, dy, dz) to also translate the
+    bone by metres in armature space.
+
+    Translation exists for the poses rotation alone cannot reach: a crouch
+    and a cover have to drop the pelvis, and a man lying on the mat has to
+    be laid ON it. Only translate the pelvis or root -- moving a limb's
+    origin detaches it from its parent visually.
     """
     action = bpy.data.actions.new(name)
     arm.animation_data_clear()
@@ -106,14 +113,33 @@ def author(arm, name, poses):
         bone.rotation_mode = "QUATERNION"
 
     touched = sorted({b for _, pose in poses for b in pose})
+    moved = sorted({b for _, pose in poses for b, v in pose.items() if len(v) > 3})
     for frame, pose in poses:
         for bone_name in touched:
             pb = arm.pose.bones.get(bone_name)
             if pb is None:
                 raise SystemExit("%s: no bone %r on the rig" % (name, bone_name))
-            rx, ry, rz = pose.get(bone_name, (0.0, 0.0, 0.0))
-            pb.rotation_quaternion = local_rot(arm, bone_name, rx, ry, rz)
+            value = pose.get(bone_name, (0.0, 0.0, 0.0))
+            pb.rotation_quaternion = local_rot(arm, bone_name, *value[:3])
             pb.keyframe_insert("rotation_quaternion", frame=frame)
+        for bone_name in moved:
+            pb = arm.pose.bones[bone_name]
+            value = pose.get(bone_name, (0.0, 0.0, 0.0))
+            offset = mathutils.Vector(value[3:6]) if len(value) > 3 \
+                else mathutils.Vector((0.0, 0.0, 0.0))
+            rest = arm.data.bones[bone_name].matrix_local.to_3x3()
+            pb.location = rest.inverted() @ offset
+            pb.keyframe_insert("location", frame=frame)
+
+    # Bezier everywhere. The animation skill is explicit that linear
+    # interpolation on organic motion reads as mechanical, and a wrestler
+    # moving at a constant rate between poses is the single clearest tell
+    # that a clip was generated rather than performed.
+    for fcurve in action.fcurves:
+        for key in fcurve.keyframe_points:
+            key.interpolation = "BEZIER"
+            key.handle_left_type = "AUTO_CLAMPED"
+            key.handle_right_type = "AUTO_CLAMPED"
     return action
 
 
@@ -131,128 +157,264 @@ def export(path):
 
 # --- Authored clips -------------------------------------------------------
 #
-# Poses are Euler degrees in ARMATURE space: Z is up, X is the left-right
-# axis, and the character faces -Y. local_rot() re-expresses each one in the
-# bone's own frame, so a value means the same thing on a left bone as on its
-# mirrored right one.
+# Poses are Euler degrees in ARMATURE space: Z up, X the left-right axis,
+# character facing -Y. local_rot() re-expresses each in the bone's own frame,
+# so a value means the same thing on a left bone as on its mirrored right
+# one. A 6-tuple adds an armature-space translation in metres.
 #
-# Derived from the rest pose (a T-pose: upperarm_* lies along +/-X, spine
-# along +Z, thigh along -Z), not guessed:
+# All of this was measured off the rest pose, never guessed -- an earlier
+# pass authored in bone-local space and swung one arm down while leaving the
+# other at rest:
 #
-#   upperarm_r.Y   + raises the arm, - lowers it       (mirror: upperarm_l.Y)
-#   lowerarm_r.Z   + bends the elbow forward           (mirror: lowerarm_l.Z)
-#   spine_03.X     + leans the chest forward, - arches it back
-#   spine_03.Z     + drives the RIGHT shoulder forward (the twist a worked
-#                  strike gets its weight from; Punch_Cross uses the same
-#                  rotation, running 0 -> 29 deg -> 0 through its cross)
-#   Head.X         + drops the chin, - lifts it
+#   upperarm_r.Y  + raises the arm        (mirror: upperarm_l.Y)
+#   upperarm_r.Z  + reaches FORWARD       (mirror: upperarm_l.Z)
+#   lowerarm_r.Z  + bends the elbow       (mirror: lowerarm_l.Z)
+#   thigh_*.X     - swings the leg forward, + swings it back
+#   calf_*.X      + bends the knee (the leg folds backward: correct)
+#   foot_*.X      + points the toes down
+#   spine_03.X    + leans the chest forward, - arches it back
+#   spine_03.Z    + drives the RIGHT shoulder forward (a strike's power)
+#   pelvis.X      - lays the body on its back
+#   Head.X        + drops the chin, - lifts it
 #
-# Timing is in frames at FPS (30), so every frame lands on a whole 60 Hz tick.
+# Timing follows .claude/skills/animation/references/combat-animation.md:
+# anticipation 4-8 frames, action 2-4 (always the shortest), follow-through
+# 4-8, recovery 8-16. Frames are at FPS (30), so each lands on a whole tick.
 
-ARM_DOWN = 78.0   # |upperarm_*.Y| that hangs the arm by the side from T-pose
+ARM_DOWN = 78.0
+
+
+def stance(**over):
+    """The wrestling base: knees bent, weight forward, hands up.
+
+    Every clip starts and ends here so they cut together, and every clip
+    poses the WHOLE body from it. The first authored pass keyframed only the
+    arms and head, which baked 14 rotation tracks against the sampled clips'
+    55 -- the hips and legs held whatever the AnimationTree happened to be
+    blending from, so a strike never stepped into anything.
+    """
+    pose = {
+        "spine_03": (8, 0, 0), "spine_01": (4, 0, 0), "Head": (0, 0, 0),
+        "upperarm_r": (0, -48, 18), "lowerarm_r": (0, 0, 72),
+        "upperarm_l": (0, 50, -18), "lowerarm_l": (0, 0, -72),
+        "thigh_r": (-12, 5, 0), "thigh_l": (-12, -5, 0),
+        "calf_r": (20, 0, 0), "calf_l": (20, 0, 0),
+        "foot_r": (-8, 0, 0), "foot_l": (-8, 0, 0),
+        "pelvis": (0, 0, 0, 0.0, 0.0, -0.045),
+    }
+    pose.update(over)
+    return pose
+
 
 CLIPS = {
-    # Task #97. Blocked until now because no celebration exists anywhere in
-    # the 42 source actions -- it cannot be sampled, only authored.
-    #
-    # Blocked as anticipation -> explosion -> settle, per the animation
-    # skill's pass order: the dip at f5 is what sells the thrust at f14.
-    # Without it the arms simply translate upward and read as a lift, not a
-    # celebration.
+    # --- already shipping -------------------------------------------------
+
+    # Task #97. No celebration exists in the 42 source actions, so this
+    # could only ever be authored.
     "Win_Celebrate": [
-        (1,  {"upperarm_r": (0, -ARM_DOWN, 0), "upperarm_l": (0, ARM_DOWN, 0),
-              "lowerarm_r": (0, 0, 16),  "lowerarm_l": (0, 0, -16),
-              "spine_03":   (5, 0, 0),   "Head": (0, 0, 0)}),
-        # Anticipation: chin drops, arms load down, chest closes.
-        (5,  {"upperarm_r": (0, -90, 0), "upperarm_l": (0, 90, 0),
-              "lowerarm_r": (0, 0, 24),  "lowerarm_l": (0, 0, -24),
-              "spine_03":   (13, 0, 0),  "Head": (11, 0, 0)}),
-        # Explosion: arms overhead and slightly open, chest out, head up.
-        (14, {"upperarm_r": (0, 72, 0),  "upperarm_l": (0, -72, 0),
-              "lowerarm_r": (0, 0, 18),  "lowerarm_l": (0, 0, -18),
-              "spine_03":   (-12, 0, 0), "Head": (-18, 0, 0)}),
-        # Overshoot settles back rather than stopping dead on the extreme.
-        (22, {"upperarm_r": (0, 62, 0),  "upperarm_l": (0, -62, 0),
-              "lowerarm_r": (0, 0, 22),  "lowerarm_l": (0, 0, -22),
-              "spine_03":   (-8, 0, 0),  "Head": (-14, 0, 0)}),
-        (39, {"upperarm_r": (0, 65, 0),  "upperarm_l": (0, -65, 0),
-              "lowerarm_r": (0, 0, 20),  "lowerarm_l": (0, 0, -20),
-              "spine_03":   (-9, 0, 0),  "Head": (-15, 0, 0)}),
+        (1,  stance()),
+        # Anticipation: chin drops, arms load down, knees sink.
+        (5,  stance(upperarm_r=(0, -90, 0), upperarm_l=(0, 90, 0),
+                    lowerarm_r=(0, 0, 24), lowerarm_l=(0, 0, -24),
+                    spine_03=(14, 0, 0), Head=(11, 0, 0),
+                    calf_r=(30, 0, 0), calf_l=(30, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.0, -0.10))),
+        # Explosion: arms overhead, chest out, up onto the toes.
+        (14, stance(upperarm_r=(0, 72, 0), upperarm_l=(0, -72, 0),
+                    lowerarm_r=(0, 0, 18), lowerarm_l=(0, 0, -18),
+                    spine_03=(-13, 0, 0), Head=(-19, 0, 0),
+                    calf_r=(6, 0, 0), calf_l=(6, 0, 0),
+                    foot_r=(16, 0, 0), foot_l=(16, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.0, 0.03))),
+        # Settles back off the extreme instead of stopping dead on it.
+        (22, stance(upperarm_r=(0, 62, 0), upperarm_l=(0, -62, 0),
+                    lowerarm_r=(0, 0, 22), lowerarm_l=(0, 0, -22),
+                    spine_03=(-9, 0, 0), Head=(-14, 0, 0),
+                    calf_r=(12, 0, 0), calf_l=(12, 0, 0))),
+        (39, stance(upperarm_r=(0, 65, 0), upperarm_l=(0, -65, 0),
+                    lowerarm_r=(0, 0, 20), lowerarm_l=(0, 0, -20),
+                    spine_03=(-10, 0, 0), Head=(-15, 0, 0),
+                    calf_r=(14, 0, 0), calf_l=(14, 0, 0))),
     ],
 
-    # The striking half of the impact pair: a right forearm. Contact is on
-    # f9 so the receiving clip below can be lined up against it.
-    # The striking half of the impact pair: a right forearm. Contact is on
-    # f9 so the receiving clip below can be lined up against it.
-    #
-    # The reach is upperarm_r.Z, NOT .Y -- measured on the rest pose, +30 deg
-    # about armature Z takes the right arm to (-0.87,-0.49,0), i.e. forward,
-    # while Y only raises and lowers it at the side. A first pass used Y
-    # alone and rendered as a man standing with his arms hanging: the strike
-    # never travelled toward anything.
-    #
-    # Child rotations compound on the parent's, so lowerarm_r.Z is a bend ON
-    # TOP of whatever the upper arm is already doing -- the guard values look
-    # smaller than the elbow angle they produce.
-    # The striking half of the impact pair: a right forearm. Contact is on
-    # f9 so the receiving clip below can be lined up against it.
-    #
-    # Two things were measured rather than guessed, both off the rest pose
-    # and both wrong on a first pass:
-    #
-    # .Z is the REACH. +30 deg about armature Z takes the right arm to
-    # (-0.87,-0.49,0) -- forward. .Y only raises and lowers it at the side,
-    # and a version using Y alone rendered as a man standing with his arms
-    # hanging: the strike never travelled toward anything.
-    #
-    # .Y is the HEIGHT, and it has to stay shallow. At Y=-45 the exported
-    # clip put the arm at (-0.04,-0.57,-0.82) on the contact frame -- 55 deg
-    # below horizontal, a forearm aimed at the opponent's knees. Contact
-    # wants roughly -15.
-    #
-    # Child rotations compound on the parent's, so lowerarm_r.Z is a bend ON
-    # TOP of whatever the upper arm is already doing.
+    # Right forearm. Contact on f9, which Hit_React_Head is timed against.
+    # .Z is the reach and .Y only the height: a pass using Y alone rendered
+    # as a man with his arms hanging, and at Y=-45 the contact frame sat 55
+    # deg below horizontal, aimed at the opponent's knees.
     "Strike_Forearm": [
-        # Guard: elbow bent, hands up, arm carried slightly forward.
-        (1,  {"upperarm_r": (0, -45, 15), "lowerarm_r": (0, 0, 85),
-              "upperarm_l": (0, 48, -15), "lowerarm_l": (0, 0, -85),
-              "spine_03":   (8, 0, 0),    "Head": (0, 0, 0)}),
-        # Wind-up: the right shoulder pulls BACK and the elbow loads deeper.
-        (5,  {"upperarm_r": (0, -40, -15), "lowerarm_r": (0, 0, 100),
-              "upperarm_l": (0, 52, -22),  "lowerarm_l": (0, 0, -88),
-              "spine_03":   (10, 0, -26),  "Head": (0, 0, -12)}),
-        # Contact: torso twist drives through and the arm extends across at
-        # chest height. The power reads from spine_03.Z, not the arm alone.
-        (9,  {"upperarm_r": (0, -15, 70), "lowerarm_r": (0, 0, 10),
-              "upperarm_l": (0, 58, -12), "lowerarm_l": (0, 0, -70),
-              "spine_03":   (10, 0, 30),  "Head": (0, 0, 16)}),
+        (1,  stance()),
+        # Wind-up: shoulder pulls back, elbow loads, weight onto the back leg.
+        (5,  stance(upperarm_r=(0, -40, -15), lowerarm_r=(0, 0, 92),
+                    upperarm_l=(0, 54, -26), spine_03=(10, 0, -26),
+                    Head=(0, 0, -12), thigh_r=(6, 5, 0), calf_r=(26, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.04, -0.05))),
+        # Contact: the torso twist drives it, and the back leg pushes
+        # through so the whole man arrives, not just the arm.
+        (9,  stance(upperarm_r=(0, -15, 70), lowerarm_r=(0, 0, 10),
+                    upperarm_l=(0, 58, -10), lowerarm_l=(0, 0, -60),
+                    spine_03=(11, 0, 30), Head=(0, 0, 16),
+                    thigh_r=(-20, 5, 0), calf_r=(12, 0, 0),
+                    thigh_l=(-4, -5, 0), foot_r=(4, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, -0.06, -0.04))),
         # Follow-through PAST contact, not a stop at it.
-        (13, {"upperarm_r": (0, -14, 82), "lowerarm_r": (0, 0, 20),
-              "upperarm_l": (0, 60, -10), "lowerarm_l": (0, 0, -72),
-              "spine_03":   (11, 0, 24),  "Head": (0, 0, 11)}),
-        (24, {"upperarm_r": (0, -45, 15), "lowerarm_r": (0, 0, 85),
-              "upperarm_l": (0, 48, -15), "lowerarm_l": (0, 0, -85),
-              "spine_03":   (8, 0, 0),    "Head": (0, 0, 0)}),
+        (13, stance(upperarm_r=(0, -14, 82), lowerarm_r=(0, 0, 20),
+                    upperarm_l=(0, 60, -8), lowerarm_l=(0, 0, -62),
+                    spine_03=(12, 0, 24), Head=(0, 0, 11),
+                    thigh_r=(-22, 5, 0), calf_r=(14, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, -0.07, -0.04))),
+        (24, stance()),
     ],
 
+    # Head snaps first and furthest, neck follows, torso last -- the overlap
+    # that reads as force arriving rather than the body turning as one board.
     "Hit_React_Head": [
-        (1,  {"Head": (0, 0, 0), "neck_01": (0, 0, 0), "spine_03": (7, 0, 0),
-              "upperarm_r": (0, -62, 20), "upperarm_l": (0, 64, -20),
-              "lowerarm_r": (0, 0, 48), "lowerarm_l": (0, 0, -48)}),
-        # Impact.
-        (3,  {"Head": (-20, 0, -18), "neck_01": (-9, 0, -8), "spine_03": (0, 0, -9),
-              "upperarm_r": (0, -70, 0), "upperarm_l": (0, 72, 0),
-              "lowerarm_r": (0, 0, 32), "lowerarm_l": (0, 0, -30)}),
-        # Torso catches up a beat later.
-        (8,  {"Head": (-14, 0, -26), "neck_01": (-7, 0, -13), "spine_03": (-12, 0, -17),
-              "upperarm_r": (0, -62, 0), "upperarm_l": (0, 64, 0),
-              "lowerarm_r": (0, 0, 42), "lowerarm_l": (0, 0, -40)}),
-        (16, {"Head": (-5, 0, -9), "neck_01": (-2, 0, -4), "spine_03": (3, 0, -5),
-              "upperarm_r": (0, -74, 0), "upperarm_l": (0, 76, 0),
-              "lowerarm_r": (0, 0, 26), "lowerarm_l": (0, 0, -25)}),
-        (24, {"Head": (0, 0, 0), "neck_01": (0, 0, 0), "spine_03": (7, 0, 0),
-              "upperarm_r": (0, -62, 20), "upperarm_l": (0, 64, -20),
-              "lowerarm_r": (0, 0, 48), "lowerarm_l": (0, 0, -48)}),
+        (1,  stance()),
+        (3,  stance(Head=(-20, 0, -18), neck_01=(-9, 0, -8),
+                    spine_03=(0, 0, -9), upperarm_r=(0, -62, 8),
+                    upperarm_l=(0, 66, -10), calf_r=(26, 0, 0),
+                    calf_l=(26, 0, 0))),
+        (8,  stance(Head=(-14, 0, -26), neck_01=(-7, 0, -13),
+                    spine_03=(-12, 0, -17), upperarm_r=(0, -56, 4),
+                    upperarm_l=(0, 60, -6), thigh_r=(2, 5, 0),
+                    calf_r=(30, 0, 0), calf_l=(24, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.07, -0.07))),
+        (16, stance(Head=(-5, 0, -9), neck_01=(-2, 0, -4), spine_03=(3, 0, -5),
+                    pelvis=(0, 0, 0, 0.0, 0.02, -0.05))),
+        (24, stance()),
+    ],
+
+    # --- new this pass ----------------------------------------------------
+
+    # The jab: the fastest thing in the game. Short anticipation, 2-frame
+    # action, quick recovery -- Punch_Cross retimed to 0.514s gave the same
+    # duration but spent it as one slow arc with no snap anywhere in it.
+    "Strike_Jab": [
+        (1,  stance()),
+        (4,  stance(lowerarm_l=(0, 0, -86), spine_03=(8, 0, -8))),
+        # Contact: the LEFT hand, and only a short step behind it.
+        (6,  stance(upperarm_l=(0, 22, -64), lowerarm_l=(0, 0, -14),
+                    spine_03=(9, 0, 14), thigh_l=(-16, -5, 0),
+                    pelvis=(0, 0, 0, 0.0, -0.04, -0.045))),
+        (9,  stance(upperarm_l=(0, 26, -56), lowerarm_l=(0, 0, -28),
+                    spine_03=(9, 0, 10))),
+        (15, stance()),
+    ],
+
+    # A boot. The kicking leg is the whole performance, so the arms stay
+    # where a wrestler's arms actually go -- out for balance, not pumping.
+    "Strike_Kick": [
+        (1,  stance()),
+        # Chamber: knee up and folded before anything extends.
+        (5,  stance(thigh_r=(-52, 6, 0), calf_r=(76, 0, 0), foot_r=(10, 0, 0),
+                    spine_03=(4, 0, 0), upperarm_r=(0, -66, -6),
+                    upperarm_l=(0, 70, -6), thigh_l=(-6, -5, 0),
+                    calf_l=(14, 0, 0), pelvis=(0, 0, 0, 0.0, 0.05, -0.03))),
+        # Contact: the knee straightens and the hips open through it.
+        (8,  stance(thigh_r=(-62, 6, 0), calf_r=(10, 0, 0), foot_r=(22, 0, 0),
+                    spine_03=(-6, 0, 0), Head=(-4, 0, 0),
+                    upperarm_r=(0, -74, -14), upperarm_l=(0, 78, -10),
+                    thigh_l=(-2, -5, 0), calf_l=(10, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.08, -0.02))),
+        # Follow-through, then the leg folds back down under him.
+        (12, stance(thigh_r=(-56, 6, 0), calf_r=(26, 0, 0), foot_r=(16, 0, 0),
+                    spine_03=(-2, 0, 0), upperarm_r=(0, -70, -10),
+                    upperarm_l=(0, 74, -8), pelvis=(0, 0, 0, 0.0, 0.06, -0.03))),
+        (17, stance()),
+    ],
+
+    # The heavy kick: the same boot thrown slower, wound further back, and
+    # recovered from properly. Length comes from the anticipation and the
+    # recovery, never from a slower action phase.
+    "Strike_Kick_Heavy": [
+        (1,  stance()),
+        (8,  stance(thigh_r=(16, 6, 0), calf_r=(48, 0, 0), spine_03=(14, 0, -10),
+                    upperarm_r=(0, -40, -20), upperarm_l=(0, 60, -20),
+                    thigh_l=(-8, -5, 0), calf_l=(24, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.08, -0.07))),
+        (13, stance(thigh_r=(-48, 8, 0), calf_r=(84, 0, 0), foot_r=(12, 0, 0),
+                    spine_03=(2, 0, -4), upperarm_r=(0, -68, -8),
+                    upperarm_l=(0, 72, -8), pelvis=(0, 0, 0, 0.0, 0.04, -0.03))),
+        (17, stance(thigh_r=(-70, 8, 0), calf_r=(6, 0, 0), foot_r=(26, 0, 0),
+                    spine_03=(-12, 0, 4), Head=(-8, 0, 0),
+                    upperarm_r=(0, -78, -18), upperarm_l=(0, 82, -14),
+                    thigh_l=(0, -5, 0), calf_l=(8, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.10, -0.01))),
+        (22, stance(thigh_r=(-58, 8, 0), calf_r=(30, 0, 0), foot_r=(18, 0, 0),
+                    spine_03=(-4, 0, 2), upperarm_r=(0, -72, -12),
+                    upperarm_l=(0, 76, -10), pelvis=(0, 0, 0, 0.0, 0.07, -0.03))),
+        (28, stance()),
+    ],
+
+    # Body shot. Folds AROUND the hit -- chest hollows, shoulders close in,
+    # knees give -- where the head reaction whips backward.
+    "Hit_React_Torso": [
+        (1,  stance()),
+        (3,  stance(spine_01=(18, 0, 0), spine_03=(24, 0, 0), Head=(14, 0, 0),
+                    upperarm_r=(0, -58, 30), upperarm_l=(0, 60, -30),
+                    lowerarm_r=(0, 0, 86), lowerarm_l=(0, 0, -86),
+                    calf_r=(30, 0, 0), calf_l=(30, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.05, -0.09))),
+        (8,  stance(spine_01=(22, 0, 0), spine_03=(30, 0, 0), Head=(18, 0, 0),
+                    upperarm_r=(0, -54, 34), upperarm_l=(0, 56, -34),
+                    lowerarm_r=(0, 0, 92), lowerarm_l=(0, 0, -92),
+                    thigh_r=(-20, 5, 0), thigh_l=(-20, -5, 0),
+                    calf_r=(38, 0, 0), calf_l=(38, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.08, -0.13))),
+        (16, stance(spine_01=(10, 0, 0), spine_03=(16, 0, 0), Head=(8, 0, 0),
+                    calf_r=(28, 0, 0), calf_l=(28, 0, 0),
+                    pelvis=(0, 0, 0, 0.0, 0.03, -0.08))),
+        (24, stance()),
+    ],
+
+    # Stunned: on the feet but gone. A slow unbalanced sway with the guard
+    # dropped -- not a pose held still, which is what a frozen clip looks
+    # like and what this state used to render as.
+    "Stunned_Sway": [
+        (1,  stance(upperarm_r=(0, -70, 6), upperarm_l=(0, 72, -6),
+                    lowerarm_r=(0, 0, 30), lowerarm_l=(0, 0, -30),
+                    Head=(16, 0, 8), spine_03=(14, 0, 6),
+                    pelvis=(0, 0, 0, 0.03, 0.02, -0.08))),
+        (8,  stance(upperarm_r=(0, -74, 2), upperarm_l=(0, 70, -10),
+                    lowerarm_r=(0, 0, 24), lowerarm_l=(0, 0, -26),
+                    Head=(12, 0, -14), spine_03=(11, 0, -10),
+                    thigh_r=(-6, 8, 0), calf_r=(26, 0, 0),
+                    pelvis=(0, 0, 0, -0.04, 0.03, -0.07))),
+        (15, stance(upperarm_r=(0, -68, 8), upperarm_l=(0, 74, -4),
+                    lowerarm_r=(0, 0, 32), lowerarm_l=(0, 0, -28),
+                    Head=(18, 0, 12), spine_03=(15, 0, 9),
+                    thigh_l=(-6, -8, 0), calf_l=(26, 0, 0),
+                    pelvis=(0, 0, 0, 0.04, 0.01, -0.09))),
+        (22, stance(upperarm_r=(0, -72, 4), upperarm_l=(0, 72, -8),
+                    lowerarm_r=(0, 0, 28), lowerarm_l=(0, 0, -28),
+                    Head=(14, 0, -6), spine_03=(12, 0, -4),
+                    pelvis=(0, 0, 0, -0.02, 0.02, -0.08))),
+    ],
+
+    # The clothesline, for RUNNING_ATTACK. That state plays Punch_Cross
+    # today: a wrestler sprints across the ring and throws a boxing jab.
+    # The arm is out and LOCKED through the whole contact -- a clothesline
+    # does not swing, the run supplies the force.
+    "Running_Clothesline": [
+        (1,  stance(upperarm_r=(0, -60, 20), lowerarm_r=(0, 0, 50),
+                    thigh_r=(-26, 5, 0), thigh_l=(14, -5, 0),
+                    spine_03=(12, 0, 0))),
+        # The arm comes up and across before contact, so it is already
+        # there when the bodies meet.
+        (5,  stance(upperarm_r=(0, -10, 52), lowerarm_r=(0, 0, 12),
+                    upperarm_l=(0, 44, -30), spine_03=(10, 0, -14),
+                    thigh_r=(16, 5, 0), thigh_l=(-28, -5, 0),
+                    calf_l=(28, 0, 0))),
+        # Contact: arm straight across the chest, torso turning through it.
+        (9,  stance(upperarm_r=(0, 2, 78), lowerarm_r=(0, 0, 4),
+                    upperarm_l=(0, 40, -40), spine_03=(6, 0, 26),
+                    Head=(0, 0, 18), thigh_r=(-30, 5, 0), calf_r=(16, 0, 0),
+                    thigh_l=(10, -5, 0),
+                    pelvis=(0, 0, 0, 0.0, -0.08, -0.03))),
+        (14, stance(upperarm_r=(0, 6, 92), lowerarm_r=(0, 0, 10),
+                    upperarm_l=(0, 38, -44), spine_03=(4, 0, 20),
+                    Head=(0, 0, 12), thigh_r=(-20, 5, 0),
+                    pelvis=(0, 0, 0, 0.0, -0.10, -0.04))),
+        (24, stance()),
     ],
 }
 

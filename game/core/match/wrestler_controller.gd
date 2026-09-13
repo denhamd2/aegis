@@ -317,7 +317,11 @@ const STATE_ANIMATIONS := {
 	# state, so the wrestler curled into a ball on the mat and froze in it.
 	WrestlerFSM.State.GETUP: "strikes/getup_rise",
 	WrestlerFSM.State.IRISH_WHIP: "Push",
-	WrestlerFSM.State.RUNNING_ATTACK: "Punch_Cross",
+	# Authored clothesline, cut to the 69 frames both running_attack_*.tres
+	# share. This was Punch_Cross: a wrestler sprinted the width of the ring
+	# and threw a boxing jab, and because neither running-attack MoveDef sets
+	# animation_pair_id, BOTH of them did it.
+	WrestlerFSM.State.RUNNING_ATTACK: "strikes/running_clothesline",
 	# Retimed to STUNNED_TICKS. The raw Hit_Head is 0.43s against a 45-tick
 	# (0.75s) state, so the clip ended and the pose froze for 19 ticks.
 	WrestlerFSM.State.STUNNED: "strikes/stunned",
