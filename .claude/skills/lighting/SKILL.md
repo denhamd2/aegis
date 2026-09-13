@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: lighting, light, HDRI, three point, rim light, volumetric, fog, mood, cinematic, horror lighting
-  related-skills: rendering, materials, realistic-style, horror-style
+  related-skills: rendering, materials, realistic-style
 ---
 
 # Lighting Artist

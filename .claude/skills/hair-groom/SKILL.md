@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: hair, groom, fur, hair cards, particle hair, curves hair, scalp, bangs, beard, whiskers
-  related-skills: character-artist, creature-artist, materials, texture-workflow, rendering
+  related-skills: character-artist, materials, texture-workflow, rendering
 ---
 
 # Hair Groom

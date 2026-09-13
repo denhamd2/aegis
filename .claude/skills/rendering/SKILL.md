@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: render, Cycles, Eevee, sampling, denoise, camera, render pass, color management, output
-  related-skills: lighting, materials, realistic-style, stylized-style
+  related-skills: lighting, materials, realistic-style
 ---
 
 # Rendering

@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: QA, quality assurance, review, validation, checklist, screenshot review, ship check, art review
-  related-skills: asset-optimization, export-pipeline, blender-director, lookdev
+  related-skills: asset-optimization, export-pipeline, blender-director
 ---
 
 # QA Review

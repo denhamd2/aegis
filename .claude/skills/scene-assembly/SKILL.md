@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: scene assembly, layout, linking, library override, collection instance, level layout, set assembly, outliner organization
-  related-skills: environment-artist, set-dressing, blender-modeler, lighting, qa-review
+  related-skills: environment-artist, blender-modeler, lighting, qa-review
 ---
 
 # Scene Assembly

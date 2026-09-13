@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: hard surface, sci-fi, industrial, military, vehicle, spaceship, weapon, robot, machinery, boolean, bevel, panel line, greeble, mechanical
-  related-skills: blender-modeler, materials, uv-workflow, asset-optimization, vehicle-artist, prop-artist
+  related-skills: blender-modeler, materials, uv-workflow, asset-optimization, prop-artist
 ---
 
 # Hard Surface Artist

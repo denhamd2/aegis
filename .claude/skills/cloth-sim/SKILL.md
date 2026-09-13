@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: cloth, garment, clothing sim, fabric sim, pin group, shape key bake, cloth bake, dress, cape, soft clothing
-  related-skills: character-artist, physics-sim, materials, animation, export-pipeline
+  related-skills: character-artist, materials, animation, export-pipeline
 ---
 
 # Cloth Sim

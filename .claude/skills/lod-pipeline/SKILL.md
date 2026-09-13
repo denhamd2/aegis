@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: LOD, LODs, level of detail, decimate, LOD0, LOD1, impostor, screen size
-  related-skills: asset-optimization, export-pipeline, unity-export, unreal-export, collision-proxy
+  related-skills: asset-optimization, export-pipeline, collision-proxy
 ---
 
 # LOD Pipeline

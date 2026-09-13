@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: character, human, anatomy, face, facial, clothing, hair, body, edge loop, expression, portrait
-  related-skills: sculpting, retopology, rigging, uv-workflow, materials
+  related-skills: retopology, rigging, uv-workflow, materials
 ---
 
 # Character Artist

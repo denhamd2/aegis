@@ -24,22 +24,20 @@ work is done the way this repo already does it:
   is what lets it be diffed and reviewed like the `.tres` bakes
 - the game builds, runs and tests without Blender. Keep it that way.
 
-Three practical consequences when reading a skill:
+Two practical consequences when reading a skill:
 
 - Nine skills are directly usable: `blender-animation`, `-cameras`, `-export`,
   `-lighting`, `-materials`, `-modeling`, `-pro-workflow`, `-rendering` and
   `-uv-texturing` (RobLe3). Their bodies are plain `bpy` Python that runs
   unchanged in a headless script — only their `allowed-tools:` frontmatter names
   MCP, so ignore that and paste the code into a tool script. Note the prefix is
-  not a reliable guide: `blender-director` and `blender-modeler` are arjun988
-  checklists, and `blender-toolkit` is kevinbadi's product automation.
+  not a reliable guide to this: `blender-director` and `blender-modeler` are
+  arjun988 checklists with no runnable code, despite the name.
 - The short checklist skills (arjun988 — `animation`, `rigging`, `godot-export`,
   and so on) carry no runnable code but do carry the numbers: polycount budgets,
   cycle frame counts, naming, validation gates. They share
   `.claude/skills/references/` (budgets, pipeline, checklists) — read that
   directory alongside them.
-- Skills that shell out to OpenCV (`cv2`) cannot run: it is not installed. So
-  the whole reference-matching family below is reading material only.
 
 ## Which skill for which job
 
@@ -49,7 +47,7 @@ Work down this table; the first row that matches the task is the one to read.
 | --- | --- | --- |
 | A new wrestler model dropped into the project, or an imported one renders wrong (magenta, bald, backwards, T-posed, floating beard, head-down animation) | **`import-wrestler`** | Project-specific and measured against this rig. It **overrides** every generic skill below — do not start from `character-artist` or `rigging` for an import. |
 | Authoring a wrestling clip (bump, lock-up, cover, celebration) on the base rig | `blender-animation` (bpy keyframes, F-curves, easing) + `animation` (blocking → breakdown → splining, cycle frame counts) | This is the project's real gap: the 42 CC0 actions on `wrestler_base.glb` contain no wrestling. Extend `game/tools/blender/wrestling_clips.py`; rotations are Euler degrees over the rest pose, matching `paired_recipes.gd`. |
-| Getting a clip or mesh out to the game | `godot-export` first (GLB, +Y up, Godot-friendly materials), then `blender-export` for the actual `bpy.ops.export_scene.gltf` arguments | Ignore `unity-export`, `unreal-export`, `threejs-export`. Verify the track paths come back as `Armature/Skeleton3D:<bone>` — that is the shape `AnimationTree` consumes. |
+| Getting a clip or mesh out to the game | `godot-export` first (GLB, +Y up, Godot-friendly materials), then `blender-export` for the actual `bpy.ops.export_scene.gltf` arguments | Verify the track paths come back as `Armature/Skeleton3D:<bone>` — that is the shape `AnimationTree` consumes. |
 | Skeletons, weights, IK/FK, constraints — anything before animation on a deforming mesh | `rigging` | See also `tools/assets/rig_static_wrestler.py`, which mounts a static mesh on the base rig precisely to avoid retargeting. |
 | Ring, apron, entrance set, arena bowl, seating | `environment-artist`, `scene-assembly`, `procedural-modeling` / `geometry-nodes` for swept rows and arcs | The bowl's shape is fixed by `gauntlet/refs/arena.md` (obround, hockey-arena plan). Reference beats the skill. |
 | Props: turnbuckles, steps, barricades, commentary desk | `prop-artist`; `hard-surface` only for genuinely mechanical parts | |
@@ -67,7 +65,7 @@ Work down this table; the first row that matches the task is the one to read.
 
 ### Where two skills have the same name
 
-The three vendored sets overlap. Default to the deeper `blender-*` version for
+The two surviving vendored sets overlap. Default to the deeper `blender-*` version for
 anything you will actually write code for, and the short one for the numbers:
 
 `blender-animation` > `animation` · `blender-materials` > `materials` ·
@@ -75,42 +73,42 @@ anything you will actually write code for, and the short one for the numbers:
 `blender-modeling` > `blender-modeler` · `blender-export` > `export-pipeline`,
 except `godot-export`, which wins on target-format questions.
 
-### Do not load these
+### What was deleted, and why it is not coming back
 
-About a hundred of the 141 are art direction for other games, or product-render
-automation. They are not wrong, they are for a different project, and loading
-one will push the look away from the measured reference corpus:
+141 skills were vendored; 103 were deleted and **38 remain** — every one of them
+in the table above. If you find yourself wanting one of the deleted names, the
+reasoning was:
 
-- every `*-style`, `*-mood`, `*-worlds`, `*-horror` and `genre-*` skill. The
-  slice's look is set by `gauntlet/refs/ring.md`, `stage.md` and `arena.md`,
-  which are measurements of real venues. `realistic-style` is the nearest match
-  if you need the vocabulary, and `genre-action-combat` has something to say
-  about readable combat space — neither outranks the refs.
-- the five `polyhaven-*` skills, the six camera-move skills (`turntable`,
-  `slow-zoom`, `dolly-rotate`, `crane-shot`, `dynamic-full-loop`,
-  `perfect-loop`), `product-polish`, `threejs-export`, `blender-toolkit`. These
-  are product-shot automation; several write ProRes to `~/Desktop`, which does
-  not exist here. They are also the set with **no licence** — see
-  `BLENDER_SKILLS.md` before shipping anything derived from them.
-- `image-to-3d` and `multi-image-to-3d` need a `MESHY_API_KEY`. None is stored
-  in this repo, and generated meshes have no provenance — which is exactly what
-  `game/assets/characters/CREDITS.md` exists to prevent. Ask before using.
-- the reference-matching family (`reference-to-3d`, `multiview-fit-loop`,
-  `wireframe-to-3d`, `contour-to-mesh`, `atlas-uv-fitting`,
-  `mascot-logo-reconstruction`, `orthographic-registration`,
-  `source-part-segmentation`, `landmark-fit-repair`, `fit-repair-optimizer`,
-  `texture-driven-mesh-fitting`, `closed-surface-uv-coverage`,
-  `reference-analysis-validator`, `reference-look-calibration`,
-  `multiview-constraint-solver`). They need OpenCV, which is not installed, and
-  they are built for 1:1 brand/mascot reconstruction — the opposite of this
-  project, where the reference corpus is used for *measurement* and the assets
-  must stay original.
-- `vehicle-artist`, `vegetation-artist`, `archviz`, `creature-artist`,
-  `sculpting`, `vfx-fx`, `physics-sim`, `compositing`, `set-dressing`,
-  `lookdev`, `orbital-hud-motion`, `blender-skill-harmonizer`, `text-to-blender`,
-  `quality-refinement-autoloop`, `animation-quality-gate`. No current use; the
-  last two also duplicate `tools/capture/evidence_gate.py`, which is the gate
-  that actually runs.
+- **all 16 kevinbadi skills** (`image-to-3d`, `multi-image-to-3d`,
+  `blender-toolkit`, `product-polish`, `threejs-export`, the five `polyhaven-*`,
+  the six camera-move skills). That repository ships **no licence**, so there was
+  no grant to redistribute them here — which is reason enough on its own. They
+  are also product-shot automation that writes ProRes to `~/Desktop`, and the two
+  Meshy ones produce meshes with no provenance, which is exactly what
+  `game/assets/characters/CREDITS.md` exists to prevent.
+- **54 art-direction skills** — every `*-style`, `*-mood`, `*-worlds`, `*-horror`
+  and most `genre-*`. The slice's look is set by `gauntlet/refs/ring.md`,
+  `stage.md` and `arena.md`, which are measurements of real venues; a skill that
+  argues for PS1 fog or cel shading can only pull away from that. Two were kept:
+  `realistic-style` for the vocabulary and `genre-action-combat` for readable
+  combat space. Neither outranks the refs.
+- **the 16-skill reference-matching family** (`reference-to-3d`,
+  `multiview-fit-loop`, `wireframe-to-3d`, `contour-to-mesh` and the rest). They
+  need OpenCV, which is not installed, and they exist for 1:1 brand and mascot
+  reconstruction — the opposite of this project, where footage is a *measurement*
+  reference and the assets stay original.
+- **`unity-export` and `unreal-export`.** This ships to Godot.
+- **15 with no current use**: `vehicle-artist`, `vegetation-artist`, `archviz`,
+  `creature-artist`, `sculpting`, `vfx-fx`, `physics-sim`, `compositing`,
+  `set-dressing`, `lookdev`, `orbital-hud-motion`, `blender-skill-harmonizer`,
+  `text-to-blender`, `quality-refinement-autoloop`, `animation-quality-gate`.
+  Sculpting is gestural and cannot be driven headless at all; the last two
+  duplicate `tools/capture/evidence_gate.py`, which is the gate that actually
+  runs.
+
+`.claude/skills/references/` is not a skill and stays — 13 of the survivors link
+into it as `../references/*.md`. Everything is recoverable from git history if a
+call here proves wrong.
 
 ### The rule these all sit under
 

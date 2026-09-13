@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: collision, collider, UCX, UHX, convex hull, physics proxy, hitbox, blocking volume
-  related-skills: lod-pipeline, unity-export, unreal-export, asset-optimization, physics-sim
+  related-skills: lod-pipeline, asset-optimization
 ---
 
 # Collision Proxy

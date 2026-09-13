@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: retopo, retopology, edge loop, quad, topology, animation ready, poly reduction, remesh
-  related-skills: character-artist, creature-artist, sculpting, uv-workflow
+  related-skills: character-artist, uv-workflow
 ---
 
 # Retopology

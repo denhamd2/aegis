@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: prop, props, furniture, chair, table, bottle, tool, kitbash, household, everyday object, hero prop, set prop
-  related-skills: blender-modeler, hard-surface, materials, uv-workflow, asset-optimization, set-dressing
+  related-skills: blender-modeler, hard-surface, materials, uv-workflow, asset-optimization
 ---
 
 # Prop Artist

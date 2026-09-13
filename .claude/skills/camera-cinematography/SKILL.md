@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: camera, cinematography, lens, framing, composition, shot, dolly, orbit, focal length, depth of field, camera animation
-  related-skills: rendering, lighting, animation, compositing, lookdev
+  related-skills: rendering, lighting, animation
 ---
 
 # Camera Cinematography

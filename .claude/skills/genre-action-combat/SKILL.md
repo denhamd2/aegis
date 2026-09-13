@@ -8,7 +8,7 @@ metadata:
   domain: blender
   role: specialist
   triggers: action game, hack and slash, beat em up, brawler, fighting game, combat arena, action adventure
-  related-skills: environment-artist, prop-artist, camera-cinematography, vfx-fx
+  related-skills: environment-artist, prop-artist, camera-cinematography
 ---
 
 # Genre: Action / Combat

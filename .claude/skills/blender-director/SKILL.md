@@ -9,7 +9,7 @@ metadata:
   role: specialist
   role: orchestrator
   triggers: Blender, 3D asset, game-ready, pipeline, workflow, plan, coordinate, technical artist
-  related-skills: blender-modeler, hard-surface, prop-artist, vehicle-artist, environment-artist, character-artist, asset-optimization, export-pipeline, qa-review
+  related-skills: blender-modeler, hard-surface, prop-artist, environment-artist, character-artist, asset-optimization, export-pipeline, qa-review
 ---
 
 # Blender Director
