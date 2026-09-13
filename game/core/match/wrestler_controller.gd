@@ -289,9 +289,14 @@ var _state_clip_override: Dictionary = {}
 ## FINISHER -> Sword_Attack, GETUP -> Roll (imperfect — the only
 ## on-the-ground-to-standing clip in this library).
 const STATE_ANIMATIONS := {
-	WrestlerFSM.State.IDLE: "Idle",
-	WrestlerFSM.State.LOCOMOTION: "Walk",
-	WrestlerFSM.State.RUN: "Sprint",
+	# Authored. The rig's Idle is a relaxed civilian stand with the arms
+	# down; a wrestler at rest is coiled and never quite still.
+	WrestlerFSM.State.IDLE: "strikes/idle_ready",
+	# Authored: circling an opponent, not strolling. Hands stay up.
+	WrestlerFSM.State.LOCOMOTION: "strikes/walk_stalk",
+	# Authored. Sprint is a jog with the torso upright and the arms barely
+	# moving -- no drive in it, which is what a rope run is made of.
+	WrestlerFSM.State.RUN: "strikes/run_drive",
 	# Generated (see resources/animations/strike_recipes.gd), not the rig's
 	# raw Punch_Jab: the raw clip is 0.87s against a 20-tick move, so 38% of
 	# it played and the arm cross-faded back to idle still travelling
@@ -303,7 +308,7 @@ const STATE_ANIMATIONS := {
 	# playing it, a tie-up rendered as two men standing apart pointing past
 	# each other, which is the single most-complained-about thing in a
 	# captured match.
-	WrestlerFSM.State.TIE_UP: "Push",
+	WrestlerFSM.State.TIE_UP: "strikes/tie_up_collar",
 	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
 	# MOVE_EXEC is the beat where a grapple's throw resolves, not a strike.
 	# It played Punch_Cross, so a wrestler who had just completed a throw
@@ -312,7 +317,8 @@ const STATE_ANIMATIONS := {
 	# Replaced per hit by _play_hit_reaction() with a head or torso reaction
 	# depending on where the damage landed; this is the fallback.
 	WrestlerFSM.State.HIT_REACT: "strikes/hit_torso",
-	WrestlerFSM.State.DOWN: "Death01",
+	# Authored. Death01 is a man dying -- collapsed and still, arms splayed.
+	WrestlerFSM.State.DOWN: "strikes/down_supine",
 	# Generated: "Roll" is a tucked forward roll and 0.63s shorter than the
 	# state, so the wrestler curled into a ball on the mat and froze in it.
 	WrestlerFSM.State.GETUP: "strikes/getup_rise",
@@ -329,10 +335,13 @@ const STATE_ANIMATIONS := {
 	# that is a man crouching on his own, so the three-count played with the
 	# attacker standing beside the fallen man rather than covering him.
 	WrestlerFSM.State.PIN_ATTACKER: "strikes/pin_cover",
-	WrestlerFSM.State.PIN_DEFENDER: "Death01",
-	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
-	WrestlerFSM.State.SUBMISSION_DEFENDER: "Death01",
-	WrestlerFSM.State.FINISHER: "Sword_Attack",
+	WrestlerFSM.State.PIN_DEFENDER: "strikes/down_supine",
+	# Authored. Crouch_Idle is a man crouching by himself, not working a hold.
+	WrestlerFSM.State.SUBMISSION_ATTACKER: "strikes/submission_work",
+	WrestlerFSM.State.SUBMISSION_DEFENDER: "strikes/down_supine",
+	# Authored. This was Sword_Attack: a two-handed overhead sword swing, on
+	# the biggest moment in a match.
+	WrestlerFSM.State.FINISHER: "strikes/finisher_drive",
 	# Authored in Blender (tools/blender/wrestling_clips.py) and baked
 	# through strike_recipes.gd like the rest. Nothing in the CC0 library
 	# celebrates, so unlike every other entry here this one could not have

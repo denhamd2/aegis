@@ -119,6 +119,7 @@ func _trim(player: AnimationPlayer, recipe: Dictionary, label: String,
 				break
 			_insert(anim, out_track, source, track, t, t)
 		_insert(anim, out_track, source, track, cutoff, cutoff)
+	_dedupe_tracks(anim)
 	return anim
 
 ## Scales every key time by target/source, so the whole motion plays in the
@@ -133,7 +134,7 @@ func _retime(player: AnimationPlayer, recipe: Dictionary, label: String,
 		push_error("%s: retime to %.3fs is not a duration" % [label, target])
 		return null
 	var scale := target / source.length
-	var anim := _empty_like(source, target)
+	var anim := _empty_like(source, target, recipe.get("loop", false))
 	for track in source.get_track_count():
 		var out_track := _copy_track_header(anim, source, track, runtime_paths)
 		if out_track < 0:
@@ -141,6 +142,7 @@ func _retime(player: AnimationPlayer, recipe: Dictionary, label: String,
 		for key in source.track_get_key_count(track):
 			var t := source.track_get_key_time(track, key)
 			_insert(anim, out_track, source, track, t * scale, t)
+	_dedupe_tracks(anim)
 	return anim
 
 ## A pose sequence sampled out of other clips, for a motion the rig does not
@@ -203,12 +205,45 @@ func _stitch(player: AnimationPlayer, recipe: Dictionary, label: String,
 			elif type == Animation.TYPE_POSITION_3D:
 				anim.position_track_insert_key(out_track, t,
 						source.position_track_interpolate(src, at))
+	_dedupe_tracks(anim)
 	return anim
 
-func _empty_like(source: Animation, length: float) -> Animation:
+## Every generated clip is one-shot unless its recipe says otherwise.
+##
+## A recipe sets "loop": true for the states a wrestler SITS in -- idle,
+## walking, running. Those clips used to come straight off the rig, where
+## Idle/Walk/Sprint already carry LOOP_LINEAR; a generated replacement
+## inherits nothing, so without this it plays once and freezes on its last
+## frame, in the three states that are on screen most of the match.
+## Drops duplicate (path, type) tracks, keeping whichever carries more keys.
+##
+## Clips sampled from an external glb come back with TWO rotation tracks for
+## pelvis: the authored one, and a single-key track holding the bind pose.
+## Both remap onto the same runtime path, and Godot applies whichever it
+## reaches last -- so a wrestler in IDLE rendered lying flat on his back,
+## because the stray key is a 104 deg rotation about X.
+##
+## It only shows on authored clips (every one of them; the two still sampled
+## off the rig have none), which is why it surfaced the moment the shared
+## stance put pelvis into every pose.
+func _dedupe_tracks(anim: Animation) -> void:
+	var best := {}
+	for track in anim.get_track_count():
+		var key := "%s|%d" % [anim.track_get_path(track), anim.track_get_type(track)]
+		if not best.has(key) \
+				or anim.track_get_key_count(track) > anim.track_get_key_count(best[key]):
+			best[key] = track
+	var keep := {}
+	for key in best:
+		keep[best[key]] = true
+	for track in range(anim.get_track_count() - 1, -1, -1):
+		if not keep.has(track):
+			anim.remove_track(track)
+
+func _empty_like(source: Animation, length: float, loop: bool = false) -> Animation:
 	var anim := Animation.new()
 	anim.length = length
-	anim.loop_mode = Animation.LOOP_NONE
+	anim.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
 	return anim
 
 func _runtime_track_paths(player: AnimationPlayer) -> Dictionary:

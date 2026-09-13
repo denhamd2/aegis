@@ -227,6 +227,54 @@ const RECIPES := {
 	"win_celebrate": {"kind": "retime", "source": "Win_Celebrate",
 		"seconds": 1.300, "file": AUTHORED},
 
+	# --- states that were playing raw rig clips -------------------------
+	#
+	# These replace clips taken straight off wrestler_base.glb. Each names
+	# what it is replacing and why the borrowed one was wrong; lengths match
+	# the rig's originals so nothing downstream shifts.
+	#
+	# "loop": true is REQUIRED on the three a wrestler sits in. The rig's
+	# Idle/Walk/Sprint carry LOOP_LINEAR; a generated clip inherits nothing
+	# and would play once and freeze.
+
+	# Idle is a relaxed civilian stand with the arms down. A wrestler at
+	# rest is coiled: weight forward, hands up, always moving a little.
+	"idle_ready": {"kind": "retime", "source": "Idle_Ready",
+		"seconds": 2.500, "file": AUTHORED, "loop": true},
+
+	# Walk is a stroll. This is a man circling an opponent -- short steps,
+	# hands up, square to the danger.
+	"walk_stalk": {"kind": "retime", "source": "Walk_Stalk",
+		"seconds": 1.333, "file": AUTHORED, "loop": true},
+
+	# Sprint is a jog with the torso upright and the arms barely moving.
+	"run_drive": {"kind": "retime", "source": "Run_Drive",
+		"seconds": 0.667, "file": AUTHORED, "loop": true},
+
+	# TIE_UP played "Push", a two-armed shove -- closer than the one-armed
+	# point it replaced, but still a man pushing a crate. A collar-and-elbow
+	# has one hand high on the neck and one on the elbow, chest square, legs
+	# braced and driving.
+	"tie_up_collar": {"kind": "retime", "source": "Tie_Up_Collar",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+
+	# DOWN and PIN_DEFENDER played Death01: a man dying, collapsing and
+	# lying still with his arms splayed. A dropped wrestler is on his back
+	# with his knees up, and he is still breathing.
+	"down_supine": {"kind": "retime", "source": "Down_Supine",
+		"seconds": 1.333, "file": AUTHORED, "loop": true},
+
+	# FINISHER played Sword_Attack: a two-handed overhead sword swing. The
+	# biggest moment in a match has been a man chopping at the air. This is
+	# a lift-and-drive -- load deep, haul up through the legs, drive down.
+	"finisher_drive": {"kind": "retime", "source": "Finisher_Drive",
+		"seconds": 1.333, "file": AUTHORED},
+
+	# SUBMISSION_ATTACKER played Crouch_Idle, a man crouching by himself.
+	# This is someone working: down on a knee, hauling back rhythmically.
+	"submission_work": {"kind": "retime", "source": "Submission_Work",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+
 	# RUNNING_ATTACK plays Punch_Cross today: a wrestler sprints the width of
 	# the ring and throws a boxing jab. A clothesline does not swing -- the
 	# arm is out and locked before contact and the RUN supplies the force --

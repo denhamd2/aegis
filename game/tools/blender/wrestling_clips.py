@@ -100,9 +100,15 @@ def author(arm, name, poses):
     bone by metres in armature space.
 
     Translation exists for the poses rotation alone cannot reach: a crouch
-    and a cover have to drop the pelvis, and a man lying on the mat has to
-    be laid ON it. Only translate the pelvis or root -- moving a limb's
-    origin detaches it from its parent visually.
+    has to drop the body, and a man lying on the mat has to be laid ON it.
+
+    Translate ROOT, never pelvis. Keyframing pelvis location made Blender's
+    exporter emit a second pelvis ROTATION track carrying the bind pose --
+    a single key of 104 deg about X -- which Godot imported alongside the
+    authored one and applied instead. Every state that used the shared
+    stance then rendered as a man lying flat on his back, IDLE included.
+    root has no such conflict and is what the project's root-motion path
+    already expects.
     """
     action = bpy.data.actions.new(name)
     arm.animation_data_clear()
@@ -200,7 +206,7 @@ def stance(**over):
         "thigh_r": (-12, 5, 0), "thigh_l": (-12, -5, 0),
         "calf_r": (20, 0, 0), "calf_l": (20, 0, 0),
         "foot_r": (-8, 0, 0), "foot_l": (-8, 0, 0),
-        "pelvis": (0, 0, 0, 0.0, 0.0, -0.045),
+        "root": (0, 0, 0, 0.0, 0.0, -0.045),
     }
     pose.update(over)
     return pose
@@ -218,14 +224,14 @@ CLIPS = {
                     lowerarm_r=(0, 0, 24), lowerarm_l=(0, 0, -24),
                     spine_03=(14, 0, 0), Head=(11, 0, 0),
                     calf_r=(30, 0, 0), calf_l=(30, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.0, -0.10))),
+                    root=(0, 0, 0, 0.0, 0.0, -0.10))),
         # Explosion: arms overhead, chest out, up onto the toes.
         (14, stance(upperarm_r=(0, 72, 0), upperarm_l=(0, -72, 0),
                     lowerarm_r=(0, 0, 18), lowerarm_l=(0, 0, -18),
                     spine_03=(-13, 0, 0), Head=(-19, 0, 0),
                     calf_r=(6, 0, 0), calf_l=(6, 0, 0),
                     foot_r=(16, 0, 0), foot_l=(16, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.0, 0.03))),
+                    root=(0, 0, 0, 0.0, 0.0, 0.03))),
         # Settles back off the extreme instead of stopping dead on it.
         (22, stance(upperarm_r=(0, 62, 0), upperarm_l=(0, -62, 0),
                     lowerarm_r=(0, 0, 22), lowerarm_l=(0, 0, -22),
@@ -247,7 +253,7 @@ CLIPS = {
         (5,  stance(upperarm_r=(0, -40, -15), lowerarm_r=(0, 0, 92),
                     upperarm_l=(0, 54, -26), spine_03=(10, 0, -26),
                     Head=(0, 0, -12), thigh_r=(6, 5, 0), calf_r=(26, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.04, -0.05))),
+                    root=(0, 0, 0, 0.0, 0.04, -0.05))),
         # Contact: the torso twist drives it, and the back leg pushes
         # through so the whole man arrives, not just the arm.
         (9,  stance(upperarm_r=(0, -15, 70), lowerarm_r=(0, 0, 10),
@@ -255,13 +261,13 @@ CLIPS = {
                     spine_03=(11, 0, 30), Head=(0, 0, 16),
                     thigh_r=(-20, 5, 0), calf_r=(12, 0, 0),
                     thigh_l=(-4, -5, 0), foot_r=(4, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, -0.06, -0.04))),
+                    root=(0, 0, 0, 0.0, -0.06, -0.04))),
         # Follow-through PAST contact, not a stop at it.
         (13, stance(upperarm_r=(0, -14, 82), lowerarm_r=(0, 0, 20),
                     upperarm_l=(0, 60, -8), lowerarm_l=(0, 0, -62),
                     spine_03=(12, 0, 24), Head=(0, 0, 11),
                     thigh_r=(-22, 5, 0), calf_r=(14, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, -0.07, -0.04))),
+                    root=(0, 0, 0, 0.0, -0.07, -0.04))),
         (24, stance()),
     ],
 
@@ -277,9 +283,9 @@ CLIPS = {
                     spine_03=(-12, 0, -17), upperarm_r=(0, -56, 4),
                     upperarm_l=(0, 60, -6), thigh_r=(2, 5, 0),
                     calf_r=(30, 0, 0), calf_l=(24, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.07, -0.07))),
+                    root=(0, 0, 0, 0.0, 0.07, -0.07))),
         (16, stance(Head=(-5, 0, -9), neck_01=(-2, 0, -4), spine_03=(3, 0, -5),
-                    pelvis=(0, 0, 0, 0.0, 0.02, -0.05))),
+                    root=(0, 0, 0, 0.0, 0.02, -0.05))),
         (24, stance()),
     ],
 
@@ -294,7 +300,7 @@ CLIPS = {
         # Contact: the LEFT hand, and only a short step behind it.
         (6,  stance(upperarm_l=(0, 22, -64), lowerarm_l=(0, 0, -14),
                     spine_03=(9, 0, 14), thigh_l=(-16, -5, 0),
-                    pelvis=(0, 0, 0, 0.0, -0.04, -0.045))),
+                    root=(0, 0, 0, 0.0, -0.04, -0.045))),
         (9,  stance(upperarm_l=(0, 26, -56), lowerarm_l=(0, 0, -28),
                     spine_03=(9, 0, 10))),
         (15, stance()),
@@ -308,17 +314,17 @@ CLIPS = {
         (5,  stance(thigh_r=(-52, 6, 0), calf_r=(76, 0, 0), foot_r=(10, 0, 0),
                     spine_03=(4, 0, 0), upperarm_r=(0, -66, -6),
                     upperarm_l=(0, 70, -6), thigh_l=(-6, -5, 0),
-                    calf_l=(14, 0, 0), pelvis=(0, 0, 0, 0.0, 0.05, -0.03))),
+                    calf_l=(14, 0, 0), root=(0, 0, 0, 0.0, 0.05, -0.03))),
         # Contact: the knee straightens and the hips open through it.
         (8,  stance(thigh_r=(-62, 6, 0), calf_r=(10, 0, 0), foot_r=(22, 0, 0),
                     spine_03=(-6, 0, 0), Head=(-4, 0, 0),
                     upperarm_r=(0, -74, -14), upperarm_l=(0, 78, -10),
                     thigh_l=(-2, -5, 0), calf_l=(10, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.08, -0.02))),
+                    root=(0, 0, 0, 0.0, 0.08, -0.02))),
         # Follow-through, then the leg folds back down under him.
         (12, stance(thigh_r=(-56, 6, 0), calf_r=(26, 0, 0), foot_r=(16, 0, 0),
                     spine_03=(-2, 0, 0), upperarm_r=(0, -70, -10),
-                    upperarm_l=(0, 74, -8), pelvis=(0, 0, 0, 0.0, 0.06, -0.03))),
+                    upperarm_l=(0, 74, -8), root=(0, 0, 0, 0.0, 0.06, -0.03))),
         (17, stance()),
     ],
 
@@ -330,18 +336,18 @@ CLIPS = {
         (8,  stance(thigh_r=(16, 6, 0), calf_r=(48, 0, 0), spine_03=(14, 0, -10),
                     upperarm_r=(0, -40, -20), upperarm_l=(0, 60, -20),
                     thigh_l=(-8, -5, 0), calf_l=(24, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.08, -0.07))),
+                    root=(0, 0, 0, 0.0, 0.08, -0.07))),
         (13, stance(thigh_r=(-48, 8, 0), calf_r=(84, 0, 0), foot_r=(12, 0, 0),
                     spine_03=(2, 0, -4), upperarm_r=(0, -68, -8),
-                    upperarm_l=(0, 72, -8), pelvis=(0, 0, 0, 0.0, 0.04, -0.03))),
+                    upperarm_l=(0, 72, -8), root=(0, 0, 0, 0.0, 0.04, -0.03))),
         (17, stance(thigh_r=(-70, 8, 0), calf_r=(6, 0, 0), foot_r=(26, 0, 0),
                     spine_03=(-12, 0, 4), Head=(-8, 0, 0),
                     upperarm_r=(0, -78, -18), upperarm_l=(0, 82, -14),
                     thigh_l=(0, -5, 0), calf_l=(8, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.10, -0.01))),
+                    root=(0, 0, 0, 0.0, 0.10, -0.01))),
         (22, stance(thigh_r=(-58, 8, 0), calf_r=(30, 0, 0), foot_r=(18, 0, 0),
                     spine_03=(-4, 0, 2), upperarm_r=(0, -72, -12),
-                    upperarm_l=(0, 76, -10), pelvis=(0, 0, 0, 0.0, 0.07, -0.03))),
+                    upperarm_l=(0, 76, -10), root=(0, 0, 0, 0.0, 0.07, -0.03))),
         (28, stance()),
     ],
 
@@ -353,16 +359,16 @@ CLIPS = {
                     upperarm_r=(0, -58, 30), upperarm_l=(0, 60, -30),
                     lowerarm_r=(0, 0, 86), lowerarm_l=(0, 0, -86),
                     calf_r=(30, 0, 0), calf_l=(30, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.05, -0.09))),
+                    root=(0, 0, 0, 0.0, 0.05, -0.09))),
         (8,  stance(spine_01=(22, 0, 0), spine_03=(30, 0, 0), Head=(18, 0, 0),
                     upperarm_r=(0, -54, 34), upperarm_l=(0, 56, -34),
                     lowerarm_r=(0, 0, 92), lowerarm_l=(0, 0, -92),
                     thigh_r=(-20, 5, 0), thigh_l=(-20, -5, 0),
                     calf_r=(38, 0, 0), calf_l=(38, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.08, -0.13))),
+                    root=(0, 0, 0, 0.0, 0.08, -0.13))),
         (16, stance(spine_01=(10, 0, 0), spine_03=(16, 0, 0), Head=(8, 0, 0),
                     calf_r=(28, 0, 0), calf_l=(28, 0, 0),
-                    pelvis=(0, 0, 0, 0.0, 0.03, -0.08))),
+                    root=(0, 0, 0, 0.0, 0.03, -0.08))),
         (24, stance()),
     ],
 
@@ -373,21 +379,21 @@ CLIPS = {
         (1,  stance(upperarm_r=(0, -70, 6), upperarm_l=(0, 72, -6),
                     lowerarm_r=(0, 0, 30), lowerarm_l=(0, 0, -30),
                     Head=(16, 0, 8), spine_03=(14, 0, 6),
-                    pelvis=(0, 0, 0, 0.03, 0.02, -0.08))),
+                    root=(0, 0, 0, 0.03, 0.02, -0.08))),
         (8,  stance(upperarm_r=(0, -74, 2), upperarm_l=(0, 70, -10),
                     lowerarm_r=(0, 0, 24), lowerarm_l=(0, 0, -26),
                     Head=(12, 0, -14), spine_03=(11, 0, -10),
                     thigh_r=(-6, 8, 0), calf_r=(26, 0, 0),
-                    pelvis=(0, 0, 0, -0.04, 0.03, -0.07))),
+                    root=(0, 0, 0, -0.04, 0.03, -0.07))),
         (15, stance(upperarm_r=(0, -68, 8), upperarm_l=(0, 74, -4),
                     lowerarm_r=(0, 0, 32), lowerarm_l=(0, 0, -28),
                     Head=(18, 0, 12), spine_03=(15, 0, 9),
                     thigh_l=(-6, -8, 0), calf_l=(26, 0, 0),
-                    pelvis=(0, 0, 0, 0.04, 0.01, -0.09))),
+                    root=(0, 0, 0, 0.04, 0.01, -0.09))),
         (22, stance(upperarm_r=(0, -72, 4), upperarm_l=(0, 72, -8),
                     lowerarm_r=(0, 0, 28), lowerarm_l=(0, 0, -28),
                     Head=(14, 0, -6), spine_03=(12, 0, -4),
-                    pelvis=(0, 0, 0, -0.02, 0.02, -0.08))),
+                    root=(0, 0, 0, -0.02, 0.02, -0.08))),
     ],
 
     # The clothesline, for RUNNING_ATTACK. That state plays Punch_Cross
@@ -409,12 +415,194 @@ CLIPS = {
                     upperarm_l=(0, 40, -40), spine_03=(6, 0, 26),
                     Head=(0, 0, 18), thigh_r=(-30, 5, 0), calf_r=(16, 0, 0),
                     thigh_l=(10, -5, 0),
-                    pelvis=(0, 0, 0, 0.0, -0.08, -0.03))),
+                    root=(0, 0, 0, 0.0, -0.08, -0.03))),
         (14, stance(upperarm_r=(0, 6, 92), lowerarm_r=(0, 0, 10),
                     upperarm_l=(0, 38, -44), spine_03=(4, 0, 20),
                     Head=(0, 0, 12), thigh_r=(-20, 5, 0),
-                    pelvis=(0, 0, 0, 0.0, -0.10, -0.04))),
+                    root=(0, 0, 0, 0.0, -0.10, -0.04))),
         (24, stance()),
+    ],
+
+    # --- states that were playing raw rig clips ---------------------------
+
+    # IDLE. The rig's Idle is a relaxed civilian stand with the arms down.
+    # A wrestler at rest is still coiled: weight forward, hands up, always
+    # moving a little. Loops -- f1 and f72 are the same pose.
+    "Idle_Ready": [
+        (1,  stance()),
+        (18, stance(spine_03=(10, 0, 3), Head=(2, 0, 4),
+                    upperarm_r=(0, -46, 20), upperarm_l=(0, 52, -16),
+                    calf_r=(23, 0, 0), calf_l=(18, 0, 0),
+                    root=(0, 0, 0, 0.015, 0.0, -0.052))),
+        (36, stance(spine_03=(7, 0, 0), Head=(0, 0, 0),
+                    calf_r=(18, 0, 0), calf_l=(22, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.038))),
+        (54, stance(spine_03=(10, 0, -3), Head=(2, 0, -4),
+                    upperarm_r=(0, -50, 16), upperarm_l=(0, 48, -20),
+                    calf_r=(18, 0, 0), calf_l=(23, 0, 0),
+                    root=(0, 0, 0, -0.015, 0.0, -0.052))),
+        (72, stance()),
+    ],
+
+    # LOCOMOTION. Contact / down / pass / up twice, per the walk-cycle
+    # reference, but carried in the wrestling stance -- this is a man
+    # circling an opponent, not walking down a street, so the hands stay up
+    # and the steps stay short.
+    "Walk_Stalk": [
+        (1,  stance(thigh_r=(-24, 5, 0), thigh_l=(20, -5, 0), calf_l=(26, 0, 0),
+                    foot_r=(-14, 0, 0))),
+        (8,  stance(thigh_r=(-10, 5, 0), calf_r=(28, 0, 0),
+                    thigh_l=(10, -5, 0), calf_l=(16, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.075))),
+        (16, stance(thigh_r=(14, 5, 0), calf_r=(14, 0, 0),
+                    thigh_l=(-20, -5, 0), calf_l=(24, 0, 0),
+                    foot_l=(-14, 0, 0))),
+        (24, stance(thigh_r=(10, 5, 0), calf_r=(18, 0, 0),
+                    thigh_l=(-8, -5, 0), calf_l=(28, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.0, -0.075))),
+        (32, stance(thigh_r=(-24, 5, 0), thigh_l=(20, -5, 0), calf_l=(26, 0, 0),
+                    foot_r=(-14, 0, 0))),
+    ],
+
+    # RUN. Contact / drive / flight / recovery. Longer stride, deeper lean,
+    # and the arms actually drive -- the rig's Sprint is a jog with the
+    # torso upright.
+    "Run_Drive": [
+        (1,  stance(spine_03=(18, 0, 0), thigh_r=(-42, 5, 0), calf_r=(20, 0, 0),
+                    thigh_l=(30, -5, 0), calf_l=(54, 0, 0),
+                    upperarm_r=(0, -54, -28), lowerarm_r=(0, 0, 92),
+                    upperarm_l=(0, 56, 28), lowerarm_l=(0, 0, -92))),
+        (6,  stance(spine_03=(20, 0, 0), thigh_r=(-14, 5, 0), calf_r=(16, 0, 0),
+                    thigh_l=(20, -5, 0), calf_l=(72, 0, 0),
+                    upperarm_r=(0, -56, -8), lowerarm_r=(0, 0, 86),
+                    upperarm_l=(0, 58, 8), lowerarm_l=(0, 0, -86),
+                    root=(0, 0, 0, 0.0, 0.0, -0.09))),
+        (11, stance(spine_03=(18, 0, 0), thigh_r=(30, 5, 0), calf_r=(54, 0, 0),
+                    thigh_l=(-42, -5, 0), calf_l=(20, 0, 0),
+                    upperarm_r=(0, -54, 28), lowerarm_r=(0, 0, 92),
+                    upperarm_l=(0, 56, -28), lowerarm_l=(0, 0, -92))),
+        (16, stance(spine_03=(20, 0, 0), thigh_r=(20, 5, 0), calf_r=(72, 0, 0),
+                    thigh_l=(-14, -5, 0), calf_l=(16, 0, 0),
+                    upperarm_r=(0, -56, 8), lowerarm_r=(0, 0, 86),
+                    upperarm_l=(0, 58, -8), lowerarm_l=(0, 0, -86),
+                    root=(0, 0, 0, 0.0, 0.0, -0.09))),
+        (20, stance(spine_03=(18, 0, 0), thigh_r=(-42, 5, 0), calf_r=(20, 0, 0),
+                    thigh_l=(30, -5, 0), calf_l=(54, 0, 0),
+                    upperarm_r=(0, -54, -28), lowerarm_r=(0, 0, 92),
+                    upperarm_l=(0, 56, 28), lowerarm_l=(0, 0, -92))),
+    ],
+
+    # TIE_UP. The collar-and-elbow: both arms forward at head height, one
+    # high for the collar and one lower for the elbow, chest square, legs
+    # braced and driving. "Push" is a two-armed shove, which was closer than
+    # the one-armed point it replaced but is still a man pushing a crate.
+    "Tie_Up_Collar": [
+        (1,  stance()),
+        (10, stance(upperarm_r=(0, -18, 58), lowerarm_r=(0, 0, 46),
+                    upperarm_l=(0, 4, -66), lowerarm_l=(0, 0, -34),
+                    spine_03=(16, 0, 0), Head=(-6, 0, 0),
+                    thigh_r=(10, 6, 0), thigh_l=(-18, -6, 0),
+                    calf_r=(16, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.03, -0.08))),
+        (22, stance(upperarm_r=(0, -14, 62), lowerarm_r=(0, 0, 42),
+                    upperarm_l=(0, 8, -70), lowerarm_l=(0, 0, -30),
+                    spine_03=(19, 0, 4), Head=(-8, 0, 2),
+                    thigh_r=(12, 6, 0), thigh_l=(-20, -6, 0),
+                    calf_r=(14, 0, 0), calf_l=(32, 0, 0),
+                    root=(0, 0, 0, 0.02, -0.05, -0.085))),
+        (30, stance(upperarm_r=(0, -18, 58), lowerarm_r=(0, 0, 46),
+                    upperarm_l=(0, 4, -66), lowerarm_l=(0, 0, -34),
+                    spine_03=(16, 0, 0), Head=(-6, 0, 0),
+                    thigh_r=(10, 6, 0), thigh_l=(-18, -6, 0),
+                    calf_r=(16, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.03, -0.08))),
+    ],
+
+    # DOWN / PIN_DEFENDER. Death01 is a man dying: he collapses and lies
+    # still, arms splayed. A wrestler who has been dropped is on his back
+    # with his knees up, and he is still breathing. pelvis.-X lays him out;
+    # the translation drops him onto the mat.
+    "Down_Supine": [
+        (1,  {"pelvis": (-84, 0, 0), "root": (0, 0, 0, 0.0, 0.0, -0.86),
+              "spine_01": (-6, 0, 0), "spine_03": (-10, 0, 0),
+              "neck_01": (10, 0, 0), "Head": (14, 0, 0),
+              "thigh_r": (-54, 10, 0), "thigh_l": (-48, -10, 0),
+              "calf_r": (56, 0, 0), "calf_l": (44, 0, 0),
+              "foot_r": (-10, 0, 0), "foot_l": (-10, 0, 0),
+              "upperarm_r": (0, -34, 26), "lowerarm_r": (0, 0, 40),
+              "upperarm_l": (0, 38, -22), "lowerarm_l": (0, 0, -36)}),
+        (20, {"pelvis": (-84, 0, 0), "root": (0, 0, 0, 0.0, 0.0, -0.845),
+              "spine_01": (-3, 0, 0), "spine_03": (-6, 0, 0),
+              "neck_01": (12, 0, 0), "Head": (16, 0, 0),
+              "thigh_r": (-50, 10, 0), "thigh_l": (-52, -10, 0),
+              "calf_r": (50, 0, 0), "calf_l": (50, 0, 0),
+              "foot_r": (-8, 0, 0), "foot_l": (-8, 0, 0),
+              "upperarm_r": (0, -30, 30), "lowerarm_r": (0, 0, 46),
+              "upperarm_l": (0, 34, -26), "lowerarm_l": (0, 0, -42)}),
+        (40, {"pelvis": (-84, 0, 0), "root": (0, 0, 0, 0.0, 0.0, -0.86),
+              "spine_01": (-6, 0, 0), "spine_03": (-10, 0, 0),
+              "neck_01": (10, 0, 0), "Head": (14, 0, 0),
+              "thigh_r": (-54, 10, 0), "thigh_l": (-48, -10, 0),
+              "calf_r": (56, 0, 0), "calf_l": (44, 0, 0),
+              "foot_r": (-10, 0, 0), "foot_l": (-10, 0, 0),
+              "upperarm_r": (0, -34, 26), "lowerarm_r": (0, 0, 40),
+              "upperarm_l": (0, 38, -22), "lowerarm_l": (0, 0, -36)}),
+    ],
+
+    # FINISHER. This state plays Sword_Attack -- a two-handed overhead sword
+    # swing. The finisher is the biggest moment in a match and it has been
+    # a man chopping at the air. A big lift-and-drive instead: load deep,
+    # haul up through the legs, drive forward and down.
+    "Finisher_Drive": [
+        (1,  stance()),
+        # Load: down into the legs, arms wrapping low.
+        (10, stance(spine_03=(30, 0, 0), Head=(10, 0, 0),
+                    upperarm_r=(0, -30, 48), lowerarm_r=(0, 0, 62),
+                    upperarm_l=(0, 34, -48), lowerarm_l=(0, 0, -62),
+                    thigh_r=(-34, 6, 0), thigh_l=(-34, -6, 0),
+                    calf_r=(54, 0, 0), calf_l=(54, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.06, -0.20))),
+        # Haul: legs drive, chest opens, the load comes up.
+        (18, stance(spine_03=(-14, 0, 0), Head=(-16, 0, 0),
+                    upperarm_r=(0, 10, 40), lowerarm_r=(0, 0, 70),
+                    upperarm_l=(0, -6, -40), lowerarm_l=(0, 0, -70),
+                    thigh_r=(-6, 6, 0), thigh_l=(-6, -6, 0),
+                    calf_r=(6, 0, 0), calf_l=(6, 0, 0),
+                    foot_r=(14, 0, 0), foot_l=(14, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.04, 0.04))),
+        # Drive down: the throw, whole body committing forward.
+        (26, stance(spine_03=(38, 0, 0), Head=(16, 0, 0),
+                    upperarm_r=(0, -34, 74), lowerarm_r=(0, 0, 26),
+                    upperarm_l=(0, 38, -74), lowerarm_l=(0, 0, -26),
+                    thigh_r=(-30, 8, 0), thigh_l=(-16, -8, 0),
+                    calf_r=(46, 0, 0), calf_l=(30, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.10, -0.22))),
+        (40, stance(spine_03=(16, 0, 0), calf_r=(28, 0, 0), calf_l=(28, 0, 0),
+                    root=(0, 0, 0, 0.0, -0.02, -0.09))),
+    ],
+
+    # SUBMISSION_ATTACKER. Crouch_Idle is a man crouching by himself. This
+    # is someone WORKING: down on one knee, leaning his weight into a hold,
+    # hauling back rhythmically rather than sitting still.
+    "Submission_Work": [
+        (1,  stance(spine_03=(26, 0, 0), Head=(12, 0, 0),
+                    upperarm_r=(0, -26, 56), lowerarm_r=(0, 0, 50),
+                    upperarm_l=(0, 30, -52), lowerarm_l=(0, 0, -46),
+                    thigh_r=(-72, 8, 0), calf_r=(86, 0, 0), foot_r=(16, 0, 0),
+                    thigh_l=(-30, -10, 0), calf_l=(40, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.06, -0.34))),
+        (14, stance(spine_03=(8, 0, 0), Head=(-4, 0, 0),
+                    upperarm_r=(0, -12, 34), lowerarm_r=(0, 0, 78),
+                    upperarm_l=(0, 16, -30), lowerarm_l=(0, 0, -74),
+                    thigh_r=(-70, 8, 0), calf_r=(84, 0, 0), foot_r=(16, 0, 0),
+                    thigh_l=(-26, -10, 0), calf_l=(36, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.12, -0.30))),
+        (30, stance(spine_03=(26, 0, 0), Head=(12, 0, 0),
+                    upperarm_r=(0, -26, 56), lowerarm_r=(0, 0, 50),
+                    upperarm_l=(0, 30, -52), lowerarm_l=(0, 0, -46),
+                    thigh_r=(-72, 8, 0), calf_r=(86, 0, 0), foot_r=(16, 0, 0),
+                    thigh_l=(-30, -10, 0), calf_l=(40, 0, 0),
+                    root=(0, 0, 0, 0.0, 0.06, -0.34))),
     ],
 }
 
