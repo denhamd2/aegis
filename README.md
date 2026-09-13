@@ -2714,8 +2714,12 @@ gameplay. Capture wall-time went 2m58s → 3m25s on llvmpipe.
   seat value and stair nosings to `gauntlet/refs/arena.md` — which is what
   that sentence used to say was missing. Its rake, row counts and tier heights
   are still coverage decisions and are not claimed otherwise.
-- The hall is now **empty** — the two-box crowd impostors were removed on
-  request, and the bowl's own seats (individual, at `SEAT_PITCH`, with the
+- The hall is built to **rink scale** — 60.96 x 25.91m of ice with 8.53m
+  corners, the ring in the middle of it, the boards and the bowl measured out
+  from there, and ~1,490 folding chairs filling the floor between the
+  barricade and the boards. `gauntlet/refs/arena.md` has the derivation.
+- The hall is **empty** — the two-box crowd impostors were removed on
+  request, and the seats themselves (individual, at `SEAT_PITCH`, with the
   aisles left clear) are what fills it. That closes this bullet's old
   complaint that the crowd had no faces, no limbs and no reaction to the
   match by removing the crowd, not by fixing it; a hall with people in it

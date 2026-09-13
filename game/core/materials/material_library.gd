@@ -56,7 +56,7 @@ class_name MaterialLibrary
 ##     arena_stage_backdrop  arena_stage_panel  arena_shell  arena_truss
 ##     arena_tunnel  arena_screen  arena_portal_magenta
 ##     arena_portal_amber  arena_seat  arena_suite_glass  arena_ribbon
-##     arena_nosing
+##     arena_nosing  arena_rink  arena_boards  arena_board_cap
 ##
 ## `ALIASES` keeps older names (`ring_mat`, `ring_pad`) working.
 ##
@@ -624,6 +624,44 @@ const SPECS := {
 	## from a textured slope, and the call site holds it at 40:1.
 	"arena_nosing": {
 		"tint": Color(1.00, 0.80, 0.22), "roughness": 0.55,
+	},
+
+	# --- The rink -----------------------------------------------------------
+	# The hall is built around a regulation ice rink (gauntlet/refs/arena.md),
+	# and these three dress it: the decking laid over the ice, the dasher
+	# boards round it, and the cap rail on top of them.
+
+	## The event flooring over the ice. Panelled deck, not ice: a rink hosting
+	## anything but hockey is covered, and what the cameras see is a large
+	## matte grey field with the panel joints in it
+	## (`ArenaBuilder._build_floor_seams`).
+	##
+	## Tinted a half-stop over `arena_floor`, which it sits inside. The rink
+	## has to read as a distinct surface from the concourse concrete around it
+	## -- that edge is where the boards are, and an arena whose floor is all
+	## one value has no rink in it at all.
+	"arena_rink": {
+		"asset": "PavingStones150", "tint": Color(0.1050, 0.1270, 0.1600),
+		"tile_metres": 2.4, "roughness": 1.0, "house_lit": true,
+	},
+	## The dasher boards. White, and the brightest large surface in the hall by
+	## a wide margin -- which is correct and is the point: in every reference
+	## photograph the boards are the line that separates floor from seating and
+	## they read white even with the house lights down.
+	##
+	## `reach` is set at the call site rather than here; what this carries is
+	## the near-white tint and a slight gloss, because a dasher board is a
+	## plastic-faced panel and catches the fixtures along its length.
+	"arena_boards": {
+		"tint": Color(0.640, 0.660, 0.700), "roughness": 0.45,
+	},
+	## The yellow cap rail along the top of the boards. House-lit rather than
+	## emissive: unlike the ribbon and the stair nosings this is a painted
+	## surface catching the wash, not a fixture, and making it glow would put a
+	## lit loop around the floor that no photograph of a rink shows.
+	"arena_board_cap": {
+		"tint": Color(0.520, 0.420, 0.110), "roughness": 0.60,
+		"house_lit": true,
 	},
 }
 

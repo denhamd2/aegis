@@ -40,17 +40,49 @@ pushed further out.
 
 | property | reference | build |
 | --- | --- | --- |
-| plan | obround: straight sides, semicircular ends | offset of a rectangle of half-extents (`BOWL_STRAIGHT_X` 5.0, `BOWL_STRAIGHT_Z` 0.0) |
-| ends | true semicircles, no straight run across the end | `BOWL_STRAIGHT_Z` is zero, so the ends are exactly semicircles |
+| plan | obround: straight sides, semicircular ends | offset of a rectangle of half-extents (`BOWL_STRAIGHT_X` 4.425, `BOWL_STRAIGHT_Z` 21.95) |
+| ends | true semicircles, no straight run across the end | the rectangle's corners carry the whole turn, so every end is exactly a semicircle of the offset's radius |
 | tiers | two, split by a concourse and a suite storey | `LOWER_ROWS` 12 + `CONCOURSE_DEPTH` 2.6 + `SUITE_HEIGHT` 3.6 + `UPPER_ROWS` 8 |
-| entrance end | the set fills one **end**, not a side | stage on -Z, which is an end; the bowl opens for `STAGE_HALF_WIDTH` either side of centre |
+| entrance end | the set fills one **end**, not a side | stage beyond the boards on -Z, which is an end; the bowl opens for `STAGE_HALF_WIDTH` either side of centre |
 
-**Not matched, and deliberately.** The reference bowl is far bigger than
-ours: a lower tier of roughly twenty rows and an upper of roughly the same,
-against our 12 and 8. Ours is sized to the ring in front of it and to what a
-backdrop may cost, not to a real building's capacity. The *shape* is the
-claim here; the *seat count* is not, and nothing in the repo should cite this
-file for one.
+### Scale — the rink is the ruler
+
+The building is dimensioned from a **regulation sheet of ice**, not from the
+ring: 200 x 85 feet with 28-foot corners, which is 60.96 x 25.91m with an
+8.53m radius. That is an external fact about the sport rather than something
+these photographs measure, and it is used as one: the photographs establish
+that the room is a rink bowl, and the rulebook says how big a rink is.
+
+The identity that makes it cheap is that **a rink is its own corner radius
+offset from a rectangle** — the same construction the bowl already used. So
+one rectangle generates the whole building:
+
+| offset from the plan rectangle | what is there |
+| --- | --- |
+| 8.53m (`RINK_CORNER_RADIUS`) | the boards, and the edge of the decked floor |
+| 10.13m (`BOWL_FIRST_ROW`) | the first row of the bowl, with the walkway between |
+| +12 x 0.95m | the lower tier |
+| +2.6m, +3.6m up | the concourse and the suite storey |
+| +8 x 0.95m | the upper tier |
+| 33.5m | the shell wall |
+
+which is a hall 76 x 111m on plan, roofed at 21m. A real arena of this rink's
+era is 100-120m long. Before this the bowl's first row sat 9m from the ring on
+a 28 x 18m plan — about a third of a rink — and the ring filled a room the
+size of a sports hall.
+
+**The ring is in the middle of the rink**, which is where it goes and which
+`test_arena_bowl.gd` asserts off the shipped mesh rather than off intent. The
+barricade is unmoved at 9m from the ring, so what the scale change actually
+produced is ~20m of open floor between the barricade and the boards at each
+end — and that floor is now full of seats (`_build_floor_seats`, ~1,490
+chairs), which is what a real arena does with it.
+
+**Not matched, and deliberately.** The reference bowl still has more rows than
+ours: roughly twenty in each tier against our 12 and 8. Its *plan* is now
+measured; its *seat count* is not, and nothing in the repo should cite this
+file for one. The build seats ~6,700 in the bowl and ~1,490 on the floor,
+which is a fraction of a real building's 17,000.
 
 ### The storey between the tiers
 
@@ -111,9 +143,9 @@ something countable rather than as a navy ramp.
 
 So the model builds a seat per `SEAT_PITCH` (0.62m) at `SEAT_WIDTH_FRACTION`
 0.84 of it, with the aisles left clear, rather than the continuous rail it
-carried while a crowd sat in front of it. That is ~3,500 seats and it took the
-model from 23.3k to 55.0k triangles — spent where the crowd's own instances
-used to be, in a hall that no longer draws them.
+carried while a crowd sat in front of it. That is ~6,700 seats at rink scale
+and it is most of the model's 102k triangles — spent where the crowd's own
+instances used to be, in a hall that no longer draws them.
 
 ### What the photographs do not establish
 

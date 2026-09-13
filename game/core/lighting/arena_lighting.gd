@@ -47,14 +47,23 @@ class_name ArenaLighting
 ## reads as the thing they are hung from.
 const TRUSS_Y := 7.6
 const HANG_Y := TRUSS_Y - 0.35
-## ArenaBuilder.ROOF_Y / BARRICADE_RADIUS.
-const ROOF_Y := 14.0
-const BOWL_INNER := 9.0
+## ArenaBuilder.ROOF_Y. Up from 14.0 with the hall: the building is now built
+## around a regulation rink and carries its roof steel where an arena does.
+const ROOF_Y := 21.0
+## ArenaBuilder.BOWL_FIRST_ROW -- where the seating starts, as an offset from
+## the hall's plan rectangle. It is no longer the same number as the
+## barricade: there is a rink floor full of seats between the two.
+const BOWL_INNER := 10.13
 ## ArenaBuilder.STAGE_BACK -- the plane the backdrop and the portals stand on.
 ## Mirrored here rather than imported for the same reason TRUSS_Y is: the rig
 ## reads the hall's geometry, it never writes it, and a one-way copy makes
 ## that direction impossible to get wrong.
-const STAGE_BACK_Z := -24.0
+##
+## It moved from -24 to -38 when the entrance set moved to the end of the
+## building. Every fixture on the stage is placed relative to this rather than
+## in absolute z, so they went with it -- which is the whole reason for the
+## mirror being a named constant and not a number typed four times.
+const STAGE_BACK_Z := -38.0
 
 # --- Levels -----------------------------------------------------------------
 ## Ring key. Four fixtures on the truss corners, cross-aimed so each covers
@@ -146,9 +155,10 @@ const ACCENT_RANGE := 12.0
 @export var accent_energy: float = 3.2
 @export var uplight_energy: float = 2.8
 
-## How many house fixtures ring the bowl. Twelve is enough that the wash has
-## no scallops at bowl distance; a coverage decision, not a measurement.
-const HOUSE_FIXTURES := 12
+## How many house fixtures ring the bowl. Twelve had no scallops in it while
+## the bowl was a 28 x 18m ring; the plan is 111m round now, so twenty keeps
+## the spacing roughly where it was. A coverage decision, not a measurement.
+const HOUSE_FIXTURES := 20
 
 ## Fixture-energy gain for renderers without volumetric fog -- in practice the
 ## compatibility renderer, which is what Godot's Web platform falls back to.
@@ -310,20 +320,34 @@ func _build_rim() -> void:
 				30.0, 0.4, 26.0, false).light_volumetric_fog_energy = 2.2
 
 
-## House wash. Twelve fixtures on a ring at roof height, aimed outward and
-## down onto the seating bowl -- which is where the hall's light has to come
-## from if the stands are to stop being self-illuminated.
+## House wash. Fixtures at roof height around the rink, aimed outward and down
+## onto the seating bowl -- which is where the hall's light has to come from
+## if the stands are to stop being self-illuminated.
 ##
 ## Aimed OUTWARD on purpose: aimed inward they would spill onto the mat, and
 ## the mat's exposure is the one number in this file that is anchored to a
 ## reference measurement rather than chosen.
+##
+## They used to sit on a CIRCLE of radius 7.8 in the middle of the floor,
+## which worked while the bowl was a 28 x 18m ring around the ring itself. The
+## hall is now a rink arena: the seating on the long sides is 14m out and the
+## seating at the ends is 32m out, and no circle of fixtures is the same
+## distance from both. So the ring follows the hall's own plan curve, one
+## fixture per equal step around it, each aimed out and down at the rows in
+## front of it.
+##
+## This is the one place the rig calls into ArenaBuilder rather than mirroring
+## a constant, and the reason is that the thing being read is a CURVE. Copying
+## a number keeps a one-way dependency honest; copying a curve means copying
+## the function that generates it, and two copies of that is exactly the drift
+## the mirror rule exists to prevent.
 func _build_house() -> void:
-	var radius := BOWL_INNER - 1.2
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - 1.5)
 	for i: int in HOUSE_FIXTURES:
-		var a := TAU * float(i) / float(HOUSE_FIXTURES)
-		var dir := Vector3(sin(a), 0.0, cos(a))
-		var at := dir * radius + Vector3(0.0, ROOF_Y - 1.4, 0.0)
-		var aim := dir * (BOWL_INNER + 9.0) + Vector3(0.0, 1.6, 0.0)
+		var entry: Array = loop[(i * loop.size()) / HOUSE_FIXTURES]
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 1.4, 0.0)
+		var dir: Vector3 = entry[1]
+		var aim: Vector3 = entry[0] + dir * 10.0 + Vector3(0.0, 2.6, 0.0)
 		_spot("House%02d" % i, at, aim, HOUSE_COLOR, house_energy,
 				46.0, 0.55, 34.0, false).light_volumetric_fog_energy = 0.25
 
@@ -332,9 +356,10 @@ func _build_house() -> void:
 ## different room from the ring rather than as more of the same wash.
 func _build_stage_wash() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 4.2, 10.0, -17.0)
+		var at := Vector3(sx * 4.2, 10.0, STAGE_BACK_Z + 21.0)
 		_spot("Stage%s" % ("E" if sx > 0.0 else "W"), at,
-				Vector3(sx * 2.0, 0.0, -22.0), STAGE_COLOR, stage_energy,
+				Vector3(sx * 2.0, 0.0, STAGE_BACK_Z + 16.0), STAGE_COLOR,
+				stage_energy,
 				44.0, 0.5, 28.0, false).light_volumetric_fog_energy = 1.2
 
 
@@ -354,8 +379,8 @@ func _build_stage_accents() -> void:
 		var label := "W" if sx < 0.0 else "E"
 		for i: int in 2:
 			var shoulder := 2.1 if i == 0 else 4.6
-			var at := Vector3(sx * shoulder, 6.2, -20.6)
-			var aim := Vector3(sx * 3.3, 3.25, -22.9)
+			var at := Vector3(sx * shoulder, 6.2, STAGE_BACK_Z + 3.4)
+			var aim := Vector3(sx * 3.3, 3.25, STAGE_BACK_Z + 1.1)
 			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
 					34.0, 0.6, ACCENT_RANGE, false) \
 					.light_volumetric_fog_energy = 2.0

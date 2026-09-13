@@ -69,7 +69,7 @@ func test_the_mesh_tops_out_on_the_schedules_last_tread() -> void:
 
 
 ## The plan is an obround, and its two half-extents differ by exactly the
-## straight side's half-length. That is the definition of offsetting a
+## difference between the rectangle's. That is the definition of offsetting a
 ## rectangle, and it is what makes the ends semicircular rather than merely
 ## round: any other relationship between the two is an ellipse or a stadium
 ## with a flat end, and neither is the reference's plan
@@ -79,9 +79,114 @@ func test_the_plan_is_a_rectangle_offset_not_a_scaled_outline() -> void:
 	var box := _aabb(root, "BowlSteps")
 	var half_x := box.position.x + box.size.x
 	var half_z := box.position.z + box.size.z
-	assert_float(half_x - half_z) \
-			.is_equal_approx(ArenaBuilder.BOWL_STRAIGHT_X, TOLERANCE)
+	assert_float(half_z - half_x).is_equal_approx(
+			ArenaBuilder.BOWL_STRAIGHT_Z - ArenaBuilder.BOWL_STRAIGHT_X,
+			TOLERANCE)
 	root.free()
+
+
+## The rectangle every offset in the hall comes off IS THE RINK'S.
+##
+## `BOWL_STRAIGHT_X/Z` are written out longhand because `arena_bowl.py` parses
+## plain constants and cannot evaluate an expression. This is the expression,
+## asserted: get it wrong and the boards stop being a rink, silently, while
+## everything still looks like an arena.
+func test_the_plan_rectangle_is_the_rinks() -> void:
+	assert_float(ArenaBuilder.BOWL_STRAIGHT_X + ArenaBuilder.RINK_CORNER_RADIUS) \
+			.is_equal_approx(ArenaBuilder.RINK_HALF_WIDTH, 0.001)
+	assert_float(ArenaBuilder.BOWL_STRAIGHT_Z + ArenaBuilder.RINK_CORNER_RADIUS) \
+			.is_equal_approx(ArenaBuilder.RINK_HALF_LENGTH, 0.001)
+	# And it is a regulation sheet: 200 x 85 feet, 28-foot corners.
+	assert_float(ArenaBuilder.RINK_HALF_LENGTH * 2.0).is_equal_approx(60.96, 0.01)
+	assert_float(ArenaBuilder.RINK_HALF_WIDTH * 2.0).is_equal_approx(25.91, 0.01)
+	assert_float(ArenaBuilder.RINK_CORNER_RADIUS).is_equal_approx(8.53, 0.01)
+
+
+## The modelled rink is that rink, and the ring stands in the middle of it.
+##
+## The deck's extents are the rink's own, and its centre is the origin -- which
+## is where `ring.tscn` puts the mat. "The ring is in the middle of the rink"
+## is the kind of claim that is true when written and quietly false three
+## constants later, so it is measured off the shipped mesh.
+func test_the_rink_is_regulation_and_the_ring_is_in_the_middle_of_it() -> void:
+	var root := _model()
+	var deck := _aabb(root, "RinkDeck")
+	assert_float(deck.size.x).is_equal_approx(ArenaBuilder.RINK_HALF_WIDTH * 2.0,
+			TOLERANCE)
+	assert_float(deck.size.z).is_equal_approx(ArenaBuilder.RINK_HALF_LENGTH * 2.0,
+			TOLERANCE)
+	var centre := deck.position + deck.size * 0.5
+	assert_float(centre.x).is_equal_approx(0.0, TOLERANCE)
+	assert_float(centre.z).is_equal_approx(0.0, TOLERANCE)
+	# The mat is 6m square at the origin, so it has to be well inside.
+	assert_bool(deck.grow(TOLERANCE).has_point(
+			Vector3(ArenaBuilder.RING_HALF_EXTENT, deck.position.y,
+					ArenaBuilder.RING_HALF_EXTENT))).is_true()
+	root.free()
+
+
+## The boards stand on the rink's edge at their regulation height, and the cap
+## rail sits on top of them rather than somewhere up the wall.
+func test_the_boards_ring_the_rink() -> void:
+	var root := _model()
+	var boards := _aabb(root, "RinkBoards")
+	assert_float(boards.position.y).is_equal_approx(ArenaBuilder.FLOOR_Y, TOLERANCE)
+	assert_float(boards.size.y).is_equal_approx(
+			ArenaBuilder.RINK_BOARD_HEIGHT - ArenaBuilder.RINK_CAP_HEIGHT,
+			TOLERANCE)
+	var cap := _aabb(root, "RinkCap")
+	assert_float(cap.position.y + cap.size.y) \
+			.is_equal_approx(ArenaBuilder.FLOOR_Y + ArenaBuilder.RINK_BOARD_HEIGHT,
+					TOLERANCE)
+	# The seating starts outside the boards, with the walkway between.
+	assert_float(ArenaBuilder.BOWL_FIRST_ROW) \
+			.is_greater(ArenaBuilder.RINK_CORNER_RADIUS)
+	root.free()
+
+
+## Floor seats stay on the rink.
+##
+## `_inside_rink` is what keeps 1,400-odd chairs off the walkway, out of the
+## bowl and off the boards, and it is one distance test standing between the
+## floor plan and chairs embedded in a wall. Checked on the four places it has
+## to be exactly right.
+func test_floor_seats_are_kept_on_the_rink() -> void:
+	var margin := ArenaBuilder.FLOOR_SEAT_MARGIN
+	# Dead centre, and on the boards' own line, inset by the margin.
+	assert_bool(ArenaBuilder._inside_rink(Vector3.ZERO, margin)).is_true()
+	assert_bool(ArenaBuilder._inside_rink(
+			Vector3(0.0, 0.0, ArenaBuilder.RINK_HALF_LENGTH - margin - 0.01),
+			margin)).is_true()
+	# A hand's width past the boards, on each axis, is out.
+	assert_bool(ArenaBuilder._inside_rink(
+			Vector3(0.0, 0.0, ArenaBuilder.RINK_HALF_LENGTH - margin + 0.1),
+			margin)).is_false()
+	assert_bool(ArenaBuilder._inside_rink(
+			Vector3(ArenaBuilder.RINK_HALF_WIDTH - margin + 0.1, 0.0, 0.0),
+			margin)).is_false()
+	# And the corner, where a rectangular test would wrongly say "inside".
+	assert_bool(ArenaBuilder._inside_rink(
+			Vector3(ArenaBuilder.RINK_HALF_WIDTH - margin,
+					0.0, ArenaBuilder.RINK_HALF_LENGTH - margin),
+			margin)).is_false()
+
+
+## The ramp crosses the rink.
+##
+## The entrance set stands beyond the boards at the -Z end and the ring is in
+## the middle, so the walk is the length of half a rink -- which is the whole
+## reason the stage moved. Asserted as a length rather than as a position, so
+## the numbers can move as long as the walk survives.
+func test_the_ramp_crosses_the_rink() -> void:
+	var ramp_end := -ArenaBuilder.RING_HALF_EXTENT - 1.0
+	var ramp_length := absf(ramp_end - ArenaBuilder.STAGE_FRONT)
+	assert_float(ramp_length).is_greater(20.0)
+	# The deck it comes off is outside the boards, not standing on the floor
+	# seating.
+	assert_float(ArenaBuilder.STAGE_FRONT) \
+			.is_less_equal(-ArenaBuilder.RINK_HALF_LENGTH + 0.5)
+	# And the video wall is behind the deck, not over the seats.
+	assert_float(ArenaBuilder.STAGE_BACK).is_less(ArenaBuilder.STAGE_FRONT)
 
 
 ## The suite storey sits between the tiers, at the height the schedule gives
@@ -168,7 +273,7 @@ func test_the_seats_stand_on_the_seated_treads() -> void:
 ## curve. Checked at the barricade line, where the first row starts: every
 ## sample must sit exactly `offset` from the rectangle it is offset from.
 func test_the_plan_loop_is_everywhere_one_offset_from_its_rectangle() -> void:
-	var offset := ArenaBuilder.BARRICADE_RADIUS
+	var offset := ArenaBuilder.BOWL_FIRST_ROW
 	for entry: Array in ArenaBuilder._plan_loop(offset):
 		var point: Vector3 = entry[0]
 		# Distance from an axis-aligned rectangle: clamp to it, then measure.

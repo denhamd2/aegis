@@ -1,13 +1,18 @@
 extends Node3D
 class_name ArenaBuilder
-## Builds the hall around the ring: the ringside floor and barricades, the
-## ringside folding chairs, the entrance stage and its video wall, the
-## overhead truss -- and instances the seating bowl and shell, which are a
-## model.
+## Builds the hall around the ring: the floor and barricades, the floor
+## seating, the entrance stage with its ramp and video wall, the overhead
+## truss -- and instances the rink, seating bowl and shell, which are a model.
+##
+## The hall is dimensioned from a REGULATION ICE RINK (see "The rink" below
+## and `gauntlet/refs/arena.md`): 60.96 x 25.91m with 8.53m corners, with the
+## ring in the middle of it, the boards where a rink's boards are, and the
+## seating bowl starting a walkway outside them. Everything that is not the
+## ring is measured out from that sheet of ice.
 ##
 ## The hall is EMPTY. There is no crowd in it, by decision rather than by
-## omission: the seats are the seating now, and what fills the bowl is the
-## model's own seat rails. An empty arena is a thing a wrestling build is
+## omission: the seats are the seating now -- ~6,700 in the bowl, modelled one
+## at a time, and ~1,490 folding chairs on the rink floor. An empty arena is a thing a wrestling build is
 ## routinely shot in -- an empty-arena match, a taping-day walkthrough -- and
 ## it is what `gauntlet/refs/arena.md`'s reference photographs are of.
 ## Removing the impostors took the only animated geometry in the hall with
@@ -99,17 +104,37 @@ const ROW_RUN := 0.95
 const ROW_RISE := 0.48
 const LOWER_ROWS := 12
 const UPPER_ROWS := 8
-## How many of LOWER_ROWS sit FLAT on the ringside slab rather than raking.
-## These are the rows the folding chairs stand on.
-##
-## This is the ringside of gauntlet/refs/ring.md: rows of empty black folding
-## chairs on the flat floor behind the barricade, with the raked bowl starting
-## behind them. They are taken off the front of the lower tier rather than
-## added in front of it, so the bowl's overall footprint, the concourse and
-## the upper tier are all where they were.
-const FLAT_CHAIR_ROWS := 4
 ## Walkway between the two tiers.
 const CONCOURSE_DEPTH := 2.6
+
+# --- Floor seating ----------------------------------------------------------
+## The chairs set out on the rink floor, between the barricade and the boards.
+##
+## This is where the bowl's four flat rows went. They existed because the bowl
+## started 9m from the ring and there was nowhere else to put ringside seats;
+## with the hall on rink scale there are twenty-odd metres of floor out there,
+## and a real arena fills it -- floor seating is the best seat in the house and
+## there is more of it than there is of anything else at ringside.
+##
+## Rows are offsets of the BARRICADE's own square, so the first ones wrap the
+## ring tightly and they open out as they go; each is clipped to the rink, so
+## the floor's shape comes from the boards rather than from a row count.
+const FLOOR_ROW_PITCH := 0.85
+## First row, as a distance outside the barricade line. Enough for the camera
+## pit and for people to get past the front row.
+const FLOOR_SEAT_START := 1.20
+## Clear walkway kept inside the boards, so the back row is not up against
+## them.
+const FLOOR_SEAT_MARGIN := 1.2
+## Clearance kept either side of the entrance ramp's centreline. The ramp is
+## RAMP_HALF_WIDTH wide; this is that plus the aisle a crowd needs to stand in
+## while someone walks down it.
+const RAMP_CLEARANCE := 3.4
+## How many floor rows get the imported folding chair before the rest switch
+## to the box proxy. See `_build_floor_chairs()`: the near rows are the ones
+## `ringside_low` and `wide_broadcast` actually resolve, and the far ones are
+## forty metres of chair backs that cost 1448 triangles each if you let them.
+const FLOOR_CHAIR_DETAIL_ROWS := 5
 
 # --- Entrance stage ---------------------------------------------------------
 ## The stage occupies the -Z wedge. The default match camera sits off-axis
@@ -118,9 +143,30 @@ const CONCOURSE_DEPTH := 2.6
 ## the stage via stage_wide/entrance framings as well as the broadcast edge.
 const STAGE_HALF_WIDTH := 6.0
 const STAGE_DECK_Y := 0.35
-const STAGE_BACK := -24.0
-## The ramp runs from the stage lip to the barricade line, descending to floor.
+## The back wall of the set, which the video wall and the portals stand on.
+##
+## It moved from -24 to -38 with the rink. The set now stands in the gap the
+## bowl leaves at the -Z END of the building, BEHIND the boards (-30.48)
+## rather than a third of the way across the floor, which is where an entrance
+## set actually stands. Everything else on the stage is measured off this, so
+## the wall, the portals and the backdrop moved with it and none of their own
+## numbers changed.
+const STAGE_BACK := -38.0
+## The front lip of the deck. The deck is the 8m between it and STAGE_BACK.
+const STAGE_FRONT := -30.0
+## The ramp runs from the stage lip to the ring, descending to floor level.
+##
+## It is 25.7m long now, against 4.7m before -- because there is a rink to
+## cross. That is the length an entrance ramp is, and it is what the stage
+## moving back to the end of the building buys: the walk is a walk.
 const RAMP_HALF_WIDTH := 1.8
+## Ramp step length. The fall is only STAGE_DECK_Y - FLOOR_Y = 1.45m over the
+## whole run, a 6% grade, so the staircase `_add_box` forces is a shallow one:
+## ~18 steps of 8cm. Stepped rather than wedged for the reason it always was
+## -- axis-aligned boxes are all this file builds -- but at this length the
+## steps are under a pixel of rise at any camera in the shotlist and the ramp
+## reads as the slope it is standing in for.
+const RAMP_STEP_LENGTH := 1.45
 
 # --- Video wall -------------------------------------------------------------
 ## Chord width and height of the LED wall, 3:1, off the reference photos in
@@ -204,24 +250,64 @@ const PORTAL_EMISSION := 1.12
 ## the portal, seen and not looked at.
 const PORTAL_FAN_EMISSION := 0.26
 
-# --- Bowl plan --------------------------------------------------------------
-## The bowl is an OBROUND -- two straight sides down +-X joined by
-## semicircular ends -- because that is the plan of the ice-hockey arenas this
-## promotion plays in, which `gauntlet/refs/arena.md` records off the reference
-## photographs. Every row, the concourse, the suite fascia and the shell are
-## the same curve at a different offset from one rectangle of half-extents
-## (BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z), so the rows stay parallel and the tread
-## depth is constant through the corners.
+# --- The rink ---------------------------------------------------------------
+## The hall is built around a REGULATION ICE RINK, in metres, because the
+## reference arena is one: 200 x 85 feet with 28-foot corners, which is
+## 60.96 x 25.91m with an 8.53m radius. `gauntlet/refs/arena.md` records why
+## the building's proportions come from here rather than from the ring.
 ##
-## With BOWL_STRAIGHT_Z at zero the ends are true semicircles and the straight
-## sides are the only flat run, which is the reference's proportion: the long
-## sides carry the hard cameras, the near end carries the entrance set.
+## This is the change that put the hall on scale. Before it, the bowl's first
+## row sat 9m from the ring on a 28 x 18m plan -- about a third of a rink --
+## and the whole arena was the size of a sports hall. The ring is unmoved at
+## the centre of it; everything else is now measured out from the boards.
+const RINK_HALF_LENGTH := 30.48
+const RINK_HALF_WIDTH := 12.955
+const RINK_CORNER_RADIUS := 8.53
+## Dasher boards: 42 inches. The glass above them is not built -- it is
+## transparent, and at the distances every camera in the shotlist sees the
+## boards from it would cost a pane of geometry to show nothing.
+const RINK_BOARD_HEIGHT := 1.07
+## The board cap rail, a hand's width of yellow along the top of the white.
+const RINK_CAP_HEIGHT := 0.12
+
+# --- Bowl plan --------------------------------------------------------------
+## The bowl is an OBROUND -- two straight sides joined by semicircular ends --
+## because that is the plan of the ice-hockey arenas this promotion plays in,
+## which `gauntlet/refs/arena.md` records off the reference photographs. Every
+## row, the concourse, the suite fascia, the shell, the rink deck and the
+## boards are the same curve at a different offset from one rectangle of
+## half-extents (BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z), so the rows stay parallel
+## and the tread depth is constant through the corners.
+##
+## That rectangle IS THE RINK'S: a rink is its own corner radius offset from
+## it, so `_plan_loop(RINK_CORNER_RADIUS)` is the boards and every row is the
+## same curve further out. One rectangle, one curve, one building -- which is
+## why these two are derived numbers written out longhand rather than an
+## expression: `arena_bowl.py` parses plain constants, and
+## `test_arena_bowl.gd` asserts the derivation instead.
+##
+##     BOWL_STRAIGHT_X = RINK_HALF_WIDTH  - RINK_CORNER_RADIUS = 4.425
+##     BOWL_STRAIGHT_Z = RINK_HALF_LENGTH - RINK_CORNER_RADIUS = 21.95
+##
+## The long axis is Z, so the +-X sides are the building's long sides -- the
+## hard-camera sides -- and the -Z end is an END. That is where the entrance
+## set goes, and it is why the ramp can now be a ramp: it has the length of a
+## rink end to cross.
 ##
 ## These are the numbers `tools/blender/arena_bowl.py` reads to build the mesh.
 ## It parses them out of THIS FILE; they are not duplicated there, and adding
 ## one to its WANTED list is how it gets a new one.
-const BOWL_STRAIGHT_X := 5.0
-const BOWL_STRAIGHT_Z := 0.0
+const BOWL_STRAIGHT_X := 4.425
+const BOWL_STRAIGHT_Z := 21.95
+## Where the first row of the bowl sits, as an offset from the plan rectangle.
+## The boards are at RINK_CORNER_RADIUS (8.53) and this is 1.6m outside them:
+## the walkway that runs round every rink between the boards and the seats.
+##
+## Distinct from BARRICADE_RADIUS, which is unchanged at 9.0 and is measured
+## from the RING. The two used to be the same number because the bowl started
+## where ringside ended; now there is a rink floor between them, and it is
+## full of seats.
+const BOWL_FIRST_ROW := 10.13
 ## Sampling of the plan curve. Both loops -- Blender's and this file's -- must
 ## produce the same vertex count in the same order, which they do by using
 ## these two numbers and nothing else.
@@ -248,14 +334,26 @@ const SEAT_WIDTH_FRACTION := 0.84
 const AISLE_CLEARANCE := 0.85
 
 # --- Shell ------------------------------------------------------------------
-## The hall is longer than it is wide, like the bowl inside it. WALL_EXTENT is
+## The hall is longer than it is wide, like the rink inside it. WALL_EXTENT is
 ## the +-Z half-extent and WALL_EXTENT_X the +-X one; the difference is exactly
-## BOWL_STRAIGHT_X, so the shell clears the last row by the same margin all the
-## way round.
-const WALL_EXTENT := 32.0
-const WALL_EXTENT_X := 37.0
-const WALL_TOP := 17.0
-const ROOF_Y := 14.0
+## BOWL_STRAIGHT_Z - BOWL_STRAIGHT_X, so the shell clears the last row by the
+## same margin all the way round.
+##
+##     last row  = BOWL_FIRST_ROW + 12*ROW_RUN + CONCOURSE_DEPTH + 8*ROW_RUN
+##               = 10.13 + 11.4 + 2.6 + 7.6 = 31.73
+##     +-X       = BOWL_STRAIGHT_X + 31.73 + 1.8 = 37.96
+##     +-Z       = BOWL_STRAIGHT_Z + 31.73 + 1.8 = 55.48
+##
+## which is a building 76 x 111m on plan. A real arena of this rink's era is
+## 100-120m long, so this is the right order of magnitude for the first time.
+const WALL_EXTENT := 55.5
+const WALL_EXTENT_X := 38.0
+## Roof and wall height went up with the plan. A 14m roof over a 111m hall is
+## a warehouse; a rink arena carries its roof steel at 20-25m, and the upper
+## tier's back row now tops out at 12.1m, which the old 14m roof would have
+## been sitting on.
+const WALL_TOP := 25.0
+const ROOF_Y := 21.0
 const TRUSS_Y := 7.6
 
 # --- The Blender model ------------------------------------------------------
@@ -281,6 +379,20 @@ const BOWL_MODEL_MATERIALS := {
 	"SuiteFascia": ["arena_shell", 0.9],
 	"SuiteGlass": ["arena_suite_glass", 0.5],
 	"Shell": ["arena_shell", 0.85],
+	"RinkDeck": ["arena_rink", 0.7],
+	# The boards are the brightest large surface in the hall on purpose: they
+	# are white, they ring the floor, and in the reference photographs they
+	# are the line that tells floor from seating.
+	#
+	# 8.0 is an order of magnitude above any other reach here, and it is not a
+	# fudge: `_house_lit()` solves for a target LUMINANCE, so a reach is only
+	# comparable between surfaces of similar albedo, and this one's albedo is
+	# five times the bowl's. What it buys is 0.048 linear against the seats'
+	# 0.0070 -- boards that read white with the house down, which is what every
+	# reference photograph shows and what a fixture-lit white wall at floor
+	# level does not get on its own down here.
+	"RinkBoards": ["arena_boards", 8.0],
+	"RinkCap": ["arena_board_cap", 3.0],
 }
 ## The two parts that are lit rather than house-lit: the ribbon boards ring
 ## the whole bowl and the stair nosings run up every aisle, and both are
@@ -313,6 +425,7 @@ func _ready() -> void:
 	_build_floor()
 	_build_barricades()
 	_build_bowl()
+	_build_floor_seats()
 	_build_stage()
 	_build_truss()
 
@@ -816,24 +929,44 @@ func _build_floor() -> void:
 	_build_floor_seams()
 
 
-## The scored panel lines in the ringside slab. Drawn as their own darker
-## surface a hair above the floor rather than cut into it: a seam is 5cm wide
-## and modelling it as a groove would need three faces where one flat strip is
-## visually identical from every camera in the shotlist.
+## The panel joints in the event flooring laid over the ice.
 ##
-## `reach` is well under the floor's own, so a seam reads as a shadow line
-## rather than as a painted marking -- which is the difference between a
-## scored slab and a car park.
+## An ice rink hosting anything but hockey is decked over, and that decking
+## arrives as panels -- so the lines that used to be a scored concrete slab are
+## now the joints between them, and they run to the SHAPE OF THE RINK rather
+## than to a square. Every line is clipped to the boards analytically: at a
+## given x the rink reaches `BOWL_STRAIGHT_Z + sqrt(r^2 - dx^2)`, which is what
+## the corner arcs are, so a joint stops where the decking does instead of
+## running out over the seating.
+##
+## Drawn as their own darker surface a hair above the floor rather than cut
+## into it: a joint is 5cm wide and modelling it as a groove would need three
+## faces where one flat strip is visually identical from every camera in the
+## shotlist. `reach` is well under the floor's own, so a joint reads as a
+## shadow line rather than as a painted marking.
 func _build_floor_seams() -> void:
 	var st := _new_surface()
-	var reach := BARRICADE_RADIUS + ROW_RUN * float(FLAT_CHAIR_ROWS) + 1.0
-	var lines := int(reach / FLOOR_SEAM_PITCH)
-	for i: int in range(-lines, lines + 1):
+	var r := RINK_CORNER_RADIUS
+	# Half-extent of the rink along Z at a given |x|, and along X at a given
+	# |z| -- the same arc, read on its two axes.
+	var reach_z := func(x: float) -> float:
+		var dx := maxf(absf(x) - BOWL_STRAIGHT_X, 0.0)
+		return BOWL_STRAIGHT_Z + sqrt(maxf(r * r - dx * dx, 0.0))
+	var reach_x := func(z: float) -> float:
+		var dz := maxf(absf(z) - BOWL_STRAIGHT_Z, 0.0)
+		return BOWL_STRAIGHT_X + sqrt(maxf(r * r - dz * dz, 0.0))
+	for i: int in range(-int(RINK_HALF_WIDTH / FLOOR_SEAM_PITCH),
+			int(RINK_HALF_WIDTH / FLOOR_SEAM_PITCH) + 1):
 		var at := float(i) * FLOOR_SEAM_PITCH
+		var half: float = reach_z.call(at)
 		_add_box(st, Vector3(at, FLOOR_Y + 0.004, 0.0),
-				Vector3(FLOOR_SEAM_WIDTH, 0.008, reach * 2.0))
+				Vector3(FLOOR_SEAM_WIDTH, 0.008, half * 2.0))
+	for i: int in range(-int(RINK_HALF_LENGTH / FLOOR_SEAM_PITCH),
+			int(RINK_HALF_LENGTH / FLOOR_SEAM_PITCH) + 1):
+		var at := float(i) * FLOOR_SEAM_PITCH
+		var half: float = reach_x.call(at)
 		_add_box(st, Vector3(0.0, FLOOR_Y + 0.004, at),
-				Vector3(reach * 2.0, 0.008, FLOOR_SEAM_WIDTH))
+				Vector3(half * 2.0, 0.008, FLOOR_SEAM_WIDTH))
 	add_child(_mesh_instance("FloorSeams", st,
 			MaterialLibrary.house_compensate(
 			_house_lit(_textured("arena_floor"), 0.35))))
@@ -888,12 +1021,99 @@ func _build_barricades() -> void:
 ## height come from one place. `test_arena_bowl.gd` measures the shipped .glb
 ## against this schedule, so the pair cannot drift silently.
 func _build_bowl() -> void:
-	var chairs: Array[Transform3D] = []
 	add_child(_build_bowl_model())
-	for row: Dictionary in _row_schedule():
-		if row["kind"] == "flat":
-			_chair_row(row, chairs)
-	add_child(_build_chairs(chairs))
+
+
+# ---------------------------------------------------------------------------
+# Floor seating
+# ---------------------------------------------------------------------------
+
+## The chairs on the rink floor, from the barricade out to the boards.
+##
+## This is the biggest block of seating in the hall and, in a real building,
+## the most expensive: twenty-odd metres of floor either side of the ring and
+## a rink end behind it. It replaced the four flat rows the bowl used to carry
+## at ringside, which existed only because the bowl started 9m from the ring
+## and there was nowhere else to put them.
+##
+## Rows are offsets of the BARRICADE's square rather than of the rink's
+## rectangle: floor seating is laid out around the ring, not around the
+## building, and a row that wrapped the rink's plan would have its far end
+## forty metres from the thing it is pointed at. Each row is then clipped to
+## the rink, so the shape of the block comes from the boards.
+func _build_floor_seats() -> void:
+	var detailed: Array[Transform3D] = []
+	var distant: Array[Transform3D] = []
+	# The last row is the one whose offset still leaves the walkway inside the
+	# boards. Derived, not counted: changing the rink or the margin moves the
+	# back row without anyone having to re-count rows.
+	var last := RINK_HALF_LENGTH - FLOOR_SEAT_MARGIN - BARRICADE_RADIUS
+	var index := 0
+	var offset := FLOOR_SEAT_START
+	while offset <= last:
+		_floor_seat_row(offset,
+				detailed if index < FLOOR_CHAIR_DETAIL_ROWS else distant)
+		offset += FLOOR_ROW_PITCH
+		index += 1
+	add_child(_build_chairs("FloorChairs", _chair_mesh(), detailed))
+	add_child(_build_chairs("FloorChairsFar", _chair_proxy_mesh(), distant))
+
+
+## One row of floor chairs, walked along the barricade's offset curve.
+##
+## Three things take a chair out of the row, and all three are things a real
+## floor has: the rink's edge (with its walkway), the entrance ramp's corridor,
+## and the four corner aisles that break the floor into blocks.
+func _floor_seat_row(offset: float, out_chairs: Array[Transform3D]) -> void:
+	const WOBBLE := 0.012
+	const YAW_JITTER := 0.035
+	var loop := _offset_loop(BARRICADE_RADIUS, BARRICADE_RADIUS, offset)
+	var carry := 0.0
+	for i: int in loop.size():
+		var here: Vector3 = loop[i][0]
+		var next: Vector3 = loop[(i + 1) % loop.size()][0]
+		var span := here.distance_to(next)
+		if span <= 0.0:
+			continue
+		var at := seat_pitch - carry
+		while at < span:
+			var point := here.lerp(next, at / span)
+			at += seat_pitch
+			if not _inside_rink(point, FLOOR_SEAT_MARGIN):
+				continue
+			if point.z < 0.0 and absf(point.x) < RAMP_CLEARANCE:
+				continue
+			if _in_floor_aisle(point):
+				continue
+			var inward: Vector3 = -(loop[i][1] as Vector3)
+			var jitter := Vector3(_rng.randf_range(-WOBBLE, WOBBLE), 0.0,
+					_rng.randf_range(-WOBBLE, WOBBLE))
+			var basis := Basis(Vector3.UP, atan2(inward.x, inward.z)
+					+ _rng.randf_range(-YAW_JITTER, YAW_JITTER))
+			out_chairs.append(Transform3D(basis,
+					Vector3(point.x, FLOOR_Y, point.z) + jitter))
+		carry = span - (at - seat_pitch)
+
+
+## Is a point on the rink, with `margin` of walkway kept inside the boards?
+##
+## The rink IS the plan rectangle offset by RINK_CORNER_RADIUS, so this is the
+## same distance-to-a-rectangle the whole building is built on, tested rather
+## than swept.
+static func _inside_rink(point: Vector3, margin: float) -> bool:
+	var dx := maxf(absf(point.x) - BOWL_STRAIGHT_X, 0.0)
+	var dz := maxf(absf(point.z) - BOWL_STRAIGHT_Z, 0.0)
+	return sqrt(dx * dx + dz * dz) <= RINK_CORNER_RADIUS - margin
+
+
+## The two diagonal aisles that cut the floor into four blocks -- sides and
+## ends -- as the lines x = z and x = -z. Distance from a point to either is
+## |x -+ z| / sqrt(2), which is cheaper than any bearing arithmetic and, unlike
+## an angular clearance, stays the same width the whole way out.
+static func _in_floor_aisle(point: Vector3) -> bool:
+	const HALF_WIDTH := 0.85
+	return minf(absf(point.x - point.z), absf(point.x + point.z)) \
+			< HALF_WIDTH * sqrt(2.0)
 
 
 ## Instance the exported bowl and dress every part of it.
@@ -948,7 +1168,7 @@ func _dress(root: Node3D, part: String, mat: Material) -> void:
 ## liability than a third format between them.
 static func _row_schedule() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
-	var inner := BARRICADE_RADIUS
+	var inner := BOWL_FIRST_ROW
 	var tread_y := FLOOR_Y
 	for tier: int in [0, 1]:
 		var count: int = LOWER_ROWS if tier == 0 else UPPER_ROWS
@@ -960,12 +1180,9 @@ static func _row_schedule() -> Array[Dictionary]:
 			tread_y += SUITE_HEIGHT
 		for r: int in count:
 			var outer := inner + ROW_RUN
-			var flat := tier == 0 and r < FLAT_CHAIR_ROWS
-			if not flat:
-				tread_y += ROW_RISE
-			rows.append({"kind": "flat" if flat else "seated", "tier": tier,
-					"index": r, "inner": inner, "outer": outer,
-					"tread_y": tread_y})
+			tread_y += ROW_RISE
+			rows.append({"kind": "seated", "tier": tier, "index": r,
+					"inner": inner, "outer": outer, "tread_y": tread_y})
 			inner = outer
 	rows.append({"kind": "outer", "inner": inner, "outer": inner,
 			"tread_y": tread_y})
@@ -980,9 +1197,18 @@ static func _row_schedule() -> Array[Dictionary]:
 ## means the same bearing in both -- which is what lets the aisles the chairs
 ## leave clear be the aisles the model puts stair nosings up.
 static func _plan_loop(offset: float) -> Array:
+	return _offset_loop(BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z, offset)
+
+
+## The general form: the obround at `offset` from ANY rectangle.
+##
+## Two rectangles are offset in this hall and they are not the same one. The
+## building -- rink, boards, bowl, shell -- comes off (BOWL_STRAIGHT_X,
+## BOWL_STRAIGHT_Z), which is the rink's. The floor seating comes off the
+## BARRICADE's square, because floor seats are laid out around the ring rather
+## than around the building. Same curve, same walk, same normals; one function.
+static func _offset_loop(ax: float, az: float, offset: float) -> Array:
 	var loop: Array = []
-	var ax := BOWL_STRAIGHT_X
-	var az := BOWL_STRAIGHT_Z
 	var straight := func(from: Vector3, to: Vector3, normal: Vector3) -> void:
 		for i: int in BOWL_STRAIGHT_SEGMENTS:
 			loop.append([from.lerp(to, float(i) / float(BOWL_STRAIGHT_SEGMENTS)),
@@ -1017,7 +1243,7 @@ static func _in_stage_gap(point: Vector3) -> bool:
 ## an aisle keeps the same bearing on every row, which is what makes the
 ## nosings line up into a staircase instead of wandering across the rake.
 static func _aisle_indices() -> PackedInt32Array:
-	var per_loop := _plan_loop(BARRICADE_RADIUS).size()
+	var per_loop := _plan_loop(BOWL_FIRST_ROW).size()
 	var picks := PackedInt32Array()
 	for k: int in BOWL_AISLES:
 		picks.append(int(round(float(k) * float(per_loop) / float(BOWL_AISLES)))
@@ -1026,85 +1252,26 @@ static func _aisle_indices() -> PackedInt32Array:
 
 
 # ---------------------------------------------------------------------------
-# Ringside chairs on it
+# The chairs themselves
 # ---------------------------------------------------------------------------
 
-## One flat row's folding chairs, walked along the plan curve at a constant
-## pitch.
+## One MultiMesh of folding chairs, in one draw call, on a plain material, not
+## moving.
 ##
-## Walking arc length rather than lerping a straight run is what keeps the
-## spacing even through the corners: the old four-straight bowl could space
-## seats by dividing each side, and a curve cannot be divided that way without
-## bunching them at the end of every arc.
-##
-## Every position is filled and the jitter is small on purpose. These are set
-## out by staff before a show, so they sit in a grid with a few degrees of
-## slop in it -- the looser placement this used to take when it also had to
-## scatter a crowd is not what an unoccupied row looks like.
-func _chair_row(row: Dictionary, out_chairs: Array[Transform3D]) -> void:
-	const WOBBLE := 0.012
-	const YAW_JITTER := 0.035
-	var depth: float = row["outer"] - row["inner"]
-	var y: float = row["tread_y"]
-	var loop := _plan_loop(row["inner"] + depth * 0.45)
-	var avoid: Array[Vector3] = []
-	for index: int in _aisle_indices():
-		avoid.append(loop[index][0])
-
-	var carry := 0.0
-	for i: int in loop.size():
-		var here: Vector3 = loop[i][0]
-		var next: Vector3 = loop[(i + 1) % loop.size()][0]
-		var span := here.distance_to(next)
-		if span <= 0.0:
-			continue
-		var at := seat_pitch - carry
-		while at < span:
-			var point := here.lerp(next, at / span)
-			at += seat_pitch
-			if _in_stage_gap(point):
-				continue
-			var in_aisle := false
-			for gap: Vector3 in avoid:
-				if point.distance_to(gap) < AISLE_CLEARANCE:
-					in_aisle = true
-					break
-			if in_aisle:
-				continue
-			# Face the ring: the chair mesh looks down +Z at yaw 0, so the yaw
-			# that turns it onto the inward normal is atan2(x, z) of that
-			# normal. Taken per chair rather than per side -- on a curve there
-			# are no sides.
-			var inward: Vector3 = -(loop[i][1] as Vector3)
-			var facing := atan2(inward.x, inward.z)
-			var jitter := Vector3(_rng.randf_range(-WOBBLE, WOBBLE), 0.0,
-					_rng.randf_range(-WOBBLE, WOBBLE))
-			var basis := Basis(Vector3.UP,
-					facing + _rng.randf_range(-YAW_JITTER, YAW_JITTER))
-			out_chairs.append(Transform3D(basis,
-					Vector3(point.x, y, point.z) + jitter))
-		carry = span - (at - seat_pitch)
-# ---------------------------------------------------------------------------
-# Ringside chairs
-# ---------------------------------------------------------------------------
-
-## The empty folding chairs on the flat rows behind the barricade.
-##
-## One MultiMesh for the lot: a few hundred chairs in one draw call, on a
-## plain material, not moving. They used to need their own MultiMesh to stay
-## off the crowd's bob shader; with the crowd gone they are simply the only
-## instanced thing in the hall, and this is how a few hundred copies of one
-## 1448-triangle mesh get drawn once.
-func _build_chairs(chairs: Array[Transform3D]) -> MultiMeshInstance3D:
+## Called twice, with two different meshes: the imported chair for the rows
+## near the ring and a box proxy for the rest. See `_chair_proxy_mesh()` for
+## why that split exists and what it is worth.
+func _build_chairs(node_name: String, mesh: Mesh,
+		chairs: Array[Transform3D]) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = _chair_mesh()
+	mm.mesh = mesh
 	mm.instance_count = chairs.size()
 	for i: int in chairs.size():
 		mm.set_instance_transform(i, chairs[i])
 
 	var node := MultiMeshInstance3D.new()
-	node.name = "RingsideChairs"
+	node.name = node_name
 	node.multimesh = mm
 	# `reach` is high for a hall surface. Ringside is nearly the only part of
 	# the frame gauntlet/refs/ring.md shows lit at all -- its chairs read
@@ -1118,6 +1285,39 @@ func _build_chairs(chairs: Array[Transform3D]) -> MultiMeshInstance3D:
 			_house_lit(_textured("arena_chair"), 2.5))
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return node
+
+
+## The far-floor chair: four boxes, 48 triangles, standing in for the imported
+## chair's 1448.
+##
+## The floor seats ~2,000 chairs now. At the imported mesh's triangle count
+## that is 2.9 MILLION triangles of folding chair -- more than the rest of the
+## hall put together by an order of magnitude, and most of it forty metres from
+## any camera in the shotlist, where a whole chair covers a few pixels and
+## nothing in it is resolvable but its silhouette and the gap under its seat.
+##
+## So the near rows (FLOOR_CHAIR_DETAIL_ROWS of them, the ones `ringside_low`
+## and `wide_broadcast` actually resolve) keep the imported chair and the rest
+## get this. The split costs one extra draw call and saves ~2.4M triangles.
+##
+## Dimensions and origin match `_chair_mesh()` exactly -- 0.50 x 0.90 x 0.60m,
+## feet on y = 0, facing +Z -- because the two are placed by the same code and
+## a proxy that does not match its own subject is a seam in the middle of the
+## floor rather than an LOD.
+static var _proxy_cache: ArrayMesh
+
+
+static func _chair_proxy_mesh() -> ArrayMesh:
+	if _proxy_cache != null:
+		return _proxy_cache
+	var st := _new_surface()
+	# Seat pan, back, and the two legs, in that order.
+	_add_box(st, Vector3(0.0, 0.44, 0.0), Vector3(0.46, 0.05, 0.46))
+	_add_box(st, Vector3(0.0, 0.68, -0.21), Vector3(0.46, 0.44, 0.05))
+	for sx: float in [-1.0, 1.0]:
+		_add_box(st, Vector3(sx * 0.20, 0.22, 0.0), Vector3(0.05, 0.44, 0.42))
+	_proxy_cache = st.commit()
+	return _proxy_cache
 
 
 ## The chair, baked once.
@@ -1214,20 +1414,21 @@ func _build_stage() -> void:
 ## thing it is now there to show.
 func _build_stage_deck() -> void:
 	var deck := _new_surface()
-	var stage_front := -BARRICADE_RADIUS
-	var deck_depth := stage_front - STAGE_BACK
+	var deck_depth := STAGE_FRONT - STAGE_BACK
 	_add_box(deck, Vector3(0.0, (FLOOR_Y + STAGE_DECK_Y) * 0.5,
-			(stage_front + STAGE_BACK) * 0.5),
+			(STAGE_FRONT + STAGE_BACK) * 0.5),
 			Vector3(STAGE_HALF_WIDTH * 2.0, STAGE_DECK_Y - FLOOR_Y, deck_depth))
-	# Ramp: a short stack of steps rather than a wedge, because _add_box only
-	# makes axis-aligned boxes and a visible staircase is honest grey-box.
-	var steps := 6
+	# Ramp: a stack of steps rather than a wedge, because _add_box only makes
+	# axis-aligned boxes. The step COUNT comes from the length rather than
+	# being fixed at six, so lengthening the ramp lengthens the staircase
+	# instead of turning it into a flight of stairs nobody could walk down.
+	var ramp_end := -RING_HALF_EXTENT - 1.0
+	var steps := maxi(int(ceil(absf(ramp_end - STAGE_FRONT) / RAMP_STEP_LENGTH)), 1)
 	for i: int in steps:
 		var t := float(i) / float(steps)
 		var y := lerpf(STAGE_DECK_Y, FLOOR_Y, t)
-		var z0 := lerpf(stage_front, -RING_HALF_EXTENT - 1.0, t)
-		var z1 := lerpf(stage_front, -RING_HALF_EXTENT - 1.0,
-				float(i + 1) / float(steps))
+		var z0 := lerpf(STAGE_FRONT, ramp_end, t)
+		var z1 := lerpf(STAGE_FRONT, ramp_end, float(i + 1) / float(steps))
 		_add_box(deck, Vector3(0.0, (FLOOR_Y + y) * 0.5, (z0 + z1) * 0.5),
 				Vector3(RAMP_HALF_WIDTH * 2.0, y - FLOOR_Y, absf(z1 - z0)))
 	add_child(_mesh_instance("EntranceStage", deck, MaterialLibrary.house_compensate(

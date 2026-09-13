@@ -15,9 +15,10 @@ that shape; every row here is a swept polyline, and the corners are arcs.
 
 What this builds, and what it deliberately does not
 ---------------------------------------------------
-Builds: the raked bowl (lower tier, concourse, suite fascia with its ribbon
-LED boards and glass, upper tier), the aisle stairs, the seats themselves, and
-the shell (obround outer wall plus roof).
+Builds: the rink (decked surface, dasher boards, cap rail), the raked bowl
+(lower tier, concourse, suite fascia with its ribbon LED boards and glass,
+upper tier), the aisle stairs, the seats themselves, and the shell (obround
+outer wall plus roof).
 
 Does NOT build, because the existing set is kept exactly as it is: the ring,
 the entrance ramp, the stage deck and its portals, the video wall, the truss,
@@ -63,12 +64,14 @@ DEFAULT_OUT = REPO / "game" / "assets" / "environment" / "arena_bowl.glb"
 # silently building a differently-shaped bowl.
 WANTED = [
     "FLOOR_Y",
-    "BARRICADE_RADIUS",
     "ROW_RUN",
     "ROW_RISE",
     "LOWER_ROWS",
     "UPPER_ROWS",
-    "FLAT_CHAIR_ROWS",
+    "BOWL_FIRST_ROW",
+    "RINK_CORNER_RADIUS",
+    "RINK_BOARD_HEIGHT",
+    "RINK_CAP_HEIGHT",
     "CONCOURSE_DEPTH",
     "STAGE_HALF_WIDTH",
     "ROOF_Y",
@@ -356,7 +359,7 @@ def row_schedule(cfg: dict[str, float]) -> list[dict]:
     computes -- so nothing can end up standing in mid-air.
     """
     rows: list[dict] = []
-    inner = cfg["BARRICADE_RADIUS"]
+    inner = cfg["BOWL_FIRST_ROW"]
     tread_y = cfg["FLOOR_Y"]
     for tier in (0, 1):
         count = int(cfg["LOWER_ROWS"] if tier == 0 else cfg["UPPER_ROWS"])
@@ -378,11 +381,9 @@ def row_schedule(cfg: dict[str, float]) -> list[dict]:
             tread_y += cfg["SUITE_HEIGHT"]
         for r in range(count):
             outer = inner + cfg["ROW_RUN"]
-            flat = tier == 0 and r < int(cfg["FLAT_CHAIR_ROWS"])
-            if not flat:
-                tread_y += cfg["ROW_RISE"]
+            tread_y += cfg["ROW_RISE"]
             rows.append({
-                "kind": "flat" if flat else "seated",
+                "kind": "seated",
                 "tier": tier,
                 "index": r,
                 "inner": inner,
@@ -402,7 +403,7 @@ def aisle_indices(cfg: dict[str, float]) -> list[int]:
     on every row: the stair nosings line up into a staircase, and the gap the
     seats leave for them is the same gap all the way up the rake.
     """
-    per_loop = len(plan_loop(cfg, cfg["BARRICADE_RADIUS"]))
+    per_loop = len(plan_loop(cfg, cfg["BOWL_FIRST_ROW"]))
     aisles = int(cfg["BOWL_AISLES"])
     return [int(round(k * per_loop / aisles)) % per_loop for k in range(aisles)]
 
@@ -534,7 +535,7 @@ def build_aisles(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]
     picks = aisle_indices(cfg)
 
     for row in rows:
-        if row["kind"] not in ("seated", "flat"):
+        if row["kind"] != "seated":
             continue
         loop = plan_loop(cfg, row["inner"])
         depth = row["outer"] - row["inner"]
@@ -558,6 +559,58 @@ def build_aisles(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]
                 row["tread_y"] + 0.03,
                 closed=False,
             )
+
+
+def build_rink(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The rink: its decked-over surface, its dasher boards, and the cap rail
+    along the top of them.
+
+    The rink IS the plan rectangle offset by its own corner radius, so the
+    boards are `plan_loop(cfg, RINK_CORNER_RADIUS)` and nothing here needs a
+    second curve. That identity is the reason the building's plan rectangle is
+    the rink's rather than something chosen to suit the seating: every other
+    offset in this file -- walkway, first row, concourse, shell -- is measured
+    out from the boards, the way a real arena is.
+
+    The deck is what the ice is covered with for anything that is not hockey.
+    It is built a centimetre above the arena floor rather than replacing it, so
+    the boards have a visible base and the floor under the seating bowl is
+    still there.
+
+    No glass above the boards: it is transparent, and at the distance every
+    camera in the shotlist sees the boards from, a pane of it would be
+    geometry that shows nothing. The cap rail is built, because it is the one
+    high-value line on an otherwise white wall and it is what says "rink" in
+    the reference photographs.
+    """
+    floor_y = cfg["FLOOR_Y"]
+    radius = cfg["RINK_CORNER_RADIUS"]
+    loop = plan_loop(cfg, radius)
+    edge = [p for p, _ in loop]
+
+    # Deck: a fan from the centre out to the boards. A fan rather than a strip
+    # because the rink is one closed surface, not a band, and its middle is
+    # where the ring stands.
+    deck = parts["RinkDeck"]
+    centre = deck.vert(Vector((0.0, floor_y + 0.01, 0.0)))
+    rim = [deck.vert(Vector((p.x, floor_y + 0.01, p.z))) for p in edge]
+    for i in range(len(rim)):
+        j = (i + 1) % len(rim)
+        try:
+            deck.bm.faces.new((centre, rim[i], rim[j]))
+        except ValueError:
+            pass
+
+    # Boards, and the cap rail sitting on top of them.
+    board_h = cfg["RINK_BOARD_HEIGHT"]
+    cap_h = cfg["RINK_CAP_HEIGHT"]
+    outer = [p + n * 0.14 for p, n in loop]
+    parts["RinkBoards"].prism(edge, outer, floor_y, floor_y + board_h - cap_h,
+                              closed=True)
+    cap_in = [p - n * 0.02 for p, n in loop]
+    cap_out = [p + n * 0.16 for p, n in loop]
+    parts["RinkCap"].prism(cap_in, cap_out, floor_y + board_h - cap_h,
+                           floor_y + board_h, closed=True)
 
 
 def build_shell(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]) -> None:
@@ -596,6 +649,9 @@ PART_COLORS = {
     "SuiteGlass": (0.04, 0.05, 0.07, 1.0),
     "StairNosing": (0.62, 0.52, 0.06, 1.0),
     "Shell": (0.12, 0.13, 0.15, 1.0),
+    "RinkDeck": (0.28, 0.30, 0.33, 1.0),
+    "RinkBoards": (0.78, 0.79, 0.80, 1.0),
+    "RinkCap": (0.72, 0.58, 0.10, 1.0),
 }
 
 
@@ -642,6 +698,7 @@ def main(argv: list[str]) -> int:
     reset_scene()
     parts = {name: Part(name) for name in PART_COLORS}
     rows = build_bowl(cfg, parts)
+    build_rink(cfg, parts)
     build_fascia(cfg, parts, rows)
     build_aisles(cfg, parts, rows)
     build_shell(cfg, parts, rows)
