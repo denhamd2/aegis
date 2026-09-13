@@ -9,6 +9,13 @@ licence is a problem later, not now.
 | --- | --- | --- | --- |
 | https://github.com/kevinbadi/blender-skills | 16 | `b2f0f816d320b56ae86d52597a35284e0e6cc929` | **none stated — see below** |
 | https://github.com/RobLe3/cc-blender-skill | 30 | `11016c9a5847897491dde935c346571bd7548e3d` | MIT (`LICENSE` in repo root) |
+| https://github.com/arjun988/blender-skills | 94 | `8f778d2405a214b508d4c7d80742be8e43acdd52` | MIT (`LICENSE` in repo root) |
+
+141 skills in total. arjun988's also ships a SHARED `references/` directory
+(9 files: polycount budgets, asset pipeline, validation checklists and so on)
+which is installed as a sibling of the skills rather than inside one, because
+48 of its skills link to it as `../references/*.md` and those links break
+otherwise. It is reference material, not a skill, and has no SKILL.md.
 
 Taken from the repositories' default branches on 2026-09-13. Only the skill
 directories were copied — `cc-blender-skill`'s `knowledge/`, `docs/` and `src/`
@@ -50,8 +57,8 @@ To make them live, a machine needs:
 A skill is not data — it is instructions that steer an agent — so all 46 were
 read before being copied rather than after:
 
-- every one has valid frontmatter with `name` and `description` (46 of 46), so
-  none will fail silently at load
+- every one has valid frontmatter with `name` and `description` (141 of 141),
+  so none will fail silently at load
 - no credential access beyond the documented `MESHY_API_KEY`; nothing touching
   `~/.ssh`, `~/.aws`, or arbitrary env
 - no destructive shell: no `rm -rf`, no `curl … | sh`, no `sudo`
@@ -64,4 +71,15 @@ read before being copied rather than after:
   endpoint: `api.meshy.ai`
 
 Nothing was excluded. No name collided with another skill or with
-`import-wrestler`.
+`import-wrestler`. arjun988's set was audited the same way and came back clean
+on every count -- the single "secret" match is the phrase "secret wall" in a
+metroidvania level-design note.
+
+## What is actually relevant to this project
+
+Most of these are for product renders and stylised art, not a wrestling game.
+The ones worth reading when animation work resumes are arjun988's `animation`,
+`rigging`, `retopology`, `export-pipeline` and especially `godot-export`, plus
+RobLe3's `blender-animation` and `blender-export`. That set covers the gap this
+project actually has: authoring a performance clip in Blender and getting it
+onto the base rig as glTF.
