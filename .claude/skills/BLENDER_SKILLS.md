@@ -77,9 +77,22 @@ metroidvania level-design note.
 
 ## What is actually relevant to this project
 
-Most of these are for product renders and stylised art, not a wrestling game.
-The ones worth reading when animation work resumes are arjun988's `animation`,
-`rigging`, `retopology`, `export-pipeline` and especially `godot-export`, plus
-RobLe3's `blender-animation` and `blender-export`. That set covers the gap this
-project actually has: authoring a performance clip in Blender and getting it
-onto the base rig as glTF.
+Routing — which skill to read for which job, and the ~100 to leave alone — is
+in the repo's root `CLAUDE.md`. The short version: most of these are for product
+renders and stylised art, not a wrestling game. The ones worth reading when
+animation work resumes are arjun988's `animation`, `rigging`, `retopology`,
+`export-pipeline` and especially `godot-export`, plus RobLe3's
+`blender-animation` and `blender-export`. That set covers the gap this project
+actually has: authoring a performance clip in Blender and getting it onto the
+base rig as glTF.
+
+One correction to "none of these run in this container" above. None can be
+*invoked* — they are written for a live Blender over BlenderMCP. But nine of RobLe3's
+`blender-*` skills (`-animation`, `-cameras`, `-export`, `-lighting`,
+`-materials`, `-modeling`, `-pro-workflow`, `-rendering`, `-uv-texturing`) carry
+their bodies as plain `bpy` Python, and that code runs unchanged in a headless
+script here; only their `allowed-tools:` frontmatter names MCP. The rest of
+RobLe3's 30 are the OpenCV-dependent reference-matching family, which does not
+run. arjun988's are checklists with no code, so they transfer
+as numbers. kevinbadi's genuinely do not transfer: they automate product shots
+and write to paths this container does not have.
