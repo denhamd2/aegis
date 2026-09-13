@@ -292,11 +292,43 @@ func _on_animation_finished(_anim_name: StringName) -> void:
 	_apply_root_motion()
 	_restore_original_animation()
 	_level_bodies()
-	_separate_bodies()
+	await _ease_apart()
 	_resume(_attacker_body)
 	_resume(_defender_body)
 	_active = false
 	grapple_finished.emit(_attacker, _defender)
+
+## Ticks spent sliding the pair apart at the end of a move. Shorter than the
+## lock-up's LEAD_IN_TICKS: coming out of a hold is a shove, not a step.
+const EASE_APART_TICKS := 8
+
+## Slides the defender out to a legal separation instead of snapping him there.
+##
+## _separate_bodies() computes where he has to end up and used to assign it
+## outright, which measured (tools/probe/contact_probe.tscn) as a one-tick jump
+## of up to 0.870 m -- the last big teleport left in a match after the lock-up
+## snap was fixed, and the same defect at the other end of the same move. The
+## clips finish 0.14-0.28 m apart and the legal distance is 0.95 m, so almost
+## the whole correction was happening in a single frame.
+##
+## Done here, before _resume(), because both bodies are still suspended: their
+## own _physics_process is off, so writing the transform is how the rig moves
+## them for the whole move and there is no floor contact to lose. (Driving
+## velocity here instead would do nothing -- move_and_slide() is not running.)
+func _ease_apart() -> void:
+	var target := _separation_target()
+	if target == Vector3.INF or not _defender_body:
+		return
+	var from := _defender_body.global_position
+	for tick in range(1, EASE_APART_TICKS + 1):
+		await Engine.get_main_loop().physics_frame
+		if not _active or not is_instance_valid(_defender_body):
+			return
+		var t := float(tick) / float(EASE_APART_TICKS)
+		# Ease out: most of the push happens immediately, the way being shoved
+		# off somebody does, then it settles.
+		_defender_body.global_position = from.lerp(target,
+				1.0 - pow(1.0 - t, 3.0))
 
 ## Push the pair apart to at least their combined capsule radii before physics
 ## resumes.
@@ -359,9 +391,11 @@ func _level_bodies() -> void:
 ## the tangent where cap meets cylinder -- which is exactly one radius up.
 const SEPARATION_MARGIN := 0.15
 
-func _separate_bodies() -> void:
+## Where the defender has to end up, or Vector3.INF if he is already clear.
+## Computed rather than applied -- _ease_apart() slides him there.
+func _separation_target() -> Vector3:
 	if not _attacker_body or not _defender_body:
-		return
+		return Vector3.INF
 	var min_separation := _capsule_radius(_attacker_body) \
 			+ _capsule_radius(_defender_body) + SEPARATION_MARGIN
 	var offset := _defender_body.global_position - _attacker_body.global_position
@@ -372,15 +406,13 @@ func _separate_bodies() -> void:
 		offset = -_attacker_body.global_transform.basis.z
 		offset.y = 0.0
 	if offset.length() < 0.001:
-		return # attacker somehow facing straight up/down; leave it alone
+		return Vector3.INF # attacker facing straight up/down; leave it alone
 	if offset.length() >= min_separation:
-		return
+		return Vector3.INF
 	var pushed := _attacker_body.global_position + offset.normalized() * min_separation
 	# Y is whatever the clip ended on -- only the horizontal overlap is the
 	# problem, and rewriting height here would undo a legitimate landing pose.
-	_defender_body.global_position = Vector3(
-		pushed.x, _defender_body.global_position.y, pushed.z
-	)
+	return Vector3(pushed.x, _defender_body.global_position.y, pushed.z)
 
 static func _capsule_radius(body: CharacterBody3D) -> float:
 	for child in body.get_children():

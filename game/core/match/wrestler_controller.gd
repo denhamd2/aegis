@@ -1653,6 +1653,8 @@ func _place_cover(defender: WrestlerController) -> void:
 	_cover_from = global_transform
 	_cover_to = target
 	_cover_slide_tick = 0
+	_cover_slide_ticks = _cover_slide_duration(
+			global_position.distance_to(spot))
 
 ## Where the cover slide starts and ends, and how far through it is. Ticked in
 ## _physics_process's PIN_ATTACKER branch, which is otherwise `pass` -- the
@@ -1660,10 +1662,44 @@ func _place_cover(defender: WrestlerController) -> void:
 var _cover_from: Transform3D = Transform3D()
 var _cover_to: Transform3D = Transform3D()
 var _cover_slide_tick: int = -1
+## How long THIS slide takes, set by _cover_slide_duration() when it is armed.
+var _cover_slide_ticks: int = COVER_SLIDE_TICKS_MIN
 
-## Ticks to cover the last stride into the pin. Comfortably inside the 92-tick
-## lead-in, and a presentation value rather than a measured one.
-const COVER_SLIDE_TICKS := 12
+## Shortest the cover slide is allowed to be, for a coverer who is already
+## standing over the man: a step away should still read snappy. A presentation
+## value rather than a measured one.
+const COVER_SLIDE_TICKS_MIN := 12
+
+## Longest it is allowed to be. MatchReferee.COUNT_TICKS[0] is 92 ticks from
+## cover to the first slap, so the whole walk has to land inside that with room
+## to spare -- he should be settled and still when the hand comes down, not
+## arriving on the count.
+const COVER_SLIDE_TICKS_MAX := 80
+
+## How fast the coverer is allowed to travel on his way in. MOVE_SPEED, not
+## RUN_SPEED: a man dropping into a cover walks the last few steps, he does not
+## sprint them.
+const COVER_SLIDE_SPEED := MOVE_SPEED
+
+## Ticks to walk `distance` metres without ever exceeding COVER_SLIDE_SPEED.
+##
+## A fixed duration was the last real teleport in a match. _tick_cover_slide()
+## eases with smoothstep, whose peak speed is 1.5x the average, so a fixed
+## 12-tick slide moves at 1.5 * d / 0.2s -- fine for a cover from a step away
+## and absurd for one from across the ring. Measured on seed 3
+## (tools/probe/contact_probe.tscn): 6 one-tick jumps, worst 0.382 m, which is
+## 22.9 m/s, over three times RUN_SPEED. Switching the ease from cubic to
+## smoothstep had only taken that from 0.475 m -- because easing was never the
+## problem, duration was.
+##
+## Solving 1.5 * d / T <= COVER_SLIDE_SPEED for T gives the line below. The
+## MAX clamp is the one case that can still exceed the speed target, and only
+## for covers longer than about 3.1 m; beyond that the count window matters
+## more than the walking pace.
+func _cover_slide_duration(distance: float) -> int:
+	var needed := 1.5 * distance * float(Engine.physics_ticks_per_second) \
+			/ COVER_SLIDE_SPEED
+	return clampi(int(ceil(needed)), COVER_SLIDE_TICKS_MIN, COVER_SLIDE_TICKS_MAX)
 
 ## Steers the slide through VELOCITY, not by writing global_transform.
 ##
@@ -1687,8 +1723,13 @@ func _tick_cover_slide() -> void:
 	if _cover_slide_tick < 0:
 		return
 	_cover_slide_tick += 1
-	var t := clampf(float(_cover_slide_tick) / float(COVER_SLIDE_TICKS), 0.0, 1.0)
-	var eased := 1.0 - pow(1.0 - t, 3.0)
+	var t := clampf(float(_cover_slide_tick) / float(_cover_slide_ticks), 0.0, 1.0)
+	# Smoothstep, NOT the cubic ease-out used for the grapple lock-up. Ease-out
+	# front-loads, putting 23% of the travel in the first tick; smoothstep
+	# starts and ends slow, so he leans into the walk and settles out of it.
+	# The duration this runs over is _cover_slide_duration()'s, which is what
+	# actually caps the speed -- see the note there.
+	var eased := t * t * (3.0 - 2.0 * t)
 	var want := _cover_from.origin.lerp(_cover_to.origin, eased)
 	var ticks_per_second := float(Engine.physics_ticks_per_second)
 	velocity.x = (want.x - global_position.x) * ticks_per_second
