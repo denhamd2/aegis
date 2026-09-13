@@ -1,10 +1,11 @@
 extends Node3D
 class_name ArenaBuilder
-## Builds the hall around the ring: a raked seating bowl, its crowd, the
-## entrance stage, the overhead truss, and the shell (walls, roof, floor).
+## Builds the hall around the ring: the ringside floor and barricades, the
+## crowd, the entrance stage and its video wall, the overhead truss -- and
+## instances the seating bowl and shell, which are a model.
 ##
-## Why this is generated rather than authored in the .tscn, and why it is not
-## a downloaded arena model, are both deliberate:
+## Why none of this is authored in the .tscn, and why none of it is a
+## downloaded arena, are both still deliberate:
 ##
 ## - A twenty-row raked bowl with a few thousand seats is not hand-typeable as
 ##   transforms. Expressed as the dozen numbers below it is reviewable and
@@ -13,6 +14,31 @@ class_name ArenaBuilder
 ##   branded (extracted game assets or trademarked trade dress), and none is
 ##   an arena *bowl* -- they are all rings, which scenes/ring.tscn already
 ##   has. See assets/environment/CREDITS.md.
+##
+## What changed, and what it bought
+## --------------------------------
+## The bowl and the shell are no longer generated here from axis-aligned
+## boxes. They are `assets/environment/arena_bowl.glb`, built by
+## `tools/blender/arena_bowl.py` -- our own model, from our own numbers, not a
+## downloaded one, so the second point above is untouched.
+##
+## They moved because `gauntlet/refs/arena.md` records what the hall has to be:
+## an ice-hockey arena, whose bowl is an OBROUND -- two straight sides joined
+## by semicircular ends -- carrying an LED ribbon board that runs unbroken
+## through the corners. A stack of boxes can approximate a square annulus and
+## cannot be that shape at all; the old bowl was four flat banks, and a ribbon
+## that turns square corners is a scoreboard rather than a ribbon.
+##
+## The split is drawn where the reference draws it. The model is the BUILDING:
+## rows, concourse, suite storey, ribbons, stair nosings, wall, roof. This file
+## keeps the SHOW: the ring, the ramp, the stage, the video wall, the portals,
+## the truss, the floor, the barricades, and everyone in the seats. Nothing of
+## the entrance set moved, and none of its numbers changed.
+##
+## The exporter reads its constants out of THIS FILE (see its `WANTED` list),
+## so the mesh and the crowd sitting on it cannot be edited apart, and
+## `tests/test_arena_bowl.gd` measures the committed .glb against
+## `_row_schedule()` to prove they still agree.
 ##
 ## Everything here is cosmetic. Nothing in this file creates a
 ## CollisionObject3D, joins a physics layer, or is read by gameplay: the ring's
@@ -165,11 +191,85 @@ const PORTAL_EMISSION := 1.12
 ## the portal, seen and not looked at.
 const PORTAL_FAN_EMISSION := 0.26
 
+# --- Bowl plan --------------------------------------------------------------
+## The bowl is an OBROUND -- two straight sides down +-X joined by
+## semicircular ends -- because that is the plan of the ice-hockey arenas this
+## promotion plays in, which `gauntlet/refs/arena.md` records off the reference
+## photographs. Every row, the concourse, the suite fascia and the shell are
+## the same curve at a different offset from one rectangle of half-extents
+## (BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z), so the rows stay parallel and the tread
+## depth is constant through the corners.
+##
+## With BOWL_STRAIGHT_Z at zero the ends are true semicircles and the straight
+## sides are the only flat run, which is the reference's proportion: the long
+## sides carry the hard cameras, the near end carries the entrance set.
+##
+## These are the numbers `tools/blender/arena_bowl.py` reads to build the mesh.
+## It parses them out of THIS FILE; they are not duplicated there, and adding
+## one to its WANTED list is how it gets a new one.
+const BOWL_STRAIGHT_X := 5.0
+const BOWL_STRAIGHT_Z := 0.0
+## Sampling of the plan curve. Both loops -- Blender's and this file's -- must
+## produce the same vertex count in the same order, which they do by using
+## these two numbers and nothing else.
+const BOWL_CORNER_SEGMENTS := 16
+const BOWL_STRAIGHT_SEGMENTS := 8
+## Aisles cut up the rake. The crowd skips a seat's width either side of each
+## one, and `arena_bowl.py` lays a lit stair nosing on every tread there.
+const BOWL_AISLES := 12
+## The storey between the two tiers: suite glass with an LED ribbon board
+## above and below it. The upper tier starts on top of it, which is what gives
+## the hall two decks rather than one thirty-row rake.
+const SUITE_HEIGHT := 3.6
+const RIBBON_HEIGHT := 0.55
+## Height of the seat-back rail standing on each seated tread.
+const SEAT_BACK_HEIGHT := 0.42
+## How wide an aisle is kept clear of crowd, in metres either side.
+const AISLE_CLEARANCE := 0.85
+
 # --- Shell ------------------------------------------------------------------
+## The hall is longer than it is wide, like the bowl inside it. WALL_EXTENT is
+## the +-Z half-extent and WALL_EXTENT_X the +-X one; the difference is exactly
+## BOWL_STRAIGHT_X, so the shell clears the last row by the same margin all the
+## way round.
 const WALL_EXTENT := 32.0
+const WALL_EXTENT_X := 37.0
 const WALL_TOP := 17.0
 const ROOF_Y := 14.0
 const TRUSS_Y := 7.6
+
+# --- The Blender model ------------------------------------------------------
+## The bowl and shell mesh, built by `tools/blender/arena_bowl.py` from the
+## constants above and exported as glTF. See that file's header for why this
+## one piece of the hall is modelled rather than assembled from boxes: an
+## obround bowl with swept ribbon boards is not expressible as axis-aligned
+## primitives, and the reference arena is an obround.
+##
+## Everything else in the hall -- ring, ramp, stage, video wall, portals,
+## truss, floor, barricades, crowd, ringside chairs -- is still built here and
+## is unchanged by the model.
+const BOWL_MODEL := "res://assets/environment/arena_bowl.glb"
+## Which MaterialLibrary key dresses each object in the model. Every surface
+## the model ships is overridden: the .glb carries placeholder colours so it
+## can be opened on its own, and the hall's real tints are solved against
+## measured luminance targets that a colour picked in Blender cannot know
+## about. `reach` scales the house-emission floor per part exactly as the
+## generated surfaces do.
+const BOWL_MODEL_MATERIALS := {
+	"BowlSteps": ["arena_bowl", 1.0],
+	"BowlSeatBacks": ["arena_seat", 1.17],
+	"SuiteFascia": ["arena_shell", 0.9],
+	"SuiteGlass": ["arena_suite_glass", 0.5],
+	"Shell": ["arena_shell", 0.85],
+}
+## The two parts that are lit rather than house-lit: the ribbon boards ring
+## the whole bowl and the stair nosings run up every aisle, and both are
+## fixtures in the reference frames -- they emit, they are not surfaces
+## catching a wash. Values are the linear luminance each reaches on its own.
+const BOWL_MODEL_EMISSIVE := {
+	"RibbonBoards": ["arena_ribbon", 0.40],
+	"StairNosing": ["arena_nosing", 0.28],
+}
 
 # --- Crowd ------------------------------------------------------------------
 ## Distance between seats along a row.
@@ -206,7 +306,6 @@ func _ready() -> void:
 	_build_bowl()
 	_build_stage()
 	_build_truss()
-	_build_shell()
 
 
 # ---------------------------------------------------------------------------
@@ -698,8 +797,11 @@ static func _new_surface() -> SurfaceTool:
 
 func _build_floor() -> void:
 	var st := _new_surface()
+	# WALL_EXTENT_X on the long axis: the bowl reaches further down +-X than
+	# it does down +-Z, and a square slab under an obround hall leaves the
+	# back rows standing over nothing.
 	_add_box(st, Vector3(0.0, FLOOR_Y - 0.1, 0.0),
-			Vector3(WALL_EXTENT * 2.0, 0.2, WALL_EXTENT * 2.0))
+			Vector3(WALL_EXTENT_X * 2.0, 0.2, WALL_EXTENT * 2.0))
 	add_child(_mesh_instance("Floor", st,
 			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 1.0))))
 	_build_floor_seams()
@@ -769,133 +871,224 @@ func _build_barricades() -> void:
 # Seating bowl
 # ---------------------------------------------------------------------------
 
-## Each row is a solid block spanning from the bowl floor up to its own tread
-## height, so the stack reads as a staircase with no gaps to fall through and
-## no hidden faces to z-fight. The -Z side is split around the stage opening.
+## The bowl itself is `tools/blender/arena_bowl.py`'s model; what is built
+## here is who sits on it.
+##
+## The two halves share `_row_schedule()`, which is the same arithmetic the
+## exporter runs, so a spectator's tread height and the mesh's tread height
+## come from one place. `test_arena_bowl.gd` measures the shipped .glb against
+## this schedule, so the pair cannot drift silently.
 func _build_bowl() -> void:
-	var steps := _new_surface()
 	var seats: Array[Transform3D] = []
 	var colors: Array[Color] = []
 	var chairs: Array[Transform3D] = []
 	var chair_colors: Array[Color] = []
 
-	var inner := BARRICADE_RADIUS
-	var tread_y := FLOOR_Y
-	for tier: int in [0, 1]:
-		var rows: int = LOWER_ROWS if tier == 0 else UPPER_ROWS
-		if tier == 1:
-			inner += CONCOURSE_DEPTH
-			_add_concourse(steps, inner - CONCOURSE_DEPTH, inner, tread_y)
-		for r: int in rows:
-			var outer := inner + ROW_RUN
-			# The first rows of the lower tier stay on the slab. _add_row is
-			# still called and still no-ops on zero height, so the flat rows
-			# cost no geometry -- the floor already under them is the tread.
-			var flat := tier == 0 and r < FLAT_CHAIR_ROWS
-			if not flat:
-				tread_y += ROW_RISE
-			_add_row(steps, inner, outer, tread_y)
-			if flat:
-				_seat_row(inner, outer, tread_y, chairs, chair_colors, true)
-			else:
-				_seat_row(inner, outer, tread_y, seats, colors)
-			inner = outer
-
-	add_child(_mesh_instance("SeatingBowl", steps, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_bowl")))))
+	add_child(_build_bowl_model())
+	for row: Dictionary in _row_schedule():
+		match row["kind"]:
+			"flat":
+				_seat_row(row, chairs, chair_colors, true)
+			"seated":
+				_seat_row(row, seats, colors)
 	add_child(_build_chairs(chairs))
 	add_child(_build_crowd(seats, colors))
 
 
-## Cut around the stage exactly as the seating rows are. Built uncut, the
-## concourse closes the gap the rows leave and walls the entrance off -- a
-## false-colour pass showed it as a solid block filling the centre of frame
-## behind the ring, which is what was reading as void there.
-func _add_concourse(st: SurfaceTool, inner: float, outer: float,
-		y: float) -> void:
-	_ring_band(st, inner, outer, FLOOR_Y, y, true)
+## Instance the exported bowl and dress every part of it.
+##
+## The model ships placeholder colours so the .glb opens as something
+## recognisable on its own; nothing in the frame uses them. Each object is
+## overridden with the MaterialLibrary key `BOWL_MODEL_MATERIALS` names, which
+## is where the hall's measured tints, its maps and its house-lighting
+## compensation live -- and is why swapping generated geometry for a model
+## moved no luminance target.
+func _build_bowl_model() -> Node3D:
+	var packed: PackedScene = load(BOWL_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_arena.sh."
+				% BOWL_MODEL)
+		return Node3D.new()
+	var root: Node3D = packed.instantiate()
+	root.name = "BowlModel"
+	for part: String in BOWL_MODEL_MATERIALS:
+		var spec: Array = BOWL_MODEL_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	for part: String in BOWL_MODEL_EMISSIVE:
+		var spec: Array = BOWL_MODEL_EMISSIVE[part]
+		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
+	return root
 
 
-func _add_row(st: SurfaceTool, inner: float, outer: float, y: float) -> void:
-	_ring_band(st, inner, outer, FLOOR_Y, y, true)
-
-
-## A square annulus between `inner` and `outer`, solid from `base_y` to
-## `top_y`. Split around the stage on -Z when `cut_stage` is set.
-func _ring_band(st: SurfaceTool, inner: float, outer: float, base_y: float,
-		top_y: float, cut_stage: bool) -> void:
-	var height := top_y - base_y
-	if height <= 0.0:
+## Override one named object in the model, and say so loudly if it is missing
+## -- a part that silently keeps its Blender colour is the one failure mode of
+## dressing a model by node name, and it shows up as a pale surface in the
+## middle of a solved frame rather than as an error.
+func _dress(root: Node3D, part: String, mat: Material) -> void:
+	var node := root.find_child(part, true, false) as MeshInstance3D
+	if node == null:
+		push_error("ArenaBuilder: %s has no '%s' object." % [BOWL_MODEL, part])
 		return
-	var mid_y := (base_y + top_y) * 0.5
-	var depth := outer - inner
-	var mid_r := (inner + outer) * 0.5
-
-	# +Z bank, full width.
-	_add_box(st, Vector3(0.0, mid_y, mid_r),
-			Vector3(outer * 2.0, height, depth))
-	# -Z bank, split around the entrance stage.
-	if cut_stage:
-		var wing := (outer - STAGE_HALF_WIDTH) * 0.5
-		if wing > 0.0:
-			for sign: float in [1.0, -1.0]:
-				_add_box(st,
-						Vector3(sign * (STAGE_HALF_WIDTH + wing), mid_y, -mid_r),
-						Vector3(wing * 2.0, height, depth))
-	else:
-		_add_box(st, Vector3(0.0, mid_y, -mid_r),
-				Vector3(outer * 2.0, height, depth))
-	# +X and -X banks, spanning only the gap the Z banks leave.
-	for sign: float in [1.0, -1.0]:
-		_add_box(st, Vector3(sign * mid_r, mid_y, 0.0),
-				Vector3(depth, height, inner * 2.0))
+	node.material_override = mat
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-## Seats along one row's tread, on whichever banks that row actually has.
+# ---------------------------------------------------------------------------
+# The plan curve
+# ---------------------------------------------------------------------------
+
+## Every row of the bowl in build order, as the exporter builds them.
+##
+## Mirrors `arena_bowl.py`'s `row_schedule()` line for line. The two are
+## written twice rather than shared through a data file because what they are
+## made of is already shared -- the exporter parses its numbers out of this
+## file -- and a twenty-line loop a test pins against the mesh is a smaller
+## liability than a third format between them.
+static func _row_schedule() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var inner := BARRICADE_RADIUS
+	var tread_y := FLOOR_Y
+	for tier: int in [0, 1]:
+		var count: int = LOWER_ROWS if tier == 0 else UPPER_ROWS
+		if tier == 1:
+			var concourse_inner := inner
+			inner += CONCOURSE_DEPTH
+			rows.append({"kind": "concourse", "inner": concourse_inner,
+					"outer": inner, "tread_y": tread_y})
+			tread_y += SUITE_HEIGHT
+		for r: int in count:
+			var outer := inner + ROW_RUN
+			var flat := tier == 0 and r < FLAT_CHAIR_ROWS
+			if not flat:
+				tread_y += ROW_RISE
+			rows.append({"kind": "flat" if flat else "seated", "tier": tier,
+					"index": r, "inner": inner, "outer": outer,
+					"tread_y": tread_y})
+			inner = outer
+	rows.append({"kind": "outer", "inner": inner, "outer": inner,
+			"tread_y": tread_y})
+	return rows
+
+
+## The obround at `offset`, as [position, outward normal] pairs, counter-
+## clockwise from the +X straight. Positions carry y = 0; the caller supplies
+## the tread height.
+##
+## Mirrors `arena_bowl.py`'s `plan_loop()`, vertex order included, so an index
+## means the same bearing in both -- which is what lets the aisles the crowd
+## leaves clear be the aisles the model puts stair nosings up.
+static func _plan_loop(offset: float) -> Array:
+	var loop: Array = []
+	var ax := BOWL_STRAIGHT_X
+	var az := BOWL_STRAIGHT_Z
+	var straight := func(from: Vector3, to: Vector3, normal: Vector3) -> void:
+		for i: int in BOWL_STRAIGHT_SEGMENTS:
+			loop.append([from.lerp(to, float(i) / float(BOWL_STRAIGHT_SEGMENTS)),
+					normal])
+	var corner := func(center: Vector3, start_angle: float) -> void:
+		for i: int in BOWL_CORNER_SEGMENTS:
+			var angle := start_angle \
+					+ PI * 0.5 * float(i) / float(BOWL_CORNER_SEGMENTS)
+			var dir := Vector3(cos(angle), 0.0, sin(angle))
+			loop.append([center + dir * offset, dir])
+	straight.call(Vector3(ax + offset, 0.0, -az), Vector3(ax + offset, 0.0, az),
+			Vector3.RIGHT)
+	corner.call(Vector3(ax, 0.0, az), 0.0)
+	straight.call(Vector3(ax, 0.0, az + offset), Vector3(-ax, 0.0, az + offset),
+			Vector3.BACK)
+	corner.call(Vector3(-ax, 0.0, az), PI * 0.5)
+	straight.call(Vector3(-ax - offset, 0.0, az), Vector3(-ax - offset, 0.0, -az),
+			Vector3.LEFT)
+	corner.call(Vector3(-ax, 0.0, -az), PI)
+	straight.call(Vector3(-ax, 0.0, -az - offset), Vector3(ax, 0.0, -az - offset),
+			Vector3.FORWARD)
+	corner.call(Vector3(ax, 0.0, -az), PI * 1.5)
+	return loop
+
+
+## Where the entrance set stands: the bowl opens instead of walling it off.
+static func _in_stage_gap(point: Vector3) -> bool:
+	return point.z < 0.0 and absf(point.x) < STAGE_HALF_WIDTH
+
+
+## Loop indices the aisles land on. Index-based rather than distance-based so
+## an aisle keeps the same bearing on every row, which is what makes the
+## nosings line up into a staircase instead of wandering across the rake.
+static func _aisle_indices() -> PackedInt32Array:
+	var per_loop := _plan_loop(BARRICADE_RADIUS).size()
+	var picks := PackedInt32Array()
+	for k: int in BOWL_AISLES:
+		picks.append(int(round(float(k) * float(per_loop) / float(BOWL_AISLES)))
+				% per_loop)
+	return picks
+
+
+# ---------------------------------------------------------------------------
+# The crowd on it
+# ---------------------------------------------------------------------------
+
+## One row of spectators, walked along the plan curve at a constant pitch.
+##
+## Walking arc length rather than lerping a straight run is what keeps the
+## spacing even through the corners: the old four-straight bowl could space
+## seats by dividing each side, and a curve cannot be divided that way without
+## bunching them at the end of every arc.
 ##
 ## `neat` switches the run from a crowd to a rank of empty chairs: every
 ## position filled, near-square, no size variance. An unoccupied row is set
 ## out in a grid and a crowd never is, and the difference is most of what
 ## tells the two apart at this distance.
-func _seat_row(inner: float, outer: float, y: float,
-		out_seats: Array[Transform3D], out_colors: Array[Color],
-		neat: bool = false) -> void:
-	var seat_r := inner + (outer - inner) * 0.45
-	# +Z bank faces -Z, and so on: every seat looks at the ring.
-	_seat_run(Vector3(-outer, y, seat_r), Vector3(outer, y, seat_r), PI,
-			out_seats, out_colors, 0.0, neat)
-	_seat_run(Vector3(-inner, y, -seat_r), Vector3(inner, y, -seat_r), 0.0,
-			out_seats, out_colors, STAGE_HALF_WIDTH, neat)
-	_seat_run(Vector3(seat_r, y, -inner), Vector3(seat_r, y, inner), -PI * 0.5,
-			out_seats, out_colors, 0.0, neat)
-	_seat_run(Vector3(-seat_r, y, -inner), Vector3(-seat_r, y, inner), PI * 0.5,
-			out_seats, out_colors, 0.0, neat)
+func _seat_row(row: Dictionary, out_seats: Array[Transform3D],
+		out_colors: Array[Color], neat: bool = false) -> void:
+	var depth: float = row["outer"] - row["inner"]
+	var y: float = row["tread_y"]
+	var loop := _plan_loop(row["inner"] + depth * 0.45)
+	var avoid: Array[Vector3] = []
+	for index: int in _aisle_indices():
+		avoid.append(loop[index][0])
 
-
-func _seat_run(from: Vector3, to: Vector3, facing: float,
-		out_seats: Array[Transform3D], out_colors: Array[Color],
-		skip_abs_x: float = 0.0, neat: bool = false) -> void:
-	var span := from.distance_to(to)
-	var count := int(span / seat_pitch)
-	if count <= 0:
-		return
 	var fill := 1.0 if neat else crowd_fill
 	var wobble := 0.012 if neat else 0.06
-	var yaw := 0.035 if neat else 0.25
-	for i: int in count:
-		var t := (float(i) + 0.5) / float(count)
-		var at := from.lerp(to, t)
-		if skip_abs_x > 0.0 and absf(at.x) < skip_abs_x:
+	var yaw_jitter := 0.035 if neat else 0.25
+	var carry := 0.0
+	for i: int in loop.size():
+		var here: Vector3 = loop[i][0]
+		var next: Vector3 = loop[(i + 1) % loop.size()][0]
+		var span := here.distance_to(next)
+		if span <= 0.0:
 			continue
-		if _rng.randf() > fill:
-			continue
-		var jitter := Vector3(_rng.randf_range(-wobble, wobble), 0.0,
-				_rng.randf_range(-wobble, wobble))
-		var basis := Basis(Vector3.UP, facing + _rng.randf_range(-yaw, yaw))
-		if not neat:
-			basis = basis.scaled(Vector3.ONE * _rng.randf_range(0.9, 1.08))
-		out_seats.append(Transform3D(basis, at + jitter))
-		out_colors.append(CROWD_COLORS[_rng.randi() % CROWD_COLORS.size()])
+		var at := seat_pitch - carry
+		while at < span:
+			var point := here.lerp(next, at / span)
+			at += seat_pitch
+			if _in_stage_gap(point):
+				continue
+			var in_aisle := false
+			for gap: Vector3 in avoid:
+				if point.distance_to(gap) < AISLE_CLEARANCE:
+					in_aisle = true
+					break
+			if in_aisle:
+				continue
+			if _rng.randf() > fill:
+				continue
+			# Face the ring: the spectator mesh looks down +Z at yaw 0, so the
+			# yaw that turns it onto the inward normal is atan2(x, z) of that
+			# normal. Taken per seat rather than per side -- on a curve there
+			# are no sides.
+			var inward: Vector3 = -(loop[i][1] as Vector3)
+			var facing := atan2(inward.x, inward.z)
+			var jitter := Vector3(_rng.randf_range(-wobble, wobble), 0.0,
+					_rng.randf_range(-wobble, wobble))
+			var basis := Basis(Vector3.UP,
+					facing + _rng.randf_range(-yaw_jitter, yaw_jitter))
+			if not neat:
+				basis = basis.scaled(Vector3.ONE * _rng.randf_range(0.9, 1.08))
+			out_seats.append(Transform3D(basis,
+					Vector3(point.x, y, point.z) + jitter))
+			out_colors.append(CROWD_COLORS[_rng.randi() % CROWD_COLORS.size()])
+		carry = span - (at - seat_pitch)
 
 
 # ---------------------------------------------------------------------------
@@ -1292,16 +1485,15 @@ func _build_truss() -> void:
 			_house_lit(_textured("arena_truss"), 0.9))))
 
 
+## The shell is part of the Blender model now.
+##
+## It moved for the same reason the bowl did: the wall follows the bowl's own
+## obround plan one metre outside the last row, so the building is the shape of
+## the hall in it, and four boxes cannot be that. Its roof is still a slab --
+## every camera in the shotlist is under the truss looking at the ring, and the
+## roof is only ever the dark thing the truss hangs from.
+##
+## `_ready()` no longer calls this; it is kept as the place that documents
+## where the shell went, and deliberately builds nothing.
 func _build_shell() -> void:
-	var st := _new_surface()
-	var span := WALL_EXTENT * 2.0
-	var mid_y := (FLOOR_Y + WALL_TOP) * 0.5
-	var height := WALL_TOP - FLOOR_Y
-	for sign: float in [1.0, -1.0]:
-		_add_box(st, Vector3(0.0, mid_y, WALL_EXTENT * sign),
-				Vector3(span, height, 0.4))
-		_add_box(st, Vector3(WALL_EXTENT * sign, mid_y, 0.0),
-				Vector3(0.4, height, span))
-	_add_box(st, Vector3(0.0, ROOF_Y, 0.0), Vector3(span, 0.4, span))
-	add_child(_mesh_instance("Shell", st, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_shell"), 0.85))))
+	pass

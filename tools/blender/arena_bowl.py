@@ -1,0 +1,589 @@
+#!/usr/bin/env python3
+"""Build the arena's seating bowl and shell in Blender, and export it as glTF.
+
+Why this file exists
+--------------------
+`game/core/arena/arena_builder.gd` used to generate the whole hall from axis-
+aligned boxes, and its header explains why: a twenty-row raked bowl is not
+hand-typeable as transforms. That argument still holds against *authoring* the
+bowl in a .tscn. It does not hold against building it in Blender from the same
+dozen numbers, and building it there buys the one thing boxes could not: the
+bowl is an OBROUND -- two straight sides and two semicircular ends -- because
+that is the plan of the ice-hockey arenas this promotion actually plays, which
+is what `gauntlet/refs/arena.md` records. A square annulus of boxes cannot be
+that shape; every row here is a swept polyline, and the corners are arcs.
+
+What this builds, and what it deliberately does not
+---------------------------------------------------
+Builds: the raked bowl (lower tier, concourse, suite fascia with its ribbon
+LED boards and glass, upper tier), the aisle stairs, the seat-back rails, and
+the shell (obround outer wall plus roof).
+
+Does NOT build, because the existing set is kept exactly as it is: the ring,
+the entrance ramp, the stage deck and its portals, the video wall, the truss,
+the ringside floor, the barricades, the crowd, or the ringside chairs. Those
+stay in `arena_builder.gd` and are untouched by this file.
+
+Single source of truth
+----------------------
+Every shared number is READ OUT OF `arena_builder.gd` (see `read_constants`),
+never retyped here. The bowl mesh and the crowd that sits on it are generated
+by two different languages from one set of constants, so a row of seats cannot
+drift off its tread by editing one file and forgetting the other. A missing
+constant is a hard failure, not a default.
+
+Usage
+-----
+    tools/blender/build_arena.sh            # writes game/assets/environment/
+    python arena_bowl.py --out /tmp/x.glb   # inside a bpy-capable interpreter
+"""
+
+from __future__ import annotations
+
+import argparse
+import math
+import pathlib
+import re
+import sys
+
+import bpy  # noqa: I001  -- the bpy module registers the rest; it imports first
+import bmesh
+from mathutils import Vector
+
+REPO = pathlib.Path(__file__).resolve().parents[2]
+BUILDER_GD = REPO / "game" / "core" / "arena" / "arena_builder.gd"
+DEFAULT_OUT = REPO / "game" / "assets" / "environment" / "arena_bowl.glb"
+
+# The constants this file needs out of arena_builder.gd. Listed rather than
+# scraped wholesale so a rename over there fails here loudly instead of
+# silently building a differently-shaped bowl.
+WANTED = [
+    "FLOOR_Y",
+    "BARRICADE_RADIUS",
+    "ROW_RUN",
+    "ROW_RISE",
+    "LOWER_ROWS",
+    "UPPER_ROWS",
+    "FLAT_CHAIR_ROWS",
+    "CONCOURSE_DEPTH",
+    "STAGE_HALF_WIDTH",
+    "ROOF_Y",
+    "WALL_TOP",
+    "WALL_EXTENT",
+    "WALL_EXTENT_X",
+    "BOWL_STRAIGHT_X",
+    "BOWL_STRAIGHT_Z",
+    "BOWL_CORNER_SEGMENTS",
+    "BOWL_STRAIGHT_SEGMENTS",
+    "BOWL_AISLES",
+    "SUITE_HEIGHT",
+    "RIBBON_HEIGHT",
+    "SEAT_BACK_HEIGHT",
+]
+
+CONST_RE = re.compile(r"^const\s+([A-Z][A-Z0-9_]*)\s*:=\s*(-?\d+(?:\.\d+)?)\s*$")
+
+
+def read_constants(path: pathlib.Path) -> dict[str, float]:
+    """Parse `const NAME := <number>` out of a GDScript file.
+
+    Only plain numeric literals are read. Anything derived (`SCREEN_CENTER_Y`
+    is `STAGE_DECK_Y + 9.0`) is out of scope on purpose: this parser exists to
+    share measurements, not to evaluate GDScript.
+    """
+    found: dict[str, float] = {}
+    for line in path.read_text().splitlines():
+        match = CONST_RE.match(line.strip())
+        if match and match.group(1) in WANTED:
+            found[match.group(1)] = float(match.group(2))
+    missing = [name for name in WANTED if name not in found]
+    if missing:
+        raise SystemExit(
+            "arena_bowl.py: %s does not define %s as plain numeric constants. "
+            "Add them there rather than hard-coding them here."
+            % (path, ", ".join(missing))
+        )
+    return found
+
+
+# ---------------------------------------------------------------------------
+# The plan curve
+# ---------------------------------------------------------------------------
+#
+# Every row, the concourse, the fascia and the shell are the same curve at
+# different offsets: the set of points at distance `d` from a rectangle of
+# half-extents (BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z). That is an obround -- four
+# straights joined by quarter-circles of radius `d` -- and it is the plan of
+# the reference arena: long sides down +-X, curved ends at +-Z, the entrance
+# set filling the -Z end.
+#
+# Offsetting one rectangle is what keeps the rows PARALLEL. Scaling a single
+# outline outward instead would splay the corner spacing against the straights
+# and the treads would not be a constant depth, which is both wrong for a real
+# bowl and wrong for seating anyone on.
+
+
+def plan_loop(cfg: dict[str, float], offset: float) -> list[tuple[Vector, Vector]]:
+    """The closed obround at `offset`, as (point, outward unit normal) pairs.
+
+    Points are 2D in the XZ plane, returned as Vectors with y unset (0). The
+    loop starts on the +X straight at z = -straight_z and runs counter-
+    clockwise seen from above, and every loop at every offset has the SAME
+    vertex count in the same order -- which is what lets two loops be zipped
+    into a band without any resampling.
+    """
+    ax = cfg["BOWL_STRAIGHT_X"]
+    az = cfg["BOWL_STRAIGHT_Z"]
+    corner_n = int(cfg["BOWL_CORNER_SEGMENTS"])
+    straight_n = int(cfg["BOWL_STRAIGHT_SEGMENTS"])
+    out: list[tuple[Vector, Vector]] = []
+
+    def straight(a: Vector, b: Vector, normal: Vector) -> None:
+        for i in range(straight_n):
+            t = i / straight_n
+            out.append((a.lerp(b, t), normal))
+
+    def corner(center: Vector, start_angle: float) -> None:
+        for i in range(corner_n):
+            angle = start_angle + (math.pi / 2.0) * i / corner_n
+            direction = Vector((math.cos(angle), 0.0, math.sin(angle)))
+            out.append((center + direction * offset, direction))
+
+    px, pz = Vector((1.0, 0.0, 0.0)), Vector((0.0, 0.0, 1.0))
+    straight(Vector((ax + offset, 0.0, -az)), Vector((ax + offset, 0.0, az)), px)
+    corner(Vector((ax, 0.0, az)), 0.0)
+    straight(Vector((ax, 0.0, az + offset)), Vector((-ax, 0.0, az + offset)), pz)
+    corner(Vector((-ax, 0.0, az)), math.pi / 2.0)
+    straight(Vector((-ax - offset, 0.0, az)), Vector((-ax - offset, 0.0, -az)), -px)
+    corner(Vector((-ax, 0.0, -az)), math.pi)
+    straight(Vector((-ax, 0.0, -az - offset)), Vector((ax, 0.0, -az - offset)), -pz)
+    corner(Vector((ax, 0.0, -az)), 3.0 * math.pi / 2.0)
+    return out
+
+
+def stage_gap(cfg: dict[str, float], point: Vector) -> bool:
+    """True where the entrance set stands, so the bowl opens rather than
+    walling the stage off.
+
+    The same test as the old `_ring_band(cut_stage)`: the -Z half, within the
+    stage's own half-width. It is applied to the point at the row's INNER edge
+    so the opening is a constant width up the whole rake, rather than widening
+    with each row the way a per-row test on its own edge would.
+    """
+    return point.z < 0.0 and abs(point.x) < cfg["STAGE_HALF_WIDTH"]
+
+
+def open_runs(cfg: dict[str, float], loop: list[tuple[Vector, Vector]]) -> list[list[int]]:
+    """Index runs of `loop` that survive the stage cut, as contiguous spans.
+
+    Returned as a list of index lists so a run that wraps past the end of the
+    loop stays one piece. With no cut at all -- which cannot happen for any
+    row this file builds, but can for an offset large enough that the stage
+    is inside it -- the whole loop comes back as one closed run, flagged by
+    its first and last index being adjacent.
+    """
+    keep = [not stage_gap(cfg, point) for point, _ in loop]
+    n = len(loop)
+    if all(keep):
+        return [list(range(n)) + [0]]
+    runs: list[list[int]] = []
+    current: list[int] = []
+    # Start from the first dropped vertex so no run is split across the seam.
+    start = keep.index(False)
+    for step in range(n):
+        i = (start + step) % n
+        if keep[i]:
+            current.append(i)
+        elif current:
+            runs.append(current)
+            current = []
+    if current:
+        runs.append(current)
+    return [run for run in runs if len(run) >= 2]
+
+
+# ---------------------------------------------------------------------------
+# Mesh helpers
+# ---------------------------------------------------------------------------
+
+
+def to_blender(point: Vector) -> Vector:
+    """Godot's frame -> Blender's, the one place the two disagree.
+
+    Every calculation in this file is done in the GAME's frame: +Y is up, the
+    bowl's straights run down +-X, and the entrance set fills -Z -- so the
+    numbers here read the same as the numbers in `arena_builder.gd`, and a
+    tread height in one is a tread height in the other.
+
+    Blender is Z-up, and its glTF exporter (with `export_yup`) rewrites
+    (x, y, z) as (x, z, -y). Composing the two, a game-frame point must be
+    stored as (x, -z, y) for the export to put it back where it started. That
+    map is a rotation, not a mirror, so winding and normals survive it and
+    `recalc_face_normals` still means what it says.
+
+    Doing this per vertex, in one function, is the version that stays correct.
+    Building in Blender's frame instead would put a coordinate swap in every
+    line of geometry above, and exporting without the conversion would ship a
+    .glb that is only upright in Godot -- which is exactly the kind of asset
+    that arrives in someone else's tool lying on its side.
+    """
+    return Vector((point.x, -point.z, point.y))
+
+
+class Part:
+    """One exported object: a bmesh plus the material name Godot keys on.
+
+    Parts are separate objects rather than one merged mesh because
+    `arena_builder.gd` applies a MaterialLibrary material per part by node
+    name -- the bowl's carpet, the LED ribbon's emission and the shell's
+    concrete are three different surfaces and the hall's house-lighting
+    compensation is solved per material.
+    """
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.bm = bmesh.new()
+
+    def vert(self, position: Vector) -> bmesh.types.BMVert:
+        return self.bm.verts.new(to_blender(position))
+
+    def quad(self, a, b, c, d) -> None:
+        try:
+            self.bm.faces.new((a, b, c, d))
+        except ValueError:
+            pass  # Duplicate face where two solids share a wall; harmless.
+
+    def prism(
+        self,
+        inner: list[Vector],
+        outer: list[Vector],
+        base_y: float,
+        top_y: float,
+        closed: bool,
+    ) -> None:
+        """A closed solid swept along two polylines, from `base_y` to `top_y`.
+
+        Solid rather than a surface because the rows STACK: each row's outer
+        wall is buried in the row behind it, so only its tread and its riser
+        are ever seen, and a solid guarantees there is no gap to see the floor
+        through at the join. Winding is fixed up once at export by
+        `recalc_face_normals`, which is reliable here precisely because every
+        piece is closed.
+        """
+        if top_y <= base_y:
+            return
+        lo_in = [self.vert(Vector((p.x, base_y, p.z))) for p in inner]
+        hi_in = [self.vert(Vector((p.x, top_y, p.z))) for p in inner]
+        lo_out = [self.vert(Vector((p.x, base_y, p.z))) for p in outer]
+        hi_out = [self.vert(Vector((p.x, top_y, p.z))) for p in outer]
+        count = len(inner) - (0 if closed else 1)
+        for i in range(count):
+            j = (i + 1) % len(inner)
+            self.quad(lo_in[i], hi_in[i], hi_in[j], lo_in[j])      # riser
+            self.quad(lo_out[i], hi_out[i], hi_out[j], lo_out[j])  # back
+            self.quad(hi_in[i], hi_out[i], hi_out[j], hi_in[j])    # tread
+            self.quad(lo_in[i], lo_out[i], lo_out[j], lo_in[j])    # underside
+        if not closed:
+            # End caps, so a run cut around the stage is still a closed solid.
+            for k in (0, len(inner) - 1):
+                self.quad(lo_in[k], hi_in[k], hi_out[k], lo_out[k])
+
+    def box(self, center: Vector, size: Vector) -> None:
+        h = size * 0.5
+        corners = [
+            Vector((center.x + sx * h.x, center.y + sy * h.y, center.z + sz * h.z))
+            for sx, sy, sz in (
+                (-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1),
+                (-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1),
+            )
+        ]
+        v = [self.vert(c) for c in corners]
+        for face in ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4),
+                     (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
+            self.quad(*[v[i] for i in face])
+
+
+def offset_points(loop: list[tuple[Vector, Vector]], indices: list[int],
+                  distance: float) -> list[Vector]:
+    """The named vertices of `loop`, pushed `distance` along their outward
+    normals. This is how a row's outer edge is derived from its inner one:
+    normal-offsetting keeps the tread depth constant around the corners, where
+    a scaled copy would not."""
+    return [loop[i][0] + loop[i][1] * distance for i in indices]
+
+
+# ---------------------------------------------------------------------------
+# The bowl
+# ---------------------------------------------------------------------------
+
+
+def row_schedule(cfg: dict[str, float]) -> list[dict]:
+    """Every row of the bowl, in build order, as plain numbers.
+
+    This is the one function whose output `arena_builder.gd` mirrors exactly
+    (`ArenaBuilder._row_schedule`). `game/tests/test_arena_bowl.gd` pins the
+    two together by measuring the exported mesh against the schedule GDScript
+    computes -- so the crowd cannot end up sitting in mid-air.
+    """
+    rows: list[dict] = []
+    inner = cfg["BARRICADE_RADIUS"]
+    tread_y = cfg["FLOOR_Y"]
+    for tier in (0, 1):
+        count = int(cfg["LOWER_ROWS"] if tier == 0 else cfg["UPPER_ROWS"])
+        if tier == 1:
+            # The concourse walkway, then the suite fascia that lifts the
+            # upper tier clear of it. In the reference photos the upper deck
+            # starts well above the lower one's back row, with the ribbon
+            # boards and the suite windows filling the gap -- built flush, the
+            # two tiers read as one thirty-row rake and the arena loses the
+            # storey that makes it an arena.
+            concourse_inner = inner
+            inner += cfg["CONCOURSE_DEPTH"]
+            rows.append({
+                "kind": "concourse",
+                "inner": concourse_inner,
+                "outer": inner,
+                "tread_y": tread_y,
+            })
+            tread_y += cfg["SUITE_HEIGHT"]
+        for r in range(count):
+            outer = inner + cfg["ROW_RUN"]
+            flat = tier == 0 and r < int(cfg["FLAT_CHAIR_ROWS"])
+            if not flat:
+                tread_y += cfg["ROW_RISE"]
+            rows.append({
+                "kind": "flat" if flat else "seated",
+                "tier": tier,
+                "index": r,
+                "inner": inner,
+                "outer": outer,
+                "tread_y": tread_y,
+            })
+            inner = outer
+    rows.append({"kind": "outer", "inner": inner, "outer": inner, "tread_y": tread_y})
+    return rows
+
+
+def build_bowl(cfg: dict[str, float], parts: dict[str, Part]) -> list[dict]:
+    rows = row_schedule(cfg)
+    steps = parts["BowlSteps"]
+    seatbacks = parts["BowlSeatBacks"]
+    floor_y = cfg["FLOOR_Y"]
+
+    for row in rows:
+        if row["kind"] == "outer":
+            continue
+        loop = plan_loop(cfg, row["inner"])
+        depth = row["outer"] - row["inner"]
+        for run in open_runs(cfg, loop):
+            closed = run[-1] == run[0]
+            indices = run[:-1] if closed else run
+            inner_pts = [loop[i][0] for i in indices]
+            outer_pts = offset_points(loop, indices, depth)
+            steps.prism(inner_pts, outer_pts, floor_y, row["tread_y"], closed)
+            if row["kind"] != "seated":
+                continue
+            # The blue seat backs. A continuous rail at the seat line rather
+            # than a seat per spectator: the crowd is instanced at 86% fill,
+            # so the gaps between people would otherwise show bare tread, and
+            # a rail is one band of geometry where several thousand seats
+            # would be a second crowd's worth of draw.
+            seat_in = offset_points(loop, indices, depth * 0.62)
+            seat_out = offset_points(loop, indices, depth * 0.78)
+            seatbacks.prism(seat_in, seat_out, row["tread_y"],
+                            row["tread_y"] + cfg["SEAT_BACK_HEIGHT"], closed)
+    return rows
+
+
+def build_fascia(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]) -> None:
+    """The storey between the two tiers: a wall off the back of the concourse
+    carrying two LED ribbon boards with a band of suite glass between them.
+
+    This is the single most recognisable thing in the reference photographs --
+    the arena's own advertising ribbon wrapping the whole bowl -- and it is
+    the reason the bowl is built as a swept curve at all: a ribbon board that
+    turns square corners is a scoreboard, not a ribbon.
+    """
+    concourse = next(r for r in rows if r["kind"] == "concourse")
+    base_y = concourse["tread_y"]
+    top_y = base_y + cfg["SUITE_HEIGHT"]
+    ribbon_h = cfg["RIBBON_HEIGHT"]
+    offset = concourse["outer"]
+    loop = plan_loop(cfg, offset)
+
+    for run in open_runs(cfg, loop):
+        closed = run[-1] == run[0]
+        indices = run[:-1] if closed else run
+        face = [loop[i][0] for i in indices]
+        # The wall itself, 0.5m thick, sitting under the upper tier's front.
+        back = offset_points(loop, indices, 0.5)
+        parts["SuiteFascia"].prism(face, back, base_y, top_y, closed)
+        # Two ribbons, proud of the wall so they are never coplanar with it:
+        # a ribbon at the same depth z-fights its own wall from the far side
+        # of the bowl, which is exactly where the broadcast camera sits.
+        proud_in = offset_points(loop, indices, -0.06)
+        proud_out = offset_points(loop, indices, 0.02)
+        for y0 in (base_y + 0.18, top_y - 0.18 - ribbon_h):
+            parts["RibbonBoards"].prism(proud_in, proud_out, y0, y0 + ribbon_h, closed)
+        # Suite glass between them, recessed rather than proud so the storey
+        # reads as windows set into a wall.
+        glass_in = offset_points(loop, indices, 0.10)
+        glass_out = offset_points(loop, indices, 0.16)
+        parts["SuiteGlass"].prism(
+            glass_in, glass_out, base_y + 0.34 + ribbon_h, top_y - 0.34 - ribbon_h, closed
+        )
+
+
+def build_aisles(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]) -> None:
+    """Stair nosings up the aisles.
+
+    The yellow stripe on every step edge is the one piece of high-value colour
+    in the reference frames' seating bowl -- it is what makes a dark bank of
+    seats read as a rake with stairs in it rather than as a textured slope --
+    and it costs two triangles per row per aisle.
+
+    Aisle positions are vertex indices on the plan loop, so an aisle stays at
+    the same bearing from the ring on every row however the loop is sampled,
+    and the crowd's own skip list (`ArenaBuilder._aisle_indices`) uses the
+    same rule.
+    """
+    nosing = parts["StairNosing"]
+    per_loop = len(plan_loop(cfg, cfg["BARRICADE_RADIUS"]))
+    aisles = int(cfg["BOWL_AISLES"])
+    stride = per_loop / aisles
+    picks = [int(round(k * stride)) % per_loop for k in range(aisles)]
+
+    for row in rows:
+        if row["kind"] not in ("seated", "flat"):
+            continue
+        loop = plan_loop(cfg, row["inner"])
+        depth = row["outer"] - row["inner"]
+        for index in picks:
+            point, normal = loop[index]
+            if stage_gap(cfg, point):
+                continue
+            nxt = loop[(index + 1) % len(loop)][0]
+            along = (nxt - point)
+            if along.length == 0.0:
+                continue
+            along.normalize()
+            inner_pts = [point - along * 0.55, point + along * 0.55]
+            outer_pts = [p + normal * depth for p in inner_pts]
+            # A thin slab lying on the tread's leading edge, 2cm proud so it
+            # never z-fights the tread under it.
+            nosing.prism(
+                [p + normal * 0.02 for p in inner_pts],
+                [p - normal * (depth - 0.16) for p in outer_pts],
+                row["tread_y"] + 0.01,
+                row["tread_y"] + 0.03,
+                closed=False,
+            )
+
+
+def build_shell(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]) -> None:
+    """The hall around the bowl: an obround outer wall and a flat roof.
+
+    The wall follows the same plan curve one metre outside the last row, so
+    the building is the shape of the bowl in it. The roof stays a plain slab:
+    every camera in the shotlist is below the truss looking at the ring, and
+    the roof is only ever seen as the dark thing the truss hangs from.
+    """
+    outer = next(r for r in rows if r["kind"] == "outer")["inner"] + 1.2
+    loop = plan_loop(cfg, outer)
+    points = [p for p, _ in loop]
+    thickness = [p + n * 0.4 for p, n in loop]
+    parts["Shell"].prism(points, thickness, cfg["FLOOR_Y"], cfg["WALL_TOP"], closed=True)
+    parts["Shell"].box(
+        Vector((0.0, cfg["ROOF_Y"] + 0.2, 0.0)),
+        Vector((cfg["WALL_EXTENT_X"] * 2.0, 0.4, cfg["WALL_EXTENT"] * 2.0)),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Export
+# ---------------------------------------------------------------------------
+
+# Base colours. These are NOT the shipped look: `arena_builder.gd` overrides
+# every part with a MaterialLibrary material, because the hall's tints are
+# solved against measured luminance targets in `gauntlet/refs/VISUAL_BAR.md`
+# and a colour picked in Blender cannot know about them. What they are for is
+# the .glb being openable on its own and reading as the reference arena.
+PART_COLORS = {
+    "BowlSteps": (0.10, 0.11, 0.13, 1.0),
+    "BowlSeatBacks": (0.09, 0.14, 0.31, 1.0),
+    "SuiteFascia": (0.13, 0.14, 0.16, 1.0),
+    "RibbonBoards": (0.55, 0.42, 0.08, 1.0),
+    "SuiteGlass": (0.04, 0.05, 0.07, 1.0),
+    "StairNosing": (0.62, 0.52, 0.06, 1.0),
+    "Shell": (0.12, 0.13, 0.15, 1.0),
+}
+
+
+def reset_scene() -> None:
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+
+
+def finish(parts: dict[str, Part]) -> None:
+    for name, part in parts.items():
+        mesh = bpy.data.meshes.new(name)
+        bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:], dist=0.0005)
+        bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
+        part.bm.to_mesh(mesh)
+        part.bm.free()
+        material = bpy.data.materials.new("M_" + name)
+        material.use_nodes = True
+        bsdf = material.node_tree.nodes["Principled BSDF"]
+        bsdf.inputs["Base Color"].default_value = PART_COLORS[name]
+        bsdf.inputs["Roughness"].default_value = 0.85
+        if name in ("RibbonBoards", "StairNosing"):
+            bsdf.inputs["Emission Color"].default_value = PART_COLORS[name]
+            bsdf.inputs["Emission Strength"].default_value = 1.0
+        mesh.materials.append(material)
+        # Smooth shading would round the stair nosings and the risers into
+        # each other; a bowl is faceted geometry and reads as one.
+        obj = bpy.data.objects.new(name, mesh)
+        bpy.context.collection.objects.link(obj)
+
+
+def triangle_count() -> int:
+    total = 0
+    for obj in bpy.data.objects:
+        mesh = obj.data
+        total += sum(max(len(polygon.vertices) - 2, 0) for polygon in mesh.polygons)
+    return total
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", default=str(DEFAULT_OUT))
+    args = parser.parse_args(argv)
+
+    cfg = read_constants(BUILDER_GD)
+    reset_scene()
+    parts = {name: Part(name) for name in PART_COLORS}
+    rows = build_bowl(cfg, parts)
+    build_fascia(cfg, parts, rows)
+    build_aisles(cfg, parts, rows)
+    build_shell(cfg, parts, rows)
+    finish(parts)
+
+    out = pathlib.Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    bpy.ops.export_scene.gltf(
+        filepath=str(out),
+        export_format="GLB",
+        export_apply=True,
+        export_yup=True,
+        use_selection=False,
+        export_cameras=False,
+        export_lights=False,
+        export_materials="EXPORT",
+    )
+    seated = [r for r in rows if r["kind"] == "seated"]
+    print("arena_bowl: %d triangles, %d seated rows, top tread %.2fm, %s"
+          % (triangle_count(), len(seated), max(r["tread_y"] for r in rows), out))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

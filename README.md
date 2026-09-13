@@ -22,15 +22,20 @@ enter this repo.
   not violate. Read this first.
 - `gauntlet/refs/` — the reference corpus: measured timings, camera
   behavior, HUD layout, and feel, all traceable to footage under
-  `gauntlet/refs/raw/` (gitignored — drop clips locally). `refs/ring.md`
-  additionally records the external ring the build's *look* is matched to;
-  like the footage, it is reference-only and its asset is not committed.
+  `gauntlet/refs/raw/` (gitignored — drop clips locally). `refs/ring.md`,
+  `refs/stage.md` and `refs/arena.md` additionally record the external ring,
+  entrance set and ice-hockey arena the build's *look* is matched to; like the
+  footage, they are reference-only and no asset from them is committed.
 - `gauntlet/status/` — `slices.json` + the generated
   `gauntlet-status.html` tracking every gauntlet slice's round count,
   verdict, and current largest gap.
 - `tools/capture/` — the capture harness driver (`run_capture.sh`), the
   evidence gate (`evidence_gate.py`) that must pass before any critic sees
   a capture, and the status-page generator.
+- `tools/blender/` — `arena_bowl.py`, which builds the seating bowl and shell
+  (`game/assets/environment/arena_bowl.glb`) from the constants in
+  `game/core/arena/arena_builder.gd`, and `build_arena.sh`, which runs it. The
+  .glb is committed; Blender is not needed to build, run or test the game.
 - `.github/workflows/` — `ci.yml` (gdUnit4 suite, evidence-gate fixtures,
   status-page staleness) and `pages.yml` (the playable Web build).
 
@@ -2703,9 +2708,12 @@ gameplay. Capture wall-time went 2m58s → 3m25s on llvmpipe.
   reason and no other.
 - Normal/AO maps were skipped because they would cost llvmpipe fill rate to
   serve a bar that cannot be judged. One line per material to add back.
-- Bowl rake, stage proportions and truss layout trace to **no reference
-  measurement** — `gauntlet/refs/` measures nothing about arena architecture.
-  They are coverage decisions, held to the same rule as the momentum ladder.
+- Bowl rake and truss layout trace to **no reference measurement**; they are
+  coverage decisions, held to the same rule as the momentum ladder. Stage
+  proportions now trace to `gauntlet/refs/stage.md`, and the bowl's *plan*,
+  seat value and stair nosings to `gauntlet/refs/arena.md` — which is what
+  that sentence used to say was missing. Its rake, row counts and tier heights
+  are still coverage decisions and are not claimed otherwise.
 - The crowd are two-box impostors: no faces, no limbs, no reaction to the
   match. The stage has no branding and no entrance sequence uses it.
 

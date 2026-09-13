@@ -55,7 +55,8 @@ class_name MaterialLibrary
 ##     arena_floor  arena_barricade  arena_bowl  arena_stage_deck
 ##     arena_stage_backdrop  arena_stage_panel  arena_shell  arena_truss
 ##     arena_tunnel  arena_screen  arena_portal_magenta
-##     arena_portal_amber
+##     arena_portal_amber  arena_seat  arena_suite_glass  arena_ribbon
+##     arena_nosing
 ##
 ## `ALIASES` keeps older names (`ring_mat`, `ring_pad`) working.
 ##
@@ -561,6 +562,64 @@ const SPECS := {
 	"arena_stage_panel": {
 		"asset": "Fabric063", "tint": Color(0.150, 0.115, 0.235),
 		"tile_metres": 1.1, "roughness": 0.80, "house_lit": true,
+	},
+
+	# --- The Blender bowl model -------------------------------------------
+	# Four keys added with `tools/blender/arena_bowl.py`'s hockey-arena bowl.
+	# All four obey the same rule the rest of the hall does: the tint carries
+	# the value, a map carries the variance, and `_house_lit` compensation is
+	# applied at the call site in `arena_builder.gd`.
+
+	## The seat-back rail standing on every seated tread.
+	##
+	## NAVY, not blue, and that is measured rather than chosen:
+	## `gauntlet/refs/arena.md` reads the reference bowl's seating at mean
+	## sRGB (15, 20, 30) and relative luminance 0.0070 -- half the crowd's own
+	## 0.014. A bank of seats is the darkest large surface in a lit arena, and
+	## a seat rail bright enough to see the colour of is a seat rail competing
+	## with the men in the ring. The call site asks `_house_lit` for 0.0070
+	## exactly (`reach` 1.17 on HOUSE_TARGET 0.006).
+	##
+	## No map. A seat back is 40cm of geometry seen from 15-35m, and a tiled
+	## weave on it minifies into noise the way `arena_chair`'s would.
+	"arena_seat": {
+		"tint": Color(0.074, 0.098, 0.235), "roughness": 0.90,
+		"house_lit": true,
+	},
+	## The suite windows in the fascia between the tiers. The darkest surface
+	## in the hall on purpose: in every reference photograph the suite level
+	## is a black band, because the rooms behind it are unlit and the glass is
+	## returning the bowl rather than showing what is inside.
+	##
+	## roughness 0.18 -- glass has a reflection lobe, and on `forward_plus`
+	## that is what picks the ribbon boards up along the band and stops it
+	## reading as a painted stripe.
+	"arena_suite_glass": {
+		"tint": Color(0.030, 0.038, 0.055), "roughness": 0.18,
+	},
+	## The LED ribbon boards wrapping the bowl above and below the suites.
+	## Genuinely emissive, like the video wall and the portals:
+	## `ArenaBuilder._self_emissive()` supplies the level, so this is a hue
+	## and a gloss and nothing else.
+	##
+	## Warm amber rather than any particular advertisement: the boards are
+	## 0.55m tall at 20-35m, where a legible graphic would be under two pixels
+	## of text, and what the reference frames actually contribute at that size
+	## is a band of warm light around the whole hall. `gauntlet/refs/arena.md`
+	## records what the photographs do and do not establish about them.
+	"arena_ribbon": {
+		"tint": Color(1.00, 0.62, 0.16), "roughness": 0.25,
+	},
+	## The lit nosing on every aisle step.
+	##
+	## Measured, like the seat it sits next to: in the reference photograph the
+	## nosings run 0.2374 relative luminance against the seats' 0.0070 -- 34
+	## times the value -- while covering 0.4% of the seating bank
+	## (`gauntlet/refs/arena.md`). That ratio is the whole effect. A very small
+	## amount of very bright yellow is what tells a dark bank of seats apart
+	## from a textured slope, and the call site holds it at 40:1.
+	"arena_nosing": {
+		"tint": Color(1.00, 0.80, 0.22), "roughness": 0.55,
 	},
 }
 
