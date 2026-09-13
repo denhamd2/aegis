@@ -1665,15 +1665,41 @@ var _cover_slide_tick: int = -1
 ## lead-in, and a presentation value rather than a measured one.
 const COVER_SLIDE_TICKS := 12
 
+## Steers the slide through VELOCITY, not by writing global_transform.
+##
+## The first version assigned global_transform every tick, and that is a trap
+## on a CharacterBody3D: teleporting the body leaves the physics engine with no
+## floor contact, so is_on_floor() reads false, _apply_gravity() keeps
+## accumulating velocity.y, and the coverer falls THROUGH the mat. Measured on
+## seed 3 -- he reached y = -4.81 at tick 1567 and y = -20.08 sixty ticks later,
+## still in PIN_ATTACKER, while the man he was covering lay at y = 0.001.
+##
+## Neither standing probe could see it. floating_probe only flags a body ABOVE
+## its limit, so a man falling reads as fine, and contact_probe's teleport test
+## is a per-tick delta, which a gravity fall never trips. It surfaced as an
+## absurd separation number (64.99 m in a 6 m ring) in feel_probe, on one seed
+## of three.
+##
+## Driving velocity instead lets move_and_slide() do the moving, which is what
+## keeps the floor under him. Y is left alone entirely -- gravity owns it --
+## and only the horizontal is steered.
 func _tick_cover_slide() -> void:
 	if _cover_slide_tick < 0:
 		return
 	_cover_slide_tick += 1
 	var t := clampf(float(_cover_slide_tick) / float(COVER_SLIDE_TICKS), 0.0, 1.0)
-	global_transform = GrappleRig.blend_transforms(_cover_from, _cover_to,
-			1.0 - pow(1.0 - t, 3.0))
+	var eased := 1.0 - pow(1.0 - t, 3.0)
+	var want := _cover_from.origin.lerp(_cover_to.origin, eased)
+	var ticks_per_second := float(Engine.physics_ticks_per_second)
+	velocity.x = (want.x - global_position.x) * ticks_per_second
+	velocity.z = (want.z - global_position.z) * ticks_per_second
+	# The facing is safe to set outright: a basis carries no floor contact.
+	global_transform.basis = GrappleRig.blend_transforms(
+			_cover_from, _cover_to, eased).basis
 	if t >= 1.0:
 		_cover_slide_tick = -1
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 
 func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:

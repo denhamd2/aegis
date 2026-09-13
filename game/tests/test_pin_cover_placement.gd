@@ -55,33 +55,28 @@ func test_the_coverer_kneels_beside_the_downed_mans_chest() -> void:
 	attacker.global_position = Vector3(-3.0, 0.0, 3.0)
 
 	attacker.begin_pin(defender, 1)
-	_finish_cover_slide(attacker)
 
+	# Asserted on where he is SENT, not where he ends up.
+	#
+	# _place_cover() computes the destination; _tick_cover_slide() then steers
+	# him there through velocity, and velocity is only consumed by
+	# move_and_slide() inside _physics_process -- which never runs for a bare
+	# WrestlerController.new(). Driving the tick by hand here moves nobody, so
+	# reading global_position back would assert on the spawn point and pass or
+	# fail for the wrong reason.
+	#
+	# The contract this test exists for is unchanged and still fully covered:
+	# up the body toward the head rather than down by the boots, and off to one
+	# side. That is a property of the destination, and the slide is only how he
+	# travels to it.
 	var local: Vector3 = defender.global_transform.affine_inverse() \
-			* attacker.global_position
+			* attacker._cover_to.origin
 	# Up the body toward the head, and off to one side. Both signs matter:
 	# a negative z here is the bug that put him at the boots.
 	assert_float(local.z).is_equal_approx(
 			WrestlerController.COVER_TOWARD_HEAD_M, 0.01)
 	assert_float(absf(local.x)).is_equal_approx(
 			WrestlerController.COVER_LATERAL_M, 0.01)
-
-
-## Runs the cover slide out to its end.
-##
-## begin_pin() used to assign the cover transform outright; it now eases into
-## it over COVER_SLIDE_TICKS, because assigning it was a one-tick jump of up to
-## 0.622 m (measured, tools/probe/contact_probe.tscn) and read on screen as the
-## coverer appearing in position rather than getting there.
-##
-## The assertions below are unchanged and still assert the same landing spot --
-## WHERE he ends up is the contract, and it is only WHEN that moved. Driven by
-## calling the tick directly rather than by awaiting physics frames, because
-## these wrestlers are built by WrestlerController.new() and never enter the
-## PIN_ATTACKER branch of _physics_process that would otherwise drive it.
-func _finish_cover_slide(attacker: WrestlerController) -> void:
-	for _tick in WrestlerController.COVER_SLIDE_TICKS + 1:
-		attacker._tick_cover_slide()
 
 
 ## Facing the man he is covering. Without this he kneels with his back to him,
@@ -93,12 +88,16 @@ func test_the_coverer_faces_the_downed_man() -> void:
 	defender.global_position = Vector3(0.0, 0.0, 0.0)
 	defender.rotation.y = 0.0
 	attacker.begin_pin(defender, 1)
-	_finish_cover_slide(attacker)
 
-	var to_defender := defender.global_position - attacker.global_position
+	# Both read off the destination, for the reason given in the test above:
+	# the slide is driven by velocity now, and nothing consumes velocity for a
+	# bare WrestlerController.new(). Facing is a property of where he kneels,
+	# so measuring it from his un-moved spawn point would be measuring the
+	# wrong triangle.
+	var to_defender := defender.global_position - attacker._cover_to.origin
 	to_defender.y = 0.0
 	# -Z is forward, the same convention _turn_toward_opponent() uses.
-	var forward := -attacker.global_transform.basis.z
+	var forward := -attacker._cover_to.basis.z
 	forward.y = 0.0
 	assert_float(forward.normalized().dot(to_defender.normalized())) \
 		.override_failure_message("the coverer is not facing the man he pins") \

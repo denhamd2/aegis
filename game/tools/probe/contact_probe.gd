@@ -15,6 +15,17 @@ extends Node
 ##             much wider at the shoulder, so "not colliding" and "not visibly
 ##             inside each other" are different thresholds.
 ##
+##   OFF-MAT   whether a body leaves the ring or drops through the floor.
+##             Added after a bug that BOTH other instruments here missed: the
+##             cover slide wrote global_transform directly on a
+##             CharacterBody3D, which leaves the physics engine with no floor
+##             contact, so is_on_floor() read false and gravity carried the
+##             coverer down to y = -20 m. floating_probe only flags a body
+##             ABOVE its limit, so a falling man reads as fine, and the
+##             teleport test below is a per-tick delta that a gravity fall
+##             never trips. It surfaced by luck, as an absurd separation
+##             number in feel_probe, on one seed of three.
+##
 ##   RECOIL    how far a struck wrestler moves during HIT_REACT.
 ##             _process_timed_state() never touches velocity, so the expected
 ##             answer is zero: a landed punch moves nobody.
@@ -79,6 +90,7 @@ func _run(seed_value: int) -> void:
 		"teleports": 0, "worst_teleport": 0.0, "teleport_by": {},
 		"closest": 99.0, "overlap_ticks": 0, "free_ticks": 0,
 		"reacts": 0, "moved_reacts": 0, "worst_recoil": 0.0,
+		"off_mat": 0, "lowest_y": 0.0, "furthest": 0.0,
 	}
 	# Registered before the match runs, not after: the row is filled in place,
 	# so a seed that errors out mid-run still reports what it managed to
@@ -131,6 +143,14 @@ func _run(seed_value: int) -> void:
 				by_state[where] = [seen[0] + 1, maxf(seen[1], step)]
 			last[w] = w.global_position
 			last_state[w] = w.fsm.current_state
+			# A wrestler belongs on the mat. RING_HALF_EXTENT is 3.3 m, so
+			# anything past 4 m horizontally is outside the ropes, and the mat
+			# is y = 0, so anything below -0.5 m is through it.
+			var flat := Vector2(w.global_position.x, w.global_position.z).length()
+			row["furthest"] = maxf(row["furthest"], flat)
+			row["lowest_y"] = minf(row["lowest_y"], w.global_position.y)
+			if flat > 4.0 or w.global_position.y < -0.5:
+				row["off_mat"] += 1
 			# Recoil: measure across the whole HIT_REACT, entry to exit.
 			var in_react: bool = w.fsm.current_state == WrestlerFSM.State.HIT_REACT
 			if in_react and not react_start.has(w):
@@ -181,5 +201,7 @@ func _report() -> void:
 		print("    PRESSED   closest %.3f m   %d of %d free ticks inside %.3f m" % [
 				row["closest"], row["overlap_ticks"], row["free_ticks"],
 				row.get("min_sep", 0.0)])
+		print("    OFF-MAT   %d ticks off the mat   furthest %.2f m out   lowest y %.3f m" % [
+				row["off_mat"], row["furthest"], row["lowest_y"]])
 		print("    RECOIL    %d of %d hit reactions moved the man   worst %.3f m" % [
 				row["moved_reacts"], row["reacts"], row["worst_recoil"]])

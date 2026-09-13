@@ -50,6 +50,22 @@ extends Node
 ## 1.05 m sits inside WrestlerController.STRIKE_HIT_RANGE (1.15 m) on purpose:
 ## back off any further and the AI could no longer reach with the strike it
 ## just stepped away from.
+## Circling: how far apart to hold while waiting, and how long a wrestler keeps
+## going the same way round before he switches.
+##
+## 1.10 m is the middle of the only band that works: nearer than min_standoff
+## (1.05 m) and they are inside each other, further than
+## WrestlerController.STRIKE_HIT_RANGE (1.15 m) and the next strike cannot
+## reach. Ten centimetres of room, and holding it is the whole constraint --
+## drifting out of it is exactly the dead band that stopped matches finishing
+## earlier in this session.
+@export var circle_distance: float = 1.10
+## How hard the radial correction pulls back to circle_distance against the
+## lateral motion. 1.0 would walk straight at him; 0 would spiral away.
+@export var circle_radial_pull: float = 0.55
+## Ticks before the direction is re-rolled, so two men do not orbit in
+## lockstep for a whole match.
+@export var circle_bout_ticks: int = 90
 @export var min_standoff: float = 1.05
 @export var run_engage_distance: float = 2.5
 ## Ticks after a running attack before another charge may start. A running
@@ -97,6 +113,10 @@ var _cooldown: int = 0
 ## where the attack becomes possible, so the attack could never fire at all.
 var _charging: bool = false
 var _run_cooldown: int = 0
+## Ticks this AI has been alive, used only to number the circling bouts so the
+## direction roll has something to vary on. Advances once per physics tick, so
+## a replay re-rolls identically.
+var _circle_tick: int = 0
 var _pin_defender_tick: int = 0
 var _last_kickout_press_tick: int = -1000
 var _tie_up_tick: int = 0
@@ -142,6 +162,7 @@ func _physics_process(_delta: float) -> void:
 		_cooldown -= 1
 	if _run_cooldown > 0:
 		_run_cooldown -= 1
+	_circle_tick += 1
 	# A charge only survives while the man is actually free to run. If he is
 	# struck out of it, poll_input() returns early for the whole of HIT_REACT
 	# and the latch would otherwise still be set when he recovers -- resuming
@@ -304,6 +325,15 @@ func poll_input() -> Dictionary:
 			# against 13 in ~1700 ticks before. So: step back in.
 			var toward := to_target.normalized()
 			input["move"] = Vector2(toward.x, toward.z)
+		else:
+			# In range with nothing to throw: the strike is on cooldown and he
+			# is not reaching for a tie-up. This branch used to issue no input
+			# at all -- no move, no press -- so a strike was followed by
+			# strike_cooldown_ticks (40, two thirds of a second) of a man
+			# standing perfectly still opposite another man standing perfectly
+			# still. This file said so itself: "a tick spent on the strike
+			# cooldown is a tick of standing squared up".
+			input["move"] = _circle_move(to_target, distance)
 	else:
 		# Outside tie-up range: close, and *only* close.
 		#
@@ -464,3 +494,46 @@ func _roll_tie_up_timing() -> void:
 		tie_up_press_interval_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
 
 
+## Sidestep around the opponent while holding striking range.
+##
+## Tangent plus a radial correction: the tangent of a circle centred on him
+## carries the sidestep, and the radial term pulls back toward circle_distance
+## so the orbit neither spirals in (inside him) nor out (past the reach of the
+## next strike).
+func _circle_move(to_target: Vector3, distance: float) -> Vector2:
+	if distance < 0.001:
+		return Vector2.ZERO
+	var inward := to_target.normalized()
+	var tangent := inward.cross(Vector3.UP).normalized() * _circle_direction()
+	# Positive when he is too far away, so the radial term points inward.
+	var radial := inward * clampf((distance - circle_distance) / circle_distance,
+			-1.0, 1.0)
+	var move := tangent + radial * circle_radial_pull
+	if move.length() < 0.001:
+		return Vector2.ZERO
+	move = move.normalized()
+	return Vector2(move.x, move.z)
+
+
+## Which way round the pair is going this bout: +1 or -1.
+##
+## Deliberately NOT varied by player_index, which is the opposite of what
+## _roll_tie_up_timing() does and is the whole reason this works.
+##
+## The tangent is inward.cross(UP), and the two men's `inward` vectors point at
+## each other -- they are opposites. So the SAME sign sends them opposite ways
+## in world space, which is two men orbiting the midpoint between them, and
+## OPPOSITE signs send them the same way in world space, which is the pair
+## crab-walking across the ring together.
+##
+## The first version seeded on player_index and did exactly that: measured with
+## feel_probe, mean separation went 0.97 m -> 1.87 m and max separation hit
+## 64.99 m -- in a 6 m ring. They walked out of the arena still circling. Both
+## men take the same sign now, so the orbit closes.
+##
+## Seeded rather than random: ReplaySystem replays a match by re-running its
+## inputs, and live randomness here would desync it (ARCHITECTURE.md).
+func _circle_direction() -> float:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 6151 + int(_circle_tick / maxi(circle_bout_ticks, 1))
+	return 1.0 if rng.randi() % 2 == 0 else -1.0
