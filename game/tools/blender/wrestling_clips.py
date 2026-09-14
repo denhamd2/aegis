@@ -5,6 +5,19 @@ Run with the bpy module (no Blender application required):
 
     python3 game/tools/blender/wrestling_clips.py
 
+Before authoring or changing a clip here, read the `blender-animation` skill
+-----------------------------------------------------------------------------
+It is not optional advice and it is not a formality. CLAUDE.md's routing table
+already points clip authoring at `blender-animation` (bpy keyframes, F-curves,
+easing, bone-space handling) plus `animation` (blocking -> breakdown ->
+splining, cycle frame counts), and the pass this file replaced skipped the
+first of those. It derived the rig's axis conventions by trial instead, got
+the mirrored bones backwards, and shipped 29 clips with the arms hanging at
+the sides -- the defect described below.
+
+The reminder lives here, at the point of use, rather than only in CLAUDE.md,
+because that is where someone about to edit a pose will actually see it.
+
 Why this was rewritten
 ----------------------
 The previous pass authored these same 29 clips as per-bone Euler degrees,
