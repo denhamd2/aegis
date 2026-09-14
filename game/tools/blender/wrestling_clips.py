@@ -65,6 +65,7 @@ Output is deterministic: the same table produces a byte-identical glb, which
 is what lets it be committed and diffed like the .tres bakes.
 """
 
+import math
 import os
 import sys
 
@@ -131,6 +132,98 @@ def S(**over):
     return pose(SUPINE, **over)
 
 
+# --- gait construction ----------------------------------------------------
+#
+# The two locomotion cycles are generated rather than tabled, because the one
+# property that makes a cycle read as walking instead of skating cannot be
+# held by hand: while a foot is on the mat it must travel backward at exactly
+# the speed the engine translates the body forward. Miss it and the mat slides
+# under the boot.
+#
+# Measured on the tabled versions these replaced, sampling the planted phase
+# of the clips the game actually loads (tools/anim/gait_audit.gd reproduces
+# it):
+#
+#   walk_stalk  foot planted 0.85s of a 1.333s cycle, travelling 0.35 m
+#               -> 0.42 m/s delivered against MOVE_SPEED 3.5  (6.6x skate)
+#   run_drive   foot planted 0.16s of a 0.667s cycle, travelling 0.32 m
+#               -> 2.01 m/s delivered against RUN_SPEED 7.0   (7.3x skate)
+#
+# Contact DURATION is the free variable here, not stride length. Stride is
+# capped by the leg -- 0.829 m of thigh+calf means a planted foot can only
+# reach about +-0.30 m either side of the hip before the knee locks out -- so
+# a faster gait is bought with a shorter, harder contact and more time in the
+# air, which is what real sprinting does. The flight phase covers the rest of
+# the ground and constrains nothing, because nothing is planted during it.
+#
+# So each cycle below names its contact windows and its speed, and the foot
+# curve falls out of them. `frames`/`speed` and the `seconds` its recipe in
+# resources/animations/strike_recipes.gd retimes to must agree: the planted
+# rate is travel / (contact_frames / frames * seconds).
+
+def _gait(frames, fps, speed, contacts, plant_up, lift_up, foot_x,
+          pelvis_up, pelvis_dip, hips_yaw, spine, head, hand_fwd, hand_up,
+          hand_x, elbow, arm_spread=0.0):
+    """One looping in-place gait cycle, keyed every frame.
+
+    `contacts` is {"r": (start_frame, contact_frames), "l": ...}. Inside its
+    window a foot sits at `plant_up` and travels backward at `speed`; outside
+    it swings forward through an arc peaking at `lift_up`. Frame `frames` is
+    computed identically to frame 0, so the loop seam is closed by
+    construction rather than by remembering to repeat a pose -- which is the
+    defect that put a 0.132 m forearm pop in every run cycle, where frame 0
+    named elbow poles and the closing frame did not.
+    """
+    out = []
+    for f in range(frames + 1):
+        phase = (f % frames) / float(frames)
+        over = {}
+        for side, (start, contact) in contacts.items():
+            rel = (f - start) % frames
+            half = (contact / float(fps)) * speed * 0.5
+            if rel <= contact:
+                # Planted: backward at exactly `speed`, so the mat holds.
+                over["foot_%s" % side] = (
+                    foot_x[side], half - (rel / float(fps)) * speed, plant_up)
+            else:
+                swing = (rel - contact) / float(frames - contact)
+                # Ease the recovery so the foot does not shoot forward at a
+                # constant rate -- a swinging leg accelerates and settles.
+                eased = swing * swing * (3.0 - 2.0 * swing)
+                # The arc is raised to a fractional power so the boot LEAVES
+                # the mat, rather than easing off it. A plain sine spends two
+                # frames either side of the contact window within a
+                # centimetre of the canvas, which reads as a drag and, worse,
+                # is indistinguishable from contact: the foot is still
+                # effectively planted while the curve has already stopped
+                # holding it to the ground speed, so the skate comes back at
+                # the edges of every step.
+                over["foot_%s" % side] = (
+                    foot_x[side], -half + eased * (2.0 * half),
+                    plant_up + lift_up * math.sin(math.pi * swing) ** 0.55)
+        # Hips drop once per step (twice per cycle) as each contact absorbs.
+        over["pelvis"] = (0.0, 0.0,
+                          pelvis_up - pelvis_dip * (0.5 - 0.5 * math.cos(
+                              4.0 * math.pi * phase)))
+        # Pelvis and shoulders counter-rotate once per cycle.
+        swing_yaw = math.sin(2.0 * math.pi * phase)
+        over["hips"] = (spine[0] * 0.2, hips_yaw * swing_yaw, 0.0)
+        over["spine"] = (spine[1], -hips_yaw * swing_yaw * 0.6, 0.0)
+        over["head"] = head
+        # Arms pump opposite the legs: the right hand leads when the left
+        # foot does.
+        for side, sign in (("r", 1.0), ("l", -1.0)):
+            drive = sign * swing_yaw
+            over["hand_%s" % side] = (
+                hand_x[side] + arm_spread * abs(drive),
+                hand_fwd[0] + (hand_fwd[1] - hand_fwd[0]) * (0.5 + 0.5 * drive),
+                hand_up[0] + (hand_up[1] - hand_up[0]) * (0.5 + 0.5 * drive))
+            if elbow:
+                over["elbow_%s" % side] = elbow[side]
+        out.append((f, P(**over)))
+    return out
+
+
 # --- the clips ------------------------------------------------------------
 
 CLIPS = {
@@ -153,83 +246,51 @@ CLIPS = {
         (75, P()),
     ],
 
-    # 40 frames / 1.333s, looping: two steps, contact-down-passing-up each.
-    # A stalk, not a stroll -- short steps, hands up, hips square to the
-    # danger. In-place, so the planted foot travels backward through its
-    # stance phase and the engine's translation supplies the ground speed.
-    "Walk_Stalk": [
-        # Contact: right heel strikes forward, left foot trailing.
-        (0,  P(pelvis=(0.0, 0.02, 0.856), hips=(4, -6, 0),
-               foot_r=(0.20, 0.19, 0.104), foot_l=(-0.19, -0.18, 0.115),
-               hand_r=(0.18, 0.26, 1.29), hand_l=(-0.13, 0.37, 1.35))),
-        # Down: weight settles onto the right, hips at their lowest.
-        (5,  P(pelvis=(0.01, 0.02, 0.845), hips=(5, -4, 2),
-               foot_r=(0.20, 0.15, 0.104), foot_l=(-0.19, -0.14, 0.155),
-               hand_r=(0.18, 0.28, 1.30), hand_l=(-0.13, 0.35, 1.34))),
-        # Passing: left foot swings under him, hips rising.
-        (10, P(pelvis=(0.0, 0.02, 0.864), hips=(4, 0, 0),
-               foot_r=(0.20, 0.03, 0.104), foot_l=(-0.19, 0.0, 0.170),
-               hand_r=(0.17, 0.30, 1.31), hand_l=(-0.13, 0.34, 1.34))),
-        # Up: push off the right, left reaching forward.
-        (15, P(pelvis=(-0.01, 0.02, 0.866), hips=(4, 4, -2),
-               foot_r=(0.20, -0.12, 0.110), foot_l=(-0.19, 0.15, 0.140),
-               hand_r=(0.16, 0.32, 1.33), hand_l=(-0.14, 0.32, 1.33))),
-        # Contact, mirrored.
-        (20, P(pelvis=(0.0, 0.02, 0.856), hips=(4, 6, 0),
-               foot_r=(0.20, -0.18, 0.115), foot_l=(-0.19, 0.19, 0.104),
-               hand_r=(0.16, 0.34, 1.34), hand_l=(-0.14, 0.30, 1.32))),
-        (25, P(pelvis=(-0.01, 0.02, 0.845), hips=(5, 4, -2),
-               foot_r=(0.20, -0.14, 0.155), foot_l=(-0.19, 0.15, 0.104),
-               hand_r=(0.17, 0.33, 1.34), hand_l=(-0.13, 0.31, 1.32))),
-        (30, P(pelvis=(0.0, 0.02, 0.864), hips=(4, 0, 0),
-               foot_r=(0.20, 0.0, 0.170), foot_l=(-0.19, 0.03, 0.104),
-               hand_r=(0.17, 0.31, 1.32), hand_l=(-0.13, 0.33, 1.33))),
-        (35, P(pelvis=(0.01, 0.02, 0.866), hips=(4, -4, 2),
-               foot_r=(0.20, 0.15, 0.140), foot_l=(-0.19, -0.12, 0.110),
-               hand_r=(0.18, 0.28, 1.30), hand_l=(-0.13, 0.36, 1.35))),
-        (40, P(pelvis=(0.0, 0.02, 0.856), hips=(4, -6, 0),
-               foot_r=(0.20, 0.19, 0.104), foot_l=(-0.19, -0.18, 0.115),
-               hand_r=(0.18, 0.26, 1.29), hand_l=(-0.13, 0.37, 1.35))),
-    ],
+    # 16 frames / 0.533s, looping: two steps, generated by _gait() above.
+    #
+    # Labelled a stalk, and at MOVE_SPEED 3.5 m/s that is a generous word for
+    # it -- 3.5 m/s is a jog, not a circle. The clip is now honest about the
+    # speed it is played at rather than about the word: contact is 5 frames
+    # (0.167 s) covering 0.583 m, which is 3.50 m/s under the boot, and the
+    # remaining 37% of the cycle is flight. The tabled version it replaced
+    # delivered 0.42 m/s and the mat slid 6.6x under every step.
+    #
+    # Hands stay up and the shoulders counter the hips, which is the part of
+    # "stalk" the pose can still keep.
+    "Walk_Stalk": _gait(
+        frames=16, fps=FPS, speed=3.5,
+        contacts={"r": (0, 5), "l": (8, 5)},
+        plant_up=0.104, lift_up=0.11,
+        foot_x={"r": 0.20, "l": -0.19},
+        pelvis_up=0.862, pelvis_dip=0.018,
+        hips_yaw=6.0, spine=(4.0, 12.0), head=(-2, 0, 0),
+        hand_fwd=(0.26, 0.37), hand_up=(1.29, 1.35),
+        hand_x={"r": 0.17, "l": -0.13}, elbow=None),
 
-    # 20 frames / 0.667s, looping: two strides with a real flight phase --
-    # both feet off the mat at frames 7 and 17 -- which is the whole
-    # difference between a run and a fast walk. Torso drives forward at 24
-    # degrees and the arms pump opposite the legs.
-    "Run_Drive": [
-        (0,  P(pelvis=(0.0, 0.04, 0.858), spine=(24, 4, 0), head=(-14, 0, 0),
-               foot_r=(0.15, 0.28, 0.115), foot_l=(-0.15, -0.30, 0.22),
-               hand_r=(0.22, -0.06, 1.22), hand_l=(-0.16, 0.34, 1.42),
-               elbow_r=(0.3, -0.9, -0.3), elbow_l=(-0.3, -0.9, -0.3))),
-        # Down: absorbing, hips at their lowest of the stride.
-        (3,  P(pelvis=(0.0, 0.04, 0.822), spine=(26, 2, 0), head=(-12, 0, 0),
-               foot_r=(0.15, 0.16, 0.104), foot_l=(-0.15, -0.20, 0.26),
-               hand_r=(0.22, 0.02, 1.26), hand_l=(-0.16, 0.28, 1.40))),
-        # Drive: pushing off the right, left knee swinging through.
-        (5,  P(pelvis=(0.0, 0.04, 0.872), spine=(24, 0, 0), head=(-12, 0, 0),
-               foot_r=(0.15, -0.10, 0.120), foot_l=(-0.15, 0.08, 0.34),
-               hand_r=(0.22, 0.14, 1.32), hand_l=(-0.18, 0.10, 1.30))),
-        # Flight: nothing on the mat.
-        (7,  P(pelvis=(0.0, 0.04, 0.892), spine=(23, -2, 0), head=(-12, 0, 0),
-               foot_r=(0.15, -0.30, 0.27), foot_l=(-0.15, 0.27, 0.25),
-               hand_r=(0.20, 0.28, 1.40), hand_l=(-0.20, -0.04, 1.22))),
-        # Contact, mirrored.
-        (10, P(pelvis=(0.0, 0.04, 0.858), spine=(24, -4, 0), head=(-14, 0, 0),
-               foot_r=(0.15, -0.30, 0.22), foot_l=(-0.15, 0.28, 0.115),
-               hand_r=(0.20, 0.34, 1.42), hand_l=(-0.18, -0.06, 1.22))),
-        (13, P(pelvis=(0.0, 0.04, 0.822), spine=(26, -2, 0), head=(-12, 0, 0),
-               foot_r=(0.15, -0.20, 0.26), foot_l=(-0.15, 0.16, 0.104),
-               hand_r=(0.20, 0.28, 1.40), hand_l=(-0.18, 0.02, 1.26))),
-        (15, P(pelvis=(0.0, 0.04, 0.872), spine=(24, 0, 0), head=(-12, 0, 0),
-               foot_r=(0.15, 0.08, 0.34), foot_l=(-0.15, -0.10, 0.120),
-               hand_r=(0.20, 0.10, 1.30), hand_l=(-0.18, 0.14, 1.32))),
-        (17, P(pelvis=(0.0, 0.04, 0.892), spine=(23, 2, 0), head=(-12, 0, 0),
-               foot_r=(0.15, 0.27, 0.25), foot_l=(-0.15, -0.30, 0.27),
-               hand_r=(0.22, -0.04, 1.22), hand_l=(-0.16, 0.28, 1.40))),
-        (20, P(pelvis=(0.0, 0.04, 0.858), spine=(24, 4, 0), head=(-14, 0, 0),
-               foot_r=(0.15, 0.28, 0.115), foot_l=(-0.15, -0.30, 0.22),
-               hand_r=(0.22, -0.06, 1.22), hand_l=(-0.16, 0.34, 1.42))),
-    ],
+    # 20 frames / 0.667s, looping: two strides, generated by _gait() above.
+    #
+    # A real sprint, which means a short hard contact and a lot of air: 3
+    # frames (0.100 s) on the mat covering 0.700 m -- 7.00 m/s, RUN_SPEED
+    # exactly -- and 70% of the cycle in flight. The tabled version delivered
+    # 2.01 m/s against the same constant.
+    #
+    # The hips drop to 0.80 through each contact, which is both what absorbing
+    # a sprint stride looks like and what buys the leg enough room to reach
+    # +-0.35 m either side of the hip without locking the knee (thigh + calf
+    # is 0.829 m; at the rest hip height that stride does not fit).
+    #
+    # Elbow poles are supplied on every frame by the generator, so the arms
+    # solve the same way at the seam as anywhere else.
+    "Run_Drive": _gait(
+        frames=20, fps=FPS, speed=7.0,
+        contacts={"r": (0, 3), "l": (10, 3)},
+        plant_up=0.104, lift_up=0.26,
+        foot_x={"r": 0.15, "l": -0.15},
+        pelvis_up=0.872, pelvis_dip=0.072,
+        hips_yaw=5.0, spine=(4.0, 24.0), head=(-13, 0, 0),
+        hand_fwd=(-0.06, 0.34), hand_up=(1.22, 1.42),
+        hand_x={"r": 0.21, "l": -0.17},
+        elbow={"r": (0.3, -0.9, -0.3), "l": (-0.3, -0.9, -0.3)}),
 
     # === the lock-up ====================================================
 
@@ -269,22 +330,59 @@ CLIPS = {
     # 16 frames, LEFT hand, contact on frame 5 (= tick 9 of strike_jab.tres
     # after retiming). The fastest thing in the match: 3 frames of
     # anticipation, a 2-frame action, and the rest is recovery.
+    #
+    # The torso twist used to be NEGATIVE through contact (spine yaw -16),
+    # which is the sign that drives the RIGHT shoulder forward -- the torso
+    # rotating away from the arm actually throwing the punch. Two things
+    # followed from it, and both were measured on the shipped clip:
+    #
+    #   1. The left shoulder sat at fwd -0.119, BEHIND the body origin, so
+    #      the furthest the fist could reach was 0.42 m. The pose table asked
+    #      for 0.56, which is 0.685 m from a shoulder with 0.544 m of arm --
+    #      14 cm beyond reach. _two_bone_ik clamps to (l1+l2)*0.995 and
+    #      solves along the direction, so the truncation ate almost the whole
+    #      forward component.
+    #   2. Frames 5 and 8 both truncated onto the same reach sphere, which
+    #      collapsed them into nearly the same pose. The clip's actual peak
+    #      drifted to tick 18 -- six ticks past the contact window
+    #      strike_jab.tres declares -- and the punch read as 7 cm of ooze
+    #      rather than a strike: 2.83 m/s where the cross manages 7.20.
+    #
+    # Measured on this rig, sweeping spine yaw with the hips following at
+    # half (tools/anim/reach_audit.gd reproduces it):
+    #
+    #   yaw -16 -> left shoulder fwd -0.106, fist can reach 0.422
+    #   yaw   0 -> fwd -0.036, reach 0.492
+    #   yaw +28 -> fwd +0.116, reach 0.644
+    #   yaw +28 with clav_l protracted +20 -> fwd +0.189, reach 0.717
+    #
+    # So the twist is positive through contact and the clavicle protracts,
+    # which is what a real jab does with its shoulder. The hand target is set
+    # at 0.66 fwd, landing the wrist 0.50 m from the shoulder -- 0.92 of the
+    # arm, extended but not locked out, and with margin rather than clamped.
     "Strike_Jab": [
         (0,  P()),
         # Anticipation is small and mostly weight -- a jab that winds up is
-        # a jab you can see coming.
-        (3,  P(pelvis=(0.02, 0.0, 0.858), spine=(12, 10, 0),
-               hand_l=(-0.11, 0.28, 1.36), hand_r=(0.17, 0.31, 1.31))),
-        # Contact: the left shoulder rotates through, the hand at head
-        # height 0.56 forward, and the lead foot takes the weight.
-        (5,  P(pelvis=(-0.02, 0.06, 0.862), hips=(4, -14, 0),
-               spine=(11, -16, 0), head=(-2, -6, 0),
-               hand_l=(-0.06, 0.56, 1.40), hand_r=(0.19, 0.28, 1.28),
-               foot_l=(-0.19, 0.18, 0.104), foot_r=(0.23, -0.17, 0.112))),
-        # Follow-through past contact, not a stop on it.
-        (8,  P(pelvis=(-0.01, 0.04, 0.860), hips=(4, -10, 0),
-               spine=(11, -12, 0),
-               hand_l=(-0.08, 0.50, 1.38), hand_r=(0.18, 0.29, 1.29))),
+        # a jab you can see coming. The left shoulder loads BACK (yaw 0,
+        # down from the stance's +6), which is the half-beat the drive below
+        # unwinds.
+        (3,  P(pelvis=(0.02, 0.0, 0.858), hips=(4, -4, 0), spine=(12, 0, 0),
+               hand_l=(-0.11, 0.30, 1.36), hand_r=(0.17, 0.31, 1.31))),
+        # Contact: the left shoulder drives through and protracts, the fist
+        # arrives at head height 0.66 forward, and the lead foot takes the
+        # weight while the back heel pivots off the mat. The head counters
+        # the chest so he is still looking at the man he is hitting.
+        (5,  P(pelvis=(-0.02, 0.06, 0.862), hips=(4, 14, 0),
+               spine=(11, 28, 0), head=(-4, -20, 0), clav_l=(0, 20, 0),
+               hand_l=(-0.06, 0.66, 1.40), hand_r=(0.19, 0.30, 1.30),
+               foot_l=(-0.19, 0.18, 0.104), foot_r=(0.23, -0.17, 0.125),
+               ankle_r=(20, 0, 0))),
+        # Retracting, not stopping: the hand is already on its way back and
+        # the shoulder is unwinding, so the clip's peak stays on frame 5.
+        (8,  P(pelvis=(-0.01, 0.04, 0.860), hips=(4, 10, 0),
+               spine=(11, 20, 0), head=(-3, -14, 0), clav_l=(0, 12, 0),
+               hand_l=(-0.09, 0.52, 1.38), hand_r=(0.18, 0.30, 1.30),
+               foot_r=(0.23, -0.17, 0.118), ankle_r=(14, 0, 0))),
         (16, P()),
     ],
 

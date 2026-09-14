@@ -31,6 +31,32 @@ extends Resource
 @export var damage_arms: float = 0.0
 @export var damage_legs: float = 0.0
 
+## Where the striking limb actually is, in the wrestler's own local space,
+## on the tick this move applies damage -- forward is -Z, matching the
+## model's PI-Y mount in WrestlerController._install_character_model().
+##
+## Measured, never chosen: run
+## `godot4 --headless -s res://tools/anim/measure_contact_offsets.gd` and
+## paste what it prints. Re-run it after any change to the clip or to
+## startup_frames, because it samples the clip at exactly that tick.
+##
+## This replaced a single 1.15 m sphere between the two capsule ORIGINS,
+## shared by every strike in the game. Measured against the clips as played,
+## the four strikes put their limb 0.42 / 0.55 / 0.82 / 0.82 m in front of
+## the origin, so one range landed the jab through a third of a metre of
+## clear air and cut both kicks short. It also asked nothing about direction,
+## so a strike thrown while moving away from the opponent connected.
+##
+## Left at ZERO, the move falls back to that proximity test -- which is what
+## the grapple and paired moves still want, since GrappleRig places both
+## wrestlers itself and no limb of theirs is being aimed at anything.
+@export var contact_offset: Vector3 = Vector3.ZERO
+
+## Radius of the striking surface -- a fist is about 0.12, a boot 0.15. Zero
+## means "this move has no authored contact volume", which is what selects
+## the proximity fallback above.
+@export var contact_radius: float = 0.0
+
 @export var momentum_cost: float = 0.0
 @export var momentum_gain: float = 0.0
 

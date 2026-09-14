@@ -16,17 +16,24 @@ const AUTHORED_GLB := "res://assets/animations/wrestling_clips.glb"
 ## longer, and it is cut off mid-action. Both have shipped in this project
 ## before, which is why strike_recipes.gd retimes everything.
 const AUTHORED_LENGTHS := {
-	"strike_jab": 0.514,          # strike_jab.tres: 9+4+18 = 31 frames
+	"strike_jab": 0.514,          # strike_jab.tres: 10+4+17 = 31 frames
 	"strike_cross": 0.667,        # strike_cross.tres: 12+4+24 = 40
-	"strike_kick": 0.583,         # strike_kick.tres: 8+5+22 = 35
-	"strike_kick_heavy": 0.950,   # strike_kick_heavy.tres: 12+5+40 = 57
+	"strike_kick": 0.583,         # strike_kick.tres: 14+5+16 = 35
+	"strike_kick_heavy": 0.950,   # strike_kick_heavy.tres: 11+5+41 = 57
 	"hit_head": 0.333,            # WrestlerController.HIT_REACT_TICKS = 20
 	"hit_torso": 0.333,           # same state
 	"stunned": 0.750,             # WrestlerController.STUNNED_TICKS = 45
 	"running_clothesline": 1.150, # both running_attack_*.tres: 69 frames
 	"win_celebrate": 1.300,       # free: VICTORY is terminal
 	"idle_ready": 2.500,          # loops; matches the rig's Idle
-	"walk_stalk": 1.333,          # loops; matches the rig's Walk
+	# 0.533s, not the rig's 1.333s Walk. The cycle is generated against
+	# MOVE_SPEED (_gait() in tools/blender/wrestling_clips.py): a planted foot
+	# has to travel backward at exactly the speed the engine carries the body
+	# forward, and the planted rate is travel / (contact_frames / frames *
+	# seconds). At 1.333s the cycle delivered 0.42 m/s against MOVE_SPEED 3.5
+	# and the mat slid 6.6x under every step. tools/anim/gait_audit.gd is the
+	# check; this line and the recipe's `seconds` must move together.
+	"walk_stalk": 0.533,          # loops; 16 frames at 30fps
 	"run_drive": 0.667,           # loops; matches the rig's Sprint
 	"tie_up_collar": 1.000,
 	"down_supine": 1.333,

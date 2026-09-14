@@ -17,17 +17,20 @@ signal move_landed(attacker: WrestlerController, defender: WrestlerController, m
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
 const TIE_UP_RANGE := 1.4
-## Reach for a strike/running-attack to connect.
+## How close an opponent has to be for a strike or running attack to be worth
+## STARTING, and the fallback contact test for moves that carry no authored
+## contact volume (see MoveDef.contact_offset).
 ##
-## Measured, not chosen: running forward kinematics over `Punch_Jab`'s own
-## tracks puts the fist 0.76m ahead of the wrestler's origin at its contact
-## frame, and the opponent's capsule radius is 0.4m, so a punch reaches a
-## body whose centre is up to ~1.16m away.
+## This is no longer what decides whether a strike LANDS. It used to be: one
+## 1.15m sphere between the two capsule origins, shared by every strike in the
+## game, which could not tell a jab from a boot or forwards from backwards.
+## _strike_reaches() replaced it with the move's own measured contact volume.
 ##
-## This was 1.8m. Strikes therefore connected from 1.6m -- the distance an
-## instrumented match actually recorded them landing at -- which is more
-## than half a metre of clear air between the fist and the man it damaged.
-## That is the single biggest reason strikes read as not connecting.
+## The number itself was honest when it was written -- forward kinematics over
+## `Punch_Jab` put the fist 0.76m ahead of the origin, plus the 0.4m capsule
+## -- but that clip is gone, and the authored jab that replaced it reaches
+## 0.655m. Kept at 1.15 because as a "close enough to throw at" gate it wants
+## to be slightly generous: the strike still has to reach on its own.
 const STRIKE_HIT_RANGE := 1.15
 ## Downward acceleration (m/s^2) applied whenever a wrestler is off the mat.
 ## The project sets no custom gravity, so this matches Godot's own 3D default
@@ -1132,6 +1135,63 @@ static func _step_angle(from: float, to: float, max_step: float) -> float:
 func _in_range(range_m: float) -> bool:
 	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m
 
+## The opponent's body as a capsule, read off scenes/wrestler.tscn: radius
+## 0.4, total height 1.8, sitting at y = 0.9. A capsule's `height` spans the
+## hemispheres too, so the cylindrical axis runs 0.4 .. 1.4 in his own space,
+## and everything within BODY_RADIUS of THAT SEGMENT is him.
+const BODY_RADIUS := 0.4
+const BODY_AXIS_LOW := 0.4
+const BODY_AXIS_HIGH := 1.4
+
+## Does this strike's limb actually reach the opponent's body?
+##
+## This is the test that used to be `_in_range(STRIKE_HIT_RANGE)` -- one 1.15m
+## sphere between the two capsule ORIGINS, shared by every strike in the game
+## and evaluated on every tick of the active window. It asked nothing about
+## where the striking limb was, which had three consequences, all measured:
+##
+##   * One range for four limbs. The clips put the striking limb 0.42 / 0.55 /
+##     0.82 / 0.82 m in front of the origin (jab / cross / kick / heavy kick),
+##     so 1.15 m landed the jab through a third of a metre of clear air and
+##     cut both kicks short of where the boot really was. The 1.15 was honest
+##     once -- it is 0.76 m of fist plus the 0.4 capsule -- but it was
+##     measured on a Punch_Jab clip that no longer exists.
+##   * No direction. _turn_toward_opponent() only runs in the idle branch of
+##     _process_free_movement(), and nothing updates facing during STRIKE, so
+##     a punch thrown while strafing away connected.
+##   * No height. A boot and a jab tested identically against a man's origin.
+##
+## So the move carries a measured `contact_offset` (see MoveDef, baked by
+## tools/anim/measure_contact_offsets.gd) and this places a sphere of
+## `contact_radius` there, in the attacker's own space, and intersects it with
+## the opponent's capsule. Facing and height come out of that for free: an
+## offset is a direction as well as a distance.
+##
+## Deterministic, and deliberately NOT a physics query. ARCHITECTURE.md's
+## determinism contract says rigid-body simulation must never feed gameplay
+## state, so this reads no Jolt contact and casts no shape -- it is arithmetic
+## on two transforms and one baked constant. It also does NOT read the live
+## skeleton: a retargeted model poses its bones slightly differently, and
+## sampling those would make damage depend on which wrestler was on screen and
+## quietly break replay hashes across models.
+##
+## The offset is sampled at the move's own contact tick and then held for the
+## whole active window, so what is really being tested is the volume the limb
+## sweeps through those 4-5 ticks rather than its position on each one.
+func _strike_reaches(move: MoveDef) -> bool:
+	if opponent == null or not is_instance_valid(opponent):
+		return false
+	# Moves with no authored contact volume -- grapples, paired moves, and the
+	# timed stubs -- keep the old proximity test. GrappleRig places both
+	# wrestlers itself, so no limb of theirs is being aimed at anything.
+	if move == null or move.contact_radius <= 0.0:
+		return _in_range(STRIKE_HIT_RANGE)
+	var contact := global_transform * move.contact_offset
+	var axis_low := opponent.global_transform * Vector3(0.0, BODY_AXIS_LOW, 0.0)
+	var axis_high := opponent.global_transform * Vector3(0.0, BODY_AXIS_HIGH, 0.0)
+	var nearest := Geometry3D.get_closest_point_to_segment(contact, axis_low, axis_high)
+	return contact.distance_to(nearest) <= BODY_RADIUS + move.contact_radius
+
 ## RUN -> RUNNING_ATTACK is the only legal way into RUNNING_ATTACK, so this
 ## is only ever called while already in RUN (both the player/AI-steered
 ## case, from _process_free_movement(), and the post-whip autopilot case,
@@ -1254,8 +1314,21 @@ func _process_active_move(input: Dictionary) -> void:
 	var in_active_frames := frame_offset >= _active_move.startup_frames \
 		and frame_offset < _active_move.startup_frames + _active_move.active_frames
 
+	# Keep turning into the strike until it lands. _strike_reaches() is a
+	# DIRECTIONAL test now -- the limb has a position, not just a distance --
+	# and facing was previously updated only in the idle branch of
+	# _process_free_movement(), never during STRIKE. Without this a wrestler
+	# who threw while stepping kept the heading his movement gave him and the
+	# punch swung past an opponent standing beside him.
+	#
+	# It stops at contact rather than running through the recovery, so a
+	# strike still commits to where it was aimed: turning through the active
+	# frames would let a thrown punch track a man walking out of it.
+	if frame_offset < _active_move.startup_frames:
+		_turn_toward_opponent()
 
-	if in_active_frames and opponent and _in_range(STRIKE_HIT_RANGE) \
+
+	if in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
 			and not _active_move_hit_applied:
 		_apply_move_to_opponent(_active_move)

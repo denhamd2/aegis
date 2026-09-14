@@ -244,10 +244,17 @@ const RECIPES := {
 
 	# Walk is a stroll. This is a man circling an opponent -- short steps,
 	# hands up, square to the danger.
+	# 0.533s, matching Walk_Stalk's own 16 frames at 30fps. The cycle is
+	# generated against MOVE_SPEED (see _gait() in tools/blender/
+	# wrestling_clips.py), so this duration is not free: the planted foot
+	# delivers travel / (contact_frames / frames * seconds), and retiming
+	# this number without regenerating the clip puts the skate straight back.
 	"walk_stalk": {"kind": "retime", "source": "Walk_Stalk",
-		"seconds": 1.333, "file": AUTHORED, "loop": true},
+		"seconds": 0.533, "file": AUTHORED, "loop": true},
 
 	# Sprint is a jog with the torso upright and the arms barely moving.
+	# 0.667s, matching Run_Drive's own 20 frames at 30fps -- and, like the
+	# walk above, tied to RUN_SPEED through the generated contact phase.
 	"run_drive": {"kind": "retime", "source": "Run_Drive",
 		"seconds": 0.667, "file": AUTHORED, "loop": true},
 
