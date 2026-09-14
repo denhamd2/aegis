@@ -4461,3 +4461,147 @@ out, and both are now the finish of every AI match (see above).
 
 **WrestlerB wins 9 of 12 seeds.** That skew predates this change (the
 before-measurement has him taking 2 of 3) and nothing here addresses it.
+
+## Every animation in the match, authored again from scratch
+
+The clips did not look good, and the reason was not the numbers in them —
+it was that nothing in the loop could see them.
+
+The previous pass authored all 29 clips as per-bone Euler degrees against a
+remembered axis map. Rendered on the rig for the first time this pass (six
+frames each, three camera angles, `bpy` + Cycles CPU — EEVEE cannot open
+`libEGL` in this container), it was one defect repeated everywhere:
+
+| clip | what it actually played |
+| --- | --- |
+| `Idle_Ready` | a mannequin standing still for 57 frames, arms hanging |
+| `Tie_Up_Collar` | the same mannequin, small torso twist — two men standing near each other, not a lock-up |
+| `Strike_Forearm` | never raised a hand; the "contact" frame has nothing arriving |
+| `Pin_Cover` | a hunched crouch that never reaches the man on the mat |
+| `Getup_Rise` | **read correctly** — the one clip whose performance lives in the hips rather than the arms |
+
+`upperarm_r.Y` does not raise the arm from a T-pose rest, it lowers it. A
+table of joint angles gives you no way to notice that, which is why the
+defect survived a pass that was otherwise careful about timing.
+
+### Poses are now positions, not angles
+
+`tools/blender/rig_pose.py` is a solver: two-bone IK for both arms and both
+legs, absolute targets in armature space, with a pole for each joint. A pose
+says **where the hands and feet are**, in metres, and the joints are solved
+to match.
+
+That is the whole point. A pose is now a claim that can be checked on a
+rendered frame:
+
+- a foot at `up=0.104` is planted on the mat (measured ankle height)
+- a fist at `fwd=0.56, up=1.40` is at the end of a thrown punch, at head height
+- a hand at `fwd=0.52, up=1.46` is on the back of the other man's neck
+- a hip at `up=0.55` is a knee resting on the canvas — the thigh is 0.400 long
+
+Measured rest geometry it solves against: 1.651 tall, shoulders 1.441,
+pelvis 0.917, ankles 0.104, arm reach 0.547, leg reach 0.829.
+
+Three defects came out of the render loop that a table of angles had hidden,
+and each is recorded at the line that fixes it:
+
+- **fingers splayed instead of closing.** The curl is about a finger bone's
+  local *X*; local Z (tried first) splays them sideways in the plane of the
+  palm and renders as a claw. An open hand reads as a slap at any speed.
+- **elbows winged out.** The default elbow pole is down and slightly behind
+  the hands, not outward.
+- **the spine ignored the hips.** Every bone was set to an *absolute*
+  armature-space orientation, so the torso stood vertically while the pelvis
+  lay back: `Down_Supine` rendered as a man doing a sit-up on the canvas.
+  `spine` and `head` now compose with `hips`, cumulatively down the chain.
+
+### What is in the 29 clips
+
+Contact frames are placed at each move's own `startup_frames` fraction, so
+retiming in `resources/animations/strike_recipes.gd` lands the hit on the
+tick the MoveDef declares — `strike_jab` 9/31 ticks is frame 5 of 16,
+`strike_cross` 12/40 is frame 6 of 20, `strike_kick` 8/35 is frame 5 of 20,
+`strike_kick_heavy` 12/57 is frame 6 of 29. Timing follows the combat
+reference: anticipation 4–8 frames, action 2–4 and always the shortest,
+follow-through 4–8, recovery 8–16.
+
+The locomotion cycles are real cycles now — contact, down, passing, up, per
+`walk-cycle.md` — authored in place, so the planted foot travels backward
+through its stance phase and the engine's translation supplies the ground
+speed. `Run_Drive` has a flight phase with nothing on the mat at frames 7
+and 17, which is the whole difference between a run and a fast walk. The
+idle's feet never move at all, which is what keeps a looping idle from
+sliding.
+
+`Strike_Kick_Heavy` finishes by **stepping** the kicking foot back into the
+stance rather than sliding it there; the recovery is 40 ticks because the
+reference puts a heavy strike's length in recovery, never in a slower action
+phase.
+
+### The bake reads a cache, and the cache lies
+
+Rebuilding the `.glb` and re-running the two bake scripts produced a
+`strike_clips.tres` that was **byte-identical to the committed one**.
+`godot4 --headless -s <script>` does not reimport a changed asset first, so
+both generators had been reading the previous import of `wrestling_clips.glb`
+out of `.godot/imported/`. The sequence is:
+
+```
+python3 game/tools/blender/wrestling_clips.py
+godot4 --headless --import                          # <- not optional
+godot4 --headless -s res://tools/anim/build_strike_clips.gd
+godot4 --headless -s res://tools/anim/build_paired_poses.gd
+```
+
+Without the middle line the bakes silently succeed against stale data and
+report the right clip count while doing it.
+
+### Godot was throwing away two thirds of every clip
+
+The clips were right in Blender and still wrong in the game, and the reason
+was one line in `assets/animations/wrestling_clips.glb.import`:
+
+```
+animation/remove_immutable_tracks=true
+```
+
+That drops any track whose value does not change *within the clip*. These
+clips deliberately pose the whole body and then hold most of it still — so
+`Idle_Ready` arrived in Godot with **23 tracks out of 65 bones**, and every
+bone it held steady (both legs, both hands, every finger) was silently
+deleted and left holding whatever the `AnimationTree` happened to be
+blending from. That is precisely the fault
+`test_every_authored_clip_poses_the_whole_body` exists to catch, and it
+could not see it: the test counts tracks in the baked `.tres`, which is
+built from the already-stripped import.
+
+Set to `false`, the same clip imports with 195 tracks (65 bones × position,
+rotation, scale) and the fingers survive. `strike_clips.tres` roughly
+doubles, to 1.2 MB. That is the correct trade: this project's clips are
+whole-body by design, so "the value never changes" is information, not
+redundancy.
+
+### How closed a hand is, is a number
+
+The finger curl runs 0 (open) to 1 (fist), and the useful values were read
+off rendered frames rather than picked:
+
+| value | reads as |
+| --- | --- |
+| 0.0 | a flat palm pressing a shoulder into the mat |
+| 0.45 | a loose hand hanging off a stunned man |
+| 0.6 | a grip closed around a collar, an arm, a waistlock |
+| 0.75 | a guard |
+| 1.0 | a thrown fist |
+
+Below about 0.5 the fingers are still mostly straight, and the hand reads as
+a **claw**, not a grip — the tie-up shipped one pass at 0.3 and looked like
+a man about to scratch someone.
+
+### Left alone
+
+Clip **names and lengths are unchanged**, so `strike_recipes.gd`,
+`paired_recipes.gd`, both MoveDef tables and the getup's beat positions
+(`GETUP_RISE_FAST_TICKS` cuts this clip off partway through, so the beats
+are behavioural) all still describe the same clips. Nothing in the FSM,
+`GrappleRig` or the MoveDefs was touched.
