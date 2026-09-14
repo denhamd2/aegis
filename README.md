@@ -4605,3 +4605,91 @@ Clip **names and lengths are unchanged**, so `strike_recipes.gd`,
 (`GETUP_RISE_FAST_TICKS` cuts this clip off partway through, so the beats
 are behavioural) all still describe the same clips. Nothing in the FSM,
 `GrappleRig` or the MoveDefs was touched.
+
+## The whole venue is built in Blender now
+
+The bowl and the shell were already `tools/blender/arena_bowl.py`'s model. The
+ring, the entrance set, the ramp, the truss, the floor and the barricades were
+still generated in GDScript with `SurfaceTool`. They are all one pipeline now:
+
+| model | built by | parts |
+| --- | --- | --- |
+| `arena_bowl.glb` | `arena_bowl.py` | seating bowl, rink, aisles, suite fascia, shell |
+| `ring.glb` | `ring.py` | posts, rope terminations, twelve rope spans, apron frame, steel steps |
+| `entrance_set.glb` | `entrance_set.py` | stage deck, ramp, backdrop, portals, video wall, truss |
+| `ringside.glb` | `ringside.py` | floor slab, decking joints, barricades |
+
+`tools/blender/venue.py` is the shared foundation: the constant parser, the one
+game↔Blender frame conversion, and the primitives — bevelled boxes, wedges,
+parallel-transported swept tubes, arcs and four-chord lattices.
+`tools/blender/build_venue.sh` rebuilds any or all of them.
+
+The split is the one the bowl established. **Blender owns shape. Godot keeps
+owning look, physics and anything that moves** — every part is dressed by name
+from `MaterialLibrary`, because the hall's tints are solved against measured
+luminance targets in `VISUAL_BAR.md` and a colour picked in Blender cannot know
+about them. Colliders, the ring canvas texture, the video feed and the seat
+instancing all stay in GDScript.
+
+Every dimension is still **read out of the GDScript that declares it**, never
+retyped. Four constants that only existed inside an array, a dictionary or a
+sum are now plain numbers, because a number the parser cannot see is a number
+the mesh would have to duplicate.
+
+### What the move actually bought
+
+Not "it looks better in Blender" — three specific things GDScript could not do:
+
+- **The ramp was a staircase.** `arena_builder.gd` said it outright:
+  "axis-aligned boxes are all this file builds". So a 25.7 m ramp falling
+  1.45 m shipped as **eighteen 8 cm steps**. The note argued the steps were
+  under a pixel of rise from any camera in the shotlist — true of the *treads*,
+  false of the **edge**: a stepped ramp has a stepped silhouette against the
+  floor from every angle that sees it side-on. It is one wedge now, with a
+  fascia down each flank and a nose at the bottom instead of a 1.45 m cliff.
+- **The truss was sixteen boxes**, with a comment hoping they would "read as
+  truss rather than as bare pipe". Overhead truss is the one piece of an arena
+  that is unmistakably a lattice from every angle. It is four chords on a
+  square section with alternating diagonals bay by bay.
+- **Edges.** Ring posts, apron rails, steps and the stage lip carry real
+  chamfers; turnbuckle sleeves and barricade cap rails are round. A perfectly
+  sharp 90° edge takes no highlight from the house rig, and a box cap rail
+  takes one on a single facet where a tube takes one along its length.
+
+### Two faults found on rendered frames, not reasoned about
+
+- **An open sheet has no outside.** `recalc_face_normals` finds the outside of
+  a closed solid; for a sheet it picks a direction, and that direction is
+  arbitrary. A sheet facing the wrong way is **invisible** under backface
+  culling, not merely dark — the video wall rendered as nothing at all with its
+  UVs, its material and its bound still frame all correct. `venue.finish` now
+  takes an explicit facing for open sheets and bores.
+- **Reversing faces is not the same as winding them correctly.** The reversal
+  re-pairs each loop with its UV, and the picture came back on the wall rotated
+  180°. Only the picture on the wall settles which way round a UV goes.
+
+### The tests moved with the geometry
+
+`test_stage_set.gd` measured the deleted builder functions directly. Its
+invariants now measure the committed model, the way `test_arena_bowl.gd`
+measures the bowl — plus two new ones:
+
+- **the wall must FACE the ring**, which is the culling bug above, now guarded;
+- **the ramp run must sit at no more than two distinct depths**, which is what
+  a wedge is and a staircase is not.
+
+The bezel test keeps its intent in a stronger form. It used to assert that
+`_sagitta_for` inverts `_arc_radius`; it now asserts the thing that arithmetic
+was *for* — the frame must never surface through the picture anywhere, which is
+what went wrong when the two were built on different circles and the wall grew
+two dark chevrons across its top.
+
+### A trap worth repeating
+
+`godot4 --headless -s <script>` does **not** reimport a changed asset first, and
+neither does a test run. After `build_venue.sh`, run `godot4 --headless --import`
+before baking, testing or capturing — otherwise everything downstream keeps
+reading the previous import and reports success while doing it.
+
+All four models rebuild byte-identical. 341 tests pass, and every change was
+checked against a before shot through `CaptureHarness`'s art shotlist.
