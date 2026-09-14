@@ -114,8 +114,26 @@ func _run() -> int:
 		print("%-42s %-8s %-8s Vector3(%+0.3f, %+0.3f, %+0.3f)  %.2f"
 				% [path.get_file(), clip_name.substr(0, 8), limb,
 				   local.x, local.y, local.z, radius])
-		print("    tick %d of %d   reach %.3f m forward of origin"
-				% [move.startup_frames, roundi(anim.length * 60.0), -local.z])
+		# Where the limb PEAKS, against where damage is applied. These
+		# drifted apart on three of four strikes before anyone measured it:
+		# the jab peaked six ticks past its own contact window, so the hit
+		# landed while the fist was still on its way out.
+		var peak_tick := 0
+		var peak := -INF
+		var scan := 0.0
+		while scan <= anim.length:
+			var z: float = _global(skeleton, anim, bone_index, scan).origin.z
+			if z > peak:
+				peak = z
+				peak_tick = roundi(scan * 60.0)
+			scan += 1.0 / 60.0
+		var drift: int = absi(peak_tick - move.startup_frames)
+		print("    contact tick %d of %d, limb peaks at %d%s   reach %.3f m forward of origin"
+				% [move.startup_frames, roundi(anim.length * 60.0), peak_tick,
+				   "" if drift <= 2 else "  <-- MISALIGNED by %d ticks" % drift,
+				   -local.z])
+		if drift > 2:
+			failures += 1
 	model.free()
 	return 1 if failures > 0 else 0
 

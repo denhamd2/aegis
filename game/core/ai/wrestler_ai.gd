@@ -47,18 +47,26 @@ extends Node
 ## other. On footage they read as one body, and a punch thrown at that range
 ## goes PAST the opponent rather than into him.
 ##
-## 1.05 m sits inside WrestlerController.STRIKE_HIT_RANGE (1.15 m) on purpose:
-## back off any further and the AI could no longer reach with the strike it
-## just stepped away from.
+## 1.05 m sits inside the shortest strike's reach on purpose: back off any
+## further and the AI could no longer connect with the strike it just stepped
+## away from.
 ## Circling: how far apart to hold while waiting, and how long a wrestler keeps
 ## going the same way round before he switches.
 ##
 ## 1.10 m is the middle of the only band that works: nearer than min_standoff
-## (1.05 m) and they are inside each other, further than
-## WrestlerController.STRIKE_HIT_RANGE (1.15 m) and the next strike cannot
-## reach. Ten centimetres of room, and holding it is the whole constraint --
-## drifting out of it is exactly the dead band that stopped matches finishing
-## earlier in this session.
+## (1.05 m) and they are inside each other, further than the SHORTEST strike in
+## the pool and the next strike cannot reach. The upper edge used to be quoted
+## as STRIKE_HIT_RANGE (1.15 m), which was every strike's reach while there was
+## only one number; reach is now per-move and read through
+## WrestlerController.shortest_strike_reach() -- 1.17 m, the jab, with the
+## cross at 1.20 and both kicks past 1.35.
+##
+## That distinction is load-bearing, and it was briefly wrong. When the contact
+## volumes first landed the cross reached only 1.07 m, so the AI held 1.10 and
+## every cross it drew missed by three centimetres. The fix was to extend the
+## clip (Strike_Forearm's contact pose in tools/blender/wrestling_clips.py),
+## not to pull the standoff in: a rear-hand cross should out-reach a jab.
+## test_ai_spacing.gd is what keeps the band and the measured reaches agreeing.
 @export var circle_distance: float = 1.10
 ## How hard the radial correction pulls back to circle_distance against the
 ## lateral motion. 1.0 would walk straight at him; 0 would spiral away.
@@ -302,14 +310,21 @@ func poll_input() -> Dictionary:
 		# but outside striking range, or one spent on the strike cooldown,
 		# is a tick of standing squared up -- which is what the cooldown is
 		# for.
+		# The reach gate is the SHORTEST strike in this wrestler's pool, not
+		# STRIKE_HIT_RANGE. That constant used to be every strike's reach;
+		# since each move carries its own measured contact volume it is only
+		# the "close enough to throw at" gate, and the four strikes reach
+		# 1.17 / 1.20 / 1.37 / 1.35 m. Gating on the old 1.15 meant throwing
+		# from distances the drawn strike could not cover.
+		var reach := controller.shortest_strike_reach()
 		if _wants_tie_up():
 			input["grapple"] = true
-		elif _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE:
+		elif _cooldown <= 0 and distance <= reach:
 			input["strike"] = true
 			_cooldown = strike_cooldown_ticks
-		elif distance > WrestlerController.STRIKE_HIT_RANGE:
+		elif distance > reach:
 			# The dead band, and it has to be closed explicitly. tie_up_range
-			# is 1.3 m and STRIKE_HIT_RANGE is 1.15 m, so between those two the
+			# is 1.3 m and the shortest strike reaches 1.17 m, so between those
 			# AI used to neither close (the closing branch below only fires
 			# OUTSIDE tie-up range) nor strike (out of reach) -- it just stood
 			# there. This file already admitted as much: "a tick inside tie-up
@@ -338,10 +353,10 @@ func poll_input() -> Dictionary:
 		# Outside tie-up range: close, and *only* close.
 		#
 		# This branch used to also throw a strike anywhere inside
-		# strike_range (1.6m). That strike could never connect: a fist
-		# reaches STRIKE_HIT_RANGE (1.15m, measured off the jab's own
-		# contact frame -- see gauntlet/refs/timings.md), which is nearer
-		# than tie_up_range (1.3m), so everything this branch ever sees is
+		# strike_range (1.6m). That strike could never connect: the
+		# shortest strike reaches 1.17 m (measured per move by
+		# tools/anim/measure_contact_offsets.gd), which is nearer than
+		# tie_up_range (1.3m), so everything this branch ever sees is
 		# already out of reach. The close-range branch above had been
 		# gated on the measured reach; this one was still gated on
 		# strike_range, and the two disagreed about the same fact.

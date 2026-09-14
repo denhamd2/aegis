@@ -72,6 +72,15 @@ func _run(seed_value: int) -> void:
 	var unhittable_ever := {}
 	var reached_active := {}
 	var interrupted := 0
+	# Contact-tick geometry, for splitting misses by cause. See where these
+	# are written for why the closest approach could not do this job.
+	var contact_gap := {}
+	var contact_reach := {}
+	var contact_angle := {}
+	var miss_gaps: Array[float] = []
+	var miss_angles: Array[float] = []
+	var missed_short := 0
+	var missed_wide := 0
 	for w in wrestlers:
 		was_striking[w] = false
 		live[w] = false
@@ -107,26 +116,55 @@ func _run(seed_value: int) -> void:
 					var off: int = w._active_move.total_frames() - w._move_ticks_remaining
 					if off >= w._active_move.startup_frames:
 						reached_active[w] = true
+					# Geometry on the CONTACT tick itself, which is the only
+					# tick that can explain a miss. min_gap above is the
+					# CLOSEST the two got at any point during the strike, so a
+					# miss filed at 0.80 m never meant the fist was 0.80 m from
+					# a man it failed to hit -- reading it that way sent one
+					# investigation down the wrong path entirely.
+					#
+					# Two numbers, because a directional contact test can miss
+					# two different ways: too far, or off to the side. The gap
+					# is against this move's own measured reach, and the angle
+					# is how far off the attacker's facing the opponent sat.
+					if off == w._active_move.startup_frames:
+						var to_them: Vector3 = w.opponent.global_position - w.global_position
+						to_them.y = 0.0
+						contact_gap[w] = to_them.length()
+						contact_reach[w] = WrestlerController.strike_reach(w._active_move)
+						contact_angle[w] = rad_to_deg(
+								(-w.global_transform.basis.z).angle_to(to_them.normalized()))
 			elif was_striking[w]:
 				# The strike just ended: score it on what was true DURING it.
 				thrown += 1
 				if live[w]:
 					landed += 1
-				elif min_gap[w] > WrestlerController.STRIKE_HIT_RANGE:
-					out_of_range += 1
-					miss_distances.append(min_gap[w])
 				elif not reached_active[w]:
 					interrupted += 1
 				elif unhittable_ever[w]:
 					unhittable += 1
 				else:
+					# Split the misses by what actually caused them, from the
+					# contact tick rather than from the closest approach.
 					out_of_range += 1
 					miss_distances.append(min_gap[w])
+					var gap: float = contact_gap.get(w, -1.0)
+					var reach: float = contact_reach.get(w, 0.0)
+					var angle: float = contact_angle.get(w, 0.0)
+					if gap >= 0.0:
+						miss_gaps.append(gap - reach)
+						miss_angles.append(angle)
+						if gap > reach:
+							missed_short += 1
+						else:
+							missed_wide += 1
 			was_striking[w] = striking
 		if over:
 			break
 
 	_rows.append({
+		"short": missed_short, "wide": missed_wide,
+		"gaps": miss_gaps, "angles": miss_angles,
 		"seed": seed_value, "thrown": thrown, "landed": landed,
 		"out_of_range": out_of_range, "unhittable": unhittable,
 		"interrupted": interrupted,
@@ -164,5 +202,27 @@ func _report() -> void:
 	var sum := 0.0
 	for d in all:
 		sum += d
-	print("out-of-range misses: min %.2f m  median %.2f m  max %.2f m  mean %.2f m"
-		% [all[0], all[all.size() / 2], all[all.size() - 1], sum / all.size()])
+	print("closest approach during a missed strike: min %.2f m  median %.2f m  max %.2f m"
+		% [all[0], all[all.size() / 2], all[all.size() - 1]])
+	print("  (that is the CLOSEST the two got, not the gap when contact was tested)")
+
+	# The number that actually explains a miss.
+	var short_total := 0
+	var wide_total := 0
+	var gaps: Array[float] = []
+	var angles: Array[float] = []
+	for row in _rows:
+		short_total += row["short"]
+		wide_total += row["wide"]
+		gaps.append_array(row["gaps"])
+		angles.append_array(row["angles"])
+	if gaps.is_empty():
+		return
+	gaps.sort()
+	angles.sort()
+	print("misses by cause, measured ON the contact tick:")
+	print("  out of reach  %-4d   off to the side %-4d" % [short_total, wide_total])
+	print("  gap beyond this move\'s own reach: median %+.2f m  worst %+.2f m"
+		% [gaps[gaps.size() / 2], gaps[gaps.size() - 1]])
+	print("  angle off the attacker\'s facing: median %.0f deg  worst %.0f deg"
+		% [angles[angles.size() / 2], angles[angles.size() - 1]])

@@ -396,13 +396,40 @@ CLIPS = {
                head=(-2, 14, 0),
                hand_r=(0.26, 0.12, 1.34), hand_l=(-0.12, 0.33, 1.36))),
         # Contact: forearm arrives across at head height, hips already open.
-        (6,  P(pelvis=(-0.02, 0.07, 0.866), hips=(4, -18, 0),
-               spine=(12, -20, 0), head=(-4, -12, 0),
-               hand_r=(-0.02, 0.55, 1.40), hand_l=(-0.20, 0.24, 1.28),
+        # Contact. The right shoulder drives through and protracts, the same
+        # mechanism the jab uses mirrored -- negative yaw and negative clav_r
+        # are what carry the RIGHT shoulder forward.
+        #
+        # This used to ask for 0.55 fwd off a shoulder at +0.079, which is
+        # inside reach and so solved cleanly -- the cross was the one strike
+        # in the set that measured correctly, and it is what proved the jab's
+        # diagnosis. But 0.55 made the cross SHORTER than the jab's 0.655,
+        # and a rear-hand cross thrown off a rotating torso is the longer
+        # punch of the two, not the shorter one.
+        #
+        # It also cost the AI its spacing. With a single 1.15 m hit range the
+        # difference was invisible; once each strike reached only as far as
+        # its own limb, the cross topped out at 1.07 m centre-to-centre while
+        # WrestlerAI circles at 1.10 -- so the cross could never land from the
+        # distance the AI actually holds.
+        #
+        # Measured on this rig (tools/blender/reach_audit.py --sweep):
+        #
+        #   yaw -20            -> right shoulder fwd +0.079, fist reaches 0.607
+        #   yaw -30            -> fwd +0.134, reaches 0.662
+        #   yaw -30, clav -20  -> fwd +0.205, reaches 0.733
+        #
+        # 0.68 puts the wrist 0.509 m from the shoulder: 0.94 of the arm,
+        # extended and still short of the lockout the solver clamps at.
+        (6,  P(pelvis=(-0.02, 0.07, 0.866), hips=(4, -15, 0),
+               spine=(12, -30, 0), head=(-4, 18, 0), clav_r=(0, -20, 0),
+               hand_r=(-0.02, 0.68, 1.40), hand_l=(-0.20, 0.24, 1.28),
                foot_r=(0.23, -0.17, 0.125), ankle_r=(22, 0, 0))),
-        (9,  P(pelvis=(-0.03, 0.05, 0.862), hips=(4, -24, 0),
-               spine=(13, -26, 0), head=(-4, -16, 0),
-               hand_r=(-0.14, 0.48, 1.36), hand_l=(-0.22, 0.22, 1.26),
+        # Unwinding and retracting, so the clip's peak stays on frame 6 where
+        # strike_cross.tres applies its damage.
+        (9,  P(pelvis=(-0.03, 0.05, 0.862), hips=(4, -13, 0),
+               spine=(13, -24, 0), head=(-4, 12, 0), clav_r=(0, -12, 0),
+               hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.22, 0.22, 1.26),
                foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
         (20, P()),
     ],

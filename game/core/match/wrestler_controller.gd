@@ -38,6 +38,16 @@ const STRIKE_HIT_RANGE := 1.15
 ## tuning" rule applies here as much as anywhere, and no reference footage
 ## covers fall speed.
 const GRAVITY := 9.8
+## Inside this distance a moving wrestler faces his opponent and strafes;
+## outside it he faces where he is going.
+##
+## 2.5 m is WrestlerAI.run_engage_distance -- the distance at which the AI
+## stops walking in and charges. That is already this project's definition of
+## "close enough that this is a fight rather than a traversal", so the facing
+## rule uses the same line rather than inventing a second one. Past it a
+## wrestler is crossing the ring and should look where he is running; inside
+## it he is working, and a worker keeps his eyes on the other man.
+const FACE_OPPONENT_RANGE := 2.5
 ## Damage a wrestler must take *since his last knockdown* to be knocked off
 ## his feet again -- see _damage_at_last_knockdown, which is the half of this
 ## that makes a knockdown an event rather than a latch on a rising total.
@@ -1060,7 +1070,33 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	velocity.z = direction.z * speed
 
 	if direction.length() > 0.1:
-		look_at(global_position + direction, Vector3.UP)
+		# Face the MAN, not the direction of travel, once inside fighting
+		# distance. A wrestler circling an opponent strafes: his eyes, his
+		# guard and his hips stay pointed at the other man while his feet
+		# carry him sideways. look_at() on the input direction does the
+		# opposite -- it turns his shoulder to the opponent and walks him
+		# round in a circle facing the way he is going.
+		#
+		# This is the single biggest reason strikes did not connect, and it
+		# hid behind the old hit test: a 1.15 m sphere between two capsule
+		# origins does not care which way anyone is pointing, so a wrestler
+		# could fight a whole match side-on and still land everything. Once
+		# contact became directional the cost showed up immediately --
+		# measured over seeds 2 and 3 with tools/probe/strike_connect_probe,
+		# 49 of 50 missed strikes were off to the SIDE rather than short, at
+		# a median 97 degrees off the attacker's facing, with the opponent a
+		# comfortable 0.36 m inside the move's own reach.
+		#
+		# _turn_toward_opponent() alone could not dig out of that.
+		# TURN_RATE_PER_TICK is 0.12 rad/tick and two men circling in
+		# opposite directions swing the bearing between them by roughly 0.11
+		# rad/tick at MOVE_SPEED, so an attacker who enters STRIKE already 90
+		# degrees off recovers about 8 degrees across a jab's whole startup.
+		# The turn during startup is the backstop; this is the fix.
+		if opponent and _in_range(FACE_OPPONENT_RANGE):
+			_turn_toward_opponent()
+		else:
+			look_at(global_position + direction, Vector3.UP)
 		fsm.transition_to(WrestlerFSM.State.RUN if running else WrestlerFSM.State.LOCOMOTION)
 	else:
 		_turn_toward_opponent()
@@ -1142,6 +1178,42 @@ func _in_range(range_m: float) -> bool:
 const BODY_RADIUS := 0.4
 const BODY_AXIS_LOW := 0.4
 const BODY_AXIS_HIGH := 1.4
+
+## How far in front of this wrestler's origin `move` can connect, as a
+## centre-to-centre distance against a standing opponent.
+##
+## This is the same arithmetic _strike_reaches() does, solved for distance
+## rather than evaluated at one, and it exists because the AI has to stand
+## somewhere. WrestlerAI used to hold its spacing against STRIKE_HIT_RANGE,
+## which was the reach of every strike when there was only one number; now
+## that each move reaches as far as its own limb, a single constant cannot
+## answer "can I hit him from here" for a pool of four different strikes.
+##
+## Note the lateral term: a boot that swings across the body (strike_kick_
+## heavy's lands 0.148 m off the centre line) spends part of its contact
+## sphere sideways, so it reaches slightly less far forward than its offset
+## alone suggests.
+static func strike_reach(move: MoveDef) -> float:
+	if move == null or move.contact_radius <= 0.0:
+		return STRIKE_HIT_RANGE
+	var span: float = BODY_RADIUS + move.contact_radius
+	var lateral: float = move.contact_offset.x
+	return -move.contact_offset.z + sqrt(maxf(span * span - lateral * lateral, 0.0))
+
+## The shortest reach among every strike this wrestler might throw.
+##
+## The AI does not choose which strike it throws -- _pick_tier_move() draws
+## from strike_move plus strike_move_pool -- so the only distance at which a
+## thrown strike is guaranteed to be able to land is inside the SHORTEST of
+## them. Standing where only the longest reaches means the rest swing at air,
+## which is exactly what happened when the cross reached 1.07 m and the AI
+## circled at 1.10.
+func shortest_strike_reach() -> float:
+	var shortest := strike_reach(strike_move)
+	for move in strike_move_pool:
+		if move:
+			shortest = minf(shortest, strike_reach(move))
+	return shortest
 
 ## Does this strike's limb actually reach the opponent's body?
 ##

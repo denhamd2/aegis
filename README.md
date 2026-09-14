@@ -4845,3 +4845,98 @@ the gap at the tick contact was tested, so its miss distances cannot be read as
 "the fist was this far away and still missed". The test that settles it is the
 geometric one, at known transforms — which is what `test_strike_contact_volume`
 is for.
+
+## Round: they were fighting side-on the whole time
+
+Follow-on from the strike-contact round above, and the thing it found is bigger
+than anything in it.
+
+### The regression I shipped
+
+Making contact per-move broke the AI's spacing, and I did not notice because I
+read the wrong number. `WrestlerAI` holds `circle_distance` 1.10 m and gated
+strikes on `STRIKE_HIT_RANGE` 1.15 — constants chosen when that single number
+was every strike's reach. Once each move reached only as far as its own limb,
+the cross topped out at **1.07 m**: the AI stood at 1.10 and every cross it drew
+missed by three centimetres.
+
+Fixed in the clip rather than the standoff, because a rear-hand cross thrown off
+a rotating torso is the *longer* punch: `Strike_Forearm`'s contact now drives
+and protracts the right shoulder the way the jab does mirrored, and reaches
+0.679 m against the jab's 0.655. The AI gates on
+`WrestlerController.shortest_strike_reach()` — the shortest move in its own pool,
+since `_pick_tier_move()` chooses, not the AI. `test_ai_spacing.gd` keeps the
+band and the measured reaches agreeing.
+
+That took the hit rate from 24.6% to 27.8%. Which was the clue that the
+diagnosis was wrong.
+
+### The actual reason strikes did not connect
+
+`strike_connect_probe` reported miss distances of 0.77–1.15 m, and I read them
+as spacing. They are the **closest approach at any point during the strike**,
+not the gap on the tick contact is tested — a completely different quantity. The
+probe now measures the contact tick itself, and splits misses by cause:
+
+```
+misses by cause, measured ON the contact tick:
+  out of reach  1      off to the side 49
+  gap beyond this move's own reach: median -0.36 m
+  angle off the attacker's facing:  median 97 deg
+```
+
+**49 of 50 misses were sideways.** The opponent was a comfortable 0.36 m *inside*
+reach; the attacker was pointing 97 degrees away from him.
+
+`_process_free_movement()` called `look_at()` on the input direction. For a
+wrestler circling an opponent that direction is tangential — so he walked the
+circle facing the way he was going, shoulder to the other man, for the whole
+match. A wrestler circling an opponent *strafes*: eyes, guard and hips on him,
+feet carrying him sideways.
+
+The old hit test hid this completely. A 1.15 m sphere between two capsule
+origins does not care which way anyone points, so two men could fight an entire
+match side-on and land everything. Directional contact is what made it visible.
+
+`_turn_toward_opponent()` during startup — added in the previous round — could
+not dig out of it either: `TURN_RATE_PER_TICK` is 0.12 rad/tick and two men
+circling opposite ways swing the bearing between them by ~0.11 rad/tick, so an
+attacker entering `STRIKE` 90 degrees off recovers about 8 degrees across a
+whole jab. It is the backstop; facing while circling is the fix.
+
+Inside `FACE_OPPONENT_RANGE` (2.5 m — `WrestlerAI.run_engage_distance`, this
+project's existing line between a fight and a traversal) a moving wrestler now
+faces his opponent. Outside it he looks where he is running.
+
+| | before | after |
+| --- | --- | --- |
+| strikes landed | 24.6% | **70.7%** |
+| missed off to the side | 49 of 50 | **2 of 3** |
+| median miss angle | 97° | 63° |
+
+Strikes thrown per match fell from 115 to 41, which is the healthy half of it:
+the match now ends because someone gets hurt.
+
+### Two lessons worth keeping
+
+**A probe's number means exactly what it measures.** "Median miss 1.00 m" sent
+me looking at spacing for two rounds. The probe reports the contact tick now,
+and says in its own output which quantity is which.
+
+**A loose gate hides everything behind it.** Every defect in both rounds was
+invisible while contact was a proximity sphere — wrong reach, wrong contact
+frame, and a match fought side-on all resolved identically. Tightening the gate
+did not cause these; it revealed them.
+
+### Documentation
+
+`gauntlet/anchor/MATCH_FLOW.md` is new: the intended shape of a match — grapple,
+strikes, signature, pinfall — what decides each contest, what is deliberately
+absent (reversals, submissions, a neutral game) and why, and a table of the
+cross-file invariants with the test or tool that enforces each. It owns no
+numbers; every quantity is quoted from the file that owns it.
+
+`FEEL_BAR.md` is rewritten. Its priority #1 was reversal windows — a mechanic
+that had been removed, judged against a number `timings.md` still lists as
+`(pending)`. Every bar now names what settles it, because a bar with no enforcer
+cannot be judged, only asserted, which is exactly how that entry survived.
