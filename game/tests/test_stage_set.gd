@@ -28,13 +28,22 @@ func _model() -> Node3D:
 	return packed.instantiate()
 
 
+const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
+
+
 func _arrays(part: String) -> Array:
-	var root := _model()
+	var root := _model() if part != "Barricades" else _ringside()
 	var node := root.find_child(part, true, false) as MeshInstance3D
 	assert_object(node).is_not_null()
 	var arrays: Array = node.mesh.surface_get_arrays(0)
 	root.free()
 	return arrays
+
+
+func _ringside() -> Node3D:
+	var packed: PackedScene = load(RINGSIDE_MODEL)
+	assert_object(packed).is_not_null()
+	return packed.instantiate()
 
 
 func _verts(part: String) -> PackedVector3Array:
@@ -161,7 +170,7 @@ func test_the_curved_face_looks_at_the_ring() -> void:
 ## distinct heights the run's geometry sits at, and requires the ramp to reach
 ## the deck at one end and the floor at the other.
 func test_the_ramp_is_a_wedge_and_not_a_staircase() -> void:
-	var ramp_end := -ArenaBuilder.RING_HALF_EXTENT - 1.0
+	var ramp_end := -ArenaBuilder.BARRICADE_RADIUS
 	var levels := {}
 	var high := -INF
 	var low := INF
@@ -181,6 +190,61 @@ func test_the_ramp_is_a_wedge_and_not_a_staircase() -> void:
 			.is_less_equal(4)
 	assert_float(high).is_equal_approx(ArenaBuilder.STAGE_DECK_Y, 0.05)
 	assert_float(low).is_less(ArenaBuilder.FLOOR_Y + 0.1)
+
+
+## The ramp comes down to the BARRIER, not to the ring.
+##
+## Ringside is floored in black matting from the barrier in to the apron, and
+## the entrance stops at the edge of that -- a ramp running all the way to the
+## apron is a ramp nobody could walk around, and the one that ended a metre
+## short of the ring also ran straight through the barricade line.
+func test_the_ramp_stops_at_the_barrier_and_not_at_the_ring() -> void:
+	var nearest := -INF
+	for v: Vector3 in _verts("EntranceStage"):
+		if absf(v.x) > ArenaBuilder.RAMP_HALF_WIDTH + 0.05:
+			continue
+		nearest = maxf(nearest, v.z)
+	# The nose runs half a metre past the barrier line onto the matting; it
+	# must stop there and come nowhere near the apron.
+	assert_float(nearest).is_less(-ArenaBuilder.BARRICADE_RADIUS + 0.75)
+	assert_float(nearest) \
+			.override_failure_message(
+				"the ramp reaches z=%.2f, which is inside the ring's own apron"
+				% nearest) \
+			.is_less(-RingBuilder.APRON_OUT - 1.0)
+
+
+## The barrier clears the regulation minimum.
+##
+## "The ringside barrier must be a minimum of six feet from the outside edge
+## of the ring" -- Virginia 18VAC120-40-415.1. The outside edge of this ring
+## is its apron, so this is the one ringside number with a legal floor under
+## it rather than a taste argument.
+func test_the_barrier_clears_the_regulation_distance_from_the_ring() -> void:
+	const SIX_FEET := 1.8288
+	var clear := ArenaBuilder.BARRICADE_RADIUS - RingBuilder.APRON_OUT
+	assert_float(clear) \
+			.override_failure_message(
+				"only %.2fm of ringside floor -- under the six-foot minimum"
+				% clear) \
+			.is_greater(SIX_FEET)
+	# And not so far that ringside stops reading as ringside: 9.0 gave 5.8m,
+	# nearly nineteen feet, which is a car park with a ring in it.
+	assert_float(clear).is_less(4.0)
+
+
+## The entrance walks THROUGH the barrier, so the barrier has a gap.
+func test_the_barrier_opens_for_the_entrance() -> void:
+	var blocking := 0
+	for v: Vector3 in _verts("Barricades"):
+		if v.z > -ArenaBuilder.BARRICADE_RADIUS + 0.5:
+			continue
+		if absf(v.x) < ArenaBuilder.RAMP_HALF_WIDTH:
+			blocking += 1
+	assert_int(blocking) \
+			.override_failure_message(
+				"%d barricade vertices stand in the entrance walkway" % blocking) \
+			.is_equal(0)
 
 
 ## Almost all of the circle survives the cut. A shallow cut is what keeps it

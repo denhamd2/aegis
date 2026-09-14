@@ -52,3 +52,34 @@ light. It says nothing about, and was not allowed to change:
 - **The hall beyond ringside.** The entrance stage, ramp, truss, video wall and
   the raked upper bowl have no counterpart in the reference and keep the
   presentation the camera slice was built around.
+
+## Ringside layout — where the steps and the barrier go
+
+Added when the steps were moved off the sides and the barrier was brought in.
+Two of these are **regulation**, which is firmer footing than a photograph:
+they are what a sanctioning body requires, not what one promotion happened to
+build on one night.
+
+| property | source | value | build |
+| --- | --- | --- | --- |
+| steel steps position | Virginia 18VAC120-40-415.1 — the ring "shall have suitable steps for use of the contestants **in their corners**" | at the corners, not mid-side | two sets, each butted against a post, `STEP_POST_GAP` = 0.10 between |
+| steps arrangement | broadcast convention: two sets, opposite | diagonal | `+X` beside the post at (+3, +3); `-X` beside the post at (-3, -3) |
+| barrier distance | Virginia 18VAC120-40-415.1 — "the ringside barrier must be a **minimum of six feet** from the outside edge of the ring" | ≥ 6 ft (1.83 m) from the ring's outside edge | `BARRICADE_RADIUS` 6.0 from ring centre — **2.80 m (9 ft 2 in)** clear of the apron at 3.20 |
+| ringside floor | every televised ringside | black interlocking matting, barrier in to the ring | `RingsideMat`, a slab out to the barrier line |
+
+**What this replaced, and why it was wrong.** The steps stood halfway down
+each ±X side, offset 0.35 m along Z for no reason the file recorded — a
+wrestler climbing them steps over the middle of the top rope rather than
+beside a turnbuckle. The barrier stood at 9.0 from ring centre, 5.80 m clear
+of the apron: *nineteen feet* of empty floor, over three times the regulation
+minimum, which is not a ringside.
+
+Bringing the barrier to 6.0 does the seating on its own, because the floor
+rows are offsets of that line (`ArenaBuilder._build_floor_seats`): three
+metres of dead floor becomes four more rows of the best seats in the building,
+and the front row now sits where a front row sits.
+
+Asserted in `game/tests/test_ring_model.gd` and `test_stage_set.gd`, so a
+later edit that drifts any of it fails loudly.
+
+Source: [Virginia Administrative Code 18VAC120-40-415.1](https://law.lis.virginia.gov/admincode/title18/agency120/chapter40/section415.1/)

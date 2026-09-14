@@ -114,6 +114,20 @@ const APRON_TOP := -0.10
 const APRON_BOTTOM := -1.00
 
 # --- Steel steps -------------------------------------------------------------
+## The steps stand at a CORNER, hard against a ring post, not halfway down a
+## side. That is where they go: the regulation that governs them asks for
+## "suitable steps for use of the contestants in their corners" (Virginia
+## 18VAC120-40-415.1), and on television the two sets sit tight against a post
+## with their top tread level with the apron, so a wrestler climbing them
+## steps straight over the top rope beside the turnbuckle.
+##
+## Two sets, on DIAGONALLY opposite corners: +X beside the post at (+3, +3),
+## -X beside the post at (-3, -3). Diagonal rather than both on one side so
+## each half of the ring has a way in, and neither set stands in the entrance
+## walkway down the middle of -Z.
+##
+## This is the gap left between the near edge of the steps and the post.
+const STEP_POST_GAP := 0.10
 const STEP_TREADS := 3
 const STEP_WIDTH := 1.45
 const STEP_RUN := 0.36

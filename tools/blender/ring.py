@@ -66,6 +66,7 @@ WANTED = [
     "CLEVIS_WIDTH", "CLEVIS_HEIGHT", "CLEVIS_DEPTH",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
+    "STEP_POST_GAP",
 ]
 
 # Placeholder colours only; ring_builder.gd overrides all four by name.
@@ -199,32 +200,44 @@ def build_apron(cfg: dict[str, float], parts: dict[str, Part]) -> None:
 
 
 def build_steps(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Three treads each side, plus the stringers holding them together.
+    """Two sets of steps, each at a CORNER and hard against a ring post.
 
-    Tread geometry is unchanged -- +/-X, offset along Z, which is where the
-    reference puts them. The stringer down each flank is new: without it the
-    flight is three stacked slabs with open sides and daylight between them.
+    They used to sit halfway down each side, offset 0.35 m along Z for no
+    reason the file gave. Steps belong at the corner: the regulation asks for
+    "suitable steps for use of the contestants in their corners", and on
+    television they stand tight against a post with the top tread level with
+    the apron, so a wrestler climbing them steps over the top rope right
+    beside the turnbuckle.
+
+    Diagonally opposite -- +X beside the post at (+3, +3), -X beside the post
+    at (-3, -3) -- so each half of the ring has a way in and neither set
+    stands in the entrance walkway down the middle of -Z.
+
+    The stringer down each flank is what makes the flight read as one object
+    rather than three stacked slabs with daylight between them.
     """
     steps = parts["StepsMesh"]
     treads = int(cfg["STEP_TREADS"])
     rise = (cfg["STEP_TOP_Y"] - cfg["STEP_FLOOR_Y"]) / treads
-    for sx in (-1.0, 1.0):
+    # Butt the near edge of the flight against the post.
+    corner = cfg["POST_XZ"] - cfg["STEP_WIDTH"] * 0.5 - cfg["STEP_POST_GAP"]
+
+    for sx, sz in ((1.0, 1.0), (-1.0, -1.0)):
         out = Vector((sx, 0.0, 0.0))
         tangent = Vector((0.0, 0.0, 1.0))
+        along_z = corner * sz
         for i in range(treads):
             top = cfg["STEP_FLOOR_Y"] + rise * (i + 1)
             depth = cfg["STEP_RUN"] * (treads - i)
             center = out * (cfg["APRON_OUT"] + 0.06 + depth * 0.5) \
                 + Vector((0.0, (cfg["STEP_FLOOR_Y"] + top) * 0.5, 0.0)) \
-                + tangent * 0.35
+                + tangent * along_z
             steps.oriented_box(
                 center, tangent, out,
                 Vector((cfg["STEP_WIDTH"], top - cfg["STEP_FLOOR_Y"], depth)),
             )
-        # Stringers: a thin panel down each flank of the whole flight, cut to
-        # the staircase profile by following the same tread schedule.
         for side in (-1.0, 1.0):
-            z = 0.35 + side * (cfg["STEP_WIDTH"] * 0.5 + 0.012)
+            z = along_z + side * (cfg["STEP_WIDTH"] * 0.5 + 0.012)
             for i in range(treads):
                 top = cfg["STEP_FLOOR_Y"] + rise * (i + 1)
                 depth = cfg["STEP_RUN"] * (treads - i)

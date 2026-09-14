@@ -50,11 +50,13 @@ WANTED = [
     "RINK_HALF_LENGTH", "RINK_HALF_WIDTH", "RINK_CORNER_RADIUS",
     "BOWL_STRAIGHT_X", "BOWL_STRAIGHT_Z",
     "BARRICADE_RADIUS", "BARRICADE_HEIGHT", "BARRICADE_PANEL", "BARRICADE_JOIN",
+    "BARRICADE_GAP", "RINGSIDE_MAT_LIFT", "RAMP_HALF_WIDTH",
 ]
 
 # Placeholder colours only; arena_builder.gd overrides every part by name.
 PART_COLORS = {
     "Floor": (0.14, 0.14, 0.16, 1.0),
+    "RingsideMat": (0.035, 0.035, 0.040, 1.0),
     "FloorSeams": (0.09, 0.09, 0.10, 1.0),
     "Barricades": (0.30, 0.31, 0.34, 1.0),
 }
@@ -103,11 +105,36 @@ def build_seams(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                   Vector((reach_x(at) * 2.0, 0.008, width)))
 
 
+def build_ringside_mat(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The black matting from the barrier in to the ring.
+
+    A real ringside floor is not the bare deck: it is covered in interlocking
+    rubber mats, and they are the dark ground the ring, the steps and the
+    wrestlers working outside are all read against. It is also what the
+    entrance ramp comes down ONTO -- the ramp stops at this mat's outer edge,
+    and the mat carries the last few metres to the apron.
+
+    Laid as one slab a few millimetres above the floor rather than as tiles.
+    At every camera in the shotlist the joins between mats are below a pixel,
+    and the ring, the steps and the barricade all stand on top of it.
+    """
+    reach = cfg["BARRICADE_RADIUS"]
+    parts["RingsideMat"].box(
+        Vector((0.0, cfg["FLOOR_Y"] + cfg["RINGSIDE_MAT_LIFT"] * 0.5, 0.0)),
+        Vector((reach * 2.0, cfg["RINGSIDE_MAT_LIFT"], reach * 2.0)),
+    )
+
+
 def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """Four runs of discrete panels, each with a round cap rail and a leg.
 
     Discrete rather than one continuous box per side, which from the wide
     camera is a featureless band with nothing in it to read scale off.
+
+    The -Z run carries the entrance GAP. The ramp's foot lands on this line
+    now, and without a gap the barrier would run straight through it -- which
+    is what it did while the ramp ended further in and the barrier stood 3m
+    further out.
     """
     barricade = parts["Barricades"]
     height = cfg["BARRICADE_HEIGHT"]
@@ -122,9 +149,16 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                 Vector((1.0, 0.0, 0.0)), Vector((-1.0, 0.0, 0.0))):
         along = Vector((out.z, 0.0, -out.x))
         line = out * cfg["BARRICADE_RADIUS"]
+        entrance_run = out.z < -0.5
         for i in range(panels):
             t = (i + 0.5) / panels - 0.5
             at = line + along * (t * span)
+            # Skip any panel that INTRUDES on the walkway, not just one
+            # centred in it: a panel whose centre clears the gap by less than
+            # its own half-width still puts its end through the opening, and
+            # the first attempt left two of them standing in the entrance.
+            if entrance_run and abs(at.x) - width * 0.5 < cfg["BARRICADE_GAP"]:
+                continue
             panel_center = at + Vector((0.0, y, 0.0))
             barricade.oriented_box(panel_center, along, out,
                                    Vector((width, height, 0.14)))
@@ -159,6 +193,7 @@ def main(argv: list[str]) -> int:
     parts = {name: Part(name) for name in PART_COLORS}
     build_floor(cfg, parts)
     build_seams(cfg, parts)
+    build_ringside_mat(cfg, parts)
     build_barricades(cfg, parts)
     venue.finish(parts, PART_COLORS, smooth=SMOOTH, projected=PROJECTED)
 

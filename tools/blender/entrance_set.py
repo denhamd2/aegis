@@ -64,7 +64,7 @@ from mathutils import Vector  # noqa: E402
 WANTED = [
     "FLOOR_Y", "WALL_TOP", "ROOF_Y", "TRUSS_Y", "RING_HALF_EXTENT",
     "STAGE_HALF_WIDTH", "STAGE_DECK_Y", "STAGE_BACK", "STAGE_FRONT",
-    "RAMP_HALF_WIDTH",
+    "RAMP_HALF_WIDTH", "BARRICADE_RADIUS",
     "SCREEN_WIDTH", "SCREEN_HEIGHT", "SCREEN_SAGITTA", "SCREEN_SEGMENTS",
     "SCREEN_DEPTH", "SCREEN_BEZEL", "SCREEN_CENTER_RISE", "SCREEN_FACE_OFFSET",
     "PORTAL_MAJOR", "PORTAL_MINOR", "PORTAL_OFFSET_X", "PORTAL_CUT_DEPTH",
@@ -83,11 +83,14 @@ PART_COLORS = {
     "PortalFanEast": (0.48, 0.30, 0.05, 1.0),
     "StageScreenBezel": (0.05, 0.05, 0.06, 1.0),
     "StageScreen": (0.10, 0.08, 0.16, 1.0),
+    "RampLeds": (0.72, 0.10, 0.55, 1.0),
     "Truss": (0.13, 0.13, 0.15, 1.0),
 }
 EMISSIVE = frozenset({"PortalRingWest", "PortalRingEast",
-                      "PortalFanWest", "PortalFanEast", "StageScreen"})
-SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess", "Truss"})
+                      "PortalFanWest", "PortalFanEast", "StageScreen",
+                      "RampLeds"})
+SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
+                    "Truss", "RampLeds"})
 # The screen face authors its own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
 PROJECTED = frozenset(PART_COLORS) - {"StageScreen"}
@@ -116,11 +119,25 @@ def portal_cut_angle(cfg: dict[str, float], d: dict[str, float]) -> float:
 
 
 def build_deck_and_ramp(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """The deck, and the ramp as one sloped solid.
+    """The deck, the ramp as one sloped solid, and the ramp's edge LEDs.
 
     The deck's front lip is chamfered: it is a lacquered gloss carrying an SSR
     reflection of the video wall, and a reflection running off a perfectly
     sharp edge is the one place that trick shows its seams.
+
+    **Where the ramp stops.** At the BARRICADE line, not at the ring. Ringside
+    is floored in black matting from the barrier in to the apron, and the
+    entrance comes down to the edge of that and no further -- a ramp running
+    all the way to the apron is a ramp nobody could walk around. It used to
+    end 1m short of the ring, which also put it straight through the barrier.
+
+    **The edge LEDs.** Measured off `gauntlet/refs/stage/`'s own photographs
+    rather than remembered: sampling the lit strip along the deck's leading
+    edge in `dynamite_stage_low_angle.jpg`, 67 of 136 sampled columns are
+    violet-magenta at hue 287-295 degrees, against 9 blue and 5 cyan, with the
+    remaining 51 blown to near-white at the strip's core. So the strips are
+    the same magenta the portals carry, and `arena_builder.gd` dresses them
+    from the same `arena_portal_magenta` key.
     """
     stage = parts["EntranceStage"]
     deck_depth = cfg["STAGE_FRONT"] - cfg["STAGE_BACK"]
@@ -132,27 +149,39 @@ def build_deck_and_ramp(cfg: dict[str, float], parts: dict[str, Part]) -> None:
         bevel=0.05,
     )
 
-    # The ramp: stage lip to a metre short of the ring, falling to the floor.
-    ramp_end = -cfg["RING_HALF_EXTENT"] - 1.0
+    foot_z = -cfg["BARRICADE_RADIUS"]
+    foot_y = cfg["FLOOR_Y"] + 0.04
     stage.wedge(
         near=Vector((0.0, 0.0, cfg["STAGE_FRONT"])),
-        far=Vector((0.0, 0.0, ramp_end)),
+        far=Vector((0.0, 0.0, foot_z)),
         half_width=cfg["RAMP_HALF_WIDTH"],
         near_y=cfg["STAGE_DECK_Y"],
-        far_y=cfg["FLOOR_Y"] + 0.04,
+        far_y=foot_y,
         thickness=0.22,
         bevel=0.03,
     )
-    # A nose at the bottom, so the walk meets the floor instead of stopping on
-    # a lip. Four centimetres over half a metre is a ramp's own run-out.
+    # A nose, so the walk meets the matting instead of stopping on a lip.
     stage.wedge(
-        near=Vector((0.0, 0.0, ramp_end)),
-        far=Vector((0.0, 0.0, ramp_end + 0.5)),
+        near=Vector((0.0, 0.0, foot_z)),
+        far=Vector((0.0, 0.0, foot_z + 0.5)),
         half_width=cfg["RAMP_HALF_WIDTH"],
-        near_y=cfg["FLOOR_Y"] + 0.04,
+        near_y=foot_y,
         far_y=cfg["FLOOR_Y"] + 0.004,
         thickness=0.16,
     )
+
+    # The strips themselves: thin, just proud of the ramp's flank, running the
+    # whole fall from the stage lip to the foot. Eight-sided tubes at 4cm --
+    # a strip light is a lens, not an edge, and it has to hold its highlight
+    # where the ramp turns away from the camera.
+    leds = parts["RampLeds"]
+    for sx in (-1.0, 1.0):
+        x = sx * (cfg["RAMP_HALF_WIDTH"] + 0.045)
+        leds.tube(
+            [Vector((x, cfg["STAGE_DECK_Y"] - 0.09, cfg["STAGE_FRONT"])),
+             Vector((x, foot_y - 0.09, foot_z))],
+            0.040, sides=8,
+        )
 
 
 def build_backdrop(cfg: dict[str, float], parts: dict[str, Part]) -> None:

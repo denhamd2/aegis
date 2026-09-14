@@ -79,7 +79,27 @@ const FLOOR_Y := -1.1
 
 # --- Ringside ---------------------------------------------------------------
 ## Barricade line. Everything between the ring and this is open ringside floor.
-const BARRICADE_RADIUS := 9.0
+##
+## 6.0m, in from 9.0. The bar is a real one: a state athletic regulation
+## requires "the ringside barrier must be a minimum of six feet from the
+## outside edge of the ring" (Virginia 18VAC120-40-415.1). The outside edge of
+## THIS ring is its apron at APRON_OUT = 3.20, so the minimum legal line is
+## 5.03m and 9.0 was 5.8m of empty floor -- nearly nineteen feet, which is not
+## a ringside, it is a car park.
+##
+## 6.0 leaves 2.80m (9ft 2in) between apron and barrier: over the regulation
+## minimum, enough for the camera well and a cameraman to work in, and still
+## clear of the steel steps, which reach 4.34m from ring centre.
+##
+## Moving it in does the second half of the job on its own. The floor rows are
+## offsets of THIS number (see `_build_floor_seats`), so pulling the barrier
+## 3m closer to the ring converts 3m of dead floor into four more rows of the
+## best seats in the building.
+const BARRICADE_RADIUS := 6.0
+## Half-width of the gap the entrance walks through, on the -Z run only.
+## The ramp foot lands on this line; without a gap the barrier would run
+## straight through it, which is what it did while the ramp ended further in.
+const BARRICADE_GAP := 2.40
 const BARRICADE_HEIGHT := 1.1
 ## The barricade is a RUN OF PANELS, not one long wall, because that is what
 ## gauntlet/refs/ring.md shows and because the joins are the only thing giving
@@ -92,6 +112,13 @@ const BARRICADE_JOIN := 0.05
 ## into large panels, and those lines are most of what stops it reading as one
 ## flat grey field from the wide camera -- which is coarse detail, on the
 ## second-largest surface in the frame after the mat.
+## The black ringside matting. A real ringside floor is not the bare deck --
+## it is covered in interlocking rubber mats from the ring out to the barrier,
+## and they are the dark ground everything at ringside is read against. The
+## entrance ramp comes down to the EDGE of this, at the barrier line, and the
+## mat carries the last few metres to the ring; a ramp that runs all the way
+## to the apron is a ramp nobody could walk around.
+const RINGSIDE_MAT_LIFT := 0.006
 const FLOOR_SEAM_PITCH := 4.0
 const FLOOR_SEAM_WIDTH := 0.05
 
@@ -310,10 +337,9 @@ const BOWL_STRAIGHT_Z := 21.95
 ## The boards are at RINK_CORNER_RADIUS (8.53) and this is 1.6m outside them:
 ## the walkway that runs round every rink between the boards and the seats.
 ##
-## Distinct from BARRICADE_RADIUS, which is unchanged at 9.0 and is measured
-## from the RING. The two used to be the same number because the bowl started
-## where ringside ended; now there is a rink floor between them, and it is
-## full of seats.
+## Distinct from BARRICADE_RADIUS, which is measured from the RING. The two
+## used to be the same number because the bowl started where ringside ended;
+## now there is a rink floor between them, and it is full of seats.
 const BOWL_FIRST_ROW := 10.13
 ## Sampling of the plan curve. Both loops -- Blender's and this file's -- must
 ## produce the same vertex count in the same order, which they do by using
@@ -694,6 +720,11 @@ const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
 ## wide shot reads scale off, and it has to separate from the floor behind it.
 const RINGSIDE_MATERIALS := {
 	"Floor": ["arena_floor", 1.0],
+	# The black matting between the barrier and the ring. Reach 0.45: it is
+	# the darkest large surface in the lower frame and it is what the mat's
+	# exposure anchor, the steps and the wrestlers working outside are all
+	# read against. Lifting it further flattens the ring into the floor.
+	"RingsideMat": ["arena_floor", 0.45],
 	"FloorSeams": ["arena_floor", 0.35],
 	"Barricades": ["arena_barricade", 1.5],
 }
@@ -1136,6 +1167,18 @@ const ENTRANCE_MATERIALS := {
 
 ## The parts that light themselves: part name -> [material key, level].
 const ENTRANCE_EMISSIVE := {
+	# The ramp's edge strips, in the portals' magenta. That colour is
+	# MEASURED, not chosen: sampling the lit strip along the deck's leading
+	# edge in gauntlet/refs/stage/dynamite_stage_low_angle.jpg, 67 of 136
+	# sampled columns come back violet-magenta at hue 287-295 degrees against
+	# 9 blue and 5 cyan, with the rest blown to white at the strip's core.
+	#
+	# Level 0.72 rather than the portals' 1.12: the strips run the whole 24m
+	# of the ramp and sit far closer to the broadcast camera than the portals
+	# do, so the same level puts two hard magenta lines through the middle of
+	# every wide shot. This is under the Environment's glow threshold at the
+	# tube's centre and over it on the bloom, so they still flare.
+	"RampLeds": ["arena_portal_magenta", 0.72],
 	"PortalRingWest": ["arena_portal_magenta", PORTAL_EMISSION],
 	"PortalRingEast": ["arena_portal_amber", PORTAL_EMISSION],
 	"PortalFanWest": ["arena_portal_magenta", PORTAL_FAN_EMISSION],
