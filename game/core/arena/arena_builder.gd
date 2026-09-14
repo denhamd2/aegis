@@ -429,8 +429,7 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.seed = PLACEMENT_SEED
-	_build_floor()
-	_build_barricades()
+	_build_ringside()
 	_build_bowl()
 	_build_floor_seats()
 	_build_entrance_set()
@@ -651,12 +650,6 @@ static func _add_quad(st: SurfaceTool, corners: Array) -> void:
 
 
 
-static func _add_oriented(st: SurfaceTool, center: Vector3, along: Vector3,
-		out: Vector3, size: Vector3) -> void:
-	var world: Vector3 = along.abs() * size.x + Vector3.UP * size.y \
-			+ out.abs() * size.z
-	_add_box(st, center, world)
-
 
 static func _mesh_instance(name: String, st: SurfaceTool,
 		mat: Material) -> MeshInstance3D:
@@ -680,96 +673,45 @@ static func _new_surface() -> SurfaceTool:
 # Floor, barricades
 # ---------------------------------------------------------------------------
 
-func _build_floor() -> void:
-	var st := _new_surface()
-	# WALL_EXTENT_X on the long axis: the bowl reaches further down +-X than
-	# it does down +-Z, and a square slab under an obround hall leaves the
-	# back rows standing over nothing.
-	_add_box(st, Vector3(0.0, FLOOR_Y - 0.1, 0.0),
-			Vector3(WALL_EXTENT_X * 2.0, 0.2, WALL_EXTENT * 2.0))
-	add_child(_mesh_instance("Floor", st,
-			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 1.0))))
-	_build_floor_seams()
-
-
-## The panel joints in the event flooring laid over the ice.
+## The floor, its panel joints and the barricades are
+## `tools/blender/ringside.py`'s model.
 ##
-## An ice rink hosting anything but hockey is decked over, and that decking
-## arrives as panels -- so the lines that used to be a scored concrete slab are
-## now the joints between them, and they run to the SHAPE OF THE RINK rather
-## than to a square. Every line is clipped to the boards analytically: at a
-## given x the rink reaches `BOWL_STRAIGHT_Z + sqrt(r^2 - dx^2)`, which is what
-## the corner arcs are, so a joint stops where the decking does instead of
-## running out over the seating.
+## Only the barricades gained anything by moving, and it is worth saying which:
+## their capping rail is a TUBE now rather than a box. It is the only
+## horizontal at ringside at chest height, it runs across the whole width of
+## the wide shot, and a box takes a highlight on one facet where a tube takes
+## one along its length -- which is what reads as steel. The raking leg behind
+## each panel is a tube for the same reason.
 ##
-## Drawn as their own darker surface a hair above the floor rather than cut
-## into it: a joint is 5cm wide and modelling it as a groove would need three
-## faces where one flat strip is visually identical from every camera in the
-## shotlist. `reach` is well under the floor's own, so a joint reads as a
-## shadow line rather than as a painted marking.
-func _build_floor_seams() -> void:
-	var st := _new_surface()
-	var r := RINK_CORNER_RADIUS
-	# Half-extent of the rink along Z at a given |x|, and along X at a given
-	# |z| -- the same arc, read on its two axes.
-	var reach_z := func(x: float) -> float:
-		var dx := maxf(absf(x) - BOWL_STRAIGHT_X, 0.0)
-		return BOWL_STRAIGHT_Z + sqrt(maxf(r * r - dx * dx, 0.0))
-	var reach_x := func(z: float) -> float:
-		var dz := maxf(absf(z) - BOWL_STRAIGHT_Z, 0.0)
-		return BOWL_STRAIGHT_X + sqrt(maxf(r * r - dz * dz, 0.0))
-	for i: int in range(-int(RINK_HALF_WIDTH / FLOOR_SEAM_PITCH),
-			int(RINK_HALF_WIDTH / FLOOR_SEAM_PITCH) + 1):
-		var at := float(i) * FLOOR_SEAM_PITCH
-		var half: float = reach_z.call(at)
-		_add_box(st, Vector3(at, FLOOR_Y + 0.004, 0.0),
-				Vector3(FLOOR_SEAM_WIDTH, 0.008, half * 2.0))
-	for i: int in range(-int(RINK_HALF_LENGTH / FLOOR_SEAM_PITCH),
-			int(RINK_HALF_LENGTH / FLOOR_SEAM_PITCH) + 1):
-		var at := float(i) * FLOOR_SEAM_PITCH
-		var half: float = reach_x.call(at)
-		_add_box(st, Vector3(0.0, FLOOR_Y + 0.004, at),
-				Vector3(half * 2.0, 0.008, FLOOR_SEAM_WIDTH))
-	add_child(_mesh_instance("FloorSeams", st,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_floor"), 0.35))))
+## The floor slab is one box there as it was one box here. The panel joints
+## keep their analytic clip to the rink's own plan -- at a given x the decking
+## reaches BOWL_STRAIGHT_Z + sqrt(r^2 - dx^2), so a joint stops where the
+## decking does instead of running out over the seating.
+const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
+
+## Part name -> [material key, house reach]. Unchanged from the surfaces these
+## replace, including the barricade's 1.5: it is the one ringside surface the
+## wide shot reads scale off, and it has to separate from the floor behind it.
+const RINGSIDE_MATERIALS := {
+	"Floor": ["arena_floor", 1.0],
+	"FloorSeams": ["arena_floor", 0.35],
+	"Barricades": ["arena_barricade", 1.5],
+}
 
 
-## Four runs of discrete panels, each with a capping rail along its top and a
-## leg raking outward behind it. It was one continuous box per side, which from
-## the wide camera is a featureless band with nothing in it to read scale off.
-func _build_barricades() -> void:
-	var st := _new_surface()
-	var y := FLOOR_Y + BARRICADE_HEIGHT * 0.5
-	var top := FLOOR_Y + BARRICADE_HEIGHT
-	var span := BARRICADE_RADIUS * 2.0
-	var panels := int(span / BARRICADE_PANEL)
-	var pitch := span / float(panels)
-	var width := pitch - BARRICADE_JOIN
-	for side: int in range(4):
-		# `out` points away from the ring, `along` runs down the barricade.
-		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1),
-				Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
-		var along := Vector3(out.z, 0.0, -out.x)
-		var line: Vector3 = out * BARRICADE_RADIUS
-		for i: int in range(panels):
-			var t := (float(i) + 0.5) / float(panels) - 0.5
-			var at: Vector3 = line + along * (t * span)
-			_add_oriented(st, at + Vector3(0.0, y, 0.0), along, out,
-					Vector3(width, BARRICADE_HEIGHT, 0.14))
-			# The cap rail, proud of the panel on both faces.
-			_add_oriented(st, at + Vector3(0.0, top - 0.035, 0.0), along, out,
-					Vector3(width, 0.07, 0.20))
-			# One leg per panel, behind it, raking out to the floor. Boxed
-			# rather than angled: at ringside distance the leg is three pixels
-			# wide and its silhouette is the whole of what it contributes.
-			_add_oriented(st, at + out * 0.22
-					+ Vector3(0.0, FLOOR_Y + BARRICADE_HEIGHT * 0.28, 0.0),
-					along, out,
-					Vector3(0.05, BARRICADE_HEIGHT * 0.56, 0.42))
-	add_child(_mesh_instance("Barricades", st,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_barricade"), 1.5))))
+func _build_ringside() -> void:
+	var packed: PackedScene = load(RINGSIDE_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_venue.sh ringside."
+				% RINGSIDE_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "Ringside"
+	for part: String in RINGSIDE_MATERIALS:
+		var spec: Array = RINGSIDE_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	add_child(root)
 
 
 # ---------------------------------------------------------------------------
