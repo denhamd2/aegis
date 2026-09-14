@@ -246,18 +246,51 @@ func _empty_like(source: Animation, length: float, loop: bool = false) -> Animat
 	anim.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
 	return anim
 
+## One output track path per bone the SKELETON actually has.
+##
+## This used to take its bone list from Punch_Cross -- one of the CC0 clips --
+## on the assumption that every clip animates the same bones. That held while
+## every clip was sampled from that library. It stopped holding the moment
+## clips were authored from the pose solver, which poses all 65 bones where
+## Punch_Cross animates 55, and the difference was silent: a bone missing from
+## the list makes _copy_track_header() return -1 and the track is dropped.
+##
+## Worse was the line that tried to paper over one of those gaps:
+##
+##     paths[type]["spine_01"] = paths[type]["pelvis"]
+##
+## spine_01 is not in the CC0 list, so its animation was ALIASED onto the
+## pelvis path. Both tracks then wrote to Armature/Skeleton3D:pelvis, and
+## _dedupe_tracks() -- which keeps whichever carries more keys -- discarded one
+## of them arbitrarily. When the spine's lean won, it was applied to the
+## pelvis and rotated the WHOLE BODY: the winner of a match sprawled flat on
+## the mat instead of standing with his arms up, measured at spine-up -0.520
+## where standing is +1.0.
+##
+## Taking the bones from the skeleton makes the mapping total by construction:
+## every bone the rig has gets its own path, so nothing is dropped and nothing
+## is aliased onto a neighbour.
 func _runtime_track_paths(player: AnimationPlayer) -> Dictionary:
+	var skeleton: Skeleton3D = player.get_parent().find_child(
+			"Skeleton3D", true, false)
+	if not skeleton:
+		push_error("rig has no Skeleton3D: cannot build a track layout")
+		return {}
+	# The prefix comes from a real track rather than being spelled out, so a
+	# re-import that moves the Skeleton3D breaks loudly here instead of
+	# producing tracks that resolve to nothing.
+	var sample := player.get_animation("Punch_Cross")
+	if sample.get_track_count() == 0:
+		push_error("Punch_Cross has no tracks: cannot locate the skeleton")
+		return {}
+	var prefix := String(sample.track_get_path(0)).get_slice(":", 0)
 	var paths := {}
-	var source := player.get_animation("Punch_Cross")
-	for track in source.get_track_count():
-		var type: int = source.track_get_type(track)
-		var bone := _bone_name(source.track_get_path(track))
-		if not paths.has(type):
-			paths[type] = {}
-		paths[type][bone] = source.track_get_path(track)
-	for type in paths:
-		if paths[type].has("pelvis"):
-			paths[type]["spine_01"] = paths[type]["pelvis"]
+	for type in [Animation.TYPE_ROTATION_3D, Animation.TYPE_POSITION_3D,
+			Animation.TYPE_SCALE_3D]:
+		paths[type] = {}
+		for bone in skeleton.get_bone_count():
+			var bone_name := skeleton.get_bone_name(bone)
+			paths[type][bone_name] = NodePath("%s:%s" % [prefix, bone_name])
 	return paths
 
 func _bone_name(path: NodePath) -> String:
