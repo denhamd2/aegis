@@ -875,7 +875,74 @@ func _build_bowl_model() -> Node3D:
 	for part: String in BOWL_MODEL_EMISSIVE:
 		var spec: Array = BOWL_MODEL_EMISSIVE[part]
 		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
+	for part: String in CROWD_PARTS:
+		_dress(root, part, _crowd_material())
 	return root
+
+
+## The parts of the bowl model that are people, and the level they sit at.
+##
+## Not in BOWL_MODEL_MATERIALS because they are not a MaterialLibrary surface:
+## every crowd vertex carries its own shirt colour and its own animation phase
+## (tools/blender/crowd.py bakes both into COLOR_0), so the material has to be
+## a shader that reads them rather than a StandardMaterial3D with one albedo.
+const CROWD_PARTS := ["Crowd", "CrowdFar"]
+
+## Idle motion, and the light floor the crowd sits on.
+##
+## A vertex shader ON PURPOSE, and this is the clause ARCHITECTURE.md's
+## cosmetic-motion rule was written for: it runs on the render thread, reads
+## only TIME and the mesh's own attributes, and writes nothing back, so it
+## cannot feed gameplay state or move a replay's end-state hash. Thousands of
+## skinned spectators is not an option that runs; this is how a crowd moves.
+##
+## The phase comes from UV.x, not from INSTANCE_ID. The crowd used to be a
+## MultiMesh, where an instance id told one person from the next; it is baked
+## into the bowl's own mesh now, so every figure shares one id and keying off
+## it would make the entire bowl bob in perfect unison. crowd.py writes a
+## golden-ratio phase per figure into a UV channel instead -- colour alpha was
+## tried first and arrives back 1.0 for every vertex, since nothing in either
+## the exporter or the importer preserves an alpha no material reads.
+func _crowd_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode diffuse_lambert, specular_disabled, shadows_disabled, cull_disabled;
+
+uniform float bob_amplitude = 0.035;
+uniform float bob_speed = 1.7;
+uniform float sway_amplitude = 0.018;
+// The floor that keeps the back rows off measure_frame.py's 0.0025 void
+// threshold, in the same spirit as ArenaBuilder.HOUSE_TARGET. The crowd's
+// real level is meant to come from a fixture aimed at it; until the house
+// wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
+// this is most of what lights them, which is why it is not smaller.
+uniform float house_light = 0.055;
+
+varying vec3 shirt;
+
+void vertex() {
+	shirt = COLOR.rgb;
+	float phase = UV.x * 6.2831853;
+	// Bob scaled by height above the seat, so feet stay planted and heads
+	// move most -- a figure translated bodily reads as a hovering cutout.
+	float lift = clamp(VERTEX.y * 1.4, 0.0, 1.0);
+	VERTEX.y += sin(TIME * bob_speed + phase) * bob_amplitude * lift;
+	// A little lateral sway on a different period, so the bowl does not
+	// pulse as one organism.
+	VERTEX.x += sin(TIME * bob_speed * 0.63 + phase * 1.7) * sway_amplitude * lift;
+}
+
+void fragment() {
+	ALBEDO = shirt;
+	EMISSION = shirt * house_light;
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.0;
+}
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	return mat
 
 
 ## Override one named object in the model, and say so loudly if it is missing

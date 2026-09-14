@@ -55,6 +55,8 @@ import bpy  # noqa: I001  -- the bpy module registers the rest; it imports first
 import bmesh
 from mathutils import Vector
 
+import crowd as crowd_module
+
 REPO = pathlib.Path(__file__).resolve().parents[2]
 BUILDER_GD = REPO / "game" / "core" / "arena" / "arena_builder.gd"
 DEFAULT_OUT = REPO / "game" / "assets" / "environment" / "arena_bowl.glb"
@@ -253,6 +255,43 @@ class Part:
     def __init__(self, name: str) -> None:
         self.name = name
         self.bm = bmesh.new()
+        ## Lazily-made loop colour layer, used only by the crowd. Written per
+        ## LOOP rather than per vertex because that is the only place glTF
+        ## carries colour from, and because two people whose shoulders touch
+        ## must be able to wear different shirts.
+        self._colour_layer = None
+        self._phase_layer = None
+
+    def coloured_box(self, corners: list, colour: tuple, phase: float) -> None:
+        """A box whose every face carries `colour` and `phase`.
+
+        Corners arrive already transformed: the crowd poses each box in its
+        own leaning frame, and no (size, axis) pair describes that. Phase
+        rides in the alpha channel -- see crowd.py on why it cannot come from
+        INSTANCE_ID any more.
+        """
+        if self._colour_layer is None:
+            self._colour_layer = self.bm.loops.layers.color.new("Col")
+            # Phase travels in a UV, not in colour alpha. Alpha was tried
+            # first and does not survive the round trip: the rgb arrives
+            # intact and every alpha comes back 1.0, because neither Blender's
+            # exporter nor Godot's importer has any reason to preserve an
+            # alpha channel no material reads as transparency. A UV is carried
+            # through as TEXCOORD_0 either way.
+            self._phase_layer = self.bm.loops.layers.uv.new("Phase")
+        layer = self._colour_layer
+        uv = self._phase_layer
+        v = [self.vert(c) for c in corners]
+        rgba = (colour[0], colour[1], colour[2], 1.0)
+        for face in ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4),
+                     (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
+            try:
+                built = self.bm.faces.new([v[i] for i in face])
+            except ValueError:
+                continue
+            for loop in built.loops:
+                loop[layer] = rgba
+                loop[uv].uv = (phase, 0.0)
 
     def vert(self, position: Vector) -> bmesh.types.BMVert:
         return self.bm.verts.new(to_blender(position))
@@ -652,7 +691,14 @@ PART_COLORS = {
     "RinkDeck": (0.28, 0.30, 0.33, 1.0),
     "RinkBoards": (0.78, 0.79, 0.80, 1.0),
     "RinkCap": (0.72, 0.58, 0.10, 1.0),
+    # Fallbacks only: every crowd vertex carries its own colour, and these are
+    # what a figure would be if the colour attribute failed to export.
+    "Crowd": (0.24, 0.24, 0.27, 1.0),
+    "CrowdFar": (0.22, 0.23, 0.26, 1.0),
 }
+
+## The parts whose colour is per-vertex and whose geometry must not be welded.
+CROWD_PARTS = ("Crowd", "CrowdFar")
 
 
 def reset_scene() -> None:
@@ -662,7 +708,15 @@ def reset_scene() -> None:
 def finish(parts: dict[str, Part]) -> None:
     for name, part in parts.items():
         mesh = bpy.data.meshes.new(name)
-        bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:], dist=0.0005)
+        # The crowd is NOT welded. remove_doubles merges vertices within
+        # 0.5mm, and in a packed row one person's shoulder is inside the next
+        # person's -- welding them fuses two figures into one and gives the
+        # pair a single shirt. Everything else in the hall is a closed solid
+        # sharing walls with its neighbours, which is exactly what welding is
+        # here for.
+        if name not in CROWD_PARTS:
+            bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:],
+                                     dist=0.0005)
         bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
         part.bm.to_mesh(mesh)
         part.bm.free()
@@ -671,12 +725,32 @@ def finish(parts: dict[str, Part]) -> None:
         bsdf = material.node_tree.nodes["Principled BSDF"]
         bsdf.inputs["Base Color"].default_value = PART_COLORS[name]
         bsdf.inputs["Roughness"].default_value = 0.85
+        if name in CROWD_PARTS:
+            # Drive base colour from the colour attribute, so the exporter
+            # writes COLOR_0 and Godot's importer keeps it. Without a node
+            # actually reading the layer, glTF's default "MATERIAL" export
+            # mode drops it and every shirt comes out the fallback colour.
+            attribute = material.node_tree.nodes.new("ShaderNodeVertexColor")
+            attribute.layer_name = "Col"
+            material.node_tree.links.new(attribute.outputs["Color"],
+                                         bsdf.inputs["Base Color"])
         if name in ("RibbonBoards", "StairNosing"):
             bsdf.inputs["Emission Color"].default_value = PART_COLORS[name]
             bsdf.inputs["Emission Strength"].default_value = 1.0
         mesh.materials.append(material)
         # Smooth shading would round the stair nosings and the risers into
         # each other; a bowl is faceted geometry and reads as one.
+        #
+        # The crowd is the exception, and for a reason that is about size
+        # rather than looks: a flat-shaded box needs a separate vertex per
+        # face (each wants its own normal), so a nine-box figure costs 216
+        # vertices instead of 72. Across a full bowl that was the difference
+        # between a 52 MB export and a 9 MB one. It also happens to suit them
+        # -- a softly-shaded figure at 20m reads as a person, where a faceted
+        # one reads as a box.
+        if name in CROWD_PARTS:
+            for polygon in mesh.polygons:
+                polygon.use_smooth = True
         obj = bpy.data.objects.new(name, mesh)
         bpy.context.collection.objects.link(obj)
 
@@ -702,6 +776,8 @@ def main(argv: list[str]) -> int:
     build_fascia(cfg, parts, rows)
     build_aisles(cfg, parts, rows)
     build_shell(cfg, parts, rows)
+    counts = crowd_module.build_crowd(cfg, parts, rows, plan_loop,
+                                      aisle_indices, stage_gap)
     finish(parts)
 
     out = pathlib.Path(args.out)
@@ -715,10 +791,16 @@ def main(argv: list[str]) -> int:
         export_cameras=False,
         export_lights=False,
         export_materials="EXPORT",
+        # ACTIVE, not the "MATERIAL" default: the crowd's shirt colour and its
+        # animation phase both live in the colour attribute, and the default
+        # only exports one when a material demonstrably reads it.
+        export_vertex_color="ACTIVE",
     )
     seated = [r for r in rows if r["kind"] == "seated"]
     print("arena_bowl: %d triangles, %d seated rows, top tread %.2fm, %s"
           % (triangle_count(), len(seated), max(r["tread_y"] for r in rows), out))
+    print("  crowd: %d near, %d far, %d of them standing"
+          % (counts["Crowd"], counts["CrowdFar"], counts["standing"]))
     return 0
 
 

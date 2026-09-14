@@ -5015,3 +5015,88 @@ defects were sitting in the gap that note described, and two of them
 single rendered frame answers instantly and no amount of forward kinematics
 ever will. The project's own rule already says this: close appearance claims on
 pixels. These rounds are what it costs not to.
+
+## Round: the bowl has people in it
+
+The arena's crowd, modelled in Blender and animated by a vertex shader.
+
+### It had one, and it was two boxes
+
+A crowd was removed in 7b91d0e — impostors, a 0.42 x 0.58 x 0.30 torso with a
+0.21 cube on top, one block per seat. It went because `gauntlet/refs/arena.md`
+measures an **empty** bowl, and the seats were rebuilt from a rail into ~3,500
+individual seats so an empty bowl would read.
+
+`gauntlet/refs/lighting.md` now measures four **full** ones. The two reference
+sets disagree about whether this building has people in it, and this follows
+the second: measured across the art shotlist, the empty bowl put 3.1% of
+`crowd_bank` below 0.01 relative luminance against the references' 38–50%, and
+an empty stand is most of that gap.
+
+### What is modelled
+
+`tools/blender/crowd.py`, built and exported with the rest of the hall by
+`tools/blender/build_arena.sh`. Nine boxes a person — hips, torso, head, two
+arms, two thighs, two shins — posed sitting down, every one a different size,
+leaning a different way, with its arms somewhere else. Four arm postures
+(hanging, forearms on knees, folded, both up), a per-person lean, knee spread,
+and scale from 0.88 to 1.08. 7% are standing, because a row where every head is
+at one height is the most obviously generated thing a crowd can do.
+
+Shirt colour and skin tone come from two palettes, jittered per person. The
+shirt palette is recovered from the removed crowd, which sized it against a
+measurement: the reference crowd sits at relative luminance 0.014, so a bright
+crowd is not closer to the reference, it is further from it. Variance is the
+point, not brightness.
+
+Placement walks the same curve `build_seat_row` does — same pitch, same aisle
+and stage-gap exclusions — at 0.86 fill.
+
+### Budget, which is in vertices and not triangles
+
+A flat-shaded box cannot share a vertex between two faces, so a nine-box figure
+is 216 vertices rather than 72. The whole lower tier at that detail exported a
+**52 MB** .glb against the hall's 5.6. Two changes brought it to 18 MB:
+
+- **Smooth shading on the crowd only.** Cuts the vertex split, and a softly
+  shaded figure at 20m reads as a person where a faceted one reads as a box.
+- **LOD by row, not by tier.** The first four rows get the nine-box figure;
+  everything behind gets a four-box one that keeps the head-neck-shoulder
+  silhouette and the break between torso and lap, and drops the limbs.
+
+840 near figures, 4,874 far, 70 standing. 455k triangles for the hall, up from
+102k. That is a real cost and the seats underneath it — 80k triangles of them —
+are now mostly hidden, which is the trade 7b91d0e made in the other direction.
+
+### Animation
+
+A vertex shader, which is what the old impostors used and the reason
+ARCHITECTURE.md's cosmetic-motion clause is worded as it is: it runs on the
+render thread, reads only TIME and the mesh's own attributes, writes nothing
+back, and so cannot touch gameplay state or move a replay's end-state hash.
+Thousands of skinned spectators is not an option that runs.
+
+The bob is scaled by height above the seat so feet stay planted and heads move
+most — a figure translated bodily reads as a hovering cutout — with a lateral
+sway on a different period so the bowl does not pulse as one organism.
+
+**The phase is a UV, and that took two attempts.** The old shader keyed off
+`INSTANCE_ID`, which worked while the crowd was a MultiMesh; baked into the
+bowl's mesh every figure shares one id, and the whole stand would bob in
+unison. Colour alpha was the obvious place to put a per-figure phase and it
+does not survive: rgb arrives intact, every alpha comes back 1.0, because
+nothing in Blender's exporter or Godot's importer preserves an alpha no
+material reads as transparency. A UV channel carries it through.
+
+That failure is silent — the shirts still vary, so the bowl looks right and
+stands still — which is why `test_arena_crowd.gd` asserts the phase spread
+directly rather than trusting the export.
+
+### Measured
+
+`crowd_bank`, relative luminance below 0.01: **3.1% → 11.7%**. The references
+are 38–50%, so this is a step, not an arrival: the stands are still
+self-illuminated rather than lit (see `lighting.md`'s ablation), which is the
+next item and the one that governs.
+
+372 tests pass. The bowl rebuilds byte-identical across two runs.
