@@ -39,7 +39,16 @@ class_name RingBuilder
 const MAT_HALF := 3.0
 const MAT_TOP_LOCAL := 0.1  ## Floor box is 0.2 thick, Ring sits at y = -0.1.
 const ROPE_SPAN := 3.1
-const ROPE_HEIGHTS := [0.5, 0.85, 1.2]
+## The three rope heights, declared one per line as plain numbers rather than
+## as literals inside the array. tools/blender/ring.py reads its geometry out
+## of this file (see venue.read_constants) and can only parse plain numeric
+## constants, so a number that exists only inside an array or a dictionary is
+## a number the mesh would have to retype -- which is how a mesh stops
+## matching the game it is built for.
+const ROPE_HEIGHT_BOTTOM := 0.5
+const ROPE_HEIGHT_MIDDLE := 0.85
+const ROPE_HEIGHT_TOP := 1.2
+const ROPE_HEIGHTS := [ROPE_HEIGHT_BOTTOM, ROPE_HEIGHT_MIDDLE, ROPE_HEIGHT_TOP]
 const POST_XZ := 3.0
 
 # --- Ropes -------------------------------------------------------------------
@@ -55,7 +64,14 @@ const ROPE_SEGMENTS := 28
 ## near-straight lines between the posts, where the outgoing 3-4.8cm was a
 ## visible curve. COVERAGE DECISION -- the reference shows tension, it does not
 ## measure a depth.
-const ROPE_SAG := {1.2: 0.010, 0.85: 0.014, 0.5: 0.018}
+const ROPE_SAG_TOP := 0.010
+const ROPE_SAG_MIDDLE := 0.014
+const ROPE_SAG_BOTTOM := 0.018
+const ROPE_SAG := {
+	ROPE_HEIGHT_TOP: ROPE_SAG_TOP,
+	ROPE_HEIGHT_MIDDLE: ROPE_SAG_MIDDLE,
+	ROPE_HEIGHT_BOTTOM: ROPE_SAG_BOTTOM,
+}
 ## How far past the post centre a rope runs before its turnbuckle nub swallows
 ## the end. The nub is small now that the branded pad is gone, so this is small
 ## too -- overrun the pad used to hide would now hang in open air.
@@ -75,7 +91,10 @@ const ROPE_OVERRUN := 0.022
 ## anyone's trade dress.
 const NUB_LENGTH := 0.115
 const NUB_RADIUS := 0.038
-const CLEVIS := Vector3(0.05, 0.055, 0.07)
+const CLEVIS_WIDTH := 0.05
+const CLEVIS_HEIGHT := 0.055
+const CLEVIS_DEPTH := 0.07
+const CLEVIS := Vector3(CLEVIS_WIDTH, CLEVIS_HEIGHT, CLEVIS_DEPTH)
 
 # --- Posts -------------------------------------------------------------------
 ## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
@@ -166,10 +185,7 @@ func _ready() -> void:
 		return
 	_assert_frozen_dimensions()
 	_build_canvas()
-	_build_ropes()
-	_build_turnbuckles_and_posts()
-	_build_apron_detail()
-	_build_steps()
+	_build_model()
 
 
 ## The measurement chain in camera.md / test_camera_framing.gd / grapple_rig.gd
@@ -240,17 +256,6 @@ func _mat(albedo: Color, roughness: float, metallic: float = 0.0) -> StandardMat
 	m.metallic = metallic
 	return m
 
-
-## Steel, as a DIELECTRIC, and this is a coverage decision with a reason rather
-## than a slip. metallic is 0 or 1 and never between -- which is why the
-## outgoing post material's 0.3 was wrong by construction -- but a conductor
-## renders as nothing except what it reflects, and the hall around this ring
-## has no reflection probe and no sky. Set metallic 1.0 and the posts, caps and
-## steps come out black. The library agrees: its `ring_post` is metallic 0.0
-## painted steel, and it flags `ring_post_chrome` as unusable for this exact
-## reason. Revisit the day the arena gets a radiance map.
-func _steel() -> StandardMaterial3D:
-	return _resolve("ring_steel", _mat(Color(0.60, 0.61, 0.65), 0.28))
 
 
 ## Bare, unpainted steel: the ring steps and nothing else. Bright, because in
@@ -566,159 +571,54 @@ static func _byte(f: float) -> int:
 
 # ==================================================================== ropes ===
 
-func _build_ropes() -> void:
-	var holder := _replace("Ropes")
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for height: float in ROPE_HEIGHTS:
-		for side: int in range(4):
-			var along := Vector3(1, 0, 0) if side < 2 else Vector3(0, 0, 1)
-			var out := Vector3(0, 0, 1) if side < 2 else Vector3(1, 0, 0)
-			var sign_out := 1.0 if side % 2 == 0 else -1.0
-			var base: Vector3 = out * (ROPE_SPAN * sign_out) + Vector3(0, height, 0)
-			_sweep_rope(st, base, along, height)
-	st.generate_tangents()
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = "RopeMesh"
-	mesh_instance.mesh = st.commit()
-	mesh_instance.set_surface_override_material(0, _rope_material())
-	holder.add_child(mesh_instance)
-
-
-## One span, swept as a tube along a parabola. A catenary and a parabola differ
-## by less than a millimetre over 6m at this sag, and the parabola is the one
-## that can be written down.
-func _sweep_rope(st: SurfaceTool, base: Vector3, along: Vector3, height: float) -> void:
-	var half := POST_XZ + ROPE_OVERRUN
-	var sag: float = ROPE_SAG[height]
-	var up := Vector3(0, 1, 0)
-	var side_dir := along.cross(up).normalized()
-	var previous: Array = []
-	for seg: int in range(ROPE_SEGMENTS + 1):
-		var t := float(seg) / float(ROPE_SEGMENTS)
-		var s := lerpf(-half, half, t)
-		var drop := sag * 4.0 * t * (1.0 - t)
-		var centre: Vector3 = base + along * s - up * drop
-		var ring: Array = []
-		for r: int in range(ROPE_RINGS + 1):
-			var a := TAU * float(r) / float(ROPE_RINGS)
-			var normal: Vector3 = (side_dir * cos(a) + up * sin(a)).normalized()
-			ring.append([centre + normal * ROPE_RADIUS, normal,
-				Vector2(float(r) / float(ROPE_RINGS), s / 0.11)])
-		if seg > 0:
-			for r: int in range(ROPE_RINGS):
-				_tri(st, previous[r], previous[r + 1], ring[r + 1])
-				_tri(st, previous[r], ring[r + 1], ring[r])
-		previous = ring
-
-
-# ============================================= turnbuckles, posts and caps ===
-
-func _build_turnbuckles_and_posts() -> void:
-	var holder := _replace("Posts")
-	var dark := SurfaceTool.new(); dark.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var fitting := SurfaceTool.new(); fitting.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	for sx: float in [-1.0, 1.0]:
-		for sz: float in [-1.0, 1.0]:
-			var post := Vector3(POST_XZ * sx, 0.0, POST_XZ * sz)
-			# Axis-aligned: local X runs along +X, local Z along +Z, so the
-			# post's faces are parallel to the ring's sides.
-			_oriented_box(dark,
-				post + Vector3(0, (POST_BOTTOM + POST_TOP) * 0.5, 0),
-				Vector3(1, 0, 0), Vector3(0, 0, 1),
-				Vector3(POST_SECTION, POST_TOP - POST_BOTTOM, POST_SECTION))
-
-			# Each rope terminates in its own sleeve, and each sleeve is on the
-			# face its rope runs off. A corner carries two ropes per height --
-			# one down X, one down Z -- so it carries two sleeves per height,
-			# which is what the reference's corners show.
-			for height: float in ROPE_HEIGHTS:
-				var centre: Vector3 = post + Vector3(0, height, 0)
-				for out: Vector3 in [Vector3(-sx, 0, 0), Vector3(0, 0, -sz)]:
-					var tangent := Vector3(out.z, 0, -out.x)
-					# The sleeve, lying along the rope, drawn as a box rather
-					# than a cylinder: at this size the silhouette is four
-					# pixels and a box costs a third of the triangles.
-					_oriented_box(fitting,
-						centre + out * (POST_SECTION * 0.5 + NUB_LENGTH * 0.5),
-						tangent, out,
-						Vector3(NUB_RADIUS * 2.0, NUB_RADIUS * 2.0, NUB_LENGTH))
-					# The clevis clamping the sleeve back to the post.
-					_oriented_box(fitting,
-						centre + out * (POST_SECTION * 0.5 + 0.012),
-						tangent, out, CLEVIS)
-
-	# Matte, not satin. At roughness 0.55 the posts carried a hard vertical
-	# specular streak down each face and read as moulded plastic; the
-	# reference's posts are flat black padding and return almost nothing.
-	_emit(holder, "PostMesh", dark,
-		_resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)))
-	_emit(holder, "TurnbuckleFittings", fitting,
-		_resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)))
-
-
-# ==================================================================== apron ===
-## The skirt boxes stay in ring.tscn (they carry the CC0 fabric this file must
-## not re-license). What is added here is the frame the skirt hangs from.
+## The ring's steel and rope is `tools/blender/ring.py`'s model.
 ##
-## What is NOT added any more: the printed chevron band, and the nine vertical
-## folds per side. The ring reference (refs/ring.md) has a flat, unbranded,
-## near-featureless skirt -- a dark grey sheet from the mat edge to the floor
-## with a lip at the top and a hem at the bottom. The band went with the rest
-## of the branding; the folds went because the reference's skirt is drum-tight,
-## not draped.
+## It was four SurfaceTool generators here: the ropes, the posts and their
+## terminations, the apron frame and the steps. They are one committed `.glb`
+## now, for the reasons that file records -- bevelled arrises that catch the
+## house rig, round turnbuckle sleeves instead of boxes, and stringers holding
+## the steel steps together as one object. Every dimension still comes from
+## the constants above; `tools/blender/ring.py` reads them out of this file
+## rather than retyping them, so the two cannot drift.
 ##
-## The round note that used to sit on the band is kept, because it is about
-## this strip of frame rather than about the band, and it still binds: a bright
-## surface hung here lit the one strip of the wide frame that was still pure
-## black and took void_fraction from 0.023 to 0.002, outside VISUAL_BAR.md's
-## 0.010-0.066 floor. A real arena is dark under the ring apron. Everything
-## added below is therefore dark, which is also what the reference shows -- the
-## two agree, which is the comfortable case.
+## What did NOT move: the canvas (`_build_canvas`, two quads carrying a
+## generated texture at a node path the capture harness keys off), every
+## collider in `scenes/ring.tscn`, and every material below.
+const RING_MODEL := "res://assets/environment/ring.glb"
 
-func _build_apron_detail() -> void:
-	var holder := _replace("ApronDetail")
-	var rail := SurfaceTool.new(); rail.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for side: int in range(4):
-		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
-		var tangent := Vector3(out.z, 0, -out.x)
-		var mid: Vector3 = out * APRON_OUT
-		# The lip the skirt hangs off, under the mat edge.
-		_oriented_box(rail, mid + Vector3(0, APRON_TOP + 0.04, 0), tangent, out,
-			Vector3(6.62, 0.13, 0.17))
-		# The hem, weighted so the skirt hangs straight.
-		_oriented_box(rail, mid + Vector3(0, APRON_BOTTOM + 0.03, 0), tangent, out,
-			Vector3(6.58, 0.07, 0.13))
-	_emit(holder, "ApronRail", rail,
-		_resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
-			{"tint": Color(0.105, 0.105, 0.112)}))
+## Part name in the .glb -> the material that dresses it. Same split as
+## before: the steps get `ring_steps` rather than the apron's `ring_steel`,
+## because in the reference they are bare metal and the second-brightest
+## surface in the frame, and brightening `ring_steel` would have brightened
+## the apron rail into the strip of frame that has to stay dark.
+func _model_materials() -> Dictionary:
+	return {
+		"PostMesh": _resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)),
+		"TurnbuckleFittings": _resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)),
+		"RopeMesh": _rope_material(),
+		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
+			{"tint": Color(0.105, 0.105, 0.112)}),
+		"StepsMesh": _bare_steel(),
+	}
 
 
-# ============================================================== steel steps ===
-## Geometry unchanged -- three treads at +/-X, offset along Z, which is already
-## where the reference puts them. What changes is the material: in the
-## reference the steps are BARE metal and the second-brightest thing in the
-## frame after the canvas, where here they shared the ring's dark painted
-## `ring_steel` with the apron rail. They get their own key for that reason;
-## brightening `ring_steel` itself would have brightened the apron rail with
-## them, into the strip of frame the note above says to leave dark.
-
-func _build_steps() -> void:
-	var holder := _replace("Steps")
-	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for sx: float in [-1.0, 1.0]:
-		var out := Vector3(sx, 0, 0)
-		var tangent := Vector3(0, 0, 1)
-		var rise := (STEP_TOP_Y - STEP_FLOOR_Y) / float(STEP_TREADS)
-		for i: int in range(STEP_TREADS):
-			var top := STEP_FLOOR_Y + rise * float(i + 1)
-			var depth := STEP_RUN * float(STEP_TREADS - i)
-			var centre: Vector3 = out * (APRON_OUT + 0.06 + depth * 0.5) \
-				+ Vector3(0, (STEP_FLOOR_Y + top) * 0.5, 0) + tangent * 0.35
-			_oriented_box(st, centre, tangent, out,
-				Vector3(STEP_WIDTH, top - STEP_FLOOR_Y, depth))
-	_emit(holder, "StepsMesh", st, _bare_steel())
+func _build_model() -> void:
+	var holder := _replace("RingModel")
+	var packed: PackedScene = load(RING_MODEL)
+	if packed == null:
+		push_error("RingBuilder: %s failed to load. Run tools/blender/build_venue.sh ring."
+			% RING_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "RingMeshes"
+	holder.add_child(root)
+	var materials := _model_materials()
+	for part: String in materials:
+		var node := root.find_child(part, true, false) as MeshInstance3D
+		if node == null:
+			push_error("RingBuilder: %s has no '%s' object." % [RING_MODEL, part])
+			continue
+		node.material_override = materials[part]
 
 
 # ================================================================== helpers ===
@@ -743,23 +643,8 @@ func _replace(container: String) -> Node3D:
 	return node
 
 
-func _emit(holder: Node3D, node_name: String, st: SurfaceTool, material: Material) -> void:
-	st.generate_normals()
-	st.generate_tangents()
-	var instance := MeshInstance3D.new()
-	instance.name = node_name
-	instance.mesh = st.commit()
-	instance.set_surface_override_material(0, material)
-	holder.add_child(instance)
-
-
-func _tri(st: SurfaceTool, a: Array, b: Array, c: Array) -> void:
-	for vertex: Array in [a, b, c]:
-		st.set_normal(vertex[1])
-		st.set_uv(vertex[2])
-		st.add_vertex(vertex[0])
-
-
+## _quad survives the move to Blender because `_build_canvas` still uses
+## it: the canvas is the one ring surface this file still generates.
 func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
 		ua: Vector2, ub: Vector2, uc: Vector2, ud: Vector2) -> void:
 	var normal := (b - a).cross(d - a).normalized()
@@ -771,42 +656,3 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
 		st.set_normal(normal)
 		st.set_uv(pair[1])
 		st.add_vertex(pair[0])
-
-
-## A box whose local X follows `tangent` and local Z follows `forward`, so a
-## turnbuckle pad can face ring centre at 45 degrees without a transform node.
-func _oriented_box(st: SurfaceTool, centre: Vector3, tangent: Vector3,
-		forward: Vector3, size: Vector3) -> void:
-	var x: Vector3 = tangent.normalized() * size.x * 0.5
-	var y := Vector3(0, size.y * 0.5, 0)
-	var z: Vector3 = forward.normalized() * size.z * 0.5
-	var corner := func(i: int, j: int, k: int) -> Vector3:
-		return centre + x * float(i) + y * float(j) + z * float(k)
-	var faces := [
-		[corner.call(-1, 1, 1), corner.call(1, 1, 1), corner.call(1, 1, -1), corner.call(-1, 1, -1)],
-		[corner.call(-1, -1, -1), corner.call(1, -1, -1), corner.call(1, -1, 1), corner.call(-1, -1, 1)],
-		[corner.call(-1, -1, 1), corner.call(1, -1, 1), corner.call(1, 1, 1), corner.call(-1, 1, 1)],
-		[corner.call(1, -1, -1), corner.call(-1, -1, -1), corner.call(-1, 1, -1), corner.call(1, 1, -1)],
-		[corner.call(1, -1, 1), corner.call(1, -1, -1), corner.call(1, 1, -1), corner.call(1, 1, 1)],
-		[corner.call(-1, -1, -1), corner.call(-1, -1, 1), corner.call(-1, 1, 1), corner.call(-1, 1, -1)],
-	]
-	for face: Array in faces:
-		_quad(st, face[0], face[1], face[2], face[3],
-			Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1))
-
-
-func _cylinder(st: SurfaceTool, base: Vector3, height: float, radius: float,
-		sides: int) -> void:
-	var top := base + Vector3(0, height, 0)
-	for i: int in range(sides):
-		var a0 := TAU * float(i) / float(sides)
-		var a1 := TAU * float(i + 1) / float(sides)
-		var d0 := Vector3(cos(a0), 0, sin(a0))
-		var d1 := Vector3(cos(a1), 0, sin(a1))
-		_quad(st, base + d0 * radius, base + d1 * radius,
-			top + d1 * radius, top + d0 * radius,
-			Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1))
-		st.set_normal(Vector3.UP)
-		for point: Vector3 in [top, top + d0 * radius, top + d1 * radius]:
-			st.set_uv(Vector2(point.x, point.z))
-			st.add_vertex(point)
