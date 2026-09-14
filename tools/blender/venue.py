@@ -450,7 +450,9 @@ def cube_project(mesh: bpy.types.Mesh, scale: float = 1.0) -> None:
 def finish(parts: dict[str, Part], colors: dict[str, tuple],
            emissive: frozenset[str] = frozenset(),
            smooth: frozenset[str] = frozenset(),
-           projected: frozenset[str] = frozenset()) -> None:
+           projected: frozenset[str] = frozenset(),
+           face_toward: dict[str, tuple] | None = None,
+           flip: frozenset[str] = frozenset()) -> None:
     """Turn every Part into a scene object with a placeholder material.
 
     The colours are NOT the shipped look: the GDScript overrides every part
@@ -465,6 +467,24 @@ def finish(parts: dict[str, Part], colors: dict[str, tuple],
         mesh = bpy.data.meshes.new(name)
         bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:], dist=0.0005)
         bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
+        # `recalc_face_normals` finds the outside of a CLOSED solid. An open
+        # sheet has no outside, so it picks a consistent direction and that
+        # direction is arbitrary -- and a sheet facing the wrong way is
+        # invisible under backface culling, not merely dark. The video wall
+        # shipped exactly once that way: the still was bound, the UVs were
+        # right, and the wall rendered as nothing at all.
+        target = (face_toward or {}).get(name)
+        if target is not None:
+            want = to_blender(Vector(target)).normalized()
+            total = Vector((0.0, 0.0, 0.0))
+            for face in part.bm.faces:
+                total += face.normal * face.calc_area()
+            if total.dot(want) < 0.0:
+                bmesh.ops.reverse_faces(part.bm, faces=part.bm.faces[:])
+        # An open TUBE is the other case: recalc points its faces outward and
+        # what has to be seen is the inside, so the whole part is reversed.
+        if name in flip:
+            bmesh.ops.reverse_faces(part.bm, faces=part.bm.faces[:])
         part.bm.to_mesh(mesh)
         part.bm.free()
         material = bpy.data.materials.new("M_" + name)

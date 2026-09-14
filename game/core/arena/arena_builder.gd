@@ -185,8 +185,14 @@ const SCREEN_SAGITTA := 1.6
 const SCREEN_SEGMENTS := 24
 const SCREEN_DEPTH := 0.45
 const SCREEN_BEZEL := 0.22
-const SCREEN_CENTER_Y := STAGE_DECK_Y + 9.0
-const SCREEN_FACE_Z := STAGE_BACK + 1.1
+## Height of the wall's centre above the deck, and how far its face stands
+## clear of the back wall. Declared as plain numbers so
+## tools/blender/entrance_set.py can read them: that exporter reproduces the
+## two sums below, but it must not re-type either measurement.
+const SCREEN_CENTER_RISE := 9.0
+const SCREEN_FACE_OFFSET := 1.1
+const SCREEN_CENTER_Y := STAGE_DECK_Y + SCREEN_CENTER_RISE
+const SCREEN_FACE_Z := STAGE_BACK + SCREEN_FACE_OFFSET
 ## Linear luminance the wall reaches with nothing playing on it -- the clip
 ## missing, or a run that must not have a moving picture in it. Dark violet
 ## rather than the old flat pale blue, because an LED wall between cues is
@@ -215,7 +221,8 @@ const PORTAL_OFFSET_X := 3.3
 ## reading as an arch, which is a different piece of set.
 const PORTAL_CUT_DEPTH := 0.25
 const PORTAL_CENTER_Y := STAGE_DECK_Y + PORTAL_MAJOR - PORTAL_CUT_DEPTH
-const PORTAL_FACE_Z := STAGE_BACK + 1.3
+const PORTAL_FACE_OFFSET := 1.3
+const PORTAL_FACE_Z := STAGE_BACK + PORTAL_FACE_OFFSET
 const PORTAL_RING_SEGMENTS := 48
 const PORTAL_TUBE_SIDES := 8
 ## The angle, measured from +X counter-clockwise, at which the portal circle
@@ -426,8 +433,7 @@ func _ready() -> void:
 	_build_barricades()
 	_build_bowl()
 	_build_floor_seats()
-	_build_stage()
-	_build_truss()
+	_build_entrance_set()
 
 
 # ---------------------------------------------------------------------------
@@ -631,261 +637,18 @@ static func _add_quad(st: SurfaceTool, corners: Array) -> void:
 			st.set_normal(vert[1])
 			st.set_uv(vert[2])
 			st.add_vertex(vert[0])
+## The video wall's curve left with the wall. `tools/blender/entrance_set.py`
+## carries `arc_radius` and `sagitta_for` now, and the reason they are a PAIR
+## went with them: the bezel has to sit on the SAME circle as the picture, a
+## wider chord bowed by its own sagitta, or the two arcs cross mid-panel and
+## the frame surfaces through the picture as two dark chevrons.
 
+## The stage's mesh helpers -- the curved wall's face and shell, the portal
+## arc tube, the slat fan and the recess tube -- left with the geometry they
+## built. tools/blender/entrance_set.py makes those shapes now, out of
+## venue.py's swept tubes and arcs. What stays here is what still generates:
+## _add_box and _add_oriented, for the floor, its seams and the barricades.
 
-## Radius of the circle through a chord of half-width `half_chord` bowed by
-## `sagitta` at its midpoint: R = (c^2 + s^2) / 2s.
-##
-## The video wall is specified by the two numbers anyone can read off a
-## photograph -- how wide it is and how far its centre sits behind its ends --
-## rather than by a radius, which is a number nobody can measure from a seat.
-static func _arc_radius(half_chord: float, sagitta: float) -> float:
-	return (half_chord * half_chord + sagitta * sagitta) / maxf(2.0 * sagitta, 0.0001)
-
-
-## How far forward the arc has come at parameter angle `phi`, measured from
-## the panel's centre. 0 at phi = 0, exactly `sagitta` at each end.
-static func _arc_offset(phi: float, radius: float) -> float:
-	return radius - radius * cos(phi)
-
-
-## The sagitta a chord of half-width `half_chord` has on a circle of `radius`
-## -- the inverse of `_arc_radius`.
-##
-## This is what makes the bezel CONCENTRIC with the picture it frames. Building
-## both from the same sagitta looks right and is not: a wider chord bowed by
-## the same amount is a *different circle*, the two arcs cross somewhere in the
-## middle of the panel, and the frame surfaces through the picture. That showed
-## up as two dark chevrons across the top of the wall in the first render of
-## it. Same circle, different chord, and the frame stays behind the picture
-## everywhere.
-static func _sagitta_for(radius: float, half_chord: float) -> float:
-	return radius - sqrt(maxf(radius * radius - half_chord * half_chord, 0.0))
-
-
-## One concave panel bowed toward the audience, with NORMALISED UVs.
-##
-## This exists because `_add_box` cannot be used for it. That function lays
-## UVs out in world metres so `tile_metres` keeps texel density constant, which
-## is exactly right for a tiled hall surface and exactly wrong for anything
-## carrying a picture: a video frame mapped in metres tiles eighteen times
-## across an eighteen-metre wall. Here u runs 0..1 left to right *as the
-## audience sees it* -- a viewer at +Z looking down -Z has +X on their right,
-## so u = 0 is the -X end -- and v runs 0..1 top to bottom, which is image
-## space, so a texture lands on the wall the way it looks in a file browser.
-##
-## Vertices sit at equal ANGLE rather than equal x, so u is proportional to
-## arc length and a pixel of video is the same size at the ends as it is in
-## the middle. The circle's centre is placed on the audience side of the
-## panel, which is what makes the surface concave and not a barrel:
-##
-##     phi_i = -phi_max + 2 * phi_max * i / segments,  phi_max = asin(c / R)
-##     p_i   = center + (R sin phi_i, +-height/2, R - R cos phi_i)
-##     n_i   = (-sin phi_i, 0, cos phi_i)
-##
-## Only the front face is emitted. `_add_curved_shell` supplies the box behind
-## it, so the two can wear different materials -- a picture and a bezel.
-static func _add_curved_face(st: SurfaceTool, center: Vector3, width: float,
-		height: float, sagitta: float, segments: int) -> void:
-	var half_chord := width * 0.5
-	var radius := _arc_radius(half_chord, sagitta)
-	var phi_max := asin(clampf(half_chord / radius, -1.0, 1.0))
-	var top := center.y + height * 0.5
-	var bottom := center.y - height * 0.5
-	for i: int in segments:
-		var t0 := float(i) / float(segments)
-		var t1 := float(i + 1) / float(segments)
-		var phi0 := lerpf(-phi_max, phi_max, t0)
-		var phi1 := lerpf(-phi_max, phi_max, t1)
-		var x0 := center.x + radius * sin(phi0)
-		var x1 := center.x + radius * sin(phi1)
-		var z0 := center.z + _arc_offset(phi0, radius)
-		var z1 := center.z + _arc_offset(phi1, radius)
-		var n0 := Vector3(-sin(phi0), 0.0, cos(phi0))
-		var n1 := Vector3(-sin(phi1), 0.0, cos(phi1))
-		# Corners counter-clockwise as the audience sees them; `_add_quad`
-		# owns the winding. Never fix an inside-out surface by flipping
-		# cull_mode -- `cull_back` is a MaterialLibrary spec field, and
-		# flipping it there flips it for every other caller of that key.
-		_add_quad(st, [
-			[Vector3(x0, bottom, z0), n0, Vector2(t0, 1.0)],
-			[Vector3(x1, bottom, z1), n1, Vector2(t1, 1.0)],
-			[Vector3(x1, top, z1), n1, Vector2(t1, 0.0)],
-			[Vector3(x0, top, z0), n0, Vector2(t0, 0.0)],
-		])
-
-
-## The bezel that frames `_add_curved_face`: the same arc, `bezel` larger in
-## both axes and pushed `depth` away from the audience, plus the four rim
-## strips joining the two.
-##
-## Its UVs stay in world metres (u = arc length, v = height) because unlike
-## the face it frames it wears an ordinary tiled library material.
-static func _add_curved_shell(st: SurfaceTool, center: Vector3, width: float,
-		height: float, sagitta: float, segments: int, depth: float,
-		bezel: float) -> void:
-	# The picture's circle, then this panel's chord on that same circle.
-	var radius := _arc_radius(width * 0.5, sagitta)
-	var half_chord := width * 0.5 + bezel
-	var phi_max := asin(clampf(half_chord / radius, -1.0, 1.0))
-	var top := center.y + height * 0.5 + bezel
-	var bottom := center.y - height * 0.5 - bezel
-	for i: int in segments:
-		var phi0 := lerpf(-phi_max, phi_max, float(i) / float(segments))
-		var phi1 := lerpf(-phi_max, phi_max, float(i + 1) / float(segments))
-		# Front ring (the visible bezel, which the picture is inset into),
-		# then the back panel, then the rims that join them.
-		_arc_quad(st, center, radius, phi0, phi1, bottom, top, 0.0, true)
-		_arc_quad(st, center, radius, phi0, phi1, bottom, top, -depth, false)
-		_arc_rim(st, center, radius, phi0, phi1, top, depth, Vector3.UP)
-		_arc_rim(st, center, radius, phi0, phi1, bottom, depth, Vector3.DOWN)
-
-
-## One quad of the curved shell's face ring, at `z_shift` from the arc.
-static func _arc_quad(st: SurfaceTool, center: Vector3, radius: float,
-		phi0: float, phi1: float, lo: float, hi: float, z_shift: float,
-		front: bool) -> void:
-	var p := func(phi: float, y: float) -> Vector3:
-		return Vector3(center.x + radius * sin(phi), y,
-				center.z + _arc_offset(phi, radius) + z_shift)
-	var n0 := Vector3(-sin(phi0), 0.0, cos(phi0)) * (1.0 if front else -1.0)
-	var n1 := Vector3(-sin(phi1), 0.0, cos(phi1)) * (1.0 if front else -1.0)
-	var arc0 := radius * phi0
-	var arc1 := radius * phi1
-	var corners := [
-		[p.call(phi0, lo), n0, Vector2(arc0, lo)],
-		[p.call(phi1, lo), n1, Vector2(arc1, lo)],
-		[p.call(phi1, hi), n1, Vector2(arc1, hi)],
-		[p.call(phi0, hi), n0, Vector2(arc0, hi)],
-	]
-	if not front:
-		corners.reverse()
-	_add_quad(st, corners)
-
-
-## One quad of the horizontal rim joining the shell's front arc to its back.
-static func _arc_rim(st: SurfaceTool, center: Vector3, radius: float,
-		phi0: float, phi1: float, y: float, depth: float,
-		normal: Vector3) -> void:
-	var p := func(phi: float, z_shift: float) -> Vector3:
-		return Vector3(center.x + radius * sin(phi), y,
-				center.z + _arc_offset(phi, radius) + z_shift)
-	var arc0 := radius * phi0
-	var arc1 := radius * phi1
-	var corners := [
-		[p.call(phi0, 0.0), normal, Vector2(arc0, 0.0)],
-		[p.call(phi1, 0.0), normal, Vector2(arc1, 0.0)],
-		[p.call(phi1, -depth), normal, Vector2(arc1, -depth)],
-		[p.call(phi0, -depth), normal, Vector2(arc0, -depth)],
-	]
-	if normal.y > 0.0:
-		corners.reverse()
-	_add_quad(st, corners)
-
-
-## An arc of tube lying in the XY plane, facing +Z -- the body of an entrance
-## portal.
-##
-## Swept between two angles rather than closed, because the reference portals
-## are a circle with the bottom cut off by the deck: the tube runs from where
-## it meets the floor one side, the long way over the top, to where it meets
-## it on the other. A fully closed circle reads as a neon hoop hung on a wall
-## -- there is no doorway in it.
-##
-##     p(theta, phi) = C + (major + minor cos phi) (cos theta, sin theta, 0)
-##                       + (0, 0, minor sin phi)
-##     n(theta, phi) = cos phi (cos theta, sin theta, 0) + (0, 0, sin phi)
-##
-## UVs are (theta / TAU, phi / TAU) so a tiled material would wrap the tube
-## rather than smear along it. Nothing tiled wears one today; the next
-## material might.
-##
-## `ring_segments` counts the whole circle, so a partial sweep uses its share
-## and the facet size stays the same however much of the circle is drawn. 48
-## over the full turn is roughly two pixels of facet at the distance
-## CaptureHarness's `stage_wide` shot sees the portals from.
-static func _add_arc_tube(st: SurfaceTool, center: Vector3, major: float,
-		minor: float, from_angle: float, to_angle: float, ring_segments: int,
-		tube_sides: int) -> void:
-	var span := to_angle - from_angle
-	var steps := maxi(int(ceil(absf(span) / TAU * float(ring_segments))), 1)
-	var point := func(ti: int, pi: int) -> Array:
-		var theta := from_angle + span * float(ti) / float(steps)
-		var phi := TAU * float(pi) / float(tube_sides)
-		var radial := Vector3(cos(theta), sin(theta), 0.0)
-		var normal := radial * cos(phi) + Vector3(0.0, 0.0, sin(phi))
-		var pos := center + radial * (major + minor * cos(phi)) \
-				+ Vector3(0.0, 0.0, minor * sin(phi))
-		return [pos, normal, Vector2(theta / TAU, float(pi) / float(tube_sides))]
-	for ti: int in steps:
-		for pi: int in tube_sides:
-			_add_quad(st, [
-				point.call(ti, pi + 1), point.call(ti + 1, pi + 1),
-				point.call(ti + 1, pi), point.call(ti, pi),
-			])
-
-
-## The radial slat fan inside a portal: `count` tapered planks swept between
-## `from_angle` and `to_angle`.
-##
-## Each slat is a single two-sided quad rather than a solid plank. At the
-## distance any shot in the list sees the stage from, the 5cm edge of a plank
-## is under a pixel, so the eight triangles a box would cost buy nothing --
-## and a fan is the one place in the hall where the count of things matters
-## more than the thickness of each.
-static func _add_fan(st: SurfaceTool, center: Vector3, inner: float,
-		outer: float, count: int, half_inner: float, half_outer: float,
-		from_angle: float, to_angle: float) -> void:
-	for i: int in count:
-		var t := (float(i) + 0.5) / float(count)
-		var angle := lerpf(from_angle, to_angle, t)
-		var dir := Vector3(cos(angle), sin(angle), 0.0)
-		var side := Vector3(-sin(angle), cos(angle), 0.0)
-		var a := center + dir * inner - side * half_inner
-		var b := center + dir * inner + side * half_inner
-		var c := center + dir * outer + side * half_outer
-		var d := center + dir * outer - side * half_outer
-		for normal: Vector3 in [Vector3.BACK, Vector3.FORWARD]:
-			var corners := [
-				[a, normal, Vector2(0.0, 0.0)], [b, normal, Vector2(1.0, 0.0)],
-				[c, normal, Vector2(1.0, 1.0)], [d, normal, Vector2(0.0, 1.0)],
-			]
-			if normal.z < 0.0:
-				corners.reverse()
-			_add_quad(st, corners)
-
-
-## The dark recess behind a portal: a drum running away from the audience
-## with its normals pointing INWARD, so back-face culling keeps the inside
-## visible and the outside -- which is buried in the backdrop -- costs
-## nothing. Capped at the far end, because an uncapped tube is a hole onto
-## the Environment background, and `measure_frame.py` scores that as void.
-static func _add_tube(st: SurfaceTool, center: Vector3, radius: float,
-		depth: float, segments: int) -> void:
-	for i: int in segments:
-		var a0 := TAU * float(i) / float(segments)
-		var a1 := TAU * float(i + 1) / float(segments)
-		var d0 := Vector3(cos(a0), sin(a0), 0.0)
-		var d1 := Vector3(cos(a1), sin(a1), 0.0)
-		_add_quad(st, [
-			[center + d0 * radius - Vector3(0.0, 0.0, depth), -d0,
-					Vector2(a0 * radius, depth)],
-			[center + d1 * radius - Vector3(0.0, 0.0, depth), -d1,
-					Vector2(a1 * radius, depth)],
-			[center + d1 * radius, -d1, Vector2(a1 * radius, 0.0)],
-			[center + d0 * radius, -d0, Vector2(a0 * radius, 0.0)],
-		])
-	# The back wall of the recess.
-	var cap := center - Vector3(0.0, 0.0, depth)
-	for i: int in segments:
-		var a0 := TAU * float(i) / float(segments)
-		var a1 := TAU * float(i + 1) / float(segments)
-		var p0 := cap + Vector3(cos(a0), sin(a0), 0.0) * radius
-		var p1 := cap + Vector3(cos(a1), sin(a1), 0.0) * radius
-		for vert: Vector3 in [cap, p1, p0]:
-			st.set_normal(Vector3.BACK)
-			st.set_uv(Vector2(vert.x, vert.y))
-			st.add_vertex(vert)
 
 
 static func _add_oriented(st: SurfaceTool, center: Vector3, along: Vector3,
@@ -1394,212 +1157,90 @@ static func _chair_mesh() -> ArrayMesh:
 ## Split into four because the old single function was already sixty lines of
 ## boxes and this is four distinct pieces of set, each with its own reference
 ## photograph and its own reasons.
-func _build_stage() -> void:
-	_build_stage_deck()
-	_build_stage_backdrop()
-	_build_entrance_portals()
-	_build_stage_screen()
-
-
-## The deck and the ramp down to floor level.
+## The entrance set and the truss are `tools/blender/entrance_set.py`'s model.
 ##
-## Geometry unchanged from the grey-box version; what changed is underneath
-## it. The deck is now a lacquered gloss (`arena_stage_deck`, roughness 0.14)
-## and `match.tscn` turns on SSR, so this surface carries a reflection of the
-## video wall and the two rings. That reflection is most of what makes the
-## reference photos read as a stage.
+## They were five SurfaceTool builders here -- deck and ramp, backdrop,
+## portals, video wall, truss. Two of them are why the move was worth making:
 ##
-## The house reach drops from 1.1 to 0.8 with it: house emission is added on
-## top of the reflection, and a deck emitting at its old level washes out the
-## thing it is now there to show.
-func _build_stage_deck() -> void:
-	var deck := _new_surface()
-	var deck_depth := STAGE_FRONT - STAGE_BACK
-	_add_box(deck, Vector3(0.0, (FLOOR_Y + STAGE_DECK_Y) * 0.5,
-			(STAGE_FRONT + STAGE_BACK) * 0.5),
-			Vector3(STAGE_HALF_WIDTH * 2.0, STAGE_DECK_Y - FLOOR_Y, deck_depth))
-	# Ramp: a stack of steps rather than a wedge, because _add_box only makes
-	# axis-aligned boxes. The step COUNT comes from the length rather than
-	# being fixed at six, so lengthening the ramp lengthens the staircase
-	# instead of turning it into a flight of stairs nobody could walk down.
-	var ramp_end := -RING_HALF_EXTENT - 1.0
-	var steps := maxi(int(ceil(absf(ramp_end - STAGE_FRONT) / RAMP_STEP_LENGTH)), 1)
-	for i: int in steps:
-		var t := float(i) / float(steps)
-		var y := lerpf(STAGE_DECK_Y, FLOOR_Y, t)
-		var z0 := lerpf(STAGE_FRONT, ramp_end, t)
-		var z1 := lerpf(STAGE_FRONT, ramp_end, float(i + 1) / float(steps))
-		_add_box(deck, Vector3(0.0, (FLOOR_Y + y) * 0.5, (z0 + z1) * 0.5),
-				Vector3(RAMP_HALF_WIDTH * 2.0, y - FLOOR_Y, absf(z1 - z0)))
-	add_child(_mesh_instance("EntranceStage", deck, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_stage_deck"), 0.8))))
-
-
-## Backdrop behind the stage, at house level. Without it the portals are holes
-## onto the Environment's background colour -- which measure_frame.py scores as
-## void, and which measured as a quarter of the frame's middle band on the
-## first capture. A portal has to be a recess in something, not an opening
-## onto nothing.
+## * **The ramp was a staircase.** `_add_box` only makes axis-aligned boxes,
+##   so a 25.7m ramp falling 1.45m shipped as eighteen 8cm steps. The note on
+##   it argued the steps were under a pixel of rise from any camera in the
+##   shotlist, which is true of the treads and false of the EDGE: a stepped
+##   ramp has a stepped silhouette against the floor from every angle that
+##   sees it side-on. It is one wedge now, with a fascia down each flank and
+##   a nose at the bottom instead of a 1.45m cliff.
+## * **The truss was sixteen boxes.** Overhead truss is the one piece of an
+##   arena that is unmistakably a lattice from every angle. It is now four
+##   chords on a square section with alternating diagonals bay by bay.
 ##
-## The material is now `arena_stage_panel` rather than poured concrete: the
-## reference set's backdrop is a perforated panel wall, and at stage distance
-## what carries that is a fine dark weave rather than a flat slab.
+## Everything else is reproduced at its existing measurements, and every
+## measurement is still read out of the constants above -- entrance_set.py
+## parses them from this file rather than retyping them.
+const ENTRANCE_MODEL := "res://assets/environment/entrance_set.glb"
+
+## Part name in the .glb -> [material key, house reach]. The reaches are the
+## ones each surface was solved at and the notes that earned them still stand:
+## the deck is 0.8 because house emission is added on top of the SSR
+## reflection that makes it read as a stage, and the backdrop is 1.1 -- in
+## band with the shell -- because its colour comes from the four uplights
+## aimed at it rather than from the surface lighting itself.
+const ENTRANCE_MATERIALS := {
+	"EntranceStage": ["arena_stage_deck", 0.8],
+	"StageBackdrop": ["arena_stage_panel", 1.1],
+	"PortalRecess": ["arena_tunnel", 0.35],
+	"StageScreenBezel": ["arena_tunnel", 0.5],
+	"Truss": ["arena_truss", 0.9],
+}
+
+## The parts that light themselves: part name -> [material key, level].
+const ENTRANCE_EMISSIVE := {
+	"PortalRingWest": ["arena_portal_magenta", PORTAL_EMISSION],
+	"PortalRingEast": ["arena_portal_amber", PORTAL_EMISSION],
+	"PortalFanWest": ["arena_portal_magenta", PORTAL_FAN_EMISSION],
+	"PortalFanEast": ["arena_portal_amber", PORTAL_FAN_EMISSION],
+}
+
+
+func _build_entrance_set() -> void:
+	var packed: PackedScene = load(ENTRANCE_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_venue.sh entrance."
+				% ENTRANCE_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "EntranceSet"
+	for part: String in ENTRANCE_MATERIALS:
+		var spec: Array = ENTRANCE_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	for part: String in ENTRANCE_EMISSIVE:
+		var spec: Array = ENTRANCE_EMISSIVE[part]
+		_dress(root, part, _self_emissive(MaterialLibrary.resolve(spec[0]), spec[1]))
+	add_child(root)
+	_attach_stage_video(root)
+
+
+## The video wall, dressed last and separately.
 ##
-## The reach is 1.1 -- in band with the shell (0.85) and the deck (0.8) -- and
-## the panel's colour comes from the four uplights aimed at it, which is the
-## way round this file's whole design says it should be: real fixtures, not a
-## surface that lights itself.
-##
-## It was 2.6 for a while, over three times the shell's, and that is a
-## forward_plus-only value dressed up as a material property. The Filmic curve
-## compressed it there; the compatibility renderer has no HDR buffer to roll it
-## back, so the browser build rendered the panel as a flat blown lavender
-## rectangle measuring 3.3x the forward_plus frame. Emission that only works on
-## one renderer is the fixture's job, not the material's.
-func _build_stage_backdrop() -> void:
-	var backdrop := _new_surface()
-	_add_box(backdrop, Vector3(0.0, (FLOOR_Y + WALL_TOP) * 0.5, STAGE_BACK - 0.4),
-			Vector3(STAGE_HALF_WIDTH * 2.4, WALL_TOP - FLOOR_Y, 0.4))
-	add_child(_mesh_instance("StageBackdrop", backdrop, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_stage_panel"), 1.1))))
-
-
-## The two circular entrance portals: a dark recess, a radial slat fan in the
-## lower half of it, and a lit ring standing proud of both.
-##
-## Depth order, back to front, is what makes a ring read as a fixture rather
-## than as a painted circle: the recess is the darkest thing on the stage, the
-## fan sits inside it lit only by the ring, and the ring is in front of both
-## and is the only part that emits. Flattening any of those three onto the
-## same plane collapses the whole effect.
-##
-## The rings are the magenta/amber pair from the reference photos. They are
-## built as separate nodes rather than one surface so a later round can move,
-## recolour or animate one without touching the other.
-func _build_entrance_portals() -> void:
-	var recess := _new_surface()
-	for sx: float in [-1.0, 1.0]:
-		_add_tube(recess, Vector3(sx * PORTAL_OFFSET_X, PORTAL_CENTER_Y,
-				PORTAL_FACE_Z), PORTAL_MAJOR - PORTAL_MINOR * 0.5,
-				PORTAL_RECESS_DEPTH, PORTAL_RING_SEGMENTS)
-	add_child(_mesh_instance("PortalRecess", recess,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_tunnel"), 0.35))))
-
-	for side: Dictionary in [
-		{"name": "West", "x": -1.0, "key": "arena_portal_magenta"},
-		{"name": "East", "x": 1.0, "key": "arena_portal_amber"},
-	]:
-		var sx: float = side["x"]
-		var at := Vector3(sx * PORTAL_OFFSET_X, PORTAL_CENTER_Y, PORTAL_FACE_Z)
-
-		# A circle with the bottom cut off by the deck. The sweep runs from
-		# where the circle meets the deck on the right, the long way over the
-		# top, to where it meets it on the left -- 308 degrees of it. There
-		# are no legs and no feet: the tube simply stops at the floor, which
-		# is what a circle sunk a quarter of a metre into a stage does.
-		var ring := _new_surface()
-		var cut := _portal_cut_angle()
-		_add_arc_tube(ring, at, PORTAL_MAJOR, PORTAL_MINOR, cut, PI - cut,
-				PORTAL_RING_SEGMENTS, PORTAL_TUBE_SIDES)
-		add_child(_mesh_instance("PortalRing%s" % side["name"], ring,
-				_self_emissive(MaterialLibrary.resolve(side["key"]),
-				PORTAL_EMISSION)))
-
-		# The slat fan, in that portal's own colour and lit -- these are strip
-		# fixtures in the reference photographs, not dark slats catching the
-		# ring's spill. They were built house-lit first and vanished: at hall
-		# level, inside an unlit recess, there is nothing for them to catch.
-		#
-		# One wedge per portal, on its OUTBOARD side and clear of the gap the
-		# entrance walks through. A full lower half would fill the doorway
-		# with slats.
-		var fan := _new_surface()
-		# Centred on the outboard horizontal, reaching down toward the cut but
-		# stopping clear of the doorway the entrance walks through.
-		var wedge_from := (PI - 0.30) if sx < 0.0 else _portal_cut_angle() + 0.30
-		# Slat half-widths are what make a fan read as separate strips rather
-		# than as a filled wedge: 13 slats across 52 degrees are 0.15m apart
-		# at the outer radius, so anything over about 0.06 half-width closes
-		# the gaps and the whole thing renders as one solid triangle. It did,
-		# at 0.09.
-		_add_fan(fan, at - Vector3(0.0, 0.0, 0.12), 0.55, 2.2, PORTAL_SLATS,
-				0.012, 0.035, wedge_from,
-				wedge_from + (-_portal_cut_angle() - 0.30) + 0.30)
-		add_child(_mesh_instance("PortalFan%s" % side["name"], fan,
-				_self_emissive(MaterialLibrary.resolve(side["key"]),
-				PORTAL_FAN_EMISSION)))
-
-
-## The curved video wall, and the clip that plays on it.
-##
-## The panel is built with its own material first and only then handed to
+## The panel is given its own material FIRST and only then handed to
 ## `StageVideo`. That ordering is the fallback: if the clip is missing, fails
 ## to decode, or the run is one that must not have a moving picture in it, the
 ## wall is already correct and nothing has to be undone.
 ##
-## On the brightness. The flat panel this replaces was capped at a self-
-## emissive level of 0.35, and the note on it recorded why: at 1.35 the screen
-## owned the frame's top 5% of luminance (p95 0.633 against the reference
-## still's 0.427) with 36.5% of the blown pixels inside the one grid cell it
-## occupied. That measurement was taken of a *blank* panel whose whole area sat
-## at one value. This wall carries a picture whose own mean is far below its
-## peak, and the set it is now part of is matched to photographs in which the
-## wall is plainly the brightest thing in the building. So the cap is
-## deliberately revised upward here and re-measured rather than inherited --
-## the numbers it was re-measured against are in README.md.
-func _build_stage_screen() -> void:
-	var bezel := _new_surface()
-	_add_curved_shell(bezel, Vector3(0.0, SCREEN_CENTER_Y, SCREEN_FACE_Z - 0.06),
-			SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SAGITTA, SCREEN_SEGMENTS,
-			SCREEN_DEPTH, SCREEN_BEZEL)
-	add_child(_mesh_instance("StageScreenBezel", bezel,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_tunnel"), 0.5))))
-
-	var face := _new_surface()
-	_add_curved_face(face, Vector3(0.0, SCREEN_CENTER_Y, SCREEN_FACE_Z),
-			SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SAGITTA, SCREEN_SEGMENTS)
+## The face carries NORMALISED UVs (entrance_set.py authors them, unlike every
+## other part, which is projected at world-metre density), so the texel-density
+## scale MaterialLibrary derived from `tile_metres` has to go. Miss this and
+## whatever lands on the wall tiles across it.
+func _attach_stage_video(root: Node3D) -> void:
+	var screen := root.find_child("StageScreen", true, false) as MeshInstance3D
+	if screen == null:
+		push_error("ArenaBuilder: %s has no 'StageScreen' object." % ENTRANCE_MODEL)
+		return
 	var screen_mat := MaterialLibrary.resolve("arena_screen")
-	# The face carries normalised UVs, not world metres, so the texel-density
-	# scale MaterialLibrary derived from `tile_metres` has to go. Miss this and
-	# whatever lands on the wall tiles across it.
 	screen_mat.uv1_scale = Vector3.ONE
-	var screen := _mesh_instance("StageScreen", face,
-			_self_emissive(screen_mat, SCREEN_BLANK_EMISSION))
-	add_child(screen)
+	screen.material_override = _self_emissive(screen_mat, SCREEN_BLANK_EMISSION)
+	screen.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(StageVideo.attach(screen, screen_mat))
-
-
-# ---------------------------------------------------------------------------
-# Truss and shell
-# ---------------------------------------------------------------------------
-
-## A lighting grid above the ring. The roof alone left the camera's upper
-## third a single flat emissive plane; this is what puts structure in it.
-## It sits above the four SpotLight3Ds in match.tscn (y 5.5, range 10) so it
-## neither occludes them nor changes how the mat is lit.
-func _build_truss() -> void:
-	var st := _new_surface()
-	var reach := 11.0
-	for offset: float in [-7.5, -2.5, 2.5, 7.5]:
-		_add_box(st, Vector3(0.0, TRUSS_Y, offset),
-				Vector3(reach * 2.0, 0.24, 0.24))
-		_add_box(st, Vector3(offset, TRUSS_Y, 0.0),
-				Vector3(0.24, 0.24, reach * 2.0))
-	# Chords, so the grid reads as truss rather than as bare pipe.
-	for offset: float in [-7.5, -2.5, 2.5, 7.5]:
-		_add_box(st, Vector3(0.0, TRUSS_Y + 0.55, offset),
-				Vector3(reach * 2.0, 0.14, 0.14))
-		_add_box(st, Vector3(offset, TRUSS_Y + 0.55, 0.0),
-				Vector3(0.14, 0.14, reach * 2.0))
-	# Drops to the roof, so it hangs from something.
-	for x: float in [-7.5, 7.5]:
-		for z: float in [-7.5, 7.5]:
-			_add_box(st, Vector3(x, (TRUSS_Y + ROOF_Y) * 0.5, z),
-					Vector3(0.16, ROOF_Y - TRUSS_Y, 0.16))
-	add_child(_mesh_instance("Truss", st, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_truss"), 0.9))))
 
 
 ## The shell is part of the Blender model now.
