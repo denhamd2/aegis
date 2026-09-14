@@ -4940,3 +4940,78 @@ numbers; every quantity is quoted from the file that owns it.
 that had been removed, judged against a number `timings.md` still lists as
 `(pending)`. Every bar now names what settles it, because a bar with no enforcer
 cannot be judged, only asserted, which is exactly how that entry survived.
+
+## Round: rendering a frame, which found three things measurement had passed
+
+Every claim in the two rounds above was closed on forward kinematics and
+headless probes, with the caveat recorded each time that no frame had been
+looked at. Looking at one found three defects, all of which the numbers had
+passed cleanly.
+
+Rendered through `tools/probe/clip_shot.tscn` on **forward_plus** (software
+Vulkan via lavapipe, so `software_rasterised` applies and no performance claim
+is made from it), plus `tools/probe/arena_shot.tscn` for the in-match frame.
+
+### The run had its arms tucked together at the moment a foot landed
+
+`_gait()` phased the arm and hip swing on `sin(2*pi*phase)`. The contact
+windows start at phase 0 and 0.5 — exactly where sine is zero — so the arms and
+hips were at their NEUTRAL midpoint on both contact frames and at their extremes
+mid-flight, which is precisely backwards. It rendered as a man jogging with his
+guard up rather than driving. Now `cos`.
+
+The planted-foot rate was correct throughout, before and after. No measurement
+in the project could have caught this.
+
+### The wrestlers were walking on points
+
+`foot_*` places the ankle and says nothing about which way the boot points, so
+the foot inherited the shin's rotation: a leg swung out in front carried the toe
+down with it. Lengthening the stride to fix the skate made a pre-existing fault
+much more visible. `_gait()` now drives `ankle_*` through a heel-strike →
+toe-off roll, and the rig's rest pose stands with its soles flat, so 0 is flat
+regardless of the leg above.
+
+### The sprint was leaning backwards
+
+`Run_Drive` carried `spine=(24, ...)` under a comment reading "torso drives
+forward at 24 degrees". Measured, spine lean is negative-forward: at -18 the
+head sits 0.159 m in front of the pelvis, at +24 it sits 0.107 m **behind** it.
+The clip has been reclining since it was authored and the comment has been wrong
+just as long. Now -18, with the head countering the lean and the arm swing
+lowered to match (at the old height the lead fist ended up covering the face
+once the torso came forward).
+
+`Walk_Stalk` had the same sign and is now upright. Note `STANCE` still carries
++12 — a slight backward lean every clip in the set inherits. Correcting that
+moves all 29 and is its own job.
+
+### What the frame confirmed
+
+The facing fix is visible: `arena_shot` puts the two wrestlers squared up
+chest-on at 1.13 m, which is what `_turn_toward_opponent()` while circling was
+for. The jab reads as a punch — guard closed at rest, arm driven out and torso
+rotated at contact.
+
+### A pre-existing bug this turned up
+
+`tools/capture/run_capture.sh` **hangs on the shipped default seed.**
+`match.tscn` ships `match_seed = 1`, and seed 1 produces a match where the two
+never throw a strike at all — confirmed at 0 thrown over a 20000-tick budget.
+The recording step therefore never terminates, so the whole capture/evidence
+path is unreachable out of the box.
+
+Verified pre-existing, not caused by this work: the same seed measures 0 thrown
+on `2b75477`, the commit before any of it, in a clean worktree. Seeds 2 and 3
+finish normally. Not fixed here — it is an AI/reachability bug, not an animation
+one — but it is the reason no capture in these rounds went through the project's
+own harness.
+
+### The lesson, again
+
+Both previous rounds ended by noting that no frame had been looked at. Three
+defects were sitting in the gap that note described, and two of them
+(`sin` vs `cos`, and a torso leaning the wrong way for years) are things a
+single rendered frame answers instantly and no amount of forward kinematics
+ever will. The project's own rule already says this: close appearance claims on
+pixels. These rounds are what it costs not to.
