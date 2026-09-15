@@ -1,24 +1,99 @@
 # camera.md — measured, not remembered
 
-Status: **partially seeded from static reference screenshots, plus one real
-gameplay clip** (`gauntlet/refs/raw/video/wwe2k26_footage_01.mp4` — see
-`timings.md` for its citation format and the multi-match-compilation
-caveat). The clip's continuous camera behavior during the tie-up/getup
-sequences cited in `timings.md` broadly confirms the standoff/mid-fight
-framing described below, but cut *duration* and ease curves for
-finisher/three-count cuts specifically haven't been isolated from it yet —
-still pending. See `timings.md` for the footage-drop / No Mercy fallback
-note that still applies to everything else.
+Status: **two sources, and they are not the same promotion.**
 
-**Caveat on this source material:** these are individual promotional/gameplay
+Everything under "Subject fill" and below is measured off **WWE 2K gameplay
+stills and one WWE 2K clip** (`gauntlet/refs/raw/` — see `timings.md` for the
+citation format and the multi-match-compilation caveat). That is what was in
+the repo when this file was written, and those numbers still describe the
+build's ringside handheld, which is what they were used to solve.
+
+They do **not** describe what this project is matched to. `ring.md`,
+`stage.md`, `arena.md` and `lighting.md` are all measured against **AEW
+*Dynamite*** photographs supplied by the project owner. The camera was the one
+subsystem calibrated against a different promotion *and* a different medium —
+a video game rather than a television broadcast — and nothing in the file said
+so. The section immediately below is the AEW material, and it is the one that
+governs.
+
+**Caveat on the WWE 2K material:** those are individual promotional/gameplay
 screenshots, not a frame-stepped clip — there's no timestamp, source video, or
 frame-step method to cite per-number the way `ARCHITECTURE.md`'s
 "Reference-driven tuning" section expects for `timings.md`. Treat everything
-below as composition/framing observations, not hard numbers, and prefer real
-frame-stepped footage to replace this once Phase 1 footage capture happens.
+below as composition/framing observations, not hard numbers.
 Frames cited: `gauntlet/refs/frames/wide_standoff_broadcast_angle.jpg`,
 `mid_strike_exchange.jpg`, `close_impact_table_spot.jpg`,
 `wide_establishing_stage.jpg`.
+
+## AEW broadcast framing (measured)
+
+Source: `gauntlet/refs/lighting/aew_grand_slam_broadcast.png` (1366x768), a
+frame off an AEW *Dynamite* Grand Slam broadcast, already in the repo as
+lighting reference. `lighting.md` measures its luminance distribution; nobody
+had measured its **framing**.
+
+Method: the same pixel-grid read the subject-fill table below uses. The
+referee's standing figure was read off a 6x zoom of the crop
+(500,400)-(580,480); the mat's corners off a 2x zoom of (400,380)-(920,640)
+with a 40px grid.
+
+| quantity | value | how |
+| --- | --- | --- |
+| subject fill | **0.072** | the standing referee spans rows 412–467 of 768 |
+| camera depression | **~40°** | the mat is a square seen corner-on; its two projected diagonals give 42.5° and 38.5° |
+| stage side | **frame left** | the Grand Slam screen and portal sit left of the ring, crowd behind, commentary desk right |
+
+What this frame is: an **establishing/overhead** shot from high in the bowl,
+not the shot a match is called over. `aew_elevated_blue_beams.jpg` and
+`aew_wide_bowl_magenta.jpg` are the same family (both are elevated wides from
+the stands) and `aew_low_angle_led_wall.jpg` is a floor-level shot of ringside
+rather than of the ring. So:
+
+**There is still no AEW reference for the framing a match is actually covered
+in.** Four AEW stills, none of them an action framing. That is the gap, it is
+named here rather than papered over, and a frame-stepped AEW clip is what
+closes it. What the four *do* establish — and what the build now takes from
+them — is the arrangement: an elevated camera on the side, looking down, with
+the stage frame left and the commentary desk frame right.
+
+### The hard camera, and what its lens is worth
+
+`MatchCamera.Mode.HARD_CAM` is anchored at (-28.5, 8.3, 0). That is **not a
+framing choice** — it is a seat in the building `arena.md` already measures:
+`BOWL_STRAIGHT_X` 4.425 + `BOWL_FIRST_ROW` 10.13 puts row 1 at 14.56 out on
+the -X side, twelve rows of `ROW_RUN` 0.95 plus `CONCOURSE_DEPTH` 2.6 reach
+28.56, and twelve rises of `ROW_RISE` 0.48 over `FLOOR_Y` -1.10 reach 8.26.
+It looks down at **14.4°**, inside the band a hard camera lives in and well
+short of this frame's 40°, which is the establishing shot's angle.
+
+The lens follows from the anchor and a fill, and that is the whole reason the
+lens had to stop being a property of the camera:
+
+| lens | fill at 29.7m | full-frame equivalent |
+| --- | --- | --- |
+| 9° | 0.385 | 152mm |
+| **14°** | **0.247** | **98mm** |
+| 16° | 0.216 | 85mm |
+
+14° is what ships. It is a **derived** number and is marked as such: no AEW
+action fill has been measured, so it is not solved from one. What it is solved
+from is the anchor plus the requirement that the ring, not the hall, fills the
+frame — 0.247 sits between this frame's 0.072 establishing fill and the
+handheld's measured 0.32–0.41 standoff, which is where a master belongs.
+
+**When an AEW action fill is measured, re-solve `hard_cam_fov` from it and
+delete this paragraph.** The arithmetic is the table above run backwards;
+nothing else in the rig has to move, because the anchor is the building's and
+only the lens is inferred.
+
+### What this does not fix
+
+Cut *duration* and ease curves. `MatchCamera`'s shot clock holds the master
+7.0s and the handheld 4.5s, and those are **project values, not measurements**
+— a still cannot carry a duration, and all four AEW references are stills.
+What is defended is the shape (master longer than handheld, both in seconds
+rather than tens of seconds). A frame-stepped clip could measure them and
+should.
 
 ## Subject fill (measured)
 
@@ -122,7 +197,16 @@ not by interpolating toward a separation this file never measured.
 `game/tests/test_camera_framing.gd` asserts the achieved fill through
 `unproject_position()`, which needs no renderer.
 
+**All of the above is now the RINGSIDE HANDHELD, not the master.** The rig
+covers a match from `Mode.HARD_CAM` and cuts to `Mode.RINGSIDE` on a shot
+clock; the fill fit, the 41° lens, the 1.45m eye height and the containment
+guard are all properties of that handheld shot. That is also why the near
+ropes crossing the frame at 1.45m is no longer a defect to be designed
+around: a ringside handheld shoots *through* the ropes, and it is the master
+30m away and 8m up that has to see over them.
+
 Still placeholder, and marked as such in the source: `follow_speed`,
-`cut_speed`, and the cut's aim point. Cut *duration* is not invented — a
-finisher cut lasts as long as its paired move and a three-count cut as long
-as the pin — but the ease curves this file marks pending are still pending.
+`cut_speed`, the cut's aim point, and the shot clock's two hold times. Cut
+*duration* for the event cuts is not invented — a finisher cut lasts as long
+as its paired move and a three-count cut as long as the pin — but the ease
+curves this file marks pending are still pending.

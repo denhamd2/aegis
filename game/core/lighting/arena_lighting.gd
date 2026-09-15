@@ -519,8 +519,21 @@ func _build_fog_volumes() -> void:
 ##
 ## FOG_BEGIN is 13.0, past that worst case with margin. The mat, the ropes,
 ## the posts and both wrestlers are outside the fog in every framing the
-## camera can produce; only the barricades, the chairs and the bowl are
+## HANDHELD can produce; only the barricades, the chairs and the bowl are
 ## inside it. That is the difference between depth and a wash.
+##
+## That worst case is no longer the only one. The rig covers a match from a
+## hard camera 28.5m out (MatchCamera.hard_cam_position), which puts the far
+## side of the ring ~32m from the lens -- nineteen metres INSIDE a fog begin
+## that was written to stay outside it. A constant cannot be right for both
+## shots, because 13.0 is what gives the handheld its depth and anything that
+## clears the master's ring would leave the handheld's barricade unfogged.
+##
+## So it tracks the shot, the same way the lens does: _process sets
+## fog_depth_begin to the camera's own distance plus the ring's reach, floored
+## at the measured 13.0. At the handheld's 3.2-9.0m the floor wins and every
+## number measured on that shot is untouched; at the master's 28.5 the ring
+## falls outside the fog exactly as this note always claimed it did.
 ##
 ## fog_sky_affect is 0.0 and that is load-bearing, not tidiness: the
 ## background is a flat near-black (background_mode = 1) and VISUAL_BAR.md
@@ -541,6 +554,9 @@ const FOG_CURVE := 1.5
 ## measures no haze. The tint matches HallHaze's albedo so the two renderers
 ## disagree about technique rather than about colour.
 const FOG_DENSITY := 0.45
+## The ring's own reach from its centre, for the fog-begin solve above: the
+## far ropes at ROPE_SPAN 3.1 plus a wrestler stood behind them.
+const RING_REACH := 4.0
 ## The fog colour is the value distant geometry fades TOWARD, so in a dark hall
 ## it has to be dark. At energy 1.0 the tint below is far brighter than the
 ## arena and the haze ADDED light: the crowd went milky white and the near-black
@@ -565,6 +581,26 @@ const FOG_TINT := Color(0.62, 0.68, 0.86)
 ## was reported by eye first -- the browser frames looked over-saturated -- and
 ## the measurement agreed.
 const COMPAT_SATURATION := 0.82
+
+
+## The compatibility Environment, kept so the fog's begin distance can follow
+## the shot. Null on forward_plus, where none of this path runs.
+var _compat_env: Environment
+
+
+## Keeps the depth fog starting BEYOND the ring whichever camera is on.
+##
+## Cheap enough to do every frame -- one length and one assignment -- and it
+## has to be every frame, because the rig cuts between a camera 3.5m out and
+## one 28.5m out with no transition between them.
+func _process(_delta: float) -> void:
+	if _compat_env == null:
+		return
+	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if camera == null:
+		return
+	var out := Vector2(camera.global_position.x, camera.global_position.z).length()
+	_compat_env.fog_depth_begin = maxf(FOG_BEGIN, out + RING_REACH)
 
 
 func _apply_compat_environment() -> void:
@@ -598,6 +634,7 @@ func _apply_compat_environment() -> void:
 	# path -- see the note beside `arena_stage_deck` in material_library.gd.
 	env.ssr_enabled = false
 	world.environment = env
+	_compat_env = env
 
 
 ## Scale every fixture this rig built, on renderers that over-accumulate them.

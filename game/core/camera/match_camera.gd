@@ -135,8 +135,95 @@ const BODY_WIDTH := 0.8
 ## value: it is not defended as matching anything measured.
 @export var cut_speed: float = 14.0
 
-enum Mode { FOLLOW, FINISHER_CUT, THREE_COUNT_CUT }
-var mode: Mode = Mode.FOLLOW
+# --- The hard camera ---------------------------------------------------------
+## The master shot, and the one thing this rig did not have.
+##
+## A televised match is not covered by a follow-cam. It is covered by a FIXED
+## camera high in the bowl on a long lens, cut away from to ringside handhelds
+## and back. Everything below the hard camera in this file is the handheld;
+## this is the master it cuts from.
+##
+## The anchor is not invented -- it is a seat in the building
+## `tools/blender/arena_bowl.py` already builds. The lower tier's first row is
+## BOWL_FIRST_ROW 10.13 out from a plan rectangle of half-extent
+## BOWL_STRAIGHT_X 4.425, so on the -X straight side row 1 is 14.56 from ring
+## centre; twelve rows of ROW_RUN 0.95 and a CONCOURSE_DEPTH of 2.6 put the
+## suite line at 28.56 out, and twelve rises of ROW_RISE 0.48 over a FLOOR_Y
+## of -1.10 put it 8.26 up. That is 28.5 / 8.3, and it is where a real hard
+## camera stands: at the back of the lower bowl, on the side opposite nothing,
+## looking down the ring's own axis.
+##
+## -X, so the entrance stage on -Z reads frame LEFT and the commentary desk on
+## +Z reads frame right -- which is the arrangement
+## `gauntlet/refs/lighting/aew_grand_slam_broadcast.png` shows.
+@export var hard_cam_position := Vector3(-28.5, 8.3, 0.0)
+## 14 degrees vertical, which is a ~98mm lens on a full-frame back.
+##
+## This is the whole point of separating lens from distance. The handheld's
+## 41 degrees is a 32mm lens, and a 32mm lens CANNOT be a master shot from the
+## stands -- at 29m it frames the whole bowl. Holding a 1.8m wrestler at the
+## same fraction of frame from 29m instead of 3.5m takes a long lens, and the
+## compression that comes with it (a flat wall of crowd stacked behind the
+## ring) is the single most recognisable property of a broadcast master.
+##
+## camera.md derives the handheld's 41 degrees from fill plus "just outside
+## the near ropes". That premise is about the handheld and says nothing about
+## this shot, so this number is NOT inherited from it: it is solved from the
+## measured AEW hard-cam fill at this anchor's distance. See camera.md's
+## "AEW broadcast framing" section.
+@export var hard_cam_fov: float = 14.0
+## Aim height above the pair's midpoint. Low, because the camera is looking
+## DOWN: aiming at chest from 8.3m up tips the mat out of frame.
+@export var hard_cam_aim: float = 0.9
+
+# --- Per-shot lens -----------------------------------------------------------
+## The handheld's lens, which is the 41 degrees camera.md solves. It used to
+## live in match.tscn as the camera's one `fov`, which is exactly why there
+## could only ever be one shot: the lens was a property of the CAMERA rather
+## than of the shot it was taking.
+@export var ringside_fov: float = 41.0
+## Where the handheld stands, as a direction from the ring's centre in the XZ
+## plane. -X and slightly +Z: the same broadcast side as the hard camera, off
+## the axis so the shot does not look through a corner post, with the entrance
+## stage on -Z reading frame left.
+@export var ringside_bearing := Vector3(-0.966, 0.0, 0.258)
+## The impact cut goes wider as well as lower -- it is close to the bodies, so
+## the lens has to open to keep two of them in frame. Project value; camera.md
+## marks cut framing as pending real footage.
+@export var cut_fov: float = 52.0
+## The three-count is the tightest shot in the match and the only one that is
+## about one thing: the shoulders on the mat and the hand coming down.
+@export var three_count_fov: float = 34.0
+
+# --- The shot clock ----------------------------------------------------------
+## How long each shot holds before the rig cuts to the other one.
+##
+## A broadcast does not sit on one angle. It cuts, and the RHYTHM of those
+## cuts is most of what separates a televised match from a video game's
+## follow-cam -- longer on the master, shorter on the handheld, and straight
+## back to the master.
+##
+## These are PROJECT VALUES and are not defended as measured. camera.md has
+## marked cut duration as "pending real footage" since it was written, and the
+## AEW stills in the repo are stills: a still cannot carry a duration. What is
+## defended is the shape -- master longer than handheld, both in the seconds
+## rather than the tens of seconds -- which is what a shot clock needs to be
+## given at all. A frame-stepped clip could measure these and should.
+@export var hard_cam_hold: float = 7.0
+@export var ringside_hold: float = 4.5
+
+## HARD_CAM is the master and the default. RINGSIDE is what used to be called
+## FOLLOW -- the same rig, the same solve, renamed for what it actually is now
+## that there is something else for it to be cut against.
+enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT }
+var mode: Mode = Mode.HARD_CAM
+## Seconds the current shot has been held. Advanced off the physics delta, so
+## it is fixed-step and replays identically; it is never read by anything in
+## the tick (ARCHITECTURE.md).
+var _held: float = 0.0
+## What the last frame was on, so a CUT can snap instead of drifting into
+## position over half a second.
+var _previous_mode: int = -1
 var wrestler_a: Node3D
 var wrestler_b: Node3D
 var grapple_rig: GrappleRig
@@ -154,39 +241,89 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not wrestler_a or not wrestler_b:
 		return
-	_update_mode()
+	_update_mode(delta)
+	fov = shot_fov()
 
 	var midpoint := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
-	var separation := wrestler_a.global_position.distance_to(wrestler_b.global_position)
-	var distance := framing_distance(separation)
+	var target_position: Vector3
+	var aim: float
 
-	var to_camera := global_position - midpoint
-	to_camera.y = 0.0
-	if to_camera.length() < 0.01:
-		to_camera = Vector3.BACK
-	to_camera = to_camera.normalized() * distance
+	if mode == Mode.HARD_CAM:
+		# A fixed camera does not follow. It sits in its seat and pans, which
+		# is why the master is the shot that reads as coverage rather than as
+		# a rig strapped to the wrestlers.
+		target_position = hard_cam_position
+		aim = hard_cam_aim
+	else:
+		var separation := wrestler_a.global_position.distance_to(wrestler_b.global_position)
+		var distance := framing_distance(separation)
+		# The bearing is a PROPERTY OF THE SHOT, not of wherever the camera
+		# happens to be standing. It used to be read back off the camera's own
+		# position -- which worked only because nothing ever moved the camera
+		# anywhere else. Now that the rig cuts to a hard camera 28m away, the
+		# handheld would have come back square to the ring on the -X axis, and
+		# the off-axis 3/4 angle that match.tscn was placed for would have
+		# survived exactly one cut.
+		var to_camera := ringside_bearing.normalized() * distance
+		# Three heights, not two. The finisher cut's low angle is deliberate --
+		# camera.md: "drops lower, closer to mat height, for a grounded,
+		# low-angle look" -- and it frames two men STANDING, so it keeps
+		# cut_height. The three-count frames two men on the mat behind a set of
+		# ropes, and wants the opposite (see three_count_height).
+		var eye_height := height
+		aim = 1.0
+		if mode == Mode.THREE_COUNT_CUT:
+			eye_height = three_count_height
+			aim = three_count_aim
+		elif mode == Mode.FINISHER_CUT:
+			eye_height = cut_height
+			# A low cut looks *up* the bodies rather than down at the mat, so
+			# the aim point drops with the camera.
+			aim = 0.45
+		target_position = midpoint + to_camera + Vector3.UP * eye_height
 
-	# Three heights, not two. The finisher cut's low angle is deliberate --
-	# camera.md: "drops lower, closer to mat height, for a grounded, low-angle
-	# look" -- and it frames two men STANDING, so it keeps cut_height. The
-	# three-count frames two men on the mat behind a set of ropes, and wants
-	# the opposite (see three_count_height).
-	var eye_height := height
-	if mode == Mode.THREE_COUNT_CUT:
-		eye_height = three_count_height
-	elif mode == Mode.FINISHER_CUT:
-		eye_height = cut_height
-	var speed := follow_speed if mode == Mode.FOLLOW else cut_speed
-	var target_position := midpoint + to_camera + Vector3.UP * eye_height
-	global_position = global_position.lerp(target_position, 1.0 - exp(-speed * delta))
-	# A low cut looks *up* the bodies rather than down at the mat, so the
-	# aim point drops with the camera.
-	var aim := 1.0
-	if mode == Mode.THREE_COUNT_CUT:
-		aim = three_count_aim
-	elif mode == Mode.FINISHER_CUT:
-		aim = 0.45
+	if mode == _previous_mode:
+		var speed := follow_speed if mode == Mode.RINGSIDE else cut_speed
+		global_position = global_position.lerp(target_position, 1.0 - exp(-speed * delta))
+	else:
+		# A CUT IS INSTANT. Lerping into a new shot is a camera move, and a
+		# camera move between two angles is the one thing a vision mixer
+		# cannot do -- it is the difference between cutting to the hard camera
+		# and flying to it. The rig used to lerp into every cut because there
+		# was only ever one position to lerp from.
+		global_position = target_position
+	_previous_mode = mode
 	look_at(midpoint + Vector3.UP * aim, Vector3.UP)
+
+## The lens this shot is taken on.
+##
+## Separating the lens from the shot is what let the hard camera exist at all.
+## Distance and focal length are independent -- the same subject fill comes out
+## of a 32mm lens at 3.5m and a 98mm lens at 29m, and those two images look
+## nothing alike. With one `fov` on the camera the rig could only ever move,
+## never cut to a different lens, so every shot it had was a 32mm shot.
+func shot_fov() -> float:
+	match mode:
+		Mode.HARD_CAM:
+			return hard_cam_fov
+		Mode.FINISHER_CUT:
+			return cut_fov
+		Mode.THREE_COUNT_CUT:
+			return three_count_fov
+		_:
+			return ringside_fov
+
+## How long the current shot holds before the clock cuts away from it.
+## Returns 0 for the cut modes, which are held by their own event rather than
+## by the clock.
+func shot_hold() -> float:
+	match mode:
+		Mode.HARD_CAM:
+			return hard_cam_hold
+		Mode.RINGSIDE:
+			return ringside_hold
+		_:
+			return 0.0
 
 ## The distance that frames the shot, in metres from the pair's midpoint.
 ##
@@ -216,15 +353,23 @@ func containment_distance(separation: float) -> float:
 static func _distance_for_extent(extent: float, fill: float, fov: float) -> float:
 	return extent / (2.0 * clampf(fill, 0.01, 0.98) * tan(fov * 0.5))
 
+## The lens the FRAMING SOLVE is done against, which is the handheld's -- not
+## whatever the camera is currently set to.
+##
+## This caught the containment guard the moment the master existed. The guard
+## and the fill fit both reproduce camera.md's measurements, and those were
+## measured on a 41-degree lens; solved against the master's 14 the guard
+## demanded 8.6m at the standoff separation where the fit wants 6.7, so the
+## engineering limit started choosing the shot. A solve that reads the live
+## `fov` is a solve that changes meaning every time the rig cuts.
+##
 ## Godot keeps the vertical axis by default (KEEP_HEIGHT), which makes `fov`
 ## the vertical field of view; the horizontal one follows from the viewport
-## aspect. camera.md marks FOV itself as "not derivable from a still", so
-## this reads whatever the camera is set to rather than asserting a value --
-## the fill targets are the measurement, and distance is what gets solved.
+## aspect.
 func _vertical_fov() -> float:
 	if keep_aspect == Camera3D.KEEP_WIDTH:
-		return 2.0 * atan(tan(deg_to_rad(fov) * 0.5) / maxf(_aspect(), 0.01))
-	return deg_to_rad(fov)
+		return 2.0 * atan(tan(deg_to_rad(ringside_fov) * 0.5) / maxf(_aspect(), 0.01))
+	return deg_to_rad(ringside_fov)
 
 func _horizontal_fov() -> float:
 	return 2.0 * atan(tan(_vertical_fov() * 0.5) * _aspect())
@@ -247,29 +392,60 @@ func _aspect() -> float:
 ## as the thing it is cutting to: camera.md marks cut *duration* as pending
 ## real footage, so rather than invent one, a finisher cut holds while the
 ## paired move is playing and a three-count cut while the pin is live.
-func _update_mode() -> void:
+##
+## Everything else is the SHOT CLOCK, which is new. Between events the rig
+## alternates master and handheld on a timer, which is the coverage pattern a
+## televised match actually has. Events pre-empt it: a finisher or a pin cuts
+## immediately and resets the clock, so a scheduled cut can never land in the
+## middle of a finish.
+func _update_mode(delta: float) -> void:
+	var was := mode
 	if referee and referee.is_pin_active():
 		mode = Mode.THREE_COUNT_CUT
+		_reset_clock_on_change(was)
 		return
 	if mode == Mode.THREE_COUNT_CUT:
-		mode = Mode.FOLLOW
-	if mode == Mode.FINISHER_CUT and grapple_rig and not grapple_rig.is_active():
-		mode = Mode.FOLLOW
+		# Out of the pin and back to the master, not to whatever was on screen
+		# before it: a broadcast comes out of a near-fall on the wide.
+		mode = Mode.HARD_CAM
+	if mode == Mode.FINISHER_CUT:
+		if grapple_rig and not grapple_rig.is_active():
+			mode = Mode.HARD_CAM
+		_reset_clock_on_change(was)
+		return
+
+	_held += delta
+	var hold := shot_hold()
+	if hold > 0.0 and _held >= hold:
+		mode = Mode.RINGSIDE if mode == Mode.HARD_CAM else Mode.HARD_CAM
+	_reset_clock_on_change(was)
+
+func _reset_clock_on_change(was: Mode) -> void:
+	if mode != was:
+		_held = 0.0
 
 func _on_grapple_started(attacker: Node3D, _defender: Node3D, move: MoveDef) -> void:
 	var wrestler := attacker as WrestlerController
 	if wrestler and wrestler.is_finisher(move):
 		mode = Mode.FINISHER_CUT
+		_held = 0.0
 
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	if mode == Mode.FINISHER_CUT:
-		mode = Mode.FOLLOW
+		mode = Mode.HARD_CAM
+		_held = 0.0
 
 func cut_to_finisher() -> void:
 	mode = Mode.FINISHER_CUT
+	_held = 0.0
 
 func cut_to_three_count() -> void:
 	mode = Mode.THREE_COUNT_CUT
+	_held = 0.0
 
-func resume_follow() -> void:
-	mode = Mode.FOLLOW
+## Back to the MASTER. This was `resume_follow`, and it went to the only shot
+## there was; coming out of a cut now means coming out onto the hard camera,
+## which is where a broadcast goes.
+func resume_master() -> void:
+	mode = Mode.HARD_CAM
+	_held = 0.0

@@ -713,6 +713,42 @@ static func _new_surface() -> SurfaceTool:
 ## keep their analytic clip to the rink's own plan -- at a given x the decking
 ## reaches BOWL_STRAIGHT_Z + sqrt(r^2 - dx^2), so a joint stops where the
 ## decking does instead of running out over the seating.
+# --- Commentary desk ---------------------------------------------------------
+## The desk was the cheapest missing thing in the wide shot, and it is here
+## because the hard camera now exists to see it.
+##
+## Measured against `gauntlet/refs/lighting/aew_low_angle_led_wall.jpg`, which
+## is the one reference in the repo that shows ringside from the floor: the
+## desk is a long fascia'd table standing between the ring apron and the first
+## row of floor seats, with the commentary team seated on its OUTER side
+## facing the ring. It is not centred on the hard camera -- in
+## `aew_grand_slam_broadcast.png` it sits beside the ring at frame right, one
+## ring-side round from the lens.
+##
+## So it goes on +Z. The hard camera is anchored on -X and looks up +X, which
+## puts its screen-right at +Z (the same solve that turned the mat's artwork),
+## and that is the side of the ring the reference frame shows it on.
+##
+## Placed by what it has to fit between rather than by a measurement off the
+## still: the apron ends at 3.20 and the barricade stands at 6.00, so a 0.72
+## desk centred at 4.40 leaves 0.84 of walkway behind it and 0.84 in front.
+const DESK_Z := 4.40
+const DESK_LENGTH := 4.20
+const DESK_HEIGHT := 0.95
+const DESK_DEPTH := 0.72
+## The worktop, and how far it overhangs the fascia. A desk reads as a desk
+## from the lip's shadow line, which needs the top to stand proud of the panel
+## under it.
+const DESK_TOP_THICKNESS := 0.055
+const DESK_TOP_OVERHANG := 0.045
+## Monitors: three low boxes along the back edge, one per commentator. Small,
+## because at hard-camera range they are three specular chips on a dark table
+## and nothing more -- but without them the desk is a slab.
+const DESK_MONITORS := 3
+const DESK_MONITOR_WIDTH := 0.46
+const DESK_MONITOR_HEIGHT := 0.28
+const DESK_MONITOR_DEPTH := 0.05
+
 const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
 
 ## Part name -> [material key, house reach]. Unchanged from the surfaces these
@@ -727,6 +763,14 @@ const RINGSIDE_MATERIALS := {
 	"RingsideMat": ["arena_floor", 0.45],
 	"FloorSeams": ["arena_floor", 0.35],
 	"Barricades": ["arena_barricade", 1.5],
+	# The desk fascia takes the barricade's own surface at a lower reach: it
+	# is the same class of ringside steel-and-panel, but it stands in shadow
+	# behind the apron rather than catching the rig side-on the way the cap
+	# rail does.
+	"CommentaryDesk": ["arena_barricade", 0.7],
+	# The worktop and the monitor faces are the one bright thing at the desk,
+	# which is what makes it read as a desk and not a second barricade.
+	"CommentaryDeskTop": ["arena_barricade", 1.2],
 }
 
 

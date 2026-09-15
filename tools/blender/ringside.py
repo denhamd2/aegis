@@ -53,6 +53,10 @@ WANTED = [
     "BOWL_STRAIGHT_X", "BOWL_STRAIGHT_Z",
     "BARRICADE_RADIUS", "BARRICADE_HEIGHT", "BARRICADE_PANEL", "BARRICADE_JOIN",
     "BARRICADE_GAP", "RINGSIDE_MAT_LIFT", "RAMP_HALF_WIDTH",
+    "DESK_Z", "DESK_LENGTH", "DESK_HEIGHT", "DESK_DEPTH",
+    "DESK_TOP_THICKNESS", "DESK_TOP_OVERHANG",
+    "DESK_MONITORS", "DESK_MONITOR_WIDTH", "DESK_MONITOR_HEIGHT",
+    "DESK_MONITOR_DEPTH",
 ]
 
 # Placeholder colours only; arena_builder.gd overrides every part by name.
@@ -61,6 +65,8 @@ PART_COLORS = {
     "RingsideMat": (0.035, 0.035, 0.040, 1.0),
     "FloorSeams": (0.09, 0.09, 0.10, 1.0),
     "Barricades": (0.30, 0.31, 0.34, 1.0),
+    "CommentaryDesk": (0.10, 0.10, 0.12, 1.0),
+    "CommentaryDeskTop": (0.38, 0.39, 0.42, 1.0),
 }
 SMOOTH = frozenset()
 PROJECTED = frozenset(PART_COLORS)
@@ -125,6 +131,59 @@ def build_ringside_mat(cfg: dict[str, float], parts: dict[str, Part]) -> None:
         Vector((0.0, cfg["FLOOR_Y"] + cfg["RINGSIDE_MAT_LIFT"] * 0.5, 0.0)),
         Vector((reach * 2.0, cfg["RINGSIDE_MAT_LIFT"], reach * 2.0)),
     )
+
+
+def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The commentary desk, on +Z between the apron and the barricade.
+
+    Three pieces and no more, because at hard-camera range that is all that
+    survives: a fascia panel to the floor, a worktop standing proud of it, and
+    a row of low monitor boxes along the back edge. The lip is the part that
+    does the work -- a desk reads as a desk from the shadow line under an
+    overhanging top, and a single box reads as a crate.
+
+    The team sits on the OUTER side (+Z) facing the ring, which is where
+    `aew_low_angle_led_wall.jpg` puts them, so the fascia faces the ring and
+    the monitors stand along the far edge in front of the commentators.
+    """
+    desk = parts["CommentaryDesk"]
+    top = parts["CommentaryDeskTop"]
+    z = cfg["DESK_Z"]
+    depth = cfg["DESK_DEPTH"]
+    height = cfg["DESK_HEIGHT"]
+    length = cfg["DESK_LENGTH"]
+    floor_y = cfg["FLOOR_Y"]
+    top_y = floor_y + height
+    thickness = cfg["DESK_TOP_THICKNESS"]
+    overhang = cfg["DESK_TOP_OVERHANG"]
+
+    # Fascia: floor to just under the worktop.
+    desk.box(
+        Vector((0.0, (floor_y + top_y - thickness) * 0.5, z)),
+        Vector((length, height - thickness, depth)),
+        bevel=0.012,
+    )
+    # Worktop, proud of the fascia on every side.
+    top.box(
+        Vector((0.0, top_y - thickness * 0.5, z)),
+        Vector((length + overhang * 2.0, thickness, depth + overhang * 2.0)),
+        bevel=0.008,
+    )
+    # Monitors along the back (+Z) edge, facing the ring the way a monitor a
+    # commentator reads faces them.
+    count = int(cfg["DESK_MONITORS"])
+    m_w = cfg["DESK_MONITOR_WIDTH"]
+    m_h = cfg["DESK_MONITOR_HEIGHT"]
+    m_d = cfg["DESK_MONITOR_DEPTH"]
+    pitch = length / float(count)
+    back_z = z + depth * 0.5 - m_d * 0.5 - 0.04
+    for i in range(count):
+        x = (i + 0.5) * pitch - length * 0.5
+        top.box(
+            Vector((x, top_y + m_h * 0.5, back_z)),
+            Vector((m_w, m_h, m_d)),
+            bevel=0.005,
+        )
 
 
 def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
@@ -197,6 +256,7 @@ def main(argv: list[str]) -> int:
     build_seams(cfg, parts)
     build_ringside_mat(cfg, parts)
     build_barricades(cfg, parts)
+    build_commentary_desk(cfg, parts)
     venue.finish(parts, PART_COLORS, smooth=SMOOTH, projected=PROJECTED)
 
     out = pathlib.Path(args.out)

@@ -5627,3 +5627,152 @@ nearest point as centre-less-radius rather than as a square corner.
 
 12 cases, 0 failures. `ring.glb` rebuilt at 8120 triangles, byte-identical
 across two runs.
+
+
+## Round: the rig stops being a follow-cam
+
+Six recommendations out of the camera analysis, implemented. The through-line
+is that `MatchCamera` had **one shot** — a follow-cam strapped to the pair —
+and a televised match does not have one shot.
+
+### 1. The reference was the wrong promotion, and the wrong medium
+
+`camera.md`'s every number comes from `gauntlet/refs/raw/`, which is WWE 2K
+gameplay video and WWE promotional stills. `ring.md`, `stage.md`, `arena.md`
+and `lighting.md` are all measured against AEW *Dynamite* photographs. The
+camera was the one subsystem calibrated against a different promotion AND a
+different medium — a video game rather than a broadcast — and the file did not
+say so. It says so now, at the top, before anything else.
+
+`aew_grand_slam_broadcast.png` has been in the repo since the lighting pass.
+`lighting.md` measures its luminance distribution; nobody had measured its
+**framing**. Measured now, by the same pixel-grid method the rest of the file
+uses:
+
+| quantity | value | how |
+| --- | --- | --- |
+| subject fill | 0.072 | the standing referee spans rows 412–467 of 768 |
+| depression | ~40° | the mat is a square seen corner-on; its projected diagonals give 42.5° and 38.5° |
+| stage side | frame left | screen and portal left of the ring, desk right |
+
+And the honest part: all four AEW stills are establishing wides or floor-level
+ringside. **There is still no AEW reference for the framing a match is covered
+in.** That gap is named in `camera.md` rather than papered over, with the
+arithmetic to re-solve the master's lens the moment one arrives.
+
+### 2 & 3. A hard camera, and a lens that belongs to the shot
+
+These are one change, because the second is what makes the first possible.
+
+The rig's `fov` lived on the Camera3D, so the lens was a property of the
+CAMERA rather than of the shot it was taking — which is exactly why there
+could only ever be one shot. `shot_fov()` now returns the lens per mode.
+
+That matters because distance and focal length are independent, and the
+difference is the whole look of a broadcast. Holding a wrestler at the same
+fraction of frame from 29m instead of 3.5m takes a long lens, and the
+compression it brings — a flat wall of crowd stacked behind the ring — is the
+single most recognisable property of a master shot. A 32mm lens from the back
+of the bowl frames the building.
+
+`Mode.HARD_CAM` is anchored at (-28.5, 8.3, 0), and that is **not a framing
+choice** — it is a seat in the building `arena_bowl.py` already builds:
+`BOWL_STRAIGHT_X` 4.425 + `BOWL_FIRST_ROW` 10.13 puts row 1 at 14.56 out,
+twelve `ROW_RUN` 0.95 rows plus `CONCOURSE_DEPTH` 2.6 reach 28.56, and twelve
+`ROW_RISE` 0.48 rises over `FLOOR_Y` -1.10 reach 8.26. It looks down at 14.4°.
+The lens is 14°, a 98mm equivalent, which frames a wrestler at 0.247 — between
+the reference's 0.072 establishing fill and the handheld's measured 0.32–0.41
+standoff, which is where a master belongs.
+
+The framing solve had to stop reading the live `fov` in the same breath. The
+containment guard and the fill fit both reproduce measurements taken on a
+41° lens; solved against the master's 14 the guard demanded 8.6m where the fit
+wants 6.7, so the engineering limit started choosing the shot. Caught by the
+test that exists to catch exactly that.
+
+### 4. The handheld stays low, and that is now correct
+
+The recommendation was "raise the follow-cam above the top rope, OR accept it
+as the ringside handheld and let the hard camera be the master". Taking the
+second branch, because it is the more faithful one and it costs no
+measurement: a real ringside handheld **does** shoot through the ropes. The
+1.45m eye height camera.md measured is right for what that shot now is. It is
+the master, 30m out and 8m up, that has to see over them — and it does.
+
+What did change is the handheld's BEARING. It used to be read back off the
+camera's own position, which worked only while nothing ever moved the camera.
+One cut to the hard camera and the off-axis 3/4 angle `match.tscn` was placed
+for would have been gone forever; the handheld's bearing is its own property
+now.
+
+### 5. The commentary desk
+
+The cheapest missing thing in the wide shot, and it was missing because
+nothing had ever taken a wide shot. `aew_low_angle_led_wall.jpg` shows it from
+the floor; `aew_grand_slam_broadcast.png` shows where it sits.
+
+On +Z, which is the master's screen-right — the same solve that turned the
+mat's artwork the right way up. Placed by what it has to fit between rather
+than by a measurement: apron at 3.20, barricade at 6.00, so a 0.72 desk
+centred at 4.40 leaves 0.84 of walkway either side. Fascia, an overhanging
+worktop, three monitor boxes. The overhang is the part that does the work — a
+desk reads as a desk from the shadow line under its lip, and flush it is a
+crate.
+
+### 6. The shot clock
+
+Between events the rig alternates master (7.0s) and handheld (4.5s). Events
+pre-empt it and reset it, so a scheduled cut can never land in the middle of a
+finish, and a finisher or three-count cut comes out onto the MASTER rather
+than onto whatever was on screen before it.
+
+The hold times are **project values and are not defended as measured**.
+`camera.md` has marked cut duration pending since it was written, and a still
+cannot carry a duration — all four AEW references are stills. What is defended
+is the shape: master longer than handheld, both in seconds.
+
+And a cut is now INSTANT. The rig lerped into every mode change, which was
+harmless when there was one position to lerp from and is a 28m fly-in now. A
+move between two angles is the one thing a vision mixer cannot do.
+
+### Tests
+
+19 in `test_camera_framing.gd`, 4 in a new `test_ringside_desk.gd`.
+
+Two existing ones had to change meaning rather than numbers, which is worth
+recording:
+
+- `test_a_cut_still_tracks_the_wrestlers` asserted the camera MOVES when the
+  pair does. A hard camera that moves is not a hard camera. It is now
+  `test_no_shot_ever_stops_tracking` and asserts what both kinds of shot owe:
+  wherever the pair goes, the shot is pointed at them — compared in PLAN,
+  because every shot aims above the pair and a 3D bearing to their feet is off
+  by 15° even when the framing is perfect.
+- the fill and containment tests now state which SHOT they are measuring.
+  Fill is a property of a shot, there are four, and the rig's default is no
+  longer the one camera.md measured.
+
+`ringside.glb` rebuilt at 1528 triangles, byte-identical across two runs.
+Every shot closed on a rendered frame through the rig's own camera.
+
+### The fog's invariant, which the master broke
+
+Worth recording because it is the kind of thing that stays broken quietly.
+
+`arena_lighting.gd`'s depth fog (compatibility renderer only — forward_plus
+uses the volumetric rig) documents its `FOG_BEGIN` of 13.0 as chosen so that
+no ring geometry is ever inside the fog: "the camera sits 3.2-9.0m from the
+pair's midpoint and the far ropes are at most 3.1m past that midpoint, so no
+ring geometry is ever more than ~12.1m from the lens."
+
+The hard camera is 28.5m out, which puts the far side of the ring ~32m from
+the lens — nineteen metres inside a fog begin written to stay outside it. A
+constant cannot be right for both shots: 13.0 is what gives the handheld its
+depth, and anything that clears the master's ring would leave the handheld's
+barricade unfogged, which is the whole reason the fog exists.
+
+So it tracks the shot, the same way the lens does — `_process` sets
+`fog_depth_begin` to the camera's own distance plus the ring's reach, floored
+at the measured 13.0. At the handheld's 3.2-9.0m the floor wins and every
+number measured on that shot is untouched; at the master's 28.5 the ring falls
+outside the fog exactly as the note always claimed.
