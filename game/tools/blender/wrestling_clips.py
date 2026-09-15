@@ -588,8 +588,8 @@ CLIPS = {
         # is "2-4 frames impact pose, 8-12 frames stagger, snap to impact";
         # the previous version took five frames to reach its deepest pose,
         # which is an ease rather than a snap.
-        (2,  P(pelvis=(0.02, -0.06, 0.850), hips=(4, 6, 0),
-               spine=(16, 14, -4), head=(22, 20, -12),
+        (2,  P(pelvis=(0.02, -0.06, 0.850), hips=(3, 6, 0),
+               spine=(12, 14, -4), head=(20, 20, -12),
                hand_r=(0.24, 0.18, 1.18), hand_l=(-0.20, 0.24, 1.22))),
         # Deepest: guard broken, weight on the back foot, chin turned away,
         # and the whole torso thrown back off the shot.
@@ -602,8 +602,8 @@ CLIPS = {
         # body shot -- which is the "the opponent is hit and nothing happens"
         # report, and it is a comparison inside this clip set rather than an
         # appeal to how a punch ought to look.
-        (4,  P(pelvis=(0.05, -0.12, 0.838), hips=(8, 10, 0),
-               spine=(26, 20, -8), head=(28, 26, -16),
+        (4,  P(pelvis=(0.05, -0.12, 0.838), hips=(6, 10, 0),
+               spine=(18, 20, -8), head=(24, 26, -16),
                hand_r=(0.30, 0.12, 1.10), hand_l=(-0.26, 0.16, 1.14),
                fist_r=0.55, fist_l=0.55,
                foot_r=(0.28, -0.32, 0.104), foot_l=(-0.18, 0.22, 0.118))),

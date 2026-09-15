@@ -5776,3 +5776,150 @@ So it tracks the shot, the same way the lens does — `_process` sets
 at the measured 13.0. At the handheld's 3.2-9.0m the floor wins and every
 number measured on that shot is untouched; at the master's 28.5 the ring falls
 outside the fog exactly as the note always claimed.
+
+## Round: the pose was reclining and the punches landed on a man who did not move
+
+Two reports, one root cause between them. "Cody and Roman are standing in a
+weird pose"; "when punches land, check the opponent is hit and recoils".
+
+Three instruments were needed before any of it could be argued about, because
+every existing one looked at a single wrestler or at a number with no picture
+attached.
+
+### The probes
+
+`tools/probe/pose_compare.tscn` plays one clip on every rig the game ships —
+the mannequin, Cody, Roman — through each model's own adapter, samples the live
+skeleton, and normalises by that rig's own height so a taller model does not
+read as a different pose. It also reports how far each bone travels from frame
+0, which is the number a reaction lives or dies on.
+
+`tools/probe/exchange_shot.tscn` squares two roster models up at a distance the
+move's own measured reach covers, throws one strike, and grabs **every tick**
+from wind-up to recovery with both FSM states and the contact geometry printed
+beside each frame. Roman to Cody: the jab's contact lands on frame 10 and Cody
+is in `HIT_REACT` on tick 11; the cross lands on 12 and he reacts on 13. The
+hit machinery was never the suspect and now there is a picture of it working.
+
+`tools/probe/clip_shot.tscn` was **lying**. It borrowed the authored library
+onto a roster model raw, and those tracks name `Armature/Skeleton3D:<bone>`,
+which resolves on the mannequin and on nothing else. Every track silently
+failed to resolve, so the probe rendered Cody's bind pose and Roman's flat T
+and labelled them with clip names. It goes through the model's adapter now and
+counts resolving tracks per clip, loudly. Two clean-looking contact sheets,
+neither of them of a clip.
+
+### Roman was standing 22 cm short of the pose
+
+Measured on `Idle_Ready`: Cody's hands land within **0.0 cm** of the
+mannequin's and Roman's **22.1 cm** below them, while his head and pelvis track
+to within a centimetre. So the torso retarget was sound and the arms were not.
+
+The cause is a rest-**pose** difference on top of the rest-**orientation** one
+`RomanModel`'s conversion already handles. Read off the two skeletons:
+
+| bone | base rig | Roman |
+| --- | --- | --- |
+| upperarm | y 1.441 | y 1.396 |
+| lowerarm | y 1.441 | y 1.330 |
+| hand | y 1.441 | y 1.270 |
+
+The base rig rests in a flat T. Roman rests in an A, the arm descending 0.126 m
+across its span — about 15°. Preserving each key's offset from its own rig's
+rest preserves that 15°, and since these clips are authored as absolute hand
+positions in metres solved against the base rig's geometry, what has to survive
+the retarget is where the hand *ends up*.
+
+So each bone's rest is aligned first: Roman's rest bone direction rotated onto
+the base rig's, measured between the bone and its first mapped child rather
+than read off a bone axis, which the two rigs disagree about anyway. The roll
+correction is untouched — this removes only the swing. After: hands 4.6 cm out,
+and the residual is constant from frame 0 onward, which is Roman's own
+proportions (his shoulders sit at 0.925 of his height against the mannequin's
+0.984) rather than the retarget.
+
+### The sign was upside down, and had been since the clips were authored
+
+`rig_pose._euler()`'s docstring says a positive pitch "bows forward". It does
+the opposite. Measured off the rest pose, one axis at a time, head taken
+relative to pelvis:
+
+| pose | head |
+| --- | --- |
+| spine lean −30 | 0.241 m in **front** of the pelvis |
+| spine lean 0 | 0.055 m in front |
+| spine lean +30 | 0.133 m **behind** it |
+| hips pitch −30 | 0.374 m in front |
+| hips pitch +30 | 0.278 m behind |
+| head pitch ±30 | moves the head bone's origin under 2 cm either way |
+
+That last row matters on its own: head pitch aims the face, it does not carry
+the skull across the frame. What carries a head is the spine chain underneath
+it — which is why a reaction table reading `head=(-24, …)` looked, on paper,
+like a man being knocked backwards and measured as 6.4 cm.
+
+`Run_Drive` found this in its own clip and fixed itself — "needed a negative
+lean and for years had a positive one" — and its note says the stance still
+carried +12, a recline every clip inherits, "because correcting that moves all
+29 and is its own job". The wrong docstring then sent the next authoring pass
+the same way round again. The **text** is fixed rather than the sign: every
+clip is expressed against this convention, and flipping it would move the lot.
+
+### What changed, and what it measures
+
+**The stance.** `spine` 12 → −10, so a wrestler at rest is coiled over his
+front foot instead of reclined off it: his head sat 4.5 cm *behind* his pelvis
+and now sits 8.0 cm in front. The guard widens with it, from 0.30 m apart —
+inside the 0.384 m shoulder width, elbows pinned to the ribs, rendered as a man
+holding something in front of his chest — to 0.45 m.
+
+**The reactions.** `Hit_React_Head` moved the head **6.4 cm** while
+`Hit_React_Torso`, on the same rig through the same code path, moved it 33.8 cm
+— a head shot shifting the head a fifth as far as a body shot is "the opponent
+is hit and nothing happens", and it is a comparison inside this clip set rather
+than an appeal to how a punch ought to look. It was leaning the wrong way *and*
+taking five frames to get there, against `combat-animation.md`'s "2–4 frames
+impact pose, snap to impact". Impact now lands on frame 2 and holds to 4.
+
+The two reactions are now separated by **direction** rather than size: a head
+shot drives the head 0.20 m backward off his heels, a body shot folds him 0.12 m
+down around it. Head travel 36.0 cm and 22.6 cm respectively — which is the
+head shot measuring *larger*, because a torso rocking back off a forward-leaning
+stance sweeps a wider arc than one folding down. Size was the wrong thing to
+assert and the test says so.
+
+**The strikes.** All four lean forward through the punch rather than back, and
+the two kicks lean *away* from the boot as the counterweight they were already
+described as being. The punches hold the stance's own lean through contact
+rather than bowing further into it: bowing carried the head out with the fist
+and the punch stopped reading, while the measured reach never moved.
+
+`Tie_Up_Collar` and `Grapple_Hold_Neutral` were tried the same way and put
+back. Poses here are absolute hand positions, so leaning the chest in carries
+the shoulders toward the hands and folds the arms up — the reach that makes a
+lock-up read is worth more there than the lean, and the rendered frames said
+so. That is the general shape of this file: the sign being wrong does not make
+every value that compensated for it wrong.
+
+### What holds it
+
+`tests/test_clip_readability.gd` asserts what the clips **do**, in centimetres,
+rather than what they are made of. `test_authored_clips.gd` already checks that
+every clip exists, is the right length, loops when it must and poses the whole
+body — all of which was true of a reaction that moved the head 6.4 cm. The new
+floors are set below measured values, to catch a clip going quiet again:
+
+| clip | measured | asserted |
+| --- | --- | --- |
+| `Hit_React_Head` head | 36.0 cm | > 15 cm, and backward > 0.15 m |
+| `Hit_React_Torso` head | 22.6 cm | > 15 cm, and down > 0.08 m |
+| `Strike_Jab` left fist | 31.7 cm | > 15 cm, and further than the right |
+| `Strike_Forearm` right fist | 43.1 cm | > 15 cm, and further than the left |
+| stance | head 8.0 cm ahead of the hips | > 4 cm |
+| guard | hands 0.45 m apart | > 0.38 m |
+
+Re-measured after the rebake (`tools/anim/measure_contact_offsets.gd`), every
+strike's limb now peaks on exactly the tick its `MoveDef` applies damage: jab
+0.654 m, cross 0.679 m, kick 0.820 m, heavy kick 0.818 m. The four `.tres`
+offsets that moved are updated, `gait_audit` passes, and the glb rebuilds
+byte-identical.
