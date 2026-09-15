@@ -793,6 +793,125 @@ func _build_floor_seats() -> void:
 		index += 1
 	add_child(_build_chairs("FloorChairs", _chair_mesh(), detailed))
 	add_child(_build_chairs("FloorChairsFar", _chair_proxy_mesh(), distant))
+	_build_floor_crowd(detailed + distant)
+
+
+## Ringside model: six seated people, built by tools/blender/floor_crowd.py.
+const FLOOR_CROWD_MODEL := "res://assets/environment/floor_crowd.glb"
+## How many of the ringside chairs have somebody in them.
+##
+## Higher than the bowl's 0.86 because these are the seats a camera is nearest
+## to and the ones gauntlet/refs/lighting/ shows packed -- ringside is where a
+## show puts the people it wants on television. The empty ones still read:
+## the chair is modelled underneath every figure either way.
+const FLOOR_CROWD_FILL := 0.92
+## Seeded separately from PLACEMENT_SEED so re-rolling who is sitting where
+## does not move the chairs themselves.
+const FLOOR_CROWD_SEED := 20260916
+
+
+## Put people in the ringside chairs.
+##
+## One MultiMesh per variant rather than one for the lot, because a MultiMesh
+## draws a single mesh: six meshes is six draw calls and six poses, against
+## one draw call and a thousand identical twins.
+##
+## The figures reuse the chairs' own transforms -- same curve, same yaw, same
+## exclusions for the rink edge, the ramp and the aisles -- so a fan cannot
+## end up in a spot a chair was not. The Blender figure is built with its
+## backside at a folding chair's seat height, so it needs no vertical offset
+## here (crowd.CHAIR_SEAT_HEIGHT).
+func _build_floor_crowd(seats: Array[Transform3D]) -> void:
+	var packed: PackedScene = load(FLOOR_CROWD_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_arena.sh."
+				% FLOOR_CROWD_MODEL)
+		return
+	var source: Node3D = packed.instantiate()
+	var meshes: Array[Mesh] = []
+	for child in source.find_children("*", "MeshInstance3D", true, false):
+		var instance := child as MeshInstance3D
+		if instance.mesh != null:
+			meshes.append(instance.mesh)
+	if meshes.is_empty():
+		push_error("ArenaBuilder: %s carries no fan meshes." % FLOOR_CROWD_MODEL)
+		source.free()
+		return
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = FLOOR_CROWD_SEED
+	# Which variant each occupied seat gets, and how it is dressed.
+	var buckets: Array[Array] = []
+	var colours: Array[Array] = []
+	for _i in meshes.size():
+		buckets.append([] as Array[Transform3D])
+		colours.append([] as Array[Color])
+
+	for seat in seats:
+		if rng.randf() > FLOOR_CROWD_FILL:
+			continue
+		var pick := rng.randi_range(0, meshes.size() - 1)
+		# Size and a little extra yaw on top of the chair's own, so two
+		# neighbours on the same variant are still not the same person.
+		var scale := rng.randf_range(0.93, 1.07)
+		var turned := seat.rotated_local(Vector3.UP, rng.randf_range(-0.18, 0.18))
+		buckets[pick].append(Transform3D(turned.basis.scaled(Vector3.ONE * scale),
+				turned.origin))
+		colours[pick].append(_crowd_shirt(rng))
+	source.free()
+
+	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887")
+	for i in meshes.size():
+		if buckets[i].is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		# Per-instance colour is why the six meshes carry no hue of their
+		# own: the shirt is dressed here, so six poses clothe a thousand
+		# people. The meshes are not flat white though -- they carry white
+		# for cloth and a darker grey for skin, and this multiplies against
+		# it, which is what gives a fan a face.
+		mm.use_colors = true
+		mm.mesh = meshes[i]
+		mm.instance_count = buckets[i].size()
+		for j in buckets[i].size():
+			mm.set_instance_transform(j, buckets[i][j])
+			mm.set_instance_color(j, colours[i][j])
+		var node := MultiMeshInstance3D.new()
+		node.name = "FloorCrowd%02d" % i
+		node.multimesh = mm
+		node.material_override = material
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(node)
+
+
+## A shirt, from the same palette tools/blender/crowd.py dresses the bowl in --
+## restated here rather than shared because the bowl's is baked into a .glb by
+## a Blender script this file cannot import, and a crowd whose two halves wear
+## different palettes is worse than one number written twice.
+const CROWD_SHIRTS: Array[Color] = [
+	Color(0.20, 0.21, 0.26), Color(0.28, 0.24, 0.24), Color(0.17, 0.20, 0.24),
+	Color(0.31, 0.29, 0.27), Color(0.22, 0.26, 0.28), Color(0.26, 0.22, 0.29),
+	Color(0.15, 0.16, 0.19), Color(0.33, 0.31, 0.33), Color(0.19, 0.23, 0.21),
+	Color(0.30, 0.26, 0.22), Color(0.24, 0.20, 0.22), Color(0.18, 0.19, 0.27),
+	Color(0.29, 0.30, 0.31), Color(0.21, 0.18, 0.18),
+]
+
+
+func _crowd_shirt(rng: RandomNumberGenerator) -> Color:
+	var base: Color = CROWD_SHIRTS[rng.randi_range(0, CROWD_SHIRTS.size() - 1)]
+	var k := rng.randf_range(0.82, 1.18)
+	# sRGB in, linear out, and this conversion is the whole reason the two
+	# halves of the crowd can share one palette.
+	#
+	# crowd.py writes these same numbers into a colour attribute, where the
+	# glTF importer decodes them -- 0.72 arrives in the mesh as 0.479. A
+	# MultiMesh instance colour gets no such decode: it reaches COLOR in the
+	# shader exactly as written. Handing the shader 0.21 raw is handing it a
+	# LINEAR 0.21, which displays around 0.5 -- so the ringside fans came out
+	# pale grey blocks against a bowl wearing the identical palette, in the
+	# seats nearest the camera.
+	return Color(base.r * k, base.g * k, base.b * k).srgb_to_linear()
 
 
 ## One row of floor chairs, walked along the barricade's offset curve.
@@ -903,7 +1022,7 @@ const CROWD_PARTS := ["Crowd", "CrowdFar"]
 ## golden-ratio phase per figure into a UV channel instead -- colour alpha was
 ## tried first and arrives back 1.0 for every vertex, since nothing in either
 ## the exporter or the importer preserves an alpha no material reads.
-func _crowd_material() -> ShaderMaterial:
+func _crowd_material(phase_source: String = "UV.x") -> ShaderMaterial:
 	var shader := Shader.new()
 	shader.code = """
 shader_type spatial;
@@ -923,7 +1042,7 @@ varying vec3 shirt;
 
 void vertex() {
 	shirt = COLOR.rgb;
-	float phase = UV.x * 6.2831853;
+	float phase = PHASE_SOURCE * 6.2831853;
 	// Bob scaled by height above the seat, so feet stay planted and heads
 	// move most -- a figure translated bodily reads as a hovering cutout.
 	float lift = clamp(VERTEX.y * 1.4, 0.0, 1.0);
@@ -940,6 +1059,7 @@ void fragment() {
 	SPECULAR = 0.0;
 }
 """
+	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
 	return mat

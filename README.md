@@ -5100,3 +5100,71 @@ self-illuminated rather than lit (see `lighting.md`'s ablation), which is the
 next item and the one that governs.
 
 372 tests pass. The bowl rebuilds byte-identical across two runs.
+
+## Round: the ringside chairs have people in them
+
+The bowl got its crowd last round. The seats nearest the camera — the folding
+chairs on the floor, between the barricade and the ring — were still empty,
+and there was a half-finished slice in the working tree meant to fill them.
+
+### Instanced, not baked
+
+The bowl's crowd is baked into `arena_bowl.glb` because twenty rows on a curve
+means no two people are alike. The floor is the opposite problem:
+`arena_builder.gd` already computes a transform for every folding chair
+(`_floor_seat_row`), so the fans want to be *instanced* against transforms
+that exist. A MultiMesh draws one mesh, so the variety moves: six poses
+(`tools/blender/floor_crowd.py`) times per-instance size, yaw and shirt.
+
+The figures are built facing `+Z`, the frame the chair prop is modelled in, so
+they drop onto a chair's transform untouched, lifted by `CHAIR_SEAT_HEIGHT`
+onto the seat pan. The shader took a `phase_source` parameter because a
+MultiMesh instance cannot vary `UV.x`; ringside uses `INSTANCE_ID × φ`.
+
+### Three things were wrong, and only one of them was visible in the code
+
+**The build script did not build the model.** `floor_crowd.py`'s docstring
+opened by claiming `build_arena.sh` built it. It built the bowl and `exec`'d.
+A committed asset with no reproducible build path is one nobody can safely
+change, so the script was extended rather than the docstring corrected.
+
+Extending it exposed why nobody had: *every* exporter here segfaults on exit
+under the `bpy` module, after the `.glb` is written and closed. Under
+`set -euo pipefail` that aborts a build after its first model — which means
+`build_venue.sh all` had been silently building one of four for anyone
+without a `blender` on PATH. `tools/blender/bpy_exit.py` leaves via `os._exit`
+once the export has returned, so a real crash still surfaces as one.
+
+**The fans rendered as pale white blocks.** Only the frame showed this. The
+palette is deliberately written twice — `CROWD_SHIRTS` in GDScript, the same
+numbers in `crowd.py` — but the two halves do not arrive the same way.
+`crowd.py`'s values go through the glTF importer, which decodes sRGB (0.72
+arrives in the mesh as 0.479). A MultiMesh instance colour gets no decode: it
+reaches `COLOR` exactly as written, so a linear 0.21 displays around 0.5. Same
+palette, two colour spaces, and the ringside crowd came out half a stop bright
+in the seats closest to the camera. `_crowd_shirt` now returns
+`.srgb_to_linear()`.
+
+**The fans had no faces.** The figures are authored white for cloth and a
+darker grey for skin, and none of it was reaching the game.
+`floor_crowd.py` never wired a `ShaderNodeVertexColor` or passed
+`export_vertex_color="ACTIVE"`, so glTF wrote the layer as `COLOR_1` — a
+secondary attribute Godot's importer ignores. Every fan came back one flat
+value. `arena_bowl.py` has had the fix since the bowl's crowd shipped; this
+is the same two lines.
+
+That last one is the failure `test_arena_crowd.gd`'s header warned about, in a
+model written after the warning. It is invisible in Blender, invisible in the
+exporter's log, and nearly invisible on a frame. `test_floor_crowd.gd` asserts
+it directly: two distinct values per figure, the shirt at 1.0 and the skin
+below it. On the model as it shipped, that test fails.
+
+### Measured
+
+378 tests pass (372 before, plus six). `floor_crowd.glb` rebuilds
+byte-identical across two runs, and the script's restructuring leaves the other
+four models byte-identical too.
+
+`contact_probe --seeds 1,2,3` returns 985/1931/2494 ticks with the crowd and
+985/1931/2494 without it — checked by stashing the slice, not by assuming.
+Arena geometry does not reach the simulation.

@@ -132,9 +132,13 @@ class Figure:
     """
 
     def __init__(self, part, seat: Vector, along: Vector, out: Vector,
-                 colour, phase: float) -> None:
+                 colour, phase: float, lift: float = 0.0) -> None:
         self.part = part
-        self.seat = seat
+        # `lift` raises the whole figure off its reference point. The bowl
+        # sits people on the tread (0); a ringside folding chair puts its seat
+        # pan most of half a metre up, and a figure built for one and placed
+        # on the other is either buried or hovering.
+        self.seat = seat + Vector((0.0, lift, 0.0))
         self.along = along.normalized()
         # Toward the ring. A spectator faces the action, not the concourse.
         self.face = -out.normalized()
@@ -347,3 +351,63 @@ def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
                 built["Crowd" if detailed else "CrowdFar"] += 1
             carry = span - (at - pitch)
     return built
+
+
+# --- Standalone figures, for instancing ------------------------------------
+#
+# The bowl's crowd is baked into the hall's own mesh because it sits on twenty
+# different rows of a curve and no two people are alike. The ringside floor is
+# the opposite case: `arena_builder.gd` already computes a transform per
+# folding chair, so those figures want to be INSTANCED, and an instance needs
+# one mesh.
+#
+# The compromise is a handful of distinct people rather than one. Each variant
+# below is a full figure built at the origin facing +Z -- the frame the chair
+# prop is modelled in, so a figure drops onto a chair's transform unchanged --
+# and `arena_builder.gd` spreads the seats across them. Pose variety comes
+# from there being several; size and shirt vary per instance on top.
+
+## How many distinct ringside people to export. Six is enough that a bank of
+## chairs does not read as a repeat at the distance `ringside_low` frames it,
+## and few enough that each is still one draw call.
+FLOOR_VARIANTS = 6
+## Height of a folding chair's seat pan. The figures are lifted by this so
+## they sit ON the chair rather than through it.
+CHAIR_SEAT_HEIGHT = 0.45
+## Separate seed: the bowl's placement and these poses are different rolls,
+## and sharing one would couple "re-pose the ringside fans" to "re-seat the
+## entire bowl".
+FLOOR_SEED = 20260915
+
+
+def build_floor_variants(make_part) -> list:
+    """Build FLOOR_VARIANTS seated people, each into its own Part.
+
+    `make_part(name)` is supplied by the caller so this file does not need to
+    know how a Part is constructed or registered. Returns the part names in
+    order.
+
+    Colour is left FLAT here and overridden per instance in Godot: a MultiMesh
+    carries a colour per instance, which is a better place for it than the
+    mesh, and it means six meshes can dress a thousand different people.
+    """
+    rng = random.Random(FLOOR_SEED)
+    names = []
+    for index in range(FLOOR_VARIANTS):
+        name = "Fan%02d" % index
+        part = make_part(name)
+        figure = Figure(
+            part,
+            Vector((0.0, 0.0, 0.0)),
+            Vector((1.0, 0.0, 0.0)),   # along the row
+            Vector((0.0, 0.0, -1.0)),  # out; face is -out, so +Z
+            (1.0, 1.0, 1.0),
+            0.0,
+            lift=CHAIR_SEAT_HEIGHT,
+        )
+        # White shirt, mid skin: the instance colour multiplies this, so the
+        # mesh has to be neutral or every fan comes out tinted twice.
+        figure.colour = (1.0, 1.0, 1.0)
+        _seated(figure, rng, rng.uniform(0.94, 1.06), (0.72, 0.72, 0.72))
+        names.append(name)
+    return names
