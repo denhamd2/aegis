@@ -153,6 +153,22 @@ owner's decision to make; this file only makes sure nobody has to discover the
 marks by looking at a screenshot.
 
 
+## ring_canvas.png — THIRD-PARTY MARKS, supplied by the project owner
+
+The ring canvas artwork (`materials/ring_canvas.png`, 1254x1254) was supplied
+directly by the project owner and is mapped 1:1 over the 6m mat by
+`core/ring/ring_builder.gd` (`CANVAS_ART`).
+
+It carries **third-party trademarks** — the AEW marks — on the same terms as
+the apron banner above: no licence, no author, in the build because
+`ARCHITECTURE.md` permits third-party assets, fine for a prototype and for
+internal capture, and **not cleared for distribution**.
+
+It replaces a generated weave-and-wear texture as the mat's ALBEDO only. That
+generator is still called for the mat's roughness and normal maps, which is
+where most of its value was: it puts relief and specular breakup on the canvas
+that a flat photograph cannot.
+
 ## Entrance-set video — PROVENANCE UNVERIFIED
 
 `video/dynamite_tron.ogv` and `video/dynamite_tron_still.png` — the graphics

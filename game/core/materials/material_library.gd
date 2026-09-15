@@ -370,10 +370,29 @@ const SPECS := {
 	##
 	## Dielectric despite being bare metal, for the reason `ring_post` gives at
 	## length: this scene has no radiance map, so a conductor renders black.
+	## Coverage decision: bare bright steel, and BRIGHT is the operative word.
+	## 0.62 was solved against a reference where the steps are the
+	## second-brightest surface in a flat-lit frame. In the AEW reference they
+	## are the brightest thing at ringside by a distance -- a silver block
+	## against a dark floor, a near-black barricade and a deep blue apron --
+	## and 0.62 under this arena's lighting rendered them a muddy tan.
+	##
+	## The tile drops with the tint: at 0.8 m the plate's diamonds are large
+	## enough to read as a pattern painted on a box. 0.45 m puts them at the
+	## fine grid the photograph shows.
 	"ring_steps": {
-		"asset": "DiamondPlate009", "tint": Color(0.62, 0.62, 0.63),
-		"tile_metres": 0.8, "roughness": 0.42, "normal_scale": 1.2,
+		"asset": "DiamondPlate009", "tint": Color(0.80, 0.81, 0.83),
+		"tile_metres": 0.45, "roughness": 0.38, "normal_scale": 1.2,
 		"metallic": 0.0,
+		# albedo_map OFF, which is the change that actually made them silver.
+		# Raising the tint from 0.62 to 0.80 did nothing visible on its own:
+		# DiamondPlate009's colour map is a warm rusted steel, it MULTIPLIES,
+		# and the steps kept rendering a muddy tan whatever the tint said.
+		# This is the case the SPEC_DEFAULTS note above describes exactly --
+		# a surface whose tint is the point, where the map is a liability.
+		# The plate's normal and roughness maps still carry the grid the
+		# photograph shows; only its colour is dropped.
+		"albedo_map": false,
 	},
 
 	# --- Arena hall (consumed by core/arena/arena_builder.gd) -------------

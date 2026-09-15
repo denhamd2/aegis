@@ -89,18 +89,25 @@ const ROPE_OVERRUN := 0.022
 ## letterform, so it became stacked bars). Deleting the pad deletes the
 ## guardrail problem rather than managing it. A bare corner cannot resemble
 ## anyone's trade dress.
-## Was 0.115, when the sleeve was the whole of a bare corner and had to read
-## as the thing a rope ended in. It is behind a pad now, and at 0.115 its tip
-## reached far enough along the corner diagonal to break out through the pad's
-## ROUNDED edge -- the bevel pulls the cushion's corner back, so a fitting that
-## clears the flat face can still show at the arris. The hardware stays (a pad
-## covers a turnbuckle, it does not replace one); it just stops short.
-const NUB_LENGTH := 0.055
-const NUB_RADIUS := 0.038
-const CLEVIS_WIDTH := 0.05
-const CLEVIS_HEIGHT := 0.055
-const CLEVIS_DEPTH := 0.07
-const CLEVIS := Vector3(CLEVIS_WIDTH, CLEVIS_HEIGHT, CLEVIS_DEPTH)
+## The connector a rope visibly ends in, sitting ON the rope where it runs into
+## the pad -- not inside the post.
+##
+## Two goes at this were wrong in opposite directions. The sleeve started at
+## 0.115 pointing INWARD from the post face, which was right when the corner
+## was bare and became a fitting that broke out through the pad's rounded edge
+## once there was a pad. Shortening it to 0.055 buried it completely, and the
+## reference shows the opposite: a dark clamp is plainly visible at the point
+## each white rope meets the cushion.
+##
+## So the fitting moved onto the rope. The pad is 0.52 wide across the corner
+## diagonal, which puts its edge where a rope crosses at
+## ROPE_SPAN - PAD_WIDTH/2 * sqrt(2) = 2.732; the clamp straddles that line, so
+## it reads as the rope entering a clamp that enters the pad.
+const CLAMP_LENGTH := 0.09
+const CLAMP_RADIUS := 0.032
+## How far inboard of the pad's edge the clamp is centred. Small: the clamp
+## should overlap the cushion, not stand off it with daylight between.
+const CLAMP_INSET := 0.03
 
 # --- Turnbuckle pads ---------------------------------------------------------
 ## The pads are BACK, and the note above them is now history rather than
@@ -153,6 +160,28 @@ const POST_TOP := 1.58
 
 # --- Apron -------------------------------------------------------------------
 const APRON_OUT := 3.20
+## The padded roll along the apron's outer edge.
+##
+## The edge used to be a flat 0.2m band in dark neutral grey, described as "the
+## shadowed lip between a white mat and a dark skirt". The reference has no
+## such lip: the apron edge is a fat padded bolster, the skirt's own vinyl
+## wraps over it, and the corner chevron runs up the skirt and across it.
+## Flat and dark, it read as a hard black line drawn round the ring.
+##
+## The axis sits one radius inboard of APRON_OUT so the roll's widest point is
+## flush with the skirt plane and its crown stands above the skirt's top edge.
+const APRON_ROLL_RADIUS := 0.10
+const APRON_ROLL_AXIS := APRON_OUT - APRON_ROLL_RADIUS
+## Arc segments over the half-round. Six is where the crown highlight stops
+## reading as facets at `ring_corner`, the closest shot in the list.
+const APRON_ROLL_STEPS := 6
+## How much of the banner's height the roll takes. The skirt below starts from
+## the top of the graphic too, so this is a small overlap rather than a split:
+## the top of the artwork is near-uniform field either side of the chevrons, so
+## what carries across the seam is the COLOUR, which is the thing the eye
+## follows round a corner.
+const APRON_ROLL_V := 0.15
+const APRON_BANNER := "res://assets/environment/materials/ring_apron_banner.png"
 const APRON_TOP := -0.10
 const APRON_BOTTOM := -1.00
 
@@ -204,6 +233,17 @@ const CANVAS_SEED := 20260903
 ##    already the warmer of the two, and the mat is 212k of 921k pixels in
 ##    that frame. A warm mat would widen a gap that is already open.
 const CANVAS_WHITE := Color(0.975, 0.975, 0.972)
+## The supplied AEW canvas artwork, mapped 1:1 over the 6m mat.
+##
+## Surface 0 of the floor mesh already carries a full 0..1 UV across the square
+## precisely so a canvas lands in world space rather than tiling, which is what
+## lets this drop straight on with no scaling.
+##
+## It is DARKER than what it replaces and that is the point: the field reads
+## 0.636 in sRGB against CANVAS_WHITE's 0.975. The mat is an exposure anchor
+## (VISUAL_BAR.md, and the round that solved ring exposure to a reference
+## 0.46), so this moves a measured number -- see the round note in README.
+const CANVAS_ART := "res://assets/environment/materials/ring_canvas.png"
 ## The canvas body, multiplied into CANVAS_WHITE.
 ##
 ## SOLVED, not picked. The first pass at this put the field at 0.93 and the mat
@@ -347,7 +387,15 @@ func _bare_steel() -> StandardMaterial3D:
 func _canvas_material() -> StandardMaterial3D:
 	var m := _resolve("ring_canvas", _mat(CANVAS_WHITE, 0.86))
 	m.albedo_color = CANVAS_WHITE
-	m.albedo_texture = _canvas()
+	# The supplied canvas artwork if it is there, the generated weave if not.
+	#
+	# The generated texture does not go away: it still drives ROUGHNESS and the
+	# NORMAL below, which is where most of its value was. What it stops doing
+	# is standing in for a canvas nobody had -- the mark it used to draw was
+	# removed entirely when refs/ring.md called for an unbranded mat, leaving
+	# albedo carrying weave and wear on a blank field.
+	var art: Texture2D = load(CANVAS_ART) if ResourceLoader.exists(CANVAS_ART) else null
+	m.albedo_texture = art if art != null else _canvas()
 	if m.roughness_texture == null:
 		# The weave drives roughness as well as albedo. A canvas is not
 		# uniformly glossy -- the thread crowns catch the ring rig and the
@@ -418,26 +466,93 @@ func _build_canvas() -> void:
 	st.generate_tangents()
 	var mesh := st.commit()
 
-	# Surface 1: the canvas rolling over the edge onto the ring frame.
-	var edge := SurfaceTool.new()
-	edge.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Surface 1: the flat apron strip between the mat edge and the roll.
+	var walk := SurfaceTool.new()
+	walk.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for side: int in range(4):
-		var basis_dir: Vector3 = [Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0)][side]
+		var basis_dir: Vector3 = _SIDE_DIRS[side]
 		var tangent := Vector3(basis_dir.z, 0, -basis_dir.x)
-		var a: Vector3 = basis_dir * MAT_HALF + tangent * MAT_HALF + Vector3(0, MAT_TOP_LOCAL, 0)
-		var b: Vector3 = basis_dir * MAT_HALF - tangent * MAT_HALF + Vector3(0, MAT_TOP_LOCAL, 0)
-		_quad(edge, a, b, b - Vector3(0, 0.2, 0), a - Vector3(0, 0.2, 0),
-			Vector2(0, 0), Vector2(4, 0), Vector2(4, 1), Vector2(0, 1))
-	edge.generate_tangents()
-	edge.commit(mesh)
+		var inner: float = MAT_HALF
+		var outer: float = APRON_ROLL_AXIS
+		# Wound from -tangent to +tangent: the other way round the normals
+		# come out pointing at the floor and the strip renders as nothing at
+		# all, which is exactly what the first attempt did.
+		_quad(walk,
+			basis_dir * inner - tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			basis_dir * outer - tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			basis_dir * outer + tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			basis_dir * inner + tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			Vector2(0, 0), Vector2(1, 0), Vector2(1, 4), Vector2(0, 4))
+	walk.generate_tangents()
+	walk.commit(mesh)
+
+	# Surface 2: the padded roll the apron edge actually is.
+	var roll := SurfaceTool.new()
+	roll.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for side: int in range(4):
+		var basis_dir: Vector3 = _SIDE_DIRS[side]
+		var tangent := Vector3(basis_dir.z, 0, -basis_dir.x)
+		for step: int in range(APRON_ROLL_STEPS):
+			var t0 := float(step) / float(APRON_ROLL_STEPS)
+			var t1 := float(step + 1) / float(APRON_ROLL_STEPS)
+			var p0 := _roll_point(basis_dir, t0)
+			var p1 := _roll_point(basis_dir, t1)
+			# u runs 0..1 along the side so the banner's chevrons land on the
+			# corners, exactly as they do on the skirt below.
+			_quad(roll,
+				p0 - tangent * APRON_OUT, p1 - tangent * APRON_OUT,
+				p1 + tangent * APRON_OUT, p0 + tangent * APRON_OUT,
+				Vector2(0, t0 * APRON_ROLL_V), Vector2(0, t1 * APRON_ROLL_V),
+				Vector2(1, t1 * APRON_ROLL_V), Vector2(1, t0 * APRON_ROLL_V))
+	roll.generate_tangents()
+	roll.commit(mesh)
 
 	floor_mesh.mesh = mesh
 	floor_mesh.set_surface_override_material(0, _canvas_material())
-	# The canvas rolling over the mat edge onto the frame. Dark neutral grey:
-	# in the reference this band is the shadowed lip between a white mat and a
-	# dark skirt, and it is what stops the two reading as one surface.
+	# The apron a wrestler stands on outside the ropes: the same light cloth as
+	# the mat, not the dark lip that used to stand in for it.
 	floor_mesh.set_surface_override_material(1, _resolve("ring_apron",
-		_mat(Color(0.17, 0.17, 0.175), 0.85), {"tint": Color(0.17, 0.17, 0.175)}))
+		_mat(Color(0.52, 0.52, 0.53), 0.9), {"tint": Color(0.52, 0.52, 0.53)}))
+	floor_mesh.set_surface_override_material(2, _apron_banner_material())
+
+
+## The four side directions, outward. Shared by the apron strip and the roll so
+## the two cannot disagree about which way a side faces.
+const _SIDE_DIRS := [Vector3(0, 0, 1), Vector3(1, 0, 0),
+	Vector3(0, 0, -1), Vector3(-1, 0, 0)]
+
+
+## A point on the apron roll's arc, `t` running 0 (inboard, level with the mat)
+## to 1 (underneath, where the skirt takes over).
+##
+## The arc is a half-round of radius APRON_ROLL_RADIUS about an axis set back
+## from the skirt plane by exactly that radius, so the roll's widest point
+## lands flush on APRON_OUT. That is what makes it read: the bulge stands proud
+## of the skirt's top edge and catches the light along its crown, which is the
+## single thing that tells a padded apron edge from a folded one.
+func _roll_point(basis_dir: Vector3, t: float) -> Vector3:
+	var angle := t * PI
+	return basis_dir * (APRON_ROLL_AXIS + APRON_ROLL_RADIUS * sin(angle)) \
+		+ Vector3(0, MAT_TOP_LOCAL - APRON_ROLL_RADIUS
+			+ APRON_ROLL_RADIUS * cos(angle), 0)
+
+
+## The apron banner, on the roll, so the graphic runs over the edge instead of
+## stopping at it.
+##
+## In the reference the chevron at the corner comes up the skirt, over the roll
+## and dies at the apron floor -- the roll is the same piece of printed vinyl,
+## not a separate trim. Mapping u 0..1 per side puts the graphic's chevron ends
+## on the corners here for the same reason it does on the skirt.
+func _apron_banner_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	var tex: Texture2D = load(APRON_BANNER)
+	if tex != null:
+		mat.albedo_texture = tex
+	mat.texture_repeat = false
+	mat.roughness = 0.9
+	mat.metallic = 0.0
+	return mat
 
 
 ## The canvas texture: weave, panel seams, wear and scuff. Multiplies into

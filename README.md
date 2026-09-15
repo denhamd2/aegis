@@ -5168,3 +5168,84 @@ four models byte-identical too.
 `contact_probe --seeds 1,2,3` returns 985/1931/2494 ticks with the crowd and
 985/1931/2494 without it — checked by stashing the slice, not by assuming.
 Arena geometry does not reach the simulation.
+
+
+## Round: match the ring to the AEW references
+
+Five changes, all read off the owner's reference photographs, and one of them
+moves a measured number.
+
+### The apron edge is a padded roll, not a lip
+
+The edge was a flat 0.2m band in dark neutral grey, described in the code as
+"the shadowed lip between a white mat and a dark skirt". The reference has no
+such lip. The apron edge is a fat padded bolster; the skirt's own printed
+vinyl wraps over it, and the corner chevron runs up the skirt and across the
+roll. Flat and dark, it read as a hard black line drawn round the ring.
+
+It is a half-round of radius 0.10 whose axis sits one radius inboard of the
+skirt plane, so its widest point is flush with the skirt and its crown stands
+proud of the skirt's top edge — which is the thing that tells a padded edge
+from a folded one. Mapping u 0..1 per side puts the graphic's chevrons on the
+corners, exactly as they land on the skirt below. A flat light strip between
+the mat edge and the roll is the apron a wrestler stands on.
+
+Both new quads came out wound backwards on the first try and rendered as
+nothing at all; the normals were worked by hand from the cross products rather
+than guessed at.
+
+### Two black bars, and where they came from
+
+Reported from a frame after the roll landed. `build_apron` put a dark box
+0.17 deep centred on the skirt plane, so its outer face sat at 3.285 — further
+out than the roll (3.20) and the skirt (3.20) both. It drew in front of the
+new roll as a black band running the whole way round the ring.
+
+It is deleted rather than moved. The roll is the apron edge now and does the
+job that lip was standing in for. Its other stated purpose — keeping the strip
+dark for VISUAL_BAR.md's `void_fraction` floor — is unaffected in the only
+direction that matters: removing a lit surface can let more dark through, and
+the floor is a minimum.
+
+### The rope connectors are on the ropes
+
+Two earlier goes were wrong in opposite directions. The sleeve started at 0.115
+pointing inward from the post face, which was right for a bare corner and broke
+out through the pad's rounded edge once there was a pad; shortening it to 0.055
+buried it completely. The reference shows what neither could: a dark clamp on
+the white rope itself, at the point it meets the cushion. So the fitting moved
+onto the rope, straddling the line where the pad's edge crosses it.
+
+### The steps are silver
+
+Raising the tint from 0.62 to 0.80 did nothing visible. `DiamondPlate009`'s
+colour map is a warm rusted steel and it MULTIPLIES, so the steps kept
+rendering a muddy tan whatever the tint said. `albedo_map: false` is what
+made them silver — the case the library's own `SPEC_DEFAULTS` note describes,
+a surface whose tint is the point. The plate's normal and roughness maps still
+carry the grid the photograph shows.
+
+### The canvas, and the anchor it moves
+
+The owner supplied the AEW mat artwork; it is mapped 1:1 over the square.
+
+**It takes the mat off its exposure anchor, and this is not hidden.** Measured
+on a clean patch of mat in `wide_broadcast`, relative luminance goes from
+0.443 mean / 0.466 median to 0.322 / 0.326. The old value sat essentially dead
+on the reference 0.46 that an earlier round solved ring exposure against; the
+new one is about 30% below it.
+
+Nothing in the suite pins it — 381 tests still pass — because the mat value is
+measured by the capture gate, not by gdUnit. The artwork is applied as
+supplied rather than quietly brightened to hold the anchor: lifting someone's
+supplied art to satisfy a number is a decision for whoever owns the look, not
+a silent correction. Re-solving ring exposure against the new canvas is the
+fix when that call is made.
+
+### Checked and not changed
+
+The steel steps' POSITION. The reference shows them butted hard against a
+corner post, which is where they already stood.
+
+381 tests pass. `ring.glb` rebuilds byte-identical, and
+`contact_probe --seeds 1,2,3` is unchanged at 985/1931/2494.

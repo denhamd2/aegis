@@ -48,6 +48,7 @@ Dimensions are READ OUT OF `game/core/ring/ring_builder.gd` (see
 from __future__ import annotations
 
 import argparse
+import math
 import pathlib
 import sys
 
@@ -64,10 +65,9 @@ WANTED = [
     "ROPE_HEIGHT_BOTTOM", "ROPE_HEIGHT_MIDDLE", "ROPE_HEIGHT_TOP",
     "ROPE_SAG_BOTTOM", "ROPE_SAG_MIDDLE", "ROPE_SAG_TOP",
     "POST_XZ", "POST_SECTION", "POST_BOTTOM", "POST_TOP",
-    "NUB_LENGTH", "NUB_RADIUS",
+    "CLAMP_LENGTH", "CLAMP_RADIUS", "CLAMP_INSET",
     "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
     "TURNBUCKLE_PAD_XZ",
-    "CLEVIS_WIDTH", "CLEVIS_HEIGHT", "CLEVIS_DEPTH",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
     "STEP_POST_GAP",
@@ -136,32 +136,41 @@ def build_posts(cfg: dict[str, float], parts: dict[str, Part]) -> None:
 
 
 def build_terminations(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Every rope ends in its own sleeve on the face it runs off.
+    """The clamp each rope visibly ends in, where it runs into its pad.
 
-    A corner carries two ropes per height -- one down X, one down Z -- so it
-    carries two sleeves per height, which is what the reference's bare corners
-    show. The sleeve is a round tube now rather than a box, and the clevis
-    behind it keeps its bevelled block form because that is what a clamp is.
+    This used to be a sleeve and a clevis mounted on the POST, pointing in at
+    the mat. That was right for a bare corner and wrong for a padded one --
+    long, it broke out through the cushion's rounded edge; short, it vanished
+    inside it. Either way the reference shows something the post-mounted
+    version could never show: a dark clamp on the white rope itself, at the
+    point the rope meets the pad.
+
+    So the fitting sits on the rope now. Each corner carries two ropes per
+    height -- one down X, one down Z -- so it carries two clamps per height,
+    straddling the line where the pad's edge crosses the rope.
     """
     fitting = parts["TurnbuckleFittings"]
-    half_section = cfg["POST_SECTION"] * 0.5
+    # Where the pad's edge crosses a rope. The pad is turned to the diagonal,
+    # so half its width projects onto the rope's axis by a factor of sqrt(2).
+    pad_edge = cfg["ROPE_SPAN"] - cfg["TURNBUCKLE_PAD_WIDTH"] * 0.5 * math.sqrt(2.0)
+    at = pad_edge - cfg["CLAMP_INSET"]
+    half = cfg["CLAMP_LENGTH"] * 0.5
     for sx in (-1.0, 1.0):
         for sz in (-1.0, 1.0):
-            post = Vector((cfg["POST_XZ"] * sx, 0.0, cfg["POST_XZ"] * sz))
             for height, _ in rope_heights(cfg):
-                center = post + Vector((0.0, height, 0.0))
-                for out in (Vector((-sx, 0.0, 0.0)), Vector((0.0, 0.0, -sz))):
-                    base = center + out * half_section
+                # The rope running down X at this corner, then the one down Z.
+                for along, across in ((Vector((1.0, 0.0, 0.0)), sz),
+                                      (Vector((0.0, 0.0, 1.0)), sx)):
+                    sign = sx if along.x != 0.0 else sz
+                    offset = Vector((0.0, 0.0, cfg["ROPE_SPAN"] * across)) \
+                        if along.x != 0.0 \
+                        else Vector((cfg["ROPE_SPAN"] * across, 0.0, 0.0))
+                    centre = offset + Vector((0.0, height, 0.0)) \
+                        + along * (at * sign)
                     fitting.tube(
-                        [base, base + out * cfg["NUB_LENGTH"]],
-                        cfg["NUB_RADIUS"], sides=8,
-                    )
-                    tangent = Vector((out.z, 0.0, -out.x))
-                    fitting_center = center + out * (half_section + 0.012)
-                    fitting.oriented_box(
-                        fitting_center, tangent, out,
-                        Vector((cfg["CLEVIS_WIDTH"], cfg["CLEVIS_HEIGHT"],
-                                cfg["CLEVIS_DEPTH"])),
+                        [centre - along * (half * sign),
+                         centre + along * (half * sign)],
+                        cfg["CLAMP_RADIUS"], sides=8,
                     )
 
 
@@ -235,8 +244,17 @@ def build_apron(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                 Vector((1.0, 0.0, 0.0)), Vector((-1.0, 0.0, 0.0))):
         tangent = Vector((out.z, 0.0, -out.x))
         mid = out * cfg["APRON_OUT"]
-        rail.oriented_box(mid + Vector((0.0, cfg["APRON_TOP"] + 0.04, 0.0)),
-                          tangent, out, Vector((6.62, 0.13, 0.17)))
+        # The TOP lip is gone. It was a dark box 0.17 deep centred on the skirt
+        # plane, which put its outer face at 3.285 -- further out than the roll
+        # (3.20) and the skirt (3.20) both -- so once ring_builder.gd grew a
+        # padded apron roll, this drew IN FRONT of it as a black bar running
+        # the whole way round the ring, directly under the blue.
+        #
+        # Nothing replaces it, because the roll is the apron edge now and does
+        # the job this was standing in for. Its other purpose, keeping this
+        # strip dark for VISUAL_BAR.md's void_fraction floor, is unaffected in
+        # the direction that matters: removing a lit surface can only let more
+        # dark through, and the floor is a MINIMUM.
         rail.oriented_box(mid + Vector((0.0, cfg["APRON_BOTTOM"] + 0.03, 0.0)),
                           tangent, out, Vector((6.58, 0.07, 0.13)))
 
