@@ -86,8 +86,20 @@ func _run() -> void:
 		push_error("%s has no AnimationPlayer" % _glb)
 		get_tree().quit(1)
 		return
+	# THROUGH the model's own adapter, never raw. The authored tracks name
+	# "Armature/Skeleton3D:<bone>", which resolves on the base mannequin and on
+	# nothing else: CodyModel sits under a `Source` node and RomanModel's bones
+	# are named J_* entirely. Added raw, every track silently fails to resolve
+	# and the player poses nothing -- so the probe rendered each roster model's
+	# REST pose and labelled it with a clip name. Measured against
+	# tools/probe/pose_compare.tscn, which samples the live skeleton: Cody's
+	# "Idle_Ready" was his arms-down bind pose and Roman's was a flat T, while
+	# the same clip through the adapter puts Cody's hands within 0.0 cm of the
+	# mannequin's. Two clean-looking contact sheets, neither of them of a clip.
 	for lib_name in clip_player.get_animation_library_list():
 		var lib := clip_player.get_animation_library(lib_name)
+		if model.has_method("adapt_animation_library"):
+			lib = model.adapt_animation_library(lib)
 		var target := StringName("authored")
 		if player.has_animation_library(target):
 			player.remove_animation_library(target)
@@ -111,6 +123,27 @@ func _run() -> void:
 			push_error("no clip %s" % clip_name)
 			continue
 		var anim := player.get_animation(clip_name)
+		# A track whose node path does not resolve is not an error in Godot --
+		# it is simply ignored, and the pose that comes out is the rest pose.
+		# That is how this probe shipped two contact sheets of a bind pose, so
+		# it is checked rather than assumed, once per clip.
+		# Resolved against the player's own root_node, which is what an
+		# AnimationPlayer actually walks track paths from -- not against the
+		# player's position in the tree, which is a different node and reports
+		# every track broken.
+		var anim_root: Node = player.get_node_or_null(player.root_node)
+		var resolved := 0
+		if anim_root != null:
+			for track in anim.get_track_count():
+				var node_path := String(anim.track_get_path(track)).split(":")[0]
+				if anim_root.get_node_or_null(NodePath(node_path)) != null:
+					resolved += 1
+		if resolved == 0:
+			push_error("%s: none of its %d tracks resolve on %s -- this would render the REST pose"
+					% [clip_name, anim.get_track_count(), _model])
+			continue
+		print("  %s  %d/%d tracks resolve on %s"
+				% [clip_name, resolved, anim.get_track_count(), _model.get_file()])
 		for view_name: String in VIEWS:
 			var spot: Array = VIEWS[view_name]
 			cam.global_position = spot[0]

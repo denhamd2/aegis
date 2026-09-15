@@ -645,12 +645,102 @@ func _rest_pair(source_skeleton: Skeleton3D, source_bone: String,
 	if target_parent_index >= 0:
 		target_parent = target_skeleton.get_bone_global_rest(
 				target_parent_index).basis.get_rotation_quaternion()
+	# --- rest-POSE alignment, on top of the rest-ORIENTATION conversion ----
+	#
+	# The conversion below preserves each key's offset from its own rig's rest.
+	# That is right when the two rests are the same physical pose and differ
+	# only in how the bones are named and rolled. These two are not: measured
+	# off the skeletons, the base rig rests in a flat T (upperarm, lowerarm and
+	# hand all at y=1.441) while Roman rests in an A (1.396 / 1.330 / 1.270,
+	# the arm descending 0.126 m across its span, about 15 degrees).
+	#
+	# Preserving the offset therefore preserves that 15 degrees, and every
+	# authored pose arrives on Roman with the guard dropped. Measured with
+	# tools/probe/pose_compare.tscn on Idle_Ready: his hands sat 0.146 of a
+	# body height below the mannequin's -- 22 cm -- and 6 cm closer to his own
+	# centre line, while his head and pelvis tracked to within a centimetre.
+	# Rendered, that is the "standing in a weird pose" report: arms folded low
+	# across the chest instead of a guard up in front of it.
+	#
+	# The clips are authored as absolute hand positions in metres, solved
+	# against the base rig's geometry (tools/blender/rig_pose.py), so what has
+	# to survive the retarget is where the hand ENDS UP, not how far it moved
+	# from a rest pose the author never saw. So each bone's rest is aligned
+	# first: rotate Roman's rest bone direction onto the base rig's before the
+	# offset is applied. The roll correction the conversion already does is
+	# untouched -- this only removes the pose difference, which is a swing.
+	var source_align := _rest_align(source_skeleton, source_bone,
+			target_skeleton, target_bone)
+	var parent_align := Quaternion.IDENTITY
+	if source_parent_index >= 0 and target_parent_index >= 0:
+		var source_parent_name := source_skeleton.get_bone_name(source_parent_index)
+		if BONE_MAP.has(source_parent_name):
+			parent_align = _rest_align(source_skeleton, source_parent_name,
+					target_skeleton, BONE_MAP[source_parent_name])
+	# Expressed back as a local rest, so _retarget_key()'s formula is unchanged.
+	var target_parent_aligned := parent_align * target_parent
+	var target_rest: Transform3D = target_skeleton.get_bone_rest(target_index)
+	var target_basis_aligned := target_parent_aligned.inverse() \
+			* source_align * target_parent \
+			* target_rest.basis.get_rotation_quaternion()
 	return {
 		"source": source_skeleton.get_bone_rest(source_index),
-		"target": target_skeleton.get_bone_rest(target_index),
+		"target": target_rest,
+		"target_aligned_basis": target_basis_aligned.normalized(),
 		"source_parent": source_parent,
 		"target_parent": target_parent,
+		"target_parent_aligned": target_parent_aligned.normalized(),
 	}
+
+
+## Shortest-arc rotation taking Roman's rest direction for a bone onto the
+## base rig's, both in world space.
+##
+## "Direction" is the vector from the bone's own rest position to its first
+## MAPPED child's -- the segment the bone actually is, measured rather than
+## read off a bone axis, because the two rigs do not agree about which local
+## axis points down a bone and that disagreement is precisely what the
+## conversion below already handles.
+##
+## A bone with no mapped child (a finger tip, a foot) inherits its parent's
+## alignment: it has no direction of its own to measure, and leaving it at
+## identity would un-rotate the hand at the end of an arm that was corrected.
+func _rest_align(source_skeleton: Skeleton3D, source_bone: String,
+		target_skeleton: Skeleton3D, target_bone: String) -> Quaternion:
+	var source_index := source_skeleton.find_bone(source_bone)
+	var target_index := target_skeleton.find_bone(target_bone)
+	if source_index < 0 or target_index < 0:
+		return Quaternion.IDENTITY
+	var source_child := -1
+	var target_child := -1
+	for child in source_skeleton.get_bone_children(source_index):
+		var child_name := source_skeleton.get_bone_name(child)
+		if not BONE_MAP.has(child_name):
+			continue
+		var mapped := target_skeleton.find_bone(BONE_MAP[child_name])
+		if mapped < 0:
+			continue
+		source_child = child
+		target_child = mapped
+		break
+	if source_child < 0:
+		var parent_index := source_skeleton.get_bone_parent(source_index)
+		if parent_index < 0:
+			return Quaternion.IDENTITY
+		var parent_name := source_skeleton.get_bone_name(parent_index)
+		if not BONE_MAP.has(parent_name):
+			return Quaternion.IDENTITY
+		return _rest_align(source_skeleton, parent_name,
+				target_skeleton, BONE_MAP[parent_name])
+	var source_dir: Vector3 = (
+			source_skeleton.get_bone_global_rest(source_child).origin
+			- source_skeleton.get_bone_global_rest(source_index).origin)
+	var target_dir: Vector3 = (
+			target_skeleton.get_bone_global_rest(target_child).origin
+			- target_skeleton.get_bone_global_rest(target_index).origin)
+	if source_dir.length() < 0.0001 or target_dir.length() < 0.0001:
+		return Quaternion.IDENTITY
+	return Quaternion(target_dir.normalized(), source_dir.normalized())
 
 func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant:
 	if rest.is_empty():
@@ -659,6 +749,15 @@ func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant
 	var target_rest: Transform3D = rest["target"]
 	var source_parent: Quaternion = rest["source_parent"]
 	var target_parent: Quaternion = rest["target_parent"]
+	# The rotation branch works off the ALIGNED rest (see _rest_pair); the
+	# position branch deliberately does not. Root translation was measured and
+	# fixed against the unaligned frames -- see the note in that branch -- and
+	# the alignment is a swing of the limb chains, which carry no position
+	# tracks at all.
+	var target_aligned_basis: Quaternion = rest.get("target_aligned_basis",
+			target_rest.basis.get_rotation_quaternion())
+	var target_parent_aligned: Quaternion = rest.get("target_parent_aligned",
+			target_parent)
 	match track_type:
 		Animation.TYPE_ROTATION_3D:
 			var source_basis := source_rest.basis.get_rotation_quaternion()
@@ -688,8 +787,8 @@ func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant
 			# over the head, whose do not.
 			var delta := (value as Quaternion) * source_basis.inverse()
 			var world := source_parent * delta * source_parent.inverse()
-			var local := target_parent.inverse() * world * target_parent
-			return (local * target_basis).normalized()
+			var local := target_parent_aligned.inverse() * world * target_parent_aligned
+			return (local * target_aligned_basis).normalized()
 		Animation.TYPE_POSITION_3D:
 			# Position tracks are the translation part of the same pose, so
 			# they get the same treatment as the rotation above -- and for the
