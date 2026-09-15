@@ -121,14 +121,29 @@ are the seating.) That is deliberate:
 
 ## ring_apron_banner.png — THIRD-PARTY MARKS, supplied by the project owner
 
-The ring apron artwork (`materials/ring_apron_banner.png`, 1929x544) was
-supplied directly by the project owner and applied to all four apron sides
-(`scenes/ring.tscn`, `StandardMaterial3D_apron`).
+The ring apron artwork (`materials/ring_apron_banner.png`, 1929x544) is
+applied to all four apron sides (`scenes/ring.tscn`,
+`StandardMaterial3D_apron`).
 
-It carries **third-party trademarks** — the AEW and TNT logos — and ships with
-no licence, no author and no provenance, exactly like the folding chair
+It carries **third-party trademarks** — the AEW *Dynamite* marks — and ships
+with no licence, no author and no provenance, exactly like the folding chair
 recorded above. `ARCHITECTURE.md` permits third-party assets without limit, so
 it is in the build by that rule rather than by an exception.
+
+**It now has a build path.** The banner used to be an opaque image supplied
+directly by the project owner, which was fine for provenance and useless for
+changing it: the crop, the perspective and where the wordmark sat on the skirt
+were all unrecorded, so the only way to adjust any of it was to re-source the
+art. `tools/textures/apron_banner.py` rectifies it out of one of the owner's
+*Dynamite* reference photographs — a homography from four corners read off a
+gridded overlay, then composited centred on a field taken from the banner's
+own cloth.
+
+The photograph itself is **not committed**, following the same convention as
+every other reference here (`gauntlet/raw/README.md`, `gauntlet/refs/ring.md`):
+measurements and observations are committable, the source is not. So the
+script cannot run in CI and is not meant to — it is run by hand when the apron
+changes, exactly like `tools/blender/*.py`.
 
 Recorded here rather than left undeclared: it is fine for a prototype and for
 internal capture, and it is **not cleared for distribution**. Anything shipped
