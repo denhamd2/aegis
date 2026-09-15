@@ -92,9 +92,31 @@ def _aim(rest_dir, target_dir, twist_deg=0.0):
 def _euler(pitch, yaw, roll):
     """Armature-space Euler degrees -> quaternion.
 
-    pitch + bows forward (about the character's right-left axis)
+    pitch + tips the part BACKWARD (about the character's right-left axis)
     yaw   + turns to his left
     roll  + leans his right shoulder down
+
+    The pitch sign is the one to be careful with, and this docstring used to
+    have it backwards -- it read "+ bows forward". Measured off the rest pose,
+    one axis at a time, with the head's position taken relative to the pelvis:
+
+        spine lean -30 -> head 0.241 m in FRONT of the pelvis
+        spine lean   0 -> head 0.055 m in front
+        spine lean +30 -> head 0.133 m BEHIND it
+
+        hips pitch -30 -> head 0.374 m in front
+        hips pitch +30 -> head 0.278 m behind
+
+        head pitch moves the head bone's own origin by under 2 cm either way:
+        it aims the face, it does not carry the skull across the frame. What
+        carries a head is the spine chain underneath it.
+
+    Run_Drive found this first ("needed a negative lean and for years had a
+    positive one") and fixed itself; the wrong docstring then sent the next
+    pass the same way round again, which is why STANCE, both hit reactions and
+    all four strikes were authored reclining. Fixing the text rather than the
+    sign is deliberate: every clip in wrestling_clips.py is expressed against
+    this convention, and flipping it would move all 29 at once.
     """
     return mathutils.Euler(
         (math.radians(-pitch), math.radians(-roll), math.radians(-yaw)), "XYZ"

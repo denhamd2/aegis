@@ -94,11 +94,30 @@ FPS = 30
 # actually sits. The pelvis is dropped from its 0.917 rest to 0.860, which
 # is what bends the knees -- there is no knee angle in this file, only a hip
 # height and a planted foot, and the solver does the rest.
+#
+# The lean is NEGATIVE, and that is not a typo. A positive `spine` lean tips
+# the torso BACKWARD, whatever rig_pose._euler's docstring says: measured one
+# axis at a time off the rest pose, the head sits 0.151 m in front of the
+# pelvis at -15 and 0.041 m BEHIND it at +15, monotonic across the range.
+# `hips` pitch and `head` pitch invert the same way.
+#
+# Run_Drive found this first and fixed itself ("needed a negative lean and for
+# years had a positive one"), and its note says the stance still carried +12 --
+# a slight backward recline inherited by all 29 clips -- because correcting it
+# moves every one of them. This is that correction: a wrestler at rest is
+# coiled over his front foot, not reclined off it.
+#
+# The guard widens with it. At the old (0.17, 0.30) / (-0.13, 0.35) the hands
+# sat 0.30 m apart -- inside shoulder width, which is 0.384 -- with the elbows
+# pinned to the ribs, and rendered they read as a man holding something in
+# front of his chest rather than as a guard. They now sit slightly wider than
+# the shoulders and further out in front, which is 0.373 m of the arm's 0.547
+# reach: bent, not braced.
 
 STANCE = dict(
-    pelvis=(0.0, 0.02, 0.860), hips=(4, -8, 0), spine=(12, 6, 0), head=(-2, 8, 0),
-    hand_r=(0.17, 0.30, 1.30), hand_l=(-0.13, 0.35, 1.35),
-    fist_r=0.75, fist_l=0.75,
+    pelvis=(0.0, 0.02, 0.860), hips=(0, -8, 0), spine=(-10, 6, 0), head=(2, 8, 0),
+    hand_r=(0.24, 0.34, 1.30), hand_l=(-0.21, 0.38, 1.34),
+    fist_r=0.8, fist_l=0.8,
     foot_r=(0.23, -0.17, 0.104), foot_l=(-0.19, 0.18, 0.104),
 )
 
@@ -421,22 +440,22 @@ CLIPS = {
         # a jab you can see coming. The left shoulder loads BACK (yaw 0,
         # down from the stance's +6), which is the half-beat the drive below
         # unwinds.
-        (3,  P(pelvis=(0.02, 0.0, 0.858), hips=(4, -4, 0), spine=(12, 0, 0),
-               hand_l=(-0.11, 0.30, 1.36), hand_r=(0.17, 0.31, 1.31))),
+        (3,  P(pelvis=(0.02, 0.0, 0.858), hips=(0, -4, 0), spine=(-10, 0, 0),
+               hand_l=(-0.18, 0.34, 1.35), hand_r=(0.24, 0.35, 1.31))),
         # Contact: the left shoulder drives through and protracts, the fist
         # arrives at head height 0.66 forward, and the lead foot takes the
         # weight while the back heel pivots off the mat. The head counters
         # the chest so he is still looking at the man he is hitting.
-        (5,  P(pelvis=(-0.02, 0.06, 0.862), hips=(4, 14, 0),
-               spine=(11, 28, 0), head=(-4, -20, 0), clav_l=(0, 20, 0),
-               hand_l=(-0.06, 0.66, 1.40), hand_r=(0.19, 0.30, 1.30),
+        (5,  P(pelvis=(-0.02, 0.06, 0.862), hips=(-4, 14, 0),
+               spine=(-10, 28, 0), head=(8, -20, 0), clav_l=(0, 20, 0),
+               hand_l=(-0.06, 0.66, 1.40), hand_r=(0.22, 0.32, 1.30),
                foot_l=(-0.19, 0.18, 0.104), foot_r=(0.23, -0.17, 0.125),
                ankle_r=(20, 0, 0))),
         # Retracting, not stopping: the hand is already on its way back and
         # the shoulder is unwinding, so the clip's peak stays on frame 5.
-        (8,  P(pelvis=(-0.01, 0.04, 0.860), hips=(4, 10, 0),
-               spine=(11, 20, 0), head=(-3, -14, 0), clav_l=(0, 12, 0),
-               hand_l=(-0.09, 0.52, 1.38), hand_r=(0.18, 0.30, 1.30),
+        (8,  P(pelvis=(-0.01, 0.04, 0.860), hips=(-4, 10, 0),
+               spine=(-10, 20, 0), head=(6, -14, 0), clav_l=(0, 12, 0),
+               hand_l=(-0.09, 0.52, 1.38), hand_r=(0.22, 0.32, 1.30),
                foot_r=(0.23, -0.17, 0.118), ankle_r=(14, 0, 0))),
         (16, P()),
     ],
@@ -447,9 +466,9 @@ CLIPS = {
     # forward, with the back foot pivoting so the hip can follow.
     "Strike_Forearm": [
         (0,  P()),
-        (4,  P(pelvis=(0.05, -0.02, 0.852), hips=(4, 4, 0), spine=(10, 16, 0),
-               head=(-2, 14, 0),
-               hand_r=(0.26, 0.12, 1.34), hand_l=(-0.12, 0.33, 1.36))),
+        (4,  P(pelvis=(0.05, -0.02, 0.852), hips=(0, 4, 0), spine=(-10, 16, 0),
+               head=(4, 14, 0),
+               hand_r=(0.30, 0.16, 1.32), hand_l=(-0.19, 0.36, 1.35))),
         # Contact: forearm arrives across at head height, hips already open.
         # Contact. The right shoulder drives through and protracts, the same
         # mechanism the jab uses mirrored -- negative yaw and negative clav_r
@@ -476,15 +495,15 @@ CLIPS = {
         #
         # 0.68 puts the wrist 0.509 m from the shoulder: 0.94 of the arm,
         # extended and still short of the lockout the solver clamps at.
-        (6,  P(pelvis=(-0.02, 0.07, 0.866), hips=(4, -15, 0),
-               spine=(12, -30, 0), head=(-4, 18, 0), clav_r=(0, -20, 0),
-               hand_r=(-0.02, 0.68, 1.40), hand_l=(-0.20, 0.24, 1.28),
+        (6,  P(pelvis=(-0.02, 0.07, 0.866), hips=(-4, -15, 0),
+               spine=(-10, -30, 0), head=(8, 18, 0), clav_r=(0, -20, 0),
+               hand_r=(-0.02, 0.68, 1.40), hand_l=(-0.22, 0.28, 1.28),
                foot_r=(0.23, -0.17, 0.125), ankle_r=(22, 0, 0))),
         # Unwinding and retracting, so the clip's peak stays on frame 6 where
         # strike_cross.tres applies its damage.
-        (9,  P(pelvis=(-0.03, 0.05, 0.862), hips=(4, -13, 0),
-               spine=(13, -24, 0), head=(-4, 12, 0), clav_r=(0, -12, 0),
-               hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.22, 0.22, 1.26),
+        (9,  P(pelvis=(-0.03, 0.05, 0.862), hips=(-4, -13, 0),
+               spine=(-10, -24, 0), head=(6, 12, 0), clav_r=(0, -12, 0),
+               hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.24, 0.26, 1.26),
                foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
         (20, P()),
     ],
@@ -496,21 +515,21 @@ CLIPS = {
     "Strike_Kick": [
         (0,  P()),
         # Chamber, and the weight goes fully onto the left foot.
-        (3,  P(pelvis=(-0.04, 0.0, 0.848), hips=(4, -6, 4), spine=(8, 0, -6),
+        (3,  P(pelvis=(-0.04, 0.0, 0.848), hips=(0, -6, 4), spine=(-4, 0, -6),
                foot_r=(0.16, 0.34, 0.60), knee_r=(0.3, 1.0, 0.1),
                hand_r=(0.28, 0.16, 1.26), hand_l=(-0.24, 0.20, 1.30))),
         # Contact: the knee straightens into the target at body height and
         # the torso leans away as the counterweight.
-        (5,  P(pelvis=(-0.06, 0.0, 0.852), hips=(2, -10, 8),
-               spine=(-8, 0, -14), head=(4, -6, 0),
+        (5,  P(pelvis=(-0.06, 0.0, 0.852), hips=(6, -10, 8),
+               spine=(14, 0, -14), head=(-10, -6, 0),
                foot_r=(0.10, 0.76, 0.92), knee_r=(0.3, 1.0, 0.1),
                hand_r=(0.34, -0.08, 1.20), hand_l=(-0.34, 0.12, 1.30))),
-        (8,  P(pelvis=(-0.06, 0.0, 0.850), hips=(2, -12, 8),
-               spine=(-11, 0, -16), head=(4, -8, 0),
+        (8,  P(pelvis=(-0.06, 0.0, 0.850), hips=(7, -12, 8),
+               spine=(16, 0, -16), head=(-12, -8, 0),
                foot_r=(0.08, 0.82, 0.86), knee_r=(0.3, 1.0, 0.1),
                hand_r=(0.36, -0.12, 1.18), hand_l=(-0.36, 0.10, 1.29))),
         # The leg folds back down under him rather than dropping straight.
-        (12, P(pelvis=(-0.04, 0.02, 0.846), spine=(6, 0, -6),
+        (12, P(pelvis=(-0.04, 0.02, 0.846), spine=(-6, 0, -6),
                foot_r=(0.18, 0.28, 0.34), knee_r=(0.3, 1.0, 0.1),
                hand_r=(0.26, 0.18, 1.26), hand_l=(-0.26, 0.22, 1.30))),
         (20, P()),
@@ -524,33 +543,33 @@ CLIPS = {
     "Strike_Kick_Heavy": [
         (0,  P()),
         # Load: the leg draws back and the hips coil the other way.
-        (3,  P(pelvis=(-0.05, 0.0, 0.838), hips=(4, 10, 4), spine=(8, 16, 0),
-               head=(-2, 10, 0),
+        (3,  P(pelvis=(-0.05, 0.0, 0.838), hips=(-2, 10, 4), spine=(-6, 16, 0),
+               head=(4, 10, 0),
                foot_r=(0.30, -0.30, 0.14), knee_r=(0.4, 1.0, 0.0),
                hand_r=(0.30, 0.10, 1.28), hand_l=(-0.22, 0.26, 1.34))),
         # Contact: hips whip open through the kick.
-        (6,  P(pelvis=(-0.07, 0.0, 0.856), hips=(2, -20, 10),
-               spine=(-10, -10, -16), head=(4, -12, 0),
+        (6,  P(pelvis=(-0.07, 0.0, 0.856), hips=(6, -20, 10),
+               spine=(16, -10, -16), head=(-12, -12, 0),
                foot_r=(0.06, 0.80, 1.00), knee_r=(0.3, 1.0, 0.1),
                hand_r=(0.36, -0.14, 1.16), hand_l=(-0.36, 0.10, 1.28))),
         # Follow-through sweeps across the body, hips still turning.
-        (10, P(pelvis=(-0.07, 0.0, 0.852), hips=(2, -34, 10),
-               spine=(-13, -22, -18), head=(4, -20, 0),
+        (10, P(pelvis=(-0.07, 0.0, 0.852), hips=(7, -34, 10),
+               spine=(18, -22, -18), head=(-14, -20, 0),
                foot_r=(-0.08, 0.76, 0.94), knee_r=(0.1, 1.0, 0.1),
                hand_r=(0.34, -0.20, 1.14), hand_l=(-0.38, 0.06, 1.26))),
         # The leg comes down across him -- he is now turned out of stance.
-        (16, P(pelvis=(-0.04, 0.05, 0.820), hips=(6, -28, 4),
-               spine=(14, -20, 0), head=(-4, -14, 0),
+        (16, P(pelvis=(-0.04, 0.05, 0.820), hips=(-4, -28, 4),
+               spine=(-10, -20, 0), head=(4, -14, 0),
                foot_r=(-0.16, 0.34, 0.22), knee_r=(0.0, 1.0, 0.2),
                hand_r=(0.24, 0.14, 1.22), hand_l=(-0.28, 0.24, 1.28))),
         # Plants crossed in front, weight briefly on the wrong foot.
-        (21, P(pelvis=(-0.02, 0.06, 0.804), hips=(6, -20, 0),
-               spine=(16, -14, 0), head=(-4, -8, 0),
+        (21, P(pelvis=(-0.02, 0.06, 0.804), hips=(-4, -20, 0),
+               spine=(-12, -14, 0), head=(4, -8, 0),
                foot_r=(-0.10, 0.30, 0.104), knee_r=(0.0, 1.0, 0.1),
                hand_r=(0.20, 0.20, 1.24), hand_l=(-0.24, 0.28, 1.30))),
         # Steps it back out to the stance -- lifted, not slid.
-        (25, P(pelvis=(-0.01, 0.04, 0.834), hips=(4, -10, 0),
-               spine=(14, -4, 0),
+        (25, P(pelvis=(-0.01, 0.04, 0.834), hips=(-2, -10, 0),
+               spine=(-10, -4, 0),
                foot_r=(0.08, 0.04, 0.160), knee_r=(0.2, 1.0, 0.1),
                hand_r=(0.18, 0.26, 1.28), hand_l=(-0.18, 0.32, 1.33))),
         (29, P()),
@@ -565,18 +584,33 @@ CLIPS = {
     # move his feet has not been hit.
     "Hit_React_Head": [
         (0,  P()),
-        (2,  P(pelvis=(0.01, -0.02, 0.856), spine=(6, 10, 0),
-               head=(-24, 18, -10),
-               hand_r=(0.20, 0.24, 1.24), hand_l=(-0.16, 0.30, 1.30))),
-        # Deepest: guard broken, weight on the back foot, chin turned away.
-        (5,  P(pelvis=(0.04, -0.07, 0.844), hips=(2, 12, 0),
-               spine=(-4, 16, 0), head=(-18, 24, -14),
-               hand_r=(0.24, 0.18, 1.16), hand_l=(-0.20, 0.24, 1.20),
-               foot_r=(0.26, -0.27, 0.104))),
-        (8,  P(pelvis=(0.02, -0.03, 0.852), spine=(8, 9, 0),
-               head=(-7, 11, -5),
-               hand_r=(0.20, 0.25, 1.24), hand_l=(-0.16, 0.31, 1.30),
-               foot_r=(0.25, -0.22, 0.104))),
+        # Impact on frame 2, not frame 5. combat-animation.md's hit reaction
+        # is "2-4 frames impact pose, 8-12 frames stagger, snap to impact";
+        # the previous version took five frames to reach its deepest pose,
+        # which is an ease rather than a snap.
+        (2,  P(pelvis=(0.02, -0.06, 0.850), hips=(4, 6, 0),
+               spine=(16, 14, -4), head=(22, 20, -12),
+               hand_r=(0.24, 0.18, 1.18), hand_l=(-0.20, 0.24, 1.22))),
+        # Deepest: guard broken, weight on the back foot, chin turned away,
+        # and the whole torso thrown back off the shot.
+        #
+        # The lean is the number that matters and it was measured, not
+        # guessed. tools/probe/pose_compare.tscn reports how far each bone
+        # travels from frame 0: this clip moved the head 6.4 cm while
+        # Hit_React_Torso, on the same rig through the same code path, moved
+        # it 33.8 cm. A head shot was shifting the head a fifth as far as a
+        # body shot -- which is the "the opponent is hit and nothing happens"
+        # report, and it is a comparison inside this clip set rather than an
+        # appeal to how a punch ought to look.
+        (4,  P(pelvis=(0.05, -0.12, 0.838), hips=(8, 10, 0),
+               spine=(26, 20, -8), head=(28, 26, -16),
+               hand_r=(0.30, 0.12, 1.10), hand_l=(-0.26, 0.16, 1.14),
+               fist_r=0.55, fist_l=0.55,
+               foot_r=(0.28, -0.32, 0.104), foot_l=(-0.18, 0.22, 0.118))),
+        (8,  P(pelvis=(0.02, -0.04, 0.852), hips=(2, 6, 0),
+               spine=(2, 10, -2), head=(10, 12, -6),
+               hand_r=(0.22, 0.23, 1.22), hand_l=(-0.18, 0.28, 1.27),
+               foot_r=(0.26, -0.26, 0.104))),
         (12, P()),
     ],
 
@@ -585,14 +619,14 @@ CLIPS = {
     # whips him backward. Two different things happening to a man.
     "Hit_React_Torso": [
         (0,  P()),
-        (2,  P(pelvis=(0.0, -0.04, 0.822), spine=(28, 0, 0), head=(16, 0, 0),
+        (2,  P(pelvis=(0.0, -0.04, 0.822), spine=(-28, 0, 0), head=(-16, 0, 0),
                hand_r=(0.12, 0.18, 1.12), hand_l=(-0.10, 0.20, 1.14),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
-        (5,  P(pelvis=(0.0, -0.08, 0.782), hips=(10, 0, 0), spine=(36, 0, 0),
-               head=(22, 0, 0),
+        (5,  P(pelvis=(0.0, -0.08, 0.782), hips=(-10, 0, 0), spine=(-36, 0, 0),
+               head=(-22, 0, 0),
                hand_r=(0.10, 0.14, 1.04), hand_l=(-0.08, 0.16, 1.06),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
-        (8,  P(pelvis=(0.0, -0.04, 0.835), spine=(20, 0, 0), head=(12, 0, 0),
+        (8,  P(pelvis=(0.0, -0.04, 0.835), spine=(-20, 0, 0), head=(-12, 0, 0),
                hand_r=(0.14, 0.22, 1.18), hand_l=(-0.11, 0.24, 1.20))),
         (12, P()),
     ],
