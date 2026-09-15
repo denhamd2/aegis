@@ -89,12 +89,51 @@ const ROPE_OVERRUN := 0.022
 ## letterform, so it became stacked bars). Deleting the pad deletes the
 ## guardrail problem rather than managing it. A bare corner cannot resemble
 ## anyone's trade dress.
-const NUB_LENGTH := 0.115
+## Was 0.115, when the sleeve was the whole of a bare corner and had to read
+## as the thing a rope ended in. It is behind a pad now, and at 0.115 its tip
+## reached far enough along the corner diagonal to break out through the pad's
+## ROUNDED edge -- the bevel pulls the cushion's corner back, so a fitting that
+## clears the flat face can still show at the arris. The hardware stays (a pad
+## covers a turnbuckle, it does not replace one); it just stops short.
+const NUB_LENGTH := 0.055
 const NUB_RADIUS := 0.038
 const CLEVIS_WIDTH := 0.05
 const CLEVIS_HEIGHT := 0.055
 const CLEVIS_DEPTH := 0.07
 const CLEVIS := Vector3(CLEVIS_WIDTH, CLEVIS_HEIGHT, CLEVIS_DEPTH)
+
+# --- Turnbuckle pads ---------------------------------------------------------
+## The pads are BACK, and the note above them is now history rather than
+## policy. The comment argued a bare corner "cannot resemble anyone's trade
+## dress" -- true, and beside the point: gauntlet/refs/VISUAL_BAR.md settles
+## the question the other way, and the AEW references this ring is now matched
+## to have three cushions on every corner. They are the single loudest thing
+## about a televised corner, and without them the post reads as a bare pole
+## with the ropes passing it.
+##
+## One pad per rope per corner, turned to the DIAGONAL -- which is the one
+## respect in which a pad disagrees with the post it is mounted on. The post
+## stays axis-aligned (see below); the pad faces the ring centre, because that
+## is the face a wrestler is thrown into and the face every camera sees.
+const TURNBUCKLE_PAD_WIDTH := 0.52
+const TURNBUCKLE_PAD_HEIGHT := 0.24
+const TURNBUCKLE_PAD_DEPTH := 0.30
+## Diagonal placement, per axis, and the number is set by the POST rather than
+## by the ropes.
+##
+## Work in u, the distance from ring centre along the corner diagonal. The post
+## is axis-aligned, so its own corners put it at u = 4.133 (inner) to 4.352
+## (outer), and the two rope terminations land at u = 4.329 -- inside that
+## span. A pad centred on the ropes therefore sits INSIDE the post, which is
+## what the first attempt did: the post's inner corner stood proud of the
+## cushion and split each pad into two lobes with a pole up the middle.
+##
+## So the pad's inner face has to clear u = 4.133. At 3.013 per axis the pad
+## is centred at u = 4.261 and spans 4.111 to 4.411 -- 2.2 cm proud of the
+## post's nearest corner, and still deep enough to swallow the rope ends at
+## 4.329. Both conditions at once, which is why the depth went to 0.30: a
+## shallower pad can clear the post or cover the ropes, not both.
+const TURNBUCKLE_PAD_XZ := 3.013
 
 # --- Posts -------------------------------------------------------------------
 ## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
@@ -609,6 +648,10 @@ func _model_materials() -> Dictionary:
 	return {
 		"PostMesh": _resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)),
 		"TurnbuckleFittings": _resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)),
+		# Vinyl, not steel: a pad is a soft cover and takes a broad dull
+		# sheen, where the fittings behind it take a tight specular one.
+		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
+			_mat(Color(0.055, 0.055, 0.060), 0.62)),
 		"RopeMesh": _rope_material(),
 		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
 			{"tint": Color(0.105, 0.105, 0.112)}),

@@ -332,20 +332,22 @@ const SPECS := {
 		"asset": "Metal032", "tint": Color(0.55, 0.56, 0.60),
 		"tile_metres": 0.35, "roughness": 1.0, "metallic": 1.0,
 	},
-	## UNUSED as of the ring-reference round, and kept rather than deleted.
+	## IN USE again. The note that used to stand here said this key was kept
+	## against the day "a padded corner is a legitimate thing for this ring to
+	## grow back" -- which is this round: the ring is matched to the AEW
+	## references now, and those corners carry three cushions apiece.
 	##
-	## gauntlet/refs/ring.md's corners are bare -- a sleeve and a clevis per
-	## rope, no pad -- so `ring_builder.gd` no longer resolves this key. It
-	## stays defined because a padded corner is a legitimate thing for this
-	## ring to grow back (a branded ring for a different card, say), and
-	## rediscovering the tile size and the per-corner tint override would be
-	## work already done here. It resolves correctly; nothing calls it.
+	## The tint was Color(0.10, 0.15, 0.70), a saturated blue left over from
+	## the branded corner this key last dressed. Nothing resolved the key, so
+	## nothing showed it, and the first thing the restored pads rendered as
+	## was twelve bright blue cushions -- `_resolve`'s local fallback never
+	## gets a look in when the key EXISTS.
 	##
-	## Coverage decision: padded vinyl turnbuckle cover, Fabric061's dotted
-	## weave at a small tile so the pad reads as padded up close in
-	## `ring_corner`. Override `tint` per corner.
+	## Coverage decision: padded vinyl turnbuckle cover, near-black to match
+	## the references, on Fabric061's dotted weave at a small tile so the pad
+	## reads as padded up close in `ring_corner`. Override `tint` per corner.
 	"ring_turnbuckle_pad": {
-		"asset": "Fabric061", "tint": Color(0.10, 0.15, 0.70),
+		"asset": "Fabric061", "tint": Color(0.055, 0.055, 0.060),
 		"tile_metres": 0.30, "roughness": 0.9, "normal_scale": 1.2,
 		"albedo_map": false,
 	},

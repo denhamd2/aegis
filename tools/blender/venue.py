@@ -222,12 +222,18 @@ class Part:
                 self.quad(lo_in[k], hi_in[k], hi_out[k], lo_out[k])
 
     def oriented_box(self, center: Vector, along: Vector, out: Vector,
-                     size: Vector) -> None:
+                     size: Vector, bevel: float = 0.0,
+                     bevel_segments: int = 1) -> None:
         """A box in its own frame: `size` is (width along, height, depth out).
 
         Anything standing on a curved run -- a seat, a barricade panel -- faces
         its own bearing, and an axis-aligned box would sit skewed to the run
         and read as a jumble exactly where the plan is most visible.
+
+        The bevel is the same one `box` takes and runs through the same
+        `_beveled`, which works off the eight corners and so does not care
+        which frame they were computed in. It defaults off, so every existing
+        caller exports byte-identical.
         """
         up = Vector((0.0, 1.0, 0.0))
         ea = along.normalized() * (size.x * 0.5)
@@ -240,10 +246,14 @@ class Part:
                 (-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1),
             )
         ]
-        v = [self.vert(c) for c in corners]
-        for face in ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4),
-                     (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
-            self.quad(*[v[i] for i in face])
+        faces = ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4),
+                 (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7))
+        if bevel <= 0.0:
+            v = [self.vert(c) for c in corners]
+            for face in faces:
+                self.quad(*[v[i] for i in face])
+            return
+        self._beveled(corners, faces, bevel, bevel_segments)
 
     def box(self, center: Vector, size: Vector, bevel: float = 0.0,
             bevel_segments: int = 1) -> None:

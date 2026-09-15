@@ -65,6 +65,8 @@ WANTED = [
     "ROPE_SAG_BOTTOM", "ROPE_SAG_MIDDLE", "ROPE_SAG_TOP",
     "POST_XZ", "POST_SECTION", "POST_BOTTOM", "POST_TOP",
     "NUB_LENGTH", "NUB_RADIUS",
+    "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
+    "TURNBUCKLE_PAD_XZ",
     "CLEVIS_WIDTH", "CLEVIS_HEIGHT", "CLEVIS_DEPTH",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
@@ -75,6 +77,7 @@ WANTED = [
 PART_COLORS = {
     "PostMesh": (0.075, 0.075, 0.080, 1.0),
     "TurnbuckleFittings": (0.11, 0.11, 0.115, 1.0),
+    "TurnbucklePads": (0.055, 0.055, 0.060, 1.0),
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
     "ApronRail": (0.105, 0.105, 0.112, 1.0),
     "StepsMesh": (0.62, 0.62, 0.63, 1.0),
@@ -82,11 +85,16 @@ PART_COLORS = {
 # Ropes and sleeves are round and must read that way; the posts, rails and
 # steps are faceted steel and smoothing them only muddies the arris the bevel
 # was added to catch.
-SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings"})
+SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings", "TurnbucklePads"})
 
 # Bevel widths, as a fraction of the smallest section each piece has. Small:
 # these are chamfers that catch a highlight, not rounded-over furniture.
 POST_BEVEL = 0.010
+## Far wider than the other three, and not a chamfer at all: a turnbuckle pad
+## is a stuffed vinyl cushion, so its arrises are ROUNDED, not broken. At 0.045
+## on a 0.24 m section the rounding is about a fifth of the height, which is
+## what stops three stacked pads reading as three stacked bricks.
+PAD_BEVEL = 0.045
 RAIL_BEVEL = 0.018
 STEP_BEVEL = 0.012
 
@@ -154,6 +162,37 @@ def build_terminations(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                         Vector((cfg["CLEVIS_WIDTH"], cfg["CLEVIS_HEIGHT"],
                                 cfg["CLEVIS_DEPTH"])),
                     )
+
+
+def build_turnbuckle_pads(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """Three cushions on every corner, turned to face the ring centre.
+
+    Each pad is one rounded box on the corner diagonal at a rope's height, so
+    twelve in all. The rope ends are already inside it -- TURNBUCKLE_PAD_XZ is
+    chosen so the X and Z terminations land within the pad's own depth -- which
+    is what makes a rope read as ATTACHED rather than as passing a pole.
+
+    The pad is the one piece here that does not share the post's frame. The
+    post is axis-aligned because its flat face reads down a side-on camera;
+    the pad is diagonal because it is mounted on the corner and faces the mat.
+    `oriented_box` takes that frame directly: `along` is the tangent across the
+    corner, `out` is the inward diagonal.
+    """
+    pads = parts["TurnbucklePads"]
+    offset = cfg["TURNBUCKLE_PAD_XZ"]
+    size = Vector((cfg["TURNBUCKLE_PAD_WIDTH"],
+                   cfg["TURNBUCKLE_PAD_HEIGHT"],
+                   cfg["TURNBUCKLE_PAD_DEPTH"]))
+    for sx in (-1.0, 1.0):
+        for sz in (-1.0, 1.0):
+            # Toward the ring centre, and the tangent across it. Both are
+            # normalised by oriented_box, so the raw diagonal is enough.
+            inward = Vector((-sx, 0.0, -sz))
+            tangent = Vector((-sx, 0.0, sz))
+            for height, _ in rope_heights(cfg):
+                center = Vector((offset * sx, height, offset * sz))
+                pads.oriented_box(center, tangent, inward, size,
+                                  bevel=PAD_BEVEL, bevel_segments=2)
 
 
 def build_ropes(cfg: dict[str, float], parts: dict[str, Part]) -> None:
@@ -262,6 +301,7 @@ def main(argv: list[str]) -> int:
     parts = {name: Part(name) for name in PART_COLORS}
     build_posts(cfg, parts)
     build_terminations(cfg, parts)
+    build_turnbuckle_pads(cfg, parts)
     build_ropes(cfg, parts)
     build_apron(cfg, parts)
     build_steps(cfg, parts)

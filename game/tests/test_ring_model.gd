@@ -35,11 +35,73 @@ func _verts(part: String) -> PackedVector3Array:
 ## surface is solved against a measured target.
 func test_every_part_the_builder_dresses_exists_in_the_model() -> void:
 	var root := _model()
-	for part: String in ["PostMesh", "TurnbuckleFittings", "RopeMesh",
-			"ApronRail", "StepsMesh"]:
+	for part: String in ["PostMesh", "TurnbuckleFittings", "TurnbucklePads",
+			"RopeMesh", "ApronRail", "StepsMesh"]:
 		assert_object(root.find_child(part, true, false)) \
 				.override_failure_message("%s has no '%s' object" % [MODEL, part]) \
 				.is_not_null()
+	root.free()
+
+
+## THE PAD CLEARS THE POST, or the post splits it in two.
+##
+## This is arithmetic on the constants rather than a measurement of the mesh,
+## for the same reason `test_arena_bowl.gd` does it: the exporter reads these
+## numbers out of `ring_builder.gd`, so pinning the numbers pins the model.
+##
+## Work in u, distance from ring centre along the corner diagonal. The post is
+## AXIS-ALIGNED and the pad is DIAGONAL, so the post's nearest point to the mat
+## is its inner corner -- a vertex, not a face -- and it reaches further in
+## than the post's half-section suggests. A pad whose inner face does not clear
+## that vertex has a pole standing through the middle of it, which is exactly
+## what the first attempt rendered: two lobes either side of the post.
+func test_the_turnbuckle_pad_stands_proud_of_the_post() -> void:
+	var diagonal := sqrt(2.0)
+	var post_inner := (RingBuilder.POST_XZ - RingBuilder.POST_SECTION * 0.5) * diagonal
+	var pad_centre := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal
+	var pad_inner := pad_centre - RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
+	assert_float(pad_inner) \
+		.override_failure_message(
+			"the pad's inner face sits at u=%.3f and the post's inner corner "
+			% pad_inner
+			+ "at u=%.3f: the post stands through the cushion" % post_inner) \
+		.is_less(post_inner)
+
+
+## THE ROPE ENDS INSIDE THE PAD.
+##
+## "Attached to the turnbuckles" is a placement, not a joint -- there is no
+## constraint tying a rope to a pad, only a pad deep enough to swallow where
+## the rope stops. If the pad moves in without getting deeper, the ropes come
+## out of its back face and read as passing a pole again.
+func test_the_rope_terminations_land_inside_the_pad() -> void:
+	var diagonal := sqrt(2.0)
+	# Where the two ropes at a corner stop: one runs out along X to
+	# POST_XZ + ROPE_OVERRUN at z = ROPE_SPAN, the other is its mirror.
+	var rope_end := (RingBuilder.POST_XZ + RingBuilder.ROPE_OVERRUN
+			+ RingBuilder.ROPE_SPAN) / diagonal
+	var pad_centre := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal
+	var half_depth := RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
+	assert_float(rope_end) \
+		.override_failure_message(
+			"a rope stops at u=%.3f, outside the pad's %.3f..%.3f"
+			% [rope_end, pad_centre - half_depth, pad_centre + half_depth]) \
+		.is_between(pad_centre - half_depth, pad_centre + half_depth)
+
+
+## Three pads per corner, one at each rope height, and twelve in all.
+func test_the_model_ships_a_pad_at_every_rope_height() -> void:
+	var root := _model()
+	var node := root.find_child("TurnbucklePads", true, false) as MeshInstance3D
+	assert_object(node).is_not_null()
+	var box := node.get_aabb()
+	# The pads span the rope heights and nothing else: the lowest reaches half
+	# a pad below the bottom rope, the highest half a pad above the top.
+	var half := RingBuilder.TURNBUCKLE_PAD_HEIGHT * 0.5
+	assert_float(box.position.y) \
+		.is_equal_approx(RingBuilder.ROPE_HEIGHT_BOTTOM - half, 0.02)
+	assert_float(box.end.y) \
+		.is_equal_approx(RingBuilder.ROPE_HEIGHT_TOP + half, 0.02)
 	root.free()
 
 

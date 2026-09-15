@@ -30,7 +30,7 @@ the term.
 | canvas | plain off-white, wear and panel seams only — **no logo, no painted border** | blue field, chevron centre mark, two secondary marks, painted border |
 | ropes | three per side, thin, **black cable**, near-taut | cream, taped, 3–4.8cm midspan sag |
 | posts | **square black slabs**, flat-faced, axis-aligned, standing well clear of the top rope | 8.5cm cylinders with steel caps and lace collars |
-| turnbuckles | a short dark sleeve and a clevis per rope. **No pad.** | 0.37 × 1.13m branded vinyl pads, straps, buckles |
+| turnbuckles | a short dark sleeve and a clevis per rope. **No pad.** | 0.37 × 1.13m branded vinyl pads, straps, buckles | *(superseded — see 'The corners are padded again' below)* |
 | skirt | flat dark grey, drum-tight, unbranded | blue, chevron print band, nine folds per side |
 | steps | **bare bright metal**, three treads, second-brightest surface in frame | dark painted steel, shared with the apron rail |
 | ringside floor | dark concrete slab scored into large panels | untextured dark floor, no seams |
@@ -83,3 +83,42 @@ Asserted in `game/tests/test_ring_model.gd` and `test_stage_set.gd`, so a
 later edit that drifts any of it fails loudly.
 
 Source: [Virginia Administrative Code 18VAC120-40-415.1](https://law.lis.virginia.gov/admincode/title18/agency120/chapter40/section415.1/)
+
+
+## The corners are padded again
+
+Added when the ring was matched to the AEW *Dynamite* references supplied by
+the project owner — three photographs of a televised ring, which is a
+different thing from the training-hall ring the table above was taken off.
+
+**This reverses the `turnbuckles` row, and only that row.** The Sketchfab
+reference is a bare ring in flat studio light and its corners genuinely carry
+no pad; a televised corner carries three. Where the two disagree about
+something the cameras are pointed at, the one that looks like the show wins.
+The rest of the table is untouched — the canvas, the ropes, the skirt, the
+steps and the barricades all still read off the original reference.
+
+| element | reference | build |
+| --- | --- | --- |
+| pads | three cushions per corner, one per rope, black, turned to face the mat | `TurnbucklePads`, 0.52 × 0.24 × 0.30, at `TURNBUCKLE_PAD_XZ` 3.013 |
+| post | still square, still axis-aligned, standing clear above the top pad | unchanged |
+| ropes | running INTO the pads, not past the post | unchanged geometry; the pad is deep enough to swallow the terminations |
+
+**What the number 3.013 is doing.** The post is axis-aligned and the pad is
+diagonal, so the post's nearest point to the mat is a *vertex*, at u = 4.133
+along the corner diagonal. The rope terminations sit at u = 4.329. A pad has
+to clear the first and cover the second, and at 0.30 deep centred on u = 4.261
+it does both. Centred on the ropes instead — the obvious choice, and the one
+tried first — the post stands through the middle of the cushion and each pad
+renders as two lobes with a pole between them.
+
+Both conditions are asserted in `game/tests/test_ring_model.gd` as arithmetic
+over the constants, so a later edit to the post section or the rope span that
+breaks either one fails rather than quietly splitting the pads again.
+
+**What did not change.** The frozen dimensions above still hold: the ropes are
+still at ±3.1 and the collision bodies are untouched, so nothing here reaches
+the simulation. The pad material is `ring_turnbuckle_pad`, a key that already
+existed — retired, unused, and still carrying the saturated blue tint of the
+branded corner it last dressed, which is what the restored pads rendered as
+until it was retinted.
