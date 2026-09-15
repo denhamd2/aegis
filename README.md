@@ -5548,3 +5548,82 @@ Rebuilt twice, byte-identical both times (md5 88bc953a...), so the mesh still
 diffs like the `.tres` bakes. Rendered afterwards through the match camera:
 the corners read as three black cushions with the artwork clear and the ropes
 running into the clamps, which is what the reference's corner is.
+
+
+## Round: the mat's artwork, the corner, and the steps
+
+Three corrections in one pass, all of them things the build had modelled and
+none of them things it had looked at from the camera that ships.
+
+### The canvas logo read rotated 90 degrees
+
+`_build_canvas` mapped the mat's UV square u to +X and v to +Z. The broadcast
+camera is anchored on -X and looks up +X (`match.tscn`), so its screen-right
+is +Z and "away from the lens" is +X -- which put the logo's baseline running
+directly away from the camera. Every frame of the match had the mark on its
+side.
+
+`ring_canvas.png` is drawn upright, so this is a mapping bug rather than an
+artwork one, and the fix is a quarter turn of the UV square:
+
+    u = (z + MAT_HALF) / 6    reading direction along screen-right (+Z)
+    v = (MAT_HALF - x) / 6    texture-down toward the camera (-X)
+
+Handedness was checked rather than assumed -- from the camera the mat's
+(screen-right, screen-up) is (+Z, +X), whose cross product is +Y, the mat's
+own normal, so the mark comes out turned and not mirrored. The render settled
+it either way: ALL ELITE / AEW / WRESTLING now reads left to right.
+
+### The corner was a pillar with bolsters on it
+
+The post was a 0.155m square column wearing a cap plate 1.22x its own section,
+and each rope ended in a cushion 0.52 x 0.24 x 0.30. Against the reference
+that is a structural pillar with three bolsters: the cushions were deeper than
+they were tall, the 0.35m rope spacing left only 0.11 between them so the
+three read as one black column with notches in it, and the plate gave every
+corner a lid.
+
+- the post is a tube now, `POST_RADIUS` 0.052 (0.104 across, which is 4-inch
+  pipe), `POST_SIDES` 12, capped with a disc proud by 6mm rather than a plate
+  overhanging by a quarter of the post's width
+- the pads are 0.46 x 0.15 x 0.20, bevel 0.025. The gap between cushions goes
+  from 0.11 to 0.20 -- wider than the pad, which is what the reference shows
+
+The depth is a floor, not a taste call. The pad has to clear the post's tube
+on its inner face and swallow the rope ends on its outer one, and those two
+faces are 0.143 apart before any bevel comes off; 0.20 is about the thinnest
+cushion that spans them. `TURNBUCKLE_PAD_XZ` moves 2.979 -> 3.003 so the pad
+straddles the post rather than sitting inboard of it, which is also what stops
+the white rope ends poking out of the cushions.
+
+### The steps stood at the corner without being in it
+
+They already sat at a corner -- two sets, diagonally opposite, measured at
+|z| = 2.924 against a post face at 3.095. What they did not have is the detail
+every ring-steps casting has: a **45-degree corner missing from the top
+tread**, which is what lets the tread pass the ring post.
+
+Without it a flight can only stop beside a corner. So the flight now runs out
+to the apron's own corner at `APRON_OUT`, and the top tread is built as a
+notched prism rather than a box, `STEP_CORNER_NOTCH` 0.26 on each leg. On the
+corner flank the top tread's stringer starts after the cut so it follows the
+notch instead of spanning it.
+
+### Tests
+
+`test_the_steps_stand_at_a_corner_beside_a_post` was measuring the MEAN of the
+step mesh's vertices, which moved 7cm when the tread was notched -- because a
+notch redistributes vertices without moving the flight at all. It measures the
+flight's extent now: far end at the apron's corner, near end a tread width
+back. That is the thing the test is named for.
+
+`test_the_top_tread_is_notched_for_the_post` is new and asserted as an
+absence: no top-tread vertex lies inside the triangle the cut removes. A test
+that counted geometry, or checked a bounding box, would pass just as well on a
+square tread.
+
+`test_the_turnbuckle_pad_stands_proud_of_the_post` now takes the post's
+nearest point as centre-less-radius rather than as a square corner.
+
+12 cases, 0 failures. `ring.glb` rebuilt at 8120 triangles, byte-identical
+across two runs.

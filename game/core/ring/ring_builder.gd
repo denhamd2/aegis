@@ -122,9 +122,18 @@ const CLAMP_INSET := 0.03
 ## respect in which a pad disagrees with the post it is mounted on. The post
 ## stays axis-aligned (see below); the pad faces the ring centre, because that
 ## is the face a wrestler is thrown into and the face every camera sees.
-const TURNBUCKLE_PAD_WIDTH := 0.52
-const TURNBUCKLE_PAD_HEIGHT := 0.24
-const TURNBUCKLE_PAD_DEPTH := 0.30
+const TURNBUCKLE_PAD_WIDTH := 0.46
+## 0.15, down from 0.24. The ropes are 0.35 apart, so a 0.24 cushion left a
+## 0.11 gap and the three of them read as one continuous black column with
+## notches in it. The reference has three clearly separate cushions with more
+## air than pad between them; 0.15 puts the gap at 0.20, wider than the pad.
+const TURNBUCKLE_PAD_HEIGHT := 0.15
+## 0.20, down from 0.30. A cushion standing 0.30 off the post is deeper than
+## it is tall and reads as a bolster rather than a pad. 0.20 is the floor the
+## geometry allows, not a taste call: the pad still has to clear the post's
+## tube on its inner face AND swallow the rope ends on its outer one, and
+## those two faces are 0.143 apart before any bevel is taken off.
+const TURNBUCKLE_PAD_DEPTH := 0.20
 ## Diagonal placement, per axis, and the number is set by the POST rather than
 ## by the ropes.
 ##
@@ -146,13 +155,20 @@ const TURNBUCKLE_PAD_DEPTH := 0.30
 ## bevel can eat. The rope ends at 4.329 are still inside the pad's outer face
 ## at 4.363, which is the other half of the constraint and the reason the
 ## depth stays at 0.30.
-const TURNBUCKLE_PAD_XZ := 2.979
+## Moved out with the depth. At 0.20 deep the pad can no longer sit inboard of
+## the post and still reach the rope ends, so it straddles the post instead:
+## centred at u = 4.247 against the post's 4.243, inner face 0.044 clear of
+## the tube and outer face 0.018 past the rope ends at u = 4.329. Both margins
+## are asserted -- test_the_turnbuckle_pad_stands_proud_of_the_post and
+## test_the_rope_terminations_land_inside_the_pad -- and there is no room
+## between them for a deeper pad or a fatter post.
+const TURNBUCKLE_PAD_XZ := 3.003
 ## The rounding on a cushion's arrises. It lives HERE, not in ring.py with the
 ## other bevel widths, because it is not only a shading choice: it eats into
 ## the clearance above, and a test can only pin that relationship if both
 ## numbers are in the same file. `tools/blender/ring.py` reads it out of here
 ## like every other ring constant.
-const TURNBUCKLE_PAD_BEVEL := 0.045
+const TURNBUCKLE_PAD_BEVEL := 0.025
 
 # --- The turnbuckle connector, and why there isn't one -----------------------
 ## REMOVED. There used to be a light steel plate at each end of every pad --
@@ -194,8 +210,8 @@ const PAD_FACE_TEXTURE := "res://assets/environment/materials/turnbuckle_pad.png
 ## this file and takes plain numbers only, so an expression here stops the ring
 ## exporting at all. `test_the_pad_face_is_inset_by_the_bevel` holds the two
 ## ends together instead.
-const PAD_FACE_WIDTH := 0.43
-const PAD_FACE_HEIGHT := 0.15
+const PAD_FACE_WIDTH := 0.41
+const PAD_FACE_HEIGHT := 0.10
 ## Clear of the cushion's face, to keep the two out of a depth fight.
 const PAD_FACE_LIFT := 0.004
 ## The artwork is 1774x887 -- exactly 2:1 -- and the flat face is 2.867:1, so
@@ -203,7 +219,7 @@ const PAD_FACE_LIFT := 0.004
 ## Sampling the middle 0.6977 of the HEIGHT gives a region of the same aspect
 ## as the quad, and what it crops is the black margin above and below the
 ## letters rather than any of the mark.
-const PAD_FACE_V_SPAN := 0.6977
+const PAD_FACE_V_SPAN := 0.4878
 
 # --- Posts -------------------------------------------------------------------
 ## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
@@ -211,7 +227,20 @@ const PAD_FACE_V_SPAN := 0.6977
 ## flat face reads straight down the camera's line on a side-on shot, which is
 ## most of the shotlist. The outgoing cylinder, its steel cap and the lace
 ## collar under the pad all go with the pad they were dressed for.
-const POST_SECTION := 0.155
+## The post is a round steel tube, and its RADIUS -- not a square section.
+##
+## It was a 0.155m square column with a 1.22x cap plate on top. Against the
+## reference that is a structural pillar: a real ring post is a length of
+## 4-inch pipe, slim enough that the pads are plainly the widest thing at a
+## corner, and the cap is a disc barely proud of the tube rather than a plate
+## overhanging it. Square also caught the house rig on two flat faces and read
+## as a black slab from every angle but the diagonal.
+##
+## 0.052 is 0.104m across, which is 4-inch pipe to within a few millimetres.
+const POST_RADIUS := 0.052
+## Sides on the tube. 12 is round at the distance a post is ever seen from and
+## costs 24 more triangles than the box did.
+const POST_SIDES := 12
 const POST_BOTTOM := -0.10
 ## 1.78 in the training-hall reference, where a bare post stands well clear of
 ## the top rope and that vertical line is the whole of the corner. A padded
@@ -262,7 +291,21 @@ const APRON_BOTTOM := -1.00
 ## walkway down the middle of -Z.
 ##
 ## This is the gap left between the near edge of the steps and the post.
-const STEP_POST_GAP := 0.10
+## The 45-degree cut across the TOP tread's ring-side corner, which is what
+## lets a flight sit into a corner instead of stopping beside it.
+##
+## Replaces STEP_POST_GAP, which held the flight 0.10 clear of the post and
+## square-ended -- so the steps stood at the corner without ever reaching it.
+## Every ring-steps casting has this notch (it is why the top tread is the one
+## with a corner missing) and it exists so the tread can pass the ring post.
+##
+## 0.26 on each leg, a 0.37 diagonal, against a post 0.104 across: the cut
+## clears the tube with room for the apron's overhang either side of it.
+const STEP_CORNER_NOTCH := 0.26
+## Clearance between the apron's skirt and the flight's inner face. It was a
+## bare 0.06 inside ring.py; it is a constant here because the notch test has
+## to know where the tread's inner edge is.
+const STEP_APRON_GAP := 0.06
 const STEP_TREADS := 3
 const STEP_WIDTH := 1.45
 const STEP_RUN := 0.36
@@ -520,12 +563,31 @@ func _build_canvas() -> void:
 	# square, so the canvas texture's seams and wear land in world space where
 	# they are drawn rather than tiling arbitrarily. BoxMesh atlases its six
 	# faces into one UV square and cannot do this.
+	#
+	# The UV square is turned a quarter turn against the mat, which is what
+	# puts the canvas artwork the right way up to the broadcast camera.
+	#
+	# It used to map u to +X and v to +Z. The camera is anchored on -X and
+	# looks up +X (match.tscn), so its screen-right is +Z and the direction
+	# "away from camera" is +X -- which meant the logo's baseline ran directly
+	# away from the lens and the mark read rotated 90 degrees in every frame.
+	# ring_canvas.png is drawn upright, so this is a mapping bug, not an
+	# artwork one, and it is fixed here rather than by rotating the .png:
+	# the texture is the supplied asset and the mat is ours to orient.
+	#
+	#   u = (z + MAT_HALF) / 6   -- reading direction along screen-right (+Z)
+	#   v = (MAT_HALF - x) / 6   -- texture-down toward the camera (-X)
+	#
+	# Handedness checked rather than assumed: seen from the camera the mat's
+	# (screen-right, screen-up) is (+Z, +X), whose cross product is +Y, the
+	# mat's own normal -- so the mark comes out turned, not mirrored. The
+	# render is what settled it either way.
 	_quad(st,
 		Vector3(-MAT_HALF, MAT_TOP_LOCAL, MAT_HALF),
 		Vector3(MAT_HALF, MAT_TOP_LOCAL, MAT_HALF),
 		Vector3(MAT_HALF, MAT_TOP_LOCAL, -MAT_HALF),
 		Vector3(-MAT_HALF, MAT_TOP_LOCAL, -MAT_HALF),
-		Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0))
+		Vector2(1, 1), Vector2(1, 0), Vector2(0, 0), Vector2(0, 1))
 	st.generate_tangents()
 	var mesh := st.commit()
 

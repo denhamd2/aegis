@@ -64,14 +64,14 @@ WANTED = [
     "ROPE_SPAN", "ROPE_RADIUS", "ROPE_SEGMENTS", "ROPE_OVERRUN",
     "ROPE_HEIGHT_BOTTOM", "ROPE_HEIGHT_MIDDLE", "ROPE_HEIGHT_TOP",
     "ROPE_SAG_BOTTOM", "ROPE_SAG_MIDDLE", "ROPE_SAG_TOP",
-    "POST_XZ", "POST_SECTION", "POST_BOTTOM", "POST_TOP",
+    "POST_XZ", "POST_RADIUS", "POST_SIDES", "POST_BOTTOM", "POST_TOP",
     "CLAMP_LENGTH", "CLAMP_RADIUS", "CLAMP_INSET",
     "PAD_FACE_WIDTH", "PAD_FACE_HEIGHT", "PAD_FACE_LIFT", "PAD_FACE_V_SPAN",
     "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
     "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
-    "STEP_POST_GAP",
+    "STEP_CORNER_NOTCH", "STEP_APRON_GAP", "APRON_OUT",
 ]
 
 # Placeholder colours only; ring_builder.gd overrides all four by name.
@@ -114,28 +114,37 @@ def rope_heights(cfg: dict[str, float]) -> list[tuple[float, float]]:
 
 
 def build_posts(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Four corner posts, axis-aligned, with a cap plate on top.
+    """Four corner posts: a round tube with a disc cap.
 
-    The cap is new. The posts previously ended in a bare cut face at
-    POST_TOP; a ring post has a plate over the tube, and a flat cut face there
-    reads as unfinished. It matters more now than it did: the post stops just
-    above the top turnbuckle pad rather than well clear of it, so the plate is
-    the corner's top edge instead of something lost above the action.
+    These were 0.155m square columns carrying a cap plate 1.22x their own
+    section. A real ring post is a length of 4-inch pipe -- slim enough that
+    the turnbuckle pads are obviously the widest thing at a corner, and capped
+    with a disc barely proud of the tube. The square version read as a
+    structural pillar with wings, and the overhanging plate gave every corner
+    a lid.
+
+    Built as a tube rather than a bevelled box so the highlight travels round
+    it as the house rig moves, which is the whole reason the reference's posts
+    read as metal at all.
     """
     post = parts["PostMesh"]
-    section = cfg["POST_SECTION"]
-    height = cfg["POST_TOP"] - cfg["POST_BOTTOM"]
+    radius = cfg["POST_RADIUS"]
+    sides = int(cfg["POST_SIDES"])
     for sx in (-1.0, 1.0):
         for sz in (-1.0, 1.0):
-            center = Vector((cfg["POST_XZ"] * sx,
-                             (cfg["POST_BOTTOM"] + cfg["POST_TOP"]) * 0.5,
-                             cfg["POST_XZ"] * sz))
-            post.box(center, Vector((section, height, section)),
-                     bevel=POST_BEVEL, bevel_segments=2)
-            post.box(
-                Vector((center.x, cfg["POST_TOP"] + 0.012, center.z)),
-                Vector((section * 1.22, 0.024, section * 1.22)),
-                bevel=0.006,
+            x = cfg["POST_XZ"] * sx
+            z = cfg["POST_XZ"] * sz
+            post.tube(
+                [Vector((x, cfg["POST_BOTTOM"], z)),
+                 Vector((x, cfg["POST_TOP"], z))],
+                radius, sides=sides,
+            )
+            # The cap: a short, slightly wider disc closing the tube. Proud by
+            # 6mm, not by a quarter of the post's width.
+            post.tube(
+                [Vector((x, cfg["POST_TOP"], z)),
+                 Vector((x, cfg["POST_TOP"] + 0.020, z))],
+                radius * 1.12, sides=sides,
             )
 
 
@@ -312,48 +321,85 @@ def build_apron(cfg: dict[str, float], parts: dict[str, Part]) -> None:
 
 
 def build_steps(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Two sets of steps, each at a CORNER and hard against a ring post.
+    """Two sets of steps, each tucked INTO a corner around the ring post.
 
-    They used to sit halfway down each side, offset 0.35 m along Z for no
-    reason the file gave. Steps belong at the corner: the regulation asks for
-    "suitable steps for use of the contestants in their corners", and on
-    television they stand tight against a post with the top tread level with
-    the apron, so a wrestler climbing them steps over the top rope right
-    beside the turnbuckle.
+    The regulation asks for "suitable steps for use of the contestants in
+    their corners" (Virginia 18VAC120-40-415.1; Hawaii 16-74-295 puts it as
+    two opposite corners), and every steps casting made for a ring has the
+    same detail: the TOP tread has a 45-degree corner missing. That notch is
+    not decoration -- it is what lets the tread pass the ring post, so the
+    flight sits in the corner rather than stopping beside it.
+
+    The previous version held the flight 0.10 clear of the post with a square
+    top tread, which put it at the corner without ever reaching one. Now the
+    flight's far end runs out to the apron's own corner at APRON_OUT and the
+    top tread's ring-side corner is cut back on the diagonal.
 
     Diagonally opposite -- +X beside the post at (+3, +3), -X beside the post
     at (-3, -3) -- so each half of the ring has a way in and neither set
     stands in the entrance walkway down the middle of -Z.
 
     The stringer down each flank is what makes the flight read as one object
-    rather than three stacked slabs with daylight between them.
+    rather than three stacked slabs with daylight between them; on the corner
+    flank the top tread's stringer starts after the notch so it follows the
+    cut instead of spanning it.
     """
     steps = parts["StepsMesh"]
     treads = int(cfg["STEP_TREADS"])
     rise = (cfg["STEP_TOP_Y"] - cfg["STEP_FLOOR_Y"]) / treads
-    # Butt the near edge of the flight against the post.
-    corner = cfg["POST_XZ"] - cfg["STEP_WIDTH"] * 0.5 - cfg["STEP_POST_GAP"]
+    notch = cfg["STEP_CORNER_NOTCH"]
+    inner_x = cfg["APRON_OUT"] + cfg["STEP_APRON_GAP"]
+    # The flight's far end is the apron's own corner; its near end is a full
+    # tread width back from there.
+    far = cfg["APRON_OUT"]
+    near = far - cfg["STEP_WIDTH"]
+    centre_z = (far + near) * 0.5
 
     for sx, sz in ((1.0, 1.0), (-1.0, -1.0)):
         out = Vector((sx, 0.0, 0.0))
-        tangent = Vector((0.0, 0.0, 1.0))
-        along_z = corner * sz
         for i in range(treads):
             top = cfg["STEP_FLOOR_Y"] + rise * (i + 1)
             depth = cfg["STEP_RUN"] * (treads - i)
-            center = out * (cfg["APRON_OUT"] + 0.06 + depth * 0.5) \
-                + Vector((0.0, (cfg["STEP_FLOOR_Y"] + top) * 0.5, 0.0)) \
-                + tangent * along_z
-            steps.oriented_box(
-                center, tangent, out,
-                Vector((cfg["STEP_WIDTH"], top - cfg["STEP_FLOOR_Y"], depth)),
-            )
+            x_in = inner_x * sx
+            x_out = (inner_x + depth) * sx
+            if i == treads - 1:
+                # Top tread: the rectangle with its ring-side corner at the
+                # far end cut back on the diagonal.
+                inner_edge = [
+                    Vector((x_in, 0.0, near * sz)),
+                    Vector((x_in, 0.0, (far - notch) * sz)),
+                    Vector((x_in + notch * sx, 0.0, far * sz)),
+                ]
+                outer_edge = [
+                    Vector((x_out, 0.0, near * sz)),
+                    Vector((x_out, 0.0, (far - notch) * sz)),
+                    Vector((x_out, 0.0, far * sz)),
+                ]
+                steps.prism(inner_edge, outer_edge,
+                            cfg["STEP_FLOOR_Y"], top, closed=False)
+            else:
+                center = out * (inner_x + depth * 0.5) \
+                    + Vector((0.0, (cfg["STEP_FLOOR_Y"] + top) * 0.5, 0.0)) \
+                    + Vector((0.0, 0.0, centre_z * sz))
+                steps.oriented_box(
+                    center, Vector((0.0, 0.0, 1.0)), out,
+                    Vector((cfg["STEP_WIDTH"], top - cfg["STEP_FLOOR_Y"],
+                            depth)),
+                )
         for side in (-1.0, 1.0):
-            z = along_z + side * (cfg["STEP_WIDTH"] * 0.5 + 0.012)
+            z = (centre_z * sz) + side * (cfg["STEP_WIDTH"] * 0.5 + 0.012)
+            on_corner_flank = side == sz
             for i in range(treads):
                 top = cfg["STEP_FLOOR_Y"] + rise * (i + 1)
                 depth = cfg["STEP_RUN"] * (treads - i)
-                center = out * (cfg["APRON_OUT"] + 0.06 + depth * 0.5) \
+                start = inner_x
+                if on_corner_flank and i == treads - 1:
+                    # Follow the cut rather than spanning it.
+                    start = inner_x + notch
+                    depth -= notch
+                    if depth <= 0.0:
+                        continue
+                center = out * (start + depth * 0.5) \
                     + Vector((0.0, (cfg["STEP_FLOOR_Y"] + top) * 0.5, 0.0)) \
                     + Vector((0.0, 0.0, z))
                 steps.oriented_box(

@@ -62,8 +62,9 @@ build on one night.
 
 | property | source | value | build |
 | --- | --- | --- | --- |
-| steel steps position | Virginia 18VAC120-40-415.1 — the ring "shall have suitable steps for use of the contestants **in their corners**" | at the corners, not mid-side | two sets, each butted against a post, `STEP_POST_GAP` = 0.10 between |
-| steps arrangement | broadcast convention: two sets, opposite | diagonal | `+X` beside the post at (+3, +3); `-X` beside the post at (-3, -3) |
+| steel steps position | Virginia 18VAC120-40-415.1 — the ring "shall have suitable steps for use of the contestants **in their corners**"; Hawaii 16-74-295 — steps "at two opposite corners" | at the corners, not mid-side | two sets, each running out to the apron's own corner at `APRON_OUT` |
+| steel steps shape | every ring-steps casting: the top tread has a 45° corner missing, so it can pass the ring post | notched top tread | `STEP_CORNER_NOTCH` = 0.26 on each leg, a 0.37 diagonal against a post 0.104 across |
+| steps arrangement | broadcast convention: two sets, opposite | diagonal | `+X` at the corner by the post at (+3, +3); `-X` at the corner by the post at (-3, -3) |
 | barrier distance | Virginia 18VAC120-40-415.1 — "the ringside barrier must be a **minimum of six feet** from the outside edge of the ring" | ≥ 6 ft (1.83 m) from the ring's outside edge | `BARRICADE_RADIUS` 6.0 from ring centre — **2.80 m (9 ft 2 in)** clear of the apron at 3.20 |
 | ringside floor | every televised ringside | black interlocking matting, barrier in to the ring | `RingsideMat`, a slab out to the barrier line |
 
