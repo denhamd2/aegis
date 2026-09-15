@@ -166,9 +166,54 @@ const TURNBUCKLE_PAD_BEVEL := 0.045
 ## It is centred ON the pad's inner face rather than in front of it, so half
 ## its depth is buried in the cushion and half stands proud -- a plate bolted
 ## through a pad, not a box parked against one.
-const CONNECTOR_WIDTH := 0.20
+const CONNECTOR_WIDTH := 0.10
 const CONNECTOR_HEIGHT := 0.085
 const CONNECTOR_DEPTH := 0.07
+## How far along the pad, from its centre, each connector sits.
+##
+## They were centred on the pad's face, which was a fair reading of the
+## reference until the pad got its AEW artwork -- a steel plate parked over the
+## middle of the logo. The reference puts the bracket at the ROPE END anyway,
+## where the rope enters the cushion, not on the front of it. Two per pad, one
+## per rope, right out at the cushion's ends.
+##
+## 0.20 wide at +/-0.15 was the first try and swallowed the artwork: the plates
+## reached from 0.05 to 0.25 either side of centre, against a face only 0.43
+## wide, so all that showed of the logo was a sliver through the middle. At
+## 0.10 wide and +/-0.205 they sit on the pad's ends where the ropes enter and
+## leave the face clear.
+const CONNECTOR_TANGENT := 0.205
+
+# --- The pad's artwork -------------------------------------------------------
+## The AEW pad face, supplied by the project owner, on a flat quad sat just
+## proud of each cushion's front.
+##
+## A DECAL rather than a mapping of the cushion itself. The pads are bevelled
+## boxes built through `_beveled`, and `venue.py` gives anything that goes
+## through it a planar world projection -- fine for tiling cloth, useless for
+## landing one logo the right way up, once, on one face of twelve boxes. A quad
+## with explicit UVs is the smaller and more controllable piece of work, and it
+## leaves the cushion's rounded silhouette untouched.
+const PAD_FACE_TEXTURE := "res://assets/environment/materials/turnbuckle_pad.png"
+## Inset from the pad's full size by the bevel on each side, so the quad lands
+## on the FLAT part of the front and not on the rounding, where it would float
+## off the surface.
+##
+## Written as literals rather than as `TURNBUCKLE_PAD_WIDTH - 2 * BEVEL`,
+## which is what they are: `tools/blender/venue.py` parses its constants out of
+## this file and takes plain numbers only, so an expression here stops the ring
+## exporting at all. `test_the_pad_face_is_inset_by_the_bevel` holds the two
+## ends together instead.
+const PAD_FACE_WIDTH := 0.43
+const PAD_FACE_HEIGHT := 0.15
+## Clear of the cushion's face, to keep the two out of a depth fight.
+const PAD_FACE_LIFT := 0.004
+## The artwork is 1774x887 -- exactly 2:1 -- and the flat face is 2.867:1, so
+## mapping the whole image onto it would stretch the mark sideways by 43%.
+## Sampling the middle 0.6977 of the HEIGHT gives a region of the same aspect
+## as the quad, and what it crops is the black margin above and below the
+## letters rather than any of the mark.
+const PAD_FACE_V_SPAN := 0.6977
 
 # --- Posts -------------------------------------------------------------------
 ## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
@@ -565,6 +610,31 @@ func _roll_point(basis_dir: Vector3, t: float) -> Vector3:
 			+ APRON_ROLL_RADIUS * cos(angle), 0)
 
 
+## The AEW artwork on the front of each turnbuckle pad.
+##
+## Unshaded it is not -- a pad is vinyl and takes the ring light like the
+## cushion behind it -- but it is NOT the library's `ring_turnbuckle_pad`
+## either: that key carries a fabric normal map at a 0.30m tile, which at this
+## size would crawl a weave across the letterforms.
+func _pad_face_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	var tex: Texture2D = load(PAD_FACE_TEXTURE)
+	if tex != null:
+		mat.albedo_texture = tex
+	mat.texture_repeat = false
+	mat.roughness = 0.68
+	mat.metallic = 0.0
+	# Two-sided, and this is the fix for a failure venue.py's own `finish`
+	# warns about: `recalc_face_normals` finds the outside of a closed solid,
+	# but an OPEN SHEET has no outside, so it picks an arbitrary direction and
+	# a sheet facing the wrong way renders as nothing at all. Its `face_toward`
+	# escape hatch takes one direction per part and these twelve quads face
+	# four different diagonals, whose normals sum to nothing. Culling off makes
+	# the winding irrelevant, which for a flat decal costs nothing.
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return mat
+
+
 ## The apron banner, on the roll, so the graphic runs over the edge instead of
 ## stopping at it.
 ##
@@ -803,6 +873,7 @@ func _model_materials() -> Dictionary:
 		# post's paint: they are the one bright thing at a corner and the
 		# whole reason they are modelled.
 		"TurnbuckleConnectors": _bare_steel(),
+		"TurnbuckleFaces": _pad_face_material(),
 		"RopeMesh": _rope_material(),
 		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
 			{"tint": Color(0.105, 0.105, 0.112)}),

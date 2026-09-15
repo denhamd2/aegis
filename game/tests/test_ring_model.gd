@@ -77,17 +77,13 @@ func test_the_turnbuckle_pad_stands_proud_of_the_post() -> void:
 		.is_greater(RingBuilder.TURNBUCKLE_PAD_BEVEL)
 
 
-## EVERY PAD CARRIES ITS CONNECTOR PLATE.
+## EVERY PAD CARRIES ITS CONNECTOR PLATES.
 ##
-## The plate is the only light-coloured thing at a corner -- a flat steel
-## bracket bolted through the cushion, and the reference's most legible piece
-## of corner hardware. Without it the corners render as three featureless
-## black cushions, which is exactly what was shipped until someone looked.
-##
-## Twelve of them, and they must sit ON the pad face: centred there, so half
-## the depth is buried and half stands proud. A plate pushed fully inside the
-## cushion is invisible and passes any test that only counts geometry.
-func test_every_pad_carries_a_connector_plate() -> void:
+## The plates are the only light-coloured thing at a corner -- flat steel
+## brackets at the ends of each cushion, where the ropes enter. Without them a
+## corner renders as three featureless black cushions, which is what shipped
+## until someone looked at it.
+func test_every_pad_carries_its_connector_plates() -> void:
 	var root := _model()
 	var node := root.find_child("TurnbuckleConnectors", true, false) as MeshInstance3D
 	assert_object(node) \
@@ -95,18 +91,90 @@ func test_every_pad_carries_a_connector_plate() -> void:
 			"%s has no 'TurnbuckleConnectors' object" % MODEL) \
 		.is_not_null()
 	var box := node.get_aabb()
-	var diagonal := sqrt(2.0)
-	var face := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal \
-		- RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
-	# The plates straddle the pad face, so their outermost corner reaches
-	# half a plate-depth proud of it along the diagonal.
-	var reach := (box.position.x + box.position.z) / diagonal
-	assert_float(reach) \
+	var half := RingBuilder.CONNECTOR_HEIGHT * 0.5
+	assert_float(box.position.y) \
+		.is_equal_approx(RingBuilder.ROPE_HEIGHT_BOTTOM - half, 0.02)
+	assert_float(box.end.y) \
+		.is_equal_approx(RingBuilder.ROPE_HEIGHT_TOP + half, 0.02)
+	root.free()
+
+
+## THE PLATES STAND PROUD OF THE CUSHION, and clear of its artwork.
+##
+## Arithmetic on the constants, because both halves are relationships rather
+## than measurements. A plate centred on the pad face is half buried and half
+## visible -- pushed fully inside it is invisible and passes any test that only
+## counts geometry. And it has to sit outside the artwork: at 0.20 wide and
+## +/-0.15 the first pair reached from 0.05 to 0.25 either side of centre,
+## against a 0.43 face, and all that showed of the logo was a sliver up the
+## middle.
+func test_the_connector_plates_clear_the_pad_artwork() -> void:
+	assert_float(RingBuilder.CONNECTOR_DEPTH).is_greater(0.0)
+	var plate_inner := RingBuilder.CONNECTOR_TANGENT \
+		- RingBuilder.CONNECTOR_WIDTH * 0.5
+	var art_edge := RingBuilder.PAD_FACE_WIDTH * 0.5
+	assert_float(plate_inner) \
 		.override_failure_message(
-			"the connector plates reach u=%.3f, but the pad face is at %.3f: "
-			% [reach, face]
-			+ "they are buried in the cushion and cannot be seen") \
-		.is_less(face)
+			"a connector reaches to %.3f from the pad's centre and the "
+			% plate_inner
+			+ "artwork runs to %.3f: the plate is sat on the logo" % art_edge) \
+		.is_greater(art_edge * 0.6)
+
+
+## THE ARTWORK QUAD SITS ON THE FLAT OF THE PAD, not on its rounding.
+##
+## PAD_FACE_WIDTH/HEIGHT are written as literals because `tools/blender/
+## venue.py` parses its constants out of this file and takes plain numbers
+## only -- an expression there stops the ring exporting at all. This is what
+## holds them to what they mean.
+func test_the_pad_face_is_inset_by_the_bevel() -> void:
+	assert_float(RingBuilder.PAD_FACE_WIDTH).is_equal_approx(
+		RingBuilder.TURNBUCKLE_PAD_WIDTH
+		- 2.0 * RingBuilder.TURNBUCKLE_PAD_BEVEL, 0.001)
+	assert_float(RingBuilder.PAD_FACE_HEIGHT).is_equal_approx(
+		RingBuilder.TURNBUCKLE_PAD_HEIGHT
+		- 2.0 * RingBuilder.TURNBUCKLE_PAD_BEVEL, 0.001)
+
+
+## EVERY ARTWORK QUAD FACES THE MAT.
+##
+## This one is measured on the shipped mesh, and it is here because the build
+## got it wrong twice in two different ways, and neither way announced itself.
+##
+## First `venue.finish`'s `recalc_face_normals` reversed the authored winding:
+## it finds the outside of a closed SOLID, and each of these quads is an open
+## sheet that is its own connected component, so it had nothing to go on.
+## Then, with the winding preserved, the tangent the quads were built from
+## (`-sx, 0, sz`) flipped handedness with the parity of sx*sz, so two corners
+## of four still came out backwards.
+##
+## Neither failure was visible as an absence, because the material is
+## two-sided: a backwards quad renders its logo MIRRORED. On a letterform that
+## is glaring once you look; on any tiling texture it would never have been
+## caught at all. So it is asserted rather than eyeballed.
+func test_every_pad_artwork_quad_faces_the_mat() -> void:
+	var root := _model()
+	var node := root.find_child("TurnbuckleFaces", true, false) as MeshInstance3D
+	assert_object(node) \
+		.override_failure_message("%s has no 'TurnbuckleFaces' object" % MODEL) \
+		.is_not_null()
+	var arrays := (node.mesh as ArrayMesh).surface_get_arrays(0)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	assert_int(normals.size()).is_equal(verts.size())
+	var outward := 0
+	for i in verts.size():
+		# Inward is -position in the horizontal plane: the quads sit on the
+		# corner diagonals and must look back at ring centre.
+		var toward_centre := Vector3(-verts[i].x, 0.0, -verts[i].z).normalized()
+		if normals[i].dot(toward_centre) <= 0.0:
+			outward += 1
+	assert_int(outward) \
+		.override_failure_message(
+			"%d of %d artwork vertices face away from the mat: those pads "
+			% [outward, verts.size()]
+			+ "render their logo mirrored") \
+		.is_equal(0)
 	root.free()
 
 

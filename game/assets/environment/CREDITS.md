@@ -153,6 +153,23 @@ owner's decision to make; this file only makes sure nobody has to discover the
 marks by looking at a screenshot.
 
 
+## turnbuckle_pad.png — THIRD-PARTY MARKS, supplied by the project owner
+
+The turnbuckle pad artwork (`materials/turnbuckle_pad.png`, 1774x887) was
+supplied directly by the project owner and is placed on a flat quad just proud
+of each of the twelve cushions (`core/ring/ring_builder.gd`,
+`PAD_FACE_TEXTURE`).
+
+It carries **third-party trademarks** — the AEW mark — on the same terms as
+the apron banner and the canvas: no licence, no author, in the build because
+`ARCHITECTURE.md` permits third-party assets, fine for a prototype and for
+internal capture, and **not cleared for distribution**.
+
+Used as supplied, at native resolution. The only transform is a UV crop: the
+image is exactly 2:1 and the pad's flat face is 2.867:1, so the middle 0.6977
+of its height is sampled to keep the mark undistorted. What that crops is the
+black margin above and below the letters.
+
 ## ring_canvas.png — THIRD-PARTY MARKS, supplied by the project owner
 
 The ring canvas artwork (`materials/ring_canvas.png`, 1254x1254) was supplied

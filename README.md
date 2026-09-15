@@ -5294,3 +5294,60 @@ invisible and would pass any test that only counted geometry.
 The rope clamps from the previous round stay: in the reference those are the
 black sleeving on the rope either side of the bracket, and they are a
 different part doing a different job.
+
+
+## Round: the AEW mark on the turnbuckle pads
+
+The owner supplied the pad artwork. Placing it took four goes, and three of
+the four failures were invisible in the sense that mattered — nothing was
+missing, it was just wrong.
+
+### A decal, not a mapping
+
+The pads are bevelled boxes built through `venue.py`'s `_beveled`, and
+anything that goes through `finish()`'s `projected` set gets a world-metre
+planar projection: right for tiling cloth, useless for landing one logo the
+right way up, once, on one face of twelve boxes. So the artwork is a flat quad
+with authored UVs sat 4mm proud of each cushion, and the cushion's rounded
+silhouette is left alone behind it.
+
+The quad is inset from the pad's full size by the bevel on each side, so it
+lands on the flat of the face rather than on the rounding. Those two numbers
+are literals rather than `WIDTH - 2 * BEVEL`, because `venue.py` parses its
+constants out of `ring_builder.gd` and takes plain numbers only — an
+expression there stops the ring exporting at all. A test holds them to what
+they mean.
+
+### Three ways to get a quad wrong
+
+**The projection overwrote the UVs.** `TurnbuckleFaces` is excluded from
+`projected` now.
+
+**`recalc_face_normals` reversed the winding.** It finds the outside of a
+closed solid; each of these quads is an open sheet and its own connected
+component, so it had nothing to go on. `finish()` already had `face_toward`
+for this, and it cannot help here: it takes one direction per part, and twelve
+quads on four diagonals have area-weighted normals that sum to nothing. So
+`finish()` grew a third escape, `keep_winding`, for a part whose facing is
+authored.
+
+**The authored winding was itself half wrong.** The quads were built from the
+same `(-sx, 0, sz)` tangent the pads and connectors use. Either perpendicular
+will do for placing a symmetric box, but a quad's winding is a cross product
+and its sign follows the parity of `sx*sz` — so two corners of four came out
+facing the crowd. `(-sz, 0, sx)` is parity-independent.
+
+None of the three rendered as an absence. The material is two-sided, so a
+backwards quad shows its logo MIRRORED — glaring on a letterform, and on any
+tiling texture something that would never have been caught. That is why
+`test_every_pad_artwork_quad_faces_the_mat` measures the shipped normals
+rather than trusting the frame.
+
+### The connectors moved twice
+
+They were centred on the pad face, which was a fair reading of the reference
+until the face had artwork on it — a steel plate parked over the middle of the
+logo. The reference puts the bracket at the rope end anyway. The first move
+kept them 0.20 wide at +/-0.15, which against a 0.43 face left only a sliver
+of logo showing through the middle; 0.10 at +/-0.205 puts them on the
+cushion's ends where the ropes enter.

@@ -67,6 +67,8 @@ WANTED = [
     "POST_XZ", "POST_SECTION", "POST_BOTTOM", "POST_TOP",
     "CLAMP_LENGTH", "CLAMP_RADIUS", "CLAMP_INSET",
     "CONNECTOR_WIDTH", "CONNECTOR_HEIGHT", "CONNECTOR_DEPTH",
+    "CONNECTOR_TANGENT",
+    "PAD_FACE_WIDTH", "PAD_FACE_HEIGHT", "PAD_FACE_LIFT", "PAD_FACE_V_SPAN",
     "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
     "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
@@ -80,6 +82,7 @@ PART_COLORS = {
     "TurnbuckleFittings": (0.11, 0.11, 0.115, 1.0),
     "TurnbucklePads": (0.055, 0.055, 0.060, 1.0),
     "TurnbuckleConnectors": (0.62, 0.62, 0.63, 1.0),
+    "TurnbuckleFaces": (0.9, 0.9, 0.9, 1.0),
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
     "ApronRail": (0.105, 0.105, 0.112, 1.0),
     "StepsMesh": (0.62, 0.62, 0.63, 1.0),
@@ -88,6 +91,10 @@ PART_COLORS = {
 # steps are faceted steel and smoothing them only muddies the arris the bevel
 # was added to catch.
 SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings", "TurnbucklePads"})
+## Parts whose UVs AND winding are authored rather than derived. Both have to
+## travel together: authored UVs are only meaningful on a face that is shown
+## the right way round.
+UNPROJECTED = frozenset({"TurnbuckleFaces"})
 
 # Bevel widths, as a fraction of the smallest section each piece has. Small:
 # these are chamfers that catch a highlight, not rounded-over furniture.
@@ -230,10 +237,64 @@ def build_connectors(cfg: dict[str, float], parts: dict[str, Part]) -> None:
         for sz in (-1.0, 1.0):
             inward = Vector((-sx, 0.0, -sz))
             tangent = Vector((-sx, 0.0, sz))
+            unit_tangent = tangent.normalized()
+            for height, _ in rope_heights(cfg):
+                middle = Vector((per_axis * sx, height, per_axis * sz))
+                # One per ROPE, at the end of the pad that rope enters --
+                # which is where the reference puts the bracket, and which
+                # keeps the face clear for the artwork.
+                for side in (-1.0, 1.0):
+                    centre = middle + unit_tangent * (cfg["CONNECTOR_TANGENT"]
+                                                      * side)
+                    plates.oriented_box(centre, tangent, inward, size,
+                                        bevel=0.008, bevel_segments=1)
+
+
+def build_pad_faces(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The AEW artwork on the front of each cushion, as a flat quad.
+
+    A decal, not a mapping of the pad itself. `_beveled` boxes get `venue.py`'s
+    planar world projection, which tiles by world position -- right for cloth,
+    useless for landing one logo the right way up, once, on one face of twelve
+    boxes. Explicit UVs on a quad are smaller and fully controllable, and the
+    cushion's rounded silhouette is left alone behind it.
+
+    Wound top-left, bottom-left, bottom-right, top-right so the normal comes
+    out along `inward`; the other order faces the quad at the crowd and it
+    renders as nothing from the mat.
+    """
+    faces = parts["TurnbuckleFaces"]
+    diagonal = math.sqrt(2.0)
+    # Just proud of the cushion's flat front, to stay out of a depth fight.
+    face_u = cfg["TURNBUCKLE_PAD_XZ"] * diagonal \
+        - cfg["TURNBUCKLE_PAD_DEPTH"] * 0.5 - cfg["PAD_FACE_LIFT"]
+    per_axis = face_u / diagonal
+    half_w = cfg["PAD_FACE_WIDTH"] * 0.5
+    half_h = cfg["PAD_FACE_HEIGHT"] * 0.5
+    # Crop the artwork's height to the quad's aspect -- see PAD_FACE_V_SPAN.
+    v0 = (1.0 - cfg["PAD_FACE_V_SPAN"]) * 0.5
+    v1 = v0 + cfg["PAD_FACE_V_SPAN"]
+    up = Vector((0.0, 1.0, 0.0))
+    for sx in (-1.0, 1.0):
+        for sz in (-1.0, 1.0):
+            # (-sz, 0, sx), NOT the (-sx, 0, sz) the pads and connectors use.
+            # Both are perpendicular to the inward diagonal and either will do
+            # for placing a symmetric box, but the quad's winding is a cross
+            # product and its SIGN follows the parity of sx*sz: with
+            # (-sx, 0, sz) two of the four corners come out facing the crowd.
+            # That is why half the pads rendered their logo mirrored and half
+            # did not -- and with a two-sided material, nothing vanished to
+            # say so.
+            tangent = Vector((-sz, 0.0, sx)).normalized()
             for height, _ in rope_heights(cfg):
                 centre = Vector((per_axis * sx, height, per_axis * sz))
-                plates.oriented_box(centre, tangent, inward, size,
-                                    bevel=0.008, bevel_segments=1)
+                faces.quad_at(
+                    centre - tangent * half_w + up * half_h,
+                    centre - tangent * half_w - up * half_h,
+                    centre + tangent * half_w - up * half_h,
+                    centre + tangent * half_w + up * half_h,
+                    [(0.0, v1), (0.0, v0), (1.0, v0), (1.0, v1)],
+                )
 
 
 def build_ropes(cfg: dict[str, float], parts: dict[str, Part]) -> None:
@@ -353,11 +414,17 @@ def main(argv: list[str]) -> int:
     build_terminations(cfg, parts)
     build_turnbuckle_pads(cfg, parts)
     build_connectors(cfg, parts)
+    build_pad_faces(cfg, parts)
     build_ropes(cfg, parts)
     build_apron(cfg, parts)
     build_steps(cfg, parts)
+    # TurnbuckleFaces is excluded from the planar projection. Everything else
+    # here is boxes and tubes wearing tiled library surfaces, for which a
+    # world-metre projection is right; the pad faces carry ONE logo placed by
+    # hand, and cube_project would overwrite the UVs that put it there.
     venue.finish(parts, PART_COLORS, smooth=SMOOTH,
-                 projected=frozenset(PART_COLORS) - SMOOTH)
+                 projected=frozenset(PART_COLORS) - SMOOTH - UNPROJECTED,
+                 keep_winding=UNPROJECTED)
 
     out = pathlib.Path(args.out)
     venue.export_glb(out)

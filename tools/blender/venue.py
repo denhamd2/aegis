@@ -462,7 +462,8 @@ def finish(parts: dict[str, Part], colors: dict[str, tuple],
            smooth: frozenset[str] = frozenset(),
            projected: frozenset[str] = frozenset(),
            face_toward: dict[str, tuple] | None = None,
-           flip: frozenset[str] = frozenset()) -> None:
+           flip: frozenset[str] = frozenset(),
+           keep_winding: frozenset[str] = frozenset()) -> None:
     """Turn every Part into a scene object with a placeholder material.
 
     The colours are NOT the shipped look: the GDScript overrides every part
@@ -476,7 +477,20 @@ def finish(parts: dict[str, Part], colors: dict[str, tuple],
             raise SystemExit("venue.py: part '%s' is empty." % name)
         mesh = bpy.data.meshes.new(name)
         bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:], dist=0.0005)
-        bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
+        # `keep_winding` is the third escape from this call, after
+        # `face_toward` and `flip`, and it is for a part whose winding was
+        # AUTHORED rather than left to come out of a solid.
+        #
+        # `face_toward` handles a sheet that faces one way. It cannot handle a
+        # part of several sheets facing DIFFERENT ways -- the turnbuckle pad
+        # faces are twelve quads on four diagonals, whose area-weighted
+        # normals sum to nothing. Each quad is its own connected component, so
+        # recalc picks a direction per quad with nothing to go on, and the
+        # ones it gets backwards do not vanish if the material is two-sided:
+        # they render their texture MIRRORED, which on a letterform is
+        # glaring and on a tiling surface would never have been noticed.
+        if name not in keep_winding:
+            bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
         # `recalc_face_normals` finds the outside of a CLOSED solid. An open
         # sheet has no outside, so it picks a consistent direction and that
         # direction is arbitrary -- and a sheet facing the wrong way is
