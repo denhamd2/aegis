@@ -99,8 +99,29 @@ const STAGE_BACK_Z := -38.0
 ## improve here but do not reach their 0.24-0.31 band: closing them on this
 ## lever alone would need the mat near 0.55, outside its own. See README.
 @export var top_energy: float = 24.0
-## Cool back/rim pair. Kept deliberately small: rim light lands on the
-## wrestlers, and every unit of it CLOSES the 0.24-0.31 gap the bar wants.
+## Cool back/rim pair.
+##
+## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
+## because it sent a round down the wrong path.
+##
+## It used to read: "Kept deliberately small: rim light lands on the wrestlers,
+## and every unit of it CLOSES the 0.24-0.31 gap the bar wants." That is a
+## sound argument and it is not what the renderer does. Measured on
+## forward_plus with measure_silhouette.py, holding everything else fixed:
+##
+##   rim    mat      mat<->A   mat<->B
+##   2.2    0.437     0.185     0.236
+##   1.2    0.435     0.184     0.235
+##   0.6    0.433     0.185     0.234
+##
+## Cutting rim by 73% moved the gaps by 0.001 -- inside noise. The fixtures are
+## aimed across the ring from behind, so at the spawn standoff they rake the
+## figures at a grazing angle and contribute almost nothing to a front-facing
+## silhouette's mean.
+##
+## So it STAYS at 2.2. Spending the cool back light that separates a figure
+## from a dark crowd, in exchange for 0.001 of a gap, would be paying for
+## nothing. The gap was closed on the attire instead -- see match.tscn.
 @export var rim_energy: float = 2.2
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20

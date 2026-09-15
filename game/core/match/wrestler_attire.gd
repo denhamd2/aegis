@@ -73,7 +73,16 @@ class Piece:
 ## not reference measurements -- gauntlet/refs/ measures nothing about gear
 ## colours. Denim mid-blue, boot/sleeve near-black, buzz-hair dark brown,
 ## chain steel.
-const DENIM := Color(0.36, 0.46, 0.60)
+## Was Color(0.36, 0.46, 0.60) -- relative luminance 0.449, and the brightest
+## large surface on WrestlerB by a distance. VISUAL_BAR.md wants both men
+## 0.24-0.31 below the mat and B sat at 0.235; his shorts are the only thing
+## on him big enough to move that, because every other variant-2 piece is
+## either near-black already or too small to matter.
+##
+## Darkened by 0.6, which is still plainly denim. The palette note above
+## applies: these are engineering values, and gauntlet/refs/ measures nothing
+## about gear colours, so there is no measurement being overridden here.
+const DENIM := Color(0.216, 0.276, 0.36)
 const BOOT_BLACK := Color(0.08, 0.08, 0.09)
 const BUZZ_DARK := Color(0.13, 0.10, 0.08)
 const STEEL := Color(0.55, 0.57, 0.60)

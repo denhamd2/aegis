@@ -5415,3 +5415,88 @@ puts much of that fifth over 0.5. The reference frames it is compared against
 are wide bowl shots that are mostly dark crowd. It is recorded here rather
 than treated as a pass or a failure, because the two framings are not
 comparable and measure_look.py's own docstring says so.
+
+
+## Round: all four figures inside the band, on the renderer that ships
+
+VISUAL_BAR.md's four figures are, for the first time, all inside their
+reference bands on `forward_plus`:
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.437 | **0.436** | 0.43-0.49 |
+| mat <-> wrestler A | 0.185 | **0.287** | 0.24-0.31 |
+| mat <-> wrestler B | 0.236 | **0.253** | 0.24-0.31 |
+| wrestler <-> wrestler | 0.051 | **0.034** | 0.00-0.07 |
+
+The earlier "all four inside" result, in the round that built the harness, was
+measured on `gl_compatibility` -- a renderer `project.godot` does not ship.
+This one is on the shipping pipeline.
+
+### The planned lever did nothing
+
+The round was planned around `rim_energy`, on the strength of its own comment:
+*"rim light lands on the wrestlers, and every unit of it CLOSES the 0.24-0.31
+gap the bar wants."* That is a sound argument about light, and it is not what
+this rig does. Holding everything else fixed:
+
+| rim | mat | mat<->A | mat<->B |
+| --- | --- | --- | --- |
+| 2.2 | 0.437 | 0.185 | 0.236 |
+| 1.2 | 0.435 | 0.184 | 0.235 |
+| 0.6 | 0.433 | 0.185 | 0.234 |
+
+Cutting it by 73% moved the gaps by 0.001. The fixtures are aimed across the
+ring from behind, so at the spawn standoff they rake the figures at a grazing
+angle and barely reach a front-facing silhouette. **So rim was left at 2.2.**
+Spending the cool back light that separates a figure from a dark crowd, for
+0.001 of a gap, would be paying for nothing. The comment is corrected in place
+rather than deleted, because it sent this round down the wrong path first.
+
+### It was never a lighting problem. It was one man's shorts.
+
+Converted to absolute luminance, the failure was an asymmetry, not an offset:
+WrestlerA's `attire_body` was a bright blue at 0.587 relative luminance against
+WrestlerB's 0.212 -- **2.8x** -- and A was the figure that was furthest out.
+Scaling A's attire and accent uniformly by 0.375 (which holds the hue, and so
+`MIN_HUE_SEPARATION`) moved A from 0.185 to 0.286 on its own.
+
+### The second dead wire
+
+B was then 0.005 short, so the same treatment was applied to his
+`attire_body` -- and the rendered figure did not move by a thousandth.
+
+`WrestlerAttire.variant2_body()` dresses **every** one of its pieces from a
+fixed colour (`DENIM`, `BOOT_BLACK`, `SHOE_WHITE`, `STEEL`, `WAIST_*`) or from
+the accent. Not one reads `attire_body`. WrestlerB is `body_variant = 2`, so
+his `attire_body` has never reached the screen. It is left at its original
+value in `match.tscn` with a comment saying so, rather than carrying a
+plausible-looking number that does nothing.
+
+He was darkened on `DENIM` instead -- his shorts, the only surface on him
+large and bright enough to matter at 0.449 -- scaled by 0.6. That took B to
+0.253 and, because B rendered BRIGHTER than A, pulled A<->B *down* from 0.051
+to 0.034 rather than widening it.
+
+### A test that is now measuring a dead value
+
+`test_the_two_wrestlers_separate_from_each_other_by_hue` asserts a hue gap
+between the two `attire_body` colours. For WrestlerB that value does not reach
+the screen, so for him the test pins a number with no rendered consequence --
+the same failure mode as the albedo gate this suite already removed, where
+"a gate that reads a different quantity from the one it names is not a gate".
+It is recorded here rather than quietly rewritten, because deciding what that
+test should assert instead is a design question, not a cleanup.
+
+**Worth looking at before the next art pass:** with A in dark navy and B in
+dark denim, the two men now read closer in HUE than they did. The bar wants
+them close in VALUE and they are (0.034). They still separate by physique,
+silhouette and B's green accents -- but the old bright-blue-versus-red
+contrast is gone, and that was never what the bar was asking for.
+
+### Checked, not assumed
+
+`void_fraction` 0.000 before and after, unchanged. Whole-frame distribution
+essentially unmoved (bright>0.5 15.56% -> 15.32%, p50 0.0294 -> 0.0292).
+The frame was looked at: both men separate cleanly from the mat and neither
+is muddy.

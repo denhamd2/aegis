@@ -179,13 +179,23 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 player_index = 0
 is_ai = false
-attire_body = Color(0.42, 0.6, 0.95, 1)
+; VALUE, not hue. Was Color(0.42, 0.6, 0.95) -- a bright blue at 0.587
+; relative luminance, against WrestlerB's 0.212. That 2.8x was the whole of
+; the mat<->wrestler failure: VISUAL_BAR.md wants both men 0.24-0.31 below the
+; mat, and A sat at 0.185 while B sat at 0.236. It was an asymmetry in one
+; man's gear, not a global exposure problem.
+;
+; Scaled uniformly by 0.375, which holds the hue at 0.6 and so keeps
+; test_wrestler_colorway's MIN_HUE_SEPARATION. Measured: A 0.185 -> 0.286.
+attire_body = Color(0.157, 0.225, 0.356, 1)
 skin_tone = Color(0.66, 0.5, 0.4, 1)
 physique_bulk = 0.94
 body_variant = 0
 physique_height = 0.98
 torso_width = 1.0
-attire_accent = Color(0.46, 0.72, 1, 1)
+; Scaled with the body it trims. At Color(0.46, 0.72, 1) this was luminance
+; 0.685 -- the brightest thing on either wrestler.
+attire_accent = Color(0.172, 0.27, 0.375, 1)
 strike_move = ExtResource("7")
 grapple_move = ExtResource("15")
 signature_move = ExtResource("9")
@@ -201,6 +211,13 @@ grapple_rig_path = NodePath("../GrappleRig")
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 1.5)
 player_index = 1
 is_ai = true
+; UNUSED, and left at its original value to say so. WrestlerB is
+; body_variant 2, and WrestlerAttire.variant2_body() dresses every one of its
+; pieces from a FIXED colour (DENIM, BOOT_BLACK, SHOE_WHITE, STEEL, WAIST_*)
+; or from the accent -- not one reads attire_body. Darkening this to
+; Color(0.33, 0.072, 0.078) moved the rendered figure by exactly nothing
+; (mat<->B 0.235 before and after), which is how the dead wiring was found.
+; B was darkened on DENIM instead; see wrestler_attire.gd.
 attire_body = Color(0.55, 0.12, 0.13, 1)
 skin_tone = Color(0.7, 0.535, 0.43, 1)
 physique_bulk = 1.12
