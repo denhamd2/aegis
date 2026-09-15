@@ -113,9 +113,10 @@ def build_posts(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """Four corner posts, axis-aligned, with a cap plate on top.
 
     The cap is new. The posts previously ended in a bare cut face at
-    POST_TOP; a ring post has a plate over the tube, and at 1.78 m it sits
-    just under the broadcast camera's eyeline where a flat top edge reads as
-    unfinished.
+    POST_TOP; a ring post has a plate over the tube, and a flat cut face there
+    reads as unfinished. It matters more now than it did: the post stops just
+    above the top turnbuckle pad rather than well clear of it, so the plate is
+    the corner's top edge instead of something lost above the action.
     """
     post = parts["PostMesh"]
     section = cfg["POST_SECTION"]

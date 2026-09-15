@@ -130,20 +130,21 @@ with no licence, no author and no provenance, exactly like the folding chair
 recorded above. `ARCHITECTURE.md` permits third-party assets without limit, so
 it is in the build by that rule rather than by an exception.
 
-**It now has a build path.** The banner used to be an opaque image supplied
-directly by the project owner, which was fine for provenance and useless for
-changing it: the crop, the perspective and where the wordmark sat on the skirt
-were all unrecorded, so the only way to adjust any of it was to re-source the
-art. `tools/textures/apron_banner.py` rectifies it out of one of the owner's
-*Dynamite* reference photographs — a homography from four corners read off a
-gridded overlay, then composited centred on a field taken from the banner's
-own cloth.
+**Supplied directly by the project owner**, as a finished apron graphic
+(2928x352): art edge to edge, the AEW block and DYNAMITE wordmark centred, and
+the chevron bursts that wrap a real apron round its corners. It is used as
+supplied, at native resolution, with no processing step -- `scenes/ring.tscn`
+maps it 1:1 onto each apron face.
 
-The photograph itself is **not committed**, following the same convention as
-every other reference here (`gauntlet/raw/README.md`, `gauntlet/refs/ring.md`):
-measurements and observations are committable, the source is not. So the
-script cannot run in CI and is not meant to — it is run by hand when the apron
-changes, exactly like `tools/blender/*.py`.
+There was briefly a `tools/textures/apron_banner.py` here that rectified the
+apron out of one of the owner's reference PHOTOGRAPHS -- a homography from
+four corners, compositing the wordmark onto cloth sampled from the banner
+itself. It was deleted when this graphic arrived. It solved a real problem
+(the previous banner was an opaque crop with no build path) and this solves it
+better, by not being a photograph: there is no perspective to undo, no camera
+operator standing in front of the apron, and no lighting baked into what
+should be an albedo map. A script describing a pipeline the asset no longer
+came through would be worse than no script.
 
 Recorded here rather than left undeclared: it is fine for a prototype and for
 internal capture, and it is **not cleared for distribution**. Anything shipped

@@ -143,9 +143,13 @@ const TURNBUCKLE_PAD_XZ := 3.013
 ## collar under the pad all go with the pad they were dressed for.
 const POST_SECTION := 0.155
 const POST_BOTTOM := -0.10
-## Taller than the outgoing 1.60: in the reference the post stands well clear
-## of the top rope, which is what gives the corner its vertical line.
-const POST_TOP := 1.78
+## 1.78 in the training-hall reference, where a bare post stands well clear of
+## the top rope and that vertical line is the whole of the corner. A padded
+## corner is the other way round: in the AEW references the CUSHION crowns the
+## post, and the cap plate shows just above the top pad rather than towering
+## over it. 1.42 puts the plate 0.10 above the top pad's top edge (top rope
+## 1.20 + half a 0.24 pad), which is what the photographs show.
+const POST_TOP := 1.58
 
 # --- Apron -------------------------------------------------------------------
 const APRON_OUT := 3.20
