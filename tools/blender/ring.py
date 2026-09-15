@@ -66,8 +66,6 @@ WANTED = [
     "ROPE_SAG_BOTTOM", "ROPE_SAG_MIDDLE", "ROPE_SAG_TOP",
     "POST_XZ", "POST_SECTION", "POST_BOTTOM", "POST_TOP",
     "CLAMP_LENGTH", "CLAMP_RADIUS", "CLAMP_INSET",
-    "CONNECTOR_WIDTH", "CONNECTOR_HEIGHT", "CONNECTOR_DEPTH",
-    "CONNECTOR_TANGENT",
     "PAD_FACE_WIDTH", "PAD_FACE_HEIGHT", "PAD_FACE_LIFT", "PAD_FACE_V_SPAN",
     "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
     "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
@@ -81,7 +79,6 @@ PART_COLORS = {
     "PostMesh": (0.075, 0.075, 0.080, 1.0),
     "TurnbuckleFittings": (0.11, 0.11, 0.115, 1.0),
     "TurnbucklePads": (0.055, 0.055, 0.060, 1.0),
-    "TurnbuckleConnectors": (0.62, 0.62, 0.63, 1.0),
     "TurnbuckleFaces": (0.9, 0.9, 0.9, 1.0),
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
     "ApronRail": (0.105, 0.105, 0.112, 1.0),
@@ -213,43 +210,6 @@ def build_turnbuckle_pads(cfg: dict[str, float], parts: dict[str, Part]) -> None
                                   bevel_segments=2)
 
 
-def build_connectors(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """The turnbuckle plate on the face of each pad, one per rope height.
-
-    The reference's corner is not three plain cushions: every rope ends in a
-    flat bracket with a row of bolt holes, bolted through the pad into the
-    post, and it is the only light-coloured thing in a corner otherwise made
-    entirely of matte black. Leaving it out is what made the build's corners
-    read as featureless.
-
-    Centred ON the pad's inner face, so half the depth is buried in the
-    cushion and half stands proud. Turned to the diagonal with the pad, since
-    that is the face it is bolted to.
-    """
-    plates = parts["TurnbuckleConnectors"]
-    # The pad's inner face, in distance from ring centre along the diagonal.
-    diagonal = math.sqrt(2.0)
-    face = cfg["TURNBUCKLE_PAD_XZ"] * diagonal - cfg["TURNBUCKLE_PAD_DEPTH"] * 0.5
-    per_axis = face / diagonal
-    size = Vector((cfg["CONNECTOR_WIDTH"], cfg["CONNECTOR_HEIGHT"],
-                   cfg["CONNECTOR_DEPTH"]))
-    for sx in (-1.0, 1.0):
-        for sz in (-1.0, 1.0):
-            inward = Vector((-sx, 0.0, -sz))
-            tangent = Vector((-sx, 0.0, sz))
-            unit_tangent = tangent.normalized()
-            for height, _ in rope_heights(cfg):
-                middle = Vector((per_axis * sx, height, per_axis * sz))
-                # One per ROPE, at the end of the pad that rope enters --
-                # which is where the reference puts the bracket, and which
-                # keeps the face clear for the artwork.
-                for side in (-1.0, 1.0):
-                    centre = middle + unit_tangent * (cfg["CONNECTOR_TANGENT"]
-                                                      * side)
-                    plates.oriented_box(centre, tangent, inward, size,
-                                        bevel=0.008, bevel_segments=1)
-
-
 def build_pad_faces(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """The AEW artwork on the front of each cushion, as a flat quad.
 
@@ -277,7 +237,7 @@ def build_pad_faces(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     up = Vector((0.0, 1.0, 0.0))
     for sx in (-1.0, 1.0):
         for sz in (-1.0, 1.0):
-            # (-sz, 0, sx), NOT the (-sx, 0, sz) the pads and connectors use.
+            # (-sz, 0, sx), NOT the (-sx, 0, sz) the pads themselves use.
             # Both are perpendicular to the inward diagonal and either will do
             # for placing a symmetric box, but the quad's winding is a cross
             # product and its SIGN follows the parity of sx*sz: with
@@ -413,7 +373,6 @@ def main(argv: list[str]) -> int:
     build_posts(cfg, parts)
     build_terminations(cfg, parts)
     build_turnbuckle_pads(cfg, parts)
-    build_connectors(cfg, parts)
     build_pad_faces(cfg, parts)
     build_ropes(cfg, parts)
     build_apron(cfg, parts)

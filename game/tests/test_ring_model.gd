@@ -77,48 +77,25 @@ func test_the_turnbuckle_pad_stands_proud_of_the_post() -> void:
 		.is_greater(RingBuilder.TURNBUCKLE_PAD_BEVEL)
 
 
-## EVERY PAD CARRIES ITS CONNECTOR PLATES.
+## NO PAD CARRIES A CONNECTOR PLATE.
 ##
-## The plates are the only light-coloured thing at a corner -- flat steel
-## brackets at the ends of each cushion, where the ropes enter. Without them a
-## corner renders as three featureless black cushions, which is what shipped
-## until someone looked at it.
-func test_every_pad_carries_its_connector_plates() -> void:
+## The inverse of the test that used to stand here, and for the same reason:
+## the plates were the only bare-steel surface above the apron, so at 0.10 x
+## 0.085m against a black cushion each one resolved to a white block rather
+## than to a bracket -- six per corner, brighter than the artwork they flanked.
+## See the removal note in ring_builder.gd.
+##
+## Asserted off the shipped mesh, so a regenerated ring.glb that quietly
+## brings them back fails here rather than in someone's screenshot.
+func test_no_pad_carries_a_connector_plate() -> void:
 	var root := _model()
-	var node := root.find_child("TurnbuckleConnectors", true, false) as MeshInstance3D
-	assert_object(node) \
+	assert_object(root.find_child("TurnbuckleConnectors", true, false)) \
 		.override_failure_message(
-			"%s has no 'TurnbuckleConnectors' object" % MODEL) \
-		.is_not_null()
-	var box := node.get_aabb()
-	var half := RingBuilder.CONNECTOR_HEIGHT * 0.5
-	assert_float(box.position.y) \
-		.is_equal_approx(RingBuilder.ROPE_HEIGHT_BOTTOM - half, 0.02)
-	assert_float(box.end.y) \
-		.is_equal_approx(RingBuilder.ROPE_HEIGHT_TOP + half, 0.02)
+			"%s has a 'TurnbuckleConnectors' object again: the white " % MODEL
+			+ "blocks are back on the turnbuckles") \
+		.is_null()
 	root.free()
 
-
-## THE PLATES STAND PROUD OF THE CUSHION, and clear of its artwork.
-##
-## Arithmetic on the constants, because both halves are relationships rather
-## than measurements. A plate centred on the pad face is half buried and half
-## visible -- pushed fully inside it is invisible and passes any test that only
-## counts geometry. And it has to sit outside the artwork: at 0.20 wide and
-## +/-0.15 the first pair reached from 0.05 to 0.25 either side of centre,
-## against a 0.43 face, and all that showed of the logo was a sliver up the
-## middle.
-func test_the_connector_plates_clear_the_pad_artwork() -> void:
-	assert_float(RingBuilder.CONNECTOR_DEPTH).is_greater(0.0)
-	var plate_inner := RingBuilder.CONNECTOR_TANGENT \
-		- RingBuilder.CONNECTOR_WIDTH * 0.5
-	var art_edge := RingBuilder.PAD_FACE_WIDTH * 0.5
-	assert_float(plate_inner) \
-		.override_failure_message(
-			"a connector reaches to %.3f from the pad's centre and the "
-			% plate_inner
-			+ "artwork runs to %.3f: the plate is sat on the logo" % art_edge) \
-		.is_greater(art_edge * 0.6)
 
 
 ## THE ARTWORK QUAD SITS ON THE FLAT OF THE PAD, not on its rounding.

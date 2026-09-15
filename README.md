@@ -5291,6 +5291,10 @@ than the post's paint. `test_every_pad_carries_a_connector_plate` pins the
 "stands proud" half, because a plate pushed fully inside the cushion is
 invisible and would pass any test that only counted geometry.
 
+*(Superseded -- see "the white blocks come off the turnbuckles" below. The
+plates rendered as white blocks and were removed; this round is kept as the
+record of why they were added.)*
+
 The rope clamps from the previous round stay: in the reference those are the
 black sleeving on the rope either side of the bracket, and they are a
 different part doing a different job.
@@ -5500,3 +5504,47 @@ contrast is gone, and that was never what the bar was asking for.
 essentially unmoved (bright>0.5 15.56% -> 15.32%, p50 0.0294 -> 0.0292).
 The frame was looked at: both men separate cleanly from the mat and neither
 is muddy.
+
+
+## Round: the white blocks come off the turnbuckles
+
+The connector plates added a few rounds ago (see "There was no connector,
+because nothing modelled one") are removed. `tools/blender/ring.py` no longer
+builds `TurnbuckleConnectors`, `ring_builder.gd` no longer carries the
+`CONNECTOR_*` constants or the material binding, and `ring.glb` is rebuilt at
+8360 triangles.
+
+### Why the part that was added on purpose came off again
+
+The reasoning that added them still reads correctly and still produced the
+wrong pixels. The reference's bracket is legible because it is a plate **with
+bolt holes** catching a highlight across a matte corner; the shape of it is
+what makes it a bracket. Ours had the value and neither of the other two.
+
+At 0.10 x 0.085m, wearing `_bare_steel()`, it was the only bare-steel surface
+above the apron -- so against a 0.055 cushion each plate resolved to a plain
+white block. Two per rope, six per corner, stacked up the post and brighter
+than the AEW artwork they were placed at the ends of specifically to keep
+clear. The eye found them before it found the mark, the wrestlers or the mat.
+
+Deleted rather than darkened. A plate that is not brighter than the cushion is
+not reading as a plate, it is 96 triangles of nothing; and the honest fix --
+modelling or texturing the bolt holes -- is a different piece of work. The
+removal note in `ring_builder.gd` says so, so that if it comes back it comes
+back with the holes.
+
+### The test inverted rather than deleted
+
+`test_every_pad_carries_its_connector_plates` and
+`test_the_connector_plates_clear_the_pad_artwork` are replaced by one
+`test_no_pad_carries_a_connector_plate`, asserted off the shipped mesh. A
+regenerated `ring.glb` that quietly brings the part back now fails in the
+suite rather than in someone's screenshot -- which is how the blocks were
+found in the first place.
+
+### Checked
+
+Rebuilt twice, byte-identical both times (md5 88bc953a...), so the mesh still
+diffs like the `.tres` bakes. Rendered afterwards through the match camera:
+the corners read as three black cushions with the artwork clear and the ropes
+running into the clamps, which is what the reference's corner is.

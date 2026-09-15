@@ -154,35 +154,25 @@ const TURNBUCKLE_PAD_XZ := 2.979
 ## like every other ring constant.
 const TURNBUCKLE_PAD_BEVEL := 0.045
 
-# --- The turnbuckle connector ------------------------------------------------
-## The metal plate joining a rope to the post, sat on the pad's inner face.
+# --- The turnbuckle connector, and why there isn't one -----------------------
+## REMOVED. There used to be a light steel plate at each end of every pad --
+## CONNECTOR_WIDTH/HEIGHT/DEPTH at CONNECTOR_TANGENT +/-0.205, two per rope,
+## twelve per corner, wearing `_bare_steel()` because the reference's bracket
+## is the one bright thing in an otherwise matte-black corner.
 ##
-## In the reference this is the most legible piece of hardware at a corner: a
-## flat bracket with a row of bolt holes, noticeably LIGHTER than the cushion
-## it is bolted through, catching the ring lights where everything around it
-## is matte black. Without it a corner is three featureless cushions, which is
-## what the build showed.
+## At the scale this ring is actually seen at they did not read as brackets.
+## Each plate is 0.10 x 0.085m and the only bare-steel surface above the
+## apron, so against a black cushion it resolved to a white block -- six of
+## them stacked up a corner, brighter than the AEW artwork they flank and the
+## first thing the eye found in the frame. The reference's bracket is legible
+## because it is a plate WITH BOLT HOLES catching a highlight; ours had no
+## holes and no highlight to catch, just value.
 ##
-## It is centred ON the pad's inner face rather than in front of it, so half
-## its depth is buried in the cushion and half stands proud -- a plate bolted
-## through a pad, not a box parked against one.
-const CONNECTOR_WIDTH := 0.10
-const CONNECTOR_HEIGHT := 0.085
-const CONNECTOR_DEPTH := 0.07
-## How far along the pad, from its centre, each connector sits.
-##
-## They were centred on the pad's face, which was a fair reading of the
-## reference until the pad got its AEW artwork -- a steel plate parked over the
-## middle of the logo. The reference puts the bracket at the ROPE END anyway,
-## where the rope enters the cushion, not on the front of it. Two per pad, one
-## per rope, right out at the cushion's ends.
-##
-## 0.20 wide at +/-0.15 was the first try and swallowed the artwork: the plates
-## reached from 0.05 to 0.25 either side of centre, against a face only 0.43
-## wide, so all that showed of the logo was a sliver through the middle. At
-## 0.10 wide and +/-0.205 they sit on the pad's ends where the ropes enter and
-## leave the face clear.
-const CONNECTOR_TANGENT := 0.205
+## Deleted rather than darkened: a plate that is not brighter than the pad is
+## not a plate, it is 96 triangles of nothing. `tools/blender/ring.py` no
+## longer builds `TurnbuckleConnectors` and `_model_materials()` no longer
+## names it. If it comes back it needs the bolt holes first, because the
+## holes are what made the reference's bracket a bracket.
 
 # --- The pad's artwork -------------------------------------------------------
 ## The AEW pad face, supplied by the project owner, on a flat quad sat just
@@ -869,10 +859,6 @@ func _model_materials() -> Dictionary:
 		# sheen, where the fittings behind it take a tight specular one.
 		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
 			_mat(Color(0.055, 0.055, 0.060), 0.62)),
-		# The connector plates take the STEPS' bare steel rather than the
-		# post's paint: they are the one bright thing at a corner and the
-		# whole reason they are modelled.
-		"TurnbuckleConnectors": _bare_steel(),
 		"TurnbuckleFaces": _pad_face_material(),
 		"RopeMesh": _rope_material(),
 		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
