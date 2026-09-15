@@ -57,6 +57,8 @@ import venue  # noqa: E402 -- venue imports bpy, which registers mathutils
 from venue import Part  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
+import bpy_exit  # noqa: E402
+
 WANTED = [
     "ROPE_SPAN", "ROPE_RADIUS", "ROPE_SEGMENTS", "ROPE_OVERRUN",
     "ROPE_HEIGHT_BOTTOM", "ROPE_HEIGHT_MIDDLE", "ROPE_HEIGHT_TOP",
@@ -273,4 +275,4 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    bpy_exit.finish(main(sys.argv[1:]))

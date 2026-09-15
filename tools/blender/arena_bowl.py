@@ -56,6 +56,7 @@ import bmesh
 from mathutils import Vector
 
 import crowd as crowd_module
+import bpy_exit
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 BUILDER_GD = REPO / "game" / "core" / "arena" / "arena_builder.gd"
@@ -805,4 +806,4 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    bpy_exit.finish(main(sys.argv[1:]))

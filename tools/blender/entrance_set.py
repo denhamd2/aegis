@@ -61,6 +61,8 @@ import venue  # noqa: E402 -- venue imports bpy, which registers mathutils
 from venue import Part  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
+import bpy_exit  # noqa: E402
+
 WANTED = [
     "FLOOR_Y", "WALL_TOP", "ROOF_Y", "TRUSS_Y", "RING_HALF_EXTENT",
     "STAGE_HALF_WIDTH", "STAGE_DECK_Y", "STAGE_BACK", "STAGE_FRONT",
@@ -437,4 +439,4 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    bpy_exit.finish(main(sys.argv[1:]))
