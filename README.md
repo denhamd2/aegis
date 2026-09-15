@@ -5249,3 +5249,48 @@ corner post, which is where they already stood.
 
 381 tests pass. `ring.glb` rebuilds byte-identical, and
 `contact_probe --seeds 1,2,3` is unchanged at 985/1931/2494.
+
+
+## Round: the post behind the pads, and the connector between them
+
+Both reported from a frame, and the first is a mistake this file has now made
+three times in the same corner.
+
+### The post was coming through the cushions
+
+The pad clears the post on the corner diagonal -- that relationship was
+already reasoned out and already asserted. The assertion was `pad_inner <
+post_inner`, which passed: 4.111 against 4.133, 2.2cm of clearance.
+
+The pads carry a 4.5cm bevel. A bevel pulls the front of a box BACK by up to
+its own width, so across most of the cushion's face the post's inner corner
+stood through it -- a faint chevron on every pad, visible from inside the ring
+and invisible to the test.
+
+This is the third time the same shape of error has been made at this corner:
+a fitting that clears a pad's flat face and shows at its rounded edge. The
+first two were the sleeve at 0.115 and then at 0.055. So the number moved
+where it can be tested: `TURNBUCKLE_PAD_BEVEL` now lives in `ring_builder.gd`
+with the clearance it eats into, rather than in `ring.py` with the other bevel
+widths, and the test asserts `clearance > bevel` instead of `clearance > 0`.
+The pad moved inboard, 3.013 -> 2.979, taking the
+clearance to 7.0cm; at the old 3.013 the strengthened test fails.
+
+### There was no connector, because nothing modelled one
+
+The reference's corner is not three plain cushions. Every rope ends in a flat
+steel bracket with a row of bolt holes, bolted through the pad into the post,
+and it is the only light-coloured thing in a corner otherwise made entirely of
+matte black -- which is exactly why its absence read as "featureless" rather
+than as "missing part".
+
+Twelve plates, one per rope height per corner, centred ON the pad's inner face
+so half the depth is buried and half stands proud: a plate bolted through a
+cushion, not a box parked against one. They take the steps' bare steel rather
+than the post's paint. `test_every_pad_carries_a_connector_plate` pins the
+"stands proud" half, because a plate pushed fully inside the cushion is
+invisible and would pass any test that only counted geometry.
+
+The rope clamps from the previous round stay: in the reference those are the
+black sleeving on the rope either side of the bracket, and they are a
+different part doing a different job.

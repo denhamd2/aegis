@@ -60,12 +60,54 @@ func test_the_turnbuckle_pad_stands_proud_of_the_post() -> void:
 	var post_inner := (RingBuilder.POST_XZ - RingBuilder.POST_SECTION * 0.5) * diagonal
 	var pad_centre := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal
 	var pad_inner := pad_centre - RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
-	assert_float(pad_inner) \
+	# Clearance has to beat the BEVEL, not merely be positive. This failed as
+	# a bare `is_less` check: at 2.2cm of clearance against a 4.5cm rounding,
+	# the arithmetic said the pad cleared the post while every rendered
+	# cushion carried a faint chevron where the post's corner came through its
+	# rounded face. A bevel pulls the front of the box back by up to its own
+	# width, so that is the margin the clearance has to exceed.
+	var clearance := post_inner - pad_inner
+	assert_float(clearance) \
 		.override_failure_message(
 			"the pad's inner face sits at u=%.3f and the post's inner corner "
 			% pad_inner
-			+ "at u=%.3f: the post stands through the cushion" % post_inner) \
-		.is_less(post_inner)
+			+ "at u=%.3f -- %.3f of clearance against a bevel of %.3f, so the "
+			% [post_inner, clearance, RingBuilder.TURNBUCKLE_PAD_BEVEL]
+			+ "post shows through the rounded face of the cushion") \
+		.is_greater(RingBuilder.TURNBUCKLE_PAD_BEVEL)
+
+
+## EVERY PAD CARRIES ITS CONNECTOR PLATE.
+##
+## The plate is the only light-coloured thing at a corner -- a flat steel
+## bracket bolted through the cushion, and the reference's most legible piece
+## of corner hardware. Without it the corners render as three featureless
+## black cushions, which is exactly what was shipped until someone looked.
+##
+## Twelve of them, and they must sit ON the pad face: centred there, so half
+## the depth is buried and half stands proud. A plate pushed fully inside the
+## cushion is invisible and passes any test that only counts geometry.
+func test_every_pad_carries_a_connector_plate() -> void:
+	var root := _model()
+	var node := root.find_child("TurnbuckleConnectors", true, false) as MeshInstance3D
+	assert_object(node) \
+		.override_failure_message(
+			"%s has no 'TurnbuckleConnectors' object" % MODEL) \
+		.is_not_null()
+	var box := node.get_aabb()
+	var diagonal := sqrt(2.0)
+	var face := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal \
+		- RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
+	# The plates straddle the pad face, so their outermost corner reaches
+	# half a plate-depth proud of it along the diagonal.
+	var reach := (box.position.x + box.position.z) / diagonal
+	assert_float(reach) \
+		.override_failure_message(
+			"the connector plates reach u=%.3f, but the pad face is at %.3f: "
+			% [reach, face]
+			+ "they are buried in the cushion and cannot be seen") \
+		.is_less(face)
+	root.free()
 
 
 ## THE ROPE ENDS INSIDE THE PAD.

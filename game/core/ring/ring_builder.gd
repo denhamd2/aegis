@@ -135,12 +135,40 @@ const TURNBUCKLE_PAD_DEPTH := 0.30
 ## what the first attempt did: the post's inner corner stood proud of the
 ## cushion and split each pad into two lobes with a pole up the middle.
 ##
-## So the pad's inner face has to clear u = 4.133. At 3.013 per axis the pad
-## is centred at u = 4.261 and spans 4.111 to 4.411 -- 2.2 cm proud of the
-## post's nearest corner, and still deep enough to swallow the rope ends at
-## 4.329. Both conditions at once, which is why the depth went to 0.30: a
-## shallower pad can clear the post or cover the ropes, not both.
-const TURNBUCKLE_PAD_XZ := 3.013
+## So the pad's inner face has to clear u = 4.133, and 3.013 was not enough.
+## It put the face at 4.111, clearing the post by 2.2cm -- against a PAD_BEVEL
+## of 4.5cm. A bevel pulls the cushion's own face back by up to its width near
+## the arris, so across most of the pad's middle the post's corner stood
+## through the front of it and read as a faint chevron on every cushion. This
+## is the nub-through-the-arris mistake again, one part further along.
+##
+## 2.979 puts the face at 4.063: 7.0cm of clearance, comfortably more than the
+## bevel can eat. The rope ends at 4.329 are still inside the pad's outer face
+## at 4.363, which is the other half of the constraint and the reason the
+## depth stays at 0.30.
+const TURNBUCKLE_PAD_XZ := 2.979
+## The rounding on a cushion's arrises. It lives HERE, not in ring.py with the
+## other bevel widths, because it is not only a shading choice: it eats into
+## the clearance above, and a test can only pin that relationship if both
+## numbers are in the same file. `tools/blender/ring.py` reads it out of here
+## like every other ring constant.
+const TURNBUCKLE_PAD_BEVEL := 0.045
+
+# --- The turnbuckle connector ------------------------------------------------
+## The metal plate joining a rope to the post, sat on the pad's inner face.
+##
+## In the reference this is the most legible piece of hardware at a corner: a
+## flat bracket with a row of bolt holes, noticeably LIGHTER than the cushion
+## it is bolted through, catching the ring lights where everything around it
+## is matte black. Without it a corner is three featureless cushions, which is
+## what the build showed.
+##
+## It is centred ON the pad's inner face rather than in front of it, so half
+## its depth is buried in the cushion and half stands proud -- a plate bolted
+## through a pad, not a box parked against one.
+const CONNECTOR_WIDTH := 0.20
+const CONNECTOR_HEIGHT := 0.085
+const CONNECTOR_DEPTH := 0.07
 
 # --- Posts -------------------------------------------------------------------
 ## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
@@ -771,6 +799,10 @@ func _model_materials() -> Dictionary:
 		# sheen, where the fittings behind it take a tight specular one.
 		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
 			_mat(Color(0.055, 0.055, 0.060), 0.62)),
+		# The connector plates take the STEPS' bare steel rather than the
+		# post's paint: they are the one bright thing at a corner and the
+		# whole reason they are modelled.
+		"TurnbuckleConnectors": _bare_steel(),
 		"RopeMesh": _rope_material(),
 		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
 			{"tint": Color(0.105, 0.105, 0.112)}),

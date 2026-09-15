@@ -66,8 +66,9 @@ WANTED = [
     "ROPE_SAG_BOTTOM", "ROPE_SAG_MIDDLE", "ROPE_SAG_TOP",
     "POST_XZ", "POST_SECTION", "POST_BOTTOM", "POST_TOP",
     "CLAMP_LENGTH", "CLAMP_RADIUS", "CLAMP_INSET",
+    "CONNECTOR_WIDTH", "CONNECTOR_HEIGHT", "CONNECTOR_DEPTH",
     "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
-    "TURNBUCKLE_PAD_XZ",
+    "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
     "STEP_POST_GAP",
@@ -78,6 +79,7 @@ PART_COLORS = {
     "PostMesh": (0.075, 0.075, 0.080, 1.0),
     "TurnbuckleFittings": (0.11, 0.11, 0.115, 1.0),
     "TurnbucklePads": (0.055, 0.055, 0.060, 1.0),
+    "TurnbuckleConnectors": (0.62, 0.62, 0.63, 1.0),
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
     "ApronRail": (0.105, 0.105, 0.112, 1.0),
     "StepsMesh": (0.62, 0.62, 0.63, 1.0),
@@ -90,11 +92,9 @@ SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings", "TurnbucklePads"})
 # Bevel widths, as a fraction of the smallest section each piece has. Small:
 # these are chamfers that catch a highlight, not rounded-over furniture.
 POST_BEVEL = 0.010
-## Far wider than the other three, and not a chamfer at all: a turnbuckle pad
-## is a stuffed vinyl cushion, so its arrises are ROUNDED, not broken. At 0.045
-## on a 0.24 m section the rounding is about a fifth of the height, which is
-## what stops three stacked pads reading as three stacked bricks.
-PAD_BEVEL = 0.045
+## The pad's rounding is NOT here with the others: it lives in
+## ring_builder.gd as TURNBUCKLE_PAD_BEVEL, because it eats into the pad's
+## clearance over the post and a test has to be able to see both numbers.
 RAIL_BEVEL = 0.018
 STEP_BEVEL = 0.012
 
@@ -202,7 +202,38 @@ def build_turnbuckle_pads(cfg: dict[str, float], parts: dict[str, Part]) -> None
             for height, _ in rope_heights(cfg):
                 center = Vector((offset * sx, height, offset * sz))
                 pads.oriented_box(center, tangent, inward, size,
-                                  bevel=PAD_BEVEL, bevel_segments=2)
+                                  bevel=cfg["TURNBUCKLE_PAD_BEVEL"],
+                                  bevel_segments=2)
+
+
+def build_connectors(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The turnbuckle plate on the face of each pad, one per rope height.
+
+    The reference's corner is not three plain cushions: every rope ends in a
+    flat bracket with a row of bolt holes, bolted through the pad into the
+    post, and it is the only light-coloured thing in a corner otherwise made
+    entirely of matte black. Leaving it out is what made the build's corners
+    read as featureless.
+
+    Centred ON the pad's inner face, so half the depth is buried in the
+    cushion and half stands proud. Turned to the diagonal with the pad, since
+    that is the face it is bolted to.
+    """
+    plates = parts["TurnbuckleConnectors"]
+    # The pad's inner face, in distance from ring centre along the diagonal.
+    diagonal = math.sqrt(2.0)
+    face = cfg["TURNBUCKLE_PAD_XZ"] * diagonal - cfg["TURNBUCKLE_PAD_DEPTH"] * 0.5
+    per_axis = face / diagonal
+    size = Vector((cfg["CONNECTOR_WIDTH"], cfg["CONNECTOR_HEIGHT"],
+                   cfg["CONNECTOR_DEPTH"]))
+    for sx in (-1.0, 1.0):
+        for sz in (-1.0, 1.0):
+            inward = Vector((-sx, 0.0, -sz))
+            tangent = Vector((-sx, 0.0, sz))
+            for height, _ in rope_heights(cfg):
+                centre = Vector((per_axis * sx, height, per_axis * sz))
+                plates.oriented_box(centre, tangent, inward, size,
+                                    bevel=0.008, bevel_segments=1)
 
 
 def build_ropes(cfg: dict[str, float], parts: dict[str, Part]) -> None:
@@ -321,6 +352,7 @@ def main(argv: list[str]) -> int:
     build_posts(cfg, parts)
     build_terminations(cfg, parts)
     build_turnbuckle_pads(cfg, parts)
+    build_connectors(cfg, parts)
     build_ropes(cfg, parts)
     build_apron(cfg, parts)
     build_steps(cfg, parts)
