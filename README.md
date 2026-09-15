@@ -5351,3 +5351,67 @@ logo. The reference puts the bracket at the rope end anyway. The first move
 kept them 0.20 wide at +/-0.15, which against a 0.43 face left only a sliver
 of logo showing through the middle; 0.10 at +/-0.205 puts them on the
 cushion's ends where the ropes enter.
+
+
+## Round: re-solving the exposure anchor
+
+The mat is an exposure ANCHOR, not a bar: VISUAL_BAR.md wants it at 0.43-0.49
+relative luminance, because the wrestler figures are absolute luminances and
+comparing those to a broadcast still only means anything once the brightest
+surface both share is matched. The supplied AEW canvas has a field of 0.636 in
+sRGB where the old one was near-white, so the same rig rendered a much darker
+mat and the anchor went with it.
+
+### Solved on top_energy, empirically
+
+`arena_lighting.gd` names the lever itself: straight-down top light lands on a
+horizontal mat far more than on a standing figure, so it buys mat luminance
+without flattening the mat<->wrestler gap the way the key or the rim would.
+Measured with `tools/refs/measure_silhouette.py` on forward_plus, which is the
+only renderer these numbers mean anything on:
+
+| top_energy | mat | mat<->A | mat<->B |
+| --- | --- | --- | --- |
+| 5.0 (was) | 0.252 | 0.091 | 0.103 |
+| 12.0 | 0.330 | 0.132 | 0.160 |
+| 18.0 | 0.387 | 0.160 | 0.201 |
+| **24.0** | **0.437** | 0.185 | 0.236 |
+
+Solved empirically rather than by arithmetic, because the curve compresses as
+it climbs the filmic shoulder: +0.078 for the first seven units, +0.050 for
+the last six.
+
+**The mat was already below its anchor before the canvas landed.** 0.252
+against a 0.46 that an earlier round claimed to have reached. So this round
+fixes more than the texture change caused, and the honest reading of the
+earlier "mat reaches the reference 0.46" is that it did not survive whatever
+came after it.
+
+### What the sweep corrected in the file's own comment
+
+`top_energy`'s comment said a standing torso's N.L under a downlight is "near
+0". That is true of a chest and false of a wrestler: over the sweep the mat
+gained 0.185 and wrestler A gained 0.092, so a figure takes about HALF the
+mat's share of straight-down light. Shoulders, heads and forearms are
+horizontal too.
+
+That is why the gaps improve a long way and still do not reach 0.24-0.31:
+closing them on this lever alone would need the mat near 0.55, outside its own
+band. They are a genuine second problem needing a second lever (rim down, or
+the wrestler materials), and they were failing before this round at 0.091 and
+0.103 -- this leaves them at 0.185 and 0.236, roughly double.
+
+### Checked, not assumed
+
+`void_fraction` is 0.000 before AND after, so the brightening does not breach
+VISUAL_BAR.md's 0.010-0.066 floor -- it was already outside it, which is a
+pre-existing condition this round neither caused nor fixed. Frame sd rises
+0.162 -> 0.238.
+
+`measure_look`'s bright>0.5 goes 2.30% -> 15.56% against references of
+1.46-6.12%. That is framing, not exposure: the silhouette shot is tight on the
+ring so the mat is a fifth of its pixels, and a mat correctly sitting at 0.437
+puts much of that fifth over 0.5. The reference frames it is compared against
+are wide bowl shots that are mostly dark crowd. It is recorded here rather
+than treated as a pass or a failure, because the two framings are not
+comparable and measure_look.py's own docstring says so.

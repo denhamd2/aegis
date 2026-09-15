@@ -71,10 +71,34 @@ const STAGE_BACK_Z := -38.0
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
 @export var key_energy: float = 9.0
-## Straight-down top light. Adds to the mat far more than to a standing
-## torso (a floor's N.L is 1.0 under it, a chest's is near 0), which is the
-## lever that opens the mat<->wrestler gap without touching either material.
-@export var top_energy: float = 5.0
+## Straight-down top light, and the lever the exposure anchor is solved on.
+## Adds to the mat more than to a standing torso, which opens the
+## mat<->wrestler gap without touching either material.
+##
+## 5.0 -> 24.0, re-solved after the mat took the supplied AEW canvas: that
+## artwork's field is 0.636 in sRGB against the near-white it replaced, so the
+## same rig rendered a much darker mat. Measured with
+## tools/refs/measure_silhouette.py on forward_plus, which is the only
+## renderer these numbers mean anything on:
+##
+##   top    mat      mat<->A   mat<->B
+##   5.0    0.252     0.091     0.103
+##   12.0   0.330     0.132     0.160
+##   18.0   0.387     0.160     0.201
+##   24.0   0.437     0.185     0.236   <- mat inside 0.43-0.49
+##
+## The curve compresses as it climbs the filmic shoulder (+0.078 for the first
+## seven units, +0.050 for the last six), so this is solved empirically rather
+## than by arithmetic on the old value.
+##
+## THE COMMENT ABOVE OVERSTATED ITS OWN LEVER, and the sweep is what showed
+## it. "A chest's N.L is near 0" is true of a chest and not of a wrestler:
+## over that range the mat gained 0.185 and wrestler A gained 0.092, so a
+## figure takes about HALF the mat's share of straight-down light -- shoulders,
+## heads and forearms are horizontal too. That is why the mat<->wrestler gaps
+## improve here but do not reach their 0.24-0.31 band: closing them on this
+## lever alone would need the mat near 0.55, outside its own. See README.
+@export var top_energy: float = 24.0
 ## Cool back/rim pair. Kept deliberately small: rim light lands on the
 ## wrestlers, and every unit of it CLOSES the 0.24-0.31 gap the bar wants.
 @export var rim_energy: float = 2.2
