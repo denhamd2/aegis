@@ -5923,3 +5923,36 @@ strike's limb now peaks on exactly the tick its `MoveDef` applies damage: jab
 0.654 m, cross 0.679 m, kick 0.820 m, heavy kick 0.818 m. The four `.tres`
 offsets that moved are updated, `gait_audit` passes, and the glb rebuilds
 byte-identical.
+
+### What the match measures, and two things it does not
+
+`tools/probe/strike_connect_probe.tscn` over eight AI-vs-AI seeds, after:
+
+| seed | thrown | landed | |
+| --- | --- | --- | --- |
+| 2 | 22 | 16 | 73% |
+| 3 | 19 | 13 | 68% |
+| 6 | 18 | 12 | 67% |
+| 7 | 20 | 12 | 60% |
+| 8 | 14 | 11 | 79% |
+
+Seeds 2 and 3 are **identical, thrown for thrown and landed for landed**, to
+the same probe on the same seeds before any of this — which is the check that
+matters for a change to `MoveDef.contact_offset`: the clips moved, the match
+did not. The rest of the misses are `unhittable`, a man already down, which is
+suppressed by design.
+
+Two things that probe reports and this round did not fix, named rather than
+averaged away:
+
+- **Seeds 1 and 5 throw nothing at all** — 0 strikes over a 20 000-tick
+  budget. That is not a 0% connect rate, it is no data, and the probe prints it
+  as though it were the former.
+- **Seed 4 throws 404 and lands 4%**, running to the budget without the match
+  ending, with 383 misses filed "off to the side" at a median angle of 0° off
+  the attacker's facing — i.e. facing him, inside reach, and no contact. The
+  same seed threw nothing at all on the build before this one, so there is no
+  clean before/after to compare it against.
+
+Both are about match flow and AI spacing rather than about what a clip looks
+like, which is why they are here as findings instead of in the diff.
