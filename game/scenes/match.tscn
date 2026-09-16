@@ -120,8 +120,23 @@ ssr_depth_tolerance = 0.2
 ; four truss cones become visible volumes of air over the ring instead of
 ; invisible vectors that only exist where they land. Global density is low;
 ; ArenaLighting adds two FogVolumes for the local concentration.
+;
+; 0.0015 -> 0.0010 when the truss beams landed, and the reason is the one thing
+; that round got wrong twice before getting right.
+;
+; Density and a fixture's light_volumetric_fog_energy multiply, so a shaft can
+; be bought with either. They are NOT interchangeable: density scatters EVERY
+; light in the hall, and fog energy scatters one fixture. Raising density to
+; make the beams read lit the whole bowl with everything else as well --
+; crowd_bank's fraction below 0.01 relative luminance went the wrong way, from
+; 10.8% to 5.1%, while gauntlet/refs/lighting.md wants it at 38-50%. The haze
+; was undoing the darkening in the same commit that made it.
+;
+; So the density comes DOWN and the beams' own fog energy goes up to 200 to
+; hold the shafts. Same shafts, a much darker hall behind them: crowd_bank
+; measures 16.2% below 0.01 against the 10.8% it started at.
 volumetric_fog_enabled = true
-volumetric_fog_density = 0.0015
+volumetric_fog_density = 0.0010
 volumetric_fog_albedo = Color(0.72, 0.77, 0.9, 1)
 volumetric_fog_anisotropy = 0.35
 volumetric_fog_length = 64.0

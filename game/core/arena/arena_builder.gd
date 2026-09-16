@@ -410,9 +410,13 @@ const BOWL_MODEL_MATERIALS := {
 	"BowlSteps": ["arena_bowl", 1.0],
 	"BowlSeats": ["arena_seat", 1.17],
 	"SuiteFascia": ["arena_shell", 0.9],
-	"SuiteGlass": ["arena_suite_glass", 0.5],
+	# 0.5 -> 1.0 with the halved HOUSE_TARGET: unlit glass returning the
+	# bowl is one of the parts that would otherwise fall through the void
+	# floor, and dark glass that speckles is worse than dark glass.
+	"SuiteGlass": ["arena_suite_glass", 1.0],
 	"Shell": ["arena_shell", 0.85],
-	"RinkDeck": ["arena_rink", 0.7],
+	# 0.7 -> 0.9, the same floor compensation.
+	"RinkDeck": ["arena_rink", 0.9],
 	# The boards are the brightest large surface in the hall on purpose: they
 	# are white, they ring the floor, and in the reference photographs they
 	# are the line that tells floor from seating.
@@ -424,8 +428,15 @@ const BOWL_MODEL_MATERIALS := {
 	# 0.0070 -- boards that read white with the house down, which is what every
 	# reference photograph shows and what a fixture-lit white wall at floor
 	# level does not get on its own down here.
-	"RinkBoards": ["arena_boards", 8.0],
-	"RinkCap": ["arena_board_cap", 3.0],
+	# 8.0 -> 14.0, and this is NOT a further brightening: it holds the
+	# product where it was (0.048 -> 0.042) across a halved HOUSE_TARGET.
+	# The boards are meant to stay the brightest large surface while
+	# everything around them drops, because that is the shape
+	# gauntlet/refs/lighting.md measures -- a small, genuinely hot bright
+	# fraction over a mostly dark frame, not a uniform dim field.
+	"RinkBoards": ["arena_boards", 14.0],
+	# 3.0 -> 5.0, the same product-holding move as the boards above.
+	"RinkCap": ["arena_board_cap", 5.0],
 }
 ## The two parts that are lit rather than house-lit: the ribbon boards ring
 ## the whole bowl and the stair nosings run up every aisle, and both are
@@ -510,7 +521,45 @@ func _textured(key: String) -> StandardMaterial3D:
 ## across it and shows up as a speckled void mask. It must also sit far enough
 ## BELOW the reference crowd's 0.014 that a lit surface and an unreached one
 ## are visibly different, or the fixtures are decoration.
-const HOUSE_TARGET := 0.006
+## 0.006 -> 0.0030, halved, and this is the change gauntlet/refs/lighting.md
+## has been asking for since it measured the ablation.
+##
+## That file's first finding: a televised arena is 38-50% below 0.01 relative
+## luminance and ours was 1.9%, and "beams, haze, rim separation and bloom are
+## all effects that need darkness to read against". Its second: the bowl is lit
+## by THIS constant and by nothing else -- turning the twenty-fixture house
+## wash off entirely and turning it up sixty-fold produce the same frame to
+## three decimal places. So the hall's contrast was never a lighting problem
+## and no fixture could have fixed it.
+##
+## The truss beams landed first and proved the point from the other side: they
+## render correctly and still read as blue smears, because a shaft is only
+## visible as a contrast against what is behind it and what was behind it was
+## a uniformly lit stand.
+##
+## WHY HALVING IS SAFE, AND WHERE IT STOPS. Two different thresholds bound this
+## number and the gap between them is a factor of four:
+##
+##   measure_frame.py   void   below 0.0025   VISUAL_BAR.md bands 0.010-0.066
+##   measure_look.py    dark   below 0.01     the references sit at 38-50%
+##
+## A surface between them counts as dark and never as void, and nothing lived
+## in that band before -- the bowl sat above the top of it. At 0.0030 the seats
+## solve for 0.0035 and render near 0.008: dark, and comfortably clear of the
+## floor. 0.002 would put them at 0.0054 rendered and start the dithering
+## `_house_lit()` warns about below, so this is most of the room there is.
+##
+## Nine reaches were raised to hold their parts off the floor and two were
+## raised to hold the rink boards and cap where they were; see the tables.
+## test_house_levels.gd asserts both bounds so the next round finds out from a
+## failing test rather than from a speckled frame.
+const HOUSE_TARGET := 0.0030
+
+## How far above measure_frame.py's 0.0025 void threshold a house-lit surface
+## must solve. Not a tuning knob -- it is the margin that keeps a dark surface
+## from dithering across the void line, and test_house_levels.gd is what
+## enforces it across every reach table.
+const HOUSE_VOID_MARGIN := 0.0022
 
 ## What the Environment's ambient is assumed to return off a diffuse surface,
 ## as a fraction of its linear albedo. Ambient is down from 0.35 to 0.06 (see
@@ -760,14 +809,17 @@ const RINGSIDE_MATERIALS := {
 	# the darkest large surface in the lower frame and it is what the mat's
 	# exposure anchor, the steps and the wrestlers working outside are all
 	# read against. Lifting it further flattens the ring into the floor.
-	"RingsideMat": ["arena_floor", 0.45],
-	"FloorSeams": ["arena_floor", 0.35],
+	# 0.45 -> 0.9: the product is held at 0.0027 rather than raised. This
+	# was already the closest large surface to the void floor, which is
+	# what its note above is about, so it had no room to be halved.
+	"RingsideMat": ["arena_floor", 0.9],
+	"FloorSeams": ["arena_floor", 0.75],
 	"Barricades": ["arena_barricade", 1.5],
 	# The desk fascia takes the barricade's own surface at a lower reach: it
 	# is the same class of ringside steel-and-panel, but it stands in shadow
 	# behind the apron rather than catching the rig side-on the way the cap
 	# rail does.
-	"CommentaryDesk": ["arena_barricade", 0.7],
+	"CommentaryDesk": ["arena_barricade", 0.75],
 	# The worktop and the monitor faces are the one bright thing at the desk,
 	# which is what makes it read as a desk and not a second barricade.
 	"CommentaryDeskTop": ["arena_barricade", 1.2],
@@ -1391,8 +1443,8 @@ const ENTRANCE_MODEL := "res://assets/environment/entrance_set.glb"
 const ENTRANCE_MATERIALS := {
 	"EntranceStage": ["arena_stage_deck", 0.8],
 	"StageBackdrop": ["arena_stage_panel", 1.1],
-	"PortalRecess": ["arena_tunnel", 0.35],
-	"StageScreenBezel": ["arena_tunnel", 0.5],
+	"PortalRecess": ["arena_tunnel", 0.75],
+	"StageScreenBezel": ["arena_tunnel", 0.75],
 	"Truss": ["arena_truss", 0.9],
 }
 

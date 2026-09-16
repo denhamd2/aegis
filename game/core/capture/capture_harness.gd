@@ -313,6 +313,7 @@ func _silhouette_step() -> void:
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 2:
 		_save_viewport(_silhouette_prefix + "_beauty.png")
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 3:
+		_flatten_for_keying()
 		_key(_match.get_node("Ring/Floor/MeshInstance3D"), SILHOUETTE_KEYS["mat"])
 		# The whole wrestler, gear included -- WrestlerAttire's trunks, boots
 		# and pads are part of the subject the reference table measures, not
@@ -333,6 +334,42 @@ func _save_viewport(path: String) -> void:
 	var img := viewport.get_texture().get_image()
 	if img:
 		img.save_png(path)
+
+## Takes the screen-space effects off the MASK frame only.
+##
+## THE MASK IS A SEGMENTATION PASS AND HAS TO BE FLAT, and the keys were only
+## ever flat by luck: `_key()` paints an unshaded albedo, but volumetric fog
+## and glow are applied afterwards, in screen space, to whatever the keys
+## render as.
+##
+## That luck ran out when `ArenaLighting._build_truss_beams()` put ten
+## saturated BLUE shafts across the hall. The mat's key is blue (0, 0, 255) and
+## `measure_silhouette.py` accepts a pixel whose keyed channel clears 160, so
+## the beams' haze over the crowd keyed as MAT. Measured: the mat's mask grew
+## from 108,785 px to 182,767 and its mean luminance fell from 0.406 to 0.277
+## -- which reads exactly like the exposure anchor collapsing, and is instead
+## seventy thousand pixels of dark crowd being averaged in as canvas.
+##
+## It was nearly acted on as a lighting regression. What caught it was the
+## pixel COUNT moving at all: the wrestler keys held at 5,752 and 17,044 to the
+## pixel across the same pair of runs, so nothing had moved in the scene.
+##
+## Fog and glow are disabled here and nowhere else. The beauty frame -- the one
+## every luminance in VISUAL_BAR.md is actually read off -- is saved three
+## frames earlier and is untouched by this.
+func _flatten_for_keying() -> void:
+	var world := get_viewport().find_world_3d() if is_inside_tree() else null
+	if world == null or world.environment == null:
+		return
+	# Duplicated rather than mutated: the Environment is a sub-resource of
+	# match.tscn and is shared between instances of it, the same reason
+	# ArenaLighting._apply_compat_environment() duplicates before writing.
+	var env: Environment = world.environment.duplicate()
+	env.volumetric_fog_enabled = false
+	env.glow_enabled = false
+	env.fog_enabled = false
+	world.environment = env
+
 
 ## Paints every visible surface in `node`'s subtree (or `node` itself) with a
 ## flat unshaded key colour.

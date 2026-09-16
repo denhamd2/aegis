@@ -350,7 +350,7 @@ const BEAM_COLOR := Color(0.28, 0.51, 1.0)
 ## haze nowhere, and this number is meaningless on its own: what it multiplies
 ## is `HallHaze`'s density, so the two move together and neither can be read
 ## without the other.
-@export var beam_fog_energy: float = 80.0
+@export var beam_fog_energy: float = 200.0
 
 ## Fixture-energy gain for renderers without volumetric fog -- in practice the
 ## compatibility renderer, which is what Godot's Web platform falls back to.
@@ -740,10 +740,19 @@ func _build_fog_volumes() -> void:
 	# -1 to 13: the truss at 7.25 down to the floor, and up to the upper tier's
 	# back rows at 13.2.
 	#
-	# Density 0.0012 -> 0.0022. A shaft's brightness is the product of the
-	# volume's density and the fixture's `light_volumetric_fog_energy`, and the
-	# old figure was solved for "air behind the far stands", not for "a 40m
-	# beam has something to scatter off".
+	# Density stays at roughly what it was -- 0.0012 -> 0.0010 -- and that is
+	# the opposite of where this went first.
+	#
+	# The obvious move was to raise it to 0.0022, since a shaft's brightness is
+	# density times the fixture's `light_volumetric_fog_energy`. Rendered, it
+	# cost more than it bought: density scatters EVERY light in the hall, so
+	# the denser haze lit the whole bowl and crowd_bank's fraction below 0.01
+	# relative luminance went from 10.8% to 5.1%, away from the references'
+	# 38-50%. The haze was undoing the darkening it was committed alongside.
+	#
+	# Fog energy scatters ONE fixture. So the density comes back down and
+	# `beam_fog_energy` carries the shafts instead. Same beams, a darker hall
+	# behind them, and the two knobs are no longer fighting.
 	#
 	# ONE BOX, NOT TWO. Overlapping FogVolumes sum their densities, so a second
 	# volume over this one would make a hazy frame un-attributable to any
@@ -753,7 +762,7 @@ func _build_fog_volumes() -> void:
 	# right idea only if a later set is aimed UP into the roof steel, which is
 	# the other thing `aew_grand_slam_broadcast.png` shows.
 	_fog_box("HallHaze", Vector3(0.0, 6.0, -2.0), Vector3(78.0, 14.0, 104.0),
-			0.0022, Color(0.62, 0.68, 0.86), 0.05)
+			0.0010, Color(0.62, 0.68, 0.86), 0.05)
 
 
 ## Depth fog for the compatibility renderer, which is what the browser build
