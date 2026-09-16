@@ -1,10 +1,25 @@
 extends Node3D
 class_name ArenaBuilder
-## Builds the hall around the ring: a raked seating bowl, its crowd, the
-## entrance stage, the overhead truss, and the shell (walls, roof, floor).
+## Builds the hall around the ring: the floor and barricades, the floor
+## seating, the entrance stage with its ramp and video wall, the overhead
+## truss -- and instances the rink, seating bowl and shell, which are a model.
 ##
-## Why this is generated rather than authored in the .tscn, and why it is not
-## a downloaded arena model, are both deliberate:
+## The hall is dimensioned from a REGULATION ICE RINK (see "The rink" below
+## and `gauntlet/refs/arena.md`): 60.96 x 25.91m with 8.53m corners, with the
+## ring in the middle of it, the boards where a rink's boards are, and the
+## seating bowl starting a walkway outside them. Everything that is not the
+## ring is measured out from that sheet of ice.
+##
+## The hall is EMPTY. There is no crowd in it, by decision rather than by
+## omission: the seats are the seating now -- ~6,700 in the bowl, modelled one
+## at a time, and ~1,490 folding chairs on the rink floor. An empty arena is a thing a wrestling build is
+## routinely shot in -- an empty-arena match, a taping-day walkthrough -- and
+## it is what `gauntlet/refs/arena.md`'s reference photographs are of.
+## Removing the impostors took the only animated geometry in the hall with
+## them; see the cosmetic-motion note below.
+##
+## Why none of this is authored in the .tscn, and why none of it is a
+## downloaded arena, are both still deliberate:
 ##
 ## - A twenty-row raked bowl with a few thousand seats is not hand-typeable as
 ##   transforms. Expressed as the dozen numbers below it is reviewable and
@@ -14,14 +29,43 @@ class_name ArenaBuilder
 ##   an arena *bowl* -- they are all rings, which scenes/ring.tscn already
 ##   has. See assets/environment/CREDITS.md.
 ##
+## What changed, and what it bought
+## --------------------------------
+## The bowl and the shell are no longer generated here from axis-aligned
+## boxes. They are `assets/environment/arena_bowl.glb`, built by
+## `tools/blender/arena_bowl.py` -- our own model, from our own numbers, not a
+## downloaded one, so the second point above is untouched.
+##
+## They moved because `gauntlet/refs/arena.md` records what the hall has to be:
+## an ice-hockey arena, whose bowl is an OBROUND -- two straight sides joined
+## by semicircular ends -- carrying an LED ribbon board that runs unbroken
+## through the corners. A stack of boxes can approximate a square annulus and
+## cannot be that shape at all; the old bowl was four flat banks, and a ribbon
+## that turns square corners is a scoreboard rather than a ribbon.
+##
+## The split is drawn where the reference draws it. The model is the BUILDING:
+## rows, concourse, suite storey, ribbons, stair nosings, wall, roof. This file
+## keeps the SHOW: the ring, the ramp, the stage, the video wall, the portals,
+## the truss, the floor, the barricades, and everyone in the seats. Nothing of
+## the entrance set moved, and none of its numbers changed.
+##
+## The exporter reads its constants out of THIS FILE (see its `WANTED` list),
+## so the mesh and the ringside chairs standing on it cannot be edited apart,
+## and `tests/test_arena_bowl.gd` measures the committed .glb against
+## `_row_schedule()` to prove they still agree.
+##
 ## Everything here is cosmetic. Nothing in this file creates a
 ## CollisionObject3D, joins a physics layer, or is read by gameplay: the ring's
-## own colliders in ring.tscn remain the only bodies the match touches. The
-## crowd's idle motion is a vertex shader, so it runs on the render thread and
-## cannot reach MatchReferee.compute_end_state_hash(). ARCHITECTURE.md permits
-## cosmetic motion on exactly that condition.
+## own colliders in ring.tscn remain the only bodies the match touches.
 ##
-## Placement is seeded (CROWD_SEED), so the same build produces the same
+## Nothing here moves at all any more. The hall's one piece of cosmetic
+## motion was the crowd's idle bob, a vertex shader that ARCHITECTURE.md
+## permitted because it ran on the render thread and could not reach
+## MatchReferee.compute_end_state_hash(); it left with the crowd. The video
+## wall's clip (core/arena/video_wall.gd) is the only thing in the arena that
+## changes frame to frame now, and it is a texture, not geometry.
+##
+## Placement is seeded (PLACEMENT_SEED), so the same build produces the same
 ## arena every run and captures stay comparable between rounds.
 
 # --- The ring this hall is built around -------------------------------------
@@ -35,7 +79,27 @@ const FLOOR_Y := -1.1
 
 # --- Ringside ---------------------------------------------------------------
 ## Barricade line. Everything between the ring and this is open ringside floor.
-const BARRICADE_RADIUS := 9.0
+##
+## 6.0m, in from 9.0. The bar is a real one: a state athletic regulation
+## requires "the ringside barrier must be a minimum of six feet from the
+## outside edge of the ring" (Virginia 18VAC120-40-415.1). The outside edge of
+## THIS ring is its apron at APRON_OUT = 3.20, so the minimum legal line is
+## 5.03m and 9.0 was 5.8m of empty floor -- nearly nineteen feet, which is not
+## a ringside, it is a car park.
+##
+## 6.0 leaves 2.80m (9ft 2in) between apron and barrier: over the regulation
+## minimum, enough for the camera well and a cameraman to work in, and still
+## clear of the steel steps, which reach 4.34m from ring centre.
+##
+## Moving it in does the second half of the job on its own. The floor rows are
+## offsets of THIS number (see `_build_floor_seats`), so pulling the barrier
+## 3m closer to the ring converts 3m of dead floor into four more rows of the
+## best seats in the building.
+const BARRICADE_RADIUS := 6.0
+## Half-width of the gap the entrance walks through, on the -Z run only.
+## The ramp foot lands on this line; without a gap the barrier would run
+## straight through it, which is what it did while the ramp ended further in.
+const BARRICADE_GAP := 2.40
 const BARRICADE_HEIGHT := 1.1
 ## The barricade is a RUN OF PANELS, not one long wall, because that is what
 ## gauntlet/refs/ring.md shows and because the joins are the only thing giving
@@ -48,6 +112,13 @@ const BARRICADE_JOIN := 0.05
 ## into large panels, and those lines are most of what stops it reading as one
 ## flat grey field from the wide camera -- which is coarse detail, on the
 ## second-largest surface in the frame after the mat.
+## The black ringside matting. A real ringside floor is not the bare deck --
+## it is covered in interlocking rubber mats from the ring out to the barrier,
+## and they are the dark ground everything at ringside is read against. The
+## entrance ramp comes down to the EDGE of this, at the barrier line, and the
+## mat carries the last few metres to the ring; a ramp that runs all the way
+## to the apron is a ramp nobody could walk around.
+const RINGSIDE_MAT_LIFT := 0.006
 const FLOOR_SEAM_PITCH := 4.0
 const FLOOR_SEAM_WIDTH := 0.05
 
@@ -60,28 +131,69 @@ const ROW_RUN := 0.95
 const ROW_RISE := 0.48
 const LOWER_ROWS := 12
 const UPPER_ROWS := 8
-## How many of LOWER_ROWS sit FLAT on the ringside slab rather than raking, and
-## carry folding chairs rather than spectators.
-##
-## This is the ringside of gauntlet/refs/ring.md: rows of empty black folding
-## chairs on the flat floor behind the barricade, with the raked bowl starting
-## behind them. They are taken off the front of the lower tier rather than
-## added in front of it, so the bowl's overall footprint, the concourse and
-## the upper tier are all where they were.
-const FLAT_CHAIR_ROWS := 4
 ## Walkway between the two tiers.
 const CONCOURSE_DEPTH := 2.6
+
+# --- Floor seating ----------------------------------------------------------
+## The chairs set out on the rink floor, between the barricade and the boards.
+##
+## This is where the bowl's four flat rows went. They existed because the bowl
+## started 9m from the ring and there was nowhere else to put ringside seats;
+## with the hall on rink scale there are twenty-odd metres of floor out there,
+## and a real arena fills it -- floor seating is the best seat in the house and
+## there is more of it than there is of anything else at ringside.
+##
+## Rows are offsets of the BARRICADE's own square, so the first ones wrap the
+## ring tightly and they open out as they go; each is clipped to the rink, so
+## the floor's shape comes from the boards rather than from a row count.
+const FLOOR_ROW_PITCH := 0.85
+## First row, as a distance outside the barricade line. Enough for the camera
+## pit and for people to get past the front row.
+const FLOOR_SEAT_START := 1.20
+## Clear walkway kept inside the boards, so the back row is not up against
+## them.
+const FLOOR_SEAT_MARGIN := 1.2
+## Clearance kept either side of the entrance ramp's centreline. The ramp is
+## RAMP_HALF_WIDTH wide; this is that plus the aisle a crowd needs to stand in
+## while someone walks down it.
+const RAMP_CLEARANCE := 3.4
+## How many floor rows get the imported folding chair before the rest switch
+## to the box proxy. See `_build_floor_chairs()`: the near rows are the ones
+## `ringside_low` and `wide_broadcast` actually resolve, and the far ones are
+## forty metres of chair backs that cost 1448 triangles each if you let them.
+const FLOOR_CHAIR_DETAIL_ROWS := 5
 
 # --- Entrance stage ---------------------------------------------------------
 ## The stage occupies the -Z wedge. The default match camera sits off-axis
 ## on -X/+Z facing it, so the stage reads frame-left in the money shot with
-## the crowd at frame center -- both halves of the hall earn their polygons,
+## the bowl at frame center -- both halves of the hall earn their polygons,
 ## the stage via stage_wide/entrance framings as well as the broadcast edge.
 const STAGE_HALF_WIDTH := 6.0
 const STAGE_DECK_Y := 0.35
-const STAGE_BACK := -24.0
-## The ramp runs from the stage lip to the barricade line, descending to floor.
+## The back wall of the set, which the video wall and the portals stand on.
+##
+## It moved from -24 to -38 with the rink. The set now stands in the gap the
+## bowl leaves at the -Z END of the building, BEHIND the boards (-30.48)
+## rather than a third of the way across the floor, which is where an entrance
+## set actually stands. Everything else on the stage is measured off this, so
+## the wall, the portals and the backdrop moved with it and none of their own
+## numbers changed.
+const STAGE_BACK := -38.0
+## The front lip of the deck. The deck is the 8m between it and STAGE_BACK.
+const STAGE_FRONT := -30.0
+## The ramp runs from the stage lip to the ring, descending to floor level.
+##
+## It is 25.7m long now, against 4.7m before -- because there is a rink to
+## cross. That is the length an entrance ramp is, and it is what the stage
+## moving back to the end of the building buys: the walk is a walk.
 const RAMP_HALF_WIDTH := 1.8
+## Ramp step length. The fall is only STAGE_DECK_Y - FLOOR_Y = 1.45m over the
+## whole run, a 6% grade, so the staircase `_add_box` forces is a shallow one:
+## ~18 steps of 8cm. Stepped rather than wedged for the reason it always was
+## -- axis-aligned boxes are all this file builds -- but at this length the
+## steps are under a pixel of rise at any camera in the shotlist and the ramp
+## reads as the slope it is standing in for.
+const RAMP_STEP_LENGTH := 1.45
 
 # --- Video wall -------------------------------------------------------------
 ## Chord width and height of the LED wall, 3:1, off the reference photos in
@@ -100,8 +212,14 @@ const SCREEN_SAGITTA := 1.6
 const SCREEN_SEGMENTS := 24
 const SCREEN_DEPTH := 0.45
 const SCREEN_BEZEL := 0.22
-const SCREEN_CENTER_Y := STAGE_DECK_Y + 9.0
-const SCREEN_FACE_Z := STAGE_BACK + 1.1
+## Height of the wall's centre above the deck, and how far its face stands
+## clear of the back wall. Declared as plain numbers so
+## tools/blender/entrance_set.py can read them: that exporter reproduces the
+## two sums below, but it must not re-type either measurement.
+const SCREEN_CENTER_RISE := 9.0
+const SCREEN_FACE_OFFSET := 1.1
+const SCREEN_CENTER_Y := STAGE_DECK_Y + SCREEN_CENTER_RISE
+const SCREEN_FACE_Z := STAGE_BACK + SCREEN_FACE_OFFSET
 ## Linear luminance the wall reaches with nothing playing on it -- the clip
 ## missing, or a run that must not have a moving picture in it. Dark violet
 ## rather than the old flat pale blue, because an LED wall between cues is
@@ -130,7 +248,8 @@ const PORTAL_OFFSET_X := 3.3
 ## reading as an arch, which is a different piece of set.
 const PORTAL_CUT_DEPTH := 0.25
 const PORTAL_CENTER_Y := STAGE_DECK_Y + PORTAL_MAJOR - PORTAL_CUT_DEPTH
-const PORTAL_FACE_Z := STAGE_BACK + 1.3
+const PORTAL_FACE_OFFSET := 1.3
+const PORTAL_FACE_Z := STAGE_BACK + PORTAL_FACE_OFFSET
 const PORTAL_RING_SEGMENTS := 48
 const PORTAL_TUBE_SIDES := 8
 ## The angle, measured from +X counter-clockwise, at which the portal circle
@@ -165,48 +284,181 @@ const PORTAL_EMISSION := 1.12
 ## the portal, seen and not looked at.
 const PORTAL_FAN_EMISSION := 0.26
 
+# --- The rink ---------------------------------------------------------------
+## The hall is built around a REGULATION ICE RINK, in metres, because the
+## reference arena is one: 200 x 85 feet with 28-foot corners, which is
+## 60.96 x 25.91m with an 8.53m radius. `gauntlet/refs/arena.md` records why
+## the building's proportions come from here rather than from the ring.
+##
+## This is the change that put the hall on scale. Before it, the bowl's first
+## row sat 9m from the ring on a 28 x 18m plan -- about a third of a rink --
+## and the whole arena was the size of a sports hall. The ring is unmoved at
+## the centre of it; everything else is now measured out from the boards.
+const RINK_HALF_LENGTH := 30.48
+const RINK_HALF_WIDTH := 12.955
+const RINK_CORNER_RADIUS := 8.53
+## Dasher boards: 42 inches. The glass above them is not built -- it is
+## transparent, and at the distances every camera in the shotlist sees the
+## boards from it would cost a pane of geometry to show nothing.
+const RINK_BOARD_HEIGHT := 1.07
+## The board cap rail, a hand's width of yellow along the top of the white.
+const RINK_CAP_HEIGHT := 0.12
+
+# --- Bowl plan --------------------------------------------------------------
+## The bowl is an OBROUND -- two straight sides joined by semicircular ends --
+## because that is the plan of the ice-hockey arenas this promotion plays in,
+## which `gauntlet/refs/arena.md` records off the reference photographs. Every
+## row, the concourse, the suite fascia, the shell, the rink deck and the
+## boards are the same curve at a different offset from one rectangle of
+## half-extents (BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z), so the rows stay parallel
+## and the tread depth is constant through the corners.
+##
+## That rectangle IS THE RINK'S: a rink is its own corner radius offset from
+## it, so `_plan_loop(RINK_CORNER_RADIUS)` is the boards and every row is the
+## same curve further out. One rectangle, one curve, one building -- which is
+## why these two are derived numbers written out longhand rather than an
+## expression: `arena_bowl.py` parses plain constants, and
+## `test_arena_bowl.gd` asserts the derivation instead.
+##
+##     BOWL_STRAIGHT_X = RINK_HALF_WIDTH  - RINK_CORNER_RADIUS = 4.425
+##     BOWL_STRAIGHT_Z = RINK_HALF_LENGTH - RINK_CORNER_RADIUS = 21.95
+##
+## The long axis is Z, so the +-X sides are the building's long sides -- the
+## hard-camera sides -- and the -Z end is an END. That is where the entrance
+## set goes, and it is why the ramp can now be a ramp: it has the length of a
+## rink end to cross.
+##
+## These are the numbers `tools/blender/arena_bowl.py` reads to build the mesh.
+## It parses them out of THIS FILE; they are not duplicated there, and adding
+## one to its WANTED list is how it gets a new one.
+const BOWL_STRAIGHT_X := 4.425
+const BOWL_STRAIGHT_Z := 21.95
+## Where the first row of the bowl sits, as an offset from the plan rectangle.
+## The boards are at RINK_CORNER_RADIUS (8.53) and this is 1.6m outside them:
+## the walkway that runs round every rink between the boards and the seats.
+##
+## Distinct from BARRICADE_RADIUS, which is measured from the RING. The two
+## used to be the same number because the bowl started where ringside ended;
+## now there is a rink floor between them, and it is full of seats.
+const BOWL_FIRST_ROW := 10.13
+## Sampling of the plan curve. Both loops -- Blender's and this file's -- must
+## produce the same vertex count in the same order, which they do by using
+## these two numbers and nothing else.
+const BOWL_CORNER_SEGMENTS := 16
+const BOWL_STRAIGHT_SEGMENTS := 8
+## Aisles cut up the rake. `arena_bowl.py` lays a lit stair nosing on every
+## tread there and leaves the seat rail broken for them, and the ringside
+## chairs leave the same gaps.
+const BOWL_AISLES := 12
+## The storey between the two tiers: suite glass with an LED ribbon board
+## above and below it. The upper tier starts on top of it, which is what gives
+## the hall two decks rather than one thirty-row rake.
+const SUITE_HEIGHT := 3.6
+const RIBBON_HEIGHT := 0.55
+## Height of a seat back standing on its tread.
+const SEAT_BACK_HEIGHT := 0.42
+## How wide a seat back is as a fraction of SEAT_PITCH. Under 1.0 so there is
+## a visible dark gap between one seat and the next: with the hall empty that
+## gap is the whole read. Built as one continuous rail -- which is what this
+## was while a crowd sat in front of it -- a bank of seats renders as a flat
+## navy slope with nothing in it to count.
+const SEAT_WIDTH_FRACTION := 0.84
+## How wide an aisle is kept clear of seating, in metres either side.
+const AISLE_CLEARANCE := 0.85
+
 # --- Shell ------------------------------------------------------------------
-const WALL_EXTENT := 32.0
-const WALL_TOP := 17.0
-const ROOF_Y := 14.0
+## The hall is longer than it is wide, like the rink inside it. WALL_EXTENT is
+## the +-Z half-extent and WALL_EXTENT_X the +-X one; the difference is exactly
+## BOWL_STRAIGHT_Z - BOWL_STRAIGHT_X, so the shell clears the last row by the
+## same margin all the way round.
+##
+##     last row  = BOWL_FIRST_ROW + 12*ROW_RUN + CONCOURSE_DEPTH + 8*ROW_RUN
+##               = 10.13 + 11.4 + 2.6 + 7.6 = 31.73
+##     +-X       = BOWL_STRAIGHT_X + 31.73 + 1.8 = 37.96
+##     +-Z       = BOWL_STRAIGHT_Z + 31.73 + 1.8 = 55.48
+##
+## which is a building 76 x 111m on plan. A real arena of this rink's era is
+## 100-120m long, so this is the right order of magnitude for the first time.
+const WALL_EXTENT := 55.5
+const WALL_EXTENT_X := 38.0
+## Roof and wall height went up with the plan. A 14m roof over a 111m hall is
+## a warehouse; a rink arena carries its roof steel at 20-25m, and the upper
+## tier's back row now tops out at 12.1m, which the old 14m roof would have
+## been sitting on.
+const WALL_TOP := 25.0
+const ROOF_Y := 21.0
 const TRUSS_Y := 7.6
 
-# --- Crowd ------------------------------------------------------------------
-## Distance between seats along a row.
-@export var seat_pitch: float = 0.62
-## Fraction of seats that are actually occupied. A sold-out bowl reads as a
-## solid block; leaving gaps is what makes it read as people.
-@export var crowd_fill: float = 0.86
-## Fixed so the arena is identical every run.
-const CROWD_SEED := 20260902
+# --- The Blender model ------------------------------------------------------
+## The bowl and shell mesh, built by `tools/blender/arena_bowl.py` from the
+## constants above and exported as glTF. See that file's header for why this
+## one piece of the hall is modelled rather than assembled from boxes: an
+## obround bowl with swept ribbon boards is not expressible as axis-aligned
+## primitives, and the reference arena is an obround.
+##
+## Everything else in the hall -- ring, ramp, stage, video wall, portals,
+## truss, floor, barricades, ringside chairs -- is still built here and is
+## unchanged by the model.
+const BOWL_MODEL := "res://assets/environment/arena_bowl.glb"
+## Which MaterialLibrary key dresses each object in the model. Every surface
+## the model ships is overridden: the .glb carries placeholder colours so it
+## can be opened on its own, and the hall's real tints are solved against
+## measured luminance targets that a colour picked in Blender cannot know
+## about. `reach` scales the house-emission floor per part exactly as the
+## generated surfaces do.
+const BOWL_MODEL_MATERIALS := {
+	"BowlSteps": ["arena_bowl", 1.0],
+	"BowlSeats": ["arena_seat", 1.17],
+	"SuiteFascia": ["arena_shell", 0.9],
+	"SuiteGlass": ["arena_suite_glass", 0.5],
+	"Shell": ["arena_shell", 0.85],
+	"RinkDeck": ["arena_rink", 0.7],
+	# The boards are the brightest large surface in the hall on purpose: they
+	# are white, they ring the floor, and in the reference photographs they
+	# are the line that tells floor from seating.
+	#
+	# 8.0 is an order of magnitude above any other reach here, and it is not a
+	# fudge: `_house_lit()` solves for a target LUMINANCE, so a reach is only
+	# comparable between surfaces of similar albedo, and this one's albedo is
+	# five times the bowl's. What it buys is 0.048 linear against the seats'
+	# 0.0070 -- boards that read white with the house down, which is what every
+	# reference photograph shows and what a fixture-lit white wall at floor
+	# level does not get on its own down here.
+	"RinkBoards": ["arena_boards", 8.0],
+	"RinkCap": ["arena_board_cap", 3.0],
+}
+## The two parts that are lit rather than house-lit: the ribbon boards ring
+## the whole bowl and the stair nosings run up every aisle, and both are
+## fixtures in the reference frames -- they emit, they are not surfaces
+## catching a wash. Values are the linear luminance each reaches on its own.
+const BOWL_MODEL_EMISSIVE := {
+	"RibbonBoards": ["arena_ribbon", 0.40],
+	"StairNosing": ["arena_nosing", 0.28],
+}
 
-## Crowd shirt palette. Deliberately desaturated and dark: the reference
-## frames' crowd sits at relative luminance 0.014 (VISUAL_BAR.md), so a bright
-## crowd would not be closer to the reference, it would be further from it.
-## What the crowd is for here is *variance*, not brightness.
-const CROWD_COLORS: Array[Color] = [
-	Color(0.20, 0.21, 0.26),
-	Color(0.28, 0.24, 0.24),
-	Color(0.17, 0.20, 0.24),
-	Color(0.31, 0.29, 0.27),
-	Color(0.22, 0.26, 0.28),
-	Color(0.26, 0.22, 0.29),
-	Color(0.15, 0.16, 0.19),
-	Color(0.33, 0.31, 0.33),
-]
+# --- Seating ----------------------------------------------------------------
+## Distance between seats along a row.
+##
+## A constant as well as an export, because it is the pitch
+## `tools/blender/arena_bowl.py` divides each row's seats at and the exporter
+## reads constants, not exports. Retuning the export alone moves the ringside
+## chairs and leaves the bowl's seats where they were; move the constant and
+## rebuild the model.
+const SEAT_PITCH := 0.62
+@export var seat_pitch: float = SEAT_PITCH
+## Fixed so the arena is identical every run.
+const PLACEMENT_SEED := 20260902
 
 
 var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
-	_rng.seed = CROWD_SEED
-	_build_floor()
-	_build_barricades()
+	_rng.seed = PLACEMENT_SEED
+	_build_ringside()
 	_build_bowl()
-	_build_stage()
-	_build_truss()
-	_build_shell()
+	_build_floor_seats()
+	_build_entrance_set()
 
 
 # ---------------------------------------------------------------------------
@@ -410,268 +662,19 @@ static func _add_quad(st: SurfaceTool, corners: Array) -> void:
 			st.set_normal(vert[1])
 			st.set_uv(vert[2])
 			st.add_vertex(vert[0])
+## The video wall's curve left with the wall. `tools/blender/entrance_set.py`
+## carries `arc_radius` and `sagitta_for` now, and the reason they are a PAIR
+## went with them: the bezel has to sit on the SAME circle as the picture, a
+## wider chord bowed by its own sagitta, or the two arcs cross mid-panel and
+## the frame surfaces through the picture as two dark chevrons.
+
+## The stage's mesh helpers -- the curved wall's face and shell, the portal
+## arc tube, the slat fan and the recess tube -- left with the geometry they
+## built. tools/blender/entrance_set.py makes those shapes now, out of
+## venue.py's swept tubes and arcs. What stays here is what still generates:
+## _add_box and _add_oriented, for the floor, its seams and the barricades.
 
 
-## Radius of the circle through a chord of half-width `half_chord` bowed by
-## `sagitta` at its midpoint: R = (c^2 + s^2) / 2s.
-##
-## The video wall is specified by the two numbers anyone can read off a
-## photograph -- how wide it is and how far its centre sits behind its ends --
-## rather than by a radius, which is a number nobody can measure from a seat.
-static func _arc_radius(half_chord: float, sagitta: float) -> float:
-	return (half_chord * half_chord + sagitta * sagitta) / maxf(2.0 * sagitta, 0.0001)
-
-
-## How far forward the arc has come at parameter angle `phi`, measured from
-## the panel's centre. 0 at phi = 0, exactly `sagitta` at each end.
-static func _arc_offset(phi: float, radius: float) -> float:
-	return radius - radius * cos(phi)
-
-
-## The sagitta a chord of half-width `half_chord` has on a circle of `radius`
-## -- the inverse of `_arc_radius`.
-##
-## This is what makes the bezel CONCENTRIC with the picture it frames. Building
-## both from the same sagitta looks right and is not: a wider chord bowed by
-## the same amount is a *different circle*, the two arcs cross somewhere in the
-## middle of the panel, and the frame surfaces through the picture. That showed
-## up as two dark chevrons across the top of the wall in the first render of
-## it. Same circle, different chord, and the frame stays behind the picture
-## everywhere.
-static func _sagitta_for(radius: float, half_chord: float) -> float:
-	return radius - sqrt(maxf(radius * radius - half_chord * half_chord, 0.0))
-
-
-## One concave panel bowed toward the audience, with NORMALISED UVs.
-##
-## This exists because `_add_box` cannot be used for it. That function lays
-## UVs out in world metres so `tile_metres` keeps texel density constant, which
-## is exactly right for a tiled hall surface and exactly wrong for anything
-## carrying a picture: a video frame mapped in metres tiles eighteen times
-## across an eighteen-metre wall. Here u runs 0..1 left to right *as the
-## audience sees it* -- a viewer at +Z looking down -Z has +X on their right,
-## so u = 0 is the -X end -- and v runs 0..1 top to bottom, which is image
-## space, so a texture lands on the wall the way it looks in a file browser.
-##
-## Vertices sit at equal ANGLE rather than equal x, so u is proportional to
-## arc length and a pixel of video is the same size at the ends as it is in
-## the middle. The circle's centre is placed on the audience side of the
-## panel, which is what makes the surface concave and not a barrel:
-##
-##     phi_i = -phi_max + 2 * phi_max * i / segments,  phi_max = asin(c / R)
-##     p_i   = center + (R sin phi_i, +-height/2, R - R cos phi_i)
-##     n_i   = (-sin phi_i, 0, cos phi_i)
-##
-## Only the front face is emitted. `_add_curved_shell` supplies the box behind
-## it, so the two can wear different materials -- a picture and a bezel.
-static func _add_curved_face(st: SurfaceTool, center: Vector3, width: float,
-		height: float, sagitta: float, segments: int) -> void:
-	var half_chord := width * 0.5
-	var radius := _arc_radius(half_chord, sagitta)
-	var phi_max := asin(clampf(half_chord / radius, -1.0, 1.0))
-	var top := center.y + height * 0.5
-	var bottom := center.y - height * 0.5
-	for i: int in segments:
-		var t0 := float(i) / float(segments)
-		var t1 := float(i + 1) / float(segments)
-		var phi0 := lerpf(-phi_max, phi_max, t0)
-		var phi1 := lerpf(-phi_max, phi_max, t1)
-		var x0 := center.x + radius * sin(phi0)
-		var x1 := center.x + radius * sin(phi1)
-		var z0 := center.z + _arc_offset(phi0, radius)
-		var z1 := center.z + _arc_offset(phi1, radius)
-		var n0 := Vector3(-sin(phi0), 0.0, cos(phi0))
-		var n1 := Vector3(-sin(phi1), 0.0, cos(phi1))
-		# Corners counter-clockwise as the audience sees them; `_add_quad`
-		# owns the winding. Never fix an inside-out surface by flipping
-		# cull_mode -- `cull_back` is a MaterialLibrary spec field, and
-		# flipping it there flips it for every other caller of that key.
-		_add_quad(st, [
-			[Vector3(x0, bottom, z0), n0, Vector2(t0, 1.0)],
-			[Vector3(x1, bottom, z1), n1, Vector2(t1, 1.0)],
-			[Vector3(x1, top, z1), n1, Vector2(t1, 0.0)],
-			[Vector3(x0, top, z0), n0, Vector2(t0, 0.0)],
-		])
-
-
-## The bezel that frames `_add_curved_face`: the same arc, `bezel` larger in
-## both axes and pushed `depth` away from the audience, plus the four rim
-## strips joining the two.
-##
-## Its UVs stay in world metres (u = arc length, v = height) because unlike
-## the face it frames it wears an ordinary tiled library material.
-static func _add_curved_shell(st: SurfaceTool, center: Vector3, width: float,
-		height: float, sagitta: float, segments: int, depth: float,
-		bezel: float) -> void:
-	# The picture's circle, then this panel's chord on that same circle.
-	var radius := _arc_radius(width * 0.5, sagitta)
-	var half_chord := width * 0.5 + bezel
-	var phi_max := asin(clampf(half_chord / radius, -1.0, 1.0))
-	var top := center.y + height * 0.5 + bezel
-	var bottom := center.y - height * 0.5 - bezel
-	for i: int in segments:
-		var phi0 := lerpf(-phi_max, phi_max, float(i) / float(segments))
-		var phi1 := lerpf(-phi_max, phi_max, float(i + 1) / float(segments))
-		# Front ring (the visible bezel, which the picture is inset into),
-		# then the back panel, then the rims that join them.
-		_arc_quad(st, center, radius, phi0, phi1, bottom, top, 0.0, true)
-		_arc_quad(st, center, radius, phi0, phi1, bottom, top, -depth, false)
-		_arc_rim(st, center, radius, phi0, phi1, top, depth, Vector3.UP)
-		_arc_rim(st, center, radius, phi0, phi1, bottom, depth, Vector3.DOWN)
-
-
-## One quad of the curved shell's face ring, at `z_shift` from the arc.
-static func _arc_quad(st: SurfaceTool, center: Vector3, radius: float,
-		phi0: float, phi1: float, lo: float, hi: float, z_shift: float,
-		front: bool) -> void:
-	var p := func(phi: float, y: float) -> Vector3:
-		return Vector3(center.x + radius * sin(phi), y,
-				center.z + _arc_offset(phi, radius) + z_shift)
-	var n0 := Vector3(-sin(phi0), 0.0, cos(phi0)) * (1.0 if front else -1.0)
-	var n1 := Vector3(-sin(phi1), 0.0, cos(phi1)) * (1.0 if front else -1.0)
-	var arc0 := radius * phi0
-	var arc1 := radius * phi1
-	var corners := [
-		[p.call(phi0, lo), n0, Vector2(arc0, lo)],
-		[p.call(phi1, lo), n1, Vector2(arc1, lo)],
-		[p.call(phi1, hi), n1, Vector2(arc1, hi)],
-		[p.call(phi0, hi), n0, Vector2(arc0, hi)],
-	]
-	if not front:
-		corners.reverse()
-	_add_quad(st, corners)
-
-
-## One quad of the horizontal rim joining the shell's front arc to its back.
-static func _arc_rim(st: SurfaceTool, center: Vector3, radius: float,
-		phi0: float, phi1: float, y: float, depth: float,
-		normal: Vector3) -> void:
-	var p := func(phi: float, z_shift: float) -> Vector3:
-		return Vector3(center.x + radius * sin(phi), y,
-				center.z + _arc_offset(phi, radius) + z_shift)
-	var arc0 := radius * phi0
-	var arc1 := radius * phi1
-	var corners := [
-		[p.call(phi0, 0.0), normal, Vector2(arc0, 0.0)],
-		[p.call(phi1, 0.0), normal, Vector2(arc1, 0.0)],
-		[p.call(phi1, -depth), normal, Vector2(arc1, -depth)],
-		[p.call(phi0, -depth), normal, Vector2(arc0, -depth)],
-	]
-	if normal.y > 0.0:
-		corners.reverse()
-	_add_quad(st, corners)
-
-
-## An arc of tube lying in the XY plane, facing +Z -- the body of an entrance
-## portal.
-##
-## Swept between two angles rather than closed, because the reference portals
-## are a circle with the bottom cut off by the deck: the tube runs from where
-## it meets the floor one side, the long way over the top, to where it meets
-## it on the other. A fully closed circle reads as a neon hoop hung on a wall
-## -- there is no doorway in it.
-##
-##     p(theta, phi) = C + (major + minor cos phi) (cos theta, sin theta, 0)
-##                       + (0, 0, minor sin phi)
-##     n(theta, phi) = cos phi (cos theta, sin theta, 0) + (0, 0, sin phi)
-##
-## UVs are (theta / TAU, phi / TAU) so a tiled material would wrap the tube
-## rather than smear along it. Nothing tiled wears one today; the next
-## material might.
-##
-## `ring_segments` counts the whole circle, so a partial sweep uses its share
-## and the facet size stays the same however much of the circle is drawn. 48
-## over the full turn is roughly two pixels of facet at the distance
-## CaptureHarness's `stage_wide` shot sees the portals from.
-static func _add_arc_tube(st: SurfaceTool, center: Vector3, major: float,
-		minor: float, from_angle: float, to_angle: float, ring_segments: int,
-		tube_sides: int) -> void:
-	var span := to_angle - from_angle
-	var steps := maxi(int(ceil(absf(span) / TAU * float(ring_segments))), 1)
-	var point := func(ti: int, pi: int) -> Array:
-		var theta := from_angle + span * float(ti) / float(steps)
-		var phi := TAU * float(pi) / float(tube_sides)
-		var radial := Vector3(cos(theta), sin(theta), 0.0)
-		var normal := radial * cos(phi) + Vector3(0.0, 0.0, sin(phi))
-		var pos := center + radial * (major + minor * cos(phi)) \
-				+ Vector3(0.0, 0.0, minor * sin(phi))
-		return [pos, normal, Vector2(theta / TAU, float(pi) / float(tube_sides))]
-	for ti: int in steps:
-		for pi: int in tube_sides:
-			_add_quad(st, [
-				point.call(ti, pi + 1), point.call(ti + 1, pi + 1),
-				point.call(ti + 1, pi), point.call(ti, pi),
-			])
-
-
-## The radial slat fan inside a portal: `count` tapered planks swept between
-## `from_angle` and `to_angle`.
-##
-## Each slat is a single two-sided quad rather than a solid plank. At the
-## distance any shot in the list sees the stage from, the 5cm edge of a plank
-## is under a pixel, so the eight triangles a box would cost buy nothing --
-## and a fan is the one place in the hall where the count of things matters
-## more than the thickness of each.
-static func _add_fan(st: SurfaceTool, center: Vector3, inner: float,
-		outer: float, count: int, half_inner: float, half_outer: float,
-		from_angle: float, to_angle: float) -> void:
-	for i: int in count:
-		var t := (float(i) + 0.5) / float(count)
-		var angle := lerpf(from_angle, to_angle, t)
-		var dir := Vector3(cos(angle), sin(angle), 0.0)
-		var side := Vector3(-sin(angle), cos(angle), 0.0)
-		var a := center + dir * inner - side * half_inner
-		var b := center + dir * inner + side * half_inner
-		var c := center + dir * outer + side * half_outer
-		var d := center + dir * outer - side * half_outer
-		for normal: Vector3 in [Vector3.BACK, Vector3.FORWARD]:
-			var corners := [
-				[a, normal, Vector2(0.0, 0.0)], [b, normal, Vector2(1.0, 0.0)],
-				[c, normal, Vector2(1.0, 1.0)], [d, normal, Vector2(0.0, 1.0)],
-			]
-			if normal.z < 0.0:
-				corners.reverse()
-			_add_quad(st, corners)
-
-
-## The dark recess behind a portal: a drum running away from the audience
-## with its normals pointing INWARD, so back-face culling keeps the inside
-## visible and the outside -- which is buried in the backdrop -- costs
-## nothing. Capped at the far end, because an uncapped tube is a hole onto
-## the Environment background, and `measure_frame.py` scores that as void.
-static func _add_tube(st: SurfaceTool, center: Vector3, radius: float,
-		depth: float, segments: int) -> void:
-	for i: int in segments:
-		var a0 := TAU * float(i) / float(segments)
-		var a1 := TAU * float(i + 1) / float(segments)
-		var d0 := Vector3(cos(a0), sin(a0), 0.0)
-		var d1 := Vector3(cos(a1), sin(a1), 0.0)
-		_add_quad(st, [
-			[center + d0 * radius - Vector3(0.0, 0.0, depth), -d0,
-					Vector2(a0 * radius, depth)],
-			[center + d1 * radius - Vector3(0.0, 0.0, depth), -d1,
-					Vector2(a1 * radius, depth)],
-			[center + d1 * radius, -d1, Vector2(a1 * radius, 0.0)],
-			[center + d0 * radius, -d0, Vector2(a0 * radius, 0.0)],
-		])
-	# The back wall of the recess.
-	var cap := center - Vector3(0.0, 0.0, depth)
-	for i: int in segments:
-		var a0 := TAU * float(i) / float(segments)
-		var a1 := TAU * float(i + 1) / float(segments)
-		var p0 := cap + Vector3(cos(a0), sin(a0), 0.0) * radius
-		var p1 := cap + Vector3(cos(a1), sin(a1), 0.0) * radius
-		for vert: Vector3 in [cap, p1, p0]:
-			st.set_normal(Vector3.BACK)
-			st.set_uv(Vector2(vert.x, vert.y))
-			st.add_vertex(vert)
-
-
-static func _add_oriented(st: SurfaceTool, center: Vector3, along: Vector3,
-		out: Vector3, size: Vector3) -> void:
-	var world: Vector3 = along.abs() * size.x + Vector3.UP * size.y \
-			+ out.abs() * size.z
-	_add_box(st, center, world)
 
 
 static func _mesh_instance(name: String, st: SurfaceTool,
@@ -696,228 +699,546 @@ static func _new_surface() -> SurfaceTool:
 # Floor, barricades
 # ---------------------------------------------------------------------------
 
-func _build_floor() -> void:
-	var st := _new_surface()
-	_add_box(st, Vector3(0.0, FLOOR_Y - 0.1, 0.0),
-			Vector3(WALL_EXTENT * 2.0, 0.2, WALL_EXTENT * 2.0))
-	add_child(_mesh_instance("Floor", st,
-			MaterialLibrary.house_compensate(_house_lit(_textured("arena_floor"), 1.0))))
-	_build_floor_seams()
-
-
-## The scored panel lines in the ringside slab. Drawn as their own darker
-## surface a hair above the floor rather than cut into it: a seam is 5cm wide
-## and modelling it as a groove would need three faces where one flat strip is
-## visually identical from every camera in the shotlist.
+## The floor, its panel joints and the barricades are
+## `tools/blender/ringside.py`'s model.
 ##
-## `reach` is well under the floor's own, so a seam reads as a shadow line
-## rather than as a painted marking -- which is the difference between a
-## scored slab and a car park.
-func _build_floor_seams() -> void:
-	var st := _new_surface()
-	var reach := BARRICADE_RADIUS + ROW_RUN * float(FLAT_CHAIR_ROWS) + 1.0
-	var lines := int(reach / FLOOR_SEAM_PITCH)
-	for i: int in range(-lines, lines + 1):
-		var at := float(i) * FLOOR_SEAM_PITCH
-		_add_box(st, Vector3(at, FLOOR_Y + 0.004, 0.0),
-				Vector3(FLOOR_SEAM_WIDTH, 0.008, reach * 2.0))
-		_add_box(st, Vector3(0.0, FLOOR_Y + 0.004, at),
-				Vector3(reach * 2.0, 0.008, FLOOR_SEAM_WIDTH))
-	add_child(_mesh_instance("FloorSeams", st,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_floor"), 0.35))))
+## Only the barricades gained anything by moving, and it is worth saying which:
+## their capping rail is a TUBE now rather than a box. It is the only
+## horizontal at ringside at chest height, it runs across the whole width of
+## the wide shot, and a box takes a highlight on one facet where a tube takes
+## one along its length -- which is what reads as steel. The raking leg behind
+## each panel is a tube for the same reason.
+##
+## The floor slab is one box there as it was one box here. The panel joints
+## keep their analytic clip to the rink's own plan -- at a given x the decking
+## reaches BOWL_STRAIGHT_Z + sqrt(r^2 - dx^2), so a joint stops where the
+## decking does instead of running out over the seating.
+# --- Commentary desk ---------------------------------------------------------
+## The desk was the cheapest missing thing in the wide shot, and it is here
+## because the hard camera now exists to see it.
+##
+## Measured against `gauntlet/refs/lighting/aew_low_angle_led_wall.jpg`, which
+## is the one reference in the repo that shows ringside from the floor: the
+## desk is a long fascia'd table standing between the ring apron and the first
+## row of floor seats, with the commentary team seated on its OUTER side
+## facing the ring. It is not centred on the hard camera -- in
+## `aew_grand_slam_broadcast.png` it sits beside the ring at frame right, one
+## ring-side round from the lens.
+##
+## So it goes on +Z. The hard camera is anchored on -X and looks up +X, which
+## puts its screen-right at +Z (the same solve that turned the mat's artwork),
+## and that is the side of the ring the reference frame shows it on.
+##
+## Placed by what it has to fit between rather than by a measurement off the
+## still: the apron ends at 3.20 and the barricade stands at 6.00, so a 0.72
+## desk centred at 4.40 leaves 0.84 of walkway behind it and 0.84 in front.
+const DESK_Z := 4.40
+const DESK_LENGTH := 4.20
+const DESK_HEIGHT := 0.95
+const DESK_DEPTH := 0.72
+## The worktop, and how far it overhangs the fascia. A desk reads as a desk
+## from the lip's shadow line, which needs the top to stand proud of the panel
+## under it.
+const DESK_TOP_THICKNESS := 0.055
+const DESK_TOP_OVERHANG := 0.045
+## Monitors: three low boxes along the back edge, one per commentator. Small,
+## because at hard-camera range they are three specular chips on a dark table
+## and nothing more -- but without them the desk is a slab.
+const DESK_MONITORS := 3
+const DESK_MONITOR_WIDTH := 0.46
+const DESK_MONITOR_HEIGHT := 0.28
+const DESK_MONITOR_DEPTH := 0.05
+
+const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
+
+## Part name -> [material key, house reach]. Unchanged from the surfaces these
+## replace, including the barricade's 1.5: it is the one ringside surface the
+## wide shot reads scale off, and it has to separate from the floor behind it.
+const RINGSIDE_MATERIALS := {
+	"Floor": ["arena_floor", 1.0],
+	# The black matting between the barrier and the ring. Reach 0.45: it is
+	# the darkest large surface in the lower frame and it is what the mat's
+	# exposure anchor, the steps and the wrestlers working outside are all
+	# read against. Lifting it further flattens the ring into the floor.
+	"RingsideMat": ["arena_floor", 0.45],
+	"FloorSeams": ["arena_floor", 0.35],
+	"Barricades": ["arena_barricade", 1.5],
+	# The desk fascia takes the barricade's own surface at a lower reach: it
+	# is the same class of ringside steel-and-panel, but it stands in shadow
+	# behind the apron rather than catching the rig side-on the way the cap
+	# rail does.
+	"CommentaryDesk": ["arena_barricade", 0.7],
+	# The worktop and the monitor faces are the one bright thing at the desk,
+	# which is what makes it read as a desk and not a second barricade.
+	"CommentaryDeskTop": ["arena_barricade", 1.2],
+}
 
 
-## Four runs of discrete panels, each with a capping rail along its top and a
-## leg raking outward behind it. It was one continuous box per side, which from
-## the wide camera is a featureless band with nothing in it to read scale off.
-func _build_barricades() -> void:
-	var st := _new_surface()
-	var y := FLOOR_Y + BARRICADE_HEIGHT * 0.5
-	var top := FLOOR_Y + BARRICADE_HEIGHT
-	var span := BARRICADE_RADIUS * 2.0
-	var panels := int(span / BARRICADE_PANEL)
-	var pitch := span / float(panels)
-	var width := pitch - BARRICADE_JOIN
-	for side: int in range(4):
-		# `out` points away from the ring, `along` runs down the barricade.
-		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1),
-				Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
-		var along := Vector3(out.z, 0.0, -out.x)
-		var line: Vector3 = out * BARRICADE_RADIUS
-		for i: int in range(panels):
-			var t := (float(i) + 0.5) / float(panels) - 0.5
-			var at: Vector3 = line + along * (t * span)
-			_add_oriented(st, at + Vector3(0.0, y, 0.0), along, out,
-					Vector3(width, BARRICADE_HEIGHT, 0.14))
-			# The cap rail, proud of the panel on both faces.
-			_add_oriented(st, at + Vector3(0.0, top - 0.035, 0.0), along, out,
-					Vector3(width, 0.07, 0.20))
-			# One leg per panel, behind it, raking out to the floor. Boxed
-			# rather than angled: at ringside distance the leg is three pixels
-			# wide and its silhouette is the whole of what it contributes.
-			_add_oriented(st, at + out * 0.22
-					+ Vector3(0.0, FLOOR_Y + BARRICADE_HEIGHT * 0.28, 0.0),
-					along, out,
-					Vector3(0.05, BARRICADE_HEIGHT * 0.56, 0.42))
-	add_child(_mesh_instance("Barricades", st,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_barricade"), 1.5))))
+func _build_ringside() -> void:
+	var packed: PackedScene = load(RINGSIDE_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_venue.sh ringside."
+				% RINGSIDE_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "Ringside"
+	for part: String in RINGSIDE_MATERIALS:
+		var spec: Array = RINGSIDE_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	add_child(root)
 
 
 # ---------------------------------------------------------------------------
 # Seating bowl
 # ---------------------------------------------------------------------------
 
-## Each row is a solid block spanning from the bowl floor up to its own tread
-## height, so the stack reads as a staircase with no gaps to fall through and
-## no hidden faces to z-fight. The -Z side is split around the stage opening.
+## The bowl itself is `tools/blender/arena_bowl.py`'s model; what is built
+## here is who sits on it.
+##
+## The two halves share `_row_schedule()`, which is the same arithmetic the
+## exporter runs, so a ringside chair's tread height and the mesh's tread
+## height come from one place. `test_arena_bowl.gd` measures the shipped .glb
+## against this schedule, so the pair cannot drift silently.
 func _build_bowl() -> void:
-	var steps := _new_surface()
-	var seats: Array[Transform3D] = []
-	var colors: Array[Color] = []
-	var chairs: Array[Transform3D] = []
-	var chair_colors: Array[Color] = []
+	add_child(_build_bowl_model())
 
-	var inner := BARRICADE_RADIUS
+
+# ---------------------------------------------------------------------------
+# Floor seating
+# ---------------------------------------------------------------------------
+
+## The chairs on the rink floor, from the barricade out to the boards.
+##
+## This is the biggest block of seating in the hall and, in a real building,
+## the most expensive: twenty-odd metres of floor either side of the ring and
+## a rink end behind it. It replaced the four flat rows the bowl used to carry
+## at ringside, which existed only because the bowl started 9m from the ring
+## and there was nowhere else to put them.
+##
+## Rows are offsets of the BARRICADE's square rather than of the rink's
+## rectangle: floor seating is laid out around the ring, not around the
+## building, and a row that wrapped the rink's plan would have its far end
+## forty metres from the thing it is pointed at. Each row is then clipped to
+## the rink, so the shape of the block comes from the boards.
+func _build_floor_seats() -> void:
+	var detailed: Array[Transform3D] = []
+	var distant: Array[Transform3D] = []
+	# The last row is the one whose offset still leaves the walkway inside the
+	# boards. Derived, not counted: changing the rink or the margin moves the
+	# back row without anyone having to re-count rows.
+	var last := RINK_HALF_LENGTH - FLOOR_SEAT_MARGIN - BARRICADE_RADIUS
+	var index := 0
+	var offset := FLOOR_SEAT_START
+	while offset <= last:
+		_floor_seat_row(offset,
+				detailed if index < FLOOR_CHAIR_DETAIL_ROWS else distant)
+		offset += FLOOR_ROW_PITCH
+		index += 1
+	add_child(_build_chairs("FloorChairs", _chair_mesh(), detailed))
+	add_child(_build_chairs("FloorChairsFar", _chair_proxy_mesh(), distant))
+	_build_floor_crowd(detailed + distant)
+
+
+## Ringside model: six seated people, built by tools/blender/floor_crowd.py.
+const FLOOR_CROWD_MODEL := "res://assets/environment/floor_crowd.glb"
+## How many of the ringside chairs have somebody in them.
+##
+## Higher than the bowl's 0.86 because these are the seats a camera is nearest
+## to and the ones gauntlet/refs/lighting/ shows packed -- ringside is where a
+## show puts the people it wants on television. The empty ones still read:
+## the chair is modelled underneath every figure either way.
+const FLOOR_CROWD_FILL := 0.92
+## Seeded separately from PLACEMENT_SEED so re-rolling who is sitting where
+## does not move the chairs themselves.
+const FLOOR_CROWD_SEED := 20260916
+
+
+## Put people in the ringside chairs.
+##
+## One MultiMesh per variant rather than one for the lot, because a MultiMesh
+## draws a single mesh: six meshes is six draw calls and six poses, against
+## one draw call and a thousand identical twins.
+##
+## The figures reuse the chairs' own transforms -- same curve, same yaw, same
+## exclusions for the rink edge, the ramp and the aisles -- so a fan cannot
+## end up in a spot a chair was not. The Blender figure is built with its
+## backside at a folding chair's seat height, so it needs no vertical offset
+## here (crowd.CHAIR_SEAT_HEIGHT).
+func _build_floor_crowd(seats: Array[Transform3D]) -> void:
+	var packed: PackedScene = load(FLOOR_CROWD_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_arena.sh."
+				% FLOOR_CROWD_MODEL)
+		return
+	var source: Node3D = packed.instantiate()
+	var meshes: Array[Mesh] = []
+	for child in source.find_children("*", "MeshInstance3D", true, false):
+		var instance := child as MeshInstance3D
+		if instance.mesh != null:
+			meshes.append(instance.mesh)
+	if meshes.is_empty():
+		push_error("ArenaBuilder: %s carries no fan meshes." % FLOOR_CROWD_MODEL)
+		source.free()
+		return
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = FLOOR_CROWD_SEED
+	# Which variant each occupied seat gets, and how it is dressed.
+	var buckets: Array[Array] = []
+	var colours: Array[Array] = []
+	for _i in meshes.size():
+		buckets.append([] as Array[Transform3D])
+		colours.append([] as Array[Color])
+
+	for seat in seats:
+		if rng.randf() > FLOOR_CROWD_FILL:
+			continue
+		var pick := rng.randi_range(0, meshes.size() - 1)
+		# Size and a little extra yaw on top of the chair's own, so two
+		# neighbours on the same variant are still not the same person.
+		var scale := rng.randf_range(0.93, 1.07)
+		var turned := seat.rotated_local(Vector3.UP, rng.randf_range(-0.18, 0.18))
+		buckets[pick].append(Transform3D(turned.basis.scaled(Vector3.ONE * scale),
+				turned.origin))
+		colours[pick].append(_crowd_shirt(rng))
+	source.free()
+
+	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887")
+	for i in meshes.size():
+		if buckets[i].is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		# Per-instance colour is why the six meshes carry no hue of their
+		# own: the shirt is dressed here, so six poses clothe a thousand
+		# people. The meshes are not flat white though -- they carry white
+		# for cloth and a darker grey for skin, and this multiplies against
+		# it, which is what gives a fan a face.
+		mm.use_colors = true
+		mm.mesh = meshes[i]
+		mm.instance_count = buckets[i].size()
+		for j in buckets[i].size():
+			mm.set_instance_transform(j, buckets[i][j])
+			mm.set_instance_color(j, colours[i][j])
+		var node := MultiMeshInstance3D.new()
+		node.name = "FloorCrowd%02d" % i
+		node.multimesh = mm
+		node.material_override = material
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(node)
+
+
+## A shirt, from the same palette tools/blender/crowd.py dresses the bowl in --
+## restated here rather than shared because the bowl's is baked into a .glb by
+## a Blender script this file cannot import, and a crowd whose two halves wear
+## different palettes is worse than one number written twice.
+const CROWD_SHIRTS: Array[Color] = [
+	Color(0.20, 0.21, 0.26), Color(0.28, 0.24, 0.24), Color(0.17, 0.20, 0.24),
+	Color(0.31, 0.29, 0.27), Color(0.22, 0.26, 0.28), Color(0.26, 0.22, 0.29),
+	Color(0.15, 0.16, 0.19), Color(0.33, 0.31, 0.33), Color(0.19, 0.23, 0.21),
+	Color(0.30, 0.26, 0.22), Color(0.24, 0.20, 0.22), Color(0.18, 0.19, 0.27),
+	Color(0.29, 0.30, 0.31), Color(0.21, 0.18, 0.18),
+]
+
+
+func _crowd_shirt(rng: RandomNumberGenerator) -> Color:
+	var base: Color = CROWD_SHIRTS[rng.randi_range(0, CROWD_SHIRTS.size() - 1)]
+	var k := rng.randf_range(0.82, 1.18)
+	# sRGB in, linear out, and this conversion is the whole reason the two
+	# halves of the crowd can share one palette.
+	#
+	# crowd.py writes these same numbers into a colour attribute, where the
+	# glTF importer decodes them -- 0.72 arrives in the mesh as 0.479. A
+	# MultiMesh instance colour gets no such decode: it reaches COLOR in the
+	# shader exactly as written. Handing the shader 0.21 raw is handing it a
+	# LINEAR 0.21, which displays around 0.5 -- so the ringside fans came out
+	# pale grey blocks against a bowl wearing the identical palette, in the
+	# seats nearest the camera.
+	return Color(base.r * k, base.g * k, base.b * k).srgb_to_linear()
+
+
+## One row of floor chairs, walked along the barricade's offset curve.
+##
+## Three things take a chair out of the row, and all three are things a real
+## floor has: the rink's edge (with its walkway), the entrance ramp's corridor,
+## and the four corner aisles that break the floor into blocks.
+func _floor_seat_row(offset: float, out_chairs: Array[Transform3D]) -> void:
+	const WOBBLE := 0.012
+	const YAW_JITTER := 0.035
+	var loop := _offset_loop(BARRICADE_RADIUS, BARRICADE_RADIUS, offset)
+	var carry := 0.0
+	for i: int in loop.size():
+		var here: Vector3 = loop[i][0]
+		var next: Vector3 = loop[(i + 1) % loop.size()][0]
+		var span := here.distance_to(next)
+		if span <= 0.0:
+			continue
+		var at := seat_pitch - carry
+		while at < span:
+			var point := here.lerp(next, at / span)
+			at += seat_pitch
+			if not _inside_rink(point, FLOOR_SEAT_MARGIN):
+				continue
+			if point.z < 0.0 and absf(point.x) < RAMP_CLEARANCE:
+				continue
+			if _in_floor_aisle(point):
+				continue
+			var inward: Vector3 = -(loop[i][1] as Vector3)
+			var jitter := Vector3(_rng.randf_range(-WOBBLE, WOBBLE), 0.0,
+					_rng.randf_range(-WOBBLE, WOBBLE))
+			var basis := Basis(Vector3.UP, atan2(inward.x, inward.z)
+					+ _rng.randf_range(-YAW_JITTER, YAW_JITTER))
+			out_chairs.append(Transform3D(basis,
+					Vector3(point.x, FLOOR_Y, point.z) + jitter))
+		carry = span - (at - seat_pitch)
+
+
+## Is a point on the rink, with `margin` of walkway kept inside the boards?
+##
+## The rink IS the plan rectangle offset by RINK_CORNER_RADIUS, so this is the
+## same distance-to-a-rectangle the whole building is built on, tested rather
+## than swept.
+static func _inside_rink(point: Vector3, margin: float) -> bool:
+	var dx := maxf(absf(point.x) - BOWL_STRAIGHT_X, 0.0)
+	var dz := maxf(absf(point.z) - BOWL_STRAIGHT_Z, 0.0)
+	return sqrt(dx * dx + dz * dz) <= RINK_CORNER_RADIUS - margin
+
+
+## The two diagonal aisles that cut the floor into four blocks -- sides and
+## ends -- as the lines x = z and x = -z. Distance from a point to either is
+## |x -+ z| / sqrt(2), which is cheaper than any bearing arithmetic and, unlike
+## an angular clearance, stays the same width the whole way out.
+static func _in_floor_aisle(point: Vector3) -> bool:
+	const HALF_WIDTH := 0.85
+	return minf(absf(point.x - point.z), absf(point.x + point.z)) \
+			< HALF_WIDTH * sqrt(2.0)
+
+
+## Instance the exported bowl and dress every part of it.
+##
+## The model ships placeholder colours so the .glb opens as something
+## recognisable on its own; nothing in the frame uses them. Each object is
+## overridden with the MaterialLibrary key `BOWL_MODEL_MATERIALS` names, which
+## is where the hall's measured tints, its maps and its house-lighting
+## compensation live -- and is why swapping generated geometry for a model
+## moved no luminance target.
+func _build_bowl_model() -> Node3D:
+	var packed: PackedScene = load(BOWL_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_arena.sh."
+				% BOWL_MODEL)
+		return Node3D.new()
+	var root: Node3D = packed.instantiate()
+	root.name = "BowlModel"
+	for part: String in BOWL_MODEL_MATERIALS:
+		var spec: Array = BOWL_MODEL_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	for part: String in BOWL_MODEL_EMISSIVE:
+		var spec: Array = BOWL_MODEL_EMISSIVE[part]
+		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
+	for part: String in CROWD_PARTS:
+		_dress(root, part, _crowd_material())
+	return root
+
+
+## The parts of the bowl model that are people, and the level they sit at.
+##
+## Not in BOWL_MODEL_MATERIALS because they are not a MaterialLibrary surface:
+## every crowd vertex carries its own shirt colour and its own animation phase
+## (tools/blender/crowd.py bakes both into COLOR_0), so the material has to be
+## a shader that reads them rather than a StandardMaterial3D with one albedo.
+const CROWD_PARTS := ["Crowd", "CrowdFar"]
+
+## Idle motion, and the light floor the crowd sits on.
+##
+## A vertex shader ON PURPOSE, and this is the clause ARCHITECTURE.md's
+## cosmetic-motion rule was written for: it runs on the render thread, reads
+## only TIME and the mesh's own attributes, and writes nothing back, so it
+## cannot feed gameplay state or move a replay's end-state hash. Thousands of
+## skinned spectators is not an option that runs; this is how a crowd moves.
+##
+## The phase comes from UV.x, not from INSTANCE_ID. The crowd used to be a
+## MultiMesh, where an instance id told one person from the next; it is baked
+## into the bowl's own mesh now, so every figure shares one id and keying off
+## it would make the entire bowl bob in perfect unison. crowd.py writes a
+## golden-ratio phase per figure into a UV channel instead -- colour alpha was
+## tried first and arrives back 1.0 for every vertex, since nothing in either
+## the exporter or the importer preserves an alpha no material reads.
+func _crowd_material(phase_source: String = "UV.x") -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode diffuse_lambert, specular_disabled, shadows_disabled, cull_disabled;
+
+uniform float bob_amplitude = 0.035;
+uniform float bob_speed = 1.7;
+uniform float sway_amplitude = 0.018;
+// The floor that keeps the back rows off measure_frame.py's 0.0025 void
+// threshold, in the same spirit as ArenaBuilder.HOUSE_TARGET. The crowd's
+// real level is meant to come from a fixture aimed at it; until the house
+// wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
+// this is most of what lights them, which is why it is not smaller.
+uniform float house_light = 0.055;
+
+varying vec3 shirt;
+
+void vertex() {
+	shirt = COLOR.rgb;
+	float phase = PHASE_SOURCE * 6.2831853;
+	// Bob scaled by height above the seat, so feet stay planted and heads
+	// move most -- a figure translated bodily reads as a hovering cutout.
+	float lift = clamp(VERTEX.y * 1.4, 0.0, 1.0);
+	VERTEX.y += sin(TIME * bob_speed + phase) * bob_amplitude * lift;
+	// A little lateral sway on a different period, so the bowl does not
+	// pulse as one organism.
+	VERTEX.x += sin(TIME * bob_speed * 0.63 + phase * 1.7) * sway_amplitude * lift;
+}
+
+void fragment() {
+	ALBEDO = shirt;
+	EMISSION = shirt * house_light;
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.0;
+}
+"""
+	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	return mat
+
+
+## Override one named object in the model, and say so loudly if it is missing
+## -- a part that silently keeps its Blender colour is the one failure mode of
+## dressing a model by node name, and it shows up as a pale surface in the
+## middle of a solved frame rather than as an error.
+func _dress(root: Node3D, part: String, mat: Material) -> void:
+	var node := root.find_child(part, true, false) as MeshInstance3D
+	if node == null:
+		push_error("ArenaBuilder: %s has no '%s' object." % [BOWL_MODEL, part])
+		return
+	node.material_override = mat
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+# ---------------------------------------------------------------------------
+# The plan curve
+# ---------------------------------------------------------------------------
+
+## Every row of the bowl in build order, as the exporter builds them.
+##
+## Mirrors `arena_bowl.py`'s `row_schedule()` line for line. The two are
+## written twice rather than shared through a data file because what they are
+## made of is already shared -- the exporter parses its numbers out of this
+## file -- and a twenty-line loop a test pins against the mesh is a smaller
+## liability than a third format between them.
+static func _row_schedule() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var inner := BOWL_FIRST_ROW
 	var tread_y := FLOOR_Y
 	for tier: int in [0, 1]:
-		var rows: int = LOWER_ROWS if tier == 0 else UPPER_ROWS
+		var count: int = LOWER_ROWS if tier == 0 else UPPER_ROWS
 		if tier == 1:
+			var concourse_inner := inner
 			inner += CONCOURSE_DEPTH
-			_add_concourse(steps, inner - CONCOURSE_DEPTH, inner, tread_y)
-		for r: int in rows:
+			rows.append({"kind": "concourse", "inner": concourse_inner,
+					"outer": inner, "tread_y": tread_y})
+			tread_y += SUITE_HEIGHT
+		for r: int in count:
 			var outer := inner + ROW_RUN
-			# The first rows of the lower tier stay on the slab. _add_row is
-			# still called and still no-ops on zero height, so the flat rows
-			# cost no geometry -- the floor already under them is the tread.
-			var flat := tier == 0 and r < FLAT_CHAIR_ROWS
-			if not flat:
-				tread_y += ROW_RISE
-			_add_row(steps, inner, outer, tread_y)
-			if flat:
-				_seat_row(inner, outer, tread_y, chairs, chair_colors, true)
-			else:
-				_seat_row(inner, outer, tread_y, seats, colors)
+			tread_y += ROW_RISE
+			rows.append({"kind": "seated", "tier": tier, "index": r,
+					"inner": inner, "outer": outer, "tread_y": tread_y})
 			inner = outer
-
-	add_child(_mesh_instance("SeatingBowl", steps, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_bowl")))))
-	add_child(_build_chairs(chairs))
-	add_child(_build_crowd(seats, colors))
+	rows.append({"kind": "outer", "inner": inner, "outer": inner,
+			"tread_y": tread_y})
+	return rows
 
 
-## Cut around the stage exactly as the seating rows are. Built uncut, the
-## concourse closes the gap the rows leave and walls the entrance off -- a
-## false-colour pass showed it as a solid block filling the centre of frame
-## behind the ring, which is what was reading as void there.
-func _add_concourse(st: SurfaceTool, inner: float, outer: float,
-		y: float) -> void:
-	_ring_band(st, inner, outer, FLOOR_Y, y, true)
-
-
-func _add_row(st: SurfaceTool, inner: float, outer: float, y: float) -> void:
-	_ring_band(st, inner, outer, FLOOR_Y, y, true)
-
-
-## A square annulus between `inner` and `outer`, solid from `base_y` to
-## `top_y`. Split around the stage on -Z when `cut_stage` is set.
-func _ring_band(st: SurfaceTool, inner: float, outer: float, base_y: float,
-		top_y: float, cut_stage: bool) -> void:
-	var height := top_y - base_y
-	if height <= 0.0:
-		return
-	var mid_y := (base_y + top_y) * 0.5
-	var depth := outer - inner
-	var mid_r := (inner + outer) * 0.5
-
-	# +Z bank, full width.
-	_add_box(st, Vector3(0.0, mid_y, mid_r),
-			Vector3(outer * 2.0, height, depth))
-	# -Z bank, split around the entrance stage.
-	if cut_stage:
-		var wing := (outer - STAGE_HALF_WIDTH) * 0.5
-		if wing > 0.0:
-			for sign: float in [1.0, -1.0]:
-				_add_box(st,
-						Vector3(sign * (STAGE_HALF_WIDTH + wing), mid_y, -mid_r),
-						Vector3(wing * 2.0, height, depth))
-	else:
-		_add_box(st, Vector3(0.0, mid_y, -mid_r),
-				Vector3(outer * 2.0, height, depth))
-	# +X and -X banks, spanning only the gap the Z banks leave.
-	for sign: float in [1.0, -1.0]:
-		_add_box(st, Vector3(sign * mid_r, mid_y, 0.0),
-				Vector3(depth, height, inner * 2.0))
-
-
-## Seats along one row's tread, on whichever banks that row actually has.
+## The obround at `offset`, as [position, outward normal] pairs, counter-
+## clockwise from the +X straight. Positions carry y = 0; the caller supplies
+## the tread height.
 ##
-## `neat` switches the run from a crowd to a rank of empty chairs: every
-## position filled, near-square, no size variance. An unoccupied row is set
-## out in a grid and a crowd never is, and the difference is most of what
-## tells the two apart at this distance.
-func _seat_row(inner: float, outer: float, y: float,
-		out_seats: Array[Transform3D], out_colors: Array[Color],
-		neat: bool = false) -> void:
-	var seat_r := inner + (outer - inner) * 0.45
-	# +Z bank faces -Z, and so on: every seat looks at the ring.
-	_seat_run(Vector3(-outer, y, seat_r), Vector3(outer, y, seat_r), PI,
-			out_seats, out_colors, 0.0, neat)
-	_seat_run(Vector3(-inner, y, -seat_r), Vector3(inner, y, -seat_r), 0.0,
-			out_seats, out_colors, STAGE_HALF_WIDTH, neat)
-	_seat_run(Vector3(seat_r, y, -inner), Vector3(seat_r, y, inner), -PI * 0.5,
-			out_seats, out_colors, 0.0, neat)
-	_seat_run(Vector3(-seat_r, y, -inner), Vector3(-seat_r, y, inner), PI * 0.5,
-			out_seats, out_colors, 0.0, neat)
+## Mirrors `arena_bowl.py`'s `plan_loop()`, vertex order included, so an index
+## means the same bearing in both -- which is what lets the aisles the chairs
+## leave clear be the aisles the model puts stair nosings up.
+static func _plan_loop(offset: float) -> Array:
+	return _offset_loop(BOWL_STRAIGHT_X, BOWL_STRAIGHT_Z, offset)
 
 
-func _seat_run(from: Vector3, to: Vector3, facing: float,
-		out_seats: Array[Transform3D], out_colors: Array[Color],
-		skip_abs_x: float = 0.0, neat: bool = false) -> void:
-	var span := from.distance_to(to)
-	var count := int(span / seat_pitch)
-	if count <= 0:
-		return
-	var fill := 1.0 if neat else crowd_fill
-	var wobble := 0.012 if neat else 0.06
-	var yaw := 0.035 if neat else 0.25
-	for i: int in count:
-		var t := (float(i) + 0.5) / float(count)
-		var at := from.lerp(to, t)
-		if skip_abs_x > 0.0 and absf(at.x) < skip_abs_x:
-			continue
-		if _rng.randf() > fill:
-			continue
-		var jitter := Vector3(_rng.randf_range(-wobble, wobble), 0.0,
-				_rng.randf_range(-wobble, wobble))
-		var basis := Basis(Vector3.UP, facing + _rng.randf_range(-yaw, yaw))
-		if not neat:
-			basis = basis.scaled(Vector3.ONE * _rng.randf_range(0.9, 1.08))
-		out_seats.append(Transform3D(basis, at + jitter))
-		out_colors.append(CROWD_COLORS[_rng.randi() % CROWD_COLORS.size()])
+## The general form: the obround at `offset` from ANY rectangle.
+##
+## Two rectangles are offset in this hall and they are not the same one. The
+## building -- rink, boards, bowl, shell -- comes off (BOWL_STRAIGHT_X,
+## BOWL_STRAIGHT_Z), which is the rink's. The floor seating comes off the
+## BARRICADE's square, because floor seats are laid out around the ring rather
+## than around the building. Same curve, same walk, same normals; one function.
+static func _offset_loop(ax: float, az: float, offset: float) -> Array:
+	var loop: Array = []
+	var straight := func(from: Vector3, to: Vector3, normal: Vector3) -> void:
+		for i: int in BOWL_STRAIGHT_SEGMENTS:
+			loop.append([from.lerp(to, float(i) / float(BOWL_STRAIGHT_SEGMENTS)),
+					normal])
+	var corner := func(center: Vector3, start_angle: float) -> void:
+		for i: int in BOWL_CORNER_SEGMENTS:
+			var angle := start_angle \
+					+ PI * 0.5 * float(i) / float(BOWL_CORNER_SEGMENTS)
+			var dir := Vector3(cos(angle), 0.0, sin(angle))
+			loop.append([center + dir * offset, dir])
+	straight.call(Vector3(ax + offset, 0.0, -az), Vector3(ax + offset, 0.0, az),
+			Vector3.RIGHT)
+	corner.call(Vector3(ax, 0.0, az), 0.0)
+	straight.call(Vector3(ax, 0.0, az + offset), Vector3(-ax, 0.0, az + offset),
+			Vector3.BACK)
+	corner.call(Vector3(-ax, 0.0, az), PI * 0.5)
+	straight.call(Vector3(-ax - offset, 0.0, az), Vector3(-ax - offset, 0.0, -az),
+			Vector3.LEFT)
+	corner.call(Vector3(-ax, 0.0, -az), PI)
+	straight.call(Vector3(-ax, 0.0, -az - offset), Vector3(ax, 0.0, -az - offset),
+			Vector3.FORWARD)
+	corner.call(Vector3(ax, 0.0, -az), PI * 1.5)
+	return loop
+
+
+## Where the entrance set stands: the bowl opens instead of walling it off.
+static func _in_stage_gap(point: Vector3) -> bool:
+	return point.z < 0.0 and absf(point.x) < STAGE_HALF_WIDTH
+
+
+## Loop indices the aisles land on. Index-based rather than distance-based so
+## an aisle keeps the same bearing on every row, which is what makes the
+## nosings line up into a staircase instead of wandering across the rake.
+static func _aisle_indices() -> PackedInt32Array:
+	var per_loop := _plan_loop(BOWL_FIRST_ROW).size()
+	var picks := PackedInt32Array()
+	for k: int in BOWL_AISLES:
+		picks.append(int(round(float(k) * float(per_loop) / float(BOWL_AISLES)))
+				% per_loop)
+	return picks
 
 
 # ---------------------------------------------------------------------------
-# Ringside chairs
+# The chairs themselves
 # ---------------------------------------------------------------------------
 
-## The empty folding chairs on the flat rows behind the barricade.
+## One MultiMesh of folding chairs, in one draw call, on a plain material, not
+## moving.
 ##
-## Its own MultiMesh rather than a second colour on the crowd's, for one
-## non-negotiable reason: `_crowd_material()` is a vertex shader that bobs
-## every instance it is applied to, and a breathing chair is worse than no
-## chair at all. This takes a plain material and does not move.
-func _build_chairs(chairs: Array[Transform3D]) -> MultiMeshInstance3D:
+## Called twice, with two different meshes: the imported chair for the rows
+## near the ring and a box proxy for the rest. See `_chair_proxy_mesh()` for
+## why that split exists and what it is worth.
+func _build_chairs(node_name: String, mesh: Mesh,
+		chairs: Array[Transform3D]) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = _chair_mesh()
+	mm.mesh = mesh
 	mm.instance_count = chairs.size()
 	for i: int in chairs.size():
 		mm.set_instance_transform(i, chairs[i])
 
 	var node := MultiMeshInstance3D.new()
-	node.name = "RingsideChairs"
+	node.name = node_name
 	node.multimesh = mm
 	# `reach` is high for a hall surface. Ringside is nearly the only part of
 	# the frame gauntlet/refs/ring.md shows lit at all -- its chairs read
@@ -931,6 +1252,39 @@ func _build_chairs(chairs: Array[Transform3D]) -> MultiMeshInstance3D:
 			_house_lit(_textured("arena_chair"), 2.5))
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return node
+
+
+## The far-floor chair: four boxes, 48 triangles, standing in for the imported
+## chair's 1448.
+##
+## The floor seats ~2,000 chairs now. At the imported mesh's triangle count
+## that is 2.9 MILLION triangles of folding chair -- more than the rest of the
+## hall put together by an order of magnitude, and most of it forty metres from
+## any camera in the shotlist, where a whole chair covers a few pixels and
+## nothing in it is resolvable but its silhouette and the gap under its seat.
+##
+## So the near rows (FLOOR_CHAIR_DETAIL_ROWS of them, the ones `ringside_low`
+## and `wide_broadcast` actually resolve) keep the imported chair and the rest
+## get this. The split costs one extra draw call and saves ~2.4M triangles.
+##
+## Dimensions and origin match `_chair_mesh()` exactly -- 0.50 x 0.90 x 0.60m,
+## feet on y = 0, facing +Z -- because the two are placed by the same code and
+## a proxy that does not match its own subject is a seam in the middle of the
+## floor rather than an LOD.
+static var _proxy_cache: ArrayMesh
+
+
+static func _chair_proxy_mesh() -> ArrayMesh:
+	if _proxy_cache != null:
+		return _proxy_cache
+	var st := _new_surface()
+	# Seat pan, back, and the two legs, in that order.
+	_add_box(st, Vector3(0.0, 0.44, 0.0), Vector3(0.46, 0.05, 0.46))
+	_add_box(st, Vector3(0.0, 0.68, -0.21), Vector3(0.46, 0.44, 0.05))
+	for sx: float in [-1.0, 1.0]:
+		_add_box(st, Vector3(sx * 0.20, 0.22, 0.0), Vector3(0.05, 0.44, 0.42))
+	_proxy_cache = st.commit()
+	return _proxy_cache
 
 
 ## The chair, baked once.
@@ -995,84 +1349,6 @@ static func _chair_mesh() -> ArrayMesh:
 
 
 # ---------------------------------------------------------------------------
-# Crowd
-# ---------------------------------------------------------------------------
-
-## One MultiMesh for the whole bowl: a few thousand seated impostors in one
-## draw call. They are impostors, not characters -- a torso and a head, no
-## faces, no limbs. At bowl distance under the match lens what a crowd reads
-## as is a broken-up silhouette with colour variance, and that is all this is
-## claiming to be.
-func _build_crowd(seats: Array[Transform3D],
-		colors: Array[Color]) -> MultiMeshInstance3D:
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
-	mm.mesh = _spectator_mesh()
-	mm.instance_count = seats.size()
-	for i: int in seats.size():
-		mm.set_instance_transform(i, seats[i])
-		mm.set_instance_color(i, colors[i])
-
-	var node := MultiMeshInstance3D.new()
-	node.name = "Crowd"
-	node.multimesh = mm
-	node.material_override = _crowd_material()
-	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	return node
-
-
-static func _spectator_mesh() -> ArrayMesh:
-	var st := _new_surface()
-	_add_box(st, Vector3(0.0, 0.34, 0.0), Vector3(0.42, 0.58, 0.30))
-	_add_box(st, Vector3(0.0, 0.74, 0.0), Vector3(0.21, 0.23, 0.21))
-	return st.commit()
-
-
-## The idle bob. This is a vertex shader on purpose: it runs on the render
-## thread, reads only TIME and INSTANCE_ID, and writes nothing back, so it
-## cannot feed into gameplay state or change a replay's end-state hash --
-## which is the condition ARCHITECTURE.md puts on cosmetic motion.
-func _crowd_material() -> ShaderMaterial:
-	var shader := Shader.new()
-	shader.code = """
-shader_type spatial;
-render_mode diffuse_lambert, specular_disabled, shadows_disabled;
-
-uniform float bob_amplitude = 0.045;
-uniform float bob_speed = 1.6;
-// Residual bounce only, down from 0.55. At 0.55 this term alone put the
-// impostors at ~0.117 relative luminance -- brighter than the mat's own
-// 0.172 on forward_plus, against a reference crowd of 0.014
-// (VISUAL_BAR.md). The bowl is lit by real fixtures now
-// (core/lighting/arena_lighting.gd), so the crowd's level comes from a
-// light aimed at it; this is only the floor that keeps the back rows off
-// measure_frame.py's 0.0025 void threshold.
-uniform float house_light = 0.03;
-
-varying vec3 seat_color;
-
-void vertex() {
-	seat_color = COLOR.rgb;
-	// Golden-ratio phase spread: adjacent seats never bob together, and the
-	// pattern never repeats along a row.
-	float phase = fract(float(INSTANCE_ID) * 0.6180339887) * 6.2831853;
-	VERTEX.y += (sin(TIME * bob_speed + phase) * 0.5 + 0.5) * bob_amplitude;
-}
-
-void fragment() {
-	ALBEDO = seat_color;
-	EMISSION = seat_color * house_light;
-	ROUGHNESS = 1.0;
-	SPECULAR = 0.0;
-}
-"""
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	return mat
-
-
-# ---------------------------------------------------------------------------
 # Entrance stage
 # ---------------------------------------------------------------------------
 
@@ -1085,223 +1361,113 @@ void fragment() {
 ## Split into four because the old single function was already sixty lines of
 ## boxes and this is four distinct pieces of set, each with its own reference
 ## photograph and its own reasons.
-func _build_stage() -> void:
-	_build_stage_deck()
-	_build_stage_backdrop()
-	_build_entrance_portals()
-	_build_stage_screen()
-
-
-## The deck and the ramp down to floor level.
+## The entrance set and the truss are `tools/blender/entrance_set.py`'s model.
 ##
-## Geometry unchanged from the grey-box version; what changed is underneath
-## it. The deck is now a lacquered gloss (`arena_stage_deck`, roughness 0.14)
-## and `match.tscn` turns on SSR, so this surface carries a reflection of the
-## video wall and the two rings. That reflection is most of what makes the
-## reference photos read as a stage.
+## They were five SurfaceTool builders here -- deck and ramp, backdrop,
+## portals, video wall, truss. Two of them are why the move was worth making:
 ##
-## The house reach drops from 1.1 to 0.8 with it: house emission is added on
-## top of the reflection, and a deck emitting at its old level washes out the
-## thing it is now there to show.
-func _build_stage_deck() -> void:
-	var deck := _new_surface()
-	var stage_front := -BARRICADE_RADIUS
-	var deck_depth := stage_front - STAGE_BACK
-	_add_box(deck, Vector3(0.0, (FLOOR_Y + STAGE_DECK_Y) * 0.5,
-			(stage_front + STAGE_BACK) * 0.5),
-			Vector3(STAGE_HALF_WIDTH * 2.0, STAGE_DECK_Y - FLOOR_Y, deck_depth))
-	# Ramp: a short stack of steps rather than a wedge, because _add_box only
-	# makes axis-aligned boxes and a visible staircase is honest grey-box.
-	var steps := 6
-	for i: int in steps:
-		var t := float(i) / float(steps)
-		var y := lerpf(STAGE_DECK_Y, FLOOR_Y, t)
-		var z0 := lerpf(stage_front, -RING_HALF_EXTENT - 1.0, t)
-		var z1 := lerpf(stage_front, -RING_HALF_EXTENT - 1.0,
-				float(i + 1) / float(steps))
-		_add_box(deck, Vector3(0.0, (FLOOR_Y + y) * 0.5, (z0 + z1) * 0.5),
-				Vector3(RAMP_HALF_WIDTH * 2.0, y - FLOOR_Y, absf(z1 - z0)))
-	add_child(_mesh_instance("EntranceStage", deck, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_stage_deck"), 0.8))))
-
-
-## Backdrop behind the stage, at house level. Without it the portals are holes
-## onto the Environment's background colour -- which measure_frame.py scores as
-## void, and which measured as a quarter of the frame's middle band on the
-## first capture. A portal has to be a recess in something, not an opening
-## onto nothing.
+## * **The ramp was a staircase.** `_add_box` only makes axis-aligned boxes,
+##   so a 25.7m ramp falling 1.45m shipped as eighteen 8cm steps. The note on
+##   it argued the steps were under a pixel of rise from any camera in the
+##   shotlist, which is true of the treads and false of the EDGE: a stepped
+##   ramp has a stepped silhouette against the floor from every angle that
+##   sees it side-on. It is one wedge now, with a fascia down each flank and
+##   a nose at the bottom instead of a 1.45m cliff.
+## * **The truss was sixteen boxes.** Overhead truss is the one piece of an
+##   arena that is unmistakably a lattice from every angle. It is now four
+##   chords on a square section with alternating diagonals bay by bay.
 ##
-## The material is now `arena_stage_panel` rather than poured concrete: the
-## reference set's backdrop is a perforated panel wall, and at stage distance
-## what carries that is a fine dark weave rather than a flat slab.
+## Everything else is reproduced at its existing measurements, and every
+## measurement is still read out of the constants above -- entrance_set.py
+## parses them from this file rather than retyping them.
+const ENTRANCE_MODEL := "res://assets/environment/entrance_set.glb"
+
+## Part name in the .glb -> [material key, house reach]. The reaches are the
+## ones each surface was solved at and the notes that earned them still stand:
+## the deck is 0.8 because house emission is added on top of the SSR
+## reflection that makes it read as a stage, and the backdrop is 1.1 -- in
+## band with the shell -- because its colour comes from the four uplights
+## aimed at it rather than from the surface lighting itself.
+const ENTRANCE_MATERIALS := {
+	"EntranceStage": ["arena_stage_deck", 0.8],
+	"StageBackdrop": ["arena_stage_panel", 1.1],
+	"PortalRecess": ["arena_tunnel", 0.35],
+	"StageScreenBezel": ["arena_tunnel", 0.5],
+	"Truss": ["arena_truss", 0.9],
+}
+
+## The parts that light themselves: part name -> [material key, level].
+const ENTRANCE_EMISSIVE := {
+	# The ramp's edge strips, in the portals' magenta. That colour is
+	# MEASURED, not chosen: sampling the lit strip along the deck's leading
+	# edge in gauntlet/refs/stage/dynamite_stage_low_angle.jpg, 67 of 136
+	# sampled columns come back violet-magenta at hue 287-295 degrees against
+	# 9 blue and 5 cyan, with the rest blown to white at the strip's core.
+	#
+	# Level 0.72 rather than the portals' 1.12: the strips run the whole 24m
+	# of the ramp and sit far closer to the broadcast camera than the portals
+	# do, so the same level puts two hard magenta lines through the middle of
+	# every wide shot. This is under the Environment's glow threshold at the
+	# tube's centre and over it on the bloom, so they still flare.
+	"RampLeds": ["arena_portal_magenta", 0.72],
+	"PortalRingWest": ["arena_portal_magenta", PORTAL_EMISSION],
+	"PortalRingEast": ["arena_portal_amber", PORTAL_EMISSION],
+	"PortalFanWest": ["arena_portal_magenta", PORTAL_FAN_EMISSION],
+	"PortalFanEast": ["arena_portal_amber", PORTAL_FAN_EMISSION],
+}
+
+
+func _build_entrance_set() -> void:
+	var packed: PackedScene = load(ENTRANCE_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_venue.sh entrance."
+				% ENTRANCE_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "EntranceSet"
+	for part: String in ENTRANCE_MATERIALS:
+		var spec: Array = ENTRANCE_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	for part: String in ENTRANCE_EMISSIVE:
+		var spec: Array = ENTRANCE_EMISSIVE[part]
+		_dress(root, part, _self_emissive(MaterialLibrary.resolve(spec[0]), spec[1]))
+	add_child(root)
+	_attach_stage_video(root)
+
+
+## The video wall, dressed last and separately.
 ##
-## The reach is 1.1 -- in band with the shell (0.85) and the deck (0.8) -- and
-## the panel's colour comes from the four uplights aimed at it, which is the
-## way round this file's whole design says it should be: real fixtures, not a
-## surface that lights itself.
-##
-## It was 2.6 for a while, over three times the shell's, and that is a
-## forward_plus-only value dressed up as a material property. The Filmic curve
-## compressed it there; the compatibility renderer has no HDR buffer to roll it
-## back, so the browser build rendered the panel as a flat blown lavender
-## rectangle measuring 3.3x the forward_plus frame. Emission that only works on
-## one renderer is the fixture's job, not the material's.
-func _build_stage_backdrop() -> void:
-	var backdrop := _new_surface()
-	_add_box(backdrop, Vector3(0.0, (FLOOR_Y + WALL_TOP) * 0.5, STAGE_BACK - 0.4),
-			Vector3(STAGE_HALF_WIDTH * 2.4, WALL_TOP - FLOOR_Y, 0.4))
-	add_child(_mesh_instance("StageBackdrop", backdrop, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_stage_panel"), 1.1))))
-
-
-## The two circular entrance portals: a dark recess, a radial slat fan in the
-## lower half of it, and a lit ring standing proud of both.
-##
-## Depth order, back to front, is what makes a ring read as a fixture rather
-## than as a painted circle: the recess is the darkest thing on the stage, the
-## fan sits inside it lit only by the ring, and the ring is in front of both
-## and is the only part that emits. Flattening any of those three onto the
-## same plane collapses the whole effect.
-##
-## The rings are the magenta/amber pair from the reference photos. They are
-## built as separate nodes rather than one surface so a later round can move,
-## recolour or animate one without touching the other.
-func _build_entrance_portals() -> void:
-	var recess := _new_surface()
-	for sx: float in [-1.0, 1.0]:
-		_add_tube(recess, Vector3(sx * PORTAL_OFFSET_X, PORTAL_CENTER_Y,
-				PORTAL_FACE_Z), PORTAL_MAJOR - PORTAL_MINOR * 0.5,
-				PORTAL_RECESS_DEPTH, PORTAL_RING_SEGMENTS)
-	add_child(_mesh_instance("PortalRecess", recess,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_tunnel"), 0.35))))
-
-	for side: Dictionary in [
-		{"name": "West", "x": -1.0, "key": "arena_portal_magenta"},
-		{"name": "East", "x": 1.0, "key": "arena_portal_amber"},
-	]:
-		var sx: float = side["x"]
-		var at := Vector3(sx * PORTAL_OFFSET_X, PORTAL_CENTER_Y, PORTAL_FACE_Z)
-
-		# A circle with the bottom cut off by the deck. The sweep runs from
-		# where the circle meets the deck on the right, the long way over the
-		# top, to where it meets it on the left -- 308 degrees of it. There
-		# are no legs and no feet: the tube simply stops at the floor, which
-		# is what a circle sunk a quarter of a metre into a stage does.
-		var ring := _new_surface()
-		var cut := _portal_cut_angle()
-		_add_arc_tube(ring, at, PORTAL_MAJOR, PORTAL_MINOR, cut, PI - cut,
-				PORTAL_RING_SEGMENTS, PORTAL_TUBE_SIDES)
-		add_child(_mesh_instance("PortalRing%s" % side["name"], ring,
-				_self_emissive(MaterialLibrary.resolve(side["key"]),
-				PORTAL_EMISSION)))
-
-		# The slat fan, in that portal's own colour and lit -- these are strip
-		# fixtures in the reference photographs, not dark slats catching the
-		# ring's spill. They were built house-lit first and vanished: at hall
-		# level, inside an unlit recess, there is nothing for them to catch.
-		#
-		# One wedge per portal, on its OUTBOARD side and clear of the gap the
-		# entrance walks through. A full lower half would fill the doorway
-		# with slats.
-		var fan := _new_surface()
-		# Centred on the outboard horizontal, reaching down toward the cut but
-		# stopping clear of the doorway the entrance walks through.
-		var wedge_from := (PI - 0.30) if sx < 0.0 else _portal_cut_angle() + 0.30
-		# Slat half-widths are what make a fan read as separate strips rather
-		# than as a filled wedge: 13 slats across 52 degrees are 0.15m apart
-		# at the outer radius, so anything over about 0.06 half-width closes
-		# the gaps and the whole thing renders as one solid triangle. It did,
-		# at 0.09.
-		_add_fan(fan, at - Vector3(0.0, 0.0, 0.12), 0.55, 2.2, PORTAL_SLATS,
-				0.012, 0.035, wedge_from,
-				wedge_from + (-_portal_cut_angle() - 0.30) + 0.30)
-		add_child(_mesh_instance("PortalFan%s" % side["name"], fan,
-				_self_emissive(MaterialLibrary.resolve(side["key"]),
-				PORTAL_FAN_EMISSION)))
-
-
-## The curved video wall, and the clip that plays on it.
-##
-## The panel is built with its own material first and only then handed to
+## The panel is given its own material FIRST and only then handed to
 ## `StageVideo`. That ordering is the fallback: if the clip is missing, fails
 ## to decode, or the run is one that must not have a moving picture in it, the
 ## wall is already correct and nothing has to be undone.
 ##
-## On the brightness. The flat panel this replaces was capped at a self-
-## emissive level of 0.35, and the note on it recorded why: at 1.35 the screen
-## owned the frame's top 5% of luminance (p95 0.633 against the reference
-## still's 0.427) with 36.5% of the blown pixels inside the one grid cell it
-## occupied. That measurement was taken of a *blank* panel whose whole area sat
-## at one value. This wall carries a picture whose own mean is far below its
-## peak, and the set it is now part of is matched to photographs in which the
-## wall is plainly the brightest thing in the building. So the cap is
-## deliberately revised upward here and re-measured rather than inherited --
-## the numbers it was re-measured against are in README.md.
-func _build_stage_screen() -> void:
-	var bezel := _new_surface()
-	_add_curved_shell(bezel, Vector3(0.0, SCREEN_CENTER_Y, SCREEN_FACE_Z - 0.06),
-			SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SAGITTA, SCREEN_SEGMENTS,
-			SCREEN_DEPTH, SCREEN_BEZEL)
-	add_child(_mesh_instance("StageScreenBezel", bezel,
-			MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_tunnel"), 0.5))))
-
-	var face := _new_surface()
-	_add_curved_face(face, Vector3(0.0, SCREEN_CENTER_Y, SCREEN_FACE_Z),
-			SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SAGITTA, SCREEN_SEGMENTS)
+## The face carries NORMALISED UVs (entrance_set.py authors them, unlike every
+## other part, which is projected at world-metre density), so the texel-density
+## scale MaterialLibrary derived from `tile_metres` has to go. Miss this and
+## whatever lands on the wall tiles across it.
+func _attach_stage_video(root: Node3D) -> void:
+	var screen := root.find_child("StageScreen", true, false) as MeshInstance3D
+	if screen == null:
+		push_error("ArenaBuilder: %s has no 'StageScreen' object." % ENTRANCE_MODEL)
+		return
 	var screen_mat := MaterialLibrary.resolve("arena_screen")
-	# The face carries normalised UVs, not world metres, so the texel-density
-	# scale MaterialLibrary derived from `tile_metres` has to go. Miss this and
-	# whatever lands on the wall tiles across it.
 	screen_mat.uv1_scale = Vector3.ONE
-	var screen := _mesh_instance("StageScreen", face,
-			_self_emissive(screen_mat, SCREEN_BLANK_EMISSION))
-	add_child(screen)
+	screen.material_override = _self_emissive(screen_mat, SCREEN_BLANK_EMISSION)
+	screen.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(StageVideo.attach(screen, screen_mat))
 
 
-# ---------------------------------------------------------------------------
-# Truss and shell
-# ---------------------------------------------------------------------------
-
-## A lighting grid above the ring. The roof alone left the camera's upper
-## third a single flat emissive plane; this is what puts structure in it.
-## It sits above the four SpotLight3Ds in match.tscn (y 5.5, range 10) so it
-## neither occludes them nor changes how the mat is lit.
-func _build_truss() -> void:
-	var st := _new_surface()
-	var reach := 11.0
-	for offset: float in [-7.5, -2.5, 2.5, 7.5]:
-		_add_box(st, Vector3(0.0, TRUSS_Y, offset),
-				Vector3(reach * 2.0, 0.24, 0.24))
-		_add_box(st, Vector3(offset, TRUSS_Y, 0.0),
-				Vector3(0.24, 0.24, reach * 2.0))
-	# Chords, so the grid reads as truss rather than as bare pipe.
-	for offset: float in [-7.5, -2.5, 2.5, 7.5]:
-		_add_box(st, Vector3(0.0, TRUSS_Y + 0.55, offset),
-				Vector3(reach * 2.0, 0.14, 0.14))
-		_add_box(st, Vector3(offset, TRUSS_Y + 0.55, 0.0),
-				Vector3(0.14, 0.14, reach * 2.0))
-	# Drops to the roof, so it hangs from something.
-	for x: float in [-7.5, 7.5]:
-		for z: float in [-7.5, 7.5]:
-			_add_box(st, Vector3(x, (TRUSS_Y + ROOF_Y) * 0.5, z),
-					Vector3(0.16, ROOF_Y - TRUSS_Y, 0.16))
-	add_child(_mesh_instance("Truss", st, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_truss"), 0.9))))
-
-
+## The shell is part of the Blender model now.
+##
+## It moved for the same reason the bowl did: the wall follows the bowl's own
+## obround plan one metre outside the last row, so the building is the shape of
+## the hall in it, and four boxes cannot be that. Its roof is still a slab --
+## every camera in the shotlist is under the truss looking at the ring, and the
+## roof is only ever the dark thing the truss hangs from.
+##
+## `_ready()` no longer calls this; it is kept as the place that documents
+## where the shell went, and deliberately builds nothing.
 func _build_shell() -> void:
-	var st := _new_surface()
-	var span := WALL_EXTENT * 2.0
-	var mid_y := (FLOOR_Y + WALL_TOP) * 0.5
-	var height := WALL_TOP - FLOOR_Y
-	for sign: float in [1.0, -1.0]:
-		_add_box(st, Vector3(0.0, mid_y, WALL_EXTENT * sign),
-				Vector3(span, height, 0.4))
-		_add_box(st, Vector3(WALL_EXTENT * sign, mid_y, 0.0),
-				Vector3(0.4, height, span))
-	_add_box(st, Vector3(0.0, ROOF_Y, 0.0), Vector3(span, 0.4, span))
-	add_child(_mesh_instance("Shell", st, MaterialLibrary.house_compensate(
-			_house_lit(_textured("arena_shell"), 0.85))))
+	pass

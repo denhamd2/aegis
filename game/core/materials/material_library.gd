@@ -55,7 +55,8 @@ class_name MaterialLibrary
 ##     arena_floor  arena_barricade  arena_bowl  arena_stage_deck
 ##     arena_stage_backdrop  arena_stage_panel  arena_shell  arena_truss
 ##     arena_tunnel  arena_screen  arena_portal_magenta
-##     arena_portal_amber
+##     arena_portal_amber  arena_seat  arena_suite_glass  arena_ribbon
+##     arena_nosing  arena_rink  arena_boards  arena_board_cap
 ##
 ## `ALIASES` keeps older names (`ring_mat`, `ring_pad`) working.
 ##
@@ -331,20 +332,22 @@ const SPECS := {
 		"asset": "Metal032", "tint": Color(0.55, 0.56, 0.60),
 		"tile_metres": 0.35, "roughness": 1.0, "metallic": 1.0,
 	},
-	## UNUSED as of the ring-reference round, and kept rather than deleted.
+	## IN USE again. The note that used to stand here said this key was kept
+	## against the day "a padded corner is a legitimate thing for this ring to
+	## grow back" -- which is this round: the ring is matched to the AEW
+	## references now, and those corners carry three cushions apiece.
 	##
-	## gauntlet/refs/ring.md's corners are bare -- a sleeve and a clevis per
-	## rope, no pad -- so `ring_builder.gd` no longer resolves this key. It
-	## stays defined because a padded corner is a legitimate thing for this
-	## ring to grow back (a branded ring for a different card, say), and
-	## rediscovering the tile size and the per-corner tint override would be
-	## work already done here. It resolves correctly; nothing calls it.
+	## The tint was Color(0.10, 0.15, 0.70), a saturated blue left over from
+	## the branded corner this key last dressed. Nothing resolved the key, so
+	## nothing showed it, and the first thing the restored pads rendered as
+	## was twelve bright blue cushions -- `_resolve`'s local fallback never
+	## gets a look in when the key EXISTS.
 	##
-	## Coverage decision: padded vinyl turnbuckle cover, Fabric061's dotted
-	## weave at a small tile so the pad reads as padded up close in
-	## `ring_corner`. Override `tint` per corner.
+	## Coverage decision: padded vinyl turnbuckle cover, near-black to match
+	## the references, on Fabric061's dotted weave at a small tile so the pad
+	## reads as padded up close in `ring_corner`. Override `tint` per corner.
 	"ring_turnbuckle_pad": {
-		"asset": "Fabric061", "tint": Color(0.10, 0.15, 0.70),
+		"asset": "Fabric061", "tint": Color(0.055, 0.055, 0.060),
 		"tile_metres": 0.30, "roughness": 0.9, "normal_scale": 1.2,
 		"albedo_map": false,
 	},
@@ -367,10 +370,29 @@ const SPECS := {
 	##
 	## Dielectric despite being bare metal, for the reason `ring_post` gives at
 	## length: this scene has no radiance map, so a conductor renders black.
+	## Coverage decision: bare bright steel, and BRIGHT is the operative word.
+	## 0.62 was solved against a reference where the steps are the
+	## second-brightest surface in a flat-lit frame. In the AEW reference they
+	## are the brightest thing at ringside by a distance -- a silver block
+	## against a dark floor, a near-black barricade and a deep blue apron --
+	## and 0.62 under this arena's lighting rendered them a muddy tan.
+	##
+	## The tile drops with the tint: at 0.8 m the plate's diamonds are large
+	## enough to read as a pattern painted on a box. 0.45 m puts them at the
+	## fine grid the photograph shows.
 	"ring_steps": {
-		"asset": "DiamondPlate009", "tint": Color(0.62, 0.62, 0.63),
-		"tile_metres": 0.8, "roughness": 0.42, "normal_scale": 1.2,
+		"asset": "DiamondPlate009", "tint": Color(0.80, 0.81, 0.83),
+		"tile_metres": 0.45, "roughness": 0.38, "normal_scale": 1.2,
 		"metallic": 0.0,
+		# albedo_map OFF, which is the change that actually made them silver.
+		# Raising the tint from 0.62 to 0.80 did nothing visible on its own:
+		# DiamondPlate009's colour map is a warm rusted steel, it MULTIPLIES,
+		# and the steps kept rendering a muddy tan whatever the tint said.
+		# This is the case the SPEC_DEFAULTS note above describes exactly --
+		# a surface whose tint is the point, where the map is a liability.
+		# The plate's normal and roughness maps still carry the grid the
+		# photograph shows; only its colour is dropped.
+		"albedo_map": false,
 	},
 
 	# --- Arena hall (consumed by core/arena/arena_builder.gd) -------------
@@ -561,6 +583,106 @@ const SPECS := {
 	"arena_stage_panel": {
 		"asset": "Fabric063", "tint": Color(0.150, 0.115, 0.235),
 		"tile_metres": 1.1, "roughness": 0.80, "house_lit": true,
+	},
+
+	# --- The Blender bowl model -------------------------------------------
+	# Four keys added with `tools/blender/arena_bowl.py`'s hockey-arena bowl.
+	# All four obey the same rule the rest of the hall does: the tint carries
+	# the value, a map carries the variance, and `_house_lit` compensation is
+	# applied at the call site in `arena_builder.gd`.
+
+	## The seat-back rail standing on every seated tread.
+	##
+	## NAVY, not blue, and that is measured rather than chosen:
+	## `gauntlet/refs/arena.md` reads the reference bowl's seating at mean
+	## sRGB (15, 20, 30) and relative luminance 0.0070 -- half the level
+	## VISUAL_BAR.md measures the reference footage's crowd at. A bank of seats
+	## is the darkest large surface in a lit arena, and seats bright enough to
+	## see the colour of are seats competing with the men in the ring. The call
+	## site asks `_house_lit` for 0.0070 exactly (`reach` 1.17 on HOUSE_TARGET
+	## 0.006).
+	##
+	## It dresses ~3,500 individual seats rather than a rail, since the hall
+	## has no crowd in front of them any more -- one material, one draw.
+	##
+	## No map. A seat back is 40cm of geometry seen from 15-35m, and a tiled
+	## weave on it minifies into noise the way `arena_chair`'s would.
+	"arena_seat": {
+		"tint": Color(0.074, 0.098, 0.235), "roughness": 0.90,
+		"house_lit": true,
+	},
+	## The suite windows in the fascia between the tiers. The darkest surface
+	## in the hall on purpose: in every reference photograph the suite level
+	## is a black band, because the rooms behind it are unlit and the glass is
+	## returning the bowl rather than showing what is inside.
+	##
+	## roughness 0.18 -- glass has a reflection lobe, and on `forward_plus`
+	## that is what picks the ribbon boards up along the band and stops it
+	## reading as a painted stripe.
+	"arena_suite_glass": {
+		"tint": Color(0.030, 0.038, 0.055), "roughness": 0.18,
+	},
+	## The LED ribbon boards wrapping the bowl above and below the suites.
+	## Genuinely emissive, like the video wall and the portals:
+	## `ArenaBuilder._self_emissive()` supplies the level, so this is a hue
+	## and a gloss and nothing else.
+	##
+	## Warm amber rather than any particular advertisement: the boards are
+	## 0.55m tall at 20-35m, where a legible graphic would be under two pixels
+	## of text, and what the reference frames actually contribute at that size
+	## is a band of warm light around the whole hall. `gauntlet/refs/arena.md`
+	## records what the photographs do and do not establish about them.
+	"arena_ribbon": {
+		"tint": Color(1.00, 0.62, 0.16), "roughness": 0.25,
+	},
+	## The lit nosing on every aisle step.
+	##
+	## Measured, like the seat it sits next to: in the reference photograph the
+	## nosings run 0.2374 relative luminance against the seats' 0.0070 -- 34
+	## times the value -- while covering 0.4% of the seating bank
+	## (`gauntlet/refs/arena.md`). That ratio is the whole effect. A very small
+	## amount of very bright yellow is what tells a dark bank of seats apart
+	## from a textured slope, and the call site holds it at 40:1.
+	"arena_nosing": {
+		"tint": Color(1.00, 0.80, 0.22), "roughness": 0.55,
+	},
+
+	# --- The rink -----------------------------------------------------------
+	# The hall is built around a regulation ice rink (gauntlet/refs/arena.md),
+	# and these three dress it: the decking laid over the ice, the dasher
+	# boards round it, and the cap rail on top of them.
+
+	## The event flooring over the ice. Panelled deck, not ice: a rink hosting
+	## anything but hockey is covered, and what the cameras see is a large
+	## matte grey field with the panel joints in it
+	## (`ArenaBuilder._build_floor_seams`).
+	##
+	## Tinted a half-stop over `arena_floor`, which it sits inside. The rink
+	## has to read as a distinct surface from the concourse concrete around it
+	## -- that edge is where the boards are, and an arena whose floor is all
+	## one value has no rink in it at all.
+	"arena_rink": {
+		"asset": "PavingStones150", "tint": Color(0.1050, 0.1270, 0.1600),
+		"tile_metres": 2.4, "roughness": 1.0, "house_lit": true,
+	},
+	## The dasher boards. White, and the brightest large surface in the hall by
+	## a wide margin -- which is correct and is the point: in every reference
+	## photograph the boards are the line that separates floor from seating and
+	## they read white even with the house lights down.
+	##
+	## `reach` is set at the call site rather than here; what this carries is
+	## the near-white tint and a slight gloss, because a dasher board is a
+	## plastic-faced panel and catches the fixtures along its length.
+	"arena_boards": {
+		"tint": Color(0.640, 0.660, 0.700), "roughness": 0.45,
+	},
+	## The yellow cap rail along the top of the boards. House-lit rather than
+	## emissive: unlike the ribbon and the stair nosings this is a painted
+	## surface catching the wash, not a fixture, and making it glow would put a
+	## lit loop around the floor that no photograph of a rink shows.
+	"arena_board_cap": {
+		"tint": Color(0.520, 0.420, 0.110), "roughness": 0.60,
+		"house_lit": true,
 	},
 }
 

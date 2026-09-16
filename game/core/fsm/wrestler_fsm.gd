@@ -25,28 +25,32 @@ enum State {
 	SUBMISSION_ATTACKER,
 	SUBMISSION_DEFENDER,
 	FINISHER,
+	## The winner's celebration. Terminal: the match is over, so nothing
+	## leads out of it and no timeout applies.
+	VICTORY,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
 const LEGAL_TRANSITIONS := {
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER],
-	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.IDLE, State.HIT_REACT, State.STUNNED],
-	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED],
-	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT],
-	State.GRAPPLE_HOLD: [State.MOVE_EXEC, State.IRISH_WHIP, State.IDLE, State.FINISHER],
-	State.MOVE_EXEC: [State.DOWN, State.IDLE, State.HIT_REACT, State.PIN_ATTACKER],
-	State.HIT_REACT: [State.IDLE, State.DOWN, State.STUNNED],
-	State.DOWN: [State.GETUP, State.PIN_DEFENDER, State.SUBMISSION_DEFENDER],
-	State.GETUP: [State.IDLE, State.HIT_REACT],
-	State.IRISH_WHIP: [State.RUN, State.HIT_REACT],
-	State.RUNNING_ATTACK: [State.IDLE, State.HIT_REACT, State.DOWN],
-	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN],
-	State.PIN_ATTACKER: [State.IDLE, State.FINISHER],
-	State.PIN_DEFENDER: [State.DOWN, State.GETUP],
-	State.SUBMISSION_ATTACKER: [State.IDLE],
-	State.SUBMISSION_DEFENDER: [State.DOWN, State.SUBMISSION_DEFENDER],
-	State.FINISHER: [State.PIN_ATTACKER, State.IDLE],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
+	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY],
+	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],
+	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.VICTORY],
+	State.GRAPPLE_HOLD: [State.MOVE_EXEC, State.IRISH_WHIP, State.IDLE, State.FINISHER, State.VICTORY],
+	State.MOVE_EXEC: [State.DOWN, State.IDLE, State.HIT_REACT, State.PIN_ATTACKER, State.VICTORY],
+	State.HIT_REACT: [State.IDLE, State.DOWN, State.STUNNED, State.VICTORY],
+	State.DOWN: [State.GETUP, State.PIN_DEFENDER, State.SUBMISSION_DEFENDER, State.VICTORY],
+	State.GETUP: [State.IDLE, State.HIT_REACT, State.VICTORY],
+	State.IRISH_WHIP: [State.RUN, State.HIT_REACT, State.VICTORY],
+	State.RUNNING_ATTACK: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
+	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
+	State.PIN_ATTACKER: [State.IDLE, State.FINISHER, State.VICTORY],
+	State.PIN_DEFENDER: [State.DOWN, State.GETUP, State.VICTORY],
+	State.SUBMISSION_ATTACKER: [State.IDLE, State.VICTORY],
+	State.SUBMISSION_DEFENDER: [State.DOWN, State.SUBMISSION_DEFENDER, State.VICTORY],
+	State.FINISHER: [State.PIN_ATTACKER, State.IDLE, State.VICTORY],
+	State.VICTORY: [],
 }
 
 signal state_changed(previous: State, current: State)

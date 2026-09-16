@@ -17,17 +17,20 @@ signal move_landed(attacker: WrestlerController, defender: WrestlerController, m
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
 const TIE_UP_RANGE := 1.4
-## Reach for a strike/running-attack to connect.
+## How close an opponent has to be for a strike or running attack to be worth
+## STARTING, and the fallback contact test for moves that carry no authored
+## contact volume (see MoveDef.contact_offset).
 ##
-## Measured, not chosen: running forward kinematics over `Punch_Jab`'s own
-## tracks puts the fist 0.76m ahead of the wrestler's origin at its contact
-## frame, and the opponent's capsule radius is 0.4m, so a punch reaches a
-## body whose centre is up to ~1.16m away.
+## This is no longer what decides whether a strike LANDS. It used to be: one
+## 1.15m sphere between the two capsule origins, shared by every strike in the
+## game, which could not tell a jab from a boot or forwards from backwards.
+## _strike_reaches() replaced it with the move's own measured contact volume.
 ##
-## This was 1.8m. Strikes therefore connected from 1.6m -- the distance an
-## instrumented match actually recorded them landing at -- which is more
-## than half a metre of clear air between the fist and the man it damaged.
-## That is the single biggest reason strikes read as not connecting.
+## The number itself was honest when it was written -- forward kinematics over
+## `Punch_Jab` put the fist 0.76m ahead of the origin, plus the 0.4m capsule
+## -- but that clip is gone, and the authored jab that replaced it reaches
+## 0.655m. Kept at 1.15 because as a "close enough to throw at" gate it wants
+## to be slightly generous: the strike still has to reach on its own.
 const STRIKE_HIT_RANGE := 1.15
 ## Downward acceleration (m/s^2) applied whenever a wrestler is off the mat.
 ## The project sets no custom gravity, so this matches Godot's own 3D default
@@ -35,6 +38,16 @@ const STRIKE_HIT_RANGE := 1.15
 ## tuning" rule applies here as much as anywhere, and no reference footage
 ## covers fall speed.
 const GRAVITY := 9.8
+## Inside this distance a moving wrestler faces his opponent and strafes;
+## outside it he faces where he is going.
+##
+## 2.5 m is WrestlerAI.run_engage_distance -- the distance at which the AI
+## stops walking in and charges. That is already this project's definition of
+## "close enough that this is a fight rather than a traversal", so the facing
+## rule uses the same line rather than inventing a second one. Past it a
+## wrestler is crossing the ring and should look where he is running; inside
+## it he is working, and a worker keeps his eyes on the other man.
+const FACE_OPPONENT_RANGE := 2.5
 ## Damage a wrestler must take *since his last knockdown* to be knocked off
 ## his feet again -- see _damage_at_last_knockdown, which is the half of this
 ## that makes a knockdown an event rather than a latch on a rising total.
@@ -89,6 +102,23 @@ const GETUP_RISE_FAST_TICKS := 68 # 1.14s, the measured input-driven rise
 ## and late ones finish. A reachability value, not a feel claim.
 const SUBMISSION_ESCAPE_LIMB := 60.0
 const HIT_REACT_TICKS := 20
+
+## How hard a landed strike shoves the man who took it, and for how long.
+##
+## Measured with tools/probe/contact_probe.tscn before this existed: across
+## seeds 1-3, ZERO of 40 hit reactions moved the struck wrestler by so much as
+## a centimetre. _process_timed_state() never touches velocity, so a punch
+## landed, a flinch clip played, and the body stayed exactly where it stood --
+## which is most of why strikes read as not connecting to anything.
+##
+## 2.2 m/s decaying by KNOCKBACK_DECAY each tick carries him about 0.13 m over
+## the 8 ticks, a stagger rather than a shove: far enough to see, not far
+## enough to break the spacing the next strike depends on. These are
+## presentation values and are not claimed to match measured footage --
+## gauntlet/refs/timings.md has no knockback distance in it.
+const KNOCKBACK_SPEED := 2.2
+const KNOCKBACK_TICKS := 8
+const KNOCKBACK_DECAY := 0.75
 const STUNNED_TICKS := 45
 ## Irish whip tuning. First-pass values, same caveat as every other tuning
 ## constant in this project: gauntlet/refs/timings.md marks both reversal-
@@ -272,9 +302,14 @@ var _state_clip_override: Dictionary = {}
 ## FINISHER -> Sword_Attack, GETUP -> Roll (imperfect — the only
 ## on-the-ground-to-standing clip in this library).
 const STATE_ANIMATIONS := {
-	WrestlerFSM.State.IDLE: "Idle",
-	WrestlerFSM.State.LOCOMOTION: "Walk",
-	WrestlerFSM.State.RUN: "Sprint",
+	# Authored. The rig's Idle is a relaxed civilian stand with the arms
+	# down; a wrestler at rest is coiled and never quite still.
+	WrestlerFSM.State.IDLE: "strikes/idle_ready",
+	# Authored: circling an opponent, not strolling. Hands stay up.
+	WrestlerFSM.State.LOCOMOTION: "strikes/walk_stalk",
+	# Authored. Sprint is a jog with the torso upright and the arms barely
+	# moving -- no drive in it, which is what a rope run is made of.
+	WrestlerFSM.State.RUN: "strikes/run_drive",
 	# Generated (see resources/animations/strike_recipes.gd), not the rig's
 	# raw Punch_Jab: the raw clip is 0.87s against a 20-tick move, so 38% of
 	# it played and the arm cross-faded back to idle still travelling
@@ -286,27 +321,46 @@ const STATE_ANIMATIONS := {
 	# playing it, a tie-up rendered as two men standing apart pointing past
 	# each other, which is the single most-complained-about thing in a
 	# captured match.
-	WrestlerFSM.State.TIE_UP: "Push",
-	WrestlerFSM.State.GRAPPLE_HOLD: "Interact",
+	WrestlerFSM.State.TIE_UP: "strikes/tie_up_collar",
+	WrestlerFSM.State.GRAPPLE_HOLD: "strikes/grapple_hold_neutral",
 	# MOVE_EXEC is the beat where a grapple's throw resolves, not a strike.
 	# It played Punch_Cross, so a wrestler who had just completed a throw
 	# threw a punch at nothing on the way back to idle.
-	WrestlerFSM.State.MOVE_EXEC: "Jump_Land",
+	# Authored. Jump_Land is a man absorbing a drop he took himself.
+	WrestlerFSM.State.MOVE_EXEC: "strikes/move_exec_impact",
 	# Replaced per hit by _play_hit_reaction() with a head or torso reaction
 	# depending on where the damage landed; this is the fallback.
 	WrestlerFSM.State.HIT_REACT: "strikes/hit_torso",
-	WrestlerFSM.State.DOWN: "Death01",
-	WrestlerFSM.State.GETUP: "Roll",
-	WrestlerFSM.State.IRISH_WHIP: "Push",
-	WrestlerFSM.State.RUNNING_ATTACK: "Punch_Cross",
+	# Authored. Death01 is a man dying -- collapsed and still, arms splayed.
+	WrestlerFSM.State.DOWN: "strikes/down_supine",
+	# Generated: "Roll" is a tucked forward roll and 0.63s shorter than the
+	# state, so the wrestler curled into a ball on the mat and froze in it.
+	WrestlerFSM.State.GETUP: "strikes/getup_rise",
+	WrestlerFSM.State.IRISH_WHIP: "strikes/irish_whip_throw",
+	# Authored clothesline, cut to the 69 frames both running_attack_*.tres
+	# share. This was Punch_Cross: a wrestler sprinted the width of the ring
+	# and threw a boxing jab, and because neither running-attack MoveDef sets
+	# animation_pair_id, BOTH of them did it.
+	WrestlerFSM.State.RUNNING_ATTACK: "strikes/running_clothesline",
 	# Retimed to STUNNED_TICKS. The raw Hit_Head is 0.43s against a 45-tick
 	# (0.75s) state, so the clip ended and the pose froze for 19 ticks.
 	WrestlerFSM.State.STUNNED: "strikes/stunned",
-	WrestlerFSM.State.PIN_ATTACKER: "Crouch_Idle",
-	WrestlerFSM.State.PIN_DEFENDER: "Death01",
-	WrestlerFSM.State.SUBMISSION_ATTACKER: "Crouch_Idle",
-	WrestlerFSM.State.SUBMISSION_DEFENDER: "Death01",
-	WrestlerFSM.State.FINISHER: "Sword_Attack",
+	# Generated (see resources/animations/strike_recipes.gd), not Crouch_Idle:
+	# that is a man crouching on his own, so the three-count played with the
+	# attacker standing beside the fallen man rather than covering him.
+	WrestlerFSM.State.PIN_ATTACKER: "strikes/pin_cover",
+	WrestlerFSM.State.PIN_DEFENDER: "strikes/down_supine",
+	# Authored. Crouch_Idle is a man crouching by himself, not working a hold.
+	WrestlerFSM.State.SUBMISSION_ATTACKER: "strikes/submission_work",
+	WrestlerFSM.State.SUBMISSION_DEFENDER: "strikes/down_supine",
+	# Authored. This was Sword_Attack: a two-handed overhead sword swing, on
+	# the biggest moment in a match.
+	WrestlerFSM.State.FINISHER: "strikes/finisher_drive",
+	# Authored in Blender (tools/blender/wrestling_clips.py) and baked
+	# through strike_recipes.gd like the rest. Nothing in the CC0 library
+	# celebrates, so unlike every other entry here this one could not have
+	# borrowed a clip.
+	WrestlerFSM.State.VICTORY: "strikes/win_celebrate",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -325,10 +379,10 @@ const STATE_ANIMATIONS := {
 ## each other -- that needs paired bone tracks (see grapple_rig.gd's header
 ## for why those aren't simply added to the existing clips).
 const ATTACKER_STATE_ANIMATIONS := {
-	WrestlerFSM.State.GRAPPLE_HOLD: "PickUp_Table", # bend-and-lift
+	WrestlerFSM.State.GRAPPLE_HOLD: "strikes/grapple_hold_attacker",
 }
 const DEFENDER_STATE_ANIMATIONS := {
-	WrestlerFSM.State.GRAPPLE_HOLD: "Death01", # limp, being thrown
+	WrestlerFSM.State.GRAPPLE_HOLD: "strikes/grapple_hold_defender",
 }
 
 ## Real bone-level performances for the moves that have one, generated from
@@ -368,6 +422,17 @@ var _submission_minigame: SubmissionMinigame
 ## effect to end-of-tick so both wrestlers' decisions this tick are made
 ## from the same starting state, regardless of node order.
 var _pending_hits: Array[MoveDef] = []
+
+## A hit taken while this wrestler was mid-strike, held until the strike ends.
+##
+## See the deferral in _flush_pending_hits(): the damage is applied
+## immediately, only the HIT_REACT transition is deferred, so nothing about who
+## wins the exchange changes -- what changes is that the punch already in
+## flight is allowed to land instead of being cancelled by the one that beat it.
+var _pending_hit_reaction: MoveDef = null
+## Ticks of shove left on a landed hit. Counted down in _process_timed_state(),
+## which is the only place HIT_REACT advances.
+var _knockback_ticks: int = 0
 
 ## Whether the current _active_move has already landed its hit this
 ## attempt. This must live here, not on the MoveDef resource (previously
@@ -930,7 +995,9 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.IRISH_WHIP:
 			_process_irish_whip()
 		WrestlerFSM.State.PIN_ATTACKER:
-			pass # driven by MatchReferee
+			# Driven by MatchReferee, except for the last stride into the
+			# cover -- see _place_cover().
+			_tick_cover_slide()
 		WrestlerFSM.State.PIN_DEFENDER:
 			# MatchReferee reads this each tick against PinMinigame's target
 			# window — a kickout needs the button pressed AND the marker in
@@ -951,9 +1018,67 @@ func _physics_process(delta: float) -> void:
 
 	_apply_gravity(delta)
 	move_and_slide()
+	keep_inside_the_ring()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
 	_update_grip_ik()
+
+
+## Half-width the mat allows a wrestler's ORIGIN, as opposed to his mesh.
+##
+## RingBuilder.MAT_HALF is 3.0 and the capsule is BODY_RADIUS 0.4, so 2.6 puts
+## his far side exactly on the mat's edge. It sits deliberately OUTSIDE what
+## the ropes already enforce -- scenes/ring.tscn's rope walls are 0.3 thick at
+## +-3.1, so their inner faces are at 2.95 and move_and_slide() holds a walking
+## man at 2.55 -- which is the point: this never fights the ropes, it only
+## catches a body that was never asked to collide with them at all.
+const RING_KEEP_IN := 2.6
+
+## Mat level. scenes/ring.tscn's floor box is 0.2 thick at y = -0.1, so its top
+## surface is y = 0 and a wrestler's origin sits on it.
+const MAT_LEVEL := 0.0
+
+## The backstop that makes leaving the ring impossible.
+##
+## Measured, seed 4 of tools/probe/strike_connect_probe.tscn: WrestlerB is
+## walked out to x = -3.07 over six ticks of a GRAPPLE_HOLD, past the mat's
+## own edge at 3.0, and there is no floor collider out there -- the ring's is
+## 6 m square and the arena floor has none. He falls for the rest of the
+## match. At the 20 000-tick budget he is 411 490 m below the mat, the other
+## man cannot reach him to finish it, and every strike thrown at him is
+## recorded as a miss "off to the side" at a median 0 degrees off the
+## attacker's facing. That one seed contributed 383 of the 386 misses in a
+## four-seed run and dragged the measured connect rate from 70% to 10%.
+##
+## The cause is that GrappleRig SUSPENDS both bodies for the length of a
+## paired move and drives their transforms from the clip, so neither one is
+## colliding with anything: the ropes are not in that code path. GrappleRig
+## clamps the pair's MIDPOINT to RING_HALF_EXTENT (2.0), but each wrestler
+## then sits an authored offset away from it, and the offsets reach past the
+## mat.
+##
+## So this is a clamp on each wrestler rather than on the pair, run from both
+## paths that can move one: here, after move_and_slide(), and from
+## GrappleRig._physics_process() for the bodies it has suspended.
+##
+## Deterministic arithmetic on one transform -- no physics query, no RNG --
+## so it satisfies ARCHITECTURE.md's determinism contract while sitting in
+## the middle of gameplay positioning, which is where it has to be.
+func keep_inside_the_ring() -> void:
+	var p := global_position
+	var fixed := p
+	fixed.x = clampf(p.x, -RING_KEEP_IN, RING_KEEP_IN)
+	fixed.z = clampf(p.z, -RING_KEEP_IN, RING_KEEP_IN)
+	# Only ever pushed UP. Paired moves lift a man well clear of the mat and a
+	# ceiling would break every throw in the set; nothing legitimately puts
+	# him below it.
+	fixed.y = maxf(p.y, MAT_LEVEL)
+	if fixed == p:
+		return
+	global_position = fixed
+	# A body that has been stopped by the mat is not still falling through it.
+	if fixed.y > p.y and velocity.y < 0.0:
+		velocity.y = 0.0
 
 ## Pull a wrestler back down to the mat.
 ##
@@ -1003,7 +1128,33 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	velocity.z = direction.z * speed
 
 	if direction.length() > 0.1:
-		look_at(global_position + direction, Vector3.UP)
+		# Face the MAN, not the direction of travel, once inside fighting
+		# distance. A wrestler circling an opponent strafes: his eyes, his
+		# guard and his hips stay pointed at the other man while his feet
+		# carry him sideways. look_at() on the input direction does the
+		# opposite -- it turns his shoulder to the opponent and walks him
+		# round in a circle facing the way he is going.
+		#
+		# This is the single biggest reason strikes did not connect, and it
+		# hid behind the old hit test: a 1.15 m sphere between two capsule
+		# origins does not care which way anyone is pointing, so a wrestler
+		# could fight a whole match side-on and still land everything. Once
+		# contact became directional the cost showed up immediately --
+		# measured over seeds 2 and 3 with tools/probe/strike_connect_probe,
+		# 49 of 50 missed strikes were off to the SIDE rather than short, at
+		# a median 97 degrees off the attacker's facing, with the opponent a
+		# comfortable 0.36 m inside the move's own reach.
+		#
+		# _turn_toward_opponent() alone could not dig out of that.
+		# TURN_RATE_PER_TICK is 0.12 rad/tick and two men circling in
+		# opposite directions swing the bearing between them by roughly 0.11
+		# rad/tick at MOVE_SPEED, so an attacker who enters STRIKE already 90
+		# degrees off recovers about 8 degrees across a jab's whole startup.
+		# The turn during startup is the backstop; this is the fix.
+		if opponent and _in_range(FACE_OPPONENT_RANGE):
+			_turn_toward_opponent()
+		else:
+			look_at(global_position + direction, Vector3.UP)
 		fsm.transition_to(WrestlerFSM.State.RUN if running else WrestlerFSM.State.LOCOMOTION)
 	else:
 		_turn_toward_opponent()
@@ -1077,6 +1228,99 @@ static func _step_angle(from: float, to: float, max_step: float) -> float:
 
 func _in_range(range_m: float) -> bool:
 	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m
+
+## The opponent's body as a capsule, read off scenes/wrestler.tscn: radius
+## 0.4, total height 1.8, sitting at y = 0.9. A capsule's `height` spans the
+## hemispheres too, so the cylindrical axis runs 0.4 .. 1.4 in his own space,
+## and everything within BODY_RADIUS of THAT SEGMENT is him.
+const BODY_RADIUS := 0.4
+const BODY_AXIS_LOW := 0.4
+const BODY_AXIS_HIGH := 1.4
+
+## How far in front of this wrestler's origin `move` can connect, as a
+## centre-to-centre distance against a standing opponent.
+##
+## This is the same arithmetic _strike_reaches() does, solved for distance
+## rather than evaluated at one, and it exists because the AI has to stand
+## somewhere. WrestlerAI used to hold its spacing against STRIKE_HIT_RANGE,
+## which was the reach of every strike when there was only one number; now
+## that each move reaches as far as its own limb, a single constant cannot
+## answer "can I hit him from here" for a pool of four different strikes.
+##
+## Note the lateral term: a boot that swings across the body (strike_kick_
+## heavy's lands 0.148 m off the centre line) spends part of its contact
+## sphere sideways, so it reaches slightly less far forward than its offset
+## alone suggests.
+static func strike_reach(move: MoveDef) -> float:
+	if move == null or move.contact_radius <= 0.0:
+		return STRIKE_HIT_RANGE
+	var span: float = BODY_RADIUS + move.contact_radius
+	var lateral: float = move.contact_offset.x
+	return -move.contact_offset.z + sqrt(maxf(span * span - lateral * lateral, 0.0))
+
+## The shortest reach among every strike this wrestler might throw.
+##
+## The AI does not choose which strike it throws -- _pick_tier_move() draws
+## from strike_move plus strike_move_pool -- so the only distance at which a
+## thrown strike is guaranteed to be able to land is inside the SHORTEST of
+## them. Standing where only the longest reaches means the rest swing at air,
+## which is exactly what happened when the cross reached 1.07 m and the AI
+## circled at 1.10.
+func shortest_strike_reach() -> float:
+	var shortest := strike_reach(strike_move)
+	for move in strike_move_pool:
+		if move:
+			shortest = minf(shortest, strike_reach(move))
+	return shortest
+
+## Does this strike's limb actually reach the opponent's body?
+##
+## This is the test that used to be `_in_range(STRIKE_HIT_RANGE)` -- one 1.15m
+## sphere between the two capsule ORIGINS, shared by every strike in the game
+## and evaluated on every tick of the active window. It asked nothing about
+## where the striking limb was, which had three consequences, all measured:
+##
+##   * One range for four limbs. The clips put the striking limb 0.42 / 0.55 /
+##     0.82 / 0.82 m in front of the origin (jab / cross / kick / heavy kick),
+##     so 1.15 m landed the jab through a third of a metre of clear air and
+##     cut both kicks short of where the boot really was. The 1.15 was honest
+##     once -- it is 0.76 m of fist plus the 0.4 capsule -- but it was
+##     measured on a Punch_Jab clip that no longer exists.
+##   * No direction. _turn_toward_opponent() only runs in the idle branch of
+##     _process_free_movement(), and nothing updates facing during STRIKE, so
+##     a punch thrown while strafing away connected.
+##   * No height. A boot and a jab tested identically against a man's origin.
+##
+## So the move carries a measured `contact_offset` (see MoveDef, baked by
+## tools/anim/measure_contact_offsets.gd) and this places a sphere of
+## `contact_radius` there, in the attacker's own space, and intersects it with
+## the opponent's capsule. Facing and height come out of that for free: an
+## offset is a direction as well as a distance.
+##
+## Deterministic, and deliberately NOT a physics query. ARCHITECTURE.md's
+## determinism contract says rigid-body simulation must never feed gameplay
+## state, so this reads no Jolt contact and casts no shape -- it is arithmetic
+## on two transforms and one baked constant. It also does NOT read the live
+## skeleton: a retargeted model poses its bones slightly differently, and
+## sampling those would make damage depend on which wrestler was on screen and
+## quietly break replay hashes across models.
+##
+## The offset is sampled at the move's own contact tick and then held for the
+## whole active window, so what is really being tested is the volume the limb
+## sweeps through those 4-5 ticks rather than its position on each one.
+func _strike_reaches(move: MoveDef) -> bool:
+	if opponent == null or not is_instance_valid(opponent):
+		return false
+	# Moves with no authored contact volume -- grapples, paired moves, and the
+	# timed stubs -- keep the old proximity test. GrappleRig places both
+	# wrestlers itself, so no limb of theirs is being aimed at anything.
+	if move == null or move.contact_radius <= 0.0:
+		return _in_range(STRIKE_HIT_RANGE)
+	var contact := global_transform * move.contact_offset
+	var axis_low := opponent.global_transform * Vector3(0.0, BODY_AXIS_LOW, 0.0)
+	var axis_high := opponent.global_transform * Vector3(0.0, BODY_AXIS_HIGH, 0.0)
+	var nearest := Geometry3D.get_closest_point_to_segment(contact, axis_low, axis_high)
+	return contact.distance_to(nearest) <= BODY_RADIUS + move.contact_radius
 
 ## RUN -> RUNNING_ATTACK is the only legal way into RUNNING_ATTACK, so this
 ## is only ever called while already in RUN (both the player/AI-steered
@@ -1200,7 +1444,21 @@ func _process_active_move(input: Dictionary) -> void:
 	var in_active_frames := frame_offset >= _active_move.startup_frames \
 		and frame_offset < _active_move.startup_frames + _active_move.active_frames
 
-	if in_active_frames and opponent and _in_range(STRIKE_HIT_RANGE) \
+	# Keep turning into the strike until it lands. _strike_reaches() is a
+	# DIRECTIONAL test now -- the limb has a position, not just a distance --
+	# and facing was previously updated only in the idle branch of
+	# _process_free_movement(), never during STRIKE. Without this a wrestler
+	# who threw while stepping kept the heading his movement gave him and the
+	# punch swung past an opponent standing beside him.
+	#
+	# It stops at contact rather than running through the recovery, so a
+	# strike still commits to where it was aimed: turning through the active
+	# frames would let a thrown punch track a man walking out of it.
+	if frame_offset < _active_move.startup_frames:
+		_turn_toward_opponent()
+
+
+	if in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
 			and not _active_move_hit_applied:
 		_apply_move_to_opponent(_active_move)
@@ -1209,8 +1467,17 @@ func _process_active_move(input: Dictionary) -> void:
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
 		_active_move_hit_applied = false
-		fsm.transition_to(WrestlerFSM.State.IDLE)
 		_active_move = null
+		# A hit taken mid-strike was held back so this punch could land; pay
+		# it now. CONSUMED, not queued -- an unconsumed one-shot request spent
+		# on an unrelated hit later is a bug this project has had once already
+		# (see the note on one-shot clip overrides in references/wiring.md).
+		if _pending_hit_reaction:
+			var taken := _pending_hit_reaction
+			_pending_hit_reaction = null
+			_begin_hit_reaction(taken)
+			return
+		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
 	move_landed.emit(self, opponent, move)
@@ -1241,10 +1508,54 @@ func _resolve_pending_hits() -> void:
 	for move in moves:
 		combat.apply_damage(move)
 	if _would_be_knocked_down():
+		# Dropped mid-swing: the punch dies with him, so nothing is held over.
+		_pending_hit_reaction = null
 		_go_down()
-	else:
-		_play_hit_reaction(moves[moves.size() - 1])
-		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+		return
+	# A punch already thrown lands. Measured with
+	# tools/probe/strike_connect_probe.tscn over seeds 1-3 before this: of 64
+	# strikes thrown, only 33 landed, and the reason was NOT spacing -- zero
+	# were out of range. 22 of them were INTERRUPTED, cancelled mid-wind-up by
+	# taking a hit, so they never reached the frames where contact is tested.
+	# Both men throw at once, the first contact frame to land cancels the
+	# other's punch, and what that looks like on screen is a wrestler winding
+	# up and then nothing happening -- a punch that does not connect, and an
+	# opponent who never reacts because he was never hit.
+	#
+	# So the damage still applies this instant (the exchange is still decided
+	# by who lands first), but the reaction WAITS for the punch to finish
+	# rather than eating it. Both men connect and both then react, which is
+	# what trading blows actually looks like. A knockdown still interrupts --
+	# a man dropped mid-swing is not finishing the swing.
+	if fsm.current_state == WrestlerFSM.State.STRIKE:
+		_pending_hit_reaction = moves[moves.size() - 1]
+		return
+	_begin_hit_reaction(moves[moves.size() - 1])
+
+## Takes a hit: the reaction clip, the state, and the shove that sells it.
+##
+## The shove is set AFTER _start_move(), which zeroes velocity -- setting it
+## before would be silently thrown away. It then survives because
+## _process_timed_state() leaves velocity alone and move_and_slide() consumes
+## whatever is there, which is the same mechanism that used to let stale
+## velocity leak across states (see _start_move()'s own note) -- used
+## deliberately here, and decayed to nothing rather than left running.
+func _begin_hit_reaction(move: MoveDef) -> void:
+	_play_hit_reaction(move)
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+	var away := Vector3.ZERO
+	if opponent:
+		away = global_position - opponent.global_position
+		away.y = 0.0
+	if away.length() < 0.001:
+		# Coincident, or no opponent: shove him onto his own back foot rather
+		# than picking a direction at random.
+		away = global_transform.basis.z
+		away.y = 0.0
+	if away.length() < 0.001:
+		return
+	velocity = away.normalized() * KNOCKBACK_SPEED
+	_knockback_ticks = KNOCKBACK_TICKS
 
 ## Points the STRIKE state at this strike's own clip before entering it.
 ##
@@ -1252,6 +1563,24 @@ func _resolve_pending_hits() -> void:
 ## so a kick and a punch were the same animation with different numbers
 ## attached. A move with no generated clip keeps whatever the state already
 ## had, which is the jab.
+## Puts this wrestler into his celebration. Called by MatchSetup off the
+## referee's match_won, for the winner only.
+##
+## VICTORY is terminal in WrestlerFSM, so this is one-way: it stops the AI
+## (there is nobody left to fight), cancels anything in flight, and lets the
+## clip hold its final pose. Idempotent, because the referee guards
+## _match_over but a replay or a probe may call it twice.
+func celebrate() -> void:
+	if fsm.current_state == WrestlerFSM.State.VICTORY:
+		return
+	_active_move = null
+	_pending_hit_reaction = null
+	velocity = Vector3.ZERO
+	if ai:
+		ai.set_physics_process(false)
+	fsm.transition_to(WrestlerFSM.State.VICTORY)
+
+
 func _play_strike_clip(move: MoveDef) -> void:
 	_set_state_clip(WrestlerFSM.State.STRIKE,
 			StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
@@ -1289,22 +1618,16 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if input.get("run", false):
 		_begin_irish_whip()
 		return
-	var move := grapple_move
-	if not move or opponent.weight_class < move.weight_class_min or opponent.weight_class > move.weight_class_max:
-		# Nothing this attacker can legally throw at this opponent. That was
-		# a bare `return`, retried every tick with no timeout -- both
-		# wrestlers held in GRAPPLE_HOLD forever, and GRAPPLE_HOLD is not a
-		# state anything else pulls them out of. Unreachable in the shipped
-		# scenes (every move ships weight_class_min 0 / max 2 against a
-		# weight_class of 1) but it is one bad .tres away, and Priority 3 of
-		# gauntlet/status/roman_reigns_next.md adds moves.
-		#
-		# Break the hold instead: both sides back to IDLE, which is where a
-		# whip already sends the attacker, so the match carries on and the
-		# tie-up can simply happen again.
-		if fsm.ticks_in_state >= GRAPPLE_HOLD_MAX_TICKS:
-			_release_grapple_hold()
-		return
+	# Pick the rung FIRST, then ask whether it can be thrown.
+	#
+	# This used to test grapple_move -- the BASE rung -- before choosing a
+	# tier, which quietly made the whole grapple chain depend on the bottom of
+	# it: with no base grapple move the guard returned early every tick, so a
+	# signature or finisher the momentum ladder had earned could never be
+	# thrown either. That is fine while the base rung is always populated and
+	# wrong the moment it is not, which is exactly what removing the three
+	# throw-style grapples does.
+	var move: MoveDef = null
 	if combat.can_finisher() and finisher_move:
 		move = _pick_tier_move(finisher_move, finisher_move_pool)
 	elif combat.can_signature() and signature_move:
@@ -1313,6 +1636,25 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		move = _pick_tier_move(power_move, power_move_pool)
 	else:
 		move = _pick_tier_move(grapple_move, grapple_move_pool)
+
+	if not move or opponent.weight_class < move.weight_class_min \
+			or opponent.weight_class > move.weight_class_max:
+		# Nothing this attacker can legally throw at this opponent. That was
+		# a bare `return`, retried every tick with no timeout -- both
+		# wrestlers held in GRAPPLE_HOLD forever, and GRAPPLE_HOLD is not a
+		# state anything else pulls them out of.
+		#
+		# Reachable by design now rather than "one bad .tres away": with the
+		# grapple rung emptied, a tie-up thrown before the ladder has earned a
+		# signature has nothing to resolve to, and this is the path that ends
+		# it cleanly.
+		#
+		# Break the hold: both sides back to IDLE, which is where a whip
+		# already sends the attacker, so the match carries on and the tie-up
+		# can simply happen again.
+		if fsm.ticks_in_state >= GRAPPLE_HOLD_MAX_TICKS:
+			_release_grapple_hold()
+		return
 
 	_active_move = move
 	if grapple_rig:
@@ -1455,6 +1797,14 @@ func _process_down(input: Dictionary) -> void:
 		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_RISE_TICKS
 
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
+	# Bleed the hit's shove off. Without the decay the velocity set in
+	# _begin_hit_reaction() would be consumed at full speed for the whole
+	# 20-tick reaction and carry the man most of a metre.
+	if _knockback_ticks > 0:
+		_knockback_ticks -= 1
+		velocity *= KNOCKBACK_DECAY
+		if _knockback_ticks == 0:
+			velocity = Vector3.ZERO
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
 		# Also covers GETUP -> IDLE, the only place a wrestler that lost
@@ -1464,13 +1814,174 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 		_cover_eligible = true
 		fsm.transition_to(next_state)
 
+## Where the coverer kneels, in the DOWNED man's own frame, in metres.
+##
+## Both measured off the prone pose with tools/probe/pin_shot.tscn rather than
+## guessed, because guessing got it wrong: a prone wrestler's node keeps his
+## standing yaw, so which way along z his head lies is not something to reason
+## about from the transform. Printed from the rig while he lay there --
+##
+##   Head   local=(-0.002, +0.174, +1.250)
+##   pelvis local=(-0.010, +0.066, +0.573)
+##   foot_l local=(-0.233, +0.072, -0.257)
+##
+## -- so the body runs up +Z and the chest is near +0.95. The first attempt
+## offset along -Z and put the coverer down by the boots, which the render
+## caught immediately.
+##
+## Neither is a searched minimum, and the lateral one is not a first guess
+## either: at 0.45 the side and three-quarter shots both read fine and the low
+## angle showed the coverer's thigh passing through the prone man's chest. 0.62
+## is the value that came back clean from all three. That is what these answer
+## to -- a rendered frame, from more than one angle, not a distance that sounds
+## about right.
+const COVER_TOWARD_HEAD_M := 0.90
+const COVER_LATERAL_M := 0.62
+
+
 ## Called by MatchReferee when the attacker covers a downed opponent.
 func begin_pin(defender: WrestlerController, seed_value: int) -> void:
 	fsm.transition_to(WrestlerFSM.State.PIN_ATTACKER)
 	defender.fsm.transition_to(WrestlerFSM.State.PIN_DEFENDER)
+	_place_cover(defender)
 	var fraction := defender.combat.kickout_window_fraction(combat.momentum)
 	defender._pin_minigame = PinMinigame.new(fraction, seed_value)
 	pin_started.emit(self, defender)
+
+## Kneels the coverer beside the downed man, facing across him.
+##
+## PIN_ATTACKER's per-tick handler is `pass` -- the state is driven entirely by
+## MatchReferee -- so nothing ever moved the attacker once the pin began. He
+## simply froze wherever the last strike left him, which is how a captured
+## three-count ended up with him standing off to one side, one boot inside the
+## fallen man's head.
+##
+## Placed relative to the DEFENDER's own frame rather than in world axes, so a
+## fall in any corner of the ring covers the same way. Deterministic by
+## construction: fixed offsets off another body's transform, no randomness and
+## no wall-clock, so a replay puts him in the same place.
+##
+## Position only. The pin's outcome is the kickout minigame and the referee's
+## count -- neither reads either man's position -- so this moves what the
+## camera sees without touching what the match decides.
+func _place_cover(defender: WrestlerController) -> void:
+	var basis := defender.global_transform.basis
+	# +Z toward the head, measured (see the constants); +X is his own left.
+	var toward_head := basis.z * COVER_TOWARD_HEAD_M
+	var beside := basis.x * COVER_LATERAL_M
+	var spot := defender.global_position + toward_head + beside
+	# Face back across him, so the cover reads from the hard camera rather
+	# than showing the coverer's back to the man he is pinning.
+	var target := global_transform
+	target.origin = spot
+	var across := defender.global_position - spot
+	across.y = 0.0
+	if across.length() > 0.01:
+		target.basis = Basis(Vector3.UP, atan2(-across.x, -across.z))
+
+	# He ARRIVES at the cover rather than appearing in it. Measured with
+	# tools/probe/contact_probe.tscn: assigning the transform here was a
+	# one-tick jump of up to 0.622 m for the coverer and 0.870 m for the man
+	# being covered -- the second and third worst teleports left in a match
+	# after the grapple entry snap was fixed.
+	#
+	# There is a measured window to do it in and it was being wasted:
+	# MatchReferee.COUNT_TICKS[0] is 92 ticks (1.53 s) from cover to the first
+	# slap, frame-stepped off real footage. The coverer used to teleport on
+	# tick 0 and then kneel motionless for the whole of it. The slide happens
+	# INSIDE that window and does not move the count.
+	_cover_from = global_transform
+	_cover_to = target
+	_cover_slide_tick = 0
+	_cover_slide_ticks = _cover_slide_duration(
+			global_position.distance_to(spot))
+
+## Where the cover slide starts and ends, and how far through it is. Ticked in
+## _physics_process's PIN_ATTACKER branch, which is otherwise `pass` -- the
+## state is driven by MatchReferee, so this is the only thing that moves him.
+var _cover_from: Transform3D = Transform3D()
+var _cover_to: Transform3D = Transform3D()
+var _cover_slide_tick: int = -1
+## How long THIS slide takes, set by _cover_slide_duration() when it is armed.
+var _cover_slide_ticks: int = COVER_SLIDE_TICKS_MIN
+
+## Shortest the cover slide is allowed to be, for a coverer who is already
+## standing over the man: a step away should still read snappy. A presentation
+## value rather than a measured one.
+const COVER_SLIDE_TICKS_MIN := 12
+
+## Longest it is allowed to be. MatchReferee.COUNT_TICKS[0] is 92 ticks from
+## cover to the first slap, so the whole walk has to land inside that with room
+## to spare -- he should be settled and still when the hand comes down, not
+## arriving on the count.
+const COVER_SLIDE_TICKS_MAX := 80
+
+## How fast the coverer is allowed to travel on his way in. MOVE_SPEED, not
+## RUN_SPEED: a man dropping into a cover walks the last few steps, he does not
+## sprint them.
+const COVER_SLIDE_SPEED := MOVE_SPEED
+
+## Ticks to walk `distance` metres without ever exceeding COVER_SLIDE_SPEED.
+##
+## A fixed duration was the last real teleport in a match. _tick_cover_slide()
+## eases with smoothstep, whose peak speed is 1.5x the average, so a fixed
+## 12-tick slide moves at 1.5 * d / 0.2s -- fine for a cover from a step away
+## and absurd for one from across the ring. Measured on seed 3
+## (tools/probe/contact_probe.tscn): 6 one-tick jumps, worst 0.382 m, which is
+## 22.9 m/s, over three times RUN_SPEED. Switching the ease from cubic to
+## smoothstep had only taken that from 0.475 m -- because easing was never the
+## problem, duration was.
+##
+## Solving 1.5 * d / T <= COVER_SLIDE_SPEED for T gives the line below. The
+## MAX clamp is the one case that can still exceed the speed target, and only
+## for covers longer than about 3.1 m; beyond that the count window matters
+## more than the walking pace.
+func _cover_slide_duration(distance: float) -> int:
+	var needed := 1.5 * distance * float(Engine.physics_ticks_per_second) \
+			/ COVER_SLIDE_SPEED
+	return clampi(int(ceil(needed)), COVER_SLIDE_TICKS_MIN, COVER_SLIDE_TICKS_MAX)
+
+## Steers the slide through VELOCITY, not by writing global_transform.
+##
+## The first version assigned global_transform every tick, and that is a trap
+## on a CharacterBody3D: teleporting the body leaves the physics engine with no
+## floor contact, so is_on_floor() reads false, _apply_gravity() keeps
+## accumulating velocity.y, and the coverer falls THROUGH the mat. Measured on
+## seed 3 -- he reached y = -4.81 at tick 1567 and y = -20.08 sixty ticks later,
+## still in PIN_ATTACKER, while the man he was covering lay at y = 0.001.
+##
+## Neither standing probe could see it. floating_probe only flags a body ABOVE
+## its limit, so a man falling reads as fine, and contact_probe's teleport test
+## is a per-tick delta, which a gravity fall never trips. It surfaced as an
+## absurd separation number (64.99 m in a 6 m ring) in feel_probe, on one seed
+## of three.
+##
+## Driving velocity instead lets move_and_slide() do the moving, which is what
+## keeps the floor under him. Y is left alone entirely -- gravity owns it --
+## and only the horizontal is steered.
+func _tick_cover_slide() -> void:
+	if _cover_slide_tick < 0:
+		return
+	_cover_slide_tick += 1
+	var t := clampf(float(_cover_slide_tick) / float(_cover_slide_ticks), 0.0, 1.0)
+	# Smoothstep, NOT the cubic ease-out used for the grapple lock-up. Ease-out
+	# front-loads, putting 23% of the travel in the first tick; smoothstep
+	# starts and ends slow, so he leans into the walk and settles out of it.
+	# The duration this runs over is _cover_slide_duration()'s, which is what
+	# actually caps the speed -- see the note there.
+	var eased := t * t * (3.0 - 2.0 * t)
+	var want := _cover_from.origin.lerp(_cover_to.origin, eased)
+	var ticks_per_second := float(Engine.physics_ticks_per_second)
+	velocity.x = (want.x - global_position.x) * ticks_per_second
+	velocity.z = (want.z - global_position.z) * ticks_per_second
+	# The facing is safe to set outright: a basis carries no floor contact.
+	global_transform.basis = GrappleRig.blend_transforms(
+			_cover_from, _cover_to, eased).basis
+	if t >= 1.0:
+		_cover_slide_tick = -1
+		velocity.x = 0.0
+		velocity.z = 0.0
+
 
 func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:
 	fsm.transition_to(WrestlerFSM.State.SUBMISSION_ATTACKER)

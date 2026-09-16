@@ -90,11 +90,22 @@ measurement found genuinely broken:
 
 ### Not fixed, still open
 
-- **The AI never runs in open play.** `input["run"]` is only ever set by the
-  whip decision inside `GRAPPLE_HOLD`, so `RUN` is only entered as the whipped
-  man's rebound autopilot and `RUNNING_ATTACK` fires zero times in AI-vs-AI —
-  an authored move with its own `MoveDef`, reversal window and tests that never
-  happens in a match. This is a locomotion/feel gap, not a reachability one.
+- ~~**The AI never runs in open play.**~~ **FIXED, measured.**
+  `WrestlerAI.poll_input()` now charges when there is room and presses the
+  attack on arrival. The mechanism is a **latch**: tested per tick as a plain
+  distance check, the AI leaves `RUN` at exactly the distance where the attack
+  becomes possible, so it could never fire at all.
+  `ladder_probe` seeds 1-3: `running` **0 -> 1 in all six wrestler-matches**,
+  and `RUN` is now present in every entries dict where it was absent.
+  The decision sits below `poll_input()`'s `GRAPPLE_HOLD` branch on purpose --
+  `input["run"]` means "Irish whip" there and "sprint" in free movement, so a
+  charge visible from a hold would silently become a whip.
+  **Two limits stand, both predicted rather than discovered:** it does not yet
+  LOOK like a running attack (`_start_move()` zeroes velocity and the double
+  leg's clip was deleted, so it plays a stationary `Punch_Cross`), and each man
+  charges exactly **once** per match -- the ring is 3.3 m half-extent against a
+  2.5 m engage distance, so the opening is the only run-up. Making it a
+  recurring beat needs the item below.
 - **There is still no neutral.** The probe shows wrestlers going straight from
   a landed grapple into a strike on the next tick. No spacing, no circling.
   Measurable against nothing until Priority 1 lands ring-crossing run speed.

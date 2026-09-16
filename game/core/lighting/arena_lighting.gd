@@ -47,14 +47,23 @@ class_name ArenaLighting
 ## reads as the thing they are hung from.
 const TRUSS_Y := 7.6
 const HANG_Y := TRUSS_Y - 0.35
-## ArenaBuilder.ROOF_Y / BARRICADE_RADIUS.
-const ROOF_Y := 14.0
-const BOWL_INNER := 9.0
+## ArenaBuilder.ROOF_Y. Up from 14.0 with the hall: the building is now built
+## around a regulation rink and carries its roof steel where an arena does.
+const ROOF_Y := 21.0
+## ArenaBuilder.BOWL_FIRST_ROW -- where the seating starts, as an offset from
+## the hall's plan rectangle. It is no longer the same number as the
+## barricade: there is a rink floor full of seats between the two.
+const BOWL_INNER := 10.13
 ## ArenaBuilder.STAGE_BACK -- the plane the backdrop and the portals stand on.
 ## Mirrored here rather than imported for the same reason TRUSS_Y is: the rig
 ## reads the hall's geometry, it never writes it, and a one-way copy makes
 ## that direction impossible to get wrong.
-const STAGE_BACK_Z := -24.0
+##
+## It moved from -24 to -38 when the entrance set moved to the end of the
+## building. Every fixture on the stage is placed relative to this rather than
+## in absolute z, so they went with it -- which is the whole reason for the
+## mirror being a named constant and not a number typed four times.
+const STAGE_BACK_Z := -38.0
 
 # --- Levels -----------------------------------------------------------------
 ## Ring key. Four fixtures on the truss corners, cross-aimed so each covers
@@ -62,12 +71,57 @@ const STAGE_BACK_Z := -24.0
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
 @export var key_energy: float = 9.0
-## Straight-down top light. Adds to the mat far more than to a standing
-## torso (a floor's N.L is 1.0 under it, a chest's is near 0), which is the
-## lever that opens the mat<->wrestler gap without touching either material.
-@export var top_energy: float = 5.0
-## Cool back/rim pair. Kept deliberately small: rim light lands on the
-## wrestlers, and every unit of it CLOSES the 0.24-0.31 gap the bar wants.
+## Straight-down top light, and the lever the exposure anchor is solved on.
+## Adds to the mat more than to a standing torso, which opens the
+## mat<->wrestler gap without touching either material.
+##
+## 5.0 -> 24.0, re-solved after the mat took the supplied AEW canvas: that
+## artwork's field is 0.636 in sRGB against the near-white it replaced, so the
+## same rig rendered a much darker mat. Measured with
+## tools/refs/measure_silhouette.py on forward_plus, which is the only
+## renderer these numbers mean anything on:
+##
+##   top    mat      mat<->A   mat<->B
+##   5.0    0.252     0.091     0.103
+##   12.0   0.330     0.132     0.160
+##   18.0   0.387     0.160     0.201
+##   24.0   0.437     0.185     0.236   <- mat inside 0.43-0.49
+##
+## The curve compresses as it climbs the filmic shoulder (+0.078 for the first
+## seven units, +0.050 for the last six), so this is solved empirically rather
+## than by arithmetic on the old value.
+##
+## THE COMMENT ABOVE OVERSTATED ITS OWN LEVER, and the sweep is what showed
+## it. "A chest's N.L is near 0" is true of a chest and not of a wrestler:
+## over that range the mat gained 0.185 and wrestler A gained 0.092, so a
+## figure takes about HALF the mat's share of straight-down light -- shoulders,
+## heads and forearms are horizontal too. That is why the mat<->wrestler gaps
+## improve here but do not reach their 0.24-0.31 band: closing them on this
+## lever alone would need the mat near 0.55, outside its own. See README.
+@export var top_energy: float = 24.0
+## Cool back/rim pair.
+##
+## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
+## because it sent a round down the wrong path.
+##
+## It used to read: "Kept deliberately small: rim light lands on the wrestlers,
+## and every unit of it CLOSES the 0.24-0.31 gap the bar wants." That is a
+## sound argument and it is not what the renderer does. Measured on
+## forward_plus with measure_silhouette.py, holding everything else fixed:
+##
+##   rim    mat      mat<->A   mat<->B
+##   2.2    0.437     0.185     0.236
+##   1.2    0.435     0.184     0.235
+##   0.6    0.433     0.185     0.234
+##
+## Cutting rim by 73% moved the gaps by 0.001 -- inside noise. The fixtures are
+## aimed across the ring from behind, so at the spawn standoff they rake the
+## figures at a grazing angle and contribute almost nothing to a front-facing
+## silhouette's mean.
+##
+## So it STAYS at 2.2. Spending the cool back light that separates a figure
+## from a dark crowd, in exchange for 0.001 of a gap, would be paying for
+## nothing. The gap was closed on the attire instead -- see match.tscn.
 @export var rim_energy: float = 2.2
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20
@@ -146,9 +200,10 @@ const ACCENT_RANGE := 12.0
 @export var accent_energy: float = 3.2
 @export var uplight_energy: float = 2.8
 
-## How many house fixtures ring the bowl. Twelve is enough that the wash has
-## no scallops at bowl distance; a coverage decision, not a measurement.
-const HOUSE_FIXTURES := 12
+## How many house fixtures ring the bowl. Twelve had no scallops in it while
+## the bowl was a 28 x 18m ring; the plan is 111m round now, so twenty keeps
+## the spacing roughly where it was. A coverage decision, not a measurement.
+const HOUSE_FIXTURES := 20
 
 ## Fixture-energy gain for renderers without volumetric fog -- in practice the
 ## compatibility renderer, which is what Godot's Web platform falls back to.
@@ -310,20 +365,34 @@ func _build_rim() -> void:
 				30.0, 0.4, 26.0, false).light_volumetric_fog_energy = 2.2
 
 
-## House wash. Twelve fixtures on a ring at roof height, aimed outward and
-## down onto the seating bowl -- which is where the hall's light has to come
-## from if the stands are to stop being self-illuminated.
+## House wash. Fixtures at roof height around the rink, aimed outward and down
+## onto the seating bowl -- which is where the hall's light has to come from
+## if the stands are to stop being self-illuminated.
 ##
 ## Aimed OUTWARD on purpose: aimed inward they would spill onto the mat, and
 ## the mat's exposure is the one number in this file that is anchored to a
 ## reference measurement rather than chosen.
+##
+## They used to sit on a CIRCLE of radius 7.8 in the middle of the floor,
+## which worked while the bowl was a 28 x 18m ring around the ring itself. The
+## hall is now a rink arena: the seating on the long sides is 14m out and the
+## seating at the ends is 32m out, and no circle of fixtures is the same
+## distance from both. So the ring follows the hall's own plan curve, one
+## fixture per equal step around it, each aimed out and down at the rows in
+## front of it.
+##
+## This is the one place the rig calls into ArenaBuilder rather than mirroring
+## a constant, and the reason is that the thing being read is a CURVE. Copying
+## a number keeps a one-way dependency honest; copying a curve means copying
+## the function that generates it, and two copies of that is exactly the drift
+## the mirror rule exists to prevent.
 func _build_house() -> void:
-	var radius := BOWL_INNER - 1.2
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - 1.5)
 	for i: int in HOUSE_FIXTURES:
-		var a := TAU * float(i) / float(HOUSE_FIXTURES)
-		var dir := Vector3(sin(a), 0.0, cos(a))
-		var at := dir * radius + Vector3(0.0, ROOF_Y - 1.4, 0.0)
-		var aim := dir * (BOWL_INNER + 9.0) + Vector3(0.0, 1.6, 0.0)
+		var entry: Array = loop[(i * loop.size()) / HOUSE_FIXTURES]
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 1.4, 0.0)
+		var dir: Vector3 = entry[1]
+		var aim: Vector3 = entry[0] + dir * 10.0 + Vector3(0.0, 2.6, 0.0)
 		_spot("House%02d" % i, at, aim, HOUSE_COLOR, house_energy,
 				46.0, 0.55, 34.0, false).light_volumetric_fog_energy = 0.25
 
@@ -332,9 +401,10 @@ func _build_house() -> void:
 ## different room from the ring rather than as more of the same wash.
 func _build_stage_wash() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 4.2, 10.0, -17.0)
+		var at := Vector3(sx * 4.2, 10.0, STAGE_BACK_Z + 21.0)
 		_spot("Stage%s" % ("E" if sx > 0.0 else "W"), at,
-				Vector3(sx * 2.0, 0.0, -22.0), STAGE_COLOR, stage_energy,
+				Vector3(sx * 2.0, 0.0, STAGE_BACK_Z + 16.0), STAGE_COLOR,
+				stage_energy,
 				44.0, 0.5, 28.0, false).light_volumetric_fog_energy = 1.2
 
 
@@ -354,8 +424,8 @@ func _build_stage_accents() -> void:
 		var label := "W" if sx < 0.0 else "E"
 		for i: int in 2:
 			var shoulder := 2.1 if i == 0 else 4.6
-			var at := Vector3(sx * shoulder, 6.2, -20.6)
-			var aim := Vector3(sx * 3.3, 3.25, -22.9)
+			var at := Vector3(sx * shoulder, 6.2, STAGE_BACK_Z + 3.4)
+			var aim := Vector3(sx * 3.3, 3.25, STAGE_BACK_Z + 1.1)
 			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
 					34.0, 0.6, ACCENT_RANGE, false) \
 					.light_volumetric_fog_energy = 2.0
@@ -449,8 +519,21 @@ func _build_fog_volumes() -> void:
 ##
 ## FOG_BEGIN is 13.0, past that worst case with margin. The mat, the ropes,
 ## the posts and both wrestlers are outside the fog in every framing the
-## camera can produce; only the barricades, the chairs and the bowl are
+## HANDHELD can produce; only the barricades, the chairs and the bowl are
 ## inside it. That is the difference between depth and a wash.
+##
+## That worst case is no longer the only one. The rig covers a match from a
+## hard camera 28.5m out (MatchCamera.hard_cam_position), which puts the far
+## side of the ring ~32m from the lens -- nineteen metres INSIDE a fog begin
+## that was written to stay outside it. A constant cannot be right for both
+## shots, because 13.0 is what gives the handheld its depth and anything that
+## clears the master's ring would leave the handheld's barricade unfogged.
+##
+## So it tracks the shot, the same way the lens does: _process sets
+## fog_depth_begin to the camera's own distance plus the ring's reach, floored
+## at the measured 13.0. At the handheld's 3.2-9.0m the floor wins and every
+## number measured on that shot is untouched; at the master's 28.5 the ring
+## falls outside the fog exactly as this note always claimed it did.
 ##
 ## fog_sky_affect is 0.0 and that is load-bearing, not tidiness: the
 ## background is a flat near-black (background_mode = 1) and VISUAL_BAR.md
@@ -471,6 +554,9 @@ const FOG_CURVE := 1.5
 ## measures no haze. The tint matches HallHaze's albedo so the two renderers
 ## disagree about technique rather than about colour.
 const FOG_DENSITY := 0.45
+## The ring's own reach from its centre, for the fog-begin solve above: the
+## far ropes at ROPE_SPAN 3.1 plus a wrestler stood behind them.
+const RING_REACH := 4.0
 ## The fog colour is the value distant geometry fades TOWARD, so in a dark hall
 ## it has to be dark. At energy 1.0 the tint below is far brighter than the
 ## arena and the haze ADDED light: the crowd went milky white and the near-black
@@ -495,6 +581,26 @@ const FOG_TINT := Color(0.62, 0.68, 0.86)
 ## was reported by eye first -- the browser frames looked over-saturated -- and
 ## the measurement agreed.
 const COMPAT_SATURATION := 0.82
+
+
+## The compatibility Environment, kept so the fog's begin distance can follow
+## the shot. Null on forward_plus, where none of this path runs.
+var _compat_env: Environment
+
+
+## Keeps the depth fog starting BEYOND the ring whichever camera is on.
+##
+## Cheap enough to do every frame -- one length and one assignment -- and it
+## has to be every frame, because the rig cuts between a camera 3.5m out and
+## one 28.5m out with no transition between them.
+func _process(_delta: float) -> void:
+	if _compat_env == null:
+		return
+	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if camera == null:
+		return
+	var out := Vector2(camera.global_position.x, camera.global_position.z).length()
+	_compat_env.fog_depth_begin = maxf(FOG_BEGIN, out + RING_REACH)
 
 
 func _apply_compat_environment() -> void:
@@ -528,6 +634,7 @@ func _apply_compat_environment() -> void:
 	# path -- see the note beside `arena_stage_deck` in material_library.gd.
 	env.ssr_enabled = false
 	world.environment = env
+	_compat_env = env
 
 
 ## Scale every fixture this rig built, on renderers that over-accumulate them.

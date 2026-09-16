@@ -84,11 +84,31 @@ except ImportError:
     sys.exit("bpy is required: pip install bpy==4.2.0")
 
 
-# Limbs whose direction is measured off the mesh and fitted. The legs and head
-# are deliberately absent: measured on this asset they sit within 5 degrees of
-# the base rig's rest, and rotating a bone chain by five degrees to chase noise
+# Limbs whose direction is measured off the mesh and fitted. The head is
+# deliberately absent: measured on both assets it sits within 5 degrees of the
+# base rig's rest, and rotating a bone chain by five degrees to chase noise
 # costs accuracy in the weights rather than gaining any.
 ARM_CHAINS = [("upperarm_l", 1.0), ("upperarm_r", -1.0)]
+
+# The legs, fitted the same way but only when --fit-legs asks for it.
+#
+# They were originally absent for the same reason as the head, and on the Cody
+# asset that is still correct -- its stance is within a few degrees of the base
+# rig's. It is not a property of supplied models in general. The Kenny scan
+# stands with its feet at x = +/-0.22 m against the rig's +/-0.089 m, and with
+# the legs unfitted that put foot_l 16.1 cm OUTSIDE the mesh, which is a bone
+# driving flesh it is not inside. Hence the flag rather than a change of
+# default: Cody's output stays byte-identical, and a wide stance can be fitted.
+LEG_CHAINS = [("thigh_l", 1.0), ("thigh_r", -1.0)]
+
+# Last bone of each leg chain, whose tail is the rig's ankle.
+LEG_TIP = {"thigh_l": "foot_l", "thigh_r": "foot_r"}
+
+# Below this fraction of the model's height a vertex is leg rather than arm or
+# torso. The arms are the thing that must be excluded, and on a figure with the
+# arms spread they sit far above it -- measured on the Kenny scan the hands are
+# at 78-84% of body height.
+LEG_HEIGHT_FRACTION = 0.55
 
 # Fraction of the model's half-width beyond which a vertex is arm rather than
 # body. Half-width is the arm span, so this is "the outer half of the reach".
@@ -113,7 +133,9 @@ REACH_TOLERANCE = 0.08
 FIT_CHECK_BONES = [
     "upperarm_l", "lowerarm_l", "hand_l",
     "upperarm_r", "lowerarm_r", "hand_r",
-    "thigh_l", "calf_l", "foot_l", "spine_03", "Head",
+    "thigh_l", "calf_l", "foot_l",
+    "thigh_r", "calf_r", "foot_r",
+    "spine_03", "Head",
 ]
 # Weight smoothing after the transfer, and it is not optional. Rendered
 # comparison at the T-pose bake: with 0 passes the deltoids and pecs tear open
@@ -303,6 +325,13 @@ def main():
     parser.add_argument("--output", required=True, help="rigged .glb to write")
     parser.add_argument("--scale", type=float, default=1.0,
                         help="multiply source units by this to reach metres")
+    parser.add_argument("--fit-legs", action="store_true",
+                        help="also fit the thigh chains to the mesh's stance. "
+                             "Off by default because the arms alone suffice for "
+                             "a model standing close to the rig's own stance "
+                             "(Cody), and on for one standing wider (Kenny), "
+                             "where leaving the legs unfitted puts the foot bone "
+                             "outside the mesh")
     parser.add_argument("--report", default=None, help="write the log here too")
     parser.add_argument("--mapping", default="POLY_NEAREST",
                         help="comma-separated Blender vert_mapping passes for "
@@ -464,13 +493,50 @@ def main():
                         f"bone will not reach the mesh's hand, so grip IK will "
                         f"aim at the wrong place. Proportions need matching.")
 
+    # --- measure the legs, if asked ------------------------------------------
+    # Same method as the arms and for the same reason: aim the chain from the
+    # rig's OWN hip at the mesh's foot, rather than along the leg's principal
+    # axis, because the axis is the leg mass's line and the mass includes the
+    # thigh, which sits inboard of the hip joint.
+    fitted_chains = list(ARM_CHAINS)
+    if args.fit_legs:
+        leg_ceiling = lo.z + LEG_HEIGHT_FRACTION * (hi.z - lo.z)
+        for bone_name, side in LEG_CHAINS:
+            limb = [p for p in points
+                    if p.z < leg_ceiling and (p.x * side) > 0.0]
+            if len(limb) < 200:
+                sys.exit(f"could not isolate {bone_name}: only {len(limb)} "
+                         f"vertices below z={leg_ceiling:.3f} m on that side")
+            hip = base_armature.matrix_world \
+                @ base_armature.data.bones[bone_name].head_local
+            far = sorted(limb, key=lambda p: (p - hip).length)
+            foot_cloud = far[int(len(far) * (1.0 - HAND_CLOUD_FRACTION)):]
+            foot = mathutils.Vector((
+                sum(p.x for p in foot_cloud) / len(foot_cloud),
+                sum(p.y for p in foot_cloud) / len(foot_cloud),
+                sum(p.z for p in foot_cloud) / len(foot_cloud),
+            ))
+            reach = (foot - hip).length
+            chain_length = (base_armature.matrix_world
+                            @ base_armature.data.bones[LEG_TIP[bone_name]].tail_local
+                            - hip).length
+            axes[bone_name] = (foot - hip).normalized()
+            log(report, f"{bone_name}: foot at ({foot.x:+.3f},{foot.y:+.3f},"
+                        f"{foot.z:+.3f}) from {len(foot_cloud)} vertices; "
+                        f"reach {reach:.3f} m vs rig chain {chain_length:.3f} m "
+                        f"({100.0 * (reach / chain_length - 1.0):+.1f}%)")
+            if abs(reach / chain_length - 1.0) > REACH_TOLERANCE:
+                log(report, f"!! {bone_name}: the mesh's leg and the rig's leg "
+                            f"differ in length by more than {REACH_TOLERANCE:.0%}.")
+        fitted_chains += LEG_CHAINS
+
     # --- pose the base rig into that A-pose, and snapshot its mannequin ------
     # The mannequin is the weight source. Posing the base rig (its POSE, never
     # its rest) puts the mannequin in the supplied mesh's pose so that a
     # nearest-surface transfer maps like to like.
     select_only(base_armature)
     bpy.ops.object.mode_set(mode="POSE")
-    for bone_name, _ in ARM_CHAINS:
+    for bone_name, _ in fitted_chains:
         moved = rotate_pose_bone_to(base_armature, bone_name, axes[bone_name])
         log(report, f"{bone_name}: rotated {moved:.1f} deg to reach it")
     bpy.ops.object.mode_set(mode="OBJECT")

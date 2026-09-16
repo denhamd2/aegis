@@ -26,6 +26,61 @@ extends Node
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
+## How far away the AI stops walking in and charges instead.
+##
+## A STARTING VALUE, not a searched minimum. Its justification is the ring's
+## geometry rather than tuning: ArenaBuilder.RING_HALF_EXTENT is 3.3m, the two
+## spawn 3.0m apart (scenes/match.tscn), and tie_up_range is 1.3m -- so 2.5m
+## leaves roughly 1.35m of actual sprint at WrestlerController.RUN_SPEED (7.0).
+## That is a short run-up, and it is the most the ring offers: a real charge
+## across the ring needs the AI to make distance first, which is the separate
+## "there is still no neutral" item in gauntlet/status/roman_reigns_next.md.
+## How close the AI is willing to stand. Nearer than this and it gives ground
+## instead of crowding.
+##
+## Measured with tools/probe/contact_probe.tscn: without this the two men
+## spent essentially the whole match at 0.801 m centre-to-centre, against a
+## capsule-touching distance of 0.80 m -- jammed against the floor the physics
+## engine enforces, for 1455 of 1458 free ticks. The capsules never overlap
+## (they cannot), but the capsule is radius 0.4 and models nothing above the
+## waist, so two men at 0.80 m have their arms and shoulders fully inside each
+## other. On footage they read as one body, and a punch thrown at that range
+## goes PAST the opponent rather than into him.
+##
+## 1.05 m sits inside the shortest strike's reach on purpose: back off any
+## further and the AI could no longer connect with the strike it just stepped
+## away from.
+## Circling: how far apart to hold while waiting, and how long a wrestler keeps
+## going the same way round before he switches.
+##
+## 1.10 m is the middle of the only band that works: nearer than min_standoff
+## (1.05 m) and they are inside each other, further than the SHORTEST strike in
+## the pool and the next strike cannot reach. The upper edge used to be quoted
+## as STRIKE_HIT_RANGE (1.15 m), which was every strike's reach while there was
+## only one number; reach is now per-move and read through
+## WrestlerController.shortest_strike_reach() -- 1.17 m, the jab, with the
+## cross at 1.20 and both kicks past 1.35.
+##
+## That distinction is load-bearing, and it was briefly wrong. When the contact
+## volumes first landed the cross reached only 1.07 m, so the AI held 1.10 and
+## every cross it drew missed by three centimetres. The fix was to extend the
+## clip (Strike_Forearm's contact pose in tools/blender/wrestling_clips.py),
+## not to pull the standoff in: a rear-hand cross should out-reach a jab.
+## test_ai_spacing.gd is what keeps the band and the measured reaches agreeing.
+@export var circle_distance: float = 1.10
+## How hard the radial correction pulls back to circle_distance against the
+## lateral motion. 1.0 would walk straight at him; 0 would spiral away.
+@export var circle_radial_pull: float = 0.55
+## Ticks before the direction is re-rolled, so two men do not orbit in
+## lockstep for a whole match.
+@export var circle_bout_ticks: int = 90
+@export var min_standoff: float = 1.05
+@export var run_engage_distance: float = 2.5
+## Ticks after a running attack before another charge may start. A running
+## attack is 69 ticks committed (18 startup + 5 active + 46 recovery) against a
+## strike's 31, so without this it would crowd out the strike trading the
+## match is made of.
+@export var running_attack_cooldown_ticks: int = 90
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -55,6 +110,21 @@ var _tie_up_attempts: int = 0
 
 
 var _cooldown: int = 0
+## Latched while closing at a run, from the moment the charge starts until the
+## running attack fires (or the charge is abandoned).
+##
+## A latch rather than a plain `distance >= run_engage_distance` test, and that
+## is the whole mechanism. Tested per tick, the AI drops back to a walk the
+## instant it crosses the threshold -- which leaves RUN, and
+## WrestlerController._maybe_start_running_attack() is only called while IN
+## RUN (_process_free_movement). It would stop running at exactly the distance
+## where the attack becomes possible, so the attack could never fire at all.
+var _charging: bool = false
+var _run_cooldown: int = 0
+## Ticks this AI has been alive, used only to number the circling bouts so the
+## direction roll has something to vary on. Advances once per physics tick, so
+## a replay re-rolls identically.
+var _circle_tick: int = 0
 var _pin_defender_tick: int = 0
 var _last_kickout_press_tick: int = -1000
 var _tie_up_tick: int = 0
@@ -98,6 +168,17 @@ func _physics_process(_delta: float) -> void:
 		return
 	if _cooldown > 0:
 		_cooldown -= 1
+	if _run_cooldown > 0:
+		_run_cooldown -= 1
+	_circle_tick += 1
+	# A charge only survives while the man is actually free to run. If he is
+	# struck out of it, poll_input() returns early for the whole of HIT_REACT
+	# and the latch would otherwise still be set when he recovers -- resuming
+	# the charge from close range, with no run-up, as a running attack out of
+	# nowhere.
+	if not controller.fsm.is_in([WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
+		_charging = false
 
 func poll_input() -> Dictionary:
 	if not controller or not target:
@@ -151,6 +232,66 @@ func poll_input() -> Dictionary:
 			input["move"] = Vector2(dir.x, dir.z)
 		return input
 
+	# --- the charge ---------------------------------------------------------
+	#
+	# This is the whole of "the AI runs in open play", and it deliberately sits
+	# BELOW the GRAPPLE_HOLD branch above, which returns {} before the input
+	# dict is ever built.
+	#
+	# That ordering is load-bearing, not incidental: input["run"] means "throw
+	# an Irish whip" to WrestlerController._process_grapple_hold(), and "sprint"
+	# to _process_free_movement(). The same key, two unrelated meanings, chosen
+	# by state. Setting run anywhere that GRAPPLE_HOLD could see it would turn
+	# every charge into a whip. Do not hoist this above that branch.
+	#
+	# Running is not a separate behaviour from closing -- it IS closing, done
+	# faster when there is room for it. The attack at the end is the point:
+	# RUNNING_ATTACK has two MoveDefs, a reversal window and its own test suite,
+	# and before this it fired zero times in a match (measured, ladder_probe
+	# seeds 1-3: "running 0" for both men, with RUN absent from every entries
+	# dict).
+	if _charging and WrestlerController.UNHITTABLE_STATES.has(target.fsm.current_state):
+		# He went down, or into a pin, mid-run. Nothing to charge at, and
+		# _maybe_start_running_attack() would refuse anyway -- so stop running
+		# rather than sprint into him and hold the latch forever.
+		_charging = false
+	elif not _charging and distance >= run_engage_distance and _run_cooldown <= 0:
+		_charging = true
+
+	if _charging:
+		var dir := to_target.normalized()
+		# Both are required to stay in RUN: _process_free_movement() only
+		# transitions there when run is pressed AND there is movement to make.
+		input["move"] = Vector2(dir.x, dir.z)
+		input["run"] = true
+		if distance <= WrestlerController.STRIKE_HIT_RANGE:
+			# In RUN this press becomes _maybe_start_running_attack(), not a
+			# strike -- _process_free_movement() branches on the state before
+			# it looks at the input. The cooldown is spent here, on arrival,
+			# whether or not the attack's own gate lets it through.
+			input["strike"] = true
+			_charging = false
+			_run_cooldown = running_attack_cooldown_ticks
+		return input
+
+	# Too close: give ground -- but keep deciding. This sets the move vector
+	# and then FALLS THROUGH to the strike/tie-up logic below, rather than
+	# returning, for two reasons. A man can throw a punch while stepping off,
+	# and a lock-up is the one moment two wrestlers are supposed to be chest
+	# to chest: an early version returned here and the AI refused to tie up at
+	# 1.0 m, which broke the opening grapple the whole match is built on.
+	#
+	# It is not a spacing game. There is still no circling and no neutral (see
+	# gauntlet/status/roman_reigns_next.md); this only stops the two standing
+	# inside each other, which they otherwise do for essentially every tick of
+	# the match.
+	if distance < min_standoff and distance > 0.001:
+		var back := (controller.global_position - target.global_position)
+		back.y = 0.0
+		if back.length() > 0.001:
+			back = back.normalized()
+			input["move"] = Vector2(back.x, back.z)
+
 	if distance <= tie_up_range:
 		# Grapple, strikes, then a signature to finish him.
 		#
@@ -169,19 +310,53 @@ func poll_input() -> Dictionary:
 		# but outside striking range, or one spent on the strike cooldown,
 		# is a tick of standing squared up -- which is what the cooldown is
 		# for.
+		# The reach gate is the SHORTEST strike in this wrestler's pool, not
+		# STRIKE_HIT_RANGE. That constant used to be every strike's reach;
+		# since each move carries its own measured contact volume it is only
+		# the "close enough to throw at" gate, and the four strikes reach
+		# 1.17 / 1.20 / 1.37 / 1.35 m. Gating on the old 1.15 meant throwing
+		# from distances the drawn strike could not cover.
+		var reach := controller.shortest_strike_reach()
 		if _wants_tie_up():
 			input["grapple"] = true
-		elif _cooldown <= 0 and distance <= WrestlerController.STRIKE_HIT_RANGE:
+		elif _cooldown <= 0 and distance <= reach:
 			input["strike"] = true
 			_cooldown = strike_cooldown_ticks
+		elif distance > reach:
+			# The dead band, and it has to be closed explicitly. tie_up_range
+			# is 1.3 m and the shortest strike reaches 1.17 m, so between those
+			# AI used to neither close (the closing branch below only fires
+			# OUTSIDE tie-up range) nor strike (out of reach) -- it just stood
+			# there. This file already admitted as much: "a tick inside tie-up
+			# range but outside striking range ... is a tick of standing
+			# squared up".
+			#
+			# That was survivable only because the two men were jammed
+			# together at 0.801 m for the whole match and never sat in the
+			# band. With min_standoff holding them apart and a landed hit now
+			# shoving the victim ~0.1 m back, they land in it constantly --
+			# and measured, the match STOPPED FINISHING: all three seeds ran
+			# the full 20000-tick budget with 4 hit reactions between them,
+			# against 13 in ~1700 ticks before. So: step back in.
+			var toward := to_target.normalized()
+			input["move"] = Vector2(toward.x, toward.z)
+		else:
+			# In range with nothing to throw: the strike is on cooldown and he
+			# is not reaching for a tie-up. This branch used to issue no input
+			# at all -- no move, no press -- so a strike was followed by
+			# strike_cooldown_ticks (40, two thirds of a second) of a man
+			# standing perfectly still opposite another man standing perfectly
+			# still. This file said so itself: "a tick spent on the strike
+			# cooldown is a tick of standing squared up".
+			input["move"] = _circle_move(to_target, distance)
 	else:
 		# Outside tie-up range: close, and *only* close.
 		#
 		# This branch used to also throw a strike anywhere inside
-		# strike_range (1.6m). That strike could never connect: a fist
-		# reaches STRIKE_HIT_RANGE (1.15m, measured off the jab's own
-		# contact frame -- see gauntlet/refs/timings.md), which is nearer
-		# than tie_up_range (1.3m), so everything this branch ever sees is
+		# strike_range (1.6m). That strike could never connect: the
+		# shortest strike reaches 1.17 m (measured per move by
+		# tools/anim/measure_contact_offsets.gd), which is nearer than
+		# tie_up_range (1.3m), so everything this branch ever sees is
 		# already out of reach. The close-range branch above had been
 		# gated on the measured reach; this one was still gated on
 		# strike_range, and the two disagreed about the same fact.
@@ -334,3 +509,46 @@ func _roll_tie_up_timing() -> void:
 		tie_up_press_interval_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
 
 
+## Sidestep around the opponent while holding striking range.
+##
+## Tangent plus a radial correction: the tangent of a circle centred on him
+## carries the sidestep, and the radial term pulls back toward circle_distance
+## so the orbit neither spirals in (inside him) nor out (past the reach of the
+## next strike).
+func _circle_move(to_target: Vector3, distance: float) -> Vector2:
+	if distance < 0.001:
+		return Vector2.ZERO
+	var inward := to_target.normalized()
+	var tangent := inward.cross(Vector3.UP).normalized() * _circle_direction()
+	# Positive when he is too far away, so the radial term points inward.
+	var radial := inward * clampf((distance - circle_distance) / circle_distance,
+			-1.0, 1.0)
+	var move := tangent + radial * circle_radial_pull
+	if move.length() < 0.001:
+		return Vector2.ZERO
+	move = move.normalized()
+	return Vector2(move.x, move.z)
+
+
+## Which way round the pair is going this bout: +1 or -1.
+##
+## Deliberately NOT varied by player_index, which is the opposite of what
+## _roll_tie_up_timing() does and is the whole reason this works.
+##
+## The tangent is inward.cross(UP), and the two men's `inward` vectors point at
+## each other -- they are opposites. So the SAME sign sends them opposite ways
+## in world space, which is two men orbiting the midpoint between them, and
+## OPPOSITE signs send them the same way in world space, which is the pair
+## crab-walking across the ring together.
+##
+## The first version seeded on player_index and did exactly that: measured with
+## feel_probe, mean separation went 0.97 m -> 1.87 m and max separation hit
+## 64.99 m -- in a 6 m ring. They walked out of the arena still circling. Both
+## men take the same sign now, so the orbit closes.
+##
+## Seeded rather than random: ReplaySystem replays a match by re-running its
+## inputs, and live randomness here would desync it (ARCHITECTURE.md).
+func _circle_direction() -> float:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 6151 + int(_circle_tick / maxi(circle_bout_ticks, 1))
+	return 1.0 if rng.randi() % 2 == 0 else -1.0

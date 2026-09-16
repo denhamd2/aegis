@@ -22,15 +22,20 @@ enter this repo.
   not violate. Read this first.
 - `gauntlet/refs/` — the reference corpus: measured timings, camera
   behavior, HUD layout, and feel, all traceable to footage under
-  `gauntlet/refs/raw/` (gitignored — drop clips locally). `refs/ring.md`
-  additionally records the external ring the build's *look* is matched to;
-  like the footage, it is reference-only and its asset is not committed.
+  `gauntlet/refs/raw/` (gitignored — drop clips locally). `refs/ring.md`,
+  `refs/stage.md` and `refs/arena.md` additionally record the external ring,
+  entrance set and ice-hockey arena the build's *look* is matched to; like the
+  footage, they are reference-only and no asset from them is committed.
 - `gauntlet/status/` — `slices.json` + the generated
   `gauntlet-status.html` tracking every gauntlet slice's round count,
   verdict, and current largest gap.
 - `tools/capture/` — the capture harness driver (`run_capture.sh`), the
   evidence gate (`evidence_gate.py`) that must pass before any critic sees
   a capture, and the status-page generator.
+- `tools/blender/` — `arena_bowl.py`, which builds the seating bowl and shell
+  (`game/assets/environment/arena_bowl.glb`) from the constants in
+  `game/core/arena/arena_builder.gd`, and `build_arena.sh`, which runs it. The
+  .glb is committed; Blender is not needed to build, run or test the game.
 - `.github/workflows/` — `ci.yml` (gdUnit4 suite, evidence-gate fixtures,
   status-page staleness) and `pages.yml` (the playable Web build).
 
@@ -2703,11 +2708,24 @@ gameplay. Capture wall-time went 2m58s → 3m25s on llvmpipe.
   reason and no other.
 - Normal/AO maps were skipped because they would cost llvmpipe fill rate to
   serve a bar that cannot be judged. One line per material to add back.
-- Bowl rake, stage proportions and truss layout trace to **no reference
-  measurement** — `gauntlet/refs/` measures nothing about arena architecture.
-  They are coverage decisions, held to the same rule as the momentum ladder.
-- The crowd are two-box impostors: no faces, no limbs, no reaction to the
-  match. The stage has no branding and no entrance sequence uses it.
+- Bowl rake and truss layout trace to **no reference measurement**; they are
+  coverage decisions, held to the same rule as the momentum ladder. Stage
+  proportions now trace to `gauntlet/refs/stage.md`, and the bowl's *plan*,
+  seat value and stair nosings to `gauntlet/refs/arena.md` — which is what
+  that sentence used to say was missing. Its rake, row counts and tier heights
+  are still coverage decisions and are not claimed otherwise.
+- The hall is built to **rink scale** — 60.96 x 25.91m of ice with 8.53m
+  corners, the ring in the middle of it, the boards and the bowl measured out
+  from there, and ~1,490 folding chairs filling the floor between the
+  barricade and the boards. `gauntlet/refs/arena.md` has the derivation.
+- The hall is **empty** — the two-box crowd impostors were removed on
+  request, and the seats themselves (individual, at `SEAT_PITCH`, with the
+  aisles left clear) are what fills it. That closes this bullet's old
+  complaint that the crowd had no faces, no limbs and no reaction to the
+  match by removing the crowd, not by fixing it; a hall with people in it
+  again is a separate slice and would start from
+  `arena_builder.gd`'s history. The stage has no branding and no entrance
+  sequence uses it.
 
 ## Gauntlet: wrestler look & materials (round 2)
 
@@ -4443,3 +4461,1604 @@ out, and both are now the finish of every AI match (see above).
 
 **WrestlerB wins 9 of 12 seeds.** That skew predates this change (the
 before-measurement has him taking 2 of 3) and nothing here addresses it.
+
+## Every animation in the match, authored again from scratch
+
+The clips did not look good, and the reason was not the numbers in them —
+it was that nothing in the loop could see them.
+
+The previous pass authored all 29 clips as per-bone Euler degrees against a
+remembered axis map. Rendered on the rig for the first time this pass (six
+frames each, three camera angles, `bpy` + Cycles CPU — EEVEE cannot open
+`libEGL` in this container), it was one defect repeated everywhere:
+
+| clip | what it actually played |
+| --- | --- |
+| `Idle_Ready` | a mannequin standing still for 57 frames, arms hanging |
+| `Tie_Up_Collar` | the same mannequin, small torso twist — two men standing near each other, not a lock-up |
+| `Strike_Forearm` | never raised a hand; the "contact" frame has nothing arriving |
+| `Pin_Cover` | a hunched crouch that never reaches the man on the mat |
+| `Getup_Rise` | **read correctly** — the one clip whose performance lives in the hips rather than the arms |
+
+`upperarm_r.Y` does not raise the arm from a T-pose rest, it lowers it. A
+table of joint angles gives you no way to notice that, which is why the
+defect survived a pass that was otherwise careful about timing.
+
+### Poses are now positions, not angles
+
+`tools/blender/rig_pose.py` is a solver: two-bone IK for both arms and both
+legs, absolute targets in armature space, with a pole for each joint. A pose
+says **where the hands and feet are**, in metres, and the joints are solved
+to match.
+
+That is the whole point. A pose is now a claim that can be checked on a
+rendered frame:
+
+- a foot at `up=0.104` is planted on the mat (measured ankle height)
+- a fist at `fwd=0.56, up=1.40` is at the end of a thrown punch, at head height
+- a hand at `fwd=0.52, up=1.46` is on the back of the other man's neck
+- a hip at `up=0.55` is a knee resting on the canvas — the thigh is 0.400 long
+
+Measured rest geometry it solves against: 1.651 tall, shoulders 1.441,
+pelvis 0.917, ankles 0.104, arm reach 0.547, leg reach 0.829.
+
+Three defects came out of the render loop that a table of angles had hidden,
+and each is recorded at the line that fixes it:
+
+- **fingers splayed instead of closing.** The curl is about a finger bone's
+  local *X*; local Z (tried first) splays them sideways in the plane of the
+  palm and renders as a claw. An open hand reads as a slap at any speed.
+- **elbows winged out.** The default elbow pole is down and slightly behind
+  the hands, not outward.
+- **the spine ignored the hips.** Every bone was set to an *absolute*
+  armature-space orientation, so the torso stood vertically while the pelvis
+  lay back: `Down_Supine` rendered as a man doing a sit-up on the canvas.
+  `spine` and `head` now compose with `hips`, cumulatively down the chain.
+
+### What is in the 29 clips
+
+Contact frames are placed at each move's own `startup_frames` fraction, so
+retiming in `resources/animations/strike_recipes.gd` lands the hit on the
+tick the MoveDef declares — `strike_jab` 9/31 ticks is frame 5 of 16,
+`strike_cross` 12/40 is frame 6 of 20, `strike_kick` 8/35 is frame 5 of 20,
+`strike_kick_heavy` 12/57 is frame 6 of 29. Timing follows the combat
+reference: anticipation 4–8 frames, action 2–4 and always the shortest,
+follow-through 4–8, recovery 8–16.
+
+The locomotion cycles are real cycles now — contact, down, passing, up, per
+`walk-cycle.md` — authored in place, so the planted foot travels backward
+through its stance phase and the engine's translation supplies the ground
+speed. `Run_Drive` has a flight phase with nothing on the mat at frames 7
+and 17, which is the whole difference between a run and a fast walk. The
+idle's feet never move at all, which is what keeps a looping idle from
+sliding.
+
+`Strike_Kick_Heavy` finishes by **stepping** the kicking foot back into the
+stance rather than sliding it there; the recovery is 40 ticks because the
+reference puts a heavy strike's length in recovery, never in a slower action
+phase.
+
+### The bake reads a cache, and the cache lies
+
+Rebuilding the `.glb` and re-running the two bake scripts produced a
+`strike_clips.tres` that was **byte-identical to the committed one**.
+`godot4 --headless -s <script>` does not reimport a changed asset first, so
+both generators had been reading the previous import of `wrestling_clips.glb`
+out of `.godot/imported/`. The sequence is:
+
+```
+python3 game/tools/blender/wrestling_clips.py
+godot4 --headless --import                          # <- not optional
+godot4 --headless -s res://tools/anim/build_strike_clips.gd
+godot4 --headless -s res://tools/anim/build_paired_poses.gd
+```
+
+Without the middle line the bakes silently succeed against stale data and
+report the right clip count while doing it.
+
+### Godot was throwing away two thirds of every clip
+
+The clips were right in Blender and still wrong in the game, and the reason
+was one line in `assets/animations/wrestling_clips.glb.import`:
+
+```
+animation/remove_immutable_tracks=true
+```
+
+That drops any track whose value does not change *within the clip*. These
+clips deliberately pose the whole body and then hold most of it still — so
+`Idle_Ready` arrived in Godot with **23 tracks out of 65 bones**, and every
+bone it held steady (both legs, both hands, every finger) was silently
+deleted and left holding whatever the `AnimationTree` happened to be
+blending from. That is precisely the fault
+`test_every_authored_clip_poses_the_whole_body` exists to catch, and it
+could not see it: the test counts tracks in the baked `.tres`, which is
+built from the already-stripped import.
+
+Set to `false`, the same clip imports with 195 tracks (65 bones × position,
+rotation, scale) and the fingers survive. `strike_clips.tres` roughly
+doubles, to 1.2 MB. That is the correct trade: this project's clips are
+whole-body by design, so "the value never changes" is information, not
+redundancy.
+
+### How closed a hand is, is a number
+
+The finger curl runs 0 (open) to 1 (fist), and the useful values were read
+off rendered frames rather than picked:
+
+| value | reads as |
+| --- | --- |
+| 0.0 | a flat palm pressing a shoulder into the mat |
+| 0.45 | a loose hand hanging off a stunned man |
+| 0.6 | a grip closed around a collar, an arm, a waistlock |
+| 0.75 | a guard |
+| 1.0 | a thrown fist |
+
+Below about 0.5 the fingers are still mostly straight, and the hand reads as
+a **claw**, not a grip — the tie-up shipped one pass at 0.3 and looked like
+a man about to scratch someone.
+
+### Left alone
+
+Clip **names and lengths are unchanged**, so `strike_recipes.gd`,
+`paired_recipes.gd`, both MoveDef tables and the getup's beat positions
+(`GETUP_RISE_FAST_TICKS` cuts this clip off partway through, so the beats
+are behavioural) all still describe the same clips. Nothing in the FSM,
+`GrappleRig` or the MoveDefs was touched.
+
+## The whole venue is built in Blender now
+
+The bowl and the shell were already `tools/blender/arena_bowl.py`'s model. The
+ring, the entrance set, the ramp, the truss, the floor and the barricades were
+still generated in GDScript with `SurfaceTool`. They are all one pipeline now:
+
+| model | built by | parts |
+| --- | --- | --- |
+| `arena_bowl.glb` | `arena_bowl.py` | seating bowl, rink, aisles, suite fascia, shell |
+| `ring.glb` | `ring.py` | posts, rope terminations, twelve rope spans, apron frame, steel steps |
+| `entrance_set.glb` | `entrance_set.py` | stage deck, ramp, backdrop, portals, video wall, truss |
+| `ringside.glb` | `ringside.py` | floor slab, decking joints, barricades |
+
+`tools/blender/venue.py` is the shared foundation: the constant parser, the one
+game↔Blender frame conversion, and the primitives — bevelled boxes, wedges,
+parallel-transported swept tubes, arcs and four-chord lattices.
+`tools/blender/build_venue.sh` rebuilds any or all of them.
+
+The split is the one the bowl established. **Blender owns shape. Godot keeps
+owning look, physics and anything that moves** — every part is dressed by name
+from `MaterialLibrary`, because the hall's tints are solved against measured
+luminance targets in `VISUAL_BAR.md` and a colour picked in Blender cannot know
+about them. Colliders, the ring canvas texture, the video feed and the seat
+instancing all stay in GDScript.
+
+Every dimension is still **read out of the GDScript that declares it**, never
+retyped. Four constants that only existed inside an array, a dictionary or a
+sum are now plain numbers, because a number the parser cannot see is a number
+the mesh would have to duplicate.
+
+### What the move actually bought
+
+Not "it looks better in Blender" — three specific things GDScript could not do:
+
+- **The ramp was a staircase.** `arena_builder.gd` said it outright:
+  "axis-aligned boxes are all this file builds". So a 25.7 m ramp falling
+  1.45 m shipped as **eighteen 8 cm steps**. The note argued the steps were
+  under a pixel of rise from any camera in the shotlist — true of the *treads*,
+  false of the **edge**: a stepped ramp has a stepped silhouette against the
+  floor from every angle that sees it side-on. It is one wedge now, with a
+  fascia down each flank and a nose at the bottom instead of a 1.45 m cliff.
+- **The truss was sixteen boxes**, with a comment hoping they would "read as
+  truss rather than as bare pipe". Overhead truss is the one piece of an arena
+  that is unmistakably a lattice from every angle. It is four chords on a
+  square section with alternating diagonals bay by bay.
+- **Edges.** Ring posts, apron rails, steps and the stage lip carry real
+  chamfers; turnbuckle sleeves and barricade cap rails are round. A perfectly
+  sharp 90° edge takes no highlight from the house rig, and a box cap rail
+  takes one on a single facet where a tube takes one along its length.
+
+### Two faults found on rendered frames, not reasoned about
+
+- **An open sheet has no outside.** `recalc_face_normals` finds the outside of
+  a closed solid; for a sheet it picks a direction, and that direction is
+  arbitrary. A sheet facing the wrong way is **invisible** under backface
+  culling, not merely dark — the video wall rendered as nothing at all with its
+  UVs, its material and its bound still frame all correct. `venue.finish` now
+  takes an explicit facing for open sheets and bores.
+- **Reversing faces is not the same as winding them correctly.** The reversal
+  re-pairs each loop with its UV, and the picture came back on the wall rotated
+  180°. Only the picture on the wall settles which way round a UV goes.
+
+### The tests moved with the geometry
+
+`test_stage_set.gd` measured the deleted builder functions directly. Its
+invariants now measure the committed model, the way `test_arena_bowl.gd`
+measures the bowl — plus two new ones:
+
+- **the wall must FACE the ring**, which is the culling bug above, now guarded;
+- **the ramp run must sit at no more than two distinct depths**, which is what
+  a wedge is and a staircase is not.
+
+The bezel test keeps its intent in a stronger form. It used to assert that
+`_sagitta_for` inverts `_arc_radius`; it now asserts the thing that arithmetic
+was *for* — the frame must never surface through the picture anywhere, which is
+what went wrong when the two were built on different circles and the wall grew
+two dark chevrons across its top.
+
+### A trap worth repeating
+
+`godot4 --headless -s <script>` does **not** reimport a changed asset first, and
+neither does a test run. After `build_venue.sh`, run `godot4 --headless --import`
+before baking, testing or capturing — otherwise everything downstream keeps
+reading the previous import and reports success while doing it.
+
+All four models rebuild byte-identical. 341 tests pass, and every change was
+checked against a before shot through `CaptureHarness`'s art shotlist.
+
+## Round: the strikes connect, and the feet stop skating
+
+A review of the animation set against the clips the game actually loads, on
+the question "are these smooth and natural, and do punches land with collision
+detection". Six defects, all measured, all closed on the numbers rather than on
+a description. New tooling under `game/tools/` reproduces every figure below.
+
+### Punches had no collision detection at all
+
+`_in_range(STRIKE_HIT_RANGE)` was the whole hit test: one 1.15 m sphere between
+the two capsule **origins**, shared by every strike, evaluated on each tick of
+the declared active window. It never asked where the limb was. Three
+consequences, each measured on `strike_clips.tres`:
+
+- **One range for four limbs.** The striking limb ends up 0.42 / 0.55 / 0.82 /
+  0.82 m in front of the origin for jab / cross / kick / heavy kick. A single
+  1.15 m test landed the jab through a third of a metre of clear air and cut
+  both kicks short of where the boot actually was. The 1.15 was honest once —
+  0.76 m of fist plus the 0.4 capsule — but it was measured on a `Punch_Jab`
+  clip that no longer exists.
+- **No direction.** `_turn_toward_opponent()` runs only in the idle branch of
+  `_process_free_movement()`, and nothing updated facing during `STRIKE`, so a
+  punch thrown while strafing away connected.
+- **No height.** A boot to the midsection and a jab to the jaw tested
+  identically against the opponent's origin.
+
+`MoveDef` now carries a measured `contact_offset` and `contact_radius`, baked
+by `tools/anim/measure_contact_offsets.gd`. `_strike_reaches()` places that
+sphere in the attacker's own space and intersects it with the opponent's
+capsule, so facing and height fall out of the geometry rather than needing
+their own gates. It is arithmetic on two transforms — **not** a Jolt query, and
+deliberately not a read of the live skeleton, either of which would put
+physics or per-model retargeting into gameplay state and break replay hashes.
+Moves with no authored volume (grapples, paired moves, timed stubs) keep the
+proximity test, which is the right one for them: `GrappleRig` places both
+wrestlers itself.
+
+Measured reaches now: jab 1.17 m, cross 1.07, kick 1.37, heavy kick 1.35.
+
+### The jab was rotating away from its own punching arm
+
+The worst clip in the set, and the cause was one sign. Its contact pose twisted
+the spine **-16°**, which is the direction that drives the *right* shoulder
+forward — on a left-hand jab. That put the left shoulder at fwd **-0.119**,
+behind the body's origin, so the furthest the fist could reach was 0.42 m while
+the pose table asked for 0.56. That target is 0.685 m from a shoulder with
+0.544 m of arm, and `_two_bone_ik` clamps to `(l1+l2)*0.995` and solves along
+the direction, so the truncation ate almost the whole forward component.
+
+Frames 5 and 8 both truncated onto the same reach sphere and collapsed into
+nearly the same pose, which moved the clip's actual peak to tick 18 — six ticks
+past the window `strike_jab.tres` applies damage in. What shipped was 7 cm of
+ooze at 2.83 m/s where the cross manages 7.20.
+
+The twist is positive through contact now and the clavicle protracts, which is
+what a real jab does with its shoulder. Measured after: **0.305 m of travel at
+5.89 m/s, peaking on the declared contact tick.**
+
+The cross is what made this diagnosable rather than guessable: every one of its
+targets sits inside the reach sphere, and it measured perfectly through the
+identical code path.
+
+`tools/blender/reach_audit.py` now reports this class of defect. It finds **174
+of 720 limb targets still beyond reach** across the other clips — worst
+`Getup_Rise` f22 at 0.56 m short, then `Finisher_Drive`, `Move_Exec_Impact` and
+`Pin_Cover`. Those are not fixed here, but they are no longer invisible.
+
+### The locomotion cycles skated 6.6x and 7.3x
+
+Skate is a **rate** error during the planted phase, not a stride-length one: a
+run covers most of its ground in flight, where nothing is planted and nothing
+is constrained. Comparing stride against `speed * cycle_time` condemns every
+correct run cycle ever authored. What matters is backward travel divided by
+time planted:
+
+| | delivered | required | |
+| --- | --- | --- | --- |
+| `walk_stalk` | 0.42 m/s | `MOVE_SPEED` 3.5 | 6.6x |
+| `run_drive` | 2.01 m/s | `RUN_SPEED` 7.0 | 7.3x |
+
+Contact *duration* is the free variable, not stride: the leg caps a planted
+foot at about ±0.30 m either side of the hip, so a faster gait is bought with a
+shorter, harder contact and more air — which is what sprinting is. Both cycles
+are now generated by `_gait()` from the speed they are played at rather than
+tabled by hand, because the invariant cannot be held by hand. Measured after:
+**walk 3.48 m/s, run 6.87/6.88 m/s.** No gameplay constant changed.
+
+This also closed the loop seam by construction. `run_drive` was popping its
+left forearm **0.132 m every 0.667 s** because frame 0 named elbow poles and
+the closing frame did not, so the IK solved the same hand target two ways. The
+generator computes the closing frame identically to frame 0.
+
+### Contact frames disagreed with the MoveDefs
+
+Three of four strikes applied damage on a tick when the limb was somewhere
+else. `startup_frames` now equals each clip's measured peak, with
+`total_frames()` held constant so no clip outruns the state that plays it:
+
+| | was | now |
+| --- | --- | --- |
+| `strike_jab` | 9, peak at 18 | 10 |
+| `strike_kick` | 8, peak at 14 | 14 |
+| `strike_kick_heavy` | 12, peak at 11 | 11 |
+
+`strike_cross` was already aligned and is unchanged.
+
+### One left open, deliberately
+
+The running attacks have the same misalignment — `running_clothesline`'s arm
+peaks at tick 30 and both `running_attack_*.tres` apply damage at 18 — but the
+fix is NOT the one applied above, and the suite is what said so. That 18 is
+`0.300s`, measured off reference footage (`timings.md`: windup 230.333s,
+contact 230.633s), and `test_strike_and_getup_timings.gd` pins it there along
+with the 0.73–0.80s recovery. ARCHITECTURE.md's reference-driven tuning rule
+makes `gauntlet/refs/` the authority, so the MoveDef is correct and the CLIP is
+what disagrees with it.
+
+Closing it properly means retiming `running_clothesline` so the arm peaks on
+tick 18, which is a clip-authoring change with its own measurement, not a
+number to move here. Its contact offset is therefore baked at tick 18 where
+damage actually lands — the limb is 0.382 m out rather than the 0.500 m it
+reaches later — giving the move a 0.90 m range, which is honest about the
+clip as it stands.
+
+### What was already right
+
+Worth recording, because it is most of the pipeline: Bezier with
+`AUTO_CLAMPED` handles throughout, the bake is byte-deterministic, loop flags
+are correct in the baked library, `idle_ready` and `tie_up_collar` plant their
+feet to within 1–4 cm, hit reactions already route head-vs-torso by damage, and
+the 6-tick xfade on a physics-clocked `AnimationTree` is sound.
+
+### New tooling
+
+- `tools/anim/measure_contact_offsets.gd` — bakes each strike's contact point.
+  Re-run after **any** change to a clip or to `startup_frames`.
+- `tools/anim/gait_audit.gd` — planted-foot rate and loop seams. Fails on
+  skate.
+- `tools/blender/reach_audit.py` — pose targets the rig cannot reach;
+  `--sweep` reports the shoulder geometry that decides a punch's extension.
+- `tests/test_strike_contact_volume.gd` — pins the consequences: per-move
+  range, no landing backwards, height is read, grapples keep the old test.
+
+### The trap that cost the most time here
+
+A strike's hit rate is **not** a measure of whether the contact test is right.
+`strike_connect_probe.tscn` reports the *closest approach* during a strike, not
+the gap at the tick contact was tested, so its miss distances cannot be read as
+"the fist was this far away and still missed". The test that settles it is the
+geometric one, at known transforms — which is what `test_strike_contact_volume`
+is for.
+
+## Round: they were fighting side-on the whole time
+
+Follow-on from the strike-contact round above, and the thing it found is bigger
+than anything in it.
+
+### The regression I shipped
+
+Making contact per-move broke the AI's spacing, and I did not notice because I
+read the wrong number. `WrestlerAI` holds `circle_distance` 1.10 m and gated
+strikes on `STRIKE_HIT_RANGE` 1.15 — constants chosen when that single number
+was every strike's reach. Once each move reached only as far as its own limb,
+the cross topped out at **1.07 m**: the AI stood at 1.10 and every cross it drew
+missed by three centimetres.
+
+Fixed in the clip rather than the standoff, because a rear-hand cross thrown off
+a rotating torso is the *longer* punch: `Strike_Forearm`'s contact now drives
+and protracts the right shoulder the way the jab does mirrored, and reaches
+0.679 m against the jab's 0.655. The AI gates on
+`WrestlerController.shortest_strike_reach()` — the shortest move in its own pool,
+since `_pick_tier_move()` chooses, not the AI. `test_ai_spacing.gd` keeps the
+band and the measured reaches agreeing.
+
+That took the hit rate from 24.6% to 27.8%. Which was the clue that the
+diagnosis was wrong.
+
+### The actual reason strikes did not connect
+
+`strike_connect_probe` reported miss distances of 0.77–1.15 m, and I read them
+as spacing. They are the **closest approach at any point during the strike**,
+not the gap on the tick contact is tested — a completely different quantity. The
+probe now measures the contact tick itself, and splits misses by cause:
+
+```
+misses by cause, measured ON the contact tick:
+  out of reach  1      off to the side 49
+  gap beyond this move's own reach: median -0.36 m
+  angle off the attacker's facing:  median 97 deg
+```
+
+**49 of 50 misses were sideways.** The opponent was a comfortable 0.36 m *inside*
+reach; the attacker was pointing 97 degrees away from him.
+
+`_process_free_movement()` called `look_at()` on the input direction. For a
+wrestler circling an opponent that direction is tangential — so he walked the
+circle facing the way he was going, shoulder to the other man, for the whole
+match. A wrestler circling an opponent *strafes*: eyes, guard and hips on him,
+feet carrying him sideways.
+
+The old hit test hid this completely. A 1.15 m sphere between two capsule
+origins does not care which way anyone points, so two men could fight an entire
+match side-on and land everything. Directional contact is what made it visible.
+
+`_turn_toward_opponent()` during startup — added in the previous round — could
+not dig out of it either: `TURN_RATE_PER_TICK` is 0.12 rad/tick and two men
+circling opposite ways swing the bearing between them by ~0.11 rad/tick, so an
+attacker entering `STRIKE` 90 degrees off recovers about 8 degrees across a
+whole jab. It is the backstop; facing while circling is the fix.
+
+Inside `FACE_OPPONENT_RANGE` (2.5 m — `WrestlerAI.run_engage_distance`, this
+project's existing line between a fight and a traversal) a moving wrestler now
+faces his opponent. Outside it he looks where he is running.
+
+| | before | after |
+| --- | --- | --- |
+| strikes landed | 24.6% | **70.7%** |
+| missed off to the side | 49 of 50 | **2 of 3** |
+| median miss angle | 97° | 63° |
+
+Strikes thrown per match fell from 115 to 41, which is the healthy half of it:
+the match now ends because someone gets hurt.
+
+### Two lessons worth keeping
+
+**A probe's number means exactly what it measures.** "Median miss 1.00 m" sent
+me looking at spacing for two rounds. The probe reports the contact tick now,
+and says in its own output which quantity is which.
+
+**A loose gate hides everything behind it.** Every defect in both rounds was
+invisible while contact was a proximity sphere — wrong reach, wrong contact
+frame, and a match fought side-on all resolved identically. Tightening the gate
+did not cause these; it revealed them.
+
+### Documentation
+
+`gauntlet/anchor/MATCH_FLOW.md` is new: the intended shape of a match — grapple,
+strikes, signature, pinfall — what decides each contest, what is deliberately
+absent (reversals, submissions, a neutral game) and why, and a table of the
+cross-file invariants with the test or tool that enforces each. It owns no
+numbers; every quantity is quoted from the file that owns it.
+
+`FEEL_BAR.md` is rewritten. Its priority #1 was reversal windows — a mechanic
+that had been removed, judged against a number `timings.md` still lists as
+`(pending)`. Every bar now names what settles it, because a bar with no enforcer
+cannot be judged, only asserted, which is exactly how that entry survived.
+
+## Round: rendering a frame, which found three things measurement had passed
+
+Every claim in the two rounds above was closed on forward kinematics and
+headless probes, with the caveat recorded each time that no frame had been
+looked at. Looking at one found three defects, all of which the numbers had
+passed cleanly.
+
+Rendered through `tools/probe/clip_shot.tscn` on **forward_plus** (software
+Vulkan via lavapipe, so `software_rasterised` applies and no performance claim
+is made from it), plus `tools/probe/arena_shot.tscn` for the in-match frame.
+
+### The run had its arms tucked together at the moment a foot landed
+
+`_gait()` phased the arm and hip swing on `sin(2*pi*phase)`. The contact
+windows start at phase 0 and 0.5 — exactly where sine is zero — so the arms and
+hips were at their NEUTRAL midpoint on both contact frames and at their extremes
+mid-flight, which is precisely backwards. It rendered as a man jogging with his
+guard up rather than driving. Now `cos`.
+
+The planted-foot rate was correct throughout, before and after. No measurement
+in the project could have caught this.
+
+### The wrestlers were walking on points
+
+`foot_*` places the ankle and says nothing about which way the boot points, so
+the foot inherited the shin's rotation: a leg swung out in front carried the toe
+down with it. Lengthening the stride to fix the skate made a pre-existing fault
+much more visible. `_gait()` now drives `ankle_*` through a heel-strike →
+toe-off roll, and the rig's rest pose stands with its soles flat, so 0 is flat
+regardless of the leg above.
+
+### The sprint was leaning backwards
+
+`Run_Drive` carried `spine=(24, ...)` under a comment reading "torso drives
+forward at 24 degrees". Measured, spine lean is negative-forward: at -18 the
+head sits 0.159 m in front of the pelvis, at +24 it sits 0.107 m **behind** it.
+The clip has been reclining since it was authored and the comment has been wrong
+just as long. Now -18, with the head countering the lean and the arm swing
+lowered to match (at the old height the lead fist ended up covering the face
+once the torso came forward).
+
+`Walk_Stalk` had the same sign and is now upright. Note `STANCE` still carries
++12 — a slight backward lean every clip in the set inherits. Correcting that
+moves all 29 and is its own job.
+
+### What the frame confirmed
+
+The facing fix is visible: `arena_shot` puts the two wrestlers squared up
+chest-on at 1.13 m, which is what `_turn_toward_opponent()` while circling was
+for. The jab reads as a punch — guard closed at rest, arm driven out and torso
+rotated at contact.
+
+### A pre-existing bug this turned up
+
+`tools/capture/run_capture.sh` **hangs on the shipped default seed.**
+`match.tscn` ships `match_seed = 1`, and seed 1 produces a match where the two
+never throw a strike at all — confirmed at 0 thrown over a 20000-tick budget.
+The recording step therefore never terminates, so the whole capture/evidence
+path is unreachable out of the box.
+
+Verified pre-existing, not caused by this work: the same seed measures 0 thrown
+on `2b75477`, the commit before any of it, in a clean worktree. Seeds 2 and 3
+finish normally. Not fixed here — it is an AI/reachability bug, not an animation
+one — but it is the reason no capture in these rounds went through the project's
+own harness.
+
+### The lesson, again
+
+Both previous rounds ended by noting that no frame had been looked at. Three
+defects were sitting in the gap that note described, and two of them
+(`sin` vs `cos`, and a torso leaning the wrong way for years) are things a
+single rendered frame answers instantly and no amount of forward kinematics
+ever will. The project's own rule already says this: close appearance claims on
+pixels. These rounds are what it costs not to.
+
+## Round: the bowl has people in it
+
+The arena's crowd, modelled in Blender and animated by a vertex shader.
+
+### It had one, and it was two boxes
+
+A crowd was removed in 7b91d0e — impostors, a 0.42 x 0.58 x 0.30 torso with a
+0.21 cube on top, one block per seat. It went because `gauntlet/refs/arena.md`
+measures an **empty** bowl, and the seats were rebuilt from a rail into ~3,500
+individual seats so an empty bowl would read.
+
+`gauntlet/refs/lighting.md` now measures four **full** ones. The two reference
+sets disagree about whether this building has people in it, and this follows
+the second: measured across the art shotlist, the empty bowl put 3.1% of
+`crowd_bank` below 0.01 relative luminance against the references' 38–50%, and
+an empty stand is most of that gap.
+
+### What is modelled
+
+`tools/blender/crowd.py`, built and exported with the rest of the hall by
+`tools/blender/build_arena.sh`. Nine boxes a person — hips, torso, head, two
+arms, two thighs, two shins — posed sitting down, every one a different size,
+leaning a different way, with its arms somewhere else. Four arm postures
+(hanging, forearms on knees, folded, both up), a per-person lean, knee spread,
+and scale from 0.88 to 1.08. 7% are standing, because a row where every head is
+at one height is the most obviously generated thing a crowd can do.
+
+Shirt colour and skin tone come from two palettes, jittered per person. The
+shirt palette is recovered from the removed crowd, which sized it against a
+measurement: the reference crowd sits at relative luminance 0.014, so a bright
+crowd is not closer to the reference, it is further from it. Variance is the
+point, not brightness.
+
+Placement walks the same curve `build_seat_row` does — same pitch, same aisle
+and stage-gap exclusions — at 0.86 fill.
+
+### Budget, which is in vertices and not triangles
+
+A flat-shaded box cannot share a vertex between two faces, so a nine-box figure
+is 216 vertices rather than 72. The whole lower tier at that detail exported a
+**52 MB** .glb against the hall's 5.6. Two changes brought it to 18 MB:
+
+- **Smooth shading on the crowd only.** Cuts the vertex split, and a softly
+  shaded figure at 20m reads as a person where a faceted one reads as a box.
+- **LOD by row, not by tier.** The first four rows get the nine-box figure;
+  everything behind gets a four-box one that keeps the head-neck-shoulder
+  silhouette and the break between torso and lap, and drops the limbs.
+
+840 near figures, 4,874 far, 70 standing. 455k triangles for the hall, up from
+102k. That is a real cost and the seats underneath it — 80k triangles of them —
+are now mostly hidden, which is the trade 7b91d0e made in the other direction.
+
+### Animation
+
+A vertex shader, which is what the old impostors used and the reason
+ARCHITECTURE.md's cosmetic-motion clause is worded as it is: it runs on the
+render thread, reads only TIME and the mesh's own attributes, writes nothing
+back, and so cannot touch gameplay state or move a replay's end-state hash.
+Thousands of skinned spectators is not an option that runs.
+
+The bob is scaled by height above the seat so feet stay planted and heads move
+most — a figure translated bodily reads as a hovering cutout — with a lateral
+sway on a different period so the bowl does not pulse as one organism.
+
+**The phase is a UV, and that took two attempts.** The old shader keyed off
+`INSTANCE_ID`, which worked while the crowd was a MultiMesh; baked into the
+bowl's mesh every figure shares one id, and the whole stand would bob in
+unison. Colour alpha was the obvious place to put a per-figure phase and it
+does not survive: rgb arrives intact, every alpha comes back 1.0, because
+nothing in Blender's exporter or Godot's importer preserves an alpha no
+material reads as transparency. A UV channel carries it through.
+
+That failure is silent — the shirts still vary, so the bowl looks right and
+stands still — which is why `test_arena_crowd.gd` asserts the phase spread
+directly rather than trusting the export.
+
+### Measured
+
+`crowd_bank`, relative luminance below 0.01: **3.1% → 11.7%**. The references
+are 38–50%, so this is a step, not an arrival: the stands are still
+self-illuminated rather than lit (see `lighting.md`'s ablation), which is the
+next item and the one that governs.
+
+372 tests pass. The bowl rebuilds byte-identical across two runs.
+
+## Round: the ringside chairs have people in them
+
+The bowl got its crowd last round. The seats nearest the camera — the folding
+chairs on the floor, between the barricade and the ring — were still empty,
+and there was a half-finished slice in the working tree meant to fill them.
+
+### Instanced, not baked
+
+The bowl's crowd is baked into `arena_bowl.glb` because twenty rows on a curve
+means no two people are alike. The floor is the opposite problem:
+`arena_builder.gd` already computes a transform for every folding chair
+(`_floor_seat_row`), so the fans want to be *instanced* against transforms
+that exist. A MultiMesh draws one mesh, so the variety moves: six poses
+(`tools/blender/floor_crowd.py`) times per-instance size, yaw and shirt.
+
+The figures are built facing `+Z`, the frame the chair prop is modelled in, so
+they drop onto a chair's transform untouched, lifted by `CHAIR_SEAT_HEIGHT`
+onto the seat pan. The shader took a `phase_source` parameter because a
+MultiMesh instance cannot vary `UV.x`; ringside uses `INSTANCE_ID × φ`.
+
+### Three things were wrong, and only one of them was visible in the code
+
+**The build script did not build the model.** `floor_crowd.py`'s docstring
+opened by claiming `build_arena.sh` built it. It built the bowl and `exec`'d.
+A committed asset with no reproducible build path is one nobody can safely
+change, so the script was extended rather than the docstring corrected.
+
+Extending it exposed why nobody had: *every* exporter here segfaults on exit
+under the `bpy` module, after the `.glb` is written and closed. Under
+`set -euo pipefail` that aborts a build after its first model — which means
+`build_venue.sh all` had been silently building one of four for anyone
+without a `blender` on PATH. `tools/blender/bpy_exit.py` leaves via `os._exit`
+once the export has returned, so a real crash still surfaces as one.
+
+**The fans rendered as pale white blocks.** Only the frame showed this. The
+palette is deliberately written twice — `CROWD_SHIRTS` in GDScript, the same
+numbers in `crowd.py` — but the two halves do not arrive the same way.
+`crowd.py`'s values go through the glTF importer, which decodes sRGB (0.72
+arrives in the mesh as 0.479). A MultiMesh instance colour gets no decode: it
+reaches `COLOR` exactly as written, so a linear 0.21 displays around 0.5. Same
+palette, two colour spaces, and the ringside crowd came out half a stop bright
+in the seats closest to the camera. `_crowd_shirt` now returns
+`.srgb_to_linear()`.
+
+**The fans had no faces.** The figures are authored white for cloth and a
+darker grey for skin, and none of it was reaching the game.
+`floor_crowd.py` never wired a `ShaderNodeVertexColor` or passed
+`export_vertex_color="ACTIVE"`, so glTF wrote the layer as `COLOR_1` — a
+secondary attribute Godot's importer ignores. Every fan came back one flat
+value. `arena_bowl.py` has had the fix since the bowl's crowd shipped; this
+is the same two lines.
+
+That last one is the failure `test_arena_crowd.gd`'s header warned about, in a
+model written after the warning. It is invisible in Blender, invisible in the
+exporter's log, and nearly invisible on a frame. `test_floor_crowd.gd` asserts
+it directly: two distinct values per figure, the shirt at 1.0 and the skin
+below it. On the model as it shipped, that test fails.
+
+### Measured
+
+378 tests pass (372 before, plus six). `floor_crowd.glb` rebuilds
+byte-identical across two runs, and the script's restructuring leaves the other
+four models byte-identical too.
+
+`contact_probe --seeds 1,2,3` returns 985/1931/2494 ticks with the crowd and
+985/1931/2494 without it — checked by stashing the slice, not by assuming.
+Arena geometry does not reach the simulation.
+
+
+## Round: match the ring to the AEW references
+
+Five changes, all read off the owner's reference photographs, and one of them
+moves a measured number.
+
+### The apron edge is a padded roll, not a lip
+
+The edge was a flat 0.2m band in dark neutral grey, described in the code as
+"the shadowed lip between a white mat and a dark skirt". The reference has no
+such lip. The apron edge is a fat padded bolster; the skirt's own printed
+vinyl wraps over it, and the corner chevron runs up the skirt and across the
+roll. Flat and dark, it read as a hard black line drawn round the ring.
+
+It is a half-round of radius 0.10 whose axis sits one radius inboard of the
+skirt plane, so its widest point is flush with the skirt and its crown stands
+proud of the skirt's top edge — which is the thing that tells a padded edge
+from a folded one. Mapping u 0..1 per side puts the graphic's chevrons on the
+corners, exactly as they land on the skirt below. A flat light strip between
+the mat edge and the roll is the apron a wrestler stands on.
+
+Both new quads came out wound backwards on the first try and rendered as
+nothing at all; the normals were worked by hand from the cross products rather
+than guessed at.
+
+### Two black bars, and where they came from
+
+Reported from a frame after the roll landed. `build_apron` put a dark box
+0.17 deep centred on the skirt plane, so its outer face sat at 3.285 — further
+out than the roll (3.20) and the skirt (3.20) both. It drew in front of the
+new roll as a black band running the whole way round the ring.
+
+It is deleted rather than moved. The roll is the apron edge now and does the
+job that lip was standing in for. Its other stated purpose — keeping the strip
+dark for VISUAL_BAR.md's `void_fraction` floor — is unaffected in the only
+direction that matters: removing a lit surface can let more dark through, and
+the floor is a minimum.
+
+### The rope connectors are on the ropes
+
+Two earlier goes were wrong in opposite directions. The sleeve started at 0.115
+pointing inward from the post face, which was right for a bare corner and broke
+out through the pad's rounded edge once there was a pad; shortening it to 0.055
+buried it completely. The reference shows what neither could: a dark clamp on
+the white rope itself, at the point it meets the cushion. So the fitting moved
+onto the rope, straddling the line where the pad's edge crosses it.
+
+### The steps are silver
+
+Raising the tint from 0.62 to 0.80 did nothing visible. `DiamondPlate009`'s
+colour map is a warm rusted steel and it MULTIPLIES, so the steps kept
+rendering a muddy tan whatever the tint said. `albedo_map: false` is what
+made them silver — the case the library's own `SPEC_DEFAULTS` note describes,
+a surface whose tint is the point. The plate's normal and roughness maps still
+carry the grid the photograph shows.
+
+### The canvas, and the anchor it moves
+
+The owner supplied the AEW mat artwork; it is mapped 1:1 over the square.
+
+**It takes the mat off its exposure anchor, and this is not hidden.** Measured
+on a clean patch of mat in `wide_broadcast`, relative luminance goes from
+0.443 mean / 0.466 median to 0.322 / 0.326. The old value sat essentially dead
+on the reference 0.46 that an earlier round solved ring exposure against; the
+new one is about 30% below it.
+
+Nothing in the suite pins it — 381 tests still pass — because the mat value is
+measured by the capture gate, not by gdUnit. The artwork is applied as
+supplied rather than quietly brightened to hold the anchor: lifting someone's
+supplied art to satisfy a number is a decision for whoever owns the look, not
+a silent correction. Re-solving ring exposure against the new canvas is the
+fix when that call is made.
+
+### Checked and not changed
+
+The steel steps' POSITION. The reference shows them butted hard against a
+corner post, which is where they already stood.
+
+381 tests pass. `ring.glb` rebuilds byte-identical, and
+`contact_probe --seeds 1,2,3` is unchanged at 985/1931/2494.
+
+
+## Round: the post behind the pads, and the connector between them
+
+Both reported from a frame, and the first is a mistake this file has now made
+three times in the same corner.
+
+### The post was coming through the cushions
+
+The pad clears the post on the corner diagonal -- that relationship was
+already reasoned out and already asserted. The assertion was `pad_inner <
+post_inner`, which passed: 4.111 against 4.133, 2.2cm of clearance.
+
+The pads carry a 4.5cm bevel. A bevel pulls the front of a box BACK by up to
+its own width, so across most of the cushion's face the post's inner corner
+stood through it -- a faint chevron on every pad, visible from inside the ring
+and invisible to the test.
+
+This is the third time the same shape of error has been made at this corner:
+a fitting that clears a pad's flat face and shows at its rounded edge. The
+first two were the sleeve at 0.115 and then at 0.055. So the number moved
+where it can be tested: `TURNBUCKLE_PAD_BEVEL` now lives in `ring_builder.gd`
+with the clearance it eats into, rather than in `ring.py` with the other bevel
+widths, and the test asserts `clearance > bevel` instead of `clearance > 0`.
+The pad moved inboard, 3.013 -> 2.979, taking the
+clearance to 7.0cm; at the old 3.013 the strengthened test fails.
+
+### There was no connector, because nothing modelled one
+
+The reference's corner is not three plain cushions. Every rope ends in a flat
+steel bracket with a row of bolt holes, bolted through the pad into the post,
+and it is the only light-coloured thing in a corner otherwise made entirely of
+matte black -- which is exactly why its absence read as "featureless" rather
+than as "missing part".
+
+Twelve plates, one per rope height per corner, centred ON the pad's inner face
+so half the depth is buried and half stands proud: a plate bolted through a
+cushion, not a box parked against one. They take the steps' bare steel rather
+than the post's paint. `test_every_pad_carries_a_connector_plate` pins the
+"stands proud" half, because a plate pushed fully inside the cushion is
+invisible and would pass any test that only counted geometry.
+
+*(Superseded -- see "the white blocks come off the turnbuckles" below. The
+plates rendered as white blocks and were removed; this round is kept as the
+record of why they were added.)*
+
+The rope clamps from the previous round stay: in the reference those are the
+black sleeving on the rope either side of the bracket, and they are a
+different part doing a different job.
+
+
+## Round: the AEW mark on the turnbuckle pads
+
+The owner supplied the pad artwork. Placing it took four goes, and three of
+the four failures were invisible in the sense that mattered — nothing was
+missing, it was just wrong.
+
+### A decal, not a mapping
+
+The pads are bevelled boxes built through `venue.py`'s `_beveled`, and
+anything that goes through `finish()`'s `projected` set gets a world-metre
+planar projection: right for tiling cloth, useless for landing one logo the
+right way up, once, on one face of twelve boxes. So the artwork is a flat quad
+with authored UVs sat 4mm proud of each cushion, and the cushion's rounded
+silhouette is left alone behind it.
+
+The quad is inset from the pad's full size by the bevel on each side, so it
+lands on the flat of the face rather than on the rounding. Those two numbers
+are literals rather than `WIDTH - 2 * BEVEL`, because `venue.py` parses its
+constants out of `ring_builder.gd` and takes plain numbers only — an
+expression there stops the ring exporting at all. A test holds them to what
+they mean.
+
+### Three ways to get a quad wrong
+
+**The projection overwrote the UVs.** `TurnbuckleFaces` is excluded from
+`projected` now.
+
+**`recalc_face_normals` reversed the winding.** It finds the outside of a
+closed solid; each of these quads is an open sheet and its own connected
+component, so it had nothing to go on. `finish()` already had `face_toward`
+for this, and it cannot help here: it takes one direction per part, and twelve
+quads on four diagonals have area-weighted normals that sum to nothing. So
+`finish()` grew a third escape, `keep_winding`, for a part whose facing is
+authored.
+
+**The authored winding was itself half wrong.** The quads were built from the
+same `(-sx, 0, sz)` tangent the pads and connectors use. Either perpendicular
+will do for placing a symmetric box, but a quad's winding is a cross product
+and its sign follows the parity of `sx*sz` — so two corners of four came out
+facing the crowd. `(-sz, 0, sx)` is parity-independent.
+
+None of the three rendered as an absence. The material is two-sided, so a
+backwards quad shows its logo MIRRORED — glaring on a letterform, and on any
+tiling texture something that would never have been caught. That is why
+`test_every_pad_artwork_quad_faces_the_mat` measures the shipped normals
+rather than trusting the frame.
+
+### The connectors moved twice
+
+They were centred on the pad face, which was a fair reading of the reference
+until the face had artwork on it — a steel plate parked over the middle of the
+logo. The reference puts the bracket at the rope end anyway. The first move
+kept them 0.20 wide at +/-0.15, which against a 0.43 face left only a sliver
+of logo showing through the middle; 0.10 at +/-0.205 puts them on the
+cushion's ends where the ropes enter.
+
+
+## Round: re-solving the exposure anchor
+
+The mat is an exposure ANCHOR, not a bar: VISUAL_BAR.md wants it at 0.43-0.49
+relative luminance, because the wrestler figures are absolute luminances and
+comparing those to a broadcast still only means anything once the brightest
+surface both share is matched. The supplied AEW canvas has a field of 0.636 in
+sRGB where the old one was near-white, so the same rig rendered a much darker
+mat and the anchor went with it.
+
+### Solved on top_energy, empirically
+
+`arena_lighting.gd` names the lever itself: straight-down top light lands on a
+horizontal mat far more than on a standing figure, so it buys mat luminance
+without flattening the mat<->wrestler gap the way the key or the rim would.
+Measured with `tools/refs/measure_silhouette.py` on forward_plus, which is the
+only renderer these numbers mean anything on:
+
+| top_energy | mat | mat<->A | mat<->B |
+| --- | --- | --- | --- |
+| 5.0 (was) | 0.252 | 0.091 | 0.103 |
+| 12.0 | 0.330 | 0.132 | 0.160 |
+| 18.0 | 0.387 | 0.160 | 0.201 |
+| **24.0** | **0.437** | 0.185 | 0.236 |
+
+Solved empirically rather than by arithmetic, because the curve compresses as
+it climbs the filmic shoulder: +0.078 for the first seven units, +0.050 for
+the last six.
+
+**The mat was already below its anchor before the canvas landed.** 0.252
+against a 0.46 that an earlier round claimed to have reached. So this round
+fixes more than the texture change caused, and the honest reading of the
+earlier "mat reaches the reference 0.46" is that it did not survive whatever
+came after it.
+
+### What the sweep corrected in the file's own comment
+
+`top_energy`'s comment said a standing torso's N.L under a downlight is "near
+0". That is true of a chest and false of a wrestler: over the sweep the mat
+gained 0.185 and wrestler A gained 0.092, so a figure takes about HALF the
+mat's share of straight-down light. Shoulders, heads and forearms are
+horizontal too.
+
+That is why the gaps improve a long way and still do not reach 0.24-0.31:
+closing them on this lever alone would need the mat near 0.55, outside its own
+band. They are a genuine second problem needing a second lever (rim down, or
+the wrestler materials), and they were failing before this round at 0.091 and
+0.103 -- this leaves them at 0.185 and 0.236, roughly double.
+
+### Checked, not assumed
+
+`void_fraction` is 0.000 before AND after, so the brightening does not breach
+VISUAL_BAR.md's 0.010-0.066 floor -- it was already outside it, which is a
+pre-existing condition this round neither caused nor fixed. Frame sd rises
+0.162 -> 0.238.
+
+`measure_look`'s bright>0.5 goes 2.30% -> 15.56% against references of
+1.46-6.12%. That is framing, not exposure: the silhouette shot is tight on the
+ring so the mat is a fifth of its pixels, and a mat correctly sitting at 0.437
+puts much of that fifth over 0.5. The reference frames it is compared against
+are wide bowl shots that are mostly dark crowd. It is recorded here rather
+than treated as a pass or a failure, because the two framings are not
+comparable and measure_look.py's own docstring says so.
+
+
+## Round: all four figures inside the band, on the renderer that ships
+
+VISUAL_BAR.md's four figures are, for the first time, all inside their
+reference bands on `forward_plus`:
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.437 | **0.436** | 0.43-0.49 |
+| mat <-> wrestler A | 0.185 | **0.287** | 0.24-0.31 |
+| mat <-> wrestler B | 0.236 | **0.253** | 0.24-0.31 |
+| wrestler <-> wrestler | 0.051 | **0.034** | 0.00-0.07 |
+
+The earlier "all four inside" result, in the round that built the harness, was
+measured on `gl_compatibility` -- a renderer `project.godot` does not ship.
+This one is on the shipping pipeline.
+
+### The planned lever did nothing
+
+The round was planned around `rim_energy`, on the strength of its own comment:
+*"rim light lands on the wrestlers, and every unit of it CLOSES the 0.24-0.31
+gap the bar wants."* That is a sound argument about light, and it is not what
+this rig does. Holding everything else fixed:
+
+| rim | mat | mat<->A | mat<->B |
+| --- | --- | --- | --- |
+| 2.2 | 0.437 | 0.185 | 0.236 |
+| 1.2 | 0.435 | 0.184 | 0.235 |
+| 0.6 | 0.433 | 0.185 | 0.234 |
+
+Cutting it by 73% moved the gaps by 0.001. The fixtures are aimed across the
+ring from behind, so at the spawn standoff they rake the figures at a grazing
+angle and barely reach a front-facing silhouette. **So rim was left at 2.2.**
+Spending the cool back light that separates a figure from a dark crowd, for
+0.001 of a gap, would be paying for nothing. The comment is corrected in place
+rather than deleted, because it sent this round down the wrong path first.
+
+### It was never a lighting problem. It was one man's shorts.
+
+Converted to absolute luminance, the failure was an asymmetry, not an offset:
+WrestlerA's `attire_body` was a bright blue at 0.587 relative luminance against
+WrestlerB's 0.212 -- **2.8x** -- and A was the figure that was furthest out.
+Scaling A's attire and accent uniformly by 0.375 (which holds the hue, and so
+`MIN_HUE_SEPARATION`) moved A from 0.185 to 0.286 on its own.
+
+### The second dead wire
+
+B was then 0.005 short, so the same treatment was applied to his
+`attire_body` -- and the rendered figure did not move by a thousandth.
+
+`WrestlerAttire.variant2_body()` dresses **every** one of its pieces from a
+fixed colour (`DENIM`, `BOOT_BLACK`, `SHOE_WHITE`, `STEEL`, `WAIST_*`) or from
+the accent. Not one reads `attire_body`. WrestlerB is `body_variant = 2`, so
+his `attire_body` has never reached the screen. It is left at its original
+value in `match.tscn` with a comment saying so, rather than carrying a
+plausible-looking number that does nothing.
+
+He was darkened on `DENIM` instead -- his shorts, the only surface on him
+large and bright enough to matter at 0.449 -- scaled by 0.6. That took B to
+0.253 and, because B rendered BRIGHTER than A, pulled A<->B *down* from 0.051
+to 0.034 rather than widening it.
+
+### A test that is now measuring a dead value
+
+`test_the_two_wrestlers_separate_from_each_other_by_hue` asserts a hue gap
+between the two `attire_body` colours. For WrestlerB that value does not reach
+the screen, so for him the test pins a number with no rendered consequence --
+the same failure mode as the albedo gate this suite already removed, where
+"a gate that reads a different quantity from the one it names is not a gate".
+It is recorded here rather than quietly rewritten, because deciding what that
+test should assert instead is a design question, not a cleanup.
+
+**Worth looking at before the next art pass:** with A in dark navy and B in
+dark denim, the two men now read closer in HUE than they did. The bar wants
+them close in VALUE and they are (0.034). They still separate by physique,
+silhouette and B's green accents -- but the old bright-blue-versus-red
+contrast is gone, and that was never what the bar was asking for.
+
+### Checked, not assumed
+
+`void_fraction` 0.000 before and after, unchanged. Whole-frame distribution
+essentially unmoved (bright>0.5 15.56% -> 15.32%, p50 0.0294 -> 0.0292).
+The frame was looked at: both men separate cleanly from the mat and neither
+is muddy.
+
+
+## Round: the white blocks come off the turnbuckles
+
+The connector plates added a few rounds ago (see "There was no connector,
+because nothing modelled one") are removed. `tools/blender/ring.py` no longer
+builds `TurnbuckleConnectors`, `ring_builder.gd` no longer carries the
+`CONNECTOR_*` constants or the material binding, and `ring.glb` is rebuilt at
+8360 triangles.
+
+### Why the part that was added on purpose came off again
+
+The reasoning that added them still reads correctly and still produced the
+wrong pixels. The reference's bracket is legible because it is a plate **with
+bolt holes** catching a highlight across a matte corner; the shape of it is
+what makes it a bracket. Ours had the value and neither of the other two.
+
+At 0.10 x 0.085m, wearing `_bare_steel()`, it was the only bare-steel surface
+above the apron -- so against a 0.055 cushion each plate resolved to a plain
+white block. Two per rope, six per corner, stacked up the post and brighter
+than the AEW artwork they were placed at the ends of specifically to keep
+clear. The eye found them before it found the mark, the wrestlers or the mat.
+
+Deleted rather than darkened. A plate that is not brighter than the cushion is
+not reading as a plate, it is 96 triangles of nothing; and the honest fix --
+modelling or texturing the bolt holes -- is a different piece of work. The
+removal note in `ring_builder.gd` says so, so that if it comes back it comes
+back with the holes.
+
+### The test inverted rather than deleted
+
+`test_every_pad_carries_its_connector_plates` and
+`test_the_connector_plates_clear_the_pad_artwork` are replaced by one
+`test_no_pad_carries_a_connector_plate`, asserted off the shipped mesh. A
+regenerated `ring.glb` that quietly brings the part back now fails in the
+suite rather than in someone's screenshot -- which is how the blocks were
+found in the first place.
+
+### Checked
+
+Rebuilt twice, byte-identical both times (md5 88bc953a...), so the mesh still
+diffs like the `.tres` bakes. Rendered afterwards through the match camera:
+the corners read as three black cushions with the artwork clear and the ropes
+running into the clamps, which is what the reference's corner is.
+
+
+## Round: the mat's artwork, the corner, and the steps
+
+Three corrections in one pass, all of them things the build had modelled and
+none of them things it had looked at from the camera that ships.
+
+### The canvas logo read rotated 90 degrees
+
+`_build_canvas` mapped the mat's UV square u to +X and v to +Z. The broadcast
+camera is anchored on -X and looks up +X (`match.tscn`), so its screen-right
+is +Z and "away from the lens" is +X -- which put the logo's baseline running
+directly away from the camera. Every frame of the match had the mark on its
+side.
+
+`ring_canvas.png` is drawn upright, so this is a mapping bug rather than an
+artwork one, and the fix is a quarter turn of the UV square:
+
+    u = (z + MAT_HALF) / 6    reading direction along screen-right (+Z)
+    v = (MAT_HALF - x) / 6    texture-down toward the camera (-X)
+
+Handedness was checked rather than assumed -- from the camera the mat's
+(screen-right, screen-up) is (+Z, +X), whose cross product is +Y, the mat's
+own normal, so the mark comes out turned and not mirrored. The render settled
+it either way: ALL ELITE / AEW / WRESTLING now reads left to right.
+
+### The corner was a pillar with bolsters on it
+
+The post was a 0.155m square column wearing a cap plate 1.22x its own section,
+and each rope ended in a cushion 0.52 x 0.24 x 0.30. Against the reference
+that is a structural pillar with three bolsters: the cushions were deeper than
+they were tall, the 0.35m rope spacing left only 0.11 between them so the
+three read as one black column with notches in it, and the plate gave every
+corner a lid.
+
+- the post is a tube now, `POST_RADIUS` 0.052 (0.104 across, which is 4-inch
+  pipe), `POST_SIDES` 12, capped with a disc proud by 6mm rather than a plate
+  overhanging by a quarter of the post's width
+- the pads are 0.46 x 0.15 x 0.20, bevel 0.025. The gap between cushions goes
+  from 0.11 to 0.20 -- wider than the pad, which is what the reference shows
+
+The depth is a floor, not a taste call. The pad has to clear the post's tube
+on its inner face and swallow the rope ends on its outer one, and those two
+faces are 0.143 apart before any bevel comes off; 0.20 is about the thinnest
+cushion that spans them. `TURNBUCKLE_PAD_XZ` moves 2.979 -> 3.003 so the pad
+straddles the post rather than sitting inboard of it, which is also what stops
+the white rope ends poking out of the cushions.
+
+### The steps stood at the corner without being in it
+
+They already sat at a corner -- two sets, diagonally opposite, measured at
+|z| = 2.924 against a post face at 3.095. What they did not have is the detail
+every ring-steps casting has: a **45-degree corner missing from the top
+tread**, which is what lets the tread pass the ring post.
+
+Without it a flight can only stop beside a corner. So the flight now runs out
+to the apron's own corner at `APRON_OUT`, and the top tread is built as a
+notched prism rather than a box, `STEP_CORNER_NOTCH` 0.26 on each leg. On the
+corner flank the top tread's stringer starts after the cut so it follows the
+notch instead of spanning it.
+
+### Tests
+
+`test_the_steps_stand_at_a_corner_beside_a_post` was measuring the MEAN of the
+step mesh's vertices, which moved 7cm when the tread was notched -- because a
+notch redistributes vertices without moving the flight at all. It measures the
+flight's extent now: far end at the apron's corner, near end a tread width
+back. That is the thing the test is named for.
+
+`test_the_top_tread_is_notched_for_the_post` is new and asserted as an
+absence: no top-tread vertex lies inside the triangle the cut removes. A test
+that counted geometry, or checked a bounding box, would pass just as well on a
+square tread.
+
+`test_the_turnbuckle_pad_stands_proud_of_the_post` now takes the post's
+nearest point as centre-less-radius rather than as a square corner.
+
+12 cases, 0 failures. `ring.glb` rebuilt at 8120 triangles, byte-identical
+across two runs.
+
+
+## Round: the rig stops being a follow-cam
+
+Six recommendations out of the camera analysis, implemented. The through-line
+is that `MatchCamera` had **one shot** — a follow-cam strapped to the pair —
+and a televised match does not have one shot.
+
+### 1. The reference was the wrong promotion, and the wrong medium
+
+`camera.md`'s every number comes from `gauntlet/refs/raw/`, which is WWE 2K
+gameplay video and WWE promotional stills. `ring.md`, `stage.md`, `arena.md`
+and `lighting.md` are all measured against AEW *Dynamite* photographs. The
+camera was the one subsystem calibrated against a different promotion AND a
+different medium — a video game rather than a broadcast — and the file did not
+say so. It says so now, at the top, before anything else.
+
+`aew_grand_slam_broadcast.png` has been in the repo since the lighting pass.
+`lighting.md` measures its luminance distribution; nobody had measured its
+**framing**. Measured now, by the same pixel-grid method the rest of the file
+uses:
+
+| quantity | value | how |
+| --- | --- | --- |
+| subject fill | 0.072 | the standing referee spans rows 412–467 of 768 |
+| depression | ~40° | the mat is a square seen corner-on; its projected diagonals give 42.5° and 38.5° |
+| stage side | frame left | screen and portal left of the ring, desk right |
+
+And the honest part: all four AEW stills are establishing wides or floor-level
+ringside. **There is still no AEW reference for the framing a match is covered
+in.** That gap is named in `camera.md` rather than papered over, with the
+arithmetic to re-solve the master's lens the moment one arrives.
+
+### 2 & 3. A hard camera, and a lens that belongs to the shot
+
+These are one change, because the second is what makes the first possible.
+
+The rig's `fov` lived on the Camera3D, so the lens was a property of the
+CAMERA rather than of the shot it was taking — which is exactly why there
+could only ever be one shot. `shot_fov()` now returns the lens per mode.
+
+That matters because distance and focal length are independent, and the
+difference is the whole look of a broadcast. Holding a wrestler at the same
+fraction of frame from 29m instead of 3.5m takes a long lens, and the
+compression it brings — a flat wall of crowd stacked behind the ring — is the
+single most recognisable property of a master shot. A 32mm lens from the back
+of the bowl frames the building.
+
+`Mode.HARD_CAM` is anchored at (-28.5, 8.3, 0), and that is **not a framing
+choice** — it is a seat in the building `arena_bowl.py` already builds:
+`BOWL_STRAIGHT_X` 4.425 + `BOWL_FIRST_ROW` 10.13 puts row 1 at 14.56 out,
+twelve `ROW_RUN` 0.95 rows plus `CONCOURSE_DEPTH` 2.6 reach 28.56, and twelve
+`ROW_RISE` 0.48 rises over `FLOOR_Y` -1.10 reach 8.26. It looks down at 14.4°.
+The lens is 14°, a 98mm equivalent, which frames a wrestler at 0.247 — between
+the reference's 0.072 establishing fill and the handheld's measured 0.32–0.41
+standoff, which is where a master belongs.
+
+The framing solve had to stop reading the live `fov` in the same breath. The
+containment guard and the fill fit both reproduce measurements taken on a
+41° lens; solved against the master's 14 the guard demanded 8.6m where the fit
+wants 6.7, so the engineering limit started choosing the shot. Caught by the
+test that exists to catch exactly that.
+
+### 4. The handheld stays low, and that is now correct
+
+The recommendation was "raise the follow-cam above the top rope, OR accept it
+as the ringside handheld and let the hard camera be the master". Taking the
+second branch, because it is the more faithful one and it costs no
+measurement: a real ringside handheld **does** shoot through the ropes. The
+1.45m eye height camera.md measured is right for what that shot now is. It is
+the master, 30m out and 8m up, that has to see over them — and it does.
+
+What did change is the handheld's BEARING. It used to be read back off the
+camera's own position, which worked only while nothing ever moved the camera.
+One cut to the hard camera and the off-axis 3/4 angle `match.tscn` was placed
+for would have been gone forever; the handheld's bearing is its own property
+now.
+
+### 5. The commentary desk
+
+The cheapest missing thing in the wide shot, and it was missing because
+nothing had ever taken a wide shot. `aew_low_angle_led_wall.jpg` shows it from
+the floor; `aew_grand_slam_broadcast.png` shows where it sits.
+
+On +Z, which is the master's screen-right — the same solve that turned the
+mat's artwork the right way up. Placed by what it has to fit between rather
+than by a measurement: apron at 3.20, barricade at 6.00, so a 0.72 desk
+centred at 4.40 leaves 0.84 of walkway either side. Fascia, an overhanging
+worktop, three monitor boxes. The overhang is the part that does the work — a
+desk reads as a desk from the shadow line under its lip, and flush it is a
+crate.
+
+### 6. The shot clock
+
+Between events the rig alternates master (7.0s) and handheld (4.5s). Events
+pre-empt it and reset it, so a scheduled cut can never land in the middle of a
+finish, and a finisher or three-count cut comes out onto the MASTER rather
+than onto whatever was on screen before it.
+
+The hold times are **project values and are not defended as measured**.
+`camera.md` has marked cut duration pending since it was written, and a still
+cannot carry a duration — all four AEW references are stills. What is defended
+is the shape: master longer than handheld, both in seconds.
+
+And a cut is now INSTANT. The rig lerped into every mode change, which was
+harmless when there was one position to lerp from and is a 28m fly-in now. A
+move between two angles is the one thing a vision mixer cannot do.
+
+### Tests
+
+19 in `test_camera_framing.gd`, 4 in a new `test_ringside_desk.gd`.
+
+Two existing ones had to change meaning rather than numbers, which is worth
+recording:
+
+- `test_a_cut_still_tracks_the_wrestlers` asserted the camera MOVES when the
+  pair does. A hard camera that moves is not a hard camera. It is now
+  `test_no_shot_ever_stops_tracking` and asserts what both kinds of shot owe:
+  wherever the pair goes, the shot is pointed at them — compared in PLAN,
+  because every shot aims above the pair and a 3D bearing to their feet is off
+  by 15° even when the framing is perfect.
+- the fill and containment tests now state which SHOT they are measuring.
+  Fill is a property of a shot, there are four, and the rig's default is no
+  longer the one camera.md measured.
+
+`ringside.glb` rebuilt at 1528 triangles, byte-identical across two runs.
+Every shot closed on a rendered frame through the rig's own camera.
+
+### The fog's invariant, which the master broke
+
+Worth recording because it is the kind of thing that stays broken quietly.
+
+`arena_lighting.gd`'s depth fog (compatibility renderer only — forward_plus
+uses the volumetric rig) documents its `FOG_BEGIN` of 13.0 as chosen so that
+no ring geometry is ever inside the fog: "the camera sits 3.2-9.0m from the
+pair's midpoint and the far ropes are at most 3.1m past that midpoint, so no
+ring geometry is ever more than ~12.1m from the lens."
+
+The hard camera is 28.5m out, which puts the far side of the ring ~32m from
+the lens — nineteen metres inside a fog begin written to stay outside it. A
+constant cannot be right for both shots: 13.0 is what gives the handheld its
+depth, and anything that clears the master's ring would leave the handheld's
+barricade unfogged, which is the whole reason the fog exists.
+
+So it tracks the shot, the same way the lens does — `_process` sets
+`fog_depth_begin` to the camera's own distance plus the ring's reach, floored
+at the measured 13.0. At the handheld's 3.2-9.0m the floor wins and every
+number measured on that shot is untouched; at the master's 28.5 the ring falls
+outside the fog exactly as the note always claimed.
+
+## Round: the pose was reclining and the punches landed on a man who did not move
+
+Two reports, one root cause between them. "Cody and Roman are standing in a
+weird pose"; "when punches land, check the opponent is hit and recoils".
+
+Three instruments were needed before any of it could be argued about, because
+every existing one looked at a single wrestler or at a number with no picture
+attached.
+
+### The probes
+
+`tools/probe/pose_compare.tscn` plays one clip on every rig the game ships —
+the mannequin, Cody, Roman — through each model's own adapter, samples the live
+skeleton, and normalises by that rig's own height so a taller model does not
+read as a different pose. It also reports how far each bone travels from frame
+0, which is the number a reaction lives or dies on.
+
+`tools/probe/exchange_shot.tscn` squares two roster models up at a distance the
+move's own measured reach covers, throws one strike, and grabs **every tick**
+from wind-up to recovery with both FSM states and the contact geometry printed
+beside each frame. Roman to Cody: the jab's contact lands on frame 10 and Cody
+is in `HIT_REACT` on tick 11; the cross lands on 12 and he reacts on 13. The
+hit machinery was never the suspect and now there is a picture of it working.
+
+`tools/probe/clip_shot.tscn` was **lying**. It borrowed the authored library
+onto a roster model raw, and those tracks name `Armature/Skeleton3D:<bone>`,
+which resolves on the mannequin and on nothing else. Every track silently
+failed to resolve, so the probe rendered Cody's bind pose and Roman's flat T
+and labelled them with clip names. It goes through the model's adapter now and
+counts resolving tracks per clip, loudly. Two clean-looking contact sheets,
+neither of them of a clip.
+
+### Roman was standing 22 cm short of the pose
+
+Measured on `Idle_Ready`: Cody's hands land within **0.0 cm** of the
+mannequin's and Roman's **22.1 cm** below them, while his head and pelvis track
+to within a centimetre. So the torso retarget was sound and the arms were not.
+
+The cause is a rest-**pose** difference on top of the rest-**orientation** one
+`RomanModel`'s conversion already handles. Read off the two skeletons:
+
+| bone | base rig | Roman |
+| --- | --- | --- |
+| upperarm | y 1.441 | y 1.396 |
+| lowerarm | y 1.441 | y 1.330 |
+| hand | y 1.441 | y 1.270 |
+
+The base rig rests in a flat T. Roman rests in an A, the arm descending 0.126 m
+across its span — about 15°. Preserving each key's offset from its own rig's
+rest preserves that 15°, and since these clips are authored as absolute hand
+positions in metres solved against the base rig's geometry, what has to survive
+the retarget is where the hand *ends up*.
+
+So each bone's rest is aligned first: Roman's rest bone direction rotated onto
+the base rig's, measured between the bone and its first mapped child rather
+than read off a bone axis, which the two rigs disagree about anyway. The roll
+correction is untouched — this removes only the swing. After: hands 4.6 cm out,
+and the residual is constant from frame 0 onward, which is Roman's own
+proportions (his shoulders sit at 0.925 of his height against the mannequin's
+0.984) rather than the retarget.
+
+### The sign was upside down, and had been since the clips were authored
+
+`rig_pose._euler()`'s docstring says a positive pitch "bows forward". It does
+the opposite. Measured off the rest pose, one axis at a time, head taken
+relative to pelvis:
+
+| pose | head |
+| --- | --- |
+| spine lean −30 | 0.241 m in **front** of the pelvis |
+| spine lean 0 | 0.055 m in front |
+| spine lean +30 | 0.133 m **behind** it |
+| hips pitch −30 | 0.374 m in front |
+| hips pitch +30 | 0.278 m behind |
+| head pitch ±30 | moves the head bone's origin under 2 cm either way |
+
+That last row matters on its own: head pitch aims the face, it does not carry
+the skull across the frame. What carries a head is the spine chain underneath
+it — which is why a reaction table reading `head=(-24, …)` looked, on paper,
+like a man being knocked backwards and measured as 6.4 cm.
+
+`Run_Drive` found this in its own clip and fixed itself — "needed a negative
+lean and for years had a positive one" — and its note says the stance still
+carried +12, a recline every clip inherits, "because correcting that moves all
+29 and is its own job". The wrong docstring then sent the next authoring pass
+the same way round again. The **text** is fixed rather than the sign: every
+clip is expressed against this convention, and flipping it would move the lot.
+
+### What changed, and what it measures
+
+**The stance.** `spine` 12 → −10, so a wrestler at rest is coiled over his
+front foot instead of reclined off it: his head sat 4.5 cm *behind* his pelvis
+and now sits 8.0 cm in front. The guard widens with it, from 0.30 m apart —
+inside the 0.384 m shoulder width, elbows pinned to the ribs, rendered as a man
+holding something in front of his chest — to 0.45 m.
+
+**The reactions.** `Hit_React_Head` moved the head **6.4 cm** while
+`Hit_React_Torso`, on the same rig through the same code path, moved it 33.8 cm
+— a head shot shifting the head a fifth as far as a body shot is "the opponent
+is hit and nothing happens", and it is a comparison inside this clip set rather
+than an appeal to how a punch ought to look. It was leaning the wrong way *and*
+taking five frames to get there, against `combat-animation.md`'s "2–4 frames
+impact pose, snap to impact". Impact now lands on frame 2 and holds to 4.
+
+The two reactions are now separated by **direction** rather than size: a head
+shot drives the head 0.20 m backward off his heels, a body shot folds him 0.12 m
+down around it. Head travel 36.0 cm and 22.6 cm respectively — which is the
+head shot measuring *larger*, because a torso rocking back off a forward-leaning
+stance sweeps a wider arc than one folding down. Size was the wrong thing to
+assert and the test says so.
+
+**The strikes.** All four lean forward through the punch rather than back, and
+the two kicks lean *away* from the boot as the counterweight they were already
+described as being. The punches hold the stance's own lean through contact
+rather than bowing further into it: bowing carried the head out with the fist
+and the punch stopped reading, while the measured reach never moved.
+
+`Tie_Up_Collar` and `Grapple_Hold_Neutral` were tried the same way and put
+back. Poses here are absolute hand positions, so leaning the chest in carries
+the shoulders toward the hands and folds the arms up — the reach that makes a
+lock-up read is worth more there than the lean, and the rendered frames said
+so. That is the general shape of this file: the sign being wrong does not make
+every value that compensated for it wrong.
+
+### What holds it
+
+`tests/test_clip_readability.gd` asserts what the clips **do**, in centimetres,
+rather than what they are made of. `test_authored_clips.gd` already checks that
+every clip exists, is the right length, loops when it must and poses the whole
+body — all of which was true of a reaction that moved the head 6.4 cm. The new
+floors are set below measured values, to catch a clip going quiet again:
+
+| clip | measured | asserted |
+| --- | --- | --- |
+| `Hit_React_Head` head | 36.0 cm | > 15 cm, and backward > 0.15 m |
+| `Hit_React_Torso` head | 22.6 cm | > 15 cm, and down > 0.08 m |
+| `Strike_Jab` left fist | 31.7 cm | > 15 cm, and further than the right |
+| `Strike_Forearm` right fist | 43.1 cm | > 15 cm, and further than the left |
+| stance | head 8.0 cm ahead of the hips | > 4 cm |
+| guard | hands 0.45 m apart | > 0.38 m |
+
+Re-measured after the rebake (`tools/anim/measure_contact_offsets.gd`), every
+strike's limb now peaks on exactly the tick its `MoveDef` applies damage: jab
+0.654 m, cross 0.679 m, kick 0.820 m, heavy kick 0.818 m. The four `.tres`
+offsets that moved are updated, `gait_audit` passes, and the glb rebuilds
+byte-identical.
+
+### What the match measures, and two things it does not
+
+`tools/probe/strike_connect_probe.tscn` over eight AI-vs-AI seeds, after:
+
+| seed | thrown | landed | |
+| --- | --- | --- | --- |
+| 2 | 22 | 16 | 73% |
+| 3 | 19 | 13 | 68% |
+| 6 | 18 | 12 | 67% |
+| 7 | 20 | 12 | 60% |
+| 8 | 14 | 11 | 79% |
+
+Seeds 2 and 3 are **identical, thrown for thrown and landed for landed**, to
+the same probe on the same seeds before any of this — which is the check that
+matters for a change to `MoveDef.contact_offset`: the clips moved, the match
+did not. The rest of the misses are `unhittable`, a man already down, which is
+suppressed by design.
+
+Two things that probe reports and this round did not fix, named rather than
+averaged away:
+
+- **Seeds 1 and 5 throw nothing at all** — 0 strikes over a 20 000-tick
+  budget. That is not a 0% connect rate, it is no data, and the probe prints it
+  as though it were the former.
+- **Seed 4 throws 404 and lands 4%**, running to the budget without the match
+  ending, with 383 misses filed "off to the side" at a median angle of 0° off
+  the attacker's facing — i.e. facing him, inside reach, and no contact. The
+  same seed threw nothing at all on the build before this one, so there is no
+  clean before/after to compare it against.
+
+Both are about match flow and AI spacing rather than about what a clip looks
+like, which is why they are here as findings instead of in the diff. **They
+are fixed in the round below.**
+
+## Round: a man fell out of the ring, and nothing could see it
+
+The two findings the previous round wrote down and did not fix. Both turned
+out to be instruments lying rather than the match misbehaving — and behind one
+of them, a real defect that had been eating a match at a time.
+
+### Seeds 1 and 5 threw nothing: the match was never in the tree
+
+`strike_connect_probe` added each match with `get_tree().root.add_child(scene)`
+from inside an `await` continuation of its own `_ready()`. The scene root will
+not take a child while it is setting its own up, so that call failed — on the
+**first seed of every run and only that one** — with
+
+```
+ERROR: Parent node is busy setting up children, `add_child()` failed.
+```
+
+one line into a log nobody reads, and then measured a match that did not
+exist. It reported as `seed 1 thrown 0 landed 0 (0%)`. "Seeds 1 and 5" was
+never about those seeds: both were simply first in their list.
+
+`contact_probe.gd` already documents this trap and `title_launch.gd` is
+credited with finding it. This probe just never got the fix. It now defers the
+add and waits for `is_inside_tree()`.
+
+The reporting is fixed alongside it, because a percentage cannot tell "nobody
+landed a punch" from "nobody threw one". A seed that threw nothing now prints
+`NO DATA` with the reason, is excluded from the total, and makes the probe
+exit non-zero.
+
+### Seed 4 landed 4%: he was 411 km below the mat
+
+Traced tick by tick. At t2416 of a `GRAPPLE_HOLD`, WrestlerB starts stepping
+out — 2.28, 2.54, 2.74, 2.89, 2.98, 3.04, 3.07 — past the mat's own edge at
+3.0. There is no floor collider out there: `scenes/ring.tscn`'s floor is 6 m
+square and the arena floor has none. He fell for the remaining 17 000 ticks and
+finished **411 490 m** below the ring.
+
+Everything downstream then read as something else. The match could not end,
+because a pinfall needs the attacker within `COVER_RANGE` of a downed man.
+Every strike thrown at him was filed as a miss "off to the side" at a median
+**0°** off the attacker's facing — facing him, horizontally inside reach,
+separated only in a dimension the miss report does not print. That one seed
+contributed 383 of the 386 misses in a four-seed run and took the measured
+connect rate from 70% to 10%.
+
+The route out is `GrappleRig`. It **suspends** both bodies for the length of a
+paired move and drives their transforms from the clip, so neither one collides
+with anything — the rope walls are not in that code path at all. Its clamp is
+on the pair's **midpoint** (`RING_HALF_EXTENT` 2.0); each wrestler then sits an
+authored offset away from it, and the offsets reach past the mat.
+
+So the clamp is per wrestler now, reached from both paths that can move one:
+`WrestlerController.keep_inside_the_ring()`, called after `move_and_slide()`
+and from `GrappleRig._physics_process()` for the bodies it has suspended.
+
+`RING_KEEP_IN` is 2.6 — `MAT_HALF` 3.0 less the 0.4 capsule, so his far side is
+exactly on the edge. It sits deliberately *outside* what the ropes already
+enforce (their inner faces are at 2.95, so `move_and_slide()` holds a walking
+man at 2.55), which is the point: it never fights the ropes, it only catches a
+body that was never asked to collide with them. The vertical clamp is one-sided
+— nothing legitimately goes below the mat, and a ceiling would flatten every
+throw in the set.
+
+### And the probe could not tell a finish from a stall
+
+Printing "NEVER FINISHED" for the first time turned it on for all eight seeds
+at once, which is how the third bug surfaced:
+
+```gdscript
+var over := false
+referee.match_won.connect(func(_w, _m): over = true)   # assigns to a COPY
+```
+
+GDScript lambdas capture locals **by value**. `over` never became true, `if
+over: break` never fired, and every match this probe has ever run went the full
+20 000-tick budget whatever happened in it. `contact_probe.gd` and
+`floating_probe.gd` both use a one-element Array for exactly this reason; this
+one did not.
+
+### Eight seeds, after
+
+| seed | thrown | landed | |
+| --- | --- | --- | --- |
+| 1 | 16 | 12 | 75% |
+| 2 | 22 | 16 | 73% |
+| 3 | 19 | 13 | 68% |
+| 4 | 24 | 15 | 62% |
+| 5 | 33 | 24 | 73% |
+| 6 | 18 | 12 | 67% |
+| 7 | 20 | 12 | 60% |
+| 8 | 14 | 11 | 79% |
+
+**69.3% overall, eight seeds out of eight producing data, eight out of eight
+reaching a finish.** Seed 4 went 4% → 62% and now throws 24 strikes rather than
+404. The remaining misses are ordinary: 5 out of reach, 9 off to the side at a
+median 59° off the attacker's facing — real whiffs at a real angle, not an
+artefact of a man in low orbit.
+
+`tests/test_ring_containment.gd` holds it: the extent leaves the whole body on
+the mat and stays clear of the ropes, a wrestler put outside on any axis comes
+back, one below the mat is put on it and stops falling, one lifted above it is
+left alone, one already inside is not nudged at all, and the rig contains the
+bodies it has suspended. 411 tests pass.

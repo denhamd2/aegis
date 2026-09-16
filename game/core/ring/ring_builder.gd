@@ -39,7 +39,16 @@ class_name RingBuilder
 const MAT_HALF := 3.0
 const MAT_TOP_LOCAL := 0.1  ## Floor box is 0.2 thick, Ring sits at y = -0.1.
 const ROPE_SPAN := 3.1
-const ROPE_HEIGHTS := [0.5, 0.85, 1.2]
+## The three rope heights, declared one per line as plain numbers rather than
+## as literals inside the array. tools/blender/ring.py reads its geometry out
+## of this file (see venue.read_constants) and can only parse plain numeric
+## constants, so a number that exists only inside an array or a dictionary is
+## a number the mesh would have to retype -- which is how a mesh stops
+## matching the game it is built for.
+const ROPE_HEIGHT_BOTTOM := 0.5
+const ROPE_HEIGHT_MIDDLE := 0.85
+const ROPE_HEIGHT_TOP := 1.2
+const ROPE_HEIGHTS := [ROPE_HEIGHT_BOTTOM, ROPE_HEIGHT_MIDDLE, ROPE_HEIGHT_TOP]
 const POST_XZ := 3.0
 
 # --- Ropes -------------------------------------------------------------------
@@ -55,7 +64,14 @@ const ROPE_SEGMENTS := 28
 ## near-straight lines between the posts, where the outgoing 3-4.8cm was a
 ## visible curve. COVERAGE DECISION -- the reference shows tension, it does not
 ## measure a depth.
-const ROPE_SAG := {1.2: 0.010, 0.85: 0.014, 0.5: 0.018}
+const ROPE_SAG_TOP := 0.010
+const ROPE_SAG_MIDDLE := 0.014
+const ROPE_SAG_BOTTOM := 0.018
+const ROPE_SAG := {
+	ROPE_HEIGHT_TOP: ROPE_SAG_TOP,
+	ROPE_HEIGHT_MIDDLE: ROPE_SAG_MIDDLE,
+	ROPE_HEIGHT_BOTTOM: ROPE_SAG_BOTTOM,
+}
 ## How far past the post centre a rope runs before its turnbuckle nub swallows
 ## the end. The nub is small now that the branded pad is gone, so this is small
 ## too -- overrun the pad used to hide would now hang in open air.
@@ -73,9 +89,137 @@ const ROPE_OVERRUN := 0.022
 ## letterform, so it became stacked bars). Deleting the pad deletes the
 ## guardrail problem rather than managing it. A bare corner cannot resemble
 ## anyone's trade dress.
-const NUB_LENGTH := 0.115
-const NUB_RADIUS := 0.038
-const CLEVIS := Vector3(0.05, 0.055, 0.07)
+## The connector a rope visibly ends in, sitting ON the rope where it runs into
+## the pad -- not inside the post.
+##
+## Two goes at this were wrong in opposite directions. The sleeve started at
+## 0.115 pointing INWARD from the post face, which was right when the corner
+## was bare and became a fitting that broke out through the pad's rounded edge
+## once there was a pad. Shortening it to 0.055 buried it completely, and the
+## reference shows the opposite: a dark clamp is plainly visible at the point
+## each white rope meets the cushion.
+##
+## So the fitting moved onto the rope. The pad is 0.52 wide across the corner
+## diagonal, which puts its edge where a rope crosses at
+## ROPE_SPAN - PAD_WIDTH/2 * sqrt(2) = 2.732; the clamp straddles that line, so
+## it reads as the rope entering a clamp that enters the pad.
+const CLAMP_LENGTH := 0.09
+const CLAMP_RADIUS := 0.032
+## How far inboard of the pad's edge the clamp is centred. Small: the clamp
+## should overlap the cushion, not stand off it with daylight between.
+const CLAMP_INSET := 0.03
+
+# --- Turnbuckle pads ---------------------------------------------------------
+## The pads are BACK, and the note above them is now history rather than
+## policy. The comment argued a bare corner "cannot resemble anyone's trade
+## dress" -- true, and beside the point: gauntlet/refs/VISUAL_BAR.md settles
+## the question the other way, and the AEW references this ring is now matched
+## to have three cushions on every corner. They are the single loudest thing
+## about a televised corner, and without them the post reads as a bare pole
+## with the ropes passing it.
+##
+## One pad per rope per corner, turned to the DIAGONAL -- which is the one
+## respect in which a pad disagrees with the post it is mounted on. The post
+## stays axis-aligned (see below); the pad faces the ring centre, because that
+## is the face a wrestler is thrown into and the face every camera sees.
+const TURNBUCKLE_PAD_WIDTH := 0.46
+## 0.15, down from 0.24. The ropes are 0.35 apart, so a 0.24 cushion left a
+## 0.11 gap and the three of them read as one continuous black column with
+## notches in it. The reference has three clearly separate cushions with more
+## air than pad between them; 0.15 puts the gap at 0.20, wider than the pad.
+const TURNBUCKLE_PAD_HEIGHT := 0.15
+## 0.20, down from 0.30. A cushion standing 0.30 off the post is deeper than
+## it is tall and reads as a bolster rather than a pad. 0.20 is the floor the
+## geometry allows, not a taste call: the pad still has to clear the post's
+## tube on its inner face AND swallow the rope ends on its outer one, and
+## those two faces are 0.143 apart before any bevel is taken off.
+const TURNBUCKLE_PAD_DEPTH := 0.20
+## Diagonal placement, per axis, and the number is set by the POST rather than
+## by the ropes.
+##
+## Work in u, the distance from ring centre along the corner diagonal. The post
+## is axis-aligned, so its own corners put it at u = 4.133 (inner) to 4.352
+## (outer), and the two rope terminations land at u = 4.329 -- inside that
+## span. A pad centred on the ropes therefore sits INSIDE the post, which is
+## what the first attempt did: the post's inner corner stood proud of the
+## cushion and split each pad into two lobes with a pole up the middle.
+##
+## So the pad's inner face has to clear u = 4.133, and 3.013 was not enough.
+## It put the face at 4.111, clearing the post by 2.2cm -- against a PAD_BEVEL
+## of 4.5cm. A bevel pulls the cushion's own face back by up to its width near
+## the arris, so across most of the pad's middle the post's corner stood
+## through the front of it and read as a faint chevron on every cushion. This
+## is the nub-through-the-arris mistake again, one part further along.
+##
+## 2.979 puts the face at 4.063: 7.0cm of clearance, comfortably more than the
+## bevel can eat. The rope ends at 4.329 are still inside the pad's outer face
+## at 4.363, which is the other half of the constraint and the reason the
+## depth stays at 0.30.
+## Moved out with the depth. At 0.20 deep the pad can no longer sit inboard of
+## the post and still reach the rope ends, so it straddles the post instead:
+## centred at u = 4.247 against the post's 4.243, inner face 0.044 clear of
+## the tube and outer face 0.018 past the rope ends at u = 4.329. Both margins
+## are asserted -- test_the_turnbuckle_pad_stands_proud_of_the_post and
+## test_the_rope_terminations_land_inside_the_pad -- and there is no room
+## between them for a deeper pad or a fatter post.
+const TURNBUCKLE_PAD_XZ := 3.003
+## The rounding on a cushion's arrises. It lives HERE, not in ring.py with the
+## other bevel widths, because it is not only a shading choice: it eats into
+## the clearance above, and a test can only pin that relationship if both
+## numbers are in the same file. `tools/blender/ring.py` reads it out of here
+## like every other ring constant.
+const TURNBUCKLE_PAD_BEVEL := 0.025
+
+# --- The turnbuckle connector, and why there isn't one -----------------------
+## REMOVED. There used to be a light steel plate at each end of every pad --
+## CONNECTOR_WIDTH/HEIGHT/DEPTH at CONNECTOR_TANGENT +/-0.205, two per rope,
+## twelve per corner, wearing `_bare_steel()` because the reference's bracket
+## is the one bright thing in an otherwise matte-black corner.
+##
+## At the scale this ring is actually seen at they did not read as brackets.
+## Each plate is 0.10 x 0.085m and the only bare-steel surface above the
+## apron, so against a black cushion it resolved to a white block -- six of
+## them stacked up a corner, brighter than the AEW artwork they flank and the
+## first thing the eye found in the frame. The reference's bracket is legible
+## because it is a plate WITH BOLT HOLES catching a highlight; ours had no
+## holes and no highlight to catch, just value.
+##
+## Deleted rather than darkened: a plate that is not brighter than the pad is
+## not a plate, it is 96 triangles of nothing. `tools/blender/ring.py` no
+## longer builds `TurnbuckleConnectors` and `_model_materials()` no longer
+## names it. If it comes back it needs the bolt holes first, because the
+## holes are what made the reference's bracket a bracket.
+
+# --- The pad's artwork -------------------------------------------------------
+## The AEW pad face, supplied by the project owner, on a flat quad sat just
+## proud of each cushion's front.
+##
+## A DECAL rather than a mapping of the cushion itself. The pads are bevelled
+## boxes built through `_beveled`, and `venue.py` gives anything that goes
+## through it a planar world projection -- fine for tiling cloth, useless for
+## landing one logo the right way up, once, on one face of twelve boxes. A quad
+## with explicit UVs is the smaller and more controllable piece of work, and it
+## leaves the cushion's rounded silhouette untouched.
+const PAD_FACE_TEXTURE := "res://assets/environment/materials/turnbuckle_pad.png"
+## Inset from the pad's full size by the bevel on each side, so the quad lands
+## on the FLAT part of the front and not on the rounding, where it would float
+## off the surface.
+##
+## Written as literals rather than as `TURNBUCKLE_PAD_WIDTH - 2 * BEVEL`,
+## which is what they are: `tools/blender/venue.py` parses its constants out of
+## this file and takes plain numbers only, so an expression here stops the ring
+## exporting at all. `test_the_pad_face_is_inset_by_the_bevel` holds the two
+## ends together instead.
+const PAD_FACE_WIDTH := 0.41
+const PAD_FACE_HEIGHT := 0.10
+## Clear of the cushion's face, to keep the two out of a depth fight.
+const PAD_FACE_LIFT := 0.004
+## The artwork is 1774x887 -- exactly 2:1 -- and the flat face is 2.867:1, so
+## mapping the whole image onto it would stretch the mark sideways by 43%.
+## Sampling the middle 0.6977 of the HEIGHT gives a region of the same aspect
+## as the quad, and what it crops is the black margin above and below the
+## letters rather than any of the mark.
+const PAD_FACE_V_SPAN := 0.4878
 
 # --- Posts -------------------------------------------------------------------
 ## SQUARE, not round. The reference's posts are flat-faced dark slabs, and they
@@ -83,18 +227,85 @@ const CLEVIS := Vector3(0.05, 0.055, 0.07)
 ## flat face reads straight down the camera's line on a side-on shot, which is
 ## most of the shotlist. The outgoing cylinder, its steel cap and the lace
 ## collar under the pad all go with the pad they were dressed for.
-const POST_SECTION := 0.155
+## The post is a round steel tube, and its RADIUS -- not a square section.
+##
+## It was a 0.155m square column with a 1.22x cap plate on top. Against the
+## reference that is a structural pillar: a real ring post is a length of
+## 4-inch pipe, slim enough that the pads are plainly the widest thing at a
+## corner, and the cap is a disc barely proud of the tube rather than a plate
+## overhanging it. Square also caught the house rig on two flat faces and read
+## as a black slab from every angle but the diagonal.
+##
+## 0.052 is 0.104m across, which is 4-inch pipe to within a few millimetres.
+const POST_RADIUS := 0.052
+## Sides on the tube. 12 is round at the distance a post is ever seen from and
+## costs 24 more triangles than the box did.
+const POST_SIDES := 12
 const POST_BOTTOM := -0.10
-## Taller than the outgoing 1.60: in the reference the post stands well clear
-## of the top rope, which is what gives the corner its vertical line.
-const POST_TOP := 1.78
+## 1.78 in the training-hall reference, where a bare post stands well clear of
+## the top rope and that vertical line is the whole of the corner. A padded
+## corner is the other way round: in the AEW references the CUSHION crowns the
+## post, and the cap plate shows just above the top pad rather than towering
+## over it. 1.42 puts the plate 0.10 above the top pad's top edge (top rope
+## 1.20 + half a 0.24 pad), which is what the photographs show.
+const POST_TOP := 1.58
 
 # --- Apron -------------------------------------------------------------------
 const APRON_OUT := 3.20
+## The padded roll along the apron's outer edge.
+##
+## The edge used to be a flat 0.2m band in dark neutral grey, described as "the
+## shadowed lip between a white mat and a dark skirt". The reference has no
+## such lip: the apron edge is a fat padded bolster, the skirt's own vinyl
+## wraps over it, and the corner chevron runs up the skirt and across it.
+## Flat and dark, it read as a hard black line drawn round the ring.
+##
+## The axis sits one radius inboard of APRON_OUT so the roll's widest point is
+## flush with the skirt plane and its crown stands above the skirt's top edge.
+const APRON_ROLL_RADIUS := 0.10
+const APRON_ROLL_AXIS := APRON_OUT - APRON_ROLL_RADIUS
+## Arc segments over the half-round. Six is where the crown highlight stops
+## reading as facets at `ring_corner`, the closest shot in the list.
+const APRON_ROLL_STEPS := 6
+## How much of the banner's height the roll takes. The skirt below starts from
+## the top of the graphic too, so this is a small overlap rather than a split:
+## the top of the artwork is near-uniform field either side of the chevrons, so
+## what carries across the seam is the COLOUR, which is the thing the eye
+## follows round a corner.
+const APRON_ROLL_V := 0.15
+const APRON_BANNER := "res://assets/environment/materials/ring_apron_banner.png"
 const APRON_TOP := -0.10
 const APRON_BOTTOM := -1.00
 
 # --- Steel steps -------------------------------------------------------------
+## The steps stand at a CORNER, hard against a ring post, not halfway down a
+## side. That is where they go: the regulation that governs them asks for
+## "suitable steps for use of the contestants in their corners" (Virginia
+## 18VAC120-40-415.1), and on television the two sets sit tight against a post
+## with their top tread level with the apron, so a wrestler climbing them
+## steps straight over the top rope beside the turnbuckle.
+##
+## Two sets, on DIAGONALLY opposite corners: +X beside the post at (+3, +3),
+## -X beside the post at (-3, -3). Diagonal rather than both on one side so
+## each half of the ring has a way in, and neither set stands in the entrance
+## walkway down the middle of -Z.
+##
+## This is the gap left between the near edge of the steps and the post.
+## The 45-degree cut across the TOP tread's ring-side corner, which is what
+## lets a flight sit into a corner instead of stopping beside it.
+##
+## Replaces STEP_POST_GAP, which held the flight 0.10 clear of the post and
+## square-ended -- so the steps stood at the corner without ever reaching it.
+## Every ring-steps casting has this notch (it is why the top tread is the one
+## with a corner missing) and it exists so the tread can pass the ring post.
+##
+## 0.26 on each leg, a 0.37 diagonal, against a post 0.104 across: the cut
+## clears the tube with room for the apron's overhang either side of it.
+const STEP_CORNER_NOTCH := 0.26
+## Clearance between the apron's skirt and the flight's inner face. It was a
+## bare 0.06 inside ring.py; it is a constant here because the notch test has
+## to know where the tread's inner edge is.
+const STEP_APRON_GAP := 0.06
 const STEP_TREADS := 3
 const STEP_WIDTH := 1.45
 const STEP_RUN := 0.36
@@ -128,6 +339,17 @@ const CANVAS_SEED := 20260903
 ##    already the warmer of the two, and the mat is 212k of 921k pixels in
 ##    that frame. A warm mat would widen a gap that is already open.
 const CANVAS_WHITE := Color(0.975, 0.975, 0.972)
+## The supplied AEW canvas artwork, mapped 1:1 over the 6m mat.
+##
+## Surface 0 of the floor mesh already carries a full 0..1 UV across the square
+## precisely so a canvas lands in world space rather than tiling, which is what
+## lets this drop straight on with no scaling.
+##
+## It is DARKER than what it replaces and that is the point: the field reads
+## 0.636 in sRGB against CANVAS_WHITE's 0.975. The mat is an exposure anchor
+## (VISUAL_BAR.md, and the round that solved ring exposure to a reference
+## 0.46), so this moves a measured number -- see the round note in README.
+const CANVAS_ART := "res://assets/environment/materials/ring_canvas.png"
 ## The canvas body, multiplied into CANVAS_WHITE.
 ##
 ## SOLVED, not picked. The first pass at this put the field at 0.93 and the mat
@@ -166,10 +388,7 @@ func _ready() -> void:
 		return
 	_assert_frozen_dimensions()
 	_build_canvas()
-	_build_ropes()
-	_build_turnbuckles_and_posts()
-	_build_apron_detail()
-	_build_steps()
+	_build_model()
 
 
 ## The measurement chain in camera.md / test_camera_framing.gd / grapple_rig.gd
@@ -241,17 +460,6 @@ func _mat(albedo: Color, roughness: float, metallic: float = 0.0) -> StandardMat
 	return m
 
 
-## Steel, as a DIELECTRIC, and this is a coverage decision with a reason rather
-## than a slip. metallic is 0 or 1 and never between -- which is why the
-## outgoing post material's 0.3 was wrong by construction -- but a conductor
-## renders as nothing except what it reflects, and the hall around this ring
-## has no reflection probe and no sky. Set metallic 1.0 and the posts, caps and
-## steps come out black. The library agrees: its `ring_post` is metallic 0.0
-## painted steel, and it flags `ring_post_chrome` as unusable for this exact
-## reason. Revisit the day the arena gets a radiance map.
-func _steel() -> StandardMaterial3D:
-	return _resolve("ring_steel", _mat(Color(0.60, 0.61, 0.65), 0.28))
-
 
 ## Bare, unpainted steel: the ring steps and nothing else. Bright, because in
 ## the ring reference the steps are the second-lightest surface in the frame
@@ -285,7 +493,15 @@ func _bare_steel() -> StandardMaterial3D:
 func _canvas_material() -> StandardMaterial3D:
 	var m := _resolve("ring_canvas", _mat(CANVAS_WHITE, 0.86))
 	m.albedo_color = CANVAS_WHITE
-	m.albedo_texture = _canvas()
+	# The supplied canvas artwork if it is there, the generated weave if not.
+	#
+	# The generated texture does not go away: it still drives ROUGHNESS and the
+	# NORMAL below, which is where most of its value was. What it stops doing
+	# is standing in for a canvas nobody had -- the mark it used to draw was
+	# removed entirely when refs/ring.md called for an unbranded mat, leaving
+	# albedo carrying weave and wear on a blank field.
+	var art: Texture2D = load(CANVAS_ART) if ResourceLoader.exists(CANVAS_ART) else null
+	m.albedo_texture = art if art != null else _canvas()
 	if m.roughness_texture == null:
 		# The weave drives roughness as well as albedo. A canvas is not
 		# uniformly glossy -- the thread crowns catch the ring rig and the
@@ -347,35 +563,146 @@ func _build_canvas() -> void:
 	# square, so the canvas texture's seams and wear land in world space where
 	# they are drawn rather than tiling arbitrarily. BoxMesh atlases its six
 	# faces into one UV square and cannot do this.
+	#
+	# The UV square is turned a quarter turn against the mat, which is what
+	# puts the canvas artwork the right way up to the broadcast camera.
+	#
+	# It used to map u to +X and v to +Z. The camera is anchored on -X and
+	# looks up +X (match.tscn), so its screen-right is +Z and the direction
+	# "away from camera" is +X -- which meant the logo's baseline ran directly
+	# away from the lens and the mark read rotated 90 degrees in every frame.
+	# ring_canvas.png is drawn upright, so this is a mapping bug, not an
+	# artwork one, and it is fixed here rather than by rotating the .png:
+	# the texture is the supplied asset and the mat is ours to orient.
+	#
+	#   u = (z + MAT_HALF) / 6   -- reading direction along screen-right (+Z)
+	#   v = (MAT_HALF - x) / 6   -- texture-down toward the camera (-X)
+	#
+	# Handedness checked rather than assumed: seen from the camera the mat's
+	# (screen-right, screen-up) is (+Z, +X), whose cross product is +Y, the
+	# mat's own normal -- so the mark comes out turned, not mirrored. The
+	# render is what settled it either way.
 	_quad(st,
 		Vector3(-MAT_HALF, MAT_TOP_LOCAL, MAT_HALF),
 		Vector3(MAT_HALF, MAT_TOP_LOCAL, MAT_HALF),
 		Vector3(MAT_HALF, MAT_TOP_LOCAL, -MAT_HALF),
 		Vector3(-MAT_HALF, MAT_TOP_LOCAL, -MAT_HALF),
-		Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0))
+		Vector2(1, 1), Vector2(1, 0), Vector2(0, 0), Vector2(0, 1))
 	st.generate_tangents()
 	var mesh := st.commit()
 
-	# Surface 1: the canvas rolling over the edge onto the ring frame.
-	var edge := SurfaceTool.new()
-	edge.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Surface 1: the flat apron strip between the mat edge and the roll.
+	var walk := SurfaceTool.new()
+	walk.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for side: int in range(4):
-		var basis_dir: Vector3 = [Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0)][side]
+		var basis_dir: Vector3 = _SIDE_DIRS[side]
 		var tangent := Vector3(basis_dir.z, 0, -basis_dir.x)
-		var a: Vector3 = basis_dir * MAT_HALF + tangent * MAT_HALF + Vector3(0, MAT_TOP_LOCAL, 0)
-		var b: Vector3 = basis_dir * MAT_HALF - tangent * MAT_HALF + Vector3(0, MAT_TOP_LOCAL, 0)
-		_quad(edge, a, b, b - Vector3(0, 0.2, 0), a - Vector3(0, 0.2, 0),
-			Vector2(0, 0), Vector2(4, 0), Vector2(4, 1), Vector2(0, 1))
-	edge.generate_tangents()
-	edge.commit(mesh)
+		var inner: float = MAT_HALF
+		var outer: float = APRON_ROLL_AXIS
+		# Wound from -tangent to +tangent: the other way round the normals
+		# come out pointing at the floor and the strip renders as nothing at
+		# all, which is exactly what the first attempt did.
+		_quad(walk,
+			basis_dir * inner - tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			basis_dir * outer - tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			basis_dir * outer + tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			basis_dir * inner + tangent * APRON_OUT + Vector3(0, MAT_TOP_LOCAL, 0),
+			Vector2(0, 0), Vector2(1, 0), Vector2(1, 4), Vector2(0, 4))
+	walk.generate_tangents()
+	walk.commit(mesh)
+
+	# Surface 2: the padded roll the apron edge actually is.
+	var roll := SurfaceTool.new()
+	roll.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for side: int in range(4):
+		var basis_dir: Vector3 = _SIDE_DIRS[side]
+		var tangent := Vector3(basis_dir.z, 0, -basis_dir.x)
+		for step: int in range(APRON_ROLL_STEPS):
+			var t0 := float(step) / float(APRON_ROLL_STEPS)
+			var t1 := float(step + 1) / float(APRON_ROLL_STEPS)
+			var p0 := _roll_point(basis_dir, t0)
+			var p1 := _roll_point(basis_dir, t1)
+			# u runs 0..1 along the side so the banner's chevrons land on the
+			# corners, exactly as they do on the skirt below.
+			_quad(roll,
+				p0 - tangent * APRON_OUT, p1 - tangent * APRON_OUT,
+				p1 + tangent * APRON_OUT, p0 + tangent * APRON_OUT,
+				Vector2(0, t0 * APRON_ROLL_V), Vector2(0, t1 * APRON_ROLL_V),
+				Vector2(1, t1 * APRON_ROLL_V), Vector2(1, t0 * APRON_ROLL_V))
+	roll.generate_tangents()
+	roll.commit(mesh)
 
 	floor_mesh.mesh = mesh
 	floor_mesh.set_surface_override_material(0, _canvas_material())
-	# The canvas rolling over the mat edge onto the frame. Dark neutral grey:
-	# in the reference this band is the shadowed lip between a white mat and a
-	# dark skirt, and it is what stops the two reading as one surface.
+	# The apron a wrestler stands on outside the ropes: the same light cloth as
+	# the mat, not the dark lip that used to stand in for it.
 	floor_mesh.set_surface_override_material(1, _resolve("ring_apron",
-		_mat(Color(0.17, 0.17, 0.175), 0.85), {"tint": Color(0.17, 0.17, 0.175)}))
+		_mat(Color(0.52, 0.52, 0.53), 0.9), {"tint": Color(0.52, 0.52, 0.53)}))
+	floor_mesh.set_surface_override_material(2, _apron_banner_material())
+
+
+## The four side directions, outward. Shared by the apron strip and the roll so
+## the two cannot disagree about which way a side faces.
+const _SIDE_DIRS := [Vector3(0, 0, 1), Vector3(1, 0, 0),
+	Vector3(0, 0, -1), Vector3(-1, 0, 0)]
+
+
+## A point on the apron roll's arc, `t` running 0 (inboard, level with the mat)
+## to 1 (underneath, where the skirt takes over).
+##
+## The arc is a half-round of radius APRON_ROLL_RADIUS about an axis set back
+## from the skirt plane by exactly that radius, so the roll's widest point
+## lands flush on APRON_OUT. That is what makes it read: the bulge stands proud
+## of the skirt's top edge and catches the light along its crown, which is the
+## single thing that tells a padded apron edge from a folded one.
+func _roll_point(basis_dir: Vector3, t: float) -> Vector3:
+	var angle := t * PI
+	return basis_dir * (APRON_ROLL_AXIS + APRON_ROLL_RADIUS * sin(angle)) \
+		+ Vector3(0, MAT_TOP_LOCAL - APRON_ROLL_RADIUS
+			+ APRON_ROLL_RADIUS * cos(angle), 0)
+
+
+## The AEW artwork on the front of each turnbuckle pad.
+##
+## Unshaded it is not -- a pad is vinyl and takes the ring light like the
+## cushion behind it -- but it is NOT the library's `ring_turnbuckle_pad`
+## either: that key carries a fabric normal map at a 0.30m tile, which at this
+## size would crawl a weave across the letterforms.
+func _pad_face_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	var tex: Texture2D = load(PAD_FACE_TEXTURE)
+	if tex != null:
+		mat.albedo_texture = tex
+	mat.texture_repeat = false
+	mat.roughness = 0.68
+	mat.metallic = 0.0
+	# Two-sided, and this is the fix for a failure venue.py's own `finish`
+	# warns about: `recalc_face_normals` finds the outside of a closed solid,
+	# but an OPEN SHEET has no outside, so it picks an arbitrary direction and
+	# a sheet facing the wrong way renders as nothing at all. Its `face_toward`
+	# escape hatch takes one direction per part and these twelve quads face
+	# four different diagonals, whose normals sum to nothing. Culling off makes
+	# the winding irrelevant, which for a flat decal costs nothing.
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return mat
+
+
+## The apron banner, on the roll, so the graphic runs over the edge instead of
+## stopping at it.
+##
+## In the reference the chevron at the corner comes up the skirt, over the roll
+## and dies at the apron floor -- the roll is the same piece of printed vinyl,
+## not a separate trim. Mapping u 0..1 per side puts the graphic's chevron ends
+## on the corners here for the same reason it does on the skirt.
+func _apron_banner_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	var tex: Texture2D = load(APRON_BANNER)
+	if tex != null:
+		mat.albedo_texture = tex
+	mat.texture_repeat = false
+	mat.roughness = 0.9
+	mat.metallic = 0.0
+	return mat
 
 
 ## The canvas texture: weave, panel seams, wear and scuff. Multiplies into
@@ -566,159 +893,59 @@ static func _byte(f: float) -> int:
 
 # ==================================================================== ropes ===
 
-func _build_ropes() -> void:
-	var holder := _replace("Ropes")
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for height: float in ROPE_HEIGHTS:
-		for side: int in range(4):
-			var along := Vector3(1, 0, 0) if side < 2 else Vector3(0, 0, 1)
-			var out := Vector3(0, 0, 1) if side < 2 else Vector3(1, 0, 0)
-			var sign_out := 1.0 if side % 2 == 0 else -1.0
-			var base: Vector3 = out * (ROPE_SPAN * sign_out) + Vector3(0, height, 0)
-			_sweep_rope(st, base, along, height)
-	st.generate_tangents()
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = "RopeMesh"
-	mesh_instance.mesh = st.commit()
-	mesh_instance.set_surface_override_material(0, _rope_material())
-	holder.add_child(mesh_instance)
-
-
-## One span, swept as a tube along a parabola. A catenary and a parabola differ
-## by less than a millimetre over 6m at this sag, and the parabola is the one
-## that can be written down.
-func _sweep_rope(st: SurfaceTool, base: Vector3, along: Vector3, height: float) -> void:
-	var half := POST_XZ + ROPE_OVERRUN
-	var sag: float = ROPE_SAG[height]
-	var up := Vector3(0, 1, 0)
-	var side_dir := along.cross(up).normalized()
-	var previous: Array = []
-	for seg: int in range(ROPE_SEGMENTS + 1):
-		var t := float(seg) / float(ROPE_SEGMENTS)
-		var s := lerpf(-half, half, t)
-		var drop := sag * 4.0 * t * (1.0 - t)
-		var centre: Vector3 = base + along * s - up * drop
-		var ring: Array = []
-		for r: int in range(ROPE_RINGS + 1):
-			var a := TAU * float(r) / float(ROPE_RINGS)
-			var normal: Vector3 = (side_dir * cos(a) + up * sin(a)).normalized()
-			ring.append([centre + normal * ROPE_RADIUS, normal,
-				Vector2(float(r) / float(ROPE_RINGS), s / 0.11)])
-		if seg > 0:
-			for r: int in range(ROPE_RINGS):
-				_tri(st, previous[r], previous[r + 1], ring[r + 1])
-				_tri(st, previous[r], ring[r + 1], ring[r])
-		previous = ring
-
-
-# ============================================= turnbuckles, posts and caps ===
-
-func _build_turnbuckles_and_posts() -> void:
-	var holder := _replace("Posts")
-	var dark := SurfaceTool.new(); dark.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var fitting := SurfaceTool.new(); fitting.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	for sx: float in [-1.0, 1.0]:
-		for sz: float in [-1.0, 1.0]:
-			var post := Vector3(POST_XZ * sx, 0.0, POST_XZ * sz)
-			# Axis-aligned: local X runs along +X, local Z along +Z, so the
-			# post's faces are parallel to the ring's sides.
-			_oriented_box(dark,
-				post + Vector3(0, (POST_BOTTOM + POST_TOP) * 0.5, 0),
-				Vector3(1, 0, 0), Vector3(0, 0, 1),
-				Vector3(POST_SECTION, POST_TOP - POST_BOTTOM, POST_SECTION))
-
-			# Each rope terminates in its own sleeve, and each sleeve is on the
-			# face its rope runs off. A corner carries two ropes per height --
-			# one down X, one down Z -- so it carries two sleeves per height,
-			# which is what the reference's corners show.
-			for height: float in ROPE_HEIGHTS:
-				var centre: Vector3 = post + Vector3(0, height, 0)
-				for out: Vector3 in [Vector3(-sx, 0, 0), Vector3(0, 0, -sz)]:
-					var tangent := Vector3(out.z, 0, -out.x)
-					# The sleeve, lying along the rope, drawn as a box rather
-					# than a cylinder: at this size the silhouette is four
-					# pixels and a box costs a third of the triangles.
-					_oriented_box(fitting,
-						centre + out * (POST_SECTION * 0.5 + NUB_LENGTH * 0.5),
-						tangent, out,
-						Vector3(NUB_RADIUS * 2.0, NUB_RADIUS * 2.0, NUB_LENGTH))
-					# The clevis clamping the sleeve back to the post.
-					_oriented_box(fitting,
-						centre + out * (POST_SECTION * 0.5 + 0.012),
-						tangent, out, CLEVIS)
-
-	# Matte, not satin. At roughness 0.55 the posts carried a hard vertical
-	# specular streak down each face and read as moulded plastic; the
-	# reference's posts are flat black padding and return almost nothing.
-	_emit(holder, "PostMesh", dark,
-		_resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)))
-	_emit(holder, "TurnbuckleFittings", fitting,
-		_resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)))
-
-
-# ==================================================================== apron ===
-## The skirt boxes stay in ring.tscn (they carry the CC0 fabric this file must
-## not re-license). What is added here is the frame the skirt hangs from.
+## The ring's steel and rope is `tools/blender/ring.py`'s model.
 ##
-## What is NOT added any more: the printed chevron band, and the nine vertical
-## folds per side. The ring reference (refs/ring.md) has a flat, unbranded,
-## near-featureless skirt -- a dark grey sheet from the mat edge to the floor
-## with a lip at the top and a hem at the bottom. The band went with the rest
-## of the branding; the folds went because the reference's skirt is drum-tight,
-## not draped.
+## It was four SurfaceTool generators here: the ropes, the posts and their
+## terminations, the apron frame and the steps. They are one committed `.glb`
+## now, for the reasons that file records -- bevelled arrises that catch the
+## house rig, round turnbuckle sleeves instead of boxes, and stringers holding
+## the steel steps together as one object. Every dimension still comes from
+## the constants above; `tools/blender/ring.py` reads them out of this file
+## rather than retyping them, so the two cannot drift.
 ##
-## The round note that used to sit on the band is kept, because it is about
-## this strip of frame rather than about the band, and it still binds: a bright
-## surface hung here lit the one strip of the wide frame that was still pure
-## black and took void_fraction from 0.023 to 0.002, outside VISUAL_BAR.md's
-## 0.010-0.066 floor. A real arena is dark under the ring apron. Everything
-## added below is therefore dark, which is also what the reference shows -- the
-## two agree, which is the comfortable case.
+## What did NOT move: the canvas (`_build_canvas`, two quads carrying a
+## generated texture at a node path the capture harness keys off), every
+## collider in `scenes/ring.tscn`, and every material below.
+const RING_MODEL := "res://assets/environment/ring.glb"
 
-func _build_apron_detail() -> void:
-	var holder := _replace("ApronDetail")
-	var rail := SurfaceTool.new(); rail.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for side: int in range(4):
-		var out: Vector3 = [Vector3(0, 0, 1), Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(-1, 0, 0)][side]
-		var tangent := Vector3(out.z, 0, -out.x)
-		var mid: Vector3 = out * APRON_OUT
-		# The lip the skirt hangs off, under the mat edge.
-		_oriented_box(rail, mid + Vector3(0, APRON_TOP + 0.04, 0), tangent, out,
-			Vector3(6.62, 0.13, 0.17))
-		# The hem, weighted so the skirt hangs straight.
-		_oriented_box(rail, mid + Vector3(0, APRON_BOTTOM + 0.03, 0), tangent, out,
-			Vector3(6.58, 0.07, 0.13))
-	_emit(holder, "ApronRail", rail,
-		_resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
-			{"tint": Color(0.105, 0.105, 0.112)}))
+## Part name in the .glb -> the material that dresses it. Same split as
+## before: the steps get `ring_steps` rather than the apron's `ring_steel`,
+## because in the reference they are bare metal and the second-brightest
+## surface in the frame, and brightening `ring_steel` would have brightened
+## the apron rail into the strip of frame that has to stay dark.
+func _model_materials() -> Dictionary:
+	return {
+		"PostMesh": _resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)),
+		"TurnbuckleFittings": _resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)),
+		# Vinyl, not steel: a pad is a soft cover and takes a broad dull
+		# sheen, where the fittings behind it take a tight specular one.
+		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
+			_mat(Color(0.055, 0.055, 0.060), 0.62)),
+		"TurnbuckleFaces": _pad_face_material(),
+		"RopeMesh": _rope_material(),
+		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
+			{"tint": Color(0.105, 0.105, 0.112)}),
+		"StepsMesh": _bare_steel(),
+	}
 
 
-# ============================================================== steel steps ===
-## Geometry unchanged -- three treads at +/-X, offset along Z, which is already
-## where the reference puts them. What changes is the material: in the
-## reference the steps are BARE metal and the second-brightest thing in the
-## frame after the canvas, where here they shared the ring's dark painted
-## `ring_steel` with the apron rail. They get their own key for that reason;
-## brightening `ring_steel` itself would have brightened the apron rail with
-## them, into the strip of frame the note above says to leave dark.
-
-func _build_steps() -> void:
-	var holder := _replace("Steps")
-	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for sx: float in [-1.0, 1.0]:
-		var out := Vector3(sx, 0, 0)
-		var tangent := Vector3(0, 0, 1)
-		var rise := (STEP_TOP_Y - STEP_FLOOR_Y) / float(STEP_TREADS)
-		for i: int in range(STEP_TREADS):
-			var top := STEP_FLOOR_Y + rise * float(i + 1)
-			var depth := STEP_RUN * float(STEP_TREADS - i)
-			var centre: Vector3 = out * (APRON_OUT + 0.06 + depth * 0.5) \
-				+ Vector3(0, (STEP_FLOOR_Y + top) * 0.5, 0) + tangent * 0.35
-			_oriented_box(st, centre, tangent, out,
-				Vector3(STEP_WIDTH, top - STEP_FLOOR_Y, depth))
-	_emit(holder, "StepsMesh", st, _bare_steel())
+func _build_model() -> void:
+	var holder := _replace("RingModel")
+	var packed: PackedScene = load(RING_MODEL)
+	if packed == null:
+		push_error("RingBuilder: %s failed to load. Run tools/blender/build_venue.sh ring."
+			% RING_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "RingMeshes"
+	holder.add_child(root)
+	var materials := _model_materials()
+	for part: String in materials:
+		var node := root.find_child(part, true, false) as MeshInstance3D
+		if node == null:
+			push_error("RingBuilder: %s has no '%s' object." % [RING_MODEL, part])
+			continue
+		node.material_override = materials[part]
 
 
 # ================================================================== helpers ===
@@ -743,23 +970,8 @@ func _replace(container: String) -> Node3D:
 	return node
 
 
-func _emit(holder: Node3D, node_name: String, st: SurfaceTool, material: Material) -> void:
-	st.generate_normals()
-	st.generate_tangents()
-	var instance := MeshInstance3D.new()
-	instance.name = node_name
-	instance.mesh = st.commit()
-	instance.set_surface_override_material(0, material)
-	holder.add_child(instance)
-
-
-func _tri(st: SurfaceTool, a: Array, b: Array, c: Array) -> void:
-	for vertex: Array in [a, b, c]:
-		st.set_normal(vertex[1])
-		st.set_uv(vertex[2])
-		st.add_vertex(vertex[0])
-
-
+## _quad survives the move to Blender because `_build_canvas` still uses
+## it: the canvas is the one ring surface this file still generates.
 func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
 		ua: Vector2, ub: Vector2, uc: Vector2, ud: Vector2) -> void:
 	var normal := (b - a).cross(d - a).normalized()
@@ -771,42 +983,3 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
 		st.set_normal(normal)
 		st.set_uv(pair[1])
 		st.add_vertex(pair[0])
-
-
-## A box whose local X follows `tangent` and local Z follows `forward`, so a
-## turnbuckle pad can face ring centre at 45 degrees without a transform node.
-func _oriented_box(st: SurfaceTool, centre: Vector3, tangent: Vector3,
-		forward: Vector3, size: Vector3) -> void:
-	var x: Vector3 = tangent.normalized() * size.x * 0.5
-	var y := Vector3(0, size.y * 0.5, 0)
-	var z: Vector3 = forward.normalized() * size.z * 0.5
-	var corner := func(i: int, j: int, k: int) -> Vector3:
-		return centre + x * float(i) + y * float(j) + z * float(k)
-	var faces := [
-		[corner.call(-1, 1, 1), corner.call(1, 1, 1), corner.call(1, 1, -1), corner.call(-1, 1, -1)],
-		[corner.call(-1, -1, -1), corner.call(1, -1, -1), corner.call(1, -1, 1), corner.call(-1, -1, 1)],
-		[corner.call(-1, -1, 1), corner.call(1, -1, 1), corner.call(1, 1, 1), corner.call(-1, 1, 1)],
-		[corner.call(1, -1, -1), corner.call(-1, -1, -1), corner.call(-1, 1, -1), corner.call(1, 1, -1)],
-		[corner.call(1, -1, 1), corner.call(1, -1, -1), corner.call(1, 1, -1), corner.call(1, 1, 1)],
-		[corner.call(-1, -1, -1), corner.call(-1, -1, 1), corner.call(-1, 1, 1), corner.call(-1, 1, -1)],
-	]
-	for face: Array in faces:
-		_quad(st, face[0], face[1], face[2], face[3],
-			Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1))
-
-
-func _cylinder(st: SurfaceTool, base: Vector3, height: float, radius: float,
-		sides: int) -> void:
-	var top := base + Vector3(0, height, 0)
-	for i: int in range(sides):
-		var a0 := TAU * float(i) / float(sides)
-		var a1 := TAU * float(i + 1) / float(sides)
-		var d0 := Vector3(cos(a0), 0, sin(a0))
-		var d1 := Vector3(cos(a1), 0, sin(a1))
-		_quad(st, base + d0 * radius, base + d1 * radius,
-			top + d1 * radius, top + d0 * radius,
-			Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1))
-		st.set_normal(Vector3.UP)
-		for point: Vector3 in [top, top + d0 * radius, top + d1 * radius]:
-			st.set_uv(Vector2(point.x, point.z))
-			st.add_vertex(point)

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/match.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/kenny_model.tscn" id="2"]
+
+[node name="Match" instance=ExtResource("1")]
+
+; is_ai on WrestlerA for the same reason cody_match.tscn sets it: match.tscn
+; leaves WrestlerA as the human slot, a passive wrestler never presses grapple
+; and loses every tie-up, and the grapple chain is then unreachable in the one
+; scene named for this model.
+[node name="WrestlerA" parent="." index="0"]
+is_ai = true
+character_model_scene = ExtResource("2")
+
+[node name="WrestlerB" parent="." index="1"]
+character_model_scene = ExtResource("2")

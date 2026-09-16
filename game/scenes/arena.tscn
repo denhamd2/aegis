@@ -2,11 +2,13 @@
 
 [ext_resource type="Script" path="res://core/arena/arena_builder.gd" id="1"]
 
-; The hall around the ring. Geometry is generated in _ready() by
-; ArenaBuilder rather than authored here: a twenty-row raked bowl with a few
-; thousand seats is not hand-typeable as transforms, and as a dozen named
-; constants it can actually be reviewed and tuned. See the script's header for
-; why this is built rather than downloaded.
+; The hall around the ring. Assembled in _ready() by ArenaBuilder rather than
+; authored here: a twenty-row raked bowl with a few thousand seats is not
+; hand-typeable as transforms, and as a dozen named constants it can actually
+; be reviewed and tuned. The bowl and shell themselves are a model built from
+; those same constants (assets/environment/arena_bowl.glb, from
+; tools/blender/arena_bowl.py) because the reference arena's plan is an
+; obround and boxes cannot be one. See the script's header.
 ;
 ; Everything under this node is cosmetic. No CollisionObject3D is created
 ; anywhere in it -- ring.tscn keeps the only bodies the match touches.

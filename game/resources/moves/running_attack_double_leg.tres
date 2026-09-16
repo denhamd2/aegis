@@ -4,11 +4,18 @@
 
 [resource]
 script = ExtResource("1")
-; Second running attack (Motifect double-leg takedown, strikes/running_double_leg).
-; Frame data mirrors the clothesline and damage totals match it (16) with a
-; takedown distribution, so this adds variety without moving any balance
-; number. Contact beat is an estimate -- see the recipe.
-animation_pair_id = &"running_double_leg"
+; Second running attack. Frame data mirrors the clothesline and damage totals
+; match it (16) with a takedown distribution, so this adds variety without
+; moving any balance number.
+;
+; It has NO clip of its own, and that is deliberate: the baked double-leg
+; excerpt it used to name rendered as a ball of limbs (head below hips on 59
+; of 69 frames) and could not be re-baked -- see resources/animations/
+; strike_recipes.gd. An empty pair id falls back to STATE_ANIMATIONS'
+; RUNNING_ATTACK clip, which is exactly what running_attack_clothesline.tres
+; already does. The two running attacks therefore differ in damage
+; distribution but not yet in performance.
+animation_pair_id = &""
 startup_frames = 18
 active_frames = 5
 recovery_frames = 46
@@ -18,6 +25,8 @@ damage_head = 2.0
 damage_torso = 8.0
 damage_arms = 0.0
 damage_legs = 6.0
+contact_offset = Vector3(0.231, 1.441, -0.37)
+contact_radius = 0.12
 momentum_cost = 0.0
 momentum_gain = 10.0
 weight_class_min = 0

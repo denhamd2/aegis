@@ -27,6 +27,16 @@ const OUTPUT := "res://resources/animations/paired_poses.tres"
 ## loudly here instead of producing silently dead tracks.
 const TEMPLATE_CLIP := "PickUp_Table"
 
+## Clips authored on the rig in Blender (tools/blender/wrestling_clips.py).
+##
+## A recipe with an "authored" key names one clip PER ROLE there and is
+## copied wholesale instead of pose-stitched. Stitching exists because the
+## rig had no wrestling in it and a pose could only be approximated by
+## sampling some other clip at some other moment -- which is how a knee to
+## the midsection came to be built out of Sword_Attack and Sitting_Enter.
+## An authored half needs none of that.
+const AUTHORED := "res://assets/animations/wrestling_clips.glb"
+
 ## preload rather than the class_name: a `-s` script runs before the global
 ## class cache is necessarily populated in a fresh checkout.
 const PairedRecipes := preload("res://resources/animations/paired_recipes.gd")
@@ -64,10 +74,16 @@ func _build() -> int:
 			model.free()
 			return 1
 		var length: float = lengths[move_id]
+		var recipe: Dictionary = PairedRecipes.RECIPES[move_id]
 		for role in ["attacker", "defender"]:
-			var samples: Array = PairedRecipes.RECIPES[move_id][role]
-			var anim := _bake(player, tracks, samples, length,
-					"%s/%s" % [move_id, role], role == "defender")
+			var anim: Animation
+			if recipe.has("authored"):
+				anim = _authored(recipe["authored"][role], tracks, length,
+						"%s/%s" % [move_id, role], model)
+			else:
+				var samples: Array = recipe[role]
+				anim = _bake(player, tracks, samples, length,
+						"%s/%s" % [move_id, role], role == "defender")
 			if not anim:
 				model.free()
 				return 1
@@ -88,6 +104,67 @@ func _build() -> int:
 ## Output clips must be exactly as long as the root-transform half of the
 ## same move, because the two are started on the same physics tick and kept
 ## in sync by nothing else.
+## Copies an authored clip onto the paired track layout, retimed to the
+## move's own length so it stays locked to the root trajectory in
+## paired_moves.tres -- the two are played together and a mismatch would
+## slide the performance out of the throw.
+func _authored(clip_name: String, tracks: Array, length: float,
+		label: String, rig: Node) -> Animation:
+	var packed: PackedScene = load(AUTHORED)
+	if not packed:
+		push_error("%s: cannot load %s" % [label, AUTHORED])
+		return null
+	var node: Node = packed.instantiate()
+	var player: AnimationPlayer = node.find_child("AnimationPlayer", true, false)
+	if not player or not player.has_animation(clip_name):
+		push_error("%s: %s has no clip '%s'" % [label, AUTHORED, clip_name])
+		node.free()
+		return null
+	var source: Animation = player.get_animation(clip_name)
+	var anim := Animation.new()
+	anim.length = length
+	anim.loop_mode = Animation.LOOP_NONE
+	var scale := length / source.length
+	# Every track the layout names gets written, whether the authored clip
+	# poses that bone or not. An authored clip keyframes the ~21 bones the
+	# pose actually uses and leaves the fingers alone, but a paired clip has
+	# to fully DEFINE the pose: a track the clip omits is a bone the
+	# AnimationTree fills from whatever it was blending before, which in a
+	# grapple is the other man's hold. Missing bones are pinned to the rig's
+	# rest pose instead, which is what the omission means.
+	var skeleton: Skeleton3D = rig.find_child("Skeleton3D", true, false)
+	for entry in tracks:
+		var path: NodePath = entry["path"]
+		var type: int = entry["type"]
+		var src := source.find_track(path, type)
+		if src < 0:
+			if not skeleton:
+				continue
+			var bone := skeleton.find_bone(String(path).get_slice(":", 1))
+			if bone < 0:
+				continue
+			var rest := skeleton.get_bone_rest(bone)
+			var rest_track := anim.add_track(type)
+			anim.track_set_path(rest_track, path)
+			if type == Animation.TYPE_ROTATION_3D:
+				anim.rotation_track_insert_key(rest_track, 0.0,
+						rest.basis.get_rotation_quaternion())
+			elif type == Animation.TYPE_POSITION_3D:
+				anim.position_track_insert_key(rest_track, 0.0, rest.origin)
+			continue
+		var out_track := anim.add_track(type)
+		anim.track_set_path(out_track, path)
+		for key in source.track_get_key_count(src):
+			var at := source.track_get_key_time(src, key) * scale
+			if type == Animation.TYPE_ROTATION_3D:
+				anim.rotation_track_insert_key(out_track, at,
+						source.track_get_key_value(src, key))
+			elif type == Animation.TYPE_POSITION_3D:
+				anim.position_track_insert_key(out_track, at,
+						source.track_get_key_value(src, key))
+	node.free()
+	return anim
+
 func _root_track_lengths() -> Dictionary:
 	var library: AnimationLibrary = load(PAIRED_MOVES)
 	if not library:

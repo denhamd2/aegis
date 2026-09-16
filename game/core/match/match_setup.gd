@@ -75,6 +75,12 @@ func _ready() -> void:
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("Match won by %s via %s" % [winner.name, method])
+	# The winner celebrates. Done BEFORE the freeze below, because it is a
+	# real FSM transition and the freeze stops the controller processing --
+	# the clip itself keeps playing either way, since the AnimationTree runs
+	# on its own and does not depend on _physics_process.
+	if winner and winner.has_method("celebrate"):
+		winner.celebrate()
 	# Freeze both wrestlers immediately — without this they keep polling
 	# input and trying to act next tick, and a defender left mid-pin
 	# (PIN_DEFENDER only legally leads to DOWN/GETUP) throws an illegal

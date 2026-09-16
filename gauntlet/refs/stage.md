@@ -81,3 +81,36 @@ the deck and let the tube stop wherever it meets the floor. The cut angle is
 then derived rather than chosen, and the shape is a circle by construction
 rather than by resemblance. `dynamite_portals_close.jpg` is the frame that
 settles it.
+
+## The ramp — extent and edge lighting
+
+Added when the ramp was rebuilt as a wedge.
+
+**Where it stops.** At the **barrier line**, not at the ring. Ringside is
+floored in black matting from the barrier in to the apron (see `ring.md`), and
+the entrance comes down onto the edge of that. The version that ended one
+metre short of the ring also ran straight through the barricade line.
+
+**The edge strips, measured rather than remembered.**
+`dynamite_stage_low_angle.jpg` shows a lit strip running the leading edge of
+the deck. Sampling the brightest pixel per column across the lower band of
+that photograph, in 8-pixel steps:
+
+| hue family | columns | example |
+| --- | --- | --- |
+| **violet-magenta (287–295°)** | **67** | `(235, 163, 255)`, `(249, 178, 255)` |
+| white / desaturated (the strip's blown core) | 51 | `(255, 255, 246)` |
+| blue (250–259°) | 9 | `(173, 152, 255)` |
+| cyan (184–194°) | 5 | `(117, 223, 255)` |
+
+So the strip is the **same magenta the portals carry**, blowing to white at
+its core — not the white or the blue an unmeasured guess would have reached
+for. The build dresses `RampLeds` from `arena_portal_magenta`, the key the
+west portal already uses.
+
+It runs at level 0.72 rather than the portals' 1.12: the strips are 24 m long
+and sit far closer to the broadcast camera than the portals do, so the same
+level puts two hard magenta lines through the middle of every wide shot.
+
+Method: brightest pixel per column in the band 0.83–0.95 of image height,
+classified by HSV hue, columns under luminance 90 discarded.

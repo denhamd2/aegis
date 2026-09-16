@@ -67,11 +67,32 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
 	_pair_transform = _compute_pair_transform(attacker, defender)
-	_align_to_pair(attacker, defender)
 
 	_active = true
-	_play_role_poses(attacker, defender, move)
 	grapple_started.emit(attacker, defender, move)
+
+	# The lock-up, before the move. _align_to_pair() below teleports both men
+	# into the pair frame -- it always did, and on footage that is the single
+	# worst thing in a match: measured with tools/probe/contact_probe.tscn,
+	# 16-22 one-tick jumps per match, worst 1.810 m moved in a single 1/60s
+	# tick (108 m/s). What a viewer sees is a standing man becoming a
+	# horizontal man in mid-air between two frames, with nobody touching him.
+	#
+	# So the snap is spread over LEAD_IN_TICKS instead: both bodies slide and
+	# turn from wherever they were standing into the frame the clip is
+	# authored against, and only then does the clip start. Nothing about the
+	# move itself changes -- the trajectory still plays in the same frame,
+	# from the same alignment -- it just stops being instantaneous.
+	#
+	# Suspended for the whole slide, so neither man's own _physics_process
+	# fights the interpolation, and _active is already true so nothing else
+	# can start a second grapple during it.
+	await _lead_in(attacker, defender)
+	if not _active:
+		return # the match ended, or the rig was torn down, mid-lock-up
+
+	_align_to_pair(attacker, defender)
+	_play_role_poses(attacker, defender, move)
 
 	if animation_player and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
 		_play_retargeted(move.animation_pair_id, attacker, defender)
@@ -194,6 +215,50 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 		return Transform3D(Basis(), midpoint)
 	return Transform3D(Basis(Vector3.UP, atan2(-facing.x, -facing.z)), midpoint)
 
+## Ticks spent sliding the two bodies into the pair frame before the paired
+## clip starts.
+##
+## 10 ticks is a sixth of a second: long enough to read as closing the last
+## step and taking hold, short enough that it does not feel like a pause in
+## the match. It is a presentation value and is not defended as matching
+## measured footage -- gauntlet/refs/ has no lock-up timing in it.
+const LEAD_IN_TICKS := 10
+
+## Slides both wrestlers from where they are standing into their places in the
+## pair frame, over LEAD_IN_TICKS physics ticks.
+##
+## Interpolated on the transform rather than by driving velocity: the bodies
+## are suspended (their own _physics_process is off, so move_and_slide() never
+## runs) and a paired move must land both men on an exact frame or the
+## authored trajectory starts from the wrong place. Rotation goes through the
+## quaternion so a man who has to turn 170 degrees turns the short way round
+## instead of through his own shoulder.
+func _lead_in(attacker: Node3D, defender: Node3D) -> void:
+	var from_attacker := attacker.global_transform
+	var from_defender := defender.global_transform
+	var to_attacker := _pair_transform
+	var to_defender := _pair_transform.rotated_local(Vector3.UP, PI)
+	for tick in range(1, LEAD_IN_TICKS + 1):
+		await Engine.get_main_loop().physics_frame
+		if not _active:
+			return
+		# Ease out: most of the closing distance is covered early and the last
+		# few centimetres are taken slowly, which is how two men actually come
+		# together -- a linear slide reads as both being dragged on rails.
+		var t := float(tick) / float(LEAD_IN_TICKS)
+		var eased := 1.0 - pow(1.0 - t, 3.0)
+		attacker.global_transform = blend_transforms(from_attacker, to_attacker, eased)
+		defender.global_transform = blend_transforms(from_defender, to_defender, eased)
+
+## Shared with WrestlerController._place_cover(), which has the same problem
+## (a body that appeared at its destination instead of arriving there), so the
+## easing lives in one place rather than being written twice.
+static func blend_transforms(from: Transform3D, to: Transform3D, t: float) -> Transform3D:
+	return Transform3D(
+		Basis(Quaternion(from.basis.orthonormalized()).slerp(
+			Quaternion(to.basis.orthonormalized()), t)),
+		from.origin.lerp(to.origin, t))
+
 func _align_to_pair(attacker: Node3D, defender: Node3D) -> void:
 	attacker.global_transform = _pair_transform
 	defender.global_transform = _pair_transform.rotated_local(Vector3.UP, PI)
@@ -212,7 +277,21 @@ func _physics_process(_delta: float) -> void:
 	if not _active:
 		return
 	for body: Node3D in [_attacker, _defender]:
-		if body and body.has_method("update_paired_presentation"):
+		if body == null:
+			continue
+		# Before the presentation, because the grip aims at where the bodies
+		# ARE. A suspended body collides with nothing for the length of the
+		# move -- that is what suspension means -- so the ropes cannot stop a
+		# paired clip carrying a man off the mat, and the midpoint clamp in
+		# _compute_pair_transform() does not bound the offsets the two sit at
+		# either side of it. Measured on seed 4 of the strike-connect probe: a
+		# GRAPPLE_HOLD walked WrestlerB out to x = -3.07, past the mat's edge
+		# at 3.0 and out over a stretch of arena with no floor collider under
+		# it at all, and he fell for the remaining 17 000 ticks of the match.
+		# See WrestlerController.keep_inside_the_ring().
+		if body.has_method("keep_inside_the_ring"):
+			body.keep_inside_the_ring()
+		if body.has_method("update_paired_presentation"):
 			body.update_paired_presentation()
 
 func _suspend(body: CharacterBody3D) -> void:
@@ -227,11 +306,43 @@ func _on_animation_finished(_anim_name: StringName) -> void:
 	_apply_root_motion()
 	_restore_original_animation()
 	_level_bodies()
-	_separate_bodies()
+	await _ease_apart()
 	_resume(_attacker_body)
 	_resume(_defender_body)
 	_active = false
 	grapple_finished.emit(_attacker, _defender)
+
+## Ticks spent sliding the pair apart at the end of a move. Shorter than the
+## lock-up's LEAD_IN_TICKS: coming out of a hold is a shove, not a step.
+const EASE_APART_TICKS := 8
+
+## Slides the defender out to a legal separation instead of snapping him there.
+##
+## _separate_bodies() computes where he has to end up and used to assign it
+## outright, which measured (tools/probe/contact_probe.tscn) as a one-tick jump
+## of up to 0.870 m -- the last big teleport left in a match after the lock-up
+## snap was fixed, and the same defect at the other end of the same move. The
+## clips finish 0.14-0.28 m apart and the legal distance is 0.95 m, so almost
+## the whole correction was happening in a single frame.
+##
+## Done here, before _resume(), because both bodies are still suspended: their
+## own _physics_process is off, so writing the transform is how the rig moves
+## them for the whole move and there is no floor contact to lose. (Driving
+## velocity here instead would do nothing -- move_and_slide() is not running.)
+func _ease_apart() -> void:
+	var target := _separation_target()
+	if target == Vector3.INF or not _defender_body:
+		return
+	var from := _defender_body.global_position
+	for tick in range(1, EASE_APART_TICKS + 1):
+		await Engine.get_main_loop().physics_frame
+		if not _active or not is_instance_valid(_defender_body):
+			return
+		var t := float(tick) / float(EASE_APART_TICKS)
+		# Ease out: most of the push happens immediately, the way being shoved
+		# off somebody does, then it settles.
+		_defender_body.global_position = from.lerp(target,
+				1.0 - pow(1.0 - t, 3.0))
 
 ## Push the pair apart to at least their combined capsule radii before physics
 ## resumes.
@@ -294,9 +405,11 @@ func _level_bodies() -> void:
 ## the tangent where cap meets cylinder -- which is exactly one radius up.
 const SEPARATION_MARGIN := 0.15
 
-func _separate_bodies() -> void:
+## Where the defender has to end up, or Vector3.INF if he is already clear.
+## Computed rather than applied -- _ease_apart() slides him there.
+func _separation_target() -> Vector3:
 	if not _attacker_body or not _defender_body:
-		return
+		return Vector3.INF
 	var min_separation := _capsule_radius(_attacker_body) \
 			+ _capsule_radius(_defender_body) + SEPARATION_MARGIN
 	var offset := _defender_body.global_position - _attacker_body.global_position
@@ -307,15 +420,13 @@ func _separate_bodies() -> void:
 		offset = -_attacker_body.global_transform.basis.z
 		offset.y = 0.0
 	if offset.length() < 0.001:
-		return # attacker somehow facing straight up/down; leave it alone
+		return Vector3.INF # attacker facing straight up/down; leave it alone
 	if offset.length() >= min_separation:
-		return
+		return Vector3.INF
 	var pushed := _attacker_body.global_position + offset.normalized() * min_separation
 	# Y is whatever the clip ended on -- only the horizontal overlap is the
 	# problem, and rewriting height here would undo a legitimate landing pose.
-	_defender_body.global_position = Vector3(
-		pushed.x, _defender_body.global_position.y, pushed.z
-	)
+	return Vector3(pushed.x, _defender_body.global_position.y, pushed.z)
 
 static func _capsule_radius(body: CharacterBody3D) -> float:
 	for child in body.get_children():

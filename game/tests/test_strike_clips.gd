@@ -72,22 +72,67 @@ func test_generated_clips_are_the_length_the_recipe_asks_for() -> void:
 			.override_failure_message("%s is not %.3fs" % [name, want]) \
 			.is_equal_approx(want, 0.001)
 
+## Every generated track must name a bone the rig actually has.
+##
+## This used to build its idea of "the runtime rig" from Punch_Cross's track
+## list, which is the very assumption that produced the bug it was meant to
+## catch. Punch_Cross is a CC0 clip animating 55 of the rig's 65 bones, so a
+## track for any of the other ten looked unresolvable to this test and got
+## dropped by the generator -- spine_01 among them, aliased onto the pelvis
+## path, which applied the spine's lean to the whole body and left the winner
+## of a match sprawled on the mat instead of standing.
+##
+## A clip is not the rig. The skeleton is, so ask it.
 func test_generated_tracks_resolve_on_the_runtime_rig() -> void:
 	var player := _rig_player()
-	var runtime_tracks := {}
-	var template: Animation = player.get_animation("Punch_Cross")
-	for track in template.get_track_count():
-		runtime_tracks["%d:%s" % [template.track_get_type(track),
-				String(template.track_get_path(track).get_concatenated_subnames())]] = true
+	var skeleton: Skeleton3D = player.get_parent().find_child(
+			"Skeleton3D", true, false)
+	assert_object(skeleton).is_not_null()
+	var bones := {}
+	for bone in skeleton.get_bone_count():
+		bones[skeleton.get_bone_name(bone)] = true
 	var unresolved: Array[String] = []
 	for name in StrikeRecipes.RECIPES:
 		var clip: Animation = STRIKE_CLIPS.get_animation(StringName(name))
 		for track in clip.get_track_count():
-			var key := "%d:%s" % [clip.track_get_type(track),
-					String(clip.track_get_path(track).get_concatenated_subnames())]
-			if not runtime_tracks.has(key):
-				unresolved.append("%s -> %s" % [name, key])
+			var bone_name := String(
+					clip.track_get_path(track).get_concatenated_subnames())
+			if not bones.has(bone_name):
+				unresolved.append("%s -> %s" % [name, bone_name])
 	assert_array(unresolved).is_empty()
+
+
+## The generator must carry EVERY bone the authored source poses, not a
+## subset. Dropping one is silent -- the bone simply holds whatever the
+## AnimationTree was blending -- so it is asserted rather than eyeballed.
+func test_no_authored_bone_is_dropped_by_the_bake() -> void:
+	var packed: PackedScene = load("res://assets/animations/wrestling_clips.glb")
+	var source_player: AnimationPlayer = auto_free(packed.instantiate()) \
+			.find_child("AnimationPlayer", true, false)
+	assert_object(source_player).is_not_null()
+	var missing: Array[String] = []
+	for name in StrikeRecipes.RECIPES:
+		var recipe: Dictionary = StrikeRecipes.RECIPES[name]
+		if not recipe.has("file"):
+			continue
+		var source_name: String = recipe["source"]
+		if not source_player.has_animation(source_name):
+			continue
+		var source: Animation = source_player.get_animation(source_name)
+		var baked: Animation = STRIKE_CLIPS.get_animation(StringName(name))
+		var baked_bones := {}
+		for track in baked.get_track_count():
+			if baked.track_get_type(track) == Animation.TYPE_ROTATION_3D:
+				baked_bones[String(
+						baked.track_get_path(track).get_concatenated_subnames())] = true
+		for track in source.get_track_count():
+			if source.track_get_type(track) != Animation.TYPE_ROTATION_3D:
+				continue
+			var bone_name := String(
+					source.track_get_path(track).get_concatenated_subnames())
+			if not baked_bones.has(bone_name):
+				missing.append("%s drops %s" % [name, bone_name])
+	assert_array(missing).is_empty()
 
 ## The whole point of generating them: the clip a state plays must be as
 ## long as the state, or the FSM cuts it off mid-motion.

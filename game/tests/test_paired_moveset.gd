@@ -21,12 +21,19 @@ const PairedRecipes := preload("res://resources/animations/paired_recipes.gd")
 const PAIRED_MOVES := preload("res://resources/animations/paired_moves.tres")
 const MOVES_DIR := "res://resources/moves"
 
-## What is left of ARCHITECTURE.md's "Scope" section after the cut: three
-## basic grapples and two signatures, no reversals. (Two other moves were
-## cut earlier for the same reason and never backfilled: the suplex, whose
-## slot is held for a motion-captured replacement, and the whole power and
-## finisher escalation above the signature.)
-const SCOPED_GRAPPLE := 3
+## What is left of ARCHITECTURE.md's "Scope" section after the cuts: ONE basic
+## grapple and two signatures, no reversals. (Two other moves were cut earlier
+## for the same reason and never backfilled: the suplex, whose slot is held for
+## a motion-captured replacement, and the whole power and finisher escalation
+## above the signature.)
+##
+## Was 3. The three basic grapples -- hiptoss, snapmare, armdrag -- were all
+## throws, and their altitude could not be tuned away: the tucked-body
+## clearance gate below requires root_y >= 1.15 * |up.y| - 0.12, so a body
+## that inverts has to be lifted clear of the mat or its head goes through the
+## canvas. They are replaced by one grapple that does not flip anybody,
+## grapple_clinch_knee, which is why this number is now 1.
+const SCOPED_GRAPPLE := 1
 const SCOPED_SIGNATURE := 2
 
 func _paired_move_names() -> Array[String]:

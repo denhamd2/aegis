@@ -152,3 +152,65 @@ problem: identical local poses down an identical hierarchy give identical
 global poses, so the animation keys are copied verbatim and only their node
 paths are rebased. See the note on `CodyModel._install_animations()` for why
 converting them through rest space instead is wrong, and what it looks like.
+
+## kenny_omega.glb
+
+Source: user-supplied Google Drive archive (`model.zip`, containing
+`source/finalized.zip`), December 2022 vintage. As with `roman_reigns.glb` and
+`cody_rhodes.glb`, the author and licence are unknown and must be confirmed
+before redistribution.
+
+The supplied file is a **photogrammetry scan of a physical action figure**, and
+that shows in every measurement of it. It is not a game asset that happens to be
+unrigged; it is a scan, with a scan's strengths and a scan's damage.
+
+**What was supplied.** A binary FBX 7700 inside two nested zips, with a
+4096-square diffuse and a 4096-square normal map beside it. One mesh, 285,913
+vertices, 571,794 triangles, one material. Watertight -- 0 non-manifold edges,
+0 boundary edges, and 99.86% of its vertices in a single connected shell, which
+is markedly healthier than the Cody asset's 224 shells and 6251 non-manifold
+edges. It arrives **upside down**, **yawed 44 degrees** off the axes, and
+**0.176 units tall**, because the thing scanned is 17.6 cm of plastic.
+
+**The audit found no material faults.** One material, base colour and normal map
+both properly wired, no packed data map in an albedo slot, no untextured slot,
+no alpha card. `kenny_model.gd` therefore has no material-repair pass, the same
+way `cody_model.gd` does not. A scan has exactly one surface and paints
+everything onto it, which costs fidelity but removes that whole class of defect.
+
+**Two scripts produce the committed file.** `tools/assets/fbx_to_static_glb.py`
+converts it (the rigger reads only glTF), stands it upright, squares it to the
+base rig's frame -- arms along X, toes along -Y, both measured off the rig
+rather than assumed -- drops 7 loose scan fragments totalling 402 vertices, and
+decimates to 150,000 triangles. That target is deliberately well above Cody's
+74k: a photogrammetry atlas is thousands of tiny UV islands and every island
+boundary is a seam the collapse decimator smears across, so it does not tolerate
+what a hand-authored atlas does. Measured silhouette drift from the decimation,
+at ten heights from ankle to crown, is at worst 0.41%.
+`tools/assets/rig_static_wrestler.py` then fits the base rig's own 65-bone
+hierarchy to the pose, transfers weights from `wrestler_base.glb`'s mannequin,
+leaves the supplied geometry undeformed, and caps both textures at 2048.
+
+As with Cody, the rigged skeleton keeps the base rig's bone names and hierarchy
+but rests in the model's own pose. That is a BIND-pose difference, not a
+retarget problem, so the animation keys are copied verbatim and only their node
+paths are rebased -- see `KennyModel._install_animations()`.
+
+**Known limits of the source, which no adapter code can fix.** The face is soft
+and the hair is a solid blob at close range; the lighting of the room it was
+scanned in is baked into the diffuse and will not respond to the arena lights;
+and the figure's pointing right hand is frozen into the mesh, so his fingers
+keep that gesture in every animation.
+
+**One thing the rigging could not close, with the measurement that bounds it.**
+The rigger reports the mesh's arms as 22.0% (left) and 16.9% (right) longer
+than the base rig's arm chain, against an 8% tolerance, and warns that grip IK
+will therefore aim slightly short of the scanned hand. Two things make that
+number larger than the mismatch really is, and neither is worth "fixing" by
+reshaping the rig: the reach is measured to the furthest vertices of the hand,
+and this figure's right hand is frozen mid-point, so an extended index finger
+is being counted as arm; and the CC0 base rig is stylised, with a 0.596 m arm
+on a 1.829 m body (32.6% of height) where this realistic scan is at 41%.
+Lengthening the rig's bones to match would desync Kenny's proportions from
+Cody's and from every clip authored against the rig, so the mismatch is left
+in place and recorded here. The legs, by contrast, fit to +2.0% and +1.2%.

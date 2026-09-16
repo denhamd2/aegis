@@ -156,7 +156,13 @@ func _tier_of(w: WrestlerController, move: MoveDef) -> String:
 		return "power"
 	if move == w.grapple_move or w.grapple_move_pool.has(move):
 		return "grapple"
-	if move == w.running_attack_move:
+	# The pool is checked as well as the base rung, the same way every other
+	# tier above does it. It was not, and that was a latent crash rather than a
+	# miscount: a pool draw fell through to "unknown", which is not a key in
+	# the tiers dict the caller then indexes. It was unreachable only because
+	# RUNNING_ATTACK fired zero times in a match -- the first match in which
+	# the AI charged hit it on the first landed double leg.
+	if move == w.running_attack_move or w.running_attack_move_pool.has(move):
 		return "running"
 	if move == w.strike_move or w.strike_move_pool.has(move):
 		return "strike"

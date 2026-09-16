@@ -12,9 +12,7 @@
 [ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_double_leg.tres" id="30"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_hiptoss.tres" id="15"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_snapmare.tres" id="16"]
-[ext_resource type="Resource" path="res://resources/moves/grapple_armdrag.tres" id="17"]
+[ext_resource type="Resource" path="res://resources/moves/grapple_clinch_knee.tres" id="15"]
 [ext_resource type="Resource" path="res://resources/moves/signature_neckbreaker.tres" id="21"]
 [ext_resource type="PackedScene" path="res://scenes/match_hud.tscn" id="28"]
 [ext_resource type="Resource" path="res://resources/moves/strike_kick.tres" id="29"]
@@ -181,20 +179,30 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 player_index = 0
 is_ai = false
-attire_body = Color(0.42, 0.6, 0.95, 1)
+; VALUE, not hue. Was Color(0.42, 0.6, 0.95) -- a bright blue at 0.587
+; relative luminance, against WrestlerB's 0.212. That 2.8x was the whole of
+; the mat<->wrestler failure: VISUAL_BAR.md wants both men 0.24-0.31 below the
+; mat, and A sat at 0.185 while B sat at 0.236. It was an asymmetry in one
+; man's gear, not a global exposure problem.
+;
+; Scaled uniformly by 0.375, which holds the hue at 0.6 and so keeps
+; test_wrestler_colorway's MIN_HUE_SEPARATION. Measured: A 0.185 -> 0.286.
+attire_body = Color(0.157, 0.225, 0.356, 1)
 skin_tone = Color(0.66, 0.5, 0.4, 1)
 physique_bulk = 0.94
 body_variant = 0
 physique_height = 0.98
 torso_width = 1.0
-attire_accent = Color(0.46, 0.72, 1, 1)
+; Scaled with the body it trims. At Color(0.46, 0.72, 1) this was luminance
+; 0.685 -- the brightest thing on either wrestler.
+attire_accent = Color(0.172, 0.27, 0.375, 1)
 strike_move = ExtResource("7")
 grapple_move = ExtResource("15")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
-grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
+grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerB")
 grapple_rig_path = NodePath("../GrappleRig")
@@ -203,6 +211,13 @@ grapple_rig_path = NodePath("../GrappleRig")
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 1.5)
 player_index = 1
 is_ai = true
+; UNUSED, and left at its original value to say so. WrestlerB is
+; body_variant 2, and WrestlerAttire.variant2_body() dresses every one of its
+; pieces from a FIXED colour (DENIM, BOOT_BLACK, SHOE_WHITE, STEEL, WAIST_*)
+; or from the accent -- not one reads attire_body. Darkening this to
+; Color(0.33, 0.072, 0.078) moved the rendered figure by exactly nothing
+; (mat<->B 0.235 before and after), which is how the dead wiring was found.
+; B was darkened on DENIM instead; see wrestler_attire.gd.
 attire_body = Color(0.55, 0.12, 0.13, 1)
 skin_tone = Color(0.7, 0.535, 0.43, 1)
 physique_bulk = 1.12
@@ -219,20 +234,28 @@ signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
-grapple_move_pool = Array[Resource]([ExtResource("15"), ExtResource("16"), ExtResource("17")])
+grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerA")
 grapple_rig_path = NodePath("../GrappleRig")
 
 [node name="MatchCamera" type="Camera3D" parent="."]
-; Broadcast side: parked off-axis at (-4.5, 1.65, +1.2), facing the stage
-; side of the hall with the entrance stage over frame-left and the crowd
-; at frame center. The follow rig preserves whichever side it starts on
-; (it keeps the midpoint->camera direction and only solves distance), so
-; this west-side anchor keeps the broadcast angle without looking through a
-; corner post.
-transform = Transform3D(0.966, 0, 0.258, 0, 1, 0, -0.258, 0, 0.966, -4.5, 1.65, 1.2)
-fov = 41.0
+; The MASTER's anchor: the hard camera's seat at the back of the lower bowl,
+; -X so the entrance stage on -Z reads frame left and the commentary desk on
+; +Z reads frame right. match_camera.gd derives the same position from the
+; bowl's own constants and drives it every tick; this is what the editor and
+; the first frame see.
+;
+; The handheld's side is no longer carried by this transform. It used to be:
+; the follow rig read its bearing back off wherever the camera was standing,
+; which worked only while nothing ever moved the camera. Now that the rig cuts
+; 28m to the hard camera and back, the handheld's bearing is its own property
+; (MatchCamera.ringside_bearing) and survives a cut.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.5, 8.3, 0)
+; The lens belongs to the SHOT now (MatchCamera.shot_fov), not to the camera.
+; This is the master's 14 degrees so the first frame is not taken on the
+; handheld's lens from the hard camera's seat.
+fov = 14.0
 script = ExtResource("4")
 wrestler_a_path = NodePath("../WrestlerA")
 wrestler_b_path = NodePath("../WrestlerB")
