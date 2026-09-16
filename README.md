@@ -6062,3 +6062,146 @@ the mat and stays clear of the ropes, a wrestler put outside on any axis comes
 back, one below the mat is put on it and stops falling, one lifted above it is
 left alone, one already inside is not nudged at all, and the rig contains the
 bodies it has suspended. 411 tests pass.
+
+
+## Round: the beams the reference photographs are actually carried by
+
+`gauntlet/refs/lighting/` is four photographs of AEW shows in hockey-plan
+arenas, and the dominant visual in two of them is an effect this build had no
+answer to at all: hard, narrow, saturated cyan shafts thrown from the overhead
+grid out across the seating bowl, crossing each other over the crowd. Ask
+`grep -rn beam --include=*.gd game/` before this round and the only hits are
+title-screen UI art. All 38 fixtures in `arena_lighting.gd` were aimed at the
+mat, at the bowl rows, or at the entrance set. Nothing threw a shaft across the
+hall.
+
+`stage.md` already says "the coloured shafts standing in the haze around the
+portals are most of what carries it", and `_build_stage_accents()` delivers
+those — but that is the entrance set, four fixtures inside a 12m range behind
+z −34.6. The bowl had nothing.
+
+### The colour is measured
+
+Blue-dominant saturated pixels in the top third of the two cyan frames,
+normalised so B = 1.0: `(0.312, 0.484, 1.0)` at hue 225 on the elevated frame,
+`(0.245, 0.542, 1.0)` at hue 216 on Grand Slam. `BEAM_COLOR` is their mean.
+The other two references are the magenta shows and are what a later colourway
+would sample; they are not mixed in. Method and pixel counts are in
+`lighting.md`.
+
+### Ten fixtures, hung on steel that exists
+
+The origins and the targets come off two different curves, which is why
+`_build_truss_beams()` is longer than the other builders. Targets walk
+`ArenaBuilder._plan_loop()` 16m outside the bowl's first row, cross-aimed eight
+indices — about 30 degrees — round the loop from the bearing each fixture hangs
+on, because aimed straight out twelve beams are twelve radii and nothing
+crosses anything. Origins are where that bearing crosses the truss square, so
+every fixture sits on an outer chord `tools/blender/entrance_set.py` actually
+models rather than floating. The two whose targets land in the entrance-set gap
+are dropped, which leaves a mirror-symmetric ten without that having to be
+arranged.
+
+They are forward_plus only, the same guard the fog volumes use and for a
+stronger reason. A beam with no FogVolume to scatter through is not a beam, it
+is a seven-degree pool of blue on some seats forty metres away — the effect
+rendered as the one part of itself that was never the point. It also keeps ten
+fixtures out of the OpenGL light limit that once rendered the mat at 0.003.
+
+### Three things that did not work
+
+**5.0 and 4.0 for energy and fog energy.** Reasoned across from the stage
+accents, which read well at 3.2 × 2.0 through the global density alone. Those
+shafts are three metres long and a few metres from the lens; these are forty
+metres long and thirty away. Rendered, it produced no visible shaft at all —
+`crowd_bank`'s p99 went *down* 0.0014 and mean saturation moved 0.005. Anyone
+reading that frame would have concluded the rig was broken.
+
+**Raising `HallHaze`'s density to make them read.** A shaft's brightness is
+density times the fixture's fog energy, so either buys one. They are not
+interchangeable: density scatters every light in the hall and fog energy
+scatters one fixture. At 0.0022 the denser haze lit the whole bowl and took
+`crowd_bank`'s fraction below 0.01 from 10.8% to 5.1% — the haze undoing the
+darkening in the same commit that made it. Density came back to 0.0010 and the
+beams' own fog energy went to 200.
+
+**The cone-falloff A/B was inconclusive and is recorded as such.** Godot raises
+the cone's rim term to `1.0 / spot_angle_attenuation`, so low is hard, which is
+the opposite of what the name suggests. Rendered at 0.25 and 3.0 with
+everything else held, `crowd_bank` measured p50 0.0204 both times. Neither
+produced a visible shaft at the energies then in force, so the test could not
+settle anything. 0.25 is kept on the shader formula's authority, not on a
+measurement.
+
+### Then the darkening, which is what `lighting.md` has been asking for
+
+That file's ablation is the load-bearing fact: turning the twenty-fixture house
+wash off entirely and turning it up sixty-fold produce the same frame to three
+decimal places. The bowl is lit by `ArenaBuilder.HOUSE_TARGET` and by nothing
+else, so the hall's contrast was never a lighting problem and no fixture could
+have fixed it. The beams proved it from the other side — they rendered
+correctly and still read as smears against a uniformly lit stand.
+
+`HOUSE_TARGET` halves, 0.006 to 0.0030. What makes that safe is a gap nothing
+lived in before: `measure_frame.py` calls a pixel void below 0.0025 and
+`measure_look.py` calls it dark below 0.01, a factor of four, and the bowl sat
+above the top of it. Nine reaches are raised to hold their parts clear of the
+void floor; `RinkBoards` and `RinkCap` are raised to hold their *products*,
+because the reference shape is a small very bright fraction over a mostly dark
+frame and the lines have to stay hot while the mid-tones drop.
+`test_house_levels.gd` asserts both bounds, so the next round to touch this
+finds out from a failing test rather than from a speckled frame.
+
+### Measured
+
+| shot | dark<0.01 | p99 | mean sat |
+| --- | --- | --- | --- |
+| `crowd_bank` | 10.8% → **16.2%** | 0.454 → 0.467 | 0.285 → **0.341** |
+| `ring_corner` | 49.7% → **57.8%** | 0.861 → 0.862 | 0.252 → 0.267 |
+| `wide_broadcast` | 10.5% → **12.1%** | 0.889 → 0.895 | 0.273 → 0.283 |
+
+Every number moves toward the references and none arrives. The references are
+38–50% dark; 16% is a step. `lighting.md` already names what is left and it is
+not lighting: the stands are geometry lit by emission, and `HOUSE_TARGET` has
+about one more halving in it before surfaces start dithering across the void
+floor.
+
+### A gate that broke, and how it was caught
+
+This nearly shipped as a lighting regression. After the beams landed,
+`measure_silhouette.py` reported the mat at 0.277 against 0.406 — the exposure
+anchor apparently collapsing, which is the one thing `VISUAL_BAR.md` says
+outranks everything else in this round.
+
+It had not moved. The mask pass keys the mat **blue**, the script accepts any
+pixel whose keyed channel clears 160, and volumetric fog is applied to the mask
+frame in screen space after `_key()` has painted its unshaded albedo. Ten blue
+beams keyed seventy thousand pixels of dark crowd as canvas.
+
+What caught it was the mat's pixel *count*: 108,785 to 182,767, while both
+wrestler keys held to the pixel across the same pair of runs. Nothing in the
+scene had moved, so nothing in the scene could explain a mean that had. The
+lesson generalises past this rig — **a key colour is only flat if nothing
+screen-space runs after it**, and the hall now carries saturated light in all
+three key hues.
+
+`CaptureHarness._flatten_for_keying()` disables fog and glow for the mask frame
+only. The beauty frame every luminance is actually read off is saved three
+frames earlier and was never affected. The mat's count is 108,785 either side
+of the fix.
+
+On the corrected tool the anchor is unmoved: mat 0.406 → 0.414, gaps 0.265 →
+0.270 and 0.132 → 0.138, wrestler↔wrestler 0.133 → 0.132.
+
+### Open, and not caused here
+
+Three of those four silhouette numbers sit outside `VISUAL_BAR.md`'s bands and
+sat outside them before this round: the mat reads 0.414 against a 0.43–0.49
+anchor, mat↔B is 0.138 against 0.24–0.31, and the two men are 0.132 apart
+against 0.00–0.07. They also disagree with the figures an earlier round
+recorded (0.456, 0.306/0.296, 0.010). Both readings were taken on a software
+rasteriser, which `ARCHITECTURE.md` voids for frame cost but not for
+luminance, so the disagreement is unexplained rather than dismissed. It is
+recorded rather than tuned away, and it wants a round of its own.
+
+421 tests pass.

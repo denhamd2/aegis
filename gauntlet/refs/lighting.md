@@ -129,6 +129,82 @@ variation and mid-tone mass actually are. This is the largest single difference
 between our frames and the references, it is geometry rather than lighting, and
 no lighting change addresses it.
 
+## The beams, measured
+
+The effect these four photographs are carried by, and the one the rig had no
+answer to until `ArenaLighting._build_truss_beams()`: hard cyan shafts thrown
+from the overhead grid out across the bowl, crossing each other over the crowd.
+
+**The colour is measured, not chosen.** Blue-dominant saturated pixels
+(`B > R + 25`, `B > G + 10`, HSV saturation over 0.25, value over 120) in the
+top third of each frame, averaged and normalised so B = 1.0:
+
+| frame | normalised RGB | hue | sat | n |
+| --- | --- | --- | --- | --- |
+| elevated, blue beams | (0.312, 0.484, 1.0) | 225 deg | 0.69 | 21,243 |
+| Grand Slam broadcast | (0.245, 0.542, 1.0) | 216 deg | 0.76 | 32,465 |
+
+`BEAM_COLOR` is the mean of those two: `(0.28, 0.51, 1.0)`. The other two
+frames are the magenta shows and are what a later colourway would sample; they
+are not mixed in. Note this is the shafts' HUE and not their level -- the core
+clips toward white through the glow threshold, so the constant is deliberately
+not pre-whitened.
+
+**Beam width is the one reference number that could not be built.** The shafts
+in `aew_grand_slam_broadcast.png` read 0.3-0.5m wide over a 30m throw, i.e. 2-4
+degrees total, which is a beam mover. Godot's volumetric fog is a froxel grid:
+`match.tscn` runs `volumetric_fog_length 64.0` over the default 64-deep volume,
+about 0.54m of world per froxel at 30m. A reference-accurate shaft is narrower
+than one froxel and renders as a smudge. The build uses a 7-degree cone. The
+lever for getting closer is `volumetric_fog/volume_size` and `volume_depth`,
+which is a frame-cost decision and therefore not one this container may settle.
+
+**Density and fog energy are not interchangeable, and treating them as though
+they were cost a round.** A shaft's brightness is the volume's density times
+the fixture's `light_volumetric_fog_energy`, so either will buy one. Density
+scatters every light in the hall; fog energy scatters one fixture. Raising
+`HallHaze` to 0.0022 to make the beams read took `crowd_bank`'s dark fraction
+from 10.8% to 5.1% -- the haze undid the darkening it shipped alongside. The
+density came back down to 0.0010 and `beam_fog_energy` went to 200 instead.
+
+### After the beams and the darkening
+
+Same tool, same shot list, `forward_plus`:
+
+| frame | p50 | p90 | p99 | bright >0.5 | dark <0.01 | mean sat | coloured |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ours, `crowd_bank` before | 0.018 | 0.032 | 0.454 | 0.1% | 10.8% | 0.285 | 66.4% |
+| ours, `crowd_bank` after | 0.018 | 0.032 | 0.467 | 0.1% | **16.2%** | **0.341** | 66.9% |
+| ours, `ring_corner` before | 0.010 | 0.034 | 0.861 | 3.6% | 49.7% | 0.252 | 38.0% |
+| ours, `ring_corner` after | 0.009 | 0.040 | 0.862 | 3.6% | **57.8%** | 0.267 | 40.0% |
+| ours, `wide_broadcast` before | 0.032 | 0.529 | 0.889 | 11.8% | 10.5% | 0.273 | 42.7% |
+| ours, `wide_broadcast` after | 0.028 | 0.532 | 0.895 | 11.8% | **12.1%** | 0.283 | 42.5% |
+
+Every number moves toward the references and none of them arrives. The
+finding above still governs: **the stands are geometry lit by emission**, and
+`HOUSE_TARGET` has roughly one more halving in it before surfaces start
+dithering across the void floor. Closing 16% to 38% is not a lighting job.
+
+### A measurement fault the beams exposed
+
+Worth recording because it read exactly like a regression and was not one.
+
+`measure_silhouette.py` keys the mat **blue** and accepts any pixel whose keyed
+channel clears 160. The capture harness's mask pass paints unshaded key colours
+but volumetric fog is applied afterwards in screen space, so ten blue beams
+keyed seventy thousand pixels of dark crowd as canvas: the mat's mean fell from
+0.406 to 0.277 and looked like the exposure anchor collapsing.
+
+What caught it was the mat's pixel COUNT moving -- 108,785 to 182,767 -- while
+both wrestler keys held to the pixel across the same pair of runs. Nothing in
+the scene had moved. `CaptureHarness._flatten_for_keying()` now disables fog
+and glow for the mask frame only; the beauty frame every luminance is actually
+read off is saved three frames earlier and was never affected.
+
+The general form of this is worth holding on to: **a key colour is only flat
+if nothing screen-space is applied after it**, and this rig now puts saturated
+light of all three key hues into the hall.
+
 ## Volumetric fog
 
 Already implemented — `ArenaLighting._build_fog_volumes()` builds a ring haze
