@@ -205,11 +205,167 @@ const ACCENT_RANGE := 12.0
 ## the spacing roughly where it was. A coverage decision, not a measurement.
 const HOUSE_FIXTURES := 20
 
+# --- The beams --------------------------------------------------------------
+## The effect `gauntlet/refs/lighting/` is carried by, and the one thing in
+## those four photographs this rig had no answer to at all.
+##
+## What is being built: hard, narrow, saturated cyan-blue shafts thrown from
+## the overhead grid out across the seating bowl, crossing each other over the
+## crowd. They are moving-head beam fixtures cutting hall haze. They are not a
+## wash, they are not the ring key, and -- this is the part that makes them
+## safe -- they never touch the mat.
+##
+## Every other fixture in this file is defined by where its light LANDS. A beam
+## is defined by the air it crosses on the way, which is why `beam_energy` and
+## `beam_fog_energy` are separate exports: the first is what it does to the
+## seats at the far end, the second is the shaft itself, and tuning wants to
+## move them in opposite directions.
+
+## Where they hang. `tools/blender/entrance_set.py:build_truss()` lays
+## four-chord lattices on x and z in {-7.5, -2.5, 2.5, 7.5}, each running to
+## +-11.0, so every point on the square |x| = 7.5 or |z| = 7.5 sits on a real
+## outer chord. A fixture anywhere else on that square would be hanging from
+## nothing, which is the defect the truss was modelled to avoid.
+const BEAM_HANG_XZ := 7.5
+## The chords' half-length, so the test can say a beam is ON one rather than
+## merely on the square its corners describe.
+const TRUSS_REACH := 11.0
+## Bearings walked on the plan loop. Twelve, of which the two aimed into the
+## entrance-set gap are dropped -- see the builder.
+const BEAM_PICKS := 12
+## How far round the loop a beam lands from the bearing it hangs on: 8 indices
+## of 96, i.e. 30 degrees. This is the cross-aim, and it is the same idea as
+## `_build_ring_key()`'s for the same reason -- aimed straight out, twelve
+## beams are twelve radii and nothing crosses anything. Crossing is most of
+## what the reference frames show.
+const BEAM_CROSS := 8
+## Where they land: the plan curve this far outside the bowl's first row, i.e.
+## the mid-upper rake. Nearer and the shafts are too short to read; further and
+## they leave the haze.
+const BEAM_TARGET_OFFSET := 16.0
+## Height of the aim point. The rake is deliberately shallow -- about 7 degrees
+## below horizontal over a 35m throw -- because a beam that dives at the crowd
+## is a follow spot. The reference shafts cross the upper third of the frame
+## nearly flat, which is what a fixture hung at 7.25m and aimed at the far side
+## of a 111m bowl does.
+const BEAM_TARGET_Y := 2.5
+## Godot's `spot_angle` is the HALF-angle, so this is a 7-degree cone.
+##
+## THE REFERENCE IS NARROWER THAN THIS AND CANNOT BE BUILT. Measured off
+## `aew_grand_slam_broadcast.png` the shafts read 0.3-0.5m wide over a 30m
+## throw -- 2 to 4 degrees total, which is a beam mover. Godot's volumetric fog
+## is a froxel grid: `match.tscn` runs `volumetric_fog_length 64.0` over the
+## default 64-deep volume, which is roughly 0.54m of world per froxel at 30m.
+## A reference-accurate shaft is narrower than one froxel and renders as a grey
+## smudge or as nothing.
+##
+## 3.5 is the narrowest half-angle that still spans several froxels at the
+## median throw. THE LEVER FOR GETTING CLOSER IS NOT A SMALLER ANGLE -- it is
+## `rendering/environment/volumetric_fog/volume_size` and `volume_depth` in
+## project.godot, and that is a frame-cost decision no measurement taken in
+## this container may be used to defend (ARCHITECTURE.md's renderer rule).
+const BEAM_ANGLE := 3.5
+## Angular falloff. LOW IS HARD HERE, and that is the opposite of the reading
+## the parameter's name invites.
+##
+## Godot's forward shader computes
+##
+##     spot_rim = (1.0 - cos_angle) / (1.0 - spot_cutoff)
+##     attenuation *= 1.0 - pow(spot_rim, light_data.inv_spot_attenuation)
+##
+## and `inv_spot_attenuation` is 1.0 / spot_angle_attenuation. So a SMALL
+## parameter is a LARGE exponent, which holds the cone flat to its edge and
+## then drops -- a hard edge. The washes in this file sit at 0.4-0.7 because a
+## wash wants the feather. A beam is the opposite object: its edge is the whole
+## read.
+##
+## This was checked on rendered frames rather than trusted, because getting it
+## backwards fails silently -- every test still passes and the beams simply
+## come out as soft cones.
+##
+## THE A/B WAS INCONCLUSIVE AND THAT IS WORTH RECORDING. Rendered at 0.25 and
+## at 3.0 with everything else held, crowd_bank measured p50 0.0204 both times
+## and mean saturation 0.301 against 0.298 -- a difference inside noise,
+## because at the energies in force at the time NEITHER produced a visible
+## shaft. The 0.003 of saturation leans the way the shader formula predicts
+## and that is all it does. 0.25 is kept on the formula's authority, not on a
+## measurement, and a later round with the energies now in this file could
+## settle it properly.
+const BEAM_CONE_FALLOFF := 0.25
+## Distance falloff, against `_spot()`'s 1.6 default. That default is defended
+## there for fixtures whose job is a wash over a 20m throw. A beam fixture is
+## collimated and has to still be hot 40m out: at 0.45 a 35m hit keeps about
+## half the near intensity, at 1.6 it keeps a ninth, and a shaft that dies
+## before it crosses anything is not a shaft.
+const BEAM_ATTENUATION := 0.45
+## The longest throw this layout produces is 41.0m (the two beams aimed down
+## the length of the hall), so the range has to clear it or the shaft stops in
+## mid-air short of its target.
+const BEAM_RANGE := 44.0
+## Measured off `gauntlet/refs/lighting/`, not chosen.
+##
+## Blue-dominant saturated pixels in the top third of the two frames whose
+## beams are actually cyan (`aew_elevated_blue_beams.jpg`,
+## `aew_grand_slam_broadcast.png`), averaged and normalised so B = 1.0:
+##
+##   elevated, blue beams   (0.312, 0.484, 1.0)   hue 225   sat 0.69
+##   Grand Slam broadcast   (0.245, 0.542, 1.0)   hue 216   sat 0.76
+##
+## The mean of those two. The other two references are the magenta shows and
+## are what a later colourway would sample; they are not mixed in here.
+##
+## This is the HUE, not the level. The shaft's core clips toward white through
+## energy x fog energy and the Environment's `glow_hdr_threshold` of 1.25,
+## which is what makes it read as hot -- so the colour is NOT pre-whitened to
+## get there. Doing that produces a pale shaft that never clips.
+const BEAM_COLOR := Color(0.28, 0.51, 1.0)
+## What a beam does to the seats it lands on.
+##
+## SOLVED ON FRAMES, and the first guess was wrong by most of an order of
+## magnitude. 5.0 x 4.0 was reasoned from the stage accents, which read well at
+## 3.2 x 2.0 through the global density alone -- but those shafts are three
+## metres long and a few metres from the lens, and these are forty metres long
+## and thirty metres away. Rendered, 5.0/4.0 produced no visible shaft at all:
+## crowd_bank's p99 went DOWN 0.4434 to 0.4420 and mean saturation moved 0.005.
+## A reader looking at that frame would have concluded the rig was broken.
+##
+##   energy  fog   crowd_bank p50   mean sat   what the frame shows
+##   5.0     4.0   0.0204          0.301      nothing
+##   40.0    40.0  0.0243          0.368      shafts, and hot ovals where they land
+##   14.0    80.0  0.0235          0.359      shafts, pools reading as lit crowd
+##
+## The middle row is why these are two exports and not one number. At 40/40 the
+## far-end pools were the brightest thing in the bowl -- blue discs on the
+## seating with a shaft arriving at them. Dropping the fixture's own energy to
+## 14 and putting the difference into scatter keeps the shaft and lets the pool
+## fall back to what the reference photographs actually show, which is a patch
+## of crowd lit by a beam rather than a lamp pointed at some seats.
+@export var beam_energy: float = 14.0
+## The shaft itself. Separate from the above on purpose: if the far-end pools
+## read as hot ovals on the stands, this is the one to raise and `beam_energy`
+## is the one to drop. That is not hypothetical -- it is the 40/40 to 14/80
+## move in the table above.
+##
+## A coverage decision with no reference behind it. `gauntlet/refs/` measures
+## haze nowhere, and this number is meaningless on its own: what it multiplies
+## is `HallHaze`'s density, so the two move together and neither can be read
+## without the other.
+@export var beam_fog_energy: float = 80.0
+
 ## Fixture-energy gain for renderers without volumetric fog -- in practice the
 ## compatibility renderer, which is what Godot's Web platform falls back to.
 ##
-## Needed because the two renderers do not accumulate this rig's 22 punctual
-## lights alike, and the difference is not small. Measured with the project's
+## Needed because the two renderers do not accumulate this rig's punctual
+## lights alike, and the difference is not small.
+##
+## THE COUNT IN THIS COMMENT WAS 22 AND WAS STALE, which matters because 22 is
+## what the limit below was raised to 32 against. The rig builds 38 on
+## gl_compatibility -- 4 key, 2 top, 2 rim, 20 house, 2 stage, 4 accent, 4
+## uplight -- and 48 on forward_plus, where the ten truss beams are added. It
+## was 22 when HOUSE_FIXTURES was 12 and the accents and uplights did not
+## exist. 32 is still the right OpenGL value, and it is right for a reason the
+## old number could not have given: the beams, which are what would have burst
+## it, are not built on that renderer at all. Measured with the project's
 ## own measure_silhouette.py on the spawn standoff, mat relative luminance
 ## against VISUAL_BAR.md's 0.43-0.49 anchor:
 ##
@@ -285,6 +441,7 @@ func _ready() -> void:
 	_build_top_fill()
 	_build_rim()
 	_build_house()
+	_build_truss_beams()
 	_build_stage_wash()
 	_build_stage_accents()
 	_build_backdrop_uplights()
@@ -393,8 +550,83 @@ func _build_house() -> void:
 		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 1.4, 0.0)
 		var dir: Vector3 = entry[1]
 		var aim: Vector3 = entry[0] + dir * 10.0 + Vector3(0.0, 2.6, 0.0)
+		# 0.25 -> 0.08. Twenty fixtures aimed outward into HallHaze, whose
+		# density nearly doubled for the beams: at the new figure the old fog
+		# energy turns the whole bowl into a general blue glow, which is the
+		# opposite of what a beam needs behind it. It costs nothing visible --
+		# `gauntlet/refs/lighting.md`'s ablation shows this wash does not reach
+		# the stands at all -- and it buys back the contrast the shafts read
+		# against.
 		_spot("House%02d" % i, at, aim, HOUSE_COLOR, house_energy,
-				46.0, 0.55, 34.0, false).light_volumetric_fog_energy = 0.25
+				46.0, 0.55, 34.0, false).light_volumetric_fog_energy = 0.08
+
+
+## The truss beams: hard cyan shafts thrown out across the bowl.
+##
+## NOT BUILT ON gl_compatibility, and the guard is doing more work here than
+## the one in `_build_fog_volumes()` does.
+##
+## 1. A beam fixture with no FogVolume to scatter through is not a beam. It is
+##    a seven-degree pool of blue on some seats forty metres away -- an effect
+##    that only ever existed in the air, rendered as the one part of itself
+##    that was never the point.
+## 2. `project.godot`'s `limits/opengl/max_lights_per_object` is 32, and it was
+##    raised to that against a measured failure (see COMPAT_LIGHT_GAIN) where
+##    the renderer dropped the truss keys and rendered the mat at 0.003. The
+##    house wash already puts this rig near that ceiling on the ring. Ten more
+##    fixtures originating eight metres from the mat would re-trigger exactly
+##    that fault, and the fix is not a bigger limit -- it is not building
+##    fixtures that renderer cannot show.
+## 3. It means `_compensate_for_renderer()` never sees a beam. That is true by
+##    construction rather than by assertion, which is why it is written down.
+##
+## forward_plus is unaffected and every measured number is taken there.
+##
+## PLACEMENT. The origins come off the truss and the targets come off the
+## bowl, and they are two different curves -- which is the whole reason this
+## function is longer than the other builders.
+##
+##   * targets walk `ArenaBuilder._plan_loop()`, the hall's own obround, 16m
+##     outside the bowl's first row. Copying the function rather than a number
+##     is the rule `_build_house()` sets out: a number can be mirrored, a curve
+##     has to be called.
+##   * origins are where the target's BEARING crosses the truss square, so
+##     every fixture lands on a modelled outer chord and hangs 0.35m under the
+##     lattice exactly as the keys do.
+##
+## Two of the twelve are dropped: their targets fall in the entrance-set gap,
+## where `ArenaBuilder._in_stage_gap()` says there is no seating to light and
+## the reference photographs show the stage instead of a crowd. Ten survive,
+## and they are mirror-symmetric about x = 0 -- which is not arranged, it falls
+## out of dropping a symmetric pair from a symmetric walk.
+func _build_truss_beams() -> void:
+	if not _supports_volumetric_fog():
+		return
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER + BEAM_TARGET_OFFSET)
+	for i: int in BEAM_PICKS:
+		var hang_index := (i * loop.size()) / BEAM_PICKS
+		var aim_index := (hang_index + BEAM_CROSS) % loop.size()
+		var target: Vector3 = loop[aim_index][0]
+		if ArenaBuilder._in_stage_gap(target):
+			continue
+		var hang: Vector3 = loop[hang_index][0]
+		var bearing := Vector3(hang.x, 0.0, hang.z).normalized()
+		# Scale the bearing until it meets the truss square, i.e. until whichever
+		# of |x| and |z| is larger reaches BEAM_HANG_XZ. That is the chord.
+		var to_chord := BEAM_HANG_XZ / maxf(absf(bearing.x), absf(bearing.z))
+		var at := bearing * to_chord + Vector3(0.0, HANG_Y, 0.0)
+		var aim := Vector3(target.x, BEAM_TARGET_Y, target.z)
+		var light := _spot("Beam%02d" % i, at, aim, BEAM_COLOR, beam_energy,
+				BEAM_ANGLE, BEAM_CONE_FALLOFF, BEAM_RANGE, false)
+		# `_spot()` hardcodes 1.6 and six other fixture families are tuned
+		# against it, so it is overridden here rather than parameterised.
+		light.spot_attenuation = BEAM_ATTENUATION
+		# A specular hit from a beam on a wrestler's shoulder is the one way a
+		# cone that never touches the mat could still move
+		# `measure_silhouette.py`, which is the measurement this whole rig is
+		# range- and cone-limited to protect.
+		light.light_specular = 0.0
+		light.light_volumetric_fog_energy = beam_fog_energy
 
 
 ## Two fixtures over the entrance stage, cool so the stage reads as a
@@ -492,8 +724,36 @@ func _build_fog_volumes() -> void:
 		return
 	_fog_box("RingHaze", Vector3(0.0, 4.0, 0.0), Vector3(20.0, 9.0, 20.0),
 			0.005, Color(0.80, 0.84, 0.95), 0.14)
-	_fog_box("HallHaze", Vector3(0.0, 6.0, 2.0), Vector3(58.0, 15.0, 58.0),
-			0.0012, Color(0.62, 0.68, 0.86), 0.05)
+	# HallHaze was a 58 x 15 x 58 box at (0, 6, 2) -- x +-29, z -27..31 -- and
+	# that was big enough for its old job of putting air behind the far stands.
+	# It is not big enough for the job it has now.
+	#
+	# `_build_truss_beams()` aims at the plan curve 16m outside the bowl's
+	# first row, which reaches z +-48 at the ends of an obround this long. More
+	# than half of every end-aimed shaft used to fall OUTSIDE the only volume
+	# that can make it visible, and a beam that fades out halfway across the
+	# hall is worse than no beam: it reads as a rendering fault rather than as
+	# a fixture.
+	#
+	# 78 x 104 covers the seated rake on both axes (the last row sits at x
+	# +-36.2, z +-53.7) and lets the shell edge fall off. The height band is y
+	# -1 to 13: the truss at 7.25 down to the floor, and up to the upper tier's
+	# back rows at 13.2.
+	#
+	# Density 0.0012 -> 0.0022. A shaft's brightness is the product of the
+	# volume's density and the fixture's `light_volumetric_fog_energy`, and the
+	# old figure was solved for "air behind the far stands", not for "a 40m
+	# beam has something to scatter off".
+	#
+	# ONE BOX, NOT TWO. Overlapping FogVolumes sum their densities, so a second
+	# volume over this one would make a hazy frame un-attributable to any
+	# single number. A `RoofHaze` above the truss was considered and declined
+	# for the same reason plus a simpler one: every shaft this rig builds lives
+	# between y 7.25 and y 2.5, entirely inside the box below. It becomes the
+	# right idea only if a later set is aimed UP into the roof steel, which is
+	# the other thing `aew_grand_slam_broadcast.png` shows.
+	_fog_box("HallHaze", Vector3(0.0, 6.0, -2.0), Vector3(78.0, 14.0, 104.0),
+			0.0022, Color(0.62, 0.68, 0.86), 0.05)
 
 
 ## Depth fog for the compatibility renderer, which is what the browser build
