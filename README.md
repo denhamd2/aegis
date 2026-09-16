@@ -5955,4 +5955,110 @@ averaged away:
   clean before/after to compare it against.
 
 Both are about match flow and AI spacing rather than about what a clip looks
-like, which is why they are here as findings instead of in the diff.
+like, which is why they are here as findings instead of in the diff. **They
+are fixed in the round below.**
+
+## Round: a man fell out of the ring, and nothing could see it
+
+The two findings the previous round wrote down and did not fix. Both turned
+out to be instruments lying rather than the match misbehaving — and behind one
+of them, a real defect that had been eating a match at a time.
+
+### Seeds 1 and 5 threw nothing: the match was never in the tree
+
+`strike_connect_probe` added each match with `get_tree().root.add_child(scene)`
+from inside an `await` continuation of its own `_ready()`. The scene root will
+not take a child while it is setting its own up, so that call failed — on the
+**first seed of every run and only that one** — with
+
+```
+ERROR: Parent node is busy setting up children, `add_child()` failed.
+```
+
+one line into a log nobody reads, and then measured a match that did not
+exist. It reported as `seed 1 thrown 0 landed 0 (0%)`. "Seeds 1 and 5" was
+never about those seeds: both were simply first in their list.
+
+`contact_probe.gd` already documents this trap and `title_launch.gd` is
+credited with finding it. This probe just never got the fix. It now defers the
+add and waits for `is_inside_tree()`.
+
+The reporting is fixed alongside it, because a percentage cannot tell "nobody
+landed a punch" from "nobody threw one". A seed that threw nothing now prints
+`NO DATA` with the reason, is excluded from the total, and makes the probe
+exit non-zero.
+
+### Seed 4 landed 4%: he was 411 km below the mat
+
+Traced tick by tick. At t2416 of a `GRAPPLE_HOLD`, WrestlerB starts stepping
+out — 2.28, 2.54, 2.74, 2.89, 2.98, 3.04, 3.07 — past the mat's own edge at
+3.0. There is no floor collider out there: `scenes/ring.tscn`'s floor is 6 m
+square and the arena floor has none. He fell for the remaining 17 000 ticks and
+finished **411 490 m** below the ring.
+
+Everything downstream then read as something else. The match could not end,
+because a pinfall needs the attacker within `COVER_RANGE` of a downed man.
+Every strike thrown at him was filed as a miss "off to the side" at a median
+**0°** off the attacker's facing — facing him, horizontally inside reach,
+separated only in a dimension the miss report does not print. That one seed
+contributed 383 of the 386 misses in a four-seed run and took the measured
+connect rate from 70% to 10%.
+
+The route out is `GrappleRig`. It **suspends** both bodies for the length of a
+paired move and drives their transforms from the clip, so neither one collides
+with anything — the rope walls are not in that code path at all. Its clamp is
+on the pair's **midpoint** (`RING_HALF_EXTENT` 2.0); each wrestler then sits an
+authored offset away from it, and the offsets reach past the mat.
+
+So the clamp is per wrestler now, reached from both paths that can move one:
+`WrestlerController.keep_inside_the_ring()`, called after `move_and_slide()`
+and from `GrappleRig._physics_process()` for the bodies it has suspended.
+
+`RING_KEEP_IN` is 2.6 — `MAT_HALF` 3.0 less the 0.4 capsule, so his far side is
+exactly on the edge. It sits deliberately *outside* what the ropes already
+enforce (their inner faces are at 2.95, so `move_and_slide()` holds a walking
+man at 2.55), which is the point: it never fights the ropes, it only catches a
+body that was never asked to collide with them. The vertical clamp is one-sided
+— nothing legitimately goes below the mat, and a ceiling would flatten every
+throw in the set.
+
+### And the probe could not tell a finish from a stall
+
+Printing "NEVER FINISHED" for the first time turned it on for all eight seeds
+at once, which is how the third bug surfaced:
+
+```gdscript
+var over := false
+referee.match_won.connect(func(_w, _m): over = true)   # assigns to a COPY
+```
+
+GDScript lambdas capture locals **by value**. `over` never became true, `if
+over: break` never fired, and every match this probe has ever run went the full
+20 000-tick budget whatever happened in it. `contact_probe.gd` and
+`floating_probe.gd` both use a one-element Array for exactly this reason; this
+one did not.
+
+### Eight seeds, after
+
+| seed | thrown | landed | |
+| --- | --- | --- | --- |
+| 1 | 16 | 12 | 75% |
+| 2 | 22 | 16 | 73% |
+| 3 | 19 | 13 | 68% |
+| 4 | 24 | 15 | 62% |
+| 5 | 33 | 24 | 73% |
+| 6 | 18 | 12 | 67% |
+| 7 | 20 | 12 | 60% |
+| 8 | 14 | 11 | 79% |
+
+**69.3% overall, eight seeds out of eight producing data, eight out of eight
+reaching a finish.** Seed 4 went 4% → 62% and now throws 24 strikes rather than
+404. The remaining misses are ordinary: 5 out of reach, 9 off to the side at a
+median 59° off the attacker's facing — real whiffs at a real angle, not an
+artefact of a man in low orbit.
+
+`tests/test_ring_containment.gd` holds it: the extent leaves the whole body on
+the mat and stays clear of the ropes, a wrestler put outside on any axis comes
+back, one below the mat is put on it and stops falling, one lifted above it is
+left alone, one already inside is not nudged at all, and the rig contains the
+bodies it has suspended. 411 tests pass.

@@ -277,7 +277,21 @@ func _physics_process(_delta: float) -> void:
 	if not _active:
 		return
 	for body: Node3D in [_attacker, _defender]:
-		if body and body.has_method("update_paired_presentation"):
+		if body == null:
+			continue
+		# Before the presentation, because the grip aims at where the bodies
+		# ARE. A suspended body collides with nothing for the length of the
+		# move -- that is what suspension means -- so the ropes cannot stop a
+		# paired clip carrying a man off the mat, and the midpoint clamp in
+		# _compute_pair_transform() does not bound the offsets the two sit at
+		# either side of it. Measured on seed 4 of the strike-connect probe: a
+		# GRAPPLE_HOLD walked WrestlerB out to x = -3.07, past the mat's edge
+		# at 3.0 and out over a stretch of arena with no floor collider under
+		# it at all, and he fell for the remaining 17 000 ticks of the match.
+		# See WrestlerController.keep_inside_the_ring().
+		if body.has_method("keep_inside_the_ring"):
+			body.keep_inside_the_ring()
+		if body.has_method("update_paired_presentation"):
 			body.update_paired_presentation()
 
 func _suspend(body: CharacterBody3D) -> void:

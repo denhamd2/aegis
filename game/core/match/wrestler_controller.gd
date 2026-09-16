@@ -1018,9 +1018,67 @@ func _physics_process(delta: float) -> void:
 
 	_apply_gravity(delta)
 	move_and_slide()
+	keep_inside_the_ring()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
 	_update_grip_ik()
+
+
+## Half-width the mat allows a wrestler's ORIGIN, as opposed to his mesh.
+##
+## RingBuilder.MAT_HALF is 3.0 and the capsule is BODY_RADIUS 0.4, so 2.6 puts
+## his far side exactly on the mat's edge. It sits deliberately OUTSIDE what
+## the ropes already enforce -- scenes/ring.tscn's rope walls are 0.3 thick at
+## +-3.1, so their inner faces are at 2.95 and move_and_slide() holds a walking
+## man at 2.55 -- which is the point: this never fights the ropes, it only
+## catches a body that was never asked to collide with them at all.
+const RING_KEEP_IN := 2.6
+
+## Mat level. scenes/ring.tscn's floor box is 0.2 thick at y = -0.1, so its top
+## surface is y = 0 and a wrestler's origin sits on it.
+const MAT_LEVEL := 0.0
+
+## The backstop that makes leaving the ring impossible.
+##
+## Measured, seed 4 of tools/probe/strike_connect_probe.tscn: WrestlerB is
+## walked out to x = -3.07 over six ticks of a GRAPPLE_HOLD, past the mat's
+## own edge at 3.0, and there is no floor collider out there -- the ring's is
+## 6 m square and the arena floor has none. He falls for the rest of the
+## match. At the 20 000-tick budget he is 411 490 m below the mat, the other
+## man cannot reach him to finish it, and every strike thrown at him is
+## recorded as a miss "off to the side" at a median 0 degrees off the
+## attacker's facing. That one seed contributed 383 of the 386 misses in a
+## four-seed run and dragged the measured connect rate from 70% to 10%.
+##
+## The cause is that GrappleRig SUSPENDS both bodies for the length of a
+## paired move and drives their transforms from the clip, so neither one is
+## colliding with anything: the ropes are not in that code path. GrappleRig
+## clamps the pair's MIDPOINT to RING_HALF_EXTENT (2.0), but each wrestler
+## then sits an authored offset away from it, and the offsets reach past the
+## mat.
+##
+## So this is a clamp on each wrestler rather than on the pair, run from both
+## paths that can move one: here, after move_and_slide(), and from
+## GrappleRig._physics_process() for the bodies it has suspended.
+##
+## Deterministic arithmetic on one transform -- no physics query, no RNG --
+## so it satisfies ARCHITECTURE.md's determinism contract while sitting in
+## the middle of gameplay positioning, which is where it has to be.
+func keep_inside_the_ring() -> void:
+	var p := global_position
+	var fixed := p
+	fixed.x = clampf(p.x, -RING_KEEP_IN, RING_KEEP_IN)
+	fixed.z = clampf(p.z, -RING_KEEP_IN, RING_KEEP_IN)
+	# Only ever pushed UP. Paired moves lift a man well clear of the mat and a
+	# ceiling would break every throw in the set; nothing legitimately puts
+	# him below it.
+	fixed.y = maxf(p.y, MAT_LEVEL)
+	if fixed == p:
+		return
+	global_position = fixed
+	# A body that has been stopped by the mat is not still falling through it.
+	if fixed.y > p.y and velocity.y < 0.0:
+		velocity.y = 0.0
 
 ## Pull a wrestler back down to the mat.
 ##

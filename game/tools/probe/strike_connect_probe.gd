@@ -24,6 +24,10 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 var _seeds: Array[int] = [1, 2, 3]
 var _budget := 20000
 var _rows: Array[Dictionary] = []
+## Seeds that produced no usable measurement. A run with any of these is not a
+## result, and the probe exits non-zero rather than printing an average over
+## whatever did work.
+var _void := 0
 
 
 func _ready() -> void:
@@ -38,22 +42,42 @@ func _ready() -> void:
 	for seed_value in _seeds:
 		await _run(seed_value)
 	_report()
-	get_tree().quit()
+	get_tree().quit(1 if _void > 0 else 0)
 
 
 func _run(seed_value: int) -> void:
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	scene.match_seed = seed_value
-	get_tree().root.add_child(scene)
+	# DEFERRED, and then waited on. `_ready()` is still on the stack the first
+	# time round -- this whole function is an await continuation of it -- and
+	# the scene root will not accept a child while it is setting its own up. A
+	# direct add_child() therefore failed on the FIRST seed of every run and
+	# only that one, printing "Parent node is busy setting up children" into a
+	# log nobody reads and then measuring a match that was never in the tree.
+	#
+	# It reported as `seed 1 thrown 0 landed 0 (0%)`, which reads like a
+	# catastrophic connect rate and is in fact no match at all. Seeds 1 and 5
+	# both "failed" that way across two separate runs; both were simply first
+	# in their list.
+	get_tree().root.add_child.call_deferred(scene)
+	while not scene.is_inside_tree():
+		await get_tree().process_frame
 	await get_tree().process_frame
 	var wrestlers: Array[WrestlerController] = [
 		scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]
 	for w in wrestlers:
 		w.is_ai = true
 
-	var over := false
+	# A one-element Array, not a bool, and that is the whole point. GDScript
+	# lambdas capture locals BY VALUE, so `func(): over = true` assigns to the
+	# lambda's own copy and the outer `over` stays false forever. This probe
+	# carried that bug from the day it was written: `if over: break` never
+	# fired, every match ran the full 20 000-tick budget whatever happened in
+	# it, and the probe could not tell a finish from a stall. An Array is a
+	# reference, so writing through it is visible out here.
+	var over := [false]
 	scene.get_node("MatchReferee").match_won.connect(
-			func(_w: WrestlerController, _m: String): over = true)
+			func(_w: WrestlerController, _m: String): over[0] = true)
 
 	var thrown := 0
 	var landed := 0
@@ -159,10 +183,13 @@ func _run(seed_value: int) -> void:
 						else:
 							missed_wide += 1
 			was_striking[w] = striking
-		if over:
+		if over[0]:
 			break
 
+	if thrown == 0:
+		_void += 1
 	_rows.append({
+		"finished": over[0],
 		"short": missed_short, "wide": missed_wide,
 		"gaps": miss_gaps, "angles": miss_angles,
 		"seed": seed_value, "thrown": thrown, "landed": landed,
@@ -182,20 +209,40 @@ func _report() -> void:
 	var o := 0
 	var u := 0
 	var it := 0
+	var unfinished := 0
 	var all: Array[float] = []
 	for row in _rows:
+		if not row["finished"]:
+			unfinished += 1
 		t += row["thrown"]
 		l += row["landed"]
 		o += row["out_of_range"]
 		u += row["unhittable"]
 		it += row["interrupted"]
 		all.append_array(row["misses"])
-		print("seed %-3d thrown %-4d landed %-4d (%.0f%%)  out-of-range %-3d  unhittable %-3d  interrupted %-3d"
+		if row["thrown"] == 0:
+			# NOT "0%". A seed that threw nothing measured nothing, and the two
+			# print identically under a percentage. This probe reported
+			# `thrown 0 landed 0 (0%)` for a match that never entered the tree
+			# and it was read as a catastrophic connect rate for two rounds.
+			print("seed %-3d NO DATA -- no strike was thrown at all. The match "
+				% row["seed"]
+				+ "did not run, or ended before either man could throw.")
+			continue
+		print("seed %-3d thrown %-4d landed %-4d (%.0f%%)  out-of-range %-3d  unhittable %-3d  interrupted %-3d  %s"
 			% [row["seed"], row["thrown"], row["landed"],
 				100.0 * row["landed"] / maxf(1.0, row["thrown"]),
-				row["out_of_range"], row["unhittable"], row["interrupted"]])
+				row["out_of_range"], row["unhittable"], row["interrupted"],
+				"" if row["finished"] else "<-- NEVER FINISHED"])
 	print("TOTAL   thrown %-4d landed %-4d (%.1f%%)  out-of-range %-3d  unhittable %-3d  interrupted %-3d"
 		% [t, l, 100.0 * l / maxf(1.0, t), o, u, it])
+	if _void > 0:
+		print("!! %d of %d seeds produced NO DATA. The total above is an average "
+			% [_void, _rows.size()]
+			+ "over the rest of them, not over the seeds you asked for.")
+	if unfinished > 0:
+		print("!! %d of %d matches never reached a finish inside the budget."
+			% [unfinished, _rows.size()])
 	if all.is_empty():
 		return
 	all.sort()
