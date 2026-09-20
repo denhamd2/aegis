@@ -5,6 +5,16 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &""
+; 18 ticks = 0.300s, which is gauntlet/refs/timings.md's measured windup-to-
+; contact for an isolated heavy strike, and the frame the CLIP now lands on.
+;
+; These disagreed. The authored clip put contact on frame 18 of 35 (0.591s,
+; tick 35) while the move applied damage on tick 18, so the blow landed with
+; the arm still on its way up. Moving startup to 35 was tried and reverted:
+; it matched the clip by giving up the measurement, and
+; test_strike_and_getup_timings.gd exists precisely to stop a measured
+; constant drifting. The CLIP was retimed instead -- contact is frame 9,
+; which is 0.296s -- so both now agree at the measured number.
 startup_frames = 18
 active_frames = 5
 recovery_frames = 46
@@ -16,6 +26,11 @@ damage_arms = 0.0
 damage_legs = 0.0
 contact_offset = Vector3(0.231, 1.441, -0.37)
 contact_radius = 0.12
+; A running attack puts the man down. It is the one thing both of these are
+; for, and they used to leave him standing in a guard 0.333s later unless his
+; accumulated damage happened to cross KNOCKDOWN_DAMAGE.
+forces_knockdown = true
+hitstop_frames = 2
 momentum_cost = 0.0
 momentum_gain = 10.0
 weight_class_min = 0

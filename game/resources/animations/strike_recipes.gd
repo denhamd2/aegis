@@ -135,9 +135,13 @@ const RECIPES := {
 	"strike_kick": {"kind": "retime", "source": "Strike_Kick",
 		"seconds": 0.583, "file": AUTHORED},
 
-	# There is deliberately NO recipe for running_double_leg, the second
-	# running attack. There was one -- the last still sourced from the mocap
-	# bake -- and it carried the same fault as the three strikes reverted
+	# For a long time there was deliberately NO recipe for
+	# running_double_leg, the second running attack. There is one now,
+	# authored on the rig -- see further down this file -- and this note is
+	# kept because it records why the mocap one had to go.
+	#
+	# That first recipe was the last still sourced from the mocap
+	# bake, and it carried the same fault as the three strikes reverted
 	# above: measured with tools/probe/strike_clip_probe.tscn on the base rig,
 	# head below hips on 59 of its 69 frames, worst 0.268 m under. Rendered,
 	# that is a ball of limbs rather than a takedown.
@@ -149,11 +153,11 @@ const RECIPES := {
 	# only ever set by the whip decision inside GRAPPLE_HOLD, so the AI never
 	# runs in open play (gauntlet/status/roman_reigns_next.md).
 	#
-	# With no recipe, StrikeRecipes.clip() returns "" and _set_state_clip
-	# ignores it, so running_attack_double_leg.tres falls back to
-	# STATE_ANIMATIONS' RUNNING_ATTACK: "Punch_Cross" -- exactly what its
-	# sibling running_attack_clothesline.tres already does. A missing asset,
-	# not a bug.
+	# For as long as there was no recipe, StrikeRecipes.clip() returned ""
+	# and _set_state_clip ignored it, so running_attack_double_leg.tres fell
+	# back to STATE_ANIMATIONS' RUNNING_ATTACK: "Punch_Cross" -- exactly what
+	# its sibling running_attack_clothesline.tres does. A missing asset, not
+	# a bug; and the asset is no longer missing.
 
 	# The second punch, and the only strike drawn from the rig's own
 	# library rather than the mocap pack: Punch_Cross is a real cross, a
@@ -180,6 +184,20 @@ const RECIPES := {
 	# timing moves.
 	"strike_cross": {"kind": "retime", "source": "Strike_Forearm",
 		"seconds": 0.667, "file": AUTHORED},
+
+	# The third punch, and the only move in this file authored for variety
+	# rather than to fill a gap. Two punches drawn from a seeded pool over a
+	# whole match is two arm motions replayed several dozen times; a third
+	# breaks the count up. See Strike_Hook's own note in
+	# tools/blender/wrestling_clips.py for why it is a hook rather than a
+	# mirrored jab -- the stance is orthodox and asymmetric, so mirroring a
+	# clip means mirroring the stance every other clip cuts into.
+	#
+	# 0.600s = 36 ticks, which is strike_hook.tres's total, and contact is
+	# authored on frame 6 of 18 = 0.200s = tick 12, which is its
+	# startup_frames.
+	"strike_hook": {"kind": "retime", "source": "Strike_Hook",
+		"seconds": 0.600, "file": AUTHORED},
 
 	# The heavy kick: the same posed kick as strike_kick, thrown slower. It
 	# used to retime the mocap roundhouse, which measured head-below-hips on
@@ -216,6 +234,26 @@ const RECIPES := {
 	# shot are visibly different things happening to a man.
 	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
 		"seconds": 0.333, "file": AUTHORED},
+
+	# The three heavier sells. A reaction clip has to be exactly as long as
+	# the HIT_REACT state that plays it, and that state is no longer one
+	# length: MoveDef.sell_frames sets it per move, so each length it can
+	# take needs its own clip. The lengths here ARE those values --
+	# 24 ticks = 0.400s, 34 ticks = 0.567s -- and
+	# tests/test_hit_reactions.gd asserts the two never drift apart.
+	#
+	# Why the tiers exist at all: every landed move used to play one of two
+	# clips for a flat 20 ticks, so a jab and a heavy kick to the ribs were
+	# sold identically and the only thing separating them on screen was the
+	# damage number. gauntlet/refs/timings.md measures the man struck by an
+	# isolated heavy blow still doubled over 0.4s later, which the 0.333s
+	# clip cannot show because it is back in a fighting guard by then.
+	"hit_head_med": {"kind": "retime", "source": "Hit_React_Head_Med",
+		"seconds": 0.400, "file": AUTHORED},
+	"hit_torso_med": {"kind": "retime", "source": "Hit_React_Torso_Med",
+		"seconds": 0.400, "file": AUTHORED},
+	"hit_torso_heavy": {"kind": "retime", "source": "Hit_React_Torso_Heavy",
+		"seconds": 0.567, "file": AUTHORED},
 
 	# The winner's celebration, for WrestlerFSM.State.VICTORY. Authored, and
 	# necessarily so: there is no celebration anywhere in the 42 source
@@ -324,6 +362,16 @@ const RECIPES := {
 	"running_clothesline": {"kind": "retime", "source": "Running_Clothesline",
 		"seconds": 1.150, "file": AUTHORED},
 
+	# The second running attack, which for a long time had no clip at all and
+	# therefore played the clothesline above -- see the note further up this
+	# file that called it "a missing ASSET, not a bug". It is authored now, so
+	# running_attack_double_leg.tres names it and the two running attacks are
+	# finally two different moves rather than two damage spreads over one
+	# performance. Same 1.150s, same contact frame, opposite shape: the
+	# clothesline is height and this is depth.
+	"running_double_leg": {"kind": "retime", "source": "Running_Double_Leg",
+		"seconds": 1.150, "file": AUTHORED},
+
 	# STUNNED runs 45 ticks (0.75s) and Hit_Head is 0.43s, so the clip ended
 	# and the pose froze for the remaining 19 ticks. Retimed rather than
 	# trimmed: a stagger is the one case where slowing the motion down is
@@ -405,12 +453,41 @@ static func clip(name: String) -> String:
 		return ""
 	return "%s/%s" % [LIBRARY, name]
 
-## Which reaction a landed move should produce, from where it did its
-## damage. One clip for every hit -- a jab to the head and a slam to the
-## ribs both played Hit_Chest -- was the reason a match read as two men
-## flinching identically no matter what happened to them.
+## Sell lengths, in ticks, that a reaction clip exists for. A HIT_REACT
+## state runs for the landing move's `sell_frames` and the clip it plays
+## must be exactly that long, so these are not tuning knobs -- they are the
+## set of lengths that have been authored. A MoveDef asking for anything
+## else would play a clip that ends early and freezes, which is the defect
+## this whole file exists to prevent, so tests/test_hit_reactions.gd fails
+## on a `sell_frames` that is not one of these.
+const SELL_LIGHT := 20   # 0.333s -- hit_head / hit_torso
+const SELL_MED := 24     # 0.400s -- hit_head_med / hit_torso_med
+const SELL_HEAVY := 34   # 0.567s -- hit_torso_heavy
+const SELL_FRAMES: Array[int] = [SELL_LIGHT, SELL_MED, SELL_HEAVY]
+
+## Which reaction a landed move should produce, from where it did its damage
+## and how hard it hit.
+##
+## Two axes, and both of them were missing. One clip for every hit -- a jab
+## to the head and a slam to the ribs both played Hit_Chest -- was the
+## reason a match read as two men flinching identically no matter what
+## happened to them; splitting head from torso fixed half of it. The other
+## half is that both halves then ran for the same flat 20 ticks, so a jab
+## and a heavy kick were still sold identically. `sell_frames` picks the
+## weight, and each weight has its own clip at its own length.
+##
+## There is deliberately no hit_head_heavy: no move in the game carries head
+## damage AND a heavy sell, so authoring one would ship a clip nothing
+## plays. A head move asking for SELL_HEAVY falls back to the med clip here
+## and is failed by the test, which is the honest order -- a fallback that
+## renders, and a gate that says it should not have happened.
 static func reaction_for(move: MoveDef) -> String:
 	if not move:
 		return clip("hit_torso")
-	return clip("hit_head") if move.damage_head > move.damage_torso \
-			else clip("hit_torso")
+	if move.damage_head > move.damage_torso:
+		return clip("hit_head") if move.sell_frames <= SELL_LIGHT \
+				else clip("hit_head_med")
+	if move.sell_frames >= SELL_HEAVY:
+		return clip("hit_torso_heavy")
+	return clip("hit_torso") if move.sell_frames <= SELL_LIGHT \
+			else clip("hit_torso_med")

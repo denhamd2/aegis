@@ -6205,3 +6205,131 @@ luminance, so the disagreement is unexplained rather than dismissed. It is
 recorded rather than tuned away, and it wants a round of its own.
 
 421 tests pass.
+
+## Round: a landed blow finally weighs something
+
+Every hit in the game shared one flinch. `HIT_REACT_TICKS` was 20 for a jab,
+for a boot to the ribs and for a running clothesline alike, and the only thing
+separating them was a damage number the player cannot see. `timings.md`
+measures the man struck by an isolated heavy blow still doubled over 0.4s
+later, which a 0.333s clip cannot show: he is back in a fighting guard before
+the reference has straightened up.
+
+Four fields on `MoveDef` — `sell_frames`, `knockback_speed`, `hitstop_frames`,
+`forces_knockdown` — give each move its own answer, and every one of them
+defaults to the old constant, so a move that sets nothing behaves exactly as it
+did. `sell_frames` is not free tuning: the HIT_REACT state runs for exactly
+that many ticks and the reaction clip has to be exactly that long, so the value
+must be one of `StrikeRecipes.SELL_FRAMES`. `test_hit_reactions.gd` is the gate
+`move_def.gd` names, and it was written this round because the file cited it
+three times and did not exist.
+
+### The blow and the reaction were on different clocks
+
+`GrappleRig` resolved a paired move on its root trajectory's
+`animation_finished` — 1.00 of the clip. The clinch knee lands at 0.60 and the
+backbreaker folds a man over a knee at 0.60. So damage, momentum, the camera
+cut and the HUD all arrived together, four tenths of a second after the blow,
+which is most of why the signatures read as two bodies moving through each
+other rather than one hitting the other.
+
+`move_contacted` fires at the move's authored contact frame and carries
+everything that *is* the hit; `grapple_finished` keeps only the handing of
+control back to the FSM. `PairedRecipes.contact_at()` holds the fractions, and
+they are not chosen — each is the contact keyframe of the clip pair in
+`wrestling_clips.py` over its 30 frames. `paired_recipes.gd` claimed
+`test_paired_poses.gd` checked that; it did not, so two cases were added that
+do: one bounding the fraction inside the move, one multiplying it back up by
+the generated clip's own length and requiring it to land within half a frame of
+an authored keyframe.
+
+### MOVE_EXEC lasted zero ticks
+
+`_resolve_grapple_move()` transitioned into MOVE_EXEC and straight on to IDLE
+inside the same call. The 0.6s clip authored for it — a man who has just put
+someone down, breathing, coming back up — was never on screen for a single
+frame of any capture. It was authored, baked and asserted by
+`test_authored_clips.gd` the whole time, which is a good illustration of why a
+length gate is not a "does it play" gate. `MOVE_EXEC_TICKS := 36` gives it its
+0.6s.
+
+One consequence is recorded on the constant rather than discovered later:
+MOVE_EXEC is in `UNHITTABLE_STATES`, so the attacker is now untouchable for
+those 36 ticks instead of for zero. The defender spends most of the window in
+HIT_REACT or DOWN, leaving roughly 16 ticks of exposure against a strike
+startup of 8 or more. Taking MOVE_EXEC off the list would let a grapple be
+interrupted between its resolution and its recovery, which is a bigger change
+than putting a clip on screen, so it stays and the window is gated instead.
+
+### Three gates that failed, and what each one was really saying
+
+None of the three was a bug in the round. Each was a test pinning an assumption
+the round deliberately changed, and the interesting part is that all three
+named the change precisely.
+
+`test_grapple_move_selection.gd` read the selected move back off `_active_move`
+after `_process_grapple_hold()` returned, on a comment explaining that this was
+simpler than capturing `move_landed`. It stopped being true the moment
+`_resolve_grapple_move()` ended with `_start_move(MOVE_EXEC, ...)`, because
+`_start_move()` assigns `_active_move` — the helper was reading a nameless
+timed stub. It now reads the signal.
+
+`test_match_loop_reachability.gd` failed for a different reason than it looked
+like. The message was both wrestlers stranded in GRAPPLE_HOLD after a handoff,
+and the cause was that the test triggered its handoff check off `move_landed` —
+which used to *be* the handoff and is now the contact frame, four tenths of a
+second before either man is supposed to leave the hold. It was reporting the
+move still playing. The check now hangs off `GrappleRig.grapple_finished`.
+
+`test_move_exec_never_survives_a_frame` asserted the exact behaviour
+`MOVE_EXEC_TICKS` exists to undo, and its docstring warned that if the state
+started surviving a frame, "every referee check that runs between ticks is
+suddenly racing a state that used to be over before it looked." That worry is
+now a live condition rather than a warning, so the case became
+`test_move_exec_is_bounded`: what still matters is that the window *ends*,
+because a MOVE_EXEC whose timer stopped draining is the permanent trap
+GRAPPLE_HOLD would be without a timeout. Measured at 71 observed frames, which
+is 36 physics ticks exactly.
+
+`test_clip_authoring_gate.gd` fired correctly — `wrestling_clips.py` changed —
+and was re-pinned only after the two retimed clips were rendered through
+`clip_shot.tscn` and looked at.
+
+### The retime
+
+The two running attacks put contact on frame 18 of 35. At 1.150s that is
+0.593s of windup for a move `timings.md` measures at 0.300s, and the approach
+was where all the time went. Contact moved to frame 9 (0.296s), compressing the
+approach and expanding the follow-through; the `.tres` frame data is unchanged
+at 18/46, so the clip now lands on the frame the move data always said it did.
+On the side view the clothesline reads approach → arm across at full extension
+→ a long fold back to guard, and the double leg reads as a low shot with the
+arms wrapping at knee height.
+
+The double leg also stops borrowing. Its mocap takedown was deleted a while
+back for rendering as a ball of limbs, leaving it to fall through to the
+clothesline's animation — two running attacks, one performance, differing only
+in a damage spread. `Running_Double_Leg` is authored on the rig now, same
+1.150s and same contact frame, opposite shape: the clothesline is height and
+this is depth. Naming a clip brings it under the clip/move duration contract,
+so it was added to `test_mocap_clips_match_their_move_durations`, where it
+holds at 1.150s against 69 ticks.
+
+### Measured
+
+`contact_probe --seeds 1,2,3` moves, as it must — this round changes when
+damage lands and what knocks a man down:
+
+| seed | before | after |
+| --- | --- | --- |
+| 1 | 985 | **1715** |
+| 2 | 1931 | **1728** |
+| 3 | 2494 | **1893** |
+
+All three still finish by pinfall, and the match lengths converge rather than
+spread. No ticks off the mat on any seed, lowest y −0.013 m, and the seven
+one-tick jumps per seed are all `GRAPPLE_HOLD->GRAPPLE_HOLD`, which is
+`_align_to_pair()` snapping both roots into the pair frame — the thing the
+probe was built to name, not something this round introduced.
+
+427 tests pass.

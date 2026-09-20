@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+; The third punch, and the only move in the game added for variety rather
+; than to fill a hole in the moveset.
+;
+; With two punches in strike_move_pool a match plays two arm motions several
+; dozen times and the eye starts counting them. The hook is a lead-hand
+; punch like the jab but takes a completely different path -- outside the
+; shoulder and across, rather than straight down the middle -- so it is
+; distinguishable at a glance from the hard camera, which a mirrored jab
+; would not have been. See Strike_Hook in tools/blender/wrestling_clips.py
+; for why mirroring was not available: STANCE is orthodox and asymmetric.
+;
+; It sits between the jab and the cross on every axis: slower than the jab,
+; faster than the cross, and worth more than the jab but less than the
+; cross, so adding it to the pool does not move what a strike is worth on
+; average.
+animation_pair_id = &"strike_hook"
+; Contact is authored on frame 6 of 18 at 0.600s = 0.200s = tick 12, which is
+; what startup_frames must say. 12 + 4 + 20 = 36 ticks = the clip's 0.600s.
+startup_frames = 12
+active_frames = 4
+recovery_frames = 20
+reversal_window_start = 12
+reversal_window_end = 15
+damage_head = 6.0
+damage_torso = 2.0
+damage_arms = 0.0
+damage_legs = 0.0
+; Measured, not chosen: tools/anim/measure_contact_offsets.gd samples the
+; clip at startup_frames and prints this. A hook arrives off the centre
+; line, which is what the X component is.
+contact_offset = Vector3(0.0, 1.4, -0.6)
+contact_radius = 0.12
+sell_frames = 24
+momentum_cost = 0.0
+momentum_gain = 5.0
+weight_class_min = 0
+weight_class_max = 2
+required_opponent_state = -1

@@ -104,6 +104,9 @@ const RECIPES := {
 			{"t": 1.00, "clip": "Idle", "at": 0.00},          # back on his feet
 		],
 		"defender_grips_until": 0.68,
+		# Frame 18 of the 30-frame authored halves: the frame the knee
+		# actually lands. See CONTACT_AT's note below for what reads it.
+		"contact_at": 0.60,
 	},
 	# A drops to one knee; B is folded across it. B peaks at 1.55m, lands
 	# forward at +0.65 X.
@@ -134,6 +137,12 @@ const RECIPES := {
 			{"t": 1.00, "clip": "Death01", "at": 1.60},
 		],
 		"defender_grips_until": 0.40,
+		# Frame 18 of 30: the frame his spine crosses the knee.
+		"contact_at": 0.60,
+		# He is poured off the knee onto the mat and the last sample of his
+		# half is supine -- so he is DOWN when this ends, whatever the damage
+		# numbers say. See ends_prone() below.
+		"ends_prone": true,
 	},
 	# Attacker drops backwards and snaps the head down beside him. Both
 	# men finish low, which is what makes it read as a signature rather
@@ -160,6 +169,9 @@ const RECIPES := {
 			{"t": 1.00, "clip": "Death01", "at": 1.60},
 		],
 		"defender_grips_until": 0.35,
+		# Frame 20 of 30: the frame the head is driven to the mat.
+		"contact_at": 0.667,
+		"ends_prone": true,
 	},
 }
 
@@ -263,6 +275,48 @@ static func role_clip(move_id: StringName, is_attacker: bool) -> String:
 		return ""
 	var suffix := ATTACKER_SUFFIX if is_attacker else DEFENDER_SUFFIX
 	return "%s/%s%s" % [LIBRARY, move_id, suffix]
+
+## How far into the move the hit actually lands, as a fraction of the clip.
+##
+## This exists because the two halves of a paired move and the damage it
+## does used to be on different clocks. GrappleRig resolved a move on its
+## root trajectory's `animation_finished`, so every grapple applied its
+## damage, its momentum and its camera cut at 1.00s -- while the knee lands
+## at 0.60 and the backbreaker crosses the knee at 0.60. Four tenths of a
+## second is not a rounding error at 60Hz: it is the man reacting to a blow
+## that has not been struck yet, and it is why the signatures read as two
+## bodies moving through each other rather than one hitting the other.
+##
+## The numbers are not chosen here. Each one is the contact keyframe of the
+## clip pair in tools/blender/wrestling_clips.py divided by its 30 frames,
+## and tests/test_paired_poses.gd checks them against the authored clips.
+##
+## A move with no recipe, or a recipe that names no contact, returns 1.0 --
+## which is exactly the old behaviour, so nothing silently changes for a
+## move that has not been measured.
+static func contact_at(move_id: StringName) -> float:
+	if not RECIPES.has(String(move_id)):
+		return 1.0
+	return RECIPES[String(move_id)].get("contact_at", 1.0)
+
+## Whether this move leaves the defender on the mat.
+##
+## The two signatures end their victim's half supine -- the last sample of
+## Backbreaker_Defender and Neckbreaker_Defender is S(), flat on his back --
+## but the FSM sent him to IDLE afterwards unless his accumulated damage
+## happened to cross KNOCKDOWN_DAMAGE (100), and a backbreaker deals 42. So
+## a man dropped on his back stood up in a fighting guard over the 6-tick
+## blend, which is the single worst-looking thing in a captured match.
+##
+## Declared per move rather than inferred from the clip, because the clip is
+## the authored intent and inferring it would mean trusting a pelvis height
+## sampled out of a bake -- see WrestlerController._resolve_grapple_move(),
+## which routes the defender to DOWN when this is true no matter what the
+## damage totals say.
+static func ends_prone(move_id: StringName) -> bool:
+	if not RECIPES.has(String(move_id)):
+		return false
+	return RECIPES[String(move_id)].get("ends_prone", false)
 
 ## How long into the move the defender keeps hold of the attacker, as a
 ## fraction of the clip. Past it he has been thrown and his arms go loose;

@@ -14,6 +14,11 @@ damage_head = 8.0
 damage_torso = 22.0
 damage_arms = 4.0
 damage_legs = 8.0
+; Both halves of this end with the defender flat on his back (see
+; resources/animations/paired_recipes.gd, ends_prone), so the move puts him
+; DOWN rather than handing him back to IDLE on 42 points of damage.
+forces_knockdown = true
+hitstop_frames = 3
 momentum_cost = 8.0
 momentum_gain = 0.0
 weight_class_min = 0

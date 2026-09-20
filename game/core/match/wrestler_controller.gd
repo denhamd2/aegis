@@ -367,7 +367,10 @@ const STATE_ANIMATIONS := {
 ##
 ## A paired grapple clip animates only the two root transforms -- the throw
 ## trajectory -- and both wrestlers sit in GRAPPLE_HOLD for its whole
-## duration (MOVE_EXEC never fires for a rig-driven move; confirmed live).
+## duration. (This used to add "MOVE_EXEC never fires for a rig-driven
+## move; confirmed live", which was true only because MOVE_EXEC lasted
+## zero ticks. It now runs for MOVE_EXEC_TICKS after the clip ends, so the
+## attacker does get a MOVE_EXEC clip -- just not during the paired move.)
 ## With one clip for both roles, that meant the attacker played the same
 ## idle-ish gesture as the man he was supposedly throwing: an instrumented
 ## capture showed the "attacker" standing with an arm out while the
@@ -407,9 +410,51 @@ const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
 
+## How long MOVE_EXEC lasts, in ticks -- 36 = 0.6s, the authored length of
+## "strikes/move_exec_impact".
+##
+## It used to last ZERO. _resolve_grapple_move() transitioned into MOVE_EXEC
+## and then straight on to IDLE inside the same call, so the state existed
+## for one tick of cross-fade and the 0.6s clip authored for it -- a man who
+## has just put someone down, breathing, coming back up -- was never on
+## screen for a single frame of any capture. It was authored, baked, and
+## asserted by tests/test_authored_clips.gd the whole time, which is a good
+## illustration of why a length gate is not a "does it play" gate.
+##
+## One consequence worth stating rather than discovering: MOVE_EXEC is in
+## UNHITTABLE_STATES, so the attacker is now untouchable for these 36 ticks
+## instead of for zero. The defender spends most of that window in HIT_REACT
+## (20 ticks) or DOWN, which leaves roughly 16 ticks of exposure against a
+## strike startup of 8 or more -- narrow, and the alternative (taking
+## MOVE_EXEC off UNHITTABLE_STATES) means a grapple can be interrupted
+## between its resolution and its recovery, which is a bigger change than
+## putting the clip on screen. Left as-is deliberately.
+## tests/test_match_loop_reachability.gd gates that the window ends.
+const MOVE_EXEC_TICKS := 36
+
+## Ticks of animation hold left on this wrestler after a heavy blow landed.
+##
+## Hitstop, and deliberately animation-only: the AnimationTree stops being
+## advanced for a few ticks so both bodies hold the contact pose, while the
+## FSM, the referee and every gameplay timer keep counting normally. A
+## gameplay freeze would have to stop both wrestlers, the referee's count and
+## the capture harness together to stay consistent, and none of that is worth
+## what it buys -- the weight comes from the pose being held, not from the
+## simulation stopping.
+##
+## The cost is that the held clip finishes this many ticks into the state's
+## cross-fade rather than exactly at its end. On a 34-tick sell losing 3
+## ticks off the tail of the recovery is invisible; that is the whole of the
+## trade.
+var _hitstop_ticks: int = 0
+
 var _move_ticks_remaining: int = 0
 var _active_move: MoveDef
 var _is_grapple_attacker: bool = false
+## Guards _apply_grapple_contact() so a move's hit resolves exactly once,
+## whether it arrived on the rig's contact signal or on the fallback at the
+## end of the move.
+var _grapple_contact_applied: bool = false
 var _pin_minigame: PinMinigame
 var _submission_minigame: SubmissionMinigame
 
@@ -967,6 +1012,7 @@ func _resolve_paths() -> void:
 		ai.target = opponent
 
 func _physics_process(delta: float) -> void:
+	_tick_hitstop()
 	var live_input := _poll_live_input()
 	var input := ReplaySystem.get_input(player_index, live_input) if ReplaySystem else live_input
 	fsm._physics_process(delta)
@@ -1479,6 +1525,29 @@ func _process_active_move(input: Dictionary) -> void:
 			return
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
+## Holds this wrestler's animation for `move.hitstop_frames` ticks.
+##
+## MANUAL callback mode rather than `anim_tree.active = false`: deactivating
+## an AnimationMixer is not defined to leave the last pose written, and a
+## hold that snaps the skeleton back toward its rest pose for three ticks is
+## considerably worse than no hold at all. In MANUAL the tree stays active
+## and keeps writing -- it simply is not advanced, which is exactly a freeze.
+##
+## Takes the LONGER of any two holds rather than adding them, so a wrestler
+## caught by two things in the same tick holds once.
+func _apply_hitstop(move: MoveDef) -> void:
+	if not move or move.hitstop_frames <= 0 or not anim_tree:
+		return
+	_hitstop_ticks = maxi(_hitstop_ticks, move.hitstop_frames)
+	anim_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+
+func _tick_hitstop() -> void:
+	if _hitstop_ticks <= 0:
+		return
+	_hitstop_ticks -= 1
+	if _hitstop_ticks <= 0 and anim_tree:
+		anim_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
+
 func _apply_move_to_opponent(move: MoveDef) -> void:
 	move_landed.emit(self, opponent, move)
 	# Momentum belongs to whoever lands the hit (self), not the wrestler
@@ -1489,7 +1558,19 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	opponent._pending_hits.append(move)
 
 ## Whether this hit knocks the wrestler down, rather than staggering him.
-func _would_be_knocked_down() -> bool:
+##
+## `move` is the blow that just landed, and it gets a say: a move with
+## forces_knockdown puts him down whatever the accumulated damage is. That
+## covers the two moves whose whole purpose is a knockdown -- a running
+## attack, and a signature whose own animation ends with the defender flat
+## on his back -- and which, on the damage rule alone, left him standing in a
+## fighting guard 0.333s later (or, for the signatures, popped him from
+## prone to standing over the 6-tick blend).
+##
+## Called with no move for the accumulated-damage question on its own.
+func _would_be_knocked_down(move: MoveDef = null) -> bool:
+	if move and move.forces_knockdown:
+		return true
 	return combat.total_damage() - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
 
 ## Called by MatchReferee once every wrestler has finished its own
@@ -1505,9 +1586,15 @@ func _resolve_pending_hits() -> void:
 	_pending_hits.clear()
 	if UNHITTABLE_STATES.has(fsm.current_state):
 		return
+	var landed: MoveDef = moves[moves.size() - 1]
 	for move in moves:
 		combat.apply_damage(move)
-	if _would_be_knocked_down():
+	# The hold goes on both men, and on this tick rather than when the
+	# reaction starts: the point of it is the frame of contact.
+	_apply_hitstop(landed)
+	if opponent:
+		opponent._apply_hitstop(landed)
+	if _would_be_knocked_down(landed):
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
 		_pending_hit_reaction = null
 		_go_down()
@@ -1528,9 +1615,9 @@ func _resolve_pending_hits() -> void:
 	# what trading blows actually looks like. A knockdown still interrupts --
 	# a man dropped mid-swing is not finishing the swing.
 	if fsm.current_state == WrestlerFSM.State.STRIKE:
-		_pending_hit_reaction = moves[moves.size() - 1]
+		_pending_hit_reaction = landed
 		return
-	_begin_hit_reaction(moves[moves.size() - 1])
+	_begin_hit_reaction(landed)
 
 ## Takes a hit: the reaction clip, the state, and the shove that sells it.
 ##
@@ -1542,7 +1629,13 @@ func _resolve_pending_hits() -> void:
 ## deliberately here, and decayed to nothing rather than left running.
 func _begin_hit_reaction(move: MoveDef) -> void:
 	_play_hit_reaction(move)
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+	# The move says how long this is sold for, and _play_hit_reaction() has
+	# just picked a clip of exactly that length. HIT_REACT_TICKS is the
+	# default it falls back to and nothing more -- it used to be the length
+	# of every reaction in the game, so a jab and a boot to the ribs were the
+	# same 0.333s flinch.
+	_start_move(WrestlerFSM.State.HIT_REACT,
+			_timed_stub(move.sell_frames if move else HIT_REACT_TICKS))
 	var away := Vector3.ZERO
 	if opponent:
 		away = global_position - opponent.global_position
@@ -1554,7 +1647,7 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 		away.y = 0.0
 	if away.length() < 0.001:
 		return
-	velocity = away.normalized() * KNOCKBACK_SPEED
+	velocity = away.normalized() * (move.knockback_speed if move else KNOCKBACK_SPEED)
 	_knockback_ticks = KNOCKBACK_TICKS
 
 ## Points the STRIKE state at this strike's own clip before entering it.
@@ -1657,7 +1750,14 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		return
 
 	_active_move = move
+	_grapple_contact_applied = false
 	if grapple_rig:
+		# Two signals, because a paired move has two moments and they are not
+		# the same moment. The knee lands at 0.60 of the clip; the move ends
+		# at 1.00. Everything that IS the hit -- damage, momentum, the camera
+		# cut, the impact hold -- goes on the first, and only the handing of
+		# control back to the FSM waits for the second.
+		grapple_rig.move_contacted.connect(_on_grapple_contact, CONNECT_ONE_SHOT)
 		grapple_rig.begin(self, opponent, move)
 		grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
 	else:
@@ -1738,6 +1838,35 @@ func _clear_grapple_roles() -> void:
 	if opponent:
 		opponent._is_grapple_attacker = false
 
+func _on_grapple_contact(_attacker: Node3D, _defender: Node3D, move: MoveDef) -> void:
+	_apply_grapple_contact(move)
+
+## Everything that is the hit itself, applied on the frame the authored clip
+## actually lands it (PairedRecipes.contact_at).
+##
+## All of this used to happen on the paired clip's `animation_finished`,
+## which is 1.00s -- while the clinch knee lands at 0.60 and the backbreaker
+## folds a man over a knee at 0.60. Four tenths of a second of a match
+## reacting to a blow that had not been struck yet: the camera cut, the
+## momentum, the damage and the HUD all arrived together, long after the
+## bodies had finished doing the thing they were arriving for.
+##
+## Idempotent, because _resolve_grapple_move() calls it too -- a move with no
+## measured contact, or the grey-box path with no rig at all, still resolves
+## exactly as it always did.
+func _apply_grapple_contact(move: MoveDef) -> void:
+	if _grapple_contact_applied or not move or not opponent:
+		return
+	_grapple_contact_applied = true
+	move_landed.emit(self, opponent, move)
+	combat.apply_momentum(move)
+	# Recorded on landing rather than on selection: a grapple that gets
+	# reversed was never thrown, so it must not unlock the rung above it.
+	combat.record_tier(tier_of(move))
+	opponent.combat.apply_damage(move)
+	_apply_hitstop(move)
+	opponent._apply_hitstop(move)
+
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move
 	_active_move = null
@@ -1749,11 +1878,6 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# lockstep) so it must also be in MOVE_EXEC before taking a hit reaction —
 	# GRAPPLE_HOLD -> HIT_REACT/DOWN is not a legal transition on its own.
 	opponent.fsm.transition_to(WrestlerFSM.State.MOVE_EXEC)
-	move_landed.emit(self, opponent, move)
-	combat.apply_momentum(move)
-	# Recorded on landing rather than on selection: a grapple that gets
-	# reversed was never thrown, so it must not unlock the rung above it.
-	combat.record_tier(tier_of(move))
 	# Applied directly rather than through _apply_move_to_opponent's
 	# _pending_hits queue: that queue exists so MatchReferee can arbitrate
 	# two wrestlers striking each other the *same* tick regardless of
@@ -1767,12 +1891,17 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# simultaneous hit) — so every queued grapple hit was silently dropped
 	# the instant it was queued, damage never accumulated, and a match
 	# never progressed past tie-up -> grapple -> repeat.
-	opponent.combat.apply_damage(move)
+	#
+	# A no-op when the rig already fired the contact signal at the move's own
+	# contact frame, which is the normal path.
+	_apply_grapple_contact(move)
 	# The grapple is over as of here -- drop the roles before the FSM moves
 	# on, so nothing downstream reads an attacker flag for a finished move.
 	_clear_grapple_roles()
-	fsm.transition_to(WrestlerFSM.State.IDLE)
-	if opponent._would_be_knocked_down():
+	# The attacker gets his 0.6s of MOVE_EXEC rather than passing through it
+	# in a single tick -- see MOVE_EXEC_TICKS.
+	_start_move(WrestlerFSM.State.MOVE_EXEC, _timed_stub(MOVE_EXEC_TICKS))
+	if opponent._would_be_knocked_down(move):
 		opponent._go_down()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))

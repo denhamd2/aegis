@@ -134,6 +134,43 @@ func test_defender_grip_windows_are_inside_the_move() -> void:
 			"%s grips for %.2f of the move" % [move_id, fraction]
 		).is_between(0.0, 1.0)
 
+## contact_at is the frame the blow lands, and GrappleRig times its
+## move_contacted signal off it -- damage, momentum, the camera cut and the
+## impact hold all fire there. A fraction outside the clip fires the hit
+## either before the move starts or never.
+func test_contact_frames_are_inside_the_move() -> void:
+	for move_id in PairedRecipes.RECIPES:
+		var fraction: float = PairedRecipes.contact_at(move_id)
+		assert_float(fraction).override_failure_message(
+			"%s lands its hit at %.2f of the move" % [move_id, fraction]
+		).is_between(0.0001, 1.0)
+
+## And it has to land on a frame somebody actually authored.
+##
+## paired_recipes.gd states where each number came from -- "the contact
+## keyframe of the clip pair in tools/blender/wrestling_clips.py divided by
+## its 30 frames" -- and that claim is only worth anything if something
+## checks it. Multiplied back up by the generated clip's own length, the
+## fraction must land on a keyframe of the attacker's half, within half a
+## frame at the 30fps the clips are authored at.
+func test_contact_frames_land_on_an_authored_keyframe() -> void:
+	const AUTHORED_FPS := 30.0
+	var off_frame: Array[String] = []
+	for move_id in PairedRecipes.RECIPES:
+		var clip := PairedRecipes.role_clip(move_id, true)
+		var bare := clip.substr(clip.find("/") + 1)
+		var anim: Animation = PAIRED_POSES.get_animation(bare)
+		var seconds: float = PairedRecipes.contact_at(move_id) * anim.length
+		var nearest := INF
+		for key in anim.track_get_key_count(0):
+			nearest = minf(nearest, absf(anim.track_get_key_time(0, key) - seconds))
+		if nearest > 0.5 / AUTHORED_FPS:
+			off_frame.append("%s: %.3fs is %.3fs off the nearest keyframe"
+				% [move_id, seconds, nearest])
+	assert_array(off_frame).override_failure_message(
+		"contact_at does not name an authored frame: %s" % [off_frame]
+	).is_empty()
+
 ## A wrestler must be able to play the clip by name through his own
 ## AnimationPlayer -- the library has to be registered, under the name the
 ## recipes hand out.

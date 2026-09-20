@@ -40,12 +40,25 @@ func _selected_move_id(attacker: WrestlerController, defender: WrestlerControlle
 		momentum: float, tier_reached: int = CombatSystem.Tier.SIGNATURE) -> StringName:
 	attacker.combat.momentum = momentum
 	attacker.combat.tier_reached = tier_reached
+	# Read off move_landed rather than off _active_move.
+	#
+	# _active_move used to be left holding the selected move once
+	# _process_grapple_hold() returned, and reading it back was simpler than
+	# a closure. That stopped being true when MOVE_EXEC_TICKS gave the
+	# attacker a real 0.6s MOVE_EXEC: _resolve_grapple_move() now ends with
+	# _start_move(MOVE_EXEC, _timed_stub(...)), and _start_move() assigns
+	# _active_move, so the field holds a nameless stub by the time we look.
+	# The signal is emitted with the move itself and cannot be clobbered.
+	var landed: Array[MoveDef] = []
+	attacker.move_landed.connect(
+		func(_a: WrestlerController, _d: WrestlerController, move: MoveDef) -> void:
+			landed.append(move),
+		CONNECT_ONE_SHOT)
 	attacker._process_grapple_hold({})
-	# _active_move is set before GrappleRig dispatch/resolution and (with no
-	# grapple_rig assigned here, so the synchronous else-branch runs) is left
-	# holding the selected move afterward -- simpler and less fragile than
-	# capturing move_landed through a lambda closure.
-	var id: StringName = attacker._active_move.animation_pair_id
+	assert_array(landed).override_failure_message(
+		"No move landed, so nothing was selected."
+	).is_not_empty()
+	var id: StringName = landed[0].animation_pair_id
 	# Reset back to GRAPPLE_HOLD for the next call in the same test.
 	attacker.fsm.current_state = WrestlerFSM.State.GRAPPLE_HOLD
 	defender.fsm.current_state = WrestlerFSM.State.GRAPPLE_HOLD

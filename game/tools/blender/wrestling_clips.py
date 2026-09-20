@@ -508,6 +508,57 @@ CLIPS = {
         (20, P()),
     ],
 
+    # 18 frames / 0.6s, LEFT hook to the head, contact on frame 6 (= tick 12
+    # of strike_hook.tres).
+    #
+    # This clip exists for repetition rather than for a gap in the moveset.
+    # Every strike in this file starts and ends at the same STANCE and is
+    # drawn from a seeded pool, so with two punches in that pool a long match
+    # plays the same two arm motions several dozen times and the eye starts
+    # counting them. A third punch that is neither of the other two breaks
+    # that up for the cost of one table.
+    #
+    # It is a hook and not a mirrored jab, and that is forced rather than
+    # chosen: STANCE is orthodox and asymmetric -- left foot leading, right
+    # foot back and turned out -- so the mirror of a lead-hand jab is a
+    # rear-hand punch thrown from a stance nobody is standing in. Mirroring
+    # the clip would have meant mirroring the stance, and the stance is what
+    # lets every clip here cut into every other one. A hook keeps the lead
+    # hand and changes the PATH instead: it comes from outside the shoulder
+    # and arrives across, where the jab goes straight down the middle.
+    "Strike_Hook": [
+        (0,  P()),
+        # Load: weight settles onto the lead foot and the left hand drifts
+        # OUT, wide of the shoulder -- the wind-up of a hook is lateral, and
+        # it is the one punch here you are allowed to see coming.
+        (4,  P(pelvis=(0.03, 0.0, 0.852), hips=(0, -12, 0), spine=(-10, -8, 4),
+               head=(4, -4, 0),
+               hand_l=(-0.34, 0.30, 1.36), hand_r=(0.26, 0.30, 1.28),
+               elbow_l=(-0.9, 0.1, -0.2))),
+        # Contact: the hand comes ACROSS at head height, not forward -- it
+        # arrives 0.30 m off the centre line, which is what makes a hook
+        # read as a hook from the hard camera rather than as a wide jab. The
+        # hips and the lead shoulder drive it and the back heel lifts.
+        (6,  P(pelvis=(-0.01, 0.05, 0.860), hips=(-4, 16, 0),
+               spine=(-10, 30, 6), head=(8, -16, 0), clav_l=(0, 18, 0),
+               hand_l=(-0.30, 0.54, 1.42), hand_r=(0.22, 0.30, 1.28),
+               elbow_l=(-0.9, 0.0, 0.1), fist_l=0.95,
+               foot_r=(0.23, -0.17, 0.132), ankle_r=(24, 0, 0))),
+        # Through it and turning: a hook has nothing to stop it, so the arm
+        # keeps travelling across the body and the torso goes with it.
+        (10, P(pelvis=(-0.03, 0.04, 0.854), hips=(-4, 24, 0),
+               spine=(-10, 36, 4), head=(6, -20, 0), clav_l=(0, 10, 0),
+               hand_l=(-0.06, 0.44, 1.38), hand_r=(0.20, 0.28, 1.26),
+               elbow_l=(-0.7, -0.1, 0.1), fist_l=0.8,
+               foot_r=(0.23, -0.17, 0.122), ankle_r=(16, 0, 0))),
+        # Recovering the guard, still turned out.
+        (14, P(pelvis=(-0.01, 0.03, 0.856), hips=(-2, 12, 0),
+               spine=(-10, 18, 2), head=(4, -10, 0),
+               hand_l=(-0.16, 0.36, 1.36), hand_r=(0.22, 0.32, 1.29),
+               fist_l=0.85, foot_r=(0.23, -0.17, 0.110))),
+        (18, P()),
+    ],
+
     # 20 frames, right boot to the midsection, contact on frame 5 (= tick 8
     # of strike_kick.tres). Chamber first: the knee comes up folded before
     # anything extends, which is what separates a kick from a swung leg.
@@ -515,22 +566,36 @@ CLIPS = {
     "Strike_Kick": [
         (0,  P()),
         # Chamber, and the weight goes fully onto the left foot.
+        #
+        # `ankle_l` appears from here on and it is not cosmetic. The hips
+        # open 6 degrees through this kick (yaw -6 to -12) while the plant
+        # foot, given no ankle of its own, simply inherits whatever the shin
+        # above it is doing -- so the whole rotation of the pelvis was being
+        # taken by the standing knee with the boot nailed to the mat. A
+        # kicker pivots on the ball of the plant foot; the heel comes round
+        # and the knee stays over the toe. The yaw here tracks the hips'
+        # so the two stop fighting, and the boot returns to flat as the leg
+        # comes back down under him.
         (3,  P(pelvis=(-0.04, 0.0, 0.848), hips=(0, -6, 4), spine=(-4, 0, -6),
                foot_r=(0.16, 0.34, 0.60), knee_r=(0.3, 1.0, 0.1),
+               ankle_l=(0, -4, 0),
                hand_r=(0.28, 0.16, 1.26), hand_l=(-0.24, 0.20, 1.30))),
         # Contact: the knee straightens into the target at body height and
         # the torso leans away as the counterweight.
         (5,  P(pelvis=(-0.06, 0.0, 0.852), hips=(6, -10, 8),
                spine=(14, 0, -14), head=(-10, -6, 0),
                foot_r=(0.10, 0.76, 0.92), knee_r=(0.3, 1.0, 0.1),
+               ankle_l=(0, -10, 0),
                hand_r=(0.34, -0.08, 1.20), hand_l=(-0.34, 0.12, 1.30))),
         (8,  P(pelvis=(-0.06, 0.0, 0.850), hips=(7, -12, 8),
                spine=(16, 0, -16), head=(-12, -8, 0),
                foot_r=(0.08, 0.82, 0.86), knee_r=(0.3, 1.0, 0.1),
+               ankle_l=(0, -12, 0),
                hand_r=(0.36, -0.12, 1.18), hand_l=(-0.36, 0.10, 1.29))),
         # The leg folds back down under him rather than dropping straight.
         (12, P(pelvis=(-0.04, 0.02, 0.846), spine=(-6, 0, -6),
                foot_r=(0.18, 0.28, 0.34), knee_r=(0.3, 1.0, 0.1),
+               ankle_l=(0, -5, 0),
                hand_r=(0.26, 0.18, 1.26), hand_l=(-0.26, 0.22, 1.30))),
         (20, P()),
     ],
@@ -629,6 +694,119 @@ CLIPS = {
         (8,  P(pelvis=(0.0, -0.04, 0.835), spine=(-20, 0, 0), head=(-12, 0, 0),
                hand_r=(0.14, 0.22, 1.18), hand_l=(-0.11, 0.24, 1.20))),
         (12, P()),
+    ],
+
+    # 12 frames / 0.4s. The CROSS's reaction, and deliberately not the jab's
+    # played longer.
+    #
+    # Two things separate them. It turns the head the OTHER way -- negative
+    # yaw throughout, where Hit_React_Head is positive -- because the jab is
+    # thrown with the left hand and the cross with the right, so the shots
+    # arrive on opposite sides of the jaw and cannot spin a man the same
+    # direction. And it goes further: the head reaches 34 degrees of yaw
+    # against the jab's 26, the guard drops lower, and the recovery takes the
+    # whole back half of the clip rather than snapping shut.
+    #
+    # Length is 0.4s = 24 ticks, which is strike_cross.tres's sell_frames.
+    # Authored at 12 frames so it plays at native 30fps speed and the recipe
+    # retimes nothing.
+    "Hit_React_Head_Med": [
+        (0,  P()),
+        # Same 2-frame snap the light reaction uses: combat-animation.md's
+        # "snap to impact", not an ease into it.
+        (2,  P(pelvis=(-0.03, -0.07, 0.846), hips=(3, -8, 0),
+               spine=(12, -18, 5), head=(20, -26, 14),
+               hand_r=(0.26, 0.14, 1.14), hand_l=(-0.24, 0.20, 1.16),
+               fist_r=0.6, fist_l=0.6)),
+        # Deepest, and deeper than the jab's: chin thrown right across, the
+        # far shoulder pulled after it, weight off the front foot.
+        (5,  P(pelvis=(-0.07, -0.14, 0.830), hips=(7, -13, 0),
+               spine=(19, -26, 10), head=(25, -34, 19),
+               hand_r=(0.34, 0.08, 1.04), hand_l=(-0.30, 0.12, 1.06),
+               fist_r=0.45, fist_l=0.45,
+               foot_r=(0.25, -0.30, 0.118), foot_l=(-0.22, 0.10, 0.104))),
+        # He is still turned out here -- a cross does not let a man square up
+        # again in three frames, and the jab's reaction recovering that fast
+        # is most of why the two used to look the same.
+        (8,  P(pelvis=(-0.04, -0.08, 0.842), hips=(4, -9, 0),
+               spine=(10, -17, 6), head=(16, -22, 11),
+               hand_r=(0.28, 0.16, 1.16), hand_l=(-0.26, 0.20, 1.19),
+               fist_r=0.55, fist_l=0.55,
+               foot_r=(0.25, -0.26, 0.110))),
+        (12, P()),
+    ],
+
+    # 12 frames / 0.4s. The kick's body reaction: the same fold as
+    # Hit_React_Torso, but a boot is not a fist and it arrives across the
+    # ribs rather than straight in -- so this adds the twist the punch
+    # version has none of, and holds the fold two frames longer.
+    "Hit_React_Torso_Med": [
+        (0,  P()),
+        (2,  P(pelvis=(0.0, -0.05, 0.816), hips=(-4, 6, 0),
+               spine=(-30, 10, 4), head=(-18, 8, 0),
+               hand_r=(0.12, 0.16, 1.10), hand_l=(-0.10, 0.18, 1.12),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
+        # Deepest: hips 10 cm down, ribs turned away from the boot, and both
+        # elbows come in over the spot it landed on.
+        (5,  P(pelvis=(0.0, -0.10, 0.764), hips=(-12, 10, 0),
+               spine=(-40, 16, 7), head=(-25, 13, 0),
+               hand_r=(0.09, 0.12, 0.99), hand_l=(-0.07, 0.14, 1.01),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+               fist_r=0.5, fist_l=0.5,
+               foot_r=(0.26, -0.24, 0.104))),
+        (8,  P(pelvis=(0.0, -0.06, 0.806), hips=(-7, 5, 0),
+               spine=(-26, 8, 3), head=(-16, 6, 0),
+               hand_r=(0.12, 0.18, 1.12), hand_l=(-0.09, 0.20, 1.14),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
+        (12, P()),
+    ],
+
+    # 17 frames / 0.567s = 34 ticks, strike_kick_heavy.tres's sell_frames.
+    #
+    # gauntlet/refs/timings.md measures the man struck by an isolated heavy
+    # blow as "doubled over from ~230.700s and still doubled at 231.100s" --
+    # at least 0.4s, with no citable end frame. The light reaction returns to
+    # a fighting guard in 0.333s, which is faster than the reference is still
+    # bent double, so a heavy strike selling on it was never going to read.
+    #
+    # The shape follows from that: he does not recover inside this clip. He
+    # folds, he STAYS folded through the middle third, and he is still coming
+    # back up when it ends -- the AnimationTree's cross-fade into IDLE
+    # finishes the rise, which is what keeps the last pose from popping.
+    "Hit_React_Torso_Heavy": [
+        (0,  P()),
+        (2,  P(pelvis=(0.0, -0.06, 0.806), hips=(-6, 5, 0),
+               spine=(-34, 9, 4), head=(-20, 7, 0),
+               hand_r=(0.11, 0.14, 1.06), hand_l=(-0.09, 0.16, 1.08),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
+        # Deepest, and it is a long way down: the hips drop 0.14 m, the chest
+        # comes over the knees and both hands cover the ribs.
+        (5,  P(pelvis=(0.0, -0.13, 0.718), hips=(-16, 11, 0),
+               spine=(-48, 18, 8), head=(-30, 14, 0),
+               hand_r=(0.07, 0.10, 0.92), hand_l=(-0.05, 0.12, 0.94),
+               elbow_r=(0.5, -0.35, -0.8), elbow_l=(-0.5, -0.35, -0.8),
+               fist_r=0.45, fist_l=0.45,
+               foot_r=(0.27, -0.26, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+        # Held. A man does not bounce out of this -- he stays there while it
+        # goes through him, and only his breathing moves.
+        (9,  P(pelvis=(0.0, -0.14, 0.710), hips=(-17, 10, 0),
+               spine=(-49, 17, 8), head=(-31, 13, 0),
+               hand_r=(0.08, 0.09, 0.90), hand_l=(-0.06, 0.11, 0.92),
+               elbow_r=(0.5, -0.35, -0.8), elbow_l=(-0.5, -0.35, -0.8),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.27, -0.26, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+        # Starting to come up, and no further: the clip ends mid-rise on
+        # purpose, and the blend to IDLE takes it the rest of the way.
+        (13, P(pelvis=(0.0, -0.10, 0.772), hips=(-11, 7, 0),
+               spine=(-36, 12, 5), head=(-23, 9, 0),
+               hand_r=(0.10, 0.13, 1.00), hand_l=(-0.08, 0.15, 1.02),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+               fist_r=0.5, fist_l=0.5,
+               foot_r=(0.26, -0.22, 0.104))),
+        (17, P(pelvis=(0.0, -0.05, 0.824), hips=(-4, 3, 0),
+               spine=(-20, 6, 2), head=(-12, 4, 0),
+               hand_r=(0.14, 0.22, 1.16), hand_l=(-0.13, 0.26, 1.20),
+               fist_r=0.65, fist_l=0.65)),
     ],
 
     # 23 frames / 0.75s. On his feet and gone: guard down, chin dropped,
@@ -791,37 +969,121 @@ CLIPS = {
     # and the run supplies the force, which is why no retiming of a punch
     # ever produced one. Two strides, the arm comes up on the second, and
     # the follow-through keeps turning him past the man he hit.
+    #
+    # CONTACT IS FRAME 9, and the beats either side of it are deliberately
+    # lopsided. Frame 9 of 35 over 1.150s is 0.296s, which is the 0.300s
+    # gauntlet/refs/timings.md measures from a heavy strike's windup to its
+    # contact -- so running_attack_*.tres keep startup_frames 18 and the
+    # damage lands on the frame the blow does.
+    #
+    # It was frame 18 (0.591s), twice the measured windup, and the move data
+    # was briefly moved to startup 35 to match it. That fixed the mismatch by
+    # giving up the measurement, so the clip was retimed instead: the
+    # approach compresses into 9 frames and the follow-through gets the other
+    # 26. That is the right shape anyway -- he opens MID-STRIDE, already
+    # running, so the anticipation happened before frame 0, and a heavy blow
+    # carries more follow-through than windup (blender-animation, "Pro
+    # animation principles").
     "Running_Clothesline": [
         (0,  P(pelvis=(0.0, 0.04, 0.858), spine=(24, 4, 0), head=(-14, 0, 0),
                foot_r=(0.15, 0.28, 0.115), foot_l=(-0.15, -0.30, 0.22),
                hand_r=(0.22, -0.06, 1.22), hand_l=(-0.16, 0.34, 1.42))),
-        (6,  P(pelvis=(0.0, 0.04, 0.870), spine=(23, 0, 0), head=(-13, 0, 0),
+        (3,  P(pelvis=(0.0, 0.04, 0.870), spine=(23, 0, 0), head=(-13, 0, 0),
                foot_r=(0.15, -0.14, 0.16), foot_l=(-0.15, 0.14, 0.30),
                hand_r=(0.26, 0.10, 1.32), hand_l=(-0.20, 0.10, 1.28))),
         # The arm goes out and locks -- straight, level, at throat height,
         # and pointed FORWARD where a ringside camera sees it in profile.
         # Aimed across the chest (tried first) it hid behind his own torso
         # from the side and read as a man running with his arms tucked in.
-        (12, P(pelvis=(0.0, 0.04, 0.862), spine=(16, -8, 0), head=(-10, -6, 0),
+        (6, P(pelvis=(0.0, 0.04, 0.862), spine=(16, -8, 0), head=(-10, -6, 0),
                foot_r=(0.15, 0.26, 0.115), foot_l=(-0.15, -0.26, 0.20),
                hand_r=(0.02, 0.50, 1.44), hand_l=(-0.30, -0.10, 1.24),
                elbow_r=(0.5, -0.6, -0.6), fist_r=0.9)),
-        # Contact: nothing about the arm changes, the BODY arrives.
-        (18, P(pelvis=(0.0, 0.06, 0.852), hips=(4, -20, 0),
+        # Contact, frame 9: nothing about the arm changes, the BODY arrives.
+        (9, P(pelvis=(0.0, 0.06, 0.852), hips=(4, -20, 0),
                spine=(12, -26, 0), head=(-8, -18, 0),
                foot_r=(0.18, 0.10, 0.104), foot_l=(-0.16, -0.22, 0.14),
                hand_r=(-0.20, 0.46, 1.44), hand_l=(-0.34, -0.16, 1.22),
                elbow_r=(0.4, -0.6, -0.6), fist_r=0.9)),
         # Follow-through: he keeps turning, because he cannot not.
-        (24, P(pelvis=(0.0, 0.02, 0.836), hips=(6, -40, 0),
+        (17, P(pelvis=(0.0, 0.02, 0.836), hips=(6, -40, 0),
                spine=(10, -44, 0), head=(-6, -30, 0),
                foot_r=(0.20, 0.04, 0.104), foot_l=(-0.22, -0.24, 0.104),
                hand_r=(-0.44, 0.14, 1.40), hand_l=(-0.24, -0.28, 1.20),
                fist_r=0.7)),
-        (30, P(pelvis=(0.0, 0.02, 0.848), hips=(4, -22, 0),
+        (26, P(pelvis=(0.0, 0.02, 0.848), hips=(4, -22, 0),
                spine=(12, -24, 0), head=(-4, -14, 0),
                foot_r=(0.22, -0.06, 0.104), foot_l=(-0.21, -0.10, 0.104),
                hand_r=(-0.10, 0.10, 1.30), hand_l=(-0.18, -0.06, 1.26))),
+        (35, P()),
+    ],
+
+    # 35 frames / 1.15s, the second running attack, and the first clip it
+    # has ever had.
+    #
+    # running_attack_double_leg.tres shipped with an empty animation_pair_id
+    # and therefore played the clothesline: two moves, two damage spreads,
+    # one performance. The recipe it used to have was cut because the mocap
+    # bake behind it measured head-below-hips on 59 of 69 frames, and the
+    # note left in strike_recipes.gd called it "a missing ASSET, not a bug".
+    # This is that asset, authored on the rig like everything else here.
+    #
+    # It is the opposite shape to the clothesline and that is the point of
+    # having both. A clothesline is height -- the arm goes out at throat
+    # level and the body arrives behind it. A double leg is DEPTH: the level
+    # change is the move, the shoulder goes in under the ribs, and the arms
+    # come together behind the thighs. Contact is frame 9, the same frame
+    # the clothesline lands on, so both running attacks share a
+    # startup_frames and the pair stays tunable as one thing.
+    #
+    # He finishes on his FEET, driving up out of the finish. That is not a
+    # stylistic call: RUNNING_ATTACK exits to IDLE, so an attacker who ended
+    # this clip on the mat would stand up instantly the moment it handed off.
+    "Running_Double_Leg": [
+        # Mid-stride, closing. Same running shape the clothesline opens on.
+        (0,  P(pelvis=(0.0, 0.04, 0.858), spine=(24, 4, 0), head=(-14, 0, 0),
+               foot_r=(0.15, 0.28, 0.115), foot_l=(-0.15, -0.30, 0.22),
+               hand_r=(0.22, -0.06, 1.22), hand_l=(-0.16, 0.34, 1.42))),
+        (3,  P(pelvis=(0.0, 0.04, 0.846), spine=(26, 0, 0), head=(-14, 0, 0),
+               foot_r=(0.15, -0.14, 0.16), foot_l=(-0.15, 0.14, 0.30),
+               hand_r=(0.24, 0.12, 1.28), hand_l=(-0.20, 0.16, 1.30))),
+        # The level change. This is the beat the whole move lives or dies
+        # on: the hips drop nearly a quarter of a metre, the lead knee goes
+        # down toward the mat, and the head stays UP -- a level change with
+        # the head down is a man falling over, not a takedown.
+        (6, P(pelvis=(0.0, 0.10, 0.628), hips=(14, 0, 0), spine=(30, 0, 0),
+               head=(-26, 0, 0),
+               hand_r=(0.20, 0.46, 0.80), hand_l=(-0.20, 0.48, 0.78),
+               elbow_r=(0.6, -0.2, -0.6), elbow_l=(-0.6, -0.2, -0.6),
+               fist_r=0.3, fist_l=0.3,
+               foot_r=(0.17, 0.10, 0.104), foot_l=(-0.17, -0.34, 0.20),
+               knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 0.9, 0.2))),
+        # Contact, frame 9: the shoulder arrives in the midsection and the
+        # hands close BEHIND the thighs -- the arms come together, which is
+        # the difference between a tackle and a shove.
+        (9, P(pelvis=(0.0, 0.18, 0.556), hips=(20, 0, 0), spine=(40, 0, 0),
+               head=(-34, 0, 0),
+               hand_r=(0.13, 0.58, 0.44), hand_l=(-0.13, 0.60, 0.42),
+               elbow_r=(0.7, -0.1, -0.5), elbow_l=(-0.7, -0.1, -0.5),
+               fist_r=0.7, fist_l=0.7,
+               foot_r=(0.17, -0.06, 0.104), foot_l=(-0.17, -0.40, 0.104),
+               knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+        # The drive. He does not stop at contact -- the legs keep coming and
+        # the hips carry through the space the other man was standing in.
+        (17, P(pelvis=(0.0, 0.30, 0.520), hips=(24, 0, 0), spine=(46, 0, 0),
+               head=(-38, 0, 0),
+               hand_r=(0.11, 0.52, 0.30), hand_l=(-0.11, 0.54, 0.28),
+               elbow_r=(0.7, -0.1, -0.5), elbow_l=(-0.7, -0.1, -0.5),
+               fist_r=0.8, fist_l=0.8,
+               foot_r=(0.18, -0.34, 0.104), foot_l=(-0.18, -0.12, 0.16),
+               knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.1))),
+        # Up and off him: the hands let go of the legs and he comes back
+        # over his own feet.
+        (26, P(pelvis=(0.0, 0.12, 0.736), hips=(10, 0, 0), spine=(18, 0, 0),
+               head=(-16, 0, 0),
+               hand_r=(0.20, 0.40, 0.92), hand_l=(-0.20, 0.42, 0.90),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.21, -0.20, 0.104), foot_l=(-0.19, 0.10, 0.104))),
         (35, P()),
     ],
 
@@ -1153,6 +1415,21 @@ CLIPS = {
                   fist_r=0.7, fist_l=0.7,
                   foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+        # He gets UP off the knee, and this frame is why the clip has it.
+        #
+        # Without it the table went from a kneel at f24 (pelvis 0.554) to the
+        # standing stance at f30 (0.860) -- 0.31 m of pelvis in 0.2s with
+        # nothing keyed that could produce it, so the bezier simply floated
+        # him up off the mat. He now pushes off the planted left foot with
+        # the trailing right still on the canvas, which is what a man
+        # standing up out of a kneel actually does.
+        (27, dict(pelvis=(0.0, 0.05, 0.700), hips=(2, 0, 0), spine=(2, 0, 0),
+                  head=(-8, 0, 0),
+                  hand_r=(0.16, 0.44, 1.02), hand_l=(-0.26, 0.40, 0.94),
+                  elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
+                  fist_r=0.6, fist_l=0.6,
+                  foot_r=(0.22, -0.22, 0.104), foot_l=(-0.20, 0.24, 0.104),
+                  knee_r=(0.3, 0.9, 0.0), knee_l=(-0.2, 1.0, 0.1))),
         (30, P()),
     ],
 

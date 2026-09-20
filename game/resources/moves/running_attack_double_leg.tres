@@ -8,14 +8,21 @@ script = ExtResource("1")
 ; match it (16) with a takedown distribution, so this adds variety without
 ; moving any balance number.
 ;
-; It has NO clip of its own, and that is deliberate: the baked double-leg
-; excerpt it used to name rendered as a ball of limbs (head below hips on 59
-; of 69 frames) and could not be re-baked -- see resources/animations/
-; strike_recipes.gd. An empty pair id falls back to STATE_ANIMATIONS'
-; RUNNING_ATTACK clip, which is exactly what running_attack_clothesline.tres
-; already does. The two running attacks therefore differ in damage
-; distribution but not yet in performance.
-animation_pair_id = &""
+; It HAS a clip of its own now, and for most of this project's life it did
+; not: the baked double-leg excerpt it used to name rendered as a ball of
+; limbs (head below hips on 59 of 69 frames) and could not be re-baked, so
+; the pair id was emptied and the move fell through to the clothesline's
+; animation. Two running attacks, one performance. Running_Double_Leg is
+; authored on the rig in tools/blender/wrestling_clips.py and lands its
+; contact on the same frame, so the two are now the same move family thrown
+; two different ways -- height and depth.
+animation_pair_id = &"running_double_leg"
+; 18, matching the clothesline: both running attacks are authored at 35
+; frames over 1.150s with contact on frame 9, which is 0.296s -- the 0.300s
+; timings.md measures for a heavy strike's windup. The clip used to land its
+; contact on frame 18 (0.591s) and the move applied damage on tick 18, so the
+; shoulder arrived halfway through the level change; the clip was retimed
+; rather than the move, to keep the measured constant.
 startup_frames = 18
 active_frames = 5
 recovery_frames = 46
@@ -27,6 +34,11 @@ damage_arms = 0.0
 damage_legs = 6.0
 contact_offset = Vector3(0.231, 1.441, -0.37)
 contact_radius = 0.12
+; A running attack puts the man down. It is the one thing both of these are
+; for, and they used to leave him standing in a guard 0.333s later unless his
+; accumulated damage happened to cross KNOCKDOWN_DAMAGE.
+forces_knockdown = true
+hitstop_frames = 2
 momentum_cost = 0.0
 momentum_gain = 10.0
 weight_class_min = 0

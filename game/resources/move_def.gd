@@ -57,6 +57,57 @@ extends Resource
 ## the proximity fallback above.
 @export var contact_radius: float = 0.0
 
+## How long the man this lands on sells it, in ticks.
+##
+## This was a single constant -- WrestlerController.HIT_REACT_TICKS, 20 for
+## every hit in the game -- so a jab and a boot to the ribs put the same
+## 0.333s flinch on the defender and the only thing telling them apart was
+## the damage number. gauntlet/refs/timings.md measures the man struck by an
+## isolated heavy blow still doubled over 0.4s later, which a 0.333s clip
+## cannot show: it is back in a fighting guard before the reference has
+## straightened up.
+##
+## It is not free tuning. The HIT_REACT state runs for exactly this many
+## ticks and the reaction clip must be exactly that long, so the value has
+## to be one of StrikeRecipes.SELL_FRAMES -- the lengths a reaction clip has
+## actually been authored at. Anything else plays a clip that ends early and
+## freezes on its last pose. tests/test_hit_reactions.gd is the gate.
+##
+## 20 is the old constant, so a move that does not set this behaves exactly
+## as it did.
+@export var sell_frames: int = 20
+
+## How hard the landed hit shoves him, in m/s, for
+## WrestlerController.KNOCKBACK_TICKS.
+##
+## Same story as sell_frames: this was one constant for every move in the
+## game. 2.2 is that constant, so an unset move is unchanged.
+@export var knockback_speed: float = 2.2
+
+## Ticks of impact hold on the frame this move connects -- both wrestlers'
+## animation clocks slow to a crawl, then resume.
+##
+## The cheapest weight in the game and the only one that costs no art: a
+## blow that lands and immediately keeps moving reads as two skeletons
+## passing through each other, and two or three ticks of hold reads as
+## contact. It is counted in ticks with no RNG and the FSM's own timers are
+## untouched, so move durations, replays and captures are all unaffected.
+##
+## ZERO by default, and deliberately zero on the jab, the cross and the
+## light kick: holding a light exchange makes it feel slow rather than
+## heavy, so only the moves that are supposed to punctuate set this.
+@export var hitstop_frames: int = 0
+
+## Whether landing this puts the defender on the mat regardless of damage.
+##
+## Knockdown is normally accumulated -- KNOCKDOWN_DAMAGE since the last one
+## -- which is right for strikes and wrong for the moves whose entire point
+## is putting a man down. A running clothesline that leaves him standing in
+## a guard 0.333s later is the clearest example, and the two signatures end
+## their victim's own animation flat on his back, so anything but DOWN is a
+## pop from prone to standing over a 6-tick blend.
+@export var forces_knockdown: bool = false
+
 @export var momentum_cost: float = 0.0
 @export var momentum_gain: float = 0.0
 

@@ -18,6 +18,17 @@ extends Node3D
 ## playback — cosmetic-only physics can't desync a replay.
 
 signal grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef)
+## The frame the move actually lands, which is not the frame it ends on.
+##
+## Both halves of every paired move are authored against each other beat for
+## beat -- the knee lands on frame 18 of 30, the backbreaker folds a man over
+## a knee on frame 18 of 30 -- and until this signal existed nothing in the
+## game knew that. Damage, momentum, the camera cut and the HUD all fired
+## together on `grapple_finished`, four tenths of a second after the blow,
+## because the end of the clip was the only moment anything was listening
+## for. PairedRecipes.contact_at() carries the fraction, measured off the
+## authored clips rather than chosen.
+signal move_contacted(attacker: Node3D, defender: Node3D, move: MoveDef)
 signal grapple_finished(attacker: Node3D, defender: Node3D)
 
 @export var anchor: Marker3D
@@ -55,6 +66,11 @@ var _pair_transform: Transform3D = Transform3D()
 ## Half-width of the mat (scenes/ring.tscn's floor is 6m square), minus room
 ## for a body. Clamps where a paired move is allowed to play out.
 const RING_HALF_EXTENT := 2.0
+
+## preload rather than the class_name so a `-s` tool script can load this
+## before the global class cache is necessarily populated -- the same reason
+## WrestlerController preloads it.
+const PairedRecipes := preload("res://resources/animations/paired_recipes.gd")
 
 func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	assert(not _active, "GrappleRig.begin() called while a grapple is already active")
@@ -96,6 +112,11 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 
 	if animation_player and move.animation_pair_id != &"" and animation_player.has_animation(move.animation_pair_id):
 		_play_retargeted(move.animation_pair_id, attacker, defender)
+		# Started, not awaited: this call has to reach the connect below on
+		# the same tick it starts the clip, and the contact beat resolves
+		# itself a fraction of a second later.
+		_emit_contact_when_it_lands(attacker, defender, move,
+				animation_player.get_animation(move.animation_pair_id).length)
 		animation_player.animation_finished.connect(_on_animation_finished, CONNECT_ONE_SHOT)
 	else:
 		# Grey-box fallback (Phase 2/3 gap): no paired animation library yet,
@@ -103,6 +124,25 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 		var ticks_to_wait := move.total_frames() if move else 1
 		await Engine.get_main_loop().create_timer(ticks_to_wait / float(Engine.physics_ticks_per_second)).timeout
 		_on_animation_finished(&"")
+
+## Emits move_contacted at the move's authored contact frame.
+##
+## A coroutine started and deliberately not awaited, so begin() carries on
+## wiring up the end-of-move signal while this waits out the contact delay.
+##
+## Guarded on the way out rather than the way in: a match that ends, a rig
+## torn down, or a second grapple starting while this was waiting all mean
+## the move it was timing is no longer the move in progress, and firing then
+## would apply a finished move's damage into the next one.
+func _emit_contact_when_it_lands(attacker: Node3D, defender: Node3D,
+		move: MoveDef, length: float) -> void:
+	var fraction := PairedRecipes.contact_at(move.animation_pair_id)
+	var seconds := length * clampf(fraction, 0.0, 1.0)
+	if seconds > 0.0:
+		await Engine.get_main_loop().create_timer(seconds).timeout
+	if not _active or _move != move:
+		return
+	move_contacted.emit(attacker, defender, move)
 
 ## Starts each wrestler's half of the move's authored bone-level performance.
 ##

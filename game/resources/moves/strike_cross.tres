@@ -16,6 +16,11 @@ damage_arms = 0.0
 damage_legs = 0.0
 contact_offset = Vector3(-0.019, 1.4, -0.679)
 contact_radius = 0.12
+; A cross is a bigger punch than the jab and is now sold as one: 24 ticks
+; against the jab's 20, on its own reaction clip (hit_head_med), which also
+; turns the head the OTHER way -- the jab is thrown with the left hand and
+; this with the right, so they cannot spin a man the same direction.
+sell_frames = 24
 momentum_cost = 0.0
 momentum_gain = 6.0
 weight_class_min = 0

@@ -18,6 +18,7 @@
 [ext_resource type="Resource" path="res://resources/moves/strike_kick.tres" id="29"]
 [ext_resource type="Resource" path="res://resources/moves/strike_cross.tres" id="33"]
 [ext_resource type="Resource" path="res://resources/moves/strike_kick_heavy.tres" id="34"]
+[ext_resource type="Resource" path="res://resources/moves/strike_hook.tres" id="35"]
 [ext_resource type="Script" path="res://core/lighting/arena_lighting.gd" id="32"]
 
 [sub_resource type="Environment" id="Environment_arena"]
@@ -216,7 +217,7 @@ grapple_move = ExtResource("15")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
-strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
+strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34"), ExtResource("35")])
 grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerB")
@@ -248,7 +249,7 @@ grapple_move = ExtResource("15")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
-strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
+strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34"), ExtResource("35")])
 grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerA")
