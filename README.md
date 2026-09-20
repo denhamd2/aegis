@@ -6333,3 +6333,107 @@ one-tick jumps per seed are all `GRAPPLE_HOLD->GRAPPLE_HOLD`, which is
 probe was built to name, not something this round introduced.
 
 427 tests pass.
+
+## Round: more than half of "wrestler B" was a health bar
+
+The last round closed with three of `VISUAL_BAR.md`'s four figures outside
+their bands and an honest note that the reading disagreed with an earlier
+round's own numbers, was taken on the same software rasteriser either way, and
+so was "unexplained rather than dismissed". It is explained now, and the cause
+was in the measurement, not the build.
+
+### What the mask was actually keying
+
+`measure_silhouette.py` accepts a pixel whose keyed channel clears 160 while
+the other two stay under 80. `MatchHUD.VITALITY_GREEN` is
+`Color(0.24, 0.72, 0.28)`, which is `(61, 184, 71)` in 8-bit. It clears the
+test. The two health bars and the momentum strip are drawn on a `CanvasLayer`
+over the viewport, so they land in the mask frame exactly as they land in the
+beauty frame — `_key()` walks `GeometryInstance3D`, and a `Control` is not one.
+
+| key | pixels | what they were |
+| --- | --- | --- |
+| `wrestler_b` | 7,828 | wrestler B |
+| `wrestler_b` | 8,358 | the HUD |
+
+More than half of "wrestler B" was UI, reading 0.357 against his real 0.186.
+The mat and wrestler A were never touched — they measure 108,785 px / 0.414
+and 5,752 px / 0.144 before and after the fix, to the pixel.
+
+| | reported | actually | band |
+| --- | --- | --- | --- |
+| mat ↔ wrestler A | 0.270 | 0.270 | 0.24–0.31 |
+| mat ↔ wrestler B | 0.139 | **0.227** | 0.24–0.31 |
+| wrestler ↔ wrestler | 0.131 | **0.042** | 0.00–0.07 |
+
+So one of the three figures "outside the band" was outside it, and it was
+outside by 0.013 rather than by 0.101.
+
+### The previous round looked straight at this and cleared it
+
+This is the part worth keeping. The fog fix in the beams round caught its bug
+on a pixel count, and wrote down the reasoning:
+
+> the wrestler keys held at 5,752 and 17,044 to the pixel across the same pair
+> of runs, so nothing had moved in the scene
+
+Every word of that is true. 17,044 was already 8,358 pixels of health bar, and
+had been for some time. **A stable contaminant is stable** — a count that does
+not move tells you nothing about whether it was ever only the subject. The
+count is the wrong instrument for that question; the *shape* is the right one,
+because the contaminated region was 1,202 × 425 px, an aspect ratio of 0.35,
+and a standing man at this framing is 2.0–2.3.
+
+`measure_silhouette.py` now prints each key's bounding box and refuses to
+report any numbers at all when a wrestler's region is not taller than it is
+wide. It exits 3 with the region's dimensions rather than printing an average
+over a health bar. Checked against the old frames, it fires.
+
+`CaptureHarness._hide_overlays()` hides every `CanvasLayer` over the match —
+not `MatchHUD` by name, because the rule is that nothing 2D belongs in a
+measurement frame. It runs at the freeze, so it covers the beauty frame too:
+the bars also *occlude* crowd and apron, and measuring the scene through a hole
+is its own error.
+
+### And then the lever that "could never work" worked
+
+`arena_lighting.gd` carried a conclusion drawn from the broken figure: that
+`top_energy` could not reach the 0.24–0.31 band without putting the mat near
+0.55, outside its own anchor. That arithmetic was run on a mat↔B of 0.236 when
+the real number was already 0.227 away from its floor by 0.013. Re-swept on
+clean frames:
+
+| `top_energy` | mat | mat↔A | mat↔B |
+| --- | --- | --- | --- |
+| 24.0 | 0.414 | 0.270 | 0.227 |
+| 26.0 | 0.428 | 0.279 | 0.236 |
+| 28.0 | 0.442 | 0.287 | 0.244 |
+| **30.0** | **0.455** | **0.296** | **0.251** |
+
+Two constraints bind in opposite directions — mat↔B has to clear 0.24 and
+mat↔A has to stay under 0.31, and both rise together — so the feasible window
+is about 28 to 32 and **30.0 is its centre**, with 0.011 of margin under B's
+floor and 0.014 under A's ceiling. The mat lands at 0.455 against the band's
+own 0.46. Solved, not picked.
+
+### Measured
+
+All four figures inside their bands on the shipping renderer, on a mask that
+contains only the things it names:
+
+| | before | after | reference |
+| --- | --- | --- | --- |
+| mat luminance | 0.414 | **0.455** | 0.43–0.49 |
+| mat ↔ wrestler A | 0.270 | **0.295** | 0.24–0.31 |
+| mat ↔ wrestler B | 0.139 → 0.227 | **0.251** | 0.24–0.31 |
+| wrestler ↔ wrestler | 0.131 → 0.042 | **0.044** | 0.00–0.07 |
+
+`void_fraction` is 0.018 against a 0.010–0.066 floor — inside it, where the
+last round recorded 0.000 and noted it had been outside on the low side for
+some time. Part of that is the HUD no longer covering dark scene.
+
+Looked at, not only measured: both men read as distinct dark silhouettes
+against a bright canvas, the ropes and turnbuckles hold their lines, and
+nothing on the mat is blown out.
+
+427 tests pass.

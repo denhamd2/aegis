@@ -95,10 +95,29 @@ const STAGE_BACK_Z := -38.0
 ## it. "A chest's N.L is near 0" is true of a chest and not of a wrestler:
 ## over that range the mat gained 0.185 and wrestler A gained 0.092, so a
 ## figure takes about HALF the mat's share of straight-down light -- shoulders,
-## heads and forearms are horizontal too. That is why the mat<->wrestler gaps
-## improve here but do not reach their 0.24-0.31 band: closing them on this
-## lever alone would need the mat near 0.55, outside its own. See README.
-@export var top_energy: float = 24.0
+## heads and forearms are horizontal too.
+##
+## RE-SOLVED at 30.0, and the conclusion drawn from the table above -- that
+## this lever could never reach the 0.24-0.31 band without putting the mat
+## near 0.55 -- was an artefact of a broken measurement. The mat<->B figure it
+## rested on was read off a mask in which more than half of "wrestler B" was
+## the HUD's green health bars (see CaptureHarness._hide_overlays()). On a
+## clean mask the gaps were already most of the way there, and the beams round
+## had since cost the mat 0.023. The second sweep, on clean frames:
+##
+##   top    mat      mat<->A   mat<->B
+##   24.0   0.414     0.270     0.227
+##   26.0   0.428     0.279     0.236
+##   28.0   0.442     0.287     0.244   <- all four inside
+##   30.0   0.455     0.296     0.251   <- centre of the feasible window
+##   (32.0  0.468     0.305     0.258   extrapolated; A is 0.005 off its
+##                                      ceiling, and 34 breaches it)
+##
+## Two constraints bind in opposite directions -- mat<->B must clear 0.24 and
+## mat<->A must stay under 0.31 -- so the feasible window is about 28 to 32.
+## 30.0 is its centre, with 0.011 of margin under B's floor and 0.014 under
+## A's ceiling, and it puts the mat at 0.455 against the band's own 0.46.
+@export var top_energy: float = 30.0
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction

@@ -310,6 +310,7 @@ func _silhouette_step() -> void:
 			var w: Node = _match.get_node(name)
 			w.set_physics_process(false)
 			w.set_process(false)
+		_hide_overlays()
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 2:
 		_save_viewport(_silhouette_prefix + "_beauty.png")
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 3:
@@ -334,6 +335,39 @@ func _save_viewport(path: String) -> void:
 	var img := viewport.get_texture().get_image()
 	if img:
 		img.save_png(path)
+
+## Hides every CanvasLayer over the match, for BOTH measurement frames.
+##
+## The mask is a segmentation pass over the 3D scene, and _key() reaches only
+## GeometryInstance3D -- a Control is not one, so the HUD rendered into the
+## mask frame exactly as it rendered into the beauty frame. MatchHUD's
+## VITALITY_GREEN is Color(0.24, 0.72, 0.28) = (61, 184, 71) in 8-bit, whose
+## green channel clears measure_silhouette.py's dominance threshold of 160
+## while red and blue stay under half of it. The two health bars and the
+## momentum strip therefore keyed as WRESTLER B: 8,358 px of flat UI, against
+## 7,828 px of actual wrestler.
+##
+## More than half of "wrestler B" was a health bar, and it read at 0.357
+## against his real 0.186 -- so mat<->B reported 0.139 against a true 0.227,
+## and A<->B reported 0.131 against a true 0.042. Two of the three figures
+## VISUAL_BAR.md calls out of band were the HUD.
+##
+## The previous round looked straight at this and cleared it. Its note above
+## records "the wrestler keys held at 5,752 and 17,044 to the pixel across the
+## same pair of runs, so nothing had moved in the scene" -- which was true and
+## did not mean what it was taken to mean. A stable contaminant is stable.
+## What a pixel count cannot tell you is whether it was ever only the subject.
+##
+## Hidden for the beauty frame as well as the mask, not just the mask: the
+## bars also OCCLUDE crowd and apron, so leaving them in the beauty frame
+## would measure the scene through a hole. Every CanvasLayer goes rather than
+## MatchHUD by name, because the rule is that nothing 2D belongs in a
+## measurement frame, not that this one overlay does not.
+func _hide_overlays() -> void:
+	for child in _match.get_children():
+		var layer := child as CanvasLayer
+		if layer:
+			layer.visible = false
 
 ## Takes the screen-space effects off the MASK frame only.
 ##
