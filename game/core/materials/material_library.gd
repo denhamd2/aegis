@@ -52,10 +52,11 @@ class_name MaterialLibrary
 ##
 ## Arena hall (called from `core/arena/arena_builder.gd`):
 ##
-##     arena_floor  arena_barricade  arena_bowl  arena_stage_deck
-##     arena_stage_backdrop  arena_stage_panel  arena_shell  arena_truss
-##     arena_tunnel  arena_screen  arena_portal_magenta
-##     arena_portal_amber  arena_seat  arena_suite_glass  arena_ribbon
+##     arena_floor  arena_barricade  arena_barricade_led  arena_bowl
+##     arena_stage_deck  arena_stage_backdrop  arena_stage_panel
+##     arena_shell  arena_truss  arena_tunnel  arena_screen
+##     arena_fixture_lens  arena_portal_magenta  arena_portal_amber
+##     arena_seat  arena_suite_glass  arena_ribbon  arena_banner
 ##     arena_nosing  arena_rink  arena_boards  arena_board_cap
 ##
 ## `ALIASES` keeps older names (`ring_mat`, `ring_pad`) working.
@@ -456,6 +457,24 @@ const SPECS := {
 		"tile_metres": 2.0, "roughness": 1.0, "house_lit": true,
 		"normal_scale": 1.4,
 	},
+	## The LED video panel on the outward face of every barricade section.
+	##
+	## Blue, and that is read off the reference rather than chosen: in the
+	## supplied AEW wide the barrier run is the one continuous band of colour
+	## at floor level, and it is the same cool blue the ribbon boards and the
+	## video wall carry. It is what the whole lower frame is keyed to.
+	##
+	## No map, like the portals and the ribbons: a barricade panel is 2.35m of
+	## screen seen from 20m up, where the advertisement on it is a few pixels
+	## tall. What a real one contributes at that size is a lit rectangle, and
+	## `ArenaBuilder._self_emissive()` supplies the level at the call site.
+	##
+	## Kept a little off full saturation (there is real blue in all three
+	## channels) because the hall already measures mean saturation 0.63-0.67
+	## against the reference's 0.511, and this surface rings the entire frame.
+	"arena_barricade_led": {
+		"tint": Color(0.22, 0.42, 0.88), "roughness": 0.30,
+	},
 	## Coverage decision: carpeted bowl treads and risers. The tile is large
 	## on purpose -- the bowl sits 12-30m out, so a small tile minifies its
 	## weave below the pixel and renders as flat colour. Carpet012 scores
@@ -570,6 +589,21 @@ const SPECS := {
 	## makes the set recognisable. They are named by colour rather than by
 	## side so that swapping which side is which stays a one-line change in
 	## the builder.
+	## The lens on the underside of every moving head on the truss grid.
+	##
+	## Near-white with the faintest cool cast, and that is the point of it
+	## being its own key rather than borrowing a portal's: the portals are the
+	## set's two SIGNATURE colours and the truss is a working rig. In the
+	## supplied AEW wide the lenses read as white sources with coloured air
+	## under them -- the beam is tinted by what it cuts, the lamp is not.
+	##
+	## Holding them neutral is also what lets them buy bright fraction without
+	## buying saturation: the hall measures mean saturation 0.63-0.67 against
+	## the reference's 0.511, so ~380 more coloured emitters is the last thing
+	## it needs.
+	"arena_fixture_lens": {
+		"tint": Color(0.86, 0.90, 1.00), "roughness": 0.30,
+	},
 	"arena_portal_magenta": {
 		"tint": Color(1.00, 0.24, 0.60), "roughness": 0.35,
 	},
@@ -607,8 +641,23 @@ const SPECS := {
 	##
 	## No map. A seat back is 40cm of geometry seen from 15-35m, and a tiled
 	## weave on it minifies into noise the way `arena_chair`'s would.
+	## RETINTED to `gauntlet/refs/arena.md`'s OWN measurement, which this key
+	## had drifted away from.
+	##
+	## That file measures the reference bowl's seat backs at mean sRGB
+	## (15, 20, 30) -- saturation 0.500. This tint was (0.074, 0.098, 0.235),
+	## saturation 0.685: a good deal bluer than the thing it cites. Seats are
+	## the largest single surface in any wide frame, so that excess was being
+	## spent everywhere at once, and whole frames measured mean saturation
+	## 0.64-0.69 against the supplied AEW wide's 0.511.
+	##
+	## Rebuilt from the measured RATIO, scaled to the exact relative luminance
+	## the old tint carried (0.1028). Only the saturation moves: `_house_lit()`
+	## solves against luminance, so the house level, the 1.17 reach and
+	## `test_house_levels.gd`'s bounds are all untouched -- the same argument
+	## the ringside tints were pulled toward neutral under.
 	"arena_seat": {
-		"tint": Color(0.074, 0.098, 0.235), "roughness": 0.90,
+		"tint": Color(0.0784, 0.1046, 0.1569), "roughness": 0.90,
 		"house_lit": true,
 	},
 	## The suite windows in the fascia between the tiers. The darkest surface
@@ -632,8 +681,42 @@ const SPECS := {
 	## of text, and what the reference frames actually contribute at that size
 	## is a band of warm light around the whole hall. `gauntlet/refs/arena.md`
 	## records what the photographs do and do not establish about them.
+	## RETINTED COOL, and this reverses the paragraph above rather than
+	## qualifying it.
+	##
+	## The amber was reasoned from `gauntlet/refs/arena.md`, whose reference is
+	## a HOUSE-LIT, EMPTY hockey bowl -- a daylight-white frame of an arena with
+	## nothing running in it. The supplied AEW wide is the same class of
+	## building with the show on, and its ribbons are cool blue carrying show
+	## branding, like every other lit surface in the hall.
+	##
+	## The measurement is what forced it. In our own wide frames the ribbons
+	## were the dominant feature of the entire hall: `bowl_end` measured p99
+	## 0.4767 with 0.66% of frame above 0.5, and most of that hot fraction was
+	## two amber hoops. They were also pulling the frame's mean saturation to
+	## 0.673 against the reference's 0.511 -- a fully-saturated warm band
+	## wrapping the one part of the hall that fills a wide shot.
+	##
+	## Cool, and deliberately not fully saturated, for the same reason
+	## `arena_barricade_led` is not: these two surfaces between them ring the
+	## whole frame, and saturation there is spent everywhere at once.
 	"arena_ribbon": {
-		"tint": Color(1.00, 0.62, 0.16), "roughness": 0.25,
+		"tint": Color(0.34, 0.52, 0.92), "roughness": 0.25,
+	},
+	## The banners hung on the shell wall above the upper deck.
+	##
+	## Fabric, and house-lit rather than emissive: a banner is cloth catching
+	## the rig, not a light source. That is the distinction this key exists to
+	## hold -- built emissive they would be a third ring of light around the
+	## hall, competing with the ribbons directly below them, and the reference
+	## shows the opposite: lit cloth reading darker than the boards under it.
+	##
+	## Fabric063 at a 2.4m tile, which is the largest tile in the set, because
+	## these hang 15-19m up and a small tile minifies to flat colour at that
+	## distance -- the same reasoning `arena_bowl` records for the treads.
+	"arena_banner": {
+		"asset": "Fabric063", "tint": Color(0.126, 0.170, 0.310),
+		"tile_metres": 2.4, "roughness": 0.85, "house_lit": true,
 	},
 	## The lit nosing on every aisle step.
 	##

@@ -87,12 +87,14 @@ PART_COLORS = {
     "StageScreen": (0.10, 0.08, 0.16, 1.0),
     "RampLeds": (0.72, 0.10, 0.55, 1.0),
     "Truss": (0.13, 0.13, 0.15, 1.0),
+    "TrussFixtures": (0.08, 0.08, 0.09, 1.0),
+    "TrussLenses": (0.68, 0.72, 0.90, 1.0),
 }
 EMISSIVE = frozenset({"PortalRingWest", "PortalRingEast",
                       "PortalFanWest", "PortalFanEast", "StageScreen",
-                      "RampLeds"})
+                      "RampLeds", "TrussLenses"})
 SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
-                    "Truss", "RampLeds"})
+                    "Truss", "RampLeds", "TrussFixtures"})
 # The screen face authors its own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
 PROJECTED = frozenset(PART_COLORS) - {"StageScreen"}
@@ -409,6 +411,72 @@ def build_truss(cfg: dict[str, float], parts: dict[str, Part]) -> None:
         for z in (-7.5, 7.5):
             truss.tube([Vector((x, y + 0.2, z)), Vector((x, cfg["ROOF_Y"], z))],
                        0.07, sides=6)
+    build_truss_fixtures(cfg, parts, offsets, reach, y)
+
+
+## Spacing of the fixture bodies along a truss chord, in metres. 2.2 puts
+## five on an 11m reach, which is the density the reference frames read at:
+## close enough that the chord is a line of lamps rather than a bare pipe,
+## far enough that they do not merge into a solid rail.
+FIXTURE_PITCH = 2.2
+## Yoke drop, body and lens. A moving head is a box on a stirrup hanging
+## under the chord; at 20-35m it is a dark block with a bright disc on the
+## bottom, and that disc is the whole point of building it.
+FIXTURE_DROP = 0.30
+FIXTURE_BODY = Vector((0.20, 0.30, 0.26))
+FIXTURE_LENS_RADIUS = 0.085
+FIXTURE_LENS_DEPTH = 0.035
+
+
+def build_truss_fixtures(cfg: dict[str, float], parts: dict[str, Part],
+                         offsets: tuple[float, ...], reach: float,
+                         y: float) -> None:
+    """Hang moving-head fixture bodies under the truss grid.
+
+    Why this exists: the truss was a bare four-chord lattice carrying nothing,
+    while `core/lighting/arena_lighting.gd` hangs ~30 Light3Ds in the same
+    volume. A Light3D is invisible -- it has no body -- so the rig lit the
+    hall from nowhere and the grid read as empty pipe.
+
+    In the supplied AEW wide the truss is packed with fixture bodies and each
+    one is a bright point in its own right. That matters past set dressing:
+    `measure_look.py` puts the reference at 3.78% of frame above 0.5 against
+    our 1.43-2.12%, and a few hundred lit lenses is bright fraction that costs
+    no light and cannot spill on the mat.
+
+    The lenses point DOWN and are a separate part, so `arena_builder.gd` can
+    make them self-emissive while the bodies stay house-lit steel. They are
+    deliberately not aimed: a fixture aimed per-beam would have to agree with
+    ArenaLighting's own aiming, and nothing reads a lens's direction at this
+    distance -- what reads is a disc of light under a dark block.
+    """
+    bodies = parts["TrussFixtures"]
+    lenses = parts["TrussLenses"]
+    # One line of fixtures under each chord of the grid, skipping the bays
+    # where two chords cross so a fixture never lands inside the lattice.
+    span = int(reach / FIXTURE_PITCH)
+    for offset in offsets:
+        for i in range(-span, span + 1):
+            along = i * FIXTURE_PITCH
+            if any(abs(along - o) < 0.9 for o in offsets):
+                continue
+            for centre in (Vector((along, y, offset)),
+                           Vector((offset, y, along))):
+                _fixture(bodies, lenses, centre)
+
+
+def _fixture(bodies: Part, lenses: Part, centre: Vector) -> None:
+    """One hanging head: a yoke stub, a bevelled body, a lens on its underside."""
+    top = centre.y - 0.21
+    body_y = top - FIXTURE_DROP - FIXTURE_BODY.y * 0.5
+    bodies.tube([Vector((centre.x, top, centre.z)),
+                 Vector((centre.x, body_y + FIXTURE_BODY.y * 0.5, centre.z))],
+                0.022, sides=6)
+    bodies.box(Vector((centre.x, body_y, centre.z)), FIXTURE_BODY, bevel=0.03)
+    lens_y = body_y - FIXTURE_BODY.y * 0.5
+    lenses.box(Vector((centre.x, lens_y, centre.z)),
+               Vector((FIXTURE_LENS_RADIUS * 2.0, FIXTURE_LENS_DEPTH,
+                       FIXTURE_LENS_RADIUS * 2.0)))
 
 
 def main(argv: list[str]) -> int:

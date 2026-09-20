@@ -653,6 +653,67 @@ def build_rink(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                            floor_y + board_h, closed=True)
 
 
+## Banners on the shell wall above the upper deck.
+##
+## What they are fixing: above the ribbon line the hall fell off to nothing.
+## `measure_look.py` read our `bowl_end` park at 70.8% of frame below 0.01
+## against the supplied AEW wide's 37.6% -- the single worst number in the
+## comparison -- and most of that black is the wall between the last row and
+## the roof, which carried no geometry at all. The reference hangs that wall
+## with banners the whole way round, and they are what gives the upper hall a
+## readable edge instead of a void.
+##
+## Sized off the wall they hang on rather than off the reference, which is a
+## photograph with no scale in it: BANNER_TOP/BOTTOM sit between the top tread
+## (12.10m) and the roof (21m), leaving air above and below so they read as
+## hung cloth and not as cladding.
+BANNER_BOTTOM = 14.2
+BANNER_TOP = 18.6
+BANNER_WIDTH = 4.4
+## Spacing between banner centres along the plan curve. Wide enough that the
+## wall shows between them -- a continuous run is a wall covering, and what
+## the reference shows is discrete hanging panels with dark wall either side.
+BANNER_PITCH = 11.0
+## How far inboard of the shell the banner face hangs.
+BANNER_STANDOFF = 0.35
+
+
+def build_banners(cfg: dict[str, float], parts: dict[str, Part],
+                  rows: list[dict]) -> None:
+    """Hang banners on the shell above the upper tier, facing in.
+
+    They follow the same plan curve as everything else in the hall, one
+    standoff inside the shell wall, and they stop at the stage opening -- a
+    banner across the entrance end would hang in front of the video wall.
+    """
+    outer = next(r for r in rows if r["kind"] == "outer")["inner"] + 1.2
+    loop = plan_loop(cfg, outer - BANNER_STANDOFF)
+    banners = parts["Banners"]
+    height = BANNER_TOP - BANNER_BOTTOM
+    mid_y = (BANNER_TOP + BANNER_BOTTOM) * 0.5
+
+    carry = 0.0
+    for i in range(len(loop)):
+        here, normal = loop[i]
+        nxt = loop[(i + 1) % len(loop)][0]
+        run = nxt - here
+        span = run.length
+        if span <= 0.0:
+            continue
+        along = run / span
+        at = BANNER_PITCH - carry
+        while at < span:
+            point = here + run * (at / span)
+            at += BANNER_PITCH
+            if stage_gap(cfg, point):
+                continue
+            banners.oriented_box(
+                Vector((point.x, mid_y, point.z)), along, normal,
+                Vector((BANNER_WIDTH, height, 0.08)),
+            )
+        carry = span - (at - BANNER_PITCH)
+
+
 def build_shell(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]) -> None:
     """The hall around the bowl: an obround outer wall and a flat roof.
 
@@ -689,6 +750,7 @@ PART_COLORS = {
     "SuiteGlass": (0.04, 0.05, 0.07, 1.0),
     "StairNosing": (0.62, 0.52, 0.06, 1.0),
     "Shell": (0.12, 0.13, 0.15, 1.0),
+    "Banners": (0.18, 0.26, 0.52, 1.0),
     "RinkDeck": (0.28, 0.30, 0.33, 1.0),
     "RinkBoards": (0.78, 0.79, 0.80, 1.0),
     "RinkCap": (0.72, 0.58, 0.10, 1.0),
@@ -777,6 +839,7 @@ def main(argv: list[str]) -> int:
     build_fascia(cfg, parts, rows)
     build_aisles(cfg, parts, rows)
     build_shell(cfg, parts, rows)
+    build_banners(cfg, parts, rows)
     counts = crowd_module.build_crowd(cfg, parts, rows, plan_loop,
                                       aisle_indices, stage_gap)
     finish(parts)
@@ -800,8 +863,9 @@ def main(argv: list[str]) -> int:
     seated = [r for r in rows if r["kind"] == "seated"]
     print("arena_bowl: %d triangles, %d seated rows, top tread %.2fm, %s"
           % (triangle_count(), len(seated), max(r["tread_y"] for r in rows), out))
-    print("  crowd: %d near, %d far, %d of them standing"
-          % (counts["Crowd"], counts["CrowdFar"], counts["standing"]))
+    print("  crowd: %d near, %d far, %d of them standing, %d holding signs"
+          % (counts["Crowd"], counts["CrowdFar"], counts["standing"],
+             counts["signs"]))
     return 0
 
 

@@ -10,13 +10,22 @@ class_name ArenaBuilder
 ## seating bowl starting a walkway outside them. Everything that is not the
 ## ring is measured out from that sheet of ice.
 ##
-## The hall is EMPTY. There is no crowd in it, by decision rather than by
-## omission: the seats are the seating now -- ~6,700 in the bowl, modelled one
-## at a time, and ~1,490 folding chairs on the rink floor. An empty arena is a thing a wrestling build is
-## routinely shot in -- an empty-arena match, a taping-day walkthrough -- and
-## it is what `gauntlet/refs/arena.md`'s reference photographs are of.
-## Removing the impostors took the only animated geometry in the hall with
-## them; see the cosmetic-motion note below.
+## The hall is FULL. ~5,760 people sit in the bowl (`tools/blender/crowd.py`,
+## baked into the bowl mesh) and six instanced figures dress the rink floor
+## (`floor_crowd.glb`), on top of ~6,700 modelled seats and ~1,490 folding
+## chairs.
+##
+## This paragraph used to say the opposite -- "The hall is EMPTY. There is no
+## crowd in it, by decision rather than by omission" -- and it had been wrong
+## since the crowd came back. The decision it recorded was real: the bowl was
+## emptied to match `gauntlet/refs/arena.md`, whose photographs are of an empty
+## house. `gauntlet/refs/lighting.md` then measured four FULL ones, crowd.py
+## followed the second set, and this comment was never updated. It is called
+## out rather than quietly replaced because a stale contract in a file
+## `CLAUDE.md` names as the contract is worse than no comment at all.
+##
+## The crowd is therefore also animated geometry again; see the cosmetic-motion
+## note below, which the emptying had made moot and no longer is.
 ##
 ## Why none of this is authored in the .tscn, and why none of it is a
 ## downloaded arena, are both still deliberate:
@@ -58,12 +67,15 @@ class_name ArenaBuilder
 ## CollisionObject3D, joins a physics layer, or is read by gameplay: the ring's
 ## own colliders in ring.tscn remain the only bodies the match touches.
 ##
-## Nothing here moves at all any more. The hall's one piece of cosmetic
-## motion was the crowd's idle bob, a vertex shader that ARCHITECTURE.md
-## permitted because it ran on the render thread and could not reach
-## MatchReferee.compute_end_state_hash(); it left with the crowd. The video
-## wall's clip (core/arena/video_wall.gd) is the only thing in the arena that
-## changes frame to frame now, and it is a texture, not geometry.
+## The hall's one piece of cosmetic motion is the crowd's idle bob, a vertex
+## shader that ARCHITECTURE.md permits because it runs on the render thread,
+## reads only TIME and the mesh's own attributes, and cannot reach
+## MatchReferee.compute_end_state_hash(). See `_crowd_material()`. The video
+## wall's clip (core/arena/video_wall.gd) is the only other thing in the arena
+## that changes frame to frame, and it is a texture, not geometry.
+##
+## This paragraph also said the opposite ("Nothing here moves at all any
+## more"), for the same reason the one above did.
 ##
 ## Placement is seeded (PLACEMENT_SEED), so the same build produces the same
 ## arena every run and captures stay comparable between rounds.
@@ -437,6 +449,13 @@ const BOWL_MODEL_MATERIALS := {
 	"RinkBoards": ["arena_boards", 14.0],
 	# 3.0 -> 5.0, the same product-holding move as the boards above.
 	"RinkCap": ["arena_board_cap", 5.0],
+	# The banners hung on the shell above the upper deck. Reach 2.6, which is
+	# high for a house-lit surface and is the point of them: they hang on the
+	# one part of the hall no fixture reaches, and what they are there to fix
+	# is 70.8% of the `bowl_end` frame sitting below 0.01 against the
+	# reference's 37.6%. A banner at the shell's own 0.85 would be more dark
+	# geometry in the dark.
+	"Banners": ["arena_banner", 2.6],
 }
 ## The two parts that are lit rather than house-lit: the ribbon boards ring
 ## the whole bowl and the stair nosings run up every aisle, and both are
@@ -825,6 +844,31 @@ const RINGSIDE_MATERIALS := {
 	"CommentaryDeskTop": ["arena_barricade", 1.2],
 }
 
+## How bright the barricade LED panels sit.
+##
+## The ringside barrier is the hall's nearest large surface to the broadcast
+## camera and it rings the whole frame, so this is the most consequential
+## emissive level in the building -- and the one with the least room.
+##
+## What it is solving: `measure_look.py` reads the supplied AEW wide at p90
+## 0.2521 against our 0.0478 in the same framing. That gap is upper-mid tone,
+## and the reference's comes mostly from two things our hall had neither of --
+## a lit crowd and a lit barrier. This is the barrier half.
+##
+## 0.34 and NOT higher, for a reason that is measured rather than taste: the
+## mat is VISUAL_BAR.md's exposure anchor and the barrier stands 2.80m clear
+## of the apron. Emission has no falloff, so a barrier hot enough to read as a
+## video wall puts a floor under the mat's own luminance from three metres
+## away and the anchor moves. At 0.34 the panels clear the ringside mat they
+## stand on by ~40x while staying under the canvas, which is the ordering
+## every reference frame shows.
+const BARRICADE_LED_EMISSION := 0.34
+
+## The parts of the ringside model that light themselves.
+const RINGSIDE_EMISSIVE := {
+	"BarricadeScreens": ["arena_barricade_led", BARRICADE_LED_EMISSION],
+}
+
 
 func _build_ringside() -> void:
 	var packed: PackedScene = load(RINGSIDE_MODEL)
@@ -838,6 +882,9 @@ func _build_ringside() -> void:
 		var spec: Array = RINGSIDE_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
+	for part: String in RINGSIDE_EMISSIVE:
+		var spec: Array = RINGSIDE_EMISSIVE[part]
+		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
 	add_child(root)
 
 
@@ -1132,7 +1179,49 @@ uniform float sway_amplitude = 0.018;
 // real level is meant to come from a fixture aimed at it; until the house
 // wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
 // this is most of what lights them, which is why it is not smaller.
-uniform float house_light = 0.055;
+// 0.055 -> 0.095, and the first attempt at this round moved it the other way
+// (to 0.042) on the strength of a CROP. That was the wrong read, and it is
+// worth recording which measurement overturned it.
+//
+// A matched crop of one seating bank says ours is too bright and too flat:
+// p50 0.046 against the reference's 0.0218, 27% of the crop below 0.01
+// against 41%. Whole frames say the opposite and say it louder -- the wide
+// parks measured p50 0.0047 against the reference wide's 0.0203, four times
+// too DARK, with 65-70% of frame below 0.01 against 37.6%.
+//
+// The frame wins. `measure_look.py` exists precisely because this answer
+// does not live in any one region (see its header), and the bank a crop
+// lands on is a beam-lit one while most of the hall is not. Raised, every
+// whole-frame number moves toward the reference at once: p50 and p90 up,
+// dark fraction down 65.2 -> 60%, and mean saturation DOWN 0.665 -> 0.63,
+// because what this floor adds is the crowd's own near-neutral colour
+// rather than more of the blue the beams are painting them with.
+//
+// 0.095 and not the 0.115 the sweep also ran: at 0.115 the stand stops
+// competing with the ring for the eye, which is a thing no metric here
+// measures and every reference frame shows.
+uniform float house_light = 0.095;
+
+// What a light-valued surface gets on top of that floor, and why the floor
+// alone could not deliver it.
+//
+// `house_light` stands in for the incident light no fixture actually
+// delivers out here (see gauntlet/refs/lighting.md's ablation: the bowl is
+// lit by this floor and by nothing else). A single flat floor is the mean of
+// that incident light, so it under-returns the bright end badly -- a white
+// sign and a dark shirt in the same beam come back 3x apart when a real beam
+// puts them 3x apart on ALBEDO and then the sign catches the core as well.
+//
+// The measured symptom: our bank had 0.00% of pixels above 0.5 against the
+// reference's 1.73%, with the whole stand inside 0.04-0.15. Raising the flat
+// floor cannot fix that -- it lifts the darks with the lights and keeps the
+// compression. This lifts only the light end, so the range widens rather than
+// sliding, which is what the two measurements together ask for.
+//
+// Keyed off the shirt's own value, so it is the signs (0.85-0.94) and the
+// light shirts (0.72-0.88) that take it and the dark majority that does not.
+uniform float highlight_gain = 10.0;
+uniform float highlight_knee = 0.55;
 
 varying vec3 shirt;
 
@@ -1150,7 +1239,11 @@ void vertex() {
 
 void fragment() {
 	ALBEDO = shirt;
-	EMISSION = shirt * house_light;
+	// Value, not luminance: a sign is near-neutral and a light shirt may be
+	// warm or cool, and weighting by Rec.709 would pick the green ones out.
+	float value = max(max(shirt.r, shirt.g), shirt.b);
+	float lift = smoothstep(highlight_knee, 1.0, value);
+	EMISSION = shirt * house_light * (1.0 + highlight_gain * lift);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }
@@ -1168,7 +1261,12 @@ void fragment() {
 func _dress(root: Node3D, part: String, mat: Material) -> void:
 	var node := root.find_child(part, true, false) as MeshInstance3D
 	if node == null:
-		push_error("ArenaBuilder: %s has no '%s' object." % [BOWL_MODEL, part])
+		# Named off the ROOT rather than off BOWL_MODEL. This message used to
+		# hardcode the bowl, so a part missing from the ringside or entrance
+		# model reported the wrong file and sent the reader to a .glb that was
+		# never supposed to contain it.
+		push_error("ArenaBuilder: model '%s' has no '%s' object." %
+				[root.name, part])
 		return
 	node.material_override = mat
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1446,7 +1544,32 @@ const ENTRANCE_MATERIALS := {
 	"PortalRecess": ["arena_tunnel", 0.75],
 	"StageScreenBezel": ["arena_tunnel", 0.75],
 	"Truss": ["arena_truss", 0.9],
+	# The fixture bodies hanging under the grid. Darker than the truss they
+	# hang from (0.78 against 0.9): a moving head is a black box and the
+	# reference frames show it as a silhouette against the roof, with only
+	# its lens lit.
+	#
+	# 0.55 first, which `test_house_levels.gd` correctly rejected: 0.0030 x
+	# 0.55 = 0.00165 linear, under measure_frame.py's 0.0025 void threshold,
+	# so the bodies would have dithered across it and rendered as a speckled
+	# void mask instead of as dark metal. 0.78 is the floor this hall allows
+	# (HOUSE_VOID_MARGIN 0.0022 / HOUSE_TARGET 0.0030 = 0.733) with margin.
+	"TrussFixtures": ["arena_truss", 0.78],
 }
+
+## How bright a fixture lens sits.
+##
+## These are the hall's most numerous emissive surface -- ~380 discs of
+## 0.17m -- so the level is set by what they must NOT do as much as by what
+## they must. At the portals' 1.12 they became a second ceiling of light and
+## the truss read as a lit grid rather than as fixtures against a dark roof.
+##
+## 0.62 is where a lens still flares through the Environment's glow while the
+## body above it stays black. What it buys is measured: `measure_look.py` puts
+## the supplied AEW wide at 3.78% of frame above 0.5 against our 1.43% in the
+## same framing, and this is bright fraction spent on geometry that emits and
+## therefore cannot spill on the mat or move the ring's exposure anchor.
+const TRUSS_LENS_EMISSION := 0.62
 
 ## The parts that light themselves: part name -> [material key, level].
 const ENTRANCE_EMISSIVE := {
@@ -1466,6 +1589,7 @@ const ENTRANCE_EMISSIVE := {
 	"PortalRingEast": ["arena_portal_amber", PORTAL_EMISSION],
 	"PortalFanWest": ["arena_portal_magenta", PORTAL_FAN_EMISSION],
 	"PortalFanEast": ["arena_portal_amber", PORTAL_FAN_EMISSION],
+	"TrussLenses": ["arena_fixture_lens", TRUSS_LENS_EMISSION],
 }
 
 

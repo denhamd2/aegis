@@ -135,8 +135,18 @@ every aisle.
 
 ### Seats, not a slope
 
-The reference photographs are of an **empty** bowl, which is also what the
-build is now — there is no crowd in the hall. That makes one more thing
+The reference photographs are of an **empty** bowl. **The build is not**: the
+bowl carries ~5,760 people (`tools/blender/crowd.py`), and has since the crowd
+came back. This section used to assert "which is also what the build is now —
+there is no crowd in the hall", and that had stopped being true without being
+corrected.
+
+The disagreement is real rather than an oversight to tidy away. This file's
+photographs are of an empty house; `lighting.md`'s four are of full ones; and
+the AEW wide supplied later is of a full one. The build follows the full-house
+references, so what this section's measurements still govern is the **seats
+themselves** — their colour, their pitch, and the nosing ratio below — not
+whether anybody is sitting in them. That makes one more thing
 load-bearing: at the crop above, individual seat backs are legible, separated
 by a dark gap of roughly a sixth of their pitch, and the rows read as
 something countable rather than as a navy ramp.
@@ -150,9 +160,29 @@ instances used to be, in a hall that no longer draws them.
 ### What the photographs do not establish
 
 - Ribbon board *content*. The reference boards carry advertising; ours carry
-  a flat amber, because at 20-35m a 0.55m board is under two pixels of text
-  and what a real one contributes at that size is a band of warm light.
+  a flat colour, because at 20-35m a 0.55m board is under two pixels of text
+  and what a real one contributes at that size is a band of light.
+
+  **The colour is no longer amber.** These photographs are house-lit and
+  empty, and a warm ribbon is what that room has; the AEW wide supplied later
+  shows the same class of building with the show running and its ribbons cool
+  blue, like every other lit surface in the hall. Measured, ours were also the
+  single dominant feature of a wide frame — `bowl_end` at p99 0.4767 with two
+  saturated amber hoops carrying most of the hot fraction, against a frame
+  mean saturation of 0.673 to the reference's 0.511. `arena_ribbon` is cool
+  now; see the note on that key in `material_library.gd`.
 - Roof structure. Every camera in the shotlist is under the truss looking at
-  the ring, so the roof stays a slab and the photographs' catwalks, rigging
-  and scoreboard are not built.
+  the ring, so the roof stays a slab and the photographs' catwalks and
+  scoreboard are not built.
+
+  The **rigging** is a partial exception now. The truss grid carries fixture
+  bodies (`entrance_set.py:build_truss_fixtures`), because it was hanging ~30
+  invisible `Light3D`s and reading as bare pipe — a hall lit from nowhere. The
+  bodies and their lenses are built; the catwalks and the roof steel above
+  them still are not.
+- The **wall above the upper deck**, which these photographs show hung with
+  banners and which the build left as bare shell. It carries banners now
+  (`arena_bowl.py:build_banners`): our `bowl_end` frame measured 70.8% of
+  pixels below 0.01 against the supplied AEW wide's 37.6%, and most of that
+  black was this wall.
 - Lighting levels, per the note above.

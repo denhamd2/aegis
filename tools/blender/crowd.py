@@ -79,6 +79,65 @@ SHIRT_COLORS = [
     (0.30, 0.26, 0.22), (0.24, 0.20, 0.22), (0.18, 0.19, 0.27),
     (0.29, 0.30, 0.31), (0.21, 0.18, 0.18),
 ]
+## The bright end of the crowd, and why a palette that tops out at 0.33 was
+## not enough on its own.
+##
+## The note above is right that the crowd is for variance and not brightness,
+## and it drew the wrong conclusion from it. Variance is not the same as
+## SPREAD: fourteen shirts between 0.15 and 0.33 vary in hue and barely at all
+## in value, so the bank renders as one tone. Measured on a matched crop of
+## one seating bank against the supplied AEW wide:
+##
+##     bank            p50      p90      p99      >0.5     mean sat
+##     reference       0.0218   0.1353   0.6102   1.73%    0.469
+##     ours            0.0436   0.1138   0.1408   0.00%    0.772
+##
+## Ours is BRIGHTER at the median and has no highlights at all -- the whole
+## stand lives inside 0.04-0.14. The reference is darker overall and carries a
+## small hot fraction: light clothing and held signs catching the beams. That
+## hot fraction is what a bank of people looks like under a moving rig, and
+## `gauntlet/refs/lighting.md` already recorded the same defect in the old
+## crowd ("the entire stand lives inside a 0.007 band") without it being
+## fixed -- the band was moved, not widened.
+##
+## So: a small fraction of genuinely light shirts. Not a lighting change --
+## `arena_builder.gd`'s crowd shader is `ALBEDO = shirt` with an emission
+## floor proportional to it, so albedo here is the only lever that widens the
+## value spread without touching the fixtures or the house level.
+BRIGHT_SHIRT_COLORS = [
+    (0.78, 0.79, 0.82), (0.86, 0.85, 0.80), (0.72, 0.76, 0.84),
+    (0.88, 0.86, 0.87), (0.75, 0.72, 0.70),
+]
+## What fraction of the crowd wears one. 0.09 against the reference's 1.73%
+## of bank pixels above 0.5: a shirt is perhaps a fifth of a figure's pixels
+## and most of the bank is the gaps between people, so the pixel fraction
+## lands well under the figure fraction.
+BRIGHT_SHIRT_FRACTION = 0.09
+
+## Held signs, which are the other half of the reference's hot fraction and
+## the more characteristic one -- a wrestling crowd holds up boards, and in
+## the supplied wide they are the brightest thing in the stand by some way.
+##
+## Built for BOTH figure classes, at different rates.
+##
+## The first pass built them only on the detailed near rows, reasoning that a
+## card on a four-box distant figure would read as a firefly. The measurement
+## said otherwise, and it is the reason this constant has two values: the
+## seating bank a wide shot actually spends its pixels on is the FAR one, and
+## a matched crop of it came back with 0.00% of pixels above 0.5 against the
+## reference's 1.73%. Signs only on rows 1-4 put the highlights where the
+## frame had no room for them.
+##
+## Lower on the far figures because a distant sign is a whole pixel cluster of
+## near-white and a bank of them at the near rate reads as snow.
+SIGN_COLORS = [
+    (0.92, 0.90, 0.86), (0.88, 0.87, 0.84), (0.94, 0.92, 0.90),
+    (0.85, 0.83, 0.78),
+]
+SIGN_FRACTION = 0.12
+SIGN_FRACTION_FAR = 0.038
+SIGN_SIZE = (0.40, 0.30, 0.012)
+
 ## Skin is a separate, narrower palette: heads and forearms are small and a
 ## wide spread there reads as noise rather than as people.
 SKIN_COLORS = [
@@ -172,6 +231,35 @@ class Figure:
             )
         ]
         self.part.coloured_box(corners, colour or self.colour, self.phase)
+
+
+def _sign(fig: Figure, rng: random.Random, scale: float) -> None:
+    """A board held up in front of the chest, tipped back toward the ring.
+
+    Deliberately a blank card and not a lettered one: the sign is here for its
+    VALUE, not its content. At the distance the bowl is read from, text on a
+    0.4m board is well under a pixel, and the reference's signs contribute a
+    bright rectangle rather than anything readable -- the same argument
+    `gauntlet/refs/arena.md` already makes for the ribbon boards.
+
+    Held at CHEST height and close in, which is the correction a rendered
+    frame forced. Held high and forward -- up at 0.62-0.82 and out at
+    0.18-0.30, which is what someone clearing the head in front is doing --
+    the card separated from its figure entirely: against a dark four-box
+    distant body the arm holding it is not visible, so a bright rectangle
+    floating half a metre off a silhouette reads as confetti rather than as a
+    sign. Brought down onto the torso it reads as held, which is the whole
+    point of building it on a figure instead of scattering quads.
+    """
+    s = scale
+    w, h, d = SIGN_SIZE
+    fig.box(
+        Vector((rng.uniform(-0.08, 0.08) * s, rng.uniform(0.38, 0.52) * s,
+                rng.uniform(0.10, 0.18) * s)),
+        Vector((w * s * rng.uniform(0.85, 1.15), h * s, d)),
+        colour=_shade(rng, rng.choice(SIGN_COLORS)),
+        lean=rng.uniform(-0.38, -0.14),
+    )
 
 
 def _seated(fig: Figure, rng: random.Random, scale: float, skin) -> None:
@@ -298,7 +386,7 @@ def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
     rng = random.Random(CROWD_SEED)
     pitch = cfg["SEAT_PITCH"]
     clearance = cfg["AISLE_CLEARANCE"]
-    built = {"Crowd": 0, "CrowdFar": 0, "standing": 0}
+    built = {"Crowd": 0, "CrowdFar": 0, "standing": 0, "signs": 0}
 
     for row in rows:
         if row["kind"] != "seated":
@@ -331,7 +419,10 @@ def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
                 if rng.random() > CROWD_FILL:
                     continue
 
-                shirt = _shade(rng, rng.choice(SHIRT_COLORS))
+                if rng.random() < BRIGHT_SHIRT_FRACTION:
+                    shirt = _shade(rng, rng.choice(BRIGHT_SHIRT_COLORS))
+                else:
+                    shirt = _shade(rng, rng.choice(SHIRT_COLORS))
                 skin = _shade(rng, rng.choice(SKIN_COLORS))
                 # Golden-ratio phase, the spread the old shader used: adjacent
                 # seats never move together and the pattern never repeats
@@ -348,6 +439,10 @@ def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
                     _seated(figure, rng, scale, skin)
                 else:
                     _distant(figure, rng, scale, skin)
+                sign_rate = SIGN_FRACTION if detailed else SIGN_FRACTION_FAR
+                if rng.random() < sign_rate:
+                    _sign(figure, rng, scale)
+                    built["signs"] += 1
                 built["Crowd" if detailed else "CrowdFar"] += 1
             carry = span - (at - pitch)
     return built

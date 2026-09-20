@@ -67,6 +67,7 @@ PART_COLORS = {
     "Barricades": (0.30, 0.31, 0.34, 1.0),
     "CommentaryDesk": (0.10, 0.10, 0.12, 1.0),
     "CommentaryDeskTop": (0.38, 0.39, 0.42, 1.0),
+    "BarricadeScreens": (0.16, 0.34, 0.78, 1.0),
 }
 SMOOTH = frozenset()
 PROJECTED = frozenset(PART_COLORS)
@@ -186,6 +187,17 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
         )
 
 
+## The LED face on a barricade panel: how far proud of the carcass it sits,
+## how far in from its edges, and how thick the panel itself is.
+##
+## SCREEN_PROUD clears the carcass's own 0.14 depth (half of it, 0.07) by
+## 0.004 -- enough that the two never z-fight at the grazing angles the hard
+## camera sees the far run at, and not so much that the screen floats.
+SCREEN_PROUD = 0.074
+SCREEN_MARGIN = 0.055
+SCREEN_THICKNESS = 0.012
+
+
 def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """Four runs of discrete panels, each with a round cap rail and a leg.
 
@@ -198,6 +210,7 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     further out.
     """
     barricade = parts["Barricades"]
+    screens = parts["BarricadeScreens"]
     height = cfg["BARRICADE_HEIGHT"]
     y = cfg["FLOOR_Y"] + height * 0.5
     top = cfg["FLOOR_Y"] + height
@@ -223,6 +236,26 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
             panel_center = at + Vector((0.0, y, 0.0))
             barricade.oriented_box(panel_center, along, out,
                                    Vector((width, height, 0.14)))
+            # The LED face, on the OUTWARD side -- barricade advertising
+            # faces the crowd and the hard camera, not the ring.
+            #
+            # This is the single biggest miss the reference comparison found.
+            # The barrier was painted steel (`arena_barricade`, DiamondPlate),
+            # and in the supplied AEW wide the same run is an unbroken band of
+            # lit video panel -- the brightest thing at ringside and a hard
+            # bright edge drawn right around the ring. Measured, our ringside
+            # band carried no such edge at all.
+            #
+            # Inset from the panel on every side so the steel frame still
+            # shows: a screen flush to its own carcass reads as painted-on
+            # colour, and the join between panels is what tells the run apart
+            # from one continuous light box.
+            screens.oriented_box(
+                panel_center + out * SCREEN_PROUD,
+                along, out,
+                Vector((width - SCREEN_MARGIN * 2.0,
+                        height - SCREEN_MARGIN * 2.0, SCREEN_THICKNESS)),
+            )
             # The cap rail: a TUBE, because it is the only horizontal at
             # ringside at chest height and it runs across the whole wide
             # shot. A box takes a highlight on one facet; a tube takes one

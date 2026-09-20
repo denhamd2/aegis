@@ -359,7 +359,22 @@ const BEAM_COLOR := Color(0.28, 0.51, 1.0)
 ## 14 and putting the difference into scatter keeps the shaft and lets the pool
 ## fall back to what the reference photographs actually show, which is a patch
 ## of crowd lit by a beam rather than a lamp pointed at some seats.
-@export var beam_energy: float = 14.0
+## 14.0 -> 11.0, which is the SAME move the table above records at 40/40 ->
+## 14/80, made a second time and for the same reason: the pools had become the
+## thing the stands were made of.
+##
+## Measured against the supplied AEW wide rather than guessed. A matched crop
+## of one seating bank came back at mean saturation 0.771 against the
+## reference's 0.469, with p50 0.045 against 0.0218 and only 27.8% of the crop
+## below 0.01 against 41.4% -- a bank with no dark in it, painted one colour.
+## Whole frames read 0.64-0.69 saturation against the reference's 0.511.
+##
+## The blue is not wrong and BEAM_COLOR is not what moved: that hue is
+## measured off two reference frames and a beam in a hazed hall IS that
+## saturated. What was wrong is how much of it was landing on SURFACES, which
+## is the one thing these two exports exist to separate. The shaft keeps its
+## colour; the crowd stops being made of it.
+@export var beam_energy: float = 11.0
 ## The shaft itself. Separate from the above on purpose: if the far-end pools
 ## read as hot ovals on the stands, this is the one to raise and `beam_energy`
 ## is the one to drop. That is not hypothetical -- it is the 40/40 to 14/80
@@ -369,7 +384,10 @@ const BEAM_COLOR := Color(0.28, 0.51, 1.0)
 ## haze nowhere, and this number is meaningless on its own: what it multiplies
 ## is `HallHaze`'s density, so the two move together and neither can be read
 ## without the other.
-@export var beam_fog_energy: float = 200.0
+## 200.0 -> 260.0, taking up what `beam_energy`'s drop to 11.0 gave away,
+## so the shafts hold their length and brightness while the pools they land
+## in come back. Same trade as 40/40 -> 14/80, one notch further.
+@export var beam_fog_energy: float = 260.0
 
 ## Fixture-energy gain for renderers without volumetric fog -- in practice the
 ## compatibility renderer, which is what Godot's Web platform falls back to.
