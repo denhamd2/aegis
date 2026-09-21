@@ -6437,3 +6437,34 @@ against a bright canvas, the ropes and turnbuckles hold their lines, and
 nothing on the mat is blown out.
 
 427 tests pass.
+
+### Re-checked after the hall was filled
+
+`400b096` then brightened everything the wrestlers stand against — crowd
+emission floor 0.055 → 0.095 with lit shirts and held signs, emissive LED
+barricade panels, truss fixture bodies, `beam_energy` 14 → 11 — and verified
+with `measure_look.py`. Nothing had re-read the silhouette bands since, and
+`top_energy = 30.0` sits in a window about 0.012 wide on each side, so it was
+worth reading rather than assuming.
+
+All four figures came back **identical**: 0.455 / 0.295 / 0.251 / 0.044, on
+keyed regions of 108,785 / 5,752 / 7,828 px — the same counts to the pixel.
+The mask's bounding boxes check out, so this is a clean read and not another
+contaminated one.
+
+That is not luck, and the reason is worth keeping: the scene runs SSAO and
+screen-space reflections and **no global illumination** — no SDFGI, no
+lightmaps, no voxel GI. An emissive surface lights nothing but itself. The
+crowd, the barricades and the ribbon boards can go anywhere without moving a
+single luminance on the mat or on a wrestler, because that light never reaches
+them. The exposure anchor is a function of the ring fixtures alone. It also
+cuts the other way: the day this scene gains GI, every number in both sweep
+tables in `arena_lighting.gd` stops being valid.
+
+`void_fraction` did move, 0.018 → **0.001**, and that is the metric working
+rather than a regression: it measures the share of frame that is dark *and
+flat* — unmodelled emptiness — and `400b096`'s whole purpose was to fill the
+hall. It now sits below `VISUAL_BAR.md`'s 0.010–0.066 reference range on the
+low side, where this project has sat for most of its life.
+
+427 tests pass.

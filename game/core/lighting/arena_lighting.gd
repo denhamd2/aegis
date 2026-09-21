@@ -117,6 +117,26 @@ const STAGE_BACK_Z := -38.0
 ## mat<->A must stay under 0.31 -- so the feasible window is about 28 to 32.
 ## 30.0 is its centre, with 0.011 of margin under B's floor and 0.014 under
 ## A's ceiling, and it puts the mat at 0.455 against the band's own 0.46.
+##
+## RE-VERIFIED after the round that filled the hall (crowd emission floor
+## 0.055 -> 0.095 with lit shirts and signs, emissive LED barricade panels,
+## truss fixture bodies, beam_energy 14 -> 11). That round brightened exactly
+## the surfaces the wrestlers stand against and measured with
+## measure_look.py, so a window this narrow was worth re-reading.
+##
+## All four figures came back IDENTICAL -- 0.455 / 0.295 / 0.251 / 0.044, on
+## keyed regions of 108,785 / 5,752 / 7,828 px, the same counts to the pixel.
+##
+## Not luck, and worth knowing before the next round assumes otherwise: this
+## scene runs SSAO and screen-space reflections and NO global illumination --
+## no SDFGI, no lightmaps, no voxel GI. An emissive surface therefore lights
+## nothing but itself. The crowd, the barricades and the ribbon boards can be
+## taken anywhere at all without moving a single luminance on the mat or on a
+## wrestler, because none of that light ever reaches them. The exposure
+## anchor is a function of the ring fixtures alone.
+##
+## Which cuts both ways: the day this scene gains GI, every number in both
+## tables above stops being valid and has to be re-solved.
 @export var top_energy: float = 30.0
 ## Cool back/rim pair.
 ##
