@@ -27,8 +27,14 @@ extends Node
 ##             number in feel_probe, on one seed of three.
 ##
 ##   RECOIL    how far a struck wrestler moves during HIT_REACT.
-##             _process_timed_state() never touches velocity, so the expected
-##             answer is zero: a landed punch moves nobody.
+##             This used to say "the expected answer is zero: a landed punch
+##             moves nobody", which was true when it was written and stopped
+##             being true the moment _begin_hit_reaction() started setting
+##             velocity and _knockback_ticks. _process_timed_state() still
+##             never touches velocity -- that part was never the mechanism.
+##             Measured on seeds 1/2/3: 13 of 14, 13 of 14 and 16 of 17
+##             reactions move the man, worst 0.234 m. A reaction that moves
+##             NOBODY is now the regression.
 ##
 ## Usage:
 ##   godot4 --headless --path game --fixed-fps 6000 \

@@ -1535,11 +1535,43 @@ func _process_active_move(input: Dictionary) -> void:
 ##
 ## Takes the LONGER of any two holds rather than adding them, so a wrestler
 ## caught by two things in the same tick holds once.
-func _apply_hitstop(move: MoveDef) -> void:
-	if not move or move.hitstop_frames <= 0 or not anim_tree:
-		return
-	_hitstop_ticks = maxi(_hitstop_ticks, move.hitstop_frames)
-	anim_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+## DISABLED, and left in place with the measurement that disabled it.
+##
+## The hold itself worked exactly as authored. Measured per physics tick with
+## tools/probe/hitstop_probe.tscn, hashing every bone's local pose: a heavy
+## kick (hitstop_frames = 3) put both men on an identical pose for exactly 3
+## ticks at contact, and a cross (hitstop_frames = 0) never repeated a pose.
+##
+## What it also did was end the attacker's animation for good. From 2 ticks
+## after the hold he sat on ONE pose for the remaining 41 ticks -- 0.68s -- of
+## the kick's 57-tick move, and that pose is the REST pose: arms hanging at
+## his sides, which is this project's oldest and most recognisable animation
+## defect. Rendered at t=30 against the cross at t=30, one man is in a
+## fighting stance and the other is standing at ease in the middle of his own
+## kick.
+##
+## The cause is not the API. `active = false` and MANUAL callback mode were
+## both measured and both do it, as does advancing the tree by zero each
+## tick. Interrupting an AnimationMixer at all is what does it: the
+## AnimationNodeStateMachine's playback does not resume the node it was
+## already in. The DEFENDER escapes, which is why this was invisible for so
+## long -- taking the hit travels him into HIT_REACT, and a travel re-kicks
+## the playback. Only the man who threw the move is stranded.
+##
+## Controlled on one variable: the same kick with hitstop_frames set to 0
+## animates continuously through the same ticks.
+##
+## So it is off. Three ticks of hold is not worth two thirds of a second of
+## rest pose, and a feature that is net-negative on frames should not ship
+## while it is being thought about. `hitstop_frames` stays on MoveDef with
+## its authored values, because the data is right and it is the
+## implementation that is wrong: the hold has to be applied as an explicit
+## pose hold through a SkeletonModifier3D, which runs after the mixer and
+## cannot be undone by it, rather than by stopping the mixer.
+## The body it used to have is in git, one commit back, and is three lines:
+## take the longer of any two holds, and put the AnimationTree into MANUAL.
+func _apply_hitstop(_move: MoveDef) -> void:
+	return
 
 func _tick_hitstop() -> void:
 	if _hitstop_ticks <= 0:

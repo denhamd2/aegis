@@ -6468,3 +6468,82 @@ hall. It now sits below `VISUAL_BAR.md`'s 0.010–0.066 reference range on the
 low side, where this project has sat for most of its life.
 
 427 tests pass.
+
+## Round: the hold worked, and left him standing at ease
+
+`6ba6b88` shipped hitstop on an argument, not a frame: `move_def.gd` called it
+"the cheapest weight in the game" because "two or three ticks of hold reads as
+contact". The only gate on it checked that no move asks for *negative*
+hitstop. This round pointed a camera at it.
+
+### Pixels could not answer it, and that is the first finding
+
+`exchange_shot.gd` grabs every tick, so it looked like the right tool. Two
+things defeated it. Under llvmpipe the main loop runs about **eight physics
+ticks per rendered frame**, so a three-tick hold falls entirely between two
+samples — `--fixed-fps 60` is not optional for this measurement and nothing
+said so. And the hold is animation-only by design, so the bodies keep moving
+and the probe's camera tracks the midpoint between them: the frame-to-frame
+delta at the heavy kick's contact tick is 18,650 changed pixels against
+373,087 on the tick after, and that 20× is the camera panning, not the pose.
+
+So `hitstop_probe.gd` measures the **skeleton** — a hash of every bone's local
+pose, once per physics tick, which no camera can confuse. Local rather than
+global, because the root is *meant* to keep moving.
+
+### The hold is exactly right
+
+| move | `hitstop_frames` | ticks the pose repeated |
+| --- | --- | --- |
+| `strike_kick_heavy` | 3 | **3** (both men, identical pose) |
+| `strike_cross` | 0 | **0** |
+
+Authored, applied, and correct on both bodies.
+
+### And then the attacker stands at ease for two thirds of a second
+
+From two ticks after the hold, the attacker sat on one pose for the remaining
+**41 ticks — 0.68s — of the kick's 57-tick move**. The pose is the REST pose:
+arms hanging at his sides, which is this project's oldest and most
+recognisable animation defect, the one the clip-authoring tripwire exists for.
+Rendered at t=30 beside the cross at t=30, one man is in a fighting stance and
+the other is standing at ease in the middle of his own kick.
+
+Three things make this a measurement result rather than a guess:
+
+- **The API is not the cause.** `active = false`, MANUAL callback mode, and
+  advancing the tree by zero each tick were all measured. All three do it.
+  Interrupting an `AnimationMixer` at all is what does it — the
+  `AnimationNodeStateMachine` does not resume the node it was already in.
+- **The defender escapes**, which is why this survived review: taking the hit
+  travels him into HIT_REACT, and a travel re-kicks the playback. Only the man
+  who threw the move is stranded, and he is the one nobody was watching.
+- **Controlled on one variable.** The same kick with `hitstop_frames = 0`
+  animates continuously through the same ticks.
+
+### So it is off
+
+Three ticks of hold is not worth two thirds of a second of rest pose. The
+`hitstop_frames` values stay on `MoveDef` because the data is right and the
+implementation is wrong: the hold has to be an explicit pose hold in a
+`SkeletonModifier3D`, which runs after the mixer and cannot be undone by it.
+`_apply_hitstop()` returns immediately, and both it and `move_def.gd` carry
+the measurement rather than a plan.
+
+`contact_probe --seeds 1,2,3` is **unchanged at 1715/1728/1893**, which is the
+useful confirmation that hitstop really was animation-only: turning it off
+moved no damage, no momentum and no tick count.
+
+One stale claim in the same probe is corrected while here. `contact_probe.gd`
+said of RECOIL "the expected answer is zero: a landed punch moves nobody" —
+true when written, false since `_begin_hit_reaction()` started setting
+velocity. Measured: 13/14, 13/14 and 16/17 reactions move the man, worst
+0.234 m.
+
+### Not closed
+
+`MOVE_EXEC_TICKS` — whether the attacker's 0.6s recovery clip *reads* — is
+still unverified. The reachability suite proves the window lasts 36 ticks; no
+one has looked at it. It is the other half of this round and it is not done.
+
+427 tests pass.

@@ -96,6 +96,17 @@ extends Resource
 ## ZERO by default, and deliberately zero on the jab, the cross and the
 ## light kick: holding a light exchange makes it feel slow rather than
 ## heavy, so only the moves that are supposed to punctuate set this.
+##
+## READ THIS BEFORE TRUSTING THE VALUES BELOW: nothing applies them today.
+## WrestlerController._apply_hitstop() is disabled, and its comment carries
+## the per-tick measurement that disabled it -- the hold worked, and it also
+## left the ATTACKER on the rest pose, arms at his sides, for the remaining
+## 0.68s of a heavy kick. The numbers here are kept because they are right;
+## it is the implementation that was wrong, and it has to become an explicit
+## pose hold in a SkeletonModifier3D rather than a stopped mixer.
+##
+## The claim above that this is "the cheapest weight in the game" was written
+## before anyone looked at a frame. It cost more than it bought.
 @export var hitstop_frames: int = 0
 
 ## Whether landing this puts the defender on the mat regardless of damage.
