@@ -42,10 +42,9 @@ func test_the_pin_attacker_plays_the_generated_cover() -> void:
 		.is_true()
 
 
-## Beside the chest, not the boots. The first version offset along -Z and put
-## the coverer down by the feet, because a prone wrestler's node keeps his
-## standing yaw and the body runs up +Z from it -- measured, Head sits at
-## local z=+1.25 and foot_l at z=-0.26.
+## Beside the chest, not the boots. The downed man's body runs up -Z from his
+## origin -- measured, Head at local z=-0.69 and foot_l at z=+0.50 -- and an
+## offset along +Z put the coverer past his feet.
 func test_the_coverer_kneels_beside_the_downed_mans_chest() -> void:
 	var pair := _pair()
 	var attacker: WrestlerController = pair[0]
@@ -72,15 +71,16 @@ func test_the_coverer_kneels_beside_the_downed_mans_chest() -> void:
 	var local: Vector3 = defender.global_transform.affine_inverse() \
 			* attacker._cover_to.origin
 	# Up the body toward the head, and off to one side. Both signs matter:
-	# a negative z here is the bug that put him at the boots.
+	# a positive z here is the bug that put him at the boots.
 	assert_float(local.z).is_equal_approx(
-			WrestlerController.COVER_TOWARD_HEAD_M, 0.01)
+			-WrestlerController.COVER_TOWARD_HEAD_M, 0.01)
 	assert_float(absf(local.x)).is_equal_approx(
 			WrestlerController.COVER_LATERAL_M, 0.01)
 
 
-## Facing the man he is covering. Without this he kneels with his back to him,
-## which reads as two men who happen to be near each other.
+## Facing the man he is covering, square across his body. Without this he
+## kneels with his back to him, which reads as two men who happen to be near
+## each other.
 func test_the_coverer_faces_the_downed_man() -> void:
 	var pair := _pair()
 	var attacker: WrestlerController = pair[0]
@@ -94,14 +94,18 @@ func test_the_coverer_faces_the_downed_man() -> void:
 	# bare WrestlerController.new(). Facing is a property of where he kneels,
 	# so measuring it from his un-moved spawn point would be measuring the
 	# wrong triangle.
-	var to_defender := defender.global_position - attacker._cover_to.origin
-	to_defender.y = 0.0
+	# Toward the downed man's midline, and perpendicular to his body: the
+	# same direction as from the coverer's spot straight across to the line
+	# the body lies along.
+	var local: Vector3 = defender.global_transform.affine_inverse() \
+			* attacker._cover_to.origin
+	var to_midline := defender.global_transform.basis.x * -signf(local.x)
 	# -Z is forward, the same convention _turn_toward_opponent() uses.
 	var forward := -attacker._cover_to.basis.z
 	forward.y = 0.0
-	assert_float(forward.normalized().dot(to_defender.normalized())) \
-		.override_failure_message("the coverer is not facing the man he pins") \
-		.is_greater(0.95)
+	assert_float(forward.normalized().dot(to_midline.normalized())) \
+		.override_failure_message("the coverer is not facing across the man he pins") \
+		.is_greater(0.99)
 
 
 ## The pin's outcome must not move with the coverer. Placement is presentation:

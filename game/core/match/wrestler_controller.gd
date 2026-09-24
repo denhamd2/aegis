@@ -1841,27 +1841,25 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 
 ## Where the coverer kneels, in the DOWNED man's own frame, in metres.
 ##
-## Both measured off the prone pose with tools/probe/pin_shot.tscn rather than
-## guessed, because guessing got it wrong: a prone wrestler's node keeps his
-## standing yaw, so which way along z his head lies is not something to reason
-## about from the transform. Printed from the rig while he lay there --
+## Measured off the supine pose with tools/probe/pin_shot.tscn, which prints
+## the downed man's bones in his own frame while the cover plays:
 ##
-##   Head   local=(-0.002, +0.174, +1.250)
-##   pelvis local=(-0.010, +0.066, +0.573)
-##   foot_l local=(-0.233, +0.072, -0.257)
+##   Head       local=(-0.000, +0.217, -0.686)
+##   spine_03   see the probe -- the chest, about two thirds of the way up
+##   pelvis     local=(+0.000, +0.184, +0.000)
+##   foot_l     local=(+0.161, +0.105, +0.502)
 ##
-## -- so the body runs up +Z and the chest is near +0.95. The first attempt
-## offset along -Z and put the coverer down by the boots, which the render
-## caught immediately.
+## -- so the body runs up -Z, his facing, toward the head. It used to be
+## offset +0.90 along +Z, measured off a pose that has since changed twice
+## (first flipped end for end, then rolled face-up): by this build that put
+## the coverer past the downed man's boots, which pin_shot showed as a man
+## kneeling beside the other's shins.
 ##
-## Neither is a searched minimum, and the lateral one is not a first guess
-## either: at 0.45 the side and three-quarter shots both read fine and the low
-## angle showed the coverer's thigh passing through the prone man's chest. 0.62
-## is the value that came back clean from all three. That is what these answer
-## to -- a rendered frame, from more than one angle, not a distance that sounds
-## about right.
-const COVER_TOWARD_HEAD_M := 0.90
-const COVER_LATERAL_M := 0.62
+## TOWARD_HEAD puts him level with the chest; LATERAL is where his knees
+## clear the downed man's ribs with his chest reaching over them, read off
+## the side, three-quarter and low shots.
+const COVER_TOWARD_HEAD_M := 0.40
+const COVER_LATERAL_M := 0.55
 
 
 ## Called by MatchReferee when the attacker covers a downed opponent.
@@ -1891,15 +1889,17 @@ func begin_pin(defender: WrestlerController, seed_value: int) -> void:
 ## camera sees without touching what the match decides.
 func _place_cover(defender: WrestlerController) -> void:
 	var basis := defender.global_transform.basis
-	# +Z toward the head, measured (see the constants); +X is his own left.
-	var toward_head := basis.z * COVER_TOWARD_HEAD_M
+	# -Z toward the head, measured (see the constants); +X is his own left.
+	var toward_head := -basis.z * COVER_TOWARD_HEAD_M
 	var beside := basis.x * COVER_LATERAL_M
 	var spot := defender.global_position + toward_head + beside
-	# Face back across him, so the cover reads from the hard camera rather
-	# than showing the coverer's back to the man he is pinning.
+	# Face square across him -- perpendicular to his body, toward its
+	# midline -- so the cover reads from the hard camera rather than showing
+	# the coverer's back to the man he is pinning, and so his chest reaches
+	# over the downed man's chest rather than angling off toward the hips.
 	var target := global_transform
 	target.origin = spot
-	var across := defender.global_position - spot
+	var across := -beside
 	across.y = 0.0
 	if across.length() > 0.01:
 		target.basis = Basis(Vector3.UP, atan2(-across.x, -across.z))

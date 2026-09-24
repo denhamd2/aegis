@@ -711,28 +711,33 @@ CLIPS = {
                foot_r=(0.20, 0.34, 0.11), foot_l=(-0.10, 0.32, 0.14),
                knee_r=(0.5, 0.3, 0.9), knee_l=(-0.4, 0.4, 0.8))),
         # On all fours: both hands planted, both knees down.
-        (22, dict(pelvis=(0.0, -0.02, 0.47), hips=(58, 0, 0),
-                  spine=(18, 0, 0), head=(-26, 0, 0),
+        #
+        # This key and the three after it had their leans the wrong way round
+        # -- the pitch-sign mistake STANCE's note describes -- so he rose
+        # reclining, torso tipped back off his knee. Negative now: over his
+        # hands, then over the planted foot, then up.
+        (22, dict(pelvis=(0.0, -0.02, 0.47), hips=(-58, 0, 0),
+                  spine=(-18, 0, 0), head=(22, 0, 0),
                   hand_r=(0.24, 0.42, 0.06), hand_l=(-0.22, 0.44, 0.06),
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
                   fist_r=0.0, fist_l=0.0,
                   foot_r=(0.17, -0.22, 0.09), foot_l=(-0.17, -0.20, 0.09),
                   knee_r=(0.3, 0.9, -0.3), knee_l=(-0.3, 0.9, -0.3))),
         # Up onto one knee, lead foot planted flat, hand on that knee.
-        (34, dict(pelvis=(0.0, 0.01, 0.575), hips=(16, 0, 0),
-                  spine=(26, 0, 0), head=(-20, 0, 0),
+        (34, dict(pelvis=(0.0, 0.01, 0.575), hips=(-16, 0, 0),
+                  spine=(-26, 0, 0), head=(8, 0, 0),
                   hand_r=(0.22, 0.32, 0.70), hand_l=(-0.26, 0.18, 0.62),
                   fist_r=0.2, fist_l=0.2,
                   foot_r=(0.19, -0.26, 0.09), foot_l=(-0.19, 0.30, 0.104),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
         # Crouched over both feet, driving up through the legs.
-        (46, P(pelvis=(0.0, 0.03, 0.745), hips=(12, 0, 0), spine=(28, 0, 0),
-               head=(-14, 0, 0),
+        (46, P(pelvis=(0.0, 0.03, 0.745), hips=(-12, 0, 0), spine=(-28, 0, 0),
+               head=(6, 0, 0),
                hand_r=(0.24, 0.26, 0.96), hand_l=(-0.22, 0.30, 0.98),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.23, -0.19, 0.104), foot_l=(-0.20, 0.22, 0.104))),
         # Standing, guard still coming up -- not snapped to the stance.
-        (56, P(pelvis=(0.0, 0.02, 0.848), spine=(16, 2, 0), head=(-6, 4, 0),
+        (56, P(pelvis=(0.0, 0.02, 0.848), spine=(-14, 2, 0), head=(2, 4, 0),
                hand_r=(0.20, 0.28, 1.18), hand_l=(-0.16, 0.32, 1.22),
                fist_r=0.6, fist_l=0.6)),
         (63, P()),
@@ -740,33 +745,48 @@ CLIPS = {
 
     # === finishing ======================================================
 
-    # 18 frames / 0.6s. The cover: down onto both knees, chest across him,
-    # both hands pressing his shoulders into the mat, eyes on those
-    # shoulders because that is what the referee is counting. Hands are open
-    # (fist 0.1) -- a cover presses with palms.
+    # 18 frames / 0.6s. The cover: down onto both knees, chest out over his,
+    # both hands pressing his shoulders into the mat, eyes on those shoulders
+    # because that is what the referee is counting. Hands are open (fist 0.1)
+    # -- a cover presses with palms.
+    #
+    # The leans are NEGATIVE, and were positive until this was rendered: the
+    # same pitch-sign mistake STANCE and SUPINE both carried. At hips 36 and
+    # spine 53 he knelt beside the man he was pinning with his torso tipped
+    # back AWAY from him, arms stretched forward and down like a man bracing
+    # to stop himself falling over backwards.
+    #
+    # The hands are set off the downed man's bones as the probe measures them
+    # from where _place_cover() kneels him -- level with the chest, 0.55 m out,
+    # facing square across the body. From there, in this man's frame: the far
+    # shoulder is 0.75 m in front, the near one 0.35 m, both 0.15 m to his
+    # right (toward the downed man's head) and 0.22 m off the mat. Right palm
+    # on the far shoulder, left on the near side of the chest.
     "Pin_Cover": [
-        (0,  P(pelvis=(0.0, 0.08, 0.800), hips=(10, 0, 0), spine=(26, 0, 0),
+        (0,  P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-26, 0, 0),
                head=(-4, 0, 0),
                hand_r=(0.24, 0.44, 0.96), hand_l=(-0.22, 0.46, 0.94),
                fist_r=0.0, fist_l=0.0)),
-        # Dropping onto the knees.
-        (6,  dict(pelvis=(0.0, 0.15, 0.560), hips=(26, 0, 0),
-                  spine=(40, 0, 0), head=(-2, 0, 0),
-                  hand_r=(0.25, 0.52, 0.52), hand_l=(-0.23, 0.54, 0.50),
+        # Dropping onto the knees, already reaching for him.
+        (6,  dict(pelvis=(0.0, 0.06, 0.560), hips=(-20, 0, 0),
+                  spine=(-34, 0, 0), head=(-6, 0, 0),
+                  hand_r=(0.20, 0.58, 0.46), hand_l=(-0.06, 0.46, 0.44),
                   fist_r=0.0, fist_l=0.0,
                   foot_r=(0.19, -0.20, 0.09), foot_l=(-0.19, -0.18, 0.09),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
-        # Chest low, weight through both arms into his shoulders.
-        (12, dict(pelvis=(0.0, 0.19, 0.455), hips=(34, 0, 0),
-                  spine=(50, 0, 0), head=(8, 0, 0),
-                  hand_r=(0.27, 0.60, 0.25), hand_l=(-0.25, 0.62, 0.23),
+        # Chest out over his, weight through both arms into his shoulders.
+        (12, dict(pelvis=(0.0, 0.08, 0.480), hips=(-32, 0, 0),
+                  spine=(-46, 0, 0), head=(-10, 0, 0),
+                  hand_r=(0.16, 0.72, 0.26), hand_l=(-0.04, 0.42, 0.30),
+                  elbow_r=(0.5, -0.2, 0.6), elbow_l=(-0.6, -0.2, 0.5),
                   fist_r=0.0, fist_l=0.0,
                   foot_r=(0.19, -0.22, 0.09), foot_l=(-0.19, -0.20, 0.09),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
         # Settles into the press rather than stopping dead on it.
-        (18, dict(pelvis=(0.0, 0.20, 0.440), hips=(36, 0, 0),
-                  spine=(53, 0, 0), head=(10, 0, 0),
-                  hand_r=(0.28, 0.62, 0.21), hand_l=(-0.26, 0.64, 0.19),
+        (18, dict(pelvis=(0.0, 0.09, 0.470), hips=(-34, 0, 0),
+                  spine=(-48, 0, 0), head=(-12, 0, 0),
+                  hand_r=(0.16, 0.74, 0.24), hand_l=(-0.04, 0.43, 0.28),
+                  elbow_r=(0.5, -0.2, 0.6), elbow_l=(-0.6, -0.2, 0.5),
                   fist_r=0.0, fist_l=0.0,
                   foot_r=(0.19, -0.22, 0.09), foot_l=(-0.19, -0.20, 0.09),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),

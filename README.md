@@ -6182,3 +6182,57 @@ downed man rather than across him.
 
 424 tests pass. The glb, both paired libraries and `strike_clips.tres` rebuild
 byte-identical.
+
+## Round: the cover leans in, and the get-up rises forward
+
+Two clips that play in every match still carried the pitch-sign mistake the
+previous rounds found in `STANCE` and `SUPINE` -- a positive lean tips a man
+**back**. Both were fixed on `tools/blender/clip_sheet.py` contact sheets
+first and then on the real match through `pin_shot`.
+
+### Pin_Cover
+
+Written as "chest low, weight through both arms into his shoulders", keyed at
+hips 10-36 and spine 26-53: the coverer knelt beside the man he was pinning
+with his torso tipped back away from him, arms stretched forward and down --
+a man bracing not to fall over backwards. The leans are negative now, and the
+palms are placed off the downed man's measured bones: from where the cover
+kneels, the far shoulder is 0.75 m in front, the near one 0.35 m, both 0.15 m
+toward the head and 0.22 m off the mat.
+
+**The placement was wrong too.** `COVER_TOWARD_HEAD_M` was +0.90 along the
+downed man's +Z, measured off a pose that has since been flipped end for end
+and then rolled face-up. `pin_shot`'s bone print on this build:
+
+| bone | local |
+| --- | --- |
+| Head | (0.00, 0.22, -0.69) |
+| spine_03 | (0.00, 0.20, -0.42) |
+| upperarm_l / _r | (+/-0.20, 0.14, -0.55) |
+| pelvis | (0.00, 0.18, 0.00) |
+| foot_l | (0.16, 0.11, +0.50) |
+
+The body runs up **-Z**, so +0.90 knelt him past the man's boots. It is 0.40
+toward the head now (level with `spine_03`), 0.55 out, and he faces square
+across the body rather than at the pelvis, so his chest reaches over the
+downed man's chest. `test_pin_cover_placement` asserts the new sign and the
+square-across facing.
+
+### Getup_Rise
+
+The all-fours, one-knee, crouch and rising keys all reclined -- he came up
+tipped back off his own knee. Leans negated, heads rebalanced to look ahead;
+every key keeps its frame number, because the fast rise
+(`GETUP_RISE_FAST_TICKS`) cuts this clip short and moving a beat changes what
+a fast getup is. Side-on he now reads: back, side, tucked, over his hands,
+over the planted foot, up.
+
+### Measured
+
+Twelve AI seeds: 12 pinfalls, each by the same wrestler as before, match
+lengths within a few ticks except where a kickout's re-cover now starts from
+the new spot (seed 12, +215 ticks). 424 tests pass; every bake rebuilds
+byte-identical.
+
+Still open from last round's list: the backbreaker and neckbreaker defenders'
+mid-air beats.
