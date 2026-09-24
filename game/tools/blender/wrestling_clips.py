@@ -121,16 +121,32 @@ STANCE = dict(
     foot_r=(0.23, -0.17, 0.104), foot_l=(-0.19, 0.18, 0.104),
 )
 
-# A man on his back: hips rolled back to horizontal, shoulders on the mat,
-# head toward -fwd. Knees poled UP rather than forward, or the solver
-# straightens his legs flat along the canvas.
+# A man on his back: shoulders on the mat, face to the lights, head toward
+# +fwd, knees up.
+#
+# This was authored as hips=(-84, 0, 0) under a comment reading "hips rolled
+# back ... head toward -fwd", which is the same sign mistake STANCE's note
+# describes: a negative hips pitch tips a man FORWARD. So for as long as the
+# pose existed it laid him FACE DOWN -- measured through
+# tools/probe/paired_shot.tscn, his chest (spine_03's +Z, which points along
+# his facing when he stands) pointed at (0.03, -1.00, 0): straight into the
+# canvas. Every knockdown, every cover and every pinfall in the game was
+# played on a man lying on his front.
+#
+# The correction is the smallest one that makes him supine without moving
+# him: the same forward pitch, then rolled 180 degrees about his own spine.
+# His head stays on the +fwd side and his pelvis where it was, so the cover
+# placement and the getup, which are both measured off where the downed man
+# lies, are unchanged -- only which way up he is changes. The roll swaps his
+# sides, so his right hand and foot are at NEGATIVE `right` here; `head` is
+# negative to lift his chin off the mat rather than grind his face into it.
 SUPINE = dict(
-    pelvis=(0.0, 0.0, 0.175), hips=(-84, 0, 0), spine=(-6, 0, 0), head=(14, 0, 0),
-    hand_r=(0.36, -0.26, 0.11), hand_l=(-0.35, -0.22, 0.11),
-    elbow_r=(0.7, -0.5, 0.5), elbow_l=(-0.7, -0.5, 0.5),
+    pelvis=(0.0, 0.0, 0.175), hips=(-84, 0, 180), spine=(-6, 0, 0), head=(-14, 0, 0),
+    hand_r=(-0.40, 0.20, 0.10), hand_l=(0.39, 0.16, 0.10),
+    elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
     fist_r=0.2, fist_l=0.2,
-    foot_r=(0.17, 0.40, 0.10), foot_l=(-0.16, 0.36, 0.10),
-    knee_r=(0.3, 0.15, 1.0), knee_l=(-0.3, 0.15, 1.0),
+    foot_r=(-0.16, -0.52, 0.10), foot_l=(0.15, -0.48, 0.10),
+    knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0),
 )
 
 
@@ -663,11 +679,11 @@ CLIPS = {
     # the breath and a knee rocking, nothing else.
     "Down_Supine": [
         (0,  S()),
-        (13, S(spine=(-9, 0, 0), head=(11, 0, -4),
-               foot_r=(0.19, 0.38, 0.10), foot_l=(-0.14, 0.38, 0.10),
-               hand_r=(0.37, -0.24, 0.11), hand_l=(-0.34, -0.24, 0.11))),
-        (26, S(spine=(-4, 0, 0), head=(16, 0, 5),
-               foot_r=(0.15, 0.41, 0.10), foot_l=(-0.18, 0.34, 0.10))),
+        (13, S(spine=(-9, 0, 0), head=(-11, 0, -4),
+               foot_r=(-0.19, -0.50, 0.10), foot_l=(0.14, -0.50, 0.10),
+               hand_r=(-0.41, 0.18, 0.10), hand_l=(0.38, 0.18, 0.10))),
+        (26, S(spine=(-4, 0, 0), head=(-16, 0, 5),
+               foot_r=(-0.15, -0.53, 0.10), foot_l=(0.18, -0.46, 0.10))),
         (40, S()),
     ],
 
@@ -678,6 +694,16 @@ CLIPS = {
     # off partway through, so moving a beat changes what a fast getup is.
     "Getup_Rise": [
         (0,  S()),
+        # Onto his side first. Down on his back is SUPINE's 180-degree roll
+        # and the next beat is face-down, and a quaternion key straight
+        # across that half-turn has no preferred way round -- the key between
+        # decides it, and decides it is a roll rather than a tumble.
+        (5,  S(pelvis=(0.03, 0.0, 0.20), hips=(-78, -10, 100),
+               spine=(-6, -8, 0), head=(-4, -6, 0),
+               hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.10),
+               elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
+               foot_r=(0.02, -0.46, 0.14), foot_l=(0.16, -0.44, 0.10),
+               knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
         # Rolls toward his front and gets a hand on the mat.
         (10, S(pelvis=(0.06, 0.0, 0.21), hips=(-70, -20, 22),
                spine=(-4, -14, 0), head=(10, -10, 0),
@@ -1191,10 +1217,7 @@ CLIPS = {
                   foot_r=(0.22, 0.46, 0.30), foot_l=(-0.20, 0.50, 0.34),
                   knee_r=(0.3, 0.9, 0.2), knee_l=(-0.3, 0.9, 0.2))),
         # Pours off onto the mat.
-        (30, S(pelvis=(0.0, -0.10, 0.220), hips=(-78, 0, 0),
-               spine=(-14, 0, 0), head=(-8, 0, 0),
-               hand_r=(0.40, -0.30, 0.14), hand_l=(-0.38, -0.32, 0.14),
-               foot_r=(0.20, 0.42, 0.11), foot_l=(-0.18, 0.44, 0.11))),
+        (30, S(pelvis=(0.0, -0.10, 0.220), spine=(-14, 0, 0))),
     ],
 
     # Signature. A standing neckbreaker: he takes the head, wrenches it
@@ -1252,10 +1275,135 @@ CLIPS = {
                   fist_r=0.5, fist_l=0.5,
                   foot_r=(0.20, 0.38, 0.14), foot_l=(-0.18, 0.34, 0.14),
                   knee_r=(0.3, 0.6, 0.7), knee_l=(-0.3, 0.6, 0.7))),
-        (26, S(pelvis=(0.0, -0.14, 0.200), hips=(-82, 0, 0),
-               spine=(-10, 0, 0), head=(-4, 0, 0),
-               foot_r=(0.19, 0.42, 0.11), foot_l=(-0.17, 0.38, 0.11))),
+        (26, S(pelvis=(0.0, -0.14, 0.200), spine=(-10, 0, 0))),
         (30, S()),
+    ],
+
+    # Power. A body slam, 36 frames / 1.2s: scooped, turned, held across the
+    # chest, and dropped flat on his back.
+    #
+    # The victim is carried ALONG HIS OWN AXIS and it is the attacker who
+    # turns under him. The thrown man has to land lying the way Down_Supine
+    # lies -- along his own facing, head toward +fwd -- or the knockdown that
+    # follows spins him a quarter-turn on the mat; and GrappleRig keeps only
+    # the yaw of a defender's root key, so turning him means turning his
+    # capsule, which is what the rig exists to avoid. So the attacker's root
+    # yaws 90 degrees through the lift (paired_recipes.gd, the power_bodyslam
+    # trajectory) and the victim, whose facing never changes, ends up lying
+    # across the attacker's chest: head over his right arm, legs over his
+    # left. That is where a body slam carries a man.
+    #
+    # Height is all bone pose. The victim's pelvis rises to 1.12 m inside a
+    # root that never leaves the mat, which is what keeps the trajectory
+    # clear of the airborne-landing invariant in build_paired_moves.gd.
+    "Bodyslam_Attacker": [
+        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+               hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+               fist_r=0.6, fist_l=0.6)),
+        # Ducks in: left arm through the legs, right hand on the chest.
+        (7,  P(pelvis=(0.0, 0.10, 0.700), hips=(-10, 0, 0), spine=(-26, 0, 0),
+               head=(-8, 0, 0),
+               hand_r=(0.16, 0.44, 1.18), hand_l=(-0.12, 0.52, 0.78),
+               elbow_r=(0.6, -0.3, -0.7), elbow_l=(-0.5, -0.3, -0.8),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.24, -0.16, 0.104), foot_l=(-0.20, 0.24, 0.104))),
+        # Drives up under him, turning.
+        (13, P(pelvis=(0.0, 0.04, 0.820), hips=(-4, 0, 0), spine=(-8, 0, 0),
+               head=(-10, 0, 0),
+               hand_r=(0.22, 0.36, 1.08), hand_l=(-0.28, 0.34, 1.22),
+               elbow_r=(0.6, -0.3, -0.7), elbow_l=(-0.6, -0.3, -0.7),
+               fist_r=0.6, fist_l=0.6)),
+        # Up: he is across the chest, cradled at the shoulders (right arm)
+        # and the thighs (left).
+        (19, P(pelvis=(0.0, 0.0, 0.870), hips=(2, 0, 0), spine=(4, 0, 0),
+               head=(-6, 0, 0),
+               hand_r=(0.28, 0.30, 0.96), hand_l=(-0.34, 0.28, 0.94),
+               elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.5, -0.4, -0.7),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.22, -0.14, 0.104), foot_l=(-0.20, 0.16, 0.104))),
+        # The hang -- the beat the crowd is watching.
+        (24, P(pelvis=(0.0, 0.0, 0.872), hips=(2, 0, 0), spine=(2, 0, 0),
+               head=(-8, 0, 0),
+               hand_r=(0.28, 0.31, 0.98), hand_l=(-0.34, 0.29, 0.96),
+               elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.5, -0.4, -0.7),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.22, -0.14, 0.104), foot_l=(-0.20, 0.16, 0.104))),
+        # The slam: he bends over it and follows the body down.
+        (28, P(pelvis=(0.0, 0.08, 0.720), hips=(-18, 0, 0), spine=(-34, 0, 0),
+               head=(-18, 0, 0),
+               hand_r=(0.30, 0.52, 0.42), hand_l=(-0.34, 0.50, 0.46),
+               elbow_r=(0.5, -0.2, -0.8), elbow_l=(-0.5, -0.2, -0.8),
+               fist_r=0.5, fist_l=0.5,
+               foot_r=(0.24, -0.20, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+        (31, P(pelvis=(0.0, 0.06, 0.760), hips=(-12, 0, 0), spine=(-26, 0, 0),
+               head=(-14, 0, 0),
+               hand_r=(0.28, 0.46, 0.60), hand_l=(-0.32, 0.44, 0.64),
+               fist_r=0.5, fist_l=0.5,
+               foot_r=(0.24, -0.20, 0.104), foot_l=(-0.20, 0.22, 0.104))),
+        (36, P()),
+    ],
+
+    # The victim: grabbed, tipped forward over the arm that scoops him, rolled
+    # over onto his back in the cradle, held flat at chest height, dropped.
+    #
+    # The roll is the same one SUPINE is built from -- forward pitch, then
+    # 180 degrees about his own spine -- so the carry, the landing and the
+    # knockdown that follows are one orientation and the handoff into
+    # Down_Supine is a settle, not a flip. Head toward +fwd (the attacker's
+    # right arm), legs toward -fwd (his left). Past the roll his right side is
+    # at negative `right`.
+    "Bodyslam_Defender": [
+        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+               hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+               fist_r=0.6, fist_l=0.6)),
+        # Caught: hands to the man ducking under him.
+        (7,  P(pelvis=(0.0, -0.02, 0.840), hips=(4, 0, 0), spine=(-18, 0, 0),
+               head=(8, 0, 0),
+               hand_r=(0.22, 0.36, 1.10), hand_l=(-0.20, 0.38, 1.08),
+               fist_r=0.62, fist_l=0.62)),
+        # Off his feet, tipped forward over the arm, legs swinging up behind.
+        (12, dict(pelvis=(0.0, 0.0, 1.020), hips=(-50, 0, 0),
+                  spine=(-10, 0, 0), head=(-10, 0, 0),
+                  hand_r=(0.34, 0.44, 0.80), hand_l=(-0.32, 0.46, 0.78),
+                  elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, -0.62, 0.92), foot_l=(-0.12, -0.58, 0.98),
+                  knee_r=(0.2, -0.6, -0.8), knee_l=(-0.2, -0.6, -0.8))),
+        # Turning over in the cradle: on his side.
+        (16, dict(pelvis=(0.0, 0.0, 1.160), hips=(-86, 0, 90),
+                  spine=(-4, 0, 0), head=(-8, 0, 0),
+                  hand_r=(0.10, 0.30, 0.86), hand_l=(-0.10, 0.34, 0.92),
+                  elbow_r=(0.6, 0.0, -0.8), elbow_l=(-0.6, 0.0, -0.8),
+                  fist_r=0.4, fist_l=0.4,
+                  foot_r=(-0.12, -0.80, 1.10), foot_l=(0.12, -0.80, 1.18),
+                  knee_r=(0.8, 0.0, 0.4), knee_l=(0.8, 0.0, 0.4))),
+        # Flat on his back across the chest, 1.1 m up; arms hanging.
+        (20, dict(pelvis=(0.0, 0.0, 1.100), hips=(-88, 0, 180),
+                  spine=(-4, 0, 0), head=(-10, 0, 0),
+                  hand_r=(-0.40, 0.24, 0.76), hand_l=(0.36, 0.26, 0.80),
+                  elbow_r=(-0.6, 0.0, -0.8), elbow_l=(0.6, 0.0, -0.8),
+                  fist_r=0.3, fist_l=0.3,
+                  foot_r=(-0.12, -0.84, 1.04), foot_l=(0.10, -0.86, 1.10),
+                  knee_r=(-0.2, 0.0, 1.0), knee_l=(0.2, 0.0, 1.0))),
+        (24, dict(pelvis=(0.0, 0.0, 1.120), hips=(-88, 0, 180),
+                  spine=(-2, 0, 0), head=(-12, 0, 0),
+                  hand_r=(-0.42, 0.22, 0.78), hand_l=(0.38, 0.24, 0.82),
+                  elbow_r=(-0.6, 0.0, -0.8), elbow_l=(0.6, 0.0, -0.8),
+                  fist_r=0.3, fist_l=0.3,
+                  foot_r=(-0.12, -0.84, 1.08), foot_l=(0.10, -0.86, 1.14),
+                  knee_r=(-0.2, 0.0, 1.0), knee_l=(0.2, 0.0, 1.0))),
+        # Flat on his back. Arms slap out, the legs bounce once.
+        (28, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), spine=(-2, 0, 0),
+               head=(-4, 0, 0),
+               hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+               elbow_r=(-0.7, 0.0, 0.7), elbow_l=(0.7, 0.0, 0.7),
+               fist_r=0.1, fist_l=0.1,
+               foot_r=(-0.14, -0.74, 0.28), foot_l=(0.12, -0.76, 0.32),
+               knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0))),
+        (31, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-16, 0, 0),
+               hand_r=(-0.46, 0.18, 0.10), hand_l=(0.44, 0.18, 0.10),
+               foot_r=(-0.16, -0.62, 0.12), foot_l=(0.14, -0.60, 0.12))),
+        (36, S()),
     ],
 }
 

@@ -130,6 +130,9 @@ func _ready() -> void:
 			var focus := subject.global_position + Vector3(0.0, 0.6, 0.0)
 			camera.global_position = focus + Vector3(2.4, 1.1, 2.4)
 			camera.look_at(focus, Vector3.UP)
+			# MatchCamera takes `current` back whenever it cuts, and the frame
+			# is then the broadcast wide rather than this close-up.
+			camera.current = true
 			await RenderingServer.frame_post_draw
 			var image := get_viewport().get_texture().get_image()
 			image.save_png("%s/state_%s_at%02d.png" % [_out, state_name, offset])

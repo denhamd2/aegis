@@ -39,8 +39,10 @@ func test_pair_frame_faces_the_attacker_toward_the_defender() -> void:
 
 	var frame := rig._compute_pair_transform(attacker, defender)
 
-	# Godot forward is -Z; the defender lies along +X from the attacker.
-	assert_vector(-frame.basis.z).is_equal_approx(Vector3.RIGHT, Vector3.ONE * 0.001)
+	# The clips stand the attacker at +X and the defender at -X, so the
+	# frame's -X is the line from the attacker to the defender -- here, world
+	# +X. (It used to be the frame's -Z, a quarter-turn off that line.)
+	assert_vector(frame.basis * Vector3.LEFT).is_equal_approx(Vector3.RIGHT, Vector3.ONE * 0.001)
 
 ## A move started against the ropes must not sweep a body through them --
 ## collision is off for both wrestlers for the clip's whole duration.
@@ -75,7 +77,9 @@ func test_coincident_pair_falls_back_to_attacker_facing() -> void:
 
 	var frame := rig._compute_pair_transform(attacker, defender)
 
-	assert_vector(-frame.basis.z).is_equal_approx(
+	# The frame's -X is the attacker-to-defender line (see
+	# test_pair_frame_faces_the_attacker_toward_the_defender).
+	assert_vector(frame.basis * Vector3.LEFT).is_equal_approx(
 		-attacker.global_transform.basis.z, Vector3.ONE * 0.001
 	)
 
@@ -90,9 +94,66 @@ func test_align_puts_the_two_wrestlers_back_to_back_at_the_frame() -> void:
 	assert_vector(attacker.global_position).is_equal_approx(
 		Vector3(1.0, 0.0, 1.5), Vector3.ONE * 0.001
 	)
+	# No trajectory to read, so the authored convention: the attacker faces
+	# the defender's side of the frame, which is where the defender stood.
+	assert_vector(-attacker.global_transform.basis.z).is_equal_approx(
+		Vector3(0.0, 0.0, -1.0), Vector3.ONE * 0.001)
 	# Defender is yawed 180 degrees from the attacker, as the authored clips
 	# expect (WrestlerA's track is the lifter, WrestlerB's the thrown role).
 	var facing_dot := (-attacker.global_transform.basis.z).dot(
 		-defender.global_transform.basis.z
 	)
 	assert_float(facing_dot).is_equal_approx(-1.0, 0.001)
+
+## Through a paired move the defender's root keeps the yaw it was authored
+## with and loses only its pitch and roll. It used to lose all three, which
+## turned every thrown man a quarter-turn away from the man throwing him.
+func test_the_defender_root_keeps_its_authored_yaw() -> void:
+	var authored := Quaternion(Basis.from_euler(Vector3(deg_to_rad(-60.0),
+			deg_to_rad(-90.0), deg_to_rad(20.0))))
+	var kept := GrappleRig.defender_root_yaw(authored)
+	var facing := Basis(kept) * Vector3.FORWARD
+	# Yaw -90 turns Godot's -Z forward onto +X: toward an attacker at +0.40.
+	assert_vector(facing).is_equal_approx(Vector3(1.0, 0.0, 0.0), Vector3.ONE * 0.001)
+	# And stands him up: no pitch or roll survives.
+	assert_vector(Basis(kept) * Vector3.UP).is_equal_approx(Vector3.UP, Vector3.ONE * 0.001)
+
+func test_the_two_roots_face_each_other_through_a_paired_move() -> void:
+	var library: AnimationLibrary = load("res://resources/animations/paired_moves.tres")
+	var wrong: Array[String] = []
+	for name in library.get_animation_list():
+		var anim := library.get_animation(name)
+		var facing := {}
+		for i in anim.get_track_count():
+			if anim.track_get_type(i) != Animation.TYPE_ROTATION_3D:
+				continue
+			var path := String(anim.track_get_path(i))
+			var rot: Quaternion = anim.track_get_key_value(i, 0)
+			if path.ends_with("WrestlerB"):
+				rot = GrappleRig.defender_root_yaw(rot)
+			facing[path.get_slice("/", 1)] = Basis(rot) * Vector3.FORWARD
+		if facing.size() != 2:
+			continue
+		# First key: the lock-up, attacker at +X facing -X, defender opposite.
+		if facing["WrestlerA"].dot(facing["WrestlerB"]) > -0.99:
+			wrong.append("%s: A %s, B %s" % [name, facing["WrestlerA"], facing["WrestlerB"]])
+	assert_array(wrong).override_failure_message(
+		"Paired moves that open with the two men not facing each other: %s" % [wrong]
+	).is_empty()
+
+## The lead-in lands each man on his clip's first frame, standing where the
+## trajectory's first key puts him -- not both on the pair frame's origin.
+func test_each_role_starts_on_its_trajectorys_first_key() -> void:
+	var rig := _make_rig()
+	var player := AnimationPlayer.new()
+	rig.add_child(player)
+	player.add_animation_library("", load("res://resources/animations/paired_moves.tres"))
+	rig.animation_player = player
+	var move: MoveDef = load("res://resources/moves/power_bodyslam.tres")
+	var a := rig._role_start(move, true)
+	var b := rig._role_start(move, false)
+	assert_vector(a.origin).is_equal_approx(Vector3(0.40, 0.0, 0.0), Vector3.ONE * 0.001)
+	assert_vector(b.origin).is_equal_approx(Vector3(-0.40, 0.0, 0.0), Vector3.ONE * 0.001)
+	# Facing each other down the line between them.
+	assert_vector(a.basis * Vector3.FORWARD).is_equal_approx(Vector3.LEFT, Vector3.ONE * 0.001)
+	assert_vector(b.basis * Vector3.FORWARD).is_equal_approx(Vector3.RIGHT, Vector3.ONE * 0.001)

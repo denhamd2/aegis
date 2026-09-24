@@ -76,3 +76,18 @@ func test_a_knockdown_does_not_heal_him() -> void:
 	w.combat.apply_damage(_hit_for(WrestlerController.KNOCKDOWN_DAMAGE))
 	w._go_down()
 	assert_float(w.combat.total_damage()).is_equal(WrestlerController.KNOCKDOWN_DAMAGE)
+
+## A slam that leaves a man on the mat without knocking him down puts him in
+## DOWN, briefly -- and it is not a knockdown: the marker the AI measures the
+## finish from does not move, and nobody may cover him.
+func test_a_man_left_lying_by_a_throw_is_down_but_not_knocked_down() -> void:
+	var w := _make_wrestler()
+	for step: WrestlerFSM.State in [WrestlerFSM.State.TIE_UP,
+			WrestlerFSM.State.GRAPPLE_HOLD, WrestlerFSM.State.MOVE_EXEC]:
+		w.fsm.transition_to(step)
+	w.combat.apply_damage(_hit_for(30.0))
+	w._lie_down_after_throw()
+	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	assert_int(w._move_ticks_remaining).is_equal(WrestlerController.THROWN_DOWN_TICKS)
+	assert_bool(w._cover_eligible).is_false()
+	assert_float(w._damage_at_last_knockdown).is_equal(0.0)

@@ -15,6 +15,12 @@ extends Node
 ##       --move signature_backbreaker --out /tmp/paired
 ##
 ## --at takes fractions of the move's length; the default walks the whole arc.
+## --side frames the pair square-on from the side, perpendicular to the line
+## between them, which is the view a throw's height and landing read from.
+## --orbit DEG swings that side camera round the pair by DEG degrees (90 looks
+## down the line between them), and --lit adds a fill light from the camera,
+## because the arena lights a pair from above and behind and a probe frame
+## reads as two silhouettes without it. Neither changes the move.
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const MOVES_DIR := "res://resources/moves"
@@ -22,6 +28,9 @@ const MOVES_DIR := "res://resources/moves"
 var _out := "/tmp/paired"
 var _move_id := "signature_backbreaker"
 var _at: Array = [0.0, 0.2, 0.35, 0.5, 0.65, 0.8, 1.0]
+var _side := false
+var _orbit := 0.0
+var _lit := false
 
 
 func _ready() -> void:
@@ -31,6 +40,12 @@ func _ready() -> void:
 			_out = args[i + 1]
 		elif args[i] == "--move" and i + 1 < args.size():
 			_move_id = args[i + 1]
+		elif args[i] == "--side":
+			_side = true
+		elif args[i] == "--orbit" and i + 1 < args.size():
+			_orbit = float(args[i + 1])
+		elif args[i] == "--lit":
+			_lit = true
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
@@ -72,7 +87,20 @@ func _ready() -> void:
 	camera.current = true
 	var focus := attacker.global_position + Vector3(0.0, 0.9, 0.0)
 	camera.global_position = focus + Vector3(3.2, 1.4, 3.2)
+	if _side:
+		var mid := (attacker.global_position + defender.global_position) * 0.5
+		var across := (defender.global_position - attacker.global_position) \
+				.normalized().cross(Vector3.UP)
+		across = across.rotated(Vector3.UP, deg_to_rad(_orbit))
+		focus = mid + Vector3(0.0, 0.8, 0.0)
+		camera.global_position = focus + across * 4.2 + Vector3(0.0, 0.3, 0.0)
+		camera.fov = 45.0
 	camera.look_at(focus, Vector3.UP)
+	if _lit:
+		var fill := DirectionalLight3D.new()
+		scene.add_child(fill)
+		fill.light_energy = 2.0
+		fill.global_transform = camera.global_transform
 
 	# Step the physics forward and grab at each fraction of the move. The
 	# lowest bone is printed with every frame because "does it still read as
@@ -82,6 +110,8 @@ func _ready() -> void:
 	var grabbed := 0
 	for frame in total + 4:
 		await get_tree().physics_frame
+		# MatchCamera takes `current` back when it cuts; hold the probe's.
+		camera.current = true
 		var fraction := float(frame) / float(total)
 		if grabbed >= _at.size() or fraction < _at[grabbed]:
 			continue

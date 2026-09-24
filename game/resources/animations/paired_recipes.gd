@@ -105,6 +105,34 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.68,
 	},
+	# The power rung, and the one throw back in the set. The cut throws were
+	# stitched out of borrowed clips and read as nothing; this one is keyed
+	# in Blender beat for beat against its partner, like the signatures.
+	#
+	# A body slam: scooped, turned, held flat across the chest at 1.12 m,
+	# dropped on his back. The victim is carried along his own axis and the
+	# ATTACKER turns under him -- see Bodyslam_Attacker in
+	# tools/blender/wrestling_clips.py for why it has to be that way round.
+	"power_bodyslam": {
+		"authored": {"attacker": "Bodyslam_Attacker", "defender": "Bodyslam_Defender"},
+		# Fallback samples, used only if the authored clips are missing.
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.25, "clip": "PickUp_Table", "at": 0.25},
+			{"t": 0.50, "clip": "PickUp_Table", "at": 0.80},
+			{"t": 0.78, "clip": "PickUp_Table", "at": 0.45},
+			{"t": 1.20, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.35, "clip": "Jump", "at": 0.50},
+			{"t": 0.78, "clip": "Death01", "at": 0.90},
+			{"t": 1.20, "clip": "Death01", "at": 1.60},
+		],
+		# He grabs at the man ducking under him, and lets go once he is off
+		# his feet.
+		"defender_grips_until": 0.35,
+	},
 	# A drops to one knee; B is folded across it. B peaks at 1.55m, lands
 	# forward at +0.65 X.
 	"signature_backbreaker": {
@@ -205,6 +233,39 @@ const TRAJECTORIES := {
 					[1.00, -0.55, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [0.52, 0.0, -98.0, 0.0],
 					[1.00, 0.0, -90.0, 0.0]],
+		},
+	},
+
+	# --- grapple, power tier -------------------------------------------
+	# Nobody's root leaves the mat: the 1.12 m the victim is held at is bone
+	# pose (Bodyslam_Defender). What the roots do is the turn.
+	#
+	# The attacker yaws 90 -> 0, from facing the victim (-X) to facing -Z,
+	# so the victim -- whose facing never changes, and who therefore lies
+	# along X -- ends up ACROSS his chest rather than pointing into it. The
+	# victim's root travels with him to stay in front of the chest through
+	# the turn: at yaw theta the attacker faces (-sin theta, 0, -cos theta),
+	# and the victim sits about 0.3 m out along that, his pelvis just short
+	# of the attacker's centreline so his head and his legs overhang evenly.
+	#
+	# The slam carries him a further 0.15 m out, where the attacker's bend
+	# puts him. The attacker ends still facing -Z, looking down at him.
+	"power_bodyslam": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.23, 0.30, 0.00, 0.00],
+					[0.43, 0.34, 0.00, 0.02], [0.63, 0.40, 0.00, 0.02],
+					[1.20, 0.40, 0.00, 0.02]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.23, 0.0, 88.0, 0.0],
+					[0.43, 0.0, 40.0, 0.0], [0.63, 0.0, 0.0, 0.0],
+					[1.20, 0.0, 0.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.23, -0.28, 0.00, 0.00],
+					[0.43, 0.10, 0.00, -0.20], [0.63, 0.30, 0.00, -0.30],
+					[0.80, 0.30, 0.00, -0.30], [0.93, 0.30, 0.00, -0.45],
+					[1.20, 0.30, 0.00, -0.45]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.20, 0.0, -90.0, 0.0]],
 		},
 	},
 

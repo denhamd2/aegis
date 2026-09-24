@@ -34,6 +34,10 @@ const MOVES_DIR := "res://resources/moves"
 ## canvas. They are replaced by one grapple that does not flip anybody,
 ## grapple_clinch_knee, which is why this number is now 1.
 const SCOPED_GRAPPLE := 1
+## The power rung is back with one move: the body slam, keyed in Blender
+## against its partner rather than stitched from borrowed clips, which is
+## what the cut throws were.
+const SCOPED_POWER := 1
 const SCOPED_SIGNATURE := 2
 
 func _paired_move_names() -> Array[String]:
@@ -67,11 +71,14 @@ func _make_attacker() -> WrestlerController:
 
 func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var grapple := 0
+	var power := 0
 	var signature := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
 			grapple += 1
+		elif name.begins_with("power_"):
+			power += 1
 		elif name.begins_with("signature_"):
 			signature += 1
 		else:
@@ -79,10 +86,11 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(grapple).override_failure_message(
 		"Grapple moves in paired_moves.tres: %s" % [_paired_move_names()]
 	).is_equal(SCOPED_GRAPPLE)
+	assert_int(power).is_equal(SCOPED_POWER)
 	assert_int(signature).is_equal(SCOPED_SIGNATURE)
-	# The removed families leave nothing behind: a power, finisher or
-	# reversal clip still in the library would be an animation no MoveDef
-	# names and nothing can play.
+	# The removed families leave nothing behind: a finisher or reversal clip
+	# still in the library would be an animation no MoveDef names and
+	# nothing can play.
 	assert_array(cut).override_failure_message(
 		"Clips from a removed family still in paired_moves.tres: %s" % [cut]
 	).is_empty()
@@ -204,6 +212,7 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 		var w: WrestlerController = match_scene.get_node(name)
 		for tier: Array in [
 			[w.grapple_move, w.grapple_move_pool],
+			[w.power_move, w.power_move_pool],
 			[w.signature_move, w.signature_move_pool],
 		]:
 			reachable[String((tier[0] as MoveDef).animation_pair_id)] = true
@@ -297,3 +306,14 @@ func test_no_trajectory_buries_even_a_tucked_body() -> void:
 	assert_array(buried).override_failure_message(
 		"Body parts through the mat past any tucked explanation: %s" % [buried]
 	).is_empty()
+
+## Every paired move whose defender half ends on the mat has to say so, or
+## the grapple resolves into a standing HIT_REACT and the man lying there
+## at the clip's last frame is stood up on the next tick.
+func test_throws_that_end_on_the_mat_leave_the_defender_down() -> void:
+	for id: String in ["power_bodyslam", "signature_backbreaker", "signature_neckbreaker"]:
+		var move: MoveDef = load("%s/%s.tres" % [MOVES_DIR, id])
+		assert_bool(move.leaves_defender_down).override_failure_message(
+			"%s ends with the defender on the mat" % id).is_true()
+	var knee: MoveDef = load("%s/grapple_clinch_knee.tres" % MOVES_DIR)
+	assert_bool(knee.leaves_defender_down).is_false()

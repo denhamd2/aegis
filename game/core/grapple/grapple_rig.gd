@@ -170,10 +170,30 @@ func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
 				"WrestlerB")
 		for k in anim.track_get_key_count(track):
 			var rot: Quaternion = anim.track_get_key_value(track, k)
-			# The defender's fall is a skeleton pose. Letting the physics root
-			# pitch and roll as well turns the capsule and compounds the sampled
-			# role pose into the inverted frame seen in piledriver captures.
-			anim.track_set_key_value(track, k, yaw if is_defender_root else yaw * rot)
+			anim.track_set_key_value(track, k,
+					yaw * (defender_root_yaw(rot) if is_defender_root else rot))
+
+## The part of an authored defender root key the rig keeps: its yaw, and
+## nothing else.
+##
+## The defender's fall is a skeleton pose. Letting the physics root pitch and
+## roll as well turns the capsule and compounds the sampled role pose into the
+## inverted frame seen in piledriver captures -- so those two go.
+##
+## The yaw has to stay, and for a long time it did not: this discarded the
+## whole key, and every defender key is authored at yaw -90 (paired_recipes.gd:
+## "which is what makes them face each other"). So through every paired move
+## in the set the man being thrown stood a quarter-turn away from the man
+## throwing him, facing along the pair frame's -Z while the attacker faced him
+## down its X. Measured in tools/probe/paired_shot.tscn: attacker facing
+## (-1, 0, 0), defender facing (0, 0, -1), on the clinch knee and both
+## signatures alike. Every authored defender half -- hands on the attacker's
+## collar, folded over his knee -- was playing 90 degrees off its partner.
+##
+## Basis.get_euler()'s default YXZ order is the one build_paired_moves.gd
+## authors the keys in, so .y is exactly the yaw that was written.
+static func defender_root_yaw(rot: Quaternion) -> Quaternion:
+	return Quaternion(Vector3.UP, Basis(rot).get_euler().y)
 
 func _restore_original_animation() -> void:
 	if not _original_anim:
@@ -195,6 +215,16 @@ func _restore_original_animation() -> void:
 ## together and stacking up. Building a per-call frame instead lets the same
 ## authored clip play wherever the wrestlers actually are, and along the
 ## direction the attacker is actually facing.
+##
+## The line between the two men is the frame's X axis, not its Z. Every
+## trajectory in paired_moves.tres stands the attacker at +0.40 X and the
+## defender at -0.40 X, facing each other down X (paired_recipes.gd), so the
+## frame's -X has to point from the attacker to the defender. It used to be
+## its -Z that did, and every paired move therefore began a quarter-turn off
+## the line the two men were standing on: measured through
+## tools/probe/paired_shot.tscn, a pair standing 0.9 m apart along the
+## attacker's facing opened the clip 0.8 m apart ACROSS it, both men having
+## swung 90 degrees round their midpoint in the lead-in.
 func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	var midpoint := (attacker.global_position + defender.global_position) * 0.5
 	# Y comes from the anchor, not the pair: a clip's vertical keys are
@@ -213,7 +243,43 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 		facing.y = 0.0
 	if facing.length() < 0.001:
 		return Transform3D(Basis(), midpoint)
-	return Transform3D(Basis(Vector3.UP, atan2(-facing.x, -facing.z)), midpoint)
+	# rotY(theta) takes -X to (-cos theta, 0, sin theta); solve for `facing`.
+	return Transform3D(Basis(Vector3.UP, atan2(facing.z, -facing.x)), midpoint)
+
+## Where a role's clip starts, in the pair frame: the first key of that
+## wrestler's root tracks, as _transform_track_into_pair_frame() will play it.
+##
+## This is what the lead-in slides each man to, so the clip's first frame
+## finds him already standing on it. It used to slide both to the frame's
+## ORIGIN -- the midpoint, the two bodies in the same place -- from which the
+## clip's first key then threw each of them 0.4 m sideways and turned them a
+## quarter-turn in a single tick: the teleport the lead-in exists to remove,
+## moved to the end of it.
+##
+## A move with no trajectory falls back to the authored convention: attacker
+## on the frame's origin facing -X, defender facing +X.
+func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
+	var fallback := Transform3D(Basis(Vector3.UP, PI * (0.5 if is_attacker else -0.5)),
+			Vector3.ZERO)
+	if not animation_player or not move or move.animation_pair_id == &"":
+		return fallback
+	if not animation_player.has_animation(move.animation_pair_id):
+		return fallback
+	var anim := animation_player.get_animation(move.animation_pair_id)
+	var role := "WrestlerA" if is_attacker else "WrestlerB"
+	var start := fallback
+	for i in anim.get_track_count():
+		if not String(anim.track_get_path(i)).ends_with(role) \
+				or anim.track_get_key_count(i) == 0:
+			continue
+		var value: Variant = anim.track_get_key_value(i, 0)
+		match anim.track_get_type(i):
+			Animation.TYPE_POSITION_3D:
+				start.origin = value
+			Animation.TYPE_ROTATION_3D:
+				var rot: Quaternion = value
+				start.basis = Basis(defender_root_yaw(rot) if not is_attacker else rot)
+	return start
 
 ## Ticks spent sliding the two bodies into the pair frame before the paired
 ## clip starts.
@@ -236,8 +302,8 @@ const LEAD_IN_TICKS := 10
 func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 	var from_attacker := attacker.global_transform
 	var from_defender := defender.global_transform
-	var to_attacker := _pair_transform
-	var to_defender := _pair_transform.rotated_local(Vector3.UP, PI)
+	var to_attacker := _pair_transform * _role_start(_move, true)
+	var to_defender := _pair_transform * _role_start(_move, false)
 	for tick in range(1, LEAD_IN_TICKS + 1):
 		await Engine.get_main_loop().physics_frame
 		if not _active:
@@ -260,8 +326,8 @@ static func blend_transforms(from: Transform3D, to: Transform3D, t: float) -> Tr
 		from.origin.lerp(to.origin, t))
 
 func _align_to_pair(attacker: Node3D, defender: Node3D) -> void:
-	attacker.global_transform = _pair_transform
-	defender.global_transform = _pair_transform.rotated_local(Vector3.UP, PI)
+	attacker.global_transform = _pair_transform * _role_start(_move, true)
+	defender.global_transform = _pair_transform * _role_start(_move, false)
 
 ## Keeps both wrestlers' grip IK and grip countdown ticking while their own
 ## _physics_process is suspended.

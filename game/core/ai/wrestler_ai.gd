@@ -107,6 +107,11 @@ var _this_tie_up_interval: int = -1
 ## Number of tie-ups this AI has contested this match — seeds the per-tie-up
 ## roll.
 var _tie_up_attempts: int = 0
+## Whether this AI has already locked up once to throw its power move. One
+## try a match, won or lost: a man who loses that tie-up does not get to
+## chase it with another, or the middle of the match turns back into the
+## grapple loop this AI was rewritten to get away from.
+var _power_attempt_spent: bool = false
 
 
 var _cooldown: int = 0
@@ -198,6 +203,8 @@ func poll_input() -> Dictionary:
 		if _tie_up_tick == 0:
 			_tie_up_attempts += 1
 			_roll_tie_up_timing()
+			if _wants_power_tie_up():
+				_power_attempt_spent = true
 		_tie_up_tick += 1
 		return {"grapple": _should_press_tie_up(_tie_up_tick)}
 	_tie_up_tick = 0
@@ -390,6 +397,8 @@ func poll_input() -> Dictionary:
 ## 1. The opening grapple has not happened yet.
 ## 2. The opponent is one signature away from the mat and this wrestler can
 ##    afford one -- see _opponent_is_ripe(). This is the finish.
+## 3. Once a match, in the middle of it, to throw the power move -- see
+##    _wants_power_tie_up().
 ##
 ## There was briefly a third: a wrestler who lost the opening tie-up had
 ## landed no rung of the chain, and a signature was gated on the rung below
@@ -401,7 +410,28 @@ func poll_input() -> Dictionary:
 func _wants_tie_up() -> bool:
 	if not _opening_grapple_done():
 		return true
+	if _wants_power_tie_up():
+		return true
 	return controller.combat.can_signature() and _opponent_is_ripe()
+
+## The middle of the match: one lock-up to throw the power move, the body
+## slam, and back to strikes.
+##
+## Only inside the power band -- momentum past POWER_THRESHOLD and short of
+## SIGNATURE_THRESHOLD -- because WrestlerController._process_grapple_hold()
+## draws the highest rung the meter affords. Past the signature threshold the
+## same tie-up would throw a signature in the middle of the match, which is
+## exactly what _opponent_is_ripe() exists to prevent. Momentum only moves on
+## a landed move, and an AI that wants to lock up does not strike on the way
+## in, so the band read here is the band the hold is resolved in.
+func _wants_power_tie_up() -> bool:
+	if _power_attempt_spent or not _opening_grapple_done():
+		return false
+	if controller.power_move == null and controller.power_move_pool.is_empty():
+		return false
+	var combat := controller.combat
+	return combat.can_power() and not combat.can_signature() \
+			and combat.tier_reached < CombatSystem.Tier.POWER
 
 ## Whether a signature thrown now would knock the opponent down.
 ##

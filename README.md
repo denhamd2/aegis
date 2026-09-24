@@ -6062,3 +6062,123 @@ the mat and stays clear of the ropes, a wrestler put outside on any axis comes
 back, one below the mat is put on it and stops falling, one lifted above it is
 left alone, one already inside is not nudged at all, and the rig contains the
 bodies it has suspended. 411 tests pass.
+
+## Round: a body slam, and three things that were making every throw read wrong
+
+The power rung comes back with one move, `power_bodyslam`, keyed in Blender
+beat for beat against its partner like the two signatures. The moves cut
+earlier were stitched out of borrowed clips and did not read; this one was
+iterated on rendered frames until it did. Getting it to read turned up three
+defects that were already in every paired move and every knockdown, which is
+most of what this round is.
+
+### The throw
+
+36 frames, 1.2 s. Lock-up, the attacker ducks in with an arm through the
+legs, scoops, and the victim tips forward over the arm and rolls onto his
+back in the cradle. He is held flat across the attacker's chest at 1.12 m,
+hangs a beat, and is dropped flat on his back.
+
+The victim is carried **along his own axis** and it is the attacker who turns
+90 degrees under him. The man being thrown has to land lying the way
+`Down_Supine` lies, or the knockdown that follows spins him a quarter-turn on
+the mat; turning the attacker instead puts the victim across his chest, which
+is where a body slam carries a man. The height is all bone pose -- no root
+leaves the mat -- so the trajectory stays clear of the airborne-landing
+invariant in `build_paired_moves.gd`.
+
+A grapple that did not knock a man down used to hand him a standing
+`HIT_REACT`, which stood a slammed man straight up out of the clip's last
+frame. `MoveDef.leaves_defender_down` puts him in `DOWN` for
+`THROWN_DOWN_TICKS` (45) instead. It is **not** a knockdown: it leaves
+`_damage_at_last_knockdown` alone, emits nothing, and he is not
+cover-eligible, so a mid-match slam neither moves the finish nor hands out a
+free cover. The slam and both signatures set it; the clinch knee, which ends
+on its feet, does not.
+
+The AI reaches for it once a match: a third reason to lock up, only inside the
+band between `POWER_THRESHOLD` and `SIGNATURE_THRESHOLD` (past it the same
+tie-up would draw a signature mid-match) and only for the man who won the
+opening lock-up, since `can_power()` still asks for a landed grapple. One try,
+won or lost (`WrestlerAI._wants_power_tie_up()`).
+
+### 1. The man being thrown stood a quarter-turn away from the thrower
+
+`GrappleRig._transform_track_into_pair_frame()` discarded the defender's
+whole root rotation key, to stop the root pitching and rolling. But every
+defender key is authored at yaw -90 -- that is what makes the two face each
+other -- so through **every** paired move the defender faced the pair frame's
+-Z while the attacker faced him down its X. Measured: attacker facing
+(-1, 0, 0), defender (0, 0, -1), on the clinch knee and both signatures. Every
+authored defender half was playing 90 degrees off its partner. It now keeps
+the yaw and drops only pitch and roll (`GrappleRig.defender_root_yaw()`).
+
+### 2. `SUPINE` was face down
+
+Authored as `hips=(-84, 0, 0)` under a comment reading "hips rolled back",
+which is the pitch-sign mistake the previous round found in `STANCE`: a
+negative hips pitch tips a man **forward**. Measured through the probe, the
+downed man's chest pointed at (0.03, -1.00, 0) -- into the canvas. Every
+knockdown, cover and pinfall was played on a man lying on his front, lower
+legs sticking up behind him.
+
+The fix is the smallest one that makes him supine without moving him: the
+same pitch, rolled 180 degrees about his own spine. His head and pelvis stay
+where they were, so the cover placement and the getup -- both measured off
+where he lies -- are unchanged. `Getup_Rise` gains one key (frame 5, on his
+side) so the half-turn back onto his front is a roll and not a quaternion
+guessing its way round. The two signatures' landings now settle into it.
+
+### 3. Every lock-up swung the pair 90 degrees and stacked them
+
+The pair frame's -Z pointed from attacker to defender, but every trajectory
+stands them at +/-0.40 along its **X**. And the lead-in slid both men to the
+frame's origin -- the same point -- before the clip's first key threw each
+0.4 m sideways and turned them a quarter-turn in one tick. The frame's -X is
+now the line they were standing on, and the lead-in slides each man to his
+own first key (`GrappleRig._role_start()`).
+
+### Measured
+
+Twelve AI-vs-AI seeds, `ladder_probe`, against the same seeds on the build
+before this round:
+
+| | before | after |
+| --- | --- | --- |
+| finishes | 12 pinfall | 12 pinfall |
+| power move landed | 0 matches | 12 matches |
+| grapple moves / match | 4.8 | 5.7 |
+| strikes / match | 15.9 | 13.9 |
+| knockdowns / match | 2.1 | 2.1 |
+| length | 914-3206 ticks | 1983-3755 ticks |
+
+Worth saying plainly: the "1.0 grapple moves per match" earlier in this log
+is out of date -- the build before this round already threw 4.8, including
+two to four signatures from the winner. That is not this round's to fix, and
+it is recorded rather than tuned.
+
+`strike_connect_probe` (its three default seeds): 67.1% landed, against 69.3%
+over eight seeds last round. The misses that moved are `unhittable`, which is
+a slammed man lying on the mat, as designed.
+
+### Tools
+
+- `tools/probe/paired_shot.tscn` takes `--side`, `--orbit DEG` and `--lit`,
+  and holds its camera against `MatchCamera`, which had been cutting away
+  from it mid-move. `state_shot` holds its camera the same way.
+- `tools/blender/clip_sheet.py` renders any clip's keys on the mannequin in
+  Cycles on the CPU, in about four seconds, under flat light. It is how
+  `SUPINE` was caught: at match distance and under arena light a man on the
+  mat is a few dark pixels either way up.
+
+### Open, and deliberately not chased
+
+The same sign mistake is still in clips this round did not need to touch:
+`Pin_Cover` (the coverer leans back where the comment says "chest low"),
+`Getup_Rise` past frame 10 (reclines as it rises), and the backbreaker and
+neckbreaker defenders' mid-air beats. Each moves when its sign is flipped, so
+each is its own job with its own renders. The cover also lands beside the
+downed man rather than across him.
+
+424 tests pass. The glb, both paired libraries and `strike_clips.tres` rebuild
+byte-identical.

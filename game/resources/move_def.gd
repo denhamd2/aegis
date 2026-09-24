@@ -64,6 +64,16 @@ extends Resource
 @export var weight_class_min: int = 0
 @export var weight_class_max: int = 2
 
+## Whether this paired move ends with the defender lying on the mat.
+##
+## A grapple that does not knock a man down hands him a standing HIT_REACT,
+## which is right for the clinch knee -- he finishes it on his feet -- and
+## wrong for a slam, whose clip ends with him flat on his back: the next
+## tick stood him straight up out of it. A move that sets this puts him in
+## DOWN instead, for THROWN_DOWN_TICKS, whether or not it knocked him down.
+## It is not a knockdown -- see WrestlerController._lie_down_after_throw().
+@export var leaves_defender_down: bool = false
+
 ## Opponent WrestlerFSM.State required for this move to be legal.
 @export var required_opponent_state: int = -1
 

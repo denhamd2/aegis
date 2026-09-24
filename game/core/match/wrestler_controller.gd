@@ -78,6 +78,12 @@ const KNOCKDOWN_DAMAGE := 100.0
 ## most of that was the attacker's taunt playing out rather than a fixed
 ## timer, so this stays a reachability value.
 const GETUP_TICKS := 90 # 1.5s
+## How long a man a slam left on the mat (MoveDef.leaves_defender_down) lies
+## there before rising, when the slam did not also knock him down. Half a
+## knockdown's GETUP_TICKS: long enough to read as having been dropped,
+## short of reading as beaten. A presentation value; gauntlet/refs/ measures
+## no slam.
+const THROWN_DOWN_TICKS := 45 # 0.75s
 
 ## The rise itself: mat to a standing fighting stance.
 ##
@@ -1774,8 +1780,27 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	fsm.transition_to(WrestlerFSM.State.IDLE)
 	if opponent._would_be_knocked_down():
 		opponent._go_down()
+	elif move and move.leaves_defender_down:
+		opponent._lie_down_after_throw()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
+
+## A thrown man left lying where the throw put him, without it counting as a
+## knockdown.
+##
+## Everything _go_down() does beyond the state change is knockdown
+## bookkeeping, and none of it applies: _damage_at_last_knockdown is what
+## WrestlerAI measures "one signature from finished" against, so resetting
+## it on a mid-match slam would push the finish back by a whole knockdown;
+## and knocked_down is what the probes count. He is also NOT cover-eligible.
+## A cover on a man who has not been knocked down is a cover he kicks out of
+## at no cost, and every finish in this match is supposed to be a pinfall on
+## a man who was -- _process_timed_state() restores eligibility once he is
+## back on his feet.
+func _lie_down_after_throw() -> void:
+	fsm.transition_to(WrestlerFSM.State.DOWN)
+	_move_ticks_remaining = THROWN_DOWN_TICKS
+	_cover_eligible = false
 
 func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):

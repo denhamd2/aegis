@@ -74,11 +74,17 @@ func test_a_signature_does_not_price_the_finisher_out_of_the_match() -> void:
 	).is_less_equal(affordable)
 
 ## Every wired tier must actually have moves behind it, and every gate must
-## open onto a tier that is wired. The power and finisher slots are empty
-## now -- those moves were removed -- so what this asserts is that the two
-## rungs left are reachable and that nothing gates on the two that are not:
-## the meter has to unlock the signature by itself, or the man who lost the
-## opening tie-up -- who carries no rung at all -- could never throw one.
+## open onto a tier that is wired. The finisher slot is empty -- those moves
+## were removed -- and the power slot is wired again, with the body slam.
+##
+## This used to assert the power slot was EMPTY, as a tripwire: the gates had
+## been rewritten around a two-rung chain, and wiring a power move back had to
+## be a decision rather than an accident. It was one. The signature still
+## asks the meter alone (so the man who lost the opening tie-up can still
+## throw one); the power move asks for a landed grapple as well, so the slam
+## is the lock-up winner's to earn; and WrestlerAI only reaches for it inside
+## the band between the two thresholds, once a match, so it cannot shadow the
+## signature (WrestlerAI._wants_power_tie_up()).
 func test_each_wired_tier_has_moves_and_is_reachable() -> void:
 	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
 	add_child(scene)
@@ -87,11 +93,17 @@ func test_each_wired_tier_has_moves_and_is_reachable() -> void:
 		assert_object(w.grapple_move).is_not_null()
 		assert_object(w.signature_move).is_not_null()
 		assert_bool(w.is_finisher(w.signature_move)).is_false()
-		assert_object(w.power_move).override_failure_message(
-			"A power move is wired again; the ladder's gates assume that rung "
-			+ "is empty (see CombatSystem.can_signature())."
-		).is_null()
+		assert_object(w.power_move).is_not_null()
+		assert_int(w.tier_of(w.power_move)).is_equal(CombatSystem.Tier.POWER)
 		assert_object(w.finisher_move).is_null()
+
+		# The power band is not empty: there is a momentum at which the slam
+		# is affordable and a signature is not.
+		var band := CombatSystem.new()
+		band.record_tier(CombatSystem.Tier.GRAPPLE)
+		band.momentum = CombatSystem.POWER_THRESHOLD
+		assert_bool(band.can_power()).is_true()
+		assert_bool(band.can_signature()).is_false()
 
 		var combat := CombatSystem.new()
 		combat.momentum = CombatSystem.SIGNATURE_THRESHOLD

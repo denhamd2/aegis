@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://core/grapple/grapple_rig.gd" id="6"]
 [ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
 [ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
+[ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="40"]
 [ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_double_leg.tres" id="30"]
@@ -198,6 +199,7 @@ torso_width = 1.0
 attire_accent = Color(0.172, 0.27, 0.375, 1)
 strike_move = ExtResource("7")
 grapple_move = ExtResource("15")
+power_move = ExtResource("40")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
@@ -230,6 +232,7 @@ torso_width = 1.14
 attire_accent = Color(0.12, 0.68, 0.2, 1)
 strike_move = ExtResource("7")
 grapple_move = ExtResource("15")
+power_move = ExtResource("40")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30")])
