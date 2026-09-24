@@ -133,8 +133,9 @@ const RECIPES := {
 		# his feet.
 		"defender_grips_until": 0.35,
 	},
-	# A drops to one knee; B is folded across it. B peaks at 1.55m, lands
-	# forward at +0.65 X.
+	# The body slam's lift, then down onto one knee with the victim arched
+	# face-up across the other. The samples below are only the fallback --
+	# see Backbreaker_Attacker in tools/blender/wrestling_clips.py.
 	"signature_backbreaker": {
 		# Authored in Blender: both halves keyframed against each other
 		# beat for beat, rather than stitched out of unrelated clips.
@@ -163,9 +164,9 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.40,
 	},
-	# Attacker drops backwards and snaps the head down beside him. Both
-	# men finish low, which is what makes it read as a signature rather
-	# than a basic.
+	# The attacker takes the head and wrenches it down and across to his
+	# hip; the victim is twisted over and dropped on his back beside him.
+	# The samples below are only the fallback -- see Neckbreaker_Attacker.
 	"signature_neckbreaker": {
 		# Authored in Blender: both halves keyframed against each other
 		# beat for beat, rather than stitched out of unrelated clips.
@@ -270,48 +271,61 @@ const TRAJECTORIES := {
 	},
 
 	# --- grapple, signature tier ---------------------------------------
-	# Attacker drops back and snaps the head down beside him. Low arc,
-	# both men end up near the mat.
+	# The backbreaker. Its arc used to be hand-keyed straight into
+	# paired_moves.tres, lifting the victim's root 1.55 m and pitching it --
+	# a pitch the rig discards, so the lift is all that survived. It is
+	# generated here now, and it is the body slam's path for the lift
+	# (Backbreaker_* share Bodyslam_*'s first 20 frames), then the victim is
+	# brought down over the attacker's raised left knee -- 0.20 to his left,
+	# 0.28 in front of him, which with the attacker facing -Z is x 0.20,
+	# z -0.28 -- and poured off to -Z onto the mat.
+	"signature_backbreaker": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.23, 0.30, 0.00, 0.00],
+					[0.43, 0.34, 0.00, 0.02], [0.63, 0.40, 0.00, 0.02],
+					[1.20, 0.40, 0.00, 0.02]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.23, 0.0, 88.0, 0.0],
+					[0.43, 0.0, 40.0, 0.0], [0.63, 0.0, 0.0, 0.0],
+					[1.20, 0.0, 0.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.23, -0.28, 0.00, 0.00],
+					[0.43, 0.10, 0.00, -0.20], [0.63, 0.30, 0.00, -0.30],
+					[0.80, 0.20, 0.00, -0.28], [0.97, 0.20, 0.00, -0.30],
+					[1.10, 0.20, 0.00, -0.62], [1.20, 0.20, 0.00, -0.62]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.20, 0.0, -90.0, 0.0]],
+		},
+	},
+
+	# A standing neckbreaker. Nobody leaves the mat: the victim is dragged
+	# forward and twisted over by the head and lands on his back beside the
+	# attacker's right boot -- all bone pose (Neckbreaker_Defender). The roots
+	# only carry him there, and turn the attacker into the wrench.
+	#
+	# This used to lift the victim 0.45 m on a back-drop arc pitched to -85.
+	# GrappleRig keeps only the yaw of a defender's root key, so the pitch was
+	# discarded and the lift was not: rendered, he floated straight up,
+	# draped over the attacker's back and came down on his face. His root
+	# never leaves y = 0 now, so neither the airborne-landing invariant nor
+	# the tucked-body clearance gate has anything to ask of it.
+	#
+	# The attacker's right is the pair frame's -Z, so the victim drifts to
+	# -Z as he goes down, bringing his head in beside the boot rather than
+	# under it.
 	"signature_neckbreaker": {
 		"length": 1.0,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.25, 0.38, 0.00, 0.00],
-					[0.55, 0.30, 0.00, 0.00], [0.75, 0.22, 0.00, 0.00],
-					[1.00, 0.22, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [0.55, 0.0, 76.0, 0.0],
-					[1.00, 0.0, 88.0, 0.0]],
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.27, 0.38, 0.00, 0.00],
+					[0.67, 0.40, 0.00, 0.04], [1.00, 0.40, 0.00, 0.04]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.47, 0.0, 74.0, 0.0],
+					[1.00, 0.0, 82.0, 0.0]],
 		},
-		# A back-drop, not a somersault. The pitch used to run the whole way
-		# round -- 0, -70, -180, -290, -360 -- and a body that passes through
-		# fully inverted (up.y = -1.00) has to be lifted a whole body-length or
-		# its head goes through the canvas: the clearance gate wants
-		# root_y >= 1.15 * |up.y| - 0.12, which is 1.03 m at full inversion.
-		# That is exactly where this move sat, with head_y landing on -0.12,
-		# the floor itself. The altitude was the flip's price.
-		#
-		# A real neckbreaker snaps a standing man down onto his back -- about a
-		# quarter turn. The pitch tips to -85 (just short of horizontal, so
-		# up.y stays near 0 and the gate asks for essentially nothing) and then
-		# RETURNS to 0.
-		#
-		# Returning is not optional and is the reason the original went the
-		# whole way round: build_paired_moves.gd rejects an arc that "ends
-		# rotated away from its start -- a thrown wrestler must land upright or
-		# he sinks through the mat", and -360 satisfies that by coming back to
-		# the same orientation. Ending at -100 does not, and was refused.
-		#
-		# Landing upright costs nothing visually, because the root's rotation is
-		# not what makes a man look prone -- the bone pose is. The defender's
-		# last sample is Death01 at 1.60, "settled prone", and that is what the
-		# camera sees lying on the mat.
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.20, 0.30, 0.00],
-					[0.50, 0.05, 0.45, 0.00], [0.60, 0.12, 0.44, 0.00],
-					[0.72, 0.20, 0.26, 0.00],
-					[0.88, 0.28, 0.00, 0.00], [1.00, 0.30, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [0.35, -55.0, -90.0, 0.0],
-					[0.55, -85.0, -90.0, 0.0], [0.75, -45.0, -90.0, 0.0],
-					[0.88, 0.0, -90.0, 0.0], [1.00, 0.0, -90.0, 0.0]],
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.34, 0.00, -0.04],
+					[0.47, -0.34, 0.00, -0.18], [0.67, -0.38, 0.00, -0.26],
+					[1.00, -0.38, 0.00, -0.26]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.00, 0.0, -90.0, 0.0]],
 		},
 	},
 }

@@ -1164,138 +1164,84 @@ CLIPS = {
         (30, P()),
     ],
 
-    # Signature. He drops to the right knee EARLY (frame 12) so the knee is
-    # already there when the other man arrives on it, and arches back
-    # through the finish.
-    "Backbreaker_Attacker": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
-               hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
-               fist_r=0.6, fist_l=0.6)),
-        # Gathers him in.
-        (6,  P(pelvis=(0.0, 0.03, 0.822), hips=(10, 0, 0), spine=(26, 0, 0),
-               head=(-10, 0, 0),
-               hand_r=(0.22, 0.50, 1.10), hand_l=(-0.20, 0.52, 1.08),
-               fist_r=0.5, fist_l=0.5)),
-        # The kneel: right knee down, left foot planted flat and forward.
-        (12, dict(pelvis=(0.0, 0.02, 0.565), hips=(4, 0, 0), spine=(8, 0, 0),
-                  head=(-14, 0, 0),
-                  hand_r=(0.06, 0.44, 1.06), hand_l=(-0.28, 0.40, 0.92),
-                  elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
-                  fist_r=0.6, fist_l=0.6,
-                  foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
-                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
-        # Drives him down across the knee and arches back over it.
-        (18, dict(pelvis=(0.0, 0.0, 0.548), hips=(-10, 0, 0),
-                  spine=(-12, 0, 0), head=(-18, 0, 0),
-                  hand_r=(0.10, 0.40, 0.86), hand_l=(-0.30, 0.34, 0.74),
-                  elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
-                  fist_r=0.8, fist_l=0.8,
-                  foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
-                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
-        (24, dict(pelvis=(0.0, 0.0, 0.554), hips=(-6, 0, 0), spine=(-6, 0, 0),
-                  head=(-14, 0, 0),
-                  hand_r=(0.11, 0.42, 0.90), hand_l=(-0.29, 0.36, 0.78),
-                  elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
-                  fist_r=0.7, fist_l=0.7,
-                  foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
-                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
-        (30, P()),
-    ],
-
-    # The victim: gathered, taken off his feet, folded backward over the
-    # knee on frame 18, then poured off it onto the mat.
-    "Backbreaker_Defender": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
-               hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
-               fist_r=0.6, fist_l=0.6)),
-        (6,  P(pelvis=(0.0, -0.02, 0.830), hips=(8, 0, 0), spine=(22, 0, 0),
-               head=(6, 0, 0),
-               hand_r=(0.26, 0.40, 1.24), hand_l=(-0.24, 0.42, 1.22),
-               fist_r=0.62, fist_l=0.62)),
-        # Off his feet and turning: legs leave the mat, arms fly out.
-        (12, dict(pelvis=(0.0, -0.05, 1.010), hips=(-22, 0, 0),
-                  spine=(-18, 0, 0), head=(-14, 0, 0),
-                  hand_r=(0.40, 0.10, 1.40), hand_l=(-0.40, 0.06, 1.36),
-                  elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.20, 0.36, 0.62), foot_l=(-0.18, 0.40, 0.66),
-                  knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4))),
-        # Spine across the knee: arched backward, arms thrown behind him.
-        (18, dict(pelvis=(0.0, -0.09, 0.860), hips=(-52, 0, 0),
-                  spine=(-34, 0, 0), head=(-30, 0, 0),
-                  hand_r=(0.44, -0.24, 1.06), hand_l=(-0.44, -0.28, 1.02),
-                  elbow_r=(0.8, -0.4, 0.2), elbow_l=(-0.8, -0.4, 0.2),
-                  fist_r=0.1, fist_l=0.1,
-                  foot_r=(0.22, 0.44, 0.36), foot_l=(-0.20, 0.48, 0.40),
-                  knee_r=(0.3, 0.9, 0.2), knee_l=(-0.3, 0.9, 0.2))),
-        # Hangs there a beat -- the moment the crowd is watching.
-        (23, dict(pelvis=(0.0, -0.10, 0.845), hips=(-56, 0, 0),
-                  spine=(-32, 0, 0), head=(-28, 0, 0),
-                  hand_r=(0.45, -0.28, 1.00), hand_l=(-0.45, -0.32, 0.96),
-                  elbow_r=(0.8, -0.4, 0.2), elbow_l=(-0.8, -0.4, 0.2),
-                  fist_r=0.1, fist_l=0.1,
-                  foot_r=(0.22, 0.46, 0.30), foot_l=(-0.20, 0.50, 0.34),
-                  knee_r=(0.3, 0.9, 0.2), knee_l=(-0.3, 0.9, 0.2))),
-        # Pours off onto the mat.
-        (30, S(pelvis=(0.0, -0.10, 0.220), spine=(-14, 0, 0))),
-    ],
-
     # Signature. A standing neckbreaker: he takes the head, wrenches it
-    # down and across, and stays on his feet -- deliberately, because a
-    # sit-out version would leave him on the mat and the state that follows
-    # this expects a man who is standing.
+    # down and across to his right hip, and stays on his feet -- deliberately,
+    # because a sit-out version would leave him on the mat and the state that
+    # follows this expects a man who is standing.
+    #
+    # Rewritten against rendered frames. Every lean here was the wrong way
+    # round (a positive lean tips a man BACK -- see STANCE), so he reclined
+    # while "driving it to the mat"; and the victim's root trajectory lifted
+    # him 0.45 m on an arc whose back-tip the rig discards, so what the camera
+    # saw was a man floating straight up, draping over the attacker's back
+    # and landing on his face. Nobody leaves the mat now: the wrench pulls the
+    # victim forward and twists him over, the same forward-pitch-then-roll
+    # SUPINE and the body slam are built from, and he lands face-up with his
+    # head at the attacker's right boot.
     "Neckbreaker_Attacker": [
         (0,  P()),
         # Reaches across and takes the head.
-        (8,  P(pelvis=(0.0, 0.03, 0.848), hips=(4, -10, 0), spine=(6, -14, 0),
-               head=(-6, -12, 0),
-               hand_r=(-0.10, 0.46, 1.54), hand_l=(-0.26, 0.34, 1.42),
+        (8,  P(pelvis=(0.0, 0.03, 0.848), hips=(-4, -8, 0), spine=(-10, -10, 0),
+               head=(-6, -8, 0),
+               hand_r=(0.06, 0.60, 1.48), hand_l=(-0.12, 0.58, 1.44),
                elbow_r=(0.5, -0.5, -0.7), elbow_l=(-0.4, -0.5, -0.7),
                fist_r=0.62, fist_l=0.62)),
-        # The wrench: down and across, hips turning under it.
-        (14, P(pelvis=(0.0, 0.02, 0.790), hips=(10, -18, 0),
-               spine=(30, -26, 0), head=(8, -18, 0),
-               hand_r=(-0.20, 0.42, 1.00), hand_l=(-0.32, 0.30, 0.92),
+        # The wrench: down and across to his right hip, turning into it.
+        (14, P(pelvis=(0.0, 0.04, 0.780), hips=(-10, -18, 0),
+               spine=(-28, -22, 0), head=(-8, -14, 0),
+               hand_r=(0.22, 0.44, 0.90), hand_l=(0.06, 0.42, 0.94),
                elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.4, -0.4, -0.7),
                fist_r=0.7, fist_l=0.7)),
-        # Drives it to the mat.
-        (20, P(pelvis=(0.0, 0.04, 0.700), hips=(16, -22, 0),
-               spine=(44, -30, 0), head=(14, -20, 0),
-               hand_r=(-0.24, 0.44, 0.62), hand_l=(-0.36, 0.32, 0.56),
+        # Drives it into the mat, bent over it, knees giving with the weight.
+        (20, P(pelvis=(0.0, 0.06, 0.660), hips=(-22, -20, 0),
+               spine=(-44, -20, 0), head=(-14, -10, 0),
+               hand_r=(0.26, 0.20, 0.34), hand_l=(0.14, 0.22, 0.38),
                elbow_r=(0.5, -0.3, -0.7), elbow_l=(-0.4, -0.3, -0.7),
-               fist_r=0.8, fist_l=0.8)),
+               fist_r=0.8, fist_l=0.8,
+               foot_r=(0.25, -0.20, 0.104), foot_l=(-0.21, 0.20, 0.104))),
         # Lets go and comes back up.
-        (26, P(pelvis=(0.0, 0.02, 0.802), hips=(8, -12, 0),
-               spine=(22, -14, 0), head=(-2, -8, 0),
-               hand_r=(-0.04, 0.36, 1.06), hand_l=(-0.24, 0.30, 1.02),
+        (26, P(pelvis=(0.0, 0.03, 0.790), hips=(-8, -10, 0),
+               spine=(-22, -10, 0), head=(-4, -6, 0),
+               hand_r=(0.18, 0.32, 0.92), hand_l=(-0.10, 0.34, 1.00),
                fist_r=0.6, fist_l=0.6)),
         (30, P()),
     ],
 
-    # The victim: chin pulled up, wrenched backward, dropped flat.
+    # The victim: chin caught, dragged forward and down by the head, twisted
+    # over by the wrench, and dropped flat on his back. Head toward +fwd --
+    # the attacker's side -- and past the roll his right side is at negative
+    # `right`, as in SUPINE.
     "Neckbreaker_Defender": [
         (0,  P()),
         # Head caught: chin comes up and his hands go to the arm.
-        (8,  P(pelvis=(0.0, -0.02, 0.852), spine=(-8, 0, 0), head=(-24, 0, 0),
-               hand_r=(0.16, 0.30, 1.44), hand_l=(-0.10, 0.26, 1.46),
+        (8,  P(pelvis=(0.0, -0.02, 0.852), spine=(-6, 0, 0), head=(18, 0, 0),
+               hand_r=(0.16, 0.34, 1.40), hand_l=(-0.10, 0.30, 1.42),
                elbow_r=(0.7, -0.4, -0.5), elbow_l=(-0.7, -0.4, -0.5),
                fist_r=0.62, fist_l=0.62)),
-        # Wrenched back: the legs buckle under him.
-        (14, P(pelvis=(0.0, -0.06, 0.740), hips=(-26, 0, 0),
-               spine=(-30, 0, 0), head=(-34, 0, 0),
-               hand_r=(0.20, 0.22, 1.34), hand_l=(-0.14, 0.18, 1.36),
-               elbow_r=(0.7, -0.4, -0.4), elbow_l=(-0.7, -0.4, -0.4),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.24, -0.14, 0.104), foot_l=(-0.21, 0.14, 0.104))),
-        # Dropped: hips hit first, feet out in front of him.
-        (20, dict(pelvis=(0.0, -0.12, 0.360), hips=(-68, 0, 0),
-                  spine=(-18, 0, 0), head=(-26, 0, 0),
-                  hand_r=(0.36, 0.06, 0.30), hand_l=(-0.34, 0.02, 0.28),
-                  elbow_r=(0.7, -0.4, 0.3), elbow_l=(-0.7, -0.4, 0.3),
+        # Wrenched: dragged forward and down by the head, twisting, feet
+        # skidding out from under him.
+        (14, dict(pelvis=(0.0, 0.02, 0.700), hips=(-44, 0, 60),
+                  spine=(-10, 16, 0), head=(12, 0, 0),
+                  hand_r=(0.20, 0.40, 0.90), hand_l=(-0.10, 0.36, 0.96),
+                  elbow_r=(0.7, -0.4, -0.4), elbow_l=(-0.7, -0.4, -0.4),
                   fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.20, 0.38, 0.14), foot_l=(-0.18, 0.34, 0.14),
-                  knee_r=(0.3, 0.6, 0.7), knee_l=(-0.3, 0.6, 0.7))),
-        (26, S(pelvis=(0.0, -0.14, 0.200), spine=(-10, 0, 0))),
+                  foot_r=(0.20, -0.30, 0.14), foot_l=(-0.18, -0.22, 0.20),
+                  knee_r=(0.3, 0.6, 0.4), knee_l=(-0.3, 0.6, 0.4))),
+        # Over onto his side on the way down.
+        (17, dict(pelvis=(0.0, 0.0, 0.420), hips=(-80, 0, 120),
+                  spine=(-6, 8, 0), head=(4, 0, 0),
+                  hand_r=(0.10, 0.30, 0.50), hand_l=(0.30, 0.20, 0.30),
+                  elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
+                  fist_r=0.3, fist_l=0.3,
+                  foot_r=(0.0, -0.60, 0.30), foot_l=(0.16, -0.56, 0.26),
+                  knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
+        # Flat on his back: the impact, arms slapped out.
+        (20, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), head=(-2, 0, 0),
+               hand_r=(-0.54, 0.16, 0.10), hand_l=(0.54, 0.16, 0.10),
+               elbow_r=(-0.7, 0.0, 0.7), elbow_l=(0.7, 0.0, 0.7),
+               fist_r=0.1, fist_l=0.1,
+               foot_r=(-0.14, -0.70, 0.22), foot_l=(0.12, -0.72, 0.26))),
+        (26, S(pelvis=(0.0, 0.0, 0.185), spine=(-8, 0, 0), head=(-16, 0, 0))),
         (30, S()),
     ],
 
@@ -1427,6 +1373,74 @@ CLIPS = {
     ],
 }
 
+
+# Signature. A backbreaker, built on the body slam's lift -- which reads --
+# rather than a second one derived from scratch: the same scoop, the same
+# roll onto his back across the chest, and then instead of the slam the
+# attacker drops onto his right knee and brings the victim down with the small
+# of his back across the raised left one, arched face-up over it. He hangs
+# there a beat and is poured off onto the mat in front, into SUPINE.
+#
+# This replaces a version whose every lean was the wrong way round (see
+# STANCE): the victim, meant to be "arched backward over the knee", was draped
+# face-down over the attacker's shoulder and went in head-first.
+#
+# Sharing the first 20 frames with the body slam is the point, not a
+# shortcut: a fix to that lift is a fix to both moves.
+#
+# The raised knee sits at the attacker's left (-0.20), 0.28 in front and
+# about 0.52 up with his pelvis at 0.565; the trajectory
+# (paired_recipes.gd, signature_backbreaker) puts the victim's pelvis over
+# it, and his spine and head are leaned POSITIVE past SUPINE's roll so he
+# drapes down on both sides of it -- the arch.
+_KNEEL = dict(
+    foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+    knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1),
+)
+CLIPS["Backbreaker_Attacker"] = [k for k in CLIPS["Bodyslam_Attacker"] if k[0] <= 19] + [
+    # Down onto the knee, bringing him with it.
+    (24, dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
+              head=(-16, 0, 0),
+              hand_r=(0.10, 0.34, 0.78), hand_l=(-0.42, 0.32, 0.64),
+              elbow_r=(0.6, -0.3, -0.7), elbow_l=(-0.7, -0.3, -0.6),
+              fist_r=0.5, fist_l=0.5, **_KNEEL)),
+    # Presses him down over it: chest on his, one hand on the thighs.
+    (29, dict(pelvis=(0.0, 0.03, 0.555), hips=(-10, 0, 0), spine=(-22, 0, 0),
+              head=(-18, 0, 0),
+              hand_r=(0.10, 0.36, 0.70), hand_l=(-0.44, 0.32, 0.56),
+              elbow_r=(0.6, -0.3, -0.7), elbow_l=(-0.7, -0.3, -0.6),
+              fist_r=0.4, fist_l=0.4, **_KNEEL)),
+    # Tips him off and comes up.
+    (33, P(pelvis=(0.0, 0.02, 0.720), hips=(-10, 0, 0), spine=(-20, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.18, 0.40, 0.80), hand_l=(-0.22, 0.40, 0.76),
+           fist_r=0.4, fist_l=0.4)),
+    (36, P()),
+]
+
+CLIPS["Backbreaker_Defender"] = [k for k in CLIPS["Bodyslam_Defender"] if k[0] <= 20] + [
+    # Across the knee: pelvis over it, arched face-up, head and legs hanging.
+    (24, dict(pelvis=(0.0, 0.0, 0.640), hips=(-88, 0, 180),
+              spine=(26, 0, 0), head=(24, 0, 0),
+              hand_r=(-0.44, 0.40, 0.22), hand_l=(0.40, 0.42, 0.24),
+              elbow_r=(-0.6, 0.0, -0.8), elbow_l=(0.6, 0.0, -0.8),
+              fist_r=0.1, fist_l=0.1,
+              foot_r=(-0.14, -0.78, 0.20), foot_l=(0.12, -0.80, 0.24),
+              knee_r=(-0.2, 0.0, 1.0), knee_l=(0.2, 0.0, 1.0))),
+    # Hangs there -- the beat the crowd is watching.
+    (29, dict(pelvis=(0.0, 0.0, 0.630), hips=(-88, 0, 180),
+              spine=(30, 0, 0), head=(28, 0, 0),
+              hand_r=(-0.44, 0.44, 0.14), hand_l=(0.40, 0.46, 0.16),
+              elbow_r=(-0.6, 0.0, -0.8), elbow_l=(0.6, 0.0, -0.8),
+              fist_r=0.1, fist_l=0.1,
+              foot_r=(-0.14, -0.80, 0.14), foot_l=(0.12, -0.82, 0.18),
+              knee_r=(-0.2, 0.0, 1.0), knee_l=(0.2, 0.0, 1.0))),
+    # Poured off onto the mat.
+    (33, S(pelvis=(0.0, 0.0, 0.210), spine=(-2, 0, 0), head=(-6, 0, 0),
+           hand_r=(-0.50, 0.16, 0.10), hand_l=(0.50, 0.16, 0.10),
+           foot_r=(-0.14, -0.66, 0.16), foot_l=(0.12, -0.66, 0.18))),
+    (36, S()),
+]
 
 # --- build ----------------------------------------------------------------
 

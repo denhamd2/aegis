@@ -6236,3 +6236,50 @@ byte-identical.
 
 Still open from last round's list: the backbreaker and neckbreaker defenders'
 mid-air beats.
+
+## Round: the two signatures, the right way up
+
+The last clips carrying the pitch-sign mistake (a positive lean tips a man
+**back**; see `STANCE`) were both signatures -- the moves every AI match ends
+on. Both were rebuilt against side-on and end-on `paired_shot --side --lit`
+renders.
+
+### Neckbreaker
+
+The attacker reclined while "driving it to the mat", and the victim's root
+trajectory lifted him 0.45 m on a back-drop arc pitched to -85. GrappleRig
+keeps only the yaw of a defender's root key, so the pitch was discarded and
+the lift was not: rendered, the victim floated straight up, draped over the
+attacker's back and came down on his face.
+
+Now nobody leaves the mat. The attacker takes the head and wrenches it down
+and across to his right hip, bent over it with his knees giving; the victim
+is dragged forward, twisted over (the forward-pitch-then-roll `SUPINE` and
+the body slam use) and lands flat on his back with his head beside the
+attacker's right boot. The trajectory is roots only -- `y` is 0 throughout.
+
+### Backbreaker
+
+The victim, "arched backward over the knee", was draped face-down over the
+attacker's shoulder and went in head-first; its arc was hand-keyed straight
+into `paired_moves.tres`, lifting his root 1.55 m with a pitch the rig threw
+away.
+
+It is built on the body slam now, deliberately: `Backbreaker_*` take
+`Bodyslam_*`'s first 20 frames (the scoop, the roll onto his back across the
+chest), then the attacker drops onto his right knee and brings the victim
+down with the small of his back across the raised left one -- 0.20 to his
+left, 0.28 in front, about 0.52 up -- arched face-up, head and legs hanging
+either side. He hangs a beat and is poured off onto the mat into `SUPINE`.
+The trajectory is generated from `TRAJECTORIES` like the others, and is
+1.2 s where the old one was 1.0. A fix to the lift is now a fix to both
+moves.
+
+### Measured
+
+Twelve AI seeds: 12 pinfalls, every one by the same wrestler as last round;
+lengths move by a few ticks with the longer backbreaker. 424 tests pass,
+including the no-root-under-the-mat and tucked-body clearance gates; every
+bake rebuilds byte-identical.
+
+That closes the list of sign-flipped clips this log has been carrying.
