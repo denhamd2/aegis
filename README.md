@@ -6283,3 +6283,79 @@ including the no-root-under-the-mat and tucked-body clearance gates; every
 bake rebuilds byte-identical.
 
 That closes the list of sign-flipped clips this log has been carrying.
+
+## Round: a cooler key, and the mat back on its anchor
+
+### First: every render this session had been on the wrong renderer
+
+A fresh container has no Vulkan driver. Godot says so in one line --
+`Your video card drivers seem not to support the required Vulkan version,
+switching to OpenGL 3` -- and carries on, so `--rendering-driver vulkan`
+silently produces `gl_compatibility` frames, which VISUAL_BAR.md already
+records as meaningless for the bar. On the commit whose round logged the mat
+at 0.436, the fallback measured **0.341**; with `mesa-vulkan-drivers`
+installed (lavapipe) the same commit measures 0.436, 0.287, 0.253, 0.034 --
+the logged figures exactly. The evidence gate exists to fail that capture, and
+it would have. **Install `mesa-vulkan-drivers` before measuring anything
+visual**, and check for `Vulkan ... Forward+ ... llvmpipe` in the log.
+
+Poses and motion do not depend on the renderer, so the animation rounds'
+renders stand.
+
+### Where the build actually was
+
+On forward_plus, `fdb48e5`:
+
+| | now | reference |
+| --- | --- | --- |
+| mat | 0.406 | 0.43-0.49 |
+| mat <-> A | 0.265 | 0.24-0.31 |
+| mat <-> B | 0.132 | 0.24-0.31 |
+| A <-> B | 0.133 | 0.00-0.07 |
+| warm/cool (wide_broadcast) | -0.109 | -0.333 |
+
+Not a regression in the rig: the hard-camera round widened the silhouette
+shot (the wrestlers went from 29k and 57k pixels to 6k and 17k) and nobody
+re-measured. At that framing B faces the key bare-chested and reads twice A.
+
+### What changed
+
+The key and top were warm on purpose ("a warm key against a cool rim
+separates a figure") and the frame measured warm for it -- the largest colour
+gap against the broadcast still. Swept on wide_broadcast; the shipped pair is
+where warm/cool comes inside tolerance before saturation overshoots:
+
+| key / top | warm/cool | saturation |
+| --- | --- | --- |
+| (1.0, .975, .93) / (.95, .965, 1.0) | -0.109 | 0.273 |
+| (.93, .965, 1.0) / (.90, .945, 1.0) | -0.196 | 0.342 |
+| **(.88, .945, 1.0) / (.86, .93, 1.0)** | **-0.237** | **0.368** |
+| (.86, .93, 1.0) / (.84, .92, 1.0) | -0.261 | 0.392 |
+
+Cooling costs luminance, so `top_energy` was re-solved on the anchor:
+
+| top | mat | mat<->A | mat<->B | A<->B |
+| --- | --- | --- | --- | --- |
+| 24 (warm) | 0.406 | 0.265 | 0.132 | 0.133 |
+| 30 | 0.422 | 0.277 | 0.146 | 0.131 |
+| **36** | **0.454** | **0.297** | **0.172** | **0.125** |
+
+wide_broadcast, before -> after: warm/cool -0.109 -> -0.237 (reference
+-0.333, now inside tolerance); mean luminance 0.141 -> 0.153 (0.168);
+histogram distance 0.085 -> 0.087.
+
+### Not closed, and why
+
+- **B's gap (0.172) and A<->B (0.125)** are still out. That is B's colourway
+  at this framing, not the rig -- the last time it was closed, it was closed
+  on his gear -- and changing how a wrestler looks is the owner's call.
+- **Highlights p95 0.641 against 0.427.** In wide_broadcast p95 *is* the mat,
+  seen nearer its lit centre than the silhouette shot sees it. The anchor
+  outranks it (lighting.md), so it rose with the anchor.
+- **Saturation 0.368 against 0.306**, 0.002 past the critic threshold. The
+  next step cooler fixes nothing that is out and puts it further over.
+- **Fine and coarse detail** did not move (0.414 / 0.223 against 0.614 /
+  0.343). They are geometry and texture, as lighting.md already measured --
+  no light changes them.
+
+424 tests pass.

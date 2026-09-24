@@ -98,7 +98,22 @@ const STAGE_BACK_Z := -38.0
 ## heads and forearms are horizontal too. That is why the mat<->wrestler gaps
 ## improve here but do not reach their 0.24-0.31 band: closing them on this
 ## lever alone would need the mat near 0.55, outside its own. See README.
-@export var top_energy: float = 24.0
+##
+## 24.0 -> 36.0, re-solved again after the hard camera widened the silhouette
+## shot and the key and top were cooled (KEY_COLOR below). Cooling costs
+## luminance -- the eye weights green over blue -- so the mat fell to 0.370 at
+## the coolest setting tried, and top energy buys it back. Measured on
+## forward_plus (Vulkan, llvmpipe), with the key and top at the colours below:
+##
+##   top    mat      mat<->A   mat<->B
+##   24.0   0.406*    0.265     0.132     * at the old warm colours
+##   30.0   0.422     0.277     0.146
+##   36.0   0.454     0.297     0.172   <- mat inside 0.43-0.49
+##
+## B's gap is still short of its band and A<->B is still over its own: at the
+## hard camera's framing B faces the key bare-chested and reads twice A's
+## luminance, and that is his colourway, not the rig. See README.
+@export var top_energy: float = 36.0
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -129,12 +144,26 @@ const STAGE_BACK_Z := -38.0
 @export var stage_energy: float = 2.6
 
 # --- Colour -----------------------------------------------------------------
-## Tungsten-ish key, cool fill and rim. A warm key against a cool rim is the
-## oldest trick there is for separating a figure from its background, and it
-## costs nothing in luminance -- which matters here, because luminance is the
-## budget the bar spends.
-const KEY_COLOR := Color(1.0, 0.975, 0.93)
-const TOP_COLOR := Color(0.95, 0.965, 1.0)
+## Cool key and top, cooler rim.
+##
+## The key used to be tungsten-ish (1.0, 0.975, 0.93) on the theory that a warm
+## key against a cool rim separates a figure from its background. Measured
+## against the reference with tools/refs/compare_frame.py on wide_broadcast,
+## the frame read WARM: warm/cool -0.109 against the broadcast still's -0.333,
+## the largest colour gap on the board, and the lit ring is most of what the
+## frame's warmth was. Swept:
+##
+##   key / top                               warm/cool   saturation
+##   (1.0, .975, .93) / (.95, .965, 1.0)      -0.109       0.273
+##   (.93, .965, 1.0) / (.90, .945, 1.0)      -0.196       0.342
+##   (.88, .945, 1.0) / (.86, .93, 1.0)       -0.237       0.368   <- shipped
+##   (.86, .93, 1.0)  / (.84, .92, 1.0)       -0.261       0.392
+##
+## against a reference saturation of 0.306: cooler still overshoots it, so the
+## shipped pair is where the two meet. Top energy was re-solved after this to
+## put the mat back on its anchor (see top_energy).
+const KEY_COLOR := Color(0.88, 0.945, 1.0)
+const TOP_COLOR := Color(0.86, 0.93, 1.0)
 const RIM_COLOR := Color(0.66, 0.78, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
 ## The stage wash, pushed violet. Predominantly a hue change, and the figures
