@@ -195,6 +195,19 @@ func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
 static func defender_root_yaw(rot: Quaternion) -> Quaternion:
 	return Quaternion(Vector3.UP, Basis(rot).get_euler().y)
 
+## A match torn down mid-move must put the shared clip back.
+##
+## _play_retargeted() swaps a copy of the move, baked into this pair's frame,
+## into the AnimationLibrary -- and that library is paired_moves.tres, one
+## resource shared by every match in the process. Restoring only on
+## grapple_finished left the baked copy behind whenever a match was freed
+## mid-move, and the NEXT match played its moves from the first one's pair
+## frame. test_replay_roundtrip caught it once running attacks began moves
+## at tick 18: the recording run was freed mid-move and its replay then
+## diverged on the very tick the same move began.
+func _exit_tree() -> void:
+	_restore_original_animation()
+
 func _restore_original_animation() -> void:
 	if not _original_anim:
 		return

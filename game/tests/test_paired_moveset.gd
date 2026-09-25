@@ -44,6 +44,9 @@ const SCOPED_SIGNATURE := 4
 ## One per wrestler who has one, and they belong to the roster rather than to
 ## match.tscn: Roman's Spear and Cody's Cross Rhodes.
 const SCOPED_FINISHER := 2
+## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
+## paired move so the victim's half is keyed against the hit.
+const SCOPED_RUNNING := 25
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -79,6 +82,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var power := 0
 	var signature := 0
 	var finisher := 0
+	var running := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -89,6 +93,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			signature += 1
 		elif name.begins_with("finisher_"):
 			finisher += 1
+		elif name.begins_with("running_"):
+			running += 1
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
@@ -97,6 +103,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(power).is_equal(SCOPED_POWER)
 	assert_int(signature).is_equal(SCOPED_SIGNATURE)
 	assert_int(finisher).is_equal(SCOPED_FINISHER)
+	assert_int(running).is_equal(SCOPED_RUNNING)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -224,6 +231,7 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 			[w.grapple_move, w.grapple_move_pool],
 			[w.power_move, w.power_move_pool],
 			[w.signature_move, w.signature_move_pool],
+			[w.running_attack_move, w.running_attack_move_pool],
 		]:
 			reachable[String((tier[0] as MoveDef).animation_pair_id)] = true
 			for extra: MoveDef in tier[1]:
@@ -378,3 +386,21 @@ func test_a_wrestlers_first_signature_is_his_own() -> void:
 	var cody: WrestlerController = scene.get_node("WrestlerB")
 	assert_str(roman.own_signature.animation_pair_id).is_equal("signature_superman_punch")
 	assert_str(cody.own_signature.animation_pair_id).is_equal("signature_cody_cutter")
+
+## A running attack with a recipe connects into a paired move -- both men
+## straight to GRAPPLE_HOLD, no tie-up -- and one without keeps the old
+## single-character strike.
+func test_a_paired_running_attack_skips_the_tie_up() -> void:
+	for from: WrestlerFSM.State in [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN]:
+		assert_bool(WrestlerFSM.LEGAL_TRANSITIONS[from].has(WrestlerFSM.State.GRAPPLE_HOLD)) \
+			.override_failure_message("%s cannot enter GRAPPLE_HOLD" % from).is_true()
+	# And every running attack match.tscn hands out beyond the two original
+	# single-character ones has a recipe, so it will take the paired path.
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	var w: WrestlerController = scene.get_node("WrestlerA")
+	var paired := 0
+	for move: MoveDef in [w.running_attack_move] + w.running_attack_move_pool:
+		if PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
+			paired += 1
+	assert_int(paired).is_equal(SCOPED_RUNNING)

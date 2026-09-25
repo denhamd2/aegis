@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -10,6 +10,31 @@
 [ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
 [ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
 [ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="40"]
+[ext_resource type="Resource" path="res://resources/moves/running_bicycle_knee.tres" id="rv0"]
+[ext_resource type="Resource" path="res://resources/moves/running_cave_in.tres" id="rv1"]
+[ext_resource type="Resource" path="res://resources/moves/running_claymore.tres" id="rv2"]
+[ext_resource type="Resource" path="res://resources/moves/running_clothesline_from_hell.tres" id="rv3"]
+[ext_resource type="Resource" path="res://resources/moves/running_cyclone_kick.tres" id="rv4"]
+[ext_resource type="Resource" path="res://resources/moves/running_dragon_twist_cutter.tres" id="rv5"]
+[ext_resource type="Resource" path="res://resources/moves/running_fallaway_moonsault_slam.tres" id="rv6"]
+[ext_resource type="Resource" path="res://resources/moves/running_float_over_liger_bomb.tres" id="rv7"]
+[ext_resource type="Resource" path="res://resources/moves/running_gamengiri.tres" id="rv8"]
+[ext_resource type="Resource" path="res://resources/moves/running_hoedown.tres" id="rv9"]
+[ext_resource type="Resource" path="res://resources/moves/running_jumping_cravate_driver.tres" id="rv10"]
+[ext_resource type="Resource" path="res://resources/moves/running_knee_lift.tres" id="rv11"]
+[ext_resource type="Resource" path="res://resources/moves/running_last_shot.tres" id="rv12"]
+[ext_resource type="Resource" path="res://resources/moves/running_leaping_mushroom_stomp.tres" id="rv13"]
+[ext_resource type="Resource" path="res://resources/moves/running_leg_lariat.tres" id="rv14"]
+[ext_resource type="Resource" path="res://resources/moves/running_play_of_the_day.tres" id="rv15"]
+[ext_resource type="Resource" path="res://resources/moves/running_reverse_swing_neckbreaker.tres" id="rv16"]
+[ext_resource type="Resource" path="res://resources/moves/running_rolling_codebreaker.tres" id="rv17"]
+[ext_resource type="Resource" path="res://resources/moves/running_rolling_thunder_flatliner.tres" id="rv18"]
+[ext_resource type="Resource" path="res://resources/moves/running_single_leg_dropkick.tres" id="rv19"]
+[ext_resource type="Resource" path="res://resources/moves/running_spear.tres" id="rv20"]
+[ext_resource type="Resource" path="res://resources/moves/running_spinning_back_elbow.tres" id="rv21"]
+[ext_resource type="Resource" path="res://resources/moves/running_stundog_millionaire.tres" id="rv22"]
+[ext_resource type="Resource" path="res://resources/moves/running_tilt_a_whirl_backstabber.tres" id="rv23"]
+[ext_resource type="Resource" path="res://resources/moves/running_tilt_a_whirl_ddt.tres" id="rv24"]
 [ext_resource type="AnimationLibrary" path="res://resources/animations/paired_moves.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_clothesline.tres" id="13"]
 [ext_resource type="Resource" path="res://resources/moves/running_attack_double_leg.tres" id="30"]
@@ -202,7 +227,7 @@ grapple_move = ExtResource("15")
 power_move = ExtResource("40")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
-running_attack_move_pool = Array[Resource]([ExtResource("30")])
+running_attack_move_pool = Array[Resource]([ExtResource("30"), ExtResource("rv0"), ExtResource("rv1"), ExtResource("rv2"), ExtResource("rv3"), ExtResource("rv4"), ExtResource("rv5"), ExtResource("rv6"), ExtResource("rv7"), ExtResource("rv8"), ExtResource("rv9"), ExtResource("rv10"), ExtResource("rv11"), ExtResource("rv12"), ExtResource("rv13"), ExtResource("rv14"), ExtResource("rv15"), ExtResource("rv16"), ExtResource("rv17"), ExtResource("rv18"), ExtResource("rv19"), ExtResource("rv20"), ExtResource("rv21"), ExtResource("rv22"), ExtResource("rv23"), ExtResource("rv24")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
 grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
@@ -235,7 +260,7 @@ grapple_move = ExtResource("15")
 power_move = ExtResource("40")
 signature_move = ExtResource("9")
 running_attack_move = ExtResource("13")
-running_attack_move_pool = Array[Resource]([ExtResource("30")])
+running_attack_move_pool = Array[Resource]([ExtResource("30"), ExtResource("rv0"), ExtResource("rv1"), ExtResource("rv2"), ExtResource("rv3"), ExtResource("rv4"), ExtResource("rv5"), ExtResource("rv6"), ExtResource("rv7"), ExtResource("rv8"), ExtResource("rv9"), ExtResource("rv10"), ExtResource("rv11"), ExtResource("rv12"), ExtResource("rv13"), ExtResource("rv14"), ExtResource("rv15"), ExtResource("rv16"), ExtResource("rv17"), ExtResource("rv18"), ExtResource("rv19"), ExtResource("rv20"), ExtResource("rv21"), ExtResource("rv22"), ExtResource("rv23"), ExtResource("rv24")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
 grapple_move_pool = Array[Resource]([ExtResource("15")])
 signature_move_pool = Array[Resource]([ExtResource("21")])

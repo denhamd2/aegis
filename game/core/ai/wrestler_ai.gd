@@ -81,6 +81,12 @@ extends Node
 ## strike's 31, so without this it would crowd out the strike trading the
 ## match is made of.
 @export var running_attack_cooldown_ticks: int = 90
+## How long after a charge before this AI will back off to make room for
+## another. Backing off on every getup put 4.5 running attacks in a match and
+## cut its strikes from 15 to 6 -- the middle of a match is strikes
+## (MATCH_FLOW.md), and a running attack is the punctuation. 12 s.
+@export var make_room_cooldown_ticks: int = 720
+var _make_room_cooldown: int = 0
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -175,6 +181,8 @@ func _physics_process(_delta: float) -> void:
 		_cooldown -= 1
 	if _run_cooldown > 0:
 		_run_cooldown -= 1
+	if _make_room_cooldown > 0:
+		_make_room_cooldown -= 1
 	_circle_tick += 1
 	# A charge only survives while the man is actually free to run. If he is
 	# struck out of it, poll_input() returns early for the whole of HIT_REACT
@@ -239,6 +247,19 @@ func poll_input() -> Dictionary:
 			input["move"] = Vector2(dir.x, dir.z)
 		return input
 
+	# Making room for a charge. Once the opening lock-up is done the two never
+	# stand run_engage_distance apart on their own -- measured over twelve
+	# seeds, every charge in a match was the one at the opening bell -- so the
+	# running attacks were unreachable. While the other man is getting up, the
+	# AI backs off to charge distance; the charge below then fires when he is
+	# on his feet. He does not back off from a man he is about to finish.
+	if target.fsm.current_state == WrestlerFSM.State.GETUP \
+			and _opening_grapple_done() and _run_cooldown <= 0 \
+			and _make_room_cooldown <= 0 and not _wants_tie_up() and distance < run_engage_distance + 0.3:
+		var away := -to_target.normalized()
+		input["move"] = Vector2(away.x, away.z)
+		return input
+
 	# --- the charge ---------------------------------------------------------
 	#
 	# This is the whole of "the AI runs in open play", and it deliberately sits
@@ -262,7 +283,15 @@ func poll_input() -> Dictionary:
 		# _maybe_start_running_attack() would refuse anyway -- so stop running
 		# rather than sprint into him and hold the latch forever.
 		_charging = false
-	elif not _charging and distance >= run_engage_distance and _run_cooldown <= 0:
+	elif not _charging and distance >= run_engage_distance and _run_cooldown <= 0 \
+			and _opening_grapple_done():
+		# Not before the opening lock-up. The wrestlers spawn 3.0 m apart --
+		# past run_engage_distance -- so an AI free to charge from the first
+		# tick opened every match with a running attack, and once running
+		# attacks became paired moves (1.2-2.0 s, the victim left on the mat)
+		# the lock-up MATCH_FLOW.md opens the match with never happened in
+		# test_match_loop_reachability's 600 frames. He walks in to lock up;
+		# the charges come after.
 		_charging = true
 
 	if _charging:
@@ -279,6 +308,7 @@ func poll_input() -> Dictionary:
 			input["strike"] = true
 			_charging = false
 			_run_cooldown = running_attack_cooldown_ticks
+			_make_room_cooldown = make_room_cooldown_ticks
 		return input
 
 	# Too close: give ground -- but keep deciding. This sets the move vector

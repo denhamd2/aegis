@@ -6489,3 +6489,60 @@ the draw. Twelve seeds after: Superman Punch 5, Cody Cutter 11, a finisher in
 12/12 (the winning move in 9), chain order held in 12/12.
 
 427 tests pass.
+
+## Round: 25 running moves, from a reference reel
+
+The owner supplied a 76-second WWE 2K25 reel, "25 Running Moves that should be
+your Finisher". Each move was cut out of it at 8 fps, studied frame by frame,
+and recreated in `wrestling_clips.py` as a two-man paired move -- the victim's
+half keyed against the hit, not borrowed from a generic reaction. All 25 are in
+`match.tscn`'s `running_attack_move_pool`, so every wrestler has them.
+
+| | |
+| --- | --- |
+| strikes | Running Knee Lift, Bicycle Knee Strike, Spinning Back Elbow, Single Leg Dropkick, Claymore, Cyclone Kick, Running Gamengiri, Play of the Day, Leg Lariat, Clothesline From Hell |
+| stomps / charges | Cave-In, Leaping Mushroom Stomp, Spear |
+| cutters / DDTs | Dragon Twist Cutter, Hoedown, Jumping Cravate Driver, Stundog Millionaire, Rolling Thunder Flatliner, Tilt-A-Whirl DDT, Last Shot |
+| slams / neckbreakers | Fallaway Moonsault Slam, Float-Over Liger Bomb, Reverse Swing Neckbreaker, Rolling Codebreaker, Tilt-A-Whirl Backstabber |
+
+Shared pieces keep them consistent and short: one run-in, one fall-back-away
+(the Spear's half-turn root yaw), one face-first landing and roll-over, one
+get-up. The running Spear reuses the finisher's charge; the Backstabber reuses
+the Tilt-A-Whirl's orbit. Each was checked side-on (and the orbiting ones
+end-on) through `paired_shot`.
+
+### How a running attack becomes a two-man move
+
+`WrestlerController._begin_running_paired()`: a running attack with a recipe
+connects straight into GRAPPLE_HOLD -- no tie-up; he has arrived at a run --
+and GrappleRig plays it exactly as it plays a throw. `WrestlerFSM` gains
+GRAPPLE_HOLD from IDLE, LOCOMOTION and RUN for this. The two original running
+attacks, which have no recipe, keep the old single-character path.
+
+### Making them reachable
+
+Every charge in a match used to be the one at the opening bell (measured:
+`"RUN": 1` for both men in all twelve seeds), and it never landed. After the
+opening the two never stand 2.5 m apart again. So:
+
+- the AI no longer charges **before** the opening lock-up (the wrestlers
+  spawn past charge distance, so it used to open every match with a running
+  attack instead of the lock-up MATCH_FLOW.md opens with);
+- while the other man is **getting up**, it backs off to charge distance and
+  runs at him when he is on his feet -- at most once every 12 s
+  (`make_room_cooldown_ticks`). Every getup put 4.5 running attacks in a match
+  and cut its strikes from 15 to 6.
+
+Twelve seeds: 24 running attacks landed (19 of the 25 moves), 13.2 strikes a
+match, 12 pinfalls, the finisher the winning move in 11.
+
+### A real bug the new moves exposed
+
+`test_replay_roundtrip` diverged at tick 18. GrappleRig swaps a copy of the
+move baked into the pair's frame into the AnimationLibrary while it plays --
+and that library is `paired_moves.tres`, shared by every match in the process.
+It was put back only on `grapple_finished`, so a match freed mid-move left the
+baked copy behind and the next match played its moves in the first one's
+frame. `GrappleRig._exit_tree()` now restores it.
+
+429 tests pass; every bake rebuilds byte-identical.

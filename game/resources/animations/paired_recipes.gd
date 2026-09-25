@@ -136,6 +136,331 @@ const RECIPES := {
 	# The body slam's lift, then down onto one knee with the victim arched
 	# face-up across the other. The samples below are only the fallback --
 	# see Backbreaker_Attacker in tools/blender/wrestling_clips.py.
+	# Running attack -- see Knee_Lift_Attacker in tools/blender/wrestling_clips.py.
+	"running_knee_lift": {
+		"authored": {"attacker": "Knee_Lift_Attacker", "defender": "Knee_Lift_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see CFH_Attacker in tools/blender/wrestling_clips.py.
+	"running_clothesline_from_hell": {
+		"authored": {"attacker": "CFH_Attacker", "defender": "CFH_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Back_Elbow_Attacker in tools/blender/wrestling_clips.py.
+	"running_spinning_back_elbow": {
+		"authored": {"attacker": "Back_Elbow_Attacker", "defender": "Back_Elbow_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.30,
+	},
+	# Running attack -- see SL_Dropkick_Attacker in tools/blender/wrestling_clips.py.
+	"running_single_leg_dropkick": {
+		"authored": {"attacker": "SL_Dropkick_Attacker", "defender": "SL_Dropkick_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Tilt_DDT_Attacker in tools/blender/wrestling_clips.py.
+	"running_tilt_a_whirl_ddt": {
+		"authored": {"attacker": "Tilt_DDT_Attacker", "defender": "Tilt_DDT_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+	},
+	# Running attack -- see Bicycle_Knee_Attacker in tools/blender/wrestling_clips.py.
+	"running_bicycle_knee": {
+		"authored": {"attacker": "Bicycle_Knee_Attacker", "defender": "Bicycle_Knee_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Cave_In_Attacker in tools/blender/wrestling_clips.py.
+	"running_cave_in": {
+		"authored": {"attacker": "Cave_In_Attacker", "defender": "Cave_In_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.30,
+	},
+	# Running attack -- see Claymore_Attacker in tools/blender/wrestling_clips.py.
+	"running_claymore": {
+		"authored": {"attacker": "Claymore_Attacker", "defender": "Claymore_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Cyclone_Kick_Attacker in tools/blender/wrestling_clips.py.
+	"running_cyclone_kick": {
+		"authored": {"attacker": "Cyclone_Kick_Attacker", "defender": "Cyclone_Kick_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.30,
+	},
+	# Running attack -- see Dragon_Twist_Attacker in tools/blender/wrestling_clips.py.
+	"running_dragon_twist_cutter": {
+		"authored": {"attacker": "Dragon_Twist_Attacker", "defender": "Dragon_Twist_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.50,
+	},
+	# Running attack -- see Fallaway_Attacker in tools/blender/wrestling_clips.py.
+	"running_fallaway_moonsault_slam": {
+		"authored": {"attacker": "Fallaway_Attacker", "defender": "Fallaway_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.30,
+	},
+	# Running attack -- see Liger_Bomb_Attacker in tools/blender/wrestling_clips.py.
+	"running_float_over_liger_bomb": {
+		"authored": {"attacker": "Liger_Bomb_Attacker", "defender": "Liger_Bomb_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+	},
+	# Running attack -- see Hoedown_Attacker in tools/blender/wrestling_clips.py.
+	"running_hoedown": {
+		"authored": {"attacker": "Hoedown_Attacker", "defender": "Hoedown_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.40,
+	},
+	# Running attack -- see Cravate_Attacker in tools/blender/wrestling_clips.py.
+	"running_jumping_cravate_driver": {
+		"authored": {"attacker": "Cravate_Attacker", "defender": "Cravate_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.40,
+	},
+	# Running attack -- see Last_Shot_Attacker in tools/blender/wrestling_clips.py.
+	"running_last_shot": {
+		"authored": {"attacker": "Last_Shot_Attacker", "defender": "Last_Shot_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.35,
+	},
+	# Running attack -- see Mushroom_Stomp_Attacker in tools/blender/wrestling_clips.py.
+	"running_leaping_mushroom_stomp": {
+		"authored": {"attacker": "Mushroom_Stomp_Attacker", "defender": "Mushroom_Stomp_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.30,
+	},
+	# Running attack -- see Leg_Lariat_Attacker in tools/blender/wrestling_clips.py.
+	"running_leg_lariat": {
+		"authored": {"attacker": "Leg_Lariat_Attacker", "defender": "Leg_Lariat_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Play_Of_Day_Attacker in tools/blender/wrestling_clips.py.
+	"running_play_of_the_day": {
+		"authored": {"attacker": "Play_Of_Day_Attacker", "defender": "Play_Of_Day_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.35,
+	},
+	# Running attack -- see Swing_Neck_Attacker in tools/blender/wrestling_clips.py.
+	"running_reverse_swing_neckbreaker": {
+		"authored": {"attacker": "Swing_Neck_Attacker", "defender": "Swing_Neck_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.50,
+	},
+	# Running attack -- see Codebreaker_Attacker in tools/blender/wrestling_clips.py.
+	"running_rolling_codebreaker": {
+		"authored": {"attacker": "Codebreaker_Attacker", "defender": "Codebreaker_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.50,
+	},
+	# Running attack -- see Thunder_Flatliner_Attacker in tools/blender/wrestling_clips.py.
+	"running_rolling_thunder_flatliner": {
+		"authored": {"attacker": "Thunder_Flatliner_Attacker", "defender": "Thunder_Flatliner_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.50,
+	},
+	# Running attack -- see Gamengiri_Attacker in tools/blender/wrestling_clips.py.
+	"running_gamengiri": {
+		"authored": {"attacker": "Gamengiri_Attacker", "defender": "Gamengiri_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Run_Spear_Attacker in tools/blender/wrestling_clips.py.
+	"running_spear": {
+		"authored": {"attacker": "Run_Spear_Attacker", "defender": "Run_Spear_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
+	# Running attack -- see Stundog_Attacker in tools/blender/wrestling_clips.py.
+	"running_stundog_millionaire": {
+		"authored": {"attacker": "Stundog_Attacker", "defender": "Stundog_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.40,
+	},
+	# Running attack -- see Backstabber_Attacker in tools/blender/wrestling_clips.py.
+	"running_tilt_a_whirl_backstabber": {
+		"authored": {"attacker": "Backstabber_Attacker", "defender": "Backstabber_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.50,
+	},
 	# Roman's own signature -- see Superman_Punch_Attacker.
 	"signature_superman_punch": {
 		"authored": {"attacker": "Superman_Punch_Attacker", "defender": "Superman_Punch_Defender"},
@@ -355,6 +680,292 @@ const TRAJECTORIES := {
 					[0.80, 0.20, 0.00, -0.28], [0.97, 0.20, 0.00, -0.30],
 					[1.10, 0.20, 0.00, -0.62], [1.20, 0.20, 0.00, -0.62]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.20, 0.0, -90.0, 0.0]],
+		},
+	},
+
+	# --- running attacks, from the reference video -------------------------
+	# Each starts with the runner 1.6 m out at a sprint (x 1.20) and the
+	# victim square to him at -0.40. A blow that puts the victim on his back
+	# away from the runner yaws his root a half-turn over the two-to-five
+	# frames after the hit (the Spear's method); a face-first landing and the
+	# Clothesline From Hell's three-quarter flip need no yaw at all. The
+	# Tilt-A-Whirl orbits the runner's root once round the victim at 0.35 m,
+	# yawing to keep facing him. No root leaves the mat.
+	"running_knee_lift": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.45, 0.00, 0.00], [0.300, 0.25, 0.00, 0.00], [0.400, 0.00, 0.00, 0.00], [0.600, -0.30, 0.00, 0.35], [1.200, -0.40, 0.00, 0.45]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00], [0.367, -0.65, 0.00, 0.00], [0.467, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.300, 0.00, -90.00, 0.00], [0.367, 0.00, 0.00, 0.00], [0.467, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_clothesline_from_hell": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.300, 0.35, 0.00, 0.00], [0.433, 0.20, 0.00, 0.00], [0.600, 0.10, 0.00, 0.00], [1.200, 0.10, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.40, 0.00, 0.00], [0.433, -0.60, 0.00, 0.00], [0.567, -0.75, 0.00, 0.00], [1.200, -0.75, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_spinning_back_elbow": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.267, 0.45, 0.00, 0.00], [0.400, 0.40, 0.00, 0.00], [1.200, 0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [0.267, 0.00, 90.00, 0.00], [0.333, 0.00, 0.00, 0.00], [0.400, 0.00, -90.00, 0.00], [0.467, 0.00, -180.00, 0.00], [0.533, 0.00, -270.00, 0.00], [1.200, 0.00, -270.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.400, -0.40, 0.00, 0.00], [0.467, -0.65, 0.00, 0.00], [0.567, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.400, 0.00, -90.00, 0.00], [0.467, 0.00, 0.00, 0.00], [0.567, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_single_leg_dropkick": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.30, 0.00, 0.00], [0.133, 0.85, 0.00, 0.00], [0.233, 0.55, 0.00, 0.00], [0.333, 0.40, 0.00, 0.00], [0.533, 0.35, 0.00, 0.00], [1.200, 0.35, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.333, -0.40, 0.00, 0.00], [0.400, -0.65, 0.00, 0.00], [0.500, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.333, 0.00, -90.00, 0.00], [0.400, 0.00, 0.00, 0.00], [0.500, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_tilt_a_whirl_ddt": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.55, 0.00, 0.00], [0.200, 0.05, 0.00, 0.00], [0.267, -0.05, 0.00, 0.05], [0.367, -0.40, 0.00, 0.35], [0.467, -0.75, 0.00, 0.00], [0.567, -0.40, 0.00, -0.35], [0.667, -0.05, 0.00, 0.00], [1.200, -0.02, 0.00, 0.00], [1.333, 0.25, 0.00, 0.00], [2.000, 0.25, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [0.267, 0.00, 90.00, 0.00], [0.367, 0.00, 0.00, 0.00], [0.467, 0.00, -90.00, 0.00], [0.567, 0.00, -180.00, 0.00], [0.667, 0.00, -270.00, 0.00], [2.000, 0.00, -270.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.200, -0.40, 0.00, 0.00], [1.333, -0.20, 0.00, 0.00], [1.533, -0.05, 0.00, 0.00], [2.000, -0.05, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [2.000, 0.00, -90.00, 0.00]],
+		},
+	},
+
+	"running_bicycle_knee": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.300, 0.35, 0.00, 0.00], [0.467, 0.55, 0.00, 0.30], [1.200, 0.70, 0.00, 0.40]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.400, -0.40, 0.00, 0.00], [0.533, -0.55, 0.00, 0.00], [1.200, -0.55, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_cave_in": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.333, 0.30, 0.00, 0.00], [0.400, 0.10, 0.00, 0.00], [0.500, -0.25, 0.00, 0.00], [1.200, -0.25, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.400, -0.40, 0.00, 0.00], [0.467, -0.65, 0.00, 0.00], [0.567, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.400, 0.00, -90.00, 0.00], [0.467, 0.00, 0.00, 0.00], [0.567, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_claymore": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.30, 0.00, 0.00], [0.133, 0.85, 0.00, 0.00], [0.233, 0.60, 0.00, 0.00], [0.333, 0.45, 0.00, 0.00], [0.533, 0.45, 0.00, 0.00], [1.200, 0.45, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.367, -0.40, 0.00, 0.00], [0.433, -0.65, 0.00, 0.00], [0.533, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.367, 0.00, -90.00, 0.00], [0.433, 0.00, 0.00, 0.00], [0.533, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_cyclone_kick": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.55, 0.00, 0.00], [0.400, 0.45, 0.00, 0.00], [1.200, 0.65, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [0.267, 0.00, 90.00, 0.00], [0.333, 0.00, 0.00, 0.00], [0.400, 0.00, -90.00, 0.00], [0.433, 0.00, -180.00, 0.00], [0.500, 0.00, -270.00, 0.00], [1.200, 0.00, -270.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.467, -0.40, 0.00, 0.00], [0.600, -0.60, 0.00, 0.00], [1.200, -0.60, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_dragon_twist_cutter": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.300, 0.40, 0.00, 0.00], [0.500, 0.35, 0.00, 0.00], [0.700, 0.70, 0.00, 0.00], [1.400, 0.70, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.400, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.533, -0.40, 0.00, 0.00], [0.700, -0.50, 0.00, 0.00], [1.400, -0.50, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.400, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_fallaway_moonsault_slam": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.45, 0.00, 0.00], [0.300, 0.30, 0.00, 0.00], [0.500, 0.40, 0.00, 0.00], [1.400, 0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.400, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.333, -0.30, 0.00, 0.00], [0.400, 0.30, 0.00, 0.00], [0.533, 1.30, 0.00, 0.00], [1.400, 1.30, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.400, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_float_over_liger_bomb": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.333, 0.35, 0.00, 0.00], [1.400, 0.40, 0.00, 0.00], [2.000, 0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [2.000, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.333, -0.20, 0.00, 0.00], [1.000, -0.05, 0.00, 0.00], [1.267, -0.05, 0.00, 0.00], [1.333, -0.30, 0.00, 0.00], [1.400, -0.55, 0.00, 0.00], [2.000, -0.55, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.267, 0.00, -90.00, 0.00], [1.333, 0.00, 0.00, 0.00], [1.400, 0.00, 90.00, 0.00], [2.000, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_hoedown": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.333, 0.40, 0.00, 0.00], [0.533, 0.65, 0.00, 0.00], [1.200, 0.65, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.200, -0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_jumping_cravate_driver": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.333, 0.35, 0.00, 0.00], [0.533, 0.65, 0.00, 0.00], [1.200, 0.65, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.200, -0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_last_shot": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.333, 0.35, 0.00, 0.00], [0.533, 0.55, 0.00, 0.00], [1.200, 0.55, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.400, -0.40, 0.00, 0.00], [0.500, -0.60, 0.00, 0.00], [1.200, -0.60, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+
+	"running_leaping_mushroom_stomp": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.50, 0.00, 0.00], [0.333, 0.20, 0.00, 0.00], [0.400, -0.10, 0.00, 0.00], [0.500, -0.40, 0.00, 0.40], [1.200, -0.60, 0.00, 0.60]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.200, -0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_leg_lariat": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.30, 0.00, 0.00], [0.133, 0.85, 0.00, 0.00], [0.233, 0.60, 0.00, 0.00], [0.333, 0.35, 0.00, 0.00], [0.533, 0.45, 0.00, 0.00], [1.200, 0.45, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.367, -0.40, 0.00, 0.00], [0.500, -0.60, 0.00, 0.00], [0.633, -0.75, 0.00, 0.00], [1.200, -0.75, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_play_of_the_day": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.45, 0.00, 0.00], [0.300, 0.30, 0.00, 0.00], [0.467, 0.35, 0.00, 0.00], [1.200, 0.35, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.400, -0.40, 0.00, 0.00], [0.467, -0.65, 0.00, 0.00], [0.567, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.400, 0.00, -90.00, 0.00], [0.467, 0.00, 0.00, 0.00], [0.567, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_reverse_swing_neckbreaker": {
+		"length": 1.6,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.45, 0.00, 0.00], [0.300, 0.30, 0.00, 0.00], [0.433, -0.05, 0.00, 0.40], [0.567, -0.60, 0.00, 0.30], [0.700, -0.95, 0.00, 0.00], [0.833, -1.35, 0.00, 0.00], [1.600, -1.35, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [0.300, 0.00, 90.00, 0.00], [0.433, 0.00, 30.00, 0.00], [0.567, 0.00, -30.00, 0.00], [0.700, 0.00, -90.00, 0.00], [1.600, 0.00, -90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.767, -0.40, 0.00, 0.00], [0.833, -0.50, 0.00, 0.00], [0.933, -0.60, 0.00, 0.00], [1.600, -0.60, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.767, 0.00, -90.00, 0.00], [0.833, 0.00, 0.00, 0.00], [0.933, 0.00, 90.00, 0.00], [1.600, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_rolling_codebreaker": {
+		"length": 1.6,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.45, 0.00, 0.00], [0.300, 0.25, 0.00, 0.00], [0.433, -0.40, 0.00, 0.00], [0.567, -1.00, 0.00, 0.00], [0.700, -1.30, 0.00, 0.00], [0.867, -1.20, 0.00, 0.00], [1.000, -0.90, 0.00, 0.00], [1.100, -1.25, 0.00, 0.00], [1.600, -1.25, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [0.567, 0.00, 90.00, 0.00], [0.700, 0.00, -90.00, 0.00], [1.600, 0.00, -90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.567, -0.40, 0.00, 0.00], [0.700, -0.40, 0.00, 0.00], [1.033, -0.40, 0.00, 0.00], [1.100, -0.10, 0.00, 0.00], [1.200, 0.20, 0.00, 0.00], [1.600, 0.20, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.567, 0.00, -90.00, 0.00], [0.700, 0.00, 90.00, 0.00], [1.033, 0.00, 90.00, 0.00], [1.100, 0.00, 180.00, 0.00], [1.200, 0.00, 270.00, 0.00], [1.600, 0.00, 270.00, 0.00]],
+		},
+	},
+	"running_rolling_thunder_flatliner": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.000, 1.60, 0.00, 0.00], [0.133, 1.20, 0.00, 0.00], [0.233, 0.95, 0.00, 0.00], [0.433, 0.55, 0.00, 0.00], [0.633, 0.35, 0.00, 0.00], [0.767, 0.75, 0.00, 0.00], [1.400, 0.75, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.400, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.400, -0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.400, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_gamengiri": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.30, 0.00, 0.00], [0.133, 0.85, 0.00, 0.00], [0.233, 0.60, 0.00, 0.00], [0.333, 0.40, 0.00, 0.00], [0.533, 0.50, 0.00, 0.00], [1.200, 0.50, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.367, -0.40, 0.00, 0.00], [0.500, -0.55, 0.00, 0.00], [1.200, -0.55, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_spear": {
+		"length": 1.0,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.300, 0.00, 0.00, 0.00], [0.433, -0.35, 0.00, 0.00], [1.000, -0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.000, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.52, 0.00, 0.00], [0.433, -1.05, 0.00, 0.00], [1.000, -1.05, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [0.300, 0.00, -90.00, 0.00], [0.367, 0.00, 0.00, 0.00], [0.433, 0.00, 90.00, 0.00], [1.000, 0.00, 90.00, 0.00]],
+		},
+	},
+	"running_stundog_millionaire": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.233, 0.45, 0.00, 0.00], [0.300, 0.30, 0.00, 0.00], [0.500, 0.55, 0.00, 0.00], [0.667, 0.75, 0.00, 0.00], [1.400, 0.75, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.400, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.400, -0.40, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.400, 0.00, -90.00, 0.00]],
+		},
+	},
+	"running_tilt_a_whirl_backstabber": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.55, 0.00, 0.00], [0.200, 0.05, 0.00, 0.00], [0.267, -0.05, 0.00, 0.05], [0.367, -0.40, 0.00, 0.35], [0.467, -0.75, 0.00, 0.00], [0.567, -0.40, 0.00, -0.35], [0.667, -0.05, 0.00, 0.00], [0.933, -0.05, 0.00, 0.00], [1.100, -0.70, 0.00, 0.00], [1.800, -0.70, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [0.267, 0.00, 90.00, 0.00], [0.367, 0.00, 0.00, 0.00], [0.467, 0.00, -90.00, 0.00], [0.567, 0.00, -180.00, 0.00], [0.667, 0.00, -270.00, 0.00], [0.933, 0.00, -270.00, 0.00], [1.000, 0.00, -360.00, 0.00], [1.100, 0.00, -450.00, 0.00], [1.800, 0.00, -450.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [1.033, -0.40, 0.00, 0.00], [1.100, -0.65, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00], [1.800, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.033, 0.00, -90.00, 0.00], [1.100, 0.00, 0.00, 0.00], [1.200, 0.00, 90.00, 0.00], [1.800, 0.00, 90.00, 0.00]],
 		},
 	},
 

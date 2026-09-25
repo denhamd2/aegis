@@ -1344,12 +1344,49 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 	if input.get("strike", false) and running_attack_move and opponent \
 			and _in_range(STRIKE_HIT_RANGE) and not UNHITTABLE_STATES.has(opponent.fsm.current_state):
 		var move := _pick_tier_move(running_attack_move, running_attack_move_pool)
+		if _can_run_into_paired(move):
+			_begin_running_paired(move)
+			return
 		# One state, potentially two performances: point it at this move's
 		# clip first (a move with no baked clip keeps the Punch_Cross
 		# fallback -- _set_state_clip ignores unknown clips).
 		_set_state_clip(WrestlerFSM.State.RUNNING_ATTACK,
 				StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
 		_start_move(WrestlerFSM.State.RUNNING_ATTACK, move)
+
+## States a man can be run into a paired move from: on his feet and not
+## already committed to something of his own.
+const RUNNING_PAIRED_TARGET_STATES := [
+	WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN,
+]
+
+## Whether this running attack is a two-man move and can start now.
+##
+## A running attack with a paired recipe (resources/animations/
+## paired_recipes.gd) is performed by both men: the runner's half and the
+## victim's half keyed against each other, played through GrappleRig like a
+## throw. One without is the old single-character strike, whose victim
+## plays a generic hit reaction. The paired version needs the victim on his
+## feet and free; otherwise the old path still runs.
+func _can_run_into_paired(move: MoveDef) -> bool:
+	return move != null and grapple_rig != null \
+			and PairedRecipes.RECIPES.has(String(move.animation_pair_id)) \
+			and RUNNING_PAIRED_TARGET_STATES.has(opponent.fsm.current_state)
+
+## Starts a paired running attack: no tie-up -- he has already arrived at a
+## run -- so both men go straight to GRAPPLE_HOLD with the roles set, and
+## GrappleRig plays the move exactly as it would a throw. It resolves through
+## _on_grapple_finished(), which applies damage and momentum and puts the
+## victim down or into a reaction; a running attack is on no rung of the
+## chain, so tier_of() is -1 and nothing is recorded there.
+func _begin_running_paired(move: MoveDef) -> void:
+	_is_grapple_attacker = true
+	opponent._is_grapple_attacker = false
+	fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	opponent.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	_active_move = move
+	grapple_rig.begin(self, opponent, move)
+	grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
 
 ## Called by the attacker's own _process_grapple_hold() when it chooses to
 ## whip instead of resolving a normal grapple move. Launches the defender

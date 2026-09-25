@@ -1926,6 +1926,867 @@ CLIPS["Cody_Cutter_Defender"] = [
     (42, S()),
 ]
 
+# --- running attacks, from the reference video ---------------------------------
+#
+# Recreated from a supplied WWE 2K25 reel of 25 running moves ("25 Running
+# Moves that should be your Finisher"), each studied at 8 fps from its own
+# segment. They are available to every wrestler (match.tscn's
+# running_attack_move_pool) and performed by both men: a running attack with a
+# recipe here connects and hands both bodies to GrappleRig
+# (WrestlerController._begin_running_paired()), so the victim's half is keyed
+# against the hit rather than borrowed from a generic reaction.
+#
+# Every one starts with the runner 1.6 m out at a sprint and the victim
+# standing square to him; GrappleRig's lead-in slides the runner onto that
+# first key from wherever he connected.
+
+RUN_A = dict(pelvis=(0.0, 0.06, 0.800), hips=(-14, 0, 0), spine=(-18, 0, 0),
+             head=(8, 0, 0),
+             hand_r=(0.24, 0.10, 1.00), hand_l=(-0.22, 0.34, 1.06),
+             fist_r=0.7, fist_l=0.7,
+             foot_r=(0.16, -0.30, 0.20), foot_l=(-0.14, 0.26, 0.104))
+RUN_B = dict(RUN_A, hand_r=(0.26, 0.30, 1.04), hand_l=(-0.20, 0.10, 1.00),
+             foot_r=(0.16, 0.26, 0.104), foot_l=(-0.14, -0.30, 0.20))
+STAND = dict(STANCE, hand_r=(0.24, 0.30, 1.16), hand_l=(-0.22, 0.32, 1.14),
+             fist_r=0.6, fist_l=0.6)
+
+
+def _back_fall(hit, pelvis_hit=0.95, twist=0):
+    """The victim's half of a blow that drops him flat on his back AWAY from
+    the attacker: snapped back at frame `hit`, over at hit+2 with his root
+    half-way through the half-turn the trajectory gives it (hips yaw -90
+    undoes it), flat at hit+5, settled. Used with _back_fall_root() in
+    paired_recipes.gd's numbers -- see finisher_spear for the method."""
+    return [
+        (hit, P(pelvis=(0.0, -0.08, pelvis_hit), spine=(22, twist, 0),
+                head=(30, twist, 0),
+                hand_r=(0.36, 0.10, 1.10), hand_l=(-0.34, 0.06, 1.06),
+                fist_r=0.3, fist_l=0.3)),
+        (hit + 2, dict(pelvis=(0.0, 0.0, 0.600), hips=(46, -90, 0),
+                       spine=(-10, 0, 0), head=(-10, 0, 0),
+                       hand_r=(0.44, 0.10, 0.80), hand_l=(-0.42, 0.12, 0.78),
+                       elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.2),
+                       fist_r=0.2, fist_l=0.2,
+                       foot_r=(0.18, 0.30, 0.20), foot_l=(-0.16, 0.34, 0.24),
+                       knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4))),
+        (hit + 5, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), head=(-2, 0, 0),
+                    hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+                    elbow_r=(-0.7, 0.0, 0.7), elbow_l=(0.7, 0.0, 0.7),
+                    fist_r=0.1, fist_l=0.1,
+                    foot_r=(-0.14, -0.72, 0.22), foot_l=(0.12, -0.74, 0.26))),
+        (hit + 10, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-16, 0, 0))),
+    ]
+
+
+# The prone landing a face-first move ends in, and the roll onto his back
+# that hands him to Down_Supine -- the Cross Rhodes ending, reused.
+def _face_first_then_roll(land, end):
+    prone = dict(pelvis=(0.0, 0.0, 0.200), hips=(-86, 0, 0), spine=(-2, 0, 0),
+                 head=(8, 0, 0),
+                 hand_r=(0.46, 0.30, 0.10), hand_l=(-0.46, 0.30, 0.10),
+                 elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+                 fist_r=0.1, fist_l=0.1,
+                 foot_r=(0.14, -0.86, 0.12), foot_l=(-0.12, -0.84, 0.12),
+                 knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))
+    return [
+        (land, prone),
+        (land + 5, dict(prone, pelvis=(0.0, 0.0, 0.185), head=(4, 0, 0))),
+        (land + 9, S(pelvis=(0.03, 0.0, 0.200), hips=(-84, 0, 90), spine=(-4, 0, 0),
+                     head=(-4, 0, 0),
+                     hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.10),
+                     elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
+                     foot_r=(0.02, -0.60, 0.14), foot_l=(0.16, -0.58, 0.10),
+                     knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
+        (land + 13, S(spine=(-8, 0, 0), head=(-14, 0, 0))),
+        (end, S()),
+    ]
+
+
+# Running Knee Lift, 36 frames. Low sprint; off the left foot with the right
+# knee driven up into the jaw and both arms thrown high (video frames 6-7);
+# lands and carries on past as the victim goes over backward.
+CLIPS["Knee_Lift_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (7, P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-20, 0, 0),
+          hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+          foot_r=(0.16, -0.20, 0.20), foot_l=(-0.14, 0.12, 0.104))),
+    (9, dict(pelvis=(0.0, 0.10, 1.000), hips=(4, 0, 0), spine=(6, 0, 0),
+             head=(6, 0, 0),
+             hand_r=(0.30, 0.10, 1.76), hand_l=(-0.30, 0.10, 1.74),
+             fist_r=0.8, fist_l=0.8,
+             foot_r=(0.18, 0.22, 0.78), foot_l=(-0.14, -0.10, 0.40),
+             knee_r=(0.2, 1.0, 0.3), knee_l=(-0.2, 1.0, 0.0))),
+    (12, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-10, 0, 0),
+           hand_r=(0.30, 0.10, 1.40), hand_l=(-0.30, 0.10, 1.38),
+           foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))),
+    (18, pose(RUN_B, pelvis=(0.0, 0.03, 0.830), hips=(-6, 0, 0), spine=(-8, 0, 0))),
+    (26, pose(STAND)),
+    (36, P()),
+]
+CLIPS["Knee_Lift_Defender"] = [(0, pose(STAND)), (7, pose(STAND, head=(4, 0, 0)))] \
+    + _back_fall(9, pelvis_hit=1.00) + [(36, S())]
+
+# Clothesline From Hell, 36 frames. Sprints in with the right arm cocked,
+# swings it through the neck (video frames 2-4); the victim is turned over
+# backward three-quarters of a turn -- feet over his head -- and lands face
+# down, head toward the attacker, which is SUPINE's pitch without its roll, so
+# he rolls straight into it. The attacker ends crouched over him.
+CLIPS["CFH_Attacker"] = [
+    (0, pose(RUN_A, hand_r=(0.36, -0.30, 1.30), fist_r=1.0)),
+    (4, pose(RUN_B, hand_r=(0.38, -0.30, 1.34), fist_r=1.0)),
+    (7, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-12, -16, 0),
+          hand_r=(0.60, 0.26, 1.46), hand_l=(-0.24, 0.20, 1.06), fist_r=1.0,
+          foot_r=(0.20, -0.20, 0.104), foot_l=(-0.16, 0.24, 0.104))),
+    (9, P(pelvis=(0.0, 0.10, 0.800), hips=(-14, 12, 0), spine=(-14, 24, 0),
+          hand_r=(0.18, 0.76, 1.46), hand_l=(-0.30, 0.10, 1.04), fist_r=1.0,
+          foot_r=(0.20, -0.10, 0.104), foot_l=(-0.16, 0.30, 0.104))),
+    (13, P(pelvis=(0.0, 0.10, 0.780), hips=(-16, 20, 0), spine=(-18, 34, 0),
+           hand_r=(-0.34, 0.56, 1.20), hand_l=(-0.30, 0.00, 1.00), fist_r=1.0,
+           foot_r=(0.22, -0.10, 0.104), foot_l=(-0.16, 0.34, 0.104))),
+    (18, P(pelvis=(0.0, 0.02, 0.600), hips=(-30, 0, 0), spine=(-34, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.22, 0.28, 0.56), hand_l=(-0.22, 0.28, 0.56),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, 0.20, 0.104))),
+    (28, P(pelvis=(0.0, 0.02, 0.620), hips=(-28, 0, 0), spine=(-32, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.22, 0.28, 0.58), hand_l=(-0.22, 0.28, 0.58),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, 0.20, 0.104))),
+    (36, P()),
+]
+# The flip: no foot targets, so the legs stay in line with the hips and the
+# whole body turns over as one piece.
+_FLIP = dict(spine=(10, 0, 0), head=(10, 0, 0),
+             hand_r=(0.50, 0.10, 1.20), hand_l=(-0.50, 0.10, 1.20),
+             elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.2),
+             fist_r=0.2, fist_l=0.2)
+CLIPS["CFH_Defender"] = [
+    (0, pose(STAND)), (8, pose(STAND, head=(4, 0, 0))),
+    (9, P(pelvis=(0.0, -0.06, 0.900), spine=(24, 0, 0), head=(34, 0, 0),
+          hand_r=(0.38, 0.10, 1.12), hand_l=(-0.36, 0.06, 1.10),
+          fist_r=0.2, fist_l=0.2)),
+    (11, dict(_FLIP, pelvis=(0.0, 0.0, 1.100), hips=(80, 0, 0))),
+    (13, dict(_FLIP, pelvis=(0.0, 0.0, 1.250), hips=(160, 0, 0))),
+    (15, dict(_FLIP, pelvis=(0.0, 0.0, 0.850), hips=(230, 0, 0))),
+] + _face_first_then_roll(17, 36)
+
+# Spinning Back Elbow, 36 frames. Plants and spins a full turn to his right
+# (the root does the turn); the right elbow swings back into the jaw as his
+# back comes round (video frames 5-7). The victim's head is snapped round and
+# he goes over backward.
+CLIPS["Back_Elbow_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (8, P(pelvis=(0.0, 0.02, 0.800), hips=(-6, -20, 0), spine=(-8, -30, 0),
+          hand_r=(0.30, 0.30, 1.30), hand_l=(-0.26, 0.20, 1.20),
+          fist_r=1.0, fist_l=0.8)),
+    (12, P(pelvis=(0.0, 0.0, 0.820), hips=(0, -30, 0), spine=(-4, -40, 0),
+           head=(0, -40, 0),
+           hand_r=(0.24, -0.02, 1.46), hand_l=(-0.24, 0.24, 1.26),
+           elbow_r=(0.4, -1.0, 0.2),
+           fist_r=1.0, fist_l=0.8)),
+    (16, P(pelvis=(0.0, 0.0, 0.820), hips=(0, -10, 0), spine=(-6, -10, 0),
+           hand_r=(0.40, 0.10, 1.30), hand_l=(-0.30, 0.20, 1.20),
+           fist_r=1.0, fist_l=0.8)),
+    (22, pose(STAND)),
+    (36, P()),
+]
+CLIPS["Back_Elbow_Defender"] = [(0, pose(STAND)), (10, pose(STAND, head=(4, 0, 0)))] \
+    + _back_fall(12, pelvis_hit=0.90, twist=-40) + [(36, S())]
+
+# Single Leg Dropkick, 36 frames. Takes off and turns side-on in the air, the
+# body near level and the right leg driven into the chest (video frames 7-9);
+# drops onto his side, then gets up. The victim goes over backward.
+CLIPS["SL_Dropkick_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (7, P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-16, 0, 0),
+          hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+          foot_r=(0.16, -0.20, 0.20), foot_l=(-0.14, 0.12, 0.104))),
+    (10, dict(pelvis=(0.0, 0.10, 1.050), hips=(-10, 0, -70), spine=(0, 0, -10),
+              head=(0, 0, 10),
+              hand_r=(0.50, 0.00, 1.00), hand_l=(-0.10, 0.10, 1.50),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.10, 0.90, 1.20), foot_l=(0.40, 0.10, 0.90),
+              knee_r=(0.0, 0.0, 1.0), knee_l=(0.0, 1.0, 0.0))),
+    (13, dict(pelvis=(0.0, 0.10, 0.450), hips=(-10, 0, -80), spine=(0, 0, -6),
+              head=(0, 0, 12),
+              hand_r=(0.70, 0.10, 0.20), hand_l=(-0.10, 0.20, 0.80),
+              fist_r=0.2, fist_l=0.2)),
+    (16, dict(pelvis=(0.0, 0.05, 0.180), hips=(-8, 0, -86), spine=(0, 0, -4),
+              head=(0, 0, 16),
+              hand_r=(0.70, 0.10, 0.08), hand_l=(0.10, 0.30, 0.30),
+              fist_r=0.0, fist_l=0.0)),
+    (22, dict(pelvis=(0.0, 0.0, 0.450), hips=(-30, 0, -20), spine=(-20, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.40, 0.20, 0.06), hand_l=(-0.24, 0.30, 0.40),
+              fist_r=0.0, fist_l=0.2,
+              foot_r=(0.20, -0.30, 0.09), foot_l=(-0.20, 0.20, 0.104),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+    (28, dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+    (36, P()),
+]
+CLIPS["SL_Dropkick_Defender"] = [(0, pose(STAND)), (8, pose(STAND, head=(4, 0, 0)))] \
+    + _back_fall(10, pelvis_hit=0.92) + [(36, S())]
+
+# Tilt-A-Whirl DDT, 60 frames / 2.0s. He runs into the victim, leaps on and
+# is swung all the way round his torso -- head down across his back at the
+# half-way point (video frames 10-14) -- and comes round in front with the
+# head in a front facelock; falls back, spiking it: the victim is driven
+# head-first, his legs come up (frames 24-25), he drops back onto his face and
+# rolls over. The orbit is the ROOT's (running_tilt_a_whirl_ddt's
+# trajectory: a full circle at 0.35 m round the victim, yawing to keep facing
+# him); the bones here only carry him over and upside down.
+_WHIRL = dict(spine=(-10, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.20, 0.30, 1.10), hand_l=(-0.20, 0.30, 1.10),
+              fist_r=0.6, fist_l=0.6)
+CLIPS["Tilt_DDT_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (6, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-12, 0, 0),
+          hand_r=(0.20, 0.44, 1.30), hand_l=(-0.20, 0.44, 1.30), fist_r=0.6, fist_l=0.6)),
+    (8,  dict(_WHIRL, pelvis=(0.0, 0.10, 1.100), hips=(-60, 0, 0))),
+    (11, dict(_WHIRL, pelvis=(0.0, 0.10, 1.250), hips=(-120, 0, 0))),
+    (14, dict(_WHIRL, pelvis=(0.0, 0.10, 1.300), hips=(-180, 0, 0))),
+    (17, dict(_WHIRL, pelvis=(0.0, 0.10, 1.250), hips=(-240, 0, 0))),
+    # Round in front, landing on his feet with the head under his right arm.
+    (20, P(pelvis=(0.0, 0.04, 0.820), hips=(-16, 0, 0), spine=(-30, 0, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.06, 0.34, 1.02), hand_l=(-0.16, 0.30, 1.00),
+           elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.6, -0.3, -0.6),
+           fist_r=0.6, fist_l=0.6)),
+    (36, P(pelvis=(0.0, 0.04, 0.820), hips=(-16, 0, 0), spine=(-32, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.06, 0.34, 1.00), hand_l=(-0.16, 0.30, 0.98),
+           elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.6, -0.3, -0.6),
+           fist_r=0.6, fist_l=0.6)),
+    # Falls back, spiking it.
+    (40, dict(pelvis=(0.0, 0.0, 0.200), hips=(20, 0, 0), spine=(10, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.06, 0.30, 0.30), hand_l=(-0.16, 0.26, 0.28),
+              fist_r=0.6, fist_l=0.6,
+              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
+              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
+    (46, dict(pelvis=(0.0, 0.0, 0.200), hips=(10, 0, 0), spine=(4, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.20, 0.10, 0.10), hand_l=(-0.24, -0.06, 0.08),
+              fist_r=0.2, fist_l=0.0,
+              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
+              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
+    (53, dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+    (60, P()),
+]
+CLIPS["Tilt_DDT_Defender"] = [
+    (0, pose(STAND)),
+    # Catches him as he leaps on, arms round him.
+    (7, P(spine=(-8, 0, 0), hand_r=(0.20, 0.40, 1.10), hand_l=(-0.20, 0.40, 1.10),
+          fist_r=0.5, fist_l=0.5)),
+    (14, P(pelvis=(0.0, 0.0, 0.820), spine=(-14, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.26, 0.30, 1.00), hand_l=(-0.24, 0.30, 1.00),
+           fist_r=0.4, fist_l=0.4)),
+    # Bent forward into the facelock, feet planted under him.
+    (20, dict(pelvis=(0.0, -0.06, 0.780), hips=(-40, 0, 0), spine=(-26, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.24, 0.30, 0.80), hand_l=(-0.22, 0.32, 0.78),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, -0.14, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    (36, dict(pelvis=(0.0, -0.06, 0.780), hips=(-42, 0, 0), spine=(-28, 0, 0),
+              head=(-12, 0, 0),
+              hand_r=(0.24, 0.32, 0.78), hand_l=(-0.22, 0.34, 0.76),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, -0.14, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    # Spiked: head planted, legs coming up behind (no foot targets -- the legs
+    # stay in line with the hips).
+    (40, dict(_FLIP, pelvis=(0.0, 0.10, 0.700), hips=(-130, 0, 0))),
+    (42, dict(_FLIP, pelvis=(0.0, 0.10, 0.800), hips=(-150, 0, 0))),
+] + _face_first_then_roll(46, 60)
+
+# --- batch 2: shared pieces ----------------------------------------------------
+
+# The attacker flat on his back after going down backward: head toward -fwd,
+# face up, legs out in front, knees up. A positive hips pitch is a backward
+# tip (see STANCE), so no roll is needed.
+ATK_BACK = dict(pelvis=(0.0, 0.0, 0.180), hips=(84, 0, 0), spine=(4, 0, 0),
+                head=(-12, 0, 0),
+                hand_r=(0.40, -0.30, 0.10), hand_l=(-0.40, -0.30, 0.10),
+                elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+                fist_r=0.1, fist_l=0.1,
+                foot_r=(0.16, 0.62, 0.12), foot_l=(-0.16, 0.58, 0.12),
+                knee_r=(0.2, 0.2, 1.0), knee_l=(-0.2, 0.2, 1.0))
+# Seated on the mat, legs out in front -- the cutters' landing.
+ATK_SEAT = dict(pelvis=(0.0, 0.0, 0.200), hips=(12, 0, 0), spine=(4, 0, 0),
+                head=(-8, 0, 0),
+                hand_r=(0.30, -0.10, 0.10), hand_l=(-0.30, -0.10, 0.10),
+                elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+                fist_r=0.2, fist_l=0.2,
+                foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
+                knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))
+# Crouched over the man he has just put down.
+ATK_OVER = dict(pelvis=(0.0, 0.04, 0.600), hips=(-30, 0, 0), spine=(-32, 0, 0),
+                head=(-10, 0, 0),
+                hand_r=(0.22, 0.30, 0.56), hand_l=(-0.22, 0.30, 0.56),
+                fist_r=0.4, fist_l=0.4,
+                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, 0.20, 0.104))
+ONE_KNEE = dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
+                head=(-8, 0, 0),
+                hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
+                fist_r=0.2, fist_l=0.2,
+                foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+                knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))
+# Off the ground, both legs tucked -- the airborne frame most leaps pass
+# through.
+def _air(z, **over):
+    base = dict(pelvis=(0.0, 0.06, z), hips=(-8, 0, 0), spine=(-10, 0, 0),
+                head=(4, 0, 0),
+                hand_r=(0.30, 0.20, 1.40), hand_l=(-0.30, 0.20, 1.40),
+                fist_r=0.6, fist_l=0.6,
+                foot_r=(0.20, 0.10, z - 0.40), foot_l=(-0.18, 0.00, z - 0.46),
+                knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0))
+    base.update(over)
+    return base
+
+
+def _run_in():
+    return [(0, pose(RUN_A)), (4, pose(RUN_B)),
+            (7, P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-20, 0, 0),
+                  hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+                  foot_r=(0.16, -0.20, 0.20), foot_l=(-0.14, 0.12, 0.104)))]
+
+
+def _get_up(t, end):
+    """From anywhere on the mat to standing: one knee, then the stance."""
+    return [(t, pose(ONE_KNEE)), (end, P())]
+
+
+def _face_fall(hit, end, **hit_over):
+    """Struck and dropped forward onto his face, then rolled onto his back --
+    head toward the attacker, which is Down_Supine's side."""
+    staggered = P(pelvis=(0.0, 0.04, 0.800), spine=(-24, 0, 0), head=(-10, 0, 0),
+                  hand_r=(0.30, 0.30, 0.90), hand_l=(-0.28, 0.32, 0.88),
+                  fist_r=0.3, fist_l=0.3)
+    staggered.update(hit_over)
+    return [(hit, staggered),
+            (hit + 2, dict(pelvis=(0.0, 0.08, 0.620), hips=(-50, 0, 0),
+                           spine=(-14, 0, 0), head=(10, 0, 0),
+                           hand_r=(0.34, 0.40, 0.60), hand_l=(-0.32, 0.42, 0.60),
+                           fist_r=0.2, fist_l=0.2,
+                           foot_r=(0.20, -0.18, 0.14), foot_l=(-0.18, -0.10, 0.16)))] \
+        + _face_first_then_roll(hit + 4, end)
+
+
+# Bicycle Knee Strike, 36 frames. Leaps off the left foot and drives the
+# right knee into the face, pedalling (video frames 4-6); the victim's head
+# snaps back, then he crumples forward onto his face (frames 7-11); the
+# attacker lands and walks on past him.
+CLIPS["Bicycle_Knee_Attacker"] = _run_in() + [
+    (9, _air(1.060, hips=(0, 0, 0), spine=(-4, 0, 0),
+             hand_r=(0.30, 0.40, 1.30), hand_l=(-0.30, 0.00, 1.20),
+             foot_r=(0.18, 0.36, 1.00), foot_l=(-0.16, -0.24, 0.62),
+             knee_r=(0.2, 1.0, 0.3))),
+    (11, _air(1.000, foot_r=(0.18, 0.00, 0.62), foot_l=(-0.16, 0.30, 0.90),
+              knee_l=(-0.2, 1.0, 0.3))),
+    (14, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-10, 0, 0),
+           hand_r=(0.30, 0.10, 1.10), hand_l=(-0.30, 0.10, 1.10),
+           foot_r=(0.20, 0.10, 0.104), foot_l=(-0.18, -0.10, 0.104))),
+    (22, pose(RUN_B, pelvis=(0.0, 0.03, 0.830), hips=(-6, 0, 0), spine=(-8, 0, 0))),
+    (30, pose(STAND)), (36, P()),
+]
+CLIPS["Bicycle_Knee_Defender"] = [
+    (0, pose(STAND)), (8, pose(STAND, head=(4, 0, 0))),
+    (9, P(pelvis=(0.0, -0.04, 0.840), spine=(16, 0, 0), head=(28, 0, 0),
+          hand_r=(0.36, 0.10, 1.10), hand_l=(-0.34, 0.06, 1.06),
+          fist_r=0.3, fist_l=0.3)),
+] + _face_fall(12, 36)
+
+# Cave-In, 36 frames. A leap from a step out, knees tucked, both feet driven
+# into the chest (video frames 3-5); the victim is stamped flat on his back
+# and the attacker comes down crouched over him.
+CLIPS["Cave_In_Attacker"] = _run_in() + [
+    (10, _air(1.200, hips=(-4, 0, 0), spine=(-10, 0, 0), head=(10, 0, 0),
+              hand_r=(0.40, 0.40, 1.60), hand_l=(-0.40, 0.40, 1.60),
+              foot_r=(0.16, 0.10, 0.70), foot_l=(-0.16, 0.06, 0.66))),
+    (12, _air(1.150, hips=(8, 0, 0), spine=(-4, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.40, 0.10, 1.40), hand_l=(-0.40, 0.10, 1.40),
+              foot_r=(0.14, 0.40, 0.90), foot_l=(-0.14, 0.40, 0.90),
+              knee_r=(0.2, 1.0, 0.2), knee_l=(-0.2, 1.0, 0.2))),
+    (15, pose(ATK_OVER)), (26, pose(ATK_OVER)),
+    (36, P()),
+]
+CLIPS["Cave_In_Defender"] = [(0, pose(STAND)), (10, pose(STAND, head=(8, 0, 0)))] \
+    + _back_fall(12, pelvis_hit=0.90) + [(36, S())]
+
+# Claymore, 36 frames. A running leap with the right leg thrown out straight
+# into the face, body laid back behind it (video frames 6-8); both men go
+# down, the attacker flat on his back.
+CLIPS["Claymore_Attacker"] = _run_in() + [
+    (10, _air(1.100, hips=(30, 0, 0), spine=(10, 0, 0), head=(-20, 0, 0),
+              hand_r=(0.40, 0.20, 1.40), hand_l=(-0.30, 0.40, 1.46),
+              foot_r=(0.16, 0.80, 1.40), foot_l=(-0.16, 0.10, 0.80),
+              knee_r=(0.0, 0.0, 1.0))),
+    (13, _air(0.700, hips=(60, 0, 0), spine=(4, 0, 0), head=(-20, 0, 0),
+              hand_r=(0.40, -0.10, 0.80), hand_l=(-0.40, -0.10, 0.80),
+              foot_r=(0.16, 0.80, 0.90), foot_l=(-0.16, 0.50, 0.60),
+              knee_r=(0.0, 0.0, 1.0), knee_l=(0.0, 0.2, 1.0))),
+    (16, pose(ATK_BACK)), (22, pose(ATK_BACK, head=(-20, 0, 0))),
+] + _get_up(29, 36)
+CLIPS["Claymore_Defender"] = [(0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0)))] \
+    + _back_fall(11, pelvis_hit=0.95) + [(36, S())]
+
+# Cyclone Kick, 36 frames. Leaps and spins a full turn in the air (the root
+# does the turn), the right boot swinging round into the head (video frames
+# 3-5); the victim drops forward onto his face.
+CLIPS["Cyclone_Kick_Attacker"] = _run_in() + [
+    (10, _air(1.050, spine=(-10, -30, 0),
+              hand_r=(0.40, 0.00, 1.60), hand_l=(-0.30, 0.30, 1.20))),
+    (12, _air(1.100, hips=(0, 0, -30), spine=(0, 10, 0),
+              hand_r=(0.50, -0.20, 1.50), hand_l=(-0.40, 0.20, 1.10),
+              foot_r=(0.50, 0.50, 1.50), foot_l=(-0.10, 0.00, 0.70),
+              knee_r=(0.0, 0.0, 1.0))),
+    (15, P(pelvis=(0.0, 0.0, 0.740), hips=(-16, 0, 0), spine=(-18, 0, 0),
+           hand_r=(0.40, 0.10, 0.90), hand_l=(-0.40, 0.10, 0.90),
+           foot_r=(0.24, -0.20, 0.104), foot_l=(-0.22, 0.20, 0.104))),
+    (24, pose(STAND)), (36, P()),
+]
+CLIPS["Cyclone_Kick_Defender"] = [
+    (0, pose(STAND)), (11, pose(STAND, head=(4, 0, 0))),
+    (12, P(pelvis=(0.0, -0.04, 0.840), spine=(10, 20, 0), head=(20, 30, 0),
+           hand_r=(0.36, 0.10, 1.10), hand_l=(-0.34, 0.06, 1.06),
+           fist_r=0.3, fist_l=0.3)),
+] + _face_fall(14, 36)
+
+# Dragon Twist Cutter, 42 frames. Catches the head in a front facelock on the
+# run, springs up and flips forward over it -- inverted above the victim's
+# head (video frames 8-11) -- and lands on his back, bringing the head down
+# with him: the victim is driven face-first. His orbit over the top is his
+# root travelling past the victim (running_dragon_twist_cutter).
+CLIPS["Dragon_Twist_Attacker"] = _run_in() + [
+    (9, P(pelvis=(0.0, 0.06, 0.800), hips=(-10, 0, 0), spine=(-14, 0, 0),
+          hand_r=(0.06, 0.40, 1.40), hand_l=(-0.14, 0.36, 1.36),
+          elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
+          fist_r=0.6, fist_l=0.6)),
+    (12, _air(1.300, hips=(-70, 0, 0), spine=(-10, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.06, 0.20, 1.10), hand_l=(-0.14, 0.18, 1.10),
+              foot_r=None, foot_l=None)),
+    (15, _air(1.500, hips=(-150, 0, 0), spine=(-6, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.06, 0.10, 1.10), hand_l=(-0.14, 0.10, 1.10),
+              foot_r=None, foot_l=None)),
+    (18, _air(1.000, hips=(-220, 0, 0), spine=(-4, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.10, 0.00, 1.10), hand_l=(-0.14, 0.00, 1.10),
+              foot_r=None, foot_l=None)),
+    (21, pose(ATK_BACK, hips=(84, 0, 0))),
+    (28, pose(ATK_BACK, head=(-20, 0, 0))),
+] + _get_up(35, 42)
+CLIPS["Dragon_Twist_Defender"] = [
+    (0, pose(STAND)),
+    (9, dict(pelvis=(0.0, -0.04, 0.800), hips=(-30, 0, 0), spine=(-20, 0, 0),
+             head=(-6, 0, 0),
+             hand_r=(0.26, 0.30, 0.96), hand_l=(-0.24, 0.32, 0.94),
+             fist_r=0.4, fist_l=0.4,
+             foot_r=(0.20, -0.16, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    (16, dict(pelvis=(0.0, -0.04, 0.760), hips=(-40, 0, 0), spine=(-24, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.26, 0.30, 0.80), hand_l=(-0.24, 0.32, 0.80),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.20, -0.16, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+] + _face_first_then_roll(21, 42)
+
+# Fallaway Moonsault Slam, 42 frames. Leaps into the victim and hooks him,
+# chest to chest, then falls backward taking him over the top -- the victim's
+# legs pass overhead (video frames 9-11) -- and slams him down on his back
+# beyond the attacker's head. The attacker ends flat on his back.
+CLIPS["Fallaway_Attacker"] = _run_in() + [
+    (9, _air(0.980, hand_r=(0.20, 0.44, 1.20), hand_l=(-0.20, 0.44, 1.24),
+             foot_r=(0.20, 0.30, 0.50), foot_l=(-0.18, 0.30, 0.46))),
+    (12, dict(pelvis=(0.0, 0.0, 0.700), hips=(40, 0, 0), spine=(10, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.20, 0.30, 1.30), hand_l=(-0.20, 0.30, 1.30),
+              fist_r=0.6, fist_l=0.6,
+              foot_r=(0.18, 0.40, 0.104), foot_l=(-0.18, 0.36, 0.104))),
+    (15, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
+    (22, pose(ATK_BACK)), (28, pose(ATK_BACK, head=(-20, 0, 0))),
+] + _get_up(35, 42)
+# Over the top: face-down across the attacker's chest (hips -90), rolled
+# face-up in the air on the way down, and flat on his back -- head toward
+# +fwd, past the attacker, which is SUPINE. His root travels over the
+# attacker's (running_fallaway_moonsault_slam).
+CLIPS["Fallaway_Defender"] = [
+    (0, pose(STAND)), (8, pose(STAND, head=(4, 0, 0))),
+    (10, P(pelvis=(0.0, 0.04, 0.860), spine=(-10, 0, 0),
+           hand_r=(0.26, 0.40, 1.10), hand_l=(-0.24, 0.42, 1.10),
+           fist_r=0.4, fist_l=0.4)),
+    (12, dict(pelvis=(0.0, 0.0, 1.300), hips=(-90, 0, 0), spine=(-4, 0, 0),
+              head=(4, 0, 0),
+              hand_r=(0.44, 0.20, 1.20), hand_l=(-0.44, 0.20, 1.20),
+              elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.2),
+              fist_r=0.2, fist_l=0.2)),
+    (14, dict(pelvis=(0.0, 0.0, 0.900), hips=(-88, 0, 90), spine=(-4, 0, 0),
+              head=(0, 0, 0),
+              hand_r=(0.10, 0.30, 0.80), hand_l=(0.40, 0.10, 0.60),
+              fist_r=0.2, fist_l=0.2)),
+    (16, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), head=(-2, 0, 0),
+           hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+           elbow_r=(-0.7, 0.0, 0.7), elbow_l=(0.7, 0.0, 0.7),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(-0.14, -0.72, 0.30), foot_l=(0.12, -0.74, 0.34))),
+    (21, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-16, 0, 0))),
+    (42, S()),
+]
+
+# Float-Over Liger Bomb, 60 frames / 2.0s. The float-over is reduced to its
+# end: he runs into the victim, forces him forward and bent under him
+# (video frames 8-14), hoists him up onto his shoulders sitting up, face to
+# the lights (17-22), and sits out, slamming him down back-first in front of
+# him (23-30). The victim's root yaws a half-turn through the slam, as in the
+# Spear, so he lands the way Down_Supine lies.
+CLIPS["Liger_Bomb_Attacker"] = _run_in() + [
+    (10, P(pelvis=(0.0, 0.06, 0.780), hips=(-24, 0, 0), spine=(-30, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.20, 0.40, 0.90), hand_l=(-0.20, 0.40, 0.90),
+           fist_r=0.6, fist_l=0.6)),
+    (22, P(pelvis=(0.0, 0.06, 0.700), hips=(-34, 0, 0), spine=(-40, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.20, 0.40, 0.70), hand_l=(-0.20, 0.40, 0.70),
+           fist_r=0.6, fist_l=0.6)),
+    # The lift.
+    (30, P(pelvis=(0.0, 0.0, 0.860), hips=(0, 0, 0), spine=(4, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.22, 0.20, 1.70), hand_l=(-0.22, 0.20, 1.70),
+           fist_r=0.6, fist_l=0.6)),
+    (38, P(pelvis=(0.0, 0.0, 0.870), hips=(2, 0, 0), spine=(4, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.22, 0.22, 1.74), hand_l=(-0.22, 0.22, 1.74),
+           fist_r=0.6, fist_l=0.6)),
+    # Sit-out.
+    (42, pose(ATK_SEAT, hand_r=(0.24, 0.50, 0.30), hand_l=(-0.24, 0.50, 0.30))),
+    (50, pose(ATK_SEAT)),
+] + _get_up(55, 60)
+CLIPS["Liger_Bomb_Defender"] = [
+    (0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0))),
+    (12, dict(pelvis=(0.0, 0.0, 0.760), hips=(-60, 0, 0), spine=(-20, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.30, 0.40, 0.60), hand_l=(-0.28, 0.42, 0.60),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.20, -0.20, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    (22, dict(pelvis=(0.0, 0.0, 0.740), hips=(-64, 0, 0), spine=(-22, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.30, 0.44, 0.50), hand_l=(-0.28, 0.46, 0.50),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.20, -0.20, 0.104), foot_l=(-0.18, 0.10, 0.104))),
+    # Up on the shoulders, sitting up, legs hanging over the front.
+    (30, dict(pelvis=(0.0, 0.10, 1.700), hips=(14, 0, 0), spine=(10, 0, 0),
+              head=(10, 0, 0),
+              hand_r=(0.40, 0.10, 2.10), hand_l=(-0.40, 0.10, 2.10),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, 0.50, 1.20), foot_l=(-0.18, 0.50, 1.20),
+              knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0))),
+    (38, dict(pelvis=(0.0, 0.10, 1.720), hips=(16, 0, 0), spine=(14, 0, 0),
+              head=(14, 0, 0),
+              hand_r=(0.44, 0.10, 2.10), hand_l=(-0.44, 0.10, 2.10),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, 0.50, 1.22), foot_l=(-0.18, 0.50, 1.22),
+              knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0))),
+    # Coming down; root half-way round.
+    (40, dict(pelvis=(0.0, 0.0, 1.000), hips=(60, -90, 0), spine=(-10, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.44, 0.10, 1.10), hand_l=(-0.42, 0.12, 1.10),
+              elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.2),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.18, 0.30, 0.90), foot_l=(-0.16, 0.34, 0.94))),
+    (42, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), head=(-2, 0, 0),
+           hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+           elbow_r=(-0.7, 0.0, 0.7), elbow_l=(0.7, 0.0, 0.7),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(-0.14, -0.72, 0.30), foot_l=(0.12, -0.74, 0.34))),
+    (48, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-16, 0, 0))),
+    (60, S()),
+]
+
+# Hoedown, 36 frames. A jumping knee into the face (video frames 3-4), and on
+# the way down the head is caught and he drops to a seat on it, driving the
+# victim face-first (5-8).
+CLIPS["Hoedown_Attacker"] = _run_in() + [
+    (10, _air(1.050, hips=(0, 0, 0), spine=(-6, 0, 0),
+              hand_r=(0.30, 0.40, 1.30), hand_l=(-0.30, 0.10, 1.30),
+              foot_r=(0.18, 0.36, 1.00), foot_l=(-0.16, -0.20, 0.62),
+              knee_r=(0.2, 1.0, 0.3))),
+    (13, _air(0.900, spine=(-20, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.06, 0.40, 0.90), hand_l=(-0.14, 0.36, 0.90))),
+    (16, pose(ATK_SEAT, hand_r=(0.10, 0.40, 0.20), hand_l=(-0.14, 0.40, 0.20))),
+    (24, pose(ATK_SEAT)),
+] + _get_up(30, 36)
+CLIPS["Hoedown_Defender"] = [
+    (0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0))),
+    (10, P(pelvis=(0.0, -0.04, 0.840), spine=(14, 0, 0), head=(26, 0, 0),
+           hand_r=(0.36, 0.10, 1.10), hand_l=(-0.34, 0.06, 1.06),
+           fist_r=0.3, fist_l=0.3)),
+] + _face_fall(13, 36, spine=(-30, 0, 0), head=(-14, 0, 0))
+
+# Jumping Cravate Driver, 36 frames. Leaps and locks both arms round the head
+# -- the cravate -- then drops to his side, driving the head into the mat
+# (video frames 5-10). The victim goes face-first.
+CLIPS["Cravate_Attacker"] = _run_in() + [
+    (10, _air(1.000, spine=(-14, 0, 0), head=(-6, 0, 0),
+              hand_r=(0.04, 0.46, 1.40), hand_l=(-0.10, 0.46, 1.40),
+              elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.7, -0.3, -0.5))),
+    (13, _air(0.800, hips=(10, 0, 0), spine=(-10, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.04, 0.40, 0.90), hand_l=(-0.10, 0.40, 0.90),
+              elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.7, -0.3, -0.5))),
+    (16, pose(ATK_SEAT, hips=(40, 0, 0), hand_r=(0.04, 0.40, 0.24),
+              hand_l=(-0.10, 0.40, 0.24))),
+    (24, pose(ATK_BACK)),
+] + _get_up(30, 36)
+CLIPS["Cravate_Defender"] = [
+    (0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0))),
+] + _face_fall(12, 36, spine=(-30, 0, 0), head=(-14, 0, 0))
+
+# Last Shot, 36 frames. Leaps with both legs thrown up and forward and the
+# arms up (video frames 1-3), hooks the head as he falls back, and takes the
+# victim over with him -- the victim's legs go up behind (frame 4) -- both
+# flat on their backs.
+CLIPS["Last_Shot_Attacker"] = _run_in() + [
+    (10, _air(1.050, hips=(20, 0, 0), spine=(0, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.20, 0.10, 1.90), hand_l=(-0.20, 0.10, 1.86),
+              foot_r=(0.16, 0.60, 1.00), foot_l=(-0.16, 0.56, 0.96),
+              knee_r=(0.0, 0.2, 1.0), knee_l=(0.0, 0.2, 1.0))),
+    (13, _air(0.800, hips=(50, 0, 0), spine=(0, 0, 0), head=(-20, 0, 0),
+              hand_r=(0.10, 0.40, 1.00), hand_l=(-0.10, 0.40, 1.00),
+              foot_r=(0.16, 0.60, 0.90), foot_l=(-0.16, 0.56, 0.86),
+              knee_r=(0.0, 0.2, 1.0), knee_l=(0.0, 0.2, 1.0))),
+    (16, pose(ATK_BACK)), (24, pose(ATK_BACK, head=(-20, 0, 0))),
+] + _get_up(30, 36)
+CLIPS["Last_Shot_Defender"] = [(0, pose(STAND)), (10, pose(STAND, head=(4, 0, 0)))] \
+    + [(12, dict(_FLIP, pelvis=(0.0, 0.0, 1.000), hips=(-60, 0, 0)))] \
+    + _face_first_then_roll(15, 36)
+
+# --- batch 3 -------------------------------------------------------------------
+
+# A front facelock grip on the run: head under his right arm.
+def _facelock(z=0.800, **over):
+    base = P(pelvis=(0.0, 0.06, z), hips=(-10, 0, 0), spine=(-16, 0, 0),
+             head=(-6, 0, 0),
+             hand_r=(0.06, 0.40, 1.30), hand_l=(-0.14, 0.36, 1.28),
+             elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
+             fist_r=0.6, fist_l=0.6)
+    base.update(over)
+    return base
+
+
+VICTIM_BENT = dict(pelvis=(0.0, -0.04, 0.780), hips=(-40, 0, 0), spine=(-24, 0, 0),
+                   head=(-10, 0, 0),
+                   hand_r=(0.26, 0.30, 0.80), hand_l=(-0.24, 0.32, 0.80),
+                   fist_r=0.4, fist_l=0.4,
+                   foot_r=(0.20, -0.16, 0.104), foot_l=(-0.18, 0.10, 0.104))
+
+# Leaping Mushroom Stomp, 36 frames. A high leap from a step out, both feet
+# brought down on the head and shoulders (video frames 3-6); the victim is
+# stamped face-first and the attacker lands on his feet past him.
+CLIPS["Mushroom_Stomp_Attacker"] = _run_in() + [
+    (10, _air(1.350, hips=(-4, 0, 0), head=(10, 0, 0),
+              hand_r=(0.40, 0.40, 1.70), hand_l=(-0.40, 0.40, 1.70),
+              foot_r=(0.16, 0.10, 0.90), foot_l=(-0.16, 0.06, 0.86))),
+    (12, _air(1.250, hips=(4, 0, 0), head=(-14, 0, 0),
+              hand_r=(0.40, 0.10, 1.40), hand_l=(-0.40, 0.10, 1.40),
+              foot_r=(0.14, 0.30, 0.80), foot_l=(-0.14, 0.30, 0.80))),
+    (15, pose(ATK_OVER, pelvis=(0.0, 0.04, 0.700))),
+    (24, pose(STAND)), (36, P()),
+]
+CLIPS["Mushroom_Stomp_Defender"] = [(0, pose(STAND)), (10, pose(STAND, head=(10, 0, 0)))] \
+    + _face_fall(12, 36, pelvis=(0.0, 0.04, 0.700), spine=(-40, 0, 0))
+
+# Leg Lariat, 36 frames. Leaps and swings the right leg across the throat,
+# body turned side-on (video frames 13-16); the victim is turned over
+# backward, legs up, and lands face-down; the attacker drops to a seat.
+CLIPS["Leg_Lariat_Attacker"] = _run_in() + [
+    (10, _air(1.100, hips=(0, 0, -50), spine=(0, 0, -10),
+              hand_r=(0.50, 0.00, 1.20), hand_l=(-0.10, 0.10, 1.50),
+              foot_r=(0.10, 0.80, 1.40), foot_l=(0.30, 0.10, 0.80),
+              knee_r=(0.0, 0.0, 1.0), knee_l=(0.0, 1.0, 0.0))),
+    (13, _air(0.700, hips=(20, 0, -30),
+              hand_r=(0.40, -0.10, 0.60), hand_l=(-0.40, -0.10, 0.60),
+              foot_r=(0.16, 0.70, 0.60), foot_l=(-0.16, 0.50, 0.50))),
+    (16, pose(ATK_SEAT)), (24, pose(ATK_SEAT)),
+] + _get_up(30, 36)
+CLIPS["Leg_Lariat_Defender"] = [
+    (0, pose(STAND)), (10, pose(STAND, head=(4, 0, 0))),
+    (11, P(pelvis=(0.0, -0.06, 0.900), spine=(24, 0, 0), head=(34, 0, 0),
+           hand_r=(0.38, 0.10, 1.12), hand_l=(-0.36, 0.06, 1.10),
+           fist_r=0.2, fist_l=0.2)),
+    (13, dict(_FLIP, pelvis=(0.0, 0.0, 1.050), hips=(80, 0, 0))),
+    (15, dict(_FLIP, pelvis=(0.0, 0.0, 1.150), hips=(160, 0, 0))),
+    (17, dict(_FLIP, pelvis=(0.0, 0.0, 0.800), hips=(230, 0, 0))),
+] + _face_first_then_roll(19, 36)
+
+# Play of the Day, 36 frames. Takes the head in both hands on the run and
+# pulls it down into a leaping knee (video frames 13-15); the victim goes over
+# backward.
+CLIPS["Play_Of_Day_Attacker"] = _run_in() + [
+    (9, _facelock(hand_r=(0.14, 0.52, 1.46), hand_l=(-0.14, 0.52, 1.46))),
+    (11, _air(1.000, spine=(-24, 0, 0), head=(-10, 0, 0),
+              hand_r=(0.14, 0.46, 1.10), hand_l=(-0.14, 0.46, 1.10),
+              foot_r=(0.18, 0.40, 1.00), foot_l=(-0.16, -0.10, 0.60),
+              knee_r=(0.2, 1.0, 0.3))),
+    (14, P(pelvis=(0.0, 0.06, 0.780), hips=(-14, 0, 0), spine=(-20, 0, 0),
+           hand_r=(0.30, 0.20, 1.10), hand_l=(-0.30, 0.20, 1.10))),
+    (24, pose(STAND)), (36, P()),
+]
+CLIPS["Play_Of_Day_Defender"] = [
+    (0, pose(STAND)),
+    (9, pose(VICTIM_BENT, hips=(-20, 0, 0), spine=(-14, 0, 0))),
+    (10, pose(VICTIM_BENT)),
+] + _back_fall(12, pelvis_hit=0.90) + [(36, S())]
+
+# Reverse Swing Neckbreaker, 48 frames. Takes the head, swings himself right
+# round the victim -- legs over the top (video frames 12-17) -- and drops to
+# a seat behind him with the head on his shoulder; the victim is pulled over
+# backward onto his back. The swing is the attacker's root orbiting half a
+# circle round the victim to his far side (running_reverse_swing_neckbreaker).
+CLIPS["Swing_Neck_Attacker"] = _run_in() + [
+    (9, _facelock()),
+    (13, _air(1.200, hips=(-60, 0, 30), spine=(-10, 0, 0),
+              hand_r=(0.06, 0.20, 1.10), hand_l=(-0.14, 0.18, 1.10),
+              foot_r=None, foot_l=None)),
+    (17, _air(1.300, hips=(-100, 0, 60), spine=(-6, 0, 0),
+              hand_r=(0.06, 0.10, 1.10), hand_l=(-0.14, 0.10, 1.10),
+              foot_r=None, foot_l=None)),
+    (21, _facelock(0.820, hips=(-4, 0, 0), spine=(-6, 0, 0),
+                   hand_r=(0.10, 0.20, 1.40), hand_l=(-0.10, 0.20, 1.40))),
+    (25, pose(ATK_SEAT, hand_r=(0.10, 0.30, 0.50), hand_l=(-0.10, 0.30, 0.50))),
+    (34, pose(ATK_SEAT)),
+] + _get_up(42, 48)
+CLIPS["Swing_Neck_Defender"] = [
+    (0, pose(STAND)),
+    (9, pose(VICTIM_BENT, hips=(-20, 0, 0), spine=(-12, 0, 0))),
+    (21, P(pelvis=(0.0, -0.04, 0.820), spine=(10, 0, 0), head=(20, 0, 0),
+           hand_r=(0.10, 0.12, 1.44), hand_l=(-0.10, 0.12, 1.44),
+           fist_r=0.5, fist_l=0.5)),
+] + _back_fall(23, pelvis_hit=0.80) + [(48, S())]
+
+# Rolling Codebreaker, 48 frames. Rolls forward over the victim's back --
+# inverted across it (video frames 12-18) -- lands in front of him, springs
+# up and catches the jaw on both knees, falling back to a seat (35-39); the
+# victim goes over backward. The roll-over is the root travelling past the
+# victim and turning to face him (running_rolling_codebreaker).
+CLIPS["Codebreaker_Attacker"] = _run_in() + [
+    (9, _facelock(hips=(-30, 0, 0), spine=(-30, 0, 0))),
+    (13, _air(1.300, hips=(-100, 0, 0), foot_r=None, foot_l=None,
+              hand_r=(0.20, 0.30, 0.90), hand_l=(-0.20, 0.30, 0.90))),
+    (17, _air(1.200, hips=(-180, 0, 0), foot_r=None, foot_l=None,
+              hand_r=(0.20, 0.30, 0.90), hand_l=(-0.20, 0.30, 0.90))),
+    (21, pose(ONE_KNEE)),
+    (26, P(pelvis=(0.0, 0.0, 0.760), hips=(-10, 0, 0), spine=(-16, 0, 0))),
+    (30, _air(1.050, hips=(10, 0, 0), spine=(-10, 0, 0),
+              hand_r=(0.10, 0.40, 1.50), hand_l=(-0.10, 0.40, 1.50),
+              foot_r=(0.16, 0.30, 0.90), foot_l=(-0.16, 0.30, 0.90),
+              knee_r=(0.2, 1.0, 0.3), knee_l=(-0.2, 1.0, 0.3))),
+    (33, pose(ATK_SEAT)), (40, pose(ATK_SEAT)),
+] + _get_up(44, 48)
+CLIPS["Codebreaker_Defender"] = [
+    (0, pose(STAND)),
+    (9, pose(VICTIM_BENT)), (17, pose(VICTIM_BENT)),
+    (24, P(spine=(-6, 0, 0), head=(6, 0, 0),
+           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08))),
+    (29, P(spine=(-10, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08))),
+] + _back_fall(31, pelvis_hit=0.90) + [(48, S())]
+
+# Rolling Thunder Flatliner, 42 frames. A forward roll along the mat into the
+# victim (video frames 15-17), up into a front facelock, and falls back
+# driving him face-first into the mat (18-23).
+CLIPS["Thunder_Flatliner_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (7, pose(ONE_KNEE)),
+    (10, dict(pelvis=(0.0, 0.10, 0.400), hips=(-120, 0, 0), spine=(-30, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.20, 0.30, 0.10), hand_l=(-0.20, 0.30, 0.10),
+              fist_r=0.2, fist_l=0.2)),
+    (13, dict(pelvis=(0.0, 0.10, 0.450), hips=(-220, 0, 0), spine=(-30, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.20, 0.10, 0.40), hand_l=(-0.20, 0.10, 0.40),
+              fist_r=0.2, fist_l=0.2)),
+    (16, pose(ONE_KNEE)),
+    (19, _facelock(0.820)),
+    (23, pose(ATK_BACK, hand_r=(0.06, 0.30, 0.40), hand_l=(-0.14, 0.30, 0.40))),
+    (30, pose(ATK_BACK)),
+] + _get_up(36, 42)
+CLIPS["Thunder_Flatliner_Defender"] = [
+    (0, pose(STAND)), (16, pose(STAND, head=(6, 0, 0))),
+    (19, pose(VICTIM_BENT)),
+] + _face_fall(21, 42, pelvis=(0.0, 0.06, 0.700), spine=(-40, 0, 0))
+
+# Running Gamengiri, 36 frames. Leaps, turns side-on and whips the right shin
+# into the side of the head (video frames 16-19); lands on his side, rolls
+# up. The victim drops forward onto his face.
+CLIPS["Gamengiri_Attacker"] = _run_in() + [
+    (10, _air(1.050, hips=(10, 0, -60), spine=(0, 0, -10),
+              hand_r=(0.50, 0.00, 1.00), hand_l=(-0.10, 0.10, 1.40),
+              foot_r=(0.20, 0.70, 1.60), foot_l=(0.30, 0.10, 0.80),
+              knee_r=(0.0, 0.0, 1.0), knee_l=(0.0, 1.0, 0.0))),
+    (13, _air(0.500, hips=(-10, 0, -80), foot_r=None, foot_l=None,
+              hand_r=(0.70, 0.10, 0.20), hand_l=(-0.10, 0.20, 0.70))),
+    (16, dict(pelvis=(0.0, 0.05, 0.180), hips=(-8, 0, -86), spine=(0, 0, -4),
+              head=(0, 0, 16),
+              hand_r=(0.70, 0.10, 0.08), hand_l=(0.10, 0.30, 0.30),
+              fist_r=0.0, fist_l=0.0)),
+] + _get_up(26, 36)
+CLIPS["Gamengiri_Defender"] = [(0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0)))] \
+    + _face_fall(11, 36, spine=(-10, 20, 0), head=(-4, 30, 0))
+
+# Spear, running. The finisher's charge from a sprint, without the shove-off
+# and load it needs from a lock-up (video frames 55-57): Spear_Attacker's
+# explosion, impact and follow-through, fed from the run.
+CLIPS["Run_Spear_Attacker"] = [(0, pose(RUN_A)), (4, pose(RUN_B))] + \
+    [(k - 12, v) for k, v in CLIPS["Spear_Attacker"] if k >= 16]
+CLIPS["Run_Spear_Defender"] = [(0, pose(STAND))] + \
+    [(k - 12, v) for k, v in CLIPS["Spear_Defender"] if k >= 19]
+
+# Stundog Millionaire, 42 frames. Leaps into a front facelock, hangs from it
+# with his legs swung up (video frames 18-22), and drops to his back, spiking
+# the head: the victim's legs go up over him (23-25) before he falls on his
+# face.
+CLIPS["Stundog_Attacker"] = _run_in() + [
+    (9, _facelock()),
+    (12, _air(1.050, spine=(-20, 0, 0), head=(-8, 0, 0),
+              hand_r=(0.06, 0.36, 1.00), hand_l=(-0.14, 0.34, 1.00),
+              foot_r=(0.16, 0.60, 1.00), foot_l=(-0.16, 0.56, 0.96),
+              knee_r=(0.0, 0.2, 1.0), knee_l=(0.0, 0.2, 1.0))),
+    (15, pose(ATK_SEAT, hips=(40, 0, 0), hand_r=(0.06, 0.34, 0.30),
+              hand_l=(-0.14, 0.34, 0.30))),
+    (20, pose(ATK_BACK)), (28, pose(ATK_BACK, head=(-20, 0, 0))),
+] + _get_up(36, 42)
+CLIPS["Stundog_Defender"] = [
+    (0, pose(STAND)), (9, pose(VICTIM_BENT)),
+    (13, dict(_FLIP, pelvis=(0.0, 0.10, 0.700), hips=(-130, 0, 0))),
+    (16, dict(_FLIP, pelvis=(0.0, 0.10, 0.800), hips=(-150, 0, 0))),
+] + _face_first_then_roll(20, 42)
+
+# Tilt-A-Whirl Backstabber, 54 frames. The Tilt-A-Whirl's orbit (video
+# frames 13-26), but coming round he lets the victim fall back and drops
+# under him: the small of the back lands on his raised knees as he goes down
+# on his own back (32-39), and the victim is flat on his.
+CLIPS["Backstabber_Attacker"] = [k for k in CLIPS["Tilt_DDT_Attacker"] if k[0] <= 17] + [
+    (20, P(pelvis=(0.0, 0.04, 0.820), hips=(-10, 0, 0), spine=(-16, 0, 0),
+           hand_r=(0.20, 0.30, 1.30), hand_l=(-0.20, 0.30, 1.30))),
+    (28, P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-16, 0, 0),
+           hand_r=(0.20, 0.30, 1.20), hand_l=(-0.20, 0.30, 1.20))),
+    (33, pose(ATK_BACK, foot_r=(0.16, 0.30, 0.10), foot_l=(-0.16, 0.30, 0.10),
+              knee_r=(0.2, 0.2, 1.0), knee_l=(-0.2, 0.2, 1.0))),
+    (40, pose(ATK_BACK)),
+] + _get_up(48, 54)
+CLIPS["Backstabber_Defender"] = [k for k in CLIPS["Tilt_DDT_Defender"] if k[0] <= 14] + [
+    (20, P(pelvis=(0.0, 0.0, 0.840), spine=(4, 0, 0), head=(8, 0, 0),
+           hand_r=(0.26, 0.20, 1.10), hand_l=(-0.24, 0.20, 1.08))),
+    (28, P(pelvis=(0.0, -0.04, 0.820), spine=(14, 0, 0), head=(20, 0, 0),
+           hand_r=(0.30, 0.10, 1.20), hand_l=(-0.28, 0.10, 1.18))),
+] + _back_fall(31, pelvis_hit=0.70) + [(54, S())]
+
 # --- build ----------------------------------------------------------------
 
 def load_rig():
