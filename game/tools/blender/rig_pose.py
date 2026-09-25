@@ -301,10 +301,24 @@ class RigPoser:
                 default_pole = vec(0.16 if side_id == "r" else -0.16, -0.38, -0.91)
                 pole = pose.get("elbow_%s" % side_id)
                 pole = vec(*pole).normalized() if pole else default_pole.normalized()
-                self._two_bone_ik(
+                elbow_at = self._two_bone_ik(
                     "upperarm_%s" % side_id, "lowerarm_%s" % side_id,
                     vec(*hand), pole,
                 )
+                # A hand on the mat lies flat on it: rest orientation (palm
+                # down, fingers out), turned to carry on the line of the
+                # forearm. Left to the chain it points wherever the forearm
+                # does, and on a man lying down that put the fingers 17 cm
+                # through the canvas.
+                if hand[2] <= 0.13 and not pose.get("wrist_%s" % side_id):
+                    at = vec(*hand)
+                    heading = Vector((at.x - elbow_at.x, at.y - elbow_at.y, 0.0))
+                    rest = self.rest_dir["hand_%s" % side_id]
+                    rest = Vector((rest.x, rest.y, 0.0))
+                    if heading.length > 1e-4 and rest.length > 1e-4:
+                        turn = rest.normalized().rotation_difference(heading.normalized())
+                        turn = Quaternion((0.0, 0.0, 1.0), turn.to_euler("XYZ").z)
+                        self._set("hand_%s" % side_id, turn)
             wrist = pose.get("wrist_%s" % side_id)
             if wrist:
                 rot = _euler(*wrist) @ Quaternion(
@@ -322,10 +336,30 @@ class RigPoser:
                 knee = pose.get("knee_%s" % side_id)
                 knee_pole = vec(*knee) if knee \
                     else vec(0.25 if side_id == "r" else -0.25, 1.0, 0.05)
-                self._two_bone_ik(
+                knee_at = self._two_bone_ik(
                     "thigh_%s" % side_id, "calf_%s" % side_id,
                     vec(*foot), knee_pole.normalized(),
                 )
+                # A planted foot is flat on the canvas. Left to the chain it
+                # inherits the calf's tilt, and in STANCE that dug the right
+                # toes 5 cm into the mat -- measured, and true of every
+                # standing pose in the set. So a foot on the mat takes its
+                # rest orientation (sole flat), turned only to follow the
+                # knee. Standing and knees-up poses only: a man face down
+                # rests on his toes, not his soles.
+                upright = abs(hips[0]) <= 60.0 or (knee and knee[2] >= 0.5)
+                if foot[2] <= 0.12 and upright and not pose.get("ankle_%s" % side_id) \
+                        and not pose.get("free_feet"):
+                    hip_at = self.bone_head("thigh_%s" % side_id)
+                    heading = Vector((knee_at.x - hip_at.x, knee_at.y - hip_at.y, 0.0))
+                    if knee and knee[2] >= 0.5:
+                        heading = Vector((0.0, -1.0, 0.0))
+                    if heading.length > 1e-4:
+                        turn = Vector((0.0, -1.0, 0.0)).rotation_difference(heading.normalized())
+                        # Yaw only: a knee well out to the side still leaves
+                        # the foot on the mat.
+                        turn = Quaternion((0.0, 0.0, 1.0), turn.to_euler("XYZ").z)
+                        self._set("foot_%s" % side_id, turn)
             ankle = pose.get("ankle_%s" % side_id)
             if ankle:
                 self._set("foot_%s" % side_id, _euler(*ankle))

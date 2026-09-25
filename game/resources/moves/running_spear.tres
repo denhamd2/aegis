@@ -20,3 +20,4 @@ weight_class_min = 0
 weight_class_max = 2
 required_opponent_state = -1
 leaves_defender_down = true
+defender_lands_head_away = true

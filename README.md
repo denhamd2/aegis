@@ -6546,3 +6546,93 @@ baked copy behind and the next match played its moves in the first one's
 frame. `GrappleRig._exit_tree()` now restores it.
 
 429 tests pass; every bake rebuilds byte-identical.
+
+## Round: a visual QA of every move
+
+Every paired move and every clip was measured, fixed where it failed, and
+looked at. Two probes do the measuring:
+
+- `game/tools/probe/move_qa.tscn` (new) plays each of the 33 paired moves
+  through the real controller path -- tie-up, GrappleRig, resolution, and
+  40 ticks of the handoff into the knockdown -- and reports, per move, the
+  lowest bone (limb through the mat), the closest approach of the two men's
+  cores, the biggest one-tick jump of any bone, and whether the victim ends
+  face-up. `--roster` runs it on Roman vs Cody, `--pops` lists every snap.
+- a per-clip pass in Blender over all 89 clips, with two speed bars: 0.35
+  m/frame for the torso and head, 0.6 for hands and feet (about the fastest
+  a real strike moves at 30 fps).
+
+In game, against the last commit (mannequin, the worst value in each of the
+32 moves that throw or knock a man down; the clinch knee throws no one and was
+already clean):
+
+|                              | before        | after          |
+| ---------------------------- | ------------- | -------------- |
+| deepest limb through the mat | 0.29-0.41 m   | 0.04-0.18 m    |
+| biggest one-tick snap        | 0.77-1.71 m   | 0.20-0.77 m    |
+
+Every victim ends face-up in both. The Swinging Neckbreaker's was only
+partly turned (+0.7) and is now flat (+1.0).
+
+### What was wrong, and the fix
+
+- **Knocked-down victims stood back up.** The knockdown handoff blended
+  through MOVE_EXEC's standing clip. `_build_animation_tree` now connects every
+  clip state to every other, so DOWN is reached directly.
+- **Limbs whipped between keys.** Neighbouring quaternion keys had opposite
+  signs, and the Bezier handles were stale after the flip. `author()` keeps
+  each bone's signs continuous and refreshes the F-curves.
+- **Feet and hands.** A planted foot keeps its rest orientation, yawed with
+  the knee (`rig_pose.py`), instead of pointing its toes into the canvas; a
+  hand on the mat lies flat.
+- **Back-falls landed head-toward the attacker, then spun.** 13 moves set the
+  new `MoveDef.defender_lands_head_away`: the victim falls straight back, and
+  the controller turns him round on the mat in the same tick he goes down.
+  `_back_fall()` gives every such fall the same beats: hit, falling, impact,
+  settle.
+- **Face-first falls** stagger, pitch over with the feet leaving the mat, land,
+  and roll onto the back with the arms tucked (`_face_first_then_roll()`).
+- **Get-ups** go through beats instead of cutting from the mat to a knee:
+  lying → sit up → feet drawn in → crouch → stand; sitting → feet drawn in →
+  crouch → stand; off his side → push up. The bones interpolate, not the
+  targets, so without the middle beat every foot swung through the mat on the
+  way under him (0.15-0.43 m deep). The same beat went into `Getup_Rise`
+  without moving its existing beats (the fast get-up cuts that clip short).
+- **Airborne bodies** -- flips, whirls, rolls -- carry their limbs in the
+  body's own frame (`_body()`), so a tuck stays a tuck upside down. `_air()`'s
+  `tuck` flag had silently stopped doing anything; it works again.
+- **Speed, one move at a time.**
+  - Jumping kicks chamber the knee on the take-off step, and the kick lands on
+    the victim's hit frame.
+  - The Fallaway's throw is spread over nine frames, not six (the victim's
+    hand was moving 1.5 m a frame).
+  - The Superman Punch is cocked three frames before the jaw.
+  - The Codebreaker and Tilt-A-Whirl rotate at an even rate and reach for the
+    mat before landing.
+  - The sit-outs drop through a half-way seat.
+  - Impact poses use the settled pose's elbows, which stopped arms rolling
+    through the mat.
+
+### What is left, stated plainly
+
+- Fingers and toes still touch 0.9 m/frame on the fastest beats: kick
+  take-offs, the Superman Punch's fist, the flips. The worst is 0.93.
+- The underneath elbow and thumb in a face-first roll dip up to 0.13 m.
+- Torso speed peaks at 0.62 on the Rolling Thunder's dive into its roll.
+- `move_qa`'s MERGE flag fires on every move that holds a man chest to chest
+  or in a facelock; that is contact, not interpenetration.
+- The Liger Bomb and both Tilt-A-Whirls end past the probe's window (their
+  victims are still in the move).
+- Every move still shows a one-tick jump of the unskinned root bone when
+  GrappleRig hands root motion back. That predates this round, is invisible,
+  and `move_qa` no longer counts it.
+
+### Checks
+
+- 429 tests pass.
+- Every bake rebuilds byte-identical.
+- `test_clip_authoring_gate` is re-pinned.
+- Ladder, 12 seeds: 12 pinfalls with the same winners. The signature and
+  finisher fire in all 12, and the finisher is the winning move in 11.
+- All 33 moves were rendered side-on through `paired_shot` and checked frame
+  by frame.

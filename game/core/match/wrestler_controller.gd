@@ -508,6 +508,10 @@ var _irish_whip_target: WrestlerController
 ## actually reaches IDLE again (see _process_timed_state()).
 var _cover_eligible: bool = true
 
+## Start the next state's clip outright instead of cross-fading into it --
+## see _turn_round_on_the_mat().
+var _snap_next_animation: bool = false
+
 ## Total damage this wrestler had taken the last time he was knocked down.
 ##
 ## Knockdown used to be `total_damage() >= KNOCKDOWN_DAMAGE`, which is a
@@ -690,12 +694,23 @@ func _build_animation_tree() -> void:
 		anim_node.animation = clip_name
 		state_machine.add_node(WrestlerFSM.State.keys()[state_id], anim_node)
 
+	# EVERY pair of clip states is connected, not only the FSM's legal edges.
+	#
+	# The FSM can cross several states in one tick -- a grapple resolves
+	# GRAPPLE_HOLD -> MOVE_EXEC -> DOWN in the same call -- and travel() then
+	# walks the graph's shortest PATH to the last one, cross-fading through
+	# every state on the way. With only the legal edges that path ran through
+	# MOVE_EXEC, whose clip is a standing impact pose: every thrown man rose
+	# 0.6 m off the mat, arms windmilling, and lay back down over 12 ticks as
+	# he entered DOWN. Measured by tools/probe/move_qa.tscn on all 25 moves
+	# that end with the victim down. Legality is the FSM's job; the blend
+	# graph only needs to get from the pose on screen to the one asked for.
 	var blend_seconds := ANIMATION_BLEND_TICKS / float(Engine.physics_ticks_per_second)
 	for from_id in WrestlerFSM.LEGAL_TRANSITIONS:
 		var from_name: String = WrestlerFSM.State.keys()[from_id]
 		if not state_machine.has_node(from_name):
 			continue
-		for to_id in WrestlerFSM.LEGAL_TRANSITIONS[from_id]:
+		for to_id in WrestlerFSM.LEGAL_TRANSITIONS:
 			var to_name: String = WrestlerFSM.State.keys()[to_id]
 			if to_name == from_name or not state_machine.has_node(to_name):
 				continue
@@ -936,6 +951,10 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
 	if anim_node:
 		anim_node.animation = _take_clip_override(current)
+	if _snap_next_animation:
+		_snap_next_animation = false
+		_anim_playback.start(state_name, true)
+		return
 	_anim_playback.travel(state_name)
 
 ## The clip to enter this state with: a one-shot override if one was queued
@@ -1829,12 +1848,27 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# on, so nothing downstream reads an attacker flag for a finished move.
 	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
+	if move and move.defender_lands_head_away:
+		opponent._turn_round_on_the_mat()
 	if opponent._would_be_knocked_down():
 		opponent._go_down()
 	elif move and move.leaves_defender_down:
 		opponent._lie_down_after_throw()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
+
+## Turns a man lying on his back half round about his own pelvis, and asks
+## for the next state's clip to start with no blend.
+##
+## For a move that lands him head away from the attacker
+## (MoveDef.defender_lands_head_away): its last pose is Down_Supine's first
+## turned half round, so after this turn the knockdown clip starts on exactly
+## the pose already on screen. A blend here would be a blend between two
+## poses 180 degrees apart in the new frame.
+func _turn_round_on_the_mat() -> void:
+	global_transform = Transform3D(global_transform.basis.rotated(Vector3.UP, PI),
+			global_position)
+	_snap_next_animation = true
 
 ## A thrown man left lying where the throw put him, without it counting as a
 ## knockdown.

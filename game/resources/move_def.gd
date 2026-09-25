@@ -74,6 +74,17 @@ extends Resource
 ## It is not a knockdown -- see WrestlerController._lie_down_after_throw().
 @export var leaves_defender_down: bool = false
 
+## Whether this paired move's defender lands flat on his back with his head
+## AWAY from the attacker -- a straight back bump -- rather than toward him.
+##
+## Down_Supine lies the other way round, so on the knockdown's first tick
+## WrestlerController turns him half round and starts the knockdown clip with
+## no blend; the move's last pose is Down_Supine's first turned half round
+## (wrestling_clips.SUPINE_AWAY), so the two are the same pixels. The old way,
+## spinning his root in mid-air, whipped his hands and feet 1.1-1.7 m in one
+## frame (tools/probe/move_qa.tscn).
+@export var defender_lands_head_away: bool = false
+
 ## Opponent WrestlerFSM.State required for this move to be legal.
 @export var required_opponent_state: int = -1
 
