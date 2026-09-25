@@ -196,3 +196,39 @@ green-dominant beam, the wash leaves the crowd's level alone.
 - **Beams are static.** A real moving head sweeps; frame-stable captures are
   worth more than that.
 - **Web build** has no beams, since it has no volumetric fog to put them in.
+
+## Round: the overhead rig
+
+The stills' overhead volume is a lit rig -- aluminium truss read as bright
+lines, rows of fixture bodies with hot lenses, cyan edge strips, roof steel
+washed magenta, speaker arrays -- and ours was a bare grid under a black slab.
+Worse, the grid did not hold its own fixtures: its inner lines were at +-2.5
+and the ring keys hang at +-3.9, and the beams added last round hung 17m up
+from nothing.
+
+`tools/blender/overhead_rig.py` now builds the steel FROM the fixture
+positions, which are named constants in `arena_lighting.gd`: ring grid (inner
+lines moved to the keys, raised 0.18m so the bodies clear it, battens for the
+top fills, drop arms for the rim), a beam ring and a house ring on the plan
+curve, the stage truss, an accent boom and uplight stands, open-web roof
+joists clipped to the shell, four line arrays. 59k triangles, deterministic.
+`ArenaLighting` hangs a moving head (`moving_head.glb`) at every light:
+base level on the steel, yoke panned, head tilted onto the beam --
+`test_overhead_rig.gd` checks all 66 lenses face down their beams. Twelve
+roof-wash fixtures stand on the beam ring and put magenta and violet on the
+joists.
+
+| frame | | bright >0.5 | mean sat | dark <0.01 |
+| --- | --- | --- | --- | --- |
+| `crowd_bank` | before | 0.08% | 0.493 | 7.2% |
+| | after | 0.64% | 0.501 | 7.1% |
+| `stage_wide` | before | 7.6% | 0.419 | 2.6% |
+| | after | 8.2% | 0.423 | 2.6% |
+| references | | 1.5-6.1% | 0.487-0.665 | 38-50% |
+
+The bright fraction is the lenses and strips: the "small, very bright" sources
+point 2 above said ours lacked. Mat 0.450 before and after.
+
+The LED strips were first on every truss line and drew a cyan lattice over
+every upward shot; the stills edge the rig's OUTLINE. They are now on the
+perimeter rings and the ring grid's outer box only, at level 0.22.

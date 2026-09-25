@@ -632,6 +632,12 @@ const SPECS := {
 	## render if that image fails to load. The note that stood here argued a
 	## legible graphic would be "under two pixels of text" at 20-35m. Rendered,
 	## it is not: AEW and DYNAMITE read on every art shot that sees the bowl.
+	## The overhead rig's LED edge strips: cyan-blue, the colour the truss is
+	## edged in across the AEW stills in gauntlet/refs/lighting/. Blue-led so
+	## it is not green-dominant (capture_harness.gd's HUD probes).
+	"arena_rig_led": {
+		"tint": Color(0.20, 0.62, 1.00), "roughness": 0.4,
+	},
 	"arena_ribbon": {
 		"tint": Color(1.00, 0.62, 0.16), "roughness": 0.25,
 	},

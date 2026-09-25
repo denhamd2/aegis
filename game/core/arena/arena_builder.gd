@@ -354,10 +354,15 @@ const BOWL_AISLES := 12
 ## above and below it. The upper tier starts on top of it, which is what gives
 ## the hall two decks rather than one thirty-row rake.
 const SUITE_HEIGHT := 3.6
-const RIBBON_HEIGHT := 0.55
+## 0.55 -> 0.90. Against the owner's photograph of a real AEW crowd, the
+## ribbon on the balcony fascia stands about as tall as a row of seated fans --
+## two ROW_RISEs, 0.96 -- which is also the usual 3-4ft of an arena ribbon
+## board. At 0.55 it read as a trim line rather than as a screen. The suite
+## glass between the two ribbons gives up the difference: 1.82m -> 1.12m.
+const RIBBON_HEIGHT := 0.90
 ## Width over height of one tile of the ribbon boards' artwork
 ## (`RIBBON_ART`, 950 x 123 px). arena_bowl.py lays the tile along the board
-## at RIBBON_HEIGHT * this -- 4.25m per repeat -- so it keeps its proportions
+## at RIBBON_HEIGHT * this -- 6.95m per repeat -- so it keeps its proportions
 ## on every run and round both curved ends. Change the image, change this, and
 ## rebuild the bowl.
 const RIBBON_ART_ASPECT := 7.7236
@@ -468,6 +473,7 @@ func _ready() -> void:
 	_build_bowl()
 	_build_floor_seats()
 	_build_entrance_set()
+	_build_overhead_rig()
 
 
 # ---------------------------------------------------------------------------
@@ -1475,7 +1481,6 @@ const ENTRANCE_MATERIALS := {
 	"StageBackdrop": ["arena_stage_panel", 1.1],
 	"PortalRecess": ["arena_tunnel", 0.35],
 	"StageScreenBezel": ["arena_tunnel", 0.5],
-	"Truss": ["arena_truss", 0.9],
 }
 
 ## The parts that light themselves: part name -> [material key, level].
@@ -1539,6 +1544,48 @@ func _attach_stage_video(root: Node3D) -> void:
 	screen.material_override = _self_emissive(screen_mat, SCREEN_BLANK_EMISSION)
 	screen.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(StageVideo.attach(screen, screen_mat))
+
+
+## The overhead rig: `tools/blender/overhead_rig.py`'s model.
+##
+## The ring grid, the two perimeter rings the beams and the house wash hang
+## from, the stage truss and accent boom, the roof steel, the speaker arrays,
+## and the LED strips under the truss. The fixture BODIES are not in it --
+## ArenaLighting hangs one at each light it builds, because it owns where the
+## lights are.
+const RIG_MODEL := "res://assets/environment/overhead_rig.glb"
+
+## Part name -> [material key, house reach]. The truss is brighter than the
+## old grid's 0.9: in every AEW still the rig reads as bright aluminium lines
+## against a black roof, and that is most of what makes the overhead volume
+## read as a lighting rig rather than as ceiling. The roof steel is under the
+## shell's level -- it is the dark thing the rig hangs in front of.
+const RIG_MATERIALS := {
+	"RigTruss": ["arena_truss", 2.4],
+	"RoofSteel": ["arena_truss", 0.7],
+	"SpeakerArrays": ["arena_chair", 0.6],
+}
+
+## The truss's LED edge strips. Hue off the references: the rig in
+## aew_wide_bowl_magenta.jpg is edged in cyan-blue lines (hue ~205).
+const RIG_LED_LEVEL := 0.22
+
+
+func _build_overhead_rig() -> void:
+	var packed: PackedScene = load(RIG_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_venue.sh rig."
+				% RIG_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "OverheadRig"
+	for part: String in RIG_MATERIALS:
+		var spec: Array = RIG_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	_dress(root, "RigLeds", _self_emissive(
+			MaterialLibrary.resolve("arena_rig_led"), RIG_LED_LEVEL))
+	add_child(root)
 
 
 ## The shell is part of the Blender model now.

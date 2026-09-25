@@ -65,6 +65,45 @@ const BOWL_INNER := 10.13
 ## mirror being a named constant and not a number typed four times.
 const STAGE_BACK_Z := -38.0
 
+# --- Hanging positions ------------------------------------------------------
+## Where the fixtures hang, as plain constants because
+## `tools/blender/overhead_rig.py` reads them to put steel where the fixtures
+## are. A fixture hanging in mid-air is the failure this prevents: the truss
+## is built FROM these numbers, so it cannot drift away from them.
+##
+## Ring keys at (+-KEY_OFFSET, HANG_Y, +-KEY_OFFSET).
+const KEY_OFFSET := 3.9
+## Top fills at (0, HANG_Y + 0.2, +-TOP_OFFSET_Z).
+const TOP_OFFSET_Z := 2.1
+## Beams: the plan curve BEAM_INSET inside the bowl's first row, BEAM_DROP
+## under the roof.
+const BEAM_INSET := 3.5
+const BEAM_DROP := 4.0
+## House wash: the same, closer to the seats and the roof.
+const HOUSE_INSET := 1.5
+const HOUSE_DROP := 1.4
+## Stage wash, over the front of the entrance set.
+const STAGE_WASH_X := 4.2
+const STAGE_WASH_Y := 10.0
+const STAGE_WASH_DZ := 21.0
+## Portal accents, on booms off the deck.
+const ACCENT_Y := 6.2
+const ACCENT_DZ := 3.4
+const ACCENT_NEAR_X := 2.1
+const ACCENT_FAR_X := 4.6
+## Rim pair, off the upstage line of the ring grid.
+const RIM_X := 6.4
+const RIM_Y := 6.9
+const RIM_Z := -7.2
+## Height of a fixture's clamp face above its head's tilt axis -- where the
+## steel starts. `tools/blender/overhead_rig.py` builds to the same number.
+const FIXTURE_TOP := 0.32
+## Backdrop uplights, on floor stands either side of the set.
+const UPLIGHT_NEAR_X := 7.6
+const UPLIGHT_FAR_X := 11.5
+const UPLIGHT_Y := 0.4
+const UPLIGHT_DZ := 2.6
+
 # --- Levels -----------------------------------------------------------------
 ## Ring key. Four fixtures on the truss corners, cross-aimed so each covers
 ## the far half of the mat; that overlap is what keeps the mat's luminance
@@ -365,7 +404,9 @@ func _ready() -> void:
 	_build_stage_wash()
 	_build_stage_accents()
 	_build_backdrop_uplights()
+	_build_roof_wash()
 	_build_fog_volumes()
+	_hang_fixtures()
 	_apply_compat_environment()
 	_compensate_for_renderer()
 
@@ -411,7 +452,7 @@ func _spot(fixture_name: String, at: Vector3, aim: Vector3, color: Color,
 func _build_ring_key() -> void:
 	for sx: float in [1.0, -1.0]:
 		for sz: float in [1.0, -1.0]:
-			var at := Vector3(sx * 3.9, HANG_Y, sz * 3.9)
+			var at := Vector3(sx * KEY_OFFSET, HANG_Y, sz * KEY_OFFSET)
 			var aim := Vector3(-sx * 1.35, 0.0, -sz * 1.35)
 			var light := _spot("Key%s%s" % [
 					"E" if sx > 0.0 else "W", "N" if sz > 0.0 else "S"],
@@ -425,7 +466,7 @@ func _build_ring_key() -> void:
 ## nothing a critic can see.
 func _build_top_fill() -> void:
 	for sz: float in [1.0, -1.0]:
-		var at := Vector3(0.0, HANG_Y + 0.2, sz * 2.1)
+		var at := Vector3(0.0, HANG_Y + 0.2, sz * TOP_OFFSET_Z)
 		_spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
 				at + Vector3(0.0, -1.0, 0.0), TOP_COLOR, top_energy,
 				52.0, 0.7, 20.0, false).light_volumetric_fog_energy = 0.8
@@ -436,7 +477,7 @@ func _build_top_fill() -> void:
 ## edge on the side of a wrestler the warm key cannot reach.
 func _build_rim() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 6.4, 6.9, -7.2)
+		var at := Vector3(sx * RIM_X, RIM_Y, RIM_Z)
 		_spot("Rim%s" % ("E" if sx > 0.0 else "W"), at,
 				Vector3(-sx * 0.6, 1.15, 1.4), RIM_COLOR, rim_energy,
 				30.0, 0.4, 26.0, false).light_volumetric_fog_energy = 2.2
@@ -464,10 +505,10 @@ func _build_rim() -> void:
 ## the function that generates it, and two copies of that is exactly the drift
 ## the mirror rule exists to prevent.
 func _build_house() -> void:
-	var loop := ArenaBuilder._plan_loop(BOWL_INNER - 1.5)
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - HOUSE_INSET)
 	for i: int in HOUSE_FIXTURES:
 		var entry: Array = loop[(i * loop.size()) / HOUSE_FIXTURES]
-		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 1.4, 0.0)
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - HOUSE_DROP, 0.0)
 		var dir: Vector3 = entry[1]
 		var aim: Vector3 = entry[0] + dir * 10.0 + Vector3(0.0, 2.6, 0.0)
 		_spot("House%02d" % i, at, aim, HOUSE_COLOR, house_energy,
@@ -504,12 +545,12 @@ func _build_house() -> void:
 func _build_beams() -> void:
 	if not _supports_volumetric_fog():
 		return
-	var loop := ArenaBuilder._plan_loop(BOWL_INNER - 3.5)
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - BEAM_INSET)
 	for i: int in BEAM_FIXTURES:
 		# Offset half a step from the house fixtures so the two sets interleave
 		# rather than stacking on the same hanging points.
 		var entry: Array = loop[((2 * i + 1) * loop.size()) / (2 * BEAM_FIXTURES)]
-		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 4.0, 0.0)
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - BEAM_DROP, 0.0)
 		var dir: Vector3 = entry[1]
 		# Alternate a near and a far throw, so the fan crosses the bowl rather
 		# than drawing sixteen parallel lines at one angle.
@@ -522,11 +563,153 @@ func _build_beams() -> void:
 		light.light_volumetric_fog_energy = beam_fog_energy
 
 
+## Uplights standing on the beam ring's top chord, washing the roof steel.
+##
+## Every AEW still shows the roof: steel lit magenta and violet from below,
+## so the overhead volume reads as a coloured space the rig hangs in, not as a
+## black lid. Ours was a black lid. These put colour onto
+## overhead_rig.py's roof joists.
+##
+## Aimed UP: nothing on the floor is in any of their cones, the mat least of
+## all. Same falloff as the beams, for the same reason -- a 3.5m throw at
+## _spot()'s 1.6 is fine, but the far joists are 8m off.
+const ROOF_WASH_FIXTURES := 12
+const ROOF_WASH_COLORS: Array[Color] = [
+	Color(0.62, 0.22, 1.0),
+	Color(0.95, 0.22, 0.75),
+]
+@export var roof_wash_energy: float = 6.0
+
+
+func _build_roof_wash() -> void:
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - BEAM_INSET)
+	# Beam ring: hanging height + clamp + the 0.52 section, then stood on top.
+	var chord_top := ROOF_Y - BEAM_DROP + FIXTURE_TOP + 0.52
+	for i: int in ROOF_WASH_FIXTURES:
+		var entry: Array = loop[(i * loop.size()) / ROOF_WASH_FIXTURES]
+		var at: Vector3 = entry[0] + Vector3(0.0, chord_top + FIXTURE_TOP, 0.0)
+		var aim: Vector3 = entry[0] - (entry[1] as Vector3) * 3.0 \
+				+ Vector3(0.0, ROOF_Y, 0.0)
+		var light := _spot("RoofWash%02d" % i, at, aim,
+				ROOF_WASH_COLORS[i % ROOF_WASH_COLORS.size()], roof_wash_energy,
+				55.0, 0.5, 14.0, false)
+		light.spot_attenuation = BEAM_ATTENUATION
+		light.light_volumetric_fog_energy = 0.4
+
+
+# ---------------------------------------------------------------------------
+# Fixture bodies
+# ---------------------------------------------------------------------------
+
+## The moving-head body `tools/blender/overhead_rig.py` builds, in four parts
+## whose origin is the head's tilt axis.
+const FIXTURE_MODEL := "res://assets/environment/moving_head.glb"
+## The lens's emission. A lit fixture seen from in front is the hottest thing
+## in a televised frame -- the references put p99 at 0.64-0.94 on a handful
+## of such points -- so this is over the glow threshold on purpose. It is a
+## disc 0.22m across; at any distance a camera sees it from it is a few pixels.
+const LENS_LEVEL := 3.0
+## How far toward white a lens reads. A lit lens is nearly white at its core
+## and takes its colour at the edge; a lens emitting the pure gel colour reads
+## as a painted disc.
+const LENS_WHITENESS := 0.55
+
+
+## A body at every light this rig built.
+##
+## Placed from the light, not from the steel, so no fixture can hang in the
+## air: the steel is built from the same constants the lights are (see the
+## "Hanging positions" block). The body is articulated like the real thing --
+## base fixed to the steel, yoke panned about the vertical, head tilted inside
+## it -- so the lens ends up on the beam axis without the base leaning.
+##
+## Fixtures aimed upward stand rather than hang (the uplights on their floor
+## stands, the roof wash on top of its truss): the assembly is flipped so the
+## base is below.
+##
+## No shadows from any of it. The SpotLight3D sits on the head's tilt axis,
+## INSIDE the can, and the four ring keys cast shadows: a shadow-casting body
+## would put the key's own fixture in front of it.
+func _hang_fixtures() -> void:
+	var packed: PackedScene = load(FIXTURE_MODEL)
+	if packed == null:
+		push_error("ArenaLighting: %s failed to load. Run tools/blender/build_venue.sh rig."
+				% FIXTURE_MODEL)
+		return
+	var model: Node3D = packed.instantiate()
+	var meshes := {}
+	for part: String in ["FixtureBase", "FixtureYoke", "FixtureHead", "FixtureLens"]:
+		var node := model.find_child(part, true, false) as MeshInstance3D
+		if node == null:
+			push_error("ArenaLighting: %s has no '%s'." % [FIXTURE_MODEL, part])
+			model.free()
+			return
+		meshes[part] = node.mesh
+	model.free()
+
+	var body_mat := MaterialLibrary.resolve("arena_chair")
+	var lens_mats := {}
+	var lights: Array[SpotLight3D] = []
+	for child in get_children():
+		if child is SpotLight3D:
+			lights.append(child)
+	for light in lights:
+		var key := light.light_color.to_html()
+		if not lens_mats.has(key):
+			lens_mats[key] = _lens_material(light.light_color)
+		add_child(_fixture_for(light, meshes, body_mat, lens_mats[key]))
+
+
+static func _lens_material(color: Color) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.02, 0.02, 0.02)
+	mat.emission_enabled = true
+	mat.emission = color.lerp(Color.WHITE, LENS_WHITENESS)
+	mat.emission_energy_multiplier = LENS_LEVEL
+	mat.metallic_specular = 0.0
+	return mat
+
+
+## One articulated body for one light. Split out so a test can build one
+## against a known light and check the lens lands on its beam.
+static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
+		body_mat: Material, lens_mat: Material) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Body" + String(light.name)
+	root.position = light.position
+	var forward := -light.transform.basis.z.normalized()
+	var standing := forward.y > 0.3
+	if standing:
+		root.basis = Basis(Vector3.RIGHT, PI)
+	var local := root.basis.inverse() * forward
+	var yaw := 0.0
+	if Vector2(local.x, local.z).length() > 0.001:
+		yaw = atan2(-local.x, -local.z)
+	var in_yoke := Basis(Vector3.UP, -yaw) * local
+	var tilt := atan2(in_yoke.y, -in_yoke.z)
+	var yoke_basis := Basis(Vector3.UP, yaw)
+	var parts := {
+		"FixtureBase": Basis.IDENTITY,
+		"FixtureYoke": yoke_basis,
+		"FixtureHead": yoke_basis * Basis(Vector3.RIGHT, tilt),
+		"FixtureLens": yoke_basis * Basis(Vector3.RIGHT, tilt),
+	}
+	for part: String in parts:
+		var mi := MeshInstance3D.new()
+		mi.name = part
+		mi.mesh = meshes[part]
+		mi.basis = parts[part]
+		mi.material_override = lens_mat if part == "FixtureLens" else body_mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(mi)
+	return root
+
+
 ## Two fixtures over the entrance stage, cool so the stage reads as a
 ## different room from the ring rather than as more of the same wash.
 func _build_stage_wash() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 4.2, 10.0, STAGE_BACK_Z + 21.0)
+		var at := Vector3(sx * STAGE_WASH_X, STAGE_WASH_Y, STAGE_BACK_Z + STAGE_WASH_DZ)
 		_spot("Stage%s" % ("E" if sx > 0.0 else "W"), at,
 				Vector3(sx * 2.0, 0.0, STAGE_BACK_Z + 16.0), STAGE_COLOR,
 				stage_energy,
@@ -548,8 +731,8 @@ func _build_stage_accents() -> void:
 		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
 		var label := "W" if sx < 0.0 else "E"
 		for i: int in 2:
-			var shoulder := 2.1 if i == 0 else 4.6
-			var at := Vector3(sx * shoulder, 6.2, STAGE_BACK_Z + 3.4)
+			var shoulder := ACCENT_NEAR_X if i == 0 else ACCENT_FAR_X
+			var at := Vector3(sx * shoulder, ACCENT_Y, STAGE_BACK_Z + ACCENT_DZ)
 			var aim := Vector3(sx * 3.3, 3.25, STAGE_BACK_Z + 1.1)
 			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
 					34.0, 0.6, ACCENT_RANGE, false) \
@@ -575,8 +758,8 @@ func _build_backdrop_uplights() -> void:
 	for sx: float in [-1.0, 1.0]:
 		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
 		for i: int in 2:
-			var x := sx * (7.6 if i == 0 else 11.5)
-			var at := Vector3(x, 0.4, STAGE_BACK_Z + 2.6)
+			var x := sx * (UPLIGHT_NEAR_X if i == 0 else UPLIGHT_FAR_X)
+			var at := Vector3(x, UPLIGHT_Y, STAGE_BACK_Z + UPLIGHT_DZ)
 			_spot("Uplight%s%d" % ["W" if sx < 0.0 else "E", i], at,
 					Vector3(x, 10.0, STAGE_BACK_Z), color, uplight_energy,
 					52.0, 0.4, 16.0, false).light_volumetric_fog_energy = 1.6

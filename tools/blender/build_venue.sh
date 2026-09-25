@@ -3,7 +3,7 @@
 #
 # Usage:
 #   tools/blender/build_venue.sh            # every model
-#   tools/blender/build_venue.sh ring       # bowl ring entrance ringside
+#   tools/blender/build_venue.sh ring       # bowl ring entrance ringside rig
 #
 # Blender is not a build dependency of the game -- the .glb files are
 # committed and CI never runs this. It is run by hand when a shared constant
@@ -48,6 +48,7 @@ case "$target" in
     ring)     run ring.py ;;
     entrance) run entrance_set.py ;;
     ringside) run ringside.py ;;
-    all)      run arena_bowl.py; run ring.py; run entrance_set.py; run ringside.py ;;
+    rig)      run overhead_rig.py ;;
+    all)      run arena_bowl.py; run ring.py; run entrance_set.py; run ringside.py; run overhead_rig.py ;;
     *) echo "build_venue.sh: unknown target '$target'" >&2; exit 2 ;;
 esac

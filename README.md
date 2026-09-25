@@ -6741,3 +6741,25 @@ a different reason, and all three are pinned by `test_arena_bowl.gd`:
    left the pixels unchanged to the digit, which is how it was found.
 
 Mat 0.450 before and after. 452 tests pass.
+
+## Round: the overhead lighting rig, and taller ribbon boards
+
+**The rig.** New `tools/blender/overhead_rig.py` (target `rig` in
+`build_venue.sh`) builds `overhead_rig.glb` and `moving_head.glb`. The steel is
+placed from the fixture positions, now named constants in
+`arena_lighting.gd`, so nothing hangs in mid-air -- which the old grid had
+wrong for the ring keys, and nothing at all held the beams. Ring grid, beam
+ring, house ring, stage truss, accent boom, uplight stands, roof joists, four
+line arrays, cyan LED edge strips. `ArenaLighting._hang_fixtures()` puts an
+articulated moving head at every one of the 66 lights; bodies cast no shadow,
+because a key's light sits inside its own can. Twelve roof-wash fixtures stand
+on the beam ring and light the joists magenta and violet, as in every
+reference still. The grid left `entrance_set.py`, which rebuilds without it.
+
+**Ribbons 0.55m -> 0.90m.** Against the owner's crowd photograph the ribbon
+is about two row rises tall -- a row of seated fans -- and 3-4ft is the usual
+height of an arena ribbon board. The suite glass between the two ribbons goes
+from 1.82m to 1.12m. The artwork repeats every 6.95m now.
+
+Mat 0.450, unchanged. 458 tests pass (six new in `test_overhead_rig.gd`).
+Numbers in `gauntlet/refs/lighting.md`.

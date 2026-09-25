@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the entrance set and the overhead truss in Blender, export as glTF.
+"""Build the entrance set in Blender, export as glTF.
 
 Run:  tools/blender/build_venue.sh entrance
 
@@ -7,8 +7,8 @@ What this builds
 ----------------
 The stage deck and the ramp down to the floor, the backdrop the set stands
 against, the two circular entrance portals (recess, slat fan, lit ring), the
-curved video wall's bezel and its picture face, and the lighting truss over
-the ring.
+curved video wall's bezel and its picture face. The lighting truss that
+used to be built here is `overhead_rig.py`'s now, with the rest of the rig.
 
 The two things worth moving it for
 ----------------------------------
@@ -23,12 +23,9 @@ angle that sees it side-on. Here it is one solid with a sloped top, a sloped
 underside and a fascia down each flank -- which is also what lets it have a
 nose at the bottom instead of ending in a 1.45 m cliff face.
 
-**The truss is a lattice.** It was eight long boxes and eight shorter ones
-stacked above them, with a comment that the chords were there so the grid
-"reads as truss rather than as bare pipe". Overhead truss is the one piece of
-an arena that is unmistakably a lattice from every angle. `venue.Part.lattice`
-builds the real thing: four chords on the corners of a square section, with
-alternating diagonals bay by bay and a vertical at every node.
+**The truss was a lattice** built here, until it moved to
+`overhead_rig.py` with the rest of the rig -- see that file for why it had to
+be rebuilt from the fixture positions.
 
 Everything else is reproduced at its existing measurements. The portals' depth
 order -- dark recess, fan inside it, lit ring proud of both -- is what makes a
@@ -86,13 +83,12 @@ PART_COLORS = {
     "StageScreenBezel": (0.05, 0.05, 0.06, 1.0),
     "StageScreen": (0.10, 0.08, 0.16, 1.0),
     "RampLeds": (0.72, 0.10, 0.55, 1.0),
-    "Truss": (0.13, 0.13, 0.15, 1.0),
 }
 EMISSIVE = frozenset({"PortalRingWest", "PortalRingEast",
                       "PortalFanWest", "PortalFanEast", "StageScreen",
                       "RampLeds"})
 SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
-                    "Truss", "RampLeds"})
+                    "RampLeds"})
 # The screen face authors its own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
 PROJECTED = frozenset(PART_COLORS) - {"StageScreen"}
@@ -387,30 +383,6 @@ def build_screen(cfg: dict[str, float], d: dict[str, float],
         )
 
 
-def build_truss(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """A real four-chord lattice grid above the ring.
-
-    It sits above the four SpotLight3Ds in `match.tscn` (y 5.5, range 10), so
-    it neither occludes them nor changes how the mat is lit, and it hangs from
-    the roof on four drops rather than floating.
-    """
-    truss = parts["Truss"]
-    reach = 11.0
-    offsets = (-7.5, -2.5, 2.5, 7.5)
-    y = cfg["TRUSS_Y"]
-    for offset in offsets:
-        truss.lattice(Vector((-reach, y, offset)), Vector((reach, y, offset)),
-                      size=0.42, bay=1.6, chord_radius=0.055,
-                      diagonal_radius=0.028)
-        truss.lattice(Vector((offset, y, -reach)), Vector((offset, y, reach)),
-                      size=0.42, bay=1.6, chord_radius=0.055,
-                      diagonal_radius=0.028)
-    for x in (-7.5, 7.5):
-        for z in (-7.5, 7.5):
-            truss.tube([Vector((x, y + 0.2, z)), Vector((x, cfg["ROOF_Y"], z))],
-                       0.07, sides=6)
-
-
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default=str(venue.ASSET_DIR / "entrance_set.glb"))
@@ -424,7 +396,6 @@ def main(argv: list[str]) -> int:
     build_backdrop(cfg, parts)
     build_portals(cfg, d, parts)
     build_screen(cfg, d, parts)
-    build_truss(cfg, parts)
     # The picture face is an open sheet and must look at the ring (+Z); the
     # portal recess is an open bore and what is seen is its inner wall.
     venue.finish(parts, PART_COLORS, emissive=EMISSIVE, smooth=SMOOTH,
