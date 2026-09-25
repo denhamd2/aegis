@@ -1051,6 +1051,16 @@ func _build_bowl_model() -> Node3D:
 ## a shader that reads them rather than a StandardMaterial3D with one albedo.
 const CROWD_PARTS := ["Crowd", "CrowdFar"]
 
+## The crowd's wash colour, in linear light. Taken off the four AEW stills in
+## gauntlet/refs/lighting/, not chosen: their coloured pixels sit at hue
+## 210-240 and the broadcast frame's mean is (0.09, 0.14, 0.27). Scaled so its
+## Rec.709 luminance is ~1.0 -- 0.2126*0.62 + 0.7152*0.98 + 0.0722*2.0 = 0.977
+## -- which leaves `house_light` as the level and VISUAL_BAR.md's 0.014 crowd
+## anchor where it was. The swing is carried by blue because blue is the
+## channel the eye weights least; the same saturation bought with red would
+## cost the level.
+const CROWD_WASH := Vector3(0.62, 0.98, 2.0)
+
 ## Idle motion, and the light floor the crowd sits on.
 ##
 ## A vertex shader ON PURPOSE, and this is the clause ARCHITECTURE.md's
@@ -1081,6 +1091,15 @@ uniform float sway_amplitude = 0.018;
 // wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
 // this is most of what lights them, which is why it is not smaller.
 uniform float house_light = 0.055;
+// The colour of the light the crowd sits in. It used to be white, so the stand
+// took its shirts' colours at face value and measured blue-GREY: mean sat
+// 0.408 on crowd_bank against 0.49-0.67 on every AEW still in
+// gauntlet/refs/lighting/, whose crowds sit in a saturated blue wash (hue
+// 210-240, coloured-pixel mean (0.09, 0.14, 0.27) on the Grand Slam frame).
+// A wash multiplies albedo, so the shirts keep their variation and take the
+// hall's colour. Normalised to Rec.709 luminance ~1.0 so that house_light
+// still sets the level and only the colour changes. See ArenaBuilder.CROWD_WASH.
+uniform vec3 house_tint = vec3(1.0);
 
 varying vec3 shirt;
 
@@ -1098,7 +1117,7 @@ void vertex() {
 
 void fragment() {
 	ALBEDO = shirt;
-	EMISSION = shirt * house_light;
+	EMISSION = shirt * house_tint * house_light;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }
@@ -1106,6 +1125,7 @@ void fragment() {
 	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
+	mat.set_shader_parameter("house_tint", CROWD_WASH)
 	return mat
 
 

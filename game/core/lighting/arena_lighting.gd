@@ -142,6 +142,24 @@ const STAGE_BACK_Z := -38.0
 @export var house_energy: float = 0.20
 ## Entrance stage wash.
 @export var stage_energy: float = 2.6
+## Beam fixtures over the bowl. What they are for is the SHAFT, not the light
+## that lands: see _build_beams(). Solved on art shots on forward_plus, with
+## tools/refs/measure_look.py against the four AEW stills (mean saturation
+## band 0.487-0.665):
+##
+##   energy / fog   crowd_bank sat   ring_corner dark   read
+##   none           0.438            45.2%              no beams
+##   6 / 6          0.438            45.2%              nothing visible
+##   200 / 6        0.443            43.7%              nothing visible
+##   20 / 40        0.451            42.6%              faint
+##   40 / 60        0.468            41.9%              shafts read
+##   60 / 120       0.493            41.2%              <- shipped
+##
+## The first two rows are _spot()'s 1.6 falloff over a 20m throw -- the same
+## reason the house wash measures as nothing -- which is why BEAM_ATTENUATION
+## exists. Dark fraction falls because the haze the beams light is in frame;
+## it stays inside the references' 38-50%.
+@export var beam_energy: float = 60.0
 
 # --- Colour -----------------------------------------------------------------
 ## Cool key and top, cooler rim.
@@ -229,6 +247,35 @@ const ACCENT_RANGE := 12.0
 @export var accent_energy: float = 3.2
 @export var uplight_energy: float = 2.8
 
+## The beam fixtures' colours, cycled around the grid. Off the four AEW stills
+## in gauntlet/refs/lighting/: their saturated pixels fall at hue 210 (cyan-
+## blue, 20-81% of each frame), 240 (blue, up to 64%) and 270-300 (violet and
+## magenta, 30% of the wide-bowl frame). Blue twice, because it is twice as
+## common. None is green-dominant, which capture_harness.gd needs.
+const BEAM_COLORS: Array[Color] = [
+	Color(0.30, 0.55, 1.0),
+	Color(0.55, 0.30, 1.0),
+	Color(0.20, 0.42, 1.0),
+	Color(0.95, 0.25, 0.80),
+]
+## Narrow on purpose. A moving head in beam mode is a few degrees across, and a
+## narrow cone puts its whole energy into a visible rod of haze rather than a
+## wash nobody can see the edge of -- which is what the house wash is, and why
+## it measured as nothing.
+const BEAM_ANGLE := 6.0
+const BEAM_FIXTURES := 16
+## Short of the mat by construction: the nearest fixture on the grid is
+## BOWL_INNER - 3.5 out from the ring's centre and aimed further out, so its
+## cone points AWAY from the canvas; see test_arena_beams.gd.
+const BEAM_RANGE := 40.0
+## Distance falloff for the beams, against _spot()'s 1.6. A moving head in
+## beam mode is close to collimated; at 1.6 a 20m throw delivered ~1/120 of
+## the fixture and no energy that left the pools sane made a visible shaft.
+const BEAM_ATTENUATION := 0.8
+## How much of each beam goes into the haze rather than onto the seats. High
+## because the shaft is the point and the pool is the side effect.
+@export var beam_fog_energy: float = 120.0
+
 ## How many house fixtures ring the bowl. Twelve had no scallops in it while
 ## the bowl was a 28 x 18m ring; the plan is 111m round now, so twenty keeps
 ## the spacing roughly where it was. A coverage decision, not a measurement.
@@ -314,6 +361,7 @@ func _ready() -> void:
 	_build_top_fill()
 	_build_rim()
 	_build_house()
+	_build_beams()
 	_build_stage_wash()
 	_build_stage_accents()
 	_build_backdrop_uplights()
@@ -424,6 +472,54 @@ func _build_house() -> void:
 		var aim: Vector3 = entry[0] + dir * 10.0 + Vector3(0.0, 2.6, 0.0)
 		_spot("House%02d" % i, at, aim, HOUSE_COLOR, house_energy,
 				46.0, 0.55, 34.0, false).light_volumetric_fog_energy = 0.25
+
+
+## Moving heads in beam mode on the roof grid, fanned out over the bowl.
+##
+## This is the element of a televised AEW hall the rig did not have at all.
+## Every reference still in gauntlet/refs/lighting/ carries visible shafts of
+## blue, violet and magenta standing in the haze over the crowd, and they are
+## most of why those frames read as lit-for-TV rather than as a sports hall
+## with the lights down: 38-50% of each frame is black, and the beams are what
+## cut through it.
+##
+## Hung on the same plan curve the house wash follows (ArenaBuilder._plan_loop)
+## so the fan stays even around an obround bowl, and aimed OUT and DOWN into the
+## seats, which is what keeps the canvas out of every cone.
+##
+## Static, not sweeping. A real moving head moves, and a sweep here would be
+## cosmetic in ARCHITECTURE.md's sense -- but it would also make every capture
+## frame depend on wall-clock time, and the gauntlet's measurements are only
+## comparable across rounds because the frames are not.
+##
+## Not built on the compatibility renderer. A beam is for its shaft, and the
+## shaft is volumetric fog, which that renderer does not have (see
+## _build_fog_volumes). What would be left is sixteen coloured pools on the
+## crowd -- and split by STAGE_LINE_Z, so half would take COMPAT_LIGHT_GAIN and
+## half would not, lighting one end of the bowl seven times the other.
+##
+## No shadows: sixteen more shadow maps for a cone six degrees wide buys
+## nothing a critic can see, and the renderer's shadow atlas is already spent
+## on the ring key.
+func _build_beams() -> void:
+	if not _supports_volumetric_fog():
+		return
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - 3.5)
+	for i: int in BEAM_FIXTURES:
+		# Offset half a step from the house fixtures so the two sets interleave
+		# rather than stacking on the same hanging points.
+		var entry: Array = loop[((2 * i + 1) * loop.size()) / (2 * BEAM_FIXTURES)]
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 4.0, 0.0)
+		var dir: Vector3 = entry[1]
+		# Alternate a near and a far throw, so the fan crosses the bowl rather
+		# than drawing sixteen parallel lines at one angle.
+		var reach := 9.0 if i % 2 == 0 else 16.0
+		var aim: Vector3 = entry[0] + dir * reach + Vector3(0.0, 3.0, 0.0)
+		var light := _spot("Beam%02d" % i, at, aim,
+				BEAM_COLORS[i % BEAM_COLORS.size()], beam_energy,
+				BEAM_ANGLE, 0.2, BEAM_RANGE, false)
+		light.spot_attenuation = BEAM_ATTENUATION
+		light.light_volumetric_fog_energy = beam_fog_energy
 
 
 ## Two fixtures over the entrance stage, cool so the stage reads as a

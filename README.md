@@ -6696,3 +6696,23 @@ With `--trace` it also shows who won each lock-up.
 - The replay hash changes, because the match plays differently. Updating the
   baseline is the owner's call.
 - Not yet looked at on a rendered frame: the "FIRED UP" tag.
+
+## Round: AEW arena lighting -- beams over the bowl, a blue crowd wash
+
+Compared on forward_plus against the four AEW stills in
+`gauntlet/refs/lighting/` with `measure_look.py`. Public sources publish no
+AEW lighting plot, so the stills stayed the reference. Two gaps, both fixed off
+the ring:
+
+- **No beams.** Sixteen 6-degree moving heads on the roof grid now throw blue,
+  violet and magenta shafts through the existing haze (`_build_beams()`). The
+  colours are the stills' measured hues. They needed a gentler falloff than
+  `_spot()`'s 1.6. At 1.6 they showed nothing even at 200 energy, which is also
+  why the house wash has always measured as zero.
+- **Grey crowd.** The crowd's emission was lit white. `CROWD_WASH` tints it
+  blue at unchanged luminance.
+
+`crowd_bank` saturation 0.408 -> **0.493** (references 0.487-0.665), the first
+frame inside that band. Mat 0.453 -> 0.450, still inside its anchor.
+450 tests pass (446 + four in `test_arena_beams.gd`). The full before/after table
+and what is still open is in `gauntlet/refs/lighting.md`.
