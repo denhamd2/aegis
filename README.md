@@ -6716,3 +6716,28 @@ the ring:
 frame inside that band. Mat 0.453 -> 0.450, still inside its anchor.
 450 tests pass (446 + four in `test_arena_beams.gd`). The full before/after table
 and what is still open is in `gauntlet/refs/lighting.md`.
+
+## Round: the ribbon boards carry the AEW / Dynamite artwork
+
+The two LED ribbon boards round the suite fascia were flat amber. They now
+show the owner-supplied board graphic (`materials/ribbon_board.png`, credited
+in `assets/environment/CREDITS.md`), repeating every 4.25m -- the tile's own
+aspect at the board's 0.55m height -- round the straights and both curved
+ends. `arena_bowl.py` writes the UVs (`Part.ribbon`), and two builds of the
+bowl are byte-identical.
+
+Three renders came out a colourless white before one came out right, each for
+a different reason, and all three are pinned by `test_arena_bowl.gd`:
+
+1. **Bloom.** Holding the amber's mean luminance put the white lettering at
+   ~3.2 against a 1.25 glow threshold; on a board a few pixels tall the bloom
+   covered the whole thing. The level now pins the picture's peak at 1.1.
+2. **Gloss.** Seen nearly edge-on, a 0.25-roughness face reflected the haze
+   over its own picture. The face is matte with no specular now, as an LED
+   board is.
+3. **ADD.** StandardMaterial3D adds its emission colour to the emission
+   texture, and the colour was white. It is black now, so the board shows only
+   the picture. This was the one actually hiding the artwork: fixing 1 and 2
+   left the pixels unchanged to the digit, which is how it was found.
+
+Mat 0.450 before and after. 452 tests pass.

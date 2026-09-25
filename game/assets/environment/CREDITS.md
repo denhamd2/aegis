@@ -186,6 +186,24 @@ generator is still called for the mat's roughness and normal maps, which is
 where most of its value was: it puts relief and specular breakup on the canvas
 that a flat photograph cannot.
 
+## ribbon_board.png — THIRD-PARTY MARKS, supplied by the project owner
+
+The LED ribbon board artwork (`materials/ribbon_board.png`, 950x123) runs round
+both ribbon boards on the suite fascia (`core/arena/arena_builder.gd`,
+`RIBBON_ART`; UVs from `tools/blender/arena_bowl.py`).
+
+It carries **third-party trademarks** — the AEW and *Dynamite* marks — on the
+same terms as the apron banner above: no licence, no author, in the build
+because `ARCHITECTURE.md` permits third-party assets, fine for a prototype and
+for internal capture, and **not cleared for distribution**.
+
+Supplied as a 1902x724 image: the board strip on a black surround, carrying
+two repeats of the sequence. The only processing is a crop to exactly one
+repeat -- rows 287-409 (the strip, less its anti-aliased edge rows) and
+columns 5-954. The period, 950px, was found by shifting the strip against
+itself; the seam between the crop's two ends differs by 2.5-4.5 levels out
+of 255 per pixel, well below what can be seen. No resampling, no colour change.
+
 ## Entrance-set video — PROVENANCE UNVERIFIED
 
 `video/dynamite_tron.ogv` and `video/dynamite_tron_still.png` — the graphics

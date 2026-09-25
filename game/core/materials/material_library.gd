@@ -627,11 +627,11 @@ const SPECS := {
 	## `ArenaBuilder._self_emissive()` supplies the level, so this is a hue
 	## and a gloss and nothing else.
 	##
-	## Warm amber rather than any particular advertisement: the boards are
-	## 0.55m tall at 20-35m, where a legible graphic would be under two pixels
-	## of text, and what the reference frames actually contribute at that size
-	## is a band of warm light around the whole hall. `gauntlet/refs/arena.md`
-	## records what the photographs do and do not establish about them.
+	## The FALLBACK now. The boards show the owner-supplied AEW / Dynamite
+	## artwork (`ArenaBuilder.RIBBON_ART`); this flat amber is what they
+	## render if that image fails to load. The note that stood here argued a
+	## legible graphic would be "under two pixels of text" at 20-35m. Rendered,
+	## it is not: AEW and DYNAMITE read on every art shot that sees the bowl.
 	"arena_ribbon": {
 		"tint": Color(1.00, 0.62, 0.16), "roughness": 0.25,
 	},

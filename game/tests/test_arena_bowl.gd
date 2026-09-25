@@ -289,3 +289,27 @@ func test_the_plan_loop_is_everywhere_one_offset_from_its_rectangle() -> void:
 		assert_float(normal.length()).is_equal_approx(1.0, 0.001)
 		assert_float(normal.dot((point - nearest).normalized())) \
 				.is_equal_approx(1.0, 0.001)
+
+
+## The ribbon artwork is laid along the board at RIBBON_HEIGHT * RIBBON_ART_ASPECT
+## per repeat. If the image is swapped for one of a different shape and the
+## constant is not updated, every repeat stretches round the bowl.
+func test_the_ribbon_art_is_laid_at_its_own_aspect() -> void:
+	var tex: Texture2D = load(ArenaBuilder.RIBBON_ART)
+	assert_object(tex).is_not_null()
+	var aspect := float(tex.get_width()) / float(tex.get_height())
+	assert_float(ArenaBuilder.RIBBON_ART_ASPECT).is_equal_approx(aspect, 0.001)
+
+
+## Emission, not a lit face: see `_ribbon_material()`. Both of these were bugs
+## on the way in -- a white emission colour under ADD, and a glossy face that
+## reflected the haze -- and each rendered the board a colourless white.
+func test_the_ribbon_board_is_the_picture_and_nothing_else() -> void:
+	var builder: ArenaBuilder = auto_free(ArenaBuilder.new())
+	var mat := builder._ribbon_material(0.4)
+	assert_object(mat.emission_texture).is_not_null()
+	assert_bool(mat.emission == Color.BLACK).is_true()
+	assert_int(mat.emission_operator).is_equal(BaseMaterial3D.EMISSION_OP_ADD)
+	assert_float(mat.metallic_specular).is_equal(0.0)
+	# Under the glow threshold, or the bloom closes over the lettering.
+	assert_float(ArenaBuilder.RIBBON_ART_PEAK).is_less(1.25)

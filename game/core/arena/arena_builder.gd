@@ -355,6 +355,15 @@ const BOWL_AISLES := 12
 ## the hall two decks rather than one thirty-row rake.
 const SUITE_HEIGHT := 3.6
 const RIBBON_HEIGHT := 0.55
+## Width over height of one tile of the ribbon boards' artwork
+## (`RIBBON_ART`, 950 x 123 px). arena_bowl.py lays the tile along the board
+## at RIBBON_HEIGHT * this -- 4.25m per repeat -- so it keeps its proportions
+## on every run and round both curved ends. Change the image, change this, and
+## rebuild the bowl.
+const RIBBON_ART_ASPECT := 7.7236
+const RIBBON_ART := "res://assets/environment/materials/ribbon_board.png"
+## Emission of the artwork's white lettering; see `_ribbon_material()`.
+const RIBBON_ART_PEAK := 1.1
 ## Height of a seat back standing on its tread.
 const SEAT_BACK_HEIGHT := 0.42
 ## How wide a seat back is as a fraction of SEAT_PITCH. Under 1.0 so there is
@@ -571,6 +580,56 @@ func _self_emissive(mat: StandardMaterial3D, level: float) -> StandardMaterial3D
 	var albedo_linear := maxf(mat.albedo_color.srgb_to_linear().get_luminance(),
 			0.0001)
 	mat.emission_energy_multiplier = level * _emissive_gain() / albedo_linear
+	return mat
+
+
+## The ribbon boards, showing `RIBBON_ART` -- the supplied AEW / Dynamite
+## board graphic -- repeated round the bowl.
+##
+## The level pins the PICTURE'S PEAK, not its mean. The first version kept
+## `level`'s old meaning (the flat amber's mean linear luminance, 0.40) and
+## divided by the picture's mean, which put the white lettering at ~3.2: far
+## over match.tscn's glow_hdr_threshold of 1.25, and on a board three pixels
+## tall at 25m the bloom closed over the whole ribbon and rendered it as a
+## solid white line with no artwork in it at all. Measured, then changed.
+##
+## So the lettering sits at RIBBON_ART_PEAK, just under the threshold -- the
+## same place the ramp LED strips are put, flaring on the bloom without it
+## swallowing them -- and the blue field falls where the picture puts it.
+## That gives a mean near 0.28, a little under the amber's 0.40, on a board
+## that now carries detail instead of a flat colour.
+##
+## Falls back to the old amber if the image is missing, rather than leaving a
+## white band round the hall.
+func _ribbon_material(level: float) -> StandardMaterial3D:
+	var tex: Texture2D = load(RIBBON_ART)
+	if tex == null:
+		push_error("ArenaBuilder: %s failed to load." % RIBBON_ART)
+		return _self_emissive(_textured("arena_ribbon"), level)
+	var mat := StandardMaterial3D.new()
+	# An LED board's face is a black panel; every bit of its colour is the
+	# LEDs. Given the picture as albedo as well, the beams and the ambient lit
+	# it on top of its own emission and washed the blue field toward white.
+	mat.albedo_color = Color(0.02, 0.02, 0.025)
+	mat.emission_enabled = true
+	# BLACK, not white. StandardMaterial3D's default emission operator is ADD
+	# -- emission colour PLUS the texture -- so a white colour here put a
+	# full-white layer under the picture and the board rendered (227, 222, 228)
+	# whatever else was changed. MULTIPLY with white would do the same job;
+	# black under ADD says "the picture is the whole signal" more plainly.
+	mat.emission = Color.BLACK
+	mat.emission_operator = BaseMaterial3D.EMISSION_OP_ADD
+	mat.emission_texture = tex
+	mat.emission_energy_multiplier = RIBBON_ART_PEAK * _emissive_gain()
+	# Unshaded in effect: no specular at all. The boards are seen almost
+	# edge-on from most of the hall, and at that angle Fresnel takes a 0.25-
+	# roughness face's reflectance toward 1.0 -- it reflected the grey haze
+	# over its own picture and rendered (210, 204, 214), colourless, where the
+	# emission alone predicts a clear blue-violet. An LED face is matte.
+	mat.roughness = 1.0
+	mat.metallic_specular = 0.0
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	mat.texture_repeat = true
 	return mat
 
 
@@ -1037,6 +1096,9 @@ func _build_bowl_model() -> Node3D:
 				_house_lit(_textured(spec[0]), spec[1])))
 	for part: String in BOWL_MODEL_EMISSIVE:
 		var spec: Array = BOWL_MODEL_EMISSIVE[part]
+		if part == "RibbonBoards":
+			_dress(root, part, _ribbon_material(spec[1]))
+			continue
 		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
 	for part: String in CROWD_PARTS:
 		_dress(root, part, _crowd_material())
