@@ -6359,3 +6359,25 @@ histogram distance 0.085 -> 0.087.
   no light changes them.
 
 424 tests pass.
+
+## Measured, not changed: why the winner throws two to four signatures
+
+Twelve AI seeds on the current build: the winner lands 2-4 signatures and the
+last move before the pin is a signature in 11 of 12. Seed 2's trace shows the
+shape -- a neckbreaker at 64 damage knocks the man down at 102, he kicks out
+(the window is still wide at that damage), strikes, then the same neckbreaker
+twice in a row, the second one pinned.
+
+Three pacing rules were tried in a scratch checkout and **none shipped**:
+
+| rule | winner's signatures | finish is a signature | note |
+| --- | --- | --- | --- |
+| as built | 2-4 | 11 / 12 | same move back to back |
+| cap 2 landed, 3 strikes apart | <= 2 | 3 / 12 | loser's tie-ups become clinch knees |
+| cap 2 attempts each, 3 strikes apart | <= 2 | 2 / 12 | matches longer, two winners change |
+| 3 strikes apart, no cap | 0-3 | 4 / 12 | in two seeds the man with both signatures lost |
+
+The signature is the finish *because* it is thrown repeatedly: any rule that
+thins it out hands the finish to a strike. Which a match should be -- one
+signature and a strike finish, or the repeated signature -- is a design call
+for the owner. MATCH_FLOW.md now says so, and describes the power move.

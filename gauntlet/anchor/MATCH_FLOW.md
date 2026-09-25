@@ -38,7 +38,12 @@ That sentence is `WrestlerAI`'s, and it is the whole design:
    contest decides who throws the move. This exists to open the match with
    something other than a punch.
 2. **The middle is strikes.** Punches and kicks, traded. This is most of the
-   match by time and by count.
+   match by time and by count. Once in the middle, the man who won the opening
+   lock-up locks up again for the **power move** -- the body slam -- when his
+   momentum sits between `POWER_THRESHOLD` and `SIGNATURE_THRESHOLD`
+   (`WrestlerAI._wants_power_tie_up()`). One try a match, won or lost. It
+   leaves the other man on the mat briefly (`MoveDef.leaves_defender_down`),
+   which is not a knockdown and cannot be covered.
 3. **The signature finishes it.** Once the man opposite has been worn down far
    enough that one signature will put him on the mat, the other reaches for a
    last tie-up, throws it, and covers him where he lands.
@@ -53,10 +58,19 @@ finisher throws were then removed (they did not read on screen), so the chain
 had nowhere to escalate to, and a match made of four identical hip tosses is
 not a better match than one made of strikes.
 
-The grapple survives as **an opening and an ending**, not as the body of the
-match.
+The grapple survives as **an opening, one power move and an ending**, not as
+the body of the match.
 
 ### Why the signature comes last
+
+Measured, twelve AI seeds: the winner throws **two to four** signatures a
+match, and the one that ends it is a signature in 11 of 12. Those two facts
+are the same fact. The first signature knocks the man down at about 100
+damage, where the kickout window is still wide, so he kicks out; the finish is
+a later signature -- sometimes the same move twice in a row. Capping
+signatures at two, or spacing them three strikes apart, was tried and hands the
+finish to a strike instead (8-10 of 12). Which of those a match should be is a
+design call, recorded in README rather than made here.
 
 Momentum crosses `SIGNATURE_THRESHOLD` after three or four strikes, long before
 anybody is hurt enough to pin. An AI that threw a signature as soon as it could
@@ -113,9 +127,10 @@ Recording these stops them being rediscovered as bugs.
 - **A neutral game.** The AI circles to hold its spacing, but there is no
   feinting, no baiting, no reading. See the locomotion slice in
   `gauntlet/status/slices.json`.
-- **The POWER and FINISHER rungs.** Empty. `CombatSystem.Tier` keeps them so
-  that a tier's ordinal — and every seeded draw and saved replay that depends
-  on it — does not shift underneath the two rungs that are left.
+- **The FINISHER rung.** Empty. `CombatSystem.Tier` keeps it so that a tier's
+  ordinal — and every seeded draw and saved replay that depends on it — does
+  not shift underneath the rungs that are left. (The POWER rung was empty too
+  until the body slam was keyed back into it; see README.)
 
 ## Invariants that span files
 
