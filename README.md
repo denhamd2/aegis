@@ -6459,3 +6459,33 @@ slot); every bake rebuilds byte-identical.
 AI vs AI, with no budget -- and that match **never ends**, on this build and
 on `ca3e506` before any of this session's work (15 minutes at 6000 fps with
 no finish). It is why the gate could not complete. Next job.
+
+## Round: the Superman Punch and the Cody Cutter
+
+Two more one-man moves, as signatures: `Roster.Entry.signature`, joining the
+shared signature draw (the backbreaker and neckbreaker stay).
+
+Researched first:
+
+- **Superman Punch** (Roman) -- charges up pounding the mat, runs in, brings
+  the rear leg forward as if to kick, snaps it back and leaps into a right
+  hand. His signature, and the set-up for the Spear.
+  ([Wikipedia](https://en.wikipedia.org/wiki/Superman_punch),
+  [Sportskeeda](https://www.sportskeeda.com/wwe/top-10-signature-moves-in-wwe-sstl))
+- **Cody Cutter** (Cody) -- a springboard cutter: off the ropes, the head
+  caught in a three-quarter facelock in the air, driven face-first.
+  ([Wikipedia: Cutter](https://en.wikipedia.org/wiki/Cutter_(professional_wrestling)),
+  [TheSportster](https://www.thesportster.com/most-devastating-dangerous-effective-moves-cody-rhodes-wrestling-career-wwe-aew/))
+
+A paired clip has no ropes in its frame, so Cody turns and runs for where
+they would be and comes back off them. The punch knocks the man flat on his
+back away from Roman, so -- as in the Spear -- his root yaws a half-turn as he
+falls; the cutter lands him face-first and he rolls over.
+
+**Own signature first.** Added to a one-in-three draw, Roman went twelve AI
+matches without throwing the punch once. `WrestlerController.own_signature`
+makes a wrestler's first signature of the match his own; later ones come from
+the draw. Twelve seeds after: Superman Punch 5, Cody Cutter 11, a finisher in
+12/12 (the winning move in 9), chain order held in 12/12.
+
+427 tests pass.

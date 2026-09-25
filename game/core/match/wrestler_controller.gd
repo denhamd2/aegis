@@ -179,6 +179,14 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 @export var power_move: MoveDef
 @export var signature_move: MoveDef
 @export var finisher_move: MoveDef
+## This wrestler's own signature (Roster.Entry.signature), also in
+## signature_move_pool. The FIRST signature he throws in a match is this one,
+## and only later ones come from the seeded draw: a one-in-three draw over the
+## one or two signatures a match holds meant Roman went twelve AI matches
+## without ever throwing the Superman Punch. It is the move he is known for,
+## and the one he sets the Spear up with, so it comes first.
+@export var own_signature: MoveDef
+var _own_signature_thrown: bool = false
 @export var running_attack_move: MoveDef
 ## Extra moves at each grapple tier, picked between by a seeded draw at the
 ## moment the attacker commits (see _pick_tier_move()). The single slot
@@ -1637,7 +1645,13 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if combat.can_finisher() and finisher_move:
 		move = _pick_tier_move(finisher_move, finisher_move_pool)
 	elif combat.can_signature() and signature_move:
-		move = _pick_tier_move(signature_move, signature_move_pool)
+		if own_signature and not _own_signature_thrown \
+				and opponent.weight_class >= own_signature.weight_class_min \
+				and opponent.weight_class <= own_signature.weight_class_max:
+			move = own_signature
+			_own_signature_thrown = true
+		else:
+			move = _pick_tier_move(signature_move, signature_move_pool)
 	elif combat.can_power() and power_move:
 		move = _pick_tier_move(power_move, power_move_pool)
 	else:

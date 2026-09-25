@@ -239,6 +239,15 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		# the controller has it from its first tick.
 		wrestler.finisher_move = load(entry.finisher) as MoveDef \
 				if entry.finisher != "" else null
+		# And his own signature, joining the shared draw. A fresh array: the
+		# pool match.tscn assigns is one resource shared by both slots, and
+		# appending to it would hand Roman's punch to Cody as well.
+		var pool: Array[MoveDef] = wrestler.signature_move_pool.duplicate()
+		wrestler.own_signature = null
+		if entry.signature != "":
+			wrestler.own_signature = load(entry.signature) as MoveDef
+			pool.append(wrestler.own_signature)
+		wrestler.signature_move_pool = pool
 	if "match_seed" in scene:
 		scene.match_seed = match_seed
 

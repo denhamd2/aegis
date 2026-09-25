@@ -136,6 +136,36 @@ const RECIPES := {
 	# The body slam's lift, then down onto one knee with the victim arched
 	# face-up across the other. The samples below are only the fallback --
 	# see Backbreaker_Attacker in tools/blender/wrestling_clips.py.
+	# Roman's own signature -- see Superman_Punch_Attacker.
+	"signature_superman_punch": {
+		"authored": {"attacker": "Superman_Punch_Attacker", "defender": "Superman_Punch_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.80, "clip": "Punch_Cross", "at": 0.50},
+			{"t": 1.40, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.87, "clip": "Hit_Head", "at": 0.20},
+			{"t": 1.40, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.10,
+	},
+	# Cody's own signature -- see Cody_Cutter_Attacker.
+	"signature_cody_cutter": {
+		"authored": {"attacker": "Cody_Cutter_Attacker", "defender": "Cody_Cutter_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.80, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 1.40, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.90, "clip": "Death01", "at": 0.90},
+			{"t": 1.40, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.10,
+	},
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
 	"finisher_cross_rhodes": {
 		"authored": {"attacker": "Cross_Rhodes_Attacker", "defender": "Cross_Rhodes_Defender"},
@@ -378,6 +408,54 @@ const TRAJECTORIES := {
 			"rot": [[0.00, 0.0, -90.0, 0.0], [0.20, 0.0, -90.0, 0.0],
 					[0.33, 0.0, 0.0, 0.0], [0.47, 0.0, 90.0, 0.0],
 					[1.60, 0.0, 90.0, 0.0]],
+		},
+	},
+
+	# Roman's Superman Punch. He shoves off to 0.90, crouches and pounds the
+	# mat, runs 1.30 -> 0.45, leaps (the height is bone pose) and lands the
+	# right hand at t0.87; the victim falls straight back, his root yawing a
+	# half-turn t0.87-1.03 as in the Spear.
+	"signature_superman_punch": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.90, 0.00, 0.00],
+					[0.47, 1.30, 0.00, 0.00], [0.63, 0.45, 0.00, 0.00],
+					[0.87, 0.12, 0.00, 0.00], [0.97, 0.05, 0.00, 0.00],
+					[1.40, 0.05, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [1.40, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.55, 0.00, 0.00],
+					[0.53, -0.45, 0.00, 0.00], [0.87, -0.45, 0.00, 0.00],
+					[1.03, -0.95, 0.00, 0.00], [1.40, -0.95, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.87, 0.0, -90.0, 0.0],
+					[0.93, 0.0, 0.0, 0.0], [1.03, 0.0, 90.0, 0.0],
+					[1.40, 0.0, 90.0, 0.0]],
+		},
+	},
+
+	# Cody's Cody Cutter. He shoves off, turns and runs for where the ropes
+	# would be (yaw 90 -> -90 at t0.20-0.30, out to 1.30), turns back off
+	# them (t0.47-0.53), runs in, leaps at t0.73 and falls back to a seat at
+	# 0.50, the victim's head under his right arm. Cody faces -X at the
+	# finish, so his right is -Z: the victim is pulled face-first 0.2 m
+	# forward and 0.25 m to that side, so his head lands at Cody's hip.
+	"signature_cody_cutter": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.60, 0.00, 0.00],
+					[0.47, 1.30, 0.00, 0.00], [0.53, 1.30, 0.00, 0.00],
+					[0.73, 0.30, 0.00, 0.00], [0.90, 0.50, 0.00, 0.00],
+					[1.40, 0.50, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.20, 0.0, 90.0, 0.0],
+					[0.30, 0.0, -90.0, 0.0], [0.47, 0.0, -90.0, 0.0],
+					[0.53, 0.0, 90.0, 0.0], [1.40, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.17, -0.55, 0.00, 0.00],
+					[0.73, -0.45, 0.00, 0.00], [0.80, -0.50, 0.00, 0.00],
+					[0.90, -0.35, 0.00, -0.25], [1.40, -0.35, 0.00, -0.25]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.40, 0.0, -90.0, 0.0]],
 		},
 	},
 

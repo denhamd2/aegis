@@ -38,7 +38,9 @@ const SCOPED_GRAPPLE := 1
 ## against its partner rather than stitched from borrowed clips, which is
 ## what the cut throws were.
 const SCOPED_POWER := 1
-const SCOPED_SIGNATURE := 2
+## Two shared (backbreaker, neckbreaker) and one per wrestler who has one:
+## Roman's Superman Punch and Cody's Cody Cutter.
+const SCOPED_SIGNATURE := 4
 ## One per wrestler who has one, and they belong to the roster rather than to
 ## match.tscn: Roman's Spear and Cody's Cross Rhodes.
 const SCOPED_FINISHER := 2
@@ -227,8 +229,9 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 			for extra: MoveDef in tier[1]:
 				reachable[String(extra.animation_pair_id)] = true
 	for entry: Roster.Entry in Roster.entries():
-		if entry.finisher != "":
-			reachable[String((load(entry.finisher) as MoveDef).animation_pair_id)] = true
+		for path: String in [entry.finisher, entry.signature]:
+			if path != "":
+				reachable[String((load(path) as MoveDef).animation_pair_id)] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):
@@ -344,3 +347,34 @@ func test_each_wrestler_gets_his_own_finisher() -> void:
 			assert_int(w.tier_of(w.finisher_move)).is_equal(CombatSystem.Tier.FINISHER)
 	assert_str((load(roman.finisher) as MoveDef).animation_pair_id).is_equal("finisher_spear")
 	assert_str((load(cody.finisher) as MoveDef).animation_pair_id).is_equal("finisher_cross_rhodes")
+
+## A wrestler's own signature joins his draw -- and only his.
+func test_each_wrestler_gets_his_own_signature_and_keeps_the_shared_ones() -> void:
+	var roman := Roster.by_id("roman")
+	var cody := Roster.by_id("cody")
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, roman, cody, 1)
+	var ids := {}
+	for name: String in ["WrestlerA", "WrestlerB"]:
+		var w: WrestlerController = scene.get_node(name)
+		var drawn: Array[String] = [String(w.signature_move.animation_pair_id)]
+		for move: MoveDef in w.signature_move_pool:
+			drawn.append(String(move.animation_pair_id))
+		ids[name] = drawn
+		for move: MoveDef in [w.signature_move] + w.signature_move_pool:
+			assert_int(w.tier_of(move)).is_equal(CombatSystem.Tier.SIGNATURE)
+	assert_array(ids["WrestlerA"]).contains(["signature_superman_punch",
+			"signature_backbreaker", "signature_neckbreaker"])
+	assert_array(ids["WrestlerA"]).not_contains(["signature_cody_cutter"])
+	assert_array(ids["WrestlerB"]).contains(["signature_cody_cutter",
+			"signature_backbreaker", "signature_neckbreaker"])
+	assert_array(ids["WrestlerB"]).not_contains(["signature_superman_punch"])
+
+## And it is the first one he throws.
+func test_a_wrestlers_first_signature_is_his_own() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
+	var roman: WrestlerController = scene.get_node("WrestlerA")
+	var cody: WrestlerController = scene.get_node("WrestlerB")
+	assert_str(roman.own_signature.animation_pair_id).is_equal("signature_superman_punch")
+	assert_str(cody.own_signature.animation_pair_id).is_equal("signature_cody_cutter")

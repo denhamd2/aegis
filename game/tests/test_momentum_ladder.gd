@@ -54,7 +54,8 @@ func test_the_whole_ladder_fits_inside_one_match() -> void:
 ## unlocked it, or using it would drive the meter negative and the tier
 ## would gate on something the spend cannot honour.
 func test_no_move_costs_more_than_the_tier_that_unlocks_it() -> void:
-	for name: String in ["signature_backbreaker", "signature_neckbreaker"]:
+	for name: String in ["signature_backbreaker", "signature_neckbreaker",
+			"signature_superman_punch", "signature_cody_cutter"]:
 		assert_float(_move(name).momentum_cost).override_failure_message(
 			"%s costs more than SIGNATURE_THRESHOLD" % name
 		).is_less_equal(CombatSystem.SIGNATURE_THRESHOLD)
