@@ -50,6 +50,9 @@ func _parse_args() -> void:
 	# than per match so a bad id fails before the first seed runs.
 	_pair = Roster.pair_from_spec(_wrestlers)
 
+## Damage margin before one man counts as leading (see lead_changes).
+const LEAD_MARGIN := 15.0
+
 func _run_match(seed_value: int) -> Dictionary:
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	# The roster's models, colourways and names, through the same call the
@@ -87,6 +90,11 @@ func _run_match(seed_value: int) -> Dictionary:
 		"finish": "",
 		"earned": {a.name: 0.0, b.name: 0.0},
 		"trace": [],
+		# Each comeback: who, when, how it was earned, and the damage gap.
+		"comebacks": [],
+		# Times the damage lead changed hands (see _run_match): a match where
+		# one man leads from bell to pin tells no story.
+		"lead_changes": 0,
 		"entries": {},
 		"ticks_in": {},
 	}
@@ -123,12 +131,37 @@ func _run_match(seed_value: int) -> Dictionary:
 		row["method"] = method
 		row["finish"] = row["last_move_by_winner"].get(winner.name, "nothing")
 	referee.match_won.connect(won)
+	# The current tick, boxed so the lambda below reads the live value.
+	var tick_ref := [0]
+	var fired := func(w: WrestlerController) -> void:
+		var other: WrestlerController = b if w == a else a
+		# A kickout comeback fires with him still on the mat.
+		var kind := "kickout" if w.fsm.current_state == WrestlerFSM.State.DOWN else "heat"
+		row["comebacks"].append({"who": w.name, "tick": tick_ref[0], "kind": kind,
+				"gap": w.combat.total_damage() - other.combat.total_damage()})
+		row["trace"].append("      %-9s COMEBACK (%s) at tick %d, behind by %.0f" % [
+			w.name, kind, tick_ref[0], w.combat.total_damage() - other.combat.total_damage()])
+	a.fired_up.connect(fired)
+	b.fired_up.connect(fired)
 
 	var tick := 0
 	var last_state := {a.name: -1, b.name: -1}
+	# Who leads on damage taken (the man who has taken less), with a margin
+	# so a lead is not "changed" by one jab either way.
+	var leader := ""
 	while tick < _budget and row["winner"] == "":
 		await get_tree().physics_frame
 		tick += 1
+		tick_ref[0] = tick
+		var gap: float = b.combat.total_damage() - a.combat.total_damage()
+		var now_leading := leader
+		if gap >= LEAD_MARGIN:
+			now_leading = a.name
+		elif gap <= -LEAD_MARGIN:
+			now_leading = b.name
+		if leader != "" and now_leading != leader:
+			row["lead_changes"] += 1
+		leader = now_leading
 		for w: WrestlerController in [a, b]:
 			row["peak_momentum"][w.name] = maxf(row["peak_momentum"][w.name], w.combat.momentum)
 			var state_name: String = WrestlerFSM.State.keys()[w.fsm.current_state]
@@ -138,6 +171,9 @@ func _run_match(seed_value: int) -> Dictionary:
 				last_state[w.name] = w.fsm.current_state
 				var entries: Dictionary = row["entries"][w.name]
 				entries[state_name] = entries.get(state_name, 0) + 1
+				if w.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and w._is_grapple_attacker:
+					row["trace"].append("      %-9s wins the lock-up at tick %d (fired up: %s / %s)" % [
+						w.name, tick, a.combat.is_fired_up(), b.combat.is_fired_up()])
 	row["ticks"] = tick
 	scene.queue_free()
 	await get_tree().process_frame
@@ -237,3 +273,17 @@ func _report() -> void:
 	print("per match, mean: grapple moves %.1f   strikes %.1f   knockdowns %.1f" % [
 		float(grapples) / _rows.size(), float(strikes) / _rows.size(),
 		float(downs) / _rows.size()])
+	var fired_seeds := 0
+	var comeback_wins := 0
+	var kinds := {}
+	var changes := 0
+	for row in _rows:
+		changes += int(row["lead_changes"])
+		if not (row["comebacks"] as Array).is_empty():
+			fired_seeds += 1
+		for c: Dictionary in row["comebacks"]:
+			kinds[c["kind"]] = int(kinds.get(c["kind"], 0)) + 1
+			if c["who"] == row["winner"]:
+				comeback_wins += 1
+	print("comebacks: fired in %d of %d seeds %s   won by the man who came back %d   lead changes per match %.1f" % [
+		fired_seeds, _rows.size(), kinds, comeback_wins, float(changes) / _rows.size()])

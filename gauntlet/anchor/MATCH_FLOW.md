@@ -49,6 +49,53 @@ That sentence is `WrestlerAI`'s, and it is the whole design:
    last tie-up, throws it, and covers him where he lands.
 4. **Every finish is a cover.** A match ends on a pinfall.
 
+Running through all of it is **the comeback**. Once a match, each man may
+fire up (`CombatSystem`'s comeback section, `MatchReferee._update_comebacks()`).
+
+### The comeback
+
+A televised match is a story in a known order:
+
+1. the shine;
+2. the heat, where one man is in control and the other is beaten down;
+3. the comeback, where the beaten man fires up and turns it round;
+4. the finishing stretch.
+
+Before the comeback existed, the man who got ahead stayed ahead. Measured
+over twelve AI seeds, the damage lead changed hands 0.2 times a match.
+
+- **Who earns one.** Only the man who is behind: by at least
+  `HEAT_DAMAGE_GAP`, while the other man has just landed
+  `HEAT_UNANSWERED_HITS` on him with no answer. Surviving a cover while that
+  far behind earns one too (the near-fall comeback). Each man gets one per
+  match. It is a response to a beating, not a power-up.
+- **Why a deficit and not a count of unanswered strikes.** Matches here trade
+  strikes; nobody takes more than two or three in a row. The beating is
+  done in big pieces: the tie-up winner's power move, a running attack as
+  the other man gets up, and a signature.
+- **What it does, for `COMEBACK_TICKS`** (counted only while he is on his
+  feet, so a getup does not use it up):
+  - he no-sells strikes, taking the damage but not the flinch;
+  - his strikes rock the other man into STUNNED;
+  - his strikes and his grapples do `COMEBACK_DAMAGE_SCALE` damage;
+  - his meter jumps to at least `COMEBACK_MOMENTUM`;
+  - the AI throws faster (`comeback_strike_cooldown_ticks`);
+  - **he wins any lock-up** against a man who is not fired up himself
+    (`MatchReferee._tie_up_weight()`), because the comeback has to be able
+    to end in his big move.
+- **How it ends.** When the clock runs out, or when a knockdown cuts it off.
+- **On screen.** "FIRED UP" appears on his HUD plate.
+
+The shape it gives is heat, then comeback, then a near-fall, then often the
+other man's own comeback, then the finish. Who wins after a comeback is not
+fixed, and should not be. `tools/probe/ladder_probe.tscn` reports, per run:
+
+- how often comebacks fire;
+- how often the man who came back went on to win;
+- how many times the lead changed hands.
+
+Read those before retuning any of the numbers above.
+
 ### Why it is not a grapple match
 
 It used to be. Every close-range decision was a seeded coin flip between a

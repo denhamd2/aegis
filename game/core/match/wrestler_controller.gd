@@ -13,6 +13,8 @@ extends CharacterBody3D
 signal knocked_down(wrestler: WrestlerController)
 signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
+## His comeback has started (MatchReferee decides when; see fire_up()).
+signal fired_up(wrestler: WrestlerController)
 
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
@@ -1575,8 +1577,11 @@ func _resolve_pending_hits() -> void:
 	_pending_hits.clear()
 	if UNHITTABLE_STATES.has(fsm.current_state):
 		return
+	# The only hitter is the other man, so his comeback decides the scale.
+	var hitter_fired_up := opponent != null and opponent.combat.is_fired_up()
 	for move in moves:
-		combat.apply_damage(move)
+		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
+	_took_moves(moves.size())
 	if _would_be_knocked_down():
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
 		_pending_hit_reaction = null
@@ -1597,10 +1602,28 @@ func _resolve_pending_hits() -> void:
 	# rather than eating it. Both men connect and both then react, which is
 	# what trading blows actually looks like. A knockdown still interrupts --
 	# a man dropped mid-swing is not finishing the swing.
+	# Fired up, he no-sells: the damage is real, but he does not flinch. The
+	# man beating him down watches his offence stop working -- the first
+	# beat of every comeback.
+	if combat.is_fired_up():
+		return
 	if fsm.current_state == WrestlerFSM.State.STRIKE:
 		_pending_hit_reaction = moves[moves.size() - 1]
 		return
 	_begin_hit_reaction(moves[moves.size() - 1])
+
+## Keeps the heat count (CombatSystem.unanswered_hits): this wrestler has
+## just taken count moves, and the man who landed them has answered him.
+func _took_moves(count: int) -> void:
+	combat.unanswered_hits += count
+	if opponent:
+		opponent.combat.unanswered_hits = 0
+
+## Starts this wrestler's comeback -- see CombatSystem's comeback section.
+## Called by MatchReferee, which decides when one is earned.
+func fire_up() -> void:
+	combat.start_comeback()
+	fired_up.emit(self)
 
 ## Takes a hit: the reaction clip, the state, and the shove that sells it.
 ##
@@ -1611,8 +1634,17 @@ func _resolve_pending_hits() -> void:
 ## velocity leak across states (see _start_move()'s own note) -- used
 ## deliberately here, and decayed to nothing rather than left running.
 func _begin_hit_reaction(move: MoveDef) -> void:
-	_play_hit_reaction(move)
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+	# Hit by a man in the middle of his comeback, he is rocked -- the longer
+	# STUNNED stagger, not a flinch -- so the run can string together. The
+	# state existed, with its clip, and nothing had ever entered it.
+	# STUNNED is not legal out of every state HIT_REACT is (a second stagger,
+	# a getup, a tie-up); those take the ordinary reaction.
+	if opponent and opponent.combat.is_fired_up() \
+			and WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
+		_start_move(WrestlerFSM.State.STUNNED, _timed_stub(STUNNED_TICKS))
+	else:
+		_play_hit_reaction(move)
+		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
 	var away := Vector3.ZERO
 	if opponent:
 		away = global_position - opponent.global_position
@@ -1843,7 +1875,9 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# simultaneous hit) — so every queued grapple hit was silently dropped
 	# the instant it was queued, damage never accumulated, and a match
 	# never progressed past tie-up -> grapple -> repeat.
-	opponent.combat.apply_damage(move)
+	opponent.combat.apply_damage(move,
+			CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
+	opponent._took_moves(1)
 	# The grapple is over as of here -- drop the roles before the FSM moves
 	# on, so nothing downstream reads an attacker flag for a finished move.
 	_clear_grapple_roles()
@@ -1893,6 +1927,7 @@ func _go_down() -> void:
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	_damage_at_last_knockdown = combat.total_damage()
 	_move_ticks_remaining = GETUP_TICKS
+	combat.cut_off_comeback()
 	_cover_eligible = true
 	knocked_down.emit(self)
 
@@ -1901,7 +1936,10 @@ func _process_down(input: Dictionary) -> void:
 	# Which of the two measured rises this is depends on who ended the
 	# prone state: a wrestler who pressed his way up gets the fast one, a
 	# wrestler whose timer simply ran out gets the default.
-	var pressed_up: bool = input.get("strike", false)
+	# A man who has just fired up does not lie there: he is up on the fast
+	# rise whether or not anything was pressed.
+	var pressed_up: bool = input.get("strike", false) \
+			or (combat != null and combat.is_fired_up())
 	if pressed_up or _move_ticks_remaining <= 0:
 		fsm.transition_to(WrestlerFSM.State.GETUP)
 		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_RISE_TICKS

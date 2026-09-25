@@ -26,6 +26,8 @@ extends Node
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
+## strike_cooldown_ticks during a comeback (CombatSystem.is_fired_up()).
+@export var comeback_strike_cooldown_ticks: int = 12
 ## How far away the AI stops walking in and charges instead.
 ##
 ## A STARTING VALUE, not a searched minimum. Its justification is the ring's
@@ -358,7 +360,10 @@ func poll_input() -> Dictionary:
 			input["grapple"] = true
 		elif _cooldown <= 0 and distance <= reach:
 			input["strike"] = true
-			_cooldown = strike_cooldown_ticks
+			# Fired up, he does not wait between shots: the comeback is a
+			# flurry, and the other man is staggered for most of it.
+			_cooldown = comeback_strike_cooldown_ticks \
+					if controller.combat.is_fired_up() else strike_cooldown_ticks
 		elif distance > reach:
 			# The dead band, and it has to be closed explicitly. tie_up_range
 			# is 1.3 m and the shortest strike reaches 1.17 m, so between those
@@ -483,7 +488,10 @@ func _wants_power_tie_up() -> bool:
 func _opponent_is_ripe() -> bool:
 	var remaining := WrestlerController.KNOCKDOWN_DAMAGE \
 			- (target.combat.total_damage() - target._damage_at_last_knockdown)
-	return remaining <= _weakest_signature_damage()
+	# Fired up, his moves land harder (CombatSystem.COMEBACK_DAMAGE_SCALE),
+	# so the same signature closes a bigger gap.
+	var scale := CombatSystem.COMEBACK_DAMAGE_SCALE if controller.combat.is_fired_up() else 1.0
+	return remaining <= _weakest_signature_damage() * scale
 
 ## Total damage of the least damaging signature this wrestler can draw --
 ## his own plus his pool, exactly the set WrestlerController._pick_tier_move()

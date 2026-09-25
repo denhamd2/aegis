@@ -103,6 +103,7 @@ func _resolve_tick() -> void:
 	# regardless of node order.
 	wrestler_a._resolve_pending_hits()
 	wrestler_b._resolve_pending_hits()
+	_update_comebacks()
 
 	if _pinning:
 		_tick_pin()
@@ -274,6 +275,11 @@ func _end_pin(three_count_reached: bool) -> void:
 		_pin_count_shown = 0
 		_pin_defender.fsm.transition_to(WrestlerFSM.State.DOWN)
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
+		# The near-fall comeback: he was losing badly, he survived the cover,
+		# and he fires up off the mat.
+		if _pin_defender.combat.earned_kickout_comeback(_pin_attacker.combat):
+			_pin_defender.fire_up()
+			_pin_defender._move_ticks_remaining = KICKOUT_FIRE_UP_TICKS
 		# Not cover-eligible again until this wrestler actually reaches IDLE
 		# (DOWN -> GETUP -> IDLE) — otherwise, since the attacker is also
 		# reset to IDLE right where it was standing (already in cover
@@ -281,6 +287,37 @@ func _end_pin(three_count_reached: bool) -> void:
 		# very next tick, forever, with no time for a getup or a fresh hit
 		# to ever land.
 		_pin_defender._cover_eligible = false
+
+## The comeback clock, and the mid-match comeback -- see CombatSystem's
+## comeback section and MATCH_FLOW.md.
+##
+## Here rather than in each wrestler because both halves compare the two
+## men, and this runs once a tick after both have acted and every queued hit
+## has landed, in a fixed order -- the same reason the tie-up is arbitrated
+## here.
+func _update_comebacks() -> void:
+	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
+		var w: WrestlerController = pair[0]
+		var other: WrestlerController = pair[1]
+		w.combat.tick_comeback(not w.fsm.is_in(COMEBACK_CLOCK_STOPPED))
+		# The heat comeback fires as the last hit of the beatdown lands --
+		# in the flinch, or on his feet -- never mid-grapple or on the mat.
+		if w.combat.earned_comeback(other.combat) and w.fsm.is_in([
+				WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+				WrestlerFSM.State.HIT_REACT]):
+			w.fire_up()
+
+## States the comeback clock does not run in: he is not fighting yet.
+const COMEBACK_CLOCK_STOPPED: Array = [
+	WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP,
+	WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.PIN_DEFENDER,
+	WrestlerFSM.State.TIE_UP, WrestlerFSM.State.GRAPPLE_HOLD,
+	WrestlerFSM.State.MOVE_EXEC,
+]
+
+## After a kickout that fires him up, the beat he stays down before he is
+## up on the fast rise -- stirring, not the full GETUP_TICKS.
+const KICKOUT_FIRE_UP_TICKS := 20
 
 ## Attacker's side of the race needs no continued input (mirrors
 ## PIN_ATTACKER's automatic three-count) — only the defender's hold state,
@@ -333,7 +370,8 @@ func _end_submission(tapped_out: bool) -> void:
 ## role here — the contest itself decides it.
 func _tick_tie_up() -> void:
 	_tie_up_ticks += 1
-	_tie_up_minigame.tick(wrestler_a._tie_up_input_this_tick, wrestler_b._tie_up_input_this_tick)
+	_tie_up_minigame.tick(wrestler_a._tie_up_input_this_tick, wrestler_b._tie_up_input_this_tick,
+			_tie_up_weight(wrestler_a, wrestler_b), _tie_up_weight(wrestler_b, wrestler_a))
 	var a_won := _tie_up_minigame.a_wins()
 	var b_won := _tie_up_minigame.b_wins()
 	if a_won and b_won:
@@ -359,6 +397,19 @@ func _tick_tie_up() -> void:
 		# this guarantees the match can't stall here forever.
 		var attacker := wrestler_a if _tie_up_minigame.a_progress >= _tie_up_minigame.b_progress else wrestler_b
 		_resolve_tie_up(attacker, wrestler_b if attacker == wrestler_a else wrestler_a)
+
+## What one of w's tie-up presses is worth: nothing, against a man in the
+## middle of his comeback, when w is not in one himself.
+##
+## A fired-up man drives through the lock-up. The comeback has to be able to
+## end in his big move, and every big move starts here. It was a doubled
+## press first, and measured that lost anyway: the AI's mash rates are rolled
+## per tie-up and differ by up to three to one, so a man who fired up still
+## lost the lock-up straight after, and the leader threw his signature into
+## the middle of the comeback. The contest still runs, at the fired-up man's
+## own pace, so the lock-up is seen rather than skipped.
+func _tie_up_weight(w: WrestlerController, other: WrestlerController) -> float:
+	return 0.0 if other.combat.is_fired_up() and not w.combat.is_fired_up() else 1.0
 
 ## Seeded, not random-random: same (match_seed, _tie_up_ticks) pair always
 ## picks the same winner (ReplaySystem determinism), but varies across

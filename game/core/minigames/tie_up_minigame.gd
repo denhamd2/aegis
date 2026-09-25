@@ -15,11 +15,13 @@ const PROGRESS_THRESHOLD := 10.0
 var a_progress: float = 0.0
 var b_progress: float = 0.0
 
-func tick(a_pressed: bool, b_pressed: bool) -> void:
+## a_weight/b_weight: what one press is worth. 1.0, except against a man in
+## the middle of his comeback -- see MatchReferee._tie_up_weight().
+func tick(a_pressed: bool, b_pressed: bool, a_weight: float = 1.0, b_weight: float = 1.0) -> void:
 	if a_pressed:
-		a_progress += 1.0
+		a_progress += a_weight
 	if b_pressed:
-		b_progress += 1.0
+		b_progress += b_weight
 
 func a_wins() -> bool:
 	return a_progress >= PROGRESS_THRESHOLD

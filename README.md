@@ -6636,3 +6636,63 @@ partly turned (+0.7) and is now flat (+1.0).
   finisher fire in all 12, and the finisher is the winning move in 11.
 - All 33 moves were rendered side-on through `paired_shot` and checked frame
   by frame.
+
+## Round: the comeback -- matches that tell a story
+
+A televised match is a story in a known order: shine, heat (one man in
+control, the other beaten down), comeback (the beaten man fires up), finishing
+stretch. Before this the man who got ahead stayed ahead. Over twelve AI seeds
+the damage lead changed hands 0.2 times a match, and the loser never had a
+run of his own.
+
+**The comeback**, once per wrestler per match (`CombatSystem`'s comeback
+section, `MatchReferee._update_comebacks()`; the design is in
+`gauntlet/anchor/MATCH_FLOW.md`, "The comeback"):
+
+- **Earned** by the man who is behind by 40+ damage, when the other man has
+  just landed twice on him unanswered. Kicking out of a pin while that far
+  behind earns one too.
+- **Six seconds fired up**, counted only while he is on his feet:
+  - he no-sells strikes (takes the damage, skips the flinch);
+  - his strikes stagger the other man into STUNNED (a state that had a clip
+    and had never been entered);
+  - his strikes and throws do 1.5× damage;
+  - his momentum jumps to signature level;
+  - the AI throws faster;
+  - he wins any lock-up against a man who is not fired up himself, so the run
+    can end in his big move.
+- **Ends** when the clock runs out or a knockdown cuts it off.
+- **"FIRED UP"** shows on his HUD plate while it runs.
+
+### Measured (twenty AI seeds, `ladder_probe`)
+
+|                                            | before | after |
+| ------------------------------------------ | ------ | ----- |
+| damage lead changes per match              | 0.2    | 1.3   |
+| the first man to fire up goes on to win    | --     | 9/20  |
+| matches ending on a signature or finisher  | 12/12  | 19/20 |
+
+- The typical match now runs heat → comeback → near-fall. Often the other man
+  then fires up himself, and then comes the finish.
+- Two things were tried and measured as not working, and are recorded in the
+  code:
+  - Counting unanswered strikes never fired: nobody takes more than two or
+    three in a row here.
+  - A doubled tie-up press lost to the AI's 3:1 mash-rate spread, so the
+    leader threw his signature into the middle of the comeback.
+- Strikes per match fell from about 13 to about 8. A comeback ends in big
+  moves rather than more trading.
+
+`ladder_probe` now reports:
+- comebacks, and how each was earned;
+- whether the man who came back won;
+- lead changes.
+
+With `--trace` it also shows who won each lock-up.
+
+### Checks
+
+- 446 tests pass, 17 of them new (`test_comeback.gd`).
+- The replay hash changes, because the match plays differently. Updating the
+  baseline is the owner's call.
+- Not yet looked at on a rendered frame: the "FIRED UP" tag.
