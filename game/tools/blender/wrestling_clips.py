@@ -1442,6 +1442,254 @@ CLIPS["Backbreaker_Defender"] = [k for k in CLIPS["Bodyslam_Defender"] if k[0] <
     (36, S()),
 ]
 
+# --- finishers ---------------------------------------------------------------
+#
+# Per-wrestler moves: WrestlerController.finisher_move is set from the roster
+# (Roster.Entry.finisher), not from match.tscn, so these belong to one man each.
+# Both were researched before they were keyed, and are the moves as their
+# wrestlers perform them, reduced to what starts from a lock-up:
+#
+#   The Spear (Roman Reigns) -- he breaks off, loads low, explodes forward and
+#   drives his shoulder into the midsection, lifting the man off his feet and
+#   crashing him back-first into the mat. Reigns often throws the short-arm
+#   version, a few steps from close range, which is what this is.
+#
+#   Cross Rhodes (Cody Rhodes) -- a rolling cutter: the opponent is spun by
+#   the wrist, his head taken from behind, and Rhodes spins and drops,
+#   driving him face-first into the canvas.
+#
+# Both land the victim in SUPINE's orientation -- on his back, head toward
+# +fwd in his own root frame -- because the knockdown that follows plays
+# Down_Supine from exactly there. The Spear drives him the OTHER way (head
+# away from Roman), so his root yaws a half-turn in the air
+# (paired_recipes.gd, finisher_spear) while his bones counter-yaw to keep him
+# travelling backward in the world; Cross Rhodes lands him face-down, and he
+# rolls onto his back selling it.
+
+# The Spear, 42 frames / 1.4s.
+CLIPS["Spear_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Shoves off to make room.
+    (6,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
+           hand_r=(0.18, 0.52, 1.28), hand_l=(-0.18, 0.52, 1.26),
+           fist_r=0.1, fist_l=0.1)),
+    # Loads: dropped low over wide feet, eyes up on the target, hands clawed.
+    (12, P(pelvis=(0.0, -0.05, 0.600), hips=(-30, 0, 0), spine=(-30, 0, 0),
+           head=(24, 0, 0),
+           hand_r=(0.32, 0.26, 0.52), hand_l=(-0.32, 0.26, 0.52),
+           elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
+           fist_r=0.35, fist_l=0.35,
+           foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104))),
+    (16, P(pelvis=(0.0, -0.06, 0.575), hips=(-34, 0, 0), spine=(-34, 0, 0),
+           head=(28, 0, 0),
+           hand_r=(0.34, 0.24, 0.48), hand_l=(-0.34, 0.24, 0.48),
+           elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
+    # Explodes: torso near flat, shoulder leading, rear leg driving.
+    (19, P(pelvis=(0.0, 0.20, 0.720), hips=(-50, 0, 0), spine=(-30, 0, 0),
+           head=(30, 0, 0),
+           hand_r=(0.30, 0.56, 0.80), hand_l=(-0.30, 0.56, 0.80),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.20, -0.55, 0.20), foot_l=(-0.18, 0.10, 0.104))),
+    # Impact: shoulder in the midsection, arms wrapping the waist.
+    (21, P(pelvis=(0.0, 0.25, 0.780), hips=(-60, 0, 0), spine=(-25, 0, 0),
+           head=(20, 0, 0),
+           hand_r=(0.26, 0.72, 0.96), hand_l=(-0.26, 0.72, 0.96),
+           elbow_r=(0.7, 0.0, -0.4), elbow_l=(-0.7, 0.0, -0.4),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.20, -0.45, 0.25), foot_l=(-0.18, 0.05, 0.104))),
+    # Drives through him and goes down with him.
+    (25, dict(pelvis=(0.0, 0.30, 0.450), hips=(-75, 0, 0), spine=(-15, 0, 0),
+              head=(10, 0, 0),
+              hand_r=(0.26, 0.78, 0.34), hand_l=(-0.26, 0.78, 0.34),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.20, -0.40, 0.10), foot_l=(-0.20, -0.30, 0.10),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
+    # On his knees over him.
+    (30, dict(pelvis=(0.0, 0.05, 0.500), hips=(-40, 0, 0), spine=(-30, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.26, 0.60, 0.10), hand_l=(-0.26, 0.60, 0.10),
+              fist_r=0.1, fist_l=0.1,
+              foot_r=(0.19, -0.22, 0.09), foot_l=(-0.19, -0.20, 0.09),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
+    (36, P(pelvis=(0.0, 0.02, 0.750), hips=(-10, 0, 0), spine=(-20, 0, 0),
+           hand_r=(0.22, 0.30, 0.90), hand_l=(-0.20, 0.30, 0.90),
+           fist_r=0.6, fist_l=0.6)),
+    (42, P()),
+]
+
+# The Spear's victim. Past frame 21 his root is yawing a half-turn
+# (finisher_spear's trajectory: -90 at t0.70 to +90 at t0.83, frames 21-25),
+# and each key's hips yaw undoes the part of it already done, so in the world
+# he keeps falling straight backward and lands on his back.
+CLIPS["Spear_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Shoved back a step.
+    (6,  P(pelvis=(0.0, -0.08, 0.830), spine=(8, 0, 0), head=(6, 0, 0),
+           hand_r=(0.22, 0.26, 1.12), hand_l=(-0.20, 0.28, 1.10),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.23, -0.24, 0.104), foot_l=(-0.19, 0.10, 0.104))),
+    # Squares up, not seeing it coming.
+    (14, P(spine=(-4, 0, 0), head=(4, 0, 0),
+           hand_r=(0.24, 0.24, 1.02), hand_l=(-0.22, 0.26, 1.00),
+           fist_r=0.5, fist_l=0.5)),
+    (19, P(spine=(-4, 0, 0), head=(0, 0, 0),
+           hand_r=(0.24, 0.26, 1.06), hand_l=(-0.22, 0.28, 1.04),
+           fist_r=0.5, fist_l=0.5)),
+    # The hit: folded forward over the shoulder, lifted, feet leaving the mat.
+    (21, dict(pelvis=(0.0, -0.15, 0.980), hips=(-30, 0, 0), spine=(-40, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.34, 0.40, 1.10), hand_l=(-0.32, 0.42, 1.08),
+              elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, 0.25, 0.32), foot_l=(-0.18, 0.28, 0.36),
+              knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4))),
+    # Airborne, driven backward. Root half-way round, so yaw -90 here.
+    (23, dict(pelvis=(0.0, 0.0, 0.760), hips=(50, -90, 0), spine=(-20, 0, 0),
+              head=(-16, 0, 0),
+              hand_r=(0.40, 0.20, 1.00), hand_l=(-0.40, 0.22, 0.98),
+              elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.2),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.18, 0.30, 0.60), foot_l=(-0.16, 0.34, 0.64),
+              knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4))),
+    # Crashes onto his back; root now all the way round.
+    (25, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), head=(-4, 0, 0),
+           hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+           elbow_r=(-0.7, 0.0, 0.7), elbow_l=(0.7, 0.0, 0.7),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(-0.14, -0.72, 0.30), foot_l=(0.12, -0.74, 0.34),
+           knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0))),
+    (30, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-16, 0, 0),
+           hand_r=(-0.46, 0.18, 0.10), hand_l=(0.44, 0.18, 0.10),
+           foot_r=(-0.16, -0.60, 0.12), foot_l=(0.14, -0.58, 0.12))),
+    (42, S()),
+]
+
+# Cross Rhodes, 48 frames / 1.6s. Cody takes the victim's right wrist in his
+# left hand and spins him a half-turn so his back is to Cody (the victim's
+# ROOT does the spin -- finisher_cross_rhodes's trajectory); hooks the head
+# from behind; then leaps, spins a half-turn himself and drops to a seat,
+# pulling the head down with him so the victim is driven face-first into the
+# mat just behind Cody's shoulder.
+CLIPS["Cross_Rhodes_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Takes the wrist.
+    (6,  P(spine=(-8, 0, 0),
+           hand_r=(0.20, 0.30, 1.10), hand_l=(-0.04, 0.56, 1.10),
+           fist_r=0.5, fist_l=0.7)),
+    # Whips him round by it.
+    (10, P(pelvis=(0.0, -0.03, 0.830), spine=(-4, -14, 0),
+           hand_r=(0.22, 0.28, 1.08), hand_l=(-0.16, 0.34, 1.02),
+           fist_r=0.5, fist_l=0.7)),
+    (14, P(spine=(-8, 0, 0),
+           hand_r=(0.20, 0.34, 1.20), hand_l=(-0.18, 0.36, 1.18),
+           fist_r=0.5, fist_l=0.5)),
+    # Hooks the head from behind.
+    (18, P(spine=(-12, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.06, 0.44, 1.44), hand_l=(-0.14, 0.40, 1.40),
+           elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
+           fist_r=0.6, fist_l=0.6)),
+    # The leap: off his feet, tucked, spinning (the root turns under this).
+    (22, dict(pelvis=(0.0, 0.0, 1.000), hips=(-10, 0, 0), spine=(-14, 0, 0),
+              head=(-6, 0, 0),
+              hand_r=(0.10, 0.34, 1.20), hand_l=(-0.14, 0.32, 1.18),
+              fist_r=0.6, fist_l=0.6,
+              foot_r=(0.20, 0.10, 0.50), foot_l=(-0.18, 0.14, 0.54),
+              knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0))),
+    # Seated, the head trapped behind his right shoulder, driven into the mat.
+    (26, dict(pelvis=(0.0, 0.0, 0.200), hips=(12, 0, 0), spine=(6, 0, 0),
+              head=(-6, 0, 0),
+              hand_r=(0.14, -0.26, 0.24), hand_l=(-0.24, -0.06, 0.08),
+              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
+              fist_r=0.6, fist_l=0.0,
+              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
+              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
+    (31, dict(pelvis=(0.0, 0.0, 0.200), hips=(8, 0, 0), spine=(0, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.16, -0.20, 0.20), hand_l=(-0.24, -0.06, 0.08),
+              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
+              fist_r=0.3, fist_l=0.0,
+              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
+              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
+    # Up onto a knee, then up.
+    (38, dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+    (43, P(pelvis=(0.0, 0.02, 0.760), hips=(-10, 0, 0), spine=(-18, 0, 0),
+           hand_r=(0.22, 0.30, 0.94), hand_l=(-0.20, 0.30, 0.96),
+           fist_r=0.5, fist_l=0.5)),
+    (48, P()),
+]
+
+# The victim, root-relative throughout: his root is spun a half-turn by the
+# wrist (frames 6-14), so after that "forward" is away from Cody. He is
+# pulled forward and down by the head, lands face-first -- SUPINE's forward
+# pitch without its roll -- and rolls onto his back, the roll SUPINE is built
+# from, with a 90-degree key so it goes the short way.
+CLIPS["Cross_Rhodes_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Wrist taken: right arm drawn out toward Cody.
+    (6,  P(spine=(-10, 0, 0),
+           hand_r=(0.08, 0.52, 1.12), hand_l=(-0.22, 0.30, 1.06),
+           fist_r=0.4, fist_l=0.5)),
+    # Spinning: arms flung, the held one trailing.
+    (10, P(pelvis=(0.0, 0.0, 0.830), spine=(-4, 14, 0), head=(0, 10, 0),
+           hand_r=(0.40, -0.10, 1.12), hand_l=(-0.40, 0.10, 1.08),
+           fist_r=0.4, fist_l=0.3)),
+    # Stopped with his back to Cody, off balance.
+    (14, P(pelvis=(0.0, 0.0, 0.840), spine=(-2, 0, 0), head=(4, 0, 0),
+           hand_r=(0.30, 0.10, 1.00), hand_l=(-0.28, 0.12, 0.98),
+           fist_r=0.3, fist_l=0.3)),
+    # Head hooked from behind: chin pulled up, hands to the arm at his neck.
+    (18, P(pelvis=(0.0, -0.04, 0.830), spine=(6, 0, 0), head=(22, 0, 0),
+           hand_r=(0.10, 0.12, 1.44), hand_l=(-0.10, 0.12, 1.44),
+           elbow_r=(0.7, 0.3, -0.4), elbow_l=(-0.7, 0.3, -0.4),
+           fist_r=0.5, fist_l=0.5)),
+    # Yanked forward and down by the head.
+    (22, dict(pelvis=(0.0, 0.08, 0.740), hips=(-40, 0, 0), spine=(-14, 0, 0),
+              head=(14, 0, 0),
+              hand_r=(0.24, 0.40, 1.00), hand_l=(-0.22, 0.42, 1.00),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, -0.18, 0.12), foot_l=(-0.18, -0.10, 0.16))),
+    # Face-first into the canvas.
+    (26, dict(pelvis=(0.0, 0.0, 0.200), hips=(-86, 0, 0), spine=(-2, 0, 0),
+              head=(8, 0, 0),
+              hand_r=(0.46, 0.30, 0.10), hand_l=(-0.46, 0.30, 0.10),
+              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+              fist_r=0.1, fist_l=0.1,
+              foot_r=(0.14, -0.86, 0.12), foot_l=(-0.12, -0.84, 0.12),
+              knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))),
+    (31, dict(pelvis=(0.0, 0.0, 0.185), hips=(-86, 0, 0), spine=(-2, 0, 0),
+              head=(4, 0, 0),
+              hand_r=(0.44, 0.24, 0.10), hand_l=(-0.44, 0.24, 0.10),
+              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.7, 0.0, 0.7),
+              fist_r=0.1, fist_l=0.1,
+              foot_r=(0.14, -0.86, 0.12), foot_l=(-0.12, -0.84, 0.12),
+              knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))),
+    # Rolls onto his side ...
+    (36, S(pelvis=(0.03, 0.0, 0.200), hips=(-84, 0, 90), spine=(-4, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.10),
+           elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
+           foot_r=(0.02, -0.60, 0.14), foot_l=(0.16, -0.58, 0.10),
+           knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
+    # ... and onto his back.
+    (41, S(spine=(-8, 0, 0), head=(-14, 0, 0))),
+    (48, S()),
+]
+
 # --- build ----------------------------------------------------------------
 
 def load_rig():

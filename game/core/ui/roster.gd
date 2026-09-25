@@ -49,10 +49,16 @@ class Entry:
 	var power: float
 	var speed: float
 	var technique: float
+	## This wrestler's own finisher, as a MoveDef path, or "" for none --
+	## the one move on the roster that belongs to one man rather than to the
+	## match scene everybody shares. Installed on WrestlerController.
+	## finisher_move by TitleScreen.configure_match().
+	var finisher: String
 
 	func _init(p_id: String, p_first: String, p_last: String, p_tagline: String,
 			p_scene: String, p_body: Color, p_accent: Color,
-			p_power: float, p_speed: float, p_technique: float) -> void:
+			p_power: float, p_speed: float, p_technique: float,
+			p_finisher: String = "") -> void:
 		id = p_id
 		first_name = p_first
 		last_name = p_last
@@ -63,6 +69,7 @@ class Entry:
 		power = p_power
 		speed = p_speed
 		technique = p_technique
+		finisher = p_finisher
 
 	func display_name() -> String:
 		return "%s %s" % [first_name, last_name]
@@ -77,12 +84,16 @@ static func entries() -> Array:
 			"roman", "ROMAN", "REIGNS", "THE HEAD OF THE TABLE",
 			"res://scenes/roman_model.tscn",
 			Color(0.07, 0.08, 0.11), Color(0.55, 0.63, 0.76),
-			0.92, 0.58, 0.74),
+			0.92, 0.58, 0.74,
+			# The Spear.
+			"res://resources/moves/finisher_spear.tres"),
 		Entry.new(
 			"cody", "CODY", "RHODES", "THE AMERICAN NIGHTMARE",
 			"res://scenes/cody_model.tscn",
 			Color(0.88, 0.86, 0.82), Color(0.86, 0.68, 0.26),
-			0.74, 0.80, 0.86),
+			0.74, 0.80, 0.86,
+			# Cross Rhodes.
+			"res://resources/moves/finisher_cross_rhodes.tres"),
 		# The body colour is his scanned vest and tights, sampled from
 		# kenny_omega_tex_u1_v1_diffuse: the gear reads as a dark desaturated
 		# navy-charcoal, around Color(0.12, 0.15, 0.20).

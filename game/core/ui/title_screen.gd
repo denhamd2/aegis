@@ -235,6 +235,10 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		wrestler.display_name = entry.display_name()
 		wrestler.attire_body = entry.attire_body
 		wrestler.attire_accent = entry.attire_accent
+		# His own finisher, if he has one. Before add_child() like the rest, so
+		# the controller has it from its first tick.
+		wrestler.finisher_move = load(entry.finisher) as MoveDef \
+				if entry.finisher != "" else null
 	if "match_seed" in scene:
 		scene.match_seed = match_seed
 

@@ -136,6 +136,36 @@ const RECIPES := {
 	# The body slam's lift, then down onto one knee with the victim arched
 	# face-up across the other. The samples below are only the fallback --
 	# see Backbreaker_Attacker in tools/blender/wrestling_clips.py.
+	# Cody's finisher -- see Cross_Rhodes_Attacker.
+	"finisher_cross_rhodes": {
+		"authored": {"attacker": "Cross_Rhodes_Attacker", "defender": "Cross_Rhodes_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.80, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 1.60, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.87, "clip": "Death01", "at": 0.90},
+			{"t": 1.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.15,
+	},
+	# Roman's finisher -- see Spear_Attacker in tools/blender/wrestling_clips.py.
+	"finisher_spear": {
+		"authored": {"attacker": "Spear_Attacker", "defender": "Spear_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Jump_Start", "at": 0.30},
+			{"t": 1.40, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.70, "clip": "Death01", "at": 0.40},
+			{"t": 1.40, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.10,
+	},
 	"signature_backbreaker": {
 		# Authored in Blender: both halves keyframed against each other
 		# beat for beat, rather than stitched out of unrelated clips.
@@ -295,6 +325,59 @@ const TRAJECTORIES := {
 					[0.80, 0.20, 0.00, -0.28], [0.97, 0.20, 0.00, -0.30],
 					[1.10, 0.20, 0.00, -0.62], [1.20, 0.20, 0.00, -0.62]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.20, 0.0, -90.0, 0.0]],
+		},
+	},
+
+	# --- finisher tier -------------------------------------------------
+	# Roman's Spear: he shoves off, loads 0.9 m back, and charges through
+	# the victim's midsection -- 1.6 m in six frames -- going down on top of
+	# him. The victim is driven 0.6 m back and, while airborne (t0.70-0.83),
+	# his root yaws a half-turn so he lands facing the way Down_Supine lies;
+	# Spear_Defender's bones counter-yaw so he keeps falling straight back in
+	# the world. No root leaves the mat (y = 0 throughout), so the yaw is
+	# free of the airborne-landing invariant.
+	"finisher_spear": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.70, 0.00, 0.00],
+					[0.40, 1.30, 0.00, 0.00], [0.53, 1.30, 0.00, 0.00],
+					[0.63, 0.30, 0.00, 0.00], [0.70, 0.00, 0.00, 0.00],
+					[0.83, -0.35, 0.00, 0.00], [1.40, -0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [1.40, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.52, 0.00, 0.00],
+					[0.63, -0.52, 0.00, 0.00], [0.70, -0.62, 0.00, 0.00],
+					[0.83, -1.05, 0.00, 0.00], [1.40, -1.05, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.70, 0.0, -90.0, 0.0],
+					[0.77, 0.0, 0.0, 0.0], [0.83, 0.0, 90.0, 0.0],
+					[1.40, 0.0, 90.0, 0.0]],
+		},
+	},
+
+	# Cody's Cross Rhodes. The victim is spun a half-turn by the wrist
+	# (t0.20-0.47, his root yawing -90 -> +90, so his back is to Cody) and
+	# pulled in to 0.45 m; Cody hooks the head, leaps forward 1.3 m spinning a
+	# half-turn himself (yaw 90 -> -90), and lands seated with the head behind
+	# his right shoulder, while the victim is driven face-first 0.5 m forward
+	# of where he stood. Roots stay at y = 0.
+	"finisher_cross_rhodes": {
+		"length": 1.6,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.33, 0.36, 0.00, 0.00],
+					[0.60, 0.36, 0.00, 0.00], [0.73, -0.30, 0.00, 0.00],
+					[0.87, -0.95, 0.00, 0.00], [1.60, -0.95, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.60, 0.0, 90.0, 0.0],
+					[0.73, 0.0, 0.0, 0.0], [0.87, 0.0, -90.0, 0.0],
+					[1.60, 0.0, -90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.36, 0.00, 0.00],
+					[0.47, -0.08, 0.00, 0.00], [0.60, -0.08, 0.00, 0.00],
+					[0.87, -0.58, 0.00, 0.00], [1.60, -0.58, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.20, 0.0, -90.0, 0.0],
+					[0.33, 0.0, 0.0, 0.0], [0.47, 0.0, 90.0, 0.0],
+					[1.60, 0.0, 90.0, 0.0]],
 		},
 	},
 

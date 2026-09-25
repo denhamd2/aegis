@@ -39,6 +39,9 @@ const SCOPED_GRAPPLE := 1
 ## what the cut throws were.
 const SCOPED_POWER := 1
 const SCOPED_SIGNATURE := 2
+## One per wrestler who has one, and they belong to the roster rather than to
+## match.tscn: Roman's Spear and Cody's Cross Rhodes.
+const SCOPED_FINISHER := 2
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -73,6 +76,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var grapple := 0
 	var power := 0
 	var signature := 0
+	var finisher := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -81,6 +85,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			power += 1
 		elif name.begins_with("signature_"):
 			signature += 1
+		elif name.begins_with("finisher_"):
+			finisher += 1
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
@@ -88,9 +94,9 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	).is_equal(SCOPED_GRAPPLE)
 	assert_int(power).is_equal(SCOPED_POWER)
 	assert_int(signature).is_equal(SCOPED_SIGNATURE)
-	# The removed families leave nothing behind: a finisher or reversal clip
-	# still in the library would be an animation no MoveDef names and
-	# nothing can play.
+	assert_int(finisher).is_equal(SCOPED_FINISHER)
+	# The removed family leaves nothing behind: a reversal clip still in the
+	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
 		"Clips from a removed family still in paired_moves.tres: %s" % [cut]
 	).is_empty()
@@ -204,7 +210,9 @@ func test_the_tier_draw_skips_moves_this_opponent_is_too_heavy_for() -> void:
 		assert_str(attacker._pick_tier_move(primary, [forbidden]).animation_pair_id) \
 			.is_equal(&"primary")
 
-## The moves only matter if the shipped match actually hands them out.
+## The moves only matter if the shipped match actually hands them out --
+## the shared ones through match.tscn, each finisher through its wrestler's
+## roster entry.
 func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 	var match_scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
 	var reachable := {}
@@ -218,6 +226,9 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 			reachable[String((tier[0] as MoveDef).animation_pair_id)] = true
 			for extra: MoveDef in tier[1]:
 				reachable[String(extra.animation_pair_id)] = true
+	for entry: Roster.Entry in Roster.entries():
+		if entry.finisher != "":
+			reachable[String((load(entry.finisher) as MoveDef).animation_pair_id)] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):
@@ -317,3 +328,19 @@ func test_throws_that_end_on_the_mat_leave_the_defender_down() -> void:
 			"%s ends with the defender on the mat" % id).is_true()
 	var knee: MoveDef = load("%s/grapple_clinch_knee.tres" % MOVES_DIR)
 	assert_bool(knee.leaves_defender_down).is_false()
+
+## A finisher is one man's: configure_match() puts Roman's Spear on Roman and
+## Cody's Cross Rhodes on Cody, in whichever slot each is standing in.
+func test_each_wrestler_gets_his_own_finisher() -> void:
+	var roman := Roster.by_id("roman")
+	var cody := Roster.by_id("cody")
+	for order: Array in [[roman, cody], [cody, roman]]:
+		var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+		TitleScreen.configure_match(scene, order[0], order[1], 1)
+		for pair: Array in [["WrestlerA", order[0]], ["WrestlerB", order[1]]]:
+			var w: WrestlerController = scene.get_node(pair[0])
+			var entry: Roster.Entry = pair[1]
+			assert_str(w.finisher_move.resource_path).is_equal(entry.finisher)
+			assert_int(w.tier_of(w.finisher_move)).is_equal(CombatSystem.Tier.FINISHER)
+	assert_str((load(roman.finisher) as MoveDef).animation_pair_id).is_equal("finisher_spear")
+	assert_str((load(cody.finisher) as MoveDef).animation_pair_id).is_equal("finisher_cross_rhodes")

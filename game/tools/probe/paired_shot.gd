@@ -21,6 +21,8 @@ extends Node
 ## down the line between them), and --lit adds a fill light from the camera,
 ## because the arena lights a pair from above and behind and a probe frame
 ## reads as two silhouettes without it. Neither changes the move.
+## --dist M sets how far the side camera sits (default 4.2); moves that travel,
+## like the Spear, need more.
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const MOVES_DIR := "res://resources/moves"
@@ -31,6 +33,7 @@ var _at: Array = [0.0, 0.2, 0.35, 0.5, 0.65, 0.8, 1.0]
 var _side := false
 var _orbit := 0.0
 var _lit := false
+var _dist := 4.2
 
 
 func _ready() -> void:
@@ -46,6 +49,8 @@ func _ready() -> void:
 			_orbit = float(args[i + 1])
 		elif args[i] == "--lit":
 			_lit = true
+		elif args[i] == "--dist" and i + 1 < args.size():
+			_dist = float(args[i + 1])
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
@@ -93,7 +98,7 @@ func _ready() -> void:
 				.normalized().cross(Vector3.UP)
 		across = across.rotated(Vector3.UP, deg_to_rad(_orbit))
 		focus = mid + Vector3(0.0, 0.8, 0.0)
-		camera.global_position = focus + across * 4.2 + Vector3(0.0, 0.3, 0.0)
+		camera.global_position = focus + across * _dist + Vector3(0.0, 0.3, 0.0)
 		camera.fov = 45.0
 	camera.look_at(focus, Vector3.UP)
 	if _lit:

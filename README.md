@@ -6381,3 +6381,81 @@ The signature is the finish *because* it is thrown repeatedly: any rule that
 thins it out hands the finish to a strike. Which a match should be -- one
 signature and a strike finish, or the repeated signature -- is a design call
 for the owner. MATCH_FLOW.md now says so, and describes the power move.
+
+## Round: Roman's Spear and Cody's Cross Rhodes
+
+### Inventory, before
+
+Roman and Cody had **identical** movesets. Every move came from `match.tscn`,
+and the roster set only a model, a name and two colours:
+
+| slot | moves |
+| --- | --- |
+| strikes | jab, cross, kick, heavy kick |
+| running | clothesline, double-leg |
+| grapple | clinch knee |
+| power | body slam |
+| signature | backbreaker, neckbreaker (seeded draw) |
+| finisher | **empty, for everyone** |
+
+A finisher is one man's, so it lives on the roster now:
+`Roster.Entry.finisher` names a MoveDef, and `TitleScreen.configure_match()`
+installs it on `WrestlerController.finisher_move`. Kenny has none yet.
+
+### Researched first
+
+- **The Spear** -- load low, explode forward, drive the shoulder into the
+  midsection, lift him off his feet and crash him back-first. Reigns often
+  throws it short-arm, a few steps from close range, which is the version
+  that starts from a lock-up.
+  ([Bleacher Report](https://bleacherreport.com/articles/1872566-breaking-down-why-roman-reigns-spear-is-such-an-effective-finishing-move))
+- **Cross Rhodes** -- a rolling cutter: the head taken in a reverse headlock
+  from behind, Rhodes spins and drops, driving the man face-first into the
+  canvas.
+  ([accelerator3359](https://www.accelerator3359.com/Wrestling/moves/crhodes.html),
+  [TheSportster](https://www.thesportster.com/best-cutters-wrestling-wwe-randy-orton-rko-ddp-cody-rhodes-the-hardy-boyz/))
+
+### Keyed
+
+Both in `wrestling_clips.py`, both halves against each other, both checked on
+`paired_shot --side --lit` (with a new `--dist`, because the Spear covers
+2.5 m).
+
+- `finisher_spear`, 1.4 s. Roman shoves off, loads 0.9 m back, charges 1.6 m
+  in six frames into the midsection; the victim folds over the shoulder, is
+  lifted and driven 0.6 m back, and both go down with Roman on top.
+- `finisher_cross_rhodes`, 1.6 s. The victim is spun a half-turn by the wrist
+  so his back is to Cody, his head hooked from behind; Cody leaps, spins and
+  drops seated, and the victim is driven face-first beside him.
+
+Both land the victim where the knockdown takes over -- on his back, head
+toward his own +fwd -- because Down_Supine plays from exactly there. The
+Spear drives him the other way, so his root yaws a half-turn in the air
+while his bones counter-yaw (he keeps falling straight back in the world);
+Cross Rhodes lands him face-down and he rolls over, selling it. No root
+leaves the mat in either.
+
+### What it did to the match
+
+Twelve AI seeds, Roman vs Cody:
+
+| | before | after |
+| --- | --- | --- |
+| finisher fired | 0 / 12 | 10 / 12 |
+| winner's signatures | 2-4 | 1-2 |
+| last move before the pin | signature 11, power 1 | finisher 5, signature 6, power 1 |
+| chain order held | 12 / 12 | 12 / 12 |
+
+The open pacing question from two rounds back mostly answers itself: a
+kicked-out signature now leads to the finisher instead of to the same
+signature again.
+
+425 tests pass (a new one checks each man gets his own finisher in either
+slot); every bake rebuilds byte-identical.
+
+### Found on the way, not fixed here
+
+`round_check.sh`'s replay recording plays the default `match.tscn`, seed 1,
+AI vs AI, with no budget -- and that match **never ends**, on this build and
+on `ca3e506` before any of this session's work (15 minutes at 6000 fps with
+no finish). It is why the gate could not complete. Next job.
