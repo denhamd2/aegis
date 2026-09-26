@@ -49,6 +49,7 @@ case "$target" in
     entrance) run entrance_set.py ;;
     ringside) run ringside.py ;;
     rig)      run overhead_rig.py ;;
+    roman)    run roman_props.py ;;
     all)      run arena_bowl.py; run ring.py; run entrance_set.py; run ringside.py; run overhead_rig.py ;;
     *) echo "build_venue.sh: unknown target '$target'" >&2; exit 2 ;;
 esac

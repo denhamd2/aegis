@@ -8,9 +8,10 @@ extends GdUnitTestSuite
 const MATCH := "res://scenes/match.tscn"
 
 
-func _match(entrances: bool) -> Node:
+func _match(entrances: bool, style_a := "") -> Node:
 	var scene: Node = load(MATCH).instantiate()
 	scene.entrances = entrances
+	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = style_a
 	add_child(scene)
 	return auto_free(scene)
 
@@ -60,7 +61,33 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 ## The whole entrance, stepped: nobody jumps except at the broadcast cut (and
 ## on appearing), and it ends with the bell and both men on their marks.
 func test_the_walk_is_continuous_and_ends_on_the_marks() -> void:
-	var scene := _match(true)
+	_assert_continuous(_match(true))
+
+
+## Roman's own routine holds to the same contract, and his props and pyro are
+## gone by the bell.
+func test_romans_entrance_is_continuous_and_cleans_up() -> void:
+	var scene := _match(true, "roman")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var fired := [false, false]
+	director.bell.connect(func():
+		fired[0] = director._pyro == null and director._props.is_empty())
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var saw := {}
+	director.bell.connect(func(): fired[1] = true)
+	_assert_continuous(scene, func():
+		var props: EntranceProps = director._props.get(a)
+		if props:
+			saw[props._title_state] = true
+		if director._pyro:
+			saw["pyro"] = true)
+	assert_bool(fired[1]).is_true()
+	assert_bool(fired[0]).override_failure_message("props or pyro outlived the bell").is_true()
+	for k in ["draped", "held", "", "pyro"]:
+		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
+
+
+func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
 	var mark_a := a.global_position
@@ -75,6 +102,8 @@ func test_the_walk_is_continuous_and_ends_on_the_marks() -> void:
 		var beat_before := director._beat
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
+		if each_tick.is_valid():
+			each_tick.call()
 		for w: WrestlerController in [a, b]:
 			var moved: float = (w.global_position - (last[w] as Vector3)).length()
 			last[w] = w.global_position

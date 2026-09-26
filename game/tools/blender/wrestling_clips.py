@@ -174,6 +174,21 @@ READY = dict(
 )
 
 
+# Roman's entrance posture (gauntlet/refs/entrances.md): upright and square,
+# chest out, weight even on both feet, the right arm hanging still and the
+# AEW title over his LEFT shoulder, held by the strap at his collarbone. It is
+# the opposite of READY on purpose -- a man sizing someone up is coiled; the
+# Tribal Chief walking to the ring is not, and "no wasted movement" is what
+# sells it.
+ROMAN_STAND = dict(
+    pelvis=(0.0, 0.0, 0.900), hips=(0, 0, 0), spine=(4, 0, 0), head=(2, 0, 0),
+    hand_r=(0.25, -0.02, 0.92), hand_l=(-0.15, 0.13, 1.40),
+    elbow_r=(0.5, -0.4, -1.0), elbow_l=(-1.0, -0.2, -0.6),
+    fist_r=0.45, fist_l=0.85,
+    foot_r=(0.16, 0.0, 0.104), foot_l=(-0.16, 0.02, 0.104),
+)
+
+
 def pose(base=None, **over):
     """A pose is the base with a few things moved. Anything not named keeps
     the base's value, which is what makes a clip's table read as the changes
@@ -283,6 +298,13 @@ def _world_clip(frames, root_to, keys):
             pose_now[field] = (x, y - rf, z - ru)
         out.append((f, pose_now))
     return out
+
+
+def _holding_title(frames):
+    """A gait whose left hand stays on the title at his left shoulder."""
+    return [(f, dict(p, hand_l=ROMAN_STAND["hand_l"],
+                     elbow_l=ROMAN_STAND["elbow_l"], fist_l=0.85))
+            for f, p in frames]
 
 
 def _open_hands(frames, curl=0.3):
@@ -1047,6 +1069,112 @@ CLIPS = {
                           STANCE["foot_l"][2] + 0.24),
                   knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
     ]),
+
+    # === Roman's entrance (gauntlet/refs/entrances.md) =====================
+    #
+    # Every one of these is still on purpose. The research's one unanimous
+    # line about the entrance is its pace: slow, eyes front, no wasted
+    # movement. So the arms barely swing, the head does not move, and the
+    # raises are held long enough to read on a wide shot.
+
+    # 30 frames / 1.0s, looping: the slow walk, 1.0 m/s -- EntranceDirector's
+    # Roman pace, against the 1.6 m/s the other men walk at. Contact 15 of 30
+    # per foot, so one is always down; the half stride that buys is 0.25 m.
+    "Walk_Slow": _open_hands(_gait(
+        frames=30, fps=FPS, speed=1.0,
+        contacts={"r": (0, 15), "l": (15, 15)},
+        plant_up=0.104, lift_up=0.06,
+        foot_x={"r": 0.15, "l": -0.14},
+        pelvis_up=0.905, pelvis_dip=0.010,
+        hips_yaw=4.0, spine=(0.0, 4.0), head=(2, 0, 0),
+        hand_fwd=(-0.06, 0.06), hand_up=(0.90, 0.92),
+        hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45),
+
+    # The same walk with the title on his left shoulder: the left hand stays
+    # on the strap at the collarbone and only the right arm moves.
+    "Walk_Title": _holding_title(_open_hands(_gait(
+        frames=30, fps=FPS, speed=1.0,
+        contacts={"r": (0, 15), "l": (15, 15)},
+        plant_up=0.104, lift_up=0.06,
+        foot_x={"r": 0.15, "l": -0.14},
+        pelvis_up=0.905, pelvis_dip=0.010,
+        hips_yaw=4.0, spine=(0.0, 4.0), head=(2, 0, 0),
+        hand_fwd=(-0.06, 0.06), hand_up=(0.90, 0.92),
+        hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)),
+
+    # 60 frames / 2.0s, looping: standing on his mark. He breathes and that
+    # is all -- the camera is supposed to wait on him, not watch him fidget.
+    "Roman_Stand": [
+        (0,  ROMAN_STAND),
+        (30, pose(ROMAN_STAND, pelvis=(0.0, 0.0, 0.906), spine=(5, 0, 0),
+                  hand_l=(-0.15, 0.13, 1.41))),
+        (60, ROMAN_STAND),
+    ],
+
+    # 60 frames / 2.0s: the title overhead. The belt is already in his left
+    # hand, so it goes straight up from the shoulder, arm locked, and HOLDS
+    # (frames 16-44) -- the beat the pyro is cued against is the finger that
+    # follows, but this one is held long enough to read on its own.
+    "Title_Raise": [
+        (0,  ROMAN_STAND),
+        (10, pose(ROMAN_STAND, spine=(6, 0, 0), head=(4, 0, 0),
+                  hand_l=(-0.20, 0.10, 1.70), elbow_l=(-1.0, 0.0, 0.2),
+                  fist_l=1.0)),
+        (16, pose(ROMAN_STAND, spine=(8, 0, 0), head=(10, 0, 0),
+                  hand_l=(-0.22, 0.06, 1.98), elbow_l=(-1.0, 0.0, 0.3),
+                  fist_l=1.0)),
+        (44, pose(ROMAN_STAND, spine=(8, 0, 0), head=(10, 0, 0),
+                  hand_l=(-0.22, 0.07, 1.97), elbow_l=(-1.0, 0.0, 0.3),
+                  fist_l=1.0)),
+        (54, pose(ROMAN_STAND, spine=(5, 0, 0), head=(4, 0, 0),
+                  hand_l=(-0.18, 0.12, 1.55), elbow_l=(-1.0, -0.1, -0.2),
+                  fist_l=0.9)),
+        (60, ROMAN_STAND),
+    ],
+
+    # 60 frames / 2.0s: the finger. Right hand up, index finger to the sky
+    # (`point_r`, rig_pose.py), chin lifted, eyes up with it. The pyro is cued
+    # on frame 14 -- EntranceDirector.FINGER_PYRO_AT -- when the arm arrives.
+    "Finger_Raise": [
+        (0,  ROMAN_STAND),
+        (8,  pose(ROMAN_STAND, spine=(5, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.20, 0.14, 1.62), elbow_r=(1.0, -0.2, -0.2),
+                  fist_r=0.9, point_r=True)),
+        (14, pose(ROMAN_STAND, spine=(7, 0, 0), head=(14, 0, 0),
+                  hand_r=(0.20, 0.10, 1.97), elbow_r=(1.0, 0.0, 0.2),
+                  fist_r=0.95, point_r=True)),
+        (46, pose(ROMAN_STAND, spine=(7, 0, 0), head=(14, 0, 0),
+                  hand_r=(0.20, 0.10, 1.96), elbow_r=(1.0, 0.0, 0.2),
+                  fist_r=0.95, point_r=True)),
+        (54, pose(ROMAN_STAND, spine=(5, 0, 0), head=(4, 0, 0),
+                  hand_r=(0.24, 0.04, 1.20), elbow_r=(0.6, -0.4, -0.8),
+                  fist_r=0.6)),
+        (60, ROMAN_STAND),
+    ],
+
+    # 45 frames / 1.5s: the ula fala off -- both hands to it, up over the
+    # head, and out in front of him to hand it off. The title has already
+    # gone by now (the director puts it down before this), so both hands
+    # are free. The necklace prop moves to his right hand at frame 18
+    # (EntranceDirector.ULA_FALA_LIFT_AT) and is gone when the clip ends.
+    "Ula_Fala_Off": [
+        (0,  pose(ROMAN_STAND, hand_l=(-0.25, -0.02, 0.92),
+                  elbow_l=(-0.5, -0.4, -1.0), fist_l=0.45)),
+        (10, pose(ROMAN_STAND, head=(-6, 0, 0),
+                  hand_r=(0.12, 0.16, 1.36), hand_l=(-0.12, 0.16, 1.36),
+                  elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
+                  fist_r=0.6, fist_l=0.6)),
+        (20, pose(ROMAN_STAND, head=(-4, 0, 0),
+                  hand_r=(0.14, 0.06, 1.84), hand_l=(-0.14, 0.06, 1.84),
+                  elbow_r=(1.0, 0.0, 0.2), elbow_l=(-1.0, 0.0, 0.2),
+                  fist_r=0.7, fist_l=0.7)),
+        (32, pose(ROMAN_STAND, spine=(-4, 0, 0),
+                  hand_r=(0.12, 0.50, 1.44), hand_l=(-0.20, 0.10, 1.10),
+                  elbow_r=(0.8, -0.2, -0.6), elbow_l=(-0.6, -0.4, -1.0),
+                  fist_r=0.7, fist_l=0.45)),
+        (45, pose(ROMAN_STAND, hand_l=(-0.25, -0.02, 0.92),
+                  elbow_l=(-0.5, -0.4, -1.0), fist_l=0.45)),
+    ],
 
     "Win_Celebrate": [
         (0,  P()),

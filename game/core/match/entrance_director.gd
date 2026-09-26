@@ -88,6 +88,34 @@ const FOLLOW_SPOT_AT := Vector3(0.0, 17.0, 22.0)
 const FOLLOW_SPOT_ENERGY := 40.0
 const FOLLOW_SPOT_ANGLE := 3.5
 
+# --- Roman Reigns (gauntlet/refs/entrances.md, "Roman: beat sheet") ---------
+## He walks, he does not stride: Walk_Title / Walk_Slow travel 1.0 m/s.
+const ROMAN_WALK_SPEED := 1.0
+## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
+## Title_Raise has the belt in the hand from frame 10 to 54, Finger_Raise's arm
+## arrives on frame 14 -- the pyro hit -- and Ula_Fala_Off has it over his
+## head by frame 20.
+const TITLE_HELD_AT := 20
+const TITLE_DRAPED_AT := 108
+const FINGER_PYRO_AT := 28
+const ULA_FALA_LIFT_AT := 40
+## His portal accents go gold for him, not the side's own colour.
+const ROMAN_GOLD := Color(1.0, 0.78, 0.36)
+## His shots. The push-in on the mark: from the ramp, a slow dolly in and a
+## lens tightening on him. The hero shot: low at his feet looking up, for the
+## title. The wide: the whole set, for the pyro. The ring low: from the mat
+## under the ropes, for the finger in the ring.
+const PUSH_FROM := Vector3(0.0, 1.8, -24.5)
+const PUSH_TO := Vector3(0.0, 1.7, -27.4)
+const PUSH_FOV := Vector2(34.0, 28.0)
+const HERO_OFFSET := Vector3(0.9, 0.45, 3.0)
+const HERO_FOV := 40.0
+const STAGE_WIDE_AT := Vector3(0.0, 3.2, -15.0)
+const STAGE_WIDE_LOOK := Vector3(0.0, 4.0, -33.0)
+const STAGE_WIDE_FOV := 58.0
+const RING_LOW_OFFSET := Vector3(-2.2, 0.35, 1.4)
+const RING_LOW_FOV := 46.0
+
 var _match: Node
 var _a: WrestlerController
 var _b: WrestlerController
@@ -101,6 +129,9 @@ var _follow: SpotLight3D
 var _frozen: Array = []
 ## Where each man stands at the bell: his spawn in match.tscn.
 var _mark := {}
+## Roman's belt and ula fala, per man, and the pyro -- built when needed.
+var _props := {}
+var _pyro: EntrancePyro
 
 ## The timeline: one entry per beat, built once in begin().
 var _beats: Array = []
@@ -176,8 +207,13 @@ func _freeze(node: Node) -> void:
 func _build_timeline() -> void:
 	_beats.append({"kind": "opening", "ticks": OPENING_TICKS})
 	# The opponent enters first and waits in the ring; the player's man last.
-	_add_entrance(_b, ArenaBuilder.PORTAL_OFFSET_X, "E")
-	_add_entrance(_a, -ArenaBuilder.PORTAL_OFFSET_X, "W")
+	for pair: Array in [[_b, ArenaBuilder.PORTAL_OFFSET_X, "E"],
+			[_a, -ArenaBuilder.PORTAL_OFFSET_X, "W"]]:
+		var w: WrestlerController = pair[0]
+		if w.entrance_style == "roman":
+			_add_roman_entrance(w, pair[1], pair[2])
+		else:
+			_add_entrance(w, pair[1], pair[2])
 	_beats.append({"kind": "faceoff", "ticks": FACEOFF_TICKS})
 
 
@@ -235,8 +271,10 @@ func _start_beat() -> void:
 		# him standing at his in-ring spawn for a sixtieth of a second.
 		_place(w, beat["path"][0], _heading(beat["path"]), true)
 		w.visible = true
+	if beat.get("props", false) and w and not _props.has(w):
+		_props[w] = EntranceProps.dress(w)
 	if beat.has("lights"):
-		_portal_lights(beat["lights"], true)
+		_portal_lights(beat["lights"], true, beat.get("light_color", Color.TRANSPARENT))
 	else:
 		_portal_lights("", false)
 	if beat.get("card", false) and w:
@@ -252,10 +290,11 @@ func _start_beat() -> void:
 			for i in path.size() - 1:
 				length += _flat(path[i]).distance_to(_flat(path[i + 1]))
 			beat["length"] = length
-			beat["ticks"] = maxi(1, int(ceil(length / WALK_SPEED * TPS)))
+			var speed: float = beat.get("speed", WALK_SPEED)
+			beat["ticks"] = maxi(1, int(ceil(length / speed * TPS)))
 			if beat.get("cut", false):
 				_place(w, path[0], _heading(path), true)
-			w.play_presentation_clip("strikes/entrance_walk")
+			w.play_presentation_clip(beat.get("walk_clip", "strikes/entrance_walk"))
 		"pose", "clip":
 			w.play_presentation_clip(beat["clip"])
 		"turn":
@@ -276,6 +315,9 @@ func _physics_process(delta: float) -> void:
 	_tick += 1
 	var t := clampf(float(_tick) / float(beat["ticks"]), 0.0, 1.0)
 	var w: WrestlerController = beat.get("who")
+	for cue: Array in beat.get("events", []):
+		if int(cue[0]) == _tick:
+			_event(w, cue[1])
 	match beat["kind"]:
 		"walk":
 			var at := _along(beat["path"], t * float(beat["length"]))
@@ -310,6 +352,12 @@ func _ring_bell() -> void:
 	_portal_lights("", false)
 	if _follow:
 		_follow.visible = false
+	for props: EntranceProps in _props.values():
+		props.queue_free()
+	_props.clear()
+	if _pyro:
+		_pyro.queue_free()
+		_pyro = null
 	for w: WrestlerController in [_a, _b]:
 		w.global_transform = _mark[w]
 		w.velocity = Vector3.ZERO
@@ -322,6 +370,114 @@ func _ring_bell() -> void:
 	if _camera:
 		_camera.resume_master()
 	bell.emit()
+
+
+## Roman Reigns: the champion's walk. Everything slower and more still than
+## the generic entrance -- he walks at 1.0 m/s with the title on his shoulder
+## and the ula fala on, stops on the stage lip and makes them wait, raises the
+## title, then the finger with the pyro on it. In the ring the finger again
+## with the post pyro, the title and the ula fala come off, and he goes to his
+## mark. (gauntlet/refs/entrances.md: every beat here is one on the sheet.)
+func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -> void:
+	var deck := ArenaBuilder.STAGE_DECK_Y
+	var emerge := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 1.2)
+	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
+	var gold := {"lights": side, "light_color": ROMAN_GOLD}
+	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [emerge, lip],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
+			"shot": "stage", "appear": true, "props": true}))
+	# The mark: he stops, and the card comes up while he stands there.
+	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 90,
+			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
+			"shot": "stage_push", "card": true}))
+	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 120,
+			"clip": "strikes/title_raise", "facing": Vector3.BACK,
+			"shot": "hero_low", "card": true,
+			"events": [[TITLE_HELD_AT, "title_held"], [TITLE_DRAPED_AT, "title_draped"]]}))
+	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 120,
+			"clip": "strikes/finger_raise", "facing": Vector3.BACK,
+			"shot": "stage_wide", "card": true,
+			"events": [[FINGER_PYRO_AT, "pyro_stage"]]}))
+	var ramp_end := lip + Vector3.BACK * (ROMAN_WALK_SPEED * RAMP_SHOWN_SECONDS)
+	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
+			"shot": "track"})
+	var cut := Vector3(0.0, 0.0, CUT_TO_Z + 2.2)
+	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
+	var wide := Vector3(-4.9, 0.0, -4.0)
+	var climb_from := Vector3(CLIMB_FROM_X, 0.0, STEPS_Z)
+	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide, climb_from],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
+			"shot": "ringside", "cut": true})
+	_beats.append({"kind": "turn", "who": w, "facing": Vector3.RIGHT,
+			"shot": "ringside"})
+	var top := climb_from + Vector3(CLIMB_TO.x, 0.0, 0.0)
+	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, STEPS_Z)
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
+			"ticks": int(round(CLIMB_SECONDS * TPS)),
+			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, STEPS_Z),
+			"to": top_at, "facing": Vector3.RIGHT, "shot": "ringside"})
+	# On the apron he stops and looks the ring over before he gets in.
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/roman_stand",
+			"ticks": 60, "from": top_at, "to": top_at,
+			"facing": Vector3.RIGHT, "shot": "ringside"})
+	var inside := top + Vector3(ROPE_TO.x, 0.0, 0.0)
+	var in_at := Vector3(inside.x, 0.0, STEPS_Z)
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through",
+			"ticks": int(round(ROPE_SECONDS * TPS)),
+			"from": top_at, "to": in_at, "facing": Vector3.RIGHT, "shot": "ringside"})
+	# To the middle of the ring, and the finger again facing the hard camera
+	# side with the post pyro on it.
+	var centre := Vector3(-0.4, 0.0, -0.6)
+	_beats.append({"kind": "walk", "who": w, "path": [in_at, centre],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
+			"shot": "ringside", "on_mat": true})
+	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
+			"shot": "ring_low"})
+	_beats.append({"kind": "pose", "who": w, "ticks": 120,
+			"clip": "strikes/finger_raise", "facing": Vector3.BACK,
+			"shot": "ring_low", "events": [[FINGER_PYRO_AT, "pyro_posts"]]})
+	# The title goes to the timekeeper and the ula fala comes off.
+	_beats.append({"kind": "pose", "who": w, "ticks": 90,
+			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
+			"shot": "ring_low",
+			"events": [[1, "title_down"], [ULA_FALA_LIFT_AT, "fala_off"]]})
+	var mark: Transform3D = _mark[w]
+	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_slow",
+			"shot": "ringside", "on_mat": true})
+	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
+			"shot": "ringside", "settle": true})
+
+
+static func _with(base: Dictionary, beat: Dictionary) -> Dictionary:
+	var out := base.duplicate()
+	out.merge(beat, true)
+	return out
+
+
+## A cue inside a beat.
+func _event(w: WrestlerController, what: String) -> void:
+	var props: EntranceProps = _props.get(w)
+	match what:
+		"title_held":
+			if props:
+				props.set_title("held")
+		"title_draped":
+			if props:
+				props.set_title("draped")
+		"title_down":
+			if props:
+				props.set_title("")
+		"fala_off":
+			if props:
+				props.set_fala_visible(false)
+		"pyro_stage", "pyro_posts":
+			if _pyro == null:
+				_pyro = EntrancePyro.new()
+				_pyro.name = "EntrancePyro"
+				add_child(_pyro)
+			_pyro.fire(what.trim_prefix("pyro_"))
 
 
 # ---------------------------------------------------------------------------
@@ -405,6 +561,20 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 		"track":
 			_camera.set_entrance_shot(w.global_position + TRACK_OFFSET,
 					w.global_position + Vector3.UP * 1.35, TRACK_FOV, first, delta)
+		"stage_push":
+			var t := clampf(float(_tick) / float(beat["ticks"]), 0.0, 1.0)
+			var e := t * t * (3.0 - 2.0 * t)
+			_camera.set_entrance_shot(PUSH_FROM.lerp(PUSH_TO, e),
+					w.global_position + Vector3.UP * 1.45,
+					lerpf(PUSH_FOV.x, PUSH_FOV.y, e), true)
+		"hero_low":
+			_camera.set_entrance_shot(w.global_position + HERO_OFFSET,
+					w.global_position + Vector3.UP * 1.6, HERO_FOV, true)
+		"stage_wide":
+			_camera.set_entrance_shot(STAGE_WIDE_AT, STAGE_WIDE_LOOK, STAGE_WIDE_FOV, true)
+		"ring_low":
+			_camera.set_entrance_shot(w.global_position + RING_LOW_OFFSET,
+					w.global_position + Vector3.UP * 1.5, RING_LOW_FOV, true)
 		"ringside":
 			_camera.set_entrance_shot(RINGSIDE_AT, w.global_position + Vector3.UP * 1.0,
 					RINGSIDE_FOV, true)
@@ -435,7 +605,7 @@ func _was_shot(shot: String) -> bool:
 
 
 ## His portal's accent fixtures come up while he is on the stage.
-func _portal_lights(side: String, on: bool) -> void:
+func _portal_lights(side: String, on: bool, tint: Color = Color.TRANSPARENT) -> void:
 	if not _lights:
 		return
 	for child in _lights.get_children():
@@ -444,6 +614,9 @@ func _portal_lights(side: String, on: bool) -> void:
 		var light := child as SpotLight3D
 		if not light.has_meta("base_energy"):
 			light.set_meta("base_energy", light.light_energy)
+		if not light.has_meta("base_color"):
+			light.set_meta("base_color", light.light_color)
 		var base: float = light.get_meta("base_energy")
 		var mine := on and String(light.name).begins_with("Accent" + side)
 		light.light_energy = base * (2.4 if mine else 1.0)
+		light.light_color = tint if mine and tint.a > 0.0 else light.get_meta("base_color")

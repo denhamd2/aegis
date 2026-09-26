@@ -254,6 +254,7 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		wrestler.character_model_scene = load(entry.model_scene)
 		wrestler.display_name = entry.display_name()
 		wrestler.entrance_subtitle = entry.entrance_subtitle()
+		wrestler.entrance_style = entry.id
 		wrestler.attire_body = entry.attire_body
 		wrestler.attire_accent = entry.attire_accent
 		# His own finisher, if he has one. Before add_child() like the rest, so

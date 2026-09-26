@@ -200,8 +200,14 @@ class RigPoser:
         self._set(lower, _aim(self.rest_dir[lower], lower_dir))
         return joint
 
-    def _curl_fingers(self, side, amount):
+    def _curl_fingers(self, side, amount, point=False):
         """0 = open hand, 1 = closed fist.
+
+        `point` leaves the index finger straight while the others curl -- a
+        pointing hand, which a single curl value cannot make. Roman's raised
+        finger (gauntlet/refs/entrances.md) is the reason it exists. Off
+        unless a pose names `point_r`/`point_l`, so every clip that does not
+        is solved exactly as before.
 
         A strike thrown with an open hand reads as a slap at any speed, and
         the rig carries the finger bones already. Useful values, read off
@@ -213,6 +219,8 @@ class RigPoser:
         if amount <= 0.0:
             return
         for finger in FINGERS:
+            if point and finger == "index":
+                continue
             for i, seg in enumerate(("01", "02", "03")):
                 name = "%s_%s_%s" % (finger, seg, side)
                 if name not in self.arm.pose.bones:
@@ -230,10 +238,23 @@ class RigPoser:
                 ).to_quaternion()
         thumb = "thumb_01_%s" % side
         if thumb in self.arm.pose.bones:
-            deg = 40.0 * amount
+            # Pointing, the thumb folds right across the palm: at the fist's
+            # 40 degrees it stood up beside the index finger and a raised
+            # finger rendered as a "V".
+            deg = (80.0 if point else 40.0) * amount
             self.arm.pose.bones[thumb].rotation_quaternion = mathutils.Euler(
                 (math.radians(deg), 0.0, 0.0), "XYZ"
             ).to_quaternion()
+            if point:
+                # And its two outer segments fold in over the curled fingers.
+                # Base joint alone left the thumb jutting out sideways -- a
+                # finger-gun, not a raised finger.
+                for seg in ("02", "03"):
+                    name = "thumb_%s_%s" % (seg, side)
+                    if name in self.arm.pose.bones:
+                        self.arm.pose.bones[name].rotation_quaternion = \
+                            mathutils.Euler((math.radians(65.0 * amount), 0.0,
+                                             0.0), "XYZ").to_quaternion()
         self._update()
 
     # --- the pose interface ----------------------------------------------
@@ -325,7 +346,8 @@ class RigPoser:
                     self.arm.pose.bones["hand_%s" % side_id].y_axis, 0.0
                 )
                 self._set("hand_%s" % side_id, rot)
-            self._curl_fingers(side_id, pose.get("fist_%s" % side_id, 0.0))
+            self._curl_fingers(side_id, pose.get("fist_%s" % side_id, 0.0),
+                               pose.get("point_%s" % side_id, False))
 
             foot = pose.get("foot_%s" % side_id)
             if foot:

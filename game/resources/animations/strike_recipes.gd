@@ -239,6 +239,19 @@ const RECIPES := {
 		"seconds": 1.200, "file": AUTHORED},
 	"rope_step_through": {"kind": "retime", "source": "Rope_Step_Through",
 		"seconds": 1.600, "file": AUTHORED},
+	# Roman's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
+	"walk_slow": {"kind": "retime", "source": "Walk_Slow",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+	"walk_title": {"kind": "retime", "source": "Walk_Title",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+	"roman_stand": {"kind": "retime", "source": "Roman_Stand",
+		"seconds": 2.000, "file": AUTHORED, "loop": true},
+	"title_raise": {"kind": "retime", "source": "Title_Raise",
+		"seconds": 2.000, "file": AUTHORED},
+	"finger_raise": {"kind": "retime", "source": "Finger_Raise",
+		"seconds": 2.000, "file": AUTHORED},
+	"ula_fala_off": {"kind": "retime", "source": "Ula_Fala_Off",
+		"seconds": 1.500, "file": AUTHORED},
 
 	# --- states that were playing raw rig clips -------------------------
 	#

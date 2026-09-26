@@ -271,6 +271,9 @@ var _tier_draws: int = 0
 ## The small line over his name on the entrance lower third: his title, or his
 ## nickname if he holds none (Roster.Entry.entrance_subtitle()).
 @export var entrance_subtitle: String = ""
+## Whose ring entrance he performs (EntranceDirector): a roster id with its
+## own routine ("roman"), or "" for the generic walk to the ring.
+@export var entrance_style: String = ""
 @export var character_model_scene: PackedScene = preload(
 		"res://assets/characters/wrestler_base.glb")
 @export var opponent_path: NodePath
