@@ -361,6 +361,12 @@ const STATE_ANIMATIONS := {
 	# celebrates, so unlike every other entry here this one could not have
 	# borrowed a clip.
 	WrestlerFSM.State.VICTORY: "strikes/win_celebrate",
+	# Authored (tools/blender/wrestling_clips.py). The only gait here that is
+	# not a fighting pose: guard down, arms swinging at hip height, chin up.
+	# LOCOMOTION's walk_stalk is a man circling an opponent and reads, down a
+	# 25.7m ramp with nobody in front of him, as a wrestler who has spotted
+	# someone in the crowd.
+	WrestlerFSM.State.ENTRANCE: "strikes/walk_entrance",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.

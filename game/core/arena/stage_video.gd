@@ -297,3 +297,56 @@ func _still_mean() -> float:
 ## material is still on it.
 func is_bound() -> bool:
 	return _bound
+
+
+# --- The entrance tint --------------------------------------------------------
+#
+# The wall takes a wash of the walking wrestler's colour, and goes back to
+# neutral after. Same idea as the portals, with one difference that matters: the
+# portals are a flat colour and the wall is a PICTURE, so this tints what is
+# already playing rather than replacing it.
+#
+# `emission`, not `albedo_color`, and not the energy. The material resolves
+# `EMISSION = emission * emission_texture * energy` under EMISSION_OP_MULTIPLY
+# (see the header -- it is the single most likely wiring mistake here), so
+# multiplying a colour into `emission` scales each channel of the clip and
+# leaves its structure alone. Touching `emission_energy_multiplier` instead
+# would move the wall off the mean luminance `_still_mean()` solved it to,
+# which is what keeps it under the Environment's glow threshold at the mean and
+# over it on the highlights.
+#
+# The tint is mixed toward white rather than applied at full strength: a full
+# multiply by Cody's gold leaves nothing of the clip but gold, and the wall
+# stops being a video wall.
+
+## How far toward the accent the wall goes. At 1.0 the clip's own colour is
+## gone; at 0.0 nothing happens.
+##
+## 0.70 does two jobs. The first is colour: it reads unmistakably as his while
+## the picture underneath is still a picture. The second was found on a rendered
+## frame -- a wash is DARKER than white by however much the accent is below it,
+## so tinting also pulls the wall down off the Environment's glow threshold. The
+## first stage-camera frame had the clip blown to a white slab across the top of
+## the shot; the README already records the wall owning 36.5% of the above-p95
+## pixels in the exposure work, and an entrance camera looks far more directly at
+## it than any framing in the shotlist does.
+##
+## This is not a re-tune of the wall. `SCREEN_LEVEL` and the energy
+## `_still_mean()` solves are untouched, and `clear_tint()` puts the emission
+## back to white; the wash exists for the length of a walk and then is gone.
+const TINT_STRENGTH := 0.70
+
+
+## Washes the wall toward `color`. No-op until the clip or the still is bound,
+## which is also the state the whole file is designed to fail into.
+func set_tint(color: Color) -> void:
+	if _material == null or not _bound:
+		return
+	_material.emission = Color(1, 1, 1).lerp(color, TINT_STRENGTH)
+
+
+## Back to white, which is the clip's own colour.
+func clear_tint() -> void:
+	if _material == null or not _bound:
+		return
+	_material.emission = Color(1, 1, 1)

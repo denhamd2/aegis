@@ -4,7 +4,15 @@ extends Node
 ##
 ## Usage:
 ##   xvfb-run -a godot4 --path game --resolution 1280x720 --fixed-fps 30 \
-##       tools/probe/title_video.tscn -- --out /tmp/frames --match-seconds 40
+##       tools/probe/title_video.tscn -- --out /tmp/frames --match-seconds 90
+##
+## Since the entrances landed this records five things, not four: the landing
+## screen, the select, the VS card, BOTH WRESTLERS' WALKS TO THE RING, and the
+## match. The walks come free -- the screen launches through
+## TitleScreen._launch(), which is the one caller that turns entrances on -- but
+## they are not free in time: they are a fixed path at a fixed speed and add
+## about a minute of video. --entrance-seconds is their ceiling, not their
+## length.
 ##   ffmpeg -framerate 30 -i /tmp/frames/f_%05d.jpg -c:v libx264 out.mp4
 ##
 ## --fixed-fps 30 against the project's 60Hz physics means two physics ticks
@@ -32,6 +40,12 @@ const HOLD_BETWEEN_PICKS := 1.9
 
 var _out_dir := "/tmp/frames"
 var _match_seconds := 40.0
+## Ceiling on the two walks. Not the length of them -- EntranceDirector decides
+## that, and this run records until it says it is finished. This is the point at
+## which something has gone wrong and the recording should stop rather than fill
+## the disk with a black ramp: the walk is a fixed path at a fixed speed, so it
+## takes the same time every run and anything past this is a hang.
+var _entrance_seconds := 150.0
 var _frame := 0
 var _fps := 30.0
 ## Set from the referee's match_won. A member rather than a local captured by
@@ -39,6 +53,8 @@ var _fps := 30.0
 ## to a captured `var over` inside one leaves the outer copy false forever and
 ## the recording runs its whole budget past the finish.
 var _match_over := false
+## Same reason as _match_over above: a lambda would capture it by value.
+var _entrances_done := false
 
 
 func _ready() -> void:
@@ -48,6 +64,8 @@ func _ready() -> void:
 			_out_dir = args[i + 1]
 		elif args[i] == "--match-seconds" and i + 1 < args.size():
 			_match_seconds = float(args[i + 1])
+		elif args[i] == "--entrance-seconds" and i + 1 < args.size():
+			_entrance_seconds = float(args[i + 1])
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 
 	# Deferred, and awaited before current_scene is set: root is still setting
@@ -94,6 +112,35 @@ func _ready() -> void:
 	var referee: MatchReferee = match_scene.get_node("MatchReferee")
 	referee.match_won.connect(_on_match_won)
 
+	# THE ENTRANCES. The screen launches through TitleScreen._launch(), which
+	# calls configure_entrances(), so both men walk to the ring before the match
+	# starts -- and the match budget below must not start counting until they
+	# are in it. Counting from the scene swap instead spent the whole of
+	# --match-seconds on the ramp and the recording ended before the bell.
+	#
+	# Recorded frame by frame like everything else, because this is the part of
+	# the video the entrance work exists for.
+	var director: EntranceDirector = match_scene.get_node_or_null(
+			"EntranceDirector")
+	if director and match_scene.play_entrances:
+		director.entrances_finished.connect(_on_entrances_finished)
+		# MatchSetup._ready() started the walk when the screen added the match to
+		# the tree, which is several frames before this line. It cannot have
+		# FINISHED in that time -- the walk is about a minute -- but waiting on a
+		# signal that has already fired is a hang, so ask rather than assume.
+		if not director.is_running():
+			_entrances_done = true
+		var walked := 0.0
+		while not _entrances_done and walked < _entrance_seconds:
+			await _record_frame()
+			walked += 1.0 / _fps
+		if not _entrances_done:
+			print("TITLE_VIDEO FAILED: entrances did not finish in %.0fs"
+					% _entrance_seconds)
+			get_tree().quit(1)
+			return
+		print("ENTRANCES done at frame %d (%.1fs)" % [_frame, walked])
+
 	# Record to the finish, then a couple of seconds on the fall so the video
 	# does not cut the moment the three-count lands.
 	var elapsed := 0.0
@@ -107,6 +154,10 @@ func _ready() -> void:
 				break
 	print("TITLE_VIDEO %d frames, finished=%s" % [_frame, _match_over])
 	get_tree().quit()
+
+
+func _on_entrances_finished() -> void:
+	_entrances_done = true
 
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:

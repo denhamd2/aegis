@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -20,6 +20,9 @@
 [ext_resource type="Resource" path="res://resources/moves/strike_kick_heavy.tres" id="34"]
 [ext_resource type="Resource" path="res://resources/moves/strike_hook.tres" id="35"]
 [ext_resource type="Script" path="res://core/lighting/arena_lighting.gd" id="32"]
+[ext_resource type="Script" path="res://core/match/entrance_director.gd" id="40"]
+[ext_resource type="Script" path="res://core/camera/entrance_camera.gd" id="41"]
+[ext_resource type="Script" path="res://core/ui/entrance_nameplate.gd" id="42"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -289,3 +292,39 @@ wrestler_b_path = NodePath("../WrestlerB")
 wrestler_a_path = NodePath("../../WrestlerA")
 wrestler_b_path = NodePath("../../WrestlerB")
 referee_path = NodePath("../../MatchReferee")
+
+; --- The entrance -------------------------------------------------------------
+;
+; All three are INERT unless MatchSetup.play_entrances is set, which only
+; TitleScreen.configure_match() does. The director does nothing in _ready(); the
+; camera sets current = false in its own _ready() precisely so it cannot take
+; the frame from MatchCamera on the paths that measure things (every probe, the
+; capture harness, scenes/play.tscn); and the plate draws nothing until it is
+; given a Roster.Entry.
+;
+; Appended at the end of the file on purpose. MatchHUD's Draw child is
+; addressed by index, and ten places in the suite get_node() into this scene.
+
+[node name="EntranceDirector" type="Node" parent="."]
+script = ExtResource("40")
+
+[node name="EntranceCamera" type="Camera3D" parent="."]
+; Position, lens and aim are all driven by EntranceCamera.cut_to(); this is its
+; first shot's seat so the editor and any stray first frame are not looking at
+; the origin from the origin.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 1.05, -16.5)
+fov = 46.0
+script = ExtResource("41")
+
+; Its own CanvasLayer rather than a child of MatchHUD: the HUD is HIDDEN for the
+; whole entrance (it is a match HUD and there is no match yet), and a nameplate
+; parented under it would be hidden with it.
+[node name="EntranceOverlay" type="CanvasLayer" parent="."]
+
+[node name="Plate" type="Control" parent="EntranceOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("42")

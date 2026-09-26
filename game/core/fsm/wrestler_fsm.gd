@@ -28,11 +28,35 @@ enum State {
 	## The winner's celebration. Terminal: the match is over, so nothing
 	## leads out of it and no timeout applies.
 	VICTORY,
+	## The walk to the ring, before the match exists. Reachable only from
+	## IDLE, driven only by EntranceDirector, and gone by the referee's first
+	## tick -- so no match state leads into it and nothing in the tick reads
+	## it.
+	##
+	## It is in the enum rather than outside the FSM because
+	## WrestlerController builds its blend graph from LEGAL_TRANSITIONS and
+	## STATE_ANIMATIONS: a pose the FSM does not know about has no node in the
+	## AnimationNodeStateMachine and so could not be cross-faded into IDLE at
+	## the handoff -- the wrestler would pop from his last walking frame into
+	## the ready stance on the tick the match starts.
+	##
+	## APPENDED, not inserted before IDLE where it belongs in reading order,
+	## for the reason Roster's comment gives about Kenny: nothing here
+	## serialises a state's ordinal today (the replay stores inputs, and
+	## compute_end_state_hash() takes the seed, the tick count, damage and
+	## momentum), but renumbering sixteen match states to make room for a
+	## cosmetic one is a large, silent blast radius for no gain.
+	ENTRANCE,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
 const LEGAL_TRANSITIONS := {
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
+	# The entrance, and the one way out of it. IDLE -> ENTRANCE is how the
+	# director takes a wrestler who has just been built; ENTRANCE -> IDLE is
+	# the handoff to the match. Nothing else on either side: a wrestler cannot
+	# walk out of a tie-up, and a man on the ramp cannot strike.
+	State.ENTRANCE: [State.IDLE],
+	State.IDLE: [State.ENTRANCE, State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
 	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
 	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],

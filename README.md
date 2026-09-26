@@ -6547,3 +6547,143 @@ still unverified. The reachability suite proves the window lasts 36 ticks; no
 one has looked at it. It is the other half of this round and it is not done.
 
 427 tests pass.
+## The walk to the ring
+
+The entrance set has been in the build for a long time — an 8m deck, two lit
+portals, a 24m ramp down to the barricade line, ramp LEDs, a curved LED wall
+playing a clip, four accent spots and four backdrop uplights. Nothing had ever
+walked on any of it. `scenes/match.tscn` spawns both men on their marks, and
+tick 0 of the scene was tick 0 of the match.
+
+Now the two wrestlers a player picks walk out of the portals, down the ramp, up
+the steel steps and through the ropes before the bell.
+
+### It is off by default, and that is the load-bearing part
+
+`ARCHITECTURE.md` makes determinism a hard requirement and every measurement in
+this file is stated as byte-identical run to run. An entrance is presentation,
+so it is only allowed to exist where nothing is being measured:
+
+- `MatchSetup.play_entrances` defaults to **false**. The ten places the suite
+  instantiates the match scene, every probe under `tools/probe/`,
+  `scenes/play.tscn` and `tools/capture/run_capture.sh` get exactly the match
+  they always got.
+- `TitleScreen.configure_entrances()` is the only thing that sets it, and
+  `TitleScreen._launch()` is its only caller.
+
+That second point is the whole finding. The first version set the flag inside
+`configure_match()`, on the belief that the title screen was its only caller.
+It is not — **nine probes call it**, because it is the single description of
+"what a picked wrestler means" and they all want that. So every probe walked its
+wrestlers down the ramp before fighting:
+
+| `ladder_probe --seeds 1,2,3` | before | with the leak |
+| --- | --- | --- |
+| seed 1 | 914 ticks | 5119 ticks |
+| seed 2 | 1955 ticks, 21 landed | 6214 ticks, 22 landed |
+| seed 2 WrestlerB peak momentum | 62.0 | 70.0 |
+
+Not a broken match — a *different* match, which is worse, because nothing about
+it looks wrong. It was caught by diffing the probe's own output against a
+baseline taken before the change, which is the only instrument that could have
+caught it. `tests/test_entrance_is_off_by_default.gd` is the standing guard.
+
+Freezing the wrestlers for the walk turned out to need more than
+`set_physics_process(false)` on the controller, too: `WrestlerFSM` does nothing
+in its own `_physics_process` but increment `ticks_in_state`, and the
+controller's timeouts, the referee's tie-up limit and the AI all read that
+clock. `EntranceDirector._freeze()` stops controller, FSM and AI together and
+resets `ticks_in_state` on the way back in.
+
+With all of that in place `ladder_probe --seeds 1,2,3` is byte-identical to the
+pre-change baseline, and `floating_probe` reports 0 of 6 wrestler-matches
+floating.
+
+### What the walk is made of
+
+`EntranceDirector` derives every point on the path from the constants that built
+the set, never from typed coordinates — the ramp's grade from `STAGE_DECK_Y`,
+`FLOOR_Y` and `BARRICADE_RADIUS`, the steps from `APRON_OUT`,
+`STEP_APRON_GAP`, `STEP_WIDTH` and `STEP_RUN`. Move the stage and the walk moves
+with it.
+
+- **`Walk_Entrance`**, the 30th authored clip, and the only gait in
+  `wrestling_clips.py` that is not a fighting pose. `LOCOMOTION`'s `walk_stalk`
+  is a man circling an opponent with his hands up, which down 24m of ramp with
+  nobody in front of him reads as a wrestler who has spotted someone in the
+  crowd. A **walk**, not a run: the two contact windows sum to the whole cycle,
+  so one foot is always down — every other cycle in that file has a flight
+  phase. 1.45 m/s, and `EntranceDirector.WALK_SPEED` is that same number, so the
+  planted foot holds the ramp for the same reason `walk_stalk`'s holds the mat.
+- **`WrestlerFSM.State.ENTRANCE`**, reachable only from `IDLE` and leading only
+  back to it. It is a real FSM state because `WrestlerController` builds its
+  blend graph from `LEGAL_TRANSITIONS` and `STATE_ANIMATIONS`: a pose the FSM
+  does not know about has no node to cross-fade out of, and the wrestler would
+  pop from his last walking frame into the ready stance on the tick the match
+  starts. Appended rather than inserted, for the reason `Roster`'s comment gives
+  about Kenny.
+- **`EntranceCamera`**, its own camera with three hard cuts — stage wide, a long
+  lens tracking the ramp, low at the apron for the climb. Deliberately not a
+  fifth `MatchCamera.Mode`: that class's whole job is a framing solve against two
+  men in a six-metre ring, and during an entrance there is one man up to 37m
+  away, so the midpoint it aims at is a point in the seats.
+- **`EntranceNameplate`**, drawn rather than built from themed Controls, in the
+  idiom `title_screen.gd` documents. Colours come off the `Roster.Entry`.
+- **The accent.** The portals, their fans, the ramp LEDs, the four stage accents
+  and the four backdrop uplights all take the walking wrestler's colour and go
+  back to the shipped magenta/amber after. Hue only — each part keeps the level
+  `ENTRANCE_EMISSIVE` solved for it.
+
+### Three things only a rendered frame said
+
+None of these were visible in any number.
+
+- **The arms were a lat spread.** The first elbow poles were `(±0.6, -0.6, -0.3)`
+  — wide and well back — which threw the elbows out while the hands stayed at the
+  waist, so the forearms angled inward and the walk read as a man with his hands
+  on his hips. Now `(±0.26, -0.90, -0.22)`, close to `Run_Drive`'s: mostly
+  backward, barely out, which is where an elbow is on a hanging arm. Rendering
+  it also turned up a real bug in `_gait()`'s `arm_spread`, which was unsigned
+  and so pulled the *left* hand in across the body. `Walk_Entrance` is its first
+  caller, so nothing else moved.
+- **The climb was a ramp through the steps.** One leg from the floor to the top
+  tread is a straight line, and the flight is a staircase, so he glided up the
+  outside of it. The climb is now one leg per tread, off the flight's own taper
+  (`tread_x()` / `tread_y()`): tread `i` is `STEP_RUN * (STEP_TREADS - i)` deep,
+  so its exposed band is the single run between the two outer edges.
+- **The video wall was a blown white slab** across the top of the stage shot.
+  The wall plays its clip freely outside a capture run (`StageVideo`'s header
+  explains why the still is only bound under `--art-shots` and friends), and the
+  entrance camera looks far more directly at it than any framing in the shotlist
+  does. Fixed on the entrance's own side rather than by re-tuning a measured
+  value: the stage shot went from a 46° to a 34° lens, and the wall's entrance
+  tint went to 0.70 — a wash is darker than white by however much the accent is
+  below it, so colouring the wall also pulls it off the glow threshold.
+  `SCREEN_LEVEL` and the energy `_still_mean()` solves are untouched, and
+  `clear_tint()` puts it back.
+
+### Recording it
+
+`tools/probe/title_video.gd` now records five things rather than four — landing
+screen, select, VS card, **both walks**, and the match — and waits on the
+director's `entrances_finished` before it starts counting `--match-seconds`.
+Counting from the scene swap spent the whole match budget on the ramp.
+
+```
+xvfb-run -a godot4 --path game --resolution 1280x720 --fixed-fps 30 \
+    tools/probe/title_video.tscn -- --out /tmp/frames --match-seconds 90
+ffmpeg -framerate 30 -i /tmp/frames/f_%05d.jpg -c:v libx264 -crf 21 \
+    -pix_fmt yuv420p out.mp4
+```
+
+`tools/probe/entrance_shots.tscn` is the cheap version: a still at each beat of
+both walks, plus the measurement a screenshot cannot make — the wrestler's height
+against `EntranceDirector.surface_y()` and his drift off the ramp's centreline,
+every tick, worst reported at the end.
+
+**Forward+ needs a software Vulkan driver.** Under `xvfb` with only llvmpipe's
+OpenGL, Godot falls back to `gl_compatibility`, and `refs/VISUAL_BAR.md` is
+explicit that a compatibility frame cannot judge this project. Installing Mesa's
+`lavapipe` (`mesa-vulkan-drivers`) gets Vulkan 1.4 on llvmpipe and Forward+ back.
+Worth checking the banner line before trusting any capture: it names the API and
+the renderer.

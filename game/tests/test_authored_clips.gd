@@ -225,13 +225,25 @@ func test_victory_is_terminal() -> void:
 func test_a_winner_can_celebrate_from_wherever_the_bell_catches_him() -> void:
 	# A pinfall winner is in PIN_ATTACKER and a submission winner in
 	# SUBMISSION_ATTACKER, but the referee can also declare one from a
-	# tie-up resolution, so every non-terminal state has to reach VICTORY.
+	# tie-up resolution, so every state the bell can catch him in has to reach
+	# VICTORY.
+	#
+	# VICTORY itself is terminal, and ENTRANCE is the other exemption: the bell
+	# cannot catch a man on the ramp. The entrance runs before the referee's
+	# first tick -- MatchSetup awaits it and only then starts the recording, and
+	# EntranceDirector freezes the referee for the duration -- so there is no
+	# match to win while anybody is in it. Adding VICTORY to its transition list
+	# would be a path that says a wrestler can be declared the winner of a match
+	# that has not begun.
+	const OFF_THE_CLOCK := [WrestlerFSM.State.VICTORY,
+			WrestlerFSM.State.ENTRANCE]
 	for state: int in WrestlerFSM.State.values():
-		if state == WrestlerFSM.State.VICTORY:
+		if OFF_THE_CLOCK.has(state):
 			continue
 		assert_array(WrestlerFSM.LEGAL_TRANSITIONS[state]) \
 			.override_failure_message(
-				"state %d cannot reach VICTORY" % state) \
+				"%s cannot reach VICTORY"
+				% WrestlerFSM.State.keys()[state]) \
 			.contains([WrestlerFSM.State.VICTORY])
 
 

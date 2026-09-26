@@ -1008,3 +1008,48 @@ func _fog_box(fog_name: String, at: Vector3, size: Vector3, density: float,
 	material.edge_fade = 0.35
 	volume.material = material
 	add_child(volume)
+
+
+# --- The entrance accent ------------------------------------------------------
+#
+# The four stage accents carry one wrestler's colour while he walks out, and go
+# back to the shipped split -- magenta on the west pair, amber on the east --
+# after. `ArenaBuilder.set_entrance_accent()` does the same to the portal rings
+# those fixtures are aimed at; either one on its own leaves a magenta lamp
+# washing a blue portal.
+#
+# Colour only. `accent_energy`, the cone angle, the falloff, ACCENT_RANGE and
+# the volumetric fog energy all stay where the lighting slice put them, so this
+# cannot move the exposure VISUAL_BAR.md anchors.
+
+## The fixtures the accent repaints, in the order they are created. Named rather
+## than walked so a renamed fixture fails here instead of silently leaving a lamp
+## on the old colour.
+##
+## The BACKDROP UPLIGHTS are in this list, and leaving them out was visible on
+## the first rendered frame: `refs/stage.md` records that the backdrop's colour
+## comes from the four fixtures aimed up it rather than from the surface, so with
+## only the portals and the accents repainted, Roman walked out of steel-blue
+## portals standing against a magenta wall. The set has one colour at a time or
+## it has none.
+const ACCENT_FIXTURES := ["AccentW0", "AccentW1", "AccentE0", "AccentE1",
+		"UplightW0", "UplightW1", "UplightE0", "UplightE1"]
+
+
+## Puts `color` on all four stage accents.
+func set_stage_accent(color: Color) -> void:
+	for fixture_name: String in ACCENT_FIXTURES:
+		var light := get_node_or_null(fixture_name) as SpotLight3D
+		if light:
+			light.light_color = color
+
+
+## Back to the shipped split: magenta on the west half, amber on the east, which
+## is how both `_build_stage_accents()` and `_build_backdrop_uplights()` lay
+## their own fixtures out.
+func restore_stage_accent() -> void:
+	for fixture_name: String in ACCENT_FIXTURES:
+		var light := get_node_or_null(fixture_name) as SpotLight3D
+		if light:
+			light.light_color = ACCENT_MAGENTA if fixture_name.contains("W") \
+					else ACCENT_AMBER

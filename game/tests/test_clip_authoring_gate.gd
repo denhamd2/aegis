@@ -40,9 +40,16 @@ extends GdUnitTestSuite
 ## wrestling_clips.py -- the pose tables: what every clip in the game is.
 ## rig_pose.py        -- the IK solver those tables are expressed against, so
 ##                       a change here silently moves EVERY clip at once.
+##
+## Last re-pinned for Walk_Entrance, the walk to the ring (the 30th clip).
+## Reviewed as this file asks: `.claude/skills/blender-animation/SKILL.md` read,
+## then the clip rendered through tools/probe/clip_shot.tscn on both views and
+## looked at. The front view is what earned the change -- the first version's
+## elbow poles read as a man walking with his hands on his hips, and nothing in
+## the numbers said so. `rig_pose.py` is untouched, so no existing clip moved.
 const PINNED := {
 	"res://tools/blender/wrestling_clips.py":
-		"9c63aeb319794ba158834af6c1035c3756c66d25c8629a4c034f766a0fb6a016",
+		"d5b8ff1b7dc87de8bbe93f43e4069255f196897354f13096406537a9acc4dbc0",
 	"res://tools/blender/rig_pose.py":
 		"fb1d5e5801d0d1ef1fbfec92af57f4f769794a866f83423cba60be74b4824d6a",
 }

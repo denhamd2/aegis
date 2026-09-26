@@ -1647,3 +1647,61 @@ func _attach_stage_video(root: Node3D) -> void:
 ## where the shell went, and deliberately builds nothing.
 func _build_shell() -> void:
 	pass
+
+
+# --- The entrance accent ------------------------------------------------------
+#
+# The portals, their fans and the ramp LEDs carry one wrestler's colour while
+# he walks out, and go back to the shipped magenta/amber after. That is what an
+# entrance does to a set, and it is the cheapest way to make two entrances down
+# the same 24m of ramp read as two different men.
+#
+# Only the HUE moves. Each part keeps the level ENTRANCE_EMISSIVE solved for it
+# -- RampLeds at 0.72 rather than the portals' 1.12 because the strips run the
+# whole ramp and sit far closer to the broadcast camera, PORTAL_FAN_EMISSION at
+# 0.26 because a fan is spill -- and `_self_emissive()` re-derives the energy
+# multiplier from the new albedo's own luminance, so a dark accent does not
+# come back dimmer than a bright one. Type a new level here and the numbers
+# those comments earned are gone.
+#
+# ONE STANDING CONSTRAINT, from CaptureHarness's doc comment: nothing
+# green-dominant may appear where the HUD probes sample the frame's bottom
+# corners, or `hud_present` goes true for the wrong reason and the evidence
+# gate stops catching a missing HUD. The ramp LEDs are the only part of this
+# that reaches down into the frame, the HUD is hidden for the whole entrance
+# anyway, and both roster colourways (Roman's steel blue, Cody's gold) are well
+# clear of VITALITY_GREEN. A green accent added to the roster would not be.
+
+## Parts the accent repaints, and the ENTRANCE_EMISSIVE level each keeps.
+const ACCENT_PARTS := ["RampLeds", "PortalRingWest", "PortalRingEast",
+		"PortalFanWest", "PortalFanEast"]
+
+
+## Puts `color` on the portals, the portal fans and the ramp LEDs.
+##
+## `entrance_set.glb` is instanced as a child named "EntranceSet", so this
+## re-resolves the same nodes `_build_entrance_set()` dressed rather than
+## caching them: the set is built in _ready() and the director runs after it,
+## but a cached MeshInstance3D is a null waiting for the one call ordering
+## nobody tested.
+func set_entrance_accent(color: Color) -> void:
+	var root := get_node_or_null("EntranceSet") as Node3D
+	if root == null:
+		return
+	for part: String in ACCENT_PARTS:
+		var level: float = (ENTRANCE_EMISSIVE[part] as Array)[1]
+		var mat := MaterialLibrary.resolve(
+				(ENTRANCE_EMISSIVE[part] as Array)[0])
+		mat.albedo_color = color
+		_dress(root, part, _self_emissive(mat, level))
+
+
+## Back to the shipped magenta/amber, which is what ENTRANCE_EMISSIVE holds.
+func restore_entrance_accent() -> void:
+	var root := get_node_or_null("EntranceSet") as Node3D
+	if root == null:
+		return
+	for part: String in ENTRANCE_EMISSIVE:
+		var spec: Array = ENTRANCE_EMISSIVE[part]
+		_dress(root, part, _self_emissive(MaterialLibrary.resolve(spec[0]),
+				spec[1]))

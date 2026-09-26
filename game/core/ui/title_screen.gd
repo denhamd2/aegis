@@ -203,6 +203,7 @@ func _launch() -> void:
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
 			randi_range(1, 1 << 30))
+	configure_entrances(scene, picks[0], picks[1])
 	var tree := get_tree()
 	var old := tree.current_scene
 	tree.root.add_child(scene)
@@ -237,6 +238,37 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		wrestler.attire_accent = entry.attire_accent
 	if "match_seed" in scene:
 		scene.match_seed = match_seed
+
+
+## Turns the walk to the ring on, and says who is walking.
+##
+## SEPARATE from configure_match() above, and that separation is the whole
+## point of this function existing rather than being three lines inside it.
+## configure_match() is called by NINE probes -- ladder_probe, pin_probe,
+## feel_probe, reachability_probe, floating_probe, arena_shot, exchange_shot and
+## the two title probes -- because it is the one description of "what a picked
+## wrestler means" and they all want it. Setting `play_entrances` in there gave
+## every one of them an entrance: `ladder_probe --seeds 1,2,3` came back with
+## seed 1 at 5119 ticks against its recorded 914, ENTRANCE in both wrestlers'
+## state histograms, and a different number of strikes landed. That is exactly
+## the leak ARCHITECTURE.md's determinism requirement and the README's
+## byte-identical claim forbid, and it was caught by diffing the probe rather
+## than by reading this file.
+##
+## So the rule is: configure_match() is what a MATCH needs, this is what the
+## FRONT END adds on top, and only _launch() calls it. A probe that genuinely
+## wants to record an entrance calls it deliberately, which is what
+## tools/probe/title_video.gd gets by going through the screen itself.
+static func configure_entrances(scene: Node, player: Roster.Entry,
+		opponent: Roster.Entry) -> void:
+	if not ("play_entrances" in scene):
+		return
+	scene.play_entrances = true
+	# The entries travel with the flag because the entrance names the man -- on
+	# the nameplate, and in the colour the portals, the ramp LEDs and the video
+	# wall take while he walks. Nothing in EntranceDirector knows a wrestler's
+	# name.
+	scene.entrance_entries = [player, opponent]
 
 
 ## --- Drawing ---------------------------------------------------------------

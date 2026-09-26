@@ -290,6 +290,19 @@ const RECIPES := {
 	"walk_stalk": {"kind": "retime", "source": "Walk_Stalk",
 		"seconds": 0.533, "file": AUTHORED, "loop": true},
 
+	# The walk to the ring. Not a state the match ever enters -- ENTRANCE is
+	# reachable only from IDLE, before the referee's first tick -- so nothing
+	# here is on a timeout and this duration is set by the cycle alone.
+	#
+	# 0.933s, matching Walk_Entrance's own 28 frames at 30fps. Tied to
+	# EntranceDirector.WALK_SPEED the way walk_stalk is tied to MOVE_SPEED:
+	# the planted foot delivers travel / (contact_frames / frames * seconds),
+	# so retiming this without regenerating the clip -- or moving the
+	# director's speed without retiming this -- puts the skate back, and on a
+	# 25.7m ramp there is a great deal of time to notice it.
+	"walk_entrance": {"kind": "retime", "source": "Walk_Entrance",
+		"seconds": 0.933, "file": AUTHORED, "loop": true},
+
 	# Sprint is a jog with the torso upright and the arms barely moving.
 	# 0.667s, matching Run_Drive's own 20 frames at 30fps -- and, like the
 	# walk above, tied to RUN_SPEED through the generated contact phase.
