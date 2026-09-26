@@ -1054,6 +1054,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	move_and_slide()
 	keep_inside_the_ring()
+	_release_cover_contact()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
 	_update_grip_ik()
@@ -1978,11 +1979,16 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 ## the coverer past the downed man's boots, which pin_shot showed as a man
 ## kneeling beside the other's shins.
 ##
-## TOWARD_HEAD puts him level with the chest; LATERAL is where his knees
-## clear the downed man's ribs with his chest reaching over them, read off
-## the side, three-quarter and low shots.
+## TOWARD_HEAD puts him level with the chest.
+##
+## LATERAL is measured to his ROOT, and the cover is a lateral press now: he
+## lies face down across the man (wrestling_clips.py, Pin_Cover). In that pose
+## his pelvis sits 0.16 m behind his root and his chest about 0.35 m ahead of
+## the pelvis, so the chest is ~0.2 m in front of the root. At the kneel's
+## 0.55 the chest landed on the mat beside the man; 0.20 lays it over his
+## sternum, with the pelvis down on the mat beside his ribs.
 const COVER_TOWARD_HEAD_M := 0.40
-const COVER_LATERAL_M := 0.55
+const COVER_LATERAL_M := 0.20
 
 
 ## Called by MatchReferee when the attacker covers a downed opponent.
@@ -2011,6 +2017,13 @@ func begin_pin(defender: WrestlerController, seed_value: int) -> void:
 ## count -- neither reads either man's position -- so this moves what the
 ## camera sees without touching what the match decides.
 func _place_cover(defender: WrestlerController) -> void:
+	# The two capsules (r 0.4) stop each other 0.8 m apart, and a man lying
+	# ON another is closer than that by design -- the slide would park him
+	# short of the cover. The pair stop colliding for the pin, and start again
+	# only once they have separated: see _release_cover_contact().
+	add_collision_exception_with(defender)
+	defender.add_collision_exception_with(self)
+	_cover_partner = defender
 	var basis := defender.global_transform.basis
 	# -Z toward the head, measured (see the constants); +X is his own left.
 	var toward_head := -basis.z * COVER_TOWARD_HEAD_M
@@ -2043,6 +2056,31 @@ func _place_cover(defender: WrestlerController) -> void:
 	_cover_slide_tick = 0
 	_cover_slide_ticks = _cover_slide_duration(
 			global_position.distance_to(spot))
+
+## The man this wrestler covered, while their capsules ignore each other.
+var _cover_partner: WrestlerController = null
+
+## Collision between the pair comes back once the pin is over AND they have
+## moved apart -- never while they overlap, or the physics engine resolves the
+## overlap in a single step and throws one of them across the mat.
+## Two capsule radii plus a hair.
+const COVER_RELEASE_M := 0.82
+
+
+func _release_cover_contact() -> void:
+	if _cover_partner == null or not is_instance_valid(_cover_partner):
+		_cover_partner = null
+		return
+	if fsm.current_state == WrestlerFSM.State.PIN_ATTACKER:
+		return
+	var apart := Vector2(global_position.x - _cover_partner.global_position.x,
+			global_position.z - _cover_partner.global_position.z).length()
+	if apart < COVER_RELEASE_M:
+		return
+	remove_collision_exception_with(_cover_partner)
+	_cover_partner.remove_collision_exception_with(self)
+	_cover_partner = null
+
 
 ## Where the cover slide starts and ends, and how far through it is. Ticked in
 ## _physics_process's PIN_ATTACKER branch, which is otherwise `pass` -- the

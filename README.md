@@ -6790,3 +6790,21 @@ VS band and controls card are restyled in the art's own colours: gold for
 the cursor and rules, violet for player 1, teal for the CPU. A dark footer
 keeps the hint line readable over the smoke. Rendered at 1600x900 through
 `title_shots.tscn`; the 16:9 viewport letterboxes other shapes.
+
+## Round: the cover is a lateral press
+
+The owner asked for the cover a match actually uses: the attacker lying face
+down across the man, not kneeling beside him. `Pin_Cover` is re-authored:
+onto the knees beside him, then down across his chest -- torso slightly
+uphill (hips -78) because the pelvis is on the mat while the chest is on top
+of him, legs sprawled back with the toes dug in, both arms over to the mat on
+the far side, head up and turned to the hard camera.
+
+Placement had to follow the pose. `COVER_LATERAL_M` is to the ROOT, and the
+prone chest sits ~0.2 m in front of it, so 0.55 -> 0.20 puts the chest over
+the sternum. That is closer than two 0.4 m capsules allow, and the slide was
+being parked 0.8 m short -- so `_place_cover()` now adds a collision
+exception between the pair, and `_release_cover_contact()` drops it only
+once the pin is over AND they are 0.82 m apart; released while overlapping,
+the physics step would throw one of them across the ring. `pin_shot.tscn`
+measures separation 0.453 m against the 0.447 intended. 460 tests pass.

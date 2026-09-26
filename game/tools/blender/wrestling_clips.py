@@ -788,51 +788,52 @@ CLIPS = {
 
     # === finishing ======================================================
 
-    # 18 frames / 0.6s. The cover: down onto both knees, chest out over his,
-    # both hands pressing his shoulders into the mat, eyes on those shoulders
-    # because that is what the referee is counting. Hands are open (fist 0.1)
-    # -- a cover presses with palms.
+    # 18 frames. A LATERAL PRESS: he drops to his knees beside the man and
+    # falls forward across his chest, face down, legs sprawled back with the
+    # toes dug in, both arms wrapped over to the mat on the far side.
     #
-    # The leans are NEGATIVE, and were positive until this was rendered: the
-    # same pitch-sign mistake STANCE and SUPINE both carried. At hips 36 and
-    # spine 53 he knelt beside the man he was pinning with his torso tipped
-    # back AWAY from him, arms stretched forward and down like a man bracing
-    # to stop himself falling over backwards.
+    # It was a kneel -- down onto both knees beside him, torso leaning over,
+    # palms on his shoulders -- and the owner asked for the cover a wrestling
+    # match actually uses: the attacker lying ON the man, chest to chest. The
+    # face-down half comes from the same sign rule SUPINE's note records: a
+    # negative `hips` pitch tips a man forward, and -84 lays him on his front.
     #
-    # The hands are set off the downed man's bones as the probe measures them
-    # from where _place_cover() kneels him -- level with the chest, 0.55 m out,
-    # facing square across the body. From there, in this man's frame: the far
-    # shoulder is 0.75 m in front, the near one 0.35 m, both 0.15 m to his
-    # right (toward the downed man's head) and 0.22 m off the mat. Right palm
-    # on the far shoulder, left on the near side of the chest.
+    # His chest is the part that has to land on the other man's, so the pose
+    # is built from there: the torso runs forward from the pelvis a little
+    # uphill (-78, not flat) because the pelvis is down on the mat beside the
+    # man while the chest is on top of him, 0.20 m up. Placement is
+    # WrestlerController.COVER_*: square across the body, pelvis beside his
+    # ribs, so the chest lands over his sternum.
     "Pin_Cover": [
-        (0,  P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-26, 0, 0),
+        (0,  P(pelvis=(0.0, 0.04, 0.780), hips=(-12, 0, 0), spine=(-28, 0, 0),
                head=(-4, 0, 0),
-               hand_r=(0.24, 0.44, 0.96), hand_l=(-0.22, 0.46, 0.94),
+               hand_r=(0.24, 0.46, 0.94), hand_l=(-0.22, 0.48, 0.92),
                fist_r=0.0, fist_l=0.0)),
-        # Dropping onto the knees, already reaching for him.
-        (6,  dict(pelvis=(0.0, 0.06, 0.560), hips=(-20, 0, 0),
-                  spine=(-34, 0, 0), head=(-6, 0, 0),
-                  hand_r=(0.20, 0.58, 0.46), hand_l=(-0.06, 0.46, 0.44),
+        # Onto the knees beside him, already reaching across.
+        (5,  dict(pelvis=(0.0, 0.02, 0.540), hips=(-30, 0, 0),
+                  spine=(-30, 0, 0), head=(-6, 0, 0),
+                  hand_r=(0.22, 0.62, 0.42), hand_l=(-0.12, 0.58, 0.40),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.19, -0.20, 0.09), foot_l=(-0.19, -0.18, 0.09),
+                  foot_r=(0.19, -0.24, 0.09), foot_l=(-0.19, -0.22, 0.09),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
-        # Chest out over his, weight through both arms into his shoulders.
-        (12, dict(pelvis=(0.0, 0.08, 0.480), hips=(-32, 0, 0),
-                  spine=(-46, 0, 0), head=(-10, 0, 0),
-                  hand_r=(0.16, 0.72, 0.26), hand_l=(-0.04, 0.42, 0.30),
-                  elbow_r=(0.5, -0.2, 0.6), elbow_l=(-0.6, -0.2, 0.5),
+        # Falling across: hips out behind, chest coming down onto his.
+        (11, dict(pelvis=(0.0, -0.10, 0.360), hips=(-66, 0, 0),
+                  spine=(-8, 0, 0), head=(14, 20, 0),
+                  hand_r=(0.20, 0.92, 0.16), hand_l=(-0.30, 0.78, 0.14),
+                  elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.19, -0.22, 0.09), foot_l=(-0.19, -0.20, 0.09),
-                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
-        # Settles into the press rather than stopping dead on it.
-        (18, dict(pelvis=(0.0, 0.09, 0.470), hips=(-34, 0, 0),
-                  spine=(-48, 0, 0), head=(-12, 0, 0),
-                  hand_r=(0.16, 0.74, 0.24), hand_l=(-0.04, 0.43, 0.28),
-                  elbow_r=(0.5, -0.2, 0.6), elbow_l=(-0.6, -0.2, 0.5),
+                  foot_r=(0.17, -0.62, 0.08), foot_l=(-0.17, -0.58, 0.08),
+                  knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))),
+        # Settled: lying across him, legs sprawled for base, toes dug in,
+        # head up and turned so the face reads from the hard camera.
+        (18, dict(pelvis=(0.0, -0.16, 0.300), hips=(-78, 0, 0),
+                  spine=(-4, 0, 0), head=(18, 28, 0),
+                  hand_r=(0.18, 0.98, 0.10), hand_l=(-0.32, 0.84, 0.10),
+                  elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.19, -0.22, 0.09), foot_l=(-0.19, -0.20, 0.09),
-                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
+                  foot_r=(0.20, -0.86, 0.07), foot_l=(-0.20, -0.82, 0.07),
+                  ankle_r=(40, 0, 0), ankle_l=(40, 0, 0),
+                  knee_r=(0.25, 0.0, -1.0), knee_l=(-0.25, 0.0, -1.0))),
     ],
 
     # 39 frames / 1.3s. There is no celebration anywhere in the 42 source

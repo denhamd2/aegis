@@ -45,7 +45,7 @@ func test_the_pin_attacker_plays_the_generated_cover() -> void:
 ## Beside the chest, not the boots. The downed man's body runs up -Z from his
 ## origin -- measured, Head at local z=-0.69 and foot_l at z=+0.50 -- and an
 ## offset along +Z put the coverer past his feet.
-func test_the_coverer_kneels_beside_the_downed_mans_chest() -> void:
+func test_the_coverer_lies_across_the_downed_mans_chest() -> void:
 	var pair := _pair()
 	var attacker: WrestlerController = pair[0]
 	var defender: WrestlerController = pair[1]
@@ -120,3 +120,43 @@ func test_placing_the_cover_does_not_touch_the_pin_state() -> void:
 		.is_equal(WrestlerFSM.State.PIN_ATTACKER)
 	assert_int(defender.fsm.current_state) \
 		.is_equal(WrestlerFSM.State.PIN_DEFENDER)
+
+
+## A man lying ON another is closer than two capsules allow, so the pair stop
+## colliding for the pin -- otherwise the slide parks him 0.8 m short and the
+## press lands on the mat beside the man.
+func test_the_pair_stop_colliding_for_the_cover() -> void:
+	var pair := _pair()
+	var attacker: WrestlerController = pair[0]
+	var defender: WrestlerController = pair[1]
+	attacker.begin_pin(defender, 1)
+	assert_bool(attacker.get_collision_exceptions().has(defender)).is_true()
+	assert_bool(defender.get_collision_exceptions().has(attacker)).is_true()
+
+
+## And collide again only once the pin is over AND they are apart. Released
+## while they still overlap, the physics engine resolves the overlap in one
+## step and throws one of them across the ring.
+func test_collision_returns_only_after_the_pin_and_apart() -> void:
+	var pair := _pair()
+	var attacker: WrestlerController = pair[0]
+	var defender: WrestlerController = pair[1]
+	defender.global_position = Vector3.ZERO
+	attacker.global_position = Vector3(0.3, 0.0, 0.0)
+	attacker.begin_pin(defender, 1)
+
+	# Still pinning: held, whatever the distance.
+	attacker._release_cover_contact()
+	assert_bool(attacker.get_collision_exceptions().has(defender)).is_true()
+
+	# Pin over, still on top of him: held.
+	attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
+	attacker._release_cover_contact()
+	assert_bool(attacker.get_collision_exceptions().has(defender)).is_true()
+
+	# Apart: released, both ways.
+	attacker.global_position = Vector3(WrestlerController.COVER_RELEASE_M + 0.1,
+			0.0, 0.0)
+	attacker._release_cover_contact()
+	assert_bool(attacker.get_collision_exceptions().has(defender)).is_false()
+	assert_bool(defender.get_collision_exceptions().has(attacker)).is_false()
