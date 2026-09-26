@@ -60,12 +60,15 @@ LAYERS = 10
 ## Over this distance in from the hairline the shells come down to the skin.
 HAIRLINE_TAPER = 0.045
 ## The height field, metres off the scalp at the outermost shell.
-LIFT_FRONT = 0.062      # the front of the top, off the forehead
+LIFT_FRONT = 0.054      # the front of the top, off the forehead
 LIFT_CROWN = 0.032      # over the crown
-LIFT_SIDE = 0.017       # the short sides and the nape
+LIFT_SIDE = 0.013       # the short sides and the nape
+LIFT_SHOULDER = 0.012   # extra at the upper sides, where the top rounds over
+## Over this distance in from ANY edge of the patch the outer shells thin out.
+EDGE_FADE = 0.03
 ## How far the outermost shell sits BEHIND the scalp point it grew from,
 ## per metre of lift: the sweep.
-SWEEP = 0.55
+SWEEP = 0.85
 
 
 def _inside(poly, x, y):
@@ -135,9 +138,11 @@ def main() -> int:
     # the hair down onto the skull around each ear's notch, where it sank
     # into the scalp and showed as a grey patch at the temple.
     boundary = set()
+    rim = set()
     for e in bm.edges:
         if len(e.link_faces) == 1:
             for v in e.verts:
+                rim.add(v)
                 n = (mw.to_3x3() @ v.normal).normalized()
                 if n.y < -0.25 and (mw @ v.co).z > bottom + 0.45 * (top - bottom):
                     boundary.add(v)
@@ -146,6 +151,18 @@ def main() -> int:
     for i, v in enumerate(boundary):
         edge_kd.insert(mw @ v.co, i)
     edge_kd.balance()
+
+    # The whole rim, for the edge FADE: the outer shells thin out towards
+    # every edge of the patch, so the hair ends in a few strands on the skin
+    # instead of a dotted, stair-stepped border of cut shell.
+    rim_kd = KDTree(len(rim))
+    for i, v in enumerate(rim):
+        rim_kd.insert(mw @ v.co, i)
+    rim_kd.balance()
+
+    def edge_fade(p):
+        _, _, d = rim_kd.find(p)
+        return smooth(d / EDGE_FADE)
 
     def taper(p):
         _, _, d = edge_kd.find(p)
@@ -158,7 +175,12 @@ def main() -> int:
         frontness = smooth((back - p.y) / (back - front))
         on_top = up * smooth((n.z + 0.15) / 0.95)
         h = LIFT_SIDE + (LIFT_CROWN - LIFT_SIDE) * on_top
-        h += (LIFT_FRONT - LIFT_CROWN) * on_top * frontness ** 1.5
+        h += (LIFT_FRONT - LIFT_CROWN) * on_top * frontness
+        # Fullness at the upper sides, so the top is a rounded mass rather
+        # than a narrow crest: the side view read as a tall flat wall.
+        high = smooth((p.z - (bottom + 0.62 * (top - bottom))) / (0.25 * (top - bottom)))
+        shoulder = high * smooth(abs(n.x) / 0.8) * (1.0 - smooth((n.z - 0.2) / 0.6))
+        h += LIFT_SHOULDER * shoulder
         return h
 
     # Strand UVs, ONE continuous layout (the first version switched between
@@ -188,6 +210,10 @@ def main() -> int:
         k = layer / LAYERS
         lb = base.copy()
         luv = lb.loops.layers.uv.active
+        col = lb.loops.layers.color.new("Col")
+        fades = {}
+        for v in lb.verts:
+            fades[v.index] = edge_fade(mw @ v.co)
         for v in lb.verts:
             p = mw @ v.co
             n = (mw.to_3x3() @ v.normal).normalized()
@@ -199,6 +225,7 @@ def main() -> int:
                 p = mw @ l.vert.co
                 n = (mw.to_3x3() @ l.vert.normal).normalized()
                 l[luv].uv = strand_uv(p, n)
+                l[col] = (1.0, 1.0, 1.0, fades[l.vert.index])
         mesh = bpy.data.meshes.new("HairShell%02d" % layer)
         lb.to_mesh(mesh)
         lb.free()
@@ -231,7 +258,8 @@ def main() -> int:
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.export_scene.gltf(filepath=str(OUT), export_format="GLB", use_selection=True,
                               export_materials="PLACEHOLDER", export_yup=True,
-                              export_animations=False, export_skins=False)
+                              export_animations=False, export_skins=False,
+                              export_vertex_color="ACTIVE")
     print("cody_hair: %d shells -> %s" % (len(parts), OUT))
     return 0
 

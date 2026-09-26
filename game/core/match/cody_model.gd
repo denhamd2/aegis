@@ -100,11 +100,13 @@ func _add_hair() -> void:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_texture = strands
 		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, k)
-		mat.roughness = 0.34
+		mat.roughness = 0.5
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		# Vertex alpha thins the outer shells towards the patch's edge.
+		mat.vertex_color_use_as_albedo = true
 		if k > 0.0:
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-			mat.alpha_scissor_threshold = 0.12 + 0.40 * k
+			mat.alpha_scissor_threshold = 0.12 + 0.32 * k
 		mi.material_override = mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 

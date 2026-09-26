@@ -89,8 +89,15 @@ def main() -> int:
                       .filter(ImageFilter.GaussianBlur(2))).astype(np.float32) / 255.0
     lower = [(x, y + HAIRLINE_STRIP) if y < 0.40 else (x, y) for x, y in SKIN_TIGHT]
     strip = np.clip(hair_mask(lower) - hair_mask(SKIN_TIGHT), 0.0, 1.0)
-    mask = Image.fromarray(np.round(np.maximum(sure, np.maximum(band, strip) * dark)
-                                    * 255).astype(np.uint8))
+    # The fringe below the hairline: the source's stubble speckle there,
+    # recoloured texel by texel, read as a dotted blond border on the skin.
+    # Blur it into a soft wash instead and keep it part-transparent, so it
+    # reads as fine short hair over skin, the way a real hairline does.
+    fringe = np.maximum(band, strip) * dark
+    fringe = np.asarray(Image.fromarray(np.round(fringe * 255).astype(np.uint8))
+                        .filter(ImageFilter.GaussianBlur(w / 256.0))).astype(np.float32) / 255.0
+    fringe = np.clip(fringe * 0.75 - sure, 0.0, 1.0)[..., None]
+    mask = Image.fromarray(np.round(sure * 255).astype(np.uint8))
     mask = mask.filter(ImageFilter.GaussianBlur(w / 512.0))
     m = np.asarray(mask).astype(np.float32)[..., None] / 255.0
 
@@ -103,6 +110,8 @@ def main() -> int:
     root = np.clip(1.1 - ratio, 0.0, 1.0)
     colour = (BLOND * (1.0 - root) + ROOT * root) * np.clip(ratio, 0.55, 1.25)
     out = rgb * (1.0 - m) + np.clip(colour, 0, 255) * m
+    fringe_col = ROOT * np.clip(ratio, 0.85, 1.05)
+    out = out * (1.0 - fringe) + fringe_col * fringe
     rgba[..., :3] = out
     Image.fromarray(np.round(rgba).astype(np.uint8), "RGBA").save(TARGET, optimize=True)
     print("%s: hair %.1f%% of the texture" % (TARGET.name, 100.0 * float((m > 0.5).mean())))
