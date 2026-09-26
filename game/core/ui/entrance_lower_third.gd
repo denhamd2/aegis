@@ -18,7 +18,6 @@ extends Control
 ## Drawn, like MatchHUD and the title screen, so it scales with the viewport.
 
 const PLATE := "res://assets/ui/lower_third_plate.png"
-const FONT := "res://assets/fonts/Teko-Variable.ttf"
 
 ## Where the plate sits, as fractions of the viewport (off the reference).
 const PLATE_LEFT := 0.235
@@ -43,7 +42,7 @@ const WIPE := 0.28
 var title := ""
 var subtitle := ""
 var _plate: Texture2D
-var _font: FontVariation
+var _font: Font
 ## 0 = gone, 1 = fully on. Driven by show_card()/hide_card() through _process.
 var _shown := 0.0
 var _target := 0.0
@@ -53,12 +52,7 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_plate = load(PLATE) as Texture2D
-	var base := load(FONT) as FontFile
-	_font = FontVariation.new()
-	if base:
-		_font.base_font = base
-		var ts := TextServerManager.get_primary_interface()
-		_font.variation_opentype = {ts.name_to_tag("wght"): 700}
+	_font = TitleArt.teko(700)
 
 
 func show_card(p_title: String, p_subtitle: String) -> void:

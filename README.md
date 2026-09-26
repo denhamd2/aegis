@@ -6885,3 +6885,14 @@ Rendered end to end with new `tools/probe/entrance_shots.tscn`.
 `test_entrance_director.gd` steps a whole entrance tick by tick: no jump over
 0.1 m outside the cut, bell rung, both men on their marks; plus default-off,
 the freeze, skip, and the subtitle rule. 472 tests pass.
+
+## Round: Teko across the front end
+
+The title, select, controls and VS screens now set in Teko Bold, the face of
+the entrance lower third and of the owner's AEW references, so the menus and
+the broadcast graphics are one family. `TitleArt.teko(weight)` is the one
+place the font is built (a cached FontVariation over the variable
+Teko-Variable.ttf, weight 700 -- Teko's heaviest; there is no ExtraBold).
+Teko is condensed, so at the old sizes and tracking it read small and
+spaced out: type is ~1.35x larger and the letter-spacing is Teko's own,
+tight. Rendered through `title_shots.tscn` at 1600x900.

@@ -41,6 +41,29 @@ const KEY_GOLD := Color(0.96, 0.76, 0.32)
 const KEY_GOLD_DIM := Color(0.62, 0.50, 0.26)
 const KEY_PANEL := Color(0.035, 0.025, 0.065)
 
+## --- Type ------------------------------------------------------------------
+
+## Teko, the typeface of the owner's AEW references, used by the title screen,
+## the select screen and the entrance lower third so the front end and the
+## broadcast graphics are one family. A variable font (weight 300-700); 700,
+## Bold, is its heaviest -- Teko has no ExtraBold.
+const TEKO_PATH := "res://assets/fonts/Teko-Variable.ttf"
+static var _teko_cache := {}
+
+static func teko(weight: int = 700) -> Font:
+	if _teko_cache.has(weight):
+		return _teko_cache[weight]
+	var base := load(TEKO_PATH) as FontFile
+	if base == null:
+		return ThemeDB.fallback_font
+	var font := FontVariation.new()
+	font.base_font = base
+	var ts := TextServerManager.get_primary_interface()
+	font.variation_opentype = {ts.name_to_tag("wght"): weight}
+	_teko_cache[weight] = font
+	return font
+
+
 ## --- Textures --------------------------------------------------------------
 
 ## Vertical background wash: near-black at the truss line, a touch of blue in

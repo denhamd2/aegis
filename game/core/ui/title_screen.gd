@@ -86,7 +86,8 @@ var _card_rects: Array = []
 
 
 func _ready() -> void:
-	_font = ThemeDB.fallback_font
+	# Teko Bold, the broadcast graphics' face -- see TitleArt.teko().
+	_font = TitleArt.teko(700)
 	_backdrop = TitleArt.make_backdrop_texture()
 	_key_art = load(KEY_ART) as Texture2D
 	_glow = TitleArt.make_glow_texture()
@@ -329,7 +330,7 @@ func safe_rect(view: Vector2) -> Rect2:
 
 ## Build tag and hint line -- the frame around every phase.
 func _draw_chrome(view: Vector2) -> void:
-	var small := int(maxf(9.0, view.y * 0.016))
+	var small := int(maxf(12.0, view.y * 0.022))
 	if _key_art != null:
 		# The art's bottom edge is white smoke, and the hint line was
 		# unreadable on it: a dark footer strip, fading up into the art.
@@ -340,7 +341,7 @@ func _draw_chrome(view: Vector2) -> void:
 				Color(TitleArt.KEY_PANEL, 0.35))
 	TitleArt.draw_tracked(self, _font,
 			Vector2(view.x * 0.035, view.y * 0.955), "AEGIS BUILD", small,
-			view.y * 0.006, TitleArt.KEY_GOLD_DIM)
+			view.y * 0.002, TitleArt.KEY_GOLD_DIM)
 	var hint := ""
 	match phase:
 		Phase.TITLE:
@@ -351,10 +352,10 @@ func _draw_chrome(view: Vector2) -> void:
 			hint = "LEFT / RIGHT  CHANGE      ENTER  LOCK IN      ESC  BACK"
 	if hint == "":
 		return
-	var w := TitleArt.tracked_width(_font, hint, small, view.y * 0.006)
+	var w := TitleArt.tracked_width(_font, hint, small, view.y * 0.002)
 	TitleArt.draw_tracked(self, _font,
 			Vector2(view.x - w - view.x * 0.035, view.y * 0.955), hint, small,
-			view.y * 0.006, TitleArt.KEY_GOLD_DIM)
+			view.y * 0.002, TitleArt.KEY_GOLD_DIM)
 
 
 func _draw_title(view: Vector2) -> void:
@@ -369,7 +370,7 @@ func _draw_title(view: Vector2) -> void:
 	var row_h := unit * 0.165
 	var row_w := minf(safe.size.x * 0.52, unit * 1.05)
 	var top := safe.position.y + unit * 0.20
-	var size_px := int(row_h * 0.40)
+	var size_px := int(row_h * 0.58)
 	_menu_rects.clear()
 	for i in _menu.size():
 		var rect := Rect2(safe.get_center().x - row_w * 0.5, top + row_h * i,
@@ -377,7 +378,7 @@ func _draw_title(view: Vector2) -> void:
 		_menu_rects.append(rect)
 		var selected := i == menu_index
 		var label: String = _menu[i]
-		var track := row_h * 0.13
+		var track := row_h * 0.045
 		var text_w := TitleArt.tracked_width(_font, label, size_px, track)
 		var baseline := rect.position.y + rect.size.y * 0.67
 		var line := maxf(1.0, view.y * 0.0016)
@@ -414,25 +415,25 @@ func _draw_controls(view: Vector2) -> void:
 	TitleArt.draw_cut_panel(self, panel, view.y * 0.035,
 			Color(TitleArt.KEY_PANEL, 0.96), Color(TitleArt.KEY_GOLD_DIM, 0.8),
 			maxf(1.0, view.y * 0.0018))
-	var head_size := int(view.y * 0.030)
+	var head_size := int(view.y * 0.044)
 	TitleArt.draw_tracked(self, _font,
 			panel.position + Vector2(view.x * 0.030, view.y * 0.070),
-			"CONTROLS", head_size, view.y * 0.012, TitleArt.STEEL)
+			"CONTROLS", head_size, view.y * 0.004, TitleArt.KEY_GOLD)
 	draw_rect(Rect2(panel.position + Vector2(view.x * 0.030, view.y * 0.085),
 			Vector2(panel.size.x - view.x * 0.060, maxf(1.0, view.y * 0.002))),
 			TitleArt.KEY_GOLD)
 
-	var row_size := int(view.y * 0.022)
+	var row_size := int(view.y * 0.032)
 	var y := panel.position.y + view.y * 0.135
 	for row: Array in CONTROL_ROWS:
 		TitleArt.draw_tracked(self, _font,
 				Vector2(panel.position.x + view.x * 0.030, y), row[0],
-				row_size, view.y * 0.007, TitleArt.STEEL_DIM)
+				row_size, view.y * 0.002, TitleArt.STEEL_DIM)
 		var keys := _binding_labels(row[1])
-		var kw := TitleArt.tracked_width(_font, keys, row_size, view.y * 0.007)
+		var kw := TitleArt.tracked_width(_font, keys, row_size, view.y * 0.002)
 		TitleArt.draw_tracked(self, _font,
 				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - kw,
-						y), keys, row_size, view.y * 0.007, TitleArt.STEEL)
+						y), keys, row_size, view.y * 0.002, TitleArt.STEEL)
 		y += view.y * 0.062
 
 
@@ -468,26 +469,26 @@ static func _key_label(keycode: int) -> String:
 func _draw_select(view: Vector2) -> void:
 	var safe := safe_rect(view)
 	var unit := safe.size.y
-	var head_size := int(unit * 0.075)
+	var head_size := int(unit * 0.105)
 	var head := "SELECT YOUR WRESTLER"
-	var hw := TitleArt.tracked_width(_font, head, head_size, unit * 0.028)
+	var hw := TitleArt.tracked_width(_font, head, head_size, unit * 0.010)
 	TitleArt.draw_tracked(self, _font,
 			Vector2(safe.get_center().x - hw * 0.5,
 					safe.position.y + unit * 0.075),
-			head, head_size, unit * 0.028, TitleArt.KEY_GOLD)
+			head, head_size, unit * 0.010, TitleArt.KEY_GOLD)
 
 	var side := "PLAYER 1" if picks.is_empty() else "OPPONENT  ·  CPU"
 	# Player 1 in the left wrestler's violet, the CPU in the right one's teal:
 	# the art already says which side is which.
 	var side_color := TitleArt.KEY_VIOLET.lightened(0.25) if picks.is_empty() \
 			else TitleArt.KEY_TEAL
-	var side_size := int(unit * 0.045)
-	var sw := TitleArt.tracked_width(_font, side, side_size, unit * 0.024)
+	var side_size := int(unit * 0.062)
+	var sw := TitleArt.tracked_width(_font, side, side_size, unit * 0.010)
 	if phase == Phase.SELECT:
 		TitleArt.draw_tracked(self, _font,
 				Vector2(safe.get_center().x - sw * 0.5,
 						safe.position.y + unit * 0.155),
-				side, side_size, unit * 0.024, side_color)
+				side, side_size, unit * 0.010, side_color)
 
 	# The cards share the safe box's width; their height follows from a
 	# portrait card's proportions and is capped by the box.
@@ -555,8 +556,8 @@ func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
 			plate.position + Vector2(0.0, plate.size.y),
 		]), Color(accent.r, accent.g, accent.b, 0.55))
 
-	var first_size := int(body.size.y * 0.045)
-	var last_size := int(body.size.y * 0.082)
+	var first_size := int(body.size.y * 0.060)
+	var last_size := int(body.size.y * 0.115)
 	var text_x := body.position.x + pad
 	var name_y := plate.position.y + plate.size.y + body.size.y * 0.10
 	TitleArt.draw_tracked(self, _font, Vector2(text_x, name_y),
@@ -567,7 +568,7 @@ func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
 			last_size, body.size.x * 0.006, TitleArt.STEEL)
 	TitleArt.draw_tracked(self, _font,
 			Vector2(text_x, name_y + last_size * 1.05 + body.size.y * 0.055),
-			entry.tagline, int(body.size.y * 0.030), body.size.x * 0.008,
+			entry.tagline, int(body.size.y * 0.042), body.size.x * 0.004,
 			Color(accent.r, accent.g, accent.b, 0.85))
 
 	var bar_y := body.position.y + body.size.y - pad - body.size.y * 0.135
@@ -576,7 +577,7 @@ func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
 	for i in stats.size():
 		var row: Array = stats[i]
 		var ry := bar_y + body.size.y * 0.048 * i
-		var label_size := int(body.size.y * 0.026)
+		var label_size := int(body.size.y * 0.036)
 		TitleArt.draw_tracked(self, _font, Vector2(text_x, ry + label_size),
 				row[0], label_size, body.size.x * 0.006,
 				TitleArt.KEY_GOLD_DIM)
@@ -617,17 +618,17 @@ func _draw_versus(view: Vector2) -> void:
 			band.size.x, maxf(1.0, view.y * 0.002)), TitleArt.KEY_GOLD)
 	if t < 1.0:
 		return
-	var name_size := int(view.y * 0.052)
+	var name_size := int(view.y * 0.075)
 	var left: Roster.Entry = picks[0]
 	var right: Roster.Entry = picks[1]
 	var lw := TitleArt.tracked_width(_font, left.display_name(), name_size,
-			view.y * 0.008)
+			view.y * 0.003)
 	TitleArt.draw_tracked(self, _font,
 			Vector2(view.x * 0.44 - lw, view.y * 0.5 + name_size * 0.35),
-			left.display_name(), name_size, view.y * 0.008, TitleArt.STEEL)
+			left.display_name(), name_size, view.y * 0.003, TitleArt.STEEL)
 	TitleArt.draw_tracked(self, _font,
 			Vector2(view.x * 0.56, view.y * 0.5 + name_size * 0.35),
-			right.display_name(), name_size, view.y * 0.008, TitleArt.STEEL)
+			right.display_name(), name_size, view.y * 0.003, TitleArt.STEEL)
 	var vs_size := int(view.y * 0.085)
 	var vw := TitleArt.tracked_width(_font, "VS", vs_size, view.y * 0.004)
 	TitleArt.draw_glow(self, _glow, Vector2(view.x * 0.46, view.y * 0.5),
