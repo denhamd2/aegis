@@ -36,9 +36,11 @@ TARGET = CHARACTERS / "cody_rhodes_head_blond.png"
 
 ## Platinum through the lengths, a warmer darker root -- measured off the
 ## owner's references: bright hair (217,179,154) under warm stage light,
-## (131,109,86) in the shadowed roots of the press photograph.
+## (131,109,86) in the shadowed roots of the press photograph -- taken
+## lighter than that here: painted onto the scalp at the hairline, the full
+## root tone read as a dark band of growth under the hair (owner's review).
 BLOND = np.array([236.0, 214.0, 170.0])
-ROOT = np.array([150.0, 122.0, 88.0])
+ROOT = np.array([196.0, 172.0, 132.0])
 
 ## The face/ears/neck island, in 0..1 texture coordinates (x right, y down),
 ## traced on the texture: the hairline across the brow, down each temple to
@@ -56,6 +58,11 @@ SKIN_TIGHT = [(0.312, 0.195), (0.651, 0.195), (0.665, 0.300), (0.700, 0.371),
               (0.143, 1.0), (0.143, 0.651), (0.124, 0.553), (0.130, 0.371),
               (0.275, 0.371), (0.303, 0.300)]
 HAIR_DARKER_THAN = 128.0
+## And a strip BELOW the painted hairline, inside the face island: the
+## artist's short brown strands run a few millimetres into it, and left brown
+## they read as a dark fringe of growth under the blond (owner's review).
+## Only hair-dark texels in it are recoloured, so the forehead stays skin.
+HAIRLINE_STRIP = 0.045
 ## The two skin-coloured patches in the top corners (the ear backs).
 CORNERS = [(0.0, 0.0, 0.098, 0.150), (0.905, 0.0, 1.0, 0.150)]
 ## Nothing below this is hair.
@@ -80,7 +87,10 @@ def main() -> int:
     dark = np.clip((HAIR_DARKER_THAN - lum0) / 20.0, 0.0, 1.0)
     dark = np.asarray(Image.fromarray(np.round(dark * 255).astype(np.uint8))
                       .filter(ImageFilter.GaussianBlur(2))).astype(np.float32) / 255.0
-    mask = Image.fromarray(np.round(np.maximum(sure, band * dark) * 255).astype(np.uint8))
+    lower = [(x, y + HAIRLINE_STRIP) if y < 0.40 else (x, y) for x, y in SKIN_TIGHT]
+    strip = np.clip(hair_mask(lower) - hair_mask(SKIN_TIGHT), 0.0, 1.0)
+    mask = Image.fromarray(np.round(np.maximum(sure, np.maximum(band, strip) * dark)
+                                    * 255).astype(np.uint8))
     mask = mask.filter(ImageFilter.GaussianBlur(w / 512.0))
     m = np.asarray(mask).astype(np.float32)[..., None] / 255.0
 

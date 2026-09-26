@@ -52,9 +52,57 @@ const SKIN_TINT := Color(1.08, 1.06, 1.0)
 const SKIN_ROUGHNESS := 0.5
 
 
+## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
+## scalp, tall at the front of the top and swept back, short at the sides.
+## Each shell is cut at its own alpha threshold and coloured from a darker
+## root (inner) to platinum (outer), so the stack reads as strands.
+const HAIR := "res://assets/characters/cody_hair.glb"
+const HAIR_STRANDS := "res://assets/characters/cody_hair_strands.png"
+const HAIR_ROOT := Color(0.90, 0.83, 0.66)
+const HAIR_TIP := Color(0.96, 0.90, 0.74)
+
+
 func _ready() -> void:
 	_install_animations()
 	_fix_look()
+	_add_hair()
+
+
+func _add_hair() -> void:
+	var skeleton := get_game_skeleton()
+	if skeleton == null or not ResourceLoader.exists(HAIR):
+		return
+	var head := skeleton.find_bone("Head")
+	if head < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "HairAttachment"
+	skeleton.add_child(attach)
+	attach.bone_name = "Head"
+	# The hair is authored in skeleton space; hang it on the bone by the
+	# inverse of the bone's own rest, so at rest it sits exactly where it
+	# was built and from then on rides the head.
+	var holder := Node3D.new()
+	holder.name = "Hair"
+	holder.transform = skeleton.get_bone_global_rest(head).affine_inverse()
+	attach.add_child(holder)
+	var hair: Node = (load(HAIR) as PackedScene).instantiate()
+	holder.add_child(hair)
+	var strands: Texture2D = load(HAIR_STRANDS)
+	var shells := hair.find_children("HairShell*", "MeshInstance3D", true, false)
+	var count := shells.size()
+	for mi: MeshInstance3D in shells:
+		var k := float(String(mi.name).trim_prefix("HairShell").to_int()) / maxf(count - 1, 1)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = strands
+		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, k)
+		mat.roughness = 0.34
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		if k > 0.0:
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+			mat.alpha_scissor_threshold = 0.15 + 0.45 * k
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _fix_look() -> void:
