@@ -189,6 +189,18 @@ ROMAN_STAND = dict(
 )
 
 
+# Cody's entrance posture (gauntlet/refs/entrances.md): up on the balls of
+# his feet, chest high, chin up, arms loose and a little away from the body
+# -- a showman waiting for the music, not a man guarding.
+CODY_STAND = dict(
+    pelvis=(0.0, 0.0, 0.905), hips=(0, 0, 0), spine=(6, 0, 0), head=(6, 0, 0),
+    hand_r=(0.29, 0.02, 0.95), hand_l=(-0.29, 0.02, 0.95),
+    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    fist_r=0.4, fist_l=0.4,
+    foot_r=(0.17, 0.02, 0.104), foot_l=(-0.17, -0.02, 0.104),
+)
+
+
 def pose(base=None, **over):
     """A pose is the base with a few things moved. Anything not named keeps
     the base's value, which is what makes a clip's table read as the changes
@@ -346,6 +358,73 @@ def _methodical_walk():
         out.append((f, dict(base, head=(5.0, yaw * 0.75, 0.0),
                             spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
     return out
+
+
+def _crowd_walk():
+    """Cody's walk to the ring: 1.2 m/s, working the building.
+
+    A brisker cycle than Roman's (26 frames, two 0.52 m steps, a shorter
+    double support) with the arms swinging free; four cycles (104 frames,
+    3.5 s) so the upper body can play over it: the head sweeps his left
+    crowd, then his right, and on the third cycle the right fist pumps up
+    over his head and comes back down -- the "fists up, singing along" of
+    the refs -- while the legs keep walking underneath."""
+    cycle = _open_hands(_gait(
+        frames=26, fps=FPS, speed=1.2,
+        contacts={"r": (0, 15), "l": (13, 15)},
+        plant_up=0.104, lift_up=0.06,
+        foot_x={"r": 0.15, "l": -0.14},
+        pelvis_up=0.905, pelvis_dip=0.012,
+        hips_yaw=5.0, spine=(0.0, 6.0), head=(6, 0, 0),
+        hand_fwd=(-0.12, 0.14), hand_up=(0.90, 0.96),
+        hand_x={"r": 0.27, "l": -0.26}, elbow=None), curl=0.5)
+    looks = [(0, 0.0), (10, 28.0), (34, 28.0), (46, -26.0), (70, -26.0),
+             (86, 0.0), (104, 0.0)]
+    pump = [(0, 0.0), (52, 0.0), (58, 1.0), (72, 1.0), (80, 0.0), (104, 0.0)]
+
+    def curve(keys, f):
+        i = 0
+        while i + 1 < len(keys) - 1 and keys[i + 1][0] <= f:
+            i += 1
+        (f0, y0), (f1, y1) = keys[i], keys[i + 1]
+        t = min(max((f - f0) / float(f1 - f0), 0.0), 1.0)
+        return y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
+    out = []
+    for f in range(104 + 1):
+        base = cycle[f % 26][1]
+        yaw = curve(looks, f)
+        up = curve(pump, f)
+        sp = base["spine"]
+        pose_f = dict(base, head=(6.0 + 6.0 * up, yaw * 0.75, 0.0),
+                      spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))
+        if up > 0.0:
+            hx, hf, hu = base["hand_r"]
+            pose_f["hand_r"] = (hx + (0.22 - hx) * up, hf + (0.08 - hf) * up,
+                                hu + (2.02 - hu) * up)
+            pose_f["elbow_r"] = (1.0, 0.0, -0.2 + 0.4 * up)
+            pose_f["fist_r"] = 0.5 + 0.5 * up
+        out.append((f, pose_f))
+    return out
+
+
+## The corner. He climbs the corner by the ring steps from INSIDE the ring,
+## facing out over the post, and stands on the middle rope. Ring geometry
+## (core/ring/ring_builder.gd): posts at +-3.0, the middle rope 0.75 above the
+## mat. The director stands his root CORNER_ROOT_M from the post along the
+## diagonal (EntranceDirector.CORNER_ROOT_M); in his frame the post is then
+## straight ahead and the two ropes run back from it at 45 degrees, so each
+## boot sits on a rope 0.35 m from the post: (+-0.247, 0.62 - 0.247, 0.75).
+CORNER_FOOT_UP = 0.75 + 0.104
+CORNER_FOOT_FWD = 0.62 - 0.247
+CORNER_ON = dict(
+    CODY_STAND, pelvis=(0.0, 0.30, 1.62), hips=(-6, 0, 0), spine=(8, 0, 0),
+    head=(8, 0, 0),
+    hand_r=(0.30, 0.46, 1.14), hand_l=(-0.30, 0.46, 1.14),
+    elbow_r=(1.0, -0.4, -0.4), elbow_l=(-1.0, -0.4, -0.4),
+    fist_r=0.8, fist_l=0.8,
+    foot_r=(0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
+    foot_l=(-0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
+    knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))
 
 
 def _gait(frames, fps, speed, contacts, plant_up, lift_up, foot_x,
@@ -1222,6 +1301,155 @@ CLIPS = {
                   fist_r=0.7, fist_l=0.45)),
         (45, pose(ROMAN_STAND, hand_l=(-0.25, -0.02, 0.92),
                   elbow_l=(-0.5, -0.4, -1.0), fist_l=0.45)),
+    ],
+
+    # === Cody (gauntlet/refs/entrances.md, Cody's beat sheet) =============
+
+    # 60 frames / 2.0s, looping: waiting on his mark, bouncing on his toes.
+    "Cody_Stand": [
+        (0,  CODY_STAND),
+        (15, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.89), spine=(7, 0, 0))),
+        (30, CODY_STAND),
+        (45, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.89), spine=(7, 0, 0))),
+        (60, CODY_STAND),
+    ],
+
+    # 60 frames / 2.0s: THE WHOA. A beat of anticipation (arms in, weight
+    # down), then the arms thrown wide and up, chest open, head back -- and
+    # HELD, because the pyro is what answers it.
+    "Whoa_Arms": [
+        (0,  CODY_STAND),
+        (5,  pose(CODY_STAND, pelvis=(0.0, 0.0, 0.86), spine=(-6, 0, 0),
+                  head=(-4, 0, 0),
+                  hand_r=(0.18, 0.18, 1.08), hand_l=(-0.18, 0.18, 1.08),
+                  elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
+                  fist_r=0.8, fist_l=0.8)),
+        (11, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(14, 0, 0),
+                  head=(22, 0, 0),
+                  hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (50, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(15, 0, 0),
+                  head=(24, 0, 0),
+                  hand_r=(0.83, 0.05, 1.74), hand_l=(-0.83, 0.05, 1.74),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (60, CODY_STAND),
+    ],
+
+    # 30 frames / 1.0s: both fists up, the second WHOA.
+    "Fists_Up": [
+        (0,  CODY_STAND),
+        (8,  pose(CODY_STAND, spine=(10, 0, 0), head=(14, 0, 0),
+                  hand_r=(0.32, 0.06, 1.98), hand_l=(-0.32, 0.06, 1.98),
+                  elbow_r=(1.0, 0.0, 0.0), elbow_l=(-1.0, 0.0, 0.0),
+                  fist_r=1.0, fist_l=1.0)),
+        (30, pose(CODY_STAND, spine=(10, 0, 0), head=(14, 0, 0),
+                  hand_r=(0.33, 0.06, 1.99), hand_l=(-0.33, 0.06, 1.99),
+                  elbow_r=(1.0, 0.0, 0.0), elbow_l=(-1.0, 0.0, 0.0),
+                  fist_r=1.0, fist_l=1.0)),
+    ],
+
+    # 21 frames / 0.7s: the load into the drop -- down into a crouch, hands
+    # on his knees, head up at the crowd.
+    "Whoa_Crouch": [
+        (0,  CODY_STAND),
+        (12, pose(CODY_STAND, pelvis=(0.0, -0.06, 0.64), hips=(-30, 0, 0),
+                  spine=(-18, 0, 0), head=(20, 0, 0),
+                  hand_r=(0.20, 0.30, 0.64), hand_l=(-0.20, 0.30, 0.64),
+                  elbow_r=(1.0, -0.2, -0.4), elbow_l=(-1.0, -0.2, -0.4),
+                  foot_r=(0.24, 0.02, 0.104), foot_l=(-0.24, -0.02, 0.104),
+                  fist_r=0.6, fist_l=0.6)),
+        (21, pose(CODY_STAND, pelvis=(0.0, -0.06, 0.62), hips=(-32, 0, 0),
+                  spine=(-18, 0, 0), head=(22, 0, 0),
+                  hand_r=(0.20, 0.30, 0.62), hand_l=(-0.20, 0.30, 0.62),
+                  elbow_r=(1.0, -0.2, -0.4), elbow_l=(-1.0, -0.2, -0.4),
+                  foot_r=(0.24, 0.02, 0.104), foot_l=(-0.24, -0.02, 0.104),
+                  fist_r=0.6, fist_l=0.6)),
+    ],
+
+    # 45 frames / 1.5s: the punch at the sky. Cocked at the shoulder (6),
+    # up (10 -- EntranceDirector.CODY_PUNCH_AT, the second pyro), held.
+    "Air_Punch": [
+        (0,  CODY_STAND),
+        (6,  pose(CODY_STAND, spine=(-4, 0, 0), pelvis=(0.0, 0.0, 0.87),
+                  hand_r=(0.24, 0.10, 1.40), elbow_r=(1.0, -0.4, -0.8),
+                  fist_r=1.0)),
+        (10, pose(CODY_STAND, spine=(10, 0, 0), head=(16, 0, 0),
+                  hand_r=(0.22, 0.10, 2.04), elbow_r=(1.0, 0.0, 0.2),
+                  hand_l=(-0.30, 0.10, 1.05), fist_r=1.0, fist_l=0.9)),
+        (34, pose(CODY_STAND, spine=(10, 0, 0), head=(16, 0, 0),
+                  hand_r=(0.22, 0.10, 2.03), elbow_r=(1.0, 0.0, 0.2),
+                  hand_l=(-0.30, 0.10, 1.05), fist_r=1.0, fist_l=0.9)),
+        (45, CODY_STAND),
+    ],
+
+    # 60 frames / 2.0s: pointing out to the crowd on his right, head
+    # following the finger.
+    "Point_Crowd": [
+        (0,  CODY_STAND),
+        (10, pose(CODY_STAND, head=(8, -30, 0), spine=(6, -10, 0),
+                  hand_r=(0.72, 0.36, 1.58), elbow_r=(1.0, -0.2, 0.0),
+                  fist_r=0.95, point_r=True)),
+        (46, pose(CODY_STAND, head=(8, -34, 0), spine=(6, -12, 0),
+                  hand_r=(0.73, 0.38, 1.60), elbow_r=(1.0, -0.2, 0.0),
+                  fist_r=0.95, point_r=True)),
+        (60, CODY_STAND),
+    ],
+
+    # 104 frames / 3.5s, looping: _crowd_walk.
+    "Walk_Crowd": _crowd_walk(),
+
+    # 36 frames / 1.2s: up onto the middle rope in the corner, facing out.
+    # Hands to the top rope first (8), the right boot onto its rope (16),
+    # the weight over it and the left boot up (26), standing (36). The root
+    # stays on the mat: everything rises in root space.
+    "Corner_Climb": [
+        (0,  CODY_STAND),
+        (8,  pose(CODY_STAND, spine=(-6, 0, 0),
+                  hand_r=(0.30, 0.46, 1.14), hand_l=(-0.30, 0.46, 1.14),
+                  elbow_r=(1.0, -0.4, -0.4), elbow_l=(-1.0, -0.4, -0.4),
+                  fist_r=0.8, fist_l=0.8,
+                  foot_r=(0.22, 0.20, 0.50))),
+        (16, pose(CODY_STAND, pelvis=(0.0, 0.14, 1.06), hips=(-12, 0, 0),
+                  spine=(-6, 0, 0),
+                  hand_r=(0.30, 0.46, 1.14), hand_l=(-0.30, 0.46, 1.14),
+                  elbow_r=(1.0, -0.4, -0.4), elbow_l=(-1.0, -0.4, -0.4),
+                  fist_r=0.8, fist_l=0.8,
+                  foot_r=(0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
+                  knee_r=(0.3, 1.0, 0.0))),
+        (26, pose(CORNER_ON, pelvis=(0.0, 0.26, 1.48), hips=(-10, 0, 0),
+                  foot_l=(-0.22, 0.30, 0.70))),
+        (36, CORNER_ON),
+    ],
+
+    # 90 frames / 3.0s: on the rope, the arms come off the top rope and go
+    # WIDE over the crowd (12), chest out, head back; held to 72; back to
+    # the rope by 90.
+    "Corner_Pose": [
+        (0,  CORNER_ON),
+        (12, pose(CORNER_ON, spine=(16, 0, 0), head=(20, 0, 0),
+                  hand_r=(0.86, 0.34, 1.98), hand_l=(-0.86, 0.34, 1.98),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (72, pose(CORNER_ON, spine=(17, 0, 0), head=(22, 0, 0),
+                  hand_r=(0.87, 0.34, 2.00), hand_l=(-0.87, 0.34, 2.00),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (90, CORNER_ON),
+    ],
+
+    # 30 frames / 1.0s: back down to the mat, left boot first.
+    "Corner_Down": [
+        (0,  CORNER_ON),
+        (10, pose(CORNER_ON, pelvis=(0.0, 0.20, 1.40), hips=(-10, 0, 0),
+                  foot_l=(-0.17, 0.10, 0.40))),
+        (18, pose(CODY_STAND, pelvis=(0.0, 0.12, 1.02), hips=(-12, 0, 0),
+                  hand_r=(0.30, 0.46, 1.14), hand_l=(-0.30, 0.46, 1.14),
+                  elbow_r=(1.0, -0.4, -0.4), elbow_l=(-1.0, -0.4, -0.4),
+                  foot_r=(0.247, CORNER_FOOT_FWD, CORNER_FOOT_UP),
+                  knee_r=(0.3, 1.0, 0.0))),
+        (30, CODY_STAND),
     ],
 
     "Win_Celebrate": [

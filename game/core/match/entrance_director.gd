@@ -137,6 +137,46 @@ const FACE_FOV := 16.0
 const FACE_DISTANCE := 3.4
 ## Beside him as he walks the floor from the ramp foot to the steps.
 const FLOOR_TRACK_FOV := 30.0
+
+# --- Cody Rhodes (gauntlet/refs/entrances.md, "Cody: beat sheet") ----------
+## Every time below is MUSIC time in his video's own audio, measured: the
+## WHOA shout at 0.8 s, WHOA-OH at 3.6 and 6.3 s, the full track and the
+## picture at 7.0 s. His beats are cut to land on them.
+const CODY_WHOA_1 := 0.8
+const CODY_WHOA_2 := 3.6
+const CODY_WHOA_3 := 6.3
+const CODY_HIT := 7.0
+const CODY_PUNCH := 8.8
+const CODY_OUT := 10.3
+## He walks with purpose and works the crowd: Walk_Crowd travels 1.2 m/s.
+const CODY_WALK_SPEED := 1.2
+const CODY_WALK_CLIP := "strikes/walk_crowd"
+## Air_Punch's fist arrives on frame 10: the second pyro.
+const CODY_PUNCH_AT := 20
+## Corner_Pose has the arms fully wide by frame 12: the post sparks.
+const CODY_CORNER_PYRO_AT := 24
+## Where he stands to climb the corner: this far from the post along the
+## diagonal, facing out over it (wrestling_clips.py CORNER_FOOT_*).
+const CORNER_ROOT_M := 0.62
+## The blackout: the rig to 3% and the ambient to 10%, portal accents off.
+## His light in the dark is one cold backlight behind him in his portal, so
+## on the WHOAs the camera sees him as a silhouette in the haze.
+const CODY_BLACKOUT := 0.03
+const CODY_BLACKOUT_AMBIENT := 0.10
+const BACKLIGHT_ENERGY := 30.0
+const BACKLIGHT_COLOR := Color(0.82, 0.88, 1.0)
+const CODY_RED := Color(1.0, 0.12, 0.10)
+const CODY_BLUE := Color(0.18, 0.32, 1.0)
+## His shots. The dark wide from high behind the hard camera; the long lens
+## on his portal from down the ramp (85 mm, pushing in); a steadicam backing
+## ahead of him; and the low angle inside the ring up past him in the corner.
+const CODY_DARK_AT := Vector3(0.0, 9.0, 16.0)
+const CODY_DARK_LOOK := Vector3(0.0, 3.0, -30.0)
+const CODY_DARK_FOV := 50.0
+const PORTAL_LONG_FOV := Vector2(19.0, 14.0)
+const STEADICAM_FOV := 32.0
+const CORNER_LOW_AT := Vector3(-1.2, 0.35, -1.2)
+const CORNER_LOW_FOV := 50.0
 ## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
 ## Title_Unbuckle opens the belt on frame 20 and it moves from his waist to
 ## his left hand on frame 22; Finger_Raise's arm arrives on frame 14 -- the
@@ -182,6 +222,10 @@ var _wall: StageVideo
 ## Light energies saved while the house is dimmed, to put back exactly.
 var _dimmed := {}
 var _env: Environment
+## Cody's backlight, built on his first WHOA.
+var _backlight: SpotLight3D
+## Beats marked no_follow keep the follow spot off (Cody's silhouettes).
+var _follow_off := false
 
 ## The timeline: one entry per beat, built once in begin().
 var _beats: Array = []
@@ -268,6 +312,8 @@ func _build_timeline() -> void:
 		var w: WrestlerController = pair[0]
 		if w.entrance_style == "roman":
 			_add_roman_entrance(w, pair[1], pair[2])
+		elif w.entrance_style == "cody":
+			_add_cody_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
 	_beats.append({"kind": "faceoff", "ticks": FACEOFF_TICKS})
@@ -327,6 +373,7 @@ func _start_beat() -> void:
 		# him standing at his in-ring spawn for a sixtieth of a second.
 		_place(w, beat["path"][0], _heading(beat["path"]), true)
 		w.visible = true
+	_follow_off = beat.get("no_follow", false)
 	if beat.get("props", false) and w and not _props.has(w):
 		_props[w] = EntranceProps.dress(w)
 	if beat.has("lights"):
@@ -417,6 +464,9 @@ func _ring_bell() -> void:
 	if _wall:
 		_wall.end_entrance()
 	_dim_house(false)
+	if _backlight:
+		_backlight.queue_free()
+		_backlight = null
 	for w: WrestlerController in [_a, _b]:
 		w.global_transform = _mark[w]
 		w.velocity = Vector3.ZERO
@@ -529,6 +579,125 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
 
 
+## Cody Rhodes: the building goes black, the WHOAs find him as a silhouette
+## in his portal, and on the hit everything comes up at once -- lights, pyro,
+## him. Then a quick, crowd-working walk and the middle rope in the corner.
+## Every beat before the walk is cut to the measured music (CODY_*).
+func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -> void:
+	var deck := ArenaBuilder.STAGE_DECK_Y
+	var mouth := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 0.5)
+	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
+	var portal_look := [mouth, mouth + Vector3.BACK]
+	var dark := {"lights": "OFF", "no_follow": true}
+	var push := _secs(CODY_WHOA_1, CODY_HIT)
+	_beats.append({"kind": "hold", "who": w, "ticks": _secs(0.0, CODY_WHOA_1),
+			"shot": "cody_dark", "lights": "OFF",
+			"events": [[1, "tron_on"], [1, "blackout_on"]]})
+	_beats.append(_with(dark, {"kind": "pose", "who": w, "appear": true, "path": portal_look,
+			"ticks": _secs(CODY_WHOA_1, CODY_WHOA_2), "clip": "strikes/whoa_arms",
+			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
+			"push_from": 0, "push_over": push,
+			"events": [[1, "strobe"], [1, "backlight_on"], [84, "backlight_dim"]]}))
+	_beats.append(_with(dark, {"kind": "pose", "who": w,
+			"ticks": _secs(CODY_WHOA_2, CODY_WHOA_3), "clip": "strikes/fists_up",
+			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
+			"push_from": _secs(CODY_WHOA_1, CODY_WHOA_2), "push_over": push,
+			"events": [[1, "strobe"], [1, "backlight_on"]]}))
+	_beats.append({"kind": "pose", "who": w, "no_follow": true, "lights": "RB_LOW",
+			"ticks": _secs(CODY_WHOA_3, CODY_HIT), "clip": "strikes/whoa_crouch",
+			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
+			"push_from": _secs(CODY_WHOA_1, CODY_WHOA_3), "push_over": push,
+			"events": [[1, "backlight_dim"]]})
+	# THE HIT. Lights, pyro, the WHOA pose -- the same frame.
+	_beats.append({"kind": "pose", "who": w, "lights": "RB",
+			"ticks": _secs(CODY_HIT, CODY_PUNCH), "clip": "strikes/whoa_arms",
+			"facing": Vector3.BACK, "shot": "stage_wide",
+			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "pyro_cody_hit"]]})
+	_beats.append({"kind": "pose", "who": w, "lights": "RB",
+			"ticks": _secs(CODY_PUNCH, CODY_OUT), "clip": "strikes/air_punch",
+			"facing": Vector3.BACK, "shot": "hero_low", "card": true,
+			"events": [[CODY_PUNCH_AT, "pyro_cody_punch"]]})
+	# Out to the lip, working the crowd, the card up until he stops.
+	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
+			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
+			"shot": "steadicam", "card": true})
+	_beats.append({"kind": "pose", "who": w, "lights": "RB", "ticks": 120,
+			"clip": "strikes/point_crowd", "facing": Vector3.BACK, "shot": "hero_low"})
+	var ramp_end := lip + Vector3.BACK * (CODY_WALK_SPEED * RAMP_SHOWN_SECONDS)
+	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
+			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP, "shot": "track"})
+	var cut := Vector3(0.0, 0.0, CUT_TO_Z)
+	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
+	var wide := Vector3(-4.6, 0.0, -4.1)
+	var climb_from := Vector3(CLIMB_FROM_X, 0.0, STEPS_Z)
+	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide, climb_from],
+			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
+			"shot": "ringside", "cut": true})
+	_beats.append({"kind": "turn", "who": w, "facing": Vector3.RIGHT, "shot": "ringside"})
+	var top := climb_from + Vector3(CLIMB_TO.x, 0.0, 0.0)
+	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, STEPS_Z)
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
+			"ticks": int(round(CLIMB_SECONDS * TPS)),
+			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, STEPS_Z),
+			"to": top_at, "facing": Vector3.RIGHT, "shot": "ringside"})
+	var in_at := Vector3(top.x + ROPE_TO.x, 0.0, STEPS_Z)
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through",
+			"ticks": int(round(ROPE_SECONDS * TPS)),
+			"from": top_at, "to": in_at, "facing": Vector3.RIGHT, "shot": "ringside"})
+	# The corner by the steps: up on the middle rope, facing out.
+	var post := Vector3(-RingBuilder.POST_XZ, 0.0, -RingBuilder.POST_XZ)
+	var out_dir := Vector3(-1.0, 0.0, -1.0).normalized()
+	var stand := post - out_dir * CORNER_ROOT_M
+	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
+			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
+			"shot": "ringside", "on_mat": true})
+	_beats.append({"kind": "turn", "who": w, "facing": out_dir, "shot": "corner_low"})
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_climb",
+			"ticks": 72, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "corner_low"})
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_pose",
+			"ticks": 180, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "corner_low", "events": [[CODY_CORNER_PYRO_AT, "pyro_posts"]]})
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_down",
+			"ticks": 60, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "corner_low"})
+	var mark: Transform3D = _mark[w]
+	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
+			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
+			"shot": "ringside", "on_mat": true})
+	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
+			"shot": "ringside", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
+
+
+## Ticks between two music times.
+static func _secs(from: float, to: float) -> int:
+	return int(round((to - from) * TPS))
+
+
+## Cody's backlight: one cold spot in his portal behind him, aimed down the
+## ramp at the camera, so he is a shape against light in the haze.
+func _set_backlight(w: WrestlerController, what: String) -> void:
+	if _backlight == null:
+		_backlight = SpotLight3D.new()
+		_backlight.name = "Backlight"
+		_backlight.light_color = BACKLIGHT_COLOR
+		_backlight.spot_angle = 28.0
+		_backlight.spot_range = 40.0
+		_backlight.light_volumetric_fog_energy = 3.0
+		_backlight.shadow_enabled = true
+		add_child(_backlight)
+		_backlight.global_position = w.global_position + Vector3(0.0, 3.4, -2.6)
+		_backlight.look_at(w.global_position + Vector3(0.0, 1.2, 6.0), Vector3.UP)
+	match what:
+		"backlight_on":
+			_backlight.light_energy = BACKLIGHT_ENERGY
+			_backlight.visible = true
+		"backlight_dim":
+			_backlight.light_energy = BACKLIGHT_ENERGY * 0.3
+		"backlight_off":
+			_backlight.visible = false
+
+
 static func _with(base: Dictionary, beat: Dictionary) -> Dictionary:
 	var out := base.duplicate()
 	out.merge(beat, true)
@@ -556,6 +725,16 @@ func _event(w: WrestlerController, what: String) -> void:
 				_wall.end_entrance()
 		"dim_on":
 			_dim_house(true)
+		"blackout_on":
+			_dim_house(true, CODY_BLACKOUT, CODY_BLACKOUT_AMBIENT)
+		"backlight_on", "backlight_dim", "backlight_off":
+			_set_backlight(w, what)
+		"strobe", "pyro_cody_hit", "pyro_cody_punch":
+			if _pyro == null:
+				_pyro = EntrancePyro.new()
+				_pyro.name = "EntrancePyro"
+				add_child(_pyro)
+			_pyro.fire(what.trim_prefix("pyro_"))
 		"dim_off":
 			_dim_house(false)
 		"pyro_stage", "pyro_posts":
@@ -649,6 +828,23 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					w.global_position + Vector3.UP * 1.35, TRACK_FOV, first, delta)
 		"intro":
 			_intro_shot()
+		"cody_dark":
+			_camera.set_entrance_shot(CODY_DARK_AT, CODY_DARK_LOOK, CODY_DARK_FOV, true)
+		"portal_long":
+			# From down the ramp, dead on his portal, the lens creeping in
+			# across the three WHOAs.
+			var portal: Vector3 = beat.get("portal", w.global_position)
+			var e := clampf(float(_tick + int(beat.get("push_from", 0)))
+					/ float(beat.get("push_over", 400)), 0.0, 1.0)
+			_camera.set_entrance_shot(Vector3(portal.x * 0.55, 1.6, -21.0),
+					portal + Vector3.UP * 1.5,
+					lerpf(PORTAL_LONG_FOV.x, PORTAL_LONG_FOV.y, e), true)
+		"steadicam":
+			var fwd3 := -w.global_transform.basis.z
+			_camera.set_entrance_shot(w.global_position + fwd3 * 3.2 + Vector3.UP * 1.55,
+					w.global_position + Vector3.UP * 1.5, STEADICAM_FOV, first, delta)
+		"corner_low":
+			_camera.set_entrance_shot(CORNER_LOW_AT, _head_of(w), CORNER_LOW_FOV, true)
 		"face_walk":
 			var head := _head_of(w)
 			var fwd := -w.global_transform.basis.z
@@ -719,7 +915,8 @@ func _head_of(w: WrestlerController) -> Vector3:
 ## the portal accents (the entrance's own cue) goes to ROMAN_HOUSE_DIM of
 ## itself, and the ambient to ROMAN_AMBIENT_DIM; the originals are kept and
 ## restored exactly.
-func _dim_house(on: bool) -> void:
+func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
+		ambient: float = ROMAN_AMBIENT_DIM) -> void:
 	if on == not _dimmed.is_empty():
 		return
 	if on:
@@ -727,10 +924,10 @@ func _dim_house(on: bool) -> void:
 			for child in _lights.get_children():
 				if child is Light3D and not String(child.name).begins_with("Accent"):
 					_dimmed[child] = (child as Light3D).light_energy
-					(child as Light3D).light_energy *= ROMAN_HOUSE_DIM
+					(child as Light3D).light_energy *= rig
 		if _env:
 			_dimmed[_env] = _env.ambient_light_energy
-			_env.ambient_light_energy *= ROMAN_AMBIENT_DIM
+			_env.ambient_light_energy *= ambient
 		return
 	for key in _dimmed:
 		if key is Light3D and is_instance_valid(key):
@@ -744,7 +941,7 @@ func _dim_house(on: bool) -> void:
 func _aim_follow_spot(w: WrestlerController) -> void:
 	if not _follow:
 		return
-	if w == null or not w.visible:
+	if w == null or not w.visible or _follow_off:
 		_follow.visible = false
 		return
 	_follow.visible = true
@@ -772,6 +969,15 @@ func _portal_lights(side: String, on: bool, tint: Color = Color.TRANSPARENT) -> 
 		if not light.has_meta("base_color"):
 			light.set_meta("base_color", light.light_color)
 		var base: float = light.get_meta("base_energy")
-		var mine := on and String(light.name).begins_with("Accent" + side)
+		var name := String(light.name)
+		if on and side == "OFF":
+			light.light_energy = 0.0
+			continue
+		if on and side.begins_with("RB"):
+			# Cody's: red on the east portal, blue on the west, both hot.
+			light.light_energy = base * (2.4 if side == "RB" else 0.7)
+			light.light_color = CODY_RED if name.begins_with("AccentE") else CODY_BLUE
+			continue
+		var mine := on and name.begins_with("Accent" + side)
 		light.light_energy = base * (2.4 if mine else 1.0)
 		light.light_color = tint if mine and tint.a > 0.0 else light.get_meta("base_color")

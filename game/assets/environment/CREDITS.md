@@ -227,6 +227,28 @@ theme. Neither is licensed to this project. It is a standing exception to the
 README's "fully original" claim, and the music in particular must not ship in
 any build distributed outside the owner's own machine.
 
+## Cody Rhodes entrance video — PROVENANCE UNVERIFIED, CONTAINS MUSIC
+
+`video/cody_entrance.ogv` and `video/cody_entrance_still.png` — his
+titantron, swapped onto the wall with its audio for his entrance by
+`StageVideo.play_entrance("cody")`, and a 480x270 frame of it used only to
+solve the wall's emission level.
+
+Supplied by the project owner (a Google Drive link, 2026-09-26) as a
+1920x1080 30 fps mp4, 3:38: seven seconds of black, then the American
+Nightmare flag graphic over his theme, "Kingdom" (Downstait). Committed as
+the first 80 s, re-encoded to 960x540 30 fps Theora with Vorbis audio and a
+3 s fade:
+
+    ffmpeg -t 80 -i cody_entrance.mp4 -vf "scale=960:540:flags=lanczos,fps=30" \
+        -c:v libtheora -q:v 5 -af "afade=t=out:st=77:d=3" \
+        -c:a libvorbis -q:a 4 -ar 44100 cody_entrance.ogv
+
+Same caveats as Roman's clip above: a real wrestler's graphics and a
+commercial song, neither licensed to this project. A standing exception to
+the README's "fully original" claim; the music must not ship in any build
+distributed outside the owner's own machine.
+
 ## Entrance-set video — PROVENANCE UNVERIFIED
 
 `video/dynamite_tron.ogv` and `video/dynamite_tron_still.png` — the graphics

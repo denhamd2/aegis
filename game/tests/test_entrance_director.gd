@@ -8,10 +8,11 @@ extends GdUnitTestSuite
 const MATCH := "res://scenes/match.tscn"
 
 
-func _match(entrances: bool, style_a := "") -> Node:
+func _match(entrances: bool, style_a := "", style_b := "") -> Node:
 	var scene: Node = load(MATCH).instantiate()
 	scene.entrances = entrances
 	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = style_a
+	(scene.get_node("WrestlerB") as WrestlerController).entrance_style = style_b
 	add_child(scene)
 	return auto_free(scene)
 
@@ -167,3 +168,56 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 	assert_float(light.light_energy).is_equal_approx(before * EntranceDirector.ROMAN_HOUSE_DIM, 0.001)
 	director.skip()
 	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
+
+
+
+## Cody's routine (and Roman's after it) holds the same contract: continuous
+## outside the cuts, both on their marks at the bell, and the backlight,
+## pyro and blackout all gone.
+func test_codys_entrance_is_continuous_and_cleans_up() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var rig := scene.get_node("LightRig")
+	var light: Light3D = null
+	for child in rig.get_children():
+		if child is Light3D and not String(child.name).begins_with("Accent"):
+			light = child
+			break
+	var before := light.light_energy
+	var saw := {}
+	_assert_continuous(scene, func():
+		if director._backlight and director._backlight.visible:
+			saw["backlight"] = true
+		if light.light_energy < before * 0.05:
+			saw["blackout"] = true)
+	assert_bool(saw.has("backlight")).override_failure_message("no silhouette backlight").is_true()
+	assert_bool(saw.has("blackout")).override_failure_message("the house never went dark").is_true()
+	assert_object(director._backlight).is_null()
+	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
+
+
+## The WHOAs land on the music: his beats start at the measured times.
+func test_codys_beats_land_on_the_music() -> void:
+	var scene := _match(true, "", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var start := -1
+	var ticks := 0
+	var starts := {}
+	var last := -1
+	while ticks < 20000 and director._beat < director._beats.size():
+		var b: Dictionary = director._beats[director._beat]
+		if director._beat != last:
+			last = director._beat
+			if b.get("kind") == "hold" and start < 0:
+				start = ticks
+			var clip: String = b.get("clip", "")
+			if start >= 0 and not starts.has(clip):
+				starts[clip] = ticks - start
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+		if starts.has("strikes/air_punch"):
+			break
+	assert_int(starts.get("strikes/whoa_arms", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_1 * 60)))
+	assert_int(starts.get("strikes/fists_up", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_2 * 60)))
+	assert_int(starts.get("strikes/whoa_crouch", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_3 * 60)))
+	assert_int(starts.get("strikes/air_punch", -1)).is_equal(int(round(EntranceDirector.CODY_PUNCH * 60)))

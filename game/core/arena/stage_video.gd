@@ -109,6 +109,17 @@ const ENTRANCES := {
 		"uv_scale": Vector2(1.0, 0.66),
 		"uv_offset": Vector2(0.0, 0.165),
 	},
+	# Cody's (owner-supplied, same caveats): seven seconds of black -- the
+	# blackout, drawn into the video -- then the American Nightmare flag
+	# graphic, taller again than Roman's lockup. A 72% band keeps the
+	# emblem's body and the lettering; residual stretch 3.0 / (1.78 / 0.72)
+	# = 1.21.
+	"cody": {
+		"video": "res://assets/environment/video/cody_entrance.ogv",
+		"still": "res://assets/environment/video/cody_entrance_still.png",
+		"uv_scale": Vector2(1.0, 0.72),
+		"uv_offset": Vector2(0.0, 0.14),
+	},
 }
 ## His music, at the level the hall hears it; faded out over this when the
 ## wall goes back to the loop.
