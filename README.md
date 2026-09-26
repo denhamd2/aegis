@@ -6776,3 +6776,17 @@ lock-up no longer snaps back to the old guard. `STANCE` itself is unchanged
 -- 29 clips start and end on it. Rendered on Roman and Cody, front and side,
 through `clip_shot.tscn`. The glb rebuilds byte-identical; the clip gate is
 re-pinned after reading `blender-animation`. Mat 0.450, unchanged.
+
+## Round: the title screen on the owner's key art
+
+The title and select screens now draw the supplied key art
+(`assets/ui/title_key_art.png`, credited in `assets/ui/CREDITS.md`) cover-fit
+behind every phase. The art carries the wordmark, so the drawn logo, beams
+and ring silhouette are only the fallback if it fails to load. Everything
+interactive is laid out in `SAFE_ART`, the dark centre band measured off the
+art -- under the wordmark, inside both wrestlers' reach, above the floor's
+hot reflections -- so nothing lands on a face or the logo. The menu, cards,
+VS band and controls card are restyled in the art's own colours: gold for
+the cursor and rules, violet for player 1, teal for the CPU. A dark footer
+keeps the hint line readable over the smoke. Rendered at 1600x900 through
+`title_shots.tscn`; the 16:9 viewport letterboxes other shapes.

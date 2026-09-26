@@ -31,6 +31,16 @@ const CRIMSON_DEEP := Color(0.42, 0.05, 0.07)
 const GOLD := Color(0.86, 0.68, 0.26)
 const HAZE := Color(0.42, 0.52, 0.78)
 
+## The key art's own three colours, sampled off assets/ui/title_key_art.png:
+## the violet smoke behind the left wrestler, the teal behind the right one,
+## and the gold of the wordmark. The menu and select screen are drawn in these
+## so they sit IN the art rather than on top of it.
+const KEY_VIOLET := Color(0.55, 0.24, 0.98)
+const KEY_TEAL := Color(0.12, 0.82, 0.70)
+const KEY_GOLD := Color(0.96, 0.76, 0.32)
+const KEY_GOLD_DIM := Color(0.62, 0.50, 0.26)
+const KEY_PANEL := Color(0.035, 0.025, 0.065)
+
 ## --- Textures --------------------------------------------------------------
 
 ## Vertical background wash: near-black at the truss line, a touch of blue in
