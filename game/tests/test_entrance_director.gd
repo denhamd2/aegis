@@ -83,7 +83,7 @@ func test_romans_entrance_is_continuous_and_cleans_up() -> void:
 			saw["pyro"] = true)
 	assert_bool(fired[1]).is_true()
 	assert_bool(fired[0]).override_failure_message("props or pyro outlived the bell").is_true()
-	for k in ["draped", "held", "", "pyro"]:
+	for k in ["worn", "held", "", "pyro"]:
 		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
 
 

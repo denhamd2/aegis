@@ -109,10 +109,59 @@ Mirrors" [S].
   the crowd** [S].
 - On the way down he punches the air and raises his fists [S].
 
-**Beat sheet:**
+**How WWE stages it** [S]/[K]. The building goes dark before the music.
+"Kingdom" opens with the WHOA -- the crowd shouts it with the track -- and
+Cody is found on the stage **in the dark**, arms flung wide; he "hits his
+standard WHOA pose and waits for his pyro" [S], and when the full track
+lands the lights slam up with the pyro, and "more ensues when he punches
+the air" [S]. The house wiring is literal: WWE's pyro desk has a button
+labelled *Cody* [S]. Then a slow, crowd-singing walk, and in the ring he
+"climbs to the middle rope to look out into the crowd" [S].
 
-| # | Beat | Cody | Camera | Lower third |
-|---|---|---|---|---|
+**Measured off the owner's video** (`assets/environment/video/cody_entrance.ogv`
+source, 218 s, 1080p30). Picture: **black for the first 7.0 s**, then the
+American Nightmare flag graphic -- the video *is* the blackout. Sound
+(mid/side energy in the voice band, and spectrograms):
+
+| t (s) | What is there |
+|---|---|
+| 0.5-1.0 | **WHOA #1** -- the shout, centred, voice-to-sides ratio 17 (nothing else in the track is above 10) |
+| 3.6-4.3 | **WHOA-OH #2**, sung, over the build |
+| 6.3-7.0 | **WHOA-OH #3**, rising into the drop |
+| 7.0 | **The hit**: full band, and the graphic cuts in on the wall |
+| 7.0-22.5 | Instrumental riff (voice ratio ~1: guitars panned wide) -- the crowd sings the WHOA melody over it live [K] |
+| 22.5-32.0 | First vocal section (syllabic: lyrics) ending in a held note at 31.6-32.6 |
+| 34.5-41 | Second vocal section |
+
+**Beat sheet** (music time; [P] = production choice, the rest sourced
+above):
+
+| t | Beat | Cody | Lights | Pyro | Camera | Card |
+|---|---|---|---|---|---|---|
+| 0.0 | Blackout | not seen | House to 3%, ambient 10%, portal accents off, wall black (the video) | -- | Wide from high behind the hard cam, 24 mm (fov 53) | -- |
+| 0.8 | WHOA #1 | **In his portal mouth, silhouetted, arms flung wide, head back** (Whoa_Arms) | A strobe hit, and one cold backlight snaps on behind him through the haze | -- | Head-on long lens from the ramp, 85 mm (fov 18) | -- |
+| 2.2 | | Holds the pose | Backlight decays to 30% | -- | | -- |
+| 3.6 | WHOA #2 | **Both fists up** (Fists_Up) | Strobe, backlight back up | -- | Same, pushing in | -- |
+| 6.3 | WHOA #3 | **Drops to a crouch**, loading (Whoa_Crouch) | Portal accents creep up red/blue | -- | | -- |
+| 7.0 | **The hit** | Springs up into the **WHOA pose** again | Everything up: house restored, his portal red, the other blue, follow spot on | **Full stage pyro**: waterfall along the deck front, gerbs both sides of the ramp, mortars | Cut wide, 35 mm (fov 42) on the set | -- |
+| 8.8 | Air punch | **Punches the air** (Air_Punch) | | **Second burst** on the punch: gerbs and mortars | Low hero, 35 mm | On |
+| 10.3 | Out | Walks to the lip, **1.2 m/s**, working the crowd: head turning, a fist pump (Walk_Crowd) | | | Steadicam backing ahead of him, 50 mm | On |
+| ~15.5 | Lip | **Points out to the crowd** (Point_Crowd) | | | Low hero | Off |
+| | Ramp | Down the ramp at 1.2 m/s, singing along, fists up | | | Tracking | -- |
+| | Floor, steps, ropes | Round to the steps, up, and through the ropes | | | Ringside | -- |
+| ~35 | **The corner** | **Up onto the middle rope** in the corner by the steps, facing out, **arms wide over the crowd** (Corner_Climb, Corner_Pose, Corner_Down) | | **Post sparks** at the peak of the pose | Low from inside the ring, up past him to the crowd, 35 mm | -- |
+| | Mark | Down, to his mark, square up | Wall back to Dynamite | | Ringside | -- |
+
+**Differences from Roman, on purpose** [P]: Roman is stillness at 0.5 m/s
+and a single pose; Cody is motion at 1.2 m/s, three WHOAs before a light is
+on, and the crowd doing half of it. Roman's house dims to 50%; Cody's goes
+BLACK, and the hit is the lights, not him.
+
+**Attire** [pending the owner's references]: a robe/entrance jacket, taken
+off in the ring; his face and hair matched to supplied photographs. Both
+wait on those images.
+
+---|---|---|---|---|
 | 1 | Blackout | Black, then the video wall slams to his graphics [K] | Wide from behind the ring | — |
 | 2 | Emerge | Strides out to the lip, jacket on, already moving | Head-on long lens | — |
 | 3 | WHOA | Plants, **throws the arms wide**, head back [S] — **full stage pyro**: waterfall across the deck, mortars, gerbs both sides of the ramp [S] | Cut wide on the pyro | — |

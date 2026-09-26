@@ -5,7 +5,7 @@ extends Node
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 800x800 tools/probe/props_shot.tscn -- /tmp/props.png
 ##
-## Writes /tmp/props_0.png .. _3.png. This is the shot that found the ula fala
+## Writes /tmp/props_0.png .. _3.png at his chest and _4 .. _7 at his waist. This is the shot that found the ula fala
 ## rendering INSIDE his chest and the draped title hanging off the outside
 ## of his arm (EntranceProps.FITS).
 func _ready() -> void:
@@ -34,9 +34,12 @@ func _ready() -> void:
 	print("neck bone ", props._bone("neck_01"), " scale ", props._scale, " w ", w.global_position)
 	var right := w.global_transform.basis.x
 	var views := [fwd * 1.6, (fwd - right).normalized() * 1.6, -right * 1.6, -fwd * 1.6]
-	for k in views.size():
-		cam.global_position = head + (views[k] as Vector3) + Vector3.UP * 0.1
-		cam.look_at(head - Vector3.UP * 0.1, Vector3.UP)
+	var waist := w.global_position + Vector3.UP * 1.0
+	for k in views.size() * 2:
+		var aim := head if k < views.size() else waist
+		var off: Vector3 = views[k % views.size()]
+		cam.global_position = aim + off * (1.0 if k < views.size() else 0.8) + Vector3.UP * 0.1
+		cam.look_at(aim - Vector3.UP * 0.1, Vector3.UP)
 		for _i in 4: await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png(OS.get_cmdline_user_args()[0].replace(".png", "_%d.png" % k))
 	get_tree().quit()

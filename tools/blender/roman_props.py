@@ -8,8 +8,8 @@ Two files:
   game/assets/props/ula_fala.glb      the Samoan chief's necklace he wears to
                                       the ring (gauntlet/refs/entrances.md)
   game/assets/props/aew_title.glb     the AEW World Championship, in two
-                                      shapes: TitleDraped over the left
-                                      shoulder, TitleHeld straight in the hand
+                                      shapes: Title* worn round his waist,
+                                      Held* straight in the hand
 
 Authored in the WRESTLER'S OWN FRAME, game axes: +Y up, forward -Z (the
 controller's convention, WrestlerController._turn_toward_opponent), so +X is
@@ -17,7 +17,7 @@ his RIGHT and his left shoulder is at -X. Every prop's origin is the point it
 hangs from:
 
   ula fala   the base of the neck (the neck_01 bone's head)
-  draped     the top of the left shoulder (upperarm_l's head)
+  worn       his hips bone (the belt is authored at his measured waist)
   held       the left hand's grip (hand_l)
 
 and core/match/entrance_props.gd puts each origin on that bone at runtime,
@@ -34,6 +34,7 @@ Deterministic: same code in, byte-identical .glb out.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import pathlib
 import sys
@@ -58,12 +59,14 @@ FALA_COLORS = {
     "FalaCord": (0.10, 0.07, 0.05, 1.0),
 }
 TITLE_COLORS = {
+    "TitleArt": (1.0, 0.77, 0.34, 1.0),
     "TitleGold": (1.0, 0.77, 0.34, 1.0),
     "TitleStrap": (0.03, 0.03, 0.03, 1.0),
-    "TitleGem": (0.9, 0.9, 0.95, 1.0),
+    "TitleSnap": (0.8, 0.62, 0.3, 1.0),
+    "HeldArt": (1.0, 0.77, 0.34, 1.0),
     "HeldGold": (1.0, 0.77, 0.34, 1.0),
     "HeldStrap": (0.03, 0.03, 0.03, 1.0),
-    "HeldGem": (0.9, 0.9, 0.95, 1.0),
+    "HeldSnap": (0.8, 0.62, 0.3, 1.0),
 }
 
 
@@ -144,128 +147,173 @@ def build_ula_fala(parts: dict[str, Part]) -> None:
 # The AEW World Championship
 # ---------------------------------------------------------------------------
 
-def build_plates(part_gold: Part, part_gem: Part, center: Vector,
-                 right: Vector, up: Vector, out: Vector) -> None:
-    """The plates, laid on the strap: a big centre plate and two side plates
-    each side, gold, with a raised rim and a stone in the middle.
+# ---------------------------------------------------------------------------
+# The belt, laid out off the owner's texture atlas
+# ---------------------------------------------------------------------------
+#
+# tools/assets/build_title_textures.py measures the atlas and writes
+# aew_title_layout.json: each plate's pixel box in the belt band, the centre
+# column, the strap's rows, and the metres per pixel. Every plate here is
+# placed and sized from that, and its front face is UV-mapped to exactly its
+# own box -- so the artwork lands on the plate it was drawn for, unstretched,
+# and the leather between plates is real strap, not a picture of one.
+#
+# Atlas x runs across the belt as a viewer sees it: the viewer's LEFT is the
+# wearer's RIGHT (+X), so a belt coordinate `s` (metres along the belt from
+# the centre plate, + toward +X) is (centre_x - px) * metres_per_px.
 
-    Proportions of a heavyweight title: the centre plate ~0.26 wide and
-    ~0.22 tall against a 0.10 strap; side plates ~0.09 x 0.11."""
-    # Centre plate: a stack of three, stepping out, for the relief.
-    framed_box(part_gold, center + out * 0.004, right, up, out,
-               Vector((0.26, 0.21, 0.008)))
-    framed_box(part_gold, center + out * 0.010, right, up, out,
-               Vector((0.21, 0.17, 0.006)))
-    framed_box(part_gold, center + out * 0.015, right, up, out,
-               Vector((0.15, 0.12, 0.005)))
-    # The crest: a raised vertical bar and a stone.
-    framed_box(part_gold, center + out * 0.019 + up * 0.035, right, up, out,
-               Vector((0.03, 0.09, 0.004)))
-    framed_box(part_gem, center + out * 0.020 - up * 0.02, right, up, out,
-               Vector((0.035, 0.035, 0.008)))
-    for side in (-1.0, 1.0):
-        for k, offset in enumerate((0.20, 0.31)):
-            c = center + right * side * offset + out * 0.004
-            framed_box(part_gold, c, right, up, out,
-                       Vector((0.085, 0.10 - 0.012 * k, 0.007)))
-            framed_box(part_gold, c + out * 0.006, right, up, out,
-                       Vector((0.060, 0.075 - 0.012 * k, 0.004)))
+LAYOUT = json.loads((pathlib.Path(__file__).resolve().parent
+                     / "aew_title_layout.json").read_text())
+MPP = LAYOUT["metres_per_px"]
+BAND_W, BAND_H = LAYOUT["band"]
+CENTRE_PX = LAYOUT["centre_x"]
+STRAP_TOP, STRAP_BOTTOM = LAYOUT["strap_y"]
+STRAP_MID = 0.5 * (STRAP_TOP + STRAP_BOTTOM)
+STRAP_HEIGHT = (STRAP_BOTTOM - STRAP_TOP) * MPP
+## How far each plate stands off the strap: the centre plate is the deepest.
+PLATE_DEPTH = {"centre": 0.009, "inner_l": 0.007, "inner_r": 0.007}
+PLATE_DEPTH_DEFAULT = 0.005
+## Snaps: two columns of three at each end of the band, as the atlas has
+## them (and as its snap swatch draws them: brass rings).
+SNAP_COLS_PX = (29, 80)
+SNAP_ROWS_PX = (190, 272, 355)
 
 
-def strap_along(part: Part, path: list[Vector], normal_hint: Vector,
-                width: float = 0.10, thickness: float = 0.006) -> None:
-    """The leather strap swept along a polyline, flat face toward `normal_hint`."""
-    for i in range(len(path) - 1):
-        a, b = path[i], path[i + 1]
-        along = (b - a).normalized()
-        n = (normal_hint - along * normal_hint.dot(along)).normalized()
-        across = n.cross(along).normalized()
-        framed_box(part, (a + b) * 0.5, along, across, n,
-                   Vector(((b - a).length + 0.002, width, thickness)))
+def _s(px: float) -> float:
+    return (CENTRE_PX - px) * MPP
+
+
+def _y(py: float) -> float:
+    return (STRAP_MID - py) * MPP
+
+
+def _uv(px: float, py: float) -> tuple[float, float]:
+    return (px / BAND_W, 1.0 - py / BAND_H)
+
+
+def build_belt(parts: dict[str, Part], prefix: str, frame) -> None:
+    """The whole belt along a path. `frame(s)` gives (point, along, out) for
+    belt coordinate s: the strap's centre line and its outward face."""
+    art, gold, strap, snap = (parts[prefix + k] for k in ("Art", "Gold", "Strap", "Snap"))
+    s_end = _s(0.0)
+    # The strap: a band STRAP_HEIGHT tall, 8 mm thick, following the path.
+    steps = 64
+    for i in range(steps):
+        s0 = -s_end + 2.0 * s_end * i / steps
+        s1 = -s_end + 2.0 * s_end * (i + 1) / steps
+        p0, _, _ = frame(s0)
+        p1, _, _ = frame(s1)
+        pm, along, out = frame(0.5 * (s0 + s1))
+        up = out.cross(along).normalized()
+        framed_box(strap, pm, along, up, out,
+                   Vector(((p1 - p0).length + 0.001, STRAP_HEIGHT, 0.008)))
+    # The plates: a raised slab each, bent along the path in columns, with
+    # the art on its face.
+    for name, (x0, y0, x1, y1) in sorted(LAYOUT["plates"].items()):
+        depth = PLATE_DEPTH.get(name, PLATE_DEPTH_DEFAULT)
+        cols = max(2, int(round((x1 - x0) / LAYOUT["column_px"])))
+        slabs = LAYOUT["slabs"][name]
+        for c in range(cols):
+            pa = x0 + (x1 - x0) * c / cols
+            pb = x0 + (x1 - x0) * (c + 1) / cols
+            sa, sb = _s(pa), _s(pb)
+            qa, _, oa = frame(sa)
+            qb, _, ob = frame(sb)
+            face = 0.004 + depth
+            top, bottom = _y(y0), _y(y1)
+            corners = [qa + oa * face + Vector((0, bottom, 0)),
+                       qb + ob * face + Vector((0, bottom, 0)),
+                       qb + ob * face + Vector((0, top, 0)),
+                       qa + oa * face + Vector((0, top, 0))]
+            art.quad_at(*corners, uvs=[_uv(pa, y1), _uv(pb, y1), _uv(pb, y0), _uv(pa, y0)])
+            # The slab behind the art gives the plate its depth from the
+            # side. Built to the rows that are solid plate in this column
+            # (measured off the cut-out art, build_title_textures.py) and a
+            # little inside them, so no edge of it shows past the outline.
+            span = slabs[c]
+            if span is None:
+                continue
+            pm, along, out = frame(0.5 * (sa + sb))
+            up = out.cross(along).normalized()
+            s_top, s_bottom = _y(span[0]) - 0.007, _y(span[1]) + 0.007
+            if s_top <= s_bottom:
+                continue
+            # Its front face 1.5 mm behind the art's, or the two z-fight
+            # and the slab's flat gold wins over the artwork.
+            framed_box(gold, pm + out * (0.004 + depth * 0.5 - 0.0015)
+                       + Vector((0, 0.5 * (s_top + s_bottom), 0)), along, up, out,
+                       Vector((abs(sb - sa) * 0.9, s_top - s_bottom, depth)))
+    # Snaps at both ends.
+    for px in SNAP_COLS_PX:
+        for end in (px, BAND_W - px):
+            for py in SNAP_ROWS_PX:
+                p, along, out = frame(_s(end))
+                centre = p + out * 0.004 + Vector((0, _y(py), 0))
+                # A brass grommet: a ring, the leather showing through it.
+                ring = []
+                for k in range(11):
+                    ang = 2.0 * math.pi * k / 10.0
+                    ring.append(centre + along * (0.0085 * math.cos(ang))
+                                + Vector((0, 0.0085 * math.sin(ang), 0)))
+                snap.tube(ring, 0.0032, sides=5, caps=False)
+
+
+## Roman's waist at the height the belt sits (y 1.05, just under the
+## waistband of his trunks at 1.08-1.11), measured off M_Bottoms in
+## roman_reigns.glb: 0.36 m across, 0.26 m front to back, its centre 2.4 cm
+## forward of the hips bone's line.
+WAIST_HALF_X = 0.19
+WAIST_HALF_Z = 0.14
+WAIST_FORWARD = 0.024
+WAIST_LIFT = 0.075
+
+
+def _waist_point(t: float) -> Vector:
+    """A point on the belt line, t in [0, 1): 0 at the buckle (front, -Z),
+    going round his RIGHT (+X) side."""
+    a = 2.0 * math.pi * t
+    return Vector((WAIST_HALF_X * math.sin(a), 0.0,
+                   -WAIST_FORWARD - WAIST_HALF_Z * math.cos(a)))
+
+
+def build_title_waist(parts: dict[str, Part]) -> None:
+    """Worn round his waist: the belt path is his measured waist, the centre
+    plate at the front, the ends meeting at his back. Authored for Roman at
+    his measured size -- EntranceProps puts it on at 1:1 -- origin at his
+    hips bone, the belt line WAIST_LIFT above it."""
+    count = 720
+    pts = [_waist_point(i / count) for i in range(count + 1)]
+    arc = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        arc.append(arc[-1] + (b - a).length)
+    perimeter = arc[-1]
+
+    def frame(s: float):
+        # s along the belt from the front centre, + round his right (+X).
+        u = (s % perimeter)
+        lo, hi = 0, len(arc) - 1
+        while hi - lo > 1:
+            mid = (lo + hi) // 2
+            if arc[mid] <= u:
+                lo = mid
+            else:
+                hi = mid
+        k = (u - arc[lo]) / max(arc[hi] - arc[lo], 1e-9)
+        p = pts[lo].lerp(pts[hi], k) + Vector((0.0, WAIST_LIFT, 0.0))
+        along = (pts[hi] - pts[lo]).normalized()
+        out = Vector((p.x, 0.0, p.z + WAIST_FORWARD)).normalized()
+        return p, along, out
+    build_belt(parts, "Title", frame)
 
 
 def build_title_held(parts: dict[str, Part]) -> None:
     """Held overhead: the belt straight across, plates facing forward (-Z),
     gripped at the middle of the strap just above the centre plate."""
-    right = Vector((1.0, 0.0, 0.0))
-    up = Vector((0.0, 1.0, 0.0))
-    out = Vector((0.0, 0.0, -1.0))
-    center = Vector((0.0, -0.08, -0.02))
-    path = [center + right * (-0.62 + 1.24 * i / 12.0) for i in range(13)]
-    strap_along(parts["HeldStrap"], path, out)
-    build_plates(parts["HeldGold"], parts["HeldGem"], center, right, up, out)
+    grip = Vector((0.0, -0.08, -0.02))
 
-
-def _path_frame(path: list[Vector], distance: float):
-    """(point, tangent) `distance` metres along a polyline."""
-    left = distance
-    for a, b in zip(path, path[1:]):
-        seg = (b - a).length
-        if left <= seg:
-            return a + (b - a) * (left / seg), (b - a).normalized()
-        left -= seg
-    return path[-1], (path[-1] - path[-2]).normalized()
-
-
-def build_title_draped(parts: dict[str, Part]) -> None:
-    """Over the left shoulder, the way he carries it out: the strap folded
-    over the top of the shoulder, lying FLAT on it -- its width across the
-    shoulder, its face outward -- with the long end hanging down his front
-    carrying the centre plate on his chest, and the short end down his back.
-
-    The first version laid the plates out along X, across his body, and swept
-    the strap with its flat face sideways, so on the model the belt was a
-    thin black fin and the plates hung in the air beside the shoulder as a
-    row of loose gold tiles. Here every plate is placed ON the strap, at an
-    arc length along it, in the strap's own frame: along it, across it, and
-    out from the body."""
-    r = 0.085
-    path = []
-    # Down the back, a short end (s = 0), over the top, down the front.
-    back_drop, front_drop = 0.16, 0.42
-    path.append(Vector((-0.02, 0.01 - back_drop, r)))
-    for i in range(17):
-        ang = math.pi * (i / 16.0 - 0.5)        # -90 back .. +90 front
-        path.append(Vector((-0.02, r * math.cos(ang) + 0.01, -r * math.sin(ang))))
-    path.append(Vector((-0.02, 0.01 - front_drop, -r)))
-    # Flat on the shoulder: the face points away from the arc's centre on
-    # the curve, and straight back/forward on the hanging ends.
-    centre = Vector((-0.02, 0.01, 0.0))
-    for a, b in zip(path, path[1:]):
-        mid = (a + b) * 0.5
-        along = (b - a).normalized()
-        out = mid - centre
-        out.x = 0.0
-        if abs(mid.y - 0.01) > 1e-6 and (mid.y < 0.01):
-            out = Vector((0.0, 0.0, 1.0 if mid.z > 0 else -1.0))
-        out = (out - along * out.dot(along)).normalized()
-        across = along.cross(out).normalized()
-        framed_box(parts["TitleStrap"], mid, along, across, out,
-                   Vector(((b - a).length + 0.002, 0.10, 0.006)))
-    length = sum((b - a).length for a, b in zip(path, path[1:]))
-
-    def plate(distance: float, size: Vector, lift: float, part: str) -> None:
-        p, along = _path_frame(path, distance)
-        out = Vector((0.0, 0.0, -1.0)) if p.z < -r * 0.5 else (p - centre)
-        out.x = 0.0
-        out = (out - along * out.dot(along)).normalized()
-        across = along.cross(out).normalized()
-        framed_box(parts[part], p + out * lift, along, across, out, size)
-
-    # The centre plate on the chest, a hand below the top of the shoulder,
-    # stepped for relief, with the crest and the stone; the side plates run
-    # up the strap toward the shoulder and on down past the plate.
-    front = length - 0.20
-    for lift, w, h in ((0.004, 0.21, 0.26), (0.010, 0.17, 0.21), (0.015, 0.12, 0.15)):
-        plate(front, Vector((h, w, 0.007)), lift, "TitleGold")
-    plate(front, Vector((0.09, 0.03, 0.004)), 0.019, "TitleGold")
-    plate(front + 0.02, Vector((0.035, 0.035, 0.008)), 0.020, "TitleGem")
-    for k, offset in enumerate((0.20, 0.31)):
-        for sign in (-1.0, 1.0):
-            d = front + sign * offset
-            if 0.0 < d < length:
-                plate(d, Vector((0.10 - 0.012 * k, 0.085, 0.007)), 0.004, "TitleGold")
-                plate(d, Vector((0.075 - 0.012 * k, 0.060, 0.004)), 0.010, "TitleGold")
+    def frame(s: float):
+        return grip + Vector((s, 0.0, 0.0)), Vector((1.0, 0.0, 0.0)), Vector((0.0, 0.0, -1.0))
+    build_belt(parts, "Held", frame)
 
 
 def main(argv: list[str]) -> int:
@@ -282,9 +330,9 @@ def main(argv: list[str]) -> int:
 
     venue.reset_scene()
     parts = {name: Part(name) for name in TITLE_COLORS}
-    build_title_draped(parts)
+    build_title_waist(parts)
     build_title_held(parts)
-    venue.finish(parts, TITLE_COLORS)
+    venue.finish(parts, TITLE_COLORS, projected=frozenset({"TitleStrap", "HeldStrap"}))
     venue.export_glb(PROP_DIR / "aew_title.glb")
     print("aew_title: %d triangles" % venue.triangle_count())
     return 0

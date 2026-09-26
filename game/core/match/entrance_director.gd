@@ -89,12 +89,11 @@ const FOLLOW_SPOT_ENERGY := 40.0
 const FOLLOW_SPOT_ANGLE := 3.5
 
 # --- Roman Reigns (gauntlet/refs/entrances.md, "Roman: beat sheet") ---------
-## Slow and methodical: Walk_Title_Look / Walk_Slow_Look travel 0.5 m/s,
+## Slow and methodical: Walk_Slow_Look travels 0.5 m/s,
 ## half the generic entrance's pace, and turn his head over the crowd as he
 ## goes (wrestling_clips.py _methodical_walk).
 const ROMAN_WALK_SPEED := 0.5
-const ROMAN_WALK_CLIP := "strikes/walk_title_look"
-const ROMAN_WALK_FREE_CLIP := "strikes/walk_slow_look"
+const ROMAN_WALK_CLIP := "strikes/walk_slow_look"
 ## He does not come out until the main part of his music hits. Measured off
 ## the audio of assets/environment/video/roman_entrance.ogv: the intro runs
 ## to a near-silent break at 43.5-45.0 s and the full track lands at 45.2 s
@@ -139,11 +138,10 @@ const FACE_DISTANCE := 3.4
 ## Beside him as he walks the floor from the ramp foot to the steps.
 const FLOOR_TRACK_FOV := 30.0
 ## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
-## Title_Raise has the belt in the hand from frame 10 to 54, Finger_Raise's arm
-## arrives on frame 14 -- the pyro hit -- and Ula_Fala_Off has it over his
-## head by frame 20.
-const TITLE_HELD_AT := 20
-const TITLE_DRAPED_AT := 108
+## Title_Unbuckle opens the belt on frame 20 and it moves from his waist to
+## his left hand on frame 22; Finger_Raise's arm arrives on frame 14 -- the
+## pyro hit -- and Ula_Fala_Off has it over his head by frame 20.
+const TITLE_UNBUCKLED_AT := 44
 const FINGER_PYRO_AT := 28
 const ULA_FALA_LIFT_AT := 40
 ## His portal accents go gold for him, not the side's own colour.
@@ -463,10 +461,6 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
 			"shot": "stage_push", "card": true}))
 	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 120,
-			"clip": "strikes/title_raise", "facing": Vector3.BACK,
-			"shot": "hero_low", "card": true,
-			"events": [[TITLE_HELD_AT, "title_held"], [TITLE_DRAPED_AT, "title_draped"]]}))
-	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 120,
 			"clip": "strikes/finger_raise", "facing": Vector3.BACK,
 			"shot": "stage_wide", "card": true,
 			"events": [[FINGER_PYRO_AT, "pyro_stage"]]}))
@@ -509,9 +503,18 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
 			"shot": "ring_low"})
+	# The title off his waist and up over his head, the camera low on the
+	# mat looking up at it; then the finger again with the post pyro.
+	_beats.append({"kind": "pose", "who": w, "ticks": 90,
+			"clip": "strikes/title_unbuckle", "facing": Vector3.BACK,
+			"shot": "ring_low", "events": [[TITLE_UNBUCKLED_AT, "title_held"]]})
+	_beats.append({"kind": "pose", "who": w, "ticks": 120,
+			"clip": "strikes/title_raise", "facing": Vector3.BACK,
+			"shot": "hero_low"})
 	_beats.append({"kind": "pose", "who": w, "ticks": 120,
 			"clip": "strikes/finger_raise", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[FINGER_PYRO_AT, "pyro_posts"]]})
+			"shot": "ring_low",
+			"events": [[FINGER_PYRO_AT, "pyro_posts"]]})
 	# The title goes to the timekeeper and the ula fala comes off.
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
@@ -519,7 +522,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"events": [[1, "title_down"], [ULA_FALA_LIFT_AT, "fala_off"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_FREE_CLIP,
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "ringside", "settle": true,
@@ -539,9 +542,6 @@ func _event(w: WrestlerController, what: String) -> void:
 		"title_held":
 			if props:
 				props.set_title("held")
-		"title_draped":
-			if props:
-				props.set_title("draped")
 		"title_down":
 			if props:
 				props.set_title("")

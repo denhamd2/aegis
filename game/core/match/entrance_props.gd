@@ -1,7 +1,7 @@
 class_name EntranceProps
 extends Node3D
 ## Roman's entrance props on his body: the ula fala at his neck and the AEW
-## title, either draped over his left shoulder or held in his left hand
+## title, either worn round his waist or held in his left hand
 ## (tools/blender/roman_props.py; gauntlet/refs/entrances.md).
 ##
 ## Each prop FOLLOWS a bone rather than being parented to it. The bone gives
@@ -40,7 +40,6 @@ const BASE_SHOULDER_SPAN := 0.384
 const FITS := {
 	"roman": {
 		"fala": Vector3(1.6, 0.85, 1.75), "fala_offset": Vector3(0.0, 0.03, 0.0),
-		"title": Vector3(1.2, 1.75, 1.9), "title_offset": Vector3(0.05, 0.0, -0.02),
 	},
 }
 
@@ -49,20 +48,50 @@ const FITS := {
 ## note on arena_truss), so a pure conductor renders near-black between the
 ## lights. A little emission keeps it reading as gold in the dark.
 static func _materials() -> Dictionary:
+	# AEW_PlateArt: the plate artwork off the owner's atlas, cut to each
+	# plate's outline (alpha), with relief, roughness and metal maps made from
+	# the same art (tools/assets/build_title_textures.py). ORM so metal and
+	# enamel on one plate each get their own response under the follow spot.
+	var art := ORMMaterial3D.new()
+	art.resource_name = "AEW_PlateArt"
+	art.albedo_texture = load("res://assets/props/aew_title_art.png")
+	art.normal_enabled = true
+	art.normal_texture = load("res://assets/props/aew_title_art_normal.png")
+	art.normal_scale = 0.8
+	art.orm_texture = load("res://assets/props/aew_title_art_orm.png")
+	art.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	art.alpha_scissor_threshold = 0.5
+	art.cull_mode = BaseMaterial3D.CULL_DISABLED
+	art.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	# The hall's ambient carries no reflections (material_library's note on
+	# arena_truss), so a pure conductor goes near-black between the lights;
+	# a trace of the art's own colour as emission keeps the gold reading.
+	art.emission_enabled = true
+	art.emission_texture = art.albedo_texture
+	art.emission_energy_multiplier = 0.06
+	# AEW_Gold: the slabs' edges -- the plate depth seen from the side.
 	var gold := StandardMaterial3D.new()
-	gold.albedo_color = Color(1.0, 0.78, 0.36)
-	gold.metallic = 0.85
-	gold.roughness = 0.36
-	gold.emission_enabled = true
-	gold.emission = Color(1.0, 0.72, 0.30)
-	gold.emission_energy_multiplier = 0.035
-	var strap := StandardMaterial3D.new()
-	strap.albedo_color = Color(0.03, 0.03, 0.03)
-	strap.roughness = 0.55
-	var gem := StandardMaterial3D.new()
-	gem.albedo_color = Color(0.92, 0.94, 1.0)
-	gem.roughness = 0.08
-	gem.metallic_specular = 1.0
+	gold.resource_name = "AEW_Gold"
+	gold.albedo_color = Color(0.93, 0.74, 0.40)
+	gold.metallic = 1.0
+	gold.roughness = 0.32
+	# AEW_Leather: the tiling grain from the atlas's close-up swatch. The
+	# strap's UVs are world metres (cube-projected), so this is tiles/metre.
+	var leather := StandardMaterial3D.new()
+	leather.resource_name = "AEW_Leather"
+	leather.albedo_texture = load("res://assets/props/aew_leather.png")
+	leather.albedo_color = Color(0.32, 0.31, 0.30)
+	leather.normal_enabled = true
+	leather.normal_texture = load("res://assets/props/aew_leather_normal.png")
+	leather.normal_scale = 0.35
+	leather.roughness = 0.55
+	leather.uv1_scale = Vector3.ONE * 11.0
+	# AEW_Snaps: brass rings, after the atlas's snap swatch.
+	var snap := StandardMaterial3D.new()
+	snap.resource_name = "AEW_Snaps"
+	snap.albedo_color = Color(0.78, 0.60, 0.32)
+	snap.metallic = 1.0
+	snap.roughness = 0.4
 	var red := StandardMaterial3D.new()
 	red.albedo_color = Color(0.62, 0.06, 0.04)
 	red.roughness = 0.62
@@ -73,18 +102,20 @@ static func _materials() -> Dictionary:
 	cord.albedo_color = Color(0.10, 0.07, 0.05)
 	cord.roughness = 0.9
 	return {
-		"TitleGold": gold, "HeldGold": gold, "TitleStrap": strap,
-		"HeldStrap": strap, "TitleGem": gem, "HeldGem": gem,
+		"TitleArt": art, "HeldArt": art, "TitleGold": gold, "HeldGold": gold,
+		"TitleStrap": leather, "HeldStrap": leather,
+		"TitleSnap": snap, "HeldSnap": snap,
 		"FalaRed": red, "FalaOrange": orange, "FalaCord": cord,
 	}
+
 
 var _w: WrestlerController
 var _scale := 1.0
 var _fit: Dictionary = {}
 var _fala: Node3D
 var _title: Node3D
-## Where the title is: "draped", "held", or "" (put down).
-var _title_state := "draped"
+## Where the title is: "worn" (round his waist), "held", or "" (put down).
+var _title_state := "worn"
 
 
 static func dress(wrestler: WrestlerController) -> EntranceProps:
@@ -105,7 +136,7 @@ func _ready() -> void:
 	var r := _bone("upperarm_r")
 	if l != Vector3.INF and r != Vector3.INF:
 		_scale = clampf(l.distance_to(r) / BASE_SHOULDER_SPAN, 0.7, 1.8)
-	set_title("draped")
+	set_title("worn")
 	_follow()
 
 
@@ -131,7 +162,7 @@ func set_title(state: String) -> void:
 		return
 	for node in _title.find_children("", "MeshInstance3D", true, false):
 		var n := String(node.name)
-		(node as Node3D).visible = (state == "draped" and n.begins_with("Title")) \
+		(node as Node3D).visible = (state == "worn" and n.begins_with("Title")) \
 				or (state == "held" and n.begins_with("Held"))
 
 
@@ -149,21 +180,23 @@ func _follow() -> void:
 		return
 	var turn := Basis(Vector3.UP, _w.global_rotation.y)
 	var fala_fit: Vector3 = _fit.get("fala", Vector3.ONE)
-	var title_fit: Vector3 = _fit.get("title", Vector3.ONE)
 	var neck := _bone("neck_01")
 	if _fala and neck != Vector3.INF:
 		_fala.global_transform = Transform3D(
 				turn * Basis.from_scale(fala_fit * _scale),
 				neck + turn * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
-	var held := _title_state == "held"
-	var anchor := _bone("hand_l") if held else _bone("upperarm_l")
-	if _title and anchor != Vector3.INF:
-		# Held, the belt is a hand's width: only the draped shape has a
-		# shoulder to fit.
-		var fit := Vector3.ONE * title_fit.x if held else title_fit
-		_title.global_transform = Transform3D(turn * Basis.from_scale(fit * _scale),
-				anchor + (Vector3.ZERO if held
-				else turn * (_fit.get("title_offset", Vector3.ZERO) as Vector3)))
+	if _title == null:
+		return
+	if _title_state == "held":
+		var hand := _bone("hand_l")
+		if hand != Vector3.INF:
+			# Real size: the belt is authored in metres off the atlas.
+			_title.global_transform = Transform3D(turn, hand)
+	else:
+		# Worn: authored at Roman's own measured waist, so 1:1 on his hips.
+		var hips := _bone("pelvis")
+		if hips != Vector3.INF:
+			_title.global_transform = Transform3D(turn, hips)
 
 
 func _bone(canonical: String) -> Vector3:

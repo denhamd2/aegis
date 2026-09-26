@@ -175,16 +175,16 @@ READY = dict(
 
 
 # Roman's entrance posture (gauntlet/refs/entrances.md): upright and square,
-# chest out, weight even on both feet, the right arm hanging still and the
-# AEW title over his LEFT shoulder, held by the strap at his collarbone. It is
+# chest out, weight even on both feet, both arms hanging still -- the AEW
+# title is round his waist and the ula fala on his chest. It is
 # the opposite of READY on purpose -- a man sizing someone up is coiled; the
 # Tribal Chief walking to the ring is not, and "no wasted movement" is what
 # sells it.
 ROMAN_STAND = dict(
     pelvis=(0.0, 0.0, 0.900), hips=(0, 0, 0), spine=(4, 0, 0), head=(2, 0, 0),
-    hand_r=(0.25, -0.02, 0.92), hand_l=(-0.15, 0.13, 1.40),
-    elbow_r=(0.5, -0.4, -1.0), elbow_l=(-1.0, -0.2, -0.6),
-    fist_r=0.45, fist_l=0.85,
+    hand_r=(0.25, -0.02, 0.92), hand_l=(-0.25, -0.02, 0.92),
+    elbow_r=(0.5, -0.4, -1.0), elbow_l=(-0.5, -0.4, -1.0),
+    fist_r=0.45, fist_l=0.45,
     foot_r=(0.16, 0.0, 0.104), foot_l=(-0.16, 0.02, 0.104),
 )
 
@@ -300,19 +300,12 @@ def _world_clip(frames, root_to, keys):
     return out
 
 
-def _holding_title(frames):
-    """A gait whose left hand stays on the title at his left shoulder."""
-    return [(f, dict(p, hand_l=ROMAN_STAND["hand_l"],
-                     elbow_l=ROMAN_STAND["elbow_l"], fist_l=0.85))
-            for f, p in frames]
-
-
 def _open_hands(frames, curl=0.3):
     """A gait with READY's open hands instead of STANCE's fists."""
     return [(f, dict(p, fist_r=curl, fist_l=curl)) for f, p in frames]
 
 
-def _methodical_walk(title):
+def _methodical_walk():
     """Roman's walk to the ring, at half his normal pace, looking around.
 
     0.5 m/s: a 1.6 s cycle (48 frames) of two shorter steps with a long
@@ -337,8 +330,6 @@ def _methodical_walk(title):
         hips_yaw=3.0, spine=(0.0, 4.0), head=(4, 0, 0),
         hand_fwd=(-0.04, 0.04), hand_up=(0.90, 0.92),
         hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)
-    if title:
-        cycle = _holding_title(cycle)
     # (frame, yaw degrees): + is to his left.
     looks = [(0, 0.0), (18, 0.0), (42, 32.0), (62, 32.0), (82, 0.0),
              (96, 0.0), (116, -30.0), (132, -30.0), (144, 0.0)]
@@ -1135,31 +1126,37 @@ CLIPS = {
         hand_fwd=(-0.06, 0.06), hand_up=(0.90, 0.92),
         hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45),
 
-    # The same walk with the title on his left shoulder: the left hand stays
-    # on the strap at the collarbone and only the right arm moves.
-    "Walk_Title": _holding_title(_open_hands(_gait(
-        frames=30, fps=FPS, speed=1.0,
-        contacts={"r": (0, 15), "l": (15, 15)},
-        plant_up=0.104, lift_up=0.06,
-        foot_x={"r": 0.15, "l": -0.14},
-        pelvis_up=0.905, pelvis_dip=0.010,
-        hips_yaw=4.0, spine=(0.0, 4.0), head=(2, 0, 0),
-        hand_fwd=(-0.06, 0.06), hand_up=(0.90, 0.92),
-        hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)),
-
     # 144 frames / 4.8s, looping: his walk to the ring at 0.5 m/s, surveying
-    # the building as he goes (_methodical_walk). With the title, and without
-    # it for the last walk to his mark once it has gone to the timekeeper.
-    "Walk_Title_Look": _methodical_walk(title=True),
-    "Walk_Slow_Look": _methodical_walk(title=False),
+    # the building as he goes (_methodical_walk).
+    "Walk_Slow_Look": _methodical_walk(),
 
     # 60 frames / 2.0s, looping: standing on his mark. He breathes and that
     # is all -- the camera is supposed to wait on him, not watch him fidget.
     "Roman_Stand": [
         (0,  ROMAN_STAND),
-        (30, pose(ROMAN_STAND, pelvis=(0.0, 0.0, 0.906), spine=(5, 0, 0),
-                  hand_l=(-0.15, 0.13, 1.41))),
+        (30, pose(ROMAN_STAND, pelvis=(0.0, 0.0, 0.906), spine=(5, 0, 0))),
         (60, ROMAN_STAND),
+    ],
+
+    # 45 frames / 1.5s: the title off his waist. Chin down to the buckle,
+    # both hands to it (frame 10), the belt opened (frame 20), and the left
+    # hand brings it away to his side (32) -- the director hands the prop
+    # from his waist to that hand on frame 22 (EntranceDirector.
+    # TITLE_UNBUCKLED_AT) -- then back to his stance, belt in hand.
+    "Title_Unbuckle": [
+        (0,  ROMAN_STAND),
+        (10, pose(ROMAN_STAND, spine=(-8, 0, 0), head=(-16, 0, 0),
+                  hand_r=(0.07, 0.20, 1.03), hand_l=(-0.07, 0.20, 1.03),
+                  elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
+                  fist_r=0.7, fist_l=0.7)),
+        (20, pose(ROMAN_STAND, spine=(-6, 0, 0), head=(-12, 0, 0),
+                  hand_r=(0.16, 0.20, 1.03), hand_l=(-0.16, 0.20, 1.03),
+                  elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
+                  fist_r=0.8, fist_l=0.9)),
+        (32, pose(ROMAN_STAND, spine=(0, 0, 0), head=(0, 0, 0),
+                  hand_l=(-0.26, 0.10, 1.00), elbow_l=(-0.7, -0.4, -0.8),
+                  fist_l=0.95)),
+        (45, pose(ROMAN_STAND, fist_l=0.95)),
     ],
 
     # 60 frames / 2.0s: the title overhead. The belt is already in his left
