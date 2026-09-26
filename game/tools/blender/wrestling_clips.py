@@ -228,6 +228,63 @@ HEEL_STRIKE_PITCH = -6.0
 TOE_OFF_PITCH = 24.0
 
 
+# --- clips that travel ------------------------------------------------------
+#
+# Every clip above is authored IN PLACE: the engine moves the root and the
+# clip only poses the body around it. The entrance's step climb and rope
+# step-through cannot be authored that way by eye, because what has to hold
+# still is a foot on a TREAD, and the tread is fixed in the world while the
+# root the clip is expressed against is moving up the stairs under it.
+#
+# So these are keyed in WORLD space -- metres from where the move starts,
+# `fwd` along the travel and `up` from the surface he starts on -- and
+# converted to root-relative per frame, with the root travelling in a
+# straight line from (0, 0) to `root_to` over the clip. EntranceDirector
+# moves the root along exactly that line over exactly this duration, so the
+# two cancel and the planted foot stays planted.
+#
+# Keyed every frame, not at the sparse keys: between two keys a planted foot
+# is fixed in the world but its root-relative position changes linearly, and
+# the author()'s Bezier easing between sparse relative keys would slide it.
+
+_TRAVEL_FIELDS = ("pelvis", "hand_r", "hand_l", "foot_r", "foot_l")
+
+
+def _lerp_value(a, b, t):
+    if isinstance(a, tuple):
+        return tuple(x + (y - x) * t for x, y in zip(a, b))
+    if isinstance(a, (int, float)):
+        return a + (b - a) * t
+    return a
+
+
+def _world_clip(frames, root_to, keys):
+    """Per-frame root-relative poses from sparse world-space keys.
+
+    `keys` is [(frame, full pose dict in world space)], first at 0 and last
+    at `frames`. Between keys every field eases with smoothstep, so a swing
+    leaves and lands softly and a planted foot, keyed identically either
+    side, does not move at all.
+    """
+    out = []
+    for f in range(frames + 1):
+        i = 0
+        while i + 1 < len(keys) - 1 and keys[i + 1][0] <= f:
+            i += 1
+        (f0, k0), (f1, k1) = keys[i], keys[i + 1]
+        t = 0.0 if f1 == f0 else min(max((f - f0) / float(f1 - f0), 0.0), 1.0)
+        t = t * t * (3.0 - 2.0 * t)
+        pose_now = {key: _lerp_value(k0[key], k1.get(key, k0[key]), t)
+                    for key in k0}
+        rf = root_to[0] * f / float(frames)
+        ru = root_to[1] * f / float(frames)
+        for field in _TRAVEL_FIELDS:
+            x, y, z = pose_now[field]
+            pose_now[field] = (x, y - rf, z - ru)
+        out.append((f, pose_now))
+    return out
+
+
 def _open_hands(frames, curl=0.3):
     """A gait with READY's open hands instead of STANCE's fists."""
     return [(f, dict(p, fist_r=curl, fist_l=curl)) for f, p in frames]
@@ -841,6 +898,156 @@ CLIPS = {
     # onto the toes with both arms overhead (hands at 1.92 -- the shoulder
     # at 1.441 plus almost the full 0.547 reach), settle off the extreme,
     # one smaller second pump. Terminal state: it holds the last pose.
+    # === the ring entrance ==============================================
+    #
+    # Played by core/match/entrance_director.gd, which moves the root. Nothing
+    # in the match itself uses these.
+
+    # 24 frames / 0.8s, looping: a brisk, upright walk to the ring -- chest
+    # out, arms swinging low and loose -- where Walk_Stalk is a man circling
+    # an opponent with his hands up. Generated like the stalk, so the planted
+    # foot travels at exactly the speed the director moves him:
+    # EntranceDirector.WALK_SPEED 1.6 m/s. Contact is 12 of 24 frames per
+    # foot, so one is always down and neither is in the air -- a walk, not a
+    # jog -- and the half-stride that buys is 0.32 m, inside the leg's reach.
+    "Entrance_Walk": _open_hands(_gait(
+        frames=24, fps=FPS, speed=1.6,
+        contacts={"r": (0, 12), "l": (12, 12)},
+        plant_up=0.104, lift_up=0.08,
+        foot_x={"r": 0.14, "l": -0.13},
+        pelvis_up=0.895, pelvis_dip=0.015,
+        hips_yaw=7.0, spine=(0.0, 3.0), head=(5, 0, 0),
+        hand_fwd=(-0.14, 0.16), hand_up=(0.84, 0.90),
+        hand_x={"r": 0.25, "l": -0.23}, elbow=None), curl=0.5),
+
+    # 36 frames / 1.2s: up the three treads of the ring steps, right foot
+    # leading, one tread a step. World keys: fwd from the floor spot in front
+    # of the bottom tread, up from the floor. The treads (ring.py
+    # build_steps, 0.36 m run, 0.287 rise) put the foot targets at fwd
+    # 0.54 / 0.90 / 1.26 and tread tops at 0.29 / 0.57 / 0.86, so the root
+    # travels (1.26, 0.86): EntranceDirector.CLIMB_TO.
+    #
+    # Every key keeps both feet inside the 0.829 m leg: the pelvis waits over
+    # the trailing foot until the lead one is down, then transfers -- that
+    # wait is most of what makes it read as climbing rather than floating up.
+    "Climb_Steps": _world_clip(36, (1.26, 0.86), [
+        (0,  pose(STANCE, pelvis=(0.0, 0.0, 0.90), hips=(-4, 0, 0),
+                  spine=(-6, 0, 0), head=(4, 0, 0),
+                  hand_r=(0.25, 0.04, 0.88), hand_l=(-0.23, 0.02, 0.88),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.0, 0.104),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        (5,  pose(STANCE, pelvis=(0.0, 0.08, 0.90), hips=(-10, 0, 0),
+                  spine=(-10, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.25, -0.05, 0.90), hand_l=(-0.23, 0.22, 0.92),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 0.30, 0.50), foot_l=(-0.13, 0.0, 0.104),
+                  knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.0))),
+        (10, pose(STANCE, pelvis=(0.0, 0.24, 0.85), hips=(-12, 0, 0),
+                  spine=(-10, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.25, 0.10, 0.92), hand_l=(-0.23, 0.36, 0.96),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 0.54, 0.394), foot_l=(-0.13, 0.0, 0.104),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        (15, pose(STANCE, pelvis=(0.0, 0.46, 1.10), hips=(-10, 0, 0),
+                  spine=(-8, 0, 0), head=(5, 0, 0),
+                  hand_r=(0.25, 0.62, 1.20), hand_l=(-0.23, 0.38, 1.10),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 0.54, 0.394), foot_l=(-0.13, 0.60, 0.80),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.3))),
+        (20, pose(STANCE, pelvis=(0.0, 0.60, 1.20), hips=(-12, 0, 0),
+                  spine=(-10, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.25, 0.66, 1.26), hand_l=(-0.23, 0.90, 1.34),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 0.54, 0.394), foot_l=(-0.13, 0.90, 0.674),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        (25, pose(STANCE, pelvis=(0.0, 0.84, 1.45), hips=(-10, 0, 0),
+                  spine=(-8, 0, 0), head=(5, 0, 0),
+                  hand_r=(0.25, 1.12, 1.62), hand_l=(-0.23, 0.86, 1.52),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 1.05, 1.08), foot_l=(-0.13, 0.90, 0.674),
+                  knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.0))),
+        (30, pose(STANCE, pelvis=(0.0, 0.94, 1.49), hips=(-10, 0, 0),
+                  spine=(-8, 0, 0), head=(5, 0, 0),
+                  hand_r=(0.25, 1.00, 1.60), hand_l=(-0.23, 1.22, 1.66),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 1.26, 0.964), foot_l=(-0.13, 0.90, 0.674),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        (36, pose(STANCE, pelvis=(0.0, 1.26, 1.74), hips=(-6, 0, 0),
+                  spine=(-8, 0, 0), head=(4, 0, 0),
+                  hand_r=(0.25, 1.30, 1.74), hand_l=(-0.23, 1.28, 1.74),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.14, 1.26, 0.964), foot_l=(-0.13, 1.26, 0.964),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+    ]),
+
+    # 48 frames / 1.6s: from the top tread through the ropes onto the mat.
+    # World keys: fwd from the top tread's centre, up from its top. The rope
+    # line is 0.34 ahead (the ring's 3.1 against the tread centre's 3.44),
+    # the mat 0.24 up, the middle rope 1.09 up and the top 1.44. Between the
+    # middle and top ropes is how it is done: up onto the apron edge, lead
+    # leg high over the middle rope, fold under the top one, straddle, trail
+    # leg over, stand. The root travels (0.90, 0.24): EntranceDirector.ROPE_TO.
+    #
+    # The straddle is the tight key: the hips have to clear the middle rope
+    # (1.09) while both feet reach the mat and the apron, which is only
+    # possible from the apron -- from the tread the trailing leg is 0.2 m
+    # short -- hence the first step up onto it.
+    "Rope_Step_Through": _world_clip(48, (0.90, 0.24), [
+        (0,  pose(STANCE, pelvis=(0.0, 0.0, 0.86), hips=(-4, 0, 0),
+                  spine=(-8, 0, 0), head=(4, 0, 0),
+                  hand_r=(0.28, 0.30, 1.40), hand_l=(-0.28, 0.30, 1.40),
+                  fist_r=0.8, fist_l=0.8,
+                  foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.0, 0.104),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        # Hands on the top rope, left foot up onto the apron edge.
+        (8,  pose(STANCE, pelvis=(0.0, 0.14, 1.00), hips=(-8, 0, 0),
+                  spine=(-12, 0, 0), head=(4, 0, 0),
+                  hand_r=(0.30, 0.34, 1.44), hand_l=(-0.30, 0.34, 1.44),
+                  fist_r=0.8, fist_l=0.8,
+                  foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.28, 0.344),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.2))),
+        # Lead leg high over the middle rope; he starts to fold.
+        (16, pose(STANCE, pelvis=(0.0, 0.22, 1.10), hips=(-24, 0, 0),
+                  spine=(-30, 0, 0), head=(10, 0, 0),
+                  hand_r=(0.30, 0.34, 1.44), hand_l=(-0.30, 0.34, 1.44),
+                  fist_r=0.8, fist_l=0.8,
+                  foot_r=(0.16, 0.42, 1.22), foot_l=(-0.13, 0.28, 0.344),
+                  knee_r=(0.1, 0.6, 1.0), knee_l=(-0.1, 1.0, 0.0))),
+        # Straddling the middle rope, folded under the top one, lead foot
+        # down on the mat inside.
+        (24, pose(STANCE, pelvis=(0.0, 0.46, 1.10), hips=(-46, 0, 0),
+                  spine=(-30, 0, 0), head=(16, 0, 0),
+                  hand_r=(0.30, 0.36, 1.44), hand_l=(-0.30, 0.36, 1.44),
+                  fist_r=0.8, fist_l=0.8,
+                  foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.28, 0.344),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        # Weight inside; the trail leg comes over the rope.
+        (32, pose(STANCE, pelvis=(0.0, 0.72, 1.12), hips=(-30, 0, 0),
+                  spine=(-20, 0, 0), head=(10, 0, 0),
+                  hand_r=(0.30, 0.70, 1.20), hand_l=(-0.30, 0.40, 1.40),
+                  fist_r=0.5, fist_l=0.6,
+                  foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.42, 1.22),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 0.6, 1.0))),
+        (40, pose(STANCE, pelvis=(0.0, 0.82, 1.10), hips=(-12, 0, 0),
+                  spine=(-14, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.28, 1.00, 1.30), hand_l=(-0.26, 0.96, 1.32),
+                  fist_r=0.5, fist_l=0.5,
+                  foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.80, 0.344),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+        # Up, on the mat, in the stance -- so the walk that follows cuts on.
+        (48, pose(STANCE, pelvis=(0.0, 0.92, 1.10),
+                  hand_r=(STANCE["hand_r"][0], STANCE["hand_r"][1] + 0.90,
+                          STANCE["hand_r"][2] + 0.24),
+                  hand_l=(STANCE["hand_l"][0], STANCE["hand_l"][1] + 0.90,
+                          STANCE["hand_l"][2] + 0.24),
+                  foot_r=(STANCE["foot_r"][0], STANCE["foot_r"][1] + 0.90,
+                          STANCE["foot_r"][2] + 0.24),
+                  foot_l=(STANCE["foot_l"][0], STANCE["foot_l"][1] + 0.90,
+                          STANCE["foot_l"][2] + 0.24),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+    ]),
+
     "Win_Celebrate": [
         (0,  P()),
         # Anticipation: everything sinks and loads downward.

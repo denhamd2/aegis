@@ -227,6 +227,19 @@ const RECIPES := {
 	"win_celebrate": {"kind": "retime", "source": "Win_Celebrate",
 		"seconds": 1.300, "file": AUTHORED},
 
+	# --- the ring entrance (core/match/entrance_director.gd) ---------------
+	#
+	# Lengths are the clips' own frame counts at 30 fps and must stay so: the
+	# director moves the root at the speed and over the durations these were
+	# authored against (EntranceDirector.WALK_SPEED, CLIMB_SECONDS,
+	# ROPE_SECONDS), and a retime here would slide the planted feet.
+	"entrance_walk": {"kind": "retime", "source": "Entrance_Walk",
+		"seconds": 0.800, "file": AUTHORED, "loop": true},
+	"climb_steps": {"kind": "retime", "source": "Climb_Steps",
+		"seconds": 1.200, "file": AUTHORED},
+	"rope_step_through": {"kind": "retime", "source": "Rope_Step_Through",
+		"seconds": 1.600, "file": AUTHORED},
+
 	# --- states that were playing raw rig clips -------------------------
 	#
 	# These replace clips taken straight off wrestler_base.glb. Each names

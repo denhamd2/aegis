@@ -6842,3 +6842,46 @@ torso, head and legs, every tick one of them is down.
 The 7 left are strikes landing near the legs, a few ticks each. Gameplay
 paths changed, so the replay end-state baseline is refreshed with the
 entrance round. 466 tests pass (six new in `test_downed_body_clearance.gd`).
+
+## Round: ring entrances, with the owner's lower third
+
+A match launched from the menu now opens with both men walking to the ring:
+an establishing wide of the hall, then each wrestler out of his portal (the
+opponent first, from the amber side; the player's man from the magenta),
+an arms-up pose at the stage lip with his portal's accents up, a tracking
+shot down the ramp under a follow spot, a broadcast cut to ringside, round
+to the ring steps, up them, through the ropes and onto his mark. Then the
+faceoff on the hard camera, and the bell. Enter / Space / pad A skips.
+
+- `core/match/entrance_director.gd` runs it. It is presentation only: both
+  wrestlers, their AI, the referee and the grapple rig are frozen through it,
+  and match_setup does not start the replay until `bell`, so tick 0 is the
+  bell either way. Every placement is a function of the tick count.
+- It is OFF by default (`match_setup.entrances`) and only the title screen's
+  launch turns it on -- `configure_match()` is shared with the headless
+  probes, which need a live match on tick 1. Captures never get it.
+- There is no collision off the mat, so the men are placed kinematically on
+  each surface's height from ArenaBuilder's constants (deck, the ramp's
+  wedge, the floor).
+- Three new clips in `wrestling_clips.py`: `Entrance_Walk` (a generated gait
+  at 1.6 m/s, upright, arms low), and `Climb_Steps` / `Rope_Step_Through`,
+  keyed in WORLD space and converted to root-relative per frame so a foot on
+  a tread stays on it while the director moves the root along the same line.
+  Every key keeps both feet inside the leg's reach. The stage pose is
+  `Win_Celebrate`. Clips play through `play_presentation_clip()`, which
+  borrows the IDLE/LOCOMOTION tree nodes so every change is a cross-fade.
+- The lower third is the owner's plate (checkerboard keyed out -- it was
+  painted in) set in Teko Bold, laid out off his reference: subtitle in gold
+  on the upper plate, name slanted with the plate, silver, top-lit. The
+  subtitle is the wrestler's title if he holds one, otherwise his nickname
+  (`Roster.Entry.entrance_subtitle()`); Roman is AEW CHAMPION, per the
+  reference.
+- The first render put the ringside camera outside the barricade, and the
+  whole climb played behind barricade panels and chairs; it now stands inside
+  it at the ring's -X side. The first render also walked him down the ramp in
+  silhouette -- nothing in the rig lights the ramp -- hence the follow spot.
+
+Rendered end to end with new `tools/probe/entrance_shots.tscn`.
+`test_entrance_director.gd` steps a whole entrance tick by tick: no jump over
+0.1 m outside the cut, bell rung, both men on their marks; plus default-off,
+the freeze, skip, and the subtitle rule. 472 tests pass.

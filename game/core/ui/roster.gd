@@ -58,6 +58,9 @@ class Entry:
 	## signature draw beside the shared ones rather than replacing them, so
 	## a wrestler with one gains a move and loses nothing.
 	var signature: String
+	## The title he holds, as the entrance lower third prints it -- "AEW
+	## CHAMPION" -- or "" for a man who holds none. See entrance_subtitle().
+	var championship: String = ""
 
 	func _init(p_id: String, p_first: String, p_last: String, p_tagline: String,
 			p_scene: String, p_body: Color, p_accent: Color,
@@ -79,12 +82,18 @@ class Entry:
 	func display_name() -> String:
 		return "%s %s" % [first_name, last_name]
 
+	## The small line above his name on the entrance lower third: his title if
+	## he is a champion, otherwise his nickname -- the owner's rule for the
+	## graphic, off the AEW reference it copies.
+	func entrance_subtitle() -> String:
+		return championship if championship != "" else tagline
+
 	func initials() -> String:
 		return "%s%s" % [first_name.substr(0, 1), last_name.substr(0, 1)]
 
 
 static func entries() -> Array:
-	return [
+	var list := [
 		Entry.new(
 			"roman", "ROMAN", "REIGNS", "THE HEAD OF THE TABLE",
 			"res://scenes/roman_model.tscn",
@@ -123,6 +132,11 @@ static func entries() -> Array:
 			Color(0.12, 0.15, 0.20), Color(0.20, 0.78, 0.72),
 			0.68, 0.88, 0.94),
 	]
+	# Roman holds the title: the owner's reference for the entrance graphic
+	# is his, captioned AEW CHAMPION. The others walk out under their
+	# nicknames.
+	(list[0] as Entry).championship = "AEW CHAMPION"
+	return list
 
 
 static func by_id(id: String) -> Entry:

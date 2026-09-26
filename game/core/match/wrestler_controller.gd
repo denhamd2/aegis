@@ -268,6 +268,9 @@ var _tier_draws: int = 0
 ## "WrestlerA"/"WrestlerB" -- fine for a fixture scene, useless on a plate a
 ## player reads. TitleScreen fills it from the roster entry he picked.
 @export var display_name: String = ""
+## The small line over his name on the entrance lower third: his title, or his
+## nickname if he holds none (Roster.Entry.entrance_subtitle()).
+@export var entrance_subtitle: String = ""
 @export var character_model_scene: PackedScene = preload(
 		"res://assets/characters/wrestler_base.glb")
 @export var opponent_path: NodePath
@@ -1674,6 +1677,46 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 ## (there is nobody left to fight), cancels anything in flight, and lets the
 ## clip hold its final pose. Idempotent, because the referee guards
 ## _match_over but a replay or a probe may call it twice.
+## Plays a clip that belongs to no FSM state -- the ring entrance's walk,
+## climb and rope step -- while the controller is frozen for the entrance.
+##
+## The AnimationTree has one node per state and nothing else, so this borrows
+## the IDLE and LOCOMOTION nodes, alternating between them so every change is
+## a travel() and therefore a cross-fade rather than a pop. end_presentation()
+## puts both back before the bell.
+var _presentation_node := "IDLE"
+var _presentation_clip := ""
+
+func play_presentation_clip(clip: String) -> void:
+	if not anim_tree or clip == _presentation_clip \
+			or not anim_player.has_animation(clip):
+		return
+	var machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var next := "LOCOMOTION" if _presentation_node == "IDLE" else "IDLE"
+	var node := machine.get_node(next) as AnimationNodeAnimation
+	if node == null:
+		return
+	node.animation = clip
+	_anim_playback.travel(next)
+	_presentation_node = next
+	_presentation_clip = clip
+
+
+func end_presentation() -> void:
+	if not anim_tree:
+		return
+	var machine := anim_tree.tree_root as AnimationNodeStateMachine
+	for state: WrestlerFSM.State in [WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION]:
+		var node := machine.get_node(WrestlerFSM.State.keys()[state]) \
+				as AnimationNodeAnimation
+		if node:
+			node.animation = clip_for_state(state, false)
+	_presentation_node = "IDLE"
+	_presentation_clip = ""
+	_anim_playback.start("IDLE", true)
+
+
 func celebrate() -> void:
 	if fsm.current_state == WrestlerFSM.State.VICTORY:
 		return

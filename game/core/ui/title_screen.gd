@@ -218,6 +218,10 @@ func _launch() -> void:
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
 			randi_range(1, 1 << 30))
+	# A match launched from the menu opens with the ring entrances. Set here
+	# rather than in configure_match(), which the headless probes call to set
+	# up matches they need live on tick 1.
+	scene.entrances = true
 	var tree := get_tree()
 	var old := tree.current_scene
 	tree.root.add_child(scene)
@@ -248,6 +252,7 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		wrestler.is_ai = slot[2]
 		wrestler.character_model_scene = load(entry.model_scene)
 		wrestler.display_name = entry.display_name()
+		wrestler.entrance_subtitle = entry.entrance_subtitle()
 		wrestler.attire_body = entry.attire_body
 		wrestler.attire_accent = entry.attire_accent
 		# His own finisher, if he has one. Before add_child() like the rest, so
