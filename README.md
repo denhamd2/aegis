@@ -6896,3 +6896,23 @@ Teko-Variable.ttf, weight 700 -- Teko's heaviest; there is no ExtraBold).
 Teko is condensed, so at the old sizes and tracking it read small and
 spaced out: type is ~1.35x larger and the letter-spacing is Teko's own,
 tight. Rendered through `title_shots.tscn` at 1600x900.
+
+## Round: Roman's entrance
+
+Roman has his own routine (`EntranceDirector._add_roman_entrance`, off the
+beat sheet in `gauntlet/refs/entrances.md`): a 1.0 m/s walk with the AEW
+title draped and the ula fala on (`tools/blender/roman_props.py`,
+`EntranceProps`), gold portal accents, a stop on the stage lip with a push-in
+and the lower third, the title overhead, then the finger with stage gerbs
+and mortar bursts (`EntrancePyro`, each cue with a flash light into the
+haze). In the ring: the finger again with post sparks, the title and the ula
+fala off, and his mark. His own titantron and music replace the Dynamite loop
+on the wall for exactly his entrance (`StageVideo.play_entrance`); the clip
+is owner-supplied and its caveats are in `assets/environment/CREDITS.md`.
+
+The thumb that stuck out when he pointed was a retarget fault, not a clip
+one: RomanModel mapped the mannequin's first finger knuckle to Roman's
+`J_*F0` bones, which are metacarpals inside his palm, so every curl in every
+clip bent his palm and his curled fingers splayed into a claw. Mapped
+knuckle to knuckle now, and pinned by `test_fingers_map_knuckle_to_knuckle`.
+`clip_shot.tscn --hand r` renders the close-up that found it. 475 tests pass.
