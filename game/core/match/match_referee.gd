@@ -165,7 +165,8 @@ func _check_for_downed_opponent_action() -> void:
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
 				and defender._cover_eligible \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
-				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE:
+				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE \
+				and WrestlerController.is_beside_torso(defender, attacker.global_position):
 			# Every finish is a cover. The submission branch that used to
 			# live here is gone from the AI match: a match is meant to end
 			# with one wrestler pinning the other, and a seeded coin flip

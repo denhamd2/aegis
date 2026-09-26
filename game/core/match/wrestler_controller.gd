@@ -1051,6 +1051,7 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
+	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
 	move_and_slide()
 	keep_inside_the_ring()
@@ -2056,6 +2057,152 @@ func _place_cover(defender: WrestlerController) -> void:
 	_cover_slide_tick = 0
 	_cover_slide_ticks = _cover_slide_duration(
 			global_position.distance_to(spot))
+
+# ---------------------------------------------------------------------------
+# A downed man's body
+# ---------------------------------------------------------------------------
+#
+# A man lying on the mat is still an upright 0.4 m capsule at his pelvis --
+# GrappleRig treats lying down as a pose, not a body orientation -- so his
+# legs and his head collide with nothing. On the owner's match video his
+# raised shins went through the standing man's thigh and chest.
+# tools/probe/limb_clearance.tscn measured it: up to 0.12 m of leg inside the
+# other body, 259 visible ticks over five seeds, almost all of it with the
+# standing man walking, striking or idling over him.
+#
+# So a downed man has a FOOTPRINT: the line his body lies along, head to
+# feet, and a standing wrestler is kept a clearance off it.
+
+## The states a man is on the mat in, legs out.
+const DOWNED_STATES: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.DOWN, WrestlerFSM.State.PIN_DEFENDER,
+	WrestlerFSM.State.SUBMISSION_DEFENDER, WrestlerFSM.State.GETUP,
+]
+## The states that are ALLOWED on top of him: the cover and the hold are
+## contact by design, and a paired move or the lock-up places both bodies
+## through GrappleRig.
+const ON_TOP_STATES: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.SUBMISSION_ATTACKER,
+	WrestlerFSM.State.GRAPPLE_HOLD, WrestlerFSM.State.MOVE_EXEC,
+	WrestlerFSM.State.FINISHER, WrestlerFSM.State.TIE_UP,
+	WrestlerFSM.State.VICTORY,
+]
+## His body in his own frame, off his root: the head end up -Z, the feet down
+## +Z. The supine pose puts Head at -0.69 and the feet at +0.50
+## (tools/probe/pin_shot.tscn); a little past both, for the hair and the boots.
+const BODY_HEAD_M := 0.75
+const BODY_FEET_M := 0.65
+## How far a standing wrestler's ROOT stays off that line: his own body
+## (a 0.4 m capsule, but a torso is ~0.18 m deep) plus the downed man's limbs
+## either side of the line, knees up. Read off limb_clearance.
+const BODY_CLEAR_M := 0.55
+## The most the guard corrects in one tick. A walk is 0.058 m a tick, so this
+## only ever cancels the step that would have gone in; it is not a shove.
+## Bigger overlaps -- a man falling onto the spot someone is standing on --
+## resolve over a few ticks rather than as a jump.
+const BODY_PUSH_MAX_M := 0.06
+
+
+## His head end and feet end, on the mat plane.
+static func downed_body_line(w: WrestlerController) -> PackedVector3Array:
+	var along := w.global_transform.basis.z
+	along.y = 0.0
+	along = along.normalized()
+	var root := Vector3(w.global_position.x, 0.0, w.global_position.z)
+	return PackedVector3Array([root - along * BODY_HEAD_M,
+			root + along * BODY_FEET_M])
+
+
+## The horizontal correction that takes `pos` back out to BODY_CLEAR_M off
+## the line a..b, or zero if it is already clear. Pure, so it can be tested
+## without a scene.
+static func body_clearance_push(pos: Vector3, a: Vector3, b: Vector3) -> Vector3:
+	var flat := Vector3(pos.x, 0.0, pos.z)
+	var near := Geometry3D.get_closest_point_to_segment(flat, a, b)
+	var off := flat - near
+	var d := off.length()
+	if d >= BODY_CLEAR_M:
+		return Vector3.ZERO
+	if d < 0.0001:
+		# Dead on the line: out to his left, deterministically.
+		off = (b - a).cross(Vector3.UP).normalized()
+		d = 0.0
+	else:
+		off /= d
+	return off * minf(BODY_CLEAR_M - d, BODY_PUSH_MAX_M)
+
+
+## Where to stand to cover him: level with his chest, BODY_CLEAR_M out plus a
+## step, on whichever side `from` is already on -- so the walk in never
+## crosses the body.
+##
+## Unless that side is outside the ring. A man down by the ropes has only one
+## side to stand on, and the spot on the far side of the ropes is one the ring
+## clamp will never let anyone reach: measured on seed 4, the standing man
+## walked at it for 97 ticks, pinned between the clamp and this guard with the
+## downed man's legs through him. Then it is the other side, and the footprint
+## guard walks him round the body to get there.
+static func cover_approach_spot(victim: WrestlerController, from: Vector3) -> Vector3:
+	var basis := victim.global_transform.basis
+	var local := victim.global_transform.affine_inverse() * from
+	var side := 1.0 if local.x >= 0.0 else -1.0
+	var chest := victim.global_position - basis.z * COVER_TOWARD_HEAD_M
+	var out := basis.x * (BODY_CLEAR_M + 0.15)
+	var line := downed_body_line(victim)
+	# Both sides, each pulled back to where a man can actually STAND -- the
+	# rope colliders stop him at ~2.55, inside RING_KEEP_IN -- then the first
+	# one that is genuinely clear of the body, his own side first. The second
+	# pass of this fix was measured still failing on seed 4: the downed man lay
+	# with his head over the ropes, so BOTH chest-side spots clamped into the
+	# same corner, 0.51 m off his legs.
+	var best := Vector3.ZERO
+	var best_clear := -1.0
+	for s: float in [side, -side]:
+		var spot := chest + out * s
+		spot.x = clampf(spot.x, -STANDABLE_M, STANDABLE_M)
+		spot.z = clampf(spot.z, -STANDABLE_M, STANDABLE_M)
+		var flat := Vector3(spot.x, 0.0, spot.z)
+		var clear := flat.distance_to(
+				Geometry3D.get_closest_point_to_segment(flat, line[0], line[1]))
+		if clear >= BODY_CLEAR_M:
+			return spot
+		if clear > best_clear:
+			best_clear = clear
+			best = spot
+	return best
+
+
+## Where a wrestler can actually stand: the rope colliders stop him short of
+## RING_KEEP_IN.
+const STANDABLE_M := 2.45
+
+
+
+## True when `pos` is level with his torso rather than down by his legs --
+## the side of him a cover is made from. Past his hips toward his feet is not.
+static func is_beside_torso(victim: WrestlerController, pos: Vector3) -> bool:
+	var local := victim.global_transform.affine_inverse() * pos
+	return local.z <= 0.15
+
+
+## Steers this wrestler off a downed opponent's body, through velocity, before
+## move_and_slide() -- the same reason _tick_cover_slide() steers velocity:
+## writing the transform leaves no floor contact and he falls through the mat.
+func _keep_off_downed_body(delta: float) -> void:
+	if opponent == null or delta <= 0.0:
+		return
+	if not DOWNED_STATES.has(opponent.fsm.current_state):
+		return
+	if ON_TOP_STATES.has(fsm.current_state) or DOWNED_STATES.has(fsm.current_state):
+		return
+	var line := downed_body_line(opponent)
+	var next := global_position + velocity * delta
+	var push := body_clearance_push(next, line[0], line[1])
+	if push == Vector3.ZERO:
+		return
+	velocity.x += push.x / delta
+	velocity.z += push.z / delta
+
 
 ## The man this wrestler covered, while their capsules ignore each other.
 var _cover_partner: WrestlerController = null

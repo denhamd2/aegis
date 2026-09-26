@@ -243,9 +243,21 @@ func poll_input() -> Dictionary:
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
+	#
+	# To the side of his CHEST, not to his pelvis. Walking straight at his
+	# root from wherever this wrestler stood -- usually his feet end -- walked
+	# the standing man through the downed man's raised legs, which is the
+	# clipping the owner flagged off the match video. The spot is on the side
+	# he is already on, so the walk in never crosses the body; the footprint
+	# guard in WrestlerController slides him round the legs if the straight
+	# line would clip them.
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
-		if distance > 0.3:
-			var dir := to_target.normalized()
+		var spot := WrestlerController.cover_approach_spot(target,
+				controller.global_position)
+		var to_spot := spot - controller.global_position
+		to_spot.y = 0.0
+		if to_spot.length() > 0.12:
+			var dir := to_spot.normalized()
 			input["move"] = Vector2(dir.x, dir.z)
 		return input
 

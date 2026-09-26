@@ -6808,3 +6808,37 @@ exception between the pair, and `_release_cover_contact()` drops it only
 once the pin is over AND they are 0.82 m apart; released while overlapping,
 the physics step would throw one of them across the ring. `pin_shot.tscn`
 measures separation 0.453 m against the 0.447 intended. 460 tests pass.
+
+## Round: a downed man's legs stop passing through the standing one
+
+Off the owner's match video (40 s, 60 s): the man on his back, knees up, had
+his shins inside the other man's thigh and chest. A downed man is still an
+upright capsule at his pelvis, so his legs and head collide with nothing, and
+the AI walked straight at his pelvis from wherever it stood -- usually the
+feet end.
+
+New `tools/probe/limb_clearance.tscn` measures it on rendered bones: each limb
+a capsule round its bone segment, the downed man's legs against the other's
+torso, head and legs, every tick one of them is down.
+
+| | worst overlap | ticks > 0.04 m (5 seeds) |
+| --- | --- | --- |
+| before | 0.119 m | 259 |
+| footprint guard + chest-side approach | 0.158 m | 112 |
+| + choosing a side a man can stand on | **0.105 m** | **7** |
+
+- A downed man has a footprint -- head to feet along his own axis -- and a
+  standing wrestler's velocity is steered to stay 0.55 m off it
+  (`_keep_off_downed_body`, through velocity, never the transform, for the
+  falls-through-the-mat reason `_tick_cover_slide` documents).
+- The AI walks to the side of his CHEST on its own side
+  (`cover_approach_spot`), and the referee only starts a cover from beside
+  the torso (`is_beside_torso`).
+- The middle row was seed 4: a man down with his head over the ropes, both
+  chest-side spots clamped into one corner 0.51 m off his legs, and the
+  standing man walked at it for 97 ticks. Both sides are now clamped to where
+  a man can stand (2.45) and the first one clear of the body wins.
+
+The 7 left are strikes landing near the legs, a few ticks each. Gameplay
+paths changed, so the replay end-state baseline is refreshed with the
+entrance round. 466 tests pass (six new in `test_downed_body_clearance.gd`).
