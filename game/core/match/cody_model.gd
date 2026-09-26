@@ -29,8 +29,49 @@ extends Node3D
 const BASE_RIG := "res://assets/characters/wrestler_base.glb"
 
 
+## His look, to the owner's reference photographs (three: a press portrait,
+## an in-ring close-up and an entrance shot).
+##
+## HAIR. The model paints it on the scalp as a short ash-brown crop; the
+## references show platinum blond. The re-coloured head texture is built by
+## tools/assets/build_cody_textures.py from the supplied one (face, brows,
+## tattoo and ears untouched) and swapped in here for the head material.
+## Its SHAPE -- longer on top and swept up and back in the photos -- is
+## geometry the model does not have: the hair is paint on a skull, so the
+## volume is out of reach without new hair cards.
+##
+## SKIN. Measured medians: the references' cheek (199,142,117) and forehead
+## (209,155,132) against the texture's cheek (181,128,109) -- the same hue a
+## touch brighter and more golden. A tint on every skin material, and a
+## little sheen: a wrestler under arena light is never matte.
+const HEAD_MATERIAL := "xmaterial_c3d4d9e78b44a79"
+const HEAD_BLOND := "res://assets/characters/cody_rhodes_head_blond.png"
+const SKIN_MATERIALS := ["xmaterial_495900de7002683", "xmaterial_90b39911eb484a2",
+		"xmaterial_90b2b911eb46cd8", "xmaterial_5a329cd32db96c3", HEAD_MATERIAL]
+const SKIN_TINT := Color(1.08, 1.06, 1.0)
+const SKIN_ROUGHNESS := 0.5
+
+
 func _ready() -> void:
 	_install_animations()
+	_fix_look()
+
+
+func _fix_look() -> void:
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		for surface in mesh_instance.mesh.get_surface_count():
+			var source := mesh_instance.mesh.surface_get_material(surface) as BaseMaterial3D
+			if source == null or not SKIN_MATERIALS.has(source.resource_name):
+				continue
+			var material := source.duplicate() as BaseMaterial3D
+			if source.resource_name == HEAD_MATERIAL and ResourceLoader.exists(HEAD_BLOND):
+				material.albedo_texture = load(HEAD_BLOND)
+			material.albedo_color = material.albedo_color * SKIN_TINT
+			material.roughness = SKIN_ROUGHNESS
+			mesh_instance.set_surface_override_material(surface, material)
 
 
 ## Cody wrestles in his own gear, so the generated trunks must not be painted on.
