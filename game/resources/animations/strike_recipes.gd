@@ -271,6 +271,8 @@ const RECIPES := {
 		"seconds": 3.000, "file": AUTHORED},
 	"corner_down": {"kind": "retime", "source": "Corner_Down",
 		"seconds": 1.000, "file": AUTHORED},
+	"coat_off": {"kind": "retime", "source": "Coat_Off",
+		"seconds": 2.000, "file": AUTHORED},
 	"title_unbuckle": {"kind": "retime", "source": "Title_Unbuckle",
 		"seconds": 1.500, "file": AUTHORED},
 	"title_raise": {"kind": "retime", "source": "Title_Raise",

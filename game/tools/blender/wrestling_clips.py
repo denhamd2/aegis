@@ -1453,6 +1453,30 @@ CLIPS = {
         (60, CODY_STAND),
     ],
 
+    # 60 frames / 2.0s: the coat off. Hands to the lapels (12), shoulders
+    # rolled back and the arms swept down behind him as it slides off (24,
+    # 36), then forward as he hands it to the ringside crew (48). The
+    # director takes the coat away on frame 36 (EntranceDirector.
+    # COAT_OFF_AT), when his arms are behind him and it would be falling.
+    "Coat_Off": [
+        (0,  CODY_STAND),
+        (12, pose(CODY_STAND, spine=(-2, 0, 0), head=(-6, 0, 0),
+                  hand_r=(0.12, 0.16, 1.40), hand_l=(-0.12, 0.16, 1.40),
+                  elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
+                  fist_r=0.8, fist_l=0.8)),
+        (24, pose(CODY_STAND, spine=(10, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.30, -0.14, 1.04), hand_l=(-0.30, -0.14, 1.04),
+                  elbow_r=(1.0, 0.4, -0.6), elbow_l=(-1.0, 0.4, -0.6),
+                  fist_r=0.7, fist_l=0.7)),
+        (36, pose(CODY_STAND, spine=(12, 0, 0), head=(8, 0, 0),
+                  hand_r=(0.22, -0.26, 0.96), hand_l=(-0.22, -0.26, 0.96),
+                  elbow_r=(1.0, 0.6, -0.4), elbow_l=(-1.0, 0.6, -0.4),
+                  fist_r=0.8, fist_l=0.8)),
+        (48, pose(CODY_STAND, hand_r=(0.30, 0.40, 1.10),
+                  elbow_r=(0.8, -0.4, -0.6), fist_r=0.8)),
+        (60, CODY_STAND),
+    ],
+
     # 104 frames / 3.5s, looping: _crowd_walk.
     "Walk_Crowd": _crowd_walk(),
 

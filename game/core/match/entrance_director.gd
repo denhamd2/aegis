@@ -168,6 +168,8 @@ const CODY_WALK_CLIP := "strikes/walk_crowd"
 const CODY_PUNCH_AT := 20
 ## Corner_Pose has the arms fully wide by frame 12: the post sparks.
 const CODY_CORNER_PYRO_AT := 24
+## Coat_Off has his arms behind him, the coat sliding off, on frame 36.
+const COAT_OFF_AT := 72
 ## Where he stands to climb the corner: this far from the post along the
 ## diagonal, facing out over it (wrestling_clips.py CORNER_FOOT_*).
 const CORNER_ROOT_M := 0.62
@@ -229,6 +231,8 @@ var _frozen: Array = []
 var _mark := {}
 ## Roman's belt and ula fala, per man, and the pyro -- built when needed.
 var _props := {}
+## Cody's entrance coat, per man.
+var _coats := {}
 var _pyro: EntrancePyro
 ## The stage wall, for his own titantron.
 var _wall: StageVideo
@@ -368,6 +372,8 @@ func _start_beat() -> void:
 		_place(w, beat["path"][0], _heading(beat["path"]), true)
 		w.visible = true
 	_follow_off = beat.get("no_follow", false)
+	if beat.get("coat", false) and w and not _coats.has(w):
+		_coats[w] = EntranceCoat.dress(w)
 	if beat.get("props", false) and w and not _props.has(w):
 		_props[w] = EntranceProps.dress(w)
 	if beat.has("lights"):
@@ -452,6 +458,9 @@ func _ring_bell() -> void:
 	for props: EntranceProps in _props.values():
 		props.queue_free()
 	_props.clear()
+	for coat: EntranceCoat in _coats.values():
+		coat.queue_free()
+	_coats.clear()
 	if _pyro:
 		_pyro.queue_free()
 		_pyro = null
@@ -563,7 +572,8 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	_beats.append({"kind": "hold", "who": w, "ticks": _secs(0.0, CODY_WHOA_1),
 			"shot": "cody_dark", "lights": "OFF",
 			"events": [[1, "tron_on"], [1, "blackout_on"]]})
-	_beats.append(_with(dark, {"kind": "pose", "who": w, "appear": true, "path": portal_look,
+	_beats.append(_with(dark, {"kind": "pose", "who": w, "appear": true, "coat": true,
+			"path": portal_look,
 			"ticks": _secs(CODY_WHOA_1, CODY_WHOA_2), "clip": "strikes/whoa_arms",
 			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
 			"push_from": 0, "push_over": push,
@@ -616,6 +626,10 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_down",
 			"ticks": 60, "from": stand, "to": stand, "facing": out_dir,
 			"shot": "corner_low"})
+	# Down off the rope, and the coat comes off to the crew at ringside.
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/coat_off",
+			"ticks": 120, "from": stand, "to": stand, "facing": out_dir,
+			"shot": "ringside", "events": [[COAT_OFF_AT, "coat_off"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
@@ -719,6 +733,10 @@ func _event(w: WrestlerController, what: String) -> void:
 		"title_down":
 			if props:
 				props.set_title("")
+		"coat_off":
+			var coat: EntranceCoat = _coats.get(w)
+			if coat:
+				coat.set_worn(false)
 		"fala_off":
 			if props:
 				props.set_fala_visible(false)

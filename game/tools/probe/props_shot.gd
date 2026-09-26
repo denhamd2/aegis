@@ -20,7 +20,15 @@ func _ready() -> void:
 		if c.has_method("set_physics_process") and c != w: c.set_physics_process(false)
 	w.set_physics_process(false)
 	w.play_presentation_clip("strikes/roman_stand")
-	var props := EntranceProps.dress(w)
+	# --cody: Cody (WrestlerB) in his coat instead of Roman in his props.
+	var props: Node = null
+	if OS.get_cmdline_user_args().has("--cody"):
+		w = scene.get_node("WrestlerB")
+		w.set_physics_process(false)
+		w.play_presentation_clip("strikes/cody_stand")
+		props = EntranceCoat.dress(w)
+	else:
+		props = EntranceProps.dress(w)
 	for _i in 20: await get_tree().process_frame
 	var head := w.global_position + Vector3.UP * 1.5
 	var fwd := -w.global_transform.basis.z
@@ -31,7 +39,6 @@ func _ready() -> void:
 	if mc: mc.current = false
 	for mi: MeshInstance3D in props.find_children("*", "MeshInstance3D", true, false):
 		print(mi.name, " vis ", mi.is_visible_in_tree(), " aabb ", mi.global_transform * mi.get_aabb())
-	print("neck bone ", props._bone("neck_01"), " scale ", props._scale, " w ", w.global_position)
 	var right := w.global_transform.basis.x
 	var views := [fwd * 1.6, (fwd - right).normalized() * 1.6, -right * 1.6, -fwd * 1.6]
 	var waist := w.global_position + Vector3.UP * 1.0

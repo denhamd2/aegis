@@ -189,9 +189,15 @@ func test_codys_entrance_is_continuous_and_cleans_up() -> void:
 		if director._backlight and director._backlight.visible:
 			saw["backlight"] = true
 		if light.light_energy < before * 0.05:
-			saw["blackout"] = true)
+			saw["blackout"] = true
+		var coat: EntranceCoat = director._coats.get(scene.get_node("WrestlerB"))
+		if coat and coat._root:
+			saw["coat_on" if coat._root.visible else "coat_off"] = true)
 	assert_bool(saw.has("backlight")).override_failure_message("no silhouette backlight").is_true()
 	assert_bool(saw.has("blackout")).override_failure_message("the house never went dark").is_true()
+	assert_bool(saw.has("coat_on")).override_failure_message("he never wore the coat").is_true()
+	assert_bool(saw.has("coat_off")).override_failure_message("the coat never came off").is_true()
+	assert_bool(director._coats.is_empty()).is_true()
 	assert_object(director._backlight).is_null()
 	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
 
