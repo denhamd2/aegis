@@ -89,8 +89,55 @@ const FOLLOW_SPOT_ENERGY := 40.0
 const FOLLOW_SPOT_ANGLE := 3.5
 
 # --- Roman Reigns (gauntlet/refs/entrances.md, "Roman: beat sheet") ---------
-## He walks, he does not stride: Walk_Title / Walk_Slow travel 1.0 m/s.
-const ROMAN_WALK_SPEED := 1.0
+## Slow and methodical: Walk_Title_Look / Walk_Slow_Look travel 0.5 m/s,
+## half the generic entrance's pace, and turn his head over the crowd as he
+## goes (wrestling_clips.py _methodical_walk).
+const ROMAN_WALK_SPEED := 0.5
+const ROMAN_WALK_CLIP := "strikes/walk_title_look"
+const ROMAN_WALK_FREE_CLIP := "strikes/walk_slow_look"
+## He does not come out until the main part of his music hits. Measured off
+## the audio of assets/environment/video/roman_entrance.ogv: the intro runs
+## to a near-silent break at 43.5-45.0 s and the full track lands at 45.2 s
+## (RMS 0.01 -> 0.28 inside 200 ms). The video goes up on the wall at the top
+## of the music; he appears on the hit.
+const ROMAN_MUSIC_HIT := 45.2
+## Until then the broadcast shows the building and his video: six shots, each
+## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
+## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
+## fov_to, seconds]. Lenses as vertical FOV: 53 ~ 24 mm, 38 ~ 35 mm,
+## 27 ~ 50 mm, 16 ~ 85 mm.
+const ROMAN_INTRO_SHOTS := [
+	# His video on the wall, from low on the ramp, pushing in.
+	[Vector3(0.0, 2.6, -18.0), Vector3(0.0, 3.2, -22.0),
+		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 32.0, 26.0, 8.0],
+	# The building: high in the far end, a 24 mm wide, trucking across.
+	[Vector3(9.0, 9.5, 19.0), Vector3(3.0, 9.8, 20.0),
+		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 8.0],
+	# The crowd on the hard-camera side, panning along the rows.
+	[Vector3(3.8, 1.6, 2.0), Vector3(3.8, 1.7, 0.0),
+		Vector3(16.0, 4.5, -8.0), Vector3(16.0, 4.5, 8.0), 38.0, 38.0, 7.0],
+	# Over the ring from the rig, the stage and the wall beyond.
+	[Vector3(0.0, 14.0, 7.0), Vector3(0.0, 12.5, 3.5),
+		Vector3(0.0, 0.0, -8.0), Vector3(0.0, 1.0, -14.0), 50.0, 46.0, 7.0],
+	# Reverse, from the stage lip back over the ramp to the ring.
+	[Vector3(4.5, 2.2, -30.8), Vector3(-4.5, 2.2, -30.8),
+		Vector3(0.0, 1.2, 0.0), Vector3(0.0, 1.2, 0.0), 42.0, 42.0, 7.0],
+	# The curtain, long lens, low on the ramp, creeping in until he appears.
+	[Vector3(0.0, 1.0, -23.0), Vector3(0.0, 1.0, -25.5),
+		Vector3(0.0, 2.4, -36.5), Vector3(0.0, 2.3, -36.5), 30.0, 24.0, 8.2],
+]
+## The house lights dim for him (blender-lighting's low-key look: fewer,
+## harder sources, the key on the subject). The rig drops to this fraction and
+## the ambient to AMBIENT_DIM; the follow spot, his portal accents and the
+## pyro flashes are left alone, so he is what is lit.
+const ROMAN_HOUSE_DIM := 0.5
+const ROMAN_AMBIENT_DIM := 0.65
+## The close-ups: an 85 mm on his face walking toward the lens, and one held
+## on the stage lip.
+const FACE_FOV := 16.0
+const FACE_DISTANCE := 3.4
+## Beside him as he walks the floor from the ramp foot to the steps.
+const FLOOR_TRACK_FOV := 30.0
 ## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
 ## Title_Raise has the belt in the hand from frame 10 to 54, Finger_Raise's arm
 ## arrives on frame 14 -- the pyro hit -- and Ula_Fala_Off has it over his
@@ -134,6 +181,9 @@ var _props := {}
 var _pyro: EntrancePyro
 ## The stage wall, for his own titantron.
 var _wall: StageVideo
+## Light energies saved while the house is dimmed, to put back exactly.
+var _dimmed := {}
+var _env: Environment
 
 ## The timeline: one entry per beat, built once in begin().
 var _beats: Array = []
@@ -150,6 +200,11 @@ func begin(match_root: Node) -> void:
 	_hud = match_root.get_node_or_null("MatchHUD")
 	_lights = match_root.get_node_or_null("LightRig")
 	_wall = match_root.find_child("StageVideo", true, false) as StageVideo
+	var world: WorldEnvironment = null
+	for node in match_root.find_children("*", "WorldEnvironment", true, false):
+		world = node as WorldEnvironment
+	if world:
+		_env = world.environment
 	_mark[_a] = _a.global_transform
 	_mark[_b] = _b.global_transform
 
@@ -363,6 +418,7 @@ func _ring_bell() -> void:
 		_pyro = null
 	if _wall:
 		_wall.end_entrance()
+	_dim_house(false)
 	for w: WrestlerController in [_a, _b]:
 		w.global_transform = _mark[w]
 		w.velocity = Vector3.ZERO
@@ -388,12 +444,22 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	var emerge := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 1.2)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	var gold := {"lights": side, "light_color": ROMAN_GOLD}
-	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [emerge, lip],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
-			"shot": "stage", "appear": true, "props": true,
-			"events": [[1, "tron_on"]]}))
+	# His music and his video, the house down, and nobody on the stage until
+	# the hit.
+	_beats.append({"kind": "hold", "who": w,
+			"ticks": int(round(ROMAN_MUSIC_HIT * TPS)), "shot": "intro",
+			"events": [[1, "tron_on"], [1, "dim_on"]]})
+	# Out on the hit, and a long walk to the lip: the first half wide from
+	# the ramp, the second on his face as he comes toward the lens.
+	var half := emerge.lerp(lip, 0.5)
+	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [emerge, half],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
+			"shot": "stage", "appear": true, "props": true}))
+	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [half, lip],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
+			"shot": "face_walk"}))
 	# The mark: he stops, and the card comes up while he stands there.
-	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 90,
+	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 150,
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
 			"shot": "stage_push", "card": true}))
 	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 120,
@@ -406,15 +472,18 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"events": [[FINGER_PYRO_AT, "pyro_stage"]]}))
 	var ramp_end := lip + Vector3.BACK * (ROMAN_WALK_SPEED * RAMP_SHOWN_SECONDS)
 	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "track"})
-	var cut := Vector3(0.0, 0.0, CUT_TO_Z + 2.2)
+	var cut := Vector3(0.0, 0.0, -7.0)
 	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
-	var wide := Vector3(-4.9, 0.0, -4.0)
+	var wide := Vector3(-4.6, 0.0, -4.1)
 	var climb_from := Vector3(CLIMB_FROM_X, 0.0, STEPS_Z)
-	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide, climb_from],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
-			"shot": "ringside", "cut": true})
+	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
+			"shot": "floor_track", "cut": true})
+	_beats.append({"kind": "walk", "who": w, "path": [wide, climb_from],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
+			"shot": "ringside"})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.RIGHT,
 			"shot": "ringside"})
 	var top := climb_from + Vector3(CLIMB_TO.x, 0.0, 0.0)
@@ -436,7 +505,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	# side with the post pyro on it.
 	var centre := Vector3(-0.4, 0.0, -0.6)
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, centre],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
 			"shot": "ring_low"})
@@ -450,10 +519,11 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"events": [[1, "title_down"], [ULA_FALA_LIFT_AT, "fala_off"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_slow",
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_FREE_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
+			"shot": "ringside", "settle": true,
+			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
 
 
 static func _with(base: Dictionary, beat: Dictionary) -> Dictionary:
@@ -484,6 +554,10 @@ func _event(w: WrestlerController, what: String) -> void:
 		"tron_off":
 			if _wall:
 				_wall.end_entrance()
+		"dim_on":
+			_dim_house(true)
+		"dim_off":
+			_dim_house(false)
 		"pyro_stage", "pyro_posts":
 			if _pyro == null:
 				_pyro = EntrancePyro.new()
@@ -573,6 +647,20 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 		"track":
 			_camera.set_entrance_shot(w.global_position + TRACK_OFFSET,
 					w.global_position + Vector3.UP * 1.35, TRACK_FOV, first, delta)
+		"intro":
+			_intro_shot()
+		"face_walk":
+			var head := _head_of(w)
+			var fwd := -w.global_transform.basis.z
+			var right := w.global_transform.basis.x
+			_camera.set_entrance_shot(head + fwd * FACE_DISTANCE + right * 0.35
+					+ Vector3.UP * 0.05, head, FACE_FOV, first, delta)
+		"floor_track":
+			var fwd2 := -w.global_transform.basis.z
+			var right2 := w.global_transform.basis.x
+			_camera.set_entrance_shot(w.global_position + fwd2 * 4.2 - right2 * 1.6
+					+ Vector3.UP * 1.5, w.global_position + Vector3.UP * 1.45,
+					FLOOR_TRACK_FOV, first, delta)
 		"stage_push":
 			var t := clampf(float(_tick) / float(beat["ticks"]), 0.0, 1.0)
 			var e := t * t * (3.0 - 2.0 * t)
@@ -595,6 +683,61 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 			_camera.set_entrance_shot(_camera.hard_cam_position,
 					(_a.global_position + _b.global_position) * 0.5
 					+ Vector3.UP * _camera.hard_cam_aim, _camera.hard_cam_fov, true)
+
+
+## The pre-entrance montage: which of ROMAN_INTRO_SHOTS the hold is in, and
+## how far through its move, eased (smoothstep) so every move starts and
+## settles gently. A new shot is a cut.
+func _intro_shot() -> void:
+	var at := float(_tick) / TPS
+	var start := 0.0
+	for shot: Array in ROMAN_INTRO_SHOTS:
+		var length: float = shot[6]
+		if at <= start + length or shot == ROMAN_INTRO_SHOTS[-1]:
+			var t := clampf((at - start) / length, 0.0, 1.0)
+			var e := t * t * (3.0 - 2.0 * t)
+			_camera.set_entrance_shot((shot[0] as Vector3).lerp(shot[1], e),
+					(shot[2] as Vector3).lerp(shot[3], e),
+					lerpf(shot[4], shot[5], e), true)
+			return
+		start += length
+
+
+## His head, for the close-ups: the head bone if the rig has one, else a
+## fixed height over his root.
+func _head_of(w: WrestlerController) -> Vector3:
+	var sk := w.skeleton
+	if sk:
+		var i := sk.find_bone(w._skeleton_bone_name("Head"))
+		if i >= 0:
+			return sk.global_transform * sk.get_bone_global_pose(i).origin \
+					+ Vector3.UP * 0.08
+	return w.global_position + Vector3.UP * 1.75
+
+
+## Dims the house for his entrance, or puts it back. Every rig light except
+## the portal accents (the entrance's own cue) goes to ROMAN_HOUSE_DIM of
+## itself, and the ambient to ROMAN_AMBIENT_DIM; the originals are kept and
+## restored exactly.
+func _dim_house(on: bool) -> void:
+	if on == not _dimmed.is_empty():
+		return
+	if on:
+		if _lights:
+			for child in _lights.get_children():
+				if child is Light3D and not String(child.name).begins_with("Accent"):
+					_dimmed[child] = (child as Light3D).light_energy
+					(child as Light3D).light_energy *= ROMAN_HOUSE_DIM
+		if _env:
+			_dimmed[_env] = _env.ambient_light_energy
+			_env.ambient_light_energy *= ROMAN_AMBIENT_DIM
+		return
+	for key in _dimmed:
+		if key is Light3D and is_instance_valid(key):
+			(key as Light3D).light_energy = _dimmed[key]
+		elif key == _env:
+			_env.ambient_light_energy = _dimmed[key]
+	_dimmed.clear()
 
 
 ## Keeps the follow spot on whoever is walking; off when nobody is.

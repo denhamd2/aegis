@@ -14,7 +14,8 @@ extends Node
 ##       --resolution 900x900 tools/probe/clip_shot.tscn -- \
 ##       --glb res://assets/animations/wrestling_clips.glb \
 ##       --clips Win_Celebrate,Strike_Forearm --out /tmp/clips
-##   add `--hand r` (or l) for a close-up of that hand from three sides.
+##   add `--hand r` (or l) for a close-up of that hand from three sides, or
+##   `--face` for the face from front, three-quarter and side.
 
 var _glb := "res://assets/animations/wrestling_clips.glb"
 ## The body to play the clips ON. wrestling_clips.glb ships the skeleton and
@@ -56,6 +57,8 @@ func _ready() -> void:
 			_clips = Array(args[i + 1].split(","))
 		elif args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--face":
+			_hand = "face"
 		elif args[i] == "--hand" and i + 1 < args.size():
 			_hand = args[i + 1]
 		elif args[i] == "--model" and i + 1 < args.size():
@@ -150,9 +153,11 @@ func _run() -> void:
 			continue
 		print("  %s  %d/%d tracks resolve on %s"
 				% [clip_name, resolved, anim.get_track_count(), _model.get_file()])
-		var views: Dictionary = VIEWS if _hand == "" else {
+		var views: Dictionary = VIEWS if _hand == "" else ({
+				"ffront": Vector3(0.0, 0.02, 0.62), "f34": Vector3(-0.42, 0.04, 0.45),
+				"fside": Vector3(-0.62, 0.02, 0.0)} if _hand == "face" else {
 				"hfront": Vector3(0.0, 0.05, 0.55), "hout": Vector3(0.55 * (1.0 if _hand == "l" else -1.0), 0.05, 0.1),
-				"hback": Vector3(0.0, 0.1, -0.55)}
+				"hback": Vector3(0.0, 0.1, -0.55)})
 		for view_name: String in views:
 			for frac: float in _at:
 				player.play(clip_name)
@@ -185,6 +190,11 @@ func _run() -> void:
 ## the one holding his clothes has J_Wrist bones that stand still.
 func _hand_position(model: Node, anim: Animation, anim_root: Node) -> Vector3:
 	var s := _hand.to_upper()
+	var pairs: Array = [["hand_" + _hand, "middle_01_" + _hand],
+			["J_Wrist_" + s, "J_MiddleF0_" + s]]
+	if _hand == "face":
+		# Between the head bone and the top of the neck lands on the eyes.
+		pairs = [["head", "head"], ["Head", "Head"], ["J_Head", "J_Head"]]
 	var driven: Array = []
 	for track in anim.get_track_count():
 		var node := anim_root.get_node_or_null(NodePath(
@@ -194,14 +204,14 @@ func _hand_position(model: Node, anim: Animation, anim_root: Node) -> Vector3:
 	if driven.is_empty():
 		driven = model.find_children("*", "Skeleton3D", true, false)
 	for sk: Skeleton3D in driven:
-		for pair: Array in [["hand_" + _hand, "middle_01_" + _hand],
-				["J_Wrist_" + s, "J_MiddleF0_" + s]]:
+		for pair: Array in pairs:
 			var i := sk.find_bone(pair[0])
 			var j := sk.find_bone(pair[1])
 			if i >= 0 and j >= 0:
 				# Between the wrist and the knuckles: the middle of the hand.
-				return sk.global_transform * ((sk.get_bone_global_pose(i).origin
+				var at: Vector3 = sk.global_transform * ((sk.get_bone_global_pose(i).origin
 						+ sk.get_bone_global_pose(j).origin) * 0.5)
+				return at + (Vector3.UP * 0.09 if _hand == "face" else Vector3.ZERO)
 	return Vector3(0.0, 1.2, 0.0)
 
 

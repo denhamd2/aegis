@@ -99,7 +99,7 @@ const ALBEDO_FIXES := {
 	# iris this model had. It is a white sclera now: the iris and pupil are
 	# real geometry seated on the cornea (_build_eye_details below), and a
 	# brown eyeball behind them reads as an eye with no white at all.
-	"Material.013": {"color": Color(0.90, 0.89, 0.87)},
+	"Material.013": {"color": Color(0.80, 0.76, 0.72)},
 	"Material.016": {"color": Color(0.04, 0.04, 0.04)},
 }
 
@@ -155,7 +155,6 @@ const HAIR_FIXES := {
 ## complete on its own -- see the QA head shots in the round write-up.
 const HIDDEN_MESHES := [
 	"tops_skinned",
-	"eyelash_skinned",
 	"eye_caruncle_skinned",
 	"hair_ALPHA_skinned_001",
 	"hair_ALPHA_skinned_002",
@@ -201,6 +200,21 @@ const GROW_FIXES := {
 	"Material.004": 0.018, # bottoms
 	"Material.005": 0.004, # shoes
 }
+
+## Skin roughness: the sweat sheen. Against the owner's reference of him
+## walking out (a key-lit, glistening torso and face), the export's skin
+## rendered matte, and a matte face under an arena's hard lights reads as
+## plastic. 0.45 gives the forehead, cheekbones and shoulders a travelling
+## highlight without turning the body into a mirror. The face (Material.001)
+## and the body atlas (Material) are both skin.
+const SKIN_ROUGHNESS := {"Material.001": 0.45, "Material": 0.45}
+## And a tint on both, toward the reference's skin. Measured medians off the
+## owner's reference (forehead, cheek, chest): (170,107,88), (182,105,91),
+## (195,120,94); the textures' own tone is (168,108,75). Same red and green,
+## far less blue -- which is the difference between tan and orange. The full
+## correction (blue +16%) rendered pink under neutral light, so blue is
+## lifted 8%, half way, and green trimmed 1%.
+const SKIN_TINT := Color(1.0, 0.99, 1.08)
 
 const TEXTURE_DIR := "res://assets/characters/roman_reigns_%s.png"
 ## Roman's hair and beard are near-black; kept slightly warm so they don't
@@ -282,11 +296,14 @@ func _fix_materials() -> void:
 				continue
 			var key := source.resource_name
 			if not (ALBEDO_FIXES.has(key) or HAIR_FIXES.has(key)
-					or GROW_FIXES.has(key)):
+					or GROW_FIXES.has(key) or SKIN_ROUGHNESS.has(key)):
 				continue
 			var material := source.duplicate() as BaseMaterial3D
 			if material == null:
 				continue
+			if SKIN_ROUGHNESS.has(key):
+				material.roughness = SKIN_ROUGHNESS[key]
+				material.metallic_specular = 0.5
 			if GROW_FIXES.has(key):
 				material.grow = true
 				material.grow_amount = GROW_FIXES[key]
@@ -354,6 +371,8 @@ func _fix_materials() -> void:
 				if fix.has("texture"):
 					material.albedo_texture = _texture(fix["texture"])
 				material.albedo_color = fix["color"]
+			if SKIN_ROUGHNESS.has(key):
+				material.albedo_color *= SKIN_TINT
 			mesh_instance.set_surface_override_material(surface, material)
 
 func _texture(suffix: String) -> Texture2D:
@@ -429,8 +448,8 @@ const MOUTH_COLOR := Color(0.28, 0.09, 0.08)
 ## root space (+Z facial forward). If a re-export moves the bones, re-measure
 ## with tools (parse M_EYE centroids vs J_Eye globals) -- do not hand-tune.
 const IRIS_R := 0.006
-const PUPIL_R := 0.0028
-const IRIS_COLOR := Color(0.10, 0.07, 0.05)
+const PUPIL_R := 0.0022
+const IRIS_COLOR := Color(0.30, 0.17, 0.08)
 const PUPIL_COLOR := Color(0.012, 0.010, 0.010)
 const EYE_TARGETS := {
 	"J_Eye_L": [Vector3(-0.001077, -0.006686, -0.005771),

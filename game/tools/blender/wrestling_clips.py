@@ -312,6 +312,51 @@ def _open_hands(frames, curl=0.3):
     return [(f, dict(p, fist_r=curl, fist_l=curl)) for f, p in frames]
 
 
+def _methodical_walk(title):
+    """Roman's walk to the ring, at half his normal pace, looking around.
+
+    0.5 m/s: a 1.6 s cycle (48 frames) of two shorter steps with a long
+    double-support -- 28 of the 48 frames on each foot, so both boots are on
+    the ground for a third of every step. That overlap is what makes a walk
+    read as deliberate rather than as a slow-motion stride: the body settles
+    on each foot before it commits to the next.
+
+    Three cycles (144 frames, 4.8 s) so the head can do something the gait
+    does not: it holds forward, turns slowly to his left and HOLDS on the
+    crowd, back through centre, to his right and holds, and home. Eased key
+    to key (smoothstep), the chin a little up throughout, and the upper
+    spine follows the head by a quarter -- a man surveying the room turns
+    from the chest, not just the neck.
+    """
+    cycle = _open_hands(_gait(
+        frames=48, fps=FPS, speed=0.5,
+        contacts={"r": (0, 28), "l": (24, 28)},
+        plant_up=0.104, lift_up=0.045,
+        foot_x={"r": 0.15, "l": -0.14},
+        pelvis_up=0.905, pelvis_dip=0.008,
+        hips_yaw=3.0, spine=(0.0, 4.0), head=(4, 0, 0),
+        hand_fwd=(-0.04, 0.04), hand_up=(0.90, 0.92),
+        hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)
+    if title:
+        cycle = _holding_title(cycle)
+    # (frame, yaw degrees): + is to his left.
+    looks = [(0, 0.0), (18, 0.0), (42, 32.0), (62, 32.0), (82, 0.0),
+             (96, 0.0), (116, -30.0), (132, -30.0), (144, 0.0)]
+    out = []
+    for f in range(144 + 1):
+        i = 0
+        while i + 1 < len(looks) - 1 and looks[i + 1][0] <= f:
+            i += 1
+        (f0, y0), (f1, y1) = looks[i], looks[i + 1]
+        t = min(max((f - f0) / float(f1 - f0), 0.0), 1.0)
+        yaw = y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
+        base = cycle[f % 48][1]
+        sp = base["spine"]
+        out.append((f, dict(base, head=(5.0, yaw * 0.75, 0.0),
+                            spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
+    return out
+
+
 def _gait(frames, fps, speed, contacts, plant_up, lift_up, foot_x,
           pelvis_up, pelvis_dip, hips_yaw, spine, head, hand_fwd, hand_up,
           hand_x, elbow, arm_spread=0.0):
@@ -1101,6 +1146,12 @@ CLIPS = {
         hips_yaw=4.0, spine=(0.0, 4.0), head=(2, 0, 0),
         hand_fwd=(-0.06, 0.06), hand_up=(0.90, 0.92),
         hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)),
+
+    # 144 frames / 4.8s, looping: his walk to the ring at 0.5 m/s, surveying
+    # the building as he goes (_methodical_walk). With the title, and without
+    # it for the last walk to his mark once it has gone to the timekeeper.
+    "Walk_Title_Look": _methodical_walk(title=True),
+    "Walk_Slow_Look": _methodical_walk(title=False),
 
     # 60 frames / 2.0s, looping: standing on his mark. He breathes and that
     # is all -- the camera is supposed to wait on him, not watch him fidget.

@@ -98,7 +98,7 @@ func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 	var last := {a: a.global_position, b: b.global_position}
 	var worst := 0.0
 	var ticks := 0
-	while not rang[0] and ticks < 6000:
+	while not rang[0] and ticks < 20000:
 		var beat_before := director._beat
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
@@ -141,3 +141,29 @@ func test_the_subtitle_is_the_title_or_the_nickname() -> void:
 	var cody := Roster.by_id("cody")
 	assert_str(roman.entrance_subtitle()).is_equal("AEW CHAMPION")
 	assert_str(cody.entrance_subtitle()).is_equal(cody.tagline)
+
+
+## The house goes down for Roman and comes back exactly; he is not on the
+## stage until his music hits.
+func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
+	var scene := _match(true, "roman")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var rig := scene.get_node("LightRig")
+	var light: Light3D = null
+	for child in rig.get_children():
+		if child is Light3D and not String(child.name).begins_with("Accent"):
+			light = child
+			break
+	var before := light.light_energy
+	# Step into his hold: past the opening and Cody's whole entrance.
+	var ticks := 0
+	while ticks < 20000 and not ((director._beats[director._beat] as Dictionary).get("kind") == "hold"):
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+	for _i in 120:
+		director._physics_process(1.0 / 60.0)
+	assert_bool(a.visible).override_failure_message("out before his music hit").is_false()
+	assert_float(light.light_energy).is_equal_approx(before * EntranceDirector.ROMAN_HOUSE_DIM, 0.001)
+	director.skip()
+	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
