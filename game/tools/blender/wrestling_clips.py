@@ -525,6 +525,92 @@ def _gait(frames, fps, speed, contacts, plant_up, lift_up, foot_x,
 
 # --- the clips ------------------------------------------------------------
 
+def _shifted(base, fwd, up):
+    """`base` moved `fwd` forward and `up` upward in world space: every
+    travelling field (pelvis, hands, feet) together."""
+    out = dict(base)
+    for field in _TRAVEL_FIELDS:
+        x, y, z = base[field]
+        out[field] = (x, y + fwd, z + up)
+    return out
+
+
+## Rope_Step_Through's world keys: fwd from the top tread's centre, up from
+## its top. Shared with Rope_Step_Through_Apron, which starts on the apron.
+ROPE_STEP_KEYS = [
+
+    (0,  pose(STANCE, pelvis=(0.0, 0.0, 0.86), hips=(-4, 0, 0),
+              spine=(-8, 0, 0), head=(4, 0, 0),
+              hand_r=(0.28, 0.30, 1.40), hand_l=(-0.28, 0.30, 1.40),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.0, 0.104),
+              knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+    # Hands on the top rope, left foot up onto the apron edge.
+    (8,  pose(STANCE, pelvis=(0.0, 0.14, 1.00), hips=(-8, 0, 0),
+              spine=(-12, 0, 0), head=(4, 0, 0),
+              hand_r=(0.30, 0.34, 1.44), hand_l=(-0.30, 0.34, 1.44),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.28, 0.344),
+              knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.2))),
+    # Lead leg high over the middle rope; he starts to fold.
+    (16, pose(STANCE, pelvis=(0.0, 0.22, 1.10), hips=(-24, 0, 0),
+              spine=(-30, 0, 0), head=(10, 0, 0),
+              hand_r=(0.30, 0.34, 1.44), hand_l=(-0.30, 0.34, 1.44),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.16, 0.42, 1.22), foot_l=(-0.13, 0.28, 0.344),
+              knee_r=(0.1, 0.6, 1.0), knee_l=(-0.1, 1.0, 0.0))),
+    # Straddling the middle rope, folded under the top one, lead foot
+    # down on the mat inside.
+    (24, pose(STANCE, pelvis=(0.0, 0.46, 1.10), hips=(-46, 0, 0),
+              spine=(-30, 0, 0), head=(16, 0, 0),
+              hand_r=(0.30, 0.36, 1.44), hand_l=(-0.30, 0.36, 1.44),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.28, 0.344),
+              knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+    # Weight inside; the trail leg comes over the rope.
+    (32, pose(STANCE, pelvis=(0.0, 0.72, 1.12), hips=(-30, 0, 0),
+              spine=(-20, 0, 0), head=(10, 0, 0),
+              hand_r=(0.30, 0.70, 1.20), hand_l=(-0.30, 0.40, 1.40),
+              fist_r=0.5, fist_l=0.6,
+              foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.42, 1.22),
+              knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 0.6, 1.0))),
+    (40, pose(STANCE, pelvis=(0.0, 0.82, 1.10), hips=(-12, 0, 0),
+              spine=(-14, 0, 0), head=(6, 0, 0),
+              hand_r=(0.28, 1.00, 1.30), hand_l=(-0.26, 0.96, 1.32),
+              fist_r=0.5, fist_l=0.5,
+              foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.80, 0.344),
+              knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+    # Up, on the mat, in the stance -- so the walk that follows cuts on.
+    (48, pose(STANCE, pelvis=(0.0, 0.92, 1.10),
+              hand_r=(STANCE["hand_r"][0], STANCE["hand_r"][1] + 0.90,
+                      STANCE["hand_r"][2] + 0.24),
+              hand_l=(STANCE["hand_l"][0], STANCE["hand_l"][1] + 0.90,
+                      STANCE["hand_l"][2] + 0.24),
+              foot_r=(STANCE["foot_r"][0], STANCE["foot_r"][1] + 0.90,
+                      STANCE["foot_r"][2] + 0.24),
+              foot_l=(STANCE["foot_l"][0], STANCE["foot_l"][1] + 0.90,
+                      STANCE["foot_l"][2] + 0.24),
+              knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+
+]
+
+
+def _apron_rope_keys():
+    """ROPE_STEP_KEYS from frame 8 on, moved to start on the apron edge."""
+    keys = []
+    for frame, key in ROPE_STEP_KEYS:
+        if frame < 8:
+            continue
+        keys.append((frame - 8, _shifted(key, -0.28, -0.24)))
+    # Frame 0: both boots on the apron edge, not one still on the tread.
+    first = dict(keys[0][1])
+    first["foot_r"] = (0.14, 0.0, 0.104)
+    first["foot_l"] = (-0.13, 0.0, 0.104)
+    first["pelvis"] = (0.0, -0.04, 0.86)
+    keys[0] = (0, first)
+    return keys
+
+
 CLIPS = {
 
     # === locomotion and rest ============================================
@@ -1130,59 +1216,29 @@ CLIPS = {
     # (1.09) while both feet reach the mat and the apron, which is only
     # possible from the apron -- from the tread the trailing leg is 0.2 m
     # short -- hence the first step up onto it.
-    "Rope_Step_Through": _world_clip(48, (0.90, 0.24), [
-        (0,  pose(STANCE, pelvis=(0.0, 0.0, 0.86), hips=(-4, 0, 0),
-                  spine=(-8, 0, 0), head=(4, 0, 0),
-                  hand_r=(0.28, 0.30, 1.40), hand_l=(-0.28, 0.30, 1.40),
-                  fist_r=0.8, fist_l=0.8,
-                  foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.0, 0.104),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        # Hands on the top rope, left foot up onto the apron edge.
-        (8,  pose(STANCE, pelvis=(0.0, 0.14, 1.00), hips=(-8, 0, 0),
-                  spine=(-12, 0, 0), head=(4, 0, 0),
-                  hand_r=(0.30, 0.34, 1.44), hand_l=(-0.30, 0.34, 1.44),
-                  fist_r=0.8, fist_l=0.8,
-                  foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.28, 0.344),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.2))),
-        # Lead leg high over the middle rope; he starts to fold.
-        (16, pose(STANCE, pelvis=(0.0, 0.22, 1.10), hips=(-24, 0, 0),
-                  spine=(-30, 0, 0), head=(10, 0, 0),
-                  hand_r=(0.30, 0.34, 1.44), hand_l=(-0.30, 0.34, 1.44),
-                  fist_r=0.8, fist_l=0.8,
-                  foot_r=(0.16, 0.42, 1.22), foot_l=(-0.13, 0.28, 0.344),
-                  knee_r=(0.1, 0.6, 1.0), knee_l=(-0.1, 1.0, 0.0))),
-        # Straddling the middle rope, folded under the top one, lead foot
-        # down on the mat inside.
-        (24, pose(STANCE, pelvis=(0.0, 0.46, 1.10), hips=(-46, 0, 0),
-                  spine=(-30, 0, 0), head=(16, 0, 0),
-                  hand_r=(0.30, 0.36, 1.44), hand_l=(-0.30, 0.36, 1.44),
-                  fist_r=0.8, fist_l=0.8,
-                  foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.28, 0.344),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        # Weight inside; the trail leg comes over the rope.
-        (32, pose(STANCE, pelvis=(0.0, 0.72, 1.12), hips=(-30, 0, 0),
-                  spine=(-20, 0, 0), head=(10, 0, 0),
-                  hand_r=(0.30, 0.70, 1.20), hand_l=(-0.30, 0.40, 1.40),
-                  fist_r=0.5, fist_l=0.6,
-                  foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.42, 1.22),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 0.6, 1.0))),
-        (40, pose(STANCE, pelvis=(0.0, 0.82, 1.10), hips=(-12, 0, 0),
-                  spine=(-14, 0, 0), head=(6, 0, 0),
-                  hand_r=(0.28, 1.00, 1.30), hand_l=(-0.26, 0.96, 1.32),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.16, 0.80, 0.344), foot_l=(-0.13, 0.80, 0.344),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        # Up, on the mat, in the stance -- so the walk that follows cuts on.
-        (48, pose(STANCE, pelvis=(0.0, 0.92, 1.10),
-                  hand_r=(STANCE["hand_r"][0], STANCE["hand_r"][1] + 0.90,
-                          STANCE["hand_r"][2] + 0.24),
-                  hand_l=(STANCE["hand_l"][0], STANCE["hand_l"][1] + 0.90,
-                          STANCE["hand_l"][2] + 0.24),
-                  foot_r=(STANCE["foot_r"][0], STANCE["foot_r"][1] + 0.90,
-                          STANCE["foot_r"][2] + 0.24),
-                  foot_l=(STANCE["foot_l"][0], STANCE["foot_l"][1] + 0.90,
-                          STANCE["foot_l"][2] + 0.24),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
+    "Rope_Step_Through": _world_clip(48, (0.90, 0.24), ROPE_STEP_KEYS),
+
+    # 40 frames / 1.33s: the same step through the ropes, from the APRON --
+    # where the diagonal steps leave him (ring_builder.gd "Steel steps"). The
+    # keys are Rope_Step_Through's from the moment he is up on the apron
+    # (its frame 8), moved back 0.28 and down 0.24 so they start on the
+    # apron edge, with both feet already on it. The root travels (0.62, 0):
+    # EntranceDirector.APRON_ROPE_TO.
+    "Rope_Step_Through_Apron": _world_clip(40, (0.62, 0.0), _apron_rope_keys()),
+
+    # 30 frames / 1.0s: off the top tread of the diagonal steps and up onto
+    # the apron beside the post: the right boot up (14), the left follows
+    # (22), standing on the apron (30), 1.0 along and 0.24 up. The root
+    # travels (1.0, 0.24): EntranceDirector.APRON_STEP_TO.
+    "Apron_Step": _world_clip(30, (1.0, 0.24), [
+        (0,  _shifted(STANCE, 0.0, 0.0)),
+        (8,  dict(_shifted(STANCE, 0.10, 0.0), foot_r=(0.23, 0.30, 0.40),
+                  foot_l=(-0.19, 0.18, 0.104))),
+        (14, dict(_shifted(STANCE, 0.34, 0.08), foot_r=(0.23, 0.50, 0.344),
+                  foot_l=(-0.19, 0.18, 0.104))),
+        (22, dict(_shifted(STANCE, 0.66, 0.20), foot_r=(0.23, 0.50, 0.344),
+                  foot_l=(-0.19, 0.80, 0.50))),
+        (30, _shifted(STANCE, 1.0, 0.24)),
     ]),
 
     # === Roman's entrance (gauntlet/refs/entrances.md) =====================

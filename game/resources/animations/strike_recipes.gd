@@ -239,6 +239,10 @@ const RECIPES := {
 		"seconds": 1.200, "file": AUTHORED},
 	"rope_step_through": {"kind": "retime", "source": "Rope_Step_Through",
 		"seconds": 1.600, "file": AUTHORED},
+	"rope_step_through_apron": {"kind": "retime", "source": "Rope_Step_Through_Apron",
+		"seconds": 1.333, "file": AUTHORED},
+	"apron_step": {"kind": "retime", "source": "Apron_Step",
+		"seconds": 1.000, "file": AUTHORED},
 	# Roman's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
 	"walk_slow": {"kind": "retime", "source": "Walk_Slow",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},

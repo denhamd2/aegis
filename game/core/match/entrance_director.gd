@@ -32,18 +32,30 @@ const WALK_SPEED := 1.6
 ## treads of the ring steps, bottom-of-flight floor to top-tread centre.
 const CLIMB_SECONDS := 1.2
 const CLIMB_TO := Vector2(1.26, 0.86)
-## Rope_Step_Through: 1.6 s, (fwd 0.90, up 0.24) -- top tread onto the mat.
-const ROPE_SECONDS := 1.6
-const ROPE_TO := Vector2(0.90, 0.24)
 ## How fast a turn on the spot goes, radians per second.
 const TURN_RATE := 5.0
 
+## Apron_Step: 1.0 s, off the top tread and up onto the apron beside the
+## post, (fwd 1.0, up 0.24). Rope_Step_Through_Apron: 1.33 s, from the apron
+## edge through the ropes onto the mat, (fwd 0.62, up 0).
+const APRON_STEP_SECONDS := 1.0
+const APRON_ROPE_SECONDS := 1.333
+const APRON_ROPE_TO := Vector2(0.62, 0.0)
+
 # --- Where things are ---------------------------------------------------------
-## The -X flight of ring steps (ring.py build_steps): it spans z -3.2..-1.75
-## on the entrance side, so the climb runs along +X at its middle.
-const STEPS_Z := -2.475
-## The floor spot in front of the bottom tread that Climb_Steps starts from.
-const CLIMB_FROM_X := -4.70
+## The flight every entrance climbs: the one on the corner diagonal at the
+## hard camera's top left, (+3, -3), on the entrance side (ring_builder.gd
+## "Steel steps"). He walks in along the diagonal, climbs toward the post,
+## steps up onto the apron beside it, and goes through the ropes a pace along
+## the -Z side from the post -- never through the post itself.
+const ENTRY_CORNER := Vector2(1.0, -1.0)
+## Where on the apron he goes through the ropes: this far along the side
+## from the post, and on the apron's standing strip (3.0 .. 3.2).
+const APRON_ALONG_M := 0.55
+const APRON_STAND := 3.12
+## Straight out along the diagonal from the climb's start, so he arrives
+## square to the flight rather than cutting its corner.
+const APPROACH_M := 0.8
 ## Where the ramp's cut lands him: a few metres short of the ramp foot, in the
 ## ringside shot. The full 24 m ramp at walking pace would be fifteen seconds
 ## of one shot; a broadcast cuts it, and so does this.
@@ -72,12 +84,13 @@ const STAGE_FOV := 40.0
 ## Walking backwards down the ramp ahead of him.
 const TRACK_OFFSET := Vector3(1.3, 1.6, 5.2)
 const TRACK_FOV := 44.0
-## At ringside on the ring's -X side, inside the barricade, at a cameraman's
-## shoulder: the walk in from the ramp foot comes toward it, the steps are
-## side-on three metres away, and the ropes are in frame. The first version
+## At ringside on the ring's +X side, inside the barricade, at a cameraman's
+## shoulder: the walk in from the ramp foot comes toward it, the diagonal
+## steps at the (+3, -3) corner are three-quarter on four metres away, and the
+## ropes are in frame. The first version
 ## stood outside the barricade at (-7.2, -0.25, -7.8) and rendered the whole
 ## climb behind the barricade panels and the ringside chairs.
-const RINGSIDE_AT := Vector3(-5.6, 0.9, 0.6)
+const RINGSIDE_AT := Vector3(5.5, 1.0, 0.4)
 const RINGSIDE_FOV := 42.0
 
 ## The follow spot, in the rafters at the far end of the hall, throwing the
@@ -175,7 +188,7 @@ const CODY_DARK_LOOK := Vector3(0.0, 3.0, -30.0)
 const CODY_DARK_FOV := 50.0
 const PORTAL_LONG_FOV := Vector2(19.0, 14.0)
 const STEADICAM_FOV := 32.0
-const CORNER_LOW_AT := Vector3(-1.2, 0.35, -1.2)
+const CORNER_LOW_AT := Vector3(1.2, 0.35, -1.2)
 const CORNER_LOW_FOV := 50.0
 ## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
 ## Title_Unbuckle opens the belt on frame 20 and it moves from his waist to
@@ -331,31 +344,12 @@ func _add_entrance(w: WrestlerController, portal_x: float, side: String) -> void
 	var ramp_end := lip + Vector3.BACK * (WALK_SPEED * RAMP_SHOWN_SECONDS)
 	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
 			"shot": "track", "card": true})
-	# The cut: a few metres short of the ramp foot, then round to the steps
-	# -- the ramp foot, out wide of the ring's corner, and in along the flight.
-	var cut := Vector3(0.0, 0.0, CUT_TO_Z)
-	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
-	var wide := Vector3(-4.9, 0.0, -4.0)
-	var climb_from := Vector3(CLIMB_FROM_X, 0.0, STEPS_Z)
-	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide, climb_from],
-			"shot": "ringside", "cut": true})
-	_beats.append({"kind": "turn", "who": w, "facing": Vector3.RIGHT,
-			"shot": "ringside"})
-	var top := climb_from + Vector3(CLIMB_TO.x, 0.0, 0.0)
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
-			"ticks": int(round(CLIMB_SECONDS * TPS)),
-			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, STEPS_Z),
-			"to": Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, STEPS_Z),
-			"facing": Vector3.RIGHT, "shot": "ringside"})
-	var inside := top + Vector3(ROPE_TO.x, 0.0, 0.0)
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through",
-			"ticks": int(round(ROPE_SECONDS * TPS)),
-			"from": Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, STEPS_Z),
-			"to": Vector3(inside.x, 0.0, STEPS_Z),
-			"facing": Vector3.RIGHT, "shot": "ringside"})
+	# The cut: a few metres short of the ramp foot, then round to the steps.
+	var inside := _add_route_in(w, Vector3(0.0, 0.0, CUT_TO_Z), WALK_SPEED,
+			"strikes/entrance_walk", false)
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w,
-			"path": [Vector3(inside.x, 0.0, STEPS_Z), mark.origin],
+			"path": [inside, mark.origin],
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "ringside", "settle": true})
@@ -518,33 +512,9 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "track"})
-	var cut := Vector3(0.0, 0.0, -7.0)
-	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
-	var wide := Vector3(-4.6, 0.0, -4.1)
-	var climb_from := Vector3(CLIMB_FROM_X, 0.0, STEPS_Z)
-	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "floor_track", "cut": true})
-	_beats.append({"kind": "walk", "who": w, "path": [wide, climb_from],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "ringside"})
-	_beats.append({"kind": "turn", "who": w, "facing": Vector3.RIGHT,
-			"shot": "ringside"})
-	var top := climb_from + Vector3(CLIMB_TO.x, 0.0, 0.0)
-	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, STEPS_Z)
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
-			"ticks": int(round(CLIMB_SECONDS * TPS)),
-			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, STEPS_Z),
-			"to": top_at, "facing": Vector3.RIGHT, "shot": "ringside"})
 	# On the apron he stops and looks the ring over before he gets in.
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/roman_stand",
-			"ticks": 60, "from": top_at, "to": top_at,
-			"facing": Vector3.RIGHT, "shot": "ringside"})
-	var inside := top + Vector3(ROPE_TO.x, 0.0, 0.0)
-	var in_at := Vector3(inside.x, 0.0, STEPS_Z)
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through",
-			"ticks": int(round(ROPE_SECONDS * TPS)),
-			"from": top_at, "to": in_at, "facing": Vector3.RIGHT, "shot": "ringside"})
+	var in_at := _add_route_in(w, Vector3(0.0, 0.0, -7.0), ROMAN_WALK_SPEED,
+			ROMAN_WALK_CLIP, true, "strikes/roman_stand")
 	# To the middle of the ring, and the finger again facing the hard camera
 	# side with the post pyro on it.
 	var centre := Vector3(-0.4, 0.0, -0.6)
@@ -626,27 +596,12 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	var ramp_end := lip + Vector3.BACK * (CODY_WALK_SPEED * RAMP_SHOWN_SECONDS)
 	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP, "shot": "track"})
-	var cut := Vector3(0.0, 0.0, CUT_TO_Z)
-	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
-	var wide := Vector3(-4.6, 0.0, -4.1)
-	var climb_from := Vector3(CLIMB_FROM_X, 0.0, STEPS_Z)
-	_beats.append({"kind": "walk", "who": w, "path": [cut, foot, wide, climb_from],
-			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "ringside", "cut": true})
-	_beats.append({"kind": "turn", "who": w, "facing": Vector3.RIGHT, "shot": "ringside"})
-	var top := climb_from + Vector3(CLIMB_TO.x, 0.0, 0.0)
-	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, STEPS_Z)
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
-			"ticks": int(round(CLIMB_SECONDS * TPS)),
-			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, STEPS_Z),
-			"to": top_at, "facing": Vector3.RIGHT, "shot": "ringside"})
-	var in_at := Vector3(top.x + ROPE_TO.x, 0.0, STEPS_Z)
-	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through",
-			"ticks": int(round(ROPE_SECONDS * TPS)),
-			"from": top_at, "to": in_at, "facing": Vector3.RIGHT, "shot": "ringside"})
-	# The corner by the steps: up on the middle rope, facing out.
-	var post := Vector3(-RingBuilder.POST_XZ, 0.0, -RingBuilder.POST_XZ)
-	var out_dir := Vector3(-1.0, 0.0, -1.0).normalized()
+	var in_at := _add_route_in(w, Vector3(0.0, 0.0, CUT_TO_Z), CODY_WALK_SPEED,
+			CODY_WALK_CLIP, false)
+	# The corner by the steps: up on the middle rope, facing out over them.
+	var post := Vector3(ENTRY_CORNER.x * RingBuilder.POST_XZ, 0.0,
+			ENTRY_CORNER.y * RingBuilder.POST_XZ)
+	var out_dir := RingBuilder.step_out_dir(ENTRY_CORNER)
 	var stand := post - out_dir * CORNER_ROOT_M
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
@@ -667,6 +622,56 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "ringside", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
+
+
+## The way into the ring every entrance shares, from the ramp's cut to the
+## mat, over the diagonal steps (ring_builder.gd "Steel steps"): across the
+## floor to the foot of the flight, in along its diagonal, up it toward the
+## post, up onto the apron beside the post, and through the ropes a pace along
+## the side. Appends the beats; returns where he lands on the mat.
+##
+## `split_floor` gives the floor walk its own tracking shot up to the
+## approach (Roman's); `survey_clip`, if set, is played standing on the apron
+## before he goes in.
+func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
+		walk_clip: String, split_floor: bool, survey_clip := "") -> Vector3:
+	var out := RingBuilder.step_out_dir(ENTRY_CORNER)
+	var top := RingBuilder.step_top_centre(ENTRY_CORNER)
+	var climb_from := top + out * CLIMB_TO.x
+	var approach := climb_from + out * APPROACH_M
+	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
+	if split_floor:
+		_beats.append({"kind": "walk", "who": w, "path": [cut, foot, approach],
+				"speed": speed, "walk_clip": walk_clip, "shot": "floor_track", "cut": true})
+		_beats.append({"kind": "walk", "who": w, "path": [approach, climb_from],
+				"speed": speed, "walk_clip": walk_clip, "shot": "ringside"})
+	else:
+		_beats.append({"kind": "walk", "who": w, "path": [cut, foot, approach, climb_from],
+				"speed": speed, "walk_clip": walk_clip, "shot": "ringside", "cut": true})
+	_beats.append({"kind": "turn", "who": w, "facing": -out, "shot": "ringside"})
+	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, top.z)
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
+			"ticks": int(round(CLIMB_SECONDS * TPS)),
+			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, climb_from.z),
+			"to": top_at, "facing": -out, "shot": "ringside"})
+	# Onto the apron, a pace along the side from the post.
+	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.POST_XZ - APRON_ALONG_M), 0.0,
+			ENTRY_CORNER.y * APRON_STAND)
+	var across := _flat(apron - top_at)
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/apron_step",
+			"ticks": int(round(APRON_STEP_SECONDS * TPS)),
+			"from": top_at, "to": apron, "facing": across, "shot": "ringside"})
+	# Square to the ropes: facing into the ring across the -Z side.
+	var into := Vector3(0.0, 0.0, -ENTRY_CORNER.y)
+	_beats.append({"kind": "turn", "who": w, "facing": into, "shot": "ringside"})
+	if survey_clip != "":
+		_beats.append({"kind": "clip", "who": w, "clip": survey_clip,
+				"ticks": 60, "from": apron, "to": apron, "facing": into, "shot": "ringside"})
+	var inside := apron + into * APRON_ROPE_TO.x
+	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
+			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
+			"from": apron, "to": inside, "facing": into, "shot": "ringside"})
+	return inside
 
 
 ## Ticks between two music times.

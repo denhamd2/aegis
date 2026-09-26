@@ -89,7 +89,8 @@ const FLOOR_Y := -1.1
 ##
 ## 6.0 leaves 2.80m (9ft 2in) between apron and barrier: over the regulation
 ## minimum, enough for the camera well and a cameraman to work in, and still
-## clear of the steel steps, which reach 4.34m from ring centre.
+## clear of the steel steps, which reach 4.0m out along each axis on their
+## corner diagonals (5.67m from ring centre, inside the barrier square).
 ##
 ## Moving it in does the second half of the job on its own. The floor rows are
 ## offsets of THIS number (see `_build_floor_seats`), so pulling the barrier
