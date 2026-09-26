@@ -30,10 +30,10 @@ static func _materials() -> Dictionary:
 	var gold := StandardMaterial3D.new()
 	gold.albedo_color = Color(1.0, 0.78, 0.36)
 	gold.metallic = 0.85
-	gold.roughness = 0.28
+	gold.roughness = 0.36
 	gold.emission_enabled = true
 	gold.emission = Color(1.0, 0.72, 0.30)
-	gold.emission_energy_multiplier = 0.12
+	gold.emission_energy_multiplier = 0.035
 	var strap := StandardMaterial3D.new()
 	strap.albedo_color = Color(0.03, 0.03, 0.03)
 	strap.roughness = 0.55

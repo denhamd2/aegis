@@ -92,12 +92,43 @@ const VIDEO_UV_OFFSET := Vector2(0.0, 0.19)
 ## this cannot be a single check.
 const BIND_TIMEOUT_FRAMES := 120
 
+## A wrestler's own titantron, swapped onto the wall for his entrance by
+## `play_entrance()` and back to the Dynamite loop by `end_entrance()`.
+##
+## Unlike the loop, this one is heard: its audio is his music. It plays once,
+## from the top, when he comes through the curtain.
+##
+## Roman's clip (owner-supplied, see assets/environment/video/CREDITS.md) is a
+## logo lockup taller than Dynamite's -- the top rule sits at 17% of the frame
+## and the stars end at 83% -- so it takes a 66% band, not 62%. The residual
+## horizontal stretch is 3.0 / (1.78 / 0.66) = 1.11, which a wordmark carries.
+const ENTRANCES := {
+	"roman": {
+		"video": "res://assets/environment/video/roman_entrance.ogv",
+		"still": "res://assets/environment/video/roman_entrance_still.png",
+		"uv_scale": Vector2(1.0, 0.66),
+		"uv_offset": Vector2(0.0, 0.165),
+	},
+}
+## His music, at the level the hall hears it; faded out over this when the
+## wall goes back to the loop.
+const ENTRANCE_VOLUME_DB := 0.0
+const ENTRANCE_FADE_SECONDS := 1.5
+
 var _player: VideoStreamPlayer = null
 var _screen: MeshInstance3D = null
 var _material: StandardMaterial3D = null
 var _bound := false
 var _frames := 0
 var _video_path := VIDEO_PATH
+## The entrance feed while one is up, and the texture it bound (null until the
+## decoder hands one back).
+var _entrance_feed: SubViewport = null
+var _entrance_player: VideoStreamPlayer = null
+var _entrance: Dictionary = {}
+var _entrance_bound := false
+## Outgoing entrance feeds fading their music out.
+var _fading: Array = []
 
 
 ## Build the node for `screen`, binding into `mat`.
@@ -205,9 +236,11 @@ static func _make_feed(stream: VideoStream) -> SubViewport:
 	return feed
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_process_entrance(delta)
 	if _bound:
-		set_process(false)
+		if _entrance_player == null and _fading.is_empty():
+			set_process(false)
 		return
 	_frames += 1
 	if _player == null:
@@ -225,7 +258,8 @@ func _process(_delta: float) -> void:
 ## Bind once. The texture a playing VideoStreamPlayer hands back is updated in
 ## place for the life of playback, so re-assigning it every frame re-uploads
 ## material state for nothing.
-func _bind(tex: Texture2D, source: String) -> void:
+func _bind(tex: Texture2D, source: String, uv_scale := VIDEO_UV_SCALE,
+		uv_offset := VIDEO_UV_OFFSET, still := STILL_PATH) -> void:
 	_bound = true
 	_material.albedo_texture = tex
 	# A lit response rather than a doubling: the emission below is what the
@@ -237,9 +271,9 @@ func _bind(tex: Texture2D, source: String) -> void:
 	_material.emission_texture = tex
 	_material.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
 	_material.emission_energy_multiplier = (SCREEN_LEVEL * _compat_gain()
-			/ maxf(_still_mean(), 0.0001))
-	_material.uv1_scale = Vector3(VIDEO_UV_SCALE.x, VIDEO_UV_SCALE.y, 1.0)
-	_material.uv1_offset = Vector3(VIDEO_UV_OFFSET.x, VIDEO_UV_OFFSET.y, 0.0)
+			/ maxf(_still_mean(still), 0.0001))
+	_material.uv1_scale = Vector3(uv_scale.x, uv_scale.y, 1.0)
+	_material.uv1_offset = Vector3(uv_offset.x, uv_offset.y, 0.0)
 	_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 	if OS.is_stdout_verbose():
 		print("StageVideo: bound %s to the wall." % source)
@@ -284,10 +318,10 @@ static func _compat_gain() -> float:
 ## moved with it would make the wall's *level* a function of what happened to
 ## be on screen. The still is one fixed number, so the wall's level is fixed
 ## and only its picture changes.
-func _still_mean() -> float:
-	if not ResourceLoader.exists(STILL_PATH):
+func _still_mean(still := STILL_PATH) -> float:
+	if not ResourceLoader.exists(still):
 		return 0.5
-	var tex := load(STILL_PATH) as Texture2D
+	var tex := load(still) as Texture2D
 	if tex == null:
 		return 0.5
 	return MaterialLibrary.mean_linear(tex)
@@ -297,3 +331,71 @@ func _still_mean() -> float:
 ## material is still on it.
 func is_bound() -> bool:
 	return _bound
+
+
+# ---------------------------------------------------------------------------
+# Entrance titantrons
+# ---------------------------------------------------------------------------
+
+## Puts `style`'s entrance video on the wall, with its music, from the top.
+## Returns false -- and leaves the loop up -- when there is none for him, or
+## when the loop itself is not playing (headless, a frame-locked capture, a
+## clip that would not decode): an entrance never makes the wall worse.
+func play_entrance(style: String) -> bool:
+	if not ENTRANCES.has(style) or _player == null:
+		return false
+	var entry: Dictionary = ENTRANCES[style]
+	if not ResourceLoader.exists(entry["video"]):
+		return false
+	var stream := load(entry["video"]) as VideoStream
+	if stream == null:
+		return false
+	end_entrance()
+	_entrance = entry
+	_entrance_feed = _make_feed(stream)
+	_entrance_feed.name = "EntranceFeed"
+	add_child(_entrance_feed)
+	_entrance_player = _entrance_feed.get_node("Feed")
+	_entrance_player.loop = false
+	_entrance_player.volume_db = ENTRANCE_VOLUME_DB
+	_entrance_player.play()
+	_entrance_bound = false
+	set_process(true)
+	return true
+
+
+## Back to the Dynamite loop; the music fades rather than cuts.
+func end_entrance() -> void:
+	if _entrance_player == null:
+		return
+	_fading.append([_entrance_feed, _entrance_player])
+	_entrance_feed = null
+	_entrance_player = null
+	_entrance = {}
+	_entrance_bound = false
+	if _player:
+		var tex := _player.get_video_texture()
+		if tex:
+			_bind(tex, "clip")
+	set_process(true)
+
+
+func is_playing_entrance() -> bool:
+	return _entrance_player != null
+
+
+func _process_entrance(delta: float) -> void:
+	if _entrance_player and not _entrance_bound:
+		var tex := _entrance_player.get_video_texture()
+		if tex:
+			_entrance_bound = true
+			_bind(tex, "entrance", _entrance["uv_scale"], _entrance["uv_offset"],
+					_entrance["still"])
+	var step := 60.0 * delta / ENTRANCE_FADE_SECONDS
+	for f: Array in _fading.duplicate():
+		var player: VideoStreamPlayer = f[1]
+		player.volume_db -= step
+		if player.volume_db <= -60.0:
+			player.stop()
+			(f[0] as Node).queue_free()
+			_fading.erase(f)

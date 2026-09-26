@@ -14,6 +14,7 @@ extends Node
 ##       --resolution 900x900 tools/probe/clip_shot.tscn -- \
 ##       --glb res://assets/animations/wrestling_clips.glb \
 ##       --clips Win_Celebrate,Strike_Forearm --out /tmp/clips
+##   add `--hand r` (or l) for a close-up of that hand from three sides.
 
 var _glb := "res://assets/animations/wrestling_clips.glb"
 ## The body to play the clips ON. wrestling_clips.glb ships the skeleton and
@@ -27,6 +28,9 @@ var _out := "/tmp/clips"
 ## Fractions through the clip to grab, so the strip covers the whole action
 ## regardless of its length.
 var _at: Array = [0.0, 0.15, 0.3, 0.45, 0.6, 0.8, 1.0]
+## "l" or "r": frame that hand in close-up instead of the whole body, from
+## three sides -- a finger or a thumb is a few pixels in the full-body views.
+var _hand := ""
 
 ## Camera positions, as {name: [eye, aim]}.
 ##
@@ -52,6 +56,8 @@ func _ready() -> void:
 			_clips = Array(args[i + 1].split(","))
 		elif args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--hand" and i + 1 < args.size():
+			_hand = args[i + 1]
 		elif args[i] == "--model" and i + 1 < args.size():
 			_model = args[i + 1]
 	_run()
@@ -144,14 +150,24 @@ func _run() -> void:
 			continue
 		print("  %s  %d/%d tracks resolve on %s"
 				% [clip_name, resolved, anim.get_track_count(), _model.get_file()])
-		for view_name: String in VIEWS:
-			var spot: Array = VIEWS[view_name]
-			cam.global_position = spot[0]
-			cam.look_at(spot[1], Vector3.UP)
+		var views: Dictionary = VIEWS if _hand == "" else {
+				"hfront": Vector3(0.0, 0.05, 0.55), "hout": Vector3(0.55 * (1.0 if _hand == "l" else -1.0), 0.05, 0.1),
+				"hback": Vector3(0.0, 0.1, -0.55)}
+		for view_name: String in views:
 			for frac: float in _at:
 				player.play(clip_name)
 				player.seek(anim.length * frac, true)
 				player.advance(0.0)
+				if _hand == "":
+					var spot: Array = views[view_name]
+					cam.global_position = spot[0]
+					cam.look_at(spot[1], Vector3.UP)
+				else:
+					# The skeleton applies the seek on its own update, not here.
+					await get_tree().process_frame
+					var at := _hand_position(model, anim, anim_root)
+					cam.global_position = at + (views[view_name] as Vector3)
+					cam.look_at(at, Vector3.UP)
 				await RenderingServer.frame_post_draw
 				var img := get_viewport().get_texture().get_image()
 				var path := "%s/%s_%s_%02d.png" % [
@@ -160,6 +176,33 @@ func _run() -> void:
 				print("  %s  t=%.2fs" % [path, anim.length * frac])
 	print("done")
 	get_tree().quit(0)
+
+
+## World position of the `_hand` wrist, on whichever skeleton names it (the
+## mannequin's hand_r, Roman's J_Wrist_R, Cody's under his own names).
+##
+## Only a skeleton the clip actually drives: Roman's model carries two, and
+## the one holding his clothes has J_Wrist bones that stand still.
+func _hand_position(model: Node, anim: Animation, anim_root: Node) -> Vector3:
+	var s := _hand.to_upper()
+	var driven: Array = []
+	for track in anim.get_track_count():
+		var node := anim_root.get_node_or_null(NodePath(
+				String(anim.track_get_path(track)).split(":")[0]))
+		if node is Skeleton3D and not driven.has(node):
+			driven.append(node)
+	if driven.is_empty():
+		driven = model.find_children("*", "Skeleton3D", true, false)
+	for sk: Skeleton3D in driven:
+		for pair: Array in [["hand_" + _hand, "middle_01_" + _hand],
+				["J_Wrist_" + s, "J_MiddleF0_" + s]]:
+			var i := sk.find_bone(pair[0])
+			var j := sk.find_bone(pair[1])
+			if i >= 0 and j >= 0:
+				# Between the wrist and the knuckles: the middle of the hand.
+				return sk.global_transform * ((sk.get_bone_global_pose(i).origin
+						+ sk.get_bone_global_pose(j).origin) * 0.5)
+	return Vector3(0.0, 1.2, 0.0)
 
 
 func _light() -> void:

@@ -132,6 +132,8 @@ var _mark := {}
 ## Roman's belt and ula fala, per man, and the pyro -- built when needed.
 var _props := {}
 var _pyro: EntrancePyro
+## The stage wall, for his own titantron.
+var _wall: StageVideo
 
 ## The timeline: one entry per beat, built once in begin().
 var _beats: Array = []
@@ -147,6 +149,7 @@ func begin(match_root: Node) -> void:
 	_camera = match_root.get_node_or_null("MatchCamera") as MatchCamera
 	_hud = match_root.get_node_or_null("MatchHUD")
 	_lights = match_root.get_node_or_null("LightRig")
+	_wall = match_root.find_child("StageVideo", true, false) as StageVideo
 	_mark[_a] = _a.global_transform
 	_mark[_b] = _b.global_transform
 
@@ -358,6 +361,8 @@ func _ring_bell() -> void:
 	if _pyro:
 		_pyro.queue_free()
 		_pyro = null
+	if _wall:
+		_wall.end_entrance()
 	for w: WrestlerController in [_a, _b]:
 		w.global_transform = _mark[w]
 		w.velocity = Vector3.ZERO
@@ -385,7 +390,8 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	var gold := {"lights": side, "light_color": ROMAN_GOLD}
 	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [emerge, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_title",
-			"shot": "stage", "appear": true, "props": true}))
+			"shot": "stage", "appear": true, "props": true,
+			"events": [[1, "tron_on"]]}))
 	# The mark: he stops, and the card comes up while he stands there.
 	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
@@ -447,7 +453,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"speed": ROMAN_WALK_SPEED, "walk_clip": "strikes/walk_slow",
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true})
+			"shot": "ringside", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
 
 
 static func _with(base: Dictionary, beat: Dictionary) -> Dictionary:
@@ -472,6 +478,12 @@ func _event(w: WrestlerController, what: String) -> void:
 		"fala_off":
 			if props:
 				props.set_fala_visible(false)
+		"tron_on":
+			if _wall:
+				_wall.play_entrance(w.entrance_style)
+		"tron_off":
+			if _wall:
+				_wall.end_entrance()
 		"pyro_stage", "pyro_posts":
 			if _pyro == null:
 				_pyro = EntrancePyro.new()

@@ -6,6 +6,13 @@ extends Node3D
 
 const BASE_RIG := "res://assets/characters/wrestler_base.glb"
 
+## The fingers are one bone further down Roman's chain than their names
+## suggest: his J_*F0 bones are the METACARPALS, 3-4 cm out of the wrist inside
+## the palm, and F1-F3 are the three phalanges -- where the mannequin's
+## *_01-*_03 are. They were mapped 01 -> F0, so every finger curl bent the
+## palm instead of the knuckle: curled fingers folded out of the hand into a
+## claw and the pointing hand's thumb stuck out beside them. The thumbs number
+## from F1 on both rigs (metacarpal first) and were always right.
 const BONE_MAP := {
 	"pelvis": "J_Hips",
 	"spine_01": "J_Spine1",
@@ -17,18 +24,18 @@ const BONE_MAP := {
 	"upperarm_l": "J_Shoulder_L",
 	"lowerarm_l": "J_Elbow_L",
 	"hand_l": "J_Wrist_L",
-	"index_01_l": "J_IndexF0_L",
-	"index_02_l": "J_IndexF1_L",
-	"index_03_l": "J_IndexF2_L",
-	"middle_01_l": "J_MiddleF0_L",
-	"middle_02_l": "J_MiddleF1_L",
-	"middle_03_l": "J_MiddleF2_L",
-	"pinky_01_l": "J_PinkyF0_L",
-	"pinky_02_l": "J_PinkyF1_L",
-	"pinky_03_l": "J_PinkyF2_L",
-	"ring_01_l": "J_RingF0_L",
-	"ring_02_l": "J_RingF1_L",
-	"ring_03_l": "J_RingF2_L",
+	"index_01_l": "J_IndexF1_L",
+	"index_02_l": "J_IndexF2_L",
+	"index_03_l": "J_IndexF3_L",
+	"middle_01_l": "J_MiddleF1_L",
+	"middle_02_l": "J_MiddleF2_L",
+	"middle_03_l": "J_MiddleF3_L",
+	"pinky_01_l": "J_PinkyF1_L",
+	"pinky_02_l": "J_PinkyF2_L",
+	"pinky_03_l": "J_PinkyF3_L",
+	"ring_01_l": "J_RingF1_L",
+	"ring_02_l": "J_RingF2_L",
+	"ring_03_l": "J_RingF3_L",
 	"thumb_01_l": "J_ThumbF1_L",
 	"thumb_02_l": "J_ThumbF2_L",
 	"thumb_03_l": "J_ThumbF3_L",
@@ -36,22 +43,18 @@ const BONE_MAP := {
 	"upperarm_r": "J_Shoulder_R",
 	"lowerarm_r": "J_Elbow_R",
 	"hand_r": "J_Wrist_R",
-	"index_01_r": "J_IndexF0_R",
-	"index_02_r": "J_IndexF1_R",
-	"index_03_r": "J_IndexF2_R",
-	"index_04_leaf_r": "J_IndexF3_R",
-	"middle_01_r": "J_MiddleF0_R",
-	"middle_02_r": "J_MiddleF1_R",
-	"middle_03_r": "J_MiddleF2_R",
-	"middle_04_leaf_r": "J_MiddleF3_R",
-	"pinky_01_r": "J_PinkyF0_R",
-	"pinky_02_r": "J_PinkyF1_R",
-	"pinky_03_r": "J_PinkyF2_R",
-	"pinky_04_leaf_r": "J_PinkyF3_R",
-	"ring_01_r": "J_RingF0_R",
-	"ring_02_r": "J_RingF1_R",
-	"ring_03_r": "J_RingF2_R",
-	"ring_04_leaf_r": "J_RingF3_R",
+	"index_01_r": "J_IndexF1_R",
+	"index_02_r": "J_IndexF2_R",
+	"index_03_r": "J_IndexF3_R",
+	"middle_01_r": "J_MiddleF1_R",
+	"middle_02_r": "J_MiddleF2_R",
+	"middle_03_r": "J_MiddleF3_R",
+	"pinky_01_r": "J_PinkyF1_R",
+	"pinky_02_r": "J_PinkyF2_R",
+	"pinky_03_r": "J_PinkyF3_R",
+	"ring_01_r": "J_RingF1_R",
+	"ring_02_r": "J_RingF2_R",
+	"ring_03_r": "J_RingF3_R",
 	"thumb_01_r": "J_ThumbF1_R",
 	"thumb_02_r": "J_ThumbF2_R",
 	"thumb_03_r": "J_ThumbF3_R",
@@ -741,6 +744,7 @@ func _rest_align(source_skeleton: Skeleton3D, source_bone: String,
 	if source_dir.length() < 0.0001 or target_dir.length() < 0.0001:
 		return Quaternion.IDENTITY
 	return Quaternion(target_dir.normalized(), source_dir.normalized())
+
 
 func _retarget_key(track_type: int, value: Variant, rest: Dictionary) -> Variant:
 	if rest.is_empty():
