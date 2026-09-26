@@ -22,6 +22,28 @@ const ULA_FALA := "res://assets/props/ula_fala.glb"
 const TITLE := "res://assets/props/aew_title.glb"
 const BASE_SHOULDER_SPAN := 0.384
 
+## Per-model fit, on top of the shoulder-span scale, keyed by entrance_style.
+##
+## Shoulder span alone put Roman's ula fala INSIDE him. His J_Shoulder bones
+## sit 0.31 m apart -- 0.82 of the mannequin's -- but he is far thicker
+## through the neck and chest than the mannequin: measured off M_Body, his
+## neck is 0.18 m across at its base, his trapezius runs to +-0.24 m, and his
+## chest stands 0.16 m proud of the neck line 0.15 m down. So the loop, sized
+## for the mannequin and then shrunk, came out 8.6 cm in radius inside a
+## neck 9 cm in radius and never rendered; the draped belt floated off the
+## shoulder as loose gold tiles. Found in a close render, where the necklace
+## simply was not there.
+##
+## `fala` / `title` scale the props in the wrestler's frame (x across, y up,
+## z forward) and the offsets move their origins, in metres, in that frame
+## (+z is BEHIND him, -z in front -- the props are authored forward -Z).
+const FITS := {
+	"roman": {
+		"fala": Vector3(1.6, 0.85, 1.75), "fala_offset": Vector3(0.0, 0.03, 0.0),
+		"title": Vector3(1.2, 1.75, 1.9), "title_offset": Vector3(0.05, 0.0, -0.02),
+	},
+}
+
 ## Part name -> material. Gold is a metal lit by the follow spot and the
 ## stage washes; the hall's ambient carries no reflections (material_library's
 ## note on arena_truss), so a pure conductor renders near-black between the
@@ -58,6 +80,7 @@ static func _materials() -> Dictionary:
 
 var _w: WrestlerController
 var _scale := 1.0
+var _fit: Dictionary = {}
 var _fala: Node3D
 var _title: Node3D
 ## Where the title is: "draped", "held", or "" (put down).
@@ -68,6 +91,7 @@ static func dress(wrestler: WrestlerController) -> EntranceProps:
 	var props := EntranceProps.new()
 	props.name = "EntranceProps"
 	props._w = wrestler
+	props._fit = FITS.get(wrestler.entrance_style, {})
 	props.top_level = true
 	wrestler.add_child(props)
 	return props
@@ -123,13 +147,23 @@ func _process(_delta: float) -> void:
 func _follow() -> void:
 	if _w == null:
 		return
-	var frame := Basis(Vector3.UP, _w.global_rotation.y).scaled(Vector3.ONE * _scale)
+	var turn := Basis(Vector3.UP, _w.global_rotation.y)
+	var fala_fit: Vector3 = _fit.get("fala", Vector3.ONE)
+	var title_fit: Vector3 = _fit.get("title", Vector3.ONE)
 	var neck := _bone("neck_01")
 	if _fala and neck != Vector3.INF:
-		_fala.global_transform = Transform3D(frame, neck)
-	var anchor := _bone("hand_l") if _title_state == "held" else _bone("upperarm_l")
+		_fala.global_transform = Transform3D(
+				turn * Basis.from_scale(fala_fit * _scale),
+				neck + turn * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
+	var held := _title_state == "held"
+	var anchor := _bone("hand_l") if held else _bone("upperarm_l")
 	if _title and anchor != Vector3.INF:
-		_title.global_transform = Transform3D(frame, anchor)
+		# Held, the belt is a hand's width: only the draped shape has a
+		# shoulder to fit.
+		var fit := Vector3.ONE * title_fit.x if held else title_fit
+		_title.global_transform = Transform3D(turn * Basis.from_scale(fit * _scale),
+				anchor + (Vector3.ZERO if held
+				else turn * (_fit.get("title_offset", Vector3.ZERO) as Vector3)))
 
 
 func _bone(canonical: String) -> Vector3:

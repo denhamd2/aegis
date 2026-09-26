@@ -196,34 +196,76 @@ def build_title_held(parts: dict[str, Part]) -> None:
     build_plates(parts["HeldGold"], parts["HeldGem"], center, right, up, out)
 
 
+def _path_frame(path: list[Vector], distance: float):
+    """(point, tangent) `distance` metres along a polyline."""
+    left = distance
+    for a, b in zip(path, path[1:]):
+        seg = (b - a).length
+        if left <= seg:
+            return a + (b - a) * (left / seg), (b - a).normalized()
+        left -= seg
+    return path[-1], (path[-1] - path[-2]).normalized()
+
+
 def build_title_draped(parts: dict[str, Part]) -> None:
-    """Over the left shoulder: folded across the top of it, the centre plate
-    lying on the front of the shoulder and the chest, the ends hanging down
-    front and back. The strap's curve is an arc over the shoulder's top."""
+    """Over the left shoulder, the way he carries it out: the strap folded
+    over the top of the shoulder, lying FLAT on it -- its width across the
+    shoulder, its face outward -- with the long end hanging down his front
+    carrying the centre plate on his chest, and the short end down his back.
+
+    The first version laid the plates out along X, across his body, and swept
+    the strap with its flat face sideways, so on the model the belt was a
+    thin black fin and the plates hung in the air beside the shoulder as a
+    row of loose gold tiles. Here every plate is placed ON the strap, at an
+    arc length along it, in the strap's own frame: along it, across it, and
+    out from the body."""
+    r = 0.085
     path = []
+    # Down the back, a short end (s = 0), over the top, down the front.
+    back_drop, front_drop = 0.16, 0.42
+    path.append(Vector((-0.02, 0.01 - back_drop, r)))
     for i in range(17):
-        s = i / 16.0
-        # From down the back (s=0) over the top (s=0.5) to down the front.
-        ang = math.pi * (s - 0.5)          # -90 back .. +90 front
-        r = 0.085
-        z = -r * math.sin(ang)             # forward is -Z: front is +ang
-        y = r * math.cos(ang) + 0.01
-        # Past the shoulder the strap hangs straight down.
-        if abs(ang) > math.radians(70):
-            drop = (abs(ang) - math.radians(70)) * 0.9
-            y -= drop
-        # -X: out over his LEFT shoulder's point, not in toward the neck.
-        path.append(Vector((-0.02, y, z)))
-    # Extend both ends straight down.
-    back_end, front_end = path[0], path[-1]
-    path = [back_end + Vector((0, -0.22, 0))] + path + [front_end + Vector((0, -0.22, 0))]
-    strap_along(parts["TitleStrap"], path, Vector((1.0, 0.0, 0.0)))
-    # The centre plate on the front slope, facing forward and slightly up.
-    center = Vector((-0.02, -0.06, -0.12))
-    out = Vector((0.0, 0.25, -1.0)).normalized()
-    right = Vector((1.0, 0.0, 0.0))
-    up = out.cross(right).normalized() * -1.0
-    build_plates(parts["TitleGold"], parts["TitleGem"], center, right, up, out)
+        ang = math.pi * (i / 16.0 - 0.5)        # -90 back .. +90 front
+        path.append(Vector((-0.02, r * math.cos(ang) + 0.01, -r * math.sin(ang))))
+    path.append(Vector((-0.02, 0.01 - front_drop, -r)))
+    # Flat on the shoulder: the face points away from the arc's centre on
+    # the curve, and straight back/forward on the hanging ends.
+    centre = Vector((-0.02, 0.01, 0.0))
+    for a, b in zip(path, path[1:]):
+        mid = (a + b) * 0.5
+        along = (b - a).normalized()
+        out = mid - centre
+        out.x = 0.0
+        if abs(mid.y - 0.01) > 1e-6 and (mid.y < 0.01):
+            out = Vector((0.0, 0.0, 1.0 if mid.z > 0 else -1.0))
+        out = (out - along * out.dot(along)).normalized()
+        across = along.cross(out).normalized()
+        framed_box(parts["TitleStrap"], mid, along, across, out,
+                   Vector(((b - a).length + 0.002, 0.10, 0.006)))
+    length = sum((b - a).length for a, b in zip(path, path[1:]))
+
+    def plate(distance: float, size: Vector, lift: float, part: str) -> None:
+        p, along = _path_frame(path, distance)
+        out = Vector((0.0, 0.0, -1.0)) if p.z < -r * 0.5 else (p - centre)
+        out.x = 0.0
+        out = (out - along * out.dot(along)).normalized()
+        across = along.cross(out).normalized()
+        framed_box(parts[part], p + out * lift, along, across, out, size)
+
+    # The centre plate on the chest, a hand below the top of the shoulder,
+    # stepped for relief, with the crest and the stone; the side plates run
+    # up the strap toward the shoulder and on down past the plate.
+    front = length - 0.20
+    for lift, w, h in ((0.004, 0.21, 0.26), (0.010, 0.17, 0.21), (0.015, 0.12, 0.15)):
+        plate(front, Vector((h, w, 0.007)), lift, "TitleGold")
+    plate(front, Vector((0.09, 0.03, 0.004)), 0.019, "TitleGold")
+    plate(front + 0.02, Vector((0.035, 0.035, 0.008)), 0.020, "TitleGem")
+    for k, offset in enumerate((0.20, 0.31)):
+        for sign in (-1.0, 1.0):
+            d = front + sign * offset
+            if 0.0 < d < length:
+                plate(d, Vector((0.10 - 0.012 * k, 0.085, 0.007)), 0.004, "TitleGold")
+                plate(d, Vector((0.075 - 0.012 * k, 0.060, 0.004)), 0.010, "TitleGold")
 
 
 def main(argv: list[str]) -> int:
