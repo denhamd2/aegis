@@ -6763,3 +6763,16 @@ from 1.82m to 1.12m. The artwork repeats every 6.95m now.
 
 Mat 0.450, unchanged. 458 tests pass (six new in `test_overhead_rig.gd`).
 Numbers in `gauntlet/refs/lighting.md`.
+
+## Round: the ready stance
+
+Off the owner's match video: at the bell both men stood near straight-legged
+with their fists curled together at chest height -- two men holding a beach
+ball. `Idle_Ready` now loops on a new `READY` pose in `wrestling_clips.py`:
+pelvis 0.78 (was 0.86 of a 0.917 rest), chest forward over the lead foot,
+open hands (curl 0.3) out at belly-to-chest height with the elbows down.
+`Walk_Stalk` carries the same reach and open hands, so walking in for the
+lock-up no longer snaps back to the old guard. `STANCE` itself is unchanged
+-- 29 clips start and end on it. Rendered on Roman and Cody, front and side,
+through `clip_shot.tscn`. The glb rebuilds byte-identical; the clip gate is
+re-pinned after reading `blender-animation`. Mat 0.450, unchanged.
