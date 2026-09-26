@@ -39,8 +39,8 @@ TARGET = CHARACTERS / "cody_rhodes_head_blond.png"
 ## (131,109,86) in the shadowed roots of the press photograph -- taken
 ## lighter than that here: painted onto the scalp at the hairline, the full
 ## root tone read as a dark band of growth under the hair (owner's review).
-BLOND = np.array([236.0, 214.0, 170.0])
-ROOT = np.array([196.0, 172.0, 132.0])
+BLOND = np.array([176.0, 152.0, 120.0])
+ROOT = np.array([132.0, 110.0, 88.0])
 
 ## The face/ears/neck island, in 0..1 texture coordinates (x right, y down),
 ## traced on the texture: the hairline across the brow, down each temple to

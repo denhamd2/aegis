@@ -55,11 +55,15 @@ const SKIN_ROUGHNESS := 0.5
 ## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
 ## scalp, tall at the front of the top and swept back, short at the sides.
 ## Each shell is cut at its own alpha threshold and coloured from a darker
-## root (inner) to platinum (outer), so the stack reads as strands.
+## ash root (inner) to beige-platinum (outer), so the stack reads as strands.
+## Colours from a visual QA against the owner's references: under arena
+## light his hair measures (210-220, 185, 150-160) with heavy dark streaking;
+## the first pass rendered a clipped cream (255, 253, 211), far too light
+## and too yellow.
 const HAIR := "res://assets/characters/cody_hair.glb"
 const HAIR_STRANDS := "res://assets/characters/cody_hair_strands.png"
-const HAIR_ROOT := Color(0.90, 0.83, 0.66)
-const HAIR_TIP := Color(0.96, 0.90, 0.74)
+const HAIR_ROOT := Color(0.56, 0.46, 0.36)
+const HAIR_TIP := Color(0.86, 0.74, 0.58)
 
 
 func _ready() -> void:
@@ -100,7 +104,7 @@ func _add_hair() -> void:
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		if k > 0.0:
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-			mat.alpha_scissor_threshold = 0.15 + 0.45 * k
+			mat.alpha_scissor_threshold = 0.12 + 0.40 * k
 		mi.material_override = mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 

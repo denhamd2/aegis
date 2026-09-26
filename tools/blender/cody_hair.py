@@ -60,9 +60,9 @@ LAYERS = 10
 ## Over this distance in from the hairline the shells come down to the skin.
 HAIRLINE_TAPER = 0.045
 ## The height field, metres off the scalp at the outermost shell.
-LIFT_FRONT = 0.052      # the front of the top, off the forehead
-LIFT_CROWN = 0.026      # over the crown
-LIFT_SIDE = 0.012       # the short sides and the nape
+LIFT_FRONT = 0.062      # the front of the top, off the forehead
+LIFT_CROWN = 0.032      # over the crown
+LIFT_SIDE = 0.017       # the short sides and the nape
 ## How far the outermost shell sits BEHIND the scalp point it grew from,
 ## per metre of lift: the sweep.
 SWEEP = 0.55
@@ -168,11 +168,16 @@ def main() -> int:
     # and down each side), v runs back from the hairline and down the sides,
     # so strands lie combed back over the top and down-and-back at the sides.
     cx = 0.5 * (max(xs) + min(xs))
-    cz = bottom + 0.35 * (top - bottom)
+    # The axis sits well BELOW the head: an axis through the skull fanned
+    # the strands out from one point on the forehead (planes through it cut
+    # the front of the head radially). From below, lines of constant u run
+    # nearly straight up the front and back over the top, the way hair
+    # combed back off the forehead lies.
+    cz = bottom - 0.35
 
     def strand_uv(p, n):
         ang = math.atan2(p.x - cx, p.z - cz)
-        u = ang * 0.11 * 12.0
+        u = ang * (top - cz) * 6.0
         v = (p.y - front) * 11.0 + (top - p.z) * 7.0
         return u, v
 
@@ -232,31 +237,42 @@ def main() -> int:
 
 
 def paint_strands():
-    """Strands, running along v. RGB is each strand's own brightness (so
-    the hair streaks, lighter and darker, the way bleached hair does) and
-    alpha its coverage. CodyModel tints each shell (dark root to platinum)
-    and cuts each at its own alpha threshold, so outer shells keep only the
-    strongest, longest strands."""
+    """CLUMPS of strands, running along v -- the owner's references show
+    his hair in chunky, separated pieces swept back (visual QA against
+    them: a texture of single fine fibres read as an even cap).
+
+    Each clump is a tapered bundle: 5-9 strands fanning from a wide root to a
+    shared point, one tone per clump (bleached hair streaks by the piece),
+    with a darker core. RGB is that tone; alpha is coverage, strongest down
+    each clump's middle, so the outer shells -- cut at higher alpha -- keep
+    only clump centres and the silhouette breaks into pieces."""
     rng = np.random.default_rng(23)
     W = H = 1024
     alpha = Image.new("L", (W, H), 0)
-    shade = Image.new("L", (W, H), 238)
+    shade = Image.new("L", (W, H), 200)
     da, ds = ImageDraw.Draw(alpha), ImageDraw.Draw(shade)
-    for _ in range(4200):
+    for _ in range(820):
         x = rng.uniform(0, W)
         y = rng.uniform(0, H)
-        length = rng.uniform(220, 520)
-        drift = rng.normal(0.0, 5.0)
-        strength = int(rng.uniform(90, 255))
-        tone = int(rng.uniform(185, 255))
-        width = int(rng.integers(2, 5))
-        for dx in (-W, 0, W):
-            for dy in (-H, 0, H):
-                seg = [(x + dx, y + dy), (x + drift + dx, y + length + dy)]
-                da.line(seg, fill=strength, width=width)
-                ds.line(seg, fill=tone, width=width)
-    alpha = alpha.filter(ImageFilter.GaussianBlur(1.0))
-    shade = shade.filter(ImageFilter.GaussianBlur(0.8))
+        length = rng.uniform(260, 560)
+        half = rng.uniform(8, 30)
+        lean = rng.normal(0.0, 26.0)
+        tone = int(rng.uniform(150, 255))
+        strands = int(rng.integers(5, 10))
+        for k in range(strands):
+            f = (k / (strands - 1)) * 2.0 - 1.0
+            start = (x + f * half, y)
+            end = (x + lean + f * half * 0.15, y + length)
+            core = 1.0 - abs(f) * 0.6
+            a_val = int(255 * core * rng.uniform(0.75, 1.0))
+            t_val = max(60, min(255, int(tone * (0.85 + 0.15 * core))))
+            for dx in (-W, 0, W):
+                for dy in (-H, 0, H):
+                    seg = [(start[0] + dx, start[1] + dy), (end[0] + dx, end[1] + dy)]
+                    da.line(seg, fill=a_val, width=3)
+                    ds.line(seg, fill=t_val, width=3)
+    alpha = alpha.filter(ImageFilter.GaussianBlur(1.2))
+    shade = shade.filter(ImageFilter.GaussianBlur(1.0))
     rgb = Image.merge("RGB", (shade, shade, shade))
     rgb.putalpha(alpha)
     rgb.save(STRANDS, optimize=True)
