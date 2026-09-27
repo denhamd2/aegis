@@ -108,35 +108,46 @@ const FOLLOW_SPOT_ANGLE := 3.5
 const ROMAN_WALK_SPEED := 0.5
 const ROMAN_WALK_CLIP := "strikes/walk_slow_look"
 ## He does not come out until the main part of his music hits. Measured off
-## the audio of assets/environment/video/roman_entrance.ogv: the intro runs
-## to a near-silent break at 43.5-45.0 s and the full track lands at 45.2 s
-## (RMS 0.01 -> 0.28 inside 200 ms). The video goes up on the wall at the top
-## of the music; he appears on the hit.
-const ROMAN_MUSIC_HIT := 45.2
+## the audio of assets/environment/video/roman_entrance.ogv, 0.1 s windows:
+## near silence 42.5-44.9 s (RMS 0.011) and the full track slams back at
+## 45.0 s (0.132). The broadcast puts the FINGER on that slam, with the pyro
+## (R-41: finger 40 s, pyro and cut 42 s) -- so he is out long before it.
+const ROMAN_MUSIC_HIT := 45.0
+## On the lip before the finger: the slow push-in while he looks the building
+## over, then the close-up (R-41 30-40 s, 1:04).
+const ROMAN_LIP_PUSH := 4.0
+const ROMAN_LIP_FACE := 3.0
+## After the slam: the very wide of the pyro, then the finger held under the
+## low wide from the ramp until this music time (R-41: 40 s to 58 s).
+const ROMAN_PYRO_WIDE := 2.5
+const ROMAN_FINGER_DOWN := 58.0
+## The room goes red for the pyro and back to blue, in ticks.
+const ROMAN_RED_TICKS := 90
+## Head bowed at ringside (R-41 2:42-3:04 is twenty seconds; held here four).
+const ROMAN_BOW_TICKS := 240
+## The walk, cut the way R-41 cuts it: the low ultra-wide steadicam backing
+## ahead of him, a very wide from high every six to eight seconds, and once
+## over his shoulder down the ramp (R-CJ). [shot, seconds], cycled.
+const ROMAN_WALK_SHOTS := [["steadicam_low", 6.0], ["arena_high", 3.0],
+		["steadicam_low", 7.0], ["over_shoulder", 4.0], ["steadicam_low", 6.0],
+		["arena_high", 3.0]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
 ## fov_to, seconds]. Lenses as vertical FOV: 53 ~ 24 mm, 38 ~ 35 mm,
 ## 27 ~ 50 mm, 16 ~ 85 mm.
 const ROMAN_INTRO_SHOTS := [
-	# His video on the wall, from low on the ramp, pushing in.
-	[Vector3(0.0, 2.6, -18.0), Vector3(0.0, 3.2, -22.0),
-		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 32.0, 26.0, 8.0],
-	# The building: high in the far end, a 24 mm wide, trucking across.
+	# The building, the stage empty under his light: high in the far end, a
+	# 24 mm wide, trucking across (R-41 0-10 s).
 	[Vector3(9.0, 9.5, 19.0), Vector3(3.0, 9.8, 20.0),
 		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 8.0],
-	# The crowd on the hard-camera side, panning along the rows.
-	[Vector3(3.8, 1.6, 2.0), Vector3(3.8, 1.7, 0.0),
-		Vector3(16.0, 4.5, -8.0), Vector3(16.0, 4.5, 8.0), 38.0, 38.0, 7.0],
-	# Over the ring from the rig, the stage and the wall beyond.
-	[Vector3(0.0, 14.0, 7.0), Vector3(0.0, 12.5, 3.5),
-		Vector3(0.0, 0.0, -8.0), Vector3(0.0, 1.0, -14.0), 50.0, 46.0, 7.0],
-	# Reverse, from the stage lip back over the ramp to the ring.
-	[Vector3(4.5, 2.2, -30.8), Vector3(-4.5, 2.2, -30.8),
-		Vector3(0.0, 1.2, 0.0), Vector3(0.0, 1.2, 0.0), 42.0, 42.0, 7.0],
-	# The curtain, long lens, low on the ramp, creeping in until he appears.
+	# His video on the wall, from low on the ramp, pushing in.
+	[Vector3(0.0, 2.6, -18.0), Vector3(0.0, 3.2, -22.0),
+		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 32.0, 26.0, 7.0],
+	# Head on into the portals, long lens, creeping in until he appears
+	# (R-41 12-18 s).
 	[Vector3(0.0, 1.0, -23.0), Vector3(0.0, 1.0, -25.5),
-		Vector3(0.0, 2.4, -36.5), Vector3(0.0, 2.3, -36.5), 30.0, 24.0, 8.2],
+		Vector3(0.0, 2.4, -36.5), Vector3(0.0, 2.3, -36.5), 30.0, 24.0, 12.0],
 ]
 ## The house lights dim for him (blender-lighting's low-key look: fewer,
 ## harder sources, the key on the subject). The rig drops to this fraction and
@@ -166,6 +177,12 @@ const CODY_WALK_SPEED := 1.2
 const CODY_WALK_CLIP := "strikes/walk_crowd"
 ## Air_Punch's fist arrives on frame 10: the second pyro.
 const CODY_PUNCH_AT := 20
+## Kneel: 5.0 s at the top of the ramp (C-MITB 40-44 s).
+const CODY_KNEEL_TICKS := 300
+## His walk, cut as C-39 and C-SS cut it: the low steadicam ahead of him and a
+## wide of the building. [shot, seconds], cycled.
+const CODY_WALK_SHOTS := [["steadicam_low", 4.0], ["arena_high", 2.5],
+		["steadicam_low", 3.0]]
 ## Corner_Pose has the arms fully wide by frame 12: the post sparks.
 const CODY_CORNER_PYRO_AT := 24
 ## Coat_Off has his arms behind him, the coat sliding off, on frame 36.
@@ -199,8 +216,10 @@ const CORNER_LOW_FOV := 50.0
 const TITLE_UNBUCKLED_AT := 44
 const FINGER_PYRO_AT := 28
 const ULA_FALA_LIFT_AT := 40
-## His portal accents go gold for him, not the side's own colour.
-const ROMAN_GOLD := Color(1.0, 0.78, 0.36)
+## The OTC look is blue (R-41, R-CJ, and his own wall video): his portal
+## accents go blue, and red only for the pyro (R-41 42 s).
+const ROMAN_BLUE := Color(0.22, 0.52, 1.0)
+const ROMAN_PYRO_RED := Color(1.0, 0.10, 0.16)
 ## His shots. The push-in on the mark: from the ramp, a slow dolly in and a
 ## lens tightening on him. The hero shot: low at his feet looking up, for the
 ## title. The wide: the whole set, for the pyro. The ring low: from the mat
@@ -215,6 +234,37 @@ const STAGE_WIDE_LOOK := Vector3(0.0, 4.0, -33.0)
 const STAGE_WIDE_FOV := 58.0
 const RING_LOW_OFFSET := Vector3(-2.2, 0.35, 1.4)
 const RING_LOW_FOV := 46.0
+
+# --- The broadcast's shots (refs/entrances.md "Measured off broadcast") ---
+## The signature walk shot, both men: an ultra-wide steadicam backing ahead
+## of him with the lens at his hips, tilted up past his chest to the roof.
+const STEADICAM_LOW_AHEAD := 1.3
+const STEADICAM_LOW_HEIGHT := 0.55
+const STEADICAM_LOW_FOV := 68.0
+## The very wide from high at the far end, over the ring, on him.
+const ARENA_HIGH_AT := Vector3(7.5, 11.0, 13.0)
+const ARENA_HIGH_FOV := 50.0
+## Behind him, over his shoulder, down the ramp at the crowd (R-CJ).
+const OVER_SHOULDER_FOV := 50.0
+## Low on the ramp looking up at him small under the set (R-41 50-58 s).
+const RAMP_LOW_WIDE_AT := Vector3(0.0, 0.9, ArenaBuilder.STAGE_FRONT + 8.5)
+const RAMP_LOW_WIDE_FOV := 46.0
+## A long lens from down the ramp on him at the lip (C-MITB, the kneel).
+const RAMP_LONG_BACK := 9.0
+const RAMP_LONG_FOV := 22.0
+## Inside the ring, low, behind him as he comes through the ropes (C-SNME).
+const RING_BEHIND_FOV := 70.0
+## The hard-camera side crowd, for the WHOAs in the dark (C-MITB 12-20 s).
+const CROWD_WIDE_AT := Vector3(3.8, 1.6, 1.0)
+const CROWD_WIDE_LOOK := Vector3(16.0, 4.5, 0.0)
+const CROWD_WIDE_FOV := 40.0
+## Roman's bowed head at the steps, close, from his right.
+const BOW_SIDE := 1.9
+const BOW_AHEAD := 0.7
+const BOW_FOV := 26.0
+## The smoke he walks out of: a box over his portal mouth.
+const SMOKE_SIZE := Vector3(4.0, 3.6, 3.0)
+const SMOKE_DENSITY := 0.35
 
 var _match: Node
 var _a: WrestlerController
@@ -241,6 +291,8 @@ var _dimmed := {}
 var _env: Environment
 ## Cody's backlight, built on his first WHOA.
 var _backlight: SpotLight3D
+## Cody's smoke in his portal, while he walks out of it.
+var _smoke: FogVolume
 ## Beats marked no_follow keep the follow spot off (Cody's silhouettes).
 var _follow_off := false
 
@@ -375,7 +427,8 @@ func _start_beat() -> void:
 	if beat.get("coat", false) and w and not _coats.has(w):
 		_coats[w] = EntranceCoat.dress(w)
 	if beat.get("props", false) and w and not _props.has(w):
-		_props[w] = EntranceProps.dress(w)
+		# The OTC carries no title (refs/entrances.md): the ula fala only.
+		_props[w] = EntranceProps.dress(w, w.entrance_style != "roman")
 	if beat.has("lights"):
 		_portal_lights(beat["lights"], true, beat.get("light_color", Color.TRANSPARENT))
 	else:
@@ -470,6 +523,7 @@ func _ring_bell() -> void:
 	if _backlight:
 		_backlight.queue_free()
 		_backlight = null
+	_smoke_off()
 	for w: WrestlerController in [_a, _b]:
 		w.global_transform = _mark[w]
 		w.velocity = Vector3.ZERO
@@ -484,71 +538,84 @@ func _ring_bell() -> void:
 	bell.emit()
 
 
-## Roman Reigns: the champion's walk. Everything slower and more still than
-## the generic entrance -- he walks at 1.0 m/s with the title on his shoulder
-## and the ula fala on, stops on the stage lip and makes them wait, raises the
-## title, then the finger with the pyro on it. In the ring the finger again
-## with the post pyro, the title and the ula fala come off, and he goes to his
-## mark. (gauntlet/refs/entrances.md: every beat here is one on the sheet.)
+## Roman Reigns, the OTC, as the broadcast does it (gauntlet/refs/entrances.md
+## "Measured off broadcast footage", R-41 and R-CJ). The set blue, the stage
+## empty while his music builds; he is found deep in his portal walking at a
+## long lens, stops on the lip and looks the building over, a close-up, and
+## the finger goes up so that it is in the air when the music slams (45.0 s)
+## and the pyro and the red flash go with it. He HOLDS it -- eighteen seconds
+## in the footage, under a low wide from the ramp -- then walks the whole way
+## down on the low ultra-wide steadicam, cut with very wides from high and a
+## look over his shoulder. At ringside, head bowed, eyes shut; up the steps
+## and in; the finger to the hard camera, hands on hips, the ula fala off.
+## No title: the OTC era.
 func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
 	var emerge := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 1.2)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
-	var gold := {"lights": side, "light_color": ROMAN_GOLD}
-	# His music and his video, the house down, and nobody on the stage until
-	# the hit.
+	var blue := {"lights": side, "light_color": ROMAN_BLUE}
+	# Backward from the slam: the finger's arm arrives FINGER_PYRO_AT ticks
+	# into Finger_Hold, so it starts that much before the slam; before it he
+	# stands on the lip (the push-in, then the close-up); before that, the walk
+	# out from the portal at his pace. What is left of the music is the empty
+	# stage.
+	var finger_start := ROMAN_MUSIC_HIT - float(FINGER_PYRO_AT) / TPS
+	var stand_start := finger_start - ROMAN_LIP_PUSH - ROMAN_LIP_FACE
+	var walk_s := _flat(emerge).distance_to(_flat(lip)) / ROMAN_WALK_SPEED
+	var appear := stand_start - walk_s
 	_beats.append({"kind": "hold", "who": w,
-			"ticks": int(round(ROMAN_MUSIC_HIT * TPS)), "shot": "intro",
+			"ticks": _secs(0.0, appear), "shot": "intro",
 			"events": [[1, "tron_on"], [1, "dim_on"]]})
-	# Out on the hit, and a long walk to the lip: the first half wide from
-	# the ramp, the second on his face as he comes toward the lens.
 	var half := emerge.lerp(lip, 0.5)
-	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [emerge, half],
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, half],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "stage", "appear": true, "props": true}))
-	_beats.append(_with(gold, {"kind": "walk", "who": w, "path": [half, lip],
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [half, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "face_walk"}))
-	# The mark: he stops, and the card comes up while he stands there.
-	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 150,
+	# On the lip: the building looked over, then the close-up.
+	_beats.append(_with(blue, {"kind": "pose", "who": w,
+			"ticks": _secs(0.0, ROMAN_LIP_PUSH),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
 			"shot": "stage_push", "card": true}))
-	_beats.append(_with(gold, {"kind": "pose", "who": w, "ticks": 120,
-			"clip": "strikes/finger_raise", "facing": Vector3.BACK,
-			"shot": "stage_wide", "card": true,
-			"events": [[FINGER_PYRO_AT, "pyro_stage"]]}))
-	var ramp_end := lip + Vector3.BACK * (ROMAN_WALK_SPEED * RAMP_SHOWN_SECONDS)
-	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
-			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "track"})
-	# On the apron he stops and looks the ring over before he gets in.
-	var in_at := _add_route_in(w, Vector3(0.0, 0.0, -7.0), ROMAN_WALK_SPEED,
-			ROMAN_WALK_CLIP, true, "strikes/roman_stand")
-	# To the middle of the ring, and the finger again facing the hard camera
-	# side with the post pyro on it.
+	_beats.append(_with(blue, {"kind": "pose", "who": w,
+			"ticks": _secs(0.0, ROMAN_LIP_FACE),
+			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
+			"shot": "face_walk", "card": true}))
+	# The finger, and on the slam the pyro and the room red, on a very wide.
+	_beats.append(_with(blue, {"kind": "pose", "who": w,
+			"ticks": _secs(finger_start, ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE),
+			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
+			"shot": "stage_wide",
+			"events": [[FINGER_PYRO_AT, "pyro_roman"], [FINGER_PYRO_AT, "accent_red"],
+					[FINGER_PYRO_AT + ROMAN_RED_TICKS, "accent_back"]]}))
+	# Held, under the low wide from the ramp.
+	_beats.append(_with(blue, {"kind": "pose", "who": w,
+			"ticks": _secs(ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE, ROMAN_FINGER_DOWN),
+			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
+			"shot": "ramp_low_wide"}))
+	# The walk: all of it, cut the way the broadcast cuts it.
+	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS - 0.2)
+	_add_walk_cut(w, lip, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, ROMAN_WALK_SHOTS)
+	# Ringside, the head bowed, then up the steps and through the ropes.
+	var in_at := _add_route_in(w, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, true, "",
+			"strikes/head_bow", ROMAN_BOW_TICKS)
 	var centre := Vector3(-0.4, 0.0, -0.6)
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, centre],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
 			"shot": "ring_low"})
-	# The title off his waist and up over his head, the camera low on the
-	# mat looking up at it; then the finger again with the post pyro.
-	_beats.append({"kind": "pose", "who": w, "ticks": 90,
-			"clip": "strikes/title_unbuckle", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[TITLE_UNBUCKLED_AT, "title_held"]]})
-	_beats.append({"kind": "pose", "who": w, "ticks": 120,
-			"clip": "strikes/title_raise", "facing": Vector3.BACK,
-			"shot": "hero_low"})
-	_beats.append({"kind": "pose", "who": w, "ticks": 120,
-			"clip": "strikes/finger_raise", "facing": Vector3.BACK,
-			"shot": "ring_low",
-			"events": [[FINGER_PYRO_AT, "pyro_posts"]]})
-	# The title goes to the timekeeper and the ula fala comes off.
+	# The finger to the hard camera, then hands on hips, staring, close.
+	_beats.append({"kind": "pose", "who": w, "ticks": 240,
+			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
+			"shot": "ring_low"})
+	_beats.append({"kind": "pose", "who": w, "ticks": 300,
+			"clip": "strikes/hands_hips", "facing": Vector3.BACK,
+			"shot": "face_walk"})
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
-			"shot": "ring_low",
-			"events": [[1, "title_down"], [ULA_FALA_LIFT_AT, "fala_off"]]})
+			"shot": "ring_low", "events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
@@ -558,64 +625,97 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
 
 
-## Cody Rhodes: the building goes black, the WHOAs find him as a silhouette
-## in his portal, and on the hit everything comes up at once -- lights, pyro,
-## him. Then a quick, crowd-working walk and the middle rope in the corner.
-## Every beat before the walk is cut to the measured music (CODY_*).
+## A long walk from `from` to `to` as the broadcast cuts it: consecutive
+## walk beats, each on the next of `shots` ([shot, seconds], cycled), so he
+## never stops and the cut is only the camera's.
+func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: float,
+		clip: String, shots: Array) -> void:
+	var total := _flat(from).distance_to(_flat(to))
+	var done := 0.0
+	var i := 0
+	while done < total - 0.01:
+		var shot: Array = shots[i % shots.size()]
+		var step := minf(float(shot[1]) * speed, total - done)
+		var a := from.lerp(to, done / total)
+		var b := from.lerp(to, (done + step) / total)
+		_beats.append({"kind": "walk", "who": w, "path": [a, b], "speed": speed,
+				"walk_clip": clip, "shot": shot[0]})
+		done += step
+		i += 1
+
+
+## Cody Rhodes, as the broadcast does it (gauntlet/refs/entrances.md
+## "Measured off broadcast footage", C-39, C-MITB, C-SS, C-SNME). Black, and
+## through the WHOAs the cameras are on the BUILDING -- the crowd, the dark
+## wide -- not on him. On the last WHOA he walks out of the smoke in his
+## portal, backlit, at a long lens; on the hit, the WHOA pose -- arms straight
+## out, palms forward, head back -- and the pyro on a very wide; then both
+## fists driven down, and the second burst. To the lip on the low steadicam,
+## and there the kneel: down on the right knee, head bowed, then up at the
+## crowd. Down the ramp working both sides, the WHOA again low in the aisle,
+## round to the steps and in over the ropes with the camera low behind him in
+## the ring. Every beat to the hit is on the measured music (CODY_*).
 func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
 	var mouth := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 0.5)
+	var smoke := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z - 0.3)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
-	var portal_look := [mouth, mouth + Vector3.BACK]
 	var dark := {"lights": "OFF", "no_follow": true}
-	var push := _secs(CODY_WHOA_1, CODY_HIT)
+	# The blackout, the wall, and on each WHOA the building, not the man.
 	_beats.append({"kind": "hold", "who": w, "ticks": _secs(0.0, CODY_WHOA_1),
 			"shot": "cody_dark", "lights": "OFF",
 			"events": [[1, "tron_on"], [1, "blackout_on"]]})
-	_beats.append(_with(dark, {"kind": "pose", "who": w, "appear": true, "coat": true,
-			"path": portal_look,
-			"ticks": _secs(CODY_WHOA_1, CODY_WHOA_2), "clip": "strikes/whoa_arms",
-			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
-			"push_from": 0, "push_over": push,
-			"events": [[1, "strobe"], [1, "backlight_on"], [84, "backlight_dim"]]}))
-	_beats.append(_with(dark, {"kind": "pose", "who": w,
-			"ticks": _secs(CODY_WHOA_2, CODY_WHOA_3), "clip": "strikes/fists_up",
-			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
-			"push_from": _secs(CODY_WHOA_1, CODY_WHOA_2), "push_over": push,
-			"events": [[1, "strobe"], [1, "backlight_on"]]}))
-	_beats.append({"kind": "pose", "who": w, "no_follow": true, "lights": "RB_LOW",
-			"ticks": _secs(CODY_WHOA_3, CODY_HIT), "clip": "strikes/whoa_crouch",
-			"facing": Vector3.BACK, "shot": "portal_long", "portal": mouth,
-			"push_from": _secs(CODY_WHOA_1, CODY_WHOA_3), "push_over": push,
-			"events": [[1, "backlight_dim"]]})
+	_beats.append(_with(dark, {"kind": "hold", "who": w,
+			"ticks": _secs(CODY_WHOA_1, CODY_WHOA_2), "shot": "crowd_wide",
+			"events": [[1, "strobe"]]}))
+	_beats.append(_with(dark, {"kind": "hold", "who": w,
+			"ticks": _secs(CODY_WHOA_2, CODY_WHOA_3), "shot": "cody_dark",
+			"fog_at": smoke, "events": [[1, "strobe"], [1, "fog_on"]]}))
+	# Out of the smoke on the last WHOA, backlit, walking at the lens.
+	_beats.append({"kind": "walk", "who": w, "appear": true, "coat": true,
+			"no_follow": true, "lights": "RB_LOW", "path": [smoke, mouth],
+			# A hair over the exact speed, so the tick count rounds to the
+			# measured gap and the hit lands on its frame.
+			"speed": _flat(smoke).distance_to(_flat(mouth))
+					/ (float(_secs(CODY_WHOA_3, CODY_HIT)) / TPS) * 1.000001,
+			"walk_clip": CODY_WALK_CLIP, "shot": "portal_long", "portal": mouth,
+			"push_from": 0, "push_over": _secs(CODY_WHOA_3, CODY_HIT),
+			"events": [[1, "backlight_on"]]})
 	# THE HIT. Lights, pyro, the WHOA pose -- the same frame.
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
 			"ticks": _secs(CODY_HIT, CODY_PUNCH), "clip": "strikes/whoa_arms",
 			"facing": Vector3.BACK, "shot": "stage_wide",
-			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "pyro_cody_hit"]]})
+			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "pyro_cody_hit"],
+					[1, "fog_off"]]})
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
-			"ticks": _secs(CODY_PUNCH, CODY_OUT), "clip": "strikes/air_punch",
+			"ticks": _secs(CODY_PUNCH, CODY_OUT), "clip": "strikes/fists_down",
 			"facing": Vector3.BACK, "shot": "hero_low", "card": true,
 			"events": [[CODY_PUNCH_AT, "pyro_cody_punch"]]})
-	# Out to the lip, working the crowd, the card up until he stops.
+	# To the lip on the low steadicam, the card up until he stops.
 	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "steadicam", "card": true})
-	_beats.append({"kind": "pose", "who": w, "lights": "RB", "ticks": 120,
-			"clip": "strikes/point_crowd", "facing": Vector3.BACK, "shot": "hero_low"})
-	var ramp_end := lip + Vector3.BACK * (CODY_WALK_SPEED * RAMP_SHOWN_SECONDS)
-	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
-			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP, "shot": "track"})
-	var in_at := _add_route_in(w, Vector3(0.0, 0.0, CUT_TO_Z), CODY_WALK_SPEED,
-			CODY_WALK_CLIP, false)
+			"shot": "steadicam_low", "card": true})
+	# The kneel at the top of the ramp, on a long lens from down it.
+	_beats.append({"kind": "pose", "who": w, "lights": "RB", "ticks": CODY_KNEEL_TICKS,
+			"clip": "strikes/kneel", "facing": Vector3.BACK, "shot": "ramp_long"})
+	# Down the ramp, cut as the broadcast cuts it, the WHOA again half way.
+	var mid := lip.lerp(Vector3(0.0, 0.0, CUT_TO_Z), 0.5)
+	_add_walk_cut(w, lip, mid, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS)
+	_beats.append({"kind": "pose", "who": w, "ticks": 120,
+			"clip": "strikes/whoa_low", "facing": Vector3.BACK, "shot": "hero_low"})
+	var foot := Vector3(0.0, 0.0, CUT_TO_Z)
+	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS)
+	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, false,
+			"", "", 0, "ring_behind_low")
 	# The corner by the steps: up on the middle rope, facing out over them.
+	# (Sourced [S], not in any of the measured clips.)
 	var post := Vector3(ENTRY_CORNER.x * RingBuilder.POST_XZ, 0.0,
 			ENTRY_CORNER.y * RingBuilder.POST_XZ)
 	var out_dir := RingBuilder.step_out_dir(ENTRY_CORNER)
 	var stand := post - out_dir * CORNER_ROOT_M
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "ringside", "on_mat": true})
+			"shot": "ring_behind_low", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": out_dir, "shot": "corner_low"})
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_climb",
 			"ticks": 72, "from": stand, "to": stand, "facing": out_dir,
@@ -646,9 +746,13 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 ##
 ## `split_floor` gives the floor walk its own tracking shot up to the
 ## approach (Roman's); `survey_clip`, if set, is played standing on the apron
-## before he goes in.
+## before he goes in; `floor_clip`, if set, is played for `floor_ticks` at the
+## foot of the steps, facing them, on a close shot (Roman's bowed head);
+## `entry_shot` frames the step through the ropes (Cody's is from inside the
+## ring, low, behind him).
 func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
-		walk_clip: String, split_floor: bool, survey_clip := "") -> Vector3:
+		walk_clip: String, split_floor: bool, survey_clip := "",
+		floor_clip := "", floor_ticks := 0, entry_shot := "ringside") -> Vector3:
 	var out := RingBuilder.step_out_dir(ENTRY_CORNER)
 	var top := RingBuilder.step_top_centre(ENTRY_CORNER)
 	var climb_from := top + out * CLIMB_TO.x
@@ -663,6 +767,9 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 		_beats.append({"kind": "walk", "who": w, "path": [cut, foot, approach, climb_from],
 				"speed": speed, "walk_clip": walk_clip, "shot": "ringside", "cut": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -out, "shot": "ringside"})
+	if floor_clip != "":
+		_beats.append({"kind": "pose", "who": w, "ticks": floor_ticks,
+				"clip": floor_clip, "facing": -out, "shot": "bow_close"})
 	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, top.z)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
 			"ticks": int(round(CLIMB_SECONDS * TPS)),
@@ -684,7 +791,7 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	var inside := apron + into * APRON_ROPE_TO.x
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
-			"from": apron, "to": inside, "facing": into, "shot": "ringside"})
+			"from": apron, "to": inside, "facing": into, "shot": entry_shot})
 	return inside
 
 
@@ -760,7 +867,17 @@ func _event(w: WrestlerController, what: String) -> void:
 			_pyro.fire(what.trim_prefix("pyro_"))
 		"dim_off":
 			_dim_house(false)
-		"pyro_stage", "pyro_posts":
+		"accent_red":
+			_accents_to(ROMAN_PYRO_RED, 3.0)
+		"accent_back":
+			var now: Dictionary = _beats[mini(_beat, _beats.size() - 1)]
+			_portal_lights(now.get("lights", ""), now.has("lights"),
+					now.get("light_color", Color.TRANSPARENT))
+		"fog_on":
+			_smoke_on(w)
+		"fog_off":
+			_smoke_off()
+		"pyro_stage", "pyro_posts", "pyro_roman":
 			if _pyro == null:
 				_pyro = EntrancePyro.new()
 				_pyro.name = "EntrancePyro"
@@ -897,6 +1014,42 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 		"ringside":
 			_camera.set_entrance_shot(RINGSIDE_AT, w.global_position + Vector3.UP * 1.0,
 					RINGSIDE_FOV, true)
+		"steadicam_low":
+			# Backing ahead of him, lens at his hips, tilted up past his chest.
+			var f4 := _flat(-w.global_transform.basis.z).normalized()
+			_camera.set_entrance_shot(w.global_position + f4 * STEADICAM_LOW_AHEAD
+					+ Vector3.UP * STEADICAM_LOW_HEIGHT,
+					w.global_position + Vector3.UP * 1.55, STEADICAM_LOW_FOV, first, delta)
+		"arena_high":
+			_camera.set_entrance_shot(ARENA_HIGH_AT, w.global_position + Vector3.UP * 1.0,
+					ARENA_HIGH_FOV, true)
+		"over_shoulder":
+			var f5 := _flat(-w.global_transform.basis.z).normalized()
+			var r5 := w.global_transform.basis.x
+			_camera.set_entrance_shot(w.global_position - f5 * 1.8 + r5 * 0.45
+					+ Vector3.UP * 1.8, w.global_position + f5 * 12.0 + Vector3.UP * 0.8,
+					OVER_SHOULDER_FOV, first, delta)
+		"ramp_low_wide":
+			_camera.set_entrance_shot(RAMP_LOW_WIDE_AT, w.global_position + Vector3.UP * 2.2,
+					RAMP_LOW_WIDE_FOV, true)
+		"ramp_long":
+			_camera.set_entrance_shot(Vector3(w.global_position.x * 0.5, 0.9,
+					w.global_position.z + RAMP_LONG_BACK), _head_of(w) + Vector3.DOWN * 0.45,
+					RAMP_LONG_FOV, true)
+		"ring_behind_low":
+			var f6 := _flat(-w.global_transform.basis.z).normalized()
+			_camera.set_entrance_shot(w.global_position - f6 * 1.6 + Vector3.UP * 0.5,
+					w.global_position + f6 * 3.0 + Vector3.UP * 1.4, RING_BEHIND_FOV,
+					first, delta)
+		"bow_close":
+			# From his right and a little in front: straight ahead of him at the
+			# steps is the ring post, which the lens would shoot through.
+			var hb := _head_of(w)
+			var fb := _flat(-w.global_transform.basis.z).normalized()
+			_camera.set_entrance_shot(hb + w.global_transform.basis.x * BOW_SIDE
+					+ fb * BOW_AHEAD, hb + Vector3.DOWN * 0.12, BOW_FOV, true)
+		"crowd_wide":
+			_camera.set_entrance_shot(CROWD_WIDE_AT, CROWD_WIDE_LOOK, CROWD_WIDE_FOV, true)
 		"faceoff":
 			# The hard camera's own seat and lens, so the bell does not cut.
 			_camera.set_entrance_shot(_camera.hard_cam_position,
@@ -932,6 +1085,48 @@ func _head_of(w: WrestlerController) -> Vector3:
 			return sk.global_transform * sk.get_bone_global_pose(i).origin \
 					+ Vector3.UP * 0.08
 	return w.global_position + Vector3.UP * 1.75
+
+
+## Every portal accent to one colour and a multiple of its own energy: the
+## room going red on Roman's pyro.
+func _accents_to(color: Color, gain: float) -> void:
+	if not _lights:
+		return
+	for child in _lights.get_children():
+		if child is SpotLight3D and String(child.name).begins_with("Accent"):
+			var light := child as SpotLight3D
+			if not light.has_meta("base_energy"):
+				light.set_meta("base_energy", light.light_energy)
+			if not light.has_meta("base_color"):
+				light.set_meta("base_color", light.light_color)
+			light.light_color = color
+			light.light_energy = float(light.get_meta("base_energy")) * gain
+
+
+## Cody walks out of smoke (C-MITB 22-26 s, C-SNME 20-24 s): a dense fog
+## volume filling his portal mouth, lit by his backlight behind it. Freed on
+## the hit.
+func _smoke_on(w: WrestlerController) -> void:
+	if _smoke:
+		return
+	var at: Vector3 = (_beats[mini(_beat, _beats.size() - 1)] as Dictionary).get(
+			"fog_at", w.global_position)
+	_smoke = FogVolume.new()
+	_smoke.name = "PortalSmoke"
+	_smoke.size = SMOKE_SIZE
+	var mat := FogMaterial.new()
+	mat.density = SMOKE_DENSITY
+	mat.albedo = Color(0.9, 0.92, 1.0)
+	mat.edge_fade = 0.6
+	_smoke.material = mat
+	add_child(_smoke)
+	_smoke.global_position = at + Vector3(0.0, SMOKE_SIZE.y * 0.5, 0.0)
+
+
+func _smoke_off() -> void:
+	if _smoke:
+		_smoke.queue_free()
+		_smoke = null
 
 
 ## Dims the house for his entrance, or puts it back. Every rig light except

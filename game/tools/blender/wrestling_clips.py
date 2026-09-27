@@ -189,6 +189,18 @@ ROMAN_STAND = dict(
 )
 
 
+# Roman in the ring after the finger (refs/entrances.md [V], R-41 3:42):
+# hands on the hips -- on the iliac crests, thumbs back -- elbows out wide,
+# chest up, weight square.
+ROMAN_HIPS = dict(
+    ROMAN_STAND, spine=(4, 0, 0), head=(0, 0, 0),
+    hand_r=(0.21, 0.02, 1.02), hand_l=(-0.21, 0.02, 1.02),
+    elbow_r=(1.0, -0.5, 0.1), elbow_l=(-1.0, -0.5, 0.1),
+    fist_r=0.25, fist_l=0.25,
+    foot_r=(0.18, 0.0, 0.104), foot_l=(-0.18, 0.02, 0.104),
+)
+
+
 # Cody's entrance posture (gauntlet/refs/entrances.md): up on the balls of
 # his feet, chest high, chin up, arms loose and a little away from the body
 # -- a showman waiting for the music, not a man guarding.
@@ -333,18 +345,22 @@ def _methodical_walk():
     spine follows the head by a quarter -- a man surveying the room turns
     from the chest, not just the neck.
     """
+    # Measured off the broadcast (gauntlet/refs/entrances.md, R-41
+    # 1:18-2:18, the low steadicam): the arms hang a hand's width OFF his
+    # sides -- the lats hold them out -- palms back, barely swinging; chin a
+    # little down, eyes up and out; the head turns slowly and holds.
     cycle = _open_hands(_gait(
         frames=48, fps=FPS, speed=0.5,
         contacts={"r": (0, 28), "l": (24, 28)},
         plant_up=0.104, lift_up=0.045,
         foot_x={"r": 0.15, "l": -0.14},
         pelvis_up=0.905, pelvis_dip=0.008,
-        hips_yaw=3.0, spine=(0.0, 4.0), head=(4, 0, 0),
-        hand_fwd=(-0.04, 0.04), hand_up=(0.90, 0.92),
-        hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)
+        hips_yaw=3.0, spine=(0.0, 5.0), head=(-4, 0, 0),
+        hand_fwd=(-0.05, 0.02), hand_up=(0.92, 0.93),
+        hand_x={"r": 0.31, "l": -0.30}, elbow=None), curl=0.40)
     # (frame, yaw degrees): + is to his left.
-    looks = [(0, 0.0), (18, 0.0), (42, 32.0), (62, 32.0), (82, 0.0),
-             (96, 0.0), (116, -30.0), (132, -30.0), (144, 0.0)]
+    looks = [(0, 0.0), (22, 0.0), (48, 30.0), (70, 30.0), (88, 0.0),
+             (100, 0.0), (122, -28.0), (138, -28.0), (144, 0.0)]
     out = []
     for f in range(144 + 1):
         i = 0
@@ -355,7 +371,7 @@ def _methodical_walk():
         yaw = y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
         base = cycle[f % 48][1]
         sp = base["spine"]
-        out.append((f, dict(base, head=(5.0, yaw * 0.75, 0.0),
+        out.append((f, dict(base, head=(-4.0, yaw * 0.75, 0.0),
                             spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
     return out
 
@@ -374,12 +390,14 @@ def _crowd_walk():
         contacts={"r": (0, 15), "l": (13, 15)},
         plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14},
-        pelvis_up=0.905, pelvis_dip=0.012,
-        hips_yaw=5.0, spine=(0.0, 6.0), head=(6, 0, 0),
-        hand_fwd=(-0.12, 0.14), hand_up=(0.90, 0.96),
-        hand_x={"r": 0.27, "l": -0.26}, elbow=None), curl=0.5)
-    looks = [(0, 0.0), (10, 28.0), (34, 28.0), (46, -26.0), (70, -26.0),
-             (86, 0.0), (104, 0.0)]
+        pelvis_up=0.905, pelvis_dip=0.020,
+        hips_yaw=6.0, spine=(0.0, 7.0), head=(6, 0, 0),
+        hand_fwd=(-0.14, 0.16), hand_up=(0.90, 0.97),
+        hand_x={"r": 0.28, "l": -0.27}, elbow=None), curl=0.5)
+    # Broadcast (C-39 WHOA sheet 8-15 s, C-SS 14-30 s): he never looks
+    # ahead for long -- the head swings well out to each side of the aisle.
+    looks = [(0, 0.0), (8, 40.0), (32, 40.0), (44, -38.0), (68, -38.0),
+             (84, 0.0), (104, 0.0)]
     pump = [(0, 0.0), (52, 0.0), (58, 1.0), (72, 1.0), (80, 0.0), (104, 0.0)]
 
     def curve(keys, f):
@@ -1359,6 +1377,51 @@ CLIPS = {
                   elbow_l=(-0.5, -0.4, -1.0), fist_l=0.45)),
     ],
 
+
+    # === Roman, OTC, measured off the broadcast (refs/entrances.md [V]) ====
+
+    # 30 frames / 1.0s: the finger, raised and HELD -- the clip ends on the
+    # held pose, and a non-looping clip holds its last frame, so the director
+    # keeps it up as long as the beat runs (R-41: 40 s to 58 s, eighteen
+    # seconds). Right arm straight up over the shoulder, fist closed round
+    # the index finger, chin LEVEL -- he looks out at the building, not up
+    # at the finger. Arrives on frame 14 (FINGER_PYRO_AT): the pyro.
+    "Finger_Hold": [
+        (0,  ROMAN_STAND),
+        (8,  pose(ROMAN_STAND, spine=(4, 0, 0), head=(2, 0, 0),
+                  hand_r=(0.21, 0.10, 1.60), elbow_r=(1.0, -0.2, -0.2),
+                  fist_r=0.95, point_r=True)),
+        (14, pose(ROMAN_STAND, spine=(5, 0, 0), head=(3, 0, 0),
+                  hand_r=(0.19, 0.06, 2.00), elbow_r=(1.0, 0.0, 0.2),
+                  fist_r=0.95, point_r=True)),
+        (30, pose(ROMAN_STAND, spine=(5, 0, 0), head=(3, 0, 0),
+                  hand_r=(0.19, 0.06, 2.00), elbow_r=(1.0, 0.0, 0.2),
+                  fist_r=0.95, point_r=True)),
+    ],
+
+    # 90 frames / 3.0s: at ringside, before the steps (R-41 2:42-3:04): the
+    # chin comes down to his chest and stays there -- eyes shut, a private
+    # moment in a building of 60,000 -- then the head comes up slowly.
+    "Head_Bow": [
+        (0,  ROMAN_STAND),
+        (18, pose(ROMAN_STAND, spine=(-9, 0, 0), head=(-44, 0, 0),
+                  pelvis=(0.0, 0.0, 0.897))),
+        (66, pose(ROMAN_STAND, spine=(-10, 0, 0), head=(-46, 0, 0),
+                  pelvis=(0.0, 0.0, 0.895))),
+        (90, ROMAN_STAND),
+    ],
+
+    # 120 frames / 4.0s, looping: in the ring after the finger (R-41
+    # 3:42-3:54): hands on the hips, elbows out, square to the hard camera,
+    # and a slow look across the ring and back.
+    "Hands_Hips": [
+        (0,   ROMAN_HIPS),
+        (40,  pose(ROMAN_HIPS, head=(0, 14, 0), spine=(4, 4, 0))),
+        (70,  pose(ROMAN_HIPS, head=(0, 14, 0), spine=(4, 4, 0))),
+        (100, pose(ROMAN_HIPS, head=(0, -10, 0), spine=(4, -3, 0))),
+        (120, ROMAN_HIPS),
+    ],
+
     # === Cody (gauntlet/refs/entrances.md, Cody's beat sheet) =============
 
     # 60 frames / 2.0s, looping: waiting on his mark, bouncing on his toes.
@@ -1474,6 +1537,99 @@ CLIPS = {
                   fist_r=0.8, fist_l=0.8)),
         (48, pose(CODY_STAND, hand_r=(0.30, 0.40, 1.10),
                   elbow_r=(0.8, -0.4, -0.6), fist_r=0.8)),
+        (60, CODY_STAND),
+    ],
+
+    # === Cody, measured off the broadcast (refs/entrances.md [V]) ==========
+
+    # 30 frames / 1.0s: after the WHOA, both fists DRIVEN DOWN (C-39 26 s):
+    # cocked at the chest (6), punched down past the hips with the knees
+    # dipping (10 -- CODY_PUNCH_AT, the second burst), held, up again.
+    "Fists_Down": [
+        (0,  CODY_STAND),
+        (6,  pose(CODY_STAND, pelvis=(0.0, 0.0, 0.92), spine=(10, 0, 0),
+                  head=(12, 0, 0),
+                  hand_r=(0.26, 0.20, 1.42), hand_l=(-0.26, 0.20, 1.42),
+                  elbow_r=(1.0, -0.4, -0.2), elbow_l=(-1.0, -0.4, -0.2),
+                  fist_r=1.0, fist_l=1.0)),
+        (10, pose(CODY_STAND, pelvis=(0.0, 0.02, 0.84), spine=(-6, 0, 0),
+                  head=(14, 0, 0),
+                  hand_r=(0.30, 0.12, 0.80), hand_l=(-0.30, 0.12, 0.80),
+                  elbow_r=(1.0, 0.2, -0.4), elbow_l=(-1.0, 0.2, -0.4),
+                  foot_r=(0.22, 0.02, 0.104), foot_l=(-0.22, -0.02, 0.104),
+                  fist_r=1.0, fist_l=1.0)),
+        (22, pose(CODY_STAND, pelvis=(0.0, 0.02, 0.85), spine=(-4, 0, 0),
+                  head=(16, 0, 0),
+                  hand_r=(0.31, 0.12, 0.82), hand_l=(-0.31, 0.12, 0.82),
+                  elbow_r=(1.0, 0.2, -0.4), elbow_l=(-1.0, 0.2, -0.4),
+                  foot_r=(0.22, 0.02, 0.104), foot_l=(-0.22, -0.02, 0.104),
+                  fist_r=1.0, fist_l=1.0)),
+        (30, CODY_STAND),
+    ],
+
+    # 150 frames / 5.0s: THE KNEEL at the top of the ramp (C-MITB 40-44 s,
+    # C-SS 4 s). The left foot steps forward (10), he goes down onto the
+    # RIGHT knee (22), left forearm across the left knee, right hand on his
+    # right thigh, head DOWN; held (22-80); the head comes up to the crowd
+    # (96), held; and he rises (138). The root stays put -- the pelvis drops
+    # in root space, as Corner_Climb raises it.
+    "Kneel": [
+        (0,   CODY_STAND),
+        (10,  pose(CODY_STAND, pelvis=(0.0, 0.08, 0.82), spine=(-6, 0, 0),
+                   head=(-6, 0, 0),
+                   foot_l=(-0.16, 0.36, 0.104), knee_l=(-0.2, 1.0, 0.2))),
+        (22,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.53), hips=(-4, 0, 0),
+                   spine=(-16, 0, 0), head=(-30, 0, 0),
+                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.58), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.60), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (80,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.52), hips=(-4, 0, 0),
+                   spine=(-17, 0, 0), head=(-32, 0, 0),
+                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.57), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.59), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (96,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
+                   spine=(4, 0, 0), head=(16, 0, 0),
+                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (118, pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
+                   spine=(5, 0, 0), head=(18, 0, 0),
+                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (138, pose(CODY_STAND, pelvis=(0.0, 0.06, 0.84), spine=(2, 0, 0),
+                   head=(10, 0, 0),
+                   foot_l=(-0.16, 0.30, 0.104), knee_l=(-0.2, 1.0, 0.2))),
+        (150, CODY_STAND),
+    ],
+
+    # 60 frames / 2.0s: the WHOA again mid-aisle, low (C-SNME 40-48 s): feet
+    # wide, knees bent, arms straight out level, palms forward, chest up.
+    "Whoa_Low": [
+        (0,  CODY_STAND),
+        (10, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.78), spine=(10, 0, 0),
+                  head=(16, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.80, 0.08, 1.32), hand_l=(-0.80, 0.08, 1.32),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (48, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.77), spine=(11, 0, 0),
+                  head=(18, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.81, 0.08, 1.31), hand_l=(-0.81, 0.08, 1.31),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
         (60, CODY_STAND),
     ],
 

@@ -84,8 +84,12 @@ func test_romans_entrance_is_continuous_and_cleans_up() -> void:
 			saw["pyro"] = true)
 	assert_bool(fired[1]).is_true()
 	assert_bool(fired[0]).override_failure_message("props or pyro outlived the bell").is_true()
-	for k in ["worn", "held", "", "pyro"]:
+	# The OTC era: the ula fala, no title (refs/entrances.md) -- the title
+	# state never leaves "".
+	for k in ["", "pyro"]:
 		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
+	for k in ["worn", "held"]:
+		assert_bool(saw.has(k)).override_failure_message("a title was %s" % k).is_false()
 
 
 func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
@@ -202,14 +206,18 @@ func test_codys_entrance_is_continuous_and_cleans_up() -> void:
 	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
 
 
-## The WHOAs land on the music: his beats start at the measured times.
+## The WHOAs land on the music: in the dark the building is on camera, he
+## walks out of the smoke on the third WHOA, the WHOA pose on the hit, the
+## fists driven down on the punch (refs/entrances.md, measured).
 func test_codys_beats_land_on_the_music() -> void:
 	var scene := _match(true, "", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var b_man: WrestlerController = scene.get_node("WrestlerB")
 	var start := -1
 	var ticks := 0
 	var starts := {}
 	var last := -1
+	var seen_at := -1
 	while ticks < 20000 and director._beat < director._beats.size():
 		var b: Dictionary = director._beats[director._beat]
 		if director._beat != last:
@@ -221,9 +229,34 @@ func test_codys_beats_land_on_the_music() -> void:
 				starts[clip] = ticks - start
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
-		if starts.has("strikes/air_punch"):
+		if start >= 0 and seen_at < 0 and b_man.visible:
+			seen_at = ticks - start
+		if starts.has("strikes/fists_down"):
 			break
-	assert_int(starts.get("strikes/whoa_arms", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_1 * 60)))
-	assert_int(starts.get("strikes/fists_up", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_2 * 60)))
-	assert_int(starts.get("strikes/whoa_crouch", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_3 * 60)))
-	assert_int(starts.get("strikes/air_punch", -1)).is_equal(int(round(EntranceDirector.CODY_PUNCH * 60)))
+	assert_int(seen_at).override_failure_message("seen at %d" % seen_at) \
+			.is_between(int(round(EntranceDirector.CODY_WHOA_3 * 60)) - 1,
+				int(round(EntranceDirector.CODY_WHOA_3 * 60)) + 2)
+	assert_int(starts.get("strikes/whoa_arms", -1)).is_equal(int(round(EntranceDirector.CODY_HIT * 60)))
+	assert_int(starts.get("strikes/fists_down", -1)).is_equal(int(round(EntranceDirector.CODY_PUNCH * 60)))
+
+
+## Roman's finger is in the air on the slam of his music, and the pyro with
+## it (refs/entrances.md, R-41 and the measured track).
+func test_romans_finger_lands_on_the_slam() -> void:
+	var scene := _match(true, "", "roman")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var start := -1
+	var ticks := 0
+	var pyro_at := -1
+	while ticks < 20000 and director._beat < director._beats.size():
+		var b: Dictionary = director._beats[director._beat]
+		if b.get("kind") == "hold" and start < 0:
+			start = ticks
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+		if start >= 0 and director._pyro and pyro_at < 0:
+			pyro_at = ticks - start
+			break
+	assert_int(pyro_at).override_failure_message("pyro at %d" % pyro_at) \
+			.is_between(int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) - 2,
+				int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) + 2)

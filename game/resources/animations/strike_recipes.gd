@@ -281,6 +281,19 @@ const RECIPES := {
 		"seconds": 2.000, "file": AUTHORED},
 	"ula_fala_off": {"kind": "retime", "source": "Ula_Fala_Off",
 		"seconds": 1.500, "file": AUTHORED},
+	# Measured off the broadcast (gauntlet/refs/entrances.md [V]).
+	"finger_hold": {"kind": "retime", "source": "Finger_Hold",
+		"seconds": 1.000, "file": AUTHORED},
+	"head_bow": {"kind": "retime", "source": "Head_Bow",
+		"seconds": 3.000, "file": AUTHORED},
+	"hands_hips": {"kind": "retime", "source": "Hands_Hips",
+		"seconds": 4.000, "file": AUTHORED, "loop": true},
+	"fists_down": {"kind": "retime", "source": "Fists_Down",
+		"seconds": 1.000, "file": AUTHORED},
+	"kneel": {"kind": "retime", "source": "Kneel",
+		"seconds": 5.000, "file": AUTHORED},
+	"whoa_low": {"kind": "retime", "source": "Whoa_Low",
+		"seconds": 2.000, "file": AUTHORED},
 
 	# --- states that were playing raw rig clips -------------------------
 	#

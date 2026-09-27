@@ -33,6 +33,8 @@ const WATERFALL_COUNT := 11
 const WATERFALL_HEIGHT := 7.0
 const RAMP_GERB_ZS := [-28.0, -24.0, -20.0, -16.0, -12.0, -8.0]
 const STROBE_COLOR := Color(0.92, 0.95, 1.0)
+## Roman's pyro flash: the room goes red on the slam (R-41 42 s).
+const ROMAN_RED := Color(1.0, 0.12, 0.16)
 
 var _flashes: Array = []   # [light, age, peak, life]
 
@@ -46,6 +48,14 @@ func fire(cue: String) -> void:
 			for x: float in MORTAR_XS:
 				_burst(Vector3(x, MORTAR_HEIGHT, ArenaBuilder.STAGE_FRONT - 4.0))
 			_flash(Vector3(0.0, 3.0, ArenaBuilder.STAGE_FRONT - 1.0), 22.0, 26.0, 0.7)
+		"roman":
+			# The OTC's slam (refs/entrances.md, R-41 42 s): gerbs up the stage
+			# front, and the room RED for a beat -- the flash is what reads.
+			var z := ArenaBuilder.STAGE_FRONT - 0.25
+			for x: float in GERB_XS:
+				_gerb(Vector3(x, ArenaBuilder.STAGE_DECK_Y, z), 12.0, 1.6, 360)
+			_flash(Vector3(0.0, 4.0, ArenaBuilder.STAGE_FRONT - 1.0), 34.0, 34.0, 1.5,
+					ROMAN_RED)
 		"cody_hit":
 			# The hit: a waterfall along the front of the stage, gerbs up both
 			# sides of the ramp, and the mortars -- all of it at once.

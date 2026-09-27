@@ -7005,3 +7005,47 @@ on every edge the body passes (the open front, the cuffs, the vents).
 ### Checks
 478 tests pass. `cody_coat.py` and `build_venue.sh roman` each rebuild
 byte-identical. `wear_clearance.tscn`: title worst 0.002 m over 297 samples.
+
+## Round: the entrances, matched to the broadcast
+
+The owner asked for Roman's and Cody's entrances to match the real ones:
+poses, gait, style, camera, timing to the music, the way in to the ring.
+Discovery first: seven WWE.com entrance clips (their own MP4s, not
+committed) stepped at 0.5 s with scene-cut detection, and Roman's supplied
+theme measured. Everything seen is in `gauntlet/refs/entrances.md`,
+"Measured off broadcast footage", tagged [V] with clip and timestamp; the
+earlier [K]/[P] beats the footage contradicted are marked superseded.
+
+**Roman is the OTC** (owner's choice; his own wall video is that era): blue,
+no title. The track goes near-silent at 42.5 s and slams at **45.0 s**; the
+broadcast puts the finger and the pyro on the slam, so he now walks out of
+his portal at ~25.7 s, looks the building over on the lip (push-in, then a
+close-up), and the finger's arm arrives on 45.0 s with stage gerbs and the
+room red for 1.5 s, held to 58 s under a low wide from the ramp. The whole
+ramp at 0.5 m/s on the low ultra-wide steadicam, cut to high wides and once
+over his shoulder; head bowed at the foot of the steps; the finger to the
+hard camera, hands on hips, the ula fala off.
+
+**Cody**: the WHOAs play over the crowd and the dark building, not him; he
+walks out of smoke in his portal on the third, backlit; the WHOA pose and
+the pyro on the hit, both fists driven DOWN on the punch (it was an air
+punch up), the low steadicam, **the kneel** at the top of the ramp, the low
+WHOA mid-aisle, and in over the ropes with the camera low behind him.
+
+New clips (`wrestling_clips.py`, through the `blender-animation` gate and
+`clip_shot.tscn`): `Finger_Hold`, `Head_Bow`, `Hands_Hips`, `Fists_Down`,
+`Kneel`, `Whoa_Low`; `Walk_Slow_Look` now carries the arms off his sides,
+palms back, chin down; `Walk_Crowd` swings the head wider. New shots:
+`steadicam_low`, `arena_high`, `over_shoulder`, `ramp_low_wide`,
+`ramp_long`, `ring_behind_low`, `crowd_wide`, `bow_close`.
+
+Still not matched, and why: the set's portal rings are the arena's own
+pink/orange for everyone -- only his light goes blue; the middle-rope
+corner pose stays (sourced, but in none of the clips measured); Cody's kneel
+is partly hidden by the coat's skirt, as in C-MITB.
+
+### Checks
+479 tests pass (the clip-authoring digest re-pinned after review). The
+clip and strike bakes rebuild byte-identical. `entrance_shots.tscn`
+rendered every beat; timing asserted by `test_romans_finger_lands_on_the_slam`
+and `test_codys_beats_land_on_the_music`.

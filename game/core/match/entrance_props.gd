@@ -116,12 +116,16 @@ var _fala: Node3D
 var _title: Node3D
 ## Where the title is: "worn" (round his waist), "held", or "" (put down).
 var _title_state := "worn"
+var _with_title := true
 
 
-static func dress(wrestler: WrestlerController) -> EntranceProps:
+## `with_title` false dresses the ula fala alone -- the OTC era carries no
+## title (gauntlet/refs/entrances.md).
+static func dress(wrestler: WrestlerController, with_title := true) -> EntranceProps:
 	var props := EntranceProps.new()
 	props.name = "EntranceProps"
 	props._w = wrestler
+	props._with_title = with_title
 	props._fit = FITS.get(wrestler.entrance_style, {})
 	props.top_level = true
 	wrestler.add_child(props)
@@ -131,7 +135,8 @@ static func dress(wrestler: WrestlerController) -> EntranceProps:
 func _ready() -> void:
 	var mats := _materials()
 	_fala = _load(ULA_FALA, mats)
-	_title = _load(TITLE, mats)
+	if _with_title:
+		_title = _load(TITLE, mats)
 	var l := _bone("upperarm_l")
 	var r := _bone("upperarm_r")
 	if l != Vector3.INF and r != Vector3.INF:
@@ -157,7 +162,7 @@ func _load(path: String, mats: Dictionary) -> Node3D:
 
 
 func set_title(state: String) -> void:
-	_title_state = state
+	_title_state = state if _title else ""
 	if _title == null:
 		return
 	for node in _title.find_children("", "MeshInstance3D", true, false):

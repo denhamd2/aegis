@@ -69,7 +69,7 @@ func _ready() -> void:
 			beat = "%s %s" % [b["kind"], b.get("clip", b.get("shot", ""))]
 		for w: WrestlerController in director._props:
 			var props: EntranceProps = director._props[w]
-			if is_instance_valid(props) and props._title_state == "worn":
+			if is_instance_valid(props) and props._title and props._title_state == "worn":
 				_note("title " + w.entrance_style, _title_depth(w, props), beat)
 	for key: String in _worst:
 		if _verbose:
