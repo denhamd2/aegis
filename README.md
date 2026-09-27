@@ -6916,3 +6916,44 @@ one: RomanModel mapped the mannequin's first finger knuckle to Roman's
 clip bent his palm and his curled fingers splayed into a claw. Mapped
 knuckle to knuckle now, and pinned by `test_fingers_map_knuckle_to_knuckle`.
 `clip_shot.tscn --hand r` renders the close-up that found it. 475 tests pass.
+
+## Round: Cody's entrance, the corner steps, the textured title, Cody's look
+
+**Roman, second pass.** He waits for the drop in his music (45.2 s): the
+titantron and arena shots carry the build, then he appears, walks at half
+pace with a look-around under a dimmed house, and gets face close-ups. The
+title now rides round his waist (`roman_props.py build_belt` waist/held
+variants) so it never fights the ula fala, and he raises it overhead in the
+ring. The title is textured from the owner's atlas
+(`tools/assets/build_title_textures.py`, ORM materials in `EntranceProps`);
+the atlas swatches are material references only, not geometry.
+
+**Ring steps on the corner diagonals.** The steel steps now sit at 45°,
+pointing at the posts, in the hard camera's top-left and bottom-right
+corners, as they do at real shows (`ring.py build_steps`,
+`RingBuilder.STEP_CORNERS`). Every route in goes over them through
+`EntranceDirector._add_route_in`, and `Apron_Step` /
+`Rope_Step_Through_Apron` were re-keyed for the diagonal approach.
+
+**Cody's entrance** (beat sheet in `gauntlet/refs/entrances.md`, timed to his
+music with `_secs()`): blackout, his silhouette in the portal on each
+"WHOA", the hit with stage pyro and the lower third, a steadicam walk in the
+coat, the turnbuckle poses, then the ring. His video and music play on the
+stage screen for exactly his entrance (`StageVideo.ENTRANCES`).
+
+**Cody's look.** His coat is a skinned mesh driven from his own skeleton by
+bone name (`tools/blender/cody_coat.py`, `EntranceCoat`) and comes off in the
+ring (`Coat_Off`). His hair is geometry now: eleven shells grown off the
+scalp faces of his head mesh (`tools/blender/cody_hair.py`), riding a
+`BoneAttachment3D` on his head bone. Measured against the three reference
+photos, the hair's median colour is (192,165,134); the refs read
+(130,105,86) in the press photo, (210,186,150) in the ring and (220,185,160)
+at the entrance. The sides are tight and the top rounds over and lies back;
+the hairline fades out onto the skin instead of ending in a dotted border.
+Still short of the photos: the top reads as fine streaks rather than chunky
+clumps, and the height matches the press photo more than the spikier
+in-ring look.
+
+### Checks
+478 tests pass. Probes: `clip_shot.tscn --face`, `props_shot.tscn --cody`,
+`belt_shot.tscn`, `steps_shot.tscn`, `entrance_shots.tscn`.
