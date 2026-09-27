@@ -258,13 +258,19 @@ def build_belt(parts: dict[str, Part], prefix: str, frame) -> None:
                 snap.tube(ring, 0.0032, sides=5, caps=False)
 
 
-## Roman's waist at the height the belt sits (y 1.05, just under the
-## waistband of his trunks at 1.08-1.11), measured off M_Bottoms in
-## roman_reigns.glb: 0.36 m across, 0.26 m front to back, its centre 2.4 cm
-## forward of the hips bone's line.
-WAIST_HALF_X = 0.19
-WAIST_HALF_Z = 0.14
-WAIST_FORWARD = 0.024
+## Roman's waist, as the belt must clear it. The first cut was one rest-pose
+## ellipse (0.19 x 0.14 m, centre 2.4 cm forward), and in the owner's video
+## the plates sat inside his stomach. tools/probe/wear_clearance.tscn then
+## measured every torso vertex in the belt's height band (the centre plate
+## runs from 4 cm under the hips bone to 20 cm over it, up onto his belly)
+## on every fifth frame of his entrance: his belly stands 0.21 m in front of
+## the hips bone and his seat 0.15 m behind, and he is 0.21 m to a side.
+## So the belt line is two half-ellipses -- a deeper one in front -- fitted
+## to clear 99.9% of those points by 17 mm (the strap's inner face is 4 mm
+## inside the line); the rest come within 2 mm of it, on single frames.
+WAIST_HALF_X = 0.225
+WAIST_FRONT = 0.225
+WAIST_BACK = 0.165
 WAIST_LIFT = 0.075
 
 
@@ -272,8 +278,8 @@ def _waist_point(t: float) -> Vector:
     """A point on the belt line, t in [0, 1): 0 at the buckle (front, -Z),
     going round his RIGHT (+X) side."""
     a = 2.0 * math.pi * t
-    return Vector((WAIST_HALF_X * math.sin(a), 0.0,
-                   -WAIST_FORWARD - WAIST_HALF_Z * math.cos(a)))
+    depth = WAIST_FRONT if math.cos(a) > 0.0 else WAIST_BACK
+    return Vector((WAIST_HALF_X * math.sin(a), 0.0, -depth * math.cos(a)))
 
 
 def build_title_waist(parts: dict[str, Part]) -> None:
@@ -301,7 +307,10 @@ def build_title_waist(parts: dict[str, Part]) -> None:
         k = (u - arc[lo]) / max(arc[hi] - arc[lo], 1e-9)
         p = pts[lo].lerp(pts[hi], k) + Vector((0.0, WAIST_LIFT, 0.0))
         along = (pts[hi] - pts[lo]).normalized()
-        out = Vector((p.x, 0.0, p.z + WAIST_FORWARD)).normalized()
+        # The line's outward normal: along perpendicular to up.
+        out = along.cross(Vector((0.0, 1.0, 0.0))).normalized()
+        if out.dot(Vector((p.x, 0.0, p.z))) < 0.0:
+            out = -out
         return p, along, out
     build_belt(parts, "Title", frame)
 

@@ -193,10 +193,27 @@ func _follow() -> void:
 			# Real size: the belt is authored in metres off the atlas.
 			_title.global_transform = Transform3D(turn, hand)
 	else:
-		# Worn: authored at Roman's own measured waist, so 1:1 on his hips.
+		# Worn: authored at Roman's own measured waist, so 1:1 on his hips --
+		# and turned with them. Held level (turn alone) it stayed upright
+		# while his pelvis tipped and his torso leaned into the walk and the
+		# climb, and his stomach came out through the plates by up to 17 cm
+		# (tools/probe/wear_clearance.tscn). Here it takes the pelvis's
+		# rotation away from its rest, so at rest it is exactly as authored.
 		var hips := _bone("pelvis")
 		if hips != Vector3.INF:
-			_title.global_transform = Transform3D(turn, hips)
+			_title.global_transform = Transform3D(_pelvis_turn() * turn, hips)
+
+
+## The pelvis's rotation away from its rest pose, in world space.
+func _pelvis_turn() -> Basis:
+	var sk := _w.skeleton
+	var i := sk.find_bone(_w._skeleton_bone_name("pelvis")) if sk else -1
+	if i < 0:
+		return Basis.IDENTITY
+	var s := sk.global_basis.orthonormalized()
+	var local := sk.get_bone_global_pose(i).basis.orthonormalized() \
+			* sk.get_bone_global_rest(i).basis.orthonormalized().inverse()
+	return s * local * s.inverse()
 
 
 func _bone(canonical: String) -> Vector3:

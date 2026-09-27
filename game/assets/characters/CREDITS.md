@@ -224,3 +224,6 @@ design follows photographs of his entrance coat supplied by the owner as
 references (not committed). `cody_rhodes_head_blond.png` is the supplied
 head texture with its hair region re-coloured by
 `tools/assets/build_cody_textures.py`, to the owner's reference photographs.
+`cody_coat_lapel.png` and the fabric normal maps `cody_coat_nrm_body.png` /
+`cody_coat_nrm_sleeve.png` (twill weave and fold creases) are painted by the
+same `cody_coat.py`, procedurally, from nothing but code.

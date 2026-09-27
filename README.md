@@ -6957,3 +6957,51 @@ in-ring look.
 ### Checks
 478 tests pass. Probes: `clip_shot.tscn --face`, `props_shot.tscn --cody`,
 `belt_shot.tscn`, `steps_shot.tscn`, `entrance_shots.tscn`.
+
+## Round: Cody's coat as cloth, Roman's title off his stomach
+
+From the owner's entrance video: the coat "didn't look good" (read as painted
+on, and the tails were wrong), and part of the title sat inside Roman's
+stomach.
+
+**The title.** It followed his hips bone's position but only his yaw, so
+when his pelvis tipped and his torso leaned into the walk and the climb, his
+stomach came out through the plates -- measured at up to 17 cm by the new
+`tools/probe/wear_clearance.tscn`, which skins his meshes on the CPU and
+tests every torso vertex in the belt's height band against the belt line.
+The rest-pose waist it was built on was too small as well: his belly stands
+0.21 m in front of the hips bone at the height of the centre plate's top,
+not 0.16. Now `EntranceProps` turns the worn title with the pelvis's own
+rotation, and `roman_props.py` builds the belt line as two half-ellipses
+(deeper in front) refit to the probe's dump of every fifth entrance frame.
+Worst frame now: 2 mm past the line, short of the strap's inner face.
+Thighs are excluded -- a knee lifted to climb the steps comes up in front of
+the plates' bottom edge, as it would under a real belt.
+
+**The coat** (`tools/blender/cody_coat.py`, rebuilt):
+- The jacket was his skin pushed out 16 mm. It is now smoothed first (it
+  bridges the pec, ab and spine hollows), stood off 22 mm and pushed clear
+  of him everywhere, with 5 mm of thickness (Solidify) and a dark red lining.
+- The skirt was centred 12 cm in front of his hips -- the body mesh's hips
+  sit at y 0.14 in its bind space, the skirt assumed 0.02 -- which is why it
+  stood off his legs like a lampshade from the side. It is now measured off
+  him: it starts on the jacket's own outline, rounds over his seat and falls
+  nearly straight in folds to mid-shin, vented at both sides from mid-thigh.
+  Its weights moved from up to 75% thigh to mostly pelvis (front panels
+  0.45 to their own thigh, the back tail 0.15), so it hangs and swings.
+- The open front's saw-toothed edge is straightened and turned back into
+  lapels; the cuffs are cut square to the forearm; skin weighted to the
+  thighs round his hips is now jacket too (it was a band of holes where his
+  tights showed through).
+- Fabric: a twill-and-folds normal map, mottled roughness in the ORM, and a
+  little rim for the sheen cloth has at a grazing angle.
+
+Checked on pixels with the new `tools/probe/coat_shot.tscn`, which plays the
+real entrance and cuts to its own camera on the coat (front, three-quarter,
+side, back; `--bone lowerarm_r` for a close-up) and on the worn title. A
+nearest-surface clearance test for the coat was tried and dropped: it fires
+on every edge the body passes (the open front, the cuffs, the vents).
+
+### Checks
+478 tests pass. `cody_coat.py` and `build_venue.sh roman` each rebuild
+byte-identical. `wear_clearance.tscn`: title worst 0.002 m over 297 samples.
