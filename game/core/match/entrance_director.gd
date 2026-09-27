@@ -179,6 +179,8 @@ const CODY_WALK_CLIP := "strikes/walk_crowd"
 const CODY_PUNCH_AT := 20
 ## Kneel: 5.0 s at the top of the ramp (C-MITB 40-44 s).
 const CODY_KNEEL_TICKS := 300
+## The WHOA held on the long lens before the cut to the pyro wide.
+const CODY_WHOA_LONG_TICKS := 60
 ## His walk, cut as C-39 and C-SS cut it: the low steadicam ahead of him and a
 ## wide of the building. [shot, seconds], cycled.
 const CODY_WALK_SHOTS := [["steadicam_low", 4.0], ["arena_high", 2.5],
@@ -262,9 +264,11 @@ const CROWD_WIDE_FOV := 40.0
 const BOW_SIDE := 1.9
 const BOW_AHEAD := 0.7
 const BOW_FOV := 26.0
-## The smoke he walks out of: a box over his portal mouth.
-const SMOKE_SIZE := Vector3(4.0, 3.6, 3.0)
-const SMOKE_DENSITY := 0.35
+## The smoke he walks out of: a bank of it on the deck, knee deep, in his
+## portal mouth (C-MITB 22-26 s) -- a full-height box lit from behind went
+## white and hid him.
+const SMOKE_SIZE := Vector3(5.0, 1.1, 4.0)
+const SMOKE_DENSITY := 0.5
 
 var _match: Node
 var _a: WrestlerController
@@ -681,12 +685,18 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"walk_clip": CODY_WALK_CLIP, "shot": "portal_long", "portal": mouth,
 			"push_from": 0, "push_over": _secs(CODY_WHOA_3, CODY_HIT),
 			"events": [[1, "backlight_on"]]})
-	# THE HIT. Lights, pyro, the WHOA pose -- the same frame.
+	# THE HIT. Lights, pyro, the WHOA pose -- the same frame. Held on the
+	# long lens from down the ramp (C-39 20-24 s), then the very wide for the
+	# fire (C-39 24 s).
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
-			"ticks": _secs(CODY_HIT, CODY_PUNCH), "clip": "strikes/whoa_arms",
-			"facing": Vector3.BACK, "shot": "stage_wide",
+			"ticks": CODY_WHOA_LONG_TICKS, "clip": "strikes/whoa_arms",
+			"facing": Vector3.BACK, "shot": "ramp_long",
 			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "pyro_cody_hit"],
 					[1, "fog_off"]]})
+	_beats.append({"kind": "pose", "who": w, "lights": "RB",
+			"ticks": _secs(CODY_HIT, CODY_PUNCH) - CODY_WHOA_LONG_TICKS,
+			"clip": "strikes/whoa_arms",
+			"facing": Vector3.BACK, "shot": "stage_wide"})
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
 			"ticks": _secs(CODY_PUNCH, CODY_OUT), "clip": "strikes/fists_down",
 			"facing": Vector3.BACK, "shot": "hero_low", "card": true,
@@ -1034,7 +1044,7 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					RAMP_LOW_WIDE_FOV, true)
 		"ramp_long":
 			_camera.set_entrance_shot(Vector3(w.global_position.x * 0.5, 0.9,
-					w.global_position.z + RAMP_LONG_BACK), _head_of(w) + Vector3.DOWN * 0.45,
+					w.global_position.z + RAMP_LONG_BACK), w.global_position + Vector3.UP * 1.0,
 					RAMP_LONG_FOV, true)
 		"ring_behind_low":
 			var f6 := _flat(-w.global_transform.basis.z).normalized()

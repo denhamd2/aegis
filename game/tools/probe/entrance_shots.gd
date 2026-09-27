@@ -15,6 +15,8 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 var _out := "/tmp/entrance"
 var _every := 30
 var _frame := 0
+## --until N: stop after N frames (re-rendering the start of a long run).
+var _until := -1
 
 
 func _ready() -> void:
@@ -24,6 +26,8 @@ func _ready() -> void:
 			_out = args[i + 1]
 		elif args[i] == "--every" and i + 1 < args.size():
 			_every = int(args[i + 1])
+		elif args[i] == "--until" and i + 1 < args.size():
+			_until = int(args[i + 1])
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec("")
 	var scene: Node = load(MATCH_SCENE).instantiate()
@@ -48,6 +52,8 @@ func _ready() -> void:
 			get_viewport().get_texture().get_image().save_jpg(
 					"%s/e_%05d.jpg" % [_out, _frame], 0.85)
 		_frame += 1
+		if _until > 0 and _frame >= _until:
+			break
 		if rang[0]:
 			after += 1
 	print("ENTRANCE_SHOTS %d frames, bell=%s" % [_frame, rang[0]])
