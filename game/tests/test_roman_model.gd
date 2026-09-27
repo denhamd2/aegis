@@ -220,3 +220,22 @@ func test_a_key_at_the_source_rest_lands_on_the_target_rest() -> void:
     var out: Vector3 = model._retarget_key(Animation.TYPE_POSITION_3D,
             (rest["source"] as Transform3D).origin, rest)
     assert_vector(out).is_equal_approx(_TARGET_HIP_REST, Vector3.ONE * 0.001)
+
+
+## Roman's J_*F0 finger bones are metacarpals inside the palm; the mannequin's
+## *_01 is the first knuckle. Mapped one to the other, every curl bent the
+## palm and the hand became a claw (the pointing thumb stuck out). So no
+## finger's first bone may hang straight off the wrist.
+func test_fingers_map_knuckle_to_knuckle() -> void:
+    var model: RomanModel = auto_free((load("res://scenes/roman_model.tscn")
+            as PackedScene).instantiate())
+    add_child(model)
+    var sk: Skeleton3D = model._animation_skeletons()[0]
+    for side: String in ["l", "r"]:
+        var wrist := sk.find_bone(RomanModel.BONE_MAP["hand_" + side])
+        for finger: String in ["index", "middle", "ring", "pinky"]:
+            var bone := sk.find_bone(RomanModel.BONE_MAP["%s_01_%s" % [finger, side]])
+            assert_int(bone).is_greater_equal(0)
+            assert_int(sk.get_bone_parent(bone)).override_failure_message(
+                    "%s_01_%s maps to a bone on the wrist -- a metacarpal" % [finger, side]) \
+                    .is_not_equal(wrist)

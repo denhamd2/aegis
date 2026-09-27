@@ -34,7 +34,19 @@ const MOVES_DIR := "res://resources/moves"
 ## canvas. They are replaced by one grapple that does not flip anybody,
 ## grapple_clinch_knee, which is why this number is now 1.
 const SCOPED_GRAPPLE := 1
-const SCOPED_SIGNATURE := 2
+## The power rung is back with one move: the body slam, keyed in Blender
+## against its partner rather than stitched from borrowed clips, which is
+## what the cut throws were.
+const SCOPED_POWER := 1
+## Two shared (backbreaker, neckbreaker) and one per wrestler who has one:
+## Roman's Superman Punch and Cody's Cody Cutter.
+const SCOPED_SIGNATURE := 4
+## One per wrestler who has one, and they belong to the roster rather than to
+## match.tscn: Roman's Spear and Cody's Cross Rhodes.
+const SCOPED_FINISHER := 2
+## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
+## paired move so the victim's half is keyed against the hit.
+const SCOPED_RUNNING := 25
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -67,22 +79,33 @@ func _make_attacker() -> WrestlerController:
 
 func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var grapple := 0
+	var power := 0
 	var signature := 0
+	var finisher := 0
+	var running := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
 			grapple += 1
+		elif name.begins_with("power_"):
+			power += 1
 		elif name.begins_with("signature_"):
 			signature += 1
+		elif name.begins_with("finisher_"):
+			finisher += 1
+		elif name.begins_with("running_"):
+			running += 1
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
 		"Grapple moves in paired_moves.tres: %s" % [_paired_move_names()]
 	).is_equal(SCOPED_GRAPPLE)
+	assert_int(power).is_equal(SCOPED_POWER)
 	assert_int(signature).is_equal(SCOPED_SIGNATURE)
-	# The removed families leave nothing behind: a power, finisher or
-	# reversal clip still in the library would be an animation no MoveDef
-	# names and nothing can play.
+	assert_int(finisher).is_equal(SCOPED_FINISHER)
+	assert_int(running).is_equal(SCOPED_RUNNING)
+	# The removed family leaves nothing behind: a reversal clip still in the
+	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
 		"Clips from a removed family still in paired_moves.tres: %s" % [cut]
 	).is_empty()
@@ -196,7 +219,9 @@ func test_the_tier_draw_skips_moves_this_opponent_is_too_heavy_for() -> void:
 		assert_str(attacker._pick_tier_move(primary, [forbidden]).animation_pair_id) \
 			.is_equal(&"primary")
 
-## The moves only matter if the shipped match actually hands them out.
+## The moves only matter if the shipped match actually hands them out --
+## the shared ones through match.tscn, each finisher through its wrestler's
+## roster entry.
 func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 	var match_scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
 	var reachable := {}
@@ -204,11 +229,17 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 		var w: WrestlerController = match_scene.get_node(name)
 		for tier: Array in [
 			[w.grapple_move, w.grapple_move_pool],
+			[w.power_move, w.power_move_pool],
 			[w.signature_move, w.signature_move_pool],
+			[w.running_attack_move, w.running_attack_move_pool],
 		]:
 			reachable[String((tier[0] as MoveDef).animation_pair_id)] = true
 			for extra: MoveDef in tier[1]:
 				reachable[String(extra.animation_pair_id)] = true
+	for entry: Roster.Entry in Roster.entries():
+		for path: String in [entry.finisher, entry.signature]:
+			if path != "":
+				reachable[String((load(path) as MoveDef).animation_pair_id)] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):
@@ -297,3 +328,79 @@ func test_no_trajectory_buries_even_a_tucked_body() -> void:
 	assert_array(buried).override_failure_message(
 		"Body parts through the mat past any tucked explanation: %s" % [buried]
 	).is_empty()
+
+## Every paired move whose defender half ends on the mat has to say so, or
+## the grapple resolves into a standing HIT_REACT and the man lying there
+## at the clip's last frame is stood up on the next tick.
+func test_throws_that_end_on_the_mat_leave_the_defender_down() -> void:
+	for id: String in ["power_bodyslam", "signature_backbreaker", "signature_neckbreaker"]:
+		var move: MoveDef = load("%s/%s.tres" % [MOVES_DIR, id])
+		assert_bool(move.leaves_defender_down).override_failure_message(
+			"%s ends with the defender on the mat" % id).is_true()
+	var knee: MoveDef = load("%s/grapple_clinch_knee.tres" % MOVES_DIR)
+	assert_bool(knee.leaves_defender_down).is_false()
+
+## A finisher is one man's: configure_match() puts Roman's Spear on Roman and
+## Cody's Cross Rhodes on Cody, in whichever slot each is standing in.
+func test_each_wrestler_gets_his_own_finisher() -> void:
+	var roman := Roster.by_id("roman")
+	var cody := Roster.by_id("cody")
+	for order: Array in [[roman, cody], [cody, roman]]:
+		var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+		TitleScreen.configure_match(scene, order[0], order[1], 1)
+		for pair: Array in [["WrestlerA", order[0]], ["WrestlerB", order[1]]]:
+			var w: WrestlerController = scene.get_node(pair[0])
+			var entry: Roster.Entry = pair[1]
+			assert_str(w.finisher_move.resource_path).is_equal(entry.finisher)
+			assert_int(w.tier_of(w.finisher_move)).is_equal(CombatSystem.Tier.FINISHER)
+	assert_str((load(roman.finisher) as MoveDef).animation_pair_id).is_equal("finisher_spear")
+	assert_str((load(cody.finisher) as MoveDef).animation_pair_id).is_equal("finisher_cross_rhodes")
+
+## A wrestler's own signature joins his draw -- and only his.
+func test_each_wrestler_gets_his_own_signature_and_keeps_the_shared_ones() -> void:
+	var roman := Roster.by_id("roman")
+	var cody := Roster.by_id("cody")
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, roman, cody, 1)
+	var ids := {}
+	for name: String in ["WrestlerA", "WrestlerB"]:
+		var w: WrestlerController = scene.get_node(name)
+		var drawn: Array[String] = [String(w.signature_move.animation_pair_id)]
+		for move: MoveDef in w.signature_move_pool:
+			drawn.append(String(move.animation_pair_id))
+		ids[name] = drawn
+		for move: MoveDef in [w.signature_move] + w.signature_move_pool:
+			assert_int(w.tier_of(move)).is_equal(CombatSystem.Tier.SIGNATURE)
+	assert_array(ids["WrestlerA"]).contains(["signature_superman_punch",
+			"signature_backbreaker", "signature_neckbreaker"])
+	assert_array(ids["WrestlerA"]).not_contains(["signature_cody_cutter"])
+	assert_array(ids["WrestlerB"]).contains(["signature_cody_cutter",
+			"signature_backbreaker", "signature_neckbreaker"])
+	assert_array(ids["WrestlerB"]).not_contains(["signature_superman_punch"])
+
+## And it is the first one he throws.
+func test_a_wrestlers_first_signature_is_his_own() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
+	var roman: WrestlerController = scene.get_node("WrestlerA")
+	var cody: WrestlerController = scene.get_node("WrestlerB")
+	assert_str(roman.own_signature.animation_pair_id).is_equal("signature_superman_punch")
+	assert_str(cody.own_signature.animation_pair_id).is_equal("signature_cody_cutter")
+
+## A running attack with a recipe connects into a paired move -- both men
+## straight to GRAPPLE_HOLD, no tie-up -- and one without keeps the old
+## single-character strike.
+func test_a_paired_running_attack_skips_the_tie_up() -> void:
+	for from: WrestlerFSM.State in [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN]:
+		assert_bool(WrestlerFSM.LEGAL_TRANSITIONS[from].has(WrestlerFSM.State.GRAPPLE_HOLD)) \
+			.override_failure_message("%s cannot enter GRAPPLE_HOLD" % from).is_true()
+	# And every running attack match.tscn hands out beyond the two original
+	# single-character ones has a recipe, so it will take the paired path.
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	var w: WrestlerController = scene.get_node("WrestlerA")
+	var paired := 0
+	for move: MoveDef in [w.running_attack_move] + w.running_attack_move_pool:
+		if PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
+			paired += 1
+	assert_int(paired).is_equal(SCOPED_RUNNING)

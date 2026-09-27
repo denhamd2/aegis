@@ -278,39 +278,49 @@ const APRON_TOP := -0.10
 const APRON_BOTTOM := -1.00
 
 # --- Steel steps -------------------------------------------------------------
-## The steps stand at a CORNER, hard against a ring post, not halfway down a
-## side. That is where they go: the regulation that governs them asks for
-## "suitable steps for use of the contestants in their corners" (Virginia
-## 18VAC120-40-415.1), and on television the two sets sit tight against a post
-## with their top tread level with the apron, so a wrestler climbing them
-## steps straight over the top rope beside the turnbuckle.
+## Two flights of steel steps, each set on the DIAGONAL of a corner, pointing
+## straight at the ring post: the flight's centre line is the corner's
+## diagonal, its top tread's back edge squared across that line and touching
+## the apron's corner, so from above each flight meets the ring at 45 degrees
+## to both of its sides and leaves a triangle of floor either side. That is
+## how every televised ring rigs them -- the steps are a corner fixture, and
+## the wrestler climbs toward the turnbuckle, steps up onto the apron beside
+## the post and goes through the ropes a pace along from it.
 ##
-## Two sets, on DIAGONALLY opposite corners: +X beside the post at (+3, +3),
-## -X beside the post at (-3, -3). Diagonal rather than both on one side so
-## each half of the ring has a way in, and neither set stands in the entrance
-## walkway down the middle of -Z.
+## The corners are the hard camera's TOP-LEFT and BOTTOM-RIGHT (the owner's
+## call; the hard cam sits at -X looking +X, so its left is -Z): (+3, -3) and
+## (-3, +3). The top-left one is on the entrance side, so it is the flight
+## every entrance climbs.
 ##
-## This is the gap left between the near edge of the steps and the post.
-## The 45-degree cut across the TOP tread's ring-side corner, which is what
-## lets a flight sit into a corner instead of stopping beside it.
-##
-## Replaces STEP_POST_GAP, which held the flight 0.10 clear of the post and
-## square-ended -- so the steps stood at the corner without ever reaching it.
-## Every ring-steps casting has this notch (it is why the top tread is the one
-## with a corner missing) and it exists so the tread can pass the ring post.
-##
-## 0.26 on each leg, a 0.37 diagonal, against a post 0.104 across: the cut
-## clears the tube with room for the apron's overhang either side of it.
-const STEP_CORNER_NOTCH := 0.26
-## Clearance between the apron's skirt and the flight's inner face. It was a
-## bare 0.06 inside ring.py; it is a constant here because the notch test has
-## to know where the tread's inner edge is.
+## The casting (ring.py build_steps): three treads, each a full-height block
+## stepped back from the ring, so the flight reads as one solid steel object
+## with solid side plates, not three slabs; a raised lip on each tread's
+## nose. No notch any more: set on the diagonal, the top tread clears the
+## post by the apron's own overhang, which is what the diagonal is for.
+const STEP_CORNERS := [Vector2(1.0, -1.0), Vector2(-1.0, 1.0)]
+## Clearance between the apron's corner and the top tread's back edge.
 const STEP_APRON_GAP := 0.06
 const STEP_TREADS := 3
-const STEP_WIDTH := 1.45
+## Across the flight. Narrower than it was side-on (1.45): on the diagonal
+## the ends of the top tread stand off the apron by half this, and a
+## four-foot casting is about the size of the real ones.
+const STEP_WIDTH := 1.2
 const STEP_RUN := 0.36
 const STEP_TOP_Y := -0.14
 const STEP_FLOOR_Y := -1.00
+
+
+## The flight on the corner with signs `corner` (STEP_CORNERS): the unit
+## vector pointing OUT along its diagonal, away from the ring.
+static func step_out_dir(corner: Vector2) -> Vector3:
+	return Vector3(corner.x, 0.0, corner.y).normalized()
+
+
+## Where the flight's top tread centre is, on the floor plane (y 0).
+static func step_top_centre(corner: Vector2) -> Vector3:
+	var apron_corner := Vector3(corner.x * APRON_OUT, 0.0, corner.y * APRON_OUT)
+	return apron_corner + step_out_dir(corner) * (STEP_APRON_GAP + STEP_RUN * 0.5)
+
 
 # --- Texture generation ------------------------------------------------------
 const CANVAS_SIZE := 1024

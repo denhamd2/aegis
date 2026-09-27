@@ -115,7 +115,7 @@ func _ready() -> void:
 	# down by the boots.
 	var skel: Skeleton3D = defender.find_child("Skeleton3D", true, false)
 	if skel:
-		for bone_name: String in ["Head", "pelvis", "foot_l"]:
+		for bone_name: String in ["Head", "spine_03", "upperarm_l", "upperarm_r", "pelvis", "foot_l"]:
 			var bi := skel.find_bone(bone_name)
 			if bi < 0:
 				continue

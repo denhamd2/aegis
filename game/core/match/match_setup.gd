@@ -19,6 +19,17 @@ extends Node3D
 ## inputs against a different world.
 @export var playback_replay_path: String = ""
 
+## Open with both wrestlers walking to the ring (EntranceDirector) before the
+## bell. OFF by default, and that is load-bearing: every test, probe, capture
+## and art shot builds this scene expecting two men in the ring on tick 1.
+## The title screen switches it on for a real match.
+##
+## The entrance is presentation only. The whole match is frozen through it --
+## wrestlers, AI, referee, grapple rig -- and the replay does not start
+## recording until the bell, so tick 0 is the bell whether or not anyone
+## walked to the ring first, and a replay's end-state hash cannot tell.
+@export var entrances: bool = false
+
 @onready var wrestler_a: WrestlerController = $WrestlerA
 @onready var wrestler_b: WrestlerController = $WrestlerB
 @onready var referee: MatchReferee = $MatchReferee
@@ -65,9 +76,27 @@ func _ready() -> void:
 		wrestler_a.ai.setup_jitter(match_seed, wrestler_a.player_index)
 	if wrestler_b.is_ai and wrestler_b.ai:
 		wrestler_b.ai.setup_jitter(match_seed, wrestler_b.player_index)
+	_replay = replay
+	# Never under a capture: a capture replays a recording from tick 0 and
+	# its beats are frame-labelled.
+	var capturing := CaptureHarness != null and CaptureHarness.is_capturing()
+	if entrances and not capturing and record_replay_path == "":
+		var director := EntranceDirector.new()
+		director.name = "EntranceDirector"
+		add_child(director)
+		director.bell.connect(_begin_live)
+		director.begin(self)
+	else:
+		_begin_live()
+
+var _replay: ReplayResource = null
+
+## The bell: the recording starts here, whether it is tick 1 or the end of the
+## entrances.
+func _begin_live() -> void:
 	if ReplaySystem:
-		if replay:
-			ReplaySystem.start_playback(replay)
+		if _replay:
+			ReplaySystem.start_playback(_replay)
 		else:
 			ReplaySystem.start_recording(match_seed)
 	if CaptureHarness:

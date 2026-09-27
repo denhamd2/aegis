@@ -38,11 +38,63 @@ That sentence is `WrestlerAI`'s, and it is the whole design:
    contest decides who throws the move. This exists to open the match with
    something other than a punch.
 2. **The middle is strikes.** Punches and kicks, traded. This is most of the
-   match by time and by count.
+   match by time and by count. Once in the middle, the man who won the opening
+   lock-up locks up again for the **power move** -- the body slam -- when his
+   momentum sits between `POWER_THRESHOLD` and `SIGNATURE_THRESHOLD`
+   (`WrestlerAI._wants_power_tie_up()`). One try a match, won or lost. It
+   leaves the other man on the mat briefly (`MoveDef.leaves_defender_down`),
+   which is not a knockdown and cannot be covered.
 3. **The signature finishes it.** Once the man opposite has been worn down far
    enough that one signature will put him on the mat, the other reaches for a
    last tie-up, throws it, and covers him where he lands.
 4. **Every finish is a cover.** A match ends on a pinfall.
+
+Running through all of it is **the comeback**. Once a match, each man may
+fire up (`CombatSystem`'s comeback section, `MatchReferee._update_comebacks()`).
+
+### The comeback
+
+A televised match is a story in a known order:
+
+1. the shine;
+2. the heat, where one man is in control and the other is beaten down;
+3. the comeback, where the beaten man fires up and turns it round;
+4. the finishing stretch.
+
+Before the comeback existed, the man who got ahead stayed ahead. Measured
+over twelve AI seeds, the damage lead changed hands 0.2 times a match.
+
+- **Who earns one.** Only the man who is behind: by at least
+  `HEAT_DAMAGE_GAP`, while the other man has just landed
+  `HEAT_UNANSWERED_HITS` on him with no answer. Surviving a cover while that
+  far behind earns one too (the near-fall comeback). Each man gets one per
+  match. It is a response to a beating, not a power-up.
+- **Why a deficit and not a count of unanswered strikes.** Matches here trade
+  strikes; nobody takes more than two or three in a row. The beating is
+  done in big pieces: the tie-up winner's power move, a running attack as
+  the other man gets up, and a signature.
+- **What it does, for `COMEBACK_TICKS`** (counted only while he is on his
+  feet, so a getup does not use it up):
+  - he no-sells strikes, taking the damage but not the flinch;
+  - his strikes rock the other man into STUNNED;
+  - his strikes and his grapples do `COMEBACK_DAMAGE_SCALE` damage;
+  - his meter jumps to at least `COMEBACK_MOMENTUM`;
+  - the AI throws faster (`comeback_strike_cooldown_ticks`);
+  - **he wins any lock-up** against a man who is not fired up himself
+    (`MatchReferee._tie_up_weight()`), because the comeback has to be able
+    to end in his big move.
+- **How it ends.** When the clock runs out, or when a knockdown cuts it off.
+- **On screen.** "FIRED UP" appears on his HUD plate.
+
+The shape it gives is heat, then comeback, then a near-fall, then often the
+other man's own comeback, then the finish. Who wins after a comeback is not
+fixed, and should not be. `tools/probe/ladder_probe.tscn` reports, per run:
+
+- how often comebacks fire;
+- how often the man who came back went on to win;
+- how many times the lead changed hands.
+
+Read those before retuning any of the numbers above.
 
 ### Why it is not a grapple match
 
@@ -53,10 +105,19 @@ finisher throws were then removed (they did not read on screen), so the chain
 had nowhere to escalate to, and a match made of four identical hip tosses is
 not a better match than one made of strikes.
 
-The grapple survives as **an opening and an ending**, not as the body of the
-match.
+The grapple survives as **an opening, one power move and an ending**, not as
+the body of the match.
 
 ### Why the signature comes last
+
+Measured, twelve AI seeds: the winner throws **two to four** signatures a
+match, and the one that ends it is a signature in 11 of 12. Those two facts
+are the same fact. The first signature knocks the man down at about 100
+damage, where the kickout window is still wide, so he kicks out; the finish is
+a later signature -- sometimes the same move twice in a row. Capping
+signatures at two, or spacing them three strikes apart, was tried and hands the
+finish to a strike instead (8-10 of 12). Which of those a match should be is a
+design call, recorded in README rather than made here.
 
 Momentum crosses `SIGNATURE_THRESHOLD` after three or four strikes, long before
 anybody is hurt enough to pin. An AI that threw a signature as soon as it could
@@ -113,9 +174,10 @@ Recording these stops them being rediscovered as bugs.
 - **A neutral game.** The AI circles to hold its spacing, but there is no
   feinting, no baiting, no reading. See the locomotion slice in
   `gauntlet/status/slices.json`.
-- **The POWER and FINISHER rungs.** Empty. `CombatSystem.Tier` keeps them so
-  that a tier's ordinal — and every seeded draw and saved replay that depends
-  on it — does not shift underneath the two rungs that are left.
+- **The FINISHER rung.** Empty. `CombatSystem.Tier` keeps it so that a tier's
+  ordinal — and every seeded draw and saved replay that depends on it — does
+  not shift underneath the rungs that are left. (The POWER rung was empty too
+  until the body slam was keyed back into it; see README.)
 
 ## Invariants that span files
 

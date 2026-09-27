@@ -59,9 +59,34 @@ func test_mesh_is_skinned() -> void:
 	assert_array(meshes).is_not_empty()
 	for node in meshes:
 		var mesh_instance := node as MeshInstance3D
+		# Pieces hung on a bone (his hair, on Head) are rigid by design.
+		if _on_bone_attachment(mesh_instance):
+			continue
 		assert_object(mesh_instance.skin) \
 			.override_failure_message("%s has no skin: it is not rigged" % mesh_instance.name) \
 			.is_not_null()
+
+
+static func _on_bone_attachment(node: Node) -> bool:
+	var p := node.get_parent()
+	while p:
+		if p is BoneAttachment3D:
+			return true
+		p = p.get_parent()
+	return false
+
+
+## His hair is geometry now (tools/blender/cody_hair.py): shells hung on the
+## Head bone, so it rides his head, with volume above the scalp.
+func test_hair_rides_the_head_bone() -> void:
+	var model := _model()
+	add_child(model)
+	var skeleton := model.get_game_skeleton() as Skeleton3D
+	var attach := skeleton.get_node_or_null("HairAttachment") as BoneAttachment3D
+	assert_object(attach).is_not_null()
+	assert_str(attach.bone_name).is_equal("Head")
+	var shells := attach.find_children("HairShell*", "MeshInstance3D", true, false)
+	assert_int(shells.size()).is_greater_equal(8)
 
 
 ## The base rig's clips must arrive, under their own names, pointing at this

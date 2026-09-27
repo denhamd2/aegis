@@ -215,7 +215,10 @@ const BODY_WIDTH := 0.8
 ## HARD_CAM is the master and the default. RINGSIDE is what used to be called
 ## FOLLOW -- the same rig, the same solve, renamed for what it actually is now
 ## that there is something else for it to be cut against.
-enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT }
+## ENTRANCE is not a shot of the match: EntranceDirector drives the camera
+## directly while the wrestlers walk to the ring, through set_entrance_shot(),
+## and hands back with resume_master() at the bell.
+enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE }
 var mode: Mode = Mode.HARD_CAM
 ## Seconds the current shot has been held. Advanced off the physics delta, so
 ## it is fixed-step and replays identically; it is never read by anything in
@@ -239,6 +242,9 @@ func _ready() -> void:
 		grapple_rig.grapple_finished.connect(_on_grapple_finished)
 
 func _physics_process(delta: float) -> void:
+	if mode == Mode.ENTRANCE:
+		# EntranceDirector owns the camera until the bell.
+		return
 	if not wrestler_a or not wrestler_b:
 		return
 	_update_mode(delta)
@@ -294,6 +300,22 @@ func _physics_process(delta: float) -> void:
 		global_position = target_position
 	_previous_mode = mode
 	look_at(midpoint + Vector3.UP * aim, Vector3.UP)
+
+## Frames an entrance shot: where the camera stands, what it looks at, and
+## the lens. `snap` is a cut; otherwise it eases, which is what a camera
+## operator walking backwards down a ramp does.
+func set_entrance_shot(at: Vector3, look: Vector3, lens: float, snap: bool,
+		delta: float = 1.0 / 60.0) -> void:
+	mode = Mode.ENTRANCE
+	_previous_mode = Mode.ENTRANCE
+	fov = lens
+	if snap:
+		global_position = at
+	else:
+		global_position = global_position.lerp(at, 1.0 - exp(-5.0 * delta))
+	if global_position.distance_to(look) > 0.01:
+		look_at(look, Vector3.UP)
+
 
 ## The lens this shot is taken on.
 ##

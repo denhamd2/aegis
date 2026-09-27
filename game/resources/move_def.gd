@@ -64,6 +64,27 @@ extends Resource
 @export var weight_class_min: int = 0
 @export var weight_class_max: int = 2
 
+## Whether this paired move ends with the defender lying on the mat.
+##
+## A grapple that does not knock a man down hands him a standing HIT_REACT,
+## which is right for the clinch knee -- he finishes it on his feet -- and
+## wrong for a slam, whose clip ends with him flat on his back: the next
+## tick stood him straight up out of it. A move that sets this puts him in
+## DOWN instead, for THROWN_DOWN_TICKS, whether or not it knocked him down.
+## It is not a knockdown -- see WrestlerController._lie_down_after_throw().
+@export var leaves_defender_down: bool = false
+
+## Whether this paired move's defender lands flat on his back with his head
+## AWAY from the attacker -- a straight back bump -- rather than toward him.
+##
+## Down_Supine lies the other way round, so on the knockdown's first tick
+## WrestlerController turns him half round and starts the knockdown clip with
+## no blend; the move's last pose is Down_Supine's first turned half round
+## (wrestling_clips.SUPINE_AWAY), so the two are the same pixels. The old way,
+## spinning his root in mid-air, whipped his hands and feet 1.1-1.7 m in one
+## frame (tools/probe/move_qa.tscn).
+@export var defender_lands_head_away: bool = false
+
 ## Opponent WrestlerFSM.State required for this move to be legal.
 @export var required_opponent_state: int = -1
 

@@ -47,10 +47,17 @@ if ! command -v xvfb-run >/dev/null 2>&1; then
 	exit 1
 fi
 
+# The match scene, named explicitly. Both commands used to launch the
+# project's main scene, and that stopped being the match when the title
+# screen arrived (project.godot: run/main_scene = scenes/title.tscn): the
+# recording then sat on the title screen waiting for a press that never came,
+# with no error and no output, and every capture and round_check.sh hung.
+MATCH_SCENE="scenes/match.tscn"
+
 if [ ! -f "$REPLAY_PATH" ]; then
 	echo "recording $REPLAY_PATH (no replay supplied)..."
 	"$GODOT_BIN" --headless --path "$REPO_ROOT/game" --fixed-fps 600 \
-		-- --record-replay "$REPLAY_PATH"
+		"$MATCH_SCENE" -- --record-replay "$REPLAY_PATH"
 	if [ ! -f "$REPLAY_PATH" ]; then
 		echo "error: recording produced no replay at $REPLAY_PATH" >&2
 		exit 2
@@ -64,7 +71,7 @@ xvfb-run -a --server-args="-screen 0 ${RESOLUTION}x24" \
 	--resolution "$RESOLUTION" \
 	--fixed-fps "$FPS" \
 	--write-movie "$OUTPUT_DIR/capture.avi" \
-	-- --capture-replay "$REPLAY_PATH" --capture-output "$OUTPUT_DIR"
+	"$MATCH_SCENE" -- --capture-replay "$REPLAY_PATH" --capture-output "$OUTPUT_DIR"
 
 MANIFEST="$OUTPUT_DIR/capture_manifest.json"
 if [ ! -f "$MANIFEST" ]; then

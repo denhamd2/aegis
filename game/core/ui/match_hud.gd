@@ -48,6 +48,8 @@ const MOMENTUM_A := Color(0.28, 0.55, 0.92)
 const MOMENTUM_B := Color(0.93, 0.55, 0.18)
 const MOMENTUM_EMPTY := Color(0.16, 0.16, 0.18)
 const THRESHOLD_TICK := Color(1, 1, 1, 0.45)
+## The comeback tag on a plate (see _draw_plate()).
+const FIRED_UP := Color(1.0, 0.78, 0.2)
 
 ## "A horizontal two-color bar ... center-bottom labeled HOLD, split red
 ## (attacker side) / blue (defender side)."
@@ -150,6 +152,16 @@ func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 			if wrestler.combat else 0.0
 	_draw_momentum(Rect2(bar_x, mom_y, bar_w, mom_h), clampf(momentum, 0.0, 1.0),
 			accent, mirrored)
+
+	# The comeback, named on his plate for as long as it runs. The story
+	# beat has to be readable by someone who has never seen the game: the
+	# no-sell and the stagger show it, and this says it.
+	if wrestler.combat and wrestler.combat.is_fired_up():
+		var tag_size := int(maxf(9.0, plate.y * 0.2))
+		var pulse := 0.65 + 0.35 * absf(sin(Time.get_ticks_msec() * 0.008))
+		draw_string(font, origin + Vector2(pad, pad + name_size * 0.85),
+				"FIRED UP", HORIZONTAL_ALIGNMENT_RIGHT, content_w - pad * 2.0,
+				tag_size, Color(FIRED_UP, pulse))
 
 ## Green remaining, red revealed at the *depleted* end -- which end that is
 ## mirrors with the plate, so damage always eats inward from the screen edge.

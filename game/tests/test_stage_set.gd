@@ -403,3 +403,21 @@ func _count_collision_objects(node: Node) -> int:
 	for child: Node in node.get_children():
 		found += _count_collision_objects(child)
 	return found
+
+
+## Roman's titantron: its files are there, and asking for an entrance where
+## the loop is not playing (headless here) leaves the wall alone.
+func test_the_entrance_titantron_is_there_and_never_breaks_the_wall() -> void:
+	var entry: Dictionary = StageVideo.ENTRANCES["roman"]
+	assert_bool(ResourceLoader.exists(entry["video"])).is_true()
+	assert_bool(ResourceLoader.exists(entry["still"])).is_true()
+	var screen := MeshInstance3D.new()
+	var mat := StandardMaterial3D.new()
+	var video := StageVideo.attach(screen, mat)
+	add_child(video)
+	assert_bool(video.play_entrance("roman")).is_false()
+	assert_bool(video.play_entrance("nobody")).is_false()
+	video.end_entrance()
+	assert_bool(video.is_playing_entrance()).is_false()
+	video.queue_free()
+	screen.free()

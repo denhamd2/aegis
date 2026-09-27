@@ -146,3 +146,89 @@ No performance claim can be made about it from this environment:
 ARCHITECTURE.md's renderer rule voids frame-cost numbers taken off a software
 rasteriser, and volumetric fog is exactly the kind of effect that misleads
 there.
+
+## Round: beams and a coloured crowd wash
+
+Two things the four stills carry and the build did not, both off the ring so
+the anchor cannot move.
+
+**The crowd sat in white light.** Its hue was already right -- 94% of
+`crowd_bank`'s saturated pixels at hue 210, the same family as the stills'
+210-240 -- but its coloured-pixel mean was (0.14, 0.18, 0.22) against the Grand
+Slam frame's (0.09, 0.14, 0.27): blue-grey, not blue. `ArenaBuilder.CROWD_WASH`
+tints the crowd's house light, normalised to Rec.709 luminance ~1.0 so the
+level (VISUAL_BAR.md's 0.014) is unchanged. Alone: sat 0.408 -> 0.438.
+
+**There were no beams.** Every still has shafts of blue, violet and magenta
+standing in the haze over the crowd. `ArenaLighting._build_beams()` hangs
+sixteen 6-degree moving heads on the roof grid, aimed out over the bowl. The
+first two attempts showed nothing at energy 6 and 200 -- `_spot()`'s 1.6
+falloff over a 20m throw delivers ~1/120 of a fixture, which is also why the
+house wash ablation above measured zero. The beams use 0.8 and put most of
+their energy into the haze (`beam_fog_energy`). Sweep in the constant's
+comment.
+
+| frame | | mean sat | dark <0.01 | p50 |
+| --- | --- | --- | --- | --- |
+| `crowd_bank` | before | 0.408 | 6.7% | 0.0198 |
+| | after | **0.493** | 7.2% | 0.0247 |
+| `ring_corner` | before | 0.342 | 44.6% | 0.0107 |
+| | after | 0.412 | 41.2% | 0.0113 |
+| `stage_wide` | before | 0.378 | 2.6% | 0.0304 |
+| | after | 0.419 | 2.6% | 0.0337 |
+| `wide_broadcast` | before | 0.369 | 9.5% | 0.0345 |
+| | after | 0.401 | 9.6% | 0.0377 |
+| references | | 0.487-0.665 | 38-50% | 0.010-0.024 |
+
+`crowd_bank` is inside the reference saturation band for the first time.
+Anchor, `measure_silhouette.py`: mat 0.453 -> 0.450 (band 0.43-0.49), both
+wrestlers unchanged to three places. `test_arena_beams.gd` holds the
+renderer-free half: no beam within five cone-widths of the mat, no
+green-dominant beam, the wash leaves the crowd's level alone.
+
+### Still open, and not lighting
+
+- **Dark fraction on the wide framings** (`wide_broadcast` 9.6%,
+  `stage_wide` 2.6%) is framing, as above: those shots are ring and set, the
+  stills are mostly bowl.
+- **The overhead rig itself.** The stills show the lit grid -- truss, fixture
+  bodies, LED edge strips -- and ours is a black roof. That is geometry.
+- **Beams are static.** A real moving head sweeps; frame-stable captures are
+  worth more than that.
+- **Web build** has no beams, since it has no volumetric fog to put them in.
+
+## Round: the overhead rig
+
+The stills' overhead volume is a lit rig -- aluminium truss read as bright
+lines, rows of fixture bodies with hot lenses, cyan edge strips, roof steel
+washed magenta, speaker arrays -- and ours was a bare grid under a black slab.
+Worse, the grid did not hold its own fixtures: its inner lines were at +-2.5
+and the ring keys hang at +-3.9, and the beams added last round hung 17m up
+from nothing.
+
+`tools/blender/overhead_rig.py` now builds the steel FROM the fixture
+positions, which are named constants in `arena_lighting.gd`: ring grid (inner
+lines moved to the keys, raised 0.18m so the bodies clear it, battens for the
+top fills, drop arms for the rim), a beam ring and a house ring on the plan
+curve, the stage truss, an accent boom and uplight stands, open-web roof
+joists clipped to the shell, four line arrays. 59k triangles, deterministic.
+`ArenaLighting` hangs a moving head (`moving_head.glb`) at every light:
+base level on the steel, yoke panned, head tilted onto the beam --
+`test_overhead_rig.gd` checks all 66 lenses face down their beams. Twelve
+roof-wash fixtures stand on the beam ring and put magenta and violet on the
+joists.
+
+| frame | | bright >0.5 | mean sat | dark <0.01 |
+| --- | --- | --- | --- | --- |
+| `crowd_bank` | before | 0.08% | 0.493 | 7.2% |
+| | after | 0.64% | 0.501 | 7.1% |
+| `stage_wide` | before | 7.6% | 0.419 | 2.6% |
+| | after | 8.2% | 0.423 | 2.6% |
+| references | | 1.5-6.1% | 0.487-0.665 | 38-50% |
+
+The bright fraction is the lenses and strips: the "small, very bright" sources
+point 2 above said ours lacked. Mat 0.450 before and after.
+
+The LED strips were first on every truss line and drew a cyan lattice over
+every upward shot; the stills edge the rig's OUTLINE. They are now on the
+perimeter rings and the ring grid's outer box only, at level 0.22.

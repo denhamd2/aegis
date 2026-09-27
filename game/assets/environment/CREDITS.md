@@ -186,6 +186,69 @@ generator is still called for the mat's roughness and normal maps, which is
 where most of its value was: it puts relief and specular breakup on the canvas
 that a flat photograph cannot.
 
+## ribbon_board.png — THIRD-PARTY MARKS, supplied by the project owner
+
+The LED ribbon board artwork (`materials/ribbon_board.png`, 950x123) runs round
+both ribbon boards on the suite fascia (`core/arena/arena_builder.gd`,
+`RIBBON_ART`; UVs from `tools/blender/arena_bowl.py`).
+
+It carries **third-party trademarks** — the AEW and *Dynamite* marks — on the
+same terms as the apron banner above: no licence, no author, in the build
+because `ARCHITECTURE.md` permits third-party assets, fine for a prototype and
+for internal capture, and **not cleared for distribution**.
+
+Supplied as a 1902x724 image: the board strip on a black surround, carrying
+two repeats of the sequence. The only processing is a crop to exactly one
+repeat -- rows 287-409 (the strip, less its anti-aliased edge rows) and
+columns 5-954. The period, 950px, was found by shifting the strip against
+itself; the seam between the crop's two ends differs by 2.5-4.5 levels out
+of 255 per pixel, well below what can be seen. No resampling, no colour change.
+
+## Roman Reigns entrance video — PROVENANCE UNVERIFIED, CONTAINS MUSIC
+
+`video/roman_entrance.ogv` and `video/roman_entrance_still.png` — his
+titantron, which `StageVideo.play_entrance("roman")` swaps onto the wall
+(with its audio) for his entrance, and one frame of it at 480x270 used only to
+solve the wall's emission level.
+
+Supplied by the project owner (a Google Drive link, 2026-09-26) as a 1920x1080
+60 fps H.264/AAC mp4, 3:38. Committed as the first 60 s only -- longer than
+his entrance -- re-encoded to 960x540 30 fps Theora with Vorbis audio and a
+3 s fade at the end:
+
+    ffmpeg -t 60 -i roman_entrance.mp4 -vf "scale=960:540:flags=lanczos,fps=30" \
+        -c:v libtheora -q:v 6 -af "afade=t=out:st=57:d=3" \
+        -c:a libvorbis -q:a 4 -ar 44100 roman_entrance.ogv
+
+**The same caveats as the Dynamite clip below apply, and one more.** It is a
+fan-made edit (a creator's watermark sits in the bottom centre of the frame)
+of a real wrestler's graphics, and its audio is his commercial entrance
+theme. Neither is licensed to this project. It is a standing exception to the
+README's "fully original" claim, and the music in particular must not ship in
+any build distributed outside the owner's own machine.
+
+## Cody Rhodes entrance video — PROVENANCE UNVERIFIED, CONTAINS MUSIC
+
+`video/cody_entrance.ogv` and `video/cody_entrance_still.png` — his
+titantron, swapped onto the wall with its audio for his entrance by
+`StageVideo.play_entrance("cody")`, and a 480x270 frame of it used only to
+solve the wall's emission level.
+
+Supplied by the project owner (a Google Drive link, 2026-09-26) as a
+1920x1080 30 fps mp4, 3:38: seven seconds of black, then the American
+Nightmare flag graphic over his theme, "Kingdom" (Downstait). Committed as
+the first 80 s, re-encoded to 960x540 30 fps Theora with Vorbis audio and a
+3 s fade:
+
+    ffmpeg -t 80 -i cody_entrance.mp4 -vf "scale=960:540:flags=lanczos,fps=30" \
+        -c:v libtheora -q:v 5 -af "afade=t=out:st=77:d=3" \
+        -c:a libvorbis -q:a 4 -ar 44100 cody_entrance.ogv
+
+Same caveats as Roman's clip above: a real wrestler's graphics and a
+commercial song, neither licensed to this project. A standing exception to
+the README's "fully original" claim; the music must not ship in any build
+distributed outside the owner's own machine.
+
 ## Entrance-set video — PROVENANCE UNVERIFIED
 
 `video/dynamite_tron.ogv` and `video/dynamite_tron_still.png` — the graphics

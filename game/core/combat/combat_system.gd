@@ -86,6 +86,88 @@ var momentum: float = 0.0
 ## rising meter to imply it.
 var tier_reached: int = -1
 
+# --- the comeback -----------------------------------------------------------
+#
+# A televised match is a story told in a known order: the shine, the heat
+# (one man in control, the other beaten down), the comeback (the beaten man
+# fires up and turns it round), and the finishing stretch. Without this the
+# man who got ahead stayed ahead -- measured over twelve AI seeds, the loser
+# landed a third to a half of what the winner did and never had a run of his
+# own. See MATCH_FLOW.md, "The comeback".
+#
+# One per wrestler per match, and only for the man who is BEHIND: a comeback
+# is a response to being beaten down, not a power-up.
+
+## How long a comeback lasts, counted only while he is on his feet and
+## fighting (MatchReferee._update_comebacks()), so the getup after a kickout
+## does not eat it. 6 s: long enough for a flurry, a lock-up and his big move.
+##
+## Measured over twenty AI seeds against 5 s: at 300 the man who fired up
+## first went on to win 4 of 20, because the run rarely got as far as his
+## signature before the other man was back in it; at 360, 9 of 20.
+const COMEBACK_TICKS := 360
+## The heat: he trails on damage by at least this much...
+##
+## Measured before the trigger existed, over twelve AI seeds: matches here
+## trade strikes -- neither man ever took more than two or three in a row --
+## and the beating is done in big pieces instead: the tie-up winner's power
+## move, a running attack as the other man gets up, a signature. So the heat
+## is a damage deficit, not a count of unanswered strikes. 40 is a power
+## move and a running attack's worth, the point the story has turned.
+const HEAT_DAMAGE_GAP := 40.0
+## ...and the other man has just landed on him, twice with no answer. The
+## comeback is a response in the moment, not an accountant's decision.
+const HEAT_UNANSWERED_HITS := 2
+## His strikes hurt more while he is fired up: the run has to be able to put
+## the other man down, or it is only a delay.
+const COMEBACK_DAMAGE_SCALE := 1.5
+## And his meter jumps to at least this: the comeback is where a signature
+## becomes available to the man who was losing.
+const COMEBACK_MOMENTUM := SIGNATURE_THRESHOLD
+
+## Moves landed on this wrestler since he last landed one himself.
+var unanswered_hits: int = 0
+var comeback_used: bool = false
+## Ticks of the comeback left; zero when he is not fired up.
+var comeback_ticks: int = 0
+
+func is_fired_up() -> bool:
+	return comeback_ticks > 0
+
+## Whether this wrestler, against that one, has taken the beating that earns
+## a comeback.
+func earned_comeback(opponent: CombatSystem) -> bool:
+	return not comeback_used and unanswered_hits >= HEAT_UNANSWERED_HITS \
+			and total_damage() - opponent.total_damage() >= HEAT_DAMAGE_GAP
+
+## The kickout comeback's gate: surviving the pin stands in for the
+## unanswered hits, but he must still be as far behind as the heat demands.
+##
+## It asked only that he be behind at all, and measured over twelve seeds
+## that handed the match back to whoever had been winning every time: the
+## beaten man's comeback took the lead by 20-30, his cover was kicked out of,
+## and the kickout -- "behind", barely -- fired the leader straight back up.
+## Same twelve winners as with no comebacks at all.
+func earned_kickout_comeback(opponent: CombatSystem) -> bool:
+	return not comeback_used \
+			and total_damage() - opponent.total_damage() >= HEAT_DAMAGE_GAP
+
+func start_comeback() -> void:
+	comeback_used = true
+	comeback_ticks = COMEBACK_TICKS
+	unanswered_hits = 0
+	momentum = maxf(momentum, COMEBACK_MOMENTUM)
+
+## One tick of the comeback clock, if it is running. clock_runs is false
+## while he is down, getting up, or tied up in a grapple.
+func tick_comeback(clock_runs: bool) -> void:
+	if comeback_ticks > 0 and clock_runs:
+		comeback_ticks -= 1
+
+## A knockdown ends it: the other man has cut the comeback off.
+func cut_off_comeback() -> void:
+	comeback_ticks = 0
+
 ## Damage and momentum go to different wrestlers on a landed move — the
 ## defender takes the damage, the attacker builds the momentum. Call
 ## apply_damage() on the defender's CombatSystem and apply_momentum() on
@@ -95,11 +177,13 @@ func apply_move(move: MoveDef) -> void:
 	apply_damage(move)
 	apply_momentum(move)
 
-func apply_damage(move: MoveDef) -> void:
-	limb_damage[Limb.HEAD] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.HEAD] + move.damage_head)
-	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso)
-	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms)
-	limb_damage[Limb.LEGS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.LEGS] + move.damage_legs)
+## scale is COMEBACK_DAMAGE_SCALE for a hit thrown by a fired-up man, and
+## 1.0 for everything else.
+func apply_damage(move: MoveDef, scale: float = 1.0) -> void:
+	limb_damage[Limb.HEAD] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.HEAD] + move.damage_head * scale)
+	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso * scale)
+	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms * scale)
+	limb_damage[Limb.LEGS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.LEGS] + move.damage_legs * scale)
 
 func apply_momentum(move: MoveDef) -> void:
 	momentum = clamp(momentum - move.momentum_cost + move.momentum_gain, 0.0, MOMENTUM_MAX)

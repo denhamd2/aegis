@@ -214,3 +214,13 @@ on a 1.829 m body (32.6% of height) where this realistic scan is at 41%.
 Lengthening the rig's bones to match would desync Kenny's proportions from
 Cody's and from every clip authored against the rig, so the mismatch is left
 in place and recorded here. The legs, by contrast, fit to +2.0% and +1.2%.
+
+
+## Cody Rhodes's entrance coat (`cody_coat.glb`, `cody_coat_*.png`) and blond head texture
+
+Original geometry and textures, built by `tools/blender/cody_coat.py` on the
+supplied Cody model's own body (see above) and painted procedurally; the
+design follows photographs of his entrance coat supplied by the owner as
+references (not committed). `cody_rhodes_head_blond.png` is the supplied
+head texture with its hair region re-coloured by
+`tools/assets/build_cody_textures.py`, to the owner's reference photographs.

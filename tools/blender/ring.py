@@ -71,7 +71,7 @@ WANTED = [
     "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
-    "STEP_CORNER_NOTCH", "STEP_APRON_GAP", "APRON_OUT",
+    "STEP_APRON_GAP", "APRON_OUT",
 ]
 
 # Placeholder colours only; ring_builder.gd overrides all four by name.
@@ -320,92 +320,57 @@ def build_apron(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                           tangent, out, Vector((6.58, 0.07, 0.13)))
 
 
+## The two corners the flights stand on (ring_builder.gd STEP_CORNERS): the
+## hard camera's top-left and bottom-right.
+STEP_CORNERS = ((1.0, -1.0), (-1.0, 1.0))
+## The raised nosing along each tread's front edge.
+STEP_NOSE = 0.018
+
+
 def build_steps(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Two sets of steps, each tucked INTO a corner around the ring post.
+    """Two flights of steel steps on the corner diagonals, pointing at the
+    ring posts (see ring_builder.gd "Steel steps" for the why).
 
-    The regulation asks for "suitable steps for use of the contestants in
-    their corners" (Virginia 18VAC120-40-415.1; Hawaii 16-74-295 puts it as
-    two opposite corners), and every steps casting made for a ring has the
-    same detail: the TOP tread has a 45-degree corner missing. That notch is
-    not decoration -- it is what lets the tread pass the ring post, so the
-    flight sits in the corner rather than stopping beside it.
-
-    The previous version held the flight 0.10 clear of the post with a square
-    top tread, which put it at the corner without ever reaching one. Now the
-    flight's far end runs out to the apron's own corner at APRON_OUT and the
-    top tread's ring-side corner is cut back on the diagonal.
-
-    Diagonally opposite -- +X beside the post at (+3, +3), -X beside the post
-    at (-3, -3) -- so each half of the ring has a way in and neither set
-    stands in the entrance walkway down the middle of -Z.
-
-    The stringer down each flank is what makes the flight read as one object
-    rather than three stacked slabs with daylight between them; on the corner
-    flank the top tread's stringer starts after the notch so it follows the
-    cut instead of spanning it.
-    """
+    Each flight in its own frame: `out` along the diagonal away from the
+    ring, `across` square to it. The top tread's back edge is squared across
+    the diagonal STEP_APRON_GAP out from the apron's corner. Each tread is a
+    block from the floor to its own top, running back from that edge by
+    STEP_RUN per tread below it -- so the three stack into one stepped solid
+    -- with a thin raised nose on its front edge, and a steel side plate the
+    full stepped profile on both flanks."""
     steps = parts["StepsMesh"]
     treads = int(cfg["STEP_TREADS"])
-    rise = (cfg["STEP_TOP_Y"] - cfg["STEP_FLOOR_Y"]) / treads
-    notch = cfg["STEP_CORNER_NOTCH"]
-    inner_x = cfg["APRON_OUT"] + cfg["STEP_APRON_GAP"]
-    # The flight's far end is the apron's own corner; its near end is a full
-    # tread width back from there.
-    far = cfg["APRON_OUT"]
-    near = far - cfg["STEP_WIDTH"]
-    centre_z = (far + near) * 0.5
-
-    for sx, sz in ((1.0, 1.0), (-1.0, -1.0)):
-        out = Vector((sx, 0.0, 0.0))
+    floor_y = cfg["STEP_FLOOR_Y"]
+    rise = (cfg["STEP_TOP_Y"] - floor_y) / treads
+    run = cfg["STEP_RUN"]
+    width = cfg["STEP_WIDTH"]
+    for cx, cz in STEP_CORNERS:
+        out = Vector((cx, 0.0, cz)).normalized()
+        across = Vector((-cz, 0.0, cx)).normalized()
+        corner = Vector((cx * cfg["APRON_OUT"], 0.0, cz * cfg["APRON_OUT"]))
+        back = corner + out * cfg["STEP_APRON_GAP"]
         for i in range(treads):
-            top = cfg["STEP_FLOOR_Y"] + rise * (i + 1)
-            depth = cfg["STEP_RUN"] * (treads - i)
-            x_in = inner_x * sx
-            x_out = (inner_x + depth) * sx
-            if i == treads - 1:
-                # Top tread: the rectangle with its ring-side corner at the
-                # far end cut back on the diagonal.
-                inner_edge = [
-                    Vector((x_in, 0.0, near * sz)),
-                    Vector((x_in, 0.0, (far - notch) * sz)),
-                    Vector((x_in + notch * sx, 0.0, far * sz)),
-                ]
-                outer_edge = [
-                    Vector((x_out, 0.0, near * sz)),
-                    Vector((x_out, 0.0, (far - notch) * sz)),
-                    Vector((x_out, 0.0, far * sz)),
-                ]
-                steps.prism(inner_edge, outer_edge,
-                            cfg["STEP_FLOOR_Y"], top, closed=False)
-            else:
-                center = out * (inner_x + depth * 0.5) \
-                    + Vector((0.0, (cfg["STEP_FLOOR_Y"] + top) * 0.5, 0.0)) \
-                    + Vector((0.0, 0.0, centre_z * sz))
-                steps.oriented_box(
-                    center, Vector((0.0, 0.0, 1.0)), out,
-                    Vector((cfg["STEP_WIDTH"], top - cfg["STEP_FLOOR_Y"],
-                            depth)),
-                )
+            top = floor_y + rise * (i + 1)
+            # Tread i (0 = bottom) runs from the back edge out to its nose.
+            depth = run * (treads - i)
+            centre = back + out * (depth * 0.5) \
+                + Vector((0.0, (floor_y + top) * 0.5, 0.0))
+            steps.oriented_box(centre, across, out,
+                               Vector((width, top - floor_y, depth)))
+            # The nose: a lip along the front edge of this tread.
+            nose = back + out * (depth - 0.02) + Vector((0.0, top + STEP_NOSE * 0.5, 0.0))
+            steps.oriented_box(nose, across, out,
+                               Vector((width, STEP_NOSE, 0.04)))
+        # Side plates, proud of the treads, following the stepped profile.
         for side in (-1.0, 1.0):
-            z = (centre_z * sz) + side * (cfg["STEP_WIDTH"] * 0.5 + 0.012)
-            on_corner_flank = side == sz
+            flank = across * side * (width * 0.5 + 0.012)
             for i in range(treads):
-                top = cfg["STEP_FLOOR_Y"] + rise * (i + 1)
-                depth = cfg["STEP_RUN"] * (treads - i)
-                start = inner_x
-                if on_corner_flank and i == treads - 1:
-                    # Follow the cut rather than spanning it.
-                    start = inner_x + notch
-                    depth -= notch
-                    if depth <= 0.0:
-                        continue
-                center = out * (start + depth * 0.5) \
-                    + Vector((0.0, (cfg["STEP_FLOOR_Y"] + top) * 0.5, 0.0)) \
-                    + Vector((0.0, 0.0, z))
-                steps.oriented_box(
-                    center, Vector((0.0, 0.0, 1.0)), out,
-                    Vector((0.024, top - cfg["STEP_FLOOR_Y"], depth)),
-                )
+                top = floor_y + rise * (i + 1)
+                depth = run * (treads - i)
+                centre = back + flank + out * (depth * 0.5) \
+                    + Vector((0.0, (floor_y + top) * 0.5 + 0.02, 0.0))
+                steps.oriented_box(centre, across, out,
+                                   Vector((0.024, top - floor_y + 0.04, depth)))
 
 
 def main(argv: list[str]) -> int:

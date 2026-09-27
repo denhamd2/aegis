@@ -88,11 +88,16 @@ WANTED = [
     "BOWL_AISLES",
     "SUITE_HEIGHT",
     "RIBBON_HEIGHT",
+    "RIBBON_ART_ASPECT",
     "SEAT_BACK_HEIGHT",
     "SEAT_WIDTH_FRACTION",
     "SEAT_PITCH",
     "AISLE_CLEARANCE",
 ]
+
+## Where in the ribbon tile the board's hidden faces sample: 19px into the
+## 950px tile, a patch of plain blue field left of the first mark.
+RIBBON_FIELD_U = 0.02
 
 CONST_RE = re.compile(r"^const\s+([A-Z][A-Z0-9_]*)\s*:=\s*(-?\d+(?:\.\d+)?)\s*$")
 
@@ -262,6 +267,8 @@ class Part:
         ## must be able to wear different shirts.
         self._colour_layer = None
         self._phase_layer = None
+        ## The ribbon boards' artwork UVs; see `ribbon`.
+        self._uv_layer = None
 
     def coloured_box(self, corners: list, colour: tuple, phase: float) -> None:
         """A box whose every face carries `colour` and `phase`.
@@ -337,6 +344,64 @@ class Part:
             # End caps, so a run cut around the stage is still a closed solid.
             for k in (0, len(inner) - 1):
                 self.quad(lo_in[k], hi_in[k], hi_out[k], lo_out[k])
+
+    def ribbon(
+        self,
+        inner: list[Vector],
+        outer: list[Vector],
+        base_y: float,
+        top_y: float,
+        closed: bool,
+        period: float,
+    ) -> None:
+        """`prism`, plus UVs that run the board's artwork along it.
+
+        The face toward the ring (the `inner` one) takes u = metres travelled
+        along the ribbon / `period`, v = 0..1 bottom to top, so the tile
+        repeats round the bowl at its own aspect and never stretches on the
+        curved ends. Every other face -- top, underside, the back buried in
+        the fascia, the end caps -- samples one texel of plain blue field, so
+        a thin edge seen at a grazing angle reads as the board's ground colour
+        rather than as a smear of lettering.
+
+        Loops run counter-clockwise from above, which seen from inside the
+        bowl is left to right, so the lettering reads the right way round.
+        """
+        if top_y <= base_y:
+            return
+        if self._uv_layer is None:
+            self._uv_layer = self.bm.loops.layers.uv.new("UVMap")
+        uv = self._uv_layer
+        lo_in = [self.vert(Vector((p.x, base_y, p.z))) for p in inner]
+        hi_in = [self.vert(Vector((p.x, top_y, p.z))) for p in inner]
+        lo_out = [self.vert(Vector((p.x, base_y, p.z))) for p in outer]
+        hi_out = [self.vert(Vector((p.x, top_y, p.z))) for p in outer]
+        field = (RIBBON_FIELD_U, 0.5)
+
+        def face(verts, coords) -> None:
+            try:
+                built = self.bm.faces.new(verts)
+            except ValueError:
+                return
+            for loop, coord in zip(built.loops, coords):
+                loop[uv].uv = coord
+
+        count = len(inner) - (0 if closed else 1)
+        travelled = 0.0
+        for i in range(count):
+            j = (i + 1) % len(inner)
+            step = (inner[j] - inner[i]).length / period
+            u0, u1 = travelled, travelled + step
+            travelled = u1
+            face((lo_in[i], hi_in[i], hi_in[j], lo_in[j]),
+                 ((u0, 0.0), (u0, 1.0), (u1, 1.0), (u1, 0.0)))
+            for verts in ((lo_out[i], hi_out[i], hi_out[j], lo_out[j]),
+                          (hi_in[i], hi_out[i], hi_out[j], hi_in[j]),
+                          (lo_in[i], lo_out[i], lo_out[j], lo_in[j])):
+                face(verts, (field,) * 4)
+        if not closed:
+            for k in (0, len(inner) - 1):
+                face((lo_in[k], hi_in[k], hi_out[k], lo_out[k]), (field,) * 4)
 
     def oriented_box(self, center: Vector, along: Vector, out: Vector,
                      size: Vector) -> None:
@@ -547,8 +612,10 @@ def build_fascia(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]
         # of the bowl, which is exactly where the broadcast camera sits.
         proud_in = offset_points(loop, indices, -0.06)
         proud_out = offset_points(loop, indices, 0.02)
+        period = ribbon_h * cfg["RIBBON_ART_ASPECT"]
         for y0 in (base_y + 0.18, top_y - 0.18 - ribbon_h):
-            parts["RibbonBoards"].prism(proud_in, proud_out, y0, y0 + ribbon_h, closed)
+            parts["RibbonBoards"].ribbon(proud_in, proud_out, y0, y0 + ribbon_h,
+                                         closed, period)
         # Suite glass between them, recessed rather than proud so the storey
         # reads as windows set into a wall.
         glass_in = offset_points(loop, indices, 0.10)

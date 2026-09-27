@@ -13,6 +13,8 @@ extends CharacterBody3D
 signal knocked_down(wrestler: WrestlerController)
 signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
+## His comeback has started (MatchReferee decides when; see fire_up()).
+signal fired_up(wrestler: WrestlerController)
 
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
@@ -78,6 +80,12 @@ const KNOCKDOWN_DAMAGE := 100.0
 ## most of that was the attacker's taunt playing out rather than a fixed
 ## timer, so this stays a reachability value.
 const GETUP_TICKS := 90 # 1.5s
+## How long a man a slam left on the mat (MoveDef.leaves_defender_down) lies
+## there before rising, when the slam did not also knock him down. Half a
+## knockdown's GETUP_TICKS: long enough to read as having been dropped,
+## short of reading as beaten. A presentation value; gauntlet/refs/ measures
+## no slam.
+const THROWN_DOWN_TICKS := 45 # 0.75s
 
 ## The rise itself: mat to a standing fighting stance.
 ##
@@ -173,6 +181,14 @@ const CAN_ENTER_TIE_UP: Array[WrestlerFSM.State] = [
 @export var power_move: MoveDef
 @export var signature_move: MoveDef
 @export var finisher_move: MoveDef
+## This wrestler's own signature (Roster.Entry.signature), also in
+## signature_move_pool. The FIRST signature he throws in a match is this one,
+## and only later ones come from the seeded draw: a one-in-three draw over the
+## one or two signatures a match holds meant Roman went twelve AI matches
+## without ever throwing the Superman Punch. It is the move he is known for,
+## and the one he sets the Spear up with, so it comes first.
+@export var own_signature: MoveDef
+var _own_signature_thrown: bool = false
 @export var running_attack_move: MoveDef
 ## Extra moves at each grapple tier, picked between by a seeded draw at the
 ## moment the attacker commits (see _pick_tier_move()). The single slot
@@ -252,6 +268,12 @@ var _tier_draws: int = 0
 ## "WrestlerA"/"WrestlerB" -- fine for a fixture scene, useless on a plate a
 ## player reads. TitleScreen fills it from the roster entry he picked.
 @export var display_name: String = ""
+## The small line over his name on the entrance lower third: his title, or his
+## nickname if he holds none (Roster.Entry.entrance_subtitle()).
+@export var entrance_subtitle: String = ""
+## Whose ring entrance he performs (EntranceDirector): a roster id with its
+## own routine ("roman"), or "" for the generic walk to the ring.
+@export var entrance_style: String = ""
 @export var character_model_scene: PackedScene = preload(
 		"res://assets/characters/wrestler_base.glb")
 @export var opponent_path: NodePath
@@ -494,6 +516,10 @@ var _irish_whip_target: WrestlerController
 ## actually reaches IDLE again (see _process_timed_state()).
 var _cover_eligible: bool = true
 
+## Start the next state's clip outright instead of cross-fading into it --
+## see _turn_round_on_the_mat().
+var _snap_next_animation: bool = false
+
 ## Total damage this wrestler had taken the last time he was knocked down.
 ##
 ## Knockdown used to be `total_damage() >= KNOCKDOWN_DAMAGE`, which is a
@@ -676,12 +702,23 @@ func _build_animation_tree() -> void:
 		anim_node.animation = clip_name
 		state_machine.add_node(WrestlerFSM.State.keys()[state_id], anim_node)
 
+	# EVERY pair of clip states is connected, not only the FSM's legal edges.
+	#
+	# The FSM can cross several states in one tick -- a grapple resolves
+	# GRAPPLE_HOLD -> MOVE_EXEC -> DOWN in the same call -- and travel() then
+	# walks the graph's shortest PATH to the last one, cross-fading through
+	# every state on the way. With only the legal edges that path ran through
+	# MOVE_EXEC, whose clip is a standing impact pose: every thrown man rose
+	# 0.6 m off the mat, arms windmilling, and lay back down over 12 ticks as
+	# he entered DOWN. Measured by tools/probe/move_qa.tscn on all 25 moves
+	# that end with the victim down. Legality is the FSM's job; the blend
+	# graph only needs to get from the pose on screen to the one asked for.
 	var blend_seconds := ANIMATION_BLEND_TICKS / float(Engine.physics_ticks_per_second)
 	for from_id in WrestlerFSM.LEGAL_TRANSITIONS:
 		var from_name: String = WrestlerFSM.State.keys()[from_id]
 		if not state_machine.has_node(from_name):
 			continue
-		for to_id in WrestlerFSM.LEGAL_TRANSITIONS[from_id]:
+		for to_id in WrestlerFSM.LEGAL_TRANSITIONS:
 			var to_name: String = WrestlerFSM.State.keys()[to_id]
 			if to_name == from_name or not state_machine.has_node(to_name):
 				continue
@@ -922,6 +959,10 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
 	if anim_node:
 		anim_node.animation = _take_clip_override(current)
+	if _snap_next_animation:
+		_snap_next_animation = false
+		_anim_playback.start(state_name, true)
+		return
 	_anim_playback.travel(state_name)
 
 ## The clip to enter this state with: a one-shot override if one was queued
@@ -1016,9 +1057,11 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
+	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
 	move_and_slide()
 	keep_inside_the_ring()
+	_release_cover_contact()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
 	_update_grip_ik()
@@ -1330,12 +1373,49 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 	if input.get("strike", false) and running_attack_move and opponent \
 			and _in_range(STRIKE_HIT_RANGE) and not UNHITTABLE_STATES.has(opponent.fsm.current_state):
 		var move := _pick_tier_move(running_attack_move, running_attack_move_pool)
+		if _can_run_into_paired(move):
+			_begin_running_paired(move)
+			return
 		# One state, potentially two performances: point it at this move's
 		# clip first (a move with no baked clip keeps the Punch_Cross
 		# fallback -- _set_state_clip ignores unknown clips).
 		_set_state_clip(WrestlerFSM.State.RUNNING_ATTACK,
 				StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
 		_start_move(WrestlerFSM.State.RUNNING_ATTACK, move)
+
+## States a man can be run into a paired move from: on his feet and not
+## already committed to something of his own.
+const RUNNING_PAIRED_TARGET_STATES := [
+	WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN,
+]
+
+## Whether this running attack is a two-man move and can start now.
+##
+## A running attack with a paired recipe (resources/animations/
+## paired_recipes.gd) is performed by both men: the runner's half and the
+## victim's half keyed against each other, played through GrappleRig like a
+## throw. One without is the old single-character strike, whose victim
+## plays a generic hit reaction. The paired version needs the victim on his
+## feet and free; otherwise the old path still runs.
+func _can_run_into_paired(move: MoveDef) -> bool:
+	return move != null and grapple_rig != null \
+			and PairedRecipes.RECIPES.has(String(move.animation_pair_id)) \
+			and RUNNING_PAIRED_TARGET_STATES.has(opponent.fsm.current_state)
+
+## Starts a paired running attack: no tie-up -- he has already arrived at a
+## run -- so both men go straight to GRAPPLE_HOLD with the roles set, and
+## GrappleRig plays the move exactly as it would a throw. It resolves through
+## _on_grapple_finished(), which applies damage and momentum and puts the
+## victim down or into a reaction; a running attack is on no rung of the
+## chain, so tier_of() is -1 and nothing is recorded there.
+func _begin_running_paired(move: MoveDef) -> void:
+	_is_grapple_attacker = true
+	opponent._is_grapple_attacker = false
+	fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	opponent.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	_active_move = move
+	grapple_rig.begin(self, opponent, move)
+	grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
 
 ## Called by the attacker's own _process_grapple_hold() when it chooses to
 ## whip instead of resolving a normal grapple move. Launches the defender
@@ -1505,8 +1585,11 @@ func _resolve_pending_hits() -> void:
 	_pending_hits.clear()
 	if UNHITTABLE_STATES.has(fsm.current_state):
 		return
+	# The only hitter is the other man, so his comeback decides the scale.
+	var hitter_fired_up := opponent != null and opponent.combat.is_fired_up()
 	for move in moves:
-		combat.apply_damage(move)
+		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
+	_took_moves(moves.size())
 	if _would_be_knocked_down():
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
 		_pending_hit_reaction = null
@@ -1527,10 +1610,28 @@ func _resolve_pending_hits() -> void:
 	# rather than eating it. Both men connect and both then react, which is
 	# what trading blows actually looks like. A knockdown still interrupts --
 	# a man dropped mid-swing is not finishing the swing.
+	# Fired up, he no-sells: the damage is real, but he does not flinch. The
+	# man beating him down watches his offence stop working -- the first
+	# beat of every comeback.
+	if combat.is_fired_up():
+		return
 	if fsm.current_state == WrestlerFSM.State.STRIKE:
 		_pending_hit_reaction = moves[moves.size() - 1]
 		return
 	_begin_hit_reaction(moves[moves.size() - 1])
+
+## Keeps the heat count (CombatSystem.unanswered_hits): this wrestler has
+## just taken count moves, and the man who landed them has answered him.
+func _took_moves(count: int) -> void:
+	combat.unanswered_hits += count
+	if opponent:
+		opponent.combat.unanswered_hits = 0
+
+## Starts this wrestler's comeback -- see CombatSystem's comeback section.
+## Called by MatchReferee, which decides when one is earned.
+func fire_up() -> void:
+	combat.start_comeback()
+	fired_up.emit(self)
 
 ## Takes a hit: the reaction clip, the state, and the shove that sells it.
 ##
@@ -1541,8 +1642,17 @@ func _resolve_pending_hits() -> void:
 ## velocity leak across states (see _start_move()'s own note) -- used
 ## deliberately here, and decayed to nothing rather than left running.
 func _begin_hit_reaction(move: MoveDef) -> void:
-	_play_hit_reaction(move)
-	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+	# Hit by a man in the middle of his comeback, he is rocked -- the longer
+	# STUNNED stagger, not a flinch -- so the run can string together. The
+	# state existed, with its clip, and nothing had ever entered it.
+	# STUNNED is not legal out of every state HIT_REACT is (a second stagger,
+	# a getup, a tie-up); those take the ordinary reaction.
+	if opponent and opponent.combat.is_fired_up() \
+			and WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
+		_start_move(WrestlerFSM.State.STUNNED, _timed_stub(STUNNED_TICKS))
+	else:
+		_play_hit_reaction(move)
+		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
 	var away := Vector3.ZERO
 	if opponent:
 		away = global_position - opponent.global_position
@@ -1570,6 +1680,46 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 ## (there is nobody left to fight), cancels anything in flight, and lets the
 ## clip hold its final pose. Idempotent, because the referee guards
 ## _match_over but a replay or a probe may call it twice.
+## Plays a clip that belongs to no FSM state -- the ring entrance's walk,
+## climb and rope step -- while the controller is frozen for the entrance.
+##
+## The AnimationTree has one node per state and nothing else, so this borrows
+## the IDLE and LOCOMOTION nodes, alternating between them so every change is
+## a travel() and therefore a cross-fade rather than a pop. end_presentation()
+## puts both back before the bell.
+var _presentation_node := "IDLE"
+var _presentation_clip := ""
+
+func play_presentation_clip(clip: String) -> void:
+	if not anim_tree or clip == _presentation_clip \
+			or not anim_player.has_animation(clip):
+		return
+	var machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var next := "LOCOMOTION" if _presentation_node == "IDLE" else "IDLE"
+	var node := machine.get_node(next) as AnimationNodeAnimation
+	if node == null:
+		return
+	node.animation = clip
+	_anim_playback.travel(next)
+	_presentation_node = next
+	_presentation_clip = clip
+
+
+func end_presentation() -> void:
+	if not anim_tree:
+		return
+	var machine := anim_tree.tree_root as AnimationNodeStateMachine
+	for state: WrestlerFSM.State in [WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION]:
+		var node := machine.get_node(WrestlerFSM.State.keys()[state]) \
+				as AnimationNodeAnimation
+		if node:
+			node.animation = clip_for_state(state, false)
+	_presentation_node = "IDLE"
+	_presentation_clip = ""
+	_anim_playback.start("IDLE", true)
+
+
 func celebrate() -> void:
 	if fsm.current_state == WrestlerFSM.State.VICTORY:
 		return
@@ -1631,7 +1781,13 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	if combat.can_finisher() and finisher_move:
 		move = _pick_tier_move(finisher_move, finisher_move_pool)
 	elif combat.can_signature() and signature_move:
-		move = _pick_tier_move(signature_move, signature_move_pool)
+		if own_signature and not _own_signature_thrown \
+				and opponent.weight_class >= own_signature.weight_class_min \
+				and opponent.weight_class <= own_signature.weight_class_max:
+			move = own_signature
+			_own_signature_thrown = true
+		else:
+			move = _pick_tier_move(signature_move, signature_move_pool)
 	elif combat.can_power() and power_move:
 		move = _pick_tier_move(power_move, power_move_pool)
 	else:
@@ -1767,15 +1923,51 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# simultaneous hit) — so every queued grapple hit was silently dropped
 	# the instant it was queued, damage never accumulated, and a match
 	# never progressed past tie-up -> grapple -> repeat.
-	opponent.combat.apply_damage(move)
+	opponent.combat.apply_damage(move,
+			CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
+	opponent._took_moves(1)
 	# The grapple is over as of here -- drop the roles before the FSM moves
 	# on, so nothing downstream reads an attacker flag for a finished move.
 	_clear_grapple_roles()
 	fsm.transition_to(WrestlerFSM.State.IDLE)
+	if move and move.defender_lands_head_away:
+		opponent._turn_round_on_the_mat()
 	if opponent._would_be_knocked_down():
 		opponent._go_down()
+	elif move and move.leaves_defender_down:
+		opponent._lie_down_after_throw()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
+
+## Turns a man lying on his back half round about his own pelvis, and asks
+## for the next state's clip to start with no blend.
+##
+## For a move that lands him head away from the attacker
+## (MoveDef.defender_lands_head_away): its last pose is Down_Supine's first
+## turned half round, so after this turn the knockdown clip starts on exactly
+## the pose already on screen. A blend here would be a blend between two
+## poses 180 degrees apart in the new frame.
+func _turn_round_on_the_mat() -> void:
+	global_transform = Transform3D(global_transform.basis.rotated(Vector3.UP, PI),
+			global_position)
+	_snap_next_animation = true
+
+## A thrown man left lying where the throw put him, without it counting as a
+## knockdown.
+##
+## Everything _go_down() does beyond the state change is knockdown
+## bookkeeping, and none of it applies: _damage_at_last_knockdown is what
+## WrestlerAI measures "one signature from finished" against, so resetting
+## it on a mid-match slam would push the finish back by a whole knockdown;
+## and knocked_down is what the probes count. He is also NOT cover-eligible.
+## A cover on a man who has not been knocked down is a cover he kicks out of
+## at no cost, and every finish in this match is supposed to be a pinfall on
+## a man who was -- _process_timed_state() restores eligibility once he is
+## back on his feet.
+func _lie_down_after_throw() -> void:
+	fsm.transition_to(WrestlerFSM.State.DOWN)
+	_move_ticks_remaining = THROWN_DOWN_TICKS
+	_cover_eligible = false
 
 func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
@@ -1783,6 +1975,7 @@ func _go_down() -> void:
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	_damage_at_last_knockdown = combat.total_damage()
 	_move_ticks_remaining = GETUP_TICKS
+	combat.cut_off_comeback()
 	_cover_eligible = true
 	knocked_down.emit(self)
 
@@ -1791,7 +1984,10 @@ func _process_down(input: Dictionary) -> void:
 	# Which of the two measured rises this is depends on who ended the
 	# prone state: a wrestler who pressed his way up gets the fast one, a
 	# wrestler whose timer simply ran out gets the default.
-	var pressed_up: bool = input.get("strike", false)
+	# A man who has just fired up does not lie there: he is up on the fast
+	# rise whether or not anything was pressed.
+	var pressed_up: bool = input.get("strike", false) \
+			or (combat != null and combat.is_fired_up())
 	if pressed_up or _move_ticks_remaining <= 0:
 		fsm.transition_to(WrestlerFSM.State.GETUP)
 		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_RISE_TICKS
@@ -1816,27 +2012,30 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 
 ## Where the coverer kneels, in the DOWNED man's own frame, in metres.
 ##
-## Both measured off the prone pose with tools/probe/pin_shot.tscn rather than
-## guessed, because guessing got it wrong: a prone wrestler's node keeps his
-## standing yaw, so which way along z his head lies is not something to reason
-## about from the transform. Printed from the rig while he lay there --
+## Measured off the supine pose with tools/probe/pin_shot.tscn, which prints
+## the downed man's bones in his own frame while the cover plays:
 ##
-##   Head   local=(-0.002, +0.174, +1.250)
-##   pelvis local=(-0.010, +0.066, +0.573)
-##   foot_l local=(-0.233, +0.072, -0.257)
+##   Head       local=(-0.000, +0.217, -0.686)
+##   spine_03   see the probe -- the chest, about two thirds of the way up
+##   pelvis     local=(+0.000, +0.184, +0.000)
+##   foot_l     local=(+0.161, +0.105, +0.502)
 ##
-## -- so the body runs up +Z and the chest is near +0.95. The first attempt
-## offset along -Z and put the coverer down by the boots, which the render
-## caught immediately.
+## -- so the body runs up -Z, his facing, toward the head. It used to be
+## offset +0.90 along +Z, measured off a pose that has since changed twice
+## (first flipped end for end, then rolled face-up): by this build that put
+## the coverer past the downed man's boots, which pin_shot showed as a man
+## kneeling beside the other's shins.
 ##
-## Neither is a searched minimum, and the lateral one is not a first guess
-## either: at 0.45 the side and three-quarter shots both read fine and the low
-## angle showed the coverer's thigh passing through the prone man's chest. 0.62
-## is the value that came back clean from all three. That is what these answer
-## to -- a rendered frame, from more than one angle, not a distance that sounds
-## about right.
-const COVER_TOWARD_HEAD_M := 0.90
-const COVER_LATERAL_M := 0.62
+## TOWARD_HEAD puts him level with the chest.
+##
+## LATERAL is measured to his ROOT, and the cover is a lateral press now: he
+## lies face down across the man (wrestling_clips.py, Pin_Cover). In that pose
+## his pelvis sits 0.16 m behind his root and his chest about 0.35 m ahead of
+## the pelvis, so the chest is ~0.2 m in front of the root. At the kneel's
+## 0.55 the chest landed on the mat beside the man; 0.20 lays it over his
+## sternum, with the pelvis down on the mat beside his ribs.
+const COVER_TOWARD_HEAD_M := 0.40
+const COVER_LATERAL_M := 0.20
 
 
 ## Called by MatchReferee when the attacker covers a downed opponent.
@@ -1865,16 +2064,25 @@ func begin_pin(defender: WrestlerController, seed_value: int) -> void:
 ## count -- neither reads either man's position -- so this moves what the
 ## camera sees without touching what the match decides.
 func _place_cover(defender: WrestlerController) -> void:
+	# The two capsules (r 0.4) stop each other 0.8 m apart, and a man lying
+	# ON another is closer than that by design -- the slide would park him
+	# short of the cover. The pair stop colliding for the pin, and start again
+	# only once they have separated: see _release_cover_contact().
+	add_collision_exception_with(defender)
+	defender.add_collision_exception_with(self)
+	_cover_partner = defender
 	var basis := defender.global_transform.basis
-	# +Z toward the head, measured (see the constants); +X is his own left.
-	var toward_head := basis.z * COVER_TOWARD_HEAD_M
+	# -Z toward the head, measured (see the constants); +X is his own left.
+	var toward_head := -basis.z * COVER_TOWARD_HEAD_M
 	var beside := basis.x * COVER_LATERAL_M
 	var spot := defender.global_position + toward_head + beside
-	# Face back across him, so the cover reads from the hard camera rather
-	# than showing the coverer's back to the man he is pinning.
+	# Face square across him -- perpendicular to his body, toward its
+	# midline -- so the cover reads from the hard camera rather than showing
+	# the coverer's back to the man he is pinning, and so his chest reaches
+	# over the downed man's chest rather than angling off toward the hips.
 	var target := global_transform
 	target.origin = spot
-	var across := defender.global_position - spot
+	var across := -beside
 	across.y = 0.0
 	if across.length() > 0.01:
 		target.basis = Basis(Vector3.UP, atan2(-across.x, -across.z))
@@ -1895,6 +2103,177 @@ func _place_cover(defender: WrestlerController) -> void:
 	_cover_slide_tick = 0
 	_cover_slide_ticks = _cover_slide_duration(
 			global_position.distance_to(spot))
+
+# ---------------------------------------------------------------------------
+# A downed man's body
+# ---------------------------------------------------------------------------
+#
+# A man lying on the mat is still an upright 0.4 m capsule at his pelvis --
+# GrappleRig treats lying down as a pose, not a body orientation -- so his
+# legs and his head collide with nothing. On the owner's match video his
+# raised shins went through the standing man's thigh and chest.
+# tools/probe/limb_clearance.tscn measured it: up to 0.12 m of leg inside the
+# other body, 259 visible ticks over five seeds, almost all of it with the
+# standing man walking, striking or idling over him.
+#
+# So a downed man has a FOOTPRINT: the line his body lies along, head to
+# feet, and a standing wrestler is kept a clearance off it.
+
+## The states a man is on the mat in, legs out.
+const DOWNED_STATES: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.DOWN, WrestlerFSM.State.PIN_DEFENDER,
+	WrestlerFSM.State.SUBMISSION_DEFENDER, WrestlerFSM.State.GETUP,
+]
+## The states that are ALLOWED on top of him: the cover and the hold are
+## contact by design, and a paired move or the lock-up places both bodies
+## through GrappleRig.
+const ON_TOP_STATES: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.SUBMISSION_ATTACKER,
+	WrestlerFSM.State.GRAPPLE_HOLD, WrestlerFSM.State.MOVE_EXEC,
+	WrestlerFSM.State.FINISHER, WrestlerFSM.State.TIE_UP,
+	WrestlerFSM.State.VICTORY,
+]
+## His body in his own frame, off his root: the head end up -Z, the feet down
+## +Z. The supine pose puts Head at -0.69 and the feet at +0.50
+## (tools/probe/pin_shot.tscn); a little past both, for the hair and the boots.
+const BODY_HEAD_M := 0.75
+const BODY_FEET_M := 0.65
+## How far a standing wrestler's ROOT stays off that line: his own body
+## (a 0.4 m capsule, but a torso is ~0.18 m deep) plus the downed man's limbs
+## either side of the line, knees up. Read off limb_clearance.
+const BODY_CLEAR_M := 0.55
+## The most the guard corrects in one tick. A walk is 0.058 m a tick, so this
+## only ever cancels the step that would have gone in; it is not a shove.
+## Bigger overlaps -- a man falling onto the spot someone is standing on --
+## resolve over a few ticks rather than as a jump.
+const BODY_PUSH_MAX_M := 0.06
+
+
+## His head end and feet end, on the mat plane.
+static func downed_body_line(w: WrestlerController) -> PackedVector3Array:
+	var along := w.global_transform.basis.z
+	along.y = 0.0
+	along = along.normalized()
+	var root := Vector3(w.global_position.x, 0.0, w.global_position.z)
+	return PackedVector3Array([root - along * BODY_HEAD_M,
+			root + along * BODY_FEET_M])
+
+
+## The horizontal correction that takes `pos` back out to BODY_CLEAR_M off
+## the line a..b, or zero if it is already clear. Pure, so it can be tested
+## without a scene.
+static func body_clearance_push(pos: Vector3, a: Vector3, b: Vector3) -> Vector3:
+	var flat := Vector3(pos.x, 0.0, pos.z)
+	var near := Geometry3D.get_closest_point_to_segment(flat, a, b)
+	var off := flat - near
+	var d := off.length()
+	if d >= BODY_CLEAR_M:
+		return Vector3.ZERO
+	if d < 0.0001:
+		# Dead on the line: out to his left, deterministically.
+		off = (b - a).cross(Vector3.UP).normalized()
+		d = 0.0
+	else:
+		off /= d
+	return off * minf(BODY_CLEAR_M - d, BODY_PUSH_MAX_M)
+
+
+## Where to stand to cover him: level with his chest, BODY_CLEAR_M out plus a
+## step, on whichever side `from` is already on -- so the walk in never
+## crosses the body.
+##
+## Unless that side is outside the ring. A man down by the ropes has only one
+## side to stand on, and the spot on the far side of the ropes is one the ring
+## clamp will never let anyone reach: measured on seed 4, the standing man
+## walked at it for 97 ticks, pinned between the clamp and this guard with the
+## downed man's legs through him. Then it is the other side, and the footprint
+## guard walks him round the body to get there.
+static func cover_approach_spot(victim: WrestlerController, from: Vector3) -> Vector3:
+	var basis := victim.global_transform.basis
+	var local := victim.global_transform.affine_inverse() * from
+	var side := 1.0 if local.x >= 0.0 else -1.0
+	var chest := victim.global_position - basis.z * COVER_TOWARD_HEAD_M
+	var out := basis.x * (BODY_CLEAR_M + 0.15)
+	var line := downed_body_line(victim)
+	# Both sides, each pulled back to where a man can actually STAND -- the
+	# rope colliders stop him at ~2.55, inside RING_KEEP_IN -- then the first
+	# one that is genuinely clear of the body, his own side first. The second
+	# pass of this fix was measured still failing on seed 4: the downed man lay
+	# with his head over the ropes, so BOTH chest-side spots clamped into the
+	# same corner, 0.51 m off his legs.
+	var best := Vector3.ZERO
+	var best_clear := -1.0
+	for s: float in [side, -side]:
+		var spot := chest + out * s
+		spot.x = clampf(spot.x, -STANDABLE_M, STANDABLE_M)
+		spot.z = clampf(spot.z, -STANDABLE_M, STANDABLE_M)
+		var flat := Vector3(spot.x, 0.0, spot.z)
+		var clear := flat.distance_to(
+				Geometry3D.get_closest_point_to_segment(flat, line[0], line[1]))
+		if clear >= BODY_CLEAR_M:
+			return spot
+		if clear > best_clear:
+			best_clear = clear
+			best = spot
+	return best
+
+
+## Where a wrestler can actually stand: the rope colliders stop him short of
+## RING_KEEP_IN.
+const STANDABLE_M := 2.45
+
+
+
+## True when `pos` is level with his torso rather than down by his legs --
+## the side of him a cover is made from. Past his hips toward his feet is not.
+static func is_beside_torso(victim: WrestlerController, pos: Vector3) -> bool:
+	var local := victim.global_transform.affine_inverse() * pos
+	return local.z <= 0.15
+
+
+## Steers this wrestler off a downed opponent's body, through velocity, before
+## move_and_slide() -- the same reason _tick_cover_slide() steers velocity:
+## writing the transform leaves no floor contact and he falls through the mat.
+func _keep_off_downed_body(delta: float) -> void:
+	if opponent == null or delta <= 0.0:
+		return
+	if not DOWNED_STATES.has(opponent.fsm.current_state):
+		return
+	if ON_TOP_STATES.has(fsm.current_state) or DOWNED_STATES.has(fsm.current_state):
+		return
+	var line := downed_body_line(opponent)
+	var next := global_position + velocity * delta
+	var push := body_clearance_push(next, line[0], line[1])
+	if push == Vector3.ZERO:
+		return
+	velocity.x += push.x / delta
+	velocity.z += push.z / delta
+
+
+## The man this wrestler covered, while their capsules ignore each other.
+var _cover_partner: WrestlerController = null
+
+## Collision between the pair comes back once the pin is over AND they have
+## moved apart -- never while they overlap, or the physics engine resolves the
+## overlap in a single step and throws one of them across the mat.
+## Two capsule radii plus a hair.
+const COVER_RELEASE_M := 0.82
+
+
+func _release_cover_contact() -> void:
+	if _cover_partner == null or not is_instance_valid(_cover_partner):
+		_cover_partner = null
+		return
+	if fsm.current_state == WrestlerFSM.State.PIN_ATTACKER:
+		return
+	var apart := Vector2(global_position.x - _cover_partner.global_position.x,
+			global_position.z - _cover_partner.global_position.z).length()
+	if apart < COVER_RELEASE_M:
+		return
+	remove_collision_exception_with(_cover_partner)
+	_cover_partner.remove_collision_exception_with(self)
+	_cover_partner = null
+
 
 ## Where the cover slide starts and ends, and how far through it is. Ticked in
 ## _physics_process's PIN_ATTACKER branch, which is otherwise `pass` -- the

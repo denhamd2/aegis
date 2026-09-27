@@ -89,7 +89,8 @@ const FLOOR_Y := -1.1
 ##
 ## 6.0 leaves 2.80m (9ft 2in) between apron and barrier: over the regulation
 ## minimum, enough for the camera well and a cameraman to work in, and still
-## clear of the steel steps, which reach 4.34m from ring centre.
+## clear of the steel steps, which reach 4.0m out along each axis on their
+## corner diagonals (5.67m from ring centre, inside the barrier square).
 ##
 ## Moving it in does the second half of the job on its own. The floor rows are
 ## offsets of THIS number (see `_build_floor_seats`), so pulling the barrier
@@ -354,7 +355,21 @@ const BOWL_AISLES := 12
 ## above and below it. The upper tier starts on top of it, which is what gives
 ## the hall two decks rather than one thirty-row rake.
 const SUITE_HEIGHT := 3.6
-const RIBBON_HEIGHT := 0.55
+## 0.55 -> 0.90. Against the owner's photograph of a real AEW crowd, the
+## ribbon on the balcony fascia stands about as tall as a row of seated fans --
+## two ROW_RISEs, 0.96 -- which is also the usual 3-4ft of an arena ribbon
+## board. At 0.55 it read as a trim line rather than as a screen. The suite
+## glass between the two ribbons gives up the difference: 1.82m -> 1.12m.
+const RIBBON_HEIGHT := 0.90
+## Width over height of one tile of the ribbon boards' artwork
+## (`RIBBON_ART`, 950 x 123 px). arena_bowl.py lays the tile along the board
+## at RIBBON_HEIGHT * this -- 6.95m per repeat -- so it keeps its proportions
+## on every run and round both curved ends. Change the image, change this, and
+## rebuild the bowl.
+const RIBBON_ART_ASPECT := 7.7236
+const RIBBON_ART := "res://assets/environment/materials/ribbon_board.png"
+## Emission of the artwork's white lettering; see `_ribbon_material()`.
+const RIBBON_ART_PEAK := 1.1
 ## Height of a seat back standing on its tread.
 const SEAT_BACK_HEIGHT := 0.42
 ## How wide a seat back is as a fraction of SEAT_PITCH. Under 1.0 so there is
@@ -459,6 +474,7 @@ func _ready() -> void:
 	_build_bowl()
 	_build_floor_seats()
 	_build_entrance_set()
+	_build_overhead_rig()
 
 
 # ---------------------------------------------------------------------------
@@ -571,6 +587,56 @@ func _self_emissive(mat: StandardMaterial3D, level: float) -> StandardMaterial3D
 	var albedo_linear := maxf(mat.albedo_color.srgb_to_linear().get_luminance(),
 			0.0001)
 	mat.emission_energy_multiplier = level * _emissive_gain() / albedo_linear
+	return mat
+
+
+## The ribbon boards, showing `RIBBON_ART` -- the supplied AEW / Dynamite
+## board graphic -- repeated round the bowl.
+##
+## The level pins the PICTURE'S PEAK, not its mean. The first version kept
+## `level`'s old meaning (the flat amber's mean linear luminance, 0.40) and
+## divided by the picture's mean, which put the white lettering at ~3.2: far
+## over match.tscn's glow_hdr_threshold of 1.25, and on a board three pixels
+## tall at 25m the bloom closed over the whole ribbon and rendered it as a
+## solid white line with no artwork in it at all. Measured, then changed.
+##
+## So the lettering sits at RIBBON_ART_PEAK, just under the threshold -- the
+## same place the ramp LED strips are put, flaring on the bloom without it
+## swallowing them -- and the blue field falls where the picture puts it.
+## That gives a mean near 0.28, a little under the amber's 0.40, on a board
+## that now carries detail instead of a flat colour.
+##
+## Falls back to the old amber if the image is missing, rather than leaving a
+## white band round the hall.
+func _ribbon_material(level: float) -> StandardMaterial3D:
+	var tex: Texture2D = load(RIBBON_ART)
+	if tex == null:
+		push_error("ArenaBuilder: %s failed to load." % RIBBON_ART)
+		return _self_emissive(_textured("arena_ribbon"), level)
+	var mat := StandardMaterial3D.new()
+	# An LED board's face is a black panel; every bit of its colour is the
+	# LEDs. Given the picture as albedo as well, the beams and the ambient lit
+	# it on top of its own emission and washed the blue field toward white.
+	mat.albedo_color = Color(0.02, 0.02, 0.025)
+	mat.emission_enabled = true
+	# BLACK, not white. StandardMaterial3D's default emission operator is ADD
+	# -- emission colour PLUS the texture -- so a white colour here put a
+	# full-white layer under the picture and the board rendered (227, 222, 228)
+	# whatever else was changed. MULTIPLY with white would do the same job;
+	# black under ADD says "the picture is the whole signal" more plainly.
+	mat.emission = Color.BLACK
+	mat.emission_operator = BaseMaterial3D.EMISSION_OP_ADD
+	mat.emission_texture = tex
+	mat.emission_energy_multiplier = RIBBON_ART_PEAK * _emissive_gain()
+	# Unshaded in effect: no specular at all. The boards are seen almost
+	# edge-on from most of the hall, and at that angle Fresnel takes a 0.25-
+	# roughness face's reflectance toward 1.0 -- it reflected the grey haze
+	# over its own picture and rendered (210, 204, 214), colourless, where the
+	# emission alone predicts a clear blue-violet. An LED face is matte.
+	mat.roughness = 1.0
+	mat.metallic_specular = 0.0
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	mat.texture_repeat = true
 	return mat
 
 
@@ -1037,6 +1103,9 @@ func _build_bowl_model() -> Node3D:
 				_house_lit(_textured(spec[0]), spec[1])))
 	for part: String in BOWL_MODEL_EMISSIVE:
 		var spec: Array = BOWL_MODEL_EMISSIVE[part]
+		if part == "RibbonBoards":
+			_dress(root, part, _ribbon_material(spec[1]))
+			continue
 		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
 	for part: String in CROWD_PARTS:
 		_dress(root, part, _crowd_material())
@@ -1050,6 +1119,16 @@ func _build_bowl_model() -> Node3D:
 ## (tools/blender/crowd.py bakes both into COLOR_0), so the material has to be
 ## a shader that reads them rather than a StandardMaterial3D with one albedo.
 const CROWD_PARTS := ["Crowd", "CrowdFar"]
+
+## The crowd's wash colour, in linear light. Taken off the four AEW stills in
+## gauntlet/refs/lighting/, not chosen: their coloured pixels sit at hue
+## 210-240 and the broadcast frame's mean is (0.09, 0.14, 0.27). Scaled so its
+## Rec.709 luminance is ~1.0 -- 0.2126*0.62 + 0.7152*0.98 + 0.0722*2.0 = 0.977
+## -- which leaves `house_light` as the level and VISUAL_BAR.md's 0.014 crowd
+## anchor where it was. The swing is carried by blue because blue is the
+## channel the eye weights least; the same saturation bought with red would
+## cost the level.
+const CROWD_WASH := Vector3(0.62, 0.98, 2.0)
 
 ## Idle motion, and the light floor the crowd sits on.
 ##
@@ -1081,6 +1160,15 @@ uniform float sway_amplitude = 0.018;
 // wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
 // this is most of what lights them, which is why it is not smaller.
 uniform float house_light = 0.055;
+// The colour of the light the crowd sits in. It used to be white, so the stand
+// took its shirts' colours at face value and measured blue-GREY: mean sat
+// 0.408 on crowd_bank against 0.49-0.67 on every AEW still in
+// gauntlet/refs/lighting/, whose crowds sit in a saturated blue wash (hue
+// 210-240, coloured-pixel mean (0.09, 0.14, 0.27) on the Grand Slam frame).
+// A wash multiplies albedo, so the shirts keep their variation and take the
+// hall's colour. Normalised to Rec.709 luminance ~1.0 so that house_light
+// still sets the level and only the colour changes. See ArenaBuilder.CROWD_WASH.
+uniform vec3 house_tint = vec3(1.0);
 
 varying vec3 shirt;
 
@@ -1098,7 +1186,7 @@ void vertex() {
 
 void fragment() {
 	ALBEDO = shirt;
-	EMISSION = shirt * house_light;
+	EMISSION = shirt * house_tint * house_light;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }
@@ -1106,6 +1194,7 @@ void fragment() {
 	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
+	mat.set_shader_parameter("house_tint", CROWD_WASH)
 	return mat
 
 
@@ -1393,7 +1482,6 @@ const ENTRANCE_MATERIALS := {
 	"StageBackdrop": ["arena_stage_panel", 1.1],
 	"PortalRecess": ["arena_tunnel", 0.35],
 	"StageScreenBezel": ["arena_tunnel", 0.5],
-	"Truss": ["arena_truss", 0.9],
 }
 
 ## The parts that light themselves: part name -> [material key, level].
@@ -1457,6 +1545,48 @@ func _attach_stage_video(root: Node3D) -> void:
 	screen.material_override = _self_emissive(screen_mat, SCREEN_BLANK_EMISSION)
 	screen.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(StageVideo.attach(screen, screen_mat))
+
+
+## The overhead rig: `tools/blender/overhead_rig.py`'s model.
+##
+## The ring grid, the two perimeter rings the beams and the house wash hang
+## from, the stage truss and accent boom, the roof steel, the speaker arrays,
+## and the LED strips under the truss. The fixture BODIES are not in it --
+## ArenaLighting hangs one at each light it builds, because it owns where the
+## lights are.
+const RIG_MODEL := "res://assets/environment/overhead_rig.glb"
+
+## Part name -> [material key, house reach]. The truss is brighter than the
+## old grid's 0.9: in every AEW still the rig reads as bright aluminium lines
+## against a black roof, and that is most of what makes the overhead volume
+## read as a lighting rig rather than as ceiling. The roof steel is under the
+## shell's level -- it is the dark thing the rig hangs in front of.
+const RIG_MATERIALS := {
+	"RigTruss": ["arena_truss", 2.4],
+	"RoofSteel": ["arena_truss", 0.7],
+	"SpeakerArrays": ["arena_chair", 0.6],
+}
+
+## The truss's LED edge strips. Hue off the references: the rig in
+## aew_wide_bowl_magenta.jpg is edged in cyan-blue lines (hue ~205).
+const RIG_LED_LEVEL := 0.22
+
+
+func _build_overhead_rig() -> void:
+	var packed: PackedScene = load(RIG_MODEL)
+	if packed == null:
+		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_venue.sh rig."
+				% RIG_MODEL)
+		return
+	var root: Node3D = packed.instantiate()
+	root.name = "OverheadRig"
+	for part: String in RIG_MATERIALS:
+		var spec: Array = RIG_MATERIALS[part]
+		_dress(root, part, MaterialLibrary.house_compensate(
+				_house_lit(_textured(spec[0]), spec[1])))
+	_dress(root, "RigLeds", _self_emissive(
+			MaterialLibrary.resolve("arena_rig_led"), RIG_LED_LEVEL))
+	add_child(root)
 
 
 ## The shell is part of the Blender model now.

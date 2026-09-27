@@ -227,6 +227,61 @@ const RECIPES := {
 	"win_celebrate": {"kind": "retime", "source": "Win_Celebrate",
 		"seconds": 1.300, "file": AUTHORED},
 
+	# --- the ring entrance (core/match/entrance_director.gd) ---------------
+	#
+	# Lengths are the clips' own frame counts at 30 fps and must stay so: the
+	# director moves the root at the speed and over the durations these were
+	# authored against (EntranceDirector.WALK_SPEED, CLIMB_SECONDS,
+	# ROPE_SECONDS), and a retime here would slide the planted feet.
+	"entrance_walk": {"kind": "retime", "source": "Entrance_Walk",
+		"seconds": 0.800, "file": AUTHORED, "loop": true},
+	"climb_steps": {"kind": "retime", "source": "Climb_Steps",
+		"seconds": 1.200, "file": AUTHORED},
+	"rope_step_through": {"kind": "retime", "source": "Rope_Step_Through",
+		"seconds": 1.600, "file": AUTHORED},
+	"rope_step_through_apron": {"kind": "retime", "source": "Rope_Step_Through_Apron",
+		"seconds": 1.333, "file": AUTHORED},
+	"apron_step": {"kind": "retime", "source": "Apron_Step",
+		"seconds": 1.000, "file": AUTHORED},
+	# Roman's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
+	"walk_slow": {"kind": "retime", "source": "Walk_Slow",
+		"seconds": 1.000, "file": AUTHORED, "loop": true},
+	"walk_slow_look": {"kind": "retime", "source": "Walk_Slow_Look",
+		"seconds": 4.800, "file": AUTHORED, "loop": true},
+	"roman_stand": {"kind": "retime", "source": "Roman_Stand",
+		"seconds": 2.000, "file": AUTHORED, "loop": true},
+	# Cody's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
+	"cody_stand": {"kind": "retime", "source": "Cody_Stand",
+		"seconds": 2.000, "file": AUTHORED, "loop": true},
+	"whoa_arms": {"kind": "retime", "source": "Whoa_Arms",
+		"seconds": 2.000, "file": AUTHORED},
+	"fists_up": {"kind": "retime", "source": "Fists_Up",
+		"seconds": 1.000, "file": AUTHORED},
+	"whoa_crouch": {"kind": "retime", "source": "Whoa_Crouch",
+		"seconds": 0.700, "file": AUTHORED},
+	"air_punch": {"kind": "retime", "source": "Air_Punch",
+		"seconds": 1.500, "file": AUTHORED},
+	"point_crowd": {"kind": "retime", "source": "Point_Crowd",
+		"seconds": 2.000, "file": AUTHORED},
+	"walk_crowd": {"kind": "retime", "source": "Walk_Crowd",
+		"seconds": 3.467, "file": AUTHORED, "loop": true},
+	"corner_climb": {"kind": "retime", "source": "Corner_Climb",
+		"seconds": 1.200, "file": AUTHORED},
+	"corner_pose": {"kind": "retime", "source": "Corner_Pose",
+		"seconds": 3.000, "file": AUTHORED},
+	"corner_down": {"kind": "retime", "source": "Corner_Down",
+		"seconds": 1.000, "file": AUTHORED},
+	"coat_off": {"kind": "retime", "source": "Coat_Off",
+		"seconds": 2.000, "file": AUTHORED},
+	"title_unbuckle": {"kind": "retime", "source": "Title_Unbuckle",
+		"seconds": 1.500, "file": AUTHORED},
+	"title_raise": {"kind": "retime", "source": "Title_Raise",
+		"seconds": 2.000, "file": AUTHORED},
+	"finger_raise": {"kind": "retime", "source": "Finger_Raise",
+		"seconds": 2.000, "file": AUTHORED},
+	"ula_fala_off": {"kind": "retime", "source": "Ula_Fala_Off",
+		"seconds": 1.500, "file": AUTHORED},
+
 	# --- states that were playing raw rig clips -------------------------
 	#
 	# These replace clips taken straight off wrestler_base.glb. Each names

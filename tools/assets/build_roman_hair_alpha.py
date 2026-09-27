@@ -25,8 +25,12 @@ Outputs are written next to their sources in game/assets/characters/.
 import pathlib
 import sys
 
+import json
+import math
+import struct
+
 try:
-    from PIL import Image, ImageChops, ImageFilter
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter
 except ImportError:
     sys.exit("Pillow is required: pip install Pillow")
 
@@ -60,7 +64,7 @@ LIFT = 0.30
 ## artist drew simply render at a weight you can see. The eyebrows live in this
 ## same mask and are sparser than the jaw, which is why they were missing
 ## altogether.
-BEARD_GAMMA = 0.55
+BEARD_GAMMA = 0.45
 
 ## Strand dilation for the beard mask, in texels (odd, 0 = off).
 ##
@@ -218,6 +222,128 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
     print(f"{source.name:38} -> {target.name:34} skin tone {tone}, green mean {mean:.1f}")
 
 
+## Eyebrows, painted into the head albedo.
+##
+## The model has none that render. The beard/brow card mesh (M_Combinations)
+## stops at y 1.708 -- the bottom of the eyes, 2 cm under where a brow sits --
+## so there are no brow cards at all, whatever the alpha threshold; and the
+## head map's surviving green channel is a shading bake with no brow in it.
+## Rendered, he had a bare ridge over each eye (tools/probe/clip_shot.tscn
+## --face).
+##
+## So brows are grown here as hair strokes: laid out in the HEAD'S OWN 3D
+## SPACE over the measured eyes (M_EYE: centres x +-0.033, tops y 1.730), then
+## carried into texture space through the head mesh's UVs, so they land on
+## the brow ridge rather than wherever a guess in UV space would put them.
+## Heavy, straight and low at the inner end, the way his are; thinning to a
+## tail past the outer corner of the eye. Seeded, so the file is the same
+## every build.
+BROW_COLOR = (22, 17, 14)
+BROW_SEED = 7
+## (x from the midline, centre y, half-thickness) in metres along the brow.
+BROW_PROFILE = [(0.011, 1.7345, 0.0056), (0.020, 1.7372, 0.0060),
+                (0.032, 1.7400, 0.0052), (0.044, 1.7410, 0.0042),
+                (0.054, 1.7388, 0.0028), (0.060, 1.7360, 0.0014)]
+BROW_STRANDS = 900
+## Opacity of the soft fill under the strands: skin never shows through a
+## brow this dense at broadcast distance, where single strands filter away.
+BROW_FILL = 150
+BROW_SUPERSAMPLE = 4
+
+
+def _glb_attributes(path: pathlib.Path, mesh_name: str) -> dict:
+    """POSITION / NORMAL / TEXCOORD_0 of one mesh's first primitive, read
+    straight from the .glb -- no Blender, no numpy."""
+    data = path.read_bytes()
+    json_len = struct.unpack("<I", data[12:16])[0]
+    gltf = json.loads(data[20:20 + json_len])
+    binary = 20 + json_len + 8
+    mesh = next(m for m in gltf["meshes"] if m["name"] == mesh_name)
+    out = {}
+    for key in ("POSITION", "NORMAL", "TEXCOORD_0"):
+        accessor = gltf["accessors"][mesh["primitives"][0]["attributes"][key]]
+        view = gltf["bufferViews"][accessor["bufferView"]]
+        width = {"VEC2": 2, "VEC3": 3}[accessor["type"]]
+        start = binary + view.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+        flat = struct.unpack_from("<%df" % (accessor["count"] * width), data, start)
+        out[key] = [flat[i:i + width] for i in range(0, len(flat), width)]
+    return out
+
+
+def _uv_mapper(head: dict):
+    """Maps a point on the front of the face (x, y) to head UVs, by inverse-
+    distance weighting of the four nearest front-facing head vertices."""
+    front = [(p, uv) for p, n, uv in zip(head["POSITION"], head["NORMAL"],
+                                         head["TEXCOORD_0"])
+             if n[2] > 0.3 and abs(p[0]) < 0.09 and 1.69 < p[1] < 1.79]
+
+    def to_uv(x: float, y: float) -> tuple[float, float]:
+        near = sorted(front, key=lambda e: (e[0][0] - x) ** 2 + (e[0][1] - y) ** 2)[:4]
+        total = u = v = 0.0
+        for p, uv in near:
+            w = 1.0 / max((p[0] - x) ** 2 + (p[1] - y) ** 2, 1e-10)
+            total += w
+            u += uv[0] * w
+            v += uv[1] * w
+        return u / total, v / total
+    return to_uv
+
+
+def _brow_at(t: float) -> tuple[float, float, float]:
+    """(x, y, half-thickness) at t in [0, 1] along BROW_PROFILE."""
+    f = t * (len(BROW_PROFILE) - 1)
+    i = min(int(f), len(BROW_PROFILE) - 2)
+    k = f - i
+    a, b = BROW_PROFILE[i], BROW_PROFILE[i + 1]
+    return tuple(a[j] + (b[j] - a[j]) * k for j in range(3))
+
+
+def paint_brows(model: pathlib.Path, target: pathlib.Path) -> None:
+    import random
+    rng = random.Random(BROW_SEED)
+    to_uv = _uv_mapper(_glb_attributes(model, "M_Head"))
+    albedo = Image.open(target).convert("RGB")
+    size = albedo.size[0]
+    ss = BROW_SUPERSAMPLE
+    mask = Image.new("L", (size * ss, size * ss), 0)
+    draw = ImageDraw.Draw(mask)
+    for side in (1.0, -1.0):
+        for _ in range(BROW_STRANDS):
+            # Denser toward the inner end, where his brows are heaviest.
+            t = rng.random() ** 1.3
+            x, y, half = _brow_at(t)
+            y += rng.uniform(-half, half) * 0.95
+            # Hairs lean up and out at the head of the brow, flatten along
+            # the body, and droop slightly into the tail.
+            angle = math.radians(62 - 70 * t + rng.uniform(-9, 9))
+            length = rng.uniform(0.0045, 0.0075) * (1.0 - 0.35 * t)
+            x2 = x + math.cos(angle) * length
+            y2 = y + math.sin(angle) * length
+            u0, v0 = to_uv(side * x, y)
+            u1, v1 = to_uv(side * x2, y2)
+            shade = rng.randint(190, 255)
+            draw.line([(u0 * size * ss, v0 * size * ss), (u1 * size * ss, v1 * size * ss)],
+                      fill=shade, width=max(1, round(1.6 * ss)))
+    # The fill: the same brow shape as a solid band, softened, laid under the
+    # strands so the brow reads as a brow and not as scratches once the
+    # texture is mip-filtered at camera distance.
+    for side in (1.0, -1.0):
+        top, bottom = [], []
+        for k in range(41):
+            x, y, half = _brow_at(k / 40.0)
+            top.append(to_uv(side * x, y + half * 0.8))
+            bottom.append(to_uv(side * x, y - half * 0.8))
+        outline = [(u * size * ss, v * size * ss) for u, v in top + bottom[::-1]]
+        fill = Image.new("L", mask.size, 0)
+        ImageDraw.Draw(fill).polygon(outline, fill=BROW_FILL)
+        fill = fill.filter(ImageFilter.GaussianBlur(3 * ss))
+        mask = ImageChops.lighter(mask, fill)
+    mask = mask.resize(albedo.size, Image.LANCZOS)
+    hair = Image.new("RGB", albedo.size, BROW_COLOR)
+    Image.composite(hair, albedo, mask).save(target, optimize=True)
+    print(f"{'brows':38} -> {target.name:34} {2 * BROW_STRANDS} strands")
+
+
 def main() -> int:
     if not CHARACTERS.is_dir():
         sys.exit(f"not found: {CHARACTERS}")
@@ -231,6 +357,7 @@ def main() -> int:
         CHARACTERS / "roman_reigns_Image.png",
         CHARACTERS / "roman_reigns_head_color.png",
     )
+    paint_brows(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     return 0
 
 

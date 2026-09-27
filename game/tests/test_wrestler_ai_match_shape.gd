@@ -92,9 +92,23 @@ func test_out_of_range_it_only_closes() -> void:
 ## RUNNING_ATTACK has two MoveDefs, a reversal window and its own suite, and
 ## fired ZERO times in a match: nothing ever set input["run"] outside the whip
 ## decision in GRAPPLE_HOLD. These pin the decision that makes it reachable.
+##
+## Charges come after the opening lock-up (WrestlerAI: the wrestlers spawn past
+## run_engage_distance, so a charge from the first tick opened every match
+## with a running attack instead of the lock-up). These start past it.
+
+## A pair whose opening grapple has been thrown -- the charge's precondition.
+func _make_charging_pair(distance: float) -> WrestlerAI:
+	var ai := _make_pair(distance)
+	ai.target.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	return ai
+
+func test_no_charge_before_the_opening_lock_up() -> void:
+	var ai := _make_pair(3.0)
+	assert_bool(ai.poll_input().get("run", false)).is_false()
 
 func test_it_charges_when_there_is_room_to() -> void:
-	var ai := _make_pair(3.0)
+	var ai := _make_charging_pair(3.0)
 	assert_bool(ai.poll_input().get("run", false)).override_failure_message(
 		"The AI walked in from 3m with the ring's whole width behind it, so "
 		+ "RUN is never entered and the running attack stays unreachable."
@@ -109,7 +123,7 @@ func test_it_does_not_charge_from_close_range() -> void:
 ## latched, the AI would drop out of RUN at exactly the distance where the
 ## running attack becomes possible, and it could never fire at all.
 func test_a_charge_is_held_across_the_engage_threshold() -> void:
-	var ai := _make_pair(3.0)
+	var ai := _make_charging_pair(3.0)
 	assert_bool(ai.poll_input().get("run", false)).is_true()
 	ai.target.global_position = Vector3(1.8, 0.0, 0.0) # inside engage, outside reach
 	assert_bool(ai.poll_input().get("run", false)).override_failure_message(
@@ -120,7 +134,7 @@ func test_a_charge_is_held_across_the_engage_threshold() -> void:
 ## Arrival: still running, and now in reach. In RUN this press becomes
 ## _maybe_start_running_attack() rather than a strike.
 func test_arriving_in_reach_presses_the_attack() -> void:
-	var ai := _make_pair(3.0)
+	var ai := _make_charging_pair(3.0)
 	ai.poll_input()
 	ai.target.global_position = Vector3(WrestlerController.STRIKE_HIT_RANGE - 0.05, 0.0, 0.0)
 	var input := ai.poll_input()
@@ -130,7 +144,7 @@ func test_arriving_in_reach_presses_the_attack() -> void:
 ## And it costs a cooldown, so a 69-tick committed move cannot crowd out the
 ## strike trading the match is made of.
 func test_charges_are_rate_limited() -> void:
-	var ai := _make_pair(3.0)
+	var ai := _make_charging_pair(3.0)
 	ai.poll_input()
 	ai.target.global_position = Vector3(WrestlerController.STRIKE_HIT_RANGE - 0.05, 0.0, 0.0)
 	assert_bool(ai.poll_input().get("strike", false)).is_true()
@@ -143,7 +157,7 @@ func test_charges_are_rate_limited() -> void:
 ## _maybe_start_running_attack() refuses an unhittable target, so without this
 ## the AI would sprint into him holding the latch open.
 func test_a_charge_is_abandoned_when_the_target_stops_being_hittable() -> void:
-	var ai := _make_pair(3.0)
+	var ai := _make_charging_pair(3.0)
 	assert_bool(ai.poll_input().get("run", false)).is_true()
 	ai.target.fsm.current_state = WrestlerFSM.State.GETUP
 	assert_bool(ai.poll_input().get("run", false)).is_false()

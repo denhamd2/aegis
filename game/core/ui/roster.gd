@@ -49,10 +49,23 @@ class Entry:
 	var power: float
 	var speed: float
 	var technique: float
+	## This wrestler's own finisher, as a MoveDef path, or "" for none --
+	## the one move on the roster that belongs to one man rather than to the
+	## match scene everybody shares. Installed on WrestlerController.
+	## finisher_move by TitleScreen.configure_match().
+	var finisher: String
+	## His own signature, as a MoveDef path, or "" for none. Added to the
+	## signature draw beside the shared ones rather than replacing them, so
+	## a wrestler with one gains a move and loses nothing.
+	var signature: String
+	## The title he holds, as the entrance lower third prints it -- "AEW
+	## CHAMPION" -- or "" for a man who holds none. See entrance_subtitle().
+	var championship: String = ""
 
 	func _init(p_id: String, p_first: String, p_last: String, p_tagline: String,
 			p_scene: String, p_body: Color, p_accent: Color,
-			p_power: float, p_speed: float, p_technique: float) -> void:
+			p_power: float, p_speed: float, p_technique: float,
+			p_finisher: String = "", p_signature: String = "") -> void:
 		id = p_id
 		first_name = p_first
 		last_name = p_last
@@ -63,26 +76,40 @@ class Entry:
 		power = p_power
 		speed = p_speed
 		technique = p_technique
+		finisher = p_finisher
+		signature = p_signature
 
 	func display_name() -> String:
 		return "%s %s" % [first_name, last_name]
+
+	## The small line above his name on the entrance lower third: his title if
+	## he is a champion, otherwise his nickname -- the owner's rule for the
+	## graphic, off the AEW reference it copies.
+	func entrance_subtitle() -> String:
+		return championship if championship != "" else tagline
 
 	func initials() -> String:
 		return "%s%s" % [first_name.substr(0, 1), last_name.substr(0, 1)]
 
 
 static func entries() -> Array:
-	return [
+	var list := [
 		Entry.new(
 			"roman", "ROMAN", "REIGNS", "THE HEAD OF THE TABLE",
 			"res://scenes/roman_model.tscn",
 			Color(0.07, 0.08, 0.11), Color(0.55, 0.63, 0.76),
-			0.92, 0.58, 0.74),
+			0.92, 0.58, 0.74,
+			# The Spear, and the Superman Punch he sets it up with.
+			"res://resources/moves/finisher_spear.tres",
+			"res://resources/moves/signature_superman_punch.tres"),
 		Entry.new(
 			"cody", "CODY", "RHODES", "THE AMERICAN NIGHTMARE",
 			"res://scenes/cody_model.tscn",
 			Color(0.88, 0.86, 0.82), Color(0.86, 0.68, 0.26),
-			0.74, 0.80, 0.86),
+			0.74, 0.80, 0.86,
+			# Cross Rhodes, and the Cody Cutter.
+			"res://resources/moves/finisher_cross_rhodes.tres",
+			"res://resources/moves/signature_cody_cutter.tres"),
 		# The body colour is his scanned vest and tights, sampled from
 		# kenny_omega_tex_u1_v1_diffuse: the gear reads as a dark desaturated
 		# navy-charcoal, around Color(0.12, 0.15, 0.20).
@@ -105,6 +132,11 @@ static func entries() -> Array:
 			Color(0.12, 0.15, 0.20), Color(0.20, 0.78, 0.72),
 			0.68, 0.88, 0.94),
 	]
+	# Roman holds the title: the owner's reference for the entrance graphic
+	# is his, captioned AEW CHAMPION. The others walk out under their
+	# nicknames.
+	(list[0] as Entry).championship = "AEW CHAMPION"
+	return list
 
 
 static func by_id(id: String) -> Entry:

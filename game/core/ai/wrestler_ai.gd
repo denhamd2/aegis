@@ -26,6 +26,8 @@ extends Node
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
 @export var strike_cooldown_ticks: int = 40
+## strike_cooldown_ticks during a comeback (CombatSystem.is_fired_up()).
+@export var comeback_strike_cooldown_ticks: int = 12
 ## How far away the AI stops walking in and charges instead.
 ##
 ## A STARTING VALUE, not a searched minimum. Its justification is the ring's
@@ -81,6 +83,12 @@ extends Node
 ## strike's 31, so without this it would crowd out the strike trading the
 ## match is made of.
 @export var running_attack_cooldown_ticks: int = 90
+## How long after a charge before this AI will back off to make room for
+## another. Backing off on every getup put 4.5 running attacks in a match and
+## cut its strikes from 15 to 6 -- the middle of a match is strikes
+## (MATCH_FLOW.md), and a running attack is the punctuation. 12 s.
+@export var make_room_cooldown_ticks: int = 720
+var _make_room_cooldown: int = 0
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -107,6 +115,11 @@ var _this_tie_up_interval: int = -1
 ## Number of tie-ups this AI has contested this match — seeds the per-tie-up
 ## roll.
 var _tie_up_attempts: int = 0
+## Whether this AI has already locked up once to throw its power move. One
+## try a match, won or lost: a man who loses that tie-up does not get to
+## chase it with another, or the middle of the match turns back into the
+## grapple loop this AI was rewritten to get away from.
+var _power_attempt_spent: bool = false
 
 
 var _cooldown: int = 0
@@ -170,6 +183,8 @@ func _physics_process(_delta: float) -> void:
 		_cooldown -= 1
 	if _run_cooldown > 0:
 		_run_cooldown -= 1
+	if _make_room_cooldown > 0:
+		_make_room_cooldown -= 1
 	_circle_tick += 1
 	# A charge only survives while the man is actually free to run. If he is
 	# struck out of it, poll_input() returns early for the whole of HIT_REACT
@@ -198,6 +213,8 @@ func poll_input() -> Dictionary:
 		if _tie_up_tick == 0:
 			_tie_up_attempts += 1
 			_roll_tie_up_timing()
+			if _wants_power_tie_up():
+				_power_attempt_spent = true
 		_tie_up_tick += 1
 		return {"grapple": _should_press_tie_up(_tie_up_tick)}
 	_tie_up_tick = 0
@@ -226,10 +243,35 @@ func poll_input() -> Dictionary:
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
+	#
+	# To the side of his CHEST, not to his pelvis. Walking straight at his
+	# root from wherever this wrestler stood -- usually his feet end -- walked
+	# the standing man through the downed man's raised legs, which is the
+	# clipping the owner flagged off the match video. The spot is on the side
+	# he is already on, so the walk in never crosses the body; the footprint
+	# guard in WrestlerController slides him round the legs if the straight
+	# line would clip them.
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
-		if distance > 0.3:
-			var dir := to_target.normalized()
+		var spot := WrestlerController.cover_approach_spot(target,
+				controller.global_position)
+		var to_spot := spot - controller.global_position
+		to_spot.y = 0.0
+		if to_spot.length() > 0.12:
+			var dir := to_spot.normalized()
 			input["move"] = Vector2(dir.x, dir.z)
+		return input
+
+	# Making room for a charge. Once the opening lock-up is done the two never
+	# stand run_engage_distance apart on their own -- measured over twelve
+	# seeds, every charge in a match was the one at the opening bell -- so the
+	# running attacks were unreachable. While the other man is getting up, the
+	# AI backs off to charge distance; the charge below then fires when he is
+	# on his feet. He does not back off from a man he is about to finish.
+	if target.fsm.current_state == WrestlerFSM.State.GETUP \
+			and _opening_grapple_done() and _run_cooldown <= 0 \
+			and _make_room_cooldown <= 0 and not _wants_tie_up() and distance < run_engage_distance + 0.3:
+		var away := -to_target.normalized()
+		input["move"] = Vector2(away.x, away.z)
 		return input
 
 	# --- the charge ---------------------------------------------------------
@@ -255,7 +297,15 @@ func poll_input() -> Dictionary:
 		# _maybe_start_running_attack() would refuse anyway -- so stop running
 		# rather than sprint into him and hold the latch forever.
 		_charging = false
-	elif not _charging and distance >= run_engage_distance and _run_cooldown <= 0:
+	elif not _charging and distance >= run_engage_distance and _run_cooldown <= 0 \
+			and _opening_grapple_done():
+		# Not before the opening lock-up. The wrestlers spawn 3.0 m apart --
+		# past run_engage_distance -- so an AI free to charge from the first
+		# tick opened every match with a running attack, and once running
+		# attacks became paired moves (1.2-2.0 s, the victim left on the mat)
+		# the lock-up MATCH_FLOW.md opens the match with never happened in
+		# test_match_loop_reachability's 600 frames. He walks in to lock up;
+		# the charges come after.
 		_charging = true
 
 	if _charging:
@@ -272,6 +322,7 @@ func poll_input() -> Dictionary:
 			input["strike"] = true
 			_charging = false
 			_run_cooldown = running_attack_cooldown_ticks
+			_make_room_cooldown = make_room_cooldown_ticks
 		return input
 
 	# Too close: give ground -- but keep deciding. This sets the move vector
@@ -321,7 +372,10 @@ func poll_input() -> Dictionary:
 			input["grapple"] = true
 		elif _cooldown <= 0 and distance <= reach:
 			input["strike"] = true
-			_cooldown = strike_cooldown_ticks
+			# Fired up, he does not wait between shots: the comeback is a
+			# flurry, and the other man is staggered for most of it.
+			_cooldown = comeback_strike_cooldown_ticks \
+					if controller.combat.is_fired_up() else strike_cooldown_ticks
 		elif distance > reach:
 			# The dead band, and it has to be closed explicitly. tie_up_range
 			# is 1.3 m and the shortest strike reaches 1.17 m, so between those
@@ -390,6 +444,8 @@ func poll_input() -> Dictionary:
 ## 1. The opening grapple has not happened yet.
 ## 2. The opponent is one signature away from the mat and this wrestler can
 ##    afford one -- see _opponent_is_ripe(). This is the finish.
+## 3. Once a match, in the middle of it, to throw the power move -- see
+##    _wants_power_tie_up().
 ##
 ## There was briefly a third: a wrestler who lost the opening tie-up had
 ## landed no rung of the chain, and a signature was gated on the rung below
@@ -401,7 +457,28 @@ func poll_input() -> Dictionary:
 func _wants_tie_up() -> bool:
 	if not _opening_grapple_done():
 		return true
+	if _wants_power_tie_up():
+		return true
 	return controller.combat.can_signature() and _opponent_is_ripe()
+
+## The middle of the match: one lock-up to throw the power move, the body
+## slam, and back to strikes.
+##
+## Only inside the power band -- momentum past POWER_THRESHOLD and short of
+## SIGNATURE_THRESHOLD -- because WrestlerController._process_grapple_hold()
+## draws the highest rung the meter affords. Past the signature threshold the
+## same tie-up would throw a signature in the middle of the match, which is
+## exactly what _opponent_is_ripe() exists to prevent. Momentum only moves on
+## a landed move, and an AI that wants to lock up does not strike on the way
+## in, so the band read here is the band the hold is resolved in.
+func _wants_power_tie_up() -> bool:
+	if _power_attempt_spent or not _opening_grapple_done():
+		return false
+	if controller.power_move == null and controller.power_move_pool.is_empty():
+		return false
+	var combat := controller.combat
+	return combat.can_power() and not combat.can_signature() \
+			and combat.tier_reached < CombatSystem.Tier.POWER
 
 ## Whether a signature thrown now would knock the opponent down.
 ##
@@ -423,7 +500,10 @@ func _wants_tie_up() -> bool:
 func _opponent_is_ripe() -> bool:
 	var remaining := WrestlerController.KNOCKDOWN_DAMAGE \
 			- (target.combat.total_damage() - target._damage_at_last_knockdown)
-	return remaining <= _weakest_signature_damage()
+	# Fired up, his moves land harder (CombatSystem.COMEBACK_DAMAGE_SCALE),
+	# so the same signature closes a bigger gap.
+	var scale := CombatSystem.COMEBACK_DAMAGE_SCALE if controller.combat.is_fired_up() else 1.0
+	return remaining <= _weakest_signature_damage() * scale
 
 ## Total damage of the least damaging signature this wrestler can draw --
 ## his own plus his pool, exactly the set WrestlerController._pick_tier_move()

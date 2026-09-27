@@ -65,6 +65,45 @@ const BOWL_INNER := 10.13
 ## mirror being a named constant and not a number typed four times.
 const STAGE_BACK_Z := -38.0
 
+# --- Hanging positions ------------------------------------------------------
+## Where the fixtures hang, as plain constants because
+## `tools/blender/overhead_rig.py` reads them to put steel where the fixtures
+## are. A fixture hanging in mid-air is the failure this prevents: the truss
+## is built FROM these numbers, so it cannot drift away from them.
+##
+## Ring keys at (+-KEY_OFFSET, HANG_Y, +-KEY_OFFSET).
+const KEY_OFFSET := 3.9
+## Top fills at (0, HANG_Y + 0.2, +-TOP_OFFSET_Z).
+const TOP_OFFSET_Z := 2.1
+## Beams: the plan curve BEAM_INSET inside the bowl's first row, BEAM_DROP
+## under the roof.
+const BEAM_INSET := 3.5
+const BEAM_DROP := 4.0
+## House wash: the same, closer to the seats and the roof.
+const HOUSE_INSET := 1.5
+const HOUSE_DROP := 1.4
+## Stage wash, over the front of the entrance set.
+const STAGE_WASH_X := 4.2
+const STAGE_WASH_Y := 10.0
+const STAGE_WASH_DZ := 21.0
+## Portal accents, on booms off the deck.
+const ACCENT_Y := 6.2
+const ACCENT_DZ := 3.4
+const ACCENT_NEAR_X := 2.1
+const ACCENT_FAR_X := 4.6
+## Rim pair, off the upstage line of the ring grid.
+const RIM_X := 6.4
+const RIM_Y := 6.9
+const RIM_Z := -7.2
+## Height of a fixture's clamp face above its head's tilt axis -- where the
+## steel starts. `tools/blender/overhead_rig.py` builds to the same number.
+const FIXTURE_TOP := 0.32
+## Backdrop uplights, on floor stands either side of the set.
+const UPLIGHT_NEAR_X := 7.6
+const UPLIGHT_FAR_X := 11.5
+const UPLIGHT_Y := 0.4
+const UPLIGHT_DZ := 2.6
+
 # --- Levels -----------------------------------------------------------------
 ## Ring key. Four fixtures on the truss corners, cross-aimed so each covers
 ## the far half of the mat; that overlap is what keeps the mat's luminance
@@ -98,7 +137,22 @@ const STAGE_BACK_Z := -38.0
 ## heads and forearms are horizontal too. That is why the mat<->wrestler gaps
 ## improve here but do not reach their 0.24-0.31 band: closing them on this
 ## lever alone would need the mat near 0.55, outside its own. See README.
-@export var top_energy: float = 24.0
+##
+## 24.0 -> 36.0, re-solved again after the hard camera widened the silhouette
+## shot and the key and top were cooled (KEY_COLOR below). Cooling costs
+## luminance -- the eye weights green over blue -- so the mat fell to 0.370 at
+## the coolest setting tried, and top energy buys it back. Measured on
+## forward_plus (Vulkan, llvmpipe), with the key and top at the colours below:
+##
+##   top    mat      mat<->A   mat<->B
+##   24.0   0.406*    0.265     0.132     * at the old warm colours
+##   30.0   0.422     0.277     0.146
+##   36.0   0.454     0.297     0.172   <- mat inside 0.43-0.49
+##
+## B's gap is still short of its band and A<->B is still over its own: at the
+## hard camera's framing B faces the key bare-chested and reads twice A's
+## luminance, and that is his colourway, not the rig. See README.
+@export var top_energy: float = 36.0
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -127,14 +181,46 @@ const STAGE_BACK_Z := -38.0
 @export var house_energy: float = 0.20
 ## Entrance stage wash.
 @export var stage_energy: float = 2.6
+## Beam fixtures over the bowl. What they are for is the SHAFT, not the light
+## that lands: see _build_beams(). Solved on art shots on forward_plus, with
+## tools/refs/measure_look.py against the four AEW stills (mean saturation
+## band 0.487-0.665):
+##
+##   energy / fog   crowd_bank sat   ring_corner dark   read
+##   none           0.438            45.2%              no beams
+##   6 / 6          0.438            45.2%              nothing visible
+##   200 / 6        0.443            43.7%              nothing visible
+##   20 / 40        0.451            42.6%              faint
+##   40 / 60        0.468            41.9%              shafts read
+##   60 / 120       0.493            41.2%              <- shipped
+##
+## The first two rows are _spot()'s 1.6 falloff over a 20m throw -- the same
+## reason the house wash measures as nothing -- which is why BEAM_ATTENUATION
+## exists. Dark fraction falls because the haze the beams light is in frame;
+## it stays inside the references' 38-50%.
+@export var beam_energy: float = 60.0
 
 # --- Colour -----------------------------------------------------------------
-## Tungsten-ish key, cool fill and rim. A warm key against a cool rim is the
-## oldest trick there is for separating a figure from its background, and it
-## costs nothing in luminance -- which matters here, because luminance is the
-## budget the bar spends.
-const KEY_COLOR := Color(1.0, 0.975, 0.93)
-const TOP_COLOR := Color(0.95, 0.965, 1.0)
+## Cool key and top, cooler rim.
+##
+## The key used to be tungsten-ish (1.0, 0.975, 0.93) on the theory that a warm
+## key against a cool rim separates a figure from its background. Measured
+## against the reference with tools/refs/compare_frame.py on wide_broadcast,
+## the frame read WARM: warm/cool -0.109 against the broadcast still's -0.333,
+## the largest colour gap on the board, and the lit ring is most of what the
+## frame's warmth was. Swept:
+##
+##   key / top                               warm/cool   saturation
+##   (1.0, .975, .93) / (.95, .965, 1.0)      -0.109       0.273
+##   (.93, .965, 1.0) / (.90, .945, 1.0)      -0.196       0.342
+##   (.88, .945, 1.0) / (.86, .93, 1.0)       -0.237       0.368   <- shipped
+##   (.86, .93, 1.0)  / (.84, .92, 1.0)       -0.261       0.392
+##
+## against a reference saturation of 0.306: cooler still overshoots it, so the
+## shipped pair is where the two meet. Top energy was re-solved after this to
+## put the mat back on its anchor (see top_energy).
+const KEY_COLOR := Color(0.88, 0.945, 1.0)
+const TOP_COLOR := Color(0.86, 0.93, 1.0)
 const RIM_COLOR := Color(0.66, 0.78, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
 ## The stage wash, pushed violet. Predominantly a hue change, and the figures
@@ -199,6 +285,35 @@ const ACCENT_AMBER := Color(1.0, 0.62, 0.24)
 const ACCENT_RANGE := 12.0
 @export var accent_energy: float = 3.2
 @export var uplight_energy: float = 2.8
+
+## The beam fixtures' colours, cycled around the grid. Off the four AEW stills
+## in gauntlet/refs/lighting/: their saturated pixels fall at hue 210 (cyan-
+## blue, 20-81% of each frame), 240 (blue, up to 64%) and 270-300 (violet and
+## magenta, 30% of the wide-bowl frame). Blue twice, because it is twice as
+## common. None is green-dominant, which capture_harness.gd needs.
+const BEAM_COLORS: Array[Color] = [
+	Color(0.30, 0.55, 1.0),
+	Color(0.55, 0.30, 1.0),
+	Color(0.20, 0.42, 1.0),
+	Color(0.95, 0.25, 0.80),
+]
+## Narrow on purpose. A moving head in beam mode is a few degrees across, and a
+## narrow cone puts its whole energy into a visible rod of haze rather than a
+## wash nobody can see the edge of -- which is what the house wash is, and why
+## it measured as nothing.
+const BEAM_ANGLE := 6.0
+const BEAM_FIXTURES := 16
+## Short of the mat by construction: the nearest fixture on the grid is
+## BOWL_INNER - 3.5 out from the ring's centre and aimed further out, so its
+## cone points AWAY from the canvas; see test_arena_beams.gd.
+const BEAM_RANGE := 40.0
+## Distance falloff for the beams, against _spot()'s 1.6. A moving head in
+## beam mode is close to collimated; at 1.6 a 20m throw delivered ~1/120 of
+## the fixture and no energy that left the pools sane made a visible shaft.
+const BEAM_ATTENUATION := 0.8
+## How much of each beam goes into the haze rather than onto the seats. High
+## because the shaft is the point and the pool is the side effect.
+@export var beam_fog_energy: float = 120.0
 
 ## How many house fixtures ring the bowl. Twelve had no scallops in it while
 ## the bowl was a 28 x 18m ring; the plan is 111m round now, so twenty keeps
@@ -285,10 +400,13 @@ func _ready() -> void:
 	_build_top_fill()
 	_build_rim()
 	_build_house()
+	_build_beams()
 	_build_stage_wash()
 	_build_stage_accents()
 	_build_backdrop_uplights()
+	_build_roof_wash()
 	_build_fog_volumes()
+	_hang_fixtures()
 	_apply_compat_environment()
 	_compensate_for_renderer()
 
@@ -334,7 +452,7 @@ func _spot(fixture_name: String, at: Vector3, aim: Vector3, color: Color,
 func _build_ring_key() -> void:
 	for sx: float in [1.0, -1.0]:
 		for sz: float in [1.0, -1.0]:
-			var at := Vector3(sx * 3.9, HANG_Y, sz * 3.9)
+			var at := Vector3(sx * KEY_OFFSET, HANG_Y, sz * KEY_OFFSET)
 			var aim := Vector3(-sx * 1.35, 0.0, -sz * 1.35)
 			var light := _spot("Key%s%s" % [
 					"E" if sx > 0.0 else "W", "N" if sz > 0.0 else "S"],
@@ -348,7 +466,7 @@ func _build_ring_key() -> void:
 ## nothing a critic can see.
 func _build_top_fill() -> void:
 	for sz: float in [1.0, -1.0]:
-		var at := Vector3(0.0, HANG_Y + 0.2, sz * 2.1)
+		var at := Vector3(0.0, HANG_Y + 0.2, sz * TOP_OFFSET_Z)
 		_spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
 				at + Vector3(0.0, -1.0, 0.0), TOP_COLOR, top_energy,
 				52.0, 0.7, 20.0, false).light_volumetric_fog_energy = 0.8
@@ -359,7 +477,7 @@ func _build_top_fill() -> void:
 ## edge on the side of a wrestler the warm key cannot reach.
 func _build_rim() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 6.4, 6.9, -7.2)
+		var at := Vector3(sx * RIM_X, RIM_Y, RIM_Z)
 		_spot("Rim%s" % ("E" if sx > 0.0 else "W"), at,
 				Vector3(-sx * 0.6, 1.15, 1.4), RIM_COLOR, rim_energy,
 				30.0, 0.4, 26.0, false).light_volumetric_fog_energy = 2.2
@@ -387,21 +505,211 @@ func _build_rim() -> void:
 ## the function that generates it, and two copies of that is exactly the drift
 ## the mirror rule exists to prevent.
 func _build_house() -> void:
-	var loop := ArenaBuilder._plan_loop(BOWL_INNER - 1.5)
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - HOUSE_INSET)
 	for i: int in HOUSE_FIXTURES:
 		var entry: Array = loop[(i * loop.size()) / HOUSE_FIXTURES]
-		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - 1.4, 0.0)
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - HOUSE_DROP, 0.0)
 		var dir: Vector3 = entry[1]
 		var aim: Vector3 = entry[0] + dir * 10.0 + Vector3(0.0, 2.6, 0.0)
 		_spot("House%02d" % i, at, aim, HOUSE_COLOR, house_energy,
 				46.0, 0.55, 34.0, false).light_volumetric_fog_energy = 0.25
 
 
+## Moving heads in beam mode on the roof grid, fanned out over the bowl.
+##
+## This is the element of a televised AEW hall the rig did not have at all.
+## Every reference still in gauntlet/refs/lighting/ carries visible shafts of
+## blue, violet and magenta standing in the haze over the crowd, and they are
+## most of why those frames read as lit-for-TV rather than as a sports hall
+## with the lights down: 38-50% of each frame is black, and the beams are what
+## cut through it.
+##
+## Hung on the same plan curve the house wash follows (ArenaBuilder._plan_loop)
+## so the fan stays even around an obround bowl, and aimed OUT and DOWN into the
+## seats, which is what keeps the canvas out of every cone.
+##
+## Static, not sweeping. A real moving head moves, and a sweep here would be
+## cosmetic in ARCHITECTURE.md's sense -- but it would also make every capture
+## frame depend on wall-clock time, and the gauntlet's measurements are only
+## comparable across rounds because the frames are not.
+##
+## Not built on the compatibility renderer. A beam is for its shaft, and the
+## shaft is volumetric fog, which that renderer does not have (see
+## _build_fog_volumes). What would be left is sixteen coloured pools on the
+## crowd -- and split by STAGE_LINE_Z, so half would take COMPAT_LIGHT_GAIN and
+## half would not, lighting one end of the bowl seven times the other.
+##
+## No shadows: sixteen more shadow maps for a cone six degrees wide buys
+## nothing a critic can see, and the renderer's shadow atlas is already spent
+## on the ring key.
+func _build_beams() -> void:
+	if not _supports_volumetric_fog():
+		return
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - BEAM_INSET)
+	for i: int in BEAM_FIXTURES:
+		# Offset half a step from the house fixtures so the two sets interleave
+		# rather than stacking on the same hanging points.
+		var entry: Array = loop[((2 * i + 1) * loop.size()) / (2 * BEAM_FIXTURES)]
+		var at: Vector3 = entry[0] + Vector3(0.0, ROOF_Y - BEAM_DROP, 0.0)
+		var dir: Vector3 = entry[1]
+		# Alternate a near and a far throw, so the fan crosses the bowl rather
+		# than drawing sixteen parallel lines at one angle.
+		var reach := 9.0 if i % 2 == 0 else 16.0
+		var aim: Vector3 = entry[0] + dir * reach + Vector3(0.0, 3.0, 0.0)
+		var light := _spot("Beam%02d" % i, at, aim,
+				BEAM_COLORS[i % BEAM_COLORS.size()], beam_energy,
+				BEAM_ANGLE, 0.2, BEAM_RANGE, false)
+		light.spot_attenuation = BEAM_ATTENUATION
+		light.light_volumetric_fog_energy = beam_fog_energy
+
+
+## Uplights standing on the beam ring's top chord, washing the roof steel.
+##
+## Every AEW still shows the roof: steel lit magenta and violet from below,
+## so the overhead volume reads as a coloured space the rig hangs in, not as a
+## black lid. Ours was a black lid. These put colour onto
+## overhead_rig.py's roof joists.
+##
+## Aimed UP: nothing on the floor is in any of their cones, the mat least of
+## all. Same falloff as the beams, for the same reason -- a 3.5m throw at
+## _spot()'s 1.6 is fine, but the far joists are 8m off.
+const ROOF_WASH_FIXTURES := 12
+const ROOF_WASH_COLORS: Array[Color] = [
+	Color(0.62, 0.22, 1.0),
+	Color(0.95, 0.22, 0.75),
+]
+@export var roof_wash_energy: float = 6.0
+
+
+func _build_roof_wash() -> void:
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER - BEAM_INSET)
+	# Beam ring: hanging height + clamp + the 0.52 section, then stood on top.
+	var chord_top := ROOF_Y - BEAM_DROP + FIXTURE_TOP + 0.52
+	for i: int in ROOF_WASH_FIXTURES:
+		var entry: Array = loop[(i * loop.size()) / ROOF_WASH_FIXTURES]
+		var at: Vector3 = entry[0] + Vector3(0.0, chord_top + FIXTURE_TOP, 0.0)
+		var aim: Vector3 = entry[0] - (entry[1] as Vector3) * 3.0 \
+				+ Vector3(0.0, ROOF_Y, 0.0)
+		var light := _spot("RoofWash%02d" % i, at, aim,
+				ROOF_WASH_COLORS[i % ROOF_WASH_COLORS.size()], roof_wash_energy,
+				55.0, 0.5, 14.0, false)
+		light.spot_attenuation = BEAM_ATTENUATION
+		light.light_volumetric_fog_energy = 0.4
+
+
+# ---------------------------------------------------------------------------
+# Fixture bodies
+# ---------------------------------------------------------------------------
+
+## The moving-head body `tools/blender/overhead_rig.py` builds, in four parts
+## whose origin is the head's tilt axis.
+const FIXTURE_MODEL := "res://assets/environment/moving_head.glb"
+## The lens's emission. A lit fixture seen from in front is the hottest thing
+## in a televised frame -- the references put p99 at 0.64-0.94 on a handful
+## of such points -- so this is over the glow threshold on purpose. It is a
+## disc 0.22m across; at any distance a camera sees it from it is a few pixels.
+const LENS_LEVEL := 3.0
+## How far toward white a lens reads. A lit lens is nearly white at its core
+## and takes its colour at the edge; a lens emitting the pure gel colour reads
+## as a painted disc.
+const LENS_WHITENESS := 0.55
+
+
+## A body at every light this rig built.
+##
+## Placed from the light, not from the steel, so no fixture can hang in the
+## air: the steel is built from the same constants the lights are (see the
+## "Hanging positions" block). The body is articulated like the real thing --
+## base fixed to the steel, yoke panned about the vertical, head tilted inside
+## it -- so the lens ends up on the beam axis without the base leaning.
+##
+## Fixtures aimed upward stand rather than hang (the uplights on their floor
+## stands, the roof wash on top of its truss): the assembly is flipped so the
+## base is below.
+##
+## No shadows from any of it. The SpotLight3D sits on the head's tilt axis,
+## INSIDE the can, and the four ring keys cast shadows: a shadow-casting body
+## would put the key's own fixture in front of it.
+func _hang_fixtures() -> void:
+	var packed: PackedScene = load(FIXTURE_MODEL)
+	if packed == null:
+		push_error("ArenaLighting: %s failed to load. Run tools/blender/build_venue.sh rig."
+				% FIXTURE_MODEL)
+		return
+	var model: Node3D = packed.instantiate()
+	var meshes := {}
+	for part: String in ["FixtureBase", "FixtureYoke", "FixtureHead", "FixtureLens"]:
+		var node := model.find_child(part, true, false) as MeshInstance3D
+		if node == null:
+			push_error("ArenaLighting: %s has no '%s'." % [FIXTURE_MODEL, part])
+			model.free()
+			return
+		meshes[part] = node.mesh
+	model.free()
+
+	var body_mat := MaterialLibrary.resolve("arena_chair")
+	var lens_mats := {}
+	var lights: Array[SpotLight3D] = []
+	for child in get_children():
+		if child is SpotLight3D:
+			lights.append(child)
+	for light in lights:
+		var key := light.light_color.to_html()
+		if not lens_mats.has(key):
+			lens_mats[key] = _lens_material(light.light_color)
+		add_child(_fixture_for(light, meshes, body_mat, lens_mats[key]))
+
+
+static func _lens_material(color: Color) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.02, 0.02, 0.02)
+	mat.emission_enabled = true
+	mat.emission = color.lerp(Color.WHITE, LENS_WHITENESS)
+	mat.emission_energy_multiplier = LENS_LEVEL
+	mat.metallic_specular = 0.0
+	return mat
+
+
+## One articulated body for one light. Split out so a test can build one
+## against a known light and check the lens lands on its beam.
+static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
+		body_mat: Material, lens_mat: Material) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Body" + String(light.name)
+	root.position = light.position
+	var forward := -light.transform.basis.z.normalized()
+	var standing := forward.y > 0.3
+	if standing:
+		root.basis = Basis(Vector3.RIGHT, PI)
+	var local := root.basis.inverse() * forward
+	var yaw := 0.0
+	if Vector2(local.x, local.z).length() > 0.001:
+		yaw = atan2(-local.x, -local.z)
+	var in_yoke := Basis(Vector3.UP, -yaw) * local
+	var tilt := atan2(in_yoke.y, -in_yoke.z)
+	var yoke_basis := Basis(Vector3.UP, yaw)
+	var parts := {
+		"FixtureBase": Basis.IDENTITY,
+		"FixtureYoke": yoke_basis,
+		"FixtureHead": yoke_basis * Basis(Vector3.RIGHT, tilt),
+		"FixtureLens": yoke_basis * Basis(Vector3.RIGHT, tilt),
+	}
+	for part: String in parts:
+		var mi := MeshInstance3D.new()
+		mi.name = part
+		mi.mesh = meshes[part]
+		mi.basis = parts[part]
+		mi.material_override = lens_mat if part == "FixtureLens" else body_mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(mi)
+	return root
+
+
 ## Two fixtures over the entrance stage, cool so the stage reads as a
 ## different room from the ring rather than as more of the same wash.
 func _build_stage_wash() -> void:
 	for sx: float in [1.0, -1.0]:
-		var at := Vector3(sx * 4.2, 10.0, STAGE_BACK_Z + 21.0)
+		var at := Vector3(sx * STAGE_WASH_X, STAGE_WASH_Y, STAGE_BACK_Z + STAGE_WASH_DZ)
 		_spot("Stage%s" % ("E" if sx > 0.0 else "W"), at,
 				Vector3(sx * 2.0, 0.0, STAGE_BACK_Z + 16.0), STAGE_COLOR,
 				stage_energy,
@@ -423,8 +731,8 @@ func _build_stage_accents() -> void:
 		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
 		var label := "W" if sx < 0.0 else "E"
 		for i: int in 2:
-			var shoulder := 2.1 if i == 0 else 4.6
-			var at := Vector3(sx * shoulder, 6.2, STAGE_BACK_Z + 3.4)
+			var shoulder := ACCENT_NEAR_X if i == 0 else ACCENT_FAR_X
+			var at := Vector3(sx * shoulder, ACCENT_Y, STAGE_BACK_Z + ACCENT_DZ)
 			var aim := Vector3(sx * 3.3, 3.25, STAGE_BACK_Z + 1.1)
 			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
 					34.0, 0.6, ACCENT_RANGE, false) \
@@ -450,8 +758,8 @@ func _build_backdrop_uplights() -> void:
 	for sx: float in [-1.0, 1.0]:
 		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
 		for i: int in 2:
-			var x := sx * (7.6 if i == 0 else 11.5)
-			var at := Vector3(x, 0.4, STAGE_BACK_Z + 2.6)
+			var x := sx * (UPLIGHT_NEAR_X if i == 0 else UPLIGHT_FAR_X)
+			var at := Vector3(x, UPLIGHT_Y, STAGE_BACK_Z + UPLIGHT_DZ)
 			_spot("Uplight%s%d" % ["W" if sx < 0.0 else "E", i], at,
 					Vector3(x, 10.0, STAGE_BACK_Z), color, uplight_energy,
 					52.0, 0.4, 16.0, false).light_volumetric_fog_energy = 1.6

@@ -29,8 +29,103 @@ extends Node3D
 const BASE_RIG := "res://assets/characters/wrestler_base.glb"
 
 
+## His look, to the owner's reference photographs (three: a press portrait,
+## an in-ring close-up and an entrance shot).
+##
+## HAIR. The model paints it on the scalp as a short ash-brown crop; the
+## references show platinum blond. The re-coloured head texture is built by
+## tools/assets/build_cody_textures.py from the supplied one (face, brows,
+## tattoo and ears untouched) and swapped in here for the head material.
+## Its SHAPE -- longer on top and swept up and back in the photos -- is
+## geometry the model does not have: the hair is paint on a skull, so the
+## volume is out of reach without new hair cards.
+##
+## SKIN. Measured medians: the references' cheek (199,142,117) and forehead
+## (209,155,132) against the texture's cheek (181,128,109) -- the same hue a
+## touch brighter and more golden. A tint on every skin material, and a
+## little sheen: a wrestler under arena light is never matte.
+const HEAD_MATERIAL := "xmaterial_c3d4d9e78b44a79"
+const HEAD_BLOND := "res://assets/characters/cody_rhodes_head_blond.png"
+const SKIN_MATERIALS := ["xmaterial_495900de7002683", "xmaterial_90b39911eb484a2",
+		"xmaterial_90b2b911eb46cd8", "xmaterial_5a329cd32db96c3", HEAD_MATERIAL]
+const SKIN_TINT := Color(1.08, 1.06, 1.0)
+const SKIN_ROUGHNESS := 0.5
+
+
+## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
+## scalp, tall at the front of the top and swept back, short at the sides.
+## Each shell is cut at its own alpha threshold and coloured from a darker
+## ash root (inner) to beige-platinum (outer), so the stack reads as strands.
+## Colours from a visual QA against the owner's references: under arena
+## light his hair measures (210-220, 185, 150-160) with heavy dark streaking;
+## the first pass rendered a clipped cream (255, 253, 211), far too light
+## and too yellow.
+const HAIR := "res://assets/characters/cody_hair.glb"
+const HAIR_STRANDS := "res://assets/characters/cody_hair_strands.png"
+const HAIR_ROOT := Color(0.56, 0.46, 0.36)
+const HAIR_TIP := Color(0.86, 0.74, 0.58)
+
+
 func _ready() -> void:
 	_install_animations()
+	_fix_look()
+	_add_hair()
+
+
+func _add_hair() -> void:
+	var skeleton := get_game_skeleton()
+	if skeleton == null or not ResourceLoader.exists(HAIR):
+		return
+	var head := skeleton.find_bone("Head")
+	if head < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "HairAttachment"
+	skeleton.add_child(attach)
+	attach.bone_name = "Head"
+	# The hair is authored in skeleton space; hang it on the bone by the
+	# inverse of the bone's own rest, so at rest it sits exactly where it
+	# was built and from then on rides the head.
+	var holder := Node3D.new()
+	holder.name = "Hair"
+	holder.transform = skeleton.get_bone_global_rest(head).affine_inverse()
+	attach.add_child(holder)
+	var hair: Node = (load(HAIR) as PackedScene).instantiate()
+	holder.add_child(hair)
+	var strands: Texture2D = load(HAIR_STRANDS)
+	var shells := hair.find_children("HairShell*", "MeshInstance3D", true, false)
+	var count := shells.size()
+	for mi: MeshInstance3D in shells:
+		var k := float(String(mi.name).trim_prefix("HairShell").to_int()) / maxf(count - 1, 1)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = strands
+		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, k)
+		mat.roughness = 0.5
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		# Vertex alpha thins the outer shells towards the patch's edge.
+		mat.vertex_color_use_as_albedo = true
+		if k > 0.0:
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+			mat.alpha_scissor_threshold = 0.12 + 0.32 * k
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+func _fix_look() -> void:
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		for surface in mesh_instance.mesh.get_surface_count():
+			var source := mesh_instance.mesh.surface_get_material(surface) as BaseMaterial3D
+			if source == null or not SKIN_MATERIALS.has(source.resource_name):
+				continue
+			var material := source.duplicate() as BaseMaterial3D
+			if source.resource_name == HEAD_MATERIAL and ResourceLoader.exists(HEAD_BLOND):
+				material.albedo_texture = load(HEAD_BLOND)
+			material.albedo_color = material.albedo_color * SKIN_TINT
+			material.roughness = SKIN_ROUGHNESS
+			mesh_instance.set_surface_override_material(surface, material)
 
 
 ## Cody wrestles in his own gear, so the generated trunks must not be painted on.
