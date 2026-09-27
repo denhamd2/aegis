@@ -196,6 +196,12 @@ const RECIPES := {
 	# recovery, never from a slower action phase.
 	"strike_kick_heavy": {"kind": "retime", "source": "Strike_Kick_Heavy",
 		"seconds": 0.950, "file": AUTHORED},
+	# Cody's (wrestling_clips.py "Cody's strikes"), at their own lengths so
+	# the MoveDefs' startup_frames land on the contact frames.
+	"strike_bionic_elbow": {"kind": "retime", "source": "Strike_Bionic_Elbow",
+		"seconds": 0.900, "file": AUTHORED},
+	"strike_dropdown_uppercut": {"kind": "retime", "source": "Strike_Dropdown_Uppercut",
+		"seconds": 0.800, "file": AUTHORED},
 
 	# Both reactions are cut to exactly WrestlerController.HIT_REACT_TICKS
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is

@@ -855,6 +855,72 @@ CLIPS = {
         (20, P()),
     ],
 
+    # Cody's strikes (refs/cody_moveset.md) -------------------------------
+
+    # 27 frames / 0.9 s: the BIONIC ELBOW, his father's. The shimmy first --
+    # the hips wiggled side to side, fists up at the chest, playing to the
+    # building -- then the right elbow cocked high and driven down and
+    # forward into the side of the head, lunging so it reaches from the 1.1 m
+    # the AI circles at (see Strike_Forearm's note on reach). Contact frame
+    # 15 = tick 30, strike_bionic_elbow.tres's startup.
+    "Strike_Bionic_Elbow": [
+        (0,  P()),
+        (4,  P(pelvis=(0.03, 0.0, 0.830), hips=(0, 12, 0), spine=(0, -8, 0),
+               head=(4, -6, 0),
+               hand_r=(0.20, 0.20, 1.30), hand_l=(-0.20, 0.20, 1.30),
+               fist_r=0.9, fist_l=0.9)),
+        (8,  P(pelvis=(-0.03, 0.0, 0.830), hips=(0, -12, 0), spine=(0, 8, 0),
+               head=(4, 6, 0),
+               hand_r=(0.20, 0.20, 1.30), hand_l=(-0.20, 0.20, 1.30),
+               fist_r=0.9, fist_l=0.9)),
+        # Cocked: the elbow up, the fist by his ear.
+        (12, P(pelvis=(0.0, -0.02, 0.870), hips=(0, 10, 0), spine=(6, 14, 0),
+               head=(4, -8, 0),
+               hand_r=(0.18, -0.02, 1.64), elbow_r=(0.4, 0.5, 0.8),
+               hand_l=(-0.22, 0.24, 1.28), fist_r=0.9, fist_l=0.8)),
+        # CONTACT: down and through, the body behind it.
+        (15, P(pelvis=(-0.02, 0.12, 0.840), hips=(-6, -16, 0), spine=(-14, -26, 0),
+               head=(6, 14, 0), clav_r=(0, -18, 0),
+               hand_r=(0.00, 0.66, 1.40), elbow_r=(0.5, 1.0, 0.3),
+               hand_l=(-0.24, 0.20, 1.20), fist_r=0.95, fist_l=0.8,
+               foot_l=(-0.19, 0.36, 0.104))),
+        (18, P(pelvis=(-0.02, 0.10, 0.830), hips=(-6, -14, 0), spine=(-16, -22, 0),
+               head=(4, 10, 0),
+               hand_r=(-0.10, 0.54, 1.14), elbow_r=(0.5, 1.0, 0.0),
+               hand_l=(-0.24, 0.20, 1.18), fist_r=0.9, fist_l=0.8,
+               foot_l=(-0.19, 0.36, 0.104))),
+        (27, P()),
+    ],
+
+    # 24 frames / 0.8 s: the DROPDOWN UPPERCUT. He drops low under the man
+    # (5) and springs straight up with the right hand into the chin, up on
+    # his toes (11: contact = tick 22, strike_dropdown_uppercut.tres).
+    "Strike_Dropdown_Uppercut": [
+        (0,  P()),
+        (5,  P(pelvis=(0.0, 0.04, 0.600), hips=(-30, 0, 0), spine=(-24, 0, 0),
+               head=(14, 0, 0),
+               hand_r=(0.26, 0.24, 0.76), hand_l=(-0.24, 0.26, 0.78),
+               fist_r=0.9, fist_l=0.8,
+               foot_r=(0.25, -0.12, 0.104), foot_l=(-0.23, 0.18, 0.104),
+               knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+        (9,  P(pelvis=(0.0, 0.08, 0.800), hips=(-10, -6, 0), spine=(-8, -10, 0),
+               head=(8, 0, 0),
+               hand_r=(0.10, 0.42, 1.10), hand_l=(-0.24, 0.24, 1.10),
+               fist_r=1.0, fist_l=0.8)),
+        # CONTACT: up through the chin, on his toes.
+        (11, P(pelvis=(0.0, 0.12, 0.930), hips=(4, -12, 0), spine=(8, -18, 0),
+               head=(-4, 8, 0), clav_r=(0, -14, 0),
+               hand_r=(0.02, 0.62, 1.60), elbow_r=(0.6, -0.3, -0.8),
+               hand_l=(-0.26, 0.20, 1.12), fist_r=1.0, fist_l=0.8,
+               foot_r=(0.23, -0.17, 0.150), ankle_r=(24, 0, 0),
+               foot_l=(-0.19, 0.20, 0.140), ankle_l=(20, 0, 0))),
+        (14, P(pelvis=(0.0, 0.10, 0.900), hips=(2, -10, 0), spine=(6, -14, 0),
+               head=(-2, 6, 0),
+               hand_r=(0.00, 0.48, 1.78), elbow_r=(0.6, -0.3, -0.8),
+               hand_l=(-0.26, 0.20, 1.12), fist_r=1.0, fist_l=0.8)),
+        (24, P()),
+    ],
+
     # 20 frames, right boot to the midsection, contact on frame 5 (= tick 8
     # of strike_kick.tres). Chamber first: the knee comes up folded before
     # anything extends, which is what separates a kick from a swung leg.
@@ -3838,6 +3904,276 @@ CLIPS["Backstabber_Defender"] = [k for k in CLIPS["Tilt_DDT_Defender"] if k[0] <
     (28, P(pelvis=(0.0, -0.04, 0.820), spine=(14, 0, 0), head=(20, 0, 0),
            hand_r=(0.30, 0.10, 1.20), hand_l=(-0.28, 0.10, 1.18))),
 ] + _back_fall(31, 54, pelvis_hit=0.70)
+
+# --- Cody Rhodes's moveset (gauntlet/refs/cody_moveset.md) -----------------
+#
+# The moves he hits in nearly every WWE match, researched before keyed (All
+# Elite Moves' list, WWE 2K signature sets, and the broadcast clips used for
+# his entrance). Keyed with the blender-animation skill's rules: every beat a
+# pose the rig can reach, rotations no more than ~60 degrees apart so the
+# quaternion keys cannot take the long way round, and anything turning over
+# carried in its own body frame (_body).
+
+# Powerslam, 45 frames / 1.5 s. The body slam's scoop and roll (frames 0-19,
+# shared, so the lift that reads is the lift both use), then instead of the
+# drop he steps in and falls forward WITH him, chest to chest, landing across
+# him on his knees -- which is the whole difference between a powerslam and a
+# slam -- holds him there, and gets up.
+_ON_TOP = dict(pelvis=(0.0, 0.00, 0.440), hips=(-70, 0, 0), spine=(-10, 0, 0),
+               head=(-6, 0, 0),
+               hand_r=(0.42, 0.62, 0.12), hand_l=(-0.42, 0.62, 0.12),
+               elbow_r=(0.8, 0.0, 0.4), elbow_l=(-0.8, 0.0, 0.4),
+               fist_r=0.3, fist_l=0.3,
+               foot_r=(0.20, -0.52, 0.12), foot_l=(-0.20, -0.48, 0.12),
+               knee_r=(0.2, 0.3, -1.0), knee_l=(-0.2, 0.3, -1.0))
+CLIPS["Powerslam_Attacker"] = [k for k in CLIPS["Bodyslam_Attacker"] if k[0] <= 19] + [
+    # A step in, still carrying him across the chest.
+    (23, P(pelvis=(0.0, 0.08, 0.860), hips=(-2, 0, 0), spine=(-2, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.28, 0.34, 0.96), hand_l=(-0.34, 0.32, 0.94),
+           elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.5, -0.4, -0.7),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.30, 0.104))),
+    # Falling forward with him.
+    (27, dict(pelvis=(0.0, 0.10, 0.640), hips=(-40, 0, 0), spine=(-16, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.32, 0.56, 0.52), hand_l=(-0.36, 0.54, 0.54),
+              elbow_r=(0.6, -0.2, -0.6), elbow_l=(-0.6, -0.2, -0.6),
+              fist_r=0.5, fist_l=0.5,
+              foot_r=(0.22, -0.30, 0.104), foot_l=(-0.20, 0.10, 0.20),
+              knee_r=(0.2, 1.0, -0.2), knee_l=(-0.2, 1.0, 0.0))),
+    # Across him, chest on chest, on his knees.
+    (30, dict(_ON_TOP)),
+    (40, dict(_ON_TOP, pelvis=(0.0, 0.00, 0.450), spine=(-8, 0, 0), head=(-2, 0, 0))),
+    (43, pose(CROUCH)),
+    (45, P()),
+]
+CLIPS["Powerslam_Defender"] = [k for k in CLIPS["Bodyslam_Defender"] if k[0] <= 20] + [
+    (24, CLIPS["Bodyslam_Defender"][[k[0] for k in CLIPS["Bodyslam_Defender"]].index(24)][1]),
+    # Driven flat, with the man on top of him.
+    (29, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), spine=(-2, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+           elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(-0.14, -0.74, 0.20), foot_l=(0.12, -0.76, 0.24),
+           knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0))),
+    (33, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-12, 0, 0),
+           hand_r=(-0.46, 0.18, 0.10), hand_l=(0.44, 0.18, 0.10))),
+    (45, S()),
+]
+
+# The Disaster Kick, 42 frames / 1.4 s -- his spinning heel kick. Out of the
+# lock-up he shoves the man off a step, plants and spins (the root does the
+# turn, three quarters of it, paired_recipes.gd), and the right leg comes
+# round straight, the heel into the side of the head, the body leaning away
+# from it; he lands the leg and finishes the turn facing him. The victim goes
+# over backward.
+CLIPS["Disaster_Kick_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # The shove.
+    (5,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
+           hand_r=(0.18, 0.56, 1.28), hand_l=(-0.18, 0.56, 1.26),
+           fist_r=0.1, fist_l=0.1)),
+    # Plants the left foot and winds up, turning.
+    (10, P(pelvis=(0.0, 0.0, 0.860), hips=(0, -30, 0), spine=(0, -24, 0),
+           head=(0, 24, 0),
+           hand_r=(0.22, 0.20, 1.22), hand_l=(-0.24, 0.10, 1.20),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.20, -0.14, 0.104), foot_l=(-0.16, 0.10, 0.104))),
+    # Spinning on the left foot, the right knee chambered.
+    (14, dict(pelvis=(0.0, 0.0, 0.900), hips=(-6, 0, -8), spine=(6, 0, -6),
+              head=(0, 0, 0),
+              hand_r=(0.30, 0.12, 1.30), hand_l=(-0.34, 0.10, 1.26),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.34, -0.06, 0.66), knee_r=(0.8, 0.5, 0.2),
+              foot_l=(-0.12, 0.02, 0.104), knee_l=(-0.2, 1.0, 0.0))),
+    # CONTACT: the leg straight out to his right at head height, heel first,
+    # the body leaning away over the standing leg.
+    (18, dict(pelvis=(-0.06, 0.0, 0.950), hips=(0, 0, -30), spine=(0, 0, -18),
+              head=(0, 0, -12),
+              hand_r=(0.24, 0.16, 1.34), hand_l=(-0.56, 0.08, 1.20),
+              fist_r=0.8, fist_l=0.6,
+              foot_r=(0.96, 0.00, 1.52), knee_r=(0.2, 1.0, 0.3),
+              foot_l=(-0.10, 0.00, 0.104), knee_l=(-0.2, 1.0, 0.0))),
+    # Following through, the leg sweeping on round.
+    (21, dict(pelvis=(-0.04, 0.0, 0.920), hips=(0, 0, -20), spine=(0, 0, -12),
+              head=(0, 0, -8),
+              hand_r=(0.24, 0.16, 1.30), hand_l=(-0.46, 0.08, 1.18),
+              fist_r=0.8, fist_l=0.6,
+              foot_r=(0.60, -0.46, 1.06), knee_r=(0.4, 0.4, 0.8),
+              foot_l=(-0.10, 0.00, 0.104), knee_l=(-0.2, 1.0, 0.0))),
+    (25, P(pelvis=(0.0, 0.0, 0.840), spine=(-6, 0, 0),
+           hand_r=(0.26, 0.24, 1.14), hand_l=(-0.24, 0.26, 1.12),
+           foot_r=(0.24, -0.20, 0.104), foot_l=(-0.20, 0.12, 0.104))),
+    (30, pose(STAND)),
+    (42, P()),
+]
+CLIPS["Disaster_Kick_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Shoved off a step.
+    (5,  P(pelvis=(0.0, -0.08, 0.830), spine=(8, 0, 0), head=(6, 0, 0),
+           hand_r=(0.22, 0.26, 1.12), hand_l=(-0.20, 0.28, 1.10),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.23, -0.24, 0.104), foot_l=(-0.19, 0.10, 0.104))),
+    (12, P(spine=(-6, 0, 0), head=(6, 0, 0),
+           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08),
+           fist_r=0.6, fist_l=0.6)),
+] + _back_fall(18, 42, pelvis_hit=0.90, twist=-40)
+
+# The delayed vertical suplex, 72 frames / 2.4 s. Front facelock, his arm
+# over Cody's neck; lifted straight up until he is upside down and vertical
+# -- and HELD there, a full second, which is the "delayed" (and the point:
+# Cody plays to the crowd with a man upside down over him); then Cody falls
+# back and the man goes over the top, flat on his back beyond Cody's head.
+# The victim's inversion is bone pose in his own body frame (_body), keyed in
+# steps no wider than 55 degrees; his root carries him over Cody's
+# (paired_recipes.gd grapple_vertical_suplex).
+_SUPLEX_ATK_HOLD = P(pelvis=(0.0, -0.04, 0.900), hips=(2, 0, 0), spine=(12, 0, 0),
+                     head=(4, 0, 0),
+                     hand_r=(0.06, 0.16, 1.56), hand_l=(-0.12, 0.14, 1.52),
+                     elbow_r=(0.7, -0.2, 0.2), elbow_l=(-0.7, -0.2, 0.2),
+                     fist_r=0.8, fist_l=0.8,
+                     foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["Vertical_Suplex_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # The front facelock, the other hand in his tights.
+    (6,  _facelock(0.800, hand_l=(-0.10, 0.44, 0.96), elbow_l=(-0.7, -0.2, -0.6))),
+    # Sits into the lift.
+    (12, P(pelvis=(0.0, 0.02, 0.720), hips=(-8, 0, 0), spine=(-10, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(0.06, 0.34, 1.24), hand_l=(-0.10, 0.30, 1.00),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.06, 0.104), foot_l=(-0.24, 0.08, 0.104))),
+    # Driving him up.
+    (17, P(pelvis=(0.0, -0.02, 0.880), hips=(4, 0, 0), spine=(8, 0, 0),
+           head=(-2, 0, 0),
+           hand_r=(0.05, 0.22, 1.46), hand_l=(-0.12, 0.20, 1.40),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))),
+    (21, dict(_SUPLEX_ATK_HOLD)),
+    # The hold: a slow shift of the weight, chin up, the building counting.
+    (36, dict(_SUPLEX_ATK_HOLD, pelvis=(0.0, -0.05, 0.895), spine=(14, 0, 0),
+              head=(8, 0, 0))),
+    (50, dict(_SUPLEX_ATK_HOLD)),
+    # Over backward, taking him with him.
+    (55, dict(pelvis=(0.0, -0.20, 0.620), hips=(40, 0, 0), spine=(10, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.20, -0.10, 1.30), hand_l=(-0.20, -0.10, 1.30),
+              fist_r=0.6, fist_l=0.6,
+              foot_r=(0.18, 0.40, 0.104), foot_l=(-0.18, 0.36, 0.104))),
+    (59, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
+] + _get_up(64, 72, lying=True)
+
+# The victim's arms and legs while he is carried upside down: hugging round
+# Cody, legs long -- given in the BODY frame, so they turn with him.
+_SUPLEX_LIMBS = dict(spine=(-6, 0, 0), head=(-8, 0, 0),
+                     hand_r=(0.30, 0.30, 0.30), hand_l=(-0.30, 0.30, 0.30),
+                     elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                     fist_r=0.4, fist_l=0.4,
+                     foot_r=(0.12, 0.04, -0.82), foot_l=(-0.12, 0.02, -0.82),
+                     knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+CLIPS["Vertical_Suplex_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Bent into the facelock, his right arm over Cody's neck.
+    (6,  pose(VICTIM_BENT, hand_r=(0.12, 0.46, 1.30), elbow_r=(0.6, -0.3, 0.2))),
+    # Off his feet.
+    (12, _body((-55, 0, 0), (0.0, 0.04, 1.080), **dict(_TUCK_LEGS, spine=(-10, 0, 0),
+               head=(-8, 0, 0), hand_r=(0.30, 0.30, 0.40), hand_l=(-0.30, 0.30, 0.40),
+               fist_r=0.4, fist_l=0.4))),
+    (16, _body((-110, 0, 0), (0.0, 0.08, 1.600), **_SUPLEX_LIMBS)),
+    # Straight up and down, upside down over him.
+    (20, _body((-165, 0, 0), (0.0, 0.10, 2.050), **_SUPLEX_LIMBS)),
+    (36, _body((-168, 0, 0), (0.0, 0.10, 2.060), **_SUPLEX_LIMBS)),
+    (50, _body((-165, 0, 0), (0.0, 0.10, 2.050), **_SUPLEX_LIMBS)),
+    # Over the top.
+    (54, _body((-215, 0, 0), (0.0, 0.10, 1.700), **_SUPLEX_LIMBS)),
+    (57, _body((-250, 0, 0), (0.0, 0.00, 0.900), **dict(_SUPLEX_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # Flat on his back beyond Cody's head -- head toward him, which is
+    # SUPINE_AWAY (MoveDef.defender_lands_head_away).
+    (59, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.220))),
+    (72, dict(SUPINE_AWAY)),
+]
+
+# The Alabama Slam, 60 frames / 2.0 s. He ducks in, and the man is hoisted
+# upside down over his shoulders, hanging down his back, legs held at
+# Cody's shoulders; a beat there; then Cody heaves him back up over the top
+# and slams him down in front, back first, and follows him down bent over
+# the legs. The victim's whole turn is one direction (pitch rising, -150 to
+# +90), keyed in 50-60 degree steps in his body frame; his root travels from
+# in front of Cody to under him and out in front again.
+_ALA_LIMBS = dict(spine=(-8, 0, 0), head=(-10, 0, 0),
+                  hand_r=(0.30, 0.20, 0.36), hand_l=(-0.30, 0.20, 0.36),
+                  elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                  fist_r=0.3, fist_l=0.3,
+                  foot_r=(0.14, 0.30, -0.46), foot_l=(-0.14, 0.30, -0.48),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+_ALA_HOLD = P(pelvis=(0.0, 0.0, 0.860), spine=(4, 0, 0), head=(6, 0, 0),
+              hand_r=(0.22, 0.08, 1.56), hand_l=(-0.22, 0.08, 1.56),
+              elbow_r=(0.8, -0.3, 0.0), elbow_l=(-0.8, -0.3, 0.0),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["Alabama_Slam_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Ducks in under him, arms round the thighs.
+    (7,  P(pelvis=(0.0, 0.12, 0.660), hips=(-30, 0, 0), spine=(-30, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.20, 0.44, 0.90), hand_l=(-0.20, 0.44, 0.90),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.16, 0.104))),
+    # Up, the man over his shoulders.
+    (14, dict(_ALA_HOLD)),
+    (30, dict(_ALA_HOLD, spine=(6, 0, 0), head=(10, 0, 0))),
+    # The heave: up and over the top.
+    (35, P(pelvis=(0.0, 0.02, 0.900), hips=(4, 0, 0), spine=(10, 0, 0),
+           head=(8, 0, 0),
+           hand_r=(0.22, 0.10, 1.74), hand_l=(-0.22, 0.10, 1.74),
+           fist_r=0.8, fist_l=0.8)),
+    # Down with him, bent over the legs.
+    (40, P(pelvis=(0.0, 0.12, 0.620), hips=(-30, 0, 0), spine=(-38, 0, 0),
+           head=(-14, 0, 0),
+           hand_r=(0.24, 0.60, 0.52), hand_l=(-0.24, 0.60, 0.52),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.22, 0.104))),
+    (46, P(pelvis=(0.0, 0.06, 0.760), hips=(-12, 0, 0), spine=(-24, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.24, 0.40, 0.70), hand_l=(-0.24, 0.40, 0.70))),
+    (60, P()),
+]
+CLIPS["Alabama_Slam_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Bent over the man ducking under him.
+    (7,  pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.860), hips=(-50, 0, 0))),
+    (10, _body((-100, 0, 0), (0.0, 0.04, 1.250), **_ALA_LIMBS)),
+    # Upside down down his back, knees hooked over his shoulders.
+    (14, _body((-150, 0, 0), (0.0, 0.00, 1.560), **_ALA_LIMBS)),
+    (30, _body((-148, 0, 0), (0.0, 0.00, 1.570), **_ALA_LIMBS)),
+    # Heaved back up and over the top of him.
+    (33, _body((-100, 0, 0), (0.0, -0.04, 1.720), **_ALA_LIMBS)),
+    (35, _body((-45, 0, 0), (0.0, -0.08, 1.860), **_ALA_LIMBS)),
+    (37, _body((10, 0, 0), (0.0, -0.10, 1.760), **dict(_ALA_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    (39, _body((60, 0, 0), (0.0, -0.10, 1.050), **dict(_ALA_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # Back first, head away from Cody: SUPINE_AWAY.
+    (41, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.230))),
+    (46, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (60, dict(SUPINE_AWAY)),
+]
+
 
 # --- build ----------------------------------------------------------------
 

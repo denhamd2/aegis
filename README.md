@@ -7049,3 +7049,32 @@ is partly hidden by the coat's skirt, as in C-MITB.
 clip and strike bakes rebuild byte-identical. `entrance_shots.tscn`
 rendered every beat; timing asserted by `test_romans_finger_lands_on_the_slam`
 and `test_codys_beats_land_on_the_music`.
+
+## Round: Cody's own moveset
+
+The owner asked for Cody's real moveset, animated and in his matches.
+Researched in `gauntlet/refs/cody_moveset.md` (All Elite Moves, the 2K
+sets): the WWE-era core he hits in nearly every match. Scope chosen by the
+owner: the core, the Figure-Four, and the dives -- this round is the core.
+
+New paired moves (`wrestling_clips.py`, recipes and root paths in
+`paired_recipes.gd`): **powerslam**, **Disaster Kick** (standing),
+**delayed vertical suplex** (held upside down, then over), **Alabama
+Slam**. New strikes: **Bionic Elbow**, **dropdown uppercut** (contact
+offsets measured). Cross Rhodes and the Cody Cutter were already his.
+
+`Roster.Entry.moveset` gives a wrestler his own move per tier;
+`TitleScreen.configure_match` puts the first as the tier's primary and the
+rest in its pool, in place of the shared moves. Only Cody has one; Roman
+still fights with the shared set.
+
+Next: the Figure-Four as a paired submission hold (submissions are one
+generic pose today), then the dives, which need out-of-ring and apron
+positioning the match does not have yet.
+
+### Checks
+480 tests pass (new `test_cody_fights_with_his_own_moveset`; clip digest
+re-pinned after `paired_shot` review). `move_qa --roster` on the four new
+paired moves: mat, merge and pop within the house figures of the body slam
+and Cody Cutter. `tools/probe/moveset_tally.tscn` over 16 seeded
+Roman-vs-Cody matches: every new move thrown.

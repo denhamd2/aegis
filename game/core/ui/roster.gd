@@ -61,6 +61,14 @@ class Entry:
 	## The title he holds, as the entrance lower third prints it -- "AEW
 	## CHAMPION" -- or "" for a man who holds none. See entrance_subtitle().
 	var championship: String = ""
+	## His own moveset, where he has one: tier -> MoveDef paths, the first of
+	## each the tier's guaranteed move and the rest its pool. A tier named
+	## here REPLACES the shared one match.tscn gives everybody -- a man's
+	## moveset is his, not a draw from the other men's -- and a tier left out
+	## keeps the shared moves. Keys: "strike", "grapple", "power",
+	## "signature" (drawn beside `signature`, which still goes first),
+	## "running". Installed by TitleScreen.configure_match().
+	var moveset: Dictionary = {}
 
 	func _init(p_id: String, p_first: String, p_last: String, p_tagline: String,
 			p_scene: String, p_body: Color, p_accent: Color,
@@ -136,6 +144,18 @@ static func entries() -> Array:
 	# is his, captioned AEW CHAMPION. The others walk out under their
 	# nicknames.
 	(list[0] as Entry).championship = "AEW CHAMPION"
+	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
+	# nearly every match, in place of the shared draw.
+	const M := "res://resources/moves/"
+	(list[1] as Entry).moveset = {
+		"strike": [M + "strike_jab.tres", M + "strike_bionic_elbow.tres",
+				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
+		"grapple": [M + "grapple_vertical_suplex.tres"],
+		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres"],
+		"signature": [M + "signature_disaster_kick.tres"],
+		"running": [M + "running_attack_clothesline.tres",
+				M + "running_single_leg_dropkick.tres"],
+	}
 	return list
 
 

@@ -264,6 +264,32 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		# And his own signature, joining the shared draw. A fresh array: the
 		# pool match.tscn assigns is one resource shared by both slots, and
 		# appending to it would hand Roman's punch to Cody as well.
+		# His own moveset, tier by tier, where the roster gives him one:
+		# the first move is the tier's guaranteed one, the rest its pool, and
+		# the shared moves for that tier are dropped.
+		for tier: String in entry.moveset:
+			var moves: Array[MoveDef] = []
+			for path: String in entry.moveset[tier]:
+				moves.append(load(path) as MoveDef)
+			if moves.is_empty():
+				continue
+			var rest: Array[MoveDef] = moves.slice(1)
+			match tier:
+				"strike":
+					wrestler.strike_move = moves[0]
+					wrestler.strike_move_pool = rest
+				"grapple":
+					wrestler.grapple_move = moves[0]
+					wrestler.grapple_move_pool = rest
+				"power":
+					wrestler.power_move = moves[0]
+					wrestler.power_move_pool = rest
+				"signature":
+					wrestler.signature_move = moves[0]
+					wrestler.signature_move_pool = rest
+				"running":
+					wrestler.running_attack_move = moves[0]
+					wrestler.running_attack_move_pool = rest
 		var pool: Array[MoveDef] = wrestler.signature_move_pool.duplicate()
 		wrestler.own_signature = null
 		if entry.signature != "":
