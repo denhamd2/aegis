@@ -7240,3 +7240,29 @@ highlight that runs across the strands.
 **Checks.** `tools/probe/hair_shot.tscn` and `tools/probe/shadow_shot.tscn`
 render before and after. Tests are in `tests/test_hair_shadow_pyro.gd`.
 Details are in `gauntlet/refs/aaa_gap.md`.
+
+## Round: AAA pass, items 10–12
+
+**Broadcast finish.**
+- Depth of field on the entrance and face-off close-ups.
+- A light lens vignette, which leaves the mat at 0.444, still in band.
+- Grain on replay playback.
+- AgX was tried against Filmic. It clips nothing, but the mat drops to
+  0.340, so it is parked until the rig is re-solved for it.
+
+**A living crowd.** `CrowdReaction` drives the crowd shader's excitement
+(a jump bounce) from:
+- big moves;
+- covers and near-falls;
+- the finish;
+- the entrance pyro.
+
+Phone flashes run through the entrances.
+
+**Eyes that look.** `EyeAim` aims Roman's eye bones at Cody's head. Measured
+off the rendered pupils: 30–34° off staring ahead, 3.5° with the aim on. No
+blink, because the model has no lids or shapes.
+
+**Checks.** `tools/probe/broadcast_shot.tscn` renders the frames. Tests are
+in `tests/test_broadcast_crowd_eyes.gd`. Details are in
+`gauntlet/refs/aaa_gap.md`.

@@ -828,6 +828,9 @@ func aim_eyes(look_target: Callable) -> void:
 		aim = EyeAim.new()
 		aim.name = "EyeAim"
 		body.add_child(aim)
+		# The line of sight is bone -> pupil (EYE_TARGETS), not the skull's +Z.
+		for bone: String in EYE_TARGETS:
+			aim.sight_local[bone] = (EYE_TARGETS[bone][1] as Vector3).normalized()
 	aim.look_target = look_target
 
 

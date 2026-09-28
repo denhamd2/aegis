@@ -22,9 +22,12 @@ extends SkeletonModifier3D
 ## .glb). Cody's eyes are part of his body mesh and cannot move until they are
 ## split out, so he gets none of this.
 
-## How far an eye turns before it gives up and recentres, in degrees. Human
-## eyes comfortably rotate about 25-30 degrees; the rest is the head.
-const MAX_ANGLE := 28.0
+## How far an eye turns, in degrees: a human eye rotates to about 35 degrees
+## before the head has to take over. Past it the eye holds at the corner --
+## a sideways glare -- and only past GIVE_UP_ANGLE (the target is behind him)
+## does it recentre.
+const MAX_ANGLE := 35.0
+const GIVE_UP_ANGLE := 75.0
 ## Easing toward the aim, per second; fast, because eyes move in saccades.
 const FOLLOW := 18.0
 ## The line of sight in skeleton space at rest: the model faces +Z.
@@ -34,6 +37,11 @@ const REST_FORWARD := Vector3(0.0, 0.0, 1.0)
 ## one to look at" (eyes ease back to centre). Read every frame.
 var look_target: Callable
 var eye_bones: PackedStringArray = ["J_Eye_L", "J_Eye_R"]
+## Each eye's line of sight in its own bone frame, where the model knows it
+## better than "the skeleton's +Z": RomanModel passes the direction from the
+## bone to the pupil it seats on the cornea. Bones not listed use
+## REST_FORWARD. Aiming +Z left 6 degrees of error, measured on renders.
+var sight_local: Dictionary = {}
 
 var _current: Dictionary = {}   # bone -> Quaternion applied last frame
 
@@ -51,7 +59,7 @@ func _process_modification() -> void:
 		if bone < 0:
 			continue
 		var want := Quaternion.IDENTITY if aim_world == Vector3.INF \
-				else aim_rotation(skeleton, bone, aim)
+				else aim_rotation(skeleton, bone, aim, sight_local.get(bone_name, Vector3.ZERO))
 		var have: Quaternion = _current.get(bone_name, Quaternion.IDENTITY)
 		var now := have.slerp(want, k)
 		_current[bone_name] = now
@@ -61,19 +69,24 @@ func _process_modification() -> void:
 
 ## The rotation, in the eye bone's own frame, that turns its rest line of
 ## sight toward `aim` (skeleton space), or identity if that is past MAX_ANGLE.
-static func aim_rotation(skeleton: Skeleton3D, bone: int, aim: Vector3) -> Quaternion:
+static func aim_rotation(skeleton: Skeleton3D, bone: int, aim: Vector3,
+		sight := Vector3.ZERO) -> Quaternion:
 	var parent := skeleton.get_bone_parent(bone)
 	var parent_pose := skeleton.get_bone_global_pose(parent) if parent >= 0 \
 			else Transform3D.IDENTITY
 	var eye := parent_pose * skeleton.get_bone_rest(bone)
 	# The rest line of sight, in the bone's own frame.
-	var forward := (skeleton.get_bone_global_rest(bone).basis.inverse() * REST_FORWARD).normalized()
+	var forward := sight.normalized() if not sight.is_zero_approx() \
+			else (skeleton.get_bone_global_rest(bone).basis.inverse() * REST_FORWARD).normalized()
 	# The rest line carried by the animated head, and the line to the target,
 	# both in the bone's own frame.
 	var to_aim := (eye.basis.inverse() * (aim - eye.origin)).normalized()
 	if to_aim.is_zero_approx():
 		return Quaternion.IDENTITY
 	var angle := forward.angle_to(to_aim)
-	if angle > deg_to_rad(MAX_ANGLE):
+	if angle > deg_to_rad(GIVE_UP_ANGLE):
 		return Quaternion.IDENTITY
-	return Quaternion(forward, to_aim)
+	var full := Quaternion(forward, to_aim)
+	if angle <= deg_to_rad(MAX_ANGLE):
+		return full
+	return Quaternion.IDENTITY.slerp(full, deg_to_rad(MAX_ANGLE) / angle)

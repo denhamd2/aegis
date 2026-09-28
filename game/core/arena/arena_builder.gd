@@ -971,6 +971,9 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 	source.free()
 
 	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887")
+	# No phone flashes on the ringside rows: at that distance a whole lit
+	# figure reads as a glowing statue, not a flash.
+	material.set_shader_parameter("flash_min_distance", 1.0e6)
 	for i in meshes.size():
 		if buckets[i].is_empty():
 			continue
@@ -1178,6 +1181,10 @@ global uniform float crowd_flash_rate;
 // How high an excited figure bounces, and how fast: a crowd on its feet
 // jumps at about two and a half beats a second.
 uniform float cheer_amplitude = 0.07;
+// Phone flashes only where a figure is small in frame. The flash lights the
+// whole figure (there is no telling a hand from a shirt in this mesh), which
+// reads as a flash only far enough away.
+uniform float flash_min_distance = 16.0;
 uniform float cheer_speed = 15.0;
 
 varying vec3 shirt;
@@ -1212,8 +1219,8 @@ void fragment() {
 	// over-bright so it blooms. Each figure rolls its own dice every slot.
 	float slot = floor(TIME / 0.08);
 	float roll = hash(figure * 911.0 + slot * 0.137);
-	if (roll < crowd_flash_rate * 0.08) {
-		EMISSION += vec3(6.0);
+	if (roll < crowd_flash_rate * 0.08 && length(VERTEX) > flash_min_distance) {
+		EMISSION += vec3(3.5);
 	}
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;

@@ -131,6 +131,51 @@ Exposure after 7–9 (Vulkan):
 - The waterfall, which had no light at all, gets one light per three falls,
   2.5 m under the truss.
 
+## Done: items 10–12
+
+**Broadcast finish.**
+- Depth of field (`MatchCamera._entrance_focus`):
+  - Far blur on entrance and face-off close-ups at 40° or tighter, focused
+    1.2 m past the subject.
+  - Cleared at the bell. The match's wide shots stay sharp.
+- Vignette (`core/camera/broadcast_look.gd`):
+  - 0.22 at the corners, as a canvas overlay under the HUD.
+  - The mat moves 0.446 → 0.444, still in band.
+- Grain: on replay playback only.
+- AgX was evaluated, not adopted.
+  - On the silhouette shot it clips nothing (Filmic clips 523 px) and reads a
+    little richer (mean saturation 0.45 against 0.40).
+  - But the mat falls to 0.340, far under its 0.43–0.49 anchor. Adopting it
+    means re-solving the rig's energies, which is a lighting round of its own.
+  - Measure it with the Filmic run's mask: AgX tone-maps the mask frame's key
+    colours too, so its own mask keys the wrong pixels.
+
+**A living crowd** (`core/arena/crowd_reaction.gd`, crowd shader globals).
+- Excitement from 0 to 1 adds a jump bounce on top of the idle bob. It rises
+  on:
+  - big moves (by damage; signature moves hit 0.9);
+  - each count of a cover;
+  - a near-fall kickout after two (1.0);
+  - a wrestler firing up;
+  - the finish (held at 0.8 for 8 s).
+- It halves every 2.2 s.
+- Phone flashes run through the entrances, and pyro hits pop the crowd.
+- Flashes are only drawn on figures more than 16 m from the camera. Up close
+  the whole figure lights and reads as a glowing statue, so the ringside rows
+  never flash.
+- Presentation only: it listens to the match and writes two render globals.
+
+**Eyes that look** (`core/match/eye_aim.gd`).
+- A SkeletonModifier3D aims Roman's J_Eye bones at Cody's head, up to 35°.
+  Past that it holds at the corner, and it recentres only past 75°.
+- The line of sight is bone → pupil (`RomanModel.EYE_TARGETS`), not the
+  skull's +Z. Using +Z left 6° of error.
+- Measured in `tools/probe/broadcast_shot.tscn` off the rendered iris and
+  pupil: 30–34° off Cody staring ahead, 3.5° with the aim on.
+- Not done, and why:
+  - A blink needs eyelid bones or blend shapes, and Roman's .glb has neither.
+  - Cody's eyes are part of his body mesh, so they need a split first.
+
 ## The improvements, in order of look gained per hour
 
 Each item is small and self-contained. Each must be verified on a render

@@ -30,8 +30,9 @@ func _ready() -> void:
 	# Cody off Roman's line of sight, so his eyes have somewhere to go.
 	a.global_position = Vector3(-0.45, 0, 0)
 	b.global_position = Vector3(0.55, 0, 0.45)
-	a.rotation.y = atan2(1.0, 0.0)
-	b.rotation.y = atan2(-1.0, -0.45)
+	# A wrestler faces -Z at rotation 0, so facing d needs atan2(-d.x, -d.z).
+	a.rotation.y = atan2(-1.0, 0.0)
+	b.rotation.y = atan2(1.0, 0.45)
 	var hud := scene.get_node_or_null("MatchHUD")
 	if hud and "visible" in hud:
 		hud.visible = false
@@ -49,11 +50,20 @@ func _ready() -> void:
 		if eye_aim:
 			eye_aim.look_target = aim_on if mode == "on_cody" \
 					else func() -> Vector3: return Vector3.INF
-		cam.set_entrance_shot(Vector3(0.15, 1.72, -0.05), Vector3(-0.45, 1.70, -0.02), 12.0, true)
+		# Framed on his eyes as they are this frame: the clip moves his head.
+		for _i in 20:
+			await RenderingServer.frame_post_draw
+		var iris := a.find_child("RomanIris_Eye_L", true, false) as Node3D
+		var eyes := (iris.get_child(0) as Node3D).global_position + Vector3(0.0, 0.0, -0.032)
+		cam.set_entrance_shot(eyes + Vector3(0.6, 0.02, -0.08), eyes, 9.0, true)
 		cam._clear_focus()
 		await _save("eyes_%s" % mode)
+		_report_gaze(a, mode, aim_on)
 	if eye_aim:
 		eye_aim.look_target = aim_on
+	if "--eyes-only" in args:
+		get_tree().quit()
+		return
 
 	# 10: the face-off close-up (34 degrees), without and with depth of field.
 	for mode: String in ["flat", "dof"]:
@@ -82,6 +92,25 @@ func _ready() -> void:
 		await _save("grain_%s" % mode)
 	print("BROADCAST_SHOT done")
 	get_tree().quit()
+
+
+## Each eye's gaze against the line to the target, read off what renders:
+## the iris and pupil spheres both sit on the eye's axis (RomanModel.
+## EYE_TARGETS), so iris -> pupil is the line of sight. (The bone pose read
+## from outside a SkeletonModifier3D is the unmodified one, so bone -> pupil
+## measured garbage the first time.)
+func _report_gaze(w: WrestlerController, mode: String, target: Callable) -> void:
+	var goal: Vector3 = target.call()
+	for side in ["L", "R"]:
+		var pupil := w.find_child("RomanPupil_Eye_" + side, true, false) as Node3D
+		var iris := w.find_child("RomanIris_Eye_" + side, true, false) as Node3D
+		if pupil == null or iris == null:
+			continue
+		var p := (pupil.get_child(0) as Node3D).global_position
+		var i := (iris.get_child(0) as Node3D).global_position
+		var gaze := (p - i).normalized()
+		print("BROADCAST_SHOT gaze %s %s: %.1f deg off the target" % [mode, side,
+				rad_to_deg(gaze.angle_to((goal - p).normalized()))])
 
 
 func _save(name: String) -> void:
