@@ -4512,13 +4512,18 @@ def _spring_air(yaw, pelvis, **over):
     return base
 
 
+# The hands are ON the top rope and the boot ON the middle one, 0.05 in front
+# of the root (the apron stands 0.05 outside the rope line): a boot 0.14 in
+# never touched the rope, and with live ropes (core/ring/ring_ropes.gd) a
+# springboard that does not press the rope down reads as a man jumping off
+# nothing. Weighted, the boot takes the middle rope ~0.12 m down.
 CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
-    (0,  P(hand_r=(0.30, 0.10, 1.20), hand_l=(-0.30, 0.10, 1.20),
+    (0,  P(hand_r=(0.30, 0.06, 1.25), hand_l=(-0.30, 0.06, 1.25),
            fist_r=0.8, fist_l=0.8)),
     # A boot onto the middle rope beside the post-side hand.
     (8,  P(pelvis=(0.0, 0.05, 1.050), hips=(-10, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.30, 0.18, 1.22), hand_l=(-0.30, 0.18, 1.22),
-           foot_r=(0.12, 0.14, 0.86), knee_r=(0.1, 1.0, 0.4),
+           hand_r=(0.30, 0.08, 1.24), hand_l=(-0.30, 0.08, 1.24),
+           foot_r=(0.12, 0.06, 0.80), knee_r=(0.1, 1.0, 0.4),
            foot_l=(-0.14, -0.02, 0.104), free_feet=True,
            fist_r=0.8, fist_l=0.8)),
     # Sprung.
@@ -4535,6 +4540,55 @@ CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
     (38, _shifted(pose(CROUCH), 0.85, 0.0)),
     (48, _shifted(P(), 0.85, 0.0)),
 ]))
+
+# Off the ropes (gauntlet/refs/ropes.md): the last stride turns him side-on,
+# the rope-side arm goes over the top rope, and his hip and ribs take the
+# middle and top ropes. The ropes give -- the pelvis carries on 0.30 m past
+# the rope line at the deepest -- and then throw him back: he pushes off the
+# outside foot, lets go of the rope and comes out running the other way.
+# 20 frames. The root stays put, 0.5 m inside the ropes, facing them; the
+# body turns through 180 degrees in bone pose, so he ends running AWAY from
+# the root's facing (the director turns the root round on a cut after it).
+REBOUND_ROPE = 0.50
+_REBOUND_RUN_OUT = dict(
+    pelvis=(0.0, -0.06, 0.800), hips=(-14, 180, 0), spine=(-18, 0, 0),
+    head=(8, 0, 0),
+    hand_r=(-0.26, -0.30, 1.04), hand_l=(0.20, -0.10, 1.00),
+    foot_r=(-0.16, -0.26, 0.104), foot_l=(0.14, 0.30, 0.20),
+    fist_r=0.7, fist_l=0.7)
+CLIPS["Rope_Rebound"] = _world_clip(20, (0.0, 0.0), _unified([
+    (0,  pose(RUN_B)),
+    # The turn: planting the rope-side foot, the other already coming round.
+    (3,  pose(RUN_B, pelvis=(0.0, 0.30, 0.820), hips=(-8, 50, 0), spine=(-8, 0, 0),
+              hand_r=(0.10, 0.52, 1.30), hand_l=(-0.22, 0.30, 1.06),
+              foot_r=(0.10, 0.40, 0.104), foot_l=(-0.10, 0.12, 0.20))),
+    # Contact: hip on the middle rope, ribs on the top, arm hooked over it.
+    (5,  P(pelvis=(0.0, REBOUND_ROPE + 0.02, 0.840), hips=(0, 90, 0),
+           spine=(4, 0, 0), head=(4, 0, 0),
+           hand_r=(0.00, REBOUND_ROPE + 0.10, 1.27), hand_l=(-0.32, 0.36, 1.08),
+           fist_r=0.9, fist_l=0.5,
+           foot_r=(0.08, 0.46, 0.104), foot_l=(-0.10, 0.16, 0.104))),
+    # Deepest: the ropes wrapped round his side, leaning back into them.
+    (8,  P(pelvis=(0.0, REBOUND_ROPE + 0.30, 0.820), hips=(0, 96, 0),
+           spine=(9, 0, 0), head=(8, 0, 0),
+           hand_r=(0.00, REBOUND_ROPE + 0.40, 1.20), hand_l=(-0.28, 0.62, 1.04),
+           fist_r=0.9, fist_l=0.5,
+           foot_r=(0.08, 0.46, 0.104), foot_l=(-0.10, 0.16, 0.104))),
+    # Thrown back: the ropes return him, still holding on.
+    (11, P(pelvis=(0.0, REBOUND_ROPE, 0.840), hips=(-6, 118, 0),
+           spine=(0, 0, 0), head=(4, 0, 0),
+           hand_r=(0.00, REBOUND_ROPE + 0.08, 1.26), hand_l=(-0.20, 0.26, 1.08),
+           fist_r=0.9, fist_l=0.6,
+           foot_r=(0.08, 0.46, 0.104), foot_l=(-0.10, 0.16, 0.104))),
+    # Off the outside foot, the hand leaving the rope.
+    (14, P(pelvis=(0.0, 0.24, 0.810), hips=(-14, 155, 0),
+           spine=(-14, 0, 0), head=(6, 0, 0),
+           hand_r=(-0.05, 0.40, 1.18), hand_l=(0.10, 0.02, 1.04),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.02, 0.30, 0.22), foot_l=(-0.06, 0.16, 0.104))),
+    (20, _REBOUND_RUN_OUT),
+]))
+
 
 # --- build ----------------------------------------------------------------
 

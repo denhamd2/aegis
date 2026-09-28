@@ -956,6 +956,22 @@ func _build_model() -> void:
 			push_error("RingBuilder: %s has no '%s' object." % [RING_MODEL, part])
 			continue
 		node.material_override = materials[part]
+	_build_live_ropes(holder, root, materials["RopeMesh"])
+
+
+## The ropes the glb ships are swept once and never move. They stay in the
+## file (test_ring_model.gd measures them) but are hidden, and RingRopes draws
+## the same twelve parabolas as live strings that give under a body -- see
+## its header and gauntlet/refs/ropes.md.
+func _build_live_ropes(holder: Node3D, root: Node3D, material: Material) -> void:
+	var baked := root.find_child("RopeMesh", true, false) as MeshInstance3D
+	if baked:
+		baked.visible = false
+	var ropes := RingRopes.new()
+	ropes.name = "LiveRopes"
+	holder.add_child(ropes)
+	ropes.setup(ROPE_SPAN, POST_XZ + ROPE_OVERRUN, ROPE_HEIGHTS, ROPE_SAG,
+			ROPE_RADIUS, material)
 
 
 # ================================================================== helpers ===

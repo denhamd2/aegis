@@ -555,6 +555,8 @@ var _snap_next_animation: bool = false
 var _damage_at_last_knockdown: float = 0.0
 
 func _ready() -> void:
+	# RingRopes finds the bodies it has to give under by this group.
+	add_to_group("wrestlers")
 	_install_character_model()
 	fsm = WrestlerFSM.new()
 	add_child(fsm)
@@ -1077,7 +1079,11 @@ func _physics_process(delta: float) -> void:
 	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
 	move_and_slide()
-	keep_inside_the_ring()
+	if _rope_load_body:
+		# Out in the ropes on purpose -- the clamp would snap him back.
+		_end_rope_load_when_clear()
+	else:
+		keep_inside_the_ring()
 	_release_cover_contact()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
@@ -1445,6 +1451,7 @@ func _begin_irish_whip() -> void:
 	launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
 	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
+	opponent._irish_whip_launch_velocity = opponent.velocity
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
 	# The hold ends here too -- the whip replaces the grapple move.
@@ -1464,14 +1471,15 @@ func _begin_irish_whip() -> void:
 func _process_irish_whip() -> void:
 	if _irish_whip_rebounded:
 		return
+	if _rope_load_tick >= 0:
+		_tick_rope_load()
+		return
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
 		var collider := collision.get_collider()
 		if collider is Node and (collider as Node).is_in_group(RING_ROPE_GROUP):
-			velocity = velocity.bounce(collision.get_normal()) * IRISH_WHIP_REBOUND_DAMPING
-			_irish_whip_rebounded = true
-			_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
-			fsm.transition_to(WrestlerFSM.State.RUN)
+			_begin_rope_load(collision.get_normal(), collider as Node)
+			_tick_rope_load()
 			return
 	# No rope found in time -- see IRISH_WHIP_MAX_TICKS. Hand back to RUN
 	# without a rebound rather than leaving the wrestler in a state with no
@@ -1480,6 +1488,105 @@ func _process_irish_whip() -> void:
 	if fsm.ticks_in_state >= IRISH_WHIP_MAX_TICKS:
 		_irish_whip_rebounded = true
 		fsm.transition_to(WrestlerFSM.State.RUN)
+
+## THE ROPE LOAD (gauntlet/refs/ropes.md). A body does not bounce off the
+## ropes the tick it reaches them; it carries on INTO them, and they stop it
+## and throw it back. The rope collider stops the capsule's centre 0.38 m
+## short of where his back first touches the real ropes at 3.1, so he first
+## travels that gap at full speed (ROPE_LOAD_FREE), then the ropes take him
+## ROPE_LOAD_DEPTH further on a half-sine -- a mass on a spring, stopped and
+## returned -- and he comes back out of them at the rebound's speed. At 9 m/s
+## that is ~14 ticks in the ropes, against the footage's ~0.25 s contact;
+## the live ropes (core/ring/ring_ropes.gd) see his back go 0.4 m past their
+## line and give that far.
+##
+## Kinematic and closed-form in ticks, so deterministic. The rope collider he
+## is in is excepted from his collision for the load and until he is back
+## inside the point where it stopped him, and keep_inside_the_ring() stands
+## aside for the same span (it would snap him back to 2.6).
+const ROPE_LOAD_FREE := 0.38
+const ROPE_LOAD_DEPTH := 0.40
+## Longest he can be out in the ropes before being put back regardless -- a
+## load interrupted by something that holds him still must not strand him
+## outside the ring with the rope collider switched off.
+const ROPE_LOAD_MAX_TICKS := 60
+
+## Ticks since this whip's rope load began, or -1 when not loading.
+var _rope_load_tick := -1
+var _rope_load_from := Vector3.ZERO
+var _rope_load_out := Vector3.ZERO
+var _rope_load_speed := 0.0
+var _rope_load_along := Vector3.ZERO
+var _rope_load_body: CollisionObject3D
+## What _begin_irish_whip() launched him with -- see _begin_rope_load().
+var _irish_whip_launch_velocity := Vector3.ZERO
+
+
+func _begin_rope_load(normal: Vector3, rope: Node) -> void:
+	var inward := Vector3(normal.x, 0.0, normal.z).normalized()
+	_rope_load_out = -inward
+	# The launch velocity, not `velocity`: move_and_slide() has already slid
+	# the tick that reached the collider, taking the part into the rope away.
+	var flat := Vector3(_irish_whip_launch_velocity.x, 0.0, _irish_whip_launch_velocity.z)
+	_rope_load_speed = maxf(flat.dot(_rope_load_out), 1.0)
+	_rope_load_along = flat - _rope_load_out * flat.dot(_rope_load_out)
+	_rope_load_from = global_position
+	_rope_load_tick = 0
+	_rope_load_body = rope as CollisionObject3D
+	if _rope_load_body:
+		add_collision_exception_with(_rope_load_body)
+
+
+## Where the load has him `seconds` after it began, as distance out past
+## where the collider stopped him; -1 once the ropes have thrown him back.
+static func rope_load_offset(seconds: float, speed: float) -> float:
+	var t_free := ROPE_LOAD_FREE / speed
+	if seconds < t_free:
+		return speed * seconds
+	var omega := speed / ROPE_LOAD_DEPTH
+	var u := seconds - t_free
+	if u < PI / omega:
+		return ROPE_LOAD_FREE + ROPE_LOAD_DEPTH * sin(omega * u)
+	return -1.0
+
+
+func _tick_rope_load() -> void:
+	var dt := 1.0 / Engine.physics_ticks_per_second
+	_rope_load_tick += 1
+	var x := rope_load_offset(_rope_load_tick * dt, _rope_load_speed)
+	if x < 0.0:
+		# Thrown back: out of the ropes at the rebound's speed, the way he
+		# went in reflected, as the old instant bounce gave.
+		global_position = _rope_load_from + _rope_load_out * ROPE_LOAD_FREE \
+				+ _rope_load_along * (_rope_load_tick * dt)
+		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
+				* IRISH_WHIP_REBOUND_DAMPING
+		_irish_whip_rebounded = true
+		_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
+		fsm.transition_to(WrestlerFSM.State.RUN)
+		return
+	var want := _rope_load_from + _rope_load_out * x \
+			+ _rope_load_along * (_rope_load_tick * dt)
+	want.y = global_position.y
+	velocity = (want - global_position) / dt
+
+
+## Hands the rope collider back once he is inside where it stopped him.
+func _end_rope_load_when_clear() -> void:
+	var out := (global_position - _rope_load_from).dot(_rope_load_out)
+	var loading := _rope_load_tick >= 0 and not _irish_whip_rebounded
+	if out > 0.0 and (loading or _rope_load_tick < ROPE_LOAD_MAX_TICKS):
+		if not loading:
+			_rope_load_tick += 1
+		return
+	if out > 0.0:
+		# Stranded out in the ropes (stopped mid-return): put him back.
+		global_position -= _rope_load_out * out
+	if is_instance_valid(_rope_load_body):
+		remove_collision_exception_with(_rope_load_body)
+	_rope_load_body = null
+	_rope_load_tick = -1
+
 
 ## Autopilot phase right after a rope rebound -- see
 ## _irish_whip_return_ticks_remaining's doc comment for why this can't just
@@ -1707,7 +1814,12 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 var _presentation_node := "IDLE"
 var _presentation_clip := ""
 
-func play_presentation_clip(clip: String) -> void:
+## `cut` starts the clip on its first frame with no crossfade -- for a clip
+## whose first frame IS the last one's pose seen from a root that has just
+## been turned round (DiveSpot's rope rebound, which ends running the other
+## way). Crossfaded, the hips would blend 180 degrees of yaw back to 0 and
+## the man would spin on the spot.
+func play_presentation_clip(clip: String, cut := false) -> void:
 	if not anim_tree or clip == _presentation_clip \
 			or not anim_player.has_animation(clip):
 		return
@@ -1717,7 +1829,10 @@ func play_presentation_clip(clip: String) -> void:
 	if node == null:
 		return
 	node.animation = clip
-	_anim_playback.travel(next)
+	if cut:
+		_anim_playback.start(next, true)
+	else:
+		_anim_playback.travel(next)
 	_presentation_node = next
 	_presentation_clip = clip
 

@@ -30,7 +30,11 @@ const NEAR_ROPES := 1.0
 const FLOOR_Y := ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
 const TUMBLE_FROM := 2.35
 const FLOOR_AT := 3.9
-const RUN_TO := -2.45
+## Where Cody's root stops at the far ropes: 0.5 inside the rope line at
+## 3.1, which is where Rope_Rebound's keys put the ropes (REBOUND_ROPE). His
+## body goes on into them from here -- see gauntlet/refs/ropes.md.
+const RUN_TO := -2.6
+const REBOUND_TICKS := 40
 const TAKEOFF := 1.30
 const TOPE_TO := 3.25
 const ROLL_IN_FROM := 3.6
@@ -144,14 +148,19 @@ func _build() -> void:
 	_seg_add(maxi(_ticks(_flat(a0).distance_to(_flat(far)), RUN), 24),
 			_hold("strikes/stunned", floor_spot, 0, a0),
 			_go("strikes/run_drive", a0, far, -_out))
-	# 5. The rebound.
-	_seg_add(12, _hold("strikes/stunned", floor_spot, 0, far),
-			_go("strikes/run_drive", far, far, _out))
-	# 6. The run in.
+	# 5. The rebound: into the ropes side-on, an arm over the top one, and
+	# thrown back out by them. The body travels and turns in the clip; the
+	# root holds, facing the ropes.
+	_seg_add(REBOUND_TICKS, _hold("strikes/stunned", floor_spot, 0, far),
+			_go("strikes/rope_rebound", far, far, -_out))
+	# 6. The run in. The rebound ended with him running AWAY from the root's
+	# facing, so the root is turned round and the run cut in, not blended.
 	var takeoff := at(TAKEOFF, _lane)
+	var run_in := _go("strikes/run_drive", far, takeoff, _out)
+	run_in["snap"] = true
+	run_in["cut"] = true
 	_seg_add(_ticks(_flat(far).distance_to(_flat(takeoff)), RUN),
-			_hold("strikes/stunned", floor_spot, 0, takeoff),
-			_go("strikes/run_drive", far, takeoff, _out), "wide")
+			_hold("strikes/stunned", floor_spot, 0, takeoff), run_in, "wide")
 	# 7. The tope suicida.
 	var landed := at(TOPE_TO, _lane, FLOOR_Y)
 	_seg_add(TOPE_TICKS, _hold("strikes/tope_defender", floor_spot, 0, takeoff),
@@ -234,8 +243,12 @@ func _next() -> void:
 	var seg: Dictionary = _segments[_seg]
 	for pair: Array in [[defender, seg["d"]], [attacker, seg["a"]]]:
 		var beat: Dictionary = pair[1]
+		var w := pair[0] as WrestlerController
+		if beat.get("snap", false):
+			var f: Vector3 = beat["facing"]
+			w.rotation.y = atan2(-f.x, -f.z)
 		if int(beat["delay"]) == 0 and beat["clip"] != "":
-			(pair[0] as WrestlerController).play_presentation_clip(beat["clip"])
+			w.play_presentation_clip(beat["clip"], beat.get("cut", false))
 	_frame_shot(seg, true, 1.0 / TPS)
 
 

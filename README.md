@@ -7120,3 +7120,54 @@ across the silver; out, the letters slip left and the plate wipes off.
 484 tests pass; `test_codys_beats_land_on_the_music` pins every accent
 within two ticks of its measured note. Clips reviewed in `clip_shot.tscn`
 before re-pinning the authoring gate.
+
+## Round: live ropes
+
+The owner asked for rope physics that hold up when a man runs into the
+ropes, stands on them, or goes through them. Research is in
+`gauntlet/refs/ropes.md`.
+
+**Research.**
+- Construction specs: steel cable in a hose sleeve, tensioned at the
+  turnbuckles.
+- WWE 619 and springboard footage: a body bends a rope into a V that is
+  stiffer near the posts, and a rope rings for a few slow swings rather
+  than buzzing.
+- Derived numbers: a rebound deflects the rope 0.3–0.5 m, with contact
+  lasting about 0.25 s. The fundamental is about 7 Hz and the damping
+  ratio 0.08.
+
+**Before this round.** Bodies never reached the ropes. The rope colliders
+stopped a man 0.35 m short of the rendered ropes, and the ropes were
+static tubes.
+
+**What changed.**
+- `core/ring/ring_ropes.gd` replaces the baked rope mesh with twelve live
+  strings.
+  - Each is the discrete wave equation, pinned at the turnbuckles. The
+    rest shape is `ring.py`'s parabola, so a ring at rest is unchanged.
+  - Every wrestler is sampled into spheres along his bones each frame, and
+    rope nodes are pushed out of them. A back makes a V, a boot presses a
+    rope down, and a body going through parts two ropes.
+  - The ropes are cosmetic and one-way: nothing pushes back on a body. The
+    ropes sleep when nothing is touching them.
+- **Cody's rebound before the tope** is now real. The new `Rope_Rebound`
+  clip turns him side-on with an arm over the top rope, carries him 0.3 m
+  into the ropes, and throws him back running. `DiveSpot` turns the root
+  round on a cut (`play_presentation_clip(..., cut)`) so he doesn't spin.
+- **The springboard** now puts the boot on the middle rope and the hands on
+  the top one. Before, the boot was 0.14 m short of the middle rope.
+- **The Irish whip** no longer bounces on the tick it reaches the collider.
+  He carries on into the ropes on a half-sine (`rope_load_offset`) and is
+  thrown back out. This touches gameplay only for a player's whip, because
+  the AI never whips.
+
+Measured through `tools/probe/rope_shot.tscn`:
+
+| Beat | Peak rope deflection |
+| --- | --- |
+| Rebound | 0.53 m |
+| Roll out | 0.35 m |
+| Tope | 0.46 m |
+| Roll in | 0.46 m |
+| Springboard | 0.17 m |
