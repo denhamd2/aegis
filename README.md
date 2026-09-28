@@ -7302,3 +7302,24 @@ attacker. The paired bake was re-run and all 512 tests pass.
 
 `Submission_Work` and `Finisher_Drive` also use positive pitch, but lean back
 on purpose, so they are unchanged.
+
+## Round: Cody's eyes, and the animation research
+
+**Cody's eyes.** They are real geometry, an eyeball plus a cornea shell per
+eye, but they were weighted to Head.
+- `tools/assets/rig_cody_eyes.py` finds them by shape.
+- It adds `Eye_L` and `Eye_R` under Head at each eyeball's centre, and moves
+  their weight onto those bones.
+- `CodyModel.aim_eyes` gives him the same EyeAim as Roman.
+- Measured in `tools/probe/cody_eye_shot.tscn`: 24–27° off Roman staring
+  ahead, and 0° with the aim on.
+- The line of sight is the face's forward at rest, not the bone's own +Y.
+  After the glTF round trip the bone's +Y pointed 155° away.
+
+**Animation research.** `gauntlet/refs/animation_gap.md` sets out:
+- what 2K26 does (mocap of both performers at once, position- and
+  size-aware moves, in-between reactions);
+- the five gaps our audit found;
+- a phased plan: automated pose and pair lint, contact-first two-man
+  authoring with size fitting, better transitions and foot IK, then
+  match-play systems.

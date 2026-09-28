@@ -122,3 +122,18 @@ func test_a_lock_up_closes_to_chest_to_chest() -> void:
 	assert_float(gap - 2.0 * slide).is_equal_approx(WrestlerController.LOCK_UP_GAP, 0.001)
 	assert_float(WrestlerController.lock_up_slide(0.5)).is_equal(0.0)
 	assert_float(WrestlerController.lock_up_slide(3.0)).is_equal(WrestlerController.LOCK_UP_MAX_SLIDE)
+
+
+## Cody's eyes are their own bones now (tools/assets/rig_cody_eyes.py), and
+## he gets an EyeAim on them like Roman.
+func test_cody_has_eye_bones_that_aim() -> void:
+	var model := auto_free((load("res://scenes/cody_model.tscn") as PackedScene).instantiate()) as CodyModel
+	assert_object(model).is_not_null()
+	add_child(model)
+	var sk := model.get_game_skeleton()
+	for bone in CodyModel.EYE_BONES:
+		var i := sk.find_bone(bone)
+		assert_int(i).is_greater_equal(0)
+		assert_str(sk.get_bone_name(sk.get_bone_parent(i))).is_equal("Head")
+	model.aim_eyes(func() -> Vector3: return Vector3.INF)
+	assert_object(sk.get_node_or_null("EyeAim")).is_not_null()

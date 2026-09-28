@@ -245,3 +245,25 @@ func adapt_animation_library(source: AnimationLibrary,
 
 func get_game_skeleton() -> Skeleton3D:
 	return find_child("Skeleton3D", true, false) as Skeleton3D
+
+
+## His eyes on whatever `look_target` returns (EyeAim). The eye bones are
+## added to the .glb by tools/assets/rig_cody_eyes.py, each at its eyeball's
+## centre. The line of sight is EyeAim's default, his face's forward at rest.
+## Not the bone's own +Y, though that is the axis it points along in Blender:
+## after the glTF round trip the bone's +Y measured 155 degrees off where he
+## was looking. Idempotent; a no-op on a model without them.
+const EYE_BONES := ["Eye_L", "Eye_R"]
+
+
+func aim_eyes(look_target: Callable) -> void:
+	var skeleton := get_game_skeleton()
+	if skeleton == null or skeleton.find_bone(EYE_BONES[0]) < 0:
+		return
+	var aim := skeleton.get_node_or_null("EyeAim") as EyeAim
+	if aim == null:
+		aim = EyeAim.new()
+		aim.name = "EyeAim"
+		aim.eye_bones = PackedStringArray(EYE_BONES)
+		skeleton.add_child(aim)
+	aim.look_target = look_target
