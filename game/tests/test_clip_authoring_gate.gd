@@ -80,8 +80,10 @@ func test_the_clip_authoring_surface_has_not_changed_unreviewed() -> void:
 			.override_failure_message(
 				"%s changed.\n\n" % path
 				+ "Before re-pinning: read .claude/skills/%s/SKILL.md, " % CITED_SKILL
-				+ "render what you changed through tools/probe/clip_shot.tscn, "
-				+ "and look at the frames.\n\n"
+				+ "render what you changed -- tools/anim/contact_sheet.sh OUT Clip_A "
+				+ "Clip_B (or --paired move_id) -- and look at the frames. "
+				+ "tests/test_pose_lint.gd and test_pair_clearance.gd must pass "
+				+ "too; they catch what can be measured.\n\n"
 				+ "Then set its entry in PINNED to:\n  %s" % actual) \
 			.is_equal(PINNED[path])
 

@@ -7372,3 +7372,30 @@ floor. Solved in-between keys fixed them, found by tracing frame by frame.
 **No knee check.** Three measures of a backwards knee each misread
 render-checked normal poses, so none shipped; the reasons are in
 `pose_lint.gd`.
+
+## Round: the pair check (Phase 1 complete)
+
+**PairClearance** (`tools/anim/pair_clearance.gd`,
+`tests/test_pair_clearance.gd`, probe `tools/probe/pair_clearance.tscn`).
+- Every paired move runs through the real GrappleRig in the match scene.
+- Each tick it measures the deepest overlap between the two bodies, modelled
+  as capsules: torso, head, arms and legs.
+- Limits: 5 cm body into body, and 8 cm for an arm, since a grip wraps round
+  a body.
+
+**What it found.** 32 of 37 paired moves put one body through the other by up
+to 26 cm, confirmed on renders:
+- the slam carries the man's belly through the lifter's head;
+- the tilt-a-whirls merge torsos.
+
+This is the root of the overlaps the owner has flagged. Fixing it is Phase 2
+(contact-first two-man authoring), so the test is a **ratchet**:
+- `PairClearanceBaseline` records each move's depth at the time, worst first,
+  and serves as the Phase 2 queue;
+- a listed move may not get worse, and an unlisted one may not go over;
+- a move that gets fixed has to be deleted from the list, which then holds
+  it.
+
+**Contact sheets.** `tools/anim/contact_sheet.sh OUT Clip ...` (or
+`--paired move ...`) renders side and front frames of changed clips. The clip
+gate now points at it and at the two lint tests.

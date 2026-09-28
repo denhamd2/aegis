@@ -104,7 +104,11 @@ The problems David sees trace back to five gaps.
     it until the mat is 0.43–0.49.
   - Re-measure every band, then update `VISUAL_BAR.md` and `aaa_gap.md`.
 
-### Phase 1: stop shipping bad poses (automated gates)
+### Phase 1: stop shipping bad poses (automated gates) -- DONE
+
+Built as `PoseLint` (13 defects found and fixed) and `PairClearance`. The
+pair check found 32 of 37 moves with bodies inside each other by up to 26 cm.
+These are held by a ratchet (`PairClearanceBaseline`), the queue for Phase 2.
 
 This matters most, because it catches the whole class of bug David keeps
 finding.
