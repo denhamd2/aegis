@@ -142,7 +142,23 @@ Exposure after 7–9 (Vulkan):
   - 0.22 at the corners, as a canvas overlay under the HUD.
   - The mat moves 0.446 → 0.444, still in band.
 - Grain: on replay playback only.
-- AgX was evaluated, not adopted.
+- AgX: **adopted** in a follow-up round, at exposure 1.7, measured on the
+  silhouette shot:
+
+  | | Filmic 1.0 | AgX 1.7 |
+  | --- | --- | --- |
+  | mat | 0.448 | 0.458 |
+  | mat ↔ A | 0.278 | 0.261 |
+  | mat ↔ B | 0.161 | 0.161 |
+  | A ↔ B | 0.117 | 0.100 |
+  | clipped pixels | 473 | 1 |
+
+  - AgX is as good or better on every band; the full exposure sweep is in
+    `match.tscn`.
+  - The capture harness's mask frame now renders with a linear tonemap.
+  - The compatibility renderer stays on Filmic 1.0, where its gains were
+    solved, and measures exactly as before (mat 0.496).
+- AgX was first evaluated and parked, with the mat at 0.340 at exposure 1.0:
   - On the silhouette shot it clips nothing (Filmic clips 523 px) and reads a
     little richer (mean saturation 0.45 against 0.40).
   - But the mat falls to 0.340, far under its 0.43–0.49 anchor. Adopting it

@@ -7338,3 +7338,37 @@ Three wrong turns were caught on `tools/probe/lids_shot.tscn` renders:
 - a mirrored basis, which drew the cap inside out;
 - placing the lids from the mesh put them 6 cm too high;
 - a full sweep bulged over his cheek.
+
+## Round: AgX adopted, and the first animation gate (PoseLint)
+
+**AgX.**
+- `match.tscn` uses AgX at exposure 1.7: mat 0.458 (reference 0.46), and
+  clipped pixels drop from 473 to 1.
+- The capture harness's mask frame uses a linear tonemap, so measurements
+  hold under AgX. Filmic re-measured 0.448 through the new mask.
+- The compatibility renderer keeps Filmic 1.0 and is unchanged.
+
+**PoseLint** (`tools/anim/pose_lint.gd`, `tests/test_pose_lint.gd`,
+`resources/animations/clip_intent.gd`). This is Phase 1 of
+`gauntlet/refs/animation_gap.md`. Every authored clip is sampled at 11 points
+and checked for:
+- a bone under the mat (world-space and paired clips excepted, since those are
+  placed differently at play time);
+- a head snapped more than 75° off the torso;
+- a hand inside its own torso;
+- each tagged clip leaning the way it means to.
+
+A self-test proves the lean check reads a backbend.
+
+The first run found 13 real defects, all now fixed and checked on renders:
+- Pin_Cover's shin 5.5 cm and toes 10 cm into the canvas;
+- Getup_Rise's foot 12 cm and fingers 9 cm through the mat;
+- the back foot of the entrance kneel;
+- hands inside the chest on the dropdown uppercut and the dropkick.
+
+Most were the joint-space blend between keys sweeping a limb through the
+floor. Solved in-between keys fixed them, found by tracing frame by frame.
+
+**No knee check.** Three measures of a backwards knee each misread
+render-checked normal poses, so none shipped; the reasons are in
+`pose_lint.gd`.

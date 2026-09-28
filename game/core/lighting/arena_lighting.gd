@@ -953,6 +953,13 @@ func _apply_compat_environment() -> void:
 	env.fog_aerial_perspective = 0.0
 	env.fog_sky_affect = 0.0
 	env.adjustment_saturation = COMPAT_SATURATION
+	# The compatibility path keeps Filmic at exposure 1.0. match.tscn moved
+	# to AgX at 1.7 (refs/aaa_gap.md item 10), measured on forward_plus; this
+	# renderer's COMPAT_* gains were solved under Filmic, and AgX's 1.7 on top
+	# of them put the mat at 0.536, over its band. Kept as calibrated rather
+	# than re-solved on the renderer the game does not ship its look on.
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.0
 	# gl_compatibility has no screen-space reflections, so the flag match.tscn
 	# sets is inert here. Clearing it explicitly is documentation: this
 	# duplicated Environment is meant to be an honest description of what that

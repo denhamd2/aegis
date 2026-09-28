@@ -908,7 +908,9 @@ CLIPS = {
         (0,  P()),
         (5,  P(pelvis=(0.0, 0.04, 0.600), hips=(-30, 0, 0), spine=(-24, 0, 0),
                head=(14, 0, 0),
-               hand_r=(0.26, 0.24, 0.76), hand_l=(-0.24, 0.26, 0.78),
+               # Out in front of the dipped chest: at fwd 0.24-0.26 the
+               # forward-pitched torso swallowed both hands (PoseLint).
+               hand_r=(0.28, 0.44, 0.80), hand_l=(-0.26, 0.46, 0.82),
                fist_r=0.9, fist_l=0.8,
                foot_r=(0.25, -0.12, 0.104), foot_l=(-0.23, 0.18, 0.104),
                knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
@@ -1106,24 +1108,45 @@ CLIPS = {
         # decides it, and decides it is a roll rather than a tumble.
         (5,  S(pelvis=(0.03, 0.0, 0.20), hips=(-78, -10, 100),
                spine=(-6, -8, 0), head=(-4, -6, 0),
-               hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.10),
+               # Hands and feet higher than they rest: the clip is blended
+               # in joint space between keys, and from these the blend swept
+               # a foot 12 cm and a hand 10 cm under the mat (PoseLint).
+               hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.16),
                elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
-               foot_r=(0.02, -0.46, 0.14), foot_l=(0.16, -0.44, 0.10),
+               foot_r=(0.02, -0.46, 0.24), foot_l=(0.16, -0.44, 0.18),
+               ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
                knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
         # Rolls toward his front and gets a hand on the mat.
         (10, S(pelvis=(0.06, 0.0, 0.21), hips=(-70, -20, 22),
                spine=(-4, -14, 0), head=(10, -10, 0),
-               hand_r=(0.30, 0.14, 0.09), hand_l=(-0.30, -0.18, 0.13),
-               foot_r=(0.20, 0.34, 0.11), foot_l=(-0.10, 0.32, 0.14),
+               hand_r=(0.30, 0.14, 0.22), hand_l=(-0.30, -0.18, 0.16),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.20, 0.34, 0.15), foot_l=(-0.10, 0.32, 0.16),
+               ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
                knee_r=(0.5, 0.3, 0.9), knee_l=(-0.4, 0.4, 0.8))),
         # Knees drawn up under him, feet off the mat: a breakdown only, the
         # beats either side stay put. Without it the feet travelled from in
         # front to behind him through the canvas (0.17 m deep).
+        # Solved, midway between 10 and 16: blended in joint space, the
+        # right arm swung down through an arc and put the hand at 5 cm with
+        # the fingers 9 cm into the mat at frame 13 (PoseLint; traced frame
+        # by frame). The hand is held at 20 cm here.
+        (13, dict(pelvis=(0.045, -0.005, 0.275), hips=(-67, -15, 16),
+                  spine=(-7, -10, 0), head=(13, -7, 0),
+                  hand_r=(0.28, 0.22, 0.20), hand_l=(-0.28, 0.01, 0.16),
+                  elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
+                  fist_r=0.65, fist_l=0.65,
+                  foot_r=(0.19, 0.18, 0.18), foot_l=(-0.13, 0.16, 0.19),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
+                  knee_r=(0.4, 0.6, 0.4), knee_l=(-0.35, 0.65, 0.35), free_feet=True)),
         (16, dict(pelvis=(0.03, -0.01, 0.34), hips=(-64, -10, 10),
                   spine=(-10, -6, 0), head=(16, -4, 0),
-                  hand_r=(0.26, 0.30, 0.07), hand_l=(-0.26, 0.20, 0.10),
+                  # Posted on the knuckles at 0.12, not flat at 0.07: open
+                  # and that low, his fingers went 9 cm into the mat on the
+                  # way in (PoseLint).
+                  hand_r=(0.26, 0.30, 0.12), hand_l=(-0.26, 0.20, 0.12),
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
-                  fist_r=0.0, fist_l=0.0,
+                  fist_r=0.7, fist_l=0.7,
                   foot_r=(0.18, 0.02, 0.20), foot_l=(-0.16, 0.00, 0.22),
                   knee_r=(0.3, 0.9, -0.1), knee_l=(-0.3, 0.9, -0.1), free_feet=True)),
         # On all fours: both hands planted, both knees down.
@@ -1138,6 +1161,7 @@ CLIPS = {
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
                   fist_r=0.0, fist_l=0.0,
                   foot_r=(0.17, -0.22, 0.09), foot_l=(-0.17, -0.20, 0.09),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
                   knee_r=(0.3, 0.9, -0.3), knee_l=(-0.3, 0.9, -0.3))),
         # Up onto one knee, lead foot planted flat, hand on that knee.
         (34, dict(pelvis=(0.0, 0.01, 0.575), hips=(-16, 0, 0),
@@ -1187,15 +1211,31 @@ CLIPS = {
                   spine=(-30, 0, 0), head=(-6, 0, 0),
                   hand_r=(0.22, 0.62, 0.42), hand_l=(-0.12, 0.58, 0.40),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.19, -0.24, 0.09), foot_l=(-0.19, -0.22, 0.09),
+                  foot_r=(0.19, -0.24, 0.11), foot_l=(-0.19, -0.22, 0.11),
+                  ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
         # Falling across: hips out behind, chest coming down onto his.
+        # Solved between 5 and 11 rather than blended: the joint-space blend
+        # swung the ball of the foot 10 cm through the canvas as the legs
+        # went back (PoseLint).
+        (8,  dict(pelvis=(0.0, -0.04, 0.450), hips=(-48, 0, 0),
+                  spine=(-19, 0, 0), head=(4, 10, 0),
+                  hand_r=(0.21, 0.78, 0.28), hand_l=(-0.22, 0.68, 0.26),
+                  elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
+                  fist_r=0.0, fist_l=0.0,
+                  foot_r=(0.18, -0.46, 0.12), foot_l=(-0.18, -0.42, 0.12),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
+                  knee_r=(0.25, 0.4, -0.6), knee_l=(-0.25, 0.4, -0.6))),
         (11, dict(pelvis=(0.0, -0.10, 0.360), hips=(-66, 0, 0),
                   spine=(-8, 0, 0), head=(14, 20, 0),
                   hand_r=(0.20, 0.92, 0.16), hand_l=(-0.30, 0.78, 0.14),
                   elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.17, -0.62, 0.08), foot_l=(-0.17, -0.58, 0.08),
+                  # Further back and a touch higher: at -0.62 the hip-to-foot
+                  # span was short of the leg, the knee dropped toward its
+                  # mat-ward pole and went 5.5 cm INTO the canvas (PoseLint).
+                  foot_r=(0.17, -0.72, 0.11), foot_l=(-0.17, -0.68, 0.11),
+                  ankle_r=(40, 0, 0), ankle_l=(40, 0, 0),
                   knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))),
         # Settled: lying across him, legs sprawled for base, toes dug in,
         # head up and turned so the face reads from the hard camera.
@@ -1204,7 +1244,7 @@ CLIPS = {
                   hand_r=(0.18, 0.98, 0.10), hand_l=(-0.32, 0.84, 0.10),
                   elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.20, -0.86, 0.07), foot_l=(-0.20, -0.82, 0.07),
+                  foot_r=(0.20, -0.95, 0.11), foot_l=(-0.20, -0.91, 0.11),
                   ankle_r=(40, 0, 0), ankle_l=(40, 0, 0),
                   knee_r=(0.25, 0.0, -1.0), knee_l=(-0.25, 0.0, -1.0))),
     ],
@@ -1692,28 +1732,32 @@ CLIPS = {
                    foot_l=(-0.16, 0.36, 0.104), knee_l=(-0.2, 1.0, 0.2))),
         (22,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.53), hips=(-4, 0, 0),
                    spine=(-16, 0, 0), head=(-30, 0, 0),
-                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.58), elbow_l=(-1.0, 0.2, 0.0),
                    hand_r=(0.22, 0.22, 0.60), elbow_r=(1.0, 0.0, -0.4),
                    fist_l=0.5, fist_r=0.4)),
         (80,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.52), hips=(-4, 0, 0),
                    spine=(-17, 0, 0), head=(-32, 0, 0),
-                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.57), elbow_l=(-1.0, 0.2, 0.0),
                    hand_r=(0.22, 0.22, 0.59), elbow_r=(1.0, 0.0, -0.4),
                    fist_l=0.5, fist_r=0.4)),
         (96,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
                    spine=(4, 0, 0), head=(16, 0, 0),
-                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
                    hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
                    fist_l=0.5, fist_r=0.4)),
         (118, pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
                    spine=(5, 0, 0), head=(18, 0, 0),
-                   foot_r=(0.15, -0.40, 0.11), knee_r=(0.2, 1.0, -0.6),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
                    foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
                    hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
                    hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
@@ -3224,7 +3268,9 @@ CLIPS["SL_Dropkick_Attacker"] = [
               knee_r=(0.0, 0.0, 1.0), knee_l=(0.0, 1.0, 0.0))),
     (14, dict(pelvis=(0.0, 0.10, 0.520), hips=(-10, 0, -80), spine=(0, 0, -6),
               head=(0, 0, 12),
-              hand_r=(0.70, 0.10, 0.20), hand_l=(-0.10, 0.20, 0.80),
+              # Both clear of his flank: at fwd 0.10-0.20 each sat inside
+              # the torso of a man turned on his side (PoseLint).
+              hand_r=(0.70, 0.34, 0.20), hand_l=(-0.10, 0.46, 0.84),
               fist_r=0.2, fist_l=0.2)),
     (17, dict(pelvis=(0.0, 0.05, 0.180), hips=(-8, 0, -86), spine=(0, 0, -4),
               head=(0, 0, 16),

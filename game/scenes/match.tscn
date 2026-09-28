@@ -70,13 +70,22 @@ ambient_light_energy = 0.06
 ; Filmic over ACES: ACES desaturates its top end hardest, and mean_saturation
 ; is already 0.218 against the reference's 0.306 -- ACES would widen the gap
 ; this project is trying to close.
-tonemap_mode = 2
+; AgX (4) since refs/aaa_gap.md item 10. Filmic clipped 473 px of the
+; silhouette shot to flat white (the mat's brightest weave, rope highlights);
+; AgX clipped 1, and with exposure re-solved to 1.7 it measures mat 0.458
+; (reference 0.46), mat<->A 0.261, mat<->B 0.161 (unchanged), A<->B 0.100
+; (Filmic 0.117): equal or better on every band, saturation 0.41 vs 0.40.
+; Measured with the capture harness's mask frame on a linear tonemap, since
+; AgX shifts the key colours a tonemapped mask relies on.
+tonemap_mode = 4
 ; White point. Sets where the shoulder puts pure white, and therefore how much
 ; of the curve the mat's 0.46 sits on. 2.0 keeps the mat on the near-linear
 ; part while leaving a stop of headroom above it for the ropes and the fixture
 ; cones. Coverage decision: gauntlet/refs/ measures no white point.
 tonemap_white = 2.0
-tonemap_exposure = 1.0
+; Re-solved for AgX, whose curve sits lower than Filmic's: 1.0 -> mat 0.343,
+; 1.3 -> 0.400, 1.5 -> 0.431, 1.7 -> 0.458.
+tonemap_exposure = 1.7
 ; --- Glow ------------------------------------------------------------------
 ; Threshold above 1.0 so only genuinely over-range things bloom -- the video
 ; wall, the fixture cones in the haze, the top of the ropes. Broadcast light

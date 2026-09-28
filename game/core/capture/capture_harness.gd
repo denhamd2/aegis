@@ -338,6 +338,22 @@ func _silhouette_step() -> void:
 		# key colours along every edge, so both are off for the mask alone.
 		get_viewport().use_taa = false
 		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+		# And no tonemap, glow or grade on the keys. Under Filmic the primaries
+		# came through near enough; under AgX, which desaturates toward white
+		# by design, the keys shifted and the mask keyed the wrong pixels (mat
+		# 0.141 measured on a frame whose mat was plainly as bright as before).
+		for node in _match.find_children("*", "WorldEnvironment", true, false):
+			var env := (node as WorldEnvironment).environment
+			if env:
+				env = env.duplicate() as Environment
+				env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+				env.tonemap_exposure = 1.0
+				env.glow_enabled = false
+				env.adjustment_enabled = false
+				(node as WorldEnvironment).environment = env
+		var finish := _match.get_node_or_null("BroadcastLook") as CanvasLayer
+		if finish:
+			finish.visible = false
 		_key(_match.get_node("Ring/Floor/MeshInstance3D"), SILHOUETTE_KEYS["mat"])
 		# The whole wrestler, gear included -- WrestlerAttire's trunks, boots
 		# and pads are part of the subject the reference table measures, not
