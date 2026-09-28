@@ -345,6 +345,11 @@ var _tick := 0
 var _done := false
 
 
+## The crowd's reaction to a pyro hit (CrowdReaction).
+const CROWD_PYRO_POP := 0.8
+var _crowd: CrowdReaction
+
+
 func begin(match_root: Node) -> void:
 	_match = match_root
 	_a = match_root.get_node("WrestlerA")
@@ -358,6 +363,11 @@ func begin(match_root: Node) -> void:
 		world = node as WorldEnvironment
 	if world:
 		_env = world.environment
+	# Phones out for the entrances (CrowdReaction; refs/aaa_gap.md item 11).
+	_crowd = get_tree().get_first_node_in_group("crowd_reaction") as CrowdReaction
+	if _crowd:
+		_crowd.set_flashes(CrowdReaction.ENTRANCE_FLASH_RATE)
+		_crowd.pop(0.4)
 	# Their marks, squared up to each other. The scene's spawn transforms
 	# face OUTWARD (a wrestler faces his node's -Z, and WrestlerA stands at
 	# z -1.5 with an identity basis), which the match never showed because
@@ -636,6 +646,9 @@ func _ring_bell() -> void:
 		_hud.visible = true
 	if _camera:
 		_camera.resume_master()
+	if _crowd:
+		_crowd.set_flashes(0.0)
+		_crowd.pop(0.7)
 	bell.emit()
 
 
@@ -1019,6 +1032,8 @@ func _event(w: WrestlerController, what: String) -> void:
 				_pyro.name = "EntrancePyro"
 				add_child(_pyro)
 			_pyro.fire(what.trim_prefix("pyro_"))
+			if _crowd:
+				_crowd.pop(CROWD_PYRO_POP)
 		"dim_off":
 			_dim_house(false)
 		"accent_red":
@@ -1037,6 +1052,8 @@ func _event(w: WrestlerController, what: String) -> void:
 				_pyro.name = "EntrancePyro"
 				add_child(_pyro)
 			_pyro.fire(what.trim_prefix("pyro_"))
+			if _crowd:
+				_crowd.pop(CROWD_PYRO_POP)
 
 
 # ---------------------------------------------------------------------------

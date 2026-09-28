@@ -119,3 +119,14 @@ environment/subsurface_scattering/subsurface_scattering_quality=2
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+
+[shader_globals]
+
+crowd_excitement={
+"type": "float",
+"value": 0.0
+}
+crowd_flash_rate={
+"type": "float",
+"value": 0.0
+}

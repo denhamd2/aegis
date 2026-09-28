@@ -315,6 +315,49 @@ func set_entrance_shot(at: Vector3, look: Vector3, lens: float, snap: bool,
 		global_position = global_position.lerp(at, 1.0 - exp(-5.0 * delta))
 	if global_position.distance_to(look) > 0.01:
 		look_at(look, Vector3.UP)
+	_entrance_focus(global_position.distance_to(look), lens)
+
+
+# --- Depth of field (refs/aaa_gap.md item 10) --------------------------------
+## A close-up on a long lens loses its background, the way a broadcast
+## camera's does: the crowd behind a man's head goes soft and he stands out of
+## it. Only on the entrance and face-off close-ups -- the match's master is a
+## wide shot at 28 m, where everything a viewer needs is in focus, and a
+## blurred ring would hide the action.
+##
+## Lenses at or tighter than DOF_MAX_FOV get it, a little stronger the tighter
+## they are; the focus sits on the subject plus DOF_MARGIN so his whole head
+## and shoulders stay sharp.
+const DOF_MAX_FOV := 40.0
+const DOF_MARGIN := 1.2
+const DOF_TRANSITION := 6.0
+const DOF_AMOUNT := 0.08
+var _dof: CameraAttributesPractical
+
+
+static func dof_amount_for(lens: float) -> float:
+	if lens > DOF_MAX_FOV:
+		return 0.0
+	return DOF_AMOUNT * clampf((DOF_MAX_FOV + 6.0 - lens) / 20.0, 0.3, 1.0)
+
+
+func _entrance_focus(subject_distance: float, lens: float) -> void:
+	var amount := dof_amount_for(lens)
+	if amount <= 0.0:
+		_clear_focus()
+		return
+	if _dof == null:
+		_dof = CameraAttributesPractical.new()
+	_dof.dof_blur_far_enabled = true
+	_dof.dof_blur_far_distance = subject_distance + DOF_MARGIN
+	_dof.dof_blur_far_transition = DOF_TRANSITION
+	_dof.dof_blur_amount = amount
+	attributes = _dof
+
+
+func _clear_focus() -> void:
+	if attributes == _dof and _dof != null:
+		attributes = null
 
 
 ## The lens this shot is taken on.
@@ -471,3 +514,4 @@ func cut_to_three_count() -> void:
 func resume_master() -> void:
 	mode = Mode.HARD_CAM
 	_held = 0.0
+	_clear_focus()

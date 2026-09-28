@@ -601,6 +601,10 @@ func _ready() -> void:
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
+		# His eyes on the other man, where the model has eyes that move
+		# (RomanModel; EyeAim). Presentation only.
+		if model and model.has_method("aim_eyes"):
+			model.aim_eyes(_opponent_eye_line)
 		if _uses_universal_attire():
 			WrestlerAttire.build(skeleton, attire_body, attire_accent,
 					physique_bulk, body_variant)
@@ -1018,6 +1022,21 @@ static func clip_for_state(state: WrestlerFSM.State, is_attacker: bool) -> Strin
 	if overrides.has(state):
 		return overrides[state]
 	return STATE_ANIMATIONS.get(state, "")
+
+## The other man's eyes, in world space, for EyeAim; Vector3.INF with no
+## opponent. His head bone plus a few centimetres, as EntranceDirector frames
+## a close-up.
+func _opponent_eye_line() -> Vector3:
+	if opponent == null or not is_instance_valid(opponent):
+		return Vector3.INF
+	var sk := opponent.skeleton
+	if sk:
+		var i := sk.find_bone(opponent._skeleton_bone_name("Head"))
+		if i >= 0:
+			return sk.global_transform * sk.get_bone_global_pose(i).origin \
+					+ Vector3.UP * 0.06
+	return opponent.global_position + Vector3.UP * 1.7
+
 
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():

@@ -817,6 +817,20 @@ func _add_eye_sphere(body: Skeleton3D, bone: String, bone_idx: int,
 	instance.position = offset
 	attachment.add_child(instance)
 
+## Point his eyes at whatever `look_target` returns (a world position, or
+## Vector3.INF for straight ahead). See EyeAim. Idempotent.
+func aim_eyes(look_target: Callable) -> void:
+	var body := _find_body_skeleton()
+	if body == null:
+		return
+	var aim := body.get_node_or_null("EyeAim") as EyeAim
+	if aim == null:
+		aim = EyeAim.new()
+		aim.name = "EyeAim"
+		body.add_child(aim)
+	aim.look_target = look_target
+
+
 func _find_body_skeleton() -> Skeleton3D:
 	for candidate in find_children("", "Skeleton3D", true, false):
 		var skeleton := candidate as Skeleton3D

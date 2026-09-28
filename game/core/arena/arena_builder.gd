@@ -1169,11 +1169,27 @@ uniform float house_light = 0.055;
 // hall's colour. Normalised to Rec.709 luminance ~1.0 so that house_light
 // still sets the level and only the colour changes. See ArenaBuilder.CROWD_WASH.
 uniform vec3 house_tint = vec3(1.0);
+// The crowd reacting (CrowdReaction; refs/aaa_gap.md item 11). Globals, so
+// one write reaches both bowl parts and the ringside rows. 0 is the idle
+// stand exactly as before.
+global uniform float crowd_excitement;
+// Phone flashes and camera pops, per figure per second, during entrances.
+global uniform float crowd_flash_rate;
+// How high an excited figure bounces, and how fast: a crowd on its feet
+// jumps at about two and a half beats a second.
+uniform float cheer_amplitude = 0.07;
+uniform float cheer_speed = 15.0;
 
 varying vec3 shirt;
+varying float figure;
+
+float hash(float n) {
+	return fract(sin(n * 12.9898) * 43758.5453);
+}
 
 void vertex() {
 	shirt = COLOR.rgb;
+	figure = PHASE_SOURCE;
 	float phase = PHASE_SOURCE * 6.2831853;
 	// Bob scaled by height above the seat, so feet stay planted and heads
 	// move most -- a figure translated bodily reads as a hovering cutout.
@@ -1182,11 +1198,23 @@ void vertex() {
 	// A little lateral sway on a different period, so the bowl does not
 	// pulse as one organism.
 	VERTEX.x += sin(TIME * bob_speed * 0.63 + phase * 1.7) * sway_amplitude * lift;
+	// On a pop they come up out of their seats: a bounce ADDED at a fixed
+	// frequency, scaled by excitement. Scaling the idle bob's speed instead
+	// would jump every figure's phase each time excitement changed.
+	float bounce = abs(sin(TIME * cheer_speed * (0.85 + 0.3 * hash(PHASE_SOURCE)) + phase));
+	VERTEX.y += bounce * cheer_amplitude * crowd_excitement * lift;
 }
 
 void fragment() {
 	ALBEDO = shirt;
 	EMISSION = shirt * house_tint * house_light;
+	// A phone flash: one figure, one frame-ish (a 0.08 s slot), white and
+	// over-bright so it blooms. Each figure rolls its own dice every slot.
+	float slot = floor(TIME / 0.08);
+	float roll = hash(figure * 911.0 + slot * 0.137);
+	if (roll < crowd_flash_rate * 0.08) {
+		EMISSION += vec3(6.0);
+	}
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }
