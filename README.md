@@ -7293,8 +7293,12 @@ There were four causes:
   the stand-ins went on into a grapple hold 2 m apart. It now stops the
   referee and returns both to IDLE. The mat reads 0.445, still in band.
 
-Still carrying the same positive-pitch pattern, and not changed here:
-- `Clinch_Knee_Defender`, which is meant to fold forward over the knee. It is
-  a paired move keyed beat-for-beat against its attacker, so it needs its own
-  pass.
-- `Submission_Work` and `Finisher_Drive`, which lean back on purpose.
+**The knee to the gut, a follow-up round.** `Clinch_Knee_Attacker` and
+`Clinch_Knee_Defender` had the same sign mistake. The man taking the knee
+arched back to 52°, carrying his stomach away from it. The pitches are
+negated on every key of both halves, so the two stay beat-locked. Side-on
+renders through `paired_shot.tscn` now show him doubling over onto the
+attacker. The paired bake was re-run and all 512 tests pass.
+
+`Submission_Work` and `Finisher_Drive` also use positive pitch, but lean back
+on purpose, so they are unchanged.

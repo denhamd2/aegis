@@ -2138,33 +2138,41 @@ CLIPS = {
 
     # Collar tie -> drag him down -> knee to the midsection -> shove off.
     # 30 frames; the knee lands on frame 18.
+    #
+    # Both halves had every pitch the wrong way round (positive tips a man
+    # BACK -- see STANCE): the attacker reclined while "dragging his head
+    # down", and the defender arched back to 52 degrees at the knee, taking
+    # his stomach AWAY from it -- a man bending over backwards off a knee. The
+    # hips, spine and head pitches are negated on every key of both halves, so
+    # the beats stay locked together: the attacker leans in over him, and the
+    # defender folds forward around the knee.
     "Clinch_Knee_Attacker": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
+        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(-6, 0, 0), spine=(-18, 0, 0),
                hand_r=(0.10, 0.52, 1.46), hand_l=(-0.28, 0.44, 1.28),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # Drags his head down: both hands pull down and back.
-        (8,  P(pelvis=(0.0, 0.02, 0.830), hips=(8, 0, 0), spine=(24, 0, 0),
-               head=(-10, 0, 0),
+        (8,  P(pelvis=(0.0, 0.02, 0.830), hips=(-8, 0, 0), spine=(-24, 0, 0),
+               head=(10, 0, 0),
                hand_r=(0.10, 0.40, 1.12), hand_l=(-0.22, 0.38, 1.08),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # Loads the knee, weight entirely onto the left foot.
-        (14, P(pelvis=(-0.04, 0.0, 0.862), hips=(6, -6, 6), spine=(20, 0, -4),
-               head=(-10, 0, 0),
+        (14, P(pelvis=(-0.04, 0.0, 0.862), hips=(-6, -6, 6), spine=(-20, 0, -4),
+               head=(10, 0, 0),
                hand_r=(0.11, 0.38, 1.08), hand_l=(-0.21, 0.36, 1.04),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.16, 0.30, 0.62), knee_r=(0.3, 1.0, 0.1),
                foot_l=(-0.24, 0.16, 0.104))),
         # The knee lands, and the hands pull DOWN into it.
-        (18, P(pelvis=(-0.05, 0.02, 0.870), hips=(10, -8, 8),
-               spine=(10, 0, -6), head=(-6, 0, 0),
+        (18, P(pelvis=(-0.05, 0.02, 0.870), hips=(-10, -8, 8),
+               spine=(-10, 0, -6), head=(6, 0, 0),
                hand_r=(0.12, 0.34, 0.98), hand_l=(-0.20, 0.32, 0.96),
                fist_r=0.7, fist_l=0.7,
                foot_r=(0.12, 0.50, 0.88), knee_r=(0.3, 1.0, 0.1),
                foot_l=(-0.24, 0.16, 0.104))),
         # Shoves him off and gets the foot back down.
-        (22, P(pelvis=(-0.02, 0.04, 0.848), hips=(6, 0, 2), spine=(16, 0, 0),
+        (22, P(pelvis=(-0.02, 0.04, 0.848), hips=(-6, 0, 2), spine=(-16, 0, 0),
                hand_r=(0.16, 0.54, 1.24), hand_l=(-0.18, 0.56, 1.22),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.20, 0.14, 0.30), knee_r=(0.3, 1.0, 0.1),
@@ -2174,31 +2182,31 @@ CLIPS = {
 
     # The other side of it, frame for frame.
     "Clinch_Knee_Defender": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
+        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(-6, 0, 0), spine=(-18, 0, 0),
                hand_r=(0.24, 0.46, 1.34), hand_l=(-0.20, 0.48, 1.32),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
         # Dragged down by the head, hands on the arms that are doing it.
-        (8,  P(pelvis=(0.0, -0.04, 0.802), hips=(12, 0, 0), spine=(38, 0, 0),
-               head=(10, 0, 0),
+        (8,  P(pelvis=(0.0, -0.04, 0.802), hips=(-12, 0, 0), spine=(-38, 0, 0),
+               head=(-10, 0, 0),
                hand_r=(0.24, 0.40, 1.10), hand_l=(-0.22, 0.42, 1.08),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        (14, P(pelvis=(0.0, -0.06, 0.788), hips=(14, 0, 0), spine=(44, 0, 0),
-               head=(16, 0, 0),
+        (14, P(pelvis=(0.0, -0.06, 0.788), hips=(-14, 0, 0), spine=(-44, 0, 0),
+               head=(-16, 0, 0),
                hand_r=(0.22, 0.36, 1.02), hand_l=(-0.20, 0.38, 1.00),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # The knee lands: he folds hard around it and his hands go to it.
-        (18, P(pelvis=(0.0, -0.10, 0.742), hips=(18, 0, 0), spine=(52, 0, 0),
-               head=(22, 0, 0),
+        (18, P(pelvis=(0.0, -0.10, 0.742), hips=(-18, 0, 0), spine=(-52, 0, 0),
+               head=(-22, 0, 0),
                hand_r=(0.14, 0.26, 0.94), hand_l=(-0.12, 0.28, 0.92),
                elbow_r=(0.6, -0.3, -0.7), elbow_l=(-0.6, -0.3, -0.7),
                fist_r=0.62, fist_l=0.62,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # Shoved off: he goes backward a step, still folded.
-        (22, P(pelvis=(0.0, -0.16, 0.778), hips=(14, 0, 0), spine=(44, 0, 0),
-               head=(18, 0, 0),
+        (22, P(pelvis=(0.0, -0.16, 0.778), hips=(-14, 0, 0), spine=(-44, 0, 0),
+               head=(-18, 0, 0),
                hand_r=(0.18, 0.30, 1.02), hand_l=(-0.16, 0.32, 1.00),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.32, 0.104), foot_l=(-0.24, 0.06, 0.140))),
