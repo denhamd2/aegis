@@ -156,6 +156,7 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
+		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_disaster_kick.tres"],
 	}
 	return list
 

@@ -211,6 +211,11 @@ var _own_signature_thrown: bool = false
 @export var submission_move: MoveDef
 ## Whether submission_move has been taken this match. Once is the rule.
 var _submission_move_used := false
+## His dives (Cody's tope suicida and springboard Disaster Kick; Roster's
+## "dive" tier): with any here, MatchReferee plays DiveSpot once a match.
+@export var dive_moves: Array[MoveDef] = []
+## Whether the dives have been taken this match.
+var _dive_used := false
 ## Tier of the last grapple-chain move this wrestler landed, or -1. The
 ## referee reads it so a man put down by a finisher is pinned,
 ## never put in a hold.

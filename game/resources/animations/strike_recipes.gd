@@ -356,6 +356,25 @@ const RECIPES := {
 	"submission_work": {"kind": "retime", "source": "Submission_Work",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},
 
+	# Cody's dives (core/match/dive_spot.gd): out through the ropes, the tope
+	# suicida, back in, up onto the apron, the springboard Disaster Kick.
+	# Travelling clips keyed in world space; played once, not looped.
+	"roll_out_ropes": {"kind": "retime", "source": "Roll_Out_Ropes",
+		"seconds": 1.533, "file": AUTHORED},
+	"tope_attacker": {"kind": "retime", "source": "Tope_Attacker",
+		"seconds": 2.000, "file": AUTHORED},
+	"tope_defender": {"kind": "retime", "source": "Tope_Defender",
+		"seconds": 5.667, "file": AUTHORED},
+	"roll_in": {"kind": "retime", "source": "Roll_In",
+		"seconds": 2.000, "file": AUTHORED},
+	"apron_climb": {"kind": "retime", "source": "Apron_Climb",
+		"seconds": 1.200, "file": AUTHORED},
+	"springboard_dk_attacker": {"kind": "retime", "source": "Springboard_DK_Attacker",
+		"seconds": 1.600, "file": AUTHORED},
+	# The man it lands on: the standing Disaster Kick's own victim half.
+	"disaster_kick_defender": {"kind": "retime", "source": "Disaster_Kick_Defender",
+		"seconds": 1.400, "file": AUTHORED},
+
 	# Cody's Figure-Four leglock (gauntlet/refs/cody_moveset.md): both halves
 	# of the hold, played by the two SUBMISSION_* states when the hold is
 	# his (WrestlerController.begin_submission with a move). Not looped: the

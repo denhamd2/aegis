@@ -4350,6 +4350,192 @@ CLIPS["Figure_Four_Defender"] = [
     (180, dict(_F4_VICTIM)),
 ]
 
+# === Cody's dives (core/match/dive_spot.gd) ===============================
+#
+# A set piece off the ropes, played by DiveSpot with both men's physics
+# frozen, like the entrances: every clip here is keyed in WORLD space
+# relative to where it starts (_world_clip), and the director moves the root
+# along the clip's root line -- so a hand on the apron, a foot on the rope
+# and a boot on the floor stay where the ring puts them. The ring, from
+# RingBuilder/ArenaBuilder: the mat at 0, the ropes 3.0 m out (middle 0.85,
+# top 1.2), the apron to 3.2, the floor 1.094 below the mat.
+FLOOR_DROP = 1.094
+
+
+def _on_floor(pose_dict, fwd):
+    """A standing pose moved down to the floor and `fwd` along."""
+    out = dict(pose_dict)
+    for k in ("pelvis", "hand_r", "hand_l", "foot_r", "foot_l"):
+        if out.get(k):
+            x, y, z = out[k]
+            out[k] = (x, y + fwd, z - FLOOR_DROP)
+    return out
+
+
+def _unified(keys):
+    """Every key given every field any key has: a field missing from a key
+    takes the nearest earlier key's value (or the first later one's), so
+    _world_clip, which walks the first key's fields, drops none of them."""
+    names = []
+    for _, k in keys:
+        for n in k:
+            if n not in names:
+                names.append(n)
+    out = []
+    for i, (f, k) in enumerate(keys):
+        full = dict(k)
+        for n in names:
+            if n in full:
+                continue
+            prev = [kk[n] for _, kk in keys[:i][::-1] if n in kk]
+            nxt = [kk[n] for _, kk in keys[i + 1:] if n in kk]
+            full[n] = (prev or nxt)[0]
+        out.append((f, full))
+    return out
+
+
+HURT = P(pelvis=(0.0, -0.02, 0.840), hips=(-10, 0, 0), spine=(-16, 0, 0),
+         head=(-12, 0, 0),
+         hand_r=(0.20, 0.22, 1.10), hand_l=(-0.18, 0.26, 1.20),
+         fist_r=0.3, fist_l=0.3)
+
+# Out through the ropes, hurt, facing them: bent over the middle rope, sliding
+# through between it and the top rope, hands down to the floor, the legs
+# coming over, landing crouched on the floor, standing. 46 frames; the root
+# travels 1.55 m out and 1.094 down (his start: 2.35 m out, facing the ropes).
+CLIPS["Roll_Out_Ropes"] = _world_clip(46, (1.55, -FLOOR_DROP), _unified([
+    (0,  pose(HURT)),
+    (10, P(pelvis=(0.0, 0.30, 0.960), hips=(-50, 0, 0), spine=(-30, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.30, 0.62, 1.20), hand_l=(-0.30, 0.62, 1.20),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.15, 0.05, 0.104), foot_l=(-0.15, 0.10, 0.104))),
+    (18, _body((-82, 0, 0), (0.0, 0.85, 1.00),
+               hand_r=(0.25, 0.30, 0.75), hand_l=(-0.25, 0.30, 0.75),
+               foot_r=(0.14, 0.10, -0.80), foot_l=(-0.14, 0.05, -0.84),
+               knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True,
+               fist_r=0.2, fist_l=0.2)),
+    (26, _body((-60, 0, 0), (0.0, 1.25, 0.20),
+               hand_r=(0.25, 0.40, 1.40), hand_l=(-0.25, 0.40, 1.40),
+               foot_r=(0.14, 0.40, -0.70), foot_l=(-0.14, 0.30, -0.74),
+               knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.3), free_feet=True,
+               fist_r=0.1, fist_l=0.1)),
+    (34, _on_floor(pose(CROUCH), 1.45)),
+    (46, _on_floor(pose(HURT), 1.55)),
+]))
+
+# The tope suicida: the run's plant at 1.3 m out, head first between the
+# middle and top ropes, into the chest of the man standing on the floor at
+# 3.9 m, both down on it; Cody rolls through to his knees and up. 60 frames;
+# contact on frame 14 (TOPE_CONTACT). Root 2.6 m out, 1.094 down.
+_DIVE = dict(hand_r=(0.18, 0.30, 1.80), hand_l=(-0.18, 0.30, 1.80),
+             foot_r=(0.12, -0.05, -0.86), foot_l=(-0.12, -0.10, -0.88),
+             knee_r=(0.1, -1.0, 0.0), knee_l=(-0.1, -1.0, 0.0),
+             fist_r=0.4, fist_l=0.4, free_feet=True,
+             spine=(-6, 0, 0), head=(20, 0, 0))
+CLIPS["Tope_Attacker"] = _world_clip(60, (2.6, -FLOOR_DROP), _unified([
+    (0,  pose(RUN_B, pelvis=(0.0, 0.10, 0.740), hips=(-24, 0, 0))),
+    (4,  _body((-55, 0, 0), (0.0, 0.45, 1.00), **_DIVE)),
+    (9,  _body((-92, 0, 0), (0.0, 1.35, 1.05), **_DIVE)),
+    (14, _body((-112, 0, 0), (0.0, 1.95, 0.55), **_DIVE)),
+    (20, _body((-88, 0, 0), (0.0, 2.45, 0.25 - FLOOR_DROP),
+               hand_r=(0.40, 0.60, 1.20), hand_l=(-0.40, 0.60, 1.20),
+               foot_r=(0.16, -0.10, -0.86), foot_l=(-0.16, -0.12, -0.88),
+               knee_r=(0.1, -1.0, 0.0), knee_l=(-0.1, -1.0, 0.0),
+               free_feet=True, fist_r=0.1, fist_l=0.1)),
+    (36, _on_floor(pose(ONE_KNEE), 2.55)),
+    (48, _on_floor(pose(CROUCH), 2.60)),
+    (60, _on_floor(P(), 2.60)),
+]))
+# Standing hurt on the floor facing the ring; taken in the chest on frame 14,
+# flat on his back away from the ring, down, and up again. 170 frames.
+CLIPS["Tope_Defender"] = [
+    (0,  pose(HURT)),
+    (8,  pose(HURT, head=(-2, 0, 0), spine=(-6, 0, 0))),
+] + _back_fall(14, 44, pelvis_hit=0.84) + [
+    (110, dict(SUPINE_AWAY)),
+] + _get_up(118, 170, lying=True)
+
+# Back in under the bottom rope from the floor: hands up onto the apron,
+# prone and rolled in under the rope, to a knee on the mat, up. 60 frames;
+# root 1.3 m in, 1.094 up (his start: on the floor 3.6 m out, facing in).
+_PRONE_IN = dict(hand_r=(0.30, 0.25, 0.60), hand_l=(-0.30, 0.25, 0.60),
+                 foot_r=(0.14, 0.05, -0.84), foot_l=(-0.14, 0.02, -0.86),
+                 knee_r=(0.1, -1.0, 0.0), knee_l=(-0.1, -1.0, 0.0),
+                 free_feet=True, fist_r=0.2, fist_l=0.2)
+CLIPS["Roll_In"] = _world_clip(60, (1.3, FLOOR_DROP), _unified([
+    (0,  pose(HURT)),
+    (10, P(pelvis=(0.0, 0.10, 0.800), hips=(-40, 0, 0), spine=(-20, 0, 0),
+           hand_r=(0.25, 0.45, FLOOR_DROP + 0.02), hand_l=(-0.25, 0.45, FLOOR_DROP + 0.02),
+           fist_r=0.1, fist_l=0.1)),
+    (20, _body((-86, 0, 0), (0.0, 0.55, FLOOR_DROP + 0.18), **_PRONE_IN)),
+    (30, _body((-86, 0, 0), (0.0, 1.05, FLOOR_DROP + 0.18), **_PRONE_IN)),
+    (44, _shifted(ONE_KNEE, 1.25, FLOOR_DROP)),
+    (60, _shifted(P(), 1.30, FLOOR_DROP)),
+]))
+
+# Up onto the apron from the floor: hands on its edge, a knee up, a foot up,
+# standing on it holding the top rope. 36 frames; root 0.45 in, 1.094 up.
+CLIPS["Apron_Climb"] = _world_clip(36, (0.45, FLOOR_DROP), _unified([
+    (0,  P()),
+    (8,  P(pelvis=(0.0, 0.10, 0.800), hips=(-24, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.28, 0.40, FLOOR_DROP + 0.02), hand_l=(-0.28, 0.40, FLOOR_DROP + 0.02),
+           fist_r=0.2, fist_l=0.2)),
+    (16, P(pelvis=(0.0, 0.22, 1.300), hips=(-40, 0, 0), spine=(-20, 0, 0),
+           hand_r=(0.28, 0.50, FLOOR_DROP + 0.30), hand_l=(-0.28, 0.50, FLOOR_DROP + 0.30),
+           foot_r=(0.15, 0.40, FLOOR_DROP + 0.10), knee_r=(0.1, 1.0, 0.2),
+           foot_l=(-0.15, 0.05, 0.104), free_feet=True,
+           fist_r=0.6, fist_l=0.6)),
+    (26, P(pelvis=(0.0, 0.40, FLOOR_DROP + 0.70), hips=(-20, 0, 0), spine=(-10, 0, 0),
+           hand_r=(0.30, 0.55, FLOOR_DROP + 1.20), hand_l=(-0.30, 0.55, FLOOR_DROP + 1.20),
+           foot_r=(0.15, 0.42, FLOOR_DROP + 0.104), foot_l=(-0.15, 0.40, FLOOR_DROP + 0.20),
+           free_feet=True, fist_r=0.8, fist_l=0.8)),
+    (36, _shifted(P(hand_r=(0.30, 0.10, 1.20), hand_l=(-0.30, 0.10, 1.20),
+                    fist_r=0.8, fist_l=0.8), 0.45, FLOOR_DROP)),
+]))
+
+# The springboard Disaster Kick: from the apron facing in, a foot up onto the
+# middle rope, springing off it, spinning a full turn in the air, the right
+# leg sweeping round into the head of the man standing inside at 1.95 m out
+# on frame 24 (SPRINGBOARD_CONTACT), landing inside and standing. 48 frames;
+# root 0.85 in. The spin is bone pose, keyed in steps of at most 60 degrees.
+def _spring_air(yaw, pelvis, **over):
+    base = dict(pelvis=pelvis, hips=(-6, yaw, 0), spine=(-6, 0, 0), head=(4, 0, 0),
+                hand_r=(0.30, 0.0, 0.0), hand_l=(-0.30, 0.0, 0.0),
+                fist_r=0.7, fist_l=0.7)
+    arms = _body((-6, yaw, 0), pelvis,
+                 hand_r=(0.45, 0.05, 0.40), hand_l=(-0.45, 0.05, 0.40),
+                 foot_r=(0.16, 0.20, -0.45), foot_l=(-0.16, 0.10, -0.50),
+                 knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), free_feet=True)
+    base.update({k: v for k, v in arms.items() if k not in ("hips", "pelvis")})
+    base.update(over)
+    return base
+
+
+CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
+    (0,  P(hand_r=(0.30, 0.10, 1.20), hand_l=(-0.30, 0.10, 1.20),
+           fist_r=0.8, fist_l=0.8)),
+    # A boot onto the middle rope beside the post-side hand.
+    (8,  P(pelvis=(0.0, 0.05, 1.050), hips=(-10, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.30, 0.18, 1.22), hand_l=(-0.30, 0.18, 1.22),
+           foot_r=(0.12, 0.14, 0.86), knee_r=(0.1, 1.0, 0.4),
+           foot_l=(-0.14, -0.02, 0.104), free_feet=True,
+           fist_r=0.8, fist_l=0.8)),
+    # Sprung.
+    (13, _spring_air(0, (0.0, 0.30, 1.75))),
+    (16, _spring_air(-60, (0.0, 0.40, 1.85))),
+    (18, _spring_air(-120, (0.0, 0.48, 1.88))),
+    (20, _spring_air(-180, (0.0, 0.55, 1.86))),
+    (22, _spring_air(-240, (0.0, 0.60, 1.80))),
+    # CONTACT: his right side to the man, the leg straight into the head.
+    (24, _spring_air(-270, (0.0, 0.62, 1.72),
+                     foot_r=(0.0, 1.20, 1.72), knee_r=(0.0, 0.3, 1.0))),
+    (28, _spring_air(-320, (0.0, 0.72, 1.40))),
+    (32, _spring_air(-360, (0.0, 0.80, 1.05))),
+    (38, _shifted(pose(CROUCH), 0.85, 0.0)),
+    (48, _shifted(P(), 0.85, 0.0)),
+]))
+
 # --- build ----------------------------------------------------------------
 
 def load_rig():

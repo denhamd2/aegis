@@ -190,6 +190,13 @@ func _check_for_downed_opponent_action() -> void:
 			# eight. It is a set piece before the finish, not a way to end
 			# it: the tap only comes on a leg already past
 			# SUBMISSION_ESCAPE_LIMB, and the match goes on to a pinfall.
+			# His dives (DiveSpot): once a match, on a man down off the
+			# ropes (a knockdown mid-ring takes the hold instead). Gated
+			# on the hold first, measured over 8 seeds it never came: the
+			# knockdown after the hold is nearly always the finish.
+			if _wants_dive(attacker, defender):
+				_start_dive(attacker, defender)
+				return
 			if _wants_own_hold(attacker) \
 					and WrestlerController.has_room_for_figure_four(defender):
 				_start_own_hold(attacker, defender)
@@ -201,6 +208,18 @@ func _check_for_downed_opponent_action() -> void:
 			_pin_defender = defender
 			attacker.begin_pin(defender, _pin_seed())
 			return
+
+func _wants_dive(attacker: WrestlerController, defender: WrestlerController) -> bool:
+	return not attacker.dive_moves.is_empty() and not attacker._dive_used \
+			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
+			and DiveSpot.near_ropes(defender)
+
+func _start_dive(attacker: WrestlerController, defender: WrestlerController) -> void:
+	attacker._dive_used = true
+	var spot := DiveSpot.new()
+	spot.name = "DiveSpot"
+	get_parent().add_child(spot)
+	spot.begin(attacker, defender)
 
 func _wants_own_hold(attacker: WrestlerController) -> bool:
 	return attacker.submission_move != null and not attacker._submission_move_used \

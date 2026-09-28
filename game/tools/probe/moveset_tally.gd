@@ -35,9 +35,13 @@ func _ready() -> void:
 		ref.match_won.connect(func(_w, m): done[0] = true; how[0] = m)
 		var last := {}
 		var ticks := 0
+		var dived := false
 		while not done[0] and ticks < 30000:
 			await get_tree().physics_frame
 			ticks += 1
+			if not dived and scene.has_node("DiveSpot"):
+				dived = true
+				tally["cody dive spot"] = tally.get("cody dive spot", 0) + 1
 			for n in ["WrestlerA", "WrestlerB"]:
 				var w: WrestlerController = scene.get_node(n)
 				var m: MoveDef = w._active_move
