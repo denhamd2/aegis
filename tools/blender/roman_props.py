@@ -108,19 +108,50 @@ def fala_curve(t: float) -> Vector:
     return Vector((x, y, z))
 
 
-def build_ula_fala(parts: dict[str, Part]) -> None:
-    """Forty wedge segments of dried pandanus on a cord, red and orange.
+def ellipsoid(part: Part, center: Vector, ax: Vector, ay: Vector, az: Vector,
+              radii: Vector, seg: int = 8, rings: int = 5) -> None:
+    """A low-poly ellipsoid on an arbitrary frame (radii along ax, ay, az)."""
+    rows = []
+    for r in range(rings + 1):
+        phi = math.pi * r / rings - math.pi * 0.5
+        row = []
+        for s in range(seg):
+            th = 2.0 * math.pi * s / seg
+            p = (ax * (radii.x * math.cos(phi) * math.cos(th))
+                 + ay * (radii.y * math.cos(phi) * math.sin(th))
+                 + az * (radii.z * math.sin(phi)))
+            row.append(part.vert(center + p))
+        rows.append(row)
+    for r in range(rings):
+        for s in range(seg):
+            n = (s + 1) % seg
+            part.quad(rows[r][s], rows[r][n], rows[r + 1][n], rows[r + 1][s])
 
-    The real thing is a chain of the fruit's wedge-shaped keys, strung so
-    their wide ends face out: from the front it reads as a thick, faceted
-    band, darker at the base of each key and bright at the tip. Each segment
-    here is a small box on the curve's own frame -- long along the cord,
-    deep out from the body -- alternating the two colours, with a slight
-    fan so the band has the ridged silhouette the real one has.
+
+## The keys: how many round the loop, and how big (metres, along the cord,
+## across it, out from the body). Seeded jitter, so the file is identical on
+## every build.
+FALA_KEYS = 76
+FALA_KEY = Vector((0.017, 0.021, 0.030))
+FALA_SEED = 3
+
+
+def build_ula_fala(parts: dict[str, Part]) -> None:
+    """The pandanus keys of a chief's ula fala, packed on a cord.
+
+    The first build was forty alternating red and orange boxes, and against
+    the owner's side-by-side it read as flat striped straps. The real one is
+    a thick, lumpy garland: many rounded wedge-shaped keys strung tight with
+    their wide ends out, each a deep red tip on an orange base, so from any
+    angle it is a red rope with warm orange showing in its depths. So each key
+    here is two ellipsoids on the cord's own frame -- an orange base at the
+    cord, a larger red tip beyond it -- fanned and jittered a little so the
+    band has the ridged, organic silhouette rather than a machined one.
     """
-    count = 40
-    for i in range(count):
-        t0, t1 = i / count, (i + 1) / count
+    import random
+    rng = random.Random(FALA_SEED)
+    for i in range(FALA_KEYS):
+        t0, t1 = i / FALA_KEYS, (i + 1) / FALA_KEYS
         p0, p1 = fala_curve(t0), fala_curve(t1)
         center = (p0 + p1) * 0.5
         along = (p1 - p0).normalized()
@@ -131,13 +162,17 @@ def build_ula_fala(parts: dict[str, Part]) -> None:
         radial.normalize()
         up = along.cross(radial).normalized()
         out = up.cross(along).normalized()
-        # A small alternating tilt about the cord: the keys fan.
-        fan = 0.18 * (1 if i % 2 else -1)
+        # The keys fan about the cord, alternately, and none sits exactly
+        # like its neighbour.
+        fan = (0.30 if i % 2 else -0.30) + rng.uniform(-0.12, 0.12)
         out2 = (out * math.cos(fan) + up * math.sin(fan)).normalized()
         up2 = out2.cross(along).normalized()
-        part = parts["FalaRed" if i % 2 == 0 else "FalaOrange"]
-        framed_box(part, center + out2 * 0.012, along, up2, out2,
-                   Vector((0.030, 0.028, 0.042)))
+        k = 1.0 + rng.uniform(-0.12, 0.12)
+        size = Vector((FALA_KEY.x * k, FALA_KEY.y * k, FALA_KEY.z * k))
+        ellipsoid(parts["FalaOrange"], center + out2 * (size.z * 0.25), along, up2, out2,
+                  Vector((size.x * 0.85, size.y * 0.80, size.z * 0.40)), seg=6, rings=4)
+        ellipsoid(parts["FalaRed"], center + out2 * (size.z * 0.75), along, up2, out2,
+                  Vector((size.x, size.y, size.z * 0.55)), seg=8, rings=5)
     # The cord the keys hang on, visible between them.
     path = [fala_curve(i / 64.0) for i in range(65)]
     parts["FalaCord"].tube(path, 0.006, sides=6)

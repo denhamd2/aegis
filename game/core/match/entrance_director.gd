@@ -759,13 +759,20 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	# To the lip on the low steadicam, the card up until he stops; working
 	# the crowd there for whatever is left, so the knee lands on its phrase.
 	var kneel_from := CODY_KNEEL - float(KNEEL_DOWN_AT) / TPS
+	# A short gap goes into his pace, not a stand: a presentation clip held
+	# for less than its cross-fade never finishes blending in, and the clip
+	# after it was lost with it -- rendered, he stood through the whole kneel
+	# behind a 0.33 s stand. Only a gap long enough to blend gets one.
 	var to_lip := _flat(mouth).distance_to(_flat(lip))
-	var lip_speed := maxf(CODY_WALK_SPEED, to_lip / (kneel_from - fists_end))
+	var lip_speed := to_lip / (kneel_from - fists_end)
+	if lip_speed < CODY_WALK_SPEED * 0.8:
+		lip_speed = CODY_WALK_SPEED
+	lip_speed = minf(lip_speed, CODY_WALK_SPEED * 1.4)
 	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
 			"speed": lip_speed, "walk_clip": CODY_WALK_CLIP,
 			"shot": "steadicam_low", "card": true})
 	var at_lip := fists_end + to_lip / lip_speed
-	if kneel_from - at_lip > 0.1:
+	if kneel_from - at_lip > 0.6:
 		_beats.append({"kind": "pose", "who": w, "lights": "RB",
 				"ticks": _secs(at_lip, kneel_from), "clip": "strikes/cody_stand",
 				"facing": Vector3.BACK, "shot": "steadicam_low"})

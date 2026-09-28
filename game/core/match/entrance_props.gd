@@ -92,12 +92,15 @@ static func _materials() -> Dictionary:
 	snap.albedo_color = Color(0.78, 0.60, 0.32)
 	snap.metallic = 1.0
 	snap.roughness = 0.4
+	# The keys: a deep red tip, dried and a little waxy, on an orange base
+	# (roman_props.py build_ula_fala). Deeper and glossier than the flat
+	# cardboard red the box version wore.
 	var red := StandardMaterial3D.new()
-	red.albedo_color = Color(0.62, 0.06, 0.04)
-	red.roughness = 0.62
+	red.albedo_color = Color(0.50, 0.035, 0.03)
+	red.roughness = 0.42
 	var orange := StandardMaterial3D.new()
-	orange.albedo_color = Color(0.88, 0.32, 0.07)
-	orange.roughness = 0.62
+	orange.albedo_color = Color(0.78, 0.30, 0.06)
+	orange.roughness = 0.55
 	var cord := StandardMaterial3D.new()
 	cord.albedo_color = Color(0.10, 0.07, 0.05)
 	cord.roughness = 0.9

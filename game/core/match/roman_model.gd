@@ -294,8 +294,133 @@ func _ready() -> void:
 	# Iris/pupil geometry is headless-safe (plain nodes); colours need a real
 	# renderer, same split WrestlerAttire uses for the same reason.
 	_build_eye_details(body)
+	# His broad face and thick neck (RomanHeadShape), on every skeleton.
+	for skeleton in _animation_skeletons():
+		if not skeleton.has_node("RomanHeadShape"):
+			var shape := RomanHeadShape.new()
+			shape.name = "RomanHeadShape"
+			skeleton.add_child(shape)
 	if DisplayServer.get_name() != "headless":
 		_normalize_mouth_materials()
+	_trim_beard()
+
+# ---------------------------------------------------------------------------
+# The beard's shape: trimmed, and faded at the sides
+# ---------------------------------------------------------------------------
+#
+# Against the owner's reference photo the beard read as too bushy, with none
+# of the fade his has along the sides: his is short and tight up the cheeks
+# and sideburns, thinning toward the ears into the hair, and fullest on the
+# jaw and chin. Measured off the .glb, the beard cards (M_Combinations, 5323
+# vertices) stand off the skin by 7 mm median, 13 mm p90, 18 mm at most --
+# the same depth up the sideburns as on the chin, which is the bush.
+#
+# So each card vertex is pulled toward the nearest skin vertex, keeping
+# BEARD_KEEP of its standoff on the jaw and BEARD_KEEP_SIDES where the fade
+# is, and its vertex-colour alpha goes from 1 to BEARD_ALPHA_SIDES across the
+# same band -- the sides thin out into stubble instead of stopping. The fade
+# is a function of bind-pose position, in the .glb's own metres: up through
+# the sideburns (BEARD_FADE_Y) and back toward the ear (BEARD_FADE_X/Z).
+# Runtime, because the supplied .glb is never edited; skin weights are left
+# exactly as they are, so the trimmed cards still ride the head.
+const BEARD_KEEP := 0.70
+const BEARD_KEEP_SIDES := 0.30
+const BEARD_ALPHA_SIDES := 0.35
+const BEARD_FADE_Y := Vector2(1.645, 1.700)
+const BEARD_FADE_X := Vector2(0.045, 0.075)
+const BEARD_FADE_Z := Vector2(0.10, 0.05)
+const BEARD_CELL := 0.01
+
+## 0 on the jaw and chin, 1 up the sideburns and back by the ear.
+static func beard_fade(p: Vector3) -> float:
+	var h := smoothstep(BEARD_FADE_Y.x, BEARD_FADE_Y.y, p.y)
+	var side := smoothstep(BEARD_FADE_X.x, BEARD_FADE_X.y, absf(p.x)) \
+			* (1.0 - smoothstep(BEARD_FADE_Z.y, BEARD_FADE_Z.x, p.z))
+	return maxf(h, 0.8 * side)
+
+
+func _trim_beard() -> void:
+	var beard: MeshInstance3D = null
+	var beard_surface := -1
+	var head: MeshInstance3D = null
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var mat := mi.mesh.surface_get_material(s)
+			if mat == null:
+				continue
+			if mat.resource_name == "beard":
+				beard = mi
+				beard_surface = s
+			elif mat.resource_name == "Material.001":
+				head = mi
+	if beard == null or head == null or not (beard.mesh is ArrayMesh):
+		push_warning("RomanModel: beard or head mesh not found; beard left as supplied")
+		return
+	var source := beard.mesh as ArrayMesh
+	var arrays := source.surface_get_arrays(beard_surface)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	# The skin, in the beard mesh's space, hashed into 1 cm cells.
+	var to_beard := beard.global_transform.affine_inverse() * head.global_transform
+	var grid := {}
+	for s in head.mesh.get_surface_count():
+		var head_verts: PackedVector3Array = head.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+		for v in head_verts:
+			var p := to_beard * v
+			var cell := Vector3i((p / BEARD_CELL).floor())
+			if not grid.has(cell):
+				grid[cell] = PackedVector3Array()
+			(grid[cell] as PackedVector3Array).append(p)
+	var colors := PackedColorArray()
+	colors.resize(verts.size())
+	var trimmed := PackedVector3Array(verts)
+	for i in verts.size():
+		var v := verts[i]
+		var fade := beard_fade(v)
+		colors[i] = Color(1, 1, 1, lerpf(1.0, BEARD_ALPHA_SIDES, fade))
+		var skin := _nearest_in_grid(grid, v)
+		if skin != Vector3.INF:
+			trimmed[i] = skin + (v - skin) * lerpf(BEARD_KEEP, BEARD_KEEP_SIDES, fade)
+	arrays[Mesh.ARRAY_VERTEX] = trimmed
+	arrays[Mesh.ARRAY_COLOR] = colors
+	var mesh := ArrayMesh.new()
+	for s in source.get_surface_count():
+		var fmt := source.surface_get_format(s)
+		var flags := fmt & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		var surface_arrays: Array = arrays if s == beard_surface else source.surface_get_arrays(s)
+		mesh.add_surface_from_arrays(source.surface_get_primitive_type(s), surface_arrays,
+				[], {}, flags)
+		mesh.surface_set_material(s, source.surface_get_material(s))
+		mesh.surface_set_name(s, source.surface_get_name(s))
+	beard.mesh = mesh
+	# The override material _fix_materials built reads the alpha from the
+	# vertex colour too.
+	var override := beard.get_surface_override_material(beard_surface) as BaseMaterial3D
+	if override:
+		override.vertex_color_use_as_albedo = true
+
+
+static func _nearest_in_grid(grid: Dictionary, p: Vector3) -> Vector3:
+	var base := Vector3i((p / BEARD_CELL).floor())
+	var best := Vector3.INF
+	var best_d := INF
+	for reach in [1, 2]:
+		for dx in range(-reach, reach + 1):
+			for dy in range(-reach, reach + 1):
+				for dz in range(-reach, reach + 1):
+					var cell := base + Vector3i(dx, dy, dz)
+					if not grid.has(cell):
+						continue
+					for q in grid[cell] as PackedVector3Array:
+						var d := p.distance_squared_to(q)
+						if d < best_d:
+							best_d = d
+							best = q
+		if best != Vector3.INF:
+			return best
+	return best
 
 ## Repairs the materials the export left unusable. Applied as surface
 ## overrides rather than by editing the .glb: the source asset stays exactly

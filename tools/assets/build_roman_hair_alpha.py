@@ -241,13 +241,20 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
 BROW_COLOR = (22, 17, 14)
 BROW_SEED = 7
 ## (x from the midline, centre y, half-thickness) in metres along the brow.
-BROW_PROFILE = [(0.011, 1.7345, 0.0056), (0.020, 1.7372, 0.0060),
-                (0.032, 1.7400, 0.0052), (0.044, 1.7410, 0.0042),
-                (0.054, 1.7388, 0.0028), (0.060, 1.7360, 0.0014)]
+##
+## Flattened and lowered against the owner's side-by-side: the first profile
+## rose 6.5 mm from the inner end to an arch over the outer eye and dropped
+## again, and on the model that arch read as a worried, raised brow -- where
+## his sit low and nearly straight over the eyes, the inner ends pulled down,
+## which is most of his stare. Now it rises only 3 mm, peaks flat, and the
+## tail barely drops; a touch thinner so it reads as hair, not marker.
+BROW_PROFILE = [(0.011, 1.7332, 0.0050), (0.020, 1.7348, 0.0053),
+                (0.032, 1.7360, 0.0047), (0.044, 1.7363, 0.0038),
+                (0.054, 1.7352, 0.0026), (0.060, 1.7336, 0.0013)]
 BROW_STRANDS = 900
 ## Opacity of the soft fill under the strands: skin never shows through a
 ## brow this dense at broadcast distance, where single strands filter away.
-BROW_FILL = 150
+BROW_FILL = 125
 BROW_SUPERSAMPLE = 4
 
 
@@ -367,7 +374,9 @@ def paint_brows(model: pathlib.Path, target: pathlib.Path) -> None:
 BEARD_SHADOW_COLOR = (30, 24, 21)
 BEARD_SHADOW_NEAR = 0.004
 BEARD_SHADOW_FAR = 0.014
-BEARD_SHADOW_OPACITY = 0.82
+BEARD_SHADOW_OPACITY = 0.72
+## What is left of the shadow where the beard fades, up the sideburns.
+BEARD_SHADOW_SIDES = 0.40
 BEARD_SHADOW_SEED = 11
 BEARD_LIP_Y = 1.646
 BEARD_LIP_HALF_W = 0.028
@@ -398,6 +407,17 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     lip = np.sqrt((pos[:, 0] / BEARD_LIP_HALF_W) ** 2
                   + ((pos[:, 1] - BEARD_LIP_Y) / BEARD_LIP_HALF_H) ** 2)
     weight *= np.clip((lip - 1.0) / 0.35, 0.0, 1.0)
+    # And faded up the sideburns and back by the ear, as the cards are
+    # (RomanModel.beard_fade -- same band, same numbers): full on the jaw,
+    # short stubble at the sides. Full strength everywhere, the first version
+    # made the sideburns as solid as the chin and the fade disappeared.
+    def smooth(a, b, x):
+        t = np.clip((x - a) / (b - a), 0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    fade = np.maximum(smooth(1.645, 1.700, pos[:, 1]),
+                      0.8 * smooth(0.045, 0.075, np.abs(pos[:, 0]))
+                      * smooth(0.10, 0.05, pos[:, 2]))
+    weight *= 1.0 - (1.0 - BEARD_SHADOW_SIDES) * fade
     albedo = Image.open(target).convert("RGB")
     size = albedo.size[0]
     field = np.zeros((size, size), dtype=np.float32)
