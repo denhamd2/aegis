@@ -7266,3 +7266,35 @@ blink, because the model has no lids or shapes.
 **Checks.** `tools/probe/broadcast_shot.tscn` renders the frames. Tests are
 in `tests/test_broadcast_crowd_eyes.gd`. Details are in
 `gauntlet/refs/aaa_gap.md`.
+
+## Round: the lock-up and grapple holds were backbends
+
+The owner flagged two frames:
+- the tie-up, where Roman arches back with his arms flung out and Cody's are
+  crossed;
+- a measurement shot of the stand-ins gripping air 2 m apart.
+
+There were four causes:
+- **Sign.** `Tie_Up_Collar`, the three `Grapple_Hold_*` clips and
+  `Move_Exec_Impact` were authored with a positive hips/spine pitch under
+  notes saying "bent at the waist". A positive pitch tips a man backward,
+  per the STANCE note in `wrestling_clips.py`. So every lock-up and grapple
+  hold played as a backbend. The pitches are negated, head included, and
+  side-on renders confirm each now bends forward.
+- **Grips.** During the tie-up the grip IK aimed both hands at the other
+  man's chest, which is a two-handed shove. It is now a collar-and-elbow:
+  the right hand behind his neck, the left on his right elbow
+  (`WrestlerController._aim_collar_and_elbow`).
+- **Distance.** Tie-ups were held 1.1–1.25 m apart, measured live. The models
+  (never the bodies) now slide in to a 0.60 m lock-up gap and back out after
+  (`_close_for_lock_up`). It is presentation only, so the replay hash is
+  untouched.
+- **The measurement shot.** It froze the wrestlers but not the referee, so
+  the stand-ins went on into a grapple hold 2 m apart. It now stops the
+  referee and returns both to IDLE. The mat reads 0.445, still in band.
+
+Still carrying the same positive-pitch pattern, and not changed here:
+- `Clinch_Knee_Defender`, which is meant to fold forward over the knee. It is
+  a paired move keyed beat-for-beat against its attacker, so it needs its own
+  pass.
+- `Submission_Work` and `Finisher_Drive`, which lean back on purpose.

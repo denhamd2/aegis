@@ -318,6 +318,18 @@ func _silhouette_step() -> void:
 			var w: Node = _match.get_node(name)
 			w.set_physics_process(false)
 			w.set_process(false)
+		# And the referee, which is what starts the opening tie-up: frozen
+		# 2 m apart it carried on into the grapple hold, and the shot showed
+		# both men gripping air (the owner flagged it). Back to the ready
+		# stance -- the standoff this shot is meant to measure.
+		var referee := _match.get_node_or_null("MatchReferee")
+		if referee:
+			referee.set_physics_process(false)
+			referee.set("_tying_up", false)
+		for name: String in ["WrestlerA", "WrestlerB"]:
+			var w := _match.get_node(name) as WrestlerController
+			if w and w.fsm.current_state != WrestlerFSM.State.IDLE:
+				w.fsm.transition_to(WrestlerFSM.State.IDLE)
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 2:
 		_save_viewport(_silhouette_prefix + "_beauty.png")
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 3:

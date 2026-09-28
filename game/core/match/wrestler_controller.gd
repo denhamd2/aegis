@@ -868,11 +868,61 @@ func _update_grip_ik() -> void:
 		return
 	if _paired_grip_ticks > 0:
 		_paired_grip_ticks -= 1
+	_close_for_lock_up()
 	var engaged := _is_gripping_state() and _aim_grip_targets()
 	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
 	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
 	for ik in _arm_ik:
 		ik.interpolation = _grip_blend
+
+
+# --- The lock-up's distance --------------------------------------------------
+## A collar-and-elbow is chest to chest: foreheads nearly touching, pelvises
+## about LOCK_UP_GAP apart. The tie-up starts wherever the two men happened to
+## be inside TIE_UP_RANGE (1.4 m) and nothing closed it, so they held the
+## "lock-up" 1.1-1.25 m apart -- measured in a live match -- with arms locked
+## out at air, which is the pose the owner flagged. So each man's MODEL slides
+## toward the other by half the excess, eased in over LOCK_UP_EASE_TICKS and
+## back out after.
+##
+## The model only, never the body: the capsule, position and velocity stay
+## exactly where the match put them, so the tie-up minigame, the replay and its
+## end-state hash cannot see it. The slide is capped at LOCK_UP_MAX_SLIDE so a
+## tie-up at the very edge of range does not skate a model across the mat.
+const LOCK_UP_GAP := 0.60
+const LOCK_UP_MAX_SLIDE := 0.40
+const LOCK_UP_EASE_TICKS := 8
+var _lock_up_close := 0.0          # 0-1 eased
+var _model_home := Vector3.INF     # the model's own local position
+
+
+func _close_for_lock_up() -> void:
+	var model := anim_player.get_parent() as Node3D if anim_player else null
+	if model == null or model == self:
+		return
+	if _model_home == Vector3.INF:
+		_model_home = model.position
+	var locked := fsm.current_state == WrestlerFSM.State.TIE_UP \
+			and opponent != null and is_instance_valid(opponent)
+	var step := 1.0 / LOCK_UP_EASE_TICKS
+	_lock_up_close = clampf(_lock_up_close + (step if locked else -step), 0.0, 1.0)
+	if _lock_up_close <= 0.0:
+		model.position = _model_home
+		return
+	var to := Vector3.ZERO
+	if opponent and is_instance_valid(opponent):
+		to = opponent.global_position - global_position
+		to.y = 0.0
+	var slide := lock_up_slide(to.length())
+	var local_dir := (global_transform.basis.inverse() * to.normalized()) \
+			if to.length() > 0.001 else Vector3.ZERO
+	var eased := smoothstep(0.0, 1.0, _lock_up_close)
+	model.position = _model_home + local_dir * slide * eased
+
+
+## How far one man's model slides in for a lock-up at `gap` metres apart.
+static func lock_up_slide(gap: float) -> float:
+	return clampf((gap - LOCK_UP_GAP) * 0.5, 0.0, LOCK_UP_MAX_SLIDE)
 
 ## Places the two targets on either side of the part of the opponent this
 ## wrestler is holding. Returns false only when there is nothing to grip, so
@@ -892,6 +942,8 @@ func _aim_grip_targets() -> bool:
 	# a tie-up, or a defender holding on to the man lifting him -- holds the
 	# chest. Reaching for a lifted victim's chest puts the arms overhead and
 	# behind, which reads as nothing at all.
+	if fsm.current_state == WrestlerFSM.State.TIE_UP:
+		return _aim_collar_and_elbow()
 	var lifting := fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
 			and _is_grapple_attacker
 	var anchor_name := GRIP_BONE_LIFT if lifting else GRIP_BONE
@@ -910,6 +962,29 @@ func _aim_grip_targets() -> bool:
 	# takes the +X side of the grip, index 0 (left arm) the -X side.
 	_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], anchor - lateral)
 	_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], anchor + lateral)
+	return true
+
+## The collar-and-elbow: the RIGHT hand cups the back of his neck, the LEFT
+## grips his right elbow -- the arm he has on your neck. Both men do the same,
+## so the arms cross as a real tie-up's do. It used to aim both hands at his
+## chest 22 cm either side, which is a two-handed shove; at the old
+## tie-up distance it also locked both arms straight out (Roman) or crossed
+## them in front of the body (Cody).
+func _aim_collar_and_elbow() -> bool:
+	var sk := opponent.skeleton
+	var neck := sk.find_bone(opponent._skeleton_bone_name(COLLAR_BONE))
+	var elbow := sk.find_bone(opponent._skeleton_bone_name(ELBOW_BONE))
+	if neck < 0 or elbow < 0:
+		return false
+	var neck_at := sk.global_transform * sk.get_bone_global_pose(neck).origin
+	# Behind the neck: past it along the line from this man to him.
+	var across := opponent.global_position - global_position
+	across.y = 0.0
+	across = across.normalized() if across.length() > 0.001 else Vector3.ZERO
+	var collar := neck_at + across * COLLAR_BEHIND + Vector3.UP * COLLAR_UP
+	var elbow_at := sk.global_transform * sk.get_bone_global_pose(elbow).origin
+	_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], collar)
+	_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], elbow_at)
 	return true
 
 ## Nearest point to `target` the named shoulder's arm can actually straighten
@@ -1281,6 +1356,14 @@ const GRIP_BONE := "spine_03"
 ## During a throw the victim's chest is overhead and behind, and reaching for
 ## it puts the arms somewhere that reads as nothing at all.
 const GRIP_BONE_LIFT := "pelvis"
+## The tie-up's grips (_aim_collar_and_elbow): his neck, and his right elbow.
+## The collar hand sits COLLAR_BEHIND past the neck bone -- round the back of
+## it rather than on his throat -- and COLLAR_UP above it, at the base of the
+## skull where a real hand cups.
+const COLLAR_BONE := "neck_01"
+const ELBOW_BONE := "lowerarm_r"
+const COLLAR_BEHIND := 0.07
+const COLLAR_UP := 0.03
 ## Arm chains, index-matched to _arm_ik / _grip_targets.
 const ARM_CHAINS := [
 	{"root": "upperarm_l", "tip": "hand_l"},

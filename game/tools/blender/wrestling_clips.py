@@ -715,35 +715,44 @@ CLIPS = {
 
     # === the lock-up ====================================================
 
-    # 30 frames / 1.0s, looping. Collar-and-elbow: the right hand is high on
-    # the back of the other man's neck (fwd 0.52, up 1.46 -- neck height on
-    # a man the same size standing 0.8 m away) and the left grips his elbow
-    # (out to the left, chest height). Chest square, feet braced wide, and
-    # the loop is the two of them pressuring in and giving ground, because a
-    # tie-up that holds still is two men leaning on a wall.
+    # 30 frames / 1.0s, looping. Collar-and-elbow, as the owner asked for it
+    # after the first one read as two men flinging their arms at the air:
+    # both men LEAN IN from the hips with the hips kept back, so they meet at
+    # the chest and shoulders, not the belly; the head turns off to the side
+    # so it goes past his, cheek to cheek, rather than butting foreheads. The
+    # hands here are only where the grip IK blends FROM -- in the match it puts
+    # the right hand behind the other man's neck and the left on his right
+    # elbow (WrestlerController._aim_collar_and_elbow), and the models close to
+    # lock-up distance (LOCK_UP_GAP). Feet staggered and braced, left foot
+    # forward, and the loop is the struggle: drive in, give a little, drive.
     "Tie_Up_Collar": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
-               head=(-6, 0, 0),
-               hand_r=(0.10, 0.52, 1.46), hand_l=(-0.28, 0.44, 1.28),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        # Driving in: hips forward, chest over the lead foot.
-        (10, P(pelvis=(0.0, 0.05, 0.838), hips=(8, 0, 0), spine=(22, 0, 0),
-               head=(-8, 0, 0),
-               hand_r=(0.09, 0.55, 1.44), hand_l=(-0.30, 0.47, 1.26),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        # Giving ground, but not letting go.
-        (20, P(pelvis=(0.0, -0.03, 0.850), hips=(5, 0, 0), spine=(15, 0, 0),
-               head=(-4, 0, 0),
-               hand_r=(0.11, 0.49, 1.48), hand_l=(-0.26, 0.41, 1.30),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        (30, P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
-               head=(-6, 0, 0),
-               hand_r=(0.10, 0.52, 1.46), hand_l=(-0.28, 0.44, 1.28),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
+        (0,  P(pelvis=(0.0, -0.05, 0.820), hips=(-12, 0, 0), spine=(-24, 0, 0),
+               head=(14, 14, 0),
+               hand_r=(0.06, 0.40, 1.52), hand_l=(-0.12, 0.36, 1.22),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
+        # Driving in: chest over the lead foot, weight on the ball of the
+        # back foot.
+        (10, P(pelvis=(0.0, -0.01, 0.812), hips=(-14, 0, 0), spine=(-28, 0, 0),
+               head=(16, 14, 0),
+               hand_r=(0.06, 0.43, 1.50), hand_l=(-0.12, 0.39, 1.20),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
+        # Giving ground, not letting go.
+        (20, P(pelvis=(0.0, -0.08, 0.826), hips=(-10, 0, 0), spine=(-21, 0, 0),
+               head=(12, 12, 0),
+               hand_r=(0.06, 0.38, 1.53), hand_l=(-0.12, 0.34, 1.24),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
+        (30, P(pelvis=(0.0, -0.05, 0.820), hips=(-12, 0, 0), spine=(-24, 0, 0),
+               head=(14, 14, 0),
+               hand_r=(0.06, 0.40, 1.52), hand_l=(-0.12, 0.36, 1.22),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
     ],
 
     # === strikes ========================================================
@@ -1920,6 +1929,13 @@ CLIPS = {
     ],
 
     # === grapple holds ==================================================
+    #
+    # These three, Tie_Up_Collar and Move_Exec_Impact were authored with a
+    # POSITIVE hips/spine pitch under notes saying "bends at the waist" --
+    # and a positive pitch tips a man BACKWARD (see STANCE). Every lock-up and
+    # grapple hold in the game played as two backbends with arms reaching at
+    # the air; the owner flagged both. The pitches are negated, head included
+    # (the head was lifted against a forward lean that was never there).
 
     # 30 frames / 1.0s, looping, role unknown. Both men have hands on each
     # other and neither is winning; the pressure shifts and comes back.
@@ -1927,23 +1943,23 @@ CLIPS = {
     # wrestlers playing it rendered a lock-up as two men pointing past each
     # other.
     "Grapple_Hold_Neutral": [
-        (0,  P(pelvis=(0.0, 0.0, 0.840), hips=(6, 0, 0), spine=(20, 0, 0),
-               head=(-4, 0, 0),
+        (0,  P(pelvis=(0.0, 0.0, 0.840), hips=(-6, 0, 0), spine=(-20, 0, 0),
+               head=(4, 0, 0),
                hand_r=(0.12, 0.50, 1.42), hand_l=(-0.26, 0.46, 1.30),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
-        (10, P(pelvis=(0.0, 0.04, 0.832), hips=(8, -4, 0), spine=(24, -4, 0),
-               head=(-6, -4, 0),
+        (10, P(pelvis=(0.0, 0.04, 0.832), hips=(-8, -4, 0), spine=(-24, -4, 0),
+               head=(6, -4, 0),
                hand_r=(0.11, 0.53, 1.40), hand_l=(-0.28, 0.49, 1.28),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
-        (20, P(pelvis=(0.0, -0.02, 0.846), hips=(5, 4, 0), spine=(17, 4, 0),
-               head=(-3, 4, 0),
+        (20, P(pelvis=(0.0, -0.02, 0.846), hips=(-5, 4, 0), spine=(-17, 4, 0),
+               head=(3, 4, 0),
                hand_r=(0.13, 0.48, 1.44), hand_l=(-0.24, 0.44, 1.32),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
-        (30, P(pelvis=(0.0, 0.0, 0.840), hips=(6, 0, 0), spine=(20, 0, 0),
-               head=(-4, 0, 0),
+        (30, P(pelvis=(0.0, 0.0, 0.840), hips=(-6, 0, 0), spine=(-20, 0, 0),
+               head=(4, 0, 0),
                hand_r=(0.12, 0.50, 1.42), hand_l=(-0.26, 0.46, 1.30),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
@@ -1954,27 +1970,27 @@ CLIPS = {
     # his shoulder, feet back so he can drive. This replaced
     # "PickUp_Table", which lifts furniture with a straight back.
     "Grapple_Hold_Attacker": [
-        (0,  P(pelvis=(0.0, 0.04, 0.800), hips=(10, 0, 0), spine=(42, 0, 0),
-               head=(-32, 0, 8),
+        (0,  P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-42, 0, 0),
+               head=(32, 0, 8),
                hand_r=(0.07, 0.52, 0.92), hand_l=(-0.11, 0.54, 0.90),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.08, 0.104))),
         # Squeezes and tries to break him off the mat.
-        (10, P(pelvis=(0.0, 0.02, 0.842), hips=(6, 0, 0), spine=(34, 0, 0),
-               head=(-28, 0, 8),
+        (10, P(pelvis=(0.0, 0.02, 0.842), hips=(-6, 0, 0), spine=(-34, 0, 0),
+               head=(28, 0, 8),
                hand_r=(0.06, 0.50, 1.00), hand_l=(-0.10, 0.52, 0.98),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.08, 0.104))),
-        (20, P(pelvis=(0.0, 0.05, 0.792), hips=(11, 0, 0), spine=(44, 0, 0),
-               head=(-33, 0, 8),
+        (20, P(pelvis=(0.0, 0.05, 0.792), hips=(-11, 0, 0), spine=(-44, 0, 0),
+               head=(33, 0, 8),
                hand_r=(0.07, 0.53, 0.89), hand_l=(-0.11, 0.55, 0.87),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.08, 0.104))),
-        (30, P(pelvis=(0.0, 0.04, 0.800), hips=(10, 0, 0), spine=(42, 0, 0),
-               head=(-32, 0, 8),
+        (30, P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-42, 0, 0),
+               head=(32, 0, 8),
                hand_r=(0.07, 0.52, 0.92), hand_l=(-0.11, 0.54, 0.90),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.5, fist_l=0.5,
@@ -1985,27 +2001,27 @@ CLIPS = {
     # corpse. He is bent over the top of the waistlock, hands fighting the
     # grip, feet sprawled back and wide so he cannot be lifted.
     "Grapple_Hold_Defender": [
-        (0,  P(pelvis=(0.0, -0.04, 0.780), hips=(12, 0, 0), spine=(46, 0, 0),
-               head=(-30, 0, 0),
+        (0,  P(pelvis=(0.0, -0.04, 0.780), hips=(-12, 0, 0), spine=(-46, 0, 0),
+               head=(30, 0, 0),
                hand_r=(0.24, 0.44, 0.90), hand_l=(-0.22, 0.46, 0.88),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.62, fist_l=0.62,
                foot_r=(0.29, -0.34, 0.104), foot_l=(-0.27, -0.30, 0.104))),
         # Sprawls harder -- hips back and down, all of it into his grip.
-        (10, P(pelvis=(0.0, -0.08, 0.762), hips=(14, 0, 0), spine=(50, 0, 0),
-               head=(-32, 0, 0),
+        (10, P(pelvis=(0.0, -0.08, 0.762), hips=(-14, 0, 0), spine=(-50, 0, 0),
+               head=(32, 0, 0),
                hand_r=(0.26, 0.46, 0.86), hand_l=(-0.24, 0.48, 0.84),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.29, -0.36, 0.104), foot_l=(-0.27, -0.32, 0.104))),
-        (20, P(pelvis=(0.0, -0.02, 0.792), hips=(11, 0, 0), spine=(43, 0, 0),
-               head=(-28, 0, 0),
+        (20, P(pelvis=(0.0, -0.02, 0.792), hips=(-11, 0, 0), spine=(-43, 0, 0),
+               head=(28, 0, 0),
                hand_r=(0.23, 0.42, 0.93), hand_l=(-0.21, 0.44, 0.91),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.62, fist_l=0.62,
                foot_r=(0.29, -0.33, 0.104), foot_l=(-0.27, -0.29, 0.104))),
-        (30, P(pelvis=(0.0, -0.04, 0.780), hips=(12, 0, 0), spine=(46, 0, 0),
-               head=(-30, 0, 0),
+        (30, P(pelvis=(0.0, -0.04, 0.780), hips=(-12, 0, 0), spine=(-46, 0, 0),
+               head=(30, 0, 0),
                hand_r=(0.24, 0.44, 0.90), hand_l=(-0.22, 0.46, 0.88),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.62, fist_l=0.62,
@@ -2016,17 +2032,17 @@ CLIPS = {
     # spot, chest opening as he comes back up off the impact. This replaced
     # "Jump_Land", which is a man absorbing a drop he took himself.
     "Move_Exec_Impact": [
-        (0,  P(pelvis=(0.0, 0.06, 0.720), hips=(14, 0, 0), spine=(42, 0, 0),
-               head=(-16, 0, 0),
+        (0,  P(pelvis=(0.0, 0.06, 0.720), hips=(-14, 0, 0), spine=(-42, 0, 0),
+               head=(16, 0, 0),
                hand_r=(0.26, 0.46, 0.34), hand_l=(-0.24, 0.48, 0.36),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.6, fist_l=0.6)),
-        (4,  P(pelvis=(0.0, 0.05, 0.762), hips=(11, 0, 0), spine=(32, 0, 0),
-               head=(-14, 0, 0),
+        (4,  P(pelvis=(0.0, 0.05, 0.762), hips=(-11, 0, 0), spine=(-32, 0, 0),
+               head=(14, 0, 0),
                hand_r=(0.26, 0.44, 0.52), hand_l=(-0.24, 0.46, 0.54),
                fist_r=0.6, fist_l=0.6)),
-        (9,  P(pelvis=(0.0, 0.03, 0.822), hips=(8, 0, 0), spine=(18, 0, 0),
-               head=(-8, 0, 0),
+        (9,  P(pelvis=(0.0, 0.03, 0.822), hips=(-8, 0, 0), spine=(-18, 0, 0),
+               head=(8, 0, 0),
                hand_r=(0.24, 0.38, 0.94), hand_l=(-0.20, 0.40, 0.96),
                fist_r=0.5, fist_l=0.5)),
         (18, P()),

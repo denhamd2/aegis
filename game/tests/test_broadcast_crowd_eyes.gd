@@ -111,3 +111,14 @@ func test_an_eye_does_not_roll_to_look_behind_him() -> void:
 	var sk := _head()
 	var behind := sk.get_bone_global_pose(1).origin + Vector3(0.0, 0.0, -2.0)
 	assert_bool(EyeAim.aim_rotation(sk, 1, behind).is_equal_approx(Quaternion.IDENTITY)).is_true()
+
+# --- The lock-up (owner-flagged: two men gripping air) -----------------------
+
+## A tie-up held 1.2 m apart closes to chest-to-chest on the MODELS, half
+## each; one already close does not move; the edge of range is capped.
+func test_a_lock_up_closes_to_chest_to_chest() -> void:
+	var gap := 1.2
+	var slide := WrestlerController.lock_up_slide(gap)
+	assert_float(gap - 2.0 * slide).is_equal_approx(WrestlerController.LOCK_UP_GAP, 0.001)
+	assert_float(WrestlerController.lock_up_slide(0.5)).is_equal(0.0)
+	assert_float(WrestlerController.lock_up_slide(3.0)).is_equal(WrestlerController.LOCK_UP_MAX_SLIDE)
