@@ -322,6 +322,7 @@ var _arm_ik: Array[SkeletonIK3D] = []
 var _grip_targets: Array[Marker3D] = []
 ## Planted feet for GrappleRig's walk-in (FootPlant). Presentation only.
 var foot_plant: FootPlant
+var inertializer: Inertializer
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -445,6 +446,17 @@ const StrikeRecipes := preload("res://resources/animations/strike_recipes.gd")
 const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
+## How long the Inertializer carries the old pose into a new clip, by the state
+## the clip belongs to. Longer than the crossfade it replaces, because it does
+## not mush: from the first tick he moves the way the new clip moves, and only
+## the difference fades. A hit lands fast -- a reaction that eased in would
+## read as him deciding to react -- and lying down or getting up has the most
+## body to move.
+const INERTIA_DEFAULT_TICKS := 9
+const INERTIA_TICKS := {
+	"HIT_REACT": 5, "STUNNED": 6, "STRIKE": 6,
+	"DOWN": 12, "GETUP": 12, "WALK_IN": 9, "GRAPPLE_HOLD": 8,
+}
 
 var _move_ticks_remaining: int = 0
 var _active_move: MoveDef
@@ -601,6 +613,7 @@ func _ready() -> void:
 			skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
 		_build_foot_plant()
+		_build_inertializer()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -608,6 +621,7 @@ func _ready() -> void:
 		# (RomanModel; EyeAim). Presentation only.
 		if model and model.has_method("aim_eyes"):
 			model.aim_eyes(_opponent_eye_line)
+		_build_worn_follow()
 		if _uses_universal_attire():
 			WrestlerAttire.build(skeleton, attire_body, attire_accent,
 					physique_bulk, body_variant)
@@ -902,6 +916,7 @@ func begin_walk_in(from: Transform3D, to: Transform3D, ticks: int,
 	if start_pose != "":
 		var machine := anim_tree.tree_root as AnimationNodeStateMachine
 		(machine.get_node(WALK_IN_STATE) as AnimationNodeAnimation).animation = start_pose
+		_inertialize(WALK_IN_STATE)
 		_anim_playback.travel(WALK_IN_STATE)
 		if foot_plant:
 			var rel := from.affine_inverse() * skeleton.global_transform
@@ -949,6 +964,61 @@ func _build_foot_plant() -> void:
 		mapped.append(leg.map(func(b: String) -> String: return _skeleton_bone_name(b)))
 	foot_plant.legs = mapped
 	skeleton.add_child(foot_plant)
+
+## The Inertializer (Phase 3 "transitions"): first among the skeleton's
+## modifiers, so it smooths the clip's pose and everything after it -- grip
+## IK, FootPlant, the eyes -- works on the smoothed one.
+func _build_inertializer() -> void:
+	inertializer = Inertializer.new()
+	inertializer.name = "Inertializer"
+	skeleton.add_child(inertializer)
+	skeleton.move_child(inertializer, 0)
+	if anim_tree:
+		inertializer.watch(anim_tree, _anim_playback)
+	# It replaces the crossfades: every edge in the blend graph becomes a cut,
+	# and _inertialize() carries the pose across it instead. The graph keeps
+	# its crossfades when there is no skeleton to smooth.
+	if anim_tree:
+		var machine := anim_tree.tree_root as AnimationNodeStateMachine
+		for i in machine.get_transition_count():
+			machine.get_transition(i).xfade_time = 0.0
+
+
+## A model dressed on a second skeleton (Roman) gets the body's final pose
+## carried across to it, LAST, after every other modifier. See WornFollow.
+## His hip height standing at rest, in his own frame, at the size he is
+## scaled to. GrappleRig fits how high he lifts a man to it.
+func hip_height() -> float:
+	if skeleton == null:
+		return GrappleRig.AUTHORED_HIP_HEIGHT
+	var pelvis := skeleton.find_bone(_skeleton_bone_name("pelvis"))
+	if pelvis < 0:
+		return GrappleRig.AUTHORED_HIP_HEIGHT
+	return (global_transform.affine_inverse()
+			* (skeleton.global_transform * skeleton.get_bone_global_rest(pelvis).origin)).y
+
+
+func _build_worn_follow() -> void:
+	var model := anim_player.get_parent()
+	if model == null:
+		return
+	for s: Skeleton3D in model.find_children("", "Skeleton3D", true, false):
+		if s == skeleton or s.find_bone(skeleton.get_bone_name(0)) < 0:
+			continue
+		var follow := WornFollow.new()
+		follow.name = "WornFollow"
+		skeleton.add_child(follow)
+		follow.bind(s)
+		return
+
+
+## Hands the pose on screen over to the clip about to start, over the ticks
+## INERTIA_TICKS gives the state it is going to. See Inertializer.
+func _inertialize(state_name: String) -> void:
+	if inertializer:
+		inertializer.inertialize(INERTIA_TICKS.get(state_name, INERTIA_DEFAULT_TICKS),
+				StringName(state_name))
+
 
 func _update_grip_ik() -> void:
 	if _arm_ik.is_empty():
@@ -1161,6 +1231,7 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	if not anim_node:
 		return false
 	anim_node.animation = clip
+	_inertialize(state_name)
 	_anim_playback.start(state_name, true)
 
 	var length := anim_player.get_animation(clip).length
@@ -1192,6 +1263,7 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 		_snap_next_animation = false
 		_anim_playback.start(state_name, true)
 		return
+	_inertialize(state_name)
 	_anim_playback.travel(state_name)
 
 ## The clip to enter this state with: a one-shot override if one was queued
@@ -2067,6 +2139,7 @@ func play_presentation_clip(clip: String, cut := false) -> void:
 	if cut:
 		_anim_playback.start(next, true)
 	else:
+		_inertialize(next)
 		_anim_playback.travel(next)
 	_presentation_node = next
 	_presentation_clip = clip

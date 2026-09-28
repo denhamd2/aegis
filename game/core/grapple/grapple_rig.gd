@@ -56,6 +56,13 @@ var _pair_transform: Transform3D = Transform3D()
 ## for a body. Clamps where a paired move is allowed to play out.
 const RING_HALF_EXTENT := 2.0
 
+## The mannequin's hip height at scale 1.0, which every paired trajectory was
+## authored against (tools/probe landmarks: pelvis 0.90 m at scale 0.98).
+const AUTHORED_HIP_HEIGHT := 0.918
+## How high this attacker carries a man, against the mannequin: his hip
+## height over AUTHORED_HIP_HEIGHT. See _transform_track_into_pair_frame().
+var _lift_scale := 1.0
+
 func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	assert(not _active, "GrappleRig.begin() called while a grapple is already active")
 	_attacker = attacker
@@ -67,6 +74,8 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
 	_pair_transform = _compute_pair_transform(attacker, defender)
+	_lift_scale = attacker.hip_height() / AUTHORED_HIP_HEIGHT \
+			if attacker.has_method("hip_height") else 1.0
 
 	_active = true
 	grapple_started.emit(attacker, defender, move)
@@ -161,8 +170,18 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
 	var track_type := anim.track_get_type(track)
 	if track_type == Animation.TYPE_POSITION_3D:
+		# Size fitting (animation_gap.md Phase 2): the man being thrown is
+		# carried as high as THIS attacker's body carries him, not the
+		# mannequin's. The clips hold him at the mannequin's knee, shoulder or
+		# overhead, and the real men are not built alike -- Roman's hips sit
+		# 1.03 m up, 12% above the mannequin's, Cody's and Kenny's within 3% --
+		# so across Roman's knee Kenny lay 11 cm low and Roman's head went
+		# 15 cm into his back (PairClearance, backbreaker). Height only: on the
+		# mat (y 0) nothing moves, and the line between the two is unchanged.
+		var lift := _lift_scale if String(anim.track_get_path(track)).ends_with("WrestlerB") else 1.0
 		for k in anim.track_get_key_count(track):
 			var pos: Vector3 = anim.track_get_key_value(track, k)
+			pos.y *= lift
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
@@ -289,6 +308,8 @@ func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
 		match anim.track_get_type(i):
 			Animation.TYPE_POSITION_3D:
 				start.origin = value
+				if not is_attacker:
+					start.origin.y *= _lift_scale
 			Animation.TYPE_ROTATION_3D:
 				var rot: Quaternion = value
 				start.basis = Basis(defender_root_yaw(rot) if not is_attacker else rot)

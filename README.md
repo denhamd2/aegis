@@ -7507,3 +7507,97 @@ first 10 frames.
 - `PairClearanceBaseline.MIN_CONTACT_FRAMES` is 10: a 3-frame median, like the
   Cody Cutter's, isn't judged.
 - The neckbreaker's hands came off the ratchet (3.4 cm).
+
+## Round: Phase 2 closed at real sizes, Phase 3 begins (transitions)
+
+### Phase 2 — the real-size check
+
+Every paired move was run through `tools/probe/pair_clearance.tscn` with the
+real men, at their real sizes, in four pairings: Roman on Cody, Cody on Roman,
+Kenny on Roman, and Roman on Kenny (the mismatch).
+
+**Finding.** The models are not built alike. Measured at rest:
+
+| | hips | head |
+| --- | --- | --- |
+| mannequin (clips authored on it) | 0.92 m | 1.57 m |
+| Cody | 0.94 m | 1.61 m |
+| Kenny | 0.92 m | 1.57 m |
+| Roman | **1.03 m** | 1.69 m |
+
+Roman is 12% longer in the leg than the man every move was authored on. So
+whatever he lifts is held at a shorter man's height. Across his knee in the
+backbreaker, Kenny lay 11 cm low and Roman's head went 15 cm into his back.
+
+**The fix: size fitting.** `GrappleRig` scales the thrown man's root height by
+the attacker's hip height over the mannequin's (`hip_height()`,
+`AUTHORED_HIP_HEIGHT` 0.918 m). Nothing changes on the mat or along the line
+between the two men.
+- Roman's backbreaker on Kenny: body overlap 0.20 → 0.01 m.
+- Roman's neckbreaker on Kenny: 0.03 → clean.
+
+### Roman's clothes were not following his body
+
+Roman is rigged on two skeletons: body and head on one, and bottoms, shoes,
+hair, beard and wrist tape on the other. Both play the clip. But the grip IK,
+`FootPlant` and anything else that bends the body after the clip reached only
+the first. Through a body slam his wrist tape hung up to **0.82 m** from his
+wrists (`tools/probe/wear_follow.tscn`), left where the clip had the hand
+while the IK took the real one to Cody's thigh.
+
+`WornFollow` (`core/match/worn_follow.gd`) runs last on the body skeleton and
+copies its final pose onto the worn one. It copies rotation and position only,
+because scale belongs to each skeleton's own `RomanHeadShape`. The root is
+matched in world space, because the worn skeleton holds it in another axis
+frame. Gap afterwards: 0.000 m.
+
+### Phase 3 — inertialization
+
+**Measure first.** `tools/probe/transition_pops.tscn` plays real AI matches
+and reads eleven bones as drawn, in the body's own frame, every tick. At each
+clip switch it records the worst change of velocity (the "kick") over the
+next 10 ticks. A fast punch has speed but no kick; a pose that jumps has a
+kick as big as the jump.
+
+**The problem.** Every state was cross-faded over 6 ticks. A crossfade plays
+both clips at once and averages them, so for its whole length the man is in
+neither pose. And it still popped: 64% of 612 switches over two matches
+kicked more than 5 cm, the worst 1.5 m.
+
+**The fix.** `Inertializer` (`core/match/inertializer.gd`) runs first among
+the skeleton's modifiers. The crossfades are now cuts. On the tick a switch
+lands:
+- it takes the difference, per bone, between the pose last drawn and the new
+  clip's first pose;
+- it fades that out on Bollo's quintic (GDC 2018, *Gears of War*), which
+  starts at the bone's current speed and arrives with none, without
+  overshooting;
+- fade length depends on the state: 5 ticks into a hit reaction, 12 into
+  going down or getting up, 9 otherwise.
+
+Three things measurement caught along the way:
+- **Capture timing.** A switch is captured when it lands on the mixer's side,
+  not when it is asked for. A state machine with no crossfade reports the new
+  state a tick before it outputs it, then restarts it. Captured on the request,
+  nothing was carried, and running to walking popped 0.5 m at a foot.
+- **Arms.** Only the hips may be cut for a half-turn on the mat. A 100° limit
+  on every bone cut running arms into a guard.
+- **Speed.** Carrying position alone left a kick of the old clip's full speed
+  on the switch tick. Bollo's velocity term fixed it.
+
+**Result** (same two seeded matches). Switches kicking over 5 cm fell from
+64% to 40%:
+- running to walking: mean kick 0.165 → under 0.05 m;
+- getting up: 0.64 → 0.29 m;
+- idle to strike: 0.16 → 0.10 m.
+
+The worst that remain:
+- the paired move's hand-off to DOWN (1.3 m), where GrappleRig lands the
+  thrown man;
+- the deliberate half-turn on the mat, which is correct on screen but counts
+  in the body frame.
+
+**Found, not fixed.** The body itself snaps its facing: 180° in one tick when
+starting or stopping a run. The pose transitions are now smooth; the body's
+turn is not. This is a gameplay rotation, and facing decides whether strikes
+land, so it is a separate change.

@@ -163,8 +163,18 @@ through bodies (30/37).
   on the Spear's back-off), and the up-to-0.53 m foot snap as the clip took
   over is gone.
 
-Still to do:
-- a check with Roman, Cody and Kenny's real sizes.
+- The real-size check: every paired move with Roman, Cody and Kenny at
+  their real sizes, in four pairings. The models differ more than their
+  heights: Roman's hips sit 1.03 m up, 12% above the mannequin the moves
+  were authored on. Size fitting now scales the thrown man's height by the
+  attacker's hip height (`GrappleRig._lift_scale`). Roman's backbreaker on
+  Kenny went from 0.20 m of overlap to 0.01 m.
+- `WornFollow`: Roman's clothes, hair and wrist tape ride a second skeleton,
+  which the IK and FootPlant never reached (wrist tape up to 0.82 m off his
+  wrists). They now follow exactly.
+
+Phase 2 is DONE for the runtime work. Contact-first authoring in Blender
+(item 1 below) stays the route for the spin moves still on the grip ratchet.
 
 1. **Contact-first paired authoring**, standing in for capturing both men
    together:
@@ -200,7 +210,18 @@ Still to do:
    - Use a per-family setup clip (front grapple, rear, corner, downed) so each
      move starts from a matching grip.
 
-### Phase 3: smooth flow between actions
+### Phase 3: smooth flow between actions -- IN PROGRESS
+
+Done so far:
+- Inertialization (`Inertializer`) in place of every crossfade: Bollo's
+  quintic, velocity carried, captured on the tick the switch lands. Switches
+  kicking over 5 cm fell from 64% to 40% over two seeded matches
+  (`tools/probe/transition_pops.tscn`).
+
+Still to do: tuned per-edge times, transition clips (hit > stagger >
+recover), the paired hand-off to DOWN (1.3 m), smoothing the body's own
+facing snap, foot IK beyond the walk-in, hit reactions, and in-between life.
+
 
 1. **Transitions.**
    - Replace the all-to-all 0.1 s crossfade with tuned per-edge fades plus

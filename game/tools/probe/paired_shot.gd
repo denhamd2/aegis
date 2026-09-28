@@ -34,6 +34,8 @@ var _side := false
 var _orbit := 0.0
 var _lit := false
 var _dist := 4.2
+## --wrestlers roman,kenny: the real men at their real sizes, attacker first.
+var _wrestlers := ""
 
 
 func _ready() -> void:
@@ -51,6 +53,8 @@ func _ready() -> void:
 			_lit = true
 		elif args[i] == "--dist" and i + 1 < args.size():
 			_dist = float(args[i + 1])
+		elif args[i] == "--wrestlers" and i + 1 < args.size():
+			_wrestlers = args[i + 1]
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
@@ -58,6 +62,10 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 
 	var scene: Node = load(MATCH_SCENE).instantiate()
+	if _wrestlers != "":
+		var pair := Roster.pair_from_spec(_wrestlers)
+		if pair.size() == 2:
+			TitleScreen.configure_match(scene, pair[0], pair[1], 1)
 	get_tree().root.add_child.call_deferred(scene)
 	await get_tree().process_frame
 	get_tree().current_scene = scene
