@@ -598,6 +598,9 @@ func _ready() -> void:
 		else:
 			skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
+		# Sweat over the match, on the skin materials the model registered.
+		if model:
+			Sweat.attach(self, model)
 		if _uses_universal_attire():
 			WrestlerAttire.build(skeleton, attire_body, attire_accent,
 					physique_bulk, body_variant)

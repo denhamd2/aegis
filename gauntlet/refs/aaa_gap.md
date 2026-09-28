@@ -62,6 +62,27 @@ What the numbers show:
 - Art-shot settle frames went from 3 to 24 so TAA and SSIL converge. Captured
   at 48 frames as well, every metric agrees within 0.002.
 
+## Done: items 5–6
+
+**Sweat** (`core/materials/sweat.gd`, `SkinLook.set_wetness`).
+- It is a clearcoat film over the skin, not lower skin roughness. A wet man
+  keeps his skin's soft sheen underneath and gains a sharp highlight on top.
+- Wetness starts at 0.08 at the bell.
+- Time adds up to +0.6 over 150 s of match clock.
+- Damage taken adds up to +0.35.
+- It is presentation only and cannot reach the replay hash.
+- The first strength (0.85 coat, 0.12 roughness) read as cling-film when
+  soaked. It ships at 0.6 / 0.18.
+
+**Pores** (`tools/assets/build_skin_detail.py`, `SkinLook.add_pores`).
+- A 512² tiling normal map of pores on a jittered grid, plus diagonal creases.
+  The generator is deterministic.
+- It is mixed in at 0.3 through a UV2 copied from UV1 at load
+  (`SkinLook.with_detail_uv`), about 2.5 cm of skin per tile.
+- Mostly invisible dry. It breaks the sweat highlight into points wet.
+- Check both through `tools/probe/skin_shot.tscn`, which renders dry and
+  soaked.
+
 ## The improvements, in order of look gained per hour
 
 Each item is small and self-contained. Each must be verified on a render

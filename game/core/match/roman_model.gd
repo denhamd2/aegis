@@ -212,6 +212,10 @@ const GROW_FIXES := {
 ## and neck carried hot white spots and he read as moulded plastic; his real
 ## skin is mostly matte with a thin sweat sheen.
 const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.58}
+## Pore tiles across one UV square (SkinLook.add_pores): the head's own
+## texture spans about 0.4 m of face and scalp, the body's about 1.2 m, so a
+## tile is ~2.5 cm on both.
+const PORE_TILES := {"Material.001": 16.0, "Material": 48.0}
 ## And a tint on both, toward the reference's skin. Measured medians off the
 ## owner's reference (forehead, cheek, chest): (170,107,88), (182,105,91),
 ## (195,120,94); the textures' own tone is (168,108,75). Same red and green,
@@ -519,10 +523,19 @@ static func _nearest_in_grid(grid: Dictionary, p: Vector3) -> Vector3:
 ## as supplied, and every fix is visible here as code with its reason next to
 ## it. Safe to call once at _ready -- it only touches the materials it names.
 func _fix_materials() -> void:
+	var skin: Array[BaseMaterial3D] = []
 	for node in find_children("", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
 		if not mesh_instance or not mesh_instance.mesh:
 			continue
+		# A UV2 on the skin surfaces for the pore layer (SkinLook.add_pores).
+		var skin_surfaces := []
+		for surface in mesh_instance.mesh.get_surface_count():
+			var m := mesh_instance.mesh.surface_get_material(surface)
+			if m and SKIN_ROUGHNESS.has(m.resource_name):
+				skin_surfaces.append(surface)
+		if not HIDDEN_MESHES.has(mesh_instance.name):
+			SkinLook.with_detail_uv(mesh_instance, skin_surfaces)
 		if HIDDEN_MESHES.has(mesh_instance.name):
 			mesh_instance.visible = false
 			continue
@@ -541,6 +554,8 @@ func _fix_materials() -> void:
 				material.roughness = SKIN_ROUGHNESS[key]
 				material.metallic_specular = 0.5
 				SkinLook.apply(material)
+				SkinLook.add_pores(material, PORE_TILES[key])
+				skin.append(material)
 			if GROW_FIXES.has(key):
 				material.grow = true
 				material.grow_amount = GROW_FIXES[key]
@@ -615,6 +630,8 @@ func _fix_materials() -> void:
 			if SKIN_ROUGHNESS.has(key):
 				material.albedo_color *= SKIN_TINT
 			mesh_instance.set_surface_override_material(surface, material)
+	# For Sweat (WrestlerController attaches it).
+	set_meta("skin_materials", skin)
 
 func _texture(suffix: String) -> Texture2D:
 	return load(TEXTURE_DIR % suffix) as Texture2D

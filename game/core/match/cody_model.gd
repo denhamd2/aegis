@@ -50,6 +50,9 @@ const SKIN_MATERIALS := ["xmaterial_495900de7002683", "xmaterial_90b39911eb484a2
 		"xmaterial_90b2b911eb46cd8", "xmaterial_5a329cd32db96c3", HEAD_MATERIAL]
 const SKIN_TINT := Color(1.08, 1.06, 1.0)
 const SKIN_ROUGHNESS := 0.5
+## Pore tiles across one UV square of his skin atlases (SkinLook.add_pores):
+## his torso-and-arms atlas spans about 1.2 m of skin, so ~2.5 cm a tile.
+const PORE_TILES := 48.0
 
 
 ## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
@@ -118,10 +121,18 @@ func _add_hair() -> void:
 
 
 func _fix_look() -> void:
+	var skin: Array[BaseMaterial3D] = []
 	for node in find_children("", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
 		if mesh_instance.mesh == null:
 			continue
+		# A UV2 on the skin surfaces for the pore layer (SkinLook.add_pores).
+		var skin_surfaces := []
+		for surface in mesh_instance.mesh.get_surface_count():
+			var m := mesh_instance.mesh.surface_get_material(surface)
+			if m and SKIN_MATERIALS.has(m.resource_name):
+				skin_surfaces.append(surface)
+		SkinLook.with_detail_uv(mesh_instance, skin_surfaces)
 		for surface in mesh_instance.mesh.get_surface_count():
 			var source := mesh_instance.mesh.surface_get_material(surface) as BaseMaterial3D
 			if source == null or not SKIN_MATERIALS.has(source.resource_name):
@@ -132,7 +143,11 @@ func _fix_look() -> void:
 			material.albedo_color = material.albedo_color * SKIN_TINT
 			material.roughness = SKIN_ROUGHNESS
 			SkinLook.apply(material)
+			SkinLook.add_pores(material, PORE_TILES)
+			skin.append(material)
 			mesh_instance.set_surface_override_material(surface, material)
+	# For Sweat (WrestlerController attaches it).
+	set_meta("skin_materials", skin)
 
 
 ## Cody wrestles in his own gear, so the generated trunks must not be painted on.
