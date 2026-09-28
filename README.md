@@ -7323,3 +7323,18 @@ eye, but they were weighted to Head.
 - a phased plan: automated pose and pair lint, contact-first two-man
   authoring with size fitting, better transitions and foot IK, then
   match-play systems.
+
+**Roman blinks** (`core/match/eye_lids.gd`, `RomanModel.build_eye_lids`). His
+model has no lid bones or shapes, so the lids are built:
+- A skin-toned spherical cap per eye, centred on the J_Eye bone. The pupil
+  sits 12.2 mm from it, a human eyeball's radius, so the bone is the centre.
+- Hung on J_Head, so the lids do not roll with EyeAim.
+- A blink is 60 ms closing, 30 ms held, 90 ms opening, every 2–6 s, seeded.
+- The cap sits inside the skin line (0.95 of the eye's radius), and the eye
+  tucks to 0.8 scale while shut so the cornea does not poke through.
+- The lid only sweeps the opening, from 35° above the pupil to the lower rim.
+
+Three wrong turns were caught on `tools/probe/lids_shot.tscn` renders:
+- a mirrored basis, which drew the cap inside out;
+- placing the lids from the mesh put them 6 cm too high;
+- a full sweep bulged over his cheek.

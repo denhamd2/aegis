@@ -137,3 +137,23 @@ func test_cody_has_eye_bones_that_aim() -> void:
 		assert_str(sk.get_bone_name(sk.get_bone_parent(i))).is_equal("Head")
 	model.aim_eyes(func() -> Vector3: return Vector3.INF)
 	assert_object(sk.get_node_or_null("EyeAim")).is_not_null()
+
+
+## Roman blinks: a fast close, a hold, a slower open; lids built on both eyes.
+func test_a_blink_closes_fast_and_opens_slower() -> void:
+	assert_float(EyeLids.closure_at(-1.0)).is_equal(0.0)
+	assert_float(EyeLids.closure_at(EyeLids.CLOSE_SECONDS)).is_equal_approx(1.0, 0.001)
+	assert_float(EyeLids.closure_at(EyeLids.CLOSE_SECONDS + EyeLids.HOLD_SECONDS * 0.5)).is_equal(1.0)
+	assert_float(EyeLids.closure_at(EyeLids.blink_length())).is_equal_approx(0.0, 0.001)
+	assert_float(EyeLids.OPEN_SECONDS).is_greater(EyeLids.CLOSE_SECONDS)
+	# A human blink: 100-200 ms.
+	assert_float(EyeLids.blink_length()).is_between(0.1, 0.2)
+
+
+func test_roman_has_two_eyelids() -> void:
+	var model := auto_free((load("res://scenes/roman_model.tscn") as PackedScene).instantiate()) as RomanModel
+	assert_object(model).is_not_null()
+	add_child(model)
+	var lids := model.find_child("EyeLids", true, false) as EyeLids
+	assert_object(lids).is_not_null()
+	assert_int(lids.get_child_count()).is_equal(2)

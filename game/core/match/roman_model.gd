@@ -303,6 +303,7 @@ func _ready() -> void:
 	# Iris/pupil geometry is headless-safe (plain nodes); colours need a real
 	# renderer, same split WrestlerAttire uses for the same reason.
 	_build_eye_details(body)
+	build_eye_lids()
 	# His broad face and thick neck (RomanHeadShape), on every skeleton.
 	for skeleton in _animation_skeletons():
 		if not skeleton.has_node("RomanHeadShape"):
@@ -816,6 +817,73 @@ func _add_eye_sphere(body: Skeleton3D, bone: String, bone_idx: int,
 		instance.material_override = mat
 	instance.position = offset
 	attachment.add_child(instance)
+
+## His eyelids (EyeLids): the model has no lid bones and no blend shapes, so
+## they are built, one per eye, centred on its J_Eye bone and hung on J_Head.
+## LID_COLOR is the skin round his eyes, off the head texture under the arena
+## key (checked on the broadcast_shot close-ups).
+const LID_COLOR := Color(0.47, 0.32, 0.23)
+const LID_SEED := 7
+## The eyeball's centre, ahead of its bone along the line of sight. Zero:
+## the pupil sphere sits 12.2 mm from the bone, which is a human eyeball's
+## radius exactly, so the bone IS the centre. (6 mm, from the note on
+## EYE_TARGETS, put the lids' centre in front of the cornea and they closed
+## as a ball stuck on the front of the eye.)
+const EYE_CENTRE_AHEAD := 0.0
+
+
+func build_eye_lids() -> EyeLids:
+	var body := _find_body_skeleton()
+	if body == null:
+		return null
+	var existing := body.find_child("EyeLids", true, false) as EyeLids
+	if existing:
+		return existing
+	var head := body.find_bone("J_Head")
+	if head < 0:
+		return null
+	# Placed off the EYE BONES, not the eye mesh: converting the mesh's
+	# vertices into skeleton space put the lids 6 cm above his eyes (the mesh
+	# and the scaled, posed skeleton do not share a frame at load). The bones
+	# are exact, and EYE_TARGETS already knows each eye's line of sight and,
+	# by the pupil's distance, its radius.
+	var head_rest := body.get_bone_global_rest(head)
+	var to_head := head_rest.affine_inverse()
+	# The radius to the cornea's apex: bone -> pupil. EyeLids adds its margin.
+	var radius := (EYE_TARGETS["J_Eye_L"][1] as Vector3).length()
+	var eyes := []
+	for bone: String in EYE_TARGETS:
+		var eye := body.find_bone(bone)
+		if eye < 0:
+			continue
+		var rest := body.get_bone_global_rest(eye)
+		var sight: Vector3 = (EYE_TARGETS[bone][1] as Vector3).normalized()
+		var centre := rest * (sight * EYE_CENTRE_AHEAD)
+		var forward := (rest.basis * sight).normalized()
+		eyes.append([to_head * centre, radius,
+				(head_rest.basis.inverse() * forward).normalized(),
+				(head_rest.basis.inverse() * Vector3.RIGHT).normalized()])
+	if eyes.size() != 2 or radius <= 0.0:
+		push_warning("RomanModel: eyes not found; no eyelids")
+		return null
+	var attach := BoneAttachment3D.new()
+	attach.name = "EyeLidMount"
+	body.add_child(attach)
+	attach.bone_name = "J_Head"
+	var lids := EyeLids.new()
+	lids.name = "EyeLids"
+	attach.add_child(lids)
+	var material: StandardMaterial3D = null
+	if DisplayServer.get_name() != "headless":
+		material = StandardMaterial3D.new()
+		material.albedo_color = LID_COLOR
+		material.roughness = 0.6
+		SkinLook.apply(material)
+	lids.skeleton = body
+	lids.eye_bones = PackedStringArray(EYE_TARGETS.keys())
+	lids.build(eyes, material, LID_SEED)
+	return lids
+
 
 ## Point his eyes at whatever `look_target` returns (a world position, or
 ## Vector3.INF for straight ahead). See EyeAim. Idempotent.
