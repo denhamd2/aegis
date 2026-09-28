@@ -260,7 +260,7 @@ const RECIPES := {
 	"cody_stand": {"kind": "retime", "source": "Cody_Stand",
 		"seconds": 2.000, "file": AUTHORED, "loop": true},
 	"whoa_arms": {"kind": "retime", "source": "Whoa_Arms",
-		"seconds": 2.000, "file": AUTHORED},
+		"seconds": 5.000, "file": AUTHORED},
 	"fists_up": {"kind": "retime", "source": "Fists_Up",
 		"seconds": 1.000, "file": AUTHORED},
 	"whoa_crouch": {"kind": "retime", "source": "Whoa_Crouch",
@@ -299,7 +299,7 @@ const RECIPES := {
 	"kneel": {"kind": "retime", "source": "Kneel",
 		"seconds": 5.000, "file": AUTHORED},
 	"whoa_low": {"kind": "retime", "source": "Whoa_Low",
-		"seconds": 2.000, "file": AUTHORED},
+		"seconds": 3.333, "file": AUTHORED},
 
 	# --- states that were playing raw rig clips -------------------------
 	#

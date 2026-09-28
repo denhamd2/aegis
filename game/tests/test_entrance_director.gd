@@ -252,13 +252,24 @@ func test_codys_beats_land_on_the_music() -> void:
 		ticks += 1
 		if start >= 0 and seen_at < 0 and b_man.visible:
 			seen_at = ticks - start
-		if starts.has("strikes/fists_down"):
+		if starts.has("strikes/whoa_low"):
 			break
-	assert_int(seen_at).override_failure_message("seen at %d" % seen_at) \
-			.is_between(int(round(EntranceDirector.CODY_WHOA_3 * 60)) - 1,
-				int(round(EntranceDirector.CODY_WHOA_3 * 60)) + 2)
-	assert_int(starts.get("strikes/whoa_arms", -1)).is_equal(int(round(EntranceDirector.CODY_HIT * 60)))
-	assert_int(starts.get("strikes/fists_down", -1)).is_equal(int(round(EntranceDirector.CODY_PUNCH * 60)))
+	# Measured in his music (EntranceDirector's CODY_* notes): nobody on
+	# camera until the first sung WHOA -- he used to walk out 16 s early, on
+	# an intro swell -- and each pose's accent on its phrase, within two ticks.
+	var on := func(what: String, at: int, music: float) -> void:
+		assert_int(at).override_failure_message("%s at tick %d, music %.2f s" % [
+				what, at, music]).is_between(int(round(music * 60)) - 2,
+				int(round(music * 60)) + 2)
+	on.call("appears", seen_at, EntranceDirector.CODY_EMERGE)
+	on.call("WHOA arms wide", starts.get("strikes/whoa_arms", -999)
+			+ EntranceDirector.WHOA_WIDE_AT, EntranceDirector.CODY_WHOA)
+	on.call("fists down", starts.get("strikes/fists_down", -999)
+			+ EntranceDirector.CODY_PUNCH_AT, EntranceDirector.CODY_PUNCH)
+	on.call("knee down", starts.get("strikes/kneel", -999)
+			+ EntranceDirector.KNEEL_DOWN_AT, EntranceDirector.CODY_KNEEL)
+	on.call("low WHOA wide", starts.get("strikes/whoa_low", -999)
+			+ EntranceDirector.WHOA_LOW_WIDE_AT, EntranceDirector.CODY_WHOA_LOW)
 
 
 ## Roman's finger is in the air on the slam of his music, and the pyro with

@@ -1499,9 +1499,13 @@ CLIPS = {
         (60, CODY_STAND),
     ],
 
-    # 60 frames / 2.0s: THE WHOA. A beat of anticipation (arms in, weight
-    # down), then the arms thrown wide and up, chest open, head back -- and
-    # HELD, because the pyro is what answers it.
+    # 150 frames / 5.0s: THE WHOA, cut to his music (entrance_director.gd,
+    # CODY_WHOA): a beat of anticipation, the arms thrown wide and up on
+    # frame 11 -- the chant's first sung WHOA -- and HELD through the pyro
+    # (frame 71, where his chest lifts to it) until the fists drive down on
+    # the next phrase. A held pose is never a frozen one: he breathes, the
+    # head goes back to drink it in, the hands drift. It drops to the stand on
+    # its last frames, which is the cock Fists_Down punches out of.
     "Whoa_Arms": [
         (0,  CODY_STAND),
         (5,  pose(CODY_STAND, pelvis=(0.0, 0.0, 0.86), spine=(-6, 0, 0),
@@ -1509,17 +1513,50 @@ CLIPS = {
                   hand_r=(0.18, 0.18, 1.08), hand_l=(-0.18, 0.18, 1.08),
                   elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
                   fist_r=0.8, fist_l=0.8)),
-        (11, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(14, 0, 0),
+        # Thrown: a touch past the hold, and it settles back.
+        (11, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.92), spine=(16, 0, 0),
+                  head=(22, 0, 0),
+                  hand_r=(0.84, 0.06, 1.77), hand_l=(-0.84, 0.06, 1.77),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.15, fist_l=0.15)),
+        (17, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(14, 0, 0),
                   head=(22, 0, 0),
                   hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
-        (50, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(15, 0, 0),
+        # Breathing it in, head going back.
+        (44, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.905), spine=(17, 0, 0),
+                  head=(28, 0, 0),
+                  hand_r=(0.83, 0.04, 1.75), hand_l=(-0.83, 0.04, 1.75),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (62, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.905), spine=(14, 0, 0),
                   head=(24, 0, 0),
+                  hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        # The pyro: the chest lifts to it.
+        (72, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.93), spine=(20, 0, 0),
+                  head=(30, 0, 0),
+                  hand_r=(0.85, 0.04, 1.80), hand_l=(-0.85, 0.04, 1.80),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (96, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(16, 0, 0),
+                  head=(24, 0, 4),
                   hand_r=(0.83, 0.05, 1.74), hand_l=(-0.83, 0.05, 1.74),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
-        (60, CODY_STAND),
+        (130, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(15, 0, 0),
+                   head=(20, 0, -3),
+                   hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.3, fist_l=0.3)),
+        (141, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.90), spine=(12, 0, 0),
+                   head=(14, 0, 0),
+                   hand_r=(0.78, 0.08, 1.66), hand_l=(-0.78, 0.08, 1.66),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.6, fist_l=0.6)),
+        (150, CODY_STAND),
     ],
 
     # 30 frames / 1.0s: both fists up, the second WHOA.
@@ -1678,25 +1715,56 @@ CLIPS = {
         (150, CODY_STAND),
     ],
 
-    # 60 frames / 2.0s: the WHOA again mid-aisle, low (C-SNME 40-48 s): feet
-    # wide, knees bent, arms straight out level, palms forward, chest up.
+    # 100 frames / 3.33s: the WHOA again, low, down the ramp -- on the
+    # chorus's big held WHOAAA (43.5 s in his music; entrance_director.gd
+    # CODY_WHOA_LOW): feet wide, knees bent, arms straight out level, palms
+    # forward, chest up. Wide on frame 10, sunk into it, and pushed wider on
+    # the second held WHOA (45.5 s: frame 70), then up to the stand.
     "Whoa_Low": [
         (0,  CODY_STAND),
-        (10, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.78), spine=(10, 0, 0),
+        (10, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.780), spine=(10, 0, 0),
                   head=(16, 0, 0),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.80, 0.08, 1.32), hand_l=(-0.80, 0.08, 1.32),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
-        (48, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.77), spine=(11, 0, 0),
+        (18, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.760), spine=(12, 0, 0),
                   head=(18, 0, 0),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
-                  hand_r=(0.81, 0.08, 1.31), hand_l=(-0.81, 0.08, 1.31),
+                  hand_r=(0.81, 0.08, 1.30), hand_l=(-0.81, 0.08, 1.30),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
-        (60, CODY_STAND),
+        (44, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.765), spine=(14, 0, 0),
+                  head=(22, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.81, 0.08, 1.33), hand_l=(-0.81, 0.08, 1.33),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (62, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.770), spine=(11, 0, 0),
+                  head=(18, 0, -4),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.80, 0.08, 1.31), hand_l=(-0.80, 0.08, 1.31),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (70, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.750), spine=(16, 0, 0),
+                  head=(26, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.84, 0.08, 1.40), hand_l=(-0.84, 0.08, 1.40),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.0, fist_l=0.0)),
+        (90, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.765), spine=(12, 0, 0),
+                  head=(18, 0, 3),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.81, 0.08, 1.32), hand_l=(-0.81, 0.08, 1.32),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (100, CODY_STAND),
     ],
 
     # 104 frames / 3.5s, looping: _crowd_walk.

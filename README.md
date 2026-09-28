@@ -7095,3 +7095,28 @@ before `hold_shot.tscn` showed it right.
 483 tests pass (new `test_own_hold.gd`; clip digest re-pinned after
 review in `hold_shot.tscn`). Moveset tally, 8 seeds: the hold in 5
 matches, every match still won by pinfall.
+
+## Round: Cody on his music, and the lower third
+
+The owner: Cody came out too soon, and his WHOA poses weren't on the WHOAs.
+Measured: his track's sung chant starts at 22.5 s; seven broadcast clips
+aligned to it by audio cross-correlation all start on the music, and all
+keep him off camera until the smoke at ~22.3 s. The game had him out on an
+intro swell at 6.3 s. Re-cut on the vocal onsets (`CODY_*` in
+`entrance_director.gd`; `gauntlet/refs/entrances.md` "Cody, cut to his
+music"): out of the smoke on the first sung WHOA, arms wide on 24.0, pyro
+26.0, fists 29.0, the knee down on 36.5, the low WHOA on the held WHOAAA at
+43.5. `Whoa_Arms` (5.0 s) and `Whoa_Low` (3.3 s) re-authored with living
+holds -- breath, head back, a chest lift to the pyro, a push wider on the
+second held WHOA -- so the poses carry their phrases.
+
+The lower third builds on in layers instead of one fade: a light streak
+wipes the plate on behind a slanted edge, the subtitle tracks in from wide,
+the name's letters rise in one after another with overshoot, a shine runs
+across the silver; out, the letters slip left and the plate wipes off.
+`tools/probe/lower_third_shot.tscn` renders it frame by frame.
+
+### Checks
+484 tests pass; `test_codys_beats_land_on_the_music` pins every accent
+within two ticks of its measured note. Clips reviewed in `clip_shot.tscn`
+before re-pinning the authoring gate.

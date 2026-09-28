@@ -150,6 +150,27 @@ blue sleeves and white stripes. It swings wide when he turns.
 **Light.** Blue house, red/white/blue stage and wall, white beams, heavy
 fog at the portal.
 
+### Cody, cut to his music [V + measured]
+
+His track (`cody_entrance.ogv`, 80 s) measured: three swells in a sparse
+intro (0.8, 3.6, 6.3 s), the band in at 7.9 s, and the sung chant from
+**22.5 s** -- a held-vowel detector puts vocal onsets at 22.5, 24.0, 26.0,
+29.0, 36.5 and the chorus's big held WHOAAA at **43.5 s** (and 45.5). Every
+WWE.com clip, aligned to this track by cross-correlating its audio, starts on
+the music (+0.2 s, a single sharp peak), so the footage reads straight onto
+it: MITB is crowd shots until the smoke at 22.3 s and Cody out of it at
+22.5-26 s; C-39 has the WHOA pose on from 20.8, the pyro at 23.3, the fists
+at 25.8; the kneel at 39.8-43.8 (MITB); the low WHOA at 39.8-47.8 (SNME).
+
+The game had him out on the third intro swell (6.3 s) and the WHOA on
+7.0 s -- 16 s early, in the part of the song where the broadcast shows the
+building. Now: black and the building to 20.3 s; smoke and the backlight;
+out of it on the first sung WHOA (22.5); arms wide on 24.0, held and alive
+through the pyro (26.0) to the fists on 29.0; the knee down at the lip on
+36.5; the low WHOA down the ramp on the held WHOAAA, 43.5, pushed wider on
+45.5. `test_codys_beats_land_on_the_music` pins each accent within two
+ticks.
+
 ### What the game now does, beat by beat [P, cut to the [V] above]
 
 **Roman (OTC; no title, the blue look).** Music time from his wall video:

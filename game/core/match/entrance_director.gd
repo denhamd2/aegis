@@ -162,16 +162,38 @@ const FACE_DISTANCE := 3.4
 ## Beside him as he walks the floor from the ramp foot to the steps.
 const FLOOR_TRACK_FOV := 30.0
 
-# --- Cody Rhodes (gauntlet/refs/entrances.md, "Cody: beat sheet") ----------
-## Every time below is MUSIC time in his video's own audio, measured: the
-## WHOA shout at 0.8 s, WHOA-OH at 3.6 and 6.3 s, the full track and the
-## picture at 7.0 s. His beats are cut to land on them.
+# --- Cody Rhodes (gauntlet/refs/entrances.md, "Cody: cut to his music") -----
+## Every time below is MUSIC time in his video's own audio (cody_entrance.ogv,
+## 80 s), measured: the intro's three swells (0.8, 3.6, 6.3 s), the band in at
+## 7.9 s, and the sung chant from 22.5 s -- vocal onsets at 22.5, 24.0, 26.0,
+## 29.0, 36.5 and the chorus's big held WHOAAA at 43.5 s. Seven WWE.com
+## entrance clips were aligned to this track by cross-correlating their audio
+## (every one starts on the music, +0.2 s), which put what the broadcast shows
+## on it: nobody on camera until the smoke (MITB 22.3 s), out of it on the
+## first sung WHOA, the WHOA pose, the pyro 2.5 s into it and the fists 5 s
+## into it (C-39), the kneel at the lip (C-MITB), the low WHOA mid-aisle on the
+## held WHOAAA (C-SNME). He used to be out on the third intro swell, 16 s early.
 const CODY_WHOA_1 := 0.8
 const CODY_WHOA_2 := 3.6
 const CODY_WHOA_3 := 6.3
-const CODY_HIT := 7.0
-const CODY_PUNCH := 8.8
-const CODY_OUT := 10.3
+const CODY_BAND := 7.9
+const CODY_SMOKE := 20.3
+## The first sung WHOA: he steps out of the smoke.
+const CODY_EMERGE := 22.5
+## Arms thrown wide on the chant.
+const CODY_WHOA := 24.0
+const CODY_PYRO := 26.0
+## Both fists driven down.
+const CODY_PUNCH := 29.0
+## His knee on the mat at the lip.
+const CODY_KNEEL := 36.5
+## The low WHOA down the ramp, on the held WHOAAA.
+const CODY_WHOA_LOW := 43.5
+## Where in each clip its accent lands, in ticks: Whoa_Arms' arms are wide on
+## frame 11, Kneel's knee down on 22, Whoa_Low's arms wide on 10.
+const WHOA_WIDE_AT := 22
+const KNEEL_DOWN_AT := 44
+const WHOA_LOW_WIDE_AT := 20
 ## He walks with purpose and works the crowd: Walk_Crowd travels 1.2 m/s.
 const CODY_WALK_SPEED := 1.2
 const CODY_WALK_CLIP := "strikes/walk_crowd"
@@ -179,8 +201,8 @@ const CODY_WALK_CLIP := "strikes/walk_crowd"
 const CODY_PUNCH_AT := 20
 ## Kneel: 5.0 s at the top of the ramp (C-MITB 40-44 s).
 const CODY_KNEEL_TICKS := 300
-## The WHOA held on the long lens before the cut to the pyro wide.
-const CODY_WHOA_LONG_TICKS := 60
+## Whoa_Low, played through.
+const CODY_WHOA_LOW_TICKS := 200
 ## His walk, cut as C-39 and C-SS cut it: the low steadicam ahead of him and a
 ## wide of the building. [shot, seconds], cycled.
 const CODY_WALK_SHOTS := [["steadicam_low", 4.0], ["arena_high", 2.5],
@@ -674,58 +696,95 @@ func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: flo
 func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
 	var mouth := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 0.5)
-	var smoke := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z - 0.3)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
+	var foot_of_ramp := Vector3(0.0, 0.0, CUT_TO_Z)
+	# He walks out of the smoke at his own pace: far enough back in it that
+	# Walk_Crowd's planted foot keeps the mat from sliding under the boot.
+	var emerge_s := CODY_WHOA - float(WHOA_WIDE_AT) / TPS - CODY_EMERGE
+	var smoke := mouth - Vector3(0.0, 0.0, CODY_WALK_SPEED * emerge_s)
 	var dark := {"lights": "OFF", "no_follow": true}
-	# The blackout, the wall, and on each WHOA the building, not the man.
+	# The intro and the band: black, the wall, and the building -- the crowd
+	# and the dark wide, a strobe on each swell -- never the man.
 	_beats.append({"kind": "hold", "who": w, "ticks": _secs(0.0, CODY_WHOA_1),
 			"shot": "cody_dark", "lights": "OFF",
 			"events": [[1, "tron_on"], [1, "blackout_on"]]})
+	for cut: Array in [[CODY_WHOA_1, CODY_WHOA_2, "crowd_wide", true],
+			[CODY_WHOA_2, CODY_WHOA_3, "cody_dark", true],
+			[CODY_WHOA_3, CODY_BAND, "crowd_wide", true],
+			[CODY_BAND, 12.0, "cody_dark", false],
+			[12.0, 16.0, "crowd_wide", false],
+			[16.0, CODY_SMOKE, "cody_dark", false]]:
+		_beats.append(_with(dark, {"kind": "hold", "who": w,
+				"ticks": _secs(cut[0], cut[1]), "shot": cut[2],
+				"events": [[1, "strobe"]] if cut[3] else []}))
+	# The smoke builds in his portal, lit from behind, the long lens creeping.
 	_beats.append(_with(dark, {"kind": "hold", "who": w,
-			"ticks": _secs(CODY_WHOA_1, CODY_WHOA_2), "shot": "crowd_wide",
-			"events": [[1, "strobe"]]}))
-	_beats.append(_with(dark, {"kind": "hold", "who": w,
-			"ticks": _secs(CODY_WHOA_2, CODY_WHOA_3), "shot": "cody_dark",
-			"fog_at": smoke, "events": [[1, "strobe"], [1, "fog_on"]]}))
-	# Out of the smoke on the last WHOA, backlit, walking at the lens.
+			"ticks": _secs(CODY_SMOKE, CODY_EMERGE), "shot": "portal_long",
+			"portal": mouth, "push_from": 0, "push_over": _secs(CODY_SMOKE, CODY_WHOA),
+			"fog_at": smoke, "lights": "RB_LOW",
+			"events": [[1, "fog_on"], [1, "backlight_on"]]}))
+	# Out of it on the first sung WHOA, at the lens.
 	_beats.append({"kind": "walk", "who": w, "appear": true, "coat": true,
 			"no_follow": true, "lights": "RB_LOW", "path": [smoke, mouth],
 			# A hair over the exact speed, so the tick count rounds to the
-			# measured gap and the hit lands on its frame.
+			# measured gap and the WHOA lands on its frame.
 			"speed": _flat(smoke).distance_to(_flat(mouth))
-					/ (float(_secs(CODY_WHOA_3, CODY_HIT)) / TPS) * 1.000001,
+					/ (float(_secs(CODY_EMERGE, CODY_WHOA - float(WHOA_WIDE_AT) / TPS))
+					/ TPS) * 1.000001,
 			"walk_clip": CODY_WALK_CLIP, "shot": "portal_long", "portal": mouth,
-			"push_from": 0, "push_over": _secs(CODY_WHOA_3, CODY_HIT),
-			"events": [[1, "backlight_on"]]})
-	# THE HIT. Lights, pyro, the WHOA pose -- the same frame. Held on the
-	# long lens from down the ramp (C-39 20-24 s), then the very wide for the
-	# fire (C-39 24 s).
+			"push_from": _secs(CODY_SMOKE, CODY_EMERGE),
+			"push_over": _secs(CODY_SMOKE, CODY_WHOA)})
+	# THE WHOA: the wind-up, then the arms wide on the chant and the building
+	# lit with it; held on the long lens from down the ramp (C-39 21-23 s),
+	# the very wide for the pyro (C-39 23.5 s).
+	var whoa_from := CODY_WHOA - float(WHOA_WIDE_AT) / TPS
+	_beats.append({"kind": "pose", "who": w, "lights": "RB_LOW",
+			"ticks": WHOA_WIDE_AT, "clip": "strikes/whoa_arms",
+			"facing": Vector3.BACK, "shot": "ramp_long"})
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
-			"ticks": CODY_WHOA_LONG_TICKS, "clip": "strikes/whoa_arms",
-			"facing": Vector3.BACK, "shot": "ramp_long",
-			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "pyro_cody_hit"],
-					[1, "fog_off"]]})
+			"ticks": _secs(whoa_from, CODY_PYRO) - WHOA_WIDE_AT,
+			"clip": "strikes/whoa_arms", "facing": Vector3.BACK, "shot": "ramp_long",
+			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "fog_off"]]})
+	var punch_from := CODY_PUNCH - float(CODY_PUNCH_AT) / TPS
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
-			"ticks": _secs(CODY_HIT, CODY_PUNCH) - CODY_WHOA_LONG_TICKS,
-			"clip": "strikes/whoa_arms",
-			"facing": Vector3.BACK, "shot": "stage_wide"})
+			"ticks": _secs(CODY_PYRO, punch_from), "clip": "strikes/whoa_arms",
+			"facing": Vector3.BACK, "shot": "stage_wide",
+			"events": [[1, "pyro_cody_hit"]]})
+	# The fists, the second burst, the card.
+	var fists_end := punch_from + 1.0 + 1.0 / 3.0
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
-			"ticks": _secs(CODY_PUNCH, CODY_OUT), "clip": "strikes/fists_down",
+			"ticks": _secs(punch_from, fists_end), "clip": "strikes/fists_down",
 			"facing": Vector3.BACK, "shot": "hero_low", "card": true,
 			"events": [[CODY_PUNCH_AT, "pyro_cody_punch"]]})
-	# To the lip on the low steadicam, the card up until he stops.
+	# To the lip on the low steadicam, the card up until he stops; working
+	# the crowd there for whatever is left, so the knee lands on its phrase.
+	var kneel_from := CODY_KNEEL - float(KNEEL_DOWN_AT) / TPS
+	var to_lip := _flat(mouth).distance_to(_flat(lip))
+	var lip_speed := maxf(CODY_WALK_SPEED, to_lip / (kneel_from - fists_end))
 	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
-			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
+			"speed": lip_speed, "walk_clip": CODY_WALK_CLIP,
 			"shot": "steadicam_low", "card": true})
+	var at_lip := fists_end + to_lip / lip_speed
+	if kneel_from - at_lip > 0.1:
+		_beats.append({"kind": "pose", "who": w, "lights": "RB",
+				"ticks": _secs(at_lip, kneel_from), "clip": "strikes/cody_stand",
+				"facing": Vector3.BACK, "shot": "steadicam_low"})
 	# The kneel at the top of the ramp, on a long lens from down it.
 	_beats.append({"kind": "pose", "who": w, "lights": "RB", "ticks": CODY_KNEEL_TICKS,
 			"clip": "strikes/kneel", "facing": Vector3.BACK, "shot": "ramp_long"})
-	# Down the ramp, cut as the broadcast cuts it, the WHOA again half way.
-	var mid := lip.lerp(Vector3(0.0, 0.0, CUT_TO_Z), 0.5)
-	_add_walk_cut(w, lip, mid, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS)
-	_beats.append({"kind": "pose", "who": w, "ticks": 120,
+	# Down the ramp exactly as far as his pace takes him before the held
+	# WHOAAA, and the low WHOA there.
+	var kneel_end := kneel_from + float(CODY_KNEEL_TICKS) / TPS
+	var low_from := CODY_WHOA_LOW - float(WHOA_LOW_WIDE_AT) / TPS
+	var down := CODY_WALK_SPEED * (low_from - kneel_end)
+	var mid := lip.lerp(foot_of_ramp, clampf(down / _flat(lip).distance_to(_flat(foot_of_ramp)),
+			0.0, 1.0))
+	_beats.append({"kind": "walk", "who": w, "path": [lip, mid], "lights": "RB",
+			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
+			"shot": "steadicam_low"})
+	_beats.append({"kind": "pose", "who": w, "ticks": CODY_WHOA_LOW_TICKS,
 			"clip": "strikes/whoa_low", "facing": Vector3.BACK, "shot": "hero_low"})
-	var foot := Vector3(0.0, 0.0, CUT_TO_Z)
+	var foot := foot_of_ramp
 	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS)
 	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, false,
 			"", "", 0, "ring_behind_low")
