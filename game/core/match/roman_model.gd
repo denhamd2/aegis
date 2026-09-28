@@ -303,6 +303,7 @@ func _ready() -> void:
 	if DisplayServer.get_name() != "headless":
 		_normalize_mouth_materials()
 	_trim_beard()
+	_volumize_hair()
 
 # ---------------------------------------------------------------------------
 # The beard's shape: trimmed, and faded at the sides
@@ -370,9 +371,12 @@ func _trim_beard() -> void:
 		for v in head_verts:
 			var p := to_beard * v
 			var cell := Vector3i((p / BEARD_CELL).floor())
+			# A plain Array: a PackedVector3Array held in a Dictionary is a
+			# value, and appending to it through grid[cell] appends to a copy
+			# -- which left every cell empty and the whole trim a no-op.
 			if not grid.has(cell):
-				grid[cell] = PackedVector3Array()
-			(grid[cell] as PackedVector3Array).append(p)
+				grid[cell] = []
+			(grid[cell] as Array).append(p)
 	var colors := PackedColorArray()
 	colors.resize(verts.size())
 	var trimmed := PackedVector3Array(verts)
@@ -402,18 +406,106 @@ func _trim_beard() -> void:
 		override.vertex_color_use_as_albedo = true
 
 
+# ---------------------------------------------------------------------------
+# The hair's volume
+# ---------------------------------------------------------------------------
+#
+# Against the same reference his hair read plastered to the scalp. Measured
+# off the .glb, the scalp cards (M_Hair) sit 11 mm off the head on top
+# (median, y > 1.74) and 20 mm off it where they hang -- a wet cap, where his
+# is slicked back with lift on top and falls in thick waves past the
+# shoulders. So each scalp-hair vertex is pushed OUT from the nearest skin,
+# HAIR_LIFT_TOP times its standoff on the crown and HAIR_LIFT_HANG where it
+# hangs, blended between -- and only HAIR_LIFT_FRONT at the front hairline,
+# so no fringe falls forward over his forehead. Skin weights untouched.
+const HAIR_LIFT_TOP := 1.9
+const HAIR_LIFT_HANG := 1.6
+const HAIR_LIFT_FRONT := 1.15
+## Crown above this, hang below the next; blended between.
+const HAIR_LIFT_Y := Vector2(1.62, 1.74)
+
+
+static func hair_lift(p: Vector3) -> float:
+	var k := lerpf(HAIR_LIFT_HANG, HAIR_LIFT_TOP, smoothstep(HAIR_LIFT_Y.x, HAIR_LIFT_Y.y, p.y))
+	# The hairline: in front of the ears, across the forehead.
+	var front := smoothstep(0.05, 0.09, p.z) * smoothstep(1.70, 1.76, p.y)
+	return lerpf(k, HAIR_LIFT_FRONT, front)
+
+
+func _volumize_hair() -> void:
+	var skin_meshes: Array[MeshInstance3D] = []
+	var hair: Array = []
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null or not mi.visible:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var mat := mi.mesh.surface_get_material(s)
+			if mat == null:
+				continue
+			var key := mat.resource_name
+			if key == "Material.001" or key == "Material":
+				skin_meshes.append(mi)
+			elif HAIR_FIXES.has(key) and key != "beard":
+				hair.append([mi, s])
+	if skin_meshes.is_empty() or hair.is_empty():
+		push_warning("RomanModel: hair or skin not found; hair left as supplied")
+		return
+	for entry: Array in hair:
+		var mi: MeshInstance3D = entry[0]
+		var surface: int = entry[1]
+		if not (mi.mesh is ArrayMesh):
+			continue
+		var grid := {}
+		for skin_mi in skin_meshes:
+			var to_hair := mi.global_transform.affine_inverse() * skin_mi.global_transform
+			for s in skin_mi.mesh.get_surface_count():
+				for v in skin_mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX] as PackedVector3Array:
+					var p := to_hair * v
+					if p.y < 1.25:
+						continue
+					var cell := Vector3i((p / BEARD_CELL).floor())
+					if not grid.has(cell):
+						grid[cell] = []
+					(grid[cell] as Array).append(p)
+		var source := mi.mesh as ArrayMesh
+		var arrays := source.surface_get_arrays(surface)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var lifted := PackedVector3Array(verts)
+		for i in verts.size():
+			var skin := _nearest_in_grid(grid, verts[i])
+			if skin != Vector3.INF:
+				lifted[i] = skin + (verts[i] - skin) * hair_lift(verts[i])
+		arrays[Mesh.ARRAY_VERTEX] = lifted
+		mi.mesh = _rebuilt(source, surface, arrays)
+
+
+## A copy of `source` with one surface's arrays replaced, materials, names
+## and skinning format kept.
+static func _rebuilt(source: ArrayMesh, surface: int, arrays: Array) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	for s in source.get_surface_count():
+		var flags := source.surface_get_format(s) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		var surface_arrays: Array = arrays if s == surface else source.surface_get_arrays(s)
+		mesh.add_surface_from_arrays(source.surface_get_primitive_type(s), surface_arrays,
+				[], {}, flags)
+		mesh.surface_set_material(s, source.surface_get_material(s))
+		mesh.surface_set_name(s, source.surface_get_name(s))
+	return mesh
+
+
 static func _nearest_in_grid(grid: Dictionary, p: Vector3) -> Vector3:
 	var base := Vector3i((p / BEARD_CELL).floor())
 	var best := Vector3.INF
 	var best_d := INF
-	for reach in [1, 2]:
+	for reach in [1, 2, 4]:
 		for dx in range(-reach, reach + 1):
 			for dy in range(-reach, reach + 1):
 				for dz in range(-reach, reach + 1):
 					var cell := base + Vector3i(dx, dy, dz)
 					if not grid.has(cell):
 						continue
-					for q in grid[cell] as PackedVector3Array:
+					for q: Vector3 in grid[cell] as Array:
 						var d := p.distance_squared_to(q)
 						if d < best_d:
 							best_d = d
