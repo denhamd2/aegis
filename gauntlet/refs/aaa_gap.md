@@ -43,6 +43,25 @@ at the end with the reason.
 | Sweat | None | |
 | Hair anti-aliasing | Alpha scissor only, except Roman's alpha-to-coverage | Cody's hair shells stair-step. |
 
+## Done: items 1–4 (September 2026)
+
+Measured with the round check's own tools, on Vulkan, before and after.
+
+| Metric | Before | After | Band |
+| --- | --- | --- | --- |
+| mat luminance | 0.451 | 0.453 | 0.43–0.49 |
+| mat ↔ wrestler A | 0.295 | 0.283 | 0.24–0.31 |
+| mat ↔ wrestler B | 0.143 | 0.131 | 0.24–0.31 (already below) |
+| wrestler ↔ wrestler | 0.153 | 0.152 | 0.00–0.07 (already above) |
+| fine detail | 0.443 | 0.415 | ref 0.614 |
+
+What the numbers show:
+- The wrestlers are about 0.013 brighter: the mat's bounce light (SSIL)
+  reaching them.
+- "Fine detail" is lower because it was partly counting aliasing.
+- Art-shot settle frames went from 3 to 24 so TAA and SSIL converge. Captured
+  at 48 frames as well, every metric agrees within 0.002.
+
 ## The improvements, in order of look gained per hour
 
 Each item is small and self-contained. Each must be verified on a render

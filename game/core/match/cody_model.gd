@@ -107,6 +107,12 @@ func _add_hair() -> void:
 		if k > 0.0:
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 			mat.alpha_scissor_threshold = 0.12 + 0.32 * k
+			# Alpha to coverage, as Roman's hair cards: with MSAA on
+			# (project.godot) the strand edges resolve to partial coverage
+			# instead of the hard stair-step a bare scissor cuts.
+			mat.alpha_antialiasing_mode = \
+					BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+			mat.alpha_antialiasing_edge = mat.alpha_scissor_threshold
 		mi.material_override = mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
@@ -125,6 +131,7 @@ func _fix_look() -> void:
 				material.albedo_texture = load(HEAD_BLOND)
 			material.albedo_color = material.albedo_color * SKIN_TINT
 			material.roughness = SKIN_ROUGHNESS
+			SkinLook.apply(material)
 			mesh_instance.set_surface_override_material(surface, material)
 
 

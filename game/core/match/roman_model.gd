@@ -540,6 +540,7 @@ func _fix_materials() -> void:
 			if SKIN_ROUGHNESS.has(key):
 				material.roughness = SKIN_ROUGHNESS[key]
 				material.metallic_specular = 0.5
+				SkinLook.apply(material)
 			if GROW_FIXES.has(key):
 				material.grow = true
 				material.grow_amount = GROW_FIXES[key]

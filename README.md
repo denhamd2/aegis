@@ -7171,3 +7171,29 @@ Measured through `tools/probe/rope_shot.tscn`:
 | Tope | 0.46 m |
 | Roll in | 0.46 m |
 | Springboard | 0.17 m |
+
+## Round: AAA pass, items 1–4
+
+From `gauntlet/refs/aaa_gap.md`.
+
+**What changed.**
+1. **Anti-aliasing.** MSAA 4x and TAA are on in `project.godot`. Cody's hair
+   shells use alpha to coverage, as Roman's cards already did.
+2. **Skin subsurface scattering.** New `core/materials/skin_look.gd` applies
+   it to Roman's and Cody's skin materials, with a little transmittance for
+   backlit ears and fingers. It is not applied to Kenny, whose one scan
+   material covers his gear too.
+3. **A ReflectionProbe over the ring** (`RingReflections` in `match.tscn`).
+   Posts, turnbuckle hardware, steps and title plates now reflect the hall.
+4. **SSIL.** The canvas bounces light onto the wrestlers.
+
+**Measurement changes.**
+- `CaptureHarness.ART_SETTLE_FRAMES` went from 3 to 24, so art shots are
+  measured converged.
+- The silhouette mask frame turns TAA and MSAA off, so its flat keys stay
+  exact.
+
+**Results.**
+- The mat holds its exposure anchor (0.453).
+- The before and after table is in `aaa_gap.md`.
+- 490 tests pass.

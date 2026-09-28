@@ -103,12 +103,21 @@ ssao_power = 1.4
 ssao_detail = 0.6
 ssao_light_affect = 0.12
 ssao_ao_channel_affect = 0.2
-; SSIL and SDFGI are deliberately OFF, and this is not a cost argument -- no
-; software capture may make one (ARCHITECTURE.md). Both accumulate over
-; frames, and CaptureHarness.ART_SETTLE_FRAMES is 3 while SILHOUETTE_SETTLE is
-; 90. An effect that has converged in one measurement and not the other makes
-; the two disagree about the same scene, which would poison the exposure
-; anchor the whole slice is judged on.
+; SDFGI stays OFF. SSIL is now ON (gauntlet/refs/aaa_gap.md, item 4): the
+; white canvas bounces the truss keys back up onto the wrestlers, the lift
+; under chins and chests every broadcast frame shows. It was off because it
+; accumulates over frames while CaptureHarness.ART_SETTLE_FRAMES was 3 against
+; SILHOUETTE_SETTLE's 90 -- one measurement converged and one not. The settle
+; is now 24, and the art shots were captured at 24 and at 48 to show the
+; metrics no longer move with it.
+; Radius 3 m: the mat-to-torso distance and no further, so the hall does not
+; bounce onto the ring. Intensity 1.2 with light_affect left at 0: the bounce
+; is added light only, it never darkens what the keys lit.
+ssil_enabled = true
+ssil_radius = 3.0
+ssil_intensity = 1.2
+ssil_sharpness = 0.98
+ssil_normal_rejection = 1.0
 ; --- Screen-space reflections ----------------------------------------------
 ; ON, where SSIL and SDFGI stay off, and the distinction is exactly the one
 ; the paragraph above draws. SSIL and SDFGI ACCUMULATE OVER FRAMES. Godot's
@@ -179,6 +188,22 @@ match_seed = 1
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_arena")
+
+; What the metal in and around the ring reflects (gauntlet/refs/aaa_gap.md,
+; item 3). The Environment's ambient carries no reflections, so the posts,
+; the turnbuckle hardware, the steps and the title plates -- every conductor
+; here -- went near-black between the lights, and three materials carried
+; emission to hide it (material_library's arena_truss note, EntranceProps'
+; gold, the hardware's 0.7 metallic). One probe over the ring, captured once
+; at load: the lit hall, the video wall and the truss for every metal to
+; reflect, and a specular environment for skin and the wet-look hair.
+; Centred 3 m up over the ring; 26 m across reaches the barricades and first
+; rows, which is what a post or a belt plate actually sees.
+[node name="RingReflections" type="ReflectionProbe" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+size = Vector3(26, 12, 26)
+max_distance = 80.0
+enable_shadows = true
 
 [node name="LightRig" type="Node3D" parent="."]
 script = ExtResource("32")

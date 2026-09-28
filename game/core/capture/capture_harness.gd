@@ -160,7 +160,15 @@ const ART_SHOTS := [
 ## Frames to let the renderer settle before each art shot is saved. The
 ## first frame after a camera jump can still carry the previous view's
 ## temporal state, and a shot saved into that is not the shot asked for.
-const ART_SETTLE_FRAMES := 3
+##
+## 24, up from 3, because the renderer now HAS temporal state that takes
+## frames to converge: TAA and SSIL (project.godot, match.tscn; gauntlet/refs/
+## aaa_gap.md). At 3 frames an art shot would be measured mid-convergence
+## while the silhouette shot, at SILHOUETTE_SETTLE, is measured converged --
+## two measurements of one scene disagreeing, which is the exact failure
+## match.tscn's note on SSIL exists to prevent. Checked by capturing at 24 and
+## at 48 and comparing the round-check metrics.
+const ART_SETTLE_FRAMES := 24
 
 
 func _ready() -> void:
@@ -313,6 +321,11 @@ func _silhouette_step() -> void:
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 2:
 		_save_viewport(_silhouette_prefix + "_beauty.png")
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 3:
+		# The mask is flat key colours read back exactly. TAA would blend it
+		# with the beauty frames before it (its history), and MSAA would mix
+		# key colours along every edge, so both are off for the mask alone.
+		get_viewport().use_taa = false
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
 		_key(_match.get_node("Ring/Floor/MeshInstance3D"), SILHOUETTE_KEYS["mat"])
 		# The whole wrestler, gear included -- WrestlerAttire's trunks, boots
 		# and pads are part of the subject the reference table measures, not

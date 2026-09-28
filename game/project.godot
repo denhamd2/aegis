@@ -103,6 +103,16 @@ environment/defaults/default_clear_color=Color(0.1, 0.1, 0.12, 1)
 ; This key is under limits/opengl and Vulkan ignores it, so forward_plus --
 ; where every measured number in gauntlet/ was taken -- cannot be affected.
 limits/opengl/max_lights_per_object=32
+; Anti-aliasing (gauntlet/refs/aaa_gap.md, item 1). There was none at all, and
+; the stair-stepped edges on hair, ropes and shoulders were the loudest
+; not-AAA tell in the owner's screenshots. MSAA 4x resolves geometry edges and
+; -- through alpha to coverage on the hair cards and shells -- strand edges;
+; TAA takes the shimmer out of the thin, high-contrast lines MSAA alone leaves
+; crawling in motion (ropes against the dark hall, the crowd cards).
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/use_taa=true
+; Skin scattering (SkinLook): medium quality, the default is the lowest.
+environment/subsurface_scattering/subsurface_scattering_quality=2
 
 [display]
 
