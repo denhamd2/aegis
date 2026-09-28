@@ -242,6 +242,9 @@ const HAIR_COLOR := Color(0.045, 0.042, 0.043)
 ## His hair is slicked and wet-looking; a low roughness gives it the long
 ## streaky highlight a matte card never has.
 const HAIR_ROUGHNESS := 0.32
+## The direction ACROSS the strands on his hair cards, in UV space
+## (HairLook.apply). Checked on renders through tools/probe/hair_shot.tscn.
+const HAIR_FLOW := Vector2(1.0, 0.0)
 const BEARD_ROUGHNESS := 0.8
 ## Alpha below this is cut away. Hair cards need a scissor rather than
 ## blending: sorted transparency on overlapping strands produces halos.
@@ -429,6 +432,19 @@ const HAIR_LIFT_FRONT := 1.15
 const HAIR_LIFT_Y := Vector2(1.62, 1.74)
 
 
+## Root-to-tip (refs/aaa_gap.md item 7): the albedo at the scalp, as a share
+## of HAIR_COLOR, rising to 1 by HAIR_TIP_STANDOFF off the skin. Black hair
+## is two-tone too -- the lengths are a shade browner and lighter than the
+## roots -- and without it the lifted crown read as one flat mass.
+const HAIR_ROOT_SHADE := 0.55
+const HAIR_TIP_STANDOFF := Vector2(0.006, 0.035)
+
+
+static func hair_root_to_tip(standoff: float) -> float:
+	return lerpf(HAIR_ROOT_SHADE, 1.0,
+			smoothstep(HAIR_TIP_STANDOFF.x, HAIR_TIP_STANDOFF.y, standoff))
+
+
 static func hair_lift(p: Vector3) -> float:
 	var k := lerpf(HAIR_LIFT_HANG, HAIR_LIFT_TOP, smoothstep(HAIR_LIFT_Y.x, HAIR_LIFT_Y.y, p.y))
 	# The hairline: in front of the ears, across the forehead.
@@ -476,11 +492,20 @@ func _volumize_hair() -> void:
 		var arrays := source.surface_get_arrays(surface)
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var lifted := PackedVector3Array(verts)
+		# Root to tip: darkest where the card leaves the scalp, full colour
+		# out at the ends (HAIR_ROOT_SHADE). Vertex colour, so the material's
+		# albedo multiplies it.
+		var shade := PackedColorArray()
+		shade.resize(verts.size())
 		for i in verts.size():
 			var skin := _nearest_in_grid(grid, verts[i])
+			var k := 1.0
 			if skin != Vector3.INF:
 				lifted[i] = skin + (verts[i] - skin) * hair_lift(verts[i])
+				k = hair_root_to_tip(lifted[i].distance_to(skin))
+			shade[i] = Color(k, k, k, 1.0)
 		arrays[Mesh.ARRAY_VERTEX] = lifted
+		arrays[Mesh.ARRAY_COLOR] = shade
 		mi.mesh = _rebuilt(source, surface, arrays)
 
 
@@ -576,6 +601,11 @@ func _fix_materials() -> void:
 				# it rendered as a black plastic chin.
 				material.roughness = BEARD_ROUGHNESS if key == "beard" \
 					else HAIR_ROUGHNESS
+				if key != "beard":
+					# The band of shine across the strands (HairLook), and the
+					# root-to-tip shade _volumize_hair writes as vertex colour.
+					HairLook.apply(material, HAIR_FLOW)
+					material.vertex_color_use_as_albedo = true
 				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
 					else HAIR_ALPHA_SCISSOR
 				if key == "beard" or key in SCALP_BLEND:

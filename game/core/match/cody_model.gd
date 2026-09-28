@@ -65,8 +65,15 @@ const PORE_TILES := 48.0
 ## and too yellow.
 const HAIR := "res://assets/characters/cody_hair.glb"
 const HAIR_STRANDS := "res://assets/characters/cody_hair_strands.png"
-const HAIR_ROOT := Color(0.56, 0.46, 0.36)
+##
+## The root deepened from (0.56, 0.46, 0.36) with the anisotropic shine (item 7
+## of refs/aaa_gap.md): a lighter root flattened the stack once the shine
+## lifted the outer shells, and bleach-blond hair is darkest at the root.
+const HAIR_ROOT := Color(0.48, 0.38, 0.29)
 const HAIR_TIP := Color(0.86, 0.74, 0.58)
+## Down from 0.5: at 0.5 the stretched highlight spread so wide it was only a
+## general sheen. See HairLook.
+const HAIR_ROUGHNESS := 0.42
 
 
 func _ready() -> void:
@@ -103,7 +110,10 @@ func _add_hair() -> void:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_texture = strands
 		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, k)
-		mat.roughness = 0.5
+		mat.roughness = HAIR_ROUGHNESS
+		# The highlight as a band across the strands (u runs round the head,
+		# the strands along v), not a round spot.
+		HairLook.apply(mat)
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		# Vertex alpha thins the outer shells towards the patch's edge.
 		mat.vertex_color_use_as_albedo = true

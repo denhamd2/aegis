@@ -7213,3 +7213,24 @@ most once he is wet.
 
 **Checks.** Rendered dry and soaked through `tools/probe/skin_shot.tscn`.
 Tests are in `tests/test_skin_look.gd`.
+
+## Round: AAA pass, items 7–9
+
+**Hair shine.** `core/materials/hair_look.gd` gives the hair an anisotropic
+highlight that runs across the strands.
+- Roman's hair gets a root-to-tip shade, written as vertex colour.
+- Cody's roots are deepened.
+- Roman's single glossy sheen now breaks into streaks along the strands.
+
+**Soft shadows.** The four ring keys get a 0.35 m `light_size`, which turns on
+contact-hardening PCSS shadows.
+
+**Pyro light.**
+- Gerbs and the waterfall now light what is near them for as long as they
+  burn: held, flickering, and cooling to orange.
+- Previously a gerb's light decayed like a pop.
+- The waterfall had no light at all; it now gets one light per three falls.
+
+**Checks.** `tools/probe/hair_shot.tscn` and `tools/probe/shadow_shot.tscn`
+render before and after. Tests are in `tests/test_hair_shadow_pyro.gd`.
+Details are in `gauntlet/refs/aaa_gap.md`.

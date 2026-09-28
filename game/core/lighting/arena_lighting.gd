@@ -110,6 +110,13 @@ const UPLIGHT_DZ := 2.6
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
 @export var key_energy: float = 9.0
+## The key fixture's emitting size, in metres, for PCSS soft shadows. A large
+## truss wash or profile has a 0.3-0.4 m front lens. From 7.25 m up that
+## makes a penumbra about 9 cm wide under a shoulder 1.5 m off the mat
+## (0.35 x 1.5 / 5.75), and
+## none at the feet: sharp where a body touches the canvas, soft away from it,
+## the way broadcast footage reads.
+const KEY_LIGHT_SIZE := 0.35
 ## Straight-down top light, and the lever the exposure anchor is solved on.
 ## Adds to the mat more than to a standing torso, which opens the
 ## mat<->wrestler gap without touching either material.
@@ -459,6 +466,10 @@ func _build_ring_key() -> void:
 					at, aim, KEY_COLOR, key_energy, 40.0, 0.5, 24.0, true)
 			# These are the fixtures the shafts come out of.
 			light.light_volumetric_fog_energy = 1.6
+			# Contact-hardening shadows (refs/aaa_gap.md item 8): a truss
+			# fixture's lens is a wide source, so a shadow is sharp where a
+			# boot meets the mat and opens up with distance from the body.
+			light.light_size = KEY_LIGHT_SIZE
 
 
 ## Two wide fixtures pointing straight down the ring's long axis. No shadows:

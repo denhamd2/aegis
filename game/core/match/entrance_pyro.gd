@@ -36,7 +36,21 @@ const STROBE_COLOR := Color(0.92, 0.95, 1.0)
 ## Roman's pyro flash: the room goes red on the slam (R-41 42 s).
 const ROMAN_RED := Color(1.0, 0.12, 0.16)
 
-var _flashes: Array = []   # [light, age, peak, life]
+## A burning jet (gerb, waterfall) lights what is near it for as long as it
+## burns, not as a pop (refs/aaa_gap.md item 9, 2K26's "particle lighting"):
+## full within SUSTAIN_ATTACK, held until SUSTAIN_HOLD of its life, then out.
+## And it flickers -- a spark fountain's output is not steady -- by up to
+## FLICKER of its level, on a few summed sines per light so no two gerbs
+## pulse together.
+const SUSTAIN_ATTACK := 0.06
+const SUSTAIN_HOLD := 0.7
+const FLICKER := 0.3
+## The waterfall's light hangs this far under the truss, where the sheet of
+## sparks is densest in front of the deck, one per this many falls.
+const WATERFALL_LIGHT_DROP := 2.5
+const WATERFALL_LIGHT_EVERY := 3
+
+var _flashes: Array = []   # [light, age, peak, life, sustained, phase]
 
 
 func fire(cue: String) -> void:
@@ -62,7 +76,8 @@ func fire(cue: String) -> void:
 			for i in WATERFALL_COUNT:
 				var x := lerpf(-ArenaBuilder.STAGE_HALF_WIDTH + 0.4,
 						ArenaBuilder.STAGE_HALF_WIDTH - 0.4, float(i) / (WATERFALL_COUNT - 1))
-				_waterfall(Vector3(x, WATERFALL_HEIGHT, ArenaBuilder.STAGE_FRONT - 0.3))
+				_waterfall(Vector3(x, WATERFALL_HEIGHT, ArenaBuilder.STAGE_FRONT - 0.3),
+						i % WATERFALL_LIGHT_EVERY == 1)
 			_ramp_gerbs(12.0)
 			for x: float in MORTAR_XS:
 				_burst(Vector3(x, MORTAR_HEIGHT, ArenaBuilder.STAGE_FRONT - 4.0))
@@ -89,10 +104,35 @@ func _physics_process(delta: float) -> void:
 	for f: Array in _flashes:
 		var light: OmniLight3D = f[0]
 		f[1] += delta
-		var k := clampf(1.0 - float(f[1]) / float(f[3]), 0.0, 1.0)
-		# Fast attack, quadratic decay: a flash, not a fade.
-		light.light_energy = float(f[2]) * k * k
-		light.visible = k > 0.0
+		var t := float(f[1]) / float(f[3])
+		if f[4]:
+			var level := sustain_level(t) * flicker(float(f[1]), float(f[5]))
+			light.light_energy = float(f[2]) * level
+			# White-hot while it burns, orange as the jet dies, as the sparks'
+			# own colour ramp goes.
+			light.light_color = SPARK_HOT.lerp(SPARK_EMBER, smoothstep(SUSTAIN_HOLD, 1.0, t))
+			light.visible = t < 1.0
+		else:
+			var k := clampf(1.0 - t, 0.0, 1.0)
+			# Fast attack, quadratic decay: a flash, not a fade.
+			light.light_energy = float(f[2]) * k * k
+			light.visible = k > 0.0
+
+
+## A burning jet's level, 0-1, over its life fraction `t`.
+static func sustain_level(t: float) -> float:
+	if t <= 0.0 or t >= 1.0:
+		return 0.0
+	var up := minf(t / SUSTAIN_ATTACK, 1.0)
+	var down := 1.0 - smoothstep(SUSTAIN_HOLD, 1.0, t)
+	return up * down
+
+
+## 1 - FLICKER .. 1: three incommensurate sines, offset per light.
+static func flicker(age: float, phase: float) -> float:
+	var n := sin(age * 37.0 + phase) + sin(age * 61.0 + phase * 1.7) \
+			+ sin(age * 23.0 + phase * 2.3)
+	return 1.0 - FLICKER * (0.5 + n / 6.0)
 
 
 func _spark_material() -> ParticleProcessMaterial:
@@ -145,7 +185,9 @@ func _gerb(at: Vector3, speed: float, life: float, amount: int) -> void:
 	add_child(p)
 	p.global_position = at
 	p.emitting = true
-	_flash(at + Vector3.UP * 1.5, 6.0, 8.0, life)
+	# At the jet's lower third, where it is densest: what lights a wrestler
+	# walking past it.
+	_flash(at + Vector3.UP * 1.5, 6.0, 8.0, life, SPARK_HOT, true)
 
 
 ## A mortar air burst: a sphere of sparks high over the set.
@@ -171,7 +213,7 @@ func _burst(at: Vector3) -> void:
 
 
 ## A waterfall: sparks pouring DOWN off a truss, slow, in a sheet.
-func _waterfall(at: Vector3) -> void:
+func _waterfall(at: Vector3, lit := false) -> void:
 	var p := GPUParticles3D.new()
 	var m := _spark_material()
 	m.direction = Vector3.DOWN
@@ -192,6 +234,10 @@ func _waterfall(at: Vector3) -> void:
 	add_child(p)
 	p.global_position = at
 	p.emitting = true
+	if lit:
+		# The sheet lights the deck and the wrestler walking out under it.
+		_flash(at + Vector3.DOWN * WATERFALL_LIGHT_DROP, 5.0, 9.0, p.lifetime,
+				SPARK_HOT, true)
 
 
 ## Gerbs either side of the ramp, on its surface.
@@ -204,7 +250,7 @@ func _ramp_gerbs(speed: float) -> void:
 
 
 func _flash(at: Vector3, energy: float, reach: float, life: float,
-		color: Color = FLASH_COLOR) -> void:
+		color: Color = FLASH_COLOR, sustained := false) -> void:
 	var light := OmniLight3D.new()
 	light.light_color = color
 	light.omni_range = reach
@@ -213,5 +259,7 @@ func _flash(at: Vector3, energy: float, reach: float, life: float,
 	light.shadow_enabled = false
 	add_child(light)
 	light.global_position = at
-	light.light_energy = energy
-	_flashes.append([light, 0.0, energy, life])
+	light.light_energy = 0.0 if sustained else energy
+	# Phase from the position, so the flicker is the same every run.
+	var phase := fposmod(at.x * 12.9898 + at.z * 78.233, TAU)
+	_flashes.append([light, 0.0, energy, life, sustained, phase])

@@ -83,6 +83,39 @@ What the numbers show:
 - Check both through `tools/probe/skin_shot.tscn`, which renders dry and
   soaked.
 
+## Done: items 7–9
+
+**Hair shine** (`core/materials/hair_look.gd`).
+- GGX anisotropy at 0.7, stretching the highlight ACROSS the strands. A head
+  of hair is rough across the strands and smooth along them, which is the band
+  of light round a head under a key.
+- Cody's shells need no flowmap: u runs round the head, the strands along v.
+  Roman's cards were checked on renders both ways (`tools/probe/hair_shot.tscn`
+  renders off, as shipped, and turned 90°).
+- Root to tip:
+  - Cody's root is deepened to (0.48, 0.38, 0.29), and his roughness drops
+    0.5 → 0.42 so the band reads.
+  - Roman gets a vertex-colour shade from 0.55 at the scalp to 1.0 at 35 mm
+    off it (`RomanModel.hair_root_to_tip`).
+- On Roman the one plastic sheen breaks into strand streaks. On Cody the
+  effect is subtler: more depth between the shells.
+
+**Soft key shadows** (`ArenaLighting.KEY_LIGHT_SIZE` 0.35 m).
+- PCSS on the four shadow-casting ring keys. A 0.35 m lens at 7.25 m gives a
+  penumbra of about 9 cm under a shoulder and none at the feet.
+- Check through `tools/probe/shadow_shot.tscn` (hard vs soft).
+
+**Pyro light** (`EntrancePyro`).
+- Every cue already flashed an OmniLight. The gap was that a gerb's light
+  decayed like a pop while its jet was still burning.
+- Burning jets (gerbs and the waterfall) now:
+  - hold their light for 70% of their life, then fade;
+  - flicker by up to 30% on three summed sines, phased by position so the
+    same run always flickers the same way;
+  - cool from white-hot to ember as they die.
+- The waterfall, which had no light at all, gets one light per three falls,
+  2.5 m under the truss.
+
 ## The improvements, in order of look gained per hour
 
 Each item is small and self-contained. Each must be verified on a render
