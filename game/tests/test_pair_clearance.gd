@@ -41,3 +41,21 @@ func test_segment_distance_is_the_gap_between_centre_lines() -> void:
 	var d := PairClearance.segment_distance(Vector3(0, 0, 0), Vector3(0, 1, 0),
 			Vector3(0.2, 0, 0), Vector3(0.2, 1, 0))
 	assert_float(d).is_equal_approx(0.2, 0.0001)
+
+
+## Their own big moves, at their real sizes: Roman's Spear and Superman Punch
+## on Cody, Cody's Cross Rhodes and Cody Cutter on Roman. The ratchet above
+## runs on the mannequin the clips were authored on; this holds the moves
+## that decide matches for the men who actually wrestle them.
+func test_each_mans_finisher_and_signature_are_clean_on_the_other() -> void:
+	var failures: Array[String] = []
+	for spec: Array in [["roman", "cody", "finisher_spear"],
+			["roman", "cody", "signature_superman_punch"],
+			["cody", "roman", "finisher_cross_rhodes"],
+			["cody", "roman", "signature_cody_cutter"]]:
+		var r: Dictionary = await PairClearance.measure(self, spec[2],
+				PackedStringArray([spec[0], spec[1]]))
+		if r["body"] > PairClearance.BODY_LIMIT or r["arm"] > PairClearance.ARM_LIMIT:
+			failures.append("%s on %s: %s body %.3f arm %.3f -- %s"
+					% [spec[0], spec[1], spec[2], r["body"], r["arm"], r["where"]])
+	assert_array(failures).override_failure_message("\n".join(failures)).is_empty()

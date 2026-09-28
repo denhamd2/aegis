@@ -20,19 +20,22 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 const MOVES_DIR := "res://resources/moves"
 
 var _only: Array[String] = []
+var _roster := PackedStringArray()
 
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
-		if args[i] == "--moves" and i + 1 < args.size():
+		if args[i] == "--wrestlers" and i + 1 < args.size():
+			_roster = args[i + 1].split(",")
+		elif args[i] == "--moves" and i + 1 < args.size():
 			for token in args[i + 1].split(","):
 				_only.append(token)
 	var results := []
 	for move_id in PairClearance.paired_move_ids():
 		if not _only.is_empty() and not _only.has(move_id):
 			continue
-		var r: Dictionary = await PairClearance.measure(self, move_id)
+		var r: Dictionary = await PairClearance.measure(self, move_id, _roster)
 		results.append(r)
 		print("PAIR %-36s worst %.3f m  %s @%.2f   body-body %.3f   arm %.3f   moved A %.3f D %.3f" % [move_id,
 				r["worst"], r["where"], r["at"], r["body"], r["arm"], r["moved_attacker"], r["moved_defender"]])

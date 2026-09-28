@@ -140,8 +140,13 @@ static func push(a: WrestlerController, b: WrestlerController) -> Vector3:
 ## Runs `move_id` through the real GrappleRig in a fresh match scene under
 ## `host`, and returns its worst overlap: {"move", "body", "arm", "worst",
 ## "where", "at"}. "worst" is the largest excess over the matching limit.
-static func measure(host: Node, move_id: String) -> Dictionary:
+static func measure(host: Node, move_id: String, roster := PackedStringArray()) -> Dictionary:
 	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
+	# The real wrestlers at their real sizes, when asked (["roman", "cody"]):
+	# the clips were authored on the mannequin, and the separation has to
+	# hold for the men who actually wrestle.
+	if roster.size() == 2:
+		TitleScreen.configure_match(scene, Roster.by_id(roster[0]), Roster.by_id(roster[1]), 1)
 	host.add_child(scene)
 	await host.get_tree().physics_frame
 	var attacker: WrestlerController = scene.get_node("WrestlerA")
