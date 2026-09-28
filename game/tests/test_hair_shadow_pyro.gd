@@ -32,6 +32,9 @@ func test_the_ring_keys_are_wide_sources() -> void:
 	add_child(rig)
 	var keys := rig.find_children("Key*", "SpotLight3D", false, false)
 	assert_int(keys.size()).is_equal(4)
+	# The top fill too: shadowless, it filled in every key shadow.
+	keys.append_array(rig.find_children("Top*", "SpotLight3D", false, false))
+	assert_int(keys.size()).is_equal(6)
 	for key: SpotLight3D in keys:
 		assert_bool(key.shadow_enabled).is_true()
 		assert_float(key.light_size).is_equal_approx(ArenaLighting.KEY_LIGHT_SIZE, 0.001)

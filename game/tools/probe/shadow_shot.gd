@@ -34,13 +34,18 @@ func _ready() -> void:
 	if hud and "visible" in hud:
 		hud.visible = false
 	var keys := scene.find_children("Key*", "SpotLight3D", true, false)
-	print("SHADOW_SHOT keys: %d" % keys.size())
+	var tops := scene.find_children("Top*", "SpotLight3D", true, false)
+	print("SHADOW_SHOT keys: %d tops: %d" % [keys.size(), tops.size()])
 	var cam := Camera3D.new()
 	scene.add_child(cam)
 	cam.make_current()
+	# "hard" is the rig before item 8: hard key shadows, shadowless top fill.
 	for size: float in [0.0, ArenaLighting.KEY_LIGHT_SIZE]:
 		for key: SpotLight3D in keys:
 			key.light_size = size
+		for top: SpotLight3D in tops:
+			top.shadow_enabled = size > 0.0
+			top.light_size = size
 		for shot: Array in [["feet", Vector3(0.0, 1.3, 2.6), Vector3(0.0, 0.1, 0.0), 40.0],
 				["wide", Vector3(0.0, 3.4, 5.5), Vector3(0.0, 0.6, 0.0), 45.0]]:
 			cam.fov = shot[3]

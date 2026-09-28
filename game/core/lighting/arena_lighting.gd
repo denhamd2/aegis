@@ -472,15 +472,23 @@ func _build_ring_key() -> void:
 			light.light_size = KEY_LIGHT_SIZE
 
 
-## Two wide fixtures pointing straight down the ring's long axis. No shadows:
-## their job is the mat's flatness, and a second set of shadow maps buys
-## nothing a critic can see.
+## Two wide fixtures pointing straight down the ring's long axis. Their job is
+## the mat's flatness. They had no shadows ("a second set of shadow maps buys
+## nothing a critic can see"), and that was wrong: see below.
 func _build_top_fill() -> void:
 	for sz: float in [1.0, -1.0]:
 		var at := Vector3(0.0, HANG_Y + 0.2, sz * TOP_OFFSET_Z)
-		_spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
+		var light := _spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
 				at + Vector3(0.0, -1.0, 0.0), TOP_COLOR, top_energy,
-				52.0, 0.7, 20.0, false).light_volumetric_fog_energy = 0.8
+				52.0, 0.7, 20.0, true)
+		light.light_volumetric_fog_energy = 0.8
+		# Soft shadows (refs/aaa_gap.md item 8). These two are the strongest
+		# light on the mat, and without shadows they filled in every shadow
+		# the keys cast: giving the keys PCSS alone changed nothing visible
+		# (tools/probe/shadow_shot.tscn). Straight down, they give the
+		# contact shadow under a body, the pool that grounds a wrestler on
+		# the canvas in broadcast footage.
+		light.light_size = KEY_LIGHT_SIZE
 
 
 ## Back pair, above and behind the entrance side, raking across the ring
