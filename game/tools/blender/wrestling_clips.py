@@ -4175,6 +4175,113 @@ CLIPS["Alabama_Slam_Defender"] = [
 ]
 
 
+# The Figure-Four leglock, 180 frames / 6.0 s, played by the two SUBMISSION_*
+# states rather than GrappleRig: the man is already down, and
+# WrestlerController._place_figure_four() stands Cody at his feet facing up
+# his body, FIGURE_FOUR_BEHIND_FEET_M (1.0 m) back from his root on his own
+# heading. So in Cody's frame the downed man's pelvis is at fwd +1.00 and
+# his boots (Down_Supine's, at his own fwd -0.50) are at +0.50.
+#
+# The hold as Cody works it (refs/cody_moveset.md): grab both ankles, lift,
+# cross the man's LEFT shin over his right knee -- the "4" -- step in, sit
+# down and lie back with his own right leg hooked over the crossed ankle,
+# then bridge his hips to put the pressure on. Locked by frame 62 (2.07 s);
+# MoveDef.startup_frames is that, and the struggle only starts from there.
+# Frames 62-180 are the pressure: three bridges, the victim sitting up to
+# reach for the leg and slapping the mat between them. Not looped -- the
+# hold can outlast the clip, and the last frame is Cody flat and hooked.
+_F4_HOOK = dict(foot_r=(-0.08, 0.70, 0.42), foot_l=(0.20, 0.70, 0.14),
+                knee_r=(0.0, 0.2, 1.0), knee_l=(0.3, 0.2, 1.0), free_feet=True)
+_F4_BACK = dict(ATK_BACK, **_F4_HOOK)
+_F4_BRIDGE = dict(_F4_BACK, pelvis=(0.0, 0.02, 0.330), hips=(66, 0, 0),
+                  spine=(10, 0, 0), head=(-26, 0, 0),
+                  hand_r=(0.42, -0.24, 0.08), hand_l=(-0.42, -0.24, 0.08),
+                  foot_r=(-0.08, 0.68, 0.46), foot_l=(0.20, 0.68, 0.16))
+CLIPS["Figure_Four_Attacker"] = [
+    (0,  P()),
+    # Down over his boots, a hand on each ankle.
+    (12, P(pelvis=(0.0, -0.08, 0.620), hips=(-44, 0, 0), spine=(-30, 0, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.14, 0.46, 0.20), hand_l=(-0.14, 0.44, 0.20),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.05, 0.104))),
+    # Up with both legs.
+    (24, P(pelvis=(0.0, -0.02, 0.800), hips=(-14, 0, 0), spine=(-16, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.10, 0.44, 0.54), hand_l=(-0.10, 0.42, 0.54),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.22, -0.10, 0.104), foot_l=(-0.20, 0.02, 0.104))),
+    # The cross: his left shin hauled over his right knee.
+    (36, P(pelvis=(0.0, 0.00, 0.780), hips=(-12, 10, 0), spine=(-18, 6, 0),
+           head=(-12, 0, 0),
+           hand_r=(-0.06, 0.48, 0.50), hand_l=(-0.16, 0.36, 0.50),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.18, 0.02, 0.104), foot_l=(-0.20, 0.04, 0.104))),
+    # Stepping in and sitting down through it, still holding the 4.
+    (48, dict(pelvis=(0.0, -0.06, 0.460), hips=(22, 0, 0), spine=(-14, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(-0.06, 0.46, 0.40), hand_l=(-0.16, 0.34, 0.38),
+              elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.7, -0.3, -0.5),
+              fist_r=0.7, fist_l=0.7,
+              foot_r=(0.10, 0.40, 0.18), foot_l=(0.02, 0.44, 0.104),
+              knee_r=(0.2, 0.6, 0.8), knee_l=(0.2, 0.6, 0.8))),
+    # Seated, his right leg coming over the crossed ankle.
+    (56, dict(ATK_SEAT, pelvis=(0.0, 0.0, 0.210), hips=(24, 0, 0),
+              hand_r=(0.30, -0.12, 0.10), hand_l=(-0.30, -0.12, 0.10),
+              **_F4_HOOK)),
+    # Flat on his back: locked.
+    (62, dict(_F4_BACK)),
+    (74, dict(_F4_BRIDGE)),
+    (86, dict(_F4_BACK, head=(-18, 0, 0))),
+    (108, dict(_F4_BRIDGE, head=(-30, 20, 0))),
+    (122, dict(_F4_BACK, hand_r=(0.48, -0.10, 0.30))),
+    (128, dict(_F4_BACK, hand_r=(0.50, -0.12, 0.08))),
+    (150, dict(_F4_BRIDGE, head=(-24, -16, 0))),
+    (164, dict(_F4_BACK)),
+    (180, dict(_F4_BACK)),
+]
+# The man in it. Down_Supine's frame: head +fwd, boots at fwd -0.50, and
+# supine, so his RIGHT side is at negative `right`. His left leg is the one
+# crossed: its ankle over his right knee, the knee falling out to his left.
+_F4_LEGS = dict(foot_r=(-0.10, -0.80, 0.34), foot_l=(-0.12, -0.46, 0.44),
+                knee_r=(-0.2, 0.0, 1.0), knee_l=(1.0, 0.0, 0.9), free_feet=True)
+_F4_VICTIM = S(**_F4_LEGS)
+CLIPS["Figure_Four_Defender"] = [
+    (0,  S()),
+    (12, S(foot_r=(-0.15, -0.56, 0.16), foot_l=(0.14, -0.54, 0.16),
+           free_feet=True)),
+    # Hauled up by the ankles.
+    (24, S(foot_r=(-0.10, -0.58, 0.50), foot_l=(0.10, -0.56, 0.50),
+           knee_r=(-0.3, 0.2, 1.0), knee_l=(0.3, 0.2, 1.0), free_feet=True)),
+    # Crossed.
+    (36, S(spine=(-12, 0, 0), head=(-20, 0, 0),
+           foot_r=(-0.10, -0.64, 0.46), foot_l=(-0.12, -0.50, 0.48),
+           knee_r=(-0.3, 0.2, 1.0), knee_l=(1.0, 0.0, 0.6), free_feet=True)),
+    (50, S(spine=(-18, 0, 0), head=(-22, 0, 0),
+           foot_r=(-0.10, -0.80, 0.30), foot_l=(-0.10, -0.50, 0.34),
+           knee_r=(-0.2, 0.0, 1.0), knee_l=(1.0, 0.0, 0.4), free_feet=True)),
+    (62, dict(_F4_VICTIM)),
+    # The first bridge: he comes up off the mat, a hand thrown up.
+    (74, pose(_F4_VICTIM, spine=(-34, 0, 0), head=(-22, 0, 0),
+              hand_r=(-0.34, 0.26, 0.46), hand_l=(0.36, 0.10, 0.10))),
+    (80, pose(_F4_VICTIM, spine=(-26, 0, 0), head=(-14, 0, 0),
+              hand_r=(-0.44, 0.10, 0.08))),
+    # Head thrown back into the mat.
+    (92, pose(_F4_VICTIM, spine=(-4, 0, 0), head=(6, 0, -16))),
+    # Sitting up, reaching down for the leg.
+    (108, pose(_F4_VICTIM, spine=(-42, 0, 0), head=(-26, 0, 0),
+               hand_r=(-0.16, -0.26, 0.36), hand_l=(0.16, -0.24, 0.36))),
+    (122, pose(_F4_VICTIM, spine=(-14, 0, 0), head=(-12, 0, 8),
+               hand_l=(0.40, 0.10, 0.36))),
+    (128, pose(_F4_VICTIM, spine=(-12, 0, 0), head=(-10, 0, 8),
+               hand_l=(0.44, 0.12, 0.08))),
+    (140, pose(_F4_VICTIM, spine=(-4, 0, 0), head=(4, 0, 18))),
+    (150, pose(_F4_VICTIM, spine=(-36, 0, 0), head=(-24, 0, 0),
+               hand_r=(-0.16, -0.22, 0.34), hand_l=(0.16, -0.20, 0.34))),
+    (166, pose(_F4_VICTIM, spine=(-10, 0, 0), head=(-10, 0, -8))),
+    (180, dict(_F4_VICTIM)),
+]
+
 # --- build ----------------------------------------------------------------
 
 def load_rig():

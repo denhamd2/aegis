@@ -440,3 +440,6 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	# Roman keeps the shared draw.
 	var roman: WrestlerController = scene.get_node("WrestlerA")
 	assert_bool(roman.power_move_pool.has(cody.power_move)).is_false()
+	# The Figure-Four is his, and only his.
+	assert_str(String(cody.submission_move.animation_pair_id)).is_equal("figure_four")
+	assert_object(roman.submission_move).is_null()

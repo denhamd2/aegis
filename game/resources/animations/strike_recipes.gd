@@ -356,6 +356,15 @@ const RECIPES := {
 	"submission_work": {"kind": "retime", "source": "Submission_Work",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},
 
+	# Cody's Figure-Four leglock (gauntlet/refs/cody_moveset.md): both halves
+	# of the hold, played by the two SUBMISSION_* states when the hold is
+	# his (WrestlerController.begin_submission with a move). Not looped: the
+	# application runs once and the last frame is the locked hold.
+	"figure_four_attacker": {"kind": "retime", "source": "Figure_Four_Attacker",
+		"seconds": 6.000, "file": AUTHORED},
+	"figure_four_defender": {"kind": "retime", "source": "Figure_Four_Defender",
+		"seconds": 6.000, "file": AUTHORED},
+
 	# The grapple family: the last clips taken straight off the rig, and the
 	# ones furthest from what they represent.
 

@@ -7078,3 +7078,20 @@ re-pinned after `paired_shot` review). `move_qa --roster` on the four new
 paired moves: mat, merge and pop within the house figures of the body slam
 and Cody Cutter. `tools/probe/moveset_tally.tscn` over 16 seeded
 Roman-vs-Cody matches: every new move thrown.
+
+## Round: the Figure-Four
+
+Cody's Figure-Four leglock, authored (`Figure_Four_Attacker`/`_Defender`,
+6 s: grab the ankles, cross the left shin over the right knee, sit back,
+three bridges while the man sits up and slaps the mat) and in his matches.
+Submissions existed but nothing in a match started one; now a wrestler's
+own hold (`Roster` "submission" tier -> `WrestlerController.submission_move`)
+is taken once a match on the first man he has down, unless a finisher put
+him there. Placement is measured off the downed man's bones: assumed from
+his node's heading it put Cody over the man's head, then facing away,
+before `hold_shot.tscn` showed it right.
+
+### Checks
+483 tests pass (new `test_own_hold.gd`; clip digest re-pinned after
+review in `hold_shot.tscn`). Moveset tally, 8 seeds: the hold in 5
+matches, every match still won by pinfall.

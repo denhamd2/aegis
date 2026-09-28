@@ -205,6 +205,16 @@ var _own_signature_thrown: bool = false
 ## Extra running attacks alongside running_attack_move (double-leg
 ## takedown). Same seeded draw as the tiers, so replays still match.
 @export var running_attack_move_pool: Array[MoveDef] = []
+## His own submission hold, if he has one (Cody's Figure-Four; Roster's
+## "submission" tier). MatchReferee has him take it once a match on a man he
+## has knocked down mid-match -- see _check_for_downed_opponent_action().
+@export var submission_move: MoveDef
+## Whether submission_move has been taken this match. Once is the rule.
+var _submission_move_used := false
+## Tier of the last grapple-chain move this wrestler landed, or -1. The
+## referee reads it so a man put down by a finisher is pinned,
+## never put in a hold.
+var last_landed_tier := -1
 @export var weight_class: int = 1
 ## Set by MatchSetup so _pick_tier_move()'s draw is seeded per match rather
 ## than by the global RNG. Same reasoning as WrestlerAI.setup_jitter().
@@ -1048,8 +1058,10 @@ func _physics_process(delta: float) -> void:
 			# resolve as an automatic kickout before reaching a three-count).
 			_kickout_input_this_tick = input.get("strike", false)
 		WrestlerFSM.State.SUBMISSION_ATTACKER:
-			pass # driven by MatchReferee; no continued attacker input needed,
-			# same as PIN_ATTACKER's three-count
+			# Driven by MatchReferee; no continued attacker input needed,
+			# same as PIN_ATTACKER's three-count. The only motion is the
+			# walk to a hold's spot (_place_figure_four).
+			_tick_cover_slide()
 		WrestlerFSM.State.SUBMISSION_DEFENDER:
 			# Mirrors the PIN_DEFENDER case above, but held rather than
 			# just-pressed — SubmissionMinigame is a genuine continuous-hold
@@ -1897,6 +1909,7 @@ func _clear_grapple_roles() -> void:
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move
 	_active_move = null
+	last_landed_tier = tier_of(move)
 	_resolve_grapple_move(move)
 
 func _resolve_grapple_move(move: MoveDef) -> void:
@@ -2264,7 +2277,7 @@ func _release_cover_contact() -> void:
 	if _cover_partner == null or not is_instance_valid(_cover_partner):
 		_cover_partner = null
 		return
-	if fsm.current_state == WrestlerFSM.State.PIN_ATTACKER:
+	if fsm.is_in([WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.SUBMISSION_ATTACKER]):
 		return
 	var apart := Vector2(global_position.x - _cover_partner.global_position.x,
 			global_position.z - _cover_partner.global_position.z).length()
@@ -2338,6 +2351,87 @@ func _cover_slide_duration(distance: float) -> int:
 ## Driving velocity instead lets move_and_slide() do the moving, which is what
 ## keeps the floor under him. Y is left alone entirely -- gravity owns it --
 ## and only the horizontal is steered.
+## How far behind a downed man's root Cody stands to take the Figure-Four:
+## on the man's own heading, off his feet end. wrestling_clips.py's
+## Figure_Four_* are authored against exactly this spacing (his pelvis at
+## Cody's fwd +1.00, his boots at +0.50). Past the two capsules' 0.8 m, so
+## the bodies never need to stop colliding.
+const FIGURE_FOUR_BEHIND_FEET_M := 1.0
+## Ticks left before the hold is locked and the contest starts. Counted down
+## by MatchReferee._tick_submission().
+var _submission_lock_ticks := 0
+## The hold being worked, while it is; null for a generic submission.
+var _submission_hold_move: MoveDef
+
+## Where he stands to take the hold on this man: off his feet end.
+##
+## Measured off the man's own skeleton -- head to boots, flattened onto the
+## mat -- rather than assumed from his node's heading. Assumed, it was wrong
+## twice in tools/probe/hold_shot.tscn: once Cody stood over the man's head
+## and lay back across his chest, once he faced away and hooked nothing.
+static func figure_four_spot(defender: WrestlerController) -> Vector3:
+	return defender.global_position + _feet_way(defender) * FIGURE_FOUR_BEHIND_FEET_M
+
+## Unit vector on the mat from a downed man's head toward his boots.
+static func _feet_way(defender: WrestlerController) -> Vector3:
+	var head := defender._bone_world("neck_01")
+	var foot_l := defender._bone_world("foot_l")
+	var foot_r := defender._bone_world("foot_r")
+	var way := Vector3.ZERO
+	if head != Vector3.INF and foot_l != Vector3.INF and foot_r != Vector3.INF:
+		way = (foot_l + foot_r) * 0.5 - head
+	way.y = 0.0
+	if way.length() < 0.2:
+		# No skeleton to read: a supine man lies boots toward his node's +Z.
+		way = defender.global_transform.basis.z
+		way.y = 0.0
+	return way.normalized()
+
+func _bone_world(canonical: String) -> Vector3:
+	if skeleton == null:
+		return Vector3.INF
+	var i := skeleton.find_bone(_skeleton_bone_name(canonical))
+	if i < 0:
+		return Vector3.INF
+	return (skeleton.global_transform * skeleton.get_bone_global_pose(i)).origin
+
+## Whether there is room: a man down by the ropes feet-first leaves nowhere
+## to stand, and keep_inside_the_ring() would park Cody on top of him.
+static func has_room_for_figure_four(defender: WrestlerController) -> bool:
+	var spot := figure_four_spot(defender)
+	return absf(spot.x) <= RING_KEEP_IN and absf(spot.z) <= RING_KEEP_IN
+
+## Stands him at the downed man's feet, facing up his body, and walks him
+## there the way the cover does (_tick_cover_slide), not in one tick.
+func _place_figure_four(defender: WrestlerController) -> void:
+	# The walk there can cross his body; the pair stop colliding for it, as
+	# for the cover, until they are apart again (_release_cover_contact).
+	add_collision_exception_with(defender)
+	defender.add_collision_exception_with(self)
+	_cover_partner = defender
+	# Facing up the man's body, toward his head. A wrestler faces down his
+	# node's -Z (the clips' `fwd`), so -Z is turned onto the head-ward line.
+	var up_body := -_feet_way(defender)
+	var target := Transform3D(Basis(Vector3.UP, atan2(-up_body.x, -up_body.z)),
+			figure_four_spot(defender))
+	target.origin.y = global_position.y
+	_cover_from = global_transform
+	_cover_to = target
+	_cover_slide_tick = 0
+	_cover_slide_ticks = _cover_slide_duration(global_position.distance_to(target.origin))
+
+## Out of the hold without the tap: he is flat on his back where he worked
+## it, head away from the man, so he turns round on the mat (the snap into
+## Down_Supine, as a head-away throw does) and gets up like any man thrown.
+func release_submission_hold() -> void:
+	_submission_hold_move = null
+	_submission_lock_ticks = 0
+	_cover_slide_tick = -1
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_turn_round_on_the_mat()
+	_lie_down_after_throw()
+
 func _tick_cover_slide() -> void:
 	if _cover_slide_tick < 0:
 		return
@@ -2362,9 +2456,24 @@ func _tick_cover_slide() -> void:
 		velocity.z = 0.0
 
 
-func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:
+## With `move` (his own hold, e.g. the Figure-Four), both men play the
+## move's clip pair ("strikes/<animation_pair_id>_attacker"/"_defender"), he
+## is placed where the hold is worked, and the contest waits out
+## move.startup_frames -- the application -- before either side's ring fills.
+func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb,
+		move: MoveDef = null) -> void:
+	_submission_lock_ticks = 0
+	if move:
+		_set_state_clip(WrestlerFSM.State.SUBMISSION_ATTACKER,
+				"strikes/%s_attacker" % move.animation_pair_id)
+		defender._set_state_clip(WrestlerFSM.State.SUBMISSION_DEFENDER,
+				"strikes/%s_defender" % move.animation_pair_id)
+		_submission_lock_ticks = move.startup_frames
+		_submission_hold_move = move
 	fsm.transition_to(WrestlerFSM.State.SUBMISSION_ATTACKER)
 	defender.fsm.transition_to(WrestlerFSM.State.SUBMISSION_DEFENDER)
+	if move:
+		_place_figure_four(defender)
 	# submission_break_rate() reads whichever CombatSystem it's called on —
 	# it must be the defender's (the limb actually being locked), not the
 	# attacker's own. Calling it on `combat` (self, the attacker) silently

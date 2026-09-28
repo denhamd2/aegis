@@ -33,7 +33,7 @@ it from (`WrestlerController`); **[built]** is authored, baked and wired.
 | Powerslam | Carried across the chest, fallen on | power | **[built]** (`power_powerslam`, the body slam's lift) |
 | Alabama Slam | Upside down over the shoulders, slammed back-first | power | **[built]** (`power_alabama_slam`) |
 | Dropkick | Running | running | shared `running_single_leg_dropkick` |
-| Figure-Four Leglock | Submission | submission | **next** — needs a paired hold (the game's submission is one generic pose today) |
+| Figure-Four Leglock | Ankles grabbed, left shin crossed over the right knee, sits back and bridges | submission (his own hold) | **[built]** (`submission_figure_four`, `Figure_Four_*` clips) |
 | Tope suicida; springboard/apron Disaster Kick | Dives to the floor, off the apron | — | **next** — needs outside-the-ring positioning the match does not have |
 
 ## Checks
@@ -47,3 +47,17 @@ it from (`WrestlerController`); **[built]** is authored, baked and wired.
   uppercut 38, vertical suplex 11, Cody Cutter 17, Cross Rhodes 8, Alabama
   Slam 2, powerslam 1, Disaster Kick 3. The power rung is the rarest the
   momentum ladder reaches, so its two moves are thrown least.
+
+## The Figure-Four in a match
+
+Played by the two SUBMISSION_* states, not GrappleRig: the man is already
+down. `MatchReferee` takes it once a match, on the first man Cody has down
+that a finisher did not put there (a finisher knockdown is always pinned);
+`WrestlerController._place_figure_four()` walks him to the man's boots,
+measured off the downed man's own skeleton, and the contest waits out the
+application (`startup_frames` 124 = the clip's 62 authored frames) before
+either ring fills; the leg damage lands on the lock. Escaped, Cody turns
+round on the mat and gets up like a thrown man. The tap only comes on a leg
+past `SUBMISSION_ESCAPE_LIMB`, so the match still ends on a pin: 8 seeded
+Roman-vs-Cody matches, the hold in 5, all 8 won by pinfall.
+Rendered through `tools/probe/hold_shot.tscn`.

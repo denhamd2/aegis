@@ -178,8 +178,22 @@ func _check_for_downed_opponent_action() -> void:
 			# SubmissionMinigame, the two SUBMISSION_* states and
 			# WrestlerController.begin_submission() all still work, and
 			# their tests still cover them. What changed is that the
-			# referee no longer reaches for it, so nothing in a match
-			# starts one.
+			# referee no longer reaches for it on a coin flip.
+			#
+			# The one exception is a man's OWN hold (Cody's Figure-Four,
+			# WrestlerController.submission_move): taken once a match, on the
+			# first man he has down -- never one a finisher has just put
+			# down, who gets the cover. Measured over 8 seeded Roman-vs-Cody
+			# matches (tools/probe/moveset_tally.tscn), every cover Cody
+			# made followed a signature or a finisher, so a rule that also
+			# spared the signature knockdown left the hold in one match in
+			# eight. It is a set piece before the finish, not a way to end
+			# it: the tap only comes on a leg already past
+			# SUBMISSION_ESCAPE_LIMB, and the match goes on to a pinfall.
+			if _wants_own_hold(attacker) \
+					and WrestlerController.has_room_for_figure_four(defender):
+				_start_own_hold(attacker, defender)
+				return
 			_pinning = true
 			_pin_ticks = 0
 			_pin_count_shown = 0
@@ -187,6 +201,17 @@ func _check_for_downed_opponent_action() -> void:
 			_pin_defender = defender
 			attacker.begin_pin(defender, _pin_seed())
 			return
+
+func _wants_own_hold(attacker: WrestlerController) -> bool:
+	return attacker.submission_move != null and not attacker._submission_move_used \
+			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER
+
+func _start_own_hold(attacker: WrestlerController, defender: WrestlerController) -> void:
+	attacker._submission_move_used = true
+	_submissioning = true
+	_submission_attacker = attacker
+	_submission_defender = defender
+	attacker.begin_submission(defender, CombatSystem.Limb.LEGS, attacker.submission_move)
 
 ## Seed for this pin's kickout minigame. Every pin in a match needs its own
 ## target window, so the seed has to vary -- but only with match state.
@@ -324,6 +349,16 @@ const KICKOUT_FIRE_UP_TICKS := 20
 ## PIN_ATTACKER's automatic three-count) — only the defender's hold state,
 ## captured each tick by WrestlerController, matters.
 func _tick_submission() -> void:
+	# A hold is applied before it is fought: nothing fills until it is locked
+	# (WrestlerController.begin_submission's move.startup_frames), and the
+	# hold's damage lands on the lock.
+	if _submission_attacker._submission_lock_ticks > 0:
+		_submission_attacker._submission_lock_ticks -= 1
+		if _submission_attacker._submission_lock_ticks == 0 \
+				and _submission_attacker._submission_hold_move:
+			_submission_defender.combat.apply_damage(
+					_submission_attacker._submission_hold_move)
+		return
 	var minigame: SubmissionMinigame = _submission_defender._submission_minigame
 	minigame.tick(true, _submission_defender._submission_defender_input_this_tick)
 	var tapped := minigame.attacker_wins()
@@ -354,7 +389,12 @@ func _break_submission_tie() -> bool:
 
 func _end_submission(tapped_out: bool) -> void:
 	_submissioning = false
-	_submission_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
+	if _submission_attacker._submission_hold_move and not tapped_out:
+		# Worked from flat on his back: he gets up, he does not pop upright.
+		_submission_attacker.release_submission_hold()
+	else:
+		_submission_attacker._submission_hold_move = null
+		_submission_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	if tapped_out:
 		_declare_winner(_submission_attacker, "submission")
 	else:

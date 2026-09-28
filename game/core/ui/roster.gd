@@ -155,6 +155,7 @@ static func entries() -> Array:
 		"signature": [M + "signature_disaster_kick.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
+		"submission": [M + "submission_figure_four.tres"],
 	}
 	return list
 

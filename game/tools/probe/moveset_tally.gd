@@ -31,7 +31,8 @@ func _ready() -> void:
 		add_child(scene)
 		var ref: Node = scene.get_node("MatchReferee")
 		var done := [false]
-		ref.match_won.connect(func(_w, _m): done[0] = true)
+		var how := [""]
+		ref.match_won.connect(func(_w, m): done[0] = true; how[0] = m)
 		var last := {}
 		var ticks := 0
 		while not done[0] and ticks < 30000:
@@ -40,11 +41,13 @@ func _ready() -> void:
 			for n in ["WrestlerA", "WrestlerB"]:
 				var w: WrestlerController = scene.get_node(n)
 				var m: MoveDef = w._active_move
+				if m == null and w._submission_hold_move:
+					m = w._submission_hold_move
 				if m != last.get(n) and m != null:
 					var key := "%s %s" % [pair[0 if n == "WrestlerA" else 1].id, m.animation_pair_id]
 					tally[key] = tally.get(key, 0) + 1
 				last[n] = m
-		print("seed %d: %d ticks, done=%s" % [seed_value, ticks, done[0]])
+		print("seed %d: %d ticks, done=%s by %s" % [seed_value, ticks, done[0], how[0]])
 		scene.queue_free()
 		await get_tree().process_frame
 	var keys := tally.keys()

@@ -290,6 +290,8 @@ static func configure_match(scene: Node, player: Roster.Entry,
 				"running":
 					wrestler.running_attack_move = moves[0]
 					wrestler.running_attack_move_pool = rest
+				"submission":
+					wrestler.submission_move = moves[0]
 		var pool: Array[MoveDef] = wrestler.signature_move_pool.duplicate()
 		wrestler.own_signature = null
 		if entry.signature != "":
