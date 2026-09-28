@@ -438,6 +438,61 @@ func _separate_models() -> void:
 		for w: WrestlerController in [a, d]:
 			w.paired_separation *= SEPARATION_SETTLE
 			w.apply_model_offset()
+	_pull_into_reach(a, d)
+
+
+# --- Contact (Phase 2) --------------------------------------------------------
+## The other half of it. Measured with the grip IK on, a move's hold was out of
+## the attacker's reach 85-99% of the time: the pair offsets hold two men
+## ~0.8 m apart, too far for a headlock or a waistlock, so his hands closed on
+## air. So when the hold's primary target (PairedContacts) is NEARLY in reach
+## -- short by less than PULL_RADIUS -- the defender's model is drawn in until
+## it is, and the separation above stops them going through each other; they
+## settle touching and holding. Further than PULL_RADIUS out he is meant to be
+## out of reach (a run-in, a throw), and nothing pulls.
+const PULL_RADIUS := 0.25
+const PULL_GAIN := 0.5
+
+
+func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
+	if not a._is_grapple_attacker:
+		return
+	var family := PairedContacts.family(_move)
+	if family == "" or family == "none":
+		return
+	if PairedContacts.NO_PULL.has(_move.resource_path.get_file().get_basename()):
+		return
+	var sk := a.skeleton
+	var chest := sk.global_transform * sk.get_bone_global_pose(
+			sk.find_bone(a._skeleton_bone_name("spine_03"))).origin
+	var targets := PairedContacts.targets(family, d, chest)
+	if targets.size() != 2:
+		return
+	var shoulder := sk.global_transform * sk.get_bone_global_pose(
+			sk.find_bone(a._skeleton_bone_name("upperarm_r"))).origin
+	var to_target: Vector3 = targets[1] - shoulder
+	var short := to_target.length() - a._arm_reach * 0.9
+	if short <= 0.0 or short > PULL_RADIUS:
+		return
+	var before := d.paired_separation
+	d.paired_separation = (d.paired_separation - to_target.normalized() * short * PULL_GAIN) \
+			.limit_length(SEPARATION_MAX)
+	d.apply_model_offset()
+	# Pulled in; now make sure that did not put him inside the attacker. If the
+	# separation cannot clear what the pull caused -- his head drawn into the
+	# legs of a man in mid-air, on the cutter -- the pull is undone: a hand
+	# short of its hold reads better than a body through a body.
+	var clear := false
+	for _pass in SEPARATION_PASSES:
+		var push := PairClearance.push(a, d)
+		if push.length() <= 0.0005:
+			clear = true
+			break
+		d.paired_separation = (d.paired_separation + push).limit_length(SEPARATION_MAX)
+		d.apply_model_offset()
+	if not clear and PairClearance.push(a, d).length() > 0.0005:
+		d.paired_separation = before
+		d.apply_model_offset()
 
 func _suspend(body: CharacterBody3D) -> void:
 	if body:

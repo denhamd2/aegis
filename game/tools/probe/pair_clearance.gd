@@ -37,6 +37,14 @@ func _ready() -> void:
 			continue
 		var r: Dictionary = await PairClearance.measure(self, move_id, _roster)
 		results.append(r)
+		var g: Array = r["grip"]
+		g.sort()
+		if not g.is_empty():
+			print("GRIP %-36s %-6s median %.3f  p90 %.3f  (%d in reach, %d out)" % [move_id,
+					PairedContacts.family(load("res://resources/moves/%s.tres" % move_id)),
+					g[g.size() / 2], g[int(g.size() * 0.9)], g.size(), int(r.get("out_of_reach", 0))])
+		elif PairedContacts.family(load("res://resources/moves/%s.tres" % move_id)) == "none":
+			print("GRIP %-36s none   grip blend peak %.2f" % [move_id, r["grip_blend"]])
 		print("PAIR %-36s worst %.3f m  %s @%.2f   body-body %.3f   arm %.3f   moved A %.3f D %.3f" % [move_id,
 				r["worst"], r["where"], r["at"], r["body"], r["arm"], r["moved_attacker"], r["moved_defender"]])
 	results.sort_custom(func(x, y): return x["worst"] > y["worst"])

@@ -973,6 +973,20 @@ func _aim_grip_targets() -> bool:
 	# behind, which reads as nothing at all.
 	if fsm.current_state == WrestlerFSM.State.TIE_UP:
 		return _aim_collar_and_elbow()
+	# In a paired move, the move says what the attacker holds (PairedContacts).
+	if fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and _is_grapple_attacker \
+			and grapple_rig and grapple_rig.is_active():
+		var family := PairedContacts.family(grapple_rig._move)
+		if family == "none":
+			return false
+		if family != "":
+			var chest := skeleton.global_transform * skeleton.get_bone_global_pose(
+					skeleton.find_bone(_skeleton_bone_name("spine_03"))).origin
+			var t := PairedContacts.targets(family, opponent, chest)
+			if t.size() == 2:
+				_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], t[0])
+				_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], t[1])
+				return true
 	var lifting := fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
 			and _is_grapple_attacker
 	var anchor_name := GRIP_BONE_LIFT if lifting else GRIP_BONE

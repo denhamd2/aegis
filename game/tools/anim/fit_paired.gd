@@ -105,6 +105,15 @@ func _record(move_id: String) -> Array:
 	d.look_at(a.global_position, Vector3.UP)
 	await get_tree().physics_frame
 	var rig: GrappleRig = scene.get_node("GrappleRig")
+	# As a match starts one (WrestlerController._begin_running_paired): roles
+	# set and both men in GRAPPLE_HOLD first. Without it the attacker never
+	# counts as gripping, so the grip IK -- the arms -- never ran here.
+	a._is_grapple_attacker = true
+	d._is_grapple_attacker = false
+	a.opponent = d
+	d.opponent = a
+	a.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	d.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 	rig.begin(a, d, move)
 	var samples := []
 	var guard := 0

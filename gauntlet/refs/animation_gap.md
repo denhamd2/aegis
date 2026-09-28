@@ -142,11 +142,19 @@ finding.
 Done so far:
 - Runtime separation (`PairSeparator`), which solves overlap each tick after
   the animation.
-- A measured trajectory fit (`PairedFit`).
+- A measured trajectory fit (`PairedFit`), with keys inserted where it peaks
+  mid-air.
+- Contact data and contact IK: `PairedContacts` says what each move holds
+  (neck, waist, legs, facelock, wrist, or nothing for a strike), the grip IK
+  aims there, and `GrappleRig._pull_into_reach` draws the defender up to
+  25 cm into reach, undone if it would put him inside the attacker.
 
-Paired moves within the overlap limits went from 5/37 to 36/37. Still to do:
-- keys where the fit peaks mid-air;
-- the contact track and contact IK;
+Paired moves within the overlap limits went from 5/37 to 36/37. Hands on
+their hold: 14 of 21 holding moves within 5 cm (median), strikes hands-free;
+the 7 that turn or roll through the hold are on a ratchet
+(`PairClearanceBaseline.GRIP`). Refitting `PairedFit` with the pull included
+was tried and rejected: it doubled the in-reach frames but drove grip arms
+through bodies (30/37). Still to do:
 - the walk-in lead-in;
 - a check with Roman, Cody and Kenny's real sizes.
 

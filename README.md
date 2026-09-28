@@ -7433,3 +7433,32 @@ gate now points at it and at the two lint tests.
 runtime correction mid-air: Cross Rhodes, both tilt-a-whirls, and the
 mushroom stomp. Their trajectory keys are too sparse there, and extra keys
 where the fit peaks would take that up.
+
+### Phase 2 — hand contact
+
+**What each move holds** (`resources/animations/PairedContacts`).
+- Every paired move is tagged: headlock (`neck`), `waist`, cradled (`legs`),
+  cravate (`facelock`), Cross Rhodes' wrist-clutch (`wrist`), or `none`.
+- Before this, every move aimed both hands at the chest, so on a Superman
+  Punch or a clothesline the attacker reached out and held the man he was
+  hitting. The 16 strikes, kicks and dives now keep their hands free.
+
+**Reach.** `GrappleRig._pull_into_reach` draws the defender's model up to
+25 cm towards a hold that is just out of reach, then re-runs the separation.
+If that cannot clear the overlap it causes, the pull is undone — a hand short
+of its hold reads better than a body through a body. The Cody Cutter is
+exempt: pulling his head in put it in the path of Cody's legs.
+
+**Result.**
+- 14 of 21 holding moves have the hands within 5 cm of the hold (median),
+  most 1–3 cm.
+- Overlap stays at 36/37.
+- Seven moves that spin or roll through the hold are ratcheted in
+  `PairClearanceBaseline.GRIP`; the rolling codebreaker is the worst.
+
+**Tried and dropped.** Refitting the trajectories with the pull in (30/37 —
+the grip arms went through bodies).
+
+**Probe fix.** `pair_clearance` now stops at the end of the move being
+measured. The hold was starting a second move straight after the first, and
+the probe was counting it.

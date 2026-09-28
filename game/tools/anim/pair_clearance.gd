@@ -160,16 +160,62 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 	defender.look_at(attacker.global_position, Vector3.UP)
 	await host.get_tree().physics_frame
 	var rig: GrappleRig = scene.get_node("GrappleRig")
+	# As a match starts one (WrestlerController._begin_running_paired): roles
+	# set and both men in GRAPPLE_HOLD first. Without it the attacker never
+	# counts as gripping, so the grip IK -- the arms -- never ran here.
+	attacker._is_grapple_attacker = true
+	defender._is_grapple_attacker = false
+	attacker.opponent = defender
+	defender.opponent = attacker
+	attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 	rig.begin(attacker, defender, move)
 	var total := maxi(int(move.total_frames()), 1)
 	var r := {"move": move_id, "body": 0.0, "arm": 0.0, "worst": 0.0, "where": "", "at": 0.0,
-			"moved_attacker": 0.0, "moved_defender": 0.0}
+			"moved_attacker": 0.0, "moved_defender": 0.0, "grip": [], "grip_blend": 0.0}
+	# Hands as drawn, IK included: a bone pose read from outside a
+	# SkeletonModifier3D is the pose BEFORE the modifiers (EyeAim found the
+	# same), so the grip IK's result is only readable inside the skeleton's
+	# own update.
+	var drawn_hands := [Vector3.ZERO, Vector3.ZERO]
+	var drawn_shoulders := [Vector3.ZERO, Vector3.ZERO]
+	var ask := attacker.skeleton
+	var hand_ids := [ask.find_bone(attacker._skeleton_bone_name("hand_l")),
+			ask.find_bone(attacker._skeleton_bone_name("hand_r"))]
+	var shoulder_ids := [ask.find_bone(attacker._skeleton_bone_name("upperarm_l")),
+			ask.find_bone(attacker._skeleton_bone_name("upperarm_r"))]
+	var on_update := func() -> void:
+		for side in 2:
+			drawn_hands[side] = ask.global_transform * ask.get_bone_global_pose(hand_ids[side]).origin
+			drawn_shoulders[side] = ask.global_transform * ask.get_bone_global_pose(shoulder_ids[side]).origin
+	ask.skeleton_updated.connect(on_update)
 	var tick := 0
-	while rig.is_active() and tick < total * 3:
+	# Only this move: out of GRAPPLE_HOLD the hold can start a second one
+	# straight away, which is not what is being measured.
+	var done := [false]
+	rig.grapple_finished.connect(func(_a, _d) -> void: done[0] = true, CONNECT_ONE_SHOT)
+	while rig.is_active() and not done[0] and tick < total * 3:
 		await host.get_tree().physics_frame
 		tick += 1
 		var d := depth(attacker, defender)
 		r["moved_attacker"] = maxf(r["moved_attacker"], attacker.paired_separation.length())
+		# The attacker's hands against where PairedContacts says they hold.
+		r["grip_blend"] = maxf(r["grip_blend"], attacker._grip_blend)
+		var fam := PairedContacts.family(move)
+		if fam != "" and fam != "none" and attacker._grip_blend > 0.9:
+			var sk := attacker.skeleton
+			var chest := sk.global_transform * sk.get_bone_global_pose(
+					sk.find_bone(attacker._skeleton_bone_name("spine_03"))).origin
+			var t := PairedContacts.targets(fam, defender, chest)
+			if t.size() == 2:
+				for side in 2:
+					# Only where he can reach it: while he is still running in
+					# or the man is flying away, a hand stops short by design.
+					var reach := (drawn_shoulders[side] as Vector3).distance_to(t[side])
+					if reach <= attacker._arm_reach * 0.95:
+						(r["grip"] as Array).append((drawn_hands[side] as Vector3).distance_to(t[side]))
+					else:
+						r["out_of_reach"] = int(r.get("out_of_reach", 0)) + 1
 		r["moved_defender"] = maxf(r["moved_defender"], defender.paired_separation.length())
 		r["body"] = maxf(r["body"], d["body"])
 		r["arm"] = maxf(r["arm"], d["arm"])

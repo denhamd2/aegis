@@ -15,7 +15,7 @@ extends GdUnitTestSuite
 const SLACK := 0.005
 
 
-func test_no_paired_move_puts_one_body_through_the_other() -> void:
+func test_no_paired_move_puts_one_body_through_the_other_and_hands_hold() -> void:
 	var failures: Array[String] = []
 	for move_id in PairClearance.paired_move_ids():
 		var r: Dictionary = await PairClearance.measure(self, move_id)
@@ -32,7 +32,34 @@ func test_no_paired_move_puts_one_body_through_the_other() -> void:
 		elif body > PairClearance.BODY_LIMIT or arm > PairClearance.ARM_LIMIT:
 			failures.append("%s puts one body through the other: body %.3f, arm %.3f -- %s @%.2f"
 					% [move_id, body, arm, r["where"], r["at"]])
+		failures.append_array(_contact_failures(move_id, r))
 	assert_array(failures).override_failure_message("\n".join(failures)).is_empty()
+
+
+## Hands where the move says they hold (PairedContacts), and off the man in a
+## strike. Measured in the same run as the overlap: one pass through every
+## move is the slow part of this suite.
+func _contact_failures(move_id: String, r: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var family := PairedContacts.family(load("res://resources/moves/%s.tres" % move_id))
+	if family == "none":
+		if float(r["grip_blend"]) > PairClearanceBaseline.FREE_HANDS_MAX_BLEND:
+			out.append("%s is a strike but the grip IK blended in to %.2f"
+					% [move_id, r["grip_blend"]])
+		return out
+	var grip: Array = r["grip"]
+	if family == "" or grip.is_empty():
+		return out
+	grip.sort()
+	var median: float = grip[grip.size() / 2]
+	var limit := float(PairClearanceBaseline.GRIP.get(move_id, PairClearanceBaseline.CONTACT_LIMIT))
+	if median > limit + SLACK:
+		out.append("%s (%s): hands %.3f m from their hold, limit %.2f"
+				% [move_id, family, median, limit])
+	elif PairClearanceBaseline.GRIP.has(move_id) and median <= PairClearanceBaseline.CONTACT_LIMIT:
+		out.append("%s's hands are FIXED (%.3f): delete it from PairClearanceBaseline.GRIP"
+				% [move_id, median])
+	return out
 
 
 ## The measure itself: two capsules a known distance apart overlap by exactly
