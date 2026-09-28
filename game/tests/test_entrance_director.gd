@@ -59,6 +59,27 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.HARD_CAM)
 
 
+## Both men meet the bell squared up to each other. The scene's spawns face
+## outward, and the entrance used to end on them: the owner saw both men
+## finish with their backs to each other.
+func test_the_bell_finds_them_facing_each_other() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	director.skip()
+	for pair: Array in [[a, b], [b, a]]:
+		var me: WrestlerController = pair[0]
+		var other: WrestlerController = pair[1]
+		var facing := -me.global_transform.basis.z
+		var to_other := other.global_position - me.global_position
+		facing.y = 0.0
+		to_other.y = 0.0
+		assert_float(facing.normalized().dot(to_other.normalized())) \
+				.override_failure_message("%s ends his entrance facing away" % me.name) \
+				.is_greater(0.99)
+
+
 ## The whole entrance, stepped: nobody jumps except at the broadcast cut (and
 ## on appearing), and it ends with the bell and both men on their marks.
 func test_the_walk_is_continuous_and_ends_on_the_marks() -> void:

@@ -320,8 +320,20 @@ func begin(match_root: Node) -> void:
 		world = node as WorldEnvironment
 	if world:
 		_env = world.environment
-	_mark[_a] = _a.global_transform
-	_mark[_b] = _b.global_transform
+	# Their marks, squared up to each other. The scene's spawn transforms
+	# face OUTWARD (a wrestler faces his node's -Z, and WrestlerA stands at
+	# z -1.5 with an identity basis), which the match never showed because
+	# WrestlerController turns a man to his opponent from the first tick.
+	# The entrance ends on these marks, frozen, so the owner saw both men
+	# finish their entrances with their backs to each other.
+	for pair: Array in [[_a, _b], [_b, _a]]:
+		var me: WrestlerController = pair[0]
+		var other: WrestlerController = pair[1]
+		var mark := me.global_transform
+		var to_other := _flat(other.global_position - me.global_position)
+		if to_other.length() > 0.01:
+			mark.basis = _facing_basis(to_other)
+		_mark[me] = mark
 
 	for w: WrestlerController in [_a, _b]:
 		_freeze(w)
