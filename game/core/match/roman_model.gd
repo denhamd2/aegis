@@ -207,19 +207,38 @@ const GROW_FIXES := {
 ## plastic. 0.45 gives the forehead, cheekbones and shoulders a travelling
 ## highlight without turning the body into a mirror. The face (Material.001)
 ## and the body atlas (Material) are both skin.
-const SKIN_ROUGHNESS := {"Material.001": 0.45, "Material": 0.45}
+## Raised from 0.45 against the owner's side-by-side (a close-up of him on
+## the entrance card next to a broadcast still): at 0.45 the forehead, nose
+## and neck carried hot white spots and he read as moulded plastic; his real
+## skin is mostly matte with a thin sweat sheen.
+const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.58}
 ## And a tint on both, toward the reference's skin. Measured medians off the
 ## owner's reference (forehead, cheek, chest): (170,107,88), (182,105,91),
 ## (195,120,94); the textures' own tone is (168,108,75). Same red and green,
 ## far less blue -- which is the difference between tan and orange. The full
 ## correction (blue +16%) rendered pink under neutral light, so blue is
 ## lifted 8%, half way, and green trimmed 1%.
-const SKIN_TINT := Color(1.0, 0.99, 1.08)
+##
+## Then darkened and pulled off orange toward olive, against the same
+## side-by-side: under neutral light (clip_shot --face) the face read pale
+## peach, where he is tanned olive-brown. The texture's own tone is
+## (168,108,75); olive-brown is about (139,100,75), so red comes down most,
+## green less, blue least -- (134,93,68), a shade darker than olive-khaki,
+## which (0.83, 0.93, 1.0) rendered. (Lifting blue instead, tried first,
+## turned the orange pink.)
+const SKIN_TINT := Color(0.80, 0.86, 0.90)
 
 const TEXTURE_DIR := "res://assets/characters/roman_reigns_%s.png"
 ## Roman's hair and beard are near-black; kept slightly warm so they don't
 ## read as a flat silhouette under the arena's key light.
-const HAIR_COLOR := Color(0.075, 0.062, 0.055)
+##
+## Cooled toward jet black: under the entrance's warm backlight the warm
+## version rendered reddish-brown, which is not his hair in any light.
+const HAIR_COLOR := Color(0.045, 0.042, 0.043)
+## His hair is slicked and wet-looking; a low roughness gives it the long
+## streaky highlight a matte card never has.
+const HAIR_ROUGHNESS := 0.32
+const BEARD_ROUGHNESS := 0.8
 ## Alpha below this is cut away. Hair cards need a scissor rather than
 ## blending: sorted transparency on overlapping strands produces halos.
 ##
@@ -320,6 +339,10 @@ func _fix_materials() -> void:
 				mesh_instance.lod_bias = HAIR_LOD_BIAS
 				material.albedo_texture = _texture(HAIR_FIXES[key])
 				material.albedo_color = HAIR_COLOR
+				# The scalp is wet and slicked; the beard is not, and glossy
+				# it rendered as a black plastic chin.
+				material.roughness = BEARD_ROUGHNESS if key == "beard" \
+					else HAIR_ROUGHNESS
 				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
 					else HAIR_ALPHA_SCISSOR
 				if key == "beard" or key in SCALP_BLEND:
@@ -449,7 +472,10 @@ const MOUTH_COLOR := Color(0.28, 0.09, 0.08)
 ## with tools (parse M_EYE centroids vs J_Eye globals) -- do not hand-tune.
 const IRIS_R := 0.006
 const PUPIL_R := 0.0022
-const IRIS_COLOR := Color(0.30, 0.17, 0.08)
+## Dark brown, as his are. The lighter brown with a 0.25 roughness rendered
+## as a pale grey-blue eye -- the highlight on the small sphere was most of
+## what showed.
+const IRIS_COLOR := Color(0.13, 0.075, 0.045)
 const PUPIL_COLOR := Color(0.012, 0.010, 0.010)
 const EYE_TARGETS := {
 	"J_Eye_L": [Vector3(-0.001077, -0.006686, -0.005771),
@@ -518,7 +544,7 @@ func _add_eye_sphere(body: Skeleton3D, bone: String, bone_idx: int,
 	if not headless:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = color
-		mat.roughness = 0.25
+		mat.roughness = 0.45
 		mat.metallic = 0.0
 		instance.material_override = mat
 	instance.position = offset
