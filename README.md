@@ -7222,8 +7222,14 @@ highlight that runs across the strands.
 - Cody's roots are deepened.
 - Roman's single glossy sheen now breaks into streaks along the strands.
 
-**Soft shadows.** The four ring keys get a 0.35 m `light_size`, which turns on
-contact-hardening PCSS shadows.
+**Soft shadows.**
+- The four ring keys get a 0.35 m `light_size`, which turns on
+  contact-hardening PCSS shadows.
+- On the keys alone this was invisible: the shadowless top fill washed every
+  key shadow out.
+- So the top fill casts soft shadows too, which gives the contact pool under
+  each wrestler.
+- The mat measures 0.446, still inside 0.43–0.49.
 
 **Pyro light.**
 - Gerbs and the waterfall now light what is near them for as long as they

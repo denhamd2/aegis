@@ -100,10 +100,25 @@ What the numbers show:
 - On Roman the one plastic sheen breaks into strand streaks. On Cody the
   effect is subtler: more depth between the shells.
 
-**Soft key shadows** (`ArenaLighting.KEY_LIGHT_SIZE` 0.35 m).
-- PCSS on the four shadow-casting ring keys. A 0.35 m lens at 7.25 m gives a
-  penumbra of about 9 cm under a shoulder and none at the feet.
-- Check through `tools/probe/shadow_shot.tscn` (hard vs soft).
+**Soft shadows** (`ArenaLighting.KEY_LIGHT_SIZE` 0.35 m).
+- PCSS on the four ring keys. A 0.35 m lens at 7.25 m gives a penumbra of
+  about 9 cm under a shoulder and none at the feet.
+- On the keys alone this changed nothing visible. The two straight-down top
+  fills, the strongest light on the mat, cast no shadows, so they filled in
+  every key shadow.
+- So the top fills now cast soft shadows too. That gives the grey contact
+  pool under each wrestler that grounds him on the canvas.
+- Checked through `tools/probe/shadow_shot.tscn`: "hard" is the rig before
+  this item.
+
+Exposure after 7–9 (Vulkan):
+
+| Metric | After 5–6 | After 7–9 | Band |
+| --- | --- | --- | --- |
+| mat luminance | 0.453 | 0.446 | 0.43–0.49 |
+| mat ↔ A | 0.284 | 0.291 | 0.24–0.31 |
+| mat ↔ B | 0.131 | 0.134 | 0.24–0.31 (already below) |
+| A ↔ B | 0.152 | 0.158 | 0.00–0.07 (already above) |
 
 **Pyro light** (`EntrancePyro`).
 - Every cue already flashed an OmniLight. The gap was that a gerb's light
