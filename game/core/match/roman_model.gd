@@ -243,7 +243,9 @@ const HAIR_COLOR := Color(0.045, 0.042, 0.043)
 ## streaky highlight a matte card never has.
 const HAIR_ROUGHNESS := 0.32
 ## The direction ACROSS the strands on his hair cards, in UV space
-## (HairLook.apply). Checked on renders through tools/probe/hair_shot.tscn.
+## (HairLook.apply). Checked on renders through tools/probe/hair_shot.tscn:
+## along the tangent the shine breaks into fine streaks; turned 90 degrees it
+## smears into pale patches down the hanging lengths.
 const HAIR_FLOW := Vector2(1.0, 0.0)
 const BEARD_ROUGHNESS := 0.8
 ## Alpha below this is cut away. Hair cards need a scissor rather than
