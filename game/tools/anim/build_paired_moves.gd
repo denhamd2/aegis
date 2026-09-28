@@ -131,6 +131,10 @@ func _bake(move_id: String, spec: Dictionary) -> Animation:
 		for k: Array in positions:
 			authored_peak = maxf(authored_peak, float(k[2]))
 		var y_cap := AIRBORNE_PEAK - 0.01 if authored_peak < AIRBORNE_PEAK else INF
+		# Authored keys with their fitted offsets, then the fit's inserted
+		# keys (PairedFit.INSERTS: absolute positions where the fit found the
+		# body needed to be BETWEEN authored keys), merged in time order.
+		var final_keys := []
 		var key_index := -1
 		for raw: Array in positions:
 			key_index += 1
@@ -141,6 +145,13 @@ func _bake(move_id: String, spec: Dictionary) -> Animation:
 				key[2] = clampf(float(key[2]) + float(off[1]), MAT_LEVEL,
 						maxf(y_cap, float(key[2])))
 				key[3] = float(key[3]) + float(off[2])
+			final_keys.append(key)
+		for ins: Array in PairedFit.INSERTS.get(move_id, {}).get(role, []):
+			var key := ins.duplicate()
+			key[2] = clampf(float(key[2]), MAT_LEVEL, maxf(y_cap, MAT_LEVEL))
+			final_keys.append(key)
+		final_keys.sort_custom(func(x, y): return float(x[0]) < float(y[0]))
+		for key: Array in final_keys:
 			var t: float = key[0]
 			if t < 0.0 or t > length:
 				push_error("%s: position key at %.3f is outside 0..%.3f"

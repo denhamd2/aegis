@@ -14,10 +14,16 @@ extends Node
 const OUT := "res://resources/animations/paired_fit.gd"
 ## Keys closer together than this share a sample window.
 const WINDOW := 0.05
+## A correction bigger than this, further than INSERT_GAP seconds from any
+## key, gets a key of its own (PairedFit.INSERTS): the authored keys are too
+## sparse there for an offset at a key to reach it.
+const INSERT_MIN := 0.05
+const INSERT_GAP := 0.08
 
 
 func _ready() -> void:
 	var fit: Dictionary = PairedFit.OFFSETS.duplicate(true)
+	var inserts: Dictionary = PairedFit.INSERTS.duplicate(true)
 	for move_id in PairClearance.paired_move_ids():
 		var move: MoveDef = load("res://resources/moves/%s.tres" % move_id)
 		var spec: Dictionary = PairedRecipes.TRAJECTORIES.get(String(move.animation_pair_id), {})
@@ -38,10 +44,48 @@ func _ready() -> void:
 				var v := prev + add
 				out.append([snappedf(v.x, 0.001), snappedf(v.y, 0.001), snappedf(v.z, 0.001)])
 			entry[role] = out
+			# Existing inserted keys move by the separation at their time too;
+			# then the worst uncovered correction in each gap gets a new one.
+			var index := 1 if role == "attacker" else 2
+			var ins: Array = inserts.get(move_id, {}).get(role, [])
+			for k: Array in ins:
+				var add := _separation_at(samples, float(k[0]), role)
+				k[1] = snappedf(float(k[1]) + add.x, 0.001)
+				k[2] = snappedf(float(k[2]) + add.y, 0.001)
+				k[3] = snappedf(float(k[3]) + add.z, 0.001)
+			var times: Array = []
+			for k: Array in keys:
+				times.append(float(k[0]))
+			for k: Array in ins:
+				times.append(float(k[0]))
+			var best: Array = []
+			for sample: Array in samples:
+				var t: float = sample[0]
+				var v: Vector3 = sample[index]
+				if v.length() < INSERT_MIN:
+					continue
+				var clear := true
+				for kt: float in times:
+					if absf(kt - t) < INSERT_GAP:
+						clear = false
+						break
+				if not clear:
+					continue
+				if best.is_empty() or v.length() > (best[1] as Vector3).length():
+					best = [t, v, sample[index + 2]]
+			if not best.is_empty():
+				var at: Vector3 = (best[2] as Vector3) + (best[1] as Vector3)
+				ins.append([snappedf(best[0], 0.001), snappedf(at.x, 0.001),
+						snappedf(at.y, 0.001), snappedf(at.z, 0.001)])
+				ins.sort_custom(func(x, y): return float(x[0]) < float(y[0]))
+			if not ins.is_empty():
+				if not inserts.has(move_id):
+					inserts[move_id] = {}
+				inserts[move_id][role] = ins
 		fit[move_id] = entry
 		print("FIT %-36s D max %.3f  A max %.3f" % [move_id, _peak(samples, "defender"),
 				_peak(samples, "attacker")])
-	_write(fit)
+	_write(fit, inserts)
 	print("FIT_DONE wrote %s" % OUT)
 	get_tree().quit()
 
@@ -71,8 +115,10 @@ func _record(move_id: String) -> Array:
 		if player == null or not player.is_playing():
 			continue
 		var to_pair := rig._pair_transform.basis.inverse()
+		var inv := rig._pair_transform.affine_inverse()
 		samples.append([player.current_animation_position,
-				to_pair * a.paired_separation, to_pair * d.paired_separation])
+				to_pair * a.paired_separation, to_pair * d.paired_separation,
+				inv * a.global_position, inv * d.global_position])
 	scene.queue_free()
 	await get_tree().process_frame
 	return samples
@@ -105,11 +151,24 @@ func _peak(samples: Array, role: String) -> float:
 	return m
 
 
-func _write(fit: Dictionary) -> void:
+func _write(fit: Dictionary, inserts: Dictionary) -> void:
 	var text := FileAccess.get_file_as_string(OUT)
-	var head := text.substr(0, text.find("const OFFSETS"))
-	var body := "const OFFSETS := {\n"
-	var ids := fit.keys()
+	var head := text.substr(0, text.find("const INSERTS"))
+	var body := "const INSERTS := {\n"
+	var ids := inserts.keys()
+	ids.sort()
+	for id in ids:
+		body += "\t\"%s\": {\n" % id
+		for role in ["attacker", "defender"]:
+			if not inserts[id].has(role):
+				continue
+			var rows := []
+			for k: Array in inserts[id][role]:
+				rows.append("[%.3f, %.3f, %.3f, %.3f]" % [k[0], k[1], k[2], k[3]])
+			body += "\t\t\"%s\": [%s],\n" % [role, ", ".join(rows)]
+		body += "\t},\n"
+	body += "}\n\nconst OFFSETS := {\n"
+	ids = fit.keys()
 	ids.sort()
 	for id in ids:
 		body += "\t\"%s\": {\n" % id
