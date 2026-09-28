@@ -29,8 +29,11 @@ const GRIP := {
 	"running_fallaway_moonsault_slam": 0.10,
 	"running_reverse_swing_neckbreaker": 0.09,
 	"running_tilt_a_whirl_ddt": 0.08,
-	"signature_neckbreaker": 0.07,
 	"running_rolling_thunder_flatliner": 0.07,
 }
+## Fewer in-reach frames than this and a median says nothing: the Cody
+## Cutter's hold is in reach for three or four ticks of a jump, and its median
+## swung between 1 and 12 cm on how the walk-in happened to land.
+const MIN_CONTACT_FRAMES := 10
 ## A strike, kick or dive ("none") must leave his hands his own.
 const FREE_HANDS_MAX_BLEND := 0.2

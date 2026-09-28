@@ -320,6 +320,8 @@ var skeleton: Skeleton3D
 ## the opponent while gripping. See _build_ik_rig().
 var _arm_ik: Array[SkeletonIK3D] = []
 var _grip_targets: Array[Marker3D] = []
+## Planted feet for GrappleRig's walk-in (FootPlant). Presentation only.
+var foot_plant: FootPlant
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -598,6 +600,7 @@ func _ready() -> void:
 		else:
 			skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
+		_build_foot_plant()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -751,6 +754,24 @@ func _build_animation_tree() -> void:
 			transition.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
 			state_machine.add_transition(from_name, to_name, transition)
 
+	# The walk-in's pose (begin_walk_in): reached from anywhere with a longer
+	# blend, left with a cut -- its clip IS the first frame of what follows.
+	var walk_in := AnimationNodeAnimation.new()
+	walk_in.animation = STATE_ANIMATIONS[WrestlerFSM.State.GRAPPLE_HOLD]
+	state_machine.add_node(WALK_IN_STATE, walk_in)
+	for state_id in STATE_ANIMATIONS:
+		var other: String = WrestlerFSM.State.keys()[state_id]
+		if not state_machine.has_node(other):
+			continue
+		var into := AnimationNodeStateMachineTransition.new()
+		into.xfade_time = WALK_IN_BLEND_TICKS / float(Engine.physics_ticks_per_second)
+		into.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
+		state_machine.add_transition(other, WALK_IN_STATE, into)
+		var out := AnimationNodeStateMachineTransition.new()
+		out.xfade_time = blend_seconds
+		out.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
+		state_machine.add_transition(WALK_IN_STATE, other, out)
+
 	anim_tree = AnimationTree.new()
 	add_child(anim_tree)
 	anim_tree.tree_root = state_machine
@@ -862,6 +883,72 @@ func _is_gripping_state() -> bool:
 ## running, so the two paths can never both fire on one tick.
 func update_paired_presentation() -> void:
 	_update_grip_ik()
+	if foot_plant:
+		foot_plant.advance()
+
+
+## GrappleRig is about to carry this body from `from` to `to` over `ticks`
+## ticks, into the first frame of his half of `move`. Two things, both
+## presentation only:
+##   * he blends into that first frame now (WALK_IN_STATE), instead of the
+##     hold pose snapping to it on the tick the clip starts -- measured up to
+##     0.53 m of foot in one tick on the Spear;
+##   * his feet step there instead of skating (FootPlant), planned against
+##     that pose's stance rather than the one he is standing in.
+func begin_walk_in(from: Transform3D, to: Transform3D, ticks: int,
+		move: MoveDef = null, is_attacker := false) -> void:
+	var start_pose := _first_frame_clip(move, is_attacker)
+	var end_feet := []
+	if start_pose != "":
+		var machine := anim_tree.tree_root as AnimationNodeStateMachine
+		(machine.get_node(WALK_IN_STATE) as AnimationNodeAnimation).animation = start_pose
+		_anim_playback.travel(WALK_IN_STATE)
+		if foot_plant:
+			var rel := from.affine_inverse() * skeleton.global_transform
+			for p: Vector3 in foot_plant.first_frame_feet(anim_player.get_animation(start_pose)):
+				end_feet.append(rel * p)
+	if foot_plant:
+		foot_plant.begin(from, to, ticks, end_feet)
+
+
+## The walk-in's blend-graph node, and how long the blend into it takes: most
+## of a short walk-in, so the change of stance happens while he steps.
+const WALK_IN_STATE := "WALK_IN"
+const WALK_IN_BLEND_TICKS := 9
+
+## A one-frame clip holding the first frame of his half of `move`, made once
+## and kept in a runtime library; "" if the move has no half for him.
+func _first_frame_clip(move: MoveDef, is_attacker: bool) -> String:
+	if move == null or anim_player == null or anim_tree == null:
+		return ""
+	var clip := PairedRecipes.role_clip(move.animation_pair_id, is_attacker)
+	if clip == "" or not anim_player.has_animation(clip):
+		return ""
+	if not anim_player.has_animation_library(&"walk_in"):
+		anim_player.add_animation_library(&"walk_in", AnimationLibrary.new())
+	var library := anim_player.get_animation_library(&"walk_in")
+	var key := StringName(clip.replace("/", "__"))
+	if not library.has_animation(key):
+		var still := (anim_player.get_animation(clip).duplicate(true)) as Animation
+		for t in still.get_track_count():
+			for k in range(still.track_get_key_count(t) - 1, 0, -1):
+				still.track_remove_key(t, k)
+			if still.track_get_key_count(t) > 0:
+				still.track_set_key_time(t, 0, 0.0)
+		still.length = 0.1
+		still.loop_mode = Animation.LOOP_NONE
+		library.add_animation(key, still)
+	return "walk_in/%s" % key
+
+
+func _build_foot_plant() -> void:
+	foot_plant = FootPlant.new()
+	foot_plant.name = "FootPlant"
+	var mapped := []
+	for leg: Array in foot_plant.legs:
+		mapped.append(leg.map(func(b: String) -> String: return _skeleton_bone_name(b)))
+	foot_plant.legs = mapped
+	skeleton.add_child(foot_plant)
 
 func _update_grip_ik() -> void:
 	if _arm_ik.is_empty():

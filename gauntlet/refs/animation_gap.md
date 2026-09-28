@@ -154,8 +154,16 @@ their hold: 14 of 21 holding moves within 5 cm (median), strikes hands-free;
 the 7 that turn or roll through the hold are on a ratchet
 (`PairClearanceBaseline.GRIP`). Refitting `PairedFit` with the pull included
 was tried and rejected: it doubled the in-reach frames but drove grip arms
-through bodies (30/37). Still to do:
-- the walk-in lead-in;
+through bodies (30/37).
+- The walk-in: the set-up takes as long as stepping there would (10-45 ticks,
+  at 1.6 m/s and 240 deg/s, was a fixed 10), each man blends into his first
+  frame of the move during it, and `FootPlant` plants his feet and steps them
+  there with two-bone leg IK. Foot skating over a set-up fell about 4x
+  (`tools/probe/walk_in.tscn`: 0.92 -> 0.17 m on short set-ups, 1.54 -> 0.36 m
+  on the Spear's back-off), and the up-to-0.53 m foot snap as the clip took
+  over is gone.
+
+Still to do:
 - a check with Roman, Cody and Kenny's real sizes.
 
 1. **Contact-first paired authoring**, standing in for capturing both men

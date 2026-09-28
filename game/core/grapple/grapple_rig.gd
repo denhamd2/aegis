@@ -294,17 +294,39 @@ func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
 				start.basis = Basis(defender_root_yaw(rot) if not is_attacker else rot)
 	return start
 
-## Ticks spent sliding the two bodies into the pair frame before the paired
-## clip starts.
+## The walk-in: how long GrappleRig takes to carry both men from where they
+## stand into the places the move starts from (gauntlet/refs/animation_gap.md,
+## Phase 2).
 ##
-## 10 ticks is a sixth of a second: long enough to read as closing the last
-## step and taking hold, short enough that it does not feel like a pause in
-## the match. It is a presentation value and is not defended as matching
-## measured footage -- gauntlet/refs/ has no lock-up timing in it.
+## It was a fixed 10 ticks. Measured over four seeded matches the carry is a
+## median 0.41 m and up to 1.5 m, turning up to 124 degrees -- so a sixth of a
+## second meant 2.5 m/s on a typical set-up and 9 m/s on the worst, with feet
+## that never moved: two men gliding into place. Now it takes as long as
+## stepping there would, at WALK_IN_SPEED and WALK_IN_TURN, and FootPlant puts
+## steps under it. LEAD_IN_TICKS stays the floor, so a short closing is no
+## slower than it was; LEAD_IN_MAX_TICKS stops a long one reading as a pause.
 const LEAD_IN_TICKS := 10
+const LEAD_IN_MAX_TICKS := 45
+## A quick set-up shuffle, not a stroll: faster than MOVE_SPEED's walk.
+const WALK_IN_SPEED := 1.6
+## Degrees per second a man turns while stepping round to his mark.
+const WALK_IN_TURN := 240.0
 
-## Slides both wrestlers from where they are standing into their places in the
-## pair frame, over LEAD_IN_TICKS physics ticks.
+## How long this move's walk-in took, in ticks (for probes).
+var lead_in_ticks := LEAD_IN_TICKS
+
+## Ticks to carry one body from `from` to `to` at walking pace.
+static func walk_in_ticks(from: Transform3D, to: Transform3D) -> int:
+	var flat := to.origin - from.origin
+	flat.y = 0.0
+	var turn := rad_to_deg(Quaternion(from.basis.orthonormalized()).angle_to(
+			Quaternion(to.basis.orthonormalized())))
+	var seconds := maxf(flat.length() / WALK_IN_SPEED, turn / WALK_IN_TURN)
+	return clampi(int(ceil(seconds * Engine.physics_ticks_per_second)),
+			LEAD_IN_TICKS, LEAD_IN_MAX_TICKS)
+
+## Carries both wrestlers from where they are standing into their places in
+## the pair frame, over walk_in_ticks().
 ##
 ## Interpolated on the transform rather than by driving velocity: the bodies
 ## are suspended (their own _physics_process is off, so move_and_slide() never
@@ -317,15 +339,23 @@ func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 	var from_defender := defender.global_transform
 	var to_attacker := _pair_transform * _role_start(_move, true)
 	var to_defender := _pair_transform * _role_start(_move, false)
-	for tick in range(1, LEAD_IN_TICKS + 1):
+	# Both men arrive together, so the slower of the two sets the pace.
+	lead_in_ticks = maxi(walk_in_ticks(from_attacker, to_attacker),
+			walk_in_ticks(from_defender, to_defender))
+	for pair: Array in [[attacker, from_attacker, to_attacker, true],
+			[defender, from_defender, to_defender, false]]:
+		if pair[0].has_method("begin_walk_in"):
+			pair[0].begin_walk_in(pair[1], pair[2], lead_in_ticks, _move, pair[3])
+	for tick in range(1, lead_in_ticks + 1):
 		await Engine.get_main_loop().physics_frame
 		if not _active:
 			return
-		# Ease out: most of the closing distance is covered early and the last
-		# few centimetres are taken slowly, which is how two men actually come
-		# together -- a linear slide reads as both being dragged on rails.
-		var t := float(tick) / float(LEAD_IN_TICKS)
-		var eased := 1.0 - pow(1.0 - t, 3.0)
+		# Ease in and out: a man stepping into a hold starts from standing and
+		# settles onto his mark. (The old ease-out moved at three times the
+		# average speed on the first tick -- a lurch, which was fine for a
+		# slide nobody's feet were part of.)
+		var t := float(tick) / float(lead_in_ticks)
+		var eased := t * t * (3.0 - 2.0 * t)
 		attacker.global_transform = blend_transforms(from_attacker, to_attacker, eased)
 		defender.global_transform = blend_transforms(from_defender, to_defender, eased)
 

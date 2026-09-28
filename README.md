@@ -7462,3 +7462,48 @@ the grip arms went through bodies).
 **Probe fix.** `pair_clearance` now stops at the end of the move being
 measured. The hold was starting a second move straight after the first, and
 the probe was counting it.
+
+### Phase 2 — the walk-in
+
+Before a two-man move, GrappleRig carries both men from where they are
+standing onto the move's start marks.
+
+**The problem.** In four seeded matches the carry was:
+- a median of 0.41 m, and up to 1.5 m;
+- up to 124° of turn;
+- always done in a fixed sixth of a second, with the feet frozen.
+
+That is a 2.5–9 m/s glide. The direction varies too: running moves back the
+attacker straight off 0.6–0.7 m, so no forward step clip could cover it.
+And on the tick the move started, the feet snapped up to 0.53 m, from the
+hold stance to the move's opening stance.
+
+**The fix.**
+- **Timing.** The walk-in lasts as long as stepping there would: 10–45 ticks,
+  at 1.6 m/s and 240°/s, eased in and out.
+- **Opening pose.** Each man blends into his first frame of the move during
+  the walk-in, using a runtime one-frame clip on a `WALK_IN` blend node. The
+  clip then starts without a snap.
+- **`FootPlant`** (`core/match/foot_plant.gd`) is a SkeletonModifier3D that
+  handles the feet:
+  - it keeps each foot planted while the body moves over it, using two-bone
+    leg IK;
+  - it steps the feet in turn, leading foot first, planned against the
+    opening pose's stance;
+  - each step lifts, travels, then sets down.
+  - It is presentation only, so the replay hash can't see it.
+
+**Result** (`tools/probe/walk_in.tscn`). Total foot skating fell about 4x:
+from 0.92 to 0.17 m on short set-ups, and from 1.54 to 0.36 m on the Spear.
+
+**Ropes: start-up fix.** The rope sim sampled wrestlers in their first
+frames, while the AnimationTree was still blending them in from the bind
+pose. A man placed near the ropes pushed the middle rope 18 cm down with a
+pose nobody sees, and it was still bouncing half a second later. The owner
+spotted it on a probe render. `RingRopes` now ignores a wrestler for his
+first 10 frames.
+
+**Also.**
+- `PairClearanceBaseline.MIN_CONTACT_FRAMES` is 10: a 3-frame median, like the
+  Cody Cutter's, isn't judged.
+- The neckbreaker's hands came off the ratchet (3.4 cm).

@@ -99,7 +99,7 @@ func _qa(id: String) -> void:
 	rig.begin(a, b, move)
 	rig.grapple_finished.connect(a._on_grapple_finished, CONNECT_ONE_SHOT)
 
-	var total := move.total_frames() + GrappleRig.LEAD_IN_TICKS + HANDOFF_TICKS
+	var total := move.total_frames() + rig.lead_in_ticks + HANDOFF_TICKS
 	var lowest := INF
 	var closest := INF
 	var pop := 0.0
@@ -126,9 +126,9 @@ func _qa(id: String) -> void:
 				if p.y < lowest:
 					lowest = p.y
 					low_what = "%s %s t%d" % [key, WrestlerFSM.State.keys()[w.fsm.current_state],
-							tick - GrappleRig.LEAD_IN_TICKS]
+							tick - rig.lead_in_ticks]
 		# Skip the lead-in slide: it is a deliberate transform lerp.
-		if tick > GrappleRig.LEAD_IN_TICKS + 1:
+		if tick > rig.lead_in_ticks + 1:
 			var tick_pop := 0.0
 			var tick_what := ""
 			for k in now:
@@ -139,11 +139,11 @@ func _qa(id: String) -> void:
 						tick_what = k
 					if d > pop:
 						pop = d
-						pop_tick = tick - GrappleRig.LEAD_IN_TICKS
+						pop_tick = tick - rig.lead_in_ticks
 						var who: WrestlerController = a if k.begins_with("WrestlerA") else b
 						pop_what = "%s %s" % [k, WrestlerFSM.State.keys()[who.fsm.current_state]]
 			if _pops and tick_pop > 0.20:
-				print("    t%3d %.2f %s" % [tick - GrappleRig.LEAD_IN_TICKS, tick_pop, tick_what])
+				print("    t%3d %.2f %s" % [tick - rig.lead_in_ticks, tick_pop, tick_what])
 		prev = now
 		for na: String in CORE:
 			var ia := a.skeleton.find_bone(a._skeleton_bone_name(na))

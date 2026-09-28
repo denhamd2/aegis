@@ -48,7 +48,7 @@ func _contact_failures(move_id: String, r: Dictionary) -> Array[String]:
 					% [move_id, r["grip_blend"]])
 		return out
 	var grip: Array = r["grip"]
-	if family == "" or grip.is_empty():
+	if family == "" or grip.size() < PairClearanceBaseline.MIN_CONTACT_FRAMES:
 		return out
 	grip.sort()
 	var median: float = grip[grip.size() / 2]

@@ -167,13 +167,29 @@ func _physics_process(delta: float) -> void:
 
 # ================================================================ bodies ===
 
+## Physics frames a wrestler is ignored for after he first appears. For his
+## first ~6 the AnimationTree is still blending him in from the unposed bind
+## pose -- arms straight out at shoulder height -- and a man spawned or placed
+## near the ropes in that window pushed the middle rope 18 cm down with a pose
+## nobody ever sees, and it was still bouncing half a second later (found on a
+## probe render; the owner asked what was wrong with the ropes).
+const WARMUP_FRAMES := 10
+var _first_seen := {}   # instance id -> physics frame
+
+
 func _gather_spheres() -> void:
 	for side in 4:
 		(_spheres[side] as Array).clear()
 	var inv := global_transform.affine_inverse()
+	var frame := Engine.get_physics_frames()
 	for node in get_tree().get_nodes_in_group("wrestlers"):
 		var w := node as WrestlerController
 		if w == null or not w.is_inside_tree() or not w.visible:
+			continue
+		var id := w.get_instance_id()
+		if not _first_seen.has(id):
+			_first_seen[id] = frame
+		if frame - int(_first_seen[id]) < WARMUP_FRAMES:
 			continue
 		var p := inv * w.global_position
 		# Nowhere near any rope: skip the bone walk entirely.
