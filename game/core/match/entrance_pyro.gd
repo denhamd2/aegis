@@ -20,7 +20,7 @@ const FLASH_COLOR := Color(1.0, 0.80, 0.45)
 
 ## Where things fire. The stage-front gerbs stand along the lip of the deck,
 ## either side of the ramp; the mortars go up behind the set; the post sparks
-## sit on the four ring posts' tops (RingBuilder POST_XZ 3.0, POST_TOP 1.58
+## sit on the four ring posts' tops (RingBuilder.POST_XZ, POST_TOP 1.58
 ## less the ring's -0.1 placement).
 const GERB_XS := [-5.2, -3.8, 3.8, 5.2]
 const MORTAR_XS := [-4.5, 0.0, 4.5]
@@ -78,9 +78,10 @@ func fire(cue: String) -> void:
 			_flash(Vector3(0.0, 6.0, ArenaBuilder.STAGE_FRONT - 2.0), 45.0, 45.0, 0.16,
 					STROBE_COLOR)
 		"posts":
-			for sx: float in [-3.0, 3.0]:
-				for sz: float in [-3.0, 3.0]:
-					_gerb(Vector3(sx, POST_TOP_Y, sz), 6.5, 1.0, 180)
+			for sx: float in [-1.0, 1.0]:
+				for sz: float in [-1.0, 1.0]:
+					_gerb(Vector3(sx, 0.0, sz) * RingBuilder.POST_XZ + Vector3.UP * POST_TOP_Y,
+							6.5, 1.0, 180)
 			_flash(Vector3(0.0, 3.5, 0.0), 12.0, 14.0, 0.5)
 
 

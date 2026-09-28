@@ -6,7 +6,7 @@ const DT := 1.0 / 60.0
 
 func _ropes() -> RingRopes:
 	var r: RingRopes = auto_free(RingRopes.new())
-	r.setup(RingBuilder.ROPE_SPAN, RingBuilder.POST_XZ + RingBuilder.ROPE_OVERRUN,
+	r.setup(RingBuilder.ROPE_SPAN, RingBuilder.ROPE_END,
 			RingBuilder.ROPE_HEIGHTS, RingBuilder.ROPE_SAG, RingBuilder.ROPE_RADIUS,
 			StandardMaterial3D.new())
 	return r
@@ -44,7 +44,7 @@ func test_twelve_ropes_at_rest_on_their_parabolas() -> void:
 	assert_int(r.rope_count()).is_equal(12)
 	var rope := _top_north(r)
 	# Ends at the turnbuckles, sag at mid-span, exactly as ring.py sweeps it.
-	assert_float(rope.rest[0].x).is_equal_approx(-3.022, 0.001)
+	assert_float(rope.rest[0].x).is_equal_approx(-RingBuilder.ROPE_END, 0.001)
 	var mid := rope.rest[RingRopes.SEGMENTS / 2]
 	assert_float(mid.y).is_equal_approx(
 			RingBuilder.ROPE_HEIGHT_TOP - RingBuilder.ROPE_SAG_TOP, 0.0005)

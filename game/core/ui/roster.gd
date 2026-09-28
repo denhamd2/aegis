@@ -69,6 +69,19 @@ class Entry:
 	## "signature" (drawn beside `signature`, which still goes first),
 	## "running". Installed by TitleScreen.configure_match().
 	var moveset: Dictionary = {}
+	## His real billed height, in metres, and his model's own height to the
+	## top of the head (hair excluded) at scale 1.0, measured off the model
+	## scene. configure_match() scales him by the ratio, so the men stand at
+	## their true heights relative to each other -- the owner: "Roman looks
+	## too small compared to Cody". Before this the slot decided a man's size
+	## (match.tscn: WrestlerA 0.98, WrestlerB 1.05), which put Cody 7 cm taller
+	## than Roman, who is billed an inch taller than him.
+	var stature_m := 0.0
+	var model_height_m := 0.0
+
+	## The physique_height that stands him at his real height, or 0 if unknown.
+	func stature_scale() -> float:
+		return stature_m / model_height_m if stature_m > 0.0 and model_height_m > 0.0 else 0.0
 
 	func _init(p_id: String, p_first: String, p_last: String, p_tagline: String,
 			p_scene: String, p_body: Color, p_accent: Color,
@@ -144,6 +157,18 @@ static func entries() -> Array:
 	# is his, captioned AEW CHAMPION. The others walk out under their
 	# nicknames.
 	(list[0] as Entry).championship = "AEW CHAMPION"
+	# Billed heights (WWE / AEW profiles): Roman 6'3", Cody 6'2", Kenny 6'0".
+	# Model heights are each model's crown at scale 1.0, hair excluded: Cody's
+	# and Kenny's Body mesh top (1.837, 1.829). Roman's is CALIBRATED, not his
+	# head_skinned top (1.895), which overstates his skull -- that mesh
+	# carries the base of his hair -- and stood him eye to eye with Cody when
+	# he should look down on him an inch. Calibrated by eye height in the
+	# face-off stance (tools/probe/stature_shot.tscn, 5 cm lines): posed eyes
+	# 1.721 m for Roman and 1.695 m for Cody at scale 1.0; Roman's model
+	# height is Cody's scaled by that ratio, 1.837 * 1.721 / 1.695 = 1.866.
+	for pair: Array in [[0, 1.905, 1.866], [1, 1.880, 1.837], [2, 1.829, 1.829]]:
+		(list[pair[0]] as Entry).stature_m = pair[1]
+		(list[pair[0]] as Entry).model_height_m = pair[2]
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.
 	const M := "res://resources/moves/"

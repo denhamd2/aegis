@@ -257,6 +257,9 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		wrestler.entrance_style = entry.id
 		wrestler.attire_body = entry.attire_body
 		wrestler.attire_accent = entry.attire_accent
+		# His real height, not the slot's (Roster.Entry.stature_m).
+		if entry.stature_scale() > 0.0:
+			wrestler.physique_height = entry.stature_scale()
 		# His own finisher, if he has one. Before add_child() like the rest, so
 		# the controller has it from its first tick.
 		wrestler.finisher_move = load(entry.finisher) as MoveDef \

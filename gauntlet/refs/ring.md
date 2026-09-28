@@ -123,3 +123,22 @@ the simulation. The pad material is `ring_turnbuckle_pad`, a key that already
 existed — retired, unused, and still carrying the saturated blue tint of the
 branded corner it last dressed, which is what the restored pads rendered as
 until it was retinted.
+
+## Corners
+
+On a real ring, each rope ends in a forged turnbuckle. The turnbuckle hooks an
+eye bolt that runs through a collar on the ring post, and the pad is laced
+round the turnbuckle. Between the back of every pad and its post there is
+therefore a hand's width of bare galvanised hardware, and the pad never touches
+the post. See the
+[Turnbuckle](https://en.wikipedia.org/wiki/Turnbuckle) article, and the
+[Monster Rings wrestling turnbuckle](https://www.monsterringsandcages.com/products/wrestling-ring-turnbuckle)
+product page ("hook and hook, drop forged, galvanized"). The posts stand at
+the deck corners, outboard of the rope lines.
+
+The slice's numbers are in `ring_builder.gd`:
+- `POST_XZ` is 3.17. This puts the posts at the deck corners, outboard of the
+  ropes, which are frozen at 3.1.
+- `ROPE_END` is 2.86. Each rope ends inside its pad.
+- Each pad's back is 0.114 m clear of its post. The `TURNBUCKLE_*` hardware
+  spans that gap: a collar, an eye bolt, a turnbuckle body and a hook.

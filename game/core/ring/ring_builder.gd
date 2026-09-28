@@ -49,7 +49,15 @@ const ROPE_HEIGHT_BOTTOM := 0.5
 const ROPE_HEIGHT_MIDDLE := 0.85
 const ROPE_HEIGHT_TOP := 1.2
 const ROPE_HEIGHTS := [ROPE_HEIGHT_BOTTOM, ROPE_HEIGHT_MIDDLE, ROPE_HEIGHT_TOP]
-const POST_XZ := 3.0
+## The posts stand at the deck's corners, OUTBOARD of the rope lines, as a
+## real ring's do. At 3.0 they stood inside the ropes (which are frozen at
+## 3.1), so the only way to put a pad on a rope end was to wrap it round the
+## post -- the owner's note: the pads were joined straight onto the posts,
+## with no connector. At 3.17 the tube's outer edge is 2 cm past the apron
+## edge (APRON_OUT 3.20), which is where a ring post stands, and there is
+## 0.114 m between each pad's back and its post for the turnbuckle hardware
+## (TURNBUCKLE_* below; gauntlet/refs/ring.md "Corners").
+const POST_XZ := 3.17
 
 # --- Ropes -------------------------------------------------------------------
 ## Rope radius. The ring reference (refs/ring.md) shows thin dark cable, and
@@ -72,10 +80,14 @@ const ROPE_SAG := {
 	ROPE_HEIGHT_MIDDLE: ROPE_SAG_MIDDLE,
 	ROPE_HEIGHT_BOTTOM: ROPE_SAG_BOTTOM,
 }
-## How far past the post centre a rope runs before its turnbuckle nub swallows
-## the end. The nub is small now that the branded pad is gone, so this is small
-## too -- overrun the pad used to hide would now hang in open air.
-const ROPE_OVERRUN := 0.022
+## Where each rope ENDS along its own axis: inside its turnbuckle pad, which
+## is where a real rope ends -- in the turnbuckle the pad covers, not at the
+## post. It used to run to the post (POST_XZ + a 0.022 overrun), which is what
+## a ring with the pads bolted straight onto its posts needed. 2.86 puts the
+## end 0.17 across the pad's diagonal from its centre line and at its centre
+## depth, inside the cushion on both counts
+## (test_the_rope_terminations_land_inside_the_pad).
+const ROPE_END := 2.86
 
 # --- Turnbuckles -------------------------------------------------------------
 ## No pads. The ring reference (refs/ring.md) has bare corners: each rope ends
@@ -162,7 +174,12 @@ const TURNBUCKLE_PAD_DEPTH := 0.20
 ## are asserted -- test_the_turnbuckle_pad_stands_proud_of_the_post and
 ## test_the_rope_terminations_land_inside_the_pad -- and there is no room
 ## between them for a deeper pad or a fatter post.
-const TURNBUCKLE_PAD_XZ := 3.003
+##
+## SUPERSEDED by the move of the posts to the deck corners (POST_XZ): the pad
+## no longer straddles a post. It is centred at u = 4.217 on the diagonal,
+## where both ropes end inside it (ROPE_END), with its back face at u = 4.317
+## -- 0.114 clear of the post's surface, the gap the turnbuckle spans.
+const TURNBUCKLE_PAD_XZ := 2.982
 ## The rounding on a cushion's arrises. It lives HERE, not in ring.py with the
 ## other bevel widths, because it is not only a shading choice: it eats into
 ## the clearance above, and a test can only pin that relationship if both
@@ -189,6 +206,28 @@ const TURNBUCKLE_PAD_BEVEL := 0.025
 ## longer builds `TurnbuckleConnectors` and `_model_materials()` no longer
 ## names it. If it comes back it needs the bolt holes first, because the
 ## holes are what made the reference's bracket a bracket.
+
+# --- The turnbuckle: what joins a pad to its post ----------------------------
+## Back, and not as the plate that was deleted above. A real ring's rope ends
+## in a turnbuckle -- a forged steel body with a hook at one end -- that hooks
+## an eye bolt through a collar on the post; the pad is laced round the
+## turnbuckle, so between the back of every pad and the post there is a hand's
+## width of bare galvanised hardware. That gap is what reads as "connected" on
+## camera, and it is thin: rods and a slotted body, not a plate, so it catches
+## a line of highlight rather than showing a white block.
+##
+## Along the diagonal from the pad's back to the post: the hook rod, the
+## turnbuckle body (two side bars between end bosses), and the eye bolt into
+## the post collar.
+const TURNBUCKLE_ROD_RADIUS := 0.009
+const TURNBUCKLE_BODY_LENGTH := 0.07
+const TURNBUCKLE_BODY_BAR_RADIUS := 0.0055
+const TURNBUCKLE_BODY_HALF_GAP := 0.014
+const TURNBUCKLE_BOSS_RADIUS := 0.014
+const TURNBUCKLE_EYE_RADIUS := 0.017
+## The collar each eye bolt goes through, one per rope height.
+const POST_COLLAR_RADIUS := 0.060
+const POST_COLLAR_HEIGHT := 0.05
 
 # --- The pad's artwork -------------------------------------------------------
 ## The AEW pad face, supplied by the project owner, on a flat quad sat just
@@ -927,6 +966,11 @@ func _model_materials() -> Dictionary:
 	return {
 		"PostMesh": _resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)),
 		"TurnbuckleFittings": _resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)),
+		# Galvanised: a light grey, mostly metallic, a little rough -- a line
+		# of highlight on each rod, not a mirror and not a white block. Not
+		# fully metallic: the hall's ambient carries no reflections (see
+		# arena_truss), and a pure conductor rendered the hardware near-black.
+		"TurnbuckleHardware": _mat(Color(0.64, 0.65, 0.66), 0.32, 0.7),
 		# Vinyl, not steel: a pad is a soft cover and takes a broad dull
 		# sheen, where the fittings behind it take a tight specular one.
 		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
@@ -970,7 +1014,7 @@ func _build_live_ropes(holder: Node3D, root: Node3D, material: Material) -> void
 	var ropes := RingRopes.new()
 	ropes.name = "LiveRopes"
 	holder.add_child(ropes)
-	ropes.setup(ROPE_SPAN, POST_XZ + ROPE_OVERRUN, ROPE_HEIGHTS, ROPE_SAG,
+	ropes.setup(ROPE_SPAN, ROPE_END, ROPE_HEIGHTS, ROPE_SAG,
 			ROPE_RADIUS, material)
 
 

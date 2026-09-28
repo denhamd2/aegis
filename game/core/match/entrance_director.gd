@@ -860,8 +860,11 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"", "", 0, "ring_behind_low")
 	# The corner by the steps: up on the middle rope, facing out over them.
 	# (Sourced [S], not in any of the measured clips.)
-	var post := Vector3(ENTRY_CORNER.x * RingBuilder.POST_XZ, 0.0,
-			ENTRY_CORNER.y * RingBuilder.POST_XZ)
+	# Measured from the turnbuckle pads, which are where the man stands on
+	# the ropes -- not the post, which now stands out at the deck corner
+	# beyond the turnbuckle hardware (RingBuilder.POST_XZ).
+	var post := Vector3(ENTRY_CORNER.x * RingBuilder.TURNBUCKLE_PAD_XZ, 0.0,
+			ENTRY_CORNER.y * RingBuilder.TURNBUCKLE_PAD_XZ)
 	var out_dir := RingBuilder.step_out_dir(ENTRY_CORNER)
 	var stand := post - out_dir * CORNER_ROOT_M
 	_beats.append({"kind": "walk", "who": w, "path": [in_at, stand],
@@ -927,7 +930,7 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, climb_from.z),
 			"to": top_at, "facing": -out, "shot": "ringside"})
 	# Onto the apron, a pace along the side from the post.
-	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.POST_XZ - APRON_ALONG_M), 0.0,
+	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.TURNBUCKLE_PAD_XZ - APRON_ALONG_M), 0.0,
 			ENTRY_CORNER.y * APRON_STAND)
 	var across := _flat(apron - top_at)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/apron_step",
