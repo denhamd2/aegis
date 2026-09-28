@@ -84,6 +84,15 @@ func _ready() -> void:
 	await get_tree().physics_frame
 
 	var rig: Node = scene.get_node("GrappleRig")
+	# As a match starts one (WrestlerController._begin_running_paired): roles
+	# set and both in GRAPPLE_HOLD, or the grip IK -- the hands -- never runs.
+	if not OS.get_cmdline_user_args().has("--no-grip"):
+		attacker._is_grapple_attacker = true
+		defender._is_grapple_attacker = false
+		attacker.opponent = defender
+		defender.opponent = attacker
+		attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+		defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 	rig.begin(attacker, defender, move)
 	print("PAIRED_SHOT %s" % _move_id)
 
