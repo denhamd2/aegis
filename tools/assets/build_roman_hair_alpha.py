@@ -376,7 +376,7 @@ BEARD_SHADOW_NEAR = 0.004
 BEARD_SHADOW_FAR = 0.014
 BEARD_SHADOW_OPACITY = 0.72
 ## What is left of the shadow where the beard fades, up the sideburns.
-BEARD_SHADOW_SIDES = 0.40
+BEARD_SHADOW_SIDES = 0.30
 BEARD_SHADOW_SEED = 11
 BEARD_LIP_Y = 1.646
 BEARD_LIP_HALF_W = 0.028
@@ -414,8 +414,8 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     def smooth(a, b, x):
         t = np.clip((x - a) / (b - a), 0.0, 1.0)
         return t * t * (3.0 - 2.0 * t)
-    fade = np.maximum(smooth(1.645, 1.700, pos[:, 1]),
-                      0.8 * smooth(0.045, 0.075, np.abs(pos[:, 0]))
+    fade = np.maximum(smooth(1.625, 1.695, pos[:, 1]),
+                      0.8 * smooth(0.040, 0.072, np.abs(pos[:, 0]))
                       * smooth(0.10, 0.05, pos[:, 2]))
     weight *= 1.0 - (1.0 - BEARD_SHADOW_SIDES) * fade
     albedo = Image.open(target).convert("RGB")

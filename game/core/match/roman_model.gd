@@ -324,10 +324,10 @@ func _ready() -> void:
 # Runtime, because the supplied .glb is never edited; skin weights are left
 # exactly as they are, so the trimmed cards still ride the head.
 const BEARD_KEEP := 0.70
-const BEARD_KEEP_SIDES := 0.30
-const BEARD_ALPHA_SIDES := 0.35
-const BEARD_FADE_Y := Vector2(1.645, 1.700)
-const BEARD_FADE_X := Vector2(0.045, 0.075)
+const BEARD_KEEP_SIDES := 0.20
+const BEARD_ALPHA_SIDES := 0.22
+const BEARD_FADE_Y := Vector2(1.625, 1.695)
+const BEARD_FADE_X := Vector2(0.040, 0.072)
 const BEARD_FADE_Z := Vector2(0.10, 0.05)
 const BEARD_CELL := 0.01
 
