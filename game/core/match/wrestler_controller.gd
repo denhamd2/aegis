@@ -889,11 +889,33 @@ func _update_grip_ik() -> void:
 ## exactly where the match put them, so the tie-up minigame, the replay and its
 ## end-state hash cannot see it. The slide is capped at LOCK_UP_MAX_SLIDE so a
 ## tie-up at the very edge of range does not skate a model across the mat.
+## Set by GrappleRig during a paired move (PairSeparation): how far this
+## man's MODEL is eased off the other's body so the two touch instead of
+## passing through each other. World space; presentation only, like the
+## lock-up slide it is added to. Relaxes back to zero once the move is over.
+var paired_separation := Vector3.ZERO
+const SEPARATION_RELAX := 0.85
+
 const LOCK_UP_GAP := 0.60
 const LOCK_UP_MAX_SLIDE := 0.40
 const LOCK_UP_EASE_TICKS := 8
 var _lock_up_close := 0.0          # 0-1 eased
 var _model_home := Vector3.INF     # the model's own local position
+
+
+## Re-applies the model's presentation offset (lock-up slide plus paired
+## separation) right now, without advancing either ease. GrappleRig calls it
+## between separation passes, so each pass measures where the model now is.
+func apply_model_offset() -> void:
+	var model := anim_player.get_parent() as Node3D if anim_player else null
+	if model == null or model == self or _model_home == Vector3.INF:
+		return
+	var base := model.position - _last_separation_local
+	_last_separation_local = global_transform.basis.inverse() * paired_separation
+	model.position = base + _last_separation_local
+
+
+var _last_separation_local := Vector3.ZERO
 
 
 func _close_for_lock_up() -> void:
@@ -906,8 +928,15 @@ func _close_for_lock_up() -> void:
 			and opponent != null and is_instance_valid(opponent)
 	var step := 1.0 / LOCK_UP_EASE_TICKS
 	_lock_up_close = clampf(_lock_up_close + (step if locked else -step), 0.0, 1.0)
+	# Out of a paired move, the separation eases back onto the body.
+	if not (grapple_rig and grapple_rig.is_active()):
+		paired_separation *= SEPARATION_RELAX
+		if paired_separation.length() < 0.001:
+			paired_separation = Vector3.ZERO
+	var separation := global_transform.basis.inverse() * paired_separation
+	_last_separation_local = separation
 	if _lock_up_close <= 0.0:
-		model.position = _model_home
+		model.position = _model_home + separation
 		return
 	var to := Vector3.ZERO
 	if opponent and is_instance_valid(opponent):
@@ -917,7 +946,7 @@ func _close_for_lock_up() -> void:
 	var local_dir := (global_transform.basis.inverse() * to.normalized()) \
 			if to.length() > 0.001 else Vector3.ZERO
 	var eased := smoothstep(0.0, 1.0, _lock_up_close)
-	model.position = _model_home + local_dir * slide * eased
+	model.position = _model_home + local_dir * slide * eased + separation
 
 
 ## How far one man's model slides in for a lock-up at `gap` metres apart.

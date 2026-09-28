@@ -121,7 +121,26 @@ func _bake(move_id: String, spec: Dictionary) -> Animation:
 		anim.track_set_interpolation_type(pos_track, Animation.INTERPOLATION_CUBIC)
 		var peak := -INF
 		var previous := -1.0
-		for key: Array in positions:
+		# The fitted corrections (PairedFit), one per key, in the pair frame.
+		var fit: Array = PairedFit.OFFSETS.get(move_id, {}).get(role, [])
+		# A fit may not turn a grounded arc into an airborne one: past
+		# AIRBORNE_PEAK a move must finish a full flip (see above), and a
+		# separation that lifts a man 3 cm is not a flip. So the fitted height
+		# stays under the line whenever the authored one did.
+		var authored_peak := -INF
+		for k: Array in positions:
+			authored_peak = maxf(authored_peak, float(k[2]))
+		var y_cap := AIRBORNE_PEAK - 0.01 if authored_peak < AIRBORNE_PEAK else INF
+		var key_index := -1
+		for raw: Array in positions:
+			key_index += 1
+			var key := raw.duplicate()
+			if key_index < fit.size():
+				var off: Array = fit[key_index]
+				key[1] = float(key[1]) + float(off[0])
+				key[2] = clampf(float(key[2]) + float(off[1]), MAT_LEVEL,
+						maxf(y_cap, float(key[2])))
+				key[3] = float(key[3]) + float(off[2])
 			var t: float = key[0]
 			if t < 0.0 or t > length:
 				push_error("%s: position key at %.3f is outside 0..%.3f"

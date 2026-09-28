@@ -34,8 +34,8 @@ func _ready() -> void:
 			continue
 		var r: Dictionary = await PairClearance.measure(self, move_id)
 		results.append(r)
-		print("PAIR %-36s worst %.3f m  %s @%.2f   body-body %.3f   arm %.3f" % [move_id,
-				r["worst"], r["where"], r["at"], r["body"], r["arm"]])
+		print("PAIR %-36s worst %.3f m  %s @%.2f   body-body %.3f   arm %.3f   moved A %.3f D %.3f" % [move_id,
+				r["worst"], r["where"], r["at"], r["body"], r["arm"], r["moved_attacker"], r["moved_defender"]])
 	results.sort_custom(func(x, y): return x["worst"] > y["worst"])
 	print("PAIR_DONE %d moves; over %.2f m: %d" % [results.size(), PairClearance.BODY_LIMIT,
 			results.filter(func(r): return r["body"] > PairClearance.BODY_LIMIT).size()])

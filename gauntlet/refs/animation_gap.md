@@ -137,7 +137,18 @@ finding.
    - The clip gate (`test_clip_authoring_gate.gd`) message points at them. A
      human still looks, but the frames are already there.
 
-### Phase 2: two-man moves that fit (2K's "natural together")
+### Phase 2: two-man moves that fit (2K's "natural together") -- IN PROGRESS
+
+Done so far:
+- Runtime separation (`PairSeparator`), which solves overlap each tick after
+  the animation.
+- A measured trajectory fit (`PairedFit`).
+
+Paired moves within the overlap limits went from 5/37 to 36/37. Still to do:
+- keys where the fit peaks mid-air;
+- the contact track and contact IK;
+- the walk-in lead-in;
+- a check with Roman, Cody and Kenny's real sizes.
 
 1. **Contact-first paired authoring**, standing in for capturing both men
    together:

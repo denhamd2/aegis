@@ -7399,3 +7399,37 @@ This is the root of the overlaps the owner has flagged. Fixing it is Phase 2
 **Contact sheets.** `tools/anim/contact_sheet.sh OUT Clip ...` (or
 `--paired move ...`) renders side and front frames of changed clips. The clip
 gate now points at it and at the two lint tests.
+
+## Round: Phase 2a, two-man moves that touch instead of overlap
+
+**Runtime separation** (`GrappleRig._separate_models`, `PairSeparator`).
+- Each tick of a paired move, after the animation has posed both men,
+  `PairClearance.push` measures how far their capsule bodies are inside each
+  other past contact.
+- It eases the models apart: 85% on the defender, the rest on the attacker,
+  capped at 10 cm so his boots do not slide.
+- It solves in up to 6 passes in the same tick, so fast impacts are caught.
+  Two earlier versions fell short: a gentle step per tick (still 6/37 over),
+  and solving before the animation advanced (24/37).
+- It runs from a late-priority child node because GrappleRig's own order is
+  part of the replay (it keeps bodies in the ring).
+- Models only: bodies, positions and the replay hash never see it, and the
+  offset relaxes back onto the body after the move.
+
+**Trajectory fit** (`tools/anim/fit_paired.tscn` → `PairedFit.OFFSETS` →
+`build_paired_moves.gd`).
+- Records where each role's model had to be moved, in the pair frame, at each
+  trajectory key.
+- Bakes that into the root keys over three passes, so the bodies go where they
+  touch. This is the measured stand-in for contact-first authoring.
+- The fit may not lift a grounded arc past the 0.30 m "must flip" line.
+
+**Result.** 36 of 37 moves are within the limits, against 5 before:
+- lifts, spears, cutters and tilt-a-whirls go from up to 26 cm of overlap to
+  about 1–2 cm, confirmed on before/after renders;
+- only the Clothesline From Hell remains, 3 mm over, and stays on the ratchet.
+
+**Follow-up.** On four moves the carried man still needs up to 30 cm of
+runtime correction mid-air: Cross Rhodes, both tilt-a-whirls, and the
+mushroom stomp. Their trajectory keys are too sparse there, and extra keys
+where the fit peaks would take that up.

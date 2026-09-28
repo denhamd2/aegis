@@ -372,6 +372,72 @@ func _physics_process(_delta: float) -> void:
 			body.keep_inside_the_ring()
 		if body.has_method("update_paired_presentation"):
 			body.update_paired_presentation()
+	# Separation runs later in the tick, from PairSeparator, once the
+	# animation has posed both men.
+
+
+# --- Separation (gauntlet/refs/animation_gap.md, Phase 2) --------------------
+## The two halves of every paired move were authored apart and placed at fixed
+## offsets, and measured (PairClearance) 32 of 37 moves put one body through
+## the other by up to 26 cm: the slam carried a man's belly through the
+## lifter's head. This is the runtime answer, the one AAA wrestling games give
+## the same problem: each tick, measure how far the bodies are inside each
+## other past contact (PairClearance.push) and ease the DEFENDER's model out
+## by it; when they are clear, let him settle back, so the pair comes to rest
+## touching. It fits any two bodies -- Roman and Cody are not the mannequin
+## the clips were authored on -- because it works on the posed skeletons.
+##
+## Mostly the defender (DEFENDER_SHARE), because he is the one being carried,
+## thrown or driven, and moving the man on his feet slides his boots on the
+## canvas; the attacker takes the rest. The model only:
+## the bodies, positions and the replay hash never see it.
+## Solved, not stepped: up to SEPARATION_PASSES push-and-remeasure passes a
+## tick, each moving the model straight away, so a fast impact (a spear's
+## pelvis into pelvis) is resolved on the tick it happens. A single 60% step a
+## tick was tried first and lagged every impact: the pair check barely moved.
+const SEPARATION_PASSES := 6
+## The defender's share of each push; the attacker takes the rest, up to
+## ATTACKER_MAX -- he is on his feet, and a model moved further than that
+## under a planted boot reads as the boot sliding. (Uncapped, it reached the
+## 0.45 m ceiling on the rolling codebreaker.)
+const DEFENDER_SHARE := 0.85
+const ATTACKER_MAX := 0.10
+const SEPARATION_SETTLE := 0.96
+const SEPARATION_MAX := 0.45
+
+
+func _ready() -> void:
+	var separator := PairSeparator.new()
+	separator.name = "PairSeparator"
+	separator.rig = self
+	add_child(separator)
+
+
+func _separate_models() -> void:
+	var a := _attacker as WrestlerController
+	var d := _defender as WrestlerController
+	if a == null or d == null or a.skeleton == null or d.skeleton == null:
+		return
+	var pushed := false
+	for _pass in SEPARATION_PASSES:
+		var push := PairClearance.push(a, d)
+		if push.length() <= 0.0005:
+			break
+		pushed = true
+		# Most of it on the defender; DEFENDER_SHARE of it. The rest moves the
+		# attacker the other way: when the defender is wrapped round him (the
+		# tilt-a-whirls, Cross Rhodes), pushing only the defender just presses
+		# him into the far side and the pushes cancel.
+		d.paired_separation = (d.paired_separation + push * DEFENDER_SHARE) \
+				.limit_length(SEPARATION_MAX)
+		a.paired_separation = (a.paired_separation - push * (1.0 - DEFENDER_SHARE)) \
+				.limit_length(ATTACKER_MAX)
+		d.apply_model_offset()
+		a.apply_model_offset()
+	if not pushed:
+		for w: WrestlerController in [a, d]:
+			w.paired_separation *= SEPARATION_SETTLE
+			w.apply_model_offset()
 
 func _suspend(body: CharacterBody3D) -> void:
 	if body:

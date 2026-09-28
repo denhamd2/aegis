@@ -95,6 +95,48 @@ static func depth(a: WrestlerController, b: WrestlerController) -> Dictionary:
 	return {"body": body, "arm": arm, "where": where, "over": worst}
 
 
+## Contact, not overlap: how much of each capsule pair's overlap PairSeparation
+## leaves alone. A body resting on another is a few millimetres "in" on
+## capsules this size; a grip wraps an arm round him.
+const BODY_CONTACT := 0.01
+const ARM_CONTACT := 0.04
+
+
+## The push, in world space, that would move `b` out of `a`: every
+## overlapping capsule pair past its contact allowance contributes its excess
+## along the line from a's closest point to b's. Summed, then capped at the
+## single deepest excess (many pairs overlapping the same way would otherwise
+## push many times too far). Zero when they only touch.
+static func push(a: WrestlerController, b: WrestlerController) -> Vector3:
+	var pa := _points(a)
+	var pb := _points(b)
+	var total := Vector3.ZERO
+	var deepest := 0.0
+	for sa in SEGMENTS:
+		if not (pa.has(sa[0]) and pa.has(sa[1])):
+			continue
+		for sb in SEGMENTS:
+			if not (pb.has(sb[0]) and pb.has(sb[1])):
+				continue
+			var pts := Geometry3D.get_closest_points_between_segments(
+					pa[sa[0]], pa[sa[1]], pb[sb[0]], pb[sb[1]])
+			var gap: float = (pts[1] as Vector3).distance_to(pts[0])
+			var allow := ARM_CONTACT if (sa[3] == "arm" or sb[3] == "arm") else BODY_CONTACT
+			var excess := float(sa[2]) + float(sb[2]) - gap - allow
+			if excess <= 0.0:
+				continue
+			var n: Vector3 = (pts[1] as Vector3) - (pts[0] as Vector3)
+			if n.length() < 1e-4:
+				# Centre lines crossing: push b away from a's body centre.
+				n = b.global_position - a.global_position
+				n.y = 0.0
+			total += n.normalized() * excess
+			deepest = maxf(deepest, excess)
+	if total.length() > deepest:
+		total = total.normalized() * deepest
+	return total
+
+
 ## Runs `move_id` through the real GrappleRig in a fresh match scene under
 ## `host`, and returns its worst overlap: {"move", "body", "arm", "worst",
 ## "where", "at"}. "worst" is the largest excess over the matching limit.
@@ -115,12 +157,15 @@ static func measure(host: Node, move_id: String) -> Dictionary:
 	var rig: GrappleRig = scene.get_node("GrappleRig")
 	rig.begin(attacker, defender, move)
 	var total := maxi(int(move.total_frames()), 1)
-	var r := {"move": move_id, "body": 0.0, "arm": 0.0, "worst": 0.0, "where": "", "at": 0.0}
+	var r := {"move": move_id, "body": 0.0, "arm": 0.0, "worst": 0.0, "where": "", "at": 0.0,
+			"moved_attacker": 0.0, "moved_defender": 0.0}
 	var tick := 0
 	while rig.is_active() and tick < total * 3:
 		await host.get_tree().physics_frame
 		tick += 1
 		var d := depth(attacker, defender)
+		r["moved_attacker"] = maxf(r["moved_attacker"], attacker.paired_separation.length())
+		r["moved_defender"] = maxf(r["moved_defender"], defender.paired_separation.length())
 		r["body"] = maxf(r["body"], d["body"])
 		r["arm"] = maxf(r["arm"], d["arm"])
 		if d["over"] > r["worst"]:
