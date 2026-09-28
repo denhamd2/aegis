@@ -367,6 +367,9 @@ const RECIPES := {
 		"seconds": 5.667, "file": AUTHORED},
 	"roll_in": {"kind": "retime", "source": "Roll_In",
 		"seconds": 2.000, "file": AUTHORED},
+	# Squared up before the bell (EntranceDirector's face-off).
+	"face_off": {"kind": "retime", "source": "Face_Off",
+		"seconds": 3.000, "file": AUTHORED, "loop": true},
 	# Off the ropes before the tope (gauntlet/refs/ropes.md).
 	"rope_rebound": {"kind": "retime", "source": "Rope_Rebound",
 		"seconds": 0.667, "file": AUTHORED},

@@ -292,3 +292,45 @@ func test_romans_finger_lands_on_the_slam() -> void:
 	assert_int(pyro_at).override_failure_message("pyro at %d" % pyro_at) \
 			.is_between(int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) - 2,
 				int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) + 2)
+
+
+## The owner: no grapple stance before the bell -- they walk up to each
+## other, face off, and the bell rings. Stepped through the face-off: at the
+## stare they stand FACEOFF_GAP apart, square to each other, and no beat of
+## the whole entrance plays the grapple crouch.
+func test_they_walk_up_and_face_off_before_the_bell() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	for beat: Dictionary in director._beats:
+		for move: Array in beat.get("moves", []):
+			assert_str(move[4]).is_not_equal("strikes/idle_ready")
+	var stare := -1
+	for i in director._beats.size():
+		var beat: Dictionary = director._beats[i]
+		if beat["kind"] == "pair" and (beat["moves"][0] as Array)[4] == "strikes/face_off" \
+				and (beat["moves"][0] as Array)[1] == (beat["moves"][0] as Array)[2]:
+			stare = i
+			break
+	assert_int(stare).is_greater(0)
+	for w: WrestlerController in [a, b]:
+		w.global_transform = director._mark[w]
+	director._beat = stare - 1
+	director._start_beat()
+	for _i in 400:
+		director._physics_process(1.0 / 60.0)
+		if director._beat > stare:
+			break
+		if director._beat == stare and director._tick > 60:
+			break
+	assert_float(a.global_position.distance_to(b.global_position)) \
+			.is_equal_approx(EntranceDirector.FACEOFF_GAP, 0.02)
+	for pair: Array in [[a, b], [b, a]]:
+		var me: WrestlerController = pair[0]
+		var facing := -me.global_transform.basis.z
+		var to_other: Vector3 = (pair[1] as WrestlerController).global_position - me.global_position
+		facing.y = 0.0
+		to_other.y = 0.0
+		assert_float(facing.normalized().dot(to_other.normalized())).is_greater(0.99)
+	assert_str(a._presentation_clip).is_equal("strikes/face_off")

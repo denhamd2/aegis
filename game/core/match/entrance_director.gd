@@ -70,10 +70,26 @@ const OPENING_TICKS := 150
 const POSE_TICKS := 114
 ## Held at his mark, turned to face the ring, before the next man.
 const SETTLE_TICKS := 40
-## The two men squared up before the bell.
-const FACEOFF_TICKS := 70
+## The face-off before the bell (the owner: "just have them walk up to each
+## other to do a face off, then the bell rings"). Both walk in off their
+## marks until they are FACEOFF_GAP apart, centre to centre -- chest to chest
+## less a hand, as a stare-down is -- hold it, then turn and walk back to
+## their marks and turn round, where the bell finds them. The match starts on
+## the marks, exactly as it did, so nothing downstream moves.
+const FACEOFF_GAP := 0.75
+const FACEOFF_WALK_SPEED := 0.9
+const FACEOFF_STARE_TICKS := 210
+## Back to the marks: the turn away, and the turn back at the end.
+const FACEOFF_TURN_TICKS := 30
+## A beat on the marks, facing, before the bell.
+const FACEOFF_SET_TICKS := 30
 
 # --- Camera shots (project values; refs/camera.md measures none of these) ---
+## The face-off two-shot: from the hard camera's side of the pair, square to
+## them, a little under head height, close enough for both heads and chests.
+const FACEOFF_CAM_DISTANCE := 3.4
+const FACEOFF_CAM_HEIGHT := 1.5
+const FACEOFF_CAM_FOV := 34.0
 const OPENING_AT := Vector3(0.0, 8.0, 13.0)
 const OPENING_LOOK := Vector3(0.0, 3.0, -30.0)
 const OPENING_FOV := 52.0
@@ -423,7 +439,50 @@ func _build_timeline() -> void:
 			_add_cody_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
-	_beats.append({"kind": "faceoff", "ticks": FACEOFF_TICKS})
+	_add_faceoff()
+
+
+## Walk up, stare down, back to the marks (FACEOFF_GAP's note). Each beat is a
+## "pair" beat: both men move at once, each on his own line.
+func _add_faceoff() -> void:
+	var a: Transform3D = _mark[_a]
+	var b: Transform3D = _mark[_b]
+	var mid := (a.origin + b.origin) * 0.5
+	var a_in := mid + _flat(a.origin - mid).normalized() * (FACEOFF_GAP * 0.5)
+	var b_in := mid + _flat(b.origin - mid).normalized() * (FACEOFF_GAP * 0.5)
+	var walk := maxi(1, int(ceil(_flat(a.origin).distance_to(_flat(a_in))
+			/ FACEOFF_WALK_SPEED * TPS)))
+	var face_a := _flat(b.origin - a.origin)
+	var face_b := -face_a
+	_beats.append({"kind": "pair", "ticks": walk, "shot": "faceoff_side", "moves": [
+			[_a, a.origin, a_in, face_a, "strikes/entrance_walk"],
+			[_b, b.origin, b_in, face_b, "strikes/entrance_walk"]]})
+	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "faceoff_side",
+			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
+					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
+	# Back to their marks: turned away, walked, turned round.
+	_beats.append({"kind": "pair", "ticks": FACEOFF_TURN_TICKS, "shot": "faceoff",
+			"moves": [[_a, a_in, a_in, face_b, "strikes/face_off"],
+					[_b, b_in, b_in, face_a, "strikes/face_off"]]})
+	_beats.append({"kind": "pair", "ticks": walk, "shot": "faceoff", "moves": [
+			[_a, a_in, a.origin, face_b, "strikes/entrance_walk"],
+			[_b, b_in, b.origin, face_a, "strikes/entrance_walk"]]})
+	_beats.append({"kind": "pair", "ticks": FACEOFF_TURN_TICKS + FACEOFF_SET_TICKS,
+			"shot": "faceoff", "moves": [
+			[_a, a.origin, a.origin, face_a, _wait_clip(_a)],
+			[_b, b.origin, b.origin, face_b, _wait_clip(_b)]]})
+
+
+## What a man does standing in the ring waiting -- never the grapple crouch
+## (Idle_Ready), which is a match stance: his own entrance stand if he has
+## one, else the face-off's square stance.
+static func _wait_clip(w: WrestlerController) -> String:
+	match w.entrance_style:
+		"roman":
+			return "strikes/roman_stand"
+		"cody":
+			return "strikes/cody_stand"
+	return "strikes/face_off"
 
 
 func _add_entrance(w: WrestlerController, portal_x: float, side: String) -> void:
@@ -493,10 +552,10 @@ func _start_beat() -> void:
 			w.play_presentation_clip(beat["clip"])
 		"turn":
 			beat["ticks"] = SETTLE_TICKS if beat.get("settle", false) else 18
-			w.play_presentation_clip("strikes/idle_ready")
-		"faceoff":
-			for m: WrestlerController in [_a, _b]:
-				m.play_presentation_clip("strikes/idle_ready")
+			w.play_presentation_clip(_wait_clip(w))
+		"pair":
+			for move: Array in beat["moves"]:
+				(move[0] as WrestlerController).play_presentation_clip(move[4])
 
 
 func _physics_process(delta: float) -> void:
@@ -520,6 +579,10 @@ func _physics_process(delta: float) -> void:
 			_place(w, w.global_position, beat["facing"], false, delta)
 		"turn":
 			_place(w, w.global_position, beat["facing"], false, delta)
+		"pair":
+			for move: Array in beat["moves"]:
+				var m: WrestlerController = move[0]
+				_place(m, (move[1] as Vector3).lerp(move[2], t), move[3], false, delta)
 		"clip":
 			var from: Vector3 = beat["from"]
 			var to: Vector3 = beat["to"]
@@ -1138,11 +1201,23 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					+ fb * BOW_AHEAD, hb + Vector3.DOWN * 0.12, BOW_FOV, true)
 		"crowd_wide":
 			_camera.set_entrance_shot(CROWD_WIDE_AT, CROWD_WIDE_LOOK, CROWD_WIDE_FOV, true)
+		"faceoff_side":
+			# Square to the line between them, at eye height, both profiles
+			# filling the frame: the stare-down shot every broadcast takes.
+			var mid := (_a.global_position + _b.global_position) * 0.5
+			var across := _flat(_b.global_position - _a.global_position).normalized()
+			var side := Vector3.UP.cross(across).normalized()
+			if side.dot(_camera.hard_cam_position - mid) < 0.0:
+				side = -side
+			_camera.set_entrance_shot(mid + side * FACEOFF_CAM_DISTANCE
+					+ Vector3.UP * FACEOFF_CAM_HEIGHT, mid + Vector3.UP * 1.45,
+					FACEOFF_CAM_FOV, first and not _was_shot("faceoff_side"), delta)
 		"faceoff":
 			# The hard camera's own seat and lens, so the bell does not cut.
 			_camera.set_entrance_shot(_camera.hard_cam_position,
 					(_a.global_position + _b.global_position) * 0.5
-					+ Vector3.UP * _camera.hard_cam_aim, _camera.hard_cam_fov, true)
+					+ Vector3.UP * _camera.hard_cam_aim, _camera.hard_cam_fov,
+					not _was_shot("faceoff"), delta)
 
 
 ## The pre-entrance montage: which of ROMAN_INTRO_SHOTS the hold is in, and

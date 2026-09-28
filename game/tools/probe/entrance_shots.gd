@@ -17,6 +17,8 @@ var _every := 30
 var _frame := 0
 ## --until N: stop after N frames (re-rendering the start of a long run).
 var _until := -1
+## --faceoff: skip both entrances and start on the face-off, men on marks.
+var _faceoff := false
 
 
 func _ready() -> void:
@@ -28,6 +30,8 @@ func _ready() -> void:
 			_every = int(args[i + 1])
 		elif args[i] == "--until" and i + 1 < args.size():
 			_until = int(args[i + 1])
+		elif args[i] == "--faceoff":
+			_faceoff = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec("")
 	var scene: Node = load(MATCH_SCENE).instantiate()
@@ -39,6 +43,15 @@ func _ready() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var rang := [false]
 	director.bell.connect(func(): rang[0] = true)
+	if _faceoff:
+		for i in director._beats.size():
+			if (director._beats[i] as Dictionary)["kind"] == "pair":
+				for w: WrestlerController in [director._a, director._b]:
+					w.global_transform = director._mark[w]
+					w.visible = true
+				director._beat = i
+				director._start_beat()
+				break
 	var last_beat := -1
 	var after := 0
 	while after < 30:

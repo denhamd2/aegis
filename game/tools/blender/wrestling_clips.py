@@ -4541,6 +4541,27 @@ CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
     (48, _shifted(P(), 0.85, 0.0)),
 ]))
 
+# The face-off before the bell: nose to nose in the middle of the ring, square
+# on, chest up and chin down, arms hanging loose a hand's width off the hips,
+# hands half closed. Nothing guarded about it -- the owner's note was that the
+# grapple crouch (Idle_Ready) read as ridiculous here; a stare-down is two men
+# standing TALL. Alive, not frozen: a slow breath lifts the chest and the
+# head settles a touch lower on the exhale. 90 frames, looping.
+FACE_OFF = dict(
+    pelvis=(0.0, 0.01, 0.905), hips=(0, 0, 0), spine=(3, 0, 0), head=(-7, 0, 0),
+    hand_r=(0.27, 0.00, 0.93), hand_l=(-0.27, 0.00, 0.93),
+    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    fist_r=0.55, fist_l=0.55,
+    foot_r=(0.17, -0.02, 0.104), foot_l=(-0.17, 0.02, 0.104),
+)
+CLIPS["Face_Off"] = [
+    (0,  FACE_OFF),
+    (40, pose(FACE_OFF, pelvis=(0.0, 0.01, 0.911), spine=(6, 0, 0), head=(-5, 0, 0),
+              hand_r=(0.28, 0.00, 0.94), hand_l=(-0.28, 0.00, 0.94))),
+    (65, pose(FACE_OFF, head=(-8, 1, 0))),
+    (90, FACE_OFF),
+]
+
 # Off the ropes (gauntlet/refs/ropes.md): the last stride turns him side-on,
 # the rope-side arm goes over the top rope, and his hip and ribs take the
 # middle and top ropes. The ropes give -- the pelvis carries on 0.30 m past
