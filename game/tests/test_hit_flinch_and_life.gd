@@ -49,3 +49,11 @@ func test_fatigue_runs_from_fresh_to_spent_on_sweats_scale() -> void:
 func test_a_bigger_snap_takes_longer_to_turn_out() -> void:
 	assert_float(Inertializer.turn_ticks(PI)).is_equal_approx(14.0, 1e-4)
 	assert_float(Inertializer.turn_ticks(0.3)).is_less(Inertializer.turn_ticks(PI))
+
+
+func test_a_fidget_eases_in_and_out_and_starts_and_ends_at_rest() -> void:
+	assert_float(BodyLife.fidget_curve(0.0)).is_equal_approx(0.0, 1e-6)
+	assert_float(BodyLife.fidget_curve(0.5)).is_equal_approx(1.0, 1e-6)
+	assert_float(BodyLife.fidget_curve(1.0)).is_equal_approx(0.0, 1e-6)
+	# No slope at either end: it does not jolt in or out.
+	assert_float(BodyLife.fidget_curve(0.01)).is_less(0.002)

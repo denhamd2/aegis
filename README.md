@@ -7655,3 +7655,94 @@ staggered:
 **Measurement note.** With facing smoothing in, the body-frame pop count is
 no longer meaningful: the drawn body turns relative to its own frame while
 it absorbs a snap. `--world`, what a viewer sees, is the reference from here.
+
+### Phase 3 — planted feet, staggers and idle fidgets (Phase 3 complete)
+
+**Measure first.** `tools/probe/foot_skate.tscn` reads both ankles as drawn,
+in world space, over real AI matches. A foot within 4 cm of its standing
+height, relative to the body, counts as on the mat. Any sideways movement
+between two such ticks is skate. Before: **76 cm of slide per second a foot
+was planted**. The worst states:
+- circling: 3.7 m/s (one forward walk clip, played while he strafes in every
+  direction);
+- two-man moves: 1.35 m/s;
+- getting up: 0.73 m/s;
+- standing: 0.38 m/s (the body turns to face the other man and the feet
+  swivel with it).
+
+**`FootLock`** (`core/match/foot_lock.gd`) runs after everything that moves
+the body and before `WornFollow`. Per foot:
+- **Planted:** when the clip puts the ankle at standing height, the foot is
+  pinned where it landed, and two-bone leg IK (FootPlant's solver) bends the
+  leg to it.
+- **Let go:** when the clip lifts it, it blends back onto the clip's swing
+  over 4 ticks.
+- **Stepped:** when the body drifts 14 cm off a planted foot, the foot takes
+  an 8-tick lifted step under him, one foot at a time. This covers turning on
+  the spot, being shoved back by a blow, and a paired move's root carrying
+  him. So the stagger after a hit is steps, not a slide. This stands in for
+  authored stagger-and-recover clips.
+
+It is off during the walk-in (FootPlant has it) and while lying down.
+
+**Result** (same two seeded matches, cm of slide per planted second):
+
+| state | before | after |
+| --- | --- | --- |
+| circling | 370 | 151 |
+| two-man moves | 135 | 66 |
+| standing | 38 | 20 |
+| striking | 40 | 10 |
+| hit reactions | 76 | 4.5 |
+| tie-up | 13 | 3 |
+| **all planted time** | **76** | **41** |
+
+**Tuned against jumps, not only skate.** Each setting was measured both ways
+(`transition_pops --world` for jumps). A tighter lock skated less (28.5 with
+getting up included, 35 without), but it cost jumps elsewhere:
+- **Getting up:** the getup clips kneel and step, and pinning made the knees
+  jerk, so getting up is left to the clip.
+- **Going down:** a lock fading out as a man is turned round dragged his
+  legs across, so a pin 20 cm from the clip's foot is now cut at once.
+- **Hand-back:** it takes 7 eased ticks rather than 4.
+- **Knee pole:** the leg IK's pole is now a 5 cm tie-break. At 30 cm the knee
+  swung off the clip's line whenever a lock engaged mid-stride.
+
+Some of what the jump probe still counts is a real foot stopping as it lands.
+
+Lying down (89 cm/s) is left alone: it includes the deliberate turn-round
+on the mat, where the feet swap sides.
+
+**Idle fidgets (`BodyLife`).** Standing still, every 3–7 s a man does one
+of: a weight shift onto one leg, a roll of the neck, or two small bounces.
+The schedule is seeded per man, so two never move in step. FootLock keeps
+the feet where they are, so the shift reads through the legs.
+
+### The ring canvas: smooth, not denim
+
+The owner spotted a coarse, denim-like diagonal texture over the canvas. It
+was the material library's woven fabric (ambientCG Fabric036) used as the
+canvas's normal and roughness maps, at a 0.5 m repeat and bump strength 0.8.
+
+**Research.** TV wrestling rings are covered in #10 cotton duck canvas, a
+heavy plain weave sold as "the same as used on TV for professional
+wrestling" ([Highspots](https://highspots.com/products/2252),
+[Tarps & All](https://www.tarpsandall.com/boxing-ring-covers)). Vinyl-coated
+polyester is the other option, and the art is printed directly onto either
+([signs101](https://www.signs101.com/threads/canvas-boxing-ring-graphics-what-type-of-material.157298/)).
+Its threads are under a millimetre, so from a broadcast camera the weave is
+invisible and the mat reads as a smooth, matte sheet. What does show is
+broad: the cloth pulled taut to the frame and settling between the boards,
+and the scuffs.
+
+**The fix.**
+- The supplied AEW artwork stays as the colour, untouched.
+- No fabric maps at all.
+- Uniform matte roughness of 0.84.
+- A generated low-frequency normal once over the whole mat: undulations
+  about a metre across, and shallow ripples parallel to each edge within
+  half a metre of it.
+
+The mat's rendered median rose from 0.397 to 0.451 in the same probe shot,
+which puts it inside VISUAL_BAR's 0.43–0.49 exposure band; the weave's dark
+valleys had been pulling it below.

@@ -30,6 +30,8 @@ var _budget := 5400
 var _pair: Array = []
 var _edges := false
 var _debug := false
+## --debug-min M: the kick past which --debug prints a bone.
+var _debug_min := 0.5
 ## --world: bones in world orientation less the body's position, so the way
 ## he faces counts too -- what a viewer sees, turns included.
 var _world := false
@@ -47,6 +49,7 @@ func _ready() -> void:
 			"--wrestlers": spec = args[i + 1]
 			"--edges": _edges = true
 			"--debug": _debug = true
+			"--debug-min": _debug_min = float(args[i + 1])
 			"--world": _world = true
 	if _seeds.is_empty():
 		_seeds = [1, 2]
@@ -143,7 +146,7 @@ func _run(seed_value: int, edges: Dictionary, steady: Array) -> int:
 					if vel[i].has(b):
 						var kk := (v - (vel[i][b] as Vector3)).length()
 						kick = maxf(kick, kk)
-						if _debug and kk > 0.5:
+						if _debug and kk > _debug_min:
 							print("DBG t%d w%d %s %s kick %.2f p %s prev %s since %d w %.2f" % [tick, i, state, b, kk, p, prev[i][b], since[i],
 									1.0 if w.inertializer and w.inertializer.is_blending() else 0.0])
 					vel[i][b] = v

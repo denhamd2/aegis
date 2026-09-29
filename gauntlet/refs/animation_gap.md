@@ -210,7 +210,7 @@ Phase 2 is DONE for the runtime work. Contact-first authoring in Blender
    - Use a per-family setup clip (front grapple, rear, corner, downed) so each
      move starts from a matching grip.
 
-### Phase 3: smooth flow between actions -- IN PROGRESS
+### Phase 3: smooth flow between actions -- DONE
 
 Done so far:
 - Inertialization (`Inertializer`) in place of every crossfade: Bollo's
@@ -227,8 +227,16 @@ Done so far:
 - In-between life: `BodyLife` (head follows the opponent, breathing, a
   slump that grows with damage).
 
-Still to do: transition clips (hit > stagger > recover), foot IK beyond the
-walk-in, idle variations.
+- Foot IK everywhere he stands (`FootLock`): feet pinned while the clip
+  plants them, stepped when the body drifts off them. Planted-foot skate over
+  two matches: 76 -> 41 cm per planted second (circling 370 -> 151), tuned
+  against the jumps a tighter lock caused. The
+  step also gives hit knockback its stagger, in place of authored clips.
+- Idle fidgets: weight shifts, neck rolls and bounces, seeded per man.
+
+Phase 3 is DONE. Left for later: lying-down skate (includes the deliberate
+turn-round), and authored stagger/recover clips if the procedural step is
+not enough on footage.
 
 
 1. **Transitions.**

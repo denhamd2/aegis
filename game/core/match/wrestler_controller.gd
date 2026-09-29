@@ -325,6 +325,7 @@ var foot_plant: FootPlant
 var inertializer: Inertializer
 var hit_flinch: HitFlinch
 var body_life: BodyLife
+var foot_lock: FootLock
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -618,6 +619,7 @@ func _ready() -> void:
 		_build_inertializer()
 		_build_body_life()
 		_build_hit_flinch()
+		_build_foot_lock()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -998,6 +1000,7 @@ func _build_body_life() -> void:
 		body_life.bones[key] = _skeleton_bone_name(key)
 	body_life.wrestler = self
 	body_life.phase = 0.37 * player_index
+	body_life.fidget_seed = 7919 * (player_index + 1)
 	skeleton.add_child(body_life)
 
 
@@ -1034,6 +1037,20 @@ func _build_hit_flinch() -> void:
 		hit_flinch.bones[key] = _skeleton_bone_name(key)
 	hit_flinch.body = self
 	skeleton.add_child(hit_flinch)
+
+
+## FootLock: after everything that moves the body above the feet (the
+## Inertializer's turn, BodyLife, HitFlinch), so it pins the feet under the
+## body as it will be drawn; before WornFollow, which carries it to his shoes.
+func _build_foot_lock() -> void:
+	foot_lock = FootLock.new()
+	foot_lock.name = "FootLock"
+	var mapped := []
+	for leg: Array in foot_lock.legs:
+		mapped.append(leg.map(func(b: String) -> String: return _skeleton_bone_name(b)))
+	foot_lock.legs = mapped
+	foot_lock.wrestler = self
+	skeleton.add_child(foot_lock)
 
 
 ## A model dressed on a second skeleton (Roman) gets the body's final pose

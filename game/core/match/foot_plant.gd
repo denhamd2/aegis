@@ -36,6 +36,10 @@ const LIFT := 0.08
 ## The share of a swing spent lifting off before the foot travels, and again
 ## setting down after it arrives.
 const PEEL := 0.2
+## How far in front of the clip's knee the IK pole sits, metres: a tie-break
+## for a near-straight leg, not a new bend -- at 0.3 the knee swung off the
+## clip's line whenever a lock engaged mid-stride.
+const POLE_REACH := 0.05
 ## Ticks to hand the feet back to the animation after the walk-in.
 const RELEASE_TICKS := 6
 
@@ -206,10 +210,16 @@ func first_frame_feet(anim: Animation) -> Array:
 	return out
 
 
-## Two-bone IK in skeleton space: thigh and calf turn in the leg's current
-## bend plane so the ankle lands on `target`, knee on the side it already
-## bends to; the foot takes the target's orientation.
-static func _solve_leg(sk: Skeleton3D, ids: Array, target: Transform3D) -> void:
+## Two-bone IK in skeleton space: thigh and calf turn so the ankle lands on
+## `target`, the knee toward a POLE -- where the clip has the knee, pushed
+## `forward` (skeleton space) -- and the foot takes the target's orientation.
+##
+## It used to bend in the leg's current plane, (knee - hip) x (ankle - hip).
+## A leg near straight has almost no plane, and the knee flipped side to side
+## from one tick to the next: the calves were the bones that kicked hardest in
+## tools/probe/transition_pops.tscn --world once FootLock had the legs.
+static func _solve_leg(sk: Skeleton3D, ids: Array, target: Transform3D,
+		forward := Vector3.ZERO) -> void:
 	var tg := sk.get_bone_global_pose(ids[0])
 	var cg := sk.get_bone_global_pose(ids[1])
 	var fg := sk.get_bone_global_pose(ids[2])
@@ -223,11 +233,16 @@ static func _solve_leg(sk: Skeleton3D, ids: Array, target: Transform3D) -> void:
 		return
 	var d := clampf(to.length(), absf(l1 - l2) + 1e-3, (l1 + l2) * 0.999)
 	var dir := to.normalized()
-	var n := (k - h).cross(a - h)
-	if n.length() < 1e-6:
-		n = tg.basis.x
-	n = n.normalized()
-	var perp := dir.cross(n).normalized()
+	var perp := Vector3.ZERO
+	if forward != Vector3.ZERO:
+		var pole := k + forward.normalized() * POLE_REACH - h
+		perp = pole - dir * pole.dot(dir)
+	if perp.length() < 1e-4:
+		var n := (k - h).cross(a - h)
+		if n.length() < 1e-6:
+			n = tg.basis.x
+		perp = dir.cross(n.normalized())
+	perp = perp.normalized()
 	var cos_a := clampf((l1 * l1 + d * d - l2 * l2) / (2.0 * l1 * d), -1.0, 1.0)
 	var knee := h + dir * l1 * cos_a + perp * l1 * sqrt(1.0 - cos_a * cos_a)
 	var r1 := Quaternion((k - h).normalized(), (knee - h).normalized())

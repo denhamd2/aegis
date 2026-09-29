@@ -540,37 +540,82 @@ func _bare_steel() -> StandardMaterial3D:
 ## the one lever the ring owns there; the rest is lighting's, and lighting is
 ## deliberately untouched in this round.
 func _canvas_material() -> StandardMaterial3D:
-	var m := _resolve("ring_canvas", _mat(CANVAS_WHITE, 0.86))
-	m.albedo_color = CANVAS_WHITE
-	# The supplied canvas artwork if it is there, the generated weave if not.
+	# No woven-fabric maps. A TV ring is covered in #10 cotton duck canvas
+	# (the heavy plain-weave duck sold as "the same as used on TV"), with the
+	# promotion's art printed straight onto it. Its threads are under a
+	# millimetre: from any broadcast camera the weave is invisible and the mat
+	# reads as a smooth, matte sheet. What the eye does pick up is broad --
+	# the cloth pulled taut to the frame and settling between the boards, and
+	# the scuffs and marks already in the art.
 	#
-	# The generated texture does not go away: it still drives ROUGHNESS and the
-	# NORMAL below, which is where most of its value was. What it stops doing
-	# is standing in for a canvas nobody had -- the mark it used to draw was
-	# removed entirely when refs/ring.md called for an unbranded mat, leaving
-	# albedo carrying weave and wear on a blank field.
+	# It used to take the library's Fabric036 normal and roughness at a 0.5 m
+	# repeat with normal_scale 0.8: a coarse diagonal twill across the whole
+	# mat, which the owner saw on a close shot and rightly called denim.
+	var m := _mat(CANVAS_WHITE, CANVAS_ROUGHNESS)
+	# The supplied canvas artwork if it is there, the generated one if not.
 	var art: Texture2D = load(CANVAS_ART) if ResourceLoader.exists(CANVAS_ART) else null
 	m.albedo_texture = art if art != null else _canvas()
-	if m.roughness_texture == null:
-		# The weave drives roughness as well as albedo. A canvas is not
-		# uniformly glossy -- the thread crowns catch the ring rig and the
-		# valleys do not -- and that specular breakup is detail the albedo
-		# alone cannot produce, because it survives at grazing angles where
-		# the albedo variation is already washed out by the light. The library
-		# brings its own roughness map when it is present; this stands in.
-		m.roughness = 0.86
-		m.roughness_texture = _canvas()
-	if m.normal_texture == null:
-		m.normal_enabled = true
-		m.normal_texture = _canvas_normal()
-		# 0.75 rather than the 1.0 this shipped at: enough relief to keep the
-		# weave re-lit (fine detail is 0.31 against the reference's 0.61 and
-		# needs everything it can get) without returning to the corduroy that
-		# CANVAS_RELIEF's note describes.
-		m.normal_scale = 0.75
+	m.normal_enabled = true
+	m.normal_texture = _canvas_tension_normal()
+	m.normal_scale = CANVAS_TENSION_SCALE
 	m.uv1_scale = Vector3.ONE
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return m
+
+
+## Cotton duck under the lights: matte, one value across the mat.
+const CANVAS_ROUGHNESS := 0.84
+## How strongly the tension relief relights the mat. Gentle: it should read
+## as cloth over boards, not as a texture.
+const CANVAS_TENSION_SCALE := 0.45
+const CANVAS_TENSION_SIZE := 512
+static var _canvas_tension_texture: ImageTexture
+
+
+## The mat's surface relief, once over the whole 6 m: soft undulations a
+## metre or so across where the canvas settles between the boards, and shallow
+## ripples running parallel to each edge within half a metre of it, where the
+## cloth is pulled over the frame. No weave -- see _canvas_material().
+static func _canvas_tension_normal() -> ImageTexture:
+	if _canvas_tension_texture != null:
+		return _canvas_tension_texture
+	var n := CANVAS_TENSION_SIZE
+	var noise := FastNoiseLite.new()
+	noise.seed = CANVAS_SEED
+	noise.frequency = 5.0 / float(n)   # ~1.2 m features over the 6 m mat
+	noise.fractal_octaves = 2
+	var height := PackedFloat32Array()
+	height.resize(n * n)
+	for py in n:
+		for px in n:
+			var h := noise.get_noise_2d(px, py) * 0.6
+			# Edge ripples: parallel to the nearest edge, fading in 0.5 m.
+			var u := float(px) / float(n - 1)
+			var v := float(py) / float(n - 1)
+			var edge := minf(minf(u, 1.0 - u), minf(v, 1.0 - v)) * 6.0   # metres
+			if edge < 0.5:
+				var along := u if minf(v, 1.0 - v) < minf(u, 1.0 - u) else v
+				var across := edge
+				h += 0.35 * (1.0 - edge / 0.5) * sin(across * TAU / 0.12) \
+						* (0.6 + 0.4 * sin(along * TAU * 9.0))
+			height[py * n + px] = h
+	var data := PackedByteArray()
+	data.resize(n * n * 3)
+	for py in n:
+		for px in n:
+			var l := height[py * n + maxi(px - 1, 0)]
+			var r := height[py * n + mini(px + 1, n - 1)]
+			var up := height[maxi(py - 1, 0) * n + px]
+			var dn := height[mini(py + 1, n - 1) * n + px]
+			var normal := Vector3((l - r) * 2.0, (up - dn) * 2.0, 1.0).normalized()
+			var i := (py * n + px) * 3
+			data[i] = _byte(normal.x * 0.5 + 0.5)
+			data[i + 1] = _byte(normal.y * 0.5 + 0.5)
+			data[i + 2] = _byte(normal.z * 0.5 + 0.5)
+	var img := Image.create_from_data(n, n, false, Image.FORMAT_RGB8, data)
+	img.generate_mipmaps()
+	_canvas_tension_texture = ImageTexture.create_from_image(img)
+	return _canvas_tension_texture
 
 
 ## Rope. WHITE, thin and semi-gloss.
