@@ -9,6 +9,22 @@ extends Node
 ## any more -- see _check_for_downed_opponent_action().
 
 signal match_won(winner: WrestlerController, method: String)
+## A pin or a hold broken because the man under it got to the ropes.
+signal rope_break(defender: WrestlerController, was_pin: bool)
+
+## Rope breaks (gauntlet/refs/animation_gap.md, Phase 4: position). A man
+## pinned or held within reach of the ropes gets to them, and the count or the
+## hold is broken -- unless it is a finisher he is under, which is the point of
+## a finisher. Whether he can reach them is decided as the cover or the hold
+## starts (WrestlerController.rope_within_reach()), off where he lies.
+##
+## Pinned: he starts reaching as the second count lands (COUNT_TICKS[1]) and
+## has the rope ROPE_REACH_TICKS later -- after two, before three, which is
+## when a man really gets there. A kickout before that still ends it first.
+const ROPE_REACH_START_TICK := 170
+const ROPE_REACH_TICKS := 24
+## Held: he fights the hold this long before he stretches for the rope.
+const SUBMISSION_ROPE_REACH_AFTER := 60
 
 ## Tick each hand-slap lands on, measured rather than divided evenly.
 ##
@@ -65,6 +81,11 @@ var _tying_up: bool = false
 var _tie_up_ticks: int = 0
 var _tie_up_minigame: TieUpMinigame
 var _match_over: bool = false
+## The rope side the man under the current pin or hold can reach, or ZERO.
+var _rope_side := Vector3.ZERO
+var _submission_fight_ticks := 0
+## Rope breaks this match, pins and holds together (probes, tests).
+var rope_breaks := 0
 
 func _ready() -> void:
 	wrestler_a = get_node(wrestler_a_path)
@@ -214,6 +235,7 @@ func _check_for_downed_opponent_action() -> void:
 			_pin_count_shown = 0
 			_pin_attacker = attacker
 			_pin_defender = defender
+			_rope_side = _reachable_ropes(attacker, defender)
 			attacker.begin_pin(defender, _pin_seed())
 			return
 
@@ -238,7 +260,31 @@ func _start_own_hold(attacker: WrestlerController, defender: WrestlerController)
 	_submissioning = true
 	_submission_attacker = attacker
 	_submission_defender = defender
+	_rope_side = _reachable_ropes(attacker, defender)
+	_submission_fight_ticks = 0
 	attacker.begin_submission(defender, CombatSystem.Limb.LEGS, attacker.submission_move)
+
+
+## The rope side `defender` can get to under `attacker`, or ZERO -- never
+## under a finisher.
+func _reachable_ropes(attacker: WrestlerController, defender: WrestlerController) -> Vector3:
+	if attacker.last_landed_tier >= CombatSystem.Tier.FINISHER:
+		return Vector3.ZERO
+	return WrestlerController.rope_within_reach(defender)
+
+
+## Ticks the rope reach for a pin or a hold; true once he has the rope.
+func _tick_rope_reach(tick: int, start: int) -> bool:
+	if _rope_side == Vector3.ZERO or tick < start:
+		return false
+	var defender := _pin_defender if _pinning else _submission_defender
+	if tick == start:
+		defender.reach_for_rope(_rope_side, ROPE_REACH_TICKS)
+	if tick < start + ROPE_REACH_TICKS:
+		return false
+	rope_breaks += 1
+	rope_break.emit(defender, _pinning)
+	return true
 
 ## Seed for this pin's kickout minigame. Every pin in a match needs its own
 ## target window, so the seed has to vary -- but only with match state.
@@ -303,6 +349,9 @@ func _tick_pin() -> void:
 	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
 		_end_pin(false)
 		return
+	if _tick_rope_reach(_pin_ticks, ROPE_REACH_START_TICK):
+		_end_pin(false, true)
+		return
 	_update_count()
 	if _pin_ticks >= PIN_COUNT_TICKS:
 		_end_pin(true)
@@ -319,7 +368,7 @@ func _update_count() -> void:
 			_pin_count_shown = i + 1
 			break
 
-func _end_pin(three_count_reached: bool) -> void:
+func _end_pin(three_count_reached: bool, rope := false) -> void:
 	_pinning = false
 	_pin_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	if three_count_reached:
@@ -330,7 +379,8 @@ func _end_pin(three_count_reached: bool) -> void:
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
 		# The near-fall comeback: he was losing badly, he survived the cover,
 		# and he fires up off the mat.
-		if _pin_defender.combat.earned_kickout_comeback(_pin_attacker.combat):
+		# Not off a rope break: he did not fight his way out of it.
+		if not rope and _pin_defender.combat.earned_kickout_comeback(_pin_attacker.combat):
 			_pin_defender.fire_up()
 			_pin_defender._move_ticks_remaining = KICKOUT_FIRE_UP_TICKS
 		# Not cover-eligible again until this wrestler actually reaches IDLE
@@ -385,6 +435,10 @@ func _tick_submission() -> void:
 				and _submission_attacker._submission_hold_move:
 			_submission_defender.combat.apply_damage(
 					_submission_attacker._submission_hold_move)
+		return
+	_submission_fight_ticks += 1
+	if _tick_rope_reach(_submission_fight_ticks, SUBMISSION_ROPE_REACH_AFTER):
+		_end_submission(false)
 		return
 	var minigame: SubmissionMinigame = _submission_defender._submission_minigame
 	minigame.tick(true, _submission_defender._submission_defender_input_this_tick)

@@ -229,6 +229,14 @@ const RECIPES := {
 	"ground_fist": {"kind": "retime", "source": "Ground_Fist",
 		"seconds": 0.733, "file": AUTHORED},
 
+	# Authored: trapped in the corner (Phase 4, position) -- the slump into
+	# the buckle, and a blow taken there. Played in STUNNED, cut to
+	# WrestlerController.CORNER_TRAP_TICKS and CORNER_HIT_TICKS.
+	"corner_slump": {"kind": "retime", "source": "Corner_Slump",
+		"seconds": 1.500, "file": AUTHORED},
+	"corner_hit": {"kind": "retime", "source": "Corner_Hit",
+		"seconds": 1.000, "file": AUTHORED},
+
 	# Authored: the reversal -- parry the strike off line and counter down
 	# the gap (MatchReferee._try_reversal). Counter contact at tick 18.
 	"strike_parry": {"kind": "retime", "source": "Parry_Counter",

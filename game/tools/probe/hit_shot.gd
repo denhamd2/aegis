@@ -5,6 +5,7 @@ extends Node
 ##   xvfb-run -a godot4 --path game --rendering-driver opengl3 --fixed-fps 60 \
 ##       --resolution 960x540 tools/probe/hit_shot.tscn -- --out /tmp/hits \
 ##       [--seed 1 --hits 2 --min 0.9 --wrestlers roman,cody]
+##       [--ground | --reversals | --corner | --ropes] [--dry]
 ##
 ## Each blow is framed from the side of the line between the two men.
 
@@ -21,6 +22,10 @@ var _skip := 0
 var _reversals := false
 ## --ground: film ground attacks on a man down, from their start.
 var _ground := false
+## --corner: film a man trapped in a corner, from the blow that puts him there.
+var _corner := false
+## --ropes: film a rope break, from the moment he reaches for the rope.
+var _ropes := false
 
 
 func _ready() -> void:
@@ -36,6 +41,8 @@ func _ready() -> void:
 			"--skip": _skip = int(args[i + 1])
 			"--reversals": _reversals = true
 			"--ground": _ground = true
+			"--corner": _corner = true
+			"--ropes": _ropes = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec(_spec)
 	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
@@ -65,6 +72,21 @@ func _ready() -> void:
 						await _film(cam, ws[1 - i], ws[i], shot, 40)
 						shot += 1
 				elif ws[i]._ground_zone == "":
+					seen[i] = 0
+			continue
+		if _corner or _ropes:
+			for i in 2:
+				var on: bool = ws[i].is_corner_trapped() if _corner \
+						else (ws[i].rope_reach != null and ws[i].rope_reach.is_reaching())
+				if on and seen[i] == 0:
+					seen[i] = 1
+					if _dry:
+						print("%s t%d %s" % ["CORNER" if _corner else "ROPE", tick, ws[i].name])
+						shot += 1
+					elif tick >= _skip:
+						await _film(cam, ws[i], ws[1 - i], shot, 90 if _corner else 60)
+						shot += 1
+				elif not on:
 					seen[i] = 0
 			continue
 		if _reversals:

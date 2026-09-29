@@ -28,6 +28,9 @@ extends Node
 @export var strike_cooldown_ticks: int = 40
 ## strike_cooldown_ticks during a comeback (CombatSystem.is_fired_up()).
 @export var comeback_strike_cooldown_ticks: int = 12
+## Between strikes on a man trapped in a corner (Phase 4, position): he is
+## worked over while he hangs there, not sized up.
+@export var corner_strike_cooldown_ticks: int = 18
 ## How far away the AI stops walking in and charges instead.
 ##
 ## A STARTING VALUE, not a searched minimum. Its justification is the ring's
@@ -414,7 +417,10 @@ func poll_input() -> Dictionary:
 		# 1.17 / 1.20 / 1.37 / 1.35 m. Gating on the old 1.15 meant throwing
 		# from distances the drawn strike could not cover.
 		var reach := controller.shortest_strike_reach()
-		if _wants_tie_up():
+		# A man trapped in the corner cannot be locked up with -- he is not
+		# standing to meet it -- so he is struck instead, in a flurry.
+		var cornered := target.is_corner_trapped()
+		if _wants_tie_up() and not cornered:
 			input["grapple"] = true
 		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			input["strike"] = true
@@ -422,6 +428,13 @@ func poll_input() -> Dictionary:
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
 					if controller.combat.is_fired_up() else strike_cooldown_ticks
+			if cornered:
+				_cooldown = mini(_cooldown, corner_strike_cooldown_ticks)
+		elif cornered:
+			# Stay square in front of him between shots rather than circle off.
+			var toward := to_target.normalized()
+			if distance > reach * 0.9:
+				input["move"] = Vector2(toward.x, toward.z)
 		elif distance > reach:
 			# The dead band, and it has to be closed explicitly. tie_up_range
 			# is 1.3 m and the shortest strike reaches 1.17 m, so between those

@@ -230,6 +230,23 @@ def S(**over):
     return pose(SUPINE, **over)
 
 
+# Trapped in a corner (Corner_Slump, Corner_Hit): backed into the buckle,
+# which is behind him on the diagonal, weight sagging into the ropes, arms
+# hooked over the top rope -- elbows up on it at 1.2 m, forearms hanging
+# down behind it -- and his chin on his chest.
+CORNER_HANG = dict(
+    pelvis=(0.02, -0.17, 0.765), hips=(8, 0, 2), spine=(20, -4, 4), head=(-34, -6, 4),
+    hand_r=(0.48, -0.36, 0.96), hand_l=(-0.48, -0.36, 0.96),
+    elbow_r=(0.6, -0.4, 0.7), elbow_l=(-0.6, -0.4, 0.7),
+    fist_r=0.15, fist_l=0.15,
+    foot_r=(0.25, 0.14, 0.104), foot_l=(-0.23, 0.18, 0.104),
+)
+
+
+def C(**over):
+    return pose(CORNER_HANG, **over)
+
+
 # --- gait construction ----------------------------------------------------
 #
 # The two locomotion cycles are generated rather than tabled, because the one
@@ -1143,6 +1160,52 @@ CLIPS = {
                hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.24, 0.26, 1.26),
                foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
         (20, P()),
+    ],
+
+    # The corner (gauntlet/refs/animation_gap.md, Phase 4: position). A man
+    # knocked back into a corner does not stagger free: the turnbuckle stops
+    # him, and he is trapped against it with his arms hooked over the top
+    # rope while the other man works him over. He faces OUT of the corner,
+    # which is behind him on the diagonal; the two top ropes run forward
+    # from it at 45 degrees, so at 0.6 m either side of him they pass about
+    # 0.1 m behind his shoulders at 1.2 m -- that is where the hands go.
+    #
+    # 45 frames / 1.5s: the SLUMP. Driven back into the buckle (frame 3):
+    # the whiplash throws the head back and the arms up and over the ropes.
+    # The head comes forward off the rebound (7), then he hangs there,
+    # breathing, chin down, weight in the ropes (12-38), and gathers himself
+    # to come out (45), which is where the stance picks him up.
+    "Corner_Slump": [
+        (0,  P()),
+        (3,  C(pelvis=(0.0, -0.18, 0.820), hips=(10, 0, 0), spine=(28, 0, 0),
+               head=(30, 0, 0), hand_r=(0.50, -0.34, 1.04), hand_l=(-0.50, -0.34, 1.04),
+               foot_r=(0.22, -0.02, 0.104), foot_l=(-0.20, 0.08, 0.104))),
+        (7,  C(spine=(16, 0, 0), head=(-20, 0, 0), pelvis=(0.0, -0.16, 0.770))),
+        (12, C()),
+        # Breathing: the chest lifts and the head with it, twice.
+        (22, C(pelvis=(0.02, -0.16, 0.760), spine=(22, -2, 4), head=(-28, -4, 4))),
+        (30, C(head=(-38, -8, 4))),
+        (38, C(pelvis=(0.02, -0.16, 0.760), spine=(21, -2, 3), head=(-30, -4, 2))),
+        # Pushing off the ropes: hands come off, weight forward over the feet.
+        (45, P(pelvis=(0.0, -0.04, 0.830), hips=(0, 0, 0), spine=(0, 0, 0),
+               head=(-8, 0, 0),
+               hand_r=(0.34, 0.16, 1.08), hand_l=(-0.32, 0.18, 1.10),
+               fist_r=0.5, fist_l=0.5,
+               foot_r=(0.24, 0.02, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+    ],
+
+    # 30 frames / 1.0s: HIT IN THE CORNER. From the hang, the blow drives
+    # his back into the buckle again -- head and chest thrown back, the
+    # arms jolting up on the rope (frame 2) -- the head whips forward off it
+    # (5), and he sags back into the hang (12-30). It starts and ends on the
+    # slump's hang pose so a string of them runs together.
+    "Corner_Hit": [
+        (0,  C()),
+        (2,  C(pelvis=(0.0, -0.21, 0.800), hips=(12, 0, 0), spine=(32, 0, 0),
+               head=(32, 0, 0), hand_r=(0.50, -0.34, 1.06), hand_l=(-0.50, -0.34, 1.06))),
+        (5,  C(spine=(14, 0, 0), head=(-40, 0, 0))),
+        (12, C(pelvis=(0.02, -0.17, 0.755))),
+        (30, C()),
     ],
 
     # 23 frames / 0.75s. On his feet and gone: guard down, chin dropped,

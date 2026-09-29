@@ -275,8 +275,15 @@ Done so far:
   the head, stomps to the body or legs, by where the standing man is (two new
   authored clips, up to 2 per knockdown, never after a finisher).
 
-Order from here: corner and rope positions, chain wrestling in holds, then
-the AI's in-between behaviour.
+- Position, part 2: the corner and the ropes. A blow that drives a man back
+  into a corner traps him against the buckle (`Corner_Slump`), and each blow
+  landed there is taken in the corner (`Corner_Hit`), up to 3; the AI works a
+  trapped man over in a flurry. A man pinned or held within reach of the ropes
+  gets a hand or foot on the bottom rope (`RopeReach`) and the referee breaks
+  it -- after two, before three, never under a finisher.
+
+Order from here: chain wrestling in holds, then the AI's in-between
+behaviour.
 
 
 - **Position-context moves:** front, rear, at the head or legs of a downed

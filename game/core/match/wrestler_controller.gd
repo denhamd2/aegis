@@ -328,6 +328,7 @@ var inertializer: Inertializer
 var hit_flinch: HitFlinch
 var body_life: BodyLife
 var foot_lock: FootLock
+var rope_reach: RopeReach
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -622,6 +623,7 @@ func _ready() -> void:
 		_build_body_life()
 		_build_hit_flinch()
 		_build_foot_lock()
+		_build_rope_reach()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -1055,6 +1057,19 @@ func _build_foot_lock() -> void:
 	skeleton.add_child(foot_lock)
 
 
+## RopeReach: after FootLock, so a foot reaching for the rope is not pinned
+## back to the mat; before WornFollow, which carries it to his clothes.
+func _build_rope_reach() -> void:
+	rope_reach = RopeReach.new()
+	rope_reach.name = "RopeReach"
+	var mapped := {}
+	for key: String in rope_reach.chains:
+		mapped[key] = (rope_reach.chains[key] as Array).map(
+				func(b: String) -> String: return _skeleton_bone_name(b))
+	rope_reach.chains = mapped
+	skeleton.add_child(rope_reach)
+
+
 ## A model dressed on a second skeleton (Roman) gets the body's final pose
 ## carried across to it, LAST, after every other modifier. See WornFollow.
 ## His hip height standing at rest, in his own frame, at the size he is
@@ -1313,6 +1328,8 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current != WrestlerFSM.State.STUNNED:
+		_corner_trapped = false
 	if not _anim_playback:
 		return
 	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
@@ -1415,6 +1432,8 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.MOVE_EXEC:
 			_process_active_move(input)
 		WrestlerFSM.State.HIT_REACT, WrestlerFSM.State.STUNNED:
+			if is_corner_trapped():
+				_tick_corner_trap()
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.DOWN:
 			_process_down(input)
@@ -1448,6 +1467,8 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
+	if rope_reach:
+		rope_reach.advance(fsm.is_in(ROPE_HOLD_STATES))
 	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
 	move_and_slide()
@@ -2083,6 +2104,160 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
 
+# --- the corner (gauntlet/refs/animation_gap.md, Phase 4: position) ----------
+#
+# A man knocked back into a corner does not stagger free: the turnbuckle stops
+# him, and he is trapped against it -- arms hooked over the top rope, chin on
+# his chest -- while the other man works him over. Every blow landed on him
+# there is taken in the corner (Corner_Hit) and keeps him in it, up to
+# CORNER_HITS_MAX; the next one after that, or the clock running out, lets him
+# out. A running attack into a trapped man is the corner charge.
+#
+# Deterministic: where he is and where the blow came from decide it, both read
+# off the two bodies' origins, never the skeleton.
+
+## Both |x| and |z| past this, and a man is in a corner's reach.
+const CORNER_ZONE := 1.85
+## Where a trapped man's origin is put, on both axes: keep_inside_the_ring()'s
+## own limit, which backs him into the buckle.
+const CORNER_SPOT := 2.6
+## How squarely a blow has to drive him at the corner: the cosine between the
+## blow's line and the diagonal into it.
+const CORNER_DRIVE_MIN := 0.2
+## Trapped on the first blow, and again on each blow taken there (the clip
+## lengths: corner_slump and corner_hit in strike_recipes.gd).
+const CORNER_TRAP_TICKS := 90
+const CORNER_HIT_TICKS := 60
+## Blows he takes in the corner before the next one gets him out.
+const CORNER_HITS_MAX := 3
+## Ticks to be driven back into the buckle from where he was hit.
+const CORNER_SLIDE_TICKS := 8
+
+var _corner_trapped := false
+var _corner_hits := 0
+var _corner_spot := Vector3.ZERO
+var _corner_slide := 0
+
+
+## Trapped in a corner right now.
+func is_corner_trapped() -> bool:
+	return _corner_trapped and fsm.current_state == WrestlerFSM.State.STUNNED
+
+
+## The spot in the corner a blow from `from` drives a man at `pos` into, or a
+## non-finite vector when it does not drive him into one.
+static func corner_behind(pos: Vector3, from: Vector3) -> Vector3:
+	if absf(pos.x) < CORNER_ZONE or absf(pos.z) < CORNER_ZONE:
+		return Vector3.INF
+	var away := Vector3(pos.x - from.x, 0.0, pos.z - from.z)
+	var into := Vector3(signf(pos.x), 0.0, signf(pos.z)).normalized()
+	if away.length() < 0.001 or away.normalized().dot(into) < CORNER_DRIVE_MIN:
+		return Vector3.INF
+	return Vector3(signf(pos.x) * CORNER_SPOT, pos.y, signf(pos.z) * CORNER_SPOT)
+
+
+## Takes this blow in the corner, if it is one: returns whether it did.
+func _try_corner_trap() -> bool:
+	if opponent == null:
+		return false
+	if is_corner_trapped():
+		if _corner_hits >= CORNER_HITS_MAX:
+			return false
+		_corner_hits += 1
+		_move_ticks_remaining = CORNER_HIT_TICKS
+		_restart_state_clip(WrestlerFSM.State.STUNNED, "strikes/corner_hit")
+		return true
+	if not WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
+		return false
+	var spot := corner_behind(global_position, opponent.global_position)
+	if not spot.is_finite():
+		return false
+	_corner_spot = spot
+	_corner_hits = 0
+	_corner_slide = CORNER_SLIDE_TICKS
+	_set_state_clip(WrestlerFSM.State.STUNNED, "strikes/corner_slump")
+	_start_move(WrestlerFSM.State.STUNNED, _timed_stub(CORNER_TRAP_TICKS))
+	_corner_trapped = true
+	return true
+
+
+## Each tick trapped: driven back into the buckle, then held there facing out.
+func _tick_corner_trap() -> void:
+	var dt := 1.0 / Engine.physics_ticks_per_second
+	var to := Vector3(_corner_spot.x - global_position.x, 0.0, _corner_spot.z - global_position.z)
+	if _corner_slide > 0:
+		velocity = to / (_corner_slide * dt)
+		_corner_slide -= 1
+	else:
+		velocity = to / dt if to.length() > 0.01 else Vector3.ZERO
+	_knockback_ticks = 0
+	var out := Vector3(-signf(_corner_spot.x), 0.0, -signf(_corner_spot.z))
+	look_at(global_position + out, Vector3.UP)
+
+
+## Restarts a state's clip from its first frame while already in the state --
+## a travel() to the state he is in is a no-op (see play_paired_pose()).
+func _restart_state_clip(state: WrestlerFSM.State, clip: String) -> void:
+	if not _anim_playback or not anim_player or not anim_player.has_animation(clip):
+		return
+	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var state_name: String = WrestlerFSM.State.keys()[state]
+	if not state_machine.has_node(state_name):
+		return
+	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
+	if not anim_node:
+		return
+	anim_node.animation = clip
+	_inertialize(state_name)
+	_anim_playback.start(state_name, true)
+
+
+# --- rope breaks (gauntlet/refs/animation_gap.md, Phase 4: position) ---------
+#
+# A man pinned or held near the ropes gets a hand or a foot on them, and the
+# referee breaks it (MatchReferee). Whether he can is read off his origin and
+# facing -- where his hands and feet can get to lying there -- never off the
+# skeleton, so the same match always breaks the same counts.
+
+## Where a man lying down can reach, in his own frame (his head is up -Z,
+## MatchReferee's cover measurements): a hand stretched past his head, a hand
+## out to either side, a foot either side.
+const ROPE_REACH_POINTS: Array[Vector3] = [
+	Vector3(0.0, 0.0, -1.25),
+	Vector3(0.85, 0.0, -0.45), Vector3(-0.85, 0.0, -0.45),
+	Vector3(0.2, 0.0, 1.0), Vector3(-0.2, 0.0, 1.0),
+]
+## A reach that gets this far out is on the rope: the rope line is at
+## RingBuilder.ROPE_SPAN 3.1, and a hand closes round it from inside.
+const ROPE_TOUCH := 2.98
+## States he keeps hold of the rope in once he has it.
+const ROPE_HOLD_STATES: Array = [
+	WrestlerFSM.State.PIN_DEFENDER, WrestlerFSM.State.SUBMISSION_DEFENDER,
+	WrestlerFSM.State.DOWN,
+]
+
+
+## The outward normal of the rope side a man lying at `w` can reach, or ZERO.
+static func rope_within_reach(w: Node3D) -> Vector3:
+	var best := Vector3.ZERO
+	var best_out := ROPE_TOUCH
+	for p in ROPE_REACH_POINTS:
+		var q := w.global_transform * p
+		if absf(q.x) >= best_out:
+			best_out = absf(q.x)
+			best = Vector3(signf(q.x), 0.0, 0.0)
+		if absf(q.z) >= best_out:
+			best_out = absf(q.z)
+			best = Vector3(0.0, 0.0, signf(q.z))
+	return best
+
+
+## Reaches for the ropes on `side`, getting there in `ticks`.
+func reach_for_rope(side: Vector3, ticks: int) -> void:
+	if rope_reach:
+		rope_reach.reach(side, ticks)
+
+
 # --- ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position) -------
 #
 # A man down is worked before he is covered, and what he gets depends on where
@@ -2374,6 +2549,10 @@ func fire_up() -> void:
 ## velocity leak across states (see _start_move()'s own note) -- used
 ## deliberately here, and decayed to nothing rather than left running.
 func _begin_hit_reaction(move: MoveDef) -> void:
+	# Backed into a corner, the turnbuckle takes it: trapped there, or hit
+	# again while he is.
+	if _try_corner_trap():
+		return
 	# Hit by a man in the middle of his comeback, he is rocked -- the longer
 	# STUNNED stagger, not a flinch -- so the run can string together. The
 	# state existed, with its clip, and nothing had ever entered it.
