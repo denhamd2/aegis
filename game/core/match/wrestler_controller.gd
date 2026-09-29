@@ -15,6 +15,8 @@ signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
 ## His comeback has started (MatchReferee decides when; see fire_up()).
 signal fired_up(wrestler: WrestlerController)
+## A strike parried and countered (Phase 4 reversals): `reverser` read it.
+signal reversed(reverser: WrestlerController, striker: WrestlerController, move: MoveDef)
 
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
@@ -1396,6 +1398,8 @@ func _physics_process(delta: float) -> void:
 	var live_input := _poll_live_input()
 	var input := ReplaySystem.get_input(player_index, live_input) if ReplaySystem else live_input
 	fsm._physics_process(delta)
+	_read_reversal(input)
+	_tick_stamina()
 
 	match fsm.current_state:
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN:
@@ -1546,6 +1550,7 @@ func _poll_live_input() -> Dictionary:
 		"grapple": Input.is_action_just_pressed("grapple"),
 		"run": Input.is_action_pressed("run"),
 		"submission_hold": Input.is_action_pressed("submission_hold"),
+		"reversal": Input.is_action_just_pressed("reversal"),
 	}
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
@@ -1602,6 +1607,7 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		var strike := _pick_tier_move(strike_move, strike_move_pool)
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
+		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
 	elif input.get("grapple", false):
 		_wants_tie_up_this_tick = true
 
@@ -2041,8 +2047,10 @@ func _process_active_move(input: Dictionary) -> void:
 	if in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
 			and not _active_move_hit_applied:
-		_apply_move_to_opponent(_active_move)
 		_active_move_hit_applied = true
+		# Read and parried: nothing lands, and the counter is on its way.
+		if not opponent._take_reversal(self, _active_move):
+			_apply_move_to_opponent(_active_move)
 
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
@@ -2067,6 +2075,88 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	# The damage itself still goes through the deferred queue below.
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
+
+# --- reversals (gauntlet/refs/animation_gap.md, Phase 4) ---------------------
+#
+# A strike can be read: pressed inside its window (MoveDef.reversal_window_*,
+# measured frames around its contact, opened REVERSAL_LEAD frames early so a
+# man can commit before the fist arrives), the defender parries it off line
+# and counters down the gap it opened (strike_parry, Parry_Counter). Too early
+# or at nothing and he is locked out for REVERSAL_LOCKOUT ticks -- guessing is
+# the one thing it must not reward. Every attempt costs stamina, and the AI's
+# chance of reading one scales with his (WrestlerAI._roll_reversal).
+#
+# The old counters were cut because a strike simply vanished. This one is two
+# beats nobody can miss: a forearm up that sweeps the punch aside, and a
+# straight right to the jaw that the striker flinches from.
+
+const REVERSAL_MOVE := preload("res://resources/moves/strike_parry.tres")
+const REVERSAL_LEAD := 6
+const REVERSAL_LOCKOUT := 30
+## States he can parry from: on his feet with his hands free.
+const CAN_REVERSE := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]
+
+var _reversal_armed := false
+var _reversal_lockout := 0
+## Reversals landed, for probes and the HUD.
+var reversals_landed := 0
+
+
+## Whether `move`, thrown by `striker`, is at a frame a reversal can read.
+static func in_reversal_window(move: MoveDef, frame: int) -> bool:
+	return move != null and move.reversal_window_end > 0 \
+			and frame >= move.reversal_window_start - REVERSAL_LEAD \
+			and frame <= move.reversal_window_end
+
+
+func _read_reversal(input: Dictionary) -> void:
+	if _reversal_lockout > 0:
+		_reversal_lockout -= 1
+	if _reversal_armed and (opponent == null or opponent.fsm.current_state != WrestlerFSM.State.STRIKE):
+		# The strike he read never arrived (missed, or cut short).
+		_reversal_armed = false
+	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_armed:
+		return
+	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
+	var striker := opponent
+	if striker and striker.fsm.current_state == WrestlerFSM.State.STRIKE and striker._active_move \
+			and in_reversal_window(striker._active_move, striker.strike_frame()):
+		_reversal_armed = true
+	else:
+		_reversal_lockout = REVERSAL_LOCKOUT
+
+
+## Frames into the strike he is throwing.
+func strike_frame() -> int:
+	return _active_move.total_frames() - _move_ticks_remaining if _active_move else -1
+
+
+## Called by the striker at contact. True if this man read it: he parries and
+## counters, and the strike does nothing.
+func _take_reversal(striker: WrestlerController, move: MoveDef) -> bool:
+	if not _reversal_armed:
+		return false
+	_reversal_armed = false
+	if not CAN_REVERSE.has(fsm.current_state):
+		return false
+	reversals_landed += 1
+	_turn_toward_opponent()
+	_play_strike_clip(REVERSAL_MOVE)
+	_start_move(WrestlerFSM.State.STRIKE, REVERSAL_MOVE)
+	reversed.emit(self, striker, move)
+	return true
+
+
+## Stamina's per-tick ledger: running costs, standing and lying win it back.
+func _tick_stamina() -> void:
+	match fsm.current_state:
+		WrestlerFSM.State.RUN:
+			combat.spend_stamina(CombatSystem.STAMINA_RUN_TICK)
+		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION:
+			combat.regen_stamina(CombatSystem.STAMINA_REGEN_TICK)
+		WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP:
+			combat.regen_stamina(CombatSystem.STAMINA_REGEN_DOWN_TICK)
+
 
 ## Whether this hit knocks the wrestler down, rather than staggering him.
 func _would_be_knocked_down() -> bool:
@@ -2447,6 +2537,8 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	opponent.combat.apply_damage(move,
 			CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
 	opponent._took_moves(1)
+	combat.spend_stamina(CombatSystem.STAMINA_GRAPPLE_ATTACKER)
+	opponent.combat.spend_stamina(CombatSystem.STAMINA_GRAPPLE_DEFENDER)
 	# The grapple is over as of here -- drop the roles before the FSM moves
 	# on, so nothing downstream reads an attacker flag for a finished move.
 	_clear_grapple_roles()

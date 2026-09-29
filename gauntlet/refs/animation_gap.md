@@ -260,7 +260,20 @@ not enough on footage.
    `EyeAim` to neck and head with limits), idle variations, an additive
    breathing and fatigue slump driven by stamina, and selling between moves.
 
-### Phase 4: 2K26 match-play systems (gameplay)
+### Phase 4: 2K26 match-play systems (gameplay) -- IN PROGRESS
+
+Done so far:
+- Stamina (`CombatSystem.stamina`): spent by strikes, grapples, running and
+  reversal attempts; won back standing (0.15/s) and down (a quarter of it).
+- Strike reversals: a parry-and-counter (`Parry_Counter` / `strike_parry`)
+  inside each strike's measured reversal window, opened 6 frames early,
+  with a 30-tick lockout for a wrong guess. The player uses the Reversal
+  button. The AI decides as the swing starts to hold and read it, at a
+  chance scaled by stamina.
+
+Order from here: position-context moves, chain wrestling in holds, then the
+AI's in-between behaviour.
+
 
 - **Position-context moves:** front, rear, at the head or legs of a downed
   man, corner, ropes. The move chooses its pair offset, and it only plays

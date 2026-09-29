@@ -168,6 +168,43 @@ func tick_comeback(clock_runs: bool) -> void:
 func cut_off_comeback() -> void:
 	comeback_ticks = 0
 
+# --- stamina ---------------------------------------------------------------
+#
+# gauntlet/refs/animation_gap.md, Phase 4. In 2K26 stamina is what decides how
+# often a man can reverse: a fresh wrestler reads and counters, a spent one
+# eats what is thrown at him. Spent by working -- throwing strikes, carrying a
+# man through a grapple, running -- and by trying to reverse; won back on his
+# feet with nothing to do, slowly, and a little even while he is down.
+
+const STAMINA_MAX := 1.0
+## Per strike thrown, scaled by how long it takes: a jab (31 ticks) costs
+## about 0.02, a heavy kick more.
+const STAMINA_PER_STRIKE_TICK := 0.0006
+## Per grapple move landed, attacker; and taken, defender.
+const STAMINA_GRAPPLE_ATTACKER := 0.06
+const STAMINA_GRAPPLE_DEFENDER := 0.04
+## Per reversal attempt, landed or not: guessing costs.
+const STAMINA_REVERSAL := 0.04
+## Per tick of running.
+const STAMINA_RUN_TICK := 0.0015
+## Per tick back: standing or moving (0.15/s), and down (a quarter of it).
+## Tuned so a long strike exchange tires a man without emptying him:
+## at 0.1/s and 0.001 a strike-tick, two AI men were at 0.10 and 0.26 two
+## minutes in (tools/probe/reversal_tally.tscn).
+const STAMINA_REGEN_TICK := 0.0025
+const STAMINA_REGEN_DOWN_TICK := 0.0006
+
+var stamina: float = STAMINA_MAX
+
+
+func spend_stamina(amount: float) -> void:
+	stamina = clampf(stamina - amount, 0.0, STAMINA_MAX)
+
+
+func regen_stamina(amount: float) -> void:
+	stamina = clampf(stamina + amount, 0.0, STAMINA_MAX)
+
+
 ## Damage and momentum go to different wrestlers on a landed move — the
 ## defender takes the damage, the attacker builds the momentum. Call
 ## apply_damage() on the defender's CombatSystem and apply_momentum() on

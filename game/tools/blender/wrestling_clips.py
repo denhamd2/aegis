@@ -1055,6 +1055,38 @@ CLIPS = {
         (12, P()),
     ],
 
+    # 20 frames / 0.667s: the REVERSAL (gauntlet/refs/animation_gap.md,
+    # Phase 4). The old counters were cut because they did not read -- a
+    # strike simply vanished. This one is two beats the eye cannot miss: the
+    # lead forearm comes up in front of the face and sweeps the punch off
+    # line to his left (frames 3-6), and the rear hand comes straight back
+    # down the gap it opened (frame 9) -- the cross's own measured contact
+    # frame (Strike_Forearm, frame 6), so it reaches from the 1.1 m the AI
+    # circles at. Counter contact frame 9 = tick 18, strike_parry's hit.
+    "Parry_Counter": [
+        (0,  P()),
+        # Forearm up, vertical in front of the face; the left shoulder turns
+        # into the punch to meet it, chin down behind it.
+        (3,  P(pelvis=(0.01, 0.0, 0.850), hips=(0, 6, 0), spine=(-12, 14, 0),
+               head=(10, 4, 0),
+               hand_l=(-0.02, 0.36, 1.52), hand_r=(0.22, 0.26, 1.30))),
+        # The sweep: the forearm carries the punch out past his left ear, and
+        # the right fist is loaded at the chin.
+        (6,  P(pelvis=(0.02, -0.01, 0.846), hips=(0, 10, 0), spine=(-12, 18, 0),
+               head=(8, 6, 0),
+               hand_l=(-0.34, 0.40, 1.44), hand_r=(0.20, 0.22, 1.32))),
+        # The counter: the cross's contact pose.
+        (9,  P(pelvis=(-0.02, 0.07, 0.866), hips=(-4, -15, 0),
+               spine=(-10, -30, 0), head=(8, 18, 0), clav_r=(0, -20, 0),
+               hand_r=(-0.02, 0.68, 1.40), hand_l=(-0.26, 0.30, 1.34),
+               foot_r=(0.23, -0.17, 0.125), ankle_r=(22, 0, 0))),
+        (12, P(pelvis=(-0.03, 0.05, 0.862), hips=(-4, -13, 0),
+               spine=(-10, -24, 0), head=(6, 12, 0), clav_r=(0, -12, 0),
+               hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.24, 0.26, 1.26),
+               foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
+        (20, P()),
+    ],
+
     # 23 frames / 0.75s. On his feet and gone: guard down, chin dropped,
     # and a stagger step he does not choose. The point is that it never
     # holds a pose -- a frozen stunned clip is the exact defect this

@@ -223,6 +223,11 @@ const RECIPES := {
 	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
 		"seconds": 0.333, "file": AUTHORED},
 
+	# Authored: the reversal -- parry the strike off line and counter down
+	# the gap (MatchReferee._try_reversal). Counter contact at tick 18.
+	"strike_parry": {"kind": "retime", "source": "Parry_Counter",
+		"seconds": 0.667, "file": AUTHORED},
+
 	# The winner's celebration, for WrestlerFSM.State.VICTORY. Authored, and
 	# necessarily so: there is no celebration anywhere in the 42 source
 	# actions, which is half of why this could not be built before -- the

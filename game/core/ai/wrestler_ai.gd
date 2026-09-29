@@ -195,6 +195,51 @@ func _physics_process(_delta: float) -> void:
 			WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		_charging = false
 
+## Reversals (Phase 4): once per strike thrown at him, at a moment inside
+## its window, he reads it or he does not. The chance is his stamina's: fresh,
+## REVERSAL_CHANCE; spent, a third of it -- the 2K26 rule that a worn-down man
+## stops countering. Seeded per attempt, so a replay reads the same strikes.
+const REVERSAL_CHANCE := 0.45
+## What is left of it spent: a third. Squaring stamina left a tired man no
+## reversals at all, which made the long exchanges one-sided.
+const REVERSAL_SPENT_SHARE := 0.35
+var _reversal_rolls := 0
+var _reversal_roll_frame := -1
+var _reversal_decided := false
+var _reversal_intent := false
+
+
+func _roll_reversal() -> bool:
+	if target.fsm.current_state != WrestlerFSM.State.STRIKE or target._active_move == null \
+			or target._active_move == WrestlerController.REVERSAL_MOVE:
+		_reversal_decided = false
+		_reversal_intent = false
+		return false
+	var move: MoveDef = target._active_move
+	if not _reversal_decided:
+		# Decided once, as the swing starts: hold and read it, or not. Holding
+		# is what makes a read possible at all -- measured before this, 68 of
+		# 75 strikes were thrown into a man already swinging back, with nothing
+		# free to parry them (tools/probe/reversal_tally.tscn).
+		_reversal_decided = true
+		var rng := RandomNumberGenerator.new()
+		rng.seed = _match_seed * 7331 + _player_index * 97 + _reversal_rolls
+		_reversal_rolls += 1
+		var stamina: float = controller.combat.stamina
+		_reversal_intent = rng.randf() < REVERSAL_CHANCE \
+				* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
+		# A reaction time inside the window, not its first frame.
+		_reversal_roll_frame = move.reversal_window_start - WrestlerController.REVERSAL_LEAD \
+				+ rng.randi_range(0, WrestlerController.REVERSAL_LEAD)
+	return _reversal_intent and target.strike_frame() == _reversal_roll_frame
+
+
+## True while he is holding to read the strike coming at him: he does not
+## throw into it.
+func is_reading() -> bool:
+	return _reversal_intent
+
+
 func poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
@@ -240,6 +285,7 @@ func poll_input() -> Dictionary:
 		"grapple": false,
 		"run": false,
 	}
+	input["reversal"] = _roll_reversal()
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
@@ -370,7 +416,7 @@ func poll_input() -> Dictionary:
 		var reach := controller.shortest_strike_reach()
 		if _wants_tie_up():
 			input["grapple"] = true
-		elif _cooldown <= 0 and distance <= reach:
+		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			input["strike"] = true
 			# Fired up, he does not wait between shots: the comeback is a
 			# flurry, and the other man is staggered for most of it.

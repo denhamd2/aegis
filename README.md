@@ -7746,3 +7746,65 @@ and the scuffs.
 The mat's rendered median rose from 0.397 to 0.451 in the same probe shot,
 which puts it inside VISUAL_BAR's 0.43–0.49 exposure band; the weave's dark
 valleys had been pulling it below.
+
+## Round: Phase 4 begins — stamina and reversals
+
+Phase 4 is gameplay: the 2K26 match-play systems. In order:
+1. stamina and reversals;
+2. moves that depend on position (corner, ropes, a downed man's head or legs);
+3. chain wrestling inside holds;
+4. the AI's in-between behaviour.
+
+### Stamina
+
+`CombatSystem.stamina` runs from 0 to 1. What spends it:
+- throwing strikes (by the strike's length: a jab costs about 0.02);
+- landing a grapple (0.06), or taking one (0.04);
+- running;
+- every reversal attempt (0.04).
+
+It comes back at 0.15/s standing or moving, and at a quarter of that down.
+The first tuning (0.1/s back, 0.03 a jab) left two AI men at 0.10 and 0.26
+two minutes in, which made a long exchange one-sided.
+
+### Reversals: parry and counter
+
+The old counters were cut because they didn't read: a strike simply
+vanished. This one is two beats nobody can miss:
+- the lead forearm comes up and sweeps the punch off line;
+- the rear hand comes straight back down the gap it opened.
+
+`Parry_Counter` is a new authored clip (`strike_parry`, 0.667 s). Its
+counter reuses the cross's measured contact pose, so it reaches from the
+1.1 m the AI circles at, and it is a real strike (`strike_parry.tres`)
+through the normal hit pipeline. The striker's own blow does nothing; he
+takes the counter with the usual flinch and reaction.
+
+**The window.** Each strike already carried measured `reversal_window_*`
+frames around its contact, but nothing had read them since the old counters
+were cut. They now decide reversals, opened 6 frames early so a man can
+commit before the fist arrives. Pressed too early, or at nothing, he is
+locked out for 30 ticks: guessing must not pay.
+
+**The player** has the existing Reversal button.
+
+**The AI** decides once, as the other man starts his swing: hold and read
+it, or carry on. The chance is 45% fresh, falling to about a third of that
+when spent (the 2K26 rule that a worn-down man stops countering). Holding
+matters: at first 68 of 75 strikes were thrown into a man already swinging
+back, with nothing free to parry them. The decision is seeded per attempt,
+so a replay reads the same strikes.
+
+`tools/probe/reversal_tally.tscn` counts strikes, reads, counters landed and
+the stamina each man ends on, over seeded AI matches.
+
+**Result** (seeds 2–5, Roman vs Cody):
+- **Reversals:** 17 of 184 strikes read and reversed (9%), and all 17
+  counters landed. Per match: 4, 5, 1 and 7.
+- **Stamina** at the end: 0.73–0.98.
+- **Finishes:** every match ended in a pinfall, in 4,755 to 7,676 ticks.
+
+One earlier run, at a 30% chance, had seed 4 go 20,000 ticks and 374
+strikes without a finish. With the tuned values it finishes in 5,878
+ticks. The baseline run at the last commit was not conclusive, so the
+cause of that stall is not established.
