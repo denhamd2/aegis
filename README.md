@@ -7808,3 +7808,28 @@ One earlier run, at a 30% chance, had seed 4 go 20,000 ticks and 374
 strikes without a finish. With the tuned values it finishes in 5,878
 ticks. The baseline run at the last commit was not conclusive, so the
 cause of that stall is not established.
+
+## Round: the wipe from wrestler select into the entrance
+
+The select screen used to end with a static VS card, a fade to black and a
+hard cut to the match. The frame also froze on black while the two picked
+models loaded. Now it plays like a broadcast stinger:
+
+- **VS card.** Each name slams in from its own side (an ease-out-back
+  overshoot) on a slanted band in that wrestler's colour. Then VS punches
+  in, big and settling to size, on a light flash.
+- **The wipe (`MatchStinger`, `core/ui/match_stinger.gd`).** Slanted bands
+  in the key art's violet and teal, with gold leading edges, sweep across
+  left to right. Then the dark panel covers the screen, with a "MAIN EVENT"
+  match-up card set on it. It is a CanvasLayer on the root, so it survives
+  the title screen freeing itself and hides the scene swap.
+- **No load freeze.** From the moment the VS card appears, the match scene
+  and both picked models load on worker threads. The swap happens under the
+  cover, and the match draws four frames there before anything is shown.
+  Where threads are unavailable (the Web build), it falls back to an
+  ordinary load, still under the cover.
+- **Reveal.** The bands carry on off to the right in reverse order, panel
+  first, onto the entrance's opening wide shot, with a soft flash of light.
+
+The first render gave the bands each wrestler's accent colour, which washed
+out to lavender and lime. They now use the key art's palette, deepened.

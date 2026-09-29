@@ -43,10 +43,13 @@ const MENU_FIGHT := "FIGHT"
 const MENU_CONTROLS := "CONTROLS"
 const MENU_QUIT := "QUIT"
 
-## How long the VS card holds before the match loads, and how long the fade to
-## black takes. Both are presentation; the match's own clock starts fresh.
-const VERSUS_HOLD := 1.15
+## How long the VS card holds before the stinger wipes in, and the fade kept
+## for anything that still asks for one. Both are presentation; the match's
+## own clock starts fresh.
+const VERSUS_HOLD := 1.5
 const FADE_TIME := 0.45
+## The VS card's names slam in over this long, and VS punches in after.
+const VERSUS_SLAM := 0.32
 
 ## The bindings the controls card lists, in the order it lists them, paired
 ## with the label shown for each. The KEYS come from the InputMap at runtime,
@@ -83,6 +86,12 @@ var _motes: Array = []
 ## Filled during _draw so the mouse can hit-test what was actually drawn.
 var _menu_rects: Array = []
 var _card_rects: Array = []
+## The wipe into the match (MatchStinger), once the VS card has held.
+var _stinger: MatchStinger
+var _stinger_covered := false
+## Resources loaded in the background from the VS card on, so the swap under
+## the stinger does not freeze on the two .glb files.
+var _preloads: Array[String] = []
 
 
 func _ready() -> void:
@@ -112,10 +121,12 @@ func _process(delta: float) -> void:
 		if _versus_time >= VERSUS_HOLD:
 			phase = Phase.LAUNCH
 	elif phase == Phase.LAUNCH:
-		_fade = minf(1.0, _fade + delta / FADE_TIME)
-		if _fade >= 1.0:
+		if _stinger == null:
+			_start_stinger()
+		elif _stinger_covered and _preloads_ready():
 			set_process(false)
 			_launch()
+			_stinger.reveal()
 	queue_redraw()
 
 
@@ -196,6 +207,7 @@ func _accept() -> void:
 			if picks.size() >= 2:
 				phase = Phase.VERSUS
 				_versus_time = 0.0
+				_start_preloads()
 			else:
 				# Park the opponent cursor on the other man, which is the
 				# pick a player wants far more often than the mirror match.
@@ -215,7 +227,40 @@ func _back() -> void:
 
 ## --- Launch ----------------------------------------------------------------
 
+## The match scene and both picked models, loading on worker threads while the
+## VS card holds. Where threads are not available (the Web build) the request
+## fails and _launch() loads them the ordinary way, under the stinger.
+func _start_preloads() -> void:
+	_preloads.clear()
+	for path: String in [MATCH_SCENE_PATH, (picks[0] as Roster.Entry).model_scene,
+			(picks[1] as Roster.Entry).model_scene]:
+		if path == "" or _preloads.has(path):
+			continue
+		if ResourceLoader.load_threaded_request(path) == OK:
+			_preloads.append(path)
+
+
+func _preloads_ready() -> bool:
+	for path: String in _preloads:
+		var status := ResourceLoader.load_threaded_get_status(path)
+		if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return false
+	return true
+
+
+func _start_stinger() -> void:
+	_stinger = MatchStinger.new()
+	_stinger.setup(picks[0], picks[1])
+	_stinger.covered.connect(func() -> void: _stinger_covered = true)
+	get_tree().root.add_child(_stinger)
+
+
 func _launch() -> void:
+	# Collect the background loads: they are in the resource cache now, and
+	# the load() calls below and in configure_match() pick them up from it.
+	for path: String in _preloads:
+		ResourceLoader.load_threaded_get(path)
+	_preloads.clear()
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
 			randi_range(1, 1 << 30))
@@ -640,7 +685,8 @@ func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
 
 
 func _draw_versus(view: Vector2) -> void:
-	# A quick wipe in from black, then the card sits until the match loads.
+	# A quick wipe in from black; then each name slams in from its own side on
+	# a band in his colour, and VS punches in between them on a flash.
 	var t := clampf(_versus_time / 0.28, 0.0, 1.0)
 	draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72 * t))
 	var band_h := view.y * 0.22
@@ -652,18 +698,39 @@ func _draw_versus(view: Vector2) -> void:
 			band.size.x, maxf(1.0, view.y * 0.002)), TitleArt.KEY_GOLD)
 	if t < 1.0:
 		return
-	var name_size := int(view.y * 0.075)
 	var left: Roster.Entry = picks[0]
 	var right: Roster.Entry = picks[1]
+	# The slam: in from off-screen, a touch past the mark, and back.
+	var st := clampf((_versus_time - 0.28) / VERSUS_SLAM, 0.0, 1.0)
+	var back := 1.70158
+	var e := 1.0 + (back + 1.0) * pow(st - 1.0, 3.0) + back * pow(st - 1.0, 2.0)
+	var off := view.x * 0.6 * (1.0 - e)
+	# Each man's colour behind his half of the band, slanted at the centre.
+	var skew := band_h * 0.35
+	var top := band.position.y
+	var bot := top + band_h
+	draw_colored_polygon(PackedVector2Array([Vector2(-off, bot), Vector2(view.x * 0.5 - skew * 0.5 - off, bot),
+			Vector2(view.x * 0.5 + skew * 0.5 - off, top), Vector2(-off, top)]),
+			Color(left.attire_accent, 0.22))
+	draw_colored_polygon(PackedVector2Array([Vector2(view.x * 0.5 - skew * 0.5 + off, bot),
+			Vector2(view.x + off, bot), Vector2(view.x + off, top),
+			Vector2(view.x * 0.5 + skew * 0.5 + off, top)]),
+			Color(right.attire_accent, 0.22))
+	var name_size := int(view.y * 0.075)
 	var lw := TitleArt.tracked_width(_font, left.display_name(), name_size,
 			view.y * 0.003)
 	TitleArt.draw_tracked(self, _font,
-			Vector2(view.x * 0.44 - lw, view.y * 0.5 + name_size * 0.35),
+			Vector2(view.x * 0.44 - lw - off, view.y * 0.5 + name_size * 0.35),
 			left.display_name(), name_size, view.y * 0.003, TitleArt.STEEL)
 	TitleArt.draw_tracked(self, _font,
-			Vector2(view.x * 0.56, view.y * 0.5 + name_size * 0.35),
+			Vector2(view.x * 0.56 + off, view.y * 0.5 + name_size * 0.35),
 			right.display_name(), name_size, view.y * 0.003, TitleArt.STEEL)
-	var vs_size := int(view.y * 0.085)
+	# VS punches in once the names land: big, then settling to size.
+	var vt := clampf((_versus_time - 0.28 - VERSUS_SLAM * 0.8) / 0.22, 0.0, 1.0)
+	if vt <= 0.0:
+		return
+	var punch := 1.0 + 0.8 * pow(1.0 - vt, 2.0)
+	var vs_size := int(view.y * 0.085 * punch)
 	var vw := TitleArt.tracked_width(_font, "VS", vs_size, view.y * 0.004)
 	TitleArt.draw_glow(self, _glow, Vector2(view.x * 0.46, view.y * 0.5),
 			view.x * 0.16, Color(TitleArt.KEY_VIOLET, 0.50))
@@ -671,4 +738,7 @@ func _draw_versus(view: Vector2) -> void:
 			view.x * 0.16, Color(TitleArt.KEY_TEAL, 0.42))
 	TitleArt.draw_tracked(self, _font,
 			Vector2((view.x - vw) * 0.5, view.y * 0.5 + vs_size * 0.35), "VS",
-			vs_size, view.y * 0.004, TitleArt.KEY_GOLD)
+			vs_size, view.y * 0.004, Color(TitleArt.KEY_GOLD, vt))
+	# The flash as it lands.
+	if vt < 1.0:
+		draw_rect(Rect2(Vector2.ZERO, view), Color(1, 1, 1, 0.18 * (1.0 - vt)))
