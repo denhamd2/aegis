@@ -81,7 +81,9 @@ const RECIPES := {
 		"authored": {"attacker": "Chain_Headlock_Attacker", "defender": "Chain_Headlock_Defender"},
 		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
 		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
-		"defender_grips_until": 0.80,
+		# His own hands, not the chest grip: bent double under the arm, a grip
+		# on the holder's chest hauled his arm up over the holder's shoulder.
+		"defender_grips_until": 0.10,
 	},
 	"chain_wristlock": {
 		"authored": {"attacker": "Chain_Wristlock_Attacker", "defender": "Chain_Wristlock_Defender"},

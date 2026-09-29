@@ -4864,8 +4864,8 @@ _HL_A = dict(pelvis=(0.0, 0.0, 0.830), hips=(-6, 10, 8), spine=(-16, 12, 12),
              foot_r=(0.28, -0.10, 0.104), foot_l=(-0.20, 0.12, 0.104))
 _HL_D = dict(pelvis=(0.0, -0.12, 0.740), hips=(-40, 0, 0), spine=(-58, -8, 0),
              head=(24, -30, 0),
-             hand_r=(0.10, 0.52, 0.86), hand_l=(-0.30, 0.30, 1.04),
-             elbow_r=(0.6, -0.3, -0.6), elbow_l=(-0.8, -0.2, -0.3),
+             hand_r=(0.04, 0.44, 0.70), hand_l=(-0.28, 0.34, 0.78),
+             elbow_r=(0.6, -0.3, -0.6), elbow_l=(-0.8, -0.2, -0.5),
              fist_r=0.4, fist_l=0.3,
              foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.06, 0.104))
 
@@ -4901,7 +4901,7 @@ CLIPS["Chain_Headlock_Defender"] = [
     (20, pose(_HL_D, pelvis=(0.0, -0.14, 0.725), spine=(-62, -10, 0), head=(28, -34, 0))),
     (26, pose(_HL_D)),
     (32, pose(_HL_D, pelvis=(0.0, -0.14, 0.722), spine=(-64, -10, 0), head=(28, -34, 0))),
-    (38, pose(_HL_D, hand_l=(-0.30, 0.34, 1.08), hand_r=(-0.10, 0.40, 1.02))),
+    (38, pose(_HL_D, hand_l=(-0.28, 0.36, 0.86), hand_r=(-0.06, 0.42, 0.82))),
     # Fights free: straightens up out of it, both hands driving into his back.
     (44, P(pelvis=(0.0, -0.02, 0.830), hips=(-10, 0, 0), spine=(-22, 0, 0),
            head=(4, 0, 0),
