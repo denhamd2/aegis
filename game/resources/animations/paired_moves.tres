@@ -1,6 +1,99 @@
 [gd_resource type="AnimationLibrary" format=3]
 
 [sub_resource type="Animation" id="Animation_7b2p4"]
+length = 1.8
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../WrestlerA")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.2, 1, 0.28, 0, -0.16, 0.4, 1, 0.06, 0, -0.28, 1.27, 1, 0.06, 0, -0.28, 1.47, 1, 0.36, 0, -0.2, 1.8, 1, 0.52, 0, -0.06)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../WrestlerA")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.2, 1, 0, 0.1736482, 0, 0.98480785, 0.4, 1, 0, -0.7071068, 0, 0.7071068, 1.27, 1, 0, -0.7071068, 0, 0.7071068, 1.47, 1, 0, -0.5, 0, 0.8660254, 1.8, 1, 0, 0.7071068, 0, 0.7071068)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../WrestlerB")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.4, 1, -0.5, 0, 0, 1.27, 1, -0.5, 0, 0, 1.8, 1, -0.42, 0, 0)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("../WrestlerB")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.8, 1, 0, -0.7071068, 0, 0.7071068)
+
+[sub_resource type="Animation" id="Animation_hfdie"]
+length = 1.8
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../WrestlerA")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.17, 1, 0.12, 0, -0.5, 0.33, 1, -0.56, 0, -0.56, 0.47, 1, -0.8, 0, -0.16, 0.57, 1, -0.68, 0, -0.02, 1.27, 1, -0.68, 0, -0.02, 1.8, 1, -0.84, 0, 0)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../WrestlerA")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.17, 1, 0, 0.1736482, 0, 0.98480785, 0.33, 1, 0, -0.38268343, 0, 0.92387956, 0.47, 1, 0, -0.64278764, 0, 0.76604456, 0.57, 1, 0, -0.7071068, 0, 0.7071068, 1.8, 1, 0, -0.7071068, 0, 0.7071068)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../WrestlerB")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 1.27, 1, -0.4, 0, 0, 1.47, 1, -0.24, 0, 0, 1.8, 1, 0.02, 0, 0)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("../WrestlerB")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.3, 1, 0, -0.7071068, 0, 0.7071068, 1.55, 1, 0, 0, 0, 1, 1.8, 1, 0, 0.7071068, 0, 0.7071068)
+
+[sub_resource type="Animation" id="Animation_086g0"]
+length = 1.8
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../WrestlerA")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0.4, 0, 0, 0.4, 1, 0.36, 0, 0, 1.27, 1, 0.36, 0, 0, 1.8, 1, 0.45, 0, 0)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../WrestlerA")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0.7071068, 0, 0.7071068, 0.4, 1, 0, 0.74314487, 0, 0.6691306, 1.27, 1, 0, 0.74314487, 0, 0.6691306, 1.8, 1, 0, 0.7071068, 0, 0.7071068)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../WrestlerB")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -0.4, 0, 0, 0.4, 1, -0.66, 0, 0.04, 1.27, 1, -0.66, 0, 0.04, 1.47, 1, -0.58, 0, 0.02, 1.8, 1, -0.45, 0, 0)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("../WrestlerB")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.4, 1, 0, -0.087155744, 0, 0.9961947, 1.27, 1, 0, -0.087155744, 0, 0.9961947, 1.47, 1, 0, -0.42261827, 0, 0.9063078, 1.8, 1, 0, -0.7071068, 0, 0.7071068)
+
+[sub_resource type="Animation" id="Animation_u2ccy"]
 length = 1.6
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -31,7 +124,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.2, 1, 0, -0.7071068, 0, 0.7071068, 0.33, 1, 0, 0, 0, 1, 0.47, 1, 0, 0.7071068, 0, 0.7071068, 1.6, 1, 0, 0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_hfdie"]
+[sub_resource type="Animation" id="Animation_pd0cl"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -62,7 +155,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_086g0"]
+[sub_resource type="Animation" id="Animation_twhra"]
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -92,7 +185,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.52, 1, 0, -0.7547096, 0, 0.656059, 1, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_u2ccy"]
+[sub_resource type="Animation" id="Animation_r4hmj"]
 length = 2.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -123,7 +216,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 2.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_pd0cl"]
+[sub_resource type="Animation" id="Animation_xro6q"]
 length = 2.0
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -154,7 +247,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_twhra"]
+[sub_resource type="Animation" id="Animation_7m2bs"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -185,7 +278,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_r4hmj"]
+[sub_resource type="Animation" id="Animation_105yr"]
 length = 1.5
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -216,7 +309,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.5, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_xro6q"]
+[sub_resource type="Animation" id="Animation_v5svo"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -247,7 +340,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_7m2bs"]
+[sub_resource type="Animation" id="Animation_my1t5"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -278,7 +371,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_105yr"]
+[sub_resource type="Animation" id="Animation_j1ikt"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -309,7 +402,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_v5svo"]
+[sub_resource type="Animation" id="Animation_r1r1k"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -340,7 +433,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_my1t5"]
+[sub_resource type="Animation" id="Animation_r6q60"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -371,7 +464,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_j1ikt"]
+[sub_resource type="Animation" id="Animation_op2e5"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -402,7 +495,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_r1r1k"]
+[sub_resource type="Animation" id="Animation_b44ot"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -433,7 +526,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_r6q60"]
+[sub_resource type="Animation" id="Animation_rms0v"]
 length = 2.0
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -464,7 +557,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_op2e5"]
+[sub_resource type="Animation" id="Animation_cweob"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -495,7 +588,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_b44ot"]
+[sub_resource type="Animation" id="Animation_w5hlp"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -526,7 +619,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_rms0v"]
+[sub_resource type="Animation" id="Animation_523rf"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -557,7 +650,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_cweob"]
+[sub_resource type="Animation" id="Animation_rr3k5"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -588,7 +681,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_w5hlp"]
+[sub_resource type="Animation" id="Animation_k5mpc"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -619,7 +712,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_523rf"]
+[sub_resource type="Animation" id="Animation_bc8qw"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -650,7 +743,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_rr3k5"]
+[sub_resource type="Animation" id="Animation_560xl"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -681,7 +774,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_k5mpc"]
+[sub_resource type="Animation" id="Animation_c4ebi"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -712,7 +805,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_bc8qw"]
+[sub_resource type="Animation" id="Animation_w76u8"]
 length = 1.6
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -743,7 +836,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.6, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_560xl"]
+[sub_resource type="Animation" id="Animation_sofag"]
 length = 1.6
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -774,7 +867,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 0.567, 1, 0, -0.7071068, 0, 0.7071068, 0.7, 1, 0, 0.7071068, 0, 0.7071068, 1.6, 1, 0, 0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_c4ebi"]
+[sub_resource type="Animation" id="Animation_kjlu8"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -805,7 +898,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_w76u8"]
+[sub_resource type="Animation" id="Animation_adefu"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -836,7 +929,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_sofag"]
+[sub_resource type="Animation" id="Animation_xb45o"]
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -866,7 +959,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_kjlu8"]
+[sub_resource type="Animation" id="Animation_pj4lp"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -897,7 +990,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_adefu"]
+[sub_resource type="Animation" id="Animation_sqocw"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -928,7 +1021,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_xb45o"]
+[sub_resource type="Animation" id="Animation_lb4m3"]
 length = 1.8
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -959,7 +1052,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.8, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_pj4lp"]
+[sub_resource type="Animation" id="Animation_18fdy"]
 length = 2.0
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -990,7 +1083,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_sqocw"]
+[sub_resource type="Animation" id="Animation_apkrg"]
 length = 1.2
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -1021,7 +1114,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.2, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_lb4m3"]
+[sub_resource type="Animation" id="Animation_bu5vs"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -1052,7 +1145,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_18fdy"]
+[sub_resource type="Animation" id="Animation_07g1q"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -1083,7 +1176,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_apkrg"]
+[sub_resource type="Animation" id="Animation_4cnca"]
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -1113,7 +1206,7 @@ tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1, 1, 0, -0.7071068, 0, 0.7071068)
 
-[sub_resource type="Animation" id="Animation_bu5vs"]
+[sub_resource type="Animation" id="Animation_ir2yc"]
 length = 1.4
 tracks/0/type = "position_3d"
 tracks/0/imported = false
@@ -1146,41 +1239,44 @@ tracks/3/keys = PackedFloat32Array(0, 1, 0, -0.7071068, 0, 0.7071068, 1.4, 1, 0,
 
 [resource]
 _data = {
-&"finisher_cross_rhodes": SubResource("Animation_7b2p4"),
-&"finisher_spear": SubResource("Animation_hfdie"),
-&"grapple_clinch_knee": SubResource("Animation_086g0"),
-&"grapple_vertical_suplex": SubResource("Animation_u2ccy"),
-&"power_alabama_slam": SubResource("Animation_pd0cl"),
-&"power_bodyslam": SubResource("Animation_twhra"),
-&"power_powerslam": SubResource("Animation_r4hmj"),
-&"running_bicycle_knee": SubResource("Animation_xro6q"),
-&"running_cave_in": SubResource("Animation_7m2bs"),
-&"running_claymore": SubResource("Animation_105yr"),
-&"running_clothesline_from_hell": SubResource("Animation_v5svo"),
-&"running_cyclone_kick": SubResource("Animation_my1t5"),
-&"running_dragon_twist_cutter": SubResource("Animation_j1ikt"),
-&"running_fallaway_moonsault_slam": SubResource("Animation_r1r1k"),
-&"running_float_over_liger_bomb": SubResource("Animation_r6q60"),
-&"running_gamengiri": SubResource("Animation_op2e5"),
-&"running_hoedown": SubResource("Animation_b44ot"),
-&"running_jumping_cravate_driver": SubResource("Animation_rms0v"),
-&"running_knee_lift": SubResource("Animation_cweob"),
-&"running_last_shot": SubResource("Animation_w5hlp"),
-&"running_leaping_mushroom_stomp": SubResource("Animation_523rf"),
-&"running_leg_lariat": SubResource("Animation_rr3k5"),
-&"running_play_of_the_day": SubResource("Animation_k5mpc"),
-&"running_reverse_swing_neckbreaker": SubResource("Animation_bc8qw"),
-&"running_rolling_codebreaker": SubResource("Animation_560xl"),
-&"running_rolling_thunder_flatliner": SubResource("Animation_c4ebi"),
-&"running_single_leg_dropkick": SubResource("Animation_w76u8"),
-&"running_spear": SubResource("Animation_sofag"),
-&"running_spinning_back_elbow": SubResource("Animation_kjlu8"),
-&"running_stundog_millionaire": SubResource("Animation_adefu"),
-&"running_tilt_a_whirl_backstabber": SubResource("Animation_xb45o"),
-&"running_tilt_a_whirl_ddt": SubResource("Animation_pj4lp"),
-&"signature_backbreaker": SubResource("Animation_sqocw"),
-&"signature_cody_cutter": SubResource("Animation_lb4m3"),
-&"signature_disaster_kick": SubResource("Animation_18fdy"),
-&"signature_neckbreaker": SubResource("Animation_apkrg"),
-&"signature_superman_punch": SubResource("Animation_bu5vs")
+&"chain_headlock": SubResource("Animation_7b2p4"),
+&"chain_waistlock": SubResource("Animation_hfdie"),
+&"chain_wristlock": SubResource("Animation_086g0"),
+&"finisher_cross_rhodes": SubResource("Animation_u2ccy"),
+&"finisher_spear": SubResource("Animation_pd0cl"),
+&"grapple_clinch_knee": SubResource("Animation_twhra"),
+&"grapple_vertical_suplex": SubResource("Animation_r4hmj"),
+&"power_alabama_slam": SubResource("Animation_xro6q"),
+&"power_bodyslam": SubResource("Animation_7m2bs"),
+&"power_powerslam": SubResource("Animation_105yr"),
+&"running_bicycle_knee": SubResource("Animation_v5svo"),
+&"running_cave_in": SubResource("Animation_my1t5"),
+&"running_claymore": SubResource("Animation_j1ikt"),
+&"running_clothesline_from_hell": SubResource("Animation_r1r1k"),
+&"running_cyclone_kick": SubResource("Animation_r6q60"),
+&"running_dragon_twist_cutter": SubResource("Animation_op2e5"),
+&"running_fallaway_moonsault_slam": SubResource("Animation_b44ot"),
+&"running_float_over_liger_bomb": SubResource("Animation_rms0v"),
+&"running_gamengiri": SubResource("Animation_cweob"),
+&"running_hoedown": SubResource("Animation_w5hlp"),
+&"running_jumping_cravate_driver": SubResource("Animation_523rf"),
+&"running_knee_lift": SubResource("Animation_rr3k5"),
+&"running_last_shot": SubResource("Animation_k5mpc"),
+&"running_leaping_mushroom_stomp": SubResource("Animation_bc8qw"),
+&"running_leg_lariat": SubResource("Animation_560xl"),
+&"running_play_of_the_day": SubResource("Animation_c4ebi"),
+&"running_reverse_swing_neckbreaker": SubResource("Animation_w76u8"),
+&"running_rolling_codebreaker": SubResource("Animation_sofag"),
+&"running_rolling_thunder_flatliner": SubResource("Animation_kjlu8"),
+&"running_single_leg_dropkick": SubResource("Animation_adefu"),
+&"running_spear": SubResource("Animation_xb45o"),
+&"running_spinning_back_elbow": SubResource("Animation_pj4lp"),
+&"running_stundog_millionaire": SubResource("Animation_sqocw"),
+&"running_tilt_a_whirl_backstabber": SubResource("Animation_lb4m3"),
+&"running_tilt_a_whirl_ddt": SubResource("Animation_18fdy"),
+&"signature_backbreaker": SubResource("Animation_apkrg"),
+&"signature_cody_cutter": SubResource("Animation_bu5vs"),
+&"signature_disaster_kick": SubResource("Animation_07g1q"),
+&"signature_neckbreaker": SubResource("Animation_4cnca"),
+&"signature_superman_punch": SubResource("Animation_ir2yc")
 }

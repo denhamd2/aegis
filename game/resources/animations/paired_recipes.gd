@@ -73,6 +73,28 @@ const LIBRARY := "paired"
 ## strike_recipes.gd) rather than escalating a throw ladder -- see
 ## WrestlerAI, which grapples once and then only strikes.
 const RECIPES := {
+	# Chain wrestling (Phase 4): one link each, into the hold, cranked, fought
+	# free, squared up -- WrestlerController chains them out of a lock-up.
+	# Authored in Blender against each other (wrestling_clips.py "Chain
+	# wrestling"); the samples are fallbacks only.
+	"chain_headlock": {
+		"authored": {"attacker": "Chain_Headlock_Attacker", "defender": "Chain_Headlock_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender_grips_until": 0.80,
+	},
+	"chain_wristlock": {
+		"authored": {"attacker": "Chain_Wristlock_Attacker", "defender": "Chain_Wristlock_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender_grips_until": 0.10,
+	},
+	"chain_waistlock": {
+		"authored": {"attacker": "Chain_Waistlock_Attacker", "defender": "Chain_Waistlock_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender_grips_until": 0.10,
+	},
 	# The one grapple, and deliberately not a throw. The three it replaces
 	# (hiptoss, snapmare, armdrag) all put the victim in the air, and the
 	# altitude was not a bug that could be capped away: the tucked-body
@@ -653,6 +675,72 @@ const RECIPES := {
 ## equal its first, so the flip resolves to a full 360 and he lands upright.
 ## That is exactly the bug that put suplex victims half a metre into the mat.
 const TRAJECTORIES := {
+	# --- chain wrestling (Phase 4) -------------------------------------------
+	# Each link starts from the lock-up marks (attacker +0.40 facing -X,
+	# defender -0.40 facing +X) and ends squared up about 0.9 m apart, facing
+	# each other, wherever that is: the next link's pair frame is taken from
+	# where they stand. Frames at 30 fps: in 0-12, held 12-38, free 38-44.
+	#
+	# Headlock: the holder pivots in to the man's left side and turns to face
+	# his way (yaw 90 -> -90 through facing -Z), the head at his right hip;
+	# shoved off, he stumbles on and turns back round.
+	"chain_headlock": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.28, 0.00, -0.16],
+					[0.40, 0.06, 0.00, -0.28], [1.27, 0.06, 0.00, -0.28],
+					[1.47, 0.36, 0.00, -0.20], [1.80, 0.52, 0.00, -0.06]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.20, 0.0, 20.0, 0.0],
+					[0.40, 0.0, -90.0, 0.0], [1.27, 0.0, -90.0, 0.0],
+					[1.47, 0.0, -60.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.40, -0.50, 0.00, 0.00],
+					[1.27, -0.50, 0.00, 0.00], [1.80, -0.42, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Wristlock: the holder stands his ground; the man turns away from his own
+	# arm (yaw -90 -> -10) and backs off until it is straight, then comes back
+	# round to face him.
+	"chain_wristlock": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.40, 0.36, 0.00, 0.00],
+					[1.27, 0.36, 0.00, 0.00], [1.80, 0.45, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.40, 0.0, 96.0, 0.0],
+					[1.27, 0.0, 96.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.40, -0.66, 0.00, 0.04],
+					[1.27, -0.66, 0.00, 0.04], [1.47, -0.58, 0.00, 0.02],
+					[1.80, -0.45, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.40, 0.0, -10.0, 0.0],
+					[1.27, 0.0, -10.0, 0.0], [1.47, 0.0, -50.0, 0.0],
+					[1.80, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Go-behind: the holder circles round the man's left side (-Z) to his back
+	# (yaw 90 -> -90 through facing -Z) by frame 14; the man pries free, steps
+	# on and turns round to face him (yaw -90 -> 90 through facing -Z).
+	"chain_waistlock": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.12, 0.00, -0.50],
+					[0.33, -0.56, 0.00, -0.56], [0.47, -0.80, 0.00, -0.16],
+					[0.57, -0.68, 0.00, -0.02], [1.27, -0.68, 0.00, -0.02], [1.80, -0.84, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.17, 0.0, 20.0, 0.0],
+					[0.33, 0.0, -45.0, 0.0], [0.47, 0.0, -80.0, 0.0],
+					[0.57, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [1.27, -0.40, 0.00, 0.00],
+					[1.47, -0.24, 0.00, 0.00], [1.80, 0.02, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.30, 0.0, -90.0, 0.0],
+					[1.55, 0.0, 0.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+	},
+
 	# Nobody leaves the mat: every y is 0.00, by design. See the RECIPES entry
 	# above for why a grapple that does not flip is the only kind that can
 	# stay down here.

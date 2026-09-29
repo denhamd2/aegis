@@ -212,6 +212,57 @@ var _reversal_decided := false
 var _reversal_intent := false
 
 
+## Chain wrestling. How many links the opening lock-up runs to -- one to
+## three, seeded -- and nothing out of any later one: the power and signature
+## lock-ups are the business end of a match, and the chain is its opening.
+const CHAIN_LINK_WEIGHTS := [2, 2, 1]
+## The read tick the holder picks on, and the one the held man reads it on
+## (inside WrestlerController.CHAIN_REVERSAL_WINDOW).
+const CHAIN_PICK_TICK := 6
+const CHAIN_READ_TICK := 8
+## Chance the man in a hold reverses the next one, at full stamina; it falls
+## with his stamina like a strike reversal's does.
+const CHAIN_REVERSAL_CHANCE := 0.3
+var _chain_plan := -1
+var _chain_rolls := 0
+
+
+func _chain_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 4099 + _player_index * 131 + _chain_rolls
+	_chain_rolls += 1
+	return rng
+
+
+func _chain_input() -> Dictionary:
+	var c := controller
+	if not c._is_grapple_attacker:
+		# In it: read the hold coming, and maybe take it over.
+		if c.opponent and c.opponent._chain_enabled and c.opponent.chain_hold == "" \
+				and c.opponent._chain_read == CHAIN_READ_TICK:
+			var stamina: float = c.combat.stamina
+			var go := _chain_rng().randf() < CHAIN_REVERSAL_CHANCE \
+					* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
+			return {"reversal": go}
+		return {}
+	if not c._chain_enabled:
+		return {}
+	if c._chain_pick != "":
+		return {} # a reversal already chose it; let the read run out
+	if _chain_plan < 0:
+		_chain_plan = 0
+		if not _opening_grapple_done():
+			var roll := _chain_rng().randi_range(1, 5)
+			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
+					2 if roll <= CHAIN_LINK_WEIGHTS[0] + CHAIN_LINK_WEIGHTS[1] else 3)
+	if c._chain_links >= _chain_plan:
+		return {"chain": "none"}
+	if c._chain_read != CHAIN_PICK_TICK:
+		return {} # picked once; the controller holds on to it
+	var holds := WrestlerController.CHAIN_HOLDS.keys()
+	return {"chain": holds[_chain_rng().randi_range(0, holds.size() - 1)]}
+
+
 func _roll_reversal() -> bool:
 	if target.fsm.current_state != WrestlerFSM.State.STRIKE or target._active_move == null \
 			or target._active_move == WrestlerController.REVERSAL_MOVE:
@@ -268,13 +319,16 @@ func poll_input() -> Dictionary:
 	_tie_up_tick = 0
 	_last_tie_up_press_tick = -1000
 	if controller.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
-		# Nothing to press either way now. The attacker used to roll here
-		# for an Irish whip instead of a grapple move; with one grapple in
-		# the whole match, spending it on a whip would mean matches that
-		# never show a grapple at all. The whip itself is untouched --
-		# WrestlerController._begin_irish_whip() still runs for a player
-		# who presses run in a hold.
-		return {}
+		# No whip: the attacker used to roll here for an Irish whip instead
+		# of a grapple move; with one grapple in the whole match, spending it
+		# on a whip would mean matches that never show a grapple at all. The
+		# whip itself is untouched -- WrestlerController._begin_irish_whip()
+		# still runs for a player who presses run in a hold.
+		#
+		# Chain wrestling instead (WrestlerController, "chain wrestling"):
+		# the holder picks holds, the man in them may reverse.
+		return _chain_input()
+	_chain_plan = -1
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 

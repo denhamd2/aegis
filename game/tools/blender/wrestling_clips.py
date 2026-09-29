@@ -4836,6 +4836,195 @@ CLIPS["Rope_Rebound"] = _world_clip(20, (0.0, 0.0), _unified([
 
 # --- build ----------------------------------------------------------------
 
+# === Chain wrestling (gauntlet/refs/animation_gap.md, Phase 4) ============
+#
+# The holds two men trade out of a lock-up before anybody throws anything:
+# a side headlock, a wristlock, a go-behind to a rear waistlock. Each is one
+# LINK -- into the hold, cranked twice, the other man fights free, both square
+# up again -- 54 frames / 1.8 s, and WrestlerController strings links
+# together, the holder steering which comes next with the stick and the man
+# in it reversing to take over. Both halves are keyed against each other
+# beat for beat, on the trajectories in paired_recipes.gd:
+#
+#   frames  0-12  into the hold
+#          12-38  held: cranked at 20 and 32
+#          38-44  he fights free
+#          44-54  squared up again, about 0.9 m apart
+#
+# Frame 0 and frame 54 are both the stance, so any link follows any other.
+
+# SIDE HEADLOCK. The holder pivots in beside him and turns to face the way
+# he faces, the other man's head under his right arm at his hip; the man in
+# it is bent double beside him, pushing at his back. Held from frame 12.
+_HL_A = dict(pelvis=(0.0, 0.0, 0.830), hips=(-6, 10, 8), spine=(-16, 12, 12),
+             head=(10, 16, 0),
+             hand_r=(0.14, 0.24, 0.98), hand_l=(0.02, 0.24, 1.00),
+             elbow_r=(0.8, -0.4, 0.2), elbow_l=(-0.6, -0.3, -0.5),
+             fist_r=0.5, fist_l=0.5,
+             foot_r=(0.28, -0.10, 0.104), foot_l=(-0.20, 0.12, 0.104))
+_HL_D = dict(pelvis=(0.0, -0.12, 0.740), hips=(-40, 0, 0), spine=(-58, -8, 0),
+             head=(24, -30, 0),
+             hand_r=(0.10, 0.52, 0.86), hand_l=(-0.30, 0.30, 1.04),
+             elbow_r=(0.6, -0.3, -0.6), elbow_l=(-0.8, -0.2, -0.3),
+             fist_r=0.4, fist_l=0.3,
+             foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.06, 0.104))
+
+CLIPS["Chain_Headlock_Attacker"] = [
+    (0,  P()),
+    (6,  P(pelvis=(0.0, 0.04, 0.820), hips=(-6, 20, 0), spine=(-18, 24, 0),
+           hand_r=(0.20, 0.40, 1.20), hand_l=(-0.06, 0.40, 1.16),
+           foot_r=(0.24, 0.02, 0.104), foot_l=(-0.18, 0.14, 0.104))),
+    (12, pose(_HL_A)),
+    # The crank: he sits down into it and wrenches the head up and in.
+    (20, pose(_HL_A, pelvis=(0.0, 0.0, 0.800), spine=(-22, 16, 18),
+              hand_r=(0.14, 0.22, 1.02), hand_l=(0.02, 0.22, 1.04))),
+    (26, pose(_HL_A)),
+    (32, pose(_HL_A, pelvis=(0.0, 0.0, 0.795), spine=(-24, 18, 20),
+              hand_r=(0.14, 0.22, 1.03), hand_l=(0.02, 0.22, 1.05))),
+    (38, pose(_HL_A)),
+    # Shoved off his back: grip gone, arms out, a stumble step forward.
+    (44, P(pelvis=(0.0, 0.08, 0.840), hips=(-4, 0, 0), spine=(-14, 0, 0),
+           head=(8, 0, 0),
+           hand_r=(0.30, 0.34, 1.10), hand_l=(-0.28, 0.36, 1.12), fist_r=0.3, fist_l=0.3,
+           foot_r=(0.24, 0.10, 0.104), foot_l=(-0.20, 0.30, 0.140))),
+    (54, P()),
+]
+
+CLIPS["Chain_Headlock_Defender"] = [
+    (0,  P()),
+    (6,  P(pelvis=(0.0, -0.04, 0.820), hips=(-14, 0, 0), spine=(-30, -4, 0),
+           head=(10, -16, 0),
+           hand_r=(0.14, 0.44, 1.10), hand_l=(-0.20, 0.40, 1.14),
+           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.02, 0.104))),
+    (12, pose(_HL_D)),
+    # Wrenched: his head goes lower and his feet dig in.
+    (20, pose(_HL_D, pelvis=(0.0, -0.14, 0.725), spine=(-62, -10, 0), head=(28, -34, 0))),
+    (26, pose(_HL_D)),
+    (32, pose(_HL_D, pelvis=(0.0, -0.14, 0.722), spine=(-64, -10, 0), head=(28, -34, 0))),
+    (38, pose(_HL_D, hand_l=(-0.30, 0.34, 1.08), hand_r=(-0.10, 0.40, 1.02))),
+    # Fights free: straightens up out of it, both hands driving into his back.
+    (44, P(pelvis=(0.0, -0.02, 0.830), hips=(-10, 0, 0), spine=(-22, 0, 0),
+           head=(4, 0, 0),
+           hand_r=(0.10, 0.56, 1.18), hand_l=(-0.18, 0.54, 1.18),
+           elbow_r=(0.6, -0.3, -0.6), elbow_l=(-0.6, -0.3, -0.6),
+           fist_r=0.2, fist_l=0.2,
+           foot_r=(0.26, -0.16, 0.104), foot_l=(-0.24, 0.12, 0.104))),
+    (54, P()),
+]
+
+# WRISTLOCK. The holder takes the other man's right wrist in both hands and
+# turns it over; he turns away from it, arm straight out to his right and
+# bent over it, his other hand clutching the shoulder. Held from frame 12.
+_WL_A = dict(pelvis=(0.0, 0.0, 0.840), hips=(-4, 8, 0), spine=(-14, 12, 0),
+             head=(6, 6, 0),
+             hand_r=(0.06, 0.40, 1.04), hand_l=(-0.06, 0.38, 1.02),
+             elbow_r=(0.7, -0.4, -0.5), elbow_l=(-0.7, -0.4, -0.5),
+             fist_r=0.6, fist_l=0.6,
+             foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.16, 0.104))
+_WL_D = dict(pelvis=(0.0, 0.0, 0.820), hips=(-10, 12, -4), spine=(-28, 16, -10),
+             head=(8, 30, 0),
+             hand_r=(0.72, 0.06, 1.06), hand_l=(0.10, 0.16, 1.30),
+             elbow_r=(0.2, -0.3, -0.9), elbow_l=(-0.5, 0.2, -0.8),
+             fist_r=0.3, fist_l=0.5,
+             foot_r=(0.30, 0.00, 0.104), foot_l=(-0.20, 0.10, 0.104))
+
+CLIPS["Chain_Wristlock_Attacker"] = [
+    (0,  P()),
+    (6,  P(hand_r=(0.10, 0.52, 1.10), hand_l=(-0.02, 0.50, 1.08), fist_r=0.4, fist_l=0.4)),
+    (12, pose(_WL_A)),
+    # The twist: he turns the wrist over with his whole upper body.
+    (20, pose(_WL_A, hips=(-4, 16, 0), spine=(-16, 26, 0),
+              hand_r=(0.10, 0.38, 1.10), hand_l=(-0.02, 0.36, 1.08))),
+    (26, pose(_WL_A)),
+    (32, pose(_WL_A, hips=(-4, 18, 0), spine=(-16, 28, 0),
+              hand_r=(0.10, 0.38, 1.12), hand_l=(-0.02, 0.36, 1.10))),
+    (38, pose(_WL_A)),
+    # He loses it: the arm is ripped back out of his hands.
+    (44, P(pelvis=(0.0, -0.04, 0.850), hips=(2, 0, 0), spine=(-6, 0, 0),
+           hand_r=(0.18, 0.44, 1.12), hand_l=(-0.16, 0.42, 1.10), fist_r=0.3, fist_l=0.3)),
+    (54, P()),
+]
+
+CLIPS["Chain_Wristlock_Defender"] = [
+    (0,  P()),
+    (6,  P(hand_r=(0.20, 0.50, 1.14), fist_r=0.3)),
+    (12, pose(_WL_D)),
+    # Turned over: up onto the toes and further round the arm.
+    (20, pose(_WL_D, pelvis=(0.0, 0.0, 0.850), spine=(-34, 20, -16), head=(12, 36, 0),
+              hand_r=(0.72, 0.04, 1.12), ankle_r=(18, 0, 0), ankle_l=(18, 0, 0),
+              foot_r=(0.30, 0.00, 0.120), foot_l=(-0.20, 0.10, 0.120))),
+    (26, pose(_WL_D)),
+    (32, pose(_WL_D, pelvis=(0.0, 0.0, 0.852), spine=(-36, 22, -16), head=(12, 38, 0),
+              hand_r=(0.72, 0.04, 1.13), ankle_r=(18, 0, 0), ankle_l=(18, 0, 0),
+              foot_r=(0.30, 0.00, 0.120), foot_l=(-0.20, 0.10, 0.120))),
+    (38, pose(_WL_D)),
+    # Rips it free and comes round to face him.
+    (44, P(pelvis=(0.0, -0.02, 0.840), hips=(-6, 10, 0), spine=(-16, 14, 0),
+           hand_r=(0.40, 0.20, 1.10), hand_l=(-0.14, 0.30, 1.20), fist_r=0.4)),
+    (54, P()),
+]
+
+# GO-BEHIND TO A REAR WAISTLOCK. The holder ducks and circles round his left
+# side to his back and locks his hands round the waist, cheek on his back;
+# the man in it pries at the hands. Held from frame 14, when he is behind.
+_WA_A = dict(pelvis=(0.0, -0.04, 0.750), hips=(-12, 0, 0), spine=(-28, 0, 0),
+             head=(6, 24, 0),
+             hand_r=(0.12, 0.44, 0.96), hand_l=(-0.12, 0.44, 0.96),
+             elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
+             fist_r=0.5, fist_l=0.5,
+             foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.02, 0.104))
+_WA_D = dict(pelvis=(0.0, 0.02, 0.830), hips=(-6, 0, 0), spine=(-14, 0, 0),
+             head=(10, 0, 0),
+             hand_r=(0.14, 0.24, 0.98), hand_l=(-0.14, 0.24, 0.98),
+             elbow_r=(0.9, -0.1, -0.3), elbow_l=(-0.9, -0.1, -0.3),
+             fist_r=0.6, fist_l=0.6,
+             foot_r=(0.26, -0.06, 0.104), foot_l=(-0.24, 0.10, 0.104))
+
+CLIPS["Chain_Waistlock_Attacker"] = [
+    (0,  P()),
+    # Ducks under and goes round, low.
+    (6,  P(pelvis=(0.0, 0.04, 0.740), hips=(-18, 0, 0), spine=(-30, 0, 0),
+           head=(16, 0, 0), hand_r=(0.26, 0.30, 1.00), hand_l=(-0.24, 0.32, 1.00),
+           foot_r=(0.22, 0.10, 0.160), foot_l=(-0.22, -0.10, 0.104))),
+    (10, P(pelvis=(0.0, 0.04, 0.760), hips=(-16, 0, 0), spine=(-26, 0, 0),
+           head=(14, 10, 0), hand_r=(0.24, 0.36, 1.00), hand_l=(-0.22, 0.38, 1.00),
+           foot_r=(0.22, -0.10, 0.104), foot_l=(-0.22, 0.12, 0.160))),
+    (17, pose(_WA_A)),
+    # The squeeze: hips in under him, a lift off the mat that does not come.
+    (22, pose(_WA_A, pelvis=(0.0, 0.03, 0.760), hips=(-4, 0, 0), spine=(-10, 0, 0),
+              hand_r=(0.12, 0.42, 1.00), hand_l=(-0.12, 0.42, 1.00))),
+    (28, pose(_WA_A)),
+    (34, pose(_WA_A, pelvis=(0.0, 0.03, 0.758), hips=(-4, 0, 0), spine=(-10, 0, 0),
+              hand_r=(0.12, 0.42, 1.01), hand_l=(-0.12, 0.42, 1.01))),
+    (38, pose(_WA_A)),
+    # The grip is broken and he is left holding air.
+    (44, P(pelvis=(0.0, -0.02, 0.830), hips=(-6, 0, 0), spine=(-12, 0, 0),
+           hand_r=(0.26, 0.40, 1.02), hand_l=(-0.26, 0.40, 1.02), fist_r=0.3, fist_l=0.3)),
+    (54, P()),
+]
+
+CLIPS["Chain_Waistlock_Defender"] = [
+    (0,  P()),
+    # Looks for him as he goes round.
+    (8,  P(head=(2, -40, 0), spine=(-10, -10, 0))),
+    (14, pose(_WA_D)),
+    # Squeezed: lifted onto his toes, hands still at the grip.
+    (22, pose(_WA_D, pelvis=(0.0, 0.02, 0.850), spine=(-6, 0, 0), head=(16, 0, 0),
+              ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
+              foot_r=(0.26, -0.06, 0.124), foot_l=(-0.24, 0.10, 0.124))),
+    (28, pose(_WA_D)),
+    (34, pose(_WA_D, pelvis=(0.0, 0.02, 0.852), spine=(-6, 0, 0), head=(16, 0, 0),
+              ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
+              foot_r=(0.26, -0.06, 0.124), foot_l=(-0.24, 0.10, 0.124))),
+    (38, pose(_WA_D, hand_r=(0.20, 0.20, 0.94), hand_l=(-0.20, 0.20, 0.94))),
+    # Pries the hands apart and turns out of it.
+    (44, P(pelvis=(0.0, 0.04, 0.830), hips=(-6, 0, 0), spine=(-12, 0, 0),
+           head=(6, -20, 0),
+           hand_r=(0.34, 0.14, 0.92), hand_l=(-0.34, 0.14, 0.92), fist_r=0.5, fist_l=0.5)),
+    (54, P()),
+]
+
+
 def load_rig():
     """Fresh scene with just the base rig's armature in it."""
     bpy.ops.wm.read_factory_settings(use_empty=True)

@@ -21,11 +21,20 @@ extends RefCounted
 ##              it and drove the forearm through his chest (PairClearance).
 ##   "wrist" -- Cross Rhodes: right hand on his right wrist (the wrist-clutch),
 ##              left behind his neck.
+##   "waist_behind" -- the chain's rear waistlock: from behind, hands locked
+##              at his hip bones. "waist" wraps to the front of his hips,
+##              which from behind is past arm's length (20 cm short).
+##   "wringer" -- the chain wristlock: both hands on his right wrist and
+##              forearm, turning it over.
 ##   "none"  -- hands his own: every strike, kick and dive.
 ##
 ## Unlisted moves keep the old behaviour (chest, or hips when lifting).
 
 const MOVES := {
+	# Chain wrestling (Phase 4).
+	"chain_headlock": "neck",
+	"chain_wristlock": "wringer",
+	"chain_waistlock": "waist_behind",
 	# The headlock family.
 	"signature_neckbreaker": "neck",
 	"running_reverse_swing_neckbreaker": "neck",
@@ -80,6 +89,8 @@ const NO_PULL := ["signature_cody_cutter"]
 const WRAP := 0.07
 ## Half a waist, for the two waist hands.
 const WAIST_HALF := 0.15
+## Half a waist at the hip bones, for "waist_behind".
+const WAIST_BEHIND_HALF := 0.17
 
 
 static func family(move: MoveDef) -> String:
@@ -124,4 +135,12 @@ static func targets(family_name: String, opponent: WrestlerController, from: Vec
 		"wrist":
 			var wrist: Vector3 = at.call("hand_r")
 			return [neck + away * WRAP, wrist]
+		"waist_behind":
+			var hips: Vector3 = at.call("pelvis")
+			var side := away.cross(Vector3.UP).normalized() * WAIST_BEHIND_HALF
+			return [hips + away * 0.03 - side, hips + away * 0.03 + side]
+		"wringer":
+			var hand: Vector3 = at.call("hand_r")
+			var forearm: Vector3 = at.call("lowerarm_r")
+			return [hand, forearm.lerp(hand, 0.55)]
 	return []

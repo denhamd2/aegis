@@ -893,7 +893,7 @@ func _is_gripping_state() -> bool:
 			# been thrown, and arms still reaching for the man who threw him
 			# read as him hanging in mid-air by them. A move nobody is
 			# lifted in (a reversal shove) keeps him gripping throughout.
-			return _is_grapple_attacker or _paired_grip_ticks > 0
+			return _is_grapple_attacker or _paired_grip_ticks > 0 or in_chain_read()
 		_:
 			return false
 
@@ -1167,7 +1167,7 @@ func _close_for_lock_up() -> void:
 		return
 	if _model_home == Vector3.INF:
 		_model_home = model.position
-	var locked := fsm.current_state == WrestlerFSM.State.TIE_UP \
+	var locked := (fsm.current_state == WrestlerFSM.State.TIE_UP or in_chain_read()) \
 			and opponent != null and is_instance_valid(opponent)
 	var step := 1.0 / LOCK_UP_EASE_TICKS
 	_lock_up_close = clampf(_lock_up_close + (step if locked else -step), 0.0, 1.0)
@@ -1214,7 +1214,7 @@ func _aim_grip_targets() -> bool:
 	# a tie-up, or a defender holding on to the man lifting him -- holds the
 	# chest. Reaching for a lifted victim's chest puts the arms overhead and
 	# behind, which reads as nothing at all.
-	if fsm.current_state == WrestlerFSM.State.TIE_UP:
+	if fsm.current_state == WrestlerFSM.State.TIE_UP or in_chain_read():
 		return _aim_collar_and_elbow()
 	# In a paired move, the move says what the attacker holds (PairedContacts).
 	if fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and _is_grapple_attacker \
@@ -1328,6 +1328,18 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current == WrestlerFSM.State.GRAPPLE_HOLD:
+		# A tie-up's hold chains (see "chain wrestling"); a running paired
+		# move's does not. Both men reset: either may end up the holder.
+		_chain_enabled = _previous == WrestlerFSM.State.TIE_UP
+		_chain_links = 0
+		_chain_read = 0
+		_chain_pick = ""
+		_chain_done = false
+		_chain_reversal_spent = false
+		chain_hold = ""
+		if _chain_enabled:
+			_set_state_clip(WrestlerFSM.State.GRAPPLE_HOLD, CHAIN_READ_CLIP)
 	if current != WrestlerFSM.State.STUNNED and _corner_trapped:
 		_corner_trapped = false
 		_corner_lockout = CORNER_LOCKOUT_TICKS
@@ -2107,6 +2119,194 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
 
+# --- chain wrestling (gauntlet/refs/animation_gap.md, Phase 4) ---------------
+#
+# Out of a lock-up the two men trade holds before anybody throws anything, the
+# way a match opens on TV and 2K's chain wrestling plays it: the man who won
+# the tie-up steers a hold with the stick, and the man in it can reverse to
+# take the next one himself.
+#
+# Each hold is one LINK, a paired move (chain_headlock, chain_wristlock,
+# chain_waistlock: into the hold, cranked twice, fought free, squared up) that
+# GrappleRig plays like any other. Between links is the READ: CHAIN_READ_TICKS
+# back in the collar-and-elbow, in which
+#   * the holder picks the next hold by the stick, relative to his facing:
+#     forward a side headlock, back a go-behind to a waistlock, either side a
+#     wristlock -- or nothing, and throws his grapple move when the read ends;
+#   * the other man may press Reversal inside CHAIN_REVERSAL_WINDOW to take
+#     it over: he becomes the holder and goes straight into CHAIN_COUNTER of
+#     the hold he was about to be put in. A press outside the window spends
+#     his chance for that read.
+# A hold runs to CHAIN_LINKS_MAX links, then the holder throws his move.
+#
+# Holds wear the man in them a little (2-3 damage to the part held, 2
+# momentum to the holder) and cost both some stamina. They are the opening
+# of a match, not a way through it.
+
+const CHAIN_HOLDS := {
+	"headlock": preload("res://resources/moves/chain_headlock.tres"),
+	"wristlock": preload("res://resources/moves/chain_wristlock.tres"),
+	"waistlock": preload("res://resources/moves/chain_waistlock.tres"),
+}
+## What a reversal turns each hold into, for the man who reverses it: out of
+## a headlock he takes the wrist; out of a wristlock he rolls through into his
+## own; out of a waistlock he switches behind.
+const CHAIN_COUNTER := {
+	"headlock": "wristlock", "wristlock": "wristlock", "waistlock": "waistlock",
+	"": "wristlock",
+}
+const CHAIN_LINKS_MAX := 3
+const CHAIN_READ_TICKS := 18
+## After a reversal the new holder's read is this much shorter: he is already
+## moving.
+const CHAIN_REVERSAL_HEAD_START := 12
+## Ticks into a read inside which a Reversal press takes it over.
+const CHAIN_REVERSAL_WINDOW := Vector2i(4, 14)
+## A stick push under this is no pick.
+const CHAIN_STICK_DEAD := 0.5
+## Stamina a hold costs, per link, and a reversal of one.
+const STAMINA_CHAIN_HOLDER := 0.02
+const STAMINA_CHAIN_HELD := 0.03
+
+signal chain_reversed(reverser: WrestlerController, held: WrestlerController)
+
+## Whether this hold chains at all: a tie-up's, not a running paired move's.
+var _chain_enabled := false
+var _chain_links := 0
+var _chain_read := 0
+var _chain_pick := ""
+## True once the AI (or a probe) has said this read is over with no pick.
+var _chain_done := false
+var _chain_reversal_spent := false
+## The hold being played right now, while a link runs.
+var chain_hold := ""
+## Counters landed out of holds this match (probes).
+var chain_reversals := 0
+
+
+## The hold a stick push asks for, relative to this man's facing.
+func chain_hold_for_stick(move: Vector2) -> String:
+	return chain_hold_for(move, global_transform.basis)
+
+
+## The hold a stick push (world x, z) asks for of a man facing `facing`'s -Z.
+static func chain_hold_for(move: Vector2, facing: Basis) -> String:
+	if move.length() < CHAIN_STICK_DEAD:
+		return ""
+	var dir := Vector3(move.x, 0.0, move.y).normalized()
+	var ahead := dir.dot(-facing.z)
+	var side := dir.dot(facing.x)
+	if absf(side) > absf(ahead):
+		return "wristlock"
+	return "headlock" if ahead > 0.0 else "waistlock"
+
+
+## In the read between links: back in the lock-up, the next hold undecided.
+func in_chain_read() -> bool:
+	var holder := self if _is_grapple_attacker else opponent
+	return holder != null and fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
+			and holder._chain_enabled and holder._chain_links < CHAIN_LINKS_MAX \
+			and holder.chain_hold == "" and not (grapple_rig and grapple_rig.is_active())
+
+
+## The holder's tick of the read. Returns true while the read goes on (or a
+## link has started), false when it is over with nothing picked -- the caller
+## then throws the grapple move as it always did.
+func _tick_chain_read(input: Dictionary) -> bool:
+	if not _chain_enabled or _chain_links >= CHAIN_LINKS_MAX or _chain_done:
+		return false
+	_chain_read += 1
+	var asked: String = String(input.get("chain", ""))
+	if asked == "none":
+		_chain_done = true
+		return false
+	if asked == "":
+		asked = chain_hold_for_stick(input.get("move", Vector2.ZERO))
+	if CHAIN_HOLDS.has(asked):
+		_chain_pick = asked
+	if _chain_read < CHAIN_READ_TICKS:
+		return true
+	if _chain_pick == "":
+		_chain_done = true
+		return false
+	_begin_chain_link(_chain_pick)
+	return true
+
+
+## The held man's tick of the read: a Reversal press in the window takes it.
+func _tick_chain_counter(input: Dictionary) -> void:
+	if opponent == null or not opponent._chain_enabled or opponent.chain_hold != "" \
+			or opponent._chain_links >= CHAIN_LINKS_MAX or opponent._chain_done:
+		return
+	if not input.get("reversal", false) or _chain_reversal_spent:
+		return
+	var at := opponent._chain_read
+	if at < CHAIN_REVERSAL_WINDOW.x or at > CHAIN_REVERSAL_WINDOW.y:
+		_chain_reversal_spent = true
+		return
+	_take_chain_over()
+
+
+## Reverses the hold he was about to be put in: he is the holder now, and
+## goes into its counter.
+func _take_chain_over() -> void:
+	var held := opponent
+	var counter: String = CHAIN_COUNTER.get(held._chain_pick, "wristlock")
+	held._is_grapple_attacker = false
+	_is_grapple_attacker = true
+	_chain_enabled = true
+	_chain_links = held._chain_links
+	_chain_done = false
+	_chain_pick = counter
+	_chain_read = CHAIN_REVERSAL_HEAD_START
+	_chain_reversal_spent = false
+	held._chain_reversal_spent = false
+	held._chain_pick = ""
+	held._chain_read = 0
+	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
+	chain_reversals += 1
+	chain_reversed.emit(self, held)
+
+
+func _begin_chain_link(hold: String) -> void:
+	var move: MoveDef = CHAIN_HOLDS[hold]
+	chain_hold = hold
+	_chain_links += 1
+	opponent._chain_links = _chain_links
+	_active_move = move
+	if grapple_rig:
+		grapple_rig.begin(self, opponent, move)
+		grapple_rig.grapple_finished.connect(_on_chain_link_finished, CONNECT_ONE_SHOT)
+	else:
+		_on_chain_link_finished(self, opponent)
+
+
+## A link has run: the hold's wear lands, and both are back in the lock-up
+## for the next read.
+func _on_chain_link_finished(_attacker: Node3D, _defender: Node3D) -> void:
+	var move := _active_move
+	_active_move = null
+	chain_hold = ""
+	if move:
+		opponent.combat.apply_damage(move,
+				CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
+		opponent._took_moves(1)
+		combat.apply_momentum(move)
+		move_landed.emit(self, opponent, move)
+	combat.spend_stamina(STAMINA_CHAIN_HOLDER)
+	opponent.combat.spend_stamina(STAMINA_CHAIN_HELD)
+	_chain_read = 0
+	_chain_pick = ""
+	_chain_done = false
+	opponent._chain_reversal_spent = false
+	for w: WrestlerController in [self, opponent]:
+		w._restart_state_clip(WrestlerFSM.State.GRAPPLE_HOLD, CHAIN_READ_CLIP)
+
+
+## The read is played in the collar-and-elbow.
+const CHAIN_READ_CLIP := "strikes/tie_up_collar"
+
+
 # --- the corner (gauntlet/refs/animation_gap.md, Phase 4: position) ----------
 #
 # A man knocked back into a corner does not stagger free: the turnbuckle stops
@@ -2694,10 +2894,14 @@ func _timed_stub(ticks: int) -> MoveDef:
 func _process_grapple_hold(input: Dictionary) -> void:
 	if not _is_grapple_attacker:
 		# The defender has nothing to press while the attacker's paired move
-		# plays: he waits it out.
+		# plays: he waits it out. Between chain links he may reverse.
+		_tick_chain_counter(input)
 		return
 	if input.get("run", false):
 		_begin_irish_whip()
+		return
+	# Chain wrestling first: the read, and the holds it strings together.
+	if _tick_chain_read(input):
 		return
 	# Pick the rung FIRST, then ask whether it can be thrown.
 	#
