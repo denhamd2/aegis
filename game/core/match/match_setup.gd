@@ -75,6 +75,10 @@ func _ready() -> void:
 	crowd.name = "CrowdReaction"
 	add_child(crowd)
 	crowd.watch(referee, [wrestler_a, wrestler_b])
+	# The two ringside sign fans (SignFans), built with the arena.
+	var sign_fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
+	if sign_fans:
+		sign_fans.watch(referee, [wrestler_a, wrestler_b])
 	var look := BroadcastLook.new()
 	look.name = "BroadcastLook"
 	look.replay = playback_replay_path != ""
@@ -95,6 +99,8 @@ func _ready() -> void:
 		director.name = "EntranceDirector"
 		add_child(director)
 		director.bell.connect(_begin_live)
+		if sign_fans:
+			sign_fans.follow(director)
 		director.begin(self)
 	else:
 		_begin_live()

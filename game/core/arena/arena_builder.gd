@@ -903,7 +903,18 @@ func _build_floor_seats() -> void:
 		index += 1
 	add_child(_build_chairs("FloorChairs", _chair_mesh(), detailed))
 	add_child(_build_chairs("FloorChairsFar", _chair_proxy_mesh(), distant))
-	_build_floor_crowd(detailed + distant)
+	# Two of the ringside chairs are the sign fans' (SignFans): their crowd
+	# figures are left out and the fans sit there instead.
+	var fans := SignFans.new()
+	fans.name = "SignFans"
+	add_child(fans)
+	var picked := SignFans.pick_seats(detailed)
+	fans.seat(detailed, picked)
+	var crowd_seats: Array[Transform3D] = []
+	for i in detailed.size():
+		if not picked.has(i):
+			crowd_seats.append(detailed[i])
+	_build_floor_crowd(crowd_seats + distant)
 
 
 ## Ringside model: six seated people, built by tools/blender/floor_crowd.py.

@@ -24,6 +24,9 @@ extends Node
 ## Enter, Space or a pad's A (ui_accept) skips to the bell.
 
 signal bell
+## Each beat as it starts, with the shot it is on (SignFans stands up for the
+## stare-down's).
+signal beat_started(shot: String)
 
 # --- Pace and the travelling clips (tools/blender/wrestling_clips.py) --------
 ## The speed Entrance_Walk's planted foot travels at. Must match the clip.
@@ -524,6 +527,7 @@ func _start_beat() -> void:
 		_ring_bell()
 		return
 	var beat: Dictionary = _beats[_beat]
+	beat_started.emit(String(beat.get("shot", "")))
 	var w: WrestlerController = beat.get("who")
 	if beat.get("appear", false) and w:
 		# Placed in the same step he is shown, or the frame in between renders
