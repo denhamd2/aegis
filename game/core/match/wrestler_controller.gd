@@ -1328,8 +1328,9 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
-	if current != WrestlerFSM.State.STUNNED:
+	if current != WrestlerFSM.State.STUNNED and _corner_trapped:
 		_corner_trapped = false
+		_corner_lockout = CORNER_LOCKOUT_TICKS
 	if not _anim_playback:
 		return
 	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
@@ -1469,6 +1470,8 @@ func _physics_process(delta: float) -> void:
 
 	if rope_reach:
 		rope_reach.advance(fsm.is_in(ROPE_HOLD_STATES))
+	if _corner_lockout > 0:
+		_corner_lockout -= 1
 	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
 	move_and_slide()
@@ -2132,11 +2135,18 @@ const CORNER_HIT_TICKS := 60
 const CORNER_HITS_MAX := 3
 ## Ticks to be driven back into the buckle from where he was hit.
 const CORNER_SLIDE_TICKS := 8
+## Once out of the corner he cannot be trapped in one again for this long.
+## Out of the trap he is still standing in the corner with the other man in
+## front of him, so without it the next blow trapped him straight back: one
+## seeded match (reversal_tally seed 1) looped 62 traps and never finished.
+const CORNER_LOCKOUT_TICKS := 240
 
 var _corner_trapped := false
 var _corner_hits := 0
 var _corner_spot := Vector3.ZERO
 var _corner_slide := 0
+## Ticks left before he can be trapped in a corner again.
+var _corner_lockout := 0
 
 
 ## Trapped in a corner right now.
@@ -2167,7 +2177,8 @@ func _try_corner_trap() -> bool:
 		_move_ticks_remaining = CORNER_HIT_TICKS
 		_restart_state_clip(WrestlerFSM.State.STUNNED, "strikes/corner_hit")
 		return true
-	if not WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
+	if _corner_lockout > 0 \
+			or not WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
 		return false
 	var spot := corner_behind(global_position, opponent.global_position)
 	if not spot.is_finite():
