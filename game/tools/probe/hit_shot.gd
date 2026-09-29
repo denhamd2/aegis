@@ -131,6 +131,12 @@ func _film(cam: Camera3D, victim: WrestlerController, hitter: WrestlerController
 	var side := Vector3.UP.cross(line.normalized())
 	cam.global_position = mid + side * 3.6 + Vector3.UP * 1.3
 	cam.look_at(mid + Vector3.UP * 1.1, Vector3.UP)
+	if _ropes:
+		# A man on the mat reaching out to the ropes: from the middle of the
+		# ring and above, so the man covering him is not in the way.
+		var inward := -Vector3(victim.global_position.x, 0.0, victim.global_position.z).normalized()
+		cam.global_position = victim.global_position + inward * 2.6 + Vector3.UP * 2.6
+		cam.look_at(victim.global_position + Vector3.UP * 0.3, Vector3.UP)
 	cam.current = true
 	for t in ticks:
 		await RenderingServer.frame_post_draw
