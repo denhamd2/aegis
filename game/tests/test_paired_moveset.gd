@@ -50,6 +50,8 @@ const SCOPED_FINISHER := 2
 ## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
 ## paired move so the victim's half is keyed against the hit.
 const SCOPED_RUNNING := 25
+## Chain wrestling's links (Phase 4): headlock, wristlock, waistlock.
+const SCOPED_CHAIN := 3
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -86,6 +88,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var signature := 0
 	var finisher := 0
 	var running := 0
+	var chain := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -98,6 +101,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			finisher += 1
 		elif name.begins_with("running_"):
 			running += 1
+		elif name.begins_with("chain_"):
+			chain += 1
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
@@ -107,6 +112,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(signature).is_equal(SCOPED_SIGNATURE)
 	assert_int(finisher).is_equal(SCOPED_FINISHER)
 	assert_int(running).is_equal(SCOPED_RUNNING)
+	assert_int(chain).is_equal(SCOPED_CHAIN)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -247,6 +253,9 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 		for path: String in paths:
 			if path != "":
 				reachable[String((load(path) as MoveDef).animation_pair_id)] = true
+	# Chain wrestling's holds are handed out by the lock-up itself, not a tier.
+	for hold: MoveDef in WrestlerController.CHAIN_HOLDS.values():
+		reachable[String(hold.animation_pair_id)] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):

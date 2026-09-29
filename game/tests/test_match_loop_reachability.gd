@@ -30,7 +30,11 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 ## (see test_replay_roundtrip.gd), and the probe measured the first tie-up
 ## landing around tick 51 with grapple moves following steadily after -- so
 ## this is several grapples' worth, not a single lucky one.
-const SIMULATED_FRAMES := 600
+##
+## 1400 since chain wrestling (Phase 4): the opening lock-up now trades one
+## to three holds -- 1.8 s a link, plus the read between them -- before its
+## grapple move lands, so 600 frames (~300 ticks) ended mid-chain.
+const SIMULATED_FRAMES := 1400
 ## States a wrestler must not be in on the tick after a paired move lands.
 ## The attacker resolves to IDLE and the defender to DOWN or HIT_REACT, all
 ## within _resolve_grapple_move()'s own single _physics_process, so anything

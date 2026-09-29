@@ -61,12 +61,12 @@ func _run(seed_value: int) -> Dictionary:
 		w.is_ai = true
 		w.reversed.connect(func(_rev, _st, _m): r["read"] += 1)
 		w.chain_reversed.connect(func(_a, _b): r["chain_rev"] += 1)
+		w.chain_hold_landed.connect(func(_a, _d, m: MoveDef):
+			var k := String(m.resource_path).get_file().get_basename().trim_prefix("chain_")
+			r["chain"][k] = int(r["chain"].get(k, 0)) + 1)
 		w.move_landed.connect(func(_a, _d, m: MoveDef):
 			if m == WrestlerController.REVERSAL_MOVE:
 				r["countered"] += 1
-			elif String(m.resource_path).get_file().begins_with("chain_"):
-				var k := String(m.resource_path).get_file().get_basename().trim_prefix("chain_")
-				r["chain"][k] = int(r["chain"].get(k, 0)) + 1
 			elif String(m.resource_path).get_file().begins_with("ground_"):
 				var k := String(m.resource_path).get_file().get_basename()
 				r["ground"][k] = int(r["ground"].get(k, 0)) + 1)

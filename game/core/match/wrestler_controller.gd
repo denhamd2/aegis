@@ -2169,6 +2169,10 @@ const STAMINA_CHAIN_HOLDER := 0.02
 const STAMINA_CHAIN_HELD := 0.03
 
 signal chain_reversed(reverser: WrestlerController, held: WrestlerController)
+## A hold's link has run and its wear landed. Not move_landed: that means a
+## move has resolved and both men are out of the hold, and after a link they
+## are still in it.
+signal chain_hold_landed(holder: WrestlerController, held: WrestlerController, move: MoveDef)
 
 ## Whether this hold chains at all: a tie-up's, not a running paired move's.
 var _chain_enabled := false
@@ -2292,7 +2296,7 @@ func _on_chain_link_finished(_attacker: Node3D, _defender: Node3D) -> void:
 				CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
 		opponent._took_moves(1)
 		combat.apply_momentum(move)
-		move_landed.emit(self, opponent, move)
+		chain_hold_landed.emit(self, opponent, move)
 	combat.spend_stamina(STAMINA_CHAIN_HOLDER)
 	opponent.combat.spend_stamina(STAMINA_CHAIN_HELD)
 	_chain_read = 0
