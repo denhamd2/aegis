@@ -23,25 +23,25 @@ func _ready() -> void:
 	var shot := [""]
 	var bell := [-1]
 	var over := [false]
-	var tick := 0
+	var tick := [0]
 	await get_tree().process_frame
 	var director := scene.get_node_or_null("EntranceDirector") as EntranceDirector
 	if director:
 		director.beat_started.connect(func(s: String) -> void: shot[0] = s)
-		director.bell.connect(func() -> void: bell[0] = tick)
+		director.bell.connect(func() -> void: bell[0] = tick[0])
 	var referee: MatchReferee = scene.get_node("MatchReferee")
 	referee.match_won.connect(func(_w, _m) -> void: over[0] = true)
 	var fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
 	var last := [-1, -1]
-	while tick < budget and not over[0]:
+	while tick[0] < budget and not over[0]:
 		await get_tree().physics_frame
-		tick += 1
+		tick[0] += 1
 		for n in fans.fans.size():
 			var st: int = fans.fans[n].stage
 			if st != last[n]:
 				last[n] = st
-				print("FAN %d t%-6d %-9s shot=%-14s %s" % [n, tick, SignFan.Stage.keys()[st], shot[0],
-						"(before the bell)" if bell[0] < 0 else "match +%.1fs" % ((tick - bell[0]) / 60.0)])
-	print("FANS_DONE tick %d, bell at %d, raises in the match %d, %s" % [tick, bell[0], fans.match_raises,
+				print("FAN %d t%-6d %-9s shot=%-14s %s" % [n, tick[0], SignFan.Stage.keys()[st], shot[0],
+						"(before the bell)" if bell[0] < 0 else "match +%.1fs" % ((tick[0] - bell[0]) / 60.0)])
+	print("FANS_DONE tick %d, bell at %d, raises in the match %d, %s" % [tick[0], bell[0], fans.match_raises,
 			"match over" if over[0] else "budget"])
 	get_tree().quit()

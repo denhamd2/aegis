@@ -7972,3 +7972,61 @@ rendered from two angles. Two fixes came out of the renders:
 three of the four included a reversal, and all ended by pinfall. The first
 run's reversals all became wristlocks, so out of a headlock the counter is
 now a go-behind.
+
+## Round: Phase 4 — in-between behaviour
+
+What a man does between moves, on top of what BodyLife already gave him
+(breathing, the tired slump, eyes on his man, fidgets). This finishes
+Phase 4.
+
+- **Playing to the crowd.** A new `TAUNT` state, last in the FSM enum so no
+  state is renumbered. Each man uses his own entrance gesture:
+  - Roman: `finger_raise` (1.8 s);
+  - Cody: `whoa_low` (2.3 s);
+  - anyone else: `air_punch` (1.5 s).
+
+  The AI throws it over a man who has just gone down, decided in the first
+  12 ticks: once to set up the finisher (it is ready and he wants them to
+  know), and once after his power move lands. The crowd pops for it
+  (`CrowdReaction.POP_TAUNT`).
+- **Selling.** `SellClutch` is a new skeleton modifier. His left hand goes to
+  the part that has taken the most, and he leans into it:
+  - head: a hand to the forehead;
+  - torso: to the ribs, hunched;
+  - legs: to the knee, bent down;
+  - arms: to the other shoulder.
+
+  He sells coming up off the mat (anything past 20 damage) and every 5–9 s
+  standing (past 45), timed off seeded ticks.
+- **Pacing.** A worn man walks up to 30% slower and waits up to 50% longer
+  between strikes, on BodyLife's damage scale.
+
+**Result** (seeds 1–4): every match ends by pinfall, with 1–3 taunts and
+6–16 sells a match.
+
+## Round: two ringside fans with signs
+
+The owner asked for two fans in the second or third row, facing the camera,
+holding up signs the way the reference photos of a WWE crowd do it.
+
+- **The fan** (`tools/blender/sign_fan.py` → `sign_fan.glb`).
+  - The crowd's own box figure, on a 13-bone armature, with every box
+    weighted to one bone. The board is its own bone. Its path is keyed:
+    off the lap, past the chest, over the head, pumped and rocked.
+  - The arms are solved to its two side edges every frame, and the legs to
+    planted feet, so the hands are on the sign by construction.
+  - Four clips: `Fan_Seated` (a loop), `Fan_Rise`, `Fan_Hold` (a loop) and
+    `Fan_Lower`.
+- **The signs.** The owner's two: ENDA FEARS OMAR and CODY SUCKS, in
+  `assets/environment/signs/`.
+- **Where.** `SignFans` takes two real ringside chairs, in rows two and three
+  on the +X side. That is the side the hard camera and the stare-down shot
+  both look across the ring at. The chairs sit about 3 m either side of the
+  centre line, so the two wrestlers don't hide them. Their seats are left
+  out of the crowd.
+- **When** (full match with entrances, seed 2):
+  - both rise as the stare-down shot comes up (a new
+    `EntranceDirector.beat_started` signal), the second a beat behind;
+  - they sit about a second after the bell;
+  - they stand only twice more in the match, on a signature or a near-fall,
+    at least 25 s apart, for about 4.5 s each.

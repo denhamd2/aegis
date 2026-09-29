@@ -260,7 +260,7 @@ not enough on footage.
    `EyeAim` to neck and head with limits), idle variations, an additive
    breathing and fatigue slump driven by stamina, and selling between moves.
 
-### Phase 4: 2K26 match-play systems (gameplay) -- IN PROGRESS
+### Phase 4: 2K26 match-play systems (gameplay) -- DONE
 
 Done so far:
 - Stamina (`CombatSystem.stamina`): spent by strikes, grapples, running and
@@ -289,7 +289,15 @@ Done so far:
   (in, cranked twice, fought free, squared up) inside the pair clearance and
   grip limits. The AI chains one to three in the opening lock-up.
 
-Order from here: the AI's in-between behaviour (pacing, selling, the crowd).
+- In-between behaviour: a TAUNT state plays each man's own gesture to the
+  crowd over a man who is down (Roman's finger, Cody's "whoa", an air punch
+  otherwise), once to set up the finisher and once after a power move, and
+  the crowd pops; SellClutch puts his hand on the part that has taken the
+  most and leans him into it, coming up off the mat and every so often
+  standing; a worn man walks up to 30% slower and waits up to 50% longer
+  between strikes.
+
+Phase 4 is done.
 
 
 - **Position-context moves:** front, rear, at the head or legs of a downed
