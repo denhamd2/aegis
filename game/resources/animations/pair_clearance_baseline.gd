@@ -28,7 +28,6 @@ const GRIP := {
 	"running_tilt_a_whirl_backstabber": 0.18,
 	"running_fallaway_moonsault_slam": 0.10,
 	"running_reverse_swing_neckbreaker": 0.09,
-	"running_tilt_a_whirl_ddt": 0.08,
 	"running_rolling_thunder_flatliner": 0.07,
 }
 ## Fewer in-reach frames than this and a median says nothing: the Cody

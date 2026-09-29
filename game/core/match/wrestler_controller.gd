@@ -323,6 +323,8 @@ var _grip_targets: Array[Marker3D] = []
 ## Planted feet for GrappleRig's walk-in (FootPlant). Presentation only.
 var foot_plant: FootPlant
 var inertializer: Inertializer
+var hit_flinch: HitFlinch
+var body_life: BodyLife
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -614,6 +616,8 @@ func _ready() -> void:
 		_build_ik_rig()
 		_build_foot_plant()
 		_build_inertializer()
+		_build_body_life()
+		_build_hit_flinch()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -973,6 +977,7 @@ func _build_inertializer() -> void:
 	inertializer.name = "Inertializer"
 	skeleton.add_child(inertializer)
 	skeleton.move_child(inertializer, 0)
+	inertializer.body = self
 	if anim_tree:
 		inertializer.watch(anim_tree, _anim_playback)
 	# It replaces the crossfades: every edge in the blend graph becomes a cut,
@@ -982,6 +987,53 @@ func _build_inertializer() -> void:
 		var machine := anim_tree.tree_root as AnimationNodeStateMachine
 		for i in machine.get_transition_count():
 			machine.get_transition(i).xfade_time = 0.0
+
+
+## BodyLife: before HitFlinch, so a blow lands on a man already watching,
+## breathing and tiring.
+func _build_body_life() -> void:
+	body_life = BodyLife.new()
+	body_life.name = "BodyLife"
+	for key: String in body_life.bones.keys():
+		body_life.bones[key] = _skeleton_bone_name(key)
+	body_life.wrestler = self
+	body_life.phase = 0.37 * player_index
+	skeleton.add_child(body_life)
+
+
+## Hit-stop: on a heavy blow both men's poses hold still for a couple of
+## ticks at the moment of contact -- the beat that makes a blow read as
+## landing on something, in every fighting game since the arcade. The flinch
+## keeps moving through it. Presentation only: neither the match clock nor
+## the clips stop.
+const HIT_STOP_HEAVY := 3
+const HIT_STOP_MEDIUM := 2
+
+
+static func hit_stop_ticks_for(strength: float) -> int:
+	if strength >= 0.9:
+		return HIT_STOP_HEAVY
+	return HIT_STOP_MEDIUM if strength >= 0.6 else 0
+
+
+## Held by the Inertializer: the drawn pose stops, the clip runs on under
+## it. Stopping the clip itself -- the tree switched off, or its clock
+## stopped -- reset its state machine, and the man came out of the freeze
+## playing nothing for the rest of his reaction (measured).
+func hit_stop(ticks: int) -> void:
+	if inertializer:
+		inertializer.freeze(ticks)
+
+
+## HitFlinch: after the IK and FootPlant, so a man flinches whatever his hands
+## and feet are doing; before WornFollow, which carries it to his clothes.
+func _build_hit_flinch() -> void:
+	hit_flinch = HitFlinch.new()
+	hit_flinch.name = "HitFlinch"
+	for key: String in hit_flinch.bones.keys():
+		hit_flinch.bones[key] = _skeleton_bone_name(key)
+	hit_flinch.body = self
+	skeleton.add_child(hit_flinch)
 
 
 ## A model dressed on a second skeleton (Roman) gets the body's final pose
@@ -2021,6 +2073,17 @@ func _resolve_pending_hits() -> void:
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
 	_took_moves(moves.size())
+	# Every blow that lands shows on him, whatever he is doing -- mid-punch
+	# included, where the reaction clip has to wait (below). A man fired up
+	# no-sells: he takes it without giving.
+	if hit_flinch and opponent and not combat.is_fired_up():
+		var last: MoveDef = moves[moves.size() - 1]
+		var strength := HitFlinch.strength_of(last)
+		hit_flinch.hit(opponent.global_position, HitFlinch.zone_of(last), strength)
+		var stop := hit_stop_ticks_for(strength)
+		if stop > 0:
+			hit_stop(stop)
+			opponent.hit_stop(stop)
 	if _would_be_knocked_down():
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
 		_pending_hit_reaction = null
@@ -2392,6 +2455,51 @@ func _turn_round_on_the_mat() -> void:
 	global_transform = Transform3D(global_transform.basis.rotated(Vector3.UP, PI),
 			global_position)
 	_snap_next_animation = true
+	if inertializer:
+		inertializer.skip_next_turn()
+	_hold_model_facing()
+
+
+## The body turns now, but the clip that matches it lands a tick later: a
+## state machine with no crossfade outputs the old state for one more tick
+## (Inertializer, measured). For that tick the man lay turned round in the
+## OLD pose -- his head flashed 1.2 m to the other side of him and back
+## (tools/probe/transition_pops.tscn --world, "DOWN (new clip)", 2.7 m kick).
+## So the model is held facing the way it was until his hips show the new
+## clip's half-turn, then let go on that same tick. Presentation only: the
+## body, and everything the match reads, turned at once as before.
+const MODEL_HOLD_TICKS := 4
+var _model_held := false
+var _model_held_hips := Quaternion.IDENTITY
+var _model_held_until := 0
+
+
+func _hold_model_facing() -> void:
+	var model := anim_player.get_parent() as Node3D if anim_player else null
+	if model == null or skeleton == null or anim_tree == null:
+		return
+	var hips := skeleton.find_bone(_skeleton_bone_name("pelvis"))
+	if hips < 0:
+		return
+	if not _model_held:
+		model.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * model.transform
+	_model_held = true
+	_model_held_hips = skeleton.get_bone_pose_rotation(hips)
+	_model_held_until = Engine.get_physics_frames() + MODEL_HOLD_TICKS
+	if not anim_tree.mixer_applied.is_connected(_release_model_facing):
+		anim_tree.mixer_applied.connect(_release_model_facing)
+
+
+func _release_model_facing() -> void:
+	if not _model_held:
+		return
+	var hips := skeleton.find_bone(_skeleton_bone_name("pelvis"))
+	var turned := _model_held_hips.angle_to(skeleton.get_bone_pose_rotation(hips)) > PI * 0.5
+	if not turned and Engine.get_physics_frames() < _model_held_until:
+		return
+	var model := anim_player.get_parent() as Node3D
+	model.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * model.transform
+	_model_held = false
 
 ## A thrown man left lying where the throw put him, without it counting as a
 ## knockdown.

@@ -7601,3 +7601,57 @@ The worst that remain:
 starting or stopping a run. The pose transitions are now smooth; the body's
 turn is not. This is a gameplay rotation, and facing decides whether strikes
 land, so it is a separate change.
+
+### Phase 3 — landings, turns, hit reactions and in-between life
+
+**Landing from a paired move.** When a turn-round on the mat changed the
+hips by half a turn, the inertializer cut the hips but still carried every
+other bone's difference. Those differences were now relative to hips facing
+the other way, so the legs swung 0.67 m into the air as the man landed.
+A turn-round now cuts the whole pose. The hand-off to DOWN, measured in world
+view (`transition_pops --world`), is back to a 0.06 m mean.
+
+**The one-frame flash on the mat.** `_turn_round_on_the_mat` turns the body
+at once, but the matching clip lands a tick later. For that tick the man
+lay turned round in the old pose, and his head flashed 1.2 m to the other
+side and back. This had been there all along. The model is now held facing
+the way it was until his hips show the new clip's half-turn, then released
+on that tick: 2.7 → 0.46 m.
+
+**Facing snaps.** The match snaps facing: `look_at()` on the running
+direction turns a man half round in one tick at the ropes and when he slows
+to a walk, 2.3 m at a hand. Facing is gameplay (it decides whether strikes
+land), so the body keeps its snap. The Inertializer tracks the body's yaw,
+and when it jumps more than 0.2 rad in a tick (turning is 0.12) the drawn
+man turns into it over 4–14 ticks. Teleports and the deliberate turn-round
+are skipped. RUN > LOCOMOTION in world view: 2.2 → 0.16 m mean.
+
+**Hit reactions: `HitFlinch`.** A flinch laid over whatever is playing,
+including a man mid-punch, who used to finish his swing without a flicker:
+- **Direction:** the upper body tips away from the blow, and turns if it
+  lands from the side.
+- **Height:** head shots snap the neck and head, body shots fold the spine,
+  and leg kicks buckle the struck knee.
+- **Size:** scaled by the move's damage.
+- **Shape:** it peaks in 2 ticks, rebounds once and settles in about a third
+  of a second. A fired-up man no-sells it.
+
+**Hit-stop.** On a heavy blow (a cross, a bionic elbow, a heavy kick), both
+men's drawn poses hold still for 3 ticks; on medium ones, for 2. The flinch
+keeps moving through it. The Inertializer holds the pose while the clip runs
+on underneath, then carries it back into the clip over 5 ticks. The first
+version stopped the clips themselves. That reset the AnimationTree's state
+machine (current node "Start"), and the struck man then played nothing for
+the rest of his reaction. It was caught by measuring before it shipped.
+
+**In-between life: `BodyLife`.** Applies while he is standing, moving or
+staggered:
+- **Watching:** head and neck follow the other man (60/40, within 70° of
+  yaw and 30° of pitch), and EyeAim finishes the look.
+- **Breathing:** 14 breaths a minute fresh, 32 spent, and deeper as he tires.
+- **Wearing down:** shoulders round and the head drops as damage mounts, on
+  Sweat's scale. A man fired up straightens.
+
+**Measurement note.** With facing smoothing in, the body-frame pop count is
+no longer meaningful: the drawn body turns relative to its own frame while
+it absorbs a snap. `--world`, what a viewer sees, is the reference from here.

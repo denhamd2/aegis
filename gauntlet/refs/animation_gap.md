@@ -218,9 +218,17 @@ Done so far:
   kicking over 5 cm fell from 64% to 40% over two seeded matches
   (`tools/probe/transition_pops.tscn`).
 
-Still to do: tuned per-edge times, transition clips (hit > stagger >
-recover), the paired hand-off to DOWN (1.3 m), smoothing the body's own
-facing snap, foot IK beyond the walk-in, hit reactions, and in-between life.
+- The landing after a paired move (a turn-round cuts the whole pose), the
+  one-frame flash as a man is turned round on the mat (model held until the
+  clip lands: 2.7 -> 0.46 m), and facing snaps turned out on screen
+  (RUN > LOCOMOTION in world view: 2.2 -> 0.16 m).
+- Hit reactions: `HitFlinch` (directional, by height, scaled by damage,
+  layered over any clip) and hit-stop (2-3 ticks on medium and heavy blows).
+- In-between life: `BodyLife` (head follows the opponent, breathing, a
+  slump that grows with damage).
+
+Still to do: transition clips (hit > stagger > recover), foot IK beyond the
+walk-in, idle variations.
 
 
 1. **Transitions.**

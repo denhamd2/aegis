@@ -30,6 +30,9 @@ var _budget := 5400
 var _pair: Array = []
 var _edges := false
 var _debug := false
+## --world: bones in world orientation less the body's position, so the way
+## he faces counts too -- what a viewer sees, turns included.
+var _world := false
 
 
 func _ready() -> void:
@@ -44,6 +47,7 @@ func _ready() -> void:
 			"--wrestlers": spec = args[i + 1]
 			"--edges": _edges = true
 			"--debug": _debug = true
+			"--world": _world = true
 	if _seeds.is_empty():
 		_seeds = [1, 2]
 	_pair = Roster.pair_from_spec(spec)
@@ -101,7 +105,8 @@ func _run(seed_value: int, edges: Dictionary, steady: Array) -> int:
 		var slot: Dictionary = drawn[i]
 		var cb := func() -> void:
 			for b: String in ids:
-				slot[b] = sk.get_bone_global_pose(ids[b]).origin
+				var o := sk.get_bone_global_pose(ids[b]).origin
+				slot[b] = sk.global_transform.basis * o if _world else o
 		sk.skeleton_updated.connect(cb)
 		hooks.append([sk, cb])
 	var prev := [{}, {}]
