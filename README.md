@@ -7875,3 +7875,51 @@ a pacing call.
   the drawn frame, so how often it samples depends on how many frames the
   machine draws per tick. It is noted here as timing-sensitive, not
   skipped or loosened.
+
+## Round: Phase 4 — the corner and the ropes
+
+The second half of "position" (gauntlet/refs/animation_gap.md). Where the
+two men are in the ring now changes what happens.
+
+- **Trapped in the corner.** A blow that drives a man back into a corner
+  (both |x| and |z| past 1.85 m, and the blow's line within ~80° of the
+  diagonal into it) no longer staggers him free. He is driven back into the
+  buckle over 8 ticks and hangs there: `Corner_Slump`, 1.5 s, with his arms
+  on the ropes behind him and his chin on his chest.
+- **Worked over there.** Each blow landed on a trapped man is taken in the
+  corner (`Corner_Hit`, 1.0 s, which restarts the hang), up to 3. The next
+  blow gets him out the usual way. The AI throws a quicker flurry at a
+  trapped man (every 18 ticks, against 40) and stays square in front of him.
+  A running attack into him is the corner charge.
+- **Rope breaks.** A man pinned or held within reach of the ropes (a hand
+  past his head, a hand to either side, or a foot, reaching 2.98 m or
+  further out) gets there. In a pin he starts reaching as the second count
+  lands and has the bottom rope 24 ticks later, which is after two and
+  before three. In a hold he fights for 60 ticks first. The referee breaks
+  it, and a rope break does not fire him up the way a kickout can. Never
+  under a finisher. `RopeReach`, a new skeleton modifier, draws the reach:
+  the limb whose shoulder or hip is nearest the rope goes out to the bottom
+  rope, with the same two-bone solve FootPlant uses.
+
+Deterministic throughout: the trap and the reach are decided from the two
+bodies' origins, never the skeleton.
+
+**Caught on the way.**
+- **Re-trapping loop.** Out of a trap he was still standing in the corner
+  with the other man in front of him, so the next blow trapped him straight
+  back. Seed 1 looped 62 traps and never finished. He now can't be trapped
+  again for 4 s after he gets out.
+- **A man who could not be knocked down.** Seed 1 still ran its full
+  budget, and the trace showed why. The limbs cap at 100 damage, so once
+  the limbs a man's strikes land on were full, `total_damage()` stopped
+  growing and knockdowns (measured on it) could never happen again. This is
+  a latent bug that predates this round; the corner flurries only made the
+  match long enough to reach it. `CombatSystem.wear` now keeps the uncapped
+  sum, and knockdowns and the AI's "ripe for the finish" check use it.
+  There is a new test for it.
+- **The AI ready to finish** waits for a trapped man to come out and locks
+  up then, rather than striking him.
+
+**Result** (reversal_tally, seeds 1–4): every match ends by pinfall. There
+were 3 corner traps with 6 blows taken in the corner, and 1 pin broken at
+the ropes. These are occasional moments, not the shape of every match.
