@@ -295,6 +295,53 @@ func is_reading() -> bool:
 
 
 func poll_input() -> Dictionary:
+	var input := _poll_input()
+	# Pacing: a worn man walks slower. Not a run -- a charge is a charge.
+	if controller and input.has("move") and not input.get("run", false):
+		input["move"] = (input["move"] as Vector2) * fatigue_walk_scale(
+				controller.combat.total_damage())
+	return input
+
+
+## In-between behaviour (Phase 4): how much slower a man walks, and how much
+## longer he waits between strikes, worn down by `damage` -- BodyLife's
+## "spent" scale, so he moves as tired as he looks.
+const FATIGUE_WALK_MIN := 0.7
+const FATIGUE_COOLDOWN_MAX := 1.5
+
+static func fatigue_of(damage: float) -> float:
+	return clampf(damage / BodyLife.DAMAGE_FULL, 0.0, 1.0)
+
+static func fatigue_walk_scale(damage: float) -> float:
+	return lerpf(1.0, FATIGUE_WALK_MIN, fatigue_of(damage))
+
+static func fatigue_cooldown_scale(damage: float) -> float:
+	return lerpf(1.0, FATIGUE_COOLDOWN_MAX, fatigue_of(damage))
+
+
+## Playing to the crowd (WrestlerController.begin_taunt): over a man just put
+## down, once to set up the finisher -- it is ready and he wants them to know
+## it -- and once after his power move lands. Decided in the first
+## TAUNT_WINDOW ticks he is down, or not at all for that knockdown.
+const TAUNT_WINDOW := 12
+var _setup_taunted := false
+var _power_taunted := false
+
+
+func _wants_taunt() -> bool:
+	if not controller.can_taunt() or target.fsm.current_state != WrestlerFSM.State.DOWN \
+			or target.fsm.ticks_in_state > TAUNT_WINDOW:
+		return false
+	if controller.combat.can_finisher() and controller.finisher_move and not _setup_taunted:
+		_setup_taunted = true
+		return true
+	if controller.last_landed_tier == CombatSystem.Tier.POWER and not _power_taunted:
+		_power_taunted = true
+		return true
+	return false
+
+
+func _poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
 	if controller.fsm.current_state == WrestlerFSM.State.PIN_DEFENDER:
@@ -355,6 +402,9 @@ func poll_input() -> Dictionary:
 	# guard in WrestlerController slides him round the legs if the straight
 	# line would clip them.
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
+		if _wants_taunt():
+			input["taunt"] = true
+			return input
 		var spot := WrestlerController.cover_approach_spot(target,
 				controller.global_position)
 		var to_spot := spot - controller.global_position
@@ -489,7 +539,8 @@ func poll_input() -> Dictionary:
 			# Fired up, he does not wait between shots: the comeback is a
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
-					if controller.combat.is_fired_up() else strike_cooldown_ticks
+					if controller.combat.is_fired_up() else int(strike_cooldown_ticks
+					* fatigue_cooldown_scale(controller.combat.total_damage()))
 			if cornered:
 				_cooldown = mini(_cooldown, corner_strike_cooldown_ticks)
 		elif cornered:

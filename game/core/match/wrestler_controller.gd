@@ -329,6 +329,7 @@ var hit_flinch: HitFlinch
 var body_life: BodyLife
 var foot_lock: FootLock
 var rope_reach: RopeReach
+var sell_clutch: SellClutch
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -407,6 +408,9 @@ const STATE_ANIMATIONS := {
 	# celebrates, so unlike every other entry here this one could not have
 	# borrowed a clip.
 	WrestlerFSM.State.VICTORY: "strikes/win_celebrate",
+	# Replaced per man by begin_taunt() with his own gesture (TAUNTS); this is
+	# the one a man with none of his own throws.
+	WrestlerFSM.State.TAUNT: "strikes/air_punch",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -622,6 +626,7 @@ func _ready() -> void:
 		_build_inertializer()
 		_build_body_life()
 		_build_hit_flinch()
+		_build_sell_clutch()
 		_build_foot_lock()
 		_build_rope_reach()
 		# Sweat over the match, on the skin materials the model registered.
@@ -1057,6 +1062,18 @@ func _build_foot_lock() -> void:
 	skeleton.add_child(foot_lock)
 
 
+## SellClutch: after HitFlinch and BodyLife, so the lean and the hand go on
+## top of the look and the breath; before FootLock, which keeps his feet down
+## under the lean.
+func _build_sell_clutch() -> void:
+	sell_clutch = SellClutch.new()
+	sell_clutch.name = "SellClutch"
+	for key: String in sell_clutch.bones.keys():
+		sell_clutch.bones[key] = _skeleton_bone_name(key)
+	sell_clutch.wrestler = self
+	skeleton.add_child(sell_clutch)
+
+
 ## RopeReach: after FootLock, so a foot reaching for the rope is not pinned
 ## back to the mat; before WornFollow, which carries it to his clothes.
 func _build_rope_reach() -> void:
@@ -1328,6 +1345,9 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current == WrestlerFSM.State.IDLE and _previous == WrestlerFSM.State.GETUP:
+		# Up off the mat, holding what hurts.
+		_begin_sell(most_hurt(combat.limb_damage, SELL_GETUP_MIN), SELL_GETUP_TICKS)
 	if current == WrestlerFSM.State.GRAPPLE_HOLD:
 		# A tie-up's hold chains (see "chain wrestling"); a running paired
 		# move's does not. Both men reset: either may end up the holder.
@@ -1433,7 +1453,12 @@ func _physics_process(delta: float) -> void:
 
 	match fsm.current_state:
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN:
-			_process_free_movement(delta, input)
+			if input.get("taunt", false) and can_taunt():
+				begin_taunt()
+			else:
+				_process_free_movement(delta, input)
+		WrestlerFSM.State.TAUNT:
+			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.STRIKE:
 			_process_active_move(input)
 		WrestlerFSM.State.TIE_UP:
@@ -1482,6 +1507,7 @@ func _physics_process(delta: float) -> void:
 
 	if rope_reach:
 		rope_reach.advance(fsm.is_in(ROPE_HOLD_STATES))
+	_tick_selling()
 	if _corner_lockout > 0:
 		_corner_lockout -= 1
 	_keep_off_downed_body(delta)
@@ -2118,6 +2144,110 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	# The damage itself still goes through the deferred queue below.
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
+
+# --- in-between behaviour (gauntlet/refs/animation_gap.md, Phase 4) ----------
+#
+# What a man does between moves, past what BodyLife already gives him
+# (breathing, the tired slump, eyes on his man, fidgets):
+#
+#   * He plays to the crowd. A TAUNT is his own gesture -- Roman's finger to
+#     the crowd, Cody's "whoa", the air punch for anyone else -- thrown over a
+#     man who is down: once to set up his finisher, once after a power move
+#     lands (WrestlerAI decides when). The crowd pops for it.
+#   * He sells. Coming up off the mat, and every so often standing, he holds
+#     the part that has taken the most -- a hand to the head, the ribs, the
+#     knee, the shoulder -- leaning into it (SellClutch).
+#   * He paces himself. A worn man walks slower and throws less often
+#     (WrestlerAI.fatigue_scale).
+
+## Each man's taunt: clip and how long he holds it, in ticks. Keyed by
+## entrance_style, which is who he is.
+const TAUNTS := {
+	"roman": ["strikes/finger_raise", 110],
+	"cody": ["strikes/whoa_low", 140],
+	"": ["strikes/air_punch", 90],
+}
+const TAUNTS_MAX := 2
+## Selling: coming up off the mat he holds the part that has taken at least
+## SELL_GETUP_MIN, for SELL_GETUP_TICKS; standing, one that has taken
+## SELL_IDLE_MIN, for SELL_IDLE_TICKS, every SELL_EVERY ticks or so (seeded
+## per man, so two never sell in step).
+const SELL_GETUP_MIN := 20.0
+const SELL_GETUP_TICKS := 75
+const SELL_IDLE_MIN := 45.0
+const SELL_IDLE_TICKS := 60
+const SELL_EVERY := Vector2i(300, 540)
+
+var _sell_clock := -1
+var _sell_draws := 0
+## Sells begun this match (probes).
+var sells := 0
+
+
+func _tick_selling() -> void:
+	if sell_clutch == null:
+		return
+	var free := fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
+	sell_clutch.advance(free)
+	if not free:
+		return
+	if _sell_clock < 0:
+		_sell_clock = _next_sell_wait()
+	_sell_clock -= 1
+	if _sell_clock > 0:
+		return
+	_sell_clock = _next_sell_wait()
+	_begin_sell(most_hurt(combat.limb_damage, SELL_IDLE_MIN), SELL_IDLE_TICKS)
+
+
+func _next_sell_wait() -> int:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([name, _sell_draws, "sell"])
+	_sell_draws += 1
+	return rng.randi_range(SELL_EVERY.x, SELL_EVERY.y)
+
+
+func _begin_sell(part: String, ticks: int) -> void:
+	if part == "" or sell_clutch == null:
+		return
+	sell_clutch.sell(part, ticks)
+	sells += 1
+
+signal taunted(wrestler: WrestlerController)
+
+var taunts_used := 0
+
+
+func taunt_ticks() -> int:
+	return int((TAUNTS.get(entrance_style, TAUNTS[""]) as Array)[1])
+
+
+func can_taunt() -> bool:
+	return taunts_used < TAUNTS_MAX and fsm.is_in([WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION])
+
+
+func begin_taunt() -> void:
+	var t: Array = TAUNTS.get(entrance_style, TAUNTS[""])
+	taunts_used += 1
+	_set_state_clip(WrestlerFSM.State.TAUNT, String(t[0]))
+	_start_move(WrestlerFSM.State.TAUNT, _timed_stub(int(t[1])))
+	taunted.emit(self)
+
+
+## The part of him that has taken the most, as SellClutch names it, or "" if
+## nothing has taken enough to sell.
+static func most_hurt(limb_damage: Dictionary, at_least: float) -> String:
+	var best := ""
+	var most := at_least
+	for pair: Array in [[CombatSystem.Limb.HEAD, "head"], [CombatSystem.Limb.TORSO, "torso"],
+			[CombatSystem.Limb.LEGS, "legs"], [CombatSystem.Limb.ARMS, "arms"]]:
+		var d: float = limb_damage.get(pair[0], 0.0)
+		if d >= most:
+			most = d
+			best = pair[1]
+	return best
+
 
 # --- chain wrestling (gauntlet/refs/animation_gap.md, Phase 4) ---------------
 #

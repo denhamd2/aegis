@@ -35,6 +35,7 @@ func _ready() -> void:
 				% [s, r["ticks"], r["strikes"], r["chances"], r["read"], r["countered"], r["stam_a"], r["stam_b"], r["end"]])
 		print("    ground attacks: ", r["ground"])
 		print("    chain holds: ", r["chain"], "  reversed: ", r["chain_rev"])
+		print("    taunts %d, sells %d" % [r["taunts"], r["sells"]])
 		print("    corner traps %d, hits in the corner %d, rope breaks %d (pins %d)"
 				% [r["traps"], r["corner_hits"], r["rope_breaks"], r["rope_pins"]])
 	print("REV_DONE strikes %d, read %d (%.0f%%), counters landed %d"
@@ -49,7 +50,7 @@ func _run(seed_value: int) -> Dictionary:
 	add_child(scene)
 	var ws: Array[WrestlerController] = [scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]
 	var r := {"ticks": 0, "strikes": 0, "read": 0, "countered": 0, "end": "no finish", "ground": {},
-			"traps": 0, "corner_hits": 0, "chain": {}, "chain_rev": 0, "rope_breaks": 0, "rope_pins": 0}
+			"traps": 0, "corner_hits": 0, "chain": {}, "chain_rev": 0, "taunts": 0, "sells": 0, "rope_breaks": 0, "rope_pins": 0}
 	var referee: MatchReferee = scene.get_node("MatchReferee")
 	var over := [false]
 	referee.match_won.connect(func(w, m): over[0] = true; r["end"] = "%s by %s" % [w.name, m])
@@ -61,6 +62,7 @@ func _run(seed_value: int) -> Dictionary:
 		w.is_ai = true
 		w.reversed.connect(func(_rev, _st, _m): r["read"] += 1)
 		w.chain_reversed.connect(func(_a, _b): r["chain_rev"] += 1)
+		w.taunted.connect(func(_w): r["taunts"] += 1)
 		w.chain_hold_landed.connect(func(_a, _d, m: MoveDef):
 			var k := String(m.resource_path).get_file().get_basename().trim_prefix("chain_")
 			r["chain"][k] = int(r["chain"].get(k, 0)) + 1)
@@ -91,6 +93,7 @@ func _run(seed_value: int) -> Dictionary:
 				corner_hits_seen[i] = ws[i]._corner_hits
 			trapped[i] = t
 	r["chances"] = ws[0].ai._reversal_rolls + ws[1].ai._reversal_rolls
+	r["sells"] = ws[0].sells + ws[1].sells
 	r["stam_a"] = ws[0].combat.stamina
 	r["stam_b"] = ws[1].combat.stamina
 	scene.queue_free()

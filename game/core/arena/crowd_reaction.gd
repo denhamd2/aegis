@@ -29,6 +29,8 @@ const PIN_TENSION := 0.22
 const PIN_PER_COUNT := 0.2
 const POP_NEAR_FALL := 1.0
 const POP_FIRED_UP := 0.55
+## Playing to the crowd (WrestlerController.begin_taunt): they answer him.
+const POP_TAUNT := 0.6
 ## The finish: full, held while the winner celebrates.
 const WIN_HOLD := 8.0
 ## Phone flashes during an entrance, per figure per second. There are a few
@@ -51,6 +53,7 @@ func watch(referee: MatchReferee, wrestlers: Array) -> void:
 	for w: WrestlerController in wrestlers:
 		w.move_landed.connect(_on_move_landed)
 		w.fired_up.connect(func(_w): pop(POP_FIRED_UP))
+		w.taunted.connect(func(_w): pop(POP_TAUNT))
 	referee.match_won.connect(_on_match_won)
 
 

@@ -5,7 +5,7 @@ extends Node
 ##   xvfb-run -a godot4 --path game --rendering-driver opengl3 --fixed-fps 60 \
 ##       --resolution 960x540 tools/probe/hit_shot.tscn -- --out /tmp/hits \
 ##       [--seed 1 --hits 2 --min 0.9 --wrestlers roman,cody]
-##       [--ground | --reversals | --corner | --ropes] [--dry]
+##       [--ground | --reversals | --corner | --ropes | --taunt | --sell] [--dry]
 ##
 ## Each blow is framed from the side of the line between the two men.
 
@@ -26,6 +26,9 @@ var _ground := false
 var _corner := false
 ## --ropes: film a rope break, from the moment he reaches for the rope.
 var _ropes := false
+## --taunt: film a man playing to the crowd; --sell: a man selling a hurt part.
+var _taunt := false
+var _sell := false
 
 
 func _ready() -> void:
@@ -43,6 +46,8 @@ func _ready() -> void:
 			"--ground": _ground = true
 			"--corner": _corner = true
 			"--ropes": _ropes = true
+			"--taunt": _taunt = true
+			"--sell": _sell = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec(_spec)
 	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
@@ -77,17 +82,24 @@ func _ready() -> void:
 				elif ws[i]._ground_zone == "":
 					seen[i] = 0
 			continue
-		if _corner or _ropes:
+		if _corner or _ropes or _taunt or _sell:
 			for i in 2:
-				var on: bool = ws[i].is_corner_trapped() if _corner \
-						else (ws[i].rope_reach != null and ws[i].rope_reach.is_reaching())
+				var on: bool
+				if _corner:
+					on = ws[i].is_corner_trapped()
+				elif _ropes:
+					on = ws[i].rope_reach != null and ws[i].rope_reach.is_reaching()
+				elif _taunt:
+					on = ws[i].fsm.current_state == WrestlerFSM.State.TAUNT
+				else:
+					on = ws[i].sell_clutch != null and ws[i].sell_clutch.is_selling()
 				if on and seen[i] == 0:
 					seen[i] = 1
 					if _dry:
-						print("%s t%d %s" % ["CORNER" if _corner else "ROPE", tick, ws[i].name])
+						print("EVENT t%d %s" % [tick, ws[i].name])
 						shot += 1
 					elif tick >= _skip:
-						await _film(cam, ws[i], ws[1 - i], shot, 90 if _corner else 60)
+						await _film(cam, ws[i], ws[1 - i], shot, 90 if _corner or _taunt else 60)
 						shot += 1
 				elif not on:
 					seen[i] = 0
