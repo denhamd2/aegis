@@ -59,6 +59,9 @@ func _ready() -> void:
 	var shot := 0
 	var tick := 0
 	while shot < _hits and tick < 20000:
+		# Nothing is looked at before --skip, so nothing is drawn: software
+		# rendering every frame cannot reach a moment deep in a match.
+		RenderingServer.render_loop_enabled = _dry == false and tick >= _skip - 5
 		await get_tree().physics_frame
 		tick += 1
 		if _ground:
