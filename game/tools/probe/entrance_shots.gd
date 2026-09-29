@@ -19,6 +19,10 @@ var _frame := 0
 var _until := -1
 ## --faceoff: skip both entrances and start on the face-off, men on marks.
 var _faceoff := false
+## --sparse: draw only the frames that are saved. A software renderer takes
+## ~20x real time per drawn frame; a storyboard of the whole entrance every
+## few seconds then costs minutes, not an hour. The run itself is unchanged.
+var _sparse := false
 
 
 func _ready() -> void:
@@ -32,6 +36,8 @@ func _ready() -> void:
 			_until = int(args[i + 1])
 		elif args[i] == "--faceoff":
 			_faceoff = true
+		elif args[i] == "--sparse":
+			_sparse = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec("")
 	var scene: Node = load(MATCH_SCENE).instantiate()
@@ -55,7 +61,12 @@ func _ready() -> void:
 	var last_beat := -1
 	var after := 0
 	while after < 30:
-		await RenderingServer.frame_post_draw
+		if _sparse:
+			RenderingServer.render_loop_enabled = _frame % _every == 0
+		if RenderingServer.render_loop_enabled:
+			await RenderingServer.frame_post_draw
+		else:
+			await get_tree().process_frame
 		if director._beat != last_beat and director._beat < director._beats.size():
 			last_beat = director._beat
 			var b: Dictionary = director._beats[last_beat]

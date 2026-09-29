@@ -45,6 +45,14 @@ var _match_over := false
 ## re-run to that frame without drawing or saving, then carries on. A two-hour
 ## software-rendered recording otherwise dies with the container.
 var _resume := false
+## --audio-only: the same run, drawn by nobody and saved nowhere, for a
+## Movie Maker pass that only wants the sound (--write-movie x.avi at a tiny
+## --resolution). The run is frame-for-frame the recorded one, so the .wav
+## lines up with the JPEGs; see the note on _first_process_frame.
+var _audio_only := false
+## Engine process frame the first saved JPEG is, printed so an audio pass
+## (whose Movie Maker frame 0 is the engine's first frame) can be trimmed to it.
+var _first_process_frame := -1
 var _resume_at := 0
 ## Two things made a run unrepeatable, so --resume could never line up:
 ## TitleScreen._launch() seeds the match with randi_range() off an engine RNG
@@ -65,6 +73,8 @@ func _ready() -> void:
 			_match_seconds = float(args[i + 1])
 		elif args[i] == "--resume":
 			_resume = true
+		elif args[i] == "--audio-only":
+			_audio_only = true
 		elif args[i] == "--seed" and i + 1 < args.size():
 			_seed = int(args[i + 1])
 	seed(_seed)
@@ -150,6 +160,14 @@ func _record(seconds: float) -> void:
 
 
 func _record_frame() -> void:
+	if _first_process_frame < 0:
+		_first_process_frame = Engine.get_process_frames()
+		print("TITLE_VIDEO first frame is engine process frame ", _first_process_frame)
+	if _audio_only:
+		RenderingServer.render_loop_enabled = false
+		await get_tree().process_frame
+		_frame += 1
+		return
 	if _frame < _resume_at:
 		await get_tree().process_frame
 		_frame += 1

@@ -75,6 +75,11 @@ func _ready() -> void:
 	crowd.name = "CrowdReaction"
 	add_child(crowd)
 	crowd.watch(referee, [wrestler_a, wrestler_b])
+	# ...and what it all sounds like (MatchAudio), off the same signals.
+	audio = MatchAudio.new()
+	audio.name = "MatchAudio"
+	add_child(audio)
+	audio.watch(referee, [wrestler_a, wrestler_b], crowd)
 	# The two ringside sign fans (SignFans), built with the arena.
 	var sign_fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
 	if sign_fans:
@@ -99,6 +104,7 @@ func _ready() -> void:
 		director.name = "EntranceDirector"
 		add_child(director)
 		director.bell.connect(_begin_live)
+		audio.follow(director)
 		if sign_fans:
 			sign_fans.follow(director)
 		director.begin(self)
@@ -106,10 +112,13 @@ func _ready() -> void:
 		_begin_live()
 
 var _replay: ReplayResource = null
+var audio: MatchAudio = null
 
 ## The bell: the recording starts here, whether it is tick 1 or the end of the
 ## entrances.
 func _begin_live() -> void:
+	if audio:
+		audio.opening_bell()
 	if ReplaySystem:
 		if _replay:
 			ReplaySystem.start_playback(_replay)

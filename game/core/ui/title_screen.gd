@@ -92,6 +92,13 @@ var _stinger_covered := false
 ## Resources loaded in the background from the VS card on, so the swap under
 ## the stinger does not freeze on the two .glb files.
 var _preloads: Array[String] = []
+## The menu's sounds, and the hall murmuring behind it. Heard off what
+## changed each frame (_listen) rather than wired into every input path, so a
+## mouse hover, a key and a probe calling _accept() all sound the same.
+var _sfx: SfxPool
+var _heard := []
+## The crowd under the menu, quieter than in the hall.
+const MENU_CROWD_DB := -16.0
 
 
 func _ready() -> void:
@@ -102,6 +109,10 @@ func _ready() -> void:
 	_glow = TitleArt.make_glow_texture()
 	_vignette = TitleArt.make_vignette_texture()
 	_roster = Roster.entries()
+	_sfx = SfxPool.new()
+	_sfx.name = "Sfx"
+	add_child(_sfx)
+	_sfx.make_loop("crowd_bed").volume_db = MENU_CROWD_DB
 	_menu = [MENU_FIGHT, MENU_CONTROLS]
 	if not OS.has_feature("web"):
 		_menu.append(MENU_QUIT)
@@ -116,6 +127,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_listen()
 	if phase == Phase.VERSUS:
 		_versus_time += delta
 		if _versus_time >= VERSUS_HOLD:
@@ -248,7 +260,31 @@ func _preloads_ready() -> bool:
 	return true
 
 
+func _listen() -> void:
+	var now := [phase, menu_index, cursor, picks.size()]
+	if _heard.is_empty():
+		_heard = now
+		return
+	if now == _heard:
+		return
+	if now[0] == Phase.LAUNCH:
+		_heard = now
+		return
+	if now[3] > _heard[3] or (now[0] != _heard[0] and now[0] > _heard[0]):
+		if now[0] == Phase.VERSUS:
+			_sfx.play("whoosh", -2.0)
+			_sfx.play("pyro_boom", -6.0)
+		else:
+			_sfx.play("ui_select", -6.0)
+	elif now[3] < _heard[3] or now[0] < _heard[0]:
+		_sfx.play("ui_back", -6.0)
+	elif now[1] != _heard[1] or now[2] != _heard[2]:
+		_sfx.play("ui_move", -8.0)
+	_heard = now
+
+
 func _start_stinger() -> void:
+	_sfx.play("whoosh", 0.0)
 	_stinger = MatchStinger.new()
 	_stinger.setup(picks[0], picks[1])
 	_stinger.covered.connect(func() -> void: _stinger_covered = true)

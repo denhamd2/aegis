@@ -27,6 +27,8 @@ signal bell
 ## Each beat as it starts, with the shot it is on (SignFans stands up for the
 ## stare-down's).
 signal beat_started(shot: String)
+## Every cue a beat fires (pyro, tron, lights), for the sound (MatchAudio).
+signal cue(what: String)
 
 # --- Pace and the travelling clips (tools/blender/wrestling_clips.py) --------
 ## The speed Entrance_Walk's planted foot travels at. Must match the clip.
@@ -1003,6 +1005,7 @@ static func _with(base: Dictionary, beat: Dictionary) -> Dictionary:
 
 ## A cue inside a beat.
 func _event(w: WrestlerController, what: String) -> void:
+	cue.emit(what)
 	var props: EntranceProps = _props.get(w)
 	match what:
 		"title_held":
