@@ -17,6 +17,8 @@ var _spec := ""
 var _dry := false
 ## --skip N: run the first N ticks headless-fast before looking.
 var _skip := 0
+## --reversals: film parries (WrestlerController.reversed) instead of blows.
+var _reversals := false
 
 
 func _ready() -> void:
@@ -30,6 +32,7 @@ func _ready() -> void:
 			"--wrestlers": _spec = args[i + 1]
 			"--dry": _dry = true
 			"--skip": _skip = int(args[i + 1])
+			"--reversals": _reversals = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec(_spec)
 	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
@@ -48,6 +51,17 @@ func _ready() -> void:
 	while shot < _hits and tick < 20000:
 		await get_tree().physics_frame
 		tick += 1
+		if _reversals:
+			for i in 2:
+				if ws[i].reversals_landed > seen[i]:
+					seen[i] = ws[i].reversals_landed
+					if _dry:
+						print("REVERSAL t%d %s" % [tick, ws[i].name])
+						shot += 1
+					elif tick >= _skip:
+						await _film(cam, ws[1 - i], ws[i], shot, 24)
+						shot += 1
+			continue
 		for i in 2:
 			var f := ws[i].hit_flinch
 			if f == null:
@@ -69,7 +83,7 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-func _film(cam: Camera3D, victim: WrestlerController, hitter: WrestlerController, n: int) -> void:
+func _film(cam: Camera3D, victim: WrestlerController, hitter: WrestlerController, n: int, ticks := 16) -> void:
 	var mid := (victim.global_position + hitter.global_position) * 0.5
 	var line := victim.global_position - hitter.global_position
 	line.y = 0.0
@@ -77,7 +91,7 @@ func _film(cam: Camera3D, victim: WrestlerController, hitter: WrestlerController
 	cam.global_position = mid + side * 3.6 + Vector3.UP * 1.3
 	cam.look_at(mid + Vector3.UP * 1.1, Vector3.UP)
 	cam.current = true
-	for t in 16:
+	for t in ticks:
 		await RenderingServer.frame_post_draw
 		if t % 2 == 0:
 			get_viewport().get_texture().get_image().save_png("%s/hit%d_%02d.png" % [_out, n, t])
