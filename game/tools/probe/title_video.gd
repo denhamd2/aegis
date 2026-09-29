@@ -5,6 +5,7 @@ extends Node
 ## Usage:
 ##   xvfb-run -a godot4 --path game --resolution 1280x720 --fixed-fps 30 \
 ##       tools/probe/title_video.tscn -- --out /tmp/frames --match-seconds 40
+##   (add --resume to carry on from the frames already in --out)
 ##   ffmpeg -framerate 30 -i /tmp/frames/f_%05d.jpg -c:v libx264 out.mp4
 ##
 ## --fixed-fps 30 against the project's 60Hz physics means two physics ticks
@@ -39,6 +40,20 @@ var _fps := 30.0
 ## to a captured `var over` inside one leaves the outer copy false forever and
 ## the recording runs its whole budget past the finish.
 var _match_over := false
+## --resume: frames already on disk from an interrupted run. The recording is
+## deterministic (fixed fps, presses on fixed frame counts), so the game is
+## re-run to that frame without drawing or saving, then carries on. A two-hour
+## software-rendered recording otherwise dies with the container.
+var _resume := false
+var _resume_at := 0
+## Two things made a run unrepeatable, so --resume could never line up:
+## TitleScreen._launch() seeds the match with randi_range() off an engine RNG
+## Godot randomizes at start-up, and the launch waits on threaded preloads,
+## which finish after however much wall time the renderer happened to take.
+## Seeding the global RNG and loading the scenes into the cache up front makes
+## both a fixed number of frames. Held here so the cache keeps them.
+var _seed := 2
+var _held: Array[Resource] = []
 
 
 func _ready() -> void:
@@ -48,7 +63,22 @@ func _ready() -> void:
 			_out_dir = args[i + 1]
 		elif args[i] == "--match-seconds" and i + 1 < args.size():
 			_match_seconds = float(args[i + 1])
+		elif args[i] == "--resume":
+			_resume = true
+		elif args[i] == "--seed" and i + 1 < args.size():
+			_seed = int(args[i + 1])
+	seed(_seed)
+	for path: String in ["res://scenes/match.tscn", "res://scenes/roman_model.tscn",
+			"res://scenes/cody_model.tscn"]:
+		_held.append(load(path))
 	DirAccess.make_dir_recursive_absolute(_out_dir)
+	if _resume:
+		for file in DirAccess.get_files_at(_out_dir):
+			if file.begins_with("f_") and file.ends_with(".jpg"):
+				_resume_at += 1
+		if _resume_at > 0:
+			print("TITLE_VIDEO resuming at frame ", _resume_at)
+			RenderingServer.render_loop_enabled = false
 
 	# Deferred, and awaited before current_scene is set: root is still setting
 	# up ITS children while this _ready() runs and refuses a direct add_child()
@@ -120,6 +150,12 @@ func _record(seconds: float) -> void:
 
 
 func _record_frame() -> void:
+	if _frame < _resume_at:
+		await get_tree().process_frame
+		_frame += 1
+		if _frame == _resume_at:
+			RenderingServer.render_loop_enabled = true
+		return
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.save_jpg("%s/f_%05d.jpg" % [_out_dir, _frame], 0.88)
