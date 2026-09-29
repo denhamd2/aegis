@@ -2044,7 +2044,13 @@ func _process_active_move(input: Dictionary) -> void:
 		_turn_toward_opponent()
 
 
-	if in_active_frames and opponent and _strike_reaches(_active_move) \
+	if _ground_zone != "":
+		_tick_ground_step()
+		if in_active_frames and opponent and not _active_move_hit_applied:
+			_active_move_hit_applied = true
+			if DOWNED_STATES.has(opponent.fsm.current_state):
+				opponent._take_ground_hit(self, _active_move, _ground_zone)
+	elif in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
 			and not _active_move_hit_applied:
 		_active_move_hit_applied = true
@@ -2056,6 +2062,7 @@ func _process_active_move(input: Dictionary) -> void:
 	if _move_ticks_remaining <= 0:
 		_active_move_hit_applied = false
 		_active_move = null
+		_ground_zone = ""
 		# A hit taken mid-strike was held back so this punch could land; pay
 		# it now. CONSUMED, not queued -- an unconsumed one-shot request spent
 		# on an unrelated hit later is a bug this project has had once already
@@ -2075,6 +2082,130 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	# The damage itself still goes through the deferred queue below.
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
+
+# --- ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position) -------
+#
+# A man down is worked before he is covered, and what he gets depends on where
+# the other man is standing: at his feet, a stomp to the legs -- the damage
+# Cody's Figure-Four is built on; beside him, a stomp to the body; at his
+# head, a fist driven down from one knee. MatchReferee starts one when the
+# standing man is in reach of one of those three, up to GROUND_ATTACKS_MAX
+# per knockdown; the man on the mat stays down while he takes them.
+
+const GROUND_STOMP_LEGS := preload("res://resources/moves/ground_stomp_legs.tres")
+const GROUND_STOMP_BODY := preload("res://resources/moves/ground_stomp_body.tres")
+const GROUND_FIST := preload("res://resources/moves/ground_fist.tres")
+const GROUND_ATTACKS_MAX := 2
+## Along a downed man from his pelvis (his own -Z is toward his head): past
+## HEAD_ZONE_Z he is at the head, past LEGS_ZONE_Z at the legs.
+const HEAD_ZONE_Z := -0.55
+const LEGS_ZONE_Z := 0.30
+## Where the attacker stands from the point he hits: the stomping boot and the
+## fist both land this far in front of him (Ground_Stomp / Ground_Fist).
+const GROUND_REACH := 0.45
+## And how near he has to be to it for a ground attack to start at all.
+const GROUND_START_RANGE := 0.9
+## Ticks he takes to step onto his mark as it starts.
+const GROUND_STEP_TICKS := 6
+## A man hit on the mat stays down at least this much longer.
+const GROUND_HOLD_DOWN_TICKS := 30
+
+var ground_attacks_taken := 0
+var _ground_zone := ""
+var _ground_step_left := 0
+var _ground_step: Vector3 = Vector3.ZERO
+
+
+## Which part of a downed `victim` a man standing at `pos` is at.
+static func downed_zone(victim: WrestlerController, pos: Vector3) -> String:
+	return zone_along_body((victim.global_transform.affine_inverse() * pos).z)
+
+
+## The zone at `z` metres along a downed man from his pelvis, toward his feet.
+static func zone_along_body(z: float) -> String:
+	if z <= HEAD_ZONE_Z:
+		return "head"
+	if z >= LEGS_ZONE_Z:
+		return "legs"
+	return "body"
+
+
+static func ground_move_for(zone: String) -> MoveDef:
+	match zone:
+		"head": return GROUND_FIST
+		"legs": return GROUND_STOMP_LEGS
+	return GROUND_STOMP_BODY
+
+
+## The point on a downed man a ground attack in `zone` lands on, on the mat.
+static func ground_target(victim: WrestlerController, zone: String) -> Vector3:
+	var bone := {"head": "Head", "legs": "calf_r", "body": "spine_02"}[zone] as String
+	var sk := victim.skeleton
+	var p := victim.global_position
+	if sk:
+		var i := sk.find_bone(victim._skeleton_bone_name(bone))
+		if i >= 0:
+			p = sk.global_transform * sk.get_bone_global_pose(i).origin
+	p.y = victim.global_position.y
+	return p
+
+
+## Whether a ground attack can start now on `victim`, from here.
+func can_ground_attack(victim: WrestlerController) -> bool:
+	if not DOWNED_STATES.has(victim.fsm.current_state) or victim.fsm.current_state != WrestlerFSM.State.DOWN:
+		return false
+	if victim.ground_attacks_taken >= GROUND_ATTACKS_MAX:
+		return false
+	var zone := downed_zone(victim, global_position)
+	var move := ground_move_for(zone)
+	if victim._move_ticks_remaining < move.startup_frames + 6:
+		return false
+	var flat := ground_target(victim, zone) - global_position
+	flat.y = 0.0
+	return flat.length() <= GROUND_START_RANGE
+
+
+func begin_ground_attack(victim: WrestlerController) -> void:
+	var zone := downed_zone(victim, global_position)
+	var move := ground_move_for(zone)
+	var target := ground_target(victim, zone)
+	var flat := target - global_position
+	flat.y = 0.0
+	var dir := flat.normalized() if flat.length() > 0.01 else -global_basis.z
+	look_at(global_position + dir, Vector3.UP)
+	_play_strike_clip(move)
+	_start_move(WrestlerFSM.State.STRIKE, move)
+	combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * move.total_frames())
+	_ground_zone = zone
+	# Onto his mark over the first few ticks: GROUND_REACH short of the point.
+	var mark := target - dir * GROUND_REACH
+	_ground_step = (mark - global_position) / float(GROUND_STEP_TICKS)
+	_ground_step.y = 0.0
+	_ground_step_left = GROUND_STEP_TICKS
+	# He is going nowhere while he is being worked.
+	victim._move_ticks_remaining = maxi(victim._move_ticks_remaining,
+			move.startup_frames + GROUND_HOLD_DOWN_TICKS)
+
+
+func _tick_ground_step() -> void:
+	if _ground_step_left <= 0:
+		velocity = Vector3.ZERO
+		return
+	_ground_step_left -= 1
+	velocity = _ground_step * float(Engine.physics_ticks_per_second)
+
+
+## A ground attack landing on this man, down.
+func _take_ground_hit(attacker: WrestlerController, move: MoveDef, zone: String) -> void:
+	ground_attacks_taken += 1
+	combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if attacker.combat.is_fired_up() else 1.0)
+	_took_moves(1)
+	attacker.combat.apply_momentum(move)
+	attacker.move_landed.emit(attacker, self, move)
+	_move_ticks_remaining = maxi(_move_ticks_remaining, GROUND_HOLD_DOWN_TICKS)
+	if hit_flinch:
+		hit_flinch.hit(attacker.global_position, zone, HitFlinch.strength_of(move))
+
 
 # --- reversals (gauntlet/refs/animation_gap.md, Phase 4) ---------------------
 #
@@ -2624,6 +2755,7 @@ func _release_model_facing() -> void:
 ## back on his feet.
 func _lie_down_after_throw() -> void:
 	fsm.transition_to(WrestlerFSM.State.DOWN)
+	ground_attacks_taken = 0
 	_move_ticks_remaining = THROWN_DOWN_TICKS
 	_cover_eligible = false
 
@@ -2631,6 +2763,7 @@ func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
+	ground_attacks_taken = 0
 	_damage_at_last_knockdown = combat.total_damage()
 	_move_ticks_remaining = GETUP_TICKS
 	combat.cut_off_comeback()

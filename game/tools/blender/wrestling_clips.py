@@ -1055,6 +1055,64 @@ CLIPS = {
         (12, P()),
     ],
 
+    # Ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position).
+    # A man down is worked before he is covered, and what he gets depends on
+    # where the other man stands: at his legs or body, a stomp; at his head,
+    # a fist driven down from one knee.
+    #
+    # 18 frames / 0.6s: the STOMP. Knee up and eyes on the target, then the
+    # boot driven flat down to 0.24 m -- the top of a man lying on the mat,
+    # not the canvas -- with the body dropping behind it. Contact frame 7 =
+    # tick 14, ground_stomp.tres's startup.
+    "Ground_Stomp": [
+        (0,  P()),
+        (4,  P(pelvis=(0.02, 0.0, 0.870), spine=(-14, 0, 0), head=(-28, 0, 0),
+               foot_r=(0.12, 0.30, 0.46), knee_r=(0.2, 1.0, 0.4),
+               hand_r=(0.30, 0.20, 1.20), hand_l=(-0.30, 0.24, 1.22))),
+        (7,  P(pelvis=(0.02, 0.04, 0.820), spine=(-20, 0, 0), head=(-34, 0, 0),
+               foot_r=(0.10, 0.46, 0.24), knee_r=(0.2, 1.0, 0.3),
+               hand_r=(0.34, 0.10, 1.10), hand_l=(-0.34, 0.14, 1.12))),
+        (10, P(pelvis=(0.02, 0.02, 0.840), spine=(-16, 0, 0), head=(-30, 0, 0),
+               foot_r=(0.12, 0.40, 0.30), knee_r=(0.2, 1.0, 0.3))),
+        (18, P()),
+    ],
+
+    # 22 frames / 0.733s: the FIST DROP, at the head. Down onto the left
+    # knee beside him, right hand cocked at the shoulder, then driven down to
+    # his head at 0.26 m. Contact frame 11 = tick 22, ground_fist.tres's.
+    "Ground_Fist": [
+        (0,  P()),
+        # A step, not a slide: the right foot lifts to go forward into the
+        # kneel. Sliding it along the mat between the stance and the kneel
+        # drove its ball 7 cm into the canvas (PoseLint below_mat).
+        (3,  P(pelvis=(0.0, 0.03, 0.780), spine=(-18, 0, 0), head=(-20, 0, 0),
+               foot_r=(0.19, 0.10, 0.20), knee_r=(0.2, 1.0, 0.3), ankle_r=(-10, 0, 0),
+               hand_r=(0.24, 0.20, 1.10))),
+        (7,  P(pelvis=(0.0, 0.04, 0.520), hips=(-6, 0, 0), spine=(-40, 0, 0),
+               head=(-36, 0, 0),
+               foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+               foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+               ankle_l=(40, 0, 0),
+               hand_r=(0.22, 0.12, 1.00), hand_l=(-0.20, 0.36, 0.60))),
+        (11, P(pelvis=(0.0, 0.08, 0.450), hips=(-8, 0, 0), spine=(-55, -10, 0),
+               head=(-40, 0, 0), clav_r=(0, -12, 0),
+               foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+               foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+               ankle_l=(40, 0, 0),
+               hand_r=(0.04, 0.58, 0.26), hand_l=(-0.22, 0.34, 0.58))),
+        (14, P(pelvis=(0.0, 0.06, 0.480), hips=(-6, 0, 0), spine=(-48, -4, 0),
+               head=(-38, 0, 0),
+               foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+               foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+               ankle_l=(40, 0, 0),
+               hand_r=(0.14, 0.40, 0.60), hand_l=(-0.20, 0.36, 0.60))),
+        # And a step back out of it.
+        (18, P(pelvis=(0.0, 0.03, 0.760), spine=(-20, 0, 0), head=(-20, 0, 0),
+               foot_r=(0.19, 0.08, 0.20), knee_r=(0.2, 1.0, 0.3), ankle_r=(-10, 0, 0),
+               hand_r=(0.24, 0.26, 1.10))),
+        (22, P()),
+    ],
+
     # 20 frames / 0.667s: the REVERSAL (gauntlet/refs/animation_gap.md,
     # Phase 4). The old counters were cut because they did not read -- a
     # strike simply vanished. This one is two beats the eye cannot miss: the

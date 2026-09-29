@@ -7833,3 +7833,45 @@ models loaded. Now it plays like a broadcast stinger:
 
 The first render gave the bands each wrestler's accent colour, which washed
 out to lavender and lime. They now use the key art's palette, deepened.
+
+## Round: Phase 4 — working a man who is down
+
+Before this, the standing man walked over and covered a downed opponent
+every time. Now he works him first, and what he does depends on where he
+is standing:
+
+| where he stands (along the body from the pelvis) | move | hurts |
+| --- | --- | --- |
+| at the head (−0.55 m or further) | `ground_fist`: down on one knee, fist driven down | head |
+| beside him | `ground_stomp_body`: knee up, boot down | torso |
+| at the feet (+0.30 m or further) | `ground_stomp_legs`: the same stomp | legs, which Cody's Figure-Four is built on |
+
+- **Clips.** Two new authored clips, `Ground_Stomp` and `Ground_Fist`, land
+  at 0.24–0.26 m, the height of a man lying on the mat, not the canvas.
+- **When.** `MatchReferee` starts one when the standing man is within 0.9 m
+  of the zone's target point. That is at most 2 per knockdown, never after
+  a finisher (that knockdown is the cover), and only with time left in the
+  down.
+- **Placement.** He steps onto a mark 0.45 m from the point as it starts.
+  The man on the mat stays down while he is worked, and flinches in the
+  zone that was hit.
+- **Tuning.** At 3 momentum a hit, ground attacks were a shortcut to the
+  finish: two seeded matches ran in half the time. They now earn 1, and do
+  3–4 damage.
+
+**Result** (seeds 2–5): 6–11 ground attacks a match, across all three
+zones, and every match ends by pinfall. Matches averaged 4,210 ticks
+(about 70 s), against 6,330 before. The added damage brings knockdowns
+sooner. There is no match-length target in MATCH_FLOW.md; this is noted as
+a pacing call.
+
+**Caught on the way.**
+- **PoseLint** failed the first `Ground_Fist`: the right foot slid along
+  the mat into the kneel and its ball went 7 cm into the canvas. It is now
+  a lifted step in and out (re-rendered and checked).
+- **The pair-clearance grip ratchet** failed once in a full-suite run
+  (backstabber's hands 0.201 m against 0.18). The same test passed alone
+  with no change, and again in the next full run. The grip is read from
+  the drawn frame, so how often it samples depends on how many frames the
+  machine draws per tick. It is noted here as timing-sensitive, not
+  skipped or loosened.

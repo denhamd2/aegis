@@ -223,6 +223,12 @@ const RECIPES := {
 	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
 		"seconds": 0.333, "file": AUTHORED},
 
+	# Authored: the ground attacks on a man down (Phase 4, position).
+	"ground_stomp": {"kind": "retime", "source": "Ground_Stomp",
+		"seconds": 0.600, "file": AUTHORED},
+	"ground_fist": {"kind": "retime", "source": "Ground_Fist",
+		"seconds": 0.733, "file": AUTHORED},
+
 	# Authored: the reversal -- parry the strike off line and counter down
 	# the gap (MatchReferee._try_reversal). Counter contact at tick 18.
 	"strike_parry": {"kind": "retime", "source": "Parry_Counter",

@@ -19,6 +19,8 @@ var _dry := false
 var _skip := 0
 ## --reversals: film parries (WrestlerController.reversed) instead of blows.
 var _reversals := false
+## --ground: film ground attacks on a man down, from their start.
+var _ground := false
 
 
 func _ready() -> void:
@@ -33,6 +35,7 @@ func _ready() -> void:
 			"--dry": _dry = true
 			"--skip": _skip = int(args[i + 1])
 			"--reversals": _reversals = true
+			"--ground": _ground = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec(_spec)
 	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
@@ -51,6 +54,19 @@ func _ready() -> void:
 	while shot < _hits and tick < 20000:
 		await get_tree().physics_frame
 		tick += 1
+		if _ground:
+			for i in 2:
+				if ws[i]._ground_zone != "" and seen[i] == 0:
+					seen[i] = 1
+					if _dry:
+						print("GROUND t%d %s %s" % [tick, ws[i].name, ws[i]._ground_zone])
+						shot += 1
+					elif tick >= _skip:
+						await _film(cam, ws[1 - i], ws[i], shot, 40)
+						shot += 1
+				elif ws[i]._ground_zone == "":
+					seen[i] = 0
+			continue
 		if _reversals:
 			for i in 2:
 				if ws[i].reversals_landed > seen[i]:

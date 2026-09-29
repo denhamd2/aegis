@@ -1,7 +1,7 @@
 extends Node
-## Reversals over seeded AI matches (gauntlet/refs/animation_gap.md, Phase 4):
-## strikes thrown, strikes read and countered, whether the counter landed, the
-## stamina each man ended on, and how the match ended.
+## Phase 4 over seeded AI matches (gauntlet/refs/animation_gap.md): strikes
+## thrown, strikes read and countered, whether the counter landed, ground
+## attacks by kind, the stamina each man ended on, and how the match ended.
 ##
 ##   godot4 --headless --path game --fixed-fps 6000 tools/probe/reversal_tally.tscn \
 ##       [-- --seeds 1,2,3,4 --budget 20000 --wrestlers roman,cody]
@@ -31,6 +31,7 @@ func _ready() -> void:
 			totals[k] += r[k]
 		print("REV seed %-3d %5d ticks  strikes %3d  free to read %3d  read %2d  counter landed %2d  stamina A %.2f B %.2f  %s"
 				% [s, r["ticks"], r["strikes"], r["chances"], r["read"], r["countered"], r["stam_a"], r["stam_b"], r["end"]])
+		print("    ground attacks: ", r["ground"])
 	print("REV_DONE strikes %d, read %d (%.0f%%), counters landed %d"
 			% [totals["strikes"], totals["read"], 100.0 * totals["read"] / maxf(1.0, totals["strikes"]), totals["countered"]])
 	get_tree().quit()
@@ -42,7 +43,7 @@ func _run(seed_value: int) -> Dictionary:
 	scene.match_seed = seed_value
 	add_child(scene)
 	var ws: Array[WrestlerController] = [scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]
-	var r := {"ticks": 0, "strikes": 0, "read": 0, "countered": 0, "end": "no finish"}
+	var r := {"ticks": 0, "strikes": 0, "read": 0, "countered": 0, "end": "no finish", "ground": {}}
 	var referee: MatchReferee = scene.get_node("MatchReferee")
 	var over := [false]
 	referee.match_won.connect(func(w, m): over[0] = true; r["end"] = "%s by %s" % [w.name, m])
@@ -51,7 +52,10 @@ func _run(seed_value: int) -> Dictionary:
 		w.reversed.connect(func(_rev, _st, _m): r["read"] += 1)
 		w.move_landed.connect(func(_a, _d, m: MoveDef):
 			if m == WrestlerController.REVERSAL_MOVE:
-				r["countered"] += 1)
+				r["countered"] += 1
+			elif String(m.resource_path).get_file().begins_with("ground_"):
+				var k := String(m.resource_path).get_file().get_basename()
+				r["ground"][k] = int(r["ground"].get(k, 0)) + 1)
 	var was := [false, false]
 	while r["ticks"] < _budget and not over[0]:
 		await get_tree().physics_frame

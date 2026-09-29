@@ -271,8 +271,12 @@ Done so far:
   button. The AI decides as the swing starts to hold and read it, at a
   chance scaled by stamina.
 
-Order from here: position-context moves, chain wrestling in holds, then the
-AI's in-between behaviour.
+- Position, part 1: a downed man is worked before the cover -- fist at
+  the head, stomps to the body or legs, by where the standing man is (two new
+  authored clips, up to 2 per knockdown, never after a finisher).
+
+Order from here: corner and rope positions, chain wrestling in holds, then
+the AI's in-between behaviour.
 
 
 - **Position-context moves:** front, rear, at the head or legs of a downed

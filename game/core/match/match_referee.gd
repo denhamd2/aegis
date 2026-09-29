@@ -162,6 +162,14 @@ func _check_for_downed_opponent_action() -> void:
 	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
 		var attacker: WrestlerController = pair[0]
 		var defender: WrestlerController = pair[1]
+		# Worked before he is covered (Phase 4, position): a stomp or a fist,
+		# by where the standing man is -- up to GROUND_ATTACKS_MAX a knockdown,
+		# never after a finisher, whose knockdown is the cover.
+		if attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
+				and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
+				and attacker.can_ground_attack(defender):
+			attacker.begin_ground_attack(defender)
+			return
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
 				and defender._cover_eligible \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
