@@ -216,7 +216,16 @@ func apply_move(move: MoveDef) -> void:
 
 ## scale is COMEBACK_DAMAGE_SCALE for a hit thrown by a fired-up man, and
 ## 1.0 for everything else.
+## Every point of damage he has taken, past the limbs' caps as well. The
+## limbs stop at MAX_LIMB_DAMAGE, so total_damage() stops too, and a
+## knockdown measured on it could become impossible: once the limbs a man's
+## strikes land on were full, blows added nothing and he could never go down
+## again (reversal_tally seed 1 ran its whole budget like that). Knockdowns
+## are counted on this instead; the limbs keep their caps for everything else.
+var wear := 0.0
+
 func apply_damage(move: MoveDef, scale: float = 1.0) -> void:
+	wear += (move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs) * scale
 	limb_damage[Limb.HEAD] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.HEAD] + move.damage_head * scale)
 	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso * scale)
 	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms * scale)

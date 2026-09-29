@@ -420,7 +420,15 @@ func poll_input() -> Dictionary:
 		# A man trapped in the corner cannot be locked up with -- he is not
 		# standing to meet it -- so he is struck instead, in a flurry.
 		var cornered := target.is_corner_trapped()
-		if _wants_tie_up() and not cornered:
+		var wants_tie_up := _wants_tie_up()
+		if wants_tie_up and cornered:
+			# Ready to finish him, and he is hanging in the corner: wait for
+			# him to come out and lock up then. Working him over instead kept
+			# a man ready for his finisher striking forever -- blows past his
+			# limbs' damage cap knock nobody down (reversal_tally seed 1 ran
+			# its whole budget).
+			pass
+		elif wants_tie_up:
 			input["grapple"] = true
 		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			input["strike"] = true
@@ -558,7 +566,7 @@ func _wants_power_tie_up() -> bool:
 ## in the opening exchange and finish the match with jabs.
 func _opponent_is_ripe() -> bool:
 	var remaining := WrestlerController.KNOCKDOWN_DAMAGE \
-			- (target.combat.total_damage() - target._damage_at_last_knockdown)
+			- (target.combat.wear - target._damage_at_last_knockdown)
 	# Fired up, his moves land harder (CombatSystem.COMEBACK_DAMAGE_SCALE),
 	# so the same signature closes a bigger gap.
 	var scale := CombatSystem.COMEBACK_DAMAGE_SCALE if controller.combat.is_fired_up() else 1.0

@@ -2477,7 +2477,7 @@ func _tick_stamina() -> void:
 
 ## Whether this hit knocks the wrestler down, rather than staggering him.
 func _would_be_knocked_down() -> bool:
-	return combat.total_damage() - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
+	return combat.wear - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
 
 ## Called by MatchReferee once every wrestler has finished its own
 ## _physics_process for this tick.
@@ -2954,7 +2954,7 @@ func _go_down() -> void:
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
-	_damage_at_last_knockdown = combat.total_damage()
+	_damage_at_last_knockdown = combat.wear
 	_move_ticks_remaining = GETUP_TICKS
 	combat.cut_off_comeback()
 	_cover_eligible = true
