@@ -201,6 +201,54 @@ air punch UP (it is both fists DOWN).
 
 ---
 
+## 2K26: how WWE 2K26 shoots these two entrances [V, storyboard]
+
+The owner asked for the entrance cameras to copy WWE 2K26's. Source:
+[WWE 2K26 Entrances: Cody Rhodes, John Cena, Roman Reigns, Seth Rollins & More!](https://www.youtube.com/watch?v=V_zBO1vzw7A)
+(Cody 0:00-1:53, Roman 1:53-4:55). The video itself would not download
+here; its storyboard would (150 thumbnails, one every 4.4 s), which is
+enough for the shot order and each shot's height, side and size -- not for
+lens millimetres or exact cut points. Timestamps are the video's.
+
+**Cody**
+
+| t | Shot | Ours |
+| --- | --- | --- |
+| 0:00-0:13 | Dark arena wide from over the ring end toward the stage | `cody_dark`, now under the rig |
+| 0:22-0:27 | Front, full body then knees-up, him centred in white portal light | `portal_long` |
+| 0:31 | Behind him, 3/4, over his shoulder | `over_shoulder` on the stand at the lip |
+| 0:35 | The kneel, front wide | `ramp_long` |
+| 0:40-0:49 | Arms out, full body front | `ramp_long`, `stage_wide` |
+| 0:53 | Waist-up front, 3/4, the wall behind | `hero_low` |
+| 0:58 | Walking, front, tracking back | `steadicam_low` |
+| 1:02-1:06 | Walking, from behind, following | `over_shoulder` in the walk cut |
+| 1:11-1:20 | From the ring, low, up at him; the corner pose | `ring_behind_low`, `corner_low` |
+| 1:33 | Outside a corner, high, the whole ring | `ring_high_corner` |
+| 1:37 | Waist-up front in the ring | `ring_low` |
+| 1:46-1:55 | Very wide from the far end, pyro over the ring | `end_wide` |
+
+**Roman**
+
+| t | Shot | Ours |
+| --- | --- | --- |
+| 1:55-2:04 | Dark arena wide, high, toward the stage | intro shot 1, now under the rig |
+| 2:08-2:17 | Square on the stage and his wall, long lens, him tiny | intro shots 2-3, `stage` |
+| 2:26-2:31 | Low medium, front, the fist up, pyro both sides | `hero_low` (was the very wide) |
+| 2:35-2:44 | Chest-up front, the wall behind, walking at the lens | `face_walk`, `steadicam_low` |
+| 2:53-2:57 | Medium-wide front, centred, low | `ramp_low_wide` |
+| 3:01 | High from the crowd side, across the ramp | `ramp_side_high` |
+| 3:06-3:10 | Close front, walking | `face_walk` in the walk cut |
+| 3:15-3:24 | Low rear 3/4 at the steps | `ring_behind_low`, `ringside` |
+| 3:28-3:32 | From inside the ring, low, up at him at the corner | `ring_low` |
+| 3:37-3:41 | In the ring behind him, out over the crowd | `ring_behind_out` for the finger |
+| 3:46-3:50 | Low in the ring, backlit by the rig | `ring_low` |
+| 3:55-4:08 | Waist-up front; the hard-camera wide | `face_walk`, `ringside` |
+| 4:26-4:30 | Very wide from the far end | `end_wide` |
+
+Every high shot in 2K26 is under its lighting grid. Ours were above ours
+(the truss at 7.6 m, the cameras at 8-11 m) and shot down through it; they
+now hang at 6.3 m (EntranceDirector.RIG_CLEAR_Y).
+
 ## Roman Reigns — the Tribal Chief
 
 **Character of the entrance.** Slow, deliberate, still. "Walks with a slow,

@@ -95,7 +95,13 @@ const FACEOFF_SET_TICKS := 30
 const FACEOFF_CAM_DISTANCE := 3.4
 const FACEOFF_CAM_HEIGHT := 1.5
 const FACEOFF_CAM_FOV := 34.0
-const OPENING_AT := Vector3(0.0, 8.0, 13.0)
+## Every high shot hangs at RIG_CLEAR_Y: just under the light rig over the
+## ring (ArenaBuilder.TRUSS_Y 7.6, its keys' bodies down to ~6.9), so the lens
+## sees the building under the steel instead of through it. The owner: "the
+## camera is above the light rigging above the ring, which blocks the view --
+## just underneath it, so we get a clear wide-angle shot".
+const RIG_CLEAR_Y := 6.3
+const OPENING_AT := Vector3(0.0, RIG_CLEAR_Y, 14.0)
 const OPENING_LOOK := Vector3(0.0, 3.0, -30.0)
 const OPENING_FOV := 52.0
 ## The stage: from down the ramp, on a long lens, so the set fills the frame
@@ -121,6 +127,19 @@ const RINGSIDE_FOV := 42.0
 const FOLLOW_SPOT_AT := Vector3(0.0, 17.0, 22.0)
 const FOLLOW_SPOT_ENERGY := 40.0
 const FOLLOW_SPOT_ANGLE := 3.5
+## The walk key (blender-lighting: a key from the front at about 45 degrees,
+## warm, soft, with the video wall behind him as the rim). The follow spot is
+## 40 m away in the far end: on its own it lost him halfway down the ramp --
+## once he was out of the stage wash his front went to silhouette against the
+## wall on every steadicam shot. This one rides with him, a few metres ahead,
+## to his right and above, like the front-truss followers a real entrance
+## hangs, so he is lit from the curtain to the ring.
+const WALK_KEY_AHEAD := 4.2
+const WALK_KEY_SIDE := 1.6
+const WALK_KEY_UP := 3.6
+const WALK_KEY_ENERGY := 5.0
+const WALK_KEY_ANGLE := 24.0
+const WALK_KEY_RANGE := 11.0
 
 # --- Roman Reigns (gauntlet/refs/entrances.md, "Roman: beat sheet") ---------
 ## Slow and methodical: Walk_Slow_Look travels 0.5 m/s,
@@ -149,8 +168,8 @@ const ROMAN_BOW_TICKS := 240
 ## The walk, cut the way R-41 cuts it: the low ultra-wide steadicam backing
 ## ahead of him, a very wide from high every six to eight seconds, and once
 ## over his shoulder down the ramp (R-CJ). [shot, seconds], cycled.
-const ROMAN_WALK_SHOTS := [["steadicam_low", 6.0], ["arena_high", 3.0],
-		["steadicam_low", 7.0], ["over_shoulder", 4.0], ["steadicam_low", 6.0],
+const ROMAN_WALK_SHOTS := [["steadicam_low", 5.0], ["ramp_side_high", 4.0],
+		["face_walk", 4.0], ["over_shoulder", 4.0], ["steadicam_low", 5.0],
 		["arena_high", 3.0]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
@@ -160,7 +179,7 @@ const ROMAN_WALK_SHOTS := [["steadicam_low", 6.0], ["arena_high", 3.0],
 const ROMAN_INTRO_SHOTS := [
 	# The building, the stage empty under his light: high in the far end, a
 	# 24 mm wide, trucking across (R-41 0-10 s).
-	[Vector3(9.0, 9.5, 19.0), Vector3(3.0, 9.8, 20.0),
+	[Vector3(8.5, RIG_CLEAR_Y, 14.0), Vector3(3.0, RIG_CLEAR_Y + 0.1, 14.5),
 		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 8.0],
 	# His video on the wall, from low on the ramp, pushing in.
 	[Vector3(0.0, 2.6, -18.0), Vector3(0.0, 3.2, -22.0),
@@ -226,8 +245,8 @@ const CODY_KNEEL_TICKS := 300
 const CODY_WHOA_LOW_TICKS := 200
 ## His walk, cut as C-39 and C-SS cut it: the low steadicam ahead of him and a
 ## wide of the building. [shot, seconds], cycled.
-const CODY_WALK_SHOTS := [["steadicam_low", 4.0], ["arena_high", 2.5],
-		["steadicam_low", 3.0]]
+const CODY_WALK_SHOTS := [["steadicam_low", 4.0], ["over_shoulder", 4.0],
+		["arena_high", 2.5], ["steadicam_low", 3.0]]
 ## Corner_Pose has the arms fully wide by frame 12: the post sparks.
 const CODY_CORNER_PYRO_AT := 24
 ## Coat_Off has his arms behind him, the coat sliding off, on frame 36.
@@ -247,7 +266,7 @@ const CODY_BLUE := Color(0.18, 0.32, 1.0)
 ## His shots. The dark wide from high behind the hard camera; the long lens
 ## on his portal from down the ramp (85 mm, pushing in); a steadicam backing
 ## ahead of him; and the low angle inside the ring up past him in the corner.
-const CODY_DARK_AT := Vector3(0.0, 9.0, 16.0)
+const CODY_DARK_AT := Vector3(0.0, RIG_CLEAR_Y, 14.0)
 const CODY_DARK_LOOK := Vector3(0.0, 3.0, -30.0)
 const CODY_DARK_FOV := 50.0
 const PORTAL_LONG_FOV := Vector2(19.0, 14.0)
@@ -287,7 +306,7 @@ const STEADICAM_LOW_AHEAD := 1.3
 const STEADICAM_LOW_HEIGHT := 0.55
 const STEADICAM_LOW_FOV := 68.0
 ## The very wide from high at the far end, over the ring, on him.
-const ARENA_HIGH_AT := Vector3(7.5, 11.0, 13.0)
+const ARENA_HIGH_AT := Vector3(6.5, RIG_CLEAR_Y, 12.0)
 const ARENA_HIGH_FOV := 50.0
 ## Behind him, over his shoulder, down the ramp at the crowd (R-CJ).
 const OVER_SHOULDER_FOV := 50.0
@@ -297,6 +316,26 @@ const RAMP_LOW_WIDE_FOV := 46.0
 ## A long lens from down the ramp on him at the lip (C-MITB, the kneel).
 const RAMP_LONG_BACK := 9.0
 const RAMP_LONG_FOV := 22.0
+# --- WWE 2K26's entrance shots (gauntlet/refs/entrances.md, "2K26") --------
+## High on the crowd side of the ramp, level with him plus a few metres,
+## looking across at him walking (2K26 Roman 3:01).
+const RAMP_SIDE_HIGH_X := 8.0
+const RAMP_SIDE_HIGH_Y := 4.8
+const RAMP_SIDE_HIGH_LEAD := 4.0
+const RAMP_SIDE_HIGH_FOV := 34.0
+## Outside the ring off a corner, high: the whole ring and him in it
+## (2K26 Cody 1:33, Roman 4:03).
+const RING_HIGH_CORNER_AT := Vector3(-6.2, 4.6, 6.2)
+const RING_HIGH_CORNER_FOV := 44.0
+## In the ring behind him, looking past him out over the crowd he is
+## playing to (2K26 Roman 3:37-3:41).
+const RING_BEHIND_OUT_BACK := 2.3
+const RING_BEHIND_OUT_FOV := 52.0
+## The closing wide from the far end of the hall, under the rig (2K26 Cody
+## 1:46-1:55, Roman 4:26-4:30).
+const END_WIDE_AT := Vector3(0.0, RIG_CLEAR_Y, 15.5)
+const END_WIDE_LOOK := Vector3(0.0, 1.6, 0.0)
+const END_WIDE_FOV := 46.0
 ## Inside the ring, low, behind him as he comes through the ropes (C-SNME).
 const RING_BEHIND_FOV := 70.0
 ## The hard-camera side crowd, for the WHOAs in the dark (C-MITB 12-20 s).
@@ -321,6 +360,7 @@ var _hud: Node
 var _card: EntranceLowerThird
 var _lights: Node
 var _follow: SpotLight3D
+var _walk_key: SpotLight3D
 ## Every node frozen for the entrance, with whether it was processing, so the
 ## bell puts back exactly what was there.
 var _frozen: Array = []
@@ -420,6 +460,20 @@ func begin(match_root: Node) -> void:
 	_follow.visible = false
 	add_child(_follow)
 	_follow.global_position = FOLLOW_SPOT_AT
+	_walk_key = SpotLight3D.new()
+	_walk_key.name = "WalkKey"
+	_walk_key.light_color = Color(1.0, 0.94, 0.86)
+	_walk_key.light_energy = WALK_KEY_ENERGY
+	_walk_key.spot_angle = WALK_KEY_ANGLE
+	_walk_key.spot_angle_attenuation = 1.6
+	_walk_key.spot_range = WALK_KEY_RANGE
+	_walk_key.spot_attenuation = 0.6
+	# No beam in the haze: a light hanging in mid-air must not be seen.
+	_walk_key.light_volumetric_fog_energy = 0.0
+	_walk_key.light_specular = 0.35
+	_walk_key.shadow_enabled = false
+	_walk_key.visible = false
+	add_child(_walk_key)
 
 	# The camera is the director's from the first rendered frame, not the
 	# first tick -- otherwise frame one is the match camera's hard-cam shot of
@@ -625,6 +679,8 @@ func _ring_bell() -> void:
 	_portal_lights("", false)
 	if _follow:
 		_follow.visible = false
+	if _walk_key:
+		_walk_key.visible = false
 	for props: EntranceProps in _props.values():
 		props.queue_free()
 	_props.clear()
@@ -706,7 +762,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(finger_start, ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE),
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "stage_wide",
+			"shot": "hero_low",
 			"events": [[FINGER_PYRO_AT, "pyro_roman"], [FINGER_PYRO_AT, "accent_red"],
 					[FINGER_PYRO_AT + ROMAN_RED_TICKS, "accent_back"]]}))
 	# Held, under the low wide from the ramp.
@@ -729,7 +785,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	# The finger to the hard camera, then hands on hips, staring, close.
 	_beats.append({"kind": "pose", "who": w, "ticks": 240,
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "ring_low"})
+			"shot": "ring_behind_out"})
 	_beats.append({"kind": "pose", "who": w, "ticks": 300,
 			"clip": "strikes/hands_hips", "facing": Vector3.BACK,
 			"shot": "face_walk"})
@@ -741,7 +797,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true,
+			"shot": "end_wide", "settle": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
 
 
@@ -857,7 +913,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	if kneel_from - at_lip > 0.6:
 		_beats.append({"kind": "pose", "who": w, "lights": "RB",
 				"ticks": _secs(at_lip, kneel_from), "clip": "strikes/cody_stand",
-				"facing": Vector3.BACK, "shot": "steadicam_low"})
+				"facing": Vector3.BACK, "shot": "over_shoulder"})
 	# The kneel at the top of the ramp, on a long lens from down it.
 	_beats.append({"kind": "pose", "who": w, "lights": "RB", "ticks": CODY_KNEEL_TICKS,
 			"clip": "strikes/kneel", "facing": Vector3.BACK, "shot": "ramp_long"})
@@ -898,17 +954,17 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"shot": "corner_low", "events": [[CODY_CORNER_PYRO_AT, "pyro_posts"]]})
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_down",
 			"ticks": 60, "from": stand, "to": stand, "facing": out_dir,
-			"shot": "corner_low"})
+			"shot": "ring_high_corner"})
 	# Down off the rope, and the coat comes off to the crew at ringside.
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/coat_off",
 			"ticks": 120, "from": stand, "to": stand, "facing": out_dir,
-			"shot": "ringside", "events": [[COAT_OFF_AT, "coat_off"]]})
+			"shot": "ring_low", "events": [[COAT_OFF_AT, "coat_off"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
+			"shot": "end_wide", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
 
 
 ## The way into the ring every entrance shares, from the ramp's cut to the
@@ -1228,6 +1284,23 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					+ fb * BOW_AHEAD, hb + Vector3.DOWN * 0.12, BOW_FOV, true)
 		"crowd_wide":
 			_camera.set_entrance_shot(CROWD_WIDE_AT, CROWD_WIDE_LOOK, CROWD_WIDE_FOV, true)
+		"ramp_side_high":
+			var side_x := RAMP_SIDE_HIGH_X if w.global_position.x <= 0.0 else -RAMP_SIDE_HIGH_X
+			_camera.set_entrance_shot(Vector3(side_x, RAMP_SIDE_HIGH_Y,
+					w.global_position.z + RAMP_SIDE_HIGH_LEAD),
+					w.global_position + Vector3.UP * 1.2, RAMP_SIDE_HIGH_FOV, first, delta)
+		"ring_high_corner":
+			_camera.set_entrance_shot(RING_HIGH_CORNER_AT, w.global_position + Vector3.UP * 1.0,
+					RING_HIGH_CORNER_FOV, true)
+		"ring_behind_out":
+			var f7 := _flat(-w.global_transform.basis.z).normalized()
+			var r7 := Vector3.UP.cross(-f7).normalized()
+			_camera.set_entrance_shot(w.global_position - f7 * RING_BEHIND_OUT_BACK
+					+ r7 * 0.5 + Vector3.UP * 1.2,
+					w.global_position + f7 * 10.0 + Vector3.UP * 3.0,
+					RING_BEHIND_OUT_FOV, true)
+		"end_wide":
+			_camera.set_entrance_shot(END_WIDE_AT, END_WIDE_LOOK, END_WIDE_FOV, true)
 		"faceoff_side":
 			# Square to the line between them, at eye height, both profiles
 			# filling the frame: the stare-down shot every broadcast takes.
@@ -1351,11 +1424,24 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 		return
 	if w == null or not w.visible or _follow_off:
 		_follow.visible = false
+		if _walk_key:
+			_walk_key.visible = false
 		return
 	_follow.visible = true
 	var target := w.global_position + Vector3.UP * 1.1
 	if _follow.global_position.distance_to(target) > 0.1:
 		_follow.look_at(target, Vector3.UP)
+	if _walk_key:
+		_walk_key.visible = true
+		var fwd := _flat(-w.global_transform.basis.z).normalized()
+		var right := Vector3.UP.cross(-fwd).normalized()
+		_walk_key.global_position = walk_key_at(w.global_position, fwd, right)
+		_walk_key.look_at(w.global_position + Vector3.UP * 1.3, Vector3.UP)
+
+
+## Where the walk key hangs for a man at `at` facing `fwd`.
+static func walk_key_at(at: Vector3, fwd: Vector3, right: Vector3) -> Vector3:
+	return at + fwd * WALK_KEY_AHEAD + right * WALK_KEY_SIDE + Vector3.UP * WALK_KEY_UP
 
 
 ## Whether the previous beat was on the same shot, so a shot carried across
