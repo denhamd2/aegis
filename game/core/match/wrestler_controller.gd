@@ -2149,10 +2149,10 @@ const CHAIN_HOLDS := {
 	"waistlock": preload("res://resources/moves/chain_waistlock.tres"),
 }
 ## What a reversal turns each hold into, for the man who reverses it: out of
-## a headlock he takes the wrist; out of a wristlock he rolls through into his
-## own; out of a waistlock he switches behind.
+## a headlock he goes behind (the classic escape); out of a wristlock he rolls
+## through into his own; out of a waistlock he switches behind.
 const CHAIN_COUNTER := {
-	"headlock": "wristlock", "wristlock": "wristlock", "waistlock": "waistlock",
+	"headlock": "waistlock", "wristlock": "wristlock", "waistlock": "waistlock",
 	"": "wristlock",
 }
 const CHAIN_LINKS_MAX := 3

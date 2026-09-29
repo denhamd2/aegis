@@ -282,8 +282,14 @@ Done so far:
   gets a hand or foot on the bottom rope (`RopeReach`) and the referee breaks
   it -- after two, before three, never under a finisher.
 
-Order from here: chain wrestling in holds, then the AI's in-between
-behaviour.
+- Chain wrestling: out of a lock-up the holder steers a hold with the stick
+  (forward a side headlock, back a go-behind to a rear waistlock, either side
+  a wristlock) and the man in it can press Reversal in the read between
+  holds to take over with the counter. Each hold is an authored two-man link
+  (in, cranked twice, fought free, squared up) inside the pair clearance and
+  grip limits. The AI chains one to three in the opening lock-up.
+
+Order from here: the AI's in-between behaviour (pacing, selling, the crowd).
 
 
 - **Position-context moves:** front, rear, at the head or legs of a downed

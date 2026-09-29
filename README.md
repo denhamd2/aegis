@@ -7923,3 +7923,52 @@ bodies' origins, never the skeleton.
 **Result** (reversal_tally, seeds 1–4): every match ends by pinfall. There
 were 3 corner traps with 6 blows taken in the corner, and 1 pin broken at
 the ropes. These are occasional moments, not the shape of every match.
+
+## Round: Phase 4 — chain wrestling
+
+Out of a lock-up the two men now trade holds before anyone throws anything,
+the way a match opens on TV and 2K26's chain wrestling plays it.
+
+- **Three holds**, each an authored two-man link, 1.8 s long: into the
+  hold, cranked twice, the man in it fights free, and both square up about
+  0.9 m apart. Because every link ends squared up, any link can follow any
+  other.
+  - `chain_headlock`: the holder pivots in beside him and turns to face his
+    way, with the man bent double under his right arm, pushing at his hip.
+  - `chain_wristlock`: both hands on the right wrist, turning it over. The
+    man turns away from his own straight arm.
+  - `chain_waistlock`: the holder ducks round his left side to his back and
+    locks his hands at the hip bones.
+- **Steering.** Between links there is an 18-tick "read" back in the
+  collar-and-elbow. The holder picks the next hold with the stick, relative
+  to his facing: forward is the headlock, back is the go-behind, either side
+  is the wristlock. With no pick, he throws his grapple move as before. At
+  most 3 links per lock-up.
+- **Counters.** In the read, the man about to be held can press Reversal
+  between ticks 4 and 14 to take it over. He then goes straight into the
+  counter: out of a headlock, a go-behind; out of a wristlock, his own
+  wristlock; out of a waistlock, a switch behind. A press outside the window
+  spends his chance for that read.
+- **Wear.** A hold does 2–3 damage to the part held, gives the holder 2
+  momentum, and costs both some stamina. They are the opening of a match,
+  not a way through it.
+- **AI.** In the opening lock-up it plans 1–3 links (seeded). The man in a
+  hold reverses at 30% scaled by stamina, as a strike reversal is. Later
+  lock-ups (power, signature) go straight to the move.
+- **Grips.** The headlock uses the existing `neck` grip. The wristlock uses
+  a new `wringer` grip (both hands on the wrist and forearm). The waistlock
+  uses a new `waist_behind` grip (hands at the hip bones), because the
+  front-of-hips `waist` grip is 20 cm out of reach from behind.
+
+**Checked.** All three pass the pair clearance and grip check (worst body
+overlap 3.5 cm against the 5 cm limit; grips within 2.5 cm), and they are
+rendered from two angles. Two fixes came out of the renders:
+- the headlocked man's grip was hauling his arm up over the holder's
+  shoulder; he now pushes at the hip;
+- the go-behind's path cut through the other man's leg at 16 cm; the circle
+  is wider now.
+
+**Result** (reversal_tally, seeds 1–4): every match opened with two holds,
+three of the four included a reversal, and all ended by pinfall. The first
+run's reversals all became wristlocks, so out of a headlock the counter is
+now a go-behind.
