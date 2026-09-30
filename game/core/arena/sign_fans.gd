@@ -111,8 +111,13 @@ func _big_moment() -> void:
 	_raise_all(MATCH_HOLD)
 
 
+## They are getting up (MatchCamera cuts to them in a quiet moment).
+signal raised
+
+
 func _raise_all(hold: float) -> void:
 	_since_raise = 0.0
+	raised.emit()
 	for n in fans.size():
 		_queued.append([STAGGER * n, fans[n], hold])
 

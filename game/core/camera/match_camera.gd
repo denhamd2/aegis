@@ -218,7 +218,43 @@ const BODY_WIDTH := 0.8
 ## ENTRANCE is not a shot of the match: EntranceDirector drives the camera
 ## directly while the wrestlers walk to the ring, through set_entrance_shot(),
 ## and hands back with resume_master() at the bell.
-enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE, FINISHER_AFTER }
+enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE, FINISHER_AFTER, EVENT_CUT }
+
+# --- The 2K-style gameplay camera (camera_aaa_plan.md B1) --------------------
+## In GAMEPLAY coverage (CameraSettings) the handheld is the dynamic ringside
+## camera 2K26 plays on: just above the top rope, outside the ring, swinging
+## round to stay side-on to the line between the two men -- slowly, and only
+## once they have turned more than GAMEPLAY_DEADZONE off it, so it does not
+## chase every step -- and always on the broadcast side of that line (the
+## 180-degree rule the hard camera sets). A ring post between it and the pair
+## swings it on past the post. Its distance is the same measured framing fit.
+const GAMEPLAY_HEIGHT := 2.5
+const GAMEPLAY_DEADZONE := 0.49   # 28 degrees
+const GAMEPLAY_TURN_RATE := 0.9   # rad/s once it swings
+## The ropes are at 3.1: the camera stays outside them.
+const RING_OUTSIDE := 3.55
+const POSTS := [Vector3(3.3, 0, 3.3), Vector3(-3.3, 0, 3.3), Vector3(3.3, 0, -3.3), Vector3(-3.3, 0, -3.3)]
+const POST_CLEAR := 0.45
+
+# --- Event cuts (B3), shake (B4), focus (B5), cutaways (B6) ------------------
+## Short cuts to the action, each back to the coverage it cut from. None
+## lands within MIN_SHOT of the last cut (D1: no shot under 0.8 s), and none
+## pre-empts a finisher or a pin, which have their own shots.
+enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY }
+const MIN_SHOT := 0.8
+## A strike worth a cut: the cross, the uppercut, the elbow, the kicks.
+const BIG_STRIKE_DAMAGE := 9.0
+const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6}
+## Trauma (0..1, squared into the shake) per kind of impact.
+const TRAUMA_STRIKE := 0.3
+const TRAUMA_BIG_STRIKE := 0.45
+const TRAUMA_SLAM := 0.55
+const TRAUMA_KNOCKDOWN := 0.3
+## Where the crowd cutaway looks: the ringside rows on +X, where the sign
+## fans sit (SignFans.FANS), from the floor at the far apron.
+const CUTAWAY_AT := Vector3(4.3, 1.3, -0.6)
+const CUTAWAY_LOOK := Vector3(8.6, 1.9, -0.2)
+const CUTAWAY_FOV := 40.0
 
 # --- The finisher, shot as a sequence (blender-cameras) -----------------------
 ## Only a finisher wins a match now (MatchReferee.can_be_finished), so it is
@@ -256,6 +292,20 @@ var _held: float = 0.0
 var _previous_mode: int = -1
 var wrestler_a: Node3D
 var wrestler_b: Node3D
+var _bearing := Vector3.ZERO
+var _swinging := false
+var _cut := -1
+var _cut_subject: Node3D
+var _cut_other: Node3D
+var _cut_hold := 0.0
+var _cut_grapple := false
+var _cut_return := Mode.HARD_CAM
+var _cut_landed := false
+var _sign_fans: Node
+var _kickout_reaction := false
+const KICKOUT_REACTION_AFTER := 0.9
+const GAMEPLAY_HOLD := 9.0
+const GAMEPLAY_MASTER_HOLD := 4.0
 var grapple_rig: GrappleRig
 var referee: MatchReferee
 
@@ -267,6 +317,14 @@ func _ready() -> void:
 	if grapple_rig:
 		grapple_rig.grapple_started.connect(_on_grapple_started)
 		grapple_rig.grapple_finished.connect(_on_grapple_finished)
+	for w in [wrestler_a, wrestler_b]:
+		var wc := w as WrestlerController
+		if wc == null:
+			continue
+		wc.move_landed.connect(_on_move_landed)
+		wc.taunted.connect(func(who): _try_cut(Cut.HERO, who, null))
+		wc.fired_up.connect(func(who): _try_cut(Cut.FIRE_UP, who, null))
+		wc.knocked_down.connect(func(_who): add_trauma(TRAUMA_KNOCKDOWN))
 
 func _physics_process(delta: float) -> void:
 	if mode == Mode.ENTRANCE:
@@ -284,7 +342,14 @@ func _physics_process(delta: float) -> void:
 		_after_shot(delta)
 		_previous_mode = mode
 		return
+	if mode == Mode.EVENT_CUT and _event_shot(delta):
+		_previous_mode = mode
+		return
+	if mode == Mode.THREE_COUNT_CUT and _pin_shot(delta):
+		_previous_mode = mode
+		return
 	_clear_focus_if_needed()
+	_watch_sign_fans()
 
 	var midpoint := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
 	var target_position: Vector3
@@ -306,7 +371,9 @@ func _physics_process(delta: float) -> void:
 		# handheld would have come back square to the ring on the -X axis, and
 		# the off-axis 3/4 angle that match.tscn was placed for would have
 		# survived exactly one cut.
-		var to_camera := ringside_bearing.normalized() * distance
+		var gameplay := mode == Mode.RINGSIDE and CameraSettings.gameplay()
+		var bearing := _gameplay_bearing(delta) if gameplay else ringside_bearing.normalized()
+		var to_camera := bearing * distance
 		# Three heights, not two. The finisher cut's low angle is deliberate --
 		# camera.md: "drops lower, closer to mat height, for a grounded,
 		# low-angle look" -- and it frames two men STANDING, so it keeps
@@ -322,7 +389,12 @@ func _physics_process(delta: float) -> void:
 			# A low cut looks *up* the bodies rather than down at the mat, so
 			# the aim point drops with the camera.
 			aim = 0.45
+		if gameplay:
+			eye_height = GAMEPLAY_HEIGHT
+			aim = 0.85
 		target_position = midpoint + to_camera + Vector3.UP * eye_height
+		if gameplay:
+			target_position = _outside_ring(target_position, bearing)
 
 	if mode == _previous_mode:
 		var speed := follow_speed if mode == Mode.RINGSIDE else cut_speed
@@ -420,6 +492,14 @@ func shot_fov() -> float:
 ## Returns 0 for the cut modes, which are held by their own event rather than
 ## by the clock.
 func shot_hold() -> float:
+	if CameraSettings.gameplay():
+		# 2K-style: the gameplay camera is what the match is played on; the
+		# master is the cutaway to the wide.
+		match mode:
+			Mode.HARD_CAM:
+				return GAMEPLAY_MASTER_HOLD
+			Mode.RINGSIDE:
+				return GAMEPLAY_HOLD
 	match mode:
 		Mode.HARD_CAM:
 			return hard_cam_hold
@@ -515,15 +595,31 @@ func _update_mode(delta: float) -> void:
 		return
 	if mode == Mode.THREE_COUNT_CUT:
 		# Out of the pin and back to the master, not to whatever was on screen
-		# before it: a broadcast comes out of a near-fall on the wide.
+		# before it: a broadcast comes out of a near-fall on the wide -- and
+		# then, a beat later, the crowd reacting to the kickout (B3/B6).
 		mode = Mode.HARD_CAM
+		_kickout_reaction = referee != null and not referee._match_over
 	if mode == Mode.FINISHER_CUT:
 		if grapple_rig and not grapple_rig.is_active():
 			mode = Mode.HARD_CAM
 		_reset_clock_on_change(was)
 		return
+	if mode == Mode.EVENT_CUT:
+		_held += delta
+		var bound := _cut_grapple and grapple_rig != null and grapple_rig.is_active()
+		if bound:
+			_held = minf(_held, 0.0)
+		elif _held >= _cut_hold:
+			mode = _cut_return
+			_cut = -1
+			_held = 0.0
+		return
 
 	_held += delta
+	if _kickout_reaction and mode == Mode.HARD_CAM and _held >= KICKOUT_REACTION_AFTER:
+		_kickout_reaction = false
+		_try_cut(Cut.CUTAWAY, wrestler_a, null)
+		return
 	var hold := shot_hold()
 	if hold > 0.0 and _held >= hold:
 		mode = Mode.RINGSIDE if mode == Mode.HARD_CAM else Mode.HARD_CAM
@@ -541,6 +637,8 @@ func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> v
 		_finish_defender = defender
 		_finish_shot = -1
 		_held = 0.0
+	elif _try_cut(Cut.SLAM, attacker, defender):
+		_cut_grapple = true
 
 func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
 	if mode == Mode.FINISHER_CUT:
@@ -672,7 +770,7 @@ func _shake(delta: float) -> void:
 		v_offset = 0.0
 		return
 	_shake_t += delta
-	var amt := _trauma * _trauma * FINISH_SHAKE
+	var amt := _trauma * _trauma * FINISH_SHAKE * CameraSettings.shake_scale()
 	h_offset = amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0)
 	v_offset = amt * sin(_shake_t * 59.0 + 1.3)
 	_trauma = maxf(0.0, _trauma - FINISH_SHAKE_DECAY * delta)
@@ -691,3 +789,193 @@ func _clear_focus_if_needed() -> void:
 
 static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
+
+
+# --- B1: the gameplay camera's bearing ------------------------------------------
+
+func _gameplay_bearing(delta: float) -> Vector3:
+	if _bearing == Vector3.ZERO:
+		_bearing = ringside_bearing.normalized()
+	var line := _flat(wrestler_b.global_position - wrestler_a.global_position)
+	if line.length() < 0.4:
+		return _bearing
+	var want := Vector3.UP.cross(line).normalized()
+	# The broadcast side of the line, so a cut to the hard camera never jumps it.
+	if want.dot(ringside_bearing) < 0.0:
+		want = -want
+	var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
+	for turn in [0.45, -0.9]:
+		if not post_in_the_way(mid, want, framing_distance(line.length())):
+			break
+		want = want.rotated(Vector3.UP, turn)
+	var angle := _bearing.signed_angle_to(want, Vector3.UP)
+	if absf(angle) > GAMEPLAY_DEADZONE or _swinging:
+		_swinging = absf(angle) > 0.05
+		var step := GAMEPLAY_TURN_RATE * delta
+		_bearing = _bearing.rotated(Vector3.UP, clampf(angle, -step, step)).normalized()
+	return _bearing
+
+
+## Whether a ring post stands between a camera `distance` out along
+## `bearing` and the point `mid` (in plan).
+static func post_in_the_way(mid: Vector3, bearing: Vector3, distance: float) -> bool:
+	var a := Vector2(mid.x, mid.z)
+	var b := a + Vector2(bearing.x, bearing.z) * distance
+	for post: Vector3 in POSTS:
+		var p := Vector2(post.x, post.z)
+		var ab := b - a
+		var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 1e-6), 0.0, 1.0)
+		if t > 0.05 and (a + ab * t).distance_to(p) < POST_CLEAR:
+			return true
+	return false
+
+
+## Pushed back along its bearing until it is outside the ropes.
+static func _outside_ring(p: Vector3, bearing: Vector3) -> Vector3:
+	var out := p
+	for i in 80:
+		if absf(out.x) >= RING_OUTSIDE or absf(out.z) >= RING_OUTSIDE:
+			break
+		out += bearing * 0.1
+	return out
+
+
+# --- B3-B6: event cuts ------------------------------------------------------------
+
+func _on_move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef) -> void:
+	if move == null or grapple_rig != null and grapple_rig.is_active():
+		return
+	var damage := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
+	var big := damage >= BIG_STRIKE_DAMAGE
+	add_trauma(TRAUMA_BIG_STRIKE if big else TRAUMA_STRIKE)
+	if big and String(move.resource_path).get_file().begins_with("strike"):
+		_try_cut(Cut.STRIKE, defender, attacker)
+
+
+## Cuts to `kind` if the shot grammar allows it now.
+func _try_cut(kind: int, subject: Node3D, other: Node3D) -> bool:
+	if not CameraSettings.cuts_enabled() or subject == null:
+		return false
+	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE:
+		return false
+	if _held < MIN_SHOT or (referee != null and referee.is_pin_active()):
+		return false
+	_cut_return = Mode.RINGSIDE if CameraSettings.gameplay() else Mode.HARD_CAM
+	mode = Mode.EVENT_CUT
+	_cut = kind
+	_cut_subject = subject
+	_cut_other = other
+	_cut_hold = CUT_HOLD[kind]
+	_cut_grapple = false
+	_cut_landed = false
+	_held = 0.0
+	return true
+
+
+## Frames the event cut; false if it has nothing to frame.
+func _event_shot(delta: float) -> bool:
+	if _cut < 0 or _cut_subject == null or not is_instance_valid(_cut_subject):
+		return false
+	var s := _cut_subject.global_position
+	var o := _cut_other.global_position if _cut_other and is_instance_valid(_cut_other) else s
+	var mid := (s + o) * 0.5
+	var line := _flat(s - o)
+	var facing := _flat(-_cut_subject.global_transform.basis.z).normalized()
+	if line.length() < 0.2:
+		line = facing
+	line = line.normalized()
+	var side := Vector3.UP.cross(line).normalized()
+	if side.dot(hard_cam_position - mid) < 0.0:
+		side = -side
+	var at: Vector3
+	var look: Vector3
+	var lens: float
+	var focus := false
+	match _cut:
+		Cut.STRIKE:
+			# Low three-quarter, close on the man taking it.
+			at = mid + side * 2.3 + line * 0.8 + Vector3.UP * 1.05
+			look = s + Vector3.UP * 1.35
+			lens = 40.0
+			focus = true
+		Cut.SLAM:
+			# Mat level, square to the pair, the lens wide: the landing is
+			# the payoff. The shake lands with the body.
+			at = mid + side * 3.6 + Vector3.UP * 0.45
+			look = mid + Vector3.UP * 0.7
+			lens = 52.0
+			if grapple_rig and grapple_rig.is_active() and grapple_rig.progress() >= FINISH_IMPACT_AT \
+					and not _cut_landed:
+				_cut_landed = true
+				add_trauma(TRAUMA_SLAM)
+		Cut.HERO:
+			# The taunt: low, in front of him, up at him against the lights.
+			var right := Vector3.UP.cross(-facing).normalized()
+			at = s + facing * 2.7 + right * 0.7 + Vector3.UP * 0.55
+			look = s + Vector3.UP * 1.5
+			lens = 30.0
+			focus = true
+		Cut.FIRE_UP:
+			# The comeback: a slow push in on his face.
+			var t := clampf(_held / _cut_hold, 0.0, 1.0)
+			var e := t * t * (3.0 - 2.0 * t)
+			at = s + facing * lerpf(3.2, 2.0, e) + side * 0.4 + Vector3.UP * 1.5
+			look = s + Vector3.UP * 1.45
+			lens = 32.0
+			focus = true
+		Cut.CUTAWAY:
+			at = CUTAWAY_AT
+			look = CUTAWAY_LOOK
+			lens = CUTAWAY_FOV
+		_:
+			return false
+	fov = lens
+	if _previous_mode != Mode.EVENT_CUT:
+		global_position = at
+	else:
+		global_position = global_position.lerp(at, 1.0 - exp(-cut_speed * delta))
+	look_at(look, Vector3.UP)
+	if focus:
+		_entrance_focus(global_position.distance_to(look), lens)
+		_focused = true
+	else:
+		_clear_focus_if_needed()
+	return true
+
+
+## The pin: down at the mat by the referee's hand, across the pinned man's
+## shoulders -- inside the ring, where Aubrey kneels (RefereeActor), so no
+## rope crosses the count. False with no cover to frame.
+func _pin_shot(_delta: float) -> bool:
+	if referee == null or not referee.is_pin_active() or not CameraSettings.gameplay():
+		return false
+	var defender: WrestlerController = referee._pin_defender
+	if defender == null:
+		return false
+	var at_spot := RefereeActor.cover_spot(defender)
+	var spot: Vector3 = at_spot[0]
+	var up_body: Vector3 = -(at_spot[1] as Vector3)
+	var side := Vector3.UP.cross(up_body).normalized()
+	if side.dot(hard_cam_position - spot) < 0.0:
+		side = -side
+	var neck: Vector3 = defender._bone_world("neck_01")
+	if neck == Vector3.INF:
+		neck = defender.global_position
+	var at := spot + up_body * 1.2 + side * 1.1 + Vector3.UP * 0.8
+	at.x = clampf(at.x, -2.95, 2.95)
+	at.z = clampf(at.z, -2.95, 2.95)
+	fov = 40.0
+	global_position = at
+	look_at(Vector3(neck.x, 0.35, neck.z) + side * 0.2, Vector3.UP)
+	_clear_focus_if_needed()
+	return true
+
+
+## B6: when the sign fans get up in a quiet moment, cut to them.
+func _watch_sign_fans() -> void:
+	if _sign_fans == null:
+		_sign_fans = get_tree().get_first_node_in_group("sign_fans") if is_inside_tree() else null
+		if _sign_fans and _sign_fans.has_signal("raised"):
+			_sign_fans.raised.connect(func():
+				if grapple_rig == null or not grapple_rig.is_active():
+					_try_cut(Cut.CUTAWAY, wrestler_a, null))

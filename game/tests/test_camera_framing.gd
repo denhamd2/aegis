@@ -360,7 +360,11 @@ func test_the_shot_clock_cuts_between_master_and_handheld() -> void:
 
 ## AND IT HOLDS EACH SHOT. A cut every tick is not coverage either; the master
 ## holds longer than the handheld, which is the shape of a broadcast.
+##
+## That is the BROADCAST coverage (2K26's Watch Show). GAMEPLAY coverage turns
+## it round -- see the next test.
 func test_the_master_holds_longer_than_the_handheld() -> void:
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var camera: MatchCamera = _match().get_node("MatchCamera")
 	assert_float(camera.hard_cam_hold).is_greater(camera.ringside_hold)
 	var step := 1.0 / 60.0
@@ -374,6 +378,38 @@ func test_the_master_holds_longer_than_the_handheld() -> void:
 	camera._update_mode(step)
 	assert_int(camera.mode).override_failure_message(
 		"the master never cut away").is_equal(MatchCamera.Mode.RINGSIDE)
+	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
+
+
+## In GAMEPLAY coverage the match is played on the 2K-style ringside camera,
+## and the master is the cutaway to the wide: the handheld holds longer.
+func test_gameplay_coverage_plays_on_the_ringside_camera() -> void:
+	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
+	var camera: MatchCamera = _match().get_node("MatchCamera")
+	camera.mode = MatchCamera.Mode.RINGSIDE
+	assert_float(camera.shot_hold()).is_greater(MatchCamera.GAMEPLAY_MASTER_HOLD)
+	# Above the top rope, outside the ring, side-on to the pair.
+	var a: Node3D = camera.wrestler_a
+	var b: Node3D = camera.wrestler_b
+	a.global_position = Vector3(-0.6, 0.0, 1.0)
+	b.global_position = Vector3(0.6, 0.0, 1.0)
+	for tick in 240:
+		camera.mode = MatchCamera.Mode.RINGSIDE
+		camera._physics_process(1.0 / 60.0)
+	var p := camera.global_position
+	assert_float(p.y).is_equal_approx(MatchCamera.GAMEPLAY_HEIGHT, 0.2)
+	assert_bool(absf(p.x) >= MatchCamera.RING_OUTSIDE - 0.05 or absf(p.z) >= MatchCamera.RING_OUTSIDE - 0.05).is_true()
+	# The pair runs along X, so side-on is along Z.
+	var to_cam := Vector2(p.x, p.z - 1.0).normalized()
+	assert_float(absf(to_cam.y)).is_greater(0.9)
+
+
+## No ring post between the gameplay camera and the pair.
+func test_a_post_in_the_way_is_detected() -> void:
+	# The pair at a corner, the camera out along the diagonal behind the post.
+	assert_bool(MatchCamera.post_in_the_way(Vector3(2.4, 0, 2.4),
+			Vector3(1, 0, 1).normalized(), 5.0)).is_true()
+	assert_bool(MatchCamera.post_in_the_way(Vector3(0, 0, 0), Vector3(0, 0, 1), 5.0)).is_false()
 
 ## AN EVENT PRE-EMPTS THE CLOCK. A scheduled cut landing in the middle of a
 ## finish is the one thing a shot clock must never do.
