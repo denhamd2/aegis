@@ -41,6 +41,76 @@ marked DONE.
   the match, replays, the winner sequence, the pre-match intro, and any
   settings.
 
+## How TV wrestling is actually shot (research)
+
+**The camera plot.** A WWE show runs a **jib, three hard cameras and four
+handhelds** on the floor.
+- The **hard camera** is the play-by-play master, in the first raised
+  mezzanine with the video wall to its left. Wrestlers are trained to "play
+  to" it.
+- The **handhelds** move round ringside for impact.
+- The **jib** gives the sweeping elevated moves.
+- Refs: [TV Technology, WWF production](https://www.tvtechnology.com/miscellaneous/a-behindthescenes-look-at-the-wwfs-unique-broadcast-production-challenges),
+  [Jim Cornette on the hard camera](https://x.com/TheJimCornette/status/1085161773592920065?lang=en).
+
+**How the director cuts it**
+- Cut to the hard cam for scale, to ringside for impact, and to close-ups for
+  a moment's emotion.
+- Shoot low through the near ropes to break up flat frames.
+- Use low-angle power shots for dominance.
+- Crash-zoom on a superkick or a kickout.
+- Show crowd reactions to confirm that a moment was big.
+- Pull focus between foreground and background.
+- Use slow motivated push-ins, and a slow-motion replay of anything spectacular.
+- Ref: [ten wrestling videography techniques](https://edcreative.xyz/level-up-your-show-10-wrestling-videography-techniques-for-maximum-impact/).
+
+### The face-off
+
+The stare-down is the one place a wrestling broadcast holds still. The
+"unresolved staredown" holds a steady angle: no cutting, no zooming, "letting
+tension hang in the air". It is built as a short, strict sequence:
+
+| # | Shot | Lens / position | Length |
+| --- | --- | --- | --- |
+| F1 | **Wide establishing:** the ring, both men walking to centre | Hard cam or jib, under the rig | 2–3 s |
+| F2 | **The two-shot in profile:** both faces, noses a foot apart, square to the line between them, eye height | ~50 mm, 3.4 m; ours today (`faceoff_side`) | 3–4 s, **locked off** |
+| F3 | **Over-the-shoulder, A → B:** past A's shoulder and ear onto B's face | ~85 mm, background soft | 1.5–2 s |
+| F4 | **Reverse, B → A:** the matching shot the other way, same side of the line (180° rule) | ~85 mm | 1.5–2 s |
+| F5 | **Extreme close-ups, eyes:** each man's eyes, cut back and forth, faster each time | ~135 mm | 0.8 s each, 2–4 cuts |
+| F6 | **Low hero two-shot:** from the mat between them, up at both, the lights flaring behind | ~24 mm, 0.4 m high | 1.5 s |
+| F7 | **Back to the wide** as the referee separates them and calls for the bell | Hard cam | to the bell |
+
+- **The rules for it:**
+  - Never cross the line between the two men.
+  - The only camera movement is a slow push-in on F2.
+  - The pace speeds up only in the F5 eye cuts, which is what builds the
+    tension.
+  - Crowd noise swells under it; the bell resolves it.
+- **The 2K26 version:** the storyboard shows the match intro close-ups (a
+  close on each man in his corner) right before this.
+
+### Different angles for different moments
+
+Match the camera to the beat, and never cut just because a timer ran out.
+
+| Moment | Angle | Why |
+| --- | --- | --- |
+| Neutral / circling | Gameplay cam: above the top rope, side-on to the pair, ~35 mm | Readability: both men, their feet and the ropes |
+| Lock-up, chain holds | Tighter side-on, 50 mm, slight low | The grapple is the story; faces in frame |
+| Strike exchange | Handheld 3/4 low through the ropes; a small shake on each hit | Impact and energy |
+| Big strike (superkick, spear, bionic elbow) | Crash-zoom in at contact, 0.5 s | "Inject chaos and urgency" |
+| Slam or bump | Mat-level wide, square to the fall, cut on the landing frame | The landing is the payoff |
+| Body on the mat, other man standing | Low power shot past the fallen man, up at the standing one | Dominance |
+| Top rope, climbing | Jib high over the ring looking down, or low from the mat up at him against the rig lights | Height and danger |
+| Rope break, corner | Tight on the hand on the rope / the man in the corner | The rule and the struggle |
+| Selling, hurt | 85 mm waist-up, face, background soft | Emotion |
+| Comeback fire-up | Slow push-in to a close, then crash back to the wide as he explodes | Build, then release |
+| Taunt | Low hero shot, crowd behind | Crowd connection |
+| Near-fall | Mat-level at the referee's hand; on the kickout, a crash zoom and a crowd reaction shot | The emotional peak before the finish |
+| Finisher (DONE, below) | A three-shot cinematic sequence, then a hold on the aftermath | The only way to win, so it gets the most direction |
+| Pinfall 1-2-3 | Mat-level on the hand and the shoulders; the third slap tight | The end of the story |
+| Winner | Low hero, arms raised; the arena wide under the rig; the replay | Payoff |
+
 ## The plan
 
 ### A. Entrances (A1 done; the rest is polish)
@@ -56,6 +126,9 @@ marked DONE.
   focused on the face, with a slow focus pull on the reveal shots.
 - **A4. Cut on the music.** Roman gets a beat map like Cody's, so cuts land
   on the beat.
+- **A6. The face-off sequence F1–F7** (table above), replacing today's single
+  profile two-shot. It is timed to the walk-in, the stare and the separation
+  beats that already exist (`EntranceDirector` "pair" beats).
 - **A5. Pre-match intro** (2K26 thumbnails 0–2):
   - a match card graphic after both entrances;
   - a close intro shot of each man in his corner;
@@ -80,8 +153,15 @@ marked DONE.
   - slam or bump: mat-level shot timed to the landing. The bump detector
     built for the sound already finds that frame;
   - top rope or dive: a high angle, or low looking up;
-  - finisher: a multi-angle sequence (setup close, impact low, reaction
-    wide);
+  - finisher (DONE): only a finisher (Spear, Cross Rhodes, Kenny's) can win
+    now; any other cover is kicked out at "2.9". The finisher is shot as a
+    sequence, cut on the move's own progress:
+    - a tight 3/4 on the attacker's face, ~85 mm, pushing in, crowd soft;
+    - a mat-level ~24 mm wide square to the pair, with a camera shake as
+      the body lands;
+    - a high crane over the downed man;
+    - a 1.6 s low hero shot of the winner standing over him, then the
+      mat-level three-count;
   - near-fall: the mat-level ref shot, with the hand and count;
   - kickout: the reaction wide;
   - taunt, sell or comeback: an 85 mm waist-up close with soft background.

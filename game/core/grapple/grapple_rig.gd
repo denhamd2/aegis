@@ -694,3 +694,26 @@ func _apply_root_motion() -> void:
 
 func is_active() -> bool:
 	return _active
+
+
+## How far through the paired clip the move is, 0..1 (0 when idle). For the
+## camera's finisher sequence; read-only, presentation only.
+func progress() -> float:
+	if not _active or animation_player == null or not animation_player.is_playing():
+		return 0.0
+	var length := animation_player.current_animation_length
+	return clampf(animation_player.current_animation_position / length, 0.0, 1.0) \
+			if length > 0.0 else 0.0
+
+
+## The move in progress, or null.
+func current_move() -> MoveDef:
+	return _move if _active else null
+
+
+func attacker() -> Node3D:
+	return _attacker if _active else null
+
+
+func defender() -> Node3D:
+	return _defender if _active else null

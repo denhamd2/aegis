@@ -43,6 +43,11 @@ const SUBMISSION_ROPE_REACH_AFTER := 60
 ## 60, so the count used to start about half a second early.
 const COUNT_TICKS: Array[int] = [92, 167, 227]
 const PIN_COUNT_TICKS := 227
+## Only a finisher wins (the owner: "a wrestler can only finish the match
+## using their finisher -- the Spear or the Cross Rhodes"). A cover off
+## anything else is a near-fall: he gets a shoulder up this many ticks before
+## the third slap, the "2.9" a crowd comes out of its seats for.
+const NEAR_FALL_KICKOUT_TICK := 219
 
 ## How long each digit stays on screen, also frame-stepped: "1" is visible
 ## ~0.63-0.67s and "2" ~0.37-0.43s, with a silent gap of ~0.55s before the
@@ -86,10 +91,30 @@ var _rope_side := Vector3.ZERO
 var _submission_fight_ticks := 0
 ## Rope breaks this match, pins and holds together (probes, tests).
 var rope_breaks := 0
+## Whether the last move to land on each man was his opponent's finisher:
+## wrestler -> bool. Overwritten by every landing, so a finisher kicked out
+## of and followed by a strike no longer counts.
+var _finished := {}
+## Covers kicked out of because they were not off a finisher.
+var near_falls := 0
 
 func _ready() -> void:
 	wrestler_a = get_node(wrestler_a_path)
 	wrestler_b = get_node(wrestler_b_path)
+	for w: WrestlerController in [wrestler_a, wrestler_b]:
+		w.move_landed.connect(_on_move_landed)
+
+
+func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
+		move: MoveDef) -> void:
+	if defender:
+		_finished[defender] = attacker.is_finisher(move)
+
+
+## Whether a cover on `defender` can end the match: only straight off the
+## pinning man's own finisher.
+func can_be_finished(defender: WrestlerController) -> bool:
+	return bool(_finished.get(defender, false))
 
 func _physics_process(_delta: float) -> void:
 	if _match_over:
@@ -353,6 +378,10 @@ func _tick_pin() -> void:
 		_end_pin(false, true)
 		return
 	_update_count()
+	if _pin_ticks >= NEAR_FALL_KICKOUT_TICK and not can_be_finished(_pin_defender):
+		near_falls += 1
+		_end_pin(false)
+		return
 	if _pin_ticks >= PIN_COUNT_TICKS:
 		_end_pin(true)
 

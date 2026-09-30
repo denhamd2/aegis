@@ -37,9 +37,14 @@ const BASE_SHOULDER_SPAN := 0.384
 ## `fala` / `title` scale the props in the wrestler's frame (x across, y up,
 ## z forward) and the offsets move their origins, in metres, in that frame
 ## (+z is BEHIND him, -z in front -- the props are authored forward -Z).
+##
+## Roman's ula fala is now authored at his own measured size (roman_props.py
+## fala_curve), so it is placed 1:1 -- `fala_true_size` -- rather than
+## stretched out of the mannequin's by these factors, which is what made the
+## last one a thick ring standing off his throat.
 const FITS := {
 	"roman": {
-		"fala": Vector3(1.6, 0.85, 1.75), "fala_offset": Vector3(0.0, 0.03, 0.0),
+		"fala_true_size": true, "fala_offset": Vector3.ZERO,
 	},
 }
 
@@ -188,11 +193,16 @@ func _follow() -> void:
 		return
 	var turn := Basis(Vector3.UP, _w.global_rotation.y)
 	var fala_fit: Vector3 = _fit.get("fala", Vector3.ONE)
+	var fala_scale := Vector3.ONE if _fit.get("fala_true_size", false) else fala_fit * _scale
 	var neck := _bone("neck_01")
 	if _fala and neck != Vector3.INF:
-		_fala.global_transform = Transform3D(
-				turn * Basis.from_scale(fala_fit * _scale),
-				neck + turn * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
+		# It lies on his chest and shoulders, so it turns with his chest:
+		# the upper spine's rotation away from rest, on top of his facing.
+		# Held to his yaw alone it stayed level while he leaned into the
+		# walk, and slid off his shoulders and into his chest with every step.
+		var chest := _bone_turn("spine_03") * turn
+		_fala.global_transform = Transform3D(chest * Basis.from_scale(fala_scale),
+				neck + chest * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
 	if _title == null:
 		return
 	if _title_state == "held":
@@ -214,8 +224,13 @@ func _follow() -> void:
 
 ## The pelvis's rotation away from its rest pose, in world space.
 func _pelvis_turn() -> Basis:
+	return _bone_turn("pelvis")
+
+
+## A bone's rotation away from its rest pose, in world space.
+func _bone_turn(canonical: String) -> Basis:
 	var sk := _w.skeleton
-	var i := sk.find_bone(_w._skeleton_bone_name("pelvis")) if sk else -1
+	var i := sk.find_bone(_w._skeleton_bone_name(canonical)) if sk else -1
 	if i < 0:
 		return Basis.IDENTITY
 	var s := sk.global_basis.orthonormalized()

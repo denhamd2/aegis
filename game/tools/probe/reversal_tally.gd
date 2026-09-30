@@ -35,7 +35,7 @@ func _ready() -> void:
 				% [s, r["ticks"], r["strikes"], r["chances"], r["read"], r["countered"], r["stam_a"], r["stam_b"], r["end"]])
 		print("    ground attacks: ", r["ground"])
 		print("    chain holds: ", r["chain"], "  reversed: ", r["chain_rev"])
-		print("    taunts %d, sells %d" % [r["taunts"], r["sells"]])
+		print("    taunts %d, sells %d, near-falls (not a finisher) %d" % [r["taunts"], r["sells"], r.get("near_falls", 0)])
 		print("    corner traps %d, hits in the corner %d, rope breaks %d (pins %d)"
 				% [r["traps"], r["corner_hits"], r["rope_breaks"], r["rope_pins"]])
 	print("REV_DONE strikes %d, read %d (%.0f%%), counters landed %d"
@@ -78,6 +78,7 @@ func _run(seed_value: int) -> Dictionary:
 	while r["ticks"] < _budget and not over[0]:
 		await get_tree().physics_frame
 		r["ticks"] += 1
+		r["near_falls"] = referee.near_falls
 		for i in 2:
 			var striking := ws[i].fsm.current_state == WrestlerFSM.State.STRIKE \
 					and ws[i]._active_move != WrestlerController.REVERSAL_MOVE

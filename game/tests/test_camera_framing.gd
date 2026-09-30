@@ -199,7 +199,12 @@ func test_a_finisher_cut_ends_when_the_grapple_does() -> void:
 	var camera: MatchCamera = scene.get_node("MatchCamera")
 	camera.cut_to_finisher()
 	camera._on_grapple_finished(null, null)
-	# Out onto the MASTER, which is where a broadcast comes out of a finish.
+	# The finisher is shot as a sequence now: the grapple ending hands over
+	# to the aftermath hold (the winner standing over him), and only that
+	# comes out onto the MASTER, which is where a broadcast comes out of a
+	# finish.
+	assert_int(camera.mode).is_equal(MatchCamera.Mode.FINISHER_AFTER)
+	camera._update_mode(MatchCamera.FINISHER_AFTER_HOLD + 0.1)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.HARD_CAM)
 
 ## The finisher slot is empty in every shipped scene now -- the finisher

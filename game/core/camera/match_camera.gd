@@ -218,7 +218,34 @@ const BODY_WIDTH := 0.8
 ## ENTRANCE is not a shot of the match: EntranceDirector drives the camera
 ## directly while the wrestlers walk to the ring, through set_entrance_shot(),
 ## and hands back with resume_master() at the bell.
-enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE }
+enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE, FINISHER_AFTER }
+
+# --- The finisher, shot as a sequence (blender-cameras) -----------------------
+## Only a finisher wins a match now (MatchReferee.can_be_finished), so it is
+## the one move the camera stops covering and starts DIRECTING. Three shots
+## cut on the paired clip's own progress, then a hold on the aftermath:
+##
+##   setup    0 .. SETUP_END   a tight three-quarter on the attacker's face,
+##                             ~85 mm, pushing in, the crowd soft behind him
+##   impact   .. IMPACT_END    down on the mat, square to the pair, ~24 mm --
+##                             the spectacle lens -- and the shake as he lands
+##   crane    .. the end       high over the man he has just put down, looking
+##                             down on him, the lens easing tighter
+##   after    FINISHER_AFTER_HOLD s  low and close at the winner's feet, up at
+##                             him standing over the body -- then the cover,
+##                             which the three-count cut takes
+const FINISH_SETUP_END := 0.42
+const FINISH_IMPACT_END := 0.78
+## Where in the impact shot the body lands, and the shake that goes with it.
+const FINISH_IMPACT_AT := 0.6
+const FINISH_SHAKE := 0.09
+const FINISH_SHAKE_DECAY := 3.5
+const FINISH_SETUP_FOV := Vector2(24.0, 19.0)
+const FINISH_SETUP_DISTANCE := Vector2(2.9, 2.3)
+const FINISH_IMPACT_FOV := 58.0
+const FINISH_CRANE_FOV := Vector2(44.0, 36.0)
+const FINISHER_AFTER_HOLD := 1.6
+const FINISH_AFTER_FOV := 50.0
 var mode: Mode = Mode.HARD_CAM
 ## Seconds the current shot has been held. Advanced off the physics delta, so
 ## it is fixed-step and replays identically; it is never read by anything in
@@ -249,6 +276,15 @@ func _physics_process(delta: float) -> void:
 		return
 	_update_mode(delta)
 	fov = shot_fov()
+	_shake(delta)
+	if mode == Mode.FINISHER_CUT and _finisher_shot(delta):
+		_previous_mode = mode
+		return
+	if mode == Mode.FINISHER_AFTER:
+		_after_shot(delta)
+		_previous_mode = mode
+		return
+	_clear_focus_if_needed()
 
 	var midpoint := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
 	var target_position: Vector3
@@ -373,6 +409,8 @@ func shot_fov() -> float:
 			return hard_cam_fov
 		Mode.FINISHER_CUT:
 			return cut_fov
+		Mode.FINISHER_AFTER:
+			return FINISH_AFTER_FOV
 		Mode.THREE_COUNT_CUT:
 			return three_count_fov
 		_:
@@ -469,6 +507,12 @@ func _update_mode(delta: float) -> void:
 		mode = Mode.THREE_COUNT_CUT
 		_reset_clock_on_change(was)
 		return
+	if mode == Mode.FINISHER_AFTER:
+		_held += delta
+		if _held >= FINISHER_AFTER_HOLD:
+			mode = Mode.HARD_CAM
+			_held = 0.0
+		return
 	if mode == Mode.THREE_COUNT_CUT:
 		# Out of the pin and back to the master, not to whatever was on screen
 		# before it: a broadcast comes out of a near-fall on the wide.
@@ -489,15 +533,20 @@ func _reset_clock_on_change(was: Mode) -> void:
 	if mode != was:
 		_held = 0.0
 
-func _on_grapple_started(attacker: Node3D, _defender: Node3D, move: MoveDef) -> void:
+func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	var wrestler := attacker as WrestlerController
 	if wrestler and wrestler.is_finisher(move):
 		mode = Mode.FINISHER_CUT
+		_finish_attacker = attacker
+		_finish_defender = defender
+		_finish_shot = -1
 		_held = 0.0
 
-func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
+func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
 	if mode == Mode.FINISHER_CUT:
-		mode = Mode.HARD_CAM
+		mode = Mode.FINISHER_AFTER
+		_finish_attacker = attacker
+		_finish_defender = defender
 		_held = 0.0
 
 func cut_to_finisher() -> void:
@@ -515,3 +564,130 @@ func resume_master() -> void:
 	mode = Mode.HARD_CAM
 	_held = 0.0
 	_clear_focus()
+
+
+# --- The finisher sequence -----------------------------------------------------
+
+var _finish_attacker: Node3D
+var _finish_defender: Node3D
+## Which of the three finisher shots is up (0 setup, 1 impact, 2 crane).
+var _finish_shot := -1
+var _trauma := 0.0
+var _shake_t := 0.0
+var _focused := false
+
+
+## Frames the finisher. Returns false if there is no paired move to read, and
+## the ordinary low cut takes it instead.
+func _finisher_shot(delta: float) -> bool:
+	if grapple_rig == null or not grapple_rig.is_active() or _finish_attacker == null:
+		return false
+	var p := grapple_rig.progress()
+	var shot := finish_shot_for(p)
+	var cut := shot != _finish_shot
+	if shot == 1 and _finish_shot == 1 and p >= FINISH_IMPACT_AT and _trauma <= 0.0 \
+			and not _impact_shaken:
+		_trauma = 1.0
+		_impact_shaken = true
+	if cut:
+		_impact_shaken = false
+	_finish_shot = shot
+	var a := _finish_attacker.global_position
+	var d := _finish_defender.global_position if _finish_defender else a
+	var mid := (a + d) * 0.5
+	var fwd := _flat(-_finish_attacker.global_transform.basis.z)
+	var across := _flat(d - a)
+	if across.length() < 0.2:
+		across = fwd
+	var side := Vector3.UP.cross(across).normalized()
+	# The broadcast side of the ring, so the finisher does not jump the line.
+	if side.dot(hard_cam_position - mid) < 0.0:
+		side = -side
+	var at: Vector3
+	var look: Vector3
+	var lens: float
+	match shot:
+		0:
+			var t := clampf(p / FINISH_SETUP_END, 0.0, 1.0)
+			var e := t * t * (3.0 - 2.0 * t)
+			var dir := (fwd * 0.75 + side * 0.66).normalized()
+			var head := a + Vector3.UP * 1.62
+			at = head + dir * lerpf(FINISH_SETUP_DISTANCE.x, FINISH_SETUP_DISTANCE.y, e) \
+					+ Vector3.DOWN * 0.18
+			look = head + Vector3.DOWN * 0.08
+			lens = lerpf(FINISH_SETUP_FOV.x, FINISH_SETUP_FOV.y, e)
+			_entrance_focus(at.distance_to(head), lens)
+			_focused = true
+		1:
+			at = mid + side * 3.0 + Vector3.UP * 0.32
+			look = mid + Vector3.UP * 0.75
+			lens = FINISH_IMPACT_FOV
+			_clear_focus_if_needed()
+		_:
+			var t2 := clampf((p - FINISH_IMPACT_END) / (1.0 - FINISH_IMPACT_END), 0.0, 1.0)
+			at = d + side * 1.9 - across.normalized() * 1.4 + Vector3.UP * (3.6 - 0.5 * t2)
+			look = d + Vector3.UP * 0.3
+			lens = lerpf(FINISH_CRANE_FOV.x, FINISH_CRANE_FOV.y, t2)
+	fov = lens
+	global_position = at
+	look_at(look, Vector3.UP)
+	return true
+
+
+static func finish_shot_for(p: float) -> int:
+	if p < FINISH_SETUP_END:
+		return 0
+	if p < FINISH_IMPACT_END:
+		return 1
+	return 2
+
+
+var _impact_shaken := false
+
+
+## The aftermath: low at the winner's feet, up past him standing over the man.
+func _after_shot(_delta: float) -> void:
+	if _finish_attacker == null:
+		return
+	var a := _finish_attacker.global_position
+	var d := _finish_defender.global_position if _finish_defender else a
+	var across := _flat(d - a)
+	if across.length() < 0.2:
+		across = _flat(-_finish_attacker.global_transform.basis.z)
+	var side := Vector3.UP.cross(across).normalized()
+	if side.dot(hard_cam_position - a) < 0.0:
+		side = -side
+	var t := clampf(_held / FINISHER_AFTER_HOLD, 0.0, 1.0)
+	fov = FINISH_AFTER_FOV
+	global_position = a - across.normalized() * 0.9 + side * (1.7 - 0.3 * t) + Vector3.UP * 0.35
+	look_at(a + Vector3.UP * (1.45 + 0.1 * t), Vector3.UP)
+
+
+## Handheld impact shake: a decaying "trauma" drives small offsets of the
+## film back (h_offset / v_offset), so the camera's aim is untouched and it
+## settles exactly where it was. Presentation only.
+func _shake(delta: float) -> void:
+	if _trauma <= 0.0:
+		h_offset = 0.0
+		v_offset = 0.0
+		return
+	_shake_t += delta
+	var amt := _trauma * _trauma * FINISH_SHAKE
+	h_offset = amt * sin(_shake_t * 71.0) * cos(_shake_t * 23.0)
+	v_offset = amt * sin(_shake_t * 59.0 + 1.3)
+	_trauma = maxf(0.0, _trauma - FINISH_SHAKE_DECAY * delta)
+
+
+## Kick the shake from outside (a big bump).
+func add_trauma(amount: float) -> void:
+	_trauma = clampf(_trauma + amount, 0.0, 1.0)
+
+
+func _clear_focus_if_needed() -> void:
+	if _focused:
+		_focused = false
+		_clear_focus()
+
+
+static func _flat(v: Vector3) -> Vector3:
+	return Vector3(v.x, 0.0, v.z)
