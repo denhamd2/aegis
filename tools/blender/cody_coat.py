@@ -351,6 +351,54 @@ def copy_weights(obj, body, exclude=frozenset({"Head", "neck_01", "hand_l", "han
             groups[name].add([v.index], x / total, "REPLACE")
 
 
+def reweight_from_surface(obj, body, exclude=frozenset({"Head", "neck_01", "hand_l", "hand_r"})):
+    """Each vertex's skin weights re-read from the body surface directly
+    under it: the nearest point on the body, its face's vertex weights
+    blended by closeness.
+
+    Why: the copied faces arrive carrying their own vertex's weights, but
+    SMOOTH_ITERS passes of smoothing then slide every vertex along the body
+    by up to several centimetres -- so a sleeve vertex over the inner elbow
+    was carrying the weights of skin that had been under the forearm. At
+    rest nobody can tell; bend the elbow (the WHOA, the coat coming off) and
+    the sleeve and the arm under it move differently, and the arm comes
+    through. Weights read from where the cloth actually IS move it with the
+    skin beneath it.
+    """
+    bvh = body_bvh(body)
+    names = {g.index: g.name for g in body.vertex_groups}
+    mw = body.matrix_world
+    bverts = [mw @ v.co for v in body.data.vertices]
+    group_of = {g.name: g for g in obj.vertex_groups}
+    omw = obj.matrix_world
+    for v in obj.data.vertices:
+        co = omw @ v.co
+        loc, _, fi, _ = bvh.find_nearest(co)
+        if loc is None:
+            continue
+        poly = body.data.polygons[fi]
+        acc = {}
+        total = 0.0
+        for vi in poly.vertices:
+            k = 1.0 / ((bverts[vi] - loc).length + 1e-4)
+            for g in body.data.vertices[vi].groups:
+                n = names[g.group]
+                if n in exclude or g.weight <= 0.0:
+                    continue
+                acc[n] = acc.get(n, 0.0) + g.weight * k
+            total += k
+        if not acc:
+            continue
+        top = sorted(acc.items(), key=lambda kv: (-kv[1], kv[0]))[:4]
+        norm = sum(w for _, w in top)
+        for g in list(v.groups):
+            obj.vertex_groups[g.group].remove([v.index])
+        for n, w in top:
+            if n not in group_of:
+                group_of[n] = obj.vertex_groups.new(name=n)
+            group_of[n].add([v.index], w / norm, "REPLACE")
+
+
 def measure_hips(body):
     """(centre y, waist half-widths, seat half-widths) off the body mesh,
     arms left out (they hang beside the hips)."""
@@ -828,6 +876,9 @@ def main() -> int:
     torso = build_torso(body, arm, centre_y)
     lapels = build_lapels(torso, body, centre_y)
     sleeves = split_sleeves(torso, body)
+    # Weights from where the cloth ended up, not where its faces came from.
+    reweight_from_surface(torso, body)
+    reweight_from_surface(sleeves, body)
     collar = build_collar(arm)
     copy_weights(collar, body, exclude=frozenset({"Head", "hand_l", "hand_r"}))
     scales = build_scales(arm)

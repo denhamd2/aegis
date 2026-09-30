@@ -63,7 +63,6 @@ OUT = ROOT / "game/assets/characters/aubrey_edwards.glb"
 SRC = pathlib.Path(os.path.expanduser("~/.cache/aegis_assets/ubc/Universal Base Characters[Standard]"))
 
 BODY = "Base Characters/Godot - UE/Superhero_Female_FullBody.gltf"
-HAIR = "Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/Hair_Long.gltf"
 SKIN_LIGHT = "Base Characters/Textures/T_Superhero_Female_Light_BaseColor.png"
 TEX_CAP = 1024
 
@@ -120,6 +119,8 @@ PATCH_CENTRE = (0.09, 1.33)     # x, z
 PATCH_SIZE = (0.10, 0.07)       # w, h
 
 BLACK = (0.018, 0.018, 0.018, 1.0)
+SKIN_SATURATION = 0.74
+SKIN_VALUE = 1.12
 HAIR_DARK = (26, 17, 12)
 HAIR_LIGHT = (98, 66, 44)
 
@@ -145,22 +146,8 @@ def main() -> int:
 	for o in list(bpy.data.objects):
 		if o.type == "MESH" and o.parent is None:
 			bpy.data.objects.remove(o)   # the kit's stray Icosphere
-	before = set(bpy.data.objects)
-	bpy.ops.import_scene.gltf(filepath=str(src / HAIR))
-	for o in set(bpy.data.objects) - before:
-		if o.type == "MESH" and o.parent is not None:
-			o.name = "Aubrey_Hair"
-			mat = o.matrix_world.copy()
-			o.parent = arm
-			o.matrix_world = mat
-			for md in o.modifiers:
-				if md.type == "ARMATURE":
-					md.object = arm
-	for o in set(bpy.data.objects) - before:
-		if o.name != "Aubrey_Hair":
-			bpy.data.objects.remove(o)
-
 	_retexture(src, tmp)
+	_hair(body, arm, tmp)
 	faces = _classify(body)
 	shirt = _garment(body, "Aubrey_Shirt", faces["shirt"], SHIRT_OFF, smooth=True, drape=_drape_shirt)
 	_stripe_uvs(shirt)
@@ -208,6 +195,8 @@ def _retexture(src: pathlib.Path, tmp: pathlib.Path) -> None:
 			path = src / SKIN_LIGHT
 			name = "T_Aubrey_Skin.png"
 		im = Image.open(path)
+		if name == "T_Aubrey_Skin.png":
+			im = _paler(im)
 		if name.startswith("T_Hair_2_BaseColor"):
 			im = _brown(im)
 			name = "T_Aubrey_Hair.png"
@@ -226,6 +215,16 @@ def _retexture(src: pathlib.Path, tmp: pathlib.Path) -> None:
 		img.user_remap(fresh)
 		bpy.data.images.remove(img)
 		fresh.name = out.stem
+
+
+def _paler(im: Image.Image) -> Image.Image:
+	"""Her fair skin: the kit's lightest tone is still a tan against her
+	(measured median (171, 120, 83)). Less saturation, a little lighter, so
+	it lands near (200, 158, 128) -- fair, still warm, not grey."""
+	hsv = np.asarray(im.convert("RGB").convert("HSV"), dtype=np.float32)
+	hsv[..., 1] *= SKIN_SATURATION
+	hsv[..., 2] = np.minimum(255.0, hsv[..., 2] * SKIN_VALUE)
+	return Image.fromarray(hsv.round().astype(np.uint8), "HSV").convert("RGB")
 
 
 def _brown(im: Image.Image) -> Image.Image:
@@ -732,6 +731,264 @@ def _cover_skin(body: bpy.types.Object, covered: set) -> None:
 	bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
 	bm.to_mesh(body.data)
 	bm.free()
+
+
+# --- hair: tied back, a curled ponytail ----------------------------------------
+#
+# How she wears it to referee: pulled back off the face and tied in a
+# ponytail, which she curls (her own description of her match-night routine;
+# the AEW toy figure of her is sculpted the same way). The kit has no such
+# hairstyle, so it is built here:
+#
+#   * the CAP is her own scalp -- the head's faces above her hairline, stood
+#     off a few millimetres -- because hair pulled back tight follows the
+#     skull exactly; it carries the head's weights, so it cannot slip;
+#   * the PONYTAIL is a tube swept from the tie at the back of her crown down
+#     to between her shoulder blades, full just under the tie and tapering to
+#     the tip, its cross-section lobed and twisted along its length so it
+#     reads as curls rather than a rope;
+#   * a black HAIR TIE rings the root;
+#   * the ponytail rides five new bones, ponytail_1..5, chained off Head, so
+#     the game can swing it on springs (AubreyModel, SpringBoneSimulator3D).
+#
+# Head measurements (rest pose, metres, facing -Y): brows top 1.687, crown
+# 1.767, skull centre about (0, 0.01, 1.67), back of the skull y 0.112.
+## The hairline, by bearing round the skull from the front: the forehead's
+## (5 cm above the brows), receding a little at the temples, over the ears,
+## and the nape. Hair pulled back shows the whole forehead.
+HAIRLINE = ((0.0, 1.738), (0.75, 1.728), (1.45, 1.672), (math.pi, 1.548))
+CAP_OFF = 0.0035
+CAP_CROWN = 0.004                  # a little more over the crown
+SKULL = Vector((0.0, 0.01, 1.67))
+TAIL_PATH = ((0.0, 0.122, 1.712), (0.0, 0.158, 1.700), (0.0, 0.180, 1.645),
+		(0.0, 0.172, 1.560), (0.0, 0.158, 1.480), (0.0, 0.150, 1.405))
+TAIL_RADIUS = ((0.0, 0.015), (0.12, 0.028), (0.45, 0.025), (0.80, 0.015), (1.0, 0.004))
+TAIL_RINGS, TAIL_SIDES = 28, 16
+CURL_LOBES, CURL_DEPTH, CURL_TWIST = 7, 0.20, 2.5
+TAIL_BONES = 5
+HAIR_COLOUR = ((34, 23, 16), (92, 62, 42))   # root, highlight
+
+
+def _hairline(co) -> float:
+	"""Hairline height at this bearing round the skull (HAIRLINE); smooth
+	between the keys."""
+	a = abs(math.atan2(co.x - SKULL.x, -(co.y - SKULL.y)))
+	for (a0, z0), (a1, z1) in zip(HAIRLINE, HAIRLINE[1:]):
+		if a <= a1:
+			return z0 + (z1 - z0) * _smoothstep((a - a0) / (a1 - a0))
+	return HAIRLINE[-1][1]
+
+
+def _hair(body, arm, tmp: pathlib.Path) -> None:
+	names = {g.index: g.name for g in body.vertex_groups}
+	head_faces = set()
+	for p in body.data.polygons:
+		vs = [body.data.vertices[i] for i in p.vertices]
+		# Every head face that reaches above the hairline; the exact edge is
+		# drawn by the texture's alpha (CAP_V), not by where the faces stop,
+		# which cut it in steps.
+		if all(v.groups and names[max(v.groups, key=lambda g: g.weight).group] == "Head" for v in vs) \
+				and max(v.co.z - _hairline(v.co) for v in vs) > -0.004:
+			head_faces.add(p.index)
+	cap = _garment(body, "Aubrey_HairCap", head_faces, CAP_OFF)
+	bm = bmesh.new()
+	bm.from_mesh(cap.data)
+	for v in bm.verts:
+		v.co += v.normal * CAP_CROWN * _smoothstep((v.co.z - 1.70) / 0.06)
+	bm.to_mesh(cap.data)
+	bm.free()
+	# UVs: u round the skull, v up from the hairline, so the strand texture
+	# runs from the hairline back over the crown.
+	me = cap.data
+	uv = me.uv_layers[0].data
+	for p in me.polygons:
+		us = []
+		for li in p.loop_indices:
+			co = me.vertices[me.loops[li].vertex_index].co
+			us.append((math.atan2(co.x - SKULL.x, -(co.y - SKULL.y)) / (2 * math.pi) * 6.0,
+					_cap_v(co.z - _hairline(co))))
+		if max(u for u, _ in us) - min(u for u, _ in us) > 3.0:
+			us = [(u + 6.0 if u < 0 else u, v) for u, v in us]
+		for li, (u, v) in zip(p.loop_indices, us):
+			uv[li].uv = (u, v)
+	hair_png = _strands_png(tmp)
+	mat = _textured("M_AubreyHair", hair_png, 0.45)
+	mat.blend_method = "CLIP"
+	mat.alpha_threshold = 0.35
+	nodes = mat.node_tree.nodes
+	tex = next(n for n in nodes if n.type == "TEX_IMAGE")
+	mat.node_tree.links.new(tex.outputs["Alpha"], nodes["Principled BSDF"].inputs["Alpha"])
+	cap.data.materials.clear()
+	cap.data.materials.append(mat)
+	_ponytail(arm, mat)
+
+
+## v on the cap: the hairline at CAP_V[0], the crown and back up to CAP_V[1],
+## all inside one tile so nothing wraps (a wrapped tile drew the transparent
+## hairline row as a stripe across her crown). Below the line, v runs down
+## to 0, where the texture is clear.
+CAP_V = (0.12, 0.98)
+CAP_SPAN = 0.24   # metres of scalp above the hairline the tile covers
+
+
+def _cap_v(above: float) -> float:
+	if above < 0.0:
+		return max(CAP_V[0] + above * (CAP_V[0] / 0.02), 0.0)
+	return CAP_V[0] + (CAP_V[1] - CAP_V[0]) * min(above / CAP_SPAN, 1.0)
+
+
+def _strands_png(tmp: pathlib.Path) -> pathlib.Path:
+	"""Strands along v, dark at the root; alpha ragged at the hairline (v 0)
+	so the edge reads as hair growing, not a painted line."""
+	w, h = 128, 256
+	rng = np.random.default_rng(19870309)
+	cols = rng.random(w)
+	for _ in range(2):
+		cols = (cols + np.roll(cols, 1) + np.roll(cols, -1)) / 3
+	cols = (cols - cols.min()) / max(cols.max() - cols.min(), 1e-6)
+	v = np.linspace(0.0, 1.0, h)[:, None]
+	shade = 0.55 + 0.45 * cols[None, :] * (0.6 + 0.4 * np.clip(v * 3, 0, 1))
+	lo, hi = np.array(HAIR_COLOUR[0], float), np.array(HAIR_COLOUR[1], float)
+	rgb = lo + (hi - lo) * shade[..., None]
+	# Clear below the hairline (CAP_V[0]), a ragged few millimetres of edge,
+	# solid above.
+	edge = CAP_V[0] - 0.01 + rng.random(w) * 0.03
+	alpha = np.clip((v - edge[None, :]) / 0.03, 0.0, 1.0)
+	img = np.concatenate([rgb, alpha[..., None] * 255.0], -1)
+	out = tmp / "T_Aubrey_Strands.png"
+	# v runs up the image (row 0 at the top is v = 1 in glTF's flipped V).
+	Image.fromarray(np.flipud(img).round().astype(np.uint8), "RGBA").save(out, optimize=False)
+	return out
+
+
+def _catmull(points, t: float) -> Vector:
+	n = len(points) - 1
+	f = min(max(t, 0.0), 1.0) * n
+	i = min(int(f), n - 1)
+	u = f - i
+	p0 = Vector(points[max(i - 1, 0)])
+	p1, p2 = Vector(points[i]), Vector(points[i + 1])
+	p3 = Vector(points[min(i + 2, n)])
+	return 0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u
+			+ (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u)
+
+
+def _tail_radius(t: float) -> float:
+	for (t0, r0), (t1, r1) in zip(TAIL_RADIUS, TAIL_RADIUS[1:]):
+		if t <= t1:
+			k = _smoothstep((t - t0) / max(t1 - t0, 1e-6))
+			return r0 + (r1 - r0) * k
+	return TAIL_RADIUS[-1][1]
+
+
+def _ponytail(arm, mat) -> None:
+	# The bones first: a chain from the tie to the tip, parented to Head.
+	bpy.context.view_layer.objects.active = arm
+	bpy.ops.object.mode_set(mode="EDIT")
+	eb = arm.data.edit_bones
+	parent = eb["Head"]
+	joints = [_catmull(TAIL_PATH, 0.06 + 0.94 * k / TAIL_BONES) for k in range(TAIL_BONES + 1)]
+	for k in range(TAIL_BONES):
+		b = eb.new("ponytail_%d" % (k + 1))
+		b.head, b.tail = joints[k], joints[k + 1]
+		b.parent = parent
+		b.use_connect = k > 0
+		parent = b
+	bpy.ops.object.mode_set(mode="OBJECT")
+	# The tube.
+	bm = bmesh.new()
+	uvl = bm.loops.layers.uv.new("UVMap")
+	rings = []
+	up = Vector((1.0, 0.0, 0.0))
+	for r in range(TAIL_RINGS + 1):
+		t = r / TAIL_RINGS
+		c = _catmull(TAIL_PATH, t)
+		tangent = (_catmull(TAIL_PATH, min(t + 0.01, 1.0)) - _catmull(TAIL_PATH, max(t - 0.01, 0.0))).normalized()
+		side = up.cross(tangent).normalized()
+		norm = tangent.cross(side).normalized()
+		base = _tail_radius(t)
+		ring = []
+		for k in range(TAIL_SIDES):
+			a = 2 * math.pi * k / TAIL_SIDES
+			curl = 1.0 + CURL_DEPTH * math.sin(CURL_LOBES * a + CURL_TWIST * 2 * math.pi * t) \
+					* _smoothstep(t / 0.2)
+			ring.append(bm.verts.new(c + (side * math.cos(a) + norm * math.sin(a)) * base * curl))
+		rings.append((ring, t))
+	for (ra, ta), (rb, tb) in zip(rings, rings[1:]):
+		for k in range(TAIL_SIDES):
+			k2 = (k + 1) % TAIL_SIDES
+			f = bm.faces.new((ra[k], ra[k2], rb[k2], rb[k]))
+			for loop, (kk, tt) in zip(f.loops, ((k, ta), (k + 1, ta), (k + 1, tb), (k, tb))):
+				# Strands along the tail: v down its length, u round it.
+				loop[uvl].uv = (kk / TAIL_SIDES * 2.0, 0.3 + tt * 0.65)
+	tip = bm.verts.new(_catmull(TAIL_PATH, 1.0) + (_catmull(TAIL_PATH, 1.0) - _catmull(TAIL_PATH, 0.97)).normalized() * 0.01)
+	last = rings[-1][0]
+	for k in range(TAIL_SIDES):
+		bm.faces.new((last[k], last[(k + 1) % TAIL_SIDES], tip))
+	bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+	me = bpy.data.meshes.new("Aubrey_Ponytail")
+	bm.to_mesh(me)
+	bm.free()
+	for p in me.polygons:
+		p.use_smooth = True
+	me.materials.append(mat)
+	ob = bpy.data.objects.new("Aubrey_Ponytail", me)
+	bpy.context.collection.objects.link(ob)
+	ob.parent = arm
+	# Weights: Head at the tie, then a blend along the chain.
+	groups = {n: ob.vertex_groups.new(name=n) for n in ["Head"] + ["ponytail_%d" % (k + 1) for k in range(TAIL_BONES)]}
+	for v in me.vertices:
+		# Nearest point on the chain, as a bone coordinate.
+		best, best_d = 0.0, 1e9
+		for k in range(TAIL_BONES):
+			a, b = joints[k], joints[k + 1]
+			ab = b - a
+			t = min(max((v.co - a).dot(ab) / ab.length_squared, 0.0), 1.0)
+			d = (a + ab * t - v.co).length
+			if d < best_d:
+				best, best_d = k + t, d
+		if v.co.z > joints[0].z - 0.005 and best < 0.05:
+			groups["Head"].add([v.index], 1.0, "REPLACE")
+			continue
+		k = min(int(best), TAIL_BONES - 1)
+		f = best - k
+		groups["ponytail_%d" % (k + 1)].add([v.index], 1.0 - f * 0.5, "REPLACE")
+		nxt = "ponytail_%d" % (k + 2) if k + 1 < TAIL_BONES else "Head" if k == 0 else None
+		if nxt and k + 1 < TAIL_BONES:
+			groups[nxt].add([v.index], f * 0.5, "REPLACE")
+	md = ob.modifiers.new("Armature", "ARMATURE")
+	md.object = arm
+	# The hair tie.
+	bm = bmesh.new()
+	c = _catmull(TAIL_PATH, 0.05)
+	tangent = (_catmull(TAIL_PATH, 0.07) - _catmull(TAIL_PATH, 0.03)).normalized()
+	side = up.cross(tangent).normalized()
+	norm = tangent.cross(side).normalized()
+	R, rr = 0.0175, 0.0045
+	grid = []
+	for i in range(16):
+		a = 2 * math.pi * i / 16
+		row = []
+		for j in range(8):
+			b = 2 * math.pi * j / 8
+			d = side * math.cos(a) + norm * math.sin(a)
+			row.append(bm.verts.new(c + d * (R + rr * math.cos(b)) + tangent * rr * math.sin(b)))
+		grid.append(row)
+	for i in range(16):
+		for j in range(8):
+			bm.faces.new((grid[i][j], grid[(i + 1) % 16][j], grid[(i + 1) % 16][(j + 1) % 8], grid[i][(j + 1) % 8]))
+	bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+	me = bpy.data.meshes.new("Aubrey_HairTie")
+	bm.to_mesh(me)
+	bm.free()
+	for p in me.polygons:
+		p.use_smooth = True
+	me.materials.append(_flat("M_HairTie", (0.01, 0.01, 0.01, 1.0), 0.4))
+	tie = bpy.data.objects.new("Aubrey_HairTie", me)
+	bpy.context.collection.objects.link(tie)
+	tie.parent = arm
+	tie.vertex_groups.new(name="Head").add(list(range(len(me.vertices))), 1.0, "REPLACE")
+	tie.modifiers.new("Armature", "ARMATURE").object = arm
 
 
 if __name__ == "__main__":

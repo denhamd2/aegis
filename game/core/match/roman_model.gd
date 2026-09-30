@@ -314,6 +314,106 @@ func _ready() -> void:
 		_normalize_mouth_materials()
 	_trim_beard()
 	_volumize_hair()
+	_add_hair_springs()
+
+
+# ---------------------------------------------------------------------------
+# The hair's movement
+# ---------------------------------------------------------------------------
+#
+# The supplied rig already carries his hair as bone chains: on the 471-bone
+# skeleton, J_Hair -> J_Hair_b / J_Hair_c -> 18 + 17 chains (Hair_b00..b17,
+# Hair_c00..c16), each 8-13 joints from the crown down the back of the head
+# to the top of his back (rest y 1.74 -> 1.30). Nothing ever moved them, so
+# the hair was a helmet: it turned with his head and nothing else.
+#
+# A SpringBoneSimulator3D on that skeleton drives them. His hair is slicked
+# back wet on top, so each chain starts at the nape (the first joint below
+# HAIR_SPRING_FROM_Y): what lies on the scalp stays glued to it, and only
+# the lengths that hang free off the back of the head swing -- lagging a turn
+# of the head, bouncing on a stride, settling after a bump. Heavy wet hair:
+# stiff-ish and well damped, a little gravity so it keeps hanging when he
+# bends. It collides with his head, neck, upper back and shoulders, so it
+# drapes over them rather than through.
+#
+# Presentation only: a skeleton modifier, after the animation, read by
+# nothing in the match.
+const HAIR_SPRING_FROM_Y := 1.56
+const HAIR_STIFFNESS := 1.6
+const HAIR_DRAG := 0.55
+const HAIR_GRAVITY := 0.35
+const HAIR_RADIUS := 0.012
+## [bone, radius, offset in that bone's frame, capsule height or 0]. This
+## rig's spine and head bones point DOWN (their +Y is the world's -Y at
+## rest), so "up the bone" is a negative y offset: the skull's centre sits
+## 7 cm above J_Head, the upper back's capsule 2 cm above J_Chest and short
+## enough to stay clear of the hair where it leaves the nape.
+const HAIR_COLLIDERS := [
+	["J_Head", 0.10, Vector3(0.0, -0.07, 0.0), 0.0],
+	["J_Neck", 0.062, Vector3(0.0, -0.02, 0.0), 0.0],
+	["J_Chest", 0.12, Vector3(0.0, 0.02, 0.0), 0.24],
+	["J_Shoulder_L", 0.075, Vector3.ZERO, 0.0],
+	["J_Shoulder_R", 0.075, Vector3.ZERO, 0.0],
+]
+
+
+func _add_hair_springs() -> void:
+	var worn: Skeleton3D = null
+	for skeleton in _animation_skeletons():
+		if skeleton.find_bone("J_Hair_b") >= 0:
+			worn = skeleton
+	if worn == null or worn.has_node("HairSprings"):
+		return
+	var sim := SpringBoneSimulator3D.new()
+	sim.name = "HairSprings"
+	worn.add_child(sim)
+	var chains: Array = []
+	for i in worn.get_bone_count():
+		var parent := worn.get_bone_parent(i)
+		if parent < 0:
+			continue
+		var parent_name := worn.get_bone_name(parent)
+		if parent_name != "J_Hair_b" and parent_name != "J_Hair_c":
+			continue
+		# Down the chain to the nape, then to its end.
+		var root := i
+		while worn.get_bone_global_rest(root).origin.y > HAIR_SPRING_FROM_Y:
+			var kids := worn.get_bone_children(root)
+			if kids.is_empty():
+				break
+			root = kids[0]
+		var end := root
+		while not worn.get_bone_children(end).is_empty():
+			end = worn.get_bone_children(end)[0]
+		if end != root:
+			chains.append([root, end])
+	sim.set_setting_count(chains.size())
+	for k in chains.size():
+		sim.set_root_bone(k, chains[k][0])
+		sim.set_end_bone(k, chains[k][1])
+		sim.set_stiffness(k, HAIR_STIFFNESS)
+		sim.set_drag(k, HAIR_DRAG)
+		sim.set_gravity(k, HAIR_GRAVITY)
+		sim.set_radius(k, HAIR_RADIUS)
+		sim.set_enable_all_child_collisions(k, true)
+	for spec: Array in HAIR_COLLIDERS:
+		var bone := worn.find_bone(spec[0])
+		if bone < 0:
+			continue
+		var shape: SpringBoneCollision3D
+		if spec[3] > 0.0:
+			var capsule := SpringBoneCollisionCapsule3D.new()
+			capsule.radius = spec[1]
+			capsule.height = spec[3]
+			shape = capsule
+		else:
+			var sphere := SpringBoneCollisionSphere3D.new()
+			sphere.radius = spec[1]
+			shape = sphere
+		shape.name = "Collide_" + String(spec[0])
+		sim.add_child(shape)
+		shape.set_bone(bone)
+		shape.position_offset = spec[2]
 
 # ---------------------------------------------------------------------------
 # The beard's shape: trimmed, and faded at the sides
@@ -428,7 +528,7 @@ func _trim_beard() -> void:
 # HAIR_LIFT_TOP times its standoff on the crown and HAIR_LIFT_HANG where it
 # hangs, blended between -- and only HAIR_LIFT_FRONT at the front hairline,
 # so no fringe falls forward over his forehead. Skin weights untouched.
-const HAIR_LIFT_TOP := 1.9
+const HAIR_LIFT_TOP := 1.3
 const HAIR_LIFT_HANG := 1.6
 const HAIR_LIFT_FRONT := 1.15
 ## Crown above this, hang below the next; blended between.

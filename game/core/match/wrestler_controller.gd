@@ -1474,8 +1474,10 @@ func _physics_process(delta: float) -> void:
 				_tick_corner_trap()
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.DOWN:
+			_stop_dead()
 			_process_down(input)
 		WrestlerFSM.State.GETUP:
+			_stop_dead()
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.RUNNING_ATTACK:
 			_process_active_move(input)
@@ -3282,6 +3284,7 @@ func _release_model_facing() -> void:
 ## a man who was -- _process_timed_state() restores eligibility once he is
 ## back on his feet.
 func _lie_down_after_throw() -> void:
+	_stop_dead()
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
 	_move_ticks_remaining = THROWN_DOWN_TICKS
@@ -3290,6 +3293,7 @@ func _lie_down_after_throw() -> void:
 func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	_stop_dead()
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
 	_damage_at_last_knockdown = combat.wear
@@ -3297,6 +3301,23 @@ func _go_down() -> void:
 	combat.cut_off_comeback()
 	_cover_eligible = true
 	knocked_down.emit(self)
+
+## A man on the mat goes nowhere under his own steam.
+##
+## The match recording showed wrestlers gliding across the ring flat on their
+## backs, 3-5 m at a time. tools/probe/glitch_scan.gd caught every one of them
+## the same way: knocked down out of a RUN (a running attack countered, a
+## clothesline met), he entered DOWN with his 7 m/s run velocity still set --
+## _go_down() changed state without touching velocity, and nothing in DOWN or
+## GETUP ever did either -- so move_and_slide() carried him on, most visibly
+## as he got up (he had been lying against the ropes, which held him until
+## the rise lifted him off them). The grapple rig and the cover place a downed
+## man by position, never by velocity, so clearing it costs nothing.
+func _stop_dead() -> void:
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_knockback_ticks = 0
+
 
 func _process_down(input: Dictionary) -> void:
 	_move_ticks_remaining -= 1

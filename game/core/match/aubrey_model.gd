@@ -34,6 +34,74 @@ func _ready() -> void:
 		source.scale = Vector3.ONE * (HEIGHT / KIT_HEIGHT)
 	_install_animations()
 	_dress_fabric()
+	_dress_hair()
+	_add_ponytail_springs()
+
+
+## Her hair (tools/blender/referee_aubrey.py): the tight cap and the curled
+## ponytail share one strand texture; the highlight runs across the strands
+## like the wrestlers' (HairLook), and the ragged hairline is a scissor.
+const HAIR_MATERIAL := "M_AubreyHair"
+
+
+func _dress_hair() -> void:
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for surface in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(surface) as BaseMaterial3D
+			if source == null or source.resource_name != HAIR_MATERIAL:
+				continue
+			var material := source.duplicate() as BaseMaterial3D
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+			material.alpha_scissor_threshold = 0.35
+			material.cull_mode = BaseMaterial3D.CULL_DISABLED
+			HairLook.apply(material)
+			mi.set_surface_override_material(surface, material)
+
+
+## The ponytail swings: its five bones on a spring, heavier and livelier
+## than Roman's slicked hair (a curled ponytail bounces), kept off her head,
+## neck and upper back.
+const PONYTAIL_ROOT := "ponytail_1"
+const PONYTAIL_END := "ponytail_5"
+const PONYTAIL_STIFFNESS := 1.1
+const PONYTAIL_DRAG := 0.4
+const PONYTAIL_GRAVITY := 0.6
+## [bone, radius, offset in the bone's frame]
+## (This rig's bones point up, so +y is up the bone.) The skull's centre is
+## 12 cm up the Head bone; the upper back's sphere sits on the spine.
+const PONYTAIL_COLLIDERS := [["Head", 0.1, Vector3(0.0, 0.12, 0.0)],
+		["neck_01", 0.06, Vector3.ZERO], ["spine_03", 0.1, Vector3(0.0, 0.08, 0.0)]]
+
+
+func _add_ponytail_springs() -> void:
+	var skeleton := get_game_skeleton()
+	if skeleton == null or skeleton.find_bone(PONYTAIL_ROOT) < 0 or skeleton.has_node("Ponytail"):
+		return
+	var sim := SpringBoneSimulator3D.new()
+	sim.name = "Ponytail"
+	skeleton.add_child(sim)
+	sim.set_setting_count(1)
+	sim.set_root_bone_name(0, PONYTAIL_ROOT)
+	sim.set_end_bone_name(0, PONYTAIL_END)
+	sim.set_extend_end_bone(0, true)
+	sim.set_end_bone_length(0, 0.05)
+	sim.set_stiffness(0, PONYTAIL_STIFFNESS)
+	sim.set_drag(0, PONYTAIL_DRAG)
+	sim.set_gravity(0, PONYTAIL_GRAVITY)
+	sim.set_radius(0, 0.02)
+	sim.set_enable_all_child_collisions(0, true)
+	for spec: Array in PONYTAIL_COLLIDERS:
+		var bone := skeleton.find_bone(spec[0])
+		if bone < 0:
+			continue
+		var sphere := SpringBoneCollisionSphere3D.new()
+		sphere.name = "Collide_" + String(spec[0])
+		sphere.radius = spec[1]
+		sim.add_child(sphere)
+		sphere.set_bone(bone)
+		sphere.position_offset = spec[2]
 
 
 ## Cloth, not plastic: woven fabric catches light at grazing angles (the fuzz
