@@ -112,6 +112,8 @@ func _ready() -> void:
 		audio.follow(director)
 		if sign_fans:
 			sign_fans.follow(director)
+		if referee_actor:
+			referee_actor.follow(director)
 		director.begin(self)
 	else:
 		_begin_live()

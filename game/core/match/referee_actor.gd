@@ -73,6 +73,8 @@ var _clip := ""
 var _mode_time := 0.0
 var _last_pin_tick := 0
 var _winner: WrestlerController
+var _separated := false
+var _separating := false
 
 
 func _ready() -> void:
@@ -91,9 +93,19 @@ func watch(referee: MatchReferee, wrestlers: Array) -> void:
 	referee.match_won.connect(_on_match_won)
 
 
+## The entrances: she waits by the ropes, and when the stare-down breaks
+## ("faceoff", F7) she steps in between them to send them to their corners.
+func follow(director: EntranceDirector) -> void:
+	director.beat_started.connect(func(shot: String) -> void:
+		if shot == "faceoff" and mode == Mode.PARK and not _separated:
+			_separated = true
+			_separating = true)
+
+
 ## The bell: from here she works the match.
 func go_live() -> void:
 	if mode == Mode.PARK:
+		_separating = false
 		_set_mode(Mode.FOLLOW)
 
 
@@ -103,7 +115,19 @@ func _process(delta: float) -> void:
 	_mode_time += delta
 	match mode:
 		Mode.PARK:
-			_face(_yaw_towards(-global_position), delta)
+			if _separating:
+				# Between them, on the far side of their line.
+				var a := _flat(_wrestlers[0].global_position)
+				var b := _flat(_wrestlers[1].global_position)
+				var line := b - a
+				var side := Vector3(-line.z, 0.0, line.x).normalized()
+				if side.x < 0.0:
+					side = -side
+				if not _go(_inside((a + b) * 0.5 + side * 0.9), WALK_SPEED, delta, false):
+					return
+				_face(_yaw_towards(-side), delta)
+			else:
+				_face(_yaw_towards(-global_position), delta)
 			_play("strikes/ref_stand")
 		Mode.FOLLOW:
 			if _referee.is_pin_active():

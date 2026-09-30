@@ -83,7 +83,9 @@ const SETTLE_TICKS := 40
 ## the marks, exactly as it did, so nothing downstream moves.
 const FACEOFF_GAP := 0.75
 const FACEOFF_WALK_SPEED := 0.9
-const FACEOFF_STARE_TICKS := 210
+## Long enough for the stare-down's sequence (FACEOFF_SEQ): the locked-off
+## profile, the two over-the-shoulders, the eye cuts and the low hero shot.
+const FACEOFF_STARE_TICKS := 330
 ## Back to the marks: the turn away, and the turn back at the end.
 const FACEOFF_TURN_TICKS := 30
 ## A beat on the marks, facing, before the bell.
@@ -526,7 +528,7 @@ func _add_faceoff() -> void:
 	_beats.append({"kind": "pair", "ticks": walk, "shot": "faceoff_side", "moves": [
 			[_a, a.origin, a_in, face_a, "strikes/entrance_walk"],
 			[_b, b.origin, b_in, face_b, "strikes/entrance_walk"]]})
-	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "faceoff_side",
+	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "faceoff_seq",
 			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
 					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
 	# Back to their marks: turned away, walked, turned round.
@@ -1301,9 +1303,11 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					RING_BEHIND_OUT_FOV, true)
 		"end_wide":
 			_camera.set_entrance_shot(END_WIDE_AT, END_WIDE_LOOK, END_WIDE_FOV, true)
+		"faceoff_seq":
+			_faceoff_seq(delta)
 		"faceoff_side":
-			# Square to the line between them, at eye height, both profiles
-			# filling the frame: the stare-down shot every broadcast takes.
+			# F1, the walk to the centre: square to the line between them,
+			# wide, at eye height -- then the sequence takes the stare.
 			var mid := (_a.global_position + _b.global_position) * 0.5
 			var across := _flat(_b.global_position - _a.global_position).normalized()
 			var side := Vector3.UP.cross(across).normalized()
@@ -1323,6 +1327,66 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 ## The pre-entrance montage: which of ROMAN_INTRO_SHOTS the hold is in, and
 ## how far through its move, eased (smoothstep) so every move starts and
 ## settles gently. A new shot is a cut.
+# ---------------------------------------------------------------------------
+# The stare-down (camera_aaa_plan.md A6, "The face-off", F2-F6)
+# ---------------------------------------------------------------------------
+#
+# The one place a broadcast holds still, then tightens: a locked-off profile
+# two-shot with nothing but a slow push; over one man's shoulder onto the
+# other's face, and the reverse -- both from the SAME side of the line
+# between them (the 180-degree rule); their eyes, cut back and forth, each
+# cut shorter than the last; and from the mat between them, up at both.
+# F1 (the walk in) is "faceoff_side"; F7 (back to the wide as the referee
+# steps between them) is "faceoff", the hard camera.
+##  [ends at (s), shot]
+const FACEOFF_SEQ := [[1.6, "profile"], [2.6, "ots_a"], [3.6, "ots_b"],
+		[4.05, "eyes_a"], [4.45, "eyes_b"], [4.8, "eyes_a"], [5.1, "eyes_b"], [9.9, "low_hero"]]
+const FACEOFF_OTS_FOV := 26.0     # ~85 mm
+const FACEOFF_EYES_FOV := 13.0    # ~135 mm
+const FACEOFF_HERO_FOV := 58.0    # ~24 mm
+
+
+static func faceoff_shot_at(seconds: float) -> String:
+	for step: Array in FACEOFF_SEQ:
+		if seconds < float(step[0]):
+			return step[1]
+	return FACEOFF_SEQ[-1][1]
+
+
+func _faceoff_seq(delta: float) -> void:
+	var t := float(_tick) / TPS
+	var shot := faceoff_shot_at(t)
+	var cut := shot != faceoff_shot_at(maxf(t - 1.0 / TPS, 0.0)) or _tick <= 1
+	var ha := _head_of(_a)
+	var hb := _head_of(_b)
+	var mid := (_a.global_position + _b.global_position) * 0.5
+	var across := _flat(_b.global_position - _a.global_position).normalized()
+	var side := Vector3.UP.cross(across).normalized()
+	if side.dot(_camera.hard_cam_position - mid) < 0.0:
+		side = -side
+	match shot:
+		"profile":
+			var e := smoothstep(0.0, 1.6, t)
+			_camera.set_entrance_shot(mid + side * lerpf(FACEOFF_CAM_DISTANCE, 2.9, e)
+					+ Vector3.UP * FACEOFF_CAM_HEIGHT, mid + Vector3.UP * 1.5,
+					FACEOFF_CAM_FOV, cut, delta)
+		"ots_a", "ots_b":
+			var near := ha if shot == "ots_a" else hb
+			var far := hb if shot == "ots_a" else ha
+			var back := _flat(near - far).normalized()
+			_camera.set_entrance_shot(near + back * 0.75 + side * 0.38 + Vector3.UP * 0.02,
+					far + Vector3.DOWN * 0.04, FACEOFF_OTS_FOV, true, delta, false)
+		"eyes_a", "eyes_b":
+			var who := ha if shot == "eyes_a" else hb
+			var other := hb if shot == "eyes_a" else ha
+			var toward := _flat(other - who).normalized()
+			_camera.set_entrance_shot(who + toward * 0.95 + side * 0.18,
+					who, FACEOFF_EYES_FOV, true, delta, false)
+		_:
+			_camera.set_entrance_shot(mid + side * 1.15 + Vector3.UP * 0.32,
+					mid + Vector3.UP * 1.55, FACEOFF_HERO_FOV, cut, delta)
+
+
 func _intro_shot() -> void:
 	var at := float(_tick) / TPS
 	var start := 0.0

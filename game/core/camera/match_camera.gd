@@ -412,11 +412,38 @@ func _physics_process(delta: float) -> void:
 ## Frames an entrance shot: where the camera stands, what it looks at, and
 ## the lens. `snap` is a cut; otherwise it eases, which is what a camera
 ## operator walking backwards down a ramp does.
+##
+## A2: no entrance shot is locked off (2K26's never are). A held shot pushes
+## in slowly -- eased, SHOT_PUSH_RATE of the distance a second up to
+## SHOT_PUSH_MAX -- and every shot carries a touch of handheld drift. `motion`
+## false is the exception: the stare-down's locked-off shots.
+const SHOT_PUSH_RATE := 0.025
+const SHOT_PUSH_MAX := 0.12
+const SHOT_DRIFT := 0.012
+var _shot_t := 0.0
+var _shot_at := Vector3.INF
+var _shot_look := Vector3.INF
+
+
 func set_entrance_shot(at: Vector3, look: Vector3, lens: float, snap: bool,
-		delta: float = 1.0 / 60.0) -> void:
+		delta: float = 1.0 / 60.0, motion: bool = true) -> void:
 	mode = Mode.ENTRANCE
 	_previous_mode = Mode.ENTRANCE
 	fov = lens
+	# A new shot is a new framing, not the same one re-asserted each tick.
+	if snap and (at.distance_to(_shot_at) > 0.05 or look.distance_to(_shot_look) > 0.05):
+		_shot_t = 0.0
+	_shot_at = at
+	_shot_look = look
+	_shot_t += delta
+	if motion:
+		var reach := at.distance_to(look)
+		var e := smoothstep(0.0, SHOT_PUSH_MAX / SHOT_PUSH_RATE, _shot_t)
+		if snap:
+			at += (look - at).normalized() * reach * SHOT_PUSH_MAX * e
+		var drift := SHOT_DRIFT * clampf(reach / 4.0, 0.5, 2.0)
+		at += Vector3(sin(_shot_t * 2.2) * 0.6 + sin(_shot_t * 3.7 + 1.0) * 0.4,
+				sin(_shot_t * 2.9 + 2.0) * 0.5, 0.0) * drift
 	if snap:
 		global_position = at
 	else:
