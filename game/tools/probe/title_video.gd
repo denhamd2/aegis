@@ -173,7 +173,7 @@ func _log_sound() -> void:
 	for p in _sound_players:
 		if not is_instance_valid(p):
 			continue
-		var id := p.get_instance_id()
+		var id: int = p.get_instance_id()
 		seen[id] = true
 		var playing: bool = p.is_playing()
 		var vol: float = p.volume_db
