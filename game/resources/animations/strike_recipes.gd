@@ -389,6 +389,23 @@ const RECIPES := {
 	# Squared up before the bell (EntranceDirector's face-off).
 	"face_off": {"kind": "retime", "source": "Face_Off",
 		"seconds": 3.000, "file": AUTHORED, "loop": true},
+	# The referee (RefereeActor, on AubreyModel). Authored at 30 fps and kept
+	# at their own lengths: ref_slap's palm lands on its frame 12 (0.4 s),
+	# which RefereeActor.SLAP_LEAD counts back from each count tick.
+	"ref_stand": {"kind": "retime", "source": "Ref_Stand",
+		"seconds": 3.000, "file": AUTHORED, "loop": true},
+	"ref_watch": {"kind": "retime", "source": "Ref_Watch",
+		"seconds": 3.000, "file": AUTHORED, "loop": true},
+	"ref_count_down": {"kind": "retime", "source": "Ref_Count_Down",
+		"seconds": 0.467, "file": AUTHORED},
+	"ref_slap": {"kind": "retime", "source": "Ref_Slap",
+		"seconds": 0.667, "file": AUTHORED},
+	"ref_count_up": {"kind": "retime", "source": "Ref_Count_Up",
+		"seconds": 0.533, "file": AUTHORED},
+	"ref_call_bell": {"kind": "retime", "source": "Ref_Call_Bell",
+		"seconds": 1.200, "file": AUTHORED},
+	"ref_raise_hand": {"kind": "retime", "source": "Ref_Raise_Hand",
+		"seconds": 2.000, "file": AUTHORED},
 	# Off the ropes before the tope (gauntlet/refs/ropes.md).
 	"rope_rebound": {"kind": "retime", "source": "Rope_Rebound",
 		"seconds": 0.667, "file": AUTHORED},

@@ -4785,6 +4785,104 @@ CLIPS["Face_Off"] = [
     (90, FACE_OFF),
 ]
 
+
+# === The referee (core/match/referee_actor.gd) ===========================
+#
+# Aubrey Edwards (assets/characters/aubrey_edwards.glb) is rigged on this same
+# skeleton, so her clips are authored here like everyone else's. Real refs,
+# watched off broadcast footage (gauntlet/refs/referee.md): upright and still
+# while the two men are on their feet, bent with the hands on the knees when
+# the action goes to the mat, and for a cover DOWN -- on both knees beside the
+# pinned man's shoulders, chest low, the left hand posted and the right arm
+# coming high and slapping the canvas on each count. Then up, the arm waved
+# over the head for the bell, and the winner's hand raised.
+
+# Upright between exchanges: square, weight even, arms loose.
+REF_STAND = dict(
+    pelvis=(0.0, 0.0, 0.900), hips=(0, 0, 0), spine=(-4, 0, 0), head=(-4, 0, 0),
+    hand_r=(0.24, 0.04, 0.90), hand_l=(-0.24, 0.04, 0.90),
+    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    fist_r=0.3, fist_l=0.3,
+    foot_r=(0.15, -0.02, 0.104), foot_l=(-0.15, 0.02, 0.104),
+)
+# Watching the mat: knees bent, chest over them, hands on the thighs just
+# above the knee.
+REF_WATCH = dict(
+    pelvis=(0.0, -0.06, 0.780), hips=(-10, 0, 0), spine=(-28, 0, 0), head=(18, 0, 0),
+    hand_r=(0.15, 0.26, 0.64), hand_l=(-0.15, 0.26, 0.64),
+    elbow_r=(1.0, -0.2, 0.0), elbow_l=(-1.0, -0.2, 0.0),
+    fist_r=0.1, fist_l=0.1,
+    foot_r=(0.19, 0.0, 0.104), foot_l=(-0.19, 0.0, 0.104),
+)
+# Down for the count: both knees on the canvas, chest low over them, the
+# head up to see the shoulders; the left hand posted, the right ready.
+REF_LOW = dict(
+    pelvis=(0.0, 0.0, 0.420), hips=(-34, 0, 0), spine=(-50, 0, 0), head=(46, 0, 0),
+    hand_r=(0.24, 0.50, 0.10), hand_l=(-0.22, 0.50, 0.07),
+    elbow_r=(1.0, 0.0, 0.2), elbow_l=(-1.0, 0.0, 0.2),
+    fist_r=0.1, fist_l=0.1,
+    foot_r=(0.15, -0.42, 0.08), foot_l=(-0.15, -0.42, 0.08),
+    knee_r=(0.0, 1.0, -0.4), knee_l=(0.0, 1.0, -0.4),
+)
+# Halfway down (and up): one knee going to the mat.
+REF_DROP = pose(REF_WATCH, pelvis=(0.0, -0.10, 0.600), spine=(-36, 0, 0),
+                hand_r=(0.20, 0.40, 0.40), hand_l=(-0.20, 0.42, 0.36),
+                foot_r=(0.16, -0.30, 0.10), knee_r=(0.0, 1.0, -0.6))
+
+CLIPS["Ref_Stand"] = [
+    (0,  REF_STAND),
+    (45, pose(REF_STAND, pelvis=(0.0, 0.0, 0.905), spine=(-2, 0, 0), head=(-2, 3, 0))),
+    (90, REF_STAND),
+]
+CLIPS["Ref_Watch"] = [
+    (0,  REF_WATCH),
+    (45, pose(REF_WATCH, pelvis=(0.0, -0.06, 0.770), head=(20, -4, 0))),
+    (90, REF_WATCH),
+]
+# 14 frames: from the watch crouch to REF_LOW.
+CLIPS["Ref_Count_Down"] = [
+    (0,  REF_WATCH),
+    (6,  REF_DROP),
+    (14, REF_LOW),
+]
+# 20 frames, one count: the arm comes up high, and the palm hits the canvas
+# on frame 12 -- RefereeActor starts it 12 frames before each count tick.
+CLIPS["Ref_Slap"] = [
+    (0,  REF_LOW),
+    (7,  pose(REF_LOW, spine=(-38, 0, 0), hand_r=(0.32, 0.36, 1.02), elbow_r=(1.0, 0.0, 0.6),
+              fist_r=0.0)),
+    (12, pose(REF_LOW, spine=(-56, 0, 0), head=(52, 0, 0), hand_r=(0.24, 0.56, 0.05), fist_r=0.0)),
+    (15, pose(REF_LOW, spine=(-53, 0, 0), hand_r=(0.25, 0.52, 0.14), fist_r=0.0)),
+    (20, REF_LOW),
+]
+CLIPS["Ref_Count_Up"] = [
+    (0,  REF_LOW),
+    (8,  REF_DROP),
+    (16, REF_STAND),
+]
+# 36 frames: the bell -- the right arm up and waved over the head twice.
+_BELL_UP = pose(REF_STAND, spine=(2, 0, 0), head=(6, 0, 0),
+                hand_r=(0.10, 0.10, 1.95), elbow_r=(1.0, 0.0, 0.3), fist_r=0.0)
+CLIPS["Ref_Call_Bell"] = [
+    (0,  REF_STAND),
+    (6,  _BELL_UP),
+    (12, pose(_BELL_UP, hand_r=(0.42, 0.10, 1.86))),
+    (18, _BELL_UP),
+    (24, pose(_BELL_UP, hand_r=(0.42, 0.10, 1.86))),
+    (30, _BELL_UP),
+    (36, REF_STAND),
+]
+# 60 frames, looping from 10: the winner's hand -- her right arm straight up
+# beside him, her left at her side, square to the hard camera.
+_RAISE = pose(REF_STAND, spine=(3, 0, 0), head=(4, 6, 0),
+              hand_r=(0.30, 0.06, 1.93), elbow_r=(1.0, 0.0, 0.2), fist_r=0.6)
+CLIPS["Ref_Raise_Hand"] = [
+    (0,  REF_STAND),
+    (10, _RAISE),
+    (35, pose(_RAISE, hand_r=(0.31, 0.07, 1.96), head=(4, 10, 0))),
+    (60, _RAISE),
+]
+
 # Off the ropes (gauntlet/refs/ropes.md): the last stride turns him side-on,
 # the rope-side arm goes over the top rope, and his hip and ribs take the
 # middle and top ropes. The ropes give -- the pelvis carries on 0.30 m past

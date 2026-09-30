@@ -84,6 +84,11 @@ func _ready() -> void:
 	var sign_fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
 	if sign_fans:
 		sign_fans.watch(referee, [wrestler_a, wrestler_b])
+	# The referee in the ring (RefereeActor), off the same signals.
+	referee_actor = RefereeActor.new()
+	referee_actor.name = "RefereeActor"
+	add_child(referee_actor)
+	referee_actor.watch(referee, [wrestler_a, wrestler_b])
 	var look := BroadcastLook.new()
 	look.name = "BroadcastLook"
 	look.replay = playback_replay_path != ""
@@ -113,12 +118,15 @@ func _ready() -> void:
 
 var _replay: ReplayResource = null
 var audio: MatchAudio = null
+var referee_actor: RefereeActor = null
 
 ## The bell: the recording starts here, whether it is tick 1 or the end of the
 ## entrances.
 func _begin_live() -> void:
 	if audio:
 		audio.opening_bell()
+	if referee_actor:
+		referee_actor.go_live()
 	if ReplaySystem:
 		if _replay:
 			ReplaySystem.start_playback(_replay)

@@ -22,14 +22,19 @@ smoothed over the hollows a shirt would bridge -- so it carries the body's
 own skin weights and deforms with her in every clip. The skin those garments
 cover is deleted, bar one ring under each opening, so nothing pokes through.
 
-Stripes: 5 cm black, 5 cm white, nine pairs round the torso, a black one on
-the centre line (where the reference's placket is); the sleeves' run round
-the arm, as the flat-lay reference draws them. The texture is 16 x 4 pixels
+Stripes: 5 cm black, 5 cm white, vertical, a black one on the centre line
+(where the reference's placket is); the sleeves' run round the arm, as the
+flat-lay reference draws them. The texture is 16 x 4 pixels
 and the UVs repeat it.
 
 Textures are capped at 1024 px (she is seen at ring distance, never in a face
 close-up) and the fair skin tone replaces the kit's default. Her hair is
 recoloured to a dark brown from the kit's ash texture by luminance.
+
+Fit and cloth: the garments are cut loose and draped (see CHEST_LO and
+LEG_AXIS below), and every fabric carries a woven texture -- a tileable twill
+height field, as shaded albedo and as a normal map -- so it reads as cloth
+under the arena lights rather than as paint on skin.
 
 Deterministic: every derived texture is written by PIL from fixed inputs and
 the scene has no randomness, so the same kit writes the same file.
@@ -50,6 +55,7 @@ import bpy  # before bmesh: the bpy module is what provides it
 import bmesh
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -67,22 +73,47 @@ TEX_CAP = 1024
 ARM_X = 0.20          # past this and above ARM_Z, a face is on an arm
 ARM_Z = 1.30
 SLEEVE_END = 0.335    # short sleeve: about half way to the elbow (0.392)
-CUFF = 0.035          # the black band at the end of each sleeve
 NECK_Z = 1.472        # the shirt's top edge
-COLLAR = 0.03         # the black band at the top of it
-SHIRT_HEM_Z = 0.93    # tucked in: below the trousers' waistband
-WAIST_Z = 0.995       # the trousers' waistband
+TRIM_RINGS = 2        # the collar and cuffs: this many rings of faces deep
+SHIRT_HEM_Z = 0.975   # tucked in: inside the waistband (WAISTBAND)
+WAIST_Z = 1.02        # the trousers' waistband (the belt's top edge)
 ANKLE_Z = 0.105       # trousers down to here; the shoes from here
 
 # How far each garment stands off the skin, and how far the shirt's
-# smoothing may pull it back in towards it.
-SHIRT_OFF = 0.014
-SHIRT_MIN = 0.008
-TROUSER_OFF = 0.009
+# smoothing may pull it back in towards it. The shirt's minimum clears the
+# trousers everywhere they overlap (the tuck, 0.93-0.995), so the two never
+# fight for the same surface.
+SHIRT_OFF = 0.022
+SHIRT_MIN = 0.019
+TROUSER_OFF = 0.012
 SHOE_OFF = 0.011
 
+# The drape. A shirt is not a second skin: it hangs off the widest part of
+# the chest and shoulder blades and falls from there, nearly straight, to
+# where it is tucked in, bridging the waist and the small of the back instead
+# of following them in. So below the chest band every point is pushed out to
+# the chest's own girth at that bearing (less a slight taper), and eased back
+# to the body over the tuck; the fabric blouses a little over the waistband,
+# as a tucked shirt does, and a few soft vertical folds run down from the
+# bust. The sleeves are cut loose and flare towards the cuff.
+CHEST_LO, CHEST_HI = 1.17, 1.34
+DRAPE_TAPER = 0.10            # m of radius lost per m below the chest
+TUCK_LO, TUCK_HI = 1.02, 1.10
+FOLDS, FOLD_DEPTH = 11, 0.0035
+SLEEVE_EASE = (0.008, 0.024)  # extra stand-off at the shoulder, at the cuff
+# Straight-leg trousers: below the knee the leg falls at the knee's own
+# girth rather than hugging the calf, easing half back in at the hem. The leg
+# axis is the rest pose's thigh and calf bones.
+LEG_AXIS = ((0.944, 0.111, 0.052), (0.535, 0.111, 0.032), (0.071, 0.111, 0.077))
+KNEE_LO, KNEE_HI = 0.49, 0.58
+# The waistband stands proud of the tucked-in shirt tail, so the tail is
+# inside the trousers rather than poking out through them.
+WAISTBAND = (0.95, 0.032)     # from this height up, this far off the skin
+BELT = 0.035                  # the black belt: this deep below the waistband's top
+TAIL_MAX = 0.024              # the shirt tail's stand-off below the waistband
+FABRIC_TILE = 0.10            # the weave textures repeat every 10 cm
+
 STRIPE_PERIOD = 0.10
-STRIPE_PAIRS = 9      # round the torso; a whole number, so the back seam meets
 
 # The chest patch, on her left chest (+X).
 PATCH_CENTRE = (0.09, 1.33)     # x, z
@@ -131,13 +162,19 @@ def main() -> int:
 
 	_retexture(src, tmp)
 	faces = _classify(body)
-	shirt = _garment(body, "Aubrey_Shirt", faces["shirt"], SHIRT_OFF, smooth=True)
+	shirt = _garment(body, "Aubrey_Shirt", faces["shirt"], SHIRT_OFF, smooth=True, drape=_drape_shirt)
 	_stripe_uvs(shirt)
 	_shirt_materials(shirt, tmp)
 	_patch(shirt, arm, tmp)
-	trousers = _garment(body, "Aubrey_Trousers", faces["trousers"], TROUSER_OFF)
+	trousers = _garment(body, "Aubrey_Trousers", faces["trousers"], TROUSER_OFF, drape=_drape_trousers)
+	_fabric_uvs(trousers)
 	trousers.data.materials.clear()
-	trousers.data.materials.append(_flat("M_Trousers", BLACK, 0.78))
+	trousers.data.materials.append(_textured("M_Trousers", _cloth_png(tmp, "T_Aubrey_Trousers", (22, 22, 24), (22, 22, 24), 0.12),
+			0.85, _weave_normal_png(tmp, "T_Aubrey_Twill_N", 1.2)))
+	trousers.data.materials.append(_flat("M_Belt", (0.008, 0.008, 0.008, 1.0), 0.3))
+	for p in trousers.data.polygons:
+		if min(trousers.data.vertices[i].co.z for i in p.vertices) > WAIST_Z - BELT:
+			p.material_index = 1
 	shoes = _garment(body, "Aubrey_Shoes", faces["shoes"], SHOE_OFF)
 	shoes.data.materials.clear()
 	shoes.data.materials.append(_flat("M_Shoes", (0.01, 0.01, 0.01, 1.0), 0.32))
@@ -205,11 +242,50 @@ def _brown(im: Image.Image) -> Image.Image:
 	return Image.merge("RGB", (grey, grey, grey)).point(lut)
 
 
+def _weave(size: int = 128) -> "np.ndarray":
+	"""A tileable twill height field in 0..1: diagonal ribs (a 2/1 twill's
+	wale, exaggerated to about 3 mm so it survives ring distance), crossed by
+	a fainter plain-weave grid, with a little seeded slub noise."""
+	i, j = np.meshgrid(np.arange(size), np.arange(size), indexing="xy")
+	ribs = 0.5 + 0.5 * np.sin(2 * np.pi * (i + j) * 32 / size)
+	grid = 0.5 + 0.25 * (np.sin(2 * np.pi * i * 64 / size) + np.sin(2 * np.pi * j * 64 / size))
+	rng = np.random.default_rng(20240613)
+	slub = rng.random((size, size))
+	for _ in range(3):   # a wrap-around blur, so the noise tiles too
+		slub = (slub + np.roll(slub, 1, 0) + np.roll(slub, -1, 0) + np.roll(slub, 1, 1) + np.roll(slub, -1, 1)) / 5
+	slub = (slub - slub.min()) / max(slub.max() - slub.min(), 1e-6)
+	return 0.62 * ribs + 0.18 * grid + 0.20 * slub
+
+
+def _cloth_png(tmp: pathlib.Path, name: str, left, right, depth: float) -> pathlib.Path:
+	"""One tile of cloth: the left half `left`, the right half `right` (the
+	stripes: black and white; the trousers: one colour twice), shaded by the
+	weave so the fabric reads as woven rather than printed."""
+	size = 128
+	h = _weave(size)
+	base = np.zeros((size, size, 3))
+	base[:, : size // 2] = left
+	base[:, size // 2:] = right
+	shade = (1.0 - depth) + depth * h
+	out = tmp / (name + ".png")
+	Image.fromarray(np.clip(base * shade[..., None], 0, 255).astype(np.uint8), "RGB").save(out, optimize=False)
+	return out
+
+
 def _stripe_png(tmp: pathlib.Path) -> pathlib.Path:
-	im = Image.new("RGB", (16, 4), (26, 26, 26))
-	ImageDraw.Draw(im).rectangle((8, 0, 15, 3), fill=(236, 236, 232))
-	out = tmp / "T_Aubrey_Stripes.png"
-	im.save(out, optimize=False)
+	return _cloth_png(tmp, "T_Aubrey_Stripes", (24, 24, 25), (238, 237, 232), 0.10)
+
+
+def _weave_normal_png(tmp: pathlib.Path, name: str, strength: float) -> pathlib.Path:
+	"""The weave's normal map (OpenGL convention, as glTF wants), from the
+	same height field by wrap-around central differences."""
+	h = _weave(128)
+	dx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * strength
+	dy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) * strength
+	n = np.stack([-dx, dy, np.ones_like(h)], -1)
+	n /= np.linalg.norm(n, axis=-1, keepdims=True)
+	out = tmp / (name + ".png")
+	Image.fromarray(((n * 0.5 + 0.5) * 255).round().astype(np.uint8), "RGB").save(out, optimize=False)
 	return out
 
 
@@ -259,24 +335,47 @@ def _flat(name: str, colour, roughness: float) -> bpy.types.Material:
 	return m
 
 
-def _textured(name: str, png: pathlib.Path, roughness: float) -> bpy.types.Material:
+def _textured(name: str, png: pathlib.Path, roughness: float, normal: pathlib.Path | None = None) -> bpy.types.Material:
 	m = _flat(name, (1, 1, 1, 1), roughness)
-	tex = m.node_tree.nodes.new("ShaderNodeTexImage")
+	nodes, links = m.node_tree.nodes, m.node_tree.links
+	bsdf = nodes["Principled BSDF"]
+	tex = nodes.new("ShaderNodeTexImage")
 	tex.image = bpy.data.images.load(str(png))
 	tex.image.name = png.stem
-	m.node_tree.links.new(tex.outputs["Color"], m.node_tree.nodes["Principled BSDF"].inputs["Base Color"])
+	links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+	if normal is not None:
+		ntex = nodes.new("ShaderNodeTexImage")
+		ntex.image = bpy.data.images.load(str(normal))
+		ntex.image.name = normal.stem
+		ntex.image.colorspace_settings.name = "Non-Color"
+		nmap = nodes.new("ShaderNodeNormalMap")
+		links.new(ntex.outputs["Color"], nmap.inputs["Color"])
+		links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
 	return m
 
 
 def _shirt_materials(shirt: bpy.types.Object, tmp: pathlib.Path) -> None:
+	"""The stripes, and the black trim: the collar and the cuffs are the two
+	rings of faces at each opening, so the band follows the edge exactly
+	rather than stepping across the stripes where the neckline dips."""
 	shirt.data.materials.clear()
-	shirt.data.materials.append(_textured("M_RefStripes", _stripe_png(tmp), 0.72))
-	shirt.data.materials.append(_flat("M_RefTrim", BLACK, 0.7))
-	for p in shirt.data.polygons:
-		c = p.center
-		sleeve = abs(c.x) > ARM_X and c.z > ARM_Z
-		trim = (sleeve and abs(c.x) > SLEEVE_END - CUFF) or (not sleeve and c.z > NECK_Z - COLLAR)
-		p.material_index = 1 if trim else 0
+	weave = _weave_normal_png(tmp, "T_Aubrey_Weave_N", 1.0)
+	shirt.data.materials.append(_textured("M_RefStripes", _stripe_png(tmp), 0.8, weave))
+	# The trim is ribbed knit: the same weave, black, and a touch shinier.
+	shirt.data.materials.append(_textured("M_RefTrim",
+			_cloth_png(tmp, "T_Aubrey_Trim", (20, 20, 21), (20, 20, 21), 0.18), 0.7, weave))
+	bm = bmesh.new()
+	bm.from_mesh(shirt.data)
+	edge = {v for v in bm.verts if v.is_boundary and v.co.z > ARM_Z - 0.1}
+	trim = set()
+	for _ring in range(TRIM_RINGS):
+		ring = {f for v in edge for f in v.link_faces}
+		trim |= ring
+		edge = {v for f in ring for v in f.verts}
+	for f in bm.faces:
+		f.material_index = 1 if f in trim else 0
+	bm.to_mesh(shirt.data)
+	bm.free()
 
 
 # --- geometry ---------------------------------------------------------------
@@ -299,7 +398,7 @@ def _classify(body: bpy.types.Object) -> dict:
 	return {"shirt": shirt, "trousers": trousers, "shoes": shoes}
 
 
-def _garment(body, name: str, keep: set, offset: float, smooth: bool = False):
+def _garment(body, name: str, keep: set, offset: float, smooth: bool = False, drape=None):
 	"""A copy of the body cut down to `keep` and stood off the skin: it keeps
 	the body's vertex groups and armature modifier, so it is skinned as she
 	is. `smooth` bridges the hollows a garment does not follow (between the
@@ -319,6 +418,8 @@ def _garment(body, name: str, keep: set, offset: float, smooth: bool = False):
 	skin = {v: (v.co.copy(), v.normal.copy()) for v in bm.verts}
 	for v in bm.verts:
 		v.co += v.normal * offset
+	if drape:
+		drape(bm)
 	if smooth:
 		inner = [v for v in bm.verts if not v.is_boundary]
 		for _ in range(6):
@@ -329,6 +430,10 @@ def _garment(body, name: str, keep: set, offset: float, smooth: bool = False):
 			out = (v.co - co).dot(n)
 			if out < SHIRT_MIN:
 				v.co += n * (SHIRT_MIN - out)
+			elif co.z < WAIST_Z and out > TAIL_MAX:
+				# The tail stays inside the waistband.
+				v.co -= n * (out - TAIL_MAX)
+		_folds(bm)
 	bm.to_mesh(ob.data)
 	bm.free()
 	while len(ob.data.uv_layers) > 1:
@@ -338,26 +443,226 @@ def _garment(body, name: str, keep: set, offset: float, smooth: bool = False):
 	return ob
 
 
-def _stripe_uvs(shirt: bpy.types.Object) -> None:
-	"""u in stripe periods: round the torso by angle (a whole number of pairs,
-	so the seam at the back meets), round each arm by distance out along it."""
-	me = shirt.data
+def _smoothstep(t: float) -> float:
+	t = min(max(t, 0.0), 1.0)
+	return t * t * (3.0 - 2.0 * t)
+
+
+def _bins(values, count: int) -> list:
+	"""A circular max-filter over angle bins, so one sparse bin does not
+	leave a dent in the drape."""
+	return [max(values[(i - 1) % count], values[i], values[(i + 1) % count]) for i in range(count)]
+
+
+def _drape_shirt(bm) -> None:
+	"""See CHEST_LO. Radii are about the torso's own front-back centre."""
+	sleeve = lambda v: abs(v.co.x) > ARM_X and v.co.z > ARM_Z
+	for v in bm.verts:
+		if sleeve(v):
+			t = _smoothstep((abs(v.co.x) - ARM_X) / (SLEEVE_END - ARM_X))
+			v.co += v.normal * (SLEEVE_EASE[0] + (SLEEVE_EASE[1] - SLEEVE_EASE[0]) * t)
+	torso = [v for v in bm.verts if not sleeve(v)]
+	cy = sum(v.co.y for v in torso) / len(torso)
+	count = 48
+	top = [0.0] * count
+	def polar(v):
+		a = math.atan2(v.co.x, v.co.y - cy)
+		return a, math.hypot(v.co.x, v.co.y - cy), int((a + math.pi) / (2 * math.pi) * count) % count
+	for v in torso:
+		if CHEST_LO < v.co.z < CHEST_HI:
+			_, r, b = polar(v)
+			top[b] = max(top[b], r)
+	top = _bins(top, count)
+	for v in torso:
+		z = v.co.z
+		if z >= CHEST_LO:
+			continue
+		a, r, b = polar(v)
+		target = top[b] - DRAPE_TAPER * (CHEST_LO - z)
+		w = _smoothstep((z - TUCK_LO) / (TUCK_HI - TUCK_LO))
+		if target > r and r > 1e-4:
+			k = (r + (target - r) * w) / r
+			v.co.x *= k
+			v.co.y = cy + (v.co.y - cy) * k
+
+
+def _folds(bm) -> None:
+	"""Soft vertical folds from under the bust to the tuck: a small radial
+	ripple, after the smoothing so it is not smoothed away."""
+	torso = [v for v in bm.verts if not (abs(v.co.x) > ARM_X and v.co.z > ARM_Z)]
+	cy = sum(v.co.y for v in torso) / len(torso)
+	for v in torso:
+		z = v.co.z
+		amount = _smoothstep((CHEST_HI - 0.06 - z) / 0.08) * _smoothstep((z - TUCK_LO) / 0.05)
+		if amount <= 0.0:
+			continue
+		a = math.atan2(v.co.x, v.co.y - cy)
+		out = Vector((v.co.x, v.co.y - cy, 0.0))
+		if out.length > 1e-4:
+			v.co += out.normalized() * FOLD_DEPTH * amount * math.sin(a * FOLDS + z * 9.0)
+
+
+def _leg_axis(z: float):
+	(z0, x0, y0), (z1, x1, y1), (z2, x2, y2) = LEG_AXIS
+	if z >= z1:
+		t = (z0 - z) / (z0 - z1)
+		return x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+	t = min((z1 - z) / (z1 - z2), 1.0)
+	return x1 + (x2 - x1) * t, y1 + (y2 - y1) * t
+
+
+def _drape_trousers(bm) -> None:
+	"""See LEG_AXIS and WAISTBAND. The waistband's top edge is levelled to
+	one height (cut along the body's faces it was ragged), and the belt is
+	the band under it."""
+	for v in bm.verts:
+		if v.is_boundary and v.co.z > 0.9:
+			v.co.z = WAIST_Z + 0.008
+	for v in bm.verts:
+		k = _smoothstep((v.co.z - WAISTBAND[0]) / 0.02)
+		if k > 0.0:
+			v.co += v.normal * (WAISTBAND[1] - TROUSER_OFF) * k
+	count = 32
+	for side in (-1.0, 1.0):
+		leg = [v for v in bm.verts if v.co.x * side > 0.02 and v.co.z < KNEE_HI + 0.05]
+		def polar(v):
+			ax, ay = _leg_axis(v.co.z)
+			dx, dy = v.co.x - ax * side, v.co.y - ay
+			a = math.atan2(dx, dy)
+			return dx, dy, math.hypot(dx, dy), int((a + math.pi) / (2 * math.pi) * count) % count
+		knee = [0.0] * count
+		for v in leg:
+			if KNEE_LO < v.co.z < KNEE_HI:
+				_, _, r, b = polar(v)
+				knee[b] = max(knee[b], r)
+		knee = _bins(knee, count)
+		for v in leg:
+			z = v.co.z
+			if z >= KNEE_LO + 0.03:
+				continue
+			dx, dy, r, b = polar(v)
+			# Full straight fall to mid-shin, easing half back in at the hem.
+			w = 0.5 + 0.5 * _smoothstep((z - ANKLE_Z) / 0.18)
+			w *= _smoothstep((KNEE_LO + 0.03 - z) / 0.06)
+			if knee[b] > r > 1e-4:
+				k = (r + (knee[b] - r) * w) / r
+				ax, ay = _leg_axis(z)
+				v.co.x = ax * side + dx * k
+				v.co.y = ay + dy * k
+
+
+def _fabric_uvs(ob) -> None:
+	"""Tile coordinates for the weave: projected front and back like the
+	shirt's stripes, one tile every FABRIC_TILE."""
+	me = ob.data
 	uv = me.uv_layers[0].data
 	for p in me.polygons:
+		back = p.normal.y > 0.0
+		for li in p.loop_indices:
+			co = me.vertices[me.loops[li].vertex_index].co
+			uv[li].uv = ((-co.x if back else co.x) / FABRIC_TILE, co.z / FABRIC_TILE)
+
+
+def _stripe_uvs(shirt: bpy.types.Object) -> None:
+	"""u in stripe periods. Round the torso it is ARC LENGTH from the front
+	centre-line, measured along the cross-section at each height, so a
+	stripe is the same 5 cm wherever it is -- front, flank or back -- and
+	hangs vertical down a straight drape. (By angle, the stripes fanned out
+	from the neck like rays; projected flat, they smeared down the sides.)
+	The seam is at the centre back. The sleeves run round the arm, by
+	distance out along it."""
+	me = shirt.data
+	uv = me.uv_layers[0].data
+	sleeve = lambda co: abs(co.x) > ARM_X and co.z > ARM_Z
+	torso = [v.co for v in me.vertices if not sleeve(v.co)]
+	cy = sum(c.y for c in torso) / len(torso)
+	# The girth profile: mean radius per (height slab, bearing bin), smoothed
+	# over both, and integrated round from the front centre-line. Measuring
+	# vertex to vertex instead zigzags between rows and stripes the back like
+	# a zebra.
+	slab, count = 0.02, 72
+	z0 = min(c.z for c in torso)
+	rows = int((max(c.z for c in torso) - z0) / slab) + 1
+	total = [[0.0] * count for _ in range(rows)]
+	seen = [[0] * count for _ in range(rows)]
+	bearing = lambda co: math.atan2(co.x, -(co.y - cy))
+	for c in torso:
+		k = min(int((c.z - z0) / slab), rows - 1)
+		b = int((bearing(c) + math.pi) / (2 * math.pi) * count) % count
+		total[k][b] += math.hypot(c.x, c.y - cy)
+		seen[k][b] += 1
+	radius = []
+	for k in range(rows):
+		known = [(b, total[k][b] / seen[k][b]) for b in range(count) if seen[k][b]]
+		row = []
+		for b in range(count):
+			if seen[k][b]:
+				row.append(total[k][b] / seen[k][b])
+			else:   # an empty bin: the nearest filled one round the ring
+				row.append(min(known, key=lambda e: min(abs(e[0] - b), count - abs(e[0] - b)))[1]
+						if known else 0.15)
+		radius.append(row)
+	for _ in range(4):
+		radius = [[(radius[k][(b - 1) % count] + 2 * radius[k][b] + radius[k][(b + 1) % count]) / 4
+				for b in range(count)] for k in range(rows)]
+		radius = [[(radius[max(k - 1, 0)][b] + 2 * radius[k][b] + radius[min(k + 1, rows - 1)][b]) / 4
+				for b in range(count)] for k in range(rows)]
+	step = 2 * math.pi / count
+	arcs = []
+	for k in range(rows):
+		# cum[b]: arc from bearing -pi to bin b's lower edge; re-zeroed on the
+		# front (bearing 0, the lower edge of bin count/2).
+		cum = [0.0]
+		for b in range(count):
+			cum.append(cum[-1] + radius[k][b] * step)
+		# Front and back are separate panels, joined at side seams (as a real
+		# shirt is cut): each is measured from its OWN centre-line, so both
+		# centre stripes hang true and any mismatch lands in the seams.
+		front, back = cum[count // 2], cum[count]
+		arcs.append([c - front if abs(i - count // 2) <= count // 4 else
+				(c - back if i > count // 2 else c) for i, c in enumerate(cum)])
+	def arc(co) -> float:
+		f = (bearing(co) + math.pi) / step
+		b = min(int(f), count - 1)
+		t = f - b
+		zf = min(max((co.z - z0) / slab - 0.5, 0.0), rows - 1.0)
+		k = min(int(zf), rows - 2) if rows > 1 else 0
+		s_ = zf - k
+		at = lambda kk: arcs[kk][b] + (arcs[kk][b + 1] - arcs[kk][b]) * t
+		return at(k) if rows == 1 else at(k) * (1 - s_) + at(k + 1) * s_
+	for p in me.polygons:
 		c = p.center
-		sleeve = abs(c.x) > ARM_X and c.z > ARM_Z
 		us = []
 		for li in p.loop_indices:
 			co = me.vertices[me.loops[li].vertex_index].co
-			if sleeve:
-				u = (abs(co.x) - ARM_X) / STRIPE_PERIOD
+			if sleeve(c):
+				us.append((abs(co.x) - ARM_X) / STRIPE_PERIOD)
 			else:
-				u = math.atan2(co.x, -co.y) / (2 * math.pi) * STRIPE_PAIRS
-			us.append(u + 0.25)   # a black stripe centred on the front
-		if not sleeve and max(us) - min(us) > STRIPE_PAIRS / 2:
-			us = [u + STRIPE_PAIRS if u < 0.25 else u for u in us]
+				us.append(arc(co) / STRIPE_PERIOD + 0.25)   # black on the centre-line
+		if not sleeve(c) and max(us) - min(us) > 1.5:
+			# A face across a seam: all of it on the side of its first corner,
+			# measured on that panel.
+			us = [us[0]] * len(us)
 		for li, u in zip(p.loop_indices, us):
 			uv[li].uv = (u, me.vertices[me.loops[li].vertex_index].co.z / STRIPE_PERIOD)
+
+
+def _interp(xs, ys, x) -> float:
+	"""ys at x, linearly, clamped to the ends."""
+	if x <= xs[0]:
+		return ys[0]
+	if x >= xs[-1]:
+		return ys[-1]
+	lo, hi = 0, len(xs) - 1
+	while hi - lo > 1:
+		mid = (lo + hi) // 2
+		if xs[mid] <= x:
+			lo = mid
+		else:
+			hi = mid
+	span = xs[hi] - xs[lo]
+	t = 0.0 if span <= 0 else (x - xs[lo]) / span
+	return ys[lo] + (ys[hi] - ys[lo]) * t
 
 
 def _patch(shirt: bpy.types.Object, arm: bpy.types.Object, tmp: pathlib.Path) -> None:
