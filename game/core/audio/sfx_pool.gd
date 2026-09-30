@@ -74,6 +74,9 @@ func play(sound: String, volume_db := 0.0, pitch := 1.0) -> bool:
 	p.volume_db = volume_db
 	p.pitch_scale = pitch
 	p.play()
+	# Counted so a recorder can tell a voice restarted on the same sound from
+	# one still ringing (tools/probe/title_video.gd's sound log).
+	p.set_meta("plays", int(p.get_meta("plays", 0)) + 1)
 	played.emit(sound, volume_db)
 	return true
 
@@ -95,8 +98,11 @@ func make_loop(sound: String) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
 	p.name = "Loop_" + sound
 	if s is AudioStreamOggVorbis:
+		var source := s.resource_path
 		s = s.duplicate()
 		(s as AudioStreamOggVorbis).loop = true
+		# The copy has no path of its own; keep where it came from.
+		s.set_meta("src", source)
 	p.stream = s
 	p.volume_db = -80.0
 	add_child(p)

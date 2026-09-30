@@ -61,6 +61,16 @@ var _resume_at := 0
 ## Seeding the global RNG and loading the scenes into the cache up front makes
 ## both a fixed number of frames. Held here so the cache keeps them.
 var _seed := 2
+## The sound log (--out/sound_log.txt): every audio player in the tree as it
+## starts, changes level and stops, by frame. tools/capture/mix_sound_log.py
+## rebuilds the soundtrack from it and the source files. A Movie Maker sound
+## pass is exact too, but on the Vulkan software renderer it read back every
+## 1080p frame and ran at a minute of sound an hour; the log costs nothing,
+## comes out of the same run as the pictures, and is rewritten from frame 0
+## on a --resume, which re-simulates every frame anyway.
+var _sound_log: FileAccess
+var _sound_players: Array = []
+var _sound_state := {}
 var _held: Array[Resource] = []
 
 
@@ -82,6 +92,7 @@ func _ready() -> void:
 			"res://scenes/cody_model.tscn"]:
 		_held.append(load(path))
 	DirAccess.make_dir_recursive_absolute(_out_dir)
+	_sound_log = FileAccess.open(_out_dir + "/sound_log.txt", FileAccess.WRITE)
 	if _resume:
 		for file in DirAccess.get_files_at(_out_dir):
 			if file.begins_with("f_") and file.ends_with(".jpg"):
@@ -149,6 +160,48 @@ func _ready() -> void:
 	get_tree().quit()
 
 
+## One line per change: S(tart) frame id path loop pitch volume_db,
+## V(olume) frame id volume_db, E(nd) frame id. Frame is the index of the JPEG
+## this frame is saved as (_frame, before it is incremented).
+func _log_sound() -> void:
+	if _sound_log == null:
+		return
+	if _frame % 15 == 0 or _sound_players.is_empty():
+		_sound_players = get_tree().root.find_children("*", "AudioStreamPlayer", true, false) \
+				+ get_tree().root.find_children("*", "VideoStreamPlayer", true, false)
+	var seen := {}
+	for p in _sound_players:
+		if not is_instance_valid(p):
+			continue
+		var id := p.get_instance_id()
+		seen[id] = true
+		var playing: bool = p.is_playing()
+		var vol: float = p.volume_db
+		var was: Dictionary = _sound_state.get(id, {})
+		var plays := int(p.get_meta("plays", 0))
+		if playing and vol > -60.0:
+			if was.is_empty() or plays != int(was["plays"]):
+				var stream: Resource = p.stream
+				var path := String(stream.get_meta("src", stream.resource_path)) if stream else ""
+				var looped := p is AudioStreamPlayer and stream is AudioStreamOggVorbis \
+						and (stream as AudioStreamOggVorbis).loop
+				var pitch: float = p.pitch_scale if p is AudioStreamPlayer else 1.0
+				_sound_log.store_line("S %d %d %s %d %.4f %.2f" % [_frame, id, path,
+						int(looped), pitch, vol])
+				_sound_state[id] = {"plays": plays, "vol": vol}
+			elif absf(vol - float(was["vol"])) > 0.05:
+				_sound_log.store_line("V %d %d %.2f" % [_frame, id, vol])
+				was["vol"] = vol
+		elif not was.is_empty():
+			_sound_log.store_line("E %d %d" % [_frame, id])
+			_sound_state.erase(id)
+	for id: int in _sound_state.keys():
+		if not seen.has(id):
+			_sound_log.store_line("E %d %d" % [_frame, id])
+			_sound_state.erase(id)
+	_sound_log.flush()
+
+
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("FINISH: %s by %s at frame %d" % [winner.display_name, method, _frame])
 	_match_over = true
@@ -160,6 +213,7 @@ func _record(seconds: float) -> void:
 
 
 func _record_frame() -> void:
+	_log_sound()
 	if _first_process_frame < 0:
 		_first_process_frame = Engine.get_process_frames()
 		print("TITLE_VIDEO first frame is engine process frame ", _first_process_frame)
