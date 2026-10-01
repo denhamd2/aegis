@@ -597,7 +597,9 @@ func _start_beat() -> void:
 		_coats[w] = EntranceCoat.dress(w)
 	if beat.get("props", false) and w and not _props.has(w):
 		# The OTC carries no title (refs/entrances.md): the ula fala only.
-		_props[w] = EntranceProps.dress(w, w.entrance_style != "roman")
+		# Roman walks out with the AEW title round his waist (the owner's
+		# ask): worn on the pelvis, so it turns and tips with his hips.
+		_props[w] = EntranceProps.dress(w, true)
 	if beat.has("lights"):
 		_portal_lights(beat["lights"], true, beat.get("light_color", Color.TRANSPARENT))
 	else:
@@ -784,16 +786,27 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
 			"shot": "ring_low"})
+	# The title off his waist and up over his head, the camera low on the
+	# mat looking up at it.
+	_beats.append({"kind": "pose", "who": w, "ticks": 90,
+			"clip": "strikes/title_unbuckle", "facing": Vector3.BACK,
+			"shot": "ring_low", "events": [[TITLE_UNBUCKLED_AT, "title_held"]]})
+	_beats.append({"kind": "pose", "who": w, "ticks": 120,
+			"clip": "strikes/title_raise", "facing": Vector3.BACK,
+			"shot": "hero_low"})
 	# The finger to the hard camera, then hands on hips, staring, close.
 	_beats.append({"kind": "pose", "who": w, "ticks": 240,
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "ring_behind_out"})
+			"shot": "ring_behind_out",
+			# Handed to the timekeeper before the finger, not carried through it.
+			"events": [[1, "title_down"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": 300,
 			"clip": "strikes/hands_hips", "facing": Vector3.BACK,
 			"shot": "face_walk"})
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
+			"shot": "ring_low",
+			"events": [[1, "title_down"], [ULA_FALA_LIFT_AT, "fala_off"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,

@@ -105,12 +105,10 @@ func test_romans_entrance_is_continuous_and_cleans_up() -> void:
 			saw["pyro"] = true)
 	assert_bool(fired[1]).is_true()
 	assert_bool(fired[0]).override_failure_message("props or pyro outlived the bell").is_true()
-	# The OTC era: the ula fala, no title (refs/entrances.md) -- the title
-	# state never leaves "".
-	for k in ["", "pyro"]:
+	# The owner's call: he walks out with the AEW title round his waist,
+	# raises it in the ring and hands it off -- worn, held, then gone.
+	for k in ["worn", "held", "", "pyro"]:
 		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
-	for k in ["worn", "held"]:
-		assert_bool(saw.has(k)).override_failure_message("a title was %s" % k).is_false()
 
 
 func _assert_continuous(scene: Node, each_tick := Callable()) -> void:

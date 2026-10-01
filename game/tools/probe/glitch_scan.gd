@@ -15,13 +15,15 @@ extends Node
 
 const SLIDE_SPEED := 0.6
 const SLIDE_TICKS := 6
-const AWAY_TICKS := 30
+const AWAY_TICKS := 20
 const AWAY_DIST := 3.0
 const ON_MAT := [WrestlerFSM.State.DOWN, WrestlerFSM.State.PIN_DEFENDER,
 		WrestlerFSM.State.GETUP, WrestlerFSM.State.SUBMISSION_DEFENDER]
 const UPRIGHT := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
 		WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE, WrestlerFSM.State.HIT_REACT,
-		WrestlerFSM.State.STUNNED, WrestlerFSM.State.TAUNT]
+		WrestlerFSM.State.STUNNED, WrestlerFSM.State.TAUNT, WrestlerFSM.State.TIE_UP,
+		WrestlerFSM.State.GRAPPLE_HOLD, WrestlerFSM.State.GETUP, WrestlerFSM.State.IRISH_WHIP,
+		WrestlerFSM.State.RUNNING_ATTACK]
 
 var _seeds: Array[int] = []
 var _budget := 20000
