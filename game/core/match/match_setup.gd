@@ -69,6 +69,47 @@ func _ready() -> void:
 	wrestler_a.match_seed = match_seed
 	wrestler_b.match_seed = match_seed
 	referee.match_won.connect(_on_match_won)
+	# The crowd reacting, and the broadcast finish over the frame. Both are
+	# presentation only (CrowdReaction, BroadcastLook).
+	var crowd := CrowdReaction.new()
+	crowd.name = "CrowdReaction"
+	add_child(crowd)
+	crowd.watch(referee, [wrestler_a, wrestler_b])
+	# ...and what it all sounds like (MatchAudio), off the same signals.
+	audio = MatchAudio.new()
+	audio.name = "MatchAudio"
+	add_child(audio)
+	audio.watch(referee, [wrestler_a, wrestler_b], crowd)
+	# The two ringside sign fans (SignFans), built with the arena.
+	var sign_fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
+	if sign_fans:
+		sign_fans.watch(referee, [wrestler_a, wrestler_b])
+	# The referee in the ring (RefereeActor), off the same signals.
+	referee_actor = RefereeActor.new()
+	referee_actor.name = "RefereeActor"
+	add_child(referee_actor)
+	referee_actor.watch(referee, [wrestler_a, wrestler_b])
+	# What the finish replay is cut from, and what the match rating is
+	# scored on (PostMatch). Presentation only.
+	replay_buffer = ReplayBuffer.new()
+	replay_buffer.name = "ReplayBuffer"
+	add_child(replay_buffer)
+	replay_buffer.track([wrestler_a, wrestler_b, referee_actor])
+	var rig := get_node_or_null("GrappleRig") as GrappleRig
+	if rig:
+		rig.grapple_started.connect(func(attacker, _d, move):
+			var wc := attacker as WrestlerController
+			if wc and move and wc.tier_of(move) >= CombatSystem.Tier.SIGNATURE:
+				_stats["big_moves"] = int(_stats.get("big_moves", 0)) + 1
+			if wc and wc.is_finisher(move):
+				replay_buffer.mark("finisher"))
+	for w: WrestlerController in [wrestler_a, wrestler_b]:
+		w.pin_started.connect(func(_a, _d): replay_buffer.mark("cover"))
+		w.reversed.connect(func(_r, _s, _m): _stats["reversals"] = int(_stats.get("reversals", 0)) + 1)
+	var look := BroadcastLook.new()
+	look.name = "BroadcastLook"
+	look.replay = playback_replay_path != ""
+	add_child(look)
 	# Only matters once both wrestlers are AI (e.g. an AI-vs-AI match) — with
 	# a single AI opponent the other side's input is either a human or idle,
 	# already naturally distinct. See WrestlerAI.setup_jitter()'s doc comment.
@@ -81,19 +122,45 @@ func _ready() -> void:
 	# its beats are frame-labelled.
 	var capturing := CaptureHarness != null and CaptureHarness.is_capturing()
 	if entrances and not capturing and record_replay_path == "":
+		_set_look(ArenaLighting.Look.ENTRANCE)
 		var director := EntranceDirector.new()
 		director.name = "EntranceDirector"
 		add_child(director)
 		director.bell.connect(_begin_live)
+		audio.follow(director)
+		if sign_fans:
+			sign_fans.follow(director)
+		if referee_actor:
+			referee_actor.follow(director)
 		director.begin(self)
 	else:
 		_begin_live()
 
 var _replay: ReplayResource = null
+var audio: MatchAudio = null
+var referee_actor: RefereeActor = null
+var replay_buffer: ReplayBuffer = null
+var post_match: PostMatch = null
+var _stats := {}
+var _live_at_ms := 0
+var _live_ticks := 0
 
 ## The bell: the recording starts here, whether it is tick 1 or the end of the
 ## entrances.
+func _set_look(look: ArenaLighting.Look) -> void:
+	var rig := get_tree().get_first_node_in_group("arena_lighting") as ArenaLighting
+	if rig:
+		rig.set_look(look)
+
+
 func _begin_live() -> void:
+	_set_look(ArenaLighting.Look.MATCH)
+	if audio:
+		audio.opening_bell()
+	if referee_actor:
+		referee_actor.go_live()
+	_live_at_ms = Time.get_ticks_msec()
+	_live_ticks = Engine.get_physics_frames()
 	if ReplaySystem:
 		if _replay:
 			ReplaySystem.start_playback(_replay)
@@ -121,6 +188,18 @@ func _on_match_won(winner: WrestlerController, method: String) -> void:
 	# a capture run's harness has already written its manifest.
 	if record_replay_path != "" or (CaptureHarness and CaptureHarness.is_capturing()):
 		get_tree().quit()
+		return
+	# The bell, the winner, the replay, the celebration, the rating.
+	var camera := get_node_or_null("MatchCamera") as MatchCamera
+	if camera and winner:
+		_stats["near_falls"] = referee.near_falls
+		_stats["seconds"] = float(Engine.get_physics_frames() - _live_ticks) \
+				/ Engine.physics_ticks_per_second
+		post_match = PostMatch.new()
+		post_match.name = "PostMatch"
+		add_child(post_match)
+		post_match.begin(camera, winner, wrestler_b if winner == wrestler_a else wrestler_a,
+				replay_buffer, _stats)
 
 ## Writes the recording out, if this run was asked for one. Saved after the
 ## freeze above so the resource holds exactly the ticks the match ran and

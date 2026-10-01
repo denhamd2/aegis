@@ -60,15 +60,21 @@ LAYERS = 10
 ## Over this distance in from the hairline the shells come down to the skin.
 HAIRLINE_TAPER = 0.045
 ## The height field, metres off the scalp at the outermost shell.
-LIFT_FRONT = 0.054      # the front of the top, off the forehead
-LIFT_CROWN = 0.032      # over the crown
-LIFT_SIDE = 0.013       # the short sides and the nape
-LIFT_SHOULDER = 0.012   # extra at the upper sides, where the top rounds over
+##
+## Roughly halved from the first cut (0.054 / 0.032 / 0.013 / 0.012). The owner:
+## "Cody's hair looks too big" -- side-on it stood 5 cm off the forehead and
+## a helmet's width off the skull all round, a pompadour on a man whose
+## references show a short sweep: a few centimetres on top, combed back, and
+## the sides close to the head.
+LIFT_FRONT = 0.030      # the front of the top, off the forehead
+LIFT_CROWN = 0.018      # over the crown
+LIFT_SIDE = 0.006       # the short sides and the nape
+LIFT_SHOULDER = 0.004   # extra at the upper sides, where the top rounds over
 ## Over this distance in from ANY edge of the patch the outer shells thin out.
 EDGE_FADE = 0.03
 ## How far the outermost shell sits BEHIND the scalp point it grew from,
 ## per metre of lift: the sweep.
-SWEEP = 0.85
+SWEEP = 0.7
 
 
 def _inside(poly, x, y):

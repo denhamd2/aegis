@@ -37,9 +37,14 @@ const BASE_SHOULDER_SPAN := 0.384
 ## `fala` / `title` scale the props in the wrestler's frame (x across, y up,
 ## z forward) and the offsets move their origins, in metres, in that frame
 ## (+z is BEHIND him, -z in front -- the props are authored forward -Z).
+##
+## Roman's ula fala is now authored at his own measured size (roman_props.py
+## fala_curve), so it is placed 1:1 -- `fala_true_size` -- rather than
+## stretched out of the mannequin's by these factors, which is what made the
+## last one a thick ring standing off his throat.
 const FITS := {
 	"roman": {
-		"fala": Vector3(1.6, 0.85, 1.75), "fala_offset": Vector3(0.0, 0.03, 0.0),
+		"fala_true_size": true, "fala_offset": Vector3.ZERO,
 	},
 }
 
@@ -92,12 +97,15 @@ static func _materials() -> Dictionary:
 	snap.albedo_color = Color(0.78, 0.60, 0.32)
 	snap.metallic = 1.0
 	snap.roughness = 0.4
+	# The keys: a deep red tip, dried and a little waxy, on an orange base
+	# (roman_props.py build_ula_fala). Deeper and glossier than the flat
+	# cardboard red the box version wore.
 	var red := StandardMaterial3D.new()
-	red.albedo_color = Color(0.62, 0.06, 0.04)
-	red.roughness = 0.62
+	red.albedo_color = Color(0.50, 0.035, 0.03)
+	red.roughness = 0.42
 	var orange := StandardMaterial3D.new()
-	orange.albedo_color = Color(0.88, 0.32, 0.07)
-	orange.roughness = 0.62
+	orange.albedo_color = Color(0.78, 0.30, 0.06)
+	orange.roughness = 0.55
 	var cord := StandardMaterial3D.new()
 	cord.albedo_color = Color(0.10, 0.07, 0.05)
 	cord.roughness = 0.9
@@ -116,12 +124,16 @@ var _fala: Node3D
 var _title: Node3D
 ## Where the title is: "worn" (round his waist), "held", or "" (put down).
 var _title_state := "worn"
+var _with_title := true
 
 
-static func dress(wrestler: WrestlerController) -> EntranceProps:
+## `with_title` false dresses the ula fala alone -- the OTC era carries no
+## title (gauntlet/refs/entrances.md).
+static func dress(wrestler: WrestlerController, with_title := true) -> EntranceProps:
 	var props := EntranceProps.new()
 	props.name = "EntranceProps"
 	props._w = wrestler
+	props._with_title = with_title
 	props._fit = FITS.get(wrestler.entrance_style, {})
 	props.top_level = true
 	wrestler.add_child(props)
@@ -131,7 +143,8 @@ static func dress(wrestler: WrestlerController) -> EntranceProps:
 func _ready() -> void:
 	var mats := _materials()
 	_fala = _load(ULA_FALA, mats)
-	_title = _load(TITLE, mats)
+	if _with_title:
+		_title = _load(TITLE, mats)
 	var l := _bone("upperarm_l")
 	var r := _bone("upperarm_r")
 	if l != Vector3.INF and r != Vector3.INF:
@@ -157,7 +170,7 @@ func _load(path: String, mats: Dictionary) -> Node3D:
 
 
 func set_title(state: String) -> void:
-	_title_state = state
+	_title_state = state if _title else ""
 	if _title == null:
 		return
 	for node in _title.find_children("", "MeshInstance3D", true, false):
@@ -180,11 +193,16 @@ func _follow() -> void:
 		return
 	var turn := Basis(Vector3.UP, _w.global_rotation.y)
 	var fala_fit: Vector3 = _fit.get("fala", Vector3.ONE)
+	var fala_scale := Vector3.ONE if _fit.get("fala_true_size", false) else fala_fit * _scale
 	var neck := _bone("neck_01")
 	if _fala and neck != Vector3.INF:
-		_fala.global_transform = Transform3D(
-				turn * Basis.from_scale(fala_fit * _scale),
-				neck + turn * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
+		# It lies on his chest and shoulders, so it turns with his chest:
+		# the upper spine's rotation away from rest, on top of his facing.
+		# Held to his yaw alone it stayed level while he leaned into the
+		# walk, and slid off his shoulders and into his chest with every step.
+		var chest := _bone_turn("spine_03") * turn
+		_fala.global_transform = Transform3D(chest * Basis.from_scale(fala_scale),
+				neck + chest * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
 	if _title == null:
 		return
 	if _title_state == "held":
@@ -193,10 +211,32 @@ func _follow() -> void:
 			# Real size: the belt is authored in metres off the atlas.
 			_title.global_transform = Transform3D(turn, hand)
 	else:
-		# Worn: authored at Roman's own measured waist, so 1:1 on his hips.
+		# Worn: authored at Roman's own measured waist, so 1:1 on his hips --
+		# and turned with them. Held level (turn alone) it stayed upright
+		# while his pelvis tipped and his torso leaned into the walk and the
+		# climb, and his stomach came out through the plates by up to 17 cm
+		# (tools/probe/wear_clearance.tscn). Here it takes the pelvis's
+		# rotation away from its rest, so at rest it is exactly as authored.
 		var hips := _bone("pelvis")
 		if hips != Vector3.INF:
-			_title.global_transform = Transform3D(turn, hips)
+			_title.global_transform = Transform3D(_pelvis_turn() * turn, hips)
+
+
+## The pelvis's rotation away from its rest pose, in world space.
+func _pelvis_turn() -> Basis:
+	return _bone_turn("pelvis")
+
+
+## A bone's rotation away from its rest pose, in world space.
+func _bone_turn(canonical: String) -> Basis:
+	var sk := _w.skeleton
+	var i := sk.find_bone(_w._skeleton_bone_name(canonical)) if sk else -1
+	if i < 0:
+		return Basis.IDENTITY
+	var s := sk.global_basis.orthonormalized()
+	var local := sk.get_bone_global_pose(i).basis.orthonormalized() \
+			* sk.get_bone_global_rest(i).basis.orthonormalized().inverse()
+	return s * local * s.inverse()
 
 
 func _bone(canonical: String) -> Vector3:

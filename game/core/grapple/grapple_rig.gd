@@ -56,6 +56,13 @@ var _pair_transform: Transform3D = Transform3D()
 ## for a body. Clamps where a paired move is allowed to play out.
 const RING_HALF_EXTENT := 2.0
 
+## The mannequin's hip height at scale 1.0, which every paired trajectory was
+## authored against (tools/probe landmarks: pelvis 0.90 m at scale 0.98).
+const AUTHORED_HIP_HEIGHT := 0.918
+## How high this attacker carries a man, against the mannequin: his hip
+## height over AUTHORED_HIP_HEIGHT. See _transform_track_into_pair_frame().
+var _lift_scale := 1.0
+
 func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	assert(not _active, "GrappleRig.begin() called while a grapple is already active")
 	_attacker = attacker
@@ -67,6 +74,8 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_suspend(_attacker_body)
 	_suspend(_defender_body)
 	_pair_transform = _compute_pair_transform(attacker, defender)
+	_lift_scale = attacker.hip_height() / AUTHORED_HIP_HEIGHT \
+			if attacker.has_method("hip_height") else 1.0
 
 	_active = true
 	grapple_started.emit(attacker, defender, move)
@@ -161,8 +170,18 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
 	var track_type := anim.track_get_type(track)
 	if track_type == Animation.TYPE_POSITION_3D:
+		# Size fitting (animation_gap.md Phase 2): the man being thrown is
+		# carried as high as THIS attacker's body carries him, not the
+		# mannequin's. The clips hold him at the mannequin's knee, shoulder or
+		# overhead, and the real men are not built alike -- Roman's hips sit
+		# 1.03 m up, 12% above the mannequin's, Cody's and Kenny's within 3% --
+		# so across Roman's knee Kenny lay 11 cm low and Roman's head went
+		# 15 cm into his back (PairClearance, backbreaker). Height only: on the
+		# mat (y 0) nothing moves, and the line between the two is unchanged.
+		var lift := _lift_scale if String(anim.track_get_path(track)).ends_with("WrestlerB") else 1.0
 		for k in anim.track_get_key_count(track):
 			var pos: Vector3 = anim.track_get_key_value(track, k)
+			pos.y *= lift
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
@@ -289,22 +308,46 @@ func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
 		match anim.track_get_type(i):
 			Animation.TYPE_POSITION_3D:
 				start.origin = value
+				if not is_attacker:
+					start.origin.y *= _lift_scale
 			Animation.TYPE_ROTATION_3D:
 				var rot: Quaternion = value
 				start.basis = Basis(defender_root_yaw(rot) if not is_attacker else rot)
 	return start
 
-## Ticks spent sliding the two bodies into the pair frame before the paired
-## clip starts.
+## The walk-in: how long GrappleRig takes to carry both men from where they
+## stand into the places the move starts from (gauntlet/refs/animation_gap.md,
+## Phase 2).
 ##
-## 10 ticks is a sixth of a second: long enough to read as closing the last
-## step and taking hold, short enough that it does not feel like a pause in
-## the match. It is a presentation value and is not defended as matching
-## measured footage -- gauntlet/refs/ has no lock-up timing in it.
+## It was a fixed 10 ticks. Measured over four seeded matches the carry is a
+## median 0.41 m and up to 1.5 m, turning up to 124 degrees -- so a sixth of a
+## second meant 2.5 m/s on a typical set-up and 9 m/s on the worst, with feet
+## that never moved: two men gliding into place. Now it takes as long as
+## stepping there would, at WALK_IN_SPEED and WALK_IN_TURN, and FootPlant puts
+## steps under it. LEAD_IN_TICKS stays the floor, so a short closing is no
+## slower than it was; LEAD_IN_MAX_TICKS stops a long one reading as a pause.
 const LEAD_IN_TICKS := 10
+const LEAD_IN_MAX_TICKS := 45
+## A quick set-up shuffle, not a stroll: faster than MOVE_SPEED's walk.
+const WALK_IN_SPEED := 1.6
+## Degrees per second a man turns while stepping round to his mark.
+const WALK_IN_TURN := 240.0
 
-## Slides both wrestlers from where they are standing into their places in the
-## pair frame, over LEAD_IN_TICKS physics ticks.
+## How long this move's walk-in took, in ticks (for probes).
+var lead_in_ticks := LEAD_IN_TICKS
+
+## Ticks to carry one body from `from` to `to` at walking pace.
+static func walk_in_ticks(from: Transform3D, to: Transform3D) -> int:
+	var flat := to.origin - from.origin
+	flat.y = 0.0
+	var turn := rad_to_deg(Quaternion(from.basis.orthonormalized()).angle_to(
+			Quaternion(to.basis.orthonormalized())))
+	var seconds := maxf(flat.length() / WALK_IN_SPEED, turn / WALK_IN_TURN)
+	return clampi(int(ceil(seconds * Engine.physics_ticks_per_second)),
+			LEAD_IN_TICKS, LEAD_IN_MAX_TICKS)
+
+## Carries both wrestlers from where they are standing into their places in
+## the pair frame, over walk_in_ticks().
 ##
 ## Interpolated on the transform rather than by driving velocity: the bodies
 ## are suspended (their own _physics_process is off, so move_and_slide() never
@@ -317,15 +360,23 @@ func _lead_in(attacker: Node3D, defender: Node3D) -> void:
 	var from_defender := defender.global_transform
 	var to_attacker := _pair_transform * _role_start(_move, true)
 	var to_defender := _pair_transform * _role_start(_move, false)
-	for tick in range(1, LEAD_IN_TICKS + 1):
+	# Both men arrive together, so the slower of the two sets the pace.
+	lead_in_ticks = maxi(walk_in_ticks(from_attacker, to_attacker),
+			walk_in_ticks(from_defender, to_defender))
+	for pair: Array in [[attacker, from_attacker, to_attacker, true],
+			[defender, from_defender, to_defender, false]]:
+		if pair[0].has_method("begin_walk_in"):
+			pair[0].begin_walk_in(pair[1], pair[2], lead_in_ticks, _move, pair[3])
+	for tick in range(1, lead_in_ticks + 1):
 		await Engine.get_main_loop().physics_frame
 		if not _active:
 			return
-		# Ease out: most of the closing distance is covered early and the last
-		# few centimetres are taken slowly, which is how two men actually come
-		# together -- a linear slide reads as both being dragged on rails.
-		var t := float(tick) / float(LEAD_IN_TICKS)
-		var eased := 1.0 - pow(1.0 - t, 3.0)
+		# Ease in and out: a man stepping into a hold starts from standing and
+		# settles onto his mark. (The old ease-out moved at three times the
+		# average speed on the first tick -- a lurch, which was fine for a
+		# slide nobody's feet were part of.)
+		var t := float(tick) / float(lead_in_ticks)
+		var eased := t * t * (3.0 - 2.0 * t)
 		attacker.global_transform = blend_transforms(from_attacker, to_attacker, eased)
 		defender.global_transform = blend_transforms(from_defender, to_defender, eased)
 
@@ -372,6 +423,127 @@ func _physics_process(_delta: float) -> void:
 			body.keep_inside_the_ring()
 		if body.has_method("update_paired_presentation"):
 			body.update_paired_presentation()
+	# Separation runs later in the tick, from PairSeparator, once the
+	# animation has posed both men.
+
+
+# --- Separation (gauntlet/refs/animation_gap.md, Phase 2) --------------------
+## The two halves of every paired move were authored apart and placed at fixed
+## offsets, and measured (PairClearance) 32 of 37 moves put one body through
+## the other by up to 26 cm: the slam carried a man's belly through the
+## lifter's head. This is the runtime answer, the one AAA wrestling games give
+## the same problem: each tick, measure how far the bodies are inside each
+## other past contact (PairClearance.push) and ease the DEFENDER's model out
+## by it; when they are clear, let him settle back, so the pair comes to rest
+## touching. It fits any two bodies -- Roman and Cody are not the mannequin
+## the clips were authored on -- because it works on the posed skeletons.
+##
+## Mostly the defender (DEFENDER_SHARE), because he is the one being carried,
+## thrown or driven, and moving the man on his feet slides his boots on the
+## canvas; the attacker takes the rest. The model only:
+## the bodies, positions and the replay hash never see it.
+## Solved, not stepped: up to SEPARATION_PASSES push-and-remeasure passes a
+## tick, each moving the model straight away, so a fast impact (a spear's
+## pelvis into pelvis) is resolved on the tick it happens. A single 60% step a
+## tick was tried first and lagged every impact: the pair check barely moved.
+const SEPARATION_PASSES := 6
+## The defender's share of each push; the attacker takes the rest, up to
+## ATTACKER_MAX -- he is on his feet, and a model moved further than that
+## under a planted boot reads as the boot sliding. (Uncapped, it reached the
+## 0.45 m ceiling on the rolling codebreaker.)
+const DEFENDER_SHARE := 0.85
+const ATTACKER_MAX := 0.10
+const SEPARATION_SETTLE := 0.96
+const SEPARATION_MAX := 0.45
+
+
+func _ready() -> void:
+	var separator := PairSeparator.new()
+	separator.name = "PairSeparator"
+	separator.rig = self
+	add_child(separator)
+
+
+func _separate_models() -> void:
+	var a := _attacker as WrestlerController
+	var d := _defender as WrestlerController
+	if a == null or d == null or a.skeleton == null or d.skeleton == null:
+		return
+	var pushed := false
+	for _pass in SEPARATION_PASSES:
+		var push := PairClearance.push(a, d)
+		if push.length() <= 0.0005:
+			break
+		pushed = true
+		# Most of it on the defender; DEFENDER_SHARE of it. The rest moves the
+		# attacker the other way: when the defender is wrapped round him (the
+		# tilt-a-whirls, Cross Rhodes), pushing only the defender just presses
+		# him into the far side and the pushes cancel.
+		d.paired_separation = (d.paired_separation + push * DEFENDER_SHARE) \
+				.limit_length(SEPARATION_MAX)
+		a.paired_separation = (a.paired_separation - push * (1.0 - DEFENDER_SHARE)) \
+				.limit_length(ATTACKER_MAX)
+		d.apply_model_offset()
+		a.apply_model_offset()
+	if not pushed:
+		for w: WrestlerController in [a, d]:
+			w.paired_separation *= SEPARATION_SETTLE
+			w.apply_model_offset()
+	_pull_into_reach(a, d)
+
+
+# --- Contact (Phase 2) --------------------------------------------------------
+## The other half of it. Measured with the grip IK on, a move's hold was out of
+## the attacker's reach 85-99% of the time: the pair offsets hold two men
+## ~0.8 m apart, too far for a headlock or a waistlock, so his hands closed on
+## air. So when the hold's primary target (PairedContacts) is NEARLY in reach
+## -- short by less than PULL_RADIUS -- the defender's model is drawn in until
+## it is, and the separation above stops them going through each other; they
+## settle touching and holding. Further than PULL_RADIUS out he is meant to be
+## out of reach (a run-in, a throw), and nothing pulls.
+const PULL_RADIUS := 0.25
+const PULL_GAIN := 0.5
+
+
+func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
+	if not a._is_grapple_attacker:
+		return
+	var family := PairedContacts.family(_move)
+	if family == "" or family == "none":
+		return
+	if PairedContacts.NO_PULL.has(_move.resource_path.get_file().get_basename()):
+		return
+	var sk := a.skeleton
+	var chest := sk.global_transform * sk.get_bone_global_pose(
+			sk.find_bone(a._skeleton_bone_name("spine_03"))).origin
+	var targets := PairedContacts.targets(family, d, chest)
+	if targets.size() != 2:
+		return
+	var shoulder := sk.global_transform * sk.get_bone_global_pose(
+			sk.find_bone(a._skeleton_bone_name("upperarm_r"))).origin
+	var to_target: Vector3 = targets[1] - shoulder
+	var short := to_target.length() - a._arm_reach * 0.9
+	if short <= 0.0 or short > PULL_RADIUS:
+		return
+	var before := d.paired_separation
+	d.paired_separation = (d.paired_separation - to_target.normalized() * short * PULL_GAIN) \
+			.limit_length(SEPARATION_MAX)
+	d.apply_model_offset()
+	# Pulled in; now make sure that did not put him inside the attacker. If the
+	# separation cannot clear what the pull caused -- his head drawn into the
+	# legs of a man in mid-air, on the cutter -- the pull is undone: a hand
+	# short of its hold reads better than a body through a body.
+	var clear := false
+	for _pass in SEPARATION_PASSES:
+		var push := PairClearance.push(a, d)
+		if push.length() <= 0.0005:
+			clear = true
+			break
+		d.paired_separation = (d.paired_separation + push).limit_length(SEPARATION_MAX)
+		d.apply_model_offset()
+	if not clear and PairClearance.push(a, d).length() > 0.0005:
+		d.paired_separation = before
+		d.apply_model_offset()
 
 func _suspend(body: CharacterBody3D) -> void:
 	if body:
@@ -522,3 +694,26 @@ func _apply_root_motion() -> void:
 
 func is_active() -> bool:
 	return _active
+
+
+## How far through the paired clip the move is, 0..1 (0 when idle). For the
+## camera's finisher sequence; read-only, presentation only.
+func progress() -> float:
+	if not _active or animation_player == null or not animation_player.is_playing():
+		return 0.0
+	var length := animation_player.current_animation_length
+	return clampf(animation_player.current_animation_position / length, 0.0, 1.0) \
+			if length > 0.0 else 0.0
+
+
+## The move in progress, or null.
+func current_move() -> MoveDef:
+	return _move if _active else null
+
+
+func attacker() -> Node3D:
+	return _attacker if _active else null
+
+
+func defender() -> Node3D:
+	return _defender if _active else null

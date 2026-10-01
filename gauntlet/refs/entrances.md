@@ -29,6 +29,226 @@ each man's own choreography onto *this game's* AEW set and production.
 
 ---
 
+## Measured off broadcast footage (this round)
+
+The gap the first pass named -- nothing frame-stepped -- is closed for the
+beats below. Seven WWE.com entrance highlight clips, pulled as the site's own
+720p MP4s and stepped at 0.5 s (contact sheets; cuts by scene detection). Not
+committed: the files are WWE's, used here as measurement only, as the refs
+always have been. Tag **[V]** = seen in that footage, with the clip and time.
+
+| Clip | Length | What it is |
+|---|---|---|
+| R-41 | 237 s | Roman, WrestleMania 41 Sat -- walks **alone**, no title, the full walk to the ring |
+| R-XL | 180 s | Roman, WrestleMania XL Sun -- champion, Heyman, orchestra, title raise, steps and ring |
+| R-39 | 54 s | Roman, WrestleMania 39 Sun -- in-ring title display |
+| R-CJ | 59 s | Roman, Crown Jewel 2024 -- the **OTC** era: the owner's `roman_entrance.ogv` wall video is this era's |
+| C-39 | 59 s | Cody, WrestleMania 39 Sun -- stage WHOA, pyro, low steadicam, walk |
+| C-MITB | 74 s | Cody, Money in the Bank 2023 -- smoke portal, the ramp **kneel** |
+| C-SS | 37 s | Cody, SummerSlam 2023 -- aisle between barricades, hand slaps |
+| C-SNME | 131 s | Cody, Saturday Night's Main Event Dec 2024 -- full walk, jacket opened on the title, steps and ring entry |
+
+### Roman [V]
+
+**The wait is the entrance.** R-41: 0-18 s the stage is EMPTY -- a wide
+establishing shot of the set under blue/cyan lasers, then a slow head-on
+push into the tunnel mouth. He is first seen at **20 s**, deep in the
+tunnel, walking straight at a static head-on long lens; he reaches the stage
+front at **~30 s**. The music's quiet-then-slam (owner's track: near silence
+42.5-44.9 s, the slam at **45.0 s**) is what the finger waits for.
+
+**Stage.** R-41 30-40 s: stops at the front of the stage, full figure,
+head-on; stands square, looks slowly left and right. **40 s: the finger** --
+the RIGHT arm straight up, index finger to the sky, the rest of the fist
+closed, chin level. **42 s: pyro** on the cut -- red gerbs both sides of the
+stage and the light flips from blue to red/magenta for the burst -- and a
+cut to a **very wide** of the whole stage. The finger is HELD, still, for
+**~18 s** (40-58 s) under a low wide shot from the ramp, his name on the set
+above him. R-CJ: the same finger, right arm, taken with Jey beside him.
+R-XL (title era): the title goes up one-handed, right arm straight, plates
+to camera, **eyes closed, head bowed** (1:00-1:04), then the pyro burst turns
+the set from gold to blue.
+
+**Face.** R-41 1:04-1:06: a tight telephoto close-up, head and shoulders,
+eyes narrowed, before he moves.
+
+**The walk.** R-41 1:08 to 2:40 -- **~90 s from stage to ringside**. The
+signature shot is an **extreme low-angle ultra-wide steadicam backing
+down the ramp ahead of him**: lens at hip height or lower, tilted up, him
+chest-up against the roof and the lasers, head and ula fala at the top of
+frame (1:18-1:52, 2:00-2:18). Intercut every ~6-8 s with **very wide
+arena shots from high** (1:14, 1:26, 1:36, 1:44, 1:54, 2:20-2:40). Gait:
+slow, square, arms hanging a hand's width off his sides with the palms
+back, shoulders back, chin a little down, eyes up and out; he looks slowly
+round the building, never at the camera, never breaks stride. R-XL walk
+(1:34-2:06): the same, taken instead head-on at eye level, chest-up,
+Heyman holding the title up behind him. R-CJ adds an **over-the-shoulder
+steadicam behind him** looking down the ramp at the crowd (20-22 s,
+46-52 s).
+
+**Ringside.** R-41 2:42-3:04: stops at ringside, close eye-level
+handheld: **head bowed, eyes closed** -- a held, private beat -- before the
+steps. Then (3:06-3:08) a tight shot of his hand on the post, and up the
+steps and in.
+
+**Ring.** R-41 3:24-3:26: in the ring, arm and finger up again to the
+crowd (hard cam, wide). R-39: with the titles, **arms out level to the
+sides** holding one in each hand (14 s), then **both overhead** (16-28 s),
+low camera from the apron up at him. Then hands on hips, staring
+(R-41 3:42-3:54, tight).
+
+**Light.** OTC and WM41: **blue/cyan** set and house, lasers; red only in
+the pyro burst. The gold look belongs to the title-era set (R-XL's
+orchestra), and even there it flips to blue after the pyro.
+
+### Cody [V]
+
+**Open.** C-SNME 0-8 s and C-MITB 4-8 s: black, then the silver
+American-Nightmare skull wall video; wide shots of a dark, blue-lit house
+and the crowd while the WHOA plays -- **he is not on camera for the first
+WHOA**.
+
+**Emerge.** C-MITB 22-26 s and C-SNME 20-24 s: out of **thick stage
+smoke**, backlit in the portal, walking straight at a head-on long lens.
+
+**The WHOA pose.** C-39 20-25 s: at the top of the stage, **arms straight
+out level to the sides, palms forward, chest up, head back**, held; taken
+head-on down the ramp on a long lens. **The pyro** (C-39 24 s): an air
+burst of fireworks over the set, on a very wide. Then (C-39 26 s, and
+8 s of the WHOA sheet) **both fists pumped down hard** -- the "punch" --
+and confetti.
+
+**Walk.** C-39 8-15 s (WHOA sheet): an **extreme low-angle wide steadicam
+backing ahead of him**, the same grammar as Roman's, but he is moving fast
+and looking about, mouth open, calling to the crowd. Profile close-ups
+yelling (C-39 48-50 s). Gait: brisk, bouncy, shoulders rolling, arms
+swinging, head turning side to side.
+
+**The kneel.** C-MITB 40-44 s: at the top of the ramp he **drops to one
+knee** -- right knee down, left foot planted, left forearm across the left
+knee, head down -- holds, then looks up and stands. Long lens head-on up
+the ramp. (C-SS 4 s: the same kneel.)
+
+**The barricade.** C-SS 14-30 s, C-SNME 36-1:40: he walks down the aisle
+**slapping hands along both barricades**, stopping to shout with fans;
+handheld at barricade height alongside him. C-SNME 40-48 s: a **low wide
+stance mid-aisle, knees bent, arms wide** -- the WHOA again, for the fans.
+C-SNME 1:44: **opens the jacket with both hands** to show the title.
+
+**Ring.** C-SNME 1:50-1:58: round the ringside mat to the steps, up them in
+two strides, onto the apron at the corner, and **in over the ropes by the
+post**; the camera is low **inside the ring behind him**, the coat's long
+tail filling the frame as he walks to centre and turns to the hard cam.
+None of these clips shows the middle-rope pose the sources describe; it
+stays [S], unmeasured.
+
+**Coat** (C-39, C-SNME): long, to mid-calf, fitted through the chest and
+waist then **flaring from the hips**; a **stand collar, open to the waist**;
+**gold fringed epaulettes**; C-39's is white and gold, C-SNME's red with
+blue sleeves and white stripes. It swings wide when he turns.
+
+**Light.** Blue house, red/white/blue stage and wall, white beams, heavy
+fog at the portal.
+
+### Cody, cut to his music [V + measured]
+
+His track (`cody_entrance.ogv`, 80 s) measured: three swells in a sparse
+intro (0.8, 3.6, 6.3 s), the band in at 7.9 s, and the sung chant from
+**22.5 s** -- a held-vowel detector puts vocal onsets at 22.5, 24.0, 26.0,
+29.0, 36.5 and the chorus's big held WHOAAA at **43.5 s** (and 45.5). Every
+WWE.com clip, aligned to this track by cross-correlating its audio, starts on
+the music (+0.2 s, a single sharp peak), so the footage reads straight onto
+it: MITB is crowd shots until the smoke at 22.3 s and Cody out of it at
+22.5-26 s; C-39 has the WHOA pose on from 20.8, the pyro at 23.3, the fists
+at 25.8; the kneel at 39.8-43.8 (MITB); the low WHOA at 39.8-47.8 (SNME).
+
+The game had him out on the third intro swell (6.3 s) and the WHOA on
+7.0 s -- 16 s early, in the part of the song where the broadcast shows the
+building. Now: black and the building to 20.3 s; smoke and the backlight;
+out of it on the first sung WHOA (22.5); arms wide on 24.0, held and alive
+through the pyro (26.0) to the fists on 29.0; the knee down at the lip on
+36.5; the low WHOA down the ramp on the held WHOAAA, 43.5, pushed wider on
+45.5. `test_codys_beats_land_on_the_music` pins each accent within two
+ticks.
+
+### What the game now does, beat by beat [P, cut to the [V] above]
+
+**Roman (OTC; no title, the blue look).** Music time from his wall video:
+the empty stage on a high wide, his wall, then a long lens creeping into
+the portals; he appears in his portal at ~25.7 s walking at the lens
+(0.5 m/s), then a close-up as he comes on; on the lip, the push-in (4 s)
+and the close-up (3 s); **the finger up with its arm arriving on the slam,
+45.0 s** -- stage gerbs and the room red for 1.5 s, on the very wide --
+held to 58 s under the low wide from the ramp. The whole ramp at his pace
+on the low ultra-wide steadicam, cut to the high wide and once over his
+shoulder (`ROMAN_WALK_SHOTS`). At the foot of the steps, head bowed
+(`Head_Bow`, 4 s, close); up and in; the finger to the hard camera;
+hands on hips on the close-up (`Hands_Hips`); the ula fala off; his mark.
+
+**Cody.** Blackout; WHOA #1 on the hard-camera crowd, WHOA #2 on the dark
+wide, both with a strobe; smoke fills his portal and on WHOA #3 he walks out
+of it, backlit, at the long lens; **the hit (7.0 s)**: the WHOA pose, the
+pyro, on the very wide; **fists driven down (8.8 s)**, the second burst;
+the low steadicam to the lip; **the kneel** on the long lens up the ramp
+(5 s); down the ramp cut steadicam/wide, **the low WHOA** half way; round
+to the steps and in over the ropes with the camera low behind him in the
+ring; the corner pose (still [S]); the coat off; his mark.
+
+**Superseded by the footage**, below: Roman's title on the stage and in the
+ring, and his gold light (the title era, not the OTC); Cody's silhouette in
+the portal on the first two WHOAs (the broadcast shows the crowd) and the
+air punch UP (it is both fists DOWN).
+
+---
+
+## 2K26: how WWE 2K26 shoots these two entrances [V, storyboard]
+
+The owner asked for the entrance cameras to copy WWE 2K26's. Source:
+[WWE 2K26 Entrances: Cody Rhodes, John Cena, Roman Reigns, Seth Rollins & More!](https://www.youtube.com/watch?v=V_zBO1vzw7A)
+(Cody 0:00-1:53, Roman 1:53-4:55). The video itself would not download
+here; its storyboard would (150 thumbnails, one every 4.4 s), which is
+enough for the shot order and each shot's height, side and size -- not for
+lens millimetres or exact cut points. Timestamps are the video's.
+
+**Cody**
+
+| t | Shot | Ours |
+| --- | --- | --- |
+| 0:00-0:13 | Dark arena wide from over the ring end toward the stage | `cody_dark`, now under the rig |
+| 0:22-0:27 | Front, full body then knees-up, him centred in white portal light | `portal_long` |
+| 0:31 | Behind him, 3/4, over his shoulder | `over_shoulder` on the stand at the lip |
+| 0:35 | The kneel, front wide | `ramp_long` |
+| 0:40-0:49 | Arms out, full body front | `ramp_long`, `stage_wide` |
+| 0:53 | Waist-up front, 3/4, the wall behind | `hero_low` |
+| 0:58 | Walking, front, tracking back | `steadicam_low` |
+| 1:02-1:06 | Walking, from behind, following | `over_shoulder` in the walk cut |
+| 1:11-1:20 | From the ring, low, up at him; the corner pose | `ring_behind_low`, `corner_low` |
+| 1:33 | Outside a corner, high, the whole ring | `ring_high_corner` |
+| 1:37 | Waist-up front in the ring | `ring_low` |
+| 1:46-1:55 | Very wide from the far end, pyro over the ring | `end_wide` |
+
+**Roman**
+
+| t | Shot | Ours |
+| --- | --- | --- |
+| 1:55-2:04 | Dark arena wide, high, toward the stage | intro shot 1, now under the rig |
+| 2:08-2:17 | Square on the stage and his wall, long lens, him tiny | intro shots 2-3, `stage` |
+| 2:26-2:31 | Low medium, front, the fist up, pyro both sides | `hero_low` (was the very wide) |
+| 2:35-2:44 | Chest-up front, the wall behind, walking at the lens | `face_walk`, `steadicam_low` |
+| 2:53-2:57 | Medium-wide front, centred, low | `ramp_low_wide` |
+| 3:01 | High from the crowd side, across the ramp | `ramp_side_high` |
+| 3:06-3:10 | Close front, walking | `face_walk` in the walk cut |
+| 3:15-3:24 | Low rear 3/4 at the steps | `ring_behind_low`, `ringside` |
+| 3:28-3:32 | From inside the ring, low, up at him at the corner | `ring_low` |
+| 3:37-3:41 | In the ring behind him, out over the crowd | `ring_behind_out` for the finger |
+| 3:46-3:50 | Low in the ring, backlit by the rig | `ring_low` |
+| 3:55-4:08 | Waist-up front; the hard-camera wide | `face_walk`, `ringside` |
+| 4:26-4:30 | Very wide from the far end | `end_wide` |
+
+Every high shot in 2K26 is under its lighting grid. Ours were above ours
+(the truss at 7.6 m, the cameras at 8-11 m) and shot down through it; they
+now hang at 6.3 m (EntranceDirector.RIG_CLEAR_Y).
+
 ## Roman Reigns — the Tribal Chief
 
 **Character of the entrance.** Slow, deliberate, still. "Walks with a slow,
@@ -283,3 +503,12 @@ proves itself before Cody's bigger motion.
   [Fightful, WrestleMania 39 pyro](https://www.fightful.com/wrestling/cody-rhodes-his-wrestemania-39-entrance-i-think-you-re-looking-record-setting-amount-pyro);
   [EssentiallySports, AEW pyro and Pharaoh](https://www.essentiallysports.com/category/wrestling/wwe/wwe-aew-news-tony-khan-just-invested-a-million-dollars-cody-rhodes-pyro-record-seemingly-broken-on-aew-collision-as-fans-go-bonkers/);
   [WWE Shop, entrance jacket replica](https://shop.wwe.com/en/cody-rhodes-deluxe-replica-entrance-full-snap-jacket/p-350089534986067996+z-99-1080634694).
+- Footage ([V], measured this round; WWE.com highlight pages, their own MP4s):
+  [R-41](https://www.wwe.com/videos/roman-reigns-heads-into-battle-alone-wrestlemania-41-saturday-highlights),
+  [R-XL](https://www.wwe.com/videos/roman-reigns-honors-the-bloodline-in-wrestlemania-entrance-wrestlemania-xl-sunday-highlights),
+  [R-39](https://www.wwe.com/videos/roman-reigns-make-his-grand-entrance-at-wrestlemania-wrestlemania-39-sunday-highlights),
+  [R-CJ](https://www.wwe.com/videos/roman-reigns-makes-stunning-entrance-as-the-o-t-c-crown-jewel-2024-highlights),
+  [C-39](https://www.wwe.com/videos/cody-rhodes-makes-his-explosive-entrance-at-wrestlemania-wrestlemania-39-sunday-highlights),
+  [C-MITB](https://www.wwe.com/videos/cody-rhodes-makes-an-electric-entrance-money-in-the-bank-2023-highlights),
+  [C-SS](https://www.wwe.com/videos/cody-rhodes-lights-up-detroit-with-his-summerslam-entrance-summerslam-2023-highlights),
+  [C-SNME](https://www.wwe.com/videos/cody-rhodes-makes-his-entrance-with-the-winged-eagle-wwe-championship).

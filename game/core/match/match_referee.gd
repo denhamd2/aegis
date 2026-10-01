@@ -9,6 +9,22 @@ extends Node
 ## any more -- see _check_for_downed_opponent_action().
 
 signal match_won(winner: WrestlerController, method: String)
+## A pin or a hold broken because the man under it got to the ropes.
+signal rope_break(defender: WrestlerController, was_pin: bool)
+
+## Rope breaks (gauntlet/refs/animation_gap.md, Phase 4: position). A man
+## pinned or held within reach of the ropes gets to them, and the count or the
+## hold is broken -- unless it is a finisher he is under, which is the point of
+## a finisher. Whether he can reach them is decided as the cover or the hold
+## starts (WrestlerController.rope_within_reach()), off where he lies.
+##
+## Pinned: he starts reaching as the second count lands (COUNT_TICKS[1]) and
+## has the rope ROPE_REACH_TICKS later -- after two, before three, which is
+## when a man really gets there. A kickout before that still ends it first.
+const ROPE_REACH_START_TICK := 170
+const ROPE_REACH_TICKS := 24
+## Held: he fights the hold this long before he stretches for the rope.
+const SUBMISSION_ROPE_REACH_AFTER := 60
 
 ## Tick each hand-slap lands on, measured rather than divided evenly.
 ##
@@ -27,6 +43,11 @@ signal match_won(winner: WrestlerController, method: String)
 ## 60, so the count used to start about half a second early.
 const COUNT_TICKS: Array[int] = [92, 167, 227]
 const PIN_COUNT_TICKS := 227
+## Only a finisher wins (the owner: "a wrestler can only finish the match
+## using their finisher -- the Spear or the Cross Rhodes"). A cover off
+## anything else is a near-fall: he gets a shoulder up this many ticks before
+## the third slap, the "2.9" a crowd comes out of its seats for.
+const NEAR_FALL_KICKOUT_TICK := 219
 
 ## How long each digit stays on screen, also frame-stepped: "1" is visible
 ## ~0.63-0.67s and "2" ~0.37-0.43s, with a silent gap of ~0.55s before the
@@ -65,10 +86,35 @@ var _tying_up: bool = false
 var _tie_up_ticks: int = 0
 var _tie_up_minigame: TieUpMinigame
 var _match_over: bool = false
+## The rope side the man under the current pin or hold can reach, or ZERO.
+var _rope_side := Vector3.ZERO
+var _submission_fight_ticks := 0
+## Rope breaks this match, pins and holds together (probes, tests).
+var rope_breaks := 0
+## Whether the last move to land on each man was his opponent's finisher:
+## wrestler -> bool. Overwritten by every landing, so a finisher kicked out
+## of and followed by a strike no longer counts.
+var _finished := {}
+## Covers kicked out of because they were not off a finisher.
+var near_falls := 0
 
 func _ready() -> void:
 	wrestler_a = get_node(wrestler_a_path)
 	wrestler_b = get_node(wrestler_b_path)
+	for w: WrestlerController in [wrestler_a, wrestler_b]:
+		w.move_landed.connect(_on_move_landed)
+
+
+func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
+		move: MoveDef) -> void:
+	if defender:
+		_finished[defender] = attacker.is_finisher(move)
+
+
+## Whether a cover on `defender` can end the match: only straight off the
+## pinning man's own finisher.
+func can_be_finished(defender: WrestlerController) -> bool:
+	return bool(_finished.get(defender, false))
 
 func _physics_process(_delta: float) -> void:
 	if _match_over:
@@ -162,6 +208,14 @@ func _check_for_downed_opponent_action() -> void:
 	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
 		var attacker: WrestlerController = pair[0]
 		var defender: WrestlerController = pair[1]
+		# Worked before he is covered (Phase 4, position): a stomp or a fist,
+		# by where the standing man is -- up to GROUND_ATTACKS_MAX a knockdown,
+		# never after a finisher, whose knockdown is the cover.
+		if attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
+				and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
+				and attacker.can_ground_attack(defender):
+			attacker.begin_ground_attack(defender)
+			return
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
 				and defender._cover_eligible \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
@@ -178,15 +232,84 @@ func _check_for_downed_opponent_action() -> void:
 			# SubmissionMinigame, the two SUBMISSION_* states and
 			# WrestlerController.begin_submission() all still work, and
 			# their tests still cover them. What changed is that the
-			# referee no longer reaches for it, so nothing in a match
-			# starts one.
+			# referee no longer reaches for it on a coin flip.
+			#
+			# The one exception is a man's OWN hold (Cody's Figure-Four,
+			# WrestlerController.submission_move): taken once a match, on the
+			# first man he has down -- never one a finisher has just put
+			# down, who gets the cover. Measured over 8 seeded Roman-vs-Cody
+			# matches (tools/probe/moveset_tally.tscn), every cover Cody
+			# made followed a signature or a finisher, so a rule that also
+			# spared the signature knockdown left the hold in one match in
+			# eight. It is a set piece before the finish, not a way to end
+			# it: the tap only comes on a leg already past
+			# SUBMISSION_ESCAPE_LIMB, and the match goes on to a pinfall.
+			# His dives (DiveSpot): once a match, on a man down off the
+			# ropes (a knockdown mid-ring takes the hold instead). Gated
+			# on the hold first, measured over 8 seeds it never came: the
+			# knockdown after the hold is nearly always the finish.
+			if _wants_dive(attacker, defender):
+				_start_dive(attacker, defender)
+				return
+			if _wants_own_hold(attacker) \
+					and WrestlerController.has_room_for_figure_four(defender):
+				_start_own_hold(attacker, defender)
+				return
 			_pinning = true
 			_pin_ticks = 0
 			_pin_count_shown = 0
 			_pin_attacker = attacker
 			_pin_defender = defender
+			_rope_side = _reachable_ropes(attacker, defender)
 			attacker.begin_pin(defender, _pin_seed())
 			return
+
+func _wants_dive(attacker: WrestlerController, defender: WrestlerController) -> bool:
+	return not attacker.dive_moves.is_empty() and not attacker._dive_used \
+			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
+			and DiveSpot.near_ropes(defender)
+
+func _start_dive(attacker: WrestlerController, defender: WrestlerController) -> void:
+	attacker._dive_used = true
+	var spot := DiveSpot.new()
+	spot.name = "DiveSpot"
+	get_parent().add_child(spot)
+	spot.begin(attacker, defender)
+
+func _wants_own_hold(attacker: WrestlerController) -> bool:
+	return attacker.submission_move != null and not attacker._submission_move_used \
+			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER
+
+func _start_own_hold(attacker: WrestlerController, defender: WrestlerController) -> void:
+	attacker._submission_move_used = true
+	_submissioning = true
+	_submission_attacker = attacker
+	_submission_defender = defender
+	_rope_side = _reachable_ropes(attacker, defender)
+	_submission_fight_ticks = 0
+	attacker.begin_submission(defender, CombatSystem.Limb.LEGS, attacker.submission_move)
+
+
+## The rope side `defender` can get to under `attacker`, or ZERO -- never
+## under a finisher.
+func _reachable_ropes(attacker: WrestlerController, defender: WrestlerController) -> Vector3:
+	if attacker.last_landed_tier >= CombatSystem.Tier.FINISHER:
+		return Vector3.ZERO
+	return WrestlerController.rope_within_reach(defender)
+
+
+## Ticks the rope reach for a pin or a hold; true once he has the rope.
+func _tick_rope_reach(tick: int, start: int) -> bool:
+	if _rope_side == Vector3.ZERO or tick < start:
+		return false
+	var defender := _pin_defender if _pinning else _submission_defender
+	if tick == start:
+		defender.reach_for_rope(_rope_side, ROPE_REACH_TICKS)
+	if tick < start + ROPE_REACH_TICKS:
+		return false
+	rope_breaks += 1
+	rope_break.emit(defender, _pinning)
+	return true
 
 ## Seed for this pin's kickout minigame. Every pin in a match needs its own
 ## target window, so the seed has to vary -- but only with match state.
@@ -251,7 +374,14 @@ func _tick_pin() -> void:
 	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
 		_end_pin(false)
 		return
+	if _tick_rope_reach(_pin_ticks, ROPE_REACH_START_TICK):
+		_end_pin(false, true)
+		return
 	_update_count()
+	if _pin_ticks >= NEAR_FALL_KICKOUT_TICK and not can_be_finished(_pin_defender):
+		near_falls += 1
+		_end_pin(false)
+		return
 	if _pin_ticks >= PIN_COUNT_TICKS:
 		_end_pin(true)
 
@@ -267,7 +397,7 @@ func _update_count() -> void:
 			_pin_count_shown = i + 1
 			break
 
-func _end_pin(three_count_reached: bool) -> void:
+func _end_pin(three_count_reached: bool, rope := false) -> void:
 	_pinning = false
 	_pin_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	if three_count_reached:
@@ -278,7 +408,8 @@ func _end_pin(three_count_reached: bool) -> void:
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
 		# The near-fall comeback: he was losing badly, he survived the cover,
 		# and he fires up off the mat.
-		if _pin_defender.combat.earned_kickout_comeback(_pin_attacker.combat):
+		# Not off a rope break: he did not fight his way out of it.
+		if not rope and _pin_defender.combat.earned_kickout_comeback(_pin_attacker.combat):
 			_pin_defender.fire_up()
 			_pin_defender._move_ticks_remaining = KICKOUT_FIRE_UP_TICKS
 		# Not cover-eligible again until this wrestler actually reaches IDLE
@@ -324,6 +455,20 @@ const KICKOUT_FIRE_UP_TICKS := 20
 ## PIN_ATTACKER's automatic three-count) — only the defender's hold state,
 ## captured each tick by WrestlerController, matters.
 func _tick_submission() -> void:
+	# A hold is applied before it is fought: nothing fills until it is locked
+	# (WrestlerController.begin_submission's move.startup_frames), and the
+	# hold's damage lands on the lock.
+	if _submission_attacker._submission_lock_ticks > 0:
+		_submission_attacker._submission_lock_ticks -= 1
+		if _submission_attacker._submission_lock_ticks == 0 \
+				and _submission_attacker._submission_hold_move:
+			_submission_defender.combat.apply_damage(
+					_submission_attacker._submission_hold_move)
+		return
+	_submission_fight_ticks += 1
+	if _tick_rope_reach(_submission_fight_ticks, SUBMISSION_ROPE_REACH_AFTER):
+		_end_submission(false)
+		return
 	var minigame: SubmissionMinigame = _submission_defender._submission_minigame
 	minigame.tick(true, _submission_defender._submission_defender_input_this_tick)
 	var tapped := minigame.attacker_wins()
@@ -354,7 +499,12 @@ func _break_submission_tie() -> bool:
 
 func _end_submission(tapped_out: bool) -> void:
 	_submissioning = false
-	_submission_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
+	if _submission_attacker._submission_hold_move and not tapped_out:
+		# Worked from flat on his back: he gets up, he does not pop upright.
+		_submission_attacker.release_submission_hold()
+	else:
+		_submission_attacker._submission_hold_move = null
+		_submission_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	if tapped_out:
 		_declare_winner(_submission_attacker, "submission")
 	else:

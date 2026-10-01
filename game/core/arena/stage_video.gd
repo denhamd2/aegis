@@ -61,7 +61,9 @@ const STILL_PATH := "res://assets/environment/video/dynamite_tron_still.png"
 ## same failure the old flat panel had at 1.35 and the reason the 0.35 cap
 ## existed. 0.55 keeps the picture readable while the brightest parts of it
 ## still bloom. The re-measured p95 this was settled on is in README.md.
-const SCREEN_LEVEL := 0.55
+## 0.55 -> 0.32 in the 2K26 lighting round (lighting_2k26.md item 11): the
+## wall filled the stage shots with white; 2K26's is hot but keeps its picture.
+const SCREEN_LEVEL := 0.32
 
 ## The clip is 16:9 and the wall is 3:1, so something has to give.
 ##

@@ -33,20 +33,25 @@ const MOVES_DIR := "res://resources/moves"
 ## that inverts has to be lifted clear of the mat or its head goes through the
 ## canvas. They are replaced by one grapple that does not flip anybody,
 ## grapple_clinch_knee, which is why this number is now 1.
-const SCOPED_GRAPPLE := 1
+## Cody's delayed vertical suplex joins it as his own (Roster.Entry.moveset).
+const SCOPED_GRAPPLE := 2
 ## The power rung is back with one move: the body slam, keyed in Blender
 ## against its partner rather than stitched from borrowed clips, which is
 ## what the cut throws were.
-const SCOPED_POWER := 1
+## Cody's powerslam and Alabama Slam are his own power rung (his moveset).
+const SCOPED_POWER := 3
 ## Two shared (backbreaker, neckbreaker) and one per wrestler who has one:
 ## Roman's Superman Punch and Cody's Cody Cutter.
-const SCOPED_SIGNATURE := 4
+## And Cody's Disaster Kick, in his own signature draw.
+const SCOPED_SIGNATURE := 5
 ## One per wrestler who has one, and they belong to the roster rather than to
 ## match.tscn: Roman's Spear and Cody's Cross Rhodes.
 const SCOPED_FINISHER := 2
 ## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
 ## paired move so the victim's half is keyed against the hit.
 const SCOPED_RUNNING := 25
+## Chain wrestling's links (Phase 4): headlock, wristlock, waistlock.
+const SCOPED_CHAIN := 3
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -83,6 +88,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var signature := 0
 	var finisher := 0
 	var running := 0
+	var chain := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -95,6 +101,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			finisher += 1
 		elif name.begins_with("running_"):
 			running += 1
+		elif name.begins_with("chain_"):
+			chain += 1
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
@@ -104,6 +112,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(signature).is_equal(SCOPED_SIGNATURE)
 	assert_int(finisher).is_equal(SCOPED_FINISHER)
 	assert_int(running).is_equal(SCOPED_RUNNING)
+	assert_int(chain).is_equal(SCOPED_CHAIN)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -237,9 +246,16 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 			for extra: MoveDef in tier[1]:
 				reachable[String(extra.animation_pair_id)] = true
 	for entry: Roster.Entry in Roster.entries():
-		for path: String in [entry.finisher, entry.signature]:
+		var paths: Array = [entry.finisher, entry.signature]
+		# A man's own moveset (Roster.Entry.moveset) reaches its moves too.
+		for tier: String in entry.moveset:
+			paths.append_array(entry.moveset[tier])
+		for path: String in paths:
 			if path != "":
 				reachable[String((load(path) as MoveDef).animation_pair_id)] = true
+	# Chain wrestling's holds are handed out by the lock-up itself, not a tier.
+	for hold: MoveDef in WrestlerController.CHAIN_HOLDS.values():
+		reachable[String(hold.animation_pair_id)] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):
@@ -374,8 +390,10 @@ func test_each_wrestler_gets_his_own_signature_and_keeps_the_shared_ones() -> vo
 	assert_array(ids["WrestlerA"]).contains(["signature_superman_punch",
 			"signature_backbreaker", "signature_neckbreaker"])
 	assert_array(ids["WrestlerA"]).not_contains(["signature_cody_cutter"])
-	assert_array(ids["WrestlerB"]).contains(["signature_cody_cutter",
-			"signature_backbreaker", "signature_neckbreaker"])
+	# Cody has his own signature tier (Roster.Entry.moveset): his Cutter and
+	# his Disaster Kick, and not the shared two.
+	assert_array(ids["WrestlerB"]).contains_exactly_in_any_order(
+			["signature_cody_cutter", "signature_disaster_kick"])
 	assert_array(ids["WrestlerB"]).not_contains(["signature_superman_punch"])
 
 ## And it is the first one he throws.
@@ -404,3 +422,33 @@ func test_a_paired_running_attack_skips_the_tie_up() -> void:
 		if PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
 			paired += 1
 	assert_int(paired).is_equal(SCOPED_RUNNING)
+
+
+## Cody fights with his own moves (Roster.Entry.moveset,
+## gauntlet/refs/cody_moveset.md): every tier the roster names replaces the
+## shared draw, and his own signature still goes first.
+func test_cody_fights_with_his_own_moveset() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
+	var cody: WrestlerController = scene.get_node("WrestlerB")
+	var ids := func(primary: MoveDef, pool: Array[MoveDef]) -> Array:
+		var out := [String(primary.animation_pair_id)]
+		for m in pool:
+			out.append(String(m.animation_pair_id))
+		return out
+	assert_array(ids.call(cody.strike_move, cody.strike_move_pool)).contains(
+			["strike_bionic_elbow", "strike_dropdown_uppercut"])
+	assert_array(ids.call(cody.grapple_move, cody.grapple_move_pool)) \
+			.is_equal(["grapple_vertical_suplex"])
+	assert_array(ids.call(cody.power_move, cody.power_move_pool)) \
+			.is_equal(["power_powerslam", "power_alabama_slam"])
+	assert_array(ids.call(cody.signature_move, cody.signature_move_pool)) \
+			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter"])
+	assert_str(String(cody.own_signature.animation_pair_id)).is_equal("signature_cody_cutter")
+	assert_str(String(cody.finisher_move.animation_pair_id)).is_equal("finisher_cross_rhodes")
+	# Roman keeps the shared draw.
+	var roman: WrestlerController = scene.get_node("WrestlerA")
+	assert_bool(roman.power_move_pool.has(cody.power_move)).is_false()
+	# The Figure-Four is his, and only his.
+	assert_str(String(cody.submission_move.animation_pair_id)).is_equal("figure_four")
+	assert_object(roman.submission_move).is_null()

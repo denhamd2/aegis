@@ -35,18 +35,27 @@ const KEY_ART := "res://assets/ui/title_key_art.png"
 ## or on the logo at any window shape.
 const SAFE_ART := Rect2(0.265, 0.385, 0.47, 0.45)
 
-enum Phase { TITLE, CONTROLS, SELECT, VERSUS, LAUNCH }
+enum Phase { TITLE, CONTROLS, SELECT, VERSUS, LAUNCH, CAMERA }
 
 ## Menu rows. QUIT is dropped on Web, where SceneTree.quit() leaves the player
 ## staring at a dead canvas with no way back.
 const MENU_FIGHT := "FIGHT"
 const MENU_CONTROLS := "CONTROLS"
+const MENU_CAMERA := "CAMERA"
+## The camera options (CameraSettings, camera_aaa_plan.md D2): [label,
+## the values' names in CameraSettings' enum order].
+const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST"]], ["CUTS", ["ON", "OFF"]],
+		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]]]
+var camera_row := 0
 const MENU_QUIT := "QUIT"
 
-## How long the VS card holds before the match loads, and how long the fade to
-## black takes. Both are presentation; the match's own clock starts fresh.
-const VERSUS_HOLD := 1.15
+## How long the VS card holds before the stinger wipes in, and the fade kept
+## for anything that still asks for one. Both are presentation; the match's
+## own clock starts fresh.
+const VERSUS_HOLD := 1.5
 const FADE_TIME := 0.45
+## The VS card's names slam in over this long, and VS punches in after.
+const VERSUS_SLAM := 0.32
 
 ## The bindings the controls card lists, in the order it lists them, paired
 ## with the label shown for each. The KEYS come from the InputMap at runtime,
@@ -83,6 +92,19 @@ var _motes: Array = []
 ## Filled during _draw so the mouse can hit-test what was actually drawn.
 var _menu_rects: Array = []
 var _card_rects: Array = []
+## The wipe into the match (MatchStinger), once the VS card has held.
+var _stinger: MatchStinger
+var _stinger_covered := false
+## Resources loaded in the background from the VS card on, so the swap under
+## the stinger does not freeze on the two .glb files.
+var _preloads: Array[String] = []
+## The menu's sounds, and the hall murmuring behind it. Heard off what
+## changed each frame (_listen) rather than wired into every input path, so a
+## mouse hover, a key and a probe calling _accept() all sound the same.
+var _sfx: SfxPool
+var _heard := []
+## The crowd under the menu, quieter than in the hall.
+const MENU_CROWD_DB := -16.0
 
 
 func _ready() -> void:
@@ -93,7 +115,11 @@ func _ready() -> void:
 	_glow = TitleArt.make_glow_texture()
 	_vignette = TitleArt.make_vignette_texture()
 	_roster = Roster.entries()
-	_menu = [MENU_FIGHT, MENU_CONTROLS]
+	_sfx = SfxPool.new()
+	_sfx.name = "Sfx"
+	add_child(_sfx)
+	_sfx.make_loop("crowd_bed").volume_db = MENU_CROWD_DB
+	_menu = [MENU_FIGHT, MENU_CONTROLS, MENU_CAMERA]
 	if not OS.has_feature("web"):
 		_menu.append(MENU_QUIT)
 	var rng := RandomNumberGenerator.new()
@@ -107,15 +133,18 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_listen()
 	if phase == Phase.VERSUS:
 		_versus_time += delta
 		if _versus_time >= VERSUS_HOLD:
 			phase = Phase.LAUNCH
 	elif phase == Phase.LAUNCH:
-		_fade = minf(1.0, _fade + delta / FADE_TIME)
-		if _fade >= 1.0:
+		if _stinger == null:
+			_start_stinger()
+		elif _stinger_covered and _preloads_ready():
 			set_process(false)
 			_launch()
+			_stinger.reveal()
 	queue_redraw()
 
 
@@ -140,6 +169,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("ui_up"):
 				menu_index = wrapi(menu_index - 1, 0, _menu.size())
 				accept_event()
+		Phase.CAMERA:
+			if event.is_action_pressed("ui_down"):
+				camera_row = wrapi(camera_row + 1, 0, CAMERA_ROWS.size())
+				accept_event()
+			elif event.is_action_pressed("ui_up"):
+				camera_row = wrapi(camera_row - 1, 0, CAMERA_ROWS.size())
+				accept_event()
+			elif event.is_action_pressed("ui_right"):
+				step_camera_option(1)
+				accept_event()
+			elif event.is_action_pressed("ui_left"):
+				step_camera_option(-1)
+				accept_event()
 		Phase.SELECT:
 			if event.is_action_pressed("ui_right"):
 				cursor = wrapi(cursor + 1, 0, _roster.size())
@@ -163,7 +205,7 @@ func _gui_input(event: InputEvent) -> void:
 					cursor = i
 	elif event is InputEventMouseButton and event.pressed \
 			and event.button_index == MOUSE_BUTTON_LEFT:
-		if phase == Phase.CONTROLS:
+		if phase == Phase.CONTROLS or phase == Phase.CAMERA:
 			_back()
 		elif phase == Phase.TITLE:
 			for i in _menu_rects.size():
@@ -187,15 +229,21 @@ func _accept() -> void:
 					cursor = 0
 				MENU_CONTROLS:
 					phase = Phase.CONTROLS
+				MENU_CAMERA:
+					phase = Phase.CAMERA
+					camera_row = 0
 				MENU_QUIT:
 					get_tree().quit()
 		Phase.CONTROLS:
 			phase = Phase.TITLE
+		Phase.CAMERA:
+			step_camera_option(1)
 		Phase.SELECT:
 			picks.append(_roster[cursor])
 			if picks.size() >= 2:
 				phase = Phase.VERSUS
 				_versus_time = 0.0
+				_start_preloads()
 			else:
 				# Park the opponent cursor on the other man, which is the
 				# pick a player wants far more often than the mirror match.
@@ -204,7 +252,7 @@ func _accept() -> void:
 
 func _back() -> void:
 	match phase:
-		Phase.CONTROLS:
+		Phase.CONTROLS, Phase.CAMERA:
 			phase = Phase.TITLE
 		Phase.SELECT:
 			if picks.is_empty():
@@ -215,7 +263,64 @@ func _back() -> void:
 
 ## --- Launch ----------------------------------------------------------------
 
+## The match scene and both picked models, loading on worker threads while the
+## VS card holds. Where threads are not available (the Web build) the request
+## fails and _launch() loads them the ordinary way, under the stinger.
+func _start_preloads() -> void:
+	_preloads.clear()
+	for path: String in [MATCH_SCENE_PATH, (picks[0] as Roster.Entry).model_scene,
+			(picks[1] as Roster.Entry).model_scene]:
+		if path == "" or _preloads.has(path):
+			continue
+		if ResourceLoader.load_threaded_request(path) == OK:
+			_preloads.append(path)
+
+
+func _preloads_ready() -> bool:
+	for path: String in _preloads:
+		var status := ResourceLoader.load_threaded_get_status(path)
+		if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return false
+	return true
+
+
+func _listen() -> void:
+	var now := [phase, menu_index, cursor, picks.size()]
+	if _heard.is_empty():
+		_heard = now
+		return
+	if now == _heard:
+		return
+	if now[0] == Phase.LAUNCH:
+		_heard = now
+		return
+	if now[3] > _heard[3] or (now[0] != _heard[0] and now[0] > _heard[0]):
+		if now[0] == Phase.VERSUS:
+			_sfx.play("whoosh", -2.0)
+			_sfx.play("pyro_boom", -6.0)
+		else:
+			_sfx.play("ui_select", -6.0)
+	elif now[3] < _heard[3] or now[0] < _heard[0]:
+		_sfx.play("ui_back", -6.0)
+	elif now[1] != _heard[1] or now[2] != _heard[2]:
+		_sfx.play("ui_move", -8.0)
+	_heard = now
+
+
+func _start_stinger() -> void:
+	_sfx.play("whoosh", 0.0)
+	_stinger = MatchStinger.new()
+	_stinger.setup(picks[0], picks[1])
+	_stinger.covered.connect(func() -> void: _stinger_covered = true)
+	get_tree().root.add_child(_stinger)
+
+
 func _launch() -> void:
+	# Collect the background loads: they are in the resource cache now, and
+	# the load() calls below and in configure_match() pick them up from it.
+	for path: String in _preloads:
+		ResourceLoader.load_threaded_get(path)
+	_preloads.clear()
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
 			randi_range(1, 1 << 30))
@@ -257,6 +362,9 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		wrestler.entrance_style = entry.id
 		wrestler.attire_body = entry.attire_body
 		wrestler.attire_accent = entry.attire_accent
+		# His real height, not the slot's (Roster.Entry.stature_m).
+		if entry.stature_scale() > 0.0:
+			wrestler.physique_height = entry.stature_scale()
 		# His own finisher, if he has one. Before add_child() like the rest, so
 		# the controller has it from its first tick.
 		wrestler.finisher_move = load(entry.finisher) as MoveDef \
@@ -264,6 +372,36 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		# And his own signature, joining the shared draw. A fresh array: the
 		# pool match.tscn assigns is one resource shared by both slots, and
 		# appending to it would hand Roman's punch to Cody as well.
+		# His own moveset, tier by tier, where the roster gives him one:
+		# the first move is the tier's guaranteed one, the rest its pool, and
+		# the shared moves for that tier are dropped.
+		for tier: String in entry.moveset:
+			var moves: Array[MoveDef] = []
+			for path: String in entry.moveset[tier]:
+				moves.append(load(path) as MoveDef)
+			if moves.is_empty():
+				continue
+			var rest: Array[MoveDef] = moves.slice(1)
+			match tier:
+				"strike":
+					wrestler.strike_move = moves[0]
+					wrestler.strike_move_pool = rest
+				"grapple":
+					wrestler.grapple_move = moves[0]
+					wrestler.grapple_move_pool = rest
+				"power":
+					wrestler.power_move = moves[0]
+					wrestler.power_move_pool = rest
+				"signature":
+					wrestler.signature_move = moves[0]
+					wrestler.signature_move_pool = rest
+				"running":
+					wrestler.running_attack_move = moves[0]
+					wrestler.running_attack_move_pool = rest
+				"submission":
+					wrestler.submission_move = moves[0]
+				"dive":
+					wrestler.dive_moves = moves
 		var pool: Array[MoveDef] = wrestler.signature_move_pool.duplicate()
 		wrestler.own_signature = null
 		if entry.signature != "":
@@ -295,6 +433,9 @@ func _draw() -> void:
 		Phase.CONTROLS:
 			_draw_title(view)
 			_draw_controls(view)
+		Phase.CAMERA:
+			_draw_title(view)
+			_draw_camera(view)
 		Phase.SELECT:
 			_draw_select(view)
 		Phase.VERSUS, Phase.LAUNCH:
@@ -349,6 +490,8 @@ func _draw_chrome(view: Vector2) -> void:
 			hint = "UP / DOWN  NAVIGATE      ENTER  SELECT"
 		Phase.CONTROLS:
 			hint = "ESC  BACK"
+		Phase.CAMERA:
+			hint = "UP / DOWN  OPTION      LEFT / RIGHT  CHANGE      ESC  BACK"
 		Phase.SELECT:
 			hint = "LEFT / RIGHT  CHANGE      ENTER  LOCK IN      ESC  BACK"
 	if hint == "":
@@ -436,6 +579,58 @@ func _draw_controls(view: Vector2) -> void:
 				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - kw,
 						y), keys, row_size, view.y * 0.002, TitleArt.STEEL)
 		y += view.y * 0.062
+
+
+## The camera options, read from and written to CameraSettings.
+static func camera_option(row: int) -> int:
+	match row:
+		0: return CameraSettings.coverage
+		1: return 0 if CameraSettings.cuts else 1
+		2: return CameraSettings.shake
+		_: return CameraSettings.replays
+
+
+func step_camera_option(dir: int) -> void:
+	var n: int = (CAMERA_ROWS[camera_row][1] as Array).size()
+	var v := wrapi(camera_option(camera_row) + dir, 0, n)
+	CameraSettings.cuts_enabled()   # reads the command line once, before we override it
+	match camera_row:
+		0: CameraSettings.coverage = v as CameraSettings.Coverage
+		1: CameraSettings.cuts = v == 0
+		2: CameraSettings.shake = v as CameraSettings.Shake
+		_: CameraSettings.replays = v as CameraSettings.Replays
+	if _sfx:
+		_sfx.play("ui_move", -8.0)
+
+
+func _draw_camera(view: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72))
+	var panel := Rect2(view.x * 0.28, view.y * 0.24, view.x * 0.44, view.y * 0.48)
+	TitleArt.draw_cut_panel(self, panel, view.y * 0.035,
+			Color(TitleArt.KEY_PANEL, 0.96), Color(TitleArt.KEY_GOLD_DIM, 0.8),
+			maxf(1.0, view.y * 0.0018))
+	TitleArt.draw_tracked(self, _font,
+			panel.position + Vector2(view.x * 0.030, view.y * 0.070),
+			"CAMERA", int(view.y * 0.044), view.y * 0.004, TitleArt.KEY_GOLD)
+	draw_rect(Rect2(panel.position + Vector2(view.x * 0.030, view.y * 0.085),
+			Vector2(panel.size.x - view.x * 0.060, maxf(1.0, view.y * 0.002))),
+			TitleArt.KEY_GOLD)
+	var row_size := int(view.y * 0.032)
+	var y := panel.position.y + view.y * 0.150
+	for i in CAMERA_ROWS.size():
+		var row: Array = CAMERA_ROWS[i]
+		var active := i == camera_row
+		TitleArt.draw_tracked(self, _font, Vector2(panel.position.x + view.x * 0.030, y),
+				row[0], row_size, view.y * 0.002,
+				TitleArt.KEY_GOLD if active else TitleArt.STEEL_DIM)
+		var value := String((row[1] as Array)[camera_option(i)])
+		if active:
+			value = "<  " + value + "  >"
+		var vw := TitleArt.tracked_width(_font, value, row_size, view.y * 0.002)
+		TitleArt.draw_tracked(self, _font,
+				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - vw, y),
+				value, row_size, view.y * 0.002, TitleArt.STEEL)
+		y += view.y * 0.070
 
 
 ## First keyboard event bound to each action, joined -- e.g. "W A S D".
@@ -607,7 +802,8 @@ func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
 
 
 func _draw_versus(view: Vector2) -> void:
-	# A quick wipe in from black, then the card sits until the match loads.
+	# A quick wipe in from black; then each name slams in from its own side on
+	# a band in his colour, and VS punches in between them on a flash.
 	var t := clampf(_versus_time / 0.28, 0.0, 1.0)
 	draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72 * t))
 	var band_h := view.y * 0.22
@@ -619,18 +815,39 @@ func _draw_versus(view: Vector2) -> void:
 			band.size.x, maxf(1.0, view.y * 0.002)), TitleArt.KEY_GOLD)
 	if t < 1.0:
 		return
-	var name_size := int(view.y * 0.075)
 	var left: Roster.Entry = picks[0]
 	var right: Roster.Entry = picks[1]
+	# The slam: in from off-screen, a touch past the mark, and back.
+	var st := clampf((_versus_time - 0.28) / VERSUS_SLAM, 0.0, 1.0)
+	var back := 1.70158
+	var e := 1.0 + (back + 1.0) * pow(st - 1.0, 3.0) + back * pow(st - 1.0, 2.0)
+	var off := view.x * 0.6 * (1.0 - e)
+	# Each man's colour behind his half of the band, slanted at the centre.
+	var skew := band_h * 0.35
+	var top := band.position.y
+	var bot := top + band_h
+	draw_colored_polygon(PackedVector2Array([Vector2(-off, bot), Vector2(view.x * 0.5 - skew * 0.5 - off, bot),
+			Vector2(view.x * 0.5 + skew * 0.5 - off, top), Vector2(-off, top)]),
+			Color(left.attire_accent, 0.22))
+	draw_colored_polygon(PackedVector2Array([Vector2(view.x * 0.5 - skew * 0.5 + off, bot),
+			Vector2(view.x + off, bot), Vector2(view.x + off, top),
+			Vector2(view.x * 0.5 + skew * 0.5 + off, top)]),
+			Color(right.attire_accent, 0.22))
+	var name_size := int(view.y * 0.075)
 	var lw := TitleArt.tracked_width(_font, left.display_name(), name_size,
 			view.y * 0.003)
 	TitleArt.draw_tracked(self, _font,
-			Vector2(view.x * 0.44 - lw, view.y * 0.5 + name_size * 0.35),
+			Vector2(view.x * 0.44 - lw - off, view.y * 0.5 + name_size * 0.35),
 			left.display_name(), name_size, view.y * 0.003, TitleArt.STEEL)
 	TitleArt.draw_tracked(self, _font,
-			Vector2(view.x * 0.56, view.y * 0.5 + name_size * 0.35),
+			Vector2(view.x * 0.56 + off, view.y * 0.5 + name_size * 0.35),
 			right.display_name(), name_size, view.y * 0.003, TitleArt.STEEL)
-	var vs_size := int(view.y * 0.085)
+	# VS punches in once the names land: big, then settling to size.
+	var vt := clampf((_versus_time - 0.28 - VERSUS_SLAM * 0.8) / 0.22, 0.0, 1.0)
+	if vt <= 0.0:
+		return
+	var punch := 1.0 + 0.8 * pow(1.0 - vt, 2.0)
+	var vs_size := int(view.y * 0.085 * punch)
 	var vw := TitleArt.tracked_width(_font, "VS", vs_size, view.y * 0.004)
 	TitleArt.draw_glow(self, _glow, Vector2(view.x * 0.46, view.y * 0.5),
 			view.x * 0.16, Color(TitleArt.KEY_VIOLET, 0.50))
@@ -638,4 +855,7 @@ func _draw_versus(view: Vector2) -> void:
 			view.x * 0.16, Color(TitleArt.KEY_TEAL, 0.42))
 	TitleArt.draw_tracked(self, _font,
 			Vector2((view.x - vw) * 0.5, view.y * 0.5 + vs_size * 0.35), "VS",
-			vs_size, view.y * 0.004, TitleArt.KEY_GOLD)
+			vs_size, view.y * 0.004, Color(TitleArt.KEY_GOLD, vt))
+	# The flash as it lands.
+	if vt < 1.0:
+		draw_rect(Rect2(Vector2.ZERO, view), Color(1, 1, 1, 0.18 * (1.0 - vt)))

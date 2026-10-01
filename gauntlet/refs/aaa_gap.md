@@ -1,0 +1,292 @@
+# The AAA gap: what makes WWE 2K26 look real, and what we can do about it
+
+The owner asked for research into WWE 2K26's lighting, modelling and texturing,
+and for a list of improvements that the tools this repo actually has can
+deliver. Those tools are:
+- Godot 4.6 Forward+
+- headless `bpy` 4.2
+- Python with PIL and numpy
+
+Every item below is feasible with them. Anything that isn't feasible is listed
+at the end with the reason.
+
+## What 2K26 does (sources at the end)
+
+- **It is last-gen-free.** Visual Concepts dropped PS4/XB1 for 2K26, so every
+  budget went to current hardware: better character models, hair and physics.
+- **Hair.** Hair textures are "much crisper" than in 2K25. Hair uses two-tone
+  colour blending (root to tip), real hair physics, and saturated highlights.
+- **Lighting carries it.** Reviews credit the lighting with "doing a lot of the
+  heavy lifting" in making it feel like a broadcast. The 2K26 lighting is a
+  touch brighter, which lifts colour.
+  - The ring is lit hard from an overhead truss.
+  - The crowd falls away into the dark.
+  - The white mat bounces light up onto the wrestlers.
+  - Ray-traced reflections are on, on PC and PS5.
+- **Presentation.** Camera angles were reworked toward the TV broadcast.
+  Particle lighting was added: pyro and sparks light the wrestlers and the set.
+  Player-triggered pyro is part of the entrance.
+- **Skin.** Faces are scanned. Skin is soft-lit by subsurface scattering, has
+  pore-level detail and specular breakup, and builds up sweat over a match.
+- **Colour.** 2K26 reads "more vibrant" than 2K25. The grade does real work.
+
+## What we have (audited in this repo, September 2026)
+
+| Area | Status | Where |
+| --- | --- | --- |
+| Filmic tonemap, glow, SSAO, SSR, volumetric fog, saturation lift | Have | `scenes/match.tscn` Environment |
+| Shadow-casting ring keys, fixtures with shafts | Have | `core/lighting/arena_lighting.gd` |
+| **Anti-aliasing** | **None**. No MSAA, TAA or FXAA in `project.godot`. | This is the jagged edges on hair, ropes and shoulders in the owner's screenshots. |
+| **Skin subsurface scattering** | **None**. No material sets `subsurf_scatter`. | Skin reads as painted plastic under the keys. |
+| Reflections for metal | None. No ReflectionProbe, and the hall ambient carries none. | Posts, title plates and turnbuckle hardware go near-black between lights (see the notes in `ring_builder.gd` and `entrance_props.gd`). |
+| Bounce light from the mat | None. SSIL and SDFGI are off. | Chins and torsos lack the lift a white canvas gives them. |
+| Sweat | None | |
+| Hair anti-aliasing | Alpha scissor only, except Roman's alpha-to-coverage | Cody's hair shells stair-step. |
+
+## Done: items 1–4 (September 2026)
+
+Measured with the round check's own tools, on Vulkan, before and after.
+
+| Metric | Before | After | Band |
+| --- | --- | --- | --- |
+| mat luminance | 0.451 | 0.453 | 0.43–0.49 |
+| mat ↔ wrestler A | 0.295 | 0.283 | 0.24–0.31 |
+| mat ↔ wrestler B | 0.143 | 0.131 | 0.24–0.31 (already below) |
+| wrestler ↔ wrestler | 0.153 | 0.152 | 0.00–0.07 (already above) |
+| fine detail | 0.443 | 0.415 | ref 0.614 |
+
+What the numbers show:
+- The wrestlers are about 0.013 brighter: the mat's bounce light (SSIL)
+  reaching them.
+- "Fine detail" is lower because it was partly counting aliasing.
+- Art-shot settle frames went from 3 to 24 so TAA and SSIL converge. Captured
+  at 48 frames as well, every metric agrees within 0.002.
+
+## Done: items 5–6
+
+**Sweat** (`core/materials/sweat.gd`, `SkinLook.set_wetness`).
+- It is a clearcoat film over the skin, not lower skin roughness. A wet man
+  keeps his skin's soft sheen underneath and gains a sharp highlight on top.
+- Wetness starts at 0.08 at the bell.
+- Time adds up to +0.6 over 150 s of match clock.
+- Damage taken adds up to +0.35.
+- It is presentation only and cannot reach the replay hash.
+- The first strength (0.85 coat, 0.12 roughness) read as cling-film when
+  soaked. It ships at 0.6 / 0.18.
+
+**Pores** (`tools/assets/build_skin_detail.py`, `SkinLook.add_pores`).
+- A 512² tiling normal map of pores on a jittered grid, plus diagonal creases.
+  The generator is deterministic.
+- It is mixed in at 0.3 through a UV2 copied from UV1 at load
+  (`SkinLook.with_detail_uv`), about 2.5 cm of skin per tile.
+- Mostly invisible dry. It breaks the sweat highlight into points wet.
+- Check both through `tools/probe/skin_shot.tscn`, which renders dry and
+  soaked.
+
+## Done: items 7–9
+
+**Hair shine** (`core/materials/hair_look.gd`).
+- GGX anisotropy at 0.7, stretching the highlight ACROSS the strands. A head
+  of hair is rough across the strands and smooth along them, which is the band
+  of light round a head under a key.
+- Cody's shells need no flowmap: u runs round the head, the strands along v.
+  Roman's cards were checked on renders both ways (`tools/probe/hair_shot.tscn`
+  renders off, as shipped, and turned 90°).
+- Root to tip:
+  - Cody's root is deepened to (0.48, 0.38, 0.29), and his roughness drops
+    0.5 → 0.42 so the band reads.
+  - Roman gets a vertex-colour shade from 0.55 at the scalp to 1.0 at 35 mm
+    off it (`RomanModel.hair_root_to_tip`).
+- On Roman the one plastic sheen breaks into strand streaks. On Cody the
+  effect is subtler: more depth between the shells.
+
+**Soft shadows** (`ArenaLighting.KEY_LIGHT_SIZE` 0.35 m).
+- PCSS on the four ring keys. A 0.35 m lens at 7.25 m gives a penumbra of
+  about 9 cm under a shoulder and none at the feet.
+- On the keys alone this changed nothing visible. The two straight-down top
+  fills, the strongest light on the mat, cast no shadows, so they filled in
+  every key shadow.
+- So the top fills now cast soft shadows too. That gives the grey contact
+  pool under each wrestler that grounds him on the canvas.
+- Checked through `tools/probe/shadow_shot.tscn`: "hard" is the rig before
+  this item.
+
+Exposure after 7–9 (Vulkan):
+
+| Metric | After 5–6 | After 7–9 | Band |
+| --- | --- | --- | --- |
+| mat luminance | 0.453 | 0.446 | 0.43–0.49 |
+| mat ↔ A | 0.284 | 0.291 | 0.24–0.31 |
+| mat ↔ B | 0.131 | 0.134 | 0.24–0.31 (already below) |
+| A ↔ B | 0.152 | 0.158 | 0.00–0.07 (already above) |
+
+**Pyro light** (`EntrancePyro`).
+- Every cue already flashed an OmniLight. The gap was that a gerb's light
+  decayed like a pop while its jet was still burning.
+- Burning jets (gerbs and the waterfall) now:
+  - hold their light for 70% of their life, then fade;
+  - flicker by up to 30% on three summed sines, phased by position so the
+    same run always flickers the same way;
+  - cool from white-hot to ember as they die.
+- The waterfall, which had no light at all, gets one light per three falls,
+  2.5 m under the truss.
+
+## Done: items 10–12
+
+**Broadcast finish.**
+- Depth of field (`MatchCamera._entrance_focus`):
+  - Far blur on entrance and face-off close-ups at 40° or tighter, focused
+    1.2 m past the subject.
+  - Cleared at the bell. The match's wide shots stay sharp.
+- Vignette (`core/camera/broadcast_look.gd`):
+  - 0.22 at the corners, as a canvas overlay under the HUD.
+  - The mat moves 0.446 → 0.444, still in band.
+- Grain: on replay playback only.
+- AgX: **adopted** in a follow-up round, at exposure 1.7, measured on the
+  silhouette shot:
+
+  | | Filmic 1.0 | AgX 1.7 |
+  | --- | --- | --- |
+  | mat | 0.448 | 0.458 |
+  | mat ↔ A | 0.278 | 0.261 |
+  | mat ↔ B | 0.161 | 0.161 |
+  | A ↔ B | 0.117 | 0.100 |
+  | clipped pixels | 473 | 1 |
+
+  - AgX is as good or better on every band; the full exposure sweep is in
+    `match.tscn`.
+  - The capture harness's mask frame now renders with a linear tonemap.
+  - The compatibility renderer stays on Filmic 1.0, where its gains were
+    solved, and measures exactly as before (mat 0.496).
+- AgX was first evaluated and parked, with the mat at 0.340 at exposure 1.0:
+  - On the silhouette shot it clips nothing (Filmic clips 523 px) and reads a
+    little richer (mean saturation 0.45 against 0.40).
+  - But the mat falls to 0.340, far under its 0.43–0.49 anchor. Adopting it
+    means re-solving the rig's energies, which is a lighting round of its own.
+  - Measure it with the Filmic run's mask: AgX tone-maps the mask frame's key
+    colours too, so its own mask keys the wrong pixels.
+
+**A living crowd** (`core/arena/crowd_reaction.gd`, crowd shader globals).
+- Excitement from 0 to 1 adds a jump bounce on top of the idle bob. It rises
+  on:
+  - big moves (by damage; signature moves hit 0.9);
+  - each count of a cover;
+  - a near-fall kickout after two (1.0);
+  - a wrestler firing up;
+  - the finish (held at 0.8 for 8 s).
+- It halves every 2.2 s.
+- Phone flashes run through the entrances, and pyro hits pop the crowd.
+- Flashes are only drawn on figures more than 16 m from the camera. Up close
+  the whole figure lights and reads as a glowing statue, so the ringside rows
+  never flash.
+- Presentation only: it listens to the match and writes two render globals.
+
+**Eyes that look** (`core/match/eye_aim.gd`).
+- A SkeletonModifier3D aims Roman's J_Eye bones at Cody's head, up to 35°.
+  Past that it holds at the corner, and it recentres only past 75°.
+- The line of sight is bone → pupil (`RomanModel.EYE_TARGETS`), not the
+  skull's +Z. Using +Z left 6° of error.
+- Measured in `tools/probe/broadcast_shot.tscn` off the rendered iris and
+  pupil: 30–34° off Cody staring ahead, 3.5° with the aim on.
+- Not done, and why:
+  - A blink needs eyelid bones or blend shapes, and Roman's .glb has neither.
+  - Cody's eyes are part of his body mesh, so they need a split first.
+
+## The improvements, in order of look gained per hour
+
+Each item is small and self-contained. Each must be verified on a render
+through `tools/capture/`, then `round_check.sh`, before it counts.
+
+1. **Anti-aliasing.** This is the single biggest "not AAA" tell in the current
+   frames.
+   - Turn on MSAA 4x plus TAA in `project.godot`
+     (`rendering/anti_aliasing/quality/msaa_3d`, `use_taa`).
+   - Switch Cody's hair shells to alpha-to-coverage, as Roman's hair already
+     is.
+   - Tools: settings only.
+   - Risk: frame cost. Measure it on the capture rig.
+   - Recalibration: the evidence gate's edge metrics may move, so rebaseline
+     deliberately.
+2. **Skin subsurface scattering.**
+   - Set `subsurf_scatter_enabled` with skin mode on every skin material:
+     `RomanModel` / `CodyModel` / `KennyModel` `SKIN_MATERIALS`, around
+     strength 0.35–0.5.
+   - Turn on transmittance so ears and fingers glow red when backlit by the
+     rim lights.
+   - This is what makes 2K's faces read as flesh.
+   - Tools: material parameters.
+3. **A ReflectionProbe over the ring**, plus a dim reflected ambient.
+   - Posts, turnbuckle hardware, the title belt and the ring steps finally
+     reflect the arena. Skin gets a real specular environment too.
+   - It retires three separate "emission so metal isn't black" workarounds.
+   - Tools: one node in `match.tscn`, set to update once.
+4. **Screen-space indirect light (SSIL).** The bright canvas bounces onto the
+   wrestlers from below, which is 2K's under-lift on chins and chests.
+   - Tools: an Environment toggle.
+   - Recalibration: re-measure the mat exposure anchor in `VISUAL_BAR.md`.
+5. **Sweat over the match.**
+   - A per-wrestler `sweat` value from 0 to 1, driven by ticks and damage
+     taken.
+   - It lowers skin roughness from about 0.5 to 0.25 and raises specular.
+   - A small tiled pore normal map adds a highlight breakup that only shows
+     once he is wet.
+   - Tools: GDScript and one numpy-generated normal texture.
+   - It is presentation only, so the determinism contract is untouched.
+6. **Pore / micro-detail normal on skin.**
+   - Generate a tiling pore-and-fine-wrinkle normal map procedurally with
+     numpy, and apply it as `detail_normal` at a small UV scale.
+   - It breaks up the perfectly smooth highlight that reads as CG.
+7. **Hair shading.**
+   - Anisotropic specular along the strands, using Godot's `anisotropy` with
+     the strand flow already baked in `cody_hair.py`'s UVs.
+   - Root-to-tip two-tone, which Cody's shells already have. Deepen it and
+     add it to Roman's.
+   - This matches 2K26's headline hair improvement.
+8. **Soft shadows on the ring keys.**
+   - Give the four shadow-casting ring keys a `light_size` for
+     contact-hardening (PCSS) shadows: crisp at the feet, soft away from the
+     body, the look of a big truss fixture.
+   - Tools: four numbers.
+9. **Particle light from pyro.**
+   - Each pyro burst in `entrance_pyro.gd` gets a short-lived OmniLight
+     flicker, so sparks light the wrestler and the set as 2K26's particle
+     lighting does.
+   - Tools: GDScript.
+10. **Broadcast post-processing.**
+    - Depth of field on entrance close-ups and the face-off, using
+      CameraAttributesPractical far blur.
+    - A very light vignette, and sensor grain on replays.
+    - Evaluate AgX tonemapping against the current filmic curve. It gives
+      broadcast-like highlight roll-off on white gear and the bright mat, but
+      needs the `VISUAL_BAR` recalibration.
+11. **A living crowd.**
+    - A vertex-shader bob and cheer on the crowd cards, driven by match
+      events (near-falls, finishers).
+    - Phone flashes and camera pops during entrances.
+    - 2K's crowd reacts. Ours is static.
+12. **Eyes that look.**
+    - Aim Roman's eye bones at the opponent's head during the face-off and
+      cover.
+    - Cody's eyes are part of his body mesh and would need a split.
+    - A blink where the model has the shapes.
+    - 2K26's faces are alive in the close-ups, and ours stare.
+
+## Not feasible here, and why
+
+- **Scanned heads and 4K/8K artist-painted textures.** There is no capture rig
+  and no licensed scans. The assets we have are the assets. Items 2, 5 and 6
+  are the closest substitutes.
+- **Strand-based hair.** Godot 4.6 has no strand renderer. Cards and shells
+  with anisotropy (item 7) are the ceiling.
+- **Ray-traced GI and reflections.** Not in Godot 4.6 Forward+. Items 3 and 4
+  are the screen-space and probe equivalents.
+- **Motion-captured animation.** There is no capture. Authored clips in
+  `wrestling_clips.py` remain the method.
+
+## Sources
+
+- [GamingBolt: WWE 2K26 — 15 new features worth knowing](https://gamingbolt.com/wwe-2k26-15-new-features-worth-knowing)
+- [Operation Sports: WWE 2K26 vs 2K25 early graphics comparison](https://www.operationsports.com/wwe-2k26-vs-2k25-early-graphics-comparison/)
+- [Gaming Respawn: WWE 2K26 review](https://gamingrespawn.com/featured/64532/wwe-2k26-review/)
+- [VideoGamer: 2K26 creation suite improvements](https://www.videogamer.com/news/wwe-2k26-creation-suite-improvements/)
+- [NGOHQ: WWE 2K25 review (ray tracing on PC)](https://www.ngohq.com/2025/07/02/wwe-2k25-review/)

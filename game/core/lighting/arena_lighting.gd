@@ -109,7 +109,14 @@ const UPLIGHT_DZ := 2.6
 ## the far half of the mat; that overlap is what keeps the mat's luminance
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
-@export var key_energy: float = 9.0
+@export var key_energy: float = 16.0
+## The key fixture's emitting size, in metres, for PCSS soft shadows. A large
+## truss wash or profile has a 0.3-0.4 m front lens. From 7.25 m up that
+## makes a penumbra about 9 cm wide under a shoulder 1.5 m off the mat
+## (0.35 x 1.5 / 5.75), and
+## none at the feet: sharp where a body touches the canvas, soft away from it,
+## the way broadcast footage reads.
+const KEY_LIGHT_SIZE := 0.35
 ## Straight-down top light, and the lever the exposure anchor is solved on.
 ## Adds to the mat more than to a standing torso, which opens the
 ## mat<->wrestler gap without touching either material.
@@ -152,7 +159,12 @@ const UPLIGHT_DZ := 2.6
 ## B's gap is still short of its band and A<->B is still over its own: at the
 ## hard camera's framing B faces the key bare-chested and reads twice A's
 ## luminance, and that is his colourway, not the rig. See README.
-@export var top_energy: float = 36.0
+## 36 -> 22 and the key 9 -> 16 in the 2K26 round (lighting_2k26.md items
+## 1/4), with the canvas taken to a light grey: light moved off the floor and
+## onto the bodies. Measured on the gameplay and hard cameras (match_look.tscn,
+## Vulkan): mat 0.65 -> 0.45, skin p75 0.24 -> 0.29 (2K26 0.31), frame above
+## 0.5 from 22% -> 4-8% (2K26 7%), white balance B/G 1.09 -> 1.17 (2K26 1.16).
+@export var top_energy: float = 22.0
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -176,7 +188,9 @@ const UPLIGHT_DZ := 2.6
 ## So it STAYS at 2.2. Spending the cool back light that separates a figure
 ## from a dark crowd, in exchange for 0.001 of a gap, would be paying for
 ## nothing. The gap was closed on the attire instead -- see match.tscn.
-@export var rim_energy: float = 2.2
+## Raised 2.2 -> 4.0 in the 2K26 round (item 4): the bright edge on heads and
+## shoulders against the crowd is what reviewers mean by the ring "popping".
+@export var rim_energy: float = 5.0
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20
 ## Entrance stage wash.
@@ -219,8 +233,10 @@ const UPLIGHT_DZ := 2.6
 ## against a reference saturation of 0.306: cooler still overshoots it, so the
 ## shipped pair is where the two meet. Top energy was re-solved after this to
 ## put the mat back on its anchor (see top_energy).
-const KEY_COLOR := Color(0.88, 0.945, 1.0)
-const TOP_COLOR := Color(0.86, 0.93, 1.0)
+## Cooler since the 2K26 round (lighting_2k26.md item 4): its match frames
+## measure white balance B/G 1.16 against our 1.09 -- a crisp 6500 K-ish TV key.
+const KEY_COLOR := Color(0.84, 0.93, 1.0)
+const TOP_COLOR := Color(0.83, 0.92, 1.0)
 const RIM_COLOR := Color(0.66, 0.78, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
 ## The stage wash, pushed violet. Predominantly a hue change, and the figures
@@ -395,7 +411,123 @@ const COMPAT_STAGE_GAIN := 1.0
 const STAGE_LINE_Z := -12.0
 
 
+## The two looks WWE 2K26 runs (gauntlet/refs/lighting_2k26.md): a concert for
+## the entrances -- the house near black, the haze full for the beams -- and a
+## TV studio for the match -- the crowd lit as people, the ring haze thinned so
+## the blacks stay black. MatchSetup switches at the start and at the bell.
+enum Look { ENTRANCE, MATCH }
+## The ring haze's share during the match (item 3, "clear the veil"): the
+## in-scatter in front of the mat was a grey lift over the whole low shot.
+const MATCH_RING_HAZE := 0.45
+## And on the entrances: enough for the beams and the top light's cone, but the
+## full density lit up by the follow spot was a white glare round the ring.
+const ENTRANCE_RING_HAZE := 0.6
+## The crowd shader's light (`crowd_light` global) in each look (items 2, 7).
+const CROWD_LIGHT_MATCH := 3.5
+const CROWD_LIGHT_ENTRANCE := 0.3
+## The ring keys and top fill in the entrance look (item 7): a concert, the
+## ring a pool under the rig, not the studio's even field -- and what bloomed
+## Cody's coat white on the in-ring low shots (item 10).
+const ENTRANCE_RING_SHARE := 0.4
+## Star glints (StarGlints, item 8): full on the entrances, a trace in the
+## match, where 2K26's top lights still catch the lens on low shots.
+const GLINT_ENTRANCE := 1.0
+## glow_hdr_threshold per look: match.tscn's 1.25 for the match; higher on the
+## entrances, where the follow spot and walk key put skin and white gear over
+## 1.25 and the bloom washed Cody's coat to a white shape (item 10).
+const GLOW_THRESHOLD_MATCH := 1.25
+const GLOW_THRESHOLD_ENTRANCE := 1.9
+const GLINT_MATCH := 0.3
+## Moving beams (item 9), entrance look only: each head sweeps its pan and
+## tilt about its rest aim over SWEEP_BEATS beats of the music, and every beat
+## kicks its level -- a decaying pulse, never a hard strobe.
+const SWEEP_PAN := 0.42
+const SWEEP_TILT := 0.22
+const SWEEP_BEATS := 8.0
+const PULSE_FLOOR := 0.5
+const PULSE_DECAY := 5.0
+var look := Look.MATCH
+var _ring_haze: FogMaterial
+var _ring_haze_density := 0.0
+var _ring_lights: Array[SpotLight3D] = []
+var _beams: Array[SpotLight3D] = []
+var _beam_rest := {}     # SpotLight3D -> rest Transform3D
+var _bodies := {}        # SpotLight3D -> fixture body root
+var _glints: StarGlints
+var _beat := 0.5
+var _beat_clock := 0.0
+## The entrance director's house dim, which the moving beams' own level
+## (rewritten every frame) has to carry.
+var house_dim := 1.0
+
+
+func set_look(p_look: Look) -> void:
+	look = p_look
+	var entrance := look == Look.ENTRANCE
+	if _ring_haze:
+		_ring_haze.density = _ring_haze_density * (ENTRANCE_RING_HAZE if entrance else MATCH_RING_HAZE)
+	RenderingServer.global_shader_parameter_set("crowd_light",
+			CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH)
+	RenderingServer.global_shader_parameter_set("glint_strength",
+			GLINT_ENTRANCE if entrance else GLINT_MATCH)
+	var env := _environment()
+	if env:
+		env.glow_hdr_threshold = GLOW_THRESHOLD_ENTRANCE if entrance else GLOW_THRESHOLD_MATCH
+	for light in _ring_lights:
+		var base := key_energy if String(light.name).begins_with("Key") else top_energy
+		light.light_energy = base * (ENTRANCE_RING_SHARE if entrance else 1.0)
+	if not entrance:
+		for beam in _beams:
+			beam.transform = _beam_rest[beam]
+			beam.light_energy = beam_energy
+			_pose_body(beam)
+
+
+func _environment() -> Environment:
+	if not is_inside_tree():
+		return null
+	var we := get_tree().root.find_child("WorldEnvironment", true, false) as WorldEnvironment
+	return we.environment if we else null
+
+
+## The music's beat for the moving beams, and its downbeat now
+## (EntranceDirector calls it on each entrance's music hit).
+func sync_beat(seconds: float) -> void:
+	_beat = maxf(seconds, 0.1)
+	_beat_clock = 0.0
+
+
+func _move_beams(delta: float) -> void:
+	_beat_clock += delta
+	var pulse := PULSE_FLOOR + (1.0 - PULSE_FLOOR) * exp(-PULSE_DECAY * fmod(_beat_clock, _beat) / _beat)
+	var w := TAU / (_beat * SWEEP_BEATS)
+	for i in _beams.size():
+		var beam := _beams[i]
+		var rest: Transform3D = _beam_rest[beam]
+		var pan := SWEEP_PAN * sin(_beat_clock * w + i * 0.9)
+		var tilt := SWEEP_TILT * sin(_beat_clock * w * 0.5 + i * 1.7)
+		beam.transform = Transform3D(Basis(Vector3.UP, pan) * rest.basis
+				* Basis(Vector3.RIGHT, tilt), rest.origin)
+		beam.light_energy = beam_energy * pulse * house_dim
+		_pose_body(beam)
+		if _glints:
+			_glints.aim(beam)
+
+
+func _pose_body(light: SpotLight3D) -> void:
+	var root: Node3D = _bodies.get(light)
+	if root == null:
+		return
+	var forward := -light.transform.basis.z.normalized()
+	var bases := _fixture_bases(root.basis, forward)
+	for part: String in bases:
+		var mi := root.get_node_or_null(part) as Node3D
+		if mi:
+			mi.basis = bases[part]
+
+
 func _ready() -> void:
+	add_to_group("arena_lighting")
 	_build_ring_key()
 	_build_top_fill()
 	_build_rim()
@@ -405,10 +537,26 @@ func _ready() -> void:
 	_build_stage_accents()
 	_build_backdrop_uplights()
 	_build_roof_wash()
+	_build_ribbon_spill()
 	_build_fog_volumes()
 	_hang_fixtures()
 	_apply_compat_environment()
 	_compensate_for_renderer()
+	for child in get_children():
+		if child is SpotLight3D:
+			var n := String(child.name)
+			if n.begins_with("Key") or n.begins_with("Top"):
+				_ring_lights.append(child)
+			elif n.begins_with("Beam"):
+				_beams.append(child)
+				_beam_rest[child] = (child as SpotLight3D).transform
+	_glints = StarGlints.new()
+	_glints.name = "StarGlints"
+	add_child(_glints)
+	for child in get_children():
+		if child is SpotLight3D:
+			_glints.add_for(child)
+	set_look(look)
 
 
 # ---------------------------------------------------------------------------
@@ -459,17 +607,29 @@ func _build_ring_key() -> void:
 					at, aim, KEY_COLOR, key_energy, 40.0, 0.5, 24.0, true)
 			# These are the fixtures the shafts come out of.
 			light.light_volumetric_fog_energy = 1.6
+			# Contact-hardening shadows (refs/aaa_gap.md item 8): a truss
+			# fixture's lens is a wide source, so a shadow is sharp where a
+			# boot meets the mat and opens up with distance from the body.
+			light.light_size = KEY_LIGHT_SIZE
 
 
-## Two wide fixtures pointing straight down the ring's long axis. No shadows:
-## their job is the mat's flatness, and a second set of shadow maps buys
-## nothing a critic can see.
+## Two wide fixtures pointing straight down the ring's long axis. Their job is
+## the mat's flatness. They had no shadows ("a second set of shadow maps buys
+## nothing a critic can see"), and that was wrong: see below.
 func _build_top_fill() -> void:
 	for sz: float in [1.0, -1.0]:
 		var at := Vector3(0.0, HANG_Y + 0.2, sz * TOP_OFFSET_Z)
-		_spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
+		var light := _spot("Top%s" % ("N" if sz > 0.0 else "S"), at,
 				at + Vector3(0.0, -1.0, 0.0), TOP_COLOR, top_energy,
-				52.0, 0.7, 20.0, false).light_volumetric_fog_energy = 0.8
+				52.0, 0.7, 20.0, true)
+		light.light_volumetric_fog_energy = 0.8
+		# Soft shadows (refs/aaa_gap.md item 8). These two are the strongest
+		# light on the mat, and without shadows they filled in every shadow
+		# the keys cast: giving the keys PCSS alone changed nothing visible
+		# (tools/probe/shadow_shot.tscn). Straight down, they give the
+		# contact shadow under a body, the pool that grounds a wrestler on
+		# the canvas in broadcast footage.
+		light.light_size = KEY_LIGHT_SIZE
 
 
 ## Back pair, above and behind the entrance side, raking across the ring
@@ -657,7 +817,9 @@ func _hang_fixtures() -> void:
 		var key := light.light_color.to_html()
 		if not lens_mats.has(key):
 			lens_mats[key] = _lens_material(light.light_color)
-		add_child(_fixture_for(light, meshes, body_mat, lens_mats[key]))
+		var body := _fixture_for(light, meshes, body_mat, lens_mats[key])
+		add_child(body)
+		_bodies[light] = body
 
 
 static func _lens_material(color: Color) -> StandardMaterial3D:
@@ -681,19 +843,7 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 	var standing := forward.y > 0.3
 	if standing:
 		root.basis = Basis(Vector3.RIGHT, PI)
-	var local := root.basis.inverse() * forward
-	var yaw := 0.0
-	if Vector2(local.x, local.z).length() > 0.001:
-		yaw = atan2(-local.x, -local.z)
-	var in_yoke := Basis(Vector3.UP, -yaw) * local
-	var tilt := atan2(in_yoke.y, -in_yoke.z)
-	var yoke_basis := Basis(Vector3.UP, yaw)
-	var parts := {
-		"FixtureBase": Basis.IDENTITY,
-		"FixtureYoke": yoke_basis,
-		"FixtureHead": yoke_basis * Basis(Vector3.RIGHT, tilt),
-		"FixtureLens": yoke_basis * Basis(Vector3.RIGHT, tilt),
-	}
+	var parts := _fixture_bases(root.basis, forward)
 	for part: String in parts:
 		var mi := MeshInstance3D.new()
 		mi.name = part
@@ -703,6 +853,58 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
 	return root
+
+
+## The LED ribbon boards as light sources (lighting_2k26.md item 6). In 2K26
+## the ribbons throw their purple and blue onto the rows round them; ours were
+## emissive art that lit nothing. Low omnis under the lower ribbon on the
+## suite fascia, alternating the two hues the art is mostly made of. No
+## shadows, short range: they colour the neighbouring rows and stop.
+const RIBBON_SPILL_LIGHTS := 24
+const RIBBON_SPILL_ENERGY := 1.4
+const RIBBON_SPILL_RANGE := 6.5
+const RIBBON_SPILL_COLORS: Array[Color] = [Color(0.55, 0.25, 1.0), Color(0.2, 0.45, 1.0)]
+
+
+func _build_ribbon_spill() -> void:
+	var suite := {}
+	for row: Dictionary in ArenaBuilder._row_schedule():
+		if row["kind"] == "concourse":
+			suite = row
+			break
+	if suite.is_empty():
+		return
+	var loop := ArenaBuilder._plan_loop(float(suite["inner"]) - 0.6)
+	var y := float(suite["tread_y"]) + 0.5
+	for i: int in RIBBON_SPILL_LIGHTS:
+		var entry: Array = loop[(i * loop.size()) / RIBBON_SPILL_LIGHTS]
+		var light := OmniLight3D.new()
+		light.name = "RibbonSpill%02d" % i
+		light.position = (entry[0] as Vector3) + Vector3(0.0, y, 0.0)
+		light.light_color = RIBBON_SPILL_COLORS[i % RIBBON_SPILL_COLORS.size()]
+		light.light_energy = RIBBON_SPILL_ENERGY
+		light.omni_range = RIBBON_SPILL_RANGE
+		light.shadow_enabled = false
+		light.light_volumetric_fog_energy = 0.0
+		add_child(light)
+
+
+## The yoke and head bases that point a fixture body's lens along `forward`.
+## Shared with the moving beams, which re-pose their bodies every frame.
+static func _fixture_bases(root_basis: Basis, forward: Vector3) -> Dictionary:
+	var local := root_basis.inverse() * forward
+	var yaw := 0.0
+	if Vector2(local.x, local.z).length() > 0.001:
+		yaw = atan2(-local.x, -local.z)
+	var in_yoke := Basis(Vector3.UP, -yaw) * local
+	var tilt := atan2(in_yoke.y, -in_yoke.z)
+	var yoke_basis := Basis(Vector3.UP, yaw)
+	return {
+		"FixtureBase": Basis.IDENTITY,
+		"FixtureYoke": yoke_basis,
+		"FixtureHead": yoke_basis * Basis(Vector3.RIGHT, tilt),
+		"FixtureLens": yoke_basis * Basis(Vector3.RIGHT, tilt),
+	}
 
 
 ## Two fixtures over the entrance stage, cool so the stage reads as a
@@ -902,6 +1104,8 @@ var _compat_env: Environment
 ## has to be every frame, because the rig cuts between a camera 3.5m out and
 ## one 28.5m out with no transition between them.
 func _process(_delta: float) -> void:
+	if look == Look.ENTRANCE and not _beams.is_empty():
+		_move_beams(_delta)
 	if _compat_env == null:
 		return
 	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null
@@ -934,6 +1138,13 @@ func _apply_compat_environment() -> void:
 	env.fog_aerial_perspective = 0.0
 	env.fog_sky_affect = 0.0
 	env.adjustment_saturation = COMPAT_SATURATION
+	# The compatibility path keeps Filmic at exposure 1.0. match.tscn moved
+	# to AgX at 1.7 (refs/aaa_gap.md item 10), measured on forward_plus; this
+	# renderer's COMPAT_* gains were solved under Filmic, and AgX's 1.7 on top
+	# of them put the mat at 0.536, over its band. Kept as calibrated rather
+	# than re-solved on the renderer the game does not ship its look on.
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.0
 	# gl_compatibility has no screen-space reflections, so the flag match.tscn
 	# sets is inert here. Clearing it explicitly is documentation: this
 	# duplicated Environment is meant to be an honest description of what that
@@ -990,3 +1201,6 @@ func _fog_box(fog_name: String, at: Vector3, size: Vector3, density: float,
 	material.edge_fade = 0.35
 	volume.material = material
 	add_child(volume)
+	if fog_name == "RingHaze":
+		_ring_haze = material
+		_ring_haze_density = density

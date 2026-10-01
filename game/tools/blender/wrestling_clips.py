@@ -189,6 +189,18 @@ ROMAN_STAND = dict(
 )
 
 
+# Roman in the ring after the finger (refs/entrances.md [V], R-41 3:42):
+# hands on the hips -- on the iliac crests, thumbs back -- elbows out wide,
+# chest up, weight square.
+ROMAN_HIPS = dict(
+    ROMAN_STAND, spine=(4, 0, 0), head=(0, 0, 0),
+    hand_r=(0.21, 0.02, 1.02), hand_l=(-0.21, 0.02, 1.02),
+    elbow_r=(1.0, -0.5, 0.1), elbow_l=(-1.0, -0.5, 0.1),
+    fist_r=0.25, fist_l=0.25,
+    foot_r=(0.18, 0.0, 0.104), foot_l=(-0.18, 0.02, 0.104),
+)
+
+
 # Cody's entrance posture (gauntlet/refs/entrances.md): up on the balls of
 # his feet, chest high, chin up, arms loose and a little away from the body
 # -- a showman waiting for the music, not a man guarding.
@@ -216,6 +228,23 @@ def P(**over):
 
 def S(**over):
     return pose(SUPINE, **over)
+
+
+# Trapped in a corner (Corner_Slump, Corner_Hit): backed into the buckle,
+# which is behind him on the diagonal, weight sagging into the ropes, arms
+# hooked over the top rope -- elbows up on it at 1.2 m, forearms hanging
+# down behind it -- and his chin on his chest.
+CORNER_HANG = dict(
+    pelvis=(0.02, -0.17, 0.765), hips=(8, 0, 2), spine=(20, -4, 4), head=(-34, -6, 4),
+    hand_r=(0.48, -0.36, 0.96), hand_l=(-0.48, -0.36, 0.96),
+    elbow_r=(0.6, -0.4, 0.7), elbow_l=(-0.6, -0.4, 0.7),
+    fist_r=0.15, fist_l=0.15,
+    foot_r=(0.25, 0.14, 0.104), foot_l=(-0.23, 0.18, 0.104),
+)
+
+
+def C(**over):
+    return pose(CORNER_HANG, **over)
 
 
 # --- gait construction ----------------------------------------------------
@@ -333,18 +362,22 @@ def _methodical_walk():
     spine follows the head by a quarter -- a man surveying the room turns
     from the chest, not just the neck.
     """
+    # Measured off the broadcast (gauntlet/refs/entrances.md, R-41
+    # 1:18-2:18, the low steadicam): the arms hang a hand's width OFF his
+    # sides -- the lats hold them out -- palms back, barely swinging; chin a
+    # little down, eyes up and out; the head turns slowly and holds.
     cycle = _open_hands(_gait(
         frames=48, fps=FPS, speed=0.5,
         contacts={"r": (0, 28), "l": (24, 28)},
         plant_up=0.104, lift_up=0.045,
         foot_x={"r": 0.15, "l": -0.14},
         pelvis_up=0.905, pelvis_dip=0.008,
-        hips_yaw=3.0, spine=(0.0, 4.0), head=(4, 0, 0),
-        hand_fwd=(-0.04, 0.04), hand_up=(0.90, 0.92),
-        hand_x={"r": 0.25, "l": -0.24}, elbow=None), curl=0.45)
+        hips_yaw=3.0, spine=(0.0, 5.0), head=(-4, 0, 0),
+        hand_fwd=(-0.05, 0.02), hand_up=(0.92, 0.93),
+        hand_x={"r": 0.31, "l": -0.30}, elbow=None), curl=0.40)
     # (frame, yaw degrees): + is to his left.
-    looks = [(0, 0.0), (18, 0.0), (42, 32.0), (62, 32.0), (82, 0.0),
-             (96, 0.0), (116, -30.0), (132, -30.0), (144, 0.0)]
+    looks = [(0, 0.0), (22, 0.0), (48, 30.0), (70, 30.0), (88, 0.0),
+             (100, 0.0), (122, -28.0), (138, -28.0), (144, 0.0)]
     out = []
     for f in range(144 + 1):
         i = 0
@@ -355,7 +388,7 @@ def _methodical_walk():
         yaw = y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
         base = cycle[f % 48][1]
         sp = base["spine"]
-        out.append((f, dict(base, head=(5.0, yaw * 0.75, 0.0),
+        out.append((f, dict(base, head=(-4.0, yaw * 0.75, 0.0),
                             spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
     return out
 
@@ -374,12 +407,14 @@ def _crowd_walk():
         contacts={"r": (0, 15), "l": (13, 15)},
         plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14},
-        pelvis_up=0.905, pelvis_dip=0.012,
-        hips_yaw=5.0, spine=(0.0, 6.0), head=(6, 0, 0),
-        hand_fwd=(-0.12, 0.14), hand_up=(0.90, 0.96),
-        hand_x={"r": 0.27, "l": -0.26}, elbow=None), curl=0.5)
-    looks = [(0, 0.0), (10, 28.0), (34, 28.0), (46, -26.0), (70, -26.0),
-             (86, 0.0), (104, 0.0)]
+        pelvis_up=0.905, pelvis_dip=0.020,
+        hips_yaw=6.0, spine=(0.0, 7.0), head=(6, 0, 0),
+        hand_fwd=(-0.14, 0.16), hand_up=(0.90, 0.97),
+        hand_x={"r": 0.28, "l": -0.27}, elbow=None), curl=0.5)
+    # Broadcast (C-39 WHOA sheet 8-15 s, C-SS 14-30 s): he never looks
+    # ahead for long -- the head swings well out to each side of the aisle.
+    looks = [(0, 0.0), (8, 40.0), (32, 40.0), (44, -38.0), (68, -38.0),
+             (84, 0.0), (104, 0.0)]
     pump = [(0, 0.0), (52, 0.0), (58, 1.0), (72, 1.0), (80, 0.0), (104, 0.0)]
 
     def curve(keys, f):
@@ -697,35 +732,44 @@ CLIPS = {
 
     # === the lock-up ====================================================
 
-    # 30 frames / 1.0s, looping. Collar-and-elbow: the right hand is high on
-    # the back of the other man's neck (fwd 0.52, up 1.46 -- neck height on
-    # a man the same size standing 0.8 m away) and the left grips his elbow
-    # (out to the left, chest height). Chest square, feet braced wide, and
-    # the loop is the two of them pressuring in and giving ground, because a
-    # tie-up that holds still is two men leaning on a wall.
+    # 30 frames / 1.0s, looping. Collar-and-elbow, as the owner asked for it
+    # after the first one read as two men flinging their arms at the air:
+    # both men LEAN IN from the hips with the hips kept back, so they meet at
+    # the chest and shoulders, not the belly; the head turns off to the side
+    # so it goes past his, cheek to cheek, rather than butting foreheads. The
+    # hands here are only where the grip IK blends FROM -- in the match it puts
+    # the right hand behind the other man's neck and the left on his right
+    # elbow (WrestlerController._aim_collar_and_elbow), and the models close to
+    # lock-up distance (LOCK_UP_GAP). Feet staggered and braced, left foot
+    # forward, and the loop is the struggle: drive in, give a little, drive.
     "Tie_Up_Collar": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
-               head=(-6, 0, 0),
-               hand_r=(0.10, 0.52, 1.46), hand_l=(-0.28, 0.44, 1.28),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        # Driving in: hips forward, chest over the lead foot.
-        (10, P(pelvis=(0.0, 0.05, 0.838), hips=(8, 0, 0), spine=(22, 0, 0),
-               head=(-8, 0, 0),
-               hand_r=(0.09, 0.55, 1.44), hand_l=(-0.30, 0.47, 1.26),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        # Giving ground, but not letting go.
-        (20, P(pelvis=(0.0, -0.03, 0.850), hips=(5, 0, 0), spine=(15, 0, 0),
-               head=(-4, 0, 0),
-               hand_r=(0.11, 0.49, 1.48), hand_l=(-0.26, 0.41, 1.30),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        (30, P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
-               head=(-6, 0, 0),
-               hand_r=(0.10, 0.52, 1.46), hand_l=(-0.28, 0.44, 1.28),
-               fist_r=0.6, fist_l=0.6,
-               foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
+        (0,  P(pelvis=(0.0, -0.05, 0.820), hips=(-12, 0, 0), spine=(-24, 0, 0),
+               head=(14, 14, 0),
+               hand_r=(0.06, 0.40, 1.52), hand_l=(-0.12, 0.36, 1.22),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
+        # Driving in: chest over the lead foot, weight on the ball of the
+        # back foot.
+        (10, P(pelvis=(0.0, -0.01, 0.812), hips=(-14, 0, 0), spine=(-28, 0, 0),
+               head=(16, 14, 0),
+               hand_r=(0.06, 0.43, 1.50), hand_l=(-0.12, 0.39, 1.20),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
+        # Giving ground, not letting go.
+        (20, P(pelvis=(0.0, -0.08, 0.826), hips=(-10, 0, 0), spine=(-21, 0, 0),
+               head=(12, 12, 0),
+               hand_r=(0.06, 0.38, 1.53), hand_l=(-0.12, 0.34, 1.24),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
+        (30, P(pelvis=(0.0, -0.05, 0.820), hips=(-12, 0, 0), spine=(-24, 0, 0),
+               head=(14, 14, 0),
+               hand_r=(0.06, 0.40, 1.52), hand_l=(-0.12, 0.36, 1.22),
+               elbow_r=(0.8, 0.2, 0.5), elbow_l=(-0.7, -0.5, -0.3),
+               fist_r=0.35, fist_l=0.7,
+               foot_r=(0.24, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104))),
     ],
 
     # === strikes ========================================================
@@ -835,6 +879,74 @@ CLIPS = {
                hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.24, 0.26, 1.26),
                foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
         (20, P()),
+    ],
+
+    # Cody's strikes (refs/cody_moveset.md) -------------------------------
+
+    # 27 frames / 0.9 s: the BIONIC ELBOW, his father's. The shimmy first --
+    # the hips wiggled side to side, fists up at the chest, playing to the
+    # building -- then the right elbow cocked high and driven down and
+    # forward into the side of the head, lunging so it reaches from the 1.1 m
+    # the AI circles at (see Strike_Forearm's note on reach). Contact frame
+    # 15 = tick 30, strike_bionic_elbow.tres's startup.
+    "Strike_Bionic_Elbow": [
+        (0,  P()),
+        (4,  P(pelvis=(0.03, 0.0, 0.830), hips=(0, 12, 0), spine=(0, -8, 0),
+               head=(4, -6, 0),
+               hand_r=(0.20, 0.20, 1.30), hand_l=(-0.20, 0.20, 1.30),
+               fist_r=0.9, fist_l=0.9)),
+        (8,  P(pelvis=(-0.03, 0.0, 0.830), hips=(0, -12, 0), spine=(0, 8, 0),
+               head=(4, 6, 0),
+               hand_r=(0.20, 0.20, 1.30), hand_l=(-0.20, 0.20, 1.30),
+               fist_r=0.9, fist_l=0.9)),
+        # Cocked: the elbow up, the fist by his ear.
+        (12, P(pelvis=(0.0, -0.02, 0.870), hips=(0, 10, 0), spine=(6, 14, 0),
+               head=(4, -8, 0),
+               hand_r=(0.18, -0.02, 1.64), elbow_r=(0.4, 0.5, 0.8),
+               hand_l=(-0.22, 0.24, 1.28), fist_r=0.9, fist_l=0.8)),
+        # CONTACT: down and through, the body behind it.
+        (15, P(pelvis=(-0.02, 0.12, 0.840), hips=(-6, -16, 0), spine=(-14, -26, 0),
+               head=(6, 14, 0), clav_r=(0, -18, 0),
+               hand_r=(0.00, 0.66, 1.40), elbow_r=(0.5, 1.0, 0.3),
+               hand_l=(-0.24, 0.20, 1.20), fist_r=0.95, fist_l=0.8,
+               foot_l=(-0.19, 0.36, 0.104))),
+        (18, P(pelvis=(-0.02, 0.10, 0.830), hips=(-6, -14, 0), spine=(-16, -22, 0),
+               head=(4, 10, 0),
+               hand_r=(-0.10, 0.54, 1.14), elbow_r=(0.5, 1.0, 0.0),
+               hand_l=(-0.24, 0.20, 1.18), fist_r=0.9, fist_l=0.8,
+               foot_l=(-0.19, 0.36, 0.104))),
+        (27, P()),
+    ],
+
+    # 24 frames / 0.8 s: the DROPDOWN UPPERCUT. He drops low under the man
+    # (5) and springs straight up with the right hand into the chin, up on
+    # his toes (11: contact = tick 22, strike_dropdown_uppercut.tres).
+    "Strike_Dropdown_Uppercut": [
+        (0,  P()),
+        (5,  P(pelvis=(0.0, 0.04, 0.600), hips=(-30, 0, 0), spine=(-24, 0, 0),
+               head=(14, 0, 0),
+               # Out in front of the dipped chest: at fwd 0.24-0.26 the
+               # forward-pitched torso swallowed both hands (PoseLint).
+               hand_r=(0.28, 0.44, 0.80), hand_l=(-0.26, 0.46, 0.82),
+               fist_r=0.9, fist_l=0.8,
+               foot_r=(0.25, -0.12, 0.104), foot_l=(-0.23, 0.18, 0.104),
+               knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))),
+        (9,  P(pelvis=(0.0, 0.08, 0.800), hips=(-10, -6, 0), spine=(-8, -10, 0),
+               head=(8, 0, 0),
+               hand_r=(0.10, 0.42, 1.10), hand_l=(-0.24, 0.24, 1.10),
+               fist_r=1.0, fist_l=0.8)),
+        # CONTACT: up through the chin, on his toes.
+        (11, P(pelvis=(0.0, 0.12, 0.930), hips=(4, -12, 0), spine=(8, -18, 0),
+               head=(-4, 8, 0), clav_r=(0, -14, 0),
+               hand_r=(0.02, 0.62, 1.60), elbow_r=(0.6, -0.3, -0.8),
+               hand_l=(-0.26, 0.20, 1.12), fist_r=1.0, fist_l=0.8,
+               foot_r=(0.23, -0.17, 0.150), ankle_r=(24, 0, 0),
+               foot_l=(-0.19, 0.20, 0.140), ankle_l=(20, 0, 0))),
+        (14, P(pelvis=(0.0, 0.10, 0.900), hips=(2, -10, 0), spine=(6, -14, 0),
+               head=(-2, 6, 0),
+               hand_r=(0.00, 0.48, 1.78), elbow_r=(0.6, -0.3, -0.8),
+               hand_l=(-0.26, 0.20, 1.12), fist_r=1.0, fist_l=0.8)),
+        (24, P()),
     ],
 
     # 20 frames, right boot to the midsection, contact on frame 5 (= tick 8
@@ -960,6 +1072,142 @@ CLIPS = {
         (12, P()),
     ],
 
+    # Ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position).
+    # A man down is worked before he is covered, and what he gets depends on
+    # where the other man stands: at his legs or body, a stomp; at his head,
+    # a fist driven down from one knee.
+    #
+    # 18 frames / 0.6s: the STOMP. Knee up and eyes on the target, then the
+    # boot driven flat down to 0.24 m -- the top of a man lying on the mat,
+    # not the canvas -- with the body dropping behind it. Contact frame 7 =
+    # tick 14, ground_stomp.tres's startup.
+    "Ground_Stomp": [
+        (0,  P()),
+        (4,  P(pelvis=(0.02, 0.0, 0.870), spine=(-14, 0, 0), head=(-28, 0, 0),
+               foot_r=(0.12, 0.30, 0.46), knee_r=(0.2, 1.0, 0.4),
+               hand_r=(0.30, 0.20, 1.20), hand_l=(-0.30, 0.24, 1.22))),
+        (7,  P(pelvis=(0.02, 0.04, 0.820), spine=(-20, 0, 0), head=(-34, 0, 0),
+               foot_r=(0.10, 0.46, 0.24), knee_r=(0.2, 1.0, 0.3),
+               hand_r=(0.34, 0.10, 1.10), hand_l=(-0.34, 0.14, 1.12))),
+        (10, P(pelvis=(0.02, 0.02, 0.840), spine=(-16, 0, 0), head=(-30, 0, 0),
+               foot_r=(0.12, 0.40, 0.30), knee_r=(0.2, 1.0, 0.3))),
+        (18, P()),
+    ],
+
+    # 22 frames / 0.733s: the FIST DROP, at the head. Down onto the left
+    # knee beside him, right hand cocked at the shoulder, then driven down to
+    # his head at 0.26 m. Contact frame 11 = tick 22, ground_fist.tres's.
+    "Ground_Fist": [
+        (0,  P()),
+        # A step, not a slide: the right foot lifts to go forward into the
+        # kneel. Sliding it along the mat between the stance and the kneel
+        # drove its ball 7 cm into the canvas (PoseLint below_mat).
+        (3,  P(pelvis=(0.0, 0.03, 0.780), spine=(-18, 0, 0), head=(-20, 0, 0),
+               foot_r=(0.19, 0.10, 0.20), knee_r=(0.2, 1.0, 0.3), ankle_r=(-10, 0, 0),
+               hand_r=(0.24, 0.20, 1.10))),
+        (7,  P(pelvis=(0.0, 0.04, 0.520), hips=(-6, 0, 0), spine=(-40, 0, 0),
+               head=(-36, 0, 0),
+               foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+               foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+               ankle_l=(40, 0, 0),
+               hand_r=(0.22, 0.12, 1.00), hand_l=(-0.20, 0.36, 0.60))),
+        (11, P(pelvis=(0.0, 0.08, 0.450), hips=(-8, 0, 0), spine=(-55, -10, 0),
+               head=(-40, 0, 0), clav_r=(0, -12, 0),
+               foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+               foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+               ankle_l=(40, 0, 0),
+               hand_r=(0.04, 0.58, 0.26), hand_l=(-0.22, 0.34, 0.58))),
+        (14, P(pelvis=(0.0, 0.06, 0.480), hips=(-6, 0, 0), spine=(-48, -4, 0),
+               head=(-38, 0, 0),
+               foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+               foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+               ankle_l=(40, 0, 0),
+               hand_r=(0.14, 0.40, 0.60), hand_l=(-0.20, 0.36, 0.60))),
+        # And a step back out of it.
+        (18, P(pelvis=(0.0, 0.03, 0.760), spine=(-20, 0, 0), head=(-20, 0, 0),
+               foot_r=(0.19, 0.08, 0.20), knee_r=(0.2, 1.0, 0.3), ankle_r=(-10, 0, 0),
+               hand_r=(0.24, 0.26, 1.10))),
+        (22, P()),
+    ],
+
+    # 20 frames / 0.667s: the REVERSAL (gauntlet/refs/animation_gap.md,
+    # Phase 4). The old counters were cut because they did not read -- a
+    # strike simply vanished. This one is two beats the eye cannot miss: the
+    # lead forearm comes up in front of the face and sweeps the punch off
+    # line to his left (frames 3-6), and the rear hand comes straight back
+    # down the gap it opened (frame 9) -- the cross's own measured contact
+    # frame (Strike_Forearm, frame 6), so it reaches from the 1.1 m the AI
+    # circles at. Counter contact frame 9 = tick 18, strike_parry's hit.
+    "Parry_Counter": [
+        (0,  P()),
+        # Forearm up, vertical in front of the face; the left shoulder turns
+        # into the punch to meet it, chin down behind it.
+        (3,  P(pelvis=(0.01, 0.0, 0.850), hips=(0, 6, 0), spine=(-12, 14, 0),
+               head=(10, 4, 0),
+               hand_l=(-0.02, 0.36, 1.52), hand_r=(0.22, 0.26, 1.30))),
+        # The sweep: the forearm carries the punch out past his left ear, and
+        # the right fist is loaded at the chin.
+        (6,  P(pelvis=(0.02, -0.01, 0.846), hips=(0, 10, 0), spine=(-12, 18, 0),
+               head=(8, 6, 0),
+               hand_l=(-0.34, 0.40, 1.44), hand_r=(0.20, 0.22, 1.32))),
+        # The counter: the cross's contact pose.
+        (9,  P(pelvis=(-0.02, 0.07, 0.866), hips=(-4, -15, 0),
+               spine=(-10, -30, 0), head=(8, 18, 0), clav_r=(0, -20, 0),
+               hand_r=(-0.02, 0.68, 1.40), hand_l=(-0.26, 0.30, 1.34),
+               foot_r=(0.23, -0.17, 0.125), ankle_r=(22, 0, 0))),
+        (12, P(pelvis=(-0.03, 0.05, 0.862), hips=(-4, -13, 0),
+               spine=(-10, -24, 0), head=(6, 12, 0), clav_r=(0, -12, 0),
+               hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.24, 0.26, 1.26),
+               foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
+        (20, P()),
+    ],
+
+    # The corner (gauntlet/refs/animation_gap.md, Phase 4: position). A man
+    # knocked back into a corner does not stagger free: the turnbuckle stops
+    # him, and he is trapped against it with his arms hooked over the top
+    # rope while the other man works him over. He faces OUT of the corner,
+    # which is behind him on the diagonal; the two top ropes run forward
+    # from it at 45 degrees, so at 0.6 m either side of him they pass about
+    # 0.1 m behind his shoulders at 1.2 m -- that is where the hands go.
+    #
+    # 45 frames / 1.5s: the SLUMP. Driven back into the buckle (frame 3):
+    # the whiplash throws the head back and the arms up and over the ropes.
+    # The head comes forward off the rebound (7), then he hangs there,
+    # breathing, chin down, weight in the ropes (12-38), and gathers himself
+    # to come out (45), which is where the stance picks him up.
+    "Corner_Slump": [
+        (0,  P()),
+        (3,  C(pelvis=(0.0, -0.18, 0.820), hips=(10, 0, 0), spine=(28, 0, 0),
+               head=(30, 0, 0), hand_r=(0.50, -0.34, 1.04), hand_l=(-0.50, -0.34, 1.04),
+               foot_r=(0.22, -0.02, 0.104), foot_l=(-0.20, 0.08, 0.104))),
+        (7,  C(spine=(16, 0, 0), head=(-20, 0, 0), pelvis=(0.0, -0.16, 0.770))),
+        (12, C()),
+        # Breathing: the chest lifts and the head with it, twice.
+        (22, C(pelvis=(0.02, -0.16, 0.760), spine=(22, -2, 4), head=(-28, -4, 4))),
+        (30, C(head=(-38, -8, 4))),
+        (38, C(pelvis=(0.02, -0.16, 0.760), spine=(21, -2, 3), head=(-30, -4, 2))),
+        # Pushing off the ropes: hands come off, weight forward over the feet.
+        (45, P(pelvis=(0.0, -0.04, 0.830), hips=(0, 0, 0), spine=(0, 0, 0),
+               head=(-8, 0, 0),
+               hand_r=(0.34, 0.16, 1.08), hand_l=(-0.32, 0.18, 1.10),
+               fist_r=0.5, fist_l=0.5,
+               foot_r=(0.24, 0.02, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+    ],
+
+    # 30 frames / 1.0s: HIT IN THE CORNER. From the hang, the blow drives
+    # his back into the buckle again -- head and chest thrown back, the
+    # arms jolting up on the rope (frame 2) -- the head whips forward off it
+    # (5), and he sags back into the hang (12-30). It starts and ends on the
+    # slump's hang pose so a string of them runs together.
+    "Corner_Hit": [
+        (0,  C()),
+        (2,  C(pelvis=(0.0, -0.21, 0.800), hips=(12, 0, 0), spine=(32, 0, 0),
+               head=(32, 0, 0), hand_r=(0.50, -0.34, 1.06), hand_l=(-0.50, -0.34, 1.06))),
+        (5,  C(spine=(14, 0, 0), head=(-40, 0, 0))),
+        (12, C(pelvis=(0.02, -0.17, 0.755))),
+        (30, C()),
+    ],
+
     # 23 frames / 0.75s. On his feet and gone: guard down, chin dropped,
     # and a stagger step he does not choose. The point is that it never
     # holds a pose -- a frozen stunned clip is the exact defect this
@@ -1013,24 +1261,45 @@ CLIPS = {
         # decides it, and decides it is a roll rather than a tumble.
         (5,  S(pelvis=(0.03, 0.0, 0.20), hips=(-78, -10, 100),
                spine=(-6, -8, 0), head=(-4, -6, 0),
-               hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.10),
+               # Hands and feet higher than they rest: the clip is blended
+               # in joint space between keys, and from these the blend swept
+               # a foot 12 cm and a hand 10 cm under the mat (PoseLint).
+               hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.16),
                elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
-               foot_r=(0.02, -0.46, 0.14), foot_l=(0.16, -0.44, 0.10),
+               foot_r=(0.02, -0.46, 0.24), foot_l=(0.16, -0.44, 0.18),
+               ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
                knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
         # Rolls toward his front and gets a hand on the mat.
         (10, S(pelvis=(0.06, 0.0, 0.21), hips=(-70, -20, 22),
                spine=(-4, -14, 0), head=(10, -10, 0),
-               hand_r=(0.30, 0.14, 0.09), hand_l=(-0.30, -0.18, 0.13),
-               foot_r=(0.20, 0.34, 0.11), foot_l=(-0.10, 0.32, 0.14),
+               hand_r=(0.30, 0.14, 0.22), hand_l=(-0.30, -0.18, 0.16),
+               fist_r=0.6, fist_l=0.6,
+               foot_r=(0.20, 0.34, 0.15), foot_l=(-0.10, 0.32, 0.16),
+               ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
                knee_r=(0.5, 0.3, 0.9), knee_l=(-0.4, 0.4, 0.8))),
         # Knees drawn up under him, feet off the mat: a breakdown only, the
         # beats either side stay put. Without it the feet travelled from in
         # front to behind him through the canvas (0.17 m deep).
+        # Solved, midway between 10 and 16: blended in joint space, the
+        # right arm swung down through an arc and put the hand at 5 cm with
+        # the fingers 9 cm into the mat at frame 13 (PoseLint; traced frame
+        # by frame). The hand is held at 20 cm here.
+        (13, dict(pelvis=(0.045, -0.005, 0.275), hips=(-67, -15, 16),
+                  spine=(-7, -10, 0), head=(13, -7, 0),
+                  hand_r=(0.28, 0.22, 0.20), hand_l=(-0.28, 0.01, 0.16),
+                  elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
+                  fist_r=0.65, fist_l=0.65,
+                  foot_r=(0.19, 0.18, 0.18), foot_l=(-0.13, 0.16, 0.19),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
+                  knee_r=(0.4, 0.6, 0.4), knee_l=(-0.35, 0.65, 0.35), free_feet=True)),
         (16, dict(pelvis=(0.03, -0.01, 0.34), hips=(-64, -10, 10),
                   spine=(-10, -6, 0), head=(16, -4, 0),
-                  hand_r=(0.26, 0.30, 0.07), hand_l=(-0.26, 0.20, 0.10),
+                  # Posted on the knuckles at 0.12, not flat at 0.07: open
+                  # and that low, his fingers went 9 cm into the mat on the
+                  # way in (PoseLint).
+                  hand_r=(0.26, 0.30, 0.12), hand_l=(-0.26, 0.20, 0.12),
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
-                  fist_r=0.0, fist_l=0.0,
+                  fist_r=0.7, fist_l=0.7,
                   foot_r=(0.18, 0.02, 0.20), foot_l=(-0.16, 0.00, 0.22),
                   knee_r=(0.3, 0.9, -0.1), knee_l=(-0.3, 0.9, -0.1), free_feet=True)),
         # On all fours: both hands planted, both knees down.
@@ -1045,6 +1314,7 @@ CLIPS = {
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
                   fist_r=0.0, fist_l=0.0,
                   foot_r=(0.17, -0.22, 0.09), foot_l=(-0.17, -0.20, 0.09),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
                   knee_r=(0.3, 0.9, -0.3), knee_l=(-0.3, 0.9, -0.3))),
         # Up onto one knee, lead foot planted flat, hand on that knee.
         (34, dict(pelvis=(0.0, 0.01, 0.575), hips=(-16, 0, 0),
@@ -1094,15 +1364,31 @@ CLIPS = {
                   spine=(-30, 0, 0), head=(-6, 0, 0),
                   hand_r=(0.22, 0.62, 0.42), hand_l=(-0.12, 0.58, 0.40),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.19, -0.24, 0.09), foot_l=(-0.19, -0.22, 0.09),
+                  foot_r=(0.19, -0.24, 0.11), foot_l=(-0.19, -0.22, 0.11),
+                  ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
                   knee_r=(0.3, 0.9, -0.2), knee_l=(-0.3, 0.9, -0.2))),
         # Falling across: hips out behind, chest coming down onto his.
+        # Solved between 5 and 11 rather than blended: the joint-space blend
+        # swung the ball of the foot 10 cm through the canvas as the legs
+        # went back (PoseLint).
+        (8,  dict(pelvis=(0.0, -0.04, 0.450), hips=(-48, 0, 0),
+                  spine=(-19, 0, 0), head=(4, 10, 0),
+                  hand_r=(0.21, 0.78, 0.28), hand_l=(-0.22, 0.68, 0.26),
+                  elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
+                  fist_r=0.0, fist_l=0.0,
+                  foot_r=(0.18, -0.46, 0.12), foot_l=(-0.18, -0.42, 0.12),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
+                  knee_r=(0.25, 0.4, -0.6), knee_l=(-0.25, 0.4, -0.6))),
         (11, dict(pelvis=(0.0, -0.10, 0.360), hips=(-66, 0, 0),
                   spine=(-8, 0, 0), head=(14, 20, 0),
                   hand_r=(0.20, 0.92, 0.16), hand_l=(-0.30, 0.78, 0.14),
                   elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.17, -0.62, 0.08), foot_l=(-0.17, -0.58, 0.08),
+                  # Further back and a touch higher: at -0.62 the hip-to-foot
+                  # span was short of the leg, the knee dropped toward its
+                  # mat-ward pole and went 5.5 cm INTO the canvas (PoseLint).
+                  foot_r=(0.17, -0.72, 0.11), foot_l=(-0.17, -0.68, 0.11),
+                  ankle_r=(40, 0, 0), ankle_l=(40, 0, 0),
                   knee_r=(0.2, 0.0, -1.0), knee_l=(-0.2, 0.0, -1.0))),
         # Settled: lying across him, legs sprawled for base, toes dug in,
         # head up and turned so the face reads from the hard camera.
@@ -1111,7 +1397,7 @@ CLIPS = {
                   hand_r=(0.18, 0.98, 0.10), hand_l=(-0.32, 0.84, 0.10),
                   elbow_r=(0.9, 0.0, 0.3), elbow_l=(-0.9, 0.0, 0.3),
                   fist_r=0.0, fist_l=0.0,
-                  foot_r=(0.20, -0.86, 0.07), foot_l=(-0.20, -0.82, 0.07),
+                  foot_r=(0.20, -0.95, 0.11), foot_l=(-0.20, -0.91, 0.11),
                   ankle_r=(40, 0, 0), ankle_l=(40, 0, 0),
                   knee_r=(0.25, 0.0, -1.0), knee_l=(-0.25, 0.0, -1.0))),
     ],
@@ -1359,6 +1645,51 @@ CLIPS = {
                   elbow_l=(-0.5, -0.4, -1.0), fist_l=0.45)),
     ],
 
+
+    # === Roman, OTC, measured off the broadcast (refs/entrances.md [V]) ====
+
+    # 30 frames / 1.0s: the finger, raised and HELD -- the clip ends on the
+    # held pose, and a non-looping clip holds its last frame, so the director
+    # keeps it up as long as the beat runs (R-41: 40 s to 58 s, eighteen
+    # seconds). Right arm straight up over the shoulder, fist closed round
+    # the index finger, chin LEVEL -- he looks out at the building, not up
+    # at the finger. Arrives on frame 14 (FINGER_PYRO_AT): the pyro.
+    "Finger_Hold": [
+        (0,  ROMAN_STAND),
+        (8,  pose(ROMAN_STAND, spine=(4, 0, 0), head=(2, 0, 0),
+                  hand_r=(0.21, 0.10, 1.60), elbow_r=(1.0, -0.2, -0.2),
+                  fist_r=0.95, point_r=True)),
+        (14, pose(ROMAN_STAND, spine=(5, 0, 0), head=(3, 0, 0),
+                  hand_r=(0.19, 0.06, 2.00), elbow_r=(1.0, 0.0, 0.2),
+                  fist_r=0.95, point_r=True)),
+        (30, pose(ROMAN_STAND, spine=(5, 0, 0), head=(3, 0, 0),
+                  hand_r=(0.19, 0.06, 2.00), elbow_r=(1.0, 0.0, 0.2),
+                  fist_r=0.95, point_r=True)),
+    ],
+
+    # 90 frames / 3.0s: at ringside, before the steps (R-41 2:42-3:04): the
+    # chin comes down to his chest and stays there -- eyes shut, a private
+    # moment in a building of 60,000 -- then the head comes up slowly.
+    "Head_Bow": [
+        (0,  ROMAN_STAND),
+        (18, pose(ROMAN_STAND, spine=(-9, 0, 0), head=(-44, 0, 0),
+                  pelvis=(0.0, 0.0, 0.897))),
+        (66, pose(ROMAN_STAND, spine=(-10, 0, 0), head=(-46, 0, 0),
+                  pelvis=(0.0, 0.0, 0.895))),
+        (90, ROMAN_STAND),
+    ],
+
+    # 120 frames / 4.0s, looping: in the ring after the finger (R-41
+    # 3:42-3:54): hands on the hips, elbows out, square to the hard camera,
+    # and a slow look across the ring and back.
+    "Hands_Hips": [
+        (0,   ROMAN_HIPS),
+        (40,  pose(ROMAN_HIPS, head=(0, 14, 0), spine=(4, 4, 0))),
+        (70,  pose(ROMAN_HIPS, head=(0, 14, 0), spine=(4, 4, 0))),
+        (100, pose(ROMAN_HIPS, head=(0, -10, 0), spine=(4, -3, 0))),
+        (120, ROMAN_HIPS),
+    ],
+
     # === Cody (gauntlet/refs/entrances.md, Cody's beat sheet) =============
 
     # 60 frames / 2.0s, looping: waiting on his mark, bouncing on his toes.
@@ -1370,9 +1701,13 @@ CLIPS = {
         (60, CODY_STAND),
     ],
 
-    # 60 frames / 2.0s: THE WHOA. A beat of anticipation (arms in, weight
-    # down), then the arms thrown wide and up, chest open, head back -- and
-    # HELD, because the pyro is what answers it.
+    # 150 frames / 5.0s: THE WHOA, cut to his music (entrance_director.gd,
+    # CODY_WHOA): a beat of anticipation, the arms thrown wide and up on
+    # frame 11 -- the chant's first sung WHOA -- and HELD through the pyro
+    # (frame 71, where his chest lifts to it) until the fists drive down on
+    # the next phrase. A held pose is never a frozen one: he breathes, the
+    # head goes back to drink it in, the hands drift. It drops to the stand on
+    # its last frames, which is the cock Fists_Down punches out of.
     "Whoa_Arms": [
         (0,  CODY_STAND),
         (5,  pose(CODY_STAND, pelvis=(0.0, 0.0, 0.86), spine=(-6, 0, 0),
@@ -1380,17 +1715,50 @@ CLIPS = {
                   hand_r=(0.18, 0.18, 1.08), hand_l=(-0.18, 0.18, 1.08),
                   elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
                   fist_r=0.8, fist_l=0.8)),
-        (11, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(14, 0, 0),
+        # Thrown: a touch past the hold, and it settles back.
+        (11, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.92), spine=(16, 0, 0),
+                  head=(22, 0, 0),
+                  hand_r=(0.84, 0.06, 1.77), hand_l=(-0.84, 0.06, 1.77),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.15, fist_l=0.15)),
+        (17, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(14, 0, 0),
                   head=(22, 0, 0),
                   hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
-        (50, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(15, 0, 0),
+        # Breathing it in, head going back.
+        (44, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.905), spine=(17, 0, 0),
+                  head=(28, 0, 0),
+                  hand_r=(0.83, 0.04, 1.75), hand_l=(-0.83, 0.04, 1.75),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (62, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.905), spine=(14, 0, 0),
                   head=(24, 0, 0),
+                  hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        # The pyro: the chest lifts to it.
+        (72, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.93), spine=(20, 0, 0),
+                  head=(30, 0, 0),
+                  hand_r=(0.85, 0.04, 1.80), hand_l=(-0.85, 0.04, 1.80),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (96, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(16, 0, 0),
+                  head=(24, 0, 4),
                   hand_r=(0.83, 0.05, 1.74), hand_l=(-0.83, 0.05, 1.74),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
-        (60, CODY_STAND),
+        (130, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(15, 0, 0),
+                   head=(20, 0, -3),
+                   hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.3, fist_l=0.3)),
+        (141, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.90), spine=(12, 0, 0),
+                   head=(14, 0, 0),
+                   hand_r=(0.78, 0.08, 1.66), hand_l=(-0.78, 0.08, 1.66),
+                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                   fist_r=0.6, fist_l=0.6)),
+        (150, CODY_STAND),
     ],
 
     # 30 frames / 1.0s: both fists up, the second WHOA.
@@ -1475,6 +1843,134 @@ CLIPS = {
         (48, pose(CODY_STAND, hand_r=(0.30, 0.40, 1.10),
                   elbow_r=(0.8, -0.4, -0.6), fist_r=0.8)),
         (60, CODY_STAND),
+    ],
+
+    # === Cody, measured off the broadcast (refs/entrances.md [V]) ==========
+
+    # 30 frames / 1.0s: after the WHOA, both fists DRIVEN DOWN (C-39 26 s):
+    # cocked at the chest (6), punched down past the hips with the knees
+    # dipping (10 -- CODY_PUNCH_AT, the second burst), held, up again.
+    "Fists_Down": [
+        (0,  CODY_STAND),
+        (6,  pose(CODY_STAND, pelvis=(0.0, 0.0, 0.92), spine=(10, 0, 0),
+                  head=(12, 0, 0),
+                  hand_r=(0.26, 0.20, 1.42), hand_l=(-0.26, 0.20, 1.42),
+                  elbow_r=(1.0, -0.4, -0.2), elbow_l=(-1.0, -0.4, -0.2),
+                  fist_r=1.0, fist_l=1.0)),
+        (10, pose(CODY_STAND, pelvis=(0.0, 0.02, 0.84), spine=(-6, 0, 0),
+                  head=(14, 0, 0),
+                  hand_r=(0.30, 0.12, 0.80), hand_l=(-0.30, 0.12, 0.80),
+                  elbow_r=(1.0, 0.2, -0.4), elbow_l=(-1.0, 0.2, -0.4),
+                  foot_r=(0.22, 0.02, 0.104), foot_l=(-0.22, -0.02, 0.104),
+                  fist_r=1.0, fist_l=1.0)),
+        (22, pose(CODY_STAND, pelvis=(0.0, 0.02, 0.85), spine=(-4, 0, 0),
+                  head=(16, 0, 0),
+                  hand_r=(0.31, 0.12, 0.82), hand_l=(-0.31, 0.12, 0.82),
+                  elbow_r=(1.0, 0.2, -0.4), elbow_l=(-1.0, 0.2, -0.4),
+                  foot_r=(0.22, 0.02, 0.104), foot_l=(-0.22, -0.02, 0.104),
+                  fist_r=1.0, fist_l=1.0)),
+        (30, CODY_STAND),
+    ],
+
+    # 150 frames / 5.0s: THE KNEEL at the top of the ramp (C-MITB 40-44 s,
+    # C-SS 4 s). The left foot steps forward (10), he goes down onto the
+    # RIGHT knee (22), left forearm across the left knee, right hand on his
+    # right thigh, head DOWN; held (22-80); the head comes up to the crowd
+    # (96), held; and he rises (138). The root stays put -- the pelvis drops
+    # in root space, as Corner_Climb raises it.
+    "Kneel": [
+        (0,   CODY_STAND),
+        (10,  pose(CODY_STAND, pelvis=(0.0, 0.08, 0.82), spine=(-6, 0, 0),
+                   head=(-6, 0, 0),
+                   foot_l=(-0.16, 0.36, 0.104), knee_l=(-0.2, 1.0, 0.2))),
+        (22,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.53), hips=(-4, 0, 0),
+                   spine=(-16, 0, 0), head=(-30, 0, 0),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.58), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.60), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (80,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.52), hips=(-4, 0, 0),
+                   spine=(-17, 0, 0), head=(-32, 0, 0),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.57), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.59), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (96,  pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
+                   spine=(4, 0, 0), head=(16, 0, 0),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (118, pose(CODY_STAND, pelvis=(0.0, 0.04, 0.54), hips=(-2, 0, 0),
+                   spine=(5, 0, 0), head=(18, 0, 0),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6),
+                   ankle_r=(40, 0, 0),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_l=(-0.04, 0.46, 0.60), elbow_l=(-1.0, 0.2, 0.0),
+                   hand_r=(0.22, 0.22, 0.62), elbow_r=(1.0, 0.0, -0.4),
+                   fist_l=0.5, fist_r=0.4)),
+        (138, pose(CODY_STAND, pelvis=(0.0, 0.06, 0.84), spine=(2, 0, 0),
+                   head=(10, 0, 0),
+                   foot_l=(-0.16, 0.30, 0.104), knee_l=(-0.2, 1.0, 0.2))),
+        (150, CODY_STAND),
+    ],
+
+    # 100 frames / 3.33s: the WHOA again, low, down the ramp -- on the
+    # chorus's big held WHOAAA (43.5 s in his music; entrance_director.gd
+    # CODY_WHOA_LOW): feet wide, knees bent, arms straight out level, palms
+    # forward, chest up. Wide on frame 10, sunk into it, and pushed wider on
+    # the second held WHOA (45.5 s: frame 70), then up to the stand.
+    "Whoa_Low": [
+        (0,  CODY_STAND),
+        (10, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.780), spine=(10, 0, 0),
+                  head=(16, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.80, 0.08, 1.32), hand_l=(-0.80, 0.08, 1.32),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (18, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.760), spine=(12, 0, 0),
+                  head=(18, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.81, 0.08, 1.30), hand_l=(-0.81, 0.08, 1.30),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (44, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.765), spine=(14, 0, 0),
+                  head=(22, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.81, 0.08, 1.33), hand_l=(-0.81, 0.08, 1.33),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (62, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.770), spine=(11, 0, 0),
+                  head=(18, 0, -4),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.80, 0.08, 1.31), hand_l=(-0.80, 0.08, 1.31),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.1, fist_l=0.1)),
+        (70, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.750), spine=(16, 0, 0),
+                  head=(26, 0, 0),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.84, 0.08, 1.40), hand_l=(-0.84, 0.08, 1.40),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.0, fist_l=0.0)),
+        (90, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.765), spine=(12, 0, 0),
+                  head=(18, 0, 3),
+                  foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
+                  knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
+                  hand_r=(0.81, 0.08, 1.32), hand_l=(-0.81, 0.08, 1.32),
+                  elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+                  fist_r=0.2, fist_l=0.2)),
+        (100, CODY_STAND),
     ],
 
     # 104 frames / 3.5s, looping: _crowd_walk.
@@ -1630,6 +2126,13 @@ CLIPS = {
     ],
 
     # === grapple holds ==================================================
+    #
+    # These three, Tie_Up_Collar and Move_Exec_Impact were authored with a
+    # POSITIVE hips/spine pitch under notes saying "bends at the waist" --
+    # and a positive pitch tips a man BACKWARD (see STANCE). Every lock-up and
+    # grapple hold in the game played as two backbends with arms reaching at
+    # the air; the owner flagged both. The pitches are negated, head included
+    # (the head was lifted against a forward lean that was never there).
 
     # 30 frames / 1.0s, looping, role unknown. Both men have hands on each
     # other and neither is winning; the pressure shifts and comes back.
@@ -1637,23 +2140,23 @@ CLIPS = {
     # wrestlers playing it rendered a lock-up as two men pointing past each
     # other.
     "Grapple_Hold_Neutral": [
-        (0,  P(pelvis=(0.0, 0.0, 0.840), hips=(6, 0, 0), spine=(20, 0, 0),
-               head=(-4, 0, 0),
+        (0,  P(pelvis=(0.0, 0.0, 0.840), hips=(-6, 0, 0), spine=(-20, 0, 0),
+               head=(4, 0, 0),
                hand_r=(0.12, 0.50, 1.42), hand_l=(-0.26, 0.46, 1.30),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
-        (10, P(pelvis=(0.0, 0.04, 0.832), hips=(8, -4, 0), spine=(24, -4, 0),
-               head=(-6, -4, 0),
+        (10, P(pelvis=(0.0, 0.04, 0.832), hips=(-8, -4, 0), spine=(-24, -4, 0),
+               head=(6, -4, 0),
                hand_r=(0.11, 0.53, 1.40), hand_l=(-0.28, 0.49, 1.28),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
-        (20, P(pelvis=(0.0, -0.02, 0.846), hips=(5, 4, 0), spine=(17, 4, 0),
-               head=(-3, 4, 0),
+        (20, P(pelvis=(0.0, -0.02, 0.846), hips=(-5, 4, 0), spine=(-17, 4, 0),
+               head=(3, 4, 0),
                hand_r=(0.13, 0.48, 1.44), hand_l=(-0.24, 0.44, 1.32),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
-        (30, P(pelvis=(0.0, 0.0, 0.840), hips=(6, 0, 0), spine=(20, 0, 0),
-               head=(-4, 0, 0),
+        (30, P(pelvis=(0.0, 0.0, 0.840), hips=(-6, 0, 0), spine=(-20, 0, 0),
+               head=(4, 0, 0),
                hand_r=(0.12, 0.50, 1.42), hand_l=(-0.26, 0.46, 1.30),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
@@ -1664,27 +2167,27 @@ CLIPS = {
     # his shoulder, feet back so he can drive. This replaced
     # "PickUp_Table", which lifts furniture with a straight back.
     "Grapple_Hold_Attacker": [
-        (0,  P(pelvis=(0.0, 0.04, 0.800), hips=(10, 0, 0), spine=(42, 0, 0),
-               head=(-32, 0, 8),
+        (0,  P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-42, 0, 0),
+               head=(32, 0, 8),
                hand_r=(0.07, 0.52, 0.92), hand_l=(-0.11, 0.54, 0.90),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.08, 0.104))),
         # Squeezes and tries to break him off the mat.
-        (10, P(pelvis=(0.0, 0.02, 0.842), hips=(6, 0, 0), spine=(34, 0, 0),
-               head=(-28, 0, 8),
+        (10, P(pelvis=(0.0, 0.02, 0.842), hips=(-6, 0, 0), spine=(-34, 0, 0),
+               head=(28, 0, 8),
                hand_r=(0.06, 0.50, 1.00), hand_l=(-0.10, 0.52, 0.98),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.08, 0.104))),
-        (20, P(pelvis=(0.0, 0.05, 0.792), hips=(11, 0, 0), spine=(44, 0, 0),
-               head=(-33, 0, 8),
+        (20, P(pelvis=(0.0, 0.05, 0.792), hips=(-11, 0, 0), spine=(-44, 0, 0),
+               head=(33, 0, 8),
                hand_r=(0.07, 0.53, 0.89), hand_l=(-0.11, 0.55, 0.87),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.08, 0.104))),
-        (30, P(pelvis=(0.0, 0.04, 0.800), hips=(10, 0, 0), spine=(42, 0, 0),
-               head=(-32, 0, 8),
+        (30, P(pelvis=(0.0, 0.04, 0.800), hips=(-10, 0, 0), spine=(-42, 0, 0),
+               head=(32, 0, 8),
                hand_r=(0.07, 0.52, 0.92), hand_l=(-0.11, 0.54, 0.90),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.5, fist_l=0.5,
@@ -1695,27 +2198,27 @@ CLIPS = {
     # corpse. He is bent over the top of the waistlock, hands fighting the
     # grip, feet sprawled back and wide so he cannot be lifted.
     "Grapple_Hold_Defender": [
-        (0,  P(pelvis=(0.0, -0.04, 0.780), hips=(12, 0, 0), spine=(46, 0, 0),
-               head=(-30, 0, 0),
+        (0,  P(pelvis=(0.0, -0.04, 0.780), hips=(-12, 0, 0), spine=(-46, 0, 0),
+               head=(30, 0, 0),
                hand_r=(0.24, 0.44, 0.90), hand_l=(-0.22, 0.46, 0.88),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.62, fist_l=0.62,
                foot_r=(0.29, -0.34, 0.104), foot_l=(-0.27, -0.30, 0.104))),
         # Sprawls harder -- hips back and down, all of it into his grip.
-        (10, P(pelvis=(0.0, -0.08, 0.762), hips=(14, 0, 0), spine=(50, 0, 0),
-               head=(-32, 0, 0),
+        (10, P(pelvis=(0.0, -0.08, 0.762), hips=(-14, 0, 0), spine=(-50, 0, 0),
+               head=(32, 0, 0),
                hand_r=(0.26, 0.46, 0.86), hand_l=(-0.24, 0.48, 0.84),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.29, -0.36, 0.104), foot_l=(-0.27, -0.32, 0.104))),
-        (20, P(pelvis=(0.0, -0.02, 0.792), hips=(11, 0, 0), spine=(43, 0, 0),
-               head=(-28, 0, 0),
+        (20, P(pelvis=(0.0, -0.02, 0.792), hips=(-11, 0, 0), spine=(-43, 0, 0),
+               head=(28, 0, 0),
                hand_r=(0.23, 0.42, 0.93), hand_l=(-0.21, 0.44, 0.91),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.62, fist_l=0.62,
                foot_r=(0.29, -0.33, 0.104), foot_l=(-0.27, -0.29, 0.104))),
-        (30, P(pelvis=(0.0, -0.04, 0.780), hips=(12, 0, 0), spine=(46, 0, 0),
-               head=(-30, 0, 0),
+        (30, P(pelvis=(0.0, -0.04, 0.780), hips=(-12, 0, 0), spine=(-46, 0, 0),
+               head=(30, 0, 0),
                hand_r=(0.24, 0.44, 0.90), hand_l=(-0.22, 0.46, 0.88),
                elbow_r=(0.8, -0.2, -0.5), elbow_l=(-0.8, -0.2, -0.5),
                fist_r=0.62, fist_l=0.62,
@@ -1726,17 +2229,17 @@ CLIPS = {
     # spot, chest opening as he comes back up off the impact. This replaced
     # "Jump_Land", which is a man absorbing a drop he took himself.
     "Move_Exec_Impact": [
-        (0,  P(pelvis=(0.0, 0.06, 0.720), hips=(14, 0, 0), spine=(42, 0, 0),
-               head=(-16, 0, 0),
+        (0,  P(pelvis=(0.0, 0.06, 0.720), hips=(-14, 0, 0), spine=(-42, 0, 0),
+               head=(16, 0, 0),
                hand_r=(0.26, 0.46, 0.34), hand_l=(-0.24, 0.48, 0.36),
                elbow_r=(0.7, -0.3, -0.6), elbow_l=(-0.7, -0.3, -0.6),
                fist_r=0.6, fist_l=0.6)),
-        (4,  P(pelvis=(0.0, 0.05, 0.762), hips=(11, 0, 0), spine=(32, 0, 0),
-               head=(-14, 0, 0),
+        (4,  P(pelvis=(0.0, 0.05, 0.762), hips=(-11, 0, 0), spine=(-32, 0, 0),
+               head=(14, 0, 0),
                hand_r=(0.26, 0.44, 0.52), hand_l=(-0.24, 0.46, 0.54),
                fist_r=0.6, fist_l=0.6)),
-        (9,  P(pelvis=(0.0, 0.03, 0.822), hips=(8, 0, 0), spine=(18, 0, 0),
-               head=(-8, 0, 0),
+        (9,  P(pelvis=(0.0, 0.03, 0.822), hips=(-8, 0, 0), spine=(-18, 0, 0),
+               head=(8, 0, 0),
                hand_r=(0.24, 0.38, 0.94), hand_l=(-0.20, 0.40, 0.96),
                fist_r=0.5, fist_l=0.5)),
         (18, P()),
@@ -1832,33 +2335,41 @@ CLIPS = {
 
     # Collar tie -> drag him down -> knee to the midsection -> shove off.
     # 30 frames; the knee lands on frame 18.
+    #
+    # Both halves had every pitch the wrong way round (positive tips a man
+    # BACK -- see STANCE): the attacker reclined while "dragging his head
+    # down", and the defender arched back to 52 degrees at the knee, taking
+    # his stomach AWAY from it -- a man bending over backwards off a knee. The
+    # hips, spine and head pitches are negated on every key of both halves, so
+    # the beats stay locked together: the attacker leans in over him, and the
+    # defender folds forward around the knee.
     "Clinch_Knee_Attacker": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
+        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(-6, 0, 0), spine=(-18, 0, 0),
                hand_r=(0.10, 0.52, 1.46), hand_l=(-0.28, 0.44, 1.28),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # Drags his head down: both hands pull down and back.
-        (8,  P(pelvis=(0.0, 0.02, 0.830), hips=(8, 0, 0), spine=(24, 0, 0),
-               head=(-10, 0, 0),
+        (8,  P(pelvis=(0.0, 0.02, 0.830), hips=(-8, 0, 0), spine=(-24, 0, 0),
+               head=(10, 0, 0),
                hand_r=(0.10, 0.40, 1.12), hand_l=(-0.22, 0.38, 1.08),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # Loads the knee, weight entirely onto the left foot.
-        (14, P(pelvis=(-0.04, 0.0, 0.862), hips=(6, -6, 6), spine=(20, 0, -4),
-               head=(-10, 0, 0),
+        (14, P(pelvis=(-0.04, 0.0, 0.862), hips=(-6, -6, 6), spine=(-20, 0, -4),
+               head=(10, 0, 0),
                hand_r=(0.11, 0.38, 1.08), hand_l=(-0.21, 0.36, 1.04),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.16, 0.30, 0.62), knee_r=(0.3, 1.0, 0.1),
                foot_l=(-0.24, 0.16, 0.104))),
         # The knee lands, and the hands pull DOWN into it.
-        (18, P(pelvis=(-0.05, 0.02, 0.870), hips=(10, -8, 8),
-               spine=(10, 0, -6), head=(-6, 0, 0),
+        (18, P(pelvis=(-0.05, 0.02, 0.870), hips=(-10, -8, 8),
+               spine=(-10, 0, -6), head=(6, 0, 0),
                hand_r=(0.12, 0.34, 0.98), hand_l=(-0.20, 0.32, 0.96),
                fist_r=0.7, fist_l=0.7,
                foot_r=(0.12, 0.50, 0.88), knee_r=(0.3, 1.0, 0.1),
                foot_l=(-0.24, 0.16, 0.104))),
         # Shoves him off and gets the foot back down.
-        (22, P(pelvis=(-0.02, 0.04, 0.848), hips=(6, 0, 2), spine=(16, 0, 0),
+        (22, P(pelvis=(-0.02, 0.04, 0.848), hips=(-6, 0, 2), spine=(-16, 0, 0),
                hand_r=(0.16, 0.54, 1.24), hand_l=(-0.18, 0.56, 1.22),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.20, 0.14, 0.30), knee_r=(0.3, 1.0, 0.1),
@@ -1868,31 +2379,31 @@ CLIPS = {
 
     # The other side of it, frame for frame.
     "Clinch_Knee_Defender": [
-        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(18, 0, 0),
+        (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(-6, 0, 0), spine=(-18, 0, 0),
                hand_r=(0.24, 0.46, 1.34), hand_l=(-0.20, 0.48, 1.32),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.18, 0.104))),
         # Dragged down by the head, hands on the arms that are doing it.
-        (8,  P(pelvis=(0.0, -0.04, 0.802), hips=(12, 0, 0), spine=(38, 0, 0),
-               head=(10, 0, 0),
+        (8,  P(pelvis=(0.0, -0.04, 0.802), hips=(-12, 0, 0), spine=(-38, 0, 0),
+               head=(-10, 0, 0),
                hand_r=(0.24, 0.40, 1.10), hand_l=(-0.22, 0.42, 1.08),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
-        (14, P(pelvis=(0.0, -0.06, 0.788), hips=(14, 0, 0), spine=(44, 0, 0),
-               head=(16, 0, 0),
+        (14, P(pelvis=(0.0, -0.06, 0.788), hips=(-14, 0, 0), spine=(-44, 0, 0),
+               head=(-16, 0, 0),
                hand_r=(0.22, 0.36, 1.02), hand_l=(-0.20, 0.38, 1.00),
                fist_r=0.5, fist_l=0.5,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # The knee lands: he folds hard around it and his hands go to it.
-        (18, P(pelvis=(0.0, -0.10, 0.742), hips=(18, 0, 0), spine=(52, 0, 0),
-               head=(22, 0, 0),
+        (18, P(pelvis=(0.0, -0.10, 0.742), hips=(-18, 0, 0), spine=(-52, 0, 0),
+               head=(-22, 0, 0),
                hand_r=(0.14, 0.26, 0.94), hand_l=(-0.12, 0.28, 0.92),
                elbow_r=(0.6, -0.3, -0.7), elbow_l=(-0.6, -0.3, -0.7),
                fist_r=0.62, fist_l=0.62,
                foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.16, 0.104))),
         # Shoved off: he goes backward a step, still folded.
-        (22, P(pelvis=(0.0, -0.16, 0.778), hips=(14, 0, 0), spine=(44, 0, 0),
-               head=(18, 0, 0),
+        (22, P(pelvis=(0.0, -0.16, 0.778), hips=(-14, 0, 0), spine=(-44, 0, 0),
+               head=(-18, 0, 0),
                hand_r=(0.18, 0.30, 1.02), hand_l=(-0.16, 0.32, 1.00),
                fist_r=0.6, fist_l=0.6,
                foot_r=(0.26, -0.32, 0.104), foot_l=(-0.24, 0.06, 0.140))),
@@ -2910,7 +3421,9 @@ CLIPS["SL_Dropkick_Attacker"] = [
               knee_r=(0.0, 0.0, 1.0), knee_l=(0.0, 1.0, 0.0))),
     (14, dict(pelvis=(0.0, 0.10, 0.520), hips=(-10, 0, -80), spine=(0, 0, -6),
               head=(0, 0, 12),
-              hand_r=(0.70, 0.10, 0.20), hand_l=(-0.10, 0.20, 0.80),
+              # Both clear of his flank: at fwd 0.10-0.20 each sat inside
+              # the torso of a man turned on his side (PoseLint).
+              hand_r=(0.70, 0.34, 0.20), hand_l=(-0.10, 0.46, 0.84),
               fist_r=0.2, fist_l=0.2)),
     (17, dict(pelvis=(0.0, 0.05, 0.180), hips=(-8, 0, -86), spine=(0, 0, -4),
               head=(0, 0, 16),
@@ -3683,7 +4196,945 @@ CLIPS["Backstabber_Defender"] = [k for k in CLIPS["Tilt_DDT_Defender"] if k[0] <
            hand_r=(0.30, 0.10, 1.20), hand_l=(-0.28, 0.10, 1.18))),
 ] + _back_fall(31, 54, pelvis_hit=0.70)
 
+# --- Cody Rhodes's moveset (gauntlet/refs/cody_moveset.md) -----------------
+#
+# The moves he hits in nearly every WWE match, researched before keyed (All
+# Elite Moves' list, WWE 2K signature sets, and the broadcast clips used for
+# his entrance). Keyed with the blender-animation skill's rules: every beat a
+# pose the rig can reach, rotations no more than ~60 degrees apart so the
+# quaternion keys cannot take the long way round, and anything turning over
+# carried in its own body frame (_body).
+
+# Powerslam, 45 frames / 1.5 s. The body slam's scoop and roll (frames 0-19,
+# shared, so the lift that reads is the lift both use), then instead of the
+# drop he steps in and falls forward WITH him, chest to chest, landing across
+# him on his knees -- which is the whole difference between a powerslam and a
+# slam -- holds him there, and gets up.
+_ON_TOP = dict(pelvis=(0.0, 0.00, 0.440), hips=(-70, 0, 0), spine=(-10, 0, 0),
+               head=(-6, 0, 0),
+               hand_r=(0.42, 0.62, 0.12), hand_l=(-0.42, 0.62, 0.12),
+               elbow_r=(0.8, 0.0, 0.4), elbow_l=(-0.8, 0.0, 0.4),
+               fist_r=0.3, fist_l=0.3,
+               foot_r=(0.20, -0.52, 0.12), foot_l=(-0.20, -0.48, 0.12),
+               knee_r=(0.2, 0.3, -1.0), knee_l=(-0.2, 0.3, -1.0))
+CLIPS["Powerslam_Attacker"] = [k for k in CLIPS["Bodyslam_Attacker"] if k[0] <= 19] + [
+    # A step in, still carrying him across the chest.
+    (23, P(pelvis=(0.0, 0.08, 0.860), hips=(-2, 0, 0), spine=(-2, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.28, 0.34, 0.96), hand_l=(-0.34, 0.32, 0.94),
+           elbow_r=(0.5, -0.4, -0.7), elbow_l=(-0.5, -0.4, -0.7),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.30, 0.104))),
+    # Falling forward with him.
+    (27, dict(pelvis=(0.0, 0.10, 0.640), hips=(-40, 0, 0), spine=(-16, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.32, 0.56, 0.52), hand_l=(-0.36, 0.54, 0.54),
+              elbow_r=(0.6, -0.2, -0.6), elbow_l=(-0.6, -0.2, -0.6),
+              fist_r=0.5, fist_l=0.5,
+              foot_r=(0.22, -0.30, 0.104), foot_l=(-0.20, 0.10, 0.20),
+              knee_r=(0.2, 1.0, -0.2), knee_l=(-0.2, 1.0, 0.0))),
+    # Across him, chest on chest, on his knees.
+    (30, dict(_ON_TOP)),
+    (40, dict(_ON_TOP, pelvis=(0.0, 0.00, 0.450), spine=(-8, 0, 0), head=(-2, 0, 0))),
+    (43, pose(CROUCH)),
+    (45, P()),
+]
+CLIPS["Powerslam_Defender"] = [k for k in CLIPS["Bodyslam_Defender"] if k[0] <= 20] + [
+    (24, CLIPS["Bodyslam_Defender"][[k[0] for k in CLIPS["Bodyslam_Defender"]].index(24)][1]),
+    # Driven flat, with the man on top of him.
+    (29, S(pelvis=(0.0, 0.0, 0.200), hips=(-88, 0, 180), spine=(-2, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(-0.56, 0.14, 0.10), hand_l=(0.56, 0.14, 0.10),
+           elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+           fist_r=0.1, fist_l=0.1,
+           foot_r=(-0.14, -0.74, 0.20), foot_l=(0.12, -0.76, 0.24),
+           knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0))),
+    (33, S(pelvis=(0.0, 0.0, 0.180), spine=(-8, 0, 0), head=(-12, 0, 0),
+           hand_r=(-0.46, 0.18, 0.10), hand_l=(0.44, 0.18, 0.10))),
+    (45, S()),
+]
+
+# The Disaster Kick, 42 frames / 1.4 s -- his spinning heel kick. Out of the
+# lock-up he shoves the man off a step, plants and spins (the root does the
+# turn, three quarters of it, paired_recipes.gd), and the right leg comes
+# round straight, the heel into the side of the head, the body leaning away
+# from it; he lands the leg and finishes the turn facing him. The victim goes
+# over backward.
+CLIPS["Disaster_Kick_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # The shove.
+    (5,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
+           hand_r=(0.18, 0.56, 1.28), hand_l=(-0.18, 0.56, 1.26),
+           fist_r=0.1, fist_l=0.1)),
+    # Plants the left foot and winds up, turning.
+    (10, P(pelvis=(0.0, 0.0, 0.860), hips=(0, -30, 0), spine=(0, -24, 0),
+           head=(0, 24, 0),
+           hand_r=(0.22, 0.20, 1.22), hand_l=(-0.24, 0.10, 1.20),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.20, -0.14, 0.104), foot_l=(-0.16, 0.10, 0.104))),
+    # Spinning on the left foot, the right knee chambered.
+    (14, dict(pelvis=(0.0, 0.0, 0.900), hips=(-6, 0, -8), spine=(6, 0, -6),
+              head=(0, 0, 0),
+              hand_r=(0.30, 0.12, 1.30), hand_l=(-0.34, 0.10, 1.26),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.34, -0.06, 0.66), knee_r=(0.8, 0.5, 0.2),
+              foot_l=(-0.12, 0.02, 0.104), knee_l=(-0.2, 1.0, 0.0))),
+    # CONTACT: the leg straight out to his right at head height, heel first,
+    # the body leaning away over the standing leg.
+    (18, dict(pelvis=(-0.06, 0.0, 0.950), hips=(0, 0, -30), spine=(0, 0, -18),
+              head=(0, 0, -12),
+              hand_r=(0.24, 0.16, 1.34), hand_l=(-0.56, 0.08, 1.20),
+              fist_r=0.8, fist_l=0.6,
+              foot_r=(0.96, 0.00, 1.52), knee_r=(0.2, 1.0, 0.3),
+              foot_l=(-0.10, 0.00, 0.104), knee_l=(-0.2, 1.0, 0.0))),
+    # Following through, the leg sweeping on round.
+    (21, dict(pelvis=(-0.04, 0.0, 0.920), hips=(0, 0, -20), spine=(0, 0, -12),
+              head=(0, 0, -8),
+              hand_r=(0.24, 0.16, 1.30), hand_l=(-0.46, 0.08, 1.18),
+              fist_r=0.8, fist_l=0.6,
+              foot_r=(0.60, -0.46, 1.06), knee_r=(0.4, 0.4, 0.8),
+              foot_l=(-0.10, 0.00, 0.104), knee_l=(-0.2, 1.0, 0.0))),
+    (25, P(pelvis=(0.0, 0.0, 0.840), spine=(-6, 0, 0),
+           hand_r=(0.26, 0.24, 1.14), hand_l=(-0.24, 0.26, 1.12),
+           foot_r=(0.24, -0.20, 0.104), foot_l=(-0.20, 0.12, 0.104))),
+    (30, pose(STAND)),
+    (42, P()),
+]
+CLIPS["Disaster_Kick_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Shoved off a step.
+    (5,  P(pelvis=(0.0, -0.08, 0.830), spine=(8, 0, 0), head=(6, 0, 0),
+           hand_r=(0.22, 0.26, 1.12), hand_l=(-0.20, 0.28, 1.10),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.23, -0.24, 0.104), foot_l=(-0.19, 0.10, 0.104))),
+    (12, P(spine=(-6, 0, 0), head=(6, 0, 0),
+           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08),
+           fist_r=0.6, fist_l=0.6)),
+] + _back_fall(18, 42, pelvis_hit=0.90, twist=-40)
+
+# The delayed vertical suplex, 72 frames / 2.4 s. Front facelock, his arm
+# over Cody's neck; lifted straight up until he is upside down and vertical
+# -- and HELD there, a full second, which is the "delayed" (and the point:
+# Cody plays to the crowd with a man upside down over him); then Cody falls
+# back and the man goes over the top, flat on his back beyond Cody's head.
+# The victim's inversion is bone pose in his own body frame (_body), keyed in
+# steps no wider than 55 degrees; his root carries him over Cody's
+# (paired_recipes.gd grapple_vertical_suplex).
+_SUPLEX_ATK_HOLD = P(pelvis=(0.0, -0.04, 0.900), hips=(2, 0, 0), spine=(12, 0, 0),
+                     head=(4, 0, 0),
+                     hand_r=(0.06, 0.16, 1.56), hand_l=(-0.12, 0.14, 1.52),
+                     elbow_r=(0.7, -0.2, 0.2), elbow_l=(-0.7, -0.2, 0.2),
+                     fist_r=0.8, fist_l=0.8,
+                     foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["Vertical_Suplex_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # The front facelock, the other hand in his tights.
+    (6,  _facelock(0.800, hand_l=(-0.10, 0.44, 0.96), elbow_l=(-0.7, -0.2, -0.6))),
+    # Sits into the lift.
+    (12, P(pelvis=(0.0, 0.02, 0.720), hips=(-8, 0, 0), spine=(-10, 0, 0),
+           head=(-4, 0, 0),
+           hand_r=(0.06, 0.34, 1.24), hand_l=(-0.10, 0.30, 1.00),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.06, 0.104), foot_l=(-0.24, 0.08, 0.104))),
+    # Driving him up.
+    (17, P(pelvis=(0.0, -0.02, 0.880), hips=(4, 0, 0), spine=(8, 0, 0),
+           head=(-2, 0, 0),
+           hand_r=(0.05, 0.22, 1.46), hand_l=(-0.12, 0.20, 1.40),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))),
+    (21, dict(_SUPLEX_ATK_HOLD)),
+    # The hold: a slow shift of the weight, chin up, the building counting.
+    (36, dict(_SUPLEX_ATK_HOLD, pelvis=(0.0, -0.05, 0.895), spine=(14, 0, 0),
+              head=(8, 0, 0))),
+    (50, dict(_SUPLEX_ATK_HOLD)),
+    # Over backward, taking him with him.
+    (55, dict(pelvis=(0.0, -0.20, 0.620), hips=(40, 0, 0), spine=(10, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.20, -0.10, 1.30), hand_l=(-0.20, -0.10, 1.30),
+              fist_r=0.6, fist_l=0.6,
+              foot_r=(0.18, 0.40, 0.104), foot_l=(-0.18, 0.36, 0.104))),
+    (59, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
+] + _get_up(64, 72, lying=True)
+
+# The victim's arms and legs while he is carried upside down: hugging round
+# Cody, legs long -- given in the BODY frame, so they turn with him.
+_SUPLEX_LIMBS = dict(spine=(-6, 0, 0), head=(-8, 0, 0),
+                     hand_r=(0.30, 0.30, 0.30), hand_l=(-0.30, 0.30, 0.30),
+                     elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                     fist_r=0.4, fist_l=0.4,
+                     foot_r=(0.12, 0.04, -0.82), foot_l=(-0.12, 0.02, -0.82),
+                     knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+CLIPS["Vertical_Suplex_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Bent into the facelock, his right arm over Cody's neck.
+    (6,  pose(VICTIM_BENT, hand_r=(0.12, 0.46, 1.30), elbow_r=(0.6, -0.3, 0.2))),
+    # Off his feet.
+    (12, _body((-55, 0, 0), (0.0, 0.04, 1.080), **dict(_TUCK_LEGS, spine=(-10, 0, 0),
+               head=(-8, 0, 0), hand_r=(0.30, 0.30, 0.40), hand_l=(-0.30, 0.30, 0.40),
+               fist_r=0.4, fist_l=0.4))),
+    (16, _body((-110, 0, 0), (0.0, 0.08, 1.600), **_SUPLEX_LIMBS)),
+    # Straight up and down, upside down over him.
+    (20, _body((-165, 0, 0), (0.0, 0.10, 2.050), **_SUPLEX_LIMBS)),
+    (36, _body((-168, 0, 0), (0.0, 0.10, 2.060), **_SUPLEX_LIMBS)),
+    (50, _body((-165, 0, 0), (0.0, 0.10, 2.050), **_SUPLEX_LIMBS)),
+    # Over the top.
+    (54, _body((-215, 0, 0), (0.0, 0.10, 1.700), **_SUPLEX_LIMBS)),
+    (57, _body((-250, 0, 0), (0.0, 0.00, 0.900), **dict(_SUPLEX_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # Flat on his back beyond Cody's head -- head toward him, which is
+    # SUPINE_AWAY (MoveDef.defender_lands_head_away).
+    (59, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.220))),
+    (72, dict(SUPINE_AWAY)),
+]
+
+# The Alabama Slam, 60 frames / 2.0 s. He ducks in, and the man is hoisted
+# upside down over his shoulders, hanging down his back, legs held at
+# Cody's shoulders; a beat there; then Cody heaves him back up over the top
+# and slams him down in front, back first, and follows him down bent over
+# the legs. The victim's whole turn is one direction (pitch rising, -150 to
+# +90), keyed in 50-60 degree steps in his body frame; his root travels from
+# in front of Cody to under him and out in front again.
+_ALA_LIMBS = dict(spine=(-8, 0, 0), head=(-10, 0, 0),
+                  hand_r=(0.30, 0.20, 0.36), hand_l=(-0.30, 0.20, 0.36),
+                  elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                  fist_r=0.3, fist_l=0.3,
+                  foot_r=(0.14, 0.30, -0.46), foot_l=(-0.14, 0.30, -0.48),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+_ALA_HOLD = P(pelvis=(0.0, 0.0, 0.860), spine=(4, 0, 0), head=(6, 0, 0),
+              hand_r=(0.22, 0.08, 1.56), hand_l=(-0.22, 0.08, 1.56),
+              elbow_r=(0.8, -0.3, 0.0), elbow_l=(-0.8, -0.3, 0.0),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["Alabama_Slam_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Ducks in under him, arms round the thighs.
+    (7,  P(pelvis=(0.0, 0.12, 0.660), hips=(-30, 0, 0), spine=(-30, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.20, 0.44, 0.90), hand_l=(-0.20, 0.44, 0.90),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.16, 0.104))),
+    # Up, the man over his shoulders.
+    (14, dict(_ALA_HOLD)),
+    (30, dict(_ALA_HOLD, spine=(6, 0, 0), head=(10, 0, 0))),
+    # The heave: up and over the top.
+    (35, P(pelvis=(0.0, 0.02, 0.900), hips=(4, 0, 0), spine=(10, 0, 0),
+           head=(8, 0, 0),
+           hand_r=(0.22, 0.10, 1.74), hand_l=(-0.22, 0.10, 1.74),
+           fist_r=0.8, fist_l=0.8)),
+    # Down with him, bent over the legs.
+    (40, P(pelvis=(0.0, 0.12, 0.620), hips=(-30, 0, 0), spine=(-38, 0, 0),
+           head=(-14, 0, 0),
+           hand_r=(0.24, 0.60, 0.52), hand_l=(-0.24, 0.60, 0.52),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.22, 0.104))),
+    (46, P(pelvis=(0.0, 0.06, 0.760), hips=(-12, 0, 0), spine=(-24, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.24, 0.40, 0.70), hand_l=(-0.24, 0.40, 0.70))),
+    (60, P()),
+]
+CLIPS["Alabama_Slam_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Bent over the man ducking under him.
+    (7,  pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.860), hips=(-50, 0, 0))),
+    (10, _body((-100, 0, 0), (0.0, 0.04, 1.250), **_ALA_LIMBS)),
+    # Upside down down his back, knees hooked over his shoulders.
+    (14, _body((-150, 0, 0), (0.0, 0.00, 1.560), **_ALA_LIMBS)),
+    (30, _body((-148, 0, 0), (0.0, 0.00, 1.570), **_ALA_LIMBS)),
+    # Heaved back up and over the top of him.
+    (33, _body((-100, 0, 0), (0.0, -0.04, 1.720), **_ALA_LIMBS)),
+    (35, _body((-45, 0, 0), (0.0, -0.08, 1.860), **_ALA_LIMBS)),
+    (37, _body((10, 0, 0), (0.0, -0.10, 1.760), **dict(_ALA_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    (39, _body((60, 0, 0), (0.0, -0.10, 1.050), **dict(_ALA_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # Back first, head away from Cody: SUPINE_AWAY.
+    (41, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.230))),
+    (46, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (60, dict(SUPINE_AWAY)),
+]
+
+
+# The Figure-Four leglock, 180 frames / 6.0 s, played by the two SUBMISSION_*
+# states rather than GrappleRig: the man is already down, and
+# WrestlerController._place_figure_four() stands Cody at his feet facing up
+# his body, FIGURE_FOUR_BEHIND_FEET_M (1.0 m) back from his root on his own
+# heading. So in Cody's frame the downed man's pelvis is at fwd +1.00 and
+# his boots (Down_Supine's, at his own fwd -0.50) are at +0.50.
+#
+# The hold as Cody works it (refs/cody_moveset.md): grab both ankles, lift,
+# cross the man's LEFT shin over his right knee -- the "4" -- step in, sit
+# down and lie back with his own right leg hooked over the crossed ankle,
+# then bridge his hips to put the pressure on. Locked by frame 62 (2.07 s);
+# MoveDef.startup_frames is that, and the struggle only starts from there.
+# Frames 62-180 are the pressure: three bridges, the victim sitting up to
+# reach for the leg and slapping the mat between them. Not looped -- the
+# hold can outlast the clip, and the last frame is Cody flat and hooked.
+_F4_HOOK = dict(foot_r=(-0.08, 0.70, 0.42), foot_l=(0.20, 0.70, 0.14),
+                knee_r=(0.0, 0.2, 1.0), knee_l=(0.3, 0.2, 1.0), free_feet=True)
+_F4_BACK = dict(ATK_BACK, **_F4_HOOK)
+_F4_BRIDGE = dict(_F4_BACK, pelvis=(0.0, 0.02, 0.330), hips=(66, 0, 0),
+                  spine=(10, 0, 0), head=(-26, 0, 0),
+                  hand_r=(0.42, -0.24, 0.08), hand_l=(-0.42, -0.24, 0.08),
+                  foot_r=(-0.08, 0.68, 0.46), foot_l=(0.20, 0.68, 0.16))
+CLIPS["Figure_Four_Attacker"] = [
+    (0,  P()),
+    # Down over his boots, a hand on each ankle.
+    (12, P(pelvis=(0.0, -0.08, 0.620), hips=(-44, 0, 0), spine=(-30, 0, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.14, 0.46, 0.20), hand_l=(-0.14, 0.44, 0.20),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.05, 0.104))),
+    # Up with both legs.
+    (24, P(pelvis=(0.0, -0.02, 0.800), hips=(-14, 0, 0), spine=(-16, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.10, 0.44, 0.54), hand_l=(-0.10, 0.42, 0.54),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.22, -0.10, 0.104), foot_l=(-0.20, 0.02, 0.104))),
+    # The cross: his left shin hauled over his right knee.
+    (36, P(pelvis=(0.0, 0.00, 0.780), hips=(-12, 10, 0), spine=(-18, 6, 0),
+           head=(-12, 0, 0),
+           hand_r=(-0.06, 0.48, 0.50), hand_l=(-0.16, 0.36, 0.50),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.18, 0.02, 0.104), foot_l=(-0.20, 0.04, 0.104))),
+    # Stepping in and sitting down through it, still holding the 4.
+    (48, dict(pelvis=(0.0, -0.06, 0.460), hips=(22, 0, 0), spine=(-14, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(-0.06, 0.46, 0.40), hand_l=(-0.16, 0.34, 0.38),
+              elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.7, -0.3, -0.5),
+              fist_r=0.7, fist_l=0.7,
+              foot_r=(0.10, 0.40, 0.18), foot_l=(0.02, 0.44, 0.104),
+              knee_r=(0.2, 0.6, 0.8), knee_l=(0.2, 0.6, 0.8))),
+    # Seated, his right leg coming over the crossed ankle.
+    (56, dict(ATK_SEAT, pelvis=(0.0, 0.0, 0.210), hips=(24, 0, 0),
+              hand_r=(0.30, -0.12, 0.10), hand_l=(-0.30, -0.12, 0.10),
+              **_F4_HOOK)),
+    # Flat on his back: locked.
+    (62, dict(_F4_BACK)),
+    (74, dict(_F4_BRIDGE)),
+    (86, dict(_F4_BACK, head=(-18, 0, 0))),
+    (108, dict(_F4_BRIDGE, head=(-30, 20, 0))),
+    (122, dict(_F4_BACK, hand_r=(0.48, -0.10, 0.30))),
+    (128, dict(_F4_BACK, hand_r=(0.50, -0.12, 0.08))),
+    (150, dict(_F4_BRIDGE, head=(-24, -16, 0))),
+    (164, dict(_F4_BACK)),
+    (180, dict(_F4_BACK)),
+]
+# The man in it. Down_Supine's frame: head +fwd, boots at fwd -0.50, and
+# supine, so his RIGHT side is at negative `right`. His left leg is the one
+# crossed: its ankle over his right knee, the knee falling out to his left.
+_F4_LEGS = dict(foot_r=(-0.10, -0.80, 0.34), foot_l=(-0.12, -0.46, 0.44),
+                knee_r=(-0.2, 0.0, 1.0), knee_l=(1.0, 0.0, 0.9), free_feet=True)
+_F4_VICTIM = S(**_F4_LEGS)
+CLIPS["Figure_Four_Defender"] = [
+    (0,  S()),
+    (12, S(foot_r=(-0.15, -0.56, 0.16), foot_l=(0.14, -0.54, 0.16),
+           free_feet=True)),
+    # Hauled up by the ankles.
+    (24, S(foot_r=(-0.10, -0.58, 0.50), foot_l=(0.10, -0.56, 0.50),
+           knee_r=(-0.3, 0.2, 1.0), knee_l=(0.3, 0.2, 1.0), free_feet=True)),
+    # Crossed.
+    (36, S(spine=(-12, 0, 0), head=(-20, 0, 0),
+           foot_r=(-0.10, -0.64, 0.46), foot_l=(-0.12, -0.50, 0.48),
+           knee_r=(-0.3, 0.2, 1.0), knee_l=(1.0, 0.0, 0.6), free_feet=True)),
+    (50, S(spine=(-18, 0, 0), head=(-22, 0, 0),
+           foot_r=(-0.10, -0.80, 0.30), foot_l=(-0.10, -0.50, 0.34),
+           knee_r=(-0.2, 0.0, 1.0), knee_l=(1.0, 0.0, 0.4), free_feet=True)),
+    (62, dict(_F4_VICTIM)),
+    # The first bridge: he comes up off the mat, a hand thrown up.
+    (74, pose(_F4_VICTIM, spine=(-34, 0, 0), head=(-22, 0, 0),
+              hand_r=(-0.34, 0.26, 0.46), hand_l=(0.36, 0.10, 0.10))),
+    (80, pose(_F4_VICTIM, spine=(-26, 0, 0), head=(-14, 0, 0),
+              hand_r=(-0.44, 0.10, 0.08))),
+    # Head thrown back into the mat.
+    (92, pose(_F4_VICTIM, spine=(-4, 0, 0), head=(6, 0, -16))),
+    # Sitting up, reaching down for the leg.
+    (108, pose(_F4_VICTIM, spine=(-42, 0, 0), head=(-26, 0, 0),
+               hand_r=(-0.16, -0.26, 0.36), hand_l=(0.16, -0.24, 0.36))),
+    (122, pose(_F4_VICTIM, spine=(-14, 0, 0), head=(-12, 0, 8),
+               hand_l=(0.40, 0.10, 0.36))),
+    (128, pose(_F4_VICTIM, spine=(-12, 0, 0), head=(-10, 0, 8),
+               hand_l=(0.44, 0.12, 0.08))),
+    (140, pose(_F4_VICTIM, spine=(-4, 0, 0), head=(4, 0, 18))),
+    (150, pose(_F4_VICTIM, spine=(-36, 0, 0), head=(-24, 0, 0),
+               hand_r=(-0.16, -0.22, 0.34), hand_l=(0.16, -0.20, 0.34))),
+    (166, pose(_F4_VICTIM, spine=(-10, 0, 0), head=(-10, 0, -8))),
+    (180, dict(_F4_VICTIM)),
+]
+
+# === Cody's dives (core/match/dive_spot.gd) ===============================
+#
+# A set piece off the ropes, played by DiveSpot with both men's physics
+# frozen, like the entrances: every clip here is keyed in WORLD space
+# relative to where it starts (_world_clip), and the director moves the root
+# along the clip's root line -- so a hand on the apron, a foot on the rope
+# and a boot on the floor stay where the ring puts them. The ring, from
+# RingBuilder/ArenaBuilder: the mat at 0, the ropes 3.0 m out (middle 0.85,
+# top 1.2), the apron to 3.2, the floor 1.094 below the mat.
+FLOOR_DROP = 1.094
+
+
+def _on_floor(pose_dict, fwd):
+    """A standing pose moved down to the floor and `fwd` along."""
+    out = dict(pose_dict)
+    for k in ("pelvis", "hand_r", "hand_l", "foot_r", "foot_l"):
+        if out.get(k):
+            x, y, z = out[k]
+            out[k] = (x, y + fwd, z - FLOOR_DROP)
+    return out
+
+
+def _unified(keys):
+    """Every key given every field any key has: a field missing from a key
+    takes the nearest earlier key's value (or the first later one's), so
+    _world_clip, which walks the first key's fields, drops none of them."""
+    names = []
+    for _, k in keys:
+        for n in k:
+            if n not in names:
+                names.append(n)
+    out = []
+    for i, (f, k) in enumerate(keys):
+        full = dict(k)
+        for n in names:
+            if n in full:
+                continue
+            prev = [kk[n] for _, kk in keys[:i][::-1] if n in kk]
+            nxt = [kk[n] for _, kk in keys[i + 1:] if n in kk]
+            full[n] = (prev or nxt)[0]
+        out.append((f, full))
+    return out
+
+
+HURT = P(pelvis=(0.0, -0.02, 0.840), hips=(-10, 0, 0), spine=(-16, 0, 0),
+         head=(-12, 0, 0),
+         hand_r=(0.20, 0.22, 1.10), hand_l=(-0.18, 0.26, 1.20),
+         fist_r=0.3, fist_l=0.3)
+
+# Out through the ropes, hurt, facing them: bent over the middle rope, sliding
+# through between it and the top rope, hands down to the floor, the legs
+# coming over, landing crouched on the floor, standing. 46 frames; the root
+# travels 1.55 m out and 1.094 down (his start: 2.35 m out, facing the ropes).
+CLIPS["Roll_Out_Ropes"] = _world_clip(46, (1.55, -FLOOR_DROP), _unified([
+    (0,  pose(HURT)),
+    (10, P(pelvis=(0.0, 0.30, 0.960), hips=(-50, 0, 0), spine=(-30, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.30, 0.62, 1.20), hand_l=(-0.30, 0.62, 1.20),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.15, 0.05, 0.104), foot_l=(-0.15, 0.10, 0.104))),
+    (18, _body((-82, 0, 0), (0.0, 0.85, 1.00),
+               hand_r=(0.25, 0.30, 0.75), hand_l=(-0.25, 0.30, 0.75),
+               foot_r=(0.14, 0.10, -0.80), foot_l=(-0.14, 0.05, -0.84),
+               knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True,
+               fist_r=0.2, fist_l=0.2)),
+    (26, _body((-60, 0, 0), (0.0, 1.25, 0.20),
+               hand_r=(0.25, 0.40, 1.40), hand_l=(-0.25, 0.40, 1.40),
+               foot_r=(0.14, 0.40, -0.70), foot_l=(-0.14, 0.30, -0.74),
+               knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.3), free_feet=True,
+               fist_r=0.1, fist_l=0.1)),
+    (34, _on_floor(pose(CROUCH), 1.45)),
+    (46, _on_floor(pose(HURT), 1.55)),
+]))
+
+# The tope suicida: the run's plant at 1.3 m out, head first between the
+# middle and top ropes, into the chest of the man standing on the floor at
+# 3.9 m, both down on it; Cody rolls through to his knees and up. 60 frames;
+# contact on frame 14 (TOPE_CONTACT). Root 2.6 m out, 1.094 down.
+_DIVE = dict(hand_r=(0.18, 0.30, 1.80), hand_l=(-0.18, 0.30, 1.80),
+             foot_r=(0.12, -0.05, -0.86), foot_l=(-0.12, -0.10, -0.88),
+             knee_r=(0.1, -1.0, 0.0), knee_l=(-0.1, -1.0, 0.0),
+             fist_r=0.4, fist_l=0.4, free_feet=True,
+             spine=(-6, 0, 0), head=(20, 0, 0))
+CLIPS["Tope_Attacker"] = _world_clip(60, (2.6, -FLOOR_DROP), _unified([
+    (0,  pose(RUN_B, pelvis=(0.0, 0.10, 0.740), hips=(-24, 0, 0))),
+    (4,  _body((-55, 0, 0), (0.0, 0.45, 1.00), **_DIVE)),
+    (9,  _body((-92, 0, 0), (0.0, 1.35, 1.05), **_DIVE)),
+    (14, _body((-112, 0, 0), (0.0, 1.95, 0.55), **_DIVE)),
+    (20, _body((-88, 0, 0), (0.0, 2.45, 0.25 - FLOOR_DROP),
+               hand_r=(0.40, 0.60, 1.20), hand_l=(-0.40, 0.60, 1.20),
+               foot_r=(0.16, -0.10, -0.86), foot_l=(-0.16, -0.12, -0.88),
+               knee_r=(0.1, -1.0, 0.0), knee_l=(-0.1, -1.0, 0.0),
+               free_feet=True, fist_r=0.1, fist_l=0.1)),
+    (36, _on_floor(pose(ONE_KNEE), 2.55)),
+    (48, _on_floor(pose(CROUCH), 2.60)),
+    (60, _on_floor(P(), 2.60)),
+]))
+# Standing hurt on the floor facing the ring; taken in the chest on frame 14,
+# flat on his back away from the ring, down, and up again. 170 frames.
+CLIPS["Tope_Defender"] = [
+    (0,  pose(HURT)),
+    (8,  pose(HURT, head=(-2, 0, 0), spine=(-6, 0, 0))),
+] + _back_fall(14, 44, pelvis_hit=0.84) + [
+    (110, dict(SUPINE_AWAY)),
+] + _get_up(118, 170, lying=True)
+
+# Back in under the bottom rope from the floor: hands up onto the apron,
+# prone and rolled in under the rope, to a knee on the mat, up. 60 frames;
+# root 1.3 m in, 1.094 up (his start: on the floor 3.6 m out, facing in).
+_PRONE_IN = dict(hand_r=(0.30, 0.25, 0.60), hand_l=(-0.30, 0.25, 0.60),
+                 foot_r=(0.14, 0.05, -0.84), foot_l=(-0.14, 0.02, -0.86),
+                 knee_r=(0.1, -1.0, 0.0), knee_l=(-0.1, -1.0, 0.0),
+                 free_feet=True, fist_r=0.2, fist_l=0.2)
+CLIPS["Roll_In"] = _world_clip(60, (1.3, FLOOR_DROP), _unified([
+    (0,  pose(HURT)),
+    (10, P(pelvis=(0.0, 0.10, 0.800), hips=(-40, 0, 0), spine=(-20, 0, 0),
+           hand_r=(0.25, 0.45, FLOOR_DROP + 0.02), hand_l=(-0.25, 0.45, FLOOR_DROP + 0.02),
+           fist_r=0.1, fist_l=0.1)),
+    (20, _body((-86, 0, 0), (0.0, 0.55, FLOOR_DROP + 0.18), **_PRONE_IN)),
+    (30, _body((-86, 0, 0), (0.0, 1.05, FLOOR_DROP + 0.18), **_PRONE_IN)),
+    (44, _shifted(ONE_KNEE, 1.25, FLOOR_DROP)),
+    (60, _shifted(P(), 1.30, FLOOR_DROP)),
+]))
+
+# Up onto the apron from the floor: hands on its edge, a knee up, a foot up,
+# standing on it holding the top rope. 36 frames; root 0.45 in, 1.094 up.
+CLIPS["Apron_Climb"] = _world_clip(36, (0.45, FLOOR_DROP), _unified([
+    (0,  P()),
+    (8,  P(pelvis=(0.0, 0.10, 0.800), hips=(-24, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.28, 0.40, FLOOR_DROP + 0.02), hand_l=(-0.28, 0.40, FLOOR_DROP + 0.02),
+           fist_r=0.2, fist_l=0.2)),
+    (16, P(pelvis=(0.0, 0.22, 1.300), hips=(-40, 0, 0), spine=(-20, 0, 0),
+           hand_r=(0.28, 0.50, FLOOR_DROP + 0.30), hand_l=(-0.28, 0.50, FLOOR_DROP + 0.30),
+           foot_r=(0.15, 0.40, FLOOR_DROP + 0.10), knee_r=(0.1, 1.0, 0.2),
+           foot_l=(-0.15, 0.05, 0.104), free_feet=True,
+           fist_r=0.6, fist_l=0.6)),
+    (26, P(pelvis=(0.0, 0.40, FLOOR_DROP + 0.70), hips=(-20, 0, 0), spine=(-10, 0, 0),
+           hand_r=(0.30, 0.55, FLOOR_DROP + 1.20), hand_l=(-0.30, 0.55, FLOOR_DROP + 1.20),
+           foot_r=(0.15, 0.42, FLOOR_DROP + 0.104), foot_l=(-0.15, 0.40, FLOOR_DROP + 0.20),
+           free_feet=True, fist_r=0.8, fist_l=0.8)),
+    (36, _shifted(P(hand_r=(0.30, 0.10, 1.20), hand_l=(-0.30, 0.10, 1.20),
+                    fist_r=0.8, fist_l=0.8), 0.45, FLOOR_DROP)),
+]))
+
+# The springboard Disaster Kick: from the apron facing in, a foot up onto the
+# middle rope, springing off it, spinning a full turn in the air, the right
+# leg sweeping round into the head of the man standing inside at 1.95 m out
+# on frame 24 (SPRINGBOARD_CONTACT), landing inside and standing. 48 frames;
+# root 0.85 in. The spin is bone pose, keyed in steps of at most 60 degrees.
+def _spring_air(yaw, pelvis, **over):
+    base = dict(pelvis=pelvis, hips=(-6, yaw, 0), spine=(-6, 0, 0), head=(4, 0, 0),
+                hand_r=(0.30, 0.0, 0.0), hand_l=(-0.30, 0.0, 0.0),
+                fist_r=0.7, fist_l=0.7)
+    arms = _body((-6, yaw, 0), pelvis,
+                 hand_r=(0.45, 0.05, 0.40), hand_l=(-0.45, 0.05, 0.40),
+                 foot_r=(0.16, 0.20, -0.45), foot_l=(-0.16, 0.10, -0.50),
+                 knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), free_feet=True)
+    base.update({k: v for k, v in arms.items() if k not in ("hips", "pelvis")})
+    base.update(over)
+    return base
+
+
+# The hands are ON the top rope and the boot ON the middle one, 0.05 in front
+# of the root (the apron stands 0.05 outside the rope line): a boot 0.14 in
+# never touched the rope, and with live ropes (core/ring/ring_ropes.gd) a
+# springboard that does not press the rope down reads as a man jumping off
+# nothing. Weighted, the boot takes the middle rope ~0.12 m down.
+CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
+    (0,  P(hand_r=(0.30, 0.06, 1.25), hand_l=(-0.30, 0.06, 1.25),
+           fist_r=0.8, fist_l=0.8)),
+    # A boot onto the middle rope beside the post-side hand.
+    (8,  P(pelvis=(0.0, 0.05, 1.050), hips=(-10, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.30, 0.08, 1.24), hand_l=(-0.30, 0.08, 1.24),
+           foot_r=(0.12, 0.06, 0.80), knee_r=(0.1, 1.0, 0.4),
+           foot_l=(-0.14, -0.02, 0.104), free_feet=True,
+           fist_r=0.8, fist_l=0.8)),
+    # Sprung.
+    (13, _spring_air(0, (0.0, 0.30, 1.75))),
+    (16, _spring_air(-60, (0.0, 0.40, 1.85))),
+    (18, _spring_air(-120, (0.0, 0.48, 1.88))),
+    (20, _spring_air(-180, (0.0, 0.55, 1.86))),
+    (22, _spring_air(-240, (0.0, 0.60, 1.80))),
+    # CONTACT: his right side to the man, the leg straight into the head.
+    (24, _spring_air(-270, (0.0, 0.62, 1.72),
+                     foot_r=(0.0, 1.20, 1.72), knee_r=(0.0, 0.3, 1.0))),
+    (28, _spring_air(-320, (0.0, 0.72, 1.40))),
+    (32, _spring_air(-360, (0.0, 0.80, 1.05))),
+    (38, _shifted(pose(CROUCH), 0.85, 0.0)),
+    (48, _shifted(P(), 0.85, 0.0)),
+]))
+
+# The face-off before the bell: nose to nose in the middle of the ring, square
+# on, chest up and chin down, arms hanging loose a hand's width off the hips,
+# hands half closed. Nothing guarded about it -- the owner's note was that the
+# grapple crouch (Idle_Ready) read as ridiculous here; a stare-down is two men
+# standing TALL. Alive, not frozen: a slow breath lifts the chest and the
+# head settles a touch lower on the exhale. 90 frames, looping.
+FACE_OFF = dict(
+    pelvis=(0.0, 0.01, 0.905), hips=(0, 0, 0), spine=(3, 0, 0), head=(-7, 0, 0),
+    hand_r=(0.27, 0.00, 0.93), hand_l=(-0.27, 0.00, 0.93),
+    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    fist_r=0.55, fist_l=0.55,
+    foot_r=(0.17, -0.02, 0.104), foot_l=(-0.17, 0.02, 0.104),
+)
+CLIPS["Face_Off"] = [
+    (0,  FACE_OFF),
+    (40, pose(FACE_OFF, pelvis=(0.0, 0.01, 0.911), spine=(6, 0, 0), head=(-5, 0, 0),
+              hand_r=(0.28, 0.00, 0.94), hand_l=(-0.28, 0.00, 0.94))),
+    (65, pose(FACE_OFF, head=(-8, 1, 0))),
+    (90, FACE_OFF),
+]
+
+
+# === The referee (core/match/referee_actor.gd) ===========================
+#
+# Aubrey Edwards (assets/characters/aubrey_edwards.glb) is rigged on this same
+# skeleton, so her clips are authored here like everyone else's. Real refs,
+# watched off broadcast footage (gauntlet/refs/referee.md): upright and still
+# while the two men are on their feet, bent with the hands on the knees when
+# the action goes to the mat, and for a cover DOWN -- on both knees beside the
+# pinned man's shoulders, chest low, the left hand posted and the right arm
+# coming high and slapping the canvas on each count. Then up, the arm waved
+# over the head for the bell, and the winner's hand raised.
+
+# Upright between exchanges: square, weight even, arms loose.
+REF_STAND = dict(
+    pelvis=(0.0, 0.0, 0.900), hips=(0, 0, 0), spine=(-4, 0, 0), head=(-4, 0, 0),
+    hand_r=(0.24, 0.04, 0.90), hand_l=(-0.24, 0.04, 0.90),
+    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    fist_r=0.3, fist_l=0.3,
+    foot_r=(0.15, -0.02, 0.104), foot_l=(-0.15, 0.02, 0.104),
+)
+# Watching the mat: knees bent, chest over them, hands on the thighs just
+# above the knee.
+REF_WATCH = dict(
+    pelvis=(0.0, -0.06, 0.780), hips=(-10, 0, 0), spine=(-28, 0, 0), head=(18, 0, 0),
+    hand_r=(0.15, 0.26, 0.64), hand_l=(-0.15, 0.26, 0.64),
+    elbow_r=(1.0, -0.2, 0.0), elbow_l=(-1.0, -0.2, 0.0),
+    fist_r=0.1, fist_l=0.1,
+    foot_r=(0.19, 0.0, 0.104), foot_l=(-0.19, 0.0, 0.104),
+)
+# Down for the count: both knees on the canvas, chest low over them, the
+# head up to see the shoulders; the left hand posted, the right ready.
+REF_LOW = dict(
+    pelvis=(0.0, 0.0, 0.420), hips=(-34, 0, 0), spine=(-50, 0, 0), head=(46, 0, 0),
+    hand_r=(0.24, 0.50, 0.10), hand_l=(-0.22, 0.50, 0.07),
+    elbow_r=(1.0, 0.0, 0.2), elbow_l=(-1.0, 0.0, 0.2),
+    fist_r=0.1, fist_l=0.1,
+    foot_r=(0.15, -0.42, 0.08), foot_l=(-0.15, -0.42, 0.08),
+    knee_r=(0.0, 1.0, -0.4), knee_l=(0.0, 1.0, -0.4),
+)
+# Halfway down (and up): one knee going to the mat.
+REF_DROP = pose(REF_WATCH, pelvis=(0.0, -0.10, 0.600), spine=(-36, 0, 0),
+                hand_r=(0.20, 0.40, 0.40), hand_l=(-0.20, 0.42, 0.36),
+                foot_r=(0.16, -0.30, 0.10), knee_r=(0.0, 1.0, -0.6),
+                # The left foot already coming back off the canvas, so the
+                # kneel that follows never drags it through (_REF_KNEEL_L).
+                foot_l=(-0.18, -0.10, 0.12))
+
+CLIPS["Ref_Stand"] = [
+    (0,  REF_STAND),
+    (45, pose(REF_STAND, pelvis=(0.0, 0.0, 0.905), spine=(-2, 0, 0), head=(-2, 3, 0))),
+    (90, REF_STAND),
+]
+CLIPS["Ref_Watch"] = [
+    (0,  REF_WATCH),
+    (45, pose(REF_WATCH, pelvis=(0.0, -0.06, 0.770), head=(20, -4, 0))),
+    (90, REF_WATCH),
+]
+# The left foot on its way back under her as the second knee goes down: just
+# off the canvas (z 0.12), which keeps the rig's flat-sole rule on it so every
+# key holds the same foot angle and nothing pitches the toes into the mat. Between REF_DROP and REF_LOW the solver otherwise
+# swings the trailing foot through the canvas (pose lint: ball_l 0.15 m below
+# the mat at mid-drop) -- the knee hint flips from forward to down while the
+# foot travels 0.42 m back.
+_REF_KNEEL_L = pose(REF_LOW, pelvis=(0.0, -0.06, 0.500), spine=(-44, 0, 0),
+                    foot_l=(-0.16, -0.28, 0.12), knee_l=(0.0, 1.0, -0.2))
+# 14 frames: from the watch crouch to REF_LOW.
+CLIPS["Ref_Count_Down"] = [
+    (0,  REF_WATCH),
+    (6,  REF_DROP),
+    (10, _REF_KNEEL_L),
+    (14, REF_LOW),
+]
+# 20 frames, one count: the arm comes up high, and the palm hits the canvas
+# on frame 12 -- RefereeActor starts it 12 frames before each count tick.
+CLIPS["Ref_Slap"] = [
+    (0,  REF_LOW),
+    (7,  pose(REF_LOW, spine=(-38, 0, 0), hand_r=(0.32, 0.36, 1.02), elbow_r=(1.0, 0.0, 0.6),
+              fist_r=0.0)),
+    (12, pose(REF_LOW, spine=(-56, 0, 0), head=(52, 0, 0), hand_r=(0.24, 0.56, 0.05), fist_r=0.0)),
+    (15, pose(REF_LOW, spine=(-53, 0, 0), hand_r=(0.25, 0.52, 0.14), fist_r=0.0)),
+    (20, REF_LOW),
+]
+CLIPS["Ref_Count_Up"] = [
+    (0,  REF_LOW),
+    (4,  _REF_KNEEL_L),
+    (8,  REF_DROP),
+    (16, REF_STAND),
+]
+# 36 frames: the bell -- the right arm up and waved over the head twice.
+_BELL_UP = pose(REF_STAND, spine=(2, 0, 0), head=(6, 0, 0),
+                hand_r=(0.10, 0.10, 1.95), elbow_r=(1.0, 0.0, 0.3), fist_r=0.0)
+CLIPS["Ref_Call_Bell"] = [
+    (0,  REF_STAND),
+    (6,  _BELL_UP),
+    (12, pose(_BELL_UP, hand_r=(0.42, 0.10, 1.86))),
+    (18, _BELL_UP),
+    (24, pose(_BELL_UP, hand_r=(0.42, 0.10, 1.86))),
+    (30, _BELL_UP),
+    (36, REF_STAND),
+]
+# 60 frames, looping from 10: the winner's hand -- her right arm straight up
+# beside him, her left at her side, square to the hard camera.
+_RAISE = pose(REF_STAND, spine=(3, 0, 0), head=(4, 6, 0),
+              hand_r=(0.30, 0.06, 1.93), elbow_r=(1.0, 0.0, 0.2), fist_r=0.6)
+CLIPS["Ref_Raise_Hand"] = [
+    (0,  REF_STAND),
+    (10, _RAISE),
+    (35, pose(_RAISE, hand_r=(0.31, 0.07, 1.96), head=(4, 10, 0))),
+    (60, _RAISE),
+]
+
+# Off the ropes (gauntlet/refs/ropes.md): the last stride turns him side-on,
+# the rope-side arm goes over the top rope, and his hip and ribs take the
+# middle and top ropes. The ropes give -- the pelvis carries on 0.30 m past
+# the rope line at the deepest -- and then throw him back: he pushes off the
+# outside foot, lets go of the rope and comes out running the other way.
+# 20 frames. The root stays put, 0.5 m inside the ropes, facing them; the
+# body turns through 180 degrees in bone pose, so he ends running AWAY from
+# the root's facing (the director turns the root round on a cut after it).
+REBOUND_ROPE = 0.50
+_REBOUND_RUN_OUT = dict(
+    pelvis=(0.0, -0.06, 0.800), hips=(-14, 180, 0), spine=(-18, 0, 0),
+    head=(8, 0, 0),
+    hand_r=(-0.26, -0.30, 1.04), hand_l=(0.20, -0.10, 1.00),
+    foot_r=(-0.16, -0.26, 0.104), foot_l=(0.14, 0.30, 0.20),
+    fist_r=0.7, fist_l=0.7)
+CLIPS["Rope_Rebound"] = _world_clip(20, (0.0, 0.0), _unified([
+    (0,  pose(RUN_B)),
+    # The turn: planting the rope-side foot, the other already coming round.
+    (3,  pose(RUN_B, pelvis=(0.0, 0.30, 0.820), hips=(-8, 50, 0), spine=(-8, 0, 0),
+              hand_r=(0.10, 0.52, 1.30), hand_l=(-0.22, 0.30, 1.06),
+              foot_r=(0.10, 0.40, 0.104), foot_l=(-0.10, 0.12, 0.20))),
+    # Contact: hip on the middle rope, ribs on the top, arm hooked over it.
+    (5,  P(pelvis=(0.0, REBOUND_ROPE + 0.02, 0.840), hips=(0, 90, 0),
+           spine=(4, 0, 0), head=(4, 0, 0),
+           hand_r=(0.00, REBOUND_ROPE + 0.10, 1.27), hand_l=(-0.32, 0.36, 1.08),
+           fist_r=0.9, fist_l=0.5,
+           foot_r=(0.08, 0.46, 0.104), foot_l=(-0.10, 0.16, 0.104))),
+    # Deepest: the ropes wrapped round his side, leaning back into them.
+    (8,  P(pelvis=(0.0, REBOUND_ROPE + 0.30, 0.820), hips=(0, 96, 0),
+           spine=(9, 0, 0), head=(8, 0, 0),
+           hand_r=(0.00, REBOUND_ROPE + 0.40, 1.20), hand_l=(-0.28, 0.62, 1.04),
+           fist_r=0.9, fist_l=0.5,
+           foot_r=(0.08, 0.46, 0.104), foot_l=(-0.10, 0.16, 0.104))),
+    # Thrown back: the ropes return him, still holding on.
+    (11, P(pelvis=(0.0, REBOUND_ROPE, 0.840), hips=(-6, 118, 0),
+           spine=(0, 0, 0), head=(4, 0, 0),
+           hand_r=(0.00, REBOUND_ROPE + 0.08, 1.26), hand_l=(-0.20, 0.26, 1.08),
+           fist_r=0.9, fist_l=0.6,
+           foot_r=(0.08, 0.46, 0.104), foot_l=(-0.10, 0.16, 0.104))),
+    # Off the outside foot, the hand leaving the rope.
+    (14, P(pelvis=(0.0, 0.24, 0.810), hips=(-14, 155, 0),
+           spine=(-14, 0, 0), head=(6, 0, 0),
+           hand_r=(-0.05, 0.40, 1.18), hand_l=(0.10, 0.02, 1.04),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.02, 0.30, 0.22), foot_l=(-0.06, 0.16, 0.104))),
+    (20, _REBOUND_RUN_OUT),
+]))
+
+
 # --- build ----------------------------------------------------------------
+
+# === Chain wrestling (gauntlet/refs/animation_gap.md, Phase 4) ============
+#
+# The holds two men trade out of a lock-up before anybody throws anything:
+# a side headlock, a wristlock, a go-behind to a rear waistlock. Each is one
+# LINK -- into the hold, cranked twice, the other man fights free, both square
+# up again -- 54 frames / 1.8 s, and WrestlerController strings links
+# together, the holder steering which comes next with the stick and the man
+# in it reversing to take over. Both halves are keyed against each other
+# beat for beat, on the trajectories in paired_recipes.gd:
+#
+#   frames  0-12  into the hold
+#          12-38  held: cranked at 20 and 32
+#          38-44  he fights free
+#          44-54  squared up again, about 0.9 m apart
+#
+# Frame 0 and frame 54 are both the stance, so any link follows any other.
+
+# SIDE HEADLOCK. The holder pivots in beside him and turns to face the way
+# he faces, the other man's head under his right arm at his hip; the man in
+# it is bent double beside him, pushing at his back. Held from frame 12.
+_HL_A = dict(pelvis=(0.0, 0.0, 0.830), hips=(-6, 10, 8), spine=(-16, 12, 12),
+             head=(10, 16, 0),
+             hand_r=(0.14, 0.24, 0.98), hand_l=(0.02, 0.24, 1.00),
+             elbow_r=(0.8, -0.4, 0.2), elbow_l=(-0.6, -0.3, -0.5),
+             fist_r=0.5, fist_l=0.5,
+             foot_r=(0.28, -0.10, 0.104), foot_l=(-0.20, 0.12, 0.104))
+_HL_D = dict(pelvis=(0.0, -0.12, 0.740), hips=(-40, 0, 0), spine=(-58, -8, 0),
+             head=(24, -30, 0),
+             hand_r=(0.04, 0.44, 0.70), hand_l=(-0.28, 0.34, 0.78),
+             elbow_r=(0.6, -0.3, -0.6), elbow_l=(-0.8, -0.2, -0.5),
+             fist_r=0.4, fist_l=0.3,
+             foot_r=(0.26, -0.24, 0.104), foot_l=(-0.24, -0.06, 0.104))
+
+CLIPS["Chain_Headlock_Attacker"] = [
+    (0,  P()),
+    (6,  P(pelvis=(0.0, 0.04, 0.820), hips=(-6, 20, 0), spine=(-18, 24, 0),
+           hand_r=(0.20, 0.40, 1.20), hand_l=(-0.06, 0.40, 1.16),
+           foot_r=(0.24, 0.02, 0.104), foot_l=(-0.18, 0.14, 0.104))),
+    (12, pose(_HL_A)),
+    # The crank: he sits down into it and wrenches the head up and in.
+    (20, pose(_HL_A, pelvis=(0.0, 0.0, 0.800), spine=(-22, 16, 18),
+              hand_r=(0.14, 0.22, 1.02), hand_l=(0.02, 0.22, 1.04))),
+    (26, pose(_HL_A)),
+    (32, pose(_HL_A, pelvis=(0.0, 0.0, 0.795), spine=(-24, 18, 20),
+              hand_r=(0.14, 0.22, 1.03), hand_l=(0.02, 0.22, 1.05))),
+    (38, pose(_HL_A)),
+    # Shoved off his back: grip gone, arms out, a stumble step forward.
+    (44, P(pelvis=(0.0, 0.08, 0.840), hips=(-4, 0, 0), spine=(-14, 0, 0),
+           head=(8, 0, 0),
+           hand_r=(0.30, 0.34, 1.10), hand_l=(-0.28, 0.36, 1.12), fist_r=0.3, fist_l=0.3,
+           foot_r=(0.24, 0.10, 0.104), foot_l=(-0.20, 0.30, 0.140))),
+    (54, P()),
+]
+
+CLIPS["Chain_Headlock_Defender"] = [
+    (0,  P()),
+    (6,  P(pelvis=(0.0, -0.04, 0.820), hips=(-14, 0, 0), spine=(-30, -4, 0),
+           head=(10, -16, 0),
+           hand_r=(0.14, 0.44, 1.10), hand_l=(-0.20, 0.40, 1.14),
+           foot_r=(0.26, -0.22, 0.104), foot_l=(-0.24, 0.02, 0.104))),
+    (12, pose(_HL_D)),
+    # Wrenched: his head goes lower and his feet dig in.
+    (20, pose(_HL_D, pelvis=(0.0, -0.14, 0.725), spine=(-62, -10, 0), head=(28, -34, 0))),
+    (26, pose(_HL_D)),
+    (32, pose(_HL_D, pelvis=(0.0, -0.14, 0.722), spine=(-64, -10, 0), head=(28, -34, 0))),
+    (38, pose(_HL_D, hand_l=(-0.28, 0.36, 0.86), hand_r=(-0.06, 0.42, 0.82))),
+    # Fights free: straightens up out of it, both hands driving into his back.
+    (44, P(pelvis=(0.0, -0.02, 0.830), hips=(-10, 0, 0), spine=(-22, 0, 0),
+           head=(4, 0, 0),
+           hand_r=(0.10, 0.56, 1.18), hand_l=(-0.18, 0.54, 1.18),
+           elbow_r=(0.6, -0.3, -0.6), elbow_l=(-0.6, -0.3, -0.6),
+           fist_r=0.2, fist_l=0.2,
+           foot_r=(0.26, -0.16, 0.104), foot_l=(-0.24, 0.12, 0.104))),
+    (54, P()),
+]
+
+# WRISTLOCK. The holder takes the other man's right wrist in both hands and
+# turns it over; he turns away from it, arm straight out to his right and
+# bent over it, his other hand clutching the shoulder. Held from frame 12.
+_WL_A = dict(pelvis=(0.0, 0.0, 0.840), hips=(-4, 8, 0), spine=(-14, 12, 0),
+             head=(6, 6, 0),
+             hand_r=(0.06, 0.40, 1.04), hand_l=(-0.06, 0.38, 1.02),
+             elbow_r=(0.7, -0.4, -0.5), elbow_l=(-0.7, -0.4, -0.5),
+             fist_r=0.6, fist_l=0.6,
+             foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.16, 0.104))
+_WL_D = dict(pelvis=(0.0, 0.0, 0.820), hips=(-10, 12, -4), spine=(-28, 16, -10),
+             head=(8, 30, 0),
+             hand_r=(0.72, 0.06, 1.06), hand_l=(0.10, 0.16, 1.30),
+             elbow_r=(0.2, -0.3, -0.9), elbow_l=(-0.5, 0.2, -0.8),
+             fist_r=0.3, fist_l=0.5,
+             foot_r=(0.30, 0.00, 0.104), foot_l=(-0.20, 0.10, 0.104))
+
+CLIPS["Chain_Wristlock_Attacker"] = [
+    (0,  P()),
+    (6,  P(hand_r=(0.10, 0.52, 1.10), hand_l=(-0.02, 0.50, 1.08), fist_r=0.4, fist_l=0.4)),
+    (12, pose(_WL_A)),
+    # The twist: he turns the wrist over with his whole upper body.
+    (20, pose(_WL_A, hips=(-4, 16, 0), spine=(-16, 26, 0),
+              hand_r=(0.10, 0.38, 1.10), hand_l=(-0.02, 0.36, 1.08))),
+    (26, pose(_WL_A)),
+    (32, pose(_WL_A, hips=(-4, 18, 0), spine=(-16, 28, 0),
+              hand_r=(0.10, 0.38, 1.12), hand_l=(-0.02, 0.36, 1.10))),
+    (38, pose(_WL_A)),
+    # He loses it: the arm is ripped back out of his hands.
+    (44, P(pelvis=(0.0, -0.04, 0.850), hips=(2, 0, 0), spine=(-6, 0, 0),
+           hand_r=(0.18, 0.44, 1.12), hand_l=(-0.16, 0.42, 1.10), fist_r=0.3, fist_l=0.3)),
+    (54, P()),
+]
+
+CLIPS["Chain_Wristlock_Defender"] = [
+    (0,  P()),
+    (6,  P(hand_r=(0.20, 0.50, 1.14), fist_r=0.3)),
+    (12, pose(_WL_D)),
+    # Turned over: up onto the toes and further round the arm.
+    (20, pose(_WL_D, pelvis=(0.0, 0.0, 0.850), spine=(-34, 20, -16), head=(12, 36, 0),
+              hand_r=(0.72, 0.04, 1.12), ankle_r=(18, 0, 0), ankle_l=(18, 0, 0),
+              foot_r=(0.30, 0.00, 0.120), foot_l=(-0.20, 0.10, 0.120))),
+    (26, pose(_WL_D)),
+    (32, pose(_WL_D, pelvis=(0.0, 0.0, 0.852), spine=(-36, 22, -16), head=(12, 38, 0),
+              hand_r=(0.72, 0.04, 1.13), ankle_r=(18, 0, 0), ankle_l=(18, 0, 0),
+              foot_r=(0.30, 0.00, 0.120), foot_l=(-0.20, 0.10, 0.120))),
+    (38, pose(_WL_D)),
+    # Rips it free and comes round to face him.
+    (44, P(pelvis=(0.0, -0.02, 0.840), hips=(-6, 10, 0), spine=(-16, 14, 0),
+           hand_r=(0.40, 0.20, 1.10), hand_l=(-0.14, 0.30, 1.20), fist_r=0.4)),
+    (54, P()),
+]
+
+# GO-BEHIND TO A REAR WAISTLOCK. The holder ducks and circles round his left
+# side to his back and locks his hands round the waist, cheek on his back;
+# the man in it pries at the hands. Held from frame 14, when he is behind.
+_WA_A = dict(pelvis=(0.0, -0.04, 0.750), hips=(-12, 0, 0), spine=(-28, 0, 0),
+             head=(6, 24, 0),
+             hand_r=(0.12, 0.44, 0.96), hand_l=(-0.12, 0.44, 0.96),
+             elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
+             fist_r=0.5, fist_l=0.5,
+             foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.02, 0.104))
+_WA_D = dict(pelvis=(0.0, 0.02, 0.830), hips=(-6, 0, 0), spine=(-14, 0, 0),
+             head=(10, 0, 0),
+             hand_r=(0.14, 0.24, 0.98), hand_l=(-0.14, 0.24, 0.98),
+             elbow_r=(0.9, -0.1, -0.3), elbow_l=(-0.9, -0.1, -0.3),
+             fist_r=0.6, fist_l=0.6,
+             foot_r=(0.26, -0.06, 0.104), foot_l=(-0.24, 0.10, 0.104))
+
+CLIPS["Chain_Waistlock_Attacker"] = [
+    (0,  P()),
+    # Ducks under and goes round, low.
+    (6,  P(pelvis=(0.0, 0.04, 0.740), hips=(-18, 0, 0), spine=(-30, 0, 0),
+           head=(16, 0, 0), hand_r=(0.26, 0.30, 1.00), hand_l=(-0.24, 0.32, 1.00),
+           foot_r=(0.22, 0.10, 0.160), foot_l=(-0.22, -0.10, 0.104))),
+    (10, P(pelvis=(0.0, 0.04, 0.760), hips=(-16, 0, 0), spine=(-26, 0, 0),
+           head=(14, 10, 0), hand_r=(0.24, 0.36, 1.00), hand_l=(-0.22, 0.38, 1.00),
+           foot_r=(0.22, -0.10, 0.104), foot_l=(-0.22, 0.12, 0.160))),
+    (17, pose(_WA_A)),
+    # The squeeze: hips in under him, a lift off the mat that does not come.
+    (22, pose(_WA_A, pelvis=(0.0, 0.03, 0.760), hips=(-4, 0, 0), spine=(-10, 0, 0),
+              hand_r=(0.12, 0.42, 1.00), hand_l=(-0.12, 0.42, 1.00))),
+    (28, pose(_WA_A)),
+    (34, pose(_WA_A, pelvis=(0.0, 0.03, 0.758), hips=(-4, 0, 0), spine=(-10, 0, 0),
+              hand_r=(0.12, 0.42, 1.01), hand_l=(-0.12, 0.42, 1.01))),
+    (38, pose(_WA_A)),
+    # The grip is broken and he is left holding air.
+    (44, P(pelvis=(0.0, -0.02, 0.830), hips=(-6, 0, 0), spine=(-12, 0, 0),
+           hand_r=(0.26, 0.40, 1.02), hand_l=(-0.26, 0.40, 1.02), fist_r=0.3, fist_l=0.3)),
+    (54, P()),
+]
+
+CLIPS["Chain_Waistlock_Defender"] = [
+    (0,  P()),
+    # Looks for him as he goes round.
+    (8,  P(head=(2, -40, 0), spine=(-10, -10, 0))),
+    (14, pose(_WA_D)),
+    # Squeezed: lifted onto his toes, hands still at the grip.
+    (22, pose(_WA_D, pelvis=(0.0, 0.02, 0.850), spine=(-6, 0, 0), head=(16, 0, 0),
+              ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
+              foot_r=(0.26, -0.06, 0.124), foot_l=(-0.24, 0.10, 0.124))),
+    (28, pose(_WA_D)),
+    (34, pose(_WA_D, pelvis=(0.0, 0.02, 0.852), spine=(-6, 0, 0), head=(16, 0, 0),
+              ankle_r=(20, 0, 0), ankle_l=(20, 0, 0),
+              foot_r=(0.26, -0.06, 0.124), foot_l=(-0.24, 0.10, 0.124))),
+    (38, pose(_WA_D, hand_r=(0.20, 0.20, 0.94), hand_l=(-0.20, 0.20, 0.94))),
+    # Pries the hands apart and turns out of it.
+    (44, P(pelvis=(0.0, 0.04, 0.830), hips=(-6, 0, 0), spine=(-12, 0, 0),
+           head=(6, -20, 0),
+           hand_r=(0.34, 0.14, 0.92), hand_l=(-0.34, 0.14, 0.92), fist_r=0.5, fist_l=0.5)),
+    (54, P()),
+]
+
 
 def load_rig():
     """Fresh scene with just the base rig's armature in it."""

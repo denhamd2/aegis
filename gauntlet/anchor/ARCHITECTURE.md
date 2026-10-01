@@ -136,12 +136,12 @@ on them holding.
   pin kickout, submission, ref, win conditions, AI opponent). Match
   variety, roster, creation suite, and career are out of scope until this
   slice is anchored end to end.
-- The power and finisher rungs of the grapple chain, and the reversal
-  mechanic, were **cut** — not deferred. Their paired animations did not
-  read on screen, and the moves went with them. The slots and the tier
-  gates survive in code (`CombatSystem.Tier`, `WrestlerController`'s
-  per-tier exports) so the rungs can be refilled by a scene that wires
-  moves into them, but nothing ships in them today.
+- The reversal mechanic was **cut** — not deferred. The power and finisher
+  rungs were cut with it and have since been refilled: `TitleScreen.
+  configure_match` wires the shared moves into every tier, and a roster
+  entry with its own `moveset` (`Roster.Entry.moveset`; Cody's is
+  researched in `gauntlet/refs/cody_moveset.md`) replaces each tier's
+  primary and pool with his own moves.
 - An AI-vs-AI match therefore has a fixed shape: the two wrestlers lock up
   once and throw a grapple, trade strikes through the middle of the match,
   and finish with a signature into a cover — the AI reaches for its

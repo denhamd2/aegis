@@ -160,7 +160,15 @@ const ART_SHOTS := [
 ## Frames to let the renderer settle before each art shot is saved. The
 ## first frame after a camera jump can still carry the previous view's
 ## temporal state, and a shot saved into that is not the shot asked for.
-const ART_SETTLE_FRAMES := 3
+##
+## 24, up from 3, because the renderer now HAS temporal state that takes
+## frames to converge: TAA and SSIL (project.godot, match.tscn; gauntlet/refs/
+## aaa_gap.md). At 3 frames an art shot would be measured mid-convergence
+## while the silhouette shot, at SILHOUETTE_SETTLE, is measured converged --
+## two measurements of one scene disagreeing, which is the exact failure
+## match.tscn's note on SSIL exists to prevent. Checked by capturing at 24 and
+## at 48 and comparing the round-check metrics.
+const ART_SETTLE_FRAMES := 24
 
 
 func _ready() -> void:
@@ -310,9 +318,42 @@ func _silhouette_step() -> void:
 			var w: Node = _match.get_node(name)
 			w.set_physics_process(false)
 			w.set_process(false)
+		# And the referee, which is what starts the opening tie-up: frozen
+		# 2 m apart it carried on into the grapple hold, and the shot showed
+		# both men gripping air (the owner flagged it). Back to the ready
+		# stance -- the standoff this shot is meant to measure.
+		var referee := _match.get_node_or_null("MatchReferee")
+		if referee:
+			referee.set_physics_process(false)
+			referee.set("_tying_up", false)
+		for name: String in ["WrestlerA", "WrestlerB"]:
+			var w := _match.get_node(name) as WrestlerController
+			if w and w.fsm.current_state != WrestlerFSM.State.IDLE:
+				w.fsm.transition_to(WrestlerFSM.State.IDLE)
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 2:
 		_save_viewport(_silhouette_prefix + "_beauty.png")
 	elif _silhouette_frames == SILHOUETTE_SETTLE + 3:
+		# The mask is flat key colours read back exactly. TAA would blend it
+		# with the beauty frames before it (its history), and MSAA would mix
+		# key colours along every edge, so both are off for the mask alone.
+		get_viewport().use_taa = false
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+		# And no tonemap, glow or grade on the keys. Under Filmic the primaries
+		# came through near enough; under AgX, which desaturates toward white
+		# by design, the keys shifted and the mask keyed the wrong pixels (mat
+		# 0.141 measured on a frame whose mat was plainly as bright as before).
+		for node in _match.find_children("*", "WorldEnvironment", true, false):
+			var env := (node as WorldEnvironment).environment
+			if env:
+				env = env.duplicate() as Environment
+				env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+				env.tonemap_exposure = 1.0
+				env.glow_enabled = false
+				env.adjustment_enabled = false
+				(node as WorldEnvironment).environment = env
+		var finish := _match.get_node_or_null("BroadcastLook") as CanvasLayer
+		if finish:
+			finish.visible = false
 		_key(_match.get_node("Ring/Floor/MeshInstance3D"), SILHOUETTE_KEYS["mat"])
 		# The whole wrestler, gear included -- WrestlerAttire's trunks, boots
 		# and pads are part of the subject the reference table measures, not

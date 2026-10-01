@@ -50,6 +50,9 @@ const SKIN_MATERIALS := ["xmaterial_495900de7002683", "xmaterial_90b39911eb484a2
 		"xmaterial_90b2b911eb46cd8", "xmaterial_5a329cd32db96c3", HEAD_MATERIAL]
 const SKIN_TINT := Color(1.08, 1.06, 1.0)
 const SKIN_ROUGHNESS := 0.5
+## Pore tiles across one UV square of his skin atlases (SkinLook.add_pores):
+## his torso-and-arms atlas spans about 1.2 m of skin, so ~2.5 cm a tile.
+const PORE_TILES := 48.0
 
 
 ## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
@@ -62,8 +65,15 @@ const SKIN_ROUGHNESS := 0.5
 ## and too yellow.
 const HAIR := "res://assets/characters/cody_hair.glb"
 const HAIR_STRANDS := "res://assets/characters/cody_hair_strands.png"
-const HAIR_ROOT := Color(0.56, 0.46, 0.36)
+##
+## The root deepened from (0.56, 0.46, 0.36) with the anisotropic shine (item 7
+## of refs/aaa_gap.md): a lighter root flattened the stack once the shine
+## lifted the outer shells, and bleach-blond hair is darkest at the root.
+const HAIR_ROOT := Color(0.48, 0.38, 0.29)
 const HAIR_TIP := Color(0.86, 0.74, 0.58)
+## Down from 0.5: at 0.5 the stretched highlight spread so wide it was only a
+## general sheen. See HairLook.
+const HAIR_ROUGHNESS := 0.42
 
 
 func _ready() -> void:
@@ -100,22 +110,39 @@ func _add_hair() -> void:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_texture = strands
 		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, k)
-		mat.roughness = 0.5
+		mat.roughness = HAIR_ROUGHNESS
+		# The highlight as a band across the strands (u runs round the head,
+		# the strands along v), not a round spot.
+		HairLook.apply(mat)
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		# Vertex alpha thins the outer shells towards the patch's edge.
 		mat.vertex_color_use_as_albedo = true
 		if k > 0.0:
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 			mat.alpha_scissor_threshold = 0.12 + 0.32 * k
+			# Alpha to coverage, as Roman's hair cards: with MSAA on
+			# (project.godot) the strand edges resolve to partial coverage
+			# instead of the hard stair-step a bare scissor cuts.
+			mat.alpha_antialiasing_mode = \
+					BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+			mat.alpha_antialiasing_edge = mat.alpha_scissor_threshold
 		mi.material_override = mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _fix_look() -> void:
+	var skin: Array[BaseMaterial3D] = []
 	for node in find_children("", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
 		if mesh_instance.mesh == null:
 			continue
+		# A UV2 on the skin surfaces for the pore layer (SkinLook.add_pores).
+		var skin_surfaces := []
+		for surface in mesh_instance.mesh.get_surface_count():
+			var m := mesh_instance.mesh.surface_get_material(surface)
+			if m and SKIN_MATERIALS.has(m.resource_name):
+				skin_surfaces.append(surface)
+		SkinLook.with_detail_uv(mesh_instance, skin_surfaces)
 		for surface in mesh_instance.mesh.get_surface_count():
 			var source := mesh_instance.mesh.surface_get_material(surface) as BaseMaterial3D
 			if source == null or not SKIN_MATERIALS.has(source.resource_name):
@@ -125,7 +152,12 @@ func _fix_look() -> void:
 				material.albedo_texture = load(HEAD_BLOND)
 			material.albedo_color = material.albedo_color * SKIN_TINT
 			material.roughness = SKIN_ROUGHNESS
+			SkinLook.apply(material)
+			SkinLook.add_pores(material, PORE_TILES)
+			skin.append(material)
 			mesh_instance.set_surface_override_material(surface, material)
+	# For Sweat (WrestlerController attaches it).
+	set_meta("skin_materials", skin)
 
 
 ## Cody wrestles in his own gear, so the generated trunks must not be painted on.
@@ -213,3 +245,25 @@ func adapt_animation_library(source: AnimationLibrary,
 
 func get_game_skeleton() -> Skeleton3D:
 	return find_child("Skeleton3D", true, false) as Skeleton3D
+
+
+## His eyes on whatever `look_target` returns (EyeAim). The eye bones are
+## added to the .glb by tools/assets/rig_cody_eyes.py, each at its eyeball's
+## centre. The line of sight is EyeAim's default, his face's forward at rest.
+## Not the bone's own +Y, though that is the axis it points along in Blender:
+## after the glTF round trip the bone's +Y measured 155 degrees off where he
+## was looking. Idempotent; a no-op on a model without them.
+const EYE_BONES := ["Eye_L", "Eye_R"]
+
+
+func aim_eyes(look_target: Callable) -> void:
+	var skeleton := get_game_skeleton()
+	if skeleton == null or skeleton.find_bone(EYE_BONES[0]) < 0:
+		return
+	var aim := skeleton.get_node_or_null("EyeAim") as EyeAim
+	if aim == null:
+		aim = EyeAim.new()
+		aim.name = "EyeAim"
+		aim.eye_bones = PackedStringArray(EYE_BONES)
+		skeleton.add_child(aim)
+	aim.look_target = look_target

@@ -196,6 +196,12 @@ const RECIPES := {
 	# recovery, never from a slower action phase.
 	"strike_kick_heavy": {"kind": "retime", "source": "Strike_Kick_Heavy",
 		"seconds": 0.950, "file": AUTHORED},
+	# Cody's (wrestling_clips.py "Cody's strikes"), at their own lengths so
+	# the MoveDefs' startup_frames land on the contact frames.
+	"strike_bionic_elbow": {"kind": "retime", "source": "Strike_Bionic_Elbow",
+		"seconds": 0.900, "file": AUTHORED},
+	"strike_dropdown_uppercut": {"kind": "retime", "source": "Strike_Dropdown_Uppercut",
+		"seconds": 0.800, "file": AUTHORED},
 
 	# Both reactions are cut to exactly WrestlerController.HIT_REACT_TICKS
 	# (20 ticks, 0.333s) so the clip ends as the state does. Hit_Chest is
@@ -216,6 +222,25 @@ const RECIPES := {
 	# shot are visibly different things happening to a man.
 	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
 		"seconds": 0.333, "file": AUTHORED},
+
+	# Authored: the ground attacks on a man down (Phase 4, position).
+	"ground_stomp": {"kind": "retime", "source": "Ground_Stomp",
+		"seconds": 0.600, "file": AUTHORED},
+	"ground_fist": {"kind": "retime", "source": "Ground_Fist",
+		"seconds": 0.733, "file": AUTHORED},
+
+	# Authored: trapped in the corner (Phase 4, position) -- the slump into
+	# the buckle, and a blow taken there. Played in STUNNED, cut to
+	# WrestlerController.CORNER_TRAP_TICKS and CORNER_HIT_TICKS.
+	"corner_slump": {"kind": "retime", "source": "Corner_Slump",
+		"seconds": 1.500, "file": AUTHORED},
+	"corner_hit": {"kind": "retime", "source": "Corner_Hit",
+		"seconds": 1.000, "file": AUTHORED},
+
+	# Authored: the reversal -- parry the strike off line and counter down
+	# the gap (MatchReferee._try_reversal). Counter contact at tick 18.
+	"strike_parry": {"kind": "retime", "source": "Parry_Counter",
+		"seconds": 0.667, "file": AUTHORED},
 
 	# The winner's celebration, for WrestlerFSM.State.VICTORY. Authored, and
 	# necessarily so: there is no celebration anywhere in the 42 source
@@ -254,7 +279,7 @@ const RECIPES := {
 	"cody_stand": {"kind": "retime", "source": "Cody_Stand",
 		"seconds": 2.000, "file": AUTHORED, "loop": true},
 	"whoa_arms": {"kind": "retime", "source": "Whoa_Arms",
-		"seconds": 2.000, "file": AUTHORED},
+		"seconds": 5.000, "file": AUTHORED},
 	"fists_up": {"kind": "retime", "source": "Fists_Up",
 		"seconds": 1.000, "file": AUTHORED},
 	"whoa_crouch": {"kind": "retime", "source": "Whoa_Crouch",
@@ -281,6 +306,19 @@ const RECIPES := {
 		"seconds": 2.000, "file": AUTHORED},
 	"ula_fala_off": {"kind": "retime", "source": "Ula_Fala_Off",
 		"seconds": 1.500, "file": AUTHORED},
+	# Measured off the broadcast (gauntlet/refs/entrances.md [V]).
+	"finger_hold": {"kind": "retime", "source": "Finger_Hold",
+		"seconds": 1.000, "file": AUTHORED},
+	"head_bow": {"kind": "retime", "source": "Head_Bow",
+		"seconds": 3.000, "file": AUTHORED},
+	"hands_hips": {"kind": "retime", "source": "Hands_Hips",
+		"seconds": 4.000, "file": AUTHORED, "loop": true},
+	"fists_down": {"kind": "retime", "source": "Fists_Down",
+		"seconds": 1.000, "file": AUTHORED},
+	"kneel": {"kind": "retime", "source": "Kneel",
+		"seconds": 5.000, "file": AUTHORED},
+	"whoa_low": {"kind": "retime", "source": "Whoa_Low",
+		"seconds": 3.333, "file": AUTHORED},
 
 	# --- states that were playing raw rig clips -------------------------
 	#
@@ -336,6 +374,57 @@ const RECIPES := {
 	# This is someone working: down on a knee, hauling back rhythmically.
 	"submission_work": {"kind": "retime", "source": "Submission_Work",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},
+
+	# Cody's dives (core/match/dive_spot.gd): out through the ropes, the tope
+	# suicida, back in, up onto the apron, the springboard Disaster Kick.
+	# Travelling clips keyed in world space; played once, not looped.
+	"roll_out_ropes": {"kind": "retime", "source": "Roll_Out_Ropes",
+		"seconds": 1.533, "file": AUTHORED},
+	"tope_attacker": {"kind": "retime", "source": "Tope_Attacker",
+		"seconds": 2.000, "file": AUTHORED},
+	"tope_defender": {"kind": "retime", "source": "Tope_Defender",
+		"seconds": 5.667, "file": AUTHORED},
+	"roll_in": {"kind": "retime", "source": "Roll_In",
+		"seconds": 2.000, "file": AUTHORED},
+	# Squared up before the bell (EntranceDirector's face-off).
+	"face_off": {"kind": "retime", "source": "Face_Off",
+		"seconds": 3.000, "file": AUTHORED, "loop": true},
+	# The referee (RefereeActor, on AubreyModel). Authored at 30 fps and kept
+	# at their own lengths: ref_slap's palm lands on its frame 12 (0.4 s),
+	# which RefereeActor.SLAP_LEAD counts back from each count tick.
+	"ref_stand": {"kind": "retime", "source": "Ref_Stand",
+		"seconds": 3.000, "file": AUTHORED, "loop": true},
+	"ref_watch": {"kind": "retime", "source": "Ref_Watch",
+		"seconds": 3.000, "file": AUTHORED, "loop": true},
+	"ref_count_down": {"kind": "retime", "source": "Ref_Count_Down",
+		"seconds": 0.467, "file": AUTHORED},
+	"ref_slap": {"kind": "retime", "source": "Ref_Slap",
+		"seconds": 0.667, "file": AUTHORED},
+	"ref_count_up": {"kind": "retime", "source": "Ref_Count_Up",
+		"seconds": 0.533, "file": AUTHORED},
+	"ref_call_bell": {"kind": "retime", "source": "Ref_Call_Bell",
+		"seconds": 1.200, "file": AUTHORED},
+	"ref_raise_hand": {"kind": "retime", "source": "Ref_Raise_Hand",
+		"seconds": 2.000, "file": AUTHORED},
+	# Off the ropes before the tope (gauntlet/refs/ropes.md).
+	"rope_rebound": {"kind": "retime", "source": "Rope_Rebound",
+		"seconds": 0.667, "file": AUTHORED},
+	"apron_climb": {"kind": "retime", "source": "Apron_Climb",
+		"seconds": 1.200, "file": AUTHORED},
+	"springboard_dk_attacker": {"kind": "retime", "source": "Springboard_DK_Attacker",
+		"seconds": 1.600, "file": AUTHORED},
+	# The man it lands on: the standing Disaster Kick's own victim half.
+	"disaster_kick_defender": {"kind": "retime", "source": "Disaster_Kick_Defender",
+		"seconds": 1.400, "file": AUTHORED},
+
+	# Cody's Figure-Four leglock (gauntlet/refs/cody_moveset.md): both halves
+	# of the hold, played by the two SUBMISSION_* states when the hold is
+	# his (WrestlerController.begin_submission with a move). Not looped: the
+	# application runs once and the last frame is the locked hold.
+	"figure_four_attacker": {"kind": "retime", "source": "Figure_Four_Attacker",
+		"seconds": 6.000, "file": AUTHORED},
+	"figure_four_defender": {"kind": "retime", "source": "Figure_Four_Defender",
+		"seconds": 6.000, "file": AUTHORED},
 
 	# The grapple family: the last clips taken straight off the rig, and the
 	# ones furthest from what they represent.

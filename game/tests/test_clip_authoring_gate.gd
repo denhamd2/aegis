@@ -42,7 +42,7 @@ extends GdUnitTestSuite
 ##                       a change here silently moves EVERY clip at once.
 const PINNED := {
 	"res://tools/blender/wrestling_clips.py":
-		"0fc033d294bcbe3920595e2c3f470923d2645a67c7b0f4a83b38550fcc7aa353",
+		"6d330c72fd207456023b0a45d36eb64447697c8b66b4ea658d14f696608fe6b8",
 	"res://tools/blender/rig_pose.py":
 		"d5b9341164290e5a8a581813ec2c6e639696f06019835c2c4e0dc713bac5fa4a",
 }
@@ -80,8 +80,10 @@ func test_the_clip_authoring_surface_has_not_changed_unreviewed() -> void:
 			.override_failure_message(
 				"%s changed.\n\n" % path
 				+ "Before re-pinning: read .claude/skills/%s/SKILL.md, " % CITED_SKILL
-				+ "render what you changed through tools/probe/clip_shot.tscn, "
-				+ "and look at the frames.\n\n"
+				+ "render what you changed -- tools/anim/contact_sheet.sh OUT Clip_A "
+				+ "Clip_B (or --paired move_id) -- and look at the frames. "
+				+ "tests/test_pose_lint.gd and test_pair_clearance.gd must pass "
+				+ "too; they catch what can be measured.\n\n"
 				+ "Then set its entry in PINNED to:\n  %s" % actual) \
 			.is_equal(PINNED[path])
 

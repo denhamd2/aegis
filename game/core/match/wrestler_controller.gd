@@ -15,6 +15,8 @@ signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
 ## His comeback has started (MatchReferee decides when; see fire_up()).
 signal fired_up(wrestler: WrestlerController)
+## A strike parried and countered (Phase 4 reversals): `reverser` read it.
+signal reversed(reverser: WrestlerController, striker: WrestlerController, move: MoveDef)
 
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
@@ -205,6 +207,21 @@ var _own_signature_thrown: bool = false
 ## Extra running attacks alongside running_attack_move (double-leg
 ## takedown). Same seeded draw as the tiers, so replays still match.
 @export var running_attack_move_pool: Array[MoveDef] = []
+## His own submission hold, if he has one (Cody's Figure-Four; Roster's
+## "submission" tier). MatchReferee has him take it once a match on a man he
+## has knocked down mid-match -- see _check_for_downed_opponent_action().
+@export var submission_move: MoveDef
+## Whether submission_move has been taken this match. Once is the rule.
+var _submission_move_used := false
+## His dives (Cody's tope suicida and springboard Disaster Kick; Roster's
+## "dive" tier): with any here, MatchReferee plays DiveSpot once a match.
+@export var dive_moves: Array[MoveDef] = []
+## Whether the dives have been taken this match.
+var _dive_used := false
+## Tier of the last grapple-chain move this wrestler landed, or -1. The
+## referee reads it so a man put down by a finisher is pinned,
+## never put in a hold.
+var last_landed_tier := -1
 @export var weight_class: int = 1
 ## Set by MatchSetup so _pick_tier_move()'s draw is seeded per match rather
 ## than by the global RNG. Same reasoning as WrestlerAI.setup_jitter().
@@ -305,6 +322,14 @@ var skeleton: Skeleton3D
 ## the opponent while gripping. See _build_ik_rig().
 var _arm_ik: Array[SkeletonIK3D] = []
 var _grip_targets: Array[Marker3D] = []
+## Planted feet for GrappleRig's walk-in (FootPlant). Presentation only.
+var foot_plant: FootPlant
+var inertializer: Inertializer
+var hit_flinch: HitFlinch
+var body_life: BodyLife
+var foot_lock: FootLock
+var rope_reach: RopeReach
+var sell_clutch: SellClutch
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
@@ -383,6 +408,9 @@ const STATE_ANIMATIONS := {
 	# celebrates, so unlike every other entry here this one could not have
 	# borrowed a clip.
 	WrestlerFSM.State.VICTORY: "strikes/win_celebrate",
+	# Replaced per man by begin_taunt() with his own gesture (TAUNTS); this is
+	# the one a man with none of his own throws.
+	WrestlerFSM.State.TAUNT: "strikes/air_punch",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -428,6 +456,17 @@ const StrikeRecipes := preload("res://resources/animations/strike_recipes.gd")
 const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
+## How long the Inertializer carries the old pose into a new clip, by the state
+## the clip belongs to. Longer than the crossfade it replaces, because it does
+## not mush: from the first tick he moves the way the new clip moves, and only
+## the difference fades. A hit lands fast -- a reaction that eased in would
+## read as him deciding to react -- and lying down or getting up has the most
+## body to move.
+const INERTIA_DEFAULT_TICKS := 9
+const INERTIA_TICKS := {
+	"HIT_REACT": 5, "STUNNED": 6, "STRIKE": 6,
+	"DOWN": 12, "GETUP": 12, "WALK_IN": 9, "GRAPPLE_HOLD": 8,
+}
 
 var _move_ticks_remaining: int = 0
 var _active_move: MoveDef
@@ -540,6 +579,8 @@ var _snap_next_animation: bool = false
 var _damage_at_last_knockdown: float = 0.0
 
 func _ready() -> void:
+	# RingRopes finds the bodies it has to give under by this group.
+	add_to_group("wrestlers")
 	_install_character_model()
 	fsm = WrestlerFSM.new()
 	add_child(fsm)
@@ -581,6 +622,21 @@ func _ready() -> void:
 		else:
 			skeleton.scale = Vector3.ONE * physique_height
 		_build_ik_rig()
+		_build_foot_plant()
+		_build_inertializer()
+		_build_body_life()
+		_build_hit_flinch()
+		_build_sell_clutch()
+		_build_foot_lock()
+		_build_rope_reach()
+		# Sweat over the match, on the skin materials the model registered.
+		if model:
+			Sweat.attach(self, model)
+		# His eyes on the other man, where the model has eyes that move
+		# (RomanModel; EyeAim). Presentation only.
+		if model and model.has_method("aim_eyes"):
+			model.aim_eyes(_opponent_eye_line)
+		_build_worn_follow()
 		if _uses_universal_attire():
 			WrestlerAttire.build(skeleton, attire_body, attire_accent,
 					physique_bulk, body_variant)
@@ -727,6 +783,24 @@ func _build_animation_tree() -> void:
 			transition.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
 			state_machine.add_transition(from_name, to_name, transition)
 
+	# The walk-in's pose (begin_walk_in): reached from anywhere with a longer
+	# blend, left with a cut -- its clip IS the first frame of what follows.
+	var walk_in := AnimationNodeAnimation.new()
+	walk_in.animation = STATE_ANIMATIONS[WrestlerFSM.State.GRAPPLE_HOLD]
+	state_machine.add_node(WALK_IN_STATE, walk_in)
+	for state_id in STATE_ANIMATIONS:
+		var other: String = WrestlerFSM.State.keys()[state_id]
+		if not state_machine.has_node(other):
+			continue
+		var into := AnimationNodeStateMachineTransition.new()
+		into.xfade_time = WALK_IN_BLEND_TICKS / float(Engine.physics_ticks_per_second)
+		into.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
+		state_machine.add_transition(other, WALK_IN_STATE, into)
+		var out := AnimationNodeStateMachineTransition.new()
+		out.xfade_time = blend_seconds
+		out.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE
+		state_machine.add_transition(WALK_IN_STATE, other, out)
+
 	anim_tree = AnimationTree.new()
 	add_child(anim_tree)
 	anim_tree.tree_root = state_machine
@@ -824,7 +898,7 @@ func _is_gripping_state() -> bool:
 			# been thrown, and arms still reaching for the man who threw him
 			# read as him hanging in mid-air by them. A move nobody is
 			# lifted in (a reversal shove) keeps him gripping throughout.
-			return _is_grapple_attacker or _paired_grip_ticks > 0
+			return _is_grapple_attacker or _paired_grip_ticks > 0 or in_chain_read()
 		_:
 			return false
 
@@ -838,17 +912,306 @@ func _is_gripping_state() -> bool:
 ## running, so the two paths can never both fire on one tick.
 func update_paired_presentation() -> void:
 	_update_grip_ik()
+	if foot_plant:
+		foot_plant.advance()
+
+
+## GrappleRig is about to carry this body from `from` to `to` over `ticks`
+## ticks, into the first frame of his half of `move`. Two things, both
+## presentation only:
+##   * he blends into that first frame now (WALK_IN_STATE), instead of the
+##     hold pose snapping to it on the tick the clip starts -- measured up to
+##     0.53 m of foot in one tick on the Spear;
+##   * his feet step there instead of skating (FootPlant), planned against
+##     that pose's stance rather than the one he is standing in.
+func begin_walk_in(from: Transform3D, to: Transform3D, ticks: int,
+		move: MoveDef = null, is_attacker := false) -> void:
+	var start_pose := _first_frame_clip(move, is_attacker)
+	var end_feet := []
+	if start_pose != "":
+		var machine := anim_tree.tree_root as AnimationNodeStateMachine
+		(machine.get_node(WALK_IN_STATE) as AnimationNodeAnimation).animation = start_pose
+		_inertialize(WALK_IN_STATE)
+		_anim_playback.travel(WALK_IN_STATE)
+		if foot_plant:
+			var rel := from.affine_inverse() * skeleton.global_transform
+			for p: Vector3 in foot_plant.first_frame_feet(anim_player.get_animation(start_pose)):
+				end_feet.append(rel * p)
+	if foot_plant:
+		foot_plant.begin(from, to, ticks, end_feet)
+
+
+## The walk-in's blend-graph node, and how long the blend into it takes: most
+## of a short walk-in, so the change of stance happens while he steps.
+const WALK_IN_STATE := "WALK_IN"
+const WALK_IN_BLEND_TICKS := 9
+
+## A one-frame clip holding the first frame of his half of `move`, made once
+## and kept in a runtime library; "" if the move has no half for him.
+func _first_frame_clip(move: MoveDef, is_attacker: bool) -> String:
+	if move == null or anim_player == null or anim_tree == null:
+		return ""
+	var clip := PairedRecipes.role_clip(move.animation_pair_id, is_attacker)
+	if clip == "" or not anim_player.has_animation(clip):
+		return ""
+	if not anim_player.has_animation_library(&"walk_in"):
+		anim_player.add_animation_library(&"walk_in", AnimationLibrary.new())
+	var library := anim_player.get_animation_library(&"walk_in")
+	var key := StringName(clip.replace("/", "__"))
+	if not library.has_animation(key):
+		var still := (anim_player.get_animation(clip).duplicate(true)) as Animation
+		for t in still.get_track_count():
+			for k in range(still.track_get_key_count(t) - 1, 0, -1):
+				still.track_remove_key(t, k)
+			if still.track_get_key_count(t) > 0:
+				still.track_set_key_time(t, 0, 0.0)
+		still.length = 0.1
+		still.loop_mode = Animation.LOOP_NONE
+		library.add_animation(key, still)
+	return "walk_in/%s" % key
+
+
+func _build_foot_plant() -> void:
+	foot_plant = FootPlant.new()
+	foot_plant.name = "FootPlant"
+	var mapped := []
+	for leg: Array in foot_plant.legs:
+		mapped.append(leg.map(func(b: String) -> String: return _skeleton_bone_name(b)))
+	foot_plant.legs = mapped
+	skeleton.add_child(foot_plant)
+
+## The Inertializer (Phase 3 "transitions"): first among the skeleton's
+## modifiers, so it smooths the clip's pose and everything after it -- grip
+## IK, FootPlant, the eyes -- works on the smoothed one.
+func _build_inertializer() -> void:
+	inertializer = Inertializer.new()
+	inertializer.name = "Inertializer"
+	skeleton.add_child(inertializer)
+	skeleton.move_child(inertializer, 0)
+	inertializer.body = self
+	if anim_tree:
+		inertializer.watch(anim_tree, _anim_playback)
+	# It replaces the crossfades: every edge in the blend graph becomes a cut,
+	# and _inertialize() carries the pose across it instead. The graph keeps
+	# its crossfades when there is no skeleton to smooth.
+	if anim_tree:
+		var machine := anim_tree.tree_root as AnimationNodeStateMachine
+		for i in machine.get_transition_count():
+			machine.get_transition(i).xfade_time = 0.0
+
+
+## BodyLife: before HitFlinch, so a blow lands on a man already watching,
+## breathing and tiring.
+func _build_body_life() -> void:
+	body_life = BodyLife.new()
+	body_life.name = "BodyLife"
+	for key: String in body_life.bones.keys():
+		body_life.bones[key] = _skeleton_bone_name(key)
+	body_life.wrestler = self
+	body_life.phase = 0.37 * player_index
+	body_life.fidget_seed = 7919 * (player_index + 1)
+	skeleton.add_child(body_life)
+
+
+## Hit-stop: on a heavy blow both men's poses hold still for a couple of
+## ticks at the moment of contact -- the beat that makes a blow read as
+## landing on something, in every fighting game since the arcade. The flinch
+## keeps moving through it. Presentation only: neither the match clock nor
+## the clips stop.
+const HIT_STOP_HEAVY := 3
+const HIT_STOP_MEDIUM := 2
+
+
+static func hit_stop_ticks_for(strength: float) -> int:
+	if strength >= 0.9:
+		return HIT_STOP_HEAVY
+	return HIT_STOP_MEDIUM if strength >= 0.6 else 0
+
+
+## Held by the Inertializer: the drawn pose stops, the clip runs on under
+## it. Stopping the clip itself -- the tree switched off, or its clock
+## stopped -- reset its state machine, and the man came out of the freeze
+## playing nothing for the rest of his reaction (measured).
+func hit_stop(ticks: int) -> void:
+	if inertializer:
+		inertializer.freeze(ticks)
+
+
+## HitFlinch: after the IK and FootPlant, so a man flinches whatever his hands
+## and feet are doing; before WornFollow, which carries it to his clothes.
+func _build_hit_flinch() -> void:
+	hit_flinch = HitFlinch.new()
+	hit_flinch.name = "HitFlinch"
+	for key: String in hit_flinch.bones.keys():
+		hit_flinch.bones[key] = _skeleton_bone_name(key)
+	hit_flinch.body = self
+	skeleton.add_child(hit_flinch)
+
+
+## FootLock: after everything that moves the body above the feet (the
+## Inertializer's turn, BodyLife, HitFlinch), so it pins the feet under the
+## body as it will be drawn; before WornFollow, which carries it to his shoes.
+func _build_foot_lock() -> void:
+	foot_lock = FootLock.new()
+	foot_lock.name = "FootLock"
+	var mapped := []
+	for leg: Array in foot_lock.legs:
+		mapped.append(leg.map(func(b: String) -> String: return _skeleton_bone_name(b)))
+	foot_lock.legs = mapped
+	foot_lock.wrestler = self
+	skeleton.add_child(foot_lock)
+
+
+## SellClutch: after HitFlinch and BodyLife, so the lean and the hand go on
+## top of the look and the breath; before FootLock, which keeps his feet down
+## under the lean.
+func _build_sell_clutch() -> void:
+	sell_clutch = SellClutch.new()
+	sell_clutch.name = "SellClutch"
+	for key: String in sell_clutch.bones.keys():
+		sell_clutch.bones[key] = _skeleton_bone_name(key)
+	sell_clutch.wrestler = self
+	skeleton.add_child(sell_clutch)
+
+
+## RopeReach: after FootLock, so a foot reaching for the rope is not pinned
+## back to the mat; before WornFollow, which carries it to his clothes.
+func _build_rope_reach() -> void:
+	rope_reach = RopeReach.new()
+	rope_reach.name = "RopeReach"
+	var mapped := {}
+	for key: String in rope_reach.chains:
+		mapped[key] = (rope_reach.chains[key] as Array).map(
+				func(b: String) -> String: return _skeleton_bone_name(b))
+	rope_reach.chains = mapped
+	skeleton.add_child(rope_reach)
+
+
+## A model dressed on a second skeleton (Roman) gets the body's final pose
+## carried across to it, LAST, after every other modifier. See WornFollow.
+## His hip height standing at rest, in his own frame, at the size he is
+## scaled to. GrappleRig fits how high he lifts a man to it.
+func hip_height() -> float:
+	if skeleton == null:
+		return GrappleRig.AUTHORED_HIP_HEIGHT
+	var pelvis := skeleton.find_bone(_skeleton_bone_name("pelvis"))
+	if pelvis < 0:
+		return GrappleRig.AUTHORED_HIP_HEIGHT
+	return (global_transform.affine_inverse()
+			* (skeleton.global_transform * skeleton.get_bone_global_rest(pelvis).origin)).y
+
+
+func _build_worn_follow() -> void:
+	var model := anim_player.get_parent()
+	if model == null:
+		return
+	for s: Skeleton3D in model.find_children("", "Skeleton3D", true, false):
+		if s == skeleton or s.find_bone(skeleton.get_bone_name(0)) < 0:
+			continue
+		var follow := WornFollow.new()
+		follow.name = "WornFollow"
+		skeleton.add_child(follow)
+		follow.bind(s)
+		return
+
+
+## Hands the pose on screen over to the clip about to start, over the ticks
+## INERTIA_TICKS gives the state it is going to. See Inertializer.
+func _inertialize(state_name: String) -> void:
+	if inertializer:
+		inertializer.inertialize(INERTIA_TICKS.get(state_name, INERTIA_DEFAULT_TICKS),
+				StringName(state_name))
+
 
 func _update_grip_ik() -> void:
 	if _arm_ik.is_empty():
 		return
 	if _paired_grip_ticks > 0:
 		_paired_grip_ticks -= 1
+	_close_for_lock_up()
 	var engaged := _is_gripping_state() and _aim_grip_targets()
 	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
 	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
 	for ik in _arm_ik:
 		ik.interpolation = _grip_blend
+
+
+# --- The lock-up's distance --------------------------------------------------
+## A collar-and-elbow is chest to chest: foreheads nearly touching, pelvises
+## about LOCK_UP_GAP apart. The tie-up starts wherever the two men happened to
+## be inside TIE_UP_RANGE (1.4 m) and nothing closed it, so they held the
+## "lock-up" 1.1-1.25 m apart -- measured in a live match -- with arms locked
+## out at air, which is the pose the owner flagged. So each man's MODEL slides
+## toward the other by half the excess, eased in over LOCK_UP_EASE_TICKS and
+## back out after.
+##
+## The model only, never the body: the capsule, position and velocity stay
+## exactly where the match put them, so the tie-up minigame, the replay and its
+## end-state hash cannot see it. The slide is capped at LOCK_UP_MAX_SLIDE so a
+## tie-up at the very edge of range does not skate a model across the mat.
+## Set by GrappleRig during a paired move (PairSeparation): how far this
+## man's MODEL is eased off the other's body so the two touch instead of
+## passing through each other. World space; presentation only, like the
+## lock-up slide it is added to. Relaxes back to zero once the move is over.
+var paired_separation := Vector3.ZERO
+const SEPARATION_RELAX := 0.85
+
+const LOCK_UP_GAP := 0.60
+const LOCK_UP_MAX_SLIDE := 0.40
+const LOCK_UP_EASE_TICKS := 8
+var _lock_up_close := 0.0          # 0-1 eased
+var _model_home := Vector3.INF     # the model's own local position
+
+
+## Re-applies the model's presentation offset (lock-up slide plus paired
+## separation) right now, without advancing either ease. GrappleRig calls it
+## between separation passes, so each pass measures where the model now is.
+func apply_model_offset() -> void:
+	var model := anim_player.get_parent() as Node3D if anim_player else null
+	if model == null or model == self or _model_home == Vector3.INF:
+		return
+	var base := model.position - _last_separation_local
+	_last_separation_local = global_transform.basis.inverse() * paired_separation
+	model.position = base + _last_separation_local
+
+
+var _last_separation_local := Vector3.ZERO
+
+
+func _close_for_lock_up() -> void:
+	var model := anim_player.get_parent() as Node3D if anim_player else null
+	if model == null or model == self:
+		return
+	if _model_home == Vector3.INF:
+		_model_home = model.position
+	var locked := (fsm.current_state == WrestlerFSM.State.TIE_UP or in_chain_read()) \
+			and opponent != null and is_instance_valid(opponent)
+	var step := 1.0 / LOCK_UP_EASE_TICKS
+	_lock_up_close = clampf(_lock_up_close + (step if locked else -step), 0.0, 1.0)
+	# Out of a paired move, the separation eases back onto the body.
+	if not (grapple_rig and grapple_rig.is_active()):
+		paired_separation *= SEPARATION_RELAX
+		if paired_separation.length() < 0.001:
+			paired_separation = Vector3.ZERO
+	var separation := global_transform.basis.inverse() * paired_separation
+	_last_separation_local = separation
+	if _lock_up_close <= 0.0:
+		model.position = _model_home + separation
+		return
+	var to := Vector3.ZERO
+	if opponent and is_instance_valid(opponent):
+		to = opponent.global_position - global_position
+		to.y = 0.0
+	var slide := lock_up_slide(to.length())
+	var local_dir := (global_transform.basis.inverse() * to.normalized()) \
+			if to.length() > 0.001 else Vector3.ZERO
+	var eased := smoothstep(0.0, 1.0, _lock_up_close)
+	model.position = _model_home + local_dir * slide * eased + separation
+
+
+## How far one man's model slides in for a lock-up at `gap` metres apart.
+static func lock_up_slide(gap: float) -> float:
+	return clampf((gap - LOCK_UP_GAP) * 0.5, 0.0, LOCK_UP_MAX_SLIDE)
 
 ## Places the two targets on either side of the part of the opponent this
 ## wrestler is holding. Returns false only when there is nothing to grip, so
@@ -868,6 +1231,22 @@ func _aim_grip_targets() -> bool:
 	# a tie-up, or a defender holding on to the man lifting him -- holds the
 	# chest. Reaching for a lifted victim's chest puts the arms overhead and
 	# behind, which reads as nothing at all.
+	if fsm.current_state == WrestlerFSM.State.TIE_UP or in_chain_read():
+		return _aim_collar_and_elbow()
+	# In a paired move, the move says what the attacker holds (PairedContacts).
+	if fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and _is_grapple_attacker \
+			and grapple_rig and grapple_rig.is_active():
+		var family := PairedContacts.family(grapple_rig._move)
+		if family == "none":
+			return false
+		if family != "":
+			var chest := skeleton.global_transform * skeleton.get_bone_global_pose(
+					skeleton.find_bone(_skeleton_bone_name("spine_03"))).origin
+			var t := PairedContacts.targets(family, opponent, chest)
+			if t.size() == 2:
+				_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], t[0])
+				_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], t[1])
+				return true
 	var lifting := fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
 			and _is_grapple_attacker
 	var anchor_name := GRIP_BONE_LIFT if lifting else GRIP_BONE
@@ -886,6 +1265,29 @@ func _aim_grip_targets() -> bool:
 	# takes the +X side of the grip, index 0 (left arm) the -X side.
 	_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], anchor - lateral)
 	_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], anchor + lateral)
+	return true
+
+## The collar-and-elbow: the RIGHT hand cups the back of his neck, the LEFT
+## grips his right elbow -- the arm he has on your neck. Both men do the same,
+## so the arms cross as a real tie-up's do. It used to aim both hands at his
+## chest 22 cm either side, which is a two-handed shove; at the old
+## tie-up distance it also locked both arms straight out (Roman) or crossed
+## them in front of the body (Cody).
+func _aim_collar_and_elbow() -> bool:
+	var sk := opponent.skeleton
+	var neck := sk.find_bone(opponent._skeleton_bone_name(COLLAR_BONE))
+	var elbow := sk.find_bone(opponent._skeleton_bone_name(ELBOW_BONE))
+	if neck < 0 or elbow < 0:
+		return false
+	var neck_at := sk.global_transform * sk.get_bone_global_pose(neck).origin
+	# Behind the neck: past it along the line from this man to him.
+	var across := opponent.global_position - global_position
+	across.y = 0.0
+	across = across.normalized() if across.length() > 0.001 else Vector3.ZERO
+	var collar := neck_at + across * COLLAR_BEHIND + Vector3.UP * COLLAR_UP
+	var elbow_at := sk.global_transform * sk.get_bone_global_pose(elbow).origin
+	_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], collar)
+	_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], elbow_at)
 	return true
 
 ## Nearest point to `target` the named shoulder's arm can actually straighten
@@ -932,6 +1334,7 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	if not anim_node:
 		return false
 	anim_node.animation = clip
+	_inertialize(state_name)
 	_anim_playback.start(state_name, true)
 
 	var length := anim_player.get_animation(clip).length
@@ -942,6 +1345,24 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
+	if current == WrestlerFSM.State.IDLE and _previous == WrestlerFSM.State.GETUP:
+		# Up off the mat, holding what hurts.
+		_begin_sell(most_hurt(combat.limb_damage, SELL_GETUP_MIN), SELL_GETUP_TICKS)
+	if current == WrestlerFSM.State.GRAPPLE_HOLD:
+		# A tie-up's hold chains (see "chain wrestling"); a running paired
+		# move's does not. Both men reset: either may end up the holder.
+		_chain_enabled = _previous == WrestlerFSM.State.TIE_UP
+		_chain_links = 0
+		_chain_read = 0
+		_chain_pick = ""
+		_chain_done = false
+		_chain_reversal_spent = false
+		chain_hold = ""
+		if _chain_enabled:
+			_set_state_clip(WrestlerFSM.State.GRAPPLE_HOLD, CHAIN_READ_CLIP)
+	if current != WrestlerFSM.State.STUNNED and _corner_trapped:
+		_corner_trapped = false
+		_corner_lockout = CORNER_LOCKOUT_TICKS
 	if not _anim_playback:
 		return
 	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
@@ -963,6 +1384,7 @@ func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.St
 		_snap_next_animation = false
 		_anim_playback.start(state_name, true)
 		return
+	_inertialize(state_name)
 	_anim_playback.travel(state_name)
 
 ## The clip to enter this state with: a one-shot override if one was queued
@@ -999,6 +1421,21 @@ static func clip_for_state(state: WrestlerFSM.State, is_attacker: bool) -> Strin
 		return overrides[state]
 	return STATE_ANIMATIONS.get(state, "")
 
+## The other man's eyes, in world space, for EyeAim; Vector3.INF with no
+## opponent. His head bone plus a few centimetres, as EntranceDirector frames
+## a close-up.
+func _opponent_eye_line() -> Vector3:
+	if opponent == null or not is_instance_valid(opponent):
+		return Vector3.INF
+	var sk := opponent.skeleton
+	if sk:
+		var i := sk.find_bone(opponent._skeleton_bone_name("Head"))
+		if i >= 0:
+			return sk.global_transform * sk.get_bone_global_pose(i).origin \
+					+ Vector3.UP * 0.06
+	return opponent.global_position + Vector3.UP * 1.7
+
+
 func _resolve_paths() -> void:
 	if opponent_path != NodePath():
 		opponent = get_node(opponent_path)
@@ -1008,13 +1445,28 @@ func _resolve_paths() -> void:
 		ai.target = opponent
 
 func _physics_process(delta: float) -> void:
+	# The model's held half-turn is let go on the AnimationTree's mixer_applied
+	# -- which never comes if the tree stops mixing (a paired move or the grapple
+	# rig takes the pose over), and then the model stayed turned 180 degrees
+	# from the man: the two of them stood back to back in the recorded match
+	# (tools/probe/glitch_scan.gd: body facing opposite the controller, dot -1,
+	# for 35 ticks). A deadline the signal cannot miss.
+	if _model_held and Engine.get_physics_frames() > _model_held_until + MODEL_HOLD_GRACE:
+		_release_model_facing(true)
 	var live_input := _poll_live_input()
 	var input := ReplaySystem.get_input(player_index, live_input) if ReplaySystem else live_input
 	fsm._physics_process(delta)
+	_read_reversal(input)
+	_tick_stamina()
 
 	match fsm.current_state:
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN:
-			_process_free_movement(delta, input)
+			if input.get("taunt", false) and can_taunt():
+				begin_taunt()
+			else:
+				_process_free_movement(delta, input)
+		WrestlerFSM.State.TAUNT:
+			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.STRIKE:
 			_process_active_move(input)
 		WrestlerFSM.State.TIE_UP:
@@ -1026,10 +1478,14 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.MOVE_EXEC:
 			_process_active_move(input)
 		WrestlerFSM.State.HIT_REACT, WrestlerFSM.State.STUNNED:
+			if is_corner_trapped():
+				_tick_corner_trap()
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.DOWN:
+			_stop_dead()
 			_process_down(input)
 		WrestlerFSM.State.GETUP:
+			_stop_dead()
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.RUNNING_ATTACK:
 			_process_active_move(input)
@@ -1048,8 +1504,10 @@ func _physics_process(delta: float) -> void:
 			# resolve as an automatic kickout before reaching a three-count).
 			_kickout_input_this_tick = input.get("strike", false)
 		WrestlerFSM.State.SUBMISSION_ATTACKER:
-			pass # driven by MatchReferee; no continued attacker input needed,
-			# same as PIN_ATTACKER's three-count
+			# Driven by MatchReferee; no continued attacker input needed,
+			# same as PIN_ATTACKER's three-count. The only motion is the
+			# walk to a hold's spot (_place_figure_four).
+			_tick_cover_slide()
 		WrestlerFSM.State.SUBMISSION_DEFENDER:
 			# Mirrors the PIN_DEFENDER case above, but held rather than
 			# just-pressed — SubmissionMinigame is a genuine continuous-hold
@@ -1057,10 +1515,19 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
+	if rope_reach:
+		rope_reach.advance(fsm.is_in(ROPE_HOLD_STATES))
+	_tick_selling()
+	if _corner_lockout > 0:
+		_corner_lockout -= 1
 	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
 	move_and_slide()
-	keep_inside_the_ring()
+	if _rope_load_body:
+		# Out in the ropes on purpose -- the clamp would snap him back.
+		_end_rope_load_when_clear()
+	else:
+		keep_inside_the_ring()
 	_release_cover_contact()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
@@ -1155,6 +1622,7 @@ func _poll_live_input() -> Dictionary:
 		"grapple": Input.is_action_just_pressed("grapple"),
 		"run": Input.is_action_pressed("run"),
 		"submission_hold": Input.is_action_pressed("submission_hold"),
+		"reversal": Input.is_action_just_pressed("reversal"),
 	}
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
@@ -1211,6 +1679,7 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		var strike := _pick_tier_move(strike_move, strike_move_pool)
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
+		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
 	elif input.get("grapple", false):
 		_wants_tie_up_this_tick = true
 
@@ -1236,6 +1705,14 @@ const GRIP_BONE := "spine_03"
 ## During a throw the victim's chest is overhead and behind, and reaching for
 ## it puts the arms somewhere that reads as nothing at all.
 const GRIP_BONE_LIFT := "pelvis"
+## The tie-up's grips (_aim_collar_and_elbow): his neck, and his right elbow.
+## The collar hand sits COLLAR_BEHIND past the neck bone -- round the back of
+## it rather than on his throat -- and COLLAR_UP above it, at the base of the
+## skull where a real hand cups.
+const COLLAR_BONE := "neck_01"
+const ELBOW_BONE := "lowerarm_r"
+const COLLAR_BEHIND := 0.07
+const COLLAR_UP := 0.03
 ## Arm chains, index-matched to _arm_ik / _grip_targets.
 const ARM_CHAINS := [
 	{"root": "upperarm_l", "tip": "hand_l"},
@@ -1428,6 +1905,7 @@ func _begin_irish_whip() -> void:
 	launch_dir.y = 0.0
 	launch_dir = launch_dir.normalized() if launch_dir.length() > 0.01 else Vector3.FORWARD
 	opponent.velocity = launch_dir * IRISH_WHIP_LAUNCH_SPEED
+	opponent._irish_whip_launch_velocity = opponent.velocity
 	opponent._irish_whip_target = self
 	opponent._irish_whip_rebounded = false
 	# The hold ends here too -- the whip replaces the grapple move.
@@ -1447,14 +1925,15 @@ func _begin_irish_whip() -> void:
 func _process_irish_whip() -> void:
 	if _irish_whip_rebounded:
 		return
+	if _rope_load_tick >= 0:
+		_tick_rope_load()
+		return
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
 		var collider := collision.get_collider()
 		if collider is Node and (collider as Node).is_in_group(RING_ROPE_GROUP):
-			velocity = velocity.bounce(collision.get_normal()) * IRISH_WHIP_REBOUND_DAMPING
-			_irish_whip_rebounded = true
-			_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
-			fsm.transition_to(WrestlerFSM.State.RUN)
+			_begin_rope_load(collision.get_normal(), collider as Node)
+			_tick_rope_load()
 			return
 	# No rope found in time -- see IRISH_WHIP_MAX_TICKS. Hand back to RUN
 	# without a rebound rather than leaving the wrestler in a state with no
@@ -1463,6 +1942,105 @@ func _process_irish_whip() -> void:
 	if fsm.ticks_in_state >= IRISH_WHIP_MAX_TICKS:
 		_irish_whip_rebounded = true
 		fsm.transition_to(WrestlerFSM.State.RUN)
+
+## THE ROPE LOAD (gauntlet/refs/ropes.md). A body does not bounce off the
+## ropes the tick it reaches them; it carries on INTO them, and they stop it
+## and throw it back. The rope collider stops the capsule's centre 0.38 m
+## short of where his back first touches the real ropes at 3.1, so he first
+## travels that gap at full speed (ROPE_LOAD_FREE), then the ropes take him
+## ROPE_LOAD_DEPTH further on a half-sine -- a mass on a spring, stopped and
+## returned -- and he comes back out of them at the rebound's speed. At 9 m/s
+## that is ~14 ticks in the ropes, against the footage's ~0.25 s contact;
+## the live ropes (core/ring/ring_ropes.gd) see his back go 0.4 m past their
+## line and give that far.
+##
+## Kinematic and closed-form in ticks, so deterministic. The rope collider he
+## is in is excepted from his collision for the load and until he is back
+## inside the point where it stopped him, and keep_inside_the_ring() stands
+## aside for the same span (it would snap him back to 2.6).
+const ROPE_LOAD_FREE := 0.38
+const ROPE_LOAD_DEPTH := 0.40
+## Longest he can be out in the ropes before being put back regardless -- a
+## load interrupted by something that holds him still must not strand him
+## outside the ring with the rope collider switched off.
+const ROPE_LOAD_MAX_TICKS := 60
+
+## Ticks since this whip's rope load began, or -1 when not loading.
+var _rope_load_tick := -1
+var _rope_load_from := Vector3.ZERO
+var _rope_load_out := Vector3.ZERO
+var _rope_load_speed := 0.0
+var _rope_load_along := Vector3.ZERO
+var _rope_load_body: CollisionObject3D
+## What _begin_irish_whip() launched him with -- see _begin_rope_load().
+var _irish_whip_launch_velocity := Vector3.ZERO
+
+
+func _begin_rope_load(normal: Vector3, rope: Node) -> void:
+	var inward := Vector3(normal.x, 0.0, normal.z).normalized()
+	_rope_load_out = -inward
+	# The launch velocity, not `velocity`: move_and_slide() has already slid
+	# the tick that reached the collider, taking the part into the rope away.
+	var flat := Vector3(_irish_whip_launch_velocity.x, 0.0, _irish_whip_launch_velocity.z)
+	_rope_load_speed = maxf(flat.dot(_rope_load_out), 1.0)
+	_rope_load_along = flat - _rope_load_out * flat.dot(_rope_load_out)
+	_rope_load_from = global_position
+	_rope_load_tick = 0
+	_rope_load_body = rope as CollisionObject3D
+	if _rope_load_body:
+		add_collision_exception_with(_rope_load_body)
+
+
+## Where the load has him `seconds` after it began, as distance out past
+## where the collider stopped him; -1 once the ropes have thrown him back.
+static func rope_load_offset(seconds: float, speed: float) -> float:
+	var t_free := ROPE_LOAD_FREE / speed
+	if seconds < t_free:
+		return speed * seconds
+	var omega := speed / ROPE_LOAD_DEPTH
+	var u := seconds - t_free
+	if u < PI / omega:
+		return ROPE_LOAD_FREE + ROPE_LOAD_DEPTH * sin(omega * u)
+	return -1.0
+
+
+func _tick_rope_load() -> void:
+	var dt := 1.0 / Engine.physics_ticks_per_second
+	_rope_load_tick += 1
+	var x := rope_load_offset(_rope_load_tick * dt, _rope_load_speed)
+	if x < 0.0:
+		# Thrown back: out of the ropes at the rebound's speed, the way he
+		# went in reflected, as the old instant bounce gave.
+		global_position = _rope_load_from + _rope_load_out * ROPE_LOAD_FREE \
+				+ _rope_load_along * (_rope_load_tick * dt)
+		velocity = (-_rope_load_out * _rope_load_speed + _rope_load_along) \
+				* IRISH_WHIP_REBOUND_DAMPING
+		_irish_whip_rebounded = true
+		_irish_whip_return_ticks_remaining = IRISH_WHIP_RETURN_TICKS
+		fsm.transition_to(WrestlerFSM.State.RUN)
+		return
+	var want := _rope_load_from + _rope_load_out * x \
+			+ _rope_load_along * (_rope_load_tick * dt)
+	want.y = global_position.y
+	velocity = (want - global_position) / dt
+
+
+## Hands the rope collider back once he is inside where it stopped him.
+func _end_rope_load_when_clear() -> void:
+	var out := (global_position - _rope_load_from).dot(_rope_load_out)
+	var loading := _rope_load_tick >= 0 and not _irish_whip_rebounded
+	if out > 0.0 and (loading or _rope_load_tick < ROPE_LOAD_MAX_TICKS):
+		if not loading:
+			_rope_load_tick += 1
+		return
+	if out > 0.0:
+		# Stranded out in the ropes (stopped mid-return): put him back.
+		global_position -= _rope_load_out * out
+	if is_instance_valid(_rope_load_body):
+		remove_collision_exception_with(_rope_load_body)
+	_rope_load_body = null
+	_rope_load_tick = -1
+
 
 ## Autopilot phase right after a rope rebound -- see
 ## _irish_whip_return_ticks_remaining's doc comment for why this can't just
@@ -1538,16 +2116,25 @@ func _process_active_move(input: Dictionary) -> void:
 		_turn_toward_opponent()
 
 
-	if in_active_frames and opponent and _strike_reaches(_active_move) \
+	if _ground_zone != "":
+		_tick_ground_step()
+		if in_active_frames and opponent and not _active_move_hit_applied:
+			_active_move_hit_applied = true
+			if DOWNED_STATES.has(opponent.fsm.current_state):
+				opponent._take_ground_hit(self, _active_move, _ground_zone)
+	elif in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
 			and not _active_move_hit_applied:
-		_apply_move_to_opponent(_active_move)
 		_active_move_hit_applied = true
+		# Read and parried: nothing lands, and the counter is on its way.
+		if not opponent._take_reversal(self, _active_move):
+			_apply_move_to_opponent(_active_move)
 
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
 		_active_move_hit_applied = false
 		_active_move = null
+		_ground_zone = ""
 		# A hit taken mid-strike was held back so this punch could land; pay
 		# it now. CONSUMED, not queued -- an unconsumed one-shot request spent
 		# on an unrelated hit later is a bug this project has had once already
@@ -1568,9 +2155,673 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	combat.apply_momentum(move)
 	opponent._pending_hits.append(move)
 
+# --- in-between behaviour (gauntlet/refs/animation_gap.md, Phase 4) ----------
+#
+# What a man does between moves, past what BodyLife already gives him
+# (breathing, the tired slump, eyes on his man, fidgets):
+#
+#   * He plays to the crowd. A TAUNT is his own gesture -- Roman's finger to
+#     the crowd, Cody's "whoa", the air punch for anyone else -- thrown over a
+#     man who is down: once to set up his finisher, once after a power move
+#     lands (WrestlerAI decides when). The crowd pops for it.
+#   * He sells. Coming up off the mat, and every so often standing, he holds
+#     the part that has taken the most -- a hand to the head, the ribs, the
+#     knee, the shoulder -- leaning into it (SellClutch).
+#   * He paces himself. A worn man walks slower and throws less often
+#     (WrestlerAI.fatigue_scale).
+
+## Each man's taunt: clip and how long he holds it, in ticks. Keyed by
+## entrance_style, which is who he is.
+const TAUNTS := {
+	"roman": ["strikes/finger_raise", 110],
+	"cody": ["strikes/whoa_low", 140],
+	"": ["strikes/air_punch", 90],
+}
+const TAUNTS_MAX := 2
+## Selling: coming up off the mat he holds the part that has taken at least
+## SELL_GETUP_MIN, for SELL_GETUP_TICKS; standing, one that has taken
+## SELL_IDLE_MIN, for SELL_IDLE_TICKS, every SELL_EVERY ticks or so (seeded
+## per man, so two never sell in step).
+const SELL_GETUP_MIN := 20.0
+const SELL_GETUP_TICKS := 75
+const SELL_IDLE_MIN := 45.0
+const SELL_IDLE_TICKS := 60
+const SELL_EVERY := Vector2i(300, 540)
+
+var _sell_clock := -1
+var _sell_draws := 0
+## Sells begun this match (probes).
+var sells := 0
+
+
+func _tick_selling() -> void:
+	if sell_clutch == null:
+		return
+	var free := fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
+	sell_clutch.advance(free)
+	if not free:
+		return
+	if _sell_clock < 0:
+		_sell_clock = _next_sell_wait()
+	_sell_clock -= 1
+	if _sell_clock > 0:
+		return
+	_sell_clock = _next_sell_wait()
+	_begin_sell(most_hurt(combat.limb_damage, SELL_IDLE_MIN), SELL_IDLE_TICKS)
+
+
+func _next_sell_wait() -> int:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([name, _sell_draws, "sell"])
+	_sell_draws += 1
+	return rng.randi_range(SELL_EVERY.x, SELL_EVERY.y)
+
+
+func _begin_sell(part: String, ticks: int) -> void:
+	if part == "" or sell_clutch == null:
+		return
+	sell_clutch.sell(part, ticks)
+	sells += 1
+
+signal taunted(wrestler: WrestlerController)
+
+var taunts_used := 0
+
+
+func taunt_ticks() -> int:
+	return int((TAUNTS.get(entrance_style, TAUNTS[""]) as Array)[1])
+
+
+func can_taunt() -> bool:
+	return taunts_used < TAUNTS_MAX and fsm.is_in([WrestlerFSM.State.IDLE,
+			WrestlerFSM.State.LOCOMOTION])
+
+
+func begin_taunt() -> void:
+	var t: Array = TAUNTS.get(entrance_style, TAUNTS[""])
+	taunts_used += 1
+	_set_state_clip(WrestlerFSM.State.TAUNT, String(t[0]))
+	_start_move(WrestlerFSM.State.TAUNT, _timed_stub(int(t[1])))
+	taunted.emit(self)
+
+
+## The part of him that has taken the most, as SellClutch names it, or "" if
+## nothing has taken enough to sell.
+static func most_hurt(limb_damage: Dictionary, at_least: float) -> String:
+	var best := ""
+	var most := at_least
+	for pair: Array in [[CombatSystem.Limb.HEAD, "head"], [CombatSystem.Limb.TORSO, "torso"],
+			[CombatSystem.Limb.LEGS, "legs"], [CombatSystem.Limb.ARMS, "arms"]]:
+		var d: float = limb_damage.get(pair[0], 0.0)
+		if d >= most:
+			most = d
+			best = pair[1]
+	return best
+
+
+# --- chain wrestling (gauntlet/refs/animation_gap.md, Phase 4) ---------------
+#
+# Out of a lock-up the two men trade holds before anybody throws anything, the
+# way a match opens on TV and 2K's chain wrestling plays it: the man who won
+# the tie-up steers a hold with the stick, and the man in it can reverse to
+# take the next one himself.
+#
+# Each hold is one LINK, a paired move (chain_headlock, chain_wristlock,
+# chain_waistlock: into the hold, cranked twice, fought free, squared up) that
+# GrappleRig plays like any other. Between links is the READ: CHAIN_READ_TICKS
+# back in the collar-and-elbow, in which
+#   * the holder picks the next hold by the stick, relative to his facing:
+#     forward a side headlock, back a go-behind to a waistlock, either side a
+#     wristlock -- or nothing, and throws his grapple move when the read ends;
+#   * the other man may press Reversal inside CHAIN_REVERSAL_WINDOW to take
+#     it over: he becomes the holder and goes straight into CHAIN_COUNTER of
+#     the hold he was about to be put in. A press outside the window spends
+#     his chance for that read.
+# A hold runs to CHAIN_LINKS_MAX links, then the holder throws his move.
+#
+# Holds wear the man in them a little (2-3 damage to the part held, 2
+# momentum to the holder) and cost both some stamina. They are the opening
+# of a match, not a way through it.
+
+const CHAIN_HOLDS := {
+	"headlock": preload("res://resources/moves/chain_headlock.tres"),
+	"wristlock": preload("res://resources/moves/chain_wristlock.tres"),
+	"waistlock": preload("res://resources/moves/chain_waistlock.tres"),
+}
+## What a reversal turns each hold into, for the man who reverses it: out of
+## a headlock he goes behind (the classic escape); out of a wristlock he rolls
+## through into his own; out of a waistlock he switches behind.
+const CHAIN_COUNTER := {
+	"headlock": "waistlock", "wristlock": "wristlock", "waistlock": "waistlock",
+	"": "wristlock",
+}
+const CHAIN_LINKS_MAX := 3
+const CHAIN_READ_TICKS := 18
+## After a reversal the new holder's read is this much shorter: he is already
+## moving.
+const CHAIN_REVERSAL_HEAD_START := 12
+## Ticks into a read inside which a Reversal press takes it over.
+const CHAIN_REVERSAL_WINDOW := Vector2i(4, 14)
+## A stick push under this is no pick.
+const CHAIN_STICK_DEAD := 0.5
+## Stamina a hold costs, per link, and a reversal of one.
+const STAMINA_CHAIN_HOLDER := 0.02
+const STAMINA_CHAIN_HELD := 0.03
+
+signal chain_reversed(reverser: WrestlerController, held: WrestlerController)
+## A hold's link has run and its wear landed. Not move_landed: that means a
+## move has resolved and both men are out of the hold, and after a link they
+## are still in it.
+signal chain_hold_landed(holder: WrestlerController, held: WrestlerController, move: MoveDef)
+
+## Whether this hold chains at all: a tie-up's, not a running paired move's.
+var _chain_enabled := false
+var _chain_links := 0
+var _chain_read := 0
+var _chain_pick := ""
+## True once the AI (or a probe) has said this read is over with no pick.
+var _chain_done := false
+var _chain_reversal_spent := false
+## The hold being played right now, while a link runs.
+var chain_hold := ""
+## Counters landed out of holds this match (probes).
+var chain_reversals := 0
+
+
+## The hold a stick push asks for, relative to this man's facing.
+func chain_hold_for_stick(move: Vector2) -> String:
+	return chain_hold_for(move, global_transform.basis)
+
+
+## The hold a stick push (world x, z) asks for of a man facing `facing`'s -Z.
+static func chain_hold_for(move: Vector2, facing: Basis) -> String:
+	if move.length() < CHAIN_STICK_DEAD:
+		return ""
+	var dir := Vector3(move.x, 0.0, move.y).normalized()
+	var ahead := dir.dot(-facing.z)
+	var side := dir.dot(facing.x)
+	if absf(side) > absf(ahead):
+		return "wristlock"
+	return "headlock" if ahead > 0.0 else "waistlock"
+
+
+## In the read between links: back in the lock-up, the next hold undecided.
+func in_chain_read() -> bool:
+	var holder := self if _is_grapple_attacker else opponent
+	return holder != null and fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
+			and holder._chain_enabled and holder._chain_links < CHAIN_LINKS_MAX \
+			and holder.chain_hold == "" and not (grapple_rig and grapple_rig.is_active())
+
+
+## The holder's tick of the read. Returns true while the read goes on (or a
+## link has started), false when it is over with nothing picked -- the caller
+## then throws the grapple move as it always did.
+func _tick_chain_read(input: Dictionary) -> bool:
+	if not _chain_enabled or _chain_links >= CHAIN_LINKS_MAX or _chain_done:
+		return false
+	_chain_read += 1
+	var asked: String = String(input.get("chain", ""))
+	if asked == "none":
+		_chain_done = true
+		return false
+	if asked == "":
+		asked = chain_hold_for_stick(input.get("move", Vector2.ZERO))
+	if CHAIN_HOLDS.has(asked):
+		_chain_pick = asked
+	if _chain_read < CHAIN_READ_TICKS:
+		return true
+	if _chain_pick == "":
+		_chain_done = true
+		return false
+	_begin_chain_link(_chain_pick)
+	return true
+
+
+## The held man's tick of the read: a Reversal press in the window takes it.
+func _tick_chain_counter(input: Dictionary) -> void:
+	if opponent == null or not opponent._chain_enabled or opponent.chain_hold != "" \
+			or opponent._chain_links >= CHAIN_LINKS_MAX or opponent._chain_done:
+		return
+	if not input.get("reversal", false) or _chain_reversal_spent:
+		return
+	var at := opponent._chain_read
+	if at < CHAIN_REVERSAL_WINDOW.x or at > CHAIN_REVERSAL_WINDOW.y:
+		_chain_reversal_spent = true
+		return
+	_take_chain_over()
+
+
+## Reverses the hold he was about to be put in: he is the holder now, and
+## goes into its counter.
+func _take_chain_over() -> void:
+	var held := opponent
+	var counter: String = CHAIN_COUNTER.get(held._chain_pick, "wristlock")
+	held._is_grapple_attacker = false
+	_is_grapple_attacker = true
+	_chain_enabled = true
+	_chain_links = held._chain_links
+	_chain_done = false
+	_chain_pick = counter
+	_chain_read = CHAIN_REVERSAL_HEAD_START
+	_chain_reversal_spent = false
+	held._chain_reversal_spent = false
+	held._chain_pick = ""
+	held._chain_read = 0
+	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
+	chain_reversals += 1
+	chain_reversed.emit(self, held)
+
+
+func _begin_chain_link(hold: String) -> void:
+	var move: MoveDef = CHAIN_HOLDS[hold]
+	chain_hold = hold
+	_chain_links += 1
+	opponent._chain_links = _chain_links
+	_active_move = move
+	if grapple_rig:
+		grapple_rig.begin(self, opponent, move)
+		grapple_rig.grapple_finished.connect(_on_chain_link_finished, CONNECT_ONE_SHOT)
+	else:
+		_on_chain_link_finished(self, opponent)
+
+
+## A link has run: the hold's wear lands, and both are back in the lock-up
+## for the next read.
+func _on_chain_link_finished(_attacker: Node3D, _defender: Node3D) -> void:
+	var move := _active_move
+	_active_move = null
+	chain_hold = ""
+	if move:
+		opponent.combat.apply_damage(move,
+				CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
+		opponent._took_moves(1)
+		combat.apply_momentum(move)
+		chain_hold_landed.emit(self, opponent, move)
+	combat.spend_stamina(STAMINA_CHAIN_HOLDER)
+	opponent.combat.spend_stamina(STAMINA_CHAIN_HELD)
+	_chain_read = 0
+	_chain_pick = ""
+	_chain_done = false
+	opponent._chain_reversal_spent = false
+	for w: WrestlerController in [self, opponent]:
+		w._restart_state_clip(WrestlerFSM.State.GRAPPLE_HOLD, CHAIN_READ_CLIP)
+
+
+## The read is played in the collar-and-elbow.
+const CHAIN_READ_CLIP := "strikes/tie_up_collar"
+
+
+# --- the corner (gauntlet/refs/animation_gap.md, Phase 4: position) ----------
+#
+# A man knocked back into a corner does not stagger free: the turnbuckle stops
+# him, and he is trapped against it -- arms hooked over the top rope, chin on
+# his chest -- while the other man works him over. Every blow landed on him
+# there is taken in the corner (Corner_Hit) and keeps him in it, up to
+# CORNER_HITS_MAX; the next one after that, or the clock running out, lets him
+# out. A running attack into a trapped man is the corner charge.
+#
+# Deterministic: where he is and where the blow came from decide it, both read
+# off the two bodies' origins, never the skeleton.
+
+## Both |x| and |z| past this, and a man is in a corner's reach.
+const CORNER_ZONE := 1.85
+## Where a trapped man's origin is put, on both axes: keep_inside_the_ring()'s
+## own limit, which backs him into the buckle.
+const CORNER_SPOT := 2.6
+## How squarely a blow has to drive him at the corner: the cosine between the
+## blow's line and the diagonal into it.
+const CORNER_DRIVE_MIN := 0.2
+## Trapped on the first blow, and again on each blow taken there (the clip
+## lengths: corner_slump and corner_hit in strike_recipes.gd).
+const CORNER_TRAP_TICKS := 90
+const CORNER_HIT_TICKS := 60
+## Blows he takes in the corner before the next one gets him out.
+const CORNER_HITS_MAX := 3
+## Ticks to be driven back into the buckle from where he was hit.
+const CORNER_SLIDE_TICKS := 8
+## Once out of the corner he cannot be trapped in one again for this long.
+## Out of the trap he is still standing in the corner with the other man in
+## front of him, so without it the next blow trapped him straight back: one
+## seeded match (reversal_tally seed 1) looped 62 traps and never finished.
+const CORNER_LOCKOUT_TICKS := 240
+
+var _corner_trapped := false
+var _corner_hits := 0
+var _corner_spot := Vector3.ZERO
+var _corner_slide := 0
+## Ticks left before he can be trapped in a corner again.
+var _corner_lockout := 0
+
+
+## Trapped in a corner right now.
+func is_corner_trapped() -> bool:
+	return _corner_trapped and fsm.current_state == WrestlerFSM.State.STUNNED
+
+
+## The spot in the corner a blow from `from` drives a man at `pos` into, or a
+## non-finite vector when it does not drive him into one.
+static func corner_behind(pos: Vector3, from: Vector3) -> Vector3:
+	if absf(pos.x) < CORNER_ZONE or absf(pos.z) < CORNER_ZONE:
+		return Vector3.INF
+	var away := Vector3(pos.x - from.x, 0.0, pos.z - from.z)
+	var into := Vector3(signf(pos.x), 0.0, signf(pos.z)).normalized()
+	if away.length() < 0.001 or away.normalized().dot(into) < CORNER_DRIVE_MIN:
+		return Vector3.INF
+	return Vector3(signf(pos.x) * CORNER_SPOT, pos.y, signf(pos.z) * CORNER_SPOT)
+
+
+## Takes this blow in the corner, if it is one: returns whether it did.
+func _try_corner_trap() -> bool:
+	if opponent == null:
+		return false
+	if is_corner_trapped():
+		if _corner_hits >= CORNER_HITS_MAX:
+			return false
+		_corner_hits += 1
+		_move_ticks_remaining = CORNER_HIT_TICKS
+		_restart_state_clip(WrestlerFSM.State.STUNNED, "strikes/corner_hit")
+		return true
+	if _corner_lockout > 0 \
+			or not WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
+		return false
+	var spot := corner_behind(global_position, opponent.global_position)
+	if not spot.is_finite():
+		return false
+	_corner_spot = spot
+	_corner_hits = 0
+	_corner_slide = CORNER_SLIDE_TICKS
+	_set_state_clip(WrestlerFSM.State.STUNNED, "strikes/corner_slump")
+	_start_move(WrestlerFSM.State.STUNNED, _timed_stub(CORNER_TRAP_TICKS))
+	_corner_trapped = true
+	return true
+
+
+## Each tick trapped: driven back into the buckle, then held there facing out.
+func _tick_corner_trap() -> void:
+	var dt := 1.0 / Engine.physics_ticks_per_second
+	var to := Vector3(_corner_spot.x - global_position.x, 0.0, _corner_spot.z - global_position.z)
+	if _corner_slide > 0:
+		velocity = to / (_corner_slide * dt)
+		_corner_slide -= 1
+	else:
+		velocity = to / dt if to.length() > 0.01 else Vector3.ZERO
+	_knockback_ticks = 0
+	var out := Vector3(-signf(_corner_spot.x), 0.0, -signf(_corner_spot.z))
+	look_at(global_position + out, Vector3.UP)
+
+
+## Restarts a state's clip from its first frame while already in the state --
+## a travel() to the state he is in is a no-op (see play_paired_pose()).
+func _restart_state_clip(state: WrestlerFSM.State, clip: String) -> void:
+	if not _anim_playback or not anim_player or not anim_player.has_animation(clip):
+		return
+	var state_machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var state_name: String = WrestlerFSM.State.keys()[state]
+	if not state_machine.has_node(state_name):
+		return
+	var anim_node := state_machine.get_node(state_name) as AnimationNodeAnimation
+	if not anim_node:
+		return
+	anim_node.animation = clip
+	_inertialize(state_name)
+	_anim_playback.start(state_name, true)
+
+
+# --- rope breaks (gauntlet/refs/animation_gap.md, Phase 4: position) ---------
+#
+# A man pinned or held near the ropes gets a hand or a foot on them, and the
+# referee breaks it (MatchReferee). Whether he can is read off his origin and
+# facing -- where his hands and feet can get to lying there -- never off the
+# skeleton, so the same match always breaks the same counts.
+
+## Where a man lying down can reach, in his own frame (his head is up -Z,
+## MatchReferee's cover measurements): a hand stretched past his head, a hand
+## out to either side, a foot either side.
+const ROPE_REACH_POINTS: Array[Vector3] = [
+	Vector3(0.0, 0.0, -1.25),
+	Vector3(0.85, 0.0, -0.45), Vector3(-0.85, 0.0, -0.45),
+	Vector3(0.2, 0.0, 1.0), Vector3(-0.2, 0.0, 1.0),
+]
+## A reach that gets this far out is on the rope: the rope line is at
+## RingBuilder.ROPE_SPAN 3.1, and a hand closes round it from inside.
+const ROPE_TOUCH := 2.98
+## States he keeps hold of the rope in once he has it.
+const ROPE_HOLD_STATES: Array = [
+	WrestlerFSM.State.PIN_DEFENDER, WrestlerFSM.State.SUBMISSION_DEFENDER,
+	WrestlerFSM.State.DOWN,
+]
+
+
+## The outward normal of the rope side a man lying at `w` can reach, or ZERO.
+static func rope_within_reach(w: Node3D) -> Vector3:
+	var best := Vector3.ZERO
+	var best_out := ROPE_TOUCH
+	for p in ROPE_REACH_POINTS:
+		var q := w.global_transform * p
+		if absf(q.x) >= best_out:
+			best_out = absf(q.x)
+			best = Vector3(signf(q.x), 0.0, 0.0)
+		if absf(q.z) >= best_out:
+			best_out = absf(q.z)
+			best = Vector3(0.0, 0.0, signf(q.z))
+	return best
+
+
+## Reaches for the ropes on `side`, getting there in `ticks`.
+func reach_for_rope(side: Vector3, ticks: int) -> void:
+	if rope_reach:
+		rope_reach.reach(side, ticks)
+
+
+# --- ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position) -------
+#
+# A man down is worked before he is covered, and what he gets depends on where
+# the other man is standing: at his feet, a stomp to the legs -- the damage
+# Cody's Figure-Four is built on; beside him, a stomp to the body; at his
+# head, a fist driven down from one knee. MatchReferee starts one when the
+# standing man is in reach of one of those three, up to GROUND_ATTACKS_MAX
+# per knockdown; the man on the mat stays down while he takes them.
+
+const GROUND_STOMP_LEGS := preload("res://resources/moves/ground_stomp_legs.tres")
+const GROUND_STOMP_BODY := preload("res://resources/moves/ground_stomp_body.tres")
+const GROUND_FIST := preload("res://resources/moves/ground_fist.tres")
+const GROUND_ATTACKS_MAX := 2
+## Along a downed man from his pelvis (his own -Z is toward his head): past
+## HEAD_ZONE_Z he is at the head, past LEGS_ZONE_Z at the legs.
+const HEAD_ZONE_Z := -0.55
+const LEGS_ZONE_Z := 0.30
+## Where the attacker stands from the point he hits: the stomping boot and the
+## fist both land this far in front of him (Ground_Stomp / Ground_Fist).
+const GROUND_REACH := 0.45
+## And how near he has to be to it for a ground attack to start at all.
+const GROUND_START_RANGE := 0.9
+## Ticks he takes to step onto his mark as it starts.
+const GROUND_STEP_TICKS := 6
+## A man hit on the mat stays down at least this much longer.
+const GROUND_HOLD_DOWN_TICKS := 30
+
+var ground_attacks_taken := 0
+var _ground_zone := ""
+var _ground_step_left := 0
+var _ground_step: Vector3 = Vector3.ZERO
+
+
+## Which part of a downed `victim` a man standing at `pos` is at.
+static func downed_zone(victim: WrestlerController, pos: Vector3) -> String:
+	return zone_along_body((victim.global_transform.affine_inverse() * pos).z)
+
+
+## The zone at `z` metres along a downed man from his pelvis, toward his feet.
+static func zone_along_body(z: float) -> String:
+	if z <= HEAD_ZONE_Z:
+		return "head"
+	if z >= LEGS_ZONE_Z:
+		return "legs"
+	return "body"
+
+
+static func ground_move_for(zone: String) -> MoveDef:
+	match zone:
+		"head": return GROUND_FIST
+		"legs": return GROUND_STOMP_LEGS
+	return GROUND_STOMP_BODY
+
+
+## The point on a downed man a ground attack in `zone` lands on, on the mat.
+static func ground_target(victim: WrestlerController, zone: String) -> Vector3:
+	var bone := {"head": "Head", "legs": "calf_r", "body": "spine_02"}[zone] as String
+	var sk := victim.skeleton
+	var p := victim.global_position
+	if sk:
+		var i := sk.find_bone(victim._skeleton_bone_name(bone))
+		if i >= 0:
+			p = sk.global_transform * sk.get_bone_global_pose(i).origin
+	p.y = victim.global_position.y
+	return p
+
+
+## Whether a ground attack can start now on `victim`, from here.
+func can_ground_attack(victim: WrestlerController) -> bool:
+	if not DOWNED_STATES.has(victim.fsm.current_state) or victim.fsm.current_state != WrestlerFSM.State.DOWN:
+		return false
+	if victim.ground_attacks_taken >= GROUND_ATTACKS_MAX:
+		return false
+	var zone := downed_zone(victim, global_position)
+	var move := ground_move_for(zone)
+	if victim._move_ticks_remaining < move.startup_frames + 6:
+		return false
+	var flat := ground_target(victim, zone) - global_position
+	flat.y = 0.0
+	return flat.length() <= GROUND_START_RANGE
+
+
+func begin_ground_attack(victim: WrestlerController) -> void:
+	var zone := downed_zone(victim, global_position)
+	var move := ground_move_for(zone)
+	var target := ground_target(victim, zone)
+	var flat := target - global_position
+	flat.y = 0.0
+	var dir := flat.normalized() if flat.length() > 0.01 else -global_basis.z
+	look_at(global_position + dir, Vector3.UP)
+	_play_strike_clip(move)
+	_start_move(WrestlerFSM.State.STRIKE, move)
+	combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * move.total_frames())
+	_ground_zone = zone
+	# Onto his mark over the first few ticks: GROUND_REACH short of the point.
+	var mark := target - dir * GROUND_REACH
+	_ground_step = (mark - global_position) / float(GROUND_STEP_TICKS)
+	_ground_step.y = 0.0
+	_ground_step_left = GROUND_STEP_TICKS
+	# He is going nowhere while he is being worked.
+	victim._move_ticks_remaining = maxi(victim._move_ticks_remaining,
+			move.startup_frames + GROUND_HOLD_DOWN_TICKS)
+
+
+func _tick_ground_step() -> void:
+	if _ground_step_left <= 0:
+		velocity = Vector3.ZERO
+		return
+	_ground_step_left -= 1
+	velocity = _ground_step * float(Engine.physics_ticks_per_second)
+
+
+## A ground attack landing on this man, down.
+func _take_ground_hit(attacker: WrestlerController, move: MoveDef, zone: String) -> void:
+	ground_attacks_taken += 1
+	combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if attacker.combat.is_fired_up() else 1.0)
+	_took_moves(1)
+	attacker.combat.apply_momentum(move)
+	attacker.move_landed.emit(attacker, self, move)
+	_move_ticks_remaining = maxi(_move_ticks_remaining, GROUND_HOLD_DOWN_TICKS)
+	if hit_flinch:
+		hit_flinch.hit(attacker.global_position, zone, HitFlinch.strength_of(move))
+
+
+# --- reversals (gauntlet/refs/animation_gap.md, Phase 4) ---------------------
+#
+# A strike can be read: pressed inside its window (MoveDef.reversal_window_*,
+# measured frames around its contact, opened REVERSAL_LEAD frames early so a
+# man can commit before the fist arrives), the defender parries it off line
+# and counters down the gap it opened (strike_parry, Parry_Counter). Too early
+# or at nothing and he is locked out for REVERSAL_LOCKOUT ticks -- guessing is
+# the one thing it must not reward. Every attempt costs stamina, and the AI's
+# chance of reading one scales with his (WrestlerAI._roll_reversal).
+#
+# The old counters were cut because a strike simply vanished. This one is two
+# beats nobody can miss: a forearm up that sweeps the punch aside, and a
+# straight right to the jaw that the striker flinches from.
+
+const REVERSAL_MOVE := preload("res://resources/moves/strike_parry.tres")
+const REVERSAL_LEAD := 6
+const REVERSAL_LOCKOUT := 30
+## States he can parry from: on his feet with his hands free.
+const CAN_REVERSE := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]
+
+var _reversal_armed := false
+var _reversal_lockout := 0
+## Reversals landed, for probes and the HUD.
+var reversals_landed := 0
+
+
+## Whether `move`, thrown by `striker`, is at a frame a reversal can read.
+static func in_reversal_window(move: MoveDef, frame: int) -> bool:
+	return move != null and move.reversal_window_end > 0 \
+			and frame >= move.reversal_window_start - REVERSAL_LEAD \
+			and frame <= move.reversal_window_end
+
+
+func _read_reversal(input: Dictionary) -> void:
+	if _reversal_lockout > 0:
+		_reversal_lockout -= 1
+	if _reversal_armed and (opponent == null or opponent.fsm.current_state != WrestlerFSM.State.STRIKE):
+		# The strike he read never arrived (missed, or cut short).
+		_reversal_armed = false
+	if not input.get("reversal", false) or _reversal_lockout > 0 or _reversal_armed:
+		return
+	combat.spend_stamina(CombatSystem.STAMINA_REVERSAL)
+	var striker := opponent
+	if striker and striker.fsm.current_state == WrestlerFSM.State.STRIKE and striker._active_move \
+			and in_reversal_window(striker._active_move, striker.strike_frame()):
+		_reversal_armed = true
+	else:
+		_reversal_lockout = REVERSAL_LOCKOUT
+
+
+## Frames into the strike he is throwing.
+func strike_frame() -> int:
+	return _active_move.total_frames() - _move_ticks_remaining if _active_move else -1
+
+
+## Called by the striker at contact. True if this man read it: he parries and
+## counters, and the strike does nothing.
+func _take_reversal(striker: WrestlerController, move: MoveDef) -> bool:
+	if not _reversal_armed:
+		return false
+	_reversal_armed = false
+	if not CAN_REVERSE.has(fsm.current_state):
+		return false
+	reversals_landed += 1
+	_turn_toward_opponent()
+	_play_strike_clip(REVERSAL_MOVE)
+	_start_move(WrestlerFSM.State.STRIKE, REVERSAL_MOVE)
+	reversed.emit(self, striker, move)
+	return true
+
+
+## Stamina's per-tick ledger: running costs, standing and lying win it back.
+func _tick_stamina() -> void:
+	match fsm.current_state:
+		WrestlerFSM.State.RUN:
+			combat.spend_stamina(CombatSystem.STAMINA_RUN_TICK)
+		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION:
+			combat.regen_stamina(CombatSystem.STAMINA_REGEN_TICK)
+		WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP:
+			combat.regen_stamina(CombatSystem.STAMINA_REGEN_DOWN_TICK)
+
+
 ## Whether this hit knocks the wrestler down, rather than staggering him.
 func _would_be_knocked_down() -> bool:
-	return combat.total_damage() - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
+	return combat.wear - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
 
 ## Called by MatchReferee once every wrestler has finished its own
 ## _physics_process for this tick.
@@ -1590,6 +2841,17 @@ func _resolve_pending_hits() -> void:
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
 	_took_moves(moves.size())
+	# Every blow that lands shows on him, whatever he is doing -- mid-punch
+	# included, where the reaction clip has to wait (below). A man fired up
+	# no-sells: he takes it without giving.
+	if hit_flinch and opponent and not combat.is_fired_up():
+		var last: MoveDef = moves[moves.size() - 1]
+		var strength := HitFlinch.strength_of(last)
+		hit_flinch.hit(opponent.global_position, HitFlinch.zone_of(last), strength)
+		var stop := hit_stop_ticks_for(strength)
+		if stop > 0:
+			hit_stop(stop)
+			opponent.hit_stop(stop)
 	if _would_be_knocked_down():
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
 		_pending_hit_reaction = null
@@ -1642,6 +2904,10 @@ func fire_up() -> void:
 ## velocity leak across states (see _start_move()'s own note) -- used
 ## deliberately here, and decayed to nothing rather than left running.
 func _begin_hit_reaction(move: MoveDef) -> void:
+	# Backed into a corner, the turnbuckle takes it: trapped there, or hit
+	# again while he is.
+	if _try_corner_trap():
+		return
 	# Hit by a man in the middle of his comeback, he is rocked -- the longer
 	# STUNNED stagger, not a flinch -- so the run can string together. The
 	# state existed, with its clip, and nothing had ever entered it.
@@ -1690,7 +2956,12 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 var _presentation_node := "IDLE"
 var _presentation_clip := ""
 
-func play_presentation_clip(clip: String) -> void:
+## `cut` starts the clip on its first frame with no crossfade -- for a clip
+## whose first frame IS the last one's pose seen from a root that has just
+## been turned round (DiveSpot's rope rebound, which ends running the other
+## way). Crossfaded, the hips would blend 180 degrees of yaw back to 0 and
+## the man would spin on the spot.
+func play_presentation_clip(clip: String, cut := false) -> void:
 	if not anim_tree or clip == _presentation_clip \
 			or not anim_player.has_animation(clip):
 		return
@@ -1700,7 +2971,11 @@ func play_presentation_clip(clip: String) -> void:
 	if node == null:
 		return
 	node.animation = clip
-	_anim_playback.travel(next)
+	if cut:
+		_anim_playback.start(next, true)
+	else:
+		_inertialize(next)
+		_anim_playback.travel(next)
 	_presentation_node = next
 	_presentation_clip = clip
 
@@ -1763,10 +3038,14 @@ func _timed_stub(ticks: int) -> MoveDef:
 func _process_grapple_hold(input: Dictionary) -> void:
 	if not _is_grapple_attacker:
 		# The defender has nothing to press while the attacker's paired move
-		# plays: he waits it out.
+		# plays: he waits it out. Between chain links he may reverse.
+		_tick_chain_counter(input)
 		return
 	if input.get("run", false):
 		_begin_irish_whip()
+		return
+	# Chain wrestling first: the read, and the holds it strings together.
+	if _tick_chain_read(input):
 		return
 	# Pick the rung FIRST, then ask whether it can be thrown.
 	#
@@ -1897,6 +3176,7 @@ func _clear_grapple_roles() -> void:
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move
 	_active_move = null
+	last_landed_tier = tier_of(move)
 	_resolve_grapple_move(move)
 
 func _resolve_grapple_move(move: MoveDef) -> void:
@@ -1926,6 +3206,8 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	opponent.combat.apply_damage(move,
 			CombatSystem.COMEBACK_DAMAGE_SCALE if combat.is_fired_up() else 1.0)
 	opponent._took_moves(1)
+	combat.spend_stamina(CombatSystem.STAMINA_GRAPPLE_ATTACKER)
+	opponent.combat.spend_stamina(CombatSystem.STAMINA_GRAPPLE_DEFENDER)
 	# The grapple is over as of here -- drop the roles before the FSM moves
 	# on, so nothing downstream reads an attacker flag for a finished move.
 	_clear_grapple_roles()
@@ -1951,6 +3233,53 @@ func _turn_round_on_the_mat() -> void:
 	global_transform = Transform3D(global_transform.basis.rotated(Vector3.UP, PI),
 			global_position)
 	_snap_next_animation = true
+	if inertializer:
+		inertializer.skip_next_turn()
+	_hold_model_facing()
+
+
+## The body turns now, but the clip that matches it lands a tick later: a
+## state machine with no crossfade outputs the old state for one more tick
+## (Inertializer, measured). For that tick the man lay turned round in the
+## OLD pose -- his head flashed 1.2 m to the other side of him and back
+## (tools/probe/transition_pops.tscn --world, "DOWN (new clip)", 2.7 m kick).
+## So the model is held facing the way it was until his hips show the new
+## clip's half-turn, then let go on that same tick. Presentation only: the
+## body, and everything the match reads, turned at once as before.
+const MODEL_HOLD_TICKS := 4
+## Ticks past the hold before it is let go whether or not the mixer ran.
+const MODEL_HOLD_GRACE := 2
+var _model_held := false
+var _model_held_hips := Quaternion.IDENTITY
+var _model_held_until := 0
+
+
+func _hold_model_facing() -> void:
+	var model := anim_player.get_parent() as Node3D if anim_player else null
+	if model == null or skeleton == null or anim_tree == null:
+		return
+	var hips := skeleton.find_bone(_skeleton_bone_name("pelvis"))
+	if hips < 0:
+		return
+	if not _model_held:
+		model.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * model.transform
+	_model_held = true
+	_model_held_hips = skeleton.get_bone_pose_rotation(hips)
+	_model_held_until = Engine.get_physics_frames() + MODEL_HOLD_TICKS
+	if not anim_tree.mixer_applied.is_connected(_release_model_facing):
+		anim_tree.mixer_applied.connect(_release_model_facing)
+
+
+func _release_model_facing(force := false) -> void:
+	if not _model_held:
+		return
+	var hips := skeleton.find_bone(_skeleton_bone_name("pelvis"))
+	var turned := _model_held_hips.angle_to(skeleton.get_bone_pose_rotation(hips)) > PI * 0.5
+	if not force and not turned and Engine.get_physics_frames() < _model_held_until:
+		return
+	var model := anim_player.get_parent() as Node3D
+	model.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * model.transform
+	_model_held = false
 
 ## A thrown man left lying where the throw put him, without it counting as a
 ## knockdown.
@@ -1965,19 +3294,40 @@ func _turn_round_on_the_mat() -> void:
 ## a man who was -- _process_timed_state() restores eligibility once he is
 ## back on his feet.
 func _lie_down_after_throw() -> void:
+	_stop_dead()
 	fsm.transition_to(WrestlerFSM.State.DOWN)
+	ground_attacks_taken = 0
 	_move_ticks_remaining = THROWN_DOWN_TICKS
 	_cover_eligible = false
 
 func _go_down() -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
+	_stop_dead()
 	fsm.transition_to(WrestlerFSM.State.DOWN)
-	_damage_at_last_knockdown = combat.total_damage()
+	ground_attacks_taken = 0
+	_damage_at_last_knockdown = combat.wear
 	_move_ticks_remaining = GETUP_TICKS
 	combat.cut_off_comeback()
 	_cover_eligible = true
 	knocked_down.emit(self)
+
+## A man on the mat goes nowhere under his own steam.
+##
+## The match recording showed wrestlers gliding across the ring flat on their
+## backs, 3-5 m at a time. tools/probe/glitch_scan.gd caught every one of them
+## the same way: knocked down out of a RUN (a running attack countered, a
+## clothesline met), he entered DOWN with his 7 m/s run velocity still set --
+## _go_down() changed state without touching velocity, and nothing in DOWN or
+## GETUP ever did either -- so move_and_slide() carried him on, most visibly
+## as he got up (he had been lying against the ropes, which held him until
+## the rise lifted him off them). The grapple rig and the cover place a downed
+## man by position, never by velocity, so clearing it costs nothing.
+func _stop_dead() -> void:
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_knockback_ticks = 0
+
 
 func _process_down(input: Dictionary) -> void:
 	_move_ticks_remaining -= 1
@@ -2264,7 +3614,7 @@ func _release_cover_contact() -> void:
 	if _cover_partner == null or not is_instance_valid(_cover_partner):
 		_cover_partner = null
 		return
-	if fsm.current_state == WrestlerFSM.State.PIN_ATTACKER:
+	if fsm.is_in([WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.SUBMISSION_ATTACKER]):
 		return
 	var apart := Vector2(global_position.x - _cover_partner.global_position.x,
 			global_position.z - _cover_partner.global_position.z).length()
@@ -2338,6 +3688,87 @@ func _cover_slide_duration(distance: float) -> int:
 ## Driving velocity instead lets move_and_slide() do the moving, which is what
 ## keeps the floor under him. Y is left alone entirely -- gravity owns it --
 ## and only the horizontal is steered.
+## How far behind a downed man's root Cody stands to take the Figure-Four:
+## on the man's own heading, off his feet end. wrestling_clips.py's
+## Figure_Four_* are authored against exactly this spacing (his pelvis at
+## Cody's fwd +1.00, his boots at +0.50). Past the two capsules' 0.8 m, so
+## the bodies never need to stop colliding.
+const FIGURE_FOUR_BEHIND_FEET_M := 1.0
+## Ticks left before the hold is locked and the contest starts. Counted down
+## by MatchReferee._tick_submission().
+var _submission_lock_ticks := 0
+## The hold being worked, while it is; null for a generic submission.
+var _submission_hold_move: MoveDef
+
+## Where he stands to take the hold on this man: off his feet end.
+##
+## Measured off the man's own skeleton -- head to boots, flattened onto the
+## mat -- rather than assumed from his node's heading. Assumed, it was wrong
+## twice in tools/probe/hold_shot.tscn: once Cody stood over the man's head
+## and lay back across his chest, once he faced away and hooked nothing.
+static func figure_four_spot(defender: WrestlerController) -> Vector3:
+	return defender.global_position + _feet_way(defender) * FIGURE_FOUR_BEHIND_FEET_M
+
+## Unit vector on the mat from a downed man's head toward his boots.
+static func _feet_way(defender: WrestlerController) -> Vector3:
+	var head := defender._bone_world("neck_01")
+	var foot_l := defender._bone_world("foot_l")
+	var foot_r := defender._bone_world("foot_r")
+	var way := Vector3.ZERO
+	if head != Vector3.INF and foot_l != Vector3.INF and foot_r != Vector3.INF:
+		way = (foot_l + foot_r) * 0.5 - head
+	way.y = 0.0
+	if way.length() < 0.2:
+		# No skeleton to read: a supine man lies boots toward his node's +Z.
+		way = defender.global_transform.basis.z
+		way.y = 0.0
+	return way.normalized()
+
+func _bone_world(canonical: String) -> Vector3:
+	if skeleton == null:
+		return Vector3.INF
+	var i := skeleton.find_bone(_skeleton_bone_name(canonical))
+	if i < 0:
+		return Vector3.INF
+	return (skeleton.global_transform * skeleton.get_bone_global_pose(i)).origin
+
+## Whether there is room: a man down by the ropes feet-first leaves nowhere
+## to stand, and keep_inside_the_ring() would park Cody on top of him.
+static func has_room_for_figure_four(defender: WrestlerController) -> bool:
+	var spot := figure_four_spot(defender)
+	return absf(spot.x) <= RING_KEEP_IN and absf(spot.z) <= RING_KEEP_IN
+
+## Stands him at the downed man's feet, facing up his body, and walks him
+## there the way the cover does (_tick_cover_slide), not in one tick.
+func _place_figure_four(defender: WrestlerController) -> void:
+	# The walk there can cross his body; the pair stop colliding for it, as
+	# for the cover, until they are apart again (_release_cover_contact).
+	add_collision_exception_with(defender)
+	defender.add_collision_exception_with(self)
+	_cover_partner = defender
+	# Facing up the man's body, toward his head. A wrestler faces down his
+	# node's -Z (the clips' `fwd`), so -Z is turned onto the head-ward line.
+	var up_body := -_feet_way(defender)
+	var target := Transform3D(Basis(Vector3.UP, atan2(-up_body.x, -up_body.z)),
+			figure_four_spot(defender))
+	target.origin.y = global_position.y
+	_cover_from = global_transform
+	_cover_to = target
+	_cover_slide_tick = 0
+	_cover_slide_ticks = _cover_slide_duration(global_position.distance_to(target.origin))
+
+## Out of the hold without the tap: he is flat on his back where he worked
+## it, head away from the man, so he turns round on the mat (the snap into
+## Down_Supine, as a head-away throw does) and gets up like any man thrown.
+func release_submission_hold() -> void:
+	_submission_hold_move = null
+	_submission_lock_ticks = 0
+	_cover_slide_tick = -1
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_turn_round_on_the_mat()
+	_lie_down_after_throw()
+
 func _tick_cover_slide() -> void:
 	if _cover_slide_tick < 0:
 		return
@@ -2362,9 +3793,24 @@ func _tick_cover_slide() -> void:
 		velocity.z = 0.0
 
 
-func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb) -> void:
+## With `move` (his own hold, e.g. the Figure-Four), both men play the
+## move's clip pair ("strikes/<animation_pair_id>_attacker"/"_defender"), he
+## is placed where the hold is worked, and the contest waits out
+## move.startup_frames -- the application -- before either side's ring fills.
+func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Limb,
+		move: MoveDef = null) -> void:
+	_submission_lock_ticks = 0
+	if move:
+		_set_state_clip(WrestlerFSM.State.SUBMISSION_ATTACKER,
+				"strikes/%s_attacker" % move.animation_pair_id)
+		defender._set_state_clip(WrestlerFSM.State.SUBMISSION_DEFENDER,
+				"strikes/%s_defender" % move.animation_pair_id)
+		_submission_lock_ticks = move.startup_frames
+		_submission_hold_move = move
 	fsm.transition_to(WrestlerFSM.State.SUBMISSION_ATTACKER)
 	defender.fsm.transition_to(WrestlerFSM.State.SUBMISSION_DEFENDER)
+	if move:
+		_place_figure_four(defender)
 	# submission_break_rate() reads whichever CombatSystem it's called on —
 	# it must be the defender's (the limb actually being locked), not the
 	# attacker's own. Calling it on `combat` (self, the attacker) silently

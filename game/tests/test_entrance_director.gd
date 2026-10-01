@@ -59,6 +59,27 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.HARD_CAM)
 
 
+## Both men meet the bell squared up to each other. The scene's spawns face
+## outward, and the entrance used to end on them: the owner saw both men
+## finish with their backs to each other.
+func test_the_bell_finds_them_facing_each_other() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	director.skip()
+	for pair: Array in [[a, b], [b, a]]:
+		var me: WrestlerController = pair[0]
+		var other: WrestlerController = pair[1]
+		var facing := -me.global_transform.basis.z
+		var to_other := other.global_position - me.global_position
+		facing.y = 0.0
+		to_other.y = 0.0
+		assert_float(facing.normalized().dot(to_other.normalized())) \
+				.override_failure_message("%s ends his entrance facing away" % me.name) \
+				.is_greater(0.99)
+
+
 ## The whole entrance, stepped: nobody jumps except at the broadcast cut (and
 ## on appearing), and it ends with the bell and both men on their marks.
 func test_the_walk_is_continuous_and_ends_on_the_marks() -> void:
@@ -84,6 +105,8 @@ func test_romans_entrance_is_continuous_and_cleans_up() -> void:
 			saw["pyro"] = true)
 	assert_bool(fired[1]).is_true()
 	assert_bool(fired[0]).override_failure_message("props or pyro outlived the bell").is_true()
+	# The owner's call: he walks out with the AEW title round his waist,
+	# raises it in the ring and hands it off -- worn, held, then gone.
 	for k in ["worn", "held", "", "pyro"]:
 		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
 
@@ -167,7 +190,19 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 	assert_bool(a.visible).override_failure_message("out before his music hit").is_false()
 	assert_float(light.light_energy).is_equal_approx(before * EntranceDirector.ROMAN_HOUSE_DIM, 0.001)
 	director.skip()
-	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
+	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
+
+
+## What a rig light reads once the bell has rung: the house dim undone, and
+## the ring keys and top fill on the match look (ArenaLighting.set_look),
+## which is brighter than the entrance look they started the show on.
+static func _after_bell(rig: Node, light: Light3D, before: float) -> float:
+	var n := String(light.name)
+	if n.begins_with("Key"):
+		return rig.key_energy
+	if n.begins_with("Top"):
+		return rig.top_energy
+	return before
 
 
 
@@ -199,17 +234,21 @@ func test_codys_entrance_is_continuous_and_cleans_up() -> void:
 	assert_bool(saw.has("coat_off")).override_failure_message("the coat never came off").is_true()
 	assert_bool(director._coats.is_empty()).is_true()
 	assert_object(director._backlight).is_null()
-	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
+	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
 
 
-## The WHOAs land on the music: his beats start at the measured times.
+## The WHOAs land on the music: in the dark the building is on camera, he
+## walks out of the smoke on the third WHOA, the WHOA pose on the hit, the
+## fists driven down on the punch (refs/entrances.md, measured).
 func test_codys_beats_land_on_the_music() -> void:
 	var scene := _match(true, "", "cody")
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var b_man: WrestlerController = scene.get_node("WrestlerB")
 	var start := -1
 	var ticks := 0
 	var starts := {}
 	var last := -1
+	var seen_at := -1
 	while ticks < 20000 and director._beat < director._beats.size():
 		var b: Dictionary = director._beats[director._beat]
 		if director._beat != last:
@@ -221,9 +260,87 @@ func test_codys_beats_land_on_the_music() -> void:
 				starts[clip] = ticks - start
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
-		if starts.has("strikes/air_punch"):
+		if start >= 0 and seen_at < 0 and b_man.visible:
+			seen_at = ticks - start
+		if starts.has("strikes/whoa_low"):
 			break
-	assert_int(starts.get("strikes/whoa_arms", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_1 * 60)))
-	assert_int(starts.get("strikes/fists_up", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_2 * 60)))
-	assert_int(starts.get("strikes/whoa_crouch", -1)).is_equal(int(round(EntranceDirector.CODY_WHOA_3 * 60)))
-	assert_int(starts.get("strikes/air_punch", -1)).is_equal(int(round(EntranceDirector.CODY_PUNCH * 60)))
+	# Measured in his music (EntranceDirector's CODY_* notes): nobody on
+	# camera until the first sung WHOA -- he used to walk out 16 s early, on
+	# an intro swell -- and each pose's accent on its phrase, within two ticks.
+	var on := func(what: String, at: int, music: float) -> void:
+		assert_int(at).override_failure_message("%s at tick %d, music %.2f s" % [
+				what, at, music]).is_between(int(round(music * 60)) - 2,
+				int(round(music * 60)) + 2)
+	on.call("appears", seen_at, EntranceDirector.CODY_EMERGE)
+	on.call("WHOA arms wide", starts.get("strikes/whoa_arms", -999)
+			+ EntranceDirector.WHOA_WIDE_AT, EntranceDirector.CODY_WHOA)
+	on.call("fists down", starts.get("strikes/fists_down", -999)
+			+ EntranceDirector.CODY_PUNCH_AT, EntranceDirector.CODY_PUNCH)
+	on.call("knee down", starts.get("strikes/kneel", -999)
+			+ EntranceDirector.KNEEL_DOWN_AT, EntranceDirector.CODY_KNEEL)
+	on.call("low WHOA wide", starts.get("strikes/whoa_low", -999)
+			+ EntranceDirector.WHOA_LOW_WIDE_AT, EntranceDirector.CODY_WHOA_LOW)
+
+
+## Roman's finger is in the air on the slam of his music, and the pyro with
+## it (refs/entrances.md, R-41 and the measured track).
+func test_romans_finger_lands_on_the_slam() -> void:
+	var scene := _match(true, "", "roman")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var start := -1
+	var ticks := 0
+	var pyro_at := -1
+	while ticks < 20000 and director._beat < director._beats.size():
+		var b: Dictionary = director._beats[director._beat]
+		if b.get("kind") == "hold" and start < 0:
+			start = ticks
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+		if start >= 0 and director._pyro and pyro_at < 0:
+			pyro_at = ticks - start
+			break
+	assert_int(pyro_at).override_failure_message("pyro at %d" % pyro_at) \
+			.is_between(int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) - 2,
+				int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) + 2)
+
+
+## The owner: no grapple stance before the bell -- they walk up to each
+## other, face off, and the bell rings. Stepped through the face-off: at the
+## stare they stand FACEOFF_GAP apart, square to each other, and no beat of
+## the whole entrance plays the grapple crouch.
+func test_they_walk_up_and_face_off_before_the_bell() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	for beat: Dictionary in director._beats:
+		for move: Array in beat.get("moves", []):
+			assert_str(move[4]).is_not_equal("strikes/idle_ready")
+	var stare := -1
+	for i in director._beats.size():
+		var beat: Dictionary = director._beats[i]
+		if beat["kind"] == "pair" and (beat["moves"][0] as Array)[4] == "strikes/face_off" \
+				and (beat["moves"][0] as Array)[1] == (beat["moves"][0] as Array)[2]:
+			stare = i
+			break
+	assert_int(stare).is_greater(0)
+	for w: WrestlerController in [a, b]:
+		w.global_transform = director._mark[w]
+	director._beat = stare - 1
+	director._start_beat()
+	for _i in 400:
+		director._physics_process(1.0 / 60.0)
+		if director._beat > stare:
+			break
+		if director._beat == stare and director._tick > 60:
+			break
+	assert_float(a.global_position.distance_to(b.global_position)) \
+			.is_equal_approx(EntranceDirector.FACEOFF_GAP, 0.02)
+	for pair: Array in [[a, b], [b, a]]:
+		var me: WrestlerController = pair[0]
+		var facing := -me.global_transform.basis.z
+		var to_other: Vector3 = (pair[1] as WrestlerController).global_position - me.global_position
+		facing.y = 0.0
+		to_other.y = 0.0
+		assert_float(facing.normalized().dot(to_other.normalized())).is_greater(0.99)
+	assert_str(a._presentation_clip).is_equal("strikes/face_off")

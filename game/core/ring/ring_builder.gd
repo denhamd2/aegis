@@ -49,7 +49,15 @@ const ROPE_HEIGHT_BOTTOM := 0.5
 const ROPE_HEIGHT_MIDDLE := 0.85
 const ROPE_HEIGHT_TOP := 1.2
 const ROPE_HEIGHTS := [ROPE_HEIGHT_BOTTOM, ROPE_HEIGHT_MIDDLE, ROPE_HEIGHT_TOP]
-const POST_XZ := 3.0
+## The posts stand at the deck's corners, OUTBOARD of the rope lines, as a
+## real ring's do. At 3.0 they stood inside the ropes (which are frozen at
+## 3.1), so the only way to put a pad on a rope end was to wrap it round the
+## post -- the owner's note: the pads were joined straight onto the posts,
+## with no connector. At 3.17 the tube's outer edge is 2 cm past the apron
+## edge (APRON_OUT 3.20), which is where a ring post stands, and there is
+## 0.114 m between each pad's back and its post for the turnbuckle hardware
+## (TURNBUCKLE_* below; gauntlet/refs/ring.md "Corners").
+const POST_XZ := 3.17
 
 # --- Ropes -------------------------------------------------------------------
 ## Rope radius. The ring reference (refs/ring.md) shows thin dark cable, and
@@ -72,10 +80,14 @@ const ROPE_SAG := {
 	ROPE_HEIGHT_MIDDLE: ROPE_SAG_MIDDLE,
 	ROPE_HEIGHT_BOTTOM: ROPE_SAG_BOTTOM,
 }
-## How far past the post centre a rope runs before its turnbuckle nub swallows
-## the end. The nub is small now that the branded pad is gone, so this is small
-## too -- overrun the pad used to hide would now hang in open air.
-const ROPE_OVERRUN := 0.022
+## Where each rope ENDS along its own axis: inside its turnbuckle pad, which
+## is where a real rope ends -- in the turnbuckle the pad covers, not at the
+## post. It used to run to the post (POST_XZ + a 0.022 overrun), which is what
+## a ring with the pads bolted straight onto its posts needed. 2.86 puts the
+## end 0.17 across the pad's diagonal from its centre line and at its centre
+## depth, inside the cushion on both counts
+## (test_the_rope_terminations_land_inside_the_pad).
+const ROPE_END := 2.86
 
 # --- Turnbuckles -------------------------------------------------------------
 ## No pads. The ring reference (refs/ring.md) has bare corners: each rope ends
@@ -162,7 +174,12 @@ const TURNBUCKLE_PAD_DEPTH := 0.20
 ## are asserted -- test_the_turnbuckle_pad_stands_proud_of_the_post and
 ## test_the_rope_terminations_land_inside_the_pad -- and there is no room
 ## between them for a deeper pad or a fatter post.
-const TURNBUCKLE_PAD_XZ := 3.003
+##
+## SUPERSEDED by the move of the posts to the deck corners (POST_XZ): the pad
+## no longer straddles a post. It is centred at u = 4.217 on the diagonal,
+## where both ropes end inside it (ROPE_END), with its back face at u = 4.317
+## -- 0.114 clear of the post's surface, the gap the turnbuckle spans.
+const TURNBUCKLE_PAD_XZ := 2.982
 ## The rounding on a cushion's arrises. It lives HERE, not in ring.py with the
 ## other bevel widths, because it is not only a shading choice: it eats into
 ## the clearance above, and a test can only pin that relationship if both
@@ -189,6 +206,28 @@ const TURNBUCKLE_PAD_BEVEL := 0.025
 ## longer builds `TurnbuckleConnectors` and `_model_materials()` no longer
 ## names it. If it comes back it needs the bolt holes first, because the
 ## holes are what made the reference's bracket a bracket.
+
+# --- The turnbuckle: what joins a pad to its post ----------------------------
+## Back, and not as the plate that was deleted above. A real ring's rope ends
+## in a turnbuckle -- a forged steel body with a hook at one end -- that hooks
+## an eye bolt through a collar on the post; the pad is laced round the
+## turnbuckle, so between the back of every pad and the post there is a hand's
+## width of bare galvanised hardware. That gap is what reads as "connected" on
+## camera, and it is thin: rods and a slotted body, not a plate, so it catches
+## a line of highlight rather than showing a white block.
+##
+## Along the diagonal from the pad's back to the post: the hook rod, the
+## turnbuckle body (two side bars between end bosses), and the eye bolt into
+## the post collar.
+const TURNBUCKLE_ROD_RADIUS := 0.009
+const TURNBUCKLE_BODY_LENGTH := 0.07
+const TURNBUCKLE_BODY_BAR_RADIUS := 0.0055
+const TURNBUCKLE_BODY_HALF_GAP := 0.014
+const TURNBUCKLE_BOSS_RADIUS := 0.014
+const TURNBUCKLE_EYE_RADIUS := 0.017
+## The collar each eye bolt goes through, one per rope height.
+const POST_COLLAR_RADIUS := 0.060
+const POST_COLLAR_HEIGHT := 0.05
 
 # --- The pad's artwork -------------------------------------------------------
 ## The AEW pad face, supplied by the project owner, on a flat quad sat just
@@ -348,7 +387,12 @@ const CANVAS_SEED := 20260903
 ##    warm/cool -0.311 against the reference still's -0.333, so ours is
 ##    already the warmer of the two, and the mat is 212k of 921k pixels in
 ##    that frame. A warm mat would widen a gap that is already open.
-const CANVAS_WHITE := Color(0.975, 0.975, 0.972)
+## Taken down to a light grey in the 2K26 lighting round
+## (gauntlet/refs/lighting_2k26.md item 1): on the gameplay camera the mat
+## measured 0.65 and read as a milky sheet over a fifth of the frame; 2K26's
+## canvas is a textured light grey. Lowering the cloth, not the lights, keeps
+## the wrestlers lit while the mat comes down.
+const CANVAS_WHITE := Color(0.66, 0.66, 0.66)
 ## The supplied AEW canvas artwork, mapped 1:1 over the 6m mat.
 ##
 ## Surface 0 of the floor mesh already carries a full 0..1 UV across the square
@@ -501,37 +545,82 @@ func _bare_steel() -> StandardMaterial3D:
 ## the one lever the ring owns there; the rest is lighting's, and lighting is
 ## deliberately untouched in this round.
 func _canvas_material() -> StandardMaterial3D:
-	var m := _resolve("ring_canvas", _mat(CANVAS_WHITE, 0.86))
-	m.albedo_color = CANVAS_WHITE
-	# The supplied canvas artwork if it is there, the generated weave if not.
+	# No woven-fabric maps. A TV ring is covered in #10 cotton duck canvas
+	# (the heavy plain-weave duck sold as "the same as used on TV"), with the
+	# promotion's art printed straight onto it. Its threads are under a
+	# millimetre: from any broadcast camera the weave is invisible and the mat
+	# reads as a smooth, matte sheet. What the eye does pick up is broad --
+	# the cloth pulled taut to the frame and settling between the boards, and
+	# the scuffs and marks already in the art.
 	#
-	# The generated texture does not go away: it still drives ROUGHNESS and the
-	# NORMAL below, which is where most of its value was. What it stops doing
-	# is standing in for a canvas nobody had -- the mark it used to draw was
-	# removed entirely when refs/ring.md called for an unbranded mat, leaving
-	# albedo carrying weave and wear on a blank field.
+	# It used to take the library's Fabric036 normal and roughness at a 0.5 m
+	# repeat with normal_scale 0.8: a coarse diagonal twill across the whole
+	# mat, which the owner saw on a close shot and rightly called denim.
+	var m := _mat(CANVAS_WHITE, CANVAS_ROUGHNESS)
+	# The supplied canvas artwork if it is there, the generated one if not.
 	var art: Texture2D = load(CANVAS_ART) if ResourceLoader.exists(CANVAS_ART) else null
 	m.albedo_texture = art if art != null else _canvas()
-	if m.roughness_texture == null:
-		# The weave drives roughness as well as albedo. A canvas is not
-		# uniformly glossy -- the thread crowns catch the ring rig and the
-		# valleys do not -- and that specular breakup is detail the albedo
-		# alone cannot produce, because it survives at grazing angles where
-		# the albedo variation is already washed out by the light. The library
-		# brings its own roughness map when it is present; this stands in.
-		m.roughness = 0.86
-		m.roughness_texture = _canvas()
-	if m.normal_texture == null:
-		m.normal_enabled = true
-		m.normal_texture = _canvas_normal()
-		# 0.75 rather than the 1.0 this shipped at: enough relief to keep the
-		# weave re-lit (fine detail is 0.31 against the reference's 0.61 and
-		# needs everything it can get) without returning to the corduroy that
-		# CANVAS_RELIEF's note describes.
-		m.normal_scale = 0.75
+	m.normal_enabled = true
+	m.normal_texture = _canvas_tension_normal()
+	m.normal_scale = CANVAS_TENSION_SCALE
 	m.uv1_scale = Vector3.ONE
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return m
+
+
+## Cotton duck under the lights: matte, one value across the mat.
+const CANVAS_ROUGHNESS := 0.84
+## How strongly the tension relief relights the mat. Gentle: it should read
+## as cloth over boards, not as a texture.
+const CANVAS_TENSION_SCALE := 0.45
+const CANVAS_TENSION_SIZE := 512
+static var _canvas_tension_texture: ImageTexture
+
+
+## The mat's surface relief, once over the whole 6 m: soft undulations a
+## metre or so across where the canvas settles between the boards, and shallow
+## ripples running parallel to each edge within half a metre of it, where the
+## cloth is pulled over the frame. No weave -- see _canvas_material().
+static func _canvas_tension_normal() -> ImageTexture:
+	if _canvas_tension_texture != null:
+		return _canvas_tension_texture
+	var n := CANVAS_TENSION_SIZE
+	var noise := FastNoiseLite.new()
+	noise.seed = CANVAS_SEED
+	noise.frequency = 5.0 / float(n)   # ~1.2 m features over the 6 m mat
+	noise.fractal_octaves = 2
+	var height := PackedFloat32Array()
+	height.resize(n * n)
+	for py in n:
+		for px in n:
+			var h := noise.get_noise_2d(px, py) * 0.6
+			# Edge ripples: parallel to the nearest edge, fading in 0.5 m.
+			var u := float(px) / float(n - 1)
+			var v := float(py) / float(n - 1)
+			var edge := minf(minf(u, 1.0 - u), minf(v, 1.0 - v)) * 6.0   # metres
+			if edge < 0.5:
+				var along := u if minf(v, 1.0 - v) < minf(u, 1.0 - u) else v
+				var across := edge
+				h += 0.35 * (1.0 - edge / 0.5) * sin(across * TAU / 0.12) \
+						* (0.6 + 0.4 * sin(along * TAU * 9.0))
+			height[py * n + px] = h
+	var data := PackedByteArray()
+	data.resize(n * n * 3)
+	for py in n:
+		for px in n:
+			var l := height[py * n + maxi(px - 1, 0)]
+			var r := height[py * n + mini(px + 1, n - 1)]
+			var up := height[maxi(py - 1, 0) * n + px]
+			var dn := height[mini(py + 1, n - 1) * n + px]
+			var normal := Vector3((l - r) * 2.0, (up - dn) * 2.0, 1.0).normalized()
+			var i := (py * n + px) * 3
+			data[i] = _byte(normal.x * 0.5 + 0.5)
+			data[i + 1] = _byte(normal.y * 0.5 + 0.5)
+			data[i + 2] = _byte(normal.z * 0.5 + 0.5)
+	var img := Image.create_from_data(n, n, false, Image.FORMAT_RGB8, data)
+	img.generate_mipmaps()
+	_canvas_tension_texture = ImageTexture.create_from_image(img)
+	return _canvas_tension_texture
 
 
 ## Rope. WHITE, thin and semi-gloss.
@@ -927,6 +1016,11 @@ func _model_materials() -> Dictionary:
 	return {
 		"PostMesh": _resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)),
 		"TurnbuckleFittings": _resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)),
+		# Galvanised: a light grey, mostly metallic, a little rough -- a line
+		# of highlight on each rod, not a mirror and not a white block. Not
+		# fully metallic: the hall's ambient carries no reflections (see
+		# arena_truss), and a pure conductor rendered the hardware near-black.
+		"TurnbuckleHardware": _mat(Color(0.64, 0.65, 0.66), 0.32, 0.7),
 		# Vinyl, not steel: a pad is a soft cover and takes a broad dull
 		# sheen, where the fittings behind it take a tight specular one.
 		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
@@ -956,6 +1050,22 @@ func _build_model() -> void:
 			push_error("RingBuilder: %s has no '%s' object." % [RING_MODEL, part])
 			continue
 		node.material_override = materials[part]
+	_build_live_ropes(holder, root, materials["RopeMesh"])
+
+
+## The ropes the glb ships are swept once and never move. They stay in the
+## file (test_ring_model.gd measures them) but are hidden, and RingRopes draws
+## the same twelve parabolas as live strings that give under a body -- see
+## its header and gauntlet/refs/ropes.md.
+func _build_live_ropes(holder: Node3D, root: Node3D, material: Material) -> void:
+	var baked := root.find_child("RopeMesh", true, false) as MeshInstance3D
+	if baked:
+		baked.visible = false
+	var ropes := RingRopes.new()
+	ropes.name = "LiveRopes"
+	holder.add_child(ropes)
+	ropes.setup(ROPE_SPAN, ROPE_END, ROPE_HEIGHTS, ROPE_SAG,
+			ROPE_RADIUS, material)
 
 
 # ================================================================== helpers ===

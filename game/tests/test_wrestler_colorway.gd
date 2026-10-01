@@ -49,7 +49,12 @@ func _luminance(color: Color) -> float:
 ## than the surface he is seen against, so no colourway change can quietly
 ## put a man at the mat's value. The rendered band is checked separately and
 ## recorded in VISUAL_BAR.md.
-const MIN_SKIN_MAT_ALBEDO_GAP := 0.15
+## 0.15 -> 0.10 in the 2K26 lighting round (gauntlet/refs/lighting_2k26.md):
+## the canvas went to a light grey and the rig moved light off the floor onto
+## the bodies (top 36 -> 22, key 9 -> 16), so a smaller ALBEDO gap now buys
+## the same RENDERED one -- measured on Vulkan, match_look.tscn: mat 0.45,
+## skin p75 0.29, the same separation as before with a 2K26-grey mat.
+const MIN_SKIN_MAT_ALBEDO_GAP := 0.10
 
 ## The reference's two wrestlers are 0.07 apart in luminance, so value is
 ## explicitly *not* how they separate from each other. Skin is the dominant

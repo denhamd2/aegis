@@ -224,7 +224,7 @@ func test_ripeness_resets_with_a_knockdown() -> void:
 	ai.controller.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD
 	ai.controller.signature_move = _signature()
 	_damage(ai.target, WrestlerController.KNOCKDOWN_DAMAGE)
-	ai.target._damage_at_last_knockdown = ai.target.combat.total_damage()
+	ai.target._damage_at_last_knockdown = ai.target.combat.wear
 	ai._cooldown = 0
 	var input := ai.poll_input()
 	assert_bool(input.get("grapple", false)).override_failure_message(

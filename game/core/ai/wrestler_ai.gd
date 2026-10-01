@@ -28,6 +28,9 @@ extends Node
 @export var strike_cooldown_ticks: int = 40
 ## strike_cooldown_ticks during a comeback (CombatSystem.is_fired_up()).
 @export var comeback_strike_cooldown_ticks: int = 12
+## Between strikes on a man trapped in a corner (Phase 4, position): he is
+## worked over while he hangs there, not sized up.
+@export var corner_strike_cooldown_ticks: int = 18
 ## How far away the AI stops walking in and charges instead.
 ##
 ## A STARTING VALUE, not a searched minimum. Its justification is the ring's
@@ -195,7 +198,150 @@ func _physics_process(_delta: float) -> void:
 			WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		_charging = false
 
+## Reversals (Phase 4): once per strike thrown at him, at a moment inside
+## its window, he reads it or he does not. The chance is his stamina's: fresh,
+## REVERSAL_CHANCE; spent, a third of it -- the 2K26 rule that a worn-down man
+## stops countering. Seeded per attempt, so a replay reads the same strikes.
+const REVERSAL_CHANCE := 0.45
+## What is left of it spent: a third. Squaring stamina left a tired man no
+## reversals at all, which made the long exchanges one-sided.
+const REVERSAL_SPENT_SHARE := 0.35
+var _reversal_rolls := 0
+var _reversal_roll_frame := -1
+var _reversal_decided := false
+var _reversal_intent := false
+
+
+## Chain wrestling. How many links the opening lock-up runs to -- one to
+## three, seeded -- and nothing out of any later one: the power and signature
+## lock-ups are the business end of a match, and the chain is its opening.
+const CHAIN_LINK_WEIGHTS := [2, 2, 1]
+## The read tick the holder picks on, and the one the held man reads it on
+## (inside WrestlerController.CHAIN_REVERSAL_WINDOW).
+const CHAIN_PICK_TICK := 6
+const CHAIN_READ_TICK := 8
+## Chance the man in a hold reverses the next one, at full stamina; it falls
+## with his stamina like a strike reversal's does.
+const CHAIN_REVERSAL_CHANCE := 0.3
+var _chain_plan := -1
+var _chain_rolls := 0
+
+
+func _chain_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 4099 + _player_index * 131 + _chain_rolls
+	_chain_rolls += 1
+	return rng
+
+
+func _chain_input() -> Dictionary:
+	var c := controller
+	if not c._is_grapple_attacker:
+		# In it: read the hold coming, and maybe take it over.
+		if c.opponent and c.opponent._chain_enabled and c.opponent.chain_hold == "" \
+				and c.opponent._chain_read == CHAIN_READ_TICK:
+			var stamina: float = c.combat.stamina
+			var go := _chain_rng().randf() < CHAIN_REVERSAL_CHANCE \
+					* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
+			return {"reversal": go}
+		return {}
+	if not c._chain_enabled:
+		return {}
+	if c._chain_pick != "":
+		return {} # a reversal already chose it; let the read run out
+	if _chain_plan < 0:
+		_chain_plan = 0
+		if not _opening_grapple_done():
+			var roll := _chain_rng().randi_range(1, 5)
+			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
+					2 if roll <= CHAIN_LINK_WEIGHTS[0] + CHAIN_LINK_WEIGHTS[1] else 3)
+	if c._chain_links >= _chain_plan:
+		return {"chain": "none"}
+	if c._chain_read != CHAIN_PICK_TICK:
+		return {} # picked once; the controller holds on to it
+	var holds := WrestlerController.CHAIN_HOLDS.keys()
+	return {"chain": holds[_chain_rng().randi_range(0, holds.size() - 1)]}
+
+
+func _roll_reversal() -> bool:
+	if target.fsm.current_state != WrestlerFSM.State.STRIKE or target._active_move == null \
+			or target._active_move == WrestlerController.REVERSAL_MOVE:
+		_reversal_decided = false
+		_reversal_intent = false
+		return false
+	var move: MoveDef = target._active_move
+	if not _reversal_decided:
+		# Decided once, as the swing starts: hold and read it, or not. Holding
+		# is what makes a read possible at all -- measured before this, 68 of
+		# 75 strikes were thrown into a man already swinging back, with nothing
+		# free to parry them (tools/probe/reversal_tally.tscn).
+		_reversal_decided = true
+		var rng := RandomNumberGenerator.new()
+		rng.seed = _match_seed * 7331 + _player_index * 97 + _reversal_rolls
+		_reversal_rolls += 1
+		var stamina: float = controller.combat.stamina
+		_reversal_intent = rng.randf() < REVERSAL_CHANCE \
+				* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
+		# A reaction time inside the window, not its first frame.
+		_reversal_roll_frame = move.reversal_window_start - WrestlerController.REVERSAL_LEAD \
+				+ rng.randi_range(0, WrestlerController.REVERSAL_LEAD)
+	return _reversal_intent and target.strike_frame() == _reversal_roll_frame
+
+
+## True while he is holding to read the strike coming at him: he does not
+## throw into it.
+func is_reading() -> bool:
+	return _reversal_intent
+
+
 func poll_input() -> Dictionary:
+	var input := _poll_input()
+	# Pacing: a worn man walks slower. Not a run -- a charge is a charge.
+	if controller and input.has("move") and not input.get("run", false):
+		input["move"] = (input["move"] as Vector2) * fatigue_walk_scale(
+				controller.combat.total_damage())
+	return input
+
+
+## In-between behaviour (Phase 4): how much slower a man walks, and how much
+## longer he waits between strikes, worn down by `damage` -- BodyLife's
+## "spent" scale, so he moves as tired as he looks.
+const FATIGUE_WALK_MIN := 0.7
+const FATIGUE_COOLDOWN_MAX := 1.5
+
+static func fatigue_of(damage: float) -> float:
+	return clampf(damage / BodyLife.DAMAGE_FULL, 0.0, 1.0)
+
+static func fatigue_walk_scale(damage: float) -> float:
+	return lerpf(1.0, FATIGUE_WALK_MIN, fatigue_of(damage))
+
+static func fatigue_cooldown_scale(damage: float) -> float:
+	return lerpf(1.0, FATIGUE_COOLDOWN_MAX, fatigue_of(damage))
+
+
+## Playing to the crowd (WrestlerController.begin_taunt): over a man just put
+## down, once to set up the finisher -- it is ready and he wants them to know
+## it -- and once after his power move lands. Decided in the first
+## TAUNT_WINDOW ticks he is down, or not at all for that knockdown.
+const TAUNT_WINDOW := 12
+var _setup_taunted := false
+var _power_taunted := false
+
+
+func _wants_taunt() -> bool:
+	if not controller.can_taunt() or target.fsm.current_state != WrestlerFSM.State.DOWN \
+			or target.fsm.ticks_in_state > TAUNT_WINDOW:
+		return false
+	if controller.combat.can_finisher() and controller.finisher_move and not _setup_taunted:
+		_setup_taunted = true
+		return true
+	if controller.last_landed_tier == CombatSystem.Tier.POWER and not _power_taunted:
+		_power_taunted = true
+		return true
+	return false
+
+
+func _poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
 	if controller.fsm.current_state == WrestlerFSM.State.PIN_DEFENDER:
@@ -220,13 +366,16 @@ func poll_input() -> Dictionary:
 	_tie_up_tick = 0
 	_last_tie_up_press_tick = -1000
 	if controller.fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD:
-		# Nothing to press either way now. The attacker used to roll here
-		# for an Irish whip instead of a grapple move; with one grapple in
-		# the whole match, spending it on a whip would mean matches that
-		# never show a grapple at all. The whip itself is untouched --
-		# WrestlerController._begin_irish_whip() still runs for a player
-		# who presses run in a hold.
-		return {}
+		# No whip: the attacker used to roll here for an Irish whip instead
+		# of a grapple move; with one grapple in the whole match, spending it
+		# on a whip would mean matches that never show a grapple at all. The
+		# whip itself is untouched -- WrestlerController._begin_irish_whip()
+		# still runs for a player who presses run in a hold.
+		#
+		# Chain wrestling instead (WrestlerController, "chain wrestling"):
+		# the holder picks holds, the man in them may reverse.
+		return _chain_input()
+	_chain_plan = -1
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 
@@ -240,6 +389,7 @@ func poll_input() -> Dictionary:
 		"grapple": false,
 		"run": false,
 	}
+	input["reversal"] = _roll_reversal()
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
@@ -252,6 +402,9 @@ func poll_input() -> Dictionary:
 	# guard in WrestlerController slides him round the legs if the straight
 	# line would clip them.
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
+		if _wants_taunt():
+			input["taunt"] = true
+			return input
 		var spot := WrestlerController.cover_approach_spot(target,
 				controller.global_position)
 		var to_spot := spot - controller.global_position
@@ -368,14 +521,33 @@ func poll_input() -> Dictionary:
 		# 1.17 / 1.20 / 1.37 / 1.35 m. Gating on the old 1.15 meant throwing
 		# from distances the drawn strike could not cover.
 		var reach := controller.shortest_strike_reach()
-		if _wants_tie_up():
+		# A man trapped in the corner cannot be locked up with -- he is not
+		# standing to meet it -- so he is struck instead, in a flurry.
+		var cornered := target.is_corner_trapped()
+		var wants_tie_up := _wants_tie_up()
+		if wants_tie_up and cornered:
+			# Ready to finish him, and he is hanging in the corner: wait for
+			# him to come out and lock up then. Working him over instead kept
+			# a man ready for his finisher striking forever -- blows past his
+			# limbs' damage cap knock nobody down (reversal_tally seed 1 ran
+			# its whole budget).
+			pass
+		elif wants_tie_up:
 			input["grapple"] = true
-		elif _cooldown <= 0 and distance <= reach:
+		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			input["strike"] = true
 			# Fired up, he does not wait between shots: the comeback is a
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
-					if controller.combat.is_fired_up() else strike_cooldown_ticks
+					if controller.combat.is_fired_up() else int(strike_cooldown_ticks
+					* fatigue_cooldown_scale(controller.combat.total_damage()))
+			if cornered:
+				_cooldown = mini(_cooldown, corner_strike_cooldown_ticks)
+		elif cornered:
+			# Stay square in front of him between shots rather than circle off.
+			var toward := to_target.normalized()
+			if distance > reach * 0.9:
+				input["move"] = Vector2(toward.x, toward.z)
 		elif distance > reach:
 			# The dead band, and it has to be closed explicitly. tie_up_range
 			# is 1.3 m and the shortest strike reaches 1.17 m, so between those
@@ -499,7 +671,7 @@ func _wants_power_tie_up() -> bool:
 ## in the opening exchange and finish the match with jabs.
 func _opponent_is_ripe() -> bool:
 	var remaining := WrestlerController.KNOCKDOWN_DAMAGE \
-			- (target.combat.total_damage() - target._damage_at_last_knockdown)
+			- (target.combat.wear - target._damage_at_last_knockdown)
 	# Fired up, his moves land harder (CombatSystem.COMEBACK_DAMAGE_SCALE),
 	# so the same signature closes a bigger gap.
 	var scale := CombatSystem.COMEBACK_DAMAGE_SCALE if controller.combat.is_fired_up() else 1.0

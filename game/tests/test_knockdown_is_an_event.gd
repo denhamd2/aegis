@@ -91,3 +91,16 @@ func test_a_man_left_lying_by_a_throw_is_down_but_not_knocked_down() -> void:
 	assert_int(w._move_ticks_remaining).is_equal(WrestlerController.THROWN_DOWN_TICKS)
 	assert_bool(w._cover_eligible).is_false()
 	assert_float(w._damage_at_last_knockdown).is_equal(0.0)
+
+
+## The limbs cap at MAX_LIMB_DAMAGE, and knockdowns must not: once the limbs a
+## man's strikes land on were full, total_damage() stopped growing and he could
+## never be knocked down again -- a seeded match ran its whole budget that way.
+func test_damage_past_a_full_limb_still_counts_toward_a_knockdown() -> void:
+	var combat := CombatSystem.new()
+	var jab := MoveDef.new()
+	jab.damage_head = 10.0
+	for i in 15:
+		combat.apply_damage(jab)
+	assert_float(combat.limb_damage[CombatSystem.Limb.HEAD]).is_equal(CombatSystem.MAX_LIMB_DAMAGE)
+	assert_float(combat.wear).is_equal(150.0)

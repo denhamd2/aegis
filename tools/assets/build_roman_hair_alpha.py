@@ -241,13 +241,20 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
 BROW_COLOR = (22, 17, 14)
 BROW_SEED = 7
 ## (x from the midline, centre y, half-thickness) in metres along the brow.
-BROW_PROFILE = [(0.011, 1.7345, 0.0056), (0.020, 1.7372, 0.0060),
-                (0.032, 1.7400, 0.0052), (0.044, 1.7410, 0.0042),
-                (0.054, 1.7388, 0.0028), (0.060, 1.7360, 0.0014)]
+##
+## Flattened and lowered against the owner's side-by-side: the first profile
+## rose 6.5 mm from the inner end to an arch over the outer eye and dropped
+## again, and on the model that arch read as a worried, raised brow -- where
+## his sit low and nearly straight over the eyes, the inner ends pulled down,
+## which is most of his stare. Now it rises only 3 mm, peaks flat, and the
+## tail barely drops; a touch thinner so it reads as hair, not marker.
+BROW_PROFILE = [(0.011, 1.7332, 0.0050), (0.020, 1.7348, 0.0053),
+                (0.032, 1.7360, 0.0047), (0.044, 1.7363, 0.0038),
+                (0.054, 1.7352, 0.0026), (0.060, 1.7336, 0.0013)]
 BROW_STRANDS = 900
 ## Opacity of the soft fill under the strands: skin never shows through a
 ## brow this dense at broadcast distance, where single strands filter away.
-BROW_FILL = 150
+BROW_FILL = 125
 BROW_SUPERSAMPLE = 4
 
 
@@ -260,6 +267,13 @@ def _glb_attributes(path: pathlib.Path, mesh_name: str) -> dict:
     binary = 20 + json_len + 8
     mesh = next(m for m in gltf["meshes"] if m["name"] == mesh_name)
     out = {}
+    prim = mesh["primitives"][0]
+    if "indices" in prim:
+        acc = gltf["accessors"][prim["indices"]]
+        view = gltf["bufferViews"][acc["bufferView"]]
+        fmt = {5121: "B", 5123: "H", 5125: "I"}[acc["componentType"]]
+        start = binary + view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        out["INDICES"] = list(struct.unpack_from("<%d%s" % (acc["count"], fmt), data, start))
     for key in ("POSITION", "NORMAL", "TEXCOORD_0"):
         accessor = gltf["accessors"][mesh["primitives"][0]["attributes"][key]]
         view = gltf["bufferViews"][accessor["bufferView"]]
@@ -344,6 +358,102 @@ def paint_brows(model: pathlib.Path, target: pathlib.Path) -> None:
     print(f"{'brows':38} -> {target.name:34} {2 * BROW_STRANDS} strands")
 
 
+## The beard's shadow, painted into the head albedo under the beard cards.
+##
+## Against the owner's side-by-side the beard read as a flat black cut-out
+## with stepped edges, a disconnected moustache and a pale gap under the lower
+## lip -- where he has one continuous, dense beard. The cards are fine; what
+## showed was SKIN between and around them. A game beard is always two
+## layers: cards for the silhouette, and a painted shadow on the skin beneath
+## so the gaps read as more beard. Where to paint it is taken from the cards
+## themselves (M_Combinations, which is all beard: it stops at the bottom of
+## the eyes), not guessed: each head vertex is darkened by its distance to the
+## nearest card vertex, full inside BEARD_SHADOW_NEAR, feathering out to
+## nothing at BEARD_SHADOW_FAR -- reach enough to close the lip gap and join
+## the moustache, soft enough that the edge feathers instead of stepping.
+BEARD_SHADOW_COLOR = (30, 24, 21)
+BEARD_SHADOW_NEAR = 0.004
+BEARD_SHADOW_FAR = 0.014
+BEARD_SHADOW_OPACITY = 0.72
+## What is left of the shadow where the beard fades, up the sideburns.
+BEARD_SHADOW_SIDES = 0.30
+BEARD_SHADOW_SEED = 11
+BEARD_LIP_Y = 1.646
+BEARD_LIP_HALF_W = 0.028
+BEARD_LIP_HALF_H = 0.0105
+
+
+def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
+    import numpy as np
+    head = _glb_attributes(model, "M_Head")
+    cards = np.array(_glb_attributes(model, "M_Combinations")["POSITION"])
+    pos = np.array(head["POSITION"])
+    uv = np.array(head["TEXCOORD_0"])
+    tris = np.array(head["INDICES"]).reshape(-1, 3)
+    # Nearest card vertex per head vertex, in chunks.
+    near = np.empty(len(pos))
+    for i in range(0, len(pos), 256):
+        d = np.linalg.norm(pos[i:i + 256, None, :] - cards[None, :, :], axis=2)
+        near[i:i + 256] = d.min(axis=1)
+    weight = np.clip(1.0 - (near - BEARD_SHADOW_NEAR)
+                     / (BEARD_SHADOW_FAR - BEARD_SHADOW_NEAR), 0.0, 1.0)
+    # Never above the cheekbone line or behind the ear.
+    weight[pos[:, 1] > 1.700] = 0.0
+    weight[pos[:, 2] < 0.0] = 0.0
+    # And never on the lips: the moustache and chin cards sit right against
+    # them, and a first render painted the mouth grey. An ellipse over the
+    # mouth (teeth, tongue and mouth bag span y 1.61-1.67 and x +-0.035;
+    # the lips are the middle of that), feathered at its edge.
+    lip = np.sqrt((pos[:, 0] / BEARD_LIP_HALF_W) ** 2
+                  + ((pos[:, 1] - BEARD_LIP_Y) / BEARD_LIP_HALF_H) ** 2)
+    weight *= np.clip((lip - 1.0) / 0.35, 0.0, 1.0)
+    # And faded up the sideburns and back by the ear, as the cards are
+    # (RomanModel.beard_fade -- same band, same numbers): full on the jaw,
+    # short stubble at the sides. Full strength everywhere, the first version
+    # made the sideburns as solid as the chin and the fade disappeared.
+    def smooth(a, b, x):
+        t = np.clip((x - a) / (b - a), 0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    fade = np.maximum(smooth(1.625, 1.695, pos[:, 1]),
+                      0.8 * smooth(0.040, 0.072, np.abs(pos[:, 0]))
+                      * smooth(0.10, 0.05, pos[:, 2]))
+    weight *= 1.0 - (1.0 - BEARD_SHADOW_SIDES) * fade
+    albedo = Image.open(target).convert("RGB")
+    size = albedo.size[0]
+    field = np.zeros((size, size), dtype=np.float32)
+    for tri in tris:
+        w = weight[tri]
+        if w.max() <= 0.0:
+            continue
+        p = uv[tri] * size
+        x0, y0 = np.floor(p.min(axis=0)).astype(int)
+        x1, y1 = np.ceil(p.max(axis=0)).astype(int)
+        x0, y0 = max(x0, 0), max(y0, 0)
+        x1, y1 = min(x1, size - 1), min(y1, size - 1)
+        if x1 < x0 or y1 < y0:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+        (ax, ay), (bx, by), (cx, cy) = p
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-9:
+            continue
+        l0 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / den
+        l1 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / den
+        l2 = 1.0 - l0 - l1
+        inside = (l0 >= -0.01) & (l1 >= -0.01) & (l2 >= -0.01)
+        val = l0 * w[0] + l1 * w[1] + l2 * w[2]
+        region = field[y0:y1 + 1, x0:x1 + 1]
+        region[inside] = np.maximum(region[inside], val[inside])
+    # Stubble grain, seeded: a beard shadow is not a flat fill.
+    rng = np.random.default_rng(BEARD_SHADOW_SEED)
+    grain = 0.78 + 0.22 * rng.random((size, size), dtype=np.float32)
+    mask = Image.fromarray(np.clip(field * grain * BEARD_SHADOW_OPACITY * 255, 0, 255)
+                           .astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(3))
+    shadow = Image.new("RGB", albedo.size, BEARD_SHADOW_COLOR)
+    Image.composite(shadow, albedo, mask).save(target, optimize=True)
+    print(f"{'beard shadow':38} -> {target.name:34} {int((field > 0.05).sum())} texels")
+
+
 def main() -> int:
     if not CHARACTERS.is_dir():
         sys.exit(f"not found: {CHARACTERS}")
@@ -358,6 +468,7 @@ def main() -> int:
         CHARACTERS / "roman_reigns_head_color.png",
     )
     paint_brows(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
+    paint_beard_shadow(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     return 0
 
 

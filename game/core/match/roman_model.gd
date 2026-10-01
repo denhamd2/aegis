@@ -207,19 +207,49 @@ const GROW_FIXES := {
 ## plastic. 0.45 gives the forehead, cheekbones and shoulders a travelling
 ## highlight without turning the body into a mirror. The face (Material.001)
 ## and the body atlas (Material) are both skin.
-const SKIN_ROUGHNESS := {"Material.001": 0.45, "Material": 0.45}
+## Raised from 0.45 against the owner's side-by-side (a close-up of him on
+## the entrance card next to a broadcast still): at 0.45 the forehead, nose
+## and neck carried hot white spots and he read as moulded plastic; his real
+## skin is mostly matte with a thin sweat sheen.
+const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.58}
+## Pore tiles across one UV square (SkinLook.add_pores): the head's own
+## texture spans about 0.4 m of face and scalp, the body's about 1.2 m, so a
+## tile is ~2.5 cm on both.
+const PORE_TILES := {"Material.001": 16.0, "Material": 48.0}
 ## And a tint on both, toward the reference's skin. Measured medians off the
 ## owner's reference (forehead, cheek, chest): (170,107,88), (182,105,91),
 ## (195,120,94); the textures' own tone is (168,108,75). Same red and green,
 ## far less blue -- which is the difference between tan and orange. The full
 ## correction (blue +16%) rendered pink under neutral light, so blue is
 ## lifted 8%, half way, and green trimmed 1%.
-const SKIN_TINT := Color(1.0, 0.99, 1.08)
+##
+## Then darkened and pulled off orange toward olive, against the same
+## side-by-side: under neutral light (clip_shot --face) the face read pale
+## peach, where he is tanned olive-brown. The texture's own tone is
+## (168,108,75); olive-brown is about (139,100,75), so red comes down most,
+## green less, blue least -- (134,93,68), a shade darker than olive-khaki,
+## which (0.83, 0.93, 1.0) rendered. (Lifting blue instead, tried first,
+## turned the orange pink.)
+const SKIN_TINT := Color(0.80, 0.86, 0.90)
 
 const TEXTURE_DIR := "res://assets/characters/roman_reigns_%s.png"
 ## Roman's hair and beard are near-black; kept slightly warm so they don't
 ## read as a flat silhouette under the arena's key light.
-const HAIR_COLOR := Color(0.075, 0.062, 0.055)
+##
+## Cooled toward jet black: under the entrance's warm backlight the warm
+## version rendered reddish-brown, which is not his hair in any light.
+const HAIR_COLOR := Color(0.045, 0.042, 0.043)
+## His hair is slicked and wet-looking; a low roughness gives it the long
+## streaky highlight a matte card never has.
+## 0.32 -> 0.42 (modelling plan, Roman's hair): at 0.32 the slicked crown
+## read as one glossy helmet; his wet look is a narrow streak, not a gloss.
+const HAIR_ROUGHNESS := 0.42
+## The direction ACROSS the strands on his hair cards, in UV space
+## (HairLook.apply). Checked on renders through tools/probe/hair_shot.tscn:
+## along the tangent the shine breaks into fine streaks; turned 90 degrees it
+## smears into pale patches down the hanging lengths.
+const HAIR_FLOW := Vector2(1.0, 0.0)
+const BEARD_ROUGHNESS := 0.8
 ## Alpha below this is cut away. Hair cards need a scissor rather than
 ## blending: sorted transparency on overlapping strands produces halos.
 ##
@@ -275,18 +305,385 @@ func _ready() -> void:
 	# Iris/pupil geometry is headless-safe (plain nodes); colours need a real
 	# renderer, same split WrestlerAttire uses for the same reason.
 	_build_eye_details(body)
+	build_eye_lids()
+	# His broad face and thick neck (RomanHeadShape), on every skeleton.
+	for skeleton in _animation_skeletons():
+		if not skeleton.has_node("RomanHeadShape"):
+			var shape := RomanHeadShape.new()
+			shape.name = "RomanHeadShape"
+			skeleton.add_child(shape)
 	if DisplayServer.get_name() != "headless":
 		_normalize_mouth_materials()
+	_trim_beard()
+	_volumize_hair()
+	_add_hair_springs()
+
+
+# ---------------------------------------------------------------------------
+# The hair's movement
+# ---------------------------------------------------------------------------
+#
+# The supplied rig already carries his hair as bone chains: on the 471-bone
+# skeleton, J_Hair -> J_Hair_b / J_Hair_c -> 18 + 17 chains (Hair_b00..b17,
+# Hair_c00..c16), each 8-13 joints from the crown down the back of the head
+# to the top of his back (rest y 1.74 -> 1.30). Nothing ever moved them, so
+# the hair was a helmet: it turned with his head and nothing else.
+#
+# A SpringBoneSimulator3D on that skeleton drives them. His hair is slicked
+# back wet on top, so each chain starts at the nape (the first joint below
+# HAIR_SPRING_FROM_Y): what lies on the scalp stays glued to it, and only
+# the lengths that hang free off the back of the head swing -- lagging a turn
+# of the head, bouncing on a stride, settling after a bump. Heavy wet hair:
+# stiff-ish and well damped, a little gravity so it keeps hanging when he
+# bends. It collides with his head, neck, upper back and shoulders, so it
+# drapes over them rather than through.
+#
+# Presentation only: a skeleton modifier, after the animation, read by
+# nothing in the match.
+const HAIR_SPRING_FROM_Y := 1.56
+const HAIR_STIFFNESS := 1.6
+const HAIR_DRAG := 0.55
+const HAIR_GRAVITY := 0.35
+const HAIR_RADIUS := 0.012
+## [bone, radius, offset in that bone's frame, capsule height or 0]. This
+## rig's spine and head bones point DOWN (their +Y is the world's -Y at
+## rest), so "up the bone" is a negative y offset: the skull's centre sits
+## 7 cm above J_Head, the upper back's capsule 2 cm above J_Chest and short
+## enough to stay clear of the hair where it leaves the nape.
+const HAIR_COLLIDERS := [
+	["J_Head", 0.10, Vector3(0.0, -0.07, 0.0), 0.0],
+	["J_Neck", 0.062, Vector3(0.0, -0.02, 0.0), 0.0],
+	["J_Chest", 0.12, Vector3(0.0, 0.02, 0.0), 0.24],
+	["J_Shoulder_L", 0.075, Vector3.ZERO, 0.0],
+	["J_Shoulder_R", 0.075, Vector3.ZERO, 0.0],
+]
+
+
+func _add_hair_springs() -> void:
+	var worn: Skeleton3D = null
+	for skeleton in _animation_skeletons():
+		if skeleton.find_bone("J_Hair_b") >= 0:
+			worn = skeleton
+	if worn == null or worn.has_node("HairSprings"):
+		return
+	var sim := SpringBoneSimulator3D.new()
+	sim.name = "HairSprings"
+	worn.add_child(sim)
+	var chains: Array = []
+	for i in worn.get_bone_count():
+		var parent := worn.get_bone_parent(i)
+		if parent < 0:
+			continue
+		var parent_name := worn.get_bone_name(parent)
+		if parent_name != "J_Hair_b" and parent_name != "J_Hair_c":
+			continue
+		# Down the chain to the nape, then to its end.
+		var root := i
+		while worn.get_bone_global_rest(root).origin.y > HAIR_SPRING_FROM_Y:
+			var kids := worn.get_bone_children(root)
+			if kids.is_empty():
+				break
+			root = kids[0]
+		var end := root
+		while not worn.get_bone_children(end).is_empty():
+			end = worn.get_bone_children(end)[0]
+		if end != root:
+			chains.append([root, end])
+	sim.set_setting_count(chains.size())
+	for k in chains.size():
+		sim.set_root_bone(k, chains[k][0])
+		sim.set_end_bone(k, chains[k][1])
+		sim.set_stiffness(k, HAIR_STIFFNESS)
+		sim.set_drag(k, HAIR_DRAG)
+		sim.set_gravity(k, HAIR_GRAVITY)
+		sim.set_radius(k, HAIR_RADIUS)
+		sim.set_enable_all_child_collisions(k, true)
+	for spec: Array in HAIR_COLLIDERS:
+		var bone := worn.find_bone(spec[0])
+		if bone < 0:
+			continue
+		var shape: SpringBoneCollision3D
+		if spec[3] > 0.0:
+			var capsule := SpringBoneCollisionCapsule3D.new()
+			capsule.radius = spec[1]
+			capsule.height = spec[3]
+			shape = capsule
+		else:
+			var sphere := SpringBoneCollisionSphere3D.new()
+			sphere.radius = spec[1]
+			shape = sphere
+		shape.name = "Collide_" + String(spec[0])
+		sim.add_child(shape)
+		shape.set_bone(bone)
+		shape.position_offset = spec[2]
+
+# ---------------------------------------------------------------------------
+# The beard's shape: trimmed, and faded at the sides
+# ---------------------------------------------------------------------------
+#
+# Against the owner's reference photo the beard read as too bushy, with none
+# of the fade his has along the sides: his is short and tight up the cheeks
+# and sideburns, thinning toward the ears into the hair, and fullest on the
+# jaw and chin. Measured off the .glb, the beard cards (M_Combinations, 5323
+# vertices) stand off the skin by 7 mm median, 13 mm p90, 18 mm at most --
+# the same depth up the sideburns as on the chin, which is the bush.
+#
+# So each card vertex is pulled toward the nearest skin vertex, keeping
+# BEARD_KEEP of its standoff on the jaw and BEARD_KEEP_SIDES where the fade
+# is, and its vertex-colour alpha goes from 1 to BEARD_ALPHA_SIDES across the
+# same band -- the sides thin out into stubble instead of stopping. The fade
+# is a function of bind-pose position, in the .glb's own metres: up through
+# the sideburns (BEARD_FADE_Y) and back toward the ear (BEARD_FADE_X/Z).
+# Runtime, because the supplied .glb is never edited; skin weights are left
+# exactly as they are, so the trimmed cards still ride the head.
+const BEARD_KEEP := 0.70
+const BEARD_KEEP_SIDES := 0.20
+const BEARD_ALPHA_SIDES := 0.22
+const BEARD_FADE_Y := Vector2(1.625, 1.695)
+const BEARD_FADE_X := Vector2(0.040, 0.072)
+const BEARD_FADE_Z := Vector2(0.10, 0.05)
+const BEARD_CELL := 0.01
+
+## 0 on the jaw and chin, 1 up the sideburns and back by the ear.
+static func beard_fade(p: Vector3) -> float:
+	var h := smoothstep(BEARD_FADE_Y.x, BEARD_FADE_Y.y, p.y)
+	var side := smoothstep(BEARD_FADE_X.x, BEARD_FADE_X.y, absf(p.x)) \
+			* (1.0 - smoothstep(BEARD_FADE_Z.y, BEARD_FADE_Z.x, p.z))
+	return maxf(h, 0.8 * side)
+
+
+func _trim_beard() -> void:
+	var beard: MeshInstance3D = null
+	var beard_surface := -1
+	var head: MeshInstance3D = null
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var mat := mi.mesh.surface_get_material(s)
+			if mat == null:
+				continue
+			if mat.resource_name == "beard":
+				beard = mi
+				beard_surface = s
+			elif mat.resource_name == "Material.001":
+				head = mi
+	if beard == null or head == null or not (beard.mesh is ArrayMesh):
+		push_warning("RomanModel: beard or head mesh not found; beard left as supplied")
+		return
+	var source := beard.mesh as ArrayMesh
+	var arrays := source.surface_get_arrays(beard_surface)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	# The skin, in the beard mesh's space, hashed into 1 cm cells.
+	var to_beard := beard.global_transform.affine_inverse() * head.global_transform
+	var grid := {}
+	for s in head.mesh.get_surface_count():
+		var head_verts: PackedVector3Array = head.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+		for v in head_verts:
+			var p := to_beard * v
+			var cell := Vector3i((p / BEARD_CELL).floor())
+			# A plain Array: a PackedVector3Array held in a Dictionary is a
+			# value, and appending to it through grid[cell] appends to a copy
+			# -- which left every cell empty and the whole trim a no-op.
+			if not grid.has(cell):
+				grid[cell] = []
+			(grid[cell] as Array).append(p)
+	var colors := PackedColorArray()
+	colors.resize(verts.size())
+	var trimmed := PackedVector3Array(verts)
+	for i in verts.size():
+		var v := verts[i]
+		var fade := beard_fade(v)
+		colors[i] = Color(1, 1, 1, lerpf(1.0, BEARD_ALPHA_SIDES, fade))
+		var skin := _nearest_in_grid(grid, v)
+		if skin != Vector3.INF:
+			trimmed[i] = skin + (v - skin) * lerpf(BEARD_KEEP, BEARD_KEEP_SIDES, fade)
+	arrays[Mesh.ARRAY_VERTEX] = trimmed
+	arrays[Mesh.ARRAY_COLOR] = colors
+	var mesh := ArrayMesh.new()
+	for s in source.get_surface_count():
+		var fmt := source.surface_get_format(s)
+		var flags := fmt & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		var surface_arrays: Array = arrays if s == beard_surface else source.surface_get_arrays(s)
+		mesh.add_surface_from_arrays(source.surface_get_primitive_type(s), surface_arrays,
+				[], {}, flags)
+		mesh.surface_set_material(s, source.surface_get_material(s))
+		mesh.surface_set_name(s, source.surface_get_name(s))
+	beard.mesh = mesh
+	# The override material _fix_materials built reads the alpha from the
+	# vertex colour too.
+	var override := beard.get_surface_override_material(beard_surface) as BaseMaterial3D
+	if override:
+		override.vertex_color_use_as_albedo = true
+
+
+# ---------------------------------------------------------------------------
+# The hair's volume
+# ---------------------------------------------------------------------------
+#
+# Against the same reference his hair read plastered to the scalp. Measured
+# off the .glb, the scalp cards (M_Hair) sit 11 mm off the head on top
+# (median, y > 1.74) and 20 mm off it where they hang -- a wet cap, where his
+# is slicked back with lift on top and falls in thick waves past the
+# shoulders. So each scalp-hair vertex is pushed OUT from the nearest skin,
+# HAIR_LIFT_TOP times its standoff on the crown and HAIR_LIFT_HANG where it
+# hangs, blended between -- and only HAIR_LIFT_FRONT at the front hairline,
+# so no fringe falls forward over his forehead. Skin weights untouched.
+const HAIR_LIFT_TOP := 1.3
+const HAIR_LIFT_HANG := 1.6
+const HAIR_LIFT_FRONT := 1.15
+## Crown above this, hang below the next; blended between.
+const HAIR_LIFT_Y := Vector2(1.62, 1.74)
+## His hair falls loose PAST the shoulders, onto the upper back; the cards
+## end at the collar. Below HAIR_STRETCH_FROM the hanging lengths are drawn
+## out by HAIR_STRETCH (distance below that line, scaled), behind the ears
+## only (z under HAIR_STRETCH_Z) so nothing new falls over his face or chest.
+## Geometry only, in bind space: the cards keep their skin weights and ride
+## the spring chains as before.
+const HAIR_STRETCH_FROM := 1.58
+const HAIR_STRETCH := 1.45
+const HAIR_STRETCH_Z := 0.02
+
+
+## Root-to-tip (refs/aaa_gap.md item 7): the albedo at the scalp, as a share
+## of HAIR_COLOR, rising to 1 by HAIR_TIP_STANDOFF off the skin. Black hair
+## is two-tone too -- the lengths are a shade browner and lighter than the
+## roots -- and without it the lifted crown read as one flat mass.
+const HAIR_ROOT_SHADE := 0.55
+const HAIR_TIP_STANDOFF := Vector2(0.006, 0.035)
+
+
+static func hair_root_to_tip(standoff: float) -> float:
+	return lerpf(HAIR_ROOT_SHADE, 1.0,
+			smoothstep(HAIR_TIP_STANDOFF.x, HAIR_TIP_STANDOFF.y, standoff))
+
+
+static func hair_lift(p: Vector3) -> float:
+	var k := lerpf(HAIR_LIFT_HANG, HAIR_LIFT_TOP, smoothstep(HAIR_LIFT_Y.x, HAIR_LIFT_Y.y, p.y))
+	# The hairline: in front of the ears, across the forehead.
+	var front := smoothstep(0.05, 0.09, p.z) * smoothstep(1.70, 1.76, p.y)
+	return lerpf(k, HAIR_LIFT_FRONT, front)
+
+
+static func hair_stretch(p: Vector3) -> Vector3:
+	if p.y >= HAIR_STRETCH_FROM:
+		return p
+	var back := 1.0 - smoothstep(HAIR_STRETCH_Z - 0.04, HAIR_STRETCH_Z, p.z)
+	var below := HAIR_STRETCH_FROM - p.y
+	return Vector3(p.x, HAIR_STRETCH_FROM - below * lerpf(1.0, HAIR_STRETCH, back), p.z)
+
+
+func _volumize_hair() -> void:
+	var skin_meshes: Array[MeshInstance3D] = []
+	var hair: Array = []
+	for node in find_children("", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null or not mi.visible:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var mat := mi.mesh.surface_get_material(s)
+			if mat == null:
+				continue
+			var key := mat.resource_name
+			if key == "Material.001" or key == "Material":
+				skin_meshes.append(mi)
+			elif HAIR_FIXES.has(key) and key != "beard":
+				hair.append([mi, s])
+	if skin_meshes.is_empty() or hair.is_empty():
+		push_warning("RomanModel: hair or skin not found; hair left as supplied")
+		return
+	for entry: Array in hair:
+		var mi: MeshInstance3D = entry[0]
+		var surface: int = entry[1]
+		if not (mi.mesh is ArrayMesh):
+			continue
+		var grid := {}
+		for skin_mi in skin_meshes:
+			var to_hair := mi.global_transform.affine_inverse() * skin_mi.global_transform
+			for s in skin_mi.mesh.get_surface_count():
+				for v in skin_mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX] as PackedVector3Array:
+					var p := to_hair * v
+					if p.y < 1.25:
+						continue
+					var cell := Vector3i((p / BEARD_CELL).floor())
+					if not grid.has(cell):
+						grid[cell] = []
+					(grid[cell] as Array).append(p)
+		var source := mi.mesh as ArrayMesh
+		var arrays := source.surface_get_arrays(surface)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var lifted := PackedVector3Array(verts)
+		# Root to tip: darkest where the card leaves the scalp, full colour
+		# out at the ends (HAIR_ROOT_SHADE). Vertex colour, so the material's
+		# albedo multiplies it.
+		var shade := PackedColorArray()
+		shade.resize(verts.size())
+		for i in verts.size():
+			var skin := _nearest_in_grid(grid, verts[i])
+			var k := 1.0
+			if skin != Vector3.INF:
+				lifted[i] = skin + (verts[i] - skin) * hair_lift(verts[i])
+				k = hair_root_to_tip(lifted[i].distance_to(skin))
+			lifted[i] = hair_stretch(lifted[i])
+			shade[i] = Color(k, k, k, 1.0)
+		arrays[Mesh.ARRAY_VERTEX] = lifted
+		arrays[Mesh.ARRAY_COLOR] = shade
+		mi.mesh = _rebuilt(source, surface, arrays)
+
+
+## A copy of `source` with one surface's arrays replaced, materials, names
+## and skinning format kept.
+static func _rebuilt(source: ArrayMesh, surface: int, arrays: Array) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	for s in source.get_surface_count():
+		var flags := source.surface_get_format(s) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		var surface_arrays: Array = arrays if s == surface else source.surface_get_arrays(s)
+		mesh.add_surface_from_arrays(source.surface_get_primitive_type(s), surface_arrays,
+				[], {}, flags)
+		mesh.surface_set_material(s, source.surface_get_material(s))
+		mesh.surface_set_name(s, source.surface_get_name(s))
+	return mesh
+
+
+static func _nearest_in_grid(grid: Dictionary, p: Vector3) -> Vector3:
+	var base := Vector3i((p / BEARD_CELL).floor())
+	var best := Vector3.INF
+	var best_d := INF
+	for reach in [1, 2, 4]:
+		for dx in range(-reach, reach + 1):
+			for dy in range(-reach, reach + 1):
+				for dz in range(-reach, reach + 1):
+					var cell := base + Vector3i(dx, dy, dz)
+					if not grid.has(cell):
+						continue
+					for q: Vector3 in grid[cell] as Array:
+						var d := p.distance_squared_to(q)
+						if d < best_d:
+							best_d = d
+							best = q
+		if best != Vector3.INF:
+			return best
+	return best
 
 ## Repairs the materials the export left unusable. Applied as surface
 ## overrides rather than by editing the .glb: the source asset stays exactly
 ## as supplied, and every fix is visible here as code with its reason next to
 ## it. Safe to call once at _ready -- it only touches the materials it names.
 func _fix_materials() -> void:
+	var skin: Array[BaseMaterial3D] = []
 	for node in find_children("", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
 		if not mesh_instance or not mesh_instance.mesh:
 			continue
+		# A UV2 on the skin surfaces for the pore layer (SkinLook.add_pores).
+		var skin_surfaces := []
+		for surface in mesh_instance.mesh.get_surface_count():
+			var m := mesh_instance.mesh.surface_get_material(surface)
+			if m and SKIN_ROUGHNESS.has(m.resource_name):
+				skin_surfaces.append(surface)
+		if not HIDDEN_MESHES.has(mesh_instance.name):
+			SkinLook.with_detail_uv(mesh_instance, skin_surfaces)
 		if HIDDEN_MESHES.has(mesh_instance.name):
 			mesh_instance.visible = false
 			continue
@@ -304,6 +701,9 @@ func _fix_materials() -> void:
 			if SKIN_ROUGHNESS.has(key):
 				material.roughness = SKIN_ROUGHNESS[key]
 				material.metallic_specular = 0.5
+				SkinLook.apply(material)
+				SkinLook.add_pores(material, PORE_TILES[key])
+				skin.append(material)
 			if GROW_FIXES.has(key):
 				material.grow = true
 				material.grow_amount = GROW_FIXES[key]
@@ -320,6 +720,15 @@ func _fix_materials() -> void:
 				mesh_instance.lod_bias = HAIR_LOD_BIAS
 				material.albedo_texture = _texture(HAIR_FIXES[key])
 				material.albedo_color = HAIR_COLOR
+				# The scalp is wet and slicked; the beard is not, and glossy
+				# it rendered as a black plastic chin.
+				material.roughness = BEARD_ROUGHNESS if key == "beard" \
+					else HAIR_ROUGHNESS
+				if key != "beard":
+					# The band of shine across the strands (HairLook), and the
+					# root-to-tip shade _volumize_hair writes as vertex colour.
+					HairLook.apply(material, HAIR_FLOW)
+					material.vertex_color_use_as_albedo = true
 				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
 					else HAIR_ALPHA_SCISSOR
 				if key == "beard" or key in SCALP_BLEND:
@@ -374,6 +783,8 @@ func _fix_materials() -> void:
 			if SKIN_ROUGHNESS.has(key):
 				material.albedo_color *= SKIN_TINT
 			mesh_instance.set_surface_override_material(surface, material)
+	# For Sweat (WrestlerController attaches it).
+	set_meta("skin_materials", skin)
 
 func _texture(suffix: String) -> Texture2D:
 	return load(TEXTURE_DIR % suffix) as Texture2D
@@ -449,7 +860,10 @@ const MOUTH_COLOR := Color(0.28, 0.09, 0.08)
 ## with tools (parse M_EYE centroids vs J_Eye globals) -- do not hand-tune.
 const IRIS_R := 0.006
 const PUPIL_R := 0.0022
-const IRIS_COLOR := Color(0.30, 0.17, 0.08)
+## Dark brown, as his are. The lighter brown with a 0.25 roughness rendered
+## as a pale grey-blue eye -- the highlight on the small sphere was most of
+## what showed.
+const IRIS_COLOR := Color(0.13, 0.075, 0.045)
 const PUPIL_COLOR := Color(0.012, 0.010, 0.010)
 const EYE_TARGETS := {
 	"J_Eye_L": [Vector3(-0.001077, -0.006686, -0.005771),
@@ -518,11 +932,95 @@ func _add_eye_sphere(body: Skeleton3D, bone: String, bone_idx: int,
 	if not headless:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = color
-		mat.roughness = 0.25
+		mat.roughness = 0.45
 		mat.metallic = 0.0
 		instance.material_override = mat
 	instance.position = offset
 	attachment.add_child(instance)
+
+## His eyelids (EyeLids): the model has no lid bones and no blend shapes, so
+## they are built, one per eye, centred on its J_Eye bone and hung on J_Head.
+## LID_COLOR is the skin round his eyes, off the head texture under the arena
+## key (checked on the broadcast_shot close-ups).
+const LID_COLOR := Color(0.47, 0.32, 0.23)
+const LID_SEED := 7
+## The eyeball's centre, ahead of its bone along the line of sight. Zero:
+## the pupil sphere sits 12.2 mm from the bone, which is a human eyeball's
+## radius exactly, so the bone IS the centre. (6 mm, from the note on
+## EYE_TARGETS, put the lids' centre in front of the cornea and they closed
+## as a ball stuck on the front of the eye.)
+const EYE_CENTRE_AHEAD := 0.0
+
+
+func build_eye_lids() -> EyeLids:
+	var body := _find_body_skeleton()
+	if body == null:
+		return null
+	var existing := body.find_child("EyeLids", true, false) as EyeLids
+	if existing:
+		return existing
+	var head := body.find_bone("J_Head")
+	if head < 0:
+		return null
+	# Placed off the EYE BONES, not the eye mesh: converting the mesh's
+	# vertices into skeleton space put the lids 6 cm above his eyes (the mesh
+	# and the scaled, posed skeleton do not share a frame at load). The bones
+	# are exact, and EYE_TARGETS already knows each eye's line of sight and,
+	# by the pupil's distance, its radius.
+	var head_rest := body.get_bone_global_rest(head)
+	var to_head := head_rest.affine_inverse()
+	# The radius to the cornea's apex: bone -> pupil. EyeLids adds its margin.
+	var radius := (EYE_TARGETS["J_Eye_L"][1] as Vector3).length()
+	var eyes := []
+	for bone: String in EYE_TARGETS:
+		var eye := body.find_bone(bone)
+		if eye < 0:
+			continue
+		var rest := body.get_bone_global_rest(eye)
+		var sight: Vector3 = (EYE_TARGETS[bone][1] as Vector3).normalized()
+		var centre := rest * (sight * EYE_CENTRE_AHEAD)
+		var forward := (rest.basis * sight).normalized()
+		eyes.append([to_head * centre, radius,
+				(head_rest.basis.inverse() * forward).normalized(),
+				(head_rest.basis.inverse() * Vector3.RIGHT).normalized()])
+	if eyes.size() != 2 or radius <= 0.0:
+		push_warning("RomanModel: eyes not found; no eyelids")
+		return null
+	var attach := BoneAttachment3D.new()
+	attach.name = "EyeLidMount"
+	body.add_child(attach)
+	attach.bone_name = "J_Head"
+	var lids := EyeLids.new()
+	lids.name = "EyeLids"
+	attach.add_child(lids)
+	var material: StandardMaterial3D = null
+	if DisplayServer.get_name() != "headless":
+		material = StandardMaterial3D.new()
+		material.albedo_color = LID_COLOR
+		material.roughness = 0.6
+		SkinLook.apply(material)
+	lids.skeleton = body
+	lids.eye_bones = PackedStringArray(EYE_TARGETS.keys())
+	lids.build(eyes, material, LID_SEED)
+	return lids
+
+
+## Point his eyes at whatever `look_target` returns (a world position, or
+## Vector3.INF for straight ahead). See EyeAim. Idempotent.
+func aim_eyes(look_target: Callable) -> void:
+	var body := _find_body_skeleton()
+	if body == null:
+		return
+	var aim := body.get_node_or_null("EyeAim") as EyeAim
+	if aim == null:
+		aim = EyeAim.new()
+		aim.name = "EyeAim"
+		body.add_child(aim)
+		# The line of sight is bone -> pupil (EYE_TARGETS), not the skull's +Z.
+		for bone: String in EYE_TARGETS:
+			aim.sight_local[bone] = (EYE_TARGETS[bone][1] as Vector3).normalized()
+	aim.look_target = look_target
+
 
 func _find_body_skeleton() -> Skeleton3D:
 	for candidate in find_children("", "Skeleton3D", true, false):

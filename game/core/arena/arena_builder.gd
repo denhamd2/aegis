@@ -274,7 +274,9 @@ const PORTAL_RECESS_DEPTH := 3.2
 ## 1.12 sits just under the threshold at the tube's centre and over it on the
 ## bloom the fixtures add, so the rings still flare without either of them
 ## losing the colour that tells the two apart.
-const PORTAL_EMISSION := 1.12
+## 1.12 -> 0.7 in the 2K26 lighting round (item 11): the rings filled the
+## stage close-ups and bloomed; the accent fixtures still carry their light.
+const PORTAL_EMISSION := 0.7
 ## The slat fans inside each portal, well under the ring that frames them.
 ## Making the two the same level collapses the depth: the reference photos
 ## read as a lit ring in front of a lit recess, and that only works while the
@@ -283,7 +285,7 @@ const PORTAL_EMISSION := 1.12
 ## 0.34 read as a second light source competing with the ring. 0.26 is the
 ## version that reads as what it is -- fine strip fixtures picked out inside
 ## the portal, seen and not looked at.
-const PORTAL_FAN_EMISSION := 0.26
+const PORTAL_FAN_EMISSION := 0.18
 
 # --- The rink ---------------------------------------------------------------
 ## The hall is built around a REGULATION ICE RINK, in metres, because the
@@ -903,7 +905,18 @@ func _build_floor_seats() -> void:
 		index += 1
 	add_child(_build_chairs("FloorChairs", _chair_mesh(), detailed))
 	add_child(_build_chairs("FloorChairsFar", _chair_proxy_mesh(), distant))
-	_build_floor_crowd(detailed + distant)
+	# Two of the ringside chairs are the sign fans' (SignFans): their crowd
+	# figures are left out and the fans sit there instead.
+	var fans := SignFans.new()
+	fans.name = "SignFans"
+	add_child(fans)
+	var picked := SignFans.pick_seats(detailed)
+	fans.seat(detailed, picked)
+	var crowd_seats: Array[Transform3D] = []
+	for i in detailed.size():
+		if not picked.has(i):
+			crowd_seats.append(detailed[i])
+	_build_floor_crowd(crowd_seats + distant)
 
 
 ## Ringside model: six seated people, built by tools/blender/floor_crowd.py.
@@ -971,6 +984,9 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 	source.free()
 
 	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887")
+	# No phone flashes on the ringside rows: at that distance a whole lit
+	# figure reads as a glowing statue, not a flash.
+	material.set_shader_parameter("flash_min_distance", 1.0e6)
 	for i in meshes.size():
 		if buckets[i].is_empty():
 			continue
@@ -1169,11 +1185,44 @@ uniform float house_light = 0.055;
 // hall's colour. Normalised to Rec.709 luminance ~1.0 so that house_light
 // still sets the level and only the colour changes. See ArenaBuilder.CROWD_WASH.
 uniform vec3 house_tint = vec3(1.0);
+// The crowd reacting (CrowdReaction; refs/aaa_gap.md item 11). Globals, so
+// one write reaches both bowl parts and the ringside rows. 0 is the idle
+// stand exactly as before.
+global uniform float crowd_excitement;
+// Phone flashes and camera pops, per figure per second, during entrances.
+global uniform float crowd_flash_rate;
+// How high an excited figure bounces, and how fast: a crowd on its feet
+// jumps at about two and a half beats a second.
+uniform float cheer_amplitude = 0.07;
+// Phone flashes only where a figure is small in frame. The flash lights the
+// whole figure (there is no telling a hand from a shirt in this mesh), which
+// reads as a flash only far enough away.
+uniform float flash_min_distance = 16.0;
+uniform float cheer_speed = 15.0;
+// The 2K26 looks (ArenaLighting.set_look): the whole stand's light, near-off
+// for the entrances' concert dark and 1.0 for the match.
+global uniform float crowd_light;
+// In the match 2K26's front rows read as people -- faces, warm skin, shirt
+// colour -- and the far bowl falls into the dark. A gain on the rows nearest
+// the ring, warmed toward ~4000 K, fading out by FAR metres.
+uniform float near_gain = 3.2;
+uniform float near_from = 7.0;
+uniform float near_to = 30.0;
+uniform vec3 near_warm = vec3(1.18, 0.98, 0.80);
+varying float ring_dist;
 
 varying vec3 shirt;
+varying float figure;
+
+float hash(float n) {
+	return fract(sin(n * 12.9898) * 43758.5453);
+}
 
 void vertex() {
 	shirt = COLOR.rgb;
+	figure = PHASE_SOURCE;
+	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	ring_dist = length(world.xz);
 	float phase = PHASE_SOURCE * 6.2831853;
 	// Bob scaled by height above the seat, so feet stay planted and heads
 	// move most -- a figure translated bodily reads as a hovering cutout.
@@ -1182,11 +1231,25 @@ void vertex() {
 	// A little lateral sway on a different period, so the bowl does not
 	// pulse as one organism.
 	VERTEX.x += sin(TIME * bob_speed * 0.63 + phase * 1.7) * sway_amplitude * lift;
+	// On a pop they come up out of their seats: a bounce ADDED at a fixed
+	// frequency, scaled by excitement. Scaling the idle bob's speed instead
+	// would jump every figure's phase each time excitement changed.
+	float bounce = abs(sin(TIME * cheer_speed * (0.85 + 0.3 * hash(PHASE_SOURCE)) + phase));
+	VERTEX.y += bounce * cheer_amplitude * crowd_excitement * lift;
 }
 
 void fragment() {
 	ALBEDO = shirt;
-	EMISSION = shirt * house_tint * house_light;
+	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
+	vec3 wash = mix(house_tint, near_warm, near);
+	EMISSION = shirt * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
+	// A phone flash: one figure, one frame-ish (a 0.08 s slot), white and
+	// over-bright so it blooms. Each figure rolls its own dice every slot.
+	float slot = floor(TIME / 0.08);
+	float roll = hash(figure * 911.0 + slot * 0.137);
+	if (roll < crowd_flash_rate * 0.08 && length(VERTEX) > flash_min_distance) {
+		EMISSION += vec3(3.5);
+	}
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }

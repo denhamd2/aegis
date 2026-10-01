@@ -28,6 +28,10 @@ enum State {
 	## The winner's celebration. Terminal: the match is over, so nothing
 	## leads out of it and no timeout applies.
 	VICTORY,
+	## Playing to the crowd between moves (gauntlet/refs/animation_gap.md,
+	## Phase 4): his own gesture, over a man who is down. Last in the enum so
+	## no state before it changes number.
+	TAUNT,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
@@ -35,8 +39,8 @@ const LEGAL_TRANSITIONS := {
 	# GRAPPLE_HOLD from IDLE/LOCOMOTION/RUN: a paired running attack skips the
 	# tie-up -- the runner connects and both men go straight into the move
 	# (WrestlerController._begin_running_paired()).
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT],
 	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.VICTORY],
@@ -50,10 +54,11 @@ const LEGAL_TRANSITIONS := {
 	State.STUNNED: [State.IDLE, State.HIT_REACT, State.DOWN, State.VICTORY],
 	State.PIN_ATTACKER: [State.IDLE, State.FINISHER, State.VICTORY],
 	State.PIN_DEFENDER: [State.DOWN, State.GETUP, State.VICTORY],
-	State.SUBMISSION_ATTACKER: [State.IDLE, State.VICTORY],
+	State.SUBMISSION_ATTACKER: [State.IDLE, State.DOWN, State.VICTORY],
 	State.SUBMISSION_DEFENDER: [State.DOWN, State.SUBMISSION_DEFENDER, State.VICTORY],
 	State.FINISHER: [State.PIN_ATTACKER, State.IDLE, State.VICTORY],
 	State.VICTORY: [],
+	State.TAUNT: [State.IDLE, State.HIT_REACT, State.STUNNED, State.DOWN, State.VICTORY],
 }
 
 signal state_changed(previous: State, current: State)

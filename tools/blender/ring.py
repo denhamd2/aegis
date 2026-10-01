@@ -61,7 +61,7 @@ from mathutils import Vector  # noqa: E402
 import bpy_exit  # noqa: E402
 
 WANTED = [
-    "ROPE_SPAN", "ROPE_RADIUS", "ROPE_SEGMENTS", "ROPE_OVERRUN",
+    "ROPE_SPAN", "ROPE_RADIUS", "ROPE_SEGMENTS", "ROPE_END",
     "ROPE_HEIGHT_BOTTOM", "ROPE_HEIGHT_MIDDLE", "ROPE_HEIGHT_TOP",
     "ROPE_SAG_BOTTOM", "ROPE_SAG_MIDDLE", "ROPE_SAG_TOP",
     "POST_XZ", "POST_RADIUS", "POST_SIDES", "POST_BOTTOM", "POST_TOP",
@@ -69,6 +69,9 @@ WANTED = [
     "PAD_FACE_WIDTH", "PAD_FACE_HEIGHT", "PAD_FACE_LIFT", "PAD_FACE_V_SPAN",
     "TURNBUCKLE_PAD_WIDTH", "TURNBUCKLE_PAD_HEIGHT", "TURNBUCKLE_PAD_DEPTH",
     "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
+    "TURNBUCKLE_ROD_RADIUS", "TURNBUCKLE_BODY_LENGTH", "TURNBUCKLE_BODY_BAR_RADIUS",
+    "TURNBUCKLE_BODY_HALF_GAP", "TURNBUCKLE_BOSS_RADIUS", "TURNBUCKLE_EYE_RADIUS",
+    "POST_COLLAR_RADIUS", "POST_COLLAR_HEIGHT",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
     "STEP_APRON_GAP", "APRON_OUT",
@@ -78,6 +81,7 @@ WANTED = [
 PART_COLORS = {
     "PostMesh": (0.075, 0.075, 0.080, 1.0),
     "TurnbuckleFittings": (0.11, 0.11, 0.115, 1.0),
+    "TurnbuckleHardware": (0.56, 0.57, 0.58, 1.0),
     "TurnbucklePads": (0.055, 0.055, 0.060, 1.0),
     "TurnbuckleFaces": (0.9, 0.9, 0.9, 1.0),
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
@@ -87,7 +91,8 @@ PART_COLORS = {
 # Ropes and sleeves are round and must read that way; the posts, rails and
 # steps are faceted steel and smoothing them only muddies the arris the bevel
 # was added to catch.
-SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings", "TurnbucklePads"})
+SMOOTH = frozenset({"RopeMesh", "TurnbuckleFittings", "TurnbucklePads",
+                    "TurnbuckleHardware"})
 ## Parts whose UVs AND winding are authored rather than derived. Both have to
 ## travel together: authored UVs are only meaningful on a face that is shown
 ## the right way round.
@@ -219,6 +224,71 @@ def build_turnbuckle_pads(cfg: dict[str, float], parts: dict[str, Part]) -> None
                                   bevel_segments=2)
 
 
+def build_turnbuckles(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """What joins each pad to its post: hook rod, turnbuckle body, eye bolt.
+
+    A real rope ends in a forged turnbuckle; the pad is laced round it, and the
+    turnbuckle hooks an eye bolt through a collar on the post. So between the
+    back of every pad and the post there is bare galvanised hardware -- the
+    connector the owner asked for, in place of the pads wrapped round the post
+    they replaced. Built along the corner diagonal at each rope height:
+
+    * a collar round the post, which the eye bolt goes through;
+    * the eye bolt: a rod from inside the post out to an eye;
+    * the turnbuckle body: two side bars between two end bosses;
+    * the hook rod from the body into the back of the pad.
+    """
+    hw = parts["TurnbuckleHardware"]
+    diagonal = math.sqrt(2.0)
+    post_u = cfg["POST_XZ"] * diagonal
+    back_u = cfg["TURNBUCKLE_PAD_XZ"] * diagonal + cfg["TURNBUCKLE_PAD_DEPTH"] * 0.5
+    post_face_u = post_u - cfg["POST_RADIUS"]
+    rod = cfg["TURNBUCKLE_ROD_RADIUS"]
+    body = cfg["TURNBUCKLE_BODY_LENGTH"]
+    # The body sits in the middle of the gap, the eye just off the post.
+    mid_u = (back_u + post_face_u) * 0.5
+    b0, b1 = mid_u - body * 0.5, mid_u + body * 0.5
+    eye_r = cfg["TURNBUCKLE_EYE_RADIUS"]
+    eye_u = post_face_u - eye_r - 0.004
+    for sx in (-1.0, 1.0):
+        for sz in (-1.0, 1.0):
+            d = Vector((sx, 0.0, sz)).normalized()
+            side = Vector((-sz, 0.0, sx)).normalized()
+            up = Vector((0.0, 1.0, 0.0))
+            post = Vector((cfg["POST_XZ"] * sx, 0.0, cfg["POST_XZ"] * sz))
+            for height, _ in rope_heights(cfg):
+                h = up * height
+
+                def at(u, _d=d, _h=h):
+                    return _d * u + _h
+
+                # Collar round the post.
+                hw.tube([post + h - up * (cfg["POST_COLLAR_HEIGHT"] * 0.5),
+                         post + h + up * (cfg["POST_COLLAR_HEIGHT"] * 0.5)],
+                        cfg["POST_COLLAR_RADIUS"], sides=12)
+                # Eye bolt: from inside the post out to its eye.
+                hw.tube([at(post_u), at(eye_u + eye_r)], rod, sides=8)
+                # The eye: a ring in the vertical plane of the diagonal.
+                loop = []
+                for k in range(13):
+                    a = 2.0 * math.pi * k / 12
+                    loop.append(at(eye_u) + d * (math.cos(a) * eye_r)
+                                + up * (math.sin(a) * eye_r))
+                hw.tube(loop, rod * 0.7, sides=6, caps=False)
+                # Hook from the body's outer boss through the eye.
+                hw.tube([at(b1), at(eye_u - eye_r * 0.4)], rod, sides=8)
+                # The turnbuckle body: end bosses and two side bars.
+                for u in (b0, b1):
+                    hw.tube([at(u - 0.007), at(u + 0.007)],
+                            cfg["TURNBUCKLE_BOSS_RADIUS"], sides=10)
+                for s in (-1.0, 1.0):
+                    off = side * (cfg["TURNBUCKLE_BODY_HALF_GAP"] * s)
+                    hw.tube([at(b0) + off, at(b1) + off],
+                            cfg["TURNBUCKLE_BODY_BAR_RADIUS"], sides=6)
+                # Into the back of the pad, where the rope ends meet it.
+                hw.tube([at(back_u - 0.03), at(b0)], rod, sides=8)
+
+
 def build_pad_faces(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """The AEW artwork on the front of each cushion, as a flat quad.
 
@@ -274,7 +344,8 @@ def build_ropes(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     is rendered only -- the collision bodies are straight and unmoved.
     """
     rope = parts["RopeMesh"]
-    half = cfg["POST_XZ"] + cfg["ROPE_OVERRUN"]
+    # To the rope's end inside its pad (ROPE_END), not to the post.
+    half = cfg["ROPE_END"]
     segments = int(cfg["ROPE_SEGMENTS"])
     for height, sag in rope_heights(cfg):
         for side in range(4):
@@ -384,6 +455,7 @@ def main(argv: list[str]) -> int:
     build_posts(cfg, parts)
     build_terminations(cfg, parts)
     build_turnbuckle_pads(cfg, parts)
+    build_turnbuckles(cfg, parts)
     build_pad_faces(cfg, parts)
     build_ropes(cfg, parts)
     build_apron(cfg, parts)

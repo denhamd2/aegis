@@ -34,6 +34,8 @@ var _side := false
 var _orbit := 0.0
 var _lit := false
 var _dist := 4.2
+## --wrestlers roman,kenny: the real men at their real sizes, attacker first.
+var _wrestlers := ""
 
 
 func _ready() -> void:
@@ -51,6 +53,8 @@ func _ready() -> void:
 			_lit = true
 		elif args[i] == "--dist" and i + 1 < args.size():
 			_dist = float(args[i + 1])
+		elif args[i] == "--wrestlers" and i + 1 < args.size():
+			_wrestlers = args[i + 1]
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
@@ -58,6 +62,10 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 
 	var scene: Node = load(MATCH_SCENE).instantiate()
+	if _wrestlers != "":
+		var pair := Roster.pair_from_spec(_wrestlers)
+		if pair.size() == 2:
+			TitleScreen.configure_match(scene, pair[0], pair[1], 1)
 	get_tree().root.add_child.call_deferred(scene)
 	await get_tree().process_frame
 	get_tree().current_scene = scene
@@ -84,6 +92,15 @@ func _ready() -> void:
 	await get_tree().physics_frame
 
 	var rig: Node = scene.get_node("GrappleRig")
+	# As a match starts one (WrestlerController._begin_running_paired): roles
+	# set and both in GRAPPLE_HOLD, or the grip IK -- the hands -- never runs.
+	if not OS.get_cmdline_user_args().has("--no-grip"):
+		attacker._is_grapple_attacker = true
+		defender._is_grapple_attacker = false
+		attacker.opponent = defender
+		defender.opponent = attacker
+		attacker.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+		defender.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
 	rig.begin(attacker, defender, move)
 	print("PAIRED_SHOT %s" % _move_id)
 

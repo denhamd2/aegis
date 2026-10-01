@@ -49,8 +49,9 @@ func _wear(skeleton: Skeleton3D) -> void:
 	var mats := _materials()
 	for node in _root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
-		if mats.has(String(mi.name)):
-			mi.material_override = mats[String(mi.name)]
+		var set: Array = mats.get(String(mi.name), [])
+		for i in mini(set.size(), mi.mesh.get_surface_count()):
+			mi.set_surface_override_material(i, set[i])
 		_meshes.append(mi)
 	if _own:
 		for i in _own.get_bone_count():
@@ -81,24 +82,55 @@ func set_worn(on: bool) -> void:
 
 
 static func _materials() -> Dictionary:
-	# Satin coat fabric: white with the red panels and the gold trim painted
-	# in (cody_coat.py); the ORM map makes the trim and studs metal.
-	var body := ORMMaterial3D.new()
-	body.albedo_texture = load("res://assets/characters/cody_coat_body.png")
-	body.orm_texture = load("res://assets/characters/cody_coat_orm_body.png")
-	body.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var sleeve := ORMMaterial3D.new()
-	sleeve.albedo_texture = load("res://assets/characters/cody_coat_sleeve.png")
-	sleeve.orm_texture = load("res://assets/characters/cody_coat_orm_sleeve.png")
-	sleeve.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var collar := StandardMaterial3D.new()
-	collar.albedo_color = Color(0.73, 0.10, 0.13)
-	collar.roughness = 0.5
+	# The cloth: a satin-backed drill, white with the red panels and the
+	# gold trim painted in (cody_coat.py). The ORM makes the trim and studs
+	# metal and breaks up the cloth's roughness; the normal map carries the
+	# twill and the fine folds; a little rim is the sheen cloth has at a
+	# grazing angle. The coat has thickness now (Solidify), so it is drawn
+	# one-sided and its inner shell is the lining.
+	var body := _cloth("res://assets/characters/cody_coat_body.png",
+			"res://assets/characters/cody_coat_orm_body.png",
+			"res://assets/characters/cody_coat_nrm_body.png")
+	var sleeve := _cloth("res://assets/characters/cody_coat_sleeve.png",
+			"res://assets/characters/cody_coat_orm_sleeve.png",
+			"res://assets/characters/cody_coat_nrm_sleeve.png")
+	var lining := StandardMaterial3D.new()
+	lining.albedo_color = Color(0.42, 0.05, 0.07)
+	lining.roughness = 0.45
+	var lapel := StandardMaterial3D.new()
+	lapel.albedo_texture = load("res://assets/characters/cody_coat_lapel.png")
+	lapel.roughness = 0.55
+	lapel.rim_enabled = true
+	lapel.rim = 0.3
+	lapel.rim_tint = 0.5
+	lapel.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# The stand collar: white with the gold lip and seam, both faces drawn --
+	# its inside is in shot whenever he throws his head back.
+	var collar := _cloth("res://assets/characters/cody_coat_collar.png",
+			"res://assets/characters/cody_coat_orm_collar.png",
+			"res://assets/characters/cody_coat_nrm_sleeve.png")
 	collar.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var scales := StandardMaterial3D.new()
 	scales.albedo_color = Color(0.93, 0.74, 0.40)
 	scales.metallic = 1.0
 	scales.roughness = 0.3
 	scales.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return {"CoatBody": body, "CoatSkirt": body, "CoatSleeve": sleeve,
-			"CoatCollar": collar, "CoatScales": scales}
+	# Per part: [outer, lining]. The glb carries one surface per material
+	# slot, in slot order -- slot 1 is Solidify's inner shell.
+	return {"CoatBody": [body, lining], "CoatSkirt": [body, lining],
+			"CoatSleeve": [sleeve, lining], "CoatLapel": [lapel],
+			"CoatCollar": [collar], "CoatScales": [scales]}
+
+
+static func _cloth(albedo: String, orm: String, normal: String) -> ORMMaterial3D:
+	var m := ORMMaterial3D.new()
+	m.albedo_texture = load(albedo)
+	m.orm_texture = load(orm)
+	m.normal_enabled = true
+	m.normal_texture = load(normal)
+	m.normal_scale = 0.8
+	m.rim_enabled = true
+	m.rim = 0.3
+	m.rim_tint = 0.5
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return m

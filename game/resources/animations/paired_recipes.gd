@@ -73,6 +73,30 @@ const LIBRARY := "paired"
 ## strike_recipes.gd) rather than escalating a throw ladder -- see
 ## WrestlerAI, which grapples once and then only strikes.
 const RECIPES := {
+	# Chain wrestling (Phase 4): one link each, into the hold, cranked, fought
+	# free, squared up -- WrestlerController chains them out of a lock-up.
+	# Authored in Blender against each other (wrestling_clips.py "Chain
+	# wrestling"); the samples are fallbacks only.
+	"chain_headlock": {
+		"authored": {"attacker": "Chain_Headlock_Attacker", "defender": "Chain_Headlock_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		# His own hands, not the chest grip: bent double under the arm, a grip
+		# on the holder's chest hauled his arm up over the holder's shoulder.
+		"defender_grips_until": 0.10,
+	},
+	"chain_wristlock": {
+		"authored": {"attacker": "Chain_Wristlock_Attacker", "defender": "Chain_Wristlock_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender_grips_until": 0.10,
+	},
+	"chain_waistlock": {
+		"authored": {"attacker": "Chain_Waistlock_Attacker", "defender": "Chain_Waistlock_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Push", "at": 0.80}, {"t": 1.80, "clip": "Idle", "at": 0.00}],
+		"defender_grips_until": 0.10,
+	},
 	# The one grapple, and deliberately not a throw. The three it replaces
 	# (hiptoss, snapmare, armdrag) all put the victim in the air, and the
 	# altitude was not a bug that could be capped away: the tucked-body
@@ -575,6 +599,58 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.35,
 	},
+	# Cody's -- see Powerslam_Attacker in tools/blender/wrestling_clips.py. The body slam's lift, then he falls with him.
+	"power_powerslam": {
+		"authored": {"attacker": "Powerslam_Attacker", "defender": "Powerslam_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.40,
+	},
+	# Cody's -- see Disaster_Kick_Attacker in tools/blender/wrestling_clips.py. His spinning heel kick.
+	"signature_disaster_kick": {
+		"authored": {"attacker": "Disaster_Kick_Attacker", "defender": "Disaster_Kick_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.10,
+	},
+	# Cody's -- see Vertical_Suplex_Attacker in tools/blender/wrestling_clips.py. Delayed: held upside down a second.
+	"grapple_vertical_suplex": {
+		"authored": {"attacker": "Vertical_Suplex_Attacker", "defender": "Vertical_Suplex_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.70,
+	},
+	# Cody's -- see Alabama_Slam_Attacker in tools/blender/wrestling_clips.py. Over the shoulders, then over the top.
+	"power_alabama_slam": {
+		"authored": {"attacker": "Alabama_Slam_Attacker", "defender": "Alabama_Slam_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.65,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -601,6 +677,72 @@ const RECIPES := {
 ## equal its first, so the flip resolves to a full 360 and he lands upright.
 ## That is exactly the bug that put suplex victims half a metre into the mat.
 const TRAJECTORIES := {
+	# --- chain wrestling (Phase 4) -------------------------------------------
+	# Each link starts from the lock-up marks (attacker +0.40 facing -X,
+	# defender -0.40 facing +X) and ends squared up about 0.9 m apart, facing
+	# each other, wherever that is: the next link's pair frame is taken from
+	# where they stand. Frames at 30 fps: in 0-12, held 12-38, free 38-44.
+	#
+	# Headlock: the holder pivots in to the man's left side and turns to face
+	# his way (yaw 90 -> -90 through facing -Z), the head at his right hip;
+	# shoved off, he stumbles on and turns back round.
+	"chain_headlock": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.28, 0.00, -0.16],
+					[0.40, 0.06, 0.00, -0.28], [1.27, 0.06, 0.00, -0.28],
+					[1.47, 0.36, 0.00, -0.20], [1.80, 0.52, 0.00, -0.06]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.20, 0.0, 20.0, 0.0],
+					[0.40, 0.0, -90.0, 0.0], [1.27, 0.0, -90.0, 0.0],
+					[1.47, 0.0, -60.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.40, -0.50, 0.00, 0.00],
+					[1.27, -0.50, 0.00, 0.00], [1.80, -0.42, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Wristlock: the holder stands his ground; the man turns away from his own
+	# arm (yaw -90 -> -10) and backs off until it is straight, then comes back
+	# round to face him.
+	"chain_wristlock": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.40, 0.36, 0.00, 0.00],
+					[1.27, 0.36, 0.00, 0.00], [1.80, 0.45, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.40, 0.0, 96.0, 0.0],
+					[1.27, 0.0, 96.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.40, -0.66, 0.00, 0.04],
+					[1.27, -0.66, 0.00, 0.04], [1.47, -0.58, 0.00, 0.02],
+					[1.80, -0.45, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.40, 0.0, -10.0, 0.0],
+					[1.27, 0.0, -10.0, 0.0], [1.47, 0.0, -50.0, 0.0],
+					[1.80, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Go-behind: the holder circles round the man's left side (-Z) to his back
+	# (yaw 90 -> -90 through facing -Z) by frame 14; the man pries free, steps
+	# on and turns round to face him (yaw -90 -> 90 through facing -Z).
+	"chain_waistlock": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.12, 0.00, -0.50],
+					[0.33, -0.56, 0.00, -0.56], [0.47, -0.80, 0.00, -0.16],
+					[0.57, -0.68, 0.00, -0.02], [1.27, -0.68, 0.00, -0.02], [1.80, -0.84, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.17, 0.0, 20.0, 0.0],
+					[0.33, 0.0, -45.0, 0.0], [0.47, 0.0, -80.0, 0.0],
+					[0.57, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [1.27, -0.40, 0.00, 0.00],
+					[1.47, -0.24, 0.00, 0.00], [1.80, 0.02, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.30, 0.0, -90.0, 0.0],
+					[1.55, 0.0, 0.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+	},
+
 	# Nobody leaves the mat: every y is 0.00, by design. See the RECIPES entry
 	# above for why a grapple that does not flip is the only kind that can
 	# stay down here.
@@ -1094,6 +1236,84 @@ const TRAJECTORIES := {
 					[0.47, -0.34, 0.00, -0.18], [0.67, -0.38, 0.00, -0.26],
 					[1.00, -0.38, 0.00, -0.26]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.00, 0.0, -90.0, 0.0]],
+		},
+	},
+	# --- Cody's moveset (wrestling_clips.py "Cody Rhodes's moveset") -------
+	# The powerslam is the body slam's path for the lift (same frames), then
+	# Cody steps in and goes down on top of him where he lands.
+	"power_powerslam": {
+		"length": 1.5,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.23, 0.30, 0.00, 0.00],
+					[0.43, 0.34, 0.00, 0.02], [0.63, 0.40, 0.00, 0.02],
+					[0.77, 0.38, 0.00, -0.06], [1.00, 0.36, 0.00, -0.08],
+					[1.50, 0.36, 0.00, -0.08]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.23, 0.0, 88.0, 0.0],
+					[0.43, 0.0, 40.0, 0.0], [0.63, 0.0, 0.0, 0.0],
+					[1.50, 0.0, 0.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.23, -0.28, 0.00, 0.00],
+					[0.43, 0.10, 0.00, -0.20], [0.63, 0.30, 0.00, -0.30],
+					[0.80, 0.30, 0.00, -0.38], [0.97, 0.30, 0.00, -0.50],
+					[1.50, 0.30, 0.00, -0.50]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.50, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The Disaster Kick: shoved off to 1.05 m, Cody spins three quarters of a
+	# turn (yaw 90 -> -180: his right side to the victim) to the kick at 0.60 s,
+	# and on round to face him (-270 == 90) as he lands; the victim goes back.
+	"signature_disaster_kick": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.17, 0.44, 0.00, 0.00],
+					[1.40, 0.44, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.33, 0.0, 90.0, 0.0],
+					[0.42, 0.0, 0.0, 0.0], [0.50, 0.0, -90.0, 0.0],
+					[0.60, 0.0, -180.0, 0.0], [0.72, 0.0, -225.0, 0.0],
+					[0.87, 0.0, -270.0, 0.0], [1.40, 0.0, -270.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.17, -0.60, 0.00, 0.00],
+					[0.60, -0.60, 0.00, 0.00], [0.70, -0.85, 0.00, 0.00],
+					[0.83, -1.10, 0.00, 0.00], [1.40, -1.10, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.40, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The delayed vertical suplex: the victim's root comes in to Cody's chest
+	# as he goes up, stays there through the hold, then travels over Cody's
+	# head to land beyond it. Nobody's root leaves the mat -- the height is
+	# bone pose.
+	"grapple_vertical_suplex": {
+		"length": 2.4,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [2.40, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.40, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.28, 0.00, 0.00],
+					[0.53, 0.05, 0.00, 0.00], [0.67, 0.20, 0.00, 0.00],
+					[1.67, 0.20, 0.00, 0.00], [1.80, 0.60, 0.00, 0.00],
+					[1.90, 1.40, 0.00, 0.00], [1.97, 1.75, 0.00, 0.00],
+					[2.40, 1.75, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.40, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The Alabama Slam: the victim's root comes under Cody while he is over
+	# his shoulders, then goes out in front as he is slammed.
+	"power_alabama_slam": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [2.00, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.00, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.23, -0.20, 0.00, 0.00],
+					[0.47, 0.34, 0.00, 0.00], [1.00, 0.34, 0.00, 0.00],
+					[1.17, 0.20, 0.00, 0.00], [1.23, -0.05, 0.00, 0.00],
+					[1.30, -0.45, 0.00, 0.00], [1.37, -0.65, 0.00, 0.00],
+					[2.00, -0.65, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
 		},
 	},
 }

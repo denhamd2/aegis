@@ -6957,3 +6957,1076 @@ in-ring look.
 ### Checks
 478 tests pass. Probes: `clip_shot.tscn --face`, `props_shot.tscn --cody`,
 `belt_shot.tscn`, `steps_shot.tscn`, `entrance_shots.tscn`.
+
+## Round: Cody's coat as cloth, Roman's title off his stomach
+
+From the owner's entrance video: the coat "didn't look good" (read as painted
+on, and the tails were wrong), and part of the title sat inside Roman's
+stomach.
+
+**The title.** It followed his hips bone's position but only his yaw, so
+when his pelvis tipped and his torso leaned into the walk and the climb, his
+stomach came out through the plates -- measured at up to 17 cm by the new
+`tools/probe/wear_clearance.tscn`, which skins his meshes on the CPU and
+tests every torso vertex in the belt's height band against the belt line.
+The rest-pose waist it was built on was too small as well: his belly stands
+0.21 m in front of the hips bone at the height of the centre plate's top,
+not 0.16. Now `EntranceProps` turns the worn title with the pelvis's own
+rotation, and `roman_props.py` builds the belt line as two half-ellipses
+(deeper in front) refit to the probe's dump of every fifth entrance frame.
+Worst frame now: 2 mm past the line, short of the strap's inner face.
+Thighs are excluded -- a knee lifted to climb the steps comes up in front of
+the plates' bottom edge, as it would under a real belt.
+
+**The coat** (`tools/blender/cody_coat.py`, rebuilt):
+- The jacket was his skin pushed out 16 mm. It is now smoothed first (it
+  bridges the pec, ab and spine hollows), stood off 22 mm and pushed clear
+  of him everywhere, with 5 mm of thickness (Solidify) and a dark red lining.
+- The skirt was centred 12 cm in front of his hips -- the body mesh's hips
+  sit at y 0.14 in its bind space, the skirt assumed 0.02 -- which is why it
+  stood off his legs like a lampshade from the side. It is now measured off
+  him: it starts on the jacket's own outline, rounds over his seat and falls
+  nearly straight in folds to mid-shin, vented at both sides from mid-thigh.
+  Its weights moved from up to 75% thigh to mostly pelvis (front panels
+  0.45 to their own thigh, the back tail 0.15), so it hangs and swings.
+- The open front's saw-toothed edge is straightened and turned back into
+  lapels; the cuffs are cut square to the forearm; skin weighted to the
+  thighs round his hips is now jacket too (it was a band of holes where his
+  tights showed through).
+- Fabric: a twill-and-folds normal map, mottled roughness in the ORM, and a
+  little rim for the sheen cloth has at a grazing angle.
+
+Checked on pixels with the new `tools/probe/coat_shot.tscn`, which plays the
+real entrance and cuts to its own camera on the coat (front, three-quarter,
+side, back; `--bone lowerarm_r` for a close-up) and on the worn title. A
+nearest-surface clearance test for the coat was tried and dropped: it fires
+on every edge the body passes (the open front, the cuffs, the vents).
+
+### Checks
+478 tests pass. `cody_coat.py` and `build_venue.sh roman` each rebuild
+byte-identical. `wear_clearance.tscn`: title worst 0.002 m over 297 samples.
+
+## Round: the entrances, matched to the broadcast
+
+The owner asked for Roman's and Cody's entrances to match the real ones:
+poses, gait, style, camera, timing to the music, the way in to the ring.
+Discovery first: seven WWE.com entrance clips (their own MP4s, not
+committed) stepped at 0.5 s with scene-cut detection, and Roman's supplied
+theme measured. Everything seen is in `gauntlet/refs/entrances.md`,
+"Measured off broadcast footage", tagged [V] with clip and timestamp; the
+earlier [K]/[P] beats the footage contradicted are marked superseded.
+
+**Roman is the OTC** (owner's choice; his own wall video is that era): blue,
+no title. The track goes near-silent at 42.5 s and slams at **45.0 s**; the
+broadcast puts the finger and the pyro on the slam, so he now walks out of
+his portal at ~25.7 s, looks the building over on the lip (push-in, then a
+close-up), and the finger's arm arrives on 45.0 s with stage gerbs and the
+room red for 1.5 s, held to 58 s under a low wide from the ramp. The whole
+ramp at 0.5 m/s on the low ultra-wide steadicam, cut to high wides and once
+over his shoulder; head bowed at the foot of the steps; the finger to the
+hard camera, hands on hips, the ula fala off.
+
+**Cody**: the WHOAs play over the crowd and the dark building, not him; he
+walks out of smoke in his portal on the third, backlit; the WHOA pose and
+the pyro on the hit, both fists driven DOWN on the punch (it was an air
+punch up), the low steadicam, **the kneel** at the top of the ramp, the low
+WHOA mid-aisle, and in over the ropes with the camera low behind him.
+
+New clips (`wrestling_clips.py`, through the `blender-animation` gate and
+`clip_shot.tscn`): `Finger_Hold`, `Head_Bow`, `Hands_Hips`, `Fists_Down`,
+`Kneel`, `Whoa_Low`; `Walk_Slow_Look` now carries the arms off his sides,
+palms back, chin down; `Walk_Crowd` swings the head wider. New shots:
+`steadicam_low`, `arena_high`, `over_shoulder`, `ramp_low_wide`,
+`ramp_long`, `ring_behind_low`, `crowd_wide`, `bow_close`.
+
+Still not matched, and why: the set's portal rings are the arena's own
+pink/orange for everyone -- only his light goes blue; the middle-rope
+corner pose stays (sourced, but in none of the clips measured); Cody's kneel
+is partly hidden by the coat's skirt, as in C-MITB.
+
+### Checks
+479 tests pass (the clip-authoring digest re-pinned after review). The
+clip and strike bakes rebuild byte-identical. `entrance_shots.tscn`
+rendered every beat; timing asserted by `test_romans_finger_lands_on_the_slam`
+and `test_codys_beats_land_on_the_music`.
+
+## Round: Cody's own moveset
+
+The owner asked for Cody's real moveset, animated and in his matches.
+Researched in `gauntlet/refs/cody_moveset.md` (All Elite Moves, the 2K
+sets): the WWE-era core he hits in nearly every match. Scope chosen by the
+owner: the core, the Figure-Four, and the dives -- this round is the core.
+
+New paired moves (`wrestling_clips.py`, recipes and root paths in
+`paired_recipes.gd`): **powerslam**, **Disaster Kick** (standing),
+**delayed vertical suplex** (held upside down, then over), **Alabama
+Slam**. New strikes: **Bionic Elbow**, **dropdown uppercut** (contact
+offsets measured). Cross Rhodes and the Cody Cutter were already his.
+
+`Roster.Entry.moveset` gives a wrestler his own move per tier;
+`TitleScreen.configure_match` puts the first as the tier's primary and the
+rest in its pool, in place of the shared moves. Only Cody has one; Roman
+still fights with the shared set.
+
+Next: the Figure-Four as a paired submission hold (submissions are one
+generic pose today), then the dives, which need out-of-ring and apron
+positioning the match does not have yet.
+
+### Checks
+480 tests pass (new `test_cody_fights_with_his_own_moveset`; clip digest
+re-pinned after `paired_shot` review). `move_qa --roster` on the four new
+paired moves: mat, merge and pop within the house figures of the body slam
+and Cody Cutter. `tools/probe/moveset_tally.tscn` over 16 seeded
+Roman-vs-Cody matches: every new move thrown.
+
+## Round: the Figure-Four
+
+Cody's Figure-Four leglock, authored (`Figure_Four_Attacker`/`_Defender`,
+6 s: grab the ankles, cross the left shin over the right knee, sit back,
+three bridges while the man sits up and slaps the mat) and in his matches.
+Submissions existed but nothing in a match started one; now a wrestler's
+own hold (`Roster` "submission" tier -> `WrestlerController.submission_move`)
+is taken once a match on the first man he has down, unless a finisher put
+him there. Placement is measured off the downed man's bones: assumed from
+his node's heading it put Cody over the man's head, then facing away,
+before `hold_shot.tscn` showed it right.
+
+### Checks
+483 tests pass (new `test_own_hold.gd`; clip digest re-pinned after
+review in `hold_shot.tscn`). Moveset tally, 8 seeds: the hold in 5
+matches, every match still won by pinfall.
+
+## Round: Cody on his music, and the lower third
+
+The owner: Cody came out too soon, and his WHOA poses weren't on the WHOAs.
+Measured: his track's sung chant starts at 22.5 s; seven broadcast clips
+aligned to it by audio cross-correlation all start on the music, and all
+keep him off camera until the smoke at ~22.3 s. The game had him out on an
+intro swell at 6.3 s. Re-cut on the vocal onsets (`CODY_*` in
+`entrance_director.gd`; `gauntlet/refs/entrances.md` "Cody, cut to his
+music"): out of the smoke on the first sung WHOA, arms wide on 24.0, pyro
+26.0, fists 29.0, the knee down on 36.5, the low WHOA on the held WHOAAA at
+43.5. `Whoa_Arms` (5.0 s) and `Whoa_Low` (3.3 s) re-authored with living
+holds -- breath, head back, a chest lift to the pyro, a push wider on the
+second held WHOA -- so the poses carry their phrases.
+
+The lower third builds on in layers instead of one fade: a light streak
+wipes the plate on behind a slanted edge, the subtitle tracks in from wide,
+the name's letters rise in one after another with overshoot, a shine runs
+across the silver; out, the letters slip left and the plate wipes off.
+`tools/probe/lower_third_shot.tscn` renders it frame by frame.
+
+### Checks
+484 tests pass; `test_codys_beats_land_on_the_music` pins every accent
+within two ticks of its measured note. Clips reviewed in `clip_shot.tscn`
+before re-pinning the authoring gate.
+
+## Round: live ropes
+
+The owner asked for rope physics that hold up when a man runs into the
+ropes, stands on them, or goes through them. Research is in
+`gauntlet/refs/ropes.md`.
+
+**Research.**
+- Construction specs: steel cable in a hose sleeve, tensioned at the
+  turnbuckles.
+- WWE 619 and springboard footage: a body bends a rope into a V that is
+  stiffer near the posts, and a rope rings for a few slow swings rather
+  than buzzing.
+- Derived numbers: a rebound deflects the rope 0.3–0.5 m, with contact
+  lasting about 0.25 s. The fundamental is about 7 Hz and the damping
+  ratio 0.08.
+
+**Before this round.** Bodies never reached the ropes. The rope colliders
+stopped a man 0.35 m short of the rendered ropes, and the ropes were
+static tubes.
+
+**What changed.**
+- `core/ring/ring_ropes.gd` replaces the baked rope mesh with twelve live
+  strings.
+  - Each is the discrete wave equation, pinned at the turnbuckles. The
+    rest shape is `ring.py`'s parabola, so a ring at rest is unchanged.
+  - Every wrestler is sampled into spheres along his bones each frame, and
+    rope nodes are pushed out of them. A back makes a V, a boot presses a
+    rope down, and a body going through parts two ropes.
+  - The ropes are cosmetic and one-way: nothing pushes back on a body. The
+    ropes sleep when nothing is touching them.
+- **Cody's rebound before the tope** is now real. The new `Rope_Rebound`
+  clip turns him side-on with an arm over the top rope, carries him 0.3 m
+  into the ropes, and throws him back running. `DiveSpot` turns the root
+  round on a cut (`play_presentation_clip(..., cut)`) so he doesn't spin.
+- **The springboard** now puts the boot on the middle rope and the hands on
+  the top one. Before, the boot was 0.14 m short of the middle rope.
+- **The Irish whip** no longer bounces on the tick it reaches the collider.
+  He carries on into the ropes on a half-sine (`rope_load_offset`) and is
+  thrown back out. This touches gameplay only for a player's whip, because
+  the AI never whips.
+
+Measured through `tools/probe/rope_shot.tscn`:
+
+| Beat | Peak rope deflection |
+| --- | --- |
+| Rebound | 0.53 m |
+| Roll out | 0.35 m |
+| Tope | 0.46 m |
+| Roll in | 0.46 m |
+| Springboard | 0.17 m |
+
+## Round: AAA pass, items 1–4
+
+From `gauntlet/refs/aaa_gap.md`.
+
+**What changed.**
+1. **Anti-aliasing.** MSAA 4x and TAA are on in `project.godot`. Cody's hair
+   shells use alpha to coverage, as Roman's cards already did.
+2. **Skin subsurface scattering.** New `core/materials/skin_look.gd` applies
+   it to Roman's and Cody's skin materials, with a little transmittance for
+   backlit ears and fingers. It is not applied to Kenny, whose one scan
+   material covers his gear too.
+3. **A ReflectionProbe over the ring** (`RingReflections` in `match.tscn`).
+   Posts, turnbuckle hardware, steps and title plates now reflect the hall.
+4. **SSIL.** The canvas bounces light onto the wrestlers.
+
+**Measurement changes.**
+- `CaptureHarness.ART_SETTLE_FRAMES` went from 3 to 24, so art shots are
+  measured converged.
+- The silhouette mask frame turns TAA and MSAA off, so its flat keys stay
+  exact.
+
+**Results.**
+- The mat holds its exposure anchor (0.453).
+- The before and after table is in `aaa_gap.md`.
+- 490 tests pass.
+
+## Round: AAA pass, items 5–6
+
+**Sweat.** `core/materials/sweat.gd` builds a wet film over each man's skin
+across the match.
+- `SkinLook.set_wetness` makes it a clearcoat layer.
+- Wetness comes from match time and damage taken.
+- It is presentation only.
+
+**Pores.** A tiling pore-and-crease normal map, generated by
+`tools/assets/build_skin_detail.py`, is layered onto Roman's and Cody's skin
+through a UV2 added at load. It breaks the highlight into points, which shows
+most once he is wet.
+
+**Checks.** Rendered dry and soaked through `tools/probe/skin_shot.tscn`.
+Tests are in `tests/test_skin_look.gd`.
+
+## Round: AAA pass, items 7–9
+
+**Hair shine.** `core/materials/hair_look.gd` gives the hair an anisotropic
+highlight that runs across the strands.
+- Roman's hair gets a root-to-tip shade, written as vertex colour.
+- Cody's roots are deepened.
+- Roman's single glossy sheen now breaks into streaks along the strands.
+
+**Soft shadows.**
+- The four ring keys get a 0.35 m `light_size`, which turns on
+  contact-hardening PCSS shadows.
+- On the keys alone this was invisible: the shadowless top fill washed every
+  key shadow out.
+- So the top fill casts soft shadows too, which gives the contact pool under
+  each wrestler.
+- The mat measures 0.446, still inside 0.43–0.49.
+
+**Pyro light.**
+- Gerbs and the waterfall now light what is near them for as long as they
+  burn: held, flickering, and cooling to orange.
+- Previously a gerb's light decayed like a pop.
+- The waterfall had no light at all; it now gets one light per three falls.
+
+**Checks.** `tools/probe/hair_shot.tscn` and `tools/probe/shadow_shot.tscn`
+render before and after. Tests are in `tests/test_hair_shadow_pyro.gd`.
+Details are in `gauntlet/refs/aaa_gap.md`.
+
+## Round: AAA pass, items 10–12
+
+**Broadcast finish.**
+- Depth of field on the entrance and face-off close-ups.
+- A light lens vignette, which leaves the mat at 0.444, still in band.
+- Grain on replay playback.
+- AgX was tried against Filmic. It clips nothing, but the mat drops to
+  0.340, so it is parked until the rig is re-solved for it.
+
+**A living crowd.** `CrowdReaction` drives the crowd shader's excitement
+(a jump bounce) from:
+- big moves;
+- covers and near-falls;
+- the finish;
+- the entrance pyro.
+
+Phone flashes run through the entrances.
+
+**Eyes that look.** `EyeAim` aims Roman's eye bones at Cody's head. Measured
+off the rendered pupils: 30–34° off staring ahead, 3.5° with the aim on. No
+blink, because the model has no lids or shapes.
+
+**Checks.** `tools/probe/broadcast_shot.tscn` renders the frames. Tests are
+in `tests/test_broadcast_crowd_eyes.gd`. Details are in
+`gauntlet/refs/aaa_gap.md`.
+
+## Round: the lock-up and grapple holds were backbends
+
+The owner flagged two frames:
+- the tie-up, where Roman arches back with his arms flung out and Cody's are
+  crossed;
+- a measurement shot of the stand-ins gripping air 2 m apart.
+
+There were four causes:
+- **Sign.** `Tie_Up_Collar`, the three `Grapple_Hold_*` clips and
+  `Move_Exec_Impact` were authored with a positive hips/spine pitch under
+  notes saying "bent at the waist". A positive pitch tips a man backward,
+  per the STANCE note in `wrestling_clips.py`. So every lock-up and grapple
+  hold played as a backbend. The pitches are negated, head included, and
+  side-on renders confirm each now bends forward.
+- **Grips.** During the tie-up the grip IK aimed both hands at the other
+  man's chest, which is a two-handed shove. It is now a collar-and-elbow:
+  the right hand behind his neck, the left on his right elbow
+  (`WrestlerController._aim_collar_and_elbow`).
+- **Distance.** Tie-ups were held 1.1–1.25 m apart, measured live. The models
+  (never the bodies) now slide in to a 0.60 m lock-up gap and back out after
+  (`_close_for_lock_up`). It is presentation only, so the replay hash is
+  untouched.
+- **The measurement shot.** It froze the wrestlers but not the referee, so
+  the stand-ins went on into a grapple hold 2 m apart. It now stops the
+  referee and returns both to IDLE. The mat reads 0.445, still in band.
+
+**The knee to the gut, a follow-up round.** `Clinch_Knee_Attacker` and
+`Clinch_Knee_Defender` had the same sign mistake. The man taking the knee
+arched back to 52°, carrying his stomach away from it. The pitches are
+negated on every key of both halves, so the two stay beat-locked. Side-on
+renders through `paired_shot.tscn` now show him doubling over onto the
+attacker. The paired bake was re-run and all 512 tests pass.
+
+`Submission_Work` and `Finisher_Drive` also use positive pitch, but lean back
+on purpose, so they are unchanged.
+
+## Round: Cody's eyes, and the animation research
+
+**Cody's eyes.** They are real geometry, an eyeball plus a cornea shell per
+eye, but they were weighted to Head.
+- `tools/assets/rig_cody_eyes.py` finds them by shape.
+- It adds `Eye_L` and `Eye_R` under Head at each eyeball's centre, and moves
+  their weight onto those bones.
+- `CodyModel.aim_eyes` gives him the same EyeAim as Roman.
+- Measured in `tools/probe/cody_eye_shot.tscn`: 24–27° off Roman staring
+  ahead, and 0° with the aim on.
+- The line of sight is the face's forward at rest, not the bone's own +Y.
+  After the glTF round trip the bone's +Y pointed 155° away.
+
+**Animation research.** `gauntlet/refs/animation_gap.md` sets out:
+- what 2K26 does (mocap of both performers at once, position- and
+  size-aware moves, in-between reactions);
+- the five gaps our audit found;
+- a phased plan: automated pose and pair lint, contact-first two-man
+  authoring with size fitting, better transitions and foot IK, then
+  match-play systems.
+
+**Roman blinks** (`core/match/eye_lids.gd`, `RomanModel.build_eye_lids`). His
+model has no lid bones or shapes, so the lids are built:
+- A skin-toned spherical cap per eye, centred on the J_Eye bone. The pupil
+  sits 12.2 mm from it, a human eyeball's radius, so the bone is the centre.
+- Hung on J_Head, so the lids do not roll with EyeAim.
+- A blink is 60 ms closing, 30 ms held, 90 ms opening, every 2–6 s, seeded.
+- The cap sits inside the skin line (0.95 of the eye's radius), and the eye
+  tucks to 0.8 scale while shut so the cornea does not poke through.
+- The lid only sweeps the opening, from 35° above the pupil to the lower rim.
+
+Three wrong turns were caught on `tools/probe/lids_shot.tscn` renders:
+- a mirrored basis, which drew the cap inside out;
+- placing the lids from the mesh put them 6 cm too high;
+- a full sweep bulged over his cheek.
+
+## Round: AgX adopted, and the first animation gate (PoseLint)
+
+**AgX.**
+- `match.tscn` uses AgX at exposure 1.7: mat 0.458 (reference 0.46), and
+  clipped pixels drop from 473 to 1.
+- The capture harness's mask frame uses a linear tonemap, so measurements
+  hold under AgX. Filmic re-measured 0.448 through the new mask.
+- The compatibility renderer keeps Filmic 1.0 and is unchanged.
+
+**PoseLint** (`tools/anim/pose_lint.gd`, `tests/test_pose_lint.gd`,
+`resources/animations/clip_intent.gd`). This is Phase 1 of
+`gauntlet/refs/animation_gap.md`. Every authored clip is sampled at 11 points
+and checked for:
+- a bone under the mat (world-space and paired clips excepted, since those are
+  placed differently at play time);
+- a head snapped more than 75° off the torso;
+- a hand inside its own torso;
+- each tagged clip leaning the way it means to.
+
+A self-test proves the lean check reads a backbend.
+
+The first run found 13 real defects, all now fixed and checked on renders:
+- Pin_Cover's shin 5.5 cm and toes 10 cm into the canvas;
+- Getup_Rise's foot 12 cm and fingers 9 cm through the mat;
+- the back foot of the entrance kneel;
+- hands inside the chest on the dropdown uppercut and the dropkick.
+
+Most were the joint-space blend between keys sweeping a limb through the
+floor. Solved in-between keys fixed them, found by tracing frame by frame.
+
+**No knee check.** Three measures of a backwards knee each misread
+render-checked normal poses, so none shipped; the reasons are in
+`pose_lint.gd`.
+
+## Round: the pair check (Phase 1 complete)
+
+**PairClearance** (`tools/anim/pair_clearance.gd`,
+`tests/test_pair_clearance.gd`, probe `tools/probe/pair_clearance.tscn`).
+- Every paired move runs through the real GrappleRig in the match scene.
+- Each tick it measures the deepest overlap between the two bodies, modelled
+  as capsules: torso, head, arms and legs.
+- Limits: 5 cm body into body, and 8 cm for an arm, since a grip wraps round
+  a body.
+
+**What it found.** 32 of 37 paired moves put one body through the other by up
+to 26 cm, confirmed on renders:
+- the slam carries the man's belly through the lifter's head;
+- the tilt-a-whirls merge torsos.
+
+This is the root of the overlaps the owner has flagged. Fixing it is Phase 2
+(contact-first two-man authoring), so the test is a **ratchet**:
+- `PairClearanceBaseline` records each move's depth at the time, worst first,
+  and serves as the Phase 2 queue;
+- a listed move may not get worse, and an unlisted one may not go over;
+- a move that gets fixed has to be deleted from the list, which then holds
+  it.
+
+**Contact sheets.** `tools/anim/contact_sheet.sh OUT Clip ...` (or
+`--paired move ...`) renders side and front frames of changed clips. The clip
+gate now points at it and at the two lint tests.
+
+## Round: Phase 2a, two-man moves that touch instead of overlap
+
+**Runtime separation** (`GrappleRig._separate_models`, `PairSeparator`).
+- Each tick of a paired move, after the animation has posed both men,
+  `PairClearance.push` measures how far their capsule bodies are inside each
+  other past contact.
+- It eases the models apart: 85% on the defender, the rest on the attacker,
+  capped at 10 cm so his boots do not slide.
+- It solves in up to 6 passes in the same tick, so fast impacts are caught.
+  Two earlier versions fell short: a gentle step per tick (still 6/37 over),
+  and solving before the animation advanced (24/37).
+- It runs from a late-priority child node because GrappleRig's own order is
+  part of the replay (it keeps bodies in the ring).
+- Models only: bodies, positions and the replay hash never see it, and the
+  offset relaxes back onto the body after the move.
+
+**Trajectory fit** (`tools/anim/fit_paired.tscn` → `PairedFit.OFFSETS` →
+`build_paired_moves.gd`).
+- Records where each role's model had to be moved, in the pair frame, at each
+  trajectory key.
+- Bakes that into the root keys over three passes, so the bodies go where they
+  touch. This is the measured stand-in for contact-first authoring.
+- The fit may not lift a grounded arc past the 0.30 m "must flip" line.
+
+**Result.** 36 of 37 moves are within the limits, against 5 before:
+- lifts, spears, cutters and tilt-a-whirls go from up to 26 cm of overlap to
+  about 1–2 cm, confirmed on before/after renders;
+- only the Clothesline From Hell remains, 3 mm over, and stays on the ratchet.
+
+**Follow-up.** On four moves the carried man still needs up to 30 cm of
+runtime correction mid-air: Cross Rhodes, both tilt-a-whirls, and the
+mushroom stomp. Their trajectory keys are too sparse there, and extra keys
+where the fit peaks would take that up.
+
+### Phase 2 — hand contact
+
+**What each move holds** (`resources/animations/PairedContacts`).
+- Every paired move is tagged: headlock (`neck`), `waist`, cradled (`legs`),
+  cravate (`facelock`), Cross Rhodes' wrist-clutch (`wrist`), or `none`.
+- Before this, every move aimed both hands at the chest, so on a Superman
+  Punch or a clothesline the attacker reached out and held the man he was
+  hitting. The 16 strikes, kicks and dives now keep their hands free.
+
+**Reach.** `GrappleRig._pull_into_reach` draws the defender's model up to
+25 cm towards a hold that is just out of reach, then re-runs the separation.
+If that cannot clear the overlap it causes, the pull is undone — a hand short
+of its hold reads better than a body through a body. The Cody Cutter is
+exempt: pulling his head in put it in the path of Cody's legs.
+
+**Result.**
+- 14 of 21 holding moves have the hands within 5 cm of the hold (median),
+  most 1–3 cm.
+- Overlap stays at 36/37.
+- Seven moves that spin or roll through the hold are ratcheted in
+  `PairClearanceBaseline.GRIP`; the rolling codebreaker is the worst.
+
+**Tried and dropped.** Refitting the trajectories with the pull in (30/37 —
+the grip arms went through bodies).
+
+**Probe fix.** `pair_clearance` now stops at the end of the move being
+measured. The hold was starting a second move straight after the first, and
+the probe was counting it.
+
+### Phase 2 — the walk-in
+
+Before a two-man move, GrappleRig carries both men from where they are
+standing onto the move's start marks.
+
+**The problem.** In four seeded matches the carry was:
+- a median of 0.41 m, and up to 1.5 m;
+- up to 124° of turn;
+- always done in a fixed sixth of a second, with the feet frozen.
+
+That is a 2.5–9 m/s glide. The direction varies too: running moves back the
+attacker straight off 0.6–0.7 m, so no forward step clip could cover it.
+And on the tick the move started, the feet snapped up to 0.53 m, from the
+hold stance to the move's opening stance.
+
+**The fix.**
+- **Timing.** The walk-in lasts as long as stepping there would: 10–45 ticks,
+  at 1.6 m/s and 240°/s, eased in and out.
+- **Opening pose.** Each man blends into his first frame of the move during
+  the walk-in, using a runtime one-frame clip on a `WALK_IN` blend node. The
+  clip then starts without a snap.
+- **`FootPlant`** (`core/match/foot_plant.gd`) is a SkeletonModifier3D that
+  handles the feet:
+  - it keeps each foot planted while the body moves over it, using two-bone
+    leg IK;
+  - it steps the feet in turn, leading foot first, planned against the
+    opening pose's stance;
+  - each step lifts, travels, then sets down.
+  - It is presentation only, so the replay hash can't see it.
+
+**Result** (`tools/probe/walk_in.tscn`). Total foot skating fell about 4x:
+from 0.92 to 0.17 m on short set-ups, and from 1.54 to 0.36 m on the Spear.
+
+**Ropes: start-up fix.** The rope sim sampled wrestlers in their first
+frames, while the AnimationTree was still blending them in from the bind
+pose. A man placed near the ropes pushed the middle rope 18 cm down with a
+pose nobody sees, and it was still bouncing half a second later. The owner
+spotted it on a probe render. `RingRopes` now ignores a wrestler for his
+first 10 frames.
+
+**Also.**
+- `PairClearanceBaseline.MIN_CONTACT_FRAMES` is 10: a 3-frame median, like the
+  Cody Cutter's, isn't judged.
+- The neckbreaker's hands came off the ratchet (3.4 cm).
+
+## Round: Phase 2 closed at real sizes, Phase 3 begins (transitions)
+
+### Phase 2 — the real-size check
+
+Every paired move was run through `tools/probe/pair_clearance.tscn` with the
+real men, at their real sizes, in four pairings: Roman on Cody, Cody on Roman,
+Kenny on Roman, and Roman on Kenny (the mismatch).
+
+**Finding.** The models are not built alike. Measured at rest:
+
+| | hips | head |
+| --- | --- | --- |
+| mannequin (clips authored on it) | 0.92 m | 1.57 m |
+| Cody | 0.94 m | 1.61 m |
+| Kenny | 0.92 m | 1.57 m |
+| Roman | **1.03 m** | 1.69 m |
+
+Roman is 12% longer in the leg than the man every move was authored on. So
+whatever he lifts is held at a shorter man's height. Across his knee in the
+backbreaker, Kenny lay 11 cm low and Roman's head went 15 cm into his back.
+
+**The fix: size fitting.** `GrappleRig` scales the thrown man's root height by
+the attacker's hip height over the mannequin's (`hip_height()`,
+`AUTHORED_HIP_HEIGHT` 0.918 m). Nothing changes on the mat or along the line
+between the two men.
+- Roman's backbreaker on Kenny: body overlap 0.20 → 0.01 m.
+- Roman's neckbreaker on Kenny: 0.03 → clean.
+
+### Roman's clothes were not following his body
+
+Roman is rigged on two skeletons: body and head on one, and bottoms, shoes,
+hair, beard and wrist tape on the other. Both play the clip. But the grip IK,
+`FootPlant` and anything else that bends the body after the clip reached only
+the first. Through a body slam his wrist tape hung up to **0.82 m** from his
+wrists (`tools/probe/wear_follow.tscn`), left where the clip had the hand
+while the IK took the real one to Cody's thigh.
+
+`WornFollow` (`core/match/worn_follow.gd`) runs last on the body skeleton and
+copies its final pose onto the worn one. It copies rotation and position only,
+because scale belongs to each skeleton's own `RomanHeadShape`. The root is
+matched in world space, because the worn skeleton holds it in another axis
+frame. Gap afterwards: 0.000 m.
+
+### Phase 3 — inertialization
+
+**Measure first.** `tools/probe/transition_pops.tscn` plays real AI matches
+and reads eleven bones as drawn, in the body's own frame, every tick. At each
+clip switch it records the worst change of velocity (the "kick") over the
+next 10 ticks. A fast punch has speed but no kick; a pose that jumps has a
+kick as big as the jump.
+
+**The problem.** Every state was cross-faded over 6 ticks. A crossfade plays
+both clips at once and averages them, so for its whole length the man is in
+neither pose. And it still popped: 64% of 612 switches over two matches
+kicked more than 5 cm, the worst 1.5 m.
+
+**The fix.** `Inertializer` (`core/match/inertializer.gd`) runs first among
+the skeleton's modifiers. The crossfades are now cuts. On the tick a switch
+lands:
+- it takes the difference, per bone, between the pose last drawn and the new
+  clip's first pose;
+- it fades that out on Bollo's quintic (GDC 2018, *Gears of War*), which
+  starts at the bone's current speed and arrives with none, without
+  overshooting;
+- fade length depends on the state: 5 ticks into a hit reaction, 12 into
+  going down or getting up, 9 otherwise.
+
+Three things measurement caught along the way:
+- **Capture timing.** A switch is captured when it lands on the mixer's side,
+  not when it is asked for. A state machine with no crossfade reports the new
+  state a tick before it outputs it, then restarts it. Captured on the request,
+  nothing was carried, and running to walking popped 0.5 m at a foot.
+- **Arms.** Only the hips may be cut for a half-turn on the mat. A 100° limit
+  on every bone cut running arms into a guard.
+- **Speed.** Carrying position alone left a kick of the old clip's full speed
+  on the switch tick. Bollo's velocity term fixed it.
+
+**Result** (same two seeded matches). Switches kicking over 5 cm fell from
+64% to 40%:
+- running to walking: mean kick 0.165 → under 0.05 m;
+- getting up: 0.64 → 0.29 m;
+- idle to strike: 0.16 → 0.10 m.
+
+The worst that remain:
+- the paired move's hand-off to DOWN (1.3 m), where GrappleRig lands the
+  thrown man;
+- the deliberate half-turn on the mat, which is correct on screen but counts
+  in the body frame.
+
+**Found, not fixed.** The body itself snaps its facing: 180° in one tick when
+starting or stopping a run. The pose transitions are now smooth; the body's
+turn is not. This is a gameplay rotation, and facing decides whether strikes
+land, so it is a separate change.
+
+### Phase 3 — landings, turns, hit reactions and in-between life
+
+**Landing from a paired move.** When a turn-round on the mat changed the
+hips by half a turn, the inertializer cut the hips but still carried every
+other bone's difference. Those differences were now relative to hips facing
+the other way, so the legs swung 0.67 m into the air as the man landed.
+A turn-round now cuts the whole pose. The hand-off to DOWN, measured in world
+view (`transition_pops --world`), is back to a 0.06 m mean.
+
+**The one-frame flash on the mat.** `_turn_round_on_the_mat` turns the body
+at once, but the matching clip lands a tick later. For that tick the man
+lay turned round in the old pose, and his head flashed 1.2 m to the other
+side and back. This had been there all along. The model is now held facing
+the way it was until his hips show the new clip's half-turn, then released
+on that tick: 2.7 → 0.46 m.
+
+**Facing snaps.** The match snaps facing: `look_at()` on the running
+direction turns a man half round in one tick at the ropes and when he slows
+to a walk, 2.3 m at a hand. Facing is gameplay (it decides whether strikes
+land), so the body keeps its snap. The Inertializer tracks the body's yaw,
+and when it jumps more than 0.2 rad in a tick (turning is 0.12) the drawn
+man turns into it over 4–14 ticks. Teleports and the deliberate turn-round
+are skipped. RUN > LOCOMOTION in world view: 2.2 → 0.16 m mean.
+
+**Hit reactions: `HitFlinch`.** A flinch laid over whatever is playing,
+including a man mid-punch, who used to finish his swing without a flicker:
+- **Direction:** the upper body tips away from the blow, and turns if it
+  lands from the side.
+- **Height:** head shots snap the neck and head, body shots fold the spine,
+  and leg kicks buckle the struck knee.
+- **Size:** scaled by the move's damage.
+- **Shape:** it peaks in 2 ticks, rebounds once and settles in about a third
+  of a second. A fired-up man no-sells it.
+
+**Hit-stop.** On a heavy blow (a cross, a bionic elbow, a heavy kick), both
+men's drawn poses hold still for 3 ticks; on medium ones, for 2. The flinch
+keeps moving through it. The Inertializer holds the pose while the clip runs
+on underneath, then carries it back into the clip over 5 ticks. The first
+version stopped the clips themselves. That reset the AnimationTree's state
+machine (current node "Start"), and the struck man then played nothing for
+the rest of his reaction. It was caught by measuring before it shipped.
+
+**In-between life: `BodyLife`.** Applies while he is standing, moving or
+staggered:
+- **Watching:** head and neck follow the other man (60/40, within 70° of
+  yaw and 30° of pitch), and EyeAim finishes the look.
+- **Breathing:** 14 breaths a minute fresh, 32 spent, and deeper as he tires.
+- **Wearing down:** shoulders round and the head drops as damage mounts, on
+  Sweat's scale. A man fired up straightens.
+
+**Measurement note.** With facing smoothing in, the body-frame pop count is
+no longer meaningful: the drawn body turns relative to its own frame while
+it absorbs a snap. `--world`, what a viewer sees, is the reference from here.
+
+### Phase 3 — planted feet, staggers and idle fidgets (Phase 3 complete)
+
+**Measure first.** `tools/probe/foot_skate.tscn` reads both ankles as drawn,
+in world space, over real AI matches. A foot within 4 cm of its standing
+height, relative to the body, counts as on the mat. Any sideways movement
+between two such ticks is skate. Before: **76 cm of slide per second a foot
+was planted**. The worst states:
+- circling: 3.7 m/s (one forward walk clip, played while he strafes in every
+  direction);
+- two-man moves: 1.35 m/s;
+- getting up: 0.73 m/s;
+- standing: 0.38 m/s (the body turns to face the other man and the feet
+  swivel with it).
+
+**`FootLock`** (`core/match/foot_lock.gd`) runs after everything that moves
+the body and before `WornFollow`. Per foot:
+- **Planted:** when the clip puts the ankle at standing height, the foot is
+  pinned where it landed, and two-bone leg IK (FootPlant's solver) bends the
+  leg to it.
+- **Let go:** when the clip lifts it, it blends back onto the clip's swing
+  over 4 ticks.
+- **Stepped:** when the body drifts 14 cm off a planted foot, the foot takes
+  an 8-tick lifted step under him, one foot at a time. This covers turning on
+  the spot, being shoved back by a blow, and a paired move's root carrying
+  him. So the stagger after a hit is steps, not a slide. This stands in for
+  authored stagger-and-recover clips.
+
+It is off during the walk-in (FootPlant has it) and while lying down.
+
+**Result** (same two seeded matches, cm of slide per planted second):
+
+| state | before | after |
+| --- | --- | --- |
+| circling | 370 | 151 |
+| two-man moves | 135 | 66 |
+| standing | 38 | 20 |
+| striking | 40 | 10 |
+| hit reactions | 76 | 4.5 |
+| tie-up | 13 | 3 |
+| **all planted time** | **76** | **41** |
+
+**Tuned against jumps, not only skate.** Each setting was measured both ways
+(`transition_pops --world` for jumps). A tighter lock skated less (28.5 with
+getting up included, 35 without), but it cost jumps elsewhere:
+- **Getting up:** the getup clips kneel and step, and pinning made the knees
+  jerk, so getting up is left to the clip.
+- **Going down:** a lock fading out as a man is turned round dragged his
+  legs across, so a pin 20 cm from the clip's foot is now cut at once.
+- **Hand-back:** it takes 7 eased ticks rather than 4.
+- **Knee pole:** the leg IK's pole is now a 5 cm tie-break. At 30 cm the knee
+  swung off the clip's line whenever a lock engaged mid-stride.
+
+Some of what the jump probe still counts is a real foot stopping as it lands.
+
+Lying down (89 cm/s) is left alone: it includes the deliberate turn-round
+on the mat, where the feet swap sides.
+
+**Idle fidgets (`BodyLife`).** Standing still, every 3–7 s a man does one
+of: a weight shift onto one leg, a roll of the neck, or two small bounces.
+The schedule is seeded per man, so two never move in step. FootLock keeps
+the feet where they are, so the shift reads through the legs.
+
+### The ring canvas: smooth, not denim
+
+The owner spotted a coarse, denim-like diagonal texture over the canvas. It
+was the material library's woven fabric (ambientCG Fabric036) used as the
+canvas's normal and roughness maps, at a 0.5 m repeat and bump strength 0.8.
+
+**Research.** TV wrestling rings are covered in #10 cotton duck canvas, a
+heavy plain weave sold as "the same as used on TV for professional
+wrestling" ([Highspots](https://highspots.com/products/2252),
+[Tarps & All](https://www.tarpsandall.com/boxing-ring-covers)). Vinyl-coated
+polyester is the other option, and the art is printed directly onto either
+([signs101](https://www.signs101.com/threads/canvas-boxing-ring-graphics-what-type-of-material.157298/)).
+Its threads are under a millimetre, so from a broadcast camera the weave is
+invisible and the mat reads as a smooth, matte sheet. What does show is
+broad: the cloth pulled taut to the frame and settling between the boards,
+and the scuffs.
+
+**The fix.**
+- The supplied AEW artwork stays as the colour, untouched.
+- No fabric maps at all.
+- Uniform matte roughness of 0.84.
+- A generated low-frequency normal once over the whole mat: undulations
+  about a metre across, and shallow ripples parallel to each edge within
+  half a metre of it.
+
+The mat's rendered median rose from 0.397 to 0.451 in the same probe shot,
+which puts it inside VISUAL_BAR's 0.43–0.49 exposure band; the weave's dark
+valleys had been pulling it below.
+
+## Round: Phase 4 begins — stamina and reversals
+
+Phase 4 is gameplay: the 2K26 match-play systems. In order:
+1. stamina and reversals;
+2. moves that depend on position (corner, ropes, a downed man's head or legs);
+3. chain wrestling inside holds;
+4. the AI's in-between behaviour.
+
+### Stamina
+
+`CombatSystem.stamina` runs from 0 to 1. What spends it:
+- throwing strikes (by the strike's length: a jab costs about 0.02);
+- landing a grapple (0.06), or taking one (0.04);
+- running;
+- every reversal attempt (0.04).
+
+It comes back at 0.15/s standing or moving, and at a quarter of that down.
+The first tuning (0.1/s back, 0.03 a jab) left two AI men at 0.10 and 0.26
+two minutes in, which made a long exchange one-sided.
+
+### Reversals: parry and counter
+
+The old counters were cut because they didn't read: a strike simply
+vanished. This one is two beats nobody can miss:
+- the lead forearm comes up and sweeps the punch off line;
+- the rear hand comes straight back down the gap it opened.
+
+`Parry_Counter` is a new authored clip (`strike_parry`, 0.667 s). Its
+counter reuses the cross's measured contact pose, so it reaches from the
+1.1 m the AI circles at, and it is a real strike (`strike_parry.tres`)
+through the normal hit pipeline. The striker's own blow does nothing; he
+takes the counter with the usual flinch and reaction.
+
+**The window.** Each strike already carried measured `reversal_window_*`
+frames around its contact, but nothing had read them since the old counters
+were cut. They now decide reversals, opened 6 frames early so a man can
+commit before the fist arrives. Pressed too early, or at nothing, he is
+locked out for 30 ticks: guessing must not pay.
+
+**The player** has the existing Reversal button.
+
+**The AI** decides once, as the other man starts his swing: hold and read
+it, or carry on. The chance is 45% fresh, falling to about a third of that
+when spent (the 2K26 rule that a worn-down man stops countering). Holding
+matters: at first 68 of 75 strikes were thrown into a man already swinging
+back, with nothing free to parry them. The decision is seeded per attempt,
+so a replay reads the same strikes.
+
+`tools/probe/reversal_tally.tscn` counts strikes, reads, counters landed and
+the stamina each man ends on, over seeded AI matches.
+
+**Result** (seeds 2–5, Roman vs Cody):
+- **Reversals:** 17 of 184 strikes read and reversed (9%), and all 17
+  counters landed. Per match: 4, 5, 1 and 7.
+- **Stamina** at the end: 0.73–0.98.
+- **Finishes:** every match ended in a pinfall, in 4,755 to 7,676 ticks.
+
+One earlier run, at a 30% chance, had seed 4 go 20,000 ticks and 374
+strikes without a finish. With the tuned values it finishes in 5,878
+ticks. The baseline run at the last commit was not conclusive, so the
+cause of that stall is not established.
+
+## Round: the wipe from wrestler select into the entrance
+
+The select screen used to end with a static VS card, a fade to black and a
+hard cut to the match. The frame also froze on black while the two picked
+models loaded. Now it plays like a broadcast stinger:
+
+- **VS card.** Each name slams in from its own side (an ease-out-back
+  overshoot) on a slanted band in that wrestler's colour. Then VS punches
+  in, big and settling to size, on a light flash.
+- **The wipe (`MatchStinger`, `core/ui/match_stinger.gd`).** Slanted bands
+  in the key art's violet and teal, with gold leading edges, sweep across
+  left to right. Then the dark panel covers the screen, with a "MAIN EVENT"
+  match-up card set on it. It is a CanvasLayer on the root, so it survives
+  the title screen freeing itself and hides the scene swap.
+- **No load freeze.** From the moment the VS card appears, the match scene
+  and both picked models load on worker threads. The swap happens under the
+  cover, and the match draws four frames there before anything is shown.
+  Where threads are unavailable (the Web build), it falls back to an
+  ordinary load, still under the cover.
+- **Reveal.** The bands carry on off to the right in reverse order, panel
+  first, onto the entrance's opening wide shot, with a soft flash of light.
+
+The first render gave the bands each wrestler's accent colour, which washed
+out to lavender and lime. They now use the key art's palette, deepened.
+
+## Round: Phase 4 — working a man who is down
+
+Before this, the standing man walked over and covered a downed opponent
+every time. Now he works him first, and what he does depends on where he
+is standing:
+
+| where he stands (along the body from the pelvis) | move | hurts |
+| --- | --- | --- |
+| at the head (−0.55 m or further) | `ground_fist`: down on one knee, fist driven down | head |
+| beside him | `ground_stomp_body`: knee up, boot down | torso |
+| at the feet (+0.30 m or further) | `ground_stomp_legs`: the same stomp | legs, which Cody's Figure-Four is built on |
+
+- **Clips.** Two new authored clips, `Ground_Stomp` and `Ground_Fist`, land
+  at 0.24–0.26 m, the height of a man lying on the mat, not the canvas.
+- **When.** `MatchReferee` starts one when the standing man is within 0.9 m
+  of the zone's target point. That is at most 2 per knockdown, never after
+  a finisher (that knockdown is the cover), and only with time left in the
+  down.
+- **Placement.** He steps onto a mark 0.45 m from the point as it starts.
+  The man on the mat stays down while he is worked, and flinches in the
+  zone that was hit.
+- **Tuning.** At 3 momentum a hit, ground attacks were a shortcut to the
+  finish: two seeded matches ran in half the time. They now earn 1, and do
+  3–4 damage.
+
+**Result** (seeds 2–5): 6–11 ground attacks a match, across all three
+zones, and every match ends by pinfall. Matches averaged 4,210 ticks
+(about 70 s), against 6,330 before. The added damage brings knockdowns
+sooner. There is no match-length target in MATCH_FLOW.md; this is noted as
+a pacing call.
+
+**Caught on the way.**
+- **PoseLint** failed the first `Ground_Fist`: the right foot slid along
+  the mat into the kneel and its ball went 7 cm into the canvas. It is now
+  a lifted step in and out (re-rendered and checked).
+- **The pair-clearance grip ratchet** failed once in a full-suite run
+  (backstabber's hands 0.201 m against 0.18). The same test passed alone
+  with no change, and again in the next full run. The grip is read from
+  the drawn frame, so how often it samples depends on how many frames the
+  machine draws per tick. It is noted here as timing-sensitive, not
+  skipped or loosened.
+
+## Round: Phase 4 — the corner and the ropes
+
+The second half of "position" (gauntlet/refs/animation_gap.md). Where the
+two men are in the ring now changes what happens.
+
+- **Trapped in the corner.** A blow that drives a man back into a corner
+  (both |x| and |z| past 1.85 m, and the blow's line within ~80° of the
+  diagonal into it) no longer staggers him free. He is driven back into the
+  buckle over 8 ticks and hangs there: `Corner_Slump`, 1.5 s, with his arms
+  on the ropes behind him and his chin on his chest.
+- **Worked over there.** Each blow landed on a trapped man is taken in the
+  corner (`Corner_Hit`, 1.0 s, which restarts the hang), up to 3. The next
+  blow gets him out the usual way. The AI throws a quicker flurry at a
+  trapped man (every 18 ticks, against 40) and stays square in front of him.
+  A running attack into him is the corner charge.
+- **Rope breaks.** A man pinned or held within reach of the ropes (a hand
+  past his head, a hand to either side, or a foot, reaching 2.98 m or
+  further out) gets there. In a pin he starts reaching as the second count
+  lands and has the bottom rope 24 ticks later, which is after two and
+  before three. In a hold he fights for 60 ticks first. The referee breaks
+  it, and a rope break does not fire him up the way a kickout can. Never
+  under a finisher. `RopeReach`, a new skeleton modifier, draws the reach:
+  the limb whose shoulder or hip is nearest the rope goes out to the bottom
+  rope, with the same two-bone solve FootPlant uses.
+
+Deterministic throughout: the trap and the reach are decided from the two
+bodies' origins, never the skeleton.
+
+**Caught on the way.**
+- **Re-trapping loop.** Out of a trap he was still standing in the corner
+  with the other man in front of him, so the next blow trapped him straight
+  back. Seed 1 looped 62 traps and never finished. He now can't be trapped
+  again for 4 s after he gets out.
+- **A man who could not be knocked down.** Seed 1 still ran its full
+  budget, and the trace showed why. The limbs cap at 100 damage, so once
+  the limbs a man's strikes land on were full, `total_damage()` stopped
+  growing and knockdowns (measured on it) could never happen again. This is
+  a latent bug that predates this round; the corner flurries only made the
+  match long enough to reach it. `CombatSystem.wear` now keeps the uncapped
+  sum, and knockdowns and the AI's "ripe for the finish" check use it.
+  There is a new test for it.
+- **The AI ready to finish** waits for a trapped man to come out and locks
+  up then, rather than striking him.
+
+**Result** (reversal_tally, seeds 1–4): every match ends by pinfall. There
+were 3 corner traps with 6 blows taken in the corner, and 1 pin broken at
+the ropes. These are occasional moments, not the shape of every match.
+
+## Round: Phase 4 — chain wrestling
+
+Out of a lock-up the two men now trade holds before anyone throws anything,
+the way a match opens on TV and 2K26's chain wrestling plays it.
+
+- **Three holds**, each an authored two-man link, 1.8 s long: into the
+  hold, cranked twice, the man in it fights free, and both square up about
+  0.9 m apart. Because every link ends squared up, any link can follow any
+  other.
+  - `chain_headlock`: the holder pivots in beside him and turns to face his
+    way, with the man bent double under his right arm, pushing at his hip.
+  - `chain_wristlock`: both hands on the right wrist, turning it over. The
+    man turns away from his own straight arm.
+  - `chain_waistlock`: the holder ducks round his left side to his back and
+    locks his hands at the hip bones.
+- **Steering.** Between links there is an 18-tick "read" back in the
+  collar-and-elbow. The holder picks the next hold with the stick, relative
+  to his facing: forward is the headlock, back is the go-behind, either side
+  is the wristlock. With no pick, he throws his grapple move as before. At
+  most 3 links per lock-up.
+- **Counters.** In the read, the man about to be held can press Reversal
+  between ticks 4 and 14 to take it over. He then goes straight into the
+  counter: out of a headlock, a go-behind; out of a wristlock, his own
+  wristlock; out of a waistlock, a switch behind. A press outside the window
+  spends his chance for that read.
+- **Wear.** A hold does 2–3 damage to the part held, gives the holder 2
+  momentum, and costs both some stamina. They are the opening of a match,
+  not a way through it.
+- **AI.** In the opening lock-up it plans 1–3 links (seeded). The man in a
+  hold reverses at 30% scaled by stamina, as a strike reversal is. Later
+  lock-ups (power, signature) go straight to the move.
+- **Grips.** The headlock uses the existing `neck` grip. The wristlock uses
+  a new `wringer` grip (both hands on the wrist and forearm). The waistlock
+  uses a new `waist_behind` grip (hands at the hip bones), because the
+  front-of-hips `waist` grip is 20 cm out of reach from behind.
+
+**Checked.** All three pass the pair clearance and grip check (worst body
+overlap 3.5 cm against the 5 cm limit; grips within 2.5 cm), and they are
+rendered from two angles. Two fixes came out of the renders:
+- the headlocked man's grip was hauling his arm up over the holder's
+  shoulder; he now pushes at the hip;
+- the go-behind's path cut through the other man's leg at 16 cm; the circle
+  is wider now.
+
+**Result** (reversal_tally, seeds 1–4): every match opened with two holds,
+three of the four included a reversal, and all ended by pinfall. The first
+run's reversals all became wristlocks, so out of a headlock the counter is
+now a go-behind.
+
+## Round: Phase 4 — in-between behaviour
+
+What a man does between moves, on top of what BodyLife already gave him
+(breathing, the tired slump, eyes on his man, fidgets). This finishes
+Phase 4.
+
+- **Playing to the crowd.** A new `TAUNT` state, last in the FSM enum so no
+  state is renumbered. Each man uses his own entrance gesture:
+  - Roman: `finger_raise` (1.8 s);
+  - Cody: `whoa_low` (2.3 s);
+  - anyone else: `air_punch` (1.5 s).
+
+  The AI throws it over a man who has just gone down, decided in the first
+  12 ticks: once to set up the finisher (it is ready and he wants them to
+  know), and once after his power move lands. The crowd pops for it
+  (`CrowdReaction.POP_TAUNT`).
+- **Selling.** `SellClutch` is a new skeleton modifier. His left hand goes to
+  the part that has taken the most, and he leans into it:
+  - head: a hand to the forehead;
+  - torso: to the ribs, hunched;
+  - legs: to the knee, bent down;
+  - arms: to the other shoulder.
+
+  He sells coming up off the mat (anything past 20 damage) and every 5–9 s
+  standing (past 45), timed off seeded ticks.
+- **Pacing.** A worn man walks up to 30% slower and waits up to 50% longer
+  between strikes, on BodyLife's damage scale.
+
+**Result** (seeds 1–4): every match ends by pinfall, with 1–3 taunts and
+6–16 sells a match.
+
+## Round: two ringside fans with signs
+
+The owner asked for two fans in the second or third row, facing the camera,
+holding up signs the way the reference photos of a WWE crowd do it.
+
+- **The fan** (`tools/blender/sign_fan.py` → `sign_fan.glb`).
+  - The crowd's own box figure, on a 13-bone armature, with every box
+    weighted to one bone. The board is its own bone. Its path is keyed:
+    off the lap, past the chest, over the head, pumped and rocked.
+  - The arms are solved to its two side edges every frame, and the legs to
+    planted feet, so the hands are on the sign by construction.
+  - Four clips: `Fan_Seated` (a loop), `Fan_Rise`, `Fan_Hold` (a loop) and
+    `Fan_Lower`.
+- **The signs.** The owner's two: ENDA FEARS OMAR and CODY SUCKS, in
+  `assets/environment/signs/`.
+- **Where.** `SignFans` takes two real ringside chairs, in rows two and three
+  on the +X side. That is the side the hard camera and the stare-down shot
+  both look across the ring at. The chairs sit about 3 m either side of the
+  centre line, so the two wrestlers don't hide them. Their seats are left
+  out of the crowd.
+- **When** (full match with entrances, seed 2):
+  - both rise as the stare-down shot comes up (a new
+    `EntranceDirector.beat_started` signal), the second a beat behind;
+  - they sit about a second after the bell;
+  - they stand only twice more in the match, on a signature or a near-fall,
+    at least 25 s apart, for about 4.5 s each.

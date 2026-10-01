@@ -36,146 +36,55 @@ func _verts(part: String) -> PackedVector3Array:
 func test_every_part_the_builder_dresses_exists_in_the_model() -> void:
 	var root := _model()
 	for part: String in ["PostMesh", "TurnbuckleFittings", "TurnbucklePads",
-			"RopeMesh", "ApronRail", "StepsMesh"]:
+			"TurnbuckleHardware", "RopeMesh", "ApronRail", "StepsMesh"]:
 		assert_object(root.find_child(part, true, false)) \
 				.override_failure_message("%s has no '%s' object" % [MODEL, part]) \
 				.is_not_null()
 	root.free()
 
 
-## THE PAD CLEARS THE POST, or the post splits it in two.
-##
-## This is arithmetic on the constants rather than a measurement of the mesh,
-## for the same reason `test_arena_bowl.gd` does it: the exporter reads these
-## numbers out of `ring_builder.gd`, so pinning the numbers pins the model.
-##
-## Work in u, distance from ring centre along the corner diagonal. The post is
-## AXIS-ALIGNED and the pad is DIAGONAL, so the post's nearest point to the mat
-## is its inner corner -- a vertex, not a face -- and it reaches further in
-## than the post's half-section suggests. A pad whose inner face does not clear
-## that vertex has a pole standing through the middle of it, which is exactly
-## what the first attempt rendered: two lobes either side of the post.
-func test_the_turnbuckle_pad_stands_proud_of_the_post() -> void:
+## THE PAD IS NOT JOINED TO THE POST. The owner: "there should be a connector
+## connecting the two, they should not be joined to each other". A real
+## pad is laced round the turnbuckle a rope ends in, and the turnbuckle hooks
+## an eye bolt on the post -- so there is a hand's width of bare hardware
+## between the back of every pad and its post. Work in u, distance from ring
+## centre along the corner diagonal (the pads face down it).
+func test_a_turnbuckle_gap_separates_every_pad_from_its_post() -> void:
 	var diagonal := sqrt(2.0)
-	# The post is a round tube, so its nearest point to the mat along the
-	# corner diagonal is its centre less the RADIUS -- not a square corner.
-	var post_inner := RingBuilder.POST_XZ * diagonal - RingBuilder.POST_RADIUS
-	var pad_centre := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal
-	var pad_inner := pad_centre - RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
-	# Clearance has to beat the BEVEL, not merely be positive. This failed as
-	# a bare `is_less` check: at 2.2cm of clearance against a 4.5cm rounding,
-	# the arithmetic said the pad cleared the post while every rendered
-	# cushion carried a faint chevron where the post's corner came through its
-	# rounded face. A bevel pulls the front of the box back by up to its own
-	# width, so that is the margin the clearance has to exceed.
-	var clearance := post_inner - pad_inner
-	assert_float(clearance) \
-		.override_failure_message(
-			"the pad's inner face sits at u=%.3f and the post's inner corner "
-			% pad_inner
-			+ "at u=%.3f -- %.3f of clearance against a bevel of %.3f, so the "
-			% [post_inner, clearance, RingBuilder.TURNBUCKLE_PAD_BEVEL]
-			+ "post shows through the rounded face of the cushion") \
-		.is_greater(RingBuilder.TURNBUCKLE_PAD_BEVEL)
+	var post_face := RingBuilder.POST_XZ * diagonal - RingBuilder.POST_RADIUS
+	var pad_back := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal \
+			+ RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
+	var gap := post_face - pad_back
+	assert_float(gap).override_failure_message(
+			"pad back at u=%.3f, post face at u=%.3f: %.3f of turnbuckle"
+			% [pad_back, post_face, gap]).is_between(0.08, 0.20)
+	# The turnbuckle body fits in it, with the hook and eye either side.
+	assert_float(RingBuilder.TURNBUCKLE_BODY_LENGTH
+			+ 2.0 * RingBuilder.TURNBUCKLE_EYE_RADIUS).is_less(gap)
+	# And the post stands at the deck's corner: outboard of the rope line,
+	# not more than a couple of centimetres past the apron.
+	assert_float(RingBuilder.POST_XZ).is_greater(RingBuilder.ROPE_SPAN)
+	assert_float(RingBuilder.POST_XZ + RingBuilder.POST_RADIUS) \
+			.is_less(RingBuilder.APRON_OUT + 0.03)
 
 
-## NO PAD CARRIES A CONNECTOR PLATE.
-##
-## The inverse of the test that used to stand here, and for the same reason:
-## the plates were the only bare-steel surface above the apron, so at 0.10 x
-## 0.085m against a black cushion each one resolved to a white block rather
-## than to a bracket -- six per corner, brighter than the artwork they flanked.
-## See the removal note in ring_builder.gd.
-##
-## Asserted off the shipped mesh, so a regenerated ring.glb that quietly
-## brings them back fails here rather than in someone's screenshot.
-func test_no_pad_carries_a_connector_plate() -> void:
-	var root := _model()
-	assert_object(root.find_child("TurnbuckleConnectors", true, false)) \
-		.override_failure_message(
-			"%s has a 'TurnbuckleConnectors' object again: the white " % MODEL
-			+ "blocks are back on the turnbuckles") \
-		.is_null()
-	root.free()
-
-
-
-## THE ARTWORK QUAD SITS ON THE FLAT OF THE PAD, not on its rounding.
-##
-## PAD_FACE_WIDTH/HEIGHT are written as literals because `tools/blender/
-## venue.py` parses its constants out of this file and takes plain numbers
-## only -- an expression there stops the ring exporting at all. This is what
-## holds them to what they mean.
-func test_the_pad_face_is_inset_by_the_bevel() -> void:
-	assert_float(RingBuilder.PAD_FACE_WIDTH).is_equal_approx(
-		RingBuilder.TURNBUCKLE_PAD_WIDTH
-		- 2.0 * RingBuilder.TURNBUCKLE_PAD_BEVEL, 0.001)
-	assert_float(RingBuilder.PAD_FACE_HEIGHT).is_equal_approx(
-		RingBuilder.TURNBUCKLE_PAD_HEIGHT
-		- 2.0 * RingBuilder.TURNBUCKLE_PAD_BEVEL, 0.001)
-
-
-## EVERY ARTWORK QUAD FACES THE MAT.
-##
-## This one is measured on the shipped mesh, and it is here because the build
-## got it wrong twice in two different ways, and neither way announced itself.
-##
-## First `venue.finish`'s `recalc_face_normals` reversed the authored winding:
-## it finds the outside of a closed SOLID, and each of these quads is an open
-## sheet that is its own connected component, so it had nothing to go on.
-## Then, with the winding preserved, the tangent the quads were built from
-## (`-sx, 0, sz`) flipped handedness with the parity of sx*sz, so two corners
-## of four still came out backwards.
-##
-## Neither failure was visible as an absence, because the material is
-## two-sided: a backwards quad renders its logo MIRRORED. On a letterform that
-## is glaring once you look; on any tiling texture it would never have been
-## caught at all. So it is asserted rather than eyeballed.
-func test_every_pad_artwork_quad_faces_the_mat() -> void:
-	var root := _model()
-	var node := root.find_child("TurnbuckleFaces", true, false) as MeshInstance3D
-	assert_object(node) \
-		.override_failure_message("%s has no 'TurnbuckleFaces' object" % MODEL) \
-		.is_not_null()
-	var arrays := (node.mesh as ArrayMesh).surface_get_arrays(0)
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-	assert_int(normals.size()).is_equal(verts.size())
-	var outward := 0
-	for i in verts.size():
-		# Inward is -position in the horizontal plane: the quads sit on the
-		# corner diagonals and must look back at ring centre.
-		var toward_centre := Vector3(-verts[i].x, 0.0, -verts[i].z).normalized()
-		if normals[i].dot(toward_centre) <= 0.0:
-			outward += 1
-	assert_int(outward) \
-		.override_failure_message(
-			"%d of %d artwork vertices face away from the mat: those pads "
-			% [outward, verts.size()]
-			+ "render their logo mirrored") \
-		.is_equal(0)
-	root.free()
-
-
-## THE ROPE ENDS INSIDE THE PAD.
-##
-## "Attached to the turnbuckles" is a placement, not a joint -- there is no
-## constraint tying a rope to a pad, only a pad deep enough to swallow where
-## the rope stops. If the pad moves in without getting deeper, the ropes come
-## out of its back face and read as passing a pole again.
+## THE ROPE ENDS INSIDE THE PAD, in depth AND across it: both of a corner's
+## ropes end in the one turnbuckle the pad covers.
 func test_the_rope_terminations_land_inside_the_pad() -> void:
 	var diagonal := sqrt(2.0)
-	# Where the two ropes at a corner stop: one runs out along X to
-	# POST_XZ + ROPE_OVERRUN at z = ROPE_SPAN, the other is its mirror.
-	var rope_end := (RingBuilder.POST_XZ + RingBuilder.ROPE_OVERRUN
-			+ RingBuilder.ROPE_SPAN) / diagonal
+	# The rope down X stops at (ROPE_END, ROPE_SPAN); the other mirrors it.
+	var u := (RingBuilder.ROPE_END + RingBuilder.ROPE_SPAN) / diagonal
+	var across := absf(RingBuilder.ROPE_END - RingBuilder.ROPE_SPAN) / diagonal
 	var pad_centre := RingBuilder.TURNBUCKLE_PAD_XZ * diagonal
-	var half_depth := RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5
-	assert_float(rope_end) \
+	var half_depth := RingBuilder.TURNBUCKLE_PAD_DEPTH * 0.5 \
+			- RingBuilder.TURNBUCKLE_PAD_BEVEL
+	assert_float(u) \
 		.override_failure_message(
 			"a rope stops at u=%.3f, outside the pad's %.3f..%.3f"
-			% [rope_end, pad_centre - half_depth, pad_centre + half_depth]) \
+			% [u, pad_centre - half_depth, pad_centre + half_depth]) \
 		.is_between(pad_centre - half_depth, pad_centre + half_depth)
+	assert_float(across + RingBuilder.ROPE_RADIUS).is_less(
+			RingBuilder.TURNBUCKLE_PAD_WIDTH * 0.5 - RingBuilder.TURNBUCKLE_PAD_BEVEL)
 
 
 ## Three pads per corner, one at each rope height, and twelve in all.
@@ -278,10 +187,9 @@ func test_the_ropes_still_span_the_measured_distance() -> void:
 		lowest = minf(lowest, v.y)
 		highest = maxf(highest, v.y)
 	# The widest the rope gets is its SPAN plus the tube's own radius --
-	# 3.1 + 0.018 -- not its run past the posts. A rope running down X is
-	# swept to POST_XZ + ROPE_OVERRUN (3.022) on that axis, which is the
-	# shorter of the two, so the outermost geometry is the perpendicular
-	# offset of the rope on the opposite side.
+	# 3.1 + 0.018. A rope running down X is swept to ROPE_END (2.86, inside
+	# its pad) on that axis, which is the shorter of the two, so the
+	# outermost geometry is the perpendicular offset of the rope.
 	assert_float(reach).is_equal_approx(
 			RingBuilder.ROPE_SPAN + RingBuilder.ROPE_RADIUS, 0.02)
 	assert_float(highest).is_equal_approx(

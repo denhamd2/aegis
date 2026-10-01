@@ -224,3 +224,27 @@ design follows photographs of his entrance coat supplied by the owner as
 references (not committed). `cody_rhodes_head_blond.png` is the supplied
 head texture with its hair region re-coloured by
 `tools/assets/build_cody_textures.py`, to the owner's reference photographs.
+`cody_coat_lapel.png` and the fabric normal maps `cody_coat_nrm_body.png` /
+`cody_coat_nrm_sleeve.png` (twill weave and fold creases) are painted by the
+same `cody_coat.py`, procedurally, from nothing but code.
+
+## aubrey_edwards.glb (the referee)
+
+Source: **Universal Base Characters** (Standard, free tier) by
+[Quaternius](https://quaternius.com)
+([itch.io](https://quaternius.itch.io/universal-base-characters)):
+`Superhero_Female_FullBody` (Godot/UE glTF), the `Hair_Long` hairstyle and the
+kit's textures, including the fair skin tone
+(`Textures/T_Superhero_Female_Light_BaseColor.png`).
+
+License: **CC0 1.0 Universal** (the kit's `License_Standard.txt`) —
+https://creativecommons.org/publicdomain/zero/1.0/
+
+It is rigged on the same 65-bone skeleton as `wrestler_base.glb` (identical
+bone names and hierarchy), so every clip here plays on it without a retarget.
+Her referee kit is original work in `tools/blender/referee_aubrey.py`: the
+garments are cut from the body mesh and skinned with its own weights, and the
+stripe, patch and dark-brown hair textures are generated from the kit's own
+images by that script. Rebuild with the kit unzipped to
+`~/.cache/aegis_assets/ubc/`; the output is byte-identical for the same kit.
+Not included in the repo: the kit itself (only the exported .glb).
