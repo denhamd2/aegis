@@ -142,6 +142,19 @@ const WALK_KEY_UP := 3.6
 const WALK_KEY_ENERGY := 5.0
 const WALK_KEY_ANGLE := 24.0
 const WALK_KEY_RANGE := 11.0
+## And its partner behind him. The key and the far follow spot both light his
+## FRONT, so on every shot from behind him -- the steadicam following him down,
+## the over-the-shoulder at the lip -- he walked as a silhouette (the owner
+## caught it on the walk-down frames). A real entrance hangs followers on the
+## back truss too: this one rides behind, above and to his other side, a
+## little cooler, so his back, shoulders and hair are lit from the curtain to
+## the ring without flattening the key's modelling from the front.
+const WALK_BACK_BEHIND := 3.0
+const WALK_BACK_SIDE := -1.4
+const WALK_BACK_UP := 3.4
+const WALK_BACK_ENERGY := 3.4
+const WALK_BACK_ANGLE := 28.0
+const WALK_BACK_RANGE := 10.0
 
 # --- Roman Reigns (gauntlet/refs/entrances.md, "Roman: beat sheet") ---------
 ## Slow and methodical: Walk_Slow_Look travels 0.5 m/s,
@@ -363,6 +376,7 @@ var _card: EntranceLowerThird
 var _lights: Node
 var _follow: SpotLight3D
 var _walk_key: SpotLight3D
+var _walk_back: SpotLight3D
 ## Every node frozen for the entrance, with whether it was processing, so the
 ## bell puts back exactly what was there.
 var _frozen: Array = []
@@ -476,6 +490,13 @@ func begin(match_root: Node) -> void:
 	_walk_key.shadow_enabled = false
 	_walk_key.visible = false
 	add_child(_walk_key)
+	_walk_back = _walk_key.duplicate() as SpotLight3D
+	_walk_back.name = "WalkBack"
+	_walk_back.light_color = Color(0.88, 0.93, 1.0)
+	_walk_back.light_energy = WALK_BACK_ENERGY
+	_walk_back.spot_angle = WALK_BACK_ANGLE
+	_walk_back.spot_range = WALK_BACK_RANGE
+	add_child(_walk_back)
 
 	# The camera is the director's from the first rendered frame, not the
 	# first tick -- otherwise frame one is the match camera's hard-cam shot of
@@ -685,6 +706,8 @@ func _ring_bell() -> void:
 		_follow.visible = false
 	if _walk_key:
 		_walk_key.visible = false
+	if _walk_back:
+		_walk_back.visible = false
 	for props: EntranceProps in _props.values():
 		props.queue_free()
 	_props.clear()
@@ -1503,6 +1526,8 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 		_follow.visible = false
 		if _walk_key:
 			_walk_key.visible = false
+		if _walk_back:
+			_walk_back.visible = false
 		return
 	_follow.visible = true
 	var target := w.global_position + Vector3.UP * 1.1
@@ -1514,11 +1539,20 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 		var right := Vector3.UP.cross(-fwd).normalized()
 		_walk_key.global_position = walk_key_at(w.global_position, fwd, right)
 		_walk_key.look_at(w.global_position + Vector3.UP * 1.3, Vector3.UP)
+		if _walk_back:
+			_walk_back.visible = true
+			_walk_back.global_position = walk_back_at(w.global_position, fwd, right)
+			_walk_back.look_at(w.global_position + Vector3.UP * 1.4, Vector3.UP)
 
 
 ## Where the walk key hangs for a man at `at` facing `fwd`.
 static func walk_key_at(at: Vector3, fwd: Vector3, right: Vector3) -> Vector3:
 	return at + fwd * WALK_KEY_AHEAD + right * WALK_KEY_SIDE + Vector3.UP * WALK_KEY_UP
+
+
+## Where the back follower hangs: behind him, above, to his left.
+static func walk_back_at(at: Vector3, fwd: Vector3, right: Vector3) -> Vector3:
+	return at - fwd * WALK_BACK_BEHIND + right * WALK_BACK_SIDE + Vector3.UP * WALK_BACK_UP
 
 
 ## Whether the previous beat was on the same shot, so a shot carried across

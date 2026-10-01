@@ -28,6 +28,8 @@ const TITLE_SCENE := "res://scenes/title.tscn"
 ## and the cards are the two places a viewer needs a moment to see what he is
 ## being shown.
 const HOLD_TITLE := 2.2
+## The longest the recording follows the post-match before it stops anyway.
+const POST_MATCH_CAP := 40.0
 const HOLD_BEFORE_PICK := 1.9
 const HOLD_BETWEEN_PICKS := 1.9
 
@@ -145,8 +147,9 @@ func _ready() -> void:
 	var referee: MatchReferee = match_scene.get_node("MatchReferee")
 	referee.match_won.connect(_on_match_won)
 
-	# Record to the finish, then a couple of seconds on the fall so the video
-	# does not cut the moment the three-count lands.
+	# Record to the finish, then through the post-match (PostMatch: the
+	# winner, the replay, the celebration, the rating), capped, so the video
+	# ends on the rating rather than the moment the three-count lands.
 	var elapsed := 0.0
 	var after_finish := 0.0
 	while elapsed < _match_seconds:
@@ -154,7 +157,9 @@ func _ready() -> void:
 		elapsed += 1.0 / _fps
 		if _match_over:
 			after_finish += 1.0 / _fps
-			if after_finish >= 2.5:
+			var post := match_scene.get_node_or_null("PostMatch") as PostMatch
+			var post_done := post == null or post.is_done()
+			if (post_done and after_finish >= 2.5) or after_finish >= POST_MATCH_CAP:
 				break
 	print("TITLE_VIDEO %d frames, finished=%s" % [_frame, _match_over])
 	get_tree().quit()
