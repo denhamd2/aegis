@@ -8225,3 +8225,23 @@ neck inside the back fold. Next: likeness (stage 3), skin and make-up
 ### Checks
 600 tests pass. `aubrey_aaa.glb` and `aubrey_hair_strands.png` are
 byte-identical across runs.
+
+## Round: Aubrey AAA rebuild, stage 3 (likeness)
+
+Her face is shaped with 33 MPFB face targets (`FACE` in
+`tools/blender/aubrey_aaa.py`), applied over the macro sliders before the
+body is fitted, so the hair cap, collar and ponytail all re-derive from the
+new head. Tuned in six rounds on clay renders beside the owner's character
+sheet (front, 3/4, profile): a long face; high cheekbones over slightly
+hollow cheeks; a slim jaw tapering to a narrow, defined chin with a clean
+line into the neck; a long straight nose with a softly rounded tip; a wide
+mouth with a full lower lip carried forward; large open almond eyes under a
+raised brow; a slim neck. The first passes were too subtle, then too tall at
+the crown and too pinched at the nose tip; the profile needed the chin, jaw
+and nose pushed furthest.
+
+Her colouring -- skin, make-up (smoky eyes, red lips), brows, lashes, eye
+texture -- is stage 4, and carries much of the likeness the clay cannot.
+
+### Checks
+600 tests pass. `aubrey_aaa.glb` is byte-identical across builds.

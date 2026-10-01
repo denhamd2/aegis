@@ -331,7 +331,8 @@ conformed to the new body (standoff limits, smoothed, re-weighted from it,
 covered skin removed), a fitted polo collar and placket, the ponytail moved
 with its bones, and a new hair cap with a feathered, measured hairline.
 Known: white specks on the collar flap, a sliver of neck in the back fold.
-Next: her likeness (face targets against the owner's character sheet), the skin
+Stage 3 done -- her likeness as MPFB face targets (FACE), set against the
+sheet's front, 3/4 and profile on clay renders. Next: the skin
 texture with her make-up, lashes and brows, then wire it in and gate it.
 
 **Why Aubrey goes first in the head/body work.** She has no likeness

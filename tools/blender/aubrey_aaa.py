@@ -88,6 +88,54 @@ MACROS = {
     "gender": 0.0, "age": 0.62, "muscle": 0.62, "weight": 0.42,
     "proportions": 0.75, "african": 0.0, "asian": 0.0, "caucasian": 1.0,
 }
+## Her likeness (stage 3): MPFB face targets, set against the owner's
+## character sheet (front, 3/4 and profile) on a clay render. A long face,
+## high cheekbones over slightly hollow cheeks, a slim jaw tapering to a
+## narrow, defined chin with a clean line into the neck; a long straight nose
+## with a softly rounded tip; a wide mouth with a full lower lip carried
+## forward; large, open almond eyes under a raised brow; a slim neck. A name
+## without a side (e.g. "cheek-bones-incr") is applied to both l- and r-.
+FACE = {
+    # head
+    "forehead-scale-vert-incr": 0.2,
+    "forehead-temple-decr": 0.3,
+    "forehead-trans-backward": 0.25,
+    "head-oval": 0.5,
+    "head-scale-horiz-decr": 0.1,
+    # chin and jaw
+    "chin-bones-incr": 0.4,
+    "chin-height-incr": 0.35,
+    "chin-jaw-drop-incr": 0.3,
+    "chin-prominent-incr": 0.75,
+    "chin-triangle": 0.3,
+    "chin-width-decr": 0.5,
+    "neck-double-decr": 0.6,
+    "neck-scale-horiz-decr": 0.4,
+    # cheeks
+    "cheek-bones-incr": 1.26,
+    "cheek-inner-decr": 0.7,
+    "cheek-volume-decr": 0.6,
+    # nose
+    "nose-flaring-decr": 0.3,
+    "nose-point-down": 0.15,
+    "nose-point-width-decr": 0.15,
+    "nose-scale-depth-incr": 0.85,
+    "nose-scale-vert-incr": 0.45,
+    "nose-width1-decr": 0.3,
+    "nose-width2-decr": 0.3,
+    # mouth
+    "mouth-cupidsbow-incr": 0.6,
+    "mouth-lowerlip-volume-incr": 0.75,
+    "mouth-scale-horiz-incr": 0.56,
+    "mouth-trans-forward": 0.49,
+    "mouth-upperlip-volume-incr": 0.15,
+    # eyes and brows
+    "eye-corner2-up": 0.2,
+    "eye-height2-incr": 0.5,
+    "eye-scale-incr": 0.5,
+    "eyebrows-trans-forward": 0.3,
+    "eyebrows-trans-up": 0.3,
+}
 ## MPFB bone -> her bone, where the names differ.
 BONE_NAMES = {"head": "Head"}
 ## Bones that take her bone's direction but keep their own position. Her kit
@@ -187,6 +235,13 @@ def make_body(old_arm):
     for key, value in MACROS.items():
         Props.set_value(key, value, entity_reference=human)
     TargetService.reapply_macro_details(human)
+    for name, weight in sorted(FACE.items()):
+        sided = TargetService.target_full_path(name) is None
+        for full in ([f"l-{name}", f"r-{name}"] if sided else [name]):
+            path = TargetService.target_full_path(full)
+            if path is None or not pathlib.Path(path).name.startswith(full + "."):
+                raise SystemExit(f"aubrey_aaa: no MPFB target {full}")
+            TargetService.load_target(human, path, weight=weight, name=full)
     rig = HumanService.add_builtin_rig(human, "game_engine")
     # Pin every MPFB bone onto hers. Disconnected first: Blender ignores Copy
     # Location on a bone connected to its parent, and the first build kept
