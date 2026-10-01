@@ -319,6 +319,17 @@ before/after contact sheet.
 | **6** | Crowd CR1–CR5 | 4–5 days | None (cosmetic layer, no gameplay contact) |
 | **7** | S2 facial blendshapes across all four, event-driven | 2 days | None (shape keys) |
 
+**Aubrey rebuild -- progress.** `tools/blender/aubrey_aaa.py` (WIP, not yet
+wired into the game) builds `aubrey_aaa.glb`: stage 1 done -- an MPFB body
+(CC0), female, ~40, lean, fitted to her existing 70-bone skeleton (joints
+pinned, bones aimed; the head left on MPFB's own neck because her kit
+skeleton's head joint is stylised-low) with MPFB's weights on her bone names,
+and eyeballs at MPFB's eye helpers. MPFB is installed as a Blender extension
+and its CC0 asset packs (system assets, skins01/02) live in
+~/.cache/aegis_assets/mpfb. Next: refit the uniform and hair to the new body,
+her likeness (face targets against the owner's character sheet), the skin
+texture with her make-up, lashes and brows, then wire it in and gate it.
+
 **Why Aubrey goes first in the head/body work.** She has no likeness
 expectations from a 2K model and the simplest kit. If the MPFB → re-skin →
 gates pipeline is going to fail, it fails on her, before it touches Cody or
