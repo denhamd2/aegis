@@ -79,7 +79,24 @@ const HAIR_ROUGHNESS := 0.42
 func _ready() -> void:
 	_install_animations()
 	_fix_look()
+	_fix_eyes()
 	_add_hair()
+
+
+## His eyes (character_aaa_plan.md S1): the eyeball's photographic texture,
+## kept but corrected -- his iris tinted to his blue, the bloodshot sclera
+## calmed -- with the head kit's lid occlusion, roughness, iris depth and
+## wet film (tools/assets/build_eyes.py, EyeKit). Each eyeball is a 13.1 mm
+## sphere on Eye_L / Eye_R with a flat front projection, so the painted iris
+## turns with EyeAim. (The 36-vertex shells round them are their backs and
+## take the same material unseen.)
+const EYE_MATERIAL := "xmaterial_7d08cd4d239faf3"
+## Iris depth as parallax: the same hint of it as Roman's.
+const EYE_PARALLAX := 4.0
+
+
+func _fix_eyes() -> void:
+	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("cody", EYE_PARALLAX))
 
 
 func _add_hair() -> void:

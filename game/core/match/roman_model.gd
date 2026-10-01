@@ -1204,7 +1204,7 @@ func _paint_all_surfaces(mesh_instance: MeshInstance3D, color: Color,
 		mesh_instance.set_surface_override_material(surface, mat)
 
 ## His eyes and lashes (character_aaa_plan.md S1), from
-## tools/assets/build_roman_eyes.py. M_EYE is two eyeballs on J_Eye_L/R
+## tools/assets/build_eyes.py, through EyeKit. M_EYE is two eyeballs on J_Eye_L/R
 ## with a flat front-projected UV, and shipped untextured: flat white, the
 ## iris faked by spheres stuck on the cornea, and the eyeball's outer band --
 ## nearly edge-on in the lid opening -- mirroring the cool key as two chrome
@@ -1226,62 +1226,14 @@ const LASH_MATERIAL := "Material.016"
 ## parallax smears at the angles the lids leave visible -- at 8 the pupil
 ## dragged a dark keyhole down the iris -- so it is held to a hint of depth.
 const EYE_PARALLAX := 4.0
-const EYE_CLEARCOAT_ROUGHNESS := 0.03
 const LASH_COLOR := Color(0.030, 0.024, 0.021)
 const LASH_SCISSOR := 0.3
 
 
 func _fix_eyes() -> void:
-	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
-		if mi.mesh == null:
-			continue
-		for s in mi.mesh.get_surface_count():
-			var source := mi.mesh.surface_get_material(s)
-			if source == null:
-				continue
-			if source.resource_name == EYE_MATERIAL:
-				mi.set_surface_override_material(s, _eye_material())
-			elif source.resource_name == LASH_MATERIAL:
-				mi.set_surface_override_material(s, _lash_material())
-
-
-func _eye_material() -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.resource_name = "RomanEye"
-	m.albedo_texture = _texture("eye_color")
-	var orm := _texture("eye_orm")
-	m.ao_enabled = true
-	m.ao_texture = orm
-	m.ao_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
-	# Lids shade direct light too, not just the ambient.
-	m.ao_light_affect = 0.7
-	m.roughness = 1.0
-	m.roughness_texture = orm
-	m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
-	m.heightmap_enabled = true
-	m.heightmap_texture = _texture("eye_height")
-	m.heightmap_scale = EYE_PARALLAX
-	m.clearcoat_enabled = true
-	m.clearcoat = 1.0
-	m.clearcoat_roughness = EYE_CLEARCOAT_ROUGHNESS
-	return m
-
-
-func _lash_material() -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.resource_name = "RomanLashes"
-	m.albedo_texture = _texture("lash_alpha")
-	m.albedo_color = LASH_COLOR
-	# Lashes barely reflect: at the default reflectance the thin cards
-	# caught the cool key and read as a silver fringe on the lid.
-	m.roughness = 0.85
-	m.metallic_specular = 0.1
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	m.alpha_scissor_threshold = LASH_SCISSOR
-	m.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
-	m.alpha_antialiasing_edge = LASH_SCISSOR
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return m
+	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("roman_reigns", EYE_PARALLAX))
+	EyeKit.dress(self, LASH_MATERIAL, EyeKit.lash_material(
+			_texture("lash_alpha"), LASH_COLOR, LASH_SCISSOR))
 
 
 ## His eyelids (EyeLids): the model has no lid bones and no blend shapes, so

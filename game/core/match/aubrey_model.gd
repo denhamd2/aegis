@@ -35,7 +35,25 @@ func _ready() -> void:
 	_install_animations()
 	_dress_fabric()
 	_dress_hair()
+	_dress_eyes()
 	_add_ponytail_springs()
+
+
+## Her eyes (character_aaa_plan.md S1). The kit's eye is a cartoon one --
+## 17 mm, a brown iris with a highlight baked into its texture, and lid cards
+## painted from the same texture that drew as thick brown rims. In the
+## owner's photos her eyes are blue-green under dark, smoky make-up. The
+## texture is repainted to that (tools/assets/build_eyes.py: the iris, her
+## skin tone on the lids, a smoky liner band) and goes on through EyeKit, with
+## the clearcoat masked to the eye so the lids are not wet.
+const EYE_MATERIAL := "MI_Eyes"
+## A cartoon eye's UVs span ~82 mm per unit, so depth reads at a third of
+## Roman's scale.
+const EYE_PARALLAX := 1.5
+
+
+func _dress_eyes() -> void:
+	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("aubrey", EYE_PARALLAX))
 
 
 ## Her hair (tools/blender/referee_aubrey.py): the tight cap and the curled

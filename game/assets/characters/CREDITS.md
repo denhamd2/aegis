@@ -266,3 +266,11 @@ no geometry is copied from the source asset. Its strand texture
 
 Original textures, painted procedurally by `tools/assets/build_roman_eyes.py`
 from nothing but code, laid out for the supplied model's own eye and lash UVs.
+
+## Cody's, Aubrey's and Kenny's eye textures (`cody_eye_*.png`, `aubrey_eye_*.png`, `kenny_eye_*.png`)
+
+Painted by `tools/assets/build_eyes.py`. Kenny's and the occlusion, roughness
+and height maps are procedural, from nothing but code. `cody_eye_color.png` is
+derived from the eye texture embedded in `cody_rhodes.glb` (iris tinted,
+sclera calmed); `aubrey_eye_color.png` from the kit eye texture embedded in
+`aubrey_edwards.glb` (Quaternius, CC0), with the iris and lids repainted.
