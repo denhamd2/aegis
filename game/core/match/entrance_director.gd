@@ -168,24 +168,30 @@ const ROMAN_WALK_CLIP := "strikes/walk_slow_look"
 ## 45.0 s (0.132). The broadcast puts the FINGER on that slam, with the pyro
 ## (R-41: finger 40 s, pyro and cut 42 s) -- so he is out long before it.
 const ROMAN_MUSIC_HIT := 45.0
+## His music's beat after the hit (camera_aaa_plan.md A4): 71.8 BPM, measured
+## by onset autocorrelation over 45-115 s of the same audio, and the grid's
+## phase lands on the hit itself (44.95 s). Every cut from the hit to the
+## foot of the ramp is a whole number of these, so the cuts land on the music.
+const ROMAN_BEAT := 0.836
 ## On the lip before the finger: the slow push-in while he looks the building
 ## over, then the close-up (R-41 30-40 s, 1:04).
 const ROMAN_LIP_PUSH := 4.0
 const ROMAN_LIP_FACE := 3.0
 ## After the slam: the very wide of the pyro, then the finger held under the
 ## low wide from the ramp until this music time (R-41: 40 s to 58 s).
-const ROMAN_PYRO_WIDE := 2.5
-const ROMAN_FINGER_DOWN := 58.0
+const ROMAN_PYRO_WIDE := 3 * ROMAN_BEAT
+const ROMAN_FINGER_DOWN := ROMAN_MUSIC_HIT + 16 * ROMAN_BEAT
 ## The room goes red for the pyro and back to blue, in ticks.
 const ROMAN_RED_TICKS := 90
 ## Head bowed at ringside (R-41 2:42-3:04 is twenty seconds; held here four).
 const ROMAN_BOW_TICKS := 240
 ## The walk, cut the way R-41 cuts it: the low ultra-wide steadicam backing
 ## ahead of him, a very wide from high every six to eight seconds, and once
-## over his shoulder down the ramp (R-CJ). [shot, seconds], cycled.
-const ROMAN_WALK_SHOTS := [["steadicam_low", 5.0], ["ramp_side_high", 4.0],
-		["face_walk", 4.0], ["over_shoulder", 4.0], ["steadicam_low", 5.0],
-		["arena_high", 3.0]]
+## over his shoulder down the ramp (R-CJ). [shot, seconds], cycled; each a
+## whole number of beats (A4).
+const ROMAN_WALK_SHOTS := [["steadicam_low", 6 * ROMAN_BEAT], ["ramp_side_high", 5 * ROMAN_BEAT],
+		["face_walk", 5 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
+		["steadicam_low", 6 * ROMAN_BEAT], ["arena_high", 4 * ROMAN_BEAT]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,

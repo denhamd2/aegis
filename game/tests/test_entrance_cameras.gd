@@ -61,3 +61,16 @@ func test_the_walk_key_rides_ahead_and_above_him() -> void:
 	# From the front at roughly 45 degrees down onto his chest, not overhead.
 	var down := rad_to_deg(atan2(rel.y - 1.3, Vector2(rel.x, rel.z).length()))
 	assert_float(down).is_between(20.0, 50.0)
+
+
+func test_roman_cuts_land_on_his_music_beat() -> void:
+	# A4: from the hit to the foot of the ramp, every cut is whole beats.
+	var beat := EntranceDirector.ROMAN_BEAT
+	var on_grid := func(secs: float) -> bool:
+		var n := secs / beat
+		return absf(n - roundf(n)) < 0.02
+	assert_bool(on_grid.call(EntranceDirector.ROMAN_PYRO_WIDE)).is_true()
+	assert_bool(on_grid.call(EntranceDirector.ROMAN_FINGER_DOWN - EntranceDirector.ROMAN_MUSIC_HIT)).is_true()
+	for shot: Array in EntranceDirector.ROMAN_WALK_SHOTS:
+		assert_bool(on_grid.call(float(shot[1]))) \
+				.override_failure_message("off the beat: " + str(shot)).is_true()
