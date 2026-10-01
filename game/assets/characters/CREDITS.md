@@ -261,3 +261,8 @@ no geometry is copied from the source asset. Its strand texture
 `roman_reigns_hair_4_strands_nrm.png` and the head surface map
 `roman_reigns_head_rm.png`, are painted procedurally by that script and by
 `tools/assets/build_roman_hair_alpha.py`, from nothing but code.
+
+## Roman Reigns's eye and lash textures (`roman_reigns_eye_color.png`, `roman_reigns_eye_orm.png`, `roman_reigns_eye_height.png`, `roman_reigns_lash_alpha.png`)
+
+Original textures, painted procedurally by `tools/assets/build_roman_eyes.py`
+from nothing but code, laid out for the supplied model's own eye and lash UVs.

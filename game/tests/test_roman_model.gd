@@ -78,7 +78,7 @@ func test_bone_map_covers_the_spine_chain() -> void:
         + "itself is broken, and spine_01 would not survive it either."
     ).is_greater(0)
 
-func test_eyes_carry_iris_and_pupil_attachments() -> void:
+func test_eyes_and_lashes_are_textured() -> void:
     var model := _make_model()
     await await_millis(20)
     var skeleton := model.get_game_skeleton() as Skeleton3D
@@ -87,31 +87,29 @@ func test_eyes_carry_iris_and_pupil_attachments() -> void:
         assert_int(skeleton.find_bone(bone)).override_failure_message(
             "Roman skeleton lost eye bone '%s'" % bone
         ).is_greater_equal(0)
-    var targets: Dictionary = RomanModel.EYE_TARGETS
-    for bone in targets:
-        for slot_i in [0, 1]:
-            var want: Vector3 = (targets[bone] as Array)[slot_i]
-            var kind := "Iris" if slot_i == 0 else "Pupil"
-            var found: BoneAttachment3D = null
-            for child in skeleton.get_children():
-                if String(child.name) == "Roman" + kind + bone.right(6):
-                    found = child as BoneAttachment3D
-            assert_object(found).override_failure_message(
-                "%s has no %s attachment -- the untextured eyeball renders "
-                % [bone, kind] + "with no iris."
-            ).is_not_null()
-            # The measured offset lives on the attachment's lens child (the
-            # standard BoneAttachment3D pattern: attachment at the bone
-            # origin, mesh offset beneath it).
-            var lens := found.get_child(0) as MeshInstance3D
-            assert_object(lens).override_failure_message(
-                "%s %s attachment holds no lens mesh." % [bone, kind]
-            ).is_not_null()
-            assert_vector(lens.position).override_failure_message(
-                "%s %s lens sits at %v, not the measured %v -- re-measure "
-                % [bone, kind, lens.position, want]
-                + "from the .glb bind pose, do not hand-tune."
-            ).is_equal_approx(want, Vector3.ONE * 0.001)
+    # The painted iris lives on the eyeball (RomanModel._fix_eyes); the old
+    # sphere irises are gone, and the eye and lash materials are textured.
+    var eyes := 0
+    var lashes := 0
+    for mi: MeshInstance3D in model.find_children("", "MeshInstance3D", true, false):
+        assert_bool(String(mi.get_parent().name).begins_with("RomanIris")).is_false()
+        if mi.mesh == null:
+            continue
+        for s in mi.mesh.get_surface_count():
+            var source := mi.mesh.surface_get_material(s)
+            var m := mi.get_surface_override_material(s) as BaseMaterial3D
+            if source == null or m == null:
+                continue
+            if source.resource_name == RomanModel.EYE_MATERIAL:
+                assert_object(m.albedo_texture).is_not_null()
+                assert_bool(m.heightmap_enabled and m.ao_enabled and m.clearcoat_enabled).is_true()
+                eyes += 1
+            elif source.resource_name == RomanModel.LASH_MATERIAL:
+                assert_object(m.albedo_texture).is_not_null()
+                assert_int(m.transparency).is_equal(BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR)
+                lashes += 1
+    assert_int(eyes).is_greater(0)
+    assert_int(lashes).is_greater(0)
 
 func test_normal_maps_import_as_normal_maps() -> void:
     var files := ["bottoms_nrm", "l_wrist_nrm", "r_a_acce_nrm", "r_wrist_nrm",

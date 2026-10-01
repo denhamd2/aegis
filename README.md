@@ -8160,3 +8160,37 @@ lengths are new geometry now.
 his hair's own binds; the sheet cut and the flyaways add up; the existing
 walk test still has the hair swinging and off his back). Both generators
 are byte-identical across runs.
+
+## Round: Roman's eyes
+
+The "blue-grey smear" was three things, seen in a new `roman_eyes` close-up
+on `hair_shot.tscn`:
+
+- **M_EYE shipped untextured.** Each eyeball is a front cap and an outer band
+  on one 13.2 mm sphere, skinned to the J_Eye bones, with a flat
+  front-projected UV (31 mm per unit, line of sight at (0.501, 0.455)) that
+  was waiting for an eye texture. Flat white, its band -- nearly edge-on in
+  the lid opening -- mirrored the cool key as chrome strips above and below
+  each eye. The iris was two 12-sided spheres stuck on the front.
+- **The lash cards had no texture** and drew as a solid black bar.
+
+`tools/assets/build_roman_eyes.py` paints, at real sizes off that projection:
+a dark brown iris (radial fibres, a warmer collarette, a near-black limbal
+ring, 11.8 mm), a 3.8 mm pupil, a warm off-white sclera with faint veins;
+an occlusion/roughness map that shades the band where the lids meet the eye
+and leaves the cornea glass-smooth; a height map that sets the iris behind
+the cornea; and lash strands for the cards' layout (upper dense, lower short
+and sparse). `RomanModel._fix_eyes` gives the eye that texture, occlusion
+(also on direct light), parallax, and a wet clearcoat, and the lashes a
+scissored, barely-reflective strand material. The spheres are gone; the
+painted iris is on the eyeball, so it turns with EyeAim.
+
+Tuned against the owner's photos: the first iris read amber and doll-like
+(darkened, collarette softened); the corners read paper-white (occlusion
+starts nearer the iris); the lashes caught the rig as a silver fringe
+(specular cut); parallax at 8 dragged a dark keyhole down the iris, so it is
+4, a hint of depth.
+
+### Checks
+600 tests pass (`test_eyes_and_lashes_are_textured` replaces the sphere
+test). The texture build is byte-identical across runs.

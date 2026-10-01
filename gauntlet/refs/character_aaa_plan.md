@@ -148,7 +148,8 @@ if these hold:
 
 ### Shared technique (do once, all four benefit)
 
-- **S1. A "head kit" standard.** Every wrestler gets:
+- **S1. A "head kit" standard.** (Roman's eyes and lashes done -- README
+  "Roman's eyes"; Cody, Kenny and Aubrey still to do.) Every wrestler gets:
   - separate **eyes** (cornea + iris depth + wet layer, driven by the existing
     eye bones);
   - **teeth and tongue**;

@@ -94,13 +94,8 @@ const ALBEDO_FIXES := {
 	"Material.006": {"color": Color(0.82, 0.80, 0.76)}, # l_wrist
 	"Material.007": {"color": Color(0.82, 0.80, 0.76)}, # r_wrist
 	"Material.012": {"color": Color(0.10, 0.10, 0.11)}, # r_a_acce
-	# Eye and lash. Material.013 is the whole eyeball (M_EYE), which ships
-	# untextured -- it held a flat brown here when that tint was the only
-	# iris this model had. It is a white sclera now: the iris and pupil are
-	# real geometry seated on the cornea (_build_eye_details below), and a
-	# brown eyeball behind them reads as an eye with no white at all.
-	"Material.013": {"color": Color(0.80, 0.76, 0.72)},
-	"Material.016": {"color": Color(0.04, 0.04, 0.04)},
+	# The eyes (Material.013) and lashes (Material.016) are not here: they
+	# get whole materials of their own, textured (_fix_eyes).
 }
 
 ## Hair and beard cards, and the mask texture each should use.
@@ -327,9 +322,7 @@ func _ready() -> void:
 		return
 	_fix_materials()
 	_copy_base_animation_library()
-	# Iris/pupil geometry is headless-safe (plain nodes); colours need a real
-	# renderer, same split WrestlerAttire uses for the same reason.
-	_build_eye_details(body)
+	_fix_eyes()
 	build_eye_lids()
 	# His broad face and thick neck (RomanHeadShape), on every skeleton.
 	for skeleton in _animation_skeletons():
@@ -1171,21 +1164,12 @@ func uses_universal_attire() -> bool:
 const TEETH_COLOR := Color(0.87, 0.85, 0.79)
 const MOUTH_COLOR := Color(0.28, 0.09, 0.08)
 
-## Geometric irises. The eyeballs are untextured, so the iris/pupil are small
-## spheres seated on the cornea, parented to the J_Eye bones (which exist but
-## carry no animation tracks, so the eyes ride the head rigidly -- matching
-## the base rig, which has no eye bones at all). Offsets are in each eye
-## bone's LOCAL space, converted once from the .glb bind pose: eyeballs
-## ~2.5cm, bone ~6mm behind the mesh centroid, cornea apex ~+9mm forward in
-## root space (+Z facial forward). If a re-export moves the bones, re-measure
-## with tools (parse M_EYE centroids vs J_Eye globals) -- do not hand-tune.
-const IRIS_R := 0.006
-const PUPIL_R := 0.0022
-## Dark brown, as his are. The lighter brown with a 0.25 roughness rendered
-## as a pale grey-blue eye -- the highlight on the small sphere was most of
-## what showed.
-const IRIS_COLOR := Color(0.13, 0.075, 0.045)
-const PUPIL_COLOR := Color(0.012, 0.010, 0.010)
+## The eye bones' lines of sight, in each J_Eye bone's LOCAL space, converted
+## once from the .glb bind pose: [iris plane, cornea apex]. They used to seat
+## sphere irises on the eyeball; the eyes are painted now (_fix_eyes), and the
+## lids (build_eye_lids) still measure the eye from the apex. If a re-export
+## moves the bones, re-measure (M_EYE centroids vs J_Eye globals) -- do not
+## hand-tune.
 const EYE_TARGETS := {
 	"J_Eye_L": [Vector3(-0.001077, -0.006686, -0.005771),
 		Vector3(-0.001568, -0.009389, -0.007743)],
@@ -1219,45 +1203,86 @@ func _paint_all_surfaces(mesh_instance: MeshInstance3D, color: Color,
 		mat.metallic = 1.0 if metal else 0.0
 		mesh_instance.set_surface_override_material(surface, mat)
 
-func _build_eye_details(body: Skeleton3D) -> void:
-	var headless := DisplayServer.get_name() == "headless"
-	for bone in EYE_TARGETS:
-		var bone_idx := body.find_bone(bone)
-		if bone_idx < 0:
-			push_warning("RomanModel: skeleton has no bone '%s'" % bone)
-			continue
-		var targets: Array = EYE_TARGETS[bone]
-		_add_eye_sphere(body, bone, bone_idx, "RomanIris" + bone.right(6),
-			targets[0], IRIS_R, IRIS_COLOR, headless)
-		_add_eye_sphere(body, bone, bone_idx, "RomanPupil" + bone.right(6),
-			targets[1], PUPIL_R, PUPIL_COLOR, headless)
+## His eyes and lashes (character_aaa_plan.md S1), from
+## tools/assets/build_roman_eyes.py. M_EYE is two eyeballs on J_Eye_L/R
+## with a flat front-projected UV, and shipped untextured: flat white, the
+## iris faked by spheres stuck on the cornea, and the eyeball's outer band --
+## nearly edge-on in the lid opening -- mirroring the cool key as two chrome
+## strips above and below each eye. Now:
+##   * a painted sclera, iris and pupil at real sizes;
+##   * occlusion and roughness (EYE_ORM): the band where the lids meet the eye
+##     shaded and rough, the cornea glass-smooth;
+##   * the iris BEHIND the cornea, as parallax (EYE_PARALLAX) -- it shifts
+##     against the cornea's highlight as the camera moves, as a real one does;
+##   * a wet film (clearcoat) over it all;
+##   * the lash cards given strands (their texture was missing: they drew as
+##     a solid black bar along the upper lid).
+## The eyes are skinned to the eye bones, so the painted iris turns with
+## EyeAim; the spheres that used to stand in for it are gone.
+const EYE_MATERIAL := "Material.013"
+const LASH_MATERIAL := "Material.016"
+## Godot's height-map scale (UV offset at grazing, x0.01). The iris plane sits
+## ~2.5 mm behind the apex, which would ask for ~14; but Godot's single-step
+## parallax smears at the angles the lids leave visible -- at 8 the pupil
+## dragged a dark keyhole down the iris -- so it is held to a hint of depth.
+const EYE_PARALLAX := 4.0
+const EYE_CLEARCOAT_ROUGHNESS := 0.03
+const LASH_COLOR := Color(0.030, 0.024, 0.021)
+const LASH_SCISSOR := 0.3
 
-func _add_eye_sphere(body: Skeleton3D, bone: String, bone_idx: int,
-		slot: String, offset: Vector3, radius: float, color: Color,
-		headless: bool) -> void:
-	for child in body.get_children():
-		if String(child.name) == slot:
-			return # already built
-	var attachment := BoneAttachment3D.new()
-	attachment.name = slot
-	body.add_child(attachment)
-	attachment.bone_name = bone
-	attachment.bone_idx = bone_idx
-	var ball := SphereMesh.new()
-	ball.radius = radius
-	ball.height = radius * 2.0
-	ball.radial_segments = 12
-	ball.rings = 6
-	var instance := MeshInstance3D.new()
-	instance.mesh = ball
-	if not headless:
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = color
-		mat.roughness = 0.45
-		mat.metallic = 0.0
-		instance.material_override = mat
-	instance.position = offset
-	attachment.add_child(instance)
+
+func _fix_eyes() -> void:
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(s)
+			if source == null:
+				continue
+			if source.resource_name == EYE_MATERIAL:
+				mi.set_surface_override_material(s, _eye_material())
+			elif source.resource_name == LASH_MATERIAL:
+				mi.set_surface_override_material(s, _lash_material())
+
+
+func _eye_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.resource_name = "RomanEye"
+	m.albedo_texture = _texture("eye_color")
+	var orm := _texture("eye_orm")
+	m.ao_enabled = true
+	m.ao_texture = orm
+	m.ao_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	# Lids shade direct light too, not just the ambient.
+	m.ao_light_affect = 0.7
+	m.roughness = 1.0
+	m.roughness_texture = orm
+	m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
+	m.heightmap_enabled = true
+	m.heightmap_texture = _texture("eye_height")
+	m.heightmap_scale = EYE_PARALLAX
+	m.clearcoat_enabled = true
+	m.clearcoat = 1.0
+	m.clearcoat_roughness = EYE_CLEARCOAT_ROUGHNESS
+	return m
+
+
+func _lash_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.resource_name = "RomanLashes"
+	m.albedo_texture = _texture("lash_alpha")
+	m.albedo_color = LASH_COLOR
+	# Lashes barely reflect: at the default reflectance the thin cards
+	# caught the cool key and read as a silver fringe on the lid.
+	m.roughness = 0.85
+	m.metallic_specular = 0.1
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	m.alpha_scissor_threshold = LASH_SCISSOR
+	m.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+	m.alpha_antialiasing_edge = LASH_SCISSOR
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m
+
 
 ## His eyelids (EyeLids): the model has no lid bones and no blend shapes, so
 ## they are built, one per eye, centred on its J_Eye bone and hung on J_Head.
