@@ -4827,7 +4827,10 @@ REF_LOW = dict(
 # Halfway down (and up): one knee going to the mat.
 REF_DROP = pose(REF_WATCH, pelvis=(0.0, -0.10, 0.600), spine=(-36, 0, 0),
                 hand_r=(0.20, 0.40, 0.40), hand_l=(-0.20, 0.42, 0.36),
-                foot_r=(0.16, -0.30, 0.10), knee_r=(0.0, 1.0, -0.6))
+                foot_r=(0.16, -0.30, 0.10), knee_r=(0.0, 1.0, -0.6),
+                # The left foot already coming back off the canvas, so the
+                # kneel that follows never drags it through (_REF_KNEEL_L).
+                foot_l=(-0.18, -0.10, 0.12))
 
 CLIPS["Ref_Stand"] = [
     (0,  REF_STAND),
@@ -4839,10 +4842,19 @@ CLIPS["Ref_Watch"] = [
     (45, pose(REF_WATCH, pelvis=(0.0, -0.06, 0.770), head=(20, -4, 0))),
     (90, REF_WATCH),
 ]
+# The left foot on its way back under her as the second knee goes down: just
+# off the canvas (z 0.12), which keeps the rig's flat-sole rule on it so every
+# key holds the same foot angle and nothing pitches the toes into the mat. Between REF_DROP and REF_LOW the solver otherwise
+# swings the trailing foot through the canvas (pose lint: ball_l 0.15 m below
+# the mat at mid-drop) -- the knee hint flips from forward to down while the
+# foot travels 0.42 m back.
+_REF_KNEEL_L = pose(REF_LOW, pelvis=(0.0, -0.06, 0.500), spine=(-44, 0, 0),
+                    foot_l=(-0.16, -0.28, 0.12), knee_l=(0.0, 1.0, -0.2))
 # 14 frames: from the watch crouch to REF_LOW.
 CLIPS["Ref_Count_Down"] = [
     (0,  REF_WATCH),
     (6,  REF_DROP),
+    (10, _REF_KNEEL_L),
     (14, REF_LOW),
 ]
 # 20 frames, one count: the arm comes up high, and the palm hits the canvas
@@ -4857,6 +4869,7 @@ CLIPS["Ref_Slap"] = [
 ]
 CLIPS["Ref_Count_Up"] = [
     (0,  REF_LOW),
+    (4,  _REF_KNEEL_L),
     (8,  REF_DROP),
     (16, REF_STAND),
 ]
