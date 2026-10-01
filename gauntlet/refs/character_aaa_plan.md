@@ -326,8 +326,12 @@ pinned, bones aimed; the head left on MPFB's own neck because her kit
 skeleton's head joint is stylised-low) with MPFB's weights on her bone names,
 and eyeballs at MPFB's eye helpers. MPFB is installed as a Blender extension
 and its CC0 asset packs (system assets, skins01/02) live in
-~/.cache/aegis_assets/mpfb. Next: refit the uniform and hair to the new body,
-her likeness (face targets against the owner's character sheet), the skin
+~/.cache/aegis_assets/mpfb. Stage 2 done -- the shirt, trousers and shoes
+conformed to the new body (standoff limits, smoothed, re-weighted from it,
+covered skin removed), a fitted polo collar and placket, the ponytail moved
+with its bones, and a new hair cap with a feathered, measured hairline.
+Known: white specks on the collar flap, a sliver of neck in the back fold.
+Next: her likeness (face targets against the owner's character sheet), the skin
 texture with her make-up, lashes and brows, then wire it in and gate it.
 
 **Why Aubrey goes first in the head/body work.** She has no likeness

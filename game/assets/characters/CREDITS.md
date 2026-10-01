@@ -249,6 +249,23 @@ images by that script. Rebuild with the kit unzipped to
 `~/.cache/aegis_assets/ubc/`; the output is byte-identical for the same kit.
 Not included in the repo: the kit itself (only the exported .glb).
 
+## aubrey_aaa.glb (the referee, AAA rebuild -- work in progress, not yet in the game)
+
+Built by `tools/blender/aubrey_aaa.py`. Her body is a **MakeHuman** base mesh
+made with **MPFB** (MakeHuman Plugin For Blender), from the MakeHuman system
+assets: the mesh, its targets and its `game_engine` rig weights. MPFB's
+assets are **CC0 1.0 Universal**
+(https://static.makehumancommunity.org/assets/license.html,
+https://creativecommons.org/publicdomain/zero/1.0/); the body is generated
+from macro sliders, not from any scan of a person. It is fitted to the
+skeleton of `aubrey_edwards.glb` (above) and carries that file's referee kit
+and ponytail, refitted to the new body. The polo collar, placket, hair cap,
+eyeballs and `aubrey_hair_strands.png` are original, generated from code by
+the same script. Rebuild with MPFB installed as a Blender extension and its
+asset packs unpacked to `~/.cache/aegis_assets/mpfb/`; the output is
+byte-identical for the same inputs. Not included in the repo: MPFB or its
+asset packs (only the exported .glb).
+
 ## Roman Reigns's ringlets and hair maps (`roman_ringlets.glb`, `roman_reigns_ringlets_alpha.png`, `roman_reigns_hair_*_nrm.png`, `roman_reigns_head_rm.png`)
 
 Original geometry and textures. `roman_ringlets.glb` is built by

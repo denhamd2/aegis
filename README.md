@@ -8194,3 +8194,34 @@ starts nearer the iris); the lashes caught the rig as a silver fringe
 ### Checks
 600 tests pass (`test_eyes_and_lashes_are_textured` replaces the sphere
 test). The texture build is byte-identical across runs.
+
+## Round: Aubrey AAA rebuild, stages 1-2 (body, uniform, hair)
+
+Work in progress in `tools/blender/aubrey_aaa.py`, writing
+`game/assets/characters/aubrey_aaa.glb`; the game still loads
+`aubrey_edwards.glb` until stage 5.
+
+- **Stage 1, body.** An MPFB (MakeHuman, CC0) body -- female, ~40, lean --
+  fitted to her existing skeleton: bones disconnected so Copy Location holds,
+  each pinned and aimed at her bone of the same name, the pose baked in and
+  MPFB's weights renamed onto her bones. The head stays on MPFB's neck; her
+  kit skeleton's head joint sits 8 cm low.
+- **Stage 2, uniform and hair.** Shirt, trousers and shoes conformed to the
+  new body within a standoff band, smoothed, re-weighted from the body, and
+  the skin they cover deleted. A polo collar (stand hugging the neck, flap
+  resting on the shirt) and placket replace the kit's neckline. The ponytail
+  and its bones move with the new head. A new hair cap follows a measured
+  hairline with a vertex-alpha feather and clears the ears; strand texture
+  `aubrey_hair_strands.png` is painted from code.
+- **Determinism.** The eyeballs are written vertex by vertex: as two objects
+  the exporter shared their index buffer some runs and not others, and
+  bmesh's `create_uvsphere` ordered its faces differently each run. The .glb
+  is now byte-identical across builds.
+
+Known blemishes for stage 4: white specks on the collar flap, a sliver of
+neck inside the back fold. Next: likeness (stage 3), skin and make-up
+(stage 4), wiring and gates (stage 5).
+
+### Checks
+600 tests pass. `aubrey_aaa.glb` and `aubrey_hair_strands.png` are
+byte-identical across runs.
