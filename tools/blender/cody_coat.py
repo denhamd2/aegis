@@ -617,31 +617,80 @@ def solidify(obj, lining=True):
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
+## The stand collar (the owner's photo and the broadcast frames: high, stiff,
+## gold-edged). Profile rows from the coat's top edge up to a rolled lip, as
+## (height over the neck bone's head, radius): it overlaps the coat below,
+## stands nearly straight, flares a little, and turns in at the top so the lip
+## reads as a folded edge, not a cut ring. The first collar was one flat band
+## 8.5 cm tall with no thickness, flat red, culled from behind -- from most
+## angles a thin jagged line round his neck.
+COLLAR_PROFILE = ((-0.050, 0.096), (-0.020, 0.099), (0.015, 0.104),
+                  (0.045, 0.110), (0.062, 0.111), (0.070, 0.106))
+## Half-angle of the open front, at the bottom and at the lip: a stand
+## collar opens wider at the top.
+COLLAR_GAP = (math.radians(30), math.radians(40))
+COLLAR_SEGMENTS = 40
+COLLAR_THICK = 0.006
+
+
 def build_collar(arm):
-    """A high stand collar round the neck base, open at the front."""
+    """A high stand collar round the neck base, open at the front: a
+    profile swept round the neck, flared and rolled at the lip (see
+    COLLAR_PROFILE). v runs 0 at the bottom to 1 at the lip."""
     neck = arm.matrix_world @ arm.data.bones["neck_01"].head_local
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
-    gap = math.radians(38)
-    seg = 32
     rows = []
-    for k, (dz, r) in enumerate(((-0.035, 0.092), (0.05, 0.108))):
+    last = len(COLLAR_PROFILE) - 1
+    for k, (dz, r) in enumerate(COLLAR_PROFILE):
+        gap = COLLAR_GAP[0] + (COLLAR_GAP[1] - COLLAR_GAP[0]) * k / last
         row = []
-        for s in range(seg + 1):
-            a = gap + (2 * math.pi - 2 * gap) * s / seg
-            row.append(bm.verts.new((neck.x + r * math.sin(a), neck.y + 0.01 - r * 0.9 * math.cos(a),
+        for s in range(COLLAR_SEGMENTS + 1):
+            a = gap + (2 * math.pi - 2 * gap) * s / COLLAR_SEGMENTS
+            row.append(bm.verts.new((neck.x + r * math.sin(a),
+                                     neck.y + 0.012 - r * 0.92 * math.cos(a),
                                      neck.z + dz)))
         rows.append(row)
-    for s in range(seg):
-        f = bm.faces.new((rows[0][s], rows[1][s], rows[1][s + 1], rows[0][s + 1]))
-        for loop, (kk, ss) in zip(f.loops, ((0, s), (1, s), (1, s + 1), (0, s + 1))):
-            loop[uv].uv = (ss / seg, kk)
+    for k in range(last):
+        for s in range(COLLAR_SEGMENTS):
+            f = bm.faces.new((rows[k][s], rows[k + 1][s], rows[k + 1][s + 1], rows[k][s + 1]))
+            for loop, (kk, ss) in zip(f.loops, ((k, s), (k + 1, s), (k + 1, s + 1), (k, s + 1))):
+                loop[uv].uv = (ss / COLLAR_SEGMENTS, kk / last)
+    bm.normal_update()
+    # Outward, away from the neck.
+    for f in bm.faces:
+        c = f.calc_center_median()
+        if f.normal.dot(Vector((c.x - neck.x, c.y - neck.y, 0.0))) < 0.0:
+            f.normal_flip()
     mesh = bpy.data.meshes.new("CoatCollar")
     bm.to_mesh(mesh)
     bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
     obj = bpy.data.objects.new("CoatCollar", mesh)
     bpy.context.collection.objects.link(obj)
     return obj
+
+
+def paint_collar(path_rgb, path_orm):
+    """White, a gold band along the lip edged in blue, gold studs, and a
+    blue-piped gold seam where it meets the coat -- the coat's own trim."""
+    W, H = 1024, 128
+    img = Image.new("RGB", (W, H), (236, 234, 230))
+    orm = Image.new("RGB", (W, H), (255, CLOTH_ROUGH, 0))
+    d, o = ImageDraw.Draw(img), ImageDraw.Draw(orm)
+    GOLD, BLUE = (214, 172, 84), (46, 52, 170)
+    # v 1 (the lip) is image row 0.
+    d.rectangle((0, 0, W, 34), fill=GOLD)
+    o.rectangle((0, 0, W, 34), fill=(255, 90, 230))
+    d.rectangle((0, 34, W, 40), fill=BLUE)
+    for x in range(10, W, 34):
+        d.ellipse((x - 6, 11, x + 6, 23), fill=(245, 222, 150))
+    d.rectangle((0, H - 18, W, H), fill=GOLD)
+    o.rectangle((0, H - 18, W, H), fill=(255, 90, 230))
+    d.rectangle((0, H - 22, W, H - 18), fill=BLUE)
+    img.save(path_rgb, optimize=True)
+    _mottle(orm).save(path_orm, optimize=True)
 
 
 def build_scales(arm):
@@ -880,7 +929,9 @@ def main() -> int:
     reweight_from_surface(torso, body)
     reweight_from_surface(sleeves, body)
     collar = build_collar(arm)
-    copy_weights(collar, body, exclude=frozenset({"Head", "hand_l", "hand_r"}))
+    # Off the body surface it sits over, neck included (not the head): it
+    # rides the shoulders and leans with the neck, never cutting into it.
+    reweight_from_surface(collar, body, exclude=frozenset({"Head", "hand_l", "hand_r"}))
     scales = build_scales(arm)
     copy_weights(scales, body)
     skirt = build_skirt(body, torso)
@@ -916,7 +967,16 @@ def main() -> int:
     for obj in (torso, sleeves, skirt):
         obj.data.materials.append(bpy.data.materials.new(obj.name + "Lining"))
         solidify(obj)
-    solidify(collar, lining=False)
+    collar_mod = collar.modifiers.new("Solidify", "SOLIDIFY")
+    collar_mod.thickness = COLLAR_THICK
+    collar_mod.offset = -1.0
+    collar_mod.use_rim = True
+    collar_mod.use_even_offset = True
+    bpy.context.view_layer.objects.active = collar
+    for o in bpy.context.selected_objects:
+        o.select_set(False)
+    collar.select_set(True)
+    bpy.ops.object.modifier_apply(modifier=collar_mod.name)
     # Skin: every part to the armature.
     for obj in parts:
         obj.parent = arm
@@ -927,6 +987,7 @@ def main() -> int:
     paint_body(TEX / "cody_coat_body.png", TEX / "cody_coat_orm_body.png")
     paint_sleeve(TEX / "cody_coat_sleeve.png", TEX / "cody_coat_orm_sleeve.png")
     paint_lapel(TEX / "cody_coat_lapel.png")
+    paint_collar(TEX / "cody_coat_collar.png", TEX / "cody_coat_orm_collar.png")
     paint_normals(TEX / "cody_coat_nrm_body.png", TEX / "cody_coat_nrm_sleeve.png")
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.export_scene.gltf(filepath=str(OUT), export_format="GLB",

@@ -241,7 +241,9 @@ const TEXTURE_DIR := "res://assets/characters/roman_reigns_%s.png"
 const HAIR_COLOR := Color(0.045, 0.042, 0.043)
 ## His hair is slicked and wet-looking; a low roughness gives it the long
 ## streaky highlight a matte card never has.
-const HAIR_ROUGHNESS := 0.32
+## 0.32 -> 0.42 (modelling plan, Roman's hair): at 0.32 the slicked crown
+## read as one glossy helmet; his wet look is a narrow streak, not a gloss.
+const HAIR_ROUGHNESS := 0.42
 ## The direction ACROSS the strands on his hair cards, in UV space
 ## (HairLook.apply). Checked on renders through tools/probe/hair_shot.tscn:
 ## along the tangent the shine breaks into fine streaks; turned 90 degrees it
@@ -533,6 +535,15 @@ const HAIR_LIFT_HANG := 1.6
 const HAIR_LIFT_FRONT := 1.15
 ## Crown above this, hang below the next; blended between.
 const HAIR_LIFT_Y := Vector2(1.62, 1.74)
+## His hair falls loose PAST the shoulders, onto the upper back; the cards
+## end at the collar. Below HAIR_STRETCH_FROM the hanging lengths are drawn
+## out by HAIR_STRETCH (distance below that line, scaled), behind the ears
+## only (z under HAIR_STRETCH_Z) so nothing new falls over his face or chest.
+## Geometry only, in bind space: the cards keep their skin weights and ride
+## the spring chains as before.
+const HAIR_STRETCH_FROM := 1.58
+const HAIR_STRETCH := 1.45
+const HAIR_STRETCH_Z := 0.02
 
 
 ## Root-to-tip (refs/aaa_gap.md item 7): the albedo at the scalp, as a share
@@ -553,6 +564,14 @@ static func hair_lift(p: Vector3) -> float:
 	# The hairline: in front of the ears, across the forehead.
 	var front := smoothstep(0.05, 0.09, p.z) * smoothstep(1.70, 1.76, p.y)
 	return lerpf(k, HAIR_LIFT_FRONT, front)
+
+
+static func hair_stretch(p: Vector3) -> Vector3:
+	if p.y >= HAIR_STRETCH_FROM:
+		return p
+	var back := 1.0 - smoothstep(HAIR_STRETCH_Z - 0.04, HAIR_STRETCH_Z, p.z)
+	var below := HAIR_STRETCH_FROM - p.y
+	return Vector3(p.x, HAIR_STRETCH_FROM - below * lerpf(1.0, HAIR_STRETCH, back), p.z)
 
 
 func _volumize_hair() -> void:
@@ -606,6 +625,7 @@ func _volumize_hair() -> void:
 			if skin != Vector3.INF:
 				lifted[i] = skin + (verts[i] - skin) * hair_lift(verts[i])
 				k = hair_root_to_tip(lifted[i].distance_to(skin))
+			lifted[i] = hair_stretch(lifted[i])
 			shade[i] = Color(k, k, k, 1.0)
 		arrays[Mesh.ARRAY_VERTEX] = lifted
 		arrays[Mesh.ARRAY_COLOR] = shade

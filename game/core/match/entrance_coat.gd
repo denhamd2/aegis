@@ -104,9 +104,12 @@ static func _materials() -> Dictionary:
 	lapel.rim = 0.3
 	lapel.rim_tint = 0.5
 	lapel.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var collar := StandardMaterial3D.new()
-	collar.albedo_color = Color(0.73, 0.10, 0.13)
-	collar.roughness = 0.5
+	# The stand collar: white with the gold lip and seam, both faces drawn --
+	# its inside is in shot whenever he throws his head back.
+	var collar := _cloth("res://assets/characters/cody_coat_collar.png",
+			"res://assets/characters/cody_coat_orm_collar.png",
+			"res://assets/characters/cody_coat_nrm_sleeve.png")
+	collar.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var scales := StandardMaterial3D.new()
 	scales.albedo_color = Color(0.93, 0.74, 0.40)
 	scales.metallic = 1.0
