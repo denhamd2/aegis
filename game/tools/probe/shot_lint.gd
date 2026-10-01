@@ -65,10 +65,14 @@ func _ready() -> void:
 		if post and post.is_done():
 			break
 		var at := camera.global_position
-		# A cut: the lens jumped. Shots under MIN_SHOT are a grammar fault.
-		if at.distance_to(last_pos) > 1.0 or camera.mode != last_mode:
+		# A cut is the lens jumping. The mode alone is not: a cut raised by a
+		# signal after the camera has drawn changes the flag a frame before
+		# the picture, and on screen the old shot simply runs on.
+		if at.distance_to(last_pos) > 1.0:
 			if shot_len > 0 and shot_len < int(MatchCamera.MIN_SHOT * 60) and last_mode != MatchCamera.Mode.ENTRANCE:
 				short += 1
+				print("  SHORT %d frames, %s -> %s at f%d (cut %d, jump %.1f m)" % [shot_len, MatchCamera.Mode.keys()[last_mode],
+						MatchCamera.Mode.keys()[camera.mode], frames, camera._cut, at.distance_to(last_pos)])
 			shot_len = 0
 		shot_len += 1
 		last_pos = at

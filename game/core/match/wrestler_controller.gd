@@ -1445,6 +1445,14 @@ func _resolve_paths() -> void:
 		ai.target = opponent
 
 func _physics_process(delta: float) -> void:
+	# The model's held half-turn is let go on the AnimationTree's mixer_applied
+	# -- which never comes if the tree stops mixing (a paired move or the grapple
+	# rig takes the pose over), and then the model stayed turned 180 degrees
+	# from the man: the two of them stood back to back in the recorded match
+	# (tools/probe/glitch_scan.gd: body facing opposite the controller, dot -1,
+	# for 35 ticks). A deadline the signal cannot miss.
+	if _model_held and Engine.get_physics_frames() > _model_held_until + MODEL_HOLD_GRACE:
+		_release_model_facing(true)
 	var live_input := _poll_live_input()
 	var input := ReplaySystem.get_input(player_index, live_input) if ReplaySystem else live_input
 	fsm._physics_process(delta)
@@ -3239,6 +3247,8 @@ func _turn_round_on_the_mat() -> void:
 ## clip's half-turn, then let go on that same tick. Presentation only: the
 ## body, and everything the match reads, turned at once as before.
 const MODEL_HOLD_TICKS := 4
+## Ticks past the hold before it is let go whether or not the mixer ran.
+const MODEL_HOLD_GRACE := 2
 var _model_held := false
 var _model_held_hips := Quaternion.IDENTITY
 var _model_held_until := 0
@@ -3260,12 +3270,12 @@ func _hold_model_facing() -> void:
 		anim_tree.mixer_applied.connect(_release_model_facing)
 
 
-func _release_model_facing() -> void:
+func _release_model_facing(force := false) -> void:
 	if not _model_held:
 		return
 	var hips := skeleton.find_bone(_skeleton_bone_name("pelvis"))
 	var turned := _model_held_hips.angle_to(skeleton.get_bone_pose_rotation(hips)) > PI * 0.5
-	if not turned and Engine.get_physics_frames() < _model_held_until:
+	if not force and not turned and Engine.get_physics_frames() < _model_held_until:
 		return
 	var model := anim_player.get_parent() as Node3D
 	model.transform = Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO) * model.transform

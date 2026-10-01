@@ -22,7 +22,7 @@ const ON_MAT := [WrestlerFSM.State.DOWN, WrestlerFSM.State.PIN_DEFENDER,
 const UPRIGHT := [WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
 		WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE, WrestlerFSM.State.HIT_REACT,
 		WrestlerFSM.State.STUNNED, WrestlerFSM.State.TAUNT, WrestlerFSM.State.TIE_UP,
-		WrestlerFSM.State.GRAPPLE_HOLD, WrestlerFSM.State.GETUP, WrestlerFSM.State.IRISH_WHIP,
+		WrestlerFSM.State.GRAPPLE_HOLD, WrestlerFSM.State.IRISH_WHIP,
 		WrestlerFSM.State.RUNNING_ATTACK]
 
 var _seeds: Array[int] = []

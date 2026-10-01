@@ -270,8 +270,11 @@ const CUTAWAY_FOV := 40.0
 ##   after    FINISHER_AFTER_HOLD s  low and close at the winner's feet, up at
 ##                             him standing over the body -- then the cover,
 ##                             which the three-count cut takes
-const FINISH_SETUP_END := 0.42
-const FINISH_IMPACT_END := 0.78
+## Two shots, not three: the paired finishers run about 1.6 s, and three cuts
+## in that left the crane on screen for 0.3 s (tools/probe/shot_lint.gd, under
+## D1's 0.8 s floor). The high angle now belongs to the replay (PostMatch).
+const FINISH_SETUP_END := 0.5
+const FINISH_IMPACT_END := 1.0
 ## Where in the impact shot the body lands, and the shake that goes with it.
 const FINISH_IMPACT_AT := 0.6
 const FINISH_SHAKE := 0.09
@@ -301,6 +304,10 @@ var _cut_hold := 0.0
 var _cut_grapple := false
 var _cut_return := Mode.HARD_CAM
 var _cut_landed := false
+var _cut_side := Vector3.ZERO
+var _cut_facing := Vector3.ZERO
+var _cut_fresh := false
+var _cutaway_pending := false
 var _sign_fans: Node
 var _kickout_reaction := false
 const KICKOUT_REACTION_AFTER := 0.9
@@ -610,7 +617,9 @@ func _aspect() -> float:
 ## middle of a finish.
 func _update_mode(delta: float) -> void:
 	var was := mode
-	if referee and referee.is_pin_active():
+	if referee and referee.is_pin_active() \
+			and not (mode == Mode.FINISHER_AFTER and _held < MIN_SHOT) \
+			and not (mode == Mode.FINISHER_CUT and _finish_shot >= 0 and _finish_shot_t < MIN_SHOT):
 		mode = Mode.THREE_COUNT_CUT
 		_reset_clock_on_change(was)
 		return
@@ -627,7 +636,12 @@ func _update_mode(delta: float) -> void:
 		mode = Mode.HARD_CAM
 		_kickout_reaction = referee != null and not referee._match_over
 	if mode == Mode.FINISHER_CUT:
-		if grapple_rig and not grapple_rig.is_active():
+		if _after_pending and _finish_shot_t >= MIN_SHOT:
+			_after_pending = false
+			mode = Mode.FINISHER_AFTER
+			_held = 0.0
+			return
+		if grapple_rig and not grapple_rig.is_active() and not _after_pending:
 			mode = Mode.HARD_CAM
 		_reset_clock_on_change(was)
 		return
@@ -643,6 +657,10 @@ func _update_mode(delta: float) -> void:
 		return
 
 	_held += delta
+	if _cutaway_pending:
+		_cutaway_pending = false
+		if (grapple_rig == null or not grapple_rig.is_active()) and _try_cut(Cut.CUTAWAY, wrestler_a, null):
+			return
 	if _kickout_reaction and mode == Mode.HARD_CAM and _held >= KICKOUT_REACTION_AFTER:
 		_kickout_reaction = false
 		_try_cut(Cut.CUTAWAY, wrestler_a, null)
@@ -663,11 +681,19 @@ func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> v
 		_finish_attacker = attacker
 		_finish_defender = defender
 		_finish_shot = -1
+		_finish_side = Vector3.ZERO
+		_finish_shot_t = 0.0
+		_finish_axes = []
+		_after_pending = false
 		_held = 0.0
 	elif _try_cut(Cut.SLAM, attacker, defender):
 		_cut_grapple = true
 
 func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
+	if mode == Mode.FINISHER_CUT and _finish_shot >= 0 and _finish_shot_t < MIN_SHOT:
+		# The shot on screen gets its minimum first (_update_mode).
+		_after_pending = true
+		return
 	if mode == Mode.FINISHER_CUT:
 		mode = Mode.FINISHER_AFTER
 		_finish_attacker = attacker
@@ -697,6 +723,10 @@ var _finish_attacker: Node3D
 var _finish_defender: Node3D
 ## Which of the three finisher shots is up (0 setup, 1 impact, 2 crane).
 var _finish_shot := -1
+var _finish_side := Vector3.ZERO
+var _finish_shot_t := 0.0
+var _finish_axes: Array = []
+var _after_pending := false
 var _trauma := 0.0
 var _shake_t := 0.0
 var _focused := false
@@ -705,11 +735,22 @@ var _focused := false
 ## Frames the finisher. Returns false if there is no paired move to read, and
 ## the ordinary low cut takes it instead.
 func _finisher_shot(delta: float) -> bool:
-	if grapple_rig == null or not grapple_rig.is_active() or _finish_attacker == null:
+	if grapple_rig == null or _finish_attacker == null:
 		return false
-	var p := grapple_rig.progress()
+	var active := grapple_rig.is_active()
+	if not active and _finish_shot < 0:
+		return false
+	# Shot by the move's progress, but never a shot under MIN_SHOT: the paired
+	# move can end well before its progress reaches 1, and cutting on progress
+	# alone left the impact on screen for eight frames (shot_lint).
+	var p := grapple_rig.progress() if active else 1.0
 	var shot := finish_shot_for(p)
+	if _finish_shot >= 0 and shot != _finish_shot and _finish_shot_t < MIN_SHOT:
+		shot = _finish_shot
 	var cut := shot != _finish_shot
+	if cut:
+		_finish_shot_t = 0.0
+	_finish_shot_t += delta
 	if shot == 1 and _finish_shot == 1 and p >= FINISH_IMPACT_AT and _trauma <= 0.0 \
 			and not _impact_shaken:
 		_trauma = 1.0
@@ -720,14 +761,23 @@ func _finisher_shot(delta: float) -> bool:
 	var a := _finish_attacker.global_position
 	var d := _finish_defender.global_position if _finish_defender else a
 	var mid := (a + d) * 0.5
-	var fwd := _flat(-_finish_attacker.global_transform.basis.z)
-	var across := _flat(d - a)
-	if across.length() < 0.2:
-		across = fwd
+	# The shot's axes are taken as it is cut and held through it: read live,
+	# a pair spun through a slam swung the lens 2-3 m in a frame (shot_lint).
+	if cut or _finish_axes.is_empty():
+		var f0 := _flat(-_finish_attacker.global_transform.basis.z)
+		var x0 := _flat(d - a)
+		if x0.length() < 0.2:
+			x0 = f0
+		_finish_axes = [f0.normalized(), x0.normalized()]
+	var fwd: Vector3 = _finish_axes[0]
+	var across: Vector3 = _finish_axes[1]
 	var side := Vector3.UP.cross(across).normalized()
-	# The broadcast side of the ring, so the finisher does not jump the line.
-	if side.dot(hard_cam_position - mid) < 0.0:
-		side = -side
+	# The broadcast side of the ring, so the finisher does not jump the line --
+	# chosen once for the whole sequence and the aftermath, or a pair turning
+	# through square to the hard camera flips it mid-shot.
+	if _finish_side == Vector3.ZERO:
+		_finish_side = side if side.dot(hard_cam_position - mid) >= 0.0 else -side
+	side = side if side.dot(_finish_side) >= 0.0 else -side
 	var at: Vector3
 	var look: Vector3
 	var lens: float
@@ -754,7 +804,11 @@ func _finisher_shot(delta: float) -> bool:
 			look = d + Vector3.UP * 0.3
 			lens = lerpf(FINISH_CRANE_FOV.x, FINISH_CRANE_FOV.y, t2)
 	fov = lens
-	global_position = at
+	if cut:
+		global_position = at
+	else:
+		# Within a shot the operator follows the bodies, he does not teleport.
+		global_position = global_position.lerp(at, 1.0 - exp(-cut_speed * delta))
 	look_at(look, Vector3.UP)
 	return true
 
@@ -780,8 +834,9 @@ func _after_shot(_delta: float) -> void:
 	if across.length() < 0.2:
 		across = _flat(-_finish_attacker.global_transform.basis.z)
 	var side := Vector3.UP.cross(across).normalized()
-	if side.dot(hard_cam_position - a) < 0.0:
-		side = -side
+	if _finish_side == Vector3.ZERO:
+		_finish_side = side if side.dot(hard_cam_position - a) >= 0.0 else -side
+	side = side if side.dot(_finish_side) >= 0.0 else -side
 	var t := clampf(_held / FINISHER_AFTER_HOLD, 0.0, 1.0)
 	fov = FINISH_AFTER_FOV
 	global_position = a - across.normalized() * 0.9 + side * (1.7 - 0.3 * t) + Vector3.UP * 0.35
@@ -895,6 +950,9 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D) -> bool:
 	_cut_hold = CUT_HOLD[kind]
 	_cut_grapple = false
 	_cut_landed = false
+	_cut_side = Vector3.ZERO
+	_cut_facing = Vector3.ZERO
+	_cut_fresh = true
 	_held = 0.0
 	return true
 
@@ -907,13 +965,21 @@ func _event_shot(delta: float) -> bool:
 	var o := _cut_other.global_position if _cut_other and is_instance_valid(_cut_other) else s
 	var mid := (s + o) * 0.5
 	var line := _flat(s - o)
-	var facing := _flat(-_cut_subject.global_transform.basis.z).normalized()
+	# His facing as the cut landed: read live, a man turned round mid-cut
+	# (the fire-up, a taunt) swung the lens 7 m across him in a frame.
+	if _cut_facing == Vector3.ZERO:
+		_cut_facing = _flat(-_cut_subject.global_transform.basis.z).normalized()
+	var facing := _cut_facing
 	if line.length() < 0.2:
 		line = facing
 	line = line.normalized()
 	var side := Vector3.UP.cross(line).normalized()
-	if side.dot(hard_cam_position - mid) < 0.0:
-		side = -side
+	# Chosen once, when the cut lands: re-chosen each frame, a pair turning
+	# through square to the hard camera flipped it, and the lens jumped
+	# across the ring mid-shot (shot_lint: one-frame shots inside slam cuts).
+	if _cut_side == Vector3.ZERO:
+		_cut_side = side if side.dot(hard_cam_position - mid) >= 0.0 else -side
+	side = side if side.dot(_cut_side) >= 0.0 else -side
 	var at: Vector3
 	var look: Vector3
 	var lens: float
@@ -957,7 +1023,11 @@ func _event_shot(delta: float) -> bool:
 		_:
 			return false
 	fov = lens
-	if _previous_mode != Mode.EVENT_CUT:
+	# Snap on the cut's own first frame, however it was triggered: a cut
+	# raised by a signal mid-frame (the sign fans) used to be drawn first by
+	# the ordinary framing, so the next frame eased from the wrong place.
+	if _cut_fresh or _previous_mode != Mode.EVENT_CUT:
+		_cut_fresh = false
 		global_position = at
 	else:
 		global_position = global_position.lerp(at, 1.0 - exp(-cut_speed * delta))
@@ -1004,5 +1074,6 @@ func _watch_sign_fans() -> void:
 		_sign_fans = get_tree().get_first_node_in_group("sign_fans") if is_inside_tree() else null
 		if _sign_fans and _sign_fans.has_signal("raised"):
 			_sign_fans.raised.connect(func():
-				if grapple_rig == null or not grapple_rig.is_active():
-					_try_cut(Cut.CUTAWAY, wrestler_a, null))
+				# Taken at the top of the next frame (_update_mode), never from
+				# inside this one: a cut changed mid-frame is drawn by the wrong shot.
+				_cutaway_pending = true)
