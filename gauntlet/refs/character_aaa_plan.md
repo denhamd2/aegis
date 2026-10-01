@@ -186,10 +186,10 @@ Roman is the closest to 2K already. Improve in place; no rebuild.
   - crown slicked flat and the hang slimmed, to the owner's photos -- done;
   - the beard: groomed cheek line, sideburns into the hair, painted as
     strands under the cards, full moustache -- done.
-  - Still open: the back still reads as one sheet from behind rather than
-    separate wet ringlets. The supplied cards are overlapping layers;
-    separating them needs new ringlet card geometry built in Blender and
-    skinned to his J_Hair chains (a new R1b).
+- **R1b. Ringlets** -- done (README "Roman's ringlets, R1b"): 30 wet
+  ringlets built in Blender (tools/blender/roman_ringlets.py), laid down his
+  neck and back and skinned to his hair chains; the supplied sheet cut below
+  the nape for them; the crown pulled in tighter than supplied.
 - **R2. Face texture to 4K.** Re-project from his best reference photos onto
   the existing UVs (`build_roman_hair_alpha.py` already rebuilds his head
   albedo): pores, beard-line shadow, the sheen on cheekbones and nose.

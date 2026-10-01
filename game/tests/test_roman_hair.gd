@@ -157,13 +157,12 @@ func test_wave_map_follows_the_geometry_wave() -> void:
 		assert_float(crown).is_less(0.01)
 
 
-## The flyaway layer exists and stays sparse: between 2% and 12.5% of the
-## scalp's triangles again (it is one in FLYAWAY_EVERY of the nape
-## triangles), so it frays the edges rather than doubling the hair. And the
-## thinning of the hanging ends (HAIR_THIN_EVERY) takes a real share of the
-## scalp, but well under a third of it -- only tails go, never whole cards.
-## Then the count adds up: nothing else touched the scalp's triangles.
-func test_flyaways_and_thinned_ends_stay_in_proportion() -> void:
+## The flyaways exist and stay sparse (between 2% and 12.5% of the scalp's
+## triangles again: one in FLYAWAY_EVERY of the nape's), and the supplied
+## sheet is cut below RINGLET_SHEET_CUT for the ringlets -- a real share of
+## the scalp, but most of it stays. Then the count adds up: nothing else
+## touched the scalp's triangles.
+func test_flyaways_and_the_sheet_cut_stay_in_proportion() -> void:
 	var source := (load("res://assets/characters/roman_reigns.glb") as PackedScene).instantiate()
 	var before := _scalp_triangles(source)
 	source.free()
@@ -174,10 +173,38 @@ func test_flyaways_and_thinned_ends_stay_in_proportion() -> void:
 			scalp = mi
 	assert_object(scalp).is_not_null()
 	var added: int = scalp.get_meta("hair_flyaways")
-	var thinned: int = scalp.get_meta("hair_thinned")
+	var cut: int = scalp.get_meta("hair_cut")
 	assert_int(added).is_between(before / 50, before / 8)
-	assert_int(thinned).is_between(before / 50, before / 3)
-	assert_int(_scalp_triangles(_model)).is_equal(before - thinned + added)
+	assert_int(cut).is_between(before / 50, before / 3)
+	assert_int(_scalp_triangles(_model)).is_equal(before - cut + added)
+
+
+## The ringlets (tools/blender/roman_ringlets.py) hang on the skeleton that
+## carries his hair chains, skinned to it by name, and every bind is his own
+## hair's bind for that bone -- so they sit where they were built and the
+## springs swing them. Some binds are hair-chain bones, some J_Chest.
+func test_ringlets_ride_his_hair_chains() -> void:
+	var ringlets := _worn.get_node_or_null("Ringlets") as MeshInstance3D
+	assert_object(ringlets).is_not_null()
+	assert_object(ringlets.get_node_or_null(ringlets.skeleton)).is_same(_worn)
+	var hair_binds := {}
+	for mi: MeshInstance3D in _model.find_children("", "MeshInstance3D", true, false):
+		if mi.name == "hair_ALPHA_skinned" and mi.skin:
+			for i in mi.skin.get_bind_count():
+				hair_binds[mi.skin.get_bind_name(i)] = mi.skin.get_bind_pose(i)
+	var skin := ringlets.skin
+	var checked := 0
+	for i in skin.get_bind_count():
+		var bone := skin.get_bind_name(i)
+		assert_int(_worn.find_bone(bone)).is_greater_equal(0)
+		if hair_binds.has(bone):
+			var a: Transform3D = skin.get_bind_pose(i)
+			var b: Transform3D = hair_binds[bone]
+			assert_float(a.origin.distance_to(b.origin)).is_less(0.001)
+			checked += 1
+	assert_int(checked).is_greater(50)
+	var tris: int = ringlets.mesh.surface_get_array_index_len(0) / 3
+	assert_int(tris).is_between(3000, 12000)
 
 
 static func _scalp_triangles(root: Node) -> int:

@@ -248,3 +248,16 @@ stripe, patch and dark-brown hair textures are generated from the kit's own
 images by that script. Rebuild with the kit unzipped to
 `~/.cache/aegis_assets/ubc/`; the output is byte-identical for the same kit.
 Not included in the repo: the kit itself (only the exported .glb).
+
+## Roman Reigns's ringlets and hair maps (`roman_ringlets.glb`, `roman_reigns_ringlets_alpha.png`, `roman_reigns_hair_*_nrm.png`, `roman_reigns_head_rm.png`)
+
+Original geometry and textures. `roman_ringlets.glb` is built by
+`tools/blender/roman_ringlets.py`: ringlet card geometry generated from code,
+laid against the supplied model's head and body meshes and skinned to the
+supplied model's own armature (exported alongside it so the binds match);
+no geometry is copied from the source asset. Its strand texture
+`roman_reigns_ringlets_alpha.png`, and the hair normal maps
+`roman_reigns_hair_wave_nrm.png`, `roman_reigns_hair_strands_nrm.png`,
+`roman_reigns_hair_4_strands_nrm.png` and the head surface map
+`roman_reigns_head_rm.png`, are painted procedurally by that script and by
+`tools/assets/build_roman_hair_alpha.py`, from nothing but code.

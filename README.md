@@ -8119,3 +8119,44 @@ eyes are phase 1.
 599 tests pass (`test_roman_hair`: the wave map against the geometry's
 wave, the flyaway and thinning proportions, the materials). The texture build
 is byte-identical across runs.
+
+## Round: Roman's ringlets, R1b
+
+From behind his hair read as one sheet, where the owner's photos show it
+slicked flat on top and falling as separate wet ringlets. The supplied cards
+are overlapping layers, so no edit of them could separate it; the hanging
+lengths are new geometry now.
+
+- **`tools/blender/roman_ringlets.py`** (headless `bpy`) builds 30 ringlets:
+  each a clump of two crossed strand cards whose centre coils on a helix
+  (radius 6-10 mm, pitch 5-7 cm, easing in from straight under the slick),
+  tapering to a point, with its own painted strand texture. Where they hang
+  comes from his body: rays against the head and body meshes put each one on
+  his neck and upper back at a standoff of its own, and the line may come
+  back toward the body only 0.35 m per metre of fall, so it drapes from the
+  skull's bulge over the hollow of the nape. They fan out over the
+  trapezius. How they move comes from the rig: each is weighted to the hair
+  chain nearest it, by height, with J_Chest taking up to 60% lower down so
+  the lengths on his back follow his torso. ~6,400 triangles. Deterministic.
+- Two wrong turns on the way, both visible on Blender renders before
+  anything reached the game: hung along the hair chains themselves (which
+  sit ~17 cm behind his head) they plumed out behind him; and the armature
+  carries a 1.035 scale that parenting applied twice.
+- **In game** (`RomanModel._add_ringlets`) they hang on his worn skeleton
+  beside his own hair, skinned by bone name -- their binds are his hair's
+  own, which a test checks bone by bone -- so the hair springs swing them.
+  His hair material, a scissor with alpha-to-coverage (thirty crossing
+  clumps must not sort against each other).
+- The supplied scalp and side cards are cut below y 1.58 behind the ears;
+  the ringlets start at 1.64 under the slick, so they overlap. The stretch
+  and the tail-thinning that tried to fake this are gone.
+- The crown, to the photos: pulled in to 0.75 of the supplied cards'
+  standoff, so it lies wet and flat on the skull.
+
+`hair_shot.tscn` gains a `roman_wide` shot, head to mid-back from behind.
+
+### Checks
+600 tests pass (`test_roman_hair`: the ringlets ride the hair skeleton with
+his hair's own binds; the sheet cut and the flyaways add up; the existing
+walk test still has the hair swinging and off his back). Both generators
+are byte-identical across runs.

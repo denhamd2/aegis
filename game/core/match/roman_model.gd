@@ -342,6 +342,7 @@ func _ready() -> void:
 	_trim_beard()
 	_volumize_hair()
 	_add_hair_springs()
+	_add_ringlets()
 
 
 # ---------------------------------------------------------------------------
@@ -569,20 +570,15 @@ func _trim_beard() -> void:
 # hang as separate ringlets, not a mass -- at 1.3 / 1.6 the crown read domed
 # and the back as one thick sheet. The supplied cards' own 11 mm on top is
 # the slick; the hang keeps a little lift so it clears the neck.
-const HAIR_LIFT_TOP := 1.0
+#
+# And tighter than supplied on top (0.75): the photos show the crown wet and
+# flat to the skull, and the supplied cards' 11 mm still read as a cap of
+# hair. The painted scalp cap under them keeps any gap dark.
+const HAIR_LIFT_TOP := 0.75
 const HAIR_LIFT_HANG := 1.15
-const HAIR_LIFT_FRONT := 1.0
+const HAIR_LIFT_FRONT := 0.9
 ## Crown above this, hang below the next; blended between.
 const HAIR_LIFT_Y := Vector2(1.62, 1.74)
-## His hair falls loose PAST the shoulders, onto the upper back; the cards
-## end at the collar. Below HAIR_STRETCH_FROM the hanging lengths are drawn
-## out by HAIR_STRETCH (distance below that line, scaled), behind the ears
-## only (z under HAIR_STRETCH_Z) so nothing new falls over his face or chest.
-## Geometry only, in bind space: the cards keep their skin weights and ride
-## the spring chains as before.
-const HAIR_STRETCH_FROM := 1.58
-const HAIR_STRETCH := 1.45
-const HAIR_STRETCH_Z := 0.02
 
 
 ## Root-to-tip (refs/aaa_gap.md item 7): the albedo at the scalp, as a share
@@ -603,14 +599,6 @@ static func hair_lift(p: Vector3) -> float:
 	# The hairline: in front of the ears, across the forehead.
 	var front := smoothstep(0.05, 0.09, p.z) * smoothstep(1.70, 1.76, p.y)
 	return lerpf(k, HAIR_LIFT_FRONT, front)
-
-
-static func hair_stretch(p: Vector3) -> Vector3:
-	if p.y >= HAIR_STRETCH_FROM:
-		return p
-	var back := 1.0 - smoothstep(HAIR_STRETCH_Z - 0.04, HAIR_STRETCH_Z, p.z)
-	var below := HAIR_STRETCH_FROM - p.y
-	return Vector3(p.x, HAIR_STRETCH_FROM - below * lerpf(1.0, HAIR_STRETCH, back), p.z)
 
 
 ## The wave in the hanging lengths (character_aaa_plan.md R1). Two halves on
@@ -662,19 +650,21 @@ static func hair_wave_weight(y: float) -> float:
 	return 1.0 - smoothstep(HAIR_WAVE_HANG_Y.x, HAIR_WAVE_HANG_Y.y, y)
 
 
-## The ends separate (the owner's photos, Oct 2026): wet, his lengths hang
-## as ringlets of different lengths with gaps between them, not one sheet.
-## The supplied cards overlap into a solid sheet, and only removing some of
-## them opens it. So one card in HAIR_THIN_EVERY behind the ears loses its
-## tail below a cutoff of its own between HAIR_THIN_CUT.x and .y: the ends
-## stagger and fray into clumps, and nothing above the cutoff thins, so the
-## crown and the fall from it stay whole. A card is a connected strip of
-## triangles; the choice and the cutoff come from a hash of it, so it is the
-## same every build. Of 131 cards only ~800 triangles hang (bind y < 1.58),
-## so even at one in two this is a few percent of the scalp, but a large share
-## of the sheet you see from behind.
-const HAIR_THIN_EVERY := 2
-const HAIR_THIN_CUT := Vector2(1.30, 1.58)
+## The hanging lengths are ringlets now (character_aaa_plan.md R1b): new
+## geometry built by tools/blender/roman_ringlets.py and hung on his hair
+## chains (_add_ringlets). The supplied cards hang as one layered sheet, and
+## no edit of them -- lift, stretch, a wave, thinning one card in two --
+## separated it into the wet ringlets of the owner's photos. So below
+## RINGLET_SHEET_CUT, behind the ears, the supplied scalp and side cards are
+## cut away; the ringlets start a little higher (y 1.64) under the slicked
+## crown, so the two overlap and no edge shows.
+const RINGLETS := "res://assets/characters/roman_ringlets.glb"
+const RINGLET_TEXTURE := "ringlets_alpha"
+const RINGLET_SHEET_CUT := 1.58
+## Behind the ears only: in front of this the side strands frame the face.
+const RINGLET_SHEET_CUT_Z := 0.02
+## The supplied hair materials cut for the ringlets: scalp and side strands.
+const RINGLET_SHEET_MATERIALS := ["Material.018", "Material.019"]
 
 
 ## Flyaways (character_aaa_plan.md R1): a third, sparse layer of cards at
@@ -770,7 +760,6 @@ func _volumize_hair() -> void:
 			if skin != Vector3.INF:
 				lifted[i] = skin + (verts[i] - skin) * hair_lift(verts[i])
 				k = hair_root_to_tip(lifted[i].distance_to(skin))
-			lifted[i] = hair_stretch(lifted[i])
 			uv2[i] = hair_wave_uv2(lifted[i])
 			lifted[i] = hair_wave(lifted[i])
 			shade[i] = Color(k, k, k, 1.0)
@@ -778,48 +767,30 @@ func _volumize_hair() -> void:
 		arrays[Mesh.ARRAY_COLOR] = shade
 		arrays[Mesh.ARRAY_TEX_UV2] = uv2
 		var material := mi.mesh.surface_get_material(surface)
+		if material and material.resource_name in RINGLET_SHEET_MATERIALS:
+			mi.set_meta("hair_cut", _cut_sheet(arrays))
 		if material and material.resource_name == FLYAWAY_MATERIAL:
-			mi.set_meta("hair_thinned", _thin_hanging(arrays))
 			mi.set_meta("hair_flyaways", _add_flyaways(arrays, verts, skins))
 		mi.mesh = _rebuilt(source, surface, arrays)
 
 
-## Shortens one card in HAIR_THIN_EVERY behind the ears (see HAIR_THIN_CUT).
-## Works on the final vertex positions; drops triangles from the index only.
-## Returns the triangles removed.
-static func _thin_hanging(arrays: Array) -> int:
+## Drops the triangles that lie wholly below RINGLET_SHEET_CUT behind the
+## ears, on the final vertex positions; the index only. Returns the count.
+static func _cut_sheet(arrays: Array) -> int:
 	var index: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null \
 			else PackedInt32Array()
-	if index.is_empty():
-		return 0
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	# Cards: connected components over shared vertices (union-find).
-	var parent := PackedInt32Array()
-	parent.resize(verts.size())
-	for i in verts.size():
-		parent[i] = i
-	for t in range(0, index.size(), 3):
-		for k in [1, 2]:
-			var a := _find_root(parent, index[t])
-			var b := _find_root(parent, index[t + k])
-			if a != b:
-				parent[maxi(a, b)] = mini(a, b)
 	var kept := PackedInt32Array()
 	var removed := 0
 	for t in range(0, index.size(), 3):
-		var card := _find_root(parent, index[t])
-		var h := fposmod(sin(float(card) * 78.233) * 43758.5453, 1.0)
-		if int(h * 1000.0) % HAIR_THIN_EVERY == 0:
-			var cut := lerpf(HAIR_THIN_CUT.x, HAIR_THIN_CUT.y,
-					fposmod(sin(float(card) * 12.9898) * 24634.6345, 1.0))
-			var low := true
-			for k in 3:
-				var p := verts[index[t + k]]
-				if p.y >= cut or p.z > 0.02:
-					low = false
-			if low:
-				removed += 1
-				continue
+		var low := true
+		for k in 3:
+			var p := verts[index[t + k]]
+			if p.y >= RINGLET_SHEET_CUT or p.z > RINGLET_SHEET_CUT_Z:
+				low = false
+		if low:
+			removed += 1
+			continue
 		kept.append(index[t])
 		kept.append(index[t + 1])
 		kept.append(index[t + 2])
@@ -827,11 +798,55 @@ static func _thin_hanging(arrays: Array) -> int:
 	return removed
 
 
-static func _find_root(parent: PackedInt32Array, i: int) -> int:
-	while parent[i] != i:
-		parent[i] = parent[parent[i]]
-		i = parent[i]
-	return i
+## Hangs the ringlets (RINGLETS) on his worn skeleton -- the one carrying the
+## hair chains -- beside his own hair meshes, as they are: a child of that
+## Skeleton3D, identity transform, skinned to it by bone name. Their bind
+## poses are his hair's own (roman_ringlets.py exports the same armature),
+## so the springs that swing his hair chains swing them. Drawn with his hair
+## material and the ringlet strand texture.
+func _add_ringlets() -> void:
+	var worn: Skeleton3D = null
+	for skeleton in _animation_skeletons():
+		if skeleton.find_bone("J_Hair_b") >= 0:
+			worn = skeleton
+	if worn == null or worn.has_node("Ringlets") or not ResourceLoader.exists(RINGLETS):
+		return
+	var hair_material: BaseMaterial3D = null
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(s)
+			if source and source.resource_name == FLYAWAY_MATERIAL:
+				hair_material = mi.get_surface_override_material(s) as BaseMaterial3D
+	var scene := (load(RINGLETS) as PackedScene).instantiate()
+	var source_mi := scene.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	var ringlets := MeshInstance3D.new()
+	ringlets.name = "Ringlets"
+	ringlets.mesh = source_mi.mesh
+	ringlets.skin = source_mi.skin
+	scene.free()
+	worn.add_child(ringlets)
+	ringlets.skeleton = NodePath("..")
+	ringlets.lod_bias = HAIR_LOD_BIAS
+	var material := (hair_material.duplicate() if hair_material else StandardMaterial3D.new()) \
+			as BaseMaterial3D
+	material.albedo_texture = _texture(RINGLET_TEXTURE)
+	material.albedo_color = HAIR_COLOR
+	material.vertex_color_use_as_albedo = true
+	# Thirty clumps crossing each other: a scissor, not a blend, so they
+	# never sort against one another. Alpha-to-coverage keeps the edges soft.
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	material.alpha_scissor_threshold = HAIR_ALPHA_SCISSOR
+	material.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+	material.alpha_antialiasing_edge = HAIR_ALPHA_SCISSOR
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# No UV2 on the ringlets, so no wave detail -- the coil is geometry. The
+	# strand ridges: 4 columns of ~16 mm cards, the side strands' 0.064 m/u.
+	material.detail_enabled = false
+	material.normal_enabled = true
+	material.normal_texture = _texture("hair_4_strands_nrm")
+	ringlets.set_surface_override_material(0, material)
 
 
 ## Appends the flyaway layer to a scalp surface's arrays (see FLYAWAY_EVERY).
