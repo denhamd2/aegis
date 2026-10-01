@@ -23,6 +23,9 @@ var _faceoff := false
 ## ~20x real time per drawn frame; a storyboard of the whole entrance every
 ## few seconds then costs minutes, not an hour. The run itself is unchanged.
 var _sparse := false
+## Jump straight to the first beat framed on this shot (lighting passes): the
+## wrestler is placed on the beat's own line, the beats before it are skipped.
+var _from_shot := ""
 
 
 func _ready() -> void:
@@ -38,6 +41,8 @@ func _ready() -> void:
 			_faceoff = true
 		elif args[i] == "--sparse":
 			_sparse = true
+		elif args[i] == "--from-shot" and i + 1 < args.size():
+			_from_shot = args[i + 1]
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec("")
 	var scene: Node = load(MATCH_SCENE).instantiate()
@@ -55,6 +60,19 @@ func _ready() -> void:
 				for w: WrestlerController in [director._a, director._b]:
 					w.global_transform = director._mark[w]
 					w.visible = true
+				director._beat = i
+				director._start_beat()
+				break
+	if _from_shot != "":
+		for i in director._beats.size():
+			var bt: Dictionary = director._beats[i]
+			if String(bt.get("shot", "")) == _from_shot and bt.get("who") != null:
+				var w: WrestlerController = bt["who"]
+				w.visible = true
+				if bt.has("path"):
+					w.global_position = bt["path"][0]
+				elif bt.get("on_mat", false) or _from_shot.begins_with("ring") or _from_shot.begins_with("corner"):
+					w.global_position = Vector3(-0.4, 0.0, -0.6)
 				director._beat = i
 				director._start_beat()
 				break

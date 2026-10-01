@@ -422,17 +422,105 @@ const MATCH_RING_HAZE := 0.45
 ## The crowd shader's light (`crowd_light` global) in each look (items 2, 7).
 const CROWD_LIGHT_MATCH := 3.5
 const CROWD_LIGHT_ENTRANCE := 0.3
+## The ring keys and top fill in the entrance look (item 7): a concert, the
+## ring a pool under the rig, not the studio's even field -- and what bloomed
+## Cody's coat white on the in-ring low shots (item 10).
+const ENTRANCE_RING_SHARE := 0.4
+## Star glints (StarGlints, item 8): full on the entrances, a trace in the
+## match, where 2K26's top lights still catch the lens on low shots.
+const GLINT_ENTRANCE := 1.0
+## glow_hdr_threshold per look: match.tscn's 1.25 for the match; higher on the
+## entrances, where the follow spot and walk key put skin and white gear over
+## 1.25 and the bloom washed Cody's coat to a white shape (item 10).
+const GLOW_THRESHOLD_MATCH := 1.25
+const GLOW_THRESHOLD_ENTRANCE := 1.9
+const GLINT_MATCH := 0.3
+## Moving beams (item 9), entrance look only: each head sweeps its pan and
+## tilt about its rest aim over SWEEP_BEATS beats of the music, and every beat
+## kicks its level -- a decaying pulse, never a hard strobe.
+const SWEEP_PAN := 0.42
+const SWEEP_TILT := 0.22
+const SWEEP_BEATS := 8.0
+const PULSE_FLOOR := 0.5
+const PULSE_DECAY := 5.0
 var look := Look.MATCH
 var _ring_haze: FogMaterial
 var _ring_haze_density := 0.0
+var _ring_lights: Array[SpotLight3D] = []
+var _beams: Array[SpotLight3D] = []
+var _beam_rest := {}     # SpotLight3D -> rest Transform3D
+var _bodies := {}        # SpotLight3D -> fixture body root
+var _glints: StarGlints
+var _beat := 0.5
+var _beat_clock := 0.0
+## The entrance director's house dim, which the moving beams' own level
+## (rewritten every frame) has to carry.
+var house_dim := 1.0
 
 
 func set_look(p_look: Look) -> void:
 	look = p_look
+	var entrance := look == Look.ENTRANCE
 	if _ring_haze:
-		_ring_haze.density = _ring_haze_density * (MATCH_RING_HAZE if look == Look.MATCH else 1.0)
+		_ring_haze.density = _ring_haze_density * (1.0 if entrance else MATCH_RING_HAZE)
 	RenderingServer.global_shader_parameter_set("crowd_light",
-			CROWD_LIGHT_MATCH if look == Look.MATCH else CROWD_LIGHT_ENTRANCE)
+			CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH)
+	RenderingServer.global_shader_parameter_set("glint_strength",
+			GLINT_ENTRANCE if entrance else GLINT_MATCH)
+	var env := _environment()
+	if env:
+		env.glow_hdr_threshold = GLOW_THRESHOLD_ENTRANCE if entrance else GLOW_THRESHOLD_MATCH
+	for light in _ring_lights:
+		var base := key_energy if String(light.name).begins_with("Key") else top_energy
+		light.light_energy = base * (ENTRANCE_RING_SHARE if entrance else 1.0)
+	if not entrance:
+		for beam in _beams:
+			beam.transform = _beam_rest[beam]
+			beam.light_energy = beam_energy
+			_pose_body(beam)
+
+
+func _environment() -> Environment:
+	if not is_inside_tree():
+		return null
+	var we := get_tree().root.find_child("WorldEnvironment", true, false) as WorldEnvironment
+	return we.environment if we else null
+
+
+## The music's beat for the moving beams, and its downbeat now
+## (EntranceDirector calls it on each entrance's music hit).
+func sync_beat(seconds: float) -> void:
+	_beat = maxf(seconds, 0.1)
+	_beat_clock = 0.0
+
+
+func _move_beams(delta: float) -> void:
+	_beat_clock += delta
+	var pulse := PULSE_FLOOR + (1.0 - PULSE_FLOOR) * exp(-PULSE_DECAY * fmod(_beat_clock, _beat) / _beat)
+	var w := TAU / (_beat * SWEEP_BEATS)
+	for i in _beams.size():
+		var beam := _beams[i]
+		var rest: Transform3D = _beam_rest[beam]
+		var pan := SWEEP_PAN * sin(_beat_clock * w + i * 0.9)
+		var tilt := SWEEP_TILT * sin(_beat_clock * w * 0.5 + i * 1.7)
+		beam.transform = Transform3D(Basis(Vector3.UP, pan) * rest.basis
+				* Basis(Vector3.RIGHT, tilt), rest.origin)
+		beam.light_energy = beam_energy * pulse * house_dim
+		_pose_body(beam)
+		if _glints:
+			_glints.aim(beam)
+
+
+func _pose_body(light: SpotLight3D) -> void:
+	var root: Node3D = _bodies.get(light)
+	if root == null:
+		return
+	var forward := -light.transform.basis.z.normalized()
+	var bases := _fixture_bases(root.basis, forward)
+	for part: String in bases:
+		var mi := root.get_node_or_null(part) as Node3D
+		if mi:
+			mi.basis = bases[part]
 
 
 func _ready() -> void:
@@ -446,10 +534,25 @@ func _ready() -> void:
 	_build_stage_accents()
 	_build_backdrop_uplights()
 	_build_roof_wash()
+	_build_ribbon_spill()
 	_build_fog_volumes()
 	_hang_fixtures()
 	_apply_compat_environment()
 	_compensate_for_renderer()
+	for child in get_children():
+		if child is SpotLight3D:
+			var n := String(child.name)
+			if n.begins_with("Key") or n.begins_with("Top"):
+				_ring_lights.append(child)
+			elif n.begins_with("Beam"):
+				_beams.append(child)
+				_beam_rest[child] = (child as SpotLight3D).transform
+	_glints = StarGlints.new()
+	_glints.name = "StarGlints"
+	add_child(_glints)
+	for child in get_children():
+		if child is SpotLight3D:
+			_glints.add_for(child)
 	set_look(look)
 
 
@@ -711,7 +814,9 @@ func _hang_fixtures() -> void:
 		var key := light.light_color.to_html()
 		if not lens_mats.has(key):
 			lens_mats[key] = _lens_material(light.light_color)
-		add_child(_fixture_for(light, meshes, body_mat, lens_mats[key]))
+		var body := _fixture_for(light, meshes, body_mat, lens_mats[key])
+		add_child(body)
+		_bodies[light] = body
 
 
 static func _lens_material(color: Color) -> StandardMaterial3D:
@@ -735,19 +840,7 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 	var standing := forward.y > 0.3
 	if standing:
 		root.basis = Basis(Vector3.RIGHT, PI)
-	var local := root.basis.inverse() * forward
-	var yaw := 0.0
-	if Vector2(local.x, local.z).length() > 0.001:
-		yaw = atan2(-local.x, -local.z)
-	var in_yoke := Basis(Vector3.UP, -yaw) * local
-	var tilt := atan2(in_yoke.y, -in_yoke.z)
-	var yoke_basis := Basis(Vector3.UP, yaw)
-	var parts := {
-		"FixtureBase": Basis.IDENTITY,
-		"FixtureYoke": yoke_basis,
-		"FixtureHead": yoke_basis * Basis(Vector3.RIGHT, tilt),
-		"FixtureLens": yoke_basis * Basis(Vector3.RIGHT, tilt),
-	}
+	var parts := _fixture_bases(root.basis, forward)
 	for part: String in parts:
 		var mi := MeshInstance3D.new()
 		mi.name = part
@@ -757,6 +850,58 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
 	return root
+
+
+## The LED ribbon boards as light sources (lighting_2k26.md item 6). In 2K26
+## the ribbons throw their purple and blue onto the rows round them; ours were
+## emissive art that lit nothing. Low omnis under the lower ribbon on the
+## suite fascia, alternating the two hues the art is mostly made of. No
+## shadows, short range: they colour the neighbouring rows and stop.
+const RIBBON_SPILL_LIGHTS := 24
+const RIBBON_SPILL_ENERGY := 1.4
+const RIBBON_SPILL_RANGE := 6.5
+const RIBBON_SPILL_COLORS: Array[Color] = [Color(0.55, 0.25, 1.0), Color(0.2, 0.45, 1.0)]
+
+
+func _build_ribbon_spill() -> void:
+	var suite := {}
+	for row: Dictionary in ArenaBuilder._row_schedule():
+		if row["kind"] == "concourse":
+			suite = row
+			break
+	if suite.is_empty():
+		return
+	var loop := ArenaBuilder._plan_loop(float(suite["inner"]) - 0.6)
+	var y := float(suite["tread_y"]) + 0.5
+	for i: int in RIBBON_SPILL_LIGHTS:
+		var entry: Array = loop[(i * loop.size()) / RIBBON_SPILL_LIGHTS]
+		var light := OmniLight3D.new()
+		light.name = "RibbonSpill%02d" % i
+		light.position = (entry[0] as Vector3) + Vector3(0.0, y, 0.0)
+		light.light_color = RIBBON_SPILL_COLORS[i % RIBBON_SPILL_COLORS.size()]
+		light.light_energy = RIBBON_SPILL_ENERGY
+		light.omni_range = RIBBON_SPILL_RANGE
+		light.shadow_enabled = false
+		light.light_volumetric_fog_energy = 0.0
+		add_child(light)
+
+
+## The yoke and head bases that point a fixture body's lens along `forward`.
+## Shared with the moving beams, which re-pose their bodies every frame.
+static func _fixture_bases(root_basis: Basis, forward: Vector3) -> Dictionary:
+	var local := root_basis.inverse() * forward
+	var yaw := 0.0
+	if Vector2(local.x, local.z).length() > 0.001:
+		yaw = atan2(-local.x, -local.z)
+	var in_yoke := Basis(Vector3.UP, -yaw) * local
+	var tilt := atan2(in_yoke.y, -in_yoke.z)
+	var yoke_basis := Basis(Vector3.UP, yaw)
+	return {
+		"FixtureBase": Basis.IDENTITY,
+		"FixtureYoke": yoke_basis,
+		"FixtureHead": yoke_basis * Basis(Vector3.RIGHT, tilt),
+		"FixtureLens": yoke_basis * Basis(Vector3.RIGHT, tilt),
+	}
 
 
 ## Two fixtures over the entrance stage, cool so the stage reads as a
@@ -956,6 +1101,8 @@ var _compat_env: Environment
 ## has to be every frame, because the rig cuts between a camera 3.5m out and
 ## one 28.5m out with no transition between them.
 func _process(_delta: float) -> void:
+	if look == Look.ENTRANCE and not _beams.is_empty():
+		_move_beams(_delta)
 	if _compat_env == null:
 		return
 	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null

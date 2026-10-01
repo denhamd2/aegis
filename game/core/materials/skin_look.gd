@@ -110,7 +110,7 @@ static func with_detail_uv(mi: MeshInstance3D, surfaces: Array) -> void:
 ## (tools/probe/skin_shot.tscn) he read as cling-filmed, a continuous mirror
 ## over every muscle. Sweat is beads and streaks, broken up by the pores --
 ## bright, but not a lacquer.
-const SWEAT_COAT := 0.6
+const SWEAT_COAT := 0.7
 const SWEAT_COAT_ROUGHNESS_DRY := 0.55
 const SWEAT_COAT_ROUGHNESS_WET := 0.18
 

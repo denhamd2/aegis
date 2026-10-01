@@ -13,11 +13,15 @@ extends Node
 ## its hash cannot see it. The clock only runs while the wrestler's physics
 ## does -- not through the entrance, not through a frozen capture.
 
-const BASE := 0.08
+## 0.08 -> 0.22 and the full-wet clock 150 -> 100 s in the 2K26 lighting
+## round (lighting_2k26.md item 5): its wrestlers glisten under the rig from
+## the bell, not only by the end.
+const BASE := 0.22
 ## Seconds of match for the time share to reach its full TIME_SHARE. AI
 ## matches here run 30 s to 2.5 min, so a long one ends soaked.
-const FULL_SECONDS := 150.0
-const TIME_SHARE := 0.6
+const FULL_SECONDS := 100.0
+## 0.6 -> 0.55 with BASE raised, so time alone still stops short of soaked.
+const TIME_SHARE := 0.55
 ## Total limb damage that adds the full DAMAGE_SHARE.
 const DAMAGE_FULL := 160.0
 const DAMAGE_SHARE := 0.35

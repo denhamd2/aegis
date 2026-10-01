@@ -190,7 +190,19 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 	assert_bool(a.visible).override_failure_message("out before his music hit").is_false()
 	assert_float(light.light_energy).is_equal_approx(before * EntranceDirector.ROMAN_HOUSE_DIM, 0.001)
 	director.skip()
-	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
+	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
+
+
+## What a rig light reads once the bell has rung: the house dim undone, and
+## the ring keys and top fill on the match look (ArenaLighting.set_look),
+## which is brighter than the entrance look they started the show on.
+static func _after_bell(rig: Node, light: Light3D, before: float) -> float:
+	var n := String(light.name)
+	if n.begins_with("Key"):
+		return rig.key_energy
+	if n.begins_with("Top"):
+		return rig.top_energy
+	return before
 
 
 
@@ -222,7 +234,7 @@ func test_codys_entrance_is_continuous_and_cleans_up() -> void:
 	assert_bool(saw.has("coat_off")).override_failure_message("the coat never came off").is_true()
 	assert_bool(director._coats.is_empty()).is_true()
 	assert_object(director._backlight).is_null()
-	assert_float(light.light_energy).is_equal_approx(before, 0.0001)
+	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
 
 
 ## The WHOAs land on the music: in the dark the building is on camera, he

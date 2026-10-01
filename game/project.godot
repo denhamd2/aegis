@@ -122,6 +122,10 @@ window/stretch/mode="canvas_items"
 
 [shader_globals]
 
+glint_strength={
+"type": "float",
+"value": 0.3
+}
 crowd_light={
 "type": "float",
 "value": 1.0

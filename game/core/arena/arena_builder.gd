@@ -274,7 +274,9 @@ const PORTAL_RECESS_DEPTH := 3.2
 ## 1.12 sits just under the threshold at the tube's centre and over it on the
 ## bloom the fixtures add, so the rings still flare without either of them
 ## losing the colour that tells the two apart.
-const PORTAL_EMISSION := 1.12
+## 1.12 -> 0.7 in the 2K26 lighting round (item 11): the rings filled the
+## stage close-ups and bloomed; the accent fixtures still carry their light.
+const PORTAL_EMISSION := 0.7
 ## The slat fans inside each portal, well under the ring that frames them.
 ## Making the two the same level collapses the depth: the reference photos
 ## read as a lit ring in front of a lit recess, and that only works while the
@@ -283,7 +285,7 @@ const PORTAL_EMISSION := 1.12
 ## 0.34 read as a second light source competing with the ring. 0.26 is the
 ## version that reads as what it is -- fine strip fixtures picked out inside
 ## the portal, seen and not looked at.
-const PORTAL_FAN_EMISSION := 0.26
+const PORTAL_FAN_EMISSION := 0.18
 
 # --- The rink ---------------------------------------------------------------
 ## The hall is built around a REGULATION ICE RINK, in metres, because the

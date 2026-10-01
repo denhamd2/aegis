@@ -185,6 +185,15 @@ const ROMAN_MUSIC_HIT := 45.0
 ## phase lands on the hit itself (44.95 s). Every cut from the hit to the
 ## foot of the ramp is a whole number of these, so the cuts land on the music.
 const ROMAN_BEAT := 0.836
+## Cody's, measured the same way off cody_entrance.ogv: 80.7 BPM (the onset
+## track also peaks at its double, 161.5). Drives the moving beams' pulse.
+const CODY_BEAT := 0.743
+## The hard top light on a man posing in the ring (lighting_2k26.md item 12):
+## narrow, white, straight down from under the grid, with the house dark.
+const POSE_TOP_UP := 7.0
+const POSE_TOP_ENERGY := 9.0
+const POSE_TOP_ANGLE := 13.0
+const POSE_TOP_COLOR := Color(0.92, 0.96, 1.0)
 ## On the lip before the finger: the slow push-in while he looks the building
 ## over, then the close-up (R-41 30-40 s, 1:04).
 const ROMAN_LIP_PUSH := 4.0
@@ -660,6 +669,7 @@ func _add_entrance(w: WrestlerController, portal_x: float, side: String) -> void
 
 func _start_beat() -> void:
 	_tick = 0
+	_pose_top(null)
 	if _beat >= _beats.size():
 		_ring_bell()
 		return
@@ -705,6 +715,7 @@ func _start_beat() -> void:
 			w.play_presentation_clip(beat.get("walk_clip", "strikes/entrance_walk"))
 		"pose", "clip":
 			w.play_presentation_clip(beat["clip"])
+			_pose_top(w if beat["kind"] == "pose" and _in_ring(w) else null)
 		"turn":
 			beat["ticks"] = SETTLE_TICKS if beat.get("settle", false) else 18
 			w.play_presentation_clip(_wait_clip(w))
@@ -780,6 +791,7 @@ func _ring_bell() -> void:
 	if _wall:
 		_wall.end_entrance()
 	_dim_house(false)
+	_pose_top(null)
 	if _backlight:
 		_backlight.queue_free()
 		_backlight = null
@@ -1188,6 +1200,8 @@ func _event(w: WrestlerController, what: String) -> void:
 		"backlight_on", "backlight_dim", "backlight_off":
 			_set_backlight(w, what)
 		"strobe", "pyro_cody_hit", "pyro_cody_punch":
+			if what == "pyro_cody_hit" and _lights and _lights.has_method("sync_beat"):
+				_lights.sync_beat(CODY_BEAT)
 			if _pyro == null:
 				_pyro = EntrancePyro.new()
 				_pyro.name = "EntrancePyro"
@@ -1208,6 +1222,8 @@ func _event(w: WrestlerController, what: String) -> void:
 		"fog_off":
 			_smoke_off()
 		"pyro_stage", "pyro_posts", "pyro_roman":
+			if what == "pyro_roman" and _lights and _lights.has_method("sync_beat"):
+				_lights.sync_beat(ROMAN_BEAT)
 			if _pyro == null:
 				_pyro = EntrancePyro.new()
 				_pyro.name = "EntrancePyro"
@@ -1595,6 +1611,8 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 		ambient: float = ROMAN_AMBIENT_DIM) -> void:
 	if on == not _dimmed.is_empty():
 		return
+	if _lights and "house_dim" in _lights:
+		_lights.house_dim = rig if on else 1.0
 	if on:
 		if _lights:
 			for child in _lights.get_children():
@@ -1611,6 +1629,36 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 		elif key == _env:
 			_env.ambient_light_energy = _dimmed[key]
 	_dimmed.clear()
+
+
+var _top: SpotLight3D
+
+
+## Item 12: the top light on `w` posing in the ring; null puts it out.
+func _pose_top(w: WrestlerController) -> void:
+	if w == null:
+		if _top:
+			_top.visible = false
+		return
+	if _top == null:
+		_top = SpotLight3D.new()
+		_top.name = "PoseTop"
+		_top.light_color = POSE_TOP_COLOR
+		_top.light_energy = POSE_TOP_ENERGY
+		_top.spot_angle = POSE_TOP_ANGLE
+		_top.spot_angle_attenuation = 0.6
+		_top.spot_range = POSE_TOP_UP + 2.0
+		_top.shadow_enabled = true
+		_top.light_volumetric_fog_energy = 1.4
+		add_child(_top)
+	_top.visible = true
+	var at := w.global_position + Vector3.UP * POSE_TOP_UP
+	_top.global_transform = Transform3D(Basis(Vector3.RIGHT, -PI / 2.0), at)
+
+
+static func _in_ring(w: WrestlerController) -> bool:
+	var p := w.global_position
+	return absf(p.x) < 3.2 and absf(p.z) < 3.2 and p.y > -0.2
 
 
 ## Keeps the follow spot on whoever is walking; off when nobody is.
