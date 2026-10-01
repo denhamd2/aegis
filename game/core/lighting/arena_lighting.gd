@@ -109,7 +109,7 @@ const UPLIGHT_DZ := 2.6
 ## the far half of the mat; that overlap is what keeps the mat's luminance
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
-@export var key_energy: float = 9.0
+@export var key_energy: float = 16.0
 ## The key fixture's emitting size, in metres, for PCSS soft shadows. A large
 ## truss wash or profile has a 0.3-0.4 m front lens. From 7.25 m up that
 ## makes a penumbra about 9 cm wide under a shoulder 1.5 m off the mat
@@ -159,7 +159,12 @@ const KEY_LIGHT_SIZE := 0.35
 ## B's gap is still short of its band and A<->B is still over its own: at the
 ## hard camera's framing B faces the key bare-chested and reads twice A's
 ## luminance, and that is his colourway, not the rig. See README.
-@export var top_energy: float = 36.0
+## 36 -> 22 and the key 9 -> 16 in the 2K26 round (lighting_2k26.md items
+## 1/4), with the canvas taken to a light grey: light moved off the floor and
+## onto the bodies. Measured on the gameplay and hard cameras (match_look.tscn,
+## Vulkan): mat 0.65 -> 0.45, skin p75 0.24 -> 0.29 (2K26 0.31), frame above
+## 0.5 from 22% -> 4-8% (2K26 7%), white balance B/G 1.09 -> 1.17 (2K26 1.16).
+@export var top_energy: float = 22.0
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -183,7 +188,9 @@ const KEY_LIGHT_SIZE := 0.35
 ## So it STAYS at 2.2. Spending the cool back light that separates a figure
 ## from a dark crowd, in exchange for 0.001 of a gap, would be paying for
 ## nothing. The gap was closed on the attire instead -- see match.tscn.
-@export var rim_energy: float = 2.2
+## Raised 2.2 -> 4.0 in the 2K26 round (item 4): the bright edge on heads and
+## shoulders against the crowd is what reviewers mean by the ring "popping".
+@export var rim_energy: float = 5.0
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20
 ## Entrance stage wash.
@@ -226,8 +233,10 @@ const KEY_LIGHT_SIZE := 0.35
 ## against a reference saturation of 0.306: cooler still overshoots it, so the
 ## shipped pair is where the two meet. Top energy was re-solved after this to
 ## put the mat back on its anchor (see top_energy).
-const KEY_COLOR := Color(0.88, 0.945, 1.0)
-const TOP_COLOR := Color(0.86, 0.93, 1.0)
+## Cooler since the 2K26 round (lighting_2k26.md item 4): its match frames
+## measure white balance B/G 1.16 against our 1.09 -- a crisp 6500 K-ish TV key.
+const KEY_COLOR := Color(0.84, 0.93, 1.0)
+const TOP_COLOR := Color(0.83, 0.92, 1.0)
 const RIM_COLOR := Color(0.66, 0.78, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
 ## The stage wash, pushed violet. Predominantly a hue change, and the figures
@@ -402,7 +411,32 @@ const COMPAT_STAGE_GAIN := 1.0
 const STAGE_LINE_Z := -12.0
 
 
+## The two looks WWE 2K26 runs (gauntlet/refs/lighting_2k26.md): a concert for
+## the entrances -- the house near black, the haze full for the beams -- and a
+## TV studio for the match -- the crowd lit as people, the ring haze thinned so
+## the blacks stay black. MatchSetup switches at the start and at the bell.
+enum Look { ENTRANCE, MATCH }
+## The ring haze's share during the match (item 3, "clear the veil"): the
+## in-scatter in front of the mat was a grey lift over the whole low shot.
+const MATCH_RING_HAZE := 0.45
+## The crowd shader's light (`crowd_light` global) in each look (items 2, 7).
+const CROWD_LIGHT_MATCH := 3.5
+const CROWD_LIGHT_ENTRANCE := 0.3
+var look := Look.MATCH
+var _ring_haze: FogMaterial
+var _ring_haze_density := 0.0
+
+
+func set_look(p_look: Look) -> void:
+	look = p_look
+	if _ring_haze:
+		_ring_haze.density = _ring_haze_density * (MATCH_RING_HAZE if look == Look.MATCH else 1.0)
+	RenderingServer.global_shader_parameter_set("crowd_light",
+			CROWD_LIGHT_MATCH if look == Look.MATCH else CROWD_LIGHT_ENTRANCE)
+
+
 func _ready() -> void:
+	add_to_group("arena_lighting")
 	_build_ring_key()
 	_build_top_fill()
 	_build_rim()
@@ -416,6 +450,7 @@ func _ready() -> void:
 	_hang_fixtures()
 	_apply_compat_environment()
 	_compensate_for_renderer()
+	set_look(look)
 
 
 # ---------------------------------------------------------------------------
@@ -1016,3 +1051,6 @@ func _fog_box(fog_name: String, at: Vector3, size: Vector3, density: float,
 	material.edge_fade = 0.35
 	volume.material = material
 	add_child(volume)
+	if fog_name == "RingHaze":
+		_ring_haze = material
+		_ring_haze_density = density

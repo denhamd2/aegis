@@ -1197,6 +1197,17 @@ uniform float cheer_amplitude = 0.07;
 // reads as a flash only far enough away.
 uniform float flash_min_distance = 16.0;
 uniform float cheer_speed = 15.0;
+// The 2K26 looks (ArenaLighting.set_look): the whole stand's light, near-off
+// for the entrances' concert dark and 1.0 for the match.
+global uniform float crowd_light;
+// In the match 2K26's front rows read as people -- faces, warm skin, shirt
+// colour -- and the far bowl falls into the dark. A gain on the rows nearest
+// the ring, warmed toward ~4000 K, fading out by FAR metres.
+uniform float near_gain = 3.2;
+uniform float near_from = 7.0;
+uniform float near_to = 30.0;
+uniform vec3 near_warm = vec3(1.18, 0.98, 0.80);
+varying float ring_dist;
 
 varying vec3 shirt;
 varying float figure;
@@ -1208,6 +1219,8 @@ float hash(float n) {
 void vertex() {
 	shirt = COLOR.rgb;
 	figure = PHASE_SOURCE;
+	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	ring_dist = length(world.xz);
 	float phase = PHASE_SOURCE * 6.2831853;
 	// Bob scaled by height above the seat, so feet stay planted and heads
 	// move most -- a figure translated bodily reads as a hovering cutout.
@@ -1225,7 +1238,9 @@ void vertex() {
 
 void fragment() {
 	ALBEDO = shirt;
-	EMISSION = shirt * house_tint * house_light;
+	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
+	vec3 wash = mix(house_tint, near_warm, near);
+	EMISSION = shirt * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
 	// A phone flash: one figure, one frame-ish (a 0.08 s slot), white and
 	// over-bright so it blooms. Each figure rolls its own dice every slot.
 	float slot = floor(TIME / 0.08);

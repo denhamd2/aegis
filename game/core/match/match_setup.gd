@@ -122,6 +122,7 @@ func _ready() -> void:
 	# its beats are frame-labelled.
 	var capturing := CaptureHarness != null and CaptureHarness.is_capturing()
 	if entrances and not capturing and record_replay_path == "":
+		_set_look(ArenaLighting.Look.ENTRANCE)
 		var director := EntranceDirector.new()
 		director.name = "EntranceDirector"
 		add_child(director)
@@ -146,7 +147,14 @@ var _live_ticks := 0
 
 ## The bell: the recording starts here, whether it is tick 1 or the end of the
 ## entrances.
+func _set_look(look: ArenaLighting.Look) -> void:
+	var rig := get_tree().get_first_node_in_group("arena_lighting") as ArenaLighting
+	if rig:
+		rig.set_look(look)
+
+
 func _begin_live() -> void:
+	_set_look(ArenaLighting.Look.MATCH)
 	if audio:
 		audio.opening_bell()
 	if referee_actor:

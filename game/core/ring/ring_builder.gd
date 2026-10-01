@@ -387,7 +387,12 @@ const CANVAS_SEED := 20260903
 ##    warm/cool -0.311 against the reference still's -0.333, so ours is
 ##    already the warmer of the two, and the mat is 212k of 921k pixels in
 ##    that frame. A warm mat would widen a gap that is already open.
-const CANVAS_WHITE := Color(0.975, 0.975, 0.972)
+## Taken down to a light grey in the 2K26 lighting round
+## (gauntlet/refs/lighting_2k26.md item 1): on the gameplay camera the mat
+## measured 0.65 and read as a milky sheet over a fifth of the frame; 2K26's
+## canvas is a textured light grey. Lowering the cloth, not the lights, keeps
+## the wrestlers lit while the mat comes down.
+const CANVAS_WHITE := Color(0.66, 0.66, 0.66)
 ## The supplied AEW canvas artwork, mapped 1:1 over the 6m mat.
 ##
 ## Surface 0 of the floor mesh already carries a full 0..1 UV across the square

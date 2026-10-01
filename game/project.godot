@@ -122,6 +122,10 @@ window/stretch/mode="canvas_items"
 
 [shader_globals]
 
+crowd_light={
+"type": "float",
+"value": 1.0
+}
 crowd_excitement={
 "type": "float",
 "value": 0.0
