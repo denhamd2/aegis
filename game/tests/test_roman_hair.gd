@@ -67,3 +67,59 @@ static func _clearance(c: Node3D, p: Vector3) -> float:
 	if c is SpringBoneCollisionSphere3D:
 		return (local.length() - (c as SpringBoneCollisionSphere3D).radius) * scale
 	return 1.0
+
+
+## The scalp cap's surface map (build_roman_hair_alpha.py, paint_scalp_cap)
+## carries the face's skin roughness as its smoothest value in R, at a
+## material roughness of 1.0 -- so it and SKIN_ROUGHNESS must agree, or the
+## face changes when the map is rebuilt. It reaches matte under the cap, and
+## G (metallic) is ~zero wherever R is at skin roughness: no metal on the face.
+func test_head_surface_map_keeps_the_face_at_skin_roughness() -> void:
+	var path := "res://assets/characters/roman_reigns_head_rm.png"
+	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+	image.convert(Image.FORMAT_RGB8)
+	var skin := roundi(RomanModel.SKIN_ROUGHNESS["Material.001"] * 255.0)
+	var lo := 255
+	var hi := 0
+	var metal_on_skin := 0
+	var data := image.get_data()
+	for i in range(0, data.size(), 3 * 7):
+		lo = mini(lo, data[i])
+		hi = maxi(hi, data[i])
+		if data[i] == skin:
+			metal_on_skin = maxi(metal_on_skin, data[i + 1])
+	assert_int(lo).is_equal(skin)
+	assert_int(hi).is_greater(240)
+	# A texel the cap's feather barely reaches rounds to skin roughness with
+	# a 1/255 of metal; under 1% is nothing a render can show.
+	assert_int(metal_on_skin).is_less_equal(2)
+
+
+## The materials the hair pass sets: the head reads its roughness from the
+## map, the hair reflects less than the 0.5 default, the beard is its own warm
+## brown-black rather than the hair's tint.
+func test_hair_beard_and_scalp_materials() -> void:
+	var seen := {}
+	for mi: MeshInstance3D in _model.find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(s)
+			var m := mi.get_surface_override_material(s) as BaseMaterial3D
+			if source == null or m == null:
+				continue
+			var key := source.resource_name
+			if key == "Material.001":
+				assert_float(m.roughness).is_equal(1.0)
+				assert_float(m.metallic).is_equal(1.0)
+				assert_object(m.roughness_texture).is_not_null()
+				assert_object(m.metallic_texture).is_same(m.roughness_texture)
+				seen["head"] = true
+			elif key == "beard":
+				assert_bool(m.albedo_color.is_equal_approx(RomanModel.BEARD_COLOR)).is_true()
+				assert_float(m.metallic_specular).is_equal_approx(RomanModel.BEARD_SPECULAR, 0.001)
+				seen["beard"] = true
+			elif key == "Material.018":
+				assert_float(m.metallic_specular).is_equal_approx(RomanModel.HAIR_SPECULAR, 0.001)
+				seen["hair"] = true
+	assert_int(seen.size()).is_equal(3)

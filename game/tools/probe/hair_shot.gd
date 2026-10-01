@@ -6,8 +6,14 @@ extends Node
 ##
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 1280x720 tools/probe/hair_shot.tscn -- --out /tmp/hair
+##
+## `--only roman` keeps the shots whose name starts with it, and `--modes on`
+## the shine modes listed: under a software rasteriser each frame costs
+## minutes, and a material pass on one man needs two frames, not twelve.
 
 var _out := "/tmp/hair"
+var _only := ""
+var _modes: Array = ["off", "on", "turned"]
 
 
 func _ready() -> void:
@@ -15,6 +21,10 @@ func _ready() -> void:
 	for i in args.size():
 		if args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--only" and i + 1 < args.size():
+			_only = args[i + 1]
+		elif args[i] == "--modes" and i + 1 < args.size():
+			_modes = Array(args[i + 1].split(","))
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
@@ -43,7 +53,7 @@ func _ready() -> void:
 	var shipped := {}
 	for m: BaseMaterial3D in hair:
 		shipped[m] = [m.anisotropy_enabled, m.anisotropy_flowmap]
-	for mode: String in ["off", "on", "turned"]:
+	for mode: String in _modes:
 		for m: BaseMaterial3D in hair:
 			m.anisotropy_enabled = mode != "off" and shipped[m][0]
 			m.anisotropy_flowmap = shipped[m][1]
@@ -59,6 +69,8 @@ func _ready() -> void:
 				["roman_back", Vector3(-1.2, 2.05, -0.5), Vector3(-0.45, 1.70, 0.0), 26.0],
 				["cody_34", Vector3(0.05, 1.93, 0.75), Vector3(0.40, 1.70, 0.0), 26.0],
 				["cody_top", Vector3(1.2, 2.10, 0.4), Vector3(0.45, 1.70, 0.0), 26.0]]:
+			if not (shot[0] as String).begins_with(_only):
+				continue
 			cam.fov = shot[3]
 			cam.look_at_from_position(shot[1], shot[2])
 			for _i in 30:

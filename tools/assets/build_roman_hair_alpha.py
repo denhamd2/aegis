@@ -383,6 +383,47 @@ BEARD_LIP_HALF_W = 0.028
 BEARD_LIP_HALF_H = 0.0105
 
 
+def _nearest_distance(points, cloud):
+    """Distance from each of `points` to the nearest point of `cloud`."""
+    import numpy as np
+    near = np.empty(len(points))
+    for i in range(0, len(points), 256):
+        d = np.linalg.norm(points[i:i + 256, None, :] - cloud[None, :, :], axis=2)
+        near[i:i + 256] = d.min(axis=1)
+    return near
+
+
+def _uv_field(size, uv, tris, weight):
+    """Rasterises a per-vertex weight into a size x size texture-space field
+    through the mesh's UVs, keeping the max where islands overlap."""
+    import numpy as np
+    field = np.zeros((size, size), dtype=np.float32)
+    for tri in tris:
+        w = weight[tri]
+        if w.max() <= 0.0:
+            continue
+        p = uv[tri] * size
+        x0, y0 = np.floor(p.min(axis=0)).astype(int)
+        x1, y1 = np.ceil(p.max(axis=0)).astype(int)
+        x0, y0 = max(x0, 0), max(y0, 0)
+        x1, y1 = min(x1, size - 1), min(y1, size - 1)
+        if x1 < x0 or y1 < y0:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+        (ax, ay), (bx, by), (cx, cy) = p
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-9:
+            continue
+        l0 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / den
+        l1 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / den
+        l2 = 1.0 - l0 - l1
+        inside = (l0 >= -0.01) & (l1 >= -0.01) & (l2 >= -0.01)
+        val = l0 * w[0] + l1 * w[1] + l2 * w[2]
+        region = field[y0:y1 + 1, x0:x1 + 1]
+        region[inside] = np.maximum(region[inside], val[inside])
+    return field
+
+
 def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     import numpy as np
     head = _glb_attributes(model, "M_Head")
@@ -390,11 +431,7 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     pos = np.array(head["POSITION"])
     uv = np.array(head["TEXCOORD_0"])
     tris = np.array(head["INDICES"]).reshape(-1, 3)
-    # Nearest card vertex per head vertex, in chunks.
-    near = np.empty(len(pos))
-    for i in range(0, len(pos), 256):
-        d = np.linalg.norm(pos[i:i + 256, None, :] - cards[None, :, :], axis=2)
-        near[i:i + 256] = d.min(axis=1)
+    near = _nearest_distance(pos, cards)
     weight = np.clip(1.0 - (near - BEARD_SHADOW_NEAR)
                      / (BEARD_SHADOW_FAR - BEARD_SHADOW_NEAR), 0.0, 1.0)
     # Never above the cheekbone line or behind the ear.
@@ -420,30 +457,7 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     weight *= 1.0 - (1.0 - BEARD_SHADOW_SIDES) * fade
     albedo = Image.open(target).convert("RGB")
     size = albedo.size[0]
-    field = np.zeros((size, size), dtype=np.float32)
-    for tri in tris:
-        w = weight[tri]
-        if w.max() <= 0.0:
-            continue
-        p = uv[tri] * size
-        x0, y0 = np.floor(p.min(axis=0)).astype(int)
-        x1, y1 = np.ceil(p.max(axis=0)).astype(int)
-        x0, y0 = max(x0, 0), max(y0, 0)
-        x1, y1 = min(x1, size - 1), min(y1, size - 1)
-        if x1 < x0 or y1 < y0:
-            continue
-        xs, ys = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
-        (ax, ay), (bx, by), (cx, cy) = p
-        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
-        if abs(den) < 1e-9:
-            continue
-        l0 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / den
-        l1 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / den
-        l2 = 1.0 - l0 - l1
-        inside = (l0 >= -0.01) & (l1 >= -0.01) & (l2 >= -0.01)
-        val = l0 * w[0] + l1 * w[1] + l2 * w[2]
-        region = field[y0:y1 + 1, x0:x1 + 1]
-        region[inside] = np.maximum(region[inside], val[inside])
+    field = _uv_field(size, uv, tris, weight)
     # Stubble grain, seeded: a beard shadow is not a flat fill.
     rng = np.random.default_rng(BEARD_SHADOW_SEED)
     grain = 0.78 + 0.22 * rng.random((size, size), dtype=np.float32)
@@ -452,6 +466,124 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     shadow = Image.new("RGB", albedo.size, BEARD_SHADOW_COLOR)
     Image.composite(shadow, albedo, mask).save(target, optimize=True)
     print(f"{'beard shadow':38} -> {target.name:34} {int((field > 0.05).sum())} texels")
+
+
+## The scalp under the hair, painted into the head albedo.
+##
+## The same two-layer rule as the beard, applied to the head: a game head of
+## hair is cards for the silhouette over a painted scalp cap, so wherever the
+## cards part, the eye finds more hair and not skin. Roman had no cap. With
+## his hair lifted off the scalp for volume (RomanModel.hair_lift) and the
+## hanging lengths drawn out past the shoulders (hair_stretch), the gaps
+## between cards widened, and on hair_shot.tscn tan skin showed through at
+## the temples, over the ear and in a dotted patch behind it.
+##
+## Where to paint comes from the cards, as with the beard: each head vertex
+## is darkened by its distance to the nearest card of the two visible hair
+## meshes, measured in BIND space (before the runtime lift): full inside a
+## reach, feathering to nothing SCALP_CAP_FEATHER further out. The reach is
+## not one number because the cards are not one distance off the skin --
+## measured, the median gap is 3 mm at the front hairline and 12 mm over the
+## back of the head (90th percentile 7.5 mm and 16 mm). One reach either
+## missed the back (the first render: tan blotches through a grey wash) or
+## crept down the forehead. So the tight SCALP_CAP_REACH[0] holds only on
+## the hairline itself -- the front of the head (SCALP_CAP_FRONT_Z) below
+## the top of the forehead (SCALP_CAP_FRONT_Y) -- and [1] everywhere else,
+## the crown included: a front-to-back blend left the top of the crown, whose
+## cards also sit ~10 mm off, half-painted. The feather is the hairline: hair
+## thins into the forehead, it does not stop on a line -- but over a few
+## millimetres: in game, at 9 mm the dark paint thinned over skin read as a
+## grey-blue band across the top of the forehead under the cool key. So the
+## feather narrows to SCALP_CAP_FEATHER[0] on the hairline and stays
+## [1] elsewhere, where it only blends cap into nape and sideburn.
+##
+## Never on the face: SCALP_CAP_FACE keeps it off everything in front of the
+## ears below the hairline, where the beard shadow takes over. Never on the
+## ears: the hanging cards pass within 2 cm of their backs, and the first
+## render painted them dark. SCALP_CAP_EAR is the box they stick out of the
+## skull in (|x| beyond the skull's 0.076 half-width above them).
+SCALP_CAP_MESHES = ("M_Hair", "S_Hair")
+SCALP_CAP_COLOR = (20, 16, 14)
+SCALP_CAP_REACH = (0.006, 0.017)
+SCALP_CAP_FRONT_Z = (0.03, 0.08)
+SCALP_CAP_FRONT_Y = (1.79, 1.82)
+SCALP_CAP_FEATHER = (0.003, 0.009)
+SCALP_CAP_OPACITY = 0.97
+SCALP_CAP_SEED = 13
+## (z in front of, y below) which the cap is never painted.
+SCALP_CAP_FACE = (0.065, 1.765)
+## (|x| beyond, y from, y to)
+SCALP_CAP_EAR = (0.077, 1.63, 1.77)
+## The cap's surface, written as roman_reigns_head_rm.png: roughness in R
+## (roughness_texture, multiplying a material roughness of 1.0 -- so
+## HEAD_SKIN_ROUGHNESS must equal RomanModel.SKIN_ROUGHNESS["Material.001"],
+## and a test holds them together) and the cap's coverage in G
+## (metallic_texture, at a material metallic of 1.0).
+##
+## Painting the cap dark was half the fix. Where the hairline cards thin, the
+## cap shows through them, and the head's skin material threw the cool key
+## back off it as a grey-blue band across the top of the forehead: on tan
+## skin that sheen is lost in the colour, on near-black it IS the colour.
+## Rendered with the head's reflectance at zero the band went dark, as a mat
+## of roots does. Roughness alone did not do it (rendered at 1.0, the band
+## stayed): what lit it is the 4% reflectance every dielectric has, and
+## BaseMaterial3D cannot map that. Metallic can -- a metal reflects its own
+## albedo, and this albedo is near-black -- so under the cap the head is
+## "metallic", rough, and reflects almost nothing. Only under the cap, so
+## the face keeps its sheen.
+HEAD_SKIN_ROUGHNESS = 0.58
+SCALP_CAP_ROUGHNESS = 1.0
+## Texels the painted field is grown past each UV island's edge before the
+## blur, as a bake pads its islands. Without it the blur averages the island
+## with the empty texels outside it, and every UV seam draws as a pale line --
+## one ran down the middle of the crown in the first render.
+SCALP_CAP_PAD = 4
+
+
+def paint_scalp_cap(model: pathlib.Path, target: pathlib.Path,
+                    surface: pathlib.Path) -> None:
+    import numpy as np
+    head = _glb_attributes(model, "M_Head")
+    cards = np.vstack([np.array(_glb_attributes(model, m)["POSITION"])
+                       for m in SCALP_CAP_MESHES])
+    pos = np.array(head["POSITION"])
+    uv = np.array(head["TEXCOORD_0"])
+    tris = np.array(head["INDICES"]).reshape(-1, 3)
+    near = _nearest_distance(pos, cards)
+    def smooth(a, b, x):
+        u = np.clip((x - a) / (b - a), 0.0, 1.0)
+        return u * u * (3.0 - 2.0 * u)
+    hairline = smooth(*SCALP_CAP_FRONT_Z, pos[:, 2]) * (1.0 - smooth(*SCALP_CAP_FRONT_Y, pos[:, 1]))
+    reach = SCALP_CAP_REACH[1] + (SCALP_CAP_REACH[0] - SCALP_CAP_REACH[1]) * hairline
+    feather = SCALP_CAP_FEATHER[1] + (SCALP_CAP_FEATHER[0] - SCALP_CAP_FEATHER[1]) * hairline
+    t = np.clip(1.0 - (near - reach) / feather, 0.0, 1.0)
+    weight = t * t * (3.0 - 2.0 * t)
+    weight[(pos[:, 2] > SCALP_CAP_FACE[0]) & (pos[:, 1] < SCALP_CAP_FACE[1])] = 0.0
+    ear = ((np.abs(pos[:, 0]) > SCALP_CAP_EAR[0])
+           & (pos[:, 1] > SCALP_CAP_EAR[1]) & (pos[:, 1] < SCALP_CAP_EAR[2]))
+    weight[ear] = 0.0
+    albedo = Image.open(target).convert("RGB")
+    size = albedo.size[0]
+    field = _uv_field(size, uv, tris, weight)
+    covered = field > 0.0
+    padded = np.array(Image.fromarray((field * 255).astype(np.uint8), "L")
+                      .filter(ImageFilter.MaxFilter(2 * SCALP_CAP_PAD + 1)),
+                      dtype=np.float32) / 255.0
+    field = np.where(covered, field, padded)
+    # Grain, seeded, so the cap reads as dense short roots rather than paint.
+    rng = np.random.default_rng(SCALP_CAP_SEED)
+    grain = 0.80 + 0.20 * rng.random((size, size), dtype=np.float32)
+    mask = Image.fromarray(np.clip(field * grain * SCALP_CAP_OPACITY * 255, 0, 255)
+                           .astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(2))
+    cap = Image.new("RGB", albedo.size, SCALP_CAP_COLOR)
+    Image.composite(cap, albedo, mask).save(target, optimize=True)
+    print(f"{'scalp cap':38} -> {target.name:34} {int((field > 0.05).sum())} texels")
+    cover = np.asarray(mask, dtype=np.float32) / 255.0
+    rough = HEAD_SKIN_ROUGHNESS + (SCALP_CAP_ROUGHNESS - HEAD_SKIN_ROUGHNESS) * cover
+    channels = [np.round(rough * 255), np.round(cover * 255), np.zeros_like(cover)]
+    Image.merge("RGB", [Image.fromarray(c.astype(np.uint8), "L") for c in channels]) \
+        .save(surface, optimize=True)
+    print(f"{'scalp cap roughness/metallic':38} -> {surface.name:34}")
 
 
 def main() -> int:
@@ -469,6 +601,8 @@ def main() -> int:
     )
     paint_brows(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     paint_beard_shadow(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
+    paint_scalp_cap(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png",
+                    CHARACTERS / "roman_reigns_head_rm.png")
     return 0
 
 

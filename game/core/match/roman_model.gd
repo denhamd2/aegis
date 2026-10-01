@@ -212,6 +212,16 @@ const GROW_FIXES := {
 ## and neck carried hot white spots and he read as moulded plastic; his real
 ## skin is mostly matte with a thin sweat sheen.
 const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.58}
+## Skin materials whose surface comes from a map instead: roughness in R,
+## metallic in G, at material roughness and metallic of 1.0. The head's map
+## (build_roman_hair_alpha.py, paint_scalp_cap) is SKIN_ROUGHNESS and no
+## metal on the face, and rough and "metallic" under the painted scalp cap.
+## Where the hairline cards thin the dark cap shows through, and at skin
+## roughness and a dielectric's 4% reflectance it threw the cool key back as
+## a grey-blue band across the top of the forehead; a metal reflects its own
+## albedo, which there is near-black. test_roman_hair holds the map's skin
+## value to SKIN_ROUGHNESS.
+const SURFACE_MAPS := {"Material.001": "head_rm"}
 ## Pore tiles across one UV square (SkinLook.add_pores): the head's own
 ## texture spans about 0.4 m of face and scalp, the body's about 1.2 m, so a
 ## tile is ~2.5 cm on both.
@@ -249,7 +259,22 @@ const HAIR_ROUGHNESS := 0.42
 ## along the tangent the shine breaks into fine streaks; turned 90 degrees it
 ## smears into pale patches down the hanging lengths.
 const HAIR_FLOW := Vector2(1.0, 0.0)
+## How much light the hair reflects at all (BaseMaterial3D.metallic_specular;
+## 0.5 is the default, a 4% reflectance).
+##
+## Lowered for the 2K26 lighting round's rig: the cooler key and the rim
+## raised 2.2 -> 5.0 turned his crown into pale blue-white streaks on
+## hair_shot.tscn -- silver paint, not wet black hair. Roughness was not the
+## lever: rougher spreads the same energy into a grey sheen. Less reflectance
+## keeps the streak narrow (the anisotropy and 0.42 roughness still shape it)
+## and dims it to a wet glint over jet black, the 2K26 look.
+const HAIR_SPECULAR := 0.2
+## The beard is darker brown than his hair is black: in the reference
+## (gauntlet/refs/frames/roman_head_reference.jpg) it reads warm brown-black,
+## and drawn in HAIR_COLOR under the cool key it rendered a flat blue-grey.
+const BEARD_COLOR := Color(0.052, 0.038, 0.030)
 const BEARD_ROUGHNESS := 0.8
+const BEARD_SPECULAR := 0.25
 ## Alpha below this is cut away. Hair cards need a scissor rather than
 ## blending: sorted transparency on overlapping strands produces halos.
 ##
@@ -700,6 +725,14 @@ func _fix_materials() -> void:
 				continue
 			if SKIN_ROUGHNESS.has(key):
 				material.roughness = SKIN_ROUGHNESS[key]
+				if SURFACE_MAPS.has(key):
+					var surface_map := _texture(SURFACE_MAPS[key])
+					material.roughness = 1.0
+					material.roughness_texture = surface_map
+					material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+					material.metallic = 1.0
+					material.metallic_texture = surface_map
+					material.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
 				material.metallic_specular = 0.5
 				SkinLook.apply(material)
 				SkinLook.add_pores(material, PORE_TILES[key])
@@ -719,11 +752,13 @@ func _fix_materials() -> void:
 				# the mip chain but cannot help a mesh that is no longer there.
 				mesh_instance.lod_bias = HAIR_LOD_BIAS
 				material.albedo_texture = _texture(HAIR_FIXES[key])
-				material.albedo_color = HAIR_COLOR
+				material.albedo_color = BEARD_COLOR if key == "beard" else HAIR_COLOR
 				# The scalp is wet and slicked; the beard is not, and glossy
 				# it rendered as a black plastic chin.
 				material.roughness = BEARD_ROUGHNESS if key == "beard" \
 					else HAIR_ROUGHNESS
+				material.metallic_specular = BEARD_SPECULAR if key == "beard" \
+					else HAIR_SPECULAR
 				if key != "beard":
 					# The band of shine across the strands (HairLook), and the
 					# root-to-tip shade _volumize_hair writes as vertex colour.

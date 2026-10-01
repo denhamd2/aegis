@@ -8030,3 +8030,46 @@ holding up signs the way the reference photos of a WWE crowd do it.
   - they sit about a second after the bell;
   - they stand only twice more in the match, on a signature or a near-fall,
     at least 25 s apart, for about 4.5 s each.
+
+## Round: Roman's hair, phase 0 of the character plan
+
+Phase 0 of `gauntlet/refs/character_aaa_plan.md`, rendered under the 2K26
+lighting round's rig with `hair_shot.tscn` (which now takes `--only roman
+--modes on`, so a material pass costs two frames, not twelve). Before, three
+defects: pale blue-white streaks across the crown, tan skin between the cards
+at the temples and behind the ear, and a flat blue-grey beard.
+
+- **A scalp cap.** A game head of hair is cards over a painted scalp, so a
+  parting shows more hair, not skin; Roman had none. `paint_scalp_cap` in
+  `build_roman_hair_alpha.py` paints it into the head albedo where the two
+  visible hair meshes lie, by distance from each head vertex to the nearest
+  card -- tight at the hairline (the cards sit 3 mm off the forehead), wide
+  over the crown and back (12 mm), off the face and the ears, with the
+  islands padded before the blur so no UV seam draws a line. Checked first
+  on bare-head Cycles renders of the .glb through `bpy`, then in game.
+- **The cap's surface.** Where the hairline cards thin the cap shows through,
+  and as skin it threw the cool key back as a grey-blue band across the
+  forehead. Roughness alone did not remove it; the dielectric's 4%
+  reflectance did. `roman_reigns_head_rm.png` carries roughness (R) and
+  metallic (G): skin roughness and no metal on the face, matte and "metallic"
+  under the cap -- a metal reflects its albedo, and there that is near-black.
+- **Hair reflectance** `HAIR_SPECULAR` 0.5 -> 0.2: the rim at 5.0 and the
+  cooler key had turned the crown silver. Roughness stays 0.42, so the glint
+  stays narrow -- a wet streak on jet black.
+- **The beard** gets its own `BEARD_COLOR`, warm brown-black off the head
+  reference, and `BEARD_SPECULAR` 0.25.
+
+Cody's collar from the same WIP commit was checked on Cycles renders of
+`cody_coat.glb`: a clean flared stand collar, seated on the shoulders. Not yet
+seen textured in game -- the entrance it appears in is too slow to render
+under a software rasteriser.
+
+Still open on the hair: R1's wave in the normal map and a flyaway card layer;
+the beard's soft cheek edge (card geometry); a stipple of side-strand cards
+over the skin below the ear. And not hair: the eye reads as a blue-grey slab,
+which is phase 1's eye kit.
+
+### Checks
+597 tests pass (`test_roman_hair`: the surface map's skin value against
+`SKIN_ROUGHNESS`, no metal on the face, the hair, beard and head materials).
+The texture build is byte-identical across runs.
