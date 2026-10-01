@@ -1673,6 +1673,9 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 			_walk_back.visible = false
 		return
 	_follow.visible = true
+	# In the ring the long-throw spot is a glare in the haze and burns his
+	# gear white on the low shots (lighting_2k26.md item 10): a third of it.
+	_follow.light_energy = FOLLOW_SPOT_ENERGY * (0.35 if _in_ring(w) else 1.0)
 	var target := w.global_position + Vector3.UP * 1.1
 	if _follow.global_position.distance_to(target) > 0.1:
 		_follow.look_at(target, Vector3.UP)

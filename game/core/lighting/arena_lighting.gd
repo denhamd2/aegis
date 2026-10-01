@@ -419,6 +419,9 @@ enum Look { ENTRANCE, MATCH }
 ## The ring haze's share during the match (item 3, "clear the veil"): the
 ## in-scatter in front of the mat was a grey lift over the whole low shot.
 const MATCH_RING_HAZE := 0.45
+## And on the entrances: enough for the beams and the top light's cone, but the
+## full density lit up by the follow spot was a white glare round the ring.
+const ENTRANCE_RING_HAZE := 0.6
 ## The crowd shader's light (`crowd_light` global) in each look (items 2, 7).
 const CROWD_LIGHT_MATCH := 3.5
 const CROWD_LIGHT_ENTRANCE := 0.3
@@ -462,7 +465,7 @@ func set_look(p_look: Look) -> void:
 	look = p_look
 	var entrance := look == Look.ENTRANCE
 	if _ring_haze:
-		_ring_haze.density = _ring_haze_density * (1.0 if entrance else MATCH_RING_HAZE)
+		_ring_haze.density = _ring_haze_density * (ENTRANCE_RING_HAZE if entrance else MATCH_RING_HAZE)
 	RenderingServer.global_shader_parameter_set("crowd_light",
 			CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH)
 	RenderingServer.global_shader_parameter_set("glint_strength",
