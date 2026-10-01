@@ -115,7 +115,8 @@ func test_eyes_carry_iris_and_pupil_attachments() -> void:
 
 func test_normal_maps_import_as_normal_maps() -> void:
     var files := ["bottoms_nrm", "l_wrist_nrm", "r_a_acce_nrm", "r_wrist_nrm",
-        "shoes_nrm", "tops_nrm", "wrinkles_normal"]
+        "shoes_nrm", "tops_nrm", "wrinkles_normal", "hair_wave_nrm",
+        "hair_strands_nrm", "hair_4_strands_nrm"]
     for stem in files:
         var path := "res://assets/characters/roman_reigns_%s.png.import" % stem
         assert_bool(FileAccess.file_exists(path)).override_failure_message(

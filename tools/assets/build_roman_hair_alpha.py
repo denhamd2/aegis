@@ -444,16 +444,13 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     lip = np.sqrt((pos[:, 0] / BEARD_LIP_HALF_W) ** 2
                   + ((pos[:, 1] - BEARD_LIP_Y) / BEARD_LIP_HALF_H) ** 2)
     weight *= np.clip((lip - 1.0) / 0.35, 0.0, 1.0)
-    # And faded up the sideburns and back by the ear, as the cards are
-    # (RomanModel.beard_fade -- same band, same numbers): full on the jaw,
-    # short stubble at the sides. Full strength everywhere, the first version
-    # made the sideburns as solid as the chin and the fade disappeared.
+    # And thinned toward the ear, as the cards are (RomanModel.beard_fade --
+    # same band, same numbers): full on the jaw and chin, lighter on the
+    # sideburn, where the painted strands (paint_beard_strands) carry it.
     def smooth(a, b, x):
         t = np.clip((x - a) / (b - a), 0.0, 1.0)
         return t * t * (3.0 - 2.0 * t)
-    fade = np.maximum(smooth(1.625, 1.695, pos[:, 1]),
-                      0.8 * smooth(0.040, 0.072, np.abs(pos[:, 0]))
-                      * smooth(0.10, 0.05, pos[:, 2]))
+    fade = beard_side(pos)
     weight *= 1.0 - (1.0 - BEARD_SHADOW_SIDES) * fade
     albedo = Image.open(target).convert("RGB")
     size = albedo.size[0]
@@ -467,6 +464,168 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
     Image.composite(shadow, albedo, mask).save(target, optimize=True)
     print(f"{'beard shadow':38} -> {target.name:34} {int((field > 0.05).sum())} texels")
 
+
+## How far up the side of the face a point is, as the beard thins: 0 on
+## the front of the face and along the jaw, 1 up the sideburn. By the angle
+## round the vertical axis from straight ahead (0) to the ear (90 degrees), so
+## the moustache and chin are never in it -- the first fade ran on HEIGHT as
+## well, and took the moustache to half opacity because it sits high.
+## RomanModel.beard_fade is the same function; keep the numbers together.
+BEARD_SIDE_DEG = (35.0, 62.0)
+## Only above the jaw line: the jaw's corners carry the full beard.
+BEARD_SIDE_Y = (1.615, 1.655)
+
+
+def beard_angle(pos):
+    import numpy as np
+    pos = np.asarray(pos)
+    return np.degrees(np.arctan2(np.abs(pos[..., 0]), pos[..., 2]))
+
+
+def beard_side(pos):
+    import numpy as np
+    pos = np.asarray(pos)
+
+    def smooth(a, b, x):
+        t = np.clip((x - a) / (b - a), 0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    return smooth(*BEARD_SIDE_DEG, beard_angle(pos)) * smooth(*BEARD_SIDE_Y, pos[..., 1])
+
+
+## The beard's coverage on the cheeks and sideburns, painted as hairs.
+##
+## Against the reference (gauntlet/refs/frames/roman_head_reference.jpg) his
+## beard runs up the sides of his face as sideburns into his hair, under a
+## clean, groomed cheek line that climbs from the corner of the moustache to
+## the ear. Rendered head-on (hair_shot.tscn roman_face) ours stopped at the
+## mouth: bare skin from the jaw to the hair in front of each ear, and a
+## ragged top edge of card tips. The cards there are few and short -- they
+## reach y 1.654 at the cheek -- so the coverage has to be painted, the way a
+## game beard is a painted base with cards over it.
+##
+## Painted as hairs, not a fill: points are sampled on the head mesh's own
+## triangles inside the beard (so their UVs are exact, wherever the islands
+## lie), and each grows a short stroke down the face and a little forward --
+## the way a beard grows -- carried into the texture by its triangle's own
+## UV mapping. Under them, a soft base fill so it reads as beard and not as
+## scratches once mip-filtered. The cheek line is BEARD_LINE, height as a
+## function of the angle round the face (beard_angle); strokes thin out over
+## BEARD_LINE_FEATHER above it, so the line is crisp but not cut. Behind
+## BEARD_LINE's last angle, and in the ear itself, nothing.
+## His beard is groomed and boxed (the owner's photos, Oct 2026): the mass is
+## on the chin and along the jaw, the cheek line drops from the corner of the
+## moustache back along the jaw, the cheeks above it are clear, and the
+## sideburn is a narrow strip down the front of the ear into the hair. The
+## first pass painted the whole cheek up to the cheekbone ("way too much").
+## So the line falls from the moustache (11 deg) to the jaw (45 deg), and only
+## the last few degrees before the ear climb to the scalp cap at 1.775.
+BEARD_LINE = [(0.0, 1.664), (11.0, 1.664), (25.0, 1.648), (45.0, 1.635),
+              (58.0, 1.640), (64.0, 1.765), (72.0, 1.775)]
+BEARD_LINE_FEATHER = 0.003
+## Bottom of the painted area: under the jaw the cards carry it.
+BEARD_PAINT_FLOOR = 1.600
+BEARD_STRAND_DENSITY = 1.1e6    # strands per square metre (110 per cm2)
+BEARD_STRAND_LENGTH = (0.0035, 0.0060)
+BEARD_STRAND_GROW = (0.0, -1.0, 0.3)
+BEARD_STRAND_JITTER_DEG = 16.0
+BEARD_STRAND_SEED = 19
+## Low: the cards carry the mass; at 0.5 the painted cheeks read as a dark mask.
+BEARD_FILL = 0.30
+BEARD_STRAND_COLOR = (26, 20, 17)
+BEARD_SUPERSAMPLE = 4
+
+
+def beard_line(angle):
+    import numpy as np
+    a, y = zip(*BEARD_LINE)
+    return np.interp(angle, a, y)
+
+
+def beard_paint_weight(pos):
+    """1 inside the beard below the cheek line, feathering to 0 over
+    BEARD_LINE_FEATHER above it; 0 past the ear, below the floor, on the lips."""
+    import numpy as np
+    pos = np.asarray(pos)
+    ang = beard_angle(pos)
+    above = pos[..., 1] - beard_line(ang)
+    w = np.clip(1.0 - above / BEARD_LINE_FEATHER, 0.0, 1.0)
+    w = np.where(ang > BEARD_LINE[-1][0], 0.0, w)
+    w = np.where(pos[..., 1] < BEARD_PAINT_FLOOR, 0.0, w)
+    # Never in the ear (the scalp cap's ear box): its bowl faces forward,
+    # inside the sideburn's angle, and the first render painted it.
+    ear = ((np.abs(pos[..., 0]) > SCALP_CAP_EAR[0])
+           & (pos[..., 1] > SCALP_CAP_EAR[1]) & (pos[..., 1] < SCALP_CAP_EAR[2])
+           & (pos[..., 2] > SCALP_CAP_EAR[3]) & (pos[..., 2] < SCALP_CAP_EAR[4]))
+    w = np.where(ear, 0.0, w)
+    lip = np.sqrt((pos[..., 0] / BEARD_LIP_HALF_W) ** 2
+                  + ((pos[..., 1] - BEARD_LIP_Y) / BEARD_LIP_HALF_H) ** 2)
+    return w * np.clip((lip - 1.0) / 0.35, 0.0, 1.0)
+
+
+def paint_beard_strands(model: pathlib.Path, target: pathlib.Path) -> None:
+    import numpy as np
+    head = _glb_attributes(model, "M_Head")
+    pos = np.array(head["POSITION"])
+    uv = np.array(head["TEXCOORD_0"])
+    tris = np.array(head["INDICES"]).reshape(-1, 3)
+    albedo = Image.open(target).convert("RGB")
+    size = albedo.size[0]
+    # The base fill, through the same rasteriser as the shadow and the cap.
+    weight = beard_paint_weight(pos)
+    fill = _uv_field(size, uv, tris, weight * BEARD_FILL)
+    fill = Image.fromarray((fill * 255).astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(2))
+    # The strands.
+    ss = BEARD_SUPERSAMPLE
+    strokes = Image.new("L", (size * ss, size * ss), 0)
+    draw = ImageDraw.Draw(strokes)
+    rng = np.random.default_rng(BEARD_STRAND_SEED)
+    grow = np.array(BEARD_STRAND_GROW, dtype=float)
+    grow /= np.linalg.norm(grow)
+    count = 0
+    for tri in tris:
+        a, b, c = pos[tri]
+        if weight[tri].max() <= 0.0:
+            continue
+        n = np.cross(b - a, c - a)
+        area = 0.5 * np.linalg.norm(n)
+        if area <= 0.0:
+            continue
+        n /= 2.0 * area
+        expected = area * BEARD_STRAND_DENSITY
+        k = int(expected) + (1 if rng.random() < expected - int(expected) else 0)
+        if k == 0:
+            continue
+        # Solving for barycentrics in this triangle's plane.
+        e1, e2 = b - a, c - a
+        gram = np.array([[e1 @ e1, e1 @ e2], [e1 @ e2, e2 @ e2]])
+        inv = np.linalg.inv(gram)
+        ua, ub, uc = uv[tri]
+        # Growth direction in the plane, then jittered about the normal.
+        d = grow - (grow @ n) * n
+        if np.linalg.norm(d) < 1e-6:
+            continue
+        d /= np.linalg.norm(d)
+        side = np.cross(n, d)
+        for _ in range(k):
+            r1, r2 = rng.random(), rng.random()
+            if r1 + r2 > 1.0:
+                r1, r2 = 1.0 - r1, 1.0 - r2
+            p = a + r1 * e1 + r2 * e2
+            if rng.random() > float(beard_paint_weight(p)):
+                continue
+            ang = np.radians(rng.uniform(-BEARD_STRAND_JITTER_DEG, BEARD_STRAND_JITTER_DEG))
+            q = p + (np.cos(ang) * d + np.sin(ang) * side) * rng.uniform(*BEARD_STRAND_LENGTH)
+            s_, t_ = inv @ np.array([(q - a) @ e1, (q - a) @ e2])
+            uq = ua + s_ * (ub - ua) + t_ * (uc - ua)
+            up = ua + r1 * (ub - ua) + r2 * (uc - ua)
+            draw.line([(up[0] * size * ss, up[1] * size * ss), (uq[0] * size * ss, uq[1] * size * ss)],
+                      fill=int(rng.integers(170, 256)), width=max(1, round(1.5 * ss)))
+            count += 1
+    strokes = strokes.resize(albedo.size, Image.LANCZOS)
+    mask = ImageChops.lighter(fill, strokes)
+    beard = Image.new("RGB", albedo.size, BEARD_STRAND_COLOR)
+    Image.composite(beard, albedo, mask).save(target, optimize=True)
+    print(f"{'beard strands':38} -> {target.name:34} {count} strands")
 
 ## The scalp under the hair, painted into the head albedo.
 ##
@@ -501,7 +660,10 @@ def paint_beard_shadow(model: pathlib.Path, target: pathlib.Path) -> None:
 ## ears below the hairline, where the beard shadow takes over. Never on the
 ## ears: the hanging cards pass within 2 cm of their backs, and the first
 ## render painted them dark. SCALP_CAP_EAR is the box they stick out of the
-## skull in (|x| beyond the skull's 0.076 half-width above them).
+## skull in (|x| beyond the skull's 0.076 half-width above them), bounded in
+## depth by the ear itself (measured z -0.005..0.026): without that bound the
+## box took the skin BEHIND the ear too, left it tan, and the side strands
+## that hang over it drew as a stipple of dark dots on skin.
 SCALP_CAP_MESHES = ("M_Hair", "S_Hair")
 SCALP_CAP_COLOR = (20, 16, 14)
 SCALP_CAP_REACH = (0.006, 0.017)
@@ -512,8 +674,8 @@ SCALP_CAP_OPACITY = 0.97
 SCALP_CAP_SEED = 13
 ## (z in front of, y below) which the cap is never painted.
 SCALP_CAP_FACE = (0.065, 1.765)
-## (|x| beyond, y from, y to)
-SCALP_CAP_EAR = (0.077, 1.63, 1.77)
+## (|x| beyond, y from, y to, z from, z to)
+SCALP_CAP_EAR = (0.077, 1.63, 1.77, -0.015, 0.034)
 ## The cap's surface, written as roman_reigns_head_rm.png: roughness in R
 ## (roughness_texture, multiplying a material roughness of 1.0 -- so
 ## HEAD_SKIN_ROUGHNESS must equal RomanModel.SKIN_ROUGHNESS["Material.001"],
@@ -560,7 +722,8 @@ def paint_scalp_cap(model: pathlib.Path, target: pathlib.Path,
     weight = t * t * (3.0 - 2.0 * t)
     weight[(pos[:, 2] > SCALP_CAP_FACE[0]) & (pos[:, 1] < SCALP_CAP_FACE[1])] = 0.0
     ear = ((np.abs(pos[:, 0]) > SCALP_CAP_EAR[0])
-           & (pos[:, 1] > SCALP_CAP_EAR[1]) & (pos[:, 1] < SCALP_CAP_EAR[2]))
+           & (pos[:, 1] > SCALP_CAP_EAR[1]) & (pos[:, 1] < SCALP_CAP_EAR[2])
+           & (pos[:, 2] > SCALP_CAP_EAR[3]) & (pos[:, 2] < SCALP_CAP_EAR[4]))
     weight[ear] = 0.0
     albedo = Image.open(target).convert("RGB")
     size = albedo.size[0]
@@ -586,6 +749,110 @@ def paint_scalp_cap(model: pathlib.Path, target: pathlib.Path,
     print(f"{'scalp cap roughness/metallic':38} -> {surface.name:34}")
 
 
+## A wave in the hair (character_aaa_plan.md R1), as two normal maps.
+##
+## The hanging lengths fell as flat, straight sheets: on hair_shot.tscn's back
+## shot one smooth highlight ran down the whole length. His hair in 2K26 hangs
+## in loose waves, and what makes a wave read under a key light is the
+## highlight breaking into bands down the length -- the surface normal tilting
+## back and forth along the strand.
+##
+## The wave cannot live in the hair atlases. Only the hanging lengths wave --
+## a slicked crown does not -- and measured, 30% of M_Hair's atlas is shared
+## by crown cards and hanging cards (the same strand strips reused), so any
+## wave painted there ripples the crown too. So it is a DETAIL normal on UV2,
+## and RomanModel._volumize_hair writes UV2 from where each hair vertex sits
+## in bind space: u2 the angle round the head (0.5 at the back, so the seam
+## is at the face, where nothing hangs), v2 the height down from
+## HAIR_WAVE_Y[1]. The map below is a function of that height and angle,
+## exactly: full wave below HAIR_WAVE_HANG_Y[0], none above [1], whatever
+## atlas texel the card samples.
+##
+## Its phase drifts round the head (hair_wave_phase), so neighbouring clumps
+## wave out of step -- one phase everywhere lays every card's bands level, a
+## corrugated sheet. The same formula is in RomanModel.hair_wave_phase, which
+## bends the hanging cards' geometry on the same wave, so the bands of light
+## sit on the bends of the silhouette.
+##
+## Godot mixes the detail normal into the base normal by the detail albedo's
+## alpha (RomanModel.HAIR_WAVE_MIX, 0.5), so both maps are written at
+## 1 / mix of their slope.
+HAIR_WAVE_MAP = "roman_reigns_hair_wave_nrm.png"
+HAIR_WAVE_SIZE = (512, 1024)
+## v2 spans this bind-space height, top to bottom: the hair's whole height
+## after RomanModel.hair_stretch (cards end ~1.17).
+HAIR_WAVE_Y = (1.08, 1.86)
+## 0.78 m / 0.052 m = 15 whole waves, so the map tiles if it ever repeats.
+## 5 cm: his hair hangs in wet ringlets, tighter than a loose wave (the
+## owner's photos, Oct 2026); 6.5 cm read as a gentle swell.
+HAIR_WAVE_LENGTH = 0.052
+HAIR_WAVE_AMP = 0.0075
+HAIR_WAVE_HANG_Y = (1.60, 1.68)
+HAIR_WAVE_MIX = 0.5
+
+
+def hair_wave_phase(u2):
+    """Phase (in waves) of the hair wave at u2 round the head. A fixed sum of
+    sines rather than seeded noise, so RomanModel can compute the same value
+    for the geometry: smooth, and out of step every few centimetres."""
+    import numpy as np
+    t = 2.0 * np.pi * np.asarray(u2)
+    return (0.50 * np.sin(7.0 * t) + 0.30 * np.sin(13.0 * t + 1.3)
+            + 0.20 * np.sin(23.0 * t + 2.1))
+
+
+def build_wave_normal(target: pathlib.Path) -> None:
+    import numpy as np
+    w, h = HAIR_WAVE_SIZE
+    u2 = (np.arange(w) + 0.5) / w
+    v2 = (np.arange(h) + 0.5) / h
+    uu, vv = np.meshgrid(u2, v2)
+    y = HAIR_WAVE_Y[1] - vv * (HAIR_WAVE_Y[1] - HAIR_WAVE_Y[0])
+    t = np.clip((HAIR_WAVE_HANG_Y[1] - y) / (HAIR_WAVE_HANG_Y[1] - HAIR_WAVE_HANG_Y[0]), 0.0, 1.0)
+    weight = t * t * (3.0 - 2.0 * t)
+    angle = 2.0 * np.pi * ((HAIR_WAVE_Y[1] - y) / HAIR_WAVE_LENGTH + hair_wave_phase(uu))
+    # Slope of the height along the strand, metres per metre.
+    slope = weight * HAIR_WAVE_AMP * 2.0 * np.pi / HAIR_WAVE_LENGTH * np.cos(angle) / HAIR_WAVE_MIX
+    n = np.stack([np.zeros_like(slope), -slope, np.ones_like(slope)], axis=-1)
+    n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    Image.fromarray(np.round((n * 0.5 + 0.5) * 255).astype(np.uint8), "RGB") \
+        .save(target, optimize=True)
+    print(f"{'hair wave':38} -> {target.name:34}")
+
+
+## The strands, as the base normal map of each hair atlas: a tilt across the
+## strands that changes strand to strand, so the highlight breaks into
+## strands instead of lying on a card as one sheen. Constant along the strand
+## (v), so the map is a strip HAIR_STRAND_ROWS tall that repeats down the
+## atlas. Strand width is set in metres and converted per atlas, whose u
+## spans different widths of hair (measured off the card edges: M_Hair
+## 0.313 m per unit, S_Hair 0.064).
+HAIR_STRAND_MAPS = {
+    "roman_reigns_hair_strands_nrm.png": 0.313,
+    "roman_reigns_hair_4_strands_nrm.png": 0.064,
+}
+HAIR_STRAND_WIDTH = 0.0012
+HAIR_STRAND_SLOPE = 0.14
+HAIR_STRAND_SIZE = (1024, 8)
+HAIR_STRAND_SEED = 17
+
+
+def build_strand_normal(target: pathlib.Path, metres_per_u: float) -> None:
+    import numpy as np
+    w, h = HAIR_STRAND_SIZE
+    rng = np.random.default_rng(HAIR_STRAND_SEED)
+    u = (np.arange(w) + 0.5) / w
+    step = HAIR_STRAND_WIDTH / metres_per_u
+    knots = np.arange(0.0, 1.0 + step, step)
+    values = rng.uniform(-1.0, 1.0, len(knots))
+    values[-1] = values[0]   # wraps across u = 1
+    slope = np.interp(u, knots, values) * HAIR_STRAND_SLOPE / HAIR_WAVE_MIX
+    n = np.stack([-slope, np.zeros_like(slope), np.ones_like(slope)], axis=-1)
+    n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    row = np.round((n * 0.5 + 0.5) * 255).astype(np.uint8)
+    Image.fromarray(np.repeat(row[None, :, :], h, axis=0), "RGB").save(target, optimize=True)
+    print(f"{'hair strands':38} -> {target.name:34} {len(knots) - 1} strands across")
+
 def main() -> int:
     if not CHARACTERS.is_dir():
         sys.exit(f"not found: {CHARACTERS}")
@@ -601,8 +868,12 @@ def main() -> int:
     )
     paint_brows(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     paint_beard_shadow(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
+    paint_beard_strands(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     paint_scalp_cap(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png",
                     CHARACTERS / "roman_reigns_head_rm.png")
+    build_wave_normal(CHARACTERS / HAIR_WAVE_MAP)
+    for target_name, metres_per_u in HAIR_STRAND_MAPS.items():
+        build_strand_normal(CHARACTERS / target_name, metres_per_u)
     return 0
 
 

@@ -8073,3 +8073,49 @@ which is phase 1's eye kit.
 597 tests pass (`test_roman_hair`: the surface map's skin value against
 `SKIN_ROUGHNESS`, no metal on the face, the hair, beard and head materials).
 The texture build is byte-identical across runs.
+
+## Round: Roman's hair and beard, R1 complete
+
+The rest of R1 in `gauntlet/refs/character_aaa_plan.md`, checked on
+`hair_shot.tscn` (back, three-quarter, and a new `roman_face` front shot) and
+against the owner's photos of him, which arrived mid-round and moved three
+decisions.
+
+- **A wave.** Painted into the hair atlas it would ripple the slicked crown:
+  measured, 30% of M_Hair's atlas is shared by crown and hanging cards. So
+  `_volumize_hair` writes a UV2 from where each vertex sits (angle round the
+  head, height), and the hair materials carry a detail normal on it
+  (`roman_reigns_hair_wave_nrm.png`) that is a function of exactly that: full
+  wave below y 1.60, none above 1.68. The same phase formula bends the hanging
+  geometry 11 mm sideways, so the light bands sit on the bends. 5.2 cm: his
+  hair hangs in ringlets, tighter than the 6.5 cm first tried. A test holds
+  the map and the geometry to one wave.
+- **Strands.** Base normal maps per atlas (`hair_strands_nrm`,
+  `hair_4_strands_nrm`) tilt the surface strand to strand so the highlight
+  breaks up; both are flagged as normal maps on import.
+- **Flyaways** at the nape: one in three nape triangles copied 3-8 mm off,
+  slid along its atlas strip, at 45% alpha -- copies of his own cards, so they
+  ride the hair springs. Not at the temples: wet and slicked, his are tight.
+- **Thinner.** The owner's photos show the crown flat to the scalp and the
+  lengths separating. The earlier volume lift (1.3 crown / 1.6 hang) is down
+  to 1.0 / 1.15, and one card in two loses its tail below its own cutoff, so
+  the ends stagger and fray.
+- **The beard.** Groomed and boxed, as in the photos: `paint_beard_strands`
+  grows ~22,000 short strokes over the head mesh's own triangles under a
+  cheek line that drops from the moustache to the jaw and climbs only at the
+  ear into a narrow sideburn; the cards' side fade is now by angle round the
+  face and only above the jaw, so the moustache is no longer at half opacity.
+  The first pass painted the whole cheek -- "way too much" -- and the line was
+  lowered and the fill thinned.
+- **The ear.** The cap's ear mask is bounded in depth by the ear, so the skin
+  behind it is capped and the side strands no longer stipple over tan skin.
+
+Still open: from behind, the hair still reads as one sheet rather than
+separate wet ringlets. That is the supplied cards (overlapping layers); it
+needs new ringlet cards built in Blender and skinned to his hair chains. The
+eyes are phase 1.
+
+### Checks
+599 tests pass (`test_roman_hair`: the wave map against the geometry's
+wave, the flyaway and thinning proportions, the materials). The texture build
+is byte-identical across runs.

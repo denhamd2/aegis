@@ -67,6 +67,7 @@ func _ready() -> void:
 		for shot: Array in [
 				["roman_34", Vector3(-0.05, 1.95, 0.75), Vector3(-0.40, 1.72, 0.0), 26.0],
 				["roman_back", Vector3(-1.2, 2.05, -0.5), Vector3(-0.45, 1.70, 0.0), 26.0],
+				["roman_face", Vector3(0.30, 1.73, 0.05), Vector3(-0.45, 1.69, 0.0), 26.0],
 				["cody_34", Vector3(0.05, 1.93, 0.75), Vector3(0.40, 1.70, 0.0), 26.0],
 				["cody_top", Vector3(1.2, 2.10, 0.4), Vector3(0.45, 1.70, 0.0), 26.0]]:
 			if not (shot[0] as String).begins_with(_only):

@@ -123,3 +123,69 @@ func test_hair_beard_and_scalp_materials() -> void:
 				assert_float(m.metallic_specular).is_equal_approx(RomanModel.HAIR_SPECULAR, 0.001)
 				seen["hair"] = true
 	assert_int(seen.size()).is_equal(3)
+
+
+## The wave map (build_roman_hair_alpha.py, build_wave_normal) and the wave
+## bent into the geometry (RomanModel.hair_wave) are one wave: the map's
+## tilt along the strand must follow cos() of the phase RomanModel computes,
+## on the hanging lengths, and be flat over the crown. If either side's
+## wavelength, height span or phase formula drifts, the bands of light stop
+## sitting on the bends.
+func test_wave_map_follows_the_geometry_wave() -> void:
+	var path := "res://assets/characters/roman_reigns_hair_wave_nrm.png"
+	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+	var span := RomanModel.HAIR_WAVE_Y.y - RomanModel.HAIR_WAVE_Y.x
+	for column: int in [37, 200, 381]:
+		var u2 := (column + 0.5) / image.get_width()
+		var sxy := 0.0
+		var sxx := 0.0
+		var syy := 0.0
+		var crown := 0.0
+		for row in image.get_height():
+			var v2 := (row + 0.5) / image.get_height()
+			var y := RomanModel.HAIR_WAVE_Y.y - v2 * span
+			var g := image.get_pixel(column, row).g - 0.5
+			if y > RomanModel.HAIR_WAVE_HANG_Y.y:
+				crown = maxf(crown, absf(g))
+			elif y < RomanModel.HAIR_WAVE_HANG_Y.x:
+				var expected := -cos(TAU * ((RomanModel.HAIR_WAVE_Y.y - y)
+						/ RomanModel.HAIR_WAVE_LENGTH + RomanModel.hair_wave_phase(u2)))
+				sxy += g * expected
+				sxx += g * g
+				syy += expected * expected
+		assert_float(sxy / sqrt(sxx * syy)).is_greater(0.95)
+		assert_float(crown).is_less(0.01)
+
+
+## The flyaway layer exists and stays sparse: between 2% and 12.5% of the
+## scalp's triangles again (it is one in FLYAWAY_EVERY of the nape
+## triangles), so it frays the edges rather than doubling the hair. And the
+## thinning of the hanging ends (HAIR_THIN_EVERY) takes a real share of the
+## scalp, but well under a third of it -- only tails go, never whole cards.
+## Then the count adds up: nothing else touched the scalp's triangles.
+func test_flyaways_and_thinned_ends_stay_in_proportion() -> void:
+	var source := (load("res://assets/characters/roman_reigns.glb") as PackedScene).instantiate()
+	var before := _scalp_triangles(source)
+	source.free()
+	assert_int(before).is_greater(0)
+	var scalp: MeshInstance3D = null
+	for mi: MeshInstance3D in _model.find_children("", "MeshInstance3D", true, false):
+		if mi.has_meta("hair_flyaways"):
+			scalp = mi
+	assert_object(scalp).is_not_null()
+	var added: int = scalp.get_meta("hair_flyaways")
+	var thinned: int = scalp.get_meta("hair_thinned")
+	assert_int(added).is_between(before / 50, before / 8)
+	assert_int(thinned).is_between(before / 50, before / 3)
+	assert_int(_scalp_triangles(_model)).is_equal(before - thinned + added)
+
+
+static func _scalp_triangles(root: Node) -> int:
+	for mi: MeshInstance3D in root.find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(s)
+			if m and m.resource_name == RomanModel.FLYAWAY_MATERIAL:
+				return mi.mesh.surface_get_array_index_len(s) / 3
+	return 0

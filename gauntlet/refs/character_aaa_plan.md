@@ -176,14 +176,20 @@ if these hold:
 
 Roman is the closest to 2K already. Improve in place; no rebuild.
 
-- **R1. Hair** (first pass done; see README "Roman's hair, phase 0"):
-  - hanging lengths past the shoulders -- done, checked on hair_shot.tscn;
-  - wet, narrow highlights -- done (HAIR_SPECULAR 0.2 under the 2K26 rig);
-  - a painted scalp cap under the cards, matte and near-zero reflectance --
-    done (added: the skin between cards was the biggest single defect);
-  - beard to its own warm brown-black -- done;
-  - still to do: a wave in the normal map; a third card layer for flyaways
-    at the temples and nape.
+- **R1. Hair** (done to the limit of the supplied cards; README "Roman's
+  hair and beard, R1 complete"):
+  - hanging lengths past the shoulders; wet, narrow highlights; a matte
+    scalp cap; the beard's own warm brown-black -- done;
+  - a wave: a detail normal on a position UV2 plus the same wave bent into
+    the hanging geometry; strand ridges in the base normal -- done;
+  - flyaways at the nape; staggered, frayed ends -- done;
+  - crown slicked flat and the hang slimmed, to the owner's photos -- done;
+  - the beard: groomed cheek line, sideburns into the hair, painted as
+    strands under the cards, full moustache -- done.
+  - Still open: the back still reads as one sheet from behind rather than
+    separate wet ringlets. The supplied cards are overlapping layers;
+    separating them needs new ringlet card geometry built in Blender and
+    skinned to his J_Hair chains (a new R1b).
 - **R2. Face texture to 4K.** Re-project from his best reference photos onto
   the existing UVs (`build_roman_hair_alpha.py` already rebuilds his head
   albedo): pores, beard-line shadow, the sheen on cheekbones and nose.

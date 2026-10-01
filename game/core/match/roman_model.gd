@@ -456,25 +456,33 @@ func _add_hair_springs() -> void:
 # So each card vertex is pulled toward the nearest skin vertex, keeping
 # BEARD_KEEP of its standoff on the jaw and BEARD_KEEP_SIDES where the fade
 # is, and its vertex-colour alpha goes from 1 to BEARD_ALPHA_SIDES across the
-# same band -- the sides thin out into stubble instead of stopping. The fade
-# is a function of bind-pose position, in the .glb's own metres: up through
-# the sideburns (BEARD_FADE_Y) and back toward the ear (BEARD_FADE_X/Z).
-# Runtime, because the supplied .glb is never edited; skin weights are left
-# exactly as they are, so the trimmed cards still ride the head.
+# same band. Runtime, because the supplied .glb is never edited; skin weights
+# are left exactly as they are, so the trimmed cards still ride the head.
+#
+# The fade is by the angle round the face from straight ahead (beard_fade),
+# 0 to BEARD_SIDE_DEG.x and full from .y. It used to run on height as well
+# (up through y 1.625-1.695), and the moustache sits at 1.655-1.664: it was
+# trimmed flat and drawn at half opacity, where his is full. And the sides at
+# 0.22 alpha read as a grey smear rather than a thinning beard. Now the
+# coverage up the cheeks and sideburns is PAINTED as hairs under a groomed
+# cheek line (build_roman_hair_alpha.py, paint_beard_strands), the cards on
+# the sides are short and at 0.5, and the moustache and chin keep their
+# full cards. BEARD_SIDE_DEG and BEARD_SIDE_Y match the painter's.
 const BEARD_KEEP := 0.70
 const BEARD_KEEP_SIDES := 0.20
-const BEARD_ALPHA_SIDES := 0.22
-const BEARD_FADE_Y := Vector2(1.625, 1.695)
-const BEARD_FADE_X := Vector2(0.040, 0.072)
-const BEARD_FADE_Z := Vector2(0.10, 0.05)
+const BEARD_ALPHA_SIDES := 0.50
+const BEARD_SIDE_DEG := Vector2(35.0, 62.0)
+## And only above the jaw line: the jaw's corners under the ears carry the
+## full beard in the reference; it is the sideburn above them that thins.
+const BEARD_SIDE_Y := Vector2(1.615, 1.655)
 const BEARD_CELL := 0.01
 
-## 0 on the jaw and chin, 1 up the sideburns and back by the ear.
+## 0 on the front of the face -- moustache, chin -- and along the jaw; 1 up
+## the sideburn toward the ear.
 static func beard_fade(p: Vector3) -> float:
-	var h := smoothstep(BEARD_FADE_Y.x, BEARD_FADE_Y.y, p.y)
-	var side := smoothstep(BEARD_FADE_X.x, BEARD_FADE_X.y, absf(p.x)) \
-			* (1.0 - smoothstep(BEARD_FADE_Z.y, BEARD_FADE_Z.x, p.z))
-	return maxf(h, 0.8 * side)
+	var angle := rad_to_deg(atan2(absf(p.x), p.z))
+	return smoothstep(BEARD_SIDE_DEG.x, BEARD_SIDE_DEG.y, angle) \
+			* smoothstep(BEARD_SIDE_Y.x, BEARD_SIDE_Y.y, p.y)
 
 
 func _trim_beard() -> void:
@@ -555,9 +563,15 @@ func _trim_beard() -> void:
 # HAIR_LIFT_TOP times its standoff on the crown and HAIR_LIFT_HANG where it
 # hangs, blended between -- and only HAIR_LIFT_FRONT at the front hairline,
 # so no fringe falls forward over his forehead. Skin weights untouched.
-const HAIR_LIFT_TOP := 1.3
-const HAIR_LIFT_HANG := 1.6
-const HAIR_LIFT_FRONT := 1.15
+#
+# Taken back down (character_aaa_plan.md R1, the owner's photos of him, Oct
+# 2026): wet and slicked, the crown lies flat on the scalp and the lengths
+# hang as separate ringlets, not a mass -- at 1.3 / 1.6 the crown read domed
+# and the back as one thick sheet. The supplied cards' own 11 mm on top is
+# the slick; the hang keeps a little lift so it clears the neck.
+const HAIR_LIFT_TOP := 1.0
+const HAIR_LIFT_HANG := 1.15
+const HAIR_LIFT_FRONT := 1.0
 ## Crown above this, hang below the next; blended between.
 const HAIR_LIFT_Y := Vector2(1.62, 1.74)
 ## His hair falls loose PAST the shoulders, onto the upper back; the cards
@@ -597,6 +611,107 @@ static func hair_stretch(p: Vector3) -> Vector3:
 	var back := 1.0 - smoothstep(HAIR_STRETCH_Z - 0.04, HAIR_STRETCH_Z, p.z)
 	var below := HAIR_STRETCH_FROM - p.y
 	return Vector3(p.x, HAIR_STRETCH_FROM - below * lerpf(1.0, HAIR_STRETCH, back), p.z)
+
+
+## The wave in the hanging lengths (character_aaa_plan.md R1). Two halves on
+## one wave, so the bands of light sit on the bends:
+##   * geometry: each hanging vertex is pushed sideways round the head by
+##     HAIR_WAVE_GEO * sin(wave), so the sheets bend in an S down their length
+##     and the silhouette waves;
+##   * light: UV2 is written as (angle round the head, height), and the hair
+##     materials carry a detail normal on UV2 (roman_reigns_hair_wave_nrm.png,
+##     build_roman_hair_alpha.py build_wave_normal) that tilts the surface
+##     along the strand on the same wave.
+## Why UV2 and not the hair atlas: 30% of M_Hair's atlas is shared between
+## crown and hanging cards, so a wave painted there would ripple the slicked
+## crown. HAIR_WAVE_Y, HAIR_WAVE_LENGTH, HAIR_WAVE_HANG_Y and hair_wave_phase
+## must match build_wave_normal's; test_roman_hair checks the map against them.
+const HAIR_WAVE_Y := Vector2(1.08, 1.86)
+const HAIR_WAVE_LENGTH := 0.052
+const HAIR_WAVE_HANG_Y := Vector2(1.60, 1.68)
+const HAIR_WAVE_GEO := 0.011
+## How much of the final hair normal is the wave map (the detail albedo's
+## alpha); the strand maps are authored at 1 / this of their slope, as is the
+## wave map.
+const HAIR_WAVE_MIX := 0.5
+## Base normal map per hair material: strand ridges on its own atlas.
+const HAIR_STRANDS := {
+	"Material.017": "hair_4_strands_nrm",
+	"Material.018": "hair_strands_nrm",
+	"Material.019": "hair_4_strands_nrm",
+	"Material.020": "hair_strands_nrm",
+}
+
+
+## Phase of the wave, in waves, at u2 round the head: a fixed sum of sines,
+## so the map's generator computes the same thing.
+static func hair_wave_phase(u2: float) -> float:
+	var t := TAU * u2
+	return 0.50 * sin(7.0 * t) + 0.30 * sin(13.0 * t + 1.3) + 0.20 * sin(23.0 * t + 2.1)
+
+
+## UV2 for a hair vertex: the angle round the head (0.5 straight behind it,
+## so the wrap is at the face) and the height down from HAIR_WAVE_Y.y.
+static func hair_wave_uv2(p: Vector3) -> Vector2:
+	return Vector2(atan2(p.x, -p.z) / TAU + 0.5,
+			(HAIR_WAVE_Y.y - p.y) / (HAIR_WAVE_Y.y - HAIR_WAVE_Y.x))
+
+
+## 1 where the hair hangs, 0 on the crown.
+static func hair_wave_weight(y: float) -> float:
+	return 1.0 - smoothstep(HAIR_WAVE_HANG_Y.x, HAIR_WAVE_HANG_Y.y, y)
+
+
+## The ends separate (the owner's photos, Oct 2026): wet, his lengths hang
+## as ringlets of different lengths with gaps between them, not one sheet.
+## The supplied cards overlap into a solid sheet, and only removing some of
+## them opens it. So one card in HAIR_THIN_EVERY behind the ears loses its
+## tail below a cutoff of its own between HAIR_THIN_CUT.x and .y: the ends
+## stagger and fray into clumps, and nothing above the cutoff thins, so the
+## crown and the fall from it stay whole. A card is a connected strip of
+## triangles; the choice and the cutoff come from a hash of it, so it is the
+## same every build. Of 131 cards only ~800 triangles hang (bind y < 1.58),
+## so even at one in two this is a few percent of the scalp, but a large share
+## of the sheet you see from behind.
+const HAIR_THIN_EVERY := 2
+const HAIR_THIN_CUT := Vector2(1.30, 1.58)
+
+
+## Flyaways (character_aaa_plan.md R1): a third, sparse layer of cards at
+## the nape, where wet hair separates out of the hanging mass into strays.
+## Every FLYAWAY_EVERY-th scalp-card triangle there is copied,
+## pushed FLYAWAY_LIFT further off the skin (varied per triangle, so they do
+## not form a second shell), slid FLYAWAY_UV_SHIFT along its strip of the
+## atlas so it carries different strands from the card under it, and drawn at
+## FLYAWAY_ALPHA. Copies of the scalp's own triangles, so each keeps its
+## card's skin weights and rides the same spring chains -- no new rig.
+const FLYAWAY_EVERY := 3
+const FLYAWAY_LIFT := Vector2(0.003, 0.008)
+const FLYAWAY_UV_SHIFT := 0.013
+const FLYAWAY_ALPHA := 0.45
+## The material the flyaways are drawn from: M_Hair's scalp cards.
+const FLYAWAY_MATERIAL := "Material.018"
+
+
+## The nape and the backs of the hanging lengths, bind space. Not the
+## temples: slicked wet, his are tight to the head (the owner's photos), and
+## a fringe of strays there read as frizz.
+static func flyaway_region(p: Vector3) -> bool:
+	return p.z < -0.03 and p.y > 1.50 and p.y < 1.67
+
+
+static func hair_wave(p: Vector3) -> Vector3:
+	var w := hair_wave_weight(p.y)
+	if w <= 0.0:
+		return p
+	var uv2 := hair_wave_uv2(p)
+	var a := TAU * ((HAIR_WAVE_Y.y - p.y) / HAIR_WAVE_LENGTH + hair_wave_phase(uv2.x))
+	var radial := Vector2(p.x, p.z)
+	if radial.length() < 0.001:
+		return p
+	radial = radial.normalized()
+	var side := Vector2(-radial.y, radial.x) * HAIR_WAVE_GEO * w * sin(a)
+	return Vector3(p.x + side.x, p.y, p.z + side.y)
 
 
 func _volumize_hair() -> void:
@@ -644,17 +759,156 @@ func _volumize_hair() -> void:
 		# albedo multiplies it.
 		var shade := PackedColorArray()
 		shade.resize(verts.size())
+		var uv2 := PackedVector2Array()
+		uv2.resize(verts.size())
+		var skins := PackedVector3Array()
+		skins.resize(verts.size())
 		for i in verts.size():
 			var skin := _nearest_in_grid(grid, verts[i])
+			skins[i] = skin
 			var k := 1.0
 			if skin != Vector3.INF:
 				lifted[i] = skin + (verts[i] - skin) * hair_lift(verts[i])
 				k = hair_root_to_tip(lifted[i].distance_to(skin))
 			lifted[i] = hair_stretch(lifted[i])
+			uv2[i] = hair_wave_uv2(lifted[i])
+			lifted[i] = hair_wave(lifted[i])
 			shade[i] = Color(k, k, k, 1.0)
 		arrays[Mesh.ARRAY_VERTEX] = lifted
 		arrays[Mesh.ARRAY_COLOR] = shade
+		arrays[Mesh.ARRAY_TEX_UV2] = uv2
+		var material := mi.mesh.surface_get_material(surface)
+		if material and material.resource_name == FLYAWAY_MATERIAL:
+			mi.set_meta("hair_thinned", _thin_hanging(arrays))
+			mi.set_meta("hair_flyaways", _add_flyaways(arrays, verts, skins))
 		mi.mesh = _rebuilt(source, surface, arrays)
+
+
+## Shortens one card in HAIR_THIN_EVERY behind the ears (see HAIR_THIN_CUT).
+## Works on the final vertex positions; drops triangles from the index only.
+## Returns the triangles removed.
+static func _thin_hanging(arrays: Array) -> int:
+	var index: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null \
+			else PackedInt32Array()
+	if index.is_empty():
+		return 0
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	# Cards: connected components over shared vertices (union-find).
+	var parent := PackedInt32Array()
+	parent.resize(verts.size())
+	for i in verts.size():
+		parent[i] = i
+	for t in range(0, index.size(), 3):
+		for k in [1, 2]:
+			var a := _find_root(parent, index[t])
+			var b := _find_root(parent, index[t + k])
+			if a != b:
+				parent[maxi(a, b)] = mini(a, b)
+	var kept := PackedInt32Array()
+	var removed := 0
+	for t in range(0, index.size(), 3):
+		var card := _find_root(parent, index[t])
+		var h := fposmod(sin(float(card) * 78.233) * 43758.5453, 1.0)
+		if int(h * 1000.0) % HAIR_THIN_EVERY == 0:
+			var cut := lerpf(HAIR_THIN_CUT.x, HAIR_THIN_CUT.y,
+					fposmod(sin(float(card) * 12.9898) * 24634.6345, 1.0))
+			var low := true
+			for k in 3:
+				var p := verts[index[t + k]]
+				if p.y >= cut or p.z > 0.02:
+					low = false
+			if low:
+				removed += 1
+				continue
+		kept.append(index[t])
+		kept.append(index[t + 1])
+		kept.append(index[t + 2])
+	arrays[Mesh.ARRAY_INDEX] = kept
+	return removed
+
+
+static func _find_root(parent: PackedInt32Array, i: int) -> int:
+	while parent[i] != i:
+		parent[i] = parent[parent[i]]
+		i = parent[i]
+	return i
+
+
+## Appends the flyaway layer to a scalp surface's arrays (see FLYAWAY_EVERY).
+## `bind` is the surface's vertices as supplied, which pick the regions;
+## `skins` the nearest skin point to each, which sets "off the skin".
+## Returns the triangles added.
+static func _add_flyaways(arrays: Array, bind: PackedVector3Array,
+		skins: PackedVector3Array) -> int:
+	var index: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null \
+			else PackedInt32Array()
+	if index.is_empty():
+		return 0
+	for c in [Mesh.ARRAY_CUSTOM0, Mesh.ARRAY_CUSTOM1, Mesh.ARRAY_CUSTOM2, Mesh.ARRAY_CUSTOM3]:
+		if arrays[c] != null:
+			return 0
+	var n := bind.size()
+	var pick := PackedInt32Array()
+	var lift := PackedFloat32Array()
+	for t in range(0, index.size(), 3):
+		if (t / 3) % FLYAWAY_EVERY != 0:
+			continue
+		if not (flyaway_region(bind[index[t]]) and flyaway_region(bind[index[t + 1]])
+				and flyaway_region(bind[index[t + 2]])):
+			continue
+		# A per-triangle lift from a hash of its index: deterministic, varied.
+		var h := fposmod(sin(float(t) * 12.9898) * 43758.5453, 1.0)
+		for k in 3:
+			pick.append(index[t + k])
+			lift.append(lerpf(FLYAWAY_LIFT.x, FLYAWAY_LIFT.y, h))
+	if pick.is_empty():
+		return 0
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	for j in pick.size():
+		var i := pick[j]
+		var out := normals[i]
+		if skins[i] != Vector3.INF and verts[i].distance_to(skins[i]) > 0.0005:
+			out = (verts[i] - skins[i]).normalized()
+		verts.append(verts[i] + out * lift[j])
+		normals.append(normals[i])
+		index.append(n + j)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = index
+	if arrays[Mesh.ARRAY_TANGENT] != null:
+		var tangents: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT]
+		for i in pick:
+			for k in 4:
+				tangents.append(tangents[i * 4 + k])
+		arrays[Mesh.ARRAY_TANGENT] = tangents
+	var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	for i in pick:
+		var c := colors[i]
+		colors.append(Color(c.r, c.g, c.b, c.a * FLYAWAY_ALPHA))
+	arrays[Mesh.ARRAY_COLOR] = colors
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	for i in pick:
+		uv.append(uv[i] + Vector2(FLYAWAY_UV_SHIFT, 0.0))
+	arrays[Mesh.ARRAY_TEX_UV] = uv
+	if arrays[Mesh.ARRAY_TEX_UV2] != null:
+		var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2]
+		for i in pick:
+			uv2.append(uv2[i])
+		arrays[Mesh.ARRAY_TEX_UV2] = uv2
+	if arrays[Mesh.ARRAY_BONES] != null:
+		# Bones arrive as PackedInt32Array or PackedFloat32Array; 4 or 8 per
+		# vertex, which the weights' length says.
+		var bones = arrays[Mesh.ARRAY_BONES]
+		var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+		var per := weights.size() / n
+		for i in pick:
+			for k in per:
+				bones.append(bones[i * per + k])
+				weights.append(weights[i * per + k])
+		arrays[Mesh.ARRAY_BONES] = bones
+		arrays[Mesh.ARRAY_WEIGHTS] = weights
+	return pick.size() / 3
 
 
 ## A copy of `source` with one surface's arrays replaced, materials, names
@@ -764,6 +1018,7 @@ func _fix_materials() -> void:
 					# root-to-tip shade _volumize_hair writes as vertex colour.
 					HairLook.apply(material, HAIR_FLOW)
 					material.vertex_color_use_as_albedo = true
+					_add_hair_normals(material, key)
 				var scissor: float = BEARD_ALPHA_SCISSOR if key == "beard" \
 					else HAIR_ALPHA_SCISSOR
 				if key == "beard" or key in SCALP_BLEND:
@@ -820,6 +1075,22 @@ func _fix_materials() -> void:
 			mesh_instance.set_surface_override_material(surface, material)
 	# For Sweat (WrestlerController attaches it).
 	set_meta("skin_materials", skin)
+
+## The strand ridges as the base normal map, and the wave as a detail
+## normal on UV2 (see hair_wave).
+func _add_hair_normals(material: BaseMaterial3D, key: String) -> void:
+	if not HAIR_STRANDS.has(key):
+		return
+	material.normal_enabled = true
+	material.normal_texture = _texture(HAIR_STRANDS[key])
+	var mix := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	mix.set_pixel(0, 0, Color(1, 1, 1, HAIR_WAVE_MIX))
+	material.detail_enabled = true
+	material.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	material.detail_uv_layer = BaseMaterial3D.DETAIL_UV_2
+	material.detail_albedo = ImageTexture.create_from_image(mix)
+	material.detail_normal = _texture("hair_wave_nrm")
+
 
 func _texture(suffix: String) -> Texture2D:
 	return load(TEXTURE_DIR % suffix) as Texture2D
