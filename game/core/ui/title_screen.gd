@@ -35,12 +35,18 @@ const KEY_ART := "res://assets/ui/title_key_art.png"
 ## or on the logo at any window shape.
 const SAFE_ART := Rect2(0.265, 0.385, 0.47, 0.45)
 
-enum Phase { TITLE, CONTROLS, SELECT, VERSUS, LAUNCH }
+enum Phase { TITLE, CONTROLS, SELECT, VERSUS, LAUNCH, CAMERA }
 
 ## Menu rows. QUIT is dropped on Web, where SceneTree.quit() leaves the player
 ## staring at a dead canvas with no way back.
 const MENU_FIGHT := "FIGHT"
 const MENU_CONTROLS := "CONTROLS"
+const MENU_CAMERA := "CAMERA"
+## The camera options (CameraSettings, camera_aaa_plan.md D2): [label,
+## the values' names in CameraSettings' enum order].
+const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST"]], ["CUTS", ["ON", "OFF"]],
+		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]]]
+var camera_row := 0
 const MENU_QUIT := "QUIT"
 
 ## How long the VS card holds before the stinger wipes in, and the fade kept
@@ -113,7 +119,7 @@ func _ready() -> void:
 	_sfx.name = "Sfx"
 	add_child(_sfx)
 	_sfx.make_loop("crowd_bed").volume_db = MENU_CROWD_DB
-	_menu = [MENU_FIGHT, MENU_CONTROLS]
+	_menu = [MENU_FIGHT, MENU_CONTROLS, MENU_CAMERA]
 	if not OS.has_feature("web"):
 		_menu.append(MENU_QUIT)
 	var rng := RandomNumberGenerator.new()
@@ -163,6 +169,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("ui_up"):
 				menu_index = wrapi(menu_index - 1, 0, _menu.size())
 				accept_event()
+		Phase.CAMERA:
+			if event.is_action_pressed("ui_down"):
+				camera_row = wrapi(camera_row + 1, 0, CAMERA_ROWS.size())
+				accept_event()
+			elif event.is_action_pressed("ui_up"):
+				camera_row = wrapi(camera_row - 1, 0, CAMERA_ROWS.size())
+				accept_event()
+			elif event.is_action_pressed("ui_right"):
+				step_camera_option(1)
+				accept_event()
+			elif event.is_action_pressed("ui_left"):
+				step_camera_option(-1)
+				accept_event()
 		Phase.SELECT:
 			if event.is_action_pressed("ui_right"):
 				cursor = wrapi(cursor + 1, 0, _roster.size())
@@ -186,7 +205,7 @@ func _gui_input(event: InputEvent) -> void:
 					cursor = i
 	elif event is InputEventMouseButton and event.pressed \
 			and event.button_index == MOUSE_BUTTON_LEFT:
-		if phase == Phase.CONTROLS:
+		if phase == Phase.CONTROLS or phase == Phase.CAMERA:
 			_back()
 		elif phase == Phase.TITLE:
 			for i in _menu_rects.size():
@@ -210,10 +229,15 @@ func _accept() -> void:
 					cursor = 0
 				MENU_CONTROLS:
 					phase = Phase.CONTROLS
+				MENU_CAMERA:
+					phase = Phase.CAMERA
+					camera_row = 0
 				MENU_QUIT:
 					get_tree().quit()
 		Phase.CONTROLS:
 			phase = Phase.TITLE
+		Phase.CAMERA:
+			step_camera_option(1)
 		Phase.SELECT:
 			picks.append(_roster[cursor])
 			if picks.size() >= 2:
@@ -228,7 +252,7 @@ func _accept() -> void:
 
 func _back() -> void:
 	match phase:
-		Phase.CONTROLS:
+		Phase.CONTROLS, Phase.CAMERA:
 			phase = Phase.TITLE
 		Phase.SELECT:
 			if picks.is_empty():
@@ -409,6 +433,9 @@ func _draw() -> void:
 		Phase.CONTROLS:
 			_draw_title(view)
 			_draw_controls(view)
+		Phase.CAMERA:
+			_draw_title(view)
+			_draw_camera(view)
 		Phase.SELECT:
 			_draw_select(view)
 		Phase.VERSUS, Phase.LAUNCH:
@@ -463,6 +490,8 @@ func _draw_chrome(view: Vector2) -> void:
 			hint = "UP / DOWN  NAVIGATE      ENTER  SELECT"
 		Phase.CONTROLS:
 			hint = "ESC  BACK"
+		Phase.CAMERA:
+			hint = "UP / DOWN  OPTION      LEFT / RIGHT  CHANGE      ESC  BACK"
 		Phase.SELECT:
 			hint = "LEFT / RIGHT  CHANGE      ENTER  LOCK IN      ESC  BACK"
 	if hint == "":
@@ -550,6 +579,58 @@ func _draw_controls(view: Vector2) -> void:
 				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - kw,
 						y), keys, row_size, view.y * 0.002, TitleArt.STEEL)
 		y += view.y * 0.062
+
+
+## The camera options, read from and written to CameraSettings.
+static func camera_option(row: int) -> int:
+	match row:
+		0: return CameraSettings.coverage
+		1: return 0 if CameraSettings.cuts else 1
+		2: return CameraSettings.shake
+		_: return CameraSettings.replays
+
+
+func step_camera_option(dir: int) -> void:
+	var n: int = (CAMERA_ROWS[camera_row][1] as Array).size()
+	var v := wrapi(camera_option(camera_row) + dir, 0, n)
+	CameraSettings.cuts_enabled()   # reads the command line once, before we override it
+	match camera_row:
+		0: CameraSettings.coverage = v as CameraSettings.Coverage
+		1: CameraSettings.cuts = v == 0
+		2: CameraSettings.shake = v as CameraSettings.Shake
+		_: CameraSettings.replays = v as CameraSettings.Replays
+	if _sfx:
+		_sfx.play("ui_move", -8.0)
+
+
+func _draw_camera(view: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72))
+	var panel := Rect2(view.x * 0.28, view.y * 0.24, view.x * 0.44, view.y * 0.48)
+	TitleArt.draw_cut_panel(self, panel, view.y * 0.035,
+			Color(TitleArt.KEY_PANEL, 0.96), Color(TitleArt.KEY_GOLD_DIM, 0.8),
+			maxf(1.0, view.y * 0.0018))
+	TitleArt.draw_tracked(self, _font,
+			panel.position + Vector2(view.x * 0.030, view.y * 0.070),
+			"CAMERA", int(view.y * 0.044), view.y * 0.004, TitleArt.KEY_GOLD)
+	draw_rect(Rect2(panel.position + Vector2(view.x * 0.030, view.y * 0.085),
+			Vector2(panel.size.x - view.x * 0.060, maxf(1.0, view.y * 0.002))),
+			TitleArt.KEY_GOLD)
+	var row_size := int(view.y * 0.032)
+	var y := panel.position.y + view.y * 0.150
+	for i in CAMERA_ROWS.size():
+		var row: Array = CAMERA_ROWS[i]
+		var active := i == camera_row
+		TitleArt.draw_tracked(self, _font, Vector2(panel.position.x + view.x * 0.030, y),
+				row[0], row_size, view.y * 0.002,
+				TitleArt.KEY_GOLD if active else TitleArt.STEEL_DIM)
+		var value := String((row[1] as Array)[camera_option(i)])
+		if active:
+			value = "<  " + value + "  >"
+		var vw := TitleArt.tracked_width(_font, value, row_size, view.y * 0.002)
+		TitleArt.draw_tracked(self, _font,
+				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - vw, y),
+				value, row_size, view.y * 0.002, TitleArt.STEEL)
+		y += view.y * 0.070
 
 
 ## First keyboard event bound to each action, joined -- e.g. "W A S D".

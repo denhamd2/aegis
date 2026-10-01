@@ -75,6 +75,8 @@ var _last_pin_tick := 0
 var _winner: WrestlerController
 var _separated := false
 var _separating := false
+var _checking := false
+var _director: EntranceDirector
 
 
 func _ready() -> void:
@@ -96,7 +98,11 @@ func watch(referee: MatchReferee, wrestlers: Array) -> void:
 ## The entrances: she waits by the ropes, and when the stare-down breaks
 ## ("faceoff", F7) she steps in between them to send them to their corners.
 func follow(director: EntranceDirector) -> void:
+	_director = director
 	director.beat_started.connect(func(shot: String) -> void:
+		# A5: the check walks her to the man nearer her; any other shot sends
+		# her back to her spot by the ropes.
+		_checking = shot == "ref_check" and mode == Mode.PARK
 		if shot == "faceoff" and mode == Mode.PARK and not _separated:
 			_separated = true
 			_separating = true)
@@ -126,6 +132,18 @@ func _process(delta: float) -> void:
 				if not _go(_inside((a + b) * 0.5 + side * 0.9), WALK_SPEED, delta, false):
 					return
 				_face(_yaw_towards(-side), delta)
+			elif _checking and _director:
+				var man: WrestlerController = _director.checked_man()
+				if man == null:
+					return
+				var at := EntranceDirector.check_spot(man.global_position)
+				if not _go(at, WALK_SPEED, delta, false):
+					return
+				_face(_yaw_towards(_flat(man.global_position) - at), delta)
+			elif _flat(global_position).distance_to(PARK) > ARRIVED * 2.0 and _director:
+				if not _go(PARK, WALK_SPEED, delta, false):
+					return
+				_face(_yaw_towards(-global_position), delta)
 			else:
 				_face(_yaw_towards(-global_position), delta)
 			_play("strikes/ref_stand")

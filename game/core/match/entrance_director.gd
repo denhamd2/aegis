@@ -97,6 +97,18 @@ const FACEOFF_SET_TICKS := 30
 const FACEOFF_CAM_DISTANCE := 3.4
 const FACEOFF_CAM_HEIGHT := 1.5
 const FACEOFF_CAM_FOV := 34.0
+## The pre-match intro before the stare-down (camera_aaa_plan.md A5, 2K26
+## thumbnails 0-2), in ticks: the match card over a high wide of the ring;
+## the referee checking the man nearer her; then each man close in his
+## corner, the one she checked last so she is out of his shot.
+const INTRO_CARD_TICKS := 216
+const INTRO_CHECK_TICKS := 200
+const INTRO_CLOSE_TICKS := 150
+const INTRO_CARD_AT := Vector3(-8.0, 4.4, 3.4)
+const INTRO_CARD_LOOK := Vector3(0.0, 0.9, 0.0)
+const INTRO_CARD_FOV := 40.0
+const INTRO_CLOSE_FOV := 22.0
+const INTRO_CLOSE_DISTANCE := 2.6
 ## Every high shot hangs at RIG_CLEAR_Y: just under the light rig over the
 ## ring (ArenaBuilder.TRUSS_Y 7.6, its keys' bodies down to ~6.9), so the lens
 ## sees the building under the steel instead of through it. The owner: "the
@@ -552,6 +564,7 @@ func _add_faceoff() -> void:
 			/ FACEOFF_WALK_SPEED * TPS)))
 	var face_a := _flat(b.origin - a.origin)
 	var face_b := -face_a
+	_add_intro(a, b, face_a, face_b)
 	_beats.append({"kind": "pair", "ticks": walk, "shot": "faceoff_side", "moves": [
 			[_a, a.origin, a_in, face_a, "strikes/entrance_walk"],
 			[_b, b.origin, b_in, face_b, "strikes/entrance_walk"]]})
@@ -569,6 +582,45 @@ func _add_faceoff() -> void:
 			"shot": "faceoff", "moves": [
 			[_a, a.origin, a.origin, face_a, _wait_clip(_a)],
 			[_b, b.origin, b.origin, face_b, _wait_clip(_b)]]})
+
+
+## A5: both men on their marks while the broadcast introduces the match.
+func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3) -> void:
+	var hold := [[_a, a.origin, a.origin, face_a, _wait_clip(_a)],
+			[_b, b.origin, b.origin, face_b, _wait_clip(_b)]]
+	var checked := intro_checked(a.origin, b.origin)
+	_checked = checked
+	var first := _b if checked == _a else _a
+	var last := _a if checked == _a else _b
+	_beats.append({"kind": "pair", "ticks": INTRO_CARD_TICKS, "shot": "match_card",
+			"match_card": true, "moves": hold})
+	_beats.append({"kind": "pair", "ticks": INTRO_CHECK_TICKS, "shot": "ref_check",
+			"focus": last, "moves": hold})
+	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
+			"focus": first, "moves": hold})
+	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
+			"focus": last, "moves": hold})
+
+
+## Which man the referee checks: the one whose mark is nearer where she
+## waits (RefereeActor.PARK) -- she picks the same one off the same rule.
+func intro_checked(a_at: Vector3, b_at: Vector3) -> WrestlerController:
+	return _a if _flat(a_at).distance_to(RefereeActor.PARK) <= _flat(b_at).distance_to(RefereeActor.PARK) else _b
+
+
+## The man the intro's check is on, once the timeline is built.
+func checked_man() -> WrestlerController:
+	return _checked
+
+
+var _checked: WrestlerController
+
+
+## Where she stands to check a man: a metre in front of him, toward the centre.
+static func check_spot(man: Vector3) -> Vector3:
+	var flat := Vector3(man.x, 0.0, man.z)
+	var to_c := -flat.normalized() if flat.length() > 0.1 else Vector3.FORWARD
+	return flat + to_c * 1.0
 
 
 ## What a man does standing in the ring waiting -- never the grapple crouch
@@ -631,7 +683,9 @@ func _start_beat() -> void:
 		_portal_lights(beat["lights"], true, beat.get("light_color", Color.TRANSPARENT))
 	else:
 		_portal_lights("", false)
-	if beat.get("card", false) and w:
+	if beat.get("match_card", false):
+		_card.show_card("%s  VS  %s" % [_card_name(_b), _card_name(_a)], MATCH_CARD_SUBTITLE)
+	elif beat.get("card", false) and w:
 		if not _card.is_showing():
 			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
 					w.entrance_subtitle)
@@ -1347,6 +1401,13 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 			_camera.set_entrance_shot(END_WIDE_AT, END_WIDE_LOOK, END_WIDE_FOV, true)
 		"faceoff_seq":
 			_faceoff_seq(delta)
+		"match_card":
+			# A5: high on the hard camera's side, the whole ring, a slow push.
+			_camera.set_entrance_shot(INTRO_CARD_AT, INTRO_CARD_LOOK, INTRO_CARD_FOV, first, delta)
+		"corner_intro":
+			_intro_close(beat, first, delta)
+		"ref_check":
+			_intro_close(beat, first, delta)
 		"faceoff_side":
 			# F1, the walk to the centre: square to the line between them,
 			# wide, at eye height -- then the sequence takes the stare.
@@ -1442,6 +1503,34 @@ func _intro_shot() -> void:
 					lerpf(shot[4], shot[5], e), true)
 			return
 		start += length
+
+
+const MATCH_CARD_SUBTITLE := "AEW WORLD CHAMPIONSHIP"
+
+
+static func _card_name(w: WrestlerController) -> String:
+	var n := w.display_name if w.display_name != "" else String(w.name)
+	var parts := n.split(" ")
+	return parts[parts.size() - 1].to_upper()
+
+
+## A5: close on him in his corner, from the centre of the ring; for the
+## check, wider and off his shoulder, so the referee walks into it.
+func _intro_close(beat: Dictionary, first: bool, delta: float) -> void:
+	var man: WrestlerController = beat["focus"]
+	var head := _head_of(man)
+	var flat := _flat(man.global_position)
+	var to_c := -flat.normalized() if flat.length() > 0.1 else Vector3.FORWARD
+	var side := Vector3.UP.cross(to_c).normalized()
+	if side.dot(_camera.hard_cam_position - man.global_position) < 0.0:
+		side = -side
+	if beat["shot"] == "corner_intro":
+		_camera.set_entrance_shot(head + to_c * INTRO_CLOSE_DISTANCE + side * 0.45
+				+ Vector3.DOWN * 0.12, head, INTRO_CLOSE_FOV, first, delta)
+	else:
+		_camera.set_entrance_shot(man.global_position + to_c * 2.9 + side * 1.4
+				+ Vector3.UP * 1.45, man.global_position + Vector3.UP * 1.3, 34.0,
+				first, delta)
 
 
 ## His head, for the close-ups: the head bone if the rig has one, else a

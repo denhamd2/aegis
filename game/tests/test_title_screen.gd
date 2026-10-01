@@ -220,3 +220,25 @@ func test_kenny_is_selectable_and_carries_his_own_model() -> void:
 	var kenny := Roster.by_id("kenny")
 	assert_str(kenny.model_scene).is_equal("res://scenes/kenny_model.tscn")
 	assert_bool(ResourceLoader.exists(kenny.model_scene)).is_true()
+
+
+func test_camera_options_change_the_camera_settings() -> void:
+	var screen := _screen()
+	var was := [CameraSettings.coverage, CameraSettings.cuts, CameraSettings.shake, CameraSettings.replays]
+	screen.menu_index = screen._menu.find(TitleScreen.MENU_CAMERA)
+	screen._accept()
+	assert_int(screen.phase).is_equal(TitleScreen.Phase.CAMERA)
+	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
+	screen.camera_row = 0
+	screen.step_camera_option(1)
+	assert_int(CameraSettings.coverage).is_equal(CameraSettings.Coverage.BROADCAST)
+	screen.camera_row = 2
+	CameraSettings.shake = CameraSettings.Shake.HIGH
+	screen.step_camera_option(1)
+	assert_int(CameraSettings.shake).is_equal(CameraSettings.Shake.OFF)
+	screen._back()
+	assert_int(screen.phase).is_equal(TitleScreen.Phase.TITLE)
+	CameraSettings.coverage = was[0]
+	CameraSettings.cuts = was[1]
+	CameraSettings.shake = was[2]
+	CameraSettings.replays = was[3]
