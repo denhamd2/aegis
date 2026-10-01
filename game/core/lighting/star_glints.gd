@@ -45,13 +45,16 @@ void fragment() {
 	float r = length(p);
 	float a = atan(p.y, p.x);
 	// Thin spokes: sharp in angle, fading along their length.
-	float spoke = pow(abs(cos(a * rays)), 180.0) * exp(-r * 3.2);
+	// Wide enough to survive a 1080p downscale: at 180 the spokes were a
+	// tenth of a pixel and the star read as a dot.
+	float spoke = (pow(abs(cos(a * rays)), 40.0) * 0.5 + pow(abs(cos(a * rays)), 400.0) * 1.5)
+			* exp(-r * 2.4);
 	float core = exp(-r * r * 90.0) * 1.6;
 	float halo = exp(-r * 9.0) * 0.18;
 	float v = (spoke + core + halo) * facing * glint_strength;
-	ALBEDO = vec3(0.0);
-	EMISSION = mix(tint, vec3(1.0), 0.6) * v * 6.0;
-	ALPHA = 1.0;
+	// Unshaded draws ALBEDO only -- EMISSION is ignored -- so the star's
+	// over-bright HDR value goes there, for the glow to bloom.
+	ALBEDO = mix(tint, vec3(1.0), 0.6) * v * 6.0;
 }
 """
 
