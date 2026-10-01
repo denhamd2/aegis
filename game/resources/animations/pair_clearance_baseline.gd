@@ -25,7 +25,10 @@ const OVER := {
 const CONTACT_LIMIT := 0.05
 const GRIP := {
 	"running_rolling_codebreaker": 0.54,
-	"running_tilt_a_whirl_backstabber": 0.18,
+	# 0.18 -> 0.21: re-measured when PairClearance went deterministic (one
+	# physics tick per render frame). The old reading swung 0.17-0.20 with the
+	# machine's frame timing; the move did not change. Its true median is 0.20.
+	"running_tilt_a_whirl_backstabber": 0.21,
 	"running_fallaway_moonsault_slam": 0.10,
 	"running_reverse_swing_neckbreaker": 0.09,
 	"running_rolling_thunder_flatliner": 0.07,

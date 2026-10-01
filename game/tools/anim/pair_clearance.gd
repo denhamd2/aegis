@@ -180,12 +180,14 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 	var drawn_hands := [Vector3.ZERO, Vector3.ZERO]
 	var drawn_shoulders := [Vector3.ZERO, Vector3.ZERO]
 	var ask := attacker.skeleton
-	# The modifiers on the physics tick, not the render loop: on the render
-	# loop how many physics ticks pass between two skeleton updates depends
-	# on the machine's frame timing, so the drawn hands were read a varying
-	# number of ticks stale and the same move measured 0.17 one run and 0.20
-	# the next. Probe-only; the game's own setting is untouched.
-	ask.modifier_callback_mode_process = Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_PHYSICS
+	# One physics tick per render frame while measuring. The drawn hands are
+	# read off the skeleton's own update, which runs on the render loop; when a
+	# render frame ran several physics ticks, the hands sampled on the later
+	# ticks were stale by a machine-dependent amount, and the same move measured
+	# 0.17 one run and 0.20 the next. With one tick a frame they are always the
+	# hands drawn after the previous tick -- what the game itself shows.
+	var steps := Engine.max_physics_steps_per_frame
+	Engine.max_physics_steps_per_frame = 1
 	var hand_ids := [ask.find_bone(attacker._skeleton_bone_name("hand_l")),
 			ask.find_bone(attacker._skeleton_bone_name("hand_r"))]
 	var shoulder_ids := [ask.find_bone(attacker._skeleton_bone_name("upperarm_l")),
@@ -229,6 +231,7 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 			r["worst"] = d["over"]
 			r["where"] = d["where"]
 			r["at"] = float(tick) / total
+	Engine.max_physics_steps_per_frame = steps
 	scene.queue_free()
 	await host.get_tree().process_frame
 	return r
