@@ -8459,3 +8459,24 @@ the tests. A full sparse entrance storyboard takes over an hour on lavapipe
 and needs 6-7 GB, so it shares badly with a second render.
 
 Checks: 600 tests pass. No lighting constants changed.
+
+### Aubrey: face-shape pass
+
+`tools/blender/aubrey_aaa.py` FACE retuned against the sheet's front, 3/4
+and profile crops (clay renders beside them, eight variants). Before, her
+chin was long and pointed and the lower face tapered; now the chin is short
+and rounded (`chin-height-decr`, `chin-prominent-incr` down to 0.5), the
+cheekbones high and full, the nose longer with a fuller tip, the forehead
+set back and the jaw slim (`head-fat-decr` 0.5, `chin-width-decr` 0.6). A
+first textured look had the mouth too wide and puffy; it came back in (a
+firm lower lip, mouth ≈0.45 of the face's width at mouth level, as on the
+sheet). The lip paint's mask was tried tighter (lo 0.4) and left a pale band
+between the lips in game, so it sits at lo 0.25 / hi 0.6.
+
+Still off, not face shape: in game the lips read pinkish and glossy under
+the ring key (same as the rest of her skin -- the lighting gaps), and the
+slicked hair cap leaves her head looking wider than the sheet's, where the
+hair has volume at the sides.
+
+Checks: build deterministic (two runs byte-identical), 600 tests pass,
+`referee_shot.tscn --face` frames reviewed.

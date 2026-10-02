@@ -115,54 +115,55 @@ WAIST_Z = 1.025
 WAIST_SIGMA = 0.06
 WAIST_SLIM = 0.06
 ## Her likeness (stage 3): MPFB face targets, set against the owner's
-## character sheet (front, 3/4 and profile) on a clay render. A long face,
-## high cheekbones over slightly hollow cheeks, a slim jaw tapering to a
-## narrow, defined chin with a clean line into the neck; a long straight nose
-## with a softly rounded tip; a wide mouth with a full lower lip carried
-## forward; large, open almond eyes under a raised brow; a slim neck. A name
+## character sheet (front, 3/4 and profile) on a clay render. An oval face,
+## high cheekbones over lightly hollowed cheeks, a slim jaw into a short,
+## rounded chin with a clean line into the neck; a long straight nose with a
+## softly rounded tip; a mouth with a firm, full lower lip carried forward;
+## open almond eyes under a raised brow; a slim neck. A name
 ## without a side (e.g. "cheek-bones-incr") is applied to both l- and r-.
 ## The jaw was tuned again after the colour pass (four variants against the
-## sheet): a leaner face, no widening at the jaw's angle, slimmer lower
-## cheeks, a slightly tapered face and a narrower chin.
+## sheet), then the whole face again (six variants, clay beside the sheet's
+## front, 3/4 and profile): her chin is short and rounded, not long and
+## pointed; her face is full at the cheekbones and the mouth, not tapered;
+## the nose is long, with a fuller tip. Seen textured, that pass's mouth was
+## too wide and puffy and the lower face too broad, so both came back in (a
+## mouth about a third of the face's width, a firm lower lip, a slimmer jaw)
+## and the red now stops at the lip line instead of bleeding past it.
 FACE = {
     # head
-    "forehead-scale-vert-incr": 0.2,
     "forehead-temple-decr": 0.3,
     "forehead-trans-backward": 0.25,
     "head-fat-decr": 0.5,
-    "head-invertedtriangular": 0.35,
-    "head-oval": 0.5,
-    "head-scale-horiz-decr": 0.1,
+    "head-oval": 0.3,
     # chin and jaw
-    "chin-height-incr": 0.35,
-    "chin-jaw-drop-incr": 0.3,
-    "chin-prominent-incr": 0.75,
-    "chin-triangle": 0.3,
-    "chin-width-decr": 0.75,
+    "chin-height-decr": 0.3,
+    "chin-prominent-incr": 0.5,
+    "chin-width-decr": 0.6,
     "neck-double-decr": 0.6,
     "neck-scale-horiz-decr": 0.4,
     # cheeks
     "cheek-bones-incr": 1.26,
-    "cheek-inner-decr": 0.4,
-    "cheek-volume-decr": 0.6,
+    "cheek-inner-decr": 0.15,
+    "cheek-volume-decr": 0.4,
     # nose
-    "nose-flaring-decr": 0.3,
-    "nose-point-down": 0.15,
-    "nose-point-width-decr": 0.15,
+    "nose-point-down": 0.3,
     "nose-scale-depth-incr": 0.85,
-    "nose-scale-vert-incr": 0.45,
-    "nose-width1-decr": 0.3,
-    "nose-width2-decr": 0.3,
+    "nose-scale-horiz-incr": 0.2,
+    "nose-scale-vert-incr": 0.65,
+    "nose-volume-incr": 0.25,
+    "nose-width1-decr": 0.1,
+    "nose-width2-decr": 0.1,
     # mouth
     "mouth-cupidsbow-incr": 0.6,
-    "mouth-lowerlip-volume-incr": 0.55,
-    "mouth-scale-horiz-incr": 0.3,
+    "mouth-lowerlip-height-incr": 0.1,
+    "mouth-lowerlip-volume-incr": 0.3,
+    "mouth-scale-horiz-incr": 0.25,
     "mouth-trans-forward": 0.49,
     "mouth-upperlip-volume-incr": 0.15,
     # eyes and brows
     "eye-corner2-up": 0.2,
     "eye-height2-incr": 0.2,
-    "eye-scale-incr": 0.5,
+    "eye-scale-incr": 0.3,
     "eyebrows-trans-forward": 0.3,
     "eyebrows-trans-up": 0.1,
 }
@@ -435,7 +436,7 @@ SOCKET_COLOR = (34, 22, 22)
 SOCKET_OPEN = (17.0, 6.5)
 SOCKET_DEPTH = 8.0
 ## Red lips, off MPFB's own "lips" vertex group, the texture's shading kept.
-LIPS = dict(lo=0.2, hi=0.8, blur=2.0, color=(128, 14, 28), strength=0.9)
+LIPS = dict(lo=0.25, hi=0.6, blur=1.5, color=(128, 14, 28), strength=0.9)
 ## Brow and lash cards: MakeHuman's own (CC0), fitted to her face by MPFB.
 ## The brow strands go her brown and denser than drawn (the sheet's brows
 ## are full and groomed); the lashes near-black with mascara.
