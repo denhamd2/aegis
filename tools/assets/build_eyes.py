@@ -156,10 +156,13 @@ AUBREY_SMOKE_PX = 14
 AUBREY_SMOKE_STRENGTH = 0.85
 ## Aubrey's rebuild: true eyeballs (11.8 mm) projected at 30 mm per unit,
 ## centred. Grey-green, hazel-gold at the pupil (the sheet's eye close-up).
+## A clear white with no veins and a darker shadowed band: in the game the
+## veined, lit edge of the eye read as pink corners.
 AUBREY_AAA = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
                      iris_inner=(132, 116, 64), iris_outer=(92, 112, 98),
-                     collarette_lift=12.0, limbus=(34, 42, 38), veins=14,
-                     occlude_from=6.5, occlude_to=11.0, seed=53)
+                     collarette_lift=12.0, limbus=(34, 42, 38), veins=0,
+                     sclera=(214, 206, 196), occluded_albedo=0.5,
+                     occlude_from=6.5, occlude_to=10.5, seed=53)
 ## Kenny: new caps (kenny_eyes.py) front-projected at 30 mm per unit,
 ## centred. Blue-grey, a touch of hazel at the pupil.
 KENNY = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,

@@ -340,7 +340,13 @@ seen in colour. Stage 4b done -- body and uniform reviewed against the
 sheet and rebuilt: MakeHuman CC0 tee/jeans/trainers as her uniform (stripes,
 tucked, belt, buckle, radio pack, straight black trousers, black trainers),
 a polo collar laid on the shirt, a long ponytail, the hairline to the nape,
-a slimmer neck. Next: wire it in and gate it.
+a slimmer neck. Then the torso measured to the sheet, the jaw retuned, the
+patch and a pocket placed by the sheet's landmarks. Stage 5 done --
+scenes/aubrey_model.tscn loads aubrey_aaa.glb; AubreyModel dresses her skin
+(SkinLook, pores), eyes (EyeKit, aubrey_aaa), brow and lash cards, hair
+(vertex-alpha feather) and fabric; the ponytail's spring colliders resized
+to the new head and back; her referee poses rendered in the ring
+(tools/probe/referee_shot.tscn).
 
 **Why Aubrey goes first in the head/body work.** She has no likeness
 expectations from a 2K model and the simplest kit. If the MPFB → re-skin →

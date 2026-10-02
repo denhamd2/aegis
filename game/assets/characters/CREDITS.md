@@ -249,7 +249,7 @@ images by that script. Rebuild with the kit unzipped to
 `~/.cache/aegis_assets/ubc/`; the output is byte-identical for the same kit.
 Not included in the repo: the kit itself (only the exported .glb).
 
-## aubrey_aaa.glb (the referee, AAA rebuild -- work in progress, not yet in the game)
+## aubrey_aaa.glb (the referee, AAA rebuild -- the model the game uses)
 
 Built by `tools/blender/aubrey_aaa.py`. Her body is a **MakeHuman** base mesh
 made with **MPFB** (MakeHuman Plugin For Blender), from the MakeHuman system

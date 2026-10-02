@@ -104,7 +104,8 @@ static func _eyes(root: Node) -> Vector3:
 		if n == 2:
 			return sum / 2.0
 	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
-		if String(mi.name).to_lower() == "eyes" and mi.mesh:
+		var mesh_name := String(mi.name).to_lower()
+		if (mesh_name == "eyes" or mesh_name.ends_with("_eyes")) and mi.mesh:
 			return mi.global_transform * mi.get_aabb().get_center()
 	return Vector3.INF
 

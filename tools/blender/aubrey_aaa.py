@@ -144,8 +144,8 @@ FACE = {
     "neck-scale-horiz-decr": 0.4,
     # cheeks
     "cheek-bones-incr": 1.26,
-    "cheek-inner-decr": 0.7,
-    "cheek-volume-decr": 0.9,
+    "cheek-inner-decr": 0.4,
+    "cheek-volume-decr": 0.6,
     # nose
     "nose-flaring-decr": 0.3,
     "nose-point-down": 0.15,
@@ -193,6 +193,7 @@ GARMENTS = {
 ## jeans, one mesh, split here) restyled as her shirt and trousers, and
 ## shoes06 (trainers) in black.
 KIT_GARMENTS = ("Aubrey_Shirt", "Aubrey_Trousers", "Aubrey_Shoes")
+KIT_MATERIALS_REPLACED = ("M_AubreyHair", "M_Belt", "M_Shoes", "M_Trousers", "M_RefStripes")
 SUIT = "female_casualsuit01"
 SHOES = "shoes06"
 ## Her shirt's stripes (the sheet): black and white bands STRIPE_W wide,
@@ -291,7 +292,7 @@ CAP_OFF = 0.004
 HAIRLINE = [(0.0, 0.072), (35.0, 0.062), (60.0, 0.042), (82.0, 0.030),
             (95.0, 0.020), (104.0, -0.045), (125.0, -0.065), (180.0, -0.080)]
 ## The cap feathers out over this much of its edge.
-HAIRLINE_FEATHER = 0.012
+HAIRLINE_FEATHER = 0.02
 ## Her ears: never under the cap. Out from the head's centre line beyond
 ## EAR_X, within EAR_Z of eye height, the cap's margin goes negative.
 EAR_X = 0.064
@@ -306,9 +307,10 @@ HAIR_STRANDS = ROOT / "game/assets/characters/aubrey_hair_strands.png"
 HAIR_SIZE = 1024
 HAIR_SEED = 47
 ## Her hair (the owner's sheet): mid brown, slicked wet, with lighter
-## caramel strands through it.
-HAIR_BASE = (74, 52, 36)
-HAIR_LIGHT = (142, 104, 70)
+## caramel strands through it. (At (74, 52, 36) it read light tan under the
+## arena's key.)
+HAIR_BASE = (60, 42, 29)
+HAIR_LIGHT = (126, 90, 58)
 PONYTAIL = ("Aubrey_Ponytail", "Aubrey_HairTie")
 ## Her ponytail (the sheet: high, long, falling to mid-back close along the
 ## back of her head and neck), rebuilt (stage 4b) -- the kit's was short,
@@ -345,13 +347,16 @@ COLLAR_TILT = 0.024
 COLLAR_SAMPLE_UP = 0.022
 COLLAR_MAX_R = 0.072
 COLLAR_STEPS = 48
-## On the owner's sheet she is zipped to the collar, its points spread in a
-## small V.
-COLLAR_GAP = 8.0
-COLLAR_PROFILE = [(0.000, 0.004), (0.014, 0.004), (0.027, 0.004), (0.033, 0.008),
-                  (0.031, 0.012), (0.020, 0.016), (0.008, 0.021), (-0.004, 0.025)]
+## On the owner's sheet she is zipped to the collar: its points meet close
+## under the throat. The collar hugs her neck -- a stand ~3.5 cm high all
+## round, the flap folded down close over it and ending above her shoulder
+## line -- rather than spreading over her shoulders (the first version, a
+## cape on the tee's wide neckline).
+COLLAR_GAP = 5.0
+COLLAR_PROFILE = [(0.000, 0.004), (0.016, 0.004), (0.030, 0.004), (0.040, 0.007),
+                  (0.038, 0.011), (0.028, 0.013), (0.016, 0.015), (0.006, 0.017)]
 ## The collar's points drop by this at the front edges.
-COLLAR_POINT_DROP = 0.030
+COLLAR_POINT_DROP = 0.036
 ## Shirt faces above the collar's (tilted) base plus COLLAR_TRIM_UP, within
 ## COLLAR_TRIM_R of the neck's own surface at that angle, go: the flap
 ## (reaching up to COLLAR_FLAP_MAX off the neck) covers the cut. (A fixed
@@ -359,15 +364,21 @@ COLLAR_POINT_DROP = 0.030
 ## her shoulders past the flap; no cut left the tee's striped neckband
 ## standing inside the collar.)
 COLLAR_TRIM_UP = 0.0
-COLLAR_TRIM_R = 0.032
+COLLAR_TRIM_R = 0.016
 ## The flap rests this far off the shirt (at 0.005 the tee's stripes showed
 ## through it in specks), and reaches no further than COLLAR_FLAP_MAX off her
 ## neck: resting on the tee wherever that was, it spread like a bib.
-COLLAR_FLAP_OFF = 0.008
-COLLAR_FLAP_MAX = 0.040
-## The placket: from the collar's gap down to PLACKET_BOTTOM, this wide.
+COLLAR_FLAP_OFF = 0.005
+COLLAR_FLAP_MAX = 0.024
+## The placket: a zip down the shirt's black centre stripe (the sheet), from
+## under the collar's points to PLACKET_BOTTOM -- a narrow black tape with a
+## metal track down it (ZIP_HALF_W) and a pull at its top. (A 3.2 cm strip
+## started at the collar's top, where the shirt is cut away: its rays missed
+## and its top hung in front of her throat as a dark block.)
 PLACKET_BOTTOM = 1.355
-PLACKET_HALF_W = 0.016
+PLACKET_HALF_W = 0.007
+ZIP_HALF_W = 0.0012
+ZIP_PULL = (0.004, 0.012)
 TRIM_MATERIAL = "M_RefTrim"
 ## Skin is deleted where a ray out along its normal meets cloth within this.
 COVER_REACH = 0.08
@@ -384,7 +395,8 @@ EYE_COLOR = ROOT / "game/assets/characters/aubrey_aaa_eye_color.png"
 
 ## Her skin (stage 4): a CC0 MakeHuman skin with no make-up painted on --
 ## toigo's young light-skinned female, bronze -- graded from its orange
-## toward the sheet's rosier beige, then her make-up painted over it in UV
+## toward the sheet's rosier beige, and down: at (0.88, 0.90, 1.04) she read
+## bleached under the arena's key, then her make-up painted over it in UV
 ## space from 3D positions (paint_skin): the head's triangles are
 ## rasterised into a map of where each texel sits on her, and each layer of
 ## make-up is a function of that position, so it lands on her actual lids
@@ -393,7 +405,7 @@ MPFB_ASSETS = pathlib.Path.home() / ".cache/aegis_assets/mpfb"
 SKIN_SOURCE = (MPFB_ASSETS / "unpacked_skins01/skins/toigo_light_skin_female_bronze"
                / "young_lightskinned_female_diffuse_Bronze.png")
 SKIN_OUT = ROOT / "game/assets/characters/aubrey_aaa_skin.jpg"
-SKIN_GRADE = (0.88, 0.90, 1.04)
+SKIN_GRADE = (0.80, 0.74, 0.80)
 SKIN_QUALITY = 92
 ## Smoky eyes (the sheet's make-up close-up): a soft dark plum-brown shadow
 ## in an ellipse round each eye (mm: wider to the outer corner, higher over
@@ -404,6 +416,12 @@ SMOKE = dict(shift=2.0, a_out=19.0, a_in=15.0, b_up=17.0, b_down=9.0,
              e0=0.45, e1=1.15, lower=0.7, color=(66, 42, 44), strength=0.85)
 LINER = dict(near=0.8, far=3.0, color=(28, 20, 20), strength=0.85, lower=0.6,
              margin_slack=0.0012)
+## The eye socket's skin within SOCKET mm of the eyeball's centre (its radius
+## is 11.8) goes to SOCKET_COLOR, fading out by the far value.
+SOCKET = (13.0, 14.4)
+SOCKET_COLOR = (34, 22, 22)
+SOCKET_OPEN = (17.0, 6.5)
+SOCKET_DEPTH = 8.0
 ## Red lips, off MPFB's own "lips" vertex group, the texture's shading kept.
 LIPS = dict(lo=0.2, hi=0.8, blur=2.0, color=(128, 14, 28), strength=0.9)
 ## Brow and lash cards: MakeHuman's own (CC0), fitted to her face by MPFB.
@@ -884,28 +902,56 @@ def make_collar(old_arm, body, shirt):
         for j in range(rows - 1):
             a = k * rows + j
             faces.append((a, a + rows, a + rows + 1, a + 1))
-    # The placket: a strip down the front of the shirt, just proud of it.
-    top = base_z(0.0) + 0.030
-    z = top
-    strip = []
-    while z >= PLACKET_BOTTOM:
-        row = []
-        for x in (-PLACKET_HALF_W, PLACKET_HALF_W):
-            hit, nor, _, _ = shirt_bvh.ray_cast(Vector((centre.x + x, -0.5, z)), Vector((0.0, 1.0, 0.0)), 1.0)
-            row.append(hit + nor * 0.002 if hit else Vector((centre.x + x, centre.y - 0.07, z)))
-        strip.append(row)
-        z -= 0.01
+    # The placket: the zip tape and its metal track, laid on the shirt (and
+    # her skin where the shirt is cut away under the collar), from just
+    # under the collar's points down.
+    front_bvh = world_bvh([shirt, body])
+    top = base_z(0.0) - COLLAR_POINT_DROP * 0.4
+    mats = [0] * len(faces)
+
+    def strip_down(half_w, off, mat):
+        z = top
+        rows = []
+        while z >= PLACKET_BOTTOM:
+            row = []
+            for x in (-half_w, half_w):
+                hit, nor, _, _ = front_bvh.ray_cast(Vector((centre.x + x, -0.5, z)), Vector((0.0, 1.0, 0.0)), 1.0)
+                row.append(hit + nor * off)
+            rows.append(row)
+            z -= 0.01
+        base = len(verts)
+        for row in rows:
+            verts.extend(row)
+        for i in range(len(rows) - 1):
+            a = base + 2 * i
+            faces.append((a, a + 1, a + 3, a + 2))
+            mats.append(mat)
+
+    strip_down(PLACKET_HALF_W, 0.002, 0)
+    strip_down(ZIP_HALF_W, 0.0028, 1)
+    # The pull: a small tab hanging from the top of the track.
+    hit, nor, _, _ = front_bvh.ray_cast(Vector((centre.x, -0.5, top - 0.004)), Vector((0.0, 1.0, 0.0)), 1.0)
+    p0 = hit + nor * 0.0034
     base = len(verts)
-    for row in strip:
-        verts += row
-    for i in range(len(strip) - 1):
-        a = base + 2 * i
-        faces.append((a, a + 1, a + 3, a + 2))
+    w, h = ZIP_PULL[0] / 2.0, ZIP_PULL[1]
+    verts.extend([p0 + Vector((-w, 0.0, 0.0)), p0 + Vector((w, 0.0, 0.0)),
+                  p0 + Vector((w, -0.001, -h)), p0 + Vector((-w, -0.001, -h))])
+    faces.append((base, base + 1, base + 2, base + 3))
+    mats.append(1)
     mesh = bpy.data.meshes.new("Aubrey_Collar")
     mesh.from_pydata([tuple(v) for v in verts], [], faces)
     mesh.polygons.foreach_set("use_smooth", [True] * len(mesh.polygons))
     mesh.uv_layers.new(name="UVMap")
     mesh.materials.append(trim)
+    zip_mat = bpy.data.materials.new("M_Zip")
+    zip_mat.use_nodes = True
+    bsdf = zip_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.62, 0.63, 0.66, 1.0)
+    bsdf.inputs["Metallic"].default_value = 1.0
+    bsdf.inputs["Roughness"].default_value = 0.3
+    mesh.materials.append(zip_mat)
+    for poly, m in zip(mesh.polygons, mats):
+        poly.material_index = m
     collar = bpy.data.objects.new("Aubrey_Collar", mesh)
     bpy.context.scene.collection.objects.link(collar)
     collar.parent = old_arm
@@ -1847,6 +1893,7 @@ def paint_skin(body, eyes) -> None:
     lum = base.mean(-1)
     smoke = np.zeros(lum.shape, np.float32)
     liner = np.zeros(lum.shape, np.float32)
+    socket = np.zeros(lum.shape, np.float32)
     verts = [body.matrix_world @ v.co for v in body.data.vertices]
     for side in ("l", "r"):
         centre, forward = eyes[side]
@@ -1875,12 +1922,27 @@ def paint_skin(body, eyes) -> None:
         dist = dist.reshape(lum.shape) * 1000.0
         line = (1.0 - _smooth(LINER["near"], LINER["far"], dist)) * hit * (np.abs(u) < 20.0)
         liner = np.maximum(liner, line * np.where(v < 0, LINER["lower"], 1.0))
+        # The socket: skin at or inside the eyeball's surface, seen only in
+        # the sliver between eye and lid -- in shadow, not skin-pink (in the
+        # game it read as a pink rim round each eye).
+        dist_c = np.linalg.norm(pos - c, axis=-1) * 1000.0
+        socket = np.maximum(socket, (1.0 - _smooth(SOCKET[0], SOCKET[1], dist_c)) * hit)
+        # ...and the corners, which lie past the eyeball's sphere: skin within
+        # the opening (an ellipse SOCKET_OPEN mm about the eye) and set back
+        # behind SOCKET_DEPTH mm in front of its centre. (The base texture's
+        # own painted eye-corner pink showed there.)
+        uo = d @ o_ax * 1000.0
+        opening = np.sqrt((uo / SOCKET_OPEN[0]) ** 2 + (v / SOCKET_OPEN[1]) ** 2)
+        recessed = 1.0 - _smooth(SOCKET_DEPTH - 1.5, SOCKET_DEPTH + 1.5, w)
+        socket = np.maximum(socket, (1.0 - _smooth(0.85, 1.05, opening)) * recessed * hit)
     img = base.copy()
     k = (smoke * SMOKE["strength"])[..., None]
     tone = (lum / lum[hit].mean())[..., None] ** 0.5
     img = img * (1.0 - k) + np.array(SMOKE["color"], np.float32) * tone * k
     k = (liner * LINER["strength"])[..., None]
     img = img * (1.0 - k) + np.array(LINER["color"], np.float32) * k
+    k = socket[..., None]
+    img = img * (1.0 - k) + np.array(SOCKET_COLOR, np.float32) * k
     mask = Image.fromarray(np.round(_smooth(LIPS["lo"], LIPS["hi"], lips) * 255).astype(np.uint8))
     lip = np.asarray(mask.filter(ImageFilter.GaussianBlur(LIPS["blur"])), np.float32) / 255.0
     lip_tone = (lum / np.median(lum[lip > 0.9]))[..., None] ** 0.7
@@ -1897,6 +1959,13 @@ def main() -> int:
     addon_utils.enable(MPFB, default_set=True)
     bpy.ops.import_scene.gltf(filepath=str(SOURCE))
     old_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    # The kit's materials that this build replaces step aside, so the new
+    # ones keep their names (the game dresses surfaces by material name):
+    # left in place, the new belt went out as "M_Belt.001", and the ponytail
+    # took the kit's hair material rather than the cap's.
+    for mat in list(bpy.data.materials):
+        if mat.name in KIT_MATERIALS_REPLACED:
+            mat.name = mat.name + "_Kit"
     trim = next(m for m in bpy.data.objects["Aubrey_Shirt"].data.materials
                 if m and m.name.startswith(TRIM_MATERIAL))
     trim.use_fake_user = True

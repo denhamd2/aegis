@@ -8357,3 +8357,55 @@ the side of her chest in a smear (pressed straight back, the last strip
 met the shirt where it turns away): it is now wrapped in toward an axis
 14 cm behind her, like the stripes, and kept on the front (1.1x, centred
 9.4 cm out).
+
+### Aubrey AAA rebuild, stage 5: in the game
+
+`scenes/aubrey_model.tscn` now loads `aubrey_aaa.glb`. AubreyModel dresses it:
+
+- **Skin** (`M_AubreySkin`): SkinLook's scattering and the shared pore tile
+  (48 across the body's UV square, ~2.5 cm a tile), but no transmittance --
+  her lids' edges are thin enough to pass red light, and under the overhead
+  key they glowed as pink rims round her eyes.
+- **Eyes** (`MI_AubreyEyes`): EyeKit with `aubrey_aaa`, Roman's parallax (4.0,
+  the same 30 mm/UV projection). The eye texture lost its veins and darkened
+  its shadowed band (pink corners), and the skin texture now paints the
+  socket and the recessed eye corners in shadow -- the base skin's own
+  painted corner pink showed past the eyeball's sphere.
+- **Brow and lash cards**: EyeKit's lash material on their own textures;
+  brows cut at 0.12 (at the lashes' 0.3 the brows thinned to a black line).
+- **Hair** (`M_AubreyHair`, cap and ponytail now one material -- the build
+  had left the ponytail on the kit's): vertex alpha for the cap's feather,
+  alpha-to-coverage at the hairline, roughness 0.7 and specular 0.15 (at the
+  source's 0.5 the arena came back off it as a grey sheen), a darker base
+  brown in the strand texture.
+- **Height**: KIT_HEIGHT 1.744, the new body's crown.
+- **Ponytail springs**: colliders resized to the new head and back (head and
+  upper back were 10 cm spheres for the cartoon head, 3 cm proud of her).
+- The build renames the kit's replaced materials out of the way, so the new
+  ones keep their names (`M_Belt.001` etc. before).
+
+In-ring frames: `tools/probe/referee_shot.tscn` (full length front, side,
+back, 3/4; watching, the count's slap, the hand raise; `--face` for face,
+3/4 and eyes). Its first frames showed the ponytail standing out sideways --
+a probe artefact: it moved her and froze her, and the springs kept pointing
+where she had stood; it now resets them. Her model alone (no arena) and the
+bones in the match both hang the tail down her back. Clips: every referee
+clip plays on her (test_referee_actor).
+
+The owner: her collar did not match the sheet. Side by side with the sheet's
+shirt front, side and back: the sheet's is a referee's polo collar hugging
+the neck -- a stand ~3.5 cm all round, the flap folded close over it, the
+points meeting under the throat, a zip down the shirt's black centre stripe.
+Ours lay out over her shoulders like a cape (its flap reached 4 cm off the
+neck onto the tee's wide neckline), and its 3.2 cm placket started at the
+collar's top, where the shirt is cut away, so its rays missed and its top
+hung in front of her throat as a dark block. Now: a taller stand, the flap
+ending above her shoulder line and no more than 2.4 cm off the neck, the
+tee cut within 1.6 cm of the neck, the points 5 degrees apart and dropping
+3.6 cm; the placket a 1.4 cm tape laid on shirt and skin from under the
+points, with a metal zip track and pull (`M_Zip`).
+
+The owner's character sheets are now kept in `gauntlet/refs/characters/`
+(Aubrey Edwards, Kenny Omega) as the standing reference for both models.
+
+Checks: 600 tests pass; the build is byte-identical.
