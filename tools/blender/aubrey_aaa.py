@@ -91,7 +91,7 @@ MPFB = "bl_ext.user_default.mpfb"
 MACROS = {
     "gender": 0.0, "age": 0.62, "muscle": 0.62, "weight": 0.42,
     "proportions": 0.75, "african": 0.0, "asian": 0.0, "caucasian": 1.0,
-    "cupsize": 0.75, "firmness": 0.6,
+    "cupsize": 0.6, "firmness": 0.6,
 }
 ## Her torso (stage 4b), measured off the owner's sheet (front and side
 ## views, scaled to her height): the shirt ~31 cm across the chest at the
@@ -99,18 +99,22 @@ MACROS = {
 ## across the hips. The macros alone gave a narrow, shallow chest (24 x 19)
 ## over a wider waist (33). Applied like FACE.
 BODY = {
-    "measure-bust-circ-incr": 0.6,
-    "measure-waist-circ-decr": 1.0,
+    "measure-bust-circ-incr": 0.2,
+    "measure-waist-circ-decr": 0.3,
     "torso-scale-depth-incr": 0.3,
     "torso-scale-horiz-incr": 1.0,
-    "torso-vshape-incr": 0.6,
+    "torso-vshape-incr": 0.2,
 }
+## (A first pass -- cup 0.75, bust +0.6, waist -1.0, V-shape 0.6 -- matched
+## the chest and belt numbers but was chest-heavy with a pinched waist: the
+## owner's sheet is straighter, and the shirt hangs from the bust; see
+## SHIRT_DRAPE.)
 ## MPFB's waist acts above her belt line; at the belt (sheet: ~30 cm across)
 ## the body is narrowed directly, side to side, by up to WAIST_SLIM, in a
 ## smooth band WAIST_SIGMA either side of WAIST_Z.
 WAIST_Z = 1.025
 WAIST_SIGMA = 0.06
-WAIST_SLIM = 0.10
+WAIST_SLIM = 0.06
 ## Her likeness (stage 3): MPFB face targets, set against the owner's
 ## character sheet (front, 3/4 and profile) on a clay render. A long face,
 ## high cheekbones over slightly hollow cheeks, a slim jaw tapering to a
@@ -222,6 +226,14 @@ BELT_OFF = 0.004
 BELT_THICK = 0.004
 BELT_STEPS = 64
 TUCK_UNDER = 0.012
+## The shirt hangs from her bust to the belt (the sheet: as wide just above
+## the belt, ~31 cm, as across the chest), not clinging to her waist: below
+## SHIRT_DRAPE_FROM, at each angle round her, the cloth is let out to at
+## least SHIRT_DRAPE times its reach at the bust, easing back in over the
+## last SHIRT_DRAPE_GATHER above the belt where it is tucked.
+SHIRT_DRAPE_FROM = 1.30
+SHIRT_DRAPE = 0.97
+SHIRT_DRAPE_GATHER = 0.05
 BUCKLE_W, BUCKLE_H, BUCKLE_BAR = 0.046, 0.044, 0.0065
 PACK_ANGLE = 145.0          # degrees round from the front, toward her right
 PACK_SIZE = (0.058, 0.085, 0.028)
@@ -246,6 +258,7 @@ PATCH_OFF = 0.0025
 ## out from the zip by 0.29 of the chest's width; a fifth larger than the
 ## kit's. (x, z of its centre.)
 PATCH_SCALE = 1.2
+PATCH_CUTS = 3
 PATCH_CENTRE = (-0.108, 1.332)
 ## Her chest pocket (the sheet), on her left -- a narrow pen pocket, placed
 ## like the patch by landmarks: from 0.21 to 0.53 of the way from the collar
@@ -598,44 +611,6 @@ def refit(old_arm, body):
     body_bvh = world_bvh([body])
     for name, (t_min, t_max) in GARMENTS.items():
         conform(objects[name], body_bvh, t_min, t_max)
-    # The patch onto the new shirt: each vertex straight back along the
-    # line she faces until it is PATCH_OFF in front of the shirt -- one
-    # direction for all, so it lies on her like a sewn patch. (To the
-    # nearest point, its corner folded over the curve of her chest.)
-    shirt_bvh = world_bvh([objects["Aubrey_Shirt"]])
-    patch = objects[PATCH]
-    inv = patch.matrix_world.inverted()
-    # On her right chest, as the sheet's pictures show it (its caption says
-    # left; the owner went by the pictures): the kit's patch, on her left,
-    # is mirrored across her -- positions only, so the UVs and the logo
-    # still read the right way round -- and its faces turned back out.
-    # Then the sheet's size and place: PATCH_SCALE about its centre, the
-    # centre moved to PATCH_CENTRE.
-    pts = [patch.matrix_world @ v.co for v in patch.data.vertices]
-    lo = Vector((min(p.x for p in pts), 0.0, min(p.z for p in pts)))
-    hi = Vector((max(p.x for p in pts), 0.0, max(p.z for p in pts)))
-    mid = (lo + hi) / 2.0
-    for v, p in zip(patch.data.vertices, pts):
-        q = Vector((PATCH_CENTRE[0], p.y, PATCH_CENTRE[1])) + Vector(
-            (-(p.x - mid.x), 0.0, p.z - mid.z)) * PATCH_SCALE
-        v.co = inv @ q
-    # Mirroring the positions mirrored the artwork too: mirror its u back.
-    uv = patch.data.uv_layers[0].data
-    us = [d.uv.x for d in uv]
-    u_mid = (min(us) + max(us)) / 2.0
-    for d in uv:
-        d.uv.x = 2.0 * u_mid - d.uv.x
-    bm = bmesh.new()
-    bm.from_mesh(patch.data)
-    bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
-    bm.to_mesh(patch.data)
-    bm.free()
-    for v in patch.data.vertices:
-        p = patch.matrix_world @ v.co
-        hit = shirt_bvh.ray_cast(Vector((p.x, -0.5, p.z)), Vector((0.0, 1.0, 0.0)), 1.0)[0]
-        if hit is not None:
-            v.co = inv @ Vector((p.x, hit.y - PATCH_OFF, p.z))
-    patch.data.update()
     # The hair: the cap onto the new skull; the ponytail with the cap where
     # the tie sits.
     tie = objects[TIE]
@@ -657,7 +632,7 @@ def refit(old_arm, body):
             eb.head += local
             eb.tail += local
     bpy.ops.object.mode_set(mode="OBJECT")
-    for name in list(GARMENTS) + [PATCH]:
+    for name in GARMENTS:
         take_weights(objects[name], body)
     print(f"refit: ponytail moved {delta.length * 1000:.0f} mm")
     return tie_centre + delta
@@ -1245,6 +1220,39 @@ def garment_material(name: str, color: pathlib.Path, roughness: float, normal=No
     return mat
 
 
+def drape_shirt(shirt, old_arm) -> None:
+    """Lets the shirt hang straight from the bust to the belt (SHIRT_DRAPE)."""
+    spine = old_arm.matrix_world @ old_arm.data.bones["spine_02"].head_local
+    mw = shirt.matrix_world
+    inv = mw.inverted()
+    bins = 48
+    pts = [mw @ v.co for v in shirt.data.vertices]
+
+    def polar(p):
+        dx, dy = p.x, p.y - spine.y
+        a = math.atan2(dx, -dy)
+        return int((a + math.pi) / (2.0 * math.pi) * bins) % bins, math.hypot(dx, dy)
+
+    reach = [0.0] * bins
+    for p in pts:
+        if abs(p.z - SHIRT_DRAPE_FROM) < 0.03 and abs(p.x) < SLEEVE_X:
+            b, r = polar(p)
+            reach[b] = max(reach[b], r)
+    reach = [max(reach[b - 1], reach[b], reach[(b + 1) % bins]) for b in range(bins)]
+    for v, p in zip(shirt.data.vertices, pts):
+        if not (BELT_TOP - TUCK_UNDER < p.z < SHIRT_DRAPE_FROM) or abs(p.x) >= SLEEVE_X:
+            continue
+        b, r = polar(p)
+        if reach[b] <= 0.0:
+            continue
+        t = float(_smooth(BELT_TOP, BELT_TOP + SHIRT_DRAPE_GATHER, p.z))
+        target = r + (reach[b] * SHIRT_DRAPE - r) * t
+        if target > r:
+            k = target / r
+            v.co = inv @ Vector((p.x * k, spine.y + (p.y - spine.y) * k, p.z))
+    shirt.data.update()
+
+
 def tuck_shirt(shirt) -> None:
     """Cuts the shirt away under the belt: tucked in."""
     cut = BELT_TOP - TUCK_UNDER
@@ -1261,6 +1269,7 @@ def dress_garments(old_arm) -> None:
     objects = bpy.data.objects
     shirt, trousers, shoes = (objects[n] for n in ("Aubrey_Shirt", "Aubrey_Trousers", "Aubrey_Shoes"))
     tuck_shirt(shirt)
+    drape_shirt(shirt, old_arm)
     garment_textures()
     paint_stripes(shirt, old_arm)
     trim = bpy.data.materials[TRIM_MATERIAL]
@@ -1515,6 +1524,56 @@ def slim_neck(human, old_arm) -> None:
         radial = Vector((p.x - axis.x, p.y - axis.y, 0.0))
         v.co = inv @ (p - radial * (NECK_SLIM * w))
     human.data.update()
+
+
+def place_patch(body) -> None:
+    """The patch onto the shirt -- once the shirt has its final shape (after
+    the drape: placed before it, the shirt came out through it)."""
+    # The patch onto the new shirt: each vertex straight back along the
+    # line she faces until it is PATCH_OFF in front of the shirt -- one
+    # direction for all, so it lies on her like a sewn patch. (To the
+    # nearest point, its corner folded over the curve of her chest.)
+    objects = bpy.data.objects
+    shirt_bvh = world_bvh([objects["Aubrey_Shirt"]])
+    patch = objects[PATCH]
+    inv = patch.matrix_world.inverted()
+    # On her right chest, as the sheet's pictures show it (its caption says
+    # left; the owner went by the pictures): the kit's patch, on her left,
+    # is mirrored across her -- positions only, so the UVs and the logo
+    # still read the right way round -- and its faces turned back out.
+    # Then the sheet's size and place: PATCH_SCALE about its centre, the
+    # centre moved to PATCH_CENTRE.
+    pts = [patch.matrix_world @ v.co for v in patch.data.vertices]
+    lo = Vector((min(p.x for p in pts), 0.0, min(p.z for p in pts)))
+    hi = Vector((max(p.x for p in pts), 0.0, max(p.z for p in pts)))
+    mid = (lo + hi) / 2.0
+    for v, p in zip(patch.data.vertices, pts):
+        q = Vector((PATCH_CENTRE[0], p.y, PATCH_CENTRE[1])) + Vector(
+            (-(p.x - mid.x), 0.0, p.z - mid.z)) * PATCH_SCALE
+        v.co = inv @ q
+    # Mirroring the positions mirrored the artwork too: mirror its u back.
+    uv = patch.data.uv_layers[0].data
+    us = [d.uv.x for d in uv]
+    u_mid = (min(us) + max(us)) / 2.0
+    for d in uv:
+        d.uv.x = 2.0 * u_mid - d.uv.x
+    bm = bmesh.new()
+    bm.from_mesh(patch.data)
+    bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
+    # Fine enough to follow the curve of her chest: at the kit's 35
+    # vertices its flat faces cut into the shirt between them.
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=PATCH_CUTS, use_grid_fill=True)
+    bm.to_mesh(patch.data)
+    bm.free()
+    for v in patch.data.vertices:
+        p = patch.matrix_world @ v.co
+        hit = shirt_bvh.ray_cast(Vector((p.x, -0.5, p.z)), Vector((0.0, 1.0, 0.0)), 1.0)[0]
+        if hit is not None:
+            v.co = inv @ Vector((p.x, hit.y - PATCH_OFF, p.z))
+    patch.data.update()
+    # Its weights from where it now is (taken before the move, they were
+    # the left side's).
+    take_weights(patch, body)
 
 
 def make_pocket(old_arm, body):
@@ -1839,6 +1898,7 @@ def main() -> int:
     make_studs(old_arm, lobes)
     tie_centre = refit(old_arm, body)
     dress_garments(old_arm)
+    place_patch(body)
     collar = make_collar(old_arm, body, bpy.data.objects["Aubrey_Shirt"])
     make_belt(old_arm, body)
     make_pocket(old_arm, body)

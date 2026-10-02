@@ -8339,3 +8339,17 @@ Checks: 600 tests pass; the build is byte-identical run to run.
 
 Checks: 600 tests pass; byte-identical. Open: a sliver of neck under the
 collar at the back-left.
+
+### Aubrey AAA: her shape, second pass
+
+The owner: still chest-heavy, waist too thin. The first pass matched the
+sheet at the chest and the belt and nowhere between: on the sheet the shirt
+is as wide just above the belt (~31 cm) as across the chest -- it hangs
+from the bust -- where ours clung to a pinched waist (22.7 cm at 1.18 m).
+Now the bust and V-shape are moderate (cup 0.6, bust +0.2, waist -0.3,
+V 0.2, the belt-line taper 6%), and the shirt is let out below the bust to
+97% of its reach there at each angle round her, easing back in over the
+last 5 cm into the belt (`drape_shirt`): 30.9 cm across the chest, 30.9 at
+1.18 and 1.10, 29.2 at 1.06. The patch is placed after the drape (before
+it, the shirt came out through it), subdivided to follow her curve, and
+takes its weights where it now sits.
