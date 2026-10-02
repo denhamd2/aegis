@@ -74,7 +74,7 @@ WANTED = [
     "POST_COLLAR_RADIUS", "POST_COLLAR_HEIGHT",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
-    "STEP_APRON_GAP", "APRON_OUT",
+    "STEP_APRON_GAP", "STEP_PLATFORM", "APRON_OUT",
 ]
 
 # Placeholder colours only; ring_builder.gd overrides all four by name.
@@ -87,6 +87,8 @@ PART_COLORS = {
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
     "ApronRail": (0.105, 0.105, 0.112, 1.0),
     "StepsMesh": (0.62, 0.62, 0.63, 1.0),
+    "StepTreads": (0.36, 0.36, 0.37, 1.0),
+    "StepsTrim": (0.05, 0.05, 0.05, 1.0),
 }
 # Ropes and sleeves are round and must read that way; the posts, rails and
 # steps are faceted steel and smoothing them only muddies the arris the bevel
@@ -396,52 +398,132 @@ def build_apron(cfg: dict[str, float], parts: dict[str, Part]) -> None:
 STEP_CORNERS = ((1.0, -1.0), (-1.0, 1.0))
 ## The raised nosing along each tread's front edge.
 STEP_NOSE = 0.018
+## The flank's horizontal seam (one per side, where the casting's two
+## halves meet in the owner's reference), and the two hand slots below it.
+STEP_SEAM_HEIGHT = 0.012
+STEP_SLOT = (0.16, 0.045)
+STEP_TREAD_PLATE = 0.006
+
+
+def _solid(part: Part, footprint: list[Vector], base_y: float, top_y: float,
+           bevel: float = 0.0) -> None:
+    """A closed prism over a (possibly concave) floor polygon, optionally
+    bevelled through the part's own `_beveled`."""
+    n = len(footprint)
+    corners = [Vector((p.x, base_y, p.z)) for p in footprint] + \
+        [Vector((p.x, top_y, p.z)) for p in footprint]
+    faces = [tuple(range(n)), tuple(range(n, 2 * n))]
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append((i, j, n + j, n + i))
+    if bevel > 0.0:
+        part._beveled(corners, faces, bevel, 1)
+        return
+    v = [part.vert(c) for c in corners]
+    for face in faces:
+        try:
+            part.bm.faces.new([v[i] for i in face])
+        except ValueError:
+            pass
+
+
+def step_footprint(cfg: dict[str, float], cx: float, cz: float, front: float,
+                   inset: float = 0.0) -> list[Vector]:
+    """One tier's floor plan: from the V cut against the apron corner out to
+    `front` (metres along the diagonal from the apron's corner).
+
+    The owner's reference (and every televised ring): the top of the flight
+    is cut at an angle on both sides so it fits snugly into the corner, the
+    ring post standing in the notch. In the flight's frame -- `o` out along
+    the diagonal from the apron corner, `a` across it -- the apron's two
+    sides are the lines o = -|a|; the cut runs STEP_APRON_GAP off each of
+    them, at o = -|a| + gap * sqrt(2). So each tier is a pentagon: the two
+    front corners, the two back corners where the cut meets the flanks, and
+    the notch's apex on the diagonal."""
+    out = Vector((cx, 0.0, cz)).normalized()
+    across = Vector((-cz, 0.0, cx)).normalized()
+    corner = Vector((cx * cfg["APRON_OUT"], 0.0, cz * cfg["APRON_OUT"]))
+    # `inset` pulls every edge in by that much, square to itself (the tread
+    # plates sit inside the bevelled arrises).
+    half = cfg["STEP_WIDTH"] * 0.5 - inset
+    apex = (cfg["STEP_APRON_GAP"] + inset) * math.sqrt(2.0)
+    front -= inset
+
+    def at(o: float, a: float) -> Vector:
+        return corner + out * o + across * a
+
+    return [at(front, -half), at(front, half), at(-half + apex, half),
+            at(apex, 0.0), at(-half + apex, -half)]
 
 
 def build_steps(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Two flights of steel steps on the corner diagonals, pointing at the
-    ring posts (see ring_builder.gd "Steel steps" for the why).
+    """Two flights of steel steps on the corner diagonals, cut to fit the
+    corner (see ring_builder.gd "Steel steps" for the why).
 
-    Each flight in its own frame: `out` along the diagonal away from the
-    ring, `across` square to it. The top tread's back edge is squared across
-    the diagonal STEP_APRON_GAP out from the apron's corner. Each tread is a
-    block from the floor to its own top, running back from that edge by
-    STEP_RUN per tread below it -- so the three stack into one stepped solid
-    -- with a thin raised nose on its front edge, and a steel side plate the
-    full stepped profile on both flanks."""
+    Four tiers, each a solid from the floor to its own top over the same
+    V-cut footprint (step_footprint), stepping out from the ring by STEP_RUN
+    per tier below the top, so they stack into one stepped casting whose
+    back wraps the apron's corner with the post in the notch. On each:
+
+    * a raised nose along the tread's front edge (StepsMesh);
+    * a separate tread plate on top, darker and rough (StepTreads) -- the
+      reference's walking surfaces read a shade under the cast sides;
+    * on both flanks, a dark seam at mid-height and two hand slots
+      (StepsTrim), which is what reads as a casting rather than a box.
+    """
     steps = parts["StepsMesh"]
+    treads_part = parts["StepTreads"]
+    trim = parts["StepsTrim"]
     treads = int(cfg["STEP_TREADS"])
     floor_y = cfg["STEP_FLOOR_Y"]
     rise = (cfg["STEP_TOP_Y"] - floor_y) / treads
     run = cfg["STEP_RUN"]
     width = cfg["STEP_WIDTH"]
+    half = width * 0.5
+    apex = cfg["STEP_APRON_GAP"] * math.sqrt(2.0)
+    top_front = apex + cfg["STEP_PLATFORM"]
     for cx, cz in STEP_CORNERS:
         out = Vector((cx, 0.0, cz)).normalized()
         across = Vector((-cz, 0.0, cx)).normalized()
         corner = Vector((cx * cfg["APRON_OUT"], 0.0, cz * cfg["APRON_OUT"]))
-        back = corner + out * cfg["STEP_APRON_GAP"]
         for i in range(treads):
             top = floor_y + rise * (i + 1)
-            # Tread i (0 = bottom) runs from the back edge out to its nose.
-            depth = run * (treads - i)
-            centre = back + out * (depth * 0.5) \
-                + Vector((0.0, (floor_y + top) * 0.5, 0.0))
-            steps.oriented_box(centre, across, out,
-                               Vector((width, top - floor_y, depth)))
-            # The nose: a lip along the front edge of this tread.
-            nose = back + out * (depth - 0.02) + Vector((0.0, top + STEP_NOSE * 0.5, 0.0))
-            steps.oriented_box(nose, across, out,
-                               Vector((width, STEP_NOSE, 0.04)))
-        # Side plates, proud of the treads, following the stepped profile.
+            front = top_front + run * (treads - 1 - i)
+            _solid(steps, step_footprint(cfg, cx, cz, front), floor_y, top,
+                   bevel=STEP_BEVEL)
+            # The tread plate: the part of this tier's top the tier above
+            # does not cover -- the whole platform for the top one.
+            back = -half + apex if i == treads - 1 else front - run
+            inset = 0.025
+            if i == treads - 1:
+                plate = step_footprint(cfg, cx, cz, front, inset=inset)
+            else:
+                plate = [corner + out * (front - inset) + across * (-half + inset),
+                         corner + out * (front - inset) + across * (half - inset),
+                         corner + out * (back + 0.005) + across * (half - inset),
+                         corner + out * (back + 0.005) + across * (-half + inset)]
+            _solid(treads_part, plate, top - 0.001, top + STEP_TREAD_PLATE)
+            nose = corner + out * (front - 0.02) + Vector((0.0, top + STEP_NOSE * 0.5, 0.0))
+            steps.oriented_box(nose, across, out, Vector((width - 0.01, STEP_NOSE, 0.04)),
+                               bevel=0.006)
+        # The flanks: a dark seam running the full stepped length at half the
+        # flight's height, and two hand slots on the tall back half.
+        seam_y = floor_y + (cfg["STEP_TOP_Y"] - floor_y) * 0.42
+        flank_back = -half + apex
+        bottom_front = top_front + run * (treads - 1)
         for side in (-1.0, 1.0):
-            flank = across * side * (width * 0.5 + 0.012)
-            for i in range(treads):
-                top = floor_y + rise * (i + 1)
-                depth = run * (treads - i)
-                centre = back + flank + out * (depth * 0.5) \
-                    + Vector((0.0, (floor_y + top) * 0.5 + 0.02, 0.0))
-                steps.oriented_box(centre, across, out,
-                                   Vector((0.024, top - floor_y + 0.04, depth)))
+            face = across * side * (half + 0.0015)
+            # Only as far out as the tiers that reach the seam's height.
+            reach = top_front + run * (treads - 1 - int((seam_y - floor_y) / rise))
+            centre = corner + face + out * ((flank_back + min(reach, bottom_front)) * 0.5) \
+                + Vector((0.0, seam_y, 0.0))
+            trim.oriented_box(centre, out, across * side,
+                              Vector((min(reach, bottom_front) - flank_back - 0.03,
+                                      STEP_SEAM_HEIGHT, 0.003)))
+            for k, o in enumerate((flank_back + 0.24, flank_back + 0.24 + STEP_SLOT[0] + 0.14)):
+                slot = corner + face + out * o + Vector((0.0, seam_y + 0.16, 0.0))
+                trim.oriented_box(slot, out, across * side,
+                                  Vector((STEP_SLOT[0], STEP_SLOT[1], 0.003)), bevel=0.001)
 
 
 def main(argv: list[str]) -> int:

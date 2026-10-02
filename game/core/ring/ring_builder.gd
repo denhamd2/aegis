@@ -87,7 +87,10 @@ const ROPE_SAG := {
 ## end 0.17 across the pad's diagonal from its centre line and at its centre
 ## depth, inside the cushion on both counts
 ## (test_the_rope_terminations_land_inside_the_pad).
-const ROPE_END := 2.86
+## MOVED IN with the pads (TURNBUCKLE_PAD_XZ): 2.80 lands the end at u = 4.172,
+## 4 mm inside the pad's back face, and 0.212 across the diagonal, inside its
+## half-width less the bevel.
+const ROPE_END := 2.80
 
 # --- Turnbuckles -------------------------------------------------------------
 ## No pads. The ring reference (refs/ring.md) has bare corners: each rope ends
@@ -134,7 +137,9 @@ const CLAMP_INSET := 0.03
 ## respect in which a pad disagrees with the post it is mounted on. The post
 ## stays axis-aligned (see below); the pad faces the ring centre, because that
 ## is the face a wrestler is thrown into and the face every camera sees.
-const TURNBUCKLE_PAD_WIDTH := 0.46
+## 0.52, up from 0.46: moved in along the diagonal, a pad has to be wider to
+## take both rope ends across it (test_the_rope_terminations_land_inside_the_pad).
+const TURNBUCKLE_PAD_WIDTH := 0.52
 ## 0.15, down from 0.24. The ropes are 0.35 apart, so a 0.24 cushion left a
 ## 0.11 gap and the three of them read as one continuous black column with
 ## notches in it. The reference has three clearly separate cushions with more
@@ -179,7 +184,13 @@ const TURNBUCKLE_PAD_DEPTH := 0.20
 ## no longer straddles a post. It is centred at u = 4.217 on the diagonal,
 ## where both ropes end inside it (ROPE_END), with its back face at u = 4.317
 ## -- 0.114 clear of the post's surface, the gap the turnbuckle spans.
-const TURNBUCKLE_PAD_XZ := 2.982
+##
+## MOVED IN AGAIN, to 2.90: the owner's reference has a longer run of
+## turnbuckle hardware between each pad and its post than the 0.114 m here --
+## the pads, and the rope ends in them, sit further into the ring. Centred at
+## u = 4.101, the pad's back is at 4.201 and the post's face at 4.431: 0.23 m
+## of connector, the reference's hand-and-a-half.
+const TURNBUCKLE_PAD_XZ := 2.90
 ## The rounding on a cushion's arrises. It lives HERE, not in ring.py with the
 ## other bevel widths, because it is not only a shading choice: it eats into
 ## the clearance above, and a test can only pin that relationship if both
@@ -220,7 +231,7 @@ const TURNBUCKLE_PAD_BEVEL := 0.025
 ## turnbuckle body (two side bars between end bosses), and the eye bolt into
 ## the post collar.
 const TURNBUCKLE_ROD_RADIUS := 0.009
-const TURNBUCKLE_BODY_LENGTH := 0.07
+const TURNBUCKLE_BODY_LENGTH := 0.12
 const TURNBUCKLE_BODY_BAR_RADIUS := 0.0055
 const TURNBUCKLE_BODY_HALF_GAP := 0.014
 const TURNBUCKLE_BOSS_RADIUS := 0.014
@@ -321,33 +332,35 @@ const APRON_BOTTOM := -1.00
 
 # --- Steel steps -------------------------------------------------------------
 ## Two flights of steel steps, each set on the DIAGONAL of a corner, pointing
-## straight at the ring post: the flight's centre line is the corner's
-## diagonal, its top tread's back edge squared across that line and touching
-## the apron's corner, so from above each flight meets the ring at 45 degrees
-## to both of its sides and leaves a triangle of floor either side. That is
-## how every televised ring rigs them -- the steps are a corner fixture, and
-## the wrestler climbs toward the turnbuckle, steps up onto the apron beside
-## the post and goes through the ropes a pace along from it.
+## straight at the ring post, and CUT TO THE CORNER: the owner's reference
+## (an AEW ringside still) has the top of the casting notched at 90 degrees,
+## each face of the notch running square along one side of the apron, so the
+## flight sits snug into the ring's corner with the post standing in the
+## notch. The old flight's top tread had a straight back squared across the
+## diagonal, touching the apron only at its corner and leaving a triangle of
+## floor either side -- it read as a box parked next to the ring.
 ##
 ## The corners are the hard camera's TOP-LEFT and BOTTOM-RIGHT (the owner's
 ## call; the hard cam sits at -X looking +X, so its left is -Z): (+3, -3) and
 ## (-3, +3). The top-left one is on the entrance side, so it is the flight
 ## every entrance climbs.
 ##
-## The casting (ring.py build_steps): three treads, each a full-height block
-## stepped back from the ring, so the flight reads as one solid steel object
-## with solid side plates, not three slabs; a raised lip on each tread's
-## nose. No notch any more: set on the diagonal, the top tread clears the
-## post by the apron's own overhang, which is what the diagonal is for.
+## The casting (ring.py build_steps): four tiers, each a full-height solid over
+## the same V-cut footprint, stepping out from the ring by STEP_RUN; a raised
+## nose on each tread, a darker tread plate on each (StepTreads), and on the
+## flanks a mid-height seam and two hand slots (StepsTrim).
 const STEP_CORNERS := [Vector2(1.0, -1.0), Vector2(-1.0, 1.0)]
-## Clearance between the apron's corner and the top tread's back edge.
-const STEP_APRON_GAP := 0.06
-const STEP_TREADS := 3
-## Across the flight. Narrower than it was side-on (1.45): on the diagonal
-## the ends of the top tread stand off the apron by half this, and a
-## four-foot casting is about the size of the real ones.
+## Clearance between each face of the corner cut and the apron side it runs
+## along.
+const STEP_APRON_GAP := 0.02
+## Four tiers: the reference's three steps up to a deep top block.
+const STEP_TREADS := 4
+## Across the flight.
 const STEP_WIDTH := 1.2
-const STEP_RUN := 0.36
+const STEP_RUN := 0.34
+## The top block's depth along the diagonal, from the notch's apex to its
+## front edge: deeper than a tread, a platform to stand on beside the post.
+const STEP_PLATFORM := 0.42
 const STEP_TOP_Y := -0.14
 const STEP_FLOOR_Y := -1.00
 
@@ -358,10 +371,13 @@ static func step_out_dir(corner: Vector2) -> Vector3:
 	return Vector3(corner.x, 0.0, corner.y).normalized()
 
 
-## Where the flight's top tread centre is, on the floor plane (y 0).
+## Where the flight's top tread centre is, on the floor plane (y 0): the
+## middle of the platform out from the notch, which is where a man stepping up
+## the flight stands before he steps onto the apron.
 static func step_top_centre(corner: Vector2) -> Vector3:
 	var apron_corner := Vector3(corner.x * APRON_OUT, 0.0, corner.y * APRON_OUT)
-	return apron_corner + step_out_dir(corner) * (STEP_APRON_GAP + STEP_RUN * 0.5)
+	return apron_corner + step_out_dir(corner) * (STEP_APRON_GAP * sqrt(2.0)
+			+ STEP_PLATFORM * 0.55)
 
 
 # --- Texture generation ------------------------------------------------------
@@ -1033,6 +1049,9 @@ func _model_materials() -> Dictionary:
 		"ApronRail": _resolve("ring_apron", _mat(Color(0.105, 0.105, 0.112), 0.85),
 			{"tint": Color(0.105, 0.105, 0.112)}),
 		"StepsMesh": _bare_steel(),
+		"StepTreads": _resolve("ring_steps_tread", _mat(Color(0.36, 0.37, 0.38), 0.7)),
+		# The flank seam and hand slots: dark, flat, read as recesses.
+		"StepsTrim": _mat(Color(0.05, 0.05, 0.055), 0.9),
 	}
 
 

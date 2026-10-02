@@ -57,7 +57,7 @@ func test_a_turnbuckle_gap_separates_every_pad_from_its_post() -> void:
 	var gap := post_face - pad_back
 	assert_float(gap).override_failure_message(
 			"pad back at u=%.3f, post face at u=%.3f: %.3f of turnbuckle"
-			% [pad_back, post_face, gap]).is_between(0.08, 0.20)
+			% [pad_back, post_face, gap]).is_between(0.22, 0.32)
 	# The turnbuckle body fits in it, with the hook and eye either side.
 	assert_float(RingBuilder.TURNBUCKLE_BODY_LENGTH
 			+ 2.0 * RingBuilder.TURNBUCKLE_EYE_RADIUS).is_less(gap)
@@ -103,21 +103,20 @@ func test_the_model_ships_a_pad_at_every_rope_height() -> void:
 	root.free()
 
 
-## THE STEPS POINT AT THE POSTS, on the corner diagonals.
+## THE STEPS POINT AT THE POSTS, on the corner diagonals, CUT TO THE CORNER.
 ##
-## The owner's call, and how televised rings rig them: each flight's centre
-## line is its corner's diagonal, the top tread squared across it at the
-## apron's corner, so the flight meets the ring at 45 degrees to both sides.
 ## Measured on the shipped mesh in each flight's own frame: `u` along the
-## diagonal from the ring's centre, `w` across it. The flight must span the
-## diagonal from the apron's corner (plus the gap) out three treads, and stay
-## within its width either side of the line -- a side-on flight fails both.
+## diagonal from the ring's centre, `w` across it. The flight spans the
+## diagonal from inside the apron's corner (the notch's flanks reach back
+## along the apron sides) out to the foot of its four tiers, stays within its
+## width either side of the line -- and no vertex is inside the apron, or
+## nearer either apron side than the cut's gap.
 func test_the_steps_point_at_the_posts_on_the_diagonals() -> void:
 	var plate := 0.03
+	var apex := RingBuilder.APRON_OUT * sqrt(2.0) + RingBuilder.STEP_APRON_GAP * sqrt(2.0)
 	for corner: Vector2 in RingBuilder.STEP_CORNERS:
 		var out := RingBuilder.step_out_dir(corner)
 		var across := Vector3(-out.z, 0.0, out.x)
-		var u_lo := INF
 		var u_hi := -INF
 		var w_max := 0.0
 		var seen := 0
@@ -126,21 +125,42 @@ func test_the_steps_point_at_the_posts_on_the_diagonals() -> void:
 				continue
 			seen += 1
 			var flat := Vector3(v.x, 0.0, v.z)
-			u_lo = minf(u_lo, flat.dot(out))
 			u_hi = maxf(u_hi, flat.dot(out))
 			w_max = maxf(w_max, absf(flat.dot(across)))
+			# Outside the apron by the gap on at least one side: never in it.
+			var clear := maxf(absf(v.x) - RingBuilder.APRON_OUT, absf(v.z) - RingBuilder.APRON_OUT)
+			assert_float(clear).override_failure_message("%s: a step vertex %s is %.3f into the apron"
+					% [corner, v, -clear]).is_greater_equal(RingBuilder.STEP_APRON_GAP - 0.004)
 		assert_int(seen).is_greater(0)
-		var back := RingBuilder.APRON_OUT * sqrt(2.0) + RingBuilder.STEP_APRON_GAP
-		assert_float(u_lo).override_failure_message(
-				"the %s flight's top tread is %.3f out along its diagonal, not "
-				% [corner, u_lo] + "against the apron's corner at %.3f" % back) \
-				.is_equal_approx(back, 0.01)
-		assert_float(u_hi).is_equal_approx(
-				back + RingBuilder.STEP_RUN * RingBuilder.STEP_TREADS, 0.01)
+		assert_float(u_hi).is_equal_approx(apex + RingBuilder.STEP_PLATFORM
+				+ RingBuilder.STEP_RUN * (RingBuilder.STEP_TREADS - 1), 0.03)
 		assert_float(w_max).override_failure_message(
 				"the %s flight spreads %.3f off its diagonal: it is not square to it"
 				% [corner, w_max]) \
 				.is_less_equal(RingBuilder.STEP_WIDTH * 0.5 + plate)
+
+
+## The owner's note: the steps fit SNUG into the corner. The notch's two faces
+## run along the apron's two sides STEP_APRON_GAP off them -- within 1-3 cm --
+## for most of the flight's width, and the ring post stands in the notch,
+## clear of the casting.
+func test_the_steps_fit_snug_into_the_corner_round_the_post() -> void:
+	assert_float(RingBuilder.STEP_APRON_GAP).is_between(0.01, 0.03)
+	for corner: Vector2 in RingBuilder.STEP_CORNERS:
+		var near_side := 0
+		var post := Vector3(corner.x * RingBuilder.POST_XZ, 0.0, corner.y * RingBuilder.POST_XZ)
+		var post_clear := INF
+		for v: Vector3 in _verts("StepsMesh"):
+			if signf(v.x) != signf(corner.x) or signf(v.z) != signf(corner.y):
+				continue
+			var gap := maxf(absf(v.x) - RingBuilder.APRON_OUT, absf(v.z) - RingBuilder.APRON_OUT)
+			if gap < 0.035 and minf(absf(v.x), absf(v.z)) < RingBuilder.APRON_OUT - 0.3:
+				near_side += 1
+			if v.y > RingBuilder.STEP_TOP_Y - 0.3:
+				post_clear = minf(post_clear, Vector2(v.x - post.x, v.z - post.z).length())
+		assert_int(near_side).override_failure_message("%s: no cut face along the apron" % corner) \
+				.is_greater(8)
+		assert_float(post_clear - RingBuilder.POST_RADIUS).is_greater(0.0)
 
 
 ## The two flights are the hard camera's TOP-LEFT and BOTTOM-RIGHT corners:
@@ -164,8 +184,8 @@ func test_the_steps_reach_from_the_floor_to_the_apron() -> void:
 		highest = maxf(highest, v.y)
 		nearest = minf(nearest, maxf(absf(v.x), absf(v.z)))
 	assert_float(lowest).is_equal_approx(RingBuilder.STEP_FLOOR_Y, TOLERANCE)
-	# The top tread is level with the apron; its side plates stand 4 cm proud.
-	assert_float(highest).is_equal_approx(RingBuilder.STEP_TOP_Y + 0.04, TOLERANCE)
+	# The top tread is level with the apron; only its nose stands proud.
+	assert_float(highest).is_equal_approx(RingBuilder.STEP_TOP_Y + 0.018, TOLERANCE)
 	assert_float(nearest) \
 			.override_failure_message(
 				"the steps reach inside the apron square (%.2f < %.2f)"

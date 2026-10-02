@@ -13,6 +13,8 @@ const SHOTS := [
 	["side_on", Vector3(3.9, 1.1, 1.2), Vector3(3.05, 0.85, 3.05), 34.0],
 	["from_outside", Vector3(4.6, 1.5, 4.6), Vector3(2.9, 0.85, 2.9), 40.0],
 	["macro", Vector3(2.55, 0.95, 3.55), Vector3(3.1, 0.85, 3.1), 30.0],
+	["steps_ref", Vector3(5.4, 0.45, -1.4), Vector3(3.6, -0.55, -3.6), 46.0],
+	["steps_high", Vector3(5.6, 2.4, -5.6), Vector3(3.5, -0.6, -3.5), 44.0],
 ]
 
 
