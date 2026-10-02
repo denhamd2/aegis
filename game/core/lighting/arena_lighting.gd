@@ -942,6 +942,15 @@ const BARRICADE_SPILL_ENERGY := 0.7
 const BARRICADE_SPILL_RANGE := 3.0
 const BARRICADE_SPILL_IN := 0.35     # light in front of the panel face
 const BARRICADE_SPILL_DROP := 0.7    # light under the barricade top
+## The LED wall facing the hard camera (the owner's artwork, see
+## assets/environment/CREDITS.md): on the +X run behind the ring every panel
+## is a full-height LED face instead of a band, as on the far barricade of an
+## AEW broadcast and of WWE 2K's Dynamite arena. The banner spans the middle
+## three panels; the outer two carry its ends (its AEW and stripes), so the
+## wall reads AEW / AEW-DYNAMITE-AEW / AEW from the hard camera.
+const BARRICADE_WALL_ART := "res://assets/environment/materials/barricade_led_dynamite.png"
+const BARRICADE_WALL_FOOT := 0.10    # face above the floor
+const BARRICADE_WALL_HEAD := 0.09    # face below the barricade top (the rail)
 
 
 func _build_barricade_leds() -> void:
@@ -962,15 +971,28 @@ func _build_barricade_leds() -> void:
 		var width: float = panel[3]
 		# Right-handed whichever way the run was walked.
 		var along := Vector3(out.z, 0.0, -out.x)
-		var band := BoxMesh.new()
-		band.size = Vector3(width - 0.1, BARRICADE_LED_HEIGHT, 0.01)
 		var led := MeshInstance3D.new()
 		led.name = "BarricadeLed%02d" % n
-		led.mesh = band
-		led.material_override = mats[n % mats.size()]
 		led.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		led.transform = Transform3D(Basis(along, Vector3.UP, out),
-				at - out * inset + Vector3.UP * (top - BARRICADE_LED_DROP))
+		var wall_u := _wall_span(at, out)
+		if wall_u != Vector2.ZERO:
+			# A full face toward the ring, u across the banner as the hard
+			# camera reads it (its screen-right is +Z).
+			var quad := QuadMesh.new()
+			var h := ArenaBuilder.BARRICADE_HEIGHT - BARRICADE_WALL_FOOT - BARRICADE_WALL_HEAD
+			quad.size = Vector2(width - 0.04, h)
+			led.mesh = quad
+			led.material_override = _wall_material(wall_u)
+			led.transform = Transform3D(Basis(Vector3.UP.cross(-out), Vector3.UP, -out),
+					at - out * inset + Vector3.UP * (ArenaBuilder.FLOOR_Y
+					+ BARRICADE_WALL_FOOT + h * 0.5))
+		else:
+			var band := BoxMesh.new()
+			band.size = Vector3(width - 0.1, BARRICADE_LED_HEIGHT, 0.01)
+			led.mesh = band
+			led.material_override = mats[n % mats.size()]
+			led.transform = Transform3D(Basis(along, Vector3.UP, out),
+					at - out * inset + Vector3.UP * (top - BARRICADE_LED_DROP))
 		add_child(led)
 		var light := OmniLight3D.new()
 		light.name = "BarricadeSpill%02d" % n
@@ -983,6 +1005,37 @@ func _build_barricade_leds() -> void:
 		light.light_volumetric_fog_energy = 0.0
 		add_child(light)
 		n += 1
+
+
+## The banner's u range on a panel of the LED wall: (start, span), or zero
+## for a panel not on it. The wall is the +X run's five panels beside the
+## ring; the middle three are the banner, the outer two its outer thirds.
+static func _wall_span(at: Vector3, out: Vector3) -> Vector2:
+	if out.x < 0.5 or absf(at.z) > ArenaBuilder.BARRICADE_RADIUS:
+		return Vector2.ZERO
+	var slot := roundi(at.z / ArenaBuilder.BARRICADE_PANEL)
+	match slot:
+		-2: return Vector2(0.0, 1.0 / 3.0)
+		2: return Vector2(2.0 / 3.0, 1.0 / 3.0)
+		_: return Vector2((slot + 1) / 3.0, 1.0 / 3.0)
+
+
+func _wall_material(span: Vector2) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	# As ArenaBuilder._ribbon_material: a black face whose LEDs are the
+	# whole signal, matte, at the ribbon boards' level.
+	mat.albedo_color = Color(0.02, 0.02, 0.025)
+	mat.emission_enabled = true
+	mat.emission = Color.BLACK
+	mat.emission_operator = BaseMaterial3D.EMISSION_OP_ADD
+	mat.emission_texture = load(BARRICADE_WALL_ART)
+	mat.emission_energy_multiplier = ArenaBuilder.RIBBON_ART_PEAK * ArenaBuilder._emissive_gain()
+	mat.roughness = 1.0
+	mat.metallic_specular = 0.0
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	mat.uv1_scale = Vector3(span.y, 1.0, 1.0)
+	mat.uv1_offset = Vector3(span.x, 0.0, 0.0)
+	return mat
 
 
 ## The yoke and head bases that point a fixture body's lens along `forward`.

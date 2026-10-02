@@ -901,7 +901,10 @@ static func barricade_panels() -> Array:
 	var runs := [
 		[Vector3(-r, 0, -r), Vector3(r, 0, -r), Vector3.FORWARD],
 		[Vector3(-r, 0, -r), Vector3(-r, 0, r), Vector3.LEFT],
-		[Vector3(r, 0, -r), Vector3(r, 0, DESK_BAY_Z), Vector3.RIGHT],
+		# The run facing the hard camera, behind the ring: its own five panels,
+		# symmetric about the ring, which carry the LED wall (ArenaLighting).
+		[Vector3(r, 0, -r), Vector3(r, 0, r), Vector3.RIGHT],
+		[Vector3(r, 0, r), Vector3(r, 0, DESK_BAY_Z), Vector3.RIGHT],
 		[Vector3(-r, 0, r), Vector3(DESK_BAY_X0, 0, r), Vector3.BACK],
 		[Vector3(DESK_BAY_X0, 0, r), Vector3(DESK_BAY_X0, 0, DESK_BAY_Z), Vector3.LEFT],
 		[Vector3(DESK_BAY_X0, 0, DESK_BAY_Z), Vector3(r, 0, DESK_BAY_Z), Vector3.BACK],

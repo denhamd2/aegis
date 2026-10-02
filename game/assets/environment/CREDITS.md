@@ -186,6 +186,18 @@ generator is still called for the mat's roughness and normal maps, which is
 where most of its value was: it puts relief and specular breakup on the canvas
 that a flat photograph cannot.
 
+## barricade_led_dynamite.png — THIRD-PARTY MARKS, supplied by the project owner
+
+The LED wall on the barricade facing the hard camera
+(`materials/barricade_led_dynamite.png`, 2172x308; `core/lighting/arena_lighting.gd`,
+`BARRICADE_WALL_ART`). Supplied as a 2172x724 image, the banner on a white
+surround; the only processing is a crop of the white rows above and below
+(rows 206-513 kept, full width).
+
+It carries **third-party trademarks** — the AEW and *Dynamite* marks — on the
+same terms as the ribbon board below: no licence, no author, fine for a
+prototype and for internal capture, and **not cleared for distribution**.
+
 ## ribbon_board.png — THIRD-PARTY MARKS, supplied by the project owner
 
 The LED ribbon board artwork (`materials/ribbon_board.png`, 950x123) runs round

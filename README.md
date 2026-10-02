@@ -8541,3 +8541,12 @@ feathered edge is alpha-clipped on the scalp's own triangles), and there is a
 dark smudge on her left cheek in the in-game 3/4.
 
 Checks: 605 tests pass.
+- **LED wall facing the hard camera** (owner's artwork, image cropped of its
+  white rows: `materials/barricade_led_dynamite.png`, CREDITS updated). As on
+  the far barricade of an AEW broadcast and WWE 2K's Dynamite arena, the +X
+  run behind the ring is full-height LED panels: the banner across the middle
+  three, its AEW ends on the outer two, so the hard camera reads AEW |
+  AEW-DYNAMITE-AEW | AEW. The +X run is now split at the ring's corner so its
+  five panels sit symmetric about the ring (`barricade_panels()`,
+  `ringside.py`; rebuilt byte-identical). Frame:
+  `fixtures/venue/led_wall_hardcam_ringside.jpg` (hard camera, then ringside).

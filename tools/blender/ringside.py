@@ -324,9 +324,10 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     The runs are `ArenaBuilder.barricade_panels()`'s, mirrored here: the four
     sides of the ring with the entrance GAP on -Z, and on +Z the desk's bay --
     the barricade steps back to DESK_BAY_Z from the panel joint at
-    DESK_BAY_X0 to the +X corner, the +X run carries on to meet it, and a
-    return closes it. A run of length L takes int(L / PANEL) panels at an
-    even pitch.
+    DESK_BAY_X0 to the +X corner, the +X run carries on to meet it (a run of
+    its own past the ring's side, so the stretch facing the hard camera stays
+    symmetric about the ring for its LED wall), and a return closes it. A
+    run of length L takes int(L / PANEL) panels at an even pitch.
 
     The -Z run's GAP: the ramp's foot lands on this line, and a panel whose
     centre clears the gap by less than its own half-width still puts its end
@@ -342,7 +343,8 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     runs = [
         (Vector((-r, 0, -r)), Vector((r, 0, -r)), Vector((0.0, 0.0, -1.0))),
         (Vector((-r, 0, -r)), Vector((-r, 0, r)), Vector((-1.0, 0.0, 0.0))),
-        (Vector((r, 0, -r)), Vector((r, 0, bay_z)), Vector((1.0, 0.0, 0.0))),
+        (Vector((r, 0, -r)), Vector((r, 0, r)), Vector((1.0, 0.0, 0.0))),
+        (Vector((r, 0, r)), Vector((r, 0, bay_z)), Vector((1.0, 0.0, 0.0))),
         (Vector((-r, 0, r)), Vector((x0, 0, r)), Vector((0.0, 0.0, 1.0))),
         (Vector((x0, 0, r)), Vector((x0, 0, bay_z)), Vector((-1.0, 0.0, 0.0))),
         (Vector((x0, 0, bay_z)), Vector((r, 0, bay_z)), Vector((0.0, 0.0, 1.0))),
