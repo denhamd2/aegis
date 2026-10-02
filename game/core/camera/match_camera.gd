@@ -1049,7 +1049,7 @@ func _pin_shot(_delta: float) -> bool:
 	var defender: WrestlerController = referee._pin_defender
 	if defender == null:
 		return false
-	var at_spot := RefereeActor.cover_spot(defender)
+	var at_spot := RefereeActor.cover_spot(defender, [referee.wrestler_a, referee.wrestler_b])
 	var spot: Vector3 = at_spot[0]
 	var up_body: Vector3 = -(at_spot[1] as Vector3)
 	var side := Vector3.UP.cross(up_body).normalized()

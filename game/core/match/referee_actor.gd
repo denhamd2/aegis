@@ -36,11 +36,34 @@ const JOG_SPEED := 3.6
 const START_MOVE := 0.75
 const ARRIVED := 0.18
 const TURN_RATE := 7.0
-## How close she lets herself come to either man while following.
-const CLEARANCE := 1.0
-## The cover: she kneels this far past the pinned man's neck, facing up his
-## body, so her hands land by his shoulders.
+## How close she lets herself come to either man's body when she moves --
+## measured to his bones (body_segments), so it holds for a man lying down.
+const KEEP_CLEAR_M := 0.28
+## The fallback cover, when no searched spot is inside the ropes: this far
+## past the pinned man's neck, facing down his body.
 const COVER_REACH := 0.62
+## The cover search (cover_spot): rings round his neck, the step round them,
+## and her kneeling footprint along her facing -- knees COVER_BACK behind the
+## spot, hands COVER_FRONT ahead of it.
+const COVER_RADII := [0.7, 0.85, 1.0, 1.15]
+const COVER_STEP_DEG := 15.0
+const COVER_BACK := 0.2
+const COVER_FRONT := 0.3
+## Her path to it (route_to): how far off the bodies a straight line must
+## keep, and the ring round the pair she walks when it does not.
+const ROUTE_CLEAR := 0.3
+const ROUTE_RING := 1.5
+## Clearance past which a spot is simply clear, and under which she moves.
+const COVER_CLEAR := 0.5
+const COVER_SHUFFLE := 0.2
+## She may kneel by the ropes, not under them.
+const COVER_ROPES := 2.95
+## The body as bone chains (base-rig names).
+const BODY_CHAINS := [["pelvis", "spine_02", "neck_01", "Head"],
+		["upperarm_l", "lowerarm_l", "hand_l"], ["upperarm_r", "lowerarm_r", "hand_r"],
+		["thigh_l", "calf_l", "foot_l"], ["thigh_r", "calf_r", "foot_r"],
+		["pelvis", "thigh_l"], ["pelvis", "thigh_r"], ["neck_01", "upperarm_l"],
+		["neck_01", "upperarm_r"]]
 ## ref_slap's palm meets the mat on its frame 12 of 30 fps: 24 ticks at 60 Hz.
 const SLAP_LEAD := 24
 ## Standing beside the winner for the hand raise: on her right (-Z when she
@@ -77,6 +100,11 @@ var _separated := false
 var _separating := false
 var _checking := false
 var _director: EntranceDirector
+## The cover spot she is jogging to, and where the pinned man was when it was
+## chosen.
+var _cover_target: Array = []
+var _cover_from: Array = []
+var _recheck := 0
 
 
 func _ready() -> void:
@@ -217,16 +245,58 @@ func _to_cover(delta: float) -> void:
 	if not _referee.is_pin_active():
 		_set_mode(Mode.BELL if _winner else Mode.FOLLOW)
 		return
-	var at := cover_spot(_referee._pin_defender)
-	if _go(at[0], JOG_SPEED, delta, false):
-		rotation.y = _yaw_towards(at[1])
+	var defender: WrestlerController = _referee._pin_defender
+	# Chosen once, and again only if the pair have moved: re-searched every
+	# frame, two spots scoring alike would have her dithering between them.
+	if _cover_target.is_empty() or _pair_moved():
+		_cover_target = cover_spot(defender, _wrestlers)
+		_cover_from = _pair_at()
+	var next := route_to(_flat(global_position), _cover_target[0], _wrestlers)
+	if next != _cover_target[0]:
+		# Round the far side of the pair first: the path straight to her spot
+		# runs through them, or between a man and the ropes where there is
+		# no room.
+		_go(next, JOG_SPEED, delta, true)
+		return
+	if _go(_cover_target[0], JOG_SPEED, delta, true):
+		rotation.y = _yaw_towards(_cover_target[1])
 		_yaw = rotation.y
 		_set_mode(Mode.COUNTING)
 
 
-## Where she kneels for a cover, and which way she faces: past the pinned
-## man's neck on the line up his body, facing back down it.
-static func cover_spot(defender: WrestlerController) -> Array:
+## Both men's flat positions, to tell when the pair have moved since her
+## cover spot was chosen -- the coverer is still sliding into place when she
+## sets off.
+func _pair_at() -> Array:
+	return _wrestlers.map(func(w: WrestlerController) -> Vector3: return _flat(w.global_position))
+
+
+func _pair_moved() -> bool:
+	var now := _pair_at()
+	if now.size() != _cover_from.size():
+		return true
+	for i in now.size():
+		if (now[i] as Vector3).distance_to(_cover_from[i]) > 0.25:
+			return true
+	return false
+
+
+## Where she kneels for a cover, and which way she faces: by the pinned man's
+## head and shoulders, wherever round them is clearest of BOTH men's bodies --
+## never on top of either. It used to be a fixed 0.62 m past his neck, which
+## took no account of the man lying across him and, clamped in at the ropes,
+## put her knees on the pair.
+##
+## The search: every COVER_STEP_DEG round his neck at each of COVER_RADII, her
+## kneeling footprint (knees to hands, COVER_BACK/COVER_FRONT along her
+## facing, which is at his neck) measured against the bone segments of both
+## men. Best clearance wins up to COVER_CLEAR, past which the shot's
+## preferences decide: the head end, then the side away from the hard camera
+## (she belongs in the back of the shot).
+static func cover_spot(defender: WrestlerController, men: Array = []) -> Array:
+	var bodies := men.duplicate()
+	if not bodies.has(defender):
+		bodies.append(defender)
 	var neck: Vector3 = defender._bone_world("neck_01")
 	var hips := _flat(defender.global_position)
 	if neck == Vector3.INF:
@@ -234,10 +304,151 @@ static func cover_spot(defender: WrestlerController) -> Array:
 	neck = _flat(neck)
 	var up_body := neck - hips
 	up_body = Vector3.FORWARD if up_body.length() < 0.1 else up_body.normalized()
-	var spot := neck + up_body * COVER_REACH
-	spot.x = clampf(spot.x, -KEEP_IN - 0.4, KEEP_IN + 0.4)
-	spot.z = clampf(spot.z, -KEEP_IN - 0.4, KEEP_IN + 0.4)
-	return [spot, -up_body]
+	var segments := body_segments(bodies)
+	var best: Array = []
+	var best_score := -INF
+	for radius: float in COVER_RADII:
+		for step in int(360.0 / COVER_STEP_DEG):
+			var angle := deg_to_rad(step * COVER_STEP_DEG)
+			var out := up_body.rotated(Vector3.UP, angle)
+			var spot := neck + out * radius
+			if absf(spot.x) > COVER_ROPES or absf(spot.z) > COVER_ROPES:
+				continue
+			var facing := -out
+			var clear := _footprint_clearance(spot, facing, segments)
+			var score := minf(clear, COVER_CLEAR) * 10.0
+			score += out.dot(up_body) * 0.6
+			score += 0.3 if out.x > 0.0 else 0.0
+			score -= (radius - COVER_RADII[0]) * 0.8
+			if score > best_score:
+				best_score = score
+				best = [spot, facing]
+	if best.is_empty():
+		var spot := neck + up_body * COVER_REACH
+		spot.x = clampf(spot.x, -COVER_ROPES, COVER_ROPES)
+		spot.z = clampf(spot.z, -COVER_ROPES, COVER_ROPES)
+		return [spot, -up_body]
+	return best
+
+
+## The next point on her way from `from` to `to`: `to` itself when the
+## straight line keeps ROUTE_CLEAR of both men's bodies, else the waypoint on
+## a ring round them (ROUTE_RING out from their middle, inside the ropes)
+## that makes the shortest clear two-leg route. A line between two points on
+## the mat is all she can plan; a pair lying the length of the ropes is
+## walked round, not through.
+static func route_to(from: Vector3, to: Vector3, men: Array) -> Vector3:
+	var segments := body_segments(men)
+	if _line_clearance(from, to, segments) >= ROUTE_CLEAR:
+		return to
+	var mid := Vector3.ZERO
+	for w: WrestlerController in men:
+		mid += _flat(w.global_position) / float(men.size())
+	# The shortest fully clear two-leg route; failing that (a body hard
+	# against the ropes can leave none), the one that keeps furthest off them.
+	var best := to
+	var best_len := INF
+	var fallback := to
+	var fallback_clear := _line_clearance(from, to, segments)
+	for radius: float in [ROUTE_RING, ROUTE_RING + 0.5]:
+		for step in 16:
+			var wp := mid + Vector3.FORWARD.rotated(Vector3.UP, TAU * step / 16.0) * radius
+			if absf(wp.x) > COVER_ROPES or absf(wp.z) > COVER_ROPES \
+					or wp.distance_to(from) < ARRIVED * 1.5:
+				continue
+			var clear := minf(_line_clearance(from, wp, segments),
+					_line_clearance(wp, to, segments))
+			if clear > fallback_clear:
+				fallback_clear = clear
+				fallback = wp
+			if clear < ROUTE_CLEAR:
+				continue
+			var length := from.distance_to(wp) + wp.distance_to(to)
+			if length < best_len:
+				best_len = length
+				best = wp
+	return best if best_len < INF else fallback
+
+
+static func _line_clearance(a: Vector3, b: Vector3, segments: Array) -> float:
+	# The last stretch into a cover spot is allowed to come close: the spot
+	# itself was chosen for its clearance.
+	var end := b
+	if a.distance_to(b) > 0.4:
+		end = b + (a - b).normalized() * 0.35
+	var best := INF
+	for seg: Array in segments:
+		best = minf(best, _segment_distance(a, end, seg[0], seg[1]))
+	return best
+
+
+## The flat distance from `spot` -- and, given a facing, from her whole
+## kneeling footprint -- to the nearest bone segment of `men`.
+static func body_clearance(spot: Vector3, men: Array, facing := Vector3.ZERO) -> float:
+	return _footprint_clearance(_flat(spot), facing, body_segments(men))
+
+
+static func _footprint_clearance(spot: Vector3, facing: Vector3, segments: Array) -> float:
+	var a := spot
+	var b := spot
+	if facing.length() > 0.01:
+		var f := _flat(facing).normalized()
+		a = spot - f * COVER_BACK
+		b = spot + f * COVER_FRONT
+	var best := INF
+	for seg: Array in segments:
+		best = minf(best, _segment_distance(a, b, seg[0], seg[1]))
+	return best
+
+
+## Each man's body as flat line segments between his bones: the spine to the
+## head, both arms, both legs.
+static func body_segments(men: Array) -> Array:
+	var out: Array = []
+	for w: WrestlerController in men:
+		if w == null:
+			continue
+		for chain: Array in BODY_CHAINS:
+			var prev := Vector3.INF
+			for bone: String in chain:
+				var p: Vector3 = w._bone_world(bone)
+				if p == Vector3.INF:
+					continue
+				p = _flat(p)
+				if prev != Vector3.INF:
+					out.append([prev, p])
+				prev = p
+		if out.is_empty():
+			var root := _flat(w.global_position)
+			out.append([root, root])
+	return out
+
+
+## Closest distance between segments ab and cd, in the floor plane.
+static func _segment_distance(a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> float:
+	if _segments_cross(a, b, c, d):
+		return 0.0
+	return minf(minf(_point_segment(a, c, d), _point_segment(b, c, d)),
+			minf(_point_segment(c, a, b), _point_segment(d, a, b)))
+
+
+static func _point_segment(p: Vector3, a: Vector3, b: Vector3) -> float:
+	var ab := b - a
+	var len2 := ab.length_squared()
+	var t := 0.0 if len2 < 1e-8 else clampf((p - a).dot(ab) / len2, 0.0, 1.0)
+	return p.distance_to(a + ab * t)
+
+
+static func _segments_cross(a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> bool:
+	var d1 := _cross2(d - c, a - c)
+	var d2 := _cross2(d - c, b - c)
+	var d3 := _cross2(b - a, c - a)
+	var d4 := _cross2(b - a, d - a)
+	return d1 * d2 < 0.0 and d3 * d4 < 0.0
+
+
+static func _cross2(u: Vector3, v: Vector3) -> float:
+	return u.x * v.z - u.z * v.x
 
 
 func _counting() -> void:
@@ -249,6 +460,17 @@ func _counting() -> void:
 				_play("strikes/ref_slap", 0.05, true)
 				slaps += 1
 		_last_pin_tick = ticks
+		# The pair settle into the cover after she is down: if they have
+		# shifted onto her, she shuffles to the next clear spot.
+		_recheck += 1
+		if _recheck % 10 == 0 and _referee._pin_defender:
+			var now := body_clearance(global_position, _wrestlers, global_transform.basis.z)
+			if now < COVER_SHUFFLE:
+				var other := cover_spot(_referee._pin_defender, _wrestlers)
+				if body_clearance(other[0], _wrestlers, other[1]) > now + COVER_SHUFFLE:
+					_cover_target = other
+					_cover_from = _pair_at()
+					_set_mode(Mode.TO_COVER)
 	elif _mode_time > 0.1:
 		# A kick-out or the three: either way she gets up.
 		_set_mode(Mode.RISE)
@@ -259,9 +481,8 @@ func _submission(delta: float) -> void:
 		_set_mode(Mode.BELL if _winner else Mode.FOLLOW)
 		return
 	var defender: WrestlerController = _referee._submission_defender
-	var at := cover_spot(defender)
-	var spot: Vector3 = at[0] + (at[0] - _flat(defender.global_position)).normalized() * 0.3
-	if _go(_inside(spot), WALK_SPEED, delta, false) or not _moving:
+	var at := cover_spot(defender, _wrestlers)
+	if _go(at[0], WALK_SPEED, delta, true) or not _moving:
 		_face(_yaw_towards(at[1]), delta)
 		_play("strikes/ref_watch", 0.3)
 
@@ -290,12 +511,29 @@ func _go(spot: Vector3, speed: float, delta: float, keep_clear: bool) -> bool:
 		return true
 	_moving = true
 	var velocity := to / far * minf(speed, far / maxf(delta, 1e-4))
-	if keep_clear:
-		for w: WrestlerController in _wrestlers:
-			var away := here - _flat(w.global_position)
+	if keep_clear and far > 0.3:
+		# Round the bodies, not through them, measured to the nearest bone
+		# segment of either man rather than his root (a man lying down is two
+		# metres long): inside KEEP_CLEAR_M she loses the part of her step
+		# that goes into him and slides along him instead, so she walks round
+		# a body rather than stalling against it.
+		for seg: Array in body_segments(_wrestlers):
+			var a: Vector3 = seg[0]
+			var ab: Vector3 = (seg[1] as Vector3) - a
+			var t := 0.0 if ab.length_squared() < 1e-8 else \
+					clampf((here - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
+			var away := here - (a + ab * t)
 			var d := away.length()
-			if d < CLEARANCE and d > 0.01:
-				velocity += away / d * (CLEARANCE - d) * 3.0
+			if d < KEEP_CLEAR_M and d > 0.01:
+				var n := away / d
+				var into := velocity.dot(n)
+				if into < 0.0:
+					velocity -= n * into
+					var along := Vector3.UP.cross(n)
+					if along.dot(to) < 0.0:
+						along = -along
+					velocity += along * absf(into) * 0.8
+				velocity += n * (KEEP_CLEAR_M - d) * 2.0
 	global_position = _inside_soft(here + velocity * delta)
 	var pace := velocity.length()
 	if pace > 0.05:
