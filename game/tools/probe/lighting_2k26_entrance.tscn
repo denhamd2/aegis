@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/probe/lighting_2k26_entrance.gd" id="1"]
+
+[node name="Lighting2K26Entrance" type="Node"]
+script = ExtResource("1")

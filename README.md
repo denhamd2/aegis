@@ -8357,3 +8357,38 @@ the side of her chest in a smear (pressed straight back, the last strip
 met the shirt where it turns away): it is now wrapped in toward an axis
 14 cm behind her, like the stripes, and kept on the front (1.1x, centred
 9.4 cm out).
+
+### Lighting 2K26 items 5-12, verified on pixels
+
+Items 5-12 of `gauntlet/refs/lighting_2k26.md` went in with 3009a41,
+968a53f and 80a46b8 and were never checked on a frame. Checked now on Vulkan
+Forward+ (lavapipe, `software_rasterised`), with two new probes:
+`tools/probe/lighting_2k26_shot.tscn` (A/B toggles in one scene: ribbon
+spill, glints, beams, match vs entrance look) and
+`tools/probe/lighting_2k26_entrance.tscn` (an entrance from a beat INDEX with
+the skipped beats' cues replayed, plus `--no-posetop` / `--old-bloom`
+switches). Numbers are `measure_look.py`. Stills, each a before|after pair,
+in `tools/capture/fixtures/lighting_2k26/`.
+
+| # | Implemented | What the frames show | Verdict |
+| --- | --- | --- | --- |
+| 5 Sweat sheen | `materials/sweat.gd:19-25` (BASE 0.22, full in 100 s, + damage), `skin_look.gd:113` (clearcoat 0.7) | Roman's face at 0.22 (the bell) has a soft sheen; at 1.0 a sharp wet highlight on cheek, nose and shoulder. The ramp itself is `Sweat.target`, unit-tested, not filmed over a match. | verified (close-up) |
+| 6 LED boards as light | `arena_lighting.gd:864-890` (24 omnis, 1.4, range 6.5, under the suite ribbon) | Spill on/off: only the suite fascia directly under the ribbon changes (band mean +1/+1/+4 of 255 RGB); the rows below and the front rows: 0 change. No light from the barricade LEDs; the apron is untouched. | partly |
+| 7 Concert-dark house | `arena_lighting.gd:426-427` (crowd_light 0.3), `:431` ring keys/top at 40%; `entrance_director.gd` `_dim_house` | Same wide, match vs entrance look: dark<0.01 30% -> 70%, p50 0.019 -> 0.004. Cody's blackout wides: 64-92% dark, p50 0.003-0.006 (past the target). Median over 74 entrance frames: p50 0.031, dark 20% against 0.015 / 40%; stage close-ups run p50 0.05-0.08, dark 6-13%, filled by portal rings and the tron. | partly: house met, close-ups 2x too bright |
+| 8 Star glints | `lighting/star_glints.gd` (six points), `arena_lighting.gd:434,440,553` | Six-point stars on the five rig lenses facing the camera, none on the two facing away; gone at strength 0. At the match's 0.3 the stars still render at ~44% of the entrance's energy (5.4k px vs 9.4k px over +20/255): clear stars, not the "trace" the comment intends. | verified (entrance); match level higher than intended |
+| 9 Moving beams on the music | `arena_lighting.gd:444-448, 495-514`; beat sync `entrance_director.gd:1204,1226` (Cody 0.743 s, Roman 0.836 s) | Beam aims change frame to frame in the entrance look (Beam03 z 0.59 -> 0.69 -> 0.78 over 2.5 s), the shafts visibly move; static in the match look. Energy logged 30-33 against the match's 60: the pulse sits near its 0.5 floor most of a beat, so the entrance beams read fainter than the match's. | partly: moves and pulses, shafts faint |
+| 10 No in-ring bloom wash | `arena_lighting.gd:438-439` (glow threshold 1.9), `:431`; follow spot at 35% in the ring `entrance_director.gd:1678` | `--old-bloom` vs shipped, same frames. Roman's in-ring close-up: halo round shoulders and a blown chest before, skin texture after; frame >0.5 16.9% -> 12.2%, p99 0.85 -> 0.69. Cody on the corner: glow round his head gone, >0.5 10.2% -> 6.3%. (Coat not in these frames: the jump skips its cue; in the earlier full storyboard frames the coat on the corner keeps its stripes.) | verified |
+| 11 Tron/portal light the man | `stage_video.gd:66` (0.55 -> 0.32), `arena_builder.gd:279,288` (portal 1.12 -> 0.7, fans 0.26 -> 0.18) | Old constants vs new, same frames: >0.5 11.4/8.7/9.9% -> 9.9/6.9/7.6%; the tron keeps its picture (OTC readable, <5% clipped, median 0.52-0.60) but is still a pale band over a fifth of the ramp wide. The coloured backlight from the tron that edge-lights him is **not implemented** (the only backlight is Cody's cool-white smoke light, f291ddb). | partly |
+| 12 Hard top light on the pose | `entrance_director.gd:193-196, 718, 1638-1657` (PoseTop, 9, 13 deg, 7 m up) | Fires on Roman's in-ring `pose` beats (not Cody's corner pose: those are `clip` beats). Hidden vs shown: +6-19% luminance on head, shoulders and raised arm, 1-8% of the frame; side by side it is hard to see. Tried 30: still only x1.2-1.35 on the lit area, reverted. The follow spot and ring keys outweigh it; a hard top light needs them cut on the pose beats, not a constant. | not met |
+
+Match frame, for the record (gameplay camera, match look): p50 0.055-0.070,
+>0.5 7.2-7.5%, dark 0.3% (2K26 match 0.078 / 7.2% / 1.7%).
+
+Found on the way, not fixed: `skin_shot.tscn`'s `torsos` framing puts the
+camera inside Cody's neck; `entrance_shots --from-shot ring_low` lands on
+Cody's coat-off, not Roman's ring entry (hence the index probe); the
+worktree has no `game/addons/gdUnit4` (gitignored) and needs a copy to run
+the tests. A full sparse entrance storyboard takes over an hour on lavapipe
+and needs 6-7 GB, so it shares badly with a second render.
+
+Checks: 600 tests pass. No lighting constants changed.
