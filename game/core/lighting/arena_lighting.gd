@@ -446,10 +446,27 @@ const SWEEP_TILT := 0.22
 const SWEEP_BEATS := 8.0
 const PULSE_FLOOR := 0.5
 const PULSE_DECAY := 5.0
+## The beams' level on the entrances against the match's. They are the show,
+## so the walk's house dim does not reach them (it read their pulse at 30-33
+## against the match's 60: "shafts faint"); a blackout (house_dim under
+## BLACKOUT_DIM) still puts them out.
+const ENTRANCE_BEAM_GAIN := 1.6
+const BLACKOUT_DIM := 0.2
+## The stage set on the entrances (item 7): a concert stage is dark round the
+## man in the follow spot. The mid-grey behind him on the stage close-ups (p50
+## 0.035-0.07 against 2K26's ~0.015) was the set's house emission
+## (ArenaBuilder._house_lit, its "never black" floor), which the house dim does
+## not reach; it goes to ENTRANCE_SET_SHARE of itself, and the stage wash to
+## ENTRANCE_STAGE_SHARE.
+const ENTRANCE_SET_SHARE := 0.25
+const ENTRANCE_STAGE_SHARE := 0.35
+const ENTRANCE_SET_PARTS: Array[String] = ["StageBackdrop", "EntranceStage", "PortalRecess"]
+var _set_emission := {}   # StandardMaterial3D -> its own emission multiplier
 var look := Look.MATCH
 var _ring_haze: FogMaterial
 var _ring_haze_density := 0.0
 var _ring_lights: Array[SpotLight3D] = []
+var _stage_wash: Array[SpotLight3D] = []
 var _beams: Array[SpotLight3D] = []
 var _beam_rest := {}     # SpotLight3D -> rest Transform3D
 var _bodies := {}        # SpotLight3D -> fixture body root
@@ -476,11 +493,29 @@ func set_look(p_look: Look) -> void:
 	for light in _ring_lights:
 		var base := key_energy if String(light.name).begins_with("Key") else top_energy
 		light.light_energy = base * (ENTRANCE_RING_SHARE if entrance else 1.0)
+	for light in _stage_wash:
+		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0)
+	_dim_set(ENTRANCE_SET_SHARE if entrance else 1.0)
 	if not entrance:
 		for beam in _beams:
 			beam.transform = _beam_rest[beam]
 			beam.light_energy = beam_energy
 			_pose_body(beam)
+
+
+## The entrance set's house emission at `share` of its own.
+func _dim_set(share: float) -> void:
+	if not is_inside_tree():
+		return
+	if _set_emission.is_empty():
+		var root := get_tree().root
+		for part in ENTRANCE_SET_PARTS:
+			var node := root.find_child(part, true, false) as MeshInstance3D
+			var mat := node.material_override as StandardMaterial3D if node else null
+			if mat and mat.emission_enabled:
+				_set_emission[mat] = mat.emission_energy_multiplier
+	for mat: StandardMaterial3D in _set_emission:
+		mat.emission_energy_multiplier = _set_emission[mat] * share
 
 
 func _environment() -> Environment:
@@ -508,7 +543,8 @@ func _move_beams(delta: float) -> void:
 		var tilt := SWEEP_TILT * sin(_beat_clock * w * 0.5 + i * 1.7)
 		beam.transform = Transform3D(Basis(Vector3.UP, pan) * rest.basis
 				* Basis(Vector3.RIGHT, tilt), rest.origin)
-		beam.light_energy = beam_energy * pulse * house_dim
+		var dim := house_dim if house_dim < BLACKOUT_DIM else 1.0
+		beam.light_energy = beam_energy * ENTRANCE_BEAM_GAIN * pulse * dim
 		_pose_body(beam)
 		if _glints:
 			_glints.aim(beam)
@@ -538,6 +574,7 @@ func _ready() -> void:
 	_build_backdrop_uplights()
 	_build_roof_wash()
 	_build_ribbon_spill()
+	_build_barricade_leds()
 	_build_fog_volumes()
 	_hang_fixtures()
 	_apply_compat_environment()
@@ -547,6 +584,8 @@ func _ready() -> void:
 			var n := String(child.name)
 			if n.begins_with("Key") or n.begins_with("Top"):
 				_ring_lights.append(child)
+			elif n == "StageE" or n == "StageW":
+				_stage_wash.append(child)
 			elif n.begins_with("Beam"):
 				_beams.append(child)
 				_beam_rest[child] = (child as SpotLight3D).transform
@@ -887,6 +926,68 @@ func _build_ribbon_spill() -> void:
 		light.shadow_enabled = false
 		light.light_volumetric_fog_energy = 0.0
 		add_child(light)
+
+
+## The barricade's LEDs (item 6, second half). 2K26's barricades carry an LED
+## band on the ring side that throws its colour onto the floor, the front of
+## the apron and the first rows; ours were bare steel, so the ribbon's spill
+## up on the suite fascia was the only coloured light anywhere near the floor.
+## A band under the cap rail of every panel, the ribbon's two hues panel by
+## panel, and one low omni in front of each, short enough to fade out at the
+## mat's edge: the mat's exposure is the anchored number (VISUAL_BAR.md).
+const BARRICADE_LED_HEIGHT := 0.10
+const BARRICADE_LED_DROP := 0.17     # band centre under the barricade top
+const BARRICADE_LED_EMISSION := 1.3
+const BARRICADE_SPILL_ENERGY := 0.7
+const BARRICADE_SPILL_RANGE := 3.0
+const BARRICADE_SPILL_IN := 0.35     # light in front of the panel face
+const BARRICADE_SPILL_DROP := 0.7    # light under the barricade top
+
+
+func _build_barricade_leds() -> void:
+	var span := ArenaBuilder.BARRICADE_RADIUS * 2.0
+	var panels := int(span / ArenaBuilder.BARRICADE_PANEL)
+	var pitch := span / panels
+	var width := pitch - ArenaBuilder.BARRICADE_JOIN
+	var top := ArenaBuilder.FLOOR_Y + ArenaBuilder.BARRICADE_HEIGHT
+	# ringside.py's panel is 0.14 deep, centred on the line.
+	var face := ArenaBuilder.BARRICADE_RADIUS - 0.07 - 0.004
+	var mats: Array[StandardMaterial3D] = []
+	for c in RIBBON_SPILL_COLORS:
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = c * BARRICADE_LED_EMISSION
+		mats.append(m)
+	var band := BoxMesh.new()
+	band.size = Vector3(width - 0.1, BARRICADE_LED_HEIGHT, 0.01)
+	var n := 0
+	for out: Vector3 in [Vector3.BACK, Vector3.FORWARD, Vector3.RIGHT, Vector3.LEFT]:
+		var along := Vector3(out.z, 0.0, -out.x)
+		for i in panels:
+			var at := along * (((i + 0.5) / panels - 0.5) * span)
+			# ringside.py skips the entrance run's panels that intrude on the
+			# walkway; so does the band.
+			if out.z < -0.5 and absf(at.x) - width * 0.5 < ArenaBuilder.BARRICADE_GAP:
+				continue
+			var led := MeshInstance3D.new()
+			led.name = "BarricadeLed%02d" % n
+			led.mesh = band
+			led.material_override = mats[n % mats.size()]
+			led.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			led.transform = Transform3D(Basis(along, Vector3.UP, out),
+					at + out * face + Vector3.UP * (top - BARRICADE_LED_DROP))
+			add_child(led)
+			var light := OmniLight3D.new()
+			light.name = "BarricadeSpill%02d" % n
+			light.position = at + out * (face - BARRICADE_SPILL_IN) \
+					+ Vector3.UP * (top - BARRICADE_SPILL_DROP)
+			light.light_color = RIBBON_SPILL_COLORS[n % RIBBON_SPILL_COLORS.size()]
+			light.light_energy = BARRICADE_SPILL_ENERGY
+			light.omni_range = BARRICADE_SPILL_RANGE
+			light.shadow_enabled = false
+			light.light_volumetric_fog_energy = 0.0
+			add_child(light)
+			n += 1
 
 
 ## The yoke and head bases that point a fixture body's lens along `forward`.

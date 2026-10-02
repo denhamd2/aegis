@@ -167,6 +167,18 @@ const WALK_BACK_UP := 3.4
 const WALK_BACK_ENERGY := 3.4
 const WALK_BACK_ANGLE := 28.0
 const WALK_BACK_RANGE := 10.0
+## The titantron's light on him (lighting_2k26.md item 11): while his video is
+## on the wall and he is out of the ring, a spot in the wall's own colour
+## (StageVideo.glow_color) hangs between him and the wall, high, and rakes his
+## head and shoulders -- the coloured edge that separates him from the screen
+## in 2K26's stage and ramp shots. No shadow, and a faint beam in the haze.
+const TRON_RIM_BACK := 2.6
+const TRON_RIM_UP := 3.0
+const TRON_RIM_ENERGY := 14.0
+const TRON_RIM_ANGLE := 22.0
+const TRON_RIM_RANGE := 7.0
+## Where the wall is, to put the light on his side of it.
+const TRON_AT := Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y, ArenaBuilder.SCREEN_FACE_Z)
 
 # --- Roman Reigns (gauntlet/refs/entrances.md, "Roman: beat sheet") ---------
 ## Slow and methodical: Walk_Slow_Look travels 0.5 m/s,
@@ -190,10 +202,15 @@ const ROMAN_BEAT := 0.836
 const CODY_BEAT := 0.743
 ## The hard top light on a man posing in the ring (lighting_2k26.md item 12):
 ## narrow, white, straight down from under the grid, with the house dark.
-const POSE_TOP_UP := 7.0
-const POSE_TOP_ENERGY := 9.0
+const POSE_TOP_UP := 5.0
+const POSE_TOP_ENERGY := 110.0
 const POSE_TOP_ANGLE := 13.0
 const POSE_TOP_COLOR := Color(0.92, 0.96, 1.0)
+## While it is on, the light that was outweighing it goes: the follow spot and
+## the walk lights out, the ring keys and top fill to POSE_RING_DIM of
+## themselves. At 9, with them up, the top light added only 6-19% on his head
+## and shoulders (README, "Lighting 2K26 items 5-12").
+const POSE_RING_DIM := 0.35
 ## On the lip before the finger: the slow push-in while he looks the building
 ## over, then the close-up (R-41 30-40 s, 1:04).
 const ROMAN_LIP_PUSH := 4.0
@@ -425,6 +442,8 @@ var _backlight: SpotLight3D
 var _smoke: FogVolume
 ## Beats marked no_follow keep the follow spot off (Cody's silhouettes).
 var _follow_off := false
+var _tron_rim: SpotLight3D
+var _tron_on := false
 
 ## The timeline: one entry per beat, built once in begin().
 var _beats: Array = []
@@ -756,6 +775,7 @@ func _physics_process(delta: float) -> void:
 			w.global_transform.basis = _facing_basis(beat["facing"])
 	_frame_shot(beat, delta)
 	_aim_follow_spot(w)
+	_aim_tron_rim(w)
 	if _tick >= int(beat["ticks"]):
 		_beat += 1
 		_start_beat()
@@ -790,6 +810,9 @@ func _ring_bell() -> void:
 		_pyro = null
 	if _wall:
 		_wall.end_entrance()
+	_tron_on = false
+	if _tron_rim:
+		_tron_rim.visible = false
 	_dim_house(false)
 	_pose_top(null)
 	if _backlight:
@@ -1188,9 +1211,13 @@ func _event(w: WrestlerController, what: String) -> void:
 			if props:
 				props.set_fala_visible(false)
 		"tron_on":
+			_tron_on = true
+			if _tron_rim:
+				_tron_rim.light_color = StageVideo.glow_color(w.entrance_style)
 			if _wall:
 				_wall.play_entrance(w.entrance_style)
 		"tron_off":
+			_tron_on = false
 			if _wall:
 				_wall.end_entrance()
 		"dim_on":
@@ -1619,6 +1646,11 @@ func _dim_house(on: bool, rig: float = ROMAN_HOUSE_DIM,
 				if child is Light3D and not String(child.name).begins_with("Accent"):
 					_dimmed[child] = (child as Light3D).light_energy
 					(child as Light3D).light_energy *= rig
+					if _pose_dimmed.has(child):
+						# Mid-pose: the house's original is the one before the pose.
+						var was: Array = _pose_dimmed[child]
+						_dimmed[child] = was[0]
+						_pose_dimmed[child] = [was[0] * rig, (child as Light3D).light_energy]
 		if _env:
 			_dimmed[_env] = _env.ambient_light_energy
 			_env.ambient_light_energy *= ambient
@@ -1639,6 +1671,7 @@ func _pose_top(w: WrestlerController) -> void:
 	if w == null:
 		if _top:
 			_top.visible = false
+		_pose_dim(false)
 		return
 	if _top == null:
 		_top = SpotLight3D.new()
@@ -1652,8 +1685,34 @@ func _pose_top(w: WrestlerController) -> void:
 		_top.light_volumetric_fog_energy = 1.4
 		add_child(_top)
 	_top.visible = true
+	_pose_dim(true)
 	var at := w.global_position + Vector3.UP * POSE_TOP_UP
 	_top.global_transform = Transform3D(Basis(Vector3.RIGHT, -PI / 2.0), at)
+
+
+## Ring key or top fill -> [energy before the pose, energy set for it].
+var _pose_dimmed := {}
+
+
+## Takes the ring keys and top fill down for a pose, or puts them back. A
+## light something else rewrote in between (set_look, the house dim's
+## restore) keeps that value.
+func _pose_dim(on: bool) -> void:
+	if on == not _pose_dimmed.is_empty():
+		return
+	if on:
+		if _lights:
+			for child in _lights.get_children():
+				var n := String(child.name)
+				if child is Light3D and (n.begins_with("Key") or n.begins_with("Top")):
+					var l := child as Light3D
+					_pose_dimmed[l] = [l.light_energy, l.light_energy * POSE_RING_DIM]
+					l.light_energy *= POSE_RING_DIM
+		return
+	for l: Light3D in _pose_dimmed:
+		if is_instance_valid(l) and is_equal_approx(l.light_energy, _pose_dimmed[l][1]):
+			l.light_energy = _pose_dimmed[l][0]
+	_pose_dimmed.clear()
 
 
 static func _in_ring(w: WrestlerController) -> bool:
@@ -1665,7 +1724,7 @@ static func _in_ring(w: WrestlerController) -> bool:
 func _aim_follow_spot(w: WrestlerController) -> void:
 	if not _follow:
 		return
-	if w == null or not w.visible or _follow_off:
+	if w == null or not w.visible or _follow_off or not _pose_dimmed.is_empty():
 		_follow.visible = false
 		if _walk_key:
 			_walk_key.visible = false
@@ -1689,6 +1748,38 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 			_walk_back.visible = true
 			_walk_back.global_position = walk_back_at(w.global_position, fwd, right)
 			_walk_back.look_at(w.global_position + Vector3.UP * 1.4, Vector3.UP)
+
+
+## Item 11: the wall's coloured light on him, from between him and the wall.
+## Out while the wall is on the loop, while he is in the ring (the wall is
+## 35 m off) and while Cody's own backlight has the dark.
+func _aim_tron_rim(w: WrestlerController) -> void:
+	var on := _tron_on and w != null and w.visible and not _in_ring(w) \
+			and not (_backlight and _backlight.visible)
+	if not on:
+		if _tron_rim:
+			_tron_rim.visible = false
+		return
+	if _tron_rim == null:
+		_tron_rim = SpotLight3D.new()
+		_tron_rim.name = "TronRim"
+		_tron_rim.light_color = StageVideo.glow_color(w.entrance_style)
+		_tron_rim.light_energy = TRON_RIM_ENERGY
+		_tron_rim.spot_angle = TRON_RIM_ANGLE
+		_tron_rim.spot_angle_attenuation = 1.2
+		_tron_rim.spot_range = TRON_RIM_RANGE
+		_tron_rim.light_volumetric_fog_energy = 0.3
+		_tron_rim.shadow_enabled = false
+		add_child(_tron_rim)
+	_tron_rim.visible = true
+	_tron_rim.global_position = tron_rim_at(w.global_position)
+	_tron_rim.look_at(w.global_position + Vector3.UP * 1.5, Vector3.UP)
+
+
+## Where the tron rim hangs for a man at `at`: toward the wall, above him.
+static func tron_rim_at(at: Vector3) -> Vector3:
+	var back := _flat(TRON_AT - at).normalized()
+	return at + back * TRON_RIM_BACK + Vector3.UP * TRON_RIM_UP
 
 
 ## Where the walk key hangs for a man at `at` facing `fwd`.

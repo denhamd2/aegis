@@ -4,6 +4,9 @@ extends Node
 ##   led_on / led_off        -- the ribbon-board spill omnis (item 6) shown /
 ##                              hidden, match look, camera on the front rows
 ##                              under the suite ribbon;
+##   barricade_<view>_on/off -- the barricade's LED band and spill (item 6)
+##                              shown / hidden: out to the front rows, and
+##                              back at the apron;
 ##   glint_<look>_on / _off  -- glint_strength at its look's value / 0
 ##                              (item 8), from a low ringside camera up into
 ##                              the rig, in the match look and the entrance
@@ -64,6 +67,23 @@ func _ready() -> void:
 		await _shoot("led_%s" % ("on" if on else "off"))
 	for s in spill:
 		s.visible = true
+	# Item 6, the barricade's band and spill: from ringside out to the front
+	# rows, and from inside the barricade back at the apron.
+	var barricade: Array[Node3D] = []
+	for child in rig.get_children():
+		if String(child.name).begins_with("Barricade"):
+			barricade.append(child)
+	print("L2K barricade leds+spill: %d" % barricade.size())
+	for view: Array in [["rows", Vector3(-3.6, 0.2, 3.9), Vector3(1.5, -0.4, 7.5)],
+			["apron", Vector3(-1.5, 0.3, 5.5), Vector3(0.5, -0.5, 3.2)]]:
+		cam.fov = 60.0
+		cam.look_at_from_position(view[1], view[2])
+		for on in [true, false]:
+			for b in barricade:
+				b.visible = on
+			await _shoot("barricade_%s_%s" % [view[0], "on" if on else "off"])
+	for b in barricade:
+		b.visible = true
 
 	# Item 8: glints in each look.
 	cam.fov = 60.0

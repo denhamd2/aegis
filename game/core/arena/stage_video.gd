@@ -340,6 +340,32 @@ func _still_mean(still := STILL_PATH) -> float:
 	return MaterialLibrary.mean_linear(tex)
 
 
+## The wall's colour as light on the man in front of it (lighting_2k26.md
+## item 11), for `style`'s entrance or the loop: the still's mean colour,
+## pushed toward its hue (a mean is greyed by the black around the art) and
+## scaled so its brightest channel is 1. The still, not the live frame, for
+## the reason _still_mean gives: a fixed colour, read once.
+static func glow_color(style := "") -> Color:
+	var still: String = ENTRANCES[style]["still"] if ENTRANCES.has(style) else STILL_PATH
+	if _glow_cache.has(still):
+		return _glow_cache[still]
+	var c := Color(0.7, 0.8, 1.0)
+	if ResourceLoader.exists(still):
+		var img := (load(still) as Texture2D).get_image()
+		if img:
+			if img.is_compressed():
+				img.decompress()
+			img.resize(1, 1, Image.INTERPOLATE_LANCZOS)
+			var m := img.get_pixel(0, 0).srgb_to_linear()
+			c = Color.from_hsv(m.h, minf(m.s * GLOW_SATURATION, 1.0), 1.0)
+	_glow_cache[still] = c
+	return c
+
+
+const GLOW_SATURATION := 1.6
+static var _glow_cache := {}
+
+
 ## Whether the wall is showing something. False means the builder's blank
 ## material is still on it.
 func is_bound() -> bool:

@@ -8480,3 +8480,27 @@ hair has volume at the sides.
 
 Checks: build deterministic (two runs byte-identical), 600 tests pass,
 `referee_shot.tscn --face` frames reviewed.
+
+### Lighting 2K26: closing the gaps (items 12, 11, 6, 9, 7)
+
+The verification table above left five items short. All measured on Vulkan
+Forward+ (lavapipe) with `lighting_2k26_entrance.tscn` and
+`lighting_2k26_shot.tscn`, numbers from `tools/refs/measure_look.py`;
+before|after stills are the `*b_*.jpg` files in
+`tools/capture/fixtures/lighting_2k26/`.
+
+| # | Change | Frames | Verdict |
+| --- | --- | --- | --- |
+| 12 Hard top light on the pose | `entrance_director.gd` `_pose_dim`: on an in-ring pose the follow spot and walk lights go out and the ring keys/top fill drop to `POSE_RING_DIM` 0.35; `PoseTop` 9 -> 110, and 7 -> 5 m up (at 7 m over the 1.2 m deck it hung above the truss and the truss shadowed it) | Roman's title raise (beat 67): lit area x8.2-9.3 against the same frame with PoseTop hidden (was x1.2-1.35); head and shoulders blaze, face in shadow, the cone in the haze. Whole frame p50 0.017 -> 0.014, black 30% -> 42% (2K26 entrance: 0.013 / 44%). | met |
+| 11 Tron backlight | New `TronRim` spot (`_aim_tron_rim`): while his video is on the wall and he is out of the ring, 2.6 m toward the wall and 3 m up, in the wall's colour (`StageVideo.glow_color`, the still's mean pushed to its hue), 14, no shadow | Roman on the stage and ramp (beats 39, 46): a blue edge on his hair, crown and shoulders; 1-3% of the frame changes, all on him. | met |
+| 6 LED boards as light | Barricade LED band under every panel's cap rail (the ribbon's two hues) and one low omni in front of each (0.7, range 3.0), `_build_barricade_leds` | Ringside: purple/blue on the barricade faces, desk and floor (37-49% of those frames change). Match camera: a thin LED line along the far barricade; share of frame >0.5 unchanged (7.49 -> 7.55%), p50 +8-12%, saturation +0.01-0.04. The front rows behind the barricade still get only the ribbon's spill. | met (floor and barricade); front rows partly |
+| 9 Beams faint | Entrance beams no longer take the walk's house dim (a blackout still puts them out), `ENTRANCE_BEAM_GAIN` 1.6 | Logged level 48-86 per beat against the match's 60 (was 30-33). | met |
+| 7 Close-ups too bright | The stage set's house emission (backdrop, deck, portal recess) to 25% and the stage wash to 35% in the entrance look | Roman's stage close-up: p50 0.068 -> 0.061, black 10% -> 17%. What is left of the grey round him is the follow spot's beam in the haze, which is how a concert close-up looks; not cut further. | partly |
+
+Checks: 602 tests pass (new: the barricade spill stops half a metre short
+of the mat; the tron rim hangs between him and the wall, above him).
+
+Note: `referee_shot.tscn` frames taken with `--rendering-driver opengl3` (the
+Aubrey face pass above) are the compatibility renderer, which this file
+already rules out for judging light; her washed-out lips there want a Vulkan
+frame before they are blamed on the rig.

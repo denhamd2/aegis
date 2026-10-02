@@ -153,3 +153,20 @@ func test_the_compatibility_gains_are_inert_on_forward_plus() -> void:
 	assert_str(RenderingServer.get_current_rendering_method()).is_equal("forward_plus")
 	assert_float(ArenaBuilder._emissive_gain()).is_equal(1.0)
 	assert_float(StageVideo._compat_gain()).is_equal(1.0)
+
+
+## The barricade's LED spill (lighting_2k26.md item 6) colours the floor and
+## the apron and fades out at the mat's edge: no omni reaches the mat more
+## than half a metre in, where the anchored exposure is read.
+func test_barricade_spill_stops_at_the_mat_edge() -> void:
+	var rig := _rig()
+	var spill: Array[OmniLight3D] = []
+	for child in rig.get_children():
+		if String(child.name).begins_with("BarricadeSpill"):
+			spill.append(child)
+	assert_int(spill.size()).is_greater(10)
+	var inner := MAT_HALF - 0.5
+	for light in spill:
+		var p := light.position
+		var nearest := Vector3(clampf(p.x, -inner, inner), 0.0, clampf(p.z, -inner, inner))
+		assert_float(p.distance_to(nearest)).is_greater(light.omni_range)

@@ -344,3 +344,14 @@ func test_they_walk_up_and_face_off_before_the_bell() -> void:
 		to_other.y = 0.0
 		assert_float(facing.normalized().dot(to_other.normalized())).is_greater(0.99)
 	assert_str(a._presentation_clip).is_equal("strikes/face_off")
+
+
+## Item 11's tron rim hangs between him and the video wall and above him, so
+## it lights his head and shoulders from behind, wherever he is on the walk.
+func test_tron_rim_hangs_between_him_and_the_wall() -> void:
+	for at: Vector3 in [Vector3(0.0, 0.35, -30.0), Vector3(1.0, 0.2, -14.0), Vector3(0.0, 0.0, -6.0)]:
+		var rim := EntranceDirector.tron_rim_at(at)
+		assert_float(rim.y - at.y).is_equal_approx(EntranceDirector.TRON_RIM_UP, 0.001)
+		assert_float(rim.z).is_less(at.z)
+		var flat := Vector3(rim.x - at.x, 0.0, rim.z - at.z)
+		assert_float(flat.length()).is_equal_approx(EntranceDirector.TRON_RIM_BACK, 0.001)
