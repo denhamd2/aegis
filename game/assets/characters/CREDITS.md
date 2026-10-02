@@ -260,8 +260,14 @@ https://creativecommons.org/publicdomain/zero/1.0/); the body is generated
 from macro sliders, not from any scan of a person. It is fitted to the
 skeleton of `aubrey_edwards.glb` (above) and carries that file's referee kit
 and ponytail, refitted to the new body. The polo collar, placket, hair cap,
-eyeballs and `aubrey_hair_strands.png` are original, generated from code by
-the same script. Rebuild with MPFB installed as a Blender extension and its
+eyeballs, earring studs and `aubrey_hair_strands.png` are original, generated
+from code by the same script. Her skin, `aubrey_aaa_skin.jpg`, is the CC0
+MakeHuman community skin "toigo_light_skin_female_bronze" (by toigo, MPFB
+skins01 pack, licence CC0 per the pack's own `skins01.json`), regraded, with
+her make-up painted over it by the script. Her brow and lash cards are
+MakeHuman's own `eyebrow010` and `eyelashes02` (CC0, system assets); their
+textures `aubrey_aaa_brows.png` / `aubrey_aaa_lashes.png` are recoloured
+from theirs. `aubrey_aaa_eye_*.png` are painted by `tools/assets/build_eyes.py`. Rebuild with MPFB installed as a Blender extension and its
 asset packs unpacked to `~/.cache/aegis_assets/mpfb/`; the output is
 byte-identical for the same inputs. Not included in the repo: MPFB or its
 asset packs (only the exported .glb).

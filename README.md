@@ -8245,3 +8245,28 @@ texture -- is stage 4, and carries much of the likeness the clay cannot.
 
 ### Checks
 600 tests pass. `aubrey_aaa.glb` is byte-identical across builds.
+
+### Aubrey AAA rebuild, stage 4 (colour)
+
+Her face had likeness on clay; this gives her colour. `aubrey_aaa.py` now:
+
+- **Skin.** The CC0 MakeHuman skin "toigo light skin female, bronze" (no
+  painted make-up), regraded from orange toward the sheet's rosier beige.
+- **Make-up, painted from 3D position.** The head's triangles are rasterised
+  into a map of where each texel sits on her, so the make-up is a function of
+  position and lands on her lids and lips whatever the face targets did:
+  a smoky plum-brown shadow in an ellipse round each eye (winged outward,
+  lighter below), a liner along the lid margin (where the lids touch the
+  eyeball), and crimson lips off MPFB's own `lips` group with the texture's
+  shading kept.
+- **Brows and lashes.** MakeHuman's CC0 `eyebrow010` and `eyelashes02`
+  cards, fitted by MPFB, recoloured brown and near-black.
+- **Eyes.** True 11.8 mm eyeballs with a grey-green, hazel-centred iris
+  (`build_eyes.py` AUBREY_AAA; the other characters' eye maps are unchanged).
+- **Stud earrings**, a small brilliant in each lobe.
+- In colour the mouth read too wide and the eyes too wide open: mouth width
+  0.56 -> 0.3, lower lip 0.75 -> 0.55, eye height 0.5 -> 0.2, brow lift
+  0.3 -> 0.1.
+
+Checks: 600 tests pass; the build is byte-identical run to run. Still not in
+the game; the collar specks and back-neck sliver are open.

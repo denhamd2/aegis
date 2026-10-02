@@ -332,8 +332,12 @@ covered skin removed), a fitted polo collar and placket, the ponytail moved
 with its bones, and a new hair cap with a feathered, measured hairline.
 Known: white specks on the collar flap, a sliver of neck in the back fold.
 Stage 3 done -- her likeness as MPFB face targets (FACE), set against the
-sheet's front, 3/4 and profile on clay renders. Next: the skin
-texture with her make-up, lashes and brows, then wire it in and gate it.
+sheet's front, 3/4 and profile on clay renders. Stage 4 done -- colour: a
+CC0 skin regraded, smoky eyes, liner and red lips painted in UV space from 3D
+position, MakeHuman brow and lash cards, grey-green eyes (build_eyes.py
+AUBREY_AAA), stud earrings; the mouth narrowed and the eyes opened less once
+seen in colour. Next: a body-and-uniform review against the sheet, then wire
+it in and gate it.
 
 **Why Aubrey goes first in the head/body work.** She has no likeness
 expectations from a 2K model and the simplest kit. If the MPFB → re-skin →

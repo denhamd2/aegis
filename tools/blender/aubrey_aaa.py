@@ -125,16 +125,16 @@ FACE = {
     "nose-width2-decr": 0.3,
     # mouth
     "mouth-cupidsbow-incr": 0.6,
-    "mouth-lowerlip-volume-incr": 0.75,
-    "mouth-scale-horiz-incr": 0.56,
+    "mouth-lowerlip-volume-incr": 0.55,
+    "mouth-scale-horiz-incr": 0.3,
     "mouth-trans-forward": 0.49,
     "mouth-upperlip-volume-incr": 0.15,
     # eyes and brows
     "eye-corner2-up": 0.2,
-    "eye-height2-incr": 0.5,
+    "eye-height2-incr": 0.2,
     "eye-scale-incr": 0.5,
     "eyebrows-trans-forward": 0.3,
-    "eyebrows-trans-up": 0.3,
+    "eyebrows-trans-up": 0.1,
 }
 ## MPFB bone -> her bone, where the names differ.
 BONE_NAMES = {"head": "Head"}
@@ -216,8 +216,47 @@ COVER_REACH = 0.08
 ## front; a real eyeball is ~12 mm.
 EYE_RADIUS = 0.0118
 EYE_SEGMENTS = (32, 16)
-## The eyes' front projection (build_eyes.py AUBREY_NEW): mm per UV unit.
+## The eyes' front projection (build_eyes.py AUBREY_AAA): mm per UV unit.
 EYE_MM_PER_UV = 30.0
+EYE_COLOR = ROOT / "game/assets/characters/aubrey_aaa_eye_color.png"
+
+## Her skin (stage 4): a CC0 MakeHuman skin with no make-up painted on --
+## toigo's young light-skinned female, bronze -- graded from its orange
+## toward the sheet's rosier beige, then her make-up painted over it in UV
+## space from 3D positions (paint_skin): the head's triangles are
+## rasterised into a map of where each texel sits on her, and each layer of
+## make-up is a function of that position, so it lands on her actual lids
+## and lips whatever the targets did to them.
+MPFB_ASSETS = pathlib.Path.home() / ".cache/aegis_assets/mpfb"
+SKIN_SOURCE = (MPFB_ASSETS / "unpacked_skins01/skins/toigo_light_skin_female_bronze"
+               / "young_lightskinned_female_diffuse_Bronze.png")
+SKIN_OUT = ROOT / "game/assets/characters/aubrey_aaa_skin.jpg"
+SKIN_GRADE = (0.88, 0.90, 1.04)
+SKIN_QUALITY = 92
+## Smoky eyes (the sheet's make-up close-up): a soft dark plum-brown shadow
+## in an ellipse round each eye (mm: wider to the outer corner, higher over
+## the lid than under it), pulled 2 mm outward into a wing, lighter on the
+## lower lid; and a liner along the lid margin -- where the lids meet the
+## eyeball, the body's socket being closed behind it.
+SMOKE = dict(shift=2.0, a_out=19.0, a_in=15.0, b_up=17.0, b_down=9.0,
+             e0=0.45, e1=1.15, lower=0.7, color=(66, 42, 44), strength=0.85)
+LINER = dict(near=0.8, far=3.0, color=(28, 20, 20), strength=0.85, lower=0.6,
+             margin_slack=0.0012)
+## Red lips, off MPFB's own "lips" vertex group, the texture's shading kept.
+LIPS = dict(lo=0.2, hi=0.8, blur=2.0, color=(128, 14, 28), strength=0.9)
+## Brow and lash cards: MakeHuman's own (CC0), fitted to her face by MPFB.
+## The brow strands go her brown and denser than drawn (the sheet's brows
+## are full and groomed); the lashes near-black with mascara.
+BROWS = "eyebrow010"
+LASHES = "eyelashes02"
+CARD_TEXTURES = {
+    BROWS: (ROOT / "game/assets/characters/aubrey_aaa_brows.png", (72, 48, 34), 1.8),
+    LASHES: (ROOT / "game/assets/characters/aubrey_aaa_lashes.png", (22, 17, 16), 1.3),
+}
+## Stud earrings in each lobe (the sheet's ear close-up): a small brilliant,
+## 2.2 mm across the girdle, set 1 mm proud of the lobe's outer face.
+STUD_RADIUS = 0.0022
+STUD_PROUD = 0.001
 
 
 def mpfb(module: str, name: str):
@@ -285,6 +324,8 @@ def make_body(old_arm):
         centre = sum(pts, Vector()) / len(pts)
         front = min(pts, key=lambda p: p.y)          # she faces -Y
         eyes[side] = (centre, (front - centre).normalized())
+    cards = make_cards(human)
+    lobes = ear_lobes(human)
     # Keep only the body.
     body_group = human.vertex_groups["body"].index
     bm = bmesh.new()
@@ -294,6 +335,7 @@ def make_body(old_arm):
     bmesh.ops.delete(bm, geom=doomed, context="VERTS")
     bm.to_mesh(human.data)
     bm.free()
+    paint_skin(human, eyes)
     # Weights onto her bones: rename, and drop every group that is not one
     # of her bones (MPFB's own helper and joint groups).
     for vg in list(human.vertex_groups):
@@ -307,7 +349,9 @@ def make_body(old_arm):
     human.matrix_parent_inverse = old_arm.matrix_world.inverted()
     arm_mod = human.modifiers.new("Armature", "ARMATURE")
     arm_mod.object = old_arm
-    return human, eyes
+    for card in cards:
+        rigid_on_head(card, old_arm)
+    return human, eyes, lobes
 
 
 def world_bvh(objs):
@@ -726,6 +770,7 @@ def make_eyes(old_arm, eyes):
         layer.data[loop.index].uv = uvs[loop.vertex_index]
     for poly in mesh.polygons:
         poly.use_smooth = True
+    mesh.materials.append(image_material("MI_AubreyEyes", EYE_COLOR, roughness=0.05))
     mesh.update()
     eye = bpy.data.objects.new("Aubrey_Eyes", mesh)
     bpy.context.scene.collection.objects.link(eye)
@@ -738,6 +783,247 @@ def make_eyes(old_arm, eyes):
     return [eye]
 
 
+def image_material(name: str, path: pathlib.Path, roughness: float, alpha: bool = False):
+    """A Principled material on one image (its alpha too, if asked)."""
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    bsdf = nodes["Principled BSDF"]
+    tex = nodes.new("ShaderNodeTexImage")
+    tex.image = bpy.data.images.load(str(path))
+    mat.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    if alpha:
+        mat.node_tree.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
+        mat.blend_method = "BLEND"
+    bsdf.inputs["Roughness"].default_value = roughness
+    return mat
+
+
+def rigid_on_head(obj, old_arm) -> None:
+    """Parent obj to her skeleton, every vertex on the Head bone."""
+    from mathutils import Matrix
+    world = obj.matrix_world.copy()
+    obj.parent = None
+    obj.data.transform(world)
+    obj.matrix_world = Matrix.Identity(4)
+    obj.vertex_groups.clear()
+    group = obj.vertex_groups.new(name="Head")
+    group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    obj.parent = old_arm
+    obj.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    mod = obj.modifiers.new("Armature", "ARMATURE")
+    mod.object = old_arm
+
+
+def make_cards(human):
+    """MakeHuman's brow and lash cards fitted to her face (MPFB fits them to
+    the basemesh as it stands, so after the targets and the fitting pose),
+    their strand textures recoloured; returns the two objects."""
+    import numpy as np
+    from PIL import Image
+    HumanService = mpfb("services.humanservice", "HumanService")
+    cards = []
+    for kind, name, obj_name in (("eyebrows", BROWS, "Aubrey_Brows"),
+                                 ("eyelashes", LASHES, "Aubrey_Lashes")):
+        source = MPFB_ASSETS / "unpacked_makehuman_system_assets" / kind / name
+        obj = HumanService.add_mhclo_asset(str(source / f"{name}.mhclo"), human,
+                                           asset_type=kind.capitalize(), subdiv_levels=0,
+                                           set_up_rigging=False)
+        for mod in list(obj.modifiers):
+            obj.modifiers.remove(mod)
+        if obj.data.shape_keys:
+            obj.shape_key_clear()
+        obj.name = obj.data.name = obj_name
+        out, rgb, gain = CARD_TEXTURES[name]
+        strands = np.asarray(Image.open(source / f"{name}.png").convert("RGBA"), np.float32)
+        card = np.zeros_like(strands)
+        card[..., :3] = rgb
+        card[..., 3] = np.clip(strands[..., 3] * gain, 0.0, 255.0)
+        Image.fromarray(np.round(card).astype(np.uint8), "RGBA").save(out, optimize=True)
+        obj.data.materials.clear()
+        mat_name = "M_AubreyBrows" if kind == "eyebrows" else "M_AubreyLashes"
+        obj.data.materials.append(image_material(mat_name, out, roughness=0.6, alpha=True))
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+        cards.append(obj)
+    # MPFB adds a delete group per card to the basemesh; it masks nothing here.
+    for vg in list(human.vertex_groups):
+        if vg.name.startswith("Delete."):
+            human.vertex_groups.remove(vg)
+    return cards
+
+
+def ear_lobes(human):
+    """Each earlobe's outer face, from MPFB's "ears" group: the lowest
+    centimetre of each ear, its outermost point there; ({"l"/"r": point},
+    outward normal)."""
+    group = human.vertex_groups["ears"].index
+    lobes = {}
+    for side, sign in (("l", 1.0), ("r", -1.0)):
+        pts = [human.matrix_world @ v.co for v in human.data.vertices
+               if v.co.x * sign > 0 and any(g.group == group and g.weight > 0.5 for g in v.groups)]
+        bottom = min(p.z for p in pts)
+        low = [p for p in pts if p.z < bottom + 0.006]
+        outer = max(low, key=lambda p: p.x * sign)
+        centre = sum(low, Vector()) / len(low)
+        lobes[side] = (Vector((outer.x, centre.y, bottom + 0.004)), Vector((sign, 0.0, 0.0)))
+    return lobes
+
+
+def make_studs(old_arm, lobes):
+    """A small brilliant in each lobe: an eight-sided crown and pavilion,
+    written out vertex by vertex (deterministic), facing outward."""
+    import math
+    verts, faces = [], []
+    n = 8
+    for side in ("l", "r"):
+        point, normal = lobes[side]
+        centre = point + normal * STUD_PROUD
+        base = len(verts)
+        up = Vector((0.0, 0.0, 1.0))
+        side_axis = normal.cross(up).normalized()
+        r = STUD_RADIUS
+        verts.append(centre + normal * r * 0.55)                 # table centre
+        for k in range(n):                                         # table ring
+            a = 2.0 * math.pi * k / n
+            verts.append(centre + normal * r * 0.55
+                         + (up * math.cos(a) + side_axis * math.sin(a)) * r * 0.55)
+        for k in range(n):                                         # girdle
+            a = 2.0 * math.pi * (k + 0.5) / n
+            verts.append(centre + (up * math.cos(a) + side_axis * math.sin(a)) * r)
+        verts.append(centre - normal * r * 0.7)                   # culet
+        table = lambda k: base + 1 + k % n
+        girdle = lambda k: base + 1 + n + k % n
+        for k in range(n):
+            faces.append((base, table(k), table(k + 1)))
+            faces.append((table(k), girdle(k), table(k + 1)))
+            faces.append((table(k + 1), girdle(k), girdle(k + 1)))
+            faces.append((girdle(k), base + 1 + 2 * n, girdle(k + 1)))
+    mesh = bpy.data.meshes.new("Aubrey_Studs")
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    mat = bpy.data.materials.new("M_Stud")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.92, 0.93, 0.96, 1.0)
+    bsdf.inputs["Metallic"].default_value = 1.0
+    bsdf.inputs["Roughness"].default_value = 0.08
+    mesh.materials.append(mat)
+    mesh.update()
+    stud = bpy.data.objects.new("Aubrey_Studs", mesh)
+    bpy.context.scene.collection.objects.link(stud)
+    rigid_on_head(stud, old_arm)
+    return stud
+
+
+def _smooth(a, b, x):
+    import numpy as np
+    t = np.clip((x - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def position_map(body, size: int, z_min: float):
+    """Her head rasterised into UV space: for every texel, the point on her it
+    covers (world, metres), its "lips" weight, and whether it is covered."""
+    import numpy as np
+    mesh = body.data
+    pos = np.zeros((size, size, 3), np.float32)
+    lips = np.zeros((size, size), np.float32)
+    hit = np.zeros((size, size), bool)
+    uvs = mesh.uv_layers["UVMap"].data
+    co = np.array([body.matrix_world @ v.co for v in mesh.vertices], np.float32)
+    lip_group = body.vertex_groups["lips"].index
+    lip_w = np.zeros(len(co), np.float32)
+    for v in mesh.vertices:
+        for g in v.groups:
+            if g.group == lip_group:
+                lip_w[v.index] = g.weight
+    mesh.calc_loop_triangles()
+    for tri in mesh.loop_triangles:
+        vi = list(tri.vertices)
+        if co[vi, 2].min() < z_min:
+            continue
+        uv = np.array([uvs[i].uv for i in tri.loops], np.float32)
+        px = np.stack([uv[:, 0] * size - 0.5, (1.0 - uv[:, 1]) * size - 0.5], 1)
+        x0, y0 = np.maximum(np.floor(px.min(0)).astype(int), 0)
+        x1, y1 = np.minimum(np.ceil(px.max(0)).astype(int), size - 1)
+        if x1 < x0 or y1 < y0:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1 + 1), np.arange(y0, y1 + 1))
+        (ax, ay), (bx, by), (cx, cy) = px
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-12:
+            continue
+        w0 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / den
+        w1 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / den
+        w2 = 1.0 - w0 - w1
+        inside = (w0 >= -0.02) & (w1 >= -0.02) & (w2 >= -0.02)
+        if not inside.any():
+            continue
+        weights = np.stack([w0, w1, w2], -1)[inside]
+        yy, xx = ys[inside], xs[inside]
+        pos[yy, xx] = weights @ co[vi]
+        lips[yy, xx] = weights @ lip_w[vi]
+        hit[yy, xx] = True
+    return pos, lips, hit
+
+
+def paint_skin(body, eyes) -> None:
+    """Her skin texture: the graded CC0 skin with her make-up painted on
+    (SMOKE, LINER, LIPS), written to SKIN_OUT and put on the body."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    base = np.asarray(Image.open(SKIN_SOURCE).convert("RGB"), np.float32) * np.array(SKIN_GRADE, np.float32)
+    size = base.shape[0]
+    z_min = min(c.z for c, _ in eyes.values()) - 0.20
+    pos, lips, hit = position_map(body, size, z_min)
+    lum = base.mean(-1)
+    smoke = np.zeros(lum.shape, np.float32)
+    liner = np.zeros(lum.shape, np.float32)
+    verts = [body.matrix_world @ v.co for v in body.data.vertices]
+    for side in ("l", "r"):
+        centre, forward = eyes[side]
+        up = Vector((0.0, 0.0, 1.0))
+        up = (up - forward * up.dot(forward)).normalized()
+        out = up.cross(forward)
+        if out.x * centre.x < 0:
+            out = -out
+        c, f, u_ax, o_ax = (np.array(tuple(x), np.float32) for x in (centre, forward, up, out))
+        d = pos - c
+        u = d @ o_ax * 1000.0 - SMOKE["shift"]
+        v = d @ u_ax * 1000.0
+        w = d @ f * 1000.0
+        a = np.where(u > 0, SMOKE["a_out"], SMOKE["a_in"])
+        b = np.where(v > 0, SMOKE["b_up"], SMOKE["b_down"])
+        shade = (1.0 - _smooth(SMOKE["e0"], SMOKE["e1"], np.sqrt((u / a) ** 2 + (v / b) ** 2)))
+        shade *= (w > -2.0) * hit * np.where(v < 0, SMOKE["lower"], 1.0)
+        smoke = np.maximum(smoke, shade)
+        margin = np.array([tuple(p) for p in verts
+                           if (p - centre).length < EYE_RADIUS + LINER["margin_slack"]
+                           and (p - centre).dot(forward) > 0.3 * EYE_RADIUS], np.float32)
+        flat = pos.reshape(-1, 3)
+        dist = np.full(len(flat), 1e9, np.float32)
+        for p in margin:
+            dist = np.minimum(dist, np.linalg.norm(flat - p, axis=1))
+        dist = dist.reshape(lum.shape) * 1000.0
+        line = (1.0 - _smooth(LINER["near"], LINER["far"], dist)) * hit * (np.abs(u) < 20.0)
+        liner = np.maximum(liner, line * np.where(v < 0, LINER["lower"], 1.0))
+    img = base.copy()
+    k = (smoke * SMOKE["strength"])[..., None]
+    tone = (lum / lum[hit].mean())[..., None] ** 0.5
+    img = img * (1.0 - k) + np.array(SMOKE["color"], np.float32) * tone * k
+    k = (liner * LINER["strength"])[..., None]
+    img = img * (1.0 - k) + np.array(LINER["color"], np.float32) * k
+    mask = Image.fromarray(np.round(_smooth(LIPS["lo"], LIPS["hi"], lips) * 255).astype(np.uint8))
+    lip = np.asarray(mask.filter(ImageFilter.GaussianBlur(LIPS["blur"])), np.float32) / 255.0
+    lip_tone = (lum / np.median(lum[lip > 0.9]))[..., None] ** 0.7
+    k = (lip * LIPS["strength"])[..., None]
+    img = img * (1.0 - k) + np.array(LIPS["color"], np.float32) * lip_tone * k
+    Image.fromarray(np.clip(np.round(img), 0, 255).astype(np.uint8), "RGB").save(
+        SKIN_OUT, quality=SKIN_QUALITY, optimize=True)
+    body.data.materials.clear()
+    body.data.materials.append(image_material("M_AubreySkin", SKIN_OUT, roughness=0.5))
+
+
 def main() -> int:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     addon_utils.enable(MPFB, default_set=True)
@@ -746,8 +1032,9 @@ def main() -> int:
     for name in ("Aubrey_Body", "Eyes", "Eyebrows"):
         if name in bpy.data.objects:
             bpy.data.objects.remove(bpy.data.objects[name], do_unlink=True)
-    body, eyes = make_body(old_arm)
+    body, eyes, lobes = make_body(old_arm)
     make_eyes(old_arm, eyes)
+    make_studs(old_arm, lobes)
     tie_centre = refit(old_arm, body)
     collar = make_collar(old_arm, body, bpy.data.objects["Aubrey_Shirt"])
     # The skin under the cloth goes last, once the collar has trimmed the

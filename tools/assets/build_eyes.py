@@ -49,6 +49,12 @@ make-up. So the iris is repainted blue-green, the baked highlight square
 goes (the clearcoat makes a real one), the lid skin takes her face's tone,
 and a smoky liner band runs round the eye (aubrey_eye_*.png, 512 px).
 
+AUBREY, AAA rebuild (aubrey_aaa.glb, tools/blender/aubrey_aaa.py): real
+eyeballs, 11.8 mm, front-projected at 30 mm per UV unit round the line of
+sight at (0.5, 0.5) -- so the whole procedural eye at real sizes, in the
+sheet's colour: a grey-green iris with a warm hazel ring round the pupil
+(aubrey_aaa_eye_*.png). Her lids and make-up are in her skin texture now.
+
 KENNY: his scan has no eyes, only paint. tools/blender/kenny_eyes.py builds
 eye caps over the openings, front-projected at KENNY's spec, and this paints
 them blue-grey (kenny_eye_*.png).
@@ -148,6 +154,12 @@ AUBREY_SKIN = (232, 196, 178)
 AUBREY_SMOKE = (58, 44, 46)
 AUBREY_SMOKE_PX = 14
 AUBREY_SMOKE_STRENGTH = 0.85
+## Aubrey's rebuild: true eyeballs (11.8 mm) projected at 30 mm per unit,
+## centred. Grey-green, hazel-gold at the pupil (the sheet's eye close-up).
+AUBREY_AAA = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
+                     iris_inner=(132, 116, 64), iris_outer=(92, 112, 98),
+                     collarette_lift=12.0, limbus=(34, 42, 38), veins=14,
+                     occlude_from=6.5, occlude_to=11.0, seed=53)
 ## Kenny: new caps (kenny_eyes.py) front-projected at 30 mm per unit,
 ## centred. Blue-grey, a touch of hazel at the pupil.
 KENNY = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.0, size=512,
@@ -384,6 +396,7 @@ def main() -> int:
     build_lashes(CHARACTERS / "roman_reigns_lash_alpha.png")
     build_cody()
     build_aubrey()
+    build_procedural(AUBREY_AAA, "aubrey_aaa")
     build_procedural(KENNY, "kenny")
     return 0
 
