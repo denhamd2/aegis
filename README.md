@@ -8352,4 +8352,8 @@ V 0.2, the belt-line taper 6%), and the shirt is let out below the bust to
 last 5 cm into the belt (`drape_shirt`): 30.9 cm across the chest, 30.9 at
 1.18 and 1.10, 29.2 at 1.06. The patch is placed after the drape (before
 it, the shirt came out through it), subdivided to follow her curve, and
-takes its weights where it now sits.
+takes its weights where it now sits. Its outer edge had been dragged round
+the side of her chest in a smear (pressed straight back, the last strip
+met the shirt where it turns away): it is now wrapped in toward an axis
+14 cm behind her, like the stripes, and kept on the front (1.1x, centred
+9.4 cm out).

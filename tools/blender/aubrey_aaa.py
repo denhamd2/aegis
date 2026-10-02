@@ -255,11 +255,14 @@ PATCH_OFF = 0.0025
 ## The sheet's patch, placed by its landmarks rather than absolute height
 ## (her collar and shoulders do not sit where the photo's do): its centre a
 ## quarter of the way (0.23) from the collar points down to the belt, and
-## out from the zip by 0.29 of the chest's width; a fifth larger than the
-## kit's. (x, z of its centre.)
-PATCH_SCALE = 1.2
+## out from the zip by 0.29 of the chest's width, but kept on the front of
+## her chest (wider, its edge wrapped round her side in a smear); a tenth
+## larger than the kit's. (x, z of its centre.)
+PATCH_SCALE = 1.1
 PATCH_CUTS = 3
-PATCH_CENTRE = (-0.108, 1.332)
+PATCH_CENTRE = (-0.094, 1.332)
+## Its wrapping axis: this far behind the body's centre line.
+PATCH_AXIS_Y = 0.14
 ## Her chest pocket (the sheet), on her left -- a narrow pen pocket, placed
 ## like the patch by landmarks: from 0.21 to 0.53 of the way from the collar
 ## points down to the belt, its centre out from the zip by 0.26 of the
@@ -1565,11 +1568,18 @@ def place_patch(body) -> None:
     bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=PATCH_CUTS, use_grid_fill=True)
     bm.to_mesh(patch.data)
     bm.free()
+    # Wrapped round her rather than pressed straight back: each vertex in
+    # along the line from an axis behind her chest (as the stripes are
+    # laid), so its outer edge follows the curve of her chest instead of
+    # being dragged round the side in a smear.
+    axis_y = PATCH_AXIS_Y
     for v in patch.data.vertices:
         p = patch.matrix_world @ v.co
-        hit = shirt_bvh.ray_cast(Vector((p.x, -0.5, p.z)), Vector((0.0, 1.0, 0.0)), 1.0)[0]
+        d = Vector((p.x, p.y - axis_y, 0.0)).normalized()
+        o = Vector((0.0, axis_y, p.z)) + d * 0.6
+        hit, nor, _, _ = shirt_bvh.ray_cast(o, -d, 0.6)
         if hit is not None:
-            v.co = inv @ Vector((p.x, hit.y - PATCH_OFF, p.z))
+            v.co = inv @ (hit + d * PATCH_OFF)
     patch.data.update()
     # Its weights from where it now is (taken before the move, they were
     # the left side's).
