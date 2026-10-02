@@ -38,11 +38,19 @@ func _ready() -> void:
 	get_tree().root.add_child.call_deferred(scene)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# The referee too, or two frames in it resolves the opening lock-up and
+	# a frozen man plays the lock-up's reach at nobody (the owner caught Cody
+	# doing exactly that on led_wall_ringside). Both stand in their ready
+	# stance instead.
+	var referee := scene.get_node("MatchReferee")
+	referee.set_physics_process(false)
+	referee.set_process(false)
 	for n in ["WrestlerA", "WrestlerB"]:
 		var w: WrestlerController = scene.get_node(n)
 		w.set_physics_process(false)
 		if w.ai:
 			w.ai.set_physics_process(false)
+		w.play_presentation_clip("strikes/idle_ready", true)
 	var hud := scene.get_node_or_null("MatchHUD")
 	if hud and "visible" in hud:
 		hud.visible = false
