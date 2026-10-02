@@ -267,7 +267,12 @@ skins01 pack, licence CC0 per the pack's own `skins01.json`), regraded, with
 her make-up painted over it by the script. Her brow and lash cards are
 MakeHuman's own `eyebrow010` and `eyelashes02` (CC0, system assets); their
 textures `aubrey_aaa_brows.png` / `aubrey_aaa_lashes.png` are recoloured
-from theirs. `aubrey_aaa_eye_*.png` are painted by `tools/assets/build_eyes.py`. Rebuild with MPFB installed as a Blender extension and its
+from theirs. Her shirt, trousers and trainers are MakeHuman's own CC0
+clothes `female_casualsuit01` and `shoes06` (system assets), fitted by MPFB
+and reshaped by the script; `aubrey_aaa_trousers.jpg`, `aubrey_aaa_shoes.png`
+and `aubrey_aaa_suit_normal.png` are derived from their textures, and the
+stripes `aubrey_aaa_shirt.png` are painted by the script. The belt, buckle,
+radio pack and ponytail are original, generated from code. `aubrey_aaa_eye_*.png` are painted by `tools/assets/build_eyes.py`. Rebuild with MPFB installed as a Blender extension and its
 asset packs unpacked to `~/.cache/aegis_assets/mpfb/`; the output is
 byte-identical for the same inputs. Not included in the repo: MPFB or its
 asset packs (only the exported .glb).

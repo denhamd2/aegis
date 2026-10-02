@@ -149,12 +149,67 @@ FREE_JOINTS = {"head"}
 ## minimums are the kit build's own offsets (referee_aubrey.py SHIRT_OFF,
 ## TROUSER_OFF, SHOE_OFF); the maximums let a shirt drape but not tent.
 GARMENTS = {
-    "Aubrey_Shirt": (0.022, 0.055),
-    "Aubrey_Trousers": (0.012, 0.040),
-    "Aubrey_Shoes": (0.011, 0.030),
+    "Aubrey_Shirt": (0.005, 0.08),
+    "Aubrey_Trousers": (0.004, 0.15),
+    "Aubrey_Shoes": (0.003, 0.08),
 }
-## Riding on the shirt: moved with the nearest shirt vertex.
-SHIRT_RIDERS = ("Aubrey_Patch",)
+## The kit's garments, replaced (stage 4b) by MakeHuman's own CC0 clothes
+## fitted by MPFB: female_casualsuit01 (a fitted short-sleeved tee and slim
+## jeans, one mesh, split here) restyled as her shirt and trousers, and
+## shoes06 (trainers) in black.
+KIT_GARMENTS = ("Aubrey_Shirt", "Aubrey_Trousers", "Aubrey_Shoes")
+SUIT = "female_casualsuit01"
+SHOES = "shoes06"
+## Her shirt's stripes (the sheet): black and white bands STRIPE_W wide,
+## black down the centre front, vertical round the torso and running down
+## each sleeve to a black cuff CUFF_W deep. Painted onto the tee's own UVs
+## from 3D position, like her make-up. Torso and sleeve meet at SLEEVE_X.
+STRIPE_W = 0.036
+STRIPE_WHITE = (232, 232, 226)
+STRIPE_BLACK = (20, 20, 22)
+CUFF_W = 0.022
+SLEEVE_X = 0.172
+SIDE_SEAM_X = 0.10
+## The side panels run up to the armpit; above it the front and back panels
+## meet over the shoulder.
+ARMPIT_DROP = 0.06
+SHIRT_TEX = ROOT / "game/assets/characters/aubrey_aaa_shirt.png"
+## The jeans' and trainers' own textures, taken to black: a twill keeps its
+## seams and wear in a narrow band of near-black; the trainers keep their
+## panels' shading. The suit's normal map (the jeans' wrinkles) comes along.
+TROUSERS_TEX = ROOT / "game/assets/characters/aubrey_aaa_trousers.jpg"
+TROUSERS_TONE = (11.0, 11.0, 12.0, 12.0)   # r, g, b at black, plus lift at white
+SUIT_NORMAL = ROOT / "game/assets/characters/aubrey_aaa_suit_normal.png"
+SUIT_NORMAL_SIZE = 2048
+SHOES_TEX = ROOT / "game/assets/characters/aubrey_aaa_shoes.png"
+SHOES_TONE = (12.0, 12.0, 13.0, 34.0)
+## Tucked in: the shirt is cut under the belt; the belt (sheet: black
+## leather, square silver buckle, a radio pack at the back right) is built
+## round the trousers from rays, BELT_OFF proud of them.
+BELT_TOP = 1.036
+BELT_H = 0.036
+BELT_OFF = 0.004
+BELT_THICK = 0.004
+BELT_STEPS = 64
+TUCK_UNDER = 0.012
+BUCKLE_W, BUCKLE_H, BUCKLE_BAR = 0.046, 0.044, 0.0065
+PACK_ANGLE = 145.0          # degrees round from the front, toward her right
+PACK_SIZE = (0.058, 0.085, 0.028)
+## Her trousers (the sheet): straight-legged work trousers, not slim jeans.
+## The jeans' low waist is raised to the belt (each angle's top edge
+## stretched up to TROUSER_WAIST over the span above TROUSER_WAIST_FROM); the
+## legs below the knee are lengthened so the hem falls to TROUSER_HEM over
+## the shoe; and each leg is let out to at least TROUSER_LEG_R round its
+## axis (hip to ankle), blended in over the thigh.
+TROUSER_WAIST = 1.026
+TROUSER_WAIST_FROM = 0.84
+TROUSER_HEM = 0.035
+TROUSER_KNEE = 0.50
+TROUSER_LEG_R = 0.064
+TROUSER_LEG_FROM = (0.86, 0.70)   # z where the letting-out starts, and is full
+## The patch sits on the new shirt, this far off it.
+PATCH = "Aubrey_Patch"
+PATCH_OFF = 0.0025
 GARMENT_SMOOTH = 6
 ## The hair cap's standoff: slicked tight to the skull.
 CAP = "Aubrey_HairCap"
@@ -180,6 +235,22 @@ HAIR_SEED = 47
 HAIR_BASE = (74, 52, 36)
 HAIR_LIGHT = (142, 104, 70)
 PONYTAIL = ("Aubrey_Ponytail", "Aubrey_HairTie")
+## Her ponytail (the sheet: high, long, falling to mid-back close along the
+## back of her head and neck), rebuilt (stage 4b) -- the kit's was short,
+## curled and stood out behind her. A tube of strands along a path from the
+## tie, out over the crown and down the back, PONYTAIL_GAP off whatever is
+## under it, ending at PONYTAIL_TIP_Z; its radius by fraction of the length
+## (PONYTAIL_R); slightly flattened against her back; in the cap's own
+## strand texture so the colour matches. Its five spring bones are re-laid
+## along the path in equal lengths.
+PONYTAIL_TIP_Z = 1.235
+PONYTAIL_GAP = 0.006
+PONYTAIL_R = [(0.0, 0.017), (0.12, 0.031), (0.35, 0.034), (0.65, 0.026),
+              (0.88, 0.013), (1.0, 0.004)]
+PONYTAIL_FLAT = (1.15, 0.8)
+PONYTAIL_RINGS = 56
+PONYTAIL_SIDES = 16
+PONYTAIL_U_TILES = 3.0
 TIE = "Aubrey_HairTie"
 PONYTAIL_BONES = ("ponytail_1", "ponytail_2", "ponytail_3", "ponytail_4", "ponytail_5")
 ## The collar: where it sits (its base, m), how many angles round the neck,
@@ -204,8 +275,11 @@ COLLAR_PROFILE = [(0.000, 0.004), (0.014, 0.004), (0.027, 0.004), (0.033, 0.008)
 COLLAR_POINT_DROP = 0.022
 ## Shirt faces above the collar's (tilted) base plus COLLAR_TRIM_UP, within
 ## COLLAR_TRIM_R of the neck's axis, go: the collar's flap covers the cut.
+## (The kit shirt needed 0.105; the MakeHuman tee's crew neck already sits
+## inside the collar, and a cut that wide left a saw-toothed edge out on
+## her shoulders past the flap.)
 COLLAR_TRIM_UP = 0.012
-COLLAR_TRIM_R = 0.105
+COLLAR_TRIM_R = 0.0
 ## The placket: from the collar's gap down to PLACKET_BOTTOM, this wide.
 PLACKET_BOTTOM = 1.355
 PLACKET_HALF_W = 0.016
@@ -325,6 +399,7 @@ def make_body(old_arm):
         front = min(pts, key=lambda p: p.y)          # she faces -Y
         eyes[side] = (centre, (front - centre).normalized())
     cards = make_cards(human)
+    make_garments(human, old_arm)
     lobes = ear_lobes(human)
     # Keep only the body.
     body_group = human.vertex_groups["body"].index
@@ -351,6 +426,11 @@ def make_body(old_arm):
     arm_mod.object = old_arm
     for card in cards:
         rigid_on_head(card, old_arm)
+    for name in GARMENTS:
+        obj = bpy.data.objects[name]
+        obj.parent = old_arm
+        obj.matrix_parent_inverse = old_arm.matrix_world.inverted()
+        obj.modifiers.new("Armature", "ARMATURE").object = old_arm
     return human, eyes, lobes
 
 
@@ -442,13 +522,18 @@ def take_weights(obj, body) -> None:
 def refit(old_arm, body):
     objects = bpy.data.objects
     body_bvh = world_bvh([body])
-    shirt_pos = shirt_disp = None
     for name, (t_min, t_max) in GARMENTS.items():
-        pos, disp = conform(objects[name], body_bvh, t_min, t_max)
-        if name == "Aubrey_Shirt":
-            shirt_pos, shirt_disp = pos, disp
-    for name in SHIRT_RIDERS:
-        follow(objects[name], shirt_pos, shirt_disp)
+        conform(objects[name], body_bvh, t_min, t_max)
+    # The patch onto the new shirt: each vertex to the nearest point on it,
+    # PATCH_OFF out.
+    shirt_bvh = world_bvh([objects["Aubrey_Shirt"]])
+    patch = objects[PATCH]
+    inv = patch.matrix_world.inverted()
+    for v in patch.data.vertices:
+        loc, nor, _, _ = shirt_bvh.find_nearest(patch.matrix_world @ v.co)
+        if loc is not None:
+            v.co = inv @ (loc + nor * PATCH_OFF)
+    patch.data.update()
     # The hair: the cap onto the new skull; the ponytail with the cap where
     # the tie sits.
     tie = objects[TIE]
@@ -470,7 +555,7 @@ def refit(old_arm, body):
             eb.head += local
             eb.tail += local
     bpy.ops.object.mode_set(mode="OBJECT")
-    for name in list(GARMENTS) + list(SHIRT_RIDERS):
+    for name in list(GARMENTS) + [PATCH]:
         take_weights(objects[name], body)
     print(f"refit: ponytail moved {delta.length * 1000:.0f} mm")
     return tie_centre + delta
@@ -548,10 +633,13 @@ def make_cap(old_arm, body, eyes, tie_centre):
     centre = (eyes["l"][0] + eyes["r"][0]) / 2.0 + Vector((0.0, 0.075, 0.01))
     mw = body.matrix_world
     head = old_arm.data.bones["Head"]
-    head_group = body.vertex_groups["Head"].index
+    # The scalp is the skin that follows the head -- with the nape, which
+    # follows the neck: on the Head bone alone the cap stopped above the
+    # ears at the back, an undercut.
+    head_groups = {body.vertex_groups[n].index for n in ("Head", "neck_01")}
     margin = {}
     for v in body.data.vertices:
-        if not any(g.group == head_group and g.weight > 0.5 for g in v.groups):
+        if sum(g.weight for g in v.groups if g.group in head_groups) <= 0.5:
             continue
         p = mw @ v.co
         r = p - centre
@@ -815,6 +903,432 @@ def rigid_on_head(obj, old_arm) -> None:
     mod.object = old_arm
 
 
+def bake_world(obj) -> None:
+    """Unparents obj with its world transform applied to its mesh."""
+    from mathutils import Matrix
+    world = obj.matrix_world.copy()
+    obj.parent = None
+    obj.data.transform(world)
+    obj.matrix_world = Matrix.Identity(4)
+
+
+def split_by_height(obj, z: float):
+    """Splits obj's connected pieces: those centred above z stay, the rest
+    become a new object; returns (upper, lower)."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bm.verts.ensure_lookup_table()
+    seen, upper = set(), set()
+    for start in bm.verts:
+        if start.index in seen:
+            continue
+        piece, stack = [], [start]
+        seen.add(start.index)
+        while stack:
+            v = stack.pop()
+            piece.append(v.index)
+            for e in v.link_edges:
+                o = e.other_vert(v)
+                if o.index not in seen:
+                    seen.add(o.index)
+                    stack.append(o)
+        if sum(bm.verts[i].co.z for i in piece) / len(piece) > z:
+            upper.update(piece)
+    bm.free()
+    lower = obj.copy()
+    lower.data = obj.data.copy()
+    bpy.context.scene.collection.objects.link(lower)
+    for target, keep in ((obj, True), (lower, False)):
+        bm = bmesh.new()
+        bm.from_mesh(target.data)
+        doomed = [v for v in bm.verts if (v.index in upper) != keep]
+        bmesh.ops.delete(bm, geom=doomed, context="VERTS")
+        bm.to_mesh(target.data)
+        bm.free()
+    return obj, lower
+
+
+def apply_subdivision(obj, levels: int = 1) -> None:
+    mod = obj.modifiers.new("Subdivision", "SUBSURF")
+    mod.levels = levels
+    mod.render_levels = levels
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def shape_trousers(trousers, old_arm) -> None:
+    """Raises the jeans' waist to the belt, lengthens and straightens the
+    legs (TROUSER_*)."""
+    import math
+    mw = trousers.matrix_world
+    inv = mw.inverted()
+    pts = [mw @ v.co for v in trousers.data.vertices]
+    # The top edge's height by angle round the waist.
+    bins = 24
+    top = [TROUSER_WAIST_FROM] * bins
+    angle_bin = lambda p: int((math.atan2(p.x, -(p.y - 0.02)) + math.pi) / (2 * math.pi) * bins) % bins
+    for p in pts:
+        b = angle_bin(p)
+        top[b] = max(top[b], p.z)
+    legs = {}
+    for side in ("l", "r"):
+        hip = old_arm.matrix_world @ old_arm.data.bones[f"thigh_{side}"].head_local
+        ankle = old_arm.matrix_world @ old_arm.data.bones[f"calf_{side}"].tail_local
+        legs[side] = (hip, ankle)
+    bottom = min(p.z for p in pts)
+    stretch = (TROUSER_KNEE - TROUSER_HEM) / (TROUSER_KNEE - bottom)
+    for v, p in zip(trousers.data.vertices, pts):
+        q = p.copy()
+        t = top[angle_bin(p)]
+        if p.z > TROUSER_WAIST_FROM and t > TROUSER_WAIST_FROM + 0.01:
+            q.z = TROUSER_WAIST_FROM + (p.z - TROUSER_WAIST_FROM) * (
+                (TROUSER_WAIST - TROUSER_WAIST_FROM) / (t - TROUSER_WAIST_FROM))
+        if p.z < TROUSER_KNEE:
+            q.z = TROUSER_KNEE - (TROUSER_KNEE - p.z) * stretch
+        if q.z < TROUSER_LEG_FROM[0]:
+            hip, ankle = legs["l" if p.x > 0 else "r"]
+            f = (hip.z - q.z) / (hip.z - ankle.z)
+            axis = hip.lerp(ankle, f)
+            radial = (q - axis).to_2d()
+            r = radial.length
+            w = float(_smooth(TROUSER_LEG_FROM[0], TROUSER_LEG_FROM[1], q.z))
+            target = TROUSER_LEG_R * w
+            soft = (r + target + math.sqrt((r - target) ** 2 + 0.01 ** 2)) / 2.0
+            if r > 1e-6:
+                q.x, q.y = (axis.to_2d() + radial * (soft / r))
+        v.co = inv @ q
+    trousers.data.update()
+
+
+def make_garments(human, old_arm) -> None:
+    """Her shirt, trousers and shoes from MakeHuman's CC0 clothes, fitted to
+    her by MPFB (after the targets and the fitting pose), split, subdivided
+    once and named as the kit's were."""
+    HumanService = mpfb("services.humanservice", "HumanService")
+    clothes = MPFB_ASSETS / "unpacked_makehuman_system_assets/clothes"
+    made = {}
+    for name in (SUIT, SHOES):
+        obj = HumanService.add_mhclo_asset(str(clothes / name / f"{name}.mhclo"), human,
+                                           asset_type="Clothes", subdiv_levels=0,
+                                           set_up_rigging=False)
+        for mod in list(obj.modifiers):
+            obj.modifiers.remove(mod)
+        if obj.data.shape_keys:
+            obj.shape_key_clear()
+        bake_world(obj)
+        obj.vertex_groups.clear()
+        made[name] = obj
+    hips = old_arm.matrix_world @ old_arm.data.bones["pelvis"].head_local
+    shirt, trousers = split_by_height(made[SUIT], hips.z + 0.12)
+    shape_trousers(trousers, old_arm)
+    for obj, name in ((shirt, "Aubrey_Shirt"), (trousers, "Aubrey_Trousers"),
+                      (made[SHOES], "Aubrey_Shoes")):
+        obj.name = obj.data.name = name
+        apply_subdivision(obj)
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+        zs = [v.co.z for v in obj.data.vertices]
+        print(f"garment {name}: z {min(zs):.3f}..{max(zs):.3f}, {len(zs)} verts")
+    for vg in list(human.vertex_groups):
+        if vg.name.startswith("Delete."):
+            human.vertex_groups.remove(vg)
+
+
+def garment_textures() -> None:
+    """The trousers' and trainers' textures and the suit's normal map, from
+    MakeHuman's own, written next to the model."""
+    import numpy as np
+    from PIL import Image
+    clothes = MPFB_ASSETS / "unpacked_makehuman_system_assets/clothes"
+    for src, out, tone in ((clothes / SUIT / f"{SUIT}_diffuse.png", TROUSERS_TEX, TROUSERS_TONE),
+                           (clothes / SHOES / f"{SHOES}_diffuse.png", SHOES_TEX, SHOES_TONE)):
+        rgb = np.asarray(Image.open(src).convert("RGB"), np.float32)
+        lum = rgb.mean(-1, keepdims=True) / 255.0
+        img = np.array(tone[:3], np.float32) + lum * tone[3]
+        im = Image.fromarray(np.clip(np.round(img), 0, 255).astype(np.uint8), "RGB")
+        if out.suffix == ".jpg":
+            im.save(out, quality=90, optimize=True)
+        else:
+            im.save(out, optimize=True)
+    normal = Image.open(clothes / SUIT / f"{SUIT}_normal.png").convert("RGB")
+    normal.resize((SUIT_NORMAL_SIZE, SUIT_NORMAL_SIZE), Image.LANCZOS).save(SUIT_NORMAL, optimize=True)
+
+
+def paint_stripes(shirt, old_arm) -> None:
+    """The shirt's stripes, in its UV space from 3D position (STRIPE_W)."""
+    import numpy as np
+    from PIL import Image
+    size = 2048
+    pos, _, hit = position_map(shirt, size, -10.0, group=None)
+    x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
+    spine = old_arm.matrix_world @ old_arm.data.bones["spine_02"].head_local
+    arm = old_arm.matrix_world @ old_arm.data.bones["upperarm_l"].head_local
+    # Torso: as a shirt is cut -- front and back panels striped straight
+    # down (by x), side panels past SIDE_SEAM_X striped by depth (y), the
+    # stripes meeting at the side seams.
+    side = (np.abs(x) > SIDE_SEAM_X) & (z < arm.z - ARMPIT_DROP)
+    s_torso = np.where(side, np.sign(x) * (SIDE_SEAM_X + (y - spine.y)), x)
+    # Sleeves: arc length round the arm's axis.
+    s_sleeve = np.arctan2(z - arm.z, -(y - arm.y)) * 0.05
+    sleeve = np.abs(x) > SLEEVE_X
+    s = np.where(sleeve, s_sleeve, s_torso)
+    wave = np.cos(np.pi * s / STRIPE_W)
+    black = _smooth(-0.12, 0.12, wave)
+    end = max(abs((shirt.matrix_world @ v.co).x) for v in shirt.data.vertices)
+    black = np.where(sleeve & (np.abs(x) > end - CUFF_W), 1.0, black)
+    img = (np.array(STRIPE_WHITE, np.float32) * (1.0 - black[..., None])
+           + np.array(STRIPE_BLACK, np.float32) * black[..., None])
+    img[~hit] = STRIPE_WHITE
+    Image.fromarray(np.round(img).astype(np.uint8), "RGB").save(SHIRT_TEX, optimize=True)
+
+
+def garment_material(name: str, color: pathlib.Path, roughness: float, normal=None):
+    mat = image_material(name, color, roughness)
+    if normal is not None:
+        nodes = mat.node_tree.nodes
+        tex = nodes.new("ShaderNodeTexImage")
+        tex.image = bpy.data.images.load(str(normal))
+        tex.image.colorspace_settings.name = "Non-Color"
+        nmap = nodes.new("ShaderNodeNormalMap")
+        mat.node_tree.links.new(tex.outputs["Color"], nmap.inputs["Color"])
+        mat.node_tree.links.new(nmap.outputs["Normal"], nodes["Principled BSDF"].inputs["Normal"])
+    return mat
+
+
+def tuck_shirt(shirt) -> None:
+    """Cuts the shirt away under the belt: tucked in."""
+    cut = BELT_TOP - TUCK_UNDER
+    bm = bmesh.new()
+    bm.from_mesh(shirt.data)
+    doomed = [f for f in bm.faces if all((shirt.matrix_world @ v.co).z < cut for v in f.verts)]
+    bmesh.ops.delete(bm, geom=doomed, context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.to_mesh(shirt.data)
+    bm.free()
+
+
+def dress_garments(old_arm) -> None:
+    objects = bpy.data.objects
+    shirt, trousers, shoes = (objects[n] for n in ("Aubrey_Shirt", "Aubrey_Trousers", "Aubrey_Shoes"))
+    tuck_shirt(shirt)
+    garment_textures()
+    paint_stripes(shirt, old_arm)
+    trim = bpy.data.materials[TRIM_MATERIAL]
+    shirt.data.materials.clear()
+    shirt.data.materials.append(garment_material("M_RefStripes", SHIRT_TEX, 0.8))
+    shirt.data.materials.append(trim)
+    trousers.data.materials.clear()
+    trousers.data.materials.append(garment_material("M_Trousers", TROUSERS_TEX, 0.85, SUIT_NORMAL))
+    shoes.data.materials.clear()
+    shoes.data.materials.append(garment_material("M_Shoes", SHOES_TEX, 0.6))
+
+
+def make_belt(old_arm, body):
+    """The belt round the trousers (rays in from outside at BELT_STEPS
+    angles, BELT_OFF proud), its square buckle at the front and the radio
+    pack at the back right; one mesh, weighted from the body."""
+    import math
+    objects = bpy.data.objects
+    bvh = world_bvh([objects["Aubrey_Trousers"], objects["Aubrey_Shirt"]])
+    rows = (BELT_TOP - BELT_H, BELT_TOP - BELT_H / 2.0, BELT_TOP)
+    ring = []
+    for z in rows:
+        pts = [Vector((0.0, 0.0, z))]
+        hits = []
+        for k in range(BELT_STEPS):
+            a = 2.0 * math.pi * k / BELT_STEPS
+            d = Vector((math.sin(a), -math.cos(a), 0.0))
+            loc = bvh.ray_cast(Vector((0.0, 0.02, z)) + d * 0.5, -d, 0.5)[0]
+            hits.append(loc)
+        ring.append(hits)
+    # One radius per angle (the widest row), so the band stands straight.
+    centre = Vector((0.0, 0.02, 0.0))
+    radius = []
+    for k in range(BELT_STEPS):
+        r = max(((h - centre).to_2d().length for h in (row[k] for row in ring) if h is not None),
+                default=0.15)
+        radius.append(r + BELT_OFF)
+    radius = [(radius[k - 1] + 2.0 * radius[k] + radius[(k + 1) % BELT_STEPS]) / 4.0
+              for k in range(BELT_STEPS)]
+    verts, faces, mats = [], [], []
+
+    def band_point(k, z, out):
+        a = 2.0 * math.pi * k / BELT_STEPS
+        r = radius[k % BELT_STEPS] + out
+        return Vector((math.sin(a) * r, centre.y - math.cos(a) * r, z))
+
+    z0, z1 = BELT_TOP - BELT_H, BELT_TOP
+    # Cross-section loop: inner bottom, outer bottom, outer top, inner top.
+    section = [(z0, 0.0), (z0, BELT_THICK), (z1, BELT_THICK), (z1, 0.0)]
+    for k in range(BELT_STEPS):
+        for z, out in section:
+            verts.append(band_point(k, z, out))
+    for k in range(BELT_STEPS):
+        a, b = k * 4, ((k + 1) % BELT_STEPS) * 4
+        for j in range(4):
+            jn = (j + 1) % 4
+            faces.append((a + j, b + j, b + jn, a + jn))
+            mats.append(0)
+
+    def box(c, half, axes, mat):
+        """A box centred at c, half-extents along three axes."""
+        base = len(verts)
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                for sz in (-1, 1):
+                    verts.append(c + axes[0] * half[0] * sx + axes[1] * half[1] * sy
+                                 + axes[2] * half[2] * sz)
+        for f in ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)):
+            faces.append(tuple(base + i for i in f))
+            mats.append(mat)
+
+    front = band_point(0, (z0 + z1) / 2.0, BELT_THICK + 0.003)
+    right, up, out = Vector((1.0, 0.0, 0.0)), Vector((0.0, 0.0, 1.0)), Vector((0.0, -1.0, 0.0))
+    hw, hh, bar = BUCKLE_W / 2.0, BUCKLE_H / 2.0, BUCKLE_BAR / 2.0
+    depth = 0.002
+    for c, half in ((front + up * (hh - bar), (hw, depth, bar)),
+                    (front - up * (hh - bar), (hw, depth, bar)),
+                    (front + right * (hw - bar), (bar, depth, hh - 2 * bar)),
+                    (front - right * (hw - bar), (bar, depth, hh - 2 * bar))):
+        box(c, half, (right, out, up), 1)
+    a = math.radians(-PACK_ANGLE)
+    k = PACK_ANGLE / 360.0 * BELT_STEPS
+    r = radius[int(round(-k)) % BELT_STEPS] + BELT_THICK + PACK_SIZE[2] / 2.0
+    d = Vector((math.sin(a), -math.cos(a), 0.0))
+    side = Vector((-d.y, d.x, 0.0))
+    c = Vector((0.0, centre.y, BELT_TOP + 0.008 - PACK_SIZE[1] / 2.0)) + d * r
+    box(c, (PACK_SIZE[0] / 2.0, PACK_SIZE[2] / 2.0, PACK_SIZE[1] / 2.0), (side, d, up), 2)
+    mesh = bpy.data.meshes.new("Aubrey_Belt")
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    for poly, m in zip(mesh.polygons, mats):
+        poly.material_index = m
+    for name, color, metal, rough in (("M_Belt", (0.018, 0.018, 0.018, 1.0), 0.0, 0.42),
+                                      ("M_Buckle", (0.86, 0.87, 0.89, 1.0), 1.0, 0.18),
+                                      ("M_RadioPack", (0.025, 0.025, 0.027, 1.0), 0.0, 0.6)):
+        mat = bpy.data.materials.new(name)
+        mat.use_nodes = True
+        bsdf = mat.node_tree.nodes["Principled BSDF"]
+        bsdf.inputs["Base Color"].default_value = color
+        bsdf.inputs["Metallic"].default_value = metal
+        bsdf.inputs["Roughness"].default_value = rough
+        mesh.materials.append(mat)
+    mesh.update()
+    belt = bpy.data.objects.new("Aubrey_Belt", mesh)
+    bpy.context.scene.collection.objects.link(belt)
+    belt.parent = old_arm
+    belt.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    take_weights(belt, body)
+    belt.modifiers.new("Armature", "ARMATURE").object = old_arm
+    return belt
+
+
+def ponytail_radius(t: float) -> float:
+    for (t0, r0), (t1, r1) in zip(PONYTAIL_R, PONYTAIL_R[1:]):
+        if t0 <= t <= t1:
+            return r0 + (r1 - r0) * (t - t0) / (t1 - t0)
+    return PONYTAIL_R[-1][1]
+
+
+def make_ponytail(old_arm, tie_centre):
+    """The ponytail (PONYTAIL_*), weighted along its re-laid spring bones."""
+    objects = bpy.data.objects
+    under = world_bvh([o for o in objects if o.type == "MESH" and o.name in
+                       ("Aubrey_Body", "Aubrey_Shirt", "Aubrey_Collar", CAP)])
+    # The path: from the tie, each step down the surface behind her.
+    path = [tie_centre.copy()]
+    z = tie_centre.z - 0.01
+    while z > PONYTAIL_TIP_Z:
+        hit = under.ray_cast(Vector((0.0, 0.6, z)), Vector((0.0, -1.0, 0.0)), 1.0)[0]
+        y = hit.y if hit is not None else path[-1].y
+        path.append(Vector((0.0, y, z)))
+        z -= 0.01
+    # Off the surface by the hair's own radius, smoothed, and never in front
+    # of the tie's line at the top.
+    length = [0.0]
+    for a, b in zip(path, path[1:]):
+        length.append(length[-1] + (b - a).length)
+    for i in range(1, len(path)):
+        t = length[i] / length[-1]
+        path[i].y += ponytail_radius(t) * PONYTAIL_FLAT[1] + PONYTAIL_GAP
+        path[i].y = max(path[i].y, tie_centre.y + 0.02 * min(1.0, i / 4.0))
+    for _ in range(6):
+        path = [path[0]] + [(path[i - 1] + path[i] * 2.0 + path[i + 1]) / 4.0
+                            for i in range(1, len(path) - 1)] + [path[-1]]
+    length = [0.0]
+    for a, b in zip(path, path[1:]):
+        length.append(length[-1] + (b - a).length)
+    total = length[-1]
+
+    def at(s):
+        for i in range(len(path) - 1):
+            if length[i] <= s <= length[i + 1]:
+                f = (s - length[i]) / max(length[i + 1] - length[i], 1e-9)
+                return path[i].lerp(path[i + 1], f), (path[i + 1] - path[i]).normalized()
+        return path[-1], (path[-1] - path[-2]).normalized()
+
+    # The spring bones, equal lengths along the path.
+    n_bones = len(PONYTAIL_BONES)
+    bpy.context.view_layer.objects.active = old_arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    inv = old_arm.matrix_world.inverted()
+    for k, name in enumerate(PONYTAIL_BONES):
+        eb = old_arm.data.edit_bones[name]
+        eb.head = inv @ at(total * k / n_bones)[0]
+        eb.tail = inv @ at(total * (k + 1) / n_bones)[0]
+    bpy.ops.object.mode_set(mode="OBJECT")
+    # The tube.
+    verts, uvs, faces, weights = [], [], [], []
+    side = Vector((1.0, 0.0, 0.0))
+    for j in range(PONYTAIL_RINGS + 1):
+        t = j / PONYTAIL_RINGS
+        c, tangent = at(total * t)
+        n = (side - tangent * side.dot(tangent)).normalized()
+        b = tangent.cross(n)
+        r = ponytail_radius(t)
+        twist = 0.6 * t
+        for k in range(PONYTAIL_SIDES + 1):
+            a = 2.0 * math.pi * k / PONYTAIL_SIDES + twist
+            wave = 1.0 + 0.06 * math.sin(3.0 * a + 9.0 * t)
+            verts.append(c + (n * math.cos(a) * PONYTAIL_FLAT[0]
+                              + b * math.sin(a) * PONYTAIL_FLAT[1]) * r * wave)
+            uvs.append((k / PONYTAIL_SIDES * PONYTAIL_U_TILES, 1.0 - t))
+        # Weights: linear between the two nearest bones' midpoints.
+        x = t * n_bones - 0.5
+        lo = max(0, min(n_bones - 1, math.floor(x)))
+        hi = min(n_bones - 1, lo + 1)
+        f = max(0.0, min(1.0, x - lo))
+        weights.append(((PONYTAIL_BONES[lo], 1.0 - f), (PONYTAIL_BONES[hi], f)))
+    ring = PONYTAIL_SIDES + 1
+    for j in range(PONYTAIL_RINGS):
+        for k in range(PONYTAIL_SIDES):
+            a = j * ring + k
+            faces.append((a, a + 1, a + ring + 1, a + ring))
+    mesh = bpy.data.meshes.new("Aubrey_Ponytail")
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    layer = mesh.uv_layers.new(name="UVMap")
+    for loop in mesh.loops:
+        layer.data[loop.index].uv = uvs[loop.vertex_index]
+    col = mesh.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
+    for i in range(len(verts)):
+        col.data[i].color = (1.0, 1.0, 1.0, 1.0)
+    mesh.polygons.foreach_set("use_smooth", [True] * len(mesh.polygons))
+    mesh.materials.append(bpy.data.materials["M_AubreyHair"])
+    mesh.update()
+    tail = bpy.data.objects.new("Aubrey_Ponytail", mesh)
+    bpy.context.scene.collection.objects.link(tail)
+    groups = {name: tail.vertex_groups.new(name=name) for name in PONYTAIL_BONES}
+    for j, pair in enumerate(weights):
+        idx = list(range(j * ring, (j + 1) * ring))
+        for name, w in pair:
+            if w > 0.0:
+                groups[name].add(idx, w, "ADD")
+    tail.parent = old_arm
+    tail.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    tail.modifiers.new("Armature", "ARMATURE").object = old_arm
+    print(f"make_ponytail: {total:.3f} m, tip at z {path[-1].z:.3f}")
+    return tail
+
+
 def make_cards(human):
     """MakeHuman's brow and lash cards fitted to her face (MPFB fits them to
     the basemesh as it stands, so after the targets and the fitting pose),
@@ -921,9 +1435,10 @@ def _smooth(a, b, x):
     return t * t * (3.0 - 2.0 * t)
 
 
-def position_map(body, size: int, z_min: float):
-    """Her head rasterised into UV space: for every texel, the point on her it
-    covers (world, metres), its "lips" weight, and whether it is covered."""
+def position_map(body, size: int, z_min: float, group: str | None = "lips"):
+    """A mesh rasterised into UV space (faces wholly above z_min): for every
+    texel, the point on it that texel covers (world, metres), its weight in
+    `group`, and whether it is covered."""
     import numpy as np
     mesh = body.data
     pos = np.zeros((size, size, 3), np.float32)
@@ -931,12 +1446,13 @@ def position_map(body, size: int, z_min: float):
     hit = np.zeros((size, size), bool)
     uvs = mesh.uv_layers["UVMap"].data
     co = np.array([body.matrix_world @ v.co for v in mesh.vertices], np.float32)
-    lip_group = body.vertex_groups["lips"].index
     lip_w = np.zeros(len(co), np.float32)
-    for v in mesh.vertices:
-        for g in v.groups:
-            if g.group == lip_group:
-                lip_w[v.index] = g.weight
+    if group is not None:
+        lip_group = body.vertex_groups[group].index
+        for v in mesh.vertices:
+            for g in v.groups:
+                if g.group == lip_group:
+                    lip_w[v.index] = g.weight
     mesh.calc_loop_triangles()
     for tri in mesh.loop_triangles:
         vi = list(tri.vertices)
@@ -1029,14 +1545,19 @@ def main() -> int:
     addon_utils.enable(MPFB, default_set=True)
     bpy.ops.import_scene.gltf(filepath=str(SOURCE))
     old_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
-    for name in ("Aubrey_Body", "Eyes", "Eyebrows"):
+    trim = next(m for m in bpy.data.objects["Aubrey_Shirt"].data.materials
+                if m and m.name.startswith(TRIM_MATERIAL))
+    trim.use_fake_user = True
+    for name in ("Aubrey_Body", "Eyes", "Eyebrows") + KIT_GARMENTS:
         if name in bpy.data.objects:
             bpy.data.objects.remove(bpy.data.objects[name], do_unlink=True)
     body, eyes, lobes = make_body(old_arm)
     make_eyes(old_arm, eyes)
     make_studs(old_arm, lobes)
     tie_centre = refit(old_arm, body)
+    dress_garments(old_arm)
     collar = make_collar(old_arm, body, bpy.data.objects["Aubrey_Shirt"])
+    make_belt(old_arm, body)
     # The skin under the cloth goes last, once the collar has trimmed the
     # shirt: deleted first, the trim opened holes onto nothing.
     # Not the collar: rays up from under her jaw met it, and the skin there
@@ -1045,6 +1566,8 @@ def main() -> int:
     bpy.data.objects.remove(bpy.data.objects[CAP], do_unlink=True)
     paint_strands()
     make_cap(old_arm, body, eyes, tie_centre)
+    bpy.data.objects.remove(bpy.data.objects["Aubrey_Ponytail"], do_unlink=True)
+    make_ponytail(old_arm, tie_centre)
     for o in bpy.context.scene.objects:
         o.select_set(o == old_arm or o.parent == old_arm)
     bpy.ops.export_scene.gltf(filepath=str(OUT), export_format="GLB", use_selection=True,
