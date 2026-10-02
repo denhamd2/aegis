@@ -8504,3 +8504,40 @@ Note: `referee_shot.tscn` frames taken with `--rendering-driver opengl3` (the
 Aubrey face pass above) are the compatibility renderer, which this file
 already rules out for judging light; her washed-out lips there want a Vulkan
 frame before they are blamed on the rig.
+
+### Owner's notes: apron, star glints, the desk, Aubrey's hair
+
+- **Apron "ALL ELITE" twice.** The rolled top edge sampled the banner's top
+  15%, which takes in the "ALL ELITE" over the centre logo, so it printed on
+  the roll and again on the skirt. `RingBuilder.APRON_ROLL_V` 0.15 -> 0.04
+  (plain field and the corner chevrons). Frame:
+  `fixtures/lighting_2k26/apron_all_elite_old_new.jpg`.
+- **Lights like "a hub with spokes".** The item-8 star glints: spokes cut in
+  angle widened into bars, ran to the quad's edge and clipped white round a
+  pin-dot. `star_glints.gd` now draws fixed-width streaks tapering to points
+  (six long, six short) out of a soft core and halo. Frame:
+  `08b_glints_rods_vs_star.jpg`.
+- **The commentary desk, its own area.** It stood 0.84 m off the apron. Per
+  the Grand Slam frame (back from the ring, toward a corner, barricade behind
+  the team) and WWE 2K's announce-table placement, the +Z barricade steps
+  back to 9 m from x -1.2 to the +X corner and the desk stands in that bay,
+  4.0 m off the apron, on a riser. Remodelled: LED face with the ribbon art
+  (2K26's table covers), end panels and kick plate, padded worktop edge,
+  tilted monitors, headsets, laptops and three high-backed chairs.
+  `ArenaBuilder.barricade_panels()` is now the one panel layout (model runs
+  and LED bands); floor seats keep out of the bay. Frames:
+  `fixtures/venue/desk_old_new.jpg`, `desk_bay_high.jpg`.
+- **Aubrey's hair volume.** The cap stood a flat 4 mm off the skull. It now
+  ramps in from the hairline to 17 mm of body over the crown and temples,
+  flat at the nape and round the tie (`HAIR_VOLUME` and friends in
+  `aubrey_aaa.py`); the ponytail re-seats on it by its own ray cast. Build
+  byte-identical. Frames: `fixtures/aubrey_hair_volume_old_new.jpg` (clay
+  of the textured build, old over new, the sheet under) and
+  `aubrey_hair_ingame_vulkan.jpg` -- on Vulkan her lips are the sheet's red,
+  so the pink in the face-pass frames was the OpenGL fallback, as suspected.
+
+Still open: the hairline at the temples reads stepped at close range (the
+feathered edge is alpha-clipped on the scalp's own triangles), and there is a
+dark smudge on her left cheek in the in-game 3/4.
+
+Checks: 605 tests pass.

@@ -281,9 +281,22 @@ POCKET_FLAP = 0.022
 POCKET_STRIPE_SHIFTS = [0.004 * k for k in range(-12, 5)]
 POCKET_GRID = (4, 10)
 GARMENT_SMOOTH = 6
-## The hair cap's standoff: slicked tight to the skull.
+## The hair cap's standoff: slicked tight to the skull at the hairline...
 CAP = "Aubrey_HairCap"
 CAP_OFF = 0.004
+## ...with body over the crown and the upper sides (the owner's note: at a
+## flat 4 mm she read as a painted cap, the head wider and balder than the
+## sheet, where slicked-back hair still stands off the skull). The extra
+## standoff ramps in over HAIR_RAMP from the hairline, so the hairline stays
+## crisp; is fullest above HAIR_FULL_Z over the eyes and gone below
+## HAIR_THIN_Z (the nape lies flat); and falls to HAIR_TIE_KEEP of itself
+## within HAIR_TIE_R of the tie, which has to sit on it.
+HAIR_VOLUME = 0.017
+HAIR_RAMP = 0.025
+HAIR_FULL_Z = 0.045
+HAIR_THIN_Z = -0.02
+HAIR_TIE_R = (0.03, 0.08)
+HAIR_TIE_KEEP = 0.3
 ## Her hairline: height above the eyes (m) by the angle round the head from
 ## straight ahead (degrees) -- a high forehead, the temples, over the ear,
 ## behind it, the nape.
@@ -760,6 +773,20 @@ def hairline(angle: float) -> float:
     return z[-1]
 
 
+def _smooth01(a: float, b: float, x: float) -> float:
+    t = max(0.0, min(1.0, (x - a) / (b - a)))
+    return t * t * (3.0 - 2.0 * t)
+
+
+def hair_volume(p, margin: float, eye_z: float, tie_centre) -> float:
+    """The cap's standoff over CAP_OFF at `p` (see HAIR_VOLUME)."""
+    ramp = _smooth01(0.0, HAIR_RAMP, margin)
+    height = _smooth01(HAIR_THIN_Z, HAIR_FULL_Z, p.z - eye_z)
+    tie = HAIR_TIE_KEEP + (1.0 - HAIR_TIE_KEEP) * _smooth01(
+        HAIR_TIE_R[0], HAIR_TIE_R[1], (p - tie_centre).length)
+    return HAIR_VOLUME * ramp * height * tie
+
+
 def make_cap(old_arm, body, eyes, tie_centre, lobes):
     """The slicked cap, grown from the new head's scalp (see HAIRLINE)."""
     eye_z = (eyes["l"][0].z + eyes["r"][0].z) / 2.0
@@ -796,7 +823,7 @@ def make_cap(old_arm, body, eyes, tie_centre, lobes):
         v = body.data.vertices[i]
         p = mw @ v.co
         n = (mw.to_3x3() @ v.normal).normalized()
-        verts.append(p + n * CAP_OFF)
+        verts.append(p + n * (CAP_OFF + hair_volume(p, margin[i], eye_z, tie_centre)))
         r = (p - centre).normalized()
         phi = math.acos(max(-1.0, min(1.0, r.dot(axis))))
         az = math.atan2(r.dot(e2), r.dot(e1))
