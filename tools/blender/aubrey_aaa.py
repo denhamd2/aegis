@@ -559,6 +559,18 @@ def refit(old_arm, body):
     shirt_bvh = world_bvh([objects["Aubrey_Shirt"]])
     patch = objects[PATCH]
     inv = patch.matrix_world.inverted()
+    # On her right chest, as the sheet's pictures show it (its caption says
+    # left; the owner went by the pictures): the kit's patch, on her left,
+    # is mirrored across her -- positions only, so the UVs and the logo
+    # still read the right way round -- and its faces turned back out.
+    for v in patch.data.vertices:
+        p = patch.matrix_world @ v.co
+        v.co = inv @ Vector((-p.x, p.y, p.z))
+    bm = bmesh.new()
+    bm.from_mesh(patch.data)
+    bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
+    bm.to_mesh(patch.data)
+    bm.free()
     for v in patch.data.vertices:
         p = patch.matrix_world @ v.co
         hit = shirt_bvh.ray_cast(Vector((p.x, -0.5, p.z)), Vector((0.0, 1.0, 0.0)), 1.0)[0]
