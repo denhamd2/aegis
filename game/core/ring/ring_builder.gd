@@ -307,11 +307,14 @@ const APRON_ROLL_AXIS := APRON_OUT - APRON_ROLL_RADIUS
 ## reading as facets at `ring_corner`, the closest shot in the list.
 const APRON_ROLL_STEPS := 6
 ## How much of the banner's height the roll takes. The skirt below starts from
-## the top of the graphic too, so this is a small overlap rather than a split:
-## the top of the artwork is near-uniform field either side of the chevrons, so
-## what carries across the seam is the COLOUR, which is the thing the eye
-## follows round a corner.
-const APRON_ROLL_V := 0.15
+## the top of the graphic too, so this is a small overlap rather than a split,
+## and it has to stay inside the plain field above the artwork: at 0.15 it took
+## in the "ALL ELITE" over the centre logo (6-12% of the banner's height), and
+## the lettering printed twice, squashed on the roll and again on the skirt
+## (the owner caught it). 0.04 is blue field and the corner chevrons only, so
+## what carries across the seam is the COLOUR, the thing the eye follows round
+## a corner.
+const APRON_ROLL_V := 0.04
 const APRON_BANNER := "res://assets/environment/materials/ring_apron_banner.png"
 const APRON_TOP := -0.10
 const APRON_BOTTOM := -1.00
