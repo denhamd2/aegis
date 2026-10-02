@@ -45,7 +45,7 @@ func test_every_shot_a_beat_uses_can_be_framed() -> void:
 func test_the_walk_cuts_follow_from_behind_as_2k26_does() -> void:
 	var cody := EntranceDirector.CODY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	var roman := EntranceDirector.ROMAN_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
-	assert_array(cody).contains(["steadicam_low", "over_shoulder"])
+	assert_array(cody).contains(["steadicam_front", "over_shoulder", "barricade_track"])
 	assert_array(roman).contains(["steadicam_low", "ramp_side_high", "face_walk"])
 
 
@@ -74,3 +74,72 @@ func test_roman_cuts_land_on_his_music_beat() -> void:
 	for shot: Array in EntranceDirector.ROMAN_WALK_SHOTS:
 		assert_bool(on_grid.call(float(shot[1]))) \
 				.override_failure_message("off the beat: " + str(shot)).is_true()
+
+
+## Cody's walk cuts are whole beats of his music too.
+func test_cody_cuts_land_on_his_music_beat() -> void:
+	for shot: Array in EntranceDirector.CODY_WALK_SHOTS:
+		var n := float(shot[1]) / EntranceDirector.CODY_BEAT
+		assert_float(absf(n - roundf(n))).override_failure_message(str(shot)).is_less(0.02)
+
+
+## Both entrances played through with the match camera, tick by tick.
+func _run(styles: Array, each: Callable) -> void:
+	var scene: Node = load("res://scenes/match.tscn").instantiate()
+	scene.entrances = true
+	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = styles[0]
+	(scene.get_node("WrestlerB") as WrestlerController).entrance_style = styles[1]
+	add_child(scene)
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var camera: Camera3D = scene.get_node("MatchCamera")
+	var ticks := 0
+	while ticks < 30000 and not director._done:
+		director._physics_process(1.0 / 60.0)
+		ticks += 1
+		var beat: Dictionary = director._beats[mini(director._beat, director._beats.size() - 1)]
+		each.call(beat, camera)
+	scene.free()
+
+
+## The owner: "the camera went to the tunnel too soon". Before a man walks
+## out, the camera may look into the empty portals for INTRO_PORTAL_MAX at
+## most -- the building, the crowd and his video carry the wait.
+func test_the_camera_waits_for_him_before_the_tunnel() -> void:
+	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
+		var empty := {"run": 0, "worst": 0}
+		var portal := Vector3(0.0, 1.5, ArenaBuilder.PORTAL_FACE_Z)
+		_run(styles, func(beat: Dictionary, camera: Camera3D) -> void:
+			var w: WrestlerController = beat.get("who")
+			var to := portal - camera.global_position
+			var looking := (-camera.global_transform.basis.z).dot(to.normalized()) > 0.9 \
+					and to.length() < 18.0
+			if w and not w.visible and looking:
+				empty["run"] += 1
+				empty["worst"] = maxi(empty["worst"], empty["run"])
+			else:
+				empty["run"] = 0)
+		assert_int(empty["worst"]).override_failure_message("%s: %.1f s on the empty tunnel" % [
+				styles, empty["worst"] / 60.0]).is_less_equal(
+				int(EntranceDirector.INTRO_PORTAL_MAX * 60) + 3)
+
+
+## The owner: Cody's ramp was "mostly low angle". Over each man's walks, the
+## lens is down at his hips (under 0.8 m above his feet) for at most a
+## quarter of the time.
+func test_the_walk_is_mostly_at_eye_level() -> void:
+	for styles: Array in [["roman", "cody"]]:
+		var count := {}
+		_run(styles, func(beat: Dictionary, camera: Camera3D) -> void:
+			var w: WrestlerController = beat.get("who")
+			if beat.get("kind") != "walk" or w == null:
+				return
+			var key := String(w.entrance_style)
+			if not count.has(key):
+				count[key] = [0, 0]
+			count[key][0] += 1
+			if camera.global_position.y - w.global_position.y < 0.8:
+				count[key][1] += 1)
+		for key: String in count:
+			var frac := float(count[key][1]) / float(count[key][0])
+			assert_float(frac).override_failure_message("%s low %.0f%% of the walk" % [key,
+					frac * 100.0]).is_less_equal(0.25)

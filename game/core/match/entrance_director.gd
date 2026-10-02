@@ -231,9 +231,13 @@ const ROMAN_BOW_TICKS := 240
 ## ahead of him, a very wide from high every six to eight seconds, and once
 ## over his shoulder down the ramp (R-CJ). [shot, seconds], cycled; each a
 ## whole number of beats (A4).
+## The second pass of the cycle trades the low lens for the chest-high one
+## and the barricade track (2K26 Roman 2:35-3:10), so the low ultra-wide is
+## his signature, not the whole walk.
 const ROMAN_WALK_SHOTS := [["steadicam_low", 6 * ROMAN_BEAT], ["ramp_side_high", 5 * ROMAN_BEAT],
 		["face_walk", 5 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
-		["steadicam_low", 6 * ROMAN_BEAT], ["arena_high", 4 * ROMAN_BEAT]]
+		["steadicam_front", 6 * ROMAN_BEAT], ["arena_high", 4 * ROMAN_BEAT],
+		["barricade_track", 5 * ROMAN_BEAT], ["face_walk", 5 * ROMAN_BEAT]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
@@ -247,11 +251,19 @@ const ROMAN_INTRO_SHOTS := [
 	# His video on the wall, from low on the ramp, pushing in.
 	[Vector3(0.0, 2.6, -18.0), Vector3(0.0, 3.2, -22.0),
 		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 32.0, 26.0, 7.0],
-	# Head on into the portals, long lens, creeping in until he appears
-	# (R-41 12-18 s).
-	[Vector3(0.0, 1.0, -23.0), Vector3(0.0, 1.0, -25.5),
-		Vector3(0.0, 2.4, -36.5), Vector3(0.0, 2.3, -36.5), 30.0, 24.0, 12.0],
+	# The building waiting for him: the hard camera side's crowd from
+	# ringside, panning along the rows.
+	[Vector3(-3.6, 1.7, -1.5), Vector3(-3.6, 1.8, 1.5),
+		Vector3(-16.0, 4.6, -6.0), Vector3(-16.0, 4.6, 4.0), 40.0, 38.0, 8.0],
+	# Only now head on into the portals, long lens, creeping in -- held to
+	# INTRO_PORTAL_MAX before he appears. The owner: the camera "went to the
+	# tunnel too soon" -- it sat on the empty portal for eleven seconds.
+	[Vector3(0.0, 1.0, -23.0), Vector3(0.0, 1.0, -24.5),
+		Vector3(0.0, 2.4, -36.5), Vector3(0.0, 2.3, -36.5), 28.0, 24.0, 2.5],
 ]
+## The longest the camera looks at an empty portal before a man walks out of
+## it (test_entrance_cameras pins it for both entrances).
+const INTRO_PORTAL_MAX := 2.5
 ## The house lights dim for him (blender-lighting's low-key look: fewer,
 ## harder sources, the key on the subject). The rig drops to this fraction and
 ## the ambient to AMBIENT_DIM; the follow spot, his portal accents and the
@@ -306,10 +318,15 @@ const CODY_PUNCH_AT := 20
 const CODY_KNEEL_TICKS := 300
 ## Whoa_Low, played through.
 const CODY_WHOA_LOW_TICKS := 200
-## His walk, cut as C-39 and C-SS cut it: the low steadicam ahead of him and a
-## wide of the building. [shot, seconds], cycled.
-const CODY_WALK_SHOTS := [["steadicam_low", 4.0], ["over_shoulder", 4.0],
-		["arena_high", 2.5], ["steadicam_low", 3.0]]
+## His walk, cut as 2K26 cuts it (refs/entrances.md "2K26", Cody 0:58-1:06):
+## walking at the lens at chest height, then from behind following, along the
+## barricade with the crowd reaching for him, and a wide of the building.
+## The owner found the old cut "mostly low angle" -- four low ultra-wide
+## steadicam shots on the ramp. Now the low one is used once, on the walk
+## from the kneel (Cody's signature in C-39), and the rest sit at eye level.
+## [shot, seconds], cycled; whole beats of his music (A4).
+const CODY_WALK_SHOTS := [["steadicam_front", 6 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
+		["barricade_track", 5 * CODY_BEAT], ["arena_high", 4 * CODY_BEAT]]
 ## Corner_Pose has the arms fully wide by frame 12: the post sparks.
 const CODY_CORNER_PYRO_AT := 24
 ## Coat_Off has his arms behind him, the coat sliding off, on frame 36.
@@ -405,6 +422,21 @@ const RING_BEHIND_FOV := 70.0
 const CROWD_WIDE_AT := Vector3(3.8, 1.6, 1.0)
 const CROWD_WIDE_LOOK := Vector3(16.0, 4.5, 0.0)
 const CROWD_WIDE_FOV := 40.0
+## And the other side's, across the ring toward the far end.
+const CROWD_FAR_AT := Vector3(-3.8, 1.6, 2.0)
+const CROWD_FAR_LOOK := Vector3(-15.0, 4.8, 9.0)
+## The dark house from high on the side, the ring and the floor rows, the
+## stage out of frame.
+const ARENA_DARK_LOOK := Vector3(-4.0, 0.5, -2.0)
+## 2K26's walking shot: ahead of him at chest height, a normal lens.
+const STEADICAM_FRONT_AHEAD := 3.2
+const STEADICAM_FRONT_HEIGHT := 1.4
+const STEADICAM_FRONT_FOV := 40.0
+## Alongside from the barricade (C-SS 14-30 s).
+const BARRICADE_TRACK_SIDE := 2.4
+const BARRICADE_TRACK_AHEAD := 1.2
+const BARRICADE_TRACK_HEIGHT := 1.25
+const BARRICADE_TRACK_FOV := 38.0
 ## Roman's bowed head at the steps, close, from his right.
 const BOW_SIDE := 1.9
 const BOW_AHEAD := 0.7
@@ -990,12 +1022,15 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	_beats.append({"kind": "hold", "who": w, "ticks": _secs(0.0, CODY_WHOA_1),
 			"shot": "cody_dark", "lights": "OFF",
 			"events": [[1, "tron_on"], [1, "blackout_on"]]})
+	# The stage is in it twice, both on the wide from the far end; the rest
+	# is the building -- the owner found the old cut "went to the tunnel too
+	# soon", three of its six shots on the dark stage.
 	for cut: Array in [[CODY_WHOA_1, CODY_WHOA_2, "crowd_wide", true],
 			[CODY_WHOA_2, CODY_WHOA_3, "cody_dark", true],
-			[CODY_WHOA_3, CODY_BAND, "crowd_wide", true],
-			[CODY_BAND, 12.0, "cody_dark", false],
+			[CODY_WHOA_3, CODY_BAND, "crowd_far", true],
+			[CODY_BAND, 12.0, "arena_dark_high", false],
 			[12.0, 16.0, "crowd_wide", false],
-			[16.0, CODY_SMOKE, "cody_dark", false]]:
+			[16.0, CODY_SMOKE, "crowd_far", false]]:
 		_beats.append(_with(dark, {"kind": "hold", "who": w,
 				"ticks": _secs(cut[0], cut[1]), "shot": cut[2],
 				"events": [[1, "strobe"]] if cut[3] else []}))
@@ -1052,7 +1087,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	lip_speed = minf(lip_speed, CODY_WALK_SPEED * 1.4)
 	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
 			"speed": lip_speed, "walk_clip": CODY_WALK_CLIP,
-			"shot": "steadicam_low", "card": true})
+			"shot": "steadicam_front", "card": true})
 	var at_lip := fists_end + to_lip / lip_speed
 	if kneel_from - at_lip > 0.6:
 		_beats.append({"kind": "pose", "who": w, "lights": "RB",
@@ -1075,7 +1110,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"clip": "strikes/whoa_low", "facing": Vector3.BACK, "shot": "hero_low"})
 	var foot := foot_of_ramp
 	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS)
-	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, false,
+	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, true,
 			"", "", 0, "ring_behind_low")
 	# The corner by the steps: up on the middle rope, facing out over them.
 	# (Sourced [S], not in any of the measured clips.)
@@ -1400,6 +1435,27 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 		"ringside":
 			_camera.set_entrance_shot(RINGSIDE_AT, w.global_position + Vector3.UP * 1.0,
 					RINGSIDE_FOV, true)
+		"steadicam_front":
+			# 2K26's walk: backing ahead of him at chest height on a normal
+			# lens, his face and the set behind him.
+			var f8 := _flat(-w.global_transform.basis.z).normalized()
+			_camera.set_entrance_shot(w.global_position + f8 * STEADICAM_FRONT_AHEAD
+					+ Vector3.UP * STEADICAM_FRONT_HEIGHT,
+					w.global_position + Vector3.UP * 1.45, STEADICAM_FRONT_FOV, first, delta)
+		"barricade_track":
+			# Alongside him from the barricade, a little ahead, the crowd on the
+			# far side behind him.
+			var f9 := _flat(-w.global_transform.basis.z).normalized()
+			var r9 := Vector3.UP.cross(-f9).normalized()
+			if r9.x * w.global_position.x > 0.0:
+				r9 = -r9
+			_camera.set_entrance_shot(w.global_position + r9 * BARRICADE_TRACK_SIDE
+					+ f9 * BARRICADE_TRACK_AHEAD + Vector3.UP * BARRICADE_TRACK_HEIGHT,
+					w.global_position + Vector3.UP * 1.35, BARRICADE_TRACK_FOV, first, delta)
+		"crowd_far":
+			_camera.set_entrance_shot(CROWD_FAR_AT, CROWD_FAR_LOOK, CROWD_WIDE_FOV, true)
+		"arena_dark_high":
+			_camera.set_entrance_shot(ARENA_HIGH_AT, ARENA_DARK_LOOK, ARENA_HIGH_FOV, true)
 		"steadicam_low":
 			# Backing ahead of him, lens at his hips, tilted up past his chest.
 			var f4 := _flat(-w.global_transform.basis.z).normalized()
@@ -1545,18 +1601,34 @@ func _faceoff_seq(delta: float) -> void:
 
 
 func _intro_shot() -> void:
-	var at := float(_tick) / TPS
+	_camera_intro(intro_shot_at(float(_tick) / TPS, float(_beats[_beat]["ticks"]) / TPS))
+
+
+## Which of ROMAN_INTRO_SHOTS is up `at` seconds into a hold of `hold`
+## seconds, and how far through its move: [shot index, t]. The last shot --
+## the portals -- is pinned to the END of the hold, INTRO_PORTAL_MAX long, so
+## the camera reaches the tunnel only as he walks out of it; the one before
+## it holds still on its last frame for any time left over.
+static func intro_shot_at(at: float, hold: float) -> Array:
+	var last := ROMAN_INTRO_SHOTS.size() - 1
+	var portal_from := maxf(hold - INTRO_PORTAL_MAX, 0.0)
+	if at >= portal_from:
+		return [last, clampf((at - portal_from) / INTRO_PORTAL_MAX, 0.0, 1.0)]
 	var start := 0.0
-	for shot: Array in ROMAN_INTRO_SHOTS:
-		var length: float = shot[6]
-		if at <= start + length or shot == ROMAN_INTRO_SHOTS[-1]:
-			var t := clampf((at - start) / length, 0.0, 1.0)
-			var e := t * t * (3.0 - 2.0 * t)
-			_camera.set_entrance_shot((shot[0] as Vector3).lerp(shot[1], e),
-					(shot[2] as Vector3).lerp(shot[3], e),
-					lerpf(shot[4], shot[5], e), true)
-			return
+	for i in last:
+		var length: float = ROMAN_INTRO_SHOTS[i][6]
+		if at <= start + length or i == last - 1:
+			return [i, clampf((at - start) / length, 0.0, 1.0)]
 		start += length
+	return [last, 0.0]
+
+
+func _camera_intro(pick: Array) -> void:
+	var shot: Array = ROMAN_INTRO_SHOTS[pick[0]]
+	var t: float = pick[1]
+	var e := t * t * (3.0 - 2.0 * t)
+	_camera.set_entrance_shot((shot[0] as Vector3).lerp(shot[1], e),
+			(shot[2] as Vector3).lerp(shot[3], e), lerpf(shot[4], shot[5], e), true)
 
 
 const MATCH_CARD_SUBTITLE := "AEW WORLD CHAMPIONSHIP"
