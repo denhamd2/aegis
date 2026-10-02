@@ -75,6 +75,10 @@ const OPENING_TICKS := 150
 const POSE_TICKS := 114
 ## Held at his mark, turned to face the ring, before the next man.
 const SETTLE_TICKS := 40
+## Between the two entrances: the first man's music fades out
+## (StageVideo.ENTRANCE_FADE_SECONDS) and the room holds a beat before the
+## next man's starts.
+const HANDOVER_TICKS := 165
 ## The face-off before the bell (the owner: "just have them walk up to each
 ## other to do a face off, then the bell rings"). Both walk in off their
 ## marks until they are FACEOFF_GAP apart, centre to centre -- chest to chest
@@ -577,6 +581,13 @@ func _build_timeline() -> void:
 			_add_cody_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
+		if w == _b:
+			# The handover: he is on his mark and his music fades under the
+			# closing wide before the next man's starts -- never one track
+			# cut into the next, and never straight from him to an empty
+			# tunnel.
+			_beats.append({"kind": "hold", "who": w, "ticks": HANDOVER_TICKS,
+					"shot": "end_wide"})
 	_add_faceoff()
 
 

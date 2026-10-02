@@ -107,6 +107,8 @@ const BIND_TIMEOUT_FRAMES := 120
 const ENTRANCES := {
 	"roman": {
 		"video": "res://assets/environment/video/roman_entrance.ogv",
+		"music": "res://assets/audio/music/roman_entrance.ogg",
+		"loop_from": 62.361,
 		"still": "res://assets/environment/video/roman_entrance_still.png",
 		"uv_scale": Vector2(1.0, 0.66),
 		"uv_offset": Vector2(0.0, 0.165),
@@ -118,6 +120,8 @@ const ENTRANCES := {
 	# = 1.21.
 	"cody": {
 		"video": "res://assets/environment/video/cody_entrance.ogv",
+		"music": "res://assets/audio/music/cody_entrance.ogg",
+		"loop_from": 20.0,
 		"still": "res://assets/environment/video/cody_entrance_still.png",
 		"uv_scale": Vector2(1.0, 0.72),
 		"uv_offset": Vector2(0.0, 0.14),
@@ -125,8 +129,18 @@ const ENTRANCES := {
 }
 ## His music, at the level the hall hears it; faded out over this when the
 ## wall goes back to the loop.
+##
+## The music is NOT the video's own track any more. Played once from the
+## video, it ran out before the man reached the ring -- Cody's 80 s track
+## under an 86 s entrance, Roman's 115 s under 154 s -- and a video cannot be
+## looped from part-way in (no seek). So each track is cut out of its video
+## (tools/audio/build_entrance_music.py), ends on a loop point with the seam
+## crossfaded in, and plays on its own AudioStreamPlayer looping back to
+## "loop_from" until the director fades it: he is in the ring, his poses are
+## done and his props are handed off (EntranceDirector "tron_off"). The
+## video plays silent and loops on the wall.
 const ENTRANCE_VOLUME_DB := 0.0
-const ENTRANCE_FADE_SECONDS := 1.5
+const ENTRANCE_FADE_SECONDS := 2.0
 
 var _player: VideoStreamPlayer = null
 var _screen: MeshInstance3D = null
@@ -142,6 +156,9 @@ var _entrance: Dictionary = {}
 var _entrance_bound := false
 ## Outgoing entrance feeds fading their music out.
 var _fading: Array = []
+## His music while it is up, and outgoing ones fading.
+var _music: AudioStreamPlayer = null
+var _music_fading: Array = []
 
 
 ## Build the node for `screen`, binding into `mat`.
@@ -252,7 +269,7 @@ static func _make_feed(stream: VideoStream) -> SubViewport:
 func _process(delta: float) -> void:
 	_process_entrance(delta)
 	if _bound:
-		if _entrance_player == null and _fading.is_empty():
+		if _entrance_player == null and _fading.is_empty() and _music_fading.is_empty():
 			set_process(false)
 		return
 	_frames += 1
@@ -381,30 +398,58 @@ func is_bound() -> bool:
 ## when the loop itself is not playing (headless, a frame-locked capture, a
 ## clip that would not decode): an entrance never makes the wall worse.
 func play_entrance(style: String) -> bool:
-	if not ENTRANCES.has(style) or _player == null:
+	if not ENTRANCES.has(style):
 		return false
 	var entry: Dictionary = ENTRANCES[style]
-	if not ResourceLoader.exists(entry["video"]):
+	end_entrance()
+	_play_music(entry)
+	if _player == null or not ResourceLoader.exists(entry["video"]):
 		return false
 	var stream := load(entry["video"]) as VideoStream
 	if stream == null:
 		return false
-	end_entrance()
 	_entrance = entry
 	_entrance_feed = _make_feed(stream)
 	_entrance_feed.name = "EntranceFeed"
 	add_child(_entrance_feed)
 	_entrance_player = _entrance_feed.get_node("Feed")
-	_entrance_player.loop = false
-	_entrance_player.volume_db = ENTRANCE_VOLUME_DB
+	# Silent: the music is its own looping stream (ENTRANCE_VOLUME_DB's note),
+	# and the picture loops with it rather than freezing on its last frame.
+	_entrance_player.loop = true
 	_entrance_player.play()
 	_entrance_bound = false
 	set_process(true)
 	return true
 
 
+## His music from the top, looping back to the entry's "loop_from" for as
+## long as he needs it. Plays whether or not the wall can show his video --
+## a headless run, a frame-locked capture -- because the music is not
+## pictures.
+func _play_music(entry: Dictionary) -> void:
+	if not entry.has("music") or not ResourceLoader.exists(entry["music"]):
+		return
+	var stream := load(entry["music"]) as AudioStreamOggVorbis
+	if stream == null:
+		return
+	stream = stream.duplicate() as AudioStreamOggVorbis
+	stream.loop = true
+	stream.loop_offset = float(entry.get("loop_from", 0.0))
+	_music = AudioStreamPlayer.new()
+	_music.name = "EntranceMusic"
+	_music.stream = stream
+	_music.volume_db = ENTRANCE_VOLUME_DB
+	add_child(_music)
+	_music.play()
+	set_process(true)
+
+
 ## Back to the Dynamite loop; the music fades rather than cuts.
 func end_entrance() -> void:
+	if _music:
+		_music_fading.append(_music)
+		_music = null
+		set_process(true)
 	if _entrance_player == null:
 		return
 	_fading.append([_entrance_feed, _entrance_player])
@@ -423,6 +468,16 @@ func is_playing_entrance() -> bool:
 	return _entrance_player != null
 
 
+## True while his music is up (not fading): what the director's handover
+## waits on.
+func is_music_playing() -> bool:
+	return _music != null and _music.playing
+
+
+func music_player() -> AudioStreamPlayer:
+	return _music
+
+
 func _process_entrance(delta: float) -> void:
 	if _entrance_player and not _entrance_bound:
 		var tex := _entrance_player.get_video_texture()
@@ -432,9 +487,13 @@ func _process_entrance(delta: float) -> void:
 					_entrance["still"])
 	var step := 60.0 * delta / ENTRANCE_FADE_SECONDS
 	for f: Array in _fading.duplicate():
-		var player: VideoStreamPlayer = f[1]
-		player.volume_db -= step
-		if player.volume_db <= -60.0:
-			player.stop()
-			(f[0] as Node).queue_free()
-			_fading.erase(f)
+		# The outgoing picture: silent, so it just goes.
+		(f[1] as VideoStreamPlayer).stop()
+		(f[0] as Node).queue_free()
+		_fading.erase(f)
+	for m: AudioStreamPlayer in _music_fading.duplicate():
+		m.volume_db -= step
+		if m.volume_db <= -60.0:
+			m.stop()
+			m.queue_free()
+			_music_fading.erase(m)

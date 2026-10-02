@@ -180,9 +180,11 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 			light = child
 			break
 	var before := light.light_energy
-	# Step into his hold: past the opening and Cody's whole entrance.
+	# Step into his hold: past the opening, the first entrance and the
+	# handover after it.
 	var ticks := 0
-	while ticks < 20000 and not ((director._beats[director._beat] as Dictionary).get("kind") == "hold"):
+	while ticks < 20000 and not ((director._beats[director._beat] as Dictionary).get("kind") == "hold"
+			and (director._beats[director._beat] as Dictionary).get("who") == a):
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
 	for _i in 120:
@@ -355,3 +357,52 @@ func test_tron_rim_hangs_between_him_and_the_wall() -> void:
 		assert_float(rim.z).is_less(at.z)
 		var flat := Vector3(rim.x - at.x, 0.0, rim.z - at.z)
 		assert_float(flat.length()).is_equal_approx(EntranceDirector.TRON_RIM_BACK, 0.001)
+
+
+## The owner: the music stopped too soon. Each man's music plays from his
+## first beat to the end of his entrance -- through every pose and until his
+## props are handed off and he is settled on his mark -- looping if the
+## entrance outlasts the track, and only then fades; the next man's starts
+## after it, never on top of it.
+func test_the_music_plays_until_he_is_done() -> void:
+	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
+		var scene := _match(true, styles[0], styles[1])
+		var director: EntranceDirector = scene.get_node("EntranceDirector")
+		var wall: StageVideo = scene.find_child("StageVideo", true, false)
+		var log: Array = []
+		director.cue.connect(func(what: String) -> void:
+			log.append([what, wall.is_music_playing()]))
+		var ticks := 0
+		var silent_ticks := 0
+		var on := false
+		while ticks < 30000 and not director._done:
+			director._physics_process(1.0 / 60.0)
+			ticks += 1
+			if log.size() > 0 and log[-1][0] == "tron_on":
+				on = true
+			if log.size() > 0 and log[-1][0] == "tron_off":
+				on = false
+			if on and not wall.is_music_playing():
+				silent_ticks += 1
+		assert_int(silent_ticks).override_failure_message("%s: %d silent ticks mid-entrance" % [
+				styles, silent_ticks]).is_equal(0)
+		# Every prop handed off before the music goes, and the music up for it.
+		var order: Array = log.map(func(e: Array) -> String: return e[0])
+		for prop: String in ["coat_off", "fala_off"]:
+			var at := order.find(prop)
+			assert_int(at).is_greater_equal(0)
+			assert_bool(log[at][1]).override_failure_message("%s without music" % prop).is_true()
+			assert_int(order.find("tron_off", at)).is_greater(at)
+		# Two entrances, two tracks, one after the other.
+		assert_int(order.count("tron_on")).is_equal(2)
+		assert_int(order.find("tron_on", order.find("tron_off"))).is_greater(order.find("tron_off"))
+
+
+## The tracks loop back to a bar inside the song, not to the top.
+func test_the_entrance_music_loops_from_inside_the_song() -> void:
+	for style: String in ["roman", "cody"]:
+		var entry: Dictionary = StageVideo.ENTRANCES[style]
+		var stream := load(entry["music"]) as AudioStreamOggVorbis
+		assert_object(stream).is_not_null()
+		assert_float(float(entry["loop_from"])).is_greater(10.0)
+		assert_float(float(entry["loop_from"])).is_less(stream.get_length() - 30.0)
