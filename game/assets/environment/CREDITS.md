@@ -138,11 +138,13 @@ Processing, all of it: the white rows above and below cropped off (rows
 128-624, the last 6 columns too, where the drape's corners curl) to
 2166x497; then WIDENED to 3534x497, the apron face's own 6.4 m x 0.9 m
 (7.11:1), without touching the art. Stretched to fit, the wordmark would have
-been 1.63x too wide. Instead the image is split just past the ends of the
-wordmark's two long bars (x 470 and 1745), and each gap is filled with that
-edge column carried across (the bars run on toward the corners, the cloth's
-folds run on as horizontal drape), with a slight low-frequency ripple and a
-16 px cross-fade at each join. The chevrons and the lettering are pixel for
+been 1.63x too wide. Instead the image is split between the chevrons and
+the wordmark (x 444 and 1745, clear of the wordmark's two long bars and their
+pointed ends), and each gap is filled with the plain drape: that edge column
+carried across, with any row brighter than the cloth around it (a bar's
+glow) bridged from above and below, a slight low-frequency ripple, and a
+16 px cross-fade at each join. (A first pass carried the bars' glow across
+too and drew a faint gold line through the field; the owner caught it.) The chevrons and the lettering are pixel for
 pixel as supplied. The apron maps it 0..1 along each side
 (`core/ring/ring_builder.gd`, `APRON_BANNER`).
 
