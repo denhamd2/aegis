@@ -53,7 +53,7 @@ WANTED = [
     "BOWL_STRAIGHT_X", "BOWL_STRAIGHT_Z",
     "BARRICADE_RADIUS", "BARRICADE_HEIGHT", "BARRICADE_PANEL", "BARRICADE_JOIN",
     "BARRICADE_GAP", "RINGSIDE_MAT_LIFT", "RAMP_HALF_WIDTH",
-    "DESK_BAY_X0", "DESK_BAY_Z", "DESK_X",
+    "DESK_BAY_FRONT", "DESK_BAY_BACK", "DESK_BAY_Z", "DESK_X", "BARRICADE_CHAMFER",
     "DESK_Z", "DESK_LENGTH", "DESK_HEIGHT", "DESK_DEPTH",
     "DESK_TOP_THICKNESS", "DESK_TOP_OVERHANG", "DESK_LED_HEIGHT", "DESK_RISER",
     "DESK_MONITORS", "DESK_MONITOR_WIDTH", "DESK_MONITOR_HEIGHT",
@@ -134,19 +134,30 @@ def build_ringside_mat(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     At every camera in the shotlist the joins between mats are below a pixel,
     and the ring, the steps and the barricade all stand on top of it.
     """
-    reach = cfg["BARRICADE_RADIUS"]
-    y = cfg["FLOOR_Y"] + cfg["RINGSIDE_MAT_LIFT"] * 0.5
-    parts["RingsideMat"].box(
-        Vector((0.0, y, 0.0)),
-        Vector((reach * 2.0, cfg["RINGSIDE_MAT_LIFT"], reach * 2.0)),
-    )
-    # And on into the desk's bay (arena_builder.gd DESK_BAY_*).
-    x0, bay_z = cfg["DESK_BAY_X0"], cfg["DESK_BAY_Z"]
-    parts["RingsideMat"].box(
-        Vector(((x0 + reach) * 0.5, y, (reach + bay_z) * 0.5)),
-        Vector((reach - x0, cfg["RINGSIDE_MAT_LIFT"], bay_z - reach)),
-    )
+    # One slab the shape of the barricade's own line (barricade_path), so it
+    # runs into the chamfered corners and the desk's bay.
+    part = parts["RingsideMat"]
+    lift = cfg["RINGSIDE_MAT_LIFT"]
+    top_y = cfg["FLOOR_Y"] + lift
+    path = barricade_path(cfg)
+    top = [part.vert(Vector((x, top_y, z))) for x, z in path]
+    bottom = [part.vert(Vector((x, cfg["FLOOR_Y"], z))) for x, z in path]
+    part.bm.faces.new(top)
+    part.bm.faces.new(list(reversed(bottom)))
+    n = len(path)
+    for i in range(n):
+        j = (i + 1) % n
+        part.quad(top[i], top[j], bottom[j], bottom[i])
 
+
+def barricade_path(cfg: dict[str, float]) -> list[tuple[float, float]]:
+    """ArenaBuilder.barricade_path(), mirrored: the barricade's (x, z) corners,
+    chamfered at the ring's corners, the desk's bay on +Z."""
+    r = cfg["BARRICADE_RADIUS"]
+    c = cfg["BARRICADE_CHAMFER"]
+    f, bk, bz = cfg["DESK_BAY_FRONT"], cfg["DESK_BAY_BACK"], cfg["DESK_BAY_Z"]
+    return [(-r + c, -r), (r - c, -r), (r, -r + c), (r, r - c), (r - c, r), (f, r),
+            (bk, bz), (-bk, bz), (-f, r), (-r + c, r), (-r, r - c), (-r, -r + c)]
 
 def _box(part: Part, centre: Vector, axes: tuple[Vector, Vector, Vector],
          size: Vector, bevel: float = 0.0, segments: int = 1) -> None:
@@ -216,8 +227,8 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
     # of the bay's ends.
     r_front = front_z - 0.35
     r_back = cfg["DESK_BAY_Z"] - 0.12
-    r_x0 = cfg["DESK_BAY_X0"] + 0.25
-    r_x1 = cfg["BARRICADE_RADIUS"] - 0.15
+    r_x0 = -(cfg["DESK_BAY_BACK"] - 0.1)
+    r_x1 = cfg["DESK_BAY_BACK"] - 0.1
     riser.box(Vector(((r_x0 + r_x1) * 0.5, floor_y + cfg["DESK_RISER"] * 0.5,
                       (r_front + r_back) * 0.5)),
               Vector((r_x1 - r_x0, cfg["DESK_RISER"], r_back - r_front)), bevel=0.012)
@@ -321,13 +332,10 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
 def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """Runs of discrete panels, each with a round cap rail and a leg.
 
-    The runs are `ArenaBuilder.barricade_panels()`'s, mirrored here: the four
-    sides of the ring with the entrance GAP on -Z, and on +Z the desk's bay --
-    the barricade steps back to DESK_BAY_Z from the panel joint at
-    DESK_BAY_X0 to the +X corner, the +X run carries on to meet it (a run of
-    its own past the ring's side, so the stretch facing the hard camera stays
-    symmetric about the ring for its LED wall), and a return closes it. A
-    run of length L takes int(L / PANEL) panels at an even pitch.
+    The runs are `ArenaBuilder.barricade_panels()`'s, mirrored here: each leg
+    of the barricade's line (barricade_path: the ring's sides, its corners
+    cut at 45 degrees, the desk's bay with angled returns on +Z), the
+    entrance GAP on -Z. A leg of length L takes ceil(L / PANEL) panels.
 
     The -Z run's GAP: the ramp's foot lands on this line, and a panel whose
     centre clears the gap by less than its own half-width still puts its end
@@ -338,24 +346,18 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     height = cfg["BARRICADE_HEIGHT"]
     y = cfg["FLOOR_Y"] + height * 0.5
     top = cfg["FLOOR_Y"] + height
-    r = cfg["BARRICADE_RADIUS"]
-    x0, bay_z = cfg["DESK_BAY_X0"], cfg["DESK_BAY_Z"]
-    runs = [
-        (Vector((-r, 0, -r)), Vector((r, 0, -r)), Vector((0.0, 0.0, -1.0))),
-        (Vector((-r, 0, -r)), Vector((-r, 0, r)), Vector((-1.0, 0.0, 0.0))),
-        (Vector((r, 0, -r)), Vector((r, 0, r)), Vector((1.0, 0.0, 0.0))),
-        (Vector((r, 0, r)), Vector((r, 0, bay_z)), Vector((1.0, 0.0, 0.0))),
-        (Vector((-r, 0, r)), Vector((x0, 0, r)), Vector((0.0, 0.0, 1.0))),
-        (Vector((x0, 0, r)), Vector((x0, 0, bay_z)), Vector((-1.0, 0.0, 0.0))),
-        (Vector((x0, 0, bay_z)), Vector((r, 0, bay_z)), Vector((0.0, 0.0, 1.0))),
-    ]
-    for a, b, out in runs:
+    path = [Vector((x, 0.0, z)) for x, z in barricade_path(cfg)]
+    for k, a in enumerate(path):
+        b = path[(k + 1) % len(path)]
         length = (b - a).length
-        count = max(1, int(length / cfg["BARRICADE_PANEL"]))
+        count = max(1, math.ceil(length / cfg["BARRICADE_PANEL"] - 0.05))
         pitch = length / count
         width = pitch - cfg["BARRICADE_JOIN"]
-        along = Vector((out.z, 0.0, -out.x))
         step = (b - a).normalized()
+        out = Vector((step.z, 0.0, -step.x))
+        if out.dot((a + b) * 0.5) < 0.0:
+            out = -out
+        along = Vector((out.z, 0.0, -out.x))
         for i in range(count):
             at = a + step * (pitch * (i + 0.5))
             if out.z < -0.5 and abs(at.x) - width * 0.5 < cfg["BARRICADE_GAP"]:
@@ -383,6 +385,47 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
             )
 
 
+## The padded mats round the ring (the owner's AEW arena still): grey vinyl
+## crash mats, 1.22 m square, butted in a grid, each a little quilted at its
+## edges so the seams read as soft dark lines. One texture of 2 x 2 mats, a
+## colour map and a normal map; arena_builder.gd tiles it in world metres.
+PAD_TEX = venue.REPO / "game/assets/environment/materials/ringside_pads.png"
+PAD_NRM = venue.REPO / "game/assets/environment/materials/ringside_pads_nrm.png"
+PAD_SIZE = 1024
+PAD_MATS = 2
+PAD_GREY = 58
+PAD_SEED = 1220
+
+
+def paint_pads() -> None:
+    import numpy as np
+    from PIL import Image, ImageFilter
+    rng = np.random.default_rng(PAD_SEED)
+    n = PAD_SIZE
+    cell = n // PAD_MATS
+    y, x = np.mgrid[0:n, 0:n].astype(np.float32)
+    # Distance to the nearest seam, in pixels.
+    d = np.minimum(np.minimum(x % cell, cell - x % cell), np.minimum(y % cell, cell - y % cell))
+    # Height: flat over the mat, rolling down over its last 4% into the seam.
+    roll = cell * 0.04
+    height = np.clip(d / roll, 0.0, 1.0) ** 0.5
+    # Each mat a shade of its own, and a fine vinyl grain.
+    shade = rng.uniform(0.92, 1.08, (PAD_MATS, PAD_MATS)).astype(np.float32)
+    tone = shade[(y // cell).astype(int) % PAD_MATS, (x // cell).astype(int) % PAD_MATS]
+    grain = np.asarray(Image.fromarray((rng.random((n, n)) * 255).astype(np.uint8))
+                       .filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255.0
+    scuff = np.asarray(Image.fromarray((rng.random((n // 16, n // 16)) * 255).astype(np.uint8))
+                       .resize((n, n), Image.BICUBIC), np.float32) / 255.0
+    grey = PAD_GREY * tone * (0.93 + 0.1 * grain + 0.08 * (scuff - 0.5)) * (0.35 + 0.65 * height)
+    rgb = np.stack([grey, grey, grey * 1.04], -1)
+    Image.fromarray(np.clip(np.round(rgb), 0, 255).astype(np.uint8), "RGB").save(PAD_TEX, optimize=True)
+    gy, gx = np.gradient(height * 6.0 + grain * 0.4)
+    nz = np.ones_like(gx)
+    nrm = np.stack([-gx, gy, nz], -1)
+    nrm /= np.linalg.norm(nrm, axis=-1, keepdims=True)
+    Image.fromarray(np.round((nrm * 0.5 + 0.5) * 255).astype(np.uint8), "RGB").save(PAD_NRM, optimize=True)
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default=str(venue.ASSET_DIR / "ringside.glb"))
@@ -394,6 +437,7 @@ def main(argv: list[str]) -> int:
     build_floor(cfg, parts)
     build_seams(cfg, parts)
     build_ringside_mat(cfg, parts)
+    paint_pads()
     build_barricades(cfg, parts)
     build_commentary_desk(cfg, parts)
     venue.finish(parts, PART_COLORS, smooth=SMOOTH, projected=PROJECTED,

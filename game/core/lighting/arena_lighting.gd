@@ -928,71 +928,54 @@ func _build_ribbon_spill() -> void:
 		add_child(light)
 
 
-## The barricade's LEDs (item 6, second half). 2K26's barricades carry an LED
-## band on the ring side that throws its colour onto the floor, the front of
-## the apron and the first rows; ours were bare steel, so the ribbon's spill
-## up on the suite fascia was the only coloured light anywhere near the floor.
-## A band under the cap rail of every panel, the ribbon's two hues panel by
-## panel, and one low omni in front of each, short enough to fade out at the
-## mat's edge: the mat's exposure is the anchored number (VISUAL_BAR.md).
-const BARRICADE_LED_HEIGHT := 0.10
-const BARRICADE_LED_DROP := 0.17     # band centre under the barricade top
-const BARRICADE_LED_EMISSION := 1.3
+## The barricade's LEDs (item 6, second half; and the owner's AEW arena
+## still). Every panel's ring side is a full-height LED face, as on the
+## barriers in the still and in WWE 2K's Dynamite arena: the owner's banner
+## (see assets/environment/CREDITS.md) cut per panel -- its AEW block and its
+## DYNAMITE wordmark, alternating round the ring -- and the whole banner
+## across the run facing the hard camera. One low omni in front of each, in
+## the art's purple and blue, short enough to fade out at the mat's edge: the
+## mat's exposure is the anchored number (VISUAL_BAR.md).
 const BARRICADE_SPILL_ENERGY := 0.7
 const BARRICADE_SPILL_RANGE := 3.0
 const BARRICADE_SPILL_IN := 0.35     # light in front of the panel face
 const BARRICADE_SPILL_DROP := 0.7    # light under the barricade top
-## The LED wall facing the hard camera (the owner's artwork, see
-## assets/environment/CREDITS.md): on the +X run behind the ring every panel
-## is a full-height LED face instead of a band, as on the far barricade of an
-## AEW broadcast and of WWE 2K's Dynamite arena. The banner spans the middle
-## three panels; the outer two carry its ends (its AEW and stripes), so the
-## wall reads AEW / AEW-DYNAMITE-AEW / AEW from the hard camera.
 const BARRICADE_WALL_ART := "res://assets/environment/materials/barricade_led_dynamite.png"
 const BARRICADE_WALL_FOOT := 0.10    # face above the floor
 const BARRICADE_WALL_HEAD := 0.09    # face below the barricade top (the rail)
+## The art's two cuts, (start, span) in u: its AEW block with the chevrons
+## round it, and its DYNAMITE wordmark whole. A 2.3 m panel's own aspect would
+## take 0.36 of the art's width, which cuts the wordmark (0.44 wide) in half,
+## so each cut is fitted to the panel instead: the wordmark condensed to 0.78
+## of its width, the AEW block widened 1.16 -- the way a barrier LED is fed
+## a graphic laid out for it.
+const BARRICADE_ART_CUTS := [Vector2(0.0, 0.31), Vector2(0.27, 0.46)]
+## The hard camera's run: barricade_path()'s +X leg.
+const BARRICADE_HARDCAM_RUN := 2
 
 
 func _build_barricade_leds() -> void:
 	var top := ArenaBuilder.FLOOR_Y + ArenaBuilder.BARRICADE_HEIGHT
-	# ringside.py's panel is 0.14 deep, centred on the line; the band sits on
+	# ringside.py's panel is 0.14 deep, centred on the line; the face sits on
 	# its ring-side face.
 	var inset := 0.07 + 0.004
-	var mats: Array[StandardMaterial3D] = []
-	for c in RIBBON_SPILL_COLORS:
-		var m := StandardMaterial3D.new()
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m.albedo_color = c * BARRICADE_LED_EMISSION
-		mats.append(m)
+	var h := ArenaBuilder.BARRICADE_HEIGHT - BARRICADE_WALL_FOOT - BARRICADE_WALL_HEAD
 	var n := 0
 	for panel: Array in ArenaBuilder.barricade_panels():
 		var at: Vector3 = panel[0]
 		var out: Vector3 = panel[2]
 		var width: float = panel[3]
-		# Right-handed whichever way the run was walked.
-		var along := Vector3(out.z, 0.0, -out.x)
 		var led := MeshInstance3D.new()
 		led.name = "BarricadeLed%02d" % n
 		led.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var wall_u := _wall_span(at, out)
-		if wall_u != Vector2.ZERO:
-			# A full face toward the ring, u across the banner as the hard
-			# camera reads it (its screen-right is +Z).
-			var quad := QuadMesh.new()
-			var h := ArenaBuilder.BARRICADE_HEIGHT - BARRICADE_WALL_FOOT - BARRICADE_WALL_HEAD
-			quad.size = Vector2(width - 0.04, h)
-			led.mesh = quad
-			led.material_override = _wall_material(wall_u)
-			led.transform = Transform3D(Basis(Vector3.UP.cross(-out), Vector3.UP, -out),
-					at - out * inset + Vector3.UP * (ArenaBuilder.FLOOR_Y
-					+ BARRICADE_WALL_FOOT + h * 0.5))
-		else:
-			var band := BoxMesh.new()
-			band.size = Vector3(width - 0.1, BARRICADE_LED_HEIGHT, 0.01)
-			led.mesh = band
-			led.material_override = mats[n % mats.size()]
-			led.transform = Transform3D(Basis(along, Vector3.UP, out),
-					at - out * inset + Vector3.UP * (top - BARRICADE_LED_DROP))
+		var quad := QuadMesh.new()
+		quad.size = Vector2(width - 0.04, h)
+		led.mesh = quad
+		led.material_override = _wall_material(_wall_span(panel, n, h))
+		# Facing the ring, u across the art as someone in the ring reads it.
+		led.transform = Transform3D(Basis(Vector3.UP.cross(-out), Vector3.UP, -out),
+				at - out * inset + Vector3.UP * (ArenaBuilder.FLOOR_Y
+				+ BARRICADE_WALL_FOOT + h * 0.5))
 		add_child(led)
 		var light := OmniLight3D.new()
 		light.name = "BarricadeSpill%02d" % n
@@ -1007,17 +990,16 @@ func _build_barricade_leds() -> void:
 		n += 1
 
 
-## The banner's u range on a panel of the LED wall: (start, span), or zero
-## for a panel not on it. The wall is the +X run's five panels beside the
-## ring; the middle three are the banner, the outer two its outer thirds.
-static func _wall_span(at: Vector3, out: Vector3) -> Vector2:
-	if out.x < 0.5 or absf(at.z) > ArenaBuilder.BARRICADE_RADIUS:
-		return Vector2.ZERO
-	var slot := roundi(at.z / ArenaBuilder.BARRICADE_PANEL)
-	match slot:
-		-2: return Vector2(0.0, 1.0 / 3.0)
-		2: return Vector2(2.0 / 3.0, 1.0 / 3.0)
-		_: return Vector2((slot + 1) / 3.0, 1.0 / 3.0)
+## The art's u range on a panel: (start, span). The hard camera's run takes
+## the whole banner across its panels; every other panel one cut of it.
+static func _wall_span(panel: Array, n: int, _h: float) -> Vector2:
+	if int(panel[4]) == BARRICADE_HARDCAM_RUN:
+		var count := float(panel[6])
+		return Vector2(float(panel[5]) / count, 1.0 / count)
+	# A corner's narrow panel always takes the AEW block.
+	if float(panel[3]) < ArenaBuilder.BARRICADE_PANEL * 0.8:
+		return BARRICADE_ART_CUTS[0]
+	return BARRICADE_ART_CUTS[n % BARRICADE_ART_CUTS.size()]
 
 
 func _wall_material(span: Vector2) -> StandardMaterial3D:

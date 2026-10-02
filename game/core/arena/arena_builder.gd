@@ -789,24 +789,23 @@ static func _new_surface() -> SurfaceTool:
 ## puts its screen-right at +Z (the same solve that turned the mat's artwork),
 ## and that is the side of the ring `aew_grand_slam_broadcast.png` shows it on.
 ##
-## IT HAS ITS OWN AREA. It first stood in the 2.8 m strip between the apron
-## (3.20) and the barricade (6.00), 0.84 m clear either side -- in the way of
-## anyone working outside, and too close to the ring (the owner's note). In
-## the Grand Slam frame it stands well back, offset toward a corner, with a
-## wide clear floor between it and the ring and the barricade close behind
-## the commentators; WWE 2K's announce table sits the same way, at the side
-## of the ring with the barricade at its back. So the +Z barricade steps back
-## into a BAY: from the panel joint at DESK_BAY_X0 out to the +X corner it
-## runs at DESK_BAY_Z, the +X run carries on to meet it, and a short return
-## at DESK_BAY_X0 closes it. The bay's edges are the existing panel joints, so
-## no panel is cut. The desk is centred in it; its front is DESK_Z -
-## DESK_DEPTH / 2 = 7.20, 4.0 m off the apron, and the commentators' chairs
-## stand between it and the bay's barricade.
-const DESK_BAY_X0 := -1.2
+## IT HAS ITS OWN AREA, and where is the owner's AEW arena still (the
+## Dynamite set, from the far side of the ring): centred on the side opposite
+## the stage, set back against the barricade, which steps back round it in a
+## bay with angled returns. So the +Z barricade steps back from the panel
+## joints at x = +-DESK_BAY_FRONT, angled in to +-DESK_BAY_BACK at
+## DESK_BAY_Z. The desk is centred in it, 4 m off the apron, the
+## commentators' chairs between it and the bay's barricade.
+##
+## The barricade's corners are cut at 45 degrees by BARRICADE_CHAMFER, as in
+## the still: the barrier wraps the ring rather than boxing it.
+const DESK_BAY_FRONT := 3.6
+const DESK_BAY_BACK := 2.4
 const DESK_BAY_Z := 9.0
-const DESK_X := 2.4
+const DESK_X := 0.0
+const BARRICADE_CHAMFER := 1.2
 const DESK_Z := 7.6
-const DESK_LENGTH := 4.8
+const DESK_LENGTH := 4.2
 const DESK_HEIGHT := 0.95
 const DESK_DEPTH := 0.8
 ## The worktop, and how far it overhangs the fascia. A desk reads as a desk
@@ -835,11 +834,7 @@ const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
 ## wide shot reads scale off, and it has to separate from the floor behind it.
 const RINGSIDE_MATERIALS := {
 	"Floor": ["arena_floor", 1.0],
-	# The black matting between the barrier and the ring. Reach 0.45: it is
-	# the darkest large surface in the lower frame and it is what the mat's
-	# exposure anchor, the steps and the wrestlers working outside are all
-	# read against. Lifting it further flattens the ring into the floor.
-	"RingsideMat": ["arena_floor", 0.45],
+	# (RingsideMat, the padded mats, is dressed by _ringside_pads.)
 	"FloorSeams": ["arena_floor", 0.35],
 	"Barricades": ["arena_barricade", 1.5],
 	# The desk fascia takes the barricade's own surface at a lower reach: it
@@ -869,10 +864,36 @@ func _build_ringside() -> void:
 		var spec: Array = RINGSIDE_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
+	_dress(root, "RingsideMat", _ringside_pads())
 	# The desk's LED face shows the ribbon boards' art, at their level.
 	_dress(root, "CommentaryDeskLed", _ribbon_material(RIBBON_ART_PEAK))
 	_dress(root, "CommentaryScreens", _monitor_screen_material())
 	add_child(root)
+
+
+## The padded mats round the ring (the owner's AEW arena still), painted by
+## tools/blender/ringside.py: grey crash mats, 1.22 m square, in a grid of
+## soft seams. The model's UVs are world metres; the tile is PAD_TILE_M.
+const PAD_TEX := "res://assets/environment/materials/ringside_pads.png"
+const PAD_NRM := "res://assets/environment/materials/ringside_pads_nrm.png"
+const PAD_TILE_M := 2.44
+const PAD_REACH := 0.6
+
+
+func _ringside_pads() -> Material:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = load(PAD_TEX)
+	mat.normal_enabled = true
+	mat.normal_texture = load(PAD_NRM)
+	mat.normal_scale = 0.8
+	mat.roughness = 0.62
+	mat.uv1_scale = Vector3.ONE / PAD_TILE_M
+	mat.albedo_color = Color(1, 1, 1)
+	mat = _house_lit(mat, PAD_REACH)
+	# _house_lit's floor is flat colour; let the mats' own grain carry it.
+	mat.emission_texture = mat.albedo_texture
+	mat.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+	return MaterialLibrary.house_compensate(mat)
 
 
 ## The commentary monitors' faces: a dim cool picture, lit from within. Dim
@@ -891,46 +912,54 @@ func _monitor_screen_material() -> StandardMaterial3D:
 	return mat
 
 
-## Every barricade panel as [centre on the floor line, along, out, width]:
-## the four runs round the ring with the entrance gap on -Z and the desk's
-## bay on +Z (see DESK_BAY_X0). tools/blender/ringside.py builds the panels
-## off the same runs, and ArenaLighting hangs its LED bands off this list.
-static func barricade_panels() -> Array:
+## The barricade's line, as (x, z) corners round the ring: chamfered at the
+## four corners, the desk's bay on +Z. tools/blender/ringside.py walks the
+## same list.
+static func barricade_path() -> Array[Vector2]:
 	var r := BARRICADE_RADIUS
-	# [start, end, out]: each run from one corner of its stretch to the other.
-	var runs := [
-		[Vector3(-r, 0, -r), Vector3(r, 0, -r), Vector3.FORWARD],
-		[Vector3(-r, 0, -r), Vector3(-r, 0, r), Vector3.LEFT],
-		# The run facing the hard camera, behind the ring: its own five panels,
-		# symmetric about the ring, which carry the LED wall (ArenaLighting).
-		[Vector3(r, 0, -r), Vector3(r, 0, r), Vector3.RIGHT],
-		[Vector3(r, 0, r), Vector3(r, 0, DESK_BAY_Z), Vector3.RIGHT],
-		[Vector3(-r, 0, r), Vector3(DESK_BAY_X0, 0, r), Vector3.BACK],
-		[Vector3(DESK_BAY_X0, 0, r), Vector3(DESK_BAY_X0, 0, DESK_BAY_Z), Vector3.LEFT],
-		[Vector3(DESK_BAY_X0, 0, DESK_BAY_Z), Vector3(r, 0, DESK_BAY_Z), Vector3.BACK],
+	var c := BARRICADE_CHAMFER
+	return [
+		Vector2(-r + c, -r), Vector2(r - c, -r), Vector2(r, -r + c), Vector2(r, r - c),
+		Vector2(r - c, r), Vector2(DESK_BAY_FRONT, r), Vector2(DESK_BAY_BACK, DESK_BAY_Z),
+		Vector2(-DESK_BAY_BACK, DESK_BAY_Z), Vector2(-DESK_BAY_FRONT, r), Vector2(-r + c, r),
+		Vector2(-r, r - c), Vector2(-r, -r + c),
 	]
+
+
+## Every barricade panel as [centre on the floor line, along, out, width,
+## run index, index in the run, panels in the run]: each leg of
+## barricade_path() in panels of BARRICADE_PANEL or less, the entrance's gap
+## left in the -Z leg. ArenaLighting hangs its LED faces off this list.
+static func barricade_panels() -> Array:
+	var path := barricade_path()
 	var out := []
-	for run: Array in runs:
-		var a: Vector3 = run[0]
-		var b: Vector3 = run[1]
+	for run in path.size():
+		var a2: Vector2 = path[run]
+		var b2: Vector2 = path[(run + 1) % path.size()]
+		var a := Vector3(a2.x, 0, a2.y)
+		var b := Vector3(b2.x, 0, b2.y)
 		var length := a.distance_to(b)
-		var count := maxi(1, int(length / BARRICADE_PANEL))
+		var count := maxi(1, int(ceil(length / BARRICADE_PANEL - 0.05)))
 		var pitch := length / count
 		var width := pitch - BARRICADE_JOIN
 		var along := (b - a).normalized()
+		var normal := Vector3(along.z, 0, -along.x)
+		var mid := (a + b) * 0.5
+		if normal.dot(mid) < 0.0:
+			normal = -normal
 		for i in count:
 			var at := a + along * (pitch * (i + 0.5))
 			# The entrance run skips any panel that intrudes on the walkway.
-			if (run[2] as Vector3).z < -0.5 and absf(at.x) - width * 0.5 < BARRICADE_GAP:
+			if normal.z < -0.5 and absf(at.x) - width * 0.5 < BARRICADE_GAP:
 				continue
-			out.append([at, along, run[2], width])
+			out.append([at, along, normal, width, run, i, count])
 	return out
 
 
 ## Whether a floor point is in the desk's bay or the walkway round it.
 static func in_desk_bay(point: Vector3) -> bool:
-	return point.z > 0.0 and point.x > DESK_BAY_X0 - FLOOR_SEAT_START \
-			and point.x < BARRICADE_RADIUS and point.z < DESK_BAY_Z + FLOOR_SEAT_START
+	return point.z > 0.0 and absf(point.x) < DESK_BAY_FRONT + FLOOR_SEAT_START \
+			and point.z < DESK_BAY_Z + FLOOR_SEAT_START
 
 
 # ---------------------------------------------------------------------------

@@ -54,8 +54,8 @@ func test_the_desk_stands_back_in_its_bay() -> void:
 			"the desk's near face is %.2f m off the apron; it needs a clear lane"
 			% (box.position.z - RingBuilder.APRON_OUT)) \
 		.is_greater(3.5)
-	assert_float(box.position.x).is_greater(ArenaBuilder.DESK_BAY_X0)
-	assert_float(box.end.x).is_less(ArenaBuilder.BARRICADE_RADIUS)
+	assert_float(box.position.x).is_greater(-ArenaBuilder.DESK_BAY_BACK)
+	assert_float(box.end.x).is_less(ArenaBuilder.DESK_BAY_BACK)
 	# Chairs and all, inside the bay's barricade.
 	var kit := _aabb(root, "CommentaryKit")
 	assert_float(kit.end.z).is_less(ArenaBuilder.DESK_BAY_Z - 0.07)
@@ -68,7 +68,8 @@ func test_the_desk_stands_back_in_its_bay() -> void:
 ## The master is anchored on -X and looks up +X, so its screen-right is +Z --
 ## the same solve that turned the mat's artwork the right way up. +Z is where
 ## `aew_grand_slam_broadcast.png` puts the desk: beside the ring at frame
-## right, offset toward a corner, with the entrance stage on -Z at frame left.
+## right, and the owner's AEW arena still puts it centred on the side
+## opposite the stage, against the barricade.
 func test_the_desk_is_on_the_hard_cameras_right() -> void:
 	var root := _model()
 	var box := _aabb(root, "CommentaryDesk")

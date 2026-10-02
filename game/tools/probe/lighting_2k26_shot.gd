@@ -8,6 +8,8 @@ extends Node
 ##                              shown / hidden: out to the front rows, and
 ##                              back at the apron;
 ##   desk_ringside / desk_high -- the commentary desk in its bay;
+##   ref_view                -- high behind the desk side, across the ring
+##                              to the stage (the owner's AEW arena still);
 ##   led_wall_hardcam / _ringside -- the LED wall behind the ring, from the
 ##                              hard camera and from ringside;
 ##   glint_<look>_on / _off  -- glint_strength at its look's value / 0
@@ -99,7 +101,9 @@ func _ready() -> void:
 	for view: Array in [["desk_ringside", Vector3(-0.5, 1.4, 2.2), Vector3(2.4, -0.4, 7.6)],
 			["desk_high", Vector3(-7.5, 6.5, -3.0), Vector3(2.0, -1.0, 6.5)],
 			["led_wall_hardcam", Vector3(-28.5, 8.3, 0.0), Vector3(3.0, -0.2, 0.0), 26.0],
-			["led_wall_ringside", Vector3(-4.4, 1.2, -1.5), Vector3(6.0, -0.5, 0.5)]]:
+			["led_wall_ringside", Vector3(-4.4, 1.2, -1.5), Vector3(6.0, -0.5, 0.5)],
+			["ref_view", Vector3(0.0, 5.2, 11.5), Vector3(0.0, 2.2, -12.0), 58.0],
+			["stage_view", Vector3(0.0, 3.5, -12.0), Vector3(0.0, 4.5, -38.0), 60.0]]:
 		cam.fov = view[3] if view.size() > 3 else 55.0
 		cam.look_at_from_position(view[1], view[2])
 		await _shoot(view[0])
