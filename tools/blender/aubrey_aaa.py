@@ -91,7 +91,26 @@ MPFB = "bl_ext.user_default.mpfb"
 MACROS = {
     "gender": 0.0, "age": 0.62, "muscle": 0.62, "weight": 0.42,
     "proportions": 0.75, "african": 0.0, "asian": 0.0, "caucasian": 1.0,
+    "cupsize": 0.75, "firmness": 0.6,
 }
+## Her torso (stage 4b), measured off the owner's sheet (front and side
+## views, scaled to her height): the shirt ~31 cm across the chest at the
+## armpits and ~25 cm deep at the bust, ~30 cm across the belt, ~37 cm
+## across the hips. The macros alone gave a narrow, shallow chest (24 x 19)
+## over a wider waist (33). Applied like FACE.
+BODY = {
+    "measure-bust-circ-incr": 0.6,
+    "measure-waist-circ-decr": 1.0,
+    "torso-scale-depth-incr": 0.3,
+    "torso-scale-horiz-incr": 1.0,
+    "torso-vshape-incr": 0.6,
+}
+## MPFB's waist acts above her belt line; at the belt (sheet: ~30 cm across)
+## the body is narrowed directly, side to side, by up to WAIST_SLIM, in a
+## smooth band WAIST_SIGMA either side of WAIST_Z.
+WAIST_Z = 1.025
+WAIST_SIGMA = 0.06
+WAIST_SLIM = 0.10
 ## Her likeness (stage 3): MPFB face targets, set against the owner's
 ## character sheet (front, 3/4 and profile) on a clay render. A long face,
 ## high cheekbones over slightly hollow cheeks, a slim jaw tapering to a
@@ -99,26 +118,30 @@ MACROS = {
 ## with a softly rounded tip; a wide mouth with a full lower lip carried
 ## forward; large, open almond eyes under a raised brow; a slim neck. A name
 ## without a side (e.g. "cheek-bones-incr") is applied to both l- and r-.
+## The jaw was tuned again after the colour pass (four variants against the
+## sheet): a leaner face, no widening at the jaw's angle, slimmer lower
+## cheeks, a slightly tapered face and a narrower chin.
 FACE = {
     # head
     "forehead-scale-vert-incr": 0.2,
     "forehead-temple-decr": 0.3,
     "forehead-trans-backward": 0.25,
+    "head-fat-decr": 0.5,
+    "head-invertedtriangular": 0.35,
     "head-oval": 0.5,
     "head-scale-horiz-decr": 0.1,
     # chin and jaw
-    "chin-bones-incr": 0.4,
     "chin-height-incr": 0.35,
     "chin-jaw-drop-incr": 0.3,
     "chin-prominent-incr": 0.75,
     "chin-triangle": 0.3,
-    "chin-width-decr": 0.5,
+    "chin-width-decr": 0.75,
     "neck-double-decr": 0.6,
     "neck-scale-horiz-decr": 0.4,
     # cheeks
     "cheek-bones-incr": 1.26,
     "cheek-inner-decr": 0.7,
-    "cheek-volume-decr": 0.6,
+    "cheek-volume-decr": 0.9,
     # nose
     "nose-flaring-decr": 0.3,
     "nose-point-down": 0.15,
@@ -217,6 +240,22 @@ TROUSER_LEG_FROM = (0.86, 0.70)   # z where the letting-out starts, and is full
 ## The patch sits on the new shirt, this far off it.
 PATCH = "Aubrey_Patch"
 PATCH_OFF = 0.0025
+## The sheet's patch is a fifth larger than the kit's and higher on the chest
+## (PATCH_OUT moves it away from the placket).
+PATCH_SCALE = 1.2
+PATCH_RAISE = 0.03
+PATCH_OUT = 0.0
+## Her chest pocket (the sheet), on her left: cut from the shirt's own
+## cloth -- its UVs taken from the shirt beside it (POCKET_STRIPE_SHIFT) --
+## standing POCKET_OFF proud, with a flap POCKET_FLAP deep over its top.
+## (x from, x to, z bottom, z top), metres.
+POCKET = (0.034, 0.112, 1.285, 1.390)
+POCKET_OFF = 0.005
+POCKET_FLAP = 0.026
+## A sewn-on pocket's stripes never quite meet the shirt's: its cloth is
+## sampled this far to the side, so its edges read.
+POCKET_STRIPE_SHIFT = 0.012
+POCKET_GRID = (8, 10)
 GARMENT_SMOOTH = 6
 ## The hair cap's standoff: slicked tight to the skull.
 CAP = "Aubrey_HairCap"
@@ -298,7 +337,7 @@ COLLAR_POINT_DROP = 0.030
 ## her shoulders past the flap; no cut left the tee's striped neckband
 ## standing inside the collar.)
 COLLAR_TRIM_UP = 0.0
-COLLAR_TRIM_R = 0.02
+COLLAR_TRIM_R = 0.032
 ## The flap rests this far off the shirt (at 0.005 the tee's stripes showed
 ## through it in specks), and reaches no further than COLLAR_FLAP_MAX off her
 ## neck: resting on the tee wherever that was, it spread like a bib.
@@ -375,7 +414,7 @@ def make_body(old_arm):
     for key, value in MACROS.items():
         Props.set_value(key, value, entity_reference=human)
     TargetService.reapply_macro_details(human)
-    for name, weight in sorted(FACE.items()):
+    for name, weight in sorted({**FACE, **BODY}.items()):
         sided = TargetService.target_full_path(name) is None
         for full in ([f"l-{name}", f"r-{name}"] if sided else [name]):
             path = TargetService.target_full_path(full)
@@ -426,6 +465,7 @@ def make_body(old_arm):
         front = min(pts, key=lambda p: p.y)          # she faces -Y
         eyes[side] = (centre, (front - centre).normalized())
     slim_neck(human, old_arm)
+    taper_waist(human)
     cards = make_cards(human)
     make_garments(human, old_arm)
     lobes = ear_lobes(human)
@@ -563,9 +603,20 @@ def refit(old_arm, body):
     # left; the owner went by the pictures): the kit's patch, on her left,
     # is mirrored across her -- positions only, so the UVs and the logo
     # still read the right way round -- and its faces turned back out.
-    for v in patch.data.vertices:
-        p = patch.matrix_world @ v.co
-        v.co = inv @ Vector((-p.x, p.y, p.z))
+    # Then the sheet's size and height: PATCH_SCALE about its centre,
+    # PATCH_RAISE up, PATCH_OUT away from the placket.
+    pts = [patch.matrix_world @ v.co for v in patch.data.vertices]
+    mid = sum(pts, Vector()) / len(pts)
+    for v, p in zip(patch.data.vertices, pts):
+        q = Vector((-mid.x - PATCH_OUT, p.y, mid.z + PATCH_RAISE)) + Vector(
+            (-(p.x - mid.x), 0.0, p.z - mid.z)) * PATCH_SCALE
+        v.co = inv @ q
+    # Mirroring the positions mirrored the artwork too: mirror its u back.
+    uv = patch.data.uv_layers[0].data
+    us = [d.uv.x for d in uv]
+    u_mid = (min(us) + max(us)) / 2.0
+    for d in uv:
+        d.uv.x = 2.0 * u_mid - d.uv.x
     bm = bmesh.new()
     bm.from_mesh(patch.data)
     bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
@@ -1428,6 +1479,17 @@ def make_ponytail(old_arm, tie_centre):
     return tail
 
 
+def taper_waist(human) -> None:
+    """Narrows the body side to side round WAIST_Z (see WAIST_SLIM)."""
+    mw = human.matrix_world
+    inv = mw.inverted()
+    for v in human.data.vertices:
+        p = mw @ v.co
+        k = WAIST_SLIM * math.exp(-0.5 * ((p.z - WAIST_Z) / WAIST_SIGMA) ** 2)
+        v.co = inv @ Vector((p.x * (1.0 - k), p.y, p.z))
+    human.data.update()
+
+
 def slim_neck(human, old_arm) -> None:
     """Draws the neck's skin toward its axis (NECK_SLIM by neck weight)."""
     group = human.vertex_groups["neck_01"].index
@@ -1445,6 +1507,79 @@ def slim_neck(human, old_arm) -> None:
         radial = Vector((p.x - axis.x, p.y - axis.y, 0.0))
         v.co = inv @ (p - radial * (NECK_SLIM * w))
     human.data.update()
+
+
+def make_pocket(old_arm, body):
+    """Her chest pocket (POCKET): a panel and a flap laid on the shirt by rays
+    from the front, closed down to the shirt round their edges, in the
+    shirt's material with the shirt's UVs at each point."""
+    shirt = bpy.data.objects["Aubrey_Shirt"]
+    bvh = world_bvh([shirt])
+    mesh_s = shirt.data
+    uvs = mesh_s.uv_layers["UVMap"].data
+    mw = shirt.matrix_world
+    from mathutils.geometry import barycentric_transform
+
+    def on_shirt(x, z, off):
+        loc, nor, idx, _ = bvh.ray_cast(Vector((x, -0.5, z)), Vector((0.0, 1.0, 0.0)), 1.0)
+        if idx is None:
+            raise SystemExit(f"make_pocket: no shirt at x {x:.3f}, z {z:.3f}")
+        poly = mesh_s.polygons[idx]
+        # The UV there: the polygon's triangle that holds the point.
+        corners = [(mw @ mesh_s.vertices[mesh_s.loops[li].vertex_index].co, uvs[li].uv)
+                   for li in poly.loop_indices]
+        best = None
+        for k in range(1, len(corners) - 1):
+            a, b, c = corners[0], corners[k], corners[k + 1]
+            uvw = barycentric_transform(loc, a[0], b[0], c[0],
+                                        Vector((*a[1], 0)), Vector((*b[1], 0)), Vector((*c[1], 0)))
+            if best is None or (k == 1):
+                best = uvw
+            # Prefer the triangle whose weights are all non-negative.
+            from mathutils.geometry import intersect_point_tri
+            if intersect_point_tri(loc, a[0], b[0], c[0]):
+                best = uvw
+                break
+        return loc + nor * off, (best.x, best.y)
+
+    x0, x1, z0, z1 = POCKET
+    nx, nz = POCKET_GRID
+    verts, uv, faces = [], [], []
+
+    def panel(zb, zt, off, lip):
+        """A grid from zb to zt, off proud, its rim stepping down to lip."""
+        base = len(verts)
+        for j in range(nz + 1):
+            z = zb + (zt - zb) * j / nz
+            for i in range(nx + 1):
+                x = x0 + (x1 - x0) * i / nx
+                edge = i in (0, nx) or j in (0, nz)
+                p, _ = on_shirt(x, z, lip if edge else off)
+                _, t = on_shirt(x + POCKET_STRIPE_SHIFT, z, 0.0)
+                verts.append(p)
+                uv.append(t)
+        for j in range(nz):
+            for i in range(nx):
+                a = base + j * (nx + 1) + i
+                faces.append((a, a + 1, a + nx + 2, a + nx + 1))
+
+    panel(z0, z1 - POCKET_FLAP * 0.5, POCKET_OFF, 0.0008)
+    panel(z1 - POCKET_FLAP, z1, POCKET_OFF * 1.8, POCKET_OFF * 0.9)
+    mesh = bpy.data.meshes.new("Aubrey_Pocket")
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    layer = mesh.uv_layers.new(name="UVMap")
+    for loop in mesh.loops:
+        layer.data[loop.index].uv = uv[loop.vertex_index]
+    mesh.polygons.foreach_set("use_smooth", [True] * len(mesh.polygons))
+    mesh.materials.append(shirt.data.materials[0])
+    mesh.update()
+    pocket = bpy.data.objects.new("Aubrey_Pocket", mesh)
+    bpy.context.scene.collection.objects.link(pocket)
+    pocket.parent = old_arm
+    pocket.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    take_weights(pocket, body)
+    pocket.modifiers.new("Armature", "ARMATURE").object = old_arm
+    return pocket
 
 
 def make_cards(human):
@@ -1676,6 +1811,7 @@ def main() -> int:
     dress_garments(old_arm)
     collar = make_collar(old_arm, body, bpy.data.objects["Aubrey_Shirt"])
     make_belt(old_arm, body)
+    make_pocket(old_arm, body)
     # The skin under the cloth goes last, once the collar has trimmed the
     # shirt: deleted first, the trim opened holes onto nothing.
     # Not the collar: rays up from under her jaw met it, and the skin there

@@ -8309,3 +8309,26 @@ stopped above her ears at the back. Rebuilt in `aubrey_aaa.py`:
 - **Neck** slimmed 12% by neck weight.
 
 Checks: 600 tests pass; the build is byte-identical run to run.
+
+### Aubrey AAA rebuild: torso, jaw, patch and pocket to the sheet
+
+- **Torso measured off the sheet** (front and side views, scaled to her
+  height) and matched: shirt across the chest at the armpits 30.2 cm
+  (sheet ~31), bust depth 25.5 (~25), waist at the belt 29.5 (~29), hips
+  37.1 (~37). Before: a narrow, shallow chest (24.4 x 19.0) over a wider
+  waist (32.6). MPFB macros `cupsize` 0.75 / `firmness` 0.6 and a BODY
+  table (bust, torso width/depth, V-shape, waist); MPFB's waist acts above
+  her belt line, so the body is also narrowed side to side in a smooth band
+  at the belt (`taper_waist`). Clothes are fitted after, so they follow.
+- **Jaw** retuned from four variants against the sheet's front, 3/4 and
+  profile: leaner face, no widening at the jaw's angle, slimmer lower
+  cheeks, slightly tapered face, narrower chin.
+- **Patch** on her right chest as the sheet's pictures show (its caption
+  says left), the artwork mirrored back so it reads, 1.2x larger and 3 cm
+  higher; **pocket** on her left chest, cut from the shirt's own striped
+  cloth (UVs sampled beside it so its edges read), with a flap.
+- The wider chest raised the tee's cut edge inside the collar: the cut is
+  widened to 3.2 cm off the neck, still under the flap.
+
+Checks: 600 tests pass; byte-identical. Open: a sliver of neck under the
+collar at the back-left.
