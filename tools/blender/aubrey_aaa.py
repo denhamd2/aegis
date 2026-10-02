@@ -307,6 +307,8 @@ HAIRLINE = [(0.0, 0.072), (35.0, 0.062), (60.0, 0.042), (82.0, 0.030),
             (95.0, 0.020), (104.0, -0.045), (125.0, -0.065), (180.0, -0.080)]
 ## The cap feathers out over this much of its edge.
 HAIRLINE_FEATHER = 0.02
+## ...on a cap cut this many times finer along the hairline (make_cap).
+HAIRLINE_CUTS = 2
 ## Her ears: never under the cap. Out from the head's centre line beyond
 ## EAR_X, within EAR_Z of eye height, the cap's margin goes negative.
 EAR_X = 0.064
@@ -448,6 +450,7 @@ SOCKET = (13.0, 14.4)
 SOCKET_COLOR = (34, 22, 22)
 SOCKET_OPEN = (17.0, 6.5)
 SOCKET_DEPTH = 8.0
+SOCKET_BACK = 6.0
 ## Red lips, off MPFB's own "lips" vertex group, the texture's shading kept.
 LIPS = dict(lo=0.25, hi=0.6, blur=1.5, color=(128, 14, 28), strength=0.9)
 ## Brow and lash cards: MakeHuman's own (CC0), fitted to her face by MPFB.
@@ -797,11 +800,8 @@ def make_cap(old_arm, body, eyes, tie_centre, lobes):
     # follows the neck: on the Head bone alone the cap stopped above the
     # ears at the back, an undercut.
     head_groups = {body.vertex_groups[n].index for n in ("Head", "neck_01")}
-    margin = {}
-    for v in body.data.vertices:
-        if sum(g.weight for g in v.groups if g.group in head_groups) <= 0.5:
-            continue
-        p = mw @ v.co
+
+    def margin_at(p):
         r = p - centre
         angle = math.degrees(math.atan2(abs(r.x), -r.y))
         m = (p.z - eye_z) - hairline(angle)
@@ -810,28 +810,57 @@ def make_cap(old_arm, body, eyes, tie_centre, lobes):
         ear_y = lobes["l" if p.x > 0 else "r"][0].y
         if EAR_Z[0] < p.z - eye_z < EAR_Z[1] and EAR_Y[0] < p.y - ear_y < EAR_Y[1]:
             m = min(m, EAR_X - abs(r.x))
-        margin[v.index] = m
+        return m
+
+    margin = {}
+    for v in body.data.vertices:
+        if sum(g.weight for g in v.groups if g.group in head_groups) <= 0.5:
+            continue
+        margin[v.index] = margin_at(mw @ v.co)
     faces = [f for f in body.data.polygons
              if all(i in margin for i in f.vertices) and max(margin[i] for i in f.vertices) > 0.0]
     used = sorted({i for f in faces for i in f.vertices})
-    remap = {old: new for new, old in enumerate(used)}
+    # The scalp under the cap, in world space, as its own mesh -- then cut
+    # finer along the hairline (HAIRLINE_CUTS times). The feather is vertex
+    # alpha, alpha-clipped at 0.5, and on the scalp's own 1-2 cm triangles
+    # that 0.5 contour runs in straight steps from edge to edge: at close
+    # range the temples read stepped. Every per-vertex value below is a
+    # function of position, so the new vertices take theirs the same way.
+    bm = bmesh.new()
+    bvs = {i: bm.verts.new(mw @ body.data.vertices[i].co) for i in used}
+    for f in faces:
+        bm.faces.new([bvs[i] for i in f.vertices])
+    for _ in range(HAIRLINE_CUTS):
+        band = [e for e in bm.edges
+                if min(margin_at(v.co) for v in e.verts) < HAIRLINE_FEATHER * 1.5
+                and max(margin_at(v.co) for v in e.verts) > -HAIRLINE_FEATHER]
+        bmesh.ops.subdivide_edges(bm, edges=band, cuts=1, use_grid_fill=True)
+    bm.normal_update()
+    # Normals off the body where a vertex is one of its own, interpolated
+    # off the cut mesh only for the new ones (the cap's own normals turn at
+    # its open edge, where the body's do not).
+    body_n = {i: (mw.to_3x3() @ body.data.vertices[i].normal).normalized() for i in used}
+    own = {bvs[i]: body_n[i] for i in used}
     axis = (tie_centre - centre).normalized()
     e1 = (Vector((0.0, 0.0, 1.0)) - axis * axis.z).normalized()
     e2 = axis.cross(e1)
+    bm.verts.index_update()
     verts, uvs, alpha = [], [], []
-    for i in used:
-        v = body.data.vertices[i]
-        p = mw @ v.co
-        n = (mw.to_3x3() @ v.normal).normalized()
-        verts.append(p + n * (CAP_OFF + hair_volume(p, margin[i], eye_z, tie_centre)))
+    for bv in bm.verts:
+        p = bv.co.copy()
+        n = own.get(bv, bv.normal).normalized()
+        m = margin_at(p)
+        verts.append(p + n * (CAP_OFF + hair_volume(p, m, eye_z, tie_centre)))
         r = (p - centre).normalized()
         phi = math.acos(max(-1.0, min(1.0, r.dot(axis))))
         az = math.atan2(r.dot(e2), r.dot(e1))
         uvs.append(((az / (2.0 * math.pi) + 0.5) * CAP_U_TILES, phi / 2.4))
-        t = max(0.0, min(1.0, margin[i] / HAIRLINE_FEATHER))
+        t = max(0.0, min(1.0, m / HAIRLINE_FEATHER))
         alpha.append(t * t * (3.0 - 2.0 * t))
+    cap_faces = [[v.index for v in f.verts] for f in bm.faces]
+    bm.free()
     mesh = bpy.data.meshes.new(CAP)
-    mesh.from_pydata(verts, [], [[remap[i] for i in f.vertices] for f in faces])
+    mesh.from_pydata(verts, [], cap_faces)
     uv = mesh.uv_layers.new(name="UVMap")
     for poly in mesh.polygons:
         us = [uvs[mesh.loops[li].vertex_index] for li in poly.loop_indices]
@@ -861,7 +890,7 @@ def make_cap(old_arm, body, eyes, tie_centre, lobes):
     cap.matrix_parent_inverse = old_arm.matrix_world.inverted()
     mod = cap.modifiers.new("Armature", "ARMATURE")
     mod.object = old_arm
-    print(f"make_cap: {len(faces)} faces")
+    print(f"make_cap: {len(faces)} scalp faces -> {len(mesh.polygons)}")
     return cap
 
 
@@ -2034,6 +2063,11 @@ def paint_skin(body, eyes) -> None:
         uo = d @ o_ax * 1000.0
         opening = np.sqrt((uo / SOCKET_OPEN[0]) ** 2 + (v / SOCKET_OPEN[1]) ** 2)
         recessed = 1.0 - _smooth(SOCKET_DEPTH - 1.5, SOCKET_DEPTH + 1.5, w)
+        # ...and no deeper than SOCKET_BACK behind the centre: unbounded, the
+        # opening ran straight back through the head as a tube and painted a
+        # dark blot wherever it came out of the skin (one showed on her
+        # cheek in the game's 3/4).
+        recessed *= _smooth(-SOCKET_BACK - 1.5, -SOCKET_BACK + 1.5, w)
         socket = np.maximum(socket, (1.0 - _smooth(0.85, 1.05, opening)) * recessed * hit)
     img = base.copy()
     k = (smoke * SMOKE["strength"])[..., None]
