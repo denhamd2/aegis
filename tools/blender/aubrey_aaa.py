@@ -91,7 +91,7 @@ MPFB = "bl_ext.user_default.mpfb"
 MACROS = {
     "gender": 0.0, "age": 0.62, "muscle": 0.62, "weight": 0.42,
     "proportions": 0.75, "african": 0.0, "asian": 0.0, "caucasian": 1.0,
-    "cupsize": 0.6, "firmness": 0.6,
+    "cupsize": 0.5, "firmness": 0.6,
 }
 ## Her torso (stage 4b), measured off the owner's sheet (front and side
 ## views, scaled to her height): the shirt ~31 cm across the chest at the
@@ -99,7 +99,6 @@ MACROS = {
 ## across the hips. The macros alone gave a narrow, shallow chest (24 x 19)
 ## over a wider waist (33). Applied like FACE.
 BODY = {
-    "measure-bust-circ-incr": 0.2,
     "measure-waist-circ-decr": 0.3,
     "torso-scale-depth-incr": 0.3,
     "torso-scale-horiz-incr": 1.0,
@@ -347,16 +346,17 @@ COLLAR_TILT = 0.024
 COLLAR_SAMPLE_UP = 0.022
 COLLAR_MAX_R = 0.072
 COLLAR_STEPS = 48
-## On the owner's sheet she is zipped to the collar: its points meet close
-## under the throat. The collar hugs her neck -- a stand ~3.5 cm high all
+## On the owner's sheet the collar is open at the front in a V -- its ends
+## ~35 degrees either side of straight ahead, the points dropping -- with the
+## zip starting at the V's point (SHIRT_V). The collar hugs her neck -- a stand ~3.5 cm high all
 ## round, the flap folded down close over it and ending above her shoulder
 ## line -- rather than spreading over her shoulders (the first version, a
 ## cape on the tee's wide neckline).
-COLLAR_GAP = 5.0
+COLLAR_GAP = 35.0
 COLLAR_PROFILE = [(0.000, 0.004), (0.016, 0.004), (0.030, 0.004), (0.040, 0.007),
                   (0.038, 0.011), (0.028, 0.013), (0.016, 0.015), (0.006, 0.017)]
 ## The collar's points drop by this at the front edges.
-COLLAR_POINT_DROP = 0.036
+COLLAR_POINT_DROP = 0.040
 ## Shirt faces above the collar's (tilted) base plus COLLAR_TRIM_UP, within
 ## COLLAR_TRIM_R of the neck's own surface at that angle, go: the flap
 ## (reaching up to COLLAR_FLAP_MAX off the neck) covers the cut. (A fixed
@@ -370,6 +370,13 @@ COLLAR_TRIM_R = 0.016
 ## neck: resting on the tee wherever that was, it spread like a bib.
 COLLAR_FLAP_OFF = 0.005
 COLLAR_FLAP_MAX = 0.024
+## The open neck (the sheet's shirt front, measured off its patch's width):
+## a V cut in the shirt from the collar's open ends down to its point
+## SHIRT_V[1] below them; its edges bound in the
+## trim, SHIRT_V_EDGE wide -- wide enough to cover the cut, which steps
+## along the shirt's faces (at 5 mm the white steps showed).
+SHIRT_V = (None, 0.045)
+SHIRT_V_EDGE = 0.011
 ## The placket: a zip down the shirt's black centre stripe (the sheet), from
 ## under the collar's points to PLACKET_BOTTOM -- a narrow black tape with a
 ## metal track down it (ZIP_HALF_W) and a pull at its top. (A 3.2 cm strip
@@ -838,7 +845,21 @@ def make_collar(old_arm, body, shirt):
         rel = p.xy - centre.xy
         th = math.atan2(rel.x, -rel.y)
         return p.z > base_z(th) + COLLAR_TRIM_UP and rel.length < radius(th, centre) + COLLAR_TRIM_R
-    doomed = [f for f in bm.faces if any(above(mw @ v.co) for v in f.verts)]
+    # The V starts at the collar's open ends -- their inner corners, at the
+    # neck's surface COLLAR_GAP either side -- and runs down to its point.
+    # (From the front's base instead, a flat strip of shirt stood between the
+    # collar's ends and the V.)
+    gap_r = math.radians(COLLAR_GAP)
+    v_half = radius(gap_r, centre) * math.sin(gap_r) + 0.003
+    v_top = base_z(gap_r) + 0.008
+    v_apex = v_top - SHIRT_V[1]
+
+    def in_v(p):
+        if p.y > centre.y or p.z < v_apex:
+            return False
+        return abs(p.x - centre.x) < v_half * (p.z - v_apex) / SHIRT_V[1]
+    doomed = [f for f in bm.faces if any(above(mw @ v.co) for v in f.verts)
+              or any(in_v(mw @ v.co) for v in f.verts)]
     bmesh.ops.delete(bm, geom=doomed, context="FACES")
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     bm.to_mesh(shirt.data)
@@ -906,8 +927,29 @@ def make_collar(old_arm, body, shirt):
     # her skin where the shirt is cut away under the collar), from just
     # under the collar's points down.
     front_bvh = world_bvh([shirt, body])
-    top = base_z(0.0) - COLLAR_POINT_DROP * 0.4
+    top = v_apex
     mats = [0] * len(faces)
+    # The V's edges, bound in the trim: a narrow band down each from the
+    # collar's base to the point, laid on shirt and skin.
+    for sign in (-1.0, 1.0):
+        rows = []
+        for k in range(9):
+            t = k / 8.0
+            z = v_top + (v_apex - v_top) * t
+            x_edge = sign * v_half * (1.0 - t)
+            row = []
+            for dx in (-sign * 0.002, sign * SHIRT_V_EDGE):
+                hit, nor, _, _ = front_bvh.ray_cast(Vector((centre.x + x_edge + dx, -0.5, z)),
+                                                    Vector((0.0, 1.0, 0.0)), 1.0)
+                row.append(hit + nor * 0.0025)
+            rows.append(row)
+        base = len(verts)
+        for row in rows:
+            verts.extend(row)
+        for i in range(len(rows) - 1):
+            a = base + 2 * i
+            faces.append((a, a + 1, a + 3, a + 2) if sign > 0 else (a, a + 2, a + 3, a + 1))
+            mats.append(0)
 
     def strip_down(half_w, off, mat):
         z = top

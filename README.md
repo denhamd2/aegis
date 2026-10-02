@@ -8409,3 +8409,11 @@ The owner's character sheets are now kept in `gauntlet/refs/characters/`
 (Aubrey Edwards, Kenny Omega) as the standing reference for both models.
 
 Checks: 600 tests pass; the build is byte-identical.
+
+Then, from the owner's side-by-side of the sheet's shirt front: the collar
+is OPEN at the neck in a V. Its ends sit ~35 degrees either side of straight
+ahead, the shirt is cut in a V from those ends down 4.5 cm to the zip, the
+V's edges bound in the trim (11 mm bands laid over the cut, which steps
+along the tee's faces), and the zip starts at the V's point. The bust came
+down a notch (cup 0.5, no bust target): owner, "a little too big" -- bust
+depth 21.4 -> 20.1 cm, the chest still ~30 cm across.
