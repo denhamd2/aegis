@@ -7,7 +7,7 @@ extends GdUnitTestSuite
 ## calibration has to be redone. Roman's model_height_m is calibrated by eye
 ## height rather than read off this top -- see the note in Roster.
 const HEAD_MESH := {"roman": "head_skinned", "cody": "Body", "kenny": "Kenny_Body"}
-const HEAD_TOP := {"roman": 1.895, "cody": 1.837, "kenny": 1.749}
+const HEAD_TOP := {"roman": 1.895, "cody": 1.837, "kenny": 1.737}
 
 
 func test_roster_heights() -> void:

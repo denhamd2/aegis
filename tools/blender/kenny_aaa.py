@@ -103,25 +103,26 @@ BODY = {
 ## (front, 3/4, the hair side view) on clay renders: a broad square jaw and
 ## chin, a strong brow ridge with the brows set low over deep, narrowed
 ## eyes with heavy lids and bags, high cheekbones, a broad nose with a full
-## rounded tip, a thin upper lip, a high forehead.
+## rounded tip, a thin upper lip, a high forehead. Polished in game: the
+## first pass read narrow and long, so the head is wider and shorter.
 FACE = {
     # head and forehead
-    "head-square": 0.5, "head-scale-horiz-incr": 0.2, "head-age-incr": 0.3,
-    "head-fat-incr": 0.15,
-    "forehead-scale-vert-incr": 0.3, "forehead-nubian-incr": 0.3,
+    "head-square": 0.5, "head-scale-horiz-incr": 0.5, "head-scale-vert-decr": 0.25, "head-age-incr": 0.3,
+    "head-fat-incr": 0.35,
+    "forehead-scale-vert-incr": 0.15, "forehead-nubian-incr": 0.3,
     # brows and eyes
     "eyebrows-trans-forward": 0.6, "eyebrows-trans-down": 0.3, "eyebrows-angle-down": 0.3,
     "eye-scale-decr": 0.35, "eye-height2-decr": 0.4, "eye-bag-incr": 0.4,
     "eye-push1-in": 0.3, "eye-eyefold-down": 0.4, "eye-corner2-down": 0.2,
     # nose
     "nose-scale-horiz-incr": 0.35, "nose-point-width-incr": 0.5, "nose-volume-incr": 0.4,
-    "nose-width2-incr": 0.3, "nose-scale-vert-incr": 0.35,
+    "nose-width2-incr": 0.3, "nose-scale-vert-incr": 0.15,
     # mouth
     "mouth-upperlip-volume-decr": 0.4, "mouth-scale-horiz-incr": 0.3,
     "mouth-lowerlip-volume-incr": 0.2,
     # jaw, chin and cheeks
-    "chin-width-incr": 0.6, "chin-bones-incr": 0.7, "chin-prominent-incr": 0.3,
-    "chin-height-incr": 0.2, "cheek-bones-incr": 0.6, "cheek-volume-decr": 0.3,
+    "chin-width-incr": 0.8, "chin-bones-incr": 0.7, "chin-prominent-incr": 0.3,
+    "cheek-bones-incr": 0.6,
 }
 ## MPFB bone -> his bone, where the names differ.
 BONE_NAMES = {"head": "Head"}
@@ -249,13 +250,16 @@ HAIRLINE = [(0.0, 0.088), (25.0, 0.084), (42.0, 0.070), (60.0, 0.052),
 HAIRLINE_FEATHER = 0.018
 ## The cap's standoff: its root, and the volume it gains back from the
 ## hairline over the crown and the back (curly hair stands off the skull).
-CAP_OFF = (0.004, 0.020)
+CAP_OFF = (0.004, 0.028)
 CAP_RAMP = 0.035
 ## The cap's strand direction: combed back from a pole over the forehead.
 CAP_AXIS = Vector((0.0, -0.75, 0.66)).normalized()
 CAP_E1 = Vector((0.0, 0.66, 0.75)).normalized()
 CAP_E2 = CAP_AXIS.cross(CAP_E1)
 CAP_U_TILES = 5
+## (Polished in game: they hung close to his face, where the sheet's mass
+## stands well out from it, so wider cards, more standoff, more flare and an
+## upper layer reaching round to the sides.)
 ## Curls: how many; where they start (angle round the head, from in front of
 ## the ears round the back); start height under the cap (m above the eyes) by
 ## angle; their ends (m, world height); their standoff off whatever they fall
@@ -263,18 +267,18 @@ CAP_U_TILES = 5
 CURL_COUNT = 120
 ## A second layer over the crown and the back, starting higher up the cap,
 ## so the curls cover it from behind as the sheet's back view shows.
-CURL_UPPER = (70, (110.0, 180.0), 0.055)
+CURL_UPPER = (80, (95.0, 180.0), 0.05)
 CURL_ANGLES = (72.0, 180.0)
 CURL_TOP = [(62.0, 0.035), (90.0, 0.025), (120.0, 0.010), (180.0, -0.010)]
 CURL_END = (1.36, 1.50)
-CURL_STANDOFF = (0.020, 0.060)
+CURL_STANDOFF = (0.022, 0.055)
 CURL_RADIUS = (0.005, 0.011)
 CURL_PITCH = (0.034, 0.060)
-CURL_WIDTH = ((0.026, 0.040), 0.010)
+CURL_WIDTH = ((0.028, 0.044), 0.011)
 CURL_STEP = 0.006
 ## How far each curl drifts out from the head per metre of fall: the
 ## sheet's hair flares out over the shoulders rather than hanging plumb.
-CURL_FLARE = 0.35
+CURL_FLARE = 0.42
 CURL_SEED = 1012
 CURL_COLUMNS = 4
 CURL_TEX = (512, 2048)
@@ -1224,7 +1228,7 @@ def make_curls(old_arm, body, cap, eyes):
         if hit is None:
             continue
         standoff = float(rng.uniform(*CURL_STANDOFF))
-        start = hit + d * 0.004
+        start = hit + d * 0.012
         end_z = float(rng.uniform(*CURL_END))
         # The line: down, pushed out of the body to its standoff, and never
         # back in toward it faster than a drape.
@@ -1238,7 +1242,11 @@ def make_curls(old_arm, body, cap, eyes):
                 gap = (p - near[0]).length
                 n = (p - near[0]).normalized() if gap > 1e-6 else near[1]
                 if gap < standoff:
+                    # Out of the body, but never back up: on top of his
+                    # shoulders the push is upward, and the line stalled.
+                    z_next = p.z
                     p = near[0] + n * standoff
+                    p.z = min(p.z, z_next)
             pts.append(p.copy())
         for _ in range(3):
             pts = [pts[0]] + [(pts[k - 1] + pts[k] * 2 + pts[k + 1]) / 4 for k in range(1, len(pts) - 1)] + [pts[-1]]

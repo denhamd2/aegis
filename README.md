@@ -8573,7 +8573,7 @@ cards, hair (scissor + alpha-to-coverage) and gear (roughness/metal map).
 - **Hair**: a cap combed back off a high forehead and 190 curl clumps (two
   crossed strand cards on a helix), dark roots to blond ends, draped over his
   head, neck and shoulders; Head-weighted, handing to spine_03 low down.
-- Roster model height 1.749 (Kenny_Body crown); billed 1.829 unchanged.
+- Roster model height 1.737 (Kenny_Body crown); billed 1.829 unchanged.
 
 Open: the face reads narrower and longer than the sheet's; the curls hang
 closer to the face than his volume; the hair has no springs yet; the boot
