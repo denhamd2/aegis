@@ -8270,3 +8270,42 @@ Her face had likeness on clay; this gives her colour. `aubrey_aaa.py` now:
 
 Checks: 600 tests pass; the build is byte-identical run to run. Still not in
 the game; the collar specks and back-neck sliver are open.
+
+### Aubrey AAA rebuild, stage 4b (body and uniform against the sheet)
+
+The owner asked whether her body and clothes had been checked against the
+sheet. They had not -- stage 2 refitted the kit's cartoon uniform and only
+checked the fit. Side by side with the sheet they missed badly: shoes shaped
+like bare feet, leggings for trousers, no belt buckle or radio pack, a boxy
+untucked shirt, a short curled ponytail standing off her head, a cap that
+stopped above her ears at the back. Rebuilt in `aubrey_aaa.py`:
+
+- **Uniform from MakeHuman's CC0 clothes**, fitted by MPFB:
+  `female_casualsuit01` (tee and jeans, split) and `shoes06`.
+  - The shirt's **stripes are painted from 3D position** onto the tee's own
+    UVs, per pattern piece: front and back each striped by angle round an
+    axis behind (or in front of) her, so the bands run straight down the
+    middle, wrap the sides and meet at the tee's real side seams; the
+    sleeves striped down the arm with a black cuff. (By x alone the sides
+    were one solid band; by |x| the shoulders took the sleeve pattern in
+    blotches.)
+  - **Tucked** under a **belt** built round the trousers from rays, with a
+    square silver buckle and a radio pack at the back right.
+  - **Trousers**: the jeans' low waist raised to the belt, the legs let out
+    to a straight 6.4 cm radius below the thigh and lengthened to break on
+    the shoe; near-black, keeping the jeans' wrinkle normal map.
+  - **Trainers** in black. The feet inside are deleted below the collar:
+    the heel cup sits 2 mm off her heel and the skin showed through.
+- **Collar**: the flap is now pushed onto the shirt's surface and smoothed
+  (placed by radius it was a bib, and the tee came through it in shards);
+  the tee is cut inside it; a small V at the zip.
+- **Patch** projected straight back onto the shirt, flat like a sewn patch.
+- **Ponytail** rebuilt: a 47 cm tube of strands from the tie down her back
+  to mid-back, its head-side pressed onto her (no daylight between tail and
+  head), in the cap's strand texture; the five spring bones re-laid along it.
+- **Hairline** retuned: on the new head the ear sits nearly beside the
+  skull's centre, so the hairline now drops straight down behind it to the
+  nape (the strip behind her ears was bare), and the scalp takes the nape.
+- **Neck** slimmed 12% by neck weight.
+
+Checks: 600 tests pass; the build is byte-identical run to run.

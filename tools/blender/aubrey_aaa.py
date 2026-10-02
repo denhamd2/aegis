@@ -27,16 +27,20 @@ her, and everything the game relies on is kept:
 * THE WEIGHTS are MPFB's own -- complete and smooth, fingers included --
   renamed onto her bones; her kit body cannot supply them (the skin under
   her uniform was deleted when the uniform was cut).
-* HER UNIFORM AND HAIR (cut for the kit body) are REFITTED to the new one.
-  Each garment conforms by its own standoff: fabric inside or nearer the skin
-  than its minimum is pushed out to it, fabric hanging further than its
-  maximum is pulled in, and everything between keeps its drape; the
-  corrections are smoothed across the cloth (GARMENT_SMOOTH) so nothing
-  kinks, then the minimum is enforced again. Each garment then takes its
-  weights from the new body, so cloth and skin move as one, and the skin
-  under the cloth is deleted -- bar the ring at each opening -- so nothing
-  can poke through in a pose. The ponytail, its tie and the ponytail spring
-  bones move to the new skull where the tie sits.
+* HER UNIFORM is new (stage 4b): MakeHuman's own CC0 clothes, fitted to her
+  by MPFB -- female_casualsuit01, a fitted short-sleeved tee and slim jeans
+  split apart, and shoes06, trainers -- restyled to the owner's sheet: the
+  tee striped (painted in its UV space from 3D position, piece by piece, a
+  black cuff on each sleeve) and tucked under a belt with a square buckle
+  and a radio pack; the jeans' waist raised to the belt, the legs let out
+  straight and lengthened to break on the shoe, all near-black; the
+  trainers black. Each garment then conforms to the body by a minimum
+  standoff, takes its weights from it, and the skin under the cloth (and
+  the feet inside the shoes) is deleted so nothing can poke through in a
+  pose. The kit's patch is laid flat on the new shirt.
+* HER PONYTAIL is new (stage 4b): long and falling close down her back from
+  the tie, its spring bones re-laid along it; the kit's was short, curled
+  and stood out behind her.
 * HER COLLAR is new: the kit shirt's neckline zig-zagged from 1.39 to 1.53 m
   and stood up round her neck in shards. Now the shirt is trimmed below the
   collar line and a polo collar is built round her actual neck -- rays
@@ -145,6 +149,10 @@ BONE_NAMES = {"head": "Head"}
 ## rides MPFB's own neck; the head turns about her Head bone, ~3.5 cm lower
 ## in the neck, which no clip's head rotation shows.
 FREE_JOINTS = {"head"}
+## Her neck is slim (the sheet); fitted to her kit's neck bone, the body's
+## came out ~2.5 cm thicker than MPFB's own. The skin on the neck bone is
+## drawn toward the neck's axis by NECK_SLIM times its neck weight.
+NECK_SLIM = 0.12
 ## Garment -> (minimum, maximum) standoff off the new body, metres. The
 ## minimums are the kit build's own offsets (referee_aubrey.py SHIRT_OFF,
 ## TROUSER_OFF, SHOE_OFF); the maximums let a shirt drape but not tent.
@@ -169,10 +177,9 @@ STRIPE_WHITE = (232, 232, 226)
 STRIPE_BLACK = (20, 20, 22)
 CUFF_W = 0.022
 SLEEVE_X = 0.172
-SIDE_SEAM_X = 0.10
-## The side panels run up to the armpit; above it the front and back panels
-## meet over the shoulder.
-ARMPIT_DROP = 0.06
+## The front's stripes are angles round an axis this far behind her spine
+## (the back's, this far in front), times the distance to her surface.
+TORSO_AXIS_BACK = 0.14
 SHIRT_TEX = ROOT / "game/assets/characters/aubrey_aaa_shirt.png"
 ## The jeans' and trainers' own textures, taken to black: a twill keeps its
 ## seams and wear in a narrow band of near-black; the trainers keep their
@@ -217,14 +224,21 @@ CAP_OFF = 0.004
 ## Her hairline: height above the eyes (m) by the angle round the head from
 ## straight ahead (degrees) -- a high forehead, the temples, over the ear,
 ## behind it, the nape.
+## (On the new head her ear sits at ~95 degrees, nearly beside the head's
+## centre: the hairline drops straight down behind it to the nape. At 100
+## degrees and +1 cm the strip behind her ears was bare -- an undercut.)
 HAIRLINE = [(0.0, 0.072), (35.0, 0.062), (60.0, 0.042), (82.0, 0.030),
-            (100.0, 0.010), (125.0, -0.040), (180.0, -0.070)]
+            (95.0, 0.020), (104.0, -0.045), (125.0, -0.065), (180.0, -0.080)]
 ## The cap feathers out over this much of its edge.
 HAIRLINE_FEATHER = 0.012
 ## Her ears: never under the cap. Out from the head's centre line beyond
 ## EAR_X, within EAR_Z of eye height, the cap's margin goes negative.
 EAR_X = 0.064
 EAR_Z = (-0.040, 0.022)
+## ...and within EAR_Y of the ear's own depth (its lobe's y): before, the
+## whole band of the head at ear height was bare, behind the ear too -- an
+## undercut.
+EAR_Y = (-0.026, 0.022)
 ## Strand repeats round the head.
 CAP_U_TILES = 6
 HAIR_STRANDS = ROOT / "game/assets/characters/aubrey_hair_strands.png"
@@ -244,7 +258,10 @@ PONYTAIL = ("Aubrey_Ponytail", "Aubrey_HairTie")
 ## strand texture so the colour matches. Its five spring bones are re-laid
 ## along the path in equal lengths.
 PONYTAIL_TIP_Z = 1.235
-PONYTAIL_GAP = 0.006
+PONYTAIL_GAP = 0.002
+## The side of the tail toward her lies on her: those ring vertices are
+## pressed onto what is under them, this far off it.
+PONYTAIL_HUG = 0.002
 PONYTAIL_R = [(0.0, 0.017), (0.12, 0.031), (0.35, 0.034), (0.65, 0.026),
               (0.88, 0.013), (1.0, 0.004)]
 PONYTAIL_FLAT = (1.15, 0.8)
@@ -267,25 +284,35 @@ COLLAR_TILT = 0.024
 COLLAR_SAMPLE_UP = 0.022
 COLLAR_MAX_R = 0.072
 COLLAR_STEPS = 48
-## Narrow: on the owner's sheet she is zipped up to the collar.
-COLLAR_GAP = 6.0
+## On the owner's sheet she is zipped to the collar, its points spread in a
+## small V.
+COLLAR_GAP = 8.0
 COLLAR_PROFILE = [(0.000, 0.004), (0.014, 0.004), (0.027, 0.004), (0.033, 0.008),
                   (0.031, 0.012), (0.020, 0.016), (0.008, 0.021), (-0.004, 0.025)]
 ## The collar's points drop by this at the front edges.
-COLLAR_POINT_DROP = 0.022
+COLLAR_POINT_DROP = 0.030
 ## Shirt faces above the collar's (tilted) base plus COLLAR_TRIM_UP, within
-## COLLAR_TRIM_R of the neck's axis, go: the collar's flap covers the cut.
-## (The kit shirt needed 0.105; the MakeHuman tee's crew neck already sits
-## inside the collar, and a cut that wide left a saw-toothed edge out on
-## her shoulders past the flap.)
-COLLAR_TRIM_UP = 0.012
-COLLAR_TRIM_R = 0.0
+## COLLAR_TRIM_R of the neck's own surface at that angle, go: the flap
+## (reaching up to COLLAR_FLAP_MAX off the neck) covers the cut. (A fixed
+## 0.105 from the axis, for the kit shirt, left a saw-toothed edge out on
+## her shoulders past the flap; no cut left the tee's striped neckband
+## standing inside the collar.)
+COLLAR_TRIM_UP = 0.0
+COLLAR_TRIM_R = 0.02
+## The flap rests this far off the shirt (at 0.005 the tee's stripes showed
+## through it in specks), and reaches no further than COLLAR_FLAP_MAX off her
+## neck: resting on the tee wherever that was, it spread like a bib.
+COLLAR_FLAP_OFF = 0.008
+COLLAR_FLAP_MAX = 0.040
 ## The placket: from the collar's gap down to PLACKET_BOTTOM, this wide.
 PLACKET_BOTTOM = 1.355
 PLACKET_HALF_W = 0.016
 TRIM_MATERIAL = "M_RefTrim"
 ## Skin is deleted where a ray out along its normal meets cloth within this.
 COVER_REACH = 0.08
+## The feet, inside the trainers, go whole below their collar: the shoe's
+## heel cup sits only ~2 mm off her heel and the skin showed through it.
+FOOT_HIDDEN_Z = 0.09
 ## Eyeball radius over MPFB's eye helper's: the helper is the eye's visible
 ## front; a real eyeball is ~12 mm.
 EYE_RADIUS = 0.0118
@@ -398,6 +425,7 @@ def make_body(old_arm):
         centre = sum(pts, Vector()) / len(pts)
         front = min(pts, key=lambda p: p.y)          # she faces -Y
         eyes[side] = (centre, (front - centre).normalized())
+    slim_neck(human, old_arm)
     cards = make_cards(human)
     make_garments(human, old_arm)
     lobes = ear_lobes(human)
@@ -524,15 +552,18 @@ def refit(old_arm, body):
     body_bvh = world_bvh([body])
     for name, (t_min, t_max) in GARMENTS.items():
         conform(objects[name], body_bvh, t_min, t_max)
-    # The patch onto the new shirt: each vertex to the nearest point on it,
-    # PATCH_OFF out.
+    # The patch onto the new shirt: each vertex straight back along the
+    # line she faces until it is PATCH_OFF in front of the shirt -- one
+    # direction for all, so it lies on her like a sewn patch. (To the
+    # nearest point, its corner folded over the curve of her chest.)
     shirt_bvh = world_bvh([objects["Aubrey_Shirt"]])
     patch = objects[PATCH]
     inv = patch.matrix_world.inverted()
     for v in patch.data.vertices:
-        loc, nor, _, _ = shirt_bvh.find_nearest(patch.matrix_world @ v.co)
-        if loc is not None:
-            v.co = inv @ (loc + nor * PATCH_OFF)
+        p = patch.matrix_world @ v.co
+        hit = shirt_bvh.ray_cast(Vector((p.x, -0.5, p.z)), Vector((0.0, 1.0, 0.0)), 1.0)[0]
+        if hit is not None:
+            v.co = inv @ Vector((p.x, hit.y - PATCH_OFF, p.z))
     patch.data.update()
     # The hair: the cap onto the new skull; the ponytail with the cap where
     # the tie sits.
@@ -574,7 +605,8 @@ def cover_skin(body, cloth) -> None:
     bm = bmesh.new()
     bm.from_mesh(body.data)
     bm.faces.ensure_lookup_table()
-    doomed = [f for f in bm.faces if all(covered[v.index] for v in f.verts)]
+    doomed = [f for f in bm.faces if all(covered[v.index] or (mw @ v.co).z < FOOT_HIDDEN_Z
+                                         for v in f.verts)]
     bmesh.ops.delete(bm, geom=doomed, context="FACES")
     loose = [v for v in bm.verts if not v.link_faces]
     bmesh.ops.delete(bm, geom=loose, context="VERTS")
@@ -627,7 +659,7 @@ def hairline(angle: float) -> float:
     return z[-1]
 
 
-def make_cap(old_arm, body, eyes, tie_centre):
+def make_cap(old_arm, body, eyes, tie_centre, lobes):
     """The slicked cap, grown from the new head's scalp (see HAIRLINE)."""
     eye_z = (eyes["l"][0].z + eyes["r"][0].z) / 2.0
     centre = (eyes["l"][0] + eyes["r"][0]) / 2.0 + Vector((0.0, 0.075, 0.01))
@@ -647,7 +679,8 @@ def make_cap(old_arm, body, eyes, tie_centre):
         m = (p.z - eye_z) - hairline(angle)
         # The ear: a negative margin, so the cap feathers round it rather
         # than stopping on whole faces.
-        if EAR_Z[0] < p.z - eye_z < EAR_Z[1]:
+        ear_y = lobes["l" if p.x > 0 else "r"][0].y
+        if EAR_Z[0] < p.z - eye_z < EAR_Z[1] and EAR_Y[0] < p.y - ear_y < EAR_Y[1]:
             m = min(m, EAR_X - abs(r.x))
         margin[v.index] = m
     faces = [f for f in body.data.polygons
@@ -737,7 +770,7 @@ def make_collar(old_arm, body, shirt):
     def above(p):
         rel = p.xy - centre.xy
         th = math.atan2(rel.x, -rel.y)
-        return p.z > base_z(th) + COLLAR_TRIM_UP and rel.length < COLLAR_TRIM_R
+        return p.z > base_z(th) + COLLAR_TRIM_UP and rel.length < radius(th, centre) + COLLAR_TRIM_R
     doomed = [f for f in bm.faces if any(above(mw @ v.co) for v in f.verts)]
     bmesh.ops.delete(bm, geom=doomed, context="FACES")
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
@@ -772,9 +805,32 @@ def make_collar(old_arm, body, shirt):
                 reach = (neck_radius(th, z, centre) or r) + off
             else:
                 # 5 mm proud: at 3 the shirt's stripes flickered through.
-                reach = max(r + off, shirt_r(th, z) + 0.005)
+                reach = min(max(r + off, shirt_r(th, z) + COLLAR_FLAP_OFF), r + COLLAR_FLAP_MAX)
             verts.append(Vector((centre.x, centre.y, z0 + h - drop)) + d * reach)
     rows = len(COLLAR_PROFILE)
+    # The flap lies ON the shirt: each of its points pushed out to at least
+    # COLLAR_FLAP_OFF off the shirt's surface, the corrections smoothed
+    # round the ring, then the minimum enforced again. (Placed by radius
+    # alone, the tee's shoulders came through it in shards.)
+    flap = [k * rows + j for k in range(COLLAR_STEPS) for j in range(4, rows)]
+    for rnd in range(3):
+        push = {}
+        for i in flap:
+            loc, nor, _, _ = shirt_bvh.find_nearest(verts[i])
+            if loc is None:
+                continue
+            d = (verts[i] - loc).dot(nor)
+            if d < COLLAR_FLAP_OFF:
+                push[i] = nor * (COLLAR_FLAP_OFF - d)
+        if rnd < 2:
+            smooth_push = {}
+            for i in flap:
+                k, j = divmod(i, rows)
+                nb = [push.get(kk * rows + j, Vector()) for kk in (k - 1, k + 1) if 0 <= kk < COLLAR_STEPS]
+                smooth_push[i] = push.get(i, Vector()) * 0.5 + sum(nb, Vector()) * (0.5 / max(len(nb), 1))
+            push = smooth_push
+        for i, d in push.items():
+            verts[i] = verts[i] + d
     for k in range(COLLAR_STEPS - 1):
         for j in range(rows - 1):
             a = k * rows + j
@@ -1063,14 +1119,37 @@ def paint_stripes(shirt, old_arm) -> None:
     x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
     spine = old_arm.matrix_world @ old_arm.data.bones["spine_02"].head_local
     arm = old_arm.matrix_world @ old_arm.data.bones["upperarm_l"].head_local
-    # Torso: as a shirt is cut -- front and back panels striped straight
-    # down (by x), side panels past SIDE_SEAM_X striped by depth (y), the
-    # stripes meeting at the side seams.
-    side = (np.abs(x) > SIDE_SEAM_X) & (z < arm.z - ARMPIT_DROP)
-    s_torso = np.where(side, np.sign(x) * (SIDE_SEAM_X + (y - spine.y)), x)
-    # Sleeves: arc length round the arm's axis.
+    # Torso: the tee's front and back are separate pieces (UV islands, the
+    # left and right halves of its upper atlas), meeting at its side seams.
+    # Each is striped by angle round an axis well behind it (the front) or
+    # in front of it (the back), times that distance: straight down the
+    # middle, wrapping round the sides, every band its true width at the
+    # centre line. (By x alone the sides were one solid band; panels by y
+    # made blotches over the chest.)
+    px = (np.arange(size) + 0.5) / size
+    uu, vv = np.meshgrid(px, 1.0 - px)
+    left = uu < 0.5
+    left_y = y[hit & left & (vv > 0.5)].mean()
+    right_y = y[hit & ~left & (vv > 0.5)].mean()
+    front = left if left_y < right_y else ~left
+    reach = TORSO_AXIS_BACK
+    s_front = np.arctan2(x, -(y - (spine.y + reach))) * (reach + 0.10)
+    s_back = np.arctan2(x, y - (spine.y - reach)) * (reach + 0.10)
+    s_torso = np.where(front, s_front, s_back)
+    # Sleeves: arc length round the arm's axis -- down the sleeve.
     s_sleeve = np.arctan2(z - arm.z, -(y - arm.y)) * 0.05
-    sleeve = np.abs(x) > SLEEVE_X
+    # The sleeves are the tee's own sleeve pieces: their UV island, found as
+    # the box round the faces well out along the arm. (By |x| alone, the top
+    # of the shoulder took the sleeves' pattern in blotches.)
+    uvs = shirt.data.uv_layers["UVMap"].data
+    island = [uvs[li].uv for poly in shirt.data.polygons
+              if abs((shirt.matrix_world @ poly.center).x) > SLEEVE_X + 0.06
+              for li in poly.loop_indices]
+    u0 = min(u.x for u in island) - 0.01
+    u1 = max(u.x for u in island) + 0.01
+    v0 = min(u.y for u in island) - 0.01
+    v1 = max(u.y for u in island) + 0.01
+    sleeve = (uu > u0) & (uu < u1) & (vv > v0) & (vv < v1)
     s = np.where(sleeve, s_sleeve, s_torso)
     wave = np.cos(np.pi * s / STRIPE_W)
     black = _smooth(-0.12, 0.12, wave)
@@ -1289,8 +1368,16 @@ def make_ponytail(old_arm, tie_centre):
         for k in range(PONYTAIL_SIDES + 1):
             a = 2.0 * math.pi * k / PONYTAIL_SIDES + twist
             wave = 1.0 + 0.06 * math.sin(3.0 * a + 9.0 * t)
-            verts.append(c + (n * math.cos(a) * PONYTAIL_FLAT[0]
-                              + b * math.sin(a) * PONYTAIL_FLAT[1]) * r * wave)
+            p = c + (n * math.cos(a) * PONYTAIL_FLAT[0]
+                     + b * math.sin(a) * PONYTAIL_FLAT[1]) * r * wave
+            # Toward her (-y): pressed onto her, in or out, so the tail lies
+            # on her head and back -- seen from the side, no daylight.
+            toward = max(0.0, (c - p).y / max(r * PONYTAIL_FLAT[1], 1e-6))
+            if toward > 0.0:
+                hit = under.ray_cast(Vector((p.x, c.y + 0.05, p.z)), Vector((0.0, -1.0, 0.0)), 0.3)[0]
+                if hit is not None:
+                    p.y += (hit.y + PONYTAIL_HUG - p.y) * toward
+            verts.append(p)
             uvs.append((k / PONYTAIL_SIDES * PONYTAIL_U_TILES, 1.0 - t))
         # Weights: linear between the two nearest bones' midpoints.
         x = t * n_bones - 0.5
@@ -1327,6 +1414,25 @@ def make_ponytail(old_arm, tie_centre):
     tail.modifiers.new("Armature", "ARMATURE").object = old_arm
     print(f"make_ponytail: {total:.3f} m, tip at z {path[-1].z:.3f}")
     return tail
+
+
+def slim_neck(human, old_arm) -> None:
+    """Draws the neck's skin toward its axis (NECK_SLIM by neck weight)."""
+    group = human.vertex_groups["neck_01"].index
+    head = old_arm.matrix_world @ old_arm.data.bones["neck_01"].head_local
+    tail = old_arm.matrix_world @ old_arm.data.bones["neck_01"].tail_local
+    mw = human.matrix_world
+    inv = mw.inverted()
+    for v in human.data.vertices:
+        w = next((g.weight for g in v.groups if g.group == group), 0.0)
+        if w <= 0.0:
+            continue
+        p = mw @ v.co
+        f = max(0.0, min(1.0, (p.z - head.z) / (tail.z - head.z))) if tail.z != head.z else 0.0
+        axis = head.lerp(tail, f)
+        radial = Vector((p.x - axis.x, p.y - axis.y, 0.0))
+        v.co = inv @ (p - radial * (NECK_SLIM * w))
+    human.data.update()
 
 
 def make_cards(human):
@@ -1565,7 +1671,7 @@ def main() -> int:
     cover_skin(body, [bpy.data.objects[n] for n in GARMENTS])
     bpy.data.objects.remove(bpy.data.objects[CAP], do_unlink=True)
     paint_strands()
-    make_cap(old_arm, body, eyes, tie_centre)
+    make_cap(old_arm, body, eyes, tie_centre, lobes)
     bpy.data.objects.remove(bpy.data.objects["Aubrey_Ponytail"], do_unlink=True)
     make_ponytail(old_arm, tie_centre)
     for o in bpy.context.scene.objects:

@@ -336,8 +336,11 @@ sheet's front, 3/4 and profile on clay renders. Stage 4 done -- colour: a
 CC0 skin regraded, smoky eyes, liner and red lips painted in UV space from 3D
 position, MakeHuman brow and lash cards, grey-green eyes (build_eyes.py
 AUBREY_AAA), stud earrings; the mouth narrowed and the eyes opened less once
-seen in colour. Next: a body-and-uniform review against the sheet, then wire
-it in and gate it.
+seen in colour. Stage 4b done -- body and uniform reviewed against the
+sheet and rebuilt: MakeHuman CC0 tee/jeans/trainers as her uniform (stripes,
+tucked, belt, buckle, radio pack, straight black trousers, black trainers),
+a polo collar laid on the shirt, a long ponytail, the hairline to the nape,
+a slimmer neck. Next: wire it in and gate it.
 
 **Why Aubrey goes first in the head/body work.** She has no likeness
 expectations from a 2K model and the simplest kit. If the MPFB → re-skin →
