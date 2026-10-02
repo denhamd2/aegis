@@ -945,49 +945,44 @@ const BARRICADE_SPILL_DROP := 0.7    # light under the barricade top
 
 
 func _build_barricade_leds() -> void:
-	var span := ArenaBuilder.BARRICADE_RADIUS * 2.0
-	var panels := int(span / ArenaBuilder.BARRICADE_PANEL)
-	var pitch := span / panels
-	var width := pitch - ArenaBuilder.BARRICADE_JOIN
 	var top := ArenaBuilder.FLOOR_Y + ArenaBuilder.BARRICADE_HEIGHT
-	# ringside.py's panel is 0.14 deep, centred on the line.
-	var face := ArenaBuilder.BARRICADE_RADIUS - 0.07 - 0.004
+	# ringside.py's panel is 0.14 deep, centred on the line; the band sits on
+	# its ring-side face.
+	var inset := 0.07 + 0.004
 	var mats: Array[StandardMaterial3D] = []
 	for c in RIBBON_SPILL_COLORS:
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.albedo_color = c * BARRICADE_LED_EMISSION
 		mats.append(m)
-	var band := BoxMesh.new()
-	band.size = Vector3(width - 0.1, BARRICADE_LED_HEIGHT, 0.01)
 	var n := 0
-	for out: Vector3 in [Vector3.BACK, Vector3.FORWARD, Vector3.RIGHT, Vector3.LEFT]:
+	for panel: Array in ArenaBuilder.barricade_panels():
+		var at: Vector3 = panel[0]
+		var out: Vector3 = panel[2]
+		var width: float = panel[3]
+		# Right-handed whichever way the run was walked.
 		var along := Vector3(out.z, 0.0, -out.x)
-		for i in panels:
-			var at := along * (((i + 0.5) / panels - 0.5) * span)
-			# ringside.py skips the entrance run's panels that intrude on the
-			# walkway; so does the band.
-			if out.z < -0.5 and absf(at.x) - width * 0.5 < ArenaBuilder.BARRICADE_GAP:
-				continue
-			var led := MeshInstance3D.new()
-			led.name = "BarricadeLed%02d" % n
-			led.mesh = band
-			led.material_override = mats[n % mats.size()]
-			led.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			led.transform = Transform3D(Basis(along, Vector3.UP, out),
-					at + out * face + Vector3.UP * (top - BARRICADE_LED_DROP))
-			add_child(led)
-			var light := OmniLight3D.new()
-			light.name = "BarricadeSpill%02d" % n
-			light.position = at + out * (face - BARRICADE_SPILL_IN) \
-					+ Vector3.UP * (top - BARRICADE_SPILL_DROP)
-			light.light_color = RIBBON_SPILL_COLORS[n % RIBBON_SPILL_COLORS.size()]
-			light.light_energy = BARRICADE_SPILL_ENERGY
-			light.omni_range = BARRICADE_SPILL_RANGE
-			light.shadow_enabled = false
-			light.light_volumetric_fog_energy = 0.0
-			add_child(light)
-			n += 1
+		var band := BoxMesh.new()
+		band.size = Vector3(width - 0.1, BARRICADE_LED_HEIGHT, 0.01)
+		var led := MeshInstance3D.new()
+		led.name = "BarricadeLed%02d" % n
+		led.mesh = band
+		led.material_override = mats[n % mats.size()]
+		led.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		led.transform = Transform3D(Basis(along, Vector3.UP, out),
+				at - out * inset + Vector3.UP * (top - BARRICADE_LED_DROP))
+		add_child(led)
+		var light := OmniLight3D.new()
+		light.name = "BarricadeSpill%02d" % n
+		light.position = at - out * (inset + BARRICADE_SPILL_IN) \
+				+ Vector3.UP * (top - BARRICADE_SPILL_DROP)
+		light.light_color = RIBBON_SPILL_COLORS[n % RIBBON_SPILL_COLORS.size()]
+		light.light_energy = BARRICADE_SPILL_ENERGY
+		light.omni_range = BARRICADE_SPILL_RANGE
+		light.shadow_enabled = false
+		light.light_volumetric_fog_energy = 0.0
+		add_child(light)
+		n += 1
 
 
 ## The yoke and head bases that point a fixture body's lens along `forward`.

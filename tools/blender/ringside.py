@@ -53,10 +53,11 @@ WANTED = [
     "BOWL_STRAIGHT_X", "BOWL_STRAIGHT_Z",
     "BARRICADE_RADIUS", "BARRICADE_HEIGHT", "BARRICADE_PANEL", "BARRICADE_JOIN",
     "BARRICADE_GAP", "RINGSIDE_MAT_LIFT", "RAMP_HALF_WIDTH",
+    "DESK_BAY_X0", "DESK_BAY_Z", "DESK_X",
     "DESK_Z", "DESK_LENGTH", "DESK_HEIGHT", "DESK_DEPTH",
-    "DESK_TOP_THICKNESS", "DESK_TOP_OVERHANG",
+    "DESK_TOP_THICKNESS", "DESK_TOP_OVERHANG", "DESK_LED_HEIGHT", "DESK_RISER",
     "DESK_MONITORS", "DESK_MONITOR_WIDTH", "DESK_MONITOR_HEIGHT",
-    "DESK_MONITOR_DEPTH",
+    "DESK_MONITOR_DEPTH", "DESK_MONITOR_TILT",
 ]
 
 # Placeholder colours only; arena_builder.gd overrides every part by name.
@@ -67,9 +68,16 @@ PART_COLORS = {
     "Barricades": (0.30, 0.31, 0.34, 1.0),
     "CommentaryDesk": (0.10, 0.10, 0.12, 1.0),
     "CommentaryDeskTop": (0.38, 0.39, 0.42, 1.0),
+    "CommentaryDeskLed": (0.20, 0.25, 0.80, 1.0),
+    "CommentaryRiser": (0.05, 0.05, 0.06, 1.0),
+    "CommentaryKit": (0.04, 0.04, 0.045, 1.0),
+    "CommentaryScreens": (0.30, 0.40, 0.60, 1.0),
 }
-SMOOTH = frozenset()
-PROJECTED = frozenset(PART_COLORS)
+SMOOTH = frozenset({"CommentaryKit"})
+## The LED face carries its own UVs (one tile of the ribbon art across the
+## desk); everything else is cube-projected.
+PROJECTED = frozenset(PART_COLORS) - {"CommentaryDeskLed", "CommentaryScreens"}
+FACE_TOWARD = {"CommentaryDeskLed": (0.0, 0.0, -1.0)}
 
 
 def build_floor(cfg: dict[str, float], parts: dict[str, Part]) -> None:
@@ -127,101 +135,230 @@ def build_ringside_mat(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     and the ring, the steps and the barricade all stand on top of it.
     """
     reach = cfg["BARRICADE_RADIUS"]
+    y = cfg["FLOOR_Y"] + cfg["RINGSIDE_MAT_LIFT"] * 0.5
     parts["RingsideMat"].box(
-        Vector((0.0, cfg["FLOOR_Y"] + cfg["RINGSIDE_MAT_LIFT"] * 0.5, 0.0)),
+        Vector((0.0, y, 0.0)),
         Vector((reach * 2.0, cfg["RINGSIDE_MAT_LIFT"], reach * 2.0)),
     )
+    # And on into the desk's bay (arena_builder.gd DESK_BAY_*).
+    x0, bay_z = cfg["DESK_BAY_X0"], cfg["DESK_BAY_Z"]
+    parts["RingsideMat"].box(
+        Vector(((x0 + reach) * 0.5, y, (reach + bay_z) * 0.5)),
+        Vector((reach - x0, cfg["RINGSIDE_MAT_LIFT"], bay_z - reach)),
+    )
+
+
+def _box(part: Part, centre: Vector, axes: tuple[Vector, Vector, Vector],
+         size: Vector, bevel: float = 0.0, segments: int = 1) -> None:
+    """A box in any frame -- `axes` are its width, height and depth
+    directions -- for the tilted pieces oriented_box (always upright) cannot
+    make: a monitor leaning back, a laptop lid, a chair back."""
+    ea, eu, eo = (axes[0].normalized() * (size.x * 0.5),
+                  axes[1].normalized() * (size.y * 0.5),
+                  axes[2].normalized() * (size.z * 0.5))
+    corners = [
+        centre + ea * sa + eu * su + eo * so
+        for sa, su, so in (
+            (-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1),
+            (-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1),
+        )
+    ]
+    faces = ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4),
+             (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7))
+    if bevel > 0.0:
+        part._beveled(corners, faces, bevel, segments)
+        return
+    v = [part.vert(c) for c in corners]
+    for face in faces:
+        part.quad(*[v[i] for i in face])
 
 
 def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """The commentary desk, on +Z between the apron and the barricade.
+    """The commentary desk, in its own bay on +Z (arena_builder.gd DESK_*).
 
-    Three pieces and no more, because at hard-camera range that is all that
-    survives: a fascia panel to the floor, a worktop standing proud of it, and
-    a row of low monitor boxes along the back edge. The lip is the part that
-    does the work -- a desk reads as a desk from the shadow line under an
-    overhanging top, and a single box reads as a crate.
+    Built to read at broadcast range the way WWE 2K's announce table does:
 
-    The team sits on the OUTER side (+Z) facing the ring, which is where
-    `aew_low_angle_led_wall.jpg` puts them, so the fascia faces the ring and
-    the monitors stand along the far edge in front of the commentators.
+    * a low carpeted RISER under the desk and chairs -- the team's own area;
+    * the desk body with a kick plate and proud end panels, and on its ring
+      side an LED FACE showing the ribbon boards' art (2K26's announce-table
+      cover; the face is its own part so Godot can light it);
+    * a thick WORKTOP with a padded, rounded front edge, overhanging the body
+      -- the shadow line under it is what makes a desk read as a desk;
+    * per commentator, a MONITOR on a short stand tilted back at the seat, a
+      HEADSET on the desk and a high-backed CHAIR behind it; two laptops
+      between them.
+
+    The team sits on the far (+Z) side facing the ring, as in
+    `aew_low_angle_led_wall.jpg`, so the LED face is toward the ring and the
+    hard camera, and the monitors face away from it.
     """
-    desk = parts["CommentaryDesk"]
+    body = parts["CommentaryDesk"]
     top = parts["CommentaryDeskTop"]
-    z = cfg["DESK_Z"]
+    led = parts["CommentaryDeskLed"]
+    riser = parts["CommentaryRiser"]
+    kit = parts["CommentaryKit"]
+    screens = parts["CommentaryScreens"]
+    x0, z = cfg["DESK_X"], cfg["DESK_Z"]
     depth = cfg["DESK_DEPTH"]
-    height = cfg["DESK_HEIGHT"]
     length = cfg["DESK_LENGTH"]
     floor_y = cfg["FLOOR_Y"]
-    top_y = floor_y + height
+    base_y = floor_y + cfg["DESK_RISER"]
+    top_y = floor_y + cfg["DESK_HEIGHT"]
     thickness = cfg["DESK_TOP_THICKNESS"]
     overhang = cfg["DESK_TOP_OVERHANG"]
+    front_z = z - depth * 0.5
+    back_z = z + depth * 0.5
+    X = Vector((1.0, 0.0, 0.0))
+    Y = Vector((0.0, 1.0, 0.0))
+    Z = Vector((0.0, 0.0, 1.0))
 
-    # Fascia: floor to just under the worktop.
-    desk.box(
-        Vector((0.0, (floor_y + top_y - thickness) * 0.5, z)),
-        Vector((length, height - thickness, depth)),
-        bevel=0.012,
-    )
-    # Worktop, proud of the fascia on every side.
-    top.box(
-        Vector((0.0, top_y - thickness * 0.5, z)),
-        Vector((length + overhang * 2.0, thickness, depth + overhang * 2.0)),
-        bevel=0.008,
-    )
-    # Monitors along the back (+Z) edge, facing the ring the way a monitor a
-    # commentator reads faces them.
+    # The riser: from in front of the desk back to the bay's barricade, short
+    # of the bay's ends.
+    r_front = front_z - 0.35
+    r_back = cfg["DESK_BAY_Z"] - 0.12
+    r_x0 = cfg["DESK_BAY_X0"] + 0.25
+    r_x1 = cfg["BARRICADE_RADIUS"] - 0.15
+    riser.box(Vector(((r_x0 + r_x1) * 0.5, floor_y + cfg["DESK_RISER"] * 0.5,
+                      (r_front + r_back) * 0.5)),
+              Vector((r_x1 - r_x0, cfg["DESK_RISER"], r_back - r_front)), bevel=0.012)
+
+    # Body: riser to just under the worktop, the ends standing proud of it.
+    body_h = top_y - thickness - base_y
+    body.box(Vector((x0, base_y + body_h * 0.5, z)),
+             Vector((length - 0.08, body_h, depth)), bevel=0.01)
+    for sx in (-1.0, 1.0):
+        body.box(Vector((x0 + sx * (length * 0.5 - 0.03), base_y + body_h * 0.5, z)),
+                 Vector((0.06, body_h, depth + 0.04)), bevel=0.012, bevel_segments=2)
+    # Kick plate along the ring side.
+    kick = 0.09
+    body.box(Vector((x0, base_y + kick * 0.5, front_z - 0.012)),
+             Vector((length - 0.08, kick, 0.03)), bevel=0.006)
+    # The LED face: one quad, one tile of the ribbon art across it, u running
+    # left to right as the ring sees it (screen-right from +Z looking in is -X).
+    led_y0 = base_y + kick + 0.03
+    led_y1 = led_y0 + cfg["DESK_LED_HEIGHT"]
+    fz = front_z - 0.004
+    lx0, lx1 = x0 - (length * 0.5 - 0.07), x0 + (length * 0.5 - 0.07)
+    a = led.vert(Vector((lx1, led_y0, fz)))
+    b = led.vert(Vector((lx0, led_y0, fz)))
+    c = led.vert(Vector((lx0, led_y1, fz)))
+    d = led.vert(Vector((lx1, led_y1, fz)))
+    led.quad(a, b, c, d, uvs=[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
+
+    # Worktop, proud of the body on every side, its edges rounded.
+    top.box(Vector((x0, top_y - thickness * 0.5, z)),
+            Vector((length + overhang * 2.0, thickness, depth + overhang * 2.0)),
+            bevel=0.02, bevel_segments=3)
+    # The padded bumper along its ring-side edge.
+    kit.tube([Vector((x0 - length * 0.5 - overhang + 0.03, top_y - thickness * 0.5,
+                      front_z - overhang)),
+              Vector((x0 + length * 0.5 + overhang - 0.03, top_y - thickness * 0.5,
+                      front_z - overhang))], thickness * 0.62, sides=10)
+
+    # Seats: one per monitor, evenly along the desk.
     count = int(cfg["DESK_MONITORS"])
-    m_w = cfg["DESK_MONITOR_WIDTH"]
-    m_h = cfg["DESK_MONITOR_HEIGHT"]
-    m_d = cfg["DESK_MONITOR_DEPTH"]
     pitch = length / float(count)
-    back_z = z + depth * 0.5 - m_d * 0.5 - 0.04
-    for i in range(count):
-        x = (i + 0.5) * pitch - length * 0.5
-        top.box(
-            Vector((x, top_y + m_h * 0.5, back_z)),
-            Vector((m_w, m_h, m_d)),
-            bevel=0.005,
-        )
+    m_w, m_h, m_d = (cfg["DESK_MONITOR_WIDTH"], cfg["DESK_MONITOR_HEIGHT"],
+                     cfg["DESK_MONITOR_DEPTH"])
+    tilt = math.radians(cfg["DESK_MONITOR_TILT"])
+    seat_xs = [x0 + (i + 0.5) * pitch - length * 0.5 for i in range(count)]
+    for i, sx in enumerate(seat_xs):
+        # Monitor: a foot, a short neck, and the housing leaning back toward
+        # the seat with its screen on the seat side.
+        mz = z - depth * 0.18
+        kit.box(Vector((sx, top_y + 0.008, mz)), Vector((0.22, 0.016, 0.16)), bevel=0.004)
+        kit.cylinder(Vector((sx, top_y, mz)), Y, 0.018, 0.16, sides=8)
+        up = Vector((0.0, math.cos(tilt), -math.sin(tilt)))
+        out = Vector((0.0, math.sin(tilt), math.cos(tilt)))
+        centre = Vector((sx, top_y + 0.13 + m_h * 0.5 * math.cos(tilt), mz))
+        _box(kit, centre, (X, up, out), Vector((m_w, m_h, m_d)), bevel=0.006)
+        # Screen face, a few millimetres proud of the housing toward the seat.
+        sc = centre + out * (m_d * 0.5 + 0.002)
+        ew, eh = X * (m_w * 0.46), up * (m_h * 0.44)
+        q = [screens.vert(sc - ew - eh), screens.vert(sc + ew - eh),
+             screens.vert(sc + ew + eh), screens.vert(sc - ew + eh)]
+        screens.quad(*q)
+        # Headset, on the desk in front of the seat: a band and two cups.
+        hz = back_z - 0.2
+        hx = sx + 0.32
+        band = [Vector((hx + 0.09 * math.cos(t), top_y + 0.03 + 0.07 * math.sin(t), hz))
+                for t in [math.pi * k / 8.0 for k in range(9)]]
+        kit.tube(band, 0.008, sides=6, caps=True)
+        for side in (-1.0, 1.0):
+            kit.cylinder(Vector((hx + side * 0.09, top_y, hz)), Y, 0.04, 0.045, sides=10)
+        # Chair: five-star base, gas column, seat, tilted high back.
+        cz = back_z + 0.42
+        for k in range(5):
+            ang = 2.0 * math.pi * k / 5.0
+            leg = Vector((math.cos(ang), 0.0, math.sin(ang)))
+            kit.oriented_box(Vector((sx, base_y + 0.04, cz)) + leg * 0.15, leg,
+                             Vector((-leg.z, 0.0, leg.x)), Vector((0.3, 0.03, 0.04)))
+        kit.cylinder(Vector((sx, base_y + 0.05, cz)), Y, 0.025, 0.36, sides=8)
+        seat_y = base_y + 0.48
+        kit.box(Vector((sx, seat_y, cz)), Vector((0.5, 0.08, 0.48)), bevel=0.025, bevel_segments=2)
+        back_tilt = math.radians(12.0)
+        bup = Vector((0.0, math.cos(back_tilt), math.sin(back_tilt)))
+        bout = Vector((0.0, -math.sin(back_tilt), math.cos(back_tilt)))
+        _box(kit, Vector((sx, seat_y + 0.38, cz + 0.24 + 0.36 * math.sin(back_tilt))),
+             (X, bup, bout), Vector((0.48, 0.68, 0.08)), bevel=0.025, segments=2)
+        # A laptop between this seat and the next.
+        if i < count - 1:
+            lx = (sx + seat_xs[i + 1]) * 0.5
+            lz = back_z - 0.22
+            kit.box(Vector((lx, top_y + 0.009, lz)), Vector((0.33, 0.018, 0.23)), bevel=0.003)
+            lid = math.radians(105.0)
+            lup = Vector((0.0, math.sin(lid), math.cos(lid)))
+            lout = Vector((0.0, -math.cos(lid), math.sin(lid)))
+            lc = Vector((lx, top_y + 0.018, lz - 0.115)) + lup * 0.11
+            _box(kit, lc, (X, lup, lout), Vector((0.33, 0.22, 0.01)))
+            ls = lc + lout * 0.006
+            ew, eh = X * 0.15, lup * 0.095
+            q = [screens.vert(ls - ew - eh), screens.vert(ls + ew - eh),
+                 screens.vert(ls + ew + eh), screens.vert(ls - ew + eh)]
+            screens.quad(*q)
 
 
 def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Four runs of discrete panels, each with a round cap rail and a leg.
+    """Runs of discrete panels, each with a round cap rail and a leg.
 
-    Discrete rather than one continuous box per side, which from the wide
-    camera is a featureless band with nothing in it to read scale off.
+    The runs are `ArenaBuilder.barricade_panels()`'s, mirrored here: the four
+    sides of the ring with the entrance GAP on -Z, and on +Z the desk's bay --
+    the barricade steps back to DESK_BAY_Z from the panel joint at
+    DESK_BAY_X0 to the +X corner, the +X run carries on to meet it, and a
+    return closes it. A run of length L takes int(L / PANEL) panels at an
+    even pitch.
 
-    The -Z run carries the entrance GAP. The ramp's foot lands on this line
-    now, and without a gap the barrier would run straight through it -- which
-    is what it did while the ramp ended further in and the barrier stood 3m
-    further out.
+    The -Z run's GAP: the ramp's foot lands on this line, and a panel whose
+    centre clears the gap by less than its own half-width still puts its end
+    through the opening -- the first attempt left two of them standing in
+    the entrance.
     """
     barricade = parts["Barricades"]
     height = cfg["BARRICADE_HEIGHT"]
     y = cfg["FLOOR_Y"] + height * 0.5
     top = cfg["FLOOR_Y"] + height
-    span = cfg["BARRICADE_RADIUS"] * 2.0
-    panels = int(span / cfg["BARRICADE_PANEL"])
-    pitch = span / panels
-    width = pitch - cfg["BARRICADE_JOIN"]
-
-    for out in (Vector((0.0, 0.0, 1.0)), Vector((0.0, 0.0, -1.0)),
-                Vector((1.0, 0.0, 0.0)), Vector((-1.0, 0.0, 0.0))):
+    r = cfg["BARRICADE_RADIUS"]
+    x0, bay_z = cfg["DESK_BAY_X0"], cfg["DESK_BAY_Z"]
+    runs = [
+        (Vector((-r, 0, -r)), Vector((r, 0, -r)), Vector((0.0, 0.0, -1.0))),
+        (Vector((-r, 0, -r)), Vector((-r, 0, r)), Vector((-1.0, 0.0, 0.0))),
+        (Vector((r, 0, -r)), Vector((r, 0, bay_z)), Vector((1.0, 0.0, 0.0))),
+        (Vector((-r, 0, r)), Vector((x0, 0, r)), Vector((0.0, 0.0, 1.0))),
+        (Vector((x0, 0, r)), Vector((x0, 0, bay_z)), Vector((-1.0, 0.0, 0.0))),
+        (Vector((x0, 0, bay_z)), Vector((r, 0, bay_z)), Vector((0.0, 0.0, 1.0))),
+    ]
+    for a, b, out in runs:
+        length = (b - a).length
+        count = max(1, int(length / cfg["BARRICADE_PANEL"]))
+        pitch = length / count
+        width = pitch - cfg["BARRICADE_JOIN"]
         along = Vector((out.z, 0.0, -out.x))
-        line = out * cfg["BARRICADE_RADIUS"]
-        entrance_run = out.z < -0.5
-        for i in range(panels):
-            t = (i + 0.5) / panels - 0.5
-            at = line + along * (t * span)
-            # Skip any panel that INTRUDES on the walkway, not just one
-            # centred in it: a panel whose centre clears the gap by less than
-            # its own half-width still puts its end through the opening, and
-            # the first attempt left two of them standing in the entrance.
-            if entrance_run and abs(at.x) - width * 0.5 < cfg["BARRICADE_GAP"]:
+        step = (b - a).normalized()
+        for i in range(count):
+            at = a + step * (pitch * (i + 0.5))
+            if out.z < -0.5 and abs(at.x) - width * 0.5 < cfg["BARRICADE_GAP"]:
                 continue
-            panel_center = at + Vector((0.0, y, 0.0))
-            barricade.oriented_box(panel_center, along, out,
+            barricade.oriented_box(at + Vector((0.0, y, 0.0)), along, out,
                                    Vector((width, height, 0.14)))
             # The cap rail: a TUBE, because it is the only horizontal at
             # ringside at chest height and it runs across the whole wide
@@ -257,7 +394,8 @@ def main(argv: list[str]) -> int:
     build_ringside_mat(cfg, parts)
     build_barricades(cfg, parts)
     build_commentary_desk(cfg, parts)
-    venue.finish(parts, PART_COLORS, smooth=SMOOTH, projected=PROJECTED)
+    venue.finish(parts, PART_COLORS, smooth=SMOOTH, projected=PROJECTED,
+                 face_toward=FACE_TOWARD)
 
     out = pathlib.Path(args.out)
     venue.export_glb(out)

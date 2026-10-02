@@ -7,6 +7,7 @@ extends Node
 ##   barricade_<view>_on/off -- the barricade's LED band and spill (item 6)
 ##                              shown / hidden: out to the front rows, and
 ##                              back at the apron;
+##   desk_ringside / desk_high -- the commentary desk in its bay;
 ##   glint_<look>_on / _off  -- glint_strength at its look's value / 0
 ##                              (item 8), from a low ringside camera up into
 ##                              the rig, in the match look and the entrance
@@ -84,6 +85,12 @@ func _ready() -> void:
 			await _shoot("barricade_%s_%s" % [view[0], "on" if on else "off"])
 	for b in barricade:
 		b.visible = true
+	# The commentary desk in its bay: from the ring's corner, and high and wide.
+	for view: Array in [["desk_ringside", Vector3(-0.5, 1.4, 2.2), Vector3(2.4, -0.4, 7.6)],
+			["desk_high", Vector3(-7.5, 6.5, -3.0), Vector3(2.0, -1.0, 6.5)]]:
+		cam.fov = 55.0
+		cam.look_at_from_position(view[1], view[2])
+		await _shoot(view[0])
 
 	# Item 8: glints in each look.
 	cam.fov = 60.0

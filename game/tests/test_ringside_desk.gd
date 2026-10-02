@@ -43,22 +43,23 @@ func test_the_model_ships_a_commentary_desk() -> void:
 	root.free()
 
 
-## IT STANDS BETWEEN THE APRON AND THE BARRICADE, which is the only strip of
-## floor it can stand on: inside the barricade because the team works inside
-## it, outside the apron because the ring is there.
-func test_the_desk_stands_in_the_ringside_walkway() -> void:
+## IT HAS ITS OWN AREA: a clear lane of floor between it and the apron (it
+## first stood 0.84 m off the apron, in the way of anyone working outside),
+## and the bay's barricade behind its chairs, not through them.
+func test_the_desk_stands_back_in_its_bay() -> void:
 	var root := _model()
 	var box := _aabb(root, "CommentaryDesk")
-	assert_float(box.position.z) \
+	assert_float(box.position.z - RingBuilder.APRON_OUT) \
 		.override_failure_message(
-			"the desk's near face is at z=%.2f, inside the apron at %.2f"
-			% [box.position.z, RingBuilder.APRON_OUT]) \
-		.is_greater(RingBuilder.APRON_OUT)
-	assert_float(box.end.z) \
-		.override_failure_message(
-			"the desk's far face is at z=%.2f, past the barricade at %.2f"
-			% [box.end.z, ArenaBuilder.BARRICADE_RADIUS]) \
-		.is_less(ArenaBuilder.BARRICADE_RADIUS)
+			"the desk's near face is %.2f m off the apron; it needs a clear lane"
+			% (box.position.z - RingBuilder.APRON_OUT)) \
+		.is_greater(3.5)
+	assert_float(box.position.x).is_greater(ArenaBuilder.DESK_BAY_X0)
+	assert_float(box.end.x).is_less(ArenaBuilder.BARRICADE_RADIUS)
+	# Chairs and all, inside the bay's barricade.
+	var kit := _aabb(root, "CommentaryKit")
+	assert_float(kit.end.z).is_less(ArenaBuilder.DESK_BAY_Z - 0.07)
+	assert_float(kit.position.z).is_greater(RingBuilder.APRON_OUT + 3.0)
 	root.free()
 
 
@@ -67,18 +68,48 @@ func test_the_desk_stands_in_the_ringside_walkway() -> void:
 ## The master is anchored on -X and looks up +X, so its screen-right is +Z --
 ## the same solve that turned the mat's artwork the right way up. +Z is where
 ## `aew_grand_slam_broadcast.png` puts the desk: beside the ring at frame
-## right, with the entrance stage on -Z at frame left. On -Z it would be in
-## the entrance walkway; on -X it would be between the master and the ring.
+## right, offset toward a corner, with the entrance stage on -Z at frame left.
 func test_the_desk_is_on_the_hard_cameras_right() -> void:
 	var root := _model()
 	var box := _aabb(root, "CommentaryDesk")
 	var centre_z: float = (box.position.z + box.end.z) * 0.5
 	assert_float(centre_z).is_greater(0.0)
-	assert_float(absf((box.position.x + box.end.x) * 0.5)) \
-		.override_failure_message(
-			"the desk is not centred on the ring's +Z side") \
-		.is_less(0.5)
+	assert_float((box.position.x + box.end.x) * 0.5) \
+		.is_equal_approx(ArenaBuilder.DESK_X, 0.1)
 	root.free()
+
+
+## The bay's barricade is in the model: the barricades now reach back to it.
+func test_the_barricade_steps_back_round_the_bay() -> void:
+	var root := _model()
+	var box := _aabb(root, "Barricades")
+	assert_float(box.end.z).is_greater(ArenaBuilder.DESK_BAY_Z)
+	assert_float(box.position.z).is_less(-ArenaBuilder.BARRICADE_RADIUS + 0.1)
+	root.free()
+
+
+## No ringside chair stands in the bay or its walkway.
+func test_no_floor_seat_in_the_desk_bay() -> void:
+	var arena: ArenaBuilder = auto_free(ArenaBuilder.new())
+	add_child(arena)
+	var chairs := arena.find_child("FloorChairs", true, false) as MultiMeshInstance3D
+	assert_object(chairs).is_not_null()
+	for i in chairs.multimesh.instance_count:
+		var at := chairs.multimesh.get_instance_transform(i).origin
+		assert_bool(ArenaBuilder.in_desk_bay(at)) \
+			.override_failure_message("a chair at %s is in the desk's bay" % at) \
+			.is_false()
+
+
+## The barricade's LED bands follow the same panels the model is built from.
+func test_barricade_leds_follow_the_panels() -> void:
+	var rig: ArenaLighting = auto_free(ArenaLighting.new())
+	add_child(rig)
+	var bands := 0
+	for child in rig.get_children():
+		if String(child.name).begins_with("BarricadeLed"):
+			bands += 1
+	assert_int(bands).is_equal(ArenaBuilder.barricade_panels().size())
 
 
 ## THE WORKTOP STANDS PROUD OF THE FASCIA. A desk reads as a desk from the
@@ -98,5 +129,5 @@ func test_the_worktop_overhangs_the_fascia() -> void:
 	# And it is a desk, not a table: the top sits at working height and the
 	# fascia runs to the floor under it.
 	assert_float(fascia.position.y) \
-		.is_equal_approx(ArenaBuilder.FLOOR_Y, 0.05)
+		.is_equal_approx(ArenaBuilder.FLOOR_Y + ArenaBuilder.DESK_RISER, 0.05)
 	root.free()

@@ -785,37 +785,48 @@ static func _new_surface() -> SurfaceTool:
 ## The desk was the cheapest missing thing in the wide shot, and it is here
 ## because the hard camera now exists to see it.
 ##
-## Measured against `gauntlet/refs/lighting/aew_low_angle_led_wall.jpg`, which
-## is the one reference in the repo that shows ringside from the floor: the
-## desk is a long fascia'd table standing between the ring apron and the first
-## row of floor seats, with the commentary team seated on its OUTER side
-## facing the ring. It is not centred on the hard camera -- in
-## `aew_grand_slam_broadcast.png` it sits beside the ring at frame right, one
-## ring-side round from the lens.
-##
-## So it goes on +Z. The hard camera is anchored on -X and looks up +X, which
+## It goes on +Z. The hard camera is anchored on -X and looks up +X, which
 ## puts its screen-right at +Z (the same solve that turned the mat's artwork),
-## and that is the side of the ring the reference frame shows it on.
+## and that is the side of the ring `aew_grand_slam_broadcast.png` shows it on.
 ##
-## Placed by what it has to fit between rather than by a measurement off the
-## still: the apron ends at 3.20 and the barricade stands at 6.00, so a 0.72
-## desk centred at 4.40 leaves 0.84 of walkway behind it and 0.84 in front.
-const DESK_Z := 4.40
-const DESK_LENGTH := 4.20
+## IT HAS ITS OWN AREA. It first stood in the 2.8 m strip between the apron
+## (3.20) and the barricade (6.00), 0.84 m clear either side -- in the way of
+## anyone working outside, and too close to the ring (the owner's note). In
+## the Grand Slam frame it stands well back, offset toward a corner, with a
+## wide clear floor between it and the ring and the barricade close behind
+## the commentators; WWE 2K's announce table sits the same way, at the side
+## of the ring with the barricade at its back. So the +Z barricade steps back
+## into a BAY: from the panel joint at DESK_BAY_X0 out to the +X corner it
+## runs at DESK_BAY_Z, the +X run carries on to meet it, and a short return
+## at DESK_BAY_X0 closes it. The bay's edges are the existing panel joints, so
+## no panel is cut. The desk is centred in it; its front is DESK_Z -
+## DESK_DEPTH / 2 = 7.20, 4.0 m off the apron, and the commentators' chairs
+## stand between it and the bay's barricade.
+const DESK_BAY_X0 := -1.2
+const DESK_BAY_Z := 9.0
+const DESK_X := 2.4
+const DESK_Z := 7.6
+const DESK_LENGTH := 4.8
 const DESK_HEIGHT := 0.95
-const DESK_DEPTH := 0.72
+const DESK_DEPTH := 0.8
 ## The worktop, and how far it overhangs the fascia. A desk reads as a desk
 ## from the lip's shadow line, which needs the top to stand proud of the panel
 ## under it.
-const DESK_TOP_THICKNESS := 0.055
-const DESK_TOP_OVERHANG := 0.045
-## Monitors: three low boxes along the back edge, one per commentator. Small,
-## because at hard-camera range they are three specular chips on a dark table
-## and nothing more -- but without them the desk is a slab.
+const DESK_TOP_THICKNESS := 0.07
+const DESK_TOP_OVERHANG := 0.06
+## The LED face on the ring side of the fascia (2K26's announce-table cover):
+## the ribbon boards' own artwork, one tile across the desk -- the art's
+## aspect (RIBBON_ART_ASPECT 7.72) over DESK_LENGTH puts it at this height.
+const DESK_LED_HEIGHT := 0.62
+## The low riser the desk and its chairs stand on, which is what makes the
+## bay read as the team's own area rather than more floor.
+const DESK_RISER := 0.06
+## One monitor per commentator, on a short stand, tilted back toward the seat.
 const DESK_MONITORS := 3
-const DESK_MONITOR_WIDTH := 0.46
-const DESK_MONITOR_HEIGHT := 0.28
-const DESK_MONITOR_DEPTH := 0.05
+const DESK_MONITOR_WIDTH := 0.52
+const DESK_MONITOR_HEIGHT := 0.32
+const DESK_MONITOR_DEPTH := 0.04
+const DESK_MONITOR_TILT := 15.0
 
 const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
 
@@ -839,6 +850,10 @@ const RINGSIDE_MATERIALS := {
 	# The worktop and the monitor faces are the one bright thing at the desk,
 	# which is what makes it read as a desk and not a second barricade.
 	"CommentaryDeskTop": ["arena_barricade", 1.2],
+	# The riser is carpet, darker than the floor; the chairs, headsets and
+	# monitor housings are black plastic and fabric.
+	"CommentaryRiser": ["arena_floor", 0.35],
+	"CommentaryKit": ["arena_tunnel", 0.6],
 }
 
 
@@ -854,7 +869,65 @@ func _build_ringside() -> void:
 		var spec: Array = RINGSIDE_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
+	# The desk's LED face shows the ribbon boards' art, at their level.
+	_dress(root, "CommentaryDeskLed", _ribbon_material(RIBBON_ART_PEAK))
+	_dress(root, "CommentaryScreens", _monitor_screen_material())
 	add_child(root)
+
+
+## The commentary monitors' faces: a dim cool picture, lit from within. Dim
+## because a screen at ringside is a small bright chip at hard-camera range,
+## and anything brighter blooms into a light the desk does not have.
+const DESK_SCREEN_LEVEL := 0.22
+
+
+func _monitor_screen_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.02, 0.025, 0.03)
+	mat.emission_enabled = true
+	mat.emission = Color(0.45, 0.6, 0.9)
+	mat.emission_energy_multiplier = DESK_SCREEN_LEVEL * _emissive_gain()
+	mat.roughness = 0.25
+	return mat
+
+
+## Every barricade panel as [centre on the floor line, along, out, width]:
+## the four runs round the ring with the entrance gap on -Z and the desk's
+## bay on +Z (see DESK_BAY_X0). tools/blender/ringside.py builds the panels
+## off the same runs, and ArenaLighting hangs its LED bands off this list.
+static func barricade_panels() -> Array:
+	var r := BARRICADE_RADIUS
+	# [start, end, out]: each run from one corner of its stretch to the other.
+	var runs := [
+		[Vector3(-r, 0, -r), Vector3(r, 0, -r), Vector3.FORWARD],
+		[Vector3(-r, 0, -r), Vector3(-r, 0, r), Vector3.LEFT],
+		[Vector3(r, 0, -r), Vector3(r, 0, DESK_BAY_Z), Vector3.RIGHT],
+		[Vector3(-r, 0, r), Vector3(DESK_BAY_X0, 0, r), Vector3.BACK],
+		[Vector3(DESK_BAY_X0, 0, r), Vector3(DESK_BAY_X0, 0, DESK_BAY_Z), Vector3.LEFT],
+		[Vector3(DESK_BAY_X0, 0, DESK_BAY_Z), Vector3(r, 0, DESK_BAY_Z), Vector3.BACK],
+	]
+	var out := []
+	for run: Array in runs:
+		var a: Vector3 = run[0]
+		var b: Vector3 = run[1]
+		var length := a.distance_to(b)
+		var count := maxi(1, int(length / BARRICADE_PANEL))
+		var pitch := length / count
+		var width := pitch - BARRICADE_JOIN
+		var along := (b - a).normalized()
+		for i in count:
+			var at := a + along * (pitch * (i + 0.5))
+			# The entrance run skips any panel that intrudes on the walkway.
+			if (run[2] as Vector3).z < -0.5 and absf(at.x) - width * 0.5 < BARRICADE_GAP:
+				continue
+			out.append([at, along, run[2], width])
+	return out
+
+
+## Whether a floor point is in the desk's bay or the walkway round it.
+static func in_desk_bay(point: Vector3) -> bool:
+	return point.z > 0.0 and point.x > DESK_BAY_X0 - FLOOR_SEAT_START \
+			and point.x < BARRICADE_RADIUS and point.z < DESK_BAY_Z + FLOOR_SEAT_START
 
 
 # ---------------------------------------------------------------------------
@@ -1065,6 +1138,8 @@ func _floor_seat_row(offset: float, out_chairs: Array[Transform3D]) -> void:
 			if point.z < 0.0 and absf(point.x) < RAMP_CLEARANCE:
 				continue
 			if _in_floor_aisle(point):
+				continue
+			if in_desk_bay(point):
 				continue
 			var inward: Vector3 = -(loop[i][1] as Vector3)
 			var jitter := Vector3(_rng.randf_range(-WOBBLE, WOBBLE), 0.0,
