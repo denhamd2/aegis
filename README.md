@@ -8324,9 +8324,16 @@ Checks: 600 tests pass; the build is byte-identical run to run.
   profile: leaner face, no widening at the jaw's angle, slimmer lower
   cheeks, slightly tapered face, narrower chin.
 - **Patch** on her right chest as the sheet's pictures show (its caption
-  says left), the artwork mirrored back so it reads, 1.2x larger and 3 cm
-  higher; **pocket** on her left chest, cut from the shirt's own striped
-  cloth (UVs sampled beside it so its edges read), with a flap.
+  says left), the artwork mirrored back so it reads, 1.2x larger.
+  **Pocket** on her left chest: a narrow pen pocket with a flap, cut from
+  the shirt's own striped cloth, sampled to the side by whichever shift
+  makes it whitest (on the sheet it is white over a black stripe). Both are
+  placed by landmarks on the sheet -- fractions of the way from the collar
+  points down to the belt, and of the chest's width out from the zip --
+  since absolute heights put them low: her collar and shoulders do not sit
+  where the photo's do. (The first pocket was twice the sheet's width, too
+  near the zip and 7 cm high; its UV lookup also fell back to an
+  extrapolated triangle on bent quads, now proper barycentrics.)
 - The wider chest raised the tee's cut edge inside the collar: the cut is
   widened to 3.2 cm off the neck, still under the flap.
 

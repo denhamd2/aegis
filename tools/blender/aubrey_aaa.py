@@ -240,22 +240,28 @@ TROUSER_LEG_FROM = (0.86, 0.70)   # z where the letting-out starts, and is full
 ## The patch sits on the new shirt, this far off it.
 PATCH = "Aubrey_Patch"
 PATCH_OFF = 0.0025
-## The sheet's patch is a fifth larger than the kit's and higher on the chest
-## (PATCH_OUT moves it away from the placket).
+## The sheet's patch, placed by its landmarks rather than absolute height
+## (her collar and shoulders do not sit where the photo's do): its centre a
+## quarter of the way (0.23) from the collar points down to the belt, and
+## out from the zip by 0.29 of the chest's width; a fifth larger than the
+## kit's. (x, z of its centre.)
 PATCH_SCALE = 1.2
-PATCH_RAISE = 0.03
-PATCH_OUT = 0.0
-## Her chest pocket (the sheet), on her left: cut from the shirt's own
+PATCH_CENTRE = (-0.108, 1.332)
+## Her chest pocket (the sheet), on her left -- a narrow pen pocket, placed
+## like the patch by landmarks: from 0.21 to 0.53 of the way from the collar
+## points down to the belt, its centre out from the zip by 0.26 of the
+## chest's width, 0.14 of it wide. Cut from the shirt's own
 ## cloth -- its UVs taken from the shirt beside it (POCKET_STRIPE_SHIFT) --
 ## standing POCKET_OFF proud, with a flap POCKET_FLAP deep over its top.
 ## (x from, x to, z bottom, z top), metres.
-POCKET = (0.034, 0.112, 1.285, 1.390)
+POCKET = (0.058, 0.101, 1.216, 1.339)
 POCKET_OFF = 0.005
-POCKET_FLAP = 0.026
+POCKET_FLAP = 0.022
 ## A sewn-on pocket's stripes never quite meet the shirt's: its cloth is
-## sampled this far to the side, so its edges read.
-POCKET_STRIPE_SHIFT = 0.012
-POCKET_GRID = (8, 10)
+## sampled to one side, by whichever of these shifts makes it whitest (on
+## the sheet it is mostly white, over the black stripe it sits on).
+POCKET_STRIPE_SHIFTS = [0.004 * k for k in range(-12, 5)]
+POCKET_GRID = (4, 10)
 GARMENT_SMOOTH = 6
 ## The hair cap's standoff: slicked tight to the skull.
 CAP = "Aubrey_HairCap"
@@ -603,12 +609,14 @@ def refit(old_arm, body):
     # left; the owner went by the pictures): the kit's patch, on her left,
     # is mirrored across her -- positions only, so the UVs and the logo
     # still read the right way round -- and its faces turned back out.
-    # Then the sheet's size and height: PATCH_SCALE about its centre,
-    # PATCH_RAISE up, PATCH_OUT away from the placket.
+    # Then the sheet's size and place: PATCH_SCALE about its centre, the
+    # centre moved to PATCH_CENTRE.
     pts = [patch.matrix_world @ v.co for v in patch.data.vertices]
-    mid = sum(pts, Vector()) / len(pts)
+    lo = Vector((min(p.x for p in pts), 0.0, min(p.z for p in pts)))
+    hi = Vector((max(p.x for p in pts), 0.0, max(p.z for p in pts)))
+    mid = (lo + hi) / 2.0
     for v, p in zip(patch.data.vertices, pts):
-        q = Vector((-mid.x - PATCH_OUT, p.y, mid.z + PATCH_RAISE)) + Vector(
+        q = Vector((PATCH_CENTRE[0], p.y, PATCH_CENTRE[1])) + Vector(
             (-(p.x - mid.x), 0.0, p.z - mid.z)) * PATCH_SCALE
         v.co = inv @ q
     # Mirroring the positions mirrored the artwork too: mirror its u back.
@@ -1518,33 +1526,54 @@ def make_pocket(old_arm, body):
     mesh_s = shirt.data
     uvs = mesh_s.uv_layers["UVMap"].data
     mw = shirt.matrix_world
-    from mathutils.geometry import barycentric_transform
 
     def on_shirt(x, z, off):
         loc, nor, idx, _ = bvh.ray_cast(Vector((x, -0.5, z)), Vector((0.0, 1.0, 0.0)), 1.0)
         if idx is None:
             raise SystemExit(f"make_pocket: no shirt at x {x:.3f}, z {z:.3f}")
         poly = mesh_s.polygons[idx]
-        # The UV there: the polygon's triangle that holds the point.
-        corners = [(mw @ mesh_s.vertices[mesh_s.loops[li].vertex_index].co, uvs[li].uv)
+        # The UV there: barycentric weights in whichever of the polygon's fan
+        # triangles holds the point (the point projected into its plane).
+        # (mathutils' point-in-triangle test wants exact coplanarity; on a
+        # bent quad it failed, and the fallback scrambled the stripes.)
+        corners = [(mw @ mesh_s.vertices[mesh_s.loops[li].vertex_index].co, uvs[li].uv.copy())
                    for li in poly.loop_indices]
-        best = None
+        best, best_err = None, None
         for k in range(1, len(corners) - 1):
-            a, b, c = corners[0], corners[k], corners[k + 1]
-            uvw = barycentric_transform(loc, a[0], b[0], c[0],
-                                        Vector((*a[1], 0)), Vector((*b[1], 0)), Vector((*c[1], 0)))
-            if best is None or (k == 1):
-                best = uvw
-            # Prefer the triangle whose weights are all non-negative.
-            from mathutils.geometry import intersect_point_tri
-            if intersect_point_tri(loc, a[0], b[0], c[0]):
-                best = uvw
-                break
+            (a, ta), (b, tb), (c, tc) = corners[0], corners[k], corners[k + 1]
+            v0, v1, v2 = b - a, c - a, loc - a
+            d00, d01, d11 = v0.dot(v0), v0.dot(v1), v1.dot(v1)
+            d20, d21 = v2.dot(v0), v2.dot(v1)
+            den = d00 * d11 - d01 * d01
+            if abs(den) < 1e-18:
+                continue
+            wb = (d11 * d20 - d01 * d21) / den
+            wc = (d00 * d21 - d01 * d20) / den
+            wa = 1.0 - wb - wc
+            err = -min(wa, wb, wc, 0.0)
+            if best_err is None or err < best_err:
+                best_err = err
+                best = ta * wa + tb * wb + tc * wc
         return loc + nor * off, (best.x, best.y)
 
     x0, x1, z0, z1 = POCKET
     nx, nz = POCKET_GRID
     verts, uv, faces = [], [], []
+    from PIL import Image
+    tex = Image.open(SHIRT_TEX).convert("L")
+    tw, th = tex.size
+
+    def whiteness(shift):
+        total = 0.0
+        for j in range(nz + 1):
+            for i in range(nx + 1):
+                x = x0 + (x1 - x0) * i / nx + shift
+                if bvh.ray_cast(Vector((x, -0.5, z0 + (z1 - z0) * j / nz)), Vector((0.0, 1.0, 0.0)), 1.0)[2] is None:
+                    return -1.0
+                _, (u, v) = on_shirt(x0 + (x1 - x0) * i / nx + shift, z0 + (z1 - z0) * j / nz, 0.0)
+                total += tex.getpixel((min(tw - 1, int(u * tw)), min(th - 1, int((1.0 - v) * th))))
+        return total
+    shift = max(POCKET_STRIPE_SHIFTS, key=whiteness)
 
     def panel(zb, zt, off, lip):
         """A grid from zb to zt, off proud, its rim stepping down to lip."""
@@ -1555,7 +1584,7 @@ def make_pocket(old_arm, body):
                 x = x0 + (x1 - x0) * i / nx
                 edge = i in (0, nx) or j in (0, nz)
                 p, _ = on_shirt(x, z, lip if edge else off)
-                _, t = on_shirt(x + POCKET_STRIPE_SHIFT, z, 0.0)
+                _, t = on_shirt(x + shift, z, 0.0)
                 verts.append(p)
                 uv.append(t)
         for j in range(nz):
@@ -1577,6 +1606,7 @@ def make_pocket(old_arm, body):
     bpy.context.scene.collection.objects.link(pocket)
     pocket.parent = old_arm
     pocket.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    print(f"make_pocket: cloth from {shift * 1000:.0f} mm to the side")
     take_weights(pocket, body)
     pocket.modifiers.new("Armature", "ARMATURE").object = old_arm
     return pocket
