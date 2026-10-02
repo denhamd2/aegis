@@ -286,12 +286,14 @@ CAP = "Aubrey_HairCap"
 CAP_OFF = 0.004
 ## ...with body over the crown and the upper sides (the owner's note: at a
 ## flat 4 mm she read as a painted cap, the head wider and balder than the
-## sheet, where slicked-back hair still stands off the skull). The extra
+## sheet, where slicked-back hair still stands off the skull). At 17 mm it
+## went too far the other way -- big on top (the owner, against the sheet's
+## face and hair crops, where it lies close over the crown). The extra
 ## standoff ramps in over HAIR_RAMP from the hairline, so the hairline stays
 ## crisp; is fullest above HAIR_FULL_Z over the eyes and gone below
 ## HAIR_THIN_Z (the nape lies flat); and falls to HAIR_TIE_KEEP of itself
 ## within HAIR_TIE_R of the tie, which has to sit on it.
-HAIR_VOLUME = 0.017
+HAIR_VOLUME = 0.007
 HAIR_RAMP = 0.025
 HAIR_FULL_Z = 0.045
 HAIR_THIN_Z = -0.02
