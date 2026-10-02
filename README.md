@@ -8417,3 +8417,11 @@ V's edges bound in the trim (11 mm bands laid over the cut, which steps
 along the tee's faces), and the zip starts at the V's point. The bust came
 down a notch (cup 0.5, no bust target): owner, "a little too big" -- bust
 depth 21.4 -> 20.1 cm, the chest still ~30 cm across.
+
+The owner: a crease and a change in the stripes near the top of her back.
+The drape let the shirt out at full strength right up to the shoulder
+blades, so the cloth stepped out there and the stripes jogged; it now eases
+in over 10 cm below them. And skin showed at the top of each shoulder, where
+the tee creases at its sleeve seam and a ray out along the skin's normal
+slips past it: skin within 1.5 cm of cloth and more than 4 cm from any of
+the cloth's openings now goes too.

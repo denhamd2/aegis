@@ -234,6 +234,7 @@ TUCK_UNDER = 0.012
 SHIRT_DRAPE_FROM = 1.30
 SHIRT_DRAPE = 0.97
 SHIRT_DRAPE_GATHER = 0.05
+SHIRT_DRAPE_EASE = 0.10
 BUCKLE_W, BUCKLE_H, BUCKLE_BAR = 0.046, 0.044, 0.0065
 PACK_ANGLE = 145.0          # degrees round from the front, toward her right
 PACK_SIZE = (0.058, 0.085, 0.028)
@@ -389,6 +390,10 @@ ZIP_PULL = (0.004, 0.012)
 TRIM_MATERIAL = "M_RefTrim"
 ## Skin is deleted where a ray out along its normal meets cloth within this.
 COVER_REACH = 0.08
+## ...or where it lies within COVER_NEAR of cloth, more than
+## COVER_OPENING_CLEAR from any of the cloth's openings.
+COVER_NEAR = 0.015
+COVER_OPENING_CLEAR = 0.04
 ## The feet, inside the trainers, go whole below their collar: the shoe's
 ## heel cup sits only ~2 mm off her heel and the skin showed through it.
 FOOT_HIDDEN_Z = 0.09
@@ -668,13 +673,34 @@ def refit(old_arm, body):
 
 def cover_skin(body, cloth) -> None:
     """Deletes the body's faces that are wholly under cloth."""
+    from mathutils.kdtree import KDTree
     bvh = world_bvh(cloth)
+    # The cloth's open edges (neck, cuffs, hems, the V): skin near them must
+    # stay, or a gap opens at the opening.
+    edges = []
+    for o in cloth:
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
+        edges += [o.matrix_world @ v.co for v in bm.verts if v.is_boundary]
+        bm.free()
+    openings = KDTree(len(edges))
+    for i, q in enumerate(edges):
+        openings.insert(q, i)
+    openings.balance()
     mw = body.matrix_world
     covered = []
     for v in body.data.vertices:
         p = mw @ v.co
         n = (mw.to_3x3() @ v.normal).normalized()
         hit = bvh.ray_cast(p + n * 0.001, n, COVER_REACH)[0]
+        if hit is None:
+            # Skin close under (or through) the cloth, away from any opening:
+            # where the shirt creases at the shoulder seam a ray out along
+            # the skin's normal slips past it, and the shoulder showed.
+            loc = bvh.find_nearest(p)[0]
+            far = openings.find(p)[2] > COVER_OPENING_CLEAR
+            hit = loc if (loc is not None and (loc - p).length < COVER_NEAR and far) else None
         covered.append(hit is not None)
     bm = bmesh.new()
     bm.from_mesh(body.data)
@@ -1337,6 +1363,10 @@ def drape_shirt(shirt, old_arm) -> None:
         if reach[b] <= 0.0:
             continue
         t = float(_smooth(BELT_TOP, BELT_TOP + SHIRT_DRAPE_GATHER, p.z))
+        # ...and in from nothing over the SHIRT_DRAPE_EASE below where the
+        # reach is taken: let out at full strength right up to it, the cloth
+        # stepped out at the shoulder blades in a crease, the stripes jogging.
+        t *= float(_smooth(SHIRT_DRAPE_FROM, SHIRT_DRAPE_FROM - SHIRT_DRAPE_EASE, p.z))
         target = r + (reach[b] * SHIRT_DRAPE - r) * t
         if target > r:
             k = target / r
