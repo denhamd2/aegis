@@ -121,7 +121,7 @@ are the seating.) That is deliberate:
 
 ## ring_apron_banner.png — THIRD-PARTY MARKS, supplied by the project owner
 
-The ring apron artwork (`materials/ring_apron_banner.png`, 1929x544) is
+The ring apron artwork (`materials/ring_apron_banner.png`, 3534x497) is
 applied to all four apron sides (`scenes/ring.tscn`,
 `StandardMaterial3D_apron`).
 
@@ -130,11 +130,21 @@ with no licence, no author and no provenance, exactly like the folding chair
 recorded above. `ARCHITECTURE.md` permits third-party assets without limit, so
 it is in the build by that rule rather than by an exception.
 
-**Supplied directly by the project owner**, as a finished apron graphic
-(2928x352): art edge to edge, the AEW block and DYNAMITE wordmark centred, and
-the chevron bursts that wrap a real apron round its corners. It is used as
-supplied, at native resolution, with no processing step -- `scenes/ring.tscn`
-maps it 1:1 onto each apron face.
+**Supplied directly by the project owner** (a second graphic, replacing the
+2928x352 one): the AEW / DYNAMITE wordmark on a draped dark banner with
+chevron bursts at both ends, as a 2172x724 image on a white surround.
+
+Processing, all of it: the white rows above and below cropped off (rows
+128-624, the last 6 columns too, where the drape's corners curl) to
+2166x497; then WIDENED to 3534x497, the apron face's own 6.4 m x 0.9 m
+(7.11:1), without touching the art. Stretched to fit, the wordmark would have
+been 1.63x too wide. Instead the image is split just past the ends of the
+wordmark's two long bars (x 470 and 1745), and each gap is filled with that
+edge column carried across (the bars run on toward the corners, the cloth's
+folds run on as horizontal drape), with a slight low-frequency ripple and a
+16 px cross-fade at each join. The chevrons and the lettering are pixel for
+pixel as supplied. The apron maps it 0..1 along each side
+(`core/ring/ring_builder.gd`, `APRON_BANNER`).
 
 There was briefly a `tools/textures/apron_banner.py` here that rectified the
 apron out of one of the owner's reference PHOTOGRAPHS -- a homography from
