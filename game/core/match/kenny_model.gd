@@ -44,6 +44,118 @@ const BASE_RIG := "res://assets/characters/wrestler_base.glb"
 
 func _ready() -> void:
 	_install_animations()
+	_dress_skin()
+	_dress_eyes()
+	_dress_hair()
+	_dress_gear()
+
+
+# ---------------------------------------------------------------------------
+# The AAA rebuild (tools/blender/kenny_aaa.py): what Godot's glTF import does
+# not carry over. Each look is found by its Blender material name.
+# ---------------------------------------------------------------------------
+
+const SKIN_MATERIAL := "M_KennySkin"
+const SKIN_PORE_TILES := 48.0
+
+
+## His skin: SkinLook's subsurface, sheen and pores, as Aubrey's.
+func _dress_skin() -> void:
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		var surfaces := _surfaces_named(mi, SKIN_MATERIAL)
+		if surfaces.is_empty():
+			continue
+		SkinLook.with_detail_uv(mi, surfaces)
+		for surface: int in surfaces:
+			var material := mi.mesh.surface_get_material(surface).duplicate() as BaseMaterial3D
+			material.metallic_specular = 0.5
+			SkinLook.apply(material)
+			material.subsurf_scatter_transmittance_enabled = false
+			SkinLook.add_pores(material, SKIN_PORE_TILES)
+			mi.set_surface_override_material(surface, material)
+
+
+const EYE_MATERIAL := "MI_KennyEyes"
+const EYE_PARALLAX := 4.0
+const CARD_MATERIALS := {"M_KennyBrows": 0.12, "M_KennyLashes": 0.3}
+
+
+## His eyes (EyeKit, build_eyes.py's KENNY maps) and his brow and lash cards.
+func _dress_eyes() -> void:
+	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("kenny", EYE_PARALLAX))
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for surface in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(surface) as BaseMaterial3D
+			if source and CARD_MATERIALS.has(source.resource_name):
+				mi.set_surface_override_material(surface, EyeKit.lash_material(
+						source.albedo_texture, Color.WHITE, CARD_MATERIALS[source.resource_name]))
+
+
+## The curls: strand cards, scissored with alpha-to-coverage (a hundred and
+## ninety crossing clumps must not sort against each other) and seen from
+## both sides. The cap: its hairline feathered by vertex alpha.
+const HAIR_MATERIALS := {"M_KennyHair": 0.4, "M_KennyHairCap": 0.5}
+const HAIR_ROUGHNESS := 0.6
+const HAIR_SPECULAR := 0.25
+
+
+func _dress_hair() -> void:
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for surface in mi.mesh.get_surface_count():
+			var source := mi.mesh.surface_get_material(surface) as BaseMaterial3D
+			if source == null or not HAIR_MATERIALS.has(source.resource_name):
+				continue
+			var material := source.duplicate() as BaseMaterial3D
+			if source.resource_name == "M_KennyHairCap":
+				material.vertex_color_use_as_albedo = true
+			material.roughness = HAIR_ROUGHNESS
+			material.metallic_specular = HAIR_SPECULAR
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+			material.alpha_scissor_threshold = HAIR_MATERIALS[source.resource_name]
+			material.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+			material.alpha_antialiasing_edge = 0.35
+			material.cull_mode = BaseMaterial3D.CULL_DISABLED
+			HairLook.apply(material)
+			mi.set_surface_override_material(surface, material)
+
+
+## His gear: the painted albedo with its roughness and metal map (gold leaf
+## is metal; satin, leather and tape are not) and a cloth rim.
+const GEAR_MATERIAL := "M_KennyGear"
+const GEAR_ORM := "res://assets/characters/kenny_aaa_gear_orm.png"
+
+
+func _dress_gear() -> void:
+	var orm := load(GEAR_ORM) as Texture2D
+	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
+		for surface: int in _surfaces_named(mi, GEAR_MATERIAL):
+			var material := mi.mesh.surface_get_material(surface).duplicate() as StandardMaterial3D
+			if orm:
+				material.roughness_texture = orm
+				material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
+				material.roughness = 1.0
+				material.metallic_texture = orm
+				material.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_BLUE
+				material.metallic = 1.0
+			material.rim_enabled = true
+			material.rim = 0.3
+			material.rim_tint = 0.7
+			mi.set_surface_override_material(surface, material)
+
+
+func _surfaces_named(mi: MeshInstance3D, material_name: String) -> Array:
+	var out := []
+	if mi.mesh == null:
+		return out
+	for surface in mi.mesh.get_surface_count():
+		var source := mi.mesh.surface_get_material(surface)
+		if source and source.resource_name == material_name:
+			out.append(surface)
+	return out
 
 
 ## Kenny wrestles in his own gear, so the generated trunks must not be painted on.

@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgf7e285jli4"
-path="res://.godot/imported/kenny_aaa_kenny_aaa_gear.png-502222779020f02d7ae2031a36643050.ctex"
+uid="uid://b8a8hfcjx4elw"
+path="res://.godot/imported/kenny_aaa_kenny_aaa_brows.png-df560e017f794e1a4aaaa3028e0bcfa4.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "dffa5aec292aabac81f82900bc0b78a4"
+"md5": "24a19be3e4af195c0826b6fe483d13c5"
 }
 
 [deps]
 
-source_file="res://assets/characters/kenny_aaa_kenny_aaa_gear.png"
-dest_files=["res://.godot/imported/kenny_aaa_kenny_aaa_gear.png-502222779020f02d7ae2031a36643050.ctex"]
+source_file="res://assets/characters/kenny_aaa_kenny_aaa_brows.png"
+dest_files=["res://.godot/imported/kenny_aaa_kenny_aaa_brows.png-df560e017f794e1a4aaaa3028e0bcfa4.ctex"]
 
 [params]
 

@@ -2,19 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgf7e285jli4"
-path="res://.godot/imported/kenny_aaa_kenny_aaa_gear.png-502222779020f02d7ae2031a36643050.ctex"
+uid="uid://dkkkh4ncj5ig7"
+path="res://.godot/imported/kenny_aaa_lashes.png-fb2b4d670c715e810d7fb842e50552bb.ctex"
 metadata={
 "vram_texture": false
-}
-generator_parameters={
-"md5": "dffa5aec292aabac81f82900bc0b78a4"
 }
 
 [deps]
 
-source_file="res://assets/characters/kenny_aaa_kenny_aaa_gear.png"
-dest_files=["res://.godot/imported/kenny_aaa_kenny_aaa_gear.png-502222779020f02d7ae2031a36643050.ctex"]
+source_file="res://assets/characters/kenny_aaa_lashes.png"
+dest_files=["res://.godot/imported/kenny_aaa_lashes.png-fb2b4d670c715e810d7fb842e50552bb.ctex"]
 
 [params]
 
@@ -26,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

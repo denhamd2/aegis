@@ -85,7 +85,7 @@ BODY = {
     "torso-scale-horiz-incr": 0.35,
     "torso-muscle-dorsi-incr": 1.0,
     "torso-muscle-pectoral-incr": 0.5,
-    "measure-shoulder-dist-incr": 0.4,
+    "measure-shoulder-dist-incr": 0.2,
     "measure-waist-circ-decr": 0.15,
     "stomach-tone-incr": 0.8,
     "upperarm-muscle-incr": 1.0,
@@ -99,7 +99,30 @@ BODY = {
     "neck-scale-horiz-incr": 0.4,
     "neck-scale-depth-incr": 0.3,
 }
-FACE: dict[str, float] = {}
+## His likeness as MPFB face targets, set against the sheet's head references
+## (front, 3/4, the hair side view) on clay renders: a broad square jaw and
+## chin, a strong brow ridge with the brows set low over deep, narrowed
+## eyes with heavy lids and bags, high cheekbones, a broad nose with a full
+## rounded tip, a thin upper lip, a high forehead.
+FACE = {
+    # head and forehead
+    "head-square": 0.5, "head-scale-horiz-incr": 0.2, "head-age-incr": 0.3,
+    "head-fat-incr": 0.15,
+    "forehead-scale-vert-incr": 0.3, "forehead-nubian-incr": 0.3,
+    # brows and eyes
+    "eyebrows-trans-forward": 0.6, "eyebrows-trans-down": 0.3, "eyebrows-angle-down": 0.3,
+    "eye-scale-decr": 0.35, "eye-height2-decr": 0.4, "eye-bag-incr": 0.4,
+    "eye-push1-in": 0.3, "eye-eyefold-down": 0.4, "eye-corner2-down": 0.2,
+    # nose
+    "nose-scale-horiz-incr": 0.35, "nose-point-width-incr": 0.5, "nose-volume-incr": 0.4,
+    "nose-width2-incr": 0.3, "nose-scale-vert-incr": 0.35,
+    # mouth
+    "mouth-upperlip-volume-decr": 0.4, "mouth-scale-horiz-incr": 0.3,
+    "mouth-lowerlip-volume-incr": 0.2,
+    # jaw, chin and cheeks
+    "chin-width-incr": 0.6, "chin-bones-incr": 0.7, "chin-prominent-incr": 0.3,
+    "chin-height-incr": 0.2, "cheek-bones-incr": 0.6, "cheek-volume-decr": 0.3,
+}
 ## MPFB bone -> his bone, where the names differ.
 BONE_NAMES = {"head": "Head"}
 ## Bones that take his bone's direction but keep their own position.
@@ -177,9 +200,315 @@ LEATHER = (30, 29, 31)
 PIPING = (236, 233, 224)
 TAPE = (238, 236, 229)
 
+# --- Head (stage 3) ----------------------------------------------------------
+MPFB_ASSETS = pathlib.Path.home() / ".cache/aegis_assets/mpfb"
+## His eyes: spheres at MPFB's eye helpers, front-projected with
+## tools/assets/build_eyes.py's KENNY spec (blue-grey, 30 mm per UV unit).
+EYE_RADIUS = 0.0122
+EYE_SEGMENTS = (32, 16)
+EYE_MM_PER_UV = 30.0
+EYE_COLOR = ROOT / "game/assets/characters/kenny_eye_color.png"
+## Brow and lash cards: MakeHuman's own (CC0), fitted to his face by MPFB --
+## heavy straight brows, a darker dirty blond than his hair; plain lashes.
+BROWS = "eyebrow001"
+LASHES = "eyelashes01"
+CARD_TEXTURES = {
+    BROWS: (ROOT / "game/assets/characters/kenny_aaa_brows.png", (104, 78, 50), 1.6),
+    LASHES: (ROOT / "game/assets/characters/kenny_aaa_lashes.png", (60, 44, 32), 1.0),
+}
+## His skin: a CC0 MakeHuman skin with stubble -- jartur69's middle-aged
+## Slavic male with beard -- graded from its pale beige toward the sheet's
+## sun-warmed, ruddy tan.
+SKIN_SOURCE = (MPFB_ASSETS / "unpacked_skins02/skins/jartur69_middleage_slavic_male_with_genitals_and_beard"
+               / "Jartur_mid_old_Slavic_Male_with_Genitals_and_Beard_lsdif_lighter.png")
+SKIN_OUT = ROOT / "game/assets/characters/kenny_aaa_skin.jpg"
+SKIN_GRADE = (0.94, 0.64, 0.50)
+SKIN_QUALITY = 92
+## His beard (the sheet's head references): a short, full, ginger-brown
+## beard and moustache, painted from 3D position relative to his eyes (m):
+## down to the top of the neck, back to just in front of the ears.
+BEARD = dict(color=(104, 66, 36), strength=0.85, neck=-0.155, behind=0.045, seed=1974)
+
+# --- Hair (stage 3) ----------------------------------------------------------
+## His hair (the sheet's head and hair references): shoulder length, a mass of
+## tight curls, dirty blond with darker brown roots and lighter ends, pushed
+## back off a high forehead, falling over his ears and onto his shoulders and
+## upper back. Two parts: a CAP grown off his scalp with volume, and CURL
+## clumps hanging from under it -- each two crossed strand cards round a tight
+## helix (roman_ringlets.py's construction), draped down over his head, neck
+## and shoulders by pushing each sample out of the body.
+HAIR_CAP = "Kenny_HairCap"
+HAIR_CURLS = "Kenny_Curls"
+HAIR_TEX = ROOT / "game/assets/characters/kenny_aaa_hair.png"
+CAP_TEX = ROOT / "game/assets/characters/kenny_aaa_hair_cap.png"
+## The hairline: height above the eyes (m) by the angle round the head from
+## straight ahead -- a high forehead receding at the temples, over the ears,
+## down the back to the nape.
+HAIRLINE = [(0.0, 0.088), (25.0, 0.084), (42.0, 0.070), (60.0, 0.052),
+            (80.0, 0.036), (100.0, 0.000), (130.0, -0.060), (180.0, -0.085)]
+HAIRLINE_FEATHER = 0.018
+## The cap's standoff: its root, and the volume it gains back from the
+## hairline over the crown and the back (curly hair stands off the skull).
+CAP_OFF = (0.004, 0.020)
+CAP_RAMP = 0.035
+## The cap's strand direction: combed back from a pole over the forehead.
+CAP_AXIS = Vector((0.0, -0.75, 0.66)).normalized()
+CAP_E1 = Vector((0.0, 0.66, 0.75)).normalized()
+CAP_E2 = CAP_AXIS.cross(CAP_E1)
+CAP_U_TILES = 5
+## Curls: how many; where they start (angle round the head, from in front of
+## the ears round the back); start height under the cap (m above the eyes) by
+## angle; their ends (m, world height); their standoff off whatever they fall
+## over; and their coil.
+CURL_COUNT = 120
+## A second layer over the crown and the back, starting higher up the cap,
+## so the curls cover it from behind as the sheet's back view shows.
+CURL_UPPER = (70, (110.0, 180.0), 0.055)
+CURL_ANGLES = (72.0, 180.0)
+CURL_TOP = [(62.0, 0.035), (90.0, 0.025), (120.0, 0.010), (180.0, -0.010)]
+CURL_END = (1.36, 1.50)
+CURL_STANDOFF = (0.020, 0.060)
+CURL_RADIUS = (0.005, 0.011)
+CURL_PITCH = (0.034, 0.060)
+CURL_WIDTH = ((0.026, 0.040), 0.010)
+CURL_STEP = 0.006
+## How far each curl drifts out from the head per metre of fall: the
+## sheet's hair flares out over the shoulders rather than hanging plumb.
+CURL_FLARE = 0.35
+CURL_SEED = 1012
+CURL_COLUMNS = 4
+CURL_TEX = (512, 2048)
+CURL_STRANDS = 70
+## Colours (sRGB): roots, lengths, the light ends.
+HAIR_ROOT = (72, 52, 34)
+HAIR_MID = (150, 114, 70)
+HAIR_TIP = (214, 182, 124)
+## The curls follow his head down to HAIR_BODY_Z[0], then hand over to his
+## upper chest (spine_03) by HAIR_BODY_Z[1], up to HAIR_BODY_SHARE of it.
+HAIR_BODY_Z = (1.58, 1.44)
+HAIR_BODY_SHARE = 0.7
+
 
 def mpfb(module: str, name: str):
     return getattr(importlib.import_module(f"{MPFB}.{module}"), name)
+
+
+def image_material(name: str, path: pathlib.Path, roughness: float, alpha: bool = False):
+    """A Principled material on one image (its alpha too, if asked)."""
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    bsdf = nodes["Principled BSDF"]
+    tex = nodes.new("ShaderNodeTexImage")
+    tex.image = bpy.data.images.load(str(path))
+    mat.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    if alpha:
+        mat.node_tree.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
+        mat.blend_method = "BLEND"
+    bsdf.inputs["Roughness"].default_value = roughness
+    return mat
+
+
+def rigid_on_head(obj, old_arm) -> None:
+    """Parent obj to her skeleton, every vertex on the Head bone."""
+    from mathutils import Matrix
+    world = obj.matrix_world.copy()
+    obj.parent = None
+    obj.data.transform(world)
+    obj.matrix_world = Matrix.Identity(4)
+    obj.vertex_groups.clear()
+    group = obj.vertex_groups.new(name="Head")
+    group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    obj.parent = old_arm
+    obj.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    mod = obj.modifiers.new("Armature", "ARMATURE")
+    mod.object = old_arm
+
+
+def make_eyes(old_arm, eyes):
+    """Both eyeballs in one mesh (Kenny_Eyes), front-projected UVs centred on
+    each line of sight, rigid on his Head bone. The spheres are written out
+    vertex by vertex: as two objects the glTF exporter shared (or not) one
+    index buffer between them run to run, joined they came out in selection
+    order, and bmesh's create_uvsphere orders its faces differently each run
+    -- any of which kept the file from being byte-identical."""
+    import math
+    seg_u, seg_v = EYE_SEGMENTS
+    verts, faces, uvs = [], [], []
+    for side in ("l", "r"):
+        centre, forward = eyes[side]
+        rot = Vector((0.0, 0.0, 1.0)).rotation_difference(forward).to_matrix()
+        right = Vector((1.0, 0.0, 0.0))
+        up = forward.cross(right).normalized()
+        right = up.cross(forward).normalized()
+        base = len(verts)
+        # Poles at the local z ends, seg_v - 1 rings between them.
+        local = [Vector((0.0, 0.0, EYE_RADIUS))]
+        for ring in range(1, seg_v):
+            th = math.pi * ring / seg_v
+            for k in range(seg_u):
+                ph = 2.0 * math.pi * k / seg_u
+                local.append(Vector((math.sin(th) * math.cos(ph), math.sin(th) * math.sin(ph),
+                                     math.cos(th))) * EYE_RADIUS)
+        local.append(Vector((0.0, 0.0, -EYE_RADIUS)))
+        verts += [centre + rot @ v for v in local]
+        ring_at = lambda ring, k: base + 1 + (ring - 1) * seg_u + k % seg_u
+        bottom = base + len(local) - 1
+        for k in range(seg_u):
+            faces.append((base, ring_at(1, k), ring_at(1, k + 1)))
+            for ring in range(1, seg_v - 1):
+                faces.append((ring_at(ring, k), ring_at(ring + 1, k),
+                              ring_at(ring + 1, k + 1), ring_at(ring, k + 1)))
+            faces.append((ring_at(seg_v - 1, k), bottom, ring_at(seg_v - 1, k + 1)))
+        for i in range(base, len(verts)):
+            p = verts[i] - centre
+            uvs.append((0.5 + p.dot(right) * 1000.0 / EYE_MM_PER_UV,
+                        0.5 - p.dot(up) * 1000.0 / EYE_MM_PER_UV))
+    mesh = bpy.data.meshes.new("Kenny_Eyes")
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    layer = mesh.uv_layers.new(name="UVMap")
+    for loop in mesh.loops:
+        layer.data[loop.index].uv = uvs[loop.vertex_index]
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    mesh.materials.append(image_material("MI_KennyEyes", EYE_COLOR, roughness=0.05))
+    mesh.update()
+    eye = bpy.data.objects.new("Kenny_Eyes", mesh)
+    bpy.context.scene.collection.objects.link(eye)
+    group = eye.vertex_groups.new(name="Head")
+    group.add(list(range(len(mesh.vertices))), 1.0, "REPLACE")
+    eye.parent = old_arm
+    eye.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    mod = eye.modifiers.new("Armature", "ARMATURE")
+    mod.object = old_arm
+    return [eye]
+
+
+def make_cards(human):
+    """MakeHuman's brow and lash cards fitted to his face (MPFB fits them to
+    the basemesh as it stands, so after the targets and the fitting pose),
+    their strand textures recoloured; returns the two objects."""
+    import numpy as np
+    from PIL import Image
+    HumanService = mpfb("services.humanservice", "HumanService")
+    cards = []
+    for kind, name, obj_name in (("eyebrows", BROWS, "Kenny_Brows"),
+                                 ("eyelashes", LASHES, "Kenny_Lashes")):
+        source = MPFB_ASSETS / "unpacked_makehuman_system_assets" / kind / name
+        obj = HumanService.add_mhclo_asset(str(source / f"{name}.mhclo"), human,
+                                           asset_type=kind.capitalize(), subdiv_levels=0,
+                                           set_up_rigging=False)
+        for mod in list(obj.modifiers):
+            obj.modifiers.remove(mod)
+        if obj.data.shape_keys:
+            obj.shape_key_clear()
+        obj.name = obj.data.name = obj_name
+        out, rgb, gain = CARD_TEXTURES[name]
+        strands = np.asarray(Image.open(source / f"{name}.png").convert("RGBA"), np.float32)
+        card = np.zeros_like(strands)
+        card[..., :3] = rgb
+        card[..., 3] = np.clip(strands[..., 3] * gain, 0.0, 255.0)
+        Image.fromarray(np.round(card).astype(np.uint8), "RGBA").save(out, optimize=True)
+        obj.data.materials.clear()
+        mat_name = "M_KennyBrows" if kind == "eyebrows" else "M_KennyLashes"
+        obj.data.materials.append(image_material(mat_name, out, roughness=0.6, alpha=True))
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+        cards.append(obj)
+    # MPFB adds a delete group per card to the basemesh; it masks nothing here.
+    for vg in list(human.vertex_groups):
+        if vg.name.startswith("Delete."):
+            human.vertex_groups.remove(vg)
+    return cards
+
+
+def _smooth(a, b, x):
+    import numpy as np
+    t = np.clip((x - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def position_map(body, size: int, z_min: float, group: str | None = "lips"):
+    """A mesh rasterised into UV space (faces wholly above z_min): for every
+    texel, the point on it that texel covers (world, metres), its weight in
+    `group`, and whether it is covered."""
+    import numpy as np
+    mesh = body.data
+    pos = np.zeros((size, size, 3), np.float32)
+    lips = np.zeros((size, size), np.float32)
+    hit = np.zeros((size, size), bool)
+    uvs = mesh.uv_layers["UVMap"].data
+    co = np.array([body.matrix_world @ v.co for v in mesh.vertices], np.float32)
+    lip_w = np.zeros(len(co), np.float32)
+    if group is not None:
+        lip_group = body.vertex_groups[group].index
+        for v in mesh.vertices:
+            for g in v.groups:
+                if g.group == lip_group:
+                    lip_w[v.index] = g.weight
+    mesh.calc_loop_triangles()
+    for tri in mesh.loop_triangles:
+        vi = list(tri.vertices)
+        if co[vi, 2].min() < z_min:
+            continue
+        uv = np.array([uvs[i].uv for i in tri.loops], np.float32)
+        px = np.stack([uv[:, 0] * size - 0.5, (1.0 - uv[:, 1]) * size - 0.5], 1)
+        x0, y0 = np.maximum(np.floor(px.min(0)).astype(int), 0)
+        x1, y1 = np.minimum(np.ceil(px.max(0)).astype(int), size - 1)
+        if x1 < x0 or y1 < y0:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1 + 1), np.arange(y0, y1 + 1))
+        (ax, ay), (bx, by), (cx, cy) = px
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-12:
+            continue
+        w0 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / den
+        w1 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / den
+        w2 = 1.0 - w0 - w1
+        inside = (w0 >= -0.02) & (w1 >= -0.02) & (w2 >= -0.02)
+        if not inside.any():
+            continue
+        weights = np.stack([w0, w1, w2], -1)[inside]
+        yy, xx = ys[inside], xs[inside]
+        pos[yy, xx] = weights @ co[vi]
+        lips[yy, xx] = weights @ lip_w[vi]
+        hit[yy, xx] = True
+    return pos, lips, hit
+
+
+def paint_skin(body, eyes) -> None:
+    """His skin texture: the graded CC0 skin with his beard painted on
+    (BEARD), in UV space from 3D position, written to SKIN_OUT and put on the
+    body."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    base = np.asarray(Image.open(SKIN_SOURCE).convert("RGB"), np.float32) * np.array(SKIN_GRADE, np.float32)
+    size = base.shape[0]
+    e = (eyes["l"][0] + eyes["r"][0]) / 2.0
+    pos, lips, hit = position_map(body, size, e.z - 0.25)
+    d = pos - np.array(tuple(e), np.float32)
+    x, y, z = np.abs(d[..., 0]), d[..., 1], d[..., 2]
+    # The beard: from the sideburns in front of the ears down the jaw, round
+    # the chin and over the upper lip; not the lips, the nose or the cheeks
+    # above the line from the sideburn to the mouth's corner; under the jaw
+    # to the top of the neck.
+    cheek_line = np.clip(-0.072 + (x - 0.028) * 1.6, -0.072, -0.004)
+    beard = (_smooth(cheek_line + 0.012, cheek_line - 0.006, z)
+             * (1.0 - _smooth(BEARD["neck"] + 0.02, BEARD["neck"], z))
+             * (1.0 - _smooth(BEARD["behind"] - 0.012, BEARD["behind"], y))
+             * hit)
+    nose = (x < 0.026) & (z > -0.058) & (y < -0.05)
+    beard *= ~nose
+    beard *= 1.0 - _smooth(0.55, 0.85, lips)
+    grain = np.asarray(Image.fromarray((np.random.default_rng(BEARD["seed"]).random((size, size)) * 255)
+                                       .astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255.0
+    k = (np.clip(beard, 0, 1) * (BEARD["strength"] * (0.25 + 1.5 * grain ** 1.5)))[..., None]
+    k = np.clip(k, 0.0, 0.95)
+    img = base * (1.0 - k) + np.array(BEARD["color"], np.float32) * k
+    Image.fromarray(np.clip(np.round(img), 0, 255).astype(np.uint8), "RGB").save(
+        SKIN_OUT, quality=SKIN_QUALITY, optimize=True)
+    body.data.materials.clear()
+    body.data.materials.append(image_material("M_KennySkin", SKIN_OUT, roughness=0.5))
 
 
 def make_body(old_arm):
@@ -240,6 +569,7 @@ def make_body(old_arm):
         centre = sum(pts, Vector()) / len(pts)
         front = min(pts, key=lambda p: p.y)          # he faces -Y
         eyes[side] = (centre, (front - centre).normalized())
+    cards = make_cards(human)
     body_group = human.vertex_groups["body"].index
     bm = bmesh.new()
     bm.from_mesh(human.data)
@@ -248,6 +578,8 @@ def make_body(old_arm):
                      context="VERTS")
     bm.to_mesh(human.data)
     bm.free()
+    # While MPFB's own "lips" group is still on him.
+    paint_skin(human, eyes)
     for vg in list(human.vertex_groups):
         name = BONE_NAMES.get(vg.name, vg.name)
         if name in old_arm.data.bones:
@@ -258,6 +590,8 @@ def make_body(old_arm):
     human.parent = old_arm
     human.matrix_parent_inverse = old_arm.matrix_world.inverted()
     human.modifiers.new("Armature", "ARMATURE").object = old_arm
+    for card in cards:
+        rigid_on_head(card, old_arm)
     return human, eyes
 
 
@@ -739,6 +1073,231 @@ def paint_gear(gear, old_arm) -> None:
     print(f"paint_gear: {n} texels")
 
 
+def _lerp_table(table, x):
+    xs, ys = zip(*table)
+    if x <= xs[0]:
+        return ys[0]
+    for (x0, y0), (x1, y1) in zip(table, table[1:]):
+        if x0 <= x <= x1:
+            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    return ys[-1]
+
+
+def _s01(a, b, x):
+    t = min(max((x - a) / (b - a), 0.0), 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def paint_hair_textures() -> None:
+    """The curl cards' strands (RGBA: colour root to tip, alpha the strands)
+    in CURL_COLUMNS clumps, and the cap's tile of tight curls."""
+    import numpy as np
+    from PIL import Image, ImageDraw, ImageFilter
+    rng = np.random.default_rng(CURL_SEED + 1)
+    ss = 2
+    w, h = CURL_TEX[0] * ss, CURL_TEX[1] * ss
+    mask = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(mask)
+    col = w // CURL_COLUMNS
+    for c in range(CURL_COLUMNS):
+        centre = c * col + col * 0.5
+        for _ in range(CURL_STRANDS):
+            x0 = centre + col * 0.42 * float(np.clip(rng.normal(0.0, 0.45), -1.0, 1.0))
+            length = h * float(rng.uniform(0.75, 1.0))
+            amp = float(rng.uniform(6.0, 14.0)) * ss
+            phase = float(rng.uniform(0.0, 2.0 * math.pi))
+            freq = float(rng.uniform(10.0, 16.0))
+            pts = []
+            for t in np.linspace(0.0, 1.0, 160):
+                x = x0 + (centre - x0) * 0.5 * t * t + amp * math.sin(phase + freq * 2.0 * math.pi * t)
+                pts.append((x, t * length))
+            draw.line(pts, fill=int(rng.integers(160, 256)),
+                      width=max(1, round(float(rng.uniform(1.8, 3.0)) * ss)))
+    mask = mask.filter(ImageFilter.GaussianBlur(0.6 * ss)).resize(CURL_TEX, Image.LANCZOS)
+    t = np.linspace(0.0, 1.0, CURL_TEX[1])[:, None, None]
+    root, mid, tip = (np.array(c, np.float32) for c in (HAIR_ROOT, HAIR_MID, HAIR_TIP))
+    rgb = np.where(t < 0.35, root + (mid - root) * (t / 0.35), mid + (tip - mid) * ((t - 0.35) / 0.65))
+    streak = rng.random(CURL_TEX[0]).astype(np.float32)
+    streak = np.convolve(streak, np.ones(9) / 9, "same")[None, :, None]
+    rgb = rgb * (0.8 + 0.4 * streak)
+    rgba = np.concatenate([np.broadcast_to(rgb, (CURL_TEX[1], CURL_TEX[0], 3)),
+                           np.asarray(mask, np.float32)[..., None]], -1)
+    Image.fromarray(np.clip(np.round(rgba), 0, 255).astype(np.uint8), "RGBA").save(HAIR_TEX, optimize=True)
+    # The cap: wavy strands combed back (v), colour only, darker at the
+    # roots over the front.
+    size = 1024
+    img = Image.new("RGB", (size, size), tuple(int(c * 0.9) for c in HAIR_ROOT))
+    draw = ImageDraw.Draw(img)
+    for _ in range(1500):
+        x0 = float(rng.uniform(0, size))
+        y0 = float(rng.uniform(-0.2, 0.9)) * size
+        length = float(rng.uniform(0.15, 0.5)) * size
+        amp = float(rng.uniform(2.0, 7.0))
+        freq = float(rng.uniform(3.0, 7.0))
+        phase = float(rng.uniform(0, 6.28))
+        mix = float(rng.beta(1.6, 2.6))
+        colr = tuple(int(HAIR_ROOT[k] + (HAIR_TIP[k] - HAIR_ROOT[k]) * mix) for k in range(3))
+        pts = [((x0 + amp * math.sin(phase + freq * 6.28 * t)) % size, y0 + t * length)
+               for t in np.linspace(0, 1, 40)]
+        for a_, b_ in zip(pts, pts[1:]):
+            if abs(a_[0] - b_[0]) < size / 2:
+                draw.line([a_, b_], fill=colr, width=2)
+    img.filter(ImageFilter.GaussianBlur(0.6)).save(CAP_TEX, optimize=True)
+
+
+def make_hair_cap(old_arm, body, eyes):
+    """His scalp's skin, above the hairline (HAIRLINE), lifted off it with
+    volume (CAP_OFF), feathered at the hairline by vertex alpha."""
+    e = (eyes["l"][0] + eyes["r"][0]) / 2.0
+    centre = e + Vector((0.0, 0.08, 0.02))
+    mw = body.matrix_world
+    head = {body.vertex_groups[n].index for n in ("Head", "neck_01") if n in body.vertex_groups}
+    margin = {}
+    for v in body.data.vertices:
+        if sum(g.weight for g in v.groups if g.group in head) <= 0.5:
+            continue
+        p = mw @ v.co
+        r = p - centre
+        angle = math.degrees(math.atan2(abs(r.x), -r.y))
+        margin[v.index] = (p.z - e.z) - _lerp_table(HAIRLINE, angle)
+    faces = [f for f in body.data.polygons
+             if all(i in margin for i in f.vertices) and max(margin[i] for i in f.vertices) > 0.0]
+    used = sorted({i for f in faces for i in f.vertices})
+    remap = {o: n for n, o in enumerate(used)}
+    verts, uvs, alpha = [], [], []
+    for i in used:
+        v = body.data.vertices[i]
+        p = mw @ v.co
+        n = (mw.to_3x3() @ v.normal).normalized()
+        off = CAP_OFF[0] + CAP_OFF[1] * _s01(0.0, CAP_RAMP, margin[i])
+        verts.append(p + n * off)
+        # Strands comb back over the head: v runs from the front pole (over
+        # the forehead) to the back, u round that axis.
+        r = (p - centre).normalized()
+        phi = math.acos(max(-1.0, min(1.0, r.dot(CAP_AXIS))))
+        az = math.atan2(r.dot(CAP_E2), r.dot(CAP_E1))
+        uvs.append(((az / (2.0 * math.pi) + 0.5) * CAP_U_TILES, phi / math.pi * 1.6))
+        alpha.append(_s01(0.0, HAIRLINE_FEATHER, margin[i]))
+    mesh = bpy.data.meshes.new(HAIR_CAP)
+    mesh.from_pydata([tuple(v) for v in verts], [], [[remap[i] for i in f.vertices] for f in faces])
+    uv = mesh.uv_layers.new(name="UVMap")
+    for poly in mesh.polygons:
+        for li in poly.loop_indices:
+            uv.data[li].uv = uvs[mesh.loops[li].vertex_index]
+    col = mesh.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
+    for k, a in enumerate(alpha):
+        col.data[k].color = (1.0, 1.0, 1.0, a)
+    mesh.polygons.foreach_set("use_smooth", [True] * len(mesh.polygons))
+    mesh.materials.append(image_material("M_KennyHairCap", CAP_TEX, roughness=0.55))
+    cap = bpy.data.objects.new(HAIR_CAP, mesh)
+    bpy.context.scene.collection.objects.link(cap)
+    cap.vertex_groups.new(name="Head").add(list(range(len(verts))), 1.0, "REPLACE")
+    cap.parent = old_arm
+    cap.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    cap.modifiers.new("Armature", "ARMATURE").object = old_arm
+    print(f"make_hair_cap: {len(faces)} faces")
+    return cap
+
+
+def make_curls(old_arm, body, cap, eyes):
+    """CURL_COUNT curl clumps (see the HAIR note) hanging from under the cap
+    over his head, neck and shoulders."""
+    import numpy as np
+    from mathutils.bvhtree import BVHTree
+    rng = np.random.default_rng(CURL_SEED)
+    dg = bpy.context.evaluated_depsgraph_get()
+    bvh = BVHTree.FromObject(body, dg)
+    cap_bvh = BVHTree.FromObject(cap, dg)
+    e = (eyes["l"][0] + eyes["r"][0]) / 2.0
+    centre = e + Vector((0.0, 0.08, 0.02))
+    verts, faces, uvs, weights = [], [], [], []
+    plan = [(CURL_COUNT, CURL_ANGLES, 0.0), CURL_UPPER]
+    jobs = [(n, k, angles, lift) for n, angles, lift in plan for k in range(n)]
+    for count, i, angles, lift in jobs:
+        side = 1.0 if i % 2 == 0 else -1.0
+        frac = (i // 2 + float(rng.uniform(0.0, 1.0))) / (count / 2)
+        ang = angles[0] + (angles[1] - angles[0]) * frac
+        a = math.radians(ang)
+        top = e.z + _lerp_table(CURL_TOP, ang) + lift + float(rng.uniform(-0.01, 0.03))
+        d = Vector((side * math.sin(a), -math.cos(a), 0.0))
+        hit = cap_bvh.ray_cast(Vector((centre.x, centre.y, top)) + d * 0.3, -d, 0.4)[0]
+        if hit is None:
+            continue
+        standoff = float(rng.uniform(*CURL_STANDOFF))
+        start = hit + d * 0.004
+        end_z = float(rng.uniform(*CURL_END))
+        # The line: down, pushed out of the body to its standoff, and never
+        # back in toward it faster than a drape.
+        pts = [start]
+        p = start.copy()
+        out_dir = d.copy()
+        while p.z > end_z:
+            p = p + Vector((0.0, 0.0, -CURL_STEP)) + out_dir * (CURL_STEP * CURL_FLARE)
+            near = bvh.find_nearest(p)
+            if near[0] is not None:
+                gap = (p - near[0]).length
+                n = (p - near[0]).normalized() if gap > 1e-6 else near[1]
+                if gap < standoff:
+                    p = near[0] + n * standoff
+            pts.append(p.copy())
+        for _ in range(3):
+            pts = [pts[0]] + [(pts[k - 1] + pts[k] * 2 + pts[k + 1]) / 4 for k in range(1, len(pts) - 1)] + [pts[-1]]
+        if len(pts) < 5:
+            continue
+        radius = float(rng.uniform(*CURL_RADIUS))
+        pitch = float(rng.uniform(*CURL_PITCH))
+        phase = float(rng.uniform(0.0, 2.0 * math.pi))
+        w_top = float(rng.uniform(*CURL_WIDTH[0]))
+        column = int(rng.integers(0, CURL_COLUMNS))
+        cols = (column, (column + 1) % CURL_COLUMNS)
+        total = (len(pts) - 1) * CURL_STEP
+        tan0 = (pts[1] - pts[0]).normalized()
+        n1 = (d - tan0 * d.dot(tan0)).normalized()
+        base = len(verts)
+        for k, c in enumerate(pts):
+            tan = (pts[min(k + 1, len(pts) - 1)] - pts[max(k - 1, 0)]).normalized()
+            n1 = (n1 - tan * n1.dot(tan)).normalized()
+            n2 = tan.cross(n1)
+            s_ = k * CURL_STEP
+            rel = s_ / total
+            phi = 2.0 * math.pi * s_ / pitch + phase
+            ctr = c + (n1 * math.cos(phi) + n2 * math.sin(phi)) * radius * _s01(0.0, 0.03, s_)
+            width = (w_top + (CURL_WIDTH[1] - w_top) * rel ** 1.5) * (0.5 + 0.5 * _s01(0.0, 0.02, s_))
+            body_w = HAIR_BODY_SHARE * (1.0 - _s01(HAIR_BODY_Z[1], HAIR_BODY_Z[0], c.z))
+            wts = [("Head", 1.0 - body_w)] + ([("spine_03", body_w)] if body_w > 0 else [])
+            for card, direction in enumerate((n1, n2)):
+                for sd in (-0.5, 0.5):
+                    verts.append(ctr + direction * (width * sd))
+                    uvs.append(((cols[card] + sd + 0.5) / CURL_COLUMNS, 1.0 - rel))
+                    weights.append(wts)
+        for k in range(len(pts) - 1):
+            for card in range(2):
+                q = base + k * 4 + card * 2
+                r_ = base + (k + 1) * 4 + card * 2
+                faces.append((q, q + 1, r_ + 1, r_))
+    mesh = bpy.data.meshes.new(HAIR_CURLS)
+    mesh.from_pydata([tuple(v) for v in verts], [], faces)
+    uv = mesh.uv_layers.new(name="UVMap")
+    for poly in mesh.polygons:
+        for li in poly.loop_indices:
+            uv.data[li].uv = uvs[mesh.loops[li].vertex_index]
+    mesh.polygons.foreach_set("use_smooth", [True] * len(mesh.polygons))
+    mesh.materials.append(image_material("M_KennyHair", HAIR_TEX, roughness=0.45, alpha=True))
+    obj = bpy.data.objects.new(HAIR_CURLS, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    groups = {}
+    for k, wts in enumerate(weights):
+        for bone, w in wts:
+            if bone not in groups:
+                groups[bone] = obj.vertex_groups.new(name=bone)
+            groups[bone].add([k], w, "REPLACE")
+    obj.parent = old_arm
+    obj.matrix_parent_inverse = old_arm.matrix_world.inverted()
+    obj.modifiers.new("Armature", "ARMATURE").object = old_arm
+    print(f"make_curls: {len(faces) // 2} card quads pairs, {2 * len(faces)} triangles")
+    return obj
+
+
 def main() -> int:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     addon_utils.enable(MPFB, default_set=True)
@@ -753,14 +1312,10 @@ def main() -> int:
     gear, _ = make_gear(body, old_arm)
     make_boot_feet(old_arm, gear)
     paint_gear(gear, old_arm)
-    # A plain skin tone until stage 4 paints his skin, so the forms read.
-    skin = bpy.data.materials.new("M_KennySkin")
-    skin.use_nodes = True
-    bsdf = skin.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (0.62, 0.40, 0.30, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.5
-    body.data.materials.clear()
-    body.data.materials.append(skin)
+    make_eyes(old_arm, eyes)
+    paint_hair_textures()
+    cap = make_hair_cap(old_arm, body, eyes)
+    make_curls(old_arm, body, cap, eyes)
     for o in bpy.context.scene.objects:
         o.select_set(o == old_arm or o.parent == old_arm)
     bpy.ops.export_scene.gltf(filepath=str(OUT), export_format="GLB", use_selection=True,

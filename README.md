@@ -8550,3 +8550,32 @@ Checks: 605 tests pass.
   five panels sit symmetric about the ring (`barricade_panels()`,
   `ringside.py`; rebuilt byte-identical). Frame:
   `fixtures/venue/led_wall_hardcam_ringside.jpg` (hard camera, then ringside).
+
+### Kenny AAA rebuild (stages 1-4: body, gear, head and hair, in the game)
+
+`tools/blender/kenny_aaa.py` replaces the action-figure scan with a model built
+to the owner's sheet (`gauntlet/refs/characters/kenny_omega_sheet.png`), on the
+scan's own 65-bone base-rig skeleton, so every clip and paired move is
+untouched. `scenes/kenny_model.tscn` now loads `kenny_aaa.glb`; `KennyModel`
+dresses its skin (SkinLook), eyes (EyeKit, build_eyes KENNY), brow and lash
+cards, hair (scissor + alpha-to-coverage) and gear (roughness/metal map).
+
+- **Body**: MPFB CC0 male, ~40, built out by targets to measured girths. Limbs
+  pinned to his joints; spine, clavicles and head keep MPFB's anatomy (pinned
+  to the base rig's, the upper chest folded into a hump with the arms down).
+  Weights from the base rig's mannequin, as the scan's were.
+- **Gear**: white tights with gold flecks and an ornate thigh panel, the gold
+  "2" on the right thigh and kneepad, black-and-gold waistband, kneepads, and
+  knee boots (gold front panel, two back stripes, white piping) with modelled
+  feet; white wrist tape. Painted in UV space from 3D position.
+- **Head**: face targets against the sheet's head crops; jartur69's CC0
+  bearded skin graded ruddy, with a painted ginger-brown beard and moustache.
+- **Hair**: a cap combed back off a high forehead and 190 curl clumps (two
+  crossed strand cards on a helix), dark roots to blond ends, draped over his
+  head, neck and shoulders; Head-weighted, handing to spine_03 low down.
+- Roster model height 1.749 (Kenny_Body crown); billed 1.829 unchanged.
+
+Open: the face reads narrower and longer than the sheet's; the curls hang
+closer to the face than his volume; the hair has no springs yet; the boot
+feet are plain. Fixtures in `tools/capture/fixtures/kenny/`. Build
+byte-identical; 605 tests pass.
