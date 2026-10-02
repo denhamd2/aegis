@@ -79,15 +79,19 @@ func test_the_rig_model_carries_what_arena_builder_dresses() -> void:
 	assert_object(packed).is_not_null()
 	var root: Node3D = packed.instantiate()
 	var wanted: Array = ArenaBuilder.RIG_MATERIALS.keys()
-	wanted.append("RigLeds")
+	wanted.append("ParLenses")
 	for part: String in wanted:
 		assert_object(root.find_child(part, true, false)).override_failure_message(
 				"overhead_rig.glb has no '%s'" % part).is_not_null()
 	root.free()
 
 
-## The LED strips are blue-led: capture_harness.gd's HUD probes are blinded
-## by a green-dominant element.
-func test_the_rig_leds_are_not_green_dominant() -> void:
-	var c: Color = MaterialLibrary.resolve("arena_rig_led").albedo_color
-	assert_bool(c.g > c.r and c.g > c.b).is_false()
+## No neon piping on the truss (the owner's AEW still): the strips are gone,
+## and rows of lamps hang there instead.
+func test_the_rig_has_lamps_and_no_led_strips() -> void:
+	var root: Node3D = (load(ArenaBuilder.RIG_MODEL) as PackedScene).instantiate()
+	assert_object(root.find_child("RigLeds", true, false)).is_null()
+	var lenses := root.find_child("ParLenses", true, false) as MeshInstance3D
+	assert_object(lenses).is_not_null()
+	assert_int(lenses.mesh.get_faces().size() / 3).is_greater(1000)
+	root.free()

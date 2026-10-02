@@ -82,14 +82,28 @@ PERIMETER_SIZE = 0.52
 GRID_OUTER = 7.5
 GRID_REACH = 11.0
 
-## How far below a truss's bottom chord its LED strip runs.
-LED_DROP = 0.05
-LED_RADIUS = 0.025
+## No LED strips on the truss any more. They were cyan tubes under every
+## outer chord and round both perimeter rings, off the wide AEW still; the
+## owner's AEW arena still (and WWE 2K's) has none -- its rig reads as steel
+## carrying rows of white lamps -- and in our wide shots the tubes read as
+## neon piping across the ceiling. The rows of lamps are below (PAR_*).
+##
+## PAR cans: rows of them along the ring grid's outer lines and the beam
+## ring, each a black can with a hot white lens, aimed down toward the ring
+## (PAR_AIM). Presentation only: they carry no light of their own (the rig's
+## real fixtures do the lighting, and its measured numbers stand).
+PAR_PITCH_GRID = 0.55
+PAR_PITCH_RING = 1.3
+PAR_RADIUS = 0.085
+PAR_LENGTH = 0.22
+PAR_AIM = Vector((0.0, -1.0, 0.0))
+PAR_TILT = 0.75     # how far toward the ring's centre each can leans (0..1)
 
 PART_COLORS = {
     "RigTruss": (0.55, 0.57, 0.60, 1.0),
     "RoofSteel": (0.14, 0.14, 0.16, 1.0),
-    "RigLeds": (0.20, 0.62, 1.00, 1.0),
+    "ParCans": (0.03, 0.03, 0.035, 1.0),
+    "ParLenses": (1.0, 0.98, 0.95, 1.0),
     "SpeakerArrays": (0.03, 0.03, 0.035, 1.0),
 }
 FIXTURE_COLORS = {
@@ -105,8 +119,8 @@ FIXTURE_COLORS = {
 # ---------------------------------------------------------------------------
 
 def truss_run(parts: dict[str, Part], start: Vector, end: Vector,
-              size: float, led: bool = True, sides: int = 6) -> None:
-    """One lattice run, plus its LED strip along the bottom.
+              size: float, led: bool = False, sides: int = 6) -> None:
+    """One lattice run. (`led` is kept for the call sites; there are no strips.)
 
     `sides` is the tube section. The perimeter rings are 17-20m up and use 4:
     at that distance a square and a hexagonal tube are the same pixels, and it
@@ -116,9 +130,25 @@ def truss_run(parts: dict[str, Part], start: Vector, end: Vector,
                               chord_radius=0.055 if size < 0.5 else 0.065,
                               diagonal_radius=0.028 if size < 0.5 else 0.032,
                               sides=sides)
-    if led:
-        drop = Vector((0.0, -(size * 0.5 + LED_DROP), 0.0))
-        parts["RigLeds"].tube([start + drop, end + drop], LED_RADIUS, sides=6)
+
+
+def par_can(parts: dict[str, Part], at: Vector, toward: Vector) -> None:
+    """One PAR can hung at `at` (its clamp), aimed between straight down and
+    `toward` (PAR_TILT): a black can and its white lens."""
+    aim = (PAR_AIM * (1.0 - PAR_TILT) + (toward - at).normalized() * PAR_TILT).normalized()
+    base = at + aim * 0.06
+    parts["ParCans"].cylinder(base, aim, PAR_RADIUS, PAR_LENGTH, sides=10)
+    parts["ParLenses"].cylinder(base + aim * PAR_LENGTH, aim, PAR_RADIUS * 0.82,
+                                0.008, sides=10)
+
+
+def par_row(parts: dict[str, Part], start: Vector, end: Vector, pitch: float,
+            toward: Vector) -> None:
+    length = (end - start).length
+    count = max(1, int(length / pitch))
+    for i in range(count):
+        at = start.lerp(end, (i + 0.5) / count)
+        par_can(parts, at, toward)
 
 
 def drop_line(parts: dict[str, Part], at: Vector, roof_y: float) -> None:
@@ -149,11 +179,14 @@ def perimeter_points(cfg: dict[str, float], offset: float) -> list[Vector]:
 
 def perimeter_ring(parts: dict[str, Part], cfg: dict[str, float],
                    offset: float, y: float, roof_y: float,
-                   drops: int) -> None:
+                   drops: int, pars: bool = False) -> None:
     points = [Vector((p.x, y, p.z)) for p in perimeter_points(cfg, offset)]
     for i, a in enumerate(points):
         b = points[(i + 1) % len(points)]
         truss_run(parts, a, b, PERIMETER_SIZE, sides=4)
+        if pars:
+            drop = Vector((0.0, -PERIMETER_SIZE * 0.5 - 0.02, 0.0))
+            par_row(parts, a + drop, b + drop, PAR_PITCH_RING, Vector((0.0, 0.0, 0.0)))
     step = len(points) / drops
     for d in range(drops):
         p = points[int(d * step)]
@@ -188,6 +221,15 @@ def build_ring_grid(lc: dict[str, float], parts: dict[str, Part]) -> None:
         for z in (-GRID_OUTER, GRID_OUTER):
             drop_line(parts, Vector((x, y + RING_GRID_SIZE * 0.5, z)),
                       lc["ROOF_Y"] - 1.3)
+    # Rows of PAR cans under the outer box, aimed in at the ring.
+    chord = y - RING_GRID_SIZE * 0.5 - 0.02
+    ring = Vector((0.0, 0.0, 0.0))
+    o = GRID_OUTER
+    for a, b in ((Vector((-o, chord, -o)), Vector((o, chord, -o))),
+                 (Vector((o, chord, -o)), Vector((o, chord, o))),
+                 (Vector((o, chord, o)), Vector((-o, chord, o))),
+                 (Vector((-o, chord, o)), Vector((-o, chord, -o)))):
+        par_row(parts, a, b, PAR_PITCH_GRID, ring)
 
     # The two top fills hang 0.2 higher than the keys, between the key lines:
     # a pipe batten across, ends into the truss either side.
@@ -212,7 +254,7 @@ def build_perimeter(cfg: dict[str, float], lc: dict[str, float],
     """The beam ring and the house ring, on the bowl's own plan curve."""
     beam_y = lc["ROOF_Y"] - lc["BEAM_DROP"] + FIXTURE_TOP + PERIMETER_SIZE * 0.5
     perimeter_ring(parts, cfg, lc["BOWL_INNER"] - lc["BEAM_INSET"], beam_y,
-                   lc["ROOF_Y"] - 1.3, drops=12)
+                   lc["ROOF_Y"] - 1.3, drops=12, pars=True)
     house_y = lc["ROOF_Y"] - lc["HOUSE_DROP"] + FIXTURE_TOP + PERIMETER_SIZE * 0.5
     perimeter_ring(parts, cfg, lc["BOWL_INNER"] - lc["HOUSE_INSET"], house_y,
                    lc["ROOF_Y"] - 1.3, drops=12)
@@ -373,8 +415,8 @@ def main(argv: list[str]) -> int:
     build_stage_steel(lc, ac, parts)
     build_roof_steel(cfg, lc, parts)
     build_speaker_arrays(cfg, lc, parts)
-    venue.finish(parts, PART_COLORS, emissive=frozenset({"RigLeds"}),
-                 smooth=frozenset({"RigTruss", "RigLeds"}),
+    venue.finish(parts, PART_COLORS, emissive=frozenset({"ParLenses"}),
+                 smooth=frozenset({"RigTruss", "ParCans"}),
                  projected=frozenset({"RigTruss", "RoofSteel"}))
     out = pathlib.Path(args.out)
     venue.export_glb(out)

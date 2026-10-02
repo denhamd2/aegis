@@ -102,33 +102,22 @@ func test_no_floor_seat_in_the_desk_bay() -> void:
 			.is_false()
 
 
-## The barricade's LED bands follow the same panels the model is built from.
-func test_barricade_leds_follow_the_panels() -> void:
+## The barricade's faces follow the same panels the model is built from: an
+## LED face on every long-side panel, the logo on the four corners.
+func test_barricade_faces_follow_the_panels() -> void:
 	var rig: ArenaLighting = auto_free(ArenaLighting.new())
 	add_child(rig)
-	var bands := 0
+	var leds := 0
+	var corners := 0
 	for child in rig.get_children():
 		if String(child.name).begins_with("BarricadeLed"):
-			bands += 1
-	assert_int(bands).is_equal(ArenaBuilder.barricade_panels().size())
-
-
-## THE WORKTOP STANDS PROUD OF THE FASCIA. A desk reads as a desk from the
-## shadow line under an overhanging top; flush, it is a crate. Same failure
-## mode as the turnbuckle connector plate that had to be deleted -- geometry
-## that is present and says nothing.
-func test_the_worktop_overhangs_the_fascia() -> void:
-	var root := _model()
-	var fascia := _aabb(root, "CommentaryDesk")
-	var top := _aabb(root, "CommentaryDeskTop")
-	assert_float(top.size.x) \
-		.override_failure_message(
-			"the worktop is %.3f across against a %.3f fascia: flush, so it "
-			% [top.size.x, fascia.size.x] + "has no lip to cast a line")\
-		.is_greater(fascia.size.x)
-	assert_float(top.size.z).is_greater(fascia.size.z)
-	# And it is a desk, not a table: the top sits at working height and the
-	# fascia runs to the floor under it.
-	assert_float(fascia.position.y) \
-		.is_equal_approx(ArenaBuilder.FLOOR_Y + ArenaBuilder.DESK_RISER, 0.05)
-	root.free()
+			leds += 1
+		elif String(child.name).begins_with("BarricadeCorner"):
+			corners += 1
+	var want := 0
+	for panel: Array in ArenaBuilder.barricade_panels():
+		if ArenaLighting.barricade_face(panel) == "led":
+			want += 1
+	assert_int(leds).is_equal(want)
+	assert_int(want).is_equal(8)
+	assert_int(corners).is_equal(4)

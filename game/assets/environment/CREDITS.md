@@ -198,6 +198,15 @@ generator is still called for the mat's roughness and normal maps, which is
 where most of its value was: it puts relief and specular breakup on the canvas
 that a flat photograph cannot.
 
+## barricade_corner_aew.png — THIRD-PARTY MARK, supplied by the project owner
+
+The AEW logo on the barricade's four corner panels
+(`materials/barricade_corner_aew.png`; `core/lighting/arena_lighting.gd`,
+`BARRICADE_CORNER_ART`). Supplied as a 1200x800 image, the white-and-gold
+logo on charcoal; the only processing is a crop to the logo with an even
+margin of its own background (x 87-1116, y 153-649). The **AEW** mark, on the
+same terms as the banners below: not cleared for distribution.
+
 ## barricade_led_dynamite.png — THIRD-PARTY MARKS, supplied by the project owner
 
 The LED wall on the barricade facing the hard camera

@@ -83,15 +83,32 @@ PART_COLORS = {
     "StageScreenBezel": (0.05, 0.05, 0.06, 1.0),
     "StageScreen": (0.10, 0.08, 0.16, 1.0),
     "RampLeds": (0.72, 0.10, 0.55, 1.0),
+    "StageLedDots": (0.20, 0.85, 0.90, 1.0),
+    "StageCentreScreen": (0.30, 0.10, 0.45, 1.0),
 }
 EMISSIVE = frozenset({"PortalRingWest", "PortalRingEast",
                       "PortalFanWest", "PortalFanEast", "StageScreen",
-                      "RampLeds"})
+                      "RampLeds", "StageLedDots", "StageCentreScreen"})
 SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
                     "RampLeds"})
 # The screen face authors its own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
-PROJECTED = frozenset(PART_COLORS) - {"StageScreen"}
+PROJECTED = frozenset(PART_COLORS) - {"StageScreen", "StageCentreScreen"}
+
+## The owner's AEW arena still (the Dynamite set in WWE 2K), which our set
+## lacked two things of:
+## * COLUMNS OF LED DOTS on the dark backdrop either side of the portals --
+##   teal pixels in vertical runs, the set's own lighting texture;
+## * a CENTRE SCREEN between the two portals, an LED panel of its own under
+##   the video wall.
+LED_COLUMNS_X = (5.95, 6.45, 6.95)
+LED_DOT_PITCH = 0.24
+LED_DOT_SIZE = 0.10
+LED_DOT_BOTTOM = 0.45     # above the deck
+LED_DOT_TOP = 7.6
+CENTRE_SCREEN_HALF_W = 1.35
+CENTRE_SCREEN_Y = (0.9, 4.3)   # above the deck
+CENTRE_SCREEN_TEX = venue.REPO / "game/assets/environment/materials/stage_centre_screen.png"
 
 
 def derived(cfg: dict[str, float]) -> dict[str, float]:
@@ -383,6 +400,48 @@ def build_screen(cfg: dict[str, float], d: dict[str, float],
         )
 
 
+def build_stage_leds(cfg: dict[str, float], parts: dict[str, Part]) -> None:
+    """The backdrop's LED dot columns and the centre screen (see LED_*)."""
+    face_z = cfg["STAGE_BACK"] - 0.2 + 0.012
+    deck = cfg["STAGE_DECK_Y"]
+    dots = parts["StageLedDots"]
+    h = LED_DOT_SIZE * 0.5
+    for sx in (-1.0, 1.0):
+        for x in LED_COLUMNS_X:
+            n = int((LED_DOT_TOP - LED_DOT_BOTTOM) / LED_DOT_PITCH)
+            for k in range(n + 1):
+                y = deck + LED_DOT_BOTTOM + k * LED_DOT_PITCH
+                c = Vector((sx * x, y, face_z))
+                v = [dots.vert(c + Vector(o)) for o in ((-h, -h, 0), (h, -h, 0), (h, h, 0), (-h, h, 0))]
+                dots.quad(*v)
+    scr = parts["StageCentreScreen"]
+    w = CENTRE_SCREEN_HALF_W
+    y0, y1 = deck + CENTRE_SCREEN_Y[0], deck + CENTRE_SCREEN_Y[1]
+    v = [scr.vert(Vector(p)) for p in ((-w, y0, face_z), (w, y0, face_z), (w, y1, face_z), (-w, y1, face_z))]
+    scr.quad(*v, uvs=[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
+    paint_centre_screen()
+
+
+def paint_centre_screen() -> None:
+    """The centre screen's picture: a violet LED field with the set's pink and
+    orange chevrons coming in from the corners, under a fine pixel grid."""
+    import numpy as np
+    from PIL import Image
+    w, h = 512, 640
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    u, v = x / w, y / h
+    field = np.stack([0.30 + 0.15 * v, 0.06 + 0.05 * v, 0.55 + 0.2 * (1 - v)], -1)
+    for corner, col in (((0.0, 0.0), (1.0, 0.25, 0.65)), ((1.0, 1.0), (1.0, 0.55, 0.15)),
+                        ((1.0, 0.0), (0.25, 0.45, 1.0)), ((0.0, 1.0), (0.95, 0.2, 0.7))):
+        d = np.abs((u - corner[0]) + (v - corner[1]) * (1 if corner[0] == corner[1] else -1))
+        for k, width in ((0.18, 0.05), (0.30, 0.035), (0.40, 0.02)):
+            band = (np.abs(d - k) < width).astype(np.float32)
+            field = field * (1 - band[..., None]) + np.array(col, np.float32) * band[..., None]
+    grid = ((x % 8 < 6) & (y % 8 < 6)).astype(np.float32) * 0.25 + 0.75
+    rgb = np.clip(field * grid[..., None], 0, 1) * 255
+    Image.fromarray(np.round(rgb).astype(np.uint8), "RGB").save(CENTRE_SCREEN_TEX, optimize=True)
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default=str(venue.ASSET_DIR / "entrance_set.glb"))
@@ -396,11 +455,14 @@ def main(argv: list[str]) -> int:
     build_backdrop(cfg, parts)
     build_portals(cfg, d, parts)
     build_screen(cfg, d, parts)
+    build_stage_leds(cfg, parts)
     # The picture face is an open sheet and must look at the ring (+Z); the
     # portal recess is an open bore and what is seen is its inner wall.
     venue.finish(parts, PART_COLORS, emissive=EMISSIVE, smooth=SMOOTH,
                  projected=PROJECTED,
-                 face_toward={"StageScreen": (0.0, 0.0, 1.0)},
+                 face_toward={"StageScreen": (0.0, 0.0, 1.0),
+                              "StageLedDots": (0.0, 0.0, 1.0),
+                              "StageCentreScreen": (0.0, 0.0, 1.0)},
                  flip=frozenset({"PortalRecess"}))
 
     out = pathlib.Path(args.out)

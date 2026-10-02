@@ -381,7 +381,9 @@ const SPECS := {
 	## enough to read as a pattern painted on a box. 0.45 m puts them at the
 	## fine grid the photograph shows.
 	"ring_steps": {
-		"asset": "DiamondPlate009", "tint": Color(0.80, 0.81, 0.83),
+		# 0.80 read as near white under the ring keys; the owner's AEW arena
+		# still has the steps a mid steel grey: 0.52.
+		"asset": "DiamondPlate009", "tint": Color(0.52, 0.53, 0.55),
 		"tile_metres": 0.45, "roughness": 0.38, "normal_scale": 1.2,
 		"metallic": 0.0,
 		# albedo_map OFF, which is the change that actually made them silver.
@@ -452,9 +454,13 @@ const SPECS := {
 	## density of anything imported here, which is why it is on the geometry
 	## that rings the whole frame at ringside.
 	"arena_barricade": {
-		"asset": "DiamondPlate009", "tint": Color(0.1404, 0.1700, 0.2181),
-		"tile_metres": 2.0, "roughness": 1.0, "house_lit": true,
-		"normal_scale": 1.4,
+		# Black, as the barriers in the owner's AEW arena stills are: the
+		# LED faces and the corner logos are the colour, the steel round
+		# them dark. (It was a blue-grey 0.14 / 0.17 / 0.22.) The plate's
+		# normal keeps it reading as textured barrier, not a void.
+		"asset": "DiamondPlate009", "tint": Color(0.045, 0.046, 0.05),
+		"tile_metres": 1.2, "roughness": 0.7, "house_lit": true,
+		"normal_scale": 1.6,
 	},
 	## Coverage decision: carpeted bowl treads and risers. The tile is large
 	## on purpose -- the bowl sits 12-30m out, so a small tile minifies its

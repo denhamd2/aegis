@@ -284,8 +284,10 @@ const PORTAL_EMISSION := 0.7
 ##
 ## 0.34 read as a second light source competing with the ring. 0.26 is the
 ## version that reads as what it is -- fine strip fixtures picked out inside
-## the portal, seen and not looked at.
-const PORTAL_FAN_EMISSION := 0.18
+## the portal, seen and not looked at. The owner's AEW arena still has the
+## portals' insides lit as a sunburst, clearly under the ring but read from
+## across the hall: 0.3.
+const PORTAL_FAN_EMISSION := 0.3
 
 # --- The rink ---------------------------------------------------------------
 ## The hall is built around a REGULATION ICE RINK, in metres, because the
@@ -1673,6 +1675,12 @@ const ENTRANCE_EMISSIVE := {
 	"PortalFanWest": ["arena_portal_magenta", PORTAL_FAN_EMISSION],
 	"PortalFanEast": ["arena_portal_amber", PORTAL_FAN_EMISSION],
 }
+## The backdrop's LED dot columns (entrance_set.py LED_*, the owner's AEW
+## arena still): teal, hot enough to bloom as points.
+const STAGE_LED_DOT_COLOR := Color(0.25, 0.85, 0.92)
+const STAGE_LED_DOT_LEVEL := 2.6
+const STAGE_CENTRE_SCREEN := "res://assets/environment/materials/stage_centre_screen.png"
+const STAGE_CENTRE_SCREEN_LEVEL := 0.9
 
 
 func _build_entrance_set() -> void:
@@ -1690,6 +1698,18 @@ func _build_entrance_set() -> void:
 	for part: String in ENTRANCE_EMISSIVE:
 		var spec: Array = ENTRANCE_EMISSIVE[part]
 		_dress(root, part, _self_emissive(MaterialLibrary.resolve(spec[0]), spec[1]))
+	var dot := StandardMaterial3D.new()
+	dot.albedo_color = STAGE_LED_DOT_COLOR
+	_dress(root, "StageLedDots", _self_emissive(dot, STAGE_LED_DOT_LEVEL))
+	var centre := StandardMaterial3D.new()
+	centre.albedo_color = Color(0.02, 0.02, 0.025)
+	centre.emission_enabled = true
+	centre.emission = Color.BLACK
+	centre.emission_texture = load(STAGE_CENTRE_SCREEN)
+	centre.emission_energy_multiplier = STAGE_CENTRE_SCREEN_LEVEL * _emissive_gain()
+	centre.roughness = 1.0
+	centre.metallic_specular = 0.0
+	_dress(root, "StageCentreScreen", centre)
 	add_child(root)
 	_attach_stage_video(root)
 
@@ -1737,9 +1757,11 @@ const RIG_MATERIALS := {
 	"SpeakerArrays": ["arena_chair", 0.6],
 }
 
-## The truss's LED edge strips. Hue off the references: the rig in
-## aew_wide_bowl_magenta.jpg is edged in cyan-blue lines (hue ~205).
-const RIG_LED_LEVEL := 0.22
+## The PAR cans' lenses (overhead_rig.py PAR_*): hot white, over the glow
+## threshold so each blooms into the row of lamps the owner's AEW still shows
+## across the rig. Light of their own: none -- they are the look of lamps;
+## the rig's fixtures carry the measured light.
+const PAR_LENS_LEVEL := 3.2
 
 
 func _build_overhead_rig() -> void:
@@ -1754,8 +1776,12 @@ func _build_overhead_rig() -> void:
 		var spec: Array = RIG_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
-	_dress(root, "RigLeds", _self_emissive(
-			MaterialLibrary.resolve("arena_rig_led"), RIG_LED_LEVEL))
+	var lens := StandardMaterial3D.new()
+	lens.albedo_color = Color(1.0, 0.98, 0.94)
+	lens.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_dress(root, "ParLenses", _self_emissive(lens, PAR_LENS_LEVEL))
+	_dress(root, "ParCans", MaterialLibrary.house_compensate(
+			_house_lit(_textured("arena_chair"), 0.6)))
 	add_child(root)
 
 
