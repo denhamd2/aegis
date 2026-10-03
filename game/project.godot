@@ -84,6 +84,13 @@ common/enable_pause_aware_picking=true
 [rendering]
 
 renderer/rendering_method="forward_plus"
+; Phones run the Mobile renderer (Godot's default for the platform): no
+; volumetric fog, fewer lights per object. The Android build is for playing,
+; like the Web one -- never for measuring the visual bar.
+renderer/rendering_method.mobile="mobile"
+; The Android export needs the mobile texture formats imported alongside the
+; desktop ones (export_presets.cfg "Android").
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.1, 0.1, 0.12, 1)
 ; ArenaLighting builds 22 fixtures and the OpenGL default is 8 lights per
 ; object, so on the compatibility renderer the mat was lit by whichever 8 the
@@ -119,6 +126,8 @@ environment/subsurface_scattering/subsurface_scattering_quality=2
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+; Landscape on a phone, either way up.
+window/handheld/orientation=4
 
 [shader_globals]
 

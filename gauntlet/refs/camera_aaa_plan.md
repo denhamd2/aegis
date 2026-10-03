@@ -223,3 +223,30 @@ Match the camera to the beat, and never cut just because a timer ran out.
 
 Each step ends with a rendered storyboard and a short clip sent for sign-off
 before the next begins.
+
+## Status (audited against the code)
+
+| Item | State | Where |
+| --- | --- | --- |
+| A1 2K26 shot order, high shots under the rig, walk key | DONE | `EntranceDirector` |
+| A2 moves inside shots, handheld drift | DONE | `MatchCamera.set_entrance_shot` (push, drift) |
+| A3 focus on close entrance shots | DONE | `MatchCamera._entrance_focus` |
+| A4 cuts on the music | DONE | Roman and Cody walk cuts are whole beats (tests) |
+| A5 pre-match intro: card, check, corner closes | DONE | `EntranceDirector._add_intro` |
+| A6 face-off F1-F7 | DONE | `EntranceDirector._faceoff_seq` |
+| Entrances: no early tunnel, eye-level walks | DONE | INTRO_PORTAL_MAX, walk lint (tests) |
+| B1 dynamic ringside gameplay camera | DONE | `MatchCamera` GAMEPLAY_* |
+| B2 broadcast mode | DONE | `CameraSettings.Coverage.BROADCAST` |
+| B3 event cuts: strike, slam, finisher sequence, near-fall, kickout reaction, hero, fire-up | DONE | `MatchCamera` Cut, finisher, pin shot |
+| B3 dive | DONE | `DiveSpot._frame_shot` (wide; low on the floor for the tope) |
+| B4 trauma shake, Off/Low/High | DONE | `MatchCamera._shake`, `CameraSettings.Shake` |
+| B5 focus on close cuts only | DONE | `MatchCamera` event shots |
+| B6 crowd and sign-fan cutaways | DONE | `MatchCamera._watch_sign_fans` |
+| C1 winner card | DONE | `PostMatch` |
+| C2 finish replay | DONE | `PostMatch` + `ReplayBuffer` |
+| C2 frequent replays (big moves mid-match) | DONE (was a gap: the menu offered it, nothing read it) | `InstantReplay` |
+| C3 celebration sequence | DONE | `PostMatch.CELEBRATION` |
+| C4 match rating | DONE | `PostMatch.match_rating` |
+| D1 shot grammar (180, min shot 0.8 s) | DONE | `MatchCamera.MIN_SHOT`, hard-cam side |
+| D2 camera settings menu | DONE | title screen CAMERA |
+| D3 shot lint probe | DONE | `tools/probe/shot_lint.tscn` |

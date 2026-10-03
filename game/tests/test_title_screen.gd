@@ -113,7 +113,7 @@ func test_back_undoes_one_pick_then_leaves_select() -> void:
 
 func test_controls_opens_and_closes() -> void:
 	var screen := _screen()
-	screen.menu_index = 1
+	screen.menu_index = screen._menu.find(TitleScreen.MENU_CONTROLS)
 	screen._accept()
 	assert_int(screen.phase).is_equal(TitleScreen.Phase.CONTROLS)
 	screen._back()
@@ -242,3 +242,26 @@ func test_camera_options_change_the_camera_settings() -> void:
 	CameraSettings.cuts = was[1]
 	CameraSettings.shake = was[2]
 	CameraSettings.replays = was[3]
+
+
+## The owner: "give the option to play or just have AI vs AI so I can just
+## watch a match". WATCH opens the same select screen; the match it launches
+## has both men on the AI.
+func test_watch_picks_two_and_both_are_ai() -> void:
+	var screen := _screen()
+	screen.menu_index = screen._menu.find(TitleScreen.MENU_WATCH)
+	assert_int(screen.menu_index).is_greater_equal(0)
+	screen._accept()
+	assert_int(screen.phase).is_equal(TitleScreen.Phase.SELECT)
+	assert_bool(screen.watch_mode).is_true()
+	var scene: Node = (load("res://scenes/match.tscn") as PackedScene).instantiate()
+	var pair := Roster.pair_from_spec("")
+	TitleScreen.configure_match(scene, pair[0], pair[1], 5, true)
+	assert_bool((scene.get_node("WrestlerA") as WrestlerController).is_ai).is_true()
+	assert_bool((scene.get_node("WrestlerB") as WrestlerController).is_ai).is_true()
+	scene.free()
+	# And FIGHT is still one player against the CPU.
+	screen._back()
+	screen.menu_index = screen._menu.find(TitleScreen.MENU_FIGHT)
+	screen._accept()
+	assert_bool(screen.watch_mode).is_false()

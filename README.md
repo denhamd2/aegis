@@ -8579,3 +8579,48 @@ Open: the face reads narrower and longer than the sheet's; the curls hang
 closer to the face than his volume; the hair has no springs yet; the boot
 feet are plain. Fixtures in `tools/capture/fixtures/kenny/`. Build
 byte-identical; 605 tests pass.
+
+### Owner's notes: steps, turnbuckles, stage, entrances, music, the count
+
+- **Aubrey's count** (`referee_actor.gd`): her cover spot was a fixed 0.62 m
+  past the pinned man's neck, ignoring the coverer, and clamped in at the ropes
+  it put her hands on his head. Now a search round his head and shoulders,
+  her kneeling footprint measured against both men's bone segments; she routes
+  round the pair on the way in and re-checks while counting. Probe
+  `tools/probe/ref_count_shot.tscn`.
+- **Music** (`stage_video.gd`, `tools/audio/build_entrance_music.py`): each
+  track is cut out of its titantron video and loops back inside the song
+  (crossfaded seam) until the man is on his mark, posed and with his props
+  handed off; a handover beat lets the first man's music fade before the
+  next starts. Cody's 80 s track ran under an 86 s entrance, Roman's 115 s
+  under 154 s.
+- **Entrance cameras**: chest-high steadicam and a barricade track replace
+  most of the low ultra-wide on the walks (under 25% low, tested); the waits
+  are on the crowd and the house, with the camera on the empty portals for
+  2.5 s at most before a man walks out (tested).
+- **Steel steps**: four tiers, the top block notched 90 degrees to sit snug in
+  the corner with the post in the notch; cast-grey sides, darker treads, a
+  flank seam and hand slots. **Turnbuckles**: pads and rope ends 0.08 m
+  further in, doubling the hardware run to the post to 0.23 m.
+- **Stage**: the backdrop runs 1.9 m past each end of the video wall with the
+  LED columns spread across it; chevron LED wings at both ends of the screen.
+- **Instant replay** (`instant_replay.gd`): REPLAYS: FREQUENT now replays a
+  signature move mid-match at half speed from mat level, the match paused so
+  no tick runs. The menu offered FREQUENT before and nothing read it.
+
+The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
+("Status"). Fixtures in `tools/capture/fixtures/venue/`.
+
+### Android build, watch mode, touch controls
+
+- **WATCH** on the title menu: the same select screen, both picks marked
+  CPU, and the match runs AI against AI (`configure_match(..., both_ai)`).
+- **Touch controls** (`core/ui/touch_controls.gd`): a thumbstick and STRIKE /
+  GRAPPLE / REVERSE / RUN / HOLD buttons, plus SKIP, pressing the same
+  InputMap actions as the keyboard and pad. Shown only on a touchscreen with
+  a human in the match (or `--touch` on a desktop); menus take taps as clicks.
+- **Android**: an "Android" export preset (arm64, landscape, immersive),
+  ETC2/ASTC textures imported, the Mobile renderer on phones, and
+  `.github/workflows/android.yml`, which on every push to main exports a
+  debug-signed APK and publishes it as the `android-latest` release.
+- 620 tests pass.

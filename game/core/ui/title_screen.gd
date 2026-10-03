@@ -40,6 +40,9 @@ enum Phase { TITLE, CONTROLS, SELECT, VERSUS, LAUNCH, CAMERA }
 ## Menu rows. QUIT is dropped on Web, where SceneTree.quit() leaves the player
 ## staring at a dead canvas with no way back.
 const MENU_FIGHT := "FIGHT"
+## AI against AI: pick two men and watch (the owner's ask for the phone
+## build). The same select screen, both cards marked CPU.
+const MENU_WATCH := "WATCH"
 const MENU_CONTROLS := "CONTROLS"
 const MENU_CAMERA := "CAMERA"
 ## The camera options (CameraSettings, camera_aaa_plan.md D2): [label,
@@ -79,6 +82,8 @@ var picks: Array = []
 
 var _roster: Array = []
 var _menu: Array = []
+## True when the select screen was opened from WATCH: both picks are CPU.
+var watch_mode := false
 var _time := 0.0
 var _versus_time := 0.0
 var _fade := 0.0
@@ -119,7 +124,7 @@ func _ready() -> void:
 	_sfx.name = "Sfx"
 	add_child(_sfx)
 	_sfx.make_loop("crowd_bed").volume_db = MENU_CROWD_DB
-	_menu = [MENU_FIGHT, MENU_CONTROLS, MENU_CAMERA]
+	_menu = [MENU_FIGHT, MENU_WATCH, MENU_CONTROLS, MENU_CAMERA]
 	if not OS.has_feature("web"):
 		_menu.append(MENU_QUIT)
 	var rng := RandomNumberGenerator.new()
@@ -223,7 +228,8 @@ func _accept() -> void:
 	match phase:
 		Phase.TITLE:
 			match _menu[menu_index]:
-				MENU_FIGHT:
+				MENU_FIGHT, MENU_WATCH:
+					watch_mode = _menu[menu_index] == MENU_WATCH
 					phase = Phase.SELECT
 					picks.clear()
 					cursor = 0
@@ -323,7 +329,7 @@ func _launch() -> void:
 	_preloads.clear()
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
-			randi_range(1, 1 << 30))
+			randi_range(1, 1 << 30), watch_mode)
 	# A match launched from the menu opens with the ring entrances. Set here
 	# rather than in configure_match(), which the headless probes call to set
 	# up matches they need live on tick 1.
@@ -346,10 +352,12 @@ func _launch() -> void:
 ## character_model_scene enough: WrestlerController installs its model in
 ## _ready(), so the heavy .glb is loaded once, for the pick, and the box
 ## mannequin default is never instantiated on the way past.
+##
+## `both_ai`: WATCH -- the player's slot is driven by the AI too.
 static func configure_match(scene: Node, player: Roster.Entry,
-		opponent: Roster.Entry, match_seed: int) -> void:
+		opponent: Roster.Entry, match_seed: int, both_ai := false) -> void:
 	var slots := [
-		[scene.get_node("WrestlerA"), player, false],
+		[scene.get_node("WrestlerA"), player, both_ai],
 		[scene.get_node("WrestlerB"), opponent, true],
 	]
 	for slot: Array in slots:
@@ -673,7 +681,8 @@ func _draw_select(view: Vector2) -> void:
 					safe.position.y + unit * 0.075),
 			head, head_size, unit * 0.010, TitleArt.KEY_GOLD)
 
-	var side := "PLAYER 1" if picks.is_empty() else "OPPONENT  ·  CPU"
+	var side := ("CPU 1" if watch_mode else "PLAYER 1") if picks.is_empty() \
+			else ("CPU 2" if watch_mode else "OPPONENT  ·  CPU")
 	# Player 1 in the left wrestler's violet, the CPU in the right one's teal:
 	# the art already says which side is which.
 	var side_color := TitleArt.KEY_VIOLET.lightened(0.25) if picks.is_empty() \
@@ -791,7 +800,7 @@ func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
 		var chip_color := TitleArt.KEY_VIOLET if lock_index == 0 \
 				else TitleArt.KEY_TEAL.darkened(0.2)
 		TitleArt.draw_clipped_panel(self, chip, chip.size.y * 0.42, chip_color)
-		var chip_text := "P1" if lock_index == 0 else "CPU"
+		var chip_text := "P1" if lock_index == 0 and not watch_mode else "CPU"
 		var cs := int(chip.size.y * 0.62)
 		var cw := TitleArt.tracked_width(_font, chip_text, cs,
 				chip.size.x * 0.02)

@@ -103,6 +103,18 @@ func _ready() -> void:
 				_stats["big_moves"] = int(_stats.get("big_moves", 0)) + 1
 			if wc and wc.is_finisher(move):
 				replay_buffer.mark("finisher"))
+	# On a phone, the on-screen stick and buttons -- unless nobody is playing.
+	if TouchControls.wanted(not wrestler_a.is_ai or not wrestler_b.is_ai):
+		var touch := TouchControls.new()
+		touch.name = "TouchControls"
+		add_child(touch)
+	# Big moves replayed mid-match when replays are FREQUENT.
+	var camera_node := get_node_or_null("MatchCamera") as MatchCamera
+	if rig and camera_node:
+		instant_replay = InstantReplay.new()
+		instant_replay.name = "InstantReplay"
+		add_child(instant_replay)
+		instant_replay.watch(replay_buffer, camera_node, rig, referee, audio)
 	for w: WrestlerController in [wrestler_a, wrestler_b]:
 		w.pin_started.connect(func(_a, _d): replay_buffer.mark("cover"))
 		w.reversed.connect(func(_r, _s, _m): _stats["reversals"] = int(_stats.get("reversals", 0)) + 1)
@@ -141,6 +153,7 @@ var audio: MatchAudio = null
 var referee_actor: RefereeActor = null
 var replay_buffer: ReplayBuffer = null
 var post_match: PostMatch = null
+var instant_replay: InstantReplay = null
 var _stats := {}
 var _live_at_ms := 0
 var _live_ticks := 0

@@ -45,6 +45,12 @@ static func replay_finish() -> bool:
 	return replays != Replays.OFF
 
 
+## FREQUENT: big moves replayed mid-match too (InstantReplay).
+static func replay_frequent() -> bool:
+	_read_command_line()
+	return replays == Replays.FREQUENT
+
+
 static func _read_command_line() -> void:
 	if _read:
 		return
