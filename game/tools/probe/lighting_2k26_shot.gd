@@ -26,6 +26,9 @@ extends Node
 ##       --resolution 960x540 tools/probe/lighting_2k26_shot.tscn -- --out /tmp/l2k
 
 var _out := "/tmp/l2k"
+## --only PREFIX: shoot only the labels starting with it (the rest is skipped
+## without drawing, so one view costs seconds, not the whole sheet).
+var _only := ""
 
 
 func _ready() -> void:
@@ -33,6 +36,8 @@ func _ready() -> void:
 	for i in args.size():
 		if args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--only" and i + 1 < args.size():
+			_only = args[i + 1]
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
@@ -150,6 +155,8 @@ func _log_beams(rig: ArenaLighting) -> void:
 
 
 func _shoot(label: String) -> void:
+	if _only != "" and not label.begins_with(_only):
+		return
 	for _i in 12:
 		await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [_out, label])

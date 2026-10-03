@@ -85,15 +85,17 @@ PART_COLORS = {
     "RampLeds": (0.72, 0.10, 0.55, 1.0),
     "StageLedDots": (0.20, 0.85, 0.90, 1.0),
     "StageCentreScreen": (0.30, 0.10, 0.45, 1.0),
+    "StageScreenWings": (0.60, 0.20, 0.55, 1.0),
 }
 EMISSIVE = frozenset({"PortalRingWest", "PortalRingEast",
                       "PortalFanWest", "PortalFanEast", "StageScreen",
-                      "RampLeds", "StageLedDots", "StageCentreScreen"})
+                      "RampLeds", "StageLedDots", "StageCentreScreen",
+                      "StageScreenWings"})
 SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
                     "RampLeds"})
 # The screen face authors its own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
-PROJECTED = frozenset(PART_COLORS) - {"StageScreen", "StageCentreScreen"}
+PROJECTED = frozenset(PART_COLORS) - {"StageScreen", "StageCentreScreen", "StageScreenWings"}
 
 ## The owner's AEW arena still (the Dynamite set in WWE 2K), which our set
 ## lacked two things of:
@@ -101,7 +103,16 @@ PROJECTED = frozenset(PART_COLORS) - {"StageScreen", "StageCentreScreen"}
 ##   teal pixels in vertical runs, the set's own lighting texture;
 ## * a CENTRE SCREEN between the two portals, an LED panel of its own under
 ##   the video wall.
-LED_COLUMNS_X = (5.95, 6.45, 6.95)
+## Three near the portals as before, then pairs out across the widened wall.
+LED_COLUMNS_X = (5.95, 6.45, 6.95, 8.15, 8.65, 9.85, 10.35)
+## The backdrop's run past each end of the video wall (backdrop_half).
+BACKDROP_PAST_SCREEN = 1.9
+## The video wall's end panels (the owner's stills): an LED wing at each end of
+## the screen carrying the set's pink / orange / blue diagonal stripes, the
+## chevron frame the picture sits in.
+WING_WIDTH = 1.5
+WING_GAP = 0.08
+WING_TEX = venue.REPO / "game/assets/environment/materials/stage_screen_wing.png"
 LED_DOT_PITCH = 0.24
 LED_DOT_SIZE = 0.10
 LED_DOT_BOTTOM = 0.45     # above the deck
@@ -209,9 +220,18 @@ def build_backdrop(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     parts["StageBackdrop"].box(
         Vector((0.0, (cfg["FLOOR_Y"] + cfg["WALL_TOP"]) * 0.5,
                 cfg["STAGE_BACK"] - 0.4)),
-        Vector((cfg["STAGE_HALF_WIDTH"] * 2.4,
+        Vector((backdrop_half(cfg) * 2.0,
                 cfg["WALL_TOP"] - cfg["FLOOR_Y"], 0.4)),
     )
+
+
+def backdrop_half(cfg: dict[str, float]) -> float:
+    """Half the backdrop's width. The owner's AEW stills have the set's black
+    wall running wider than the video wall above it, its LED columns spread
+    across the whole of it; ours stopped 1.2 m past the deck and left the end
+    stand's seats showing either side of the portals. Now it runs
+    BACKDROP_PAST_SCREEN beyond each end of the screen."""
+    return cfg["SCREEN_WIDTH"] * 0.5 + cfg["SCREEN_BEZEL"] + BACKDROP_PAST_SCREEN
 
 
 def build_portals(cfg: dict[str, float], d: dict[str, float],
@@ -400,6 +420,63 @@ def build_screen(cfg: dict[str, float], d: dict[str, float],
         )
 
 
+def build_screen_wings(cfg: dict[str, float], d: dict[str, float],
+                       parts: dict[str, Part]) -> None:
+    """The chevron wings either end of the video wall (WING_*): flat LED
+    panels the screen's height, turned to the arc's own tangent at its ends so
+    they carry its curve on, a hand's width off the bezel."""
+    wings = parts["StageScreenWings"]
+    half_w = cfg["SCREEN_WIDTH"] * 0.5
+    radius = arc_radius(half_w, cfg["SCREEN_SAGITTA"])
+    half_h = cfg["SCREEN_HEIGHT"] * 0.5
+    top = d["SCREEN_CENTER_Y"] + half_h + cfg["SCREEN_BEZEL"]
+    bottom = d["SCREEN_CENTER_Y"] - half_h - cfg["SCREEN_BEZEL"]
+    for sx in (-1.0, 1.0):
+        # Along the circle past the bezel's end: start and end angles.
+        a0 = math.asin(min(1.0, (half_w + cfg["SCREEN_BEZEL"] + WING_GAP) / radius))
+        a1 = a0 + WING_WIDTH / radius
+        pts = []
+        for a in (a0, a1):
+            pts.append(Vector((sx * radius * math.sin(a), 0.0,
+                               d["SCREEN_FACE_Z"] + radius - radius * math.cos(a))))
+        inner, outer = pts
+        # u runs from the screen outward on both sides, so the stripes
+        # mirror about the centre line.
+        if sx > 0.0:
+            wings.quad_at(Vector((inner.x, top, inner.z)), Vector((inner.x, bottom, inner.z)),
+                          Vector((outer.x, bottom, outer.z)), Vector((outer.x, top, outer.z)),
+                          uvs=[(0.0, 1.0), (0.0, 0.0), (1.0, 0.0), (1.0, 1.0)])
+        else:
+            wings.quad_at(Vector((outer.x, top, outer.z)), Vector((outer.x, bottom, outer.z)),
+                          Vector((inner.x, bottom, inner.z)), Vector((inner.x, top, inner.z)),
+                          uvs=[(1.0, 1.0), (1.0, 0.0), (0.0, 0.0), (0.0, 1.0)])
+    paint_screen_wing()
+
+
+def paint_screen_wing() -> None:
+    """The wing's picture, u = 0 at the screen: a deep violet LED field and the
+    set's chevrons -- magenta, amber and blue bands rising away from the
+    screen at 50 degrees -- under the same fine pixel grid as the centre
+    screen."""
+    import numpy as np
+    from PIL import Image
+    w, h = 256, 1024
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    u, v = x / w, 1.0 - y / h
+    field = np.stack([0.16 + 0.06 * v, 0.04 + 0.03 * v, 0.32 + 0.12 * v], -1)
+    # Distance along the stripe normal, in wing widths (aspect-corrected).
+    t = u * 1.0 + v * (h / w) * 0.25
+    period = 0.62
+    phase = np.mod(t, period) / period
+    for lo, hi, col in ((0.00, 0.16, (1.0, 0.22, 0.62)), (0.22, 0.34, (1.0, 0.58, 0.14)),
+                        (0.42, 0.50, (0.22, 0.42, 1.0))):
+        band = ((phase >= lo) & (phase < hi)).astype(np.float32)
+        field = field * (1 - band[..., None]) + np.array(col, np.float32) * band[..., None]
+    grid = ((x % 6 < 5) & (y % 6 < 5)).astype(np.float32) * 0.25 + 0.75
+    rgb = np.clip(field * grid[..., None], 0, 1) * 255
+    Image.fromarray(np.round(rgb).astype(np.uint8), "RGB").save(WING_TEX, optimize=True)
+
+
 def build_stage_leds(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """The backdrop's LED dot columns and the centre screen (see LED_*)."""
     face_z = cfg["STAGE_BACK"] - 0.2 + 0.012
@@ -456,6 +533,7 @@ def main(argv: list[str]) -> int:
     build_portals(cfg, d, parts)
     build_screen(cfg, d, parts)
     build_stage_leds(cfg, parts)
+    build_screen_wings(cfg, d, parts)
     # The picture face is an open sheet and must look at the ring (+Z); the
     # portal recess is an open bore and what is seen is its inner wall.
     venue.finish(parts, PART_COLORS, emissive=EMISSIVE, smooth=SMOOTH,
@@ -463,6 +541,10 @@ def main(argv: list[str]) -> int:
                  face_toward={"StageScreen": (0.0, 0.0, 1.0),
                               "StageLedDots": (0.0, 0.0, 1.0),
                               "StageCentreScreen": (0.0, 0.0, 1.0)},
+                 # Two sheets facing different ways: recalc would pick a side
+                 # per quad and lose one (face_toward's note). Authored
+                 # counter-clockwise from the ring, as the screen is.
+                 keep_winding=frozenset({"StageScreenWings"}),
                  flip=frozenset({"PortalRecess"}))
 
     out = pathlib.Path(args.out)

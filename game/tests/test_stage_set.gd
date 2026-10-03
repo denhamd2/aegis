@@ -421,3 +421,33 @@ func test_the_entrance_titantron_is_there_and_never_breaks_the_wall() -> void:
 	assert_bool(video.is_playing_entrance()).is_false()
 	video.queue_free()
 	screen.free()
+
+
+## The owner's AEW stills: the set's black wall runs wider than the video
+## wall above it, so no seats show either side of the portals, and the
+## screen sits in a chevron frame -- an LED wing at each end, both lit, one
+## mirrored to the other, carrying on past the bezel.
+func test_the_backdrop_is_wider_than_the_screen_and_the_wings_flank_it() -> void:
+	var half_screen := ArenaBuilder.SCREEN_WIDTH * 0.5 + ArenaBuilder.SCREEN_BEZEL
+	var backdrop := _verts("StageBackdrop")
+	var widest := 0.0
+	for v: Vector3 in backdrop:
+		widest = maxf(widest, absf(v.x))
+	assert_float(widest).is_greater(half_screen + 1.0)
+	var wings := _verts("StageScreenWings")
+	var left := 0
+	var right := 0
+	for v: Vector3 in wings:
+		assert_float(absf(v.x)).is_greater(half_screen)
+		assert_float(absf(v.x)).is_less(widest)
+		if v.x < 0.0:
+			left += 1
+		else:
+			right += 1
+	assert_int(left).is_equal(right)
+	assert_int(left).is_greater(0)
+	# Both face the ring: a wing wound the wrong way is culled and vanishes.
+	var arrays := _arrays("StageScreenWings")
+	for n: Vector3 in arrays[Mesh.ARRAY_NORMAL]:
+		assert_float(n.z).is_greater(0.5)
+	assert_bool(ResourceLoader.exists(ArenaBuilder.STAGE_SCREEN_WING)).is_true()

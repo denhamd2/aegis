@@ -1681,6 +1681,9 @@ const STAGE_LED_DOT_COLOR := Color(0.25, 0.85, 0.92)
 const STAGE_LED_DOT_LEVEL := 2.6
 const STAGE_CENTRE_SCREEN := "res://assets/environment/materials/stage_centre_screen.png"
 const STAGE_CENTRE_SCREEN_LEVEL := 0.9
+## The chevron wings at each end of the video wall (entrance_set.py WING_*).
+const STAGE_SCREEN_WING := "res://assets/environment/materials/stage_screen_wing.png"
+const STAGE_SCREEN_WING_LEVEL := 1.1
 
 
 func _build_entrance_set() -> void:
@@ -1710,6 +1713,10 @@ func _build_entrance_set() -> void:
 	centre.roughness = 1.0
 	centre.metallic_specular = 0.0
 	_dress(root, "StageCentreScreen", centre)
+	var wing := centre.duplicate() as StandardMaterial3D
+	wing.emission_texture = load(STAGE_SCREEN_WING)
+	wing.emission_energy_multiplier = STAGE_SCREEN_WING_LEVEL * _emissive_gain()
+	_dress(root, "StageScreenWings", wing)
 	add_child(root)
 	_attach_stage_video(root)
 
