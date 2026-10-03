@@ -164,7 +164,7 @@ func test_barricade_spill_stops_at_the_mat_edge() -> void:
 	for child in rig.get_children():
 		if String(child.name).begins_with("BarricadeSpill"):
 			spill.append(child)
-	assert_int(spill.size()).is_equal(8)
+	assert_int(spill.size()).is_equal(13)
 	var inner := MAT_HALF - 0.5
 	for light in spill:
 		var p := light.position

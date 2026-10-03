@@ -89,8 +89,8 @@ const STAGE_WASH_DZ := 21.0
 ## Portal accents, on booms off the deck.
 const ACCENT_Y := 6.2
 const ACCENT_DZ := 3.4
-const ACCENT_NEAR_X := 2.1
-const ACCENT_FAR_X := 4.6
+const ACCENT_NEAR_X := 3.7
+const ACCENT_FAR_X := 6.3
 ## Rim pair, off the upstage line of the ring grid.
 const RIM_X := 6.4
 const RIM_Y := 6.9
@@ -99,8 +99,8 @@ const RIM_Z := -7.2
 ## steel starts. `tools/blender/overhead_rig.py` builds to the same number.
 const FIXTURE_TOP := 0.32
 ## Backdrop uplights, on floor stands either side of the set.
-const UPLIGHT_NEAR_X := 7.6
-const UPLIGHT_FAR_X := 11.5
+const UPLIGHT_NEAR_X := 9.4
+const UPLIGHT_FAR_X := 12.6
 const UPLIGHT_Y := 0.4
 const UPLIGHT_DZ := 2.6
 
@@ -956,9 +956,10 @@ func _build_ribbon_spill() -> void:
 
 ## The barricade's faces (item 6, second half; and the owner's two AEW arena
 ## stills of WWE 2K's Dynamite set). As in those stills:
-## * the two long sides -- the hard camera's own and the one facing it --
-##   are LED panels end to end, the owner's AEW / DYNAMITE banner (see
-##   assets/environment/CREDITS.md) across each run;
+## * every straight run -- the two ends AND the two sides, the hard camera's
+##   own among them (it was plain black) -- is LED panels end to end, the
+##   owner's AEW / DYNAMITE banner (see assets/environment/CREDITS.md) across
+##   each run;
 ## * the four cut corners carry the AEW logo, on black;
 ## * every other panel is plain black barrier (ringside.py's own surface).
 ## One low omni in front of each LED panel, in the banner's purple and blue,
@@ -966,6 +967,8 @@ func _build_ribbon_spill() -> void:
 ## anchored number (VISUAL_BAR.md).
 const BARRICADE_SPILL_ENERGY := 0.7
 const BARRICADE_SPILL_RANGE := 3.0
+## A spill shared by two adjacent long-side panels (see _build_barricade_leds).
+const BARRICADE_SPILL_PAIR_GAIN := 1.3
 const BARRICADE_SPILL_IN := 0.35     # light in front of the panel face
 const BARRICADE_SPILL_DROP := 0.7    # light under the barricade top
 const BARRICADE_WALL_ART := "res://assets/environment/materials/barricade_led_dynamite.png"
@@ -986,7 +989,9 @@ func _build_barricade_leds() -> void:
 	var inset := 0.07 + 0.004
 	var h := ArenaBuilder.BARRICADE_HEIGHT - BARRICADE_WALL_FOOT - BARRICADE_WALL_HEAD
 	var n := 0
+	var spills := 0
 	var corners := 0
+	var side_panels: Array = []
 	for panel: Array in ArenaBuilder.barricade_panels():
 		var at: Vector3 = panel[0]
 		var out: Vector3 = panel[2]
@@ -1013,27 +1018,58 @@ func _build_barricade_leds() -> void:
 		var count := float(panel[6])
 		face.material_override = _wall_material(Vector2(float(panel[5]) / count, 1.0 / count))
 		add_child(face)
-		var light := OmniLight3D.new()
-		light.name = "BarricadeSpill%02d" % n
-		light.position = at - out * (inset + BARRICADE_SPILL_IN) \
-				+ Vector3.UP * (top - BARRICADE_SPILL_DROP)
-		light.light_color = RIBBON_SPILL_COLORS[n % RIBBON_SPILL_COLORS.size()]
-		light.light_energy = BARRICADE_SPILL_ENERGY
-		light.omni_range = BARRICADE_SPILL_RANGE
-		light.shadow_enabled = false
-		light.light_volumetric_fog_energy = 0.0
-		add_child(light)
 		n += 1
+		if absf(out.x) > 0.99:
+			# The short ends keep one spill per panel, as they always had.
+			_barricade_spill(n - 1, at, out, inset, top, BARRICADE_SPILL_ENERGY)
+		else:
+			side_panels.append(panel)
+	# The long sides share spills: one omni per PAIR of adjacent panels, at the
+	# midpoint, a little hotter than a single panel's. Eight more full-strength
+	# omnis would have lit the mat ring (the anchored exposure) and cost eight
+	# more lights for the same effect; the LED faces themselves are
+	# per-panel and at the same level as the ends.
+	var i := 0
+	while i < side_panels.size():
+		var a: Array = side_panels[i]
+		var at: Vector3 = a[0]
+		var energy := BARRICADE_SPILL_ENERGY
+		if i + 1 < side_panels.size():
+			var b: Array = side_panels[i + 1]
+			var span := (a[0] as Vector3).distance_to(b[0])
+			if (a[2] as Vector3).is_equal_approx(b[2]) \
+					and span < ArenaBuilder.BARRICADE_PANEL * 1.5:
+				at = ((a[0] as Vector3) + (b[0] as Vector3)) * 0.5
+				energy = BARRICADE_SPILL_ENERGY * BARRICADE_SPILL_PAIR_GAIN
+				i += 1
+		_barricade_spill(n + spills, at, a[2], inset, top, energy)
+		spills += 1
+		i += 1
 
 
-## What a barricade panel shows: "led" on the two long sides (the runs
-## along X's ends, facing +-X), "corner" on a cut corner, "" for plain black.
+func _barricade_spill(index: int, at: Vector3, out: Vector3, inset: float,
+		top: float, energy: float) -> void:
+	var light := OmniLight3D.new()
+	light.name = "BarricadeSpill%02d" % index
+	light.position = at - out * (inset + BARRICADE_SPILL_IN) \
+			+ Vector3.UP * (top - BARRICADE_SPILL_DROP)
+	light.light_color = RIBBON_SPILL_COLORS[index % RIBBON_SPILL_COLORS.size()]
+	light.light_energy = energy
+	light.omni_range = BARRICADE_SPILL_RANGE
+	light.shadow_enabled = false
+	light.light_volumetric_fog_energy = 0.0
+	add_child(light)
+
+
+## What a barricade panel shows: "led" on every straight run (the ends facing
+## +-X and the sides facing +-Z), "corner" on a cut corner, "" for plain black.
 static func barricade_face(panel: Array) -> String:
 	var out: Vector3 = panel[2]
 	if float(panel[3]) < ArenaBuilder.BARRICADE_PANEL * 0.8 \
 			and absf(out.x) > 0.5 and absf(out.z) > 0.5:
 		return "corner"
-	if absf(out.x) > 0.99:
+	# Both axes: the hard camera's side shows the banner as the ends do.
+	if absf(out.x) > 0.99 or absf(out.z) > 0.99:
 		return "led"
 	return ""
 
@@ -1120,7 +1156,7 @@ func _build_stage_accents() -> void:
 		for i: int in 2:
 			var shoulder := ACCENT_NEAR_X if i == 0 else ACCENT_FAR_X
 			var at := Vector3(sx * shoulder, ACCENT_Y, STAGE_BACK_Z + ACCENT_DZ)
-			var aim := Vector3(sx * 3.3, 3.25, STAGE_BACK_Z + 1.1)
+			var aim := Vector3(sx * ArenaBuilder.PORTAL_OFFSET_X, 3.25, STAGE_BACK_Z + 1.1)
 			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
 					34.0, 0.6, ACCENT_RANGE, false) \
 					.light_volumetric_fog_energy = 2.0
@@ -1136,9 +1172,9 @@ func _build_stage_accents() -> void:
 ## what makes the perforation visible at all: the grazing angle is what casts
 ## the texture.
 ##
-## Placed OUTBOARD of the portals, at |x| 7.6 and 11.5. The obvious spot --
-## either side of the ramp at |x| 5.4 -- is inside the portal rings, whose
-## outer edge is at 5.97, so a fixture there lights the inside of a ring and
+## Placed OUTBOARD of the portals, at |x| 9.4 and 12.6. The obvious spot --
+## either side of the ramp -- is inside the portal rings, whose
+## outer edge is at 7.67, so a fixture there lights the inside of a ring and
 ## the panel behind it gets nothing. That was the first attempt and the
 ## backdrop stayed black.
 func _build_backdrop_uplights() -> void:

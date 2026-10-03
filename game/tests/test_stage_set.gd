@@ -57,7 +57,8 @@ func _verts(part: String) -> PackedVector3Array:
 func test_every_part_the_builder_dresses_exists_in_the_model() -> void:
 	var root := _model()
 	var wanted: Array = ArenaBuilder.ENTRANCE_MATERIALS.keys() \
-			+ ArenaBuilder.ENTRANCE_EMISSIVE.keys() + ["StageScreen"]
+			+ ArenaBuilder.ENTRANCE_EMISSIVE.keys() \
+			+ ["StageScreen", "StageSidePanels", "StageCentreScreen"]
 	for part: String in wanted:
 		assert_object(root.find_child(part, true, false)) \
 				.override_failure_message("%s has no '%s' object" % [MODEL, part]) \
@@ -451,3 +452,92 @@ func test_the_backdrop_is_wider_than_the_screen_and_the_wings_flank_it() -> void
 	for n: Vector3 in arrays[Mesh.ARRAY_NORMAL]:
 		assert_float(n.z).is_greater(0.5)
 	assert_bool(ResourceLoader.exists(ArenaBuilder.STAGE_SCREEN_WING)).is_true()
+
+
+## Stage 1 of the AAA plan: the portals stand about one diameter apart with
+## their outer edges near the video wall's ends, and the deck carries them.
+func test_the_portals_are_one_diameter_apart_under_the_screen() -> void:
+	var diameter := ArenaBuilder.PORTAL_MAJOR * 2.0
+	var gap := 2.0 * (ArenaBuilder.PORTAL_OFFSET_X - ArenaBuilder.PORTAL_MAJOR
+			- ArenaBuilder.PORTAL_MINOR)
+	assert_float(gap).is_between(diameter * 0.85, diameter * 1.15)
+	var outer := ArenaBuilder.PORTAL_OFFSET_X + ArenaBuilder.PORTAL_MAJOR \
+			+ ArenaBuilder.PORTAL_MINOR
+	# Outer edges under the screen (18m wide), within two metres of its ends.
+	assert_float(outer).is_less(ArenaBuilder.SCREEN_WIDTH * 0.5)
+	assert_float(outer).is_greater(ArenaBuilder.SCREEN_WIDTH * 0.5 - 2.0)
+	# The deck carries both rings.
+	assert_float(outer).is_less(ArenaBuilder.STAGE_HALF_WIDTH)
+	var widest := 0.0
+	for v: Vector3 in _verts("EntranceStage"):
+		widest = maxf(widest, absf(v.x))
+	assert_float(widest).is_equal_approx(ArenaBuilder.STAGE_HALF_WIDTH, TOLERANCE)
+	# The centre panel between them is about a portal wide, and clear of both.
+	var panel := _verts("StageCentreScreen")
+	var half := 0.0
+	for v: Vector3 in panel:
+		half = maxf(half, absf(v.x))
+	assert_float(half * 2.0).is_between(diameter * 0.8, diameter * 1.0)
+	assert_float(half).is_less(ArenaBuilder.PORTAL_OFFSET_X - ArenaBuilder.PORTAL_MAJOR)
+
+
+## The ramp opens out into the deck: the deck's width at each depth never
+## jumps, narrows monotonically toward the ramp and meets the ramp's own
+## width at the mouth, instead of butting a 3.6m ramp into a square slab.
+func test_the_deck_flares_into_the_ramp() -> void:
+	var by_depth := {}
+	for v: Vector3 in _verts("EntranceStage"):
+		if v.z < ArenaBuilder.STAGE_FRONT - 0.1 and v.y > ArenaBuilder.STAGE_DECK_Y - 0.01:
+			var key := snappedf(v.z, 0.01)
+			by_depth[key] = maxf(by_depth.get(key, 0.0), absf(v.x))
+	var depths: Array = by_depth.keys()
+	depths.sort()
+	var back_width: float = by_depth[depths[0]]
+	# The top face stops a 5cm chamfer short of the skirt.
+	assert_float(back_width).is_equal_approx(ArenaBuilder.STAGE_HALF_WIDTH - 0.05, TOLERANCE)
+	# Walking forward from the flare's start the half-width only closes, in
+	# steps no bigger than a flare facet.
+	var flare_start := ArenaBuilder.STAGE_FRONT - ArenaBuilder.STAGE_FLARE_LENGTH
+	var previous := back_width
+	for z: float in depths:
+		if z < flare_start - 0.02:
+			continue
+		var w: float = by_depth[z]
+		assert_float(w).is_less_equal(previous + 0.001)
+		assert_float(previous - w).is_less(1.5)
+		previous = w
+	assert_float(previous).is_less(ArenaBuilder.RAMP_HALF_WIDTH + 0.4)
+
+
+## The backdrop is a built thing now: a truss frame behind and above the wall,
+## lit perforated panels beside the portals (clear of them), pleated drape.
+func test_the_back_of_stage_is_built_not_a_flat_box() -> void:
+	var screen_top := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5
+	var truss_top := -INF
+	var truss_front := -INF
+	for v: Vector3 in _verts("StageTruss"):
+		truss_top = maxf(truss_top, v.y)
+		truss_front = maxf(truss_front, v.z)
+	assert_float(truss_top).is_greater(screen_top + ArenaBuilder.SCREEN_BEZEL)
+	# Behind the picture's centre (which is its furthest-back point).
+	assert_float(truss_front).is_less(ArenaBuilder.SCREEN_FACE_Z)
+	var outer := ArenaBuilder.PORTAL_OFFSET_X + ArenaBuilder.PORTAL_MAJOR \
+			+ ArenaBuilder.PORTAL_MINOR
+	var panel_inner := INF
+	for v: Vector3 in _verts("StageSidePanels"):
+		panel_inner = minf(panel_inner, absf(v.x))
+	assert_float(panel_inner).is_greater(outer)
+	var folds := {}
+	for v: Vector3 in _verts("StageDrape"):
+		folds[snappedf(v.z, 0.005)] = true
+	# Pleated: many distinct depths, not a single plane.
+	assert_int(folds.size()).is_greater(3)
+	assert_bool(ResourceLoader.exists(ArenaBuilder.STAGE_SIDE_PANEL)).is_true()
+	# Within budget: the whole set stays well under a standard prop's ceiling.
+	var triangles := 0
+	var root := _model()
+	for child in root.get_children():
+		var mesh := (child as MeshInstance3D).mesh
+		triangles += mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3
+	root.free()
+	assert_int(triangles).is_less(15000)
