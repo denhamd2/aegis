@@ -221,24 +221,22 @@ const TURNBUCKLE_PAD_BEVEL := 0.025
 # --- The turnbuckle: what joins a pad to its post ----------------------------
 ## Back, and not as the plate that was deleted above. A real ring's rope ends
 ## in a turnbuckle -- a forged steel body with a hook at one end -- that hooks
-## an eye bolt through a collar on the post; the pad is laced round the
+## an eye bolt screwed into the post (no collar: the reference posts are bare
+## black tubes); the pad is laced round the
 ## turnbuckle, so between the back of every pad and the post there is a hand's
-## width of bare galvanised hardware. That gap is what reads as "connected" on
+## width of bare dark gunmetal hardware. That gap is what reads as "connected" on
 ## camera, and it is thin: rods and a slotted body, not a plate, so it catches
 ## a line of highlight rather than showing a white block.
 ##
 ## Along the diagonal from the pad's back to the post: the hook rod, the
 ## turnbuckle body (two side bars between end bosses), and the eye bolt into
-## the post collar.
+## the post.
 const TURNBUCKLE_ROD_RADIUS := 0.009
 const TURNBUCKLE_BODY_LENGTH := 0.12
 const TURNBUCKLE_BODY_BAR_RADIUS := 0.0055
 const TURNBUCKLE_BODY_HALF_GAP := 0.014
 const TURNBUCKLE_BOSS_RADIUS := 0.014
 const TURNBUCKLE_EYE_RADIUS := 0.017
-## The collar each eye bolt goes through, one per rope height.
-const POST_COLLAR_RADIUS := 0.060
-const POST_COLLAR_HEIGHT := 0.05
 
 # --- The pad's artwork -------------------------------------------------------
 ## The AEW pad face, supplied by the project owner, on a flat quad sat just
@@ -1035,11 +1033,10 @@ func _model_materials() -> Dictionary:
 	return {
 		"PostMesh": _resolve("ring_post", _mat(Color(0.075, 0.075, 0.080), 0.94)),
 		"TurnbuckleFittings": _resolve("ring_post", _mat(Color(0.11, 0.11, 0.115), 0.42)),
-		# Galvanised: a light grey, mostly metallic, a little rough -- a line
-		# of highlight on each rod, not a mirror and not a white block. Not
-		# fully metallic: the hall's ambient carries no reflections (see
-		# arena_truss), and a pure conductor rendered the hardware near-black.
-		"TurnbuckleHardware": _mat(Color(0.64, 0.65, 0.66), 0.32, 0.7),
+		# Dark gunmetal, like the reference's hardware: a dark metal that
+		# still catches a line of highlight on each rod. Albedo 0.10, metallic,
+		# roughness 0.4.
+		"TurnbuckleHardware": _mat(Color(0.10, 0.10, 0.105), 0.4, 0.8),
 		# Vinyl, not steel: a pad is a soft cover and takes a broad dull
 		# sheen, where the fittings behind it take a tight specular one.
 		"TurnbucklePads": _resolve("ring_turnbuckle_pad",
