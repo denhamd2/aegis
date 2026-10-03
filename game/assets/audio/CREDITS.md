@@ -26,3 +26,10 @@ entrance videos (Google Drive, 2026-09-26; 3:38 each), cut out by
 clips in `assets/environment/video/` were cut from (see the CREDITS there),
 at full length, so each song plays straight through the entrance. Nothing in
 it is from a new source; the caveats there apply.
+
+`music/title_theme.ogg` is the owner-supplied title-screen track ("AEW
+Dynamite theme 2025-present, Sum 41 - You Wanted War", logo loop, 3:29),
+supplied 2026-10-03 and transcoded from the owner's mp3 to Vorbis q6 with
+metadata stripped. It is not wired in yet (Stage 2 of
+`gauntlet/refs/aaa_master_plan.md`). Same caveats as the entrance music:
+owner-supplied, not a licensed or CC0 source.
