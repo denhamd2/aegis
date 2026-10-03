@@ -98,10 +98,25 @@ plain, and show results as rendered frames rather than descriptions.
   wired in yet**.
 
 ### Stage 1 items that were in progress when this handoff was written
-Two subagents were working in local worktrees in the previous session. **First
-run `git log --oneline origin/ccr-5f96c954-z0l7gs -15`.** If you see the
-commits below, they landed: verify them and move on. If not, do the work
-yourself from these notes.
+Two subagents were working in local worktrees in the previous session. Their
+unfinished state was snapshotted to GitHub as two branches, each a single
+commit on top of `5edc236`:
+
+- **`origin/wip/stage1-stage-set`**: the stage, desk and barricade work.
+- **`origin/wip/stage1-ula-fala`**: the Ula Fala rebuild.
+
+**First run `git log --oneline origin/ccr-5f96c954-z0l7gs -15`.** If you see
+finished "Stage …" or "Ula Fala …" commits there, they landed: verify them
+and move on.
+
+Otherwise, start from the WIP branches. These are untested snapshots taken
+mid-iteration:
+1. Check each one out into its own worktree.
+2. Re-import, run the suite and render frames.
+3. Finish against the notes below.
+4. Merge into the working branch.
+
+The WIP branches can be deleted once the work is merged.
 
 **(a) Stage set, announce table and barricade LEDs.** Look for a "Stage …"
 commit touching `tools/blender/entrance_set.py`.
