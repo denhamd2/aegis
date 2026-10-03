@@ -248,22 +248,23 @@ const ROMAN_INTRO_SHOTS := [
 	# 24 mm wide, trucking across (R-41 0-10 s).
 	[Vector3(8.5, RIG_CLEAR_Y, 14.0), Vector3(3.0, RIG_CLEAR_Y + 0.1, 14.5),
 		Vector3(0.0, 3.0, -18.0), Vector3(0.0, 3.2, -20.0), 53.0, 50.0, 8.0],
-	# His video on the wall, from low on the ramp, pushing in.
-	[Vector3(0.0, 2.6, -18.0), Vector3(0.0, 3.2, -22.0),
-		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 32.0, 26.0, 7.0],
+	# His video on the wall, from up level with it over the ramp, pushing
+	# in: the screen fills the frame and the empty portals below it stay out
+	# of shot (it was taken from low on the ramp, the portals in the bottom
+	# of the frame).
+	[Vector3(0.0, 6.4, -18.0), Vector3(0.0, 6.5, -21.0),
+		Vector3(0.0, 9.2, -36.5), Vector3(0.0, 9.3, -36.5), 30.0, 26.0, 7.0],
 	# The building waiting for him: the hard camera side's crowd from
-	# ringside, panning along the rows.
+	# ringside, panning along the rows -- stretched to fill the wait, so the
+	# next cut is to him already in his portal (the "stage" walk).
 	[Vector3(-3.6, 1.7, -1.5), Vector3(-3.6, 1.8, 1.5),
 		Vector3(-16.0, 4.6, -6.0), Vector3(-16.0, 4.6, 4.0), 40.0, 38.0, 8.0],
-	# Only now head on into the portals, long lens, creeping in -- held to
-	# INTRO_PORTAL_MAX before he appears. The owner: the camera "went to the
-	# tunnel too soon" -- it sat on the empty portal for eleven seconds.
-	[Vector3(0.0, 1.0, -23.0), Vector3(0.0, 1.0, -24.5),
-		Vector3(0.0, 2.4, -36.5), Vector3(0.0, 2.3, -36.5), 28.0, 24.0, 2.5],
 ]
-## The longest the camera looks at an empty portal before a man walks out of
-## it (test_entrance_cameras pins it for both entrances).
-const INTRO_PORTAL_MAX := 2.5
+## The owner: no close-ups of an empty tunnel, ever. There used to be a long
+## lens creeping into the empty portals here -- eleven seconds of it, then
+## two and a half -- and Cody's smoke built up in his on a long lens before he
+## walked out. The camera now finds the portals only with a man in them
+## (test_entrance_cameras: zero ticks).
 ## The house lights dim for him (blender-lighting's low-key look: fewer,
 ## harder sources, the key on the subject). The rig drops to this fraction and
 ## the ambient to AMBIENT_DIM; the follow spot, his portal accents and the
@@ -1034,9 +1035,11 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 		_beats.append(_with(dark, {"kind": "hold", "who": w,
 				"ticks": _secs(cut[0], cut[1]), "shot": cut[2],
 				"events": [[1, "strobe"]] if cut[3] else []}))
-	# The smoke builds in his portal, lit from behind, the long lens creeping.
+	# The smoke builds in his portal, lit from behind -- seen on the far wide
+	# of the dark house, never on a close lens into the empty portal (the
+	# owner's note); the long lens finds him as he walks out of it.
 	_beats.append(_with(dark, {"kind": "hold", "who": w,
-			"ticks": _secs(CODY_SMOKE, CODY_EMERGE), "shot": "portal_long",
+			"ticks": _secs(CODY_SMOKE, CODY_EMERGE), "shot": "cody_dark",
 			"portal": mouth, "push_from": 0, "push_over": _secs(CODY_SMOKE, CODY_WHOA),
 			"fog_at": smoke, "lights": "RB_LOW",
 			"events": [[1, "fog_on"], [1, "backlight_on"]]}))
@@ -1605,22 +1608,18 @@ func _intro_shot() -> void:
 
 
 ## Which of ROMAN_INTRO_SHOTS is up `at` seconds into a hold of `hold`
-## seconds, and how far through its move: [shot index, t]. The last shot --
-## the portals -- is pinned to the END of the hold, INTRO_PORTAL_MAX long, so
-## the camera reaches the tunnel only as he walks out of it; the one before
-## it holds still on its last frame for any time left over.
+## seconds, and how far through its move: [shot index, t]. The last shot is
+## stretched to the end of the hold, so the montage never runs out early.
 static func intro_shot_at(at: float, hold: float) -> Array:
 	var last := ROMAN_INTRO_SHOTS.size() - 1
-	var portal_from := maxf(hold - INTRO_PORTAL_MAX, 0.0)
-	if at >= portal_from:
-		return [last, clampf((at - portal_from) / INTRO_PORTAL_MAX, 0.0, 1.0)]
 	var start := 0.0
 	for i in last:
 		var length: float = ROMAN_INTRO_SHOTS[i][6]
-		if at <= start + length or i == last - 1:
+		if at <= start + length:
 			return [i, clampf((at - start) / length, 0.0, 1.0)]
 		start += length
-	return [last, 0.0]
+	var rest := maxf(hold - start, float(ROMAN_INTRO_SHOTS[last][6]))
+	return [last, clampf((at - start) / rest, 0.0, 1.0)]
 
 
 func _camera_intro(pick: Array) -> void:

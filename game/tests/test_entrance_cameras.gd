@@ -102,25 +102,21 @@ func _run(styles: Array, each: Callable) -> void:
 
 
 ## The owner: "the camera went to the tunnel too soon". Before a man walks
-## out, the camera may look into the empty portals for INTRO_PORTAL_MAX at
-## most -- the building, the crowd and his video carry the wait.
+## out, the camera never looks into the empty portals -- not even for a beat
+## (the owner: "zero closeups of the empty tunnels"). The building, the crowd
+## and his video carry the wait; the portal shots start with him in them.
 func test_the_camera_waits_for_him_before_the_tunnel() -> void:
 	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
 		var empty := {"run": 0, "worst": 0}
-		var portal := Vector3(0.0, 1.5, ArenaBuilder.PORTAL_FACE_Z)
 		_run(styles, func(beat: Dictionary, camera: Camera3D) -> void:
 			var w: WrestlerController = beat.get("who")
-			var to := portal - camera.global_position
-			var looking := (-camera.global_transform.basis.z).dot(to.normalized()) > 0.9 \
-					and to.length() < 18.0
-			if w and not w.visible and looking:
+			if w and not w.visible and portal_in_shot(camera):
 				empty["run"] += 1
 				empty["worst"] = maxi(empty["worst"], empty["run"])
 			else:
 				empty["run"] = 0)
 		assert_int(empty["worst"]).override_failure_message("%s: %.1f s on the empty tunnel" % [
-				styles, empty["worst"] / 60.0]).is_less_equal(
-				int(EntranceDirector.INTRO_PORTAL_MAX * 60) + 3)
+				styles, empty["worst"] / 60.0]).is_equal(0)
 
 
 ## The owner: Cody's ramp was "mostly low angle". Over each man's walks, the
@@ -143,3 +139,24 @@ func test_the_walk_is_mostly_at_eye_level() -> void:
 			var frac := float(count[key][1]) / float(count[key][0])
 			assert_float(frac).override_failure_message("%s low %.0f%% of the walk" % [key,
 					frac * 100.0]).is_less_equal(0.25)
+
+
+
+## Whether either portal's mouth is in a camera's 16:9 frame from closer
+## than PORTAL_CLOSE -- a shot of the tunnel, as opposed to the far wide of
+## the whole hall, where the stage is a detail.
+const PORTAL_CLOSE := 25.0
+
+
+static func portal_in_shot(camera: Camera3D) -> bool:
+	var half_v := deg_to_rad(camera.fov) * 0.5
+	var half_h := atan(tan(half_v) * 16.0 / 9.0)
+	for sx: float in [-1.0, 1.0]:
+		var p := Vector3(sx * ArenaBuilder.PORTAL_OFFSET_X, ArenaBuilder.STAGE_DECK_Y + 1.2,
+				ArenaBuilder.PORTAL_FACE_Z)
+		var local := camera.global_transform.affine_inverse() * p
+		if local.z >= 0.0 or local.length() > PORTAL_CLOSE:
+			continue
+		if absf(atan2(local.x, -local.z)) < half_h and absf(atan2(local.y, -local.z)) < half_v:
+			return true
+	return false

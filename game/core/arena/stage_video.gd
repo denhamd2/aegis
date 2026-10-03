@@ -108,7 +108,6 @@ const ENTRANCES := {
 	"roman": {
 		"video": "res://assets/environment/video/roman_entrance.ogv",
 		"music": "res://assets/audio/music/roman_entrance.ogg",
-		"loop_from": 62.361,
 		"still": "res://assets/environment/video/roman_entrance_still.png",
 		"uv_scale": Vector2(1.0, 0.66),
 		"uv_offset": Vector2(0.0, 0.165),
@@ -121,7 +120,6 @@ const ENTRANCES := {
 	"cody": {
 		"video": "res://assets/environment/video/cody_entrance.ogv",
 		"music": "res://assets/audio/music/cody_entrance.ogg",
-		"loop_from": 20.0,
 		"still": "res://assets/environment/video/cody_entrance_still.png",
 		"uv_scale": Vector2(1.0, 0.72),
 		"uv_offset": Vector2(0.0, 0.14),
@@ -130,15 +128,15 @@ const ENTRANCES := {
 ## His music, at the level the hall hears it; faded out over this when the
 ## wall goes back to the loop.
 ##
-## The music is NOT the video's own track any more. Played once from the
-## video, it ran out before the man reached the ring -- Cody's 80 s track
-## under an 86 s entrance, Roman's 115 s under 154 s -- and a video cannot be
-## looped from part-way in (no seek). So each track is cut out of its video
-## (tools/audio/build_entrance_music.py), ends on a loop point with the seam
-## crossfaded in, and plays on its own AudioStreamPlayer looping back to
-## "loop_from" until the director fades it: he is in the ring, his poses are
-## done and his props are handed off (EntranceDirector "tron_off"). The
-## video plays silent and loops on the wall.
+## The music is NOT the wall clip's own track. The clips were committed as
+## the first 80 s and 115 s of the owner's 3:38 videos, faded, so the song
+## faded out with the man still on the ramp (Cody's entrance runs 86 s,
+## Roman's 154 s). The full song is cut from the owner's full video
+## (tools/audio/build_entrance_music.py) -- same t = 0 as the clip -- and
+## plays once, straight through, on its own AudioStreamPlayer until the
+## director fades it: he is in the ring, his poses are done and his props
+## are handed off (EntranceDirector "tron_off"). The clip plays silent and
+## loops on the wall.
 const ENTRANCE_VOLUME_DB := 0.0
 const ENTRANCE_FADE_SECONDS := 2.0
 
@@ -413,7 +411,7 @@ func play_entrance(style: String) -> bool:
 	_entrance_feed.name = "EntranceFeed"
 	add_child(_entrance_feed)
 	_entrance_player = _entrance_feed.get_node("Feed")
-	# Silent: the music is its own looping stream (ENTRANCE_VOLUME_DB's note),
+	# Silent: the music is its own stream (ENTRANCE_VOLUME_DB's note),
 	# and the picture loops with it rather than freezing on its last frame.
 	_entrance_player.loop = true
 	_entrance_player.play()
@@ -422,8 +420,7 @@ func play_entrance(style: String) -> bool:
 	return true
 
 
-## His music from the top, looping back to the entry's "loop_from" for as
-## long as he needs it. Plays whether or not the wall can show his video --
+## His music from the top, the whole song. Plays whether or not the wall can show his video --
 ## a headless run, a frame-locked capture -- because the music is not
 ## pictures.
 func _play_music(entry: Dictionary) -> void:
@@ -433,8 +430,7 @@ func _play_music(entry: Dictionary) -> void:
 	if stream == null:
 		return
 	stream = stream.duplicate() as AudioStreamOggVorbis
-	stream.loop = true
-	stream.loop_offset = float(entry.get("loop_from", 0.0))
+	stream.loop = false
 	_music = AudioStreamPlayer.new()
 	_music.name = "EntranceMusic"
 	_music.stream = stream

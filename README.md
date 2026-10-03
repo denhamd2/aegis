@@ -8624,3 +8624,19 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   `.github/workflows/android.yml`, which on every push to main exports a
   debug-signed APK and publishes it as the `android-latest` release.
 - 620 tests pass.
+
+### Entrance music at full length; no empty-tunnel shots
+
+- The owner's entrance videos are 3:38 each; they had been committed as the
+  first 80 s (Cody) and 115 s (Roman), faded, which is why the music ran out
+  -- not the videos. `tools/audio/build_entrance_music.py --source DIR` now
+  cuts the full song from the owner's mp4s (same t = 0 as the wall clips,
+  checked by cross-correlation), so it plays straight through: no loop.
+  Tested against the built timeline: each song outlasts its entrance by
+  over a minute.
+- Zero shots of an empty tunnel (the owner's note): Roman's intro loses the
+  long lens into the portals and frames his video wall from level with it;
+  Cody's smoke builds on the far wide of the dark house. The portal shots
+  start with the man in them. `test_entrance_cameras` checks every tick of
+  both entrances for a portal in a 16:9 frame from closer than 25 m while
+  nobody is in it: zero.

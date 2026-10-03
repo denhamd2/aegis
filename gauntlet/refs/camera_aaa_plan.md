@@ -234,7 +234,7 @@ before the next begins.
 | A4 cuts on the music | DONE | Roman and Cody walk cuts are whole beats (tests) |
 | A5 pre-match intro: card, check, corner closes | DONE | `EntranceDirector._add_intro` |
 | A6 face-off F1-F7 | DONE | `EntranceDirector._faceoff_seq` |
-| Entrances: no early tunnel, eye-level walks | DONE | INTRO_PORTAL_MAX, walk lint (tests) |
+| Entrances: no shot of an empty tunnel, eye-level walks | DONE | portal-in-shot and walk lint (tests) |
 | B1 dynamic ringside gameplay camera | DONE | `MatchCamera` GAMEPLAY_* |
 | B2 broadcast mode | DONE | `CameraSettings.Coverage.BROADCAST` |
 | B3 event cuts: strike, slam, finisher sequence, near-fall, kickout reaction, hero, fire-up | DONE | `MatchCamera` Cut, finisher, pin shot |

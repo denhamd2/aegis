@@ -20,8 +20,9 @@ anyway.
 | `hit_kick_*`, `count_slap_*` | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
 | `ui_*` | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney | CC0 |
 
-The entrance music in `music/` is the audio track of the owner-supplied
-titantron videos in `assets/environment/video/` (see the CREDITS there), cut
-out by `tools/audio/build_entrance_music.py` so it can loop until the man is
-in the ring: the same recording, ending on a loop point with the seam
-crossfaded. Nothing in it is from a new source.
+The entrance music in `music/` is the full soundtrack of the owner-supplied
+entrance videos (Google Drive, 2026-09-26; 3:38 each), cut out by
+`tools/audio/build_entrance_music.py`: the same recordings the titantron
+clips in `assets/environment/video/` were cut from (see the CREDITS there),
+at full length, so each song plays straight through the entrance. Nothing in
+it is from a new source; the caveats there apply.

@@ -361,9 +361,8 @@ func test_tron_rim_hangs_between_him_and_the_wall() -> void:
 
 ## The owner: the music stopped too soon. Each man's music plays from his
 ## first beat to the end of his entrance -- through every pose and until his
-## props are handed off and he is settled on his mark -- looping if the
-## entrance outlasts the track, and only then fades; the next man's starts
-## after it, never on top of it.
+## props are handed off and he is settled on his mark -- and only then
+## fades; the next man's starts after it, never on top of it.
 func test_the_music_plays_until_he_is_done() -> void:
 	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
 		var scene := _match(true, styles[0], styles[1])
@@ -398,11 +397,33 @@ func test_the_music_plays_until_he_is_done() -> void:
 		assert_int(order.find("tron_on", order.find("tron_off"))).is_greater(order.find("tron_off"))
 
 
-## The tracks loop back to a bar inside the song, not to the top.
-func test_the_entrance_music_loops_from_inside_the_song() -> void:
-	for style: String in ["roman", "cody"]:
-		var entry: Dictionary = StageVideo.ENTRANCES[style]
-		var stream := load(entry["music"]) as AudioStreamOggVorbis
-		assert_object(stream).is_not_null()
-		assert_float(float(entry["loop_from"])).is_greater(10.0)
-		assert_float(float(entry["loop_from"])).is_less(stream.get_length() - 30.0)
+## The owner: the songs stopped too soon. Each is the whole song, longer
+## than the entrance it plays under -- measured on the built timeline, from
+## his first beat to his music fading -- with room to spare, so it never
+## runs out and never has to loop.
+func test_each_song_outlasts_its_entrance() -> void:
+	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
+		var scene := _match(true, styles[0], styles[1])
+		var director: EntranceDirector = scene.get_node("EntranceDirector")
+		var on := {}
+		var lengths := {}
+		var ticks := [0]
+		var who := [""]
+		director.beat_started.connect(func(_s: String) -> void:
+			var w: WrestlerController = (director._beats[director._beat] as Dictionary).get("who")
+			if w:
+				who[0] = w.entrance_style)
+		director.cue.connect(func(what: String) -> void:
+			if what == "tron_on":
+				on[who[0]] = ticks[0]
+			elif what == "tron_off" and on.has(who[0]):
+				lengths[who[0]] = (ticks[0] - on[who[0]]) / 60.0)
+		while ticks[0] < 30000 and not director._done:
+			director._physics_process(1.0 / 60.0)
+			ticks[0] += 1
+		for style: String in ["roman", "cody"]:
+			var stream := load(StageVideo.ENTRANCES[style]["music"]) as AudioStreamOggVorbis
+			assert_float(float(lengths.get(style, 9999.0))).override_failure_message(
+					"%s: entrance %.1f s, song %.1f s" % [style, lengths.get(style, -1.0),
+					stream.get_length()]).is_less(stream.get_length() - 20.0)
+			assert_bool(stream.loop).is_false()
