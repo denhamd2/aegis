@@ -71,7 +71,6 @@ WANTED = [
     "TURNBUCKLE_PAD_XZ", "TURNBUCKLE_PAD_BEVEL",
     "TURNBUCKLE_ROD_RADIUS", "TURNBUCKLE_BODY_LENGTH", "TURNBUCKLE_BODY_BAR_RADIUS",
     "TURNBUCKLE_BODY_HALF_GAP", "TURNBUCKLE_BOSS_RADIUS", "TURNBUCKLE_EYE_RADIUS",
-    "POST_COLLAR_RADIUS", "POST_COLLAR_HEIGHT",
     "APRON_OUT", "APRON_TOP", "APRON_BOTTOM",
     "STEP_TREADS", "STEP_WIDTH", "STEP_RUN", "STEP_TOP_Y", "STEP_FLOOR_Y",
     "STEP_APRON_GAP", "STEP_PLATFORM", "APRON_OUT",
@@ -81,7 +80,7 @@ WANTED = [
 PART_COLORS = {
     "PostMesh": (0.075, 0.075, 0.080, 1.0),
     "TurnbuckleFittings": (0.11, 0.11, 0.115, 1.0),
-    "TurnbuckleHardware": (0.56, 0.57, 0.58, 1.0),
+    "TurnbuckleHardware": (0.10, 0.10, 0.105, 1.0),
     "TurnbucklePads": (0.055, 0.055, 0.060, 1.0),
     "TurnbuckleFaces": (0.9, 0.9, 0.9, 1.0),
     "RopeMesh": (0.88, 0.88, 0.87, 1.0),
@@ -230,12 +229,12 @@ def build_turnbuckles(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     """What joins each pad to its post: hook rod, turnbuckle body, eye bolt.
 
     A real rope ends in a forged turnbuckle; the pad is laced round it, and the
-    turnbuckle hooks an eye bolt through a collar on the post. So between the
-    back of every pad and the post there is bare galvanised hardware -- the
+    turnbuckle hooks an eye bolt screwed straight into the post (the reference's
+    posts are bare black tubes -- no collar, no ring). So between the back of
+    every pad and the post there is bare dark gunmetal hardware -- the
     connector the owner asked for, in place of the pads wrapped round the post
     they replaced. Built along the corner diagonal at each rope height:
 
-    * a collar round the post, which the eye bolt goes through;
     * the eye bolt: a rod from inside the post out to an eye;
     * the turnbuckle body: two side bars between two end bosses;
     * the hook rod from the body into the back of the pad.
@@ -264,10 +263,6 @@ def build_turnbuckles(cfg: dict[str, float], parts: dict[str, Part]) -> None:
                 def at(u, _d=d, _h=h):
                     return _d * u + _h
 
-                # Collar round the post.
-                hw.tube([post + h - up * (cfg["POST_COLLAR_HEIGHT"] * 0.5),
-                         post + h + up * (cfg["POST_COLLAR_HEIGHT"] * 0.5)],
-                        cfg["POST_COLLAR_RADIUS"], sides=12)
                 # Eye bolt: from inside the post out to its eye.
                 hw.tube([at(post_u), at(eye_u + eye_r)], rod, sides=8)
                 # The eye: a ring in the vertical plane of the diagonal.
