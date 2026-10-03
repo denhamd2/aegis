@@ -49,7 +49,7 @@ const DAMPING_RATIO := 0.08
 ## m^2/s), so a kink where a knee left the rope smooths out instead of
 ## chattering. Mode k is damped at KINK_DAMPING * (k pi / L)^2 per second:
 ## nothing on the fundamental, ~40/s by the twentieth.
-const KINK_DAMPING := 0.4
+const KINK_DAMPING := 1.2
 ## A rope does not go further than this from its line, however hard it is
 ## pushed: past it the body is going through the ropes, not stretching them.
 const MAX_DEFLECTION := 0.75
@@ -109,6 +109,83 @@ var _radius := 0.018
 ## Spheres this frame, in this node's space: (centre, radius) per side.
 var _spheres: Array = [[], [], [], []]
 
+## HELD ROPES. A body only ever pushes a rope; a hand can hold one. Going
+## through the ropes from the apron (EntranceDirector's step-through) a man
+## lifts the top rope in his hand and sits the middle one down under his
+## thigh, and eases both back as he stands up inside -- refs/ropes.md: the
+## ropes part by a hand's width and come back, they do not twang. Left to
+## the spheres alone, the torso shoved the top rope 0.64 m and kinked single
+## nodes, which whipped back at up to 110 m/s (tools/probe/rope_entry_shot).
+##
+## A hold pulls the rope at one point toward a target, the neighbours
+## following on a smooth bump either side, at a strength the caller eases
+## in and out. key -> {side, height, at (local), weight, grip}. A grip (a
+## hand round the rope) wins over the bodies; a press is applied first, so a
+## leg still pushes the rope it is pressing.
+var _holds := {}
+## How far a hold may take a rope from its line, and how wide the bump is.
+const HOLD_MAX := 0.28
+const HOLD_WIDTH := 0.8
+## How fast a held point follows its target, per second.
+const HOLD_RATE := 200.0
+## The fastest a body shoves a rope node out of its way, m/s. Bodies move at
+## 1-2 m/s going through the ropes and up to ~9 on a whip; past this the
+## rope gives over a few frames instead of all at once.
+const MAX_PUSH_SPEED := 6.0
+var _push_step := 1.0
+## Quadratic drag on a rope node, per metre: at 1 m/s it takes 3% a frame,
+## at 10 m/s over a quarter.
+const SPEED_DRAG := 2.0
+## What a rope node in contact with a body keeps of its velocity, per
+## simulation substep (~15 a frame).
+const CONTACT_GRIP := 0.7
+
+
+## Holds the rope at `height` on the side nearest `at` (a world point) at
+## `weight` (0..1). Call every tick it is held; `release(key)` lets go.
+func hold(key: String, at: Vector3, height: float, weight: float, grip := true) -> void:
+	var p := global_transform.affine_inverse() * at
+	var side := 0 if absf(p.z) >= absf(p.x) else 2
+	if (p.z if side == 0 else p.x) < 0.0:
+		side += 1
+	_holds[key] = {"side": side, "height": height, "at": p, "weight": clampf(weight, 0.0, 1.0),
+			"grip": grip}
+
+
+func release(key: String) -> void:
+	_holds.erase(key)
+
+
+func _held(r: Rope) -> Array:
+	var out := []
+	for h: Dictionary in _holds.values():
+		if int(h["side"]) == r.side and is_equal_approx(float(h["height"]), r.height):
+			out.append(h)
+	return out
+
+
+## Pulls the rope toward each hold's target, weighted by a smooth bump along
+## it, so a held rope is a soft peak at the hand rather than a kink.
+func _apply_holds(r: Rope, holds: Array, grip: bool, dt: float) -> void:
+	for h: Dictionary in holds:
+		if bool(h["grip"]) != grip or float(h["weight"]) <= 0.0:
+			continue
+		var at: Vector3 = h["at"]
+		var along := at.dot(r.along)
+		var i_at := clampi(roundi((along + _half) / _h), 1, SEGMENTS - 1)
+		var rest := r.rest[i_at]
+		var want := Vector2((at - rest).dot(r.out), at.y - rest.y).limit_length(HOLD_MAX)
+		var k := (1.0 - exp(-HOLD_RATE * dt)) * float(h["weight"])
+		var i0 := maxi(1, ceili((along - HOLD_WIDTH + _half) / _h))
+		var i1 := mini(SEGMENTS - 1, floori((along + HOLD_WIDTH + _half) / _h))
+		for i in range(i0, i1 + 1):
+			var u := (r.s[i] - along) / HOLD_WIDTH
+			var bump := (1.0 - u * u)
+			bump *= bump
+			var kk := k * bump
+			r.d[i] = r.d[i].lerp(want * bump, kk)
+			r.v[i] = r.v[i].lerp(Vector2.ZERO, kk)
+
 
 ## Built from RingBuilder's constants, so the rest shape is the same
 ## parabola ring.py sweeps and a ring at rest looks exactly as it did.
@@ -151,7 +228,7 @@ func setup(span: float, half_length: float, heights: Array, sags: Dictionary,
 func _physics_process(delta: float) -> void:
 	_gather_spheres()
 	for r in _ropes:
-		var touching := _touches(r)
+		var touching := _touches(r) or not _held(r).is_empty()
 		if not r.awake and not touching:
 			continue
 		r.awake = true
@@ -263,6 +340,7 @@ func _step(r: Rope, delta: float) -> void:
 	var dt := delta / n_sub
 	var inv_h2 := 1.0 / (_h * _h)
 	var list: Array = _spheres[r.side]
+	var holds := _held(r)
 	var acc: Array[Vector2] = []
 	acc.resize(SEGMENTS + 1)
 	for _sub in n_sub:
@@ -275,9 +353,16 @@ func _step(r: Rope, delta: float) -> void:
 		for i in range(1, SEGMENTS):
 			r.v[i] += acc[i] * dt
 			r.d[i] += r.v[i] * dt
+		_push_step = MAX_PUSH_SPEED * dt
+		_apply_holds(r, holds, false, dt)
 		for sp: Vector4 in list:
 			_push_out(r, sp)
+		_apply_holds(r, holds, true, dt)
 		for i in range(1, SEGMENTS):
+			# Drag that grows with speed (the hose and tape on a real rope):
+			# nothing on the slow wobble, a lot on a snapping kink. A
+			# multiplier under 1, so it can never add energy.
+			r.v[i] /= 1.0 + SPEED_DRAG * r.v[i].length() * dt
 			if r.d[i].length() > MAX_DEFLECTION:
 				r.d[i] = r.d[i].normalized() * MAX_DEFLECTION
 				var rad := r.d[i].normalized()
@@ -307,10 +392,17 @@ func _push_out(r: Rope, sp: Vector4) -> void:
 		if dist >= ring:
 			continue
 		var n := rel / dist if dist > 1e-5 else Vector2(1.0, 0.0)
-		r.d[i] += n * (ring - dist)
+		# Moved out at no more than a body moves, not in one jump: a step
+		# put a pulse on the rope that ran post to post at the wave speed.
+		r.d[i] += n * minf(ring - dist, _push_step)
 		var vn := r.v[i].dot(n)
 		if vn < 0.0:
 			r.v[i] -= n * vn
+		# Friction: a taped rope grips skin and cloth, it does not skate
+		# round a body. Without it a node held on a sphere by the string's
+		# pull slid round the surface at up to 110 m/s, a flicker on screen
+		# (tools/probe/rope_entry_shot, a man going through the ropes).
+		r.v[i] *= CONTACT_GRIP
 
 
 func _settled(r: Rope) -> bool:

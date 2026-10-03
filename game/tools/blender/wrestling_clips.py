@@ -397,15 +397,37 @@ def _methodical_walk():
     return out
 
 
-def _crowd_walk():
+## Cody's walk gestures, each played ONCE an entrance over the same gait
+## (EntranceDirector.CODY_WALK_GESTURES). The owner saw the old walk's one
+## baked fist pump come round every 3.5 s, ten times down the ramp. The
+## broadcast (C-39 WHOA sheet, C-SS 14-30 s, C-SNME 36-1:40) has him doing
+## something different each time he turns to a side of the aisle: he yells
+## at one side with a fist up by his shoulder, then the other, points a fan
+## out, and throws one fist to the roof on the chorus.
+##
+## variant -> (frames the gesture is up (in, out), head yaw, side, hand
+## target in root space (x right, fwd, up), elbow pole, fist, point).
+CROWD_GESTURES = {
+    "": None,
+    "shout_l": ((14, 76), 42.0, "l", (-0.44, 0.16, 1.50), (-1.0, -0.3, -0.7), 1.0, False),
+    "shout_r": ((14, 76), -42.0, "r", (0.44, 0.16, 1.50), (1.0, -0.3, -0.7), 1.0, False),
+    "point_r": ((10, 70), -36.0, "r", (0.74, 0.40, 1.58), (1.0, -0.2, 0.0), 0.95, True),
+    "fist": ((52, 80), 0.0, "r", (0.22, 0.08, 2.02), (1.0, 0.0, 0.2), 1.0, False),
+}
+
+
+def _crowd_walk(variant=""):
     """Cody's walk to the ring: 1.2 m/s, working the building.
 
     A brisker cycle than Roman's (26 frames, two 0.52 m steps, a shorter
-    double support) with the arms swinging free; four cycles (104 frames,
-    3.5 s) so the upper body can play over it: the head sweeps his left
-    crowd, then his right, and on the third cycle the right fist pumps up
-    over his head and comes back down -- the "fists up, singing along" of
-    the refs -- while the legs keep walking underneath."""
+    double support) with the arms swinging free and the shoulders rolling
+    over the hips; four cycles (104 frames, 3.5 s). The plain walk only
+    looks about -- out to his left crowd and back, a glance to the right
+    -- and never lifts an arm: the gestures are their own clips
+    (CROWD_GESTURES), so each is seen once, not every cycle.
+
+    Every variant starts and ends on the plain walk's frame 0, so the
+    director can switch between them on any cycle boundary."""
     cycle = _open_hands(_gait(
         frames=26, fps=FPS, speed=1.2,
         contacts={"r": (0, 15), "l": (13, 15)},
@@ -415,11 +437,18 @@ def _crowd_walk():
         hips_yaw=6.0, spine=(0.0, 7.0), head=(6, 0, 0),
         hand_fwd=(-0.14, 0.16), hand_up=(0.90, 0.97),
         hand_x={"r": 0.28, "l": -0.27}, elbow=None), curl=0.5)
-    # Broadcast (C-39 WHOA sheet 8-15 s, C-SS 14-30 s): he never looks
-    # ahead for long -- the head swings well out to each side of the aisle.
-    looks = [(0, 0.0), (8, 40.0), (32, 40.0), (44, -38.0), (68, -38.0),
-             (84, 0.0), (104, 0.0)]
-    pump = [(0, 0.0), (52, 0.0), (58, 1.0), (72, 1.0), (80, 0.0), (104, 0.0)]
+    g = CROWD_GESTURES[variant]
+    if g is None:
+        # Broadcast (C-39 WHOA sheet 8-15 s): he never looks ahead for long.
+        looks = [(0, 0.0), (10, 0.0), (30, 34.0), (46, 34.0), (62, 0.0),
+                 (76, -22.0), (90, -22.0), (104, 0.0)]
+        arm = [(0, 0.0), (104, 0.0)]
+    else:
+        (a_in, a_out), yaw, _side, _t, _e, _f, _pt = g
+        looks = [(0, 0.0), (a_in - 4, 0.0), (a_in + 8, yaw), (a_out - 6, yaw),
+                 (min(a_out + 14, 100), 0.0), (104, 0.0)]
+        arm = [(0, 0.0), (a_in, 0.0), (a_in + 8, 1.0), (a_out - 8, 1.0),
+               (a_out, 0.0), (104, 0.0)]
 
     def curve(keys, f):
         i = 0
@@ -432,16 +461,24 @@ def _crowd_walk():
     for f in range(104 + 1):
         base = cycle[f % 26][1]
         yaw = curve(looks, f)
-        up = curve(pump, f)
+        up = curve(arm, f)
         sp = base["spine"]
-        pose_f = dict(base, head=(6.0 + 6.0 * up, yaw * 0.75, 0.0),
-                      spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))
-        if up > 0.0:
-            hx, hf, hu = base["hand_r"]
-            pose_f["hand_r"] = (hx + (0.22 - hx) * up, hf + (0.08 - hf) * up,
-                                hu + (2.02 - hu) * up)
-            pose_f["elbow_r"] = (1.0, 0.0, -0.2 + 0.4 * up)
-            pose_f["fist_r"] = 0.5 + 0.5 * up
+        # A yell is chin up and chest out to that side.
+        pose_f = dict(base, head=(6.0 + 8.0 * up, yaw * 0.7, 0.0),
+                      spine=(sp[0] - 4.0 * up, sp[1] + yaw * 0.3, sp[2]))
+        if g is not None and up > 0.0:
+            side, target, elbow, fist, point = g[2], g[3], g[4], g[5], g[6]
+            hx, hf, hu = base["hand_" + side]
+            # The hand still rides the gait a little: a man walking with a
+            # fist up does not hold it dead still.
+            bob = base["pelvis"][2] - 0.905
+            pose_f["hand_" + side] = (hx + (target[0] - hx) * up,
+                                      hf + (target[1] - hf) * up,
+                                      hu + (target[2] + bob - hu) * up)
+            pose_f["elbow_" + side] = elbow
+            pose_f["fist_" + side] = 0.5 + (fist - 0.5) * up
+            if point and up > 0.5:
+                pose_f["point_" + side] = True
         out.append((f, pose_f))
     return out
 
@@ -634,20 +671,77 @@ ROPE_STEP_KEYS = [
 ]
 
 
+## Rope_Step_Through_Apron's world keys: fwd from where he stands on the
+## apron, square to the ropes, up from the apron (which is mat height). The
+## rope line is at fwd +0.02 (EntranceDirector.APRON_STAND 3.12 against the
+## ropes' 3.1), the top rope 1.10 above his feet, the middle 0.75.
+##
+## How a man goes in from the apron (refs/ropes.md, C-SNME 1:50): both hands
+## on the top rope; the left lifts it as the lead leg goes over the middle
+## rope; he folds DOWN and in under the top rope, the rope riding his upper
+## back, the middle rope sat down under his thigh; his weight goes onto the
+## inside foot, the trail leg comes over, and he stands up inside. The rope
+## work itself is RingRopes.hold, driven by EntranceDirector._part_ropes on
+## these frames: grip 0-35, press 3-34.
+##
+## The old keys were the floor-version step-through shifted onto the apron:
+## his chest crossed the rope line at 1.15-1.20 (the top rope's height), so
+## the body drove the top rope 0.4 m down and in, and it whipped back --
+## the "weird and unnatural" rope the owner saw. Here the torso is folded
+## under the top rope: neck and chest cross the line between 0.80 and 1.0.
 def _apron_rope_keys():
-    """ROPE_STEP_KEYS from frame 8 on, moved to start on the apron edge."""
-    keys = []
-    for frame, key in ROPE_STEP_KEYS:
-        if frame < 8:
-            continue
-        keys.append((frame - 8, _shifted(key, -0.28, -0.24)))
-    # Frame 0: both boots on the apron edge, not one still on the tread.
-    first = dict(keys[0][1])
-    first["foot_r"] = (0.14, 0.0, 0.104)
-    first["foot_l"] = (-0.13, 0.0, 0.104)
-    first["pelvis"] = (0.0, -0.04, 0.86)
-    keys[0] = (0, first)
-    return keys
+    top, mid = 1.10, 0.75
+    lift = dict(fist_r=0.8, fist_l=0.9)
+    return [
+        # On the apron, both hands on the top rope, sitting back off it --
+        # he stands 2 cm outside the rope line, so an upright chest is
+        # already against the top rope unless his hips are back.
+        (0, pose(STANCE, pelvis=(0.0, -0.13, 0.86), hips=(2, 0, 0),
+                 spine=(-2, 0, 0), head=(4, 0, 0),
+                 hand_r=(0.22, 0.04, top + 0.02), hand_l=(-0.22, 0.04, top + 0.02),
+                 foot_r=(0.14, -0.06, 0.104), foot_l=(-0.13, -0.06, 0.104),
+                 knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), **lift)),
+        # The left hand lifts the top rope; the lead leg comes up and over
+        # the middle rope while he is still upright, hips back.
+        (6, pose(STANCE, pelvis=(0.0, -0.15, 0.82), hips=(-6, 0, 0),
+                 spine=(-6, 0, 0), head=(8, 0, 0),
+                 hand_r=(0.20, 0.06, top + 0.04), hand_l=(-0.18, 0.06, top + 0.18),
+                 foot_r=(0.16, 0.22, mid + 0.24), foot_l=(-0.13, -0.06, 0.104),
+                 knee_r=(0.1, 0.6, 1.0), knee_l=(-0.1, 1.0, 0.0), **lift)),
+        # Lead foot down inside: astride the middle rope, still upright.
+        (12, pose(STANCE, pelvis=(0.0, -0.10, 0.76), hips=(-12, 0, 0),
+                  spine=(-8, 0, 0), head=(10, 0, 0),
+                  hand_r=(0.18, 0.08, top + 0.04), hand_l=(-0.16, 0.06, top + 0.18),
+                  foot_r=(0.16, 0.44, 0.104), foot_l=(-0.13, -0.06, 0.104),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), **lift)),
+        # The duck: down into a squat over the middle rope and folded flat,
+        # head and shoulders in under the lifted top rope.
+        (18, pose(STANCE, pelvis=(0.0, -0.06, 0.64), hips=(-70, 0, 0),
+                  spine=(-28, 0, 0), head=(34, 0, 0),
+                  hand_r=(0.20, 0.40, 0.62), hand_l=(-0.16, 0.08, top + 0.18),
+                  foot_r=(0.16, 0.46, 0.104), foot_l=(-0.13, -0.06, 0.104),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), **lift)),
+        # Weight onto the inside foot; shoulders well inside, still low.
+        (24, pose(STANCE, pelvis=(0.0, 0.20, 0.68), hips=(-58, 0, 0),
+                  spine=(-26, 0, 0), head=(30, 0, 0),
+                  hand_r=(0.22, 0.62, 0.74), hand_l=(-0.18, 0.12, top + 0.16),
+                  foot_r=(0.16, 0.46, 0.104), foot_l=(-0.13, -0.04, 0.16),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), **lift)),
+        # The trail leg comes over the middle rope; the hand lets the top
+        # rope down with it.
+        (30, pose(STANCE, pelvis=(0.0, 0.42, 0.84), hips=(-30, 0, 0),
+                  spine=(-18, 0, 0), head=(12, 0, 0),
+                  hand_r=(0.24, 0.70, 1.00), hand_l=(-0.20, 0.12, top + 0.01),
+                  foot_r=(0.16, 0.50, 0.104), foot_l=(-0.13, 0.30, mid + 0.20),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 0.6, 1.0), fist_r=0.6, fist_l=0.8)),
+        (35, pose(STANCE, pelvis=(0.0, 0.54, 0.88), hips=(-14, 0, 0),
+                  spine=(-12, 0, 0), head=(6, 0, 0),
+                  hand_r=(0.26, 0.74, 1.12), hand_l=(-0.24, 0.52, 1.10),
+                  foot_r=(0.16, 0.50, 0.104), foot_l=(-0.13, 0.62, 0.104),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), fist_r=0.6, fist_l=0.6)),
+        # Up, inside, in the stance -- so the walk that follows cuts on.
+        (40, _shifted(STANCE, 0.62, 0.0)),
+    ]
 
 
 CLIPS = {
@@ -1983,6 +2077,11 @@ CLIPS = {
 
     # 104 frames / 3.5s, looping: _crowd_walk.
     "Walk_Crowd": _crowd_walk(),
+    # The same walk with one gesture over it, each once an entrance.
+    "Walk_Crowd_Shout_L": _crowd_walk("shout_l"),
+    "Walk_Crowd_Shout_R": _crowd_walk("shout_r"),
+    "Walk_Crowd_Point": _crowd_walk("point_r"),
+    "Walk_Crowd_Fist": _crowd_walk("fist"),
 
     # 36 frames / 1.2s: up onto the middle rope in the corner, facing out.
     # Hands to the top rope first (8), the right boot onto its rope (16),

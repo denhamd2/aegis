@@ -91,9 +91,13 @@ var _rope_side := Vector3.ZERO
 var _submission_fight_ticks := 0
 ## Rope breaks this match, pins and holds together (probes, tests).
 var rope_breaks := 0
-## Whether the last move to land on each man was his opponent's finisher:
-## wrestler -> bool. Overwritten by every landing, so a finisher kicked out
-## of and followed by a strike no longer counts.
+## Each man's finisher window: wrestler -> the finisher that put him down,
+## while a cover off it can still win. Opened when the finisher lands, and
+## shut by anything else -- any other damage, by any path (CombatSystem.
+## damaged: a tope or a chain hold used to slip past, and Cody pinned a man
+## off a dive after a kicked-out Cross Rhodes), getting back to his feet,
+## or kicking out of the cover. So the match only ever ends on a cover that
+## follows the finisher.
 var _finished := {}
 ## Covers kicked out of because they were not off a finisher.
 var near_falls := 0
@@ -103,18 +107,36 @@ func _ready() -> void:
 	wrestler_b = get_node(wrestler_b_path)
 	for w: WrestlerController in [wrestler_a, wrestler_b]:
 		w.move_landed.connect(_on_move_landed)
+		w.fsm.state_changed.connect(_on_state_changed.bind(w))
+		w.combat.damaged.connect(_on_damaged.bind(w))
 
 
 func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 		move: MoveDef) -> void:
-	if defender:
-		_finished[defender] = attacker.is_finisher(move)
+	if not defender:
+		return
+	if attacker.is_finisher(move):
+		_finished[defender] = move
+	else:
+		_finished.erase(defender)
+
+
+## Damage that is not the finisher itself shuts the window.
+func _on_damaged(move: MoveDef, w: WrestlerController) -> void:
+	if _finished.get(w) != move:
+		_finished.erase(w)
+
+
+## Back on his feet: the finisher has worn off.
+func _on_state_changed(_from: int, to: int, w: WrestlerController) -> void:
+	if to == WrestlerFSM.State.IDLE or to == WrestlerFSM.State.LOCOMOTION:
+		_finished.erase(w)
 
 
 ## Whether a cover on `defender` can end the match: only straight off the
 ## pinning man's own finisher.
 func can_be_finished(defender: WrestlerController) -> bool:
-	return bool(_finished.get(defender, false))
+	return _finished.has(defender)
 
 func _physics_process(_delta: float) -> void:
 	if _match_over:
@@ -404,6 +426,8 @@ func _end_pin(three_count_reached: bool, rope := false) -> void:
 		_declare_winner(_pin_attacker, "pinfall")
 	else:
 		_pin_count_shown = 0
+		# Kicked out of: the finisher is spent.
+		_finished.erase(_pin_defender)
 		_pin_defender.fsm.transition_to(WrestlerFSM.State.DOWN)
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
 		# The near-fall comeback: he was losing badly, he survived the cover,
@@ -498,6 +522,12 @@ func _break_submission_tie() -> bool:
 	return rng.randi_range(0, 1) == 0
 
 func _end_submission(tapped_out: bool) -> void:
+	# Only a finisher wins (the owner: "they should always only win by their
+	# finisher, eg Cross Rhodes or Spear"), and no man's finisher is a hold.
+	# A hold that would have made him tap is fought to the last moment and
+	# survived: he gets free, worn, and the match goes on to the finish.
+	if tapped_out and not is_finisher_hold(_submission_attacker):
+		tapped_out = false
 	_submissioning = false
 	if _submission_attacker._submission_hold_move and not tapped_out:
 		# Worked from flat on his back: he gets up, he does not pop upright.
@@ -514,6 +544,13 @@ func _end_submission(tapped_out: bool) -> void:
 		# — an escaped submission must not instantly re-trigger a new
 		# pin/submission on the very next tick either.
 		_submission_defender._cover_eligible = false
+
+## Whether the hold this man has on is his finisher -- the only hold that
+## may end a match. None is today (Cross Rhodes and the Spear are both
+## paired moves), so every tap is survived.
+func is_finisher_hold(attacker: WrestlerController) -> bool:
+	return attacker != null and attacker._submission_hold_move != null \
+			and attacker.is_finisher(attacker._submission_hold_move)
 
 ## Both sides mash "grapple" (captured per-tick by WrestlerController);
 ## whoever accumulates more qualifying presses first becomes the grapple

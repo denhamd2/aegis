@@ -8655,3 +8655,30 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   set on the WHOA and the fists, and red-white-blue shells over the ring. No
   gerbs, no waterfall (`test_no_sparkler_or_waterfall_pyro`). Probe:
   `tools/probe/pyro_shot.tscn`.
+
+### The owner's play-test: Cody's walk, the ropes on the way in, finisher-only wins
+
+- **Cody's walk.** Walk_Crowd had a right-fist pump baked into its 3.5 s
+  loop, so the owner saw the same arm go up about ten times on the ramp. The
+  walk is now plain (he looks about, arms swinging), and four gestures are
+  authored over the same gait and played once each, one per shot of the walk
+  cut: yell at the left crowd, point a fan out, yell at the right, one fist
+  to the roof. Each goes in and out on a cycle boundary, so the legs never
+  jump. `test_codys_walk_gestures_are_each_seen_once`.
+- **The ropes on the ring entry.** Measured with the new
+  `tools/probe/rope_entry_shot.tscn`: the top rope was shoved 0.35-0.64 m and
+  parts of it moved at 66-110 m/s, a twang that read as a flicker. The step
+  through is re-authored (hips back, lead leg over the middle rope, squat and
+  duck under the top rope, trail leg, up); the left hand now holds and lifts
+  the top rope and the thigh presses the middle one (`RingRopes.hold`), both
+  eased back; and contacts move a rope at body speed, with friction and
+  speed drag, instead of in one jump. Now 0.19-0.24 m at the peak, and
+  6-11 m/s at the fastest on screen. Details in `gauntlet/refs/ropes.md`.
+- **Only a finisher wins.** The rule existed but keyed on the last move to
+  *land*; a dive, a chain hold or a submission's damage lands no move, so a
+  kicked-out Cross Rhodes followed by a tope could still be pinned for three.
+  Any damage by any path now shuts the window (`CombatSystem.damaged`), as do
+  getting up and kicking out, and a hold that isn't a man's finisher can no
+  longer make him tap. `test_finisher_only`.
+- The plan for the rest of the gap to 2K26 is in
+  `gauntlet/refs/animation_gap.md`, Phase 5.

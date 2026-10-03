@@ -311,6 +311,43 @@ Phase 4 is done.
 - **AI "in-between" behaviour:** pacing, selling, and playing to the crowd
   (`CrowdReaction` already exists).
 
+### Phase 5: the owner's play-test, and the gap to 2K26 that is left
+
+The owner played the build (October 2026) and found three faults, all now
+fixed and measured:
+
+- **Cody's walk repeated one gesture.** Walk_Crowd's fist pump was baked into
+  its 3.5 s loop: ten identical pumps down the ramp. The walk is plain now,
+  and four gestures play over the same gait once each
+  (`EntranceDirector.CODY_WALK_GESTURES`; refs/entrances.md).
+- **The ropes on the ring entry.** The body drove through the top rope and
+  every contact kicked a pulse along it. Re-authored step-through, hand and
+  leg holds, rate-limited contacts (refs/ropes.md, "Holding a rope").
+- **A win off a move that was not the finisher.** The finisher-only rule
+  keyed on "the last move to LAND was a finisher", and a dive, a chain hold
+  or a submission's wear damage a man without landing a move: Cross Rhodes
+  kicked out of, a tope, then a cover counted three. Now any damage by any
+  path (`CombatSystem.damaged`), getting up, or kicking out shuts the
+  window; and no hold may end a match unless it is a man's finisher (none
+  is), so a tap is always survived. `test_finisher_only`.
+
+What still stands between this and 2K26, in order of payoff:
+
+1. **Upper-body layering everywhere in entrances.** The walk gestures are
+   whole clips over a shared gait; a filtered upper-body blend in the
+   AnimationTree would let any gesture play over any walk, Roman's included.
+2. **Contact-first paired authoring** (Phase 2, item 1, never built): both
+   skeletons in one bpy scene, hands keyed to the other man's bones, for the
+   seven moves on the grip ratchet, then both finishers and signatures.
+3. **The finisher as a set piece:** a slow beat at contact, the cover
+   straight from the landing pose, the referee sliding in.
+4. **Authored transitions:** stagger and recover at three heights, four
+   get-up variants, a crawl to the ropes; the lying-down skate.
+5. **Faces:** shout, grimace and effort shapes driven by entrance beats and
+   match events.
+6. **Prop handoffs with contact:** hands IK'd to the title and coat as the
+   crew take them.
+
 ### Honest limits
 
 - **No mocap here.** Phase 2's contact-first authoring is the substitute.

@@ -16,6 +16,11 @@ enum Limb { HEAD, TORSO, ARMS, LEGS }
 enum Tier { GRAPPLE, POWER, SIGNATURE, FINISHER }
 
 const MAX_LIMB_DAMAGE := 100.0
+
+## Every point of damage, whatever path it came by: a landed move, a dive,
+## a chain hold, a submission's wear. MatchReferee closes a man's finisher
+## window on it, so no new damage path can reopen the non-finisher pinfall.
+signal damaged(move: MoveDef)
 const MOMENTUM_MAX := 100.0
 
 ## Momentum a winner actually earns over one match. Measured across seven
@@ -230,6 +235,7 @@ func apply_damage(move: MoveDef, scale: float = 1.0) -> void:
 	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso * scale)
 	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms * scale)
 	limb_damage[Limb.LEGS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.LEGS] + move.damage_legs * scale)
+	damaged.emit(move)
 
 func apply_momentum(move: MoveDef) -> void:
 	momentum = clamp(momentum - move.momentum_cost + move.momentum_gain, 0.0, MOMENTUM_MAX)

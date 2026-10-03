@@ -331,6 +331,18 @@ const CODY_WHOA_LOW_TICKS := 200
 ## [shot, seconds], cycled; whole beats of his music (A4).
 const CODY_WALK_SHOTS := [["steadicam_front", 6 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
 		["barricade_track", 5 * CODY_BEAT], ["arena_high", 4 * CODY_BEAT]]
+## What he does with his arms on the walk (refs/entrances.md, C-39 / C-SS /
+## C-SNME): yells at one side of the aisle with a fist up, points a fan out,
+## yells at the other side, one fist to the roof. Each ONCE, one to a beat of
+## the walk cut, over the plain walk -- the owner saw the old walk's baked
+## fist pump come round every 3.5 s, ten times down the ramp.
+const CODY_WALK_GESTURES := ["strikes/walk_crowd_shout_l", "strikes/walk_crowd_point",
+		"strikes/walk_crowd_shout_r", "strikes/walk_crowd_fist"]
+## Walk_Crowd's gait cycle (26 frames at 30 fps) and a gesture clip's length
+## (four cycles): a gesture goes in on a cycle boundary of the plain walk and
+## hands back on one, so the legs never jump.
+const WALK_CYCLE_TICKS := 52
+const WALK_GESTURE_TICKS := 208
 ## Corner_Pose has the arms fully wide by frame 12: the shells burst over the
 ## ring (EntrancePyro "over_ring").
 const CODY_CORNER_PYRO_AT := 24
@@ -488,6 +500,14 @@ var _tron_on := false
 
 ## The timeline: one entry per beat, built once in begin().
 var _beats: Array = []
+## The walk gestures: man -> ticks the plain walk has run (its gait phase),
+## the gesture waiting for the next cycle boundary, the one playing
+## [clip, ticks left], and every one played (tests).
+var _walk_clock := {}
+var _ropes: RingRopes
+var _gesture_pending := {}
+var _gesture := {}
+var gestures_played: Array[String] = []
 var _beat := 0
 var _tick := 0
 var _done := false
@@ -779,12 +799,21 @@ func _start_beat() -> void:
 			beat["ticks"] = maxi(1, int(ceil(length / speed * TPS)))
 			if beat.get("cut", false):
 				_place(w, path[0], _heading(path), true)
-			w.play_presentation_clip(beat.get("walk_clip", "strikes/entrance_walk"))
+			if beat.has("gesture"):
+				_gesture_pending[w] = beat["gesture"]
+			# A gesture already going carries on across the cut.
+			if not _gesture.has(w):
+				var clip: String = beat.get("walk_clip", "strikes/entrance_walk")
+				if w._presentation_clip != clip:
+					_walk_clock[w] = 0
+				w.play_presentation_clip(clip)
 		"pose", "clip":
+			_end_gestures(w)
 			w.play_presentation_clip(beat["clip"])
 			_pose_top(w if beat["kind"] == "pose" and _in_ring(w) else null)
 		"turn":
 			beat["ticks"] = SETTLE_TICKS if beat.get("settle", false) else 18
+			_end_gestures(w)
 			w.play_presentation_clip(_wait_clip(w))
 		"pair":
 			for move: Array in beat["moves"]:
@@ -808,6 +837,7 @@ func _physics_process(delta: float) -> void:
 		"walk":
 			var at := _along(beat["path"], t * float(beat["length"]))
 			_place(w, at[0], at[1], false, delta)
+			_tick_gesture(w, beat)
 		"pose":
 			_place(w, w.global_position, beat["facing"], false, delta)
 		"turn":
@@ -821,10 +851,14 @@ func _physics_process(delta: float) -> void:
 			var to: Vector3 = beat["to"]
 			w.global_position = from.lerp(to, t)
 			w.global_transform.basis = _facing_basis(beat["facing"])
+			if beat["clip"] == "strikes/rope_step_through_apron":
+				_part_ropes(w, t, beat["facing"])
 	_frame_shot(beat, delta)
 	_aim_follow_spot(w)
 	_aim_tron_rim(w)
 	if _tick >= int(beat["ticks"]):
+		if beat.get("clip", "") == "strikes/rope_step_through_apron":
+			_release_ropes()
 		_beat += 1
 		_start_beat()
 
@@ -839,6 +873,7 @@ func _ring_bell() -> void:
 	if _done:
 		return
 	_done = true
+	_release_ropes()
 	_card.hide_card()
 	_portal_lights("", false)
 	if _follow:
@@ -986,7 +1021,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 ## walk beats, each on the next of `shots` ([shot, seconds], cycled), so he
 ## never stops and the cut is only the camera's.
 func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: float,
-		clip: String, shots: Array) -> void:
+		clip: String, shots: Array, gestures: Array = []) -> void:
 	var total := _flat(from).distance_to(_flat(to))
 	var done := 0.0
 	var i := 0
@@ -995,8 +1030,11 @@ func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: flo
 		var step := minf(float(shot[1]) * speed, total - done)
 		var a := from.lerp(to, done / total)
 		var b := from.lerp(to, (done + step) / total)
-		_beats.append({"kind": "walk", "who": w, "path": [a, b], "speed": speed,
-				"walk_clip": clip, "shot": shot[0]})
+		var beat := {"kind": "walk", "who": w, "path": [a, b], "speed": speed,
+				"walk_clip": clip, "shot": shot[0]}
+		if i < gestures.size():
+			beat["gesture"] = gestures[i]
+		_beats.append(beat)
 		done += step
 		i += 1
 
@@ -1116,7 +1154,8 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	_beats.append({"kind": "pose", "who": w, "ticks": CODY_WHOA_LOW_TICKS,
 			"clip": "strikes/whoa_low", "facing": Vector3.BACK, "shot": "hero_low"})
 	var foot := foot_of_ramp
-	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS)
+	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS,
+			CODY_WALK_GESTURES)
 	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, true,
 			"", "", 0, "ring_behind_low")
 	# The corner by the steps: up on the middle rope, facing out over them.
@@ -1208,6 +1247,80 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
 			"from": apron, "to": inside, "facing": into, "shot": entry_shot})
 	return inside
+
+
+## Through the ropes from the apron (refs/ropes.md): his left hand takes the
+## top rope and lifts it as he ducks under, the middle rope sits down under
+## his thigh, and both are eased back as he stands up inside. In clip frames
+## of Rope_Step_Through_Apron (40): hands on the top rope from 0, the lead
+## leg over by 6 and down inside by 12, ducked under by 18, the trail leg
+## over by 30, up by 40.
+const ROPE_GRIP := [0.0, 3.0, 25.0, 35.0]
+const ROPE_PRESS := [4.0, 12.0, 26.0, 34.0]
+## How far the middle rope goes down under him.
+const ROPE_PRESS_M := 0.18
+
+
+## The weight of a hold at clip frame `f`, from [in, full, out, gone] frames.
+static func hold_weight(f: float, keys: Array) -> float:
+	if f <= keys[0] or f >= keys[3]:
+		return 0.0
+	if f < keys[1]:
+		return smoothstep(keys[0], keys[1], f)
+	if f > keys[2]:
+		return 1.0 - smoothstep(keys[2], keys[3], f)
+	return 1.0
+
+
+func _part_ropes(w: WrestlerController, t: float, into: Vector3) -> void:
+	if _ropes == null:
+		_ropes = get_parent().find_child("LiveRopes", true, false) as RingRopes
+		if _ropes == null:
+			return
+	var f := t * 40.0
+	var hand := w._bone_world("hand_l")
+	if hand != Vector3.INF:
+		_ropes.hold("entry_grip", hand, RingBuilder.ROPE_HEIGHT_TOP, hold_weight(f, ROPE_GRIP))
+	var hips := w._bone_world("pelvis")
+	if hips != Vector3.INF:
+		var n := _flat(into).normalized()
+		var on_line := hips + n * (-RingBuilder.ROPE_SPAN - hips.dot(n))
+		on_line.y = _ropes.global_position.y + RingBuilder.ROPE_HEIGHT_MIDDLE - ROPE_PRESS_M
+		_ropes.hold("entry_press", on_line, RingBuilder.ROPE_HEIGHT_MIDDLE,
+				hold_weight(f, ROPE_PRESS), false)
+
+
+func _release_ropes() -> void:
+	if _ropes:
+		_ropes.release("entry_grip")
+		_ropes.release("entry_press")
+
+
+## One tick of the walk gestures: a waiting one goes in on the plain walk's
+## next cycle boundary, and a finished one hands back to the plain walk,
+## which then starts its cycle where the gesture's ended.
+func _tick_gesture(w: WrestlerController, beat: Dictionary) -> void:
+	if _gesture.has(w):
+		_gesture[w][1] -= 1
+		if _gesture[w][1] <= 0:
+			_gesture.erase(w)
+			_walk_clock[w] = 0
+			w.play_presentation_clip(beat.get("walk_clip", "strikes/entrance_walk"))
+		return
+	_walk_clock[w] = int(_walk_clock.get(w, 0)) + 1
+	if _gesture_pending.has(w) and int(_walk_clock[w]) % WALK_CYCLE_TICKS == 0:
+		var clip: String = _gesture_pending[w]
+		_gesture_pending.erase(w)
+		_gesture[w] = [clip, WALK_GESTURE_TICKS]
+		gestures_played.append(clip)
+		w.play_presentation_clip(clip)
+
+
+## He has stopped walking: no gesture waits or carries on into the stop.
+func _end_gestures(w: WrestlerController) -> void:
+	if w:
+		_gesture.erase(w)
+		_gesture_pending.erase(w)
 
 
 ## Ticks between two music times.

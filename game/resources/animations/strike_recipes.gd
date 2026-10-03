@@ -290,6 +290,17 @@ const RECIPES := {
 		"seconds": 2.000, "file": AUTHORED},
 	"walk_crowd": {"kind": "retime", "source": "Walk_Crowd",
 		"seconds": 3.467, "file": AUTHORED, "loop": true},
+	# Cody's gestures over the same walk, each once an entrance
+	# (EntranceDirector.CODY_WALK_GESTURES); not looped -- the director goes
+	# back to walk_crowd when one is through.
+	"walk_crowd_shout_l": {"kind": "retime", "source": "Walk_Crowd_Shout_L",
+		"seconds": 3.467, "file": AUTHORED},
+	"walk_crowd_shout_r": {"kind": "retime", "source": "Walk_Crowd_Shout_R",
+		"seconds": 3.467, "file": AUTHORED},
+	"walk_crowd_point": {"kind": "retime", "source": "Walk_Crowd_Point",
+		"seconds": 3.467, "file": AUTHORED},
+	"walk_crowd_fist": {"kind": "retime", "source": "Walk_Crowd_Fist",
+		"seconds": 3.467, "file": AUTHORED},
 	"corner_climb": {"kind": "retime", "source": "Corner_Climb",
 		"seconds": 1.200, "file": AUTHORED},
 	"corner_pose": {"kind": "retime", "source": "Corner_Pose",

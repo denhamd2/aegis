@@ -60,12 +60,13 @@ measurements and the derivations from them. It is not a matter of taste.
 
 | Contact | Where it lives | Target | Measured (`tools/probe/rope_shot.tscn`) |
 | --- | --- | --- | --- |
-| Rebound off the ropes (dive spot) | `Rope_Rebound` clip; body side-on, arm over the top rope | 0.3–0.5 m | 0.53 m peak on the top and middle ropes |
+| Rebound off the ropes (dive spot) | `Rope_Rebound` clip; body side-on, arm over the top rope | 0.3–0.5 m | 0.49 m peak on the top and middle ropes (0.53 before contacts were rate-limited) |
 | Irish whip into the ropes | `wrestler_controller.gd` rope load | 0.3–0.5 m, ~0.25 s contact | see the rope-load tests |
-| Out through the ropes (roll out) | contact only | ropes part | 0.35 m |
-| Tope suicida through the ropes | contact only | ropes part | 0.46 m |
-| Roll in under the bottom rope | contact only | rope lifted | 0.46 m |
-| Springboard off the middle rope | `Springboard_DK_Attacker` boot on the rope | ~0.1–0.2 m down | 0.17 m |
+| Out through the ropes (roll out) | contact only | ropes part | 0.23 m |
+| Tope suicida through the ropes | contact only | ropes part | 0.34 m |
+| Roll in under the bottom rope | contact only | rope lifted | 0.38 m |
+| Springboard off the middle rope | `Springboard_DK_Attacker` boot on the rope | ~0.1–0.2 m down | 0.16 m |
+| Through the ropes from the apron (both entrances) | `Rope_Step_Through_Apron` plus `RingRopes.hold`: the left hand lifts the top rope, the middle rope sits down under the thigh, both eased back | ~0.1–0.25 m, no twang | 0.19–0.24 m peak; on-screen rope speed 6 m/s (Roman), 11 m/s for one frame (Cody), was 0.35–0.64 m and 66–110 m/s (`tools/probe/rope_entry_shot.tscn`) |
 
 The ropes are **one-way and cosmetic**:
 - Bodies are sampled into spheres along their bones, and rope nodes are
@@ -73,3 +74,27 @@ The ropes are **one-way and cosmetic**:
 - The rope colliders in `scenes/ring.tscn` are unchanged.
 - The only gameplay change is the whip's rope load. The AI never whips
   (`wrestler_ai.gd`), so AI matches are not affected by it.
+
+## Holding a rope, and why the ropes stopped twanging
+
+The owner found the ropes "weird and unnatural" as each man went in from
+the apron. Measured (`tools/probe/rope_entry_shot.tscn`), three faults:
+
+- **The body went over the top rope, not under it.** He stands 2 cm outside
+  the rope line (the apron is 0.1 m wide outside the frozen 3.1 m ropes), and
+  the old clip leaned his chest forward at 1.2-1.5 m, the top rope's height,
+  then folded through it. The new clip sits his hips back, steps the lead leg
+  over the middle rope while upright, then squats and ducks so his chest
+  crosses the line at 0.9-1.0 m.
+- **Nothing held a rope.** `RingRopes.hold()` lets a hand pull a rope toward
+  it on a smooth bump (HOLD_WIDTH 0.8 m either side, capped at HOLD_MAX
+  0.28 m), and a leg press it down; the director eases each hold in and out
+  on the clip's frames, so the rope is let down rather than dropped.
+- **Contacts kicked pulses down the rope.** A sphere moved a node out in one
+  step; the kink ran post to post at the 84 m/s wave speed and read as a
+  flicker. Now a body moves a node out no faster than MAX_PUSH_SPEED (6 m/s,
+  above a body's speed through the ropes, below a whip's 9 m/s for at most a
+  few frames), contact has friction (CONTACT_GRIP), and fast nodes meet a
+  drag that grows with speed (SPEED_DRAG) -- a multiplier under 1, so it
+  cannot add energy. Two things tried and dropped, both unstable in this
+  explicit integrator: a hard cap on node speed, and KINK_DAMPING above 1.2.

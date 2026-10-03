@@ -38,6 +38,30 @@ func test_only_the_finisher_makes_a_cover_winnable() -> void:
 	assert_bool(referee.can_be_finished(b)).is_false()
 
 
+## The loophole the owner hit: Cross Rhodes kicked out of, then a tope (dive
+## damage never "lands" a move), then the cover -- it counted three.
+func test_damage_by_any_path_shuts_the_finisher_window() -> void:
+	var referee: MatchReferee = _scene.get_node("MatchReferee")
+	var a: WrestlerController = _scene.get_node("WrestlerA")
+	var b: WrestlerController = _scene.get_node("WrestlerB")
+	a.move_landed.emit(a, b, a.finisher_move)
+	# The finisher's own damage keeps it open.
+	b.combat.apply_damage(a.finisher_move)
+	assert_bool(referee.can_be_finished(b)).is_true()
+	# A dive's damage, which emits no move_landed, shuts it.
+	b.combat.apply_damage(load(DiveSpot.TOPE_MOVE) as MoveDef)
+	assert_bool(referee.can_be_finished(b)).is_false()
+
+
+func test_getting_up_shuts_the_finisher_window() -> void:
+	var referee: MatchReferee = _scene.get_node("MatchReferee")
+	var a: WrestlerController = _scene.get_node("WrestlerA")
+	var b: WrestlerController = _scene.get_node("WrestlerB")
+	a.move_landed.emit(a, b, a.finisher_move)
+	b.fsm.state_changed.emit(WrestlerFSM.State.GETUP, WrestlerFSM.State.IDLE)
+	assert_bool(referee.can_be_finished(b)).is_false()
+
+
 func test_each_man_has_a_finisher_to_win_with() -> void:
 	for n in ["WrestlerA", "WrestlerB"]:
 		var w: WrestlerController = _scene.get_node(n)

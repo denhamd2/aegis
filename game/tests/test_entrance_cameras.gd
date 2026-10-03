@@ -84,7 +84,7 @@ func test_cody_cuts_land_on_his_music_beat() -> void:
 
 
 ## Both entrances played through with the match camera, tick by tick.
-func _run(styles: Array, each: Callable) -> void:
+func _run(styles: Array, each: Callable, after := Callable()) -> void:
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	scene.entrances = true
 	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = styles[0]
@@ -98,6 +98,8 @@ func _run(styles: Array, each: Callable) -> void:
 		ticks += 1
 		var beat: Dictionary = director._beats[mini(director._beat, director._beats.size() - 1)]
 		each.call(beat, camera)
+	if after.is_valid():
+		after.call(director)
 	scene.free()
 
 
@@ -160,3 +162,13 @@ static func portal_in_shot(camera: Camera3D) -> bool:
 		if absf(atan2(local.x, -local.z)) < half_h and absf(atan2(local.y, -local.z)) < half_v:
 			return true
 	return false
+
+
+## The owner: Cody "raises his finger a few times" on the ramp -- the old
+## walk's fist pump came round every cycle. Each gesture is played once,
+## the fist at most once, and they all fit in the walk.
+func test_codys_walk_gestures_are_each_seen_once() -> void:
+	var played := []
+	_run(["roman", "cody"], func(_beat: Dictionary, _camera: Camera3D) -> void: pass,
+			func(d: EntranceDirector) -> void: played.append_array(d.gestures_played))
+	assert_array(played).contains_exactly_in_any_order(EntranceDirector.CODY_WALK_GESTURES)

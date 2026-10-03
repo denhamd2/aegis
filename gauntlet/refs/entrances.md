@@ -365,9 +365,9 @@ above):
 | 6.3 | WHOA #3 | **Drops to a crouch**, loading (Whoa_Crouch) | Portal accents creep up red/blue | -- | | -- |
 | 7.0 | **The hit** | Springs up into the **WHOA pose** again | Everything up: house restored, his portal red, the other blue, follow spot on | **Full stage pyro**: waterfall along the deck front, gerbs both sides of the ramp, mortars | Cut wide, 35 mm (fov 42) on the set | -- |
 | 8.8 | Air punch | **Punches the air** (Air_Punch) | | **Second burst** on the punch: gerbs and mortars | Low hero, 35 mm | On |
-| 10.3 | Out | Walks to the lip, **1.2 m/s**, working the crowd: head turning, a fist pump (Walk_Crowd) | | | Steadicam backing ahead of him, 50 mm | On |
+| 10.3 | Out | Walks to the lip, **1.2 m/s**, working the crowd: head turning (Walk_Crowd; the arms stay down -- see "Cody's walk gestures" below) | | | Steadicam backing ahead of him, 50 mm | On |
 | ~15.5 | Lip | **Points out to the crowd** (Point_Crowd) | | | Low hero | Off |
-| | Ramp | Down the ramp at 1.2 m/s, singing along, fists up | | | Tracking | -- |
+| | Ramp | Down the ramp at 1.2 m/s, singing along: one gesture per shot of the walk cut, each once | | | Tracking | -- |
 | | Floor, steps, ropes | Round to the steps, up, and through the ropes | | | Ringside | -- |
 | ~35 | **The corner** | **Up onto the middle rope** in the corner by the steps, facing out, **arms wide over the crowd** (Corner_Climb, Corner_Pose, Corner_Down) | | **Post sparks** at the peak of the pose | Low from inside the ring, up past him to the crowd, 35 mm | -- |
 | | Mark | Down, to his mark, square up | Wall back to Dynamite | | Ringside | -- |
@@ -532,3 +532,21 @@ ring") were checked against the WWE.com clips 2K26 recreates, frames every
   the ring's corners on his corner pose ("over_ring").
 
 The gerbs, the waterfall and the ramp gerbs are gone.
+
+### Cody's walk gestures [V, the owner's note]
+
+The owner saw him "raise his finger a few times" down the ramp: the old
+Walk_Crowd had one right-fist pump baked into its 3.5 s loop, so a 40 s walk
+showed it about ten times, identically. The broadcast (C-39 WHOA sheet, C-SS
+14-30 s, C-SNME 36-1:40) has him doing something different each time he
+turns to a side of the aisle. Now the plain walk only looks about, and four
+gestures are played over the same gait, once each, one per shot of the walk
+cut (`EntranceDirector.CODY_WALK_GESTURES`):
+
+1. yells at his left-hand crowd, fist up by the shoulder (Walk_Crowd_Shout_L);
+2. points a fan out on his right (Walk_Crowd_Point);
+3. yells at his right-hand crowd (Walk_Crowd_Shout_R);
+4. one fist to the roof (Walk_Crowd_Fist).
+
+Each goes in on a cycle boundary of the plain walk and hands back on one, so
+the legs never jump. `test_codys_walk_gestures_are_each_seen_once`.
