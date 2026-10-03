@@ -512,3 +512,23 @@ proves itself before Cody's bigger motion.
   [C-MITB](https://www.wwe.com/videos/cody-rhodes-makes-an-electric-entrance-money-in-the-bank-2023-highlights),
   [C-SS](https://www.wwe.com/videos/cody-rhodes-lights-up-detroit-with-his-summerslam-entrance-summerslam-2023-highlights),
   [C-SNME](https://www.wwe.com/videos/cody-rhodes-makes-his-entrance-with-the-winged-eagle-wwe-championship).
+
+
+## Pyro, as 2K26 and the broadcasts have it [V]
+
+The owner: no sparkler or waterfall pyro for either man. The 2K26 storyboard
+notes (above: Roman "the fist up, pyro both sides"; Cody "pyro over the
+ring") were checked against the WWE.com clips 2K26 recreates, frames every
+0.5 s:
+
+- **Roman** (R-41 41.5-44 s): on the slam, big orange FLAME bursts from both
+  sides of the set and the room red. No pyro in the ring (R-41 3:16-3:56).
+  Ours: flame units on the deck lip and up on the screen's wings, three
+  pulses a beat apart, with the red room (`EntrancePyro` "roman").
+- **Cody** (C-39 23.5-25 s): on the WHOA, aerial firework shells bursting
+  gold over the set; on the fists driven down (27.5-29 s) a second volley.
+  At the ring (C-SNME 1:46), shells over the arena. Ours: gold volleys over
+  the set ("cody_hit", "cody_punch"), and red, white and blue shells over
+  the ring's corners on his corner pose ("over_ring").
+
+The gerbs, the waterfall and the ramp gerbs are gone.

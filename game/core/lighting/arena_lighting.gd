@@ -464,10 +464,24 @@ const BLACKOUT_DIM := 0.2
 ## not reach; it goes to ENTRANCE_SET_SHARE of itself, and the stage wash to
 ## ENTRANCE_STAGE_SHARE.
 const ENTRANCE_SET_SHARE := 0.25
+## The entrance's exposure, as a share of the match's (the tonemap exposure
+## the mat's anchor was solved at). The owner: entrances "way too bright".
+## Measured against 2K26's entrance storyboard (refs/lighting_2k26.md: p50
+## 0.013, p90 0.225, 4% of the frame over 0.5), ours ran p50 0.08-0.26 and
+## p90 0.55-0.74 once the man was lit -- the stage's LED faces, the set and
+## the follow spot all a stop and more over. The concert look is a dark room
+## with a few hot sources, and exposure is the one lever that takes the room
+## down while the HDR sources (the wall, the pyro, the glints) still bloom.
+const ENTRANCE_EXPOSURE := 0.55
+## And the match's, against the same base (refs/lighting_2k26.md: 2K26's
+## match frames sit at p90 0.47 with 7% of the frame over 0.5).
+const MATCH_EXPOSURE := 1.0
 const ENTRANCE_STAGE_SHARE := 0.35
 const ENTRANCE_SET_PARTS: Array[String] = ["StageBackdrop", "EntranceStage", "PortalRecess"]
 var _set_emission := {}   # StandardMaterial3D -> its own emission multiplier
 var look := Look.MATCH
+## The Environment's own exposure, read once: the looks scale it.
+var _base_exposure := -1.0
 var _ring_haze: FogMaterial
 var _ring_haze_density := 0.0
 var _ring_lights: Array[SpotLight3D] = []
@@ -489,22 +503,27 @@ func set_look(p_look: Look) -> void:
 	if _ring_haze:
 		_ring_haze.density = _ring_haze_density * (ENTRANCE_RING_HAZE if entrance else MATCH_RING_HAZE)
 	RenderingServer.global_shader_parameter_set("crowd_light",
-			CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH)
+			(CROWD_LIGHT_ENTRANCE if entrance else CROWD_LIGHT_MATCH)
+			* (1.0 if _supports_volumetric_fog() else COMPAT_CROWD_GAIN))
 	RenderingServer.global_shader_parameter_set("glint_strength",
 			GLINT_ENTRANCE if entrance else GLINT_MATCH)
 	var env := _environment()
 	if env:
 		env.glow_hdr_threshold = GLOW_THRESHOLD_ENTRANCE if entrance else GLOW_THRESHOLD_MATCH
+		if _base_exposure < 0.0:
+			_base_exposure = env.tonemap_exposure
+		env.tonemap_exposure = _base_exposure * (ENTRANCE_EXPOSURE if entrance else MATCH_EXPOSURE)
 	for light in _ring_lights:
 		var base := key_energy if String(light.name).begins_with("Key") else top_energy
-		light.light_energy = base * (ENTRANCE_RING_SHARE if entrance else 1.0)
+		light.light_energy = base * (ENTRANCE_RING_SHARE if entrance else 1.0) * renderer_gain(light)
 	for light in _stage_wash:
-		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0)
+		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0) \
+				* renderer_gain(light)
 	_dim_set(ENTRANCE_SET_SHARE if entrance else 1.0)
 	if not entrance:
 		for beam in _beams:
 			beam.transform = _beam_rest[beam]
-			beam.light_energy = beam_energy
+			beam.light_energy = beam_energy * renderer_gain(beam)
 			_pose_body(beam)
 
 
@@ -549,7 +568,7 @@ func _move_beams(delta: float) -> void:
 		beam.transform = Transform3D(Basis(Vector3.UP, pan) * rest.basis
 				* Basis(Vector3.RIGHT, tilt), rest.origin)
 		var dim := house_dim if house_dim < BLACKOUT_DIM else 1.0
-		beam.light_energy = beam_energy * ENTRANCE_BEAM_GAIN * pulse * dim
+		beam.light_energy = beam_energy * ENTRANCE_BEAM_GAIN * pulse * dim * renderer_gain(beam)
 		_pose_body(beam)
 		if _glints:
 			_glints.aim(beam)
@@ -1257,6 +1276,15 @@ const FOG_TINT := Color(0.62, 0.68, 0.86)
 ## was reported by eye first -- the browser frames looked over-saturated -- and
 ## the measurement agreed.
 const COMPAT_SATURATION := 0.82
+## The web build's fill, measured against the same match frames on Vulkan
+## (scratchpad look_vk / look_gl2, the owner's "way too bright" round): once
+## the ring keys kept their compatibility gain (renderer_gain), the mat sat
+## on its anchor but the crowd was black silhouettes and the low ringside
+## shots put the men in shadow -- this renderer has no SSIL and no
+## volumetric fog to carry the bounce. More ambient, and the crowd's house
+## emission up, close most of that without touching the mat.
+const COMPAT_AMBIENT_GAIN := 3.0
+const COMPAT_CROWD_GAIN := 6.0
 
 
 ## The compatibility Environment, kept so the fog's begin distance can follow
@@ -1304,6 +1332,7 @@ func _apply_compat_environment() -> void:
 	env.fog_aerial_perspective = 0.0
 	env.fog_sky_affect = 0.0
 	env.adjustment_saturation = COMPAT_SATURATION
+	env.ambient_light_energy *= COMPAT_AMBIENT_GAIN
 	# The compatibility path keeps Filmic at exposure 1.0. match.tscn moved
 	# to AgX at 1.7 (refs/aaa_gap.md item 10), measured on forward_plus; this
 	# renderer's COMPAT_* gains were solved under Filmic, and AgX's 1.7 on top
@@ -1336,6 +1365,19 @@ func _compensate_for_renderer() -> void:
 		if child is Light3D:
 			var light: Light3D = child
 			light.light_energy *= compat_gain_for_z(light.position.z)
+
+
+## What `_compensate_for_renderer()` scaled `light` by: 1 on forward_plus.
+##
+## Every place that SETS a fixture's energy from its exported level (the
+## looks, the beam chase) has to multiply this back in. They did not, and on
+## the compatibility renderer -- the web build -- the first set_look() put
+## the ring keys and top fill back to full: the mat rendered pure white and
+## the owner played a match "way too bright".
+func renderer_gain(light: Node3D) -> float:
+	if _supports_volumetric_fog():
+		return 1.0
+	return compat_gain_for_z(light.position.z)
 
 
 ## Which compatibility gain a fixture at this depth takes.

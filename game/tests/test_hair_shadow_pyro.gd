@@ -61,14 +61,43 @@ func test_its_flicker_stays_in_band_and_varies() -> void:
 	assert_float(hi - lo).is_greater(EntrancePyro.FLICKER * 0.5)
 
 
-func test_gerbs_carry_a_sustained_light() -> void:
+func test_flames_carry_a_sustained_light() -> void:
 	var pyro: EntrancePyro = auto_free(EntrancePyro.new())
 	add_child(pyro)
-	pyro.fire("posts")
+	pyro.fire("roman")
 	var sustained := 0
 	for f: Array in pyro._flashes:
 		if f[4]:
 			sustained += 1
-	# Four post gerbs, each lit while it burns; the room flash is a pop.
+	# The first pulse: four flame units, each lit while it burns; the room's
+	# red flash is a pop. Two more pulses follow on the beat.
 	assert_int(sustained).is_equal(4)
 	assert_int(pyro._flashes.size()).is_equal(5)
+	assert_int(pyro._pending.size()).is_equal(EntrancePyro.FLAME_PULSES - 1)
+
+
+## The owner: no sparkler or waterfall pyro for either man -- fire for
+## Roman, firework shells for Cody. Nothing that fires a spark fountain
+## (a jet that emits upward over its life) or a falling sheet is left.
+func test_no_sparkler_or_waterfall_pyro() -> void:
+	var pyro: EntrancePyro = auto_free(EntrancePyro.new())
+	add_child(pyro)
+	assert_bool(pyro.has_method("_gerb")).is_false()
+	assert_bool(pyro.has_method("_waterfall")).is_false()
+	for cue: String in ["stage", "roman", "cody_hit", "cody_punch", "over_ring"]:
+		pyro.fire(cue)
+	for i in 120:
+		pyro._physics_process(1.0 / 60.0)
+	var emitters := 0
+	for p: GPUParticles3D in pyro.find_children("", "GPUParticles3D", false, false):
+		emitters += 1
+		var m := p.process_material as ParticleProcessMaterial
+		# A shell bursts all at once in every direction; a flame is a short
+		# fireball. A fountain is a slow narrow jet held over its life, and a
+		# waterfall points down.
+		assert_bool(m.direction.y < 0.0).override_failure_message("a falling sheet").is_false()
+		var shell := is_equal_approx(p.explosiveness, 1.0) and m.spread >= 179.0
+		var flame := p.lifetime <= 1.0 and p.draw_pass_1 is QuadMesh \
+				and ((p.draw_pass_1 as QuadMesh).material as StandardMaterial3D).albedo_texture != null
+		assert_bool(shell or flame).override_failure_message("an emitter that is neither a shell nor a flame").is_true()
+	assert_int(emitters).is_greater(10)

@@ -271,6 +271,9 @@ const ROMAN_INTRO_SHOTS := [
 ## pyro flashes are left alone, so he is what is lit.
 const ROMAN_HOUSE_DIM := 0.5
 const ROMAN_AMBIENT_DIM := 0.65
+## Cody's walk, after the WHOA brings the house out of the blackout.
+const WALK_HOUSE_DIM := 0.5
+const WALK_AMBIENT_DIM := 0.65
 ## The close-ups: an 85 mm on his face walking toward the lens, and one held
 ## on the stage lip.
 const FACE_FOV := 16.0
@@ -328,7 +331,8 @@ const CODY_WHOA_LOW_TICKS := 200
 ## [shot, seconds], cycled; whole beats of his music (A4).
 const CODY_WALK_SHOTS := [["steadicam_front", 6 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
 		["barricade_track", 5 * CODY_BEAT], ["arena_high", 4 * CODY_BEAT]]
-## Corner_Pose has the arms fully wide by frame 12: the post sparks.
+## Corner_Pose has the arms fully wide by frame 12: the shells burst over the
+## ring (EntrancePyro "over_ring").
 const CODY_CORNER_PYRO_AT := 24
 ## Coat_Off has his arms behind him, the coat sliding off, on frame 36.
 const COAT_OFF_AT := 72
@@ -1064,7 +1068,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
 			"ticks": _secs(whoa_from, CODY_PYRO) - WHOA_WIDE_AT,
 			"clip": "strikes/whoa_arms", "facing": Vector3.BACK, "shot": "ramp_long",
-			"events": [[1, "dim_off"], [1, "backlight_off"], [1, "fog_off"]]})
+			"events": [[1, "house_walk"], [1, "backlight_off"], [1, "fog_off"]]})
 	var punch_from := CODY_PUNCH - float(CODY_PUNCH_AT) / TPS
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
 			"ticks": _secs(CODY_PYRO, punch_from), "clip": "strikes/whoa_arms",
@@ -1133,7 +1137,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"shot": "corner_low"})
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_pose",
 			"ticks": 180, "from": stand, "to": stand, "facing": out_dir,
-			"shot": "corner_low", "events": [[CODY_CORNER_PYRO_AT, "pyro_posts"]]})
+			"shot": "corner_low", "events": [[CODY_CORNER_PYRO_AT, "pyro_over_ring"]]})
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/corner_down",
 			"ticks": 60, "from": stand, "to": stand, "facing": out_dir,
 			"shot": "ring_high_corner"})
@@ -1285,6 +1289,13 @@ func _event(w: WrestlerController, what: String) -> void:
 			_pyro.fire(what.trim_prefix("pyro_"))
 			if _crowd:
 				_crowd.pop(CROWD_PYRO_POP)
+		"house_walk":
+			# Out of the blackout on the WHOA, but only to the walk's level:
+			# the house stays down through the walk, as 2K26's concert look
+			# does (refs/lighting_2k26.md item 7) -- it used to come all the
+			# way back up here.
+			_dim_house(false)
+			_dim_house(true, WALK_HOUSE_DIM, WALK_AMBIENT_DIM)
 		"dim_off":
 			_dim_house(false)
 		"accent_red":
@@ -1297,7 +1308,7 @@ func _event(w: WrestlerController, what: String) -> void:
 			_smoke_on(w)
 		"fog_off":
 			_smoke_off()
-		"pyro_stage", "pyro_posts", "pyro_roman":
+		"pyro_stage", "pyro_over_ring", "pyro_roman":
 			if what == "pyro_roman" and _lights and _lights.has_method("sync_beat"):
 				_lights.sync_beat(ROMAN_BEAT)
 			if _pyro == null:

@@ -92,8 +92,12 @@ func opening_bell() -> void:
 
 func _on_cue(what: String) -> void:
 	match what:
-		"pyro_stage", "pyro_posts", "pyro_roman":
+		"pyro_stage", "pyro_over_ring":
 			sfx.play("pyro_boom", -1.0)
+		"pyro_roman":
+			# Flame units: the roar of the fire under the boom.
+			sfx.play("pyro_boom", -2.0)
+			sfx.play("whoosh", -4.0)
 		"pyro_cody_hit", "pyro_cody_punch":
 			sfx.play("pyro_bang", -2.0)
 			sfx.play("pyro_boom", -8.0)

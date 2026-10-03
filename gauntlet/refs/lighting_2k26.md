@@ -153,3 +153,31 @@ so treat these numbers as bands, not exact targets.
 **Gate:** each item is verified on Vulkan frames with this measurement and
 `measure_silhouette.py`. The mat↔wrestler separation in `VISUAL_BAR.md`
 stays the priority-1 bar.
+
+## Re-check (the owner: "way too bright", entrances and match)
+
+Measured again with `tools/refs/measure_look.py` on Vulkan and on the web
+build's compatibility renderer.
+
+| | p50 | p90 | bright >0.5 | dark <0.01 |
+| --- | --- | --- | --- | --- |
+| 2K26 match | 0.078 | 0.474 | 7.2% | 1.7% |
+| ours, match, Vulkan | 0.04-0.16 | 0.47-0.49 | 2.5-8% | 0.1-3% |
+| ours, match, web (before) | 0.01-0.35 | 0.05-1.00 | up to 43% | 27-50% |
+| 2K26 entrance | 0.013 | 0.225 | 4.0% | 43.8% |
+| ours, entrance lit, before | 0.08-0.26 | 0.55-0.74 | 10-30% | 4-30% |
+| ours, entrance lit, now | ~0.02 | ~0.43 | ~6% | ~42% |
+
+- **The match on Vulkan was already on 2K26's numbers.** What the owner saw
+  was the web build: `set_look()` reset the ring keys, top fill, stage wash
+  and beams to their full energies, discarding the compatibility gain
+  (0.15) the rig is built with -- so on the web the mat rendered pure white.
+  Fixed with `ArenaLighting.renderer_gain()`, applied wherever an energy is
+  set; the web's crowd emission and ambient fill were then raised
+  (`COMPAT_CROWD_GAIN`, `COMPAT_AMBIENT_GAIN`) so it is not a black void.
+  Open: a low ringside angle on the web still renders the mat darker than
+  Vulkan.
+- **Entrances were 3-10x too bright in the mid-tones.** Now the entrance look
+  runs at `ENTRANCE_EXPOSURE` 0.55 of the match's exposure, and Cody's house
+  stays at half through his walk instead of coming all the way back up on
+  the WHOA. The hot sources (the wall, the portals, the pyro) still bloom.

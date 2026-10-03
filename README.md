@@ -8640,3 +8640,18 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   start with the man in them. `test_entrance_cameras` checks every tick of
   both entrances for a portal in a 16:9 frame from closer than 25 m while
   nobody is in it: zero.
+
+### Lighting re-check against 2K26; pyro to each man's real entrance
+
+- The web build's match was blown out: `ArenaLighting.set_look()` discarded
+  the compatibility renderer's light gain, so the ring lights ran ~6.7x too
+  hot on the web. Fixed (`renderer_gain`), plus more fill and crowd light on
+  that renderer. The Vulkan match was already on 2K26's numbers.
+- Entrances: `ENTRANCE_EXPOSURE` 0.55 and the house kept at half through
+  Cody's walk -- median brightness from 0.08-0.26 down to ~0.02, against
+  2K26's 0.013 (`gauntlet/refs/lighting_2k26.md`, "Re-check").
+- Pyro, measured off the broadcasts 2K26 recreates: Roman gets flame bursts
+  both sides of the set on the slam; Cody gets gold firework shells over the
+  set on the WHOA and the fists, and red-white-blue shells over the ring. No
+  gerbs, no waterfall (`test_no_sparkler_or_waterfall_pyro`). Probe:
+  `tools/probe/pyro_shot.tscn`.
