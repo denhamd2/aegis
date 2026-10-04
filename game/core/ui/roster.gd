@@ -169,9 +169,23 @@ static func entries() -> Array:
 	for pair: Array in [[0, 1.905, 1.866], [1, 1.880, 1.837], [2, 1.829, 1.737]]:
 		(list[pair[0]] as Entry).stature_m = pair[1]
 		(list[pair[0]] as Entry).model_height_m = pair[2]
+	# Roman's own moveset, in place of the shared draw of 26 running attacks
+	# that handed him Claymores and Hoedowns (the Tribal Chief does not hit a
+	# Claymore): clubbing strikes and a heavy kick, a clinch knee and a vertical
+	# suplex, the bodyslam and powerslam of a big man, the Superman Punch to set
+	# up the Spear, and a few lariats and knees on the run.
+	const M := "res://resources/moves/"
+	(list[0] as Entry).moveset = {
+		"strike": [M + "strike_jab.tres", M + "strike_cross.tres",
+				M + "strike_kick_heavy.tres"],
+		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres"],
+		"power": [M + "power_bodyslam.tres", M + "power_powerslam.tres"],
+		"signature": [M + "signature_superman_punch.tres", M + "signature_backbreaker.tres"],
+		"running": [M + "running_attack_clothesline.tres",
+				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres"],
+	}
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.
-	const M := "res://resources/moves/"
 	(list[1] as Entry).moveset = {
 		"strike": [M + "strike_jab.tres", M + "strike_bionic_elbow.tres",
 				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],

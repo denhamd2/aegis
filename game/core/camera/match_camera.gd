@@ -209,7 +209,7 @@ const BODY_WIDTH := 0.8
 ## defended is the shape -- master longer than handheld, both in the seconds
 ## rather than the tens of seconds -- which is what a shot clock needs to be
 ## given at all. A frame-stepped clip could measure these and should.
-@export var hard_cam_hold: float = 7.0
+@export var hard_cam_hold: float = 5.5
 @export var ringside_hold: float = 4.5
 
 ## HARD_CAM is the master and the default. RINGSIDE is what used to be called
@@ -222,15 +222,19 @@ enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE, FINISHE
 
 # --- The 2K-style gameplay camera (camera_aaa_plan.md B1) --------------------
 ## In GAMEPLAY coverage (CameraSettings) the handheld is the dynamic ringside
-## camera 2K26 plays on: just above the top rope, outside the ring, swinging
-## round to stay side-on to the line between the two men -- slowly, and only
-## once they have turned more than GAMEPLAY_DEADZONE off it, so it does not
-## chase every step -- and always on the broadcast side of that line (the
-## 180-degree rule the hard camera sets). A ring post between it and the pair
-## swings it on past the post. Its distance is the same measured framing fit.
+## camera 2K26 plays on: just above the top rope, outside the ring, side-on to
+## the line between the two men -- and always on the broadcast side of that
+## line (the 180-degree rule the hard camera sets). It does NOT orbit: a camera
+## that swings round the pair every time they turn is a camera that is never
+## still, which is what the owner saw. Its bearing is held, and when the pair
+## have turned more than GAMEPLAY_DEADZONE off it (or a ring post gets in the
+## way) it CUTS to the new side-on bearing -- instantly, no sooner than
+## GAMEPLAY_CUT_HOLD seconds after the last cut, the way a director calls a
+## new camera. Its distance is the same measured framing fit.
 const GAMEPLAY_HEIGHT := 2.5
-const GAMEPLAY_DEADZONE := 0.49   # 28 degrees
-const GAMEPLAY_TURN_RATE := 0.9   # rad/s once it swings
+const GAMEPLAY_DEADZONE := 1.0    # 57 degrees: only a real change of side-on moves it
+const GAMEPLAY_CUT_HOLD := 3.0    # seconds a bearing is held before it may cut
+const GAMEPLAY_POST_CUT_HOLD := 1.2   # a post in the way cuts sooner
 ## The ropes are at 3.1: the camera stays outside them.
 const RING_OUTSIDE := 3.55
 const POSTS := [Vector3(3.3, 0, 3.3), Vector3(-3.3, 0, 3.3), Vector3(3.3, 0, -3.3), Vector3(-3.3, 0, -3.3)]
@@ -296,7 +300,12 @@ var _previous_mode: int = -1
 var wrestler_a: Node3D
 var wrestler_b: Node3D
 var _bearing := Vector3.ZERO
-var _swinging := false
+## Seconds since the gameplay bearing last cut, and whether the next frame is
+## a cut (placed, not eased into).
+var _bearing_age := 0.0
+var _snap_next := false
+## How many times the gameplay bearing has cut (for tests and probes).
+var bearing_cuts := 0
 var _cut := -1
 var _cut_subject: Node3D
 var _cut_other: Node3D
@@ -311,7 +320,7 @@ var _cutaway_pending := false
 var _sign_fans: Node
 var _kickout_reaction := false
 const KICKOUT_REACTION_AFTER := 0.9
-const GAMEPLAY_HOLD := 9.0
+const GAMEPLAY_HOLD := 6.0
 const GAMEPLAY_MASTER_HOLD := 4.0
 var grapple_rig: GrappleRig
 var referee: MatchReferee
@@ -403,7 +412,7 @@ func _physics_process(delta: float) -> void:
 		if gameplay:
 			target_position = _outside_ring(target_position, bearing)
 
-	if mode == _previous_mode:
+	if mode == _previous_mode and not _snap_next:
 		var speed := follow_speed if mode == Mode.RINGSIDE else cut_speed
 		global_position = global_position.lerp(target_position, 1.0 - exp(-speed * delta))
 	else:
@@ -414,6 +423,7 @@ func _physics_process(delta: float) -> void:
 		# was only ever one position to lerp from.
 		global_position = target_position
 	_previous_mode = mode
+	_snap_next = false
 	look_at(midpoint + Vector3.UP * aim, Vector3.UP)
 
 ## Frames an entrance shot: where the camera stands, what it looks at, and
@@ -878,6 +888,7 @@ static func _flat(v: Vector3) -> Vector3:
 func _gameplay_bearing(delta: float) -> Vector3:
 	if _bearing == Vector3.ZERO:
 		_bearing = ringside_bearing.normalized()
+	_bearing_age += delta
 	var line := _flat(wrestler_b.global_position - wrestler_a.global_position)
 	if line.length() < 0.4:
 		return _bearing
@@ -886,15 +897,19 @@ func _gameplay_bearing(delta: float) -> Vector3:
 	if want.dot(ringside_bearing) < 0.0:
 		want = -want
 	var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
+	var distance := framing_distance(line.length())
 	for turn in [0.45, -0.9]:
-		if not post_in_the_way(mid, want, framing_distance(line.length())):
+		if not post_in_the_way(mid, want, distance):
 			break
 		want = want.rotated(Vector3.UP, turn)
 	var angle := _bearing.signed_angle_to(want, Vector3.UP)
-	if absf(angle) > GAMEPLAY_DEADZONE or _swinging:
-		_swinging = absf(angle) > 0.05
-		var step := GAMEPLAY_TURN_RATE * delta
-		_bearing = _bearing.rotated(Vector3.UP, clampf(angle, -step, step)).normalized()
+	var blocked := post_in_the_way(mid, _bearing, distance)
+	if (absf(angle) > GAMEPLAY_DEADZONE and _bearing_age >= GAMEPLAY_CUT_HOLD) \
+			or (blocked and _bearing_age >= GAMEPLAY_POST_CUT_HOLD):
+		_bearing = want
+		_bearing_age = 0.0
+		_snap_next = true
+		bearing_cuts += 1
 	return _bearing
 
 

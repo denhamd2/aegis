@@ -12,11 +12,22 @@ Done and on `main`: Stage 1 (stage set, ring, Ula Fala), Stage 2 (title music,
 layered crowd audio, rounded crowd + roles + point camera flashes), Stage 3
 (dry ice as particles, props handed wrestler -> Aubrey -> timekeeper -> table,
 crowd-cutaway beam sweeps; Cody's coat is still hidden on `coat_off`).
-Remaining, in order: Stage 6 pacing/vitality (match is ~75 s; target 8-12 min,
-heel Roman / face Cody), Stage 4 pin legality + rope contact, Stage 5
-movesets, Stage 7 broadcast camera (no orbiting), Stage 8 lighting/signage QA,
-final recording + report. Method that works: write the code, run the focused
-test file, render with the probes, and run the full suite only once per stage.
+In the working tree, being tuned (see README "Stage 6"): `MatchFlow` (match
+phases, heel Roman / face Cody, damage and tempo by phase, rung gating of the
+AI's signatures and finishers, finisher rest, one finisher kickout), recoverable
+wear in `CombatSystem`, pin legality (`MatchReferee.cover_is_legal`), the
+rope break before the first slap, Roman's own moveset, and a camera that cuts
+instead of orbiting (`MatchCamera.GAMEPLAY_DEADZONE`/`GAMEPLAY_CUT_HOLD`).
+
+Measure pacing with `tools/probe/pace_probe.tscn`, run with
+`--fixed-fps 60` (NOT 6000: that is ~30x slower) and `--wrestlers roman,cody`;
+~100 ticks/s per process, so a 9-minute match is ~6 minutes; run 3 seeds in
+parallel. Target 8-12 min, 2-4 near-falls, one kickout of a finisher.
+Not yet done: AI Irish whips and rebound attacks, new paired moves (Samoan
+Drop, Guillotine, Drive-By, Pedigree), Cody's coat handoff, LED/signage QA
+pass, the full end-to-end recording and the final report. Method that works:
+write the code, run the focused test file, render with the probes, and run the
+full suite once per stage.
 
 ## 0. Read first, in this order
 

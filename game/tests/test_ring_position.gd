@@ -58,7 +58,50 @@ func test_in_the_middle_of_the_ring_he_cannot() -> void:
 		assert_vector(WrestlerController.rope_within_reach(man)).is_equal(Vector3.ZERO)
 
 
-func test_the_rope_comes_after_two_and_before_three() -> void:
+## The referee breaks the count the moment a man touches the rope: before the
+## first slap, not after a two-count.
+func test_the_rope_breaks_the_count_before_the_first_slap() -> void:
 	var got := MatchReferee.ROPE_REACH_START_TICK + MatchReferee.ROPE_REACH_TICKS
-	assert_int(MatchReferee.ROPE_REACH_START_TICK).is_greater_equal(MatchReferee.COUNT_TICKS[1])
-	assert_int(got).is_less(MatchReferee.PIN_COUNT_TICKS)
+	assert_int(got).is_less(MatchReferee.COUNT_TICKS[0])
+
+
+# --- pin legality ------------------------------------------------------------
+#
+# A cover counts only with both men inside the ropes, the pinned man's head
+# and shoulders not under the bottom rope, and nobody on the apron.
+
+func _lying(at: Vector3, head_toward: Vector3) -> Transform3D:
+	# His head is up his own -Z.
+	return Transform3D(Basis.looking_at(head_toward, Vector3.UP), at)
+
+
+func test_a_cover_in_the_middle_is_legal() -> void:
+	var man := _lying(Vector3(0.2, 0.0, 0.1), Vector3(0, 0, 1))
+	assert_bool(MatchReferee.cover_is_legal(Vector3(0.6, 0.0, 0.2), man)).is_true()
+
+
+func test_a_man_with_his_head_under_the_bottom_rope_is_not_covered() -> void:
+	# Hips well inside, head out past the rope line.
+	var man := _lying(Vector3(2.5, 0.0, 0.0), Vector3(1, 0, 0))
+	assert_bool(MatchReferee.cover_is_legal(Vector3(2.0, 0.0, 0.5), man)).is_false()
+
+
+func test_a_man_lying_with_his_feet_to_the_ropes_is_covered() -> void:
+	# The same place, the other way round: head in, only his feet near the rope.
+	var man := _lying(Vector3(2.5, 0.0, 0.0), Vector3(-1, 0, 0))
+	assert_bool(MatchReferee.cover_is_legal(Vector3(2.0, 0.0, 0.5), man)).is_true()
+
+
+func test_a_man_part_way_out_of_the_ring_is_not_covered() -> void:
+	var man := _lying(Vector3(3.2, 0.0, 0.0), Vector3(-1, 0, 0))
+	assert_bool(MatchReferee.cover_is_legal(Vector3(2.0, 0.0, 0.0), man)).is_false()
+
+
+func test_nobody_covers_from_the_apron() -> void:
+	var man := _lying(Vector3(0.3, 0.0, 0.0), Vector3(0, 0, 1))
+	assert_bool(MatchReferee.cover_is_legal(Vector3(3.4, 0.0, 0.0), man)).is_false()
+
+
+func test_a_man_on_the_floor_outside_is_not_covered() -> void:
+	var man := _lying(Vector3(0.3, -1.0, 0.0), Vector3(0, 0, 1))
+	assert_bool(MatchReferee.cover_is_legal(Vector3(0.6, 0.0, 0.0), man)).is_false()

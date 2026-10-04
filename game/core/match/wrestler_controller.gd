@@ -577,6 +577,8 @@ var _snap_next_animation: bool = false
 ## A knockdown is an event, so it is measured from the last one: a wrestler
 ## goes down again once he has taken another KNOCKDOWN_DAMAGE *since*.
 var _damage_at_last_knockdown: float = 0.0
+## The match's pacing (MatchFlow), if this match has one; the AI reads its tempo.
+var flow: MatchFlow = null
 
 func _ready() -> void:
 	# RingRopes finds the bodies it has to give under by this group.
@@ -3307,6 +3309,9 @@ func _go_down() -> void:
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
 	_damage_at_last_knockdown = combat.wear
+	# A knockdown is not undone: what he has taken so far cannot be healed.
+	combat.heal_floor = combat.wear
+	combat.green = 0.0
 	_move_ticks_remaining = GETUP_TICKS
 	combat.cut_off_comeback()
 	_cover_eligible = true

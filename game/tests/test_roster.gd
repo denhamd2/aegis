@@ -40,3 +40,21 @@ func test_roman_stands_taller_than_cody_in_either_slot() -> void:
 			var w: WrestlerController = scene.get_node(slot[0])
 			assert_float(w.physique_height).is_equal_approx(
 					(slot[1] as Roster.Entry).stature_scale(), 0.0001)
+
+
+## Roman fights with his own moves, not a shared draw of 26 running attacks
+## that handed the Tribal Chief a Claymore and a Hoedown.
+func test_roman_has_his_own_moveset_without_borrowed_flourishes() -> void:
+	var roman := Roster.by_id("roman")
+	assert_bool(roman.moveset.is_empty()).is_false()
+	for tier: String in roman.moveset:
+		for path: String in roman.moveset[tier]:
+			assert_bool(ResourceLoader.exists(path)).override_failure_message(path).is_true()
+	var running: Array = roman.moveset["running"]
+	for borrowed in ["claymore", "hoedown", "cyclone", "gamengiri", "moonsault", "liger"]:
+		for path: String in running:
+			assert_bool(path.contains(borrowed)).override_failure_message(
+					"Roman runs with %s" % path).is_false()
+	# His big moves: the Superman Punch to set up the Spear.
+	assert_str(roman.finisher).contains("spear")
+	assert_str(roman.moveset["signature"][0]).contains("superman_punch")

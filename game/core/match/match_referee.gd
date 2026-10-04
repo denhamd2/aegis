@@ -18,10 +18,11 @@ signal rope_break(defender: WrestlerController, was_pin: bool)
 ## a finisher. Whether he can reach them is decided as the cover or the hold
 ## starts (WrestlerController.rope_within_reach()), off where he lies.
 ##
-## Pinned: he starts reaching as the second count lands (COUNT_TICKS[1]) and
-## has the rope ROPE_REACH_TICKS later -- after two, before three, which is
-## when a man really gets there. A kickout before that still ends it first.
-const ROPE_REACH_START_TICK := 170
+## Pinned: a man lying where he can reach the ropes gets a hand or foot on
+## them at once -- he starts reaching as the cover starts, and the referee
+## stops the count the moment he touches (ROPE_REACH_TICKS later), before the
+## first slap, not after a two-count. A kickout before that still ends it first.
+const ROPE_REACH_START_TICK := 36
 const ROPE_REACH_TICKS := 24
 ## Held: he fights the hold this long before he stretches for the rope.
 const SUBMISSION_ROPE_REACH_AFTER := 60
@@ -56,6 +57,53 @@ const NEAR_FALL_KICKOUT_TICK := 219
 ## three-count tense to watch.
 const COUNT_VISIBLE_TICKS: Array[int] = [39, 24, 999]
 const COVER_RANGE := 1.2
+
+## A cover is legal only with both men inside the ropes: the pinned man's hips,
+## torso, shoulders and head, and the man covering him. Lying with his head
+## under the bottom rope, over the apron or out on the floor, he is not covered
+## (the referee does not count it) -- the man who put him there has to drag him
+## to the middle. Points are in the pinned man's own frame (his head up -Z, the
+## same frame WrestlerController.ROPE_REACH_POINTS is measured in).
+const COVER_ROPES := 2.98
+const COVER_BODY_POINTS: Array[Vector3] = [
+	Vector3(0.0, 0.0, 0.0),                       # hips
+	Vector3(0.0, 0.0, -0.55),                     # torso
+	Vector3(0.28, 0.0, -0.8), Vector3(-0.28, 0.0, -0.8),   # shoulders
+	Vector3(0.0, 0.0, -1.05),                     # head
+]
+## Lying lower than this he is on the floor outside, not on the mat.
+const COVER_MAT_FLOOR := -0.3
+
+
+## How fast a man is dragged to the middle for a legal cover, metres a second,
+## and how many times one has been (for the probes).
+const DRAG_SPEED := 1.3
+var drags := 0
+
+
+## One tick of dragging `defender` toward the middle of the ring.
+func _drag_toward_centre(defender: WrestlerController) -> void:
+	var to_centre := Vector3(-defender.global_position.x, 0.0, -defender.global_position.z)
+	if to_centre.length() < 0.05:
+		return
+	drags += 1
+	defender.global_position += to_centre.normalized() \
+			* minf(DRAG_SPEED * get_physics_process_delta_time(), to_centre.length())
+
+
+## Whether a cover of a man lying at `defender` by a man at `attacker` can be
+## counted. Static and position-only, so the AI, the human and the tests all
+## ask the same question.
+static func cover_is_legal(attacker: Vector3, defender: Transform3D) -> bool:
+	if absf(attacker.x) > COVER_ROPES or absf(attacker.z) > COVER_ROPES:
+		return false
+	if defender.origin.y < COVER_MAT_FLOOR:
+		return false
+	for p in COVER_BODY_POINTS:
+		var q := defender * p
+		if absf(q.x) > COVER_ROPES or absf(q.z) > COVER_ROPES:
+			return false
+	return true
 ## Absolute safety cap on a tie-up contest, not the primary mechanism (see
 ## _tick_tie_up()) — TieUpMinigame.PROGRESS_THRESHOLD is what actually
 ## decides it in practice.
@@ -115,7 +163,11 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 		move: MoveDef) -> void:
 	if not defender:
 		return
+	# A finisher ends the match only once the story has got there (MatchFlow);
+	# before that the cover is a near-fall, kicked out of at two and nine tenths.
 	if attacker.is_finisher(move):
+		attacker.combat.spend_finisher()
+	if attacker.is_finisher(move) and (attacker.flow == null or attacker.flow.finish_allowed()):
 		_finished[defender] = move
 	else:
 		_finished.erase(defender)
@@ -243,6 +295,12 @@ func _check_for_downed_opponent_action() -> void:
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE \
 				and WrestlerController.is_beside_torso(defender, attacker.global_position):
+			# Not countable where he lies (head under the bottom rope, out on
+			# the apron): the man covering him drags him toward the middle
+			# first, and the cover starts once it is legal.
+			if not cover_is_legal(attacker.global_position, defender.global_transform):
+				_drag_toward_centre(defender)
+				return
 			# Every finish is a cover. The submission branch that used to
 			# live here is gone from the AI match: a match is meant to end
 			# with one wrestler pinning the other, and a seeded coin flip
@@ -393,7 +451,15 @@ func submission_progress() -> Vector2:
 
 func _tick_pin() -> void:
 	_pin_ticks += 1
-	if _pin_defender._pin_minigame and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
+	# The finishing stretch: a man who has already kicked out of a finisher
+	# since the match was allowed to end has no kickout left in him for the
+	# next one (MatchFlow.FINISHER_KICKOUTS_MAX), and the count runs to three.
+	var no_kickout_left: bool = can_be_finished(_pin_defender) and _pin_attacker.flow != null \
+			and _pin_attacker.flow.no_kickout_left()
+	if not no_kickout_left and _pin_defender._pin_minigame \
+			and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
+		if can_be_finished(_pin_defender) and _pin_attacker.flow != null:
+			_pin_attacker.flow.finisher_kickouts += 1
 		_end_pin(false)
 		return
 	if _tick_rope_reach(_pin_ticks, ROPE_REACH_START_TICK):
@@ -456,6 +522,7 @@ func _update_comebacks() -> void:
 		var w: WrestlerController = pair[0]
 		var other: WrestlerController = pair[1]
 		w.combat.tick_comeback(not w.fsm.is_in(COMEBACK_CLOCK_STOPPED))
+		w.combat.tick_recovery()
 		# The heat comeback fires as the last hit of the beatdown lands --
 		# in the flinch, or on his feet -- never mid-grapple or on the mat.
 		if w.combat.earned_comeback(other.combat) and w.fsm.is_in([

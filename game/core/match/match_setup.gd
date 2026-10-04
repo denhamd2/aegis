@@ -69,6 +69,11 @@ func _ready() -> void:
 	wrestler_a.match_seed = match_seed
 	wrestler_b.match_seed = match_seed
 	referee.match_won.connect(_on_match_won)
+	# The shape of the match: feeling-out, heat, hope, cut-off, comeback, finish.
+	var flow := MatchFlow.new()
+	flow.name = "MatchFlow"
+	add_child(flow)
+	flow.watch([wrestler_a, wrestler_b])
 	# The crowd reacting, and the broadcast finish over the frame. Both are
 	# presentation only (CrowdReaction, BroadcastLook).
 	var crowd := CrowdReaction.new()

@@ -172,12 +172,7 @@ static func bump_volume(fall_speed: float) -> float:
 ## Who the house is behind: -1 for the heel (Roman Reigns), +1 for the face
 ## (Cody Rhodes), 0 for anyone else. By name, the way the roster presents them.
 static func favor_of(display_name: String) -> float:
-	var n := display_name.to_upper()
-	if n.contains("ROMAN") or n.contains("REIGNS"):
-		return -1.0
-	if n.contains("CODY") or n.contains("RHODES"):
-		return 1.0
-	return 0.0
+	return Persona.favor(display_name)
 
 
 ## The match's warm-up as a floor under the intensity: 0 at the bell, full by

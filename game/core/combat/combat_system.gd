@@ -230,12 +230,59 @@ func apply_move(move: MoveDef) -> void:
 var wear := 0.0
 
 func apply_damage(move: MoveDef, scale: float = 1.0) -> void:
-	wear += (move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs) * scale
+	scale *= damage_taken_scale
+	var taken := (move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs) * scale
+	wear += taken
+	green += taken * GREEN_SHARE
+	_since_hit = 0
 	limb_damage[Limb.HEAD] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.HEAD] + move.damage_head * scale)
 	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso * scale)
 	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms * scale)
 	limb_damage[Limb.LEGS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.LEGS] + move.damage_legs * scale)
 	damaged.emit(move)
+
+
+# --- vitality: the green and the red -----------------------------------------
+#
+# 2K's health bar has two layers: the recoverable part (green), which comes
+# back while a man is out of contact, and the permanent wear (red) that does
+# not. Here every point of damage is GREEN_SHARE green, the rest red; green
+# heals once nobody has hit him for GREEN_DELAY ticks, at GREEN_PER_TICK, down
+# to heal_floor (the wear he had when he was last knocked down -- a knockdown
+# is not undone). Low vitality is what makes a long match feel like one: the
+# beaten man gets his breath back when the heel stalls, and never all of it.
+
+## What MatchFlow (the match's pacing) sets: the share of damage this man takes.
+var damage_taken_scale := 1.0
+const GREEN_SHARE := 0.6
+const GREEN_DELAY := 240
+const GREEN_PER_TICK := 0.012
+var green := 0.0
+var heal_floor := 0.0
+var _since_hit := 1000000
+
+
+## One tick of recovery: call once a tick while the match is live.
+func tick_recovery() -> void:
+	if _finisher_rest > 0:
+		_finisher_rest -= 1
+	_since_hit += 1
+	if _since_hit < GREEN_DELAY or green <= 0.0 or wear <= heal_floor:
+		return
+	var heal := minf(minf(GREEN_PER_TICK, green), wear - heal_floor)
+	var before := wear
+	wear -= heal
+	green -= heal
+	# The limbs heal in proportion, so fatigue, kickouts and submissions follow.
+	if before > 0.0:
+		var keep := wear / before
+		for limb in limb_damage:
+			limb_damage[limb] = limb_damage[limb] * keep
+
+
+## The red: wear that will not come back.
+func red() -> float:
+	return maxf(wear - green, 0.0)
 
 func apply_momentum(move: MoveDef) -> void:
 	momentum = clamp(momentum - move.momentum_cost + move.momentum_gain, 0.0, MOMENTUM_MAX)
@@ -278,10 +325,29 @@ func can_power() -> bool:
 ## reaching for a signature when it will finish the man off
 ## (_opponent_is_ripe()).
 func can_signature() -> bool:
-	return momentum >= SIGNATURE_THRESHOLD
+	return momentum >= SIGNATURE_THRESHOLD and not signature_blocked
 
 func can_finisher() -> bool:
-	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE
+	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE \
+			and not finisher_blocked and _finisher_rest <= 0
+
+## A man who has just hit his finisher has spent it: his meter empties and it
+## is a long while before he can reach for another (FINISHER_REST ticks), so a
+## kicked-out finisher is a moment the match lives on, not a move thrown every
+## ten seconds. Called by MatchReferee when a finisher lands.
+const FINISHER_REST := 3600
+var _finisher_rest := 0
+
+func spend_finisher() -> void:
+	_finisher_rest = FINISHER_REST
+	momentum = 0.0
+
+func finisher_resting() -> bool:
+	return _finisher_rest > 0
+
+## What the match's pacing (MatchFlow) is holding the AI back from, for now.
+var signature_blocked := false
+var finisher_blocked := false
 
 ## Total damage at which the kickout window is fully closed.
 ##

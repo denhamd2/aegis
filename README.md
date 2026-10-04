@@ -8743,3 +8743,42 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   while the camera is on the crowd (`ArenaLighting.crowd_sweep`).
 - Probes: `tools/probe/handoff_shots.tscn` (fixed cameras on the pass, the
   hands and the table), `arena_shot.tscn --ice`.
+
+### Stages 4, 6 and 7: a match with a shape, legal covers, and a camera that cuts
+
+- **Why the match was ~75 s.** There was no pacing at all: damage was flat,
+  nothing ever healed, momentum sat at 100 and the AI threw its finisher
+  whenever the man was ripe (measured, `gauntlet/refs/aaa_master_plan.md`).
+- **`MatchFlow`** (`core/match/match_flow.gd`, `Persona`: Roman the heel, Cody
+  the face) walks the match through feeling-out, heat, hope, cut-off, comeback
+  and finish on the match clock, and per phase sets what each man *takes*
+  (`CombatSystem.damage_taken_scale`), how fast he acts (`tempo_scale`, read by
+  `WrestlerAI`), how often he reads a blow (`reverse_scale`), whether he plays
+  to the crowd (the heel stalls with a taunt), and which move rung the AI may
+  reach for (`rung`: none / signature / finisher -- a human is never held
+  back). A finisher cannot end the match before `FINISH_FROM` (420 s): until
+  then it is a near-fall; once it may, the man pinned has one kickout in him
+  (`FINISHER_KICKOUTS_MAX`) and the next finisher is the finish. A finisher
+  spends the man's meter and rests 60 s (`CombatSystem.FINISHER_REST`).
+- **Vitality, two layers.** `CombatSystem.wear` is 60% green (heals at
+  0.012/tick once nobody has hit him for 4 s, down to the wear he had at his
+  last knockdown) and 40% red (stays); the limbs heal in proportion, so the
+  HUD bar, fatigue and kickouts follow.
+- **Legal covers.** `MatchReferee.cover_is_legal`: hips, torso, shoulders and
+  head of the pinned man and the man covering must be inside the ropes (2.98 m)
+  and on the mat; otherwise the man covering drags him toward the middle
+  (`DRAG_SPEED`) and the cover starts when it is legal. A man who can reach the
+  ropes gets them before the first slap (`ROPE_REACH_START_TICK` 36), not after
+  a two-count.
+- **Roman's own moveset** (`Roster.Entry.moveset`): jab, cross, heavy kick;
+  clinch knee, vertical suplex; bodyslam, powerslam; Superman Punch and a
+  backbreaker; lariats and a knee on the run -- no borrowed Claymore or
+  Hoedown. New paired moves (Samoan Drop, Guillotine, Drive-By, Pedigree) and
+  AI Irish whips are not done.
+- **Camera.** The gameplay handheld no longer orbits with the pair: its bearing
+  is held and it CUTS (instantly, no more than once per 3 s) when the pair have
+  turned past 57 degrees or a post gets in the way; handheld holds 6 s, the
+  master 4-5.5 s. `tests/test_camera_no_orbit.gd`.
+- **Measuring it.** `tools/probe/pace_probe.tscn` (run with `--fixed-fps 60`,
+  not 6000; `--wrestlers roman,cody`; `--trace` prints every signature,
+  finisher and knockdown with the phase).

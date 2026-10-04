@@ -92,6 +92,10 @@ extends Node
 ## (MATCH_FLOW.md), and a running attack is the punctuation. 12 s.
 @export var make_room_cooldown_ticks: int = 720
 var _make_room_cooldown: int = 0
+## The heel in control plays to the crowd now and then (MatchFlow.wants_stall):
+## a taunt between holds, no oftener than this many ticks.
+const STALL_EVERY_TICKS := 1500
+var _stall_cooldown: int = 600
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -188,6 +192,8 @@ func _physics_process(_delta: float) -> void:
 		_run_cooldown -= 1
 	if _make_room_cooldown > 0:
 		_make_room_cooldown -= 1
+	if _stall_cooldown > 0:
+		_stall_cooldown -= 1
 	_circle_tick += 1
 	# A charge only survives while the man is actually free to run. If he is
 	# struck out of it, poll_input() returns early for the whole of HIT_REACT
@@ -281,7 +287,8 @@ func _roll_reversal() -> bool:
 		_reversal_rolls += 1
 		var stamina: float = controller.combat.stamina
 		_reversal_intent = rng.randf() < REVERSAL_CHANCE \
-				* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina)
+				* (REVERSAL_SPENT_SHARE + (1.0 - REVERSAL_SPENT_SHARE) * stamina) \
+				* (controller.flow.reverse_scale(controller) if controller.flow else 1.0)
 		# A reaction time inside the window, not its first frame.
 		_reversal_roll_frame = move.reversal_window_start - WrestlerController.REVERSAL_LEAD \
 				+ rng.randi_range(0, WrestlerController.REVERSAL_LEAD)
@@ -496,6 +503,15 @@ func _poll_input() -> Dictionary:
 			back = back.normalized()
 			input["move"] = Vector2(back.x, back.z)
 
+	# The heel with the match in hand takes his time: a taunt, a look at the
+	# crowd, before he goes back to work.
+	if _stall_cooldown <= 0 and controller.flow and controller.flow.wants_stall(controller) \
+			and distance <= tie_up_range * 1.5 and controller.can_taunt() \
+			and target.fsm.current_state != WrestlerFSM.State.DOWN:
+		_stall_cooldown = STALL_EVERY_TICKS
+		input["taunt"] = true
+		return input
+
 	if distance <= tie_up_range:
 		# Grapple, strikes, then a signature to finish him.
 		#
@@ -540,7 +556,8 @@ func _poll_input() -> Dictionary:
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
 					if controller.combat.is_fired_up() else int(strike_cooldown_ticks
-					* fatigue_cooldown_scale(controller.combat.total_damage()))
+					* fatigue_cooldown_scale(controller.combat.total_damage())
+					* (controller.flow.tempo_scale(controller) if controller.flow else 1.0))
 			if cornered:
 				_cooldown = mini(_cooldown, corner_strike_cooldown_ticks)
 		elif cornered:
@@ -649,6 +666,9 @@ func _wants_power_tie_up() -> bool:
 	if controller.power_move == null and controller.power_move_pool.is_empty():
 		return false
 	var combat := controller.combat
+	# Not in the feeling-out: nothing big in the first minute.
+	if controller.flow and controller.flow.rung(controller) == "none":
+		return false
 	return combat.can_power() and not combat.can_signature() \
 			and combat.tier_reached < CombatSystem.Tier.POWER
 

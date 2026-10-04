@@ -387,9 +387,13 @@ func test_each_wrestler_gets_his_own_signature_and_keeps_the_shared_ones() -> vo
 		ids[name] = drawn
 		for move: MoveDef in [w.signature_move] + w.signature_move_pool:
 			assert_int(w.tier_of(move)).is_equal(CombatSystem.Tier.SIGNATURE)
+	# Roman has his own signature tier now (Roster.Entry.moveset): the
+	# Superman Punch and a backbreaker, not the shared draw's neckbreaker --
+	# and not Cody's Cutter.
 	assert_array(ids["WrestlerA"]).contains(["signature_superman_punch",
-			"signature_backbreaker", "signature_neckbreaker"])
-	assert_array(ids["WrestlerA"]).not_contains(["signature_cody_cutter"])
+			"signature_backbreaker"])
+	assert_array(ids["WrestlerA"]).not_contains(["signature_cody_cutter",
+			"signature_neckbreaker"])
 	# Cody has his own signature tier (Roster.Entry.moveset): his Cutter and
 	# his Disaster Kick, and not the shared two.
 	assert_array(ids["WrestlerB"]).contains_exactly_in_any_order(
@@ -446,9 +450,9 @@ func test_cody_fights_with_his_own_moveset() -> void:
 			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter"])
 	assert_str(String(cody.own_signature.animation_pair_id)).is_equal("signature_cody_cutter")
 	assert_str(String(cody.finisher_move.animation_pair_id)).is_equal("finisher_cross_rhodes")
-	# Roman keeps the shared draw.
+	# Roman has his own, and Cody's Alabama Slam is not in it.
 	var roman: WrestlerController = scene.get_node("WrestlerA")
-	assert_bool(roman.power_move_pool.has(cody.power_move)).is_false()
+	assert_bool(roman.power_move_pool.has(cody.power_move_pool[0])).is_false()
 	# The Figure-Four is his, and only his.
 	assert_str(String(cody.submission_move.animation_pair_id)).is_equal("figure_four")
 	assert_object(roman.submission_move).is_null()
