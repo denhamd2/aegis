@@ -914,7 +914,7 @@ func _ring_bell() -> void:
 	if _camera:
 		_camera.resume_master()
 	if _crowd:
-		_crowd.set_flashes(0.0)
+		_crowd.set_flashes(CrowdReaction.MATCH_FLASH_RATE)
 		_crowd.pop(0.7)
 	bell.emit()
 

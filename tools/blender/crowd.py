@@ -121,84 +121,182 @@ def _shade(rng: random.Random, base: tuple[float, float, float]) -> tuple:
     return (base[0] * k, base[1] * k, base[2] * k)
 
 
+## Hair, as people have it: linear-light, dark because the stands are. Eight
+## colours, and a figure's head style is rolled separately (HAIR_STYLES), so a
+## head is a skin tone x a hair colour x a cut, not one of six.
+HAIR_COLORS = [
+    (0.030, 0.028, 0.030), (0.07, 0.045, 0.03), (0.12, 0.075, 0.045),
+    (0.20, 0.14, 0.09), (0.38, 0.30, 0.16), (0.30, 0.30, 0.31),
+    (0.20, 0.07, 0.04), (0.50, 0.50, 0.50),
+]
+## The cuts: cropped, bald, long, tied up, bearded, and a ball cap.
+HAIR_STYLES = ("crop", "bald", "long", "bun", "beard", "cap")
+
+## What a figure is doing, in UV.y, for the crowd shader: sitting, clapping,
+## arms up and waving, on their feet and jumping.
+ROLE_SIT, ROLE_CLAP, ROLE_WAVE, ROLE_JUMP = 0.0, 0.25, 0.5, 0.75
+
+
 class Figure:
-    """One person, as a stack of oriented boxes in the row's own frame.
+    """One person, as a stack of oriented boxes and ellipsoids in the row's
+    own frame.
 
     `along` runs down the row, `out` points away from the ring, and the
     figure is built around `seat`, the point on the tread its backside is
     over. Everything is expressed in those two vectors rather than in world
     axes, for the same reason `build_seat_row` is: on the bowl's curved ends
-    an axis-aligned person sits skewed to the row.
+    an axis-aligned person sits skewed to the row. `yaw` turns the whole
+    person a few degrees off the ring's centre -- nobody in a stand looks at
+    exactly the same point.
     """
 
     def __init__(self, part, seat: Vector, along: Vector, out: Vector,
-                 colour, phase: float, lift: float = 0.0) -> None:
+                 colour, phase: float, lift: float = 0.0, yaw: float = 0.0,
+                 role: float = 0.0) -> None:
         self.part = part
         # `lift` raises the whole figure off its reference point. The bowl
         # sits people on the tread (0); a ringside folding chair puts its seat
         # pan most of half a metre up, and a figure built for one and placed
         # on the other is either buried or hovering.
         self.seat = seat + Vector((0.0, lift, 0.0))
-        self.along = along.normalized()
+        along = along.normalized()
+        face = -out.normalized()
+        if yaw:
+            c, s_ = math.cos(yaw), math.sin(yaw)
+            along, face = (along * c + face * s_), (face * c - along * s_)
+        self.along = along
         # Toward the ring. A spectator faces the action, not the concourse.
-        self.face = -out.normalized()
+        self.face = face
         self.colour = colour
         self.phase = phase
+        self.role = role
+        ## Greys only: the ringside variants are tinted per instance in Godot,
+        ## so any hue baked in here would be applied twice.
+        self.neutral = False
 
-    def box(self, offset: Vector, size: Vector, colour=None,
-            lean: float = 0.0) -> None:
-        """A box at `offset` from the seat, in (across, up, toward-ring).
+    def grey(self, colour, lo: float = 0.22, hi: float = 0.78):
+        """`colour`, or its luminance as a grey in [lo, hi] for a neutral
+        figure (dark hair maps to the dark end, white to the light)."""
+        if not self.neutral:
+            return colour
+        lum = 0.2126 * colour[0] + 0.7152 * colour[1] + 0.0722 * colour[2]
+        g = lo + (hi - lo) * min(lum / 0.5, 1.0)
+        return (g, g, g)
 
-        `lean` tips it forward about the across-axis, which is what makes a
-        torso lean in and a thigh lie flat.
-        """
+    def _frame(self, offset: Vector, lean: float):
         up = Vector((0.0, 1.0, 0.0))
         centre = (self.seat
                   + self.along * offset.x
                   + up * offset.y
                   + self.face * offset.z)
-        # Rotate the up/forward pair by `lean` about the row axis.
         c, s = math.cos(lean), math.sin(lean)
-        axis_u = up * c + self.face * s
-        axis_f = self.face * c - up * s
+        return centre, up * c + self.face * s, self.face * c - up * s
+
+    def box(self, offset: Vector, size: Vector, colour=None,
+            lean: float = 0.0, taper: float = 1.0) -> None:
+        """A box at `offset` from the seat, in (across, up, toward-ring).
+
+        `lean` tips it forward about the across-axis, which is what makes a
+        torso lean in and a thigh lie flat. `taper` scales the BOTTOM face
+        against the top (a torso: shoulders wide, waist narrower).
+        """
+        centre, axis_u, axis_f = self._frame(offset, lean)
         ea = self.along * (size.x * 0.5)
         eu = axis_u * (size.y * 0.5)
         eo = axis_f * (size.z * 0.5)
         corners = [
-            centre + ea * sa + eu * su + eo * so
+            centre + ea * sa * (taper if su < 0 else 1.0) + eu * su
+            + eo * so * (taper if su < 0 else 1.0)
             for sa, su, so in (
                 (-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1),
                 (-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1),
             )
         ]
-        self.part.coloured_box(corners, colour or self.colour, self.phase)
+        self.part.coloured_box(corners, colour or self.colour, self.phase,
+                               self.role)
+
+    def blob(self, offset: Vector, radii: Vector, colour, lean: float = 0.0,
+             segments: int = 8, rings: int = 4) -> None:
+        """An ellipsoid with semi-axes `radii` (across, up, toward-ring)."""
+        centre, axis_u, axis_f = self._frame(offset, lean)
+        self.part.coloured_blob(centre, self.along * radii.x, axis_u * radii.y,
+                                axis_f * radii.z, colour, self.phase, self.role,
+                                segments, rings)
+
+
+def _head(fig: Figure, rng: random.Random, s: float, y: float, z: float,
+          skin, lean: float, near: bool = True) -> None:
+    """Neck and a rounded head with a cut, at height `y` over the seat.
+
+    Near figures get an 8 x 4 head and a modelled cut; far ones a coarser
+    head and one cap blob, which is all that survives at 25 m."""
+    seg, rings = (8, 4) if near else (6, 3)
+    hair = fig.grey(_shade(rng, rng.choice(HAIR_COLORS)))
+    style = rng.choice(HAIR_STYLES) if near else rng.choice(("crop", "crop", "bald", "long", "cap"))
+    fig.box(Vector((0.0, y - 0.11 * s, z - 0.01 * s)),
+            Vector((0.10 * s, 0.09 * s, 0.10 * s)), colour=skin)
+    fig.blob(Vector((0.0, y, z)), Vector((0.092 * s, 0.112 * s, 0.100 * s)), skin,
+             lean=lean, segments=seg, rings=rings)
+    if style == "bald":
+        return
+    cap = Vector((0.098 * s, 0.078 * s, 0.106 * s))
+    if style == "cap":
+        # A ball cap in a shirt colour, brim to the ring.
+        cloth = fig.grey(_shade(rng, rng.choice(SHIRT_COLORS)), 0.3, 0.7)
+        fig.blob(Vector((0.0, y + 0.050 * s, z - 0.004 * s)), cap, cloth,
+                 lean=lean, segments=seg, rings=max(rings - 1, 2))
+        if near:
+            fig.box(Vector((0.0, y + 0.040 * s, z + 0.105 * s)),
+                    Vector((0.13 * s, 0.014 * s, 0.09 * s)), colour=cloth,
+                    lean=lean)
+        return
+    fig.blob(Vector((0.0, y + 0.048 * s, z - 0.012 * s)), cap, hair,
+             lean=lean, segments=seg, rings=max(rings - 1, 2))
+    if not near:
+        if style == "long":
+            fig.box(Vector((0.0, y - 0.02 * s, z - 0.085 * s)),
+                    Vector((0.17 * s, 0.17 * s, 0.04 * s)), colour=hair, lean=lean)
+        return
+    if style == "long":
+        fig.box(Vector((0.0, y - 0.02 * s, z - 0.085 * s)),
+                Vector((0.19 * s, 0.20 * s, 0.05 * s)), colour=hair, lean=lean)
+    elif style == "bun":
+        fig.blob(Vector((0.0, y + 0.085 * s, z - 0.085 * s)),
+                 Vector((0.04 * s, 0.04 * s, 0.04 * s)), hair, lean=lean,
+                 segments=6, rings=3)
+    elif style == "beard":
+        fig.blob(Vector((0.0, y - 0.065 * s, z + 0.045 * s)),
+                 Vector((0.078 * s, 0.055 * s, 0.065 * s)), hair, lean=lean,
+                 segments=6, rings=3)
 
 
 def _seated(fig: Figure, rng: random.Random, scale: float, skin) -> None:
-    """The nine-box seated figure: hips, torso, head, two arms, two thighs,
-    two shins. Proportions are a real seated adult scaled by `scale`; the
-    lean, the arm angle and the knee spread are all rolled per person."""
+    """The seated figure: hips, a tapered torso, a rounded head with a cut,
+    two arms, two thighs, two shins. Proportions are a real seated adult
+    scaled by `scale`; the lean, the arm angle and the knee spread are all
+    rolled per person."""
     lean = rng.uniform(0.05, 0.38)          # forward, radians
     s = scale
+    # What they are doing is rolled first, because the role rides on every
+    # part of the figure as it is built: arms up wave, the rest mostly sit,
+    # and one in four of the rest claps.
+    posture = rng.random()
+    fig.role = (ROLE_WAVE if posture < 0.12
+                else ROLE_CLAP if rng.random() < 0.25 else ROLE_SIT)
 
     # Hips on the seat.
     fig.box(Vector((0.0, 0.10 * s, 0.02 * s)),
             Vector((0.34 * s, 0.20 * s, 0.30 * s)))
-    # Torso, leaning in toward the ring.
+    # Torso, leaning in toward the ring: shoulders wider than the waist.
     fig.box(Vector((0.0, 0.38 * s, 0.05 * s + lean * 0.10 * s)),
-            Vector((0.36 * s, 0.42 * s, 0.24 * s)), lean=lean)
-    # Neck and head. The head carries the lean plus a little of its own, so
-    # nobody is looking at their own lap.
+            Vector((0.40 * s, 0.42 * s, 0.24 * s)), lean=lean, taper=0.80)
+    # The head carries the lean plus a little of its own, so nobody is
+    # looking at their own lap.
     head_lean = lean * rng.uniform(0.35, 0.8)
-    fig.box(Vector((0.0, 0.66 * s, 0.07 * s + lean * 0.18 * s)),
-            Vector((0.12 * s, 0.08 * s, 0.12 * s)), colour=skin)
-    fig.box(Vector((0.0, 0.77 * s, 0.08 * s + lean * 0.22 * s)),
-            Vector((0.19 * s, 0.22 * s, 0.20 * s)), colour=skin,
-            lean=head_lean)
+    _head(fig, rng, s, 0.77 * s, 0.08 * s + lean * 0.22 * s, skin, head_lean)
 
     # Arms. Four postures, because a crowd all holding the same pose is the
     # other half of the block problem the old impostors had.
-    posture = rng.random()
     for side in (-1.0, 1.0):
         x = side * 0.23 * s
         if posture < 0.12:
@@ -242,14 +340,12 @@ def _standing(fig: Figure, rng: random.Random, scale: float, skin) -> None:
     and a head higher, so a standing figure breaks the row's head line."""
     s = scale
     lean = rng.uniform(-0.04, 0.12)
+    fig.role = ROLE_JUMP
     fig.box(Vector((0.0, 0.48 * s, 0.20 * s)),
             Vector((0.32 * s, 0.24 * s, 0.24 * s)))
     fig.box(Vector((0.0, 0.82 * s, 0.20 * s)),
-            Vector((0.36 * s, 0.46 * s, 0.24 * s)), lean=lean)
-    fig.box(Vector((0.0, 1.12 * s, 0.20 * s)),
-            Vector((0.12 * s, 0.09 * s, 0.12 * s)), colour=skin)
-    fig.box(Vector((0.0, 1.24 * s, 0.21 * s)),
-            Vector((0.19 * s, 0.22 * s, 0.20 * s)), colour=skin, lean=lean)
+            Vector((0.40 * s, 0.46 * s, 0.24 * s)), lean=lean, taper=0.80)
+    _head(fig, rng, s, 1.24 * s, 0.21 * s, skin, lean)
     arms_up = rng.random() < 0.35
     for side in (-1.0, 1.0):
         x = side * 0.23 * s
@@ -269,7 +365,7 @@ def _standing(fig: Figure, rng: random.Random, scale: float, skin) -> None:
 
 
 def _distant(fig: Figure, rng: random.Random, scale: float, skin) -> None:
-    """The upper-tier figure: head, shoulders, torso, lap. Four boxes.
+    """The upper-tier figure: head, shoulders, torso, lap.
 
     What survives is what is still legible at 25m -- the head-neck-shoulder
     silhouette and the break between torso and lap. The limbs are gone
@@ -277,14 +373,13 @@ def _distant(fig: Figure, rng: random.Random, scale: float, skin) -> None:
     """
     s = scale
     lean = rng.uniform(0.04, 0.30)
+    roll = rng.random()
+    fig.role = ROLE_WAVE if roll < 0.10 else ROLE_CLAP if roll < 0.28 else ROLE_SIT
     fig.box(Vector((0.0, 0.12 * s, 0.06 * s)),
             Vector((0.36 * s, 0.24 * s, 0.34 * s)))
     fig.box(Vector((0.0, 0.40 * s, 0.06 * s + lean * 0.10 * s)),
-            Vector((0.40 * s, 0.40 * s, 0.26 * s)), lean=lean)
-    fig.box(Vector((0.0, 0.64 * s, 0.08 * s + lean * 0.18 * s)),
-            Vector((0.13 * s, 0.09 * s, 0.13 * s)), colour=skin)
-    fig.box(Vector((0.0, 0.76 * s, 0.09 * s + lean * 0.22 * s)),
-            Vector((0.20 * s, 0.22 * s, 0.21 * s)), colour=skin, lean=lean)
+            Vector((0.42 * s, 0.40 * s, 0.26 * s)), lean=lean, taper=0.80)
+    _head(fig, rng, s, 0.76 * s, 0.09 * s + lean * 0.22 * s, skin, lean, near=False)
 
 
 def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
@@ -338,7 +433,10 @@ def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
                 # along a row.
                 phase = (built["Crowd"] + built["CrowdFar"]) * 0.6180339887
                 seat = Vector((point.x, row["tread_y"], point.z))
-                figure = Figure(part, seat, along, normal, shirt, phase % 1.0)
+                # Not every head points at the ring's centre: +-22 degrees.
+                yaw = math.radians(rng.uniform(-22.0, 22.0))
+                figure = Figure(part, seat, along, normal, shirt, phase % 1.0,
+                                yaw=yaw)
                 scale = rng.uniform(0.88, 1.08)
 
                 if detailed and rng.random() < STANDING_FRACTION:
@@ -370,7 +468,10 @@ def build_crowd(cfg, parts, rows, plan_loop, aisle_indices, stage_gap) -> dict:
 ## How many distinct ringside people to export. Six is enough that a bank of
 ## chairs does not read as a repeat at the distance `ringside_low` frames it,
 ## and few enough that each is still one draw call.
-FLOOR_VARIANTS = 6
+FLOOR_VARIANTS = 16
+## Of those, the last STANDING_VARIANTS are on their feet in front of the
+## chair -- the ringside fans who get up for a spot -- and the rest sit.
+STANDING_VARIANTS = 3
 ## Height of a folding chair's seat pan. The figures are lifted by this so
 ## they sit ON the chair rather than through it.
 CHAIR_SEAT_HEIGHT = 0.45
@@ -396,6 +497,7 @@ def build_floor_variants(make_part) -> list:
     for index in range(FLOOR_VARIANTS):
         name = "Fan%02d" % index
         part = make_part(name)
+        standing = index >= FLOOR_VARIANTS - STANDING_VARIANTS
         figure = Figure(
             part,
             Vector((0.0, 0.0, 0.0)),
@@ -403,11 +505,16 @@ def build_floor_variants(make_part) -> list:
             Vector((0.0, 0.0, -1.0)),  # out; face is -out, so +Z
             (1.0, 1.0, 1.0),
             0.0,
-            lift=CHAIR_SEAT_HEIGHT,
+            # A standing figure's feet are 0.13 m under its own origin.
+            lift=0.14 if standing else CHAIR_SEAT_HEIGHT,
         )
+        figure.neutral = True
         # White shirt, mid skin: the instance colour multiplies this, so the
         # mesh has to be neutral or every fan comes out tinted twice.
         figure.colour = (1.0, 1.0, 1.0)
-        _seated(figure, rng, rng.uniform(0.94, 1.06), (0.72, 0.72, 0.72))
+        # The instance colour multiplies everything, hair and cap included,
+        # so the cuts here are drawn in greys.
+        (_standing if standing else _seated)(
+            figure, rng, rng.uniform(0.94, 1.06), (0.72, 0.72, 0.72))
         names.append(name)
     return names

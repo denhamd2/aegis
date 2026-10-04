@@ -20,6 +20,8 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 var _out := "/tmp/arena"
 var _wrestlers := ""
 var _settle := 90
+## --flashes: an entrance's camera flashes plus a burst, for judging them.
+var _flashes := false
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -28,6 +30,8 @@ func _ready() -> void:
 			_out = args[i + 1]
 		elif args[i] == "--wrestlers" and i + 1 < args.size():
 			_wrestlers = args[i + 1]
+		elif args[i] == "--flashes":
+			_flashes = true
 		elif args[i] == "--settle" and i + 1 < args.size():
 			_settle = int(args[i + 1])
 	DirAccess.make_dir_recursive_absolute(_out)
@@ -54,6 +58,12 @@ func _ready() -> void:
 	# follow settle -- grabbed on the first tick it frames the pair mid-lerp.
 	for frame in _settle:
 		await get_tree().physics_frame
+	if _flashes:
+		var crowd := scene.get_node("CrowdReaction") as CrowdReaction
+		crowd.set_flashes(CrowdReaction.ENTRANCE_FLASH_RATE)
+		crowd.burst(1.0)
+		for frame in 6:
+			await get_tree().physics_frame
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/arena.png" % _out)
 	print("  wrote %s/arena.png  separation %.2f m" % [

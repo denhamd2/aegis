@@ -140,6 +140,7 @@ func _ready() -> void:
 		add_child(director)
 		director.bell.connect(_begin_live)
 		audio.follow(director)
+		crowd.follow(director)
 		if sign_fans:
 			sign_fans.follow(director)
 		if referee_actor:

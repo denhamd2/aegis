@@ -10,13 +10,13 @@ class_name ArenaBuilder
 ## seating bowl starting a walkway outside them. Everything that is not the
 ## ring is measured out from that sheet of ice.
 ##
-## The hall is EMPTY. There is no crowd in it, by decision rather than by
-## omission: the seats are the seating now -- ~6,700 in the bowl, modelled one
-## at a time, and ~1,490 folding chairs on the rink floor. An empty arena is a thing a wrestling build is
-## routinely shot in -- an empty-arena match, a taping-day walkthrough -- and
-## it is what `gauntlet/refs/arena.md`'s reference photographs are of.
-## Removing the impostors took the only animated geometry in the hall with
-## them; see the cosmetic-motion note below.
+## The hall is FULL. About 5,600 people sit in the bowl, baked per seat into
+## arena_bowl.glb by tools/blender/crowd.py (rounded heads with eight cuts of
+## hair, tapered shoulders, a yaw jitter off the ring), and ~1,490 folding
+## chairs on the rink floor carry sixteen different ringside fans. They move in
+## a vertex shader (below) and flash with CrowdFlashes; none of it touches
+## gameplay. `gauntlet/refs/arena.md` measured an empty hall; the AEW stills
+## the look follows are full ones.
 ##
 ## Why none of this is authored in the .tscn, and why none of it is a
 ## downloaded arena, are both still deliberate:
@@ -58,12 +58,12 @@ class_name ArenaBuilder
 ## CollisionObject3D, joins a physics layer, or is read by gameplay: the ring's
 ## own colliders in ring.tscn remain the only bodies the match touches.
 ##
-## Nothing here moves at all any more. The hall's one piece of cosmetic
-## motion was the crowd's idle bob, a vertex shader that ARCHITECTURE.md
-## permitted because it ran on the render thread and could not reach
-## MatchReferee.compute_end_state_hash(); it left with the crowd. The video
-## wall's clip (core/arena/video_wall.gd) is the only thing in the arena that
-## changes frame to frame now, and it is a texture, not geometry.
+## The hall's cosmetic motion is the crowd's: an idle bob, per-section cheering
+## and each person's role (sit, clap, wave, jump) in a vertex shader that
+## ARCHITECTURE.md permits because it runs on the render thread and cannot
+## reach MatchReferee.compute_end_state_hash(); and the camera flashes
+## (CrowdFlashes), a shader on a MultiMesh of billboards. The video wall's
+## clip (core/arena/video_wall.gd) changes frame to frame too, as a texture.
 ##
 ## Placement is seeded (PLACEMENT_SEED), so the same build produces the same
 ## arena every run and captures stay comparable between rounds.
@@ -1019,7 +1019,18 @@ static func in_desk_bay(point: Vector3) -> bool:
 ## height come from one place. `test_arena_bowl.gd` measures the shipped .glb
 ## against this schedule, so the pair cannot drift silently.
 func _build_bowl() -> void:
-	add_child(_build_bowl_model())
+	var bowl := _build_bowl_model()
+	add_child(bowl)
+	# The cameras in the stands: small flashes at head height, sampled off the
+	# crowd's own figures (CrowdFlashes).
+	var flashes := CrowdFlashes.new()
+	flashes.name = "CrowdFlashes"
+	var people: Array = []
+	for part: String in CROWD_PARTS:
+		people.append(bowl.find_child(part, true, false))
+	flashes.build(CrowdFlashes.sample_positions(people, CrowdFlashes.EMITTERS,
+			CrowdFlashes.SEED))
+	add_child(flashes)
 
 
 # ---------------------------------------------------------------------------
@@ -1069,7 +1080,12 @@ func _build_floor_seats() -> void:
 	_build_floor_crowd(crowd_seats + distant)
 
 
-## Ringside model: six seated people, built by tools/blender/floor_crowd.py.
+## How many of the floor-crowd meshes are standing people (crowd.py's
+## STANDING_VARIANTS), and how many of the ringside seats they take.
+const FLOOR_STANDING_VARIANTS := 3
+const FLOOR_STANDING_CHANCE := 0.07
+
+## Ringside model: sixteen people, thirteen seated and three on their feet, built by tools/blender/floor_crowd.py.
 const FLOOR_CROWD_MODEL := "res://assets/environment/floor_crowd.glb"
 ## How many of the ringside chairs have somebody in them.
 ##
@@ -1123,20 +1139,22 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 	for seat in seats:
 		if rng.randf() > FLOOR_CROWD_FILL:
 			continue
-		var pick := rng.randi_range(0, meshes.size() - 1)
+		# Most sit; a few are on their feet in front of the chair (the last
+		# FLOOR_STANDING_VARIANTS meshes).
+		var seated_count := maxi(meshes.size() - FLOOR_STANDING_VARIANTS, 1)
+		var pick := rng.randi_range(0, seated_count - 1)
+		if meshes.size() > seated_count and rng.randf() < FLOOR_STANDING_CHANCE:
+			pick = rng.randi_range(seated_count, meshes.size() - 1)
 		# Size and a little extra yaw on top of the chair's own, so two
 		# neighbours on the same variant are still not the same person.
 		var scale := rng.randf_range(0.93, 1.07)
-		var turned := seat.rotated_local(Vector3.UP, rng.randf_range(-0.18, 0.18))
+		var turned := seat.rotated_local(Vector3.UP, rng.randf_range(-0.34, 0.34))
 		buckets[pick].append(Transform3D(turned.basis.scaled(Vector3.ONE * scale),
 				turned.origin))
 		colours[pick].append(_crowd_shirt(rng))
 	source.free()
 
 	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887")
-	# No phone flashes on the ringside rows: at that distance a whole lit
-	# figure reads as a glowing statue, not a flash.
-	material.set_shader_parameter("flash_min_distance", 1.0e6)
 	for i in meshes.size():
 		if buckets[i].is_empty():
 			continue
@@ -1341,15 +1359,10 @@ uniform vec3 house_tint = vec3(1.0);
 // one write reaches both bowl parts and the ringside rows. 0 is the idle
 // stand exactly as before.
 global uniform float crowd_excitement;
-// Phone flashes and camera pops, per figure per second, during entrances.
-global uniform float crowd_flash_rate;
 // How high an excited figure bounces, and how fast: a crowd on its feet
-// jumps at about two and a half beats a second.
+// jumps at about two and a half beats a second. Phone and camera flashes are
+// not here: they are small points of light (CrowdFlashes), never a lit figure.
 uniform float cheer_amplitude = 0.07;
-// Phone flashes only where a figure is small in frame. The flash lights the
-// whole figure (there is no telling a hand from a shirt in this mesh), which
-// reads as a flash only far enough away.
-uniform float flash_min_distance = 16.0;
 uniform float cheer_speed = 15.0;
 // The 2K26 looks (ArenaLighting.set_look): the whole stand's light, near-off
 // for the entrances' concert dark and 1.0 for the match.
@@ -1386,8 +1399,28 @@ void vertex() {
 	// On a pop they come up out of their seats: a bounce ADDED at a fixed
 	// frequency, scaled by excitement. Scaling the idle bob's speed instead
 	// would jump every figure's phase each time excitement changed.
+	// Not the whole house at once: the excitement reaches each section in
+	// drifting bands round the bowl (the angle and the distance from the ring
+	// shift the band), so one stand is up before the next and a wave of
+	// energy crosses the hall. What each person DOES with it is their role
+	// (crowd.py, UV.y): sit, clap, wave with arms up, or jump on their feet.
+	float ang = atan(world.z, world.x);
+	float band = 0.5 + 0.5 * sin(ang * 3.0 - TIME * 0.9 + ring_dist * 0.04);
+	float local_ex = clamp(crowd_excitement * (0.4 + 0.8 * band), 0.0, 1.0);
+	// glTF flips V, so the baked role arrives as 1 - role.
+	float role = 1.0 - UV.y;
+	float jumper = step(0.65, role);
+	float waver = step(0.4, role) * (1.0 - jumper);
+	float clapper = step(0.15, role) * (1.0 - step(0.4, role));
 	float bounce = abs(sin(TIME * cheer_speed * (0.85 + 0.3 * hash(PHASE_SOURCE)) + phase));
-	VERTEX.y += bounce * cheer_amplitude * crowd_excitement * lift;
+	// Sitters rise a little; the ones already on their feet go up.
+	float rise = 0.45 + 1.7 * jumper;
+	VERTEX.y += bounce * cheer_amplitude * rise * local_ex * lift;
+	// Arms up: a slow broad sway side to side.
+	VERTEX.x += sin(TIME * 3.4 + phase) * 0.05 * waver * local_ex * lift;
+	// Clapping: a quick small pulse in height and across the body.
+	VERTEX.y += sin(TIME * 17.0 + phase * 3.0) * 0.012 * clapper * local_ex * lift;
+	VERTEX.x += sin(TIME * 8.5 + phase) * 0.012 * clapper * local_ex * lift;
 }
 
 void fragment() {
@@ -1395,13 +1428,6 @@ void fragment() {
 	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
 	vec3 wash = mix(house_tint, near_warm, near);
 	EMISSION = shirt * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
-	// A phone flash: one figure, one frame-ish (a 0.08 s slot), white and
-	// over-bright so it blooms. Each figure rolls its own dice every slot.
-	float slot = floor(TIME / 0.08);
-	float roll = hash(figure * 911.0 + slot * 0.137);
-	if (roll < crowd_flash_rate * 0.08 && length(VERTEX) > flash_min_distance) {
-		EMISSION += vec3(3.5);
-	}
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }

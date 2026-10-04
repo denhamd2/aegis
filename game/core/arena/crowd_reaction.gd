@@ -7,7 +7,7 @@ extends Node
 ## 2K's crowd reacts and ours sat through everything at the same idle bob.
 ## This listens to the match and drives two shader globals the crowd material
 ## reads (ArenaBuilder._crowd_material): `crowd_excitement` (0-1, how hard
-## they bounce) and `crowd_flash_rate` (phone flashes per figure per second).
+## they bounce) and `crowd_flash_rate` (camera flashes per emitter per second).
 ##
 ## Presentation only, and the direction of every arrow is the point: it
 ## LISTENS to signals and reads the referee, runs in _process rather than the
@@ -33,12 +33,20 @@ const POP_FIRED_UP := 0.55
 const POP_TAUNT := 0.6
 ## The finish: full, held while the winner celebrates.
 const WIN_HOLD := 8.0
-## Phone flashes during an entrance, per figure per second. There are a few
-## thousand figures, so this is a few dozen flashes a second across the bowl.
-const ENTRANCE_FLASH_RATE := 0.012
+## Camera flashes, per fully active emitter per second (CrowdFlashes: about
+## 900 emitters, each busier or quieter by where it sits). An entrance has the
+## whole house holding phones up; a match has the odd one. Bursts ride on top.
+const ENTRANCE_FLASH_RATE := 0.26
+const MATCH_FLASH_RATE := 0.07
+## A burst adds up to this many flashes a second to every emitter, falling away
+## by half every BURST_HALF_LIFE seconds: pyro, a finisher, a near-fall, a count.
+const BURST_RATE := 1.4
+const BURST_HALF_LIFE := 0.55
 
 var excitement := 0.0
-var flash_rate := 0.0
+var flash_rate := MATCH_FLASH_RATE
+## The flash burst on top of flash_rate, 0-1.
+var burst_level := 0.0
 
 var _referee: MatchReferee
 var _floor := 0.0          # a level excitement cannot decay below right now
@@ -62,9 +70,30 @@ func _ready() -> void:
 	_publish()
 
 
-## Raise excitement to at least `amount` right now.
+## Raise excitement to at least `amount` right now. A big one (a finisher, a
+## near-fall) sets the cameras off.
 func pop(amount: float) -> void:
 	excitement = maxf(excitement, clampf(amount, 0.0, 1.0))
+	if amount >= POP_SIGNATURE:
+		burst(1.0)
+
+
+## A burst of camera flashes (pyro, a finisher, a count), at up to `level`.
+func burst(level: float) -> void:
+	burst_level = maxf(burst_level, clampf(level, 0.0, 1.0))
+
+
+## The entrances' cues (EntranceDirector.cue): pyro and the strobe set the
+## cameras off.
+func follow(director: EntranceDirector) -> void:
+	director.cue.connect(func(what: String) -> void:
+		if what.begins_with("pyro") or what == "strobe":
+			burst(1.0))
+
+
+## The flash rate published to the shader: the base plus the burst.
+static func published_rate(base: float, burst_value: float) -> float:
+	return base + BURST_RATE * burst_value
 
 
 ## Phone flashes on (an entrance) or off (the bell).
@@ -95,6 +124,7 @@ func _process(delta: float) -> void:
 		if _hold <= 0.0:
 			_floor = 0.0
 	excitement = decayed(excitement, delta, _floor)
+	burst_level *= pow(0.5, delta / BURST_HALF_LIFE)
 	_publish()
 
 
@@ -103,7 +133,10 @@ func _follow_the_cover() -> void:
 		return
 	var pinning: bool = _referee.get("_pinning")
 	if pinning:
-		_pin_peak = maxi(_pin_peak, _referee.pin_count())
+		var count: int = _referee.pin_count()
+		if count > _pin_peak:
+			burst(0.5)
+		_pin_peak = maxi(_pin_peak, count)
 		# Tension builds count by count, and holds through the cover.
 		_floor = PIN_TENSION + PIN_PER_COUNT * _pin_peak
 		_hold = 0.5
@@ -129,4 +162,5 @@ func _on_match_won(_winner, _method) -> void:
 
 func _publish() -> void:
 	RenderingServer.global_shader_parameter_set("crowd_excitement", excitement)
-	RenderingServer.global_shader_parameter_set("crowd_flash_rate", flash_rate)
+	RenderingServer.global_shader_parameter_set("crowd_flash_rate",
+			published_rate(flash_rate, burst_level))

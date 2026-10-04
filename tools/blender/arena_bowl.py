@@ -25,9 +25,8 @@ the entrance ramp, the stage deck and its portals, the video wall, the truss,
 the ringside floor, the barricades, or the ringside chairs. Those stay in
 `arena_builder.gd` and are untouched by this file.
 
-The hall has no crowd in it. The seats here are what fills the bowl, which is
-why they are modelled one at a time rather than as a rail -- see
-`build_seat_row`.
+The seats here are modelled one at a time rather than as a rail -- see
+`build_seat_row` -- and `crowd.py` puts a person in most of them.
 
 Single source of truth
 ----------------------
@@ -270,7 +269,8 @@ class Part:
         ## The ribbon boards' artwork UVs; see `ribbon`.
         self._uv_layer = None
 
-    def coloured_box(self, corners: list, colour: tuple, phase: float) -> None:
+    def coloured_box(self, corners: list, colour: tuple, phase: float,
+                     role: float = 0.0) -> None:
         """A box whose every face carries `colour` and `phase`.
 
         Corners arrive already transformed: the crowd poses each box in its
@@ -299,7 +299,47 @@ class Part:
                 continue
             for loop in built.loops:
                 loop[layer] = rgba
-                loop[uv].uv = (phase, 0.0)
+                loop[uv].uv = (phase, role)
+
+    def coloured_blob(self, centre: Vector, ax: Vector, ay: Vector, az: Vector,
+                      colour: tuple, phase: float, role: float = 0.0,
+                      segments: int = 8, rings: int = 4) -> None:
+        """A low-poly ellipsoid: `ax`, `ay`, `az` are its three semi-axes as
+        vectors (so it can be leant like a box). Heads and hair are these --
+        a cube head is what made the first crowd read as boxes. Carries
+        `colour`, `phase` and `role` exactly as `coloured_box` does."""
+        if self._colour_layer is None:
+            self._colour_layer = self.bm.loops.layers.color.new("Col")
+            self._phase_layer = self.bm.loops.layers.uv.new("Phase")
+        layer, uv = self._colour_layer, self._phase_layer
+        rgba = (colour[0], colour[1], colour[2], 1.0)
+        top = self.vert(centre + ay)
+        bottom = self.vert(centre - ay)
+        grid = []
+        for r in range(1, rings):
+            theta = math.pi * r / rings
+            ring = []
+            for k in range(segments):
+                phi = 2.0 * math.pi * k / segments
+                ring.append(self.vert(
+                    centre + ay * math.cos(theta)
+                    + (ax * math.cos(phi) + az * math.sin(phi)) * math.sin(theta)))
+            grid.append(ring)
+        faces = []
+        for k in range(segments):
+            n = (k + 1) % segments
+            faces.append((top, grid[0][n], grid[0][k]))
+            for r in range(len(grid) - 1):
+                faces.append((grid[r][k], grid[r][n], grid[r + 1][n], grid[r + 1][k]))
+            faces.append((bottom, grid[-1][k], grid[-1][n]))
+        for f in faces:
+            try:
+                built = self.bm.faces.new(f)
+            except ValueError:
+                continue
+            for loop in built.loops:
+                loop[layer] = rgba
+                loop[uv].uv = (phase, role)
 
     def vert(self, position: Vector) -> bmesh.types.BMVert:
         return self.bm.verts.new(to_blender(position))

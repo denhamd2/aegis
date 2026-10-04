@@ -27,9 +27,11 @@ extends GdUnitTestSuite
 ##     rather than as a bug in a model.
 
 const MODEL := "res://assets/environment/floor_crowd.glb"
-## `crowd.FLOOR_VARIANTS`. Six poses plus per-instance size, yaw and shirt is
-## what keeps a bank of chairs from reading as a repeat at `ringside_low`.
-const VARIANTS := 6
+## `crowd.FLOOR_VARIANTS`. Sixteen people plus per-instance size, yaw and shirt
+## is what keeps a bank of chairs from reading as a repeat at `ringside_low`.
+const VARIANTS := 16
+## The last of them are on their feet (`crowd.STANDING_VARIANTS`).
+const STANDING := 3
 ## Vertex positions arrive through the glTF importer and a float buffer, so
 ## the tolerance is the pipeline's, not the arithmetic's.
 const TOLERANCE := 0.02
@@ -54,11 +56,12 @@ func _fans(root: Node3D) -> Array[MeshInstance3D]:
 	return out
 
 
-## Six of them, and six DIFFERENT ones.
+## Sixteen of them, and sixteen DIFFERENT ones.
 ##
-## The count alone would pass on six copies of one person, which is exactly the
-## thing the design pays six draw calls to avoid, so the poses are compared too.
-func test_the_model_ships_six_distinct_fans() -> void:
+## The count alone would pass on sixteen copies of one person, which is exactly
+## the thing the design pays the draw calls to avoid, so the poses are compared
+## too.
+func test_the_model_ships_sixteen_distinct_fans() -> void:
 	var fans := _fans(_model())
 	assert_int(fans.size()) \
 		.override_failure_message(
@@ -125,9 +128,13 @@ func test_the_fans_are_seated_on_the_floor_not_through_it() -> void:
 ## catches `crowd._seated` being swapped for the standing pose, which would
 ## otherwise only show as a row of fans towering over the barricade.
 func test_the_fans_are_seated_height() -> void:
-	for fan in _fans(_model()):
-		var top := fan.get_aabb().end.y
-		assert_float(top).is_between(1.1, 1.6)
+	var fans := _fans(_model())
+	for i in fans.size() - STANDING:
+		var top := fans[i].get_aabb().end.y
+		assert_float(top).is_between(1.1, 1.7)
+	# The ones who got up are taller than anyone sitting.
+	for i in range(fans.size() - STANDING, fans.size()):
+		assert_float(fans[i].get_aabb().end.y).is_between(1.45, 2.1)
 
 
 ## The mesh carries no HUE, because the shirt is dressed per instance.
@@ -188,4 +195,6 @@ func test_every_fan_ships_a_skin_tone_darker_than_its_shirt() -> void:
 			darkest = minf(darkest, c.r)
 			brightest = maxf(brightest, c.r)
 		assert_float(brightest).is_equal_approx(1.0, TOLERANCE)
-		assert_float(darkest).is_between(0.2, 0.9)
+		# Hair is darker than skin (the importer reads the stored greys as
+		# sRGB, so a 0.22 hair grey arrives near 0.04); skin is the 0.72 one.
+		assert_float(darkest).is_between(0.03, 0.9)

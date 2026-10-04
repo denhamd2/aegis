@@ -8697,3 +8697,22 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   intensity (excitement over a five-minute warm-up floor, so the match starts
   quiet and builds) and never steps a gain; Roman's blows and taunts feed the
   boos, Cody's and his fire-up feed the cheer.
+
+### Stage 2b: a crowd of people, and camera flashes that are flashes
+
+- **People, not boxes.** `tools/blender/crowd.py` builds rounded heads (an
+  ellipsoid) with six cuts (crop, bald, long, bun, beard, ball cap) in an
+  eight-colour hair palette, a neck, a torso tapered shoulder to waist, and a
+  +-22 degree yaw so nobody stares at the ring's centre. The ringside floor has
+  sixteen distinct fans (was six), three of them standing. `arena_bowl.glb`
+  is 26 MB (was 20).
+- **Roles and sections, not one global jump.** Each person carries a role in
+  UV.y (sit, clap, arms-up wave, stand and jump). The crowd shader gives the
+  excitement to each section in drifting bands round the bowl, so one stand is
+  up before the next, and each role responds its own way.
+- **Camera flashes.** The old flash lit a whole figure. Now `CrowdFlashes` is
+  1,400 additive billboards at head height, each on its own clock (golden-ratio
+  seed, so no two share a frame), a few frames long, in busier and darker
+  stands. A match has a low rest rate (0.07 Hz per active emitter), an
+  entrance 0.26; bursts ride on pyro, finishers, near-falls and each count of a
+  pin. Works on gl_compatibility (checked with `arena_shot.tscn --flashes`).
