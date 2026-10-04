@@ -55,7 +55,11 @@ func _run(seed_value: int) -> Dictionary:
 			w.ai.setup_jitter(seed_value, w.player_index)
 	var row := {"seed": seed_value, "ticks": 0, "winner": "", "method": "none",
 			"landed": 0, "knockdowns": 0, "finishers": 0, "comebacks": 0,
-			"phase_marks": {}}
+			"whips": 0, "phase_marks": {}}
+	for w: WrestlerController in [a, b]:
+		w.fsm.state_changed.connect(func(_from: int, to: int) -> void:
+			if to == WrestlerFSM.State.IRISH_WHIP:
+				row["whips"] += 1)
 	var clock := [0]
 	var landed := func(attacker: WrestlerController, defender: WrestlerController, move: MoveDef) -> void:
 		row["landed"] += 1
@@ -100,10 +104,10 @@ func _run(seed_value: int) -> Dictionary:
 
 
 func _print_row(row: Dictionary) -> void:
-	print("seed %d  %6.1f s  down %2d  near-falls %d  rope-breaks %d  landed %3d  finishers %d  comebacks %d  drag-ticks %d  %s by %s" % [
+	print("seed %d  %6.1f s  down %2d  near-falls %d  rope-breaks %d  landed %3d  finishers %d  comebacks %d  drag-ticks %d  whips %d  %s by %s" % [
 			row["seed"], float(row["ticks"]) / 60.0, row["knockdowns"], row["near_falls"],
 			row["rope_breaks"], row["landed"], row["finishers"], row["comebacks"],
-			row.get("drags", 0), row["method"], row["winner"]])
+			row.get("drags", 0), row["whips"], row["method"], row["winner"]])
 
 
 func _summary() -> void:

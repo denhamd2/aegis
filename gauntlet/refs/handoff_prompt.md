@@ -8,26 +8,20 @@ plain, and show results as rendered frames rather than descriptions.
 
 ## Status (updated as stages land; the README has each stage's write-up)
 
-Done and on `main`: Stage 1 (stage set, ring, Ula Fala), Stage 2 (title music,
-layered crowd audio, rounded crowd + roles + point camera flashes), Stage 3
-(dry ice as particles, props handed wrestler -> Aubrey -> timekeeper -> table,
-crowd-cutaway beam sweeps; Cody's coat is still hidden on `coat_off`).
-In the working tree, being tuned (see README "Stage 6"): `MatchFlow` (match
-phases, heel Roman / face Cody, damage and tempo by phase, rung gating of the
-AI's signatures and finishers, finisher rest, one finisher kickout), recoverable
-wear in `CombatSystem`, pin legality (`MatchReferee.cover_is_legal`), the
-rope break before the first slap, Roman's own moveset, and a camera that cuts
-instead of orbiting (`MatchCamera.GAMEPLAY_DEADZONE`/`GAMEPLAY_CUT_HOLD`).
+Done and on `main`: Stages 1-4, 6 and 7 (stage set, ring, Ula Fala; title music,
+layered crowd audio, crowd roles and point camera flashes; dry ice as particles
+and the wrestler -> Aubrey -> timekeeper -> table prop handoff; `MatchFlow`
+pacing with heel Roman / face Cody, rung-gated finishers, one finisher kickout;
+pin legality and rope break; AI Irish whips; Roman's own moveset; a camera that
+cuts instead of orbiting). Stage 8 QA is done on stills; see
+`gauntlet/refs/final_report.md` for the results and the open list.
 
 Measure pacing with `tools/probe/pace_probe.tscn`, run with
 `--fixed-fps 60` (NOT 6000: that is ~30x slower) and `--wrestlers roman,cody`;
-~100 ticks/s per process, so a 9-minute match is ~6 minutes; run 3 seeds in
-parallel. Target 8-12 min, 2-4 near-falls, one kickout of a finisher.
-Not yet done: AI Irish whips and rebound attacks, new paired moves (Samoan
-Drop, Guillotine, Drive-By, Pedigree), Cody's coat handoff, LED/signage QA
-pass, the full end-to-end recording and the final report. Method that works:
-write the code, run the focused test file, render with the probes, and run the
-full suite once per stage.
+~100 ticks/s per process, so a 9-minute match is ~6 minutes. Measured 8-12 min.
+Not done: new paired moves (Samoan Drop, Guillotine, Drive-By, Pedigree), Cody's
+coat handoff, a darker/less blocky crowd at the high camera, and the full
+end-to-end recording (needs a GPU; `tools/capture/run_capture.sh`).
 
 ## 0. Read first, in this order
 

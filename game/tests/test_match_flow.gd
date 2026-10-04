@@ -190,6 +190,8 @@ func test_in_the_finish_the_winner_is_barely_marked_and_the_loser_is_not() -> vo
 	var flow := scene.get_node("MatchFlow") as MatchFlow
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
+	a.is_ai = true
+	b.is_ai = true
 	flow.tick = int((MatchFlow.FINISH_FROM + 10.0) * 60.0)
 	var win: WrestlerController = flow.winner
 	var lose: WrestlerController = b if win == a else a

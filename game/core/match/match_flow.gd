@@ -137,6 +137,10 @@ func damage_taken_scale(w: WrestlerController) -> float:
 ## winner's or the loser's.
 func _row_for(w: WrestlerController) -> Dictionary:
 	var p := phase()
+	# A man on the controller is nobody's character to play: he gets the
+	# neutral row, so the story does not decide his exchanges for him.
+	if not w.is_ai:
+		return p["neutral"]
 	if p["name"] == "finish" and winner != null:
 		return WINNER_ROW if w == winner else LOSER_ROW
 	return row(p, _kind.get(w, Persona.Kind.NEUTRAL))

@@ -229,6 +229,8 @@ const CHAIN_READ_TICK := 8
 ## Chance the man in a hold reverses the next one, at full stamina; it falls
 ## with his stamina like a strike reversal's does.
 const CHAIN_REVERSAL_CHANCE := 0.3
+## How often a hold the AI has the better of ends in an Irish whip.
+const WHIP_CHANCE := 0.18
 var _chain_plan := -1
 var _chain_rolls := 0
 
@@ -257,6 +259,11 @@ func _chain_input() -> Dictionary:
 		return {} # a reversal already chose it; let the read run out
 	if _chain_plan < 0:
 		_chain_plan = 0
+		# Now and then, with a man in his hands after the opening, he sends him
+		# into the ropes instead (the Irish whip) -- and is waiting when he
+		# comes off them. Seeded, like every other roll.
+		if _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
+			return {"run": true}
 		if not _opening_grapple_done():
 			var roll := _chain_rng().randi_range(1, 5)
 			_chain_plan = 1 if roll <= CHAIN_LINK_WEIGHTS[0] else (
