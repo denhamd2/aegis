@@ -89,7 +89,9 @@ func test_it_hangs_on_his_skeleton_and_is_posed_from_his_every_frame() -> void:
 	# animation's afterwards. So it is read inside the signal, after the
 	# necklace's own handler (connected first).
 	var seen := {"frames": 0, "bad": []}
-	roman.skeleton.skeleton_updated.connect(func() -> void:
+	var probe := func() -> void:
+		if not is_instance_valid(own):
+			return
 		seen["frames"] += 1
 		for i in own.get_bone_count():
 			var j := roman.skeleton.find_bone(own.get_bone_name(i))
@@ -97,9 +99,11 @@ func test_it_hangs_on_his_skeleton_and_is_posed_from_his_every_frame() -> void:
 					roman.skeleton.get_bone_pose_rotation(j)) \
 					or not own.get_bone_pose_scale(i).is_equal_approx(
 					roman.skeleton.get_bone_pose_scale(j)):
-				seen["bad"].append(own.get_bone_name(i)))
+				seen["bad"].append(own.get_bone_name(i))
+	roman.skeleton.skeleton_updated.connect(probe)
 	for i in 3:
 		await get_tree().process_frame
+	roman.skeleton.skeleton_updated.disconnect(probe)
 	assert_int(seen["frames"]).is_greater(0)
 	assert_array(seen["bad"]).override_failure_message(
 			"bones off his pose: %s" % [seen["bad"]]).is_empty()
