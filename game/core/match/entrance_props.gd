@@ -4,49 +4,30 @@ extends Node3D
 ## title, either worn round his waist or held in his left hand
 ## (tools/blender/roman_props.py; gauntlet/refs/entrances.md).
 ##
-## Each prop FOLLOWS a bone rather than being parented to it. The bone gives
-## the position; the wrestler's own upright frame gives the orientation. A
-## belt parented to hand_l would turn with every twist of the wrist as the arm
-## goes up, and the plates would end the raise facing the rafters; held this
-## way the plates face the camera the whole way, which is how a man shows a
-## title off.
+## The AEW title FOLLOWS a bone rather than being parented to it. The bone
+## gives the position; the wrestler's own upright frame gives the orientation.
+## A belt parented to hand_l would turn with every twist of the wrist as the
+## arm goes up, and the plates would end the raise facing the rafters; held
+## this way the plates face the camera the whole way, which is how a man shows
+## a title off.
 ##
-## Scaled per model by shoulder span against the base rig's 0.384 m (measured
-## in Blender off wrestler_base.glb), so one set of props fits the mannequin
-## and Roman's much bigger frame.
+## The ula fala is not a follower at all: it is SKINNED to his own rig, the way
+## EntranceCoat is. roman_props.py builds it on his body, in his skeleton's own
+## coordinates, with the skin weights of the skin under each key, and exports
+## the handful of bones those weights name. Here it keeps its own copy of
+## that skeleton and copies his pose onto it on his `skeleton_updated` signal,
+## which fires after the animation, the IK and every SkeletonModifier3D
+## (RomanHeadShape's neck) have finished -- so it is always posed from the
+## frame he is drawn in, never from the one before, and it deforms with the
+## chest, the clavicles and the neck instead of floating off them. The earlier
+## rigid version re-placed itself from one bone in `_process`, which lagged the
+## skeleton and could not follow the arms up.
 ##
 ## Presentation only: nothing here has collision or touches match state, and
 ## EntranceDirector frees it at the bell.
 
 const ULA_FALA := "res://assets/props/ula_fala.glb"
 const TITLE := "res://assets/props/aew_title.glb"
-const BASE_SHOULDER_SPAN := 0.384
-
-## Per-model fit, on top of the shoulder-span scale, keyed by entrance_style.
-##
-## Shoulder span alone put Roman's ula fala INSIDE him. His J_Shoulder bones
-## sit 0.31 m apart -- 0.82 of the mannequin's -- but he is far thicker
-## through the neck and chest than the mannequin: measured off M_Body, his
-## neck is 0.18 m across at its base, his trapezius runs to +-0.24 m, and his
-## chest stands 0.16 m proud of the neck line 0.15 m down. So the loop, sized
-## for the mannequin and then shrunk, came out 8.6 cm in radius inside a
-## neck 9 cm in radius and never rendered; the draped belt floated off the
-## shoulder as loose gold tiles. Found in a close render, where the necklace
-## simply was not there.
-##
-## `fala` / `title` scale the props in the wrestler's frame (x across, y up,
-## z forward) and the offsets move their origins, in metres, in that frame
-## (+z is BEHIND him, -z in front -- the props are authored forward -Z).
-##
-## Roman's ula fala is now authored at his own measured size (roman_props.py
-## fala_curve), so it is placed 1:1 -- `fala_true_size` -- rather than
-## stretched out of the mannequin's by these factors, which is what made the
-## last one a thick ring standing off his throat.
-const FITS := {
-	"roman": {
-		"fala_true_size": true, "fala_offset": Vector3.ZERO,
-	},
-}
 
 ## Part name -> material. Gold is a metal lit by the follow spot and the
 ## stage washes; the hall's ambient carries no reflections (material_library's
@@ -97,15 +78,20 @@ static func _materials() -> Dictionary:
 	snap.albedo_color = Color(0.78, 0.60, 0.32)
 	snap.metallic = 1.0
 	snap.roughness = 0.4
-	# The keys: a deep red tip, dried and a little waxy, on an orange base
-	# (roman_props.py build_ula_fala). Deeper and glossier than the flat
-	# cardboard red the box version wore.
+	# The keys: glossy lacquered red, crimson at the root and a little orange
+	# at the tip -- the colour ramp is baked into the glb as vertex colour
+	# (roman_props.py FALA_RAMP). A clearcoat gives the hard wet highlight the
+	# photograph shows, and a trace of emission keeps them red between the
+	# stage lights, as with the title's gold.
 	var red := StandardMaterial3D.new()
-	red.albedo_color = Color(0.50, 0.035, 0.03)
-	red.roughness = 0.42
-	var orange := StandardMaterial3D.new()
-	orange.albedo_color = Color(0.78, 0.30, 0.06)
-	orange.roughness = 0.55
+	red.resource_name = "FalaRed"
+	red.vertex_color_use_as_albedo = true
+	red.albedo_color = Color.WHITE
+	red.roughness = 0.38
+	red.metallic_specular = 0.35
+	red.emission_enabled = true
+	red.emission = Color(0.45, 0.02, 0.02)
+	red.emission_energy_multiplier = 0.02
 	var cord := StandardMaterial3D.new()
 	cord.albedo_color = Color(0.10, 0.07, 0.05)
 	cord.roughness = 0.9
@@ -113,14 +99,18 @@ static func _materials() -> Dictionary:
 		"TitleArt": art, "HeldArt": art, "TitleGold": gold, "HeldGold": gold,
 		"TitleStrap": leather, "HeldStrap": leather,
 		"TitleSnap": snap, "HeldSnap": snap,
-		"FalaRed": red, "FalaOrange": orange, "FalaCord": cord,
+		"FalaRed": red, "FalaCord": cord,
 	}
 
 
 var _w: WrestlerController
-var _scale := 1.0
-var _fit: Dictionary = {}
 var _fala: Node3D
+## The ula fala's own copy of the skeleton it was exported with, and his
+## skeleton it is driven from. `_fala_map[i]` is his bone index for the copy's
+## bone i, or -1.
+var _fala_skeleton: Skeleton3D
+var _his: Skeleton3D
+var _fala_map := PackedInt32Array()
 var _title: Node3D
 ## Where the title is: "worn" (round his waist), "held", or "" (put down).
 var _title_state := "worn"
@@ -134,7 +124,6 @@ static func dress(wrestler: WrestlerController, with_title := true) -> EntranceP
 	props.name = "EntranceProps"
 	props._w = wrestler
 	props._with_title = with_title
-	props._fit = FITS.get(wrestler.entrance_style, {})
 	props.top_level = true
 	wrestler.add_child(props)
 	return props
@@ -145,12 +134,60 @@ func _ready() -> void:
 	_fala = _load(ULA_FALA, mats)
 	if _with_title:
 		_title = _load(TITLE, mats)
-	var l := _bone("upperarm_l")
-	var r := _bone("upperarm_r")
-	if l != Vector3.INF and r != Vector3.INF:
-		_scale = clampf(l.distance_to(r) / BASE_SHOULDER_SPAN, 0.7, 1.8)
+	_wear_fala()
 	set_title("worn")
 	_follow()
+
+
+## Hang the necklace on his skeleton and drive its copy of the bones from his.
+##
+## The glb root goes UNDER his Skeleton3D with identity transforms, so the
+## necklace's skeleton shares his global transform at every moment -- through
+## the wrestler's moves, turns and physique scale -- with nothing to lag. Only
+## the bone poses need copying, and those are copied on his `skeleton_updated`,
+## after the animation, the IK and every modifier have posed him.
+func _wear_fala() -> void:
+	_his = _w.skeleton if _w else null
+	if _fala == null or _his == null:
+		return
+	var found := _fala.find_children("*", "Skeleton3D", true, false)
+	if found.is_empty():
+		push_error("EntranceProps: the ula fala has no skeleton")
+		return
+	_fala_skeleton = found[0]
+	_fala.reparent(_his, false)
+	# Every node from the glb's root down to its skeleton is the Blender
+	# armature's own placement (it carries his model's 1.035 scale); placing
+	# him is his skeleton's job here, so all of them go to identity.
+	var up: Node = _fala_skeleton
+	while up != null and up != _his:
+		if up is Node3D:
+			(up as Node3D).transform = Transform3D.IDENTITY
+		up = up.get_parent()
+	_fala_map.clear()
+	for i in _fala_skeleton.get_bone_count():
+		_fala_map.append(_his.find_bone(_fala_skeleton.get_bone_name(i)))
+	_his.skeleton_updated.connect(_sync_fala)
+	_sync_fala()
+
+
+func _sync_fala() -> void:
+	if _fala_skeleton == null:
+		return
+	for i in _fala_map.size():
+		var j := _fala_map[i]
+		if j >= 0:
+			_fala_skeleton.set_bone_pose_position(i, _his.get_bone_pose_position(j))
+			_fala_skeleton.set_bone_pose_rotation(i, _his.get_bone_pose_rotation(j))
+			_fala_skeleton.set_bone_pose_scale(i, _his.get_bone_pose_scale(j))
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_his) and _his.skeleton_updated.is_connected(_sync_fala):
+		_his.skeleton_updated.disconnect(_sync_fala)
+	# It hangs off his skeleton, not off this node, so it does not go with it.
+	if is_instance_valid(_fala) and _fala.get_parent() != self:
+		_fala.queue_free()
 
 
 func _load(path: String, mats: Dictionary) -> Node3D:
@@ -192,17 +229,6 @@ func _follow() -> void:
 	if _w == null:
 		return
 	var turn := Basis(Vector3.UP, _w.global_rotation.y)
-	var fala_fit: Vector3 = _fit.get("fala", Vector3.ONE)
-	var fala_scale := Vector3.ONE if _fit.get("fala_true_size", false) else fala_fit * _scale
-	var neck := _bone("neck_01")
-	if _fala and neck != Vector3.INF:
-		# It lies on his chest and shoulders, so it turns with his chest:
-		# the upper spine's rotation away from rest, on top of his facing.
-		# Held to his yaw alone it stayed level while he leaned into the
-		# walk, and slid off his shoulders and into his chest with every step.
-		var chest := _bone_turn("spine_03") * turn
-		_fala.global_transform = Transform3D(chest * Basis.from_scale(fala_scale),
-				neck + chest * (_fit.get("fala_offset", Vector3.ZERO) as Vector3))
 	if _title == null:
 		return
 	if _title_state == "held":
