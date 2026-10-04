@@ -8682,3 +8682,18 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   longer make him tap. `test_finisher_only`.
 - The plan for the rest of the gap to 2K26 is in
   `gauntlet/refs/animation_gap.md`, Phase 5.
+
+### Stage 2a: the title theme and a layered in-match crowd
+
+- **Title theme.** `title_theme.ogg` now plays under the title and select
+  screens (`MenuMusic`), looping with its seam ducked to a breath (the track
+  runs to full level at its last sample), and is handed to the tree root and
+  faded out under the match stinger instead of being cut.
+- **Crowd beds.** Three beds of 52 / 23 / 41 s (pairwise co-prime) plus a boo
+  loop and a cheer loop, from CC0 Red Library recordings on archive.org
+  (`tools/audio/build_sfx.py`; licence checked at download). Resampled and
+  band-limited so no word is intelligible (4-8 Hz envelope modulation index
+  0.02-0.03 against speech's ~0.2+). `MatchAudio` rides them on one slewed
+  intensity (excitement over a five-minute warm-up floor, so the match starts
+  quiet and builds) and never steps a gain; Roman's blows and taunts feed the
+  boos, Cody's and his fire-up feed the cheer.

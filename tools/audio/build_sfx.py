@@ -44,6 +44,15 @@ FREESOUND = {
 	"336011": ("Rudmer_Rotteveel", "Sharp Explosion 4 (of 5)"),
 	"683101": ("florianreichelt", "quick woosh"),
 }
+# archive.org CC0 field recordings (Red Library crowds): file -> description.
+# The item's licenseurl is checked at download time.
+ARCHIVE_ITEM = "Red_Library_Crowds_Outdoor"
+ARCHIVE = {
+	"R08-05-Large Group at Event": "walla",
+	"R28-29-Large Crowd Quiet, Then Big Reaction": "walla, then a reaction",
+	"R08-09-Large Unhappy Crowd": "boos",
+	"R25-22-Large Excited Crowd": "cheering",
+}
 KENNEY = {
 	"impact": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
 	"interface": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
@@ -72,6 +81,23 @@ def freesound(sid: str) -> str:
 	url = m.group(0).replace("-lq.", "-hq.").replace(".mp3", ".ogg")
 	if "Creative Commons 0" not in page and "publicdomain/zero" not in page:
 		sys.exit(f"freesound {sid} is no longer marked CC0 -- check before using it")
+	with open(path, "wb") as f:
+		f.write(_get(url))
+	return path
+
+
+def archive(name: str) -> str:
+	"""A recording from the CC0 Red Library item on archive.org, cached."""
+	import json
+	import urllib.parse
+	path = os.path.join(CACHE, "archive", name.replace(" ", "_").replace(",", "") + ".mp3")
+	if os.path.exists(path):
+		return path
+	os.makedirs(os.path.dirname(path), exist_ok=True)
+	meta = json.loads(_get(f"https://archive.org/metadata/{ARCHIVE_ITEM}"))
+	if "publicdomain/zero" not in meta.get("metadata", {}).get("licenseurl", ""):
+		sys.exit(f"archive.org {ARCHIVE_ITEM} is no longer marked CC0 -- check before using it")
+	url = f"https://archive.org/download/{ARCHIVE_ITEM}/" + urllib.parse.quote(name + ".mp3")
 	with open(path, "wb") as f:
 		f.write(_get(url))
 	return path
@@ -157,6 +183,25 @@ def loop(x: np.ndarray, cross: float = 2.0) -> np.ndarray:
 	return body
 
 
+def sweeten(x: np.ndarray, speed: float, hp: float = 160.0, lp: float = 4800.0) -> np.ndarray:
+	"""Makes a field recording a wash of voices rather than anyone's words:
+	resampled by `speed` (so any speech is slurred and every layer is a
+	different pitch), band-limited, then smeared by a short diffuse tail."""
+	n = int(len(x) / speed)
+	idx = np.linspace(0, len(x) - 1, n)
+	y = np.stack([np.interp(idx, np.arange(len(x)), x[:, c]) for c in range(x.shape[1])], 1)
+	spec = np.fft.rfft(y, axis=0)
+	freq = np.fft.rfftfreq(len(y), 1.0 / SR)
+	gain = np.clip((freq - hp * 0.6) / (hp * 0.4), 0.0, 1.0) * \
+			np.clip((lp * 1.3 - freq) / (lp * 0.3), 0.0, 1.0)
+	y = np.fft.irfft(spec * gain[:, None], n=len(y), axis=0).astype(np.float32)
+	out = y.copy()
+	for ms, g in ((23, 0.5), (41, 0.4), (67, 0.3), (97, 0.22), (131, 0.15)):
+		d = int(ms / 1000 * SR)
+		out[d:] += y[:-d] * g
+	return out
+
+
 def split_on_silence(x: np.ndarray, floor_db: float, min_len: float = 0.6) -> list:
 	hop = SR // 100
 	n = len(x) // hop
@@ -206,6 +251,20 @@ def build() -> None:
 	oohs = [p for p in split_on_silence(load(freesound("264499"), 2), -40.0, 1.2)]
 	for i, p in enumerate(oohs[:4]):
 		save(f"crowd_ooh_{i}", rms_to(fade(p, 0.02, 0.4), -18))
+
+	# Out-of-sync beds, so no loop point is ever heard: with the 52 s bed above
+	# these run 52 / 23 / 41 s (pairwise co-prime; the cuts are sized so each loop
+	# comes out at exactly that length, the crossfade seam included), slurred and
+	# band-limited so no word in them is intelligible. MatchAudio rides them.
+	walla = load(archive("R08-05-Large Group at Event"), 2)
+	save("crowd_walla_a", rms_to(loop(sweeten(cut(walla, 4.0, 28.0), 1.12), 2.0), -21))
+	rec = load(archive("R28-29-Large Crowd Quiet, Then Big Reaction"), 2)
+	save("crowd_walla_b", rms_to(loop(sweeten(cut(rec, 1.0, 40.42), 0.94), 2.0), -21))
+	# Boos for the heel and a cheer swell for the face, each a held layer.
+	boo = load(archive("R08-09-Large Unhappy Crowd"), 2)
+	save("crowd_boo", rms_to(loop(sweeten(cut(boo, 0.3, 24.0), 1.0, 120.0, 3600.0), 1.5), -17))
+	cheer = load(archive("R25-22-Large Excited Crowd"), 2)
+	save("crowd_cheer", rms_to(loop(sweeten(cut(cheer, 0.2, 21.5), 1.0, 160.0, 6500.0), 1.5), -17))
 
 	print("bell")
 	bell = load(freesound("571096"))

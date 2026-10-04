@@ -8,6 +8,10 @@ anyway.
 | Files | Source | Author | Licence |
 | --- | --- | --- | --- |
 | `crowd_bed` | [Rogers Arena - NHL game atmosphere](https://freesound.org/people/SEF7/sounds/706497/) | SEF7 | CC0 |
+| `crowd_walla_a` | [R08-05 Large Group at Event](https://archive.org/details/Red_Library_Crowds_Outdoor) (Red Library, archive.org) | Red Library | CC0 |
+| `crowd_walla_b` | [R28-29 Large Crowd Quiet, Then Big Reaction](https://archive.org/details/Red_Library_Crowds_Outdoor) | Red Library | CC0 |
+| `crowd_boo` | [R08-09 Large Unhappy Crowd](https://archive.org/details/Red_Library_Crowds_Outdoor) | Red Library | CC0 |
+| `crowd_cheer` | [R25-22 Large Excited Crowd](https://archive.org/details/Red_Library_Crowds_Outdoor) | Red Library | CC0 |
 | `crowd_roar` | [Crowd Cheer](https://freesound.org/people/FoolBoyMedia/sounds/397434/) | FoolBoyMedia | CC0 |
 | `crowd_pop_*`, `crowd_finish` | [Stadium Crowd Reaction Excited 01](https://freesound.org/people/itmightgetloud/sounds/829453/) | itmightgetloud | CC0 |
 | `crowd_ooh_*` | [Crowd Ooohs and Ahhhs in Excitement](https://freesound.org/people/noah0189/sounds/264499/) | noah0189 | CC0 |
