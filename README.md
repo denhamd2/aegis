@@ -8779,6 +8779,11 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   is held and it CUTS (instantly, no more than once per 3 s) when the pair have
   turned past 57 degrees or a post gets in the way; handheld holds 6 s, the
   master 4-5.5 s. `tests/test_camera_no_orbit.gd`.
+- **Measured** (Roman v Cody, AI v AI, seeds 1-7, `pace_probe`): 480, 488, 520,
+  597, 610, 722 and 760 s -- mean ~10 min, was 63-85 s; 8-16 knockdowns, 1-7
+  near-falls, 1-2 comebacks, 2-5 finishers thrown of which one is kicked out;
+  every match ends in a pinfall, won by the man the seed picks (Cody on 1, 4,
+  7; Roman on 2, 3, 5, 6).
 - **Measuring it.** `tools/probe/pace_probe.tscn` (run with `--fixed-fps 60`,
   not 6000; `--wrestlers roman,cody`; `--trace` prints every signature,
   finisher and knockdown with the phase).

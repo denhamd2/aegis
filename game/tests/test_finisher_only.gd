@@ -13,6 +13,9 @@ func before_test() -> void:
 	TitleScreen.configure_match(_scene, pair[0], pair[1], 3)
 	_scene.entrances = false
 	add_child(_scene)
+	# The match is in its finish: before FINISH_FROM a finisher is only a
+	# near-fall (MatchFlow; tests/test_match_flow.gd covers that gate).
+	(_scene.get_node("MatchFlow") as MatchFlow).tick = int(MatchFlow.FINISH_FROM * 60.0)
 
 
 func after_test() -> void:
