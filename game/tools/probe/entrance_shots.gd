@@ -91,6 +91,11 @@ func _ready() -> void:
 			print("frame %d beat %d %s %s" % [_frame, last_beat, b["kind"],
 					b.get("shot", "")])
 		if _frame % _every == 0:
+			var ice := director.get_node_or_null("DryIce") as DryIce
+			if ice:
+				var puffs := ice.get_node("Puffs") as CPUParticles3D
+				print("  dry ice at %s emitting=%s stopped=%s" % [
+						ice.global_position, puffs.emitting, ice.is_stopped()])
 			get_viewport().get_texture().get_image().save_jpg(
 					"%s/e_%05d.jpg" % [_out, _frame], 0.85)
 		_frame += 1

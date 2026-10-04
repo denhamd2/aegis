@@ -5003,6 +5003,93 @@ CLIPS["Ref_Raise_Hand"] = [
     (60, _RAISE),
 ]
 
+# --- Handing a prop on (entrance props, one at a time) ----------------------
+# The belt, the ula fala: lifted off by the wrestler, handed to Aubrey, carried
+# by her to the ropes, handed on to the timekeeper, who sets it on his table.
+# Hands are targets in the body's own frame (x right, y forward, z up). The
+# contact frames are the ones the game swaps the prop's holder on:
+#   Prop_Hand_Out_*  frame 26  the wrestler's hand is out and the prop is taken
+#   Ref_Reach        frame 24  the hand is out and the prop arrives in it
+#   Ref_Hand_Over    frame 28  the hand is out and the prop is taken from it
+#   Timekeeper_Take  frame 26  his hand is up at hers and takes it
+#   Ref_Place        frame 30  the prop is on the table
+# (PropHandoff.CONTACT_FRAMES). Over the shoulder is how a referee carries a
+# belt: it leaves both hands free for the walk.
+_PROP_OUT_R = pose(ROMAN_STAND, spine=(3, 0, 0), head=(0, 0, 0),
+                   hand_r=(0.14, 0.62, 1.22), elbow_r=(0.9, 0.0, -0.4), fist_r=0.7)
+CLIPS["Prop_Hand_Out_R"] = [
+    (0,  pose(ROMAN_STAND, hand_r=(0.12, 0.16, 1.36), elbow_r=(1.0, -0.4, -0.6), fist_r=0.6)),
+    (14, _PROP_OUT_R),
+    (26, pose(_PROP_OUT_R, hand_r=(0.14, 0.66, 1.22), fist_r=0.2)),
+    (40, pose(_PROP_OUT_R, hand_r=(0.14, 0.64, 1.22), fist_r=0.2)),
+    (58, ROMAN_STAND),
+]
+_PROP_OUT_L = pose(ROMAN_STAND, spine=(3, 0, 0), head=(0, 0, 0),
+                   hand_l=(-0.14, 0.62, 1.22), elbow_l=(-0.9, 0.0, -0.4), fist_l=0.7)
+CLIPS["Prop_Hand_Out_L"] = [
+    (0,  pose(ROMAN_STAND, hand_l=(-0.20, 0.10, 1.60), elbow_l=(-1.0, -0.2, -0.2), fist_l=0.9)),
+    (14, _PROP_OUT_L),
+    (26, pose(_PROP_OUT_L, hand_l=(-0.14, 0.66, 1.22), fist_l=0.2)),
+    (40, pose(_PROP_OUT_L, hand_l=(-0.14, 0.64, 1.22), fist_l=0.2)),
+    (58, ROMAN_STAND),
+]
+# On her shoulder: the right hand steadying the belt where her neck meets it.
+_REF_SHOULDER = pose(REF_STAND, spine=(-2, 0, 0), head=(-2, 6, 0),
+                     hand_r=(0.20, 0.10, 1.40), elbow_r=(1.0, -0.2, 0.6), fist_r=0.5)
+CLIPS["Ref_Reach"] = [
+    (0,  REF_STAND),
+    (12, pose(REF_STAND, spine=(2, 0, 0), hand_r=(0.16, 0.50, 1.22),
+              elbow_r=(0.9, 0.0, -0.3), fist_r=0.1)),
+    (24, pose(REF_STAND, spine=(3, 0, 0), hand_r=(0.14, 0.62, 1.22),
+              elbow_r=(0.9, 0.0, -0.3), fist_r=0.5)),
+    (34, pose(REF_STAND, spine=(1, 0, 0), hand_r=(0.18, 0.36, 1.30),
+              elbow_r=(1.0, -0.1, 0.0), fist_r=0.5)),
+    (46, _REF_SHOULDER),
+    (56, _REF_SHOULDER),
+]
+# Through the ropes: the middle and bottom ropes are 0.85 and 0.50 m up, so the
+# hand goes out between them at 0.68 -- the same height the timekeeper, on the
+# floor 1.1 m below the mat, reaches up to (Timekeeper_Take).
+CLIPS["Ref_Hand_Over"] = [
+    (0,  _REF_SHOULDER),
+    (12, pose(REF_STAND, spine=(3, 0, 0), hand_r=(0.18, 0.40, 1.00),
+              elbow_r=(1.0, -0.1, 0.0), fist_r=0.5)),
+    (22, pose(REF_STAND, spine=(8, 0, 0), head=(4, 0, 0), hand_r=(0.14, 0.68, 0.74),
+              elbow_r=(0.9, 0.0, -0.3), fist_r=0.5)),
+    (28, pose(REF_STAND, spine=(8, 0, 0), head=(4, 0, 0), hand_r=(0.14, 0.72, 0.68),
+              elbow_r=(0.9, 0.0, -0.3), fist_r=0.1)),
+    (44, pose(REF_STAND, spine=(5, 0, 0), hand_r=(0.14, 0.62, 0.72),
+              elbow_r=(0.9, 0.0, -0.3), fist_r=0.1)),
+    (58, REF_STAND),
+]
+# The timekeeper, on the floor, reaches UP to the hand coming through the ropes
+# (hand 1.78 m over his feet = 0.68 over the mat) and takes it to his shoulder.
+CLIPS["Timekeeper_Take"] = [
+    (0,  REF_STAND),
+    (12, pose(REF_STAND, spine=(-4, 0, 0), head=(-6, 0, 0), hand_r=(0.16, 0.34, 1.50),
+              elbow_r=(1.0, -0.1, 0.4), fist_r=0.1)),
+    (22, pose(REF_STAND, spine=(-6, 0, 0), head=(-8, 0, 0), hand_r=(0.16, 0.53, 1.76),
+              elbow_r=(0.9, 0.0, 0.5), fist_r=0.1)),
+    (26, pose(REF_STAND, spine=(-6, 0, 0), head=(-8, 0, 0), hand_r=(0.16, 0.55, 1.78),
+              elbow_r=(0.9, 0.0, 0.5), fist_r=0.5)),
+    (36, pose(REF_STAND, spine=(-2, 0, 0), hand_r=(0.18, 0.30, 1.50),
+              elbow_r=(1.0, -0.1, 0.5), fist_r=0.5)),
+    (44, _REF_SHOULDER),
+    (54, _REF_SHOULDER),
+]
+CLIPS["Ref_Place"] = [
+    (0,  _REF_SHOULDER),
+    (14, pose(REF_STAND, spine=(6, 0, 0), hand_r=(0.20, 0.42, 1.14),
+              elbow_r=(1.0, -0.1, -0.2), fist_r=0.5)),
+    (26, pose(REF_STAND, spine=(14, 0, 0), head=(8, 0, 0), hand_r=(0.22, 0.50, 0.94),
+              elbow_r=(0.9, 0.0, -0.4), fist_r=0.5)),
+    (30, pose(REF_STAND, spine=(14, 0, 0), head=(8, 0, 0), hand_r=(0.22, 0.52, 0.91),
+              elbow_r=(0.9, 0.0, -0.4), fist_r=0.1)),
+    (46, pose(REF_STAND, spine=(6, 0, 0), hand_r=(0.20, 0.40, 1.10),
+              elbow_r=(1.0, -0.1, -0.2), fist_r=0.1)),
+    (60, REF_STAND),
+]
+
 # Off the ropes (gauntlet/refs/ropes.md): the last stride turns him side-on,
 # the rope-side arm goes over the top rope, and his hip and ribs take the
 # middle and top ropes. The ropes give -- the pelvis carries on 0.30 m past

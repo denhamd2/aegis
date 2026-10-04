@@ -75,13 +75,16 @@ const WALK_CLIP_SPEED := 1.3
 const JOG_CLIP := "Jog_Fwd"
 const JOG_CLIP_SPEED := 3.0
 
-enum Mode { PARK, FOLLOW, TO_COVER, COUNTING, SUBMISSION, RISE, BELL, TO_WINNER, RAISE }
+enum Mode { PARK, FOLLOW, TO_COVER, COUNTING, SUBMISSION, RISE, BELL, TO_WINNER, RAISE, ERRAND }
 
 const GROUNDED := [
 	WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP,
 	WrestlerFSM.State.PIN_ATTACKER, WrestlerFSM.State.PIN_DEFENDER,
 	WrestlerFSM.State.SUBMISSION_ATTACKER, WrestlerFSM.State.SUBMISSION_DEFENDER,
 ]
+
+## She has reached her errand spot and is squared up (PropHandoff).
+signal errand_arrived
 
 var mode := Mode.PARK
 var model: Node3D
@@ -100,6 +103,9 @@ var _separated := false
 var _separating := false
 var _checking := false
 var _director: EntranceDirector
+var _errand_target := Vector3.INF
+var _errand_face := Vector3.ZERO
+var _errand_faced := true
 ## The cover spot she is jogging to, and where the pinned man was when it was
 ## chosen.
 var _cover_target: Array = []
@@ -136,8 +142,54 @@ func follow(director: EntranceDirector) -> void:
 			_separating = true)
 
 
+## An errand for PropHandoff, during the entrances: she leaves her spot, walks
+## where she is told, plays the clips she is given, and goes back to her spot
+## when it is over (the PARK branch walks her there).
+func begin_errand() -> void:
+	if mode == Mode.PARK:
+		_separating = false
+		_checking = false
+		_set_mode(Mode.ERRAND)
+
+
+## Walk to `spot` (on the mat) and turn to `face_dir`; errand_arrived fires
+## once she is there and squared up.
+func errand_go(spot: Vector3, face_dir: Vector3) -> void:
+	_errand_target = _flat(spot)
+	_errand_face = _flat(face_dir)
+	_errand_faced = false
+
+
+## A one-shot clip, from its first frame; she stands where she is for it.
+func errand_play(clip: String) -> void:
+	_errand_target = Vector3.INF
+	_play(clip, 0.2, true)
+
+
+func errand_idle() -> void:
+	_play("strikes/ref_stand", 0.25)
+
+
+func errand_clip_length(clip: String) -> float:
+	return _clip_length(clip)
+
+
+## The errand is over: back to her spot by the ropes.
+func end_errand() -> void:
+	_errand_target = Vector3.INF
+	if mode == Mode.ERRAND:
+		_set_mode(Mode.PARK)
+
+
+func skeleton() -> Skeleton3D:
+	return (model as AubreyModel).get_game_skeleton() if model else null
+
+
 ## The bell: from here she works the match.
 func go_live() -> void:
+	if mode == Mode.ERRAND:
+		_errand_target = Vector3.INF
+		_set_mode(Mode.PARK)
 	if mode == Mode.PARK:
 		_separating = false
 		_set_mode(Mode.FOLLOW)
@@ -200,6 +252,23 @@ func _process(delta: float) -> void:
 				_set_mode(Mode.RAISE)
 		Mode.RAISE:
 			_face(_yaw_towards(Vector3.LEFT), delta)
+		Mode.ERRAND:
+			_errand(delta)
+
+
+func _errand(delta: float) -> void:
+	if _errand_target == Vector3.INF:
+		return
+	if _flat(global_position).distance_to(_errand_target) > ARRIVED:
+		_go(_errand_target, WALK_SPEED, delta, false)
+		return
+	_play("strikes/ref_stand", 0.25)
+	var want := _yaw_towards(_errand_face) if _errand_face.length() > 0.01 else _yaw
+	_face(want, delta)
+	if not _errand_faced and absf(angle_difference(_yaw, want)) < 0.05:
+		_errand_faced = true
+		_errand_target = Vector3.INF
+		errand_arrived.emit()
 
 
 func _set_mode(next: Mode) -> void:

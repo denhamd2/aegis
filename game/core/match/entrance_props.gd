@@ -114,6 +114,8 @@ var _fala_map := PackedInt32Array()
 var _title: Node3D
 ## Where the title is: "worn" (round his waist), "held", or "" (put down).
 var _title_state := "worn"
+## Once taken, the necklace is no longer posed from his skeleton.
+var _fala_taken := false
 var _with_title := true
 
 
@@ -172,7 +174,7 @@ func _wear_fala() -> void:
 
 
 func _sync_fala() -> void:
-	if _fala_skeleton == null:
+	if _fala_skeleton == null or _fala_taken:
 		return
 	for i in _fala_map.size():
 		var j := _fala_map[i]
@@ -186,7 +188,8 @@ func _exit_tree() -> void:
 	if is_instance_valid(_his) and _his.skeleton_updated.is_connected(_sync_fala):
 		_his.skeleton_updated.disconnect(_sync_fala)
 	# It hangs off his skeleton, not off this node, so it does not go with it.
-	if is_instance_valid(_fala) and _fala.get_parent() != self:
+	# (Unless it was taken: whoever carries it owns it then.)
+	if is_instance_valid(_fala) and _fala.get_parent() != self and not _fala_taken:
 		_fala.queue_free()
 
 
@@ -204,6 +207,38 @@ func _load(path: String, mats: Dictionary) -> Node3D:
 			mi.material_override = mats[key]
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return root
+
+
+## The belt, to be carried (PropHandoff): it shows as held and stops following
+## his hand. The caller owns it from here.
+func take_title() -> Node3D:
+	if _title == null:
+		return null
+	set_title("held")
+	_title_state = "carried"
+	return _title
+
+
+## The ula fala, to be carried: it stops being posed from his bones and goes
+## back to its own rest shape (a loop). The caller owns it from here.
+func take_fala() -> Node3D:
+	if _fala == null:
+		return null
+	if is_instance_valid(_his) and _his.skeleton_updated.is_connected(_sync_fala):
+		_his.skeleton_updated.disconnect(_sync_fala)
+	if _fala_skeleton:
+		_fala_skeleton.reset_bone_poses()
+	_fala_taken = true
+	return _fala
+
+
+## Where the neck sits in the ula fala's rest shape, in the skeleton's frame:
+## the point a carrier holds it by.
+func fala_neck_rest() -> Vector3:
+	if _fala_skeleton == null:
+		return Vector3.ZERO
+	var i := _fala_skeleton.find_bone("neck_01")
+	return _fala_skeleton.get_bone_global_rest(i).origin if i >= 0 else Vector3.ZERO
 
 
 func set_title(state: String) -> void:
@@ -226,7 +261,7 @@ func _process(_delta: float) -> void:
 
 
 func _follow() -> void:
-	if _w == null:
+	if _w == null or _title_state == "carried":
 		return
 	var turn := Basis(Vector3.UP, _w.global_rotation.y)
 	if _title == null:

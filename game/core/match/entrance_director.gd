@@ -377,6 +377,10 @@ const CORNER_LOW_FOV := 50.0
 const TITLE_UNBUCKLED_AT := 44
 const FINGER_PYRO_AT := 28
 const ULA_FALA_LIFT_AT := 40
+## Prop_Hand_Out_*: 58 frames at 30 fps. The pass is on its frame 26.
+const HAND_OUT_SECONDS := 1.933
+## The longest a beat will wait for the last prop to reach the table.
+const HANDOFF_MAX_WAIT := 60 * 25
 ## The OTC look is blue (R-41, R-CJ, and his own wall video): his portal
 ## accents go blue, and red only for the pyro (R-41 42 s).
 const ROMAN_BLUE := Color(0.22, 0.52, 1.0)
@@ -493,6 +497,12 @@ var _env: Environment
 var _backlight: SpotLight3D
 ## Cody's smoke in his portal, while he walks out of it.
 var _smoke: FogVolume
+## The props' way to the timekeeper's table, and the man who keeps it.
+var _handoff: PropHandoff
+var _keeper: Timekeeper
+## ...and the dry ice that works on every renderer (DryIce), poured at the same
+## spot, which keeps rolling and thinning after the fog volume is gone.
+var _ice: DryIce
 ## Beats marked no_follow keep the follow spot off (Cody's silhouettes).
 var _follow_off := false
 var _tron_rim: SpotLight3D
@@ -531,6 +541,18 @@ func begin(match_root: Node) -> void:
 		world = node as WorldEnvironment
 	if world:
 		_env = world.environment
+	# The timekeeper and the way a man's props reach his table. Both live on
+	# in the match: the table, with whatever was set on it.
+	var ref := match_root.get_node_or_null("RefereeActor") as RefereeActor
+	if ref and match_root.get_node_or_null("Timekeeper") == null:
+		_keeper = Timekeeper.new()
+		_keeper.name = "Timekeeper"
+		match_root.add_child(_keeper)
+		_keeper.setup(PropHandoff.KEEPER_POST, Vector3(-1, 0, 0), PropHandoff.TABLE_AT)
+		_handoff = PropHandoff.new()
+		_handoff.name = "PropHandoff"
+		match_root.add_child(_handoff)
+		_handoff.setup(ref, _keeper)
 	# Phones out for the entrances (CrowdReaction; refs/aaa_gap.md item 11).
 	_crowd = get_tree().get_first_node_in_group("crowd_reaction") as CrowdReaction
 	if _crowd:
@@ -856,7 +878,9 @@ func _physics_process(delta: float) -> void:
 	_frame_shot(beat, delta)
 	_aim_follow_spot(w)
 	_aim_tron_rim(w)
-	if _tick >= int(beat["ticks"]):
+	var waiting: bool = beat.get("wait_idle", false) and _handoff != null \
+			and not _handoff.is_idle() and _tick < int(beat["ticks"]) + HANDOFF_MAX_WAIT
+	if _tick >= int(beat["ticks"]) and not waiting:
 		if beat.get("clip", "") == "strikes/rope_step_through_apron":
 			_release_ropes()
 		_beat += 1
@@ -882,6 +906,9 @@ func _ring_bell() -> void:
 		_walk_key.visible = false
 	if _walk_back:
 		_walk_back.visible = false
+	# Whatever is still on its way goes to the table, before the men's props go.
+	if _handoff:
+		_handoff.finish_now()
 	for props: EntranceProps in _props.values():
 		props.queue_free()
 	_props.clear()
@@ -991,23 +1018,30 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	# mat looking up at it.
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/title_unbuckle", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[TITLE_UNBUCKLED_AT, "title_held"]]})
+			"shot": "ring_low", "events": [[1, "prop_call_title"],
+					[TITLE_UNBUCKLED_AT, "title_held"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": 120,
 			"clip": "strikes/title_raise", "facing": Vector3.BACK,
 			"shot": "hero_low"})
+	# The belt, handed on: Aubrey is at his side by now; the pass is on the
+	# 26th frame of his hand-out (PropHandoff.GIVE_CONTACT).
+	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
+			"clip": "strikes/prop_hand_out_l", "facing": Vector3.BACK,
+			"shot": "ring_low", "events": [[1, "prop_pass_title"]]})
 	# The finger to the hard camera, then hands on hips, staring, close.
 	_beats.append({"kind": "pose", "who": w, "ticks": 240,
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,
-			"shot": "ring_behind_out",
-			# Handed to the timekeeper before the finger, not carried through it.
-			"events": [[1, "title_down"]]})
+			"shot": "ring_behind_out"})
+	# Hands on hips; Aubrey, back from the timekeeper, comes for the ula fala.
 	_beats.append({"kind": "pose", "who": w, "ticks": 300,
 			"clip": "strikes/hands_hips", "facing": Vector3.BACK,
-			"shot": "face_walk"})
+			"shot": "face_walk", "events": [[1, "prop_call_fala"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": 90,
 			"clip": "strikes/ula_fala_off", "facing": Vector3.BACK,
-			"shot": "ring_low",
-			"events": [[1, "title_down"], [ULA_FALA_LIFT_AT, "fala_off"]]})
+			"shot": "ring_low", "events": [[ULA_FALA_LIFT_AT, "fala_off"]]})
+	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
+			"clip": "strikes/prop_hand_out_r", "facing": Vector3.BACK,
+			"shot": "ring_low", "events": [[1, "prop_pass_fala"]]})
 	var mark: Transform3D = _mark[w]
 	_beats.append({"kind": "walk", "who": w, "path": [centre, mark.origin],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
@@ -1015,6 +1049,9 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "end_wide", "settle": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
+	# Nothing moves on until the last prop is on the timekeeper's table.
+	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "end_wide",
+			"wait_idle": true})
 
 
 ## A long walk from `from` to `to` as the broadcast cuts it: consecutive
@@ -1367,14 +1404,26 @@ func _event(w: WrestlerController, what: String) -> void:
 			if props:
 				props.set_title("held")
 		"title_down":
-			if props:
+			if props and _handoff == null:
 				props.set_title("")
+		"prop_call_title":
+			if props and _handoff:
+				_handoff.request("title", w, props)
+		"prop_call_fala":
+			if props and _handoff:
+				_handoff.request("fala", w, props)
+		"prop_pass_title", "prop_pass_fala":
+			if _handoff:
+				_handoff.giver_begins()
 		"coat_off":
 			var coat: EntranceCoat = _coats.get(w)
 			if coat:
 				coat.set_worn(false)
 		"fala_off":
-			if props:
+			if props and _handoff:
+				# Over his head and into his hand: a thing he holds now.
+				_handoff.lift("fala")
+			elif props:
 				props.set_fala_visible(false)
 		"tron_on":
 			_tron_on = true
@@ -1828,12 +1877,21 @@ func _smoke_on(w: WrestlerController) -> void:
 	_smoke.material = mat
 	add_child(_smoke)
 	_smoke.global_position = at + Vector3(0.0, SMOKE_SIZE.y * 0.5, 0.0)
+	# The same bank as particles: the FogVolume does nothing on the web.
+	_ice = DryIce.new()
+	_ice.name = "DryIce"
+	add_child(_ice)
+	_ice.start(at, Vector3(0, 0, 1))
 
 
 func _smoke_off() -> void:
 	if _smoke:
 		_smoke.queue_free()
 		_smoke = null
+	if _ice:
+		# Stops pouring; what is already out lingers and dissipates.
+		_ice.stop()
+		_ice = null
 
 
 ## Dims the house for his entrance, or puts it back. Every rig light except

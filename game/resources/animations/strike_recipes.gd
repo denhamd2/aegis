@@ -417,6 +417,20 @@ const RECIPES := {
 		"seconds": 1.200, "file": AUTHORED},
 	"ref_raise_hand": {"kind": "retime", "source": "Ref_Raise_Hand",
 		"seconds": 2.000, "file": AUTHORED},
+	# Handing a prop on (PropHandoff): wrestler to Aubrey, Aubrey to the
+	# timekeeper, the timekeeper onto his table. 30 fps, their own lengths.
+	"prop_hand_out_r": {"kind": "retime", "source": "Prop_Hand_Out_R",
+		"seconds": 1.933, "file": AUTHORED},
+	"prop_hand_out_l": {"kind": "retime", "source": "Prop_Hand_Out_L",
+		"seconds": 1.933, "file": AUTHORED},
+	"ref_reach": {"kind": "retime", "source": "Ref_Reach",
+		"seconds": 1.867, "file": AUTHORED},
+	"ref_hand_over": {"kind": "retime", "source": "Ref_Hand_Over",
+		"seconds": 1.933, "file": AUTHORED},
+	"timekeeper_take": {"kind": "retime", "source": "Timekeeper_Take",
+		"seconds": 1.800, "file": AUTHORED},
+	"ref_place": {"kind": "retime", "source": "Ref_Place",
+		"seconds": 2.000, "file": AUTHORED},
 	# Off the ropes before the tope (gauntlet/refs/ropes.md).
 	"rope_rebound": {"kind": "retime", "source": "Rope_Rebound",
 		"seconds": 0.667, "file": AUTHORED},

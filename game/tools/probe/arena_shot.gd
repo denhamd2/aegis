@@ -22,6 +22,8 @@ var _wrestlers := ""
 var _settle := 90
 ## --flashes: an entrance's camera flashes plus a burst, for judging them.
 var _flashes := false
+## --ice: a bank of Cody's dry ice poured at the ring's foot, for judging it.
+var _ice := false
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -32,6 +34,8 @@ func _ready() -> void:
 			_wrestlers = args[i + 1]
 		elif args[i] == "--flashes":
 			_flashes = true
+		elif args[i] == "--ice":
+			_ice = true
 		elif args[i] == "--settle" and i + 1 < args.size():
 			_settle = int(args[i + 1])
 	DirAccess.make_dir_recursive_absolute(_out)
@@ -58,6 +62,12 @@ func _ready() -> void:
 	# follow settle -- grabbed on the first tick it frames the pair mid-lerp.
 	for frame in _settle:
 		await get_tree().physics_frame
+	if _ice:
+		var ice := DryIce.new()
+		scene.add_child(ice)
+		ice.start(Vector3(0.0, 0.0, 6.0), Vector3(0, 0, -1))
+		for frame in 120:
+			await get_tree().physics_frame
 	if _flashes:
 		var crowd := scene.get_node("CrowdReaction") as CrowdReaction
 		crowd.set_flashes(CrowdReaction.ENTRANCE_FLASH_RATE)
