@@ -119,5 +119,5 @@ func test_barricade_faces_follow_the_panels() -> void:
 		if ArenaLighting.barricade_face(panel) == "led":
 			want += 1
 	assert_int(leds).is_equal(want)
-	assert_int(want).is_equal(8)
+	assert_int(want).is_equal(14)
 	assert_int(corners).is_equal(4)

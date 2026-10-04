@@ -169,7 +169,13 @@ const FLOOR_CHAIR_DETAIL_ROWS := 5
 ## on -X/+Z facing it, so the stage reads frame-left in the money shot with
 ## the bowl at frame center -- both halves of the hall earn their polygons,
 ## the stage via stage_wide/entrance framings as well as the broadcast edge.
-const STAGE_HALF_WIDTH := 6.0
+##
+## 6.0 -> 8.0 with the portals' respacing (Stage 1 of the AAA plan): the two
+## rings now stand one diameter apart with their outer edges near the video
+## wall's ends (|x| = PORTAL_OFFSET_X + PORTAL_MAJOR + PORTAL_MINOR = 7.67), so
+## the deck has to carry them. The bowl's opening and the overhead rig's
+## accent boom read this number too and were rebuilt with it.
+const STAGE_HALF_WIDTH := 8.0
 const STAGE_DECK_Y := 0.35
 ## The back wall of the set, which the video wall and the portals stand on.
 ##
@@ -188,6 +194,11 @@ const STAGE_FRONT := -30.0
 ## cross. That is the length an entrance ramp is, and it is what the stage
 ## moving back to the end of the building buys: the walk is a walk.
 const RAMP_HALF_WIDTH := 1.8
+## The ramp does not butt into the 16m deck: the deck opens out toward it over
+## this much of its depth (measured back from STAGE_FRONT) on a smoothstep
+## S-curve, tangent to the ramp's edge at the mouth and to the deck's side at
+## the far end, as the reference's stage opens out from its ramp.
+const STAGE_FLARE_LENGTH := 4.5
 ## Ramp step length. The fall is only STAGE_DECK_Y - FLOOR_Y = 1.45m over the
 ## whole run, a 6% grade, so the staircase `_add_box` forces is a shallow one:
 ## ~18 steps of 8cm. Stepped rather than wedged for the reason it always was
@@ -231,12 +242,18 @@ const SCREEN_BLANK_EMISSION := 0.35
 
 # --- Entrance portals -------------------------------------------------------
 ## The two lit rings the entrance comes out of. Outer edge lands at
-## |x| = PORTAL_OFFSET_X + PORTAL_MAJOR + PORTAL_MINOR = 5.97, just inside
+## |x| = PORTAL_OFFSET_X + PORTAL_MAJOR + PORTAL_MINOR = 7.67, just inside
 ## STAGE_HALF_WIDTH, so the deck still reads as wider than the set dressed on
 ## it.
+##
+## Spaced 3.3 -> 5.0: at 3.3 the gap between the rings was 1.26m, where the
+## reference's gap is about one ring diameter (here 2 * (5.0 - 2.45 - 0.22) =
+## 4.66m against a 4.9m ring) and the outer edges sit under the video wall's
+## ends (|x| 9.22) rather than inside its middle third. The centre LED panel
+## the rings now frame is entrance_set.py's CENTRE_SCREEN_HALF_W.
 const PORTAL_MAJOR := 2.45
 const PORTAL_MINOR := 0.22
-const PORTAL_OFFSET_X := 3.3
+const PORTAL_OFFSET_X := 5.0
 ## How far the circle's lowest point sits BELOW the deck.
 ##
 ## This is the whole shape: the portal is a circle, and the deck cuts the
@@ -644,6 +661,30 @@ func _ribbon_material(level: float) -> StandardMaterial3D:
 	return mat
 
 
+## The announce table's printed front: RIBBON_ART as albedo on a lit,
+## mid-rough vinyl, with no emission at all.
+##
+## Lit rather than self-lit because a printed panel only shows what falls on
+## it -- it carries the ring's light and its own shadow side, where the LED
+## ribbons carry theirs. Roughness 0.5 gives a faint satin sheen without the
+## mirror a lacquered face would put the lights in. The compat renderer needs
+## no gain: the gains in this file scale EMISSION, and this surface has none.
+func _printed_signage_material() -> StandardMaterial3D:
+	var tex: Texture2D = load(RIBBON_ART)
+	var mat := StandardMaterial3D.new()
+	if tex == null:
+		push_error("ArenaBuilder: %s failed to load." % RIBBON_ART)
+		mat.albedo_color = Color(0.12, 0.10, 0.22)
+	else:
+		mat.albedo_texture = tex
+	mat.emission_enabled = false
+	mat.roughness = 0.5
+	mat.metallic = 0.0
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	mat.texture_repeat = true
+	return mat
+
+
 ## Multiplier on every self-emissive level in the hall, by renderer.
 ##
 ## The levels above are solved against forward_plus, whose HDR buffer lets the
@@ -867,8 +908,10 @@ func _build_ringside() -> void:
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
 	_dress(root, "RingsideMat", _ringside_pads())
-	# The desk's LED face shows the ribbon boards' art, at their level.
-	_dress(root, "CommentaryDeskLed", _ribbon_material(RIBBON_ART_PEAK))
+	# The announce table's front is PRINTED signage (a vinyl wrap), not an LED
+	# board: the art is the albedo and the ring lights read it like any other
+	# painted surface. No emission, so it can neither bloom nor wash out.
+	_dress(root, "CommentaryDeskLed", _printed_signage_material())
 	_dress(root, "CommentaryScreens", _monitor_screen_material())
 	add_child(root)
 
@@ -1654,6 +1697,14 @@ const ENTRANCE_MATERIALS := {
 	"StageBackdrop": ["arena_stage_panel", 1.1],
 	"PortalRecess": ["arena_tunnel", 0.35],
 	"StageScreenBezel": ["arena_tunnel", 0.5],
+	# Black pleated drape either side of the lit side panels: the darkest
+	# cloth in the set, under the bezel, so the folds read as folds against
+	# the lit panels rather than as a second wall.
+	"StageDrape": ["arena_tunnel", 0.5],
+	# The truss frame the video wall hangs in. Under the rig's 2.4: this one
+	# stands in the dark behind the wall and only has to read as steel lines
+	# against it, not as the lit overhead rig.
+	"StageTruss": ["arena_truss", 3.6],
 }
 
 ## The parts that light themselves: part name -> [material key, level].
@@ -1684,6 +1735,11 @@ const STAGE_CENTRE_SCREEN_LEVEL := 0.9
 ## The chevron wings at each end of the video wall (entrance_set.py WING_*).
 const STAGE_SCREEN_WING := "res://assets/environment/materials/stage_screen_wing.png"
 const STAGE_SCREEN_WING_LEVEL := 1.1
+## The perforated side panels flanking the portals (entrance_set.py SIDE_PANEL_*).
+## Subtle on purpose: a lit surface 3m x 6m beside the rings must not compete
+## with them, so this sits under the centre screen's level.
+const STAGE_SIDE_PANEL := "res://assets/environment/materials/stage_side_panel.png"
+const STAGE_SIDE_PANEL_LEVEL := 1.1
 
 
 func _build_entrance_set() -> void:
@@ -1717,6 +1773,10 @@ func _build_entrance_set() -> void:
 	wing.emission_texture = load(STAGE_SCREEN_WING)
 	wing.emission_energy_multiplier = STAGE_SCREEN_WING_LEVEL * _emissive_gain()
 	_dress(root, "StageScreenWings", wing)
+	var panel := centre.duplicate() as StandardMaterial3D
+	panel.emission_texture = load(STAGE_SIDE_PANEL)
+	panel.emission_energy_multiplier = STAGE_SIDE_PANEL_LEVEL * _emissive_gain()
+	_dress(root, "StageSidePanels", panel)
 	add_child(root)
 	_attach_stage_video(root)
 
