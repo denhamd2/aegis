@@ -265,3 +265,41 @@ func test_watch_picks_two_and_both_are_ai() -> void:
 	screen.menu_index = screen._menu.find(TitleScreen.MENU_FIGHT)
 	screen._accept()
 	assert_bool(screen.watch_mode).is_false()
+
+## The title theme plays under the menu, looping, and the seam is a dip.
+func test_the_title_theme_plays_and_loops() -> void:
+	var screen := _screen()
+	var music: MenuMusic = screen._music
+	assert_object(music).is_not_null()
+	assert_bool(music.playing).is_true()
+	var s := music.stream as AudioStreamOggVorbis
+	assert_bool(s.loop).is_true()
+	assert_float(s.get_length()).is_greater(60.0)
+
+func test_the_loop_seam_dips_to_silence() -> void:
+	var length := 200.0
+	var mid := MenuMusic.dip_db(100.0, length)
+	assert_float(mid).is_equal(MenuMusic.LEVEL_DB)
+	assert_float(MenuMusic.dip_db(length - 0.01, length)).is_less(MenuMusic.SILENT_DB + 1.0)
+	assert_float(MenuMusic.dip_db(0.0, length)).is_equal_approx(MenuMusic.SILENT_DB, 0.01)
+	# Monotone down into the seam: no step.
+	var prev := mid
+	for t in range(0, 26):
+		var db := MenuMusic.dip_db(length - MenuMusic.LOOP_DIP + t * 0.1, length)
+		assert_float(db).is_less_equal(prev + 0.001)
+		prev = db
+
+## Into a match it is handed to the root and faded out, not cut.
+func test_leaving_the_screen_fades_the_theme_out() -> void:
+	var screen := _screen()
+	var music: MenuMusic = screen._music
+	await get_tree().process_frame
+	music.release(get_tree().root, 0.2)
+	assert_object(music.get_parent()).is_same(get_tree().root)
+	# Still sounding straight after: a fade, not a stop.
+	assert_bool(music.playing).is_true()
+	await await_millis(120)
+	assert_bool(is_instance_valid(music) and music.playing).is_true()
+	assert_float(music.volume_db).is_less(MenuMusic.LEVEL_DB)
+	await await_millis(500)
+	assert_bool(is_instance_valid(music)).is_false()

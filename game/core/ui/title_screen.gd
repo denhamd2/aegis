@@ -108,8 +108,11 @@ var _preloads: Array[String] = []
 ## mouse hover, a key and a probe calling _accept() all sound the same.
 var _sfx: SfxPool
 var _heard := []
-## The crowd under the menu, quieter than in the hall.
-const MENU_CROWD_DB := -16.0
+## The title theme under the menu; handed to the tree root and faded out as
+## the match stinger runs.
+var _music: MenuMusic
+## How long the theme takes to fade under the stinger.
+const MUSIC_FADE := 1.4
 
 
 func _ready() -> void:
@@ -123,7 +126,8 @@ func _ready() -> void:
 	_sfx = SfxPool.new()
 	_sfx.name = "Sfx"
 	add_child(_sfx)
-	_sfx.make_loop("crowd_bed").volume_db = MENU_CROWD_DB
+	_music = MenuMusic.new()
+	add_child(_music)
 	_menu = [MENU_FIGHT, MENU_WATCH, MENU_CONTROLS, MENU_CAMERA]
 	if not OS.has_feature("web"):
 		_menu.append(MENU_QUIT)
@@ -315,6 +319,7 @@ func _listen() -> void:
 
 func _start_stinger() -> void:
 	_sfx.play("whoosh", 0.0)
+	_music.release(get_tree().root, MUSIC_FADE)
 	_stinger = MatchStinger.new()
 	_stinger.setup(picks[0], picks[1])
 	_stinger.covered.connect(func() -> void: _stinger_covered = true)
