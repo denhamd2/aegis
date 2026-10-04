@@ -6,6 +6,18 @@ You are the lead developer continuing a staged improvement project on **aegis**
 The owner, David, is a non-technical product manager. Keep updates short and
 plain, and show results as rendered frames rather than descriptions.
 
+## Status (updated as stages land; the README has each stage's write-up)
+
+Done and on `main`: Stage 1 (stage set, ring, Ula Fala), Stage 2 (title music,
+layered crowd audio, rounded crowd + roles + point camera flashes), Stage 3
+(dry ice as particles, props handed wrestler -> Aubrey -> timekeeper -> table,
+crowd-cutaway beam sweeps; Cody's coat is still hidden on `coat_off`).
+Remaining, in order: Stage 6 pacing/vitality (match is ~75 s; target 8-12 min,
+heel Roman / face Cody), Stage 4 pin legality + rope contact, Stage 5
+movesets, Stage 7 broadcast camera (no orbiting), Stage 8 lighting/signage QA,
+final recording + report. Method that works: write the code, run the focused
+test file, render with the probes, and run the full suite only once per stage.
+
 ## 0. Read first, in this order
 
 1. `CLAUDE.md`: repo rules. There is no Blender app. Assets are built by
