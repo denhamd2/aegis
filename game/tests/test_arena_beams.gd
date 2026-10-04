@@ -64,3 +64,45 @@ func test_the_crowd_wash_holds_the_crowd_level() -> void:
 	assert_float(luminance).is_between(0.95, 1.05)
 	# And it is actually a colour -- blue-led, as the references are.
 	assert_float(w.z).is_greater(w.x * 2.0)
+
+
+## On a crowd cutaway the beams go fast and wide across the stands, and come
+## back to the music's pace after, never jumping.
+func test_the_beams_sweep_fast_and_wide_on_a_crowd_cutaway() -> void:
+	var rig: ArenaLighting = auto_free(ArenaLighting.new())
+	add_child(rig)
+	var beam: SpotLight3D = null
+	for child in rig.get_children():
+		if child is SpotLight3D and String(child.name).begins_with("Beam"):
+			beam = child
+			break
+	assert_object(beam).is_not_null()
+	rig.set_look(ArenaLighting.Look.ENTRANCE)
+	var travelled := func(seconds: float) -> float:
+		var last := (-beam.global_transform.basis.z).normalized()
+		var total := 0.0
+		for _i in int(seconds * 60.0):
+			rig._move_beams(1.0 / 60.0)
+			var now := (-beam.global_transform.basis.z).normalized()
+			total += last.angle_to(now)
+			last = now
+		return total
+	var calm: float = travelled.call(3.0)
+	rig.crowd_sweep(true)
+	# Let the pace slew up, then measure.
+	travelled.call(1.5)
+	var busy: float = travelled.call(3.0)
+	assert_float(busy).override_failure_message(
+			"calm %.2f rad, on the crowd %.2f rad" % [calm, busy]).is_greater(calm * 2.0)
+	assert_float(rig.sweep_width()).is_greater(1.3)
+	# No beam jumps between ticks while the pace changes.
+	rig.crowd_sweep(false)
+	var worst := 0.0
+	var last_dir := (-beam.global_transform.basis.z).normalized()
+	for _i in 180:
+		rig._move_beams(1.0 / 60.0)
+		var now := (-beam.global_transform.basis.z).normalized()
+		worst = maxf(worst, last_dir.angle_to(now))
+		last_dir = now
+	assert_float(worst).override_failure_message("a beam jumped %.3f rad in a tick" % worst) \
+			.is_less(0.06)

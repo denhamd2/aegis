@@ -119,8 +119,11 @@ func in_motion() -> int:
 ## Ask for a prop to be handed on: `kind` is "title" or "fala", `giver` the
 ## wrestler, `props` his EntranceProps. Starts at once if nothing is going on,
 ## else waits its turn.
-func request(kind: String, giver: WrestlerController, props: EntranceProps) -> void:
-	_jobs.append({"kind": kind, "giver": giver, "props": props})
+func request(kind: String, giver: WrestlerController, props: EntranceProps,
+		facing := Vector3.ZERO) -> void:
+	# `facing`: the way he will be facing for the pass (his beat's heading),
+	# when he has not turned to it yet.
+	_jobs.append({"kind": kind, "giver": giver, "props": props, "facing": facing})
 	if step == Step.IDLE:
 		_next_job()
 
@@ -155,8 +158,10 @@ func _next_job() -> void:
 	var giver: WrestlerController = _job["giver"]
 	_ref.begin_errand()
 	var hand: Vector2 = HAND_L if _job["kind"] == "title" else HAND_R
-	var spot := stand_for(giver.global_position, _facing(giver), hand, REF_RECEIVE)
-	_ref.errand_go(spot, -_facing(giver))
+	var face: Vector3 = _job["facing"] if (_job["facing"] as Vector3).length() > 0.01 else _facing(giver)
+	face = Vector3(face.x, 0.0, face.z).normalized()
+	var spot := stand_for(giver.global_position, face, hand, REF_RECEIVE)
+	_ref.errand_go(spot, -face)
 
 
 func _on_arrived(who: String) -> void:
@@ -347,11 +352,13 @@ static func _bone_holder(skeleton: Skeleton3D, bone: String, actor: Node3D,
 static func _table_holder(kind: String) -> Dictionary:
 	var top := TABLE_AT + Vector3(0.0, Timekeeper.TABLE_SIZE.y + 0.03, 0.0)
 	var slot := -0.45 if kind == "title" else 0.35
-	var basis := Basis(Vector3.UP, PI * 0.5)
+	# Along the table. The belt is authored upright facing -Z, so it lies with
+	# its front up after a quarter turn about X; the necklace is a loop around
+	# a neck, laid flat the same way (its grip is the neck, so it sits a little
+	# proud of the top).
+	var basis := Basis(Vector3.UP, PI * 0.5) * Basis(Vector3.RIGHT, PI * 0.5)
 	if kind == "fala":
-		# Flat, a loop laid down.
-		basis = Basis(Vector3.UP, PI * 0.5) * Basis(Vector3.RIGHT, PI * 0.5)
-		top.y += 0.04
+		top.y += 0.03
 	return {"type": "table", "xform": Transform3D(basis, top + Vector3(0.0, 0.0, slot))}
 
 

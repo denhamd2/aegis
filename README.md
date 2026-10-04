@@ -8716,3 +8716,30 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
   stands. A match has a low rest rate (0.07 Hz per active emitter), an
   entrance 0.26; bursts ride on pyro, finishers, near-falls and each count of a
   pin. Works on gl_compatibility (checked with `arena_shot.tscn --flashes`).
+
+### Stage 3: Cody's dry ice, and props that are handed on, never hidden
+
+- **Dry ice that works on the web.** `DryIce` (CPU particles, billboard
+  quads with a soft radial sprite) pours knee-high out of Cody's portal on the
+  `fog_on` cue, rolls down the ramp and, on `fog_off`, stops pouring and
+  thins out over its 9 s lifetime instead of vanishing. The FogVolume stays as
+  a Forward+ extra; gl_compatibility has none, so the browser had no smoke at
+  all before. (First version pre-ran its particles at the world origin, i.e.
+  over the ring; it is placed before it enters the tree now.)
+- **Props handed on.** `PropHandoff` replaces hiding the belt and the ula
+  fala. For Roman: Aubrey walks to him (placed so her hand and his meet,
+  `PropHandoff.stand_for`), he holds the prop out (`Prop_Hand_Out_L/R`), she
+  takes it (`Ref_Reach`) and shoulders it, carries it to the ropes, hands it
+  through between the bottom and middle rope (`Ref_Hand_Over`) to the new
+  `Timekeeper` on the ringside floor (`Timekeeper_Take`: he reaches up, the mat
+  is 1.1 m above the floor), who sets it on his table (`Ref_Place`). One prop
+  at a time; the second waits for the first to be on the table. A prop lives on
+  a pivot and a "holder" (a bone plus an offset, or a place on the table) says
+  where the pivot is; changing holder eases from where it is now, so the swap on
+  a contact frame cannot pop. The director's `wait_idle` beat holds the
+  timeline until the last prop is down. Not done: Cody's coat is still hidden
+  on `coat_off`.
+- **Crowd cutaways.** The entrance beams sweep 3.2x faster and 1.7x wider
+  while the camera is on the crowd (`ArenaLighting.crowd_sweep`).
+- Probes: `tools/probe/handoff_shots.tscn` (fixed cameras on the pass, the
+  hands and the table), `arena_shot.tscn --ice`.

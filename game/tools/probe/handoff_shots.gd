@@ -12,15 +12,20 @@ extends Node
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const VIEWS := [
-	[Vector3(5.5, 2.4, -4.2), Vector3(1.8, 0.6, 0.2), 52.0],
-	[Vector3(4.6, 0.9, -1.9), Vector3(2.9, 0.4, 0.0), 40.0],
-	[Vector3(2.6, 1.6, 4.4), Vector3(4.2, -0.2, 1.4), 45.0],
+	# 0: the belt going from Roman to Aubrey, side-on, from inside the ring.
+	[Vector3(2.2, 1.3, -2.6), Vector3(-0.3, 1.15, 0.1), 42.0],
+	# 1: the pass through the ropes, from the floor outside, beside the keeper.
+	[Vector3(4.9, 0.2, -2.6), Vector3(3.1, 0.15, 0.0), 40.0],
+	# 2: the table and the keeper setting a prop on it.
+	[Vector3(5.5, 0.5, 3.9), Vector3(4.1, -0.3, 1.3), 46.0],
 ]
 
 var _out := "/tmp/handoff"
 var _every := 20
 var _view := 0
 var _until := 1800
+## --from N: draw nothing before frame N (the run itself is unchanged).
+var _from := 0
 
 
 func _ready() -> void:
@@ -31,6 +36,7 @@ func _ready() -> void:
 			"--every": _every = int(args[i + 1])
 			"--view": _view = int(args[i + 1])
 			"--until": _until = int(args[i + 1])
+			"--from": _from = int(args[i + 1])
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec("roman,cody")
 	var scene: Node = load(MATCH_SCENE).instantiate()
@@ -63,13 +69,19 @@ func _ready() -> void:
 	var last_step := -1
 	var frame := 0
 	while frame < _until:
-		await RenderingServer.frame_post_draw
+		RenderingServer.render_loop_enabled = frame >= _from
+		if RenderingServer.render_loop_enabled:
+			await RenderingServer.frame_post_draw
+		else:
+			await get_tree().process_frame
 		var stepped: bool = handoff.step != last_step
-		if stepped or frame % _every == 0:
+		if (stepped or frame % _every == 0) and frame >= _from:
 			get_viewport().get_texture().get_image().save_png(
 					"%s/h_%05d_s%d.png" % [_out, frame, handoff.step])
-		if stepped:
-			print("frame %d step %d beat %d" % [frame, handoff.step, director._beat])
+		if stepped or frame % _every == 0:
+			var ref := scene.get_node("RefereeActor") as RefereeActor
+			print("frame %d step %d beat %d  ref %s mode %d  roman %s" % [frame, handoff.step,
+					director._beat, ref.global_position, ref.mode, roman.global_position])
 		last_step = handoff.step
 		frame += 1
 	get_tree().quit()

@@ -112,6 +112,24 @@ func test_romans_entrance_is_continuous_and_cleans_up() -> void:
 		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
 
 
+## The things that run on frames in a game and so need stepping by hand here:
+## Aubrey, the timekeeper, and the props' way to his table.
+func _step_actors(scene: Node) -> void:
+	var ref := scene.get_node_or_null("RefereeActor") as RefereeActor
+	var keeper := scene.get_node_or_null("Timekeeper") as Timekeeper
+	var handoff := scene.get_node_or_null("PropHandoff") as PropHandoff
+	if ref:
+		ref._process(1.0 / 60.0)
+		if ref._player:
+			ref._player.advance(1.0 / 60.0)
+	if keeper:
+		keeper._process(1.0 / 60.0)
+		if keeper._player:
+			keeper._player.advance(1.0 / 60.0)
+	if handoff:
+		handoff._process(1.0 / 60.0)
+
+
 func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
@@ -126,6 +144,7 @@ func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 	while not rang[0] and ticks < 20000:
 		var beat_before := director._beat
 		director._physics_process(1.0 / 60.0)
+		_step_actors(scene)
 		ticks += 1
 		if each_tick.is_valid():
 			each_tick.call()

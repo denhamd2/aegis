@@ -449,6 +449,12 @@ const GLINT_MATCH := 0.3
 const SWEEP_PAN := 0.42
 const SWEEP_TILT := 0.22
 const SWEEP_BEATS := 8.0
+## On the crowd cutaways the beams go to work: they sweep this many times
+## faster and this much wider across the stands (EntranceDirector.crowd_cut).
+const CROWD_SWEEP_SPEED := 3.2
+const CROWD_SWEEP_WIDTH := 1.7
+## How fast the beams change between their two paces, per second.
+const SWEEP_SLEW := 2.5
 const PULSE_FLOOR := 0.5
 const PULSE_DECAY := 5.0
 ## The beams' level on the entrances against the match's. They are the show,
@@ -492,6 +498,11 @@ var _bodies := {}        # SpotLight3D -> fixture body root
 var _glints: StarGlints
 var _beat := 0.5
 var _beat_clock := 0.0
+## The sweep's own phase, integrated so a change of pace never jumps a beam,
+## and the pace it is slewing to (1 = the music's, up to CROWD_SWEEP_SPEED).
+var _sweep_phase := 0.0
+var _sweep_pace := 1.0
+var _sweep_pace_target := 1.0
 ## The entrance director's house dim, which the moving beams' own level
 ## (rewritten every frame) has to carry.
 var house_dim := 1.0
@@ -554,17 +565,33 @@ func _environment() -> Environment:
 func sync_beat(seconds: float) -> void:
 	_beat = maxf(seconds, 0.1)
 	_beat_clock = 0.0
+	_sweep_phase = 0.0
+
+
+## The beams go fast and wide across the crowd while the camera is on it.
+func crowd_sweep(on: bool) -> void:
+	_sweep_pace_target = CROWD_SWEEP_SPEED if on else 1.0
+
+
+## How wide the beams are sweeping, 1 at the music's pace up to
+## CROWD_SWEEP_WIDTH on a crowd cutaway.
+func sweep_width() -> float:
+	return lerpf(1.0, CROWD_SWEEP_WIDTH,
+			clampf((_sweep_pace - 1.0) / (CROWD_SWEEP_SPEED - 1.0), 0.0, 1.0))
 
 
 func _move_beams(delta: float) -> void:
 	_beat_clock += delta
+	_sweep_pace = move_toward(_sweep_pace, _sweep_pace_target, SWEEP_SLEW * delta)
 	var pulse := PULSE_FLOOR + (1.0 - PULSE_FLOOR) * exp(-PULSE_DECAY * fmod(_beat_clock, _beat) / _beat)
 	var w := TAU / (_beat * SWEEP_BEATS)
+	_sweep_phase += delta * w * _sweep_pace
+	var width := sweep_width()
 	for i in _beams.size():
 		var beam := _beams[i]
 		var rest: Transform3D = _beam_rest[beam]
-		var pan := SWEEP_PAN * sin(_beat_clock * w + i * 0.9)
-		var tilt := SWEEP_TILT * sin(_beat_clock * w * 0.5 + i * 1.7)
+		var pan := SWEEP_PAN * width * sin(_sweep_phase + i * 0.9)
+		var tilt := SWEEP_TILT * width * sin(_sweep_phase * 0.5 + i * 1.7)
 		beam.transform = Transform3D(Basis(Vector3.UP, pan) * rest.basis
 				* Basis(Vector3.RIGHT, tilt), rest.origin)
 		var dim := house_dim if house_dim < BLACKOUT_DIM else 1.0

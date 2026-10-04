@@ -237,8 +237,12 @@ func take_fala() -> Node3D:
 func fala_neck_rest() -> Vector3:
 	if _fala_skeleton == null:
 		return Vector3.ZERO
-	var i := _fala_skeleton.find_bone("neck_01")
-	return _fala_skeleton.get_bone_global_rest(i).origin if i >= 0 else Vector3.ZERO
+	# The necklace carries Roman's own rig's bone names.
+	for bone: String in ["J_Neck", "neck_01"]:
+		var i := _fala_skeleton.find_bone(bone)
+		if i >= 0:
+			return _fala_skeleton.get_bone_global_rest(i).origin
+	return Vector3.ZERO
 
 
 func set_title(state: String) -> void:

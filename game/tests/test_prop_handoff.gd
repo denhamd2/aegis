@@ -76,7 +76,9 @@ func test_both_props_end_on_the_table_in_order() -> void:
 		var key := "%d" % handoff.step
 		if not seen.has(key):
 			seen[key] = tick[0]
-			print("HANDOFF step ", key, " at tick ", tick[0], " beat ", (m["director"] as EntranceDirector)._beat))
+			print("HANDOFF step ", key, " at tick ", tick[0], " beat ", (m["director"] as EntranceDirector)._beat,
+					" ref ", (m["ref"] as RefereeActor).global_position, " mode ", (m["ref"] as RefereeActor).mode,
+					" roman ", (m["roman"] as WrestlerController).global_position))
 	assert_array(handoff.delivered).is_equal(["title", "fala"])
 	# By the whole sequence, not by the bell cutting it short.
 	assert_int(handoff.completed).is_equal(2)
@@ -165,3 +167,25 @@ func test_the_timekeeper_has_a_table_with_a_bell() -> void:
 	assert_object(keeper.table).is_not_null()
 	assert_object(keeper.table.get_node_or_null("Bell")).is_not_null()
 	assert_vector(keeper.table.global_position).is_equal_approx(PropHandoff.TABLE_AT, Vector3.ONE * 0.01)
+
+
+## The necklace is held by its neck: the grip has to be found on the rig it is
+## built on, or it would float a metre and a half above whoever carries it.
+func test_the_necklace_is_carried_by_its_neck() -> void:
+	var m := _roman_match()
+	var director: EntranceDirector = m["director"]
+	var handoff: PropHandoff = m["handoff"]
+	var props: EntranceProps
+	var guard := 0
+	while handoff.carried.size() < 2 and guard < 40000:
+		_step(m)
+		guard += 1
+		for p in director._props.values():
+			props = p
+	assert_float(props.fala_neck_rest().y).is_greater(0.8)
+	var fala: PropHandoff.Carried = handoff.carried[1]
+	assert_str(fala.kind).is_equal("fala")
+	# Its mesh sits within a metre of the point it is held by, not 1.4 m above.
+	for mi: MeshInstance3D in fala.pivot.find_children("*", "MeshInstance3D", true, false):
+		var centre := mi.global_transform * mi.get_aabb().get_center()
+		assert_float(centre.distance_to(fala.pivot.global_position)).is_less(0.6)

@@ -784,6 +784,9 @@ func _start_beat() -> void:
 		return
 	var beat: Dictionary = _beats[_beat]
 	beat_started.emit(String(beat.get("shot", "")))
+	# On a crowd cutaway the beams sweep fast across the stands.
+	if _lights and _lights.has_method("crowd_sweep"):
+		_lights.crowd_sweep(String(beat.get("shot", "")).begins_with("crowd"))
 	var w: WrestlerController = beat.get("who")
 	if beat.get("appear", false) and w:
 		# Placed in the same step he is shown, or the frame in between renders
@@ -1395,6 +1398,11 @@ static func _with(base: Dictionary, beat: Dictionary) -> Dictionary:
 	return out
 
 
+## Where the man in the current beat faces, or ZERO if it does not say.
+func _beat_facing() -> Vector3:
+	return (_beats[mini(_beat, _beats.size() - 1)] as Dictionary).get("facing", Vector3.ZERO)
+
+
 ## A cue inside a beat.
 func _event(w: WrestlerController, what: String) -> void:
 	cue.emit(what)
@@ -1408,10 +1416,10 @@ func _event(w: WrestlerController, what: String) -> void:
 				props.set_title("")
 		"prop_call_title":
 			if props and _handoff:
-				_handoff.request("title", w, props)
+				_handoff.request("title", w, props, _beat_facing())
 		"prop_call_fala":
 			if props and _handoff:
-				_handoff.request("fala", w, props)
+				_handoff.request("fala", w, props, _beat_facing())
 		"prop_pass_title", "prop_pass_fala":
 			if _handoff:
 				_handoff.giver_begins()
