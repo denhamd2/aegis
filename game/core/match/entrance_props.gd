@@ -87,8 +87,8 @@ static func _materials() -> Dictionary:
 	red.resource_name = "FalaRed"
 	red.vertex_color_use_as_albedo = true
 	red.albedo_color = Color.WHITE
-	red.roughness = 0.38
-	red.metallic_specular = 0.35
+	red.roughness = 0.55
+	red.metallic_specular = 0.12
 	red.emission_enabled = true
 	red.emission = Color(0.45, 0.02, 0.02)
 	red.emission_energy_multiplier = 0.02

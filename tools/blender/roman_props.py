@@ -153,15 +153,16 @@ FALA_SEED = 11
 ## Two rows of keys on the one cord, interleaved: long, lying close to the
 ## skin, and shorter and more lifted so they show between the long ones.
 FALA_ROWS = (
-    {"count": 52, "length": 0.066, "width": 0.0160, "lift": 0.34, "phase": 0.0},
-    {"count": 52, "length": 0.052, "width": 0.0140, "lift": 0.62, "phase": 0.5},
+    {"count": 60, "length": 0.044, "width": 0.0190, "lift": 0.24, "phase": 0.0},
+    {"count": 60, "length": 0.034, "width": 0.0170, "lift": 0.40, "phase": 0.5},
 )
 ## Rings along a key (fraction of its length); the tip is a single vertex.
 FALA_RINGS = (0.0, 0.16, 0.34, 0.54, 0.74, 0.90)
 FALA_SIDES = 6
 ## Colour along a key: a deep crimson root to a brighter, slightly orange tip.
-FALA_RAMP = ((0.0, (0.07, 0.002, 0.004)), (0.55, (0.20, 0.005, 0.008)),
-             (1.0, (0.40, 0.028, 0.016)))
+## (linear values; the photograph's keys read #B0141E at the root to #D42A2A.)
+FALA_RAMP = ((0.0, (0.035, 0.001, 0.003)), (0.55, (0.20, 0.004, 0.009)),
+             (1.0, (0.34, 0.010, 0.014)))
 ## Each key starts this far back toward the neck, over the cord, so the cord
 ## is hidden under the roots and not a black line along the collar.
 FALA_ROOT_BACK = 0.012
@@ -344,7 +345,7 @@ def build_ula_fala_skinned(skin: Skin) -> dict:
             d = (d - nr * d.dot(nr)).normalized()
             # Droop: on the trapezius the skin is level and a key lies out
             # flat like a wing; hung on a cord it falls down and outward.
-            d = (d + Vector((0.0, 0.0, -0.45 * max(nr.z, 0.0)))).normalized()
+            d = (d + Vector((0.0, 0.0, -0.80 * max(nr.z, 0.0)))).normalized()
             side = nr.cross(d).normalized()
             base = p - d * FALA_ROOT_BACK + nr * 0.0015
             lift = row["lift"] * (0.5 if nr.z > 0.5 else 1.0)
@@ -354,7 +355,7 @@ def build_ula_fala_skinned(skin: Skin) -> dict:
                 c = base + (d * t + nr * (lift * t * t)) * (length + FALA_ROOT_BACK)
                 tan = (d + nr * (2.0 * lift * t)).normalized()
                 up = tan.cross(side).normalized()
-                a = width * (1.0 - t ** 2.0) ** 0.55
+                a = width * (1.0 - t ** 2.6) ** 0.45
                 b = a * 0.85
                 ring = []
                 for s in range(FALA_SIDES):
@@ -439,7 +440,7 @@ def fala_export(out: pathlib.Path) -> int:
         col = tree.nodes.new("ShaderNodeVertexColor")
         col.layer_name = "Col"
         tree.links.new(col.outputs["Color"], bsdf.inputs["Base Color"])
-        bsdf.inputs["Roughness"].default_value = 0.3
+        bsdf.inputs["Roughness"].default_value = 0.55
         mesh.materials.append(mat)
         obj = bpy.data.objects.new(name, mesh)
         bpy.context.collection.objects.link(obj)
