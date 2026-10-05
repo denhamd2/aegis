@@ -1530,6 +1530,7 @@ func _physics_process(delta: float) -> void:
 		_end_rope_load_when_clear()
 	else:
 		keep_inside_the_ring()
+		keep_lying_body_inside_the_ropes()
 	_release_cover_contact()
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
@@ -1591,6 +1592,38 @@ func keep_inside_the_ring() -> void:
 	# A body that has been stopped by the mat is not still falling through it.
 	if fixed.y > p.y and velocity.y < 0.0:
 		velocity.y = 0.0
+
+## Where a man lying down ends, in his own frame (head up -Z): crown, toes and
+## the points of his shoulders. The capsule is a standing man's, so without
+## this a body knocked down beside the ropes lay half through them.
+const LYING_BODY_POINTS: Array[Vector3] = [
+	Vector3(0.0, 0.0, -0.95), Vector3(0.0, 0.0, 1.15),
+	Vector3(0.45, 0.0, -0.5), Vector3(-0.45, 0.0, -0.5),
+]
+## How far out any of those may reach: the rope line is 3.1 (ROPE_SPAN), and a
+## board's length short of ROPE_TOUCH leaves the break reach alone.
+const LYING_BODY_LIMIT := 3.05
+const LYING_STATES: Array = [
+	WrestlerFSM.State.DOWN, WrestlerFSM.State.PIN_DEFENDER,
+	WrestlerFSM.State.SUBMISSION_DEFENDER,
+]
+
+
+## A man lying down is slid in until all of him is inside the ropes -- never
+## through or under them. Position arithmetic only, so it is deterministic.
+func keep_lying_body_inside_the_ropes() -> void:
+	if not LYING_STATES.has(fsm.current_state):
+		return
+	var shift := Vector3.ZERO
+	for point in LYING_BODY_POINTS:
+		var q := global_transform * point
+		shift.x = minf(shift.x, LYING_BODY_LIMIT - q.x) if q.x > LYING_BODY_LIMIT else shift.x
+		shift.x = maxf(shift.x, -LYING_BODY_LIMIT - q.x) if q.x < -LYING_BODY_LIMIT else shift.x
+		shift.z = minf(shift.z, LYING_BODY_LIMIT - q.z) if q.z > LYING_BODY_LIMIT else shift.z
+		shift.z = maxf(shift.z, -LYING_BODY_LIMIT - q.z) if q.z < -LYING_BODY_LIMIT else shift.z
+	if shift != Vector3.ZERO:
+		global_position += shift
+
 
 ## Pull a wrestler back down to the mat.
 ##
@@ -3006,6 +3039,21 @@ func celebrate() -> void:
 	if ai:
 		ai.set_physics_process(false)
 	fsm.transition_to(WrestlerFSM.State.VICTORY)
+
+
+## The winner's arm taken up by the referee: swaps VICTORY's clip for
+## Win_Arm_Raised (his left wrist in her hand). Only valid once celebrate() has
+## put him in VICTORY.
+func raise_arm() -> void:
+	if fsm.current_state != WrestlerFSM.State.VICTORY or not anim_tree \
+			or not anim_player.has_animation("strikes/win_arm_raised"):
+		return
+	var machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var node := machine.get_node("VICTORY") as AnimationNodeAnimation
+	if node == null or node.animation == "strikes/win_arm_raised":
+		return
+	node.animation = "strikes/win_arm_raised"
+	_anim_playback.start("VICTORY", true)
 
 
 func _play_strike_clip(move: MoveDef) -> void:
