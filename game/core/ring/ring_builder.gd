@@ -607,8 +607,10 @@ func _canvas_material() -> StandardMaterial3D:
 ## not exist on the web build's.
 ##
 ## Distances inside the edge (m) per set, the near set darker than the far.
-const ROPE_SHADOW_SETS := [[0.24, 0.42, 0.58], [0.66, 0.88, 1.06]]
-const ROPE_SHADOW_DEPTH := [0.28, 0.18]
+## One fixture's set per side: two sets read as too many lines beside the
+## owner's 2K26 frames, where the ropes' shadows are a faint few.
+const ROPE_SHADOW_SETS := [[0.30, 0.50, 0.68]]
+const ROPE_SHADOW_DEPTH := [0.20]
 ## Half-width of a line's soft core, in metres.
 const ROPE_SHADOW_SOFT := 0.045
 const ROPE_SHADOW_SIZE := 512
