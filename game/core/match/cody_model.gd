@@ -48,8 +48,15 @@ const HEAD_MATERIAL := "xmaterial_c3d4d9e78b44a79"
 const HEAD_BLOND := "res://assets/characters/cody_rhodes_head_blond.png"
 const SKIN_MATERIALS := ["xmaterial_495900de7002683", "xmaterial_90b39911eb484a2",
 		"xmaterial_90b2b911eb46cd8", "xmaterial_5a329cd32db96c3", HEAD_MATERIAL]
-const SKIN_TINT := Color(1.08, 1.06, 1.0)
-const SKIN_ROUGHNESS := 0.5
+## Darker and warmer since the owner's 2K26 Cody vs Roman match: there his
+## skin is a tan that sits well below the mat -- skin luminance 0.22-0.24
+## against ours at 0.34 with the old brightening tint (1.08, 1.06, 1.0) --
+## gauntlet/refs/cody_roman_2k26.md, "In-ring match lighting".
+const SKIN_TINT := Color(0.8, 0.68, 0.58)
+## And less of a mirror: a dielectric's default 0.5 specular threw the truss
+## keys back off his back as a white patch (p95 0.73 against 2K26's 0.52).
+const SKIN_SPECULAR := 0.3
+const SKIN_ROUGHNESS := 0.72
 ## Pore tiles across one UV square of his skin atlases (SkinLook.add_pores):
 ## his torso-and-arms atlas spans about 1.2 m of skin, so ~2.5 cm a tile.
 const PORE_TILES := 48.0
@@ -169,6 +176,7 @@ func _fix_look() -> void:
 				material.albedo_texture = load(HEAD_BLOND)
 			material.albedo_color = material.albedo_color * SKIN_TINT
 			material.roughness = SKIN_ROUGHNESS
+			material.metallic_specular = SKIN_SPECULAR
 			SkinLook.apply(material)
 			SkinLook.add_pores(material, PORE_TILES)
 			skin.append(material)

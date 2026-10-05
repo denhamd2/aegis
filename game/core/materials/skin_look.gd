@@ -110,9 +110,13 @@ static func with_detail_uv(mi: MeshInstance3D, surfaces: Array) -> void:
 ## (tools/probe/skin_shot.tscn) he read as cling-filmed, a continuous mirror
 ## over every muscle. Sweat is beads and streaks, broken up by the pores --
 ## bright, but not a lacquer.
-const SWEAT_COAT := 0.7
-const SWEAT_COAT_ROUGHNESS_DRY := 0.55
-const SWEAT_COAT_ROUGHNESS_WET := 0.18
+## Halved again (0.35, rough 0.7 -> 0.3) against the owner's 2K26 Cody vs Roman
+## match: there the sheen is a broad soft lift on the skin, and ours threw the
+## truss lights back as a white patch (skin p95 0.88 against 2K26's 0.52,
+## gauntlet/refs/cody_roman_2k26.md).
+const SWEAT_COAT := 0.35
+const SWEAT_COAT_ROUGHNESS_DRY := 0.7
+const SWEAT_COAT_ROUGHNESS_WET := 0.3
 
 
 ## Sets `material`'s wetness, 0 (dry) to 1 (soaked).

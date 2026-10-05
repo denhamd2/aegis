@@ -109,7 +109,7 @@ const UPLIGHT_DZ := 2.6
 ## the far half of the mat; that overlap is what keeps the mat's luminance
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
-@export var key_energy: float = 16.0
+@export var key_energy: float = 9.0
 ## The key fixture's emitting size, in metres, for PCSS soft shadows. A large
 ## truss wash or profile has a 0.3-0.4 m front lens. From 7.25 m up that
 ## makes a penumbra about 9 cm wide under a shoulder 1.5 m off the mat
@@ -164,7 +164,7 @@ const KEY_LIGHT_SIZE := 0.35
 ## onto the bodies. Measured on the gameplay and hard cameras (match_look.tscn,
 ## Vulkan): mat 0.65 -> 0.45, skin p75 0.24 -> 0.29 (2K26 0.31), frame above
 ## 0.5 from 22% -> 4-8% (2K26 7%), white balance B/G 1.09 -> 1.17 (2K26 1.16).
-@export var top_energy: float = 22.0
+@export var top_energy: float = 29.0
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -190,7 +190,7 @@ const KEY_LIGHT_SIZE := 0.35
 ## nothing. The gap was closed on the attire instead -- see match.tscn.
 ## Raised 2.2 -> 4.0 in the 2K26 round (item 4): the bright edge on heads and
 ## shoulders against the crowd is what reviewers mean by the ring "popping".
-@export var rim_energy: float = 5.0
+@export var rim_energy: float = 2.0
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20
 ## Entrance stage wash.

@@ -16,7 +16,9 @@ extends Node
 ## 0.08 -> 0.22 and the full-wet clock 150 -> 100 s in the 2K26 lighting
 ## round (lighting_2k26.md item 5): its wrestlers glisten under the rig from
 ## the bell, not only by the end.
-const BASE := 0.22
+## Back down to 0.1 against the owner's 2K26 match (cody_roman_2k26.md):
+## a soft sheen from the bell, not a gloss.
+const BASE := 0.1
 ## Seconds of match for the time share to reach its full TIME_SHARE. AI
 ## matches here run 30 s to 2.5 min, so a long one ends soaked.
 const FULL_SECONDS := 100.0
