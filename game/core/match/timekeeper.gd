@@ -20,7 +20,9 @@ const IDLE_CLIP := "strikes/ref_stand"
 const POLO := Color(0.05, 0.06, 0.09)
 
 ## The table: long side along Z, its ring-side face toward the ring.
-const TABLE_SIZE := Vector3(0.75, 0.95, 1.9)
+const TABLE_SIZE := Vector3(0.75, 0.95, 1.2)
+const FRONT_ART := "res://assets/environment/materials/ribbon_board.png"
+const FRONT_ART_ASPECT := 7.7236
 
 signal arrived
 
@@ -173,4 +175,21 @@ static func _build_table() -> Node3D:
 	bell.material_override = brass
 	bell.position = Vector3(0.0, TABLE_SIZE.y + 0.04, -TABLE_SIZE.z * 0.38)
 	root.add_child(bell)
+	# The ring-side face carries printed art, like the announce desk's front.
+	var art := load(FRONT_ART) as Texture2D
+	if art:
+		var front := MeshInstance3D.new()
+		front.name = "Front"
+		var quad := QuadMesh.new()
+		var width := TABLE_SIZE.z * 0.92
+		quad.size = Vector2(width, width / FRONT_ART_ASPECT)
+		front.mesh = quad
+		var print := StandardMaterial3D.new()
+		print.albedo_texture = art
+		print.roughness = 0.5
+		front.material_override = print
+		# A quad faces +Z; turn it to face the ring (-X) and hold it just off the cloth.
+		front.rotation.y = -PI * 0.5
+		front.position = Vector3(-TABLE_SIZE.x * 0.5 - 0.004, TABLE_SIZE.y * 0.5, 0.0)
+		root.add_child(front)
 	return root

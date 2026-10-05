@@ -26,8 +26,10 @@ const REF_PASS_X := 2.38
 const KEEPER_PASS_X := 3.68
 const PASS_Z := 0.0
 const KEEPER_POST := Vector3(KEEPER_PASS_X, FLOOR_Y, -1.5)
-const KEEPER_PLACE := Vector3(3.72, FLOOR_Y, 1.0)
-const TABLE_AT := Vector3(4.5, FLOOR_Y, 1.6)
+## The table sits by the ring corner on the announce-desk side (+Z), as the
+## timekeeper's does at a real show, not mid-side.
+const KEEPER_PLACE := Vector3(3.8, FLOOR_Y, 3.0)
+const TABLE_AT := Vector3(4.4, FLOOR_Y, 3.7)
 
 ## Contact frames of the clips (30 fps): the prop changes hands on these.
 const GIVE_CONTACT := 26.0 / 30.0   # Prop_Hand_Out_*

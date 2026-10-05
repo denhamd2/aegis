@@ -17,7 +17,7 @@ const VIEWS := [
 	# 1: the pass through the ropes, from the floor outside, beside the keeper.
 	[Vector3(4.9, 0.2, -2.6), Vector3(3.1, 0.15, 0.0), 40.0],
 	# 2: the table and the keeper setting a prop on it.
-	[Vector3(5.5, 0.5, 3.9), Vector3(4.1, -0.3, 1.3), 46.0],
+	[Vector3(6.2, 0.6, 1.9), Vector3(4.2, -0.3, 3.5), 46.0],
 ]
 
 var _out := "/tmp/handoff"
