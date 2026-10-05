@@ -8,7 +8,8 @@ extends Node
 ##
 ## Starts straight at the belt's unbuckle (skipping the walk) and steps the
 ## real scene; a frame every --every ticks, and one on every PropHandoff step.
-## --view: 0 wide of the ring side, 1 the rope pass close, 2 the table close.
+## --view: 0 wide of the ring side, 1 the rope pass close, 2 the table close,
+## 3 Cody's corner from the ring (--coat).
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const VIEWS := [
@@ -18,6 +19,9 @@ const VIEWS := [
 	[Vector3(4.9, 0.2, -2.6), Vector3(3.1, 0.15, 0.0), 40.0],
 	# 2: the table and the keeper setting a prop on it.
 	[Vector3(6.2, 0.6, 1.9), Vector3(4.2, -0.3, 3.5), 46.0],
+	# 3: Cody's corner and the ropes beside it, from the middle of the ring
+	# (--coat: the coat going from him to Aubrey).
+	[Vector3(-0.2, 1.6, 0.6), Vector3(2.2, 1.0, -1.6), 50.0],
 ]
 
 var _out := "/tmp/handoff"
@@ -26,6 +30,8 @@ var _view := 0
 var _until := 1800
 ## --from N: draw nothing before frame N (the run itself is unchanged).
 var _from := 0
+## --coat: start at Cody's coat_off beat and follow the coat to the table.
+var _coat := false
 
 
 func _ready() -> void:
@@ -37,6 +43,7 @@ func _ready() -> void:
 			"--view": _view = int(args[i + 1])
 			"--until": _until = int(args[i + 1])
 			"--from": _from = int(args[i + 1])
+			"--coat": _coat = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var pair := Roster.pair_from_spec("roman,cody")
 	var scene: Node = load(MATCH_SCENE).instantiate()
@@ -47,11 +54,20 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var roman: WrestlerController = scene.get_node("WrestlerA")
+	if _coat:
+		roman = scene.get_node("WrestlerB")
 	var handoff: PropHandoff = scene.get_node("PropHandoff")
 	# Straight to the belt coming off his waist.
 	for i in director._beats.size():
 		var bt: Dictionary = director._beats[i]
-		if String(bt.get("clip", "")) == "strikes/title_unbuckle":
+		if _coat and String(bt.get("clip", "")) == "strikes/coat_off":
+			roman.visible = true
+			roman.global_position = bt["from"]
+			director._coats[roman] = EntranceCoat.dress(roman)
+			director._beat = i
+			director._start_beat()
+			break
+		if not _coat and String(bt.get("clip", "")) == "strikes/title_unbuckle":
 			roman.visible = true
 			roman.global_position = Vector3(-0.4, 0.0, -0.6)
 			director._props[roman] = EntranceProps.dress(roman, true)

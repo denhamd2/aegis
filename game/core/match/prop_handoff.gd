@@ -50,6 +50,14 @@ const REF_RECEIVE := Vector2(0.14, 0.62)
 const REF_GIVE := Vector2(0.14, 0.72)
 const KEEPER_TAKE := Vector2(0.16, 0.55)
 
+## Where along the table (z from its centre, 1.2 m long) each prop lies. The
+## belt is a metre long, so it takes the bell end (and overhangs it a little,
+## as a belt does); the necklace takes the far end; the folded coat (0.30 m)
+## lies in the gap between them -- footprints clear of one another.
+const TITLE_SLOT := -0.55
+const FALA_SLOT := 0.50
+const COAT_SLOT := 0.13
+
 enum Step { IDLE, APPROACH, RECEIVE, CARRY, PASS, PLACE }
 
 var step := Step.IDLE
@@ -118,10 +126,10 @@ func in_motion() -> int:
 	return n
 
 
-## Ask for a prop to be handed on: `kind` is "title" or "fala", `giver` the
-## wrestler, `props` his EntranceProps. Starts at once if nothing is going on,
+## Ask for a prop to be handed on: `kind` is "title", "fala" or "coat", `giver`
+## the wrestler, `props` his EntranceProps (his EntranceCoat for the coat). Starts at once if nothing is going on,
 ## else waits its turn.
-func request(kind: String, giver: WrestlerController, props: EntranceProps,
+func request(kind: String, giver: WrestlerController, props: Node,
 		facing := Vector3.ZERO) -> void:
 	# `facing`: the way he will be facing for the pass (his beat's heading),
 	# when he has not turned to it yet.
@@ -130,8 +138,8 @@ func request(kind: String, giver: WrestlerController, props: EntranceProps,
 		_next_job()
 
 
-## He has taken the necklace off over his head (the director's fala_off cue):
-## it is a thing in his hand from this moment, not a skinned shape. Called for
+## He has taken the necklace off over his head (the director's fala_off cue),
+## or the coat off his shoulders (coat_off): it is a thing in his hand from this moment, not a skinned shape. Called for
 ## whichever job asked for it, current or not.
 func lift(kind: String) -> void:
 	for job: Dictionary in [_job] + _jobs:
@@ -159,7 +167,7 @@ func _next_job() -> void:
 	_stage = 0
 	var giver: WrestlerController = _job["giver"]
 	_ref.begin_errand()
-	var hand: Vector2 = HAND_L if _job["kind"] == "title" else HAND_R
+	var hand: Vector2 = HAND_L if _job["kind"] == "title" else HAND_R  # coat: right
 	var face: Vector3 = _job["facing"] if (_job["facing"] as Vector3).length() > 0.01 else _facing(giver)
 	face = Vector3(face.x, 0.0, face.z).normalized()
 	var spot := stand_for(giver.global_position, face, hand, REF_RECEIVE)
@@ -198,14 +206,17 @@ func _start_receive() -> void:
 ## Puts a job's prop on a pivot of its own, in the giver's hand.
 func _take_prop(job: Dictionary) -> void:
 	var giver: WrestlerController = job["giver"]
-	var props: EntranceProps = job["props"]
+	var props: Node = job["props"]
 	var prop: Node3D
 	var grip := Vector3.ZERO
-	if job["kind"] == "title":
-		prop = props.take_title()
-	else:
-		prop = props.take_fala()
-		grip = props.fala_neck_rest()
+	match job["kind"]:
+		"title":
+			prop = props.take_title()
+		"coat":
+			prop = props.take_coat()
+		_:
+			prop = props.take_fala()
+			grip = props.fala_neck_rest()
 	if prop == null:
 		return
 	var c := Carried.new()
@@ -353,7 +364,7 @@ static func _bone_holder(skeleton: Skeleton3D, bone: String, actor: Node3D,
 ## The table's two places for a prop: where it lies.
 static func _table_holder(kind: String) -> Dictionary:
 	var top := TABLE_AT + Vector3(0.0, Timekeeper.TABLE_SIZE.y + 0.03, 0.0)
-	var slot := -0.45 if kind == "title" else 0.35
+	var slot := COAT_SLOT if kind == "coat" else (TITLE_SLOT if kind == "title" else FALA_SLOT)
 	# Along the table. The belt is authored upright facing -Z, so it lies with
 	# its front up after a quarter turn about X; the necklace is a loop around
 	# a neck, laid flat the same way (its grip is the neck, so it sits a little
@@ -361,6 +372,10 @@ static func _table_holder(kind: String) -> Dictionary:
 	var basis := Basis(Vector3.UP, PI * 0.5) * Basis(Vector3.RIGHT, PI * 0.5)
 	if kind == "fala":
 		top.y += 0.03
+	if kind == "coat":
+		# Folded flat: its long side along the table, lying on its thickness.
+		top.y += EntranceCoat.FOLDED.y * 0.5 - 0.03
+		basis = Basis(Vector3.UP, PI * 0.5)
 	return {"type": "table", "xform": Transform3D(basis, top + Vector3(0.0, 0.0, slot))}
 
 

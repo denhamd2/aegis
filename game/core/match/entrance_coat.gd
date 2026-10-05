@@ -25,6 +25,7 @@ var _meshes: Array[MeshInstance3D] = []
 var _root: Node3D
 var _own: Skeleton3D
 var _his: Skeleton3D
+var _w: WrestlerController
 ## His bone index for each of the coat skeleton's bones, or -1.
 var _map: PackedInt32Array = PackedInt32Array()
 
@@ -32,6 +33,7 @@ var _map: PackedInt32Array = PackedInt32Array()
 static func dress(wrestler: WrestlerController) -> EntranceCoat:
 	var coat := EntranceCoat.new()
 	coat.name = "EntranceCoat"
+	coat._w = wrestler
 	wrestler.add_child(coat)
 	coat._wear(wrestler.skeleton)
 	return coat
@@ -79,6 +81,75 @@ func _follow() -> void:
 func set_worn(on: bool) -> void:
 	if _root:
 		_root.visible = on
+
+
+## The coat, to be carried (PropHandoff): the skinned coat cannot leave his
+## body (its rest pose is a T, and it is weighted to his bones), so it is
+## hidden and a small folded coat -- the same cloth, lining and trim -- takes
+## its place in his right hand. The caller owns the prop from here.
+func take_coat() -> Node3D:
+	set_worn(false)
+	var prop := folded_coat()
+	prop.name = "FoldedCoat"
+	add_child(prop)
+	# It starts in his hand, so taking it is not a jump.
+	if _w and is_instance_valid(_his):
+		var bone := _his.find_bone(_w._skeleton_bone_name("hand_r"))
+		if bone >= 0:
+			prop.global_position = (_his.global_transform * _his.get_bone_global_pose(bone)).origin
+	return prop
+
+
+## Size of the folded coat, metres: long, across, thick. Lies flat on a table
+## with its long side along the table (PropHandoff._table_holder).
+const FOLDED := Vector3(0.30, 0.08, 0.24)
+
+
+## A coat folded on itself: a thick body of the outer cloth, the red lining
+## showing along one edge where it is turned back, and the two sleeves folded
+## across the top. Origin at its centre.
+static func folded_coat() -> Node3D:
+	var mats := _materials()
+	var body_m: Material = (mats["CoatBody"] as Array)[0]
+	var lining_m: Material = (mats["CoatBody"] as Array)[1]
+	var sleeve_m: Material = (mats["CoatSleeve"] as Array)[0]
+	var trim_m: Material = (mats["CoatScales"] as Array)[0]
+	var root := Node3D.new()
+	var box := BoxMesh.new()
+	box.size = FOLDED
+	root.add_child(_mesh("FoldBody", box, body_m, Vector3.ZERO, Vector3.ZERO))
+	# The lining turned back along the front edge.
+	var lap := BoxMesh.new()
+	lap.size = Vector3(FOLDED.x * 0.98, 0.012, 0.06)
+	root.add_child(_mesh("FoldLining", lap, lining_m,
+			Vector3(0.0, FOLDED.y * 0.5 + 0.004, -FOLDED.z * 0.5 + 0.045), Vector3.ZERO))
+	# A gold edge at the collar end.
+	var edge := BoxMesh.new()
+	edge.size = Vector3(0.018, FOLDED.y + 0.004, FOLDED.z * 0.94)
+	root.add_child(_mesh("FoldTrim", edge, trim_m,
+			Vector3(FOLDED.x * 0.5 - 0.008, 0.0, 0.0), Vector3.ZERO))
+	# Two sleeves folded over the top, crossing a little.
+	for k in 2:
+		var side := -1.0 if k == 0 else 1.0
+		var cap := CapsuleMesh.new()
+		cap.radius = 0.04
+		cap.height = 0.20
+		root.add_child(_mesh("FoldSleeve%d" % k, cap, sleeve_m,
+				Vector3(-0.03, FOLDED.y * 0.5 + 0.03, side * 0.05),
+				Vector3(deg_to_rad(90.0), deg_to_rad(side * 14.0), 0.0)))
+	return root
+
+
+static func _mesh(node_name: String, mesh: Mesh, mat: Material, at: Vector3,
+		rot: Vector3) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.name = node_name
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.position = at
+	mi.rotation = rot
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mi
 
 
 static func _materials() -> Dictionary:

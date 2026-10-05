@@ -249,12 +249,19 @@ func test_codys_entrance_is_continuous_and_cleans_up() -> void:
 			saw["blackout"] = true
 		var coat: EntranceCoat = director._coats.get(scene.get_node("WrestlerB"))
 		if coat and coat._root:
+			if coat._root.visible and saw.has("coat_off"):
+				saw["coat_back"] = true
 			saw["coat_on" if coat._root.visible else "coat_off"] = true)
 	assert_bool(saw.has("backlight")).override_failure_message("no silhouette backlight").is_true()
 	assert_bool(saw.has("blackout")).override_failure_message("the house never went dark").is_true()
 	assert_bool(saw.has("coat_on")).override_failure_message("he never wore the coat").is_true()
 	assert_bool(saw.has("coat_off")).override_failure_message("the coat never came off").is_true()
 	assert_bool(director._coats.is_empty()).is_true()
+	# Taken off, not left on him: once it is off it never shows on his body
+	# again, and the folded one is in the hand-off, on the table.
+	assert_bool(saw.has("coat_back")).override_failure_message("the worn coat came back").is_false()
+	var handoff: PropHandoff = scene.get_node("PropHandoff")
+	assert_bool(handoff.delivered.has("coat")).is_true()
 	assert_object(director._backlight).is_null()
 	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
 

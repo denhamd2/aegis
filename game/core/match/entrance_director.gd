@@ -1221,15 +1221,26 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"ticks": 60, "from": stand, "to": stand, "facing": out_dir,
 			"shot": "ring_high_corner"})
 	# Down off the rope, and the coat comes off to the crew at ringside.
+	var mark: Transform3D = _mark[w]
+	# He hands it on facing in, toward the middle of the ring: Aubrey comes
+	# to him from there, not from the corner post behind him.
+	var inward := (Vector3(mark.origin.x - stand.x, 0.0, mark.origin.z - stand.z)).normalized()
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/coat_off",
 			"ticks": 120, "from": stand, "to": stand, "facing": out_dir,
-			"shot": "ring_low", "events": [[COAT_OFF_AT, "coat_off"]]})
-	var mark: Transform3D = _mark[w]
+			"shot": "ring_low", "pass_facing": inward,
+			"events": [[1, "prop_call_coat"], [COAT_OFF_AT, "coat_off"]]})
+	_beats.append({"kind": "turn", "who": w, "facing": inward, "shot": "ring_low"})
+	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
+			"clip": "strikes/prop_hand_out_r", "facing": inward,
+			"shot": "ring_low", "events": [[1, "prop_pass_coat"]]})
 	_beats.append({"kind": "walk", "who": w, "path": [stand, mark.origin],
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
 			"shot": "end_wide", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
+	# Nothing moves on until the coat is on the timekeeper's table.
+	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "end_wide",
+			"wait_idle": true})
 
 
 ## The way into the ring every entrance shares, from the ramp's cut to the
@@ -1420,12 +1431,20 @@ func _event(w: WrestlerController, what: String) -> void:
 		"prop_call_fala":
 			if props and _handoff:
 				_handoff.request("fala", w, props, _beat_facing())
-		"prop_pass_title", "prop_pass_fala":
+		"prop_pass_title", "prop_pass_fala", "prop_pass_coat":
 			if _handoff:
 				_handoff.giver_begins()
+		"prop_call_coat":
+			var worn: EntranceCoat = _coats.get(w)
+			if worn and _handoff:
+				var beat: Dictionary = _beats[mini(_beat, _beats.size() - 1)]
+				_handoff.request("coat", w, worn, beat.get("pass_facing", _beat_facing()))
 		"coat_off":
 			var coat: EntranceCoat = _coats.get(w)
-			if coat:
+			if coat and _handoff:
+				# Off his shoulders and into his hand: a folded coat now.
+				_handoff.lift("coat")
+			elif coat:
 				coat.set_worn(false)
 		"fala_off":
 			if props and _handoff:
