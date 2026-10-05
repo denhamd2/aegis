@@ -109,6 +109,8 @@ const ENTRANCES := {
 		"video": "res://assets/environment/video/roman_entrance.ogv",
 		"music": "res://assets/audio/music/roman_entrance.ogg",
 		"still": "res://assets/environment/video/roman_entrance_still.png",
+		# Music time the main part slams in (EntranceDirector.ROMAN_MUSIC_HIT).
+		"chorus": 45.0,
 		"uv_scale": Vector2(1.0, 0.66),
 		"uv_offset": Vector2(0.0, 0.165),
 	},
@@ -121,6 +123,10 @@ const ENTRANCES := {
 		"video": "res://assets/environment/video/cody_entrance.ogv",
 		"music": "res://assets/audio/music/cody_entrance.ogg",
 		"still": "res://assets/environment/video/cody_entrance_still.png",
+		# The sung chant after the instrumental riff (refs/entrances.md:
+		# vocal onsets 22.5 s); the winner's theme starts here, not at the
+		# swells.
+		"chorus": 22.5,
 		"uv_scale": Vector2(1.0, 0.72),
 		"uv_offset": Vector2(0.0, 0.14),
 	},
@@ -438,6 +444,16 @@ func _play_music(entry: Dictionary) -> void:
 	add_child(_music)
 	_music.play()
 	set_process(true)
+
+
+## Where in `style`'s song the main part starts, in seconds; -1 for a man
+## with no theme. The winner's music (MatchAudio.winner_theme) starts here.
+static func chorus_at(style: String) -> float:
+	return float((ENTRANCES.get(style, {}) as Dictionary).get("chorus", -1.0))
+
+
+static func music_path(style: String) -> String:
+	return String((ENTRANCES.get(style, {}) as Dictionary).get("music", ""))
 
 
 ## Back to the Dynamite loop; the music fades rather than cuts.

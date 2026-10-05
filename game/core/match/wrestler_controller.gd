@@ -3008,6 +3008,21 @@ func celebrate() -> void:
 	fsm.transition_to(WrestlerFSM.State.VICTORY)
 
 
+## The winner's arm taken up by the referee: swaps VICTORY's clip for
+## Win_Arm_Raised (his left wrist in her hand). Only valid once celebrate() has
+## put him in VICTORY.
+func raise_arm() -> void:
+	if fsm.current_state != WrestlerFSM.State.VICTORY or not anim_tree \
+			or not anim_player.has_animation("strikes/win_arm_raised"):
+		return
+	var machine := anim_tree.tree_root as AnimationNodeStateMachine
+	var node := machine.get_node("VICTORY") as AnimationNodeAnimation
+	if node == null or node.animation == "strikes/win_arm_raised":
+		return
+	node.animation = "strikes/win_arm_raised"
+	_anim_playback.start("VICTORY", true)
+
+
 func _play_strike_clip(move: MoveDef) -> void:
 	_set_state_clip(WrestlerFSM.State.STRIKE,
 			StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")

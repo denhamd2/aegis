@@ -161,3 +161,19 @@ func test_the_slap_lands_on_the_count_tick() -> void:
 	assert_float(ticks).is_equal_approx(contact, 0.001)
 	# And every count leaves room for the lead.
 	assert_int(MatchReferee.COUNT_TICKS[0]).is_greater(RefereeActor.SLAP_LEAD)
+
+
+func test_raise_clip_is_authored_for_both_and_wrists_meet() -> void:
+	var actor: RefereeActor = _scene.get_node("RefereeActor")
+	var a: WrestlerController = _scene.get_node("WrestlerA")
+	assert_bool((a.anim_player as AnimationPlayer).has_animation("strikes/win_arm_raised")).is_true()
+	# Winner celebrates, Aubrey beside him, her hand_r on his hand_l.
+	a.celebrate()
+	actor._winner = a
+	actor.global_position = a.global_position + RefereeActor.WINNER_SIDE
+	a.rotation.y = PI * 0.5
+	actor.rotation.y = PI * 0.5
+	actor._set_mode(RefereeActor.Mode.RAISE)
+	for i in 60:
+		await get_tree().process_frame
+	assert_float(actor.raise_hand_gap()).is_less(0.1)

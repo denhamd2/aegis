@@ -68,7 +68,7 @@ const BODY_CHAINS := [["pelvis", "spine_02", "neck_01", "Head"],
 const SLAP_LEAD := 24
 ## Standing beside the winner for the hand raise: on her right (-Z when she
 ## faces the hard camera).
-const WINNER_SIDE := Vector3(0.0, 0.0, 0.6)
+const WINNER_SIDE := Vector3(0.0, 0.0, 0.48)
 ## The two base-rig clips she moves in, and the speeds they were authored at.
 const WALK_CLIP := "Walk"
 const WALK_CLIP_SPEED := 1.3
@@ -247,13 +247,50 @@ func _process(delta: float) -> void:
 			if _mode_time >= _clip_length("strikes/ref_call_bell"):
 				_set_mode(Mode.TO_WINNER)
 		Mode.TO_WINNER:
+			_square_winner(delta)
 			var spot := _inside(_flat(_winner.global_position) + WINNER_SIDE)
 			if _go(spot, WALK_SPEED, delta, false):
 				_set_mode(Mode.RAISE)
 		Mode.RAISE:
+			_square_winner(delta)
 			_face(_yaw_towards(Vector3.LEFT), delta)
 		Mode.ERRAND:
 			_errand(delta)
+
+
+## The winner turns square to the hard camera (-X) so his raised left arm is
+## on her side and the two wrists meet (Ref_Raise_Hand / Win_Arm_Raised).
+func _square_winner(delta: float) -> void:
+	if _winner and is_instance_valid(_winner):
+		_winner.rotation.y = lerp_angle(_winner.rotation.y, PI * 0.5, 1.0 - exp(-delta * 5.0))
+
+
+## How far apart her right hand and his left hand are, metres; INF if either
+## skeleton is missing. A probe/test number: the raise reads when this is small.
+func raise_hand_offset() -> Vector3:
+	var theirs := _winner.skeleton if _winner else null
+	if theirs == null or skeleton() == null:
+		return Vector3.INF
+	var a := skeleton().find_bone("hand_r")
+	var b := theirs.find_bone(_winner._skeleton_bone_name("hand_l"))
+	if a < 0 or b < 0:
+		return Vector3.INF
+	return (theirs.global_transform * theirs.get_bone_global_pose(b).origin) \
+			- (skeleton().global_transform * skeleton().get_bone_global_pose(a).origin)
+
+
+func raise_hand_gap() -> float:
+	if _winner == null or not is_instance_valid(_winner) or skeleton() == null:
+		return INF
+	var theirs := _winner.skeleton
+	if theirs == null:
+		return INF
+	var a := skeleton().find_bone("hand_r")
+	var b := theirs.find_bone(_winner._skeleton_bone_name("hand_l"))
+	if a < 0 or b < 0:
+		return INF
+	return (skeleton().global_transform * skeleton().get_bone_global_pose(a).origin).distance_to(
+			theirs.global_transform * theirs.get_bone_global_pose(b).origin)
 
 
 func _errand(delta: float) -> void:
@@ -285,6 +322,8 @@ func _set_mode(next: Mode) -> void:
 			_play("strikes/ref_call_bell", 0.2)
 		Mode.RAISE:
 			_play("strikes/ref_raise_hand", 0.25)
+			if _winner and is_instance_valid(_winner):
+				_winner.raise_arm()
 
 
 # --- the modes ------------------------------------------------------------------

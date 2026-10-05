@@ -68,6 +68,15 @@ var cheer := 0.0
 var _clock := 0.0
 var _crowd: CrowdReaction
 var _referee: MatchReferee
+## The winner's theme, once the bell has gone: from his chorus, faded in, with
+## the crowd beds ducked under it.
+const THEME_DB := -3.0
+const THEME_FADE_IN := 2.5
+const THEME_DUCK_DB := -10.0
+var _theme: AudioStreamPlayer
+var _theme_from := -1.0
+var _theme_fade := 0.0
+var _duck := 0.0
 var _wrestlers: Array = []
 var _pelvis := {}        # wrestler -> bone index
 var _last_y := {}        # wrestler -> pelvis height last frame
@@ -224,7 +233,7 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
 
 
-func _on_match_won(_winner, method: String) -> void:
+func _on_match_won(winner: Variant, method: String) -> void:
 	_over = true
 	# The three lands on the tick the match ends, before _process hears the
 	# count: slap it here so the hand comes down before the bell, not after.
@@ -233,6 +242,47 @@ func _on_match_won(_winner, method: String) -> void:
 		sfx.play_any("count_slap", -1.0)
 	sfx.play("bell_end", -1.0)
 	sfx.play("crowd_finish", 0.0)
+	var w := winner as WrestlerController
+	if w:
+		winner_theme(w.entrance_style)
+
+
+## The winner's music: his entrance song from its main part (StageVideo
+## .chorus_at), not from the intro, fading in over THEME_FADE_IN. False when he
+## has no theme. Any entrance music still up is the director's to fade.
+func winner_theme(style: String) -> bool:
+	var from := StageVideo.chorus_at(style)
+	var path := StageVideo.music_path(style)
+	if from < 0.0 or path == "" or not ResourceLoader.exists(path):
+		return false
+	var stream := load(path) as AudioStreamOggVorbis
+	if stream == null:
+		return false
+	if _theme:
+		_theme.queue_free()
+	stream = stream.duplicate() as AudioStreamOggVorbis
+	stream.loop = false
+	_theme = AudioStreamPlayer.new()
+	_theme.name = "WinnerTheme"
+	_theme.stream = stream
+	_theme.volume_db = -60.0
+	add_child(_theme)
+	_theme.play(from)
+	_theme_from = from
+	_theme_fade = 0.0
+	return true
+
+
+## "style-less" report for probes: where the winner's theme is, in song seconds.
+func theme_info() -> String:
+	if _theme == null:
+		return "none"
+	return "%.1fs from %.1f (%.0f dB)" % [_theme.get_playback_position() + _theme_from,
+			_theme_from, _theme.volume_db]
+
+
+func theme_player() -> AudioStreamPlayer:
+	return _theme
 
 
 func _process(delta: float) -> void:
@@ -246,9 +296,13 @@ func _process(delta: float) -> void:
 	boo = cool(boo, delta)
 	cheer = cool(cheer, delta)
 	var levels := bed_levels(intensity)
-	_slew(_bed, levels["bed"], delta)
-	_slew(_walla_a, levels["walla_a"], delta)
-	_slew(_walla_b, levels["walla_b"], delta)
+	if _theme:
+		_theme_fade = minf(_theme_fade + delta / THEME_FADE_IN, 1.0)
+		_theme.volume_db = lerpf(-40.0, THEME_DB, _theme_fade * _theme_fade)
+		_duck = lerpf(_duck, THEME_DUCK_DB * _theme_fade, 1.0 - exp(-delta * 2.0))
+	_slew(_bed, levels["bed"] + _duck, delta)
+	_slew(_walla_a, levels["walla_a"] + _duck, delta)
+	_slew(_walla_b, levels["walla_b"] + _duck, delta)
 	_slew(_boo_loop, heat_db(boo), delta)
 	_slew(_cheer_loop, heat_db(cheer), delta)
 	if _roar:
