@@ -20,8 +20,9 @@ func test_emitters_sit_at_head_height_in_the_stands() -> void:
 	assert_int(positions.size()).is_equal(300)
 	var distinct := {}
 	for p in positions:
-		# Above the first tread (-1.1 m) by a head, below the roof.
-		assert_float(p.y).is_between(0.1, 14.0)
+		# Above the first tread (-1.1 m) by a head; at most the top tread
+		# (12.1 m) plus somebody standing with a sign over their head.
+		assert_float(p.y).is_between(0.1, 15.0)
 		distinct["%.2f,%.2f,%.2f" % [p.x, p.y, p.z]] = true
 	# Not 300 copies of the same few spots.
 	assert_int(distinct.size()).is_greater(200)

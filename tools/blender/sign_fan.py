@@ -13,11 +13,11 @@ head at arm's length, a hand on each side edge, pumped.
 
 What this is, and why it is rigged
 ----------------------------------
-The rest of the crowd is baked, unrigged box figures (crowd.py / floor_crowd.py)
--- nine boxes a person, animated if at all by a vertex shader, because
+The rest of the crowd is baked, unrigged Rocketbox figures (crowd.py / floor_crowd.py)
+-- animated if at all by a vertex shader, because
 thousands of skinned characters is not a thing that runs. Two people who have
 to stand up, lift a board over their heads and sit back down cannot be a
-vertex shader. So this is the SAME figure -- the same boxes, the same
+vertex shader. So this is a figure built like the old procedural crowd's -- the same boxes, the same
 proportions, the same flat shirt-and-skin dressing -- on a 14-bone armature,
 every box weighted 100% to one bone, which is as cheap as skinning gets.
 

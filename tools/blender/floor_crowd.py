@@ -64,10 +64,10 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     arena_bowl.reset_scene()
-    parts: dict[str, arena_bowl.Part] = {}
+    parts: dict[str, crowd_module.ArrayPart] = {}
 
-    def make_part(name: str) -> arena_bowl.Part:
-        part = arena_bowl.Part(name)
+    def make_part(name: str) -> crowd_module.ArrayPart:
+        part = crowd_module.ArrayPart(name)
         parts[name] = part
         return part
 
@@ -75,16 +75,9 @@ def main(argv: list[str]) -> int:
 
     for name, part in parts.items():
         mesh = bpy.data.meshes.new(name)
-        # Not welded, for the same reason the bowl's crowd is not: a figure's
-        # boxes interpenetrate and merging their shared corners fuses an arm
-        # into a torso.
-        part.bm.to_mesh(mesh)
-        part.bm.free()
-        # Smooth, again as the bowl's crowd is: it costs a third of the
-        # vertices a flat-shaded box needs, and a softly shaded person reads
-        # better than a faceted one at any distance these are seen from.
-        for polygon in mesh.polygons:
-            polygon.use_smooth = True
+        # Smooth-shaded, colour as a point attribute, UVs per loop: see
+        # crowd.ArrayPart.write.
+        part.write(mesh)
         material = bpy.data.materials.new("M_" + name)
         material.use_nodes = True
         bsdf = material.node_tree.nodes["Principled BSDF"]
@@ -117,6 +110,7 @@ def main(argv: list[str]) -> int:
         # ACTIVE, not the "MATERIAL" default: see the colour attribute above.
         export_vertex_color="ACTIVE",
     )
+    crowd_module.pack_attributes(out, tuple(names))
     print("floor_crowd: %d variants, %d triangles, %s"
           % (len(names), arena_bowl.triangle_count(), out))
     return 0

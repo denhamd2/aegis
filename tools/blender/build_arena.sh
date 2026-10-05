@@ -2,7 +2,13 @@
 # Rebuild the two models the seating bowl needs, from tools/blender/:
 #
 #   arena_bowl.glb   the hall, with its crowd baked in   (arena_bowl.py)
-#   floor_crowd.glb  the six ringside fans, instanced    (floor_crowd.py)
+#   floor_crowd.glb  the ringside fans, instanced        (floor_crowd.py)
+#
+# Both crowds are Microsoft Rocketbox people (rocketbox_crowd.py), which needs
+# a local Rocketbox checkout: run fetch_rocketbox.sh first (or set
+# ROCKETBOX_DIR to one). The posed, decimated figures are cached in
+# ROCKETBOX_CACHE (default ~/.cache/aegis-rocketbox); the cache only saves
+# the ~3 minutes of posing and does not change a byte of the output.
 #
 # Blender is not a build dependency of the game -- both .glb files are
 # committed, and CI never runs this. It is run by hand when a bowl constant in

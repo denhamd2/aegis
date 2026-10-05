@@ -1,5 +1,6 @@
 extends GdUnitTestSuite
-## The crowd in the seating bowl: that it is there, that it is varied, and
+## The crowd in the seating bowl (Rocketbox people, tools/blender/crowd.py):
+## that it is there, that it is varied, and
 ## that it carries what the shader needs to animate it.
 ##
 ## The crowd is baked geometry in `arena_bowl.glb` (built by
@@ -127,3 +128,28 @@ func test_a_figure_stands_on_its_row_rather_than_floating() -> void:
 	# over the step), heads no higher than the top tread plus a standing man.
 	assert_float(aabb.position.y).is_greater(lowest_tread - 0.6)
 	assert_float(aabb.position.y + aabb.size.y).is_less(highest_tread + 2.2)
+
+
+func test_the_crowd_is_people_not_a_palette() -> void:
+	# The figures are Rocketbox people with their textures baked into COLOR_0
+	# (tools/blender/rocketbox_crowd.py), so the near rows carry faces and
+	# hands -- warm, skin-toned colour -- and a long tail of distinct values,
+	# where a palette-dressed figure has a dozen. Losing the bake (a flat
+	# fallback colour, or the procedural figures coming back) fails here.
+	var root := _bowl()
+	var mesh := _mesh_for(root, "Crowd")
+	var colours: PackedColorArray = mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+	var warm := 0
+	var seen := {}
+	var sampled := 0
+	for i in range(0, colours.size(), 11):
+		var c := colours[i]
+		sampled += 1
+		seen["%0.3f,%0.3f,%0.3f" % [c.r, c.g, c.b]] = true
+		if c.r > c.g * 1.15 and c.g > c.b and c.r > 0.05:
+			warm += 1
+	assert_int(seen.size()).is_greater(1000)
+	assert_float(float(warm) / float(sampled)) \
+		.override_failure_message("only %d of %d sampled crowd vertices are skin-toned"
+			% [warm, sampled]) \
+		.is_greater(0.08)

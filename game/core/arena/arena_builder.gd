@@ -11,9 +11,9 @@ class_name ArenaBuilder
 ## ring is measured out from that sheet of ice.
 ##
 ## The hall is FULL. About 5,600 people sit in the bowl, baked per seat into
-## arena_bowl.glb by tools/blender/crowd.py (rounded heads with eight cuts of
-## hair, tapered shoulders, a yaw jitter off the ring), and ~1,490 folding
-## chairs on the rink floor carry sixteen different ringside fans. They move in
+## arena_bowl.glb by tools/blender/crowd.py (twenty Microsoft Rocketbox people
+## posed from motion capture: sitting, clapping, arms up, phones, signs), and
+## ~1,490 folding chairs on the rink floor carry twenty-four of them instanced. They move in
 ## a vertex shader (below) and flash with CrowdFlashes; none of it touches
 ## gameplay. `gauntlet/refs/arena.md` measured an empty hall; the AEW stills
 ## the look follows are full ones.
@@ -1082,15 +1082,16 @@ func _build_floor_seats() -> void:
 	for i in detailed.size():
 		if not picked.has(i):
 			crowd_seats.append(detailed[i])
-	_build_floor_crowd(crowd_seats + distant)
+	_build_floor_crowd(crowd_seats, distant)
 
 
 ## How many of the floor-crowd meshes are standing people (crowd.py's
 ## STANDING_VARIANTS), and how many of the ringside seats they take.
-const FLOOR_STANDING_VARIANTS := 3
+const FLOOR_STANDING_VARIANTS := 4
 const FLOOR_STANDING_CHANCE := 0.07
 
-## Ringside model: sixteen people, thirteen seated and three on their feet, built by tools/blender/floor_crowd.py.
+## Ringside model: twenty-four Rocketbox people, twenty seated and four on their
+## feet, built by tools/blender/floor_crowd.py.
 const FLOOR_CROWD_MODEL := "res://assets/environment/floor_crowd.glb"
 ## How many of the ringside chairs have somebody in them.
 ##
@@ -1107,33 +1108,52 @@ const FLOOR_CROWD_SEED := 20260916
 ## Put people in the ringside chairs.
 ##
 ## One MultiMesh per variant rather than one for the lot, because a MultiMesh
-## draws a single mesh: six meshes is six draw calls and six poses, against
-## one draw call and a thousand identical twins.
+## draws a single mesh: two dozen meshes is two dozen draw calls and two dozen
+## people, against one draw call and a thousand identical twins.
 ##
 ## The figures reuse the chairs' own transforms -- same curve, same yaw, same
 ## exclusions for the rink edge, the ramp and the aisles -- so a fan cannot
 ## end up in a spot a chair was not. The Blender figure is built with its
 ## backside at a folding chair's seat height, so it needs no vertical offset
 ## here (crowd.CHAIR_SEAT_HEIGHT).
-func _build_floor_crowd(seats: Array[Transform3D]) -> void:
+func _build_floor_crowd(near: Array[Transform3D], far: Array[Transform3D]) -> void:
 	var packed: PackedScene = load(FLOOR_CROWD_MODEL)
 	if packed == null:
 		push_error("ArenaBuilder: %s failed to load. Run tools/blender/build_arena.sh."
 				% FLOOR_CROWD_MODEL)
 		return
 	var source: Node3D = packed.instantiate()
-	var meshes: Array[Mesh] = []
-	for child in source.find_children("*", "MeshInstance3D", true, false):
+	# Two sets of the same people, in the same order: `Fan##` at ringside
+	# detail for the front rows, `FanFar##` at the bowl's level of detail for
+	# the floor further back (tools/blender/crowd.py, FLOOR_SETS).
+	var detailed: Array[Mesh] = []
+	var proxies: Array[Mesh] = []
+	var found := source.find_children("*", "MeshInstance3D", true, false)
+	found.sort_custom(func(a: Node, b: Node) -> bool: return String(a.name) < String(b.name))
+	for child in found:
 		var instance := child as MeshInstance3D
-		if instance.mesh != null:
-			meshes.append(instance.mesh)
-	if meshes.is_empty():
+		if instance.mesh == null:
+			continue
+		if String(instance.name).begins_with("FanFar"):
+			proxies.append(instance.mesh)
+		else:
+			detailed.append(instance.mesh)
+	source.free()
+	if detailed.is_empty():
 		push_error("ArenaBuilder: %s carries no fan meshes." % FLOOR_CROWD_MODEL)
-		source.free()
 		return
-
+	if proxies.size() != detailed.size():
+		proxies = detailed
 	var rng := RandomNumberGenerator.new()
 	rng.seed = FLOOR_CROWD_SEED
+	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887", true)
+	_seat_floor_fans(near, detailed, "FloorCrowd", rng, material)
+	_seat_floor_fans(far, proxies, "FloorCrowdFar", rng, material)
+
+
+## One bank of ringside fans: a MultiMesh per variant over `seats`.
+func _seat_floor_fans(seats: Array[Transform3D], meshes: Array[Mesh], prefix: String,
+		rng: RandomNumberGenerator, material: ShaderMaterial) -> void:
 	# Which variant each occupied seat gets, and how it is dressed.
 	var buckets: Array[Array] = []
 	var colours: Array[Array] = []
@@ -1156,20 +1176,22 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 		var turned := seat.rotated_local(Vector3.UP, rng.randf_range(-0.34, 0.34))
 		buckets[pick].append(Transform3D(turned.basis.scaled(Vector3.ONE * scale),
 				turned.origin))
-		colours[pick].append(_crowd_shirt(rng))
-	source.free()
+		var shirt := _crowd_shirt(rng)
+		# About half the dark tees carry a print on the chest; its ink level
+		# rides in the custom data's alpha (the floor-fan shader branch).
+		shirt.a = 0.0
+		if shirt.get_luminance() < 0.07 and rng.randf() < 0.5:
+			shirt.a = rng.randf_range(0.18, 0.45)
+		colours[pick].append(shirt)
 
-	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887", true)
 	for i in meshes.size():
 		if buckets[i].is_empty():
 			continue
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
-		# Per-instance colour is why the six meshes carry no hue of their
-		# own: the shirt is dressed here, so six poses clothe a thousand
-		# people. The meshes are not flat white though -- they carry white
-		# for cloth and a darker grey for skin, and this multiplies against
-		# it, which is what gives a fan a face.
+		# Per-instance colour is the fan's tee (and print): the meshes keep
+		# their own faces, hair and jeans, and mark the garment for the
+		# shader to re-dress, so two dozen people clothe a few hundred seats.
 		mm.use_custom_data = true
 		mm.mesh = meshes[i]
 		mm.instance_count = buckets[i].size()
@@ -1177,7 +1199,7 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 			mm.set_instance_transform(j, buckets[i][j])
 			mm.set_instance_custom_data(j, colours[i][j])
 		var node := MultiMeshInstance3D.new()
-		node.name = "FloorCrowd%02d" % i
+		node.name = "%s%02d" % [prefix, i]
 		node.multimesh = mm
 		node.material_override = material
 		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1193,6 +1215,8 @@ const CROWD_SHIRTS: Array[Color] = [
 	Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17), Color(0.16, 0.16, 0.17),
 	Color(0.22, 0.22, 0.23), Color(0.22, 0.22, 0.23), Color(0.27, 0.27, 0.28),
 	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17),
+	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17),
+	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.19, 0.19, 0.20),
 	Color(0.12, 0.15, 0.25), Color(0.15, 0.19, 0.28), Color(0.14, 0.18, 0.22),
 	Color(0.58, 0.58, 0.57), Color(0.48, 0.48, 0.48), Color(0.37, 0.37, 0.38),
 	Color(0.48, 0.12, 0.11), Color(0.38, 0.10, 0.11), Color(0.55, 0.45, 0.15),
@@ -1458,15 +1482,19 @@ void fragment() {
 	SPECULAR = 0.0;
 }
 """
-	# The ringside fans (floor_crowd.glb) carry VALUE, not hue: 1.0 cloth, 0.5
-	# skin, under 0.2 hair and shoes. Their shirt arrives per instance in
-	# INSTANCE_CUSTOM; skin takes a per-fan tone of its own, so a fan in a red
-	# shirt does not get a red face.
+	# The ringside fans (floor_crowd.glb, tools/blender/crowd.py) are real
+	# people with their own baked colours. What varies per instance is the
+	# upper garment: UV.x marks it (0 own colour, 0.5 garment, 1.0 the chest
+	# print area), COLOR on those vertices is the garment's fold shading as a
+	# half-scale grey, and the instance supplies the tee in INSTANCE_CUSTOM.rgb
+	# and a print's ink level in INSTANCE_CUSTOM.a (0 for a plain tee).
 	shader.code = shader.code.replace("FLOOR_FANS", """{
-		float v = COLOR.r;
-		float h = hash(float(INSTANCE_ID) * 3.7);
-		vec3 skin = mix(vec3(0.13, 0.06, 0.035), vec3(0.62, 0.36, 0.25), h);
-		shirt = v > 0.7 ? INSTANCE_CUSTOM.rgb : (v > 0.35 ? skin : vec3(v * 0.5));
+		float garment = UV.x;
+		float fold = COLOR.r * 2.0;
+		vec3 tee = INSTANCE_CUSTOM.rgb * fold;
+		vec3 ink = vec3(INSTANCE_CUSTOM.a) * fold;
+		shirt = garment < 0.25 ? COLOR.rgb
+				: ((garment > 0.75 && INSTANCE_CUSTOM.a > 0.004) ? ink : tee);
 	}""" if floor_fans else "")
 	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
 	var mat := ShaderMaterial.new()

@@ -850,18 +850,19 @@ def reset_scene() -> None:
 def finish(parts: dict[str, Part]) -> None:
     for name, part in parts.items():
         mesh = bpy.data.meshes.new(name)
-        # The crowd is NOT welded. remove_doubles merges vertices within
-        # 0.5mm, and in a packed row one person's shoulder is inside the next
-        # person's -- welding them fuses two figures into one and gives the
-        # pair a single shirt. Everything else in the hall is a closed solid
-        # sharing walls with its neighbours, which is exactly what welding is
-        # here for.
-        if name not in CROWD_PARTS:
+        if isinstance(part, crowd_module.ArrayPart):
+            # The crowd: whole posed people assembled as arrays (crowd.py).
+            # Not welded -- in a packed row one person's shoulder is inside
+            # the next person's, and welding would give the pair one shirt.
+            part.write(mesh)
+        else:
+            # Everything else in the hall is a closed solid sharing walls
+            # with its neighbours, which is exactly what welding is for.
             bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:],
                                      dist=0.0005)
-        bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
-        part.bm.to_mesh(mesh)
-        part.bm.free()
+            bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
+            part.bm.to_mesh(mesh)
+            part.bm.free()
         material = bpy.data.materials.new("M_" + name)
         material.use_nodes = True
         bsdf = material.node_tree.nodes["Principled BSDF"]
@@ -912,7 +913,8 @@ def main(argv: list[str]) -> int:
 
     cfg = read_constants(BUILDER_GD)
     reset_scene()
-    parts = {name: Part(name) for name in PART_COLORS}
+    parts = {name: (crowd_module.ArrayPart(name) if name in CROWD_PARTS
+                    else Part(name)) for name in PART_COLORS}
     rows = build_bowl(cfg, parts)
     build_rink(cfg, parts)
     build_fascia(cfg, parts, rows)
@@ -920,6 +922,7 @@ def main(argv: list[str]) -> int:
     build_shell(cfg, parts, rows)
     counts = crowd_module.build_crowd(cfg, parts, rows, plan_loop,
                                       aisle_indices, stage_gap)
+    parts_tris = {name: parts[name].triangle_count() for name in CROWD_PARTS}
     finish(parts)
 
     out = pathlib.Path(args.out)
@@ -938,11 +941,17 @@ def main(argv: list[str]) -> int:
         # only exports one when a material demonstrably reads it.
         export_vertex_color="ACTIVE",
     )
+    # The crowd's colour and (phase, role) as normalized shorts: see
+    # crowd.pack_attributes. It is what keeps the bowl a committable file.
+    crowd_module.pack_attributes(out, CROWD_PARTS)
     seated = [r for r in rows if r["kind"] == "seated"]
     print("arena_bowl: %d triangles, %d seated rows, top tread %.2fm, %s"
           % (triangle_count(), len(seated), max(r["tread_y"] for r in rows), out))
-    print("  crowd: %d near, %d far, %d of them standing"
-          % (counts["Crowd"], counts["CrowdFar"], counts["standing"]))
+    print("  crowd: %d near, %d far, %d of them standing, %d signs, %d phones"
+          % (counts["Crowd"], counts["CrowdFar"], counts["standing"],
+             counts["signs"], counts["phones"]))
+    for name in CROWD_PARTS:
+        print("  %s: %d triangles" % (name, parts_tris[name]))
     return 0
 
 

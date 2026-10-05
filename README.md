@@ -8787,3 +8787,33 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
 - **Measuring it.** `tools/probe/pace_probe.tscn` (run with `--fixed-fps 60`,
   not 6000; `--wrestlers roman,cody`; `--trace` prints every signature,
   finisher and knockdown with the phase).
+
+### The crowd is real people: Microsoft Rocketbox in the bowl and at ringside
+
+The procedural tube-and-ellipsoid figures are gone. Every spectator is one of
+twenty Microsoft Rocketbox adults (MIT, `game/assets/environment/CREDITS.md`,
+`LICENSE-Rocketbox.md`), posed from Rocketbox's own mocap clips.
+
+- **Pipeline.** `tools/blender/fetch_rocketbox.sh` pulls the 20 avatars' FBX and
+  colour TGAs plus 7 clips (x m/f) at a pinned commit into a scratch dir, never
+  into git. `rocketbox_crowd.py` bakes texture colour into vertex colour at full
+  resolution, finds the upper garment from the skin weights, decimates (collapse,
+  rest pose) and poses it: seated idles, and seated/standing clap, cheer, phone
+  and sign by grafting a clip's upper body onto a seated pelvis. `crowd.py`
+  places people seat by seat and re-dresses the tee (mostly black, ~half the
+  dark ones with a chest print); 1.3% hold a sign, 8% a phone. The library is
+  cached (`ROCKETBOX_CACHE`); a clean-cache build is byte-identical.
+- **Budget.** Bowl crowd 1.18M triangles (near rows ~520 a person, rest of the
+  lower tier ~190, upper ~130). `crowd.pack_attributes` stores COLOR_0 and the
+  (phase, role) UV as normalized ushorts (core glTF), so `arena_bowl.glb` is
+  42.0 MB (was 34.4). Ringside: 24 people at ~1,100 triangles for the front
+  five floor rows (`Fan##`), the same 24 at ~190 behind them (`FanFar##`);
+  `floor_crowd.glb` 0.95 MB.
+- **Shader contract.** The bowl's is unchanged (COLOR, UV.x phase, UV.y role).
+  The ringside branch now keeps each fan's baked colours and re-dresses only the
+  garment UV.x marks, with the tee in INSTANCE_CUSTOM.rgb and a print's ink in
+  its alpha.
+- **Measured.** Gameplay cam top-200-rows linear Y 0.036 (procedural crowd
+  0.034, 2K26 0.024-0.034). Gaps: the far bowl's 130-triangle figures are
+  coarse up close in the hard cam; still no per-person animation beyond the
+  shader's bob/bounce.
