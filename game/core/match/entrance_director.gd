@@ -190,6 +190,8 @@ const TRON_AT := Vector3(0.0, ArenaBuilder.SCREEN_CENTER_Y, ArenaBuilder.SCREEN_
 ## goes (wrestling_clips.py _methodical_walk).
 const ROMAN_WALK_SPEED := 0.5
 const ROMAN_WALK_CLIP := "strikes/walk_slow_look"
+## How long the very wide of the first pyro holds as he walks out of it.
+const ROMAN_FIRST_PYRO_SHOT := 3.0
 ## He does not come out until the main part of his music hits. Measured off
 ## the audio of assets/environment/video/roman_entrance.ogv, 0.1 s windows:
 ## near silence 42.5-44.9 s (RMS 0.011) and the full track slams back at
@@ -336,8 +338,10 @@ const CODY_WALK_SHOTS := [["steadicam_front", 6 * CODY_BEAT], ["over_shoulder", 
 ## yells at the other side, one fist to the roof. Each ONCE, one to a beat of
 ## the walk cut, over the plain walk -- the owner saw the old walk's baked
 ## fist pump come round every 3.5 s, ten times down the ramp.
+## The fist to the roof is left out: it throws his head back, and it landed
+## just before the ring, where he looked to be floating.
 const CODY_WALK_GESTURES := ["strikes/walk_crowd_shout_l", "strikes/walk_crowd_point",
-		"strikes/walk_crowd_shout_r", "strikes/walk_crowd_fist"]
+		"strikes/walk_crowd_shout_r"]
 ## Walk_Crowd's gait cycle (26 frames at 30 fps) and a gesture clip's length
 ## (four cycles): a gesture goes in on a cycle boundary of the plain walk and
 ## hands back on one, so the legs never jump.
@@ -767,13 +771,13 @@ func _add_entrance(w: WrestlerController, portal_x: float, side: String) -> void
 	var emerge := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 1.2)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	_beats.append({"kind": "walk", "who": w, "path": [emerge, lip],
-			"shot": "stage", "card": true, "lights": side, "appear": true})
+			"shot": "stage", "lights": side, "appear": true})
 	_beats.append({"kind": "pose", "who": w, "ticks": POSE_TICKS,
 			"clip": "strikes/win_celebrate", "facing": Vector3.BACK,
-			"shot": "stage", "card": true, "lights": side})
+			"shot": "stage", "lights": side})
 	var ramp_end := lip + Vector3.BACK * (WALK_SPEED * RAMP_SHOWN_SECONDS)
 	_beats.append({"kind": "walk", "who": w, "path": [lip, ramp_end],
-			"shot": "track", "card": true})
+			"shot": "track", "ramp_card": true})
 	# The cut: a few metres short of the ramp foot, then round to the steps.
 	var inside := _add_route_in(w, Vector3(0.0, 0.0, CUT_TO_Z), WALK_SPEED,
 			"strikes/entrance_walk", false)
@@ -816,6 +820,8 @@ func _start_beat() -> void:
 		_portal_lights("", false)
 	if beat.get("match_card", false):
 		_card.show_card("%s  VS  %s" % [_card_name(_b), _card_name(_a)], MATCH_CARD_SUBTITLE)
+	elif beat.get("ramp_card", false):
+		pass  # shown by _tick_ramp_card once he is half way down the ramp
 	elif beat.get("card", false) and w:
 		if not _card.is_showing():
 			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
@@ -854,6 +860,18 @@ func _start_beat() -> void:
 				(move[0] as WrestlerController).play_presentation_clip(move[4])
 
 
+## The name card: up once he is half way down the ramp, away at its foot.
+func _tick_ramp_card(w: WrestlerController) -> void:
+	var z := w.global_position.z
+	var halfway := (ArenaBuilder.STAGE_FRONT + CUT_TO_Z) * 0.5
+	if z >= halfway and z <= CUT_TO_Z + 0.5:
+		if not _card.is_showing():
+			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
+					w.entrance_subtitle)
+	elif _card.is_showing():
+		_card.hide_card()
+
+
 func _physics_process(delta: float) -> void:
 	if _done or _beat >= _beats.size():
 		return
@@ -867,6 +885,8 @@ func _physics_process(delta: float) -> void:
 	for cue: Array in beat.get("events", []):
 		if int(cue[0]) == _tick:
 			_event(w, cue[1])
+	if beat.get("ramp_card", false) and w:
+		_tick_ramp_card(w)
 	match beat["kind"]:
 		"walk":
 			var at := _along(beat["path"], t * float(beat["length"]))
@@ -987,9 +1007,17 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"ticks": _secs(0.0, appear), "shot": "intro",
 			"events": [[1, "tron_on"], [1, "dim_on"]]})
 	var half := emerge.lerp(lip, 0.5)
-	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, half],
+	# He walks out as the first pyro goes off, on the very wide so the burst
+	# reads; then the usual stage cut.
+	var early := emerge.lerp(lip, minf(0.4, ROMAN_FIRST_PYRO_SHOT * ROMAN_WALK_SPEED
+			/ maxf(_flat(emerge).distance_to(_flat(lip)), 0.01)))
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [emerge, early],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
-			"shot": "stage", "appear": true, "props": true}))
+			"shot": "stage_wide", "appear": true, "props": true,
+			"events": [[1, "pyro_stage"]]}))
+	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [early, half],
+			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
+			"shot": "stage"}))
 	_beats.append(_with(blue, {"kind": "walk", "who": w, "path": [half, lip],
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "face_walk"}))
@@ -997,11 +1025,11 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(0.0, ROMAN_LIP_PUSH),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
-			"shot": "stage_push", "card": true}))
+			"shot": "stage_push"}))
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(0.0, ROMAN_LIP_FACE),
 			"clip": "strikes/roman_stand", "facing": Vector3.BACK,
-			"shot": "face_walk", "card": true}))
+			"shot": "face_walk"}))
 	# The finger, and on the slam the pyro and the room red, on a very wide.
 	_beats.append(_with(blue, {"kind": "pose", "who": w,
 			"ticks": _secs(finger_start, ROMAN_MUSIC_HIT + ROMAN_PYRO_WIDE),
@@ -1016,7 +1044,8 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"shot": "ramp_low_wide"}))
 	# The walk: all of it, cut the way the broadcast cuts it.
 	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS - 0.2)
-	_add_walk_cut(w, lip, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, ROMAN_WALK_SHOTS)
+	_add_walk_cut(w, lip, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, ROMAN_WALK_SHOTS,
+			[], true)
 	# Ringside, the head bowed, then up the steps and through the ropes.
 	var in_at := _add_route_in(w, foot, ROMAN_WALK_SPEED, ROMAN_WALK_CLIP, true, "",
 			"strikes/head_bow", ROMAN_BOW_TICKS)
@@ -1070,7 +1099,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 ## walk beats, each on the next of `shots` ([shot, seconds], cycled), so he
 ## never stops and the cut is only the camera's.
 func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: float,
-		clip: String, shots: Array, gestures: Array = []) -> void:
+		clip: String, shots: Array, gestures: Array = [], ramp_card := false) -> void:
 	var total := _flat(from).distance_to(_flat(to))
 	var done := 0.0
 	var i := 0
@@ -1083,6 +1112,8 @@ func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: flo
 				"walk_clip": clip, "shot": shot[0]}
 		if i < gestures.size():
 			beat["gesture"] = gestures[i]
+		if ramp_card:
+			beat["ramp_card"] = true
 		_beats.append(beat)
 		done += step
 		i += 1
@@ -1168,7 +1199,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	var fists_end := punch_from + 1.0 + 1.0 / 3.0
 	_beats.append({"kind": "pose", "who": w, "lights": "RB",
 			"ticks": _secs(punch_from, fists_end), "clip": "strikes/fists_down",
-			"facing": Vector3.BACK, "shot": "hero_low", "card": true,
+			"facing": Vector3.BACK, "shot": "hero_low",
 			"events": [[CODY_PUNCH_AT, "pyro_cody_punch"]]})
 	# To the lip on the low steadicam, the card up until he stops; working
 	# the crowd there for whatever is left, so the knee lands on its phrase.
@@ -1184,7 +1215,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	lip_speed = minf(lip_speed, CODY_WALK_SPEED * 1.4)
 	_beats.append({"kind": "walk", "who": w, "path": [mouth, lip], "lights": "RB",
 			"speed": lip_speed, "walk_clip": CODY_WALK_CLIP,
-			"shot": "steadicam_front", "card": true})
+			"shot": "steadicam_front"})
 	var at_lip := fists_end + to_lip / lip_speed
 	if kneel_from - at_lip > 0.6:
 		_beats.append({"kind": "pose", "who": w, "lights": "RB",
@@ -1202,12 +1233,13 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			0.0, 1.0))
 	_beats.append({"kind": "walk", "who": w, "path": [lip, mid], "lights": "RB",
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
-			"shot": "steadicam_low"})
+			"shot": "steadicam_low", "ramp_card": true})
 	_beats.append({"kind": "pose", "who": w, "ticks": CODY_WHOA_LOW_TICKS,
-			"clip": "strikes/whoa_low", "facing": Vector3.BACK, "shot": "hero_low"})
+			"clip": "strikes/whoa_low", "facing": Vector3.BACK, "shot": "hero_low",
+			"ramp_card": true})
 	var foot := foot_of_ramp
 	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS,
-			CODY_WALK_GESTURES)
+			CODY_WALK_GESTURES, true)
 	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, true,
 			"", "", 0, "ring_behind_low")
 	# The corner by the steps: up on the middle rope, facing out over them.
@@ -1401,7 +1433,8 @@ func _set_backlight(w: WrestlerController, what: String) -> void:
 		_backlight.spot_angle = 28.0
 		_backlight.spot_range = 40.0
 		_backlight.light_volumetric_fog_energy = 3.0
-		_backlight.shadow_enabled = true
+		# No shadow: its cone cast a dark disc on the deck under the smoke.
+		_backlight.shadow_enabled = false
 		add_child(_backlight)
 		_backlight.global_position = w.global_position + Vector3(0.0, 3.4, -2.6)
 		_backlight.look_at(w.global_position + Vector3(0.0, 1.2, 6.0), Vector3.UP)
