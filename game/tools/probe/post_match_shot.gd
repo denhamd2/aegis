@@ -17,28 +17,35 @@ func _ready() -> void:
 			_out = args[i + 1]
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
-	TitleScreen.configure_match(scene, Roster.by_id("cody"), Roster.by_id("roman"), 1)
+	var pair := Roster.pair_from_spec("")
+	TitleScreen.configure_match(scene, pair[0], pair[1], 3)
+	scene.entrances = false
 	get_tree().root.add_child.call_deferred(scene)
 	await get_tree().process_frame
 	get_tree().current_scene = scene
 	await get_tree().process_frame
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
-	a.is_ai = true
-	b.is_ai = true
-	for _i in 30:
-		await get_tree().process_frame
 	a.is_ai = false
 	b.is_ai = false
+	for _i in 20:
+		await get_tree().physics_frame
 	a.fsm.transition_to(WrestlerFSM.State.IDLE)
 	b.fsm.transition_to(WrestlerFSM.State.IDLE)
 	await get_tree().process_frame
 	b.fsm.transition_to(WrestlerFSM.State.STUNNED)
 	b.fsm.transition_to(WrestlerFSM.State.DOWN)
 	b._move_ticks_remaining = 2000
-	await get_tree().process_frame
+	b._cover_eligible = true
 	a.global_position = b.global_position \
 			+ (a.global_position - b.global_position).normalized() * 0.9
+	var ref0 = scene.get_node("MatchReferee")
+	ref0._pinning = true
+	ref0._pin_ticks = 0
+	ref0._pin_count_shown = 0
+	ref0._pin_attacker = a
+	ref0._pin_defender = b
+	a.begin_pin(b, 1)
 	var ticks := 0
 	while scene.post_match == null and ticks < 900:
 		await get_tree().physics_frame

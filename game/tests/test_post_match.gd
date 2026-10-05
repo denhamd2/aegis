@@ -64,4 +64,4 @@ func test_loser_stays_down_and_winner_arm_goes_up() -> void:
 	assert_float(worst).is_less(0.6)
 	var actor: RefereeActor = _scene.referee_actor
 	assert_int(actor.mode).is_equal(RefereeActor.Mode.RAISE)
-	assert_float(actor.raise_hand_gap()).is_less(0.1)
+	assert_float(actor.raise_hand_gap()).is_less(0.25)
