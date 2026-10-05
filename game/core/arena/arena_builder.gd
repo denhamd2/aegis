@@ -1314,7 +1314,13 @@ const CROWD_PARTS := ["Crowd", "CrowdFar"]
 ## anchor where it was. The swing is carried by blue because blue is the
 ## channel the eye weights least; the same saturation bought with red would
 ## cost the level.
-const CROWD_WASH := Vector3(0.62, 0.98, 2.0)
+## Re-measured off the owner's 2K26 Cody vs Roman match
+## (gauntlet/refs/cody_roman_2k26.md): its match crowd is WARM, mean sRGB
+## (0.186, 0.155, 0.164), where ours under the old blue wash (0.62, 0.98, 2.0)
+## measured (0.194, 0.250, 0.346) -- the single biggest reason the hall read
+## blue and flat beside it. Still normalised to luminance ~1.0 (0.2126*1.12 +
+## 0.7152*0.98 + 0.0722*0.86 = 1.00), so house_light keeps setting the level.
+const CROWD_WASH := Vector3(1.12, 0.98, 0.86)
 
 ## Idle motion, and the light floor the crowd sits on.
 ##
@@ -1345,7 +1351,7 @@ uniform float sway_amplitude = 0.018;
 // real level is meant to come from a fixture aimed at it; until the house
 // wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
 // this is most of what lights them, which is why it is not smaller.
-uniform float house_light = 0.055;
+uniform float house_light = 0.042;
 // The colour of the light the crowd sits in. It used to be white, so the stand
 // took its shirts' colours at face value and measured blue-GREY: mean sat
 // 0.408 on crowd_bank against 0.49-0.67 on every AEW still in

@@ -50,7 +50,7 @@
 background_mode = 1
 background_color = Color(0.02, 0.02, 0.025, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.5, 0.55, 0.68, 1)
+ambient_light_color = Color(0.55, 0.55, 0.57, 1)
 ; Ambient was 0.35 and it was the rig. Ambient is direction-blind: it lands the
 ; same on a horizontal mat and on a standing torso, so under it a wrestler and
 ; the mat render at the ratio of their ALBEDOS and nothing else. That is
@@ -165,8 +165,8 @@ ssr_depth_tolerance = 0.2
 ; invisible vectors that only exist where they land. Global density is low;
 ; ArenaLighting adds two FogVolumes for the local concentration.
 volumetric_fog_enabled = true
-volumetric_fog_density = 0.0015
-volumetric_fog_albedo = Color(0.72, 0.77, 0.9, 1)
+volumetric_fog_density = 0.001
+volumetric_fog_albedo = Color(0.8, 0.8, 0.82, 1)
 volumetric_fog_anisotropy = 0.35
 volumetric_fog_length = 64.0
 volumetric_fog_detail_spread = 2.0
@@ -181,8 +181,8 @@ volumetric_fog_temporal_reprojection_enabled = false
 ; mean_saturation 0.218 vs the reference's 0.306 (compare_frame.py).
 adjustment_enabled = true
 adjustment_brightness = 1.0
-adjustment_contrast = 1.0
-adjustment_saturation = 1.22
+adjustment_contrast = 1.12
+adjustment_saturation = 1.08
 
 [node name="Match" type="Node3D"]
 script = ExtResource("1")

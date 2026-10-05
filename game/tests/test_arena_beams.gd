@@ -62,8 +62,9 @@ func test_the_crowd_wash_holds_the_crowd_level() -> void:
 	var w := ArenaBuilder.CROWD_WASH
 	var luminance := 0.2126 * w.x + 0.7152 * w.y + 0.0722 * w.z
 	assert_float(luminance).is_between(0.95, 1.05)
-	# And it is actually a colour -- blue-led, as the references are.
-	assert_float(w.z).is_greater(w.x * 2.0)
+	# And it is a colour -- warm, as the owner's 2K26 match crowd measures
+	# (cody_roman_2k26.md), not the blue it used to be.
+	assert_float(w.x).is_greater(w.z)
 
 
 ## On a crowd cutaway the beams go fast and wide across the stands, and come

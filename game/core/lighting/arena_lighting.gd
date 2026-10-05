@@ -235,9 +235,12 @@ const KEY_LIGHT_SIZE := 0.35
 ## put the mat back on its anchor (see top_energy).
 ## Cooler since the 2K26 round (lighting_2k26.md item 4): its match frames
 ## measure white balance B/G 1.16 against our 1.09 -- a crisp 6500 K-ish TV key.
-const KEY_COLOR := Color(0.84, 0.93, 1.0)
-const TOP_COLOR := Color(0.83, 0.92, 1.0)
-const RIM_COLOR := Color(0.66, 0.78, 1.0)
+## Neutral since the owner's full 2K26 Cody vs Roman match (cody_roman_2k26.md):
+## its match frame measures mean sRGB (0.354, 0.351, 0.359), B/G 1.02 -- a
+## white key, not the cool one the storyboard thumbnails suggested.
+const KEY_COLOR := Color(0.98, 0.97, 0.95)
+const TOP_COLOR := Color(0.97, 0.97, 0.96)
+const RIM_COLOR := Color(0.84, 0.89, 1.0)
 const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
 ## The stage wash, pushed violet. Predominantly a hue change, and the figures
 ## in this comment used to say "only": it claimed Rec.709 luminance of the old
@@ -481,7 +484,7 @@ const ENTRANCE_SET_SHARE := 0.25
 const ENTRANCE_EXPOSURE := 0.55
 ## And the match's, against the same base (refs/lighting_2k26.md: 2K26's
 ## match frames sit at p90 0.47 with 7% of the frame over 0.5).
-const MATCH_EXPOSURE := 1.0
+const MATCH_EXPOSURE := 1.25
 const ENTRANCE_STAGE_SHARE := 0.35
 const ENTRANCE_SET_PARTS: Array[String] = ["StageBackdrop", "EntranceStage", "PortalRecess"]
 var _set_emission := {}   # StandardMaterial3D -> its own emission multiplier
@@ -1248,10 +1251,12 @@ func _build_backdrop_uplights() -> void:
 func _build_fog_volumes() -> void:
 	if not _supports_volumetric_fog():
 		return
+	# Neutral and thinner than it was: 2K26's match frame has blacks at
+	# p10 0.008 against our 0.019 under a blue haze (cody_roman_2k26.md).
 	_fog_box("RingHaze", Vector3(0.0, 4.0, 0.0), Vector3(20.0, 9.0, 20.0),
-			0.005, Color(0.80, 0.84, 0.95), 0.14)
+			0.003, Color(0.85, 0.85, 0.87), 0.14)
 	_fog_box("HallHaze", Vector3(0.0, 6.0, 2.0), Vector3(58.0, 15.0, 58.0),
-			0.0012, Color(0.62, 0.68, 0.86), 0.05)
+			0.0006, Color(0.75, 0.75, 0.78), 0.05)
 
 
 ## Depth fog for the compatibility renderer, which is what the browser build
