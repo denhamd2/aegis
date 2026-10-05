@@ -409,7 +409,10 @@ const CANVAS_SEED := 20260903
 ## measured 0.65 and read as a milky sheet over a fifth of the frame; 2K26's
 ## canvas is a textured light grey. Lowering the cloth, not the lights, keeps
 ## the wrestlers lit while the mat comes down.
-const CANVAS_WHITE := Color(0.66, 0.66, 0.66)
+## Back up to 0.73 against the owner's 2K26 Cody vs Roman match: there the
+## mat is the brightest thing in frame at 0.60-0.63 and ours measured 0.55
+## (gauntlet/refs/cody_roman_2k26.md).
+const CANVAS_WHITE := Color(0.73, 0.73, 0.73)
 ## The supplied AEW canvas artwork, mapped 1:1 over the 6m mat.
 ##
 ## Surface 0 of the floor mesh already carries a full 0..1 UV across the square

@@ -1359,7 +1359,7 @@ uniform float sway_amplitude = 0.018;
 // real level is meant to come from a fixture aimed at it; until the house
 // wash actually reaches the bowl (see gauntlet/refs/lighting.md's ablation)
 // this is most of what lights them, which is why it is not smaller.
-uniform float house_light = 0.042;
+uniform float house_light = 0.06;
 // The colour of the light the crowd sits in. It used to be white, so the stand
 // took its shirts' colours at face value and measured blue-GREY: mean sat
 // 0.408 on crowd_bank against 0.49-0.67 on every AEW still in
@@ -1442,11 +1442,18 @@ void vertex() {
 	VERTEX.x += sin(TIME * 8.5 + phase) * 0.012 * clapper * local_ex * lift;
 }
 
+// A crowd at a show is a warm, muted mass: the owner's 2K26 match measures
+// its stands at half our saturation (cody_roman_2k26.md). Pulled a third of
+// the way to grey.
+uniform float crowd_muting = 0.35;
+
 void fragment() {
-	ALBEDO = shirt;
+	float lum = dot(shirt, vec3(0.2126, 0.7152, 0.0722));
+	vec3 cloth = mix(shirt, vec3(lum), crowd_muting);
+	ALBEDO = cloth;
 	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
 	vec3 wash = mix(house_tint, near_warm, near);
-	EMISSION = shirt * shade * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
+	EMISSION = cloth * shade * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }
