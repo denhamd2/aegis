@@ -103,7 +103,8 @@ func test_no_floor_seat_in_the_desk_bay() -> void:
 
 
 ## The barricade's faces follow the same panels the model is built from: an
-## LED face on every long-side panel, the logo on the four corners.
+## LED face on every panel of the two long sides (hard camera and opposite,
+## +-X), the logo on the four corners, plain black everywhere else.
 func test_barricade_faces_follow_the_panels() -> void:
 	var rig: ArenaLighting = auto_free(ArenaLighting.new())
 	add_child(rig)
@@ -119,5 +120,5 @@ func test_barricade_faces_follow_the_panels() -> void:
 		if ArenaLighting.barricade_face(panel) == "led":
 			want += 1
 	assert_int(leds).is_equal(want)
-	assert_int(want).is_equal(14)
+	assert_int(want).is_equal(8)
 	assert_int(corners).is_equal(4)

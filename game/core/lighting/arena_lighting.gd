@@ -1098,15 +1098,17 @@ func _barricade_spill(index: int, at: Vector3, out: Vector3, inset: float,
 	add_child(light)
 
 
-## What a barricade panel shows: "led" on every straight run (the ends facing
-## +-X and the sides facing +-Z), "corner" on a cut corner, "" for plain black.
+## What a barricade panel shows: "led" on the two long sides only -- the hard
+## camera's (-X) and the one opposite it (+X), the panels facing +-X -- "corner"
+## (the plain AEW logo) on a cut corner, and "" (plain black barrier) for the
+## rest: the stage end and the announce-desk end (+-Z). The owner's call: the
+## Dynamite banner repeating all the way round read wrong.
 static func barricade_face(panel: Array) -> String:
 	var out: Vector3 = panel[2]
 	if float(panel[3]) < ArenaBuilder.BARRICADE_PANEL * 0.8 \
 			and absf(out.x) > 0.5 and absf(out.z) > 0.5:
 		return "corner"
-	# Both axes: the hard camera's side shows the banner as the ends do.
-	if absf(out.x) > 0.99 or absf(out.z) > 0.99:
+	if absf(out.x) > 0.99:
 		return "led"
 	return ""
 
