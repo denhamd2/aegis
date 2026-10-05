@@ -301,6 +301,11 @@ const FINISH_IMPACT_FOV := 58.0
 const FINISH_CRANE_FOV := Vector2(44.0, 36.0)
 const FINISHER_AFTER_HOLD := 1.6
 const FINISH_AFTER_FOV := 50.0
+## The lens the after shot is focused as (see _after_shot).
+const AFTER_FOCUS_LENS := 24.0
+## Whether the shot on screen is a close-up the rim light should model.
+func is_close_up() -> bool:
+	return mode == Mode.FINISHER_CUT or mode == Mode.FINISHER_AFTER
 var mode: Mode = Mode.HARD_CAM
 ## Seconds the current shot has been held. Advanced off the physics delta, so
 ## it is fixed-step and replays identically; it is never read by anything in
@@ -891,7 +896,13 @@ func _after_shot(_delta: float) -> void:
 	var t := clampf(_held / FINISHER_AFTER_HOLD, 0.0, 1.0)
 	fov = FINISH_AFTER_FOV
 	global_position = a - across.normalized() * 0.9 + side * (1.7 - 0.3 * t) + Vector3.UP * 0.35
-	look_at(a + Vector3.UP * (1.45 + 0.1 * t), Vector3.UP)
+	var head := a + Vector3.UP * (1.45 + 0.1 * t)
+	look_at(head, Vector3.UP)
+	# The crowd soft behind him, as 2K26's close-ups are (cody_roman_2k26.md).
+	# Focused as a long lens would be: this lens is wide, and dof_amount_for
+	# gives a wide lens none.
+	_entrance_focus(global_position.distance_to(head), AFTER_FOCUS_LENS)
+	_focused = true
 
 
 ## Handheld impact shake: a decaying "trauma" drives small offsets of the

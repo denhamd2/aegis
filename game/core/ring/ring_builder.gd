@@ -582,14 +582,67 @@ func _canvas_material() -> StandardMaterial3D:
 	m.normal_scale = CANVAS_TENSION_SCALE
 	m.uv1_scale = Vector3.ONE
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	# The ropes' shadows, multiplied over the art (rope_shadow_texture()).
+	m.detail_enabled = true
+	m.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	m.detail_uv_layer = BaseMaterial3D.DETAIL_UV_1
+	m.detail_albedo = rope_shadow_texture()
 	return m
+
+
+## The ropes' shadows on the canvas, as a multiply layer over the whole mat.
+##
+## The owner's 2K26 Cody vs Roman match (gauntlet/refs/cody_roman_2k26.md, "In-
+## ring match lighting") lays SEVERAL sets of soft, faint lines across the
+## mat parallel to each side -- one set per overhead fixture, each throwing the
+## three ropes at its own angle. Our truss keys sit nearly over the rope line,
+## so real shadow maps would put every rope's shadow in the last few
+## centimetres of canvas (and a 3.6 cm rope is under a shadow texel at that
+## throw anyway). So they are drawn: two fixtures' worth per side, the three
+## ropes each, soft-edged. The lights are fixed for the match, the ropes
+## barely move, and a texture costs nothing on either renderer -- decals do
+## not exist on the web build's.
+##
+## Distances inside the edge (m) per set, the near set darker than the far.
+const ROPE_SHADOW_SETS := [[0.24, 0.42, 0.58], [0.66, 0.88, 1.06]]
+const ROPE_SHADOW_DEPTH := [0.28, 0.18]
+## Half-width of a line's soft core, in metres.
+const ROPE_SHADOW_SOFT := 0.045
+const ROPE_SHADOW_SIZE := 512
+static var _rope_shadow_texture: ImageTexture
+
+
+static func rope_shadow_texture() -> ImageTexture:
+	if _rope_shadow_texture != null:
+		return _rope_shadow_texture
+	var n := ROPE_SHADOW_SIZE
+	var img := Image.create(n, n, false, Image.FORMAT_RGB8)
+	var metres := 2.0 * MAT_HALF / float(n)
+	for py in n:
+		var z := (float(py) + 0.5) * metres - MAT_HALF
+		for px in n:
+			var x := (float(px) + 0.5) * metres - MAT_HALF
+			var keep := 1.0
+			# Each side's lines, parallel to it, measured in from its edge.
+			for edge: float in [MAT_HALF - x, MAT_HALF + x, MAT_HALF - z, MAT_HALF + z]:
+				for set_i in ROPE_SHADOW_SETS.size():
+					for d: float in ROPE_SHADOW_SETS[set_i]:
+						var t := (edge - d) / ROPE_SHADOW_SOFT
+						keep *= 1.0 - float(ROPE_SHADOW_DEPTH[set_i]) * exp(-t * t)
+			var v := clampf(keep, 0.0, 1.0)
+			img.set_pixel(px, py, Color(v, v, v))
+	img.generate_mipmaps()
+	_rope_shadow_texture = ImageTexture.create_from_image(img)
+	return _rope_shadow_texture
 
 
 ## Cotton duck under the lights: matte, one value across the mat.
 const CANVAS_ROUGHNESS := 0.84
 ## How strongly the tension relief relights the mat. Gentle: it should read
 ## as cloth over boards, not as a texture.
-const CANVAS_TENSION_SCALE := 0.45
+## Raised from 0.45 against the 2K26 canvas, which shows its wrinkles and
+## settling under the top light (cody_roman_2k26.md).
+const CANVAS_TENSION_SCALE := 0.7
 const CANVAS_TENSION_SIZE := 512
 static var _canvas_tension_texture: ImageTexture
 

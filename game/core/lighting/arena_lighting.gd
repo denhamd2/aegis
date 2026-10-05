@@ -740,6 +740,27 @@ func _build_top_fill() -> void:
 ## Back pair, above and behind the entrance side, raking across the ring
 ## toward the broadcast cam. This is the separation light: it puts a cool
 ## edge on the side of a wrestler the warm key cannot reach.
+## On a close-up the cool back rim comes up, so the wrestler's shoulders and
+## head separate from the soft crowd behind him, as in every 2K26 close-up
+## (cody_roman_2k26.md). Eased, so the cut is not a light switching on.
+const CLOSE_UP_RIM_GAIN := 3.5
+const CLOSE_UP_RIM_RATE := 4.0
+var _rim_gain := 1.0
+
+
+func _light_close_ups(delta: float) -> void:
+	if look != Look.MATCH or not is_inside_tree():
+		return
+	var cam := get_viewport().get_camera_3d() as MatchCamera
+	var want := CLOSE_UP_RIM_GAIN if cam != null and cam.is_close_up() else 1.0
+	if is_equal_approx(want, _rim_gain):
+		return
+	_rim_gain = move_toward(_rim_gain, want, CLOSE_UP_RIM_RATE * delta)
+	for child in get_children():
+		if child is SpotLight3D and String(child.name).begins_with("Rim"):
+			(child as SpotLight3D).light_energy = rim_energy * _rim_gain
+
+
 func _build_rim() -> void:
 	for sx: float in [1.0, -1.0]:
 		var at := Vector3(sx * RIM_X, RIM_Y, RIM_Z)
@@ -1382,6 +1403,7 @@ var _compat_env: Environment
 func _process(_delta: float) -> void:
 	if look == Look.ENTRANCE and not _beams.is_empty():
 		_move_beams(_delta)
+	_light_close_ups(_delta)
 	if _compat_env == null:
 		return
 	var camera := get_viewport().get_camera_3d() if is_inside_tree() else null
