@@ -219,6 +219,11 @@ func _on_match_won(winner: WrestlerController, method: String) -> void:
 		add_child(post_match)
 		post_match.begin(camera, winner, wrestler_b if winner == wrestler_a else wrestler_a,
 				replay_buffer, _stats)
+		# Then the choice of what next: rematch, change wrestlers, title, quit.
+		post_match.finished.connect(func() -> void:
+			var menu := PostMatchMenu.new()
+			menu.name = "PostMatchMenu"
+			add_child(menu))
 
 ## Writes the recording out, if this run was asked for one. Saved after the
 ## freeze above so the resource holds exactly the ticks the match ran and

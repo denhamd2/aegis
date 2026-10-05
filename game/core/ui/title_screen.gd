@@ -113,6 +113,12 @@ var _heard := []
 var _music: MenuMusic
 ## How long the theme takes to fade under the stinger.
 const MUSIC_FADE := 1.4
+## Set by PostMatchMenu's CHANGE WRESTLERS: the next title screen opens on the
+## select rather than the landing menu.
+static var resume_select := false
+## The last match launched from here, for PostMatchMenu's REMATCH.
+static var last_picks: Array = []
+static var last_watch := false
 
 
 func _ready() -> void:
@@ -138,6 +144,10 @@ func _ready() -> void:
 				rng.randf_range(0.35, 1.0)))
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	if resume_select:
+		resume_select = false
+		phase = Phase.SELECT
+		watch_mode = last_watch
 
 
 func _process(delta: float) -> void:
@@ -145,7 +155,9 @@ func _process(delta: float) -> void:
 	_listen()
 	if phase == Phase.VERSUS:
 		_versus_time += delta
-		if _versus_time >= VERSUS_HOLD:
+		# The card holds until the match has loaded, its bar filling, so the
+		# wipe into the match never lands on a frozen screen.
+		if _versus_time >= VERSUS_HOLD and _preloads_ready():
 			phase = Phase.LAUNCH
 	elif phase == Phase.LAUNCH:
 		if _stinger == null:
@@ -286,6 +298,20 @@ func _start_preloads() -> void:
 			_preloads.append(path)
 
 
+## How far the background loads have got, 0..1 (1 when there is nothing to
+## load on a thread, as on the Web build).
+func load_progress() -> float:
+	if _preloads.is_empty():
+		return 1.0
+	var total := 0.0
+	for path: String in _preloads:
+		var p := []
+		var status := ResourceLoader.load_threaded_get_status(path, p)
+		total += 1.0 if status != ResourceLoader.THREAD_LOAD_IN_PROGRESS \
+				else (float(p[0]) if not p.is_empty() else 0.0)
+	return total / float(_preloads.size())
+
+
 func _preloads_ready() -> bool:
 	for path: String in _preloads:
 		var status := ResourceLoader.load_threaded_get_status(path)
@@ -319,7 +345,10 @@ func _listen() -> void:
 
 func _start_stinger() -> void:
 	_sfx.play("whoosh", 0.0)
-	_music.release(get_tree().root, MUSIC_FADE)
+	# The theme plays on through the wipe and the match being built (the
+	# arena's set-up is the long part); _launch() fades it once that is done.
+	if _music.get_parent() != get_tree().root:
+		_music.reparent(get_tree().root, false)
 	_stinger = MatchStinger.new()
 	_stinger.setup(picks[0], picks[1])
 	_stinger.covered.connect(func() -> void: _stinger_covered = true)
@@ -335,6 +364,8 @@ func _launch() -> void:
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
 			randi_range(1, 1 << 30), watch_mode)
+	last_picks = [picks[0], picks[1]]
+	last_watch = watch_mode
 	# A match launched from the menu opens with the ring entrances. Set here
 	# rather than in configure_match(), which the headless probes call to set
 	# up matches they need live on tick 1.
@@ -344,6 +375,26 @@ func _launch() -> void:
 	tree.root.add_child(scene)
 	tree.current_scene = scene
 	old.queue_free()
+	# Built: now the theme gives way to the entrances.
+	if is_instance_valid(_music):
+		_music.release(tree.root, MUSIC_FADE)
+
+
+## The same two men again, a new seed, entrances and all (PostMatchMenu).
+## False when no match has been launched from the menu this session.
+static func rematch(tree: SceneTree) -> bool:
+	if last_picks.size() < 2:
+		return false
+	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
+	configure_match(scene, last_picks[0], last_picks[1],
+			randi_range(1, 1 << 30), last_watch)
+	scene.entrances = true
+	var old := tree.current_scene
+	tree.root.add_child(scene)
+	tree.current_scene = scene
+	if old:
+		old.queue_free()
+	return true
 
 
 ## Puts two roster entries into an un-entered scenes/match.tscn instance:
@@ -873,3 +924,20 @@ func _draw_versus(view: Vector2) -> void:
 	# The flash as it lands.
 	if vt < 1.0:
 		draw_rect(Rect2(Vector2.ZERO, view), Color(1, 1, 1, 0.18 * (1.0 - vt)))
+	_draw_loading(view, vt)
+
+
+## The loading bar under the VS band: thin, gold on dark, with a label.
+func _draw_loading(view: Vector2, alpha: float) -> void:
+	var p := load_progress()
+	var w := view.x * 0.36
+	var h := maxf(4.0, view.y * 0.008)
+	var at := Vector2((view.x - w) * 0.5, view.y * 0.5 + view.y * 0.16)
+	draw_rect(Rect2(at, Vector2(w, h)), Color(0, 0, 0, 0.6 * alpha))
+	draw_rect(Rect2(at, Vector2(w * p, h)), Color(TitleArt.KEY_GOLD, alpha))
+	var label := "LOADING  %d%%" % int(round(p * 100.0)) if p < 1.0 else "READY"
+	var size := int(view.y * 0.022)
+	var lw := TitleArt.tracked_width(_font, label, size, view.y * 0.002)
+	TitleArt.draw_tracked(self, _font, Vector2((view.x - lw) * 0.5,
+			at.y + h + size * 1.4), label, size, view.y * 0.002,
+			Color(TitleArt.STEEL, 0.85 * alpha))
