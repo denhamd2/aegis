@@ -164,7 +164,8 @@ func test_barricade_spill_stops_at_the_mat_edge() -> void:
 	for child in rig.get_children():
 		if String(child.name).begins_with("BarricadeSpill"):
 			spill.append(child)
-	assert_int(spill.size()).is_equal(13)
+	# One per LED panel, and LED panels are only on the two long sides now.
+	assert_int(spill.size()).is_equal(8)
 	var inner := MAT_HALF - 0.5
 	for light in spill:
 		var p := light.position

@@ -355,6 +355,59 @@ func _wants_taunt() -> bool:
 	return false
 
 
+## The strut (owner's 2K26 Cody vs Roman, gauntlet/refs/cody_roman_2k26.md):
+## the man who has just put the other down does not always walk straight in
+## for the cover. He walks off a couple of metres, turns to the crowd and
+## plays to them -- the heel in control most of all -- then goes back to work.
+## Rolled once per knockdown, deterministic off the match seed.
+const STRUT_CHANCE_HEEL := 0.55
+const STRUT_CHANCE := 0.2
+const STRUT_DISTANCE := 2.0
+## Inside the ropes with room to spare.
+const STRUT_LIMIT := 2.3
+## How long he stands and soaks it in if he cannot taunt.
+const STRUT_HOLD_TICKS := 45
+var _strut_point := Vector3.INF
+var _strut_hold := 0
+## Re-armed whenever the other man is up, so each knockdown gets one roll.
+var _strut_armed := true
+
+
+func _strut_input(input: Dictionary) -> Dictionary:
+	# One roll per knockdown.
+	if _strut_armed:
+		_strut_armed = false
+		var heel := controller.flow != null and controller.flow.wants_stall(controller)
+		_strut_point = Vector3.INF
+		if _opening_grapple_done() and _chain_rng().randf() < (STRUT_CHANCE_HEEL if heel else STRUT_CHANCE):
+			var away := controller.global_position - target.global_position
+			away.y = 0.0
+			if away.length() < 0.1:
+				away = Vector3(-controller.global_position.x, 0.0, -controller.global_position.z)
+			var p := controller.global_position + away.normalized() * STRUT_DISTANCE
+			p.x = clampf(p.x, -STRUT_LIMIT, STRUT_LIMIT)
+			p.z = clampf(p.z, -STRUT_LIMIT, STRUT_LIMIT)
+			_strut_point = Vector3(p.x, controller.global_position.y, p.z)
+			_strut_hold = STRUT_HOLD_TICKS
+	if _strut_point == Vector3.INF:
+		return {}
+	var to := _strut_point - controller.global_position
+	to.y = 0.0
+	if to.length() > 0.2:
+		var dir := to.normalized()
+		input["move"] = Vector2(dir.x, dir.z)
+		return input
+	# There: to the crowd, then back to work.
+	if controller.can_taunt():
+		input["taunt"] = true
+		_strut_point = Vector3.INF
+		return input
+	_strut_hold -= 1
+	if _strut_hold <= 0:
+		_strut_point = Vector3.INF
+	return input
+
+
 func _poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
@@ -415,10 +468,16 @@ func _poll_input() -> Dictionary:
 	# he is already on, so the walk in never crosses the body; the footprint
 	# guard in WrestlerController slides him round the legs if the straight
 	# line would clip them.
+	if target.fsm.current_state != WrestlerFSM.State.DOWN:
+		_strut_armed = true
+		_strut_point = Vector3.INF
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
 		if _wants_taunt():
 			input["taunt"] = true
 			return input
+		var strut := _strut_input(input)
+		if not strut.is_empty():
+			return strut
 		var spot := WrestlerController.cover_approach_spot(target,
 				controller.global_position)
 		var to_spot := spot - controller.global_position

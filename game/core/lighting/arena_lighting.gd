@@ -1057,7 +1057,7 @@ func _build_barricade_leds() -> void:
 		add_child(face)
 		n += 1
 		if absf(out.x) > 0.99:
-			# The short ends keep one spill per panel, as they always had.
+			# The +-X long sides (the only LED runs now) keep one spill per panel.
 			_barricade_spill(n - 1, at, out, inset, top, BARRICADE_SPILL_ENERGY)
 		else:
 			side_panels.append(panel)
