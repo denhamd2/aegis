@@ -226,7 +226,7 @@ func test_cody_s_coat_is_handed_on_and_lies_on_the_table() -> void:
 		assert_bool(c.on_table()).override_failure_message("%s is not on the table" % c.kind).is_true()
 		var p := c.pivot.global_position
 		assert_float(absf(p.z - table.z)).is_less(Timekeeper.TABLE_SIZE.z * 0.5)
-		zs[c.kind] = p.z
+		zs[c.kind] = Vector2(p.x, p.z)
 	var coat_c: PropHandoff.Carried = null
 	for c: PropHandoff.Carried in handoff.carried:
 		if c.kind == "coat":
@@ -234,24 +234,29 @@ func test_cody_s_coat_is_handed_on_and_lies_on_the_table() -> void:
 	assert_object(coat_c).is_not_null()
 	# The coat is flat on the top, and clear of the belt and the necklace.
 	assert_float(coat_c.pivot.global_position.y - (table.y + Timekeeper.TABLE_SIZE.y)).is_between(0.0, 0.1)
-	assert_float(absf(zs["coat"] - zs["title"])).is_greater(0.3)
-	assert_float(absf(zs["coat"] - zs["fala"])).is_greater(0.3)
-	# Their footprints along the table do not overlap.
+	assert_float((zs["coat"] as Vector2).distance_to(zs["title"])).is_greater(0.3)
+	assert_float((zs["coat"] as Vector2).distance_to(zs["fala"])).is_greater(0.3)
+	# Their footprints on the table do not overlap, nor cover the bell.
 	var spans := {}
 	for c: PropHandoff.Carried in handoff.carried:
-		var lo := INF
-		var hi := -INF
+		var rect := Rect2()
+		var first := true
 		for mi: MeshInstance3D in c.pivot.find_children("*", "MeshInstance3D", true, false):
 			if mi.mesh == null:
 				continue
 			var box := mi.global_transform * mi.get_aabb()
-			lo = minf(lo, box.position.z)
-			hi = maxf(hi, box.end.z)
-		spans[c.kind] = Vector2(lo, hi)
+			var flat := Rect2(box.position.x, box.position.z, box.size.x, box.size.z)
+			rect = flat if first else rect.merge(flat)
+			first = false
+		spans[c.kind] = rect
+	var bell := keeper_bell_rect(m)
+	for kind: String in spans:
+		assert_bool((spans[kind] as Rect2).intersects(bell)).override_failure_message(
+				"%s %s covers the bell %s" % [kind, spans[kind], bell]).is_false()
 	for pair: Array in [["coat", "title"], ["coat", "fala"], ["title", "fala"]]:
-		var a: Vector2 = spans[pair[0]]
-		var b: Vector2 = spans[pair[1]]
-		assert_bool(a.y < b.x or b.y < a.x).override_failure_message(
+		var a: Rect2 = spans[pair[0]]
+		var b: Rect2 = spans[pair[1]]
+		assert_bool(not a.intersects(b)).override_failure_message(
 				"%s %s overlaps %s %s" % [pair[0], a, pair[1], b]).is_true()
 	# One coat, in one place: the prop sits under exactly one pivot.
 	var count := 0
@@ -311,3 +316,10 @@ func test_the_necklace_is_carried_by_its_neck() -> void:
 	for mi: MeshInstance3D in fala.pivot.find_children("*", "MeshInstance3D", true, false):
 		var centre := mi.global_transform * mi.get_aabb().get_center()
 		assert_float(centre.distance_to(fala.pivot.global_position)).is_less(0.6)
+
+
+## The bell's footprint on the table, flat in x/z.
+func keeper_bell_rect(m: Dictionary) -> Rect2:
+	var bell := (m["keeper"] as Timekeeper).table.get_node("Bell") as MeshInstance3D
+	var box := bell.global_transform * bell.get_aabb()
+	return Rect2(box.position.x, box.position.z, box.size.x, box.size.z)

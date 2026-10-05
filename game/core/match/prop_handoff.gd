@@ -50,13 +50,13 @@ const REF_RECEIVE := Vector2(0.14, 0.62)
 const REF_GIVE := Vector2(0.14, 0.72)
 const KEEPER_TAKE := Vector2(0.16, 0.55)
 
-## Where along the table (z from its centre, 1.2 m long) each prop lies. The
-## belt is a metre long, so it takes the bell end (and overhangs it a little,
-## as a belt does); the necklace takes the far end; the folded coat (0.30 m)
-## lies in the gap between them -- footprints clear of one another.
-const TITLE_SLOT := -0.55
-const FALA_SLOT := 0.50
-const COAT_SLOT := 0.13
+## Where on the table (x across it, z along it, from its centre; 1.2 m long,
+## 0.75 m deep) each prop lies. The belt is a metre long, so it takes the whole
+## ring-side half; the folded coat and the necklace share the back half, with
+## the bell in its far corner -- footprints clear of one another and the bell.
+const TITLE_SLOT := Vector2(-0.19, 0.0)
+const COAT_SLOT := Vector2(0.2, -0.3)
+const FALA_SLOT := Vector2(0.2, 0.12)
 
 enum Step { IDLE, APPROACH, RECEIVE, CARRY, PASS, PLACE }
 
@@ -364,7 +364,7 @@ static func _bone_holder(skeleton: Skeleton3D, bone: String, actor: Node3D,
 ## The table's two places for a prop: where it lies.
 static func _table_holder(kind: String) -> Dictionary:
 	var top := TABLE_AT + Vector3(0.0, Timekeeper.TABLE_SIZE.y + 0.03, 0.0)
-	var slot := COAT_SLOT if kind == "coat" else (TITLE_SLOT if kind == "title" else FALA_SLOT)
+	var slot: Vector2 = COAT_SLOT if kind == "coat" else (TITLE_SLOT if kind == "title" else FALA_SLOT)
 	# Along the table. The belt is authored upright facing -Z, so it lies with
 	# its front up after a quarter turn about X; the necklace is a loop around
 	# a neck, laid flat the same way (its grip is the neck, so it sits a little
@@ -376,7 +376,7 @@ static func _table_holder(kind: String) -> Dictionary:
 		# Folded flat: its long side along the table, lying on its thickness.
 		top.y += EntranceCoat.FOLDED.y * 0.5 - 0.03
 		basis = Basis(Vector3.UP, PI * 0.5)
-	return {"type": "table", "xform": Transform3D(basis, top + Vector3(0.0, 0.0, slot))}
+	return {"type": "table", "xform": Transform3D(basis, top + Vector3(slot.x, 0.0, slot.y))}
 
 
 static func _holder_transform(holder: Dictionary) -> Transform3D:

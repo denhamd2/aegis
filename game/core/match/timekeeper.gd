@@ -173,7 +173,8 @@ static func _build_table() -> Node3D:
 	brass.metallic = 0.9
 	brass.roughness = 0.3
 	bell.material_override = brass
-	bell.position = Vector3(0.0, TABLE_SIZE.y + 0.04, -TABLE_SIZE.z * 0.38)
+	# The back corner, clear of the props laid on the top (PropHandoff.*_SLOT).
+	bell.position = Vector3(TABLE_SIZE.x * 0.3, TABLE_SIZE.y + 0.04, TABLE_SIZE.z * 0.4)
 	root.add_child(bell)
 	# The ring-side face carries printed art, like the announce desk's front.
 	var art := load(FRONT_ART) as Texture2D
