@@ -117,6 +117,10 @@ const UPLIGHT_DZ := 2.6
 ## none at the feet: sharp where a body touches the canvas, soft away from it,
 ## the way broadcast footage reads.
 const KEY_LIGHT_SIZE := 0.35
+## The overhead fills' source size: tighter than the keys', so the pool they
+## put straight under a body is dark and close, as 2K26's is
+## (cody_roman_2k26.md, "In-ring match lighting").
+const TOP_LIGHT_SIZE := 0.18
 ## Straight-down top light, and the lever the exposure anchor is solved on.
 ## Adds to the mat more than to a standing torso, which opens the
 ## mat<->wrestler gap without touching either material.
@@ -729,7 +733,8 @@ func _build_top_fill() -> void:
 		# (tools/probe/shadow_shot.tscn). Straight down, they give the
 		# contact shadow under a body, the pool that grounds a wrestler on
 		# the canvas in broadcast footage.
-		light.light_size = KEY_LIGHT_SIZE
+		light.light_size = TOP_LIGHT_SIZE
+		light.shadow_blur = 1.0
 
 
 ## Back pair, above and behind the entrance side, raking across the ring

@@ -37,7 +37,11 @@ func test_the_ring_keys_are_wide_sources() -> void:
 	assert_int(keys.size()).is_equal(6)
 	for key: SpotLight3D in keys:
 		assert_bool(key.shadow_enabled).is_true()
-		assert_float(key.light_size).is_equal_approx(ArenaLighting.KEY_LIGHT_SIZE, 0.001)
+		# The overhead fills are a tighter source than the keys: the dark
+		# pool straight under a body (cody_roman_2k26.md).
+		var want := ArenaLighting.TOP_LIGHT_SIZE if String(key.name).begins_with("Top") \
+				else ArenaLighting.KEY_LIGHT_SIZE
+		assert_float(key.light_size).is_equal_approx(want, 0.001)
 
 
 ## A gerb's light holds while the jet burns, and only then goes out.

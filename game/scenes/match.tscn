@@ -106,11 +106,11 @@ glow_hdr_scale = 2.0
 ; somewhere; SSAO is what keeps the wrestlers' feet joined to the mat and the
 ; seats joined to the risers now that neither is self-emissive.
 ssao_enabled = true
-ssao_radius = 0.75
-ssao_intensity = 1.7
+ssao_radius = 0.9
+ssao_intensity = 2.3
 ssao_power = 1.4
 ssao_detail = 0.6
-ssao_light_affect = 0.12
+ssao_light_affect = 0.4
 ssao_ao_channel_affect = 0.2
 ; SDFGI stays OFF. SSIL is now ON (gauntlet/refs/aaa_gap.md, item 4): the
 ; white canvas bounces the truss keys back up onto the wrestlers, the lift
@@ -124,7 +124,7 @@ ssao_ao_channel_affect = 0.2
 ; is added light only, it never darkens what the keys lit.
 ssil_enabled = true
 ssil_radius = 3.0
-ssil_intensity = 1.2
+ssil_intensity = 0.8
 ssil_sharpness = 0.98
 ssil_normal_rejection = 1.0
 ; --- Screen-space reflections ----------------------------------------------

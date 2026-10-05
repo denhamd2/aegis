@@ -923,6 +923,10 @@ const PAD_TEX := "res://assets/environment/materials/ringside_pads.png"
 const PAD_NRM := "res://assets/environment/materials/ringside_pads_nrm.png"
 const PAD_TILE_M := 2.44
 const PAD_REACH := 0.6
+## The ringside floor is dark, so the light pools on the ring: in the owner's
+## 2K26 Cody vs Roman match the mat is the brightest thing in frame and the
+## floor round the apron falls away to near-black (cody_roman_2k26.md).
+const PAD_SHADE := 0.4
 
 
 func _ringside_pads() -> Material:
@@ -933,11 +937,12 @@ func _ringside_pads() -> Material:
 	mat.normal_scale = 0.8
 	mat.roughness = 0.62
 	mat.uv1_scale = Vector3.ONE / PAD_TILE_M
-	mat.albedo_color = Color(1, 1, 1)
+	mat.albedo_color = Color(PAD_SHADE, PAD_SHADE, PAD_SHADE)
 	mat = _house_lit(mat, PAD_REACH)
 	# _house_lit's floor is flat colour; let the mats' own grain carry it.
 	mat.emission_texture = mat.albedo_texture
 	mat.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+	mat.emission_energy_multiplier *= PAD_SHADE
 	return MaterialLibrary.house_compensate(mat)
 
 
@@ -1154,7 +1159,7 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 		colours[pick].append(_crowd_shirt(rng))
 	source.free()
 
-	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887")
+	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887", true)
 	for i in meshes.size():
 		if buckets[i].is_empty():
 			continue
@@ -1165,12 +1170,12 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 		# people. The meshes are not flat white though -- they carry white
 		# for cloth and a darker grey for skin, and this multiplies against
 		# it, which is what gives a fan a face.
-		mm.use_colors = true
+		mm.use_custom_data = true
 		mm.mesh = meshes[i]
 		mm.instance_count = buckets[i].size()
 		for j in buckets[i].size():
 			mm.set_instance_transform(j, buckets[i][j])
-			mm.set_instance_color(j, colours[i][j])
+			mm.set_instance_custom_data(j, colours[i][j])
 		var node := MultiMeshInstance3D.new()
 		node.name = "FloorCrowd%02d" % i
 		node.multimesh = mm
@@ -1184,14 +1189,14 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 ## a Blender script this file cannot import, and a crowd whose two halves wear
 ## different palettes is worse than one number written twice.
 const CROWD_SHIRTS: Array[Color] = [
-	Color(0.012, 0.012, 0.014), Color(0.012, 0.012, 0.014), Color(0.016, 0.016, 0.018),
-	Color(0.016, 0.016, 0.018), Color(0.022, 0.022, 0.024), Color(0.022, 0.022, 0.024),
-	Color(0.040, 0.040, 0.044), Color(0.040, 0.041, 0.045), Color(0.06, 0.06, 0.065),
-	Color(0.012, 0.012, 0.014), Color(0.016, 0.016, 0.018), Color(0.022, 0.022, 0.024),
-	Color(0.014, 0.020, 0.050), Color(0.020, 0.030, 0.065), Color(0.018, 0.026, 0.040),
-	Color(0.30, 0.30, 0.29), Color(0.20, 0.20, 0.20), Color(0.11, 0.11, 0.12),
-	Color(0.20, 0.014, 0.012), Color(0.12, 0.010, 0.012), Color(0.26, 0.17, 0.02),
-	Color(0.18, 0.12, 0.015), Color(0.03, 0.09, 0.05), Color(0.06, 0.06, 0.20),
+	Color(0.11, 0.11, 0.12), Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14),
+	Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17), Color(0.16, 0.16, 0.17),
+	Color(0.22, 0.22, 0.23), Color(0.22, 0.22, 0.23), Color(0.27, 0.27, 0.28),
+	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17),
+	Color(0.12, 0.15, 0.25), Color(0.15, 0.19, 0.28), Color(0.14, 0.18, 0.22),
+	Color(0.58, 0.58, 0.57), Color(0.48, 0.48, 0.48), Color(0.37, 0.37, 0.38),
+	Color(0.48, 0.12, 0.11), Color(0.38, 0.10, 0.11), Color(0.55, 0.45, 0.15),
+	Color(0.46, 0.38, 0.13), Color(0.19, 0.33, 0.25), Color(0.27, 0.27, 0.48),
 ]
 
 
@@ -1340,7 +1345,7 @@ const CROWD_WASH := Vector3(1.12, 0.98, 0.86)
 ## golden-ratio phase per figure into a UV channel instead -- colour alpha was
 ## tried first and arrives back 1.0 for every vertex, since nothing in either
 ## the exporter or the importer preserves an alpha no material reads.
-func _crowd_material(phase_source: String = "UV.x") -> ShaderMaterial:
+func _crowd_material(phase_source: String = "UV.x", floor_fans := false) -> ShaderMaterial:
 	var shader := Shader.new()
 	shader.code = """
 shader_type spatial;
@@ -1379,9 +1384,9 @@ global uniform float crowd_light;
 // In the match 2K26's front rows read as people -- faces, warm skin, shirt
 // colour -- and the far bowl falls into the dark. A gain on the rows nearest
 // the ring, warmed toward ~4000 K, fading out by FAR metres.
-uniform float near_gain = 2.4;
+uniform float near_gain = 4.5;
 uniform float near_from = 7.0;
-uniform float near_to = 30.0;
+uniform float near_to = 22.0;
 uniform vec3 near_warm = vec3(1.18, 0.98, 0.80);
 varying float ring_dist;
 
@@ -1397,6 +1402,7 @@ float hash(float n) {
 
 void vertex() {
 	shirt = COLOR.rgb;
+	FLOOR_FANS
 	figure = PHASE_SOURCE;
 	shade = (0.72 + 0.4 * hash(PHASE_SOURCE * 91.7)) * (0.7 + 0.3 * clamp(NORMAL.y * 0.5 + 0.5 + abs(NORMAL.x) * 0.15, 0.0, 1.0));
 	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -1445,6 +1451,16 @@ void fragment() {
 	SPECULAR = 0.0;
 }
 """
+	# The ringside fans (floor_crowd.glb) carry VALUE, not hue: 1.0 cloth, 0.5
+	# skin, under 0.2 hair and shoes. Their shirt arrives per instance in
+	# INSTANCE_CUSTOM; skin takes a per-fan tone of its own, so a fan in a red
+	# shirt does not get a red face.
+	shader.code = shader.code.replace("FLOOR_FANS", """{
+		float v = COLOR.r;
+		float h = hash(float(INSTANCE_ID) * 3.7);
+		vec3 skin = mix(vec3(0.13, 0.06, 0.035), vec3(0.62, 0.36, 0.25), h);
+		shirt = v > 0.7 ? INSTANCE_CUSTOM.rgb : (v > 0.35 ? skin : vec3(v * 0.5));
+	}""" if floor_fans else "")
 	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
 	var mat := ShaderMaterial.new()
 	mat.shader = shader

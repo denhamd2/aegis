@@ -139,8 +139,8 @@ func test_the_fans_are_seated_height() -> void:
 
 ## The mesh carries no HUE, because the shirt is dressed per instance.
 ##
-## `_build_floor_crowd` sets `mm.use_colors` and a colour from `CROWD_SHIRTS`
-## on every instance, and Godot multiplies that by the mesh's own COLOR_0. A
+## `_build_floor_crowd` puts a shirt from `CROWD_SHIRTS` in each instance's
+## custom data, and the crowd shader dresses the mesh's cloth value with it. A
 ## mesh carrying a shirt colour of its own would tint each fan twice -- in the
 ## seats closest to the camera, which reads as bad lighting rather than as a
 ## bug in a model. Value is a different matter and is the point of the next
