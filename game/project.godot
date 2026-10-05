@@ -127,6 +127,12 @@ environment/subsurface_scattering/subsurface_scattering_quality=2
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+; Opens maximized, fitted to the screen: a fixed 1920x1080 window is taller
+; than a laptop's display, and on the owner's Mac the bottom of it -- the
+; HUD's health plates -- was off the bottom of the screen.
+window/size/mode=2
+window/size/window_width_override=1600
+window/size/window_height_override=900
 ; Landscape on a phone, either way up.
 window/handheld/orientation=4
 

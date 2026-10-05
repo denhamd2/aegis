@@ -94,6 +94,7 @@ func _draw() -> void:
 	if referee:
 		_draw_count(view)
 		_draw_hold(view)
+	_draw_controls(view)
 
 func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 		fallback_accent: Color, mirrored: bool) -> void:
@@ -217,3 +218,48 @@ func _draw_hold(view: Vector2) -> void:
 	var font_size := int(maxf(10.0, bar.y * 0.95))
 	draw_string(font, Vector2(origin.x, origin.y - bar.y * 0.35), "HOLD",
 			HORIZONTAL_ALIGNMENT_CENTER, bar.x, font_size, NAME_COLOR)
+
+
+## The keys, small, along the bottom between the plates (owner request), for
+## a player's match only -- WATCH has nobody to control. Read from the
+## InputMap so a rebind shows up here without editing this.
+const CONTROLS := [["MOVE", ["move_up", "move_left", "move_down", "move_right"]],
+		["STRIKE", ["strike"]], ["GRAPPLE", ["grapple"]], ["REVERSE", ["reversal"]],
+		["RUN", ["run"]], ["ESCAPE / KICK OUT", ["submission_hold"]]]
+var _controls_text := ""
+var _controls_font: Font
+
+
+func controls_text() -> String:
+	if _controls_text == "":
+		var parts: Array[String] = []
+		for row: Array in CONTROLS:
+			var keys: Array[String] = []
+			for action: String in row[1]:
+				if not InputMap.has_action(action):
+					continue
+				for event: InputEvent in InputMap.action_get_events(action):
+					if event is InputEventKey:
+						var code: int = event.physical_keycode if event.physical_keycode != 0 \
+								else event.keycode
+						keys.append(TitleScreen._key_label(code))
+						break
+			if not keys.is_empty():
+				parts.append("%s %s" % ["".join(keys) if keys.size() > 1 else keys[0], row[0]])
+		_controls_text = "   ·   ".join(parts)
+	return _controls_text
+
+
+func _draw_controls(view: Vector2) -> void:
+	if wrestler_a == null or wrestler_b == null or (wrestler_a.is_ai and wrestler_b.is_ai):
+		return
+	if _controls_font == null:
+		_controls_font = TitleArt.teko(500)
+	var size_px := int(view.y * 0.020)
+	var text := controls_text()
+	var w := _controls_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x
+	var at := Vector2((view.x - w) * 0.5, view.y - view.y * 0.022)
+	draw_rect(Rect2(at.x - size_px * 0.6, at.y - size_px * 0.95, w + size_px * 1.2,
+			size_px * 1.3), Color(0, 0, 0, 0.45))
+	draw_string(_controls_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px,
+			Color(1, 1, 1, 0.78))

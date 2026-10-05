@@ -366,9 +366,14 @@ const CODY_BLUE := Color(0.18, 0.32, 1.0)
 const CODY_DARK_AT := Vector3(0.0, RIG_CLEAR_Y, 14.0)
 const CODY_DARK_LOOK := Vector3(0.0, 3.0, -30.0)
 const CODY_DARK_FOV := 50.0
+## His video starting on the big screen: from a crane over the floor, square
+## to the wall, the whole screen and the dark stage under it (owner: the old
+## cut "stays too long on the crowd" -- the 2K26 intro shows the video).
+const TRON_SHOT_AT := Vector3(0.0, 4.5, -17.0)
+const TRON_SHOT_FOV := 34.0
 const PORTAL_LONG_FOV := Vector2(19.0, 14.0)
 const STEADICAM_FOV := 32.0
-const CORNER_LOW_AT := Vector3(1.2, 0.35, -1.2)
+const CORNER_LOW_AT := Vector3(1.2, 1.25, -1.2)
 const CORNER_LOW_FOV := 50.0
 ## Cues inside his clips, in ticks from the clip's start (clip frame x 2):
 ## Title_Unbuckle opens the belt on frame 20 and it moves from his waist to
@@ -392,27 +397,29 @@ const ROMAN_PYRO_RED := Color(1.0, 0.10, 0.16)
 const PUSH_FROM := Vector3(0.0, 1.8, -24.5)
 const PUSH_TO := Vector3(0.0, 1.7, -27.4)
 const PUSH_FOV := Vector2(34.0, 28.0)
-const HERO_OFFSET := Vector3(0.9, 0.45, 3.0)
+## Eye level, not a worm's-eye: 2K26's entrance mids sit at chest-to-eye
+## height (owner: "I don't like the low camera facing up"; cody_roman_2k26.md).
+const HERO_OFFSET := Vector3(0.9, 1.45, 3.0)
 const HERO_FOV := 40.0
 const STAGE_WIDE_AT := Vector3(0.0, 3.2, -15.0)
 const STAGE_WIDE_LOOK := Vector3(0.0, 4.0, -33.0)
 const STAGE_WIDE_FOV := 58.0
-const RING_LOW_OFFSET := Vector3(-2.2, 0.35, 1.4)
+const RING_LOW_OFFSET := Vector3(-2.2, 1.45, 1.4)
 const RING_LOW_FOV := 46.0
 
 # --- The broadcast's shots (refs/entrances.md "Measured off broadcast") ---
 ## The signature walk shot, both men: an ultra-wide steadicam backing ahead
 ## of him with the lens at his hips, tilted up past his chest to the roof.
 const STEADICAM_LOW_AHEAD := 1.3
-const STEADICAM_LOW_HEIGHT := 0.55
-const STEADICAM_LOW_FOV := 68.0
+const STEADICAM_LOW_HEIGHT := 1.45
+const STEADICAM_LOW_FOV := 50.0
 ## The very wide from high at the far end, over the ring, on him.
 const ARENA_HIGH_AT := Vector3(6.5, RIG_CLEAR_Y, 12.0)
 const ARENA_HIGH_FOV := 50.0
 ## Behind him, over his shoulder, down the ramp at the crowd (R-CJ).
 const OVER_SHOULDER_FOV := 50.0
 ## Low on the ramp looking up at him small under the set (R-41 50-58 s).
-const RAMP_LOW_WIDE_AT := Vector3(0.0, 0.9, ArenaBuilder.STAGE_FRONT + 8.5)
+const RAMP_LOW_WIDE_AT := Vector3(0.0, 1.8, ArenaBuilder.STAGE_FRONT + 8.5)
 const RAMP_LOW_WIDE_FOV := 46.0
 ## A long lens from down the ramp on him at the lip (C-MITB, the kneel).
 const RAMP_LONG_BACK := 9.0
@@ -710,8 +717,10 @@ func _add_intro(a: Transform3D, b: Transform3D, face_a: Vector3, face_b: Vector3
 	_checked = checked
 	var first := _b if checked == _a else _a
 	var last := _a if checked == _a else _b
+	# Both men are in: the house lights come up for the introductions and
+	# the stare-down (owner), not at the bell.
 	_beats.append({"kind": "pair", "ticks": INTRO_CARD_TICKS, "shot": "match_card",
-			"match_card": true, "moves": hold})
+			"match_card": true, "moves": hold, "events": [[1, "lights_up"]]})
 	_beats.append({"kind": "pair", "ticks": INTRO_CHECK_TICKS, "shot": "ref_check",
 			"focus": last, "moves": hold})
 	_beats.append({"kind": "pair", "ticks": INTRO_CLOSE_TICKS, "shot": "corner_intro",
@@ -1108,12 +1117,15 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	# The stage is in it twice, both on the wide from the far end; the rest
 	# is the building -- the owner found the old cut "went to the tunnel too
 	# soon", three of its six shots on the dark stage.
-	for cut: Array in [[CODY_WHOA_1, CODY_WHOA_2, "crowd_wide", true],
-			[CODY_WHOA_2, CODY_WHOA_3, "cody_dark", true],
-			[CODY_WHOA_3, CODY_BAND, "crowd_far", true],
-			[CODY_BAND, 12.0, "arena_dark_high", false],
-			[12.0, 16.0, "crowd_wide", false],
-			[16.0, CODY_SMOKE, "crowd_far", false]]:
+	# The screen is black until the band hits, so the WHOAs play on the dark
+	# house (one short crowd cutaway, not the four it had); then his video
+	# starts and the camera is on it, back to the wall again before the smoke.
+	for cut: Array in [[CODY_WHOA_1, CODY_WHOA_2, "cody_dark", true],
+			[CODY_WHOA_2, CODY_WHOA_3, "crowd_wide", true],
+			[CODY_WHOA_3, CODY_BAND, "arena_dark_high", true],
+			[CODY_BAND, 12.5, "tron_video", false],
+			[12.5, 16.0, "arena_dark_high", false],
+			[16.0, CODY_SMOKE, "tron_video", false]]:
 		_beats.append(_with(dark, {"kind": "hold", "who": w,
 				"ticks": _secs(cut[0], cut[1]), "shot": cut[2],
 				"events": [[1, "strobe"]] if cut[3] else []}))
@@ -1419,6 +1431,8 @@ func _event(w: WrestlerController, what: String) -> void:
 	cue.emit(what)
 	var props: EntranceProps = _props.get(w)
 	match what:
+		"lights_up":
+			_dim_house(false)
 		"title_held":
 			if props:
 				props.set_title("held")
@@ -1594,6 +1608,8 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 			_intro_shot()
 		"cody_dark":
 			_camera.set_entrance_shot(CODY_DARK_AT, CODY_DARK_LOOK, CODY_DARK_FOV, true)
+		"tron_video":
+			_camera.set_entrance_shot(TRON_SHOT_AT, TRON_AT, TRON_SHOT_FOV, true)
 		"portal_long":
 			# From down the ramp, dead on his portal, the lens creeping in
 			# across the three WHOAs.
@@ -1683,7 +1699,7 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					RAMP_LONG_FOV, true)
 		"ring_behind_low":
 			var f6 := _flat(-w.global_transform.basis.z).normalized()
-			_camera.set_entrance_shot(w.global_position - f6 * 1.6 + Vector3.UP * 0.5,
+			_camera.set_entrance_shot(w.global_position - f6 * 1.6 + Vector3.UP * 1.5,
 					w.global_position + f6 * 3.0 + Vector3.UP * 1.4, RING_BEHIND_FOV,
 					first, delta)
 		"bow_close":

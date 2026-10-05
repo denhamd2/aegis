@@ -259,13 +259,10 @@ func _receive_tick() -> void:
 		c.swap(_bone_holder(_ref.skeleton(), "hand_r", _ref, Vector3.ZERO))
 		_stage = 2
 	elif _stage == 2 and _clock >= REACH_SHOULDER:
-		c.swap(_bone_holder(_ref.skeleton(), "clavicle_r", _ref, SHOULDER_OFFSET))
+		# Carried in her hand, not hung off her shoulder: the shoulder hold
+		# sat the prop in front of her head (owner). It stays on hand_r.
 		_stage = 3
 		_start_carry()
-
-
-## Over her right shoulder, in her yaw frame: a little up, a little back.
-const SHOULDER_OFFSET := Vector3(0.0, 0.10, -0.04)
 
 
 func _start_carry() -> void:
@@ -298,7 +295,7 @@ func _pass_tick() -> void:
 		c.swap(_bone_holder(_keeper.skeleton(), "hand_r", _keeper, Vector3.ZERO))
 		_stage = 1
 	elif _stage == 1 and _clock >= TAKE_SHOULDER:
-		c.swap(_bone_holder(_keeper.skeleton(), "clavicle_r", _keeper, SHOULDER_OFFSET))
+		# In his hand to the table, as hers was.
 		# She is done: back to her spot. He takes it to the table.
 		_ref.end_errand()
 		step = Step.PLACE

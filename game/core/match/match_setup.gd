@@ -144,6 +144,10 @@ func _ready() -> void:
 		director.name = "EntranceDirector"
 		add_child(director)
 		director.bell.connect(_begin_live)
+		# The match look from the introductions on, so the stare-down is lit.
+		director.cue.connect(func(what: String) -> void:
+			if what == "lights_up":
+				_set_look(ArenaLighting.Look.MATCH))
 		audio.follow(director)
 		crowd.follow(director)
 		if sign_fans:

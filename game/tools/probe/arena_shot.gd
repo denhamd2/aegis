@@ -20,6 +20,7 @@ const MATCH_SCENE := "res://scenes/match.tscn"
 var _out := "/tmp/arena"
 var _wrestlers := ""
 var _settle := 90
+var _player := false
 ## --flashes: an entrance's camera flashes plus a burst, for judging them.
 var _flashes := false
 ## --ice: a bank of Cody's dry ice poured at the ring's foot, for judging it.
@@ -34,6 +35,8 @@ func _ready() -> void:
 			_wrestlers = args[i + 1]
 		elif args[i] == "--flashes":
 			_flashes = true
+		elif args[i] == "--player":
+			_player = true
 		elif args[i] == "--ice":
 			_ice = true
 		elif args[i] == "--settle" and i + 1 < args.size():
@@ -56,6 +59,9 @@ func _ready() -> void:
 	var b: WrestlerController = scene.get_node("WrestlerB")
 	for w: WrestlerController in [a, b]:
 		w.is_ai = true
+	# --player: WrestlerA is the player's (the HUD's controls legend shows).
+	if _player:
+		a.is_ai = false
 	print("ARENA %s vs %s" % [pair[0].display_name(), pair[1].display_name()])
 
 	# Let the models load and the two square up, then let the camera's own
