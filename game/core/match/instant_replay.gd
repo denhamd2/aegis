@@ -145,7 +145,7 @@ func _end() -> void:
 		audio.process_mode = _audio_mode
 	get_tree().paused = false
 	if camera:
-		camera.resume_master()
+		camera.resume_play()
 
 
 ## One new angle, the one the live coverage never has: down at mat level,

@@ -334,6 +334,6 @@ func _finish() -> void:
 	defender._go_down()
 	attacker.last_landed_tier = CombatSystem.Tier.SIGNATURE
 	if _camera:
-		_camera.resume_master()
+		_camera.resume_play()
 	finished.emit()
 	queue_free()

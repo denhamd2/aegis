@@ -205,7 +205,7 @@ func test_a_finisher_cut_ends_when_the_grapple_does() -> void:
 	# finish.
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.FINISHER_AFTER)
 	camera._update_mode(MatchCamera.FINISHER_AFTER_HOLD + 0.1)
-	assert_int(camera.mode).is_equal(MatchCamera.Mode.HARD_CAM)
+	assert_int(camera.mode).is_equal(camera.master_mode())
 
 ## The finisher slot is empty in every shipped scene now -- the finisher
 ## moves and their paired animations were removed -- so the cut is wired to
@@ -387,7 +387,7 @@ func test_gameplay_coverage_plays_on_the_ringside_camera() -> void:
 	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
 	var camera: MatchCamera = _match().get_node("MatchCamera")
 	camera.mode = MatchCamera.Mode.RINGSIDE
-	assert_float(camera.shot_hold()).is_greater(MatchCamera.GAMEPLAY_MASTER_HOLD)
+	assert_float(camera.shot_hold()).is_greater(MatchCamera.GAMEPLAY_OPENING_HOLD)
 	# Above the top rope, outside the ring, side-on to the pair.
 	var a: Node3D = camera.wrestler_a
 	var b: Node3D = camera.wrestler_b
@@ -434,7 +434,7 @@ func test_a_finisher_preempts_the_shot_clock() -> void:
 	rig._active = false
 	camera._update_mode(step)
 	assert_int(camera.mode).override_failure_message(
-		"the finisher cut outlived its move").is_equal(MatchCamera.Mode.HARD_CAM)
+		"the finisher cut outlived its move").is_equal(camera.master_mode())
 
 ## A CUT IS INSTANT. Lerping between two angles is a camera MOVE, and a move
 ## between the bowl and ringside is a 28m fly-in. The rig used to lerp into

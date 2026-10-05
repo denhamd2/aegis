@@ -222,19 +222,31 @@ enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE, FINISHE
 
 # --- The 2K-style gameplay camera (camera_aaa_plan.md B1) --------------------
 ## In GAMEPLAY coverage (CameraSettings) the handheld is the dynamic ringside
-## camera 2K26 plays on: just above the top rope, outside the ring, side-on to
-## the line between the two men -- and always on the broadcast side of that
-## line (the 180-degree rule the hard camera sets). It does NOT orbit: a camera
-## that swings round the pair every time they turn is a camera that is never
-## still, which is what the owner saw. Its bearing is held, and when the pair
-## have turned more than GAMEPLAY_DEADZONE off it (or a ring post gets in the
-## way) it CUTS to the new side-on bearing -- instantly, no sooner than
-## GAMEPLAY_CUT_HOLD seconds after the last cut, the way a director calls a
-## new camera. Its distance is the same measured framing fit.
-const GAMEPLAY_HEIGHT := 2.5
-const GAMEPLAY_DEADZONE := 1.0    # 57 degrees: only a real change of side-on moves it
-const GAMEPLAY_CUT_HOLD := 3.0    # seconds a bearing is held before it may cut
-const GAMEPLAY_POST_CUT_HOLD := 1.2   # a post in the way cuts sooner
+## camera 2K26 plays on, measured off the owner's 2K26 Cody vs Roman match
+## (gauntlet/refs/cody_roman_2k26.md): ONE continuous camera for the whole
+## match -- 13 cuts in ~475 s between the bell and the winner, a shot of about
+## 37 s on average -- just above the top rope, 6-9 m out, panning and drifting
+## with the pair. The only cuts are set pieces (the finisher, the pin, the
+## finish and replays); there is no shot clock and no cut on a strike.
+##
+## It still does not orbit: it stays on the broadcast side of the line between
+## the two men (the 180-degree rule the hard camera sets), ignores a turn of
+## the pair inside GAMEPLAY_DEADZONE, and when they have turned further it PANS
+## round to the new side-on bearing at no more than GAMEPLAY_PAN_RATE -- a
+## camera operator walking round the apron, not a cut and not a swing.
+const GAMEPLAY_HEIGHT := 1.65
+const GAMEPLAY_DEADZONE := 0.6    # 34 degrees: a small turn of the pair does not move it
+const GAMEPLAY_SETTLE := 0.08     # once panning, it pans until this close to side-on
+const GAMEPLAY_PAN_RATE := 0.35   # rad/s: 20 degrees a second at most
+const GAMEPLAY_POST_PAN_RATE := 0.7   # a post in the way: it walks faster
+## 2K26 frames the pair at about 0.45 of the frame from just outside the ropes;
+## the fit alone would bring it in to 3.5 m at a
+## tie-up, which is the tight handheld of BROADCAST coverage, not this camera.
+const GAMEPLAY_MIN_DISTANCE := 4.2
+## How fast the aim point follows the pair: the lens never snaps to a man.
+const GAMEPLAY_LOOK_SPEED := 2.5
+## The opening wide (the pre-match card), then the gameplay camera for good.
+const GAMEPLAY_OPENING_HOLD := 4.0
 ## The ropes are at 3.1: the camera stays outside them.
 const RING_OUTSIDE := 3.55
 const POSTS := [Vector3(3.3, 0, 3.3), Vector3(-3.3, 0, 3.3), Vector3(3.3, 0, -3.3), Vector3(-3.3, 0, -3.3)]
@@ -304,6 +316,10 @@ var _bearing := Vector3.ZERO
 ## a cut (placed, not eased into).
 var _bearing_age := 0.0
 var _snap_next := false
+## Whether the gameplay camera is walking round to a new side-on bearing.
+var _panning := false
+## The gameplay camera's smoothed aim point.
+var _look := Vector3.INF
 ## How many times the gameplay bearing has cut (for tests and probes).
 var bearing_cuts := 0
 var _cut := -1
@@ -320,8 +336,6 @@ var _cutaway_pending := false
 var _sign_fans: Node
 var _kickout_reaction := false
 const KICKOUT_REACTION_AFTER := 0.9
-const GAMEPLAY_HOLD := 6.0
-const GAMEPLAY_MASTER_HOLD := 4.0
 var grapple_rig: GrappleRig
 var referee: MatchReferee
 
@@ -380,6 +394,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		var separation := wrestler_a.global_position.distance_to(wrestler_b.global_position)
 		var distance := framing_distance(separation)
+		if mode == Mode.RINGSIDE and CameraSettings.gameplay():
+			distance = maxf(distance, GAMEPLAY_MIN_DISTANCE)
 		# The bearing is a PROPERTY OF THE SHOT, not of wherever the camera
 		# happens to be standing. It used to be read back off the camera's own
 		# position -- which worked only because nothing ever moved the camera
@@ -422,9 +438,18 @@ func _physics_process(delta: float) -> void:
 		# and flying to it. The rig used to lerp into every cut because there
 		# was only ever one position to lerp from.
 		global_position = target_position
+	var look := midpoint + Vector3.UP * aim
+	if mode == Mode.RINGSIDE and CameraSettings.gameplay():
+		# The lens follows the pair with a lag, so it frames the action rather
+		# than locking onto it frame by frame.
+		if _look == Vector3.INF or mode != _previous_mode or _snap_next:
+			_look = look
+		else:
+			_look = _look.lerp(look, 1.0 - exp(-GAMEPLAY_LOOK_SPEED * delta))
+		look = _look
 	_previous_mode = mode
 	_snap_next = false
-	look_at(midpoint + Vector3.UP * aim, Vector3.UP)
+	look_at(look, Vector3.UP)
 
 ## Frames an entrance shot: where the camera stands, what it looks at, and
 ## the lens. `snap` is a cut; otherwise it eases, which is what a camera
@@ -539,11 +564,13 @@ func shot_hold() -> float:
 	if CameraSettings.gameplay():
 		# 2K-style: the gameplay camera is what the match is played on; the
 		# master is the cutaway to the wide.
+		# The opening wide, once; then the gameplay camera never cuts away on
+		# a clock (2K26: one continuous camera).
 		match mode:
 			Mode.HARD_CAM:
-				return GAMEPLAY_MASTER_HOLD
+				return GAMEPLAY_OPENING_HOLD
 			Mode.RINGSIDE:
-				return GAMEPLAY_HOLD
+				return INF
 	match mode:
 		Mode.HARD_CAM:
 			return hard_cam_hold
@@ -636,15 +663,15 @@ func _update_mode(delta: float) -> void:
 	if mode == Mode.FINISHER_AFTER:
 		_held += delta
 		if _held >= FINISHER_AFTER_HOLD:
-			mode = Mode.HARD_CAM
+			mode = master_mode()
 			_held = 0.0
 		return
 	if mode == Mode.THREE_COUNT_CUT:
 		# Out of the pin and back to the master, not to whatever was on screen
 		# before it: a broadcast comes out of a near-fall on the wide -- and
 		# then, a beat later, the crowd reacting to the kickout (B3/B6).
-		mode = Mode.HARD_CAM
-		_kickout_reaction = referee != null and not referee._match_over
+		mode = master_mode()
+		_kickout_reaction = referee != null and not referee._match_over and not CameraSettings.gameplay()
 	if mode == Mode.FINISHER_CUT:
 		if _after_pending and _finish_shot_t >= MIN_SHOT:
 			_after_pending = false
@@ -652,7 +679,7 @@ func _update_mode(delta: float) -> void:
 			_held = 0.0
 			return
 		if grapple_rig and not grapple_rig.is_active() and not _after_pending:
-			mode = Mode.HARD_CAM
+			mode = master_mode()
 		_reset_clock_on_change(was)
 		return
 	if mode == Mode.EVENT_CUT:
@@ -679,6 +706,12 @@ func _update_mode(delta: float) -> void:
 	if hold > 0.0 and _held >= hold:
 		mode = Mode.RINGSIDE if mode == Mode.HARD_CAM else Mode.HARD_CAM
 	_reset_clock_on_change(was)
+
+## Where coverage comes back to after a set piece: the hard camera in
+## BROADCAST, the gameplay camera in GAMEPLAY (2K26 comes out of a near-fall
+## straight back onto the camera the match is played on).
+func master_mode() -> Mode:
+	return Mode.RINGSIDE if CameraSettings.gameplay() else Mode.HARD_CAM
 
 func _reset_clock_on_change(was: Mode) -> void:
 	if mode != was:
@@ -724,6 +757,14 @@ func cut_to_three_count() -> void:
 func resume_master() -> void:
 	mode = Mode.HARD_CAM
 	_held = 0.0
+	_clear_focus()
+
+## Back to the camera the match is played on, after a replay or a dive: the
+## gameplay camera in GAMEPLAY coverage, the master in BROADCAST.
+func resume_play() -> void:
+	mode = master_mode()
+	_held = 0.0
+	_snap_next = true
 	_clear_focus()
 
 
@@ -893,23 +934,27 @@ func _gameplay_bearing(delta: float) -> Vector3:
 	if line.length() < 0.4:
 		return _bearing
 	var want := Vector3.UP.cross(line).normalized()
-	# The broadcast side of the line, so a cut to the hard camera never jumps it.
+	# The broadcast side of the line, so it never crosses it.
 	if want.dot(ringside_bearing) < 0.0:
 		want = -want
 	var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
-	var distance := framing_distance(line.length())
+	var distance := maxf(framing_distance(line.length()), GAMEPLAY_MIN_DISTANCE)
 	for turn in [0.45, -0.9]:
 		if not post_in_the_way(mid, want, distance):
 			break
 		want = want.rotated(Vector3.UP, turn)
 	var angle := _bearing.signed_angle_to(want, Vector3.UP)
 	var blocked := post_in_the_way(mid, _bearing, distance)
-	if (absf(angle) > GAMEPLAY_DEADZONE and _bearing_age >= GAMEPLAY_CUT_HOLD) \
-			or (blocked and _bearing_age >= GAMEPLAY_POST_CUT_HOLD):
-		_bearing = want
-		_bearing_age = 0.0
-		_snap_next = true
-		bearing_cuts += 1
+	if absf(angle) > GAMEPLAY_DEADZONE or blocked:
+		_panning = true
+	if _panning:
+		if absf(angle) <= GAMEPLAY_SETTLE and not blocked:
+			_panning = false
+		else:
+			var rate := GAMEPLAY_POST_PAN_RATE if blocked else GAMEPLAY_PAN_RATE
+			# Eased in and out over the turn, capped at the operator's pace.
+			var step := signf(angle) * minf(absf(angle), rate * delta * clampf(absf(angle) / 0.3, 0.25, 1.0))
+			_bearing = _bearing.rotated(Vector3.UP, step).normalized()
 	return _bearing
 
 
@@ -952,6 +997,10 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 ## Cuts to `kind` if the shot grammar allows it now.
 func _try_cut(kind: int, subject: Node3D, other: Node3D) -> bool:
 	if not CameraSettings.cuts_enabled() or subject == null:
+		return false
+	# 2K26's gameplay camera does not cut on a strike, a slam or a taunt: the
+	# shake carries the impact and the shot stays where it is.
+	if CameraSettings.gameplay():
 		return false
 	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE:
 		return false
