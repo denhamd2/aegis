@@ -1,0 +1,71 @@
+name: Build macOS app
+
+# The desktop build for a Mac. Exports the "macOS" preset in
+# game/export_presets.cfg (a universal .app for Apple Silicon and Intel, in a
+# zip) and publishes it on the Releases page under the tag mac-latest.
+#
+# Unlike the Web build this runs the full forward_plus renderer (Metal), so it
+# looks like the frames the gauntlet judges.
+#
+# Ad-hoc signed, not notarised: there is no Apple developer account here. The
+# first time, macOS will refuse to open it -- right-click Aegis.app and choose
+# Open, or System Settings > Privacy & Security > Open Anyway.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Godot 4.6 with export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.3-stable
+          use-dotnet: false
+          include-templates: true
+
+      # Imports twice: the first builds the cache (and exits non-zero while
+      # it does), the second is the real check that every asset imports.
+      - name: Import project
+        run: |
+          godot --headless --path game --import || true
+          godot --headless --path game --import
+
+      - name: Export the app
+        run: |
+          mkdir -p build/mac
+          godot --headless --path game \
+            --export-release "macOS" ../build/mac/Aegis.zip
+          test -s build/mac/Aegis.zip
+          ls -la build/mac
+
+      - name: Keep the app as a downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aegis-macos
+          path: build/mac/Aegis.zip
+          retention-days: 30
+
+      # One release that always holds the newest app: delete and recreate.
+      - name: Publish to the mac-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete mac-latest --yes --cleanup-tag || true
+          gh release create mac-latest build/mac/Aegis.zip \
+            --title "Aegis for Mac (latest main)" \
+            --notes "Build of ${GITHUB_SHA::7}. Download Aegis.zip, double-click to unzip, then right-click Aegis.app > Open (first time only: it is not notarised by Apple)." \
+            --prerelease --target "$GITHUB_SHA"
