@@ -1184,11 +1184,14 @@ func _build_floor_crowd(seats: Array[Transform3D]) -> void:
 ## a Blender script this file cannot import, and a crowd whose two halves wear
 ## different palettes is worse than one number written twice.
 const CROWD_SHIRTS: Array[Color] = [
-	Color(0.20, 0.21, 0.26), Color(0.28, 0.24, 0.24), Color(0.17, 0.20, 0.24),
-	Color(0.31, 0.29, 0.27), Color(0.22, 0.26, 0.28), Color(0.26, 0.22, 0.29),
-	Color(0.15, 0.16, 0.19), Color(0.33, 0.31, 0.33), Color(0.19, 0.23, 0.21),
-	Color(0.30, 0.26, 0.22), Color(0.24, 0.20, 0.22), Color(0.18, 0.19, 0.27),
-	Color(0.29, 0.30, 0.31), Color(0.21, 0.18, 0.18),
+	Color(0.012, 0.012, 0.014), Color(0.012, 0.012, 0.014), Color(0.016, 0.016, 0.018),
+	Color(0.016, 0.016, 0.018), Color(0.022, 0.022, 0.024), Color(0.022, 0.022, 0.024),
+	Color(0.040, 0.040, 0.044), Color(0.040, 0.041, 0.045), Color(0.06, 0.06, 0.065),
+	Color(0.012, 0.012, 0.014), Color(0.016, 0.016, 0.018), Color(0.022, 0.022, 0.024),
+	Color(0.014, 0.020, 0.050), Color(0.020, 0.030, 0.065), Color(0.018, 0.026, 0.040),
+	Color(0.30, 0.30, 0.29), Color(0.20, 0.20, 0.20), Color(0.11, 0.11, 0.12),
+	Color(0.20, 0.014, 0.012), Color(0.12, 0.010, 0.012), Color(0.26, 0.17, 0.02),
+	Color(0.18, 0.12, 0.015), Color(0.03, 0.09, 0.05), Color(0.06, 0.06, 0.20),
 ]
 
 

@@ -341,6 +341,40 @@ class Part:
                 loop[layer] = rgba
                 loop[uv].uv = (phase, role)
 
+    def coloured_tube(self, rings: list, bottom: Vector, top: Vector,
+                      colour: tuple, phase: float, role: float = 0.0) -> None:
+        """A smooth-shaded rounded solid: `rings` are same-length loops of
+        positions from bottom to top, closed by a pole vertex at each end.
+
+        Limbs, torsos and hips are these. Shared vertices are what let the
+        crowd be smooth-shaded (a box needs a vertex per face), and the rings'
+        differing sizes are what give a shoulder line and a tapered limb.
+        Carries `colour`, `phase` and `role` exactly as `coloured_box` does.
+        """
+        if self._colour_layer is None:
+            self._colour_layer = self.bm.loops.layers.color.new("Col")
+            self._phase_layer = self.bm.loops.layers.uv.new("Phase")
+        layer, uv = self._colour_layer, self._phase_layer
+        rgba = (colour[0], colour[1], colour[2], 1.0)
+        n = len(rings[0])
+        lo, hi = self.vert(bottom), self.vert(top)
+        grid = [[self.vert(p) for p in ring] for ring in rings]
+        faces = []
+        for k in range(n):
+            m = (k + 1) % n
+            faces.append((lo, grid[0][m], grid[0][k]))
+            for r in range(len(grid) - 1):
+                faces.append((grid[r][k], grid[r][m], grid[r + 1][m], grid[r + 1][k]))
+            faces.append((hi, grid[-1][k], grid[-1][m]))
+        for f in faces:
+            try:
+                built = self.bm.faces.new(f)
+            except ValueError:
+                continue
+            for loop in built.loops:
+                loop[layer] = rgba
+                loop[uv].uv = (phase, role)
+
     def vert(self, position: Vector) -> bmesh.types.BMVert:
         return self.bm.verts.new(to_blender(position))
 

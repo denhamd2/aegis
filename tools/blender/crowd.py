@@ -73,11 +73,19 @@ from mathutils import Vector
 # gauntlet/refs/lighting/ are not monochrome -- there is warmth in a real
 # crowd even at this level.
 SHIRT_COLORS = [
-    (0.20, 0.21, 0.26), (0.28, 0.24, 0.24), (0.17, 0.20, 0.24),
-    (0.31, 0.29, 0.27), (0.22, 0.26, 0.28), (0.26, 0.22, 0.29),
-    (0.15, 0.16, 0.19), (0.33, 0.31, 0.33), (0.19, 0.23, 0.21),
-    (0.30, 0.26, 0.22), (0.24, 0.20, 0.22), (0.18, 0.19, 0.27),
-    (0.29, 0.30, 0.31), (0.21, 0.18, 0.18),
+    # Black and charcoal tees are most of a wrestling crowd. Repeated entries
+    # are weights, not mistakes: rng.choice picks uniformly.
+    (0.012, 0.012, 0.014), (0.012, 0.012, 0.014), (0.016, 0.016, 0.018),
+    (0.016, 0.016, 0.018), (0.022, 0.022, 0.024), (0.022, 0.022, 0.024),
+    (0.040, 0.040, 0.044), (0.040, 0.041, 0.045), (0.06, 0.06, 0.065),
+    (0.012, 0.012, 0.014), (0.016, 0.016, 0.018), (0.022, 0.022, 0.024),
+    # Navy and dark denim-blue.
+    (0.014, 0.020, 0.050), (0.020, 0.030, 0.065), (0.018, 0.026, 0.040),
+    # White and grey tees.
+    (0.30, 0.30, 0.29), (0.20, 0.20, 0.20), (0.11, 0.11, 0.12),
+    # Red, gold and a few others: merch colours.
+    (0.20, 0.014, 0.012), (0.12, 0.010, 0.012), (0.26, 0.17, 0.02),
+    (0.18, 0.12, 0.015), (0.03, 0.09, 0.05), (0.06, 0.06, 0.20),
 ]
 ## Skin is a separate, narrower palette: heads and forearms are small and a
 ## wide spread there reads as noise rather than as people.
@@ -173,6 +181,8 @@ class Figure:
         ## Greys only: the ringside variants are tinted per instance in Godot,
         ## so any hue baked in here would be applied twice.
         self.neutral = False
+        ## Cross-section sides for limbs; far-tier figures drop to 5.
+        self.sides = 6
 
     def grey(self, colour, lo: float = 0.22, hi: float = 0.78):
         """`colour`, or its luminance as a grey in [lo, hi] for a neutral
@@ -193,27 +203,60 @@ class Figure:
         return centre, up * c + self.face * s, self.face * c - up * s
 
     def box(self, offset: Vector, size: Vector, colour=None,
-            lean: float = 0.0, taper: float = 1.0) -> None:
-        """A box at `offset` from the seat, in (across, up, toward-ring).
+            lean: float = 0.0, taper: float = 1.0, sides: int = 0) -> None:
+        """A rounded, tapered limb-or-body-part at `offset` from the seat, in
+        (across, up, toward-ring). Still takes a box's `size`, because every
+        pose below is written in boxes: the longest dimension becomes the
+        part's axis and the other two its elliptical cross-section.
 
-        `lean` tips it forward about the across-axis, which is what makes a
-        torso lean in and a thigh lie flat. `taper` scales the BOTTOM face
-        against the top (a torso: shoulders wide, waist narrower).
+        `lean` tips it forward about the across-axis (a torso leaning in, a
+        thigh lying flat). `taper` scales the BOTTOM against the top. Hex
+        cross-section, two swelling rings and a pole at each end: 14 shared
+        vertices, smooth-shaded, where a flat box was 24.
         """
         centre, axis_u, axis_f = self._frame(offset, lean)
-        ea = self.along * (size.x * 0.5)
-        eu = axis_u * (size.y * 0.5)
-        eo = axis_f * (size.z * 0.5)
-        corners = [
-            centre + ea * sa * (taper if su < 0 else 1.0) + eu * su
-            + eo * so * (taper if su < 0 else 1.0)
-            for sa, su, so in (
-                (-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1),
-                (-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1),
-            )
-        ]
-        self.part.coloured_box(corners, colour or self.colour, self.phase,
-                               self.role)
+        dims = [(size.x, self.along), (size.y, axis_u), (size.z, axis_f)]
+        long_i = max(range(3), key=lambda i: dims[i][0])
+        length, axis = dims[long_i]
+        u, v = [d for i, d in enumerate(dims) if i != long_i]
+        n = sides or self.sides
+        half = length * 0.5
+        rings = []
+        for t, k in ((-0.72, 0.92 * taper), (0.72, 1.0)):
+            ring = []
+            for j in range(n):
+                phi = 2.0 * math.pi * j / n
+                ring.append(centre + axis * (half * t)
+                            + (u[1] * (math.cos(phi) * u[0] * 0.5)
+                               + v[1] * (math.sin(phi) * v[0] * 0.5)) * (k * 1.08))
+            rings.append(ring)
+        self.part.coloured_tube(rings, centre - axis * half, centre + axis * half,
+                                colour or self.colour, self.phase, self.role)
+
+    def torso(self, offset: Vector, width: float, height: float, depth: float,
+              lean: float = 0.0, colour=None) -> None:
+        """Waist, chest, shoulder line, top of the shoulders: a rounded
+        torso that is widest across the shoulders and narrow at the belt,
+        flatter front to back than it is wide."""
+        centre, axis_u, axis_f = self._frame(offset, lean)
+        far = self.sides < 6
+        n = self.sides + (1 if far else 2)
+        rings = []
+        # (height fraction, across, depth): waist, chest, shoulders, collar.
+        # Far figures skip the waist ring: at 25 m only the shoulder line shows.
+        profile = ((-0.46, 0.70, 0.86), (-0.08, 0.92, 1.0),
+                   (0.30, 1.0, 0.92), (0.47, 0.62, 0.70))
+        for t, wa, wd in (profile[1:] if far else profile):
+            ring = []
+            for j in range(n):
+                phi = 2.0 * math.pi * j / n
+                ring.append(centre + axis_u * (height * t)
+                            + self.along * (math.cos(phi) * width * 0.5 * wa)
+                            + axis_f * (math.sin(phi) * depth * 0.5 * wd))
+            rings.append(ring)
+        self.part.coloured_tube(rings, centre - axis_u * (height * 0.5),
+                                centre + axis_u * (height * 0.5),
+                                colour or self.colour, self.phase, self.role)
 
     def blob(self, offset: Vector, radii: Vector, colour, lean: float = 0.0,
              segments: int = 8, rings: int = 4) -> None:
@@ -233,8 +276,9 @@ def _head(fig: Figure, rng: random.Random, s: float, y: float, z: float,
     seg, rings = (8, 4) if near else (6, 3)
     hair = fig.grey(_shade(rng, rng.choice(HAIR_COLORS)))
     style = rng.choice(HAIR_STYLES) if near else rng.choice(("crop", "crop", "bald", "long", "cap"))
-    fig.box(Vector((0.0, y - 0.11 * s, z - 0.01 * s)),
-            Vector((0.10 * s, 0.09 * s, 0.10 * s)), colour=skin)
+    if near:
+        fig.box(Vector((0.0, y - 0.11 * s, z - 0.01 * s)),
+                Vector((0.10 * s, 0.09 * s, 0.10 * s)), colour=skin)
     fig.blob(Vector((0.0, y, z)), Vector((0.092 * s, 0.112 * s, 0.100 * s)), skin,
              lean=lean, segments=seg, rings=rings)
     if style == "bald":
@@ -288,8 +332,8 @@ def _seated(fig: Figure, rng: random.Random, scale: float, skin) -> None:
     fig.box(Vector((0.0, 0.10 * s, 0.02 * s)),
             Vector((0.34 * s, 0.20 * s, 0.30 * s)))
     # Torso, leaning in toward the ring: shoulders wider than the waist.
-    fig.box(Vector((0.0, 0.38 * s, 0.05 * s + lean * 0.10 * s)),
-            Vector((0.40 * s, 0.42 * s, 0.24 * s)), lean=lean, taper=0.80)
+    fig.torso(Vector((0.0, 0.38 * s, 0.05 * s + lean * 0.10 * s)),
+              0.42 * s, 0.44 * s, 0.25 * s, lean=lean)
     # The head carries the lean plus a little of its own, so nobody is
     # looking at their own lap.
     head_lean = lean * rng.uniform(0.35, 0.8)
@@ -343,8 +387,8 @@ def _standing(fig: Figure, rng: random.Random, scale: float, skin) -> None:
     fig.role = ROLE_JUMP
     fig.box(Vector((0.0, 0.48 * s, 0.20 * s)),
             Vector((0.32 * s, 0.24 * s, 0.24 * s)))
-    fig.box(Vector((0.0, 0.82 * s, 0.20 * s)),
-            Vector((0.40 * s, 0.46 * s, 0.24 * s)), lean=lean, taper=0.80)
+    fig.torso(Vector((0.0, 0.82 * s, 0.20 * s)),
+              0.42 * s, 0.48 * s, 0.25 * s, lean=lean)
     _head(fig, rng, s, 1.24 * s, 0.21 * s, skin, lean)
     arms_up = rng.random() < 0.35
     for side in (-1.0, 1.0):
@@ -372,13 +416,14 @@ def _distant(fig: Figure, rng: random.Random, scale: float, skin) -> None:
     because at that distance they are sub-pixel and cost 60% of the figure.
     """
     s = scale
+    fig.sides = 5
     lean = rng.uniform(0.04, 0.30)
     roll = rng.random()
     fig.role = ROLE_WAVE if roll < 0.10 else ROLE_CLAP if roll < 0.28 else ROLE_SIT
     fig.box(Vector((0.0, 0.12 * s, 0.06 * s)),
             Vector((0.36 * s, 0.24 * s, 0.34 * s)))
-    fig.box(Vector((0.0, 0.40 * s, 0.06 * s + lean * 0.10 * s)),
-            Vector((0.42 * s, 0.40 * s, 0.26 * s)), lean=lean, taper=0.80)
+    fig.torso(Vector((0.0, 0.40 * s, 0.06 * s + lean * 0.10 * s)),
+              0.44 * s, 0.42 * s, 0.27 * s, lean=lean)
     _head(fig, rng, s, 0.76 * s, 0.09 * s + lean * 0.22 * s, skin, lean, near=False)
 
 
