@@ -84,12 +84,13 @@ common/enable_pause_aware_picking=true
 [rendering]
 
 renderer/rendering_method="forward_plus"
-; Phones run the Mobile renderer (Godot's default for the platform): no
-; volumetric fog, fewer lights per object. The Android build is for playing,
-; like the Web one -- never for measuring the visual bar.
+; The Mac build (export_presets.cfg "macOS") is the full desktop look: pinned
+; to forward_plus (Metal) so it can never fall back to the Web build's
+; compatibility renderer.
+renderer/rendering_method.macos="forward_plus"
 renderer/rendering_method.mobile="mobile"
-; The Android export needs the mobile texture formats imported alongside the
-; desktop ones (export_presets.cfg "Android").
+; Apple Silicon Macs read the ETC2/ASTC formats as well as the desktop ones;
+; the universal macOS app ships both.
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.1, 0.1, 0.12, 1)
 ; ArenaLighting builds 22 fixtures and the OpenGL default is 8 lights per

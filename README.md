@@ -8613,6 +8613,10 @@ The 2K26 camera plan's status is in `gauntlet/refs/camera_aaa_plan.md`
 
 ### Android build, watch mode, touch controls
 
+> The Android build has since been removed at the owner's request (the Mac
+> build, `.github/workflows/mac.yml`, `mac-latest` release, replaces it as the
+> playable desktop build). Touch controls and watch mode remain for the Web build.
+
 - **WATCH** on the title menu: the same select screen, both picks marked
   CPU, and the match runs AI against AI (`configure_match(..., both_ai)`).
 - **Touch controls** (`core/ui/touch_controls.gd`): a thumbstick and STRIKE /

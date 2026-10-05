@@ -65,6 +65,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete mac-latest --yes --cleanup-tag || true
+          # The Android build was retired for this one; clear its old release.
+          gh release delete android-latest --yes --cleanup-tag || true
           gh release create mac-latest build/mac/Aegis.zip \
             --title "Aegis for Mac (latest main)" \
             --notes "Build of ${GITHUB_SHA::7}. Download Aegis.zip, double-click to unzip, then right-click Aegis.app > Open (first time only: it is not notarised by Apple)." \
