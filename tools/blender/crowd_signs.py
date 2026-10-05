@@ -8,7 +8,7 @@ ringside sign fans (`core/arena/sign_fans.gd`) take a cell of this atlas.
 Plain PIL -- no Blender -- and deterministic: the same font file and this
 table produce the same PNG.
 
-The slogans are ORIGINAL. A real crowd's signs are about real wrestlers and
+Most slogans are ORIGINAL; five are fan opinions the owner asked for. A real crowd's signs are about real wrestlers and
 real shows, and those names and marks are not ours to print; these are the
 kind of thing a fan writes in marker on a board without naming anybody
 (`game/assets/environment/CREDITS.md`).
@@ -38,15 +38,15 @@ SIGNS = (
     (("1-2-3!",), (250, 214, 40), (18, 18, 20), None),
     (("HOLD ON!",), (20, 20, 22), (245, 245, 240), (230, 190, 40)),
     (("RING THE", "BELL"), (238, 236, 228), (180, 20, 24), None),
-    (("MOM I'M", "ON TV"), (90, 190, 235), (255, 255, 255), None),
-    (("FIRST SHOW", "EVER!"), (238, 236, 228), (20, 40, 140), (230, 60, 140)),
+    (("VINCE IS", "INNOCENT"), (238, 236, 228), (20, 20, 24), (200, 30, 30)),
+    (("I BELIEVE IN", "JOE HENDRY"), (250, 214, 40), (20, 20, 24), None),
     (("BIG MATCH", "ENERGY"), (200, 24, 30), (255, 255, 255), None),
     (("DROPKICK", "ME!"), (250, 214, 40), (190, 20, 24), None),
-    (("SIGN ME", "UP"), (30, 30, 34), (250, 214, 40), None),
-    (("ONE MORE", "TIME!"), (238, 236, 228), (20, 20, 24), None),
+    (("WIRTZ", "IS CRAP"), (30, 30, 34), (250, 214, 40), None),
+    (("FIRE BERNIE", "FOLEY"), (200, 24, 30), (255, 255, 255), None),
     (("HEADLOCK", "HEAVEN"), (120, 60, 170), (255, 255, 255), None),
     (("ROW 9 IS", "LOUD"), (238, 236, 228), (30, 120, 60), (20, 20, 24)),
-    (("TAG ME", "IN!"), (250, 120, 30), (20, 20, 24), None),
+    (("FIRE ANDY", "O'NEIL"), (238, 236, 228), (20, 40, 140), (20, 20, 24)),
     (("KICK OUT!",), (238, 236, 228), (200, 24, 30), (20, 20, 24)),
     (("NEW", "CHAMP"), (20, 20, 22), (240, 200, 60), None),
     (("BEST SEATS", "IN THE HOUSE"), (250, 214, 40), (20, 20, 24), None),
