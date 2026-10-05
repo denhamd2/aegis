@@ -1370,7 +1370,7 @@ global uniform float crowd_light;
 // In the match 2K26's front rows read as people -- faces, warm skin, shirt
 // colour -- and the far bowl falls into the dark. A gain on the rows nearest
 // the ring, warmed toward ~4000 K, fading out by FAR metres.
-uniform float near_gain = 3.2;
+uniform float near_gain = 2.4;
 uniform float near_from = 7.0;
 uniform float near_to = 30.0;
 uniform vec3 near_warm = vec3(1.18, 0.98, 0.80);
@@ -1378,6 +1378,9 @@ varying float ring_dist;
 
 varying vec3 shirt;
 varying float figure;
+// Per-figure level and per-face shade: without them every box face carries one
+// flat colour, and the crowd reads as blocks from the high camera.
+varying float shade;
 
 float hash(float n) {
 	return fract(sin(n * 12.9898) * 43758.5453);
@@ -1386,6 +1389,7 @@ float hash(float n) {
 void vertex() {
 	shirt = COLOR.rgb;
 	figure = PHASE_SOURCE;
+	shade = (0.72 + 0.4 * hash(PHASE_SOURCE * 91.7)) * (0.7 + 0.3 * clamp(NORMAL.y * 0.5 + 0.5 + abs(NORMAL.x) * 0.15, 0.0, 1.0));
 	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	ring_dist = length(world.xz);
 	float phase = PHASE_SOURCE * 6.2831853;
@@ -1427,7 +1431,7 @@ void fragment() {
 	ALBEDO = shirt;
 	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
 	vec3 wash = mix(house_tint, near_warm, near);
-	EMISSION = shirt * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
+	EMISSION = shirt * shade * wash * house_light * crowd_light * (1.0 + (near_gain - 1.0) * near);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }
