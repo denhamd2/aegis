@@ -4994,13 +4994,33 @@ CLIPS["Ref_Call_Bell"] = [
 ]
 # 60 frames, looping from 10: the winner's hand -- her right arm straight up
 # beside him, her left at her side, square to the hard camera.
+#
+# Her hand HOLDS HIS WRIST: she stands on his left (her right toward him), both
+# square to the hard camera, 0.48 m apart (RefereeActor.WINNER_SIDE), tuned on the rendered rig's bones
+# (test_referee_actor: the wrists end within 10 cm).
 _RAISE = pose(REF_STAND, spine=(3, 0, 0), head=(4, 6, 0),
-              hand_r=(0.30, 0.06, 1.93), elbow_r=(1.0, 0.0, 0.2), fist_r=0.6)
+              hand_r=(0.27, 0.05, 1.90), elbow_r=(1.0, 0.0, 0.2), fist_r=0.9)
 CLIPS["Ref_Raise_Hand"] = [
     (0,  REF_STAND),
     (10, _RAISE),
-    (35, pose(_RAISE, hand_r=(0.31, 0.07, 1.96), head=(4, 10, 0))),
+    (35, pose(_RAISE, hand_r=(0.27, 0.06, 1.92), head=(4, 10, 0))),
     (60, _RAISE),
+]
+# 60 frames: the winner's left arm taken up by the referee -- the wrist held
+# in her hand, the arm straight and high, the right fist at his hip, chest out,
+# head back and turned to the crowd. Played in place of Win_Celebrate once she
+# is beside him; its last frame is held.
+_ARM_UP = P(pelvis=(0.0, -0.01, 0.900), hips=(-4, 0, 0), spine=(-8, 0, 0), head=(-12, -6, 0),
+            hand_l=(-0.30, 0.05, 1.74), elbow_l=(-0.8, -0.3, -0.4), fist_l=0.9,
+            hand_r=(0.30, 0.06, 0.98), elbow_r=(0.8, -0.2, -0.4), fist_r=0.9,
+            foot_r=(0.19, -0.02, 0.104), foot_l=(-0.19, 0.02, 0.104))
+CLIPS["Win_Arm_Raised"] = [
+    (0,  P(pelvis=(0.0, -0.01, 0.880), spine=(-10, 0, 0), head=(-16, 0, 0),
+           hand_r=(0.35, 0.05, 1.86), hand_l=(-0.33, 0.05, 1.88),
+           fist_r=1.0, fist_l=1.0)),
+    (14, _ARM_UP),
+    (38, pose(_ARM_UP, hand_l=(-0.30, 0.05, 1.76), head=(-14, -10, 0), spine=(-10, 0, 0))),
+    (60, _ARM_UP),
 ]
 
 # --- Handing a prop on (entrance props, one at a time) ----------------------

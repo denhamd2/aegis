@@ -251,6 +251,9 @@ const RECIPES := {
 	# terminal and the clip holds its last pose.
 	"win_celebrate": {"kind": "retime", "source": "Win_Celebrate",
 		"seconds": 1.300, "file": AUTHORED},
+	# The referee takes his left arm up (RefereeActor RAISE): 60 frames, held.
+	"win_arm_raised": {"kind": "retime", "source": "Win_Arm_Raised",
+		"seconds": 2.000, "file": AUTHORED},
 
 	# --- the ring entrance (core/match/entrance_director.gd) ---------------
 	#

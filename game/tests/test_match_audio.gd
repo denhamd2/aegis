@@ -140,3 +140,25 @@ func test_the_heel_is_booed_and_the_face_cheered() -> void:
 	audio._heat(face, 0.7)
 	assert_float(audio.cheer).is_equal(0.7)
 	assert_float(audio.boo).is_equal(0.5)
+
+
+## The winner's song starts at its main part, not the intro, and fades in
+## under a ducked crowd.
+func test_winner_theme_starts_at_the_chorus_not_the_top() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	assert_float(StageVideo.chorus_at("roman")).is_equal(45.0)
+	assert_float(StageVideo.chorus_at("cody")).is_equal(22.5)
+	assert_float(StageVideo.chorus_at("nobody")).is_less(0.0)
+	assert_bool(audio.winner_theme("nobody")).is_false()
+	assert_bool(audio.winner_theme("cody")).is_true()
+	var p := audio.theme_player()
+	assert_object(p).is_not_null()
+	assert_float(p.volume_db).is_less(-50.0)
+	assert_float(audio._theme_from).is_equal(22.5)
+	# Fades in over time and ducks the beds.
+	audio._crowd = null
+	for i in 90:
+		audio._process(0.05)
+	assert_float(p.volume_db).is_greater(MatchAudio.THEME_DB - 1.0)
+	assert_float(audio._duck).is_less(-5.0)
