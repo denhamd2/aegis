@@ -615,8 +615,12 @@ const SPECS := {
 	##
 	## No map. A seat back is 40cm of geometry seen from 15-35m, and a tiled
 	## weave on it minifies into noise the way `arena_chair`'s would.
+	## Charcoal, not the blue it was: the owner's 2K26 Cody vs Roman match
+	## shows the empty seats and stairs as dark neutral grey, and blue seats
+	## turned every gap in the crowd into blue (cody_roman_2k26.md). Same
+	## luminance (~0.10) so the house level is unchanged.
 	"arena_seat": {
-		"tint": Color(0.074, 0.098, 0.235), "roughness": 0.90,
+		"tint": Color(0.10, 0.10, 0.105), "roughness": 0.90,
 		"house_lit": true,
 	},
 	## The suite windows in the fascia between the tiers. The darkest surface

@@ -495,6 +495,8 @@ var _ring_haze: FogMaterial
 var _ring_haze_density := 0.0
 var _ring_lights: Array[SpotLight3D] = []
 var _stage_wash: Array[SpotLight3D] = []
+## The beams' level in the match look, as a share of the entrance's.
+const MATCH_BEAM_SHARE := 0.0
 var _beams: Array[SpotLight3D] = []
 var _beam_rest := {}     # SpotLight3D -> rest Transform3D
 var _bodies := {}        # SpotLight3D -> fixture body root
@@ -535,9 +537,14 @@ func set_look(p_look: Look) -> void:
 				* renderer_gain(light)
 	_dim_set(ENTRANCE_SET_SHARE if entrance else 1.0)
 	if not entrance:
+		# Dark in the match. The owner's 2K26 Cody vs Roman match has no
+		# coloured beam anywhere once the bell goes: the crowd is lit evenly,
+		# warm-neutral, falling off toward the back rows
+		# (gauntlet/refs/cody_roman_2k26.md). Left on, the teal beams parked
+		# over the stage threw a blue pool across the stand behind it.
 		for beam in _beams:
 			beam.transform = _beam_rest[beam]
-			beam.light_energy = beam_energy * renderer_gain(beam)
+			beam.light_energy = beam_energy * MATCH_BEAM_SHARE * renderer_gain(beam)
 			_pose_body(beam)
 
 
