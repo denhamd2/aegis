@@ -83,3 +83,28 @@ every 5 s across the whole video, 1 s windows at 495, 600 and 745 s; ffmpeg scen
   downed man rather than chaining moves.
 - Several near-falls before the finish, and two finisher attempts by Cody.
 - Ref Aubrey is always in frame near the action.
+
+## In-ring match lighting [M] (frames 335, 497, 612, 760, 826 s)
+- **Wrestlers sit well below the mat.** Skin was measured with an R>G>B skin mask, as linear
+  luminance inside the ring area.
+  | | Skin mean | Mat | Skin / mat | Skin p95 |
+  | --- | --- | --- | --- | --- |
+  | 2K26 | 0.20-0.27 | 0.60-0.64 | 0.33-0.44 | 0.49-0.65 |
+  | Ours (before this review) | 0.28-0.36 | 0.62 | 0.45-0.58 | 0.76 |
+
+  Ours are about 35% too bright against the same mat, and the skin highlights are hot.
+- **Light comes from overhead.** Shoulders, head and back are lit; sides and fronts fall into
+  shadow. Bodies are modelled by the light rather than flat front-lit.
+- **Rope shadows.** Several sets of soft, parallel rope-shadow lines criss-cross the whole mat,
+  one set per overhead fixture at a different angle. They are faint, wide and soft-edged.
+- **Shadows under bodies.**
+  - A dark contact pool sits under every body.
+  - Each leg has two or three faint offset shadows (multiple fixtures).
+- **The ring is the brightest object.** The floor outside the apron and the barricade are much
+  darker; light is a pool on the ring.
+- **Close-ups.**
+  - Warm skin with a sweat sheen and specular on the shoulders and face.
+  - A cool rim from behind.
+  - The crowd behind is soft (depth of field) and darker.
+- **Crowd.** Front rows are warm-lit, readable faces; the rows behind fade darker. No coloured
+  light falls on the crowd in the match.
