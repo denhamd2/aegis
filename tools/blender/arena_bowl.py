@@ -687,9 +687,13 @@ def build_fascia(cfg: dict[str, float], parts: dict[str, Part], rows: list[dict]
         proud_in = offset_points(loop, indices, -0.06)
         proud_out = offset_points(loop, indices, 0.02)
         period = ribbon_h * cfg["RIBBON_ART_ASPECT"]
-        for y0 in (base_y + 0.18, top_y - 0.18 - ribbon_h):
-            parts["RibbonBoards"].ribbon(proud_in, proud_out, y0, y0 + ribbon_h,
-                                         closed, period)
+        # Only the upper one is an LED board. The lower is a plain grey front
+        # (the fascia's own material), as on the real hall.
+        lower = base_y + 0.18
+        parts["SuiteFascia"].prism(proud_in, proud_out, lower, lower + ribbon_h, closed)
+        upper = top_y - 0.18 - ribbon_h
+        parts["RibbonBoards"].ribbon(proud_in, proud_out, upper, upper + ribbon_h,
+                                     closed, period)
         # Suite glass between them, recessed rather than proud so the storey
         # reads as windows set into a wall.
         glass_in = offset_points(loop, indices, 0.10)
