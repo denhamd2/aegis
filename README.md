@@ -8821,3 +8821,27 @@ twenty Microsoft Rocketbox adults (MIT, `game/assets/environment/CREDITS.md`,
   0.034, 2K26 0.024-0.034). Gaps: the far bowl's 130-triangle figures are
   coarse up close in the hard cam; still no per-person animation beyond the
   shader's bob/bounce.
+
+### The crowd, round two: dark tees, upper-deck detail, arms that move, signs
+
+- **Palette.** Gold and green merch gone; 20 of 26 tee entries are black or
+  charcoal (60% of the dark ones printed), a few white, grey, red and navy, in
+  step with `CROWD_SHIRTS`. The warm crowd wash was tuned for the old box
+  palette and now stacked on real skin: `CROWD_WASH` (1.02, 0.97, 1.12),
+  muting 0.45. Crowd area chroma/luma 0.83 -> 0.60 (2K26 0.50); gameplay top
+  200 rows linear Y 0.037.
+- **Detail.** Bowl LODs 480 / 250 / 230 triangles (was 520 / 190 / 130): 1.54M
+  crowd triangles. `crowd.optimise_glb` now writes colour as unsigned bytes and
+  splits each crowd mesh into primitives of under 65,536 vertices with 16-bit
+  indices (Godot: several surfaces, one material): `arena_bowl.glb` 44.0 MB.
+- **Arms.** UV2 = (forearm/hand reach from the skin weights, side). The crowd
+  shader parts and closes clappers' hands and pumps the arms-up roles' fists
+  (and their boards) by local excitement and per-figure phase; sitters and
+  phone holders are still. `tools/probe/crowd_arms.tscn` renders a fixed close
+  view for checking it.
+- **Signs.** `crowd_signs.py` paints 16 original slogans into an atlas; the
+  bowl's boards are their own `CrowdSigns` mesh (phase/role in COLOR so they
+  move with their holder), four times as common in the front four rows. Two
+  more ringside sign fans (`SignFans`) show atlas cells.
+- **Web.** `COMPAT_CROWD_GAIN` 6 -> 12: opengl3 top 200 rows 0.034 against
+  Vulkan's 0.037 (was 0.016).

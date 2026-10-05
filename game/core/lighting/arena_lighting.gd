@@ -1387,7 +1387,10 @@ const COMPAT_SATURATION := 0.82
 ## volumetric fog to carry the bounce. More ambient, and the crowd's house
 ## emission up, close most of that without touching the mat.
 const COMPAT_AMBIENT_GAIN := 3.0
-const COMPAT_CROWD_GAIN := 6.0
+## The crowd's share was re-measured when the stands became Rocketbox people
+## (darker tees, real skin): at 6.0 the opengl3 gameplay frame's top 200 rows
+## measured linear Y 0.016 against Vulkan's 0.037; 9.0 gave 0.026, 12.0 0.035.
+const COMPAT_CROWD_GAIN := 12.0
 
 
 ## The compatibility Environment, kept so the fog's begin distance can follow

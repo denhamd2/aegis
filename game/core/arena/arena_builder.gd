@@ -1211,16 +1211,17 @@ func _seat_floor_fans(seats: Array[Transform3D], meshes: Array[Mesh], prefix: St
 ## a Blender script this file cannot import, and a crowd whose two halves wear
 ## different palettes is worse than one number written twice.
 const CROWD_SHIRTS: Array[Color] = [
-	Color(0.11, 0.11, 0.12), Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14),
-	Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17), Color(0.16, 0.16, 0.17),
+	Color(0.11, 0.11, 0.12), Color(0.11, 0.11, 0.12), Color(0.11, 0.11, 0.12),
+	Color(0.11, 0.11, 0.12), Color(0.11, 0.11, 0.12), Color(0.11, 0.11, 0.12),
+	Color(0.13, 0.13, 0.14), Color(0.13, 0.13, 0.14), Color(0.13, 0.13, 0.14),
+	Color(0.13, 0.13, 0.14), Color(0.13, 0.13, 0.14),
+	Color(0.16, 0.16, 0.17), Color(0.16, 0.16, 0.17), Color(0.16, 0.16, 0.17),
+	Color(0.16, 0.16, 0.17),
+	Color(0.19, 0.19, 0.20), Color(0.19, 0.19, 0.20),
 	Color(0.22, 0.22, 0.23), Color(0.22, 0.22, 0.23), Color(0.27, 0.27, 0.28),
-	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17),
-	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.16, 0.16, 0.17),
-	Color(0.11, 0.11, 0.12), Color(0.13, 0.13, 0.14), Color(0.19, 0.19, 0.20),
-	Color(0.12, 0.15, 0.25), Color(0.15, 0.19, 0.28), Color(0.14, 0.18, 0.22),
-	Color(0.58, 0.58, 0.57), Color(0.48, 0.48, 0.48), Color(0.37, 0.37, 0.38),
-	Color(0.48, 0.12, 0.11), Color(0.38, 0.10, 0.11), Color(0.55, 0.45, 0.15),
-	Color(0.46, 0.38, 0.13), Color(0.19, 0.33, 0.25), Color(0.27, 0.27, 0.48),
+	Color(0.12, 0.15, 0.25), Color(0.15, 0.19, 0.28),
+	Color(0.58, 0.58, 0.57), Color(0.44, 0.44, 0.44),
+	Color(0.48, 0.12, 0.11), Color(0.38, 0.10, 0.11),
 ]
 
 
@@ -1327,6 +1328,9 @@ func _build_bowl_model() -> Node3D:
 		_dress(root, part, _self_emissive(_textured(spec[0]), spec[1]))
 	for part: String in CROWD_PARTS:
 		_dress(root, part, _crowd_material())
+	var signs := _crowd_material("UV.x", false, true)
+	signs.set_shader_parameter("sign_atlas", load(CROWD_SIGN_ATLAS))
+	_dress(root, "CrowdSigns", signs)
 	return root
 
 
@@ -1337,6 +1341,9 @@ func _build_bowl_model() -> Node3D:
 ## (tools/blender/crowd.py bakes both into COLOR_0), so the material has to be
 ## a shader that reads them rather than a StandardMaterial3D with one albedo.
 const CROWD_PARTS := ["Crowd", "CrowdFar"]
+## The boards the bowl's sign holders hold up (the model's `CrowdSigns`), and
+## the atlas of original slogans they show (tools/blender/crowd_signs.py).
+const CROWD_SIGN_ATLAS := "res://assets/environment/signs/crowd_signs.png"
 
 ## The crowd's wash colour, in linear light. Taken off the four AEW stills in
 ## gauntlet/refs/lighting/, not chosen: their coloured pixels sit at hue
@@ -1352,7 +1359,14 @@ const CROWD_PARTS := ["Crowd", "CrowdFar"]
 ## measured (0.194, 0.250, 0.346) -- the single biggest reason the hall read
 ## blue and flat beside it. Still normalised to luminance ~1.0 (0.2126*1.12 +
 ## 0.7152*0.98 + 0.0722*0.86 = 1.00), so house_light keeps setting the level.
-const CROWD_WASH := Vector3(1.12, 0.98, 0.86)
+##
+## Re-measured again when the stands became Rocketbox people: real skin and
+## brown/khaki clothes already carry the warmth the wash was adding to a
+## black-tee palette, and the crowd area measured mean sRGB (0.174, 0.139,
+## 0.108), chroma/luma 0.83, against 2K26's (0.173, 0.142, 0.152) and 0.50.
+## So the wash is near neutral now with the reference's slight magenta
+## (0.2126*1.02 + 0.7152*0.97 + 0.0722*1.12 = 0.99).
+const CROWD_WASH := Vector3(1.02, 0.97, 1.12)
 
 ## Idle motion, and the light floor the crowd sits on.
 ##
@@ -1369,7 +1383,8 @@ const CROWD_WASH := Vector3(1.12, 0.98, 0.86)
 ## golden-ratio phase per figure into a UV channel instead -- colour alpha was
 ## tried first and arrives back 1.0 for every vertex, since nothing in either
 ## the exporter or the importer preserves an alpha no material reads.
-func _crowd_material(phase_source: String = "UV.x", floor_fans := false) -> ShaderMaterial:
+func _crowd_material(phase_source: String = "UV.x", floor_fans := false,
+		signs := false) -> ShaderMaterial:
 	var shader := Shader.new()
 	shader.code = """
 shader_type spatial;
@@ -1411,7 +1426,18 @@ global uniform float crowd_light;
 uniform float near_gain = 4.5;
 uniform float near_from = 7.0;
 uniform float near_to = 22.0;
-uniform vec3 near_warm = vec3(1.18, 0.98, 0.80);
+uniform vec3 near_warm = vec3(1.10, 0.98, 0.94);
+// The arms: how far a clapper's hands part, how high a fist pumps, how fast,
+// and how much of it happens with the crowd quiet (excitement 0).
+uniform float clap_reach = 0.06;
+uniform float clap_speed = 13.0;
+uniform float pump_reach = 0.10;
+uniform float pump_speed = 6.5;
+uniform float arm_rest = 0.3;
+// The sign boards' pictures (CrowdSigns): tools/blender/crowd_signs.py.
+uniform sampler2D sign_atlas : source_color, filter_linear_mipmap, repeat_disable;
+uniform float sign_level = 0.45;
+
 varying float ring_dist;
 
 varying vec3 shirt;
@@ -1451,7 +1477,7 @@ void vertex() {
 	float band = 0.5 + 0.5 * sin(ang * 3.0 - TIME * 0.9 + ring_dist * 0.04);
 	float local_ex = clamp(crowd_excitement * (0.4 + 0.8 * band), 0.0, 1.0);
 	// glTF flips V, so the baked role arrives as 1 - role.
-	float role = 1.0 - UV.y;
+	float role = ROLE_SOURCE;
 	float jumper = step(0.65, role);
 	float waver = step(0.4, role) * (1.0 - jumper);
 	float clapper = step(0.15, role) * (1.0 - step(0.4, role));
@@ -1464,16 +1490,36 @@ void vertex() {
 	// Clapping: a quick small pulse in height and across the body.
 	VERTEX.y += sin(TIME * 17.0 + phase * 3.0) * 0.012 * clapper * local_ex * lift;
 	VERTEX.x += sin(TIME * 8.5 + phase) * 0.012 * clapper * local_ex * lift;
+
+	// The arms (crowd.py bakes them into UV2 from the skin weights: x how
+	// much of the vertex hangs off a forearm or hand, y which side of the
+	// figure it is on). Clappers' hands part and meet, the arms-up roles pump
+	// their fists -- and a sign holder's board goes up with them, since the
+	// board carries reach 1 and no side. Phone holders and sitters bake no
+	// reach at all and stay still. A little of it even in a quiet stretch:
+	// somebody is always clapping.
+	vec2 arm = ARM_SOURCE;
+	float reach = arm.x;
+	float side = arm.y * 2.0 - 1.0;
+	vec3 across = ACROSS_AXIS;
+	float act = arm_rest + (1.0 - arm_rest) * local_ex;
+	float clap = 0.5 + 0.5 * sin(TIME * clap_speed * (0.85 + 0.3 * hash(PHASE_SOURCE * 7.1)) + phase * 2.0);
+	VERTEX += across * (side * clap * clap_reach * reach * clapper * act);
+	float pump = max(0.0, sin(TIME * pump_speed * (0.8 + 0.4 * hash(PHASE_SOURCE * 3.3)) + phase * 3.0));
+	VERTEX.y += pump * pump_reach * reach * (waver + jumper) * act;
 }
 
-// A crowd at a show is a warm, muted mass: the owner's 2K26 match measures
-// its stands at half our saturation (cody_roman_2k26.md). Pulled a third of
-// the way to grey.
-uniform float crowd_muting = 0.35;
+// A crowd at a show is a muted mass: the owner's 2K26 match measures its
+// stands at about half our saturation (cody_roman_2k26.md; chroma/luma 0.50
+// there, 0.60 here with the Rocketbox crowd at this level). Pulled 45% of the
+// way to grey.
+uniform float crowd_muting = 0.45;
 
 void fragment() {
-	float lum = dot(shirt, vec3(0.2126, 0.7152, 0.0722));
-	vec3 cloth = mix(shirt, vec3(lum), crowd_muting);
+	vec3 base = shirt;
+	SIGN_ALBEDO
+	float lum = dot(base, vec3(0.2126, 0.7152, 0.0722));
+	vec3 cloth = mix(base, vec3(lum), crowd_muting);
 	ALBEDO = cloth;
 	float near = (1.0 - smoothstep(near_from, near_to, ring_dist)) * clamp(crowd_light - 0.3, 0.0, 1.0);
 	vec3 wash = mix(house_tint, near_warm, near);
@@ -1496,7 +1542,20 @@ void fragment() {
 		shirt = garment < 0.25 ? COLOR.rgb
 				: ((garment > 0.75 && INSTANCE_CUSTOM.a > 0.004) ? ink : tee);
 	}""" if floor_fans else "")
-	shader.code = shader.code.replace("PHASE_SOURCE", phase_source)
+	# The sign boards ride their holder's phase and role in COLOR (r, g) and
+	# the row's level in COLOR.b; their picture is the atlas, in UV.
+	shader.code = shader.code.replace("SIGN_ALBEDO", """base = texture(sign_atlas, UV).rgb * sign_level * COLOR.b;""" if signs else "")
+	shader.code = shader.code.replace("ROLE_SOURCE", "COLOR.g" if signs else "1.0 - UV.y")
+	# UV2 arrives V-flipped, as UV does.
+	shader.code = shader.code.replace("ARM_SOURCE", "vec2(1.0, 0.5)" if signs
+			else "vec2(UV2.x, 1.0 - UV2.y)")
+	# The across-the-body axis. A ringside fan is a MultiMesh instance built
+	# facing +Z, so it is the model's own +X; the bowl is baked in the hall's
+	# frame, where every figure faces the ring at the origin (to within the
+	# +-20 degrees crowd.py turns it), and its +X is up x that facing.
+	shader.code = shader.code.replace("ACROSS_AXIS", "vec3(1.0, 0.0, 0.0)" if floor_fans
+			else "normalize(vec3(-VERTEX.z, 0.0, VERTEX.x) + vec3(0.0, 0.0, 1e-4))")
+	shader.code = shader.code.replace("PHASE_SOURCE", "COLOR.r" if signs else phase_source)
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
 	mat.set_shader_parameter("house_tint", CROWD_WASH)

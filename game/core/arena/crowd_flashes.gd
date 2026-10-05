@@ -40,19 +40,22 @@ static func sample_positions(meshes: Array, count: int, seed_value: int) -> Pack
 	# figure into UV.x), so the head is that group's highest vertex.
 	var heads := {}
 	for m: MeshInstance3D in meshes:
-		if m == null or m.mesh == null or m.mesh.get_surface_count() == 0:
+		if m == null or m.mesh == null:
 			continue
-		var arrays: Array = m.mesh.surface_get_arrays(0)
-		var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 		var xf: Transform3D = m.global_transform if m.is_inside_tree() else m.transform
-		if uv.size() != v.size():
-			continue
-		for i in v.size():
-			var key := int(uv[i].x * 1.0e6)
-			var world := xf * v[i]
-			if not heads.has(key) or world.y > (heads[key] as Vector3).y:
-				heads[key] = world
+		# The crowd is split into several surfaces (16-bit indices; see
+		# tools/blender/crowd.py optimise_glb), so every one is walked.
+		for surface in m.mesh.get_surface_count():
+			var arrays: Array = m.mesh.surface_get_arrays(surface)
+			var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			if uv.size() != v.size():
+				continue
+			for i in v.size():
+				var key := int(uv[i].x * 1.0e6)
+				var world := xf * v[i]
+				if not heads.has(key) or world.y > (heads[key] as Vector3).y:
+					heads[key] = world
 	var out := PackedVector3Array()
 	var keys := heads.keys()
 	keys.sort()

@@ -99,12 +99,21 @@ procedural box-and-tube figures they replace are gone.
 What was done to them: texture colour sampled per vertex at full resolution
 (scaled to `TEXTURE_LEVEL`), mostly-transparent hair cards dropped (all cards
 below the ringside level of detail), the tongue dropped, collapse-decimated to
-~520 / ~190 / ~130 triangles (bowl near / mid / far) and ~1,100 (ringside),
+~480 / ~250 / ~230 triangles (bowl near / mid / far) and ~1,100 (ringside),
 posed, and the upper garment re-coloured per person from a wrestling-crowd
-palette with an occasional chest print. The phones and sign boards are boxes
-added in `rocketbox_crowd.py`. No Rocketbox file is in git: the raw FBX and
+palette with an occasional chest print. Arm membership for the shader's arm
+motion is baked from the skin weights. The phones are boxes added in
+`rocketbox_crowd.py`; the sign boards are quads carrying the sign atlas below. No Rocketbox file is in git: the raw FBX and
 TGA are fetched to a scratch directory by `tools/blender/fetch_rocketbox.sh`,
 and only the generated .glb files are committed.
+
+## `signs/crowd_signs.png` — ORIGINAL, built in this repo
+
+The crowd's sign atlas: sixteen boards (the bowl's `CrowdSigns` and two of the
+ringside sign fans), painted by `tools/blender/crowd_signs.py` with PIL in
+DejaVu Sans Bold (DejaVu fonts licence, free to embed in rendered output). The
+slogans are original ("WHAT A MATCH!", "1-2-3!", "TAG ME IN!" ...): no
+wrestler's name, catchphrase, show or promotion mark appears on any of them.
 
 ## `arena_bowl.glb` — ORIGINAL, built in this repo
 

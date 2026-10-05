@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The two ringside sign fans (SignFans): in chairs opposite the hard camera
+## The ringside sign fans (SignFans): in chairs opposite the hard camera
 ## and the stare-down shot, their seats kept out of the crowd, and their signs
 ## up only now and then -- the face-off, then at most MATCH_RAISES_MAX times
 ## in the match, never close together.
@@ -22,7 +22,7 @@ func test_they_sit_across_the_ring_from_the_cameras() -> void:
 func test_each_fan_gets_his_own_nearest_chair() -> void:
 	var chairs: Array[Transform3D] = []
 	for x in [7.2, 8.05, 8.9]:
-		for z in range(-8, 9):
+		for z in range(-10, 11):
 			chairs.append(Transform3D(Basis.IDENTITY, Vector3(x, -1.1, z * 0.62)))
 	var picked := SignFans.pick_seats(chairs)
 	assert_int(picked.size()).is_equal(SignFans.FANS.size())

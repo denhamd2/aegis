@@ -837,10 +837,13 @@ PART_COLORS = {
     # what a figure would be if the colour attribute failed to export.
     "Crowd": (0.24, 0.24, 0.27, 1.0),
     "CrowdFar": (0.22, 0.23, 0.26, 1.0),
+    # The crowd's sign boards: their picture comes from the sign atlas in
+    # Godot; COLOR carries their holder's phase and role (crowd.py).
+    "CrowdSigns": (0.8, 0.8, 0.8, 1.0),
 }
 
 ## The parts whose colour is per-vertex and whose geometry must not be welded.
-CROWD_PARTS = ("Crowd", "CrowdFar")
+CROWD_PARTS = ("Crowd", "CrowdFar", "CrowdSigns")
 
 
 def reset_scene() -> None:
@@ -913,8 +916,9 @@ def main(argv: list[str]) -> int:
 
     cfg = read_constants(BUILDER_GD)
     reset_scene()
-    parts = {name: (crowd_module.ArrayPart(name) if name in CROWD_PARTS
-                    else Part(name)) for name in PART_COLORS}
+    parts = {name: (crowd_module.ArrayPart(
+                        name, "UVMap" if name == "CrowdSigns" else "Phase")
+                    if name in CROWD_PARTS else Part(name)) for name in PART_COLORS}
     rows = build_bowl(cfg, parts)
     build_rink(cfg, parts)
     build_fascia(cfg, parts, rows)
@@ -941,9 +945,10 @@ def main(argv: list[str]) -> int:
         # only exports one when a material demonstrably reads it.
         export_vertex_color="ACTIVE",
     )
-    # The crowd's colour and (phase, role) as normalized shorts: see
-    # crowd.pack_attributes. It is what keeps the bowl a committable file.
-    crowd_module.pack_attributes(out, CROWD_PARTS)
+    # The crowd's attributes packed and its meshes split for 16-bit
+    # indices: see crowd.optimise_glb. It is what keeps the bowl a
+    # committable file.
+    crowd_module.optimise_glb(out, ("Crowd", "CrowdFar"), ("CrowdSigns",))
     seated = [r for r in rows if r["kind"] == "seated"]
     print("arena_bowl: %d triangles, %d seated rows, top tread %.2fm, %s"
           % (triangle_count(), len(seated), max(r["tread_y"] for r in rows), out))

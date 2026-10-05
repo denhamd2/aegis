@@ -153,3 +153,52 @@ func test_the_crowd_is_people_not_a_palette() -> void:
 		.override_failure_message("only %d of %d sampled crowd vertices are skin-toned"
 			% [warm, sampled]) \
 		.is_greater(0.08)
+
+
+func test_arms_carry_a_mask_and_a_side_in_uv2() -> void:
+	# The shader moves arms by UV2 (crowd.py arm_uv): x how much of a vertex
+	# hangs off a forearm or hand, y which side of the figure it is on. If the
+	# second UV set is lost on export, every arm in the bowl is still --
+	# silently, since the bodies still bob.
+	var root := _bowl()
+	for part in CROWD_PARTS:
+		var mesh := _mesh_for(root, part)
+		var arrays := mesh.surface_get_arrays(0)
+		var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2]
+		assert_int(uv2.size()) \
+			.override_failure_message("%s exports no UV2: the arm mask is gone" % part) \
+			.is_equal((arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size())
+		var reach := 0
+		var left := 0
+		var right := 0
+		for i in range(0, uv2.size(), 5):
+			if uv2[i].x > 0.8:
+				reach += 1
+				if uv2[i].y > 0.5:
+					left += 1
+				else:
+					right += 1
+		assert_int(reach).is_greater(uv2.size() / 200)
+		assert_int(left).is_greater(0)
+		assert_int(right).is_greater(0)
+
+
+func test_the_sign_boards_are_their_own_textured_part() -> void:
+	# The bowl's sign holders hold boards from the sign atlas: a mesh of
+	# their own, UVs inside the atlas, the holder's phase and role in COLOR.
+	var root := _bowl()
+	var mesh := _mesh_for(root, "CrowdSigns")
+	var arrays := mesh.surface_get_arrays(0)
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var colours: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	# Two quads a board, and dozens of boards.
+	assert_int(uv.size()).is_greater(8 * 40)
+	var cells := {}
+	for i in uv.size():
+		assert_float(uv[i].x).is_between(0.0, 1.0)
+		assert_float(uv[i].y).is_between(0.0, 1.0)
+		cells["%d,%d" % [int(uv[i].x * 4.0), int(uv[i].y * 4.0)]] = true
+	assert_int(cells.size()).is_greater(8)
+	# Holders wave: role 0.5 rides COLOR.g for every board.
+	for i in range(0, colours.size(), 8):
+		assert_float(colours[i].g).is_between(0.4, 0.8)

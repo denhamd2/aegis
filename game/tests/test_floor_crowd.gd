@@ -250,3 +250,20 @@ func test_every_fan_keeps_its_own_skin_and_clothes() -> void:
 		assert_int(warm) \
 			.override_failure_message("%s has no skin-toned vertex" % fan.name) \
 			.is_greater(5)
+
+
+## The ringside fans carry the arm mask too (UV2: reach, side), and a fan
+## filming on a phone carries none -- he holds it steady.
+func test_the_fans_carry_an_arm_mask() -> void:
+	var moving := 0
+	for fan in _fans(_model(), true):
+		var arrays := (fan.mesh as ArrayMesh).surface_get_arrays(0)
+		var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2]
+		assert_int(uv2.size()).is_equal((arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size())
+		var peak := 0.0
+		for v in uv2:
+			peak = maxf(peak, v.x)
+		if peak > 0.8:
+			moving += 1
+	# The clappers and cheerers; not the sitters and phone holders.
+	assert_int(moving).is_between(4, VARIANTS - 4)

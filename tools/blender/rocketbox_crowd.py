@@ -118,6 +118,16 @@ SHIRT_BONES = ("Bip01 Spine", "Bip01 Spine1", "Bip01 Spine2",
 ## Bones that are face, for the avatar's own skin tone.
 FACE_BONES = ("Bip01 MNose", "Bip01 RCheek", "Bip01 LCheek",
               "Bip01 MMiddleEyebrow")
+## How much each arm bone's weight counts toward a vertex's arm membership
+## (" X " stands for either side).
+ARM_BONE_WEIGHT = {"Bip01 X Forearm": 1.0, "Bip01 X Hand": 1.0,
+                   "Bip01 X UpperArm": 0.45}
+for _f in range(5):
+    for _j in ("", "1", "2"):
+        ARM_BONE_WEIGHT["Bip01 X Finger%d%s" % (_f, _j)] = 1.0
+## Poses whose arms stay still under the shader: somebody filming holds the
+## phone steady, and a standing idle has nothing to pump.
+STILL_ARMS = ("sit_a", "sit_b", "sit_c", "sit_phone", "stand", "stand_phone")
 ## Inside-the-mouth bones: their faces are never seen and are dropped.
 HIDDEN_BONES = ("Bip01 MTongue",)
 
@@ -427,6 +437,29 @@ class Avatar:
         data = np.stack([shirt.astype(float), fold, chest.astype(float),
                          np.ones(nv)], axis=1)
         info.data.foreach_set("color", data.ravel())
+        # Arm membership, for the shader's arm motion: how much of each
+        # vertex hangs off a forearm, hand or finger (half of what hangs off
+        # the upper arm, so the elbow bends rather than tears), and which
+        # arm. From the skin weights, so it falls off as smoothly as the
+        # skinning does and survives decimation as an interpolated value.
+        arm = np.zeros(nv)
+        left = np.zeros(nv)
+        for v in me.vertices:
+            lsum = rsum = 0.0
+            for g in v.groups:
+                name = groups[g.group]
+                k = ARM_BONE_WEIGHT.get(name.replace(" L ", " X ").replace(" R ", " X "))
+                if k is None:
+                    continue
+                if " L " in name:
+                    lsum += g.weight * k
+                else:
+                    rsum += g.weight * k
+            arm[v.index] = min(lsum + rsum, 1.0)
+            left[v.index] = 1.0 if lsum >= rsum else 0.0
+        arm_attr = me.color_attributes.new("Arm", "FLOAT_COLOR", "POINT")
+        arm_attr.data.foreach_set("color", np.stack(
+            [arm, left, np.zeros(nv), np.ones(nv)], axis=1).ravel())
         me.color_attributes.active_color = attr
 
         hidden = np.isin(dominant, HIDDEN_BONES)
@@ -518,6 +551,9 @@ class Avatar:
         me.color_attributes["Col"].data.foreach_get("color", col)
         info = np.empty(nv * 4)
         me.color_attributes["Info"].data.foreach_get("color", info)
+        armv = np.empty(nv * 4)
+        me.color_attributes["Arm"].data.foreach_get("color", armv)
+        armv = armv.reshape(-1, 4)
         tris = np.empty(len(me.loop_triangles) * 3, dtype=np.int64)
         me.loop_triangles.foreach_get("vertices", tris)
         ev.to_mesh_clear()
@@ -563,6 +599,13 @@ class Avatar:
         out["hands"] = (to_game(bones["Bip01 L Hand"]), to_game(bones["Bip01 R Hand"]),
                         to_game(bones["Bip01 L Finger2"]), to_game(bones["Bip01 R Finger2"]))
         out["head"] = to_game(bones["Bip01 Head"])
+        # Arm membership and which side of the figure (its local +X or -X)
+        # the arm is on -- the shader needs the side to bring two clapping
+        # hands together.
+        left_is_plus_x = to_game(bones["Bip01 L UpperArm"])[0] > to_game(bones["Bip01 R UpperArm"])[0]
+        is_left = armv[:, 1] > 0.5
+        out["arm"] = np.zeros(len(game)) if pose in STILL_ARMS else armv[:, 0].copy()
+        out["side"] = np.where(is_left == left_is_plus_x, 1.0, 0.0)
         if prop:
             _add_prop(out, prop)
         return out
@@ -609,13 +652,9 @@ def _box(centre, ax, ay, az):
     return np.array(corners), np.array(tris)
 
 
-## Prop colours, linear. The sign boards' faces are three of them; the
-## picture itself is what the dark bands suggest at the distance they are seen.
-SIGN_BOARDS = ((0.45, 0.44, 0.40), (0.45, 0.44, 0.40), (0.50, 0.38, 0.04),
-               (0.34, 0.03, 0.02), (0.40, 0.40, 0.40), (0.04, 0.04, 0.05))
-## And their lettering.
-SIGN_INKS = ((0.015, 0.015, 0.02), (0.015, 0.015, 0.02), (0.30, 0.02, 0.02),
-             (0.03, 0.05, 0.22), (0.45, 0.42, 0.36))
+## A sign board's least width, metres; its height is half its width, the
+## sign atlas's cell aspect.
+SIGN_WIDTH = 0.84
 PHONE = (0.02, 0.02, 0.025)
 PHONE_SCREEN = (0.55, 0.62, 0.75)
 
@@ -629,6 +668,8 @@ def _append(out: dict, co, tris, colour) -> None:
     out["shirt"] = np.concatenate([out["shirt"], np.zeros(n, bool)])
     out["fold"] = np.concatenate([out["fold"], np.ones(n)])
     out["chest"] = np.concatenate([out["chest"], np.zeros(n, bool)])
+    out["arm"] = np.concatenate([out["arm"], np.zeros(n)])
+    out["side"] = np.concatenate([out["side"], np.full(n, 0.5)])
     out.setdefault("prop", np.zeros(base, bool))
     out["prop"] = np.concatenate([out["prop"], np.ones(n, bool)])
 
@@ -648,32 +689,16 @@ def _add_prop(out: dict, prop: str) -> None:
         _append(out, co, tris, PHONE_SCREEN)
         out["screen"] = screen_at
     elif prop == "sign":
-        # A board held overhead between the two hands, facing the ring.
+        # A board held overhead between the two hands, facing the ring. Not
+        # geometry here: crowd.py builds every board into a mesh of its own
+        # (`CrowdSigns`) so it can carry a picture from the sign atlas. This
+        # is where it goes.
         mid = (lf + rf) * 0.5
-        width = max(np.linalg.norm((lf - rf) * np.array([1, 0, 1])) + 0.18, 0.62)
+        width = max(np.linalg.norm((lf - rf) * np.array([1, 0, 1])) + 0.24, SIGN_WIDTH)
         # Bottom edge at the hands or just over the head, whichever is
         # higher: a sign held in front of a face is a face nobody sees.
-        bottom = max(mid[1] - 0.06, out["head"][1] + 0.14)
-        centre = np.array([mid[0], bottom + 0.22, mid[2] + 0.04])
-        across = np.array([1.0, 0.0, 0.0])
-        co, tris = _box(centre, across * width * 0.5, up * 0.22,
-                        np.array([0.0, 0.0, 0.006]))
-        _append(out, co, tris, (1.0, 1.0, 1.0))
-        # 1 marks the board and 2 its lettering, which crowd.py colours per
-        # person: one sign repeated two hundred times is a pattern, not a
-        # crowd.
-        out["sign_mask"] = np.zeros(len(out["co"]), np.int8)
-        out["sign_mask"][-len(co):] = 1
-        # Lettering on the face toward the ring: a big word and a smaller
-        # line under it, off-centre so no two read as one stencil.
-        for dx, dy, w, h in ((-0.04, 0.07, 0.78, 0.065), (0.06, -0.09, 0.50, 0.035)):
-            co, tris = _box(centre + across * (width * dx) + up * dy
-                            + np.array([0.0, 0.0, 0.008]),
-                            across * width * 0.5 * w, up * h,
-                            np.array([0.0, 0.0, 0.002]))
-            _append(out, co, tris, (0.02, 0.02, 0.025))
-            out["sign_mask"] = np.concatenate([out["sign_mask"],
-                                               np.full(len(co), 2, np.int8)])
+        bottom = max(mid[1] - 0.08, out["head"][1] + 0.12)
+        centre = np.array([mid[0], bottom + width * 0.25, mid[2] + 0.05])
         out["sign"] = (centre, width)
 
 
@@ -684,13 +709,13 @@ def _add_prop(out: dict, prop: str) -> None:
 ## Levels of detail: target triangles, and whether hair cards survive.
 ## `near` is the bowl's first four rows, `mid` the rest of the lower tier,
 ## `far` the upper tier -- sized so the whole bowl stays a committable .glb
-## (~1.1M crowd triangles; see crowd.py). `floor` is the ringside fans, a
+## (~1.5M crowd triangles; see crowd.py and crowd.optimise_glb). `floor` is the ringside fans, a
 ## few metres from the gameplay camera and instanced, so they can afford
 ## ten times the bowl's nearest rows.
 LODS = {
-    "near": (520, False),
-    "mid": (190, False),
-    "far": (130, False),
+    "near": (480, False),
+    "mid": (250, False),
+    "far": (230, False),
     "floor": (1100, True),
 }
 

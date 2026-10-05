@@ -1,6 +1,6 @@
 class_name SignFans
 extends Node3D
-## Two fans in the ringside rows opposite the hard camera, holding up signs
+## Four fans in the ringside rows opposite the hard camera, holding up signs
 ## (tools/blender/sign_fan.py; the owner's two reference photographs of a WWE
 ## crowd show how it is done). They sit for most of the match and stand with
 ## their signs over their heads only now and then:
@@ -15,16 +15,24 @@ extends Node3D
 ## figures are left out for them); hooked to the match by MatchSetup.
 ## Presentation only.
 
-## The two boards, and roughly where their chairs are: ringside rows two and
+## The boards, and roughly where their chairs are: ringside rows two and
 ## three (the barricade square at 6 m plus FLOOR_SEAT_START and a row pitch or
 ## two) on the +X side, which is the side the hard camera at -X and the
 ## face-off shot both look across the ring at. Either side of the centre line
 ## by ~3 m, so the two men standing chest to chest in the middle do not hide
 ## them.
+## The last two show a cell of the crowd's own sign atlas (original slogans,
+## tools/blender/crowd_signs.py): the fourth element is the cell, -1 for a
+## whole picture.
 const FANS := [
-	["res://assets/environment/signs/enda_fears_omar.jpg", Vector3(8.05, 0.0, -3.6), Color(0.30, 0.13, 0.13)],
-	["res://assets/environment/signs/cody_sucks.jpg", Vector3(8.9, 0.0, 3.1), Color(0.14, 0.18, 0.28)],
+	["res://assets/environment/signs/enda_fears_omar.jpg", Vector3(8.05, 0.0, -3.6), Color(0.30, 0.13, 0.13), -1],
+	["res://assets/environment/signs/cody_sucks.jpg", Vector3(8.9, 0.0, 3.1), Color(0.14, 0.18, 0.28), -1],
+	["res://assets/environment/signs/crowd_signs.png", Vector3(8.05, 0.0, 5.6), Color(0.05, 0.05, 0.06), 0],
+	["res://assets/environment/signs/crowd_signs.png", Vector3(8.9, 0.0, -5.6), Color(0.06, 0.06, 0.07), 6],
 ]
+## The sign atlas's grid (crowd_signs.py COLS x ROWS).
+const ATLAS_COLS := 4
+const ATLAS_ROWS := 4
 ## Held up through the face-off, however long it runs; down this long after
 ## the bell.
 const FACEOFF_HOLD := 30.0
@@ -79,8 +87,20 @@ func seat(chairs: Array[Transform3D], picked: Array[int]) -> void:
 		fan.name = "SignFan%d" % n
 		add_child(fan)
 		fan.transform = chairs[picked[n]]
-		fan.setup(load(spec[0]) as Texture2D, spec[2], 0.37 * n)
+		fan.setup(load(spec[0]) as Texture2D, spec[2], 0.37 * n, _region(spec))
 		fans.append(fan)
+
+
+## The part of a fan's picture his board shows, in UV: the whole picture,
+## or one cell of the sign atlas. (A 3D material ignores an AtlasTexture's
+## region, so the board is cropped by its UV scale and offset instead.)
+static func _region(spec: Array) -> Rect2:
+	var cell: int = spec[3]
+	if cell < 0:
+		return Rect2(0.0, 0.0, 1.0, 1.0)
+	var w := 1.0 / ATLAS_COLS
+	var h := 1.0 / ATLAS_ROWS
+	return Rect2((cell % ATLAS_COLS) * w, (cell / ATLAS_COLS) * h, w, h)
 
 
 ## The match's big moments.

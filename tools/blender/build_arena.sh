@@ -50,5 +50,7 @@ else
     run() { "$python_bin" "$1" --out "$2"; }
 fi
 
+# The sign atlas first: plain PIL, and the boards' UVs index its cells.
+python3 "$here/crowd_signs.py"
 run "$here/arena_bowl.py" "$bowl_out"
 run "$here/floor_crowd.py" "$crowd_out"

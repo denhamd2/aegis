@@ -30,7 +30,8 @@ var _hold_left := 0.0
 
 ## Builds him in his chair, in `shirt`, with `picture` on the board. `phase`
 ## (0-1) staggers his seated sway against anyone else's.
-func setup(picture: Texture2D, shirt: Color, phase: float) -> void:
+func setup(picture: Texture2D, shirt: Color, phase: float,
+		region := Rect2(0.0, 0.0, 1.0, 1.0)) -> void:
 	var packed := load(MODEL) as PackedScene
 	if packed == null:
 		push_error("SignFan: %s failed to load. Run tools/blender/sign_fan.py." % MODEL)
@@ -41,7 +42,7 @@ func setup(picture: Texture2D, shirt: Color, phase: float) -> void:
 	for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
 		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if mesh.name.begins_with("FanSign"):
-			mesh.set_surface_override_material(0, _board(picture))
+			mesh.set_surface_override_material(0, _board(picture, region))
 			mesh.set_surface_override_material(1, _flat(Color(0.62, 0.58, 0.51)))
 		else:
 			mesh.set_surface_override_material(0, _flat(shirt))
@@ -93,9 +94,12 @@ func _on_finished(anim: StringName) -> void:
 			_player.play(SEATED, BLEND)
 
 
-func _board(picture: Texture2D) -> StandardMaterial3D:
+func _board(picture: Texture2D, region: Rect2) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = picture
+	# `region` of the picture, in UV: a cell of the crowd's sign atlas.
+	m.uv1_scale = Vector3(region.size.x, region.size.y, 1.0)
+	m.uv1_offset = Vector3(region.position.x, region.position.y, 0.0)
 	m.albedo_color = SIGN_TINT
 	m.roughness = 0.85
 	return m

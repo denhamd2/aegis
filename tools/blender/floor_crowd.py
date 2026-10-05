@@ -110,7 +110,7 @@ def main(argv: list[str]) -> int:
         # ACTIVE, not the "MATERIAL" default: see the colour attribute above.
         export_vertex_color="ACTIVE",
     )
-    crowd_module.pack_attributes(out, tuple(names))
+    crowd_module.optimise_glb(out, tuple(names), ())
     print("floor_crowd: %d variants, %d triangles, %s"
           % (len(names), arena_bowl.triangle_count(), out))
     return 0

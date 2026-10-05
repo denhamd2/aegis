@@ -62,9 +62,14 @@ func test_the_crowd_wash_holds_the_crowd_level() -> void:
 	var w := ArenaBuilder.CROWD_WASH
 	var luminance := 0.2126 * w.x + 0.7152 * w.y + 0.0722 * w.z
 	assert_float(luminance).is_between(0.95, 1.05)
-	# And it is a colour -- warm, as the owner's 2K26 match crowd measures
-	# (cody_roman_2k26.md), not the blue it used to be.
-	assert_float(w.x).is_greater(w.z)
+	# And it is not the blue it used to be (0.62, 0.98, 2.0). The 2K26 match
+	# crowd measures warm (cody_roman_2k26.md), but since the stands are
+	# Rocketbox people that warmth comes from their own baked skin and
+	# clothes, and the wash is near neutral with the reference's slight
+	# magenta: the gameplay frame's crowd still measures R > B (sRGB 0.165
+	# against 0.125), it just stopped being warm twice.
+	assert_float(w.x).is_greater_equal(1.0)
+	assert_float(w.z).is_less(1.2)
 
 
 ## On a crowd cutaway the beams go fast and wide across the stands, and come
