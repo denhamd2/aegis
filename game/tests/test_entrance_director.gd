@@ -318,19 +318,31 @@ func test_romans_finger_lands_on_the_slam() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var start := -1
 	var ticks := 0
-	var pyro_at := -1
+	var cues: Array = []
+	var clock := [0]
+	director.cue.connect(func(what: String) -> void: cues.append([what, clock[0]]))
 	while ticks < 20000 and director._beat < director._beats.size():
 		var b: Dictionary = director._beats[director._beat]
 		if b.get("kind") == "hold" and start < 0:
 			start = ticks
 		director._physics_process(1.0 / 60.0)
 		ticks += 1
-		if start >= 0 and director._pyro and pyro_at < 0:
-			pyro_at = ticks - start
+		clock[0] = ticks
+		if start >= 0 and cues.any(func(c: Array) -> bool: return c[0] == "pyro_roman"):
 			break
-	assert_int(pyro_at).override_failure_message("pyro at %d" % pyro_at) \
+	var slam_at := -1
+	var first_pyro_at := -1
+	for c: Array in cues:
+		if c[0] == "pyro_stage" and first_pyro_at < 0:
+			first_pyro_at = c[1] - start
+		if c[0] == "pyro_roman" and slam_at < 0:
+			slam_at = c[1] - start
+	assert_int(slam_at).override_failure_message("slam pyro at %d" % slam_at) \
 			.is_between(int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) - 2,
 				int(round(EntranceDirector.ROMAN_MUSIC_HIT * 60)) + 2)
+	# He walks out on the first pyro, well before the slam.
+	assert_int(first_pyro_at).is_greater(0)
+	assert_int(first_pyro_at).is_less(slam_at)
 
 
 ## The owner: no grapple stance before the bell -- they walk up to each

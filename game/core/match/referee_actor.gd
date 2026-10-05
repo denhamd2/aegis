@@ -26,6 +26,8 @@ const MODEL := "res://scenes/aubrey_model.tscn"
 ## Where she waits through the entrances and the face-off: by the far (+X)
 ## ropes, off the centre line, facing the middle.
 const PARK := Vector3(2.35, 0.0, -1.4)
+## How long she stands between them before stepping clear, in seconds.
+const SEPARATE_HOLD := 1.2
 ## She keeps inside this half-extent (the ropes are at 3.3).
 const KEEP_IN := 2.6
 const STANDOFF := 2.1
@@ -101,6 +103,8 @@ var _last_pin_tick := 0
 var _winner: WrestlerController
 var _separated := false
 var _separating := false
+## Seconds she has stood between them; she steps clear after SEPARATE_HOLD.
+var _separate_time := 0.0
 var _checking := false
 var _director: EntranceDirector
 var _errand_target := Vector3.INF
@@ -212,6 +216,11 @@ func _process(delta: float) -> void:
 				if not _go(_inside((a + b) * 0.5 + side * 0.9), WALK_SPEED, delta, false):
 					return
 				_face(_yaw_towards(-side), delta)
+				# Having sent them to their corners she gets out of the way,
+				# back to her spot by the ropes.
+				_separate_time += delta
+				if _separate_time >= SEPARATE_HOLD:
+					_separating = false
 			elif _checking and _director:
 				var man: WrestlerController = _director.checked_man()
 				if man == null:
