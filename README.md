@@ -8861,4 +8861,31 @@ touching the rest), and wired through the rosters:
 Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
 (no body through the other, hands hold) and the full suite.
 
-Still to come from the moves list: Guillotine, Drive-By, corner spear.
+
+## Round: body fixes, three more moves, smoke, HUD
+
+- **Shoulders.** `RigPoser` now lifts the clavicle as an arm goes overhead
+  (`_follow_with_clavicle`, 0.3 deg per degree past 60, capped at 30; opt out
+  per key with `clav_follow=False`). All clips re-baked.
+- **Roman's corrective bones.** The 24 `H_*` helper bones (thigh volume, knee
+  overshoot, forearm twist, foot/toe, elbow) are driven from the joint they
+  belong to in `RomanModel._add_helper_tracks`.
+- **Tried and dropped:** smoothing Cody's hip weights (no visible gain for a
+  71 MB binary rewrite). A proper fix needs corrective bones on his model.
+- **Gate:** `test_body_deformation_gate.gd` pins the clavicle lift and ratchets
+  the single-key limb flips (92 remain: Rope_Step_Through, Roll_Out_Ropes,
+  Springboard_DK, where the authored foot passes beside the hip).
+- **Smoke.** The black disc under Cody's smoke was the dry-ice puffs
+  alpha-blending; they now blend additively (`DryIce._material`). Found by
+  hiding nodes one at a time with `entrance_shots --kill` / `--from-event`.
+- **Moves.** Roman gets the Guillotine (`grapple_guillotine`), the Drive-By
+  (`running_drive_by`) and a corner Spear (`running_corner_spear`, its own
+  `corner` roster tier, thrown by `WrestlerController.try_corner_spear()` only
+  at a man trapped in a corner; the AI reaches for it 35% of the time it would
+  strike him there).
+- **HUD.** Match clock and title banner, signature/finisher ready pips on each
+  plate, a move-name pop-up for big moves, and a crowd meter off MatchAudio's
+  heats. Probe: `tools/probe/hud_shot.tscn`.
+- **Ring.** Reviewed against `gauntlet/refs/ring.md`: the ring already has
+  branded pads, rope clamps, the padded apron roll, printed skirt, mat wear and
+  rope shadows, and the reference has plain ropes, so no rope tape was added.
