@@ -84,6 +84,8 @@ const HAIR_ROUGHNESS := 0.42
 
 
 func _ready() -> void:
+	# Before the animations: they add the helpers' tracks if the bones exist.
+	HipHelpers.install(get_game_skeleton())
 	_install_animations()
 	_fix_look()
 	_fix_eyes()
@@ -264,6 +266,7 @@ func adapt_animation_library(source: AnimationLibrary,
 				continue
 			animation.track_set_path(track,
 					NodePath("%s:%s" % [skeleton_path, bone]))
+		HipHelpers.add_tracks(animation, skeleton, skeleton_path)
 		target.add_animation(name, animation)
 	return target
 
