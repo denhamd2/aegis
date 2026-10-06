@@ -167,6 +167,37 @@ class RigPoser:
 
     # --- solvers ---------------------------------------------------------
 
+    CLAVICLE_FOLLOW = 0.3      # shrug per degree of arm elevation past the threshold
+    CLAVICLE_FREE_DEG = 60.0   # an arm below this hangs with the girdle at rest
+    CLAVICLE_MAX_DEG = 30.0
+
+    def _follow_with_clavicle(self, side_id, hand):
+        """Lift and protract the shoulder girdle as the arm goes overhead.
+
+        With the clavicle left at rest, an arm swung past about 60 degrees
+        folds the deltoid and trapezius into the neck. Real shoulders ride
+        up about a third of the way with the arm, so the clavicle takes a
+        share of the arm's direction once it is raised.
+        """
+        name = "clavicle_%s" % side_id
+        root = self.bone_head("upperarm_%s" % side_id)
+        reach = hand - root
+        if reach.length < 1e-4:
+            return
+        reach.normalize()
+        elevation = math.degrees(math.acos(_clamp(-reach.z, -1.0, 1.0)))
+        if elevation <= self.CLAVICLE_FREE_DEG:
+            return
+        rest = self.rest_dir[name]
+        arc = math.degrees(rest.angle(reach))
+        if arc < 1e-3:
+            return
+        turn = _clamp(self.CLAVICLE_FOLLOW * (elevation - self.CLAVICLE_FREE_DEG),
+                      0.0, self.CLAVICLE_MAX_DEG)
+        share = _clamp(turn / arc, 0.0, 1.0)
+        aim = Quaternion().slerp(rest.rotation_difference(reach), share)
+        self._set(name, aim)
+
     def _two_bone_ik(self, upper, lower, target, pole):
         """Plant `lower`'s tail on `target`, bending the joint toward `pole`.
 
@@ -277,6 +308,7 @@ class RigPoser:
           knee_r/l    (right, fwd, up) pole direction the knee points
           ankle_r/l   (pitch, yaw, roll) degrees on the foot bone
           clav_r/l    (pitch, yaw, roll) degrees on the clavicle
+          clav_follow False to keep the clavicle at rest under a raised arm
         """
         self._reset()
 
@@ -313,6 +345,8 @@ class RigPoser:
             clav = pose.get("clav_%s" % side_id)
             if clav:
                 self._set("clavicle_%s" % side_id, chest @ _euler(*clav))
+            elif pose.get("hand_%s" % side_id) and pose.get("clav_follow", True):
+                self._follow_with_clavicle(side_id, vec(*pose["hand_%s" % side_id]))
 
             hand = pose.get("hand_%s" % side_id)
             if hand:
