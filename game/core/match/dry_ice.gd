@@ -24,7 +24,7 @@ const PUFF_LIFT := 0.50
 ## Dim by design: the house is dark for his entrance, and smoke lit by one
 ## backlight is a blue-grey, not white.
 const TINT := Color(0.66, 0.74, 0.92)
-const PEAK_ALPHA := 0.38
+const PEAK_ALPHA := 0.14
 
 var _particles: CPUParticles3D
 var _stopped := false
@@ -98,6 +98,7 @@ static func _material() -> StandardMaterial3D:
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	m.vertex_color_use_as_albedo = true
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	m.albedo_texture = _sprite()
 	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED

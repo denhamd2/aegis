@@ -26,6 +26,12 @@ var _sparse := false
 ## Jump straight to the first beat framed on this shot (lighting passes): the
 ## wrestler is placed on the beat's own line, the beats before it are skipped.
 var _from_shot := ""
+## Same, but the first beat that fires this event (e.g. fog_on: the smoke beat,
+## whose shot name is shared with earlier beats).
+var _from_event := ""
+## --kill Name[:shadow]: hide that director child (or just its shadow) once it exists.
+## Isolates which node draws an artefact, one render per suspect.
+var _kill := ""
 
 
 func _ready() -> void:
@@ -41,6 +47,10 @@ func _ready() -> void:
 			_faceoff = true
 		elif args[i] == "--sparse":
 			_sparse = true
+		elif args[i] == "--kill" and i + 1 < args.size():
+			_kill = args[i + 1]
+		elif args[i] == "--from-event" and i + 1 < args.size():
+			_from_event = args[i + 1]
 		elif args[i] == "--from-shot" and i + 1 < args.size():
 			_from_shot = args[i + 1]
 	DirAccess.make_dir_recursive_absolute(_out)
@@ -63,10 +73,16 @@ func _ready() -> void:
 				director._beat = i
 				director._start_beat()
 				break
-	if _from_shot != "":
+	if _from_shot != "" or _from_event != "":
 		for i in director._beats.size():
 			var bt: Dictionary = director._beats[i]
-			if String(bt.get("shot", "")) == _from_shot and bt.get("who") != null:
+			var wanted := String(bt.get("shot", "")) == _from_shot
+			if _from_event != "":
+				wanted = false
+				for ev in bt.get("events", []):
+					if ev[1] == _from_event:
+						wanted = true
+			if wanted and bt.get("who") != null:
 				var w: WrestlerController = bt["who"]
 				w.visible = true
 				if bt.has("path"):
@@ -90,6 +106,14 @@ func _ready() -> void:
 			var b: Dictionary = director._beats[last_beat]
 			print("frame %d beat %d %s %s" % [_frame, last_beat, b["kind"],
 					b.get("shot", "")])
+		if _kill != "":
+			var parts := _kill.split(":")
+			var victim := director.find_child(parts[0], true, false)
+			if victim:
+				if parts.size() > 1 and victim is Light3D:
+					(victim as Light3D).shadow_enabled = false
+				elif victim is Node3D:
+					(victim as Node3D).visible = false
 		if _frame % _every == 0:
 			var ice := director.get_node_or_null("DryIce") as DryIce
 			if ice:
