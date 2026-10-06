@@ -545,6 +545,8 @@ func begin(match_root: Node) -> void:
 	_match = match_root
 	_a = match_root.get_node("WrestlerA")
 	_b = match_root.get_node("WrestlerB")
+	for w: WrestlerController in [_a, _b]:
+		w.set_presentation_rate(true)
 	_camera = match_root.get_node_or_null("MatchCamera") as MatchCamera
 	_hud = match_root.get_node_or_null("MatchHUD")
 	_lights = match_root.get_node_or_null("LightRig")
@@ -1029,6 +1031,7 @@ func skip_entrance() -> void:
 	_dim_house(false)
 	_pose_top(null)
 	who.global_transform = _mark[who]
+	MatchSmoothing.snap(who)
 	who.velocity = Vector3.ZERO
 	who.visible = true
 	_beat = _handover_beat() if who == _b else _intro_beat()
@@ -1073,9 +1076,11 @@ func _ring_bell() -> void:
 	_smoke_off()
 	for w: WrestlerController in [_a, _b]:
 		w.global_transform = _mark[w]
+		MatchSmoothing.snap(w)
 		w.velocity = Vector3.ZERO
 		w.visible = true
 		w.end_presentation()
+		w.set_presentation_rate(false)
 	for entry: Array in _frozen:
 		(entry[0] as Node).set_physics_process(entry[1])
 	if _hud and "visible" in _hud:
@@ -1713,10 +1718,13 @@ func _place(w: WrestlerController, at: Vector3, heading: Vector3, snap: bool,
 	w.global_position = p
 	var flat := Vector3(heading.x, 0.0, heading.z)
 	if flat.length() < 0.001:
+		if snap:
+			MatchSmoothing.snap(w)
 		return
 	var want := atan2(-flat.x, -flat.z)
 	if snap:
 		w.rotation.y = want
+		MatchSmoothing.snap(w)
 	else:
 		w.rotation.y = rotate_toward(w.rotation.y, want, TURN_RATE * delta)
 

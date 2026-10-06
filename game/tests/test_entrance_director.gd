@@ -509,3 +509,25 @@ func test_skip_entrance_skips_one_man_at_a_time() -> void:
 		director._physics_process(1.0 / 60.0)
 		guard += 1
 	assert_bool(rang[0]).is_true()
+
+
+## Smooth motion (roman_entrance_aaa_plan.md step 1): during the entrances the
+## pose is evaluated every drawn frame and the wrestlers and camera are
+## interpolated between ticks; at the bell the pose goes back to the tick.
+## tools/probe/motion_cadence.tscn measures the result: 0 held frames of 240 at
+## 120 fps, against 119 with this off.
+func test_entrances_animate_at_render_rate_and_the_match_at_tick_rate() -> void:
+	assert_bool(ProjectSettings.get_setting("physics/common/physics_interpolation")).is_true()
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	await await_millis(20)
+	assert_int(a.anim_tree.callback_mode_process).is_equal(
+			AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE)
+	assert_int(a.physics_interpolation_mode).is_equal(Node.PHYSICS_INTERPOLATION_MODE_ON)
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	assert_int(camera.physics_interpolation_mode).is_equal(Node.PHYSICS_INTERPOLATION_MODE_ON)
+	assert_int(scene.physics_interpolation_mode).is_equal(Node.PHYSICS_INTERPOLATION_MODE_OFF)
+	director.skip()
+	assert_int(a.anim_tree.callback_mode_process).is_equal(
+			AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS)
