@@ -24,7 +24,11 @@ const INSERT_GAP := 0.08
 func _ready() -> void:
 	var fit: Dictionary = PairedFit.OFFSETS.duplicate(true)
 	var inserts: Dictionary = PairedFit.INSERTS.duplicate(true)
+	# FIT_ONLY=move_a,move_b fits just those; every other move keeps its stored fit.
+	var only := OS.get_environment("FIT_ONLY").split(",", false)
 	for move_id in PairClearance.paired_move_ids():
+		if not only.is_empty() and not (String(move_id) in only):
+			continue
 		var move: MoveDef = load("res://resources/moves/%s.tres" % move_id)
 		var spec: Dictionary = PairedRecipes.TRAJECTORIES.get(String(move.animation_pair_id), {})
 		if spec.is_empty():

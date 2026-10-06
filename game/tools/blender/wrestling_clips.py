@@ -4573,6 +4573,128 @@ CLIPS["Alabama_Slam_Defender"] = [
 ]
 
 
+# The Samoan Drop, 60 frames / 2.0 s. Roman ducks in and hoists the man
+# across both shoulders, face up, head to Roman's left and feet to his right
+# (a fireman's carry); a beat to show him off; then Roman drops to a crouch
+# and the man falls away off his shoulders in front, back first. The carried
+# body lies along the lateral axis: hips pitch 88 tips him onto his back,
+# yaw 90 turns that length across Roman's shoulders.
+_SAM_LIMBS = dict(spine=(-4, 0, 0), head=(-6, 0, 0),
+                  hand_r=(0.34, 0.06, -0.10), hand_l=(-0.34, 0.06, -0.10),
+                  elbow_r=(0.8, -0.2, -0.3), elbow_l=(-0.8, -0.2, -0.3),
+                  fist_r=0.2, fist_l=0.2,
+                  foot_r=(0.12, 0.00, -0.86), foot_l=(-0.12, 0.00, -0.86),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+_SAM_HOLD = P(pelvis=(0.0, 0.0, 0.840), spine=(2, 0, 0), head=(4, 0, 0),
+              hand_r=(0.24, 0.10, 1.32), hand_l=(-0.24, 0.10, 1.32),
+              elbow_r=(0.8, -0.3, 0.0), elbow_l=(-0.8, -0.3, 0.0),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.26, -0.04, 0.104), foot_l=(-0.24, 0.06, 0.104))
+CLIPS["Samoan_Drop_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Ducks in, his head by the man's ribs, an arm between the legs.
+    (8,  P(pelvis=(0.0, 0.12, 0.700), hips=(-26, 0, 0), spine=(-26, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.20, 0.44, 0.96), hand_l=(-0.20, 0.44, 0.96),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.16, 0.104))),
+    # Up, the man across his shoulders.
+    (16, dict(_SAM_HOLD)),
+    (28, dict(_SAM_HOLD, spine=(0, 0, 0), head=(2, 0, 0))),
+    # Drops: knees give, he sits into a crouch as the man leaves his shoulders.
+    (34, P(pelvis=(0.0, 0.06, 0.640), hips=(-12, 0, 0), spine=(-18, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.28, 0.36, 0.90), hand_l=(-0.28, 0.36, 0.90),
+           fist_r=0.5, fist_l=0.5,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.12, 0.104))),
+    (40, P(pelvis=(0.0, 0.10, 0.480), hips=(-24, 0, 0), spine=(-30, 0, 0),
+           head=(-12, 0, 0),
+           hand_r=(0.30, 0.46, 0.60), hand_l=(-0.30, 0.46, 0.60),
+           fist_r=0.4, fist_l=0.4,
+           foot_r=(0.28, -0.14, 0.104), foot_l=(-0.24, 0.22, 0.104))),
+    (48, P(pelvis=(0.0, 0.06, 0.640), hips=(-10, 0, 0), spine=(-16, 0, 0))),
+    (60, P()),
+]
+CLIPS["Samoan_Drop_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Folded over the man ducking under him.
+    (8,  pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.860), hips=(-50, 0, 0))),
+    (12, _body((40, 40, 0), (0.0, 0.02, 1.200), **_SAM_LIMBS)),
+    # Across his shoulders, face up.
+    (16, _body((88, 90, 0), (0.0, 0.00, 1.480), **_SAM_LIMBS)),
+    (28, _body((88, 90, 0), (0.0, 0.00, 1.490), **_SAM_LIMBS)),
+    # Tipping forward off him, turning back to lie along the way he faces.
+    (35, _body((78, 60, 0), (0.0, -0.10, 1.250), **_SAM_LIMBS)),
+    (38, _body((68, 28, 0), (0.0, -0.14, 0.900), **_SAM_LIMBS)),
+    # Back first, head away from Roman: SUPINE_AWAY.
+    (41, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.240))),
+    (46, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (60, dict(SUPINE_AWAY)),
+]
+
+# The Pedigree, 54 frames / 1.8 s. Cody bends the man double and hooks both
+# his arms back with his own (a double underhook), turns him toward the
+# mat -- and drops to his knees, driving the man's face into it. The man
+# goes down face first and rolls onto his back (_face_first_then_roll).
+_PED_HOOK = dict(hand_r=(0.30, -0.34, 0.52), hand_l=(-0.30, -0.34, 0.52),
+                 elbow_r=(0.7, -0.9, 0.3), elbow_l=(-0.7, -0.9, 0.3),
+                 fist_r=0.5, fist_l=0.5)
+CLIPS["Pedigree_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Over him, a hand under each of his arms.
+    (8,  P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-28, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.22, 0.46, 0.84), hand_l=(-0.22, 0.46, 0.84),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.24, -0.08, 0.104), foot_l=(-0.22, 0.12, 0.104))),
+    # Hooked, the man bent double, held.
+    (16, P(pelvis=(0.0, 0.12, 0.700), hips=(-24, 0, 0), spine=(-34, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.26, 0.42, 0.66), hand_l=(-0.26, 0.42, 0.66),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.22, 0.14, 0.104))),
+    (24, P(pelvis=(0.0, 0.12, 0.700), hips=(-24, 0, 0), spine=(-34, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.26, 0.42, 0.66), hand_l=(-0.26, 0.42, 0.66),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.22, 0.14, 0.104))),
+    # Down onto his knees with him.
+    (30, P(pelvis=(0.0, 0.16, 0.440), hips=(-30, 0, 0), spine=(-40, 0, 0),
+           head=(-14, 0, 0),
+           hand_r=(0.26, 0.50, 0.36), hand_l=(-0.26, 0.50, 0.36),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.26, -0.20, 0.104), foot_l=(-0.24, 0.20, 0.104))),
+    (36, P(pelvis=(0.0, 0.14, 0.420), hips=(-26, 0, 0), spine=(-34, 0, 0),
+           hand_r=(0.26, 0.50, 0.30), hand_l=(-0.26, 0.50, 0.30))),
+    (46, P(pelvis=(0.0, 0.06, 0.700), hips=(-12, 0, 0), spine=(-18, 0, 0))),
+    (54, P()),
+]
+CLIPS["Pedigree_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Bent double, head down at Cody's waist, arms pulled back and hooked.
+    (8,  pose(VICTIM_BENT, pelvis=(0.0, 0.04, 0.860), hips=(-60, 0, 0),
+              spine=(-30, 0, 0), head=(-12, 0, 0), **_PED_HOOK)),
+    (16, pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.820), hips=(-78, 0, 0),
+              spine=(-24, 0, 0), head=(-14, 0, 0), **_PED_HOOK)),
+    (24, pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.820), hips=(-78, 0, 0),
+              spine=(-24, 0, 0), head=(-14, 0, 0), **_PED_HOOK)),
+    # Face into the mat, then the roll.
+    (30, dict(pelvis=(0.0, 0.10, 0.560), hips=(-72, 0, 0), spine=(-14, 0, 0),
+              head=(10, 0, 0), hand_r=(0.30, -0.30, 0.40), hand_l=(-0.30, -0.30, 0.40),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.20, -0.40, 0.14), foot_l=(-0.18, -0.36, 0.16),
+              knee_r=(0.2, 0.2, -0.6), knee_l=(-0.2, 0.2, -0.6))),
+] + _face_first_then_roll(33, 54)
+
+
 # The Figure-Four leglock, 180 frames / 6.0 s, played by the two SUBMISSION_*
 # states rather than GrappleRig: the man is already down, and
 # WrestlerController._place_figure_four() stands Cody at his feet facing up

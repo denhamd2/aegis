@@ -651,6 +651,32 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.65,
 	},
+	# Roman's -- see Samoan_Drop_Attacker. Across the shoulders, then dropped.
+	"power_samoan_drop": {
+		"authored": {"attacker": "Samoan_Drop_Attacker", "defender": "Samoan_Drop_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.55,
+	},
+	# Cody's -- see Pedigree_Attacker. Double underhook, then down on the knees.
+	"signature_pedigree": {
+		"authored": {"attacker": "Pedigree_Attacker", "defender": "Pedigree_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.80, "clip": "Sitting_Enter", "at": 0.60},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.90, "clip": "Death01", "at": 0.90},
+		],
+		"defender_grips_until": 0.10,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1314,6 +1340,38 @@ const TRAJECTORIES := {
 					[1.30, -0.45, 0.00, 0.00], [1.37, -0.65, 0.00, 0.00],
 					[2.00, -0.65, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The Samoan Drop: carried across the shoulders, then off them in front.
+	"power_samoan_drop": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [2.00, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.00, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.10, 0.00, 0.00],
+					[0.53, 0.34, 0.00, 0.00], [0.93, 0.34, 0.00, 0.00],
+					[1.10, 0.20, 0.00, 0.00], [1.20, -0.05, 0.00, 0.00],
+					[1.30, -0.45, 0.00, 0.00], [1.37, -0.65, 0.00, 0.00],
+					[2.00, -0.65, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The Pedigree: bent double at his waist, down with him onto the knees.
+	"signature_pedigree": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.80, 0.40, 0.00, 0.00],
+					[1.00, 0.30, 0.00, 0.00], [1.80, 0.30, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [1.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.05, 0.00, 0.00],
+					[0.53, 0.10, 0.00, 0.00], [0.80, 0.10, 0.00, 0.00],
+					[1.00, 0.12, 0.00, 0.00], [1.20, 0.00, 0.00, 0.00],
+					[1.80, 0.00, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
 		},
 	},
 }
