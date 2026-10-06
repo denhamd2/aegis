@@ -459,6 +459,20 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.25,
 	},
+	# Roman's, from the corner -- the Spear's clips, played against a man who
+	# has nowhere to go (see TRAJECTORIES): he folds into the buckle.
+	"running_corner_spear": {
+		"authored": {"attacker": "Run_Spear_Attacker", "defender": "Run_Spear_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
 	# Running attack -- see Stundog_Attacker in tools/blender/wrestling_clips.py.
 	"running_stundog_millionaire": {
 		"authored": {"attacker": "Stundog_Attacker", "defender": "Stundog_Defender"},
@@ -1137,6 +1151,19 @@ const TRAJECTORIES := {
 		},
 		"defender": {
 			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.52, 0.00, 0.00], [0.533, -1.05, 0.00, 0.00], [1.000, -1.05, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.000, 0.00, -90.00, 0.00]],
+		},
+	},
+	# The corner Spear: the Spear's run, but the man is against the buckle, so
+	# he is driven in and folds down where he stands instead of flying back.
+	"running_corner_spear": {
+		"length": 1.0,
+		"attacker": {
+			"pos": [[0.000, 1.20, 0.00, 0.00], [0.133, 0.75, 0.00, 0.00], [0.300, 0.20, 0.00, 0.00], [0.433, 0.05, 0.00, 0.00], [1.000, 0.05, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.000, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.300, -0.45, 0.00, 0.00], [0.533, -0.60, 0.00, 0.00], [1.000, -0.60, 0.00, 0.00]],
 			"rot": [[0.000, 0.00, -90.00, 0.00], [1.000, 0.00, -90.00, 0.00]],
 		},
 	},

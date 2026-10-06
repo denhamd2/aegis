@@ -186,6 +186,8 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
 				M + "running_drive_by.tres"],
+		# From the corner: only thrown at a man hanging in one.
+		"corner": [M + "running_corner_spear.tres"],
 	}
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.
