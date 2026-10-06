@@ -36,7 +36,7 @@ func test_base_animations_are_remapped_to_roman_bones() -> void:
         var path := String(idle.track_get_path(track))
         if path.contains(":pelvis") or path.contains(":spine_03"):
             bad_tracks.append(path)
-        if path.contains(":J_") == false and track > 0:
+        if path.contains(":J_") == false and path.contains(":H_") == false and track > 0:
             bad_tracks.append(path)
     assert_array(bad_tracks).is_empty()
 
@@ -149,6 +149,37 @@ func test_adapted_poses_reference_real_roman_bones() -> void:
         "Remapped pose tracks pointing at bones Roman does not have: %s"
         % [dangling]
     ).is_empty()
+
+## His corrective H_* bones used to sit at rest under their parent while the
+## joint they belong to swung away, so the trousers ballooned into sacks and the
+## wrist tape slid off the forearm. A clip that moves a driver joint has to
+## move every helper listed for it; this pins that and that each one is real.
+func test_helper_bones_follow_the_joint_they_belong_to() -> void:
+    var model := _make_model()
+    await await_millis(20)
+    var skeleton := model.get_game_skeleton() as Skeleton3D
+    var lib: AnimationLibrary = model.adapt_animation_library(PAIRED_POSES)
+    var missing: Array[String] = []
+    var checked := 0
+    for spec in model.HELPER_BONES:
+        if skeleton.find_bone(spec[0]) < 0:
+            missing.append("%s is not a Roman bone" % spec[0])
+    assert_array(missing).is_empty()
+    for anim_name in lib.get_animation_list():
+        var anim: Animation = lib.get_animation(anim_name)
+        for spec in model.HELPER_BONES:
+            var driver := anim.find_track(NodePath("%s:%s" % [
+                    model.get_path_to(skeleton), spec[1]]), Animation.TYPE_ROTATION_3D)
+            if driver < 0:
+                continue
+            checked += 1
+            var helper := anim.find_track(NodePath("%s:%s" % [
+                    model.get_path_to(skeleton), spec[0]]), Animation.TYPE_ROTATION_3D)
+            if helper < 0:
+                missing.append("%s: %s has no track" % [anim_name, spec[0]])
+    assert_int(checked).is_greater(0)
+    assert_array(missing).override_failure_message(
+        "Helper bones left at rest while their driver moves: %s" % [missing]).is_empty()
 
 ## --- The position retarget --------------------------------------------------
 
