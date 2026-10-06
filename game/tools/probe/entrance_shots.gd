@@ -32,6 +32,8 @@ var _from_event := ""
 ## --kill Name[:shadow]: hide that director child (or just its shadow) once it exists.
 ## Isolates which node draws an artefact, one render per suspect.
 var _kill := ""
+## --who STYLE: with --from-shot, only that man's beat (roman / cody).
+var _who := ""
 
 
 func _ready() -> void:
@@ -47,6 +49,8 @@ func _ready() -> void:
 			_faceoff = true
 		elif args[i] == "--sparse":
 			_sparse = true
+		elif args[i] == "--who" and i + 1 < args.size():
+			_who = args[i + 1]
 		elif args[i] == "--kill" and i + 1 < args.size():
 			_kill = args[i + 1]
 		elif args[i] == "--from-event" and i + 1 < args.size():
@@ -82,6 +86,9 @@ func _ready() -> void:
 				for ev in bt.get("events", []):
 					if ev[1] == _from_event:
 						wanted = true
+			if wanted and _who != "" and bt.get("who") != null \
+					and (bt["who"] as WrestlerController).entrance_style != _who:
+				wanted = false
 			if wanted and bt.get("who") != null:
 				var w: WrestlerController = bt["who"]
 				w.visible = true

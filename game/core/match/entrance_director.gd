@@ -155,9 +155,22 @@ const FOLLOW_SPOT_ANGLE := 3.5
 const WALK_KEY_AHEAD := 4.2
 const WALK_KEY_SIDE := 1.6
 const WALK_KEY_UP := 3.6
-const WALK_KEY_ENERGY := 5.0
-const WALK_KEY_ANGLE := 24.0
+const WALK_KEY_ENERGY := 8.0
+const WALK_KEY_ANGLE := 32.0
 const WALK_KEY_RANGE := 11.0
+## The camera key (2K26: he is exposed on every angle): a soft front light that
+## rides the active shot, a little above and to the side of the lens, aimed
+## at his chest. The walk key and back light are fixed to HIM, so a lens off
+## their axis -- the side tracks -- saw his far side fall to black.
+const CAM_KEY_ENERGY := 2.5
+const CAM_KEY_UP := 0.7
+const CAM_KEY_SIDE := 0.9
+## The ramp wash: two long throws from either side, high, on the ramp while
+## somebody walks it, so the wides read as a lit aisle and not a black slot.
+const RAMP_WASH_ENERGY := 6.0
+const RAMP_WASH_ANGLE := 22.0
+const RAMP_WASH_SIDE := 9.0
+const RAMP_WASH_UP := 11.0
 ## And its partner behind him. The key and the far follow spot both light his
 ## FRONT, so on every shot from behind him -- the steadicam following him down,
 ## the over-the-shoulder at the lip -- he walked as a silhouette (the owner
@@ -168,8 +181,8 @@ const WALK_KEY_RANGE := 11.0
 const WALK_BACK_BEHIND := 3.0
 const WALK_BACK_SIDE := -1.4
 const WALK_BACK_UP := 3.4
-const WALK_BACK_ENERGY := 3.4
-const WALK_BACK_ANGLE := 28.0
+const WALK_BACK_ENERGY := 5.0
+const WALK_BACK_ANGLE := 34.0
 const WALK_BACK_RANGE := 10.0
 ## The titantron's light on him (lighting_2k26.md item 11): while his video is
 ## on the wall and he is out of the ring, a spot in the wall's own colour
@@ -236,10 +249,14 @@ const ROMAN_BOW_TICKS := 240
 ## The second pass of the cycle trades the low lens for the chest-high one
 ## and the barricade track (2K26 Roman 2:35-3:10), so the low ultra-wide is
 ## his signature, not the whole walk.
-const ROMAN_WALK_SHOTS := [["steadicam_low", 6 * ROMAN_BEAT], ["ramp_side_high", 5 * ROMAN_BEAT],
-		["face_walk", 5 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
-		["steadicam_front", 6 * ROMAN_BEAT], ["arena_high", 4 * ROMAN_BEAT],
-		["barricade_track", 5 * ROMAN_BEAT], ["face_walk", 5 * ROMAN_BEAT]]
+## 2K26's walk (roman_entrance_aaa_plan.md step 4): waist-up, the lens backing
+## ahead of him with the wall behind, long holds, a telephoto face, the low
+## track, over the shoulder. The high side and the arena-high wides are gone:
+## both framed him as a small dark figure on an unlit ramp.
+const ROMAN_WALK_SHOTS := [["steadicam_front", 8 * ROMAN_BEAT], ["face_walk", 6 * ROMAN_BEAT],
+		["steadicam_low", 6 * ROMAN_BEAT], ["over_shoulder", 5 * ROMAN_BEAT],
+		["steadicam_front", 7 * ROMAN_BEAT], ["barricade_track", 5 * ROMAN_BEAT],
+		["face_walk", 5 * ROMAN_BEAT]]
 ## Until then the broadcast shows the building and his video: six shots, each
 ## a slow move eased in and out (blender-cameras: push-ins, a truck, a wide
 ## establishing lens), in seconds. [from, to, look_from, look_to, fov_from,
@@ -271,7 +288,7 @@ const ROMAN_INTRO_SHOTS := [
 ## harder sources, the key on the subject). The rig drops to this fraction and
 ## the ambient to AMBIENT_DIM; the follow spot, his portal accents and the
 ## pyro flashes are left alone, so he is what is lit.
-const ROMAN_HOUSE_DIM := 0.5
+const ROMAN_HOUSE_DIM := 0.65
 const ROMAN_AMBIENT_DIM := 0.65
 ## Cody's walk, after the WHOA brings the house out of the blackout.
 const WALK_HOUSE_DIM := 0.5
@@ -461,9 +478,9 @@ const CROWD_FAR_LOOK := Vector3(-15.0, 4.8, 9.0)
 ## stage out of frame.
 const ARENA_DARK_LOOK := Vector3(-4.0, 0.5, -2.0)
 ## 2K26's walking shot: ahead of him at chest height, a normal lens.
-const STEADICAM_FRONT_AHEAD := 3.2
+const STEADICAM_FRONT_AHEAD := 2.6
 const STEADICAM_FRONT_HEIGHT := 1.4
-const STEADICAM_FRONT_FOV := 40.0
+const STEADICAM_FRONT_FOV := 28.0
 ## Alongside from the barricade (C-SS 14-30 s).
 const BARRICADE_TRACK_SIDE := 2.4
 const BARRICADE_TRACK_AHEAD := 1.2
@@ -489,6 +506,8 @@ var _lights: Node
 var _follow: SpotLight3D
 var _walk_key: SpotLight3D
 var _walk_back: SpotLight3D
+var _cam_key: SpotLight3D
+var _ramp_wash: Array[SpotLight3D] = []
 ## Every node frozen for the entrance, with whether it was processing, so the
 ## bell puts back exactly what was there.
 var _frozen: Array = []
@@ -643,6 +662,28 @@ func begin(match_root: Node) -> void:
 	_walk_back.spot_angle = WALK_BACK_ANGLE
 	_walk_back.spot_range = WALK_BACK_RANGE
 	add_child(_walk_back)
+	_cam_key = _walk_key.duplicate() as SpotLight3D
+	_cam_key.name = "CamKey"
+	_cam_key.light_color = Color(1.0, 0.95, 0.88)
+	_cam_key.light_energy = CAM_KEY_ENERGY
+	_cam_key.spot_attenuation = 0.4
+	_cam_key.light_specular = 0.25
+	add_child(_cam_key)
+	for side: float in [-1.0, 1.0]:
+		var wash := SpotLight3D.new()
+		wash.name = "RampWash"
+		wash.light_color = Color(0.92, 0.95, 1.0)
+		wash.light_energy = RAMP_WASH_ENERGY
+		wash.spot_angle = RAMP_WASH_ANGLE
+		wash.spot_angle_attenuation = 1.4
+		wash.spot_range = 40.0
+		wash.spot_attenuation = 0.5
+		wash.light_volumetric_fog_energy = 0.0
+		wash.shadow_enabled = false
+		wash.visible = false
+		wash.set_meta("side", side)
+		add_child(wash)
+		_ramp_wash.append(wash)
 
 	# The camera is the director's from the first rendered frame, not the
 	# first tick -- otherwise frame one is the match camera's hard-cam shot of
@@ -867,13 +908,31 @@ func _start_beat() -> void:
 
 
 ## The name card: up once he is half way down the ramp, away at its foot.
+## The ramp card is up for at most this long (2K26: the type is on for a few
+## seconds, never the whole walk). It sat over him for 10+ s.
+const RAMP_CARD_TICKS := 240
+## Ticks each man's ramp card has been up.
+var _ramp_card_ticks := {}
+
+
 func _tick_ramp_card(w: WrestlerController) -> void:
 	var z := w.global_position.z
 	var halfway := (ArenaBuilder.STAGE_FRONT + CUT_TO_Z) * 0.5
-	if z >= halfway and z <= CUT_TO_Z + 0.5:
+	var shown: int = _ramp_card_ticks.get(w, 0)
+	var in_zone := z >= halfway and z <= CUT_TO_Z + 0.5
+	if _card.is_showing() and shown > 0:
+		_ramp_card_ticks[w] = shown + 1
+		if shown + 1 > RAMP_CARD_TICKS or not in_zone:
+			_card.hide_card()
+			_ramp_card_ticks[w] = RAMP_CARD_TICKS + 1
+		return
+	if shown > RAMP_CARD_TICKS:
+		return
+	if in_zone:
 		if not _card.is_showing():
 			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
 					w.entrance_subtitle)
+			_ramp_card_ticks[w] = 1
 	elif _card.is_showing():
 		_card.hide_card()
 
@@ -2188,6 +2247,10 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 			_walk_key.visible = false
 		if _walk_back:
 			_walk_back.visible = false
+		if _cam_key:
+			_cam_key.visible = false
+		for wash: SpotLight3D in _ramp_wash:
+			wash.visible = false
 		return
 	_follow.visible = true
 	# In the ring the long-throw spot is a glare in the haze and burns his
@@ -2206,6 +2269,44 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 			_walk_back.visible = true
 			_walk_back.global_position = walk_back_at(w.global_position, fwd, right)
 			_walk_back.look_at(w.global_position + Vector3.UP * 1.4, Vector3.UP)
+	_aim_cam_key(w)
+	_aim_ramp_wash(w)
+
+
+## The camera key: beside and above the lens, on his chest; off in the ring,
+## where the rig lights him.
+func _aim_cam_key(w: WrestlerController) -> void:
+	if _cam_key == null or _camera == null:
+		return
+	if _in_ring(w):
+		_cam_key.visible = false
+		return
+	var chest := w.global_position + Vector3.UP * 1.3
+	var cam := _camera.global_position
+	var to := (chest - cam)
+	if to.length() < 0.5:
+		_cam_key.visible = false
+		return
+	var right := to.normalized().cross(Vector3.UP).normalized()
+	_cam_key.global_position = cam + Vector3.UP * CAM_KEY_UP + right * CAM_KEY_SIDE
+	_cam_key.spot_range = to.length() + 4.0
+	# A cone a little wider than his body at that distance.
+	_cam_key.spot_angle = clampf(rad_to_deg(atan2(1.4, to.length())), 4.0, 40.0)
+	_cam_key.visible = true
+	_cam_key.look_at(chest, Vector3.UP)
+
+
+## The ramp wash: on while he is on the ramp or the stage front, aimed down
+## the aisle a few metres ahead of him.
+func _aim_ramp_wash(w: WrestlerController) -> void:
+	var on := w.global_position.z < CUT_TO_Z + 2.0 and not _in_ring(w)
+	for wash: SpotLight3D in _ramp_wash:
+		wash.visible = on
+		if on:
+			var side: float = wash.get_meta("side")
+			var aim := Vector3(0.0, 0.0, w.global_position.z + 3.0)
+			wash.global_position = Vector3(side * RAMP_WASH_SIDE, RAMP_WASH_UP, aim.z - 4.0)
+			wash.look_at(aim, Vector3.UP)
 
 
 ## Item 11: the wall's coloured light on him, from between him and the wall.

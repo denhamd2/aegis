@@ -475,15 +475,15 @@ def _methodical_walk():
         plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14},
         pelvis_up=0.875, pelvis_dip=0.030, sway=0.025,
-        hips_yaw=6.0, spine_lean=4.0, shoulder_twist=8.0, side_roll=1.5,
-        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.02, 0.16),
-        hand_up=(0.90, 0.95), arm_lag=4)], curl=0.40)
+        hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0, side_roll=1.5,
+        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.06, 0.20),
+        hand_up=(0.84, 0.88), arm_lag=4)], curl=0.40)
     twist = {f: pose["_shoulder_yaw"] for f, pose in _heavy_gait(
         frames=48, fps=FPS, speed=0.5, contact=28, plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14}, pelvis_up=0.875, pelvis_dip=0.030,
-        sway=0.025, hips_yaw=6.0, spine_lean=4.0, shoulder_twist=8.0,
-        side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.02, 0.16),
-        hand_up=(0.90, 0.95), arm_lag=4)}
+        sway=0.025, hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0,
+        side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.06, 0.20),
+        hand_up=(0.84, 0.88), arm_lag=4)}
     # (frame, yaw degrees): + is to his left. Long eased moves, long holds.
     looks = [(0, 0.0), (14, 0.0), (40, 26.0), (62, 26.0), (84, 0.0),
              (94, 0.0), (112, -24.0), (122, -24.0), (144, 0.0)]

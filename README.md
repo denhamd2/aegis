@@ -8913,3 +8913,22 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
   (props to the table, his lights, smoke and music off, him on his mark) and
   the show carries on with the next man or the introductions. Enter/Space still
   skips everything to the bell.
+
+## Round: Roman's entrance to the 2K26 bar (gauntlet/refs/roman_entrance_aaa_plan.md)
+
+- **Smooth motion.** Physics interpolation is on for the wrestlers and the
+  match camera (`MatchSmoothing`: everything else opts out, cuts reset it), and
+  during the entrances the pose is evaluated every drawn frame
+  (`WrestlerController.set_presentation_rate`). `tools/probe/motion_cadence`
+  at 120 fps: 119 of 240 frames held the same pose before, 0 after.
+- **Roman's walk re-authored** (`_heavy_gait`): heel strike to toe-off roll
+  the right way round, heel rise, eased Hermite swing, 3 cm hip drop and
+  2.5 cm sway, shoulders turning against the hips, head stabilised with slow
+  looks (the 28-degree snap at the loop seam is gone), chest over the hips
+  and arms hanging just in front of the thighs. Gate: `test_romans_walk_has_no_jerks`.
+- **Lighting.** A camera key that rides each shot, a stronger and wider walk
+  key and back light, a ramp wash while he walks it, and the house dimmed to
+  65% (was 50%).
+- **Camera.** Walk cut on 2K26's grammar: waist-up backing ahead of him with
+  the set behind, the telephoto face, the low track, over the shoulder; the
+  high side and arena-high wides are gone. The ramp card is up at most 4 s.
