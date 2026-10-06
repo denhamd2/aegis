@@ -71,8 +71,26 @@ func test_limb_flips_do_not_grow() -> void:
 const WALK_JERK_DEG := 4.5
 
 func test_romans_walk_has_no_jerks() -> void:
+    _assert_smooth_walk("Walk_Slow_Look", WALK_JERK_DEG)
+
+
+## Cody's walk and its gesture variants (cody_entrance_aaa_plan.md step 2).
+## His cycle is 26 frames to Roman's 48: the same smooth curve played 1.85x
+## as fast changes its per-frame turn 3.4x as much, so his bar is set on his
+## own tempo. The old gait jerked his knees 17-18 and a gesture's upper arm
+## 24-33 (a clavicle that jumped by the chest's turn as the arm came down);
+## now 6 and 7.5.
+const CODY_WALK_JERK_DEG := 8.0
+
+func test_codys_walk_has_no_jerks() -> void:
+    for clip_name in ["Walk_Crowd", "Walk_Crowd_Shout_L", "Walk_Crowd_Shout_R",
+            "Walk_Crowd_Point"]:
+        _assert_smooth_walk(clip_name, CODY_WALK_JERK_DEG)
+
+
+func _assert_smooth_walk(clip_name: String, limit: float) -> void:
     var player := _library()
-    var clip := player.get_animation("Walk_Slow_Look")
+    var clip := player.get_animation(clip_name)
     var dt := 1.0 / 30.0
     var worst := {}
     for t in clip.get_track_count():
@@ -80,7 +98,8 @@ func test_romans_walk_has_no_jerks() -> void:
             continue
         var bone := String(clip.track_get_path(t).get_concatenated_subnames())
         if not (bone in ["thigh_l", "thigh_r", "calf_l", "calf_r", "Head", "neck_01",
-                "spine_03", "upperarm_l", "upperarm_r", "pelvis"]):
+                "spine_03", "upperarm_l", "upperarm_r", "lowerarm_l", "lowerarm_r",
+                "pelvis"]):
             continue
         var last_v := -1.0
         var prev: Quaternion = clip.rotation_track_interpolate(t, 0.0)
@@ -95,5 +114,5 @@ func test_romans_walk_has_no_jerks() -> void:
             time += dt
     for bone in worst:
         assert_float(worst[bone]).override_failure_message(
-                "%s jerks %.2f deg/frame^2 in Walk_Slow_Look" % [bone, worst[bone]]
-        ).is_less(WALK_JERK_DEG)
+                "%s jerks %.2f deg/frame^2 in %s" % [bone, worst[bone], clip_name]
+        ).is_less(limit)

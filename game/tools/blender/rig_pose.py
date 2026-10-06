@@ -171,7 +171,7 @@ class RigPoser:
     CLAVICLE_FREE_DEG = 60.0   # an arm below this hangs with the girdle at rest
     CLAVICLE_MAX_DEG = 30.0
 
-    def _follow_with_clavicle(self, side_id, hand):
+    def _follow_with_clavicle(self, side_id, hand, carry=False):
         """Lift and protract the shoulder girdle as the arm goes overhead.
 
         With the clavicle left at rest, an arm swung past about 60 degrees
@@ -188,14 +188,26 @@ class RigPoser:
         elevation = math.degrees(math.acos(_clamp(-reach.z, -1.0, 1.0)))
         if elevation <= self.CLAVICLE_FREE_DEG:
             return
-        rest = self.rest_dir[name]
+        # From the armature's rest by default -- what every clip in the game
+        # is fitted against. `carry` composes it onto the girdle as the chest
+        # carries it instead, which is continuous where the follow starts:
+        # aimed from rest, a raised arm on a turned or leaning chest jumps by
+        # the chest's turn as it comes down past CLAVICLE_FREE_DEG (Cody's
+        # arm coming down from a point on the walk kicked 30 degrees in a
+        # frame). Opt-in (`clav_carry`) so the grapples keep the shoulders
+        # their holds were fitted on.
+        carried = Quaternion()
+        if carry:
+            pb = self.arm.pose.bones[name]
+            carried = (pb.matrix.to_3x3() @ self.rest[name].to_3x3().inverted()).to_quaternion()
+        rest = carried @ self.rest_dir[name]
         arc = math.degrees(rest.angle(reach))
         if arc < 1e-3:
             return
         turn = _clamp(self.CLAVICLE_FOLLOW * (elevation - self.CLAVICLE_FREE_DEG),
                       0.0, self.CLAVICLE_MAX_DEG)
         share = _clamp(turn / arc, 0.0, 1.0)
-        aim = Quaternion().slerp(rest.rotation_difference(reach), share)
+        aim = Quaternion().slerp(rest.rotation_difference(reach), share) @ carried
         self._set(name, aim)
 
     def _two_bone_ik(self, upper, lower, target, pole):
@@ -309,6 +321,7 @@ class RigPoser:
           ankle_r/l   (pitch, yaw, roll) degrees on the foot bone
           clav_r/l    (pitch, yaw, roll) degrees on the clavicle
           clav_follow False to keep the clavicle at rest under a raised arm
+          clav_carry  True to follow from where the chest carries the girdle
         """
         self._reset()
 
@@ -346,7 +359,8 @@ class RigPoser:
             if clav:
                 self._set("clavicle_%s" % side_id, chest @ _euler(*clav))
             elif pose.get("hand_%s" % side_id) and pose.get("clav_follow", True):
-                self._follow_with_clavicle(side_id, vec(*pose["hand_%s" % side_id]))
+                self._follow_with_clavicle(side_id, vec(*pose["hand_%s" % side_id]),
+                                           pose.get("clav_carry", False))
 
             hand = pose.get("hand_%s" % side_id)
             if hand:

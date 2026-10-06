@@ -51,6 +51,10 @@ func _fill_at(scene: Node, separation: float) -> float:
 	# the handheld's measurements, so the handheld's lens is what they are
 	# read through -- the rig's default is the hard camera's 14 degrees, which
 	# would report a fill for a lens camera.md never measured.
+	# The camera is physics-interpolated in play (MatchSmoothing), so a
+	# placement reaches its projection at the next rendered frame. Framing is
+	# projection maths on the transform set here: read it uninterpolated.
+	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	camera.mode = MatchCamera.Mode.RINGSIDE
 	camera.fov = camera.shot_fov()
 	var a: Node3D = scene.get_node("WrestlerA")
@@ -320,6 +324,8 @@ func test_the_hard_camera_frames_the_whole_ring() -> void:
 	var b: Node3D = scene.get_node("WrestlerB")
 	a.global_position = Vector3(-3.0, 0.0, -3.0)
 	b.global_position = Vector3(3.0, 0.0, 3.0)
+	# Read uninterpolated, as in _fill_at().
+	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	camera.mode = MatchCamera.Mode.HARD_CAM
 	camera._physics_process(1.0 / 60.0)
 	var size := camera.get_viewport().get_visible_rect().size
