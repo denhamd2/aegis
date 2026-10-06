@@ -61,3 +61,39 @@ func test_limb_flips_do_not_grow() -> void:
     assert_int(flips).override_failure_message(
         "%d single-key limb flips over %d degrees (was %d)" % [flips, FLIP_DEGREES, KNOWN_FLIPS]
     ).is_less_equal(KNOWN_FLIPS)
+
+
+## Roman's entrance walk (roman_entrance_aaa_plan.md step 2) is smooth: no
+## joint's per-frame turn changes by more than WALK_JERK_DEG from one frame to
+## the next. The old gait jumped 5.9 deg (the thigh at toe-off) and the head
+## snapped home 28 degrees in 6 frames at the loop seam (3.1 deg).
+## 4.5: the knee's load response at heel strike is a real, quick flex (~4).
+const WALK_JERK_DEG := 4.5
+
+func test_romans_walk_has_no_jerks() -> void:
+    var player := _library()
+    var clip := player.get_animation("Walk_Slow_Look")
+    var dt := 1.0 / 30.0
+    var worst := {}
+    for t in clip.get_track_count():
+        if clip.track_get_type(t) != Animation.TYPE_ROTATION_3D:
+            continue
+        var bone := String(clip.track_get_path(t).get_concatenated_subnames())
+        if not (bone in ["thigh_l", "thigh_r", "calf_l", "calf_r", "Head", "neck_01",
+                "spine_03", "upperarm_l", "upperarm_r", "pelvis"]):
+            continue
+        var last_v := -1.0
+        var prev: Quaternion = clip.rotation_track_interpolate(t, 0.0)
+        var time := dt
+        while time <= clip.length + 0.0001:
+            var q: Quaternion = clip.rotation_track_interpolate(t, minf(time, clip.length))
+            var v := rad_to_deg(prev.angle_to(q))
+            if last_v >= 0.0:
+                worst[bone] = maxf(worst.get(bone, 0.0), absf(v - last_v))
+            last_v = v
+            prev = q
+            time += dt
+    for bone in worst:
+        assert_float(worst[bone]).override_failure_message(
+                "%s jerks %.2f deg/frame^2 in Walk_Slow_Look" % [bone, worst[bone]]
+        ).is_less(WALK_JERK_DEG)

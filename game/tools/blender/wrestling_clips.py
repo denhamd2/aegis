@@ -350,38 +350,125 @@ def _open_hands(frames, curl=0.3):
     return [(f, dict(p, fist_r=curl, fist_l=curl)) for f, p in frames]
 
 
-def _methodical_walk():
-    """Roman's walk to the ring, at half his normal pace, looking around.
+HEEL_RISE = 0.045
 
-    0.5 m/s: a 1.6 s cycle (48 frames) of two shorter steps with a long
-    double-support -- 28 of the 48 frames on each foot, so both boots are on
-    the ground for a third of every step. That overlap is what makes a walk
-    read as deliberate rather than as a slow-motion stride: the body settles
-    on each foot before it commits to the next.
+
+def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
+                pelvis_up, pelvis_dip, sway, hips_yaw, spine_lean, shoulder_twist,
+                side_roll, hand_x, hand_fwd, hand_up, arm_lag):
+    """Roman's gait: a heavy, continuous stride (gauntlet/refs/
+    roman_entrance_aaa_plan.md step 2), keyed every frame, looping.
+
+    What _gait() lacks, and what made his walk read as stop motion on top of
+    the engine's 60 Hz stepping:
+      * the swinging foot leaves and lands at the ground's speed (a Hermite
+        curve with matched end tangents), so the thigh does not jump from
+        still to swinging in a frame (6 deg/frame of jerk before);
+      * the lift eases off the mat and back onto it (sin^2: no vertical
+        speed at either end, so the knee does not snap at lift-off);
+      * the pelvis drops after each heel strike, 3 cm, and sways over the
+        planted foot -- weight transfer, not a glide;
+      * the shoulders counter-rotate and roll toward the stance side, and
+        the arms swing a little behind them (arm_lag frames), hanging off the
+        lats.
+    `contact` is the frames each foot is down; the right lands on frame 0 and
+    the left half a cycle later.
+    """
+    out = []
+    half = (contact / float(fps)) * speed * 0.5
+    swing_frames = frames - contact
+    # Ground speed in stride units per unit of swing progress, for the
+    # Hermite tangents: a planted foot moves backward at `speed`.
+    # The foot leaves the mat still moving back at the ground's speed and
+    # lands moving at it, so the swing has no corner at either end.
+    tangent = -speed * (swing_frames / float(fps))
+    c_mid = contact * 0.5 / frames
+    for f in range(frames + 1):
+        phase = (f % frames) / float(frames)
+        over = {}
+        for side, start in (("r", 0), ("l", frames // 2)):
+            rel = (f - start) % frames
+            if rel <= contact:
+                # The heel comes up through late stance, as a real foot rolls
+                # onto its toes. Held flat, the trailing ankle sat 2.5 cm past
+                # the leg's reach: the leg locked straight, then the knee
+                # snapped as the foot came back within reach (7.7 deg in a
+                # frame).
+                k = min(max((rel / float(contact) - 0.5) / 0.5, 0.0), 1.0)
+                heel = HEEL_RISE * k * k * (3.0 - 2.0 * k)
+                over["foot_%s" % side] = (
+                    foot_x[side], half - (rel / float(fps)) * speed, plant_up + heel)
+                over["ankle_%s" % side] = (
+                    HEEL_STRIKE_PITCH + (TOE_OFF_PITCH - HEEL_STRIKE_PITCH)
+                    * (rel / float(contact)), 0.0, 0.0)
+            else:
+                u = (rel - contact) / float(swing_frames)
+                h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+                h10 = u ** 3 - 2 * u ** 2 + u
+                h01 = -2 * u ** 3 + 3 * u ** 2
+                h11 = u ** 3 - u ** 2
+                fwd = h00 * (-half) + h10 * tangent + h01 * half + h11 * tangent
+                eased = u * u * (3.0 - 2.0 * u)
+                over["foot_%s" % side] = (
+                    foot_x[side], fwd, plant_up + lift_up * math.sin(math.pi * u) ** 2
+                    + HEEL_RISE * max(0.0, 1.0 - u / 0.4) ** 2 * (1.0 + 2.0 * min(u / 0.4, 1.0)))
+                over["ankle_%s" % side] = (
+                    TOE_OFF_PITCH + (HEEL_STRIKE_PITCH - TOE_OFF_PITCH) * eased,
+                    0.0, 0.0)
+        # Low a few frames after each heel strike, high mid-stance.
+        dip = 0.5 - 0.5 * math.cos(4.0 * math.pi * (phase - 0.06))
+        # Over the planted foot: right (+x) while the right is down.
+        lateral = math.cos(2.0 * math.pi * (phase - c_mid))
+        over["pelvis"] = (sway * lateral, 0.0, pelvis_up - pelvis_dip * dip)
+        swing_yaw = math.cos(2.0 * math.pi * phase)
+        over["hips"] = (spine_lean * 0.2, hips_yaw * swing_yaw, -side_roll * 0.5 * lateral)
+        over["spine"] = (spine_lean, -shoulder_twist * swing_yaw, side_roll * lateral)
+        lagged = math.cos(2.0 * math.pi * (phase - arm_lag / float(frames)))
+        for side, sign in (("r", 1.0), ("l", -1.0)):
+            drive = sign * lagged
+            over["hand_%s" % side] = (
+                hand_x[side],
+                hand_fwd[0] + (hand_fwd[1] - hand_fwd[0]) * (0.5 + 0.5 * drive),
+                hand_up[0] + (hand_up[1] - hand_up[0]) * (0.5 + 0.5 * drive))
+        over["_shoulder_yaw"] = -shoulder_twist * swing_yaw + hips_yaw * swing_yaw
+        out.append((f, over))
+    return out
+
+
+def _methodical_walk():
+    """Roman's walk to the ring: slow, heavy and continuous, looking around.
+
+    0.5 m/s (EntranceDirector.ROMAN_WALK_SPEED), a 1.6 s cycle of two 0.4 m
+    steps with 28 of the 48 frames on each foot. The gait is _heavy_gait():
+    3 cm of drop after each heel strike, 2.5 cm of sway over the planted foot,
+    the shoulders turning against the hips, and the arms -- held a hand's
+    width off his sides by the lats (R-41 1:18-2:18) -- swinging a little,
+    behind the shoulders.
 
     Three cycles (144 frames, 4.8 s) so the head can do something the gait
-    does not: it holds forward, turns slowly to his left and HOLDS on the
-    crowd, back through centre, to his right and holds, and home. Eased key
-    to key (smoothstep), the chin a little up throughout, and the upper
-    spine follows the head by a quarter -- a man surveying the room turns
-    from the chest, not just the neck.
+    does not: forward, slowly to his left and HOLD on the crowd, back, to his
+    right and hold, home. The head is stabilised against the shoulders' turn
+    (a man's gaze does not swing with his stride) and the return home at the
+    loop's seam takes 22 frames; it took 6 and snapped 28 degrees every 4.8 s.
     """
-    # Measured off the broadcast (gauntlet/refs/entrances.md, R-41
-    # 1:18-2:18, the low steadicam): the arms hang a hand's width OFF his
-    # sides -- the lats hold them out -- palms back, barely swinging; chin a
-    # little down, eyes up and out; the head turns slowly and holds.
-    cycle = _open_hands(_gait(
-        frames=48, fps=FPS, speed=0.5,
-        contacts={"r": (0, 28), "l": (24, 28)},
-        plant_up=0.104, lift_up=0.045,
+    cycle = _open_hands([(f, P(**{k: v for k, v in pose.items() if not k.startswith("_")}))
+                         for f, pose in _heavy_gait(
+        frames=48, fps=FPS, speed=0.5, contact=28,
+        plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14},
-        pelvis_up=0.905, pelvis_dip=0.008,
-        hips_yaw=3.0, spine=(0.0, 5.0), head=(-4, 0, 0),
-        hand_fwd=(-0.05, 0.02), hand_up=(0.92, 0.93),
-        hand_x={"r": 0.31, "l": -0.30}, elbow=None), curl=0.40)
-    # (frame, yaw degrees): + is to his left.
-    looks = [(0, 0.0), (22, 0.0), (48, 30.0), (70, 30.0), (88, 0.0),
-             (100, 0.0), (122, -28.0), (138, -28.0), (144, 0.0)]
+        pelvis_up=0.875, pelvis_dip=0.030, sway=0.025,
+        hips_yaw=6.0, spine_lean=4.0, shoulder_twist=8.0, side_roll=1.5,
+        hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.02, 0.16),
+        hand_up=(0.90, 0.95), arm_lag=4)], curl=0.40)
+    twist = {f: pose["_shoulder_yaw"] for f, pose in _heavy_gait(
+        frames=48, fps=FPS, speed=0.5, contact=28, plant_up=0.104, lift_up=0.06,
+        foot_x={"r": 0.15, "l": -0.14}, pelvis_up=0.875, pelvis_dip=0.030,
+        sway=0.025, hips_yaw=6.0, spine_lean=4.0, shoulder_twist=8.0,
+        side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.02, 0.16),
+        hand_up=(0.90, 0.95), arm_lag=4)}
+    # (frame, yaw degrees): + is to his left. Long eased moves, long holds.
+    looks = [(0, 0.0), (14, 0.0), (40, 26.0), (62, 26.0), (84, 0.0),
+             (94, 0.0), (112, -24.0), (122, -24.0), (144, 0.0)]
     out = []
     for f in range(144 + 1):
         i = 0
@@ -392,7 +479,10 @@ def _methodical_walk():
         yaw = y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
         base = cycle[f % 48][1]
         sp = base["spine"]
-        out.append((f, dict(base, head=(-4.0, yaw * 0.75, 0.0),
+        # The gaze stays put while the shoulders swing: the head takes back
+        # most of the chest's turn.
+        steady = -twist[f % 48] * 0.8
+        out.append((f, dict(base, head=(-4.0, yaw * 0.75 + steady, 0.0),
                             spine=(sp[0], sp[1] + yaw * 0.25, sp[2]))))
     return out
 
