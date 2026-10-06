@@ -8901,3 +8901,10 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
   DK and Roll_Out_Ropes are what remain.
 - **Checked on frames:** Roman's first-pyro walkout (he steps out as the burst
   fires, on the very wide) and Aubrey stepping clear after the stare-down.
+- **Springboard Disaster Kick and rope clips (leftovers).** The spin is now
+  keyed every frame (it was every 2 frames and 60 degrees, so arm and leg
+  targets cut across the body), and the landing key carries the spin's -360
+  yaw instead of unwinding it in six frames. Roll_Out_Ropes' hands now reach
+  the rope. Limb flips 73 -> 40. Left: straight-snapping kicks, the Tope
+  launch, and the arms in the rope duck. The squat's wide thighs on Cody are
+  the clip's own pose, not the skin.
