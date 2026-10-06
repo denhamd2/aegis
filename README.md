@@ -8870,8 +8870,11 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
 - **Roman's corrective bones.** The 24 `H_*` helper bones (thigh volume, knee
   overshoot, forearm twist, foot/toe, elbow) are driven from the joint they
   belong to in `RomanModel._add_helper_tracks`.
-- **Tried and dropped:** smoothing Cody's hip weights (no visible gain for a
-  71 MB binary rewrite). A proper fix needs corrective bones on his model.
+- **Cody's hips.** Smoothing his weights offline did almost nothing for a
+  71 MB binary rewrite, so `HipHelpers` builds corrective hip bones at load
+  instead (a bone per hip, 55% of the hip band's thigh weight moved onto it,
+  turning half as far as the thigh). Squat, get-up and backbreaker frames are
+  tidier; the squat's big thighs are the clip's own pose.
 - **Gate:** `test_body_deformation_gate.gd` pins the clavicle lift and ratchets
   the single-key limb flips (92 remain: Rope_Step_Through, Roll_Out_Ropes,
   Springboard_DK, where the authored foot passes beside the hip).
