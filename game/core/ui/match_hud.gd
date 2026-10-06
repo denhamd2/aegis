@@ -65,14 +65,73 @@ var wrestler_a: WrestlerController
 var wrestler_b: WrestlerController
 var referee: MatchReferee
 
+## The broadcast bar, top centre: a title and the match clock.
+const BANNER_TEXT := "DYNAMITE  ·  WORLD TITLE MATCH"
+const BANNER_BG := Color(0.05, 0.05, 0.08, 0.78)
+const PIP_SIGNATURE := Color(0.95, 0.80, 0.25)
+const PIP_FINISHER := Color(0.95, 0.30, 0.22)
+const PIP_OFF := Color(1, 1, 1, 0.16)
+## How long a landed big move's name stays up, seconds.
+const POPUP_SECONDS := 1.6
+## Move families that earn a name on screen. A jab does not.
+const POPUP_PREFIXES := ["power_", "signature_", "finisher_", "grapple_", "submission_",
+		"running_corner_", "dive_"]
+var _elapsed := 0.0
+var _popup_text := ""
+var _popup_left := 0.0
+var _audio: MatchAudio
+
 func _ready() -> void:
 	wrestler_a = get_node_or_null(wrestler_a_path)
 	wrestler_b = get_node_or_null(wrestler_b_path)
 	referee = get_node_or_null(referee_path)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for w: WrestlerController in [wrestler_a, wrestler_b]:
+		if w:
+			w.move_landed.connect(_on_move_landed)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_elapsed += delta
+	_popup_left = maxf(_popup_left - delta, 0.0)
+	if _audio == null and wrestler_a and wrestler_a.get_parent():
+		_audio = wrestler_a.get_parent().get_node_or_null("MatchAudio") as MatchAudio
 	queue_redraw()
+
+## "1:05", from seconds. A match is minutes, so no hour field.
+static func clock_text(seconds: float) -> String:
+	var whole := maxi(int(seconds), 0)
+	return "%d:%02d" % [whole / 60, whole % 60]
+
+## The on-screen name of a move worth announcing, or "" for one that is not.
+## "power_samoan_drop" -> "SAMOAN DROP".
+static func move_title(move: MoveDef) -> String:
+	if move == null:
+		return ""
+	var id := String(move.animation_pair_id)
+	for prefix: String in POPUP_PREFIXES:
+		if id.begins_with(prefix):
+			return id.trim_prefix(prefix).replace("_", " ").to_upper()
+	return ""
+
+func _on_move_landed(_attacker: WrestlerController, _defender: WrestlerController,
+		move: MoveDef) -> void:
+	var title := move_title(move)
+	if title != "":
+		_popup_text = title
+		_popup_left = POPUP_SECONDS
+
+## Which way the crowd leans, -1 (all with the left plate's man) .. +1 (all with
+## the right plate's). Read from the audio's own heats, so the meter and the
+## sound cannot disagree. 0 when there is no audio or no favourite.
+func crowd_lean() -> float:
+	if _audio == null or wrestler_a == null or wrestler_b == null:
+		return 0.0
+	var face_is_a := MatchAudio.favor_of(wrestler_a.display_name) > 0.0
+	var face_is_b := MatchAudio.favor_of(wrestler_b.display_name) > 0.0
+	if face_is_a == face_is_b:
+		return 0.0
+	var toward_face := clampf(_audio.cheer - _audio.boo, -1.0, 1.0)
+	return -toward_face if face_is_a else toward_face
 
 func _draw() -> void:
 	var view := size
@@ -91,9 +150,11 @@ func _draw() -> void:
 		_draw_plate(Vector2(view.x - plate.x - margin, view.y - plate.y - margin),
 				plate, wrestler_b, MOMENTUM_B, true)
 
+	_draw_banner(view)
 	if referee:
 		_draw_count(view)
 		_draw_hold(view)
+	_draw_popup(view)
 	_draw_controls(view)
 
 func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
@@ -154,6 +215,20 @@ func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 	_draw_momentum(Rect2(bar_x, mom_y, bar_w, mom_h), clampf(momentum, 0.0, 1.0),
 			accent, mirrored)
 
+	# Two pips at the plate's outer top corner: lit when his signature, then
+	# his finisher, can be thrown. Read from the same gates the AI and the
+	# controller use, so a lit pip is a promise.
+	var pip := plate.y * 0.07
+	if wrestler.combat:
+		var pip_y := origin.y + pad + pip
+		var right_edge := origin.x + content_w - pad
+		var sig_x := right_edge - pip * 3.6
+		var fin_x := right_edge - pip
+		draw_circle(Vector2(sig_x, pip_y), pip,
+				PIP_SIGNATURE if wrestler.combat.can_signature() else PIP_OFF)
+		draw_circle(Vector2(fin_x, pip_y), pip,
+				PIP_FINISHER if wrestler.combat.can_finisher() else PIP_OFF)
+
 	# The comeback, named on his plate for as long as it runs. The story
 	# beat has to be readable by someone who has never seen the game: the
 	# no-sell and the stagger show it, and this says it.
@@ -161,7 +236,7 @@ func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 		var tag_size := int(maxf(9.0, plate.y * 0.2))
 		var pulse := 0.65 + 0.35 * absf(sin(Time.get_ticks_msec() * 0.008))
 		draw_string(font, origin + Vector2(pad, pad + name_size * 0.85),
-				"FIRED UP", HORIZONTAL_ALIGNMENT_RIGHT, content_w - pad * 2.0,
+				"FIRED UP", HORIZONTAL_ALIGNMENT_CENTER, content_w - pad * 2.0,
 				tag_size, Color(FIRED_UP, pulse))
 
 ## Green remaining, red revealed at the *depleted* end -- which end that is
@@ -189,6 +264,39 @@ func _draw_momentum(rect: Rect2, fill: float, accent: Color, mirrored: bool) -> 
 		draw_line(Vector2(tx, rect.position.y),
 				Vector2(tx, rect.position.y + rect.size.y), THRESHOLD_TICK, 1.0)
 
+## The title and clock, top centre, with the crowd meter under them.
+func _draw_banner(view: Vector2) -> void:
+	var font := TitleArt.teko(600)
+	var size_px := int(maxf(12.0, view.y * 0.028))
+	var clock := clock_text(_elapsed)
+	var text := "%s    %s" % [BANNER_TEXT, clock]
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x
+	var pad := size_px * 0.7
+	var box := Rect2((view.x - w) * 0.5 - pad, view.y * 0.018, w + pad * 2.0, size_px * 1.45)
+	draw_rect(box, BANNER_BG)
+	draw_string(font, Vector2(box.position.x + pad, box.position.y + size_px * 1.12),
+			text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, NAME_COLOR)
+	# The crowd: a thin bar, a marker sliding toward the man they are with.
+	var bar := Rect2(box.position.x, box.end.y + 3.0, box.size.x, maxf(3.0, size_px * 0.18))
+	draw_rect(bar, Color(0.05, 0.05, 0.08, 0.6))
+	var lean := crowd_lean()
+	var mid := bar.position.x + bar.size.x * 0.5
+	var half := bar.size.x * 0.5
+	var from_x := mid if lean >= 0.0 else mid + half * lean
+	draw_rect(Rect2(from_x, bar.position.y, absf(half * lean), bar.size.y), Color(1, 1, 1, 0.75))
+	draw_line(Vector2(mid, bar.position.y - 1.0), Vector2(mid, bar.end.y + 1.0),
+			Color(1, 1, 1, 0.5), 1.0)
+
+## The name of a big move that has just landed, lower third, fading out.
+func _draw_popup(view: Vector2) -> void:
+	if _popup_left <= 0.0 or _popup_text == "":
+		return
+	var font := TitleArt.teko(700)
+	var size_px := int(view.y * 0.075)
+	var alpha := clampf(_popup_left / 0.4, 0.0, 1.0)
+	draw_string(font, Vector2(0.0, view.y * 0.68), _popup_text,
+			HORIZONTAL_ALIGNMENT_CENTER, view.x, size_px, Color(1, 1, 1, alpha))
+
 ## Centre-top, and a plain pop-in: timings.md frame-stepped the digits
 ## appearing between one frame and the next with no fade, so nothing here
 ## eases.
@@ -198,7 +306,7 @@ func _draw_count(view: Vector2) -> void:
 		return
 	var font := ThemeDB.fallback_font
 	var font_size := int(view.y * 0.17)
-	draw_string(font, Vector2(0.0, view.y * 0.22), str(count),
+	draw_string(font, Vector2(0.0, view.y * 0.30), str(count),
 			HORIZONTAL_ALIGNMENT_CENTER, view.x, font_size, NAME_COLOR)
 
 func _draw_hold(view: Vector2) -> void:

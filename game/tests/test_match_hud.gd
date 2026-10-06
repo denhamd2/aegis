@@ -184,3 +184,38 @@ func test_drawing_the_hud_changes_no_gameplay_state() -> void:
 			b.combat.momentum, a.combat.total_damage(), b.combat.total_damage(),
 			a.global_position, b.global_position]
 	assert_array(after).is_equal(before)
+
+
+## --- The broadcast extras: clock, ready pips, move names, crowd meter ------
+
+func test_the_clock_reads_minutes_and_seconds() -> void:
+	assert_str(MatchHUD.clock_text(0.0)).is_equal("0:00")
+	assert_str(MatchHUD.clock_text(65.4)).is_equal("1:05")
+	assert_str(MatchHUD.clock_text(754.0)).is_equal("12:34")
+	assert_str(MatchHUD.clock_text(-3.0)).is_equal("0:00")
+
+func _move(id: String) -> MoveDef:
+	var m := MoveDef.new()
+	m.animation_pair_id = StringName(id)
+	return m
+
+func test_big_moves_get_a_name_and_a_jab_does_not() -> void:
+	assert_str(MatchHUD.move_title(_move("power_samoan_drop"))).is_equal("SAMOAN DROP")
+	assert_str(MatchHUD.move_title(_move("signature_pedigree"))).is_equal("PEDIGREE")
+	assert_str(MatchHUD.move_title(_move("finisher_spear"))).is_equal("SPEAR")
+	assert_str(MatchHUD.move_title(_move("running_corner_spear"))).is_equal("SPEAR")
+	assert_str(MatchHUD.move_title(_move("strike_jab"))).is_equal("")
+	assert_str(MatchHUD.move_title(_move("running_attack_clothesline"))).is_equal("")
+	assert_str(MatchHUD.move_title(null)).is_equal("")
+
+func test_a_landed_big_move_raises_the_popup_and_a_jab_does_not() -> void:
+	var hud: MatchHUD = auto_free(MatchHUD.new())
+	hud._on_move_landed(null, null, _move("strike_jab"))
+	assert_float(hud._popup_left).is_equal(0.0)
+	hud._on_move_landed(null, null, _move("signature_pedigree"))
+	assert_float(hud._popup_left).is_greater(0.0)
+	assert_str(hud._popup_text).is_equal("PEDIGREE")
+
+func test_the_crowd_meter_is_neutral_without_audio_or_favourites() -> void:
+	var hud: MatchHUD = auto_free(MatchHUD.new())
+	assert_float(hud.crowd_lean()).is_equal(0.0)
