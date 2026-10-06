@@ -4951,7 +4951,7 @@ CLIPS["Roll_Out_Ropes"] = _world_clip(46, (1.55, -FLOOR_DROP), _unified([
     (0,  pose(HURT)),
     (10, P(pelvis=(0.0, 0.30, 0.960), hips=(-50, 0, 0), spine=(-30, 0, 0),
            head=(-10, 0, 0),
-           hand_r=(0.30, 0.62, 1.20), hand_l=(-0.30, 0.62, 1.20),
+           hand_r=(0.30, 0.80, 1.18), hand_l=(-0.30, 0.80, 1.18),
            fist_r=0.8, fist_l=0.8,
            foot_r=(0.15, 0.05, 0.104), foot_l=(-0.15, 0.10, 0.104))),
     (18, _body((-82, 0, 0), (0.0, 0.85, 1.00),
@@ -5056,6 +5056,42 @@ def _spring_air(yaw, pelvis, **over):
     return base
 
 
+def _unwound(spec):
+    """`spec` with its hips yawed a full turn back, so a spin that ended at
+    -360 degrees carries on from there instead of unwinding."""
+    hips = spec.get("hips", (0, 0, 0))
+    return dict(spec, hips=(hips[0], hips[1] - 360, hips[2]))
+
+
+# The spin of the springboard Disaster Kick, keyed every frame from 13 to 32:
+# (frame, yaw, pelvis) anchors, linear between them, and the kick at 24 blended
+# in over 22-26 so the leg sweeps into the head and out instead of snapping.
+_SPIN_ANCHORS = [(13, 0, (0.0, 0.30, 1.75)), (16, -60, (0.0, 0.40, 1.85)),
+                 (18, -120, (0.0, 0.48, 1.88)), (20, -180, (0.0, 0.55, 1.86)),
+                 (22, -240, (0.0, 0.60, 1.80)), (24, -270, (0.0, 0.62, 1.72)),
+                 (28, -320, (0.0, 0.72, 1.40)), (32, -360, (0.0, 0.80, 1.05))]
+_SPIN_KICK = {20: 0.0, 21: 0.15, 22: 0.35, 23: 0.65, 24: 1.0, 25: 0.65, 26: 0.35, 27: 0.15, 28: 0.0}
+
+
+def _spring_spin():
+    keys = []
+    for frame in range(13, 33):
+        for (f0, y0, p0), (f1, y1, p1) in zip(_SPIN_ANCHORS, _SPIN_ANCHORS[1:]):
+            if f0 <= frame <= f1:
+                t = (frame - f0) / float(f1 - f0)
+                yaw = y0 + (y1 - y0) * t
+                pel = tuple(a + (b - a) * t for a, b in zip(p0, p1))
+                break
+        spec = _spring_air(yaw, pel)
+        k = _SPIN_KICK.get(frame, 0.0)
+        if k > 0.0:
+            kick = _spring_air(yaw, pel, foot_r=(0.0, 1.20, 1.72), knee_r=(0.0, 0.3, 1.0))
+            for field in ("foot_r", "knee_r"):
+                spec[field] = _lerp_value(spec[field], kick[field], k)
+        keys.append((frame, spec))
+    return keys
+
+
 # The hands are ON the top rope and the boot ON the middle one, 0.05 in front
 # of the root (the apron stands 0.05 outside the rope line): a boot 0.14 in
 # never touched the rope, and with live ropes (core/ring/ring_ropes.gd) a
@@ -5070,19 +5106,16 @@ CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
            foot_r=(0.12, 0.06, 0.80), knee_r=(0.1, 1.0, 0.4),
            foot_l=(-0.14, -0.02, 0.104), free_feet=True,
            fist_r=0.8, fist_l=0.8)),
-    # Sprung.
-    (13, _spring_air(0, (0.0, 0.30, 1.75))),
-    (16, _spring_air(-60, (0.0, 0.40, 1.85))),
-    (18, _spring_air(-120, (0.0, 0.48, 1.88))),
-    (20, _spring_air(-180, (0.0, 0.55, 1.86))),
-    (22, _spring_air(-240, (0.0, 0.60, 1.80))),
-    # CONTACT: his right side to the man, the leg straight into the head.
-    (24, _spring_air(-270, (0.0, 0.62, 1.72),
-                     foot_r=(0.0, 1.20, 1.72), knee_r=(0.0, 0.3, 1.0))),
-    (28, _spring_air(-320, (0.0, 0.72, 1.40))),
-    (32, _spring_air(-360, (0.0, 0.80, 1.05))),
-    (38, _shifted(pose(CROUCH), 0.85, 0.0)),
-    (48, _shifted(P(), 0.85, 0.0)),
+    # Sprung, and the spin -- a key EVERY frame. At two frames and 60 degrees
+    # a key the arm and leg targets were interpolated in a straight line
+    # between two points on the circle round the body, cutting through it, and
+    # the arms flipped up to 179 degrees between frames.
+] + _spring_spin() + [
+    # Landed facing the way he took off: yaw -360, not 0 -- the same pose, but
+    # keyed at 0 the hips unwound the whole spin backward in the six frames
+    # after the kick, swinging the shoulders round the room.
+    (38, _unwound(_shifted(pose(CROUCH), 0.85, 0.0))),
+    (48, _unwound(_shifted(P(), 0.85, 0.0))),
 ]))
 
 # The face-off before the bell: nose to nose in the middle of the ring, square

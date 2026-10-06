@@ -6,14 +6,15 @@ extends GdUnitTestSuite
 ##    neck. Win_Celebrate (both arms overhead) must lift both clavicles.
 ## 2. Limb flips. A solved limb that swings more than 100 degrees between two
 ##    consecutive keys is an IK branch flip (the rope step-through calf turns
-##    179 degrees in 33 ms). 73 remain (the leg snaps in Rope_Step_Through and its apron version were fixed by lowering the lead foot and picking knee poles that are not parallel to the leg; arms in the duck and the Springboard DK are what is left), nearly all in Rope_Step_Through,
-##    Roll_Out_Ropes and Springboard_DK, where the authored foot passes within
-##    a hand of the hip. This is a ratchet: fixing a clip lowers the number
-##    and the constant should follow it down; making one worse fails.
+##    179 degrees in 33 ms). 40 remain: kicks that snap straight (Drive-By,
+##    Springboard DK contact), the Tope launch and the arms in the rope duck,
+##    where the hand is within a hand of the shoulder. This is a ratchet:
+##    fixing a clip lowers the number and the constant should follow it down;
+##    making one worse fails.
 
 const CLIPS_GLB := "res://assets/animations/wrestling_clips.glb"
 const FLIP_DEGREES := 100.0
-const KNOWN_FLIPS := 73
+const KNOWN_FLIPS := 40
 const CLAVICLE_LIFT_DEGREES := 10.0
 
 func _library() -> AnimationPlayer:
