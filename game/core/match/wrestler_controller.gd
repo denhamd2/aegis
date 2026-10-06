@@ -584,6 +584,9 @@ var _damage_at_last_knockdown: float = 0.0
 var flow: MatchFlow = null
 
 func _ready() -> void:
+	# Drawn between physics ticks, so his walk and root motion do not step
+	# at 60 Hz on a faster (or uneven) display -- see MatchSmoothing.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	# RingRopes finds the bodies it has to give under by this group.
 	add_to_group("wrestlers")
 	_install_character_model()
@@ -3928,3 +3931,15 @@ func begin_submission(defender: WrestlerController, target_limb: CombatSystem.Li
 	var limb_damage: float = defender.combat.limb_damage[target_limb]
 	var defender_rate := 1.0 + (2.0 * SUBMISSION_ESCAPE_LIMB - limb_damage) / CombatSystem.MAX_LIMB_DAMAGE
 	defender._submission_minigame = SubmissionMinigame.new(attacker_rate, defender_rate)
+
+
+## During the entrances and the post-match nothing reads his pose back, so the
+## tree is evaluated every rendered frame instead of every physics tick: on a
+## 120 Hz display, or a frame rate that wanders, the physics-rate pose was held
+## for an uneven number of frames, which reads as stop motion. At the bell it
+## goes back to the tick, where captures and gameplay expect it.
+func set_presentation_rate(on: bool) -> void:
+	if anim_tree:
+		anim_tree.callback_mode_process = (
+				AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE if on
+				else AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS)

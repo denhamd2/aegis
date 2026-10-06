@@ -35,6 +35,11 @@ extends Node3D
 @onready var referee: MatchReferee = $MatchReferee
 
 func _ready() -> void:
+	# Physics interpolation (project setting) is opted into per node: the two
+	# wrestlers and the camera, which move on the physics tick. Everything else
+	# in the match -- referee, props, crowd, lights -- is moved in _process and
+	# stays as it is (MatchSmoothing).
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	# A capture run supplies its replay paths on the command line;
 	# CaptureHarness parses them and is inert without them, so this is a
 	# no-op in normal play.

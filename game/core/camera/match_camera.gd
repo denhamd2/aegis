@@ -345,6 +345,9 @@ var grapple_rig: GrappleRig
 var referee: MatchReferee
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
+	# A cut must not be drawn as a one-tick slide across the arena.
+	add_child(MatchSmoothing.CutGuard.new())
 	wrestler_a = get_node_or_null(wrestler_a_path)
 	wrestler_b = get_node_or_null(wrestler_b_path)
 	grapple_rig = get_node_or_null(grapple_rig_path)
