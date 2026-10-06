@@ -1435,10 +1435,85 @@ func adapt_animation_library(source: AnimationLibrary,
 									source_animation.track_get_key_value(track, key),
 									rest),
 							source_animation.track_get_key_transition(track, key))
+		for skeleton in skeletons:
+			_add_helper_tracks(animation, skeleton)
 		target.add_animation(name, animation)
 	if owned_source_root:
 		owned_source_root.free()
 	return target
+
+## His skin carries corrective H_* bones (thigh volume, knee overshoot, forearm
+## twist, foot and toe) that no clip animates. They sit at rest under their
+## parent while the joint they are meant to follow swings away, so the skin
+## weighted to them stayed behind: trousers ballooned into sacks when the hips
+## bent and the wrist tape slid off the forearm. Each helper is driven here
+## from the joint it belongs to -- same parent, so the driver's swing out of
+## rest is the same rotation in the helper's frame -- by a share of it.
+## [helper, driver, share, twist_only]: twist_only keeps just the roll about
+## the bone's length (a forearm twists; it does not bend).
+const HELPER_BONES := [
+	["H_Leg_Vol_F_L", "J_Leg_L", 1.0, false],
+	["H_Leg_Vol_S_L", "J_Leg_L", 1.0, false],
+	["H_Leg_Vol_B_L", "J_Leg_L", 1.0, false],
+	["H_Leg_Vol_C_L", "J_Leg_L", 0.5, false],
+	["H_Leg_Vol_F_R", "J_Leg_R", 1.0, false],
+	["H_Leg_Vol_S_R", "J_Leg_R", 1.0, false],
+	["H_Leg_Vol_B_R", "J_Leg_R", 1.0, false],
+	["H_Leg_Vol_C_R", "J_Leg_R", 0.5, false],
+	["H_Kn_L_OS01", "J_Knee_L", 0.3, false],
+	["H_Kn_L_OS02", "J_Knee_L", 0.5, false],
+	["H_Kn_R_OS01", "J_Knee_R", 0.3, false],
+	["H_Kn_R_OS02", "J_Knee_R", 0.5, false],
+	["H_Foot_L", "J_Foot_L", 1.0, false],
+	["H_Foot_R", "J_Foot_R", 1.0, false],
+	["H_Toe_L", "J_Toe_L", 1.0, false],
+	["H_Toe_R", "J_Toe_R", 1.0, false],
+	["H_Elbow_L_tw01", "J_Wrist_L", 0.33, true],
+	["H_Elbow_L_tw02", "J_Wrist_L", 0.66, true],
+	["H_Elbow_R_tw01", "J_Wrist_R", 0.33, true],
+	["H_Elbow_R_tw02", "J_Wrist_R", 0.66, true],
+	["H_Ebw_In_L", "J_Elbow_L", 0.4, false],
+	["H_Ebw_Out_L", "J_Elbow_L", 0.4, false],
+	["H_Ebw_In_R", "J_Elbow_R", 0.4, false],
+	["H_Ebw_Out_R", "J_Elbow_R", 0.4, false],
+]
+
+
+func _add_helper_tracks(animation: Animation, skeleton: Skeleton3D) -> void:
+	var skeleton_path := get_path_to(skeleton)
+	for spec in HELPER_BONES:
+		var helper := skeleton.find_bone(spec[0])
+		var driver := skeleton.find_bone(spec[1])
+		if helper < 0 or driver < 0:
+			continue
+		var driver_track := animation.find_track(
+				NodePath("%s:%s" % [skeleton_path, spec[1]]), Animation.TYPE_ROTATION_3D)
+		if driver_track < 0:
+			continue
+		var driver_rest := skeleton.get_bone_rest(driver).basis.get_rotation_quaternion()
+		var helper_rest := skeleton.get_bone_rest(helper).basis.get_rotation_quaternion()
+		# The driver's bone axis in the shared parent frame, for the twist.
+		var axis := skeleton.get_bone_rest(driver).origin.normalized() \
+				if spec[3] else Vector3.ZERO
+		var output := animation.add_track(Animation.TYPE_ROTATION_3D)
+		animation.track_set_path(output, NodePath("%s:%s" % [skeleton_path, spec[0]]))
+		animation.track_set_interpolation_type(output,
+				animation.track_get_interpolation_type(driver_track))
+		for key in animation.track_get_key_count(driver_track):
+			var posed: Quaternion = animation.track_get_key_value(driver_track, key)
+			var swing := posed * driver_rest.inverse()
+			if spec[3] and axis.length() > 0.0:
+				# Swing-twist: keep the part of the rotation about `axis`.
+				var along := Vector3(swing.x, swing.y, swing.z).dot(axis) * axis
+				swing = Quaternion(along.x, along.y, along.z, swing.w)
+				if swing.length() < 1e-6:
+					swing = Quaternion.IDENTITY
+				swing = swing.normalized()
+			var share: Quaternion = Quaternion.IDENTITY.slerp(swing, spec[2])
+			animation.track_insert_key(output,
+					animation.track_get_key_time(driver_track, key),
+					share * helper_rest)
+
 
 ## The two rest transforms a key has to be converted between, or an empty
 ## dictionary when either bone is missing (then the key passes through).
