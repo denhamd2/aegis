@@ -34,7 +34,7 @@ const MOVES_DIR := "res://resources/moves"
 ## canvas. They are replaced by one grapple that does not flip anybody,
 ## grapple_clinch_knee, which is why this number is now 1.
 ## Cody's delayed vertical suplex joins it as his own (Roster.Entry.moveset).
-const SCOPED_GRAPPLE := 2
+const SCOPED_GRAPPLE := 3
 ## The power rung is back with one move: the body slam, keyed in Blender
 ## against its partner rather than stitched from borrowed clips, which is
 ## what the cut throws were.
@@ -51,7 +51,9 @@ const SCOPED_SIGNATURE := 6
 const SCOPED_FINISHER := 2
 ## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
 ## paired move so the victim's half is keyed against the hit.
-const SCOPED_RUNNING := 25
+const SCOPED_RUNNING := 26
+## What match.tscn's shared pool hands out: Roman's Drive-By is on his roster only.
+const SHARED_RUNNING_POOL := 25
 ## Chain wrestling's links (Phase 4): headlock, wristlock, waistlock.
 const SCOPED_CHAIN := 3
 
@@ -427,7 +429,7 @@ func test_a_paired_running_attack_skips_the_tie_up() -> void:
 	for move: MoveDef in [w.running_attack_move] + w.running_attack_move_pool:
 		if PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
 			paired += 1
-	assert_int(paired).is_equal(SCOPED_RUNNING)
+	assert_int(paired).is_equal(SHARED_RUNNING_POOL)
 
 
 ## Cody fights with his own moves (Roster.Entry.moveset,

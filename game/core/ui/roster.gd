@@ -178,12 +178,14 @@ static func entries() -> Array:
 	(list[0] as Entry).moveset = {
 		"strike": [M + "strike_jab.tres", M + "strike_cross.tres",
 				M + "strike_kick_heavy.tres"],
-		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres"],
+		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres",
+				M + "grapple_guillotine.tres"],
 		"power": [M + "power_samoan_drop.tres", M + "power_bodyslam.tres",
 				M + "power_powerslam.tres"],
 		"signature": [M + "signature_superman_punch.tres", M + "signature_backbreaker.tres"],
 		"running": [M + "running_attack_clothesline.tres",
-				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres"],
+				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
+				M + "running_drive_by.tres"],
 	}
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.

@@ -677,6 +677,32 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.10,
 	},
+	# Roman's -- see Guillotine_Attacker. Head in the crook of the arm, then sat back.
+	"grapple_guillotine": {
+		"authored": {"attacker": "Guillotine_Attacker", "defender": "Guillotine_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.80, "clip": "Sitting_Enter", "at": 0.60},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.90, "clip": "Death01", "at": 0.90},
+		],
+		"defender_grips_until": 0.10,
+	},
+	# Roman's -- see DriveBy_Attacker. A two-footed running dropkick.
+	"running_drive_by": {
+		"authored": {"attacker": "DriveBy_Attacker", "defender": "DriveBy_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Punch_Cross", "at": 0.50},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Idle", "at": 0.00},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.25,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1372,6 +1398,36 @@ const TRAJECTORIES := {
 					[1.00, 0.12, 0.00, 0.00], [1.20, 0.00, 0.00, 0.00],
 					[1.80, 0.00, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.80, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The Guillotine: the head clamped at his side, then sat back with it.
+	"grapple_guillotine": {
+		"length": 2.1,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.90, 0.40, 0.00, 0.00],
+					[1.10, 0.30, 0.00, 0.00], [2.10, 0.30, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.10, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.28, -0.05, 0.00, 0.00],
+					[0.55, 0.10, 0.00, 0.00], [0.90, 0.10, 0.00, 0.00],
+					[1.10, 0.14, 0.00, 0.00], [1.30, 0.02, 0.00, 0.00],
+					[2.10, 0.00, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.10, 0.0, -90.0, 0.0]],
+		},
+	},
+	# The Drive-By: the Single Leg Dropkick's flight, both boots in.
+	"running_drive_by": {
+		"length": 1.2,
+		"attacker": {
+			"pos": [[0.000, 1.30, 0.00, 0.00], [0.133, 0.85, 0.00, 0.00], [0.233, 0.55, 0.00, 0.00],
+					[0.333, 0.40, 0.00, 0.00], [0.533, 0.35, 0.00, 0.00], [1.200, 0.35, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, 90.00, 0.00], [1.200, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.000, -0.40, 0.00, 0.00], [0.333, -0.40, 0.00, 0.00], [0.433, -0.65, 0.00, 0.00],
+					[0.567, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
+			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
 		},
 	},
 }
