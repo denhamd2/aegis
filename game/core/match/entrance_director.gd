@@ -501,6 +501,8 @@ var _coats := {}
 var _pyro: EntrancePyro
 ## The stage wall, for his own titantron.
 var _wall: StageVideo
+## Bottom-right "SKIP ENTRANCE": skips only the entrance that is running.
+var _skip_button: Button
 ## Light energies saved while the house is dimmed, to put back exactly.
 var _dimmed := {}
 var _env: Environment
@@ -602,6 +604,8 @@ func begin(match_root: Node) -> void:
 	add_child(layer)
 	_card = EntranceLowerThird.new()
 	layer.add_child(_card)
+	_skip_button = _make_skip_button()
+	layer.add_child(_skip_button)
 
 	_follow = SpotLight3D.new()
 	_follow.name = "FollowSpot"
@@ -873,6 +877,7 @@ func _tick_ramp_card(w: WrestlerController) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_update_skip_button()
 	if _done or _beat >= _beats.size():
 		return
 	if Input.is_action_just_pressed("ui_accept"):
@@ -923,6 +928,111 @@ func _physics_process(delta: float) -> void:
 func skip() -> void:
 	_beat = _beats.size()
 	_ring_bell()
+
+
+## Small and out of the way, bottom right, above the corner.
+func _make_skip_button() -> Button:
+	var b := Button.new()
+	b.name = "SkipEntrance"
+	b.text = "SKIP ENTRANCE  ▸"
+	b.focus_mode = Control.FOCUS_NONE
+	b.flat = false
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.anchor_top = 1.0
+	b.anchor_bottom = 1.0
+	b.offset_left = -190.0
+	b.offset_right = -20.0
+	b.offset_top = -56.0
+	b.offset_bottom = -20.0
+	b.add_theme_font_size_override("font_size", 15)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.55)
+	style.border_color = Color(1.0, 1.0, 1.0, 0.35)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	b.add_theme_stylebox_override("normal", style)
+	var hover := style.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.0, 0.0, 0.0, 0.8)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("pressed", hover)
+	b.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	b.visible = false
+	b.pressed.connect(skip_entrance)
+	return b
+
+
+## Shown only while an entrance is running.
+func _update_skip_button() -> void:
+	if _skip_button:
+		_skip_button.visible = entrance_owner() != null
+
+
+## Index of the first beat after the entrances (the intro and the face-off).
+func _intro_beat() -> int:
+	for i in _beats.size():
+		if (_beats[i] as Dictionary)["kind"] == "pair":
+			return i
+	return _beats.size()
+
+
+## Index of the handover beat that closes the first man's entrance, or -1.
+func _handover_beat() -> int:
+	for i in _beats.size():
+		var b: Dictionary = _beats[i]
+		if b.get("shot", "") == "end_wide" and b.get("who") == _b:
+			return i
+	return -1
+
+
+## Whose entrance is running now, or null outside them (the intro, the
+## face-off, after the bell).
+func entrance_owner() -> WrestlerController:
+	if _done or _beat >= _intro_beat():
+		return null
+	var handover := _handover_beat()
+	if handover >= 0 and _beat < handover:
+		return _b
+	if handover >= 0 and _beat == handover:
+		return null
+	return _a
+
+
+## Skips just the entrance that is running: that man is tidied away onto his
+## mark (props to the table, his lights, smoke and music off) and the show
+## picks up where his entrance would have ended -- the handover to the next
+## man, or the introductions if he was the last.
+func skip_entrance() -> void:
+	var who := entrance_owner()
+	if who == null:
+		return
+	_release_ropes()
+	_card.hide_card()
+	_portal_lights("", false)
+	if _handoff:
+		_handoff.finish_now()
+	if _props.has(who):
+		(_props[who] as Node).queue_free()
+		_props.erase(who)
+	if _coats.has(who):
+		(_coats[who] as Node).queue_free()
+		_coats.erase(who)
+	_smoke_off()
+	if _backlight:
+		_backlight.queue_free()
+		_backlight = null
+	if _wall:
+		_wall.end_entrance()
+	_tron_on = false
+	if _tron_rim:
+		_tron_rim.visible = false
+	_dim_house(false)
+	_pose_top(null)
+	who.global_transform = _mark[who]
+	who.velocity = Vector3.ZERO
+	who.visible = true
+	_beat = _handover_beat() if who == _b else _intro_beat()
+	_start_beat()
 
 
 func _ring_bell() -> void:

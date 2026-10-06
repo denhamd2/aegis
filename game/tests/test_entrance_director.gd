@@ -466,3 +466,46 @@ func test_each_song_outlasts_its_entrance() -> void:
 					"%s: entrance %.1f s, song %.1f s" % [style, lengths.get(style, -1.0),
 					stream.get_length()]).is_less(stream.get_length() - 20.0)
 			assert_bool(stream.loop).is_false()
+
+
+## The bottom-right SKIP ENTRANCE button skips only the entrance that is
+## running: the first man's skip lands on the handover with him on his mark,
+## the second's on the introductions -- neither rings the bell.
+func test_skip_entrance_skips_one_man_at_a_time() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var mark_a := a.global_transform
+	var mark_b := b.global_transform
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var rang := [false]
+	director.bell.connect(func(): rang[0] = true)
+	for _i in 30:
+		director._physics_process(1.0 / 60.0)
+	var button := director.find_child("SkipEntrance", true, false) as Button
+	assert_object(button).is_not_null()
+	assert_bool(button.visible).is_true()
+	# First up is the opponent (WrestlerB).
+	assert_object(director.entrance_owner()).is_same(b)
+	director.skip_entrance()
+	assert_bool(rang[0]).is_false()
+	assert_vector(b.global_position).is_equal_approx(mark_b.origin, Vector3.ONE * 0.001)
+	assert_bool(b.visible).is_true()
+	# Through the handover into the second man's entrance.
+	var guard := 0
+	while director.entrance_owner() != a and guard < 2000:
+		director._physics_process(1.0 / 60.0)
+		guard += 1
+	assert_object(director.entrance_owner()).is_same(a)
+	director.skip_entrance()
+	assert_bool(rang[0]).is_false()
+	assert_vector(a.global_position).is_equal_approx(mark_a.origin, Vector3.ONE * 0.001)
+	assert_object(director.entrance_owner()).is_null()
+	director._physics_process(1.0 / 60.0)
+	assert_bool(button.visible).is_false()
+	# And the intro still runs to the bell.
+	guard = 0
+	while not rang[0] and guard < 20000:
+		director._physics_process(1.0 / 60.0)
+		guard += 1
+	assert_bool(rang[0]).is_true()

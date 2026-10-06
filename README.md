@@ -8908,3 +8908,8 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
   the rope. Limb flips 73 -> 40. Left: straight-snapping kicks, the Tope
   launch, and the arms in the rope duck. The squat's wide thighs on Cody are
   the clip's own pose, not the skin.
+- **Skip Entrance button.** Bottom-right, small, shown only while an entrance
+  runs: `EntranceDirector.skip_entrance()` skips just that man's entrance
+  (props to the table, his lights, smoke and music off, him on his mark) and
+  the show carries on with the next man or the introductions. Enter/Space still
+  skips everything to the bell.
