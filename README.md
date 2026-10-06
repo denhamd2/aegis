@@ -8932,3 +8932,46 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
 - **Camera.** Walk cut on 2K26's grammar: waist-up backing ahead of him with
   the set behind, the telephoto face, the low track, over the shoulder; the
   high side and arena-high wides are gone. The ramp card is up at most 4 s.
+
+## Round: Cody's entrance to the 2K26 bar (gauntlet/refs/cody_entrance_aaa_plan.md)
+
+- **Review.** The same review as Roman's, against 2K26's Cody (0-145 s of the
+  owner's video): lighting already reads (his white gear, plus the camera key
+  and ramp wash from Roman's round); smoothness was already fixed for both
+  men (`motion_cadence -- --who cody`: 119 -> 0 held frames at 120 fps); the
+  walk and one camera shot were the gaps.
+- **Cody's walk re-authored on `_heavy_gait`.** Same 1.2 m/s and 26-frame
+  cycle (the director's hand-offs are unchanged); upright, open chest (the old
+  gait leaned him back 7 degrees); hips drop at double support (`low_at`),
+  which keeps the long stride within the legs' reach -- the old knees locked
+  straight at heel strike and snapped; foot roll the right way round; arms in
+  reach with a slight bend. Gestures rise and fall over 20 frames, in front of
+  him, with the elbow pole blended in; the point is within reach. Knees
+  18 -> 6, gesture arms 33 -> 7.5 (`test_codys_walk_has_no_jerks`, bar 8 at his
+  tempo).
+- **Shoulder follow (RigPoser `clav_carry`).** The clavicle follow aims from
+  the armature's rest, not the chest, so a raised arm on a turned chest jumps
+  as it comes down past 60 degrees (Cody's point kicked 30 degrees in a frame).
+  `clav_carry` composes it onto the chest instead; Cody's walk uses it. It is
+  opt-in: made the default it moved the grapples' hands 1-6 cm off their
+  fitted holds, and a re-fit made the spears worse, so every other clip keeps
+  the shoulders it was fitted on (the paired bakes are byte-identical).
+- **Roman's arms.** His walk hands were just out of reach, so the arms were
+  locked straight most of the cycle; 5 cm higher, they keep a natural bend.
+  His walk, forearms included, is 3.9 (bar 4.5).
+- **Camera.** Cody's walk cut: waist-up at the lens (8 beats), over the
+  shoulder, the face, the barricade; `arena_high` (a dot on a dark ramp) is gone.
+- **Tests.** The framing tests and the pair-clearance measure read the camera
+  and the men uninterpolated: they check projection and authored geometry,
+  and in play both are physics-interpolated since Roman's round, which put
+  Stun Dog's measured grip 5 mm over its limit (render timing, not the move).
+- **Ring announcer (Justin Roberts, owner-supplied calls).** `RingAnnouncer`
+  plays "Ladies and gentlemen, your main event..." on its own beat on the wide
+  of the building before the first entrance, then each man's call. Each call
+  is started early enough (counted back through the beats) that the name --
+  found with an offline speech recogniser, Roman 16.98 s, Cody 7.26 s into the
+  call -- is said on the card's moment, and the card goes up on that tick. Cody's lands on the low WHOA's arms going wide
+  (2K26 puts his card up after the arms-wide pose), Roman's half way down the
+  ramp. The calls are normalised to -12 LUFS; the entrance music and the
+  crowd beds go through an `UnderVoice` bus that dips 9 dB while he speaks.
+  `test_ring_announcer.gd` pins the name to the card within a tick.

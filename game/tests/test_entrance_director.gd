@@ -282,7 +282,9 @@ func test_codys_beats_land_on_the_music() -> void:
 		var b: Dictionary = director._beats[director._beat]
 		if director._beat != last:
 			last = director._beat
-			if b.get("kind") == "hold" and start < 0:
+			# His music starts on his own first beat -- not the announcer's
+			# intro before it, which is a hold with nobody in it.
+			if b.get("kind") == "hold" and b.get("who") != null and start < 0:
 				start = ticks
 			var clip: String = b.get("clip", "")
 			if start >= 0 and not starts.has(clip):
@@ -323,7 +325,7 @@ func test_romans_finger_lands_on_the_slam() -> void:
 	director.cue.connect(func(what: String) -> void: cues.append([what, clock[0]]))
 	while ticks < 20000 and director._beat < director._beats.size():
 		var b: Dictionary = director._beats[director._beat]
-		if b.get("kind") == "hold" and start < 0:
+		if b.get("kind") == "hold" and b.get("who") != null and start < 0:
 			start = ticks
 		director._physics_process(1.0 / 60.0)
 		ticks += 1

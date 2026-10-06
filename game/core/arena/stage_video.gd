@@ -441,6 +441,8 @@ func _play_music(entry: Dictionary) -> void:
 	_music.name = "EntranceMusic"
 	_music.stream = stream
 	_music.volume_db = ENTRANCE_VOLUME_DB
+	# Under the ring announcer when he speaks (RingAnnouncer.DUCK_DB).
+	_music.bus = RingAnnouncer.under_bus()
 	add_child(_music)
 	_music.play()
 	set_process(true)

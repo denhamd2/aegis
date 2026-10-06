@@ -37,3 +37,11 @@ supplied 2026-10-03 and transcoded from the owner's mp3 to Vorbis q6 with
 metadata stripped. It is not wired in yet (Stage 2 of
 `gauntlet/refs/aaa_master_plan.md`). Same caveats as the entrance music:
 owner-supplied, not a licensed or CC0 source.
+
+`announcer/` holds three ring-announcer calls (Justin Roberts): the main-event
+intro, Roman Reigns' and Cody Rhodes'. Owner-supplied mp3s (2026-10-06),
+loudness-normalised to -12 LUFS and transcoded to Vorbis q6, mono. The name in
+each was found with an offline speech recogniser (Roman 16.98 s, Cody 7.26 s)
+and the director starts each call so the card goes up on that moment
+(`RingAnnouncer.NAME_AT`). Same caveats as the entrance music:
+owner-supplied, not a licensed or CC0 source.
