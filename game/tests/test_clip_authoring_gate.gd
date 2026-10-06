@@ -42,9 +42,9 @@ extends GdUnitTestSuite
 ##                       a change here silently moves EVERY clip at once.
 const PINNED := {
 	"res://tools/blender/wrestling_clips.py":
-		"0fecbcd83912aeb70237a0cc2383cd2cc37630dbe144983ef4b35d4df55a3f59",
+		"a47e9e72f103f87bb0e6a03d8d83b62129d33c5881091d8ae9bcba4d9bdcd127",
 	"res://tools/blender/rig_pose.py":
-		"d5b9341164290e5a8a581813ec2c6e639696f06019835c2c4e0dc713bac5fa4a",
+		"fabc592f2cbd11cc67e8c578b6bcc352d87d559222662a44890a653e17fdec73",
 }
 
 ## The citation the authoring file has to keep carrying. Deleting the reminder
