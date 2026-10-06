@@ -8845,3 +8845,20 @@ twenty Microsoft Rocketbox adults (MIT, `game/assets/environment/CREDITS.md`,
   more ringside sign fans (`SignFans`) show atlas cells.
 - **Web.** `COMPAT_CROWD_GAIN` 6 -> 12: opengl3 top 200 rows 0.034 against
   Vulkan's 0.037 (was 0.016).
+
+## Round: Samoan Drop and Pedigree
+
+Two more paired moves, authored on the base rig (`wrestling_clips.py`,
+recipes and root paths in `paired_recipes.gd`), fitted with `fit_paired`
+(now takes `FIT_ONLY=move_a,move_b` so a new move can be fitted without
+touching the rest), and wired through the rosters:
+
+- **Samoan Drop** (`power_samoan_drop`) -- Roman's power rung: the man is
+  hoisted across both shoulders, then dropped flat on his back in front.
+- **Pedigree** (`signature_pedigree`) -- Cody's signature tier: a double
+  underhook, down onto the knees, the man face first and then rolled over.
+
+Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
+(no body through the other, hands hold) and the full suite.
+
+Still to come from the moves list: Guillotine, Drive-By, corner spear.

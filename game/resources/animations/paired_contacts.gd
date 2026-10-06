@@ -57,6 +57,8 @@ const MOVES := {
 	"power_bodyslam": "legs",
 	"power_powerslam": "legs",
 	"power_alabama_slam": "legs",
+	"power_samoan_drop": "legs",
+	"signature_pedigree": "wrist",
 	"running_fallaway_moonsault_slam": "legs",
 	# The wrist-clutch.
 	"finisher_cross_rhodes": "wrist",

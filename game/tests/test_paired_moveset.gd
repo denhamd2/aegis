@@ -39,11 +39,13 @@ const SCOPED_GRAPPLE := 2
 ## against its partner rather than stitched from borrowed clips, which is
 ## what the cut throws were.
 ## Cody's powerslam and Alabama Slam are his own power rung (his moveset).
-const SCOPED_POWER := 3
+## Roman's Samoan Drop is his own, on top of those.
+const SCOPED_POWER := 4
 ## Two shared (backbreaker, neckbreaker) and one per wrestler who has one:
 ## Roman's Superman Punch and Cody's Cody Cutter.
 ## And Cody's Disaster Kick, in his own signature draw.
-const SCOPED_SIGNATURE := 5
+## And Cody's Pedigree.
+const SCOPED_SIGNATURE := 6
 ## One per wrestler who has one, and they belong to the roster rather than to
 ## match.tscn: Roman's Spear and Cody's Cross Rhodes.
 const SCOPED_FINISHER := 2
@@ -397,7 +399,7 @@ func test_each_wrestler_gets_his_own_signature_and_keeps_the_shared_ones() -> vo
 	# Cody has his own signature tier (Roster.Entry.moveset): his Cutter and
 	# his Disaster Kick, and not the shared two.
 	assert_array(ids["WrestlerB"]).contains_exactly_in_any_order(
-			["signature_cody_cutter", "signature_disaster_kick"])
+			["signature_cody_cutter", "signature_disaster_kick", "signature_pedigree"])
 	assert_array(ids["WrestlerB"]).not_contains(["signature_superman_punch"])
 
 ## And it is the first one he throws.
@@ -447,7 +449,7 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	assert_array(ids.call(cody.power_move, cody.power_move_pool)) \
 			.is_equal(["power_powerslam", "power_alabama_slam"])
 	assert_array(ids.call(cody.signature_move, cody.signature_move_pool)) \
-			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter"])
+			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter", "signature_pedigree"])
 	assert_str(String(cody.own_signature.animation_pair_id)).is_equal("signature_cody_cutter")
 	assert_str(String(cody.finisher_move.animation_pair_id)).is_equal("finisher_cross_rhodes")
 	# Roman has his own, and Cody's Alabama Slam is not in it.
