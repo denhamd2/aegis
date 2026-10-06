@@ -4695,6 +4695,98 @@ CLIPS["Pedigree_Defender"] = [
 ] + _face_first_then_roll(33, 54)
 
 
+# The Guillotine, 62 frames / 2.1 s. Roman catches the man bent forward and
+# clamps his head in the crook of his arm -- the right forearm under the chin,
+# the left hand locking onto his own wrist -- leans on the choke, then sits
+# back onto the mat, dragging the man's neck down with him. The man goes face
+# first onto the canvas and rolls over (_face_first_then_roll).
+_GUIL_HOLD = dict(hand_r=(0.14, 0.40, 1.00), hand_l=(-0.10, 0.36, 0.96),
+                  elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
+                  fist_r=0.9, fist_l=0.9)
+CLIPS["Guillotine_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Hooks the head and clamps.
+    (8,  P(pelvis=(0.0, 0.08, 0.790), hips=(-14, 0, 0), spine=(-20, 0, 0),
+           head=(-6, 0, 0), **_GUIL_HOLD,
+           foot_r=(0.22, -0.08, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+    # Leans on it.
+    (18, P(pelvis=(0.0, 0.08, 0.770), hips=(-16, 0, 0), spine=(-22, 0, 0),
+           head=(-6, 0, 0), **_GUIL_HOLD,
+           foot_r=(0.22, -0.08, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+    (26, P(pelvis=(0.0, 0.08, 0.770), hips=(-16, 0, 0), spine=(-22, 0, 0),
+           head=(-6, 0, 0), **_GUIL_HOLD,
+           foot_r=(0.22, -0.08, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+    # Sits back, taking the neck down.
+    (34, pose(SIT_DROP, hand_r=(0.14, 0.38, 0.72), hand_l=(-0.10, 0.34, 0.68),
+              fist_r=0.9, fist_l=0.9)),
+    (42, pose(SIT_DROP, hand_r=(0.20, 0.34, 0.56), hand_l=(-0.20, 0.32, 0.54),
+              fist_r=0.3, fist_l=0.3)),
+    (52, P(pelvis=(0.0, 0.02, 0.600), hips=(-20, 0, 0), spine=(-20, 0, 0))),
+    (62, P()),
+]
+CLIPS["Guillotine_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Bent forward, head under Roman's arm.
+    (8,  pose(VICTIM_BENT, pelvis=(0.0, 0.04, 0.860), hips=(-62, 0, 0),
+              spine=(-28, 0, 0), head=(-12, 0, 0))),
+    (18, pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.840), hips=(-72, 0, 0),
+              spine=(-24, 0, 0), head=(-14, 0, 0))),
+    (26, pose(VICTIM_BENT, pelvis=(0.0, 0.06, 0.840), hips=(-72, 0, 0),
+              spine=(-24, 0, 0), head=(-14, 0, 0))),
+    # Dragged down to the mat, then the roll.
+    (34, dict(pelvis=(0.0, 0.10, 0.560), hips=(-72, 0, 0), spine=(-14, 0, 0),
+              head=(10, 0, 0), hand_r=(0.30, -0.30, 0.40), hand_l=(-0.30, -0.30, 0.40),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.20, -0.40, 0.14), foot_l=(-0.18, -0.36, 0.16),
+              knee_r=(0.2, 0.2, -0.6), knee_l=(-0.2, 0.2, -0.6))),
+] + _face_first_then_roll(37, 62)
+
+# The Drive-By, 36 frames. A sprint, then both boots driven into his chest in
+# a flat dropkick (the Single Leg Dropkick's frames, but square on, with both
+# legs out); down on the back, up again. The victim goes over backward.
+CLIPS["DriveBy_Attacker"] = [
+    (0, pose(RUN_A)), (4, pose(RUN_B)),
+    (7, P(pelvis=(0.0, 0.10, 0.740), hips=(-20, 0, 0), spine=(-16, 0, 0),
+          hand_r=(0.26, 0.20, 0.90), hand_l=(-0.24, 0.24, 0.92),
+          foot_r=(0.16, 0.10, 0.50), foot_l=(-0.14, 0.12, 0.104),
+          knee_r=(0.2, 1.0, 0.3))),
+    # Off the ground, laid back, both soles out at chest height.
+    (10, dict(pelvis=(0.0, 0.05, 1.100), hips=(52, 0, 0), spine=(8, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.36, -0.20, 1.10), hand_l=(-0.36, -0.20, 1.10),
+              fist_r=0.4, fist_l=0.4,
+              foot_r=(0.14, 0.70, 1.22), foot_l=(-0.14, 0.70, 1.22),
+              knee_r=(0.1, 1.0, 0.2), knee_l=(-0.1, 1.0, 0.2))),
+    (14, dict(pelvis=(0.0, 0.00, 0.600), hips=(70, 0, 0), spine=(4, 0, 0),
+              head=(-12, 0, 0),
+              hand_r=(0.40, -0.30, 0.40), hand_l=(-0.40, -0.30, 0.40),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.14, 0.60, 0.80), foot_l=(-0.14, 0.60, 0.80),
+              knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.3))),
+    (17, dict(SUPINE)),
+    (22, dict(SUPINE)),
+    (26, dict(pelvis=(0.0, 0.0, 0.450), hips=(-30, 0, -20), spine=(-20, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.40, 0.20, 0.06), hand_l=(-0.24, 0.30, 0.40),
+              fist_r=0.0, fist_l=0.2,
+              foot_r=(0.20, -0.30, 0.09), foot_l=(-0.20, 0.20, 0.104),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+    (31, dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
+              head=(-8, 0, 0),
+              hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
+              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+    (36, P()),
+]
+CLIPS["DriveBy_Defender"] = [(0, pose(STAND)), (8, pose(STAND, head=(4, 0, 0)))] \
+    + _back_fall(10, 36, pelvis_hit=0.92)
+
+
 # The Figure-Four leglock, 180 frames / 6.0 s, played by the two SUBMISSION_*
 # states rather than GrappleRig: the man is already down, and
 # WrestlerController._place_figure_four() stands Cody at his feet facing up
