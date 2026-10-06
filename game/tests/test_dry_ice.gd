@@ -34,6 +34,10 @@ func test_it_works_without_a_fog_volume() -> void:
 	var m := puffs.material_override as StandardMaterial3D
 	assert_int(m.billboard_mode).is_equal(BaseMaterial3D.BILLBOARD_PARTICLES)
 	assert_int(m.transparency).is_equal(BaseMaterial3D.TRANSPARENCY_ALPHA)
+	# Additive, not alpha-mixed: the alpha-blended puffs drew as a hard-edged
+	# black disc on the stage floor under the smoke (isolated by hiding the
+	# DryIce node, which removed it). Added light cannot darken anything.
+	assert_int(m.blend_mode).is_equal(BaseMaterial3D.BLEND_MODE_ADD)
 
 
 func test_stopping_lets_what_is_out_linger_then_frees_it() -> void:
