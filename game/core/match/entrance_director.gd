@@ -347,9 +347,13 @@ const CODY_WHOA_LOW_TICKS := 200
 ## The owner found the old cut "mostly low angle" -- four low ultra-wide
 ## steadicam shots on the ramp. Now the low one is used once, on the walk
 ## from the kneel (Cody's signature in C-39), and the rest sit at eye level.
+## 2K26 (cody_entrance_aaa_plan.md step 4, 1:01-1:18): a long waist-up hold
+## walking at the lens with the wall behind him, over the shoulder on the
+## jacket's back, a close front, then the barricade. `arena_high` is gone: it
+## showed him as a dot on a dark ramp, the shot Roman's cut also lost.
 ## [shot, seconds], cycled; whole beats of his music (A4).
-const CODY_WALK_SHOTS := [["steadicam_front", 6 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
-		["barricade_track", 5 * CODY_BEAT], ["arena_high", 4 * CODY_BEAT]]
+const CODY_WALK_SHOTS := [["steadicam_front", 8 * CODY_BEAT], ["over_shoulder", 5 * CODY_BEAT],
+		["face_walk", 5 * CODY_BEAT], ["barricade_track", 5 * CODY_BEAT]]
 ## What he does with his arms on the walk (refs/entrances.md, C-39 / C-SS /
 ## C-SNME): yells at one side of the aisle with a fist up, points a fan out,
 ## yells at the other side, one fist to the roof. Each ONCE, one to a beat of
@@ -502,6 +506,18 @@ var _b: WrestlerController
 var _camera: MatchCamera
 var _hud: Node
 var _card: EntranceLowerThird
+## Justin Roberts: the main-event intro, then each man's call, his name on
+## the card the moment it is said (RingAnnouncer).
+var _announcer: RingAnnouncer
+## Men whose card comes up on the announcer's call rather than half way down
+## the ramp, and ticks left on a called card.
+var _called := {}
+var _name_card_ticks := 0
+## Ticks until a called man's name is said, from the moment his call starts:
+## his card goes up on it. Off the schedule, not the audio clock, so it is the
+## same on every run and every machine (an offline render runs the audio on
+## the wall clock and put the card up 2 s early).
+var _name_due := {}
 var _lights: Node
 var _follow: SpotLight3D
 var _walk_key: SpotLight3D
@@ -570,6 +586,9 @@ func begin(match_root: Node) -> void:
 	_hud = match_root.get_node_or_null("MatchHUD")
 	_lights = match_root.get_node_or_null("LightRig")
 	_wall = match_root.find_child("StageVideo", true, false) as StageVideo
+	_announcer = RingAnnouncer.new()
+	_announcer.name = "RingAnnouncer"
+	add_child(_announcer)
 	var world: WorldEnvironment = null
 	for node in match_root.find_children("*", "WorldEnvironment", true, false):
 		world = node as WorldEnvironment
@@ -708,16 +727,23 @@ func _freeze(node: Node) -> void:
 ## root line; every beat names its camera shot and whether the card is up.
 func _build_timeline() -> void:
 	_beats.append({"kind": "opening", "ticks": OPENING_TICKS})
+	# "Ladies and gentlemen, your main event of the night...": the
+	# announcer's intro on the wide of the building, before anyone comes out.
+	if RingAnnouncer.has_call("intro"):
+		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "announce_intro"]],
+				"ticks": int(ceil((RingAnnouncer.length_of("intro") + INTRO_CALL_TAIL) * TPS))})
 	# The opponent enters first and waits in the ring; the player's man last.
 	for pair: Array in [[_b, ArenaBuilder.PORTAL_OFFSET_X, "E"],
 			[_a, -ArenaBuilder.PORTAL_OFFSET_X, "W"]]:
 		var w: WrestlerController = pair[0]
+		var first_beat := _beats.size()
 		if w.entrance_style == "roman":
 			_add_roman_entrance(w, pair[1], pair[2])
 		elif w.entrance_style == "cody":
 			_add_cody_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
+		_schedule_call(w, first_beat)
 		if w == _b:
 			# The handover: he is on his mark and his music fades under the
 			# closing wide before the next man's starts -- never one track
@@ -726,6 +752,82 @@ func _build_timeline() -> void:
 			_beats.append({"kind": "hold", "who": w, "ticks": HANDOVER_TICKS,
 					"shot": "end_wide"})
 	_add_faceoff()
+
+
+## A beat after the announcer's intro before the first entrance starts.
+const INTRO_CALL_TAIL := 0.6
+## How long a called name stays on the card (the ramp card's own cap).
+const NAME_CARD_TICKS := RAMP_CARD_TICKS
+
+
+## Starts `w`'s call early enough that his name is said on the moment his
+## card should come up: Cody's on the low WHOA's arms going wide (2K26 puts
+## his card up straight after the arms-wide pose), anyone else's half way
+## down the ramp, where the ramp card always went up. Counts back through the
+## beats from that moment and drops an "announce" cue in the beat it lands in.
+func _schedule_call(w: WrestlerController, first_beat: int) -> void:
+	var style := w.entrance_style
+	if not RingAnnouncer.has_call(style) or RingAnnouncer.name_at(style) <= 0.0:
+		return
+	var target := _name_moment(w, first_beat)
+	if target.is_empty():
+		return
+	var idx: int = target[0]
+	var tick: int = int(target[1]) - int(round(RingAnnouncer.name_at(style) * TPS))
+	while tick < 1 and idx > first_beat:
+		idx -= 1
+		tick += beat_ticks(_beats[idx])
+	tick = maxi(tick, 1)
+	var beat: Dictionary = _beats[idx]
+	beat["events"] = (beat.get("events", []) as Array).duplicate() + [[tick, "announce"]]
+	_called[w] = true
+
+
+## [beat index, tick] at which `w`'s name should be said, or [].
+func _name_moment(w: WrestlerController, first_beat: int) -> Array:
+	for i in range(first_beat, _beats.size()):
+		var beat: Dictionary = _beats[i]
+		if beat.get("who") == w and beat.get("clip", "") == "strikes/whoa_low":
+			return [i, WHOA_LOW_WIDE_AT]
+	var halfway := (ArenaBuilder.STAGE_FRONT + CUT_TO_Z) * 0.5
+	for i in range(first_beat, _beats.size()):
+		var beat: Dictionary = _beats[i]
+		if beat.get("who") != w or beat["kind"] != "walk" or not beat.get("ramp_card", false):
+			continue
+		var path: Array = beat["path"]
+		var a: Vector3 = path[0]
+		var b: Vector3 = path[path.size() - 1]
+		if (a.z - halfway) * (b.z - halfway) > 0.0:
+			continue
+		var frac := 0.0 if is_equal_approx(a.z, b.z) else (halfway - a.z) / (b.z - a.z)
+		var speed: float = beat.get("speed", WALK_SPEED)
+		return [i, maxi(1, int(round(_flat(a).distance_to(_flat(b)) * frac / speed * TPS)))]
+	return []
+
+
+## A beat's length in ticks, as _start_beat() will make it.
+func beat_ticks(beat: Dictionary) -> int:
+	match beat["kind"]:
+		"walk":
+			var path: Array = beat["path"]
+			var length := 0.0
+			for i in path.size() - 1:
+				length += _flat(path[i]).distance_to(_flat(path[i + 1]))
+			return maxi(1, int(ceil(length / float(beat.get("speed", WALK_SPEED)) * TPS)))
+		"turn":
+			return SETTLE_TICKS if beat.get("settle", false) else 18
+	return int(beat.get("ticks", 1))
+
+
+## The announcer is saying his name: his card, now.
+func _on_name_called(style: String) -> void:
+	for w: WrestlerController in [_a, _b]:
+		if w.entrance_style == style and _called.has(w):
+			_name_due.erase(w)
+			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
+					w.entrance_subtitle)
+			_name_card_ticks = NAME_CARD_TICKS
+			return
 
 
 ## Walk up, stare down, back to the marks (FACEOFF_GAP's note). Each beat is a
@@ -873,7 +975,7 @@ func _start_beat() -> void:
 		if not _card.is_showing():
 			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
 					w.entrance_subtitle)
-	else:
+	elif _name_card_ticks <= 0:
 		_card.hide_card()
 	match beat["kind"]:
 		"walk":
@@ -916,6 +1018,8 @@ var _ramp_card_ticks := {}
 
 
 func _tick_ramp_card(w: WrestlerController) -> void:
+	if _called.has(w):
+		return  # his card goes up on the announcer's call (_on_name_called)
 	var z := w.global_position.z
 	var halfway := (ArenaBuilder.STAGE_FRONT + CUT_TO_Z) * 0.5
 	var shown: int = _ramp_card_ticks.get(w, 0)
@@ -946,6 +1050,14 @@ func _physics_process(delta: float) -> void:
 		return
 	var beat: Dictionary = _beats[_beat]
 	_tick += 1
+	if _name_card_ticks > 0:
+		_name_card_ticks -= 1
+		if _name_card_ticks == 0:
+			_card.hide_card()
+	for due_w: WrestlerController in _name_due.keys():
+		_name_due[due_w] = int(_name_due[due_w]) - 1
+		if int(_name_due[due_w]) <= 0:
+			_on_name_called(due_w.entrance_style)
 	var t := clampf(float(_tick) / float(beat["ticks"]), 0.0, 1.0)
 	var w: WrestlerController = beat.get("who")
 	for cue: Array in beat.get("events", []):
@@ -1069,6 +1181,10 @@ func skip_entrance() -> void:
 		return
 	_release_ropes()
 	_card.hide_card()
+	_name_card_ticks = 0
+	_name_due.clear()
+	if _announcer:
+		_announcer.stop()
 	_portal_lights("", false)
 	if _handoff:
 		_handoff.finish_now()
@@ -1103,6 +1219,10 @@ func _ring_bell() -> void:
 	_done = true
 	_release_ropes()
 	_card.hide_card()
+	_name_card_ticks = 0
+	_name_due.clear()
+	if _announcer:
+		_announcer.stop()
 	_portal_lights("", false)
 	if _follow:
 		_follow.visible = false
@@ -1638,6 +1758,13 @@ func _event(w: WrestlerController, what: String) -> void:
 	cue.emit(what)
 	var props: EntranceProps = _props.get(w)
 	match what:
+		"announce_intro":
+			if _announcer:
+				_announcer.play("intro")
+		"announce":
+			if _announcer and w:
+				_announcer.play(w.entrance_style)
+				_name_due[w] = int(round(RingAnnouncer.name_at(w.entrance_style) * TPS))
 		"lights_up":
 			_dim_house(false)
 		"title_held":

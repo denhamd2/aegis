@@ -98,6 +98,9 @@ func _ready() -> void:
 	_cheer_loop = sfx.make_loop("crowd_cheer")
 	_roar = sfx.make_loop("crowd_roar")
 	_bed.volume_db = BED_DB
+	# Under the ring announcer when he speaks (RingAnnouncer.DUCK_DB).
+	for p: AudioStreamPlayer in [_bed, _walla_a, _walla_b, _boo_loop, _cheer_loop, _roar]:
+		p.bus = RingAnnouncer.under_bus()
 	# Out of step from the first frame: each layer starts somewhere else in
 	# its own loop (deterministic -- SfxPool's seeded generator, not the match's).
 	for p: AudioStreamPlayer in [_bed, _walla_a, _walla_b, _boo_loop, _cheer_loop, _roar]:
