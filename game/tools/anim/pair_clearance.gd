@@ -153,6 +153,11 @@ static func measure(host: Node, move_id: String, roster := PackedStringArray()) 
 	var defender: WrestlerController = scene.get_node("WrestlerB")
 	for w: WrestlerController in [attacker, defender]:
 		w.is_ai = false
+		# The authored move, not the renderer's timing: in play the men are
+		# physics-interpolated (MatchSmoothing), which offsets the clock of
+		# the blends drawn between ticks by the render fraction and moved
+		# Stun Dog's measured grip 5 mm. Measured uninterpolated, as built.
+		w.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	var move: MoveDef = load("res://resources/moves/%s.tres" % move_id)
 	defender.global_position = attacker.global_position \
 			- attacker.global_transform.basis.z * 0.9

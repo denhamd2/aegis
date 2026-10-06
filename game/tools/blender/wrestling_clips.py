@@ -376,7 +376,7 @@ def _roll_stance(k):
 
 def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                 pelvis_up, pelvis_dip, sway, hips_yaw, spine_lean, shoulder_twist,
-                side_roll, hand_x, hand_fwd, hand_up, arm_lag):
+                side_roll, hand_x, hand_fwd, hand_up, arm_lag, low_at=None):
     """Roman's gait: a heavy, continuous stride (gauntlet/refs/
     roman_entrance_aaa_plan.md step 2), keyed every frame, looping.
 
@@ -393,7 +393,10 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
         the arms swing a little behind them (arm_lag frames), hanging off the
         lats.
     `contact` is the frames each foot is down; the right lands on frame 0 and
-    the left half a cycle later.
+    the left half a cycle later. `low_at`, if given, is the phase of the
+    pelvis's lowest point (and half a cycle on): a brisk walk drops at double
+    support, where the legs are spread widest, which is also what keeps a
+    long stride within the legs' reach.
     """
     out = []
     half = (contact / float(fps)) * speed * 0.5
@@ -434,7 +437,10 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                 over["ankle_%s" % side] = (
                     ROLL_TOE_OFF + (ROLL_HEEL_STRIKE - ROLL_TOE_OFF) * eased, 0.0, 0.0)
         # Low a few frames after each heel strike, high mid-stance.
-        dip = 0.5 - 0.5 * math.cos(4.0 * math.pi * (phase - 0.06))
+        if low_at is None:
+            dip = 0.5 - 0.5 * math.cos(4.0 * math.pi * (phase - 0.06))
+        else:
+            dip = 0.5 + 0.5 * math.cos(4.0 * math.pi * (phase - low_at))
         # Over the planted foot: right (+x) while the right is down.
         lateral = math.cos(2.0 * math.pi * (phase - c_mid))
         over["pelvis"] = (sway * lateral, 0.0, pelvis_up - pelvis_dip * dip)
@@ -477,13 +483,13 @@ def _methodical_walk():
         pelvis_up=0.875, pelvis_dip=0.030, sway=0.025,
         hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0, side_roll=1.5,
         hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.06, 0.20),
-        hand_up=(0.84, 0.88), arm_lag=4)], curl=0.40)
+        hand_up=(0.89, 0.925), arm_lag=4)], curl=0.40)
     twist = {f: pose["_shoulder_yaw"] for f, pose in _heavy_gait(
         frames=48, fps=FPS, speed=0.5, contact=28, plant_up=0.104, lift_up=0.06,
         foot_x={"r": 0.15, "l": -0.14}, pelvis_up=0.875, pelvis_dip=0.030,
         sway=0.025, hips_yaw=6.0, spine_lean=-6.0, shoulder_twist=8.0,
         side_roll=1.5, hand_x={"r": 0.33, "l": -0.32}, hand_fwd=(0.06, 0.20),
-        hand_up=(0.84, 0.88), arm_lag=4)}
+        hand_up=(0.89, 0.925), arm_lag=4)}
     # (frame, yaw degrees): + is to his left. Long eased moves, long holds.
     looks = [(0, 0.0), (14, 0.0), (40, 26.0), (62, 26.0), (84, 0.0),
              (94, 0.0), (112, -24.0), (122, -24.0), (144, 0.0)]
@@ -519,75 +525,119 @@ CROWD_GESTURES = {
     "": None,
     "shout_l": ((14, 76), 42.0, "l", (-0.44, 0.16, 1.50), (-1.0, -0.3, -0.7), 1.0, False),
     "shout_r": ((14, 76), -42.0, "r", (0.44, 0.16, 1.50), (1.0, -0.3, -0.7), 1.0, False),
-    "point_r": ((10, 70), -36.0, "r", (0.74, 0.40, 1.58), (1.0, -0.2, 0.0), 0.95, True),
+    "point_r": ((10, 70), -36.0, "r", (0.60, 0.40, 1.56), (1.0, -0.2, 0.0), 0.95, True),
     "fist": ((52, 80), 0.0, "r", (0.22, 0.08, 2.02), (1.0, 0.0, 0.2), 1.0, False),
 }
+
+
+# Cody's stride for _heavy_gait (cody_entrance_aaa_plan.md step 2): 1.2 m/s
+# (EntranceDirector.CODY_WALK_SPEED), the same 26-frame cycle and 15 frames
+# on each foot as before, so the director's cycle-boundary hand-offs
+# (WALK_CYCLE_TICKS) still land. Upright and open-chested where the old gait
+# leaned him back 7 degrees (spine pitch + is backward) and threw his head
+# back; the arms swing free, a hand's width off the jacket, a little behind
+# the shoulders.
+CODY_GAIT = dict(
+    frames=26, fps=FPS, speed=1.2, contact=15,
+    plant_up=0.104, lift_up=0.07,
+    foot_x={"r": 0.15, "l": -0.14},
+    pelvis_up=0.885, pelvis_dip=0.032, sway=0.018, low_at=1.5 / 26.0,
+    hips_yaw=7.0, spine_lean=-3.0, shoulder_twist=9.0, side_roll=2.0,
+    hand_x={"r": 0.29, "l": -0.28}, hand_fwd=(-0.02, 0.22),
+    hand_up=(0.885, 0.945), arm_lag=3)
+
+# How far in front of the straight line a gesturing hand travels, at mid-way.
+ARM_ARC = 0.24
+
+# The solver's own elbow pole (RigPoser: down, a little back and out), which a
+# gesture's pole is blended from rather than switched to.
+_DEFAULT_ELBOW = {"r": (0.16, -0.38, -0.91), "l": (-0.16, -0.38, -0.91)}
+
+
+def _smoother(t):
+    """Smootherstep: no velocity or acceleration at either end."""
+    t = min(max(t, 0.0), 1.0)
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 
 
 def _crowd_walk(variant=""):
     """Cody's walk to the ring: 1.2 m/s, working the building.
 
-    A brisker cycle than Roman's (26 frames, two 0.52 m steps, a shorter
-    double support) with the arms swinging free and the shoulders rolling
-    over the hips; four cycles (104 frames, 3.5 s). The plain walk only
-    looks about -- out to his left crowd and back, a glance to the right
-    -- and never lifts an arm: the gestures are their own clips
-    (CROWD_GESTURES), so each is seen once, not every cycle.
+    The gait is _heavy_gait() at CODY_GAIT -- the same continuous, eased
+    stride Roman's walk was rebuilt on (heel rise, Hermite swing, weight over
+    the planted foot, shoulders against the hips, a heel-to-toe roll the
+    right way round). The old _gait() swung the feet on a sin^0.55 arc that
+    left the mat with a snap: his knees jerked 16-17 deg/frame^2 every step,
+    three times Roman's worst.
+
+    Four cycles (104 frames, 3.5 s). The plain walk only looks about -- out
+    to his left crowd, hold, back, a look to the right -- and never lifts an
+    arm: the gestures are their own clips (CROWD_GESTURES), so each is seen
+    once, not every cycle. A gesture's arm goes up and down over 20 frames on
+    a smootherstep, with its elbow pole blended from the solver's own: the
+    old 8-frame ramp and a pole that switched on with the first frame of the
+    raise kicked the upper arm 24 deg/frame^2.
 
     Every variant starts and ends on the plain walk's frame 0, so the
     director can switch between them on any cycle boundary."""
-    cycle = _open_hands(_gait(
-        frames=26, fps=FPS, speed=1.2,
-        contacts={"r": (0, 15), "l": (13, 15)},
-        plant_up=0.104, lift_up=0.06,
-        foot_x={"r": 0.15, "l": -0.14},
-        pelvis_up=0.905, pelvis_dip=0.020,
-        hips_yaw=6.0, spine=(0.0, 7.0), head=(6, 0, 0),
-        hand_fwd=(-0.14, 0.16), hand_up=(0.90, 0.97),
-        hand_x={"r": 0.28, "l": -0.27}, elbow=None), curl=0.5)
+    raw = _heavy_gait(**CODY_GAIT)
+    cycle = _open_hands([(f, {k: v for k, v in pose.items() if not k.startswith("_")})
+                         for f, pose in raw], curl=0.45)
+    twist = {f: pose["_shoulder_yaw"] for f, pose in raw}
     g = CROWD_GESTURES[variant]
     if g is None:
-        # Broadcast (C-39 WHOA sheet 8-15 s): he never looks ahead for long.
-        looks = [(0, 0.0), (10, 0.0), (30, 34.0), (46, 34.0), (62, 0.0),
-                 (76, -22.0), (90, -22.0), (104, 0.0)]
+        # Broadcast (C-39 WHOA sheet 8-15 s; 2K26 1:03-1:06): he never looks
+        # ahead for long, and when he looks he stays a moment.
+        looks = [(0, 0.0), (8, 0.0), (30, 32.0), (50, 32.0), (66, 0.0),
+                 (80, -22.0), (92, -22.0), (104, 0.0)]
         arm = [(0, 0.0), (104, 0.0)]
     else:
         (a_in, a_out), yaw, _side, _t, _e, _f, _pt = g
-        looks = [(0, 0.0), (a_in - 4, 0.0), (a_in + 8, yaw), (a_out - 6, yaw),
-                 (min(a_out + 14, 100), 0.0), (104, 0.0)]
-        arm = [(0, 0.0), (a_in, 0.0), (a_in + 8, 1.0), (a_out - 8, 1.0),
-               (a_out, 0.0), (104, 0.0)]
+        looks = [(0, 0.0), (max(a_in - 8, 1), 0.0), (a_in + 12, yaw), (a_out - 8, yaw),
+                 (min(a_out + 18, 102), 0.0), (104, 0.0)]
+        arm = [(0, 0.0), (max(a_in - 6, 1), 0.0), (a_in + 14, 1.0), (a_out - 14, 1.0),
+               (min(a_out + 6, 100), 0.0), (104, 0.0)]
 
-    def curve(keys, f):
+    def curve(keys, f, ease):
         i = 0
         while i + 1 < len(keys) - 1 and keys[i + 1][0] <= f:
             i += 1
         (f0, y0), (f1, y1) = keys[i], keys[i + 1]
-        t = min(max((f - f0) / float(f1 - f0), 0.0), 1.0)
-        return y0 + (y1 - y0) * t * t * (3.0 - 2.0 * t)
+        return y0 + (y1 - y0) * ease((f - f0) / float(f1 - f0))
     out = []
     for f in range(104 + 1):
         base = cycle[f % 26][1]
-        yaw = curve(looks, f)
-        up = curve(arm, f)
+        yaw = curve(looks, f, _smoother)
+        up = curve(arm, f, _smoother)
         sp = base["spine"]
-        # A yell is chin up and chest out to that side.
-        pose_f = dict(base, head=(6.0 + 8.0 * up, yaw * 0.7, 0.0),
+        # The gaze stays put while the shoulders swing (the head takes back
+        # most of the chest's turn); a yell is chin up and chest out to that
+        # side.
+        steady = -twist[f % 26] * 0.8
+        pose_f = dict(base, head=(-2.0 + 8.0 * up, yaw * 0.7 + steady, 0.0),
                       spine=(sp[0] - 4.0 * up, sp[1] + yaw * 0.3, sp[2]))
         if g is not None and up > 0.0:
             side, target, elbow, fist, point = g[2], g[3], g[4], g[5], g[6]
             hx, hf, hu = base["hand_" + side]
             # The hand still rides the gait a little: a man walking with a
             # fist up does not hold it dead still.
-            bob = base["pelvis"][2] - 0.905
+            bob = base["pelvis"][2] - CODY_GAIT["pelvis_up"]
+            # On the way up and down the hand travels in front of him, not
+            # straight through the shoulder: a straight line passed within
+            # 0.3 m of the shoulder joint, where the elbow's plane flipped.
+            arc = ARM_ARC * math.sin(math.pi * up)
             pose_f["hand_" + side] = (hx + (target[0] - hx) * up,
-                                      hf + (target[1] - hf) * up,
+                                      hf + (target[1] - hf) * up + arc,
                                       hu + (target[2] + bob - hu) * up)
-            pose_f["elbow_" + side] = elbow
-            pose_f["fist_" + side] = 0.5 + (fist - 0.5) * up
+            d = _DEFAULT_ELBOW[side]
+            pose_f["elbow_" + side] = tuple(d[i] + (elbow[i] - d[i]) * up for i in range(3))
+            pose_f["fist_" + side] = 0.45 + (fist - 0.45) * up
             if point and up > 0.5:
                 pose_f["point_" + side] = True
-        out.append((f, pose_f))
+        # The shoulder follows from where his turning chest carries it
+        # (RigPoser clav_carry), so an arm coming down does not jump.
+        pose_f["clav_carry"] = True
+        out.append((f, P(**pose_f)))
     return out
 
 

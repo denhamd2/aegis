@@ -5,13 +5,18 @@ extends Node
 ## a held pose, the "stop motion" the owner saw on a 120 Hz Mac.
 ##
 ##   godot4 --headless --path game --fixed-fps 120 tools/probe/motion_cadence.tscn
-##   add `-- --rough` to measure with the smoothing turned off, for comparison.
+##   add `-- --rough` to measure with the smoothing turned off, for comparison,
+##   and `-- --who cody` to measure Cody's walk instead.
 
 const FRAMES := 240
 
 
 func _ready() -> void:
-	var rough := "--rough" in OS.get_cmdline_user_args()
+	var args := OS.get_cmdline_user_args()
+	var rough := "--rough" in args
+	var who := "roman"
+	if "--who" in args and args.find("--who") + 1 < args.size():
+		who = args[args.find("--who") + 1]
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	var pair := Roster.pair_from_spec("")
 	TitleScreen.configure_match(scene, pair[0], pair[1], 3)
@@ -22,11 +27,12 @@ func _ready() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var roman: WrestlerController = null
 	for w: WrestlerController in [scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]:
-		if w.entrance_style == "roman":
+		if w.entrance_style == who:
 			roman = w
 	for i in director._beats.size():
 		var bt: Dictionary = director._beats[i]
-		if bt.get("who") == roman and bt.get("kind") == "walk" and bt.get("shot", "") == "steadicam_low":
+		if bt.get("who") == roman and bt.get("kind") == "walk" and bt.get("shot", "") in ["steadicam_low", "steadicam_front"] \
+				and bt.get("path", [Vector3.ZERO])[0].z > ArenaBuilder.STAGE_FRONT:
 			roman.visible = true
 			roman.global_position = bt["path"][0]
 			director._beat = i
@@ -56,6 +62,6 @@ func _ready() -> void:
 			held_root += 1
 		last_hand = h
 		last_root = root
-	print("MOTION_CADENCE rough=%s frames=%d held_hand=%d held_root=%d" % [
-			rough, FRAMES, held_hand, held_root])
+	print("MOTION_CADENCE who=%s rough=%s frames=%d held_hand=%d held_root=%d" % [
+			who, rough, FRAMES, held_hand, held_root])
 	get_tree().quit()

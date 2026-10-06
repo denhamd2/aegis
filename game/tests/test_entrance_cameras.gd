@@ -45,10 +45,12 @@ func test_every_shot_a_beat_uses_can_be_framed() -> void:
 func test_the_walk_cuts_follow_from_behind_as_2k26_does() -> void:
 	var cody := EntranceDirector.CODY_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
 	var roman := EntranceDirector.ROMAN_WALK_SHOTS.map(func(s: Array) -> String: return s[0])
-	assert_array(cody).contains(["steadicam_front", "over_shoulder", "barricade_track"])
+	assert_array(cody).contains(["steadicam_front", "over_shoulder", "face_walk",
+			"barricade_track"])
 	assert_array(roman).contains(["steadicam_front", "steadicam_low", "face_walk", "over_shoulder"])
 	# Never the shots that framed him small and dark (roman_entrance_aaa_plan.md).
 	assert_array(roman).not_contains(["ramp_side_high", "arena_high"])
+	assert_array(cody).not_contains(["ramp_side_high", "arena_high"])
 
 
 func test_the_walk_key_rides_ahead_and_above_him() -> void:
