@@ -31,6 +31,9 @@ extends Node
 ## Between strikes on a man trapped in a corner (Phase 4, position): he is
 ## worked over while he hangs there, not sized up.
 @export var corner_strike_cooldown_ticks: int = 18
+## Chance, each time he would strike a man hanging in a corner, that he runs
+## in with his corner move instead (when he has one).
+const CORNER_MOVE_CHANCE := 0.35
 ## How far away the AI stops walking in and charges instead.
 ##
 ## A STARTING VALUE, not a searched minimum. Its justification is the ring's
@@ -617,6 +620,12 @@ func _poll_input() -> Dictionary:
 		elif wants_tie_up:
 			input["grapple"] = true
 		elif _cooldown <= 0 and distance <= reach and not is_reading():
+			# Hanging in the corner, with a corner move to hand: sometimes
+			# the flurry gives way to the run-in instead of another blow.
+			if cornered and controller.corner_move != null \
+					and _chain_rng().randf() < CORNER_MOVE_CHANCE \
+					and controller.try_corner_spear():
+				return input
 			input["strike"] = true
 			# Fired up, he does not wait between shots: the comeback is a
 			# flurry, and the other man is staggered for most of it.

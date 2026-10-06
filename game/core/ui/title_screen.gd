@@ -462,6 +462,8 @@ static func configure_match(scene: Node, player: Roster.Entry,
 				"running":
 					wrestler.running_attack_move = moves[0]
 					wrestler.running_attack_move_pool = rest
+				"corner":
+					wrestler.corner_move = moves[0]
 				"submission":
 					wrestler.submission_move = moves[0]
 				"dive":

@@ -207,6 +207,9 @@ var _own_signature_thrown: bool = false
 ## Extra running attacks alongside running_attack_move (double-leg
 ## takedown). Same seeded draw as the tiers, so replays still match.
 @export var running_attack_move_pool: Array[MoveDef] = []
+## Thrown only at a man trapped in a corner (Roman's corner Spear). Not part
+## of any draw: try_corner_spear() is the one way in.
+@export var corner_move: MoveDef
 ## His own submission hold, if he has one (Cody's Figure-Four; Roster's
 ## "submission" tier). MatchReferee has him take it once a match on a man he
 ## has knocked down mid-match -- see _check_for_downed_opponent_action().
@@ -1894,6 +1897,24 @@ func _maybe_start_running_attack(input: Dictionary) -> void:
 		_set_state_clip(WrestlerFSM.State.RUNNING_ATTACK,
 				StrikeRecipes.clip(String(move.animation_pair_id)) if move else "")
 		_start_move(WrestlerFSM.State.RUNNING_ATTACK, move)
+
+## The corner move, if he has one and the other man is hanging in a corner and
+## he is free to run at him. The man is brought out of the trap first
+## (STUNNED -> IDLE is legal; STUNNED -> GRAPPLE_HOLD is not), then both go
+## through the same paired path as any running attack. Returns whether it
+## started.
+func try_corner_spear() -> bool:
+	if corner_move == null or opponent == null or grapple_rig == null:
+		return false
+	if not opponent.is_corner_trapped():
+		return false
+	if not RUNNING_PAIRED_TARGET_STATES.has(fsm.current_state):
+		return false
+	if not PairedRecipes.RECIPES.has(String(corner_move.animation_pair_id)):
+		return false
+	opponent.fsm.transition_to(WrestlerFSM.State.IDLE)
+	_begin_running_paired(corner_move)
+	return true
 
 ## States a man can be run into a paired move from: on his feet and not
 ## already committed to something of his own.

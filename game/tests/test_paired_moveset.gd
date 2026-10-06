@@ -51,7 +51,7 @@ const SCOPED_SIGNATURE := 6
 const SCOPED_FINISHER := 2
 ## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
 ## paired move so the victim's half is keyed against the hit.
-const SCOPED_RUNNING := 26
+const SCOPED_RUNNING := 27
 ## What match.tscn's shared pool hands out: Roman's Drive-By is on his roster only.
 const SHARED_RUNNING_POOL := 25
 ## Chain wrestling's links (Phase 4): headlock, wristlock, waistlock.

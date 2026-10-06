@@ -61,6 +61,7 @@ const MOVES := {
 	"signature_pedigree": "wrist",
 	"grapple_guillotine": "facelock",
 	"running_drive_by": "none",
+	"running_corner_spear": "none",
 	"running_fallaway_moonsault_slam": "legs",
 	# The wrist-clutch.
 	"finisher_cross_rhodes": "wrist",
