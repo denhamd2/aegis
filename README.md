@@ -8889,3 +8889,12 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
 - **Ring.** Reviewed against `gauntlet/refs/ring.md`: the ring already has
   branded pads, rope clamps, the padded apron roll, printed skirt, mat wear and
   rope shadows, and the reference has plain ropes, so no rope tape was added.
+- **Ring-entry leg snaps.** `Rope_Step_Through` and `Rope_Step_Through_Apron`
+  had the lead foot above the hip and knee poles parallel to the leg, so the
+  thigh flipped up to 170 degrees in one frame. The lead foot now clears the
+  middle rope at hip height, the trail foot passes between the ropes, and the
+  knee poles are not parallel to the leg. Single-key limb flips 92 -> 73
+  (ratchet in `test_body_deformation_gate.gd`); arms in the duck, the Springboard
+  DK and Roll_Out_Ropes are what remain.
+- **Checked on frames:** Roman's first-pyro walkout (he steps out as the burst
+  fires, on the very wide) and Aubrey stepping clear after the stare-down.
