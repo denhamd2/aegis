@@ -353,6 +353,27 @@ def _open_hands(frames, curl=0.3):
 HEEL_RISE = 0.045
 
 
+# The foot's roll through a step, for _heavy_gait. `ankle` pitch is an
+# armature-space turn of the rest foot, + lifting the toes. The shared
+# HEEL_STRIKE_PITCH / TOE_OFF_PITCH run the other way round from their names
+# (+24 at "toe-off" lifts the toes), which only showed once the heel rose
+# with it: the owner saw Roman's back boot bent the wrong way.
+ROLL_HEEL_STRIKE = 8.0
+ROLL_TOE_OFF = -14.0
+
+
+def _roll_stance(k):
+    """Toes up at heel strike, flat by a fifth of the stance, flat until
+    half way, then onto the toes as the heel lifts (HEEL_RISE)."""
+    if k < 0.2:
+        t = k / 0.2
+        return ROLL_HEEL_STRIKE * (1.0 - t * t * (3.0 - 2.0 * t))
+    if k < 0.5:
+        return 0.0
+    t = (k - 0.5) / 0.5
+    return ROLL_TOE_OFF * t * t * (3.0 - 2.0 * t)
+
+
 def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                 pelvis_up, pelvis_dip, sway, hips_yaw, spine_lean, shoulder_twist,
                 side_roll, hand_x, hand_fwd, hand_up, arm_lag):
@@ -398,9 +419,7 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                 heel = HEEL_RISE * k * k * (3.0 - 2.0 * k)
                 over["foot_%s" % side] = (
                     foot_x[side], half - (rel / float(fps)) * speed, plant_up + heel)
-                over["ankle_%s" % side] = (
-                    HEEL_STRIKE_PITCH + (TOE_OFF_PITCH - HEEL_STRIKE_PITCH)
-                    * (rel / float(contact)), 0.0, 0.0)
+                over["ankle_%s" % side] = (_roll_stance(rel / float(contact)), 0.0, 0.0)
             else:
                 u = (rel - contact) / float(swing_frames)
                 h00 = 2 * u ** 3 - 3 * u ** 2 + 1
@@ -413,8 +432,7 @@ def _heavy_gait(frames, fps, speed, contact, plant_up, lift_up, foot_x,
                     foot_x[side], fwd, plant_up + lift_up * math.sin(math.pi * u) ** 2
                     + HEEL_RISE * max(0.0, 1.0 - u / 0.4) ** 2 * (1.0 + 2.0 * min(u / 0.4, 1.0)))
                 over["ankle_%s" % side] = (
-                    TOE_OFF_PITCH + (HEEL_STRIKE_PITCH - TOE_OFF_PITCH) * eased,
-                    0.0, 0.0)
+                    ROLL_TOE_OFF + (ROLL_HEEL_STRIKE - ROLL_TOE_OFF) * eased, 0.0, 0.0)
         # Low a few frames after each heel strike, high mid-stance.
         dip = 0.5 - 0.5 * math.cos(4.0 * math.pi * (phase - 0.06))
         # Over the planted foot: right (+x) while the right is down.
