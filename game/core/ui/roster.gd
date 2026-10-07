@@ -188,6 +188,13 @@ static func entries() -> Array:
 				M + "running_drive_by.tres"],
 		# From the corner: only thrown at a man hanging in one.
 		"corner": [M + "running_corner_spear.tres"],
+		# And at a man hanging in the corner, the lariat over and over.
+		"corner_strike": [M + "strike_corner_clothesline.tres"],
+		# From the mat: sweeps the legs of a man standing over him (PossumSpot).
+		"possum": [M + "possum_sweep.tres"],
+		# Beside the Spear: the Superman Punch into it, his 2K26 "super"
+		# (gauntlet/refs/moveset_audit_2k26.md).
+		"finisher": [M + "finisher_superman_spear.tres"],
 	}
 	# Cody's own moveset (gauntlet/refs/cody_moveset.md): the moves he hits in
 	# nearly every match, in place of the shared draw.
@@ -200,7 +207,12 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
-		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_disaster_kick.tres"],
+		# Beside the Cross Rhodes: the 2K26 finish, set up from behind.
+		"finisher": [M + "finisher_cross_rhodes_behind.tres"],
+		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_disaster_kick.tres",
+				M + "dive_springboard_cutter.tres"],
+		# Off the top onto a man down mid-ring (TopRopeSpot), as in 2K26.
+		"top_rope": [M + "dive_moonsault.tres"],
 	}
 	return list
 

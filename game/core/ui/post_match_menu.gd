@@ -3,12 +3,21 @@ extends CanvasLayer
 ## What comes after the rating: rematch, change wrestlers, back to the title,
 ## or quit (desktop). Shown by MatchSetup when PostMatch finishes; same face,
 ## colours and controls as the title screen (ui_up/ui_down/ui_accept, mouse).
+##
+## The same menu is the PAUSE menu (`pause_mode`, MatchSetup on Escape): the
+## match stops, and the choice is resume, restart the match from the bell,
+## the title screen, or quit (desktop). Escape again resumes.
 
 const TITLE_SCENE := "res://scenes/title.tscn"
 const REMATCH := "REMATCH"
 const CHANGE := "CHANGE WRESTLERS"
 const TITLE := "TITLE SCREEN"
 const QUIT := "QUIT"
+const RESUME := "RESUME"
+const RESTART := "RESTART MATCH"
+
+## Shown over a match in progress: the tree is paused while it is up.
+var pause_mode := false
 
 var options: Array[String] = []
 var index := 0
@@ -17,7 +26,13 @@ var _view: _Panel
 
 func _ready() -> void:
 	layer = 20
-	options = [REMATCH, CHANGE, TITLE]
+	if pause_mode:
+		# Runs while the match it paused does not.
+		process_mode = Node.PROCESS_MODE_ALWAYS
+		get_tree().paused = true
+		options = [RESUME, RESTART, TITLE]
+	else:
+		options = [REMATCH, CHANGE, TITLE]
 	if not OS.has_feature("web"):
 		options.append(QUIT)
 	_view = _Panel.new()
@@ -26,6 +41,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if pause_mode and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		choose(RESUME)
+		return
 	if event.is_action_pressed("ui_down"):
 		index = wrapi(index + 1, 0, options.size())
 	elif event.is_action_pressed("ui_up"):
@@ -40,7 +59,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func choose(option: String) -> void:
 	var tree := get_tree()
+	# Never leave the next scene paused.
+	if pause_mode:
+		tree.paused = false
 	match option:
+		RESUME:
+			pass
+		RESTART:
+			# The same two men from the bell -- no entrances a second time.
+			if not TitleScreen.rematch(tree, false):
+				tree.reload_current_scene()
 		REMATCH:
 			if not TitleScreen.rematch(tree):
 				tree.change_scene_to_file(TITLE_SCENE)

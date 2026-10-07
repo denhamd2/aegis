@@ -9033,3 +9033,36 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
 - **Camera:** shakes only on big blows.
 - Tests: `test_selling.gd`, `test_inertializer` (between-tick drawing), and
   `test_hit_flinch_and_life` (only the biggest blows stop the picture).
+
+## Round: the five 2K26 moves, the face-off camera, the pause menu
+
+- **Superman Punch into the Spear** (`finisher_superman_spear`, beside Roman's
+  Spear).
+  - It is stitched from the two authored moves: the punch lands, the man
+    staggers, Roman backs into his crouch, and then the Spear.
+  - The root fit is composed from the two moves' own fits. The fit tool's
+    refit of the combo drifted by up to 61 cm, and it refits every move, so
+    only the new moves' entries were merged in.
+- **Cross Rhodes from behind** (`finisher_cross_rhodes_behind`, beside the
+  Cross Rhodes): Cody circles round the rocked man, hooks the head from
+  behind, and the drop follows. Both finishers pass PairClearance.
+- **Roman's corner clotheslines** (`strike_corner_clothesline`,
+  `WrestlerController.corner_strike_move`): this is his strike at a man
+  trapped in the corner.
+- **Cody's top-rope moonsault** (`TopRopeSpot`). He climbs (Corner_Climb), steps
+  onto the top rope with his arms out for balance (Top_Rope_Step), flips onto
+  the man (Moonsault), and the referee's cover follows. It plays once a match,
+  on a man down where a corner suits the dive.
+- **The possum attack** (`PossumSpot`): Roman, down, sweeps the legs of the man
+  standing over him, and both go down. Once a match, AI only.
+- **Springboard Cody Cutter**: DiveSpot's other ending, on odd seeds.
+- **Face-off camera** (2K26 270-306 s):
+  - Two held shots in place of the 135 mm eye cuts and the 24 mm hero shot.
+  - The corner intros are now held waist-up mediums.
+  - A camera key lights the man in his corner.
+  - `motion_cadence -- --faceoff`: heads drawn on every frame.
+- **Pause.** Escape during a match pauses it: Resume, Restart Match (from the
+  bell), Title Screen (Quit on desktop). The post-match menu already offered
+  Rematch, Change Wrestlers, Title Screen and Quit.
+- Tests: `test_2k26_moves.gd`, `test_pause_menu.gd`, and the face-off shot
+  lengths in `test_entrance_cameras.gd`.

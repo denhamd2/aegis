@@ -196,6 +196,24 @@ const RECIPES := {
 	# recovery, never from a slower action phase.
 	"strike_kick_heavy": {"kind": "retime", "source": "Strike_Kick_Heavy",
 		"seconds": 0.950, "file": AUTHORED},
+	# DiveSpot's other ending, and the possum attack (PossumSpot).
+	"springboard_cutter_attacker": {"kind": "retime", "source": "Springboard_Cutter_Attacker",
+		"seconds": 1.600, "file": AUTHORED},
+	"springboard_cutter_defender": {"kind": "retime", "source": "Springboard_Cutter_Defender",
+		"seconds": 1.400, "file": AUTHORED},
+	"possum_sweep": {"kind": "retime", "source": "Possum_Sweep",
+		"seconds": 1.000, "file": AUTHORED},
+	"swept_legs": {"kind": "retime", "source": "Swept_Legs",
+		"seconds": 1.400, "file": AUTHORED},
+	# Cody's top-rope moonsault (core/match/top_rope_spot.gd).
+	"top_rope_step": {"kind": "retime", "source": "Top_Rope_Step",
+		"seconds": 2.000, "file": AUTHORED},
+	"moonsault": {"kind": "retime", "source": "Moonsault",
+		"seconds": 1.200, "file": AUTHORED},
+	# Roman's corner clothesline (wrestling_clips.py "Strike_Corner_Clothesline"):
+	# 24 frames, contact on frame 9 = tick 18.
+	"strike_corner_clothesline": {"kind": "retime", "source": "Strike_Corner_Clothesline",
+		"seconds": 0.800, "file": AUTHORED},
 	# Roman's body shot (wrestling_clips.py "Strike_Gut_Punch"): 22 frames,
 	# contact on frame 7 = tick 14, strike_gut_punch.tres's startup.
 	"strike_gut_punch": {"kind": "retime", "source": "Strike_Gut_Punch",

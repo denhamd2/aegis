@@ -49,6 +49,7 @@ const MOVES := {
 	"grapple_vertical_suplex": "neck",
 	# Round the waist.
 	"finisher_spear": "waist",
+	"finisher_superman_spear": "waist",
 	"running_spear": "waist",
 	"signature_backbreaker": "waist",
 	"running_float_over_liger_bomb": "waist",
@@ -65,6 +66,9 @@ const MOVES := {
 	"running_fallaway_moonsault_slam": "legs",
 	# The wrist-clutch.
 	"finisher_cross_rhodes": "wrist",
+	# From behind: his hands go round the head from behind (the neck family's
+	# behind side).
+	"finisher_cross_rhodes_behind": "neck",
 	# Strikes, kicks and dives: nothing to hold.
 	"signature_superman_punch": "none",
 	"signature_disaster_kick": "none",

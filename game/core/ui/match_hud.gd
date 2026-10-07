@@ -104,10 +104,19 @@ static func clock_text(seconds: float) -> String:
 
 ## The on-screen name of a move worth announcing, or "" for one that is not.
 ## "power_samoan_drop" -> "SAMOAN DROP".
+## Variants named for what they are on screen, not their file.
+const TITLES := {
+	"finisher_superman_spear": "SUPERMAN PUNCH, SPEAR",
+	"finisher_cross_rhodes_behind": "CROSS RHODES",
+}
+
+
 static func move_title(move: MoveDef) -> String:
 	if move == null:
 		return ""
 	var id := String(move.animation_pair_id)
+	if TITLES.has(id):
+		return TITLES[id]
 	for prefix: String in POPUP_PREFIXES:
 		if id.begins_with(prefix):
 			return id.trim_prefix(prefix).replace("_", " ").to_upper()

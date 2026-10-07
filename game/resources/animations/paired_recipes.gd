@@ -529,6 +529,38 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.10,
 	},
+	# Roman's Superman Punch into the Spear (wrestling_clips.py
+	# "Superman_Spear_*"): the two authored moves stitched into one.
+	"finisher_superman_spear": {
+		"authored": {"attacker": "Superman_Spear_Attacker", "defender": "Superman_Spear_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 1.40, "clip": "Jump_Start", "at": 0.30},
+			{"t": 2.80, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 2.10, "clip": "Death01", "at": 0.40},
+			{"t": 2.80, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.10,
+	},
+	# Cody's Cross Rhodes from behind (wrestling_clips.py
+	# "Cross_Rhodes_Behind_*"), the 2K26 finish.
+	"finisher_cross_rhodes_behind": {
+		"authored": {"attacker": "Cross_Rhodes_Behind_Attacker", "defender": "Cross_Rhodes_Behind_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 1.20, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 2.00, "clip": "Idle", "at": 0.00},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 1.27, "clip": "Death01", "at": 0.90},
+			{"t": 2.00, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.10,
+	},
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
 	"finisher_cross_rhodes": {
 		"authored": {"attacker": "Cross_Rhodes_Attacker", "defender": "Cross_Rhodes_Defender"},
@@ -1212,6 +1244,61 @@ const TRAJECTORIES := {
 					[0.63, -0.52, 0.00, 0.00], [0.70, -0.62, 0.00, 0.00],
 					[0.93, -1.05, 0.00, 0.00], [1.40, -1.05, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.400, 0.00, -90.0, 0.00]],
+		},
+	},
+
+	# Roman's Superman Punch into the Spear: the Superman Punch's keys to the
+	# punch landing, short (0.15 m: landing where the Superman Punch lands
+	# put him on the man's feet, PairClearance 9.5 cm), the victim rocked back
+	# to -0.72, Roman backing off to 1.30 m, then the Spear's keys from its
+	# crouch, shifted 1.4 s (SUPERMAN_SPEAR_SHIFT) and 0.18 m to keep its
+	# spacing.
+	"finisher_superman_spear": {
+		"length": 2.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.90, 0.00, 0.00],
+					[0.47, 1.30, 0.00, 0.00], [0.63, 0.45, 0.00, 0.00],
+					[0.87, 0.15, 0.00, 0.00], [0.97, 0.15, 0.00, 0.00],
+					[1.13, 0.35, 0.00, 0.00], [1.63, 1.15, 0.00, 0.00],
+					[1.80, 1.30, 0.00, 0.00], [1.93, 1.30, 0.00, 0.00],
+					[2.03, 0.12, 0.00, 0.00], [2.10, -0.18, 0.00, 0.00],
+					[2.23, -0.53, 0.00, 0.00], [2.80, -0.58, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.80, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.55, 0.00, 0.00],
+					[0.53, -0.45, 0.00, 0.00], [0.87, -0.48, 0.00, 0.00],
+					[1.07, -0.72, 0.00, 0.00], [2.03, -0.70, 0.00, 0.00],
+					[2.10, -0.80, 0.00, 0.00], [2.33, -1.23, 0.00, 0.00],
+					[2.80, -1.23, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.80, 0.00, -90.0, 0.00]],
+		},
+	},
+
+	# Cody's Cross Rhodes from behind. The victim never turns (yaw -90
+	# throughout, rocked a step back); Cody circles round him on the +Z side
+	# (yaw 90 -> 0 -> -90, always facing him) to 0.44 m behind him by t1.0 --
+	# the spacing the Cross Rhodes hooks the head at -- and from there it is
+	# the Cross Rhodes' keys mirrored along X and shifted 0.4 s
+	# (CROSS_BEHIND_SHIFT): Cody leaps forward 1.31 m spinning a half-turn
+	# the same way round, the victim is driven 0.5 m forward.
+	"finisher_cross_rhodes_behind": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.25, 0.25, 0.00, 0.45],
+					[0.50, -0.25, 0.00, 0.62], [0.75, -0.75, 0.00, 0.32],
+					[1.00, -0.84, 0.00, 0.00], [1.13, -0.18, 0.00, 0.00],
+					[1.27, 0.47, 0.00, 0.00], [2.00, 0.47, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.25, 0.0, 60.0, 0.0],
+					[0.50, 0.0, 0.0, 0.0], [0.75, 0.0, -50.0, 0.0],
+					[1.00, 0.0, -90.0, 0.0], [1.13, 0.0, -180.0, 0.0],
+					[1.27, 0.0, -270.0, 0.0], [2.00, 0.0, -270.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.48, 0.00, 0.00],
+					[1.00, -0.40, 0.00, 0.00], [1.27, 0.10, 0.00, 0.00],
+					[2.00, 0.10, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
 		},
 	},
 

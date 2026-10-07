@@ -168,6 +168,27 @@ var audio: MatchAudio = null
 var referee_actor: RefereeActor = null
 var replay_buffer: ReplayBuffer = null
 var post_match: PostMatch = null
+
+
+## Escape pauses the match (PostMatchMenu in pause_mode): resume, restart the
+## match, or the title screen. Not once the match is over -- the post-match
+## menu has those choices -- and not while the instant replay holds the tree.
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if post_match != null or get_tree().paused \
+			or get_node_or_null("PauseMenu") or get_node_or_null("PostMatchMenu"):
+		return
+	get_viewport().set_input_as_handled()
+	open_pause_menu()
+
+
+func open_pause_menu() -> PostMatchMenu:
+	var menu := PostMatchMenu.new()
+	menu.name = "PauseMenu"
+	menu.pause_mode = true
+	add_child(menu)
+	return menu
 var instant_replay: InstantReplay = null
 var _stats := {}
 var _live_at_ms := 0

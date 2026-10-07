@@ -40,3 +40,9 @@
 3. **Roman's corner clotheslines.** The corner-trapped state and flurry exist; this swaps Roman's corner punches for running clotheslines.
 4. **Possum attack.** A downed man's leg sweep when the other stands over him, on a reversal press.
 5. **Superman Punch → Spear** and the springboard Cutter.
+
+## Built (this round)
+
+All five, plus the springboard Cutter. See the README round "the five 2K26 moves".
+Each is rendered and checked by eye; the two finishers pass PairClearance, and
+the set pieces play through in `test_2k26_moves.gd`.
