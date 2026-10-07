@@ -234,38 +234,7 @@ enum Mode { HARD_CAM, RINGSIDE, FINISHER_CUT, THREE_COUNT_CUT, ENTRANCE, FINISHE
 ## the pair inside GAMEPLAY_DEADZONE, and when they have turned further it PANS
 ## round to the new side-on bearing at no more than GAMEPLAY_PAN_RATE -- a
 ## camera operator walking round the apron, not a cut and not a swing.
-## THE 2K26 HARD CAM (gauntlet/refs/match_engine_2k26.md, section 4). The
-## owner: "In wwe2k it stays as hard cam, but ours seems to be dynamic" -- ours
-## walked round the ring to stay side-on to the pair. 2K26's never leaves its
-## side: it sits square to the ring on the hard-cam side, slides along it with
-## the action and dollies in and out on one long lens. Fitted off three of its
-## frames in this ring's own units (tools/refs/fit_hard_cam.py, each to ~1 px):
-## a 17 degree vertical lens, 1.36-1.58 m above the mat, 7.4-9.3 m from the ring
-## centre, tilted 4.7 degrees down.
-##
-## Two more of its in-match angles, off the same match (sheets at 680-717 s):
-## when a man is on the apron, on the buckles or out on the floor it CRANES UP
-## on the same side and looks down at him; when the two are spread across the
-## ring it rises to a HIGH WIDE of the whole ring. Those two are read off the
-## sheets, not fitted: their heights and lens are estimates.
-const GAMEPLAY_HEIGHT := 1.45
-const GAMEPLAY_FOV := 17.0
-const GAMEPLAY_TILT := 0.082          # 4.7 degrees down
-const GAMEPLAY_NEAR := 7.4            # metres from the ring centre, pair together
-const GAMEPLAY_FAR := 9.3             # ... and apart
-const GAMEPLAY_SIDE := Vector3(-1.0, 0.0, 0.0)   # the hard-cam side, square-on
-const GAMEPLAY_SLIDE := 2.8           # how far along its side it slides each way
-const GAMEPLAY_FOLLOW := 0.5          # share of the pair's depth it dollies with
-const GAMEPLAY_CRANE_HEIGHT := 3.4
-const GAMEPLAY_WIDE_HEIGHT := 4.6
-const GAMEPLAY_WIDE_DISTANCE := 10.5
-const GAMEPLAY_WIDE_FOV := 26.0
-## Spread wider than this and it goes to the high wide.
-const GAMEPLAY_WIDE_FROM := 4.5
-## How fast it eases between the three heights and lenses (per second).
-const GAMEPLAY_BEAT_SPEED := 1.6
-var _beat_blend := Vector2.ZERO       # x: crane, y: high wide, eased
-var _gameplay_fov := GAMEPLAY_FOV
+const GAMEPLAY_HEIGHT := 1.65
 const GAMEPLAY_DEADZONE := 0.6    # 34 degrees: a small turn of the pair does not move it
 const GAMEPLAY_SETTLE := 0.08     # once panning, it pans until this close to side-on
 const GAMEPLAY_PAN_RATE := 0.35   # rad/s: 20 degrees a second at most
@@ -462,9 +431,12 @@ func _physics_process(delta: float) -> void:
 			# A low cut looks *up* the bodies rather than down at the mat, so
 			# the aim point drops with the camera.
 			aim = 0.45
+		if gameplay:
+			eye_height = GAMEPLAY_HEIGHT
+			aim = 0.85
 		target_position = midpoint + to_camera + Vector3.UP * eye_height
 		if gameplay:
-			target_position = _hard_cam_target(midpoint, delta)
+			target_position = _outside_ring(target_position, bearing)
 
 	if mode == _previous_mode and not _snap_next:
 		var speed := follow_speed if mode == Mode.RINGSIDE else cut_speed
@@ -478,7 +450,6 @@ func _physics_process(delta: float) -> void:
 		global_position = target_position
 	var look := midpoint + Vector3.UP * aim
 	if mode == Mode.RINGSIDE and CameraSettings.gameplay():
-		look = _hard_cam_look(midpoint)
 		# The lens follows the pair with a lag, so it frames the action rather
 		# than locking onto it frame by frame.
 		if _look == Vector3.INF or mode != _previous_mode or _snap_next:
@@ -594,8 +565,6 @@ func shot_fov() -> float:
 		Mode.THREE_COUNT_CUT:
 			return three_count_fov
 		_:
-			if mode == Mode.RINGSIDE and CameraSettings.gameplay():
-				return _gameplay_fov
 			return ringside_fov
 
 ## How long the current shot holds before the clock cuts away from it.
@@ -1007,42 +976,6 @@ func _gameplay_bearing(delta: float) -> Vector3:
 
 ## Whether a ring post stands between a camera `distance` out along
 ## `bearing` and the point `mid` (in plan).
-## Where the hard cam stands: square-on from its side, slid along it to the
-## pair, dollied with their separation, raised for the crane and the high wide.
-func _hard_cam_target(mid: Vector3, delta: float) -> Vector3:
-	var a := wrestler_a.global_position
-	var b := wrestler_b.global_position
-	var separation := _flat(a - b).length()
-	var out := false
-	for p: Vector3 in [a, b]:
-		if absf(p.x) > 3.15 or absf(p.z) > 3.15 or p.y > 0.6:
-			out = true
-	var want := Vector2(1.0 if out else 0.0, 1.0 if separation > GAMEPLAY_WIDE_FROM else 0.0)
-	var k := 1.0 - exp(-GAMEPLAY_BEAT_SPEED * delta)
-	_beat_blend = _beat_blend.lerp(want, k)
-	var spread := clampf((separation - 0.8) / 2.5, 0.0, 1.0)
-	var distance := lerpf(GAMEPLAY_NEAR, GAMEPLAY_FAR, spread)
-	distance = lerpf(distance, GAMEPLAY_WIDE_DISTANCE, _beat_blend.y)
-	var height := GAMEPLAY_HEIGHT
-	height = lerpf(height, GAMEPLAY_CRANE_HEIGHT, _beat_blend.x)
-	height = lerpf(height, GAMEPLAY_WIDE_HEIGHT, _beat_blend.y)
-	_gameplay_fov = lerpf(GAMEPLAY_FOV, GAMEPLAY_WIDE_FOV, _beat_blend.y)
-	var along := Vector3(-GAMEPLAY_SIDE.z, 0.0, GAMEPLAY_SIDE.x)
-	var slide := clampf(mid.dot(along), -GAMEPLAY_SLIDE, GAMEPLAY_SLIDE)
-	var depth := mid.dot(-GAMEPLAY_SIDE) * GAMEPLAY_FOLLOW
-	return GAMEPLAY_SIDE * (distance - depth) + along * slide + Vector3.UP * height
-
-
-## What it looks at: square to the ring, tilted GAMEPLAY_TILT down. Craned or
-## wide, it turns down onto the pair instead.
-func _hard_cam_look(mid: Vector3) -> Vector3:
-	var forward := (-GAMEPLAY_SIDE * cos(GAMEPLAY_TILT) + Vector3.DOWN * sin(GAMEPLAY_TILT)).normalized()
-	var square := global_position + forward * 10.0
-	square.z = global_position.z + forward.z * 10.0
-	var onto := mid + Vector3.UP * 0.8
-	return square.lerp(onto, clampf(maxf(_beat_blend.x, _beat_blend.y), 0.0, 1.0))
-
-
 static func post_in_the_way(mid: Vector3, bearing: Vector3, distance: float) -> bool:
 	var a := Vector2(mid.x, mid.z)
 	var b := a + Vector2(bearing.x, bearing.z) * distance
