@@ -297,6 +297,7 @@ func _check_for_downed_opponent_action() -> void:
 			return
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
 				and defender._cover_eligible \
+				and wants_cover(defender) \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.global_position.distance_to(defender.global_position) <= COVER_RANGE \
 				and WrestlerController.is_beside_torso(defender, attacker.global_position):
@@ -353,6 +354,20 @@ func _check_for_downed_opponent_action() -> void:
 			_rope_side = _reachable_ropes(attacker, defender)
 			attacker.begin_pin(defender, _pin_seed())
 			return
+
+## Whether a man down is worth covering yet (match flow to 2K26,
+## gauntlet/refs/match_engine_2k26.md): 2K26's man in control works a man he
+## has put down with strikes -- stomps, a strut -- and covers after the big
+## moves. Ours covered every knockdown, so the match was strike, knockdown,
+## cover, kickout, over and over. Late in the match (MatchFlow's finish) any
+## knockdown is a cover; without a MatchFlow (the bare test scene) every one is.
+func wants_cover(defender: WrestlerController) -> bool:
+	if defender.knockdown_tier >= CombatSystem.Tier.POWER:
+		return true
+	if defender.flow == null:
+		return true
+	return String(defender.flow.phase()["name"]) == "finish"
+
 
 func _wants_dive(attacker: WrestlerController, defender: WrestlerController) -> bool:
 	return not attacker.dive_moves.is_empty() and not attacker._dive_used \
