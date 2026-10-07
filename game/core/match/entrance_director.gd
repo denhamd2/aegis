@@ -89,7 +89,7 @@ const FACEOFF_GAP := 0.75
 const FACEOFF_WALK_SPEED := 0.9
 ## Long enough for the stare-down's two held shots (FACEOFF_SEQ): the profile
 ## and the long over-the-shoulder.
-const FACEOFF_STARE_TICKS := 330
+const FACEOFF_STARE_TICKS := 660
 ## Back to the marks: the turn away, and the turn back at the end.
 const FACEOFF_TURN_TICKS := 30
 ## A beat on the marks, facing, before the bell.
@@ -105,11 +105,17 @@ const FACEOFF_CAM_FOV := 34.0
 ## thumbnails 0-2), in ticks: the match card over a high wide of the ring;
 ## the referee checking the man nearer her; then each man close in his
 ## corner, the one she checked last so she is out of his shot.
-const INTRO_CARD_TICKS := 216
-const INTRO_CHECK_TICKS := 200
-## Each man in his corner is a waist-up medium held about four seconds, the
+##
+## Every hold at least five seconds (the owner, after the two-shot stare
+## shipped: still "quick cut western style"). Measured with
+## tools/probe/cut_log.tscn, the run-up to the bell was seven shots in 24 s,
+## none longer than 4 s; 2K26's (270-306 s) is about 36 s with no shot under
+## about four.
+const INTRO_CARD_TICKS := 300
+const INTRO_CHECK_TICKS := 300
+## Each man in his corner is a waist-up medium held five and a half seconds, the
 ## camera drifting in (2K26 287-303 s), not a tight head shot cut at 2.5 s.
-const INTRO_CLOSE_TICKS := 240
+const INTRO_CLOSE_TICKS := 330
 const INTRO_CARD_AT := Vector3(-8.0, 4.4, 3.4)
 const INTRO_CARD_LOOK := Vector3(0.0, 0.9, 0.0)
 const INTRO_CARD_FOV := 40.0
@@ -2128,7 +2134,9 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 # F1 (the walk in) is "faceoff_side"; F7 (back to the wide as they part) is
 # "faceoff", the hard camera.
 ##  [ends at (s), shot]
-const FACEOFF_SEQ := [[2.6, "profile"], [99.0, "ots"]]
+const FACEOFF_SEQ := [[5.0, "profile"], [99.0, "ots"]]
+## When the profile two-shot hands over to the over-the-shoulder, seconds.
+const FACEOFF_PROFILE_END := 5.0
 const FACEOFF_OTS_FOV := 30.0     # ~70 mm: both heads, one in the foreground
 ## How far the over-the-shoulder drifts round the man it looks past, metres,
 ## over its whole hold.
@@ -2155,7 +2163,7 @@ func _faceoff_seq(delta: float) -> void:
 		side = -side
 	match shot:
 		"profile":
-			var e := smoothstep(0.0, 2.6, t)
+			var e := smoothstep(0.0, FACEOFF_PROFILE_END, t)
 			_camera.set_entrance_shot(mid + side * lerpf(FACEOFF_CAM_DISTANCE, 3.0, e)
 					+ Vector3.UP * FACEOFF_CAM_HEIGHT, mid + Vector3.UP * 1.5,
 					FACEOFF_CAM_FOV, cut, delta)
@@ -2166,8 +2174,8 @@ func _faceoff_seq(delta: float) -> void:
 			# face (2K26 270-306 s).
 			var near := hb
 			var far := ha
-			var hold := maxf(float(_beats[_beat]["ticks"]) / TPS - 2.6, 0.1)
-			var e := smoothstep(0.0, 1.0, clampf((t - 2.6) / hold, 0.0, 1.0))
+			var hold := maxf(float(_beats[_beat]["ticks"]) / TPS - FACEOFF_PROFILE_END, 0.1)
+			var e := smoothstep(0.0, 1.0, clampf((t - FACEOFF_PROFILE_END) / hold, 0.0, 1.0))
 			var back := _flat(near - far).normalized()
 			# Far enough back and off to the side that he is a shoulder and
 			# the back of a head in the corner of the frame, not a black

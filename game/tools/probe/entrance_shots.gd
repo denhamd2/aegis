@@ -96,6 +96,13 @@ func _ready() -> void:
 					w.global_position = bt["path"][0]
 				elif bt.get("on_mat", false) or _from_shot.begins_with("ring") or _from_shot.begins_with("corner"):
 					w.global_position = Vector3(-0.4, 0.0, -0.6)
+				# Dressed as he would be by now: the coat goes on at his
+				# first beat, which the jump skipped.
+				for k in i:
+					var earlier: Dictionary = director._beats[k]
+					if earlier.get("coat", false) and earlier.get("who") == w \
+							and not director._coats.has(w):
+						director._coats[w] = EntranceCoat.dress(w)
 				director._beat = i
 				director._start_beat()
 				break

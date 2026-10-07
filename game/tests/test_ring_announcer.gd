@@ -93,3 +93,24 @@ func test_the_crowd_goes_under_the_voice() -> void:
 		assert_str((p as AudioStreamPlayer).bus).is_equal(RingAnnouncer.UNDER_BUS)
 	assert_int(beds).is_greater_equal(6)
 	assert_int(AudioServer.get_bus_index(RingAnnouncer.UNDER_BUS)).is_greater(0)
+
+
+## The owner: the music went too low under Justin. The music keeps its level
+## (not on the ducked bus); he is lifted over it on his own limited bus.
+func test_justin_is_lifted_over_the_music_not_the_music_ducked() -> void:
+	var scene := _match("roman", "cody")
+	var voice := scene.find_child("Voice", true, false) as AudioStreamPlayer
+	assert_object(voice).is_not_null()
+	assert_str(voice.bus).is_equal(RingAnnouncer.VOICE_BUS)
+	var i := AudioServer.get_bus_index(RingAnnouncer.VOICE_BUS)
+	var lift := AudioServer.get_bus_effect(i, 0) as AudioEffectHardLimiter
+	assert_object(lift).is_not_null()
+	assert_float(lift.pre_gain_db).is_greater_equal(6.0)
+	assert_float(RingAnnouncer.DUCK_DB).is_greater_equal(-4.0)
+	var video := scene.find_children("*", "StageVideo", true, false)
+	assert_array(video).is_not_empty()
+	var sv: StageVideo = video[0]
+	sv._play_music({"music": RingAnnouncer.CLIPS["intro"]})
+	var music := sv.get_node("EntranceMusic") as AudioStreamPlayer
+	assert_str(music.bus).is_not_equal(RingAnnouncer.UNDER_BUS)
+	music.stop()

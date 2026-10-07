@@ -9,9 +9,13 @@ extends Node
 ## said as the card goes up. `name_called` reports the same moment off the
 ## audio clock, for anything that wants the voice itself.
 ##
-## Clear over the music and the crowd: everything routed through UNDER_BUS (the
-## entrance music, the crowd beds) comes down DUCK_DB while he speaks and back
-## up after, so the building stays audible underneath him.
+## Clear over the music and the crowd. The owner, after playing: the music
+## went too low under him -- keep it at its level and have Justin louder. So
+## the entrance music is not ducked at all; he is lifted instead, on his own
+## bus (VOICE_BUS) with VOICE_GAIN_DB of pre-gain into a hard limiter, so the
+## lift can't clip (the calls already peak at -1.1 dBFS). Only the crowd beds
+## (UNDER_BUS) dip, and only DUCK_DB, as a live crowd quietens for the
+## announcer. Master gets a limiter too, so voice + music summed stay clean.
 
 signal name_called(style: String)
 signal finished(style: String)
@@ -26,11 +30,17 @@ const CLIPS := {
 ## "reigns" 18.09-19.26; "cody" 7.26-8.01).
 const NAME_AT := {"roman": 16.98, "cody": 7.26}
 ## The calls are normalised to -12 LUFS; the entrance music runs to -11.9.
-const VOICE_DB := 1.0
-## The bus the music and the crowd go through, and how far it comes down
-## under the voice.
+## Lifted VOICE_GAIN_DB into the limiter: he sits about 6 dB over the music.
+const VOICE_DB := 0.0
+const VOICE_BUS := "Announcer"
+const VOICE_GAIN_DB := 7.0
+const VOICE_CEILING_DB := -1.0
+const MASTER_CEILING_DB := -0.3
+## The bus the crowd goes through, and how far it comes down under the voice.
+## The music is NOT on it (StageVideo._play_music): -9 dB on the music was
+## the owner's complaint.
 const UNDER_BUS := "UnderVoice"
-const DUCK_DB := -9.0
+const DUCK_DB := -4.0
 ## Seconds to duck and to come back up.
 const DUCK_IN := 0.25
 const DUCK_OUT := 0.8
@@ -41,8 +51,8 @@ var _named := false
 var _duck := 0.0
 
 
-## The bus to route music and crowd through so they sit under the voice;
-## made on first use, sending to Master.
+## The bus to route the crowd through so it sits under the voice; made on
+## first use, sending to Master.
 static func under_bus() -> String:
 	if AudioServer.get_bus_index(UNDER_BUS) < 0:
 		AudioServer.add_bus()
@@ -50,6 +60,29 @@ static func under_bus() -> String:
 		AudioServer.set_bus_name(i, UNDER_BUS)
 		AudioServer.set_bus_send(i, "Master")
 	return UNDER_BUS
+
+
+## His own bus: pre-gain into a hard limiter, then Master, which gets a
+## limiter of its own. Made on first use.
+static func voice_bus() -> String:
+	if AudioServer.get_bus_index(VOICE_BUS) < 0:
+		AudioServer.add_bus()
+		var i := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(i, VOICE_BUS)
+		AudioServer.set_bus_send(i, "Master")
+		var lift := AudioEffectHardLimiter.new()
+		lift.pre_gain_db = VOICE_GAIN_DB
+		lift.ceiling_db = VOICE_CEILING_DB
+		AudioServer.add_bus_effect(i, lift)
+	var master := AudioServer.get_bus_index("Master")
+	var guarded := false
+	for e in AudioServer.get_bus_effect_count(master):
+		guarded = guarded or AudioServer.get_bus_effect(master, e) is AudioEffectHardLimiter
+	if not guarded:
+		var guard := AudioEffectHardLimiter.new()
+		guard.ceiling_db = MASTER_CEILING_DB
+		AudioServer.add_bus_effect(master, guard)
+	return VOICE_BUS
 
 
 static func has_call(style: String) -> bool:
@@ -73,6 +106,7 @@ func _ready() -> void:
 	_player = AudioStreamPlayer.new()
 	_player.name = "Voice"
 	_player.volume_db = VOICE_DB
+	_player.bus = voice_bus()
 	add_child(_player)
 	_player.finished.connect(_on_finished)
 
