@@ -84,6 +84,9 @@ const HAIR_ROUGHNESS := 0.42
 
 
 func _ready() -> void:
+	# His arms, shoulders and chest to 2K26's build (BodyBulk), first, so
+	# everything after works on the finished mesh.
+	BodyBulk.apply(self, get_game_skeleton(), BodyBulk.CODY)
 	# Before the animations: they add the helpers' tracks if the bones exist.
 	HipHelpers.install(get_game_skeleton())
 	_install_animations()
@@ -104,8 +107,17 @@ const EYE_MATERIAL := "xmaterial_7d08cd4d239faf3"
 const EYE_PARALLAX := 4.0
 
 
+## The owner's 2K26 comparison: his eyes read as a startled, glowing blue
+## stare -- a bright white sclera all round a saturated iris. Real eyes sit
+## darker than paper white in shadowed sockets; this takes the whole eye down
+## to EYE_TONE, the sclera to a soft off-white and the blue with it.
+const EYE_TONE := Color(0.74, 0.74, 0.76)
+
+
 func _fix_eyes() -> void:
-	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("cody", EYE_PARALLAX))
+	var eye := EyeKit.eye_material("cody", EYE_PARALLAX)
+	eye.albedo_color = EYE_TONE
+	EyeKit.dress(self, EYE_MATERIAL, eye)
 
 
 func _add_hair() -> void:
