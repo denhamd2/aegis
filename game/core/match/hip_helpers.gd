@@ -20,6 +20,17 @@ extends RefCounted
 const SIDES := ["l", "r"]
 ## How far the helper turns, as a share of the thigh's swing out of rest.
 const SWING := 0.5
+## Past this much swing, which half of it the helper takes stops being
+## obvious and has to be read off the frame before (scaled_turn).
+##
+## Not tuned: it is the emptiest band a thigh visits. Over the 16,964 thigh
+## keys in wrestling_clips.glb the swing-from-rest spends 0.37% of its time
+## between 130 and 140 degrees -- the lowest of any band above 60, with the
+## traffic either side of it (14.7% at 30-40 going about a man's business,
+## 2.4% at 140-150 on his back with his legs up). A branch has to be chosen
+## somewhere, so it is chosen where the thigh almost never sits, and crossing
+## it costs almost nothing.
+const ANTIPODE_GATE := deg_to_rad(135.0)
 ## The share of a vertex's thigh weight that moves to the helper at the hip...
 const SHARE := 0.55
 ## ...fading out over this far below the hip joint, metres (the knee is 0.4).
@@ -150,6 +161,50 @@ static func _move_weight(bones: PackedInt32Array, weights: PackedFloat32Array,
 			weights[at + k] /= total
 
 
+## `share` of `delta`, read so that it follows on from `last` -- the share
+## taken at the frame before, or IDENTITY to start a track.
+##
+## WHY NOT Quaternion.IDENTITY.slerp(delta, share). Every rotation has two
+## readings: an angle about an axis, or 360 minus it about the opposite axis.
+## They are the same pose, and for a WHOLE turn it makes no difference -- but
+## a SHARE of them is two different poses, and 180 degrees apart at the worst
+## of it. slerp re-normalises to the shorter reading on every call and keeps
+## no memory of the last frame, so it picks whichever happens to be shorter
+## for that frame alone.
+##
+## A thigh crosses that line. Flat on his back with his legs over him a man
+## sits within a few degrees of 180 off his standing rest, and the clips cross
+## it rather than stopping at it: Getup_Rise key 4 is 174.1 degrees about
+## (-0.25, 0.95, 0.21) and key 5 is 179.1 about (0.26, -0.92, -0.29) -- the
+## same turn carrying on past the line, read back with its axis flipped. Half
+## of the first is 87 degrees one way and half of the second 90 the other, so
+## the helper whipped 176.4 degrees in a 33 ms frame while the thigh it
+## follows moved 11.9. It carries SHARE of the skin from the hip down
+## FADE_DOWN of the thigh, so that is the leg folding through itself -- 40 of
+## them over 24 clips, every get-up and every move Cody takes.
+##
+## So both readings are built and the one nearer the last frame wins, which is
+## the only thing that distinguishes them: the half that carries on. Below
+## ANTIPODE_GATE there is nothing to choose -- the short reading is the turn
+## the animator keyed and the long one is its 300-degree twin -- and offering
+## the choice there is actively harmful, because a thigh making a small turn
+## about a tumbling axis will take the long way and stay there.
+static func scaled_turn(delta: Quaternion, share: float, last: Quaternion) -> Quaternion:
+	var q := delta.normalized()
+	if q.w < 0.0:
+		q = -q                      # canonical, so the angle lands in [0, PI]
+	var sine := sqrt(maxf(1.0 - q.w * q.w, 0.0))
+	if sine <= 1e-6:
+		return Quaternion.IDENTITY  # no turn to read, and no axis to read it on
+	var axis := Vector3(q.x, q.y, q.z) / sine
+	var angle := 2.0 * atan2(sine, q.w)
+	var short := Quaternion(axis, angle * share)
+	if angle < ANTIPODE_GATE:
+		return short
+	var long := Quaternion(-axis, (TAU - angle) * share)
+	return short if absf(short.dot(last)) >= absf(long.dot(last)) else long
+
+
 ## Adds the helpers' tracks to `animation`: half the thigh's swing out of
 ## rest, in the same frame. `skeleton_path` is how the animation addresses the
 ## skeleton.
@@ -166,7 +221,10 @@ static func add_tracks(animation: Animation, skeleton: Skeleton3D, skeleton_path
 		var out := animation.add_track(Animation.TYPE_ROTATION_3D)
 		animation.track_set_path(out, NodePath("%s:%s" % [skeleton_path, helper_name(side)]))
 		animation.track_set_interpolation_type(out, animation.track_get_interpolation_type(driver))
+		# Carried across the keys: which half of a turn past ANTIPODE_GATE the
+		# helper takes is only decidable against the frame before it.
+		var swing := Quaternion.IDENTITY
 		for key in animation.track_get_key_count(driver):
 			var posed: Quaternion = animation.track_get_key_value(driver, key)
-			var swing := Quaternion.IDENTITY.slerp(posed * rest.inverse(), SWING)
+			swing = scaled_turn(posed * rest.inverse(), SWING, swing)
 			animation.track_insert_key(out, animation.track_get_key_time(driver, key), swing * rest)

@@ -12,10 +12,30 @@ extends GdUnitTestSuite
 ##    fixing a clip lowers the number and the constant should follow it down;
 ##    making one worse fails.
 
+## 3. The hip helpers' share of the thigh. HipHelpers bakes a bone that turns
+##    SWING of the thigh's turn out of rest, and a SHARE of a turn has two
+##    readings 180 degrees apart once the turn passes the antipode -- which is
+##    exactly where a man flat on his back with his legs over him sits. Read a
+##    frame at a time it took whichever was shorter for that frame alone, so
+##    the helper whipped 179.2 degrees in 33 ms while the thigh it follows
+##    moved 4.1 (Rope_Rebound; 41 of them). It carries HipHelpers.SHARE of the
+##    skin from the hip down the thigh, so on screen that was Cody's leg
+##    folding through itself, in both get-ups and every clip where he takes a
+##    move. Same ratchet.
 const CLIPS_GLB := "res://assets/animations/wrestling_clips.glb"
 const FLIP_DEGREES := 100.0
 const KNOWN_FLIPS := 40
 const CLAVICLE_LIFT_DEGREES := 10.0
+## A helper taking a SHARE of the thigh's turn cannot out-turn the thigh, give
+## or take this much rounding.
+const HELPER_SLACK_DEGREES := 5.0
+## ...and nothing that follows a limb at half speed moves this far in a frame.
+const HELPER_JUMP_DEGREES := 60.0
+## 41 before the reading was carried across frames. All three that are left
+## are in Springboard_DK_Attacker, whose thigh genuinely swings 96 degrees in
+## one frame -- the clip that also carries six of the arm flips above, and
+## which wants re-authoring rather than a better bake.
+const KNOWN_HELPER_JUMPS := 3
 
 func _library() -> AnimationPlayer:
     var root: Node = auto_free((load(CLIPS_GLB) as PackedScene).instantiate())
@@ -61,6 +81,57 @@ func test_limb_flips_do_not_grow() -> void:
     assert_int(flips).override_failure_message(
         "%d single-key limb flips over %d degrees (was %d)" % [flips, FLIP_DEGREES, KNOWN_FLIPS]
     ).is_less_equal(KNOWN_FLIPS)
+
+
+## The helper never out-turns the thigh whose share it is taking -- which is
+## the one thing a half-swing owes, and what the antipode broke.
+func test_the_hip_helpers_never_out_turn_the_thigh() -> void:
+    var root: Node = auto_free((load(CLIPS_GLB) as PackedScene).instantiate())
+    add_child(root)
+    var player := root.find_child("AnimationPlayer", true, false) as AnimationPlayer
+    var skeleton := root.find_child("Skeleton3D", true, false) as Skeleton3D
+    assert_object(skeleton).override_failure_message(
+        "no Skeleton3D in %s" % CLIPS_GLB).is_not_null()
+    var jumps := 0
+    var worst := "none"
+    var worst_deg := 0.0
+    for clip_name in player.get_animation_list():
+        var clip := player.get_animation(clip_name)
+        for side: String in HipHelpers.SIDES:
+            var bone := "thigh_%s" % side
+            var at := skeleton.find_bone(bone)
+            if at < 0:
+                continue
+            var track := -1
+            for t in clip.get_track_count():
+                if clip.track_get_type(t) == Animation.TYPE_ROTATION_3D \
+                        and String(clip.track_get_path(t).get_concatenated_subnames()) == bone:
+                    track = t
+            if track < 0:
+                continue
+            var rest := skeleton.get_bone_rest(at).basis.get_rotation_quaternion()
+            # Exactly what HipHelpers.add_tracks() bakes, key for key.
+            var swing := Quaternion.IDENTITY
+            var last_helper := Quaternion.IDENTITY
+            var last_thigh := Quaternion.IDENTITY
+            for k in clip.track_get_key_count(track):
+                var posed: Quaternion = clip.track_get_key_value(track, k)
+                swing = HipHelpers.scaled_turn(posed * rest.inverse(), HipHelpers.SWING, swing)
+                var helper := swing * rest
+                if k > 0:
+                    var moved := rad_to_deg(last_helper.angle_to(helper))
+                    var thigh := rad_to_deg(last_thigh.angle_to(posed))
+                    if moved > thigh + HELPER_SLACK_DEGREES or moved > HELPER_JUMP_DEGREES:
+                        jumps += 1
+                        if moved > worst_deg:
+                            worst_deg = moved
+                            worst = "%s %s key %d (thigh %.1f, helper %.1f)" % [
+                                clip_name, bone, k, thigh, moved]
+                last_helper = helper
+                last_thigh = posed
+    assert_int(jumps).override_failure_message(
+        "%d hip-helper jumps past the thigh they follow, worst %s" % [jumps, worst]
+    ).is_less_equal(KNOWN_HELPER_JUMPS)
 
 
 ## Roman's entrance walk (roman_entrance_aaa_plan.md step 2) is smooth: no
