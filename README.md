@@ -8998,3 +8998,38 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
 - Tests: the tunnels end in front of the backdrop, the rings carry their
   gradient UVs and textures, and both tunnel lights exist.
   Before/after: `gauntlet/refs/stage/review/tunnels_before_after.jpg`.
+
+## Round: the match against 2K26 (gauntlet/refs/match_aaa_plan.md)
+
+- **Stop motion, found and fixed.** At the bell the mixer goes back to the
+  60 Hz physics tick, because gameplay reads bones there. On a 120 Hz display
+  every match pose was therefore held for two frames: one man's hand held on
+  111-118 of 240 frames (`tools/probe/motion_cadence -- --match`).
+  - The Inertializer now draws the animation layer between the last two tick
+    poses by the interpolation fraction (`interpolate_pose`), and the grip IK
+    targets are drawn the same way. The tick pose under it, and with it the
+    replay, is unchanged.
+  - Held frames: 0/14. The 14 are a hold whose hands really are still.
+  - The probe also had a bug: it read the bone mid-frame. It now keeps each
+    frame's last drawn value.
+  - Hit-stop now fires only at the top of the scale (2 ticks); it had frozen
+    the picture on every cross.
+- **Wrestling strikes, not boxing.** Every strike starts and ends on READY
+  (open hands), not a fists-up guard. Contact frames are unchanged and the
+  contact points were re-measured.
+  - The worked right hand (`Strike_Forearm`): load, step, turn, round to the
+    jaw, across the body.
+  - A worked left (`Strike_Jab`).
+  - A kick to the gut with the kicker over it (`Strike_Kick`).
+  - A big boot that steps through (`Strike_Kick_Heavy`).
+  - Roman's new gut punch (`strike_gut_punch`).
+- **Selling.** The hit reactions end hurt (`HEAD_HURT`, `GUT_HURT`).
+  - Left alone, he sells for `SELL_TICKS` more (`Sell_Head`, `Sell_Gut`). HIT_REACT
+    keeps its 20 ticks, so the frame data is unchanged.
+  - An AI man waits out his sell; a player's input cuts it.
+  - The third blow inside a sell rocks him (STUNNED).
+- **Strings.** Within `STRING_WINDOW_TICKS` of a landed strike the next is light
+  again, and the third is his heaviest.
+- **Camera:** shakes only on big blows.
+- Tests: `test_selling.gd`, `test_inertializer` (between-tick drawing), and
+  `test_hit_flinch_and_life` (only the biggest blows stop the picture).

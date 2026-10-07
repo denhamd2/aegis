@@ -66,6 +66,25 @@ var _rot_curve: Array[PackedFloat32Array] = []
 var _pos_curve: Array[PackedFloat32Array] = []
 var _longest := 0.0
 
+## --- Drawn between ticks ----------------------------------------------------
+## The match runs the mixer on the 60 Hz physics tick, because gameplay reads
+## bones on the tick. Drawn as is, every pose was held for an uneven number of
+## frames on a faster display -- 114 of 240 drawn frames at 120 fps
+## (tools/probe/motion_cadence -- --match): the "stop motion" the owner saw in
+## the match, the same defect the entrances had. So the animation layer is
+## drawn between the last two tick poses by the physics interpolation
+## fraction, exactly as physics interpolation draws the body's root: one tick
+## behind, never a guess ahead. The tick pose under it is untouched.
+var interpolate_pose := true
+var _mixer: AnimationMixer
+## The next tick draws its own pose with nothing in between: a cut.
+var _cut := true
+## Last tick's drawn pose, to draw from. Kept apart from _prior_*, which the
+## carry reads as a speed and which a cut must not zero.
+var _tick_prior_rot: Array[Quaternion] = []
+var _tick_prior_pos: Array[Vector3] = []
+var _tick_frame := -1
+
 ## --- Hit-stop ---------------------------------------------------------------
 ## The drawn pose held still while the clip runs on underneath, then carried
 ## into wherever the clip has got to. Holding the clip itself -- the tree
@@ -139,6 +158,7 @@ const PENDING_TICKS := 3
 ## foot on RUN > LOCOMOTION.
 func watch(mixer: AnimationMixer, playback: AnimationNodeStateMachinePlayback) -> void:
 	_playback = playback
+	_mixer = mixer
 	if mixer is AnimationTree:
 		_machine = (mixer as AnimationTree).tree_root as AnimationNodeStateMachine
 	if not mixer.mixer_applied.is_connected(_on_mixer_applied):
@@ -168,6 +188,15 @@ func _on_mixer_applied() -> void:
 	if sk == null:
 		return
 	var fresh := _ensure(sk)
+	if fresh:
+		_cut = true
+	# The pose drawn on the last tick, taken once a tick: a state restarted
+	# mid-tick (advance(0)) applies the mixer twice, and the second time the
+	# last tick's pose is already this tick's.
+	if Engine.get_physics_frames() != _tick_frame:
+		_tick_frame = Engine.get_physics_frames()
+		_tick_prior_rot = _drawn_rot.duplicate()
+		_tick_prior_pos = _drawn_pos.duplicate()
 	var node := _playback.get_current_node() if _playback else StringName()
 	var clip := StringName()
 	if _machine and _machine.has_node(node) and _machine.get_node(node) is AnimationNodeAnimation:
@@ -212,6 +241,10 @@ func _on_mixer_applied() -> void:
 		_prior_pos[b] = _drawn_pos[b]
 		_drawn_rot[b] = rot
 		_drawn_pos[b] = pos
+	if _cut:
+		_tick_prior_rot = _drawn_rot.duplicate()
+		_tick_prior_pos = _drawn_pos.duplicate()
+		_cut = false
 
 
 ## The new clip's first pose is on the skeleton: carry the difference that
@@ -228,6 +261,7 @@ func _capture(sk: Skeleton3D) -> void:
 			var hips := _drawn_rot[b] * sk.get_bone_pose_rotation(b).inverse()
 			if absf(hips.w) < cos(MAX_CARRY * 0.5):
 				_active = false
+				_cut = true
 				return
 	for b in _bones:
 		var target := sk.get_bone_pose_rotation(b)
@@ -326,6 +360,9 @@ func _process_modification() -> void:
 			sk.set_bone_pose_position(b, _frozen_pos[b])
 		_apply_facing(sk)
 		return
+	if _between_ticks(sk):
+		_apply_facing(sk)
+		return
 	_apply_facing(sk)
 	if not _active or _bones != sk.get_bone_count():
 		return
@@ -340,6 +377,33 @@ func _process_modification() -> void:
 		var pos := _carried_pos(b, t)
 		if pos != Vector3.ZERO:
 			sk.set_bone_pose_position(b, sk.get_bone_pose_position(b) + pos)
+
+
+## Draws the pose between the last two ticks; false when it is not drawing at
+## tick rate (the entrances evaluate the mixer every frame) or has nothing to
+## draw from yet.
+func _between_ticks(sk: Skeleton3D) -> bool:
+	if not interpolate_pose or _bones != sk.get_bone_count() \
+			or body == null or not body.is_physics_interpolated_and_enabled() \
+			or _tick_prior_rot.size() != _bones or _mixer == null \
+			or _mixer.callback_mode_process != AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS:
+		return false
+	draw_between(sk, clampf(Engine.get_physics_interpolation_fraction(), 0.0, 1.0))
+	return true
+
+
+## The pose `f` of the way from the last tick's to this tick's.
+func draw_between(sk: Skeleton3D, f: float) -> void:
+	for b in _bones:
+		sk.set_bone_pose_rotation(b, _tick_prior_rot[b].slerp(_drawn_rot[b], f))
+		sk.set_bone_pose_position(b, _tick_prior_pos[b].lerp(_drawn_pos[b], f))
+	if body and body.has_method("draw_grip_between_ticks"):
+		body.draw_grip_between_ticks(f)
+
+
+## The pose was placed, not moved (a teleport): draw the next tick as it is.
+func snap() -> void:
+	_cut = true
 
 
 ## Turns the whole drawn body by what is left of a carried snap, about the

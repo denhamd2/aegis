@@ -177,7 +177,7 @@ static func entries() -> Array:
 	const M := "res://resources/moves/"
 	(list[0] as Entry).moveset = {
 		"strike": [M + "strike_jab.tres", M + "strike_cross.tres",
-				M + "strike_kick_heavy.tres"],
+				M + "strike_gut_punch.tres", M + "strike_kick_heavy.tres"],
 		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres",
 				M + "grapple_guillotine.tres"],
 		"power": [M + "power_samoan_drop.tres", M + "power_bodyslam.tres",

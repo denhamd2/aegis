@@ -234,6 +234,33 @@ def S(**over):
     return pose(SUPINE, **over)
 
 
+# Hurt, mid-sell (gauntlet/refs/match_aaa_plan.md): where the hit reactions
+# end and the sells start. After a head shot a hand is on the jaw, the head
+# still turned off the blow and the weight on the back foot; after a body
+# shot he is folded over both hands on his stomach, knees giving.
+HEAD_HURT = dict(
+    READY, pelvis=(0.03, -0.12, 0.794), hips=(-4, 8, 0), spine=(-14, 14, -5),
+    head=(14, 24, -8),
+    hand_l=(-0.10, 0.26, 1.48), elbow_l=(-0.9, -0.2, -0.4), fist_l=0.2,
+    hand_r=(0.28, 0.22, 1.04),
+    foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.14, 0.104),
+)
+GUT_HURT = dict(
+    READY, pelvis=(0.0, -0.12, 0.734), hips=(-20, 0, 0), spine=(-46, 0, 0),
+    head=(-6, 0, 0),
+    hand_r=(0.10, 0.28, 0.96), hand_l=(-0.08, 0.30, 0.98),
+    elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+    fist_r=0.4, fist_l=0.4,
+    foot_r=(0.27, -0.30, 0.104), foot_l=(-0.22, 0.18, 0.104),
+)
+
+
+def R(**over):
+    """A strike key: READY with a few things moved (the open-handed stance
+    the strikes start and end on)."""
+    return pose(READY, **over)
+
+
 # Trapped in a corner (Corner_Slump, Corner_Hit): backed into the buckle,
 # which is behind him on the diagonal, weight sagging into the ropes, arms
 # hooked over the top rope -- elbows up on it at 1.2 m, forearms hanging
@@ -1033,112 +1060,98 @@ CLIPS = {
     ],
 
     # === strikes ========================================================
+    #
+    # Wrestling strikes, not boxing (gauntlet/refs/match_aaa_plan.md). The
+    # owner's 2K26 Cody vs Roman, 598-626 s at 10 fps: a worked punch is a
+    # loaded, LOOPING shot from shoulder height round to the jaw -- the
+    # shoulder pulls back and high, the lead foot steps in, the whole torso
+    # turns through it and the arm finishes ACROSS the body. Between shots the
+    # hands are open and low, not a guard at the chin. The earlier clips were a
+    # boxer's jab and cross from a fists-up guard and a karate front kick with
+    # the body thrown back; the owner: "they didn't look like wrestling
+    # punches and kicks".
+    #
+    # Every strike starts and ends on READY, the open-handed stance Idle_Ready
+    # loops on, so the cut in and out of a strike is the stance he was already
+    # standing in rather than a snap up into a boxer's guard.
+    #
+    # Contact frames and lengths are the ones the MoveDefs were built on, so
+    # their startup_frames still land on the blow; only where the fist lands
+    # (contact_offset, re-measured by tools/anim/measure_contact_offsets.gd)
+    # moves. Reach comes from the step and the turn, not a locked arm: each
+    # fist is 0.66-0.70 forward, landing the strike from the 1.10 m the AI
+    # circles at (test_ai_spacing).
 
-    # 16 frames, LEFT hand, contact on frame 5 (= tick 9 of strike_jab.tres
-    # after retiming). The fastest thing in the match: 3 frames of
-    # anticipation, a 2-frame action, and the rest is recovery.
-    #
-    # The torso twist used to be NEGATIVE through contact (spine yaw -16),
-    # which is the sign that drives the RIGHT shoulder forward -- the torso
-    # rotating away from the arm actually throwing the punch. Two things
-    # followed from it, and both were measured on the shipped clip:
-    #
-    #   1. The left shoulder sat at fwd -0.119, BEHIND the body origin, so
-    #      the furthest the fist could reach was 0.42 m. The pose table asked
-    #      for 0.56, which is 0.685 m from a shoulder with 0.544 m of arm --
-    #      14 cm beyond reach. _two_bone_ik clamps to (l1+l2)*0.995 and
-    #      solves along the direction, so the truncation ate almost the whole
-    #      forward component.
-    #   2. Frames 5 and 8 both truncated onto the same reach sphere, which
-    #      collapsed them into nearly the same pose. The clip's actual peak
-    #      drifted to tick 18 -- six ticks past the contact window
-    #      strike_jab.tres declares -- and the punch read as 7 cm of ooze
-    #      rather than a strike: 2.83 m/s where the cross manages 7.20.
-    #
-    # Measured on this rig, sweeping spine yaw with the hips following at
-    # half (tools/anim/reach_audit.gd reproduces it):
-    #
-    #   yaw -16 -> left shoulder fwd -0.106, fist can reach 0.422
-    #   yaw   0 -> fwd -0.036, reach 0.492
-    #   yaw +28 -> fwd +0.116, reach 0.644
-    #   yaw +28 with clav_l protracted +20 -> fwd +0.189, reach 0.717
-    #
-    # So the twist is positive through contact and the clavicle protracts,
-    # which is what a real jab does with its shoulder. The hand target is set
-    # at 0.66 fwd, landing the wrist 0.50 m from the shoulder -- 0.92 of the
-    # arm, extended but not locked out, and with margin rather than clamped.
+    # 16 frames, the worked LEFT, contact on frame 5 (= tick 10 of
+    # strike_jab.tres). The quick one: a short load, the left shoulder rolled
+    # back and the fist up by the ear, then round to the jaw with a half-step
+    # in, finishing across him.
     "Strike_Jab": [
-        (0,  P()),
-        # Anticipation is small and mostly weight -- a jab that winds up is
-        # a jab you can see coming. The left shoulder loads BACK (yaw 0,
-        # down from the stance's +6), which is the half-beat the drive below
-        # unwinds.
-        (3,  P(pelvis=(0.02, 0.0, 0.858), hips=(0, -4, 0), spine=(-10, 0, 0),
-               hand_l=(-0.18, 0.34, 1.35), hand_r=(0.24, 0.35, 1.31))),
-        # Contact: the left shoulder drives through and protracts, the fist
-        # arrives at head height 0.66 forward, and the lead foot takes the
-        # weight while the back heel pivots off the mat. The head counters
-        # the chest so he is still looking at the man he is hitting.
-        (5,  P(pelvis=(-0.02, 0.06, 0.862), hips=(-4, 14, 0),
-               spine=(-10, 28, 0), head=(8, -20, 0), clav_l=(0, 20, 0),
-               hand_l=(-0.06, 0.66, 1.40), hand_r=(0.22, 0.32, 1.30),
-               foot_l=(-0.19, 0.18, 0.104), foot_r=(0.23, -0.17, 0.125),
-               ankle_r=(20, 0, 0))),
-        # Retracting, not stopping: the hand is already on its way back and
-        # the shoulder is unwinding, so the clip's peak stays on frame 5.
-        (8,  P(pelvis=(-0.01, 0.04, 0.860), hips=(-4, 10, 0),
-               spine=(-10, 20, 0), head=(6, -14, 0), clav_l=(0, 12, 0),
-               hand_l=(-0.09, 0.52, 1.38), hand_r=(0.22, 0.32, 1.30),
-               foot_r=(0.23, -0.17, 0.118), ankle_r=(14, 0, 0))),
-        (16, P()),
+        (0,  R()),
+        (2,  R(pelvis=(0.02, -0.03, 0.800), hips=(-6, -10, 0), spine=(-12, -14, 0),
+               head=(6, 16, 0),
+               hand_l=(-0.34, 0.06, 1.50), elbow_l=(-1.0, -0.2, 0.4),
+               hand_r=(0.20, 0.36, 1.20), fist_l=0.9)),
+        # Contact: round to the jaw, the left shoulder driven through, a half
+        # step in on the lead foot.
+        (5,  R(pelvis=(-0.02, 0.08, 0.810), hips=(-8, 16, 0), spine=(-14, 30, 0),
+               head=(8, -22, 0), clav_l=(0, 20, 0),
+               hand_l=(0.04, 0.66, 1.46), elbow_l=(-1.0, 0.0, 0.3),
+               hand_r=(0.18, 0.30, 1.16), fist_l=0.95,
+               foot_l=(-0.21, 0.32, 0.104), foot_r=(0.27, -0.18, 0.125),
+               ankle_r=(18, 0, 0))),
+        # Follow-through: across the body, the turn still going.
+        (8,  R(pelvis=(-0.02, 0.08, 0.806), hips=(-8, 20, 0), spine=(-14, 36, 0),
+               head=(8, -26, 0), clav_l=(0, 12, 0),
+               hand_l=(0.22, 0.46, 1.34), elbow_l=(-0.9, 0.2, 0.2),
+               hand_r=(0.20, 0.30, 1.14), fist_l=0.9,
+               foot_l=(-0.21, 0.32, 0.104), foot_r=(0.27, -0.18, 0.118),
+               ankle_r=(12, 0, 0))),
+        (12, R(pelvis=(0.0, 0.05, 0.792), hips=(-8, 4, 0), spine=(-18, 12, 0),
+               head=(8, -6, 0),
+               hand_l=(-0.12, 0.38, 1.18), foot_l=(-0.22, 0.28, 0.104))),
+        (16, R(foot_l=(-0.23, 0.26, 0.104))),
     ],
 
-    # 20 frames, RIGHT forearm, contact on frame 6 (= tick 12 of
-    # strike_cross.tres). The power is in the torso: the wind-up turns the
-    # right shoulder back 14 degrees and the contact frame has swung it 20
-    # forward, with the back foot pivoting so the hip can follow.
+    # 20 frames, the worked RIGHT HAND, contact on frame 6 (= tick 12 of
+    # strike_cross.tres). The shot both men throw most in the 2K26 match: the
+    # right shoulder loads back and high, the fist cocked beside the head and
+    # the left hand reaching out to the man's shoulder; then the lead foot
+    # steps in, the hips and shoulders whip round, and the fist comes round
+    # to the jaw with the elbow bent -- a hook's arc, not a straight line --
+    # and carries on across the body.
+    #
+    # Negative spine yaw and negative clav_r carry the RIGHT shoulder forward
+    # (the sign Strike_Forearm's reach sweep measured: yaw -30, clav -20 put
+    # the shoulder 0.205 forward).
     "Strike_Forearm": [
-        (0,  P()),
-        (4,  P(pelvis=(0.05, -0.02, 0.852), hips=(0, 4, 0), spine=(-10, 16, 0),
-               head=(4, 14, 0),
-               hand_r=(0.30, 0.16, 1.32), hand_l=(-0.19, 0.36, 1.35))),
-        # Contact: forearm arrives across at head height, hips already open.
-        # Contact. The right shoulder drives through and protracts, the same
-        # mechanism the jab uses mirrored -- negative yaw and negative clav_r
-        # are what carry the RIGHT shoulder forward.
-        #
-        # This used to ask for 0.55 fwd off a shoulder at +0.079, which is
-        # inside reach and so solved cleanly -- the cross was the one strike
-        # in the set that measured correctly, and it is what proved the jab's
-        # diagnosis. But 0.55 made the cross SHORTER than the jab's 0.655,
-        # and a rear-hand cross thrown off a rotating torso is the longer
-        # punch of the two, not the shorter one.
-        #
-        # It also cost the AI its spacing. With a single 1.15 m hit range the
-        # difference was invisible; once each strike reached only as far as
-        # its own limb, the cross topped out at 1.07 m centre-to-centre while
-        # WrestlerAI circles at 1.10 -- so the cross could never land from the
-        # distance the AI actually holds.
-        #
-        # Measured on this rig (tools/blender/reach_audit.py --sweep):
-        #
-        #   yaw -20            -> right shoulder fwd +0.079, fist reaches 0.607
-        #   yaw -30            -> fwd +0.134, reaches 0.662
-        #   yaw -30, clav -20  -> fwd +0.205, reaches 0.733
-        #
-        # 0.68 puts the wrist 0.509 m from the shoulder: 0.94 of the arm,
-        # extended and still short of the lockout the solver clamps at.
-        (6,  P(pelvis=(-0.02, 0.07, 0.866), hips=(-4, -15, 0),
-               spine=(-10, -30, 0), head=(8, 18, 0), clav_r=(0, -20, 0),
-               hand_r=(-0.02, 0.68, 1.40), hand_l=(-0.22, 0.28, 1.28),
-               foot_r=(0.23, -0.17, 0.125), ankle_r=(22, 0, 0))),
-        # Unwinding and retracting, so the clip's peak stays on frame 6 where
-        # strike_cross.tres applies its damage.
-        (9,  P(pelvis=(-0.03, 0.05, 0.862), hips=(-4, -13, 0),
-               spine=(-10, -24, 0), head=(6, 12, 0), clav_r=(0, -12, 0),
-               hand_r=(-0.16, 0.56, 1.36), hand_l=(-0.24, 0.26, 1.26),
-               foot_r=(0.23, -0.17, 0.120), ankle_r=(18, 0, 0))),
-        (20, P()),
+        (0,  R()),
+        # Load: weight back on the right foot, right shoulder back and up.
+        (3,  R(pelvis=(0.04, -0.05, 0.808), hips=(-4, 12, 0), spine=(-8, 22, -4),
+               head=(6, -18, 0), clav_r=(0, 10, 8),
+               hand_r=(0.36, -0.04, 1.58), elbow_r=(1.0, -0.4, 0.5),
+               hand_l=(-0.12, 0.52, 1.38), elbow_l=(-0.8, -0.2, -0.4),
+               fist_r=0.95, fist_l=0.35)),
+        # Contact: the step in, the turn, the fist round to the jaw.
+        (6,  R(pelvis=(-0.02, 0.12, 0.818), hips=(-8, -18, 0), spine=(-14, -32, 0),
+               head=(8, 20, 0), clav_r=(0, -20, 0),
+               hand_r=(-0.08, 0.70, 1.48), elbow_r=(1.0, 0.0, 0.3),
+               hand_l=(-0.20, 0.30, 1.22), elbow_l=(-0.7, -0.3, -0.6),
+               fist_r=1.0, fist_l=0.5,
+               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130),
+               ankle_r=(24, 0, 0))),
+        # Follow-through: across his own body, shoulders still turning.
+        (9,  R(pelvis=(-0.03, 0.12, 0.810), hips=(-8, -24, 0), spine=(-16, -40, 0),
+               head=(8, 26, 0), clav_r=(0, -14, 0),
+               hand_r=(-0.30, 0.46, 1.32), elbow_r=(0.9, 0.2, 0.0),
+               hand_l=(-0.22, 0.26, 1.16), fist_r=0.95, fist_l=0.5,
+               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.124),
+               ankle_r=(18, 0, 0))),
+        # Coming back square over the planted feet, the hand dropping open.
+        (14, R(pelvis=(0.0, 0.08, 0.790), hips=(-8, -6, 0), spine=(-18, -10, 0),
+               head=(8, 6, 0),
+               hand_r=(0.10, 0.40, 1.14), foot_l=(-0.22, 0.34, 0.104))),
+        (20, R(foot_l=(-0.23, 0.28, 0.104))),
     ],
 
     # Cody's strikes (refs/cody_moveset.md) -------------------------------
@@ -1209,127 +1222,187 @@ CLIPS = {
         (24, P()),
     ],
 
-    # 20 frames, right boot to the midsection, contact on frame 5 (= tick 8
-    # of strike_kick.tres). Chamber first: the knee comes up folded before
-    # anything extends, which is what separates a kick from a swung leg.
-    # The arms do what a kicker's arms do -- out for balance, not pumping.
+    # 20 frames, the KICK TO THE GUT, contact on frame 5 (= tick 8 of
+    # strike_kick.tres). Wrestling's set-up kick: the knee chambers, then the
+    # sole drives straight into the stomach at belt height and he stays OVER
+    # it -- chest up, a little forward, hands out in front ready to grab the
+    # man it folds. The old boot leaned back 14 degrees and threw the arms
+    # behind him: a karate front kick.
     "Strike_Kick": [
-        (0,  P()),
-        # Chamber, and the weight goes fully onto the left foot.
-        (3,  P(pelvis=(-0.04, 0.0, 0.848), hips=(0, -6, 4), spine=(-4, 0, -6),
-               foot_r=(0.16, 0.34, 0.60), knee_r=(0.3, 1.0, 0.1),
-               hand_r=(0.28, 0.16, 1.26), hand_l=(-0.24, 0.20, 1.30))),
-        # Contact: the knee straightens into the target at body height and
-        # the torso leans away as the counterweight.
-        (5,  P(pelvis=(-0.06, 0.0, 0.852), hips=(6, -10, 8),
-               spine=(14, 0, -14), head=(-10, -6, 0),
-               foot_r=(0.10, 0.76, 0.92), knee_r=(0.3, 1.0, 0.1),
-               hand_r=(0.34, -0.08, 1.20), hand_l=(-0.34, 0.12, 1.30))),
-        (8,  P(pelvis=(-0.06, 0.0, 0.850), hips=(7, -12, 8),
-               spine=(16, 0, -16), head=(-12, -8, 0),
-               foot_r=(0.08, 0.82, 0.86), knee_r=(0.3, 1.0, 0.1),
-               hand_r=(0.36, -0.12, 1.18), hand_l=(-0.36, 0.10, 1.29))),
-        # The leg folds back down under him rather than dropping straight.
-        (12, P(pelvis=(-0.04, 0.02, 0.846), spine=(-6, 0, -6),
-               foot_r=(0.18, 0.28, 0.34), knee_r=(0.3, 1.0, 0.1),
-               hand_r=(0.26, 0.18, 1.26), hand_l=(-0.26, 0.22, 1.30))),
-        (20, P()),
+        (0,  R()),
+        # Chamber, weight onto the left foot.
+        (3,  R(pelvis=(-0.04, 0.02, 0.830), hips=(2, -6, 4), spine=(-10, 0, -4),
+               head=(10, 0, 0),
+               foot_r=(0.16, 0.34, 0.62), knee_r=(0.3, 1.0, 0.1),
+               hand_r=(0.30, 0.34, 1.20), hand_l=(-0.28, 0.36, 1.22))),
+        # Contact: the sole into the stomach, the body square over it.
+        (5,  R(pelvis=(-0.06, 0.04, 0.846), hips=(6, -8, 6),
+               spine=(-2, 0, -8), head=(14, 0, 0),
+               foot_r=(0.08, 0.80, 0.96), knee_r=(0.3, 1.0, 0.2),
+               ankle_r=(-12, 0, 0),
+               hand_r=(0.32, 0.36, 1.22), hand_l=(-0.30, 0.38, 1.24))),
+        (8,  R(pelvis=(-0.06, 0.04, 0.844), hips=(6, -9, 6),
+               spine=(-2, 0, -8), head=(14, 0, 0),
+               foot_r=(0.08, 0.76, 0.92), knee_r=(0.3, 1.0, 0.2),
+               hand_r=(0.32, 0.38, 1.22), hand_l=(-0.30, 0.40, 1.24))),
+        # The leg folds back under him and steps down.
+        (12, R(pelvis=(-0.04, 0.04, 0.822), spine=(-12, 0, -4), head=(10, 0, 0),
+               foot_r=(0.18, 0.24, 0.32), knee_r=(0.3, 1.0, 0.1),
+               hand_r=(0.30, 0.38, 1.16), hand_l=(-0.28, 0.40, 1.18))),
+        (20, R()),
     ],
 
-    # 29 frames, contact on frame 6 (= tick 12 of strike_kick_heavy.tres).
-    # The same boot wound further back and recovered from properly: its
-    # length is 40 ticks of recovery, never a slower action phase. It
-    # finishes by stepping the kicking foot back down into the stance, which
-    # is a real step rather than a slide back to where it started.
+    # 29 frames, the BIG BOOT, contact on frame 6 (= tick 12 of
+    # strike_kick_heavy.tres). A step, then the leg swung up straight and
+    # the sole driven into the chest, the body leaning back only as far as a
+    # high leg makes a man; then the boot comes down IN FRONT of him -- he
+    # steps through it, as the real one does, instead of sweeping across.
     "Strike_Kick_Heavy": [
-        (0,  P()),
-        # Load: the leg draws back and the hips coil the other way.
-        (3,  P(pelvis=(-0.05, 0.0, 0.838), hips=(-2, 10, 4), spine=(-6, 16, 0),
-               head=(4, 10, 0),
-               foot_r=(0.30, -0.30, 0.14), knee_r=(0.4, 1.0, 0.0),
-               hand_r=(0.30, 0.10, 1.28), hand_l=(-0.22, 0.26, 1.34))),
-        # Contact: hips whip open through the kick.
-        (6,  P(pelvis=(-0.07, 0.0, 0.856), hips=(6, -20, 10),
-               spine=(16, -10, -16), head=(-12, -12, 0),
-               foot_r=(0.06, 0.80, 1.00), knee_r=(0.3, 1.0, 0.1),
-               hand_r=(0.36, -0.14, 1.16), hand_l=(-0.36, 0.10, 1.28))),
-        # Follow-through sweeps across the body, hips still turning.
-        (10, P(pelvis=(-0.07, 0.0, 0.852), hips=(7, -34, 10),
-               spine=(18, -22, -18), head=(-14, -20, 0),
-               foot_r=(-0.08, 0.76, 0.94), knee_r=(0.1, 1.0, 0.1),
-               hand_r=(0.34, -0.20, 1.14), hand_l=(-0.38, 0.06, 1.26))),
-        # The leg comes down across him -- he is now turned out of stance.
-        (16, P(pelvis=(-0.04, 0.05, 0.820), hips=(-4, -28, 4),
-               spine=(-10, -20, 0), head=(4, -14, 0),
-               foot_r=(-0.16, 0.34, 0.22), knee_r=(0.0, 1.0, 0.2),
-               hand_r=(0.24, 0.14, 1.22), hand_l=(-0.28, 0.24, 1.28))),
-        # Plants crossed in front, weight briefly on the wrong foot.
-        (21, P(pelvis=(-0.02, 0.06, 0.804), hips=(-4, -20, 0),
-               spine=(-12, -14, 0), head=(4, -8, 0),
-               foot_r=(-0.10, 0.30, 0.104), knee_r=(0.0, 1.0, 0.1),
-               hand_r=(0.20, 0.20, 1.24), hand_l=(-0.24, 0.28, 1.30))),
-        # Steps it back out to the stance -- lifted, not slid.
-        (25, P(pelvis=(-0.01, 0.04, 0.834), hips=(-2, -10, 0),
-               spine=(-10, -4, 0),
-               foot_r=(0.08, 0.04, 0.160), knee_r=(0.2, 1.0, 0.1),
-               hand_r=(0.18, 0.26, 1.28), hand_l=(-0.18, 0.32, 1.33))),
-        (29, P()),
+        (0,  R()),
+        # The step in on the left foot, the right leg loading behind.
+        (3,  R(pelvis=(-0.05, 0.10, 0.830), hips=(-2, 4, 2), spine=(-10, 6, 0),
+               head=(8, -4, 0),
+               foot_l=(-0.20, 0.36, 0.104),
+               foot_r=(0.24, -0.20, 0.20), knee_r=(0.3, 1.0, 0.0), ankle_r=(30, 0, 0),
+               hand_r=(0.34, 0.20, 1.18), hand_l=(-0.32, 0.30, 1.20))),
+        # Contact: the boot into the chest.
+        (6,  R(pelvis=(-0.07, 0.14, 0.870), hips=(8, -10, 8),
+               spine=(10, -4, -10), head=(4, 0, 0),
+               foot_l=(-0.20, 0.36, 0.104),
+               foot_r=(0.06, 0.84, 1.18), knee_r=(0.3, 1.0, 0.2), ankle_r=(-16, 0, 0),
+               hand_r=(0.40, 0.04, 1.20), hand_l=(-0.40, 0.14, 1.24))),
+        (10, R(pelvis=(-0.07, 0.15, 0.866), hips=(8, -10, 8),
+               spine=(10, -4, -10), head=(4, 0, 0),
+               foot_l=(-0.20, 0.36, 0.104),
+               foot_r=(0.06, 0.80, 1.10), knee_r=(0.3, 1.0, 0.2),
+               hand_r=(0.40, 0.06, 1.18), hand_l=(-0.40, 0.16, 1.22))),
+        # The leg comes down in front: he steps through.
+        (16, R(pelvis=(-0.03, 0.22, 0.820), hips=(-4, -6, 2), spine=(-10, -4, 0),
+               head=(8, 0, 0),
+               foot_l=(-0.20, 0.36, 0.104),
+               foot_r=(0.16, 0.62, 0.30), knee_r=(0.2, 1.0, 0.1),
+               hand_r=(0.32, 0.30, 1.18), hand_l=(-0.30, 0.32, 1.20))),
+        (21, R(pelvis=(0.0, 0.26, 0.790), hips=(-8, -4, 0), spine=(-16, -2, 0),
+               head=(8, 2, 0),
+               foot_l=(-0.20, 0.36, 0.104), foot_r=(0.24, 0.52, 0.104),
+               hand_r=(0.30, 0.38, 1.12), hand_l=(-0.28, 0.40, 1.14))),
+        # And the back foot brings him back into his stance, lifted, not slid.
+        (25, R(pelvis=(0.0, 0.14, 0.796), spine=(-18, 2, 0),
+               foot_l=(-0.22, 0.30, 0.140),
+               foot_r=(0.26, 0.10, 0.104))),
+        (29, R()),
+    ],
+
+    # 22 frames, Roman's GUT PUNCH: the short right driven up into the
+    # stomach, contact on frame 7 (= tick 14 of strike_gut_punch.tres). He
+    # dips and steps in, his left hand on the man's shoulder to hold him
+    # there, and the fist goes in under the ribs -- the body shot that folds
+    # a man in half in the 2K26 exchanges.
+    "Strike_Gut_Punch": [
+        (0,  R()),
+        (3,  R(pelvis=(0.03, -0.02, 0.760), hips=(-10, 14, 0), spine=(-22, 18, 0),
+               head=(12, -14, 0), clav_r=(0, 8, -4),
+               hand_r=(0.32, 0.06, 1.00), elbow_r=(0.7, -0.6, -0.4),
+               hand_l=(-0.12, 0.58, 1.40), elbow_l=(-0.8, -0.2, -0.3),
+               fist_r=0.95, fist_l=0.35)),
+        # Contact: in under the ribs, the shoulder behind it.
+        (7,  R(pelvis=(-0.02, 0.14, 0.770), hips=(-12, -16, 0), spine=(-24, -26, 0),
+               head=(14, 18, 0), clav_r=(0, -18, 0),
+               hand_r=(-0.02, 0.66, 1.06), elbow_r=(0.5, -0.6, -0.6),
+               hand_l=(-0.10, 0.60, 1.40), elbow_l=(-0.8, -0.2, -0.3),
+               fist_r=1.0, fist_l=0.35,
+               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.124),
+               ankle_r=(20, 0, 0))),
+        (11, R(pelvis=(-0.02, 0.13, 0.774), hips=(-12, -14, 0), spine=(-22, -22, 0),
+               head=(14, 16, 0), clav_r=(0, -12, 0),
+               hand_r=(0.02, 0.56, 1.10), elbow_r=(0.5, -0.6, -0.6),
+               hand_l=(-0.12, 0.54, 1.36),
+               fist_r=1.0, fist_l=0.35,
+               foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118),
+               ankle_r=(14, 0, 0))),
+        (16, R(pelvis=(0.0, 0.08, 0.784), hips=(-8, -4, 0), spine=(-20, -4, 0),
+               head=(8, 6, 0), foot_l=(-0.22, 0.32, 0.104))),
+        (22, R(foot_l=(-0.23, 0.26, 0.104))),
     ],
 
     # === taking them ====================================================
 
-    # 12 frames. The head snaps first and furthest, the neck follows, the
-    # torso arrives a beat behind -- the overlap that reads as force
-    # landing rather than a body turning as one board. He also gives ground:
-    # the back foot steps out, because a man who takes a shot and does not
-    # move his feet has not been hit.
+    # 12 frames (= HIT_REACT_TICKS, 20 ticks). The head snaps first and
+    # furthest, the neck follows, the torso arrives a beat behind -- the
+    # overlap that reads as force landing rather than a body turning as one
+    # board -- and he gives ground: the back foot steps out, because a man
+    # who takes a shot and does not move his feet has not been hit.
+    #
+    # It ENDS hurt, not back in his stance (gauntlet/refs/match_aaa_plan.md):
+    # the 2K26 man who takes a right hand is still selling it a second later,
+    # bent, a hand to his jaw. The 20-tick reaction used to spring straight
+    # back to the guard, which read as the punch doing nothing. Sell_Head
+    # carries on from this last pose while he is left alone.
     "Hit_React_Head": [
-        (0,  P()),
-        # Impact on frame 2, not frame 5. combat-animation.md's hit reaction
-        # is "2-4 frames impact pose, 8-12 frames stagger, snap to impact";
-        # the previous version took five frames to reach its deepest pose,
-        # which is an ease rather than a snap.
-        (2,  P(pelvis=(0.02, -0.06, 0.850), hips=(3, 6, 0),
-               spine=(12, 14, -4), head=(20, 20, -12),
-               hand_r=(0.24, 0.18, 1.18), hand_l=(-0.20, 0.24, 1.22))),
-        # Deepest: guard broken, weight on the back foot, chin turned away,
-        # and the whole torso thrown back off the shot.
-        #
-        # The lean is the number that matters and it was measured, not
-        # guessed. tools/probe/pose_compare.tscn reports how far each bone
-        # travels from frame 0: this clip moved the head 6.4 cm while
-        # Hit_React_Torso, on the same rig through the same code path, moved
-        # it 33.8 cm. A head shot was shifting the head a fifth as far as a
-        # body shot -- which is the "the opponent is hit and nothing happens"
-        # report, and it is a comparison inside this clip set rather than an
-        # appeal to how a punch ought to look.
-        (4,  P(pelvis=(0.05, -0.12, 0.838), hips=(6, 10, 0),
-               spine=(18, 20, -8), head=(24, 26, -16),
-               hand_r=(0.30, 0.12, 1.10), hand_l=(-0.26, 0.16, 1.14),
-               fist_r=0.55, fist_l=0.55,
-               foot_r=(0.28, -0.32, 0.104), foot_l=(-0.18, 0.22, 0.118))),
-        (8,  P(pelvis=(0.02, -0.04, 0.852), hips=(2, 6, 0),
-               spine=(2, 10, -2), head=(10, 12, -6),
-               hand_r=(0.22, 0.23, 1.22), hand_l=(-0.18, 0.28, 1.27),
-               foot_r=(0.26, -0.26, 0.104))),
-        (12, P()),
+        (0,  R()),
+        # Impact on frame 2: the snap.
+        (2,  R(pelvis=(0.02, -0.06, 0.800), hips=(-2, 6, 0),
+               spine=(4, 14, -4), head=(20, 20, -12),
+               hand_r=(0.28, 0.24, 1.06), hand_l=(-0.24, 0.28, 1.10))),
+        # Deepest: thrown back off the shot, weight on the back foot.
+        (4,  R(pelvis=(0.05, -0.14, 0.806), hips=(4, 10, 0),
+               spine=(12, 20, -8), head=(24, 26, -16),
+               hand_r=(0.32, 0.12, 1.02), hand_l=(-0.28, 0.16, 1.04),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.16, 0.118))),
+        # Folding back over it, the hand coming up to the jaw.
+        (8,  R(pelvis=(0.04, -0.12, 0.796), hips=(-4, 9, 0),
+               spine=(-8, 16, -6), head=(16, 24, -10),
+               hand_l=(-0.12, 0.24, 1.42), elbow_l=(-0.9, -0.2, -0.3),
+               hand_r=(0.28, 0.20, 1.04), fist_l=0.25,
+               foot_r=(0.28, -0.36, 0.104), foot_l=(-0.20, 0.14, 0.104))),
+        (12, HEAD_HURT),
     ],
 
-    # 12 frames. A body shot folds him AROUND it -- chest hollows, shoulders
-    # close in, knees give and the hips drop 8 cm -- where the head reaction
-    # whips him backward. Two different things happening to a man.
+    # 12 frames (20 ticks). A body shot folds him AROUND it -- chest hollows,
+    # shoulders close in, knees give and the hips drop -- where the head
+    # reaction whips him backward. Two different things happening to a man.
+    # Ends doubled over, both hands on his stomach (GUT_HURT); Sell_Gut keeps
+    # him there and brings him back up.
     "Hit_React_Torso": [
-        (0,  P()),
-        (2,  P(pelvis=(0.0, -0.04, 0.822), spine=(-28, 0, 0), head=(-16, 0, 0),
-               hand_r=(0.12, 0.18, 1.12), hand_l=(-0.10, 0.20, 1.14),
+        (0,  R()),
+        (2,  R(pelvis=(0.0, -0.04, 0.780), hips=(-10, 0, 0), spine=(-30, 0, 0),
+               head=(-14, 0, 0),
+               hand_r=(0.14, 0.24, 1.04), hand_l=(-0.12, 0.26, 1.06),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
-        (5,  P(pelvis=(0.0, -0.08, 0.782), hips=(-10, 0, 0), spine=(-36, 0, 0),
-               head=(-22, 0, 0),
-               hand_r=(0.10, 0.14, 1.04), hand_l=(-0.08, 0.16, 1.06),
-               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
-        (8,  P(pelvis=(0.0, -0.04, 0.835), spine=(-20, 0, 0), head=(-12, 0, 0),
-               hand_r=(0.14, 0.22, 1.18), hand_l=(-0.11, 0.24, 1.20))),
-        (12, P()),
+        (5,  R(pelvis=(0.0, -0.12, 0.730), hips=(-20, 0, 0), spine=(-44, 0, 0),
+               head=(-12, 0, 0),
+               hand_r=(0.10, 0.26, 0.96), hand_l=(-0.08, 0.28, 0.98),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+               foot_r=(0.27, -0.30, 0.104))),
+        (12, GUT_HURT),
+    ],
+
+    # 20 frames / 0.667 s: the rest of a head shot, while nobody touches him
+    # (WrestlerController.SELL_TICKS). He holds the jaw, works it, shakes it
+    # off and squares back up to READY.
+    "Sell_Head": [
+        (0,  HEAD_HURT),
+        (6,  pose(HEAD_HURT, pelvis=(0.03, -0.10, 0.792), spine=(-12, 10, -4),
+                  head=(12, 8, -4), hand_l=(-0.12, 0.26, 1.46))),
+        (11, pose(HEAD_HURT, pelvis=(0.02, -0.08, 0.790), spine=(-14, 14, -4),
+                  head=(10, 20, -6), hand_l=(-0.16, 0.30, 1.34), fist_l=0.3)),
+        (16, R(pelvis=(0.01, -0.04, 0.786), head=(8, 10, 0),
+               foot_r=(0.27, -0.26, 0.104))),
+        (20, R()),
+    ],
+
+    # 20 frames / 0.667 s: doubled over a body shot. He stays folded,
+    # breathing into it, then pushes himself back up.
+    "Sell_Gut": [
+        (0,  GUT_HURT),
+        (7,  pose(GUT_HURT, pelvis=(0.0, -0.10, 0.744), spine=(-40, 0, 0),
+                  head=(-8, 0, 0))),
+        (13, R(pelvis=(0.0, -0.08, 0.766), hips=(-12, -4, 0), spine=(-28, 4, 0),
+               head=(4, 4, 0),
+               hand_r=(0.18, 0.30, 1.02), hand_l=(-0.16, 0.32, 1.04),
+               foot_r=(0.27, -0.28, 0.104))),
+        (20, R()),
     ],
 
     # Ground attacks (gauntlet/refs/animation_gap.md, Phase 4: position).

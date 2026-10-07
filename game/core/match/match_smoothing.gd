@@ -22,6 +22,9 @@ const CUT_ANGLE_DEG := 20.0
 static func snap(node: Node3D) -> void:
 	if node and node.is_inside_tree() and node.is_physics_interpolated():
 		node.reset_physics_interpolation()
+	# His pose is drawn between ticks too (Inertializer.interpolate_pose).
+	if node is WrestlerController and (node as WrestlerController).inertializer:
+		(node as WrestlerController).inertializer.snap()
 
 
 ## Watches its parent after every physics tick and resets its interpolation
