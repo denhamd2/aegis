@@ -87,7 +87,27 @@ const GETUP_TICKS := 90 # 1.5s
 ## knockdown's GETUP_TICKS: long enough to read as having been dropped,
 ## short of reading as beaten. A presentation value; gauntlet/refs/ measures
 ## no slam.
-const THROWN_DOWN_TICKS := 45 # 0.75s
+const THROWN_DOWN_TICKS := 240 # 4s -- was 0.75s; see DOWN_TICKS_STRIKE
+## How long a man stays down, by what put him there (match flow to 2K26,
+## gauntlet/refs/match_engine_2k26.md section 3). Measured with
+## tools/probe/flow_probe.tscn, ours was back up in 2.9 s (median) and a move
+## landed every 1.1 s; 2K26's man stays down 5-27 s, longer after the bigger
+## move, while the man in control works him. GETUP_TICKS stays the short
+## "stirring" lie after a kickout (MatchReferee).
+const DOWN_TICKS_STRIKE := 300   # 5 s: knocked down by strikes or a grapple
+const DOWN_TICKS_POWER := 540    # 9 s: a power move or a signature
+const DOWN_TICKS_FINISHER := 780 # 13 s: a finisher
+## The tier of whatever last knocked him down (CombatSystem.Tier, -1 for
+## strikes): MatchReferee covers only after the bigger ones.
+var knockdown_tier := -1
+
+
+static func down_ticks_for(tier: int) -> int:
+	if tier >= CombatSystem.Tier.FINISHER:
+		return DOWN_TICKS_FINISHER
+	if tier >= CombatSystem.Tier.POWER:
+		return DOWN_TICKS_POWER
+	return DOWN_TICKS_STRIKE
 
 ## The rise itself: mat to a standing fighting stance.
 ##
@@ -2753,7 +2773,8 @@ func reach_for_rope(side: Vector3, ticks: int) -> void:
 const GROUND_STOMP_LEGS := preload("res://resources/moves/ground_stomp_legs.tres")
 const GROUND_STOMP_BODY := preload("res://resources/moves/ground_stomp_body.tres")
 const GROUND_FIST := preload("res://resources/moves/ground_fist.tres")
-const GROUND_ATTACKS_MAX := 2
+## 2 -> 4 with the longer downs (DOWN_TICKS_*): the man in control works him.
+const GROUND_ATTACKS_MAX := 4
 ## Along a downed man from his pelvis (his own -Z is toward his head): past
 ## HEAD_ZONE_Z he is at the head, past LEGS_ZONE_Z at the legs.
 const HEAD_ZONE_Z := -0.55
@@ -3426,7 +3447,7 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	if move and move.defender_lands_head_away:
 		opponent._turn_round_on_the_mat()
 	if opponent._would_be_knocked_down():
-		opponent._go_down()
+		opponent._go_down(tier_of(move))
 	elif move and move.leaves_defender_down:
 		opponent._lie_down_after_throw()
 	else:
@@ -3511,7 +3532,7 @@ func _lie_down_after_throw() -> void:
 	_move_ticks_remaining = THROWN_DOWN_TICKS
 	_cover_eligible = false
 
-func _go_down() -> void:
+func _go_down(tier := -1) -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	_stop_dead()
@@ -3521,7 +3542,8 @@ func _go_down() -> void:
 	# A knockdown is not undone: what he has taken so far cannot be healed.
 	combat.heal_floor = combat.wear
 	combat.green = 0.0
-	_move_ticks_remaining = GETUP_TICKS
+	_move_ticks_remaining = down_ticks_for(tier)
+	knockdown_tier = tier
 	combat.cut_off_comeback()
 	_cover_eligible = true
 	knocked_down.emit(self)

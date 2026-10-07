@@ -25,7 +25,10 @@ extends Node
 @export var controller: WrestlerController
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
-@export var strike_cooldown_ticks: int = 40
+## 40 -> 70 (match flow to 2K26, gauntlet/refs/match_engine_2k26.md): a move
+## landed every 1.1 s against 2K26's 4-6 s. The longer downs carry most of
+## that; this spaces the standing exchange so a blow is sold before the next.
+@export var strike_cooldown_ticks: int = 70
 ## strike_cooldown_ticks during a comeback (CombatSystem.is_fired_up()).
 @export var comeback_strike_cooldown_ticks: int = 12
 ## Between strikes on a man trapped in a corner (Phase 4, position): he is
@@ -363,8 +366,10 @@ func _wants_taunt() -> bool:
 ## for the cover. He walks off a couple of metres, turns to the crowd and
 ## plays to them -- the heel in control most of all -- then goes back to work.
 ## Rolled once per knockdown, deterministic off the match seed.
-const STRUT_CHANCE_HEEL := 0.55
-const STRUT_CHANCE := 0.2
+## Raised with the longer downs (WrestlerController.DOWN_TICKS_*): there is
+## time to play to the crowd, and 2K26's man in control does (0.55 / 0.2).
+const STRUT_CHANCE_HEEL := 0.8
+const STRUT_CHANCE := 0.5
 const STRUT_DISTANCE := 2.0
 ## Inside the ropes with room to spare.
 const STRUT_LIMIT := 2.3
