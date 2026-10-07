@@ -4,15 +4,25 @@ extends Node
 ##
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 1280x720 tools/probe/skin_shot.tscn -- --out /tmp/skin
+##
+## --wet A,B,... shoots named wetness points instead of the dry/soaked pair.
+## The sweat round that re-scaled Sweat.FULL_SECONDS needed the skin at the
+## wetness a man actually HAS two minutes into a match, before and after --
+## the film at a given wetness did not change, when he reaches it did.
 
 var _out := "/tmp/skin"
+var _wets: Array = []
 
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
-		if args[i] == "--out" and i + 1 < args.size():
-			_out = args[i + 1]
+		if i + 1 >= args.size():
+			continue
+		match args[i]:
+			"--out": _out = args[i + 1]
+			"--wet":
+				_wets = Array(args[i + 1].split(",")).map(func(s): return float(s))
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 1)
@@ -36,7 +46,7 @@ func _ready() -> void:
 	var cam := Camera3D.new()
 	scene.add_child(cam)
 	cam.make_current()
-	for wet: float in [Sweat.BASE, 1.0]:
+	for wet: float in (_wets if not _wets.is_empty() else [Sweat.BASE, 1.0]):
 		for w: WrestlerController in [a, b]:
 			var sweat := w.get_node_or_null("Sweat") as Sweat
 			if sweat:
@@ -50,8 +60,10 @@ func _ready() -> void:
 			cam.look_at_from_position(shot[1], shot[2])
 			for _i in 30:
 				await RenderingServer.frame_post_draw
+			var tag := ("w%03d" % int(round(wet * 100.0))) if not _wets.is_empty() \
+					else ("wet" if wet > 0.5 else "dry")
 			get_viewport().get_texture().get_image().save_png(
-					"%s/%s_%s.png" % [_out, shot[0], "wet" if wet > 0.5 else "dry"])
+					"%s/%s_%s.png" % [_out, shot[0], tag])
 	print("SKIN_SHOT done, sweat nodes: %s %s" % [a.get_node_or_null("Sweat") != null,
 			b.get_node_or_null("Sweat") != null])
 	get_tree().quit()

@@ -19,13 +19,36 @@ extends Node
 ## Back down to 0.1 against the owner's 2K26 match (cody_roman_2k26.md):
 ## a soft sheen from the bell, not a gloss.
 const BASE := 0.1
-## Seconds of match for the time share to reach its full TIME_SHARE. AI
-## matches here run 30 s to 2.5 min, so a long one ends soaked.
-const FULL_SECONDS := 100.0
+## Seconds of match for the time share to reach its full TIME_SHARE.
+##
+## 100 -> 475. The old number is in the line it replaced: "AI matches here run
+## 30 s to 2.5 min, so a long one ends soaked". They do not any more. The match
+## flow was taken to 2K26's in the same round as this change and a match now
+## runs 474 s (428-518), measured by flow_probe against the reference's 475
+## (gauntlet/refs/match_engine_2k26.md). Against that, a 100 s clock was full a
+## FIFTH of the way in: from 1:40 on, both men sat at BASE + TIME_SHARE = 0.65
+## before damage, and soaked for the remaining six minutes. The owner, playing
+## it: "the wrestlers are sweating way too much during the match".
+##
+## So it is the match's own length, which is what the constant always meant --
+## "a long one ends soaked" is right, it was the length of a long one that
+## moved. A man is damp at the bell and soaked at the finish, and the climb
+## between them is the match.
+const FULL_SECONDS := 475.0
 ## 0.6 -> 0.55 with BASE raised, so time alone still stops short of soaked.
 const TIME_SHARE := 0.55
 ## Total limb damage that adds the full DAMAGE_SHARE.
-const DAMAGE_FULL := 160.0
+##
+## 160 -> 300, for the same reason and in the same proportion: the ceiling is
+## 400 (four limbs at CombatSystem.MAX_LIMB_DAMAGE 100), and over eight minutes
+## of 2K26 flow a man passes 160 early enough that the damage term, too, was
+## pinned for most of the match. 300 keeps a beating worth something at the
+## finish without being spent by the first near-fall.
+##
+## BodyLife.DAMAGE_FULL is this number (test_hit_flinch_and_life pins them
+## equal): the breathing and the slump run off the same scale and were stale
+## for the same reason.
+const DAMAGE_FULL := 300.0
 const DAMAGE_SHARE := 0.35
 ## Materials change slowly; four updates a second is plenty.
 const UPDATE_EVERY := 0.25

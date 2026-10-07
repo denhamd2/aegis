@@ -43,7 +43,11 @@ const SLUMP_SPINE_DEG := 8.0
 const SLUMP_HEAD_DEG := 7.0
 ## Damage that reads as spent -- Sweat's scale, so he looks as tired as he
 ## is wet.
-const DAMAGE_FULL := 160.0
+##
+## 160 -> 300 with Sweat's: an eight-minute 2K26-flow match passed 160 early,
+## so a man was breathing at BREATH_SPENT and fully slumped for most of it,
+## with nowhere left to go when the finish actually wore him down.
+const DAMAGE_FULL := 300.0
 
 var bones := {"pelvis": "pelvis", "spine_02": "spine_02", "spine_03": "spine_03",
 		"neck_01": "neck_01", "Head": "Head"}
