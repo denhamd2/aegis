@@ -320,6 +320,8 @@ func _ready() -> void:
 	if not body:
 		push_error("Roman model has no body Skeleton3D")
 		return
+	# His arms, shoulders and chest to 2K26's build (BodyBulk).
+	BodyBulk.apply(self, body, BodyBulk.ROMAN)
 	_fix_materials()
 	_copy_base_animation_library()
 	_fix_eyes()
