@@ -42,7 +42,7 @@ extends GdUnitTestSuite
 ##                       a change here silently moves EVERY clip at once.
 const PINNED := {
 	"res://tools/blender/wrestling_clips.py":
-		"ab6013efd2d7156a89d1a9e101746be0ba2051c56c89623ef5cedc9597d2caa2",
+		"3039a0a6c2468a4267c8000ea4d8a21b95779ec29e5d9f0f1828e4ec2b2c5726",
 	"res://tools/blender/rig_pose.py":
 		"e32514a0aed4e78fff3be153851c5c739966be03019594790dc8d5c012046c9c",
 }

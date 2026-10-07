@@ -282,6 +282,11 @@ func _check_for_downed_opponent_action() -> void:
 	for pair in [[wrestler_a, wrestler_b], [wrestler_b, wrestler_a]]:
 		var attacker: WrestlerController = pair[0]
 		var defender: WrestlerController = pair[1]
+		# Playing possum (PossumSpot): once a match, the man down sweeps the
+		# legs of the one who has come to stand over them.
+		if PossumSpot.wants(defender, attacker):
+			_start_possum(defender, attacker)
+			return
 		# Worked before he is covered (Phase 4, position): a stomp or a fist,
 		# by where the standing man is -- up to GROUND_ATTACKS_MAX a knockdown,
 		# never after a finisher, whose knockdown is the cover.
@@ -331,6 +336,11 @@ func _check_for_downed_opponent_action() -> void:
 			if _wants_dive(attacker, defender):
 				_start_dive(attacker, defender)
 				return
+			# His moonsault (TopRopeSpot): once a match, on a man down where a
+			# corner suits the dive -- after his own hold has had its turn.
+			if _wants_top_rope(attacker, defender):
+				_start_top_rope(attacker, defender)
+				return
 			if _wants_own_hold(attacker) \
 					and WrestlerController.has_room_for_figure_four(defender):
 				_start_own_hold(attacker, defender)
@@ -348,6 +358,26 @@ func _wants_dive(attacker: WrestlerController, defender: WrestlerController) -> 
 	return not attacker.dive_moves.is_empty() and not attacker._dive_used \
 			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
 			and DiveSpot.near_ropes(defender)
+
+func _start_possum(sweeper: WrestlerController, swept: WrestlerController) -> void:
+	sweeper._possum_used = true
+	var spot := PossumSpot.new()
+	spot.name = "PossumSpot"
+	get_parent().add_child(spot)
+	spot.begin(sweeper, swept)
+
+func _wants_top_rope(attacker: WrestlerController, defender: WrestlerController) -> bool:
+	return attacker.top_rope_move != null and not attacker._top_rope_used \
+			and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
+			and (attacker.submission_move == null or attacker._submission_move_used) \
+			and TopRopeSpot.can_dive_on(defender)
+
+func _start_top_rope(attacker: WrestlerController, defender: WrestlerController) -> void:
+	attacker._top_rope_used = true
+	var spot := TopRopeSpot.new()
+	spot.name = "TopRopeSpot"
+	get_parent().add_child(spot)
+	spot.begin(attacker, defender)
 
 func _start_dive(attacker: WrestlerController, defender: WrestlerController) -> void:
 	attacker._dive_used = true

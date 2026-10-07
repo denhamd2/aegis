@@ -223,6 +223,9 @@ var _own_signature_thrown: bool = false
 ## Thrown only at a man trapped in a corner (Roman's corner Spear). Not part
 ## of any draw: try_corner_spear() is the one way in.
 @export var corner_move: MoveDef
+## His strike at a man trapped in the corner, in place of his ordinary draw
+## (Roman's corner clotheslines, gauntlet/refs/moveset_audit_2k26.md).
+@export var corner_strike_move: MoveDef
 ## His own submission hold, if he has one (Cody's Figure-Four; Roster's
 ## "submission" tier). MatchReferee has him take it once a match on a man he
 ## has knocked down mid-match -- see _check_for_downed_opponent_action().
@@ -232,6 +235,12 @@ var _submission_move_used := false
 ## His dives (Cody's tope suicida and springboard Disaster Kick; Roster's
 ## "dive" tier): with any here, MatchReferee plays DiveSpot once a match.
 @export var dive_moves: Array[MoveDef] = []
+## His dive off the top rope onto a man down mid-ring (TopRopeSpot), or null.
+@export var top_rope_move: MoveDef
+var _top_rope_used := false
+## His sweep from the mat at a man standing over him (PossumSpot), or null.
+@export var possum_move: MoveDef
+var _possum_used := false
 ## Whether the dives have been taken this match.
 var _dive_used := false
 ## Tier of the last grapple-chain move this wrestler landed, or -1. The
@@ -3104,7 +3113,10 @@ func play_presentation_clip(clip: String, cut := false) -> void:
 	_presentation_clip = clip
 
 
-func end_presentation() -> void:
+## `keep_pose`: hand the state machine back without cutting to IDLE, so the
+## next state the match puts him in is carried from the pose he is in
+## (TopRopeSpot: lying across the man, into the cover).
+func end_presentation(keep_pose := false) -> void:
 	if not anim_tree:
 		return
 	var machine := anim_tree.tree_root as AnimationNodeStateMachine
@@ -3116,7 +3128,8 @@ func end_presentation() -> void:
 			node.animation = clip_for_state(state, false)
 	_presentation_node = "IDLE"
 	_presentation_clip = ""
-	_anim_playback.start("IDLE", true)
+	if not keep_pose:
+		_anim_playback.start("IDLE", true)
 
 
 func celebrate() -> void:
@@ -3297,6 +3310,8 @@ var _string_clock := 0
 
 
 func _pick_string_strike() -> MoveDef:
+	if corner_strike_move and opponent and opponent.is_corner_trapped():
+		return corner_strike_move
 	if _string_hits <= 0 or _string_clock - _string_last > STRING_WINDOW_TICKS \
 			or strike_move_pool.is_empty():
 		_string_hits = 0

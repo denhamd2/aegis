@@ -48,7 +48,7 @@ const SCOPED_POWER := 4
 const SCOPED_SIGNATURE := 6
 ## One per wrestler who has one, and they belong to the roster rather than to
 ## match.tscn: Roman's Spear and Cody's Cross Rhodes.
-const SCOPED_FINISHER := 2
+const SCOPED_FINISHER := 4  # + the 2K26 variants: Superman Punch into the Spear, Cross Rhodes from behind
 ## The 25 running attacks recreated from the supplied WWE 2K25 reel, each a
 ## paired move so the victim's half is keyed against the hit.
 const SCOPED_RUNNING := 27

@@ -66,6 +66,10 @@ const TURN_RATE := 6.0
 
 const TOPE_MOVE := "res://resources/moves/dive_tope_suicida.tres"
 const SPRING_MOVE := "res://resources/moves/dive_springboard_disaster_kick.tres"
+## The springboard's other ending (gauntlet/refs/moveset_audit_2k26.md): the
+## Cody Cutter off the same spring, on alternate matches when his dives
+## include it.
+const CUTTER_MOVE := "res://resources/moves/dive_springboard_cutter.tres"
 
 var attacker: WrestlerController
 var defender: WrestlerController
@@ -192,12 +196,25 @@ func _build() -> void:
 			_hold("strikes/apron_climb", apron, 0, at(0.0, up_lane)))
 	_seg_add(24, _hold("strikes/idle_ready", kicked, 0, apron),
 			_hold("strikes/apron_climb", apron, 0, kicked))
-	# 12. The springboard Disaster Kick.
+	# 12. The springboard Disaster Kick -- or the springboard Cody Cutter, the
+	# same spring and the same contact tick.
+	var cutter := uses_cutter(attacker)
 	_seg_add(SPRING_TICKS,
-			_go("strikes/disaster_kick_defender", kicked, kicked, _out,
-					SPRING_CONTACT - KICKED_CONTACT),
-			_go("strikes/springboard_dk_attacker", apron, at(SPRING_TO, up_lane), -_out),
+			_go("strikes/springboard_cutter_defender" if cutter else "strikes/disaster_kick_defender",
+					kicked, kicked, _out, SPRING_CONTACT - KICKED_CONTACT),
+			_go("strikes/springboard_cutter_attacker" if cutter else "strikes/springboard_dk_attacker",
+					apron, at(SPRING_TO, up_lane), -_out),
 			"wide", [[SPRING_CONTACT, "kick_hit"]])
+
+
+## Whether this spot ends on the springboard Cutter rather than the Disaster
+## Kick: when his dives carry it, on odd match seeds.
+static func uses_cutter(w: WrestlerController) -> bool:
+	var has := false
+	for m: MoveDef in w.dive_moves:
+		if m and String(m.resource_path) == CUTTER_MOVE:
+			has = true
+	return has and w.match_seed % 2 == 1
 
 
 ## One segment: what each man does, the shot, and cues at ticks into it.
@@ -296,7 +313,7 @@ func _event(what: String) -> void:
 				defender.combat.apply_damage(tope)
 				attacker.combat.apply_momentum(tope)
 		"kick_hit":
-			var kick := load(SPRING_MOVE) as MoveDef
+			var kick := load(CUTTER_MOVE if uses_cutter(attacker) else SPRING_MOVE) as MoveDef
 			if kick:
 				defender.combat.apply_damage(kick)
 				attacker.combat.apply_momentum(kick)

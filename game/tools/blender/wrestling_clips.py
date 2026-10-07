@@ -5922,6 +5922,355 @@ def export(path):
     )
 
 
+
+# --- The Superman Punch into the Spear (Roman's 2K26 "super") ------------------
+#
+# gauntlet/refs/moveset_audit_2k26.md: in 2K26 the Superman Punch is the set-up
+# for the Spear. One cinematic, stitched from the two authored moves rather
+# than re-keyed, so it is the same punch and the same Spear the match already
+# shows: the Superman Punch up to the moment it lands (frames 0-29), the
+# victim rocked onto his heels and staggering instead of going over, Roman
+# backing off into the Spear's crouch, then the Spear from its load (Spear
+# frame 12) to the end. 84 frames / 2.8 s; the Spear's frames are shifted by
+# SUPERMAN_SPEAR_SHIFT, so its impact (Spear frame 21) lands on frame 63.
+SUPERMAN_SPEAR_SHIFT = 42
+
+
+def _shift(keys, by, start=0):
+    return [(f + by, p) for f, p in keys if f >= start]
+
+
+CLIPS["Superman_Spear_Attacker"] = (
+    [(f, p) for f, p in CLIPS["Superman_Punch_Attacker"] if f <= 29]
+    + [
+        # Landed; up, looking at what he did.
+        (34, P(pelvis=(0.0, 0.0, 0.840), spine=(-10, 0, 0), head=(6, 0, 0),
+               hand_r=(0.24, 0.30, 1.10), hand_l=(-0.22, 0.32, 1.10),
+               fist_r=0.7, fist_l=0.7)),
+        # Backing off to give himself room, eyes on him: the root travels
+        # back 1.2 m, so the feet step under him.
+        (39, P(pelvis=(0.0, -0.02, 0.820), spine=(-12, 0, 0), head=(10, 0, 0),
+               hand_r=(0.26, 0.28, 1.06), hand_l=(-0.24, 0.30, 1.06),
+               foot_r=(0.23, -0.30, 0.16), foot_l=(-0.19, 0.20, 0.104),
+               fist_r=0.7, fist_l=0.7)),
+        (44, P(pelvis=(0.0, -0.02, 0.810), spine=(-14, 0, 0), head=(12, 0, 0),
+               hand_r=(0.26, 0.28, 1.00), hand_l=(-0.24, 0.30, 1.00),
+               foot_r=(0.23, -0.16, 0.104), foot_l=(-0.19, -0.10, 0.16),
+               fist_r=0.6, fist_l=0.6)),
+        (49, P(pelvis=(0.0, -0.04, 0.700), hips=(-18, 0, 0), spine=(-22, 0, 0),
+               head=(18, 0, 0),
+               hand_r=(0.30, 0.26, 0.72), hand_l=(-0.30, 0.26, 0.72),
+               foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104),
+               fist_r=0.4, fist_l=0.4)),
+    ]
+    + _shift(CLIPS["Spear_Attacker"], SUPERMAN_SPEAR_SHIFT, start=12)
+)
+
+CLIPS["Superman_Spear_Defender"] = (
+    [(f, p) for f, p in CLIPS["Superman_Punch_Defender"] if f <= 26]
+    + [
+        # Rocked onto his heels, not over: a step back, the hand to the jaw.
+        (31, HEAD_HURT),
+        (38, pose(HEAD_HURT, pelvis=(0.02, -0.10, 0.800), spine=(-10, 10, -4),
+                  head=(12, 14, -6))),
+        # Shaking it off, turning back to find him -- into the Spear's own
+        # "squares up, not seeing it coming" (Spear_Defender frame 14).
+        (46, pose(HEAD_HURT, pelvis=(0.01, -0.06, 0.810), spine=(-8, 6, -2),
+                  head=(8, 4, -2), hand_l=(-0.16, 0.30, 1.30))),
+    ]
+    + _shift([(f, p) for f, p in CLIPS["Spear_Defender"]], SUPERMAN_SPEAR_SHIFT, start=14)
+)
+
+
+# --- Cross Rhodes from behind (Cody's 2K26 finish) -----------------------------
+#
+# gauntlet/refs/moveset_audit_2k26.md: every Cross Rhodes in the 2K26 match --
+# the winner included -- is set up from BEHIND: the victim rocked and facing
+# away, Cody stepping in behind him and hooking the head. The front version
+# spins the man round by the wrist; this one does not touch him until the
+# hook. Cody circles round him (the root does the walking:
+# finisher_cross_rhodes_behind's trajectory, on the far side of the pair line
+# so the two never meet), and from the hook on it is the Cross Rhodes as
+# authored -- its frames from 18 shifted by CROSS_BEHIND_SHIFT.
+CROSS_BEHIND_SHIFT = 12
+
+CLIPS["Cross_Rhodes_Behind_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Stepping round him, eyes on him, hands loose.
+    (6,  P(pelvis=(0.0, 0.0, 0.830), spine=(-8, 0, 0), head=(4, 0, 0),
+           hand_r=(0.26, 0.24, 1.04), hand_l=(-0.24, 0.26, 1.04),
+           foot_r=(0.23, -0.10, 0.16), foot_l=(-0.19, 0.12, 0.104),
+           fist_r=0.4, fist_l=0.4)),
+    (12, P(pelvis=(0.0, 0.0, 0.830), spine=(-8, 0, 0), head=(4, 0, 0),
+           hand_r=(0.26, 0.24, 1.04), hand_l=(-0.24, 0.26, 1.04),
+           foot_r=(0.23, 0.10, 0.104), foot_l=(-0.19, -0.10, 0.16),
+           fist_r=0.4, fist_l=0.4)),
+    (18, P(pelvis=(0.0, 0.0, 0.830), spine=(-8, 0, 0), head=(4, 0, 0),
+           hand_r=(0.26, 0.24, 1.04), hand_l=(-0.24, 0.26, 1.04),
+           foot_r=(0.23, -0.10, 0.16), foot_l=(-0.19, 0.12, 0.104),
+           fist_r=0.4, fist_l=0.4)),
+    # Set behind him, reaching.
+    (24, P(spine=(-10, 0, 0),
+           hand_r=(0.10, 0.40, 1.30), hand_l=(-0.14, 0.38, 1.28),
+           fist_r=0.5, fist_l=0.5)),
+] + _shift(CLIPS["Cross_Rhodes_Attacker"], CROSS_BEHIND_SHIFT, start=18)
+
+CLIPS["Cross_Rhodes_Behind_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Rocked: a step back, swaying, not sure where Cody went.
+    (8,  HEAD_HURT),
+    (16, pose(HEAD_HURT, pelvis=(0.02, -0.08, 0.800), spine=(-12, -6, 2),
+              head=(10, -10, 2))),
+    (24, P(pelvis=(0.0, -0.02, 0.832), spine=(-4, 0, 0), head=(4, 0, 0),
+           hand_r=(0.28, 0.14, 1.00), hand_l=(-0.26, 0.16, 0.98),
+           fist_r=0.3, fist_l=0.3)),
+] + _shift(CLIPS["Cross_Rhodes_Defender"], CROSS_BEHIND_SHIFT, start=18)
+
+
+# --- Roman's corner clotheslines -------------------------------------------------
+#
+# gauntlet/refs/moveset_audit_2k26.md: with a man hanging in the corner, Roman
+# runs the lariat into him again and again, the crowd counting along. 24
+# frames / 0.8 s, contact on frame 9 (= tick 18 of
+# strike_corner_clothesline.tres): a step back to load, the right arm drawn
+# back low and wide, then a driving step in on the left foot and the arm
+# swung STRAIGHT across at chest height -- a lariat, not a punch: the arm
+# stays long through the chest -- carried across his own body, and back.
+CLIPS["Strike_Corner_Clothesline"] = [
+    (0,  R()),
+    (4,  R(pelvis=(0.03, -0.10, 0.800), hips=(-6, 12, 0), spine=(-10, 20, 0),
+           head=(8, -16, 0), clav_r=(0, 12, 0),
+           hand_r=(0.48, -0.12, 1.30), elbow_r=(0.9, -0.4, 0.2),
+           hand_l=(-0.24, 0.40, 1.24), fist_r=0.95,
+           foot_r=(0.27, -0.30, 0.104), foot_l=(-0.23, 0.12, 0.120))),
+    # Contact: the step in, the arm straight across his chest.
+    (9,  R(pelvis=(-0.02, 0.20, 0.830), hips=(-8, -18, 0), spine=(-14, -30, 0),
+           head=(8, 20, 0), clav_r=(0, -18, 0),
+           hand_r=(-0.06, 0.74, 1.36), elbow_r=(0.3, -0.2, -1.0),
+           hand_l=(-0.26, 0.20, 1.18), fist_r=1.0,
+           foot_l=(-0.21, 0.46, 0.104), foot_r=(0.27, -0.16, 0.130),
+           ankle_r=(22, 0, 0))),
+    # Through him and across his own body.
+    (13, R(pelvis=(-0.03, 0.20, 0.820), hips=(-8, -26, 0), spine=(-16, -40, 0),
+           head=(8, 26, 0), clav_r=(0, -10, 0),
+           hand_r=(-0.34, 0.46, 1.30), elbow_r=(0.3, -0.2, -1.0),
+           hand_l=(-0.26, 0.18, 1.14), fist_r=0.9,
+           foot_l=(-0.21, 0.46, 0.104), foot_r=(0.27, -0.16, 0.124),
+           ankle_r=(16, 0, 0))),
+    (18, R(pelvis=(0.0, 0.10, 0.790), hips=(-8, -6, 0), spine=(-18, -8, 0),
+           head=(8, 4, 0), hand_r=(0.14, 0.40, 1.12),
+           foot_l=(-0.22, 0.34, 0.104))),
+    (24, R()),
+]
+
+
+# --- Cody's top-rope moonsault (TopRopeSpot) ------------------------------------
+#
+# gauntlet/refs/moveset_audit_2k26.md: twice in the 2K26 match Cody climbs the
+# corner over a downed Roman and comes off the top onto him, then covers.
+# Played as a set piece (core/match/top_rope_spot.gd), like the dives: he
+# walks to the corner and climbs it facing out (Corner_Climb, onto the middle
+# rope), steps up to the top rope (Top_Rope_Step), and moonsaults backward
+# onto the man (Moonsault). The root stays on the mat throughout and
+# everything rises in root space, as Corner_Climb does; in the moonsault the
+# spot carries the root backward along the mat to the man, so the clip keys
+# only the height and the rotation -- the travel is the spot's, at constant
+# speed, as a body in flight goes.
+#
+# Root faces OUT, toward the post: +fwd is toward the corner, the man lies
+# behind him (-fwd).
+TOP_ROPE_FOOT_UP = 1.20 + 0.06  # RingBuilder.ROPE_HEIGHT_TOP, plus the sole
+TOP_ON = dict(
+    CODY_STAND, pelvis=(0.0, 0.16, 1.90), hips=(-28, 0, 0), spine=(-10, 0, 0),
+    head=(10, 0, 0),
+    # Arms out wide for balance, elbows soft and pointing DOWN. The first cut
+    # had the hands low in front of his hips with nothing to hold, and the
+    # solver folded the elbows out and back -- the owner: "his arm looks bent
+    # the wrong way".
+    hand_r=(0.64, 0.12, 2.30), hand_l=(-0.64, 0.12, 2.30),
+    elbow_r=(0.3, -0.4, -1.0), elbow_l=(-0.3, -0.4, -1.0),
+    fist_r=0.2, fist_l=0.2,
+    foot_r=(0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP),
+    foot_l=(-0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP),
+    knee_r=(0.3, 1.0, 0.2), knee_l=(-0.3, 1.0, 0.2))
+
+# 60 frames / 2.0 s: from the middle rope to crouching on the top one, then a
+# look back over his shoulder at the man.
+CLIPS["Top_Rope_Step"] = [
+    (0,  CORNER_ON),
+    # Hands on the top rope either side of the pad, the right boot up.
+    (12, pose(CORNER_ON, pelvis=(0.0, 0.24, 1.78), hips=(-24, 0, 0),
+              spine=(-10, 0, 0),
+              hand_r=(0.30, 0.52, 1.30), hand_l=(-0.30, 0.52, 1.30),
+              elbow_r=(0.8, -0.4, -0.5), elbow_l=(-0.8, -0.4, -0.5),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP + 0.10))),
+    # Both boots up, still holding on, then he lets go and rises into it.
+    (22, pose(CORNER_ON, pelvis=(0.0, 0.20, 1.86), hips=(-34, 0, 0),
+              spine=(-14, 0, 0),
+              hand_r=(0.30, 0.52, 1.30), hand_l=(-0.30, 0.52, 1.30),
+              elbow_r=(0.8, -0.4, -0.5), elbow_l=(-0.8, -0.4, -0.5),
+              fist_r=0.8, fist_l=0.8,
+              foot_r=(0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP),
+              foot_l=(-0.20, CORNER_FOOT_FWD, TOP_ROPE_FOOT_UP + 0.12))),
+    (32, TOP_ON),
+    # The look back over his right shoulder: there he is.
+    (44, pose(TOP_ON, spine=(-8, 24, 0), head=(4, 40, 0))),
+    (54, pose(TOP_ON, spine=(-8, 26, 0), head=(4, 44, 0))),
+    (60, TOP_ON),
+]
+
+# 36 frames / 1.2 s: the moonsault. Off the top rope backward, arched over --
+# face up (12), inverted (17), face down (22) -- and flat across the man
+# (25), contact on frame 25 (tick 50, TopRopeSpot.MOONSAULT_CONTACT). hips
+# pitch + leans him back: it goes 0 -> 90 -> 180 -> 270 so the backward turn
+# is the long way round, keyed every 90 degrees.
+CLIPS["Moonsault"] = [
+    (0,  TOP_ON),
+    # Springing up and back, arms swung overhead.
+    (5,  pose(TOP_ON, pelvis=(0.0, 0.04, 2.20), hips=(30, 0, 0), spine=(14, 0, 0),
+              head=(24, 0, 0),
+              hand_r=(0.40, -0.10, 2.85), hand_l=(-0.40, -0.10, 2.85),
+              foot_r=(0.18, 0.28, 1.45), foot_l=(-0.18, 0.28, 1.45),
+              knee_r=(0.3, 1.0, -0.2), knee_l=(-0.3, 1.0, -0.2))),
+    # Face up, horizontal, head back toward the man.
+    (11, pose(TOP_ON, pelvis=(0.0, 0.0, 2.40), hips=(90, 0, 0), spine=(16, 0, 0),
+              head=(28, 0, 0),
+              hand_r=(0.40, -0.70, 2.30), hand_l=(-0.40, -0.70, 2.30),
+              foot_r=(0.16, 0.80, 2.50), foot_l=(-0.16, 0.80, 2.50),
+              knee_r=(0.3, 0.0, 1.0), knee_l=(-0.3, 0.0, 1.0))),
+    # Inverted over the top of it, knees drawn in.
+    (16, pose(TOP_ON, pelvis=(0.0, 0.0, 2.10), hips=(180, 0, 0), spine=(14, 0, 0),
+              head=(20, 0, 0),
+              hand_r=(0.50, -0.20, 1.50), hand_l=(-0.50, -0.20, 1.50),
+              foot_r=(0.16, 0.30, 2.70), foot_l=(-0.16, 0.30, 2.70),
+              knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    # Face down, coming down on him, arms out to take it.
+    (21, pose(TOP_ON, pelvis=(0.0, 0.0, 1.05), hips=(270, 0, 0), spine=(6, 0, 0),
+              head=(10, 0, 0),
+              hand_r=(0.55, 0.40, 0.80), hand_l=(-0.55, 0.40, 0.80),
+              foot_r=(0.16, -0.90, 1.05), foot_l=(-0.16, -0.90, 1.05),
+              knee_r=(0.3, 0.0, 1.0), knee_l=(-0.3, 0.0, 1.0))),
+    # Flat across him: chest on his chest.
+    (25, dict(pelvis=(0.0, 0.0, 0.42), hips=(270, 0, 0), spine=(4, 0, 0),
+              head=(6, 0, 0),
+              hand_r=(0.50, 0.44, 0.22), hand_l=(-0.50, 0.44, 0.22),
+              elbow_r=(0.8, 0.0, 0.6), elbow_l=(-0.8, 0.0, 0.6),
+              fist_r=0.2, fist_l=0.2,
+              foot_r=(0.16, -0.92, 0.10), foot_l=(-0.16, -0.92, 0.10),
+              knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0))),
+    (30, dict(pelvis=(0.0, 0.0, 0.40), hips=(270, 0, 0), spine=(2, 0, 0),
+              head=(4, 0, 0),
+              hand_r=(0.44, 0.40, 0.20), hand_l=(-0.48, 0.42, 0.20),
+              elbow_r=(0.8, 0.0, 0.6), elbow_l=(-0.8, 0.0, 0.6),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.16, -0.92, 0.10), foot_l=(-0.16, -0.92, 0.10),
+              knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0))),
+    (36, dict(pelvis=(0.0, 0.0, 0.40), hips=(270, 0, 0), spine=(2, 0, 0),
+              head=(4, 0, 0),
+              hand_r=(0.44, 0.40, 0.20), hand_l=(-0.48, 0.42, 0.20),
+              elbow_r=(0.8, 0.0, 0.6), elbow_l=(-0.8, 0.0, 0.6),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.16, -0.92, 0.10), foot_l=(-0.16, -0.92, 0.10),
+              knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0))),
+]
+
+
+# --- The springboard Cody Cutter (DiveSpot's other ending) -----------------------
+#
+# 2K26's Cody Cutter list has two springboard variants
+# (gauntlet/refs/moveset_audit_2k26.md). The dive spot's last beat used to be
+# the springboard Disaster Kick only; on alternate matches it is this: the
+# same boot onto the middle rope from the apron and the same spring, but in
+# the air he catches the head in a three-quarter facelock and falls back to a
+# seat, driving the man's face into the mat in front of him. World space, the
+# Disaster Kick's travel (0.85 m in from the apron), the man 1.30 m in.
+CLIPS["Springboard_Cutter_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
+    (0,  P(hand_r=(0.30, 0.06, 1.25), hand_l=(-0.30, 0.06, 1.25),
+           fist_r=0.8, fist_l=0.8)),
+    (8,  P(pelvis=(0.0, 0.05, 1.050), hips=(-10, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.30, 0.08, 1.24), hand_l=(-0.30, 0.08, 1.24),
+           foot_r=(0.12, 0.06, 0.80), knee_r=(0.1, 1.0, 0.4),
+           foot_l=(-0.14, -0.02, 0.104), free_feet=True,
+           fist_r=0.8, fist_l=0.8)),
+    # Sprung high, reaching for the head.
+    (14, P(pelvis=(0.0, 0.45, 1.700), hips=(-18, 0, 0), spine=(-18, 0, 0),
+           head=(10, 0, 0),
+           hand_r=(0.12, 1.00, 1.95), hand_l=(-0.26, 0.80, 1.80),
+           foot_r=(0.15, 0.20, 1.20), foot_l=(-0.15, 0.15, 1.10), free_feet=True,
+           fist_r=0.5, fist_l=0.5)),
+    # Caught: the arm round his head, legs swinging under.
+    (19, P(pelvis=(0.0, 0.85, 1.500), hips=(-30, 0, 0), spine=(-14, 0, 0),
+           head=(6, 0, 0),
+           hand_r=(-0.04, 1.28, 1.55), hand_l=(-0.20, 1.22, 1.62),
+           elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
+           foot_r=(0.15, 0.95, 0.80), foot_l=(-0.15, 0.90, 0.85), free_feet=True,
+           fist_r=0.6, fist_l=0.6)),
+    # Down to the seat, the head driven into the mat ahead of him.
+    (24, dict(pelvis=(0.0, 0.85, 0.220), hips=(12, 0, 0), spine=(6, 0, 0),
+              head=(-6, 0, 0),
+              hand_r=(-0.04, 1.20, 0.30), hand_l=(-0.24, 1.00, 0.12),
+              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
+              fist_r=0.6, fist_l=0.0,
+              foot_r=(0.18, 1.40, 0.104), foot_l=(-0.18, 1.34, 0.104),
+              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
+    (30, dict(pelvis=(0.0, 0.85, 0.220), hips=(8, 0, 0), spine=(0, 0, 0),
+              head=(-10, 0, 0),
+              hand_r=(0.10, 1.10, 0.24), hand_l=(-0.24, 1.00, 0.10),
+              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
+              fist_r=0.3, fist_l=0.0,
+              foot_r=(0.18, 1.40, 0.104), foot_l=(-0.18, 1.34, 0.104),
+              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
+    (38, _shifted(pose(GATHER), 0.85, 0.0)),
+    (48, _shifted(P(), 0.85, 0.0)),
+]))
+
+# The man it is done to: facing the apron, pulled forward and down by the
+# head on frame 18 (the Disaster Kick victim's contact frame, so DiveSpot's
+# timing holds), face-first, then over onto his back.
+CLIPS["Springboard_Cutter_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    (12, P(spine=(-6, 0, 0), head=(6, 0, 0),
+           hand_r=(0.26, 0.24, 1.10), hand_l=(-0.24, 0.26, 1.08),
+           fist_r=0.6, fist_l=0.6)),
+    (18, dict(pelvis=(0.0, 0.08, 0.740), hips=(-40, 0, 0), spine=(-14, 0, 0),
+              head=(14, 0, 0),
+              hand_r=(0.24, 0.40, 1.00), hand_l=(-0.22, 0.42, 1.00),
+              fist_r=0.3, fist_l=0.3,
+              foot_r=(0.20, -0.18, 0.12), foot_l=(-0.18, -0.10, 0.16))),
+] + _face_first_then_roll(22, 42)
+
+
+# --- The possum attack (PossumSpot) ----------------------------------------------
+#
+# 2K26 640 s: Cody stands over Roman, who is down, and Roman -- playing possum
+# -- sweeps his legs from the mat. SUPINE's frame: head toward +fwd, his right
+# side at NEGATIVE right; the man standing over him is at his feet (-fwd).
+# 30 frames / 1.0 s, the sweep through on frame 12 (tick 24).
+CLIPS["Possum_Sweep"] = [
+    (0,  S()),
+    # Onto his hip, the right leg drawn back.
+    (6,  S(hips=(-84, 0, 150), foot_r=(-0.38, -0.30, 0.16), knee_r=(-0.6, 0.4, 0.6))),
+    # Swept through at shin height.
+    (12, S(hips=(-84, 0, 165), foot_r=(0.36, -0.82, 0.18), knee_r=(0.2, -0.4, 0.8))),
+    (16, S(hips=(-84, 0, 170), foot_r=(0.42, -0.56, 0.14), knee_r=(0.4, 0.0, 0.8))),
+    (30, S()),
+]
+
+# The man swept: his feet taken out from under him (frame 12), sat down hard
+# and over onto his back.
+CLIPS["Swept_Legs"] = [
+    (0,  R()),
+    (10, R(pelvis=(0.0, -0.04, 0.800), spine=(-10, 0, 0), head=(18, 0, 0),
+           hand_r=(0.26, 0.30, 1.10), hand_l=(-0.24, 0.32, 1.10))),
+] + _back_fall(12, 42, pelvis_hit=0.80)
+
 def main():
     arm = load_rig()
     clear_actions()

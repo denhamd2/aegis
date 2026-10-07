@@ -382,13 +382,14 @@ func _launch() -> void:
 
 ## The same two men again, a new seed, entrances and all (PostMatchMenu).
 ## False when no match has been launched from the menu this session.
-static func rematch(tree: SceneTree) -> bool:
+## `entrances` false: straight to the bell (the pause menu's RESTART MATCH).
+static func rematch(tree: SceneTree, entrances := true) -> bool:
 	if last_picks.size() < 2:
 		return false
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, last_picks[0], last_picks[1],
 			randi_range(1, 1 << 30), last_watch)
-	scene.entrances = true
+	scene.entrances = entrances
 	var old := tree.current_scene
 	tree.root.add_child(scene)
 	tree.current_scene = scene
@@ -464,6 +465,15 @@ static func configure_match(scene: Node, player: Roster.Entry,
 					wrestler.running_attack_move_pool = rest
 				"corner":
 					wrestler.corner_move = moves[0]
+				"possum":
+					wrestler.possum_move = moves[0]
+				"top_rope":
+					wrestler.top_rope_move = moves[0]
+				"corner_strike":
+					wrestler.corner_strike_move = moves[0]
+				"finisher":
+					# Variants of his own finisher, drawn beside it.
+					wrestler.finisher_move_pool = moves
 				"submission":
 					wrestler.submission_move = moves[0]
 				"dive":

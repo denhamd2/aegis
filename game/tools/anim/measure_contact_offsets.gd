@@ -46,6 +46,7 @@ const MOVES := {
 	"res://resources/moves/strike_kick.tres": "",
 	"res://resources/moves/strike_kick_heavy.tres": "",
 	"res://resources/moves/strike_gut_punch.tres": "",
+	"res://resources/moves/strike_corner_clothesline.tres": "",
 	"res://resources/moves/strike_bionic_elbow.tres": "",
 	"res://resources/moves/strike_dropdown_uppercut.tres": "",
 	"res://resources/moves/running_attack_clothesline.tres": "running_clothesline",
