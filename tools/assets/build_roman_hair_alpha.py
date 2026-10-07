@@ -222,6 +222,94 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
     print(f"{source.name:38} -> {target.name:34} skin tone {tone}, green mean {mean:.1f}")
 
 
+## Skin, worked over the reconstructed albedo (build_head).
+##
+## Against 2K26 the face read as a wax mask: one flat orange tint, every baked
+## crease at the same depth (forehead, crow's feet, nasolabial folds -- he
+## looked twenty years older and carved), and a pale peach mouth that drew
+## the eye before anything else did (gauntlet/refs/characters/review/
+## faces_2k26_vs_ours.jpg). A real face is zoned: warmer and redder across
+## the cheeks, nose and ears, where blood sits near the surface; darker and a
+## little cooler in the eye sockets; and lips several shades deeper than the
+## skin round them. So:
+##
+## 1. The bake is split into bands. The broad shading stays; the wrinkle band
+##    (WRINKLE_RADII) comes down to WRINKLE_KEEP; the pore band stays almost
+##    whole, so the skin keeps its grain.
+## 2. Each zone is an ellipsoid-ish falloff in the head's own 3D space,
+##    carried into texture space through the UVs (_uv_field) like the brows
+##    and the beard, and applied as a multiply so the texture's detail rides
+##    through.
+WRINKLE_RADII = (3, 18)
+WRINKLE_KEEP = 0.45
+PORE_KEEP = 0.9
+## (centre x, y, z, radius x, y, z, multiply RGB). x is mirrored.
+SKIN_ZONES = [
+    # cheeks: warm flush over the cheekbone
+    ((0.050, 1.688, 0.120), (0.030, 0.022, 0.040), (1.03, 0.95, 0.94)),
+    # nose: the same warmth, a touch stronger at the tip and wings
+    ((0.000, 1.680, 0.150), (0.020, 0.028, 0.030), (1.03, 0.95, 0.94)),
+    # eye sockets: deeper and cooler, the way his read under arena light
+    ((0.034, 1.718, 0.120), (0.022, 0.010, 0.030), (0.88, 0.86, 0.90)),
+]
+## The lips: deeper, browner and a little mauve, against skin that is warm.
+## (0.64, 0.54, 0.56) first: right in the texture, but the lower lip faces
+## up into the arena's overhead key and still rendered pale peach
+## (face_shot), so it goes deeper than it would under flat light.
+LIP_TONE = (0.50, 0.40, 0.43)
+LIP_Y = 1.647
+LIP_HALF_W = 0.026
+LIP_HALF_H = 0.0095
+LIP_FEATHER = 0.45
+## And matte, in the roughness map (written with the scalp cap's): at the
+## skin's 0.58 the lower lip, facing up into the overhead key, caught a
+## broad pale sheen that read as a peach band even once the colour was right.
+LIP_ROUGHNESS = 0.80
+_lip_field = None
+
+
+def paint_skin(model: pathlib.Path, target: pathlib.Path) -> None:
+    import numpy as np
+    head = _glb_attributes(model, "M_Head")
+    pos = np.array(head["POSITION"])
+    uv = np.array(head["TEXCOORD_0"])
+    tris = np.array(head["INDICES"]).reshape(-1, 3)
+    albedo = Image.open(target).convert("RGB")
+    size = albedo.size[0]
+    img = np.asarray(albedo, dtype=np.float32)
+
+    # 1. Soften the creases, keep the pores.
+    def blur(r):
+        return np.asarray(albedo.filter(ImageFilter.GaussianBlur(r)), dtype=np.float32)
+    fine, broad = blur(WRINKLE_RADII[0]), blur(WRINKLE_RADII[1])
+    img = broad + WRINKLE_KEEP * (fine - broad) + PORE_KEEP * (img - fine)
+
+    # 2. Colour zones.
+    tint = np.ones((size, size, 3), dtype=np.float32)
+    front = pos[:, 2] > 0.0
+    for centre, radius, mul in SKIN_ZONES:
+        for side in ((1.0, -1.0) if centre[0] else (1.0,)):
+            c = np.array([centre[0] * side, centre[1], centre[2]])
+            d = np.sqrt((((pos - c) / np.array(radius)) ** 2).sum(axis=1))
+            w = np.clip(1.0 - d, 0.0, 1.0) * front
+            w = w * w * (3.0 - 2.0 * w)
+            field = _uv_field(size, uv, tris, w)[..., None]
+            tint *= 1.0 + field * (np.array(mul, dtype=np.float32) - 1.0)
+    lip = np.sqrt((pos[:, 0] / LIP_HALF_W) ** 2 + ((pos[:, 1] - LIP_Y) / LIP_HALF_H) ** 2)
+    w = np.clip((1.0 + LIP_FEATHER - lip) / LIP_FEATHER, 0.0, 1.0) * (pos[:, 2] > 0.04)
+    global _lip_field
+    _lip_field = _uv_field(size, uv, tris, w * w * (3.0 - 2.0 * w))
+    field = _lip_field[..., None]
+    tint *= 1.0 + field * (np.array(LIP_TONE, dtype=np.float32) - 1.0)
+    # The zones are rasterised per triangle: blur off the facets.
+    tint_img = Image.fromarray(np.clip(tint * 127.5, 0, 255).astype(np.uint8), "RGB") \
+        .filter(ImageFilter.GaussianBlur(4))
+    tint = np.asarray(tint_img, dtype=np.float32) / 127.5
+    out = np.clip(img * tint, 0, 255).astype(np.uint8)
+    Image.fromarray(out, "RGB").save(target, optimize=True)
+    print(f"{'skin zones, lips':38} -> {target.name:34} wrinkles x{WRINKLE_KEEP}")
+
+
 ## Eyebrows, painted into the head albedo.
 ##
 ## The model has none that render. The beard/brow card mesh (M_Combinations)
@@ -238,7 +326,7 @@ def build_head(atlas: pathlib.Path, source: pathlib.Path, target: pathlib.Path) 
 ## Heavy, straight and low at the inner end, the way his are; thinning to a
 ## tail past the outer corner of the eye. Seeded, so the file is the same
 ## every build.
-BROW_COLOR = (22, 17, 14)
+BROW_COLOR = (16, 12, 10)
 BROW_SEED = 7
 ## (x from the midline, centre y, half-thickness) in metres along the brow.
 ##
@@ -248,13 +336,16 @@ BROW_SEED = 7
 ## his sit low and nearly straight over the eyes, the inner ends pulled down,
 ## which is most of his stare. Now it rises only 3 mm, peaks flat, and the
 ## tail barely drops; a touch thinner so it reads as hair, not marker.
-BROW_PROFILE = [(0.011, 1.7332, 0.0050), (0.020, 1.7348, 0.0053),
-                (0.032, 1.7360, 0.0047), (0.044, 1.7363, 0.0038),
-                (0.054, 1.7352, 0.0026), (0.060, 1.7336, 0.0013)]
+##
+## Then a fifth heavier, against 2K26's (faces_2k26_vs_ours.jpg): his are
+## thick dark bars at broadcast distance and ours read grey and thin.
+BROW_PROFILE = [(0.011, 1.7332, 0.0060), (0.020, 1.7348, 0.0064),
+                (0.032, 1.7360, 0.0056), (0.044, 1.7363, 0.0045),
+                (0.054, 1.7352, 0.0030), (0.060, 1.7336, 0.0015)]
 BROW_STRANDS = 900
 ## Opacity of the soft fill under the strands: skin never shows through a
 ## brow this dense at broadcast distance, where single strands filter away.
-BROW_FILL = 125
+BROW_FILL = 165
 BROW_SUPERSAMPLE = 4
 
 
@@ -743,6 +834,10 @@ def paint_scalp_cap(model: pathlib.Path, target: pathlib.Path,
     print(f"{'scalp cap':38} -> {target.name:34} {int((field > 0.05).sum())} texels")
     cover = np.asarray(mask, dtype=np.float32) / 255.0
     rough = HEAD_SKIN_ROUGHNESS + (SCALP_CAP_ROUGHNESS - HEAD_SKIN_ROUGHNESS) * cover
+    if _lip_field is not None:
+        lip = np.asarray(Image.fromarray((_lip_field * 255).astype(np.uint8), "L")
+                         .filter(ImageFilter.GaussianBlur(4)), dtype=np.float32) / 255.0
+        rough = np.maximum(rough, HEAD_SKIN_ROUGHNESS + (LIP_ROUGHNESS - HEAD_SKIN_ROUGHNESS) * lip)
     channels = [np.round(rough * 255), np.round(cover * 255), np.zeros_like(cover)]
     Image.merge("RGB", [Image.fromarray(c.astype(np.uint8), "L") for c in channels]) \
         .save(surface, optimize=True)
@@ -866,6 +961,7 @@ def main() -> int:
         CHARACTERS / "roman_reigns_Image.png",
         CHARACTERS / "roman_reigns_head_color.png",
     )
+    paint_skin(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     paint_brows(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     paint_beard_shadow(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")
     paint_beard_strands(CHARACTERS / "roman_reigns.glb", CHARACTERS / "roman_reigns_head_color.png")

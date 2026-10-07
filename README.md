@@ -9066,3 +9066,22 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
   Rematch, Change Wrestlers, Title Screen and Quit.
 - Tests: `test_2k26_moves.gd`, `test_pause_menu.gd`, and the face-off shot
   lengths in `test_entrance_cameras.gd`.
+
+## Round: Roman's face to 2K26 (gauntlet/refs/characters/review/roman_face_before_after.jpg)
+
+The owner's ask: Roman's brows, eyes and features against the 2K26 model.
+His head albedo is a reconstruction (only the source's green channel
+survived), so it was one flat orange tint with every baked crease at full
+depth and a pale peach mouth.
+
+- **`paint_skin`** (`tools/assets/build_roman_hair_alpha.py`), run right after the rebuild:
+  - **Wrinkles:** the crease band is softened to 45%; pores are kept at 90%.
+  - **Skin zones:** warm cheeks and nose, deeper eye sockets. Each zone is placed in the head's 3D space and carried to texture space through the UVs.
+- **Lips:**
+  - Deeper and browner in the albedo.
+  - Matte in `head_rm` (roughness 0.80): under the overhead key the lower lip read pale peach.
+  - Measured on the face_shot render, the lower lip's brightest band went from 223 to 158.
+- **Brows:** a fifth heavier, darker and denser.
+- **Gates:**
+  - New test `test_lips_are_deeper_than_the_skin`.
+  - The build is deterministic: re-running it leaves git clean.
