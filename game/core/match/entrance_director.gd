@@ -169,6 +169,10 @@ const WALK_KEY_RANGE := 11.0
 const CAM_KEY_ENERGY := 2.5
 const CAM_KEY_UP := 0.7
 const CAM_KEY_SIDE := 0.9
+## The camera key on a man in the ring, for the corner intros and the
+## stare-down's over-the-shoulder: his corner faces the stage, and lit only by
+## the screen behind him he was a silhouette (the owner's render).
+const CAM_KEY_RING_GAIN := 0.5
 ## The ramp wash: two long throws from either side, high, on the ramp while
 ## somebody walks it, so the wides read as a lit aisle and not a black slot.
 const RAMP_WASH_ENERGY := 6.0
@@ -2079,6 +2083,8 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 		"ref_check":
 			_intro_close(beat, first, delta)
 		"faceoff_side":
+			if _cam_key:
+				_cam_key.visible = false
 			# F1, the walk to the centre: square to the line between them,
 			# wide, at eye height -- then the sequence takes the stare.
 			var mid := (_a.global_position + _b.global_position) * 0.5
@@ -2090,6 +2096,8 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 					+ Vector3.UP * FACEOFF_CAM_HEIGHT, mid + Vector3.UP * 1.45,
 					FACEOFF_CAM_FOV, first and not _was_shot("faceoff_side"), delta)
 		"faceoff":
+			if _cam_key:
+				_cam_key.visible = false
 			# The hard camera's own seat and lens, so the bell does not cut.
 			_camera.set_entrance_shot(_camera.hard_cam_position,
 					(_a.global_position + _b.global_position) * 0.5
@@ -2151,15 +2159,22 @@ func _faceoff_seq(delta: float) -> void:
 			_camera.set_entrance_shot(mid + side * lerpf(FACEOFF_CAM_DISTANCE, 3.0, e)
 					+ Vector3.UP * FACEOFF_CAM_HEIGHT, mid + Vector3.UP * 1.5,
 					FACEOFF_CAM_FOV, cut, delta)
+			if _cam_key:
+				_cam_key.visible = false
 		_:
-			# From behind the champion, onto the challenger.
+			# Over the shoulder of the man who came out first, onto the other's
+			# face (2K26 270-306 s).
 			var near := hb
 			var far := ha
 			var hold := maxf(float(_beats[_beat]["ticks"]) / TPS - 2.6, 0.1)
 			var e := smoothstep(0.0, 1.0, clampf((t - 2.6) / hold, 0.0, 1.0))
 			var back := _flat(near - far).normalized()
-			_camera.set_entrance_shot(near + back * 1.05 + side * lerpf(0.45, 0.45 + FACEOFF_OTS_DRIFT, e)
-					+ Vector3.UP * 0.05, far + Vector3.DOWN * 0.10, FACEOFF_OTS_FOV, cut, delta)
+			# Far enough back and off to the side that he is a shoulder and
+			# the back of a head in the corner of the frame, not a black
+			# shape filling it; the challenger's face over it, lit.
+			_camera.set_entrance_shot(near + back * 1.7 + side * lerpf(0.75, 0.75 + FACEOFF_OTS_DRIFT, e)
+					+ Vector3.UP * 0.08, far + Vector3.DOWN * 0.18, FACEOFF_OTS_FOV, cut, delta)
+			_aim_cam_key(_a, true)
 
 
 func _intro_shot() -> void:
@@ -2213,10 +2228,12 @@ func _intro_close(beat: Dictionary, first: bool, delta: float) -> void:
 		var chest := head + Vector3.DOWN * 0.38
 		_camera.set_entrance_shot(chest + to_c * (INTRO_CLOSE_DISTANCE - INTRO_CLOSE_PUSH * e)
 				+ side * 0.55 + Vector3.UP * 0.05, chest, INTRO_CLOSE_FOV, first, delta)
+		_aim_cam_key(man, true)
 	else:
 		_camera.set_entrance_shot(man.global_position + to_c * 2.9 + side * 1.4
 				+ Vector3.UP * 1.45, man.global_position + Vector3.UP * 1.3, 34.0,
 				first, delta)
+		_aim_cam_key(man, true)
 
 
 ## His head, for the close-ups: the head bone if the rig has one, else a
@@ -2410,12 +2427,14 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 
 ## The camera key: beside and above the lens, on his chest; off in the ring,
 ## where the rig lights him.
-func _aim_cam_key(w: WrestlerController) -> void:
+func _aim_cam_key(w: WrestlerController, in_ring := false) -> void:
 	if _cam_key == null or _camera == null:
 		return
-	if _in_ring(w):
+	if _in_ring(w) and not in_ring:
 		_cam_key.visible = false
 		return
+	# In the ring the lens is three metres off, not ten: half the light.
+	_cam_key.light_energy = CAM_KEY_ENERGY * (CAM_KEY_RING_GAIN if in_ring else 1.0)
 	var chest := w.global_position + Vector3.UP * 1.3
 	var cam := _camera.global_position
 	var to := (chest - cam)
