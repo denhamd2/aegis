@@ -20,6 +20,9 @@ func _ready() -> void:
 	if "--match" in args:
 		await _match(rough)
 		return
+	if "--faceoff" in args:
+		await _faceoff()
+		return
 	var who := "roman"
 	if "--who" in args and args.find("--who") + 1 < args.size():
 		who = args[args.find("--who") + 1]
@@ -127,4 +130,61 @@ func _match(rough: bool) -> void:
 				held[k] += 1
 	print("MOTION_CADENCE match rough=%s frames=%d held_a hand=%d head=%d  held_b hand=%d head=%d" % [
 			rough, FRAMES, held[0], held[1], held[2], held[3]])
+	get_tree().quit()
+
+
+## The intros and the stare-down, both men on their marks: is the camera, and
+## each man's head as drawn, moving every frame? A cut is one frame of a big
+## jump and is not counted as held; a held frame is one where nothing moved
+## at all while the shot was meant to be drifting.
+func _faceoff() -> void:
+	var scene: Node = load("res://scenes/match.tscn").instantiate()
+	var pair := Roster.pair_from_spec("")
+	TitleScreen.configure_match(scene, pair[0], pair[1], 3)
+	scene.entrances = true
+	get_tree().root.add_child.call_deferred(scene)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	for i in director._beats.size():
+		if (director._beats[i] as Dictionary)["kind"] == "pair":
+			for w: WrestlerController in [director._a, director._b]:
+				w.global_transform = director._mark[w]
+				MatchSmoothing.snap(w)
+				w.visible = true
+			director._beat = i
+			director._start_beat()
+			break
+	var cam := scene.get_node("MatchCamera") as Camera3D
+	var recorders: Array[DrawnBone] = []
+	for w: WrestlerController in [director._a, director._b]:
+		var rec := DrawnBone.new()
+		rec.bone = w.skeleton.find_bone(w._skeleton_bone_name("head"))
+		w.skeleton.add_child(rec)
+		recorders.append(rec)
+	var first := Engine.get_process_frames()
+	var cams := {}
+	var shots := {}
+	var frames := 0
+	while director._beat < director._beats.size() and frames < 6000:
+		await get_tree().process_frame
+		frames += 1
+		cams[Engine.get_process_frames()] = cam.get_global_transform_interpolated()
+		shots[Engine.get_process_frames()] = String((director._beats[mini(director._beat,
+				director._beats.size() - 1)] as Dictionary).get("shot", ""))
+	var held_cam := {}
+	var held_head := [0, 0]
+	for f in range(first + 2, first + frames):
+		if not cams.has(f) or not cams.has(f - 1):
+			continue
+		var a: Transform3D = cams[f]
+		var b: Transform3D = cams[f - 1]
+		if a.origin.distance_to(b.origin) < 1e-6 and a.basis.is_equal_approx(b.basis):
+			held_cam[shots[f]] = int(held_cam.get(shots[f], 0)) + 1
+		for k in 2:
+			var seen: Dictionary = recorders[k].by_frame
+			if seen.has(f) and seen.has(f - 1) and (seen[f] as Vector3).distance_to(seen[f - 1]) < 1e-6:
+				held_head[k] += 1
+	print("MOTION_CADENCE faceoff frames=%d held_cam=%s held_head_a=%d held_head_b=%d" % [
+			frames, held_cam, held_head[0], held_head[1]])
 	get_tree().quit()
