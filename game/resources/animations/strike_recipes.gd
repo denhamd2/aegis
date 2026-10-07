@@ -597,6 +597,16 @@ const RECIPES := {
 	# pressing the shoulders into the mat, eyes on the shoulders.
 	"pin_cover": {"kind": "retime", "source": "Pin_Cover",
 		"seconds": 0.600, "file": AUTHORED},
+
+	# Authored (match flow to 2K26): the slow getup in stages -- roll over, get
+	# his wind on hands and knees, push up -- and the man hauled to his feet by
+	# the other (ground_pickup / getup_hauled play together, 1.2 s each).
+	"getup_staged": {"kind": "retime", "source": "Getup_Staged",
+		"seconds": 3.100, "file": AUTHORED},
+	"getup_hauled": {"kind": "retime", "source": "Getup_Hauled",
+		"seconds": 1.200, "file": AUTHORED},
+	"ground_pickup": {"kind": "retime", "source": "Pickup_Haul",
+		"seconds": 1.200, "file": AUTHORED},
 }
 
 ## Clip name as registered on the wrestler's AnimationPlayer.

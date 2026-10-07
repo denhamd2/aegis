@@ -46,6 +46,9 @@ const AUTHORED_LENGTHS := {
 	"irish_whip_throw": 0.800,
 	"getup_rise": 2.100,          # WrestlerController.GETUP_RISE_TICKS = 126
 	"pin_cover": 0.600,
+	"getup_staged": 3.100,        # WrestlerController.GETUP_STAGED_TICKS = 186
+	"getup_hauled": 1.200,        # WrestlerController.PICKUP_TICKS = 72
+	"ground_pickup": 1.200,
 }
 
 ## The clips a wrestler SITS in have to loop. The bake defaults to

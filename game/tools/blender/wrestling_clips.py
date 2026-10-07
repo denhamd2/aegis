@@ -6274,6 +6274,71 @@ CLIPS["Swept_Legs"] = [
            hand_r=(0.26, 0.30, 1.10), hand_l=(-0.24, 0.32, 1.10))),
 ] + _back_fall(12, 42, pelvis_hit=0.80)
 
+# --- Getting up in stages, and being hauled up (match flow to 2K26) ------------
+#
+# 2K26's man does not spring up: he rolls over, stays on his hands and knees
+# getting his wind, then pushes up (gauntlet/refs/match_engine_2k26.md). Getup_Rise
+# is the roll and the push with nothing between, and its beats are load-bearing
+# (the fast, input-driven rise is cut from it), so it stays as it is. This is
+# the same clip with the breath taken on all fours: everything up to the
+# all-fours key (22) unchanged, then STAGED_HOLD frames of heaving, then the
+# rest of the rise shifted by the hold.
+STAGED_HOLD = 30
+_rise = CLIPS["Getup_Rise"]
+_fours = dict(next(p for f, p in _rise if f == 22))
+CLIPS["Getup_Staged"] = (
+    [(f, p) for f, p in _rise if f <= 22]
+    + [
+        # Breath in: the back drops, the head hangs lower.
+        (22 + 9, pose(_fours, pelvis=(0.0, -0.02, 0.455), hips=(-60, 0, 0),
+                      spine=(-24, 0, 0), head=(30, 0, 0))),
+        # Out: the back rounds up, head level with the shoulders.
+        (22 + 19, pose(_fours, pelvis=(0.0, -0.02, 0.485), hips=(-56, 0, 0),
+                       spine=(-14, 0, 0), head=(14, 0, 0))),
+        # A shake of the head, then the second breath in.
+        (22 + 25, pose(_fours, pelvis=(0.0, -0.02, 0.462), hips=(-59, 0, 0),
+                       spine=(-22, 0, 0), head=(26, 6, 0))),
+        (22 + STAGED_HOLD, _fours),
+    ]
+    + [(f + STAGED_HOLD, p) for f, p in _rise if f > 22]
+)
+
+# The man hauled to his feet: the same rise at 36 frames instead of 63, with the
+# last beats gripping the other man's forearms. Played by the victim of
+# Pickup_Haul, beat for beat (36 frames / 1.2 s each).
+HAUL_FRAMES = 36
+_haul = [(round(f * HAUL_FRAMES / 63.0), p) for f, p in _rise]
+_haul = [(f, pose(p, hand_r=(0.20, 0.52, 1.14), hand_l=(-0.18, 0.52, 1.18),
+                  fist_r=0.5, fist_l=0.5) if f >= 26 and f < HAUL_FRAMES else p)
+         for f, p in _haul]
+CLIPS["Getup_Hauled"] = _haul
+
+# The man who hauls him: down to a knee at the downed man's head (the Ground_Fist
+# lunge), both hands to his arms, then up, drawing him with him. 36 frames / 1.2 s.
+_LUNGE = dict(hips=(-8, 0, 0), foot_r=(0.16, 0.34, 0.104), knee_r=(0.2, 1.0, 0.2),
+              foot_l=(-0.15, -0.40, 0.13), knee_l=(-0.2, 1.0, -0.6),
+              ankle_l=(40, 0, 0), fist_r=0.3, fist_l=0.3)
+CLIPS["Pickup_Haul"] = [
+    (0,  P()),
+    (4,  P(pelvis=(0.0, 0.03, 0.780), spine=(-18, 0, 0), head=(-20, 0, 0),
+           foot_r=(0.19, 0.10, 0.20), knee_r=(0.2, 1.0, 0.3), ankle_r=(-10, 0, 0),
+           hand_r=(0.20, 0.30, 1.00), hand_l=(-0.20, 0.30, 1.00))),
+    (9,  pose(P(), **_LUNGE, pelvis=(0.0, 0.08, 0.450), spine=(-55, 0, 0),
+              head=(-34, 0, 0),
+              hand_r=(0.14, 0.60, 0.30), hand_l=(-0.14, 0.60, 0.30))),
+    (14, pose(P(), **_LUNGE, pelvis=(0.0, 0.07, 0.470), spine=(-52, 0, 0),
+              head=(-30, 0, 0),
+              hand_r=(0.14, 0.58, 0.34), hand_l=(-0.14, 0.58, 0.34))),
+    (22, pose(P(), **_LUNGE, pelvis=(0.0, 0.05, 0.650), spine=(-40, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.18, 0.50, 0.78), hand_l=(-0.18, 0.50, 0.80))),
+    (30, P(pelvis=(0.0, 0.02, 0.840), spine=(-20, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.22, 0.46, 1.14), hand_l=(-0.20, 0.46, 1.18),
+           fist_r=0.5, fist_l=0.5)),
+    (36, P()),
+]
+
+
 def main():
     arm = load_rig()
     clear_actions()
