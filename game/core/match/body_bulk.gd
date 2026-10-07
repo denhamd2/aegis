@@ -40,8 +40,11 @@ const ROMAN := {
 
 
 ## Inflates every skinned mesh under `root` bound to `skeleton`. Returns how
-## many vertices moved.
-static func apply(root: Node, skeleton: Skeleton3D, gains: Dictionary) -> int:
+## many vertices moved. `inward` names, per mesh, the surfaces whose normals
+## face the body (a garment's lining), which move against their normals so
+## they go out with the rest.
+static func apply(root: Node, skeleton: Skeleton3D, gains: Dictionary,
+		inward: Dictionary = {}) -> int:
 	if skeleton == null:
 		return 0
 	var gain_of_bone := {}
@@ -71,7 +74,8 @@ static func apply(root: Node, skeleton: Skeleton3D, gains: Dictionary) -> int:
 		var any := false
 		for s in source.get_surface_count():
 			var arrays := source.surface_get_arrays(s)
-			var n := inflate(arrays, bind_gain)
+			var flip: Array = inward.get(String(mi.name), [])
+			var n := inflate(arrays, bind_gain, -1.0 if flip.has(s) else 1.0)
 			moved += n
 			any = any or n > 0
 			surfaces.append(arrays)
@@ -82,7 +86,7 @@ static func apply(root: Node, skeleton: Skeleton3D, gains: Dictionary) -> int:
 
 ## Moves each vertex of one surface's arrays out along its normal; returns how
 ## many moved. Public for the test.
-static func inflate(arrays: Array, bind_gain: Dictionary) -> int:
+static func inflate(arrays: Array, bind_gain: Dictionary, direction := 1.0) -> int:
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals = arrays[Mesh.ARRAY_NORMAL]
 	var bones = arrays[Mesh.ARRAY_BONES]
@@ -98,7 +102,7 @@ static func inflate(arrays: Array, bind_gain: Dictionary) -> int:
 			if bind_gain.has(k):
 				d += float(weights[v * per + j]) * float(bind_gain[k])
 		if d > 1e-5:
-			verts[v] += (normals[v] as Vector3) * d
+			verts[v] += (normals[v] as Vector3) * d * direction
 			moved += 1
 	arrays[Mesh.ARRAY_VERTEX] = verts
 	return moved

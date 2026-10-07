@@ -9,8 +9,24 @@ extends Node
 ## sleeves bending at his elbows and the skirt swinging with his thighs.
 ##
 ## It keeps its OWN copy of the skeleton, the one it was exported with, and
-## that copy is driven from his every frame: pinned to his skeleton's
-## transform and every bone's pose copied across by name. Re-pointing the
+## that copy is driven from his: hung UNDER his Skeleton3D with identity
+## transforms, so it shares his skeleton's global transform at every moment,
+## and every bone's pose copied across by name on his `skeleton_updated` --
+## after the animation, the IK and every modifier have posed him. The same
+## as the ula fala (EntranceProps._wear_fala).
+##
+## It used to be a top-level node pinned to his skeleton's transform and
+## copying his bone poses in _process. The owner, on his Mac: the coat
+## flashed on and off through the entrance. Read in _process his transform
+## is the physics tick's while his body is drawn interpolated between ticks
+## (MatchSmoothing), and his bone poses are the ones from before his
+## modifiers (Inertializer's between-tick draw among them) -- so the coat sat
+## up to a tick of walking (~2 cm) off the body under it, by a different
+## amount every frame, and his skin showed through it and was gone again.
+##
+## And it is bulked as his body is (BodyBulk.CODY, lining pushed the same way
+## as the cloth): built on the body before the bulk, it no longer cleared his
+## arms and shoulders by the bulk's 1-1.6 cm. Re-pointing the
 ## coat's skin at his Skeleton3D was the first attempt, and although its
 ## binds resolved (same names, identical bind poses) the coat stayed in the
 ## rest pose while he moved -- so the coat does not depend on runtime skin
@@ -44,10 +60,18 @@ func _wear(skeleton: Skeleton3D) -> void:
 		return
 	_his = skeleton
 	_root = (load(COAT) as PackedScene).instantiate()
-	add_child(_root)
-	_root.top_level = true
+	_his.add_child(_root)
 	for candidate in _root.find_children("*", "Skeleton3D", true, false):
 		_own = candidate
+	# Placing him is his skeleton's job: every node from the glb's root down
+	# to its skeleton goes to identity.
+	var up: Node = _own
+	while up != null and up != _his:
+		if up is Node3D:
+			(up as Node3D).transform = Transform3D.IDENTITY
+		up = up.get_parent()
+	if _own:
+		BodyBulk.apply(_root, _own, BodyBulk.CODY, LINING)
 	var mats := _materials()
 	for node in _root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
@@ -58,18 +82,18 @@ func _wear(skeleton: Skeleton3D) -> void:
 	if _own:
 		for i in _own.get_bone_count():
 			_map.append(_his.find_bone(_own.get_bone_name(i)))
+	_his.skeleton_updated.connect(_follow)
 	_follow()
 
 
-func _process(_delta: float) -> void:
-	_follow()
+## The inner shell (Solidify) of each part: its normals face his body, so the
+## bulk pushes it the other way, outward with the cloth.
+const LINING := {"CoatBody": [1], "CoatSkirt": [1], "CoatSleeve": [1]}
 
 
 func _follow() -> void:
 	if _own == null or not is_instance_valid(_his):
 		return
-	# His skeleton's frame, and then every bone's local pose.
-	_own.global_transform = _his.global_transform
 	for i in _map.size():
 		var j := _map[i]
 		if j >= 0:
@@ -79,8 +103,16 @@ func _follow() -> void:
 
 
 func set_worn(on: bool) -> void:
-	if _root:
+	if is_instance_valid(_root):
 		_root.visible = on
+
+
+## It hangs off his skeleton, not off this node, so it does not go with it.
+func _exit_tree() -> void:
+	if is_instance_valid(_his) and _his.skeleton_updated.is_connected(_follow):
+		_his.skeleton_updated.disconnect(_follow)
+	if is_instance_valid(_root):
+		_root.queue_free()
 
 
 ## The coat, to be carried (PropHandoff): the skinned coat cannot leave his

@@ -9085,3 +9085,17 @@ depth and a pale peach mouth.
 - **Gates:**
   - New test `test_lips_are_deeper_than_the_skin`.
   - The build is deterministic: re-running it leaves git clean.
+
+## Round: the owner's Mac playtest (coat, face-off, announcer)
+
+- **Cody's coat flashed on and off through his entrance.** It had two causes, both new with the last build.
+  - **Cause one: the bulk.** BodyBulk built his arms and shoulders out by 1-1.6 cm, and the coat, built on the old body, no longer covered them. Rendered, the bulked arms came straight through the sleeves (`gauntlet/refs/characters/review/cody_coat_before_after.jpg`).
+  - **Cause two: lag.** The coat was a top-level copy that followed him in `_process`. It read his physics-tick transform and his poses from before the modifiers. His body is now drawn between ticks, so the coat sat up to about 2 cm off it, by a different amount every frame.
+  - **Fix:** the coat now hangs under his skeleton and is posed on `skeleton_updated`, like Roman's ula fala. It is bulked with the same table, and its lining is pushed outward with the cloth.
+  - **Test:** `test_entrance_coat.gd`.
+- **The face-off still felt like quick cuts.** The stare was two shots, but the run-up to the bell was seven shots in 24 s, none longer than 4 s. Measured with the new `tools/probe/cut_log.tscn`.
+  - Every hold is now 5-6 s: card, referee check, both corners, profile into the stare, then the over-the-shoulder.
+  - That makes about 36 s to the bell, the length of 2K26's.
+- **The music dropped too low under Justin Roberts.**
+  - The music is no longer ducked. Justin is lifted 7 dB on his own bus into a hard limiter, so he can't clip.
+  - The crowd dips only 4 dB, and Master has a limiter for the sum.
