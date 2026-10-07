@@ -97,6 +97,16 @@ const THROWN_DOWN_TICKS := 240 # 4s -- was 0.75s; see DOWN_TICKS_STRIKE
 const DOWN_TICKS_STRIKE := 300   # 5 s: knocked down by strikes or a grapple
 const DOWN_TICKS_POWER := 540    # 9 s: a power move or a signature
 const DOWN_TICKS_FINISHER := 780 # 13 s: a finisher
+## The slow rise in stages (Getup_Staged): roll over, get his wind on hands and
+## knees, push up. 93 frames at 30 fps. The input-driven rise stays the quick
+## one, GETUP_RISE_FAST_TICKS.
+const GETUP_STAGED_TICKS := 186
+## Hauled to his feet by the other man (ground_pickup / getup_hauled).
+const PICKUP_TICKS := 72
+## After a finisher is kicked out of, the man who threw it sells on the mat too
+## (Getup_Staged, from PIN_ATTACKER), and the man under it stirs this long
+## before his own staged rise.
+const DOUBLE_DOWN_STIR_TICKS := 60
 ## The tier of whatever last knocked him down (CombatSystem.Tier, -1 for
 ## strikes): MatchReferee covers only after the bigger ones.
 var knockdown_tier := -1
@@ -2266,7 +2276,7 @@ func _process_active_move(input: Dictionary) -> void:
 		_tick_ground_step()
 		if in_active_frames and opponent and not _active_move_hit_applied:
 			_active_move_hit_applied = true
-			if DOWNED_STATES.has(opponent.fsm.current_state):
+			if _ground_zone != "pickup" and DOWNED_STATES.has(opponent.fsm.current_state):
 				opponent._take_ground_hit(self, _active_move, _ground_zone)
 	elif in_active_frames and opponent and _strike_reaches(_active_move) \
 			and not UNHITTABLE_STATES.has(opponent.fsm.current_state) \
@@ -2773,6 +2783,7 @@ func reach_for_rope(side: Vector3, ticks: int) -> void:
 const GROUND_STOMP_LEGS := preload("res://resources/moves/ground_stomp_legs.tres")
 const GROUND_STOMP_BODY := preload("res://resources/moves/ground_stomp_body.tres")
 const GROUND_FIST := preload("res://resources/moves/ground_fist.tres")
+const GROUND_PICKUP := preload("res://resources/moves/ground_pickup.tres")
 ## 2 -> 4 with the longer downs (DOWN_TICKS_*): the man in control works him.
 const GROUND_ATTACKS_MAX := 4
 ## Along a downed man from his pelvis (his own -Z is toward his head): past
@@ -2789,6 +2800,11 @@ const GROUND_STEP_TICKS := 6
 ## A man hit on the mat stays down at least this much longer.
 const GROUND_HOLD_DOWN_TICKS := 30
 
+## Ground blows he takes before the man in control hauls him up, how close to
+## his head that man stands to do it, and whether this knockdown's haul is spent.
+const PICKUP_AFTER_ATTACKS := 2
+const PICKUP_REACH := 0.35
+var picked_up := false
 var ground_attacks_taken := 0
 var _ground_zone := ""
 var _ground_step_left := 0
@@ -2864,6 +2880,42 @@ func begin_ground_attack(victim: WrestlerController) -> void:
 	# He is going nowhere while he is being worked.
 	victim._move_ticks_remaining = maxi(victim._move_ticks_remaining,
 			move.startup_frames + GROUND_HOLD_DOWN_TICKS)
+
+
+## Whether `victim`, down, is to be hauled to his feet from here: worked over
+## enough, the time left long enough for the whole haul, and the man in control
+## at his head (not the cover, which is the referee's call).
+func can_pickup(victim: WrestlerController) -> bool:
+	if victim.fsm.current_state != WrestlerFSM.State.DOWN or victim.picked_up:
+		return false
+	if victim.ground_attacks_taken < PICKUP_AFTER_ATTACKS:
+		return false
+	if victim._move_ticks_remaining < PICKUP_TICKS + 30:
+		return false
+	var flat := ground_target(victim, "head") - global_position
+	flat.y = 0.0
+	return flat.length() <= GROUND_START_RANGE
+
+
+## Hauls `victim` up by the arms: he rises on the paired clip while this man
+## draws him up, and is left on his feet and hurt, an arm's length off.
+func begin_pickup(victim: WrestlerController) -> void:
+	var target := ground_target(victim, "head")
+	var flat := target - global_position
+	flat.y = 0.0
+	var dir := flat.normalized() if flat.length() > 0.01 else -global_basis.z
+	look_at(global_position + dir, Vector3.UP)
+	_play_strike_clip(GROUND_PICKUP)
+	_start_move(WrestlerFSM.State.STRIKE, GROUND_PICKUP)
+	_ground_zone = "pickup"
+	var mark := target - dir * PICKUP_REACH
+	_ground_step = (mark - global_position) / float(GROUND_STEP_TICKS)
+	_ground_step.y = 0.0
+	_ground_step_left = GROUND_STEP_TICKS
+	victim.picked_up = true
+	victim._set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_hauled")
+	victim.fsm.transition_to(WrestlerFSM.State.GETUP)
+	victim._move_ticks_remaining = PICKUP_TICKS
 
 
 func _tick_ground_step() -> void:
@@ -3538,6 +3590,7 @@ func _go_down(tier := -1) -> void:
 	_stop_dead()
 	fsm.transition_to(WrestlerFSM.State.DOWN)
 	ground_attacks_taken = 0
+	picked_up = false
 	_damage_at_last_knockdown = combat.wear
 	# A knockdown is not undone: what he has taken so far cannot be healed.
 	combat.heal_floor = combat.wear
@@ -3575,8 +3628,10 @@ func _process_down(input: Dictionary) -> void:
 	var pressed_up: bool = input.get("strike", false) \
 			or (combat != null and combat.is_fired_up())
 	if pressed_up or _move_ticks_remaining <= 0:
+		if not pressed_up:
+			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")
 		fsm.transition_to(WrestlerFSM.State.GETUP)
-		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_RISE_TICKS
+		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_STAGED_TICKS
 
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
 	# Bleed the hit's shove off. Without the decay the velocity set in

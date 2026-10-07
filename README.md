@@ -9133,3 +9133,23 @@ Measured with `tools/probe/flow_probe.tscn` on three Roman vs Cody matches: the 
   - one man's control run 2.8 s → 3.8 s.
 - **Not yet done:** the staged getup (knees, then feet), picking a man up, and the double-down after a finisher kickout.
 - **Test:** `test_match_flow_2k26.gd`. `test_post_match.gd` now sets the knockdown tier (it forces a man down without a real knockdown).
+
+## Round: staged getup, the pick-up, the double-down (match flow, part 2)
+- **Getup in stages.** A man who rises on his own now rolls over, gets his wind on
+  hands and knees (a breath in, a breath out, a shake of the head), then pushes up:
+  `Getup_Staged`, 93 frames / 3.1 s (`GETUP_STAGED_TICKS` 186). It is `Getup_Rise`
+  with the hold spliced in at the all-fours key; `Getup_Rise` itself and the fast,
+  input-driven rise are untouched.
+- **The pick-up.** After two ground blows, if the knockdown does not call for a cover,
+  the man in control kneels at the downed man's head and hauls him to his feet
+  (`Pickup_Haul` / `Getup_Hauled`, 1.2 s each, `ground_pickup.tres`, no damage). Once
+  per knockdown (`picked_up`); the hauled man is left on his feet and hurt, an arm's
+  length off. `WrestlerController.can_pickup` / `begin_pickup`, called from
+  `MatchReferee._check_for_downed_opponent_action`.
+- **The double-down.** When a finisher is kicked out of (not a rope break) the man who
+  threw it goes to the mat in the staged getup too (`PIN_ATTACKER -> GETUP` is legal now)
+  and the man under it stirs `DOUBLE_DOWN_STIR_TICKS` (1 s) before his own staged rise.
+- `flow_probe` seeds 1-2: both matches still end in a pinfall (7.2 and 10.0 min); down
+  spells median 7.1 s; pick-ups now part of the control runs. One `GrappleRig.begin`
+  assert showed in seed 2 (a grapple started while one was active) -- not seen on seed 2
+  before this change, cause not yet traced.

@@ -295,6 +295,13 @@ func _check_for_downed_opponent_action() -> void:
 				and attacker.can_ground_attack(defender):
 			attacker.begin_ground_attack(defender)
 			return
+		# Hauled up instead of covered: worked over, not worth a cover, so the
+		# man in control picks him up for more.
+		if not wants_cover(defender) \
+				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
+				and attacker.can_pickup(defender):
+			attacker.begin_pickup(defender)
+			return
 		if defender.fsm.current_state == WrestlerFSM.State.DOWN \
 				and defender._cover_eligible \
 				and wants_cover(defender) \
@@ -532,7 +539,10 @@ func _update_count() -> void:
 
 func _end_pin(three_count_reached: bool, rope := false) -> void:
 	_pinning = false
-	_pin_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
+	var double_down := not three_count_reached and not rope \
+			and _pin_defender.knockdown_tier >= CombatSystem.Tier.FINISHER
+	if not double_down:
+		_pin_attacker.fsm.transition_to(WrestlerFSM.State.IDLE)
 	if three_count_reached:
 		_declare_winner(_pin_attacker, "pinfall")
 	else:
@@ -541,6 +551,13 @@ func _end_pin(three_count_reached: bool, rope := false) -> void:
 		_finished.erase(_pin_defender)
 		_pin_defender.fsm.transition_to(WrestlerFSM.State.DOWN)
 		_pin_defender._move_ticks_remaining = WrestlerController.GETUP_TICKS
+		# Both men sell a finisher kicked out of: the man who threw it is spent
+		# on the mat too, and rises in stages with the man under it.
+		if double_down:
+			_pin_defender._move_ticks_remaining = WrestlerController.DOUBLE_DOWN_STIR_TICKS
+			_pin_attacker._set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")
+			_pin_attacker.fsm.transition_to(WrestlerFSM.State.GETUP)
+			_pin_attacker._move_ticks_remaining = WrestlerController.GETUP_STAGED_TICKS
 		# The near-fall comeback: he was losing badly, he survived the cover,
 		# and he fires up off the mat.
 		# Not off a rope break: he did not fight his way out of it.
