@@ -46,8 +46,11 @@ func test_only_the_biggest_blows_stop_the_clips() -> void:
 
 func test_fatigue_runs_from_fresh_to_spent_on_sweats_scale() -> void:
 	assert_float(BodyLife.fatigue_of(0.0)).is_equal(0.0)
-	assert_float(BodyLife.fatigue_of(80.0)).is_equal_approx(0.5, 1e-5)
-	assert_float(BodyLife.fatigue_of(1000.0)).is_equal(1.0)
+	# Half the scale is half spent -- read off the scale rather than off a
+	# number that was half of it when this was written. It was 80, against a
+	# DAMAGE_FULL of 160, and went stale the moment that moved to 300.
+	assert_float(BodyLife.fatigue_of(BodyLife.DAMAGE_FULL * 0.5)).is_equal_approx(0.5, 1e-5)
+	assert_float(BodyLife.fatigue_of(BodyLife.DAMAGE_FULL * 10.0)).is_equal(1.0)
 	assert_float(BodyLife.DAMAGE_FULL).is_equal(Sweat.DAMAGE_FULL)
 
 
