@@ -9118,3 +9118,18 @@ The owner: "Remove the Dynamite and timer bar from the top of the match screen. 
 - **Removed:** `MatchHUD`'s top-centre broadcast bar, which held the "DYNAMITE · WORLD TITLE MATCH" title, the match clock and the thin crowd meter under it.
 - **Kept:** `crowd_lean()` for its tests. The arena's own LED ribbon board is part of the venue and stays.
 - **Test:** the clock test is replaced by `test_there_is_no_title_bar_or_match_clock`.
+
+## Round: match flow to 2K26 (gauntlet/refs/match_engine_2k26.md)
+
+Measured with `tools/probe/flow_probe.tscn` on three Roman vs Cody matches: the length was right (7.9 min), but a man was back up in 2.9 s against 2K26's 5-27 s.
+
+- **Down time by what put him there:** 5 s after strikes, 9 s after a power move or signature, 13 s after a finisher (`WrestlerController.DOWN_TICKS_*`). A slam that leaves him lying: 4 s (was 0.75 s).
+- **Cover gate:** `MatchReferee.wants_cover` covers after a power move, signature or finisher, or in MatchFlow's finish. Not after every knockdown. The man in control works him instead: up to 4 ground attacks (was 2), and struts more often (0.5 / heel 0.8).
+- **Strikes** space out: the AI's strike cooldown goes 40 → 70 ticks.
+- **Result (flow_probe, 3 seeds):**
+  - median down spell 2.9 s → 6.1 s, longest 13 s;
+  - length unchanged (476 s mean);
+  - moves per minute stay about 33, because strikes land in strings of three (realistic);
+  - one man's control run 2.8 s → 3.8 s.
+- **Not yet done:** the staged getup (knees, then feet), picking a man up, and the double-down after a finisher kickout.
+- **Test:** `test_match_flow_2k26.gd`. `test_post_match.gd` now sets the knockdown tier (it forces a man down without a real knockdown).

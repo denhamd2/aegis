@@ -29,6 +29,9 @@ func _finish_by_pin() -> Array:
 	b.fsm.transition_to(WrestlerFSM.State.STUNNED)
 	b.fsm.transition_to(WrestlerFSM.State.DOWN)
 	b._move_ticks_remaining = 2000
+	# A signature's knockdown: the referee covers after the big ones (match flow to
+	# 2K26), and this is the pin the test is about.
+	b.knockdown_tier = CombatSystem.Tier.SIGNATURE
 	a.global_position = b.global_position + (a.global_position - b.global_position).normalized() * 0.9
 	for i in 900:
 		await get_tree().physics_frame
