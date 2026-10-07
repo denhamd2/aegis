@@ -4,20 +4,20 @@
 
 [resource]
 script = ExtResource("1")
-animation_pair_id = &"strike_jab"
-startup_frames = 10
+animation_pair_id = &"strike_gut_punch"
+startup_frames = 14
 active_frames = 4
-recovery_frames = 17
-reversal_window_start = 10
-reversal_window_end = 13
-damage_head = 4.0
-damage_torso = 1.0
+recovery_frames = 26
+reversal_window_start = 14
+reversal_window_end = 17
+damage_head = 0.0
+damage_torso = 7.0
 damage_arms = 0.0
 damage_legs = 0.0
-contact_offset = Vector3(0.063, 1.46, -0.653)
+contact_offset = Vector3(-0.02, 1.06, -0.66)
 contact_radius = 0.12
 momentum_cost = 0.0
-momentum_gain = 4.0
+momentum_gain = 5.0
 weight_class_min = 0
 weight_class_max = 2
 required_opponent_state = -1

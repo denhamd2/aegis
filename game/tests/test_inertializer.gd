@@ -42,3 +42,36 @@ func test_a_fast_arrival_shortens_the_fade_instead_of_overshooting() -> void:
 func test_nothing_to_carry_is_a_no_op() -> void:
 	var c := Inertializer._bollo(0.0, -0.1, 9.0)
 	assert_float(Inertializer._eval(c, 0.0)).is_equal(0.0)
+
+
+## In the match the mixer runs on the 60 Hz tick; the pose drawn between two
+## ticks is between the two tick poses, not the last one held (the "stop
+## motion" a 120 Hz display showed: 111 of 240 frames held,
+## tools/probe/motion_cadence -- --match).
+func test_the_pose_is_drawn_between_ticks() -> void:
+	var sk: Skeleton3D = auto_free(Skeleton3D.new())
+	sk.add_bone("root")
+	sk.add_bone("arm")
+	sk.set_bone_parent(1, 0)
+	var ine := Inertializer.new()
+	sk.add_child(ine)
+	add_child(sk)
+	ine._ensure(sk)
+	ine._tick_prior_rot = [Quaternion.IDENTITY, Quaternion.IDENTITY]
+	ine._tick_prior_pos = [Vector3.ZERO, Vector3.ZERO]
+	ine._drawn_rot[1] = Quaternion(Vector3.UP, 0.4)
+	ine._drawn_pos[0] = Vector3(0, 0, 0.2)
+	ine.draw_between(sk, 0.5)
+	assert_float(sk.get_bone_pose_rotation(1).get_angle()).is_equal_approx(0.2, 1e-4)
+	assert_vector(sk.get_bone_pose_position(0)).is_equal_approx(Vector3(0, 0, 0.1), Vector3.ONE * 1e-5)
+	ine.draw_between(sk, 1.0)
+	assert_float(sk.get_bone_pose_rotation(1).get_angle()).is_equal_approx(0.4, 1e-4)
+
+
+## A placed body is drawn as placed: nothing in between.
+func test_a_snap_draws_the_next_tick_as_it_is() -> void:
+	var ine: Inertializer = auto_free(Inertializer.new())
+	assert_bool(ine._cut).is_true()
+	ine._cut = false
+	ine.snap()
+	assert_bool(ine._cut).is_true()

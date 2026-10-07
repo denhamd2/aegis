@@ -31,12 +31,17 @@ func test_a_blow_lands_where_its_damage_does() -> void:
 	assert_str(HitFlinch.zone_of(legs)).is_equal("legs")
 
 
-func test_only_heavy_blows_stop_the_clips() -> void:
-	var jab: MoveDef = load("res://resources/moves/strike_jab.tres")
-	var cross: MoveDef = load("res://resources/moves/strike_cross.tres")
-	assert_int(WrestlerController.hit_stop_ticks_for(HitFlinch.strength_of(jab))).is_equal(0)
-	assert_int(WrestlerController.hit_stop_ticks_for(HitFlinch.strength_of(cross))) \
+## Only the biggest blows stop the picture: an ordinary punch or kick never
+## freezes it (the stutter the owner saw), a signature does, briefly.
+func test_only_the_biggest_blows_stop_the_clips() -> void:
+	for path in ["strike_jab", "strike_cross", "strike_kick"]:
+		var move: MoveDef = load("res://resources/moves/%s.tres" % path)
+		assert_int(WrestlerController.hit_stop_ticks_for(HitFlinch.strength_of(move))) \
+				.override_failure_message("%s freezes the picture" % path).is_equal(0)
+	var superman: MoveDef = load("res://resources/moves/signature_superman_punch.tres")
+	assert_int(WrestlerController.hit_stop_ticks_for(HitFlinch.strength_of(superman))) \
 			.is_equal(WrestlerController.HIT_STOP_HEAVY)
+	assert_int(WrestlerController.HIT_STOP_HEAVY).is_less_equal(2)
 
 
 func test_fatigue_runs_from_fresh_to_spent_on_sweats_scale() -> void:

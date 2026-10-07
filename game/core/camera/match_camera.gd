@@ -262,6 +262,8 @@ const MIN_SHOT := 0.8
 const BIG_STRIKE_DAMAGE := 9.0
 const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6}
 ## Trauma (0..1, squared into the shake) per kind of impact.
+## An ordinary strike no longer shakes the camera (_on_move_landed); kept for
+## anything that still asks for a light shake.
 const TRAUMA_STRIKE := 0.3
 const TRAUMA_BIG_STRIKE := 0.45
 const TRAUMA_SLAM := 0.55
@@ -1003,7 +1005,10 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 		return
 	var damage := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
 	var big := damage >= BIG_STRIKE_DAMAGE
-	add_trauma(TRAUMA_BIG_STRIKE if big else TRAUMA_STRIKE)
+	# 2K26 shakes on a big blow, not on every punch: a shake on every jab
+	# read as the camera flinching, not the man.
+	if big:
+		add_trauma(TRAUMA_BIG_STRIKE)
 	if big and String(move.resource_path).get_file().begins_with("strike"):
 		_try_cut(Cut.STRIKE, defender, attacker)
 

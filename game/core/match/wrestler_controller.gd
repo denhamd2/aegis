@@ -112,6 +112,19 @@ const GETUP_RISE_FAST_TICKS := 68 # 1.14s, the measured input-driven rise
 ## and late ones finish. A reachability value, not a feel claim.
 const SUBMISSION_ESCAPE_LIMB := 60.0
 const HIT_REACT_TICKS := 20
+## The sell after it (gauntlet/refs/match_aaa_plan.md): HIT_REACT is still 20
+## ticks of being unable to act -- the frame data the strikes are balanced on
+## -- but it no longer springs back to the stance at the end of them. Left
+## alone, he plays on through the sell (strikes/sell_head, strikes/sell_gut),
+## 40 ticks more, so a blow is sold for a second as it is in 2K26 and not a
+## third of one. Anything he does -- a strike, a grapple, a step -- ends it at
+## once (inertialized), so it never costs a player a tick. An AI man waits it
+## out: his own reversal aside, he does not act until he has sold it.
+const SELL_TICKS := 40
+## The blow in a run that rocks him: hit while still selling the one before,
+## and the one before that, he staggers (STUNNED) instead of flinching -- the
+## 2K26 flurry, where the reactions build on each other.
+const FLURRY_STUN_AT := 3
 
 ## How hard a landed strike shoves the man who took it, and for how long.
 ##
@@ -335,11 +348,26 @@ var rope_reach: RopeReach
 var sell_clutch: SellClutch
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
+## The grip targets and blend as they stood on the last two ticks, in the
+## IK's own space, so the hands are drawn between ticks with the rest of him
+## (draw_grip_between_ticks). A target placed in the world once a tick sat
+## still against his interpolated body until the next one: the hands of a
+## lock-up stepped at 60 Hz while everything else moved every frame.
+var _grip_prev_local: Array[Vector3] = []
+var _grip_cur_local: Array[Vector3] = []
+var _grip_blend_prev: float = 0.0
 ## Span from shoulder to hand in the rest pose, measured in _build_ik_rig().
 var _arm_reach: float = 0.0
 ## State -> clip, queued by whoever is about to enter that state and
 ## consumed by _take_clip_override(). See its doc comment.
 var _state_clip_override: Dictionary = {}
+## The sell that follows the hit reaction now playing, and how long is left of
+## the one being played in IDLE (SELL_TICKS).
+var _sell_clip := ""
+var sell_ticks := 0
+## Blows taken back to back, each landing before he had finished selling the
+## last; the third rocks him (FLURRY_STUN_AT).
+var _flurry_hits := 0
 
 ## FSM state -> clip from the base mesh's library. Every state gets *some*
 ## plausible clip from the single-character library on hand — no paired
@@ -1021,19 +1049,24 @@ func _build_body_life() -> void:
 	skeleton.add_child(body_life)
 
 
-## Hit-stop: on a heavy blow both men's poses hold still for a couple of
-## ticks at the moment of contact -- the beat that makes a blow read as
-## landing on something, in every fighting game since the arcade. The flinch
-## keeps moving through it. Presentation only: neither the match clock nor
-## the clips stop.
-const HIT_STOP_HEAVY := 3
-const HIT_STOP_MEDIUM := 2
+## Hit-stop: on a big blow both men's poses hold still for a couple of ticks
+## at the moment of contact -- the beat that makes a blow read as landing on
+## something. Kept to the blows at the top of HitFlinch's scale (a signature,
+## a big boot, a spear): 2K26 has no freeze on an ordinary punch at all, and
+## held on every cross the match stuttered -- poses still for 3 ticks on
+## every second exchange, the "stop motion at certain parts" the owner saw.
+## The flinch keeps moving through it. Presentation only: neither the match
+## clock nor the clips stop.
+const HIT_STOP_HEAVY := 2
+const HIT_STOP_MEDIUM := 0
+## Only a blow at the top of the scale stops.
+const HIT_STOP_STRENGTH := HitFlinch.MAX_STRENGTH
 
 
 static func hit_stop_ticks_for(strength: float) -> int:
-	if strength >= 0.9:
+	if strength >= HIT_STOP_STRENGTH - 1e-4:
 		return HIT_STOP_HEAVY
-	return HIT_STOP_MEDIUM if strength >= 0.6 else 0
+	return HIT_STOP_MEDIUM
 
 
 ## Held by the Inertializer: the drawn pose stops, the clip runs on under
@@ -1139,9 +1172,28 @@ func _update_grip_ik() -> void:
 	_close_for_lock_up()
 	var engaged := _is_gripping_state() and _aim_grip_targets()
 	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
+	_grip_blend_prev = _grip_blend
 	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
 	for ik in _arm_ik:
 		ik.interpolation = _grip_blend
+	if _grip_cur_local.size() != _grip_targets.size():
+		_grip_cur_local.resize(_grip_targets.size())
+		for i in _grip_targets.size():
+			_grip_cur_local[i] = _grip_targets[i].position
+	_grip_prev_local = _grip_cur_local.duplicate()
+	for i in _grip_targets.size():
+		_grip_cur_local[i] = _grip_targets[i].position
+
+
+## Draws the grip between the last two ticks at `f` (Inertializer, before the
+## IK solves). The tick's own target goes back on at the next tick.
+func draw_grip_between_ticks(f: float) -> void:
+	if _grip_prev_local.size() != _grip_targets.size():
+		return
+	var blend := lerpf(_grip_blend_prev, _grip_blend, f)
+	for i in _grip_targets.size():
+		_grip_targets[i].position = _grip_prev_local[i].lerp(_grip_cur_local[i], f)
+		_arm_ik[i].interpolation = blend
 
 
 # --- The lock-up's distance --------------------------------------------------
@@ -1466,6 +1518,8 @@ func _physics_process(delta: float) -> void:
 	fsm._physics_process(delta)
 	_read_reversal(input)
 	_tick_stamina()
+	_tick_sell()
+	_string_clock += 1
 
 	match fsm.current_state:
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN:
@@ -1656,7 +1710,11 @@ func _apply_gravity(delta: float) -> void:
 
 func _poll_live_input() -> Dictionary:
 	if is_ai:
-		return ai.poll_input() if ai else {}
+		var decided: Dictionary = ai.poll_input() if ai else {}
+		# Selling a blow, he waits it out; only a reversal comes through.
+		if sell_ticks > 0:
+			return {"reversal": decided.get("reversal", false)}
+		return decided
 	return {
 		"move": Input.get_vector("move_left", "move_right", "move_up", "move_down"),
 		"strike": Input.is_action_just_pressed("strike"),
@@ -1717,7 +1775,7 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	if fsm.current_state == WrestlerFSM.State.RUN:
 		_maybe_start_running_attack(input)
 	elif input.get("strike", false) and strike_move:
-		var strike := _pick_tier_move(strike_move, strike_move_pool)
+		var strike := _pick_string_strike()
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
@@ -2206,6 +2264,8 @@ func _process_active_move(input: Dictionary) -> void:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
+	if fsm.current_state == WrestlerFSM.State.STRIKE:
+		_count_string_hit()
 	move_landed.emit(self, opponent, move)
 	# Momentum belongs to whoever lands the hit (self), not the wrestler
 	# taking it — applied immediately since it's this wrestler's own
@@ -2972,8 +3032,13 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 	# state existed, with its clip, and nothing had ever entered it.
 	# STUNNED is not legal out of every state HIT_REACT is (a second stagger,
 	# a getup, a tie-up); those take the ordinary reaction.
-	if opponent and opponent.combat.is_fired_up() \
+	var selling := sell_ticks > 0 or fsm.current_state == WrestlerFSM.State.HIT_REACT
+	_flurry_hits = _flurry_hits + 1 if selling else 1
+	var rocked := _flurry_hits >= FLURRY_STUN_AT
+	if (rocked or opponent and opponent.combat.is_fired_up()) \
 			and WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.STUNNED):
+		if rocked:
+			_flurry_hits = 0
 		_start_move(WrestlerFSM.State.STUNNED, _timed_stub(STUNNED_TICKS))
 	else:
 		_play_hit_reaction(move)
@@ -3091,12 +3156,29 @@ func _play_strike_clip(move: MoveDef) -> void:
 ## spinebuster to the ribs produced the same flinch -- which is most of why
 ## strikes read as not connecting to anything in particular.
 func _play_hit_reaction(move: MoveDef) -> void:
-	_set_state_clip(WrestlerFSM.State.HIT_REACT, StrikeRecipes.reaction_for(move))
+	var reaction := StrikeRecipes.reaction_for(move)
+	_set_state_clip(WrestlerFSM.State.HIT_REACT, reaction)
+	_sell_clip = StrikeRecipes.sell_for(reaction)
 
 ## Swaps which clip a state's node plays, before the FSM enters it. The
 ## AnimationTree is built once from STATE_ANIMATIONS, so this is how a state
 ## that needs more than one clip gets one -- the same approach
 ## play_paired_pose() uses to give each grapple role its own performance.
+## Counts the sell down. It ends early the moment he leaves IDLE (he did
+## something, or was hit again); run out in IDLE, he goes back to the stance
+## he loops on, carried in by the Inertializer.
+func _tick_sell() -> void:
+	if sell_ticks <= 0:
+		return
+	if fsm.current_state != WrestlerFSM.State.IDLE:
+		sell_ticks = 0
+		return
+	sell_ticks -= 1
+	if sell_ticks == 0:
+		_restart_state_clip(WrestlerFSM.State.IDLE,
+				clip_for_state(WrestlerFSM.State.IDLE, _is_grapple_attacker))
+
+
 func _set_state_clip(state: WrestlerFSM.State, clip: String) -> void:
 	if not anim_tree or clip == "" or not anim_player.has_animation(clip):
 		return
@@ -3202,6 +3284,46 @@ func is_finisher(move: MoveDef) -> bool:
 ## draw count) must always produce the same move, or replays stop matching.
 ## The multipliers are deliberately different from WrestlerAI._should_whip()'s
 ## so the two decisions don't move in lockstep across a match.
+## Strike strings (gauntlet/refs/match_aaa_plan.md): 2K26's strikes come in
+## combinations -- right, right, then the big one -- not one random shot per
+## press. A strike thrown within STRING_WINDOW_TICKS of the last one landing
+## carries the string on: the second is a light shot again, the third the
+## heaviest he has. Out of a string, the draw is the tier draw as before.
+const STRING_WINDOW_TICKS := 60
+const STRING_LENGTH := 3
+var _string_hits := 0
+var _string_last := -1000
+var _string_clock := 0
+
+
+func _pick_string_strike() -> MoveDef:
+	if _string_hits <= 0 or _string_clock - _string_last > STRING_WINDOW_TICKS \
+			or strike_move_pool.is_empty():
+		_string_hits = 0
+		return _pick_tier_move(strike_move, strike_move_pool)
+	var choices: Array[MoveDef] = [strike_move]
+	for candidate: MoveDef in strike_move_pool:
+		if candidate and opponent.weight_class >= candidate.weight_class_min \
+				and opponent.weight_class <= candidate.weight_class_max:
+			choices.append(candidate)
+	choices.sort_custom(func(x: MoveDef, y: MoveDef) -> bool:
+		return StrikeRecipes.total_damage(x) < StrikeRecipes.total_damage(y))
+	if _string_hits >= STRING_LENGTH - 1:
+		return choices[choices.size() - 1]
+	# Still light: the lighter half, the shot he did not just throw first.
+	var light := choices.slice(0, maxi(1, choices.size() / 2))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 8192 + player_index * 131 + _tier_draws
+	_tier_draws += 1
+	return light[rng.randi_range(0, light.size() - 1)]
+
+
+## A strike of his landed: the string goes on, or ends on its heavy shot.
+func _count_string_hit() -> void:
+	_string_hits = 0 if _string_hits + 1 >= STRING_LENGTH else _string_hits + 1
+	_string_last = _string_clock
+
+
 func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	if pool.is_empty():
 		return primary
@@ -3430,6 +3552,12 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 			velocity = Vector3.ZERO
 	_move_ticks_remaining -= 1
 	if _move_ticks_remaining <= 0:
+		# Out of a hit reaction into IDLE: sell it (SELL_TICKS).
+		if fsm.current_state == WrestlerFSM.State.HIT_REACT \
+				and next_state == WrestlerFSM.State.IDLE and _sell_clip != "":
+			_set_state_clip(WrestlerFSM.State.IDLE, _sell_clip)
+			sell_ticks = SELL_TICKS
+		_sell_clip = ""
 		# Also covers GETUP -> IDLE, the only place a wrestler that lost
 		# _cover_eligible to a kickout (see the field's own doc comment)
 		# gets it back — harmless to set unconditionally for the

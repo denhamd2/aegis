@@ -196,6 +196,10 @@ const RECIPES := {
 	# recovery, never from a slower action phase.
 	"strike_kick_heavy": {"kind": "retime", "source": "Strike_Kick_Heavy",
 		"seconds": 0.950, "file": AUTHORED},
+	# Roman's body shot (wrestling_clips.py "Strike_Gut_Punch"): 22 frames,
+	# contact on frame 7 = tick 14, strike_gut_punch.tres's startup.
+	"strike_gut_punch": {"kind": "retime", "source": "Strike_Gut_Punch",
+		"seconds": 0.733, "file": AUTHORED},
 	# Cody's (wrestling_clips.py "Cody's strikes"), at their own lengths so
 	# the MoveDefs' startup_frames land on the contact frames.
 	"strike_bionic_elbow": {"kind": "retime", "source": "Strike_Bionic_Elbow",
@@ -222,6 +226,12 @@ const RECIPES := {
 	# shot are visibly different things happening to a man.
 	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
 		"seconds": 0.333, "file": AUTHORED},
+	# The sells that follow them while he is left alone
+	# (WrestlerController.SELL_TICKS): 20 frames each.
+	"sell_head": {"kind": "retime", "source": "Sell_Head",
+		"seconds": 0.667, "file": AUTHORED},
+	"sell_gut": {"kind": "retime", "source": "Sell_Gut",
+		"seconds": 0.667, "file": AUTHORED},
 
 	# Authored: the ground attacks on a man down (Phase 4, position).
 	"ground_stomp": {"kind": "retime", "source": "Ground_Stomp",
@@ -581,6 +591,19 @@ static func clip(name: String) -> String:
 ## damage. One clip for every hit -- a jab to the head and a slam to the
 ## ribs both played Hit_Chest -- was the reason a match read as two men
 ## flinching identically no matter what happened to them.
+static func total_damage(move: MoveDef) -> float:
+	return move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
+
+
+## The sell that carries on from a hit reaction (WrestlerController.SELL_TICKS).
+static func sell_for(reaction: String) -> String:
+	if reaction == clip("hit_head"):
+		return clip("sell_head")
+	if reaction == clip("hit_torso"):
+		return clip("sell_gut")
+	return ""
+
+
 static func reaction_for(move: MoveDef) -> String:
 	if not move:
 		return clip("hit_torso")
