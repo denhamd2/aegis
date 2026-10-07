@@ -9099,3 +9099,14 @@ depth and a pale peach mouth.
 - **The music dropped too low under Justin Roberts.**
   - The music is no longer ducked. Justin is lifted 7 dB on his own bus into a hard limiter, so he can't clip.
   - The crowd dips only 4 dB, and Master has a limiter for the sum.
+
+## Round: Roman's face shape to 2K26 (gauntlet/refs/characters/review/roman_face_shape_2k26.jpg)
+
+The 2K26 close-ups (`cody_roman_2k26.mp4`, 214-218 s) show a long, lean face: a heavy low brow, hooded deep-set eyes, high cheekbones with hollows, a long straight nose and a long chin. Ours was wide and round.
+
+- **`RomanFaceShape`:** a load-time sculpt. Smooth bumps in his rest space, applied to every mesh at once, so the beard, lashes and teeth stay on the skin they belong to. Normals and tangents are carried through the field's Jacobian.
+  - **What moves:** brow ridge forward and down; cheekbones up; hollows in; the side of the face and the jaw narrower; nose bridge higher, nose narrower and longer; chin about 1 cm longer.
+  - **Limits:** nothing below y 1.55 moves. The eyeballs stay on their bones, because the lids are placed off those bones.
+- **Hooded lids:** they rest at -20° instead of -35° (`RomanModel.LID_OPEN`, `EyeLids.open_angle`).
+- **Head width:** `RomanHeadShape`'s head width goes 1.05 → 1.0. It had been set against a broadcast still, and it read round beside 2K26.
+- **Test:** `test_roman_face_shape.gd`.

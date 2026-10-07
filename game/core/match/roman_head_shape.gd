@@ -25,7 +25,11 @@ extends SkeletonModifier3D
 ## Local-axis factors (x across, y along the bone, z front-to-back), checked
 ## on a front render with clip_shot --face: x is his width.
 const NECK := Vector3(1.10, 1.0, 1.07)
-const HEAD := Vector3(1.05, 1.0, 1.02)
+##
+## Head width 1.05 -> 1.0 against 2K26 (RomanFaceShape): set against a
+## broadcast still, the wider head read round and puffy beside 2K26's long,
+## lean face; the cheekbones and jaw that made it broad are sculpted now.
+const HEAD := Vector3(1.0, 1.0, 1.02)
 
 
 func _process_modification() -> void:
