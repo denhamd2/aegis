@@ -9110,3 +9110,11 @@ The 2K26 close-ups (`cody_roman_2k26.mp4`, 214-218 s) show a long, lean face: a 
 - **Hooded lids:** they rest at -20° instead of -35° (`RomanModel.LID_OPEN`, `EyeLids.open_angle`).
 - **Head width:** `RomanHeadShape`'s head width goes 1.05 → 1.0. It had been set against a broadcast still, and it read round beside 2K26.
 - **Test:** `test_roman_face_shape.gd`.
+
+## Round: no title bar or match clock
+
+The owner: "Remove the Dynamite and timer bar from the top of the match screen. I don't want a timer."
+
+- **Removed:** `MatchHUD`'s top-centre broadcast bar, which held the "DYNAMITE · WORLD TITLE MATCH" title, the match clock and the thin crowd meter under it.
+- **Kept:** `crowd_lean()` for its tests. The arena's own LED ribbon board is part of the venue and stays.
+- **Test:** the clock test is replaced by `test_there_is_no_title_bar_or_match_clock`.

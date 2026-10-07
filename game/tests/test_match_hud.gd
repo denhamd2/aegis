@@ -186,13 +186,15 @@ func test_drawing_the_hud_changes_no_gameplay_state() -> void:
 	assert_array(after).is_equal(before)
 
 
-## --- The broadcast extras: clock, ready pips, move names, crowd meter ------
+## --- The broadcast extras: ready pips, move names, crowd meter -----------
 
-func test_the_clock_reads_minutes_and_seconds() -> void:
-	assert_str(MatchHUD.clock_text(0.0)).is_equal("0:00")
-	assert_str(MatchHUD.clock_text(65.4)).is_equal("1:05")
-	assert_str(MatchHUD.clock_text(754.0)).is_equal("12:34")
-	assert_str(MatchHUD.clock_text(-3.0)).is_equal("0:00")
+## The owner: no "Dynamite" bar and no timer at the top of the match screen.
+func test_there_is_no_title_bar_or_match_clock() -> void:
+	var hud := MatchHUD.new()
+	auto_free(hud)
+	assert_bool(hud.has_method("clock_text")).is_false()
+	assert_bool(hud.has_method("_draw_banner")).is_false()
+	assert_bool(hud.get_script().get_script_constant_map().has("BANNER_TEXT")).is_false()
 
 func _move(id: String) -> MoveDef:
 	var m := MoveDef.new()
