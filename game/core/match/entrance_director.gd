@@ -87,8 +87,8 @@ const HANDOVER_TICKS := 165
 ## the marks, exactly as it did, so nothing downstream moves.
 const FACEOFF_GAP := 0.75
 const FACEOFF_WALK_SPEED := 0.9
-## Long enough for the stare-down's sequence (FACEOFF_SEQ): the locked-off
-## profile, the two over-the-shoulders, the eye cuts and the low hero shot.
+## Long enough for the stare-down's two held shots (FACEOFF_SEQ): the profile
+## and the long over-the-shoulder.
 const FACEOFF_STARE_TICKS := 330
 ## Back to the marks: the turn away, and the turn back at the end.
 const FACEOFF_TURN_TICKS := 30
@@ -107,12 +107,16 @@ const FACEOFF_CAM_FOV := 34.0
 ## corner, the one she checked last so she is out of his shot.
 const INTRO_CARD_TICKS := 216
 const INTRO_CHECK_TICKS := 200
-const INTRO_CLOSE_TICKS := 150
+## Each man in his corner is a waist-up medium held about four seconds, the
+## camera drifting in (2K26 287-303 s), not a tight head shot cut at 2.5 s.
+const INTRO_CLOSE_TICKS := 240
 const INTRO_CARD_AT := Vector3(-8.0, 4.4, 3.4)
 const INTRO_CARD_LOOK := Vector3(0.0, 0.9, 0.0)
 const INTRO_CARD_FOV := 40.0
-const INTRO_CLOSE_FOV := 22.0
-const INTRO_CLOSE_DISTANCE := 2.6
+const INTRO_CLOSE_FOV := 34.0
+const INTRO_CLOSE_DISTANCE := 2.9
+## How far the corner medium drifts in over its hold, metres.
+const INTRO_CLOSE_PUSH := 0.4
 ## Every high shot hangs at RIG_CLEAR_Y: just under the light rig over the
 ## ring (ArenaBuilder.TRUSS_Y 7.6, its keys' bodies down to ~6.9), so the lens
 ## sees the building under the steel instead of through it. The owner: "the
@@ -2100,19 +2104,27 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 # The stare-down (camera_aaa_plan.md A6, "The face-off", F2-F6)
 # ---------------------------------------------------------------------------
 #
-# The one place a broadcast holds still, then tightens: a locked-off profile
-# two-shot with nothing but a slow push; over one man's shoulder onto the
-# other's face, and the reverse -- both from the SAME side of the line
-# between them (the 180-degree rule); their eyes, cut back and forth, each
-# cut shorter than the last; and from the mat between them, up at both.
-# F1 (the walk in) is "faceoff_side"; F7 (back to the wide as the referee
-# steps between them) is "faceoff", the hard camera.
+# The owner's 2K26 Cody vs Roman, 270-306 s (gauntlet/refs/match_aaa_plan.md,
+# "The face-off"): there is no ping-pong of close-ups. The building is shown in
+# slow, long holds -- a wide drift on the champion, then ONE over-the-shoulder
+# from behind him onto the challenger across the ring, held for about six
+# seconds, then each man on his ropes, then a high wide and the bell. Every
+# shot moves, slowly; none is shorter than about four seconds.
+#
+# Ours used to be the opposite: a profile, two over-the-shoulders, four eye
+# close-ups at 135 mm cut every 0.3-0.45 s, and a 24 mm hero shot up from the
+# mat -- a Western stand-off. The owner: "quick closeup cuts ... it looks
+# cheesy". So the stare is now two shots: the locked profile two-shot pushing
+# in slowly, then one long over-the-shoulder from behind the champion (the man
+# who came out last) onto the challenger's face, drifting round a little.
+# F1 (the walk in) is "faceoff_side"; F7 (back to the wide as they part) is
+# "faceoff", the hard camera.
 ##  [ends at (s), shot]
-const FACEOFF_SEQ := [[1.6, "profile"], [2.6, "ots_a"], [3.6, "ots_b"],
-		[4.05, "eyes_a"], [4.45, "eyes_b"], [4.8, "eyes_a"], [5.1, "eyes_b"], [9.9, "low_hero"]]
-const FACEOFF_OTS_FOV := 26.0     # ~85 mm
-const FACEOFF_EYES_FOV := 13.0    # ~135 mm
-const FACEOFF_HERO_FOV := 58.0    # ~24 mm
+const FACEOFF_SEQ := [[2.6, "profile"], [99.0, "ots"]]
+const FACEOFF_OTS_FOV := 30.0     # ~70 mm: both heads, one in the foreground
+## How far the over-the-shoulder drifts round the man it looks past, metres,
+## over its whole hold.
+const FACEOFF_OTS_DRIFT := 0.35
 
 
 static func faceoff_shot_at(seconds: float) -> String:
@@ -2135,25 +2147,19 @@ func _faceoff_seq(delta: float) -> void:
 		side = -side
 	match shot:
 		"profile":
-			var e := smoothstep(0.0, 1.6, t)
-			_camera.set_entrance_shot(mid + side * lerpf(FACEOFF_CAM_DISTANCE, 2.9, e)
+			var e := smoothstep(0.0, 2.6, t)
+			_camera.set_entrance_shot(mid + side * lerpf(FACEOFF_CAM_DISTANCE, 3.0, e)
 					+ Vector3.UP * FACEOFF_CAM_HEIGHT, mid + Vector3.UP * 1.5,
 					FACEOFF_CAM_FOV, cut, delta)
-		"ots_a", "ots_b":
-			var near := ha if shot == "ots_a" else hb
-			var far := hb if shot == "ots_a" else ha
-			var back := _flat(near - far).normalized()
-			_camera.set_entrance_shot(near + back * 0.75 + side * 0.38 + Vector3.UP * 0.02,
-					far + Vector3.DOWN * 0.04, FACEOFF_OTS_FOV, true, delta, false)
-		"eyes_a", "eyes_b":
-			var who := ha if shot == "eyes_a" else hb
-			var other := hb if shot == "eyes_a" else ha
-			var toward := _flat(other - who).normalized()
-			_camera.set_entrance_shot(who + toward * 0.95 + side * 0.18,
-					who, FACEOFF_EYES_FOV, true, delta, false)
 		_:
-			_camera.set_entrance_shot(mid + side * 1.15 + Vector3.UP * 0.32,
-					mid + Vector3.UP * 1.55, FACEOFF_HERO_FOV, cut, delta)
+			# From behind the champion, onto the challenger.
+			var near := hb
+			var far := ha
+			var hold := maxf(float(_beats[_beat]["ticks"]) / TPS - 2.6, 0.1)
+			var e := smoothstep(0.0, 1.0, clampf((t - 2.6) / hold, 0.0, 1.0))
+			var back := _flat(near - far).normalized()
+			_camera.set_entrance_shot(near + back * 1.05 + side * lerpf(0.45, 0.45 + FACEOFF_OTS_DRIFT, e)
+					+ Vector3.UP * 0.05, far + Vector3.DOWN * 0.10, FACEOFF_OTS_FOV, cut, delta)
 
 
 func _intro_shot() -> void:
@@ -2203,8 +2209,10 @@ func _intro_close(beat: Dictionary, first: bool, delta: float) -> void:
 	if side.dot(_camera.hard_cam_position - man.global_position) < 0.0:
 		side = -side
 	if beat["shot"] == "corner_intro":
-		_camera.set_entrance_shot(head + to_c * INTRO_CLOSE_DISTANCE + side * 0.45
-				+ Vector3.DOWN * 0.12, head, INTRO_CLOSE_FOV, first, delta)
+		var e := smoothstep(0.0, 1.0, float(_tick) / float(beat["ticks"]))
+		var chest := head + Vector3.DOWN * 0.38
+		_camera.set_entrance_shot(chest + to_c * (INTRO_CLOSE_DISTANCE - INTRO_CLOSE_PUSH * e)
+				+ side * 0.55 + Vector3.UP * 0.05, chest, INTRO_CLOSE_FOV, first, delta)
 	else:
 		_camera.set_entrance_shot(man.global_position + to_c * 2.9 + side * 1.4
 				+ Vector3.UP * 1.45, man.global_position + Vector3.UP * 1.3, 34.0,
