@@ -8975,3 +8975,26 @@ Checked on side and end-on `paired_shot` frames, `test_pair_clearance`
   ramp. The calls are normalised to -12 LUFS; the entrance music and the
   crowd beds go through an `UnderVoice` bus that dips 9 dB while he speaks.
   `test_ring_announcer.gd` pins the name to the card within a tick.
+
+## Round: the stage tunnels, to the Dynamite photographs (gauntlet/refs/stage/)
+
+- **Why the inside was a void.** Each tunnel was bored 3.2 m back, through the
+  backdrop that stands 1.3 m behind the rings, so its far end was hidden behind
+  the backdrop. `PORTAL_RECESS_DEPTH` is now 1.26: the tunnel ends just in
+  front of it.
+- **The lattice.** A lit, pale lavender perforated sheet closes each tunnel
+  (`entrance_set.paint_tunnel_lattice`, `tunnel_lattice.png`), seen through
+  the ring as in `dynamite_portals_close.jpg`.
+- **LED bars with depth.** The flat fan painted in the ring's plane is now 11
+  bars per tunnel from the outboard wall at the ring, back and in toward the
+  lattice: a fan head-on, receding at three-quarter.
+- **Two-tone rings.** Each ring carries a gradient along the tube (west blue →
+  violet → magenta, east orange → amber → magenta) on authored UVs, 16-sided.
+  The emission colour is black: Godot ADDS the texture to it, and white had
+  rendered both rings plain white.
+- **Spill.** A shadowless, haze-free light inside each tunnel in its ring's
+  colour, and a row of four blue LED pods on the deck outboard of each ring's
+  foot (out of the walking line).
+- Tests: the tunnels end in front of the backdrop, the rings carry their
+  gradient UVs and textures, and both tunnel lights exist.
+  Before/after: `gauntlet/refs/stage/review/tunnels_before_after.jpg`.

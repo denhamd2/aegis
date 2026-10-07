@@ -541,3 +541,50 @@ func test_the_back_of_stage_is_built_not_a_flat_box() -> void:
 		triangles += mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size() / 3
 	root.free()
 	assert_int(triangles).is_less(15000)
+
+
+## The tunnels (owner: "more realistic"; gauntlet/refs/stage/
+## dynamite_portals_close.jpg). Each ends in front of the backdrop: bored
+## through it (PORTAL_RECESS_DEPTH 3.2), its far end was hidden behind the
+## backdrop and the inside read as a black void.
+func test_each_tunnel_ends_in_front_of_the_backdrop() -> void:
+	var verts := _verts("PortalBack")
+	assert_int(verts.size()).is_greater(0)
+	for v: Vector3 in verts:
+		assert_float(v.z).is_greater(ArenaBuilder.STAGE_BACK)
+	for v: Vector3 in _verts("PortalRecess"):
+		assert_float(v.z).is_greater(ArenaBuilder.STAGE_BACK)
+
+
+## The rings carry UVs running the length of the tube, which is what their
+## two-tone gradient is read along; projected at world-metre density, as the
+## rest of the set is, the gradient would tile round the ring.
+func test_the_rings_carry_their_gradient_uvs() -> void:
+	for part in ["PortalRingWest", "PortalRingEast"]:
+		var uvs: PackedVector2Array = _arrays(part)[Mesh.ARRAY_TEX_UV]
+		var lo := INF
+		var hi := -INF
+		for uv: Vector2 in uvs:
+			lo = minf(lo, uv.x)
+			hi = maxf(hi, uv.x)
+		assert_float(lo).is_equal_approx(0.0, 0.01)
+		assert_float(hi).is_equal_approx(1.0, 0.01)
+
+
+## Dressed in a match: each ring shows its gradient (on a black emission
+## colour -- the texture is added to it), and each tunnel has its own light.
+func test_the_tunnels_are_dressed_and_lit() -> void:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	add_child(scene)
+	for side in ["West", "East"]:
+		var ring := scene.find_child("PortalRing" + side, true, false) as MeshInstance3D
+		var mat := ring.material_override as StandardMaterial3D
+		assert_object(mat.emission_texture).is_not_null()
+		assert_str(mat.emission_texture.resource_path).contains(side.to_lower())
+		assert_bool(mat.emission == Color.BLACK).is_true()
+	for part in ["PortalBack", "PortalPods"]:
+		assert_object(scene.find_child(part, true, false)).is_not_null()
+	for light in ["TunnelLightW", "TunnelLightE"]:
+		var l := scene.find_child(light, true, false) as OmniLight3D
+		assert_object(l).is_not_null()
+		assert_float(l.light_volumetric_fog_energy).is_equal(0.0)

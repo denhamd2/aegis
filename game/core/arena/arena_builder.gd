@@ -269,7 +269,7 @@ const PORTAL_CENTER_Y := STAGE_DECK_Y + PORTAL_MAJOR - PORTAL_CUT_DEPTH
 const PORTAL_FACE_OFFSET := 1.3
 const PORTAL_FACE_Z := STAGE_BACK + PORTAL_FACE_OFFSET
 const PORTAL_RING_SEGMENTS := 48
-const PORTAL_TUBE_SIDES := 8
+const PORTAL_TUBE_SIDES := 16
 ## The angle, measured from +X counter-clockwise, at which the portal circle
 ## crosses the deck on its right-hand side. Negative: it is below the
 ## horizontal. The left-hand crossing is its mirror, PI minus this.
@@ -280,31 +280,37 @@ const PORTAL_TUBE_SIDES := 8
 static func _portal_cut_angle() -> float:
 	return asin(clampf((STAGE_DECK_Y - PORTAL_CENTER_Y) / PORTAL_MAJOR,
 			-1.0, 1.0))
-const PORTAL_SLATS := 13
-const PORTAL_RECESS_DEPTH := 3.2
-## Linear luminance each ring is asked to reach on its own. Above the
-## Environment's glow threshold (1.25) so the rings bloom, which is what makes
-## them read as fixtures rather than as coloured decals.
-##
-## 1.55 was tried first and both rings clipped: the magenta went pink-white and
-## the amber went flat yellow, which is the hue being destroyed by the level.
-## 1.12 sits just under the threshold at the tube's centre and over it on the
-## bloom the fixtures add, so the rings still flare without either of them
-## losing the colour that tells the two apart.
-## 1.12 -> 0.7 in the 2K26 lighting round (item 11): the rings filled the
-## stage close-ups and bloomed; the accent fixtures still carry their light.
-const PORTAL_EMISSION := 0.7
-## The slat fans inside each portal, well under the ring that frames them.
-## Making the two the same level collapses the depth: the reference photos
-## read as a lit ring in front of a lit recess, and that only works while the
-## ring is clearly the brighter of the two.
-##
-## 0.34 read as a second light source competing with the ring. 0.26 is the
-## version that reads as what it is -- fine strip fixtures picked out inside
-## the portal, seen and not looked at. The owner's AEW arena still has the
-## portals' insides lit as a sunburst, clearly under the ring but read from
-## across the hall: 0.3.
-const PORTAL_FAN_EMISSION := 0.3
+## How deep each tunnel runs behind its ring: to just in front of the
+## backdrop (PORTAL_FACE_OFFSET, 1.3, behind the ring), which closes it. It was 3.2,
+## through the backdrop, so the tunnel's far end was hidden behind it and the
+## inside read as a black void.
+const PORTAL_RECESS_DEPTH := 1.26
+## The tunnel round (owner: "more realistic"; gauntlet/refs/stage/
+## dynamite_portals_close.jpg). The fan became LED bars from the tunnel wall at
+## the ring back and in toward the lattice: thin and set into the dark, so they carry
+## more than the flat fan did and still sit under the ring.
+const PORTAL_BAR_EMISSION := 0.75
+## Each ring is a two-tone gradient round the tube, as the set's LED rings are
+## programmed, not one flat colour: u runs from its right-hand foot over the
+## top to its left (entrance_set.ring_tube). The level puts the saturated
+## channel just over the glow threshold, so the ring blooms in its colour; a
+## flat colour at the old level bloomed to pastel pink and peach.
+const PORTAL_GRADIENT_WEST := "res://assets/environment/materials/portal_gradient_west.png"
+const PORTAL_GRADIENT_EAST := "res://assets/environment/materials/portal_gradient_east.png"
+const PORTAL_RING_LEVEL := 1.2
+## The lattice at the back of each tunnel, seen through the ring
+## (entrance_set.paint_tunnel_lattice): a pale perforated sheet lit from
+## behind, under the ring -- it is the far wall of a dark tunnel. The side
+## panels' dotted picture was tried first and vanished 4 m back in the dark.
+const PORTAL_LATTICE := "res://assets/environment/materials/tunnel_lattice.png"
+const PORTAL_BACK_LEVEL := 0.3
+## The small blue LED pods on the deck at each ring's foot: lamps, over the
+## glow threshold.
+const PORTAL_POD_COLOR := Color(0.28, 0.52, 1.0)
+const PORTAL_POD_LEVEL := 2.2
+## The tunnel's wall: dark and glossy, so the bars and the ring reflect in it
+## and it reads as a lit tunnel rather than a hole.
+const PORTAL_RECESS_ROUGHNESS := 0.22
 
 # --- The rink ---------------------------------------------------------------
 ## The hall is built around a REGULATION ICE RINK, in metres, because the
@@ -1870,10 +1876,8 @@ const ENTRANCE_EMISSIVE := {
 	# every wide shot. This is under the Environment's glow threshold at the
 	# tube's centre and over it on the bloom, so they still flare.
 	"RampLeds": ["arena_portal_magenta", 0.72],
-	"PortalRingWest": ["arena_portal_magenta", PORTAL_EMISSION],
-	"PortalRingEast": ["arena_portal_amber", PORTAL_EMISSION],
-	"PortalFanWest": ["arena_portal_magenta", PORTAL_FAN_EMISSION],
-	"PortalFanEast": ["arena_portal_amber", PORTAL_FAN_EMISSION],
+	"PortalFanWest": ["arena_portal_magenta", PORTAL_BAR_EMISSION],
+	"PortalFanEast": ["arena_portal_amber", PORTAL_BAR_EMISSION],
 }
 ## The backdrop's LED dot columns (entrance_set.py LED_*, the owner's AEW
 ## arena still): teal, hot enough to bloom as points.
@@ -1926,8 +1930,38 @@ func _build_entrance_set() -> void:
 	panel.emission_texture = load(STAGE_SIDE_PANEL)
 	panel.emission_energy_multiplier = STAGE_SIDE_PANEL_LEVEL * _emissive_gain()
 	_dress(root, "StageSidePanels", panel)
+	_dress_portals(root, panel)
 	add_child(root)
 	_attach_stage_video(root)
+
+
+## The tunnels: gradient rings, the lattice at the back, the LED pods, and a
+## glossy wall.
+func _dress_portals(root: Node3D, panel: StandardMaterial3D) -> void:
+	for side: String in ["West", "East"]:
+		var ring := StandardMaterial3D.new()
+		ring.albedo_color = Color(0.03, 0.03, 0.035)
+		ring.roughness = 0.35
+		ring.emission_enabled = true
+		# Black: the texture is ADDED to the emission colour (Godot's default
+		# operator), so white here rendered both rings plain white.
+		ring.emission = Color.BLACK
+		ring.emission_texture = load(PORTAL_GRADIENT_WEST if side == "West" else PORTAL_GRADIENT_EAST)
+		ring.emission_energy_multiplier = PORTAL_RING_LEVEL * _emissive_gain()
+		_dress(root, "PortalRing" + side, ring)
+	var back := panel.duplicate() as StandardMaterial3D
+	back.emission_texture = load(PORTAL_LATTICE)
+	back.emission_energy_multiplier = PORTAL_BACK_LEVEL * _emissive_gain()
+	_dress(root, "PortalBack", back)
+	var pod := StandardMaterial3D.new()
+	pod.albedo_color = PORTAL_POD_COLOR
+	_dress(root, "PortalPods", _self_emissive(pod, PORTAL_POD_LEVEL))
+	var recess := root.find_child("PortalRecess", true, false) as MeshInstance3D
+	if recess and recess.material_override is StandardMaterial3D:
+		var wall := recess.material_override as StandardMaterial3D
+		wall.roughness = PORTAL_RECESS_ROUGHNESS
+		wall.roughness_texture = null
+		wall.metallic_specular = 0.7
 
 
 ## The video wall, dressed last and separately.
