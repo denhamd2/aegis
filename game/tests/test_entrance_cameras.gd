@@ -176,3 +176,21 @@ func test_codys_walk_gestures_are_each_seen_once() -> void:
 	_run(["roman", "cody"], func(_beat: Dictionary, _camera: Camera3D) -> void: pass,
 			func(d: EntranceDirector) -> void: played.append_array(d.gestures_played))
 	assert_array(played).contains_exactly_in_any_order(EntranceDirector.CODY_WALK_GESTURES)
+
+
+## The stare-down holds (2K26 270-306 s): every shot at least 2.5 s, no eye
+## close-ups cut back and forth, and the corner intros are held mediums --
+## not the quick close-up cuts of a Western stand-off the owner called cheesy.
+func test_the_face_off_holds_its_shots() -> void:
+	var start := 0.0
+	var stare := float(EntranceDirector.FACEOFF_STARE_TICKS) / EntranceDirector.TPS
+	for step: Array in EntranceDirector.FACEOFF_SEQ:
+		var end := minf(float(step[0]), stare)
+		if start < stare:
+			assert_float(end - start).override_failure_message(
+					"%s holds %.2f s" % [step[1], end - start]).is_greater_equal(2.5)
+		assert_bool(String(step[1]).begins_with("eyes")).is_false()
+		start = end
+	assert_float(float(EntranceDirector.INTRO_CLOSE_TICKS) / EntranceDirector.TPS) \
+			.is_greater_equal(3.5)
+	assert_float(EntranceDirector.INTRO_CLOSE_FOV).is_greater_equal(30.0)
