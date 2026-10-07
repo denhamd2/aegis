@@ -269,3 +269,17 @@ func test_fingers_map_knuckle_to_knuckle() -> void:
             assert_int(sk.get_bone_parent(bone)).override_failure_message(
                     "%s_01_%s maps to a bone on the wrist -- a metacarpal" % [finger, side]) \
                     .is_not_equal(wrist)
+
+
+## The face against 2K26 (tools/assets/build_roman_hair_alpha.py paint_skin):
+## lips several shades deeper than the skin round them -- a pale peach mouth
+## was the first thing the eye found -- and a warm cheek. Texels are the head
+## mesh's UVs at the lower lip (0, 1.641) and on the forehead (0, 1.761).
+func test_lips_are_deeper_than_the_skin() -> void:
+    var img := (load("res://assets/characters/roman_reigns_head_color.png") as Texture2D).get_image()
+    if img.is_compressed():
+        img.decompress()
+    var lip := img.get_pixel(1040 * img.get_width() / 2048, 1192 * img.get_height() / 2048)
+    var brow := img.get_pixel(1023 * img.get_width() / 2048, 384 * img.get_height() / 2048)
+    assert_float(lip.get_luminance()).is_less(brow.get_luminance() * 0.8)
+    assert_float(lip.r).is_greater(lip.b)
