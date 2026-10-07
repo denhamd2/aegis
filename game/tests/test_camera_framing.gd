@@ -38,6 +38,10 @@ const STANDOFF_FILL_MAX := 0.47
 ## Corner to corner on this ring's 6m mat.
 const MAX_SEPARATION := 8.49
 
+func after_test() -> void:
+	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
+
+
 func _match() -> Node:
 	var scene: Node = auto_free(MATCH_SCENE.instantiate())
 	add_child(scene)
@@ -70,6 +74,8 @@ func _fill_at(scene: Node, separation: float) -> float:
 	return absf(head.y - feet.y) / camera.get_viewport().get_visible_rect().size.y
 
 func test_an_engaged_pair_is_framed_as_tightly_as_the_reference() -> void:
+	# The broadcast handheld's framing; GAMEPLAY plays on the 2K26 hard cam.
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var fill := _fill_at(_match(), ENGAGED_SEPARATION)
 	assert_float(fill).override_failure_message(
 		"At the strike-exchange separation a wrestler fills %.3f of the frame. "
@@ -80,6 +86,8 @@ func test_an_engaged_pair_is_framed_as_tightly_as_the_reference() -> void:
 ## The other end of the fit: the camera has to open out as the wrestlers
 ## separate, and land in the reference's standoff band when it does.
 func test_a_separated_pair_opens_out_to_the_standoff_band() -> void:
+	# The broadcast handheld's framing; GAMEPLAY plays on the 2K26 hard cam.
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var fill := _fill_at(_match(), STANDOFF_SEPARATION)
 	assert_float(fill).override_failure_message(
 		"At the standoff separation a wrestler fills %.3f of the frame; "
@@ -298,6 +306,8 @@ func test_the_hard_camera_looks_down_at_the_ring() -> void:
 ## the hard camera is a wide-angle shot from the back of the bowl, which
 ## frames the building rather than the match.
 func test_each_shot_carries_its_own_lens() -> void:
+	# The broadcast handheld's framing; GAMEPLAY plays on the 2K26 hard cam.
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var camera: MatchCamera = _match().get_node("MatchCamera")
 	assert_float(camera.hard_cam_fov) \
 		.override_failure_message(
@@ -394,20 +404,24 @@ func test_gameplay_coverage_plays_on_the_ringside_camera() -> void:
 	var camera: MatchCamera = _match().get_node("MatchCamera")
 	camera.mode = MatchCamera.Mode.RINGSIDE
 	assert_float(camera.shot_hold()).is_greater(MatchCamera.GAMEPLAY_OPENING_HOLD)
-	# Above the top rope, outside the ring, side-on to the pair.
+	# The 2K26 hard cam: its side of the ring, square-on, at the fitted height
+	# and distance, slid along to the pair (match_engine_2k26.md, section 4).
 	var a: Node3D = camera.wrestler_a
 	var b: Node3D = camera.wrestler_b
 	a.global_position = Vector3(-0.6, 0.0, 1.0)
 	b.global_position = Vector3(0.6, 0.0, 1.0)
-	for tick in 240:
+	for tick in 600:
 		camera.mode = MatchCamera.Mode.RINGSIDE
 		camera._physics_process(1.0 / 60.0)
 	var p := camera.global_position
-	assert_float(p.y).is_equal_approx(MatchCamera.GAMEPLAY_HEIGHT, 0.2)
-	assert_bool(absf(p.x) >= MatchCamera.RING_OUTSIDE - 0.05 or absf(p.z) >= MatchCamera.RING_OUTSIDE - 0.05).is_true()
-	# The pair runs along X, so side-on is along Z.
-	var to_cam := Vector2(p.x, p.z - 1.0).normalized()
-	assert_float(absf(to_cam.y)).is_greater(0.9)
+	assert_float(p.y).is_equal_approx(MatchCamera.GAMEPLAY_HEIGHT, 0.05)
+	assert_float(-p.x).is_between(MatchCamera.GAMEPLAY_NEAR - 0.1, MatchCamera.GAMEPLAY_FAR + 0.1)
+	assert_float(p.z).is_equal_approx(1.0, 0.1)
+	assert_float(camera.fov).is_equal_approx(MatchCamera.GAMEPLAY_FOV, 0.5)
+	# Square to the ring, looking down 4.7 degrees.
+	var fwd := -camera.global_transform.basis.z
+	assert_float(fwd.x).is_greater(0.99)
+	assert_float(rad_to_deg(asin(-fwd.y))).is_equal_approx(4.7, 0.5)
 
 
 ## No ring post between the gameplay camera and the pair.
@@ -446,6 +460,8 @@ func test_a_finisher_preempts_the_shot_clock() -> void:
 ## between the bowl and ringside is a 28m fly-in. The rig used to lerp into
 ## every mode change because there was only ever one position to lerp from.
 func test_a_cut_snaps_rather_than_flying() -> void:
+	# The broadcast handheld's framing; GAMEPLAY plays on the 2K26 hard cam.
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var scene := _match()
 	var camera: MatchCamera = scene.get_node("MatchCamera")
 	camera._physics_process(1.0 / 60.0)
