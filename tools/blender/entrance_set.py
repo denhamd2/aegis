@@ -67,7 +67,7 @@ WANTED = [
     "SCREEN_WIDTH", "SCREEN_HEIGHT", "SCREEN_SAGITTA", "SCREEN_SEGMENTS",
     "SCREEN_DEPTH", "SCREEN_BEZEL", "SCREEN_CENTER_RISE", "SCREEN_FACE_OFFSET",
     "PORTAL_MAJOR", "PORTAL_MINOR", "PORTAL_OFFSET_X", "PORTAL_CUT_DEPTH",
-    "PORTAL_RING_SEGMENTS", "PORTAL_TUBE_SIDES", "PORTAL_SLATS",
+    "PORTAL_RING_SEGMENTS", "PORTAL_TUBE_SIDES",
     "PORTAL_RECESS_DEPTH", "PORTAL_FACE_OFFSET",
 ]
 
@@ -80,6 +80,8 @@ PART_COLORS = {
     "PortalRingEast": (0.72, 0.44, 0.06, 1.0),
     "PortalFanWest": (0.40, 0.06, 0.28, 1.0),
     "PortalFanEast": (0.48, 0.30, 0.05, 1.0),
+    "PortalBack": (0.30, 0.12, 0.55, 1.0),
+    "PortalPods": (0.20, 0.45, 1.00, 1.0),
     "StageScreenBezel": (0.05, 0.05, 0.06, 1.0),
     "StageScreen": (0.10, 0.08, 0.16, 1.0),
     "RampLeds": (0.72, 0.10, 0.55, 1.0),
@@ -91,7 +93,8 @@ PART_COLORS = {
     "StageTruss": (0.45, 0.46, 0.50, 1.0),
 }
 EMISSIVE = frozenset({"PortalRingWest", "PortalRingEast",
-                      "PortalFanWest", "PortalFanEast", "StageScreen",
+                      "PortalFanWest", "PortalFanEast", "PortalBack", "PortalPods",
+                      "StageScreen",
                       "RampLeds", "StageLedDots", "StageCentreScreen",
                       "StageScreenWings", "StageSidePanels"})
 SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
@@ -99,7 +102,9 @@ SMOOTH = frozenset({"PortalRingWest", "PortalRingEast", "PortalRecess",
 # The screen face authors its own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
 PROJECTED = frozenset(PART_COLORS) - {"StageScreen", "StageCentreScreen",
-                                      "StageScreenWings", "StageSidePanels"}
+                                      "StageScreenWings", "StageSidePanels",
+                                      "PortalRingWest", "PortalRingEast",
+                                      "PortalBack"}
 
 ## The owner's AEW arena still (the Dynamite set in WWE 2K), which our set
 ## lacked two things of:
@@ -122,6 +127,11 @@ BACKDROP_PAST_SCREEN = 3.8
 SIDE_PANEL_X = (7.95, 10.85)
 SIDE_PANEL_Y = (0.15, 5.9)       # above the deck
 SIDE_PANEL_TEX = venue.REPO / "game/assets/environment/materials/stage_side_panel.png"
+## The lattice closing each tunnel (dynamite_portals_close.jpg, dynamite_stage_
+## head_on.webp): a pale lavender sheet lit from behind, round perforations in
+## a staggered grid -- the bright thing seen through each ring, not the dark
+## dotted panel beside it.
+TUNNEL_LATTICE_TEX = venue.REPO / "game/assets/environment/materials/tunnel_lattice.png"
 ## Proud of the wall plane by this much, so the panel and the dot columns on
 ## it never z-fight with the backdrop face.
 SIDE_PANEL_LIFT = 0.06
@@ -360,6 +370,7 @@ def build_side_panels(cfg: dict[str, float], parts: dict[str, Part],
             uvs = [(1.0, 0.0), (0.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
         panels.quad(*v, uvs=uvs)
     paint_side_panel()
+    paint_tunnel_lattice()
 
 
 def build_drape(cfg: dict[str, float], parts: dict[str, Part],
@@ -413,6 +424,26 @@ def build_truss_frame(cfg: dict[str, float], d: dict[str, float],
                       TRUSS_SIZE, TRUSS_BAY, 0.045, 0.025, sides=4)
 
 
+def paint_tunnel_lattice() -> None:
+    """The tunnel's back wall as an emission picture over the disc's 0-1 UVs:
+    lit lattice, dark round holes on a staggered grid, falling off toward the
+    rim where the tunnel wall shades it."""
+    import numpy as np
+    from PIL import Image
+    n = 512
+    y, x = np.mgrid[0:n, 0:n].astype(np.float32)
+    pitch = 28.0
+    row = np.floor(y / (pitch * 0.866))
+    fx = np.mod(x + (row % 2) * pitch * 0.5, pitch) - pitch * 0.5
+    fy = np.mod(y, pitch * 0.866) - pitch * 0.433
+    sheet = (fx * fx + fy * fy > 10.5 * 10.5).astype(np.float32)
+    r = np.hypot(x - n / 2, y - n / 2) / (n / 2)
+    falloff = np.clip(1.0 - r, 0.0, 1.0) ** 0.6
+    lavender = np.array((0.74, 0.62, 1.0), np.float32)
+    rgb = np.clip(lavender * (sheet * (0.25 + 0.75 * falloff))[..., None], 0, 1) * 255
+    Image.fromarray(np.round(rgb).astype(np.uint8), "RGB").save(TUNNEL_LATTICE_TEX, optimize=True)
+
+
 def paint_side_panel() -> None:
     """The perforated panel's picture: a near-black sheet with a grid of
     round perforations lit from behind in the house violet, warming toward the
@@ -452,34 +483,99 @@ def backdrop_half(cfg: dict[str, float]) -> float:
     return cfg["SCREEN_WIDTH"] * 0.5 + cfg["SCREEN_BEZEL"] + BACKDROP_PAST_SCREEN
 
 
+# The tunnel's insides (gauntlet/refs/stage/dynamite_portals_close.jpg,
+# dynamite_stage_wide.jpg): LED bars on the tunnel's inner wall running back
+# into it, on its outboard side; the lit lattice panel at the back, seen
+# through the ring; a bank of small blue LED pods on the deck at its foot.
+TUNNEL_BARS = 11
+## The arc of the inner wall the bars cover, measured from straight outboard
+## (0) up and down: 60 degrees up to 52 down, clear of the deck (the circle
+## meets it 64 degrees down) and of the doorway the entrance walks through.
+TUNNEL_BARS_UP = math.radians(60.0)
+TUNNEL_BARS_DOWN = math.radians(52.0)
+TUNNEL_BAR_RADIUS = 0.035
+## Bars start just inside the ring and stop short of the back panel.
+TUNNEL_BAR_FRONT = 0.05
+TUNNEL_BAR_BACK = 0.12
+## Each bar runs from the wall at the ring, back and INWARD to this fraction
+## of the wall's radius at the back panel: head-on the bars read as the long
+## fan of lines in the photographs, and they still recede with real depth.
+## 0.42 keeps the inner ends clear of a man walking out down the middle.
+TUNNEL_BAR_INNER = 0.42
+TUNNEL_PODS = 4
+TUNNEL_POD_SPACING = 0.34
+## From the ring's centre line, outboard: the foot is 1.08 m out.
+TUNNEL_POD_FROM = 1.40
+TUNNEL_POD_RADIUS = 0.07
+
+
+def ring_tube(part: Part, path: list[Vector], radius: float, sides: int) -> None:
+    """The portal tube with authored UVs: u runs 0 -> 1 along the ring from
+    its right-hand foot over the top to its left, v once round the section.
+    The ring's colour gradient (arena_builder PORTAL_GRADIENT_*) is a strip
+    texture read along u, so the tube must not take the world-metre
+    projection every other part gets."""
+    frames = venue._frames(path)
+    rings: list[list[Vector]] = []
+    for point, (_, normal, binormal) in zip(path, frames):
+        ring = []
+        for k in range(sides + 1):
+            theta = 2.0 * math.pi * k / sides
+            ring.append(point + normal * (math.cos(theta) * radius)
+                        + binormal * (math.sin(theta) * radius))
+        rings.append(ring)
+    n = len(path) - 1
+    for i in range(n):
+        u0, u1 = i / n, (i + 1) / n
+        for k in range(sides):
+            v0, v1 = k / sides, (k + 1) / sides
+            part.quad_at(rings[i][k], rings[i][k + 1], rings[i + 1][k + 1], rings[i + 1][k],
+                         uvs=[(u0, v0), (u0, v1), (u1, v1), (u1, v0)])
+    for end, u in ((0, 0.0), (n, 1.0)):
+        verts = [part.vert(p) for p in rings[end][:sides]]
+        face = part.bm.faces.new(verts if end else list(reversed(verts)))
+        for loop in face.loops:
+            loop[part.uv].uv = (u, 0.5)
+
+
 def build_portals(cfg: dict[str, float], d: dict[str, float],
                   parts: dict[str, Part]) -> None:
-    """Recess, slat fan and lit ring, in that depth order.
+    """Recess, light tunnel and lit ring, in that depth order.
 
-    Flattening any of the three onto the same plane collapses the effect: the
-    recess is the darkest thing on the stage, the fan sits inside it lit only
-    by the ring, and the ring is in front of both and is the only part that
-    emits.
+    The ring is in front and is the brightest thing; behind it the tunnel is
+    a dark, glossy bore with LED bars running back along its outboard wall
+    and the lit lattice panel closing it -- the reference photographs read as
+    a lit ring in front of a lit recess, with real depth between the two.
     """
     segments = int(cfg["PORTAL_RING_SEGMENTS"])
     sides = int(cfg["PORTAL_TUBE_SIDES"])
     cut = portal_cut_angle(cfg, d)
+    depth = cfg["PORTAL_RECESS_DEPTH"]
 
     for sx, name in ((-1.0, "West"), (1.0, "East")):
         center = Vector((sx * cfg["PORTAL_OFFSET_X"], d["PORTAL_CENTER_Y"],
                          d["PORTAL_FACE_Z"]))
 
-        # The recess: a cylinder bored back into the backdrop.
+        # The recess: a cylinder bored back into the backdrop, open at the
+        # back where the lattice panel closes it.
         radius = cfg["PORTAL_MAJOR"] - cfg["PORTAL_MINOR"] * 0.5
         rim = venue.arc(center, radius, 0.0, 2.0 * math.pi, segments, axis="z")
-        back = [p - Vector((0.0, 0.0, cfg["PORTAL_RECESS_DEPTH"])) for p in rim]
+        back = [p - Vector((0.0, 0.0, depth)) for p in rim]
         recess = parts["PortalRecess"]
         for i in range(segments):
             recess.quad_at(rim[i], rim[i + 1], back[i + 1], back[i])
-        cap_center = center - Vector((0.0, 0.0, cfg["PORTAL_RECESS_DEPTH"]))
+
+        # The lattice at the back: a disc with its own 0-1 UVs, so the
+        # perforated panel's picture lands on it once, square.
+        panel = parts["PortalBack"]
+        cap_center = center - Vector((0.0, 0.0, depth - 0.01))
         for i in range(segments):
-            recess.tri(recess.vert(cap_center), recess.vert(back[i]),
-                       recess.vert(back[i + 1]))
+            a, b = back[i] + Vector((0.0, 0.0, 0.01)), back[i + 1] + Vector((0.0, 0.0, 0.01))
+            uv = [(0.5, 0.5)] + [(0.5 + 0.5 * (p.x - cap_center.x) / radius,
+                                 0.5 + 0.5 * (p.y - cap_center.y) / radius) for p in (a, b)]
+            face = panel.bm.faces.new([panel.vert(cap_center), panel.vert(a), panel.vert(b)])
+            for loop, coord in zip(face.loops, uv):
+                loop[panel.uv].uv = coord
 
         # The ring: a circle with the bottom cut off by the deck. The sweep
         # runs from where the circle meets the deck on the right, the long way
@@ -488,25 +584,37 @@ def build_portals(cfg: dict[str, float], d: dict[str, float],
         # what a circle sunk a quarter of a metre into a stage does.
         path = venue.arc(center, cfg["PORTAL_MAJOR"], cut, math.pi - cut,
                          segments, axis="z")
-        parts["PortalRing%s" % name].tube(path, cfg["PORTAL_MINOR"], sides)
+        ring_tube(parts["PortalRing%s" % name], path, cfg["PORTAL_MINOR"], sides)
 
-        # The slat fan: strip fixtures in the reference photographs, not dark
-        # slats catching the ring's spill. One wedge per portal, on its
-        # OUTBOARD side and clear of the gap the entrance walks through -- a
-        # full lower half would fill the doorway with slats.
-        fan_center = center - Vector((0.0, 0.0, 0.12))
-        wedge_from = (math.pi - 0.30) if sx < 0.0 else cut + 0.30
-        wedge_to = wedge_from + (-cut - 0.30) + 0.30
+        # The light tunnel: LED bars from the inner wall at the ring, back and
+        # in toward the lattice, on the OUTBOARD side and clear of the doorway. Seen head-on they fan
+        # toward the tunnel's vanishing point -- the reference's "sunburst"
+        # -- and they keep doing so from any other angle, which a fan drawn
+        # flat in the ring's plane (the old build) did not: at three-quarter
+        # it read as a decal.
+        out = math.pi if sx < 0.0 else 0.0
         fan = parts["PortalFan%s" % name]
-        slats = int(cfg["PORTAL_SLATS"])
-        for i in range(slats):
-            theta = wedge_from + (wedge_to - wedge_from) * i / max(slats - 1, 1)
-            direction = Vector((math.cos(theta), math.sin(theta), 0.0))
-            # 13 slats across 52 degrees are 0.15 m apart at the outer radius,
-            # so a half-width over about 0.06 closes the gaps and the fan
-            # renders as one solid triangle. It did, at 0.09.
-            fan.tube([fan_center + direction * 0.55,
-                      fan_center + direction * 2.2], 0.030, sides=4)
+        wall = radius - TUNNEL_BAR_RADIUS * 1.5
+        for i in range(TUNNEL_BARS):
+            k = i / (TUNNEL_BARS - 1)
+            theta = out + (TUNNEL_BARS_UP if sx > 0.0 else -TUNNEL_BARS_UP) * (1.0 - k) \
+                - (TUNNEL_BARS_DOWN if sx > 0.0 else -TUNNEL_BARS_DOWN) * k
+            offset = Vector((math.cos(theta) * wall, math.sin(theta) * wall, 0.0))
+            inner = Vector((math.cos(theta) * wall * TUNNEL_BAR_INNER,
+                            math.sin(theta) * wall * TUNNEL_BAR_INNER, 0.0))
+            fan.tube([center + offset - Vector((0.0, 0.0, TUNNEL_BAR_FRONT)),
+                      center + inner - Vector((0.0, 0.0, depth - TUNNEL_BAR_BACK))],
+                     TUNNEL_BAR_RADIUS, sides=6)
+
+        # The LED pods: a short row of small round fixtures on the deck at the
+        # ring's foot, aimed up at it (dynamite_stage_wide.jpg) -- OUTBOARD of
+        # the foot, out of the line a man walks out of the tunnel on.
+        pods = parts["PortalPods"]
+        y = cfg["STAGE_DECK_Y"]
+        for i in range(TUNNEL_PODS):
+            x = center.x + sx * (TUNNEL_POD_FROM + i * TUNNEL_POD_SPACING)
+            pods.cylinder(Vector((x, y, center.z + 0.35)), Vector((0.0, 1.0, 0.25)),
+                          TUNNEL_POD_RADIUS, 0.10, sides=10)
 
 
 def arc_radius(half_chord: float, sagitta: float) -> float:
@@ -760,6 +868,7 @@ def main(argv: list[str]) -> int:
     venue.finish(parts, PART_COLORS, emissive=EMISSIVE, smooth=SMOOTH,
                  projected=PROJECTED,
                  face_toward={"StageScreen": (0.0, 0.0, 1.0),
+                              "PortalBack": (0.0, 0.0, 1.0),
                               "StageSidePanels": (0.0, 0.0, 1.0),
                               "StageDrape": (0.0, 0.0, 1.0),
                               "StageLedDots": (0.0, 0.0, 1.0),

@@ -636,6 +636,7 @@ func _ready() -> void:
 	_build_beams()
 	_build_stage_wash()
 	_build_stage_accents()
+	_build_tunnel_lights()
 	_build_backdrop_uplights()
 	_build_roof_wash()
 	_build_ribbon_spill()
@@ -882,7 +883,8 @@ func _build_roof_wash() -> void:
 				ROOF_WASH_COLORS[i % ROOF_WASH_COLORS.size()], roof_wash_energy,
 				55.0, 0.5, 14.0, false)
 		light.spot_attenuation = BEAM_ATTENUATION
-		light.light_volumetric_fog_energy = 0.4
+		# No haze: in the fog it drew a glowing ball in the tunnel's mouth.
+		light.light_volumetric_fog_energy = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -1225,6 +1227,38 @@ func _build_stage_accents() -> void:
 			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
 					34.0, 0.6, ACCENT_RANGE, false) \
 					.light_volumetric_fog_energy = 2.0
+
+
+## A light inside each tunnel, in its ring's colour: what the LED bars and the
+## ring throw on the tunnel's glossy wall and its floor, and on a man walking
+## out of it (gauntlet/refs/stage/dynamite_portals_close.jpg). No shadows: it
+## is a fill, inside a cylinder, and a shadow map there costs a frame for
+## nothing a camera sees.
+const TUNNEL_LIGHT_ENERGY := 1.4
+const TUNNEL_LIGHT_RANGE := 3.4
+## How far back into the tunnel, and how high above the deck.
+const TUNNEL_LIGHT_BACK := 1.3
+const TUNNEL_LIGHT_UP := 1.5
+const TUNNEL_LIGHT_OUT := 0.9
+
+
+func _build_tunnel_lights() -> void:
+	for sx: float in [-1.0, 1.0]:
+		var light := OmniLight3D.new()
+		light.name = "TunnelLight%s" % ("W" if sx < 0.0 else "E")
+		light.light_color = ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
+		light.light_energy = TUNNEL_LIGHT_ENERGY
+		light.omni_range = TUNNEL_LIGHT_RANGE
+		light.shadow_enabled = false
+		# A fill, not a lamp: no hot specular spot on the glossy wall.
+		light.light_specular = 0.0
+		# No haze: in the fog it drew a glowing ball in the tunnel's mouth.
+		light.light_volumetric_fog_energy = 0.0
+		add_child(light)
+		# Toward the outboard wall, where the bars are: spill from them.
+		light.position = Vector3(sx * (ArenaBuilder.PORTAL_OFFSET_X + TUNNEL_LIGHT_OUT),
+				ArenaBuilder.STAGE_DECK_Y + TUNNEL_LIGHT_UP,
+				ArenaBuilder.PORTAL_FACE_Z - TUNNEL_LIGHT_BACK)
 
 
 ## Floor-mounted washes up the perforated backdrop, two either side, each in
