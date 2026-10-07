@@ -322,6 +322,9 @@ func _ready() -> void:
 		return
 	# His arms, shoulders and chest to 2K26's build (BodyBulk).
 	BodyBulk.apply(self, body, BodyBulk.ROMAN)
+	# His face to 2K26's (RomanFaceShape), before anything reads the head's
+	# vertices: the eyelids, the beard trim and the hair volume all do.
+	RomanFaceShape.apply(self)
 	_fix_materials()
 	_copy_base_animation_library()
 	_fix_eyes()
@@ -1244,6 +1247,12 @@ func _fix_eyes() -> void:
 ## key (checked on the broadcast_shot close-ups).
 const LID_COLOR := Color(0.47, 0.32, 0.23)
 const LID_SEED := 7
+## His lids at rest: lower than EyeLids' default, over the top of the iris.
+## 2K26's Roman looks out from under heavy, hooded lids (cody_roman_2k26.mp4
+## 214-218 s), where at -35 ours sat wide open -- the round, startled eyes of
+## the faces_2k26_vs_ours side-by-side. With the brow brought down over them
+## (RomanFaceShape) this is most of his stare.
+const LID_OPEN := -20.0
 ## The eyeball's centre, ahead of its bone along the line of sight. Zero:
 ## the pupil sphere sits 12.2 mm from the bone, which is a human eyeball's
 ## radius exactly, so the bone IS the centre. (6 mm, from the note on
@@ -1300,6 +1309,7 @@ func build_eye_lids() -> EyeLids:
 		material.roughness = 0.6
 		SkinLook.apply(material)
 	lids.skeleton = body
+	lids.open_angle = LID_OPEN
 	lids.eye_bones = PackedStringArray(EYE_TARGETS.keys())
 	lids.build(eyes, material, LID_SEED)
 	return lids

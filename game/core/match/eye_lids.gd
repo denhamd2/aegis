@@ -38,6 +38,9 @@ const EYE_TUCK := 0.80
 ## over his cheek.
 const OPEN_ANGLE := -35.0
 const CLOSED_ANGLE := 16.0
+## Where this man's lids rest open; OPEN_ANGLE unless his model says
+## otherwise (RomanModel.LID_OPEN: 2K26's Roman has heavy, hooded lids).
+var open_angle := OPEN_ANGLE
 ## A blink: close fast, a hold, open a little slower (human blinks run
 ## 100-150 ms), every BLINK_GAP seconds, jittered.
 const CLOSE_SECONDS := 0.06
@@ -128,7 +131,7 @@ func hold(closure: float) -> void:
 
 
 func _set_closure(c: float) -> void:
-	var angle := deg_to_rad(lerpf(OPEN_ANGLE, CLOSED_ANGLE, c))
+	var angle := deg_to_rad(lerpf(open_angle, CLOSED_ANGLE, c))
 	for pivot in _lids:
 		var cap := pivot.get_node("Cap") as Node3D
 		cap.transform = Transform3D(Basis(Vector3.RIGHT, angle), Vector3.ZERO)

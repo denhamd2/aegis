@@ -80,7 +80,7 @@ static func apply(root: Node, skeleton: Skeleton3D, gains: Dictionary,
 			any = any or n > 0
 			surfaces.append(arrays)
 		if any:
-			mi.mesh = _rebuilt(source, surfaces)
+			mi.mesh = rebuilt(source, surfaces)
 	return moved
 
 
@@ -108,7 +108,7 @@ static func inflate(arrays: Array, bind_gain: Dictionary, direction := 1.0) -> i
 	return moved
 
 
-static func _rebuilt(source: ArrayMesh, surfaces: Array) -> ArrayMesh:
+static func rebuilt(source: ArrayMesh, surfaces: Array) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	for s in source.get_surface_count():
 		var flags := source.surface_get_format(s) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
