@@ -193,11 +193,20 @@ static func scaled_turn(delta: Quaternion, share: float, last: Quaternion) -> Qu
 	var q := delta.normalized()
 	if q.w < 0.0:
 		q = -q                      # canonical, so the angle lands in [0, PI]
-	var sine := sqrt(maxf(1.0 - q.w * q.w, 0.0))
-	if sine <= 1e-6:
+	# Off the vector's own length, NOT sqrt(1 - w*w). They are the same number
+	# on a unit quaternion and not the same calculation: as w approaches 1 the
+	# subtraction loses most of its significant digits, and a small turn came
+	# back with an axis several percent off unit. Godot's axis-angle
+	# constructor rejects that outright, leaves the quaternion at identity, and
+	# the helper snaps to rest -- a pop of its own, in place of the one this
+	# function exists to remove. Caught on Cody, whose bone rests differ from
+	# the base skeleton's, so the clip library alone never showed it.
+	var vec := Vector3(q.x, q.y, q.z)
+	var length := vec.length()
+	if length <= 1e-9:
 		return Quaternion.IDENTITY  # no turn to read, and no axis to read it on
-	var axis := Vector3(q.x, q.y, q.z) / sine
-	var angle := 2.0 * atan2(sine, q.w)
+	var axis := vec / length
+	var angle := 2.0 * atan2(length, q.w)
 	var short := Quaternion(axis, angle * share)
 	if angle < ANTIPODE_GATE:
 		return short
