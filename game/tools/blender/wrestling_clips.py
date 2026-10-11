@@ -5857,6 +5857,64 @@ def drop_mesh():
             bpy.data.objects.remove(obj, do_unlink=True)
 
 
+## Overlap (animation skill, principle 3: "secondary motion offset"). Every
+## pose key sets every bone on the same frame, so the trunk, the head and the
+## arms all arrived and left together -- the pose-to-pose look. The pelvis and
+## legs keep the authored frames (they carry the weight and the contacts with
+## the mat); the spine, neck and head trail them by a frame or two, the arms
+## by a frame and a half. Frames at 30 fps; the first and last key never move,
+## so loops still close and a clip still starts and ends where it is authored.
+OVERLAP_TRUNK = {"spine_01": 1.0, "spine_02": 1.0, "spine_03": 1.5,
+                 "neck_01": 2.0, "head": 2.5}
+OVERLAP_ARMS = {"clavicle_l": 1.0, "clavicle_r": 1.0,
+                "upperarm_l": 1.0, "upperarm_r": 1.0,
+                "lowerarm_l": 1.5, "lowerarm_r": 1.5}
+## Clips whose hands land on a measured frame -- a strike's contact (its
+## MoveDef active frames and contact volume are measured off the hand), a prop
+## changing hands on a cue -- keep their arms on the authored keys.
+OVERLAP_ARMS_EXCEPT = ("Strike_", "Ground_", "Corner_", "Running_", "Parry_",
+                       "Irish_", "Pickup_", "Pin_", "Finisher_", "Possum",
+                       "Prop_", "Ref_", "Timekeeper_", "Title_", "Coat_", "Ula_")
+
+
+## The weight-bearing chain: clamped handles, so nothing overshoots the mat.
+CLAMPED_BONES = ("pelvis", "thigh_", "calf_", "foot_", "ball_")
+## Clips whose arms pass close in front of the body: the overlap and the auto
+## handles' overshoot put a hand 2-7 cm into the torso (PoseLint), so they keep
+## their keys as authored, with clamped handles throughout.
+AS_AUTHORED = {
+    "Back_Elbow_Attacker", "Backstabber_Attacker", "Chain_Wristlock_Defender",
+    "Fists_Down", "Gamengiri_Attacker", "Getup_Hauled", "Getup_Rise",
+    "Last_Shot_Defender", "SL_Dropkick_Attacker", "Superman_Punch_Attacker",
+    "Tope_Defender",
+    # The referee's hand meets the winner's wrist on a measured frame.
+    "Win_Arm_Raised", "Ref_Raise_Hand",
+}
+
+
+def overlap(action, name):
+    if name in AS_AUTHORED:
+        return
+    lags = dict(OVERLAP_TRUNK)
+    if not name.startswith(OVERLAP_ARMS_EXCEPT):
+        lags.update(OVERLAP_ARMS)
+    for fcurve in action.fcurves:
+        path = fcurve.data_path
+        if not path.startswith('pose.bones["'):
+            continue
+        bone = path[len('pose.bones["'):path.index('"]')]
+        lag = lags.get(bone)
+        if lag is None:
+            continue
+        kps = fcurve.keyframe_points
+        # Back to front, each key moved at most a third of the way to the
+        # next: a lag that ate the whole gap put a limb's swing into a single
+        # frame (test_body_deformation_gate's flips, 40 -> 48).
+        for k in range(len(kps) - 2, 0, -1):
+            gap = kps[k + 1].co[0] - kps[k].co[0]
+            kps[k].co[0] += min(lag, gap / 3.0)
+
+
 def author(poser, arm, name, frames):
     """Keyframe one action from a list of (frame, pose) entries."""
     action = bpy.data.actions.new(name)
@@ -5894,14 +5952,35 @@ def author(poser, arm, name, frames):
                     c.keyframe_points[k].co[1] = v
             prev = q
 
+    overlap(action, name)
+
     # Bezier everywhere. Linear interpolation on organic motion reads as
     # mechanical, and a wrestler moving at a constant rate between poses is
     # the clearest tell that a clip was generated rather than performed.
+    #
+    # AUTO, not AUTO_CLAMPED (blender-animation: "Bezier interpolation with
+    # auto handles"). Clamped handles go flat at every key where a channel
+    # turns, so with every bone keyed on the same frames the whole body
+    # braked into each pose and pulled away from it: one-frame speed spikes in
+    # 105 places and 45 dead holds of 4+ frames across the library
+    # (scratchpad clip_cadence scan; tests/test_clip_cadence.gd now holds the
+    # line). Auto handles carry the motion through a key -- a held pose drifts
+    # on instead of freezing, the "moving hold" -- and took the spikes to 26.
+    #
+    # Except the chain that carries the weight. An auto handle overshoots a
+    # turning key a little, which in a swinging arm is follow-through and in a
+    # planted foot is a toe through the mat (PoseLint: eleven clips, up to
+    # 7 cm). The pelvis and legs keep clamped handles and land exactly on
+    # their keys.
     for fcurve in action.fcurves:
+        path = fcurve.data_path
+        bone = path[len('pose.bones["'):path.index('"]')] if path.startswith('pose.bones["') else ""
+        handle = "AUTO_CLAMPED" if name in AS_AUTHORED or bone.startswith(CLAMPED_BONES) \
+            else "AUTO"
         for key in fcurve.keyframe_points:
             key.interpolation = "BEZIER"
-            key.handle_left_type = "AUTO_CLAMPED"
-            key.handle_right_type = "AUTO_CLAMPED"
+            key.handle_left_type = handle
+            key.handle_right_type = handle
         # Recompute the handles from the keys as they now stand. Without it
         # the sign flips above move a key's value and leave its handles
         # aimed at the old one, and the curve bows away between two keys
