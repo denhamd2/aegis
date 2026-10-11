@@ -68,7 +68,8 @@ func test_a_wrestler_whose_timer_runs_out_gets_the_default_rise() -> void:
 	w._move_ticks_remaining = 1
 	w._process_down({})
 	assert_int(w.fsm.current_state).is_equal(WrestlerFSM.State.GETUP)
-	assert_int(w._move_ticks_remaining).is_equal(WrestlerController.GETUP_RISE_TICKS)
+	# On his own he rises in stages (Getup_Staged), not the bare rise.
+	assert_int(w._move_ticks_remaining).is_equal(WrestlerController.GETUP_STAGED_TICKS)
 
 func test_the_jabs_startup_matches_the_measured_jab() -> void:
 	assert_float(JAB.startup_frames / TICKS_PER_SECOND) \

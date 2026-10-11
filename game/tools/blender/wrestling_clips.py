@@ -6329,7 +6329,10 @@ CLIPS["Pickup_Haul"] = [
     (14, pose(P(), **_LUNGE, pelvis=(0.0, 0.07, 0.470), spine=(-52, 0, 0),
               head=(-30, 0, 0),
               hand_r=(0.14, 0.58, 0.34), hand_l=(-0.14, 0.58, 0.34))),
-    (22, pose(P(), **_LUNGE, pelvis=(0.0, 0.05, 0.650), spine=(-40, 0, 0),
+    # The lead foot comes up off the mat as he rises over it (PoseLint: the
+    # ball went 5 cm under at 0.7 s with it planted flat).
+    (22, pose(P(), **dict(_LUNGE, foot_r=(0.17, 0.30, 0.26), ankle_r=(-22, 0, 0)),
+              pelvis=(0.0, 0.05, 0.650), spine=(-40, 0, 0),
               head=(-20, 0, 0),
               hand_r=(0.18, 0.50, 0.78), hand_l=(-0.18, 0.50, 0.80))),
     (30, P(pelvis=(0.0, 0.02, 0.840), spine=(-20, 0, 0), head=(-8, 0, 0),
