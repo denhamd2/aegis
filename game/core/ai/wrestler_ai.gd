@@ -327,6 +327,11 @@ func poll_input() -> Dictionary:
 ## longer he waits between strikes, worn down by `damage` -- BodyLife's
 ## "spent" scale, so he moves as tired as he looks.
 const FATIGUE_WALK_MIN := 0.7
+## How much longer a man waits between strikes than strike_cooldown_ticks says
+## (comeback and corner flurries aside). The measured match was landing a move
+## every 0.7 s against 2K26's 4-6 s between beats (gauntlet/refs/
+## match_engine_2k26.md section 3); a string of three blows is one beat.
+const ACTION_GAP_SCALE := 2.2
 const FATIGUE_COOLDOWN_MAX := 1.5
 
 static func fatigue_of(damage: float) -> float:
@@ -636,6 +641,7 @@ func _poll_input() -> Dictionary:
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
 					if controller.combat.is_fired_up() else int(strike_cooldown_ticks
+					* ACTION_GAP_SCALE
 					* fatigue_cooldown_scale(controller.combat.total_damage())
 					* (controller.flow.tempo_scale(controller) if controller.flow else 1.0))
 			if cornered:

@@ -17,6 +17,7 @@ extends Node
 ## --fixed-fps 60, not 6000: one physics tick per frame, run as fast as the
 ## machine goes. At 6000 every tick waits out 100 idle frames.
 
+const BEAT_MERGE_S := 1.0
 const MATCH_SCENE := "res://scenes/match.tscn"
 const S := WrestlerFSM.State
 
@@ -135,12 +136,25 @@ func _measure(seed_value: int, per_tick: Array, landed_at: Array) -> Dictionary:
 		i = j + 1
 	for k in range(1, landed_at.size()):
 		gaps.append((landed_at[k][0] - landed_at[k - 1][0]) / 60.0)
+	# Beats: blows by the same man within BEAT_MERGE_S of each other are one
+	# beat (a string of three, a ground flurry), which is how a viewer counts.
+	var beats: Array = []
+	for e in landed_at:
+		if not beats.is_empty() and beats.back()[1] == e[1] \
+				and (e[0] - beats.back()[2]) / 60.0 <= BEAT_MERGE_S:
+			beats.back()[2] = e[0]
+		else:
+			beats.append([e[0], e[1], e[0]])
+	var beat_gaps: Array = []
+	for k in range(1, beats.size()):
+		beat_gaps.append((beats[k][0] - beats[k - 1][2]) / 60.0)
+	beat_gaps.sort()
 	down_spells.sort()
 	gaps.sort()
 	var row := {
 		"seed": seed_value, "secs": n / 60.0, "landed": landed_at.size(),
 		"per_min": landed_at.size() / maxf(n / 3600.0, 0.001),
-		"gap_med": _median(gaps), "down_med": _median(down_spells),
+		"gap_med": _median(gaps), "beat_gap_med": _median(beat_gaps), "down_med": _median(down_spells),
 		"down_max": down_spells.back() if not down_spells.is_empty() else 0.0,
 		"down_spells": down_spells.size(),
 		"any_down": float(any_down) / maxf(n, 1), "neutral": float(neutral) / maxf(n, 1),
@@ -149,8 +163,8 @@ func _measure(seed_value: int, per_tick: Array, landed_at: Array) -> Dictionary:
 		"stretch_max": stretches.map(func(s): return s[0]).max() if not stretches.is_empty() else 0,
 		"stretch_secs": _mean(stretches.map(func(s): return float(s[1]))),
 	}
-	print("seed %d  %5.1f s  landed %3d (%.1f/min, gap med %.1f s)  down spells %d (med %.1f s, max %.1f s)  someone down %2.0f%%  both standing idle %2.0f%%  double-down %.1f s  control runs %.1f moves / %.1f s (max %d)" % [
-			seed_value, row["secs"], row["landed"], row["per_min"], row["gap_med"],
+	print("seed %d  %5.1f s  landed %3d (%.1f/min, gap med %.1f s, beat gap med %.1f s)  down spells %d (med %.1f s, max %.1f s)  someone down %2.0f%%  both standing idle %2.0f%%  double-down %.1f s  control runs %.1f moves / %.1f s (max %d)" % [
+			seed_value, row["secs"], row["landed"], row["per_min"], row["gap_med"], row["beat_gap_med"],
 			row["down_spells"], row["down_med"], row["down_max"], row["any_down"] * 100.0,
 			row["neutral"] * 100.0, row["double_down"], row["stretch_moves"],
 			row["stretch_secs"], row["stretch_max"]])
@@ -182,7 +196,7 @@ static func _mean(xs: Array) -> float:
 func _summary() -> void:
 	if _rows.is_empty():
 		return
-	var keys := ["secs", "per_min", "gap_med", "down_med", "down_max", "any_down", "neutral", "stretch_moves", "stretch_secs"]
+	var keys := ["secs", "per_min", "gap_med", "beat_gap_med", "down_med", "down_max", "any_down", "neutral", "stretch_moves", "stretch_secs"]
 	var line := "FLOW mean over %d seeds:" % _rows.size()
 	for k in keys:
 		line += "  %s %.2f" % [k, _mean(_rows.map(func(r): return float(r[k])))]

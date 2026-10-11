@@ -2786,6 +2786,8 @@ const GROUND_FIST := preload("res://resources/moves/ground_fist.tres")
 const GROUND_PICKUP := preload("res://resources/moves/ground_pickup.tres")
 ## 2 -> 4 with the longer downs (DOWN_TICKS_*): the man in control works him.
 const GROUND_ATTACKS_MAX := 4
+## Least gap between two blows on the same downed man: he is worked, not flurried.
+const GROUND_GAP_TICKS := 90
 ## Along a downed man from his pelvis (his own -Z is toward his head): past
 ## HEAD_ZONE_Z he is at the head, past LEGS_ZONE_Z at the legs.
 const HEAD_ZONE_Z := -0.55
@@ -2806,6 +2808,7 @@ const PICKUP_AFTER_ATTACKS := 2
 const PICKUP_REACH := 0.35
 var picked_up := false
 var ground_attacks_taken := 0
+var _last_ground_hit_frame := -100000
 var _ground_zone := ""
 var _ground_step_left := 0
 var _ground_step: Vector3 = Vector3.ZERO
@@ -2850,6 +2853,8 @@ func can_ground_attack(victim: WrestlerController) -> bool:
 	if not DOWNED_STATES.has(victim.fsm.current_state) or victim.fsm.current_state != WrestlerFSM.State.DOWN:
 		return false
 	if victim.ground_attacks_taken >= GROUND_ATTACKS_MAX:
+		return false
+	if Engine.get_physics_frames() - victim._last_ground_hit_frame < GROUND_GAP_TICKS:
 		return false
 	var zone := downed_zone(victim, global_position)
 	var move := ground_move_for(zone)
@@ -2929,6 +2934,7 @@ func _tick_ground_step() -> void:
 ## A ground attack landing on this man, down.
 func _take_ground_hit(attacker: WrestlerController, move: MoveDef, zone: String) -> void:
 	ground_attacks_taken += 1
+	_last_ground_hit_frame = Engine.get_physics_frames()
 	combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if attacker.combat.is_fired_up() else 1.0)
 	_took_moves(1)
 	attacker.combat.apply_momentum(move)
