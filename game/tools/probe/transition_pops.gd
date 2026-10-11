@@ -35,6 +35,11 @@ var _debug_min := 0.5
 ## --world: bones in world orientation less the body's position, so the way
 ## he faces counts too -- what a viewer sees, turns included.
 var _world := false
+## --abs: bones where they are drawn in the world, body position and all -- a
+## body placed half a metre in a tick is a pop to a viewer, and --world (which
+## takes the body's position off) cannot see it. Kicks are changes of speed,
+## so walking and running still read as nothing.
+var _abs := false
 
 
 func _ready() -> void:
@@ -51,6 +56,7 @@ func _ready() -> void:
 			"--debug": _debug = true
 			"--debug-min": _debug_min = float(args[i + 1])
 			"--world": _world = true
+			"--abs": _abs = true
 	if _seeds.is_empty():
 		_seeds = [1, 2]
 	_pair = Roster.pair_from_spec(spec)
@@ -109,7 +115,10 @@ func _run(seed_value: int, edges: Dictionary, steady: Array) -> int:
 		var cb := func() -> void:
 			for b: String in ids:
 				var o := sk.get_bone_global_pose(ids[b]).origin
-				slot[b] = sk.global_transform.basis * o if _world else o
+				if _abs:
+					slot[b] = sk.global_transform * o
+				else:
+					slot[b] = sk.global_transform.basis * o if _world else o
 		sk.skeleton_updated.connect(cb)
 		hooks.append([sk, cb])
 	var prev := [{}, {}]

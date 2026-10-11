@@ -75,3 +75,37 @@ func test_a_snap_draws_the_next_tick_as_it_is() -> void:
 	ine._cut = false
 	ine.snap()
 	assert_bool(ine._cut).is_true()
+
+
+## The glide (placement): the turn about the vertical between two bases, read
+## off whatever else the basis does -- a man lying on his back turned half
+## round is half a turn, however he is pitched.
+func test_yaw_between_reads_the_turn_about_the_vertical() -> void:
+	var lying := Basis(Vector3.RIGHT, -PI / 2.0)
+	var turned := Basis(Vector3.UP, 0.7) * lying
+	assert_float(Inertializer._yaw_between(lying, turned)).is_equal_approx(0.7, 1e-4)
+	assert_float(Inertializer._yaw_between(turned, lying)).is_equal_approx(-0.7, 1e-4)
+
+
+## A glide starts by drawing the hips exactly where they were drawn last tick,
+## and is gone by the end of its fade.
+func test_a_glide_starts_where_the_hips_were_and_fades_out() -> void:
+	var body: Node3D = auto_free(Node3D.new())
+	add_child(body)
+	var ine: Inertializer = auto_free(Inertializer.new())
+	ine.body = body
+	var plain := Transform3D(Basis(Vector3.UP, PI), Vector3(0.4, 0.2, -2.0))
+	var drawn := Transform3D(Basis(), Vector3(0.1, 0.2, -2.5))
+	ine._start_glide(plain, drawn)
+	var at_start := ine._place_xf(0.0) * plain
+	assert_vector(at_start.origin).is_equal_approx(drawn.origin, Vector3.ONE * 1e-4)
+	assert_float(Inertializer._yaw_between(at_start.basis, drawn.basis)).is_equal_approx(0.0, 1e-4)
+	assert_bool(ine._place_xf(30.0) == Transform3D.IDENTITY).is_true()
+	assert_int(ine.glides).is_equal(1)
+
+
+## A deliberate placement is let through as a cut, not glided.
+func test_a_snap_is_not_glided() -> void:
+	var ine: Inertializer = auto_free(Inertializer.new())
+	ine.snap()
+	assert_bool(ine._placed).is_true()

@@ -115,6 +115,45 @@ const SNAP_YAW := 0.2
 ## A body moved further than this in a tick was placed, not turned.
 const TELEPORT := 0.5
 
+## --- Placement -------------------------------------------------------------
+## The last net under every other carry: the drawn hips, in the world, never
+## jump. Each tick this compares where the hips are about to be drawn with
+## where they were drawn last tick, run on at last tick's speed, and a jump
+## past PLACE_JUMP_M or PLACE_JUMP_YAW is carried out of the whole body as one
+## rigid glide -- a slide and a turn about the vertical through the hips --
+## instead of shown in a frame. Whatever caused it: a paired move handing a
+## thrown man over to the knockdown with his body turned and moved under him
+## (move_qa: every one of the 47 popped 0.4-1.6 m on that tick), a clip that
+## starts facing the other way, a body placed a few tenths over. A placement
+## that means it -- MatchSmoothing.snap(), or a body moved further than
+## PLACE_TELEPORT -- is let through as the cut it is.
+const PLACE_JUMP_M := 0.15
+const PLACE_JUMP_YAW := 0.4
+const PLACE_TELEPORT := 2.0
+var _hips_bone := -1
+## The hips as drawn on the last two ticks (world), and how many are known.
+var _hips_w1 := Transform3D()
+var _hips_w2 := Transform3D()
+var _hips_known := 0
+## The glide: a turn of _place_sign * curve about the vertical through
+## _place_pivot (the hips, in the body's own frame), then a slide along
+## _place_dir, both fading on Bollo's curve from _place_start.
+var _place_yaw := PackedFloat32Array([0, 0, 0, 0, 0, 0, 0])
+var _place_dist := PackedFloat32Array([0, 0, 0, 0, 0, 0, 0])
+var _place_sign := 1.0
+var _place_dir := Vector3.ZERO
+var _place_pivot := Vector3.ZERO
+var _place_start := 0
+## Glides carried, for the probes.
+var glides := 0
+## The body was placed (snap()): the next tick is a cut, not a jump to glide.
+var _placed := false
+var _place_fresh := false
+## The tick the hips were last checked on: once a tick, at draw time, when
+## everything that moves the model this tick (the turn-round's model hold among
+## them, released on the same mixer signal as this) has moved it.
+var _place_frame := -1
+
 ## Hold the pose on screen for `ticks` physics ticks (hit-stop).
 func freeze(ticks: int) -> void:
 	if ticks <= 0 or _bones == 0:
@@ -222,6 +261,7 @@ func _on_mixer_applied() -> void:
 				_prior_pos[b] = _frozen_pos[b]
 				_drawn_rot[b] = _frozen_rot[b]
 				_drawn_pos[b] = _frozen_pos[b]
+			_hips_known = 0
 			return
 		# Let go: carry the held pose into the clip as it is now.
 		_freeze_until = -1
@@ -241,6 +281,7 @@ func _on_mixer_applied() -> void:
 		_prior_pos[b] = _drawn_pos[b]
 		_drawn_rot[b] = rot
 		_drawn_pos[b] = pos
+	_place_fresh = _place_fresh or fresh
 	if _cut:
 		_tick_prior_rot = _drawn_rot.duplicate()
 		_tick_prior_pos = _drawn_pos.duplicate()
@@ -350,20 +391,111 @@ func _track_facing() -> void:
 	_last_origin = origin
 
 
+## Where the hips will be drawn this tick, in the world, with every carry but
+## the glide in it, and whether a jump from the last two ticks needs one.
+func _track_placement(sk: Skeleton3D, fresh: bool) -> void:
+	var placed := _placed
+	_placed = false
+	if body == null or _hips_bone < 0 or fresh or placed:
+		_hips_known = 0
+		_place_yaw[0] = 0.0
+		_place_dist[0] = 0.0
+		return
+	var parent := sk.get_bone_parent(_hips_bone)
+	var local := Transform3D(Basis(_drawn_rot[_hips_bone]), _drawn_pos[_hips_bone])
+	var g := (sk.get_bone_global_pose(parent) * local) if parent >= 0 else local
+	var t := float(Engine.get_physics_frames() - _yaw_start)
+	var plain := sk.global_transform * _facing_xf(sk, t) * g
+	var tp := float(Engine.get_physics_frames() - _place_start)
+	var now := _place_xf(tp) * plain
+	if _hips_known >= 1 and now.origin.distance_to(_hips_w1.origin) > PLACE_TELEPORT:
+		_hips_known = 0
+		_place_yaw[0] = 0.0
+		_place_dist[0] = 0.0
+		now = plain
+	elif _hips_known >= 2:
+		var pred := _hips_w1.origin + (_hips_w1.origin - _hips_w2.origin)
+		var step := _yaw_between(_hips_w2.basis, _hips_w1.basis)
+		var turn := _yaw_between(_hips_w1.basis, now.basis)
+		if now.origin.distance_to(pred) > PLACE_JUMP_M \
+				or absf(wrapf(turn - step, -PI, PI)) > PLACE_JUMP_YAW:
+			_start_glide(plain, _hips_w1)
+			now = _place_xf(0.0) * plain
+	_hips_w2 = _hips_w1
+	_hips_w1 = now
+	_hips_known = mini(_hips_known + 1, 2)
+
+
+## Starts the glide that draws `plain` (the hips with no glide) where `drawn`
+## was: what is left of any glide still running is folded in, since `drawn`
+## already carried it.
+func _start_glide(plain: Transform3D, drawn: Transform3D) -> void:
+	var yaw := _yaw_between(plain.basis, drawn.basis)
+	var slide := drawn.origin - plain.origin
+	slide.y = 0.0
+	var dist := slide.length()
+	var ticks := clampf(6.0 + 10.0 * absf(yaw) / PI + 20.0 * dist, 6.0, 18.0)
+	_place_sign = signf(yaw) if yaw != 0.0 else 1.0
+	_place_yaw = _bollo(absf(yaw), 0.0, ticks)
+	_place_dir = slide / dist if dist > 1e-6 else Vector3.ZERO
+	_place_dist = _bollo(dist, 0.0, ticks)
+	_place_pivot = body.global_transform.affine_inverse() * plain.origin
+	_place_start = Engine.get_physics_frames()
+	glides += 1
+
+
+## The glide at `t` ticks, as a world transform.
+func _place_xf(t: float) -> Transform3D:
+	var yaw := _place_sign * _eval(_place_yaw, t)
+	var dist := _eval(_place_dist, t)
+	if absf(yaw) < 1e-6 and dist < 1e-6:
+		return Transform3D.IDENTITY
+	var pivot := body.global_transform * _place_pivot
+	var turn := Transform3D(Basis(Vector3.UP, yaw), Vector3.ZERO)
+	return Transform3D(Basis(), _place_dir * dist) * Transform3D(Basis(), pivot) \
+			* turn * Transform3D(Basis(), -pivot)
+
+
+## The turn about the vertical that takes basis `a` to `b`.
+static func _yaw_between(a: Basis, b: Basis) -> float:
+	var q := b.get_rotation_quaternion() * a.get_rotation_quaternion().inverse()
+	return wrapf(2.0 * atan2(q.y, q.w), -PI, PI)
+
+
+func _apply_placement(sk: Skeleton3D) -> void:
+	if body == null or (_place_yaw[0] <= 0.0 and _place_dist[0] <= 0.0):
+		return
+	var t := float(Engine.get_physics_frames() - _place_start) + Engine.get_physics_interpolation_fraction()
+	var world := _place_xf(t)
+	if world == Transform3D.IDENTITY:
+		return
+	var about := sk.global_transform.affine_inverse() * world * sk.global_transform
+	for b in sk.get_bone_count():
+		if sk.get_bone_parent(b) < 0:
+			sk.set_bone_global_pose(b, about * sk.get_bone_global_pose(b))
+
+
 func _process_modification() -> void:
 	var sk := get_skeleton()
 	if sk == null:
 		return
+	if Engine.get_physics_frames() != _place_frame and _bones == sk.get_bone_count():
+		_place_frame = Engine.get_physics_frames()
+		_track_placement(sk, _place_fresh)
+		_place_fresh = false
 	if _freeze_until >= 0 and _bones == sk.get_bone_count():
 		for b in _bones:
 			sk.set_bone_pose_rotation(b, _frozen_rot[b])
 			sk.set_bone_pose_position(b, _frozen_pos[b])
 		_apply_facing(sk)
+		_apply_placement(sk)
 		return
 	if _between_ticks(sk):
 		_apply_facing(sk)
+		_apply_placement(sk)
 		return
 	_apply_facing(sk)
+	_apply_placement(sk)
 	if not _active or _bones != sk.get_bone_count():
 		return
 	var t := _elapsed()
@@ -404,6 +536,7 @@ func draw_between(sk: Skeleton3D, f: float) -> void:
 ## The pose was placed, not moved (a teleport): draw the next tick as it is.
 func snap() -> void:
 	_cut = true
+	_placed = true
 
 
 ## Turns the whole drawn body by what is left of a carried snap, about the
@@ -412,17 +545,50 @@ func _apply_facing(sk: Skeleton3D) -> void:
 	if body == null or _yaw_curve[0] <= 0.0:
 		return
 	var t := float(Engine.get_physics_frames() - _yaw_start) + Engine.get_physics_interpolation_fraction()
+	var about := _facing_xf(sk, t)
+	if about == Transform3D.IDENTITY:
+		return
+	for b in sk.get_bone_count():
+		if sk.get_bone_parent(b) < 0:
+			sk.set_bone_global_pose(b, about * sk.get_bone_global_pose(b))
+
+
+## What is left of a carried snap at `t` ticks, as a turn of the skeleton about
+## the vertical through the body's origin (skeleton space).
+func _facing_xf(sk: Skeleton3D, t: float) -> Transform3D:
+	if body == null or _yaw_curve[0] <= 0.0:
+		return Transform3D.IDENTITY
 	var angle := _yaw_sign * _eval(_yaw_curve, t)
 	if absf(angle) < 1e-5:
-		return
+		return Transform3D.IDENTITY
 	var inv := sk.global_transform.affine_inverse()
 	var up := (inv.basis * Vector3.UP).normalized()
 	var pivot := inv * body.global_position
 	var turn := Transform3D(Basis(up, angle), Vector3.ZERO)
-	var about := Transform3D(Basis(), pivot) * turn * Transform3D(Basis(), -pivot)
+	return Transform3D(Basis(), pivot) * turn * Transform3D(Basis(), -pivot)
+
+
+## The bone that carries the body: down from the root while the chain has a
+## single child -- the pelvis, under whatever root bones the rig has.
+static func _find_hips(sk: Skeleton3D) -> int:
+	var best := -1
+	var most := -1
 	for b in sk.get_bone_count():
 		if sk.get_bone_parent(b) < 0:
-			sk.set_bone_global_pose(b, about * sk.get_bone_global_pose(b))
+			var n := _descendants(sk, b)
+			if n > most:
+				most = n
+				best = b
+	while best >= 0 and sk.get_bone_children(best).size() == 1:
+		best = sk.get_bone_children(best)[0]
+	return best
+
+
+static func _descendants(sk: Skeleton3D, bone: int) -> int:
+	var n := 0
+	for c in sk.get_bone_children(bone):
+		n += 1 + _descendants(sk, c)
+	return n
 
 
 ## Sizes the per-bone arrays to the skeleton; true when it had to, which means
@@ -432,6 +598,8 @@ func _ensure(sk: Skeleton3D) -> bool:
 	if n == _bones:
 		return false
 	_bones = n
+	_hips_bone = _find_hips(sk)
+	_hips_known = 0
 	for a: Array in [_drawn_rot, _prior_rot]:
 		a.resize(n)
 		a.fill(Quaternion.IDENTITY)

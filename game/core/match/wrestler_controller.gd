@@ -1209,7 +1209,12 @@ func _update_grip_ik() -> void:
 	if _paired_grip_ticks > 0:
 		_paired_grip_ticks -= 1
 	_close_for_lock_up()
+	var held_at: Array[Vector3] = []
+	for t in _grip_targets:
+		held_at.append(t.global_position)
+	var mode_was := _grip_mode
 	var engaged := _is_gripping_state() and _aim_grip_targets()
+	_hand_grip_over(engaged, mode_was, held_at)
 	var step := IK_BLEND_PER_TICK if engaged else -IK_BLEND_PER_TICK
 	_grip_blend_prev = _grip_blend
 	_grip_blend = clampf(_grip_blend + step, 0.0, 1.0)
@@ -1222,6 +1227,39 @@ func _update_grip_ik() -> void:
 	_grip_prev_local = _grip_cur_local.duplicate()
 	for i in _grip_targets.size():
 		_grip_cur_local[i] = _grip_targets[i].position
+
+
+## What the hands hold changes in a tick -- the lock-up's collar and elbow to
+## the move's own grip as the paired clip starts, the chest to the hips as a
+## lift begins -- and the targets used to jump there with the arms already at
+## full weight: a hand crossed half a metre in one tick (transition_pops
+## --abs, "GRAPPLE_HOLD (new clip)", 0.64 m). The hands now travel from where
+## they were to the new hold over GRIP_HANDOVER_TICKS, while the hold itself
+## goes on tracking the other man.
+const GRIP_HANDOVER_TICKS := 8
+## Which hold the targets were last aimed at ("" when not gripping).
+var _grip_mode := ""
+var _grip_handover := 0
+var _grip_handover_from: Array[Vector3] = []
+
+
+func _hand_grip_over(engaged: bool, mode_was: String, held_at: Array[Vector3]) -> void:
+	if not engaged:
+		_grip_mode = ""
+		_grip_handover = 0
+		return
+	if mode_was != "" and mode_was != _grip_mode and _grip_blend > 0.0 \
+			and held_at.size() == _grip_targets.size():
+		_grip_handover_from.clear()
+		for i in _grip_targets.size():
+			_grip_handover_from.append(held_at[i] - _grip_targets[i].global_position)
+		_grip_handover = GRIP_HANDOVER_TICKS
+	if _grip_handover <= 0:
+		return
+	var w := smoothstep(0.0, 1.0, float(_grip_handover) / GRIP_HANDOVER_TICKS)
+	for i in _grip_targets.size():
+		_grip_targets[i].global_position += _grip_handover_from[i] * w
+	_grip_handover -= 1
 
 
 ## Draws the grip between the last two ticks at `f` (Inertializer, before the
@@ -1331,6 +1369,7 @@ func _aim_grip_targets() -> bool:
 	# chest. Reaching for a lifted victim's chest puts the arms overhead and
 	# behind, which reads as nothing at all.
 	if fsm.current_state == WrestlerFSM.State.TIE_UP or in_chain_read():
+		_grip_mode = "collar"
 		return _aim_collar_and_elbow()
 	# In a paired move, the move says what the attacker holds (PairedContacts).
 	if fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD and _is_grapple_attacker \
@@ -1343,12 +1382,14 @@ func _aim_grip_targets() -> bool:
 					skeleton.find_bone(_skeleton_bone_name("spine_03"))).origin
 			var t := PairedContacts.targets(family, opponent, chest)
 			if t.size() == 2:
+				_grip_mode = "paired:" + family
 				_grip_targets[0].global_position = _reachable(ARM_CHAINS[0]["root"], t[0])
 				_grip_targets[1].global_position = _reachable(ARM_CHAINS[1]["root"], t[1])
 				return true
 	var lifting := fsm.current_state == WrestlerFSM.State.GRAPPLE_HOLD \
 			and _is_grapple_attacker
 	var anchor_name := GRIP_BONE_LIFT if lifting else GRIP_BONE
+	_grip_mode = anchor_name
 	var anchor_bone := opponent.skeleton.find_bone(
 		opponent._skeleton_bone_name(anchor_name))
 	if anchor_bone < 0:
