@@ -3283,6 +3283,12 @@ func _process_grapple_hold(input: Dictionary) -> void:
 		# plays: he waits it out. Between chain links he may reverse.
 		_tick_chain_counter(input)
 		return
+	# A rig move is already playing (a running paired attack started this same
+	# tick, from the AI, after the rig had suspended this body): the hold is
+	# the move's own, not a tie-up to resolve. Godot still delivered this tick
+	# to a body whose physics processing had just been switched off.
+	if grapple_rig and grapple_rig.is_active():
+		return
 	if input.get("run", false):
 		_begin_irish_whip()
 		return
