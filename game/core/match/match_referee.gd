@@ -725,8 +725,21 @@ func _tick_tie_up() -> void:
 ## lost the lock-up straight after, and the leader threw his signature into
 ## the middle of the comeback. The contest still runs, at the fired-up man's
 ## own pace, so the lock-up is seen rather than skipped.
+##
+## And nothing, in the finish, for the man the finish is not for (MatchFlow.
+## winner) against the man it is. The story has taken his big moves away
+## (MatchFlow.LOSER_ROW), but he still won lock-ups: measured, seed 4, Cody
+## went for his finish every ten seconds, lost each lock-up to a Roman who
+## could only throw a power move, and the match ran past sixteen minutes with
+## no finisher landed.
 func _tie_up_weight(w: WrestlerController, other: WrestlerController) -> float:
-	return 0.0 if other.combat.is_fired_up() and not w.combat.is_fired_up() else 1.0
+	if other.combat.is_fired_up() and not w.combat.is_fired_up():
+		return 0.0
+	var flow := w.flow
+	if flow != null and flow.winner == other and w.is_ai \
+			and String(flow.phase()["name"]) == "finish":
+		return 0.0
+	return 1.0
 
 ## Seeded, not random-random: same (match_seed, _tie_up_ticks) pair always
 ## picks the same winner (ReplaySystem determinism), but varies across

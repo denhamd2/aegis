@@ -98,6 +98,15 @@ const CORNER_MOVE_CHANCE := 0.35
 ## (MATCH_FLOW.md), and a running attack is the punctuation. 12 s.
 @export var make_room_cooldown_ticks: int = 720
 var _make_room_cooldown: int = 0
+## The knockdown routine, varied. Backing off while the other man rises and
+## charging him as he straightens was what every knockdown led to, and a
+## routine is the first thing a viewer reads as AI. Each rise is rolled once:
+## a charge CHARGE_CHANCE of the time, never two rises running; otherwise he
+## walks in and goes back to work.
+const CHARGE_CHANCE := 0.45
+var _rise_rolled := false
+var _charge_this_rise := false
+var _charged_last_rise := false
 ## The heel in control plays to the crowd now and then (MatchFlow.wants_stall):
 ## a taunt between holds, no oftener than this many ticks.
 const STALL_EVERY_TICKS := 1500
@@ -133,6 +142,20 @@ var _tie_up_attempts: int = 0
 ## chase it with another, or the middle of the match turns back into the
 ## grapple loop this AI was rewritten to get away from.
 var _power_attempt_spent: bool = false
+
+## The working lock-up (2K26's match is grapple-led: a collar-and-elbow, a
+## hold, a suplex, then the strikes again -- gauntlet/refs/match_engine_2k26.md).
+## The AI used to lock up only to open the match, once for its power move and
+## for the finish, so a nine-minute match showed about four grapples and was
+## otherwise punches. Now, every WORK_TIE_UP_MIN-MAX blows (a string of three
+## is one beat), it reaches for a lock-up to work a grapple or a power move --
+## capped there (WrestlerController.tie_up_rung_cap), so a meter that could
+## afford a signature does not throw one in the middle of the match.
+const WORK_POWER_SHARE := 0.5
+const WORK_TIE_UP_MIN := 5
+const WORK_TIE_UP_MAX := 9
+var _blows_since_lock_up := 0
+var _work_tie_up_after := 7
 
 
 var _cooldown: int = 0
@@ -198,6 +221,8 @@ func _physics_process(_delta: float) -> void:
 		_run_cooldown -= 1
 	if _make_room_cooldown > 0:
 		_make_room_cooldown -= 1
+	if _signature_retry > 0:
+		_signature_retry -= 1
 	if _stall_cooldown > 0:
 		_stall_cooldown -= 1
 	_circle_tick += 1
@@ -331,7 +356,9 @@ const FATIGUE_WALK_MIN := 0.7
 ## (comeback and corner flurries aside). The measured match was landing a move
 ## every 0.7 s against 2K26's 4-6 s between beats (gauntlet/refs/
 ## match_engine_2k26.md section 3); a string of three blows is one beat.
-const ACTION_GAP_SCALE := 2.2
+## 2.2 -> 3.2 with the working lock-ups in: beat gap 2.5-2.8 s at 2.2,
+## 3.1-3.6 s at 2.8 (flow_probe seeds 1-4).
+const ACTION_GAP_SCALE := 3.2
 const FATIGUE_COOLDOWN_MAX := 1.5
 
 static func fatigue_of(damage: float) -> float:
@@ -439,6 +466,8 @@ func _poll_input() -> Dictionary:
 		if _tie_up_tick == 0:
 			_tie_up_attempts += 1
 			_roll_tie_up_timing()
+			_blows_since_lock_up = 0
+			_work_tie_up_after = _chain_rng().randi_range(WORK_TIE_UP_MIN, WORK_TIE_UP_MAX)
 			if _wants_power_tie_up():
 				_power_attempt_spent = true
 		_tie_up_tick += 1
@@ -506,7 +535,13 @@ func _poll_input() -> Dictionary:
 	# running attacks were unreachable. While the other man is getting up, the
 	# AI backs off to charge distance; the charge below then fires when he is
 	# on his feet. He does not back off from a man he is about to finish.
-	if target.fsm.current_state == WrestlerFSM.State.GETUP \
+	if target.fsm.current_state == WrestlerFSM.State.GETUP and not _rise_rolled:
+		_rise_rolled = true
+		_charge_this_rise = not _charged_last_rise and _chain_rng().randf() < CHARGE_CHANCE
+		_charged_last_rise = _charge_this_rise
+	elif target.fsm.current_state != WrestlerFSM.State.GETUP:
+		_rise_rolled = false
+	if target.fsm.current_state == WrestlerFSM.State.GETUP and _charge_this_rise \
 			and _opening_grapple_done() and _run_cooldown <= 0 \
 			and _make_room_cooldown <= 0 and not _wants_tie_up() and distance < run_engage_distance + 0.3:
 		var away := -to_target.normalized()
@@ -629,6 +664,16 @@ func _poll_input() -> Dictionary:
 			pass
 		elif wants_tie_up:
 			input["grapple"] = true
+			# A working lock-up stays a grapple, whoever wins it.
+			var cap := -1
+			if _is_work_tie_up():
+				# Half of them a grapple (the suplex, the knee, the guillotine),
+				# half the power move if the meter has earned one.
+				cap = CombatSystem.Tier.POWER if _chain_rng().randf() < WORK_POWER_SHARE \
+						else CombatSystem.Tier.GRAPPLE
+			controller.tie_up_rung_cap = cap
+			if target.is_ai:
+				target.tie_up_rung_cap = cap
 		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			# Hanging in the corner, with a corner move to hand: sometimes
 			# the flurry gives way to the run-in instead of another blow.
@@ -637,6 +682,7 @@ func _poll_input() -> Dictionary:
 					and controller.try_corner_spear():
 				return input
 			input["strike"] = true
+			_blows_since_lock_up += 1
 			# Fired up, he does not wait between shots: the comeback is a
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
@@ -734,7 +780,52 @@ func _wants_tie_up() -> bool:
 		return true
 	if _wants_power_tie_up():
 		return true
-	return controller.combat.can_signature() and _opponent_is_ripe()
+	if _wants_signature_tie_up():
+		return true
+	return _wants_work_tie_up()
+
+
+## The finish: a signature to put him down. Not again for SIGNATURE_RETRY_TICKS
+## after one lands -- a man does not throw his big move at the same man over
+## and over (2K26: one to three a match). Measured at a 30 s wait after only
+## the ones that left him standing: thirteen in a nine-minute match, seed 3.
+const SIGNATURE_RETRY_TICKS := 2700
+var _signature_retry := 0
+
+
+func _wants_signature_tie_up() -> bool:
+	if not _opponent_is_ripe():
+		return false
+	# The finisher is never held back: it is how the match ends.
+	if controller.combat.can_finisher() and controller.finisher_move:
+		return true
+	return _signature_retry <= 0 and controller.combat.can_signature()
+
+
+## Called by the controller when one of this man's signatures lands.
+func signature_landed(_knocked_down: bool) -> void:
+	_signature_retry = SIGNATURE_RETRY_TICKS
+
+
+## Time for a working lock-up: enough blows since the last one, a grapple-tier
+## move to work, and nothing better to do -- not mid-comeback (that is a flurry
+## of strikes), and not at a man hanging in the corner (he cannot lock up).
+func _wants_work_tie_up() -> bool:
+	if not _opening_grapple_done() or _blows_since_lock_up < _work_tie_up_after:
+		return false
+	# A man with his finisher in hand does not lock up to work a hold.
+	if controller.combat.can_finisher() and controller.finisher_move:
+		return false
+	if controller.grapple_move == null and controller.grapple_move_pool.is_empty():
+		return false
+	return not controller.combat.is_fired_up() and not target.is_corner_trapped()
+
+
+## Whether the lock-up this AI wants is the working kind rather than the power
+## move's or the finish's.
+func _is_work_tie_up() -> bool:
+	return not _wants_power_tie_up() and not _wants_signature_tie_up() \
+			and _wants_work_tie_up()
 
 ## The middle of the match: one lock-up to throw the power move, the body
 ## slam, and back to strikes.
@@ -781,6 +872,12 @@ func _opponent_is_ripe() -> bool:
 	# Fired up, his moves land harder (CombatSystem.COMEBACK_DAMAGE_SCALE),
 	# so the same signature closes a bigger gap.
 	var scale := CombatSystem.COMEBACK_DAMAGE_SCALE if controller.combat.is_fired_up() else 1.0
+	# And the story scales what he takes (MatchFlow: the man being beaten down
+	# is beaten down slowly). Unscaled, a signature that "closes the gap" left
+	# him standing, he was still ripe, and the heel threw it again every ten
+	# seconds -- fifteen Superman Punches in three and a half minutes
+	# (flow_probe seed 3).
+	scale *= target.combat.damage_taken_scale
 	return remaining <= _weakest_signature_damage() * scale
 
 ## Total damage of the least damaging signature this wrestler can draw --

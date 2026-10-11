@@ -144,3 +144,78 @@ func test_a_kickout_of_a_lesser_move_leaves_the_pinner_on_his_feet() -> void:
 	referee._pin_defender = b
 	referee._end_pin(false)
 	assert_int(a.fsm.current_state).is_equal(WrestlerFSM.State.IDLE)
+
+
+# --- the working lock-up --------------------------------------------------------
+
+## A working lock-up (WrestlerAI, the grapple-led middle) is a grapple however
+## full the meter is: a man who could afford a signature does not throw one
+## mid-match off a lock-up he went into to work a hold.
+func test_a_working_lock_up_throws_a_grapple_whatever_the_meter_affords() -> void:
+	var men := _two_men()
+	var a: WrestlerController = men[1]
+	a.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD + 1.0
+	assert_bool(a.combat.can_signature()).is_true()
+	a.tie_up_rung_cap = CombatSystem.Tier.POWER
+	assert_int(a.tier_of(a._pick_hold_move())).is_less_equal(CombatSystem.Tier.POWER)
+	assert_int(a.tie_up_rung_cap).is_equal(-1)
+
+
+## The AI reaches for one every few blows once the opening lock-up is done --
+## and not before it, and never at a man hanging in the corner.
+func test_the_ai_works_a_lock_up_every_few_blows() -> void:
+	var men := _two_men()
+	var a: WrestlerController = men[1]
+	var b: WrestlerController = men[2]
+	var ai := WrestlerAI.new()
+	auto_free(ai)
+	ai.controller = a
+	ai.target = b
+	ai._blows_since_lock_up = 99
+	assert_bool(ai._wants_work_tie_up()).is_false()
+	a.combat.record_tier(CombatSystem.Tier.GRAPPLE)
+	assert_bool(ai._wants_work_tie_up()).is_true()
+	ai._blows_since_lock_up = 0
+	assert_bool(ai._wants_work_tie_up()).is_false()
+	assert_int(WrestlerAI.WORK_TIE_UP_MIN).is_greater_equal(3)
+
+
+## A signature is not thrown again straight away, landed or not:
+## the heel threw the Superman Punch every ten seconds for three and a half
+## minutes (flow_probe seed 3) while the story's damage scale kept the man in
+## front of him on his feet.
+func test_a_signature_that_does_not_drop_him_is_not_thrown_again_at_once() -> void:
+	var men := _two_men()
+	var a: WrestlerController = men[1]
+	var b: WrestlerController = men[2]
+	var ai := WrestlerAI.new()
+	auto_free(ai)
+	ai.controller = a
+	ai.target = b
+	a.combat.momentum = CombatSystem.SIGNATURE_THRESHOLD + 1.0
+	b.combat.wear = WrestlerController.KNOCKDOWN_DAMAGE
+	assert_bool(ai._wants_signature_tie_up()).is_true()
+	ai.signature_landed(false)
+	assert_bool(ai._wants_signature_tie_up()).is_false()
+	ai._signature_retry = 0
+	assert_bool(ai._wants_signature_tie_up()).is_true()
+	ai.signature_landed(true)
+	assert_bool(ai._wants_signature_tie_up()).is_false()
+
+
+## Ripe reads the damage he will actually take: with the story halving it, a
+## signature that would have closed the gap no longer does.
+func test_ripeness_counts_the_storys_damage_scale() -> void:
+	var men := _two_men()
+	var a: WrestlerController = men[1]
+	var b: WrestlerController = men[2]
+	var ai := WrestlerAI.new()
+	auto_free(ai)
+	ai.controller = a
+	ai.target = b
+	var weakest := ai._weakest_signature_damage()
+	b.combat.wear = WrestlerController.KNOCKDOWN_DAMAGE - weakest * 0.9
+	b.combat.damage_taken_scale = 1.0
+	assert_bool(ai._opponent_is_ripe()).is_true()
+	b.combat.damage_taken_scale = 0.5
+	assert_bool(ai._opponent_is_ripe()).is_false()

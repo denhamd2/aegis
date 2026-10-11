@@ -9153,3 +9153,75 @@ Measured with `tools/probe/flow_probe.tscn` on three Roman vs Cody matches: the 
   spells median 7.1 s; pick-ups now part of the control runs. One `GrappleRig.begin`
   assert showed in seed 2 (a grapple started while one was active) -- not seen on seed 2
   before this change, cause not yet traced.
+
+## Round: AAA audit -- animation, lighting, AI, the finish
+
+The owner asked for a full audit to a 2K26 standard: nothing janky or "stop
+motion", moves that flow, AI that makes sense, and wins only by a finisher.
+Plan: `/root/.claude/plans/quiet-wobbling-alpaca.md`. Everything below is
+measured, before and after, on the same seeds.
+
+### The finish (already right; now watched)
+- A cover counts only straight after the pinning man's own finisher
+  (`MatchReferee._finished`); a tap is always survived. Unchanged.
+- `flow_probe` now prints `FINISH ... -> OK/BAD` (the winner's last landed
+  move is his finisher) and the move mix. Seeds 1-4: all `OK`.
+
+### No snaps (Phase 1)
+- `Inertializer` placement glide: once a tick, at draw time, the drawn hips
+  are checked against last tick's (run on at its speed); a jump past 0.15 m or
+  0.4 rad -- a thrown man's body turned and moved under him at the hand-off, a
+  ground strike whose clip faces the other way -- is carried out of the whole
+  body as one rigid glide over 6-18 ticks. `snap()` placements still cut.
+- Grip hands travel between holds over 8 ticks (`_hand_grip_over`).
+- `transition_pops --abs` (new: true world positions, body included), seeds
+  1-2, worst kick per edge: GRAPPLE_HOLD>DOWN 1.28 -> 0.31 m, ground strike
+  start 1.13 -> 0.32, GRAPPLE_HOLD>STRIKE 0.50 -> 0.32, grip 0.64 -> 0.43.
+
+### No stop motion (Phase 2)
+- `wrestling_clips.py`: AUTO handles (pelvis and legs stay clamped), overlap
+  (spine/neck/head trail the pelvis 1-2.5 frames, arms 1-1.5, at most a third
+  of a key gap), and `AS_AUTHORED` for the 13 clips whose hands pass close to
+  the body or meet another man's wrist.
+- Whole-body speed scan of the 192 clips: stop-and-go dips 152 -> 117, dead
+  holds 45 -> 8, one-frame snaps 105 -> 24. New gate `test_clip_cadence.gd`.
+
+### Through the mat (Phase 3)
+- `MatGuard` (new modifier, after RopeReach): any hand, foot, finger, toe,
+  elbow or knee more than 2 cm into the deck (canvas and apron, 3.2 m) is
+  swung up about the shoulder or hip -- bisected, so a limb hanging straight
+  down is handled -- then bent at the elbow or knee if that is not enough.
+- `move_qa` now reads the pose as drawn (it used to read the clip's raw
+  output, before every modifier) and skips Roman's `*_stub` tip markers and
+  points off the deck. Moves with a joint more than 3 cm into the deck:
+  29 (up to 29 cm, Cody's thumb on landings) -> 1 (Cody's elbow on the
+  Dragon Twist Cutter, 4 cm). The guard watches every bone under the shoulder
+  and hip: Roman's H_Toe_* helpers are not under his foot bone. The audit's
+  original "38 of 47" was partly the probe: stub markers, and hands hanging
+  off the apron over the floor.
+
+### The AI (Phase 4)
+- Working lock-ups: every 5-9 blows the AI locks up to work a grapple or (half
+  the time) a power move, capped there (`tie_up_rung_cap`) -- never a signature
+  mid-match.
+- The charge after a knockdown is rolled (45%, never twice running).
+- Signature loop fixed: ripeness now counts the story's damage scale, and a
+  signature waits 45 s after the last one (seed 3 threw 15 Superman Punches).
+- Finish loop fixed: in the finish, lock-ups go to the man the finish is for,
+  and a man with no big move left (`rung` "none") throws no signature or
+  finisher off one (seed 4 ran 16+ minutes with 42 power moves and no finish).
+- `ACTION_GAP_SCALE` 2.2 -> 3.2, `GROUND_GAP_TICKS` 90 -> 150.
+- flow_probe seeds 1-4: all pinfalls off a finisher, 7.3-11.3 min, beat gap
+  3.7-4.0 s (was 2.8), grapple+power moves 10-18 a match (baseline seed 1:
+  9; seed 3: 1).
+
+### Lighting (Phase 5)
+- The pose top light irises in and out over 0.3 s instead of switching.
+- The key colour stays: it was cooled as far as the measured mat level allows
+  in an earlier round. Most of the 2K26 lighting plan was already built.
+
+### Corrections to the audit
+- Strikes can be parried: a seeded, persona-scaled parry exists; the referee's
+  "no reversals" note is about the old counter clips.
+- move_qa's "every paired move pops" was read before the smoothing ran; as
+  drawn, the hand-off pops are the ones Phase 1 fixed.

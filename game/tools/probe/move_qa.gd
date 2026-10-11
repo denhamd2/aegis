@@ -107,8 +107,23 @@ func _qa(id: String) -> void:
 	var pop_what := ""
 	var low_what := ""
 	var prev := {}
+	# The pose AS DRAWN: read inside each skeleton's own update, after every
+	# modifier (the inertializer's carries, the grip IK, MatGuard), which is
+	# what a viewer sees. Read on the physics tick instead, the bones were the
+	# clip's raw output and the modifiers' work was invisible to this probe.
+	var drawn := {a: {}, b: {}}
+	var hooks := []
+	for w: WrestlerController in [a, b]:
+		var sk_w := w.skeleton
+		var slot: Dictionary = drawn[w]
+		var cb := func() -> void:
+			for i in sk_w.get_bone_count():
+				slot[i] = sk_w.global_transform * sk_w.get_bone_global_pose(i).origin
+		sk_w.skeleton_updated.connect(cb)
+		hooks.append([sk_w, cb])
 	for tick in total:
 		await get_tree().physics_frame
+		await get_tree().process_frame
 		var now := {}
 		for w: WrestlerController in [a, b]:
 			var sk := w.skeleton
@@ -118,11 +133,19 @@ func _qa(id: String) -> void:
 				# no skin either, and jumps by design when GrappleRig hands
 				# the clip's root motion back to the body at the end.
 				var bone_name := sk.get_bone_name(i)
-				if bone_name.contains("leaf") or bone_name == "root":
+				# Roman's rig ends every finger and toe in a *_stub marker, the
+				# same thing under another name: no skin, a point past the tip.
+				if bone_name.contains("leaf") or bone_name.ends_with("_stub") \
+						or bone_name == "root":
 					continue
-				var p := sk.global_transform * sk.get_bone_global_pose(i).origin
+				var p: Vector3 = (drawn[w] as Dictionary).get(i,
+						sk.global_transform * sk.get_bone_global_pose(i).origin)
 				var key := "%s/%s" % [w.name, sk.get_bone_name(i)]
 				now[key] = p
+				# Past the apron (MatGuard.DECK_HALF) a limb hangs over the
+				# floor: below mat height there is not through the mat.
+				if absf(p.x) > MatGuard.DECK_HALF or absf(p.z) > MatGuard.DECK_HALF:
+					continue
 				if p.y < lowest:
 					lowest = p.y
 					low_what = "%s %s t%d" % [key, WrestlerFSM.State.keys()[w.fsm.current_state],

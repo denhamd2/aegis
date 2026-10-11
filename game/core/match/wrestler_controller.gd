@@ -704,6 +704,7 @@ func _ready() -> void:
 		_build_sell_clutch()
 		_build_foot_lock()
 		_build_rope_reach()
+		_build_mat_guard()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -1165,6 +1166,20 @@ func _build_rope_reach() -> void:
 				func(b: String) -> String: return _skeleton_bone_name(b))
 	rope_reach.chains = mapped
 	skeleton.add_child(rope_reach)
+
+
+## MatGuard: after everything that poses a limb (RopeReach included), before
+## WornFollow carries the pose to his clothes.
+var mat_guard: MatGuard
+
+
+func _build_mat_guard() -> void:
+	mat_guard = MatGuard.new()
+	mat_guard.name = "MatGuard"
+	mat_guard.chains = mat_guard.chains.map(func(c: Array) -> Array:
+		return c.map(func(b: String) -> String: return _skeleton_bone_name(b)))
+	mat_guard.wrestler = self
+	skeleton.add_child(mat_guard)
 
 
 ## A model dressed on a second skeleton (Roman) gets the body's final pose
@@ -2828,7 +2843,9 @@ const GROUND_PICKUP := preload("res://resources/moves/ground_pickup.tres")
 ## 2 -> 4 with the longer downs (DOWN_TICKS_*): the man in control works him.
 const GROUND_ATTACKS_MAX := 4
 ## Least gap between two blows on the same downed man: he is worked, not flurried.
-const GROUND_GAP_TICKS := 90
+## 90 -> 150: at 1.5 s the ground work was the densest stretch of the match and
+## held the median beat gap at 2.5-2.8 s (flow_probe) against 2K26's 4-6 s.
+const GROUND_GAP_TICKS := 150
 ## Along a downed man from his pelvis (his own -Z is toward his head): past
 ## HEAD_ZONE_Z he is at the head, past LEGS_ZONE_Z at the legs.
 const HEAD_ZONE_Z := -0.55
@@ -3324,6 +3341,46 @@ func _timed_stub(ticks: int) -> MoveDef:
 	stub.recovery_frames = 0
 	return stub
 
+## The highest rung the next tie-up this man wins may draw (GRAPPLE or POWER),
+## or -1 for whatever the meter affords. Set by WrestlerAI for its working lock-ups;
+## spent by the hold it applies to.
+var tie_up_rung_cap := -1
+
+
+## The move this hold resolves to: the highest rung the meter affords, or a
+## grapple when the lock-up was a working one (tie_up_rung_cap).
+func _pick_hold_move() -> MoveDef:
+	var move: MoveDef = null
+	var cap := tie_up_rung_cap
+	tie_up_rung_cap = -1
+	# A man the story has no big move for (MatchFlow rung "none") throws no
+	# signature or finisher off a lock-up, whatever his meter says.
+	if is_ai and flow != null and flow.rung(self) == "none":
+		cap = CombatSystem.Tier.POWER if cap < 0 else mini(cap, CombatSystem.Tier.POWER)
+	if cap >= 0 and cap <= CombatSystem.Tier.POWER:
+		# A working lock-up (WrestlerAI): a grapple, or the power move when the
+		# meter has earned it -- never the big ones.
+		if cap == CombatSystem.Tier.POWER and combat.can_power() and power_move:
+			move = _pick_tier_move(power_move, power_move_pool)
+		else:
+			move = _pick_tier_move(grapple_move, grapple_move_pool)
+	elif combat.can_finisher() and finisher_move:
+		move = _pick_tier_move(finisher_move, finisher_move_pool)
+	elif combat.can_signature() and signature_move:
+		if own_signature and not _own_signature_thrown \
+				and opponent.weight_class >= own_signature.weight_class_min \
+				and opponent.weight_class <= own_signature.weight_class_max:
+			move = own_signature
+			_own_signature_thrown = true
+		else:
+			move = _pick_tier_move(signature_move, signature_move_pool)
+	elif combat.can_power() and power_move:
+		move = _pick_tier_move(power_move, power_move_pool)
+	else:
+		move = _pick_tier_move(grapple_move, grapple_move_pool)
+	return move
+
+
 func _process_grapple_hold(input: Dictionary) -> void:
 	if not _is_grapple_attacker:
 		# The defender has nothing to press while the attacker's paired move
@@ -3351,21 +3408,7 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	# thrown either. That is fine while the base rung is always populated and
 	# wrong the moment it is not, which is exactly what removing the three
 	# throw-style grapples does.
-	var move: MoveDef = null
-	if combat.can_finisher() and finisher_move:
-		move = _pick_tier_move(finisher_move, finisher_move_pool)
-	elif combat.can_signature() and signature_move:
-		if own_signature and not _own_signature_thrown \
-				and opponent.weight_class >= own_signature.weight_class_min \
-				and opponent.weight_class <= own_signature.weight_class_max:
-			move = own_signature
-			_own_signature_thrown = true
-		else:
-			move = _pick_tier_move(signature_move, signature_move_pool)
-	elif combat.can_power() and power_move:
-		move = _pick_tier_move(power_move, power_move_pool)
-	else:
-		move = _pick_tier_move(grapple_move, grapple_move_pool)
+	var move := _pick_hold_move()
 
 	if not move or opponent.weight_class < move.weight_class_min \
 			or opponent.weight_class > move.weight_class_max:
@@ -3551,12 +3594,15 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	fsm.transition_to(WrestlerFSM.State.IDLE)
 	if move and move.defender_lands_head_away:
 		opponent._turn_round_on_the_mat()
-	if opponent._would_be_knocked_down():
+	var knocked_down := opponent._would_be_knocked_down()
+	if knocked_down:
 		opponent._go_down(tier_of(move))
 	elif move and move.leaves_defender_down:
 		opponent._lie_down_after_throw()
 	else:
 		opponent._start_move(WrestlerFSM.State.HIT_REACT, opponent._timed_stub(HIT_REACT_TICKS))
+	if ai and tier_of(move) == CombatSystem.Tier.SIGNATURE:
+		ai.signature_landed(knocked_down)
 
 ## Turns a man lying on his back half round about his own pelvis, and asks
 ## for the next state's clip to start with no blend.

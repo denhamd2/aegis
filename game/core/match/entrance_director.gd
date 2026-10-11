@@ -2344,10 +2344,17 @@ var _top: SpotLight3D
 
 
 ## Item 12: the top light on `w` posing in the ring; null puts it out.
+## A spot is brought up, not switched: the top light irises in and out over
+## POSE_TOP_IRIS seconds instead of appearing in a frame, which read as a
+## lighting glitch whenever the cue did not land on a cut.
+const POSE_TOP_IRIS := 0.3
+var _top_iris: Tween
+
+
 func _pose_top(w: WrestlerController) -> void:
 	if w == null:
-		if _top:
-			_top.visible = false
+		if _top and _top.visible:
+			_iris_top(0.0)
 		_pose_dim(false)
 		return
 	if _top == null:
@@ -2361,10 +2368,25 @@ func _pose_top(w: WrestlerController) -> void:
 		_top.shadow_enabled = true
 		_top.light_volumetric_fog_energy = 1.4
 		add_child(_top)
-	_top.visible = true
+	if not _top.visible:
+		_top.light_energy = 0.0
+		_top.visible = true
+	_iris_top(POSE_TOP_ENERGY)
 	_pose_dim(true)
 	var at := w.global_position + Vector3.UP * POSE_TOP_UP
 	_top.global_transform = Transform3D(Basis(Vector3.RIGHT, -PI / 2.0), at)
+
+
+func _iris_top(energy: float) -> void:
+	if _top_iris and _top_iris.is_valid():
+		if is_equal_approx(_top.light_energy, energy):
+			return
+		_top_iris.kill()
+	_top_iris = create_tween()
+	_top_iris.tween_property(_top, "light_energy", energy, POSE_TOP_IRIS) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if energy <= 0.0:
+		_top_iris.tween_callback(func() -> void: _top.visible = false)
 
 
 ## Ring key or top fill -> [energy before the pose, energy set for it].

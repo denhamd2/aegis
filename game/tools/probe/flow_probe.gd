@@ -76,12 +76,30 @@ func _run(seed_value: int) -> Dictionary:
 		if w.ai:
 			w.ai.setup_jitter(seed_value, w.player_index)
 	var won := [""]
-	referee.match_won.connect(func(winner: WrestlerController, _m: String) -> void: won[0] = winner.name)
+	# The finish (owner: "they should always only win by their finisher"):
+	# the winner's last landed move, and whether it was his own finisher.
+	var last_move := {a: null, b: null}
+	var finish := [""]
+	referee.match_won.connect(func(winner: WrestlerController, m: String) -> void:
+		won[0] = winner.name
+		var mv: MoveDef = last_move[winner]
+		finish[0] = "%s by %s off %s -> %s" % [winner.name, m,
+				mv.resource_path.get_file() if mv else "nothing",
+				"OK" if mv and winner.is_finisher(mv) else "BAD"])
 	var landed_at: Array = []   # [tick, attacker index]
-	var lander := func(attacker: WrestlerController, _d, _m) -> void:
+	# The mix: landed moves by kind, and lock-ups.
+	var mix := {}
+	var lander := func(attacker: WrestlerController, _d, m: MoveDef) -> void:
 		landed_at.append([Engine.get_physics_frames(), 0 if attacker == a else 1])
+		last_move[attacker] = m
+		var t := attacker.tier_of(m)
+		var k: String = ["grapple", "power", "signature", "finisher"][t] if t >= 0 and t <= 3 else "other"
+		mix[k] = mix.get(k, 0) + 1
 	a.move_landed.connect(lander)
 	b.move_landed.connect(lander)
+	a.fsm.state_changed.connect(func(_f: int, to: int) -> void:
+		if to == WrestlerFSM.State.TIE_UP:
+			mix["tie_ups"] = mix.get("tie_ups", 0) + 1)
 	var start := Engine.get_physics_frames()
 	var per_tick: Array = []    # [kind a, kind b]
 	var tick := 0
@@ -93,6 +111,7 @@ func _run(seed_value: int) -> Dictionary:
 	await get_tree().process_frame
 	for e in landed_at:
 		e[0] -= start
+	print("seed %d  FINISH %s  MIX %s" % [seed_value, finish[0] if finish[0] != "" else "no winner", mix])
 	return _measure(seed_value, per_tick, landed_at)
 
 
