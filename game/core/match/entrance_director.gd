@@ -6,7 +6,8 @@ extends Node
 ## Presentation only, and built so the match cannot tell it happened.
 ##
 ## * Everything that plays the match is frozen for the duration -- both
-##   wrestlers, their AI, the referee, the grapple rig -- with the same
+##   wrestlers, their AI, the referee, the grapple rig, the story clock
+##   (MatchFlow) -- with the same
 ##   set_physics_process(false) the match end already uses. The referee is the
 ##   only thing that advances ReplaySystem's tick, and match_setup does not
 ##   start recording until `bell`, so tick 0 is the bell either way.
@@ -646,7 +647,12 @@ func begin(match_root: Node) -> void:
 			_freeze(w.ai)
 		w.velocity = Vector3.ZERO
 		w.visible = false
-	for path in ["MatchReferee", "GrappleRig"]:
+	# MatchFlow too: its clock is the match's story (feeling-out, heat, hope,
+	# cut-off, comeback, finish) and counts physics ticks from when it is
+	# built. Left running, the five minutes of entrances spent the first five
+	# phases before the bell, and every match launched from the menu opened in
+	# the comeback and was over in under four minutes.
+	for path in ["MatchReferee", "GrappleRig", "MatchFlow"]:
 		var node := match_root.get_node_or_null(path)
 		if node:
 			_freeze(node)

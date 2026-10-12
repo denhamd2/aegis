@@ -29,12 +29,32 @@ func test_the_match_is_frozen_until_the_bell() -> void:
 	var scene := _match(true)
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	assert_object(director).is_not_null()
-	for path in ["WrestlerA", "WrestlerB", "MatchReferee", "GrappleRig"]:
+	for path in ["WrestlerA", "WrestlerB", "MatchReferee", "GrappleRig", "MatchFlow"]:
 		assert_bool(scene.get_node(path).is_physics_processing()) \
 				.override_failure_message("%s runs during the entrance" % path) \
 				.is_false()
 	var camera: MatchCamera = scene.get_node("MatchCamera")
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.ENTRANCE)
+
+
+## The match's story starts at the bell, not when the scene is built. Its
+## clock used to run through the entrances (~5 minutes from the menu), so a
+## menu-launched match rang the bell already in the comeback and lasted under
+## four minutes, while every probe -- which skips the entrances -- measured
+## eight.
+func test_the_story_clock_starts_at_the_bell() -> void:
+	var scene := _match(true)
+	var flow: MatchFlow = scene.get_node("MatchFlow")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	for _i in 30:
+		await get_tree().physics_frame
+	assert_int(flow.tick).is_equal(0)
+	director.skip()
+	assert_bool(flow.is_physics_processing()).is_true()
+	for _i in 3:
+		await get_tree().physics_frame
+	assert_int(flow.tick).is_greater(0)
+	assert_str(String(flow.phase()["name"])).is_equal("feeling_out")
 
 
 func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
@@ -55,6 +75,7 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 	assert_bool(a.visible and b.visible).is_true()
 	assert_bool(a.is_physics_processing()).is_true()
 	assert_bool(scene.get_node("MatchReferee").is_physics_processing()).is_true()
+	assert_bool(scene.get_node("MatchFlow").is_physics_processing()).is_true()
 	var camera: MatchCamera = scene.get_node("MatchCamera")
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.HARD_CAM)
 
