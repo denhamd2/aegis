@@ -140,13 +140,23 @@ STANCE = dict(
 # lies, are unchanged -- only which way up he is changes. The roll swaps his
 # sides, so his right hand and foot are at NEGATIVE `right` here; `head` is
 # negative to lift his chin off the mat rather than grind his face into it.
+# Both legs out along the mat, near straight. Both feet were
+# drawn in to fwd -0.50, both knees ~0.4 m off the mat, and on Cody's loose
+# trousers that read as a body bent into an arch (stage 8 review); one knee
+# up at 0.37 m still did, and so did both at 0.2 m.
 SUPINE = dict(
     pelvis=(0.0, 0.0, 0.175), hips=(-84, 0, 180), spine=(-6, 0, 0), head=(-14, 0, 0),
     hand_r=(-0.40, 0.20, 0.10), hand_l=(0.39, 0.16, 0.10),
     elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
     fist_r=0.2, fist_l=0.2,
-    foot_r=(-0.16, -0.52, 0.10), foot_l=(0.15, -0.48, 0.10),
+    foot_r=(-0.16, -0.86, 0.10), foot_l=(0.15, -0.86, 0.10),
     knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0),
+    # Heels on the mat, toes up, relaxed a little toward the end of the
+    # bed. rig_pose plants a sole flat on the canvas for a knees-up pose,
+    # which this was; with the legs out straight that turned both ankles 90
+    # degrees and stood the boots up on their soles (stage 8 review), and
+    # left to follow the shins the toes went 6 cm into the mat.
+    free_feet=True, ankle_r=(80, 0, 0), ankle_l=(80, 0, 0),
 )
 
 
@@ -1569,15 +1579,15 @@ CLIPS = {
     ],
 
     # 40 frames / 1.333s, looping. A dropped wrestler is not a corpse: he is
-    # on his back with his knees up, and he is still breathing. The loop is
-    # the breath and a knee rocking, nothing else.
+    # on his back, legs out, and he is still breathing. The loop is the
+    # breath and a foot shifting, nothing else.
     "Down_Supine": [
         (0,  S()),
         (13, S(spine=(-9, 0, 0), head=(-11, 0, -4),
-               foot_r=(-0.19, -0.50, 0.10), foot_l=(0.14, -0.50, 0.10),
+               foot_r=(-0.19, -0.85, 0.10), foot_l=(0.14, -0.86, 0.10),
                hand_r=(-0.41, 0.18, 0.10), hand_l=(0.38, 0.18, 0.10))),
         (26, S(spine=(-4, 0, 0), head=(-16, 0, 5),
-               foot_r=(-0.15, -0.53, 0.10), foot_l=(0.18, -0.46, 0.10))),
+               foot_r=(-0.15, -0.87, 0.10), foot_l=(0.18, -0.87, 0.10))),
         (40, S()),
     ],
 
@@ -3199,7 +3209,14 @@ def _face_first_then_roll(land, end):
         (at[1], dict(prone, pelvis=(0.0, 0.0, 0.185), head=(4, 0, 0))),
         (at[2], _rolled(60)),
         (at[3], _rolled(120)),
-        (at[4], _rolled(180)),
+        # Over onto his back with his boots and arms coming down onto the
+        # mat: _rolled's limbs are tucked along his body, which at the roll's
+        # pelvis height held both boots ~0.3 m in the air and left his arms
+        # crossed over his chest, hands at his throat, as he landed on it.
+        (at[4], dict(_rolled(180),
+                     **{k: SUPINE[k] for k in ("foot_r", "foot_l", "knee_r", "knee_l",
+                                               "hand_r", "hand_l", "elbow_r", "elbow_l",
+                                               "fist_r", "fist_l")})),
         (at[5], S(spine=(-8, 0, 0), head=(-14, 0, 0))),
     ] + ([(end, S())] if end > at[5] else [])
 
@@ -6073,6 +6090,32 @@ CLIPS["Superman_Spear_Defender"] = (
 # authored -- its frames from 18 shifted by CROSS_BEHIND_SHIFT.
 CROSS_BEHIND_SHIFT = 12
 
+
+def _cross_behind_tail(keys):
+    """The front Cross Rhodes from the hook on (frame 18), re-timed for the
+    finish the camera dwells on. Shifted, it went hook (30) -> leap (34) ->
+    face in the mat (38): the man was stood with his head hooked on one
+    drawn frame and flat on his face four later, and the spin and drop that
+    make it a Cross Rhodes were never on screen (stage 8 review). 2K26 holds
+    the hook in a tight two-shot and takes the drop over half a second
+    (gauntlet/refs/raw, 494-500 s). So: the hook is held to 40, the leap is
+    at 46 and the impact at 54, and everything after moves 16 frames on.
+    finisher_cross_rhodes_behind's trajectory and MoveDef keep the same
+    clock (CROSS_BEHIND_HOLD .. CROSS_BEHIND_IMPACT)."""
+    def remap(f):
+        f += CROSS_BEHIND_SHIFT
+        if f <= 30:
+            return f
+        if f <= 34:
+            return int(round(40 + (f - 30) * 1.5))
+        if f <= 38:
+            return 46 + (f - 34) * 2
+        return f + 16
+    tail = [(f, p) for f, p in keys if f >= 18]
+    hook = tail[0][1]
+    out = [(remap(f), p) for f, p in tail]
+    return out[:1] + [(40, dict(hook))] + out[1:]
+
 CLIPS["Cross_Rhodes_Behind_Attacker"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
            hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
@@ -6094,7 +6137,7 @@ CLIPS["Cross_Rhodes_Behind_Attacker"] = [
     (24, P(spine=(-10, 0, 0),
            hand_r=(0.10, 0.40, 1.30), hand_l=(-0.14, 0.38, 1.28),
            fist_r=0.5, fist_l=0.5)),
-] + _shift(CLIPS["Cross_Rhodes_Attacker"], CROSS_BEHIND_SHIFT, start=18)
+] + _cross_behind_tail(CLIPS["Cross_Rhodes_Attacker"])
 
 CLIPS["Cross_Rhodes_Behind_Defender"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
@@ -6107,7 +6150,7 @@ CLIPS["Cross_Rhodes_Behind_Defender"] = [
     (24, P(pelvis=(0.0, -0.02, 0.832), spine=(-4, 0, 0), head=(4, 0, 0),
            hand_r=(0.28, 0.14, 1.00), hand_l=(-0.26, 0.16, 0.98),
            fist_r=0.3, fist_l=0.3)),
-] + _shift(CLIPS["Cross_Rhodes_Defender"], CROSS_BEHIND_SHIFT, start=18)
+] + _cross_behind_tail(CLIPS["Cross_Rhodes_Defender"])
 
 
 # --- Roman's corner clotheslines -------------------------------------------------
@@ -6334,6 +6377,9 @@ CLIPS["Springboard_Cutter_Defender"] = [
 # 30 frames / 1.0 s, the sweep through on frame 12 (tick 24).
 CLIPS["Possum_Sweep"] = [
     (0,  S()),
+    # The right knee comes up first: from SUPINE's leg flat on the mat, a
+    # straight blend to the drawn-back leg took the toe 6 cm under it.
+    (3,  S(hips=(-84, 0, 170), foot_r=(-0.24, -0.62, 0.20), knee_r=(-0.3, 0.2, 1.0))),
     # Onto his hip, the right leg drawn back.
     (6,  S(hips=(-84, 0, 150), foot_r=(-0.38, -0.30, 0.16), knee_r=(-0.6, 0.4, 0.6))),
     # Swept through at shin height.

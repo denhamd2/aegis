@@ -503,15 +503,27 @@ func _separate_models() -> void:
 ## out of reach (a run-in, a throw), and nothing pulls.
 const PULL_RADIUS := 0.25
 const PULL_GAIN := 0.5
+## A man lying on the canvas is not drawn into a hold: the hold's target is
+## up at the attacker's arm, so the pull hoisted him off the mat. On the
+## Guillotine, Roman sat back and let go, and the pull lifted the man at his
+## knees to waist height, legs flung up -- he landed folded. Pelvis height
+## above his feet, in metres; standing is ~0.85, bent over ~0.78.
+const PULL_MIN_PELVIS := 0.45
 
 
 func _pull_into_reach(a: WrestlerController, d: WrestlerController) -> void:
-	if not a._is_grapple_attacker:
+	# Nor once he has let go (PairedRecipes.attacker_grip_until).
+	if not a._is_grapple_attacker or a._paired_release_ticks == 0:
 		return
 	var family := PairedContacts.family(_move)
 	if family == "" or family == "none":
 		return
 	if PairedContacts.NO_PULL.has(_move.resource_path.get_file().get_basename()):
+		return
+	var dsk := d.skeleton
+	var pelvis := dsk.global_transform * dsk.get_bone_global_pose(
+			dsk.find_bone(d._skeleton_bone_name("pelvis"))).origin
+	if pelvis.y - d.global_position.y < PULL_MIN_PELVIS:
 		return
 	var sk := a.skeleton
 	var chest := sk.global_transform * sk.get_bone_global_pose(

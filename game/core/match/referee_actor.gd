@@ -24,8 +24,11 @@ extends Node3D
 const MODEL := "res://scenes/aubrey_model.tscn"
 
 ## Where she waits through the entrances and the face-off: by the far (+X)
-## ropes, off the centre line, facing the middle.
-const PARK := Vector3(2.35, 0.0, -1.4)
+## ropes, off the centre line, facing the middle -- on the +Z side, away from
+## the corner the men enter by (EntranceDirector.ENTRY_CORNER, +X -Z). At
+## z -1.4 she stood a metre from Cody up on that corner's ropes, and was in
+## every shot of his poses there (stage 8 review).
+const PARK := Vector3(2.35, 0.0, 1.4)
 ## How long she stands between them before stepping clear, in seconds.
 const SEPARATE_HOLD := 1.2
 ## She keeps inside this half-extent (the ropes are at 3.3).

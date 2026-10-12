@@ -486,6 +486,19 @@ const END_WIDE_LOOK := Vector3(0.0, 1.6, 0.0)
 const END_WIDE_FOV := 46.0
 ## Inside the ring, low, behind him as he comes through the ropes (C-SNME).
 const RING_BEHIND_FOV := 70.0
+## Through the ropes, wide (stage 8 review: in close, ducking under the top
+## rope read as clunky, and it is the hardest piece of body work in the
+## entrance). Composed by the blender-cameras / camera-cinematography rules:
+## a ~26 mm establishing lens (50 degrees vertical), locked off and panning
+## only to follow him; on the +X side like the ringside shot either side of
+## it, so his direction of travel does not flip across the cut; high enough
+## (2.9 m) to see over the near ropes into the ring; aimed a metre ahead of
+## him so he sits on the right third with his lead room into the ring --
+## ropes in the foreground, him in the middle ground, the crowd behind.
+## Inside the barricade (radius 6.0), or the front rows are in the lens.
+const ROPE_WIDE_AT := Vector3(5.6, 2.9, -0.6)
+const ROPE_WIDE_FOV := 50.0
+const ROPE_WIDE_LEAD := 1.0
 ## The hard-camera side crowd, for the WHOAs in the dark (C-MITB 12-20 s).
 const CROWD_WIDE_AT := Vector3(3.8, 1.6, 1.0)
 const CROWD_WIDE_LOOK := Vector3(16.0, 4.5, 0.0)
@@ -1554,8 +1567,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	var foot := foot_of_ramp
 	_add_walk_cut(w, mid, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, CODY_WALK_SHOTS,
 			CODY_WALK_GESTURES, true)
-	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, true,
-			"", "", 0, "ring_behind_low")
+	var in_at := _add_route_in(w, foot, CODY_WALK_SPEED, CODY_WALK_CLIP, true)
 	# The corner by the steps: up on the middle rope, facing out over them.
 	# (Sourced [S], not in any of the measured clips.)
 	# Measured from the turnbuckle pads, which are where the man stands on
@@ -1610,12 +1622,11 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 ## `split_floor` gives the floor walk its own tracking shot up to the
 ## approach (Roman's); `survey_clip`, if set, is played standing on the apron
 ## before he goes in; `floor_clip`, if set, is played for `floor_ticks` at the
-## foot of the steps, facing them, on a close shot (Roman's bowed head);
-## `entry_shot` frames the step through the ropes (Cody's is from inside the
-## ring, low, behind him).
+## foot of the steps, facing them, on a close shot (Roman's bowed head). The
+## step through the ropes is on the wide shot, ROPE_WIDE_AT, for every man.
 func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 		walk_clip: String, split_floor: bool, survey_clip := "",
-		floor_clip := "", floor_ticks := 0, entry_shot := "ringside") -> Vector3:
+		floor_clip := "", floor_ticks := 0) -> Vector3:
 	var out := RingBuilder.step_out_dir(ENTRY_CORNER)
 	var top := RingBuilder.step_top_centre(ENTRY_CORNER)
 	var climb_from := top + out * CLIMB_TO.x
@@ -1654,7 +1665,7 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	var inside := apron + into * APRON_ROPE_TO.x
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
-			"from": apron, "to": inside, "facing": into, "shot": entry_shot})
+			"from": apron, "to": inside, "facing": into, "shot": "rope_wide"})
 	return inside
 
 
@@ -2054,6 +2065,10 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 			_camera.set_entrance_shot(Vector3(w.global_position.x * 0.5, 0.9,
 					w.global_position.z + RAMP_LONG_BACK), w.global_position + Vector3.UP * 1.0,
 					RAMP_LONG_FOV, true)
+		"rope_wide":
+			var into_r := Vector3(0.0, 0.0, -ENTRY_CORNER.y)
+			_camera.set_entrance_shot(ROPE_WIDE_AT, w.global_position + into_r * ROPE_WIDE_LEAD
+					+ Vector3.UP * 1.0, ROPE_WIDE_FOV, first, delta)
 		"ring_behind_low":
 			var f6 := _flat(-w.global_transform.basis.z).normalized()
 			_camera.set_entrance_shot(w.global_position - f6 * 1.6 + Vector3.UP * 1.5,

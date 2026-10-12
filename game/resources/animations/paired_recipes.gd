@@ -551,15 +551,15 @@ const RECIPES := {
 		"authored": {"attacker": "Cross_Rhodes_Behind_Attacker", "defender": "Cross_Rhodes_Behind_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 1.20, "clip": "Sitting_Enter", "at": 0.60},
-			{"t": 2.00, "clip": "Idle", "at": 0.00},
+			{"t": 1.73, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 2.53, "clip": "Idle", "at": 0.00},
 		],
 		"defender": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 1.27, "clip": "Death01", "at": 0.90},
-			{"t": 2.00, "clip": "Death01", "at": 1.60},
+			{"t": 1.80, "clip": "Death01", "at": 0.90},
+			{"t": 2.53, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.10,
+		"defender_grips_until": 0.08,
 	},
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
 	"finisher_cross_rhodes": {
@@ -726,6 +726,10 @@ const RECIPES := {
 	# Roman's -- see Guillotine_Attacker. Head in the crook of the arm, then sat back.
 	"grapple_guillotine": {
 		"authored": {"attacker": "Guillotine_Attacker", "defender": "Guillotine_Defender"},
+		# Lets go as he lands sitting (frame 34 of 62): held past it, his
+		# arms dragged the man's head into his lap and the separation lifted
+		# him off the mat.
+		"attacker_grips_until": 0.55,
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
 			{"t": 0.80, "clip": "Sitting_Enter", "at": 0.60},
@@ -1282,23 +1286,34 @@ const TRAJECTORIES := {
 	# the Cross Rhodes' keys mirrored along X and shifted 0.4 s
 	# (CROSS_BEHIND_SHIFT): Cody leaps forward 1.31 m spinning a half-turn
 	# the same way round, the victim is driven 0.5 m forward.
+	# The hook is held 1.00-1.33 s, the leap is at 1.53 and the impact at
+	# 1.80 (Cross_Rhodes_Behind_*: frames 30, 40, 46, 54). It went hook at
+	# 1.00 to face-down at 1.27, too quick to see (stage 8 review). He lands
+	# beside Cody, his head by Cody's shoulder, not across his lap: there the
+	# separation held him 0.3 m off the mat.
 	"finisher_cross_rhodes_behind": {
-		"length": 2.0,
+		"length": 2.533,
 		"attacker": {
 			"pos": [[0.00, 0.40, 0.00, 0.00], [0.25, 0.25, 0.00, 0.45],
 					[0.50, -0.25, 0.00, 0.62], [0.75, -0.75, 0.00, 0.32],
-					[1.00, -0.84, 0.00, 0.00], [1.13, -0.18, 0.00, 0.00],
-					[1.27, 0.47, 0.00, 0.00], [2.00, 0.47, 0.00, 0.00]],
+					[1.00, -0.98, 0.00, 0.00], [1.333, -0.80, 0.00, 0.00],
+					[1.533, -0.18, 0.00, 0.00], [1.80, 0.47, 0.00, 0.00],
+					[2.533, 0.47, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, 90.0, 0.0], [0.25, 0.0, 60.0, 0.0],
 					[0.50, 0.0, 0.0, 0.0], [0.75, 0.0, -50.0, 0.0],
-					[1.00, 0.0, -90.0, 0.0], [1.13, 0.0, -180.0, 0.0],
-					[1.27, 0.0, -270.0, 0.0], [2.00, 0.0, -270.0, 0.0]],
+					[1.00, 0.0, -90.0, 0.0], [1.333, 0.0, -90.0, 0.0],
+					[1.533, 0.0, -180.0, 0.0], [1.80, 0.0, -270.0, 0.0],
+					[2.533, 0.0, -270.0, 0.0]],
 		},
 		"defender": {
+			# A key at 0.80 as Cody passes behind him: the fit's correction
+			# for that contact belongs there, and without one it landed on
+			# the 1.00 key and shoved him 0.8 m off through the hook.
 			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.48, 0.00, 0.00],
-					[1.00, -0.40, 0.00, 0.00], [1.27, 0.10, 0.00, 0.00],
-					[2.00, 0.10, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [2.00, 0.0, -90.0, 0.0]],
+					[0.80, -0.44, 0.00, 0.00],
+					[1.00, -0.40, 0.00, 0.00], [1.333, -0.40, 0.00, 0.00],
+					[1.80, 0.10, 0.00, 0.45], [2.533, 0.10, 0.00, 0.45]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.533, 0.0, -90.0, 0.0]],
 		},
 	},
 
@@ -1515,18 +1530,25 @@ const TRAJECTORIES := {
 		},
 	},
 	# The Guillotine: the head clamped at his side, then sat back with it.
+	# Roman sits BACK, away from him, and the man's feet go out behind him as
+	# his head is taken to the mat: face down, his head is ~0.8 m ahead of his
+	# root, so it lands at Roman's knees. (Keyed with both men where they
+	# stood, his body lay through Roman's lap by ~0.6 m, and the separation
+	# lifted him clear -- he floated at waist height, legs flung up, and
+	# landed folded.)
 	"grapple_guillotine": {
 		"length": 2.1,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.90, 0.40, 0.00, 0.00],
-					[1.10, 0.30, 0.00, 0.00], [2.10, 0.30, 0.00, 0.00]],
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.85, 0.40, 0.00, 0.00],
+					[1.05, 0.60, 0.00, 0.00], [1.25, 0.80, 0.00, 0.00],
+					[2.10, 0.80, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, 90.0, 0.0], [2.10, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
 			"pos": [[0.00, -0.40, 0.00, 0.00], [0.28, -0.05, 0.00, 0.00],
 					[0.55, 0.10, 0.00, 0.00], [0.90, 0.10, 0.00, 0.00],
-					[1.10, 0.14, 0.00, 0.00], [1.30, 0.02, 0.00, 0.00],
-					[2.10, 0.00, 0.00, 0.00]],
+					[1.10, -0.20, 0.00, 0.00], [1.25, -0.45, 0.00, 0.00],
+					[2.10, -0.45, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.10, 0.0, -90.0, 0.0]],
 		},
 	},
@@ -1558,6 +1580,16 @@ static func role_clip(move_id: StringName, is_attacker: bool) -> String:
 ## How long into the move the defender keeps hold of the attacker, as a
 ## fraction of the clip. Past it he has been thrown and his arms go loose;
 ## a move he is never lifted in keeps him gripping for its whole length.
+## The fraction of the attacker's clip after which his hands are his own
+## again (recipe key "attacker_grips_until"); 1.0, the whole move, unless a
+## recipe says he lets go. The grip IK aims at the man wherever he goes, so a
+## hold the clip has released kept dragging the man by the head.
+static func attacker_grip_until(move_id: StringName) -> float:
+	if not RECIPES.has(String(move_id)):
+		return 1.0
+	return RECIPES[String(move_id)].get("attacker_grips_until", 1.0)
+
+
 static func defender_grip_until(move_id: StringName) -> float:
 	if not RECIPES.has(String(move_id)):
 		return 0.0

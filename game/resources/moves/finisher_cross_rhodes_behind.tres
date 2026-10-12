@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 animation_pair_id = &"finisher_cross_rhodes_behind"
-startup_frames = 74
+startup_frames = 106
 active_frames = 10
 recovery_frames = 36
 reversal_window_start = 60

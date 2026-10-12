@@ -301,6 +301,18 @@ const FINISH_SETUP_END := 0.5
 const FINISH_IMPACT_END := 1.0
 ## Where in the impact shot the body lands, and the shake that goes with it.
 const FINISH_IMPACT_AT := 0.6
+## Both of those are a default now. The finishers land at different points
+## in their moves -- the Spear at 45% of it, Cross Rhodes at 52%, Cross
+## Rhodes from behind at 70% -- so a cut at a fixed 50% put the Spear's
+## impact in the close-up and spent the from-behind finish's whole hook on
+## the close-up of one man (stage 8 review). The cut is taken from each
+## move's own impact (MoveDef.startup_frames), FINISH_LEAD before it.
+const FINISH_LEAD := 0.5
+## Moves whose setup is framed over the attacker's shoulder onto the
+## defender's face rather than on the attacker's: from behind, Cody's face
+## is behind Roman's head, and the shot 2K26 holds is Roman's face with
+## Cody hooking it (gauntlet/refs/raw, 494-500 s).
+const FINISH_OVER_SHOULDER := [&"finisher_cross_rhodes_behind"]
 const FINISH_SHAKE := 0.09
 const FINISH_SHAKE_DECAY := 3.5
 const FINISH_SETUP_FOV := Vector2(24.0, 19.0)
@@ -745,6 +757,11 @@ func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> v
 		_finish_axes = []
 		_after_pending = false
 		_held = 0.0
+		var total := maxf(float(move.total_frames()), 1.0)
+		_finish_impact = clampf(move.startup_frames / total, 0.2, 0.95)
+		_finish_setup_end = maxf(0.15, _finish_impact
+				- FINISH_LEAD * 60.0 / total)
+		_finish_over_shoulder = move.animation_pair_id in FINISH_OVER_SHOULDER
 	elif _try_cut(Cut.SLAM, attacker, defender):
 		_cut_grapple = true
 
@@ -794,6 +811,10 @@ var _finish_side := Vector3.ZERO
 var _finish_shot_t := 0.0
 var _finish_axes: Array = []
 var _after_pending := false
+## This finisher's impact and its cut to the impact shot, as progress.
+var _finish_impact := FINISH_IMPACT_AT
+var _finish_setup_end := FINISH_SETUP_END
+var _finish_over_shoulder := false
 var _trauma := 0.0
 var _shake_t := 0.0
 var _focused := false
@@ -811,14 +832,14 @@ func _finisher_shot(delta: float) -> bool:
 	# move can end well before its progress reaches 1, and cutting on progress
 	# alone left the impact on screen for eight frames (shot_lint).
 	var p := grapple_rig.progress() if active else 1.0
-	var shot := finish_shot_for(p)
+	var shot := finish_shot_for(p, _finish_setup_end)
 	if _finish_shot >= 0 and shot != _finish_shot and _finish_shot_t < MIN_SHOT:
 		shot = _finish_shot
 	var cut := shot != _finish_shot
 	if cut:
 		_finish_shot_t = 0.0
 	_finish_shot_t += delta
-	if shot == 1 and _finish_shot == 1 and p >= FINISH_IMPACT_AT and _trauma <= 0.0 \
+	if shot == 1 and _finish_shot == 1 and p >= _finish_impact and _trauma <= 0.0 \
 			and not _impact_shaken:
 		_trauma = 1.0
 		_impact_shaken = true
@@ -831,7 +852,9 @@ func _finisher_shot(delta: float) -> bool:
 	# The shot's axes are taken as it is cut and held through it: read live,
 	# a pair spun through a slam swung the lens 2-3 m in a frame (shot_lint).
 	if cut or _finish_axes.is_empty():
-		var f0 := _flat(-_finish_attacker.global_transform.basis.z)
+		var facer := _finish_defender if _finish_over_shoulder and _finish_defender \
+				else _finish_attacker
+		var f0 := _flat(-facer.global_transform.basis.z)
 		var x0 := _flat(d - a)
 		if x0.length() < 0.2:
 			x0 = f0
@@ -850,10 +873,16 @@ func _finisher_shot(delta: float) -> bool:
 	var lens: float
 	match shot:
 		0:
-			var t := clampf(p / FINISH_SETUP_END, 0.0, 1.0)
+			# A tight two-shot: the face it is on (the attacker's, or the
+			# defender's over the attacker's shoulder), with the other man's
+			# head held in frame beside it -- one man alone in a finisher's
+			# setup read as him posing at nobody (stage 8 review).
+			var t := clampf(p / _finish_setup_end, 0.0, 1.0)
 			var e := t * t * (3.0 - 2.0 * t)
 			var dir := (fwd * 0.75 + side * 0.66).normalized()
-			var head := a + Vector3.UP * 1.62
+			var on := d if _finish_over_shoulder else a
+			var other := a if _finish_over_shoulder else d
+			var head := on.lerp(other, 0.35) + Vector3.UP * 1.62
 			at = head + dir * lerpf(FINISH_SETUP_DISTANCE.x, FINISH_SETUP_DISTANCE.y, e) \
 					+ Vector3.DOWN * 0.18
 			look = head + Vector3.DOWN * 0.08
@@ -880,8 +909,8 @@ func _finisher_shot(delta: float) -> bool:
 	return true
 
 
-static func finish_shot_for(p: float) -> int:
-	if p < FINISH_SETUP_END:
+static func finish_shot_for(p: float, setup_end := FINISH_SETUP_END) -> int:
+	if p < setup_end:
 		return 0
 	if p < FINISH_IMPACT_END:
 		return 1

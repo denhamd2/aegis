@@ -23,6 +23,12 @@ extends Node
 ## reads as two silhouettes without it. Neither changes the move.
 ## --dist M sets how far the side camera sits (default 4.2); moves that travel,
 ## like the Spear, need more.
+## --bare: the two men alone -- arena, crowd, ring, HUD and referee hidden,
+## a plain floor gridded every 0.5 m, studio light, the defender tinted blue.
+## For judging a move's mechanics with nothing else in the frame. --top looks
+## straight down on the pair instead of from the side.
+## --at fractions over 1.0 look past the move's end, into the knockdown or the
+## stance it hands off to (1.5 is half the move's length again).
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 const MOVES_DIR := "res://resources/moves"
@@ -36,6 +42,8 @@ var _lit := false
 var _dist := 4.2
 ## --wrestlers roman,kenny: the real men at their real sizes, attacker first.
 var _wrestlers := ""
+var _bare := false
+var _top := false
 
 
 func _ready() -> void:
@@ -51,6 +59,10 @@ func _ready() -> void:
 			_orbit = float(args[i + 1])
 		elif args[i] == "--lit":
 			_lit = true
+		elif args[i] == "--bare":
+			_bare = true
+		elif args[i] == "--top":
+			_top = true
 		elif args[i] == "--dist" and i + 1 < args.size():
 			_dist = float(args[i + 1])
 		elif args[i] == "--wrestlers" and i + 1 < args.size():
@@ -104,6 +116,8 @@ func _ready() -> void:
 	rig.begin(attacker, defender, move)
 	print("PAIRED_SHOT %s" % _move_id)
 
+	if _bare:
+		_strip(scene, attacker, defender)
 	var camera := Camera3D.new()
 	scene.add_child(camera)
 	camera.current = true
@@ -116,6 +130,11 @@ func _ready() -> void:
 		across = across.rotated(Vector3.UP, deg_to_rad(_orbit))
 		focus = mid + Vector3(0.0, 0.8, 0.0)
 		camera.global_position = focus + across * _dist + Vector3(0.0, 0.3, 0.0)
+		camera.fov = 45.0
+	if _top:
+		var mid := (attacker.global_position + defender.global_position) * 0.5
+		focus = mid
+		camera.global_position = mid + Vector3(0.0, _dist + 2.0, 0.001)
 		camera.fov = 45.0
 	camera.look_at(focus, Vector3.UP)
 	if _lit:
@@ -130,7 +149,8 @@ func _ready() -> void:
 	# here, and only one of them is answerable from a number.
 	var total := int(move.total_frames())
 	var grabbed := 0
-	for frame in total + 4:
+	var last: float = _at.max() if not _at.is_empty() else 1.0
+	for frame in int(total * maxf(last, 1.0)) + 4:
 		await get_tree().physics_frame
 		# MatchCamera takes `current` back when it cuts; hold the probe's.
 		camera.current = true
@@ -144,3 +164,51 @@ func _ready() -> void:
 				% [fraction, defender.global_position.y, attacker.global_position.y])
 		grabbed += 1
 	get_tree().quit()
+
+
+## Everything but the two men, gone; a plain gridded floor and studio light.
+func _strip(scene: Node, attacker: Node3D, defender: Node3D) -> void:
+	for child in scene.get_children():
+		if child == attacker or child == defender:
+			continue
+		if child is Node3D:
+			(child as Node3D).visible = false
+		elif child is CanvasLayer:
+			(child as CanvasLayer).visible = false
+		elif child is CanvasItem:
+			(child as CanvasItem).visible = false
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.62, 0.64, 0.67)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(1, 1, 1)
+	env.ambient_light_energy = 0.35
+	for node in scene.find_children("*", "WorldEnvironment", true, false):
+		(node as WorldEnvironment).environment = env
+	var floor := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(12.0, 12.0)
+	floor.mesh = plane
+	var grid := ShaderMaterial.new()
+	grid.shader = Shader.new()
+	grid.shader.code = """shader_type spatial;
+void fragment() {
+	vec3 w = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	vec2 g = abs(fract(w.xz * 2.0 + 0.5) - 0.5) / fwidth(w.xz * 2.0);
+	float line = 1.0 - min(min(g.x, g.y), 1.0);
+	ALBEDO = mix(vec3(0.42), vec3(0.2), line);
+	ROUGHNESS = 0.9;
+}"""
+	floor.material_override = grid
+	scene.add_child(floor)
+	floor.global_position = Vector3(attacker.global_position.x, 0.0, attacker.global_position.z)
+	for spec in [[Vector3(-50, 35, 0), 1.0, true], [Vector3(-25, -140, 0), 0.45, false]]:
+		var light := DirectionalLight3D.new()
+		scene.add_child(light)
+		light.rotation_degrees = spec[0]
+		light.light_energy = spec[1]
+		light.shadow_enabled = spec[2]
+	var blue := StandardMaterial3D.new()
+	blue.albedo_color = Color(0.32, 0.5, 0.95)
+	for mesh in defender.find_children("*", "MeshInstance3D", true, false):
+		(mesh as MeshInstance3D).material_override = blue

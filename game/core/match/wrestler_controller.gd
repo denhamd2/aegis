@@ -974,7 +974,11 @@ func _is_gripping_state() -> bool:
 			# been thrown, and arms still reaching for the man who threw him
 			# read as him hanging in mid-air by them. A move nobody is
 			# lifted in (a reversal shove) keeps him gripping throughout.
-			return _is_grapple_attacker or _paired_grip_ticks > 0 or in_chain_read()
+			# The attacker holds his opponent until the recipe says he lets
+			# go (PairedRecipes.attacker_grip_until): -1 is "never".
+			if _is_grapple_attacker:
+				return _paired_release_ticks != 0
+			return _paired_grip_ticks > 0 or in_chain_read()
 		_:
 			return false
 
@@ -1223,6 +1227,8 @@ func _update_grip_ik() -> void:
 		return
 	if _paired_grip_ticks > 0:
 		_paired_grip_ticks -= 1
+	if _paired_release_ticks > 0:
+		_paired_release_ticks -= 1
 	_close_for_lock_up()
 	var held_at: Array[Vector3] = []
 	for t in _grip_targets:
@@ -1464,6 +1470,9 @@ func _reachable(shoulder_bone_name: String, target: Vector3) -> Vector3:
 ## AnimationPlayer's position so it stays a whole number of physics ticks,
 ## the same determinism rule TURN_RATE_PER_TICK and IK_BLEND_PER_TICK follow.
 var _paired_grip_ticks: int = 0
+## The attacker's counterpart: ticks until he lets go, or -1 for a hold he
+## keeps for the whole move (every move but those with attacker_grips_until).
+var _paired_release_ticks: int = -1
 
 ## Switches this wrestler into his half of `move`'s authored performance, and
 ## returns whether the move actually had one. Called by GrappleRig.begin()
@@ -1497,6 +1506,9 @@ func play_paired_pose(move: MoveDef, is_attacker: bool) -> bool:
 			else PairedRecipes.defender_grip_until(move.animation_pair_id)
 	_paired_grip_ticks = int(round(length * grip_fraction
 			* Engine.physics_ticks_per_second))
+	var release := PairedRecipes.attacker_grip_until(move.animation_pair_id)
+	_paired_release_ticks = int(round(length * release * Engine.physics_ticks_per_second)) \
+			if is_attacker and release < 1.0 else -1
 	return true
 
 func _on_fsm_state_changed(_previous: WrestlerFSM.State, current: WrestlerFSM.State) -> void:
@@ -1679,6 +1691,7 @@ func _physics_process(delta: float) -> void:
 		_corner_lockout -= 1
 	_keep_off_downed_body(delta)
 	_apply_gravity(delta)
+	var stepped_from := global_position
 	move_and_slide()
 	if _rope_load_body:
 		# Out in the ropes on purpose -- the clamp would snap him back.
@@ -1687,9 +1700,49 @@ func _physics_process(delta: float) -> void:
 		keep_inside_the_ring()
 		keep_lying_body_inside_the_ropes()
 	_release_cover_contact()
+	_hold_feet_when_blocked(stepped_from, delta)
 	# After move_and_slide(), so the grip is aimed at where the bodies have
 	# actually ended up this tick rather than where they started it.
 	_update_grip_ik()
+
+
+## A man walking into the other man, or into the ropes, stops; his feet did
+## not -- LOCOMOTION is "he is trying to move", and its walk cycle played on
+## while the bodies held him still (stage 8 review). So once he has made less
+## than BLOCKED_SHARE of his walking pace for BLOCKED_TICKS, his legs go back
+## to the stance, and walk again as soon as he moves.
+##
+## Presentation only: the FSM stays in LOCOMOTION and nothing the match reads
+## changes -- only which of two clips the blend graph is showing.
+const BLOCKED_SHARE := 0.3
+const BLOCKED_TICKS := 6
+var _blocked_ticks := 0
+var _feet_held := false
+
+
+func _hold_feet_when_blocked(from: Vector3, delta: float) -> void:
+	if fsm.current_state != WrestlerFSM.State.LOCOMOTION or not _anim_playback:
+		_blocked_ticks = 0
+		_feet_held = false
+		return
+	var moved := Vector2(global_position.x - from.x, global_position.z - from.z).length()
+	if moved < MOVE_SPEED * delta * BLOCKED_SHARE:
+		_blocked_ticks += 1
+	else:
+		_blocked_ticks = 0
+	var held := _blocked_ticks >= BLOCKED_TICKS
+	if held == _feet_held:
+		return
+	_feet_held = held
+	var node: String = WrestlerFSM.State.keys()[
+			WrestlerFSM.State.IDLE if held else WrestlerFSM.State.LOCOMOTION]
+	_inertialize(node)
+	_anim_playback.travel(node)
+
+
+## True while a blocked man's legs are showing the stance instead of the walk.
+func feet_held() -> bool:
+	return _feet_held
 
 
 ## Half-width the mat allows a wrestler's ORIGIN, as opposed to his mesh.
@@ -3550,8 +3603,10 @@ func _release_grapple_hold() -> void:
 ## happening.
 func _clear_grapple_roles() -> void:
 	_is_grapple_attacker = false
+	_paired_release_ticks = -1
 	if opponent:
 		opponent._is_grapple_attacker = false
+		opponent._paired_release_ticks = -1
 
 func _on_grapple_finished(_attacker: Node3D, _defender: Node3D) -> void:
 	var move := _active_move
