@@ -1234,17 +1234,19 @@ const TRAJECTORIES := {
 	# Spear_Defender's bones counter-yaw so he keeps falling straight back in
 	# the world. No root leaves the mat (y = 0 throughout), so the yaw is
 	# free of the airborne-landing invariant.
+	# The back-off is quick (at his mark by 0.27 s, not 0.40) and the crouch is
+	# held longer -- tension, not a stroll (stage 8 review); impact unmoved.
 	"finisher_spear": {
 		"length": 1.4,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.20, 0.70, 0.00, 0.00],
-					[0.40, 1.30, 0.00, 0.00], [0.53, 1.30, 0.00, 0.00],
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.13, 0.75, 0.00, 0.00],
+					[0.27, 1.30, 0.00, 0.00], [0.53, 1.30, 0.00, 0.00],
 					[0.63, 0.30, 0.00, 0.00], [0.70, 0.00, 0.00, 0.00],
 					[0.83, -0.35, 0.00, 0.00], [1.40, -0.40, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, 90.0, 0.0], [1.40, 0.0, 90.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.52, 0.00, 0.00],
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.13, -0.52, 0.00, 0.00],
 					[0.63, -0.52, 0.00, 0.00], [0.70, -0.62, 0.00, 0.00],
 					[0.93, -1.05, 0.00, 0.00], [1.40, -1.05, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [1.400, 0.00, -90.0, 0.00]],

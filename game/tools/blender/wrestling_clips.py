@@ -3250,36 +3250,47 @@ CLIPS["Spear_Attacker"] = [
     (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
            hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
            fist_r=0.6, fist_l=0.6)),
-    # Shoves off to make room.
-    (6,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
+    # Shoves off to make room -- quick: the back-off was a third of the move
+    # and read as a stroll (stage 8 review); 2K26 snaps into the crouch.
+    (4,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
            hand_r=(0.18, 0.52, 1.28), hand_l=(-0.18, 0.52, 1.26),
            fist_r=0.1, fist_l=0.1)),
     # Loads: dropped low over wide feet, eyes up on the target, hands clawed.
-    (12, P(pelvis=(0.0, -0.05, 0.600), hips=(-30, 0, 0), spine=(-30, 0, 0),
+    (8,  P(pelvis=(0.0, -0.05, 0.600), hips=(-30, 0, 0), spine=(-30, 0, 0),
            head=(24, 0, 0),
            hand_r=(0.32, 0.26, 0.52), hand_l=(-0.32, 0.26, 0.52),
            elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
            fist_r=0.35, fist_l=0.35,
            foot_r=(0.28, -0.30, 0.104), foot_l=(-0.26, 0.20, 0.104))),
+    # The coil, held: rocking back onto the rear foot, wound tight.
+    (12, P(pelvis=(0.0, -0.09, 0.565), hips=(-32, 0, 0), spine=(-34, 0, 0),
+           head=(30, 0, 0),
+           hand_r=(0.34, 0.20, 0.48), hand_l=(-0.34, 0.20, 0.48),
+           elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
+           fist_r=0.45, fist_l=0.45,
+           foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
     (16, P(pelvis=(0.0, -0.06, 0.575), hips=(-34, 0, 0), spine=(-34, 0, 0),
            head=(28, 0, 0),
            hand_r=(0.34, 0.24, 0.48), hand_l=(-0.34, 0.24, 0.48),
            elbow_r=(0.6, -0.2, -0.7), elbow_l=(-0.6, -0.2, -0.7),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
-    # Explodes: torso near flat, shoulder leading, rear leg driving.
-    (19, P(pelvis=(0.0, 0.20, 0.720), hips=(-50, 0, 0), spine=(-30, 0, 0),
+    # Explodes OFF the mat: both feet leave it, torso near flat, shoulder
+    # leading. He used to run into the man with a foot down (stage 8 review).
+    (19, P(pelvis=(0.0, 0.22, 0.860), hips=(-58, 0, 0), spine=(-28, 0, 0),
            head=(30, 0, 0),
-           hand_r=(0.30, 0.56, 0.80), hand_l=(-0.30, 0.56, 0.80),
+           hand_r=(0.30, 0.60, 0.86), hand_l=(-0.30, 0.60, 0.86),
            fist_r=0.4, fist_l=0.4,
-           foot_r=(0.20, -0.55, 0.20), foot_l=(-0.18, 0.10, 0.104))),
-    # Impact: shoulder in the midsection, arms wrapping the waist.
-    (21, P(pelvis=(0.0, 0.25, 0.780), hips=(-60, 0, 0), spine=(-25, 0, 0),
+           foot_r=(0.20, -0.58, 0.34), foot_l=(-0.18, -0.22, 0.24),
+           knee_r=(0.2, 0.6, -0.6), knee_l=(-0.2, 0.8, -0.3), free_feet=True)),
+    # Impact, airborne: shoulder in the midsection, arms wrapping the waist.
+    (21, P(pelvis=(0.0, 0.27, 0.920), hips=(-66, 0, 0), spine=(-24, 0, 0),
            head=(20, 0, 0),
-           hand_r=(0.26, 0.72, 0.96), hand_l=(-0.26, 0.72, 0.96),
+           hand_r=(0.26, 0.74, 0.98), hand_l=(-0.26, 0.74, 0.98),
            elbow_r=(0.7, 0.0, -0.4), elbow_l=(-0.7, 0.0, -0.4),
            fist_r=0.6, fist_l=0.6,
-           foot_r=(0.20, -0.45, 0.25), foot_l=(-0.18, 0.05, 0.104))),
+           foot_r=(0.20, -0.52, 0.40), foot_l=(-0.18, -0.36, 0.32),
+           knee_r=(0.2, 0.6, -0.6), knee_l=(-0.2, 0.6, -0.6), free_feet=True)),
     # Drives through him and goes down with him.
     (25, dict(pelvis=(0.0, 0.30, 0.450), hips=(-75, 0, 0), spine=(-15, 0, 0),
               head=(10, 0, 0),
@@ -3309,17 +3320,22 @@ CLIPS["Spear_Defender"] = [
            hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
            fist_r=0.6, fist_l=0.6)),
     # Shoved back a step.
-    (6,  P(pelvis=(0.0, -0.08, 0.830), spine=(8, 0, 0), head=(6, 0, 0),
+    (4,  P(pelvis=(0.0, -0.08, 0.830), spine=(8, 0, 0), head=(6, 0, 0),
            hand_r=(0.22, 0.26, 1.12), hand_l=(-0.20, 0.28, 1.10),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.23, -0.24, 0.104), foot_l=(-0.19, 0.10, 0.104))),
-    # Squares up, not seeing it coming.
-    (14, P(spine=(-4, 0, 0), head=(4, 0, 0),
-           hand_r=(0.24, 0.24, 1.02), hand_l=(-0.22, 0.26, 1.00),
-           fist_r=0.5, fist_l=0.5)),
-    (19, P(spine=(-4, 0, 0), head=(0, 0, 0),
-           hand_r=(0.24, 0.26, 1.06), hand_l=(-0.22, 0.28, 1.04),
-           fist_r=0.5, fist_l=0.5)),
+    # Rocked, a hand to his head. He stood like a dummy through the load
+    # (stage 8 review); now he is still shaking off what came before it.
+    (9,  HEAD_HURT),
+    # Looks up and finds him...
+    (14, P(pelvis=(0.0, -0.02, 0.835), spine=(-2, 0, 0), head=(8, 0, 0),
+           hand_r=(0.24, 0.26, 1.10), hand_l=(-0.22, 0.28, 1.06),
+           fist_r=0.4, fist_l=0.4)),
+    # ...sees it coming and braces, a beat too late: weight back, hands up.
+    (18, P(pelvis=(0.0, -0.06, 0.805), spine=(6, 0, 0), head=(10, 0, 0),
+           hand_r=(0.26, 0.36, 1.22), hand_l=(-0.24, 0.38, 1.20),
+           fist_r=0.15, fist_l=0.15,
+           foot_r=(0.23, -0.22, 0.104), foot_l=(-0.19, 0.10, 0.104))),
     # The hit: folded forward over the shoulder, lifted, feet leaving the mat.
     (21, dict(pelvis=(0.0, -0.15, 0.980), hips=(-30, 0, 0), spine=(-40, 0, 0),
               head=(-20, 0, 0),
