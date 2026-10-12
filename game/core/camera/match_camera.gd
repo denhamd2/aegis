@@ -1180,14 +1180,37 @@ func _pin_shot(_delta: float) -> bool:
 	var neck: Vector3 = defender._bone_world("neck_01")
 	if neck == Vector3.INF:
 		neck = defender.global_position
-	var at := spot + up_body * 1.2 + side * 1.1 + Vector3.UP * 0.8
-	at.x = clampf(at.x, -2.95, 2.95)
-	at.z = clampf(at.z, -2.95, 2.95)
+	var at := pin_camera_spot(spot + up_body * 1.2 + side * 1.1 + Vector3.UP * 0.8)
 	fov = 40.0
 	global_position = at
 	look_at(Vector3(neck.x, 0.35, neck.z) + side * 0.2, Vector3.UP)
 	_clear_focus_if_needed()
 	return true
+
+
+## How far, in plan, the pin camera keeps from a corner post.
+const PIN_CORNER_CLEAR := 1.0
+
+
+## The pin camera inside the ropes and out of the corners. Clamping x and z
+## to the ropes separately put a pin near a corner at (2.95, 0.8, 2.95):
+## inside the turnbuckle pad, so the three-count -- the shot the match ends
+## on -- was the pad's AEW logo seen from inside it (the stage 8 show reel,
+## 16:07). Pulled in along the corner's diagonal until it clears the post.
+static func pin_camera_spot(at: Vector3) -> Vector3:
+	at.x = clampf(at.x, -2.95, 2.95)
+	at.z = clampf(at.z, -2.95, 2.95)
+	for post: Vector3 in POSTS:
+		var away := Vector2(at.x - post.x, at.z - post.z)
+		if away.length() >= PIN_CORNER_CLEAR:
+			continue
+		var inward := Vector2(-signf(post.x), -signf(post.z)).normalized()
+		if away.length() > 0.01 and away.normalized().dot(inward) > 0.0:
+			inward = away.normalized()
+		var to := Vector2(post.x, post.z) + inward * PIN_CORNER_CLEAR
+		at.x = to.x
+		at.z = to.y
+	return at
 
 
 ## B6: when the sign fans get up in a quiet moment, cut to them.

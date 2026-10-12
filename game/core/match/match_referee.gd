@@ -484,6 +484,10 @@ func pin_count() -> int:
 func is_pin_active() -> bool:
 	return _pinning
 
+## Whether the match has been decided.
+func is_match_over() -> bool:
+	return _match_over
+
 func is_submission_active() -> bool:
 	return _submissioning
 

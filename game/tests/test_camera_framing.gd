@@ -456,6 +456,24 @@ func test_the_gameplay_camera_walks_off_a_spot_beside_a_post() -> void:
 				.is_greater(MatchCamera.CAMERA_POST_CLEAR - 0.1)
 
 
+## The pin camera stays out of the corners. A pin near one put it at
+## (2.95, 0.8, 2.95), inside the turnbuckle pad, and the three-count was the
+## pad's logo seen from inside (the stage 8 show reel, 16:07).
+func test_the_pin_camera_stays_out_of_the_corners() -> void:
+	for want: Vector3 in [Vector3(3.6, 0.8, 3.4), Vector3(-3.0, 0.8, 3.2),
+			Vector3(2.9, 0.8, -3.5), Vector3(-4.0, 0.8, -4.0), Vector3(0.5, 0.8, 3.6)]:
+		var at := MatchCamera.pin_camera_spot(want)
+		assert_float(absf(at.x)).is_less_equal(2.9501)
+		assert_float(absf(at.z)).is_less_equal(2.9501)
+		assert_float(at.y).is_equal_approx(0.8, 0.0001)
+		for post: Vector3 in MatchCamera.POSTS:
+			assert_float(Vector2(at.x - post.x, at.z - post.z).length()) \
+					.override_failure_message("%s -> %s is inside the %s corner" % [want, at, post]) \
+					.is_greater_equal(MatchCamera.PIN_CORNER_CLEAR - 0.001)
+	# Mid-side it is the plain clamp, as before.
+	assert_vector(MatchCamera.pin_camera_spot(Vector3(0.5, 0.8, 3.6))).is_equal_approx(Vector3(0.5, 0.8, 2.95), Vector3.ONE * 0.0001)
+
+
 ## AN EVENT PRE-EMPTS THE CLOCK. A scheduled cut landing in the middle of a
 ## finish is the one thing a shot clock must never do.
 func test_a_finisher_preempts_the_shot_clock() -> void:

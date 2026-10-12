@@ -133,6 +133,24 @@ func test_the_winning_count_stays_on_screen_after_the_pinfall() -> void:
 	referee._pin_count_shown = 3
 	assert_int(referee.pin_count()).is_equal(3)
 
+## Held over the finish, then gone: it used to stay up through the replay, the
+## celebration, the rating card and the post-match menu (~30 s, the stage 8
+## show reel).
+func test_the_winning_count_clears_after_the_finish() -> void:
+	var hud_root: CanvasLayer = auto_free(HUD_SCENE.instantiate())
+	var hud: MatchHUD = hud_root.get_node("Draw")
+	var referee := _make_referee()
+	hud.referee = referee
+	add_child(hud_root)
+	hud.referee = referee
+	referee._pin_count_shown = 3
+	referee._match_over = true
+	hud._process(1.0)
+	assert_bool(hud.count_cleared()).is_false()
+	hud._process(MatchHUD.FINISH_COUNT_HOLD)
+	assert_bool(hud.count_cleared()).is_true()
+	assert_int(referee.pin_count()).is_equal(3)
+
 func test_a_kickout_clears_the_count() -> void:
 	var referee := _make_referee()
 	var attacker := _make_wrestler()

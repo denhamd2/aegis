@@ -88,8 +88,16 @@ func _ready() -> void:
 		if w:
 			w.move_landed.connect(_on_move_landed)
 
+## How long the winning count stays up once the match is decided. It used to
+## stay for good -- over the replay, the celebration, the rating card and the
+## post-match menu, ~30 s (the stage 8 show reel, 16:07-16:39).
+const FINISH_COUNT_HOLD := 2.5
+var _since_decided := 0.0
+
 func _process(delta: float) -> void:
 	_popup_left = maxf(_popup_left - delta, 0.0)
+	if referee and referee.is_match_over():
+		_since_decided += delta
 	if _audio == null and wrestler_a and wrestler_a.get_parent():
 		_audio = wrestler_a.get_parent().get_node_or_null("MatchAudio") as MatchAudio
 	queue_redraw()
@@ -279,12 +287,16 @@ func _draw_popup(view: Vector2) -> void:
 ## eases.
 func _draw_count(view: Vector2) -> void:
 	var count := referee.pin_count()
-	if count <= 0:
+	if count <= 0 or count_cleared():
 		return
 	var font := ThemeDB.fallback_font
 	var font_size := int(view.y * 0.17)
 	draw_string(font, Vector2(0.0, view.y * 0.30), str(count),
 			HORIZONTAL_ALIGNMENT_CENTER, view.x, font_size, NAME_COLOR)
+
+## Whether the winning count has been up long enough after the decision.
+func count_cleared() -> bool:
+	return referee != null and referee.is_match_over() and _since_decided >= FINISH_COUNT_HOLD
 
 func _draw_hold(view: Vector2) -> void:
 	if not referee.is_submission_active():
