@@ -105,6 +105,13 @@ const SETTLE_FRAMES := 24
 ## --perf: every 30 frames, the wall-clock cost per frame and where it went.
 var _perf := false
 var _perf_at := 0
+## --positions: --out/positions.txt, one line a frame once the match scene is
+## up -- "frame ax az bx bz rx rz cx cy cz": both men's and the referee's
+## floor positions and the camera's -- so a still that looks like a body
+## through a body, or something in front of the lens, can be checked against
+## where things actually were rather than judged off one angle.
+var _positions: FileAccess
+var _want_positions := false
 
 
 func _ready() -> void:
@@ -122,6 +129,8 @@ func _ready() -> void:
 			_seed = int(args[i + 1])
 		elif args[i] == "--frames" and i + 1 < args.size():
 			_load_frames(args[i + 1])
+		elif args[i] == "--positions":
+			_want_positions = true
 		elif args[i] == "--perf":
 			_perf = true
 		elif args[i] == "--watch":
@@ -135,6 +144,8 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	_sound_log = FileAccess.open(_out_dir + "/sound_log.txt", FileAccess.WRITE)
 	_timeline = FileAccess.open(_out_dir + "/timeline.txt", FileAccess.WRITE)
+	if _want_positions:
+		_positions = FileAccess.open(_out_dir + "/positions.txt", FileAccess.WRITE)
 	if _sparse:
 		_plan_sparse()
 	if _resume:
@@ -265,6 +276,21 @@ func _draw_3d(on: bool) -> void:
 	get_viewport().disable_3d = not on
 
 
+func _log_positions() -> void:
+	var scene := get_tree().current_scene
+	if scene == null or scene.get_node_or_null("RefereeActor") == null:
+		return
+	var parts := [str(_frame)]
+	for path: String in ["WrestlerA", "WrestlerB", "RefereeActor"]:
+		var n := scene.get_node(path) as Node3D
+		parts.append("%.3f %.3f" % [n.global_position.x, n.global_position.z])
+	var cam := get_viewport().get_camera_3d()
+	if cam:
+		parts.append("%.3f %.3f %.3f" % [cam.global_position.x, cam.global_position.y,
+				cam.global_position.z])
+	_positions.store_line(" ".join(parts))
+
+
 ## One timeline line: the frame the section starts on (the next JPEG saved).
 func _mark(section: String, detail := "") -> void:
 	if _timeline == null:
@@ -329,6 +355,8 @@ func _record(seconds: float) -> void:
 
 
 func _record_frame() -> void:
+	if _positions:
+		_log_positions()
 	if _perf and _frame % 30 == 0:
 		var now := Time.get_ticks_msec()
 		print("PERF frame %d  wall %.2f s/frame  process %.0f ms  physics %.0f ms  draws %d  objects %d" % [
