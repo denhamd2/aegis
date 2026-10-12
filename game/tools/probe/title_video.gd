@@ -106,7 +106,7 @@ const SETTLE_FRAMES := 24
 var _perf := false
 var _perf_at := 0
 ## --positions: --out/positions.txt, one line a frame once the match scene is
-## up -- "frame ax az bx bz rx rz cx cy cz": both men's and the referee's
+## up -- "frame ax az bx bz rx rz cx cy cz mode": both men's and the referee's
 ## floor positions and the camera's -- so a still that looks like a body
 ## through a body, or something in front of the lens, can be checked against
 ## where things actually were rather than judged off one angle.
@@ -288,6 +288,8 @@ func _log_positions() -> void:
 	if cam:
 		parts.append("%.3f %.3f %.3f" % [cam.global_position.x, cam.global_position.y,
 				cam.global_position.z])
+		if cam is MatchCamera:
+			parts.append(MatchCamera.Mode.keys()[(cam as MatchCamera).mode])
 	_positions.store_line(" ".join(parts))
 
 
