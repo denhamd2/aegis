@@ -93,8 +93,8 @@ var _timeline: FileAccess
 ## each after SETTLE_FRAMES drawn but unsaved frames. Every other frame is
 ## simulated, not drawn. On the software renderer a drawn arena frame costs
 ## ~3 s whatever the resolution (shadows, skinning, the fog volume), while a
-## simulated one costs ~0.01 s -- so a 13-minute show is ~20 hours in full and
-## a couple of hours as QA stills and motion clips. Frames already on disk are
+## simulated one (3D off) ~0.03 s -- so a 16-minute show is ~25 hours in full and
+## ~3.5 hours as QA stills and motion clips (seed 7: 840 frames). Frames already on disk are
 ## skipped, which is how an interrupted sparse run resumes.
 var _sparse := false
 var _save_set := {}

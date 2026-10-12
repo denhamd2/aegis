@@ -83,6 +83,21 @@ time and encoding at 30 plays back at real speed. Frames are JPEG: a minute of
 Recording is far slower than real time under llvmpipe — budget ~20 minutes of
 wall clock for a 50-second capture.
 
+The whole show — title, WATCH, select, both entrances, the match to its finish,
+the post-match and the menu — is `tools/capture/show_reel.sh` (stage 8):
+
+```
+GODOT_BIN=godot4 tools/capture/show_reel.sh /tmp/show 1280x720 7
+```
+
+It simulates the show with the 3D off, plans the frames QA needs from the
+timeline that run writes (`show_sections.py plan`), runs the show again
+drawing only those, rebuilds the sound from the sound log, and writes
+`qa/` (stills and a contact sheet per section, `index.md`) and `clips/`
+(the bell and the finish, full motion with sound). `FULL=1` records every
+frame instead, for a machine with a GPU: on llvmpipe a drawn arena frame
+costs ~3 s at any resolution, so a 16-minute show is ~25 hours.
+
 ### Is anybody floating?
 
 `tools/probe/floating_probe.tscn` takes each wrestler's **lowest bone in world
@@ -9245,3 +9260,65 @@ measured, before and after, on the same seeds.
   machine renders on Metal, so a capture there would only repeat the Vulkan
   numbers. It needs two screenshots from a real Mac (entrance, match), which
   `measure_look.py` can read.
+
+## Round: stage 8 -- the whole show, recorded and reviewed
+
+The master plan's last stage: record the show as a player sees it and review
+every section. `tools/capture/show_reel.sh` (above) on seed 7, Roman v Cody
+through WATCH: 16:43, 840 frames drawn on Vulkan (llvmpipe), 85 stills in
+seven sections and two clips with sound. Fixes first, then what is open.
+
+- **Every match from the menu was cut short.** MatchFlow -- the story clock:
+  feeling-out, heat, hope, cut-off, comeback, finish -- counted from when the
+  match scene was built, and the entrance director's freeze list predated
+  it. The ~5 minutes of entrances spent the first five phases, the bell rang
+  in the comeback, and the match was over in 3.6-4.5 min (seeds 1, 2, 3, 7).
+  Probes skip the entrances, which is why flow_probe read 7.7-9.6. MatchFlow
+  is frozen with the rest: seed 7 4.5 -> 10.9 min, seeds 1-3 7.9-8.6 min.
+  Two tests; both fail on the old freeze list.
+- **The three-count was filmed from inside a turnbuckle.** The pin camera
+  clamped x and z to the ropes separately, so a pin near a corner put it at
+  (2.95, 0.8, 2.95), inside the pad: the shot the match ends on was the pad's
+  logo from inside. `pin_camera_spot()` also keeps 1 m from every post.
+- **The "3" stayed up for the rest of the show** -- replay, celebration,
+  rating card, menu (~30 s). It now clears 2.5 s after the decision
+  (`MatchHUD.FINISH_COUNT_HOLD`).
+- **The gameplay camera stood beside the ring posts.** Its post check only
+  asked whether a post was between it and the pair; pushed to the ropes near
+  a corner it parked 0.9 m from one with the cap filling the bottom of the
+  frame (10:34). `post_beside()` and a finer bearing search
+  (`clear_bearing()`) stop it settling there. Measured over the whole match
+  with `title_video --positions`: within 0.9 m of a post 11.4% -> 7.7% of
+  the time. What is left is transit -- the pair moves, the camera passes a
+  post while it pans away (~1 s spells); a wider clearance (1.75 m) only made
+  7.0%, so that needs a pan that anticipates, not a bigger number.
+- **Rendering undrawn frames was the cost, not the drawing.** With
+  `render_loop_enabled` off the RenderingDevice never ends a frame and every
+  upload stalls on a flush: 2.7 s an undrawn frame, the same as a drawn one.
+  `title_video` switches the 3D off instead (0.03 s), which is what makes a
+  sparse render possible at all.
+- `mix_sound_log.py`: a stream with no file path wrote an empty field and
+  broke the parse.
+
+Checked and not defects: two stills that looked like the referee inside a
+wrestler measured 0.92 m and 1.6 m apart (`--positions`); Cody's four straight
+wins are the seeds -- `pick_winner` gives him 5007 of 10000 random seeds.
+
+Open:
+- **White gear clips under the entrance light.** Roman's wrist tape is 37-39%
+  pure white on the stage close-up, Cody's coat trim 13-18% (the opening wide:
+  0%). The tape's albedo is a sensible 0.82, so it is the stage exposure,
+  which earlier rounds calibrated; not retuned blind.
+- **A slow render drifts from its simulation.** The entrance cues follow the
+  audio clock and the title waits on threaded loads, so the drawn run landed
+  the bell 42 frames later and the finish 74 later -- the match itself ran
+  32 frames longer. The match after the bell does not depend on entrance
+  length alone (checked on 5 vs 95 entrance ticks, 15 s of match); the rest
+  is not yet traced. show_reel.sh cuts from the drawn run's own timeline and
+  writes `timeline_drift.txt`.
+- The pin and finisher cuts (0.8 m and 0.35-0.4 m, fixed bearings) still
+  pass near posts (136 frames); Roman stands and poses beside Cody's
+  celebration ~20 s after losing; Roman's eyes read pale in the stage
+  close-ups; the known hair and face items stand.
+- Mac lighting still needs two screenshots from a real Mac.
+

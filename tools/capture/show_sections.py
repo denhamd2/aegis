@@ -153,19 +153,45 @@ def plan(out: str, fps: float) -> None:
 	print(f"{len(wanted)} frames wanted of {end} ({stamp(end, fps)})")
 
 
-def cut_clips(out: str, marks: list, fps: float, end: int) -> None:
+def saved_frames(frames_dir: str) -> list:
+	return sorted(int(f[2:7]) for f in os.listdir(frames_dir)
+			if f.startswith("f_") and f.endswith(".jpg"))
+
+
+def runs(frames: list, min_len: int) -> list:
+	"""Consecutive stretches of saved frames at least `min_len` long: the clips."""
+	out, start = [], None
+	for i, f in enumerate(frames):
+		if start is None:
+			start = f
+		if i + 1 == len(frames) or frames[i + 1] != f + 1:
+			if f + 1 - start >= min_len:
+				out.append((start, f + 1))
+			start = None
+	return out
+
+
+def cut_clips(out: str, marks: list, fps: float, saved: list) -> None:
+	"""Each long run of saved frames, named for the clip mark it holds. Cut from
+	what was saved rather than from the plan: the drawn run can land its marks
+	a few frames off the simulated one (the entrance cues follow the audio
+	clock), so the planned range and the frames on disk need not agree."""
 	frames_dir = os.path.join(out, "frames")
 	clips = os.path.join(out, "clips")
 	os.makedirs(clips, exist_ok=True)
 	wav = os.path.join(frames_dir, "sound.wav")
-	for name, a, b in clip_ranges(marks, fps, end):
+	first = {}
+	for frame, mark, _ in marks:
+		first.setdefault(mark, frame)
+	for a, b in runs(saved, int(fps * 2)):
+		name = min(CLIPS, key=lambda c: abs(first.get(c[1], 1 << 30) - (a + b) // 2))[0]
 		cmd = ["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(fps), "-start_number", str(a),
-				"-i", os.path.join(frames_dir, "f_%05d.jpg"), "-frames:v", str(b - a)]
+				"-i", os.path.join(frames_dir, "f_%05d.jpg")]
 		if os.path.exists(wav):
 			cmd += ["-ss", f"{a / fps:.4f}", "-t", f"{(b - a) / fps:.4f}", "-i", wav,
 					"-c:a", "aac", "-b:a", "192k"]
-		cmd += ["-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-				os.path.join(clips, name + ".mp4")]
+		cmd += ["-frames:v", str(b - a), "-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p",
+				"-movflags", "+faststart", os.path.join(clips, name + ".mp4")]
 		subprocess.run(cmd, check=True)
 		print(f"clip {name}: {stamp(a, fps)}-{stamp(b, fps)}")
 
@@ -192,6 +218,8 @@ def cut(out: str, fps: float) -> None:
 	frames_dir = os.path.join(out, "frames")
 	marks = read_timeline(os.path.join(frames_dir, "timeline.txt"))
 	total = show_end(marks)
+	saved = saved_frames(frames_dir)
+	clip_runs = runs(saved, int(fps * 2))
 	qa = os.path.join(out, "qa")
 	shutil.rmtree(qa, ignore_errors=True)
 	os.makedirs(qa)
@@ -203,10 +231,12 @@ def cut(out: str, fps: float) -> None:
 		folder = f"{n:02d}_{name}"
 		os.makedirs(os.path.join(qa, folder))
 		stills = []
-		for frame in picks:
+		# Every saved still in this section of the drawn run's own timeline,
+		# plus one every two seconds out of any clip running through it.
+		in_clip = {f for r in clip_runs for f in range(*r)}
+		chosen = [f for f in saved if a <= f < b and (f not in in_clip or (f - a) % int(fps * 2) == 0)]
+		for frame in chosen:
 			src = os.path.join(frames_dir, f"f_{frame:05d}.jpg")
-			if not os.path.exists(src):
-				continue
 			dst = os.path.join(qa, folder, f"t{stamp(frame, fps)}_{frame:05d}.jpg")
 			shutil.copyfile(src, dst)
 			stills.append((frame, dst))
@@ -219,7 +249,7 @@ def cut(out: str, fps: float) -> None:
 	with open(os.path.join(qa, "index.md"), "w") as fh:
 		fh.write("\n".join(lines) + "\n")
 	print(f"qa stills -> {qa}")
-	cut_clips(out, marks, fps, total)
+	cut_clips(out, marks, fps, saved)
 
 
 def main() -> None:

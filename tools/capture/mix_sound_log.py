@@ -52,6 +52,10 @@ def main() -> None:
 			if not p:
 				continue
 			kind, frame, sid = p[0], int(p[1]), p[2]
+			if kind == "S" and len(p) == 6:
+				# A stream with no file path (generated, or loaded from memory)
+				# logs an empty field, which split() drops: nothing to mix.
+				p.insert(3, "")
 			if kind == "S":
 				if sid in open_seg:
 					segments.append(open_seg.pop(sid) + [frame])
