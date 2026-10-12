@@ -32,6 +32,8 @@ const GIVE := 0.02
 const DECK_HALF := 3.2
 ## A body below this is off the ring, on the floor.
 const ON_RING_Y := -0.2
+## How finely a swing is searched: steps each way out to a quarter turn.
+const SWING_STEPS := 18
 
 ## Game bone names (resolved by the controller): limb root, the joint in the
 ## middle (the elbow or knee is a point that can go under too), the end.
@@ -46,6 +48,8 @@ var lifts := 0
 var _roots: Array[int] = []
 var _mids: Array[int] = []
 var _points: Array[PackedInt32Array] = []
+## The points under the elbow or knee: what a bend there can move.
+var _mid_points: Array[PackedInt32Array] = []
 
 
 func _ready() -> void:
@@ -64,9 +68,12 @@ func _ready() -> void:
 		# the mat).
 		var points := PackedInt32Array()
 		_collect(sk, root, points)
+		var below_mid := PackedInt32Array()
+		_collect(sk, mid, below_mid)
 		_roots.append(root)
 		_mids.append(mid)
 		_points.append(points)
+		_mid_points.append(below_mid)
 
 
 ## Every bone under `bone` that has skin: finger and toe joints, not the
@@ -93,21 +100,30 @@ func _process_modification() -> void:
 	for i in _roots.size():
 		# The shoulder or hip first; if that joint is itself too low to swing
 		# the limb clear, the elbow or knee bends it the rest of the way.
-		for joint: int in [_roots[i], _mids[i]]:
+		for pass_i in 2:
+			var joint := _roots[i] if pass_i == 0 else _mids[i]
+			var moved := _points[i] if pass_i == 0 else _mid_points[i]
 			var low := _lowest(sk, xf, _points[i])
 			if low == Vector3.INF or (xf * low).y >= MAT_Y - GIVE:
 				break
-			if _swing_clear(sk, xf, joint, low, up, side):
+			if pass_i == 1:
+				low = _lowest(sk, xf, moved)
+				if low == Vector3.INF:
+					break
+			if _swing_clear(sk, xf, joint, moved, low, up, side):
 				lifts += 1
 
 
 ## Turns `joint` (its whole limb below with it) about the axis that swings
-## `low` straight up, by the least angle that puts it on the limit -- found by
-## bisection, so a limb hanging straight down from a low hip (where "turn it
-## toward the raised point" is no turn at all) is swung forward and up too.
-## True when it turned.
-func _swing_clear(sk: Skeleton3D, xf: Transform3D, joint: int, low: Vector3,
-		up: Vector3, side: Vector3) -> bool:
+## `low` straight up, by the least angle that puts every one of `moved` on
+## the limit. Every point, not only the lowest: on a shoulder lying on the mat
+## with the forearm folded back under it (Cody's landing on Dragon Twist
+## Cutter), the turn that lifts the hand drives the elbow 4 cm into the canvas.
+## Searched both ways in 5 degree steps out to a quarter turn, then bisected;
+## when nothing clears, the turn that leaves the limb highest. True when it
+## turned.
+func _swing_clear(sk: Skeleton3D, xf: Transform3D, joint: int, moved: PackedInt32Array,
+		low: Vector3, up: Vector3, side: Vector3) -> bool:
 	var pose := sk.get_bone_global_pose(joint)
 	var pivot := pose.origin
 	var from := low - pivot
@@ -119,23 +135,46 @@ func _swing_clear(sk: Skeleton3D, xf: Transform3D, joint: int, low: Vector3,
 		axis = side
 	axis = axis.normalized()
 	var limit := MAT_Y - GIVE
-	var height := func(angle: float) -> float:
-		return (xf * (pivot + Basis(axis, angle) * from)).y
-	# Which way lifts it, for the side-axis case; about from x up, positive does.
-	var dir := 1.0 if height.call(0.05) >= height.call(-0.05) else -1.0
-	var hi := PI * 0.5
-	if height.call(dir * hi) < limit:
-		# Even a quarter turn does not clear it from here: take what it gives.
-		_turn(sk, joint, pose, Basis(axis, dir * hi))
-		return true
-	var lo := 0.0
-	for _step in 12:
-		var mid := (lo + hi) * 0.5
-		if height.call(dir * mid) < limit:
-			lo = mid
-		else:
-			hi = mid
-	_turn(sk, joint, pose, Basis(axis, dir * hi))
+	var rel: Array[Vector3] = []
+	for b in moved:
+		rel.append(sk.get_bone_global_pose(b).origin - pivot)
+	# The lowest of the limb's points over the deck, the limb turned by `angle`.
+	var floor_at := func(angle: float) -> float:
+		var r := Basis(axis, angle)
+		var y := INF
+		for v: Vector3 in rel:
+			var w := xf * (pivot + r * v)
+			if absf(w.x) > DECK_HALF or absf(w.z) > DECK_HALF:
+				continue
+			y = minf(y, w.y)
+		return y
+	var start: float = floor_at.call(0.0)
+	if start >= limit:
+		return false
+	var step := PI * 0.5 / SWING_STEPS
+	var best := 0.0
+	var best_y := start
+	for k in range(1, SWING_STEPS + 1):
+		for sgn: float in [1.0, -1.0]:
+			var a := sgn * k * step
+			var y: float = floor_at.call(a)
+			if y >= limit:
+				var lo := sgn * (k - 1) * step
+				var hi := a
+				for _i in 8:
+					var mid := (lo + hi) * 0.5
+					if floor_at.call(mid) >= limit:
+						hi = mid
+					else:
+						lo = mid
+				_turn(sk, joint, pose, Basis(axis, hi))
+				return true
+			if y > best_y:
+				best_y = y
+				best = a
+	if best == 0.0:
+		return false
+	_turn(sk, joint, pose, Basis(axis, best))
 	return true
 
 

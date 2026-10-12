@@ -63,3 +63,18 @@ func test_an_arm_hanging_off_the_apron_is_left_alone() -> void:
 	var g := _guard(sk)
 	g._process_modification()
 	assert_int(g.lifts).is_equal(0)
+
+
+## Cody's landing on Dragon Twist Cutter: shoulder on the mat, upper arm out
+## flat, forearm folded back under him so the hand is under the canvas. The
+## shoulder turn that lifts the hand the least way drives the elbow into the
+## mat; the guard must leave every joint on it, the elbow included.
+func test_a_folded_arm_is_lifted_without_driving_the_elbow_under() -> void:
+	var sk := _arm(Vector3(0, 0.0, 0))
+	sk.set_bone_rest(2, Transform3D(Basis(), Vector3(0, 0, 0.3)))
+	sk.set_bone_rest(3, Transform3D(Basis(), Vector3(0, -0.25, -0.35)))
+	sk.reset_bone_poses()
+	var g := _guard(sk)
+	assert_float(_low(sk)).is_less(-0.2)
+	g._process_modification()
+	assert_float(_low(sk)).is_greater_equal(MatGuard.MAT_Y - MatGuard.GIVE - 0.005)

@@ -9225,3 +9225,23 @@ measured, before and after, on the same seeds.
   "no reversals" note is about the old counter clips.
 - move_qa's "every paired move pops" was read before the smoothing ran; as
   drawn, the hand-off pops are the ones Phase 1 fixed.
+
+## Round: the audit's loose ends -- shipped, the last elbow, the beat gap
+
+- **Shipped to main** (ef87a2e); the Mac build (mac.yml run 28) is green and
+  on the `mac-latest` release.
+- **Cody's elbow on Dragon Twist Cutter (4 cm under -> 0).** He lands with the
+  shoulder on the mat and the forearm folded back under him; the least
+  shoulder turn that lifted the hand drove the elbow down, and the elbow pass
+  cannot lift its own joint. MatGuard's swing now searches both ways for the
+  least turn that clears every point it moves (5 degree steps to a quarter
+  turn, then bisection), or the turn that leaves the limb highest. move_qa
+  --roster: 47 moves, none under the 2 cm give; pops unchanged (mean 0.526,
+  max 1.05). New test reproduces the fold and fails on the old guard.
+- **Beat gap into the middle of 2K26's 4-6 s.** `ACTION_GAP_SCALE` 3.2 -> 4.0.
+  flow_probe seeds 1-4: beat gap 4.4-4.8 s (was 3.7-4.0), 7.7-9.6 min, every
+  win a pinfall off the winner's finisher (two each).
+- **Mac lighting not measured.** mac.yml exports on an Ubuntu runner; no CI
+  machine renders on Metal, so a capture there would only repeat the Vulkan
+  numbers. It needs two screenshots from a real Mac (entrance, match), which
+  `measure_look.py` can read.

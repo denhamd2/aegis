@@ -357,8 +357,10 @@ const FATIGUE_WALK_MIN := 0.7
 ## every 0.7 s against 2K26's 4-6 s between beats (gauntlet/refs/
 ## match_engine_2k26.md section 3); a string of three blows is one beat.
 ## 2.2 -> 3.2 with the working lock-ups in: beat gap 2.5-2.8 s at 2.2,
-## 3.1-3.6 s at 2.8 (flow_probe seeds 1-4).
-const ACTION_GAP_SCALE := 3.2
+## 3.1-3.6 s at 2.8 (flow_probe seeds 1-4). 3.2 -> 4.0 for the middle of
+## 2K26's range: 3.7-4.0 s at 3.2, 4.0-4.4 at 3.6, 4.4-4.8 at 4.0, matches
+## 7.7-9.6 min, every win a pinfall off the winner's finisher.
+const ACTION_GAP_SCALE := 4.0
 const FATIGUE_COOLDOWN_MAX := 1.5
 
 static func fatigue_of(damage: float) -> float:
