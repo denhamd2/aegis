@@ -21,6 +21,10 @@ extends Node
 ## input events, which is what tools/probe/title_launch.gd does and what the
 ## suite exercises. Phase timing (the VS hold, the fade) is left to
 ## TitleScreen._process -- this probe only renders and saves.
+##
+## The whole show (master plan stage 8) is this probe with --watch and a long
+## --match-seconds: tools/capture/show_reel.sh runs it, resumes it, mixes the
+## sound and cuts the QA stills from --out/timeline.txt.
 
 const TITLE_SCENE := "res://scenes/title.tscn"
 
@@ -29,7 +33,7 @@ const TITLE_SCENE := "res://scenes/title.tscn"
 ## being shown.
 const HOLD_TITLE := 2.2
 ## The longest the recording follows the post-match before it stops anyway.
-const POST_MATCH_CAP := 40.0
+const POST_MATCH_CAP := 60.0
 const HOLD_BEFORE_PICK := 1.9
 const HOLD_BETWEEN_PICKS := 1.9
 
@@ -74,6 +78,33 @@ var _sound_log: FileAccess
 var _sound_players: Array = []
 var _sound_state := {}
 var _held: Array[Resource] = []
+## --watch: WATCH on the landing menu rather than FIGHT, the way a viewer
+## opens an AI-vs-AI match (both select cards read CPU).
+var _watch := false
+## --menu-hold: seconds the post-match menu stays on screen before the
+## recording stops. Without it the recording ends on the rating card.
+var _menu_hold := 0.0
+## --out/timeline.txt: "frame section detail", one line as each part of the
+## show starts (title, select, versus, match_scene, entrance <shot>, bell,
+## finish, menu, end). Rewritten from frame 0 on a --resume, like
+## the sound log. show_reel.sh cuts the QA stills from it.
+var _timeline: FileAccess
+## --frames <file>: draw and save only the frames listed (one index per line),
+## each after SETTLE_FRAMES drawn but unsaved frames. Every other frame is
+## simulated, not drawn. On the software renderer a drawn arena frame costs
+## ~3 s whatever the resolution (shadows, skinning, the fog volume), while a
+## simulated one costs ~0.01 s -- so a 13-minute show is ~20 hours in full and
+## a couple of hours as QA stills and motion clips. Frames already on disk are
+## skipped, which is how an interrupted sparse run resumes.
+var _sparse := false
+var _save_set := {}
+var _render_set := {}
+## CaptureHarness.ART_SETTLE_FRAMES, for the same reason: TAA and SSIL take
+## frames to converge after the renderer has been idle.
+const SETTLE_FRAMES := 24
+## --perf: every 30 frames, the wall-clock cost per frame and where it went.
+var _perf := false
+var _perf_at := 0
 
 
 func _ready() -> void:
@@ -89,19 +120,30 @@ func _ready() -> void:
 			_audio_only = true
 		elif args[i] == "--seed" and i + 1 < args.size():
 			_seed = int(args[i + 1])
+		elif args[i] == "--frames" and i + 1 < args.size():
+			_load_frames(args[i + 1])
+		elif args[i] == "--perf":
+			_perf = true
+		elif args[i] == "--watch":
+			_watch = true
+		elif args[i] == "--menu-hold" and i + 1 < args.size():
+			_menu_hold = float(args[i + 1])
 	seed(_seed)
 	for path: String in ["res://scenes/match.tscn", "res://scenes/roman_model.tscn",
 			"res://scenes/cody_model.tscn"]:
 		_held.append(load(path))
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	_sound_log = FileAccess.open(_out_dir + "/sound_log.txt", FileAccess.WRITE)
+	_timeline = FileAccess.open(_out_dir + "/timeline.txt", FileAccess.WRITE)
+	if _sparse:
+		_plan_sparse()
 	if _resume:
 		for file in DirAccess.get_files_at(_out_dir):
 			if file.begins_with("f_") and file.ends_with(".jpg"):
 				_resume_at += 1
 		if _resume_at > 0:
 			print("TITLE_VIDEO resuming at frame ", _resume_at)
-			RenderingServer.render_loop_enabled = false
+			_draw_3d(false)
 
 	# Deferred, and awaited before current_scene is set: root is still setting
 	# up ITS children while this _ready() runs and refuses a direct add_child()
@@ -115,12 +157,18 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var screen: TitleScreen = title.get_node("Draw")
 
+	_mark("title")
 	await _record(HOLD_TITLE)          # the landing screen, menu on FIGHT
-	screen._accept()                   # FIGHT -> the select
+	if _watch:
+		screen.menu_index = 1          # down to WATCH, as a key press would
+		await _record(HOLD_BEFORE_PICK * 0.5)
+	screen._accept()                   # FIGHT / WATCH -> the select
+	_mark("select")
 	await _record(HOLD_BEFORE_PICK)    # cursor on Roman
 	screen._accept()                   # player 1 takes Roman
 	await _record(HOLD_BETWEEN_PICKS)  # cursor parks on Cody
 	screen._accept()                   # opponent is Cody -> the VS card
+	_mark("versus")
 	print("PICKED ", (screen.picks[0] as Roster.Entry).display_name(), " vs ",
 			(screen.picks[1] as Roster.Entry).display_name())
 
@@ -146,12 +194,21 @@ func _ready() -> void:
 				w.character_model_scene.resource_path])
 	var referee: MatchReferee = match_scene.get_node("MatchReferee")
 	referee.match_won.connect(_on_match_won)
+	_mark("match_scene")
+	var director := match_scene.get_node_or_null("EntranceDirector") as EntranceDirector
+	if director:
+		director.beat_started.connect(func(shot: String) -> void: _mark("entrance", shot))
+		director.bell.connect(func() -> void: _mark("bell"))
+	else:
+		_mark("bell", "no entrances")
 
 	# Record to the finish, then through the post-match (PostMatch: the
 	# winner, the replay, the celebration, the rating), capped, so the video
-	# ends on the rating rather than the moment the three-count lands.
+	# ends on the rating rather than the moment the three-count lands -- or,
+	# with --menu-hold, on the menu that follows it.
 	var elapsed := 0.0
 	var after_finish := 0.0
+	var on_menu := -1.0
 	while elapsed < _match_seconds:
 		await _record_frame()
 		elapsed += 1.0 / _fps
@@ -159,10 +216,61 @@ func _ready() -> void:
 			after_finish += 1.0 / _fps
 			var post := match_scene.get_node_or_null("PostMatch") as PostMatch
 			var post_done := post == null or post.is_done()
-			if (post_done and after_finish >= 2.5) or after_finish >= POST_MATCH_CAP:
+			if _menu_hold > 0.0:
+				if on_menu < 0.0 and match_scene.get_node_or_null("PostMatchMenu"):
+					on_menu = 0.0
+					_mark("menu")
+				elif on_menu >= 0.0:
+					on_menu += 1.0 / _fps
+				if on_menu >= _menu_hold or after_finish >= POST_MATCH_CAP:
+					break
+			elif (post_done and after_finish >= 2.5) or after_finish >= POST_MATCH_CAP:
 				break
+	_mark("end", "finished=%s" % _match_over)
 	print("TITLE_VIDEO %d frames, finished=%s" % [_frame, _match_over])
 	get_tree().quit()
+
+
+## Reads --frames. Frames already on disk are dropped in _plan_sparse(), once
+## every argument (--out among them) has been read.
+func _load_frames(path: String) -> void:
+	_sparse = true
+	var text := FileAccess.get_file_as_string(path)
+	for line in text.split("\n", false):
+		if line.strip_edges().is_valid_int():
+			_save_set[int(line)] = true
+
+
+func _plan_sparse() -> void:
+	for f: int in _save_set.keys():
+		if FileAccess.file_exists("%s/f_%05d.jpg" % [_out_dir, f]):
+			_save_set.erase(f)
+	for f: int in _save_set.keys():
+		for k in range(maxi(0, f - SETTLE_FRAMES), f + 1):
+			_render_set[k] = true
+	print("TITLE_VIDEO sparse: %d frames to save, %d to draw" % [
+			_save_set.size(), _render_set.size()])
+
+
+## Frames nobody will see are simulated with the 3D world switched off, not
+## with RenderingServer.render_loop_enabled off. With the render loop off the
+## RenderingDevice never reaches the end of a frame, so the per-frame buffer
+## and texture uploads (the crowd, the skeletons) pile up and every one stalls
+## on a full flush: measured on a bare Roman v Cody match, 2.7 s an undrawn
+## frame, the same as a drawn one. With only the 3D off the frame still ends
+## and flushes, and costs 0.03 s. Presentation only -- nothing in the match
+## reads whether a frame was drawn, which the sparse pass's timeline check
+## (show_reel.sh) confirms.
+func _draw_3d(on: bool) -> void:
+	get_viewport().disable_3d = not on
+
+
+## One timeline line: the frame the section starts on (the next JPEG saved).
+func _mark(section: String, detail := "") -> void:
+	if _timeline == null:
+		return
+	_timeline.store_line("%d %s %s" % [_frame, section, detail.replace(" ", "_")])
+	_timeline.flush()
 
 
 ## One line per change: S(tart) frame id path loop pitch volume_db,
@@ -209,6 +317,9 @@ func _log_sound() -> void:
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("FINISH: %s by %s at frame %d" % [winner.display_name, method, _frame])
+	# The PostMatch sequence (bell, winner, replay, celebration, rating) starts
+	# on this same tick, so the finish mark is also where it begins.
+	_mark("finish", "%s by %s" % [winner.display_name, method])
 	_match_over = true
 
 
@@ -218,20 +329,42 @@ func _record(seconds: float) -> void:
 
 
 func _record_frame() -> void:
+	if _perf and _frame % 30 == 0:
+		var now := Time.get_ticks_msec()
+		print("PERF frame %d  wall %.2f s/frame  process %.0f ms  physics %.0f ms  draws %d  objects %d" % [
+				_frame, (now - _perf_at) / 30000.0,
+				Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+				Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+				Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+				Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)])
+		_perf_at = now
 	_log_sound()
 	if _first_process_frame < 0:
 		_first_process_frame = Engine.get_process_frames()
 		print("TITLE_VIDEO first frame is engine process frame ", _first_process_frame)
 	if _audio_only:
-		RenderingServer.render_loop_enabled = false
+		_draw_3d(false)
 		await get_tree().process_frame
+		_frame += 1
+		return
+	if _sparse:
+		var draw := _render_set.has(_frame)
+		_draw_3d(draw)
+		if not draw:
+			await get_tree().process_frame
+			_frame += 1
+			return
+		await RenderingServer.frame_post_draw
+		if _save_set.has(_frame):
+			get_viewport().get_texture().get_image().save_jpg(
+					"%s/f_%05d.jpg" % [_out_dir, _frame], 0.88)
 		_frame += 1
 		return
 	if _frame < _resume_at:
 		await get_tree().process_frame
 		_frame += 1
 		if _frame == _resume_at:
-			RenderingServer.render_loop_enabled = true
+			_draw_3d(true)
 		return
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
