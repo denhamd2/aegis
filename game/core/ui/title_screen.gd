@@ -84,6 +84,11 @@ var _roster: Array = []
 var _menu: Array = []
 ## True when the select screen was opened from WATCH: both picks are CPU.
 var watch_mode := false
+## The match type picked on the select screen (MatchRules.Mode): up and down
+## switch it, left and right still move between the wrestlers.
+var match_mode: int = MatchRules.Mode.ONE_ON_ONE
+## Filled during _draw, like the card rects, for the mouse.
+var _mode_rects: Array = []
 var _time := 0.0
 var _versus_time := 0.0
 var _fade := 0.0
@@ -119,6 +124,7 @@ static var resume_select := false
 ## The last match launched from here, for PostMatchMenu's REMATCH.
 static var last_picks: Array = []
 static var last_watch := false
+static var last_mode: int = MatchRules.Mode.ONE_ON_ONE
 
 
 func _ready() -> void:
@@ -204,7 +210,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				step_camera_option(-1)
 				accept_event()
 		Phase.SELECT:
-			if event.is_action_pressed("ui_right"):
+			if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
+				var step := 1 if event.is_action_pressed("ui_down") else -1
+				match_mode = wrapi(match_mode + step, 0, MatchRules.LABELS.size())
+				accept_event()
+			elif event.is_action_pressed("ui_right"):
 				cursor = wrapi(cursor + 1, 0, _roster.size())
 				accept_event()
 			elif event.is_action_pressed("ui_left"):
@@ -234,6 +244,10 @@ func _gui_input(event: InputEvent) -> void:
 					menu_index = i
 					_accept()
 		elif phase == Phase.SELECT:
+			for i in _mode_rects.size():
+				if (_mode_rects[i] as Rect2).has_point(event.position):
+					match_mode = i
+					return
 			for i in _card_rects.size():
 				if (_card_rects[i] as Rect2).has_point(event.position):
 					cursor = i
@@ -363,9 +377,10 @@ func _launch() -> void:
 	_preloads.clear()
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, picks[0], picks[1],
-			randi_range(1, 1 << 30), watch_mode)
+			randi_range(1, 1 << 30), watch_mode, match_mode)
 	last_picks = [picks[0], picks[1]]
 	last_watch = watch_mode
+	last_mode = match_mode
 	# A match launched from the menu opens with the ring entrances. Set here
 	# rather than in configure_match(), which the headless probes call to set
 	# up matches they need live on tick 1.
@@ -388,7 +403,7 @@ static func rematch(tree: SceneTree, entrances := true) -> bool:
 		return false
 	var scene: Node = (load(MATCH_SCENE_PATH) as PackedScene).instantiate()
 	configure_match(scene, last_picks[0], last_picks[1],
-			randi_range(1, 1 << 30), last_watch)
+			randi_range(1, 1 << 30), last_watch, last_mode)
 	scene.entrances = entrances
 	var old := tree.current_scene
 	tree.root.add_child(scene)
@@ -411,8 +426,11 @@ static func rematch(tree: SceneTree, entrances := true) -> bool:
 ## mannequin default is never instantiated on the way past.
 ##
 ## `both_ai`: WATCH -- the player's slot is driven by the AI too.
+## `mode`: the match type (MatchRules.Mode), carried on the scene's root.
 static func configure_match(scene: Node, player: Roster.Entry,
-		opponent: Roster.Entry, match_seed: int, both_ai := false) -> void:
+		opponent: Roster.Entry, match_seed: int, both_ai := false,
+		mode: int = MatchRules.Mode.ONE_ON_ONE) -> void:
+	MatchRules.set_mode(scene, mode)
 	var slots := [
 		[scene.get_node("WrestlerA"), player, both_ai],
 		[scene.get_node("WrestlerB"), opponent, true],
@@ -763,20 +781,62 @@ func _draw_select(view: Vector2) -> void:
 						safe.position.y + unit * 0.155),
 				side, side_size, unit * 0.010, side_color)
 
+	_draw_mode_bar(safe, unit)
+
 	# The cards share the safe box's width; their height follows from a
 	# portrait card's proportions and is capped by the box.
 	var gap := safe.size.x * 0.03
 	var n := float(_roster.size())
 	var card_w := (safe.size.x - gap * (n - 1.0)) / n
-	var card := Vector2(card_w, minf(card_w * 1.62, unit * 0.76))
+	var card := Vector2(card_w, minf(card_w * 1.62, unit * 0.69))
 	var x := safe.position.x
-	var y := safe.position.y + unit * 0.22
+	var y := safe.position.y + unit * 0.29
 	_card_rects.clear()
 	for i in _roster.size():
 		var rect := Rect2(x + (card.x + gap) * i, y, card.x, card.y)
 		_card_rects.append(rect)
 		_draw_card(rect, _roster[i], i == cursor and phase == Phase.SELECT,
 				view)
+
+
+## The match type, between the "PLAYER 1" line and the cards: every mode as a
+## cut chip, the chosen one lit gold, the others dim, and the hint that up
+## and down switch it.
+func _draw_mode_bar(safe: Rect2, unit: float) -> void:
+	_mode_rects.clear()
+	var size := int(unit * 0.040)
+	var track := unit * 0.006
+	var pad := Vector2(unit * 0.030, unit * 0.014)
+	var widths: Array[float] = []
+	var total := 0.0
+	var gap := unit * 0.024
+	for label: String in MatchRules.LABELS:
+		var w := TitleArt.tracked_width(_font, label, size, track) + pad.x * 2.0
+		widths.append(w)
+		total += w
+	total += gap * (widths.size() - 1)
+	var x := safe.get_center().x - total * 0.5
+	var y := safe.position.y + unit * 0.200
+	var h := size + pad.y * 2.0
+	for i in MatchRules.LABELS.size():
+		var rect := Rect2(x, y, widths[i], h)
+		_mode_rects.append(rect)
+		var on := i == match_mode
+		TitleArt.draw_cut_panel(self, rect, h * 0.35,
+				Color(TitleArt.KEY_PANEL, 0.92 if on else 0.6),
+				TitleArt.KEY_GOLD if on else Color(TitleArt.KEY_GOLD_DIM, 0.6),
+				maxf(1.0, unit * (0.003 if on else 0.0015)))
+		TitleArt.draw_tracked(self, _font,
+				Vector2(rect.position.x + pad.x, rect.position.y + pad.y + size * 0.82),
+				MatchRules.LABELS[i], size, track,
+				TitleArt.KEY_GOLD if on else Color(TitleArt.STEEL, 0.55))
+		x += widths[i] + gap
+	if phase == Phase.SELECT:
+		var hint := "▲ ▼  MATCH TYPE"
+		var hs := int(unit * 0.022)
+		TitleArt.draw_tracked(self, _font,
+				Vector2(x + gap * 0.5, y + pad.y + size * 0.78), hint, hs, unit * 0.003,
+				Color(TitleArt.STEEL, 0.6))
 
 
 func _draw_card(rect: Rect2, entry: Roster.Entry, active: bool,
@@ -936,6 +996,13 @@ func _draw_versus(view: Vector2) -> void:
 	# The flash as it lands.
 	if vt < 1.0:
 		draw_rect(Rect2(Vector2.ZERO, view), Color(1, 1, 1, 0.18 * (1.0 - vt)))
+	# The match type over the band.
+	var mode_label := MatchRules.label(match_mode)
+	var ms := int(view.y * 0.034)
+	var mw := TitleArt.tracked_width(_font, mode_label, ms, view.y * 0.004)
+	TitleArt.draw_tracked(self, _font,
+			Vector2((view.x - mw) * 0.5, view.y * 0.5 - band_h * 0.5 - ms * 0.6),
+			mode_label, ms, view.y * 0.004, Color(TitleArt.KEY_GOLD, vt))
 	_draw_loading(view, vt)
 
 

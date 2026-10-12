@@ -35,6 +35,10 @@ func _ready() -> void:
 	screen.cursor = 1
 	await _shot(screen, "select_p2")
 
+	# The No Holds Barred match type picked (MatchRules).
+	screen.match_mode = MatchRules.Mode.NO_HOLDS_BARRED
+	await _shot(screen, "select_nhb")
+
 	screen.picks = [Roster.entries()[0], Roster.entries()[1]]
 	screen.phase = TitleScreen.Phase.VERSUS
 	screen._versus_time = 0.6
