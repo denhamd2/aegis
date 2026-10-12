@@ -417,6 +417,45 @@ func test_a_post_in_the_way_is_detected() -> void:
 			Vector3(1, 0, 1).normalized(), 5.0)).is_true()
 	assert_bool(MatchCamera.post_in_the_way(Vector3(0, 0, 0), Vector3(0, 0, 1), 5.0)).is_false()
 
+
+## Nor one beside it. The show reel caught the camera at (-3.81, 1.65, 2.59),
+## pushed to the ropes 0.9 m from the corner post, with the post's cap filling
+## the bottom of the frame -- no post between it and the pair, so the old check
+## passed it.
+func test_a_post_beside_the_camera_spoils_the_shot() -> void:
+	var mid := Vector3(0.06, 0.0, 0.92)
+	var bearing := (Vector3(-3.81, 0.0, 2.59) - mid).normalized()
+	var distance := Vector2(-3.81 - mid.x, 2.59 - mid.z).length()
+	assert_bool(MatchCamera.post_in_the_way(mid, bearing, distance)).is_false()
+	assert_bool(MatchCamera.post_beside(mid, bearing, distance)).is_true()
+	assert_bool(MatchCamera.post_blocks_shot(mid, bearing, distance)).is_true()
+	# Square to the side, mid-ring: clear.
+	assert_bool(MatchCamera.post_blocks_shot(Vector3.ZERO, Vector3(-1, 0, 0), 4.2)).is_false()
+
+
+## And the gameplay camera, standing on that spot, walks off it: the pair is
+## the show reel's, side-on to the camera there, so the old check had no
+## reason to move it.
+func test_the_gameplay_camera_walks_off_a_spot_beside_a_post() -> void:
+	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
+	var camera: MatchCamera = _match().get_node("MatchCamera")
+	var mid := Vector3(0.06, 0.0, 0.92)
+	var bearing := (Vector3(-3.81, 0.0, 2.59) - mid).normalized()
+	var line := Vector3(-bearing.z, 0.0, bearing.x)
+	camera.wrestler_a.global_position = mid - line * 0.6
+	camera.wrestler_b.global_position = mid + line * 0.6
+	camera._bearing = bearing
+	for tick in 600:
+		camera.mode = MatchCamera.Mode.RINGSIDE
+		camera._physics_process(1.0 / 60.0)
+	var p := camera.global_position
+	for post: Vector3 in MatchCamera.POSTS:
+		var d := Vector2(p.x - post.x, p.z - post.z).length()
+		assert_float(d).override_failure_message(
+				"camera at %s, %.2f m from the post at %s" % [p, d, post]) \
+				.is_greater(MatchCamera.CAMERA_POST_CLEAR - 0.1)
+
+
 ## AN EVENT PRE-EMPTS THE CLOCK. A scheduled cut landing in the middle of a
 ## finish is the one thing a shot clock must never do.
 func test_a_finisher_preempts_the_shot_clock() -> void:

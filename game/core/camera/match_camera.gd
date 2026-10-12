@@ -251,6 +251,12 @@ const GAMEPLAY_OPENING_HOLD := 4.0
 const RING_OUTSIDE := 3.55
 const POSTS := [Vector3(3.3, 0, 3.3), Vector3(-3.3, 0, 3.3), Vector3(3.3, 0, -3.3), Vector3(-3.3, 0, -3.3)]
 const POST_CLEAR := 0.45
+## How far, in plan, the gameplay camera keeps from a post. Not between it and
+## the pair is not enough: pushed out to the ropes on a bearing near a corner,
+## it stood beside the post at rope height and the post's cap filled the bottom
+## of the frame -- the stage 8 show reel, 10:34. Measured over a whole Roman v
+## Cody match (seed 7), it was within 0.9 m of a post for 11% of the match.
+const CAMERA_POST_CLEAR := 1.25
 
 # --- Event cuts (B3), shake (B4), focus (B5), cutaways (B6) ------------------
 ## Short cuts to the action, each back to the coverage it cut from. None
@@ -956,11 +962,11 @@ func _gameplay_bearing(delta: float) -> Vector3:
 	var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
 	var distance := maxf(framing_distance(line.length()), GAMEPLAY_MIN_DISTANCE)
 	for turn in [0.45, -0.9]:
-		if not post_in_the_way(mid, want, distance):
+		if not post_blocks_shot(mid, want, distance):
 			break
 		want = want.rotated(Vector3.UP, turn)
 	var angle := _bearing.signed_angle_to(want, Vector3.UP)
-	var blocked := post_in_the_way(mid, _bearing, distance)
+	var blocked := post_blocks_shot(mid, _bearing, distance)
 	if absf(angle) > GAMEPLAY_DEADZONE or blocked:
 		_panning = true
 	if _panning:
@@ -984,6 +990,23 @@ static func post_in_the_way(mid: Vector3, bearing: Vector3, distance: float) -> 
 		var ab := b - a
 		var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 1e-6), 0.0, 1.0)
 		if t > 0.05 and (a + ab * t).distance_to(p) < POST_CLEAR:
+			return true
+	return false
+
+
+## Whether the gameplay camera's shot from `bearing` is spoiled by a post:
+## one between it and the pair, or one beside where it would stand.
+static func post_blocks_shot(mid: Vector3, bearing: Vector3, distance: float) -> bool:
+	return post_in_the_way(mid, bearing, distance) or post_beside(mid, bearing, distance)
+
+
+## Whether the gameplay camera, `distance` out along `bearing` from `mid` and
+## then pushed outside the ropes as it is in the shot, stands within
+## CAMERA_POST_CLEAR of a post in plan.
+static func post_beside(mid: Vector3, bearing: Vector3, distance: float) -> bool:
+	var spot := _outside_ring(mid + bearing * distance, bearing)
+	for post: Vector3 in POSTS:
+		if Vector2(spot.x - post.x, spot.z - post.z).length() < CAMERA_POST_CLEAR:
 			return true
 	return false
 

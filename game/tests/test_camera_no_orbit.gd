@@ -72,7 +72,12 @@ func test_a_small_turn_does_not_move_the_camera_at_all() -> void:
 	var b: Node3D = m["b"]
 	a.global_position = Vector3(-0.7, 0.0, 0.0)
 	b.global_position = Vector3(0.7, 0.0, 0.0)
-	for _i in 120:
+	# Long enough for the opening pan (from ringside_bearing round to side-on,
+	# ~75 degrees) to finish. At 120 ticks it was still under way, and the
+	# test passed only because the pan happened to stop near the turned
+	# pair's side-on; walking off a post faster (CAMERA_POST_CLEAR) moved
+	# where it stopped.
+	for _i in 600:
 		_tick(camera)
 	var before := camera._bearing
 	# The pair turn 25 degrees about each other: inside the deadzone.
