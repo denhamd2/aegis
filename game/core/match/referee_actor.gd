@@ -58,6 +58,8 @@ const COVER_FRONT := 0.3
 ## keep, and the ring round the pair she walks when it does not.
 const ROUTE_CLEAR := 0.3
 const ROUTE_RING := 1.5
+## A step clear of a body she is standing hard by, before going round it.
+const ROUTE_STEP := 0.8
 ## Clearance past which a spot is simply clear, and under which she moves.
 const COVER_CLEAR := 0.5
 const COVER_SHUFFLE := 0.2
@@ -464,13 +466,43 @@ static func route_to(from: Vector3, to: Vector3, men: Array) -> Vector3:
 	var mid := Vector3.ZERO
 	for w: WrestlerController in men:
 		mid += _flat(w.global_position) / float(men.size())
-	# The shortest fully clear two-leg route; failing that (a body hard
-	# against the ropes can leave none), the one that keeps furthest off them.
+	var ring := _ring_route(from, to, segments, mid)
+	if ring[1] < INF:
+		return ring[0]
+	# No clear way round from here: standing hard by his boots (a man lying
+	# legs-out along the ropes, SUPINE), every way round brushes him. So
+	# first a short step clear -- to a place from which there IS a way round
+	# (stepping anywhere else, the next call stepped her straight back).
+	var step_to := Vector3.INF
+	var step_len := INF
+	for step in 12:
+		var wp := from + Vector3.FORWARD.rotated(Vector3.UP, TAU * step / 12.0) * ROUTE_STEP
+		if absf(wp.x) > COVER_ROPES or absf(wp.z) > COVER_ROPES:
+			continue
+		if _line_clearance(from, wp, segments) < ROUTE_CLEAR:
+			continue
+		var onward: float
+		if _line_clearance(wp, to, segments) >= ROUTE_CLEAR:
+			onward = wp.distance_to(to)
+		else:
+			onward = _ring_route(wp, to, segments, mid)[1]
+		if onward < INF and ROUTE_STEP + onward < step_len:
+			step_len = ROUTE_STEP + onward
+			step_to = wp
+	return step_to if step_to != Vector3.INF else ring[2]
+
+
+## The shortest fully clear two-leg route from `from` to `to` by one waypoint
+## on a ring round the pair: [waypoint, length (INF if none), fallback -- the
+## waypoint that keeps furthest off them -- and that clearance].
+static func _ring_route(from: Vector3, to: Vector3, segments: Array, mid: Vector3) -> Array:
 	var best := to
 	var best_len := INF
 	var fallback := to
 	var fallback_clear := _line_clearance(from, to, segments)
-	for radius: float in [ROUTE_RING, ROUTE_RING + 0.5]:
+	# Three rings: a man lying with his legs out (SUPINE) is ~0.35 m longer
+	# than one with his knees up.
+	for radius: float in [ROUTE_RING, ROUTE_RING + 0.5, ROUTE_RING + 1.0]:
 		for step in 16:
 			var wp := mid + Vector3.FORWARD.rotated(Vector3.UP, TAU * step / 16.0) * radius
 			if absf(wp.x) > COVER_ROPES or absf(wp.z) > COVER_ROPES \
@@ -487,7 +519,7 @@ static func route_to(from: Vector3, to: Vector3, men: Array) -> Vector3:
 			if length < best_len:
 				best_len = length
 				best = wp
-	return best if best_len < INF else fallback
+	return [best, best_len, fallback, fallback_clear]
 
 
 static func _line_clearance(a: Vector3, b: Vector3, segments: Array) -> float:

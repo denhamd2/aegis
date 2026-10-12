@@ -9322,3 +9322,53 @@ Open:
   close-ups; the known hair and face items stand.
 - Mac lighting still needs two screenshots from a real Mac.
 
+
+## Round: the owner's stage 8 review -- bodies, feet, finishers, Roman
+
+The owner watched the stage 8 clips and flagged what follows; each was traced,
+fixed and checked on rendered frames.
+
+- **Cody lay bent into an arch after the Guillotine.** Three causes. The move
+  was keyed with Roman sitting back *into* the man, whose prone body lay
+  through his lap by ~0.6 m, so the separation hoisted him to waist height;
+  the contact pull kept drawing a man on the mat up toward Roman's arm; and
+  the grip IK held the head after the clip let go. Roman now sits back away
+  from him, lets go as he lands (`attacker_grips_until`), and the pull leaves
+  a man lying on the canvas alone (`PULL_MIN_PELVIS`). `test_guillotine_drop`
+  fails on the old code (pelvis 0.59 m off the mat, grip held).
+- **Every knockdown lay with both knees drawn up** -- on Cody's loose
+  trousers a body bent into an arch. SUPINE is legs out, heels down and toes
+  up (an explicit ankle: the leg solve's shortest-arc aim leaves a leg lying
+  along the mat rolled half a turn, kneecap down; facing the knees to their
+  poles in `rig_pose` was tried and doubled the library's limb flips). The
+  face-first roll lands the boots and arms on the mat instead of holding them
+  tucked. The Drive-By, which only passes through his back on the way up,
+  keeps the knees-up pose (`SUPINE_KNEES_UP`). The longer body needed the
+  referee's route round it to step clear before going round
+  (`ROUTE_STEP`); the whole paired library was refitted.
+- **Feet walked on the spot when the men walked into each other.** A blocked
+  walker's legs show the stance after 6 stalled ticks, presentation only
+  (`test_blocked_feet`).
+- **Aubrey stood beside Cody's corner poses.** Her waiting spot is on the
+  other side of the ring from the entry corner.
+- **The Cross Rhodes did not read.** From behind, the hook went to face-down
+  in four drawn frames. Re-timed against 2K26 (raw footage 494-500 s): the
+  hook held, the leap and drop over ~0.4 s, the man landed beside Cody rather
+  than across his lap. The finisher camera cuts on each move's own impact
+  (the Spear's used to land inside the close-up) and opens on a two-shot,
+  over Cody's shoulder for the from-behind version. `paired_shot --bare`
+  shows any paired move on two mannequins on a gridded floor; it found
+  that the probe needs `--fixed-fps 60` to be on time at all.
+- **The Spear** leaves the mat at the drive, the man reacts (rocked, finds
+  him, braces too late), and the back-off is quicker with the crouch held.
+- **Through the ropes** is on a wide, locked-off shot (`rope_wide`), on the
+  same side of the line as the ringside shots either side of it.
+- **Roman, toward 2K26** (`gauntlet/refs/raw` 190-218 s):
+  - the tribal ink rebuilt near-black and crisp
+    (`tools/assets/build_roman_tattoo.py`), and black fingerless gloves with
+    a white print painted over the hands in the same pass;
+  - a muscle normal map, which the body never had
+    (`tools/assets/build_roman_muscle.py`, laid out from landmarks);
+  - the face sculpt pushed further and contour shading painted on as vertex
+    colour off the same landmarks; a little more wet in the hair and sheen
+    on the body.

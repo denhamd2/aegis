@@ -98,6 +98,18 @@ const ALBEDO_FIXES := {
 	# get whole materials of their own, textured (_fix_eyes).
 }
 
+## The body's albedo, replacing the supplied atlas: the same atlas with the
+## tribal ink rebuilt dense and near-black (tools/assets/
+## build_roman_tattoo.py). As supplied, thin teal lines on tan skin averaged
+## to a grey wash at any match distance; 2K26's -- and his -- is his most
+## recognisable marking (stage 8 review).
+const BODY_ALBEDO := {"Material": "body_ink"}
+## And a normal map for the body, which the supplied one does not have: the
+## abs, the line under the pecs and their mass, laid out from landmarks on
+## the atlas (tools/assets/build_roman_muscle.py). Without it the torso read
+## as one smooth surface against 2K26's hard six-pack (stage 8 review).
+const BODY_NORMAL := {"Material": "body_nrm"}
+
 ## Hair and beard cards, and the mask texture each should use.
 ##
 ## The export wired these meshes' *packed data* maps in as base colour.
@@ -206,7 +218,11 @@ const GROW_FIXES := {
 ## the entrance card next to a broadcast still): at 0.45 the forehead, nose
 ## and neck carried hot white spots and he read as moulded plastic; his real
 ## skin is mostly matte with a thin sweat sheen.
-const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.58}
+##
+## The body 0.58 -> 0.50 (stage 8 review): 2K26's torso carries an oiled
+## sheen that picks out the muscle (with the body's new normal map,
+## BODY_NORMAL). The face stays matte -- at 0.45 it read as plastic.
+const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.50}
 ## Skin materials whose surface comes from a map instead: roughness in R,
 ## metallic in G, at material roughness and metallic of 1.0. The head's map
 ## (build_roman_hair_alpha.py, paint_scalp_cap) is SKIN_ROUGHNESS and no
@@ -248,7 +264,9 @@ const HAIR_COLOR := Color(0.045, 0.042, 0.043)
 ## streaky highlight a matte card never has.
 ## 0.32 -> 0.42 (modelling plan, Roman's hair): at 0.32 the slicked crown
 ## read as one glossy helmet; his wet look is a narrow streak, not a gloss.
-const HAIR_ROUGHNESS := 0.42
+## 0.42 -> 0.38 (stage 8 review against 2K26: still a touch dry; well short
+## of 0.32's helmet).
+const HAIR_ROUGHNESS := 0.38
 ## The direction ACROSS the strands on his hair cards, in UV space
 ## (HairLook.apply). Checked on renders through tools/probe/hair_shot.tscn:
 ## along the tangent the shine breaks into fine streaks; turned 90 degrees it
@@ -263,7 +281,9 @@ const HAIR_FLOW := Vector2(1.0, 0.0)
 ## lever: rougher spreads the same energy into a grey sheen. Less reflectance
 ## keeps the streak narrow (the anisotropy and 0.42 roughness still shape it)
 ## and dims it to a wet glint over jet black, the 2K26 look.
-const HAIR_SPECULAR := 0.2
+## 0.2 -> 0.26 with it (stage 8 review): a little more wet glint, short of
+## the silver that 0.5 gave under the 2K26 rig.
+const HAIR_SPECULAR := 0.26
 ## The beard is darker brown than his hair is black: in the reference
 ## (gauntlet/refs/frames/roman_head_reference.jpg) it reads warm brown-black,
 ## and drawn in HAIR_COLOR under the cool key it rendered a flat blue-grey.
@@ -615,7 +635,8 @@ static func hair_lift(p: Vector3) -> float:
 const HAIR_WAVE_Y := Vector2(1.08, 1.86)
 const HAIR_WAVE_LENGTH := 0.052
 const HAIR_WAVE_HANG_Y := Vector2(1.60, 1.68)
-const HAIR_WAVE_GEO := 0.011
+## 0.011 -> 0.015 (stage 8 review): 2K26's lengths fall in visible waves.
+const HAIR_WAVE_GEO := 0.015
 ## How much of the final hair normal is the wave map (the detail albedo's
 ## alpha); the strand maps are authored at 1 / this of their slope, as is the
 ## wave map.
@@ -1083,6 +1104,15 @@ func _fix_materials() -> void:
 				if fix.has("texture"):
 					material.albedo_texture = _texture(fix["texture"])
 				material.albedo_color = fix["color"]
+			if key == RomanFaceShape.CONTOUR_MATERIAL:
+				# RomanFaceShape.paint_contour's shading, in linear terms.
+				material.vertex_color_use_as_albedo = true
+				material.vertex_color_is_srgb = false
+			if BODY_ALBEDO.has(key):
+				material.albedo_texture = _texture(BODY_ALBEDO[key])
+			if BODY_NORMAL.has(key):
+				material.normal_enabled = true
+				material.normal_texture = _texture(BODY_NORMAL[key])
 			if SKIN_ROUGHNESS.has(key):
 				material.albedo_color *= SKIN_TINT
 			mesh_instance.set_surface_override_material(surface, material)

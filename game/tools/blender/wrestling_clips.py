@@ -140,7 +140,9 @@ STANCE = dict(
 # lies, are unchanged -- only which way up he is changes. The roll swaps his
 # sides, so his right hand and foot are at NEGATIVE `right` here; `head` is
 # negative to lift his chin off the mat rather than grind his face into it.
-# Both legs out along the mat, near straight. Both feet were
+# Both legs out along the mat, the knees just off straight (fully straight,
+# the knee pole has nothing to bite on and the solver twisted a thigh half
+# round its own axis: test_body_deformation_gate). Both feet were
 # drawn in to fwd -0.50, both knees ~0.4 m off the mat, and on Cody's loose
 # trousers that read as a body bent into an arch (stage 8 review); one knee
 # up at 0.37 m still did, and so did both at 0.2 m.
@@ -149,15 +151,22 @@ SUPINE = dict(
     hand_r=(-0.40, 0.20, 0.10), hand_l=(0.39, 0.16, 0.10),
     elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
     fist_r=0.2, fist_l=0.2,
-    foot_r=(-0.16, -0.86, 0.10), foot_l=(0.15, -0.86, 0.10),
+    foot_r=(-0.16, -0.82, 0.10), foot_l=(0.15, -0.82, 0.10),
     knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0),
     # Heels on the mat, toes up, relaxed a little toward the end of the
     # bed. rig_pose plants a sole flat on the canvas for a knees-up pose,
     # which this was; with the legs out straight that turned both ankles 90
     # degrees and stood the boots up on their soles (stage 8 review), and
-    # left to follow the shins the toes went 6 cm into the mat.
+    # left to follow the shins the toes went 6 cm into the mat: the leg
+    # solve's shortest-arc aim leaves a leg lying out along the mat rolled
+    # half a turn, kneecap down. (Facing the knees to their poles instead,
+    # in rig_pose, was tried: it doubled the limb flips across the library.)
     free_feet=True, ankle_r=(80, 0, 0), ankle_l=(80, 0, 0),
 )
+# SUPINE as it was before the legs went out: knees up, soles planted. For a
+# man on his back only on the way through, about to get up.
+SUPINE_KNEES_UP = dict(SUPINE, foot_r=(-0.16, -0.52, 0.10), foot_l=(0.15, -0.48, 0.10),
+                       free_feet=False, ankle_r=None, ankle_l=None)
 
 
 # The ready stance a wrestler holds while he sizes the other man up -- what
@@ -1584,10 +1593,10 @@ CLIPS = {
     "Down_Supine": [
         (0,  S()),
         (13, S(spine=(-9, 0, 0), head=(-11, 0, -4),
-               foot_r=(-0.19, -0.85, 0.10), foot_l=(0.14, -0.86, 0.10),
+               foot_r=(-0.19, -0.81, 0.10), foot_l=(0.14, -0.82, 0.10),
                hand_r=(-0.41, 0.18, 0.10), hand_l=(0.38, 0.18, 0.10))),
         (26, S(spine=(-4, 0, 0), head=(-16, 0, 5),
-               foot_r=(-0.15, -0.87, 0.10), foot_l=(0.18, -0.87, 0.10))),
+               foot_r=(-0.15, -0.83, 0.10), foot_l=(0.18, -0.83, 0.10))),
         (40, S()),
     ],
 
@@ -3277,16 +3286,16 @@ CLIPS["Spear_Attacker"] = [
            foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
     # Explodes OFF the mat: both feet leave it, torso near flat, shoulder
     # leading. He used to run into the man with a foot down (stage 8 review).
-    (19, P(pelvis=(0.0, 0.22, 0.860), hips=(-58, 0, 0), spine=(-28, 0, 0),
+    (19, P(pelvis=(0.0, 0.22, 0.820), hips=(-58, 0, 0), spine=(-28, 0, 0),
            head=(30, 0, 0),
            hand_r=(0.30, 0.60, 0.86), hand_l=(-0.30, 0.60, 0.86),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.20, -0.58, 0.34), foot_l=(-0.18, -0.22, 0.24),
            knee_r=(0.2, 0.6, -0.6), knee_l=(-0.2, 0.8, -0.3), free_feet=True)),
     # Impact, airborne: shoulder in the midsection, arms wrapping the waist.
-    (21, P(pelvis=(0.0, 0.27, 0.920), hips=(-66, 0, 0), spine=(-24, 0, 0),
+    (21, P(pelvis=(0.0, 0.29, 0.860), hips=(-66, 0, 0), spine=(-24, 0, 0),
            head=(20, 0, 0),
-           hand_r=(0.26, 0.74, 0.98), hand_l=(-0.26, 0.74, 0.98),
+           hand_r=(0.26, 0.74, 0.94), hand_l=(-0.26, 0.74, 0.94),
            elbow_r=(0.7, 0.0, -0.4), elbow_l=(-0.7, 0.0, -0.4),
            fist_r=0.6, fist_l=0.6,
            foot_r=(0.20, -0.52, 0.40), foot_l=(-0.18, -0.36, 0.32),
@@ -5031,8 +5040,11 @@ CLIPS["DriveBy_Attacker"] = [
               fist_r=0.2, fist_l=0.2,
               foot_r=(0.14, 0.60, 0.80), foot_l=(-0.14, 0.60, 0.80),
               knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.3))),
-    (17, dict(SUPINE)),
-    (22, dict(SUPINE)),
+    # Down on his back with his knees up, about to spring up -- not SUPINE's
+    # legs-out knockdown (which also rolled his thighs into the hip helpers'
+    # antipode on the way up: test_body_deformation_gate).
+    (17, dict(SUPINE_KNEES_UP)),
+    (22, dict(SUPINE_KNEES_UP)),
     (26, dict(pelvis=(0.0, 0.0, 0.450), hips=(-30, 0, -20), spine=(-20, 0, 0),
               head=(-8, 0, 0),
               hand_r=(0.40, 0.20, 0.06), hand_l=(-0.24, 0.30, 0.40),

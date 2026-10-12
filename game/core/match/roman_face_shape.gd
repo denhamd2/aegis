@@ -33,12 +33,14 @@ extends RefCounted
 const MOVES := [
 	# The brow ridge: forward and down over each eye, and at the glabella --
 	# the heavy, low brow, hooding the eyes under it.
-	[Vector3(0.031, 1.738, 0.125), Vector3(0.032, 0.014, 0.035), Vector3(0.0, -0.0045, 0.0070), true],
-	[Vector3(0.0, 1.735, 0.140), Vector3(0.016, 0.012, 0.030), Vector3(0.0, -0.002, 0.0045), false],
+	# (Pushed a further ~40% in the stage 8 review: in the match the face
+	# still read round and open-eyed beside 2K26's.)
+	[Vector3(0.031, 1.738, 0.125), Vector3(0.032, 0.014, 0.035), Vector3(0.0, -0.0062, 0.0098), true],
+	[Vector3(0.0, 1.735, 0.140), Vector3(0.016, 0.012, 0.030), Vector3(0.0, -0.0028, 0.0062), false],
 	# High cheekbones, out and up a little...
 	[Vector3(0.056, 1.699, 0.095), Vector3(0.022, 0.015, 0.032), Vector3(0.0030, 0.0015, 0.0020), true],
 	# ...and the hollow under them.
-	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.020, 0.036), Vector3(-0.0070, 0.0, -0.0040), true],
+	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.020, 0.036), Vector3(-0.0090, 0.0, -0.0052), true],
 	# Less width at the side of the face and the jaw: long and lean, not round.
 	[Vector3(0.072, 1.675, 0.060), Vector3(0.032, 0.045, 0.065), Vector3(-0.0080, 0.0, 0.0), true],
 	[Vector3(0.062, 1.625, 0.060), Vector3(0.030, 0.035, 0.065), Vector3(-0.0060, 0.0, 0.0), true],
@@ -52,6 +54,39 @@ const MOVES := [
 	# The long jaw and chin, beard and all.
 	[Vector3(0.0, 1.600, 0.080), Vector3(0.090, 0.050, 0.120), Vector3(0.0, -0.0120, 0.0040), false],
 ]
+## Contour, painted as vertex colour on the face (CONTOUR_MATERIAL) the way a
+## game face texture carries it -- the shape alone did not read at match
+## distance (stage 8 review): darker eye sockets under the brow, the hollow
+## under the cheekbones, the sides of the nose, the temples. [centre, radii,
+## darkness 0-1, mirrored], in the same rest space as MOVES (centres before
+## the sculpt moves them -- the field is applied to the rest positions).
+const CONTOUR := [
+	[Vector3(0.033, 1.722, 0.118), Vector3(0.022, 0.014, 0.030), 0.24, true],
+	[Vector3(0.033, 1.733, 0.124), Vector3(0.024, 0.008, 0.030), 0.12, true],
+	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.022, 0.040), 0.16, true],
+	[Vector3(0.016, 1.690, 0.140), Vector3(0.008, 0.025, 0.030), 0.10, true],
+	[Vector3(0.068, 1.735, 0.070), Vector3(0.020, 0.030, 0.040), 0.08, true],
+]
+## The face material the contour is written onto, and RomanModel turns
+## vertex colour on for.
+const CONTOUR_MATERIAL := "Material.001"
+
+
+## How much darker the face is at rest-space `p`, 0-1.
+static func contour_at(p: Vector3) -> float:
+	var dark := 0.0
+	for spot: Array in CONTOUR:
+		var c: Vector3 = spot[0]
+		var r: Vector3 = spot[1]
+		for side in ([1.0, -1.0] if spot[3] else [1.0]):
+			var q := (p - Vector3(c.x * side, c.y, c.z)) / r
+			var k := 1.0 - q.length()
+			if k <= 0.0:
+				continue
+			dark += float(spot[2]) * k * k * (3.0 - 2.0 * k)
+	return clampf(dark, 0.0, 0.6)
+
+
 ## Meshes the field leaves alone (see above).
 const FIXED := ["M_EYE", "M_Head_Caruncle", "eye_l", "eye_caruncle"]
 ## Finite-difference step for the Jacobian, metres.
@@ -87,6 +122,10 @@ static func apply(root: Node) -> int:
 		var any := false
 		for s in source.get_surface_count():
 			var arrays := source.surface_get_arrays(s)
+			var material := source.surface_get_material(s)
+			if material and material.resource_name == CONTOUR_MATERIAL:
+				paint_contour(arrays)
+				any = true
 			var n := sculpt(arrays)
 			moved += n
 			any = any or n > 0
@@ -94,6 +133,17 @@ static func apply(root: Node) -> int:
 		if any:
 			mi.mesh = BodyBulk.rebuilt(source, surfaces)
 	return moved
+
+
+## The contour as vertex colour (white elsewhere), off the rest positions.
+static func paint_contour(arrays: Array) -> void:
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var colors := PackedColorArray()
+	colors.resize(verts.size())
+	for i in verts.size():
+		var v := 1.0 - contour_at(verts[i])
+		colors[i] = Color(v, v, v, 1.0)
+	arrays[Mesh.ARRAY_COLOR] = colors
 
 
 static func _fixed(mi: MeshInstance3D) -> bool:
