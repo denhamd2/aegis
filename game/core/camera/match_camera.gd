@@ -961,10 +961,11 @@ func _gameplay_bearing(delta: float) -> Vector3:
 		want = -want
 	var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
 	var distance := maxf(framing_distance(line.length()), GAMEPLAY_MIN_DISTANCE)
-	for turn in [0.45, -0.9]:
-		if not post_blocks_shot(mid, want, distance):
-			break
-		want = want.rotated(Vector3.UP, turn)
+	# The nearest bearing to side-on that no post spoils, either way round, out
+	# to about 50 degrees, and never across to the far side. Two tries (+0.45,
+	# then -0.45) were not enough once a post BESIDE the camera counted: with
+	# the pair off-centre both were often spoiled, and the camera parked on one.
+	want = clear_bearing(mid, want, distance, ringside_bearing)
 	var angle := _bearing.signed_angle_to(want, Vector3.UP)
 	var blocked := post_blocks_shot(mid, _bearing, distance)
 	if absf(angle) > GAMEPLAY_DEADZONE or blocked:
@@ -992,6 +993,21 @@ static func post_in_the_way(mid: Vector3, bearing: Vector3, distance: float) -> 
 		if t > 0.05 and (a + ab * t).distance_to(p) < POST_CLEAR:
 			return true
 	return false
+
+
+## The bearing nearest `side_on` (in POST_SEARCH steps) whose shot no post
+## spoils and which stays on the broadcast side of `broadcast`; `side_on`
+## itself if every one is spoiled.
+const POST_SEARCH := [0.0, 0.225, -0.225, 0.45, -0.45, 0.675, -0.675, 0.9, -0.9]
+static func clear_bearing(mid: Vector3, side_on: Vector3, distance: float,
+		broadcast: Vector3) -> Vector3:
+	for turn: float in POST_SEARCH:
+		var b := side_on.rotated(Vector3.UP, turn)
+		if b.dot(broadcast) <= 0.0:
+			continue
+		if not post_blocks_shot(mid, b, distance):
+			return b
+	return side_on
 
 
 ## Whether the gameplay camera's shot from `bearing` is spoiled by a post:
