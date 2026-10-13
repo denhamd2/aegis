@@ -153,15 +153,21 @@ SUPINE = dict(
     fist_r=0.2, fist_l=0.2,
     foot_r=(-0.16, -0.86, 0.10), foot_l=(0.15, -0.86, 0.10),
     knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0),
-    # Heels on the mat, toes up, relaxed a little toward the end of the
-    # bed. rig_pose plants a sole flat on the canvas for a knees-up pose,
-    # which this was; with the legs out straight that turned both ankles 90
-    # degrees and stood the boots up on their soles (stage 8 review), and
+    # Heels on the mat, toes up and falling out to the sides -- a relaxed
+    # foot, not one stood on end (80 degrees read as flippers). rig_pose
+    # plants a sole flat on the canvas for a knees-up pose, which this was;
+    # with the legs out straight that turned both ankles 90 degrees and
+    # stood the boots up on their soles (stage 8 review), and
     # left to follow the shins the toes went 6 cm into the mat: the leg
     # solve's shortest-arc aim leaves a leg lying out along the mat rolled
     # half a turn, kneecap down. (Facing the knees to their poles instead,
     # in rig_pose, was tried: it doubled the limb flips across the library.)
-    free_feet=True, ankle_r=(80, 0, 0), ankle_l=(80, 0, 0),
+    free_feet=True, ankle_r=(60, -15, 0), ankle_l=(60, 15, 0),
+    # Arms by his sides: no shrug. The clavicle follow aims from the
+    # STANDING rest, blind to a chest lying rolled over, and swung each
+    # collarbone across his chest -- the shoulders swapped sides and the arms
+    # crossed over him, elbows up (David: "the arms still look deformed").
+    clav_follow=False,
 )
 # SUPINE as it was before the legs went out: knees up, soles planted. For a
 # man on his back only on the way through, about to get up.

@@ -239,13 +239,16 @@ func _grab(name: String) -> void:
 ## A real knockdown: Cody one blow from going down, Roman's heavy kick.
 func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camera3D) -> void:
 	cody.visible = true
+	for n in roman.get_parent().find_children("*", "", true, false):
+		if n is RefereeActor:
+			(n as Node3D).visible = false
 	roman.global_position = Vector3(0.0, 0.0, 1.1)
 	cody.global_position = Vector3(0.0, 0.0, 0.0)
 	roman.look_at(Vector3(0.0, 0.0, -5.0), Vector3.UP)
 	cody.look_at(Vector3(0.0, 0.0, 5.0), Vector3.UP)
-	cam.fov = 46.0
-	cam.global_position = Vector3(3.6, 1.2, 0.2)
-	cam.look_at(Vector3(0.0, 0.7, -0.3), Vector3.UP)
+	cam.fov = 44.0
+	cam.global_position = Vector3(2.9, 1.25, 0.9)
+	cam.look_at(Vector3(0.0, 0.45, -0.1), Vector3.UP)
 	for t in 20:
 		await get_tree().physics_frame
 	cody.combat.wear = cody._damage_at_last_knockdown + WrestlerController.KNOCKDOWN_DAMAGE - 1.0
@@ -254,7 +257,7 @@ func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camer
 	roman._start_move(WrestlerFSM.State.STRIKE, move)
 	var t0 := -1
 	var k := 0
-	var at := [0, 8, 14, 20, 26, 34, 50, 90]
+	var at := [0, 10, 16, 22, 30, 60]
 	var tick := 0
 	while k < at.size() and tick < 400:
 		await get_tree().physics_frame
@@ -267,3 +270,5 @@ func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camer
 				print("   %s %s" % [b, cody._bone_world(b).snappedf(0.01)])
 			await _grab("fall_%d" % k)
 			k += 1
+	for b: String in ["foot_r", "foot_l", "ball_r", "hand_r", "hand_l", "lowerarm_r", "lowerarm_l", "upperarm_r", "upperarm_l"]:
+		print("BONE %s %s" % [b, cody._bone_world(b).snappedf(0.01)])
