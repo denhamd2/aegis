@@ -1,0 +1,318 @@
+class_name WeaponCatalog
+extends RefCounted
+## Every No Holds Barred weapon (gauntlet/refs/weapons_nhb.md), in wheel
+## order, and the MoveDef each kind of swing uses. The models are the
+## tools/blender/weapons/ builds in assets/weapons/; the belt is Roman's
+## title (assets/props/aew_title.glb), held by its Held* nodes.
+##
+## Damage is per hit before the swing's scale: a jab is 7 to the head, a big
+## boot about 12, so a chair shot at 10 sits with the heavy strikes and the
+## gun and the launcher are finishing blows.
+
+const DIR := "res://assets/weapons/"
+const BELT_GLB := "res://assets/props/aew_title.glb"
+
+## How each swing is timed and where it lands, relative to the swinger
+## (forward -Z), in the MoveDef fields every strike uses. The clip each plays
+## is `weapon_<swing>` in StrikeRecipes.
+## [startup, active, recovery, contact offset, contact radius, damage scale]
+const SWINGS := {
+	WeaponDef.Swing.OVERHEAD: [18, 4, 26, Vector3(0.0, 1.62, -0.85), 0.26, 1.0],
+	WeaponDef.Swing.SIDE: [16, 4, 24, Vector3(0.05, 1.45, -0.95), 0.26, 1.0],
+	WeaponDef.Swing.THRUST: [12, 4, 20, Vector3(0.0, 1.15, -1.0), 0.22, 0.8],
+	WeaponDef.Swing.WHIP: [14, 4, 22, Vector3(0.0, 1.45, -1.1), 0.30, 1.0],
+	WeaponDef.Swing.PUNCH: [12, 4, 24, Vector3(-0.079, 1.48, -0.72), 0.13, 1.0],
+	WeaponDef.Swing.CHOP: [12, 4, 22, Vector3(0.10, 1.55, -0.78), 0.22, 1.0],
+	WeaponDef.Swing.GUN: [30, 2, 40, Vector3(0.0, 1.35, -1.0), 0.20, 1.0],
+	WeaponDef.Swing.LAUNCHER: [50, 2, 60, Vector3(0.0, 1.40, -1.0), 0.20, 1.0],
+	WeaponDef.Swing.SPRAY: [20, 40, 20, Vector3(0.0, 1.55, -0.9), 0.35, 1.0],
+	WeaponDef.Swing.POUR: [30, 10, 30, Vector3(0.0, 0.0, -0.8), 0.40, 0.0],
+}
+const SWING_NAMES := {
+	WeaponDef.Swing.OVERHEAD: "overhead", WeaponDef.Swing.SIDE: "side",
+	WeaponDef.Swing.THRUST: "thrust", WeaponDef.Swing.WHIP: "whip",
+	WeaponDef.Swing.PUNCH: "punch", WeaponDef.Swing.CHOP: "chop",
+	WeaponDef.Swing.GUN: "gun", WeaponDef.Swing.LAUNCHER: "launcher",
+	WeaponDef.Swing.SPRAY: "spray", WeaponDef.Swing.POUR: "pour",
+}
+## Ranged: they hit whoever is in front of him out to this far, not at the
+## contact sphere (WrestlerController resolves them).
+const RANGED := {WeaponDef.Swing.GUN: 9.0, WeaponDef.Swing.LAUNCHER: 14.0, WeaponDef.Swing.SPRAY: 2.4}
+
+## id, name, family, glb, held, dented, broken, set_up, swing, head, torso,
+## hits to dent, hits to break, two-handed, set piece, landing damage, sound,
+## owners, effects
+const TABLE := [
+	["steel_chair", "Steel Chair", WeaponDef.Family.CHAIRS, "steel_chair", "SteelChair_Folded",
+		"SteelChair_Bent", "", "SteelChair_Open", WeaponDef.Swing.OVERHEAD, 10.0, 3.0, 4, 0, true, false, 0.0,
+		"hit_metal", ["roman", "kenny"], {}],
+	["barbed_wire_chair", "Barbed Wire Chair", WeaponDef.Family.CHAIRS, "barbed_wire_chair",
+		"BarbedWireChair_Folded", "", "", "BarbedWireChair_Open", WeaponDef.Swing.OVERHEAD, 13.0, 4.0, 0, 0,
+		true, false, 0.0, "hit_metal", [], {}],
+	["baseball_bat", "Baseball Bat", WeaponDef.Family.SWUNG, "baseball_bat", "BaseballBat_Clean", "", "", "",
+		WeaponDef.Swing.SIDE, 9.0, 3.0, 0, 0, true, false, 0.0, "hit_wood", [], {}],
+	["barbed_wire_bat", "Barbed Wire Bat", WeaponDef.Family.SWUNG, "barbed_wire_bat", "BarbedWireBat_Clean",
+		"", "", "", WeaponDef.Swing.SIDE, 12.0, 3.0, 0, 0, true, false, 0.0, "hit_wood", [], {}],
+	["kendo_stick", "Kendo Stick", WeaponDef.Family.SWUNG, "kendo_stick", "KendoStick_Clean", "",
+		"KendoStick_Broken", "", WeaponDef.Swing.SIDE, 8.0, 3.0, 0, 8, true, false, 0.0, "hit_wood", [], {}],
+	["sledgehammer", "Sledgehammer", WeaponDef.Family.SWUNG, "sledgehammer", "Sledgehammer_Clean", "", "", "",
+		WeaponDef.Swing.THRUST, 14.0, 4.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
+	["lead_pipe", "Lead Pipe", WeaponDef.Family.SWUNG, "lead_pipe", "LeadPipe_Clean", "", "", "",
+		WeaponDef.Swing.SIDE, 10.0, 3.0, 0, 0, false, false, 0.0, "hit_metal", [], {}],
+	["board_with_nails", "2x4 With Nails", WeaponDef.Family.SWUNG, "board_with_nails", "BoardWithNails_Clean",
+		"", "BoardWithNails_Broken", "", WeaponDef.Swing.SIDE, 12.0, 3.0, 0, 4, true, false, 0.0, "hit_wood", [], {}],
+	["shovel", "Shovel", WeaponDef.Family.SWUNG, "shovel", "Shovel_Clean", "", "", "", WeaponDef.Swing.SIDE,
+		10.0, 3.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
+	["hockey_stick", "Hockey Stick", WeaponDef.Family.SWUNG, "hockey_stick", "HockeyStick_Clean", "", "", "",
+		WeaponDef.Swing.SIDE, 8.0, 3.0, 0, 0, true, false, 0.0, "hit_wood", [], {}],
+	["crutch", "Crutch", WeaponDef.Family.SWUNG, "crutch", "Crutch_Clean", "", "", "", WeaponDef.Swing.SIDE,
+		8.0, 2.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
+	["stop_sign", "Stop Sign", WeaponDef.Family.SWUNG, "stop_sign", "StopSign_Clean", "StopSign_Dented", "",
+		"", WeaponDef.Swing.OVERHEAD, 9.0, 3.0, 3, 0, true, false, 0.0, "hit_metal", [], {}],
+	["guitar", "Guitar", WeaponDef.Family.SWUNG, "guitar", "Guitar_Clean", "", "Guitar_Broken", "",
+		WeaponDef.Swing.OVERHEAD, 13.0, 2.0, 0, 1, true, false, 0.0, "hit_wood", [], {}],
+	["inflatable_banana", "Inflatable Banana", WeaponDef.Family.SWUNG, "inflatable_banana",
+		"InflatableBanana_Clean", "", "InflatableBanana_Broken", "", WeaponDef.Swing.SIDE, 1.0, 0.5, 0, 3,
+		true, false, 0.0, "whoosh", [], {}],
+	["trash_can", "Trash Can", WeaponDef.Family.CARRIED, "trash_can", "TrashCan_Clean", "TrashCan_Dented", "",
+		"", WeaponDef.Swing.OVERHEAD, 9.0, 3.0, 3, 0, true, false, 0.0, "hit_metal", [], {}],
+	["steel_steps", "Steel Steps", WeaponDef.Family.CARRIED, "steel_steps", "SteelSteps_Top", "", "",
+		"SteelSteps_Clean", WeaponDef.Swing.OVERHEAD, 15.0, 6.0, 0, 0, true, false, 0.0, "hit_metal",
+		["roman"], {}],
+	["ring_bell", "Ring Bell", WeaponDef.Family.CARRIED, "ring_bell", "RingBell_Clean", "", "", "",
+		WeaponDef.Swing.CHOP, 9.0, 2.0, 0, 0, false, false, 0.0, "bell_ding", [], {}],
+	["championship_belt", "Championship Belt", WeaponDef.Family.CARRIED, "", "", "", "", "",
+		WeaponDef.Swing.OVERHEAD, 9.0, 2.0, 0, 0, true, false, 0.0, "hit_metal", ["roman"], {}],
+	["cookie_sheet", "Cookie Sheet", WeaponDef.Family.CARRIED, "cookie_sheet", "CookieSheet_Clean",
+		"CookieSheet_Dented", "", "", WeaponDef.Swing.OVERHEAD, 6.0, 1.0, 2, 0, false, false, 0.0, "hit_metal",
+		[], {}],
+	["frying_pan", "Frying Pan", WeaponDef.Family.CARRIED, "frying_pan", "FryingPan_Clean", "", "", "",
+		WeaponDef.Swing.CHOP, 9.0, 2.0, 0, 0, false, false, 0.0, "hit_metal", [], {}],
+	["briefcase", "Briefcase", WeaponDef.Family.CARRIED, "briefcase", "Briefcase_Clean", "", "", "",
+		WeaponDef.Swing.OVERHEAD, 8.0, 3.0, 0, 0, true, false, 0.0, "hit_kick", [], {}],
+	["table", "Table", WeaponDef.Family.SET_PIECES, "table", "Table_Folded", "", "Table_Broken", "Table_Up",
+		WeaponDef.Swing.OVERHEAD, 10.0, 4.0, 0, 0, true, true, 14.0, "hit_wood", ["roman", "kenny"], {}],
+	["ladder", "Ladder", WeaponDef.Family.SET_PIECES, "ladder", "Ladder_Closed", "", "", "Ladder_Open",
+		WeaponDef.Swing.THRUST, 11.0, 5.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
+	["thumbtacks", "Thumbtacks", WeaponDef.Family.SET_PIECES, "thumbtacks", "Thumbtacks_Bag", "", "",
+		"Thumbtacks_Scattered", WeaponDef.Swing.POUR, 0.0, 0.0, 0, 0, false, true, 12.0, "hit_kick", [], {}],
+	["bed_of_nails", "Bed of Nails", WeaponDef.Family.SET_PIECES, "bed_of_nails", "BedOfNails_Clean", "", "",
+		"BedOfNails_Clean", WeaponDef.Swing.POUR, 0.0, 0.0, 0, 0, true, true, 14.0, "hit_wood", [], {}],
+	["light_tubes", "Light Tubes", WeaponDef.Family.SET_PIECES, "light_tubes", "LightTubes_Clean", "",
+		"LightTubes_Broken", "", WeaponDef.Swing.SIDE, 11.0, 3.0, 0, 1, true, false, 0.0, "hit_glass", [], {}],
+	["barbed_wire_board", "Barbed Wire Board", WeaponDef.Family.SET_PIECES, "barbed_wire_board",
+		"BarbedWireBoard_Clean", "", "", "BarbedWireBoard_Clean", WeaponDef.Swing.OVERHEAD, 11.0, 5.0, 0, 0,
+		true, true, 14.0, "hit_wood", [], {}],
+	["fire_extinguisher", "Fire Extinguisher", WeaponDef.Family.SPRAYS, "fire_extinguisher",
+		"FireExtinguisher_Clean", "", "", "", WeaponDef.Swing.SPRAY, 2.0, 0.0, 0, 0, true, false, 0.0,
+		"whoosh", [], {"cloud": "FireExtinguisher_Cloud"}],
+	["handgun", "Handgun", WeaponDef.Family.SPRAYS, "handgun", "Handgun_Clean", "", "", "",
+		WeaponDef.Swing.GUN, 22.0, 8.0, 0, 0, false, false, 0.0, "pyro_bang", [],
+		{"flash": "Handgun_Flash"}],
+	["rpg", "Rocket Launcher", WeaponDef.Family.SPRAYS, "rpg", "Rpg_Clean", "", "", "",
+		WeaponDef.Swing.LAUNCHER, 30.0, 14.0, 0, 0, true, false, 0.0, "pyro_boom", [],
+		{"rocket": "Rpg_Rocket", "blast": "Rpg_Blast"}],
+	["chain", "Chain", WeaponDef.Family.WHIPS, "chain", "Chain_Clean", "", "", "", WeaponDef.Swing.WHIP, 9.0,
+		3.0, 0, 0, false, false, 0.0, "hit_metal", [], {}],
+	["weight_belt", "Weight Belt", WeaponDef.Family.WHIPS, "weight_belt", "WeightBelt_Clean", "", "", "",
+		WeaponDef.Swing.WHIP, 8.0, 3.0, 0, 0, false, false, 0.0, "hit_punch", ["cody"], {}],
+	["brass_knuckles", "Brass Knuckles", WeaponDef.Family.WHIPS, "brass_knuckles", "BrassKnuckles_Clean", "",
+		"", "", WeaponDef.Swing.PUNCH, 12.0, 2.0, 0, 0, false, false, 0.0, "hit_punch", [], {}],
+]
+
+## How each weapon is carried when he is not swinging it: which of its points
+## (a marker) sits where in his own frame (+X his right, +Y up, -Z ahead),
+## and which way it faces -- a direction in the weapon's own axes that
+## points along a direction in his. WeaponGrip puts the weapon there and his
+## hands onto it. Presets by how the weapon is built:
+##   SHOULDER  long things built along +Y from the grip (a bat): over the
+##             right shoulder, leaning back
+##   HANG      built hanging down from the grip (a folded chair, a chain, a
+##             can by its handles): in front, at the chest or at the side
+## [anchor marker, anchor at, local_up -> world_up, local_fwd -> world_fwd]
+const _SHOULDER := ["grip_r", Vector3(0.20, 1.12, -0.22),
+		Vector3(0, 1, 0), Vector3(-0.12, 0.72, 0.68), Vector3(0, 0, -1), Vector3(0.0, 0.68, -0.72)]
+const _HANG_FRONT := ["grip_r", Vector3(0.10, 1.25, -0.40),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)]
+const _HANG_SIDE := ["grip_r", Vector3(0.27, 0.98, -0.12),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)]
+const CARRY := {
+	"steel_chair": _HANG_FRONT, "barbed_wire_chair": _HANG_FRONT,
+	"baseball_bat": _SHOULDER, "barbed_wire_bat": _SHOULDER, "kendo_stick": _SHOULDER,
+	"sledgehammer": _SHOULDER, "lead_pipe": _SHOULDER, "board_with_nails": _SHOULDER,
+	"shovel": _SHOULDER, "hockey_stick": _SHOULDER, "crutch": _SHOULDER, "stop_sign": _SHOULDER,
+	"inflatable_banana": _SHOULDER, "light_tubes": _SHOULDER, "cookie_sheet": _SHOULDER,
+	# the guitar's grip is on the neck with the body below it (-Y)
+	"guitar": ["grip_r", Vector3(0.20, 1.12, -0.22),
+		Vector3(0, -1, 0), Vector3(-0.12, 0.72, 0.68), Vector3(0, 0, -1), Vector3(0.0, 0.68, -0.72)],
+	"trash_can": ["grip_r", Vector3(0.26, 1.12, -0.32),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
+	"steel_steps": ["grip_r", Vector3(0.40, 1.05, -0.30),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, 1)],
+	"ring_bell": ["grip_r", Vector3(0.20, 1.00, -0.32),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
+	"championship_belt": ["grip_r", Vector3(0.26, 1.02, -0.18),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
+	"frying_pan": ["grip_r", Vector3(0.24, 1.02, -0.24),
+		Vector3(0, 1, 0), Vector3(0.1, 0.85, -0.5), Vector3(0, 0, -1), Vector3(0.0, 0.5, 0.85)],
+	"briefcase": ["grip_r", Vector3(0.30, 0.86, -0.04),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(1, 0, 0)],
+	# folded flat: carried upright in front, the front edge up, top facing out
+	"table": ["grip_r", Vector3(0.30, 1.22, -0.38),
+		Vector3(0, 0, -1), Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1)],
+	# closed: under his arm, top end ahead
+	"ladder": ["grip_r", Vector3(0.30, 1.12, -0.05),
+		Vector3(0, 1, 0), Vector3(0, 0.15, -0.99), Vector3(0, 0, -1), Vector3(1, 0, 0)],
+	"thumbtacks": _HANG_SIDE,
+	"bed_of_nails": ["grip_r", Vector3(0.55, 1.10, -0.38),
+		Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1)],
+	"barbed_wire_board": ["grip_r", Vector3(0.40, 1.30, -0.42),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
+	"fire_extinguisher": _HANG_SIDE,
+	# low ready: the barrel ahead and down
+	"handgun": ["grip_r", Vector3(0.22, 1.05, -0.32),
+		Vector3(0, 1, 0), Vector3(0, 0.87, -0.5), Vector3(0, 0, -1), Vector3(0, -0.5, -0.87)],
+	# on the right shoulder, aimed ahead
+	"rpg": ["shoulder", Vector3(0.17, 1.47, 0.02),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0.03, -1)],
+	"chain": _HANG_SIDE, "weight_belt": _HANG_SIDE,
+	# on the fist: no carry, it goes where the hand goes
+	"brass_knuckles": [],
+}
+
+static var _defs: Array[WeaponDef] = []
+static var _moves := {}
+
+
+## All of them, in wheel order (families in Family order, then as listed).
+static func all() -> Array[WeaponDef]:
+	if _defs.is_empty():
+		for row: Array in TABLE:
+			_defs.append(_make(row))
+		_defs.sort_custom(func(a: WeaponDef, b: WeaponDef) -> bool:
+			return a.family < b.family if a.family != b.family else _table_order(a) < _table_order(b))
+	return _defs
+
+
+static func _table_order(d: WeaponDef) -> int:
+	for i in TABLE.size():
+		if StringName(TABLE[i][0]) == d.id:
+			return i
+	return 0
+
+
+static func by_id(id: StringName) -> WeaponDef:
+	for d in all():
+		if d.id == id:
+			return d
+	return null
+
+
+static func in_family(family: int) -> Array[WeaponDef]:
+	var out: Array[WeaponDef] = []
+	for d in all():
+		if d.family == family:
+			out.append(d)
+	return out
+
+
+static func _make(row: Array) -> WeaponDef:
+	var d := WeaponDef.new()
+	d.id = StringName(row[0])
+	d.display_name = row[1]
+	d.family = row[2]
+	d.glb = (DIR + String(row[3]) + ".glb") if String(row[3]) != "" else BELT_GLB
+	d.held = row[4]
+	d.dented = row[5]
+	d.broken = row[6]
+	d.set_up = row[7]
+	d.swing = row[8]
+	d.damage_head = row[9]
+	d.damage_torso = row[10]
+	d.hits_to_dent = row[11]
+	d.hits_to_break = row[12]
+	d.two_handed = row[13]
+	d.set_piece = row[14]
+	d.landing_damage = row[15]
+	d.sound = row[16]
+	for o: String in row[17]:
+		d.owners.append(StringName(o))
+	d.effects = row[18]
+	d.throwable = d.swing != WeaponDef.Swing.POUR or d.id == &"thumbtacks"
+	return d
+
+
+## The MoveDef a swing of `weapon` plays: the swing's timing and reach with
+## the weapon's damage. One per weapon, made once.
+static func swing_move(weapon: WeaponDef) -> MoveDef:
+	if _moves.has(weapon.id):
+		return _moves[weapon.id]
+	var s: Array = SWINGS[weapon.swing]
+	var m := MoveDef.new()
+	m.animation_pair_id = StringName("weapon_" + String(SWING_NAMES[weapon.swing]))
+	m.startup_frames = s[0]
+	m.active_frames = s[1]
+	m.recovery_frames = s[2]
+	m.reversal_window_start = maxi(0, int(s[0]) - 6)
+	m.reversal_window_end = int(s[0]) - 1
+	m.contact_offset = s[3]
+	m.contact_radius = s[4]
+	m.damage_head = weapon.damage_head * float(s[5])
+	m.damage_torso = weapon.damage_torso * float(s[5])
+	m.momentum_gain = 6.0 + weapon.damage_head * 0.5
+	m.leaves_defender_down = weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER] \
+			or weapon.damage_head >= 12.0
+	m.resource_name = "weapon_" + String(weapon.id)
+	_moves[weapon.id] = m
+	return m
+
+
+## The hit a thrown `weapon` lands: most of a swing's damage, no reach (the
+## flight decides where it lands), a knockdown for the heavy ones.
+static func throw_move(weapon: WeaponDef) -> MoveDef:
+	var key := StringName(String(weapon.id) + "_thrown")
+	if _moves.has(key):
+		return _moves[key]
+	var m := MoveDef.new()
+	m.startup_frames = 1
+	m.active_frames = 1
+	m.recovery_frames = 1
+	m.damage_head = weapon.damage_head * 0.7
+	m.damage_torso = weapon.damage_torso * 0.7
+	m.momentum_gain = 4.0 + weapon.damage_head * 0.4
+	m.leaves_defender_down = weapon.damage_head >= 13.0
+	m.resource_name = "weapon_thrown_" + String(weapon.id)
+	_moves[key] = m
+	return m
+
+
+## The weapon's carry transform for a man at `body` (his global transform),
+## given where the anchor marker sits in the weapon (`anchor_local`). Empty
+## spec (worn on the hand): Transform3D() and false.
+static func carry_transform(weapon: WeaponDef, body: Transform3D, anchor_local: Transform3D) -> Array:
+	var spec: Array = CARRY.get(String(weapon.id), [])
+	if spec.is_empty():
+		return [Transform3D(), false]
+	var local := _frame(spec[2], spec[4])
+	var world := _frame(spec[3], spec[5])
+	var basis := body.basis.orthonormalized() * world * local.inverse()
+	var anchor_world: Vector3 = body * (spec[1] as Vector3)
+	var origin := anchor_world - basis * anchor_local.origin
+	return [Transform3D(basis, origin), true]
+
+
+## An orthonormal frame from an up and a roughly-forward direction.
+static func _frame(up: Vector3, fwd: Vector3) -> Basis:
+	var y := up.normalized()
+	var z := -(fwd - y * fwd.dot(y)).normalized()
+	var x := y.cross(z).normalized()
+	return Basis(x, y, z)
+
+
+static func carry_anchor(weapon: WeaponDef) -> String:
+	var spec: Array = CARRY.get(String(weapon.id), [])
+	return spec[0] if not spec.is_empty() else "grip_r"
+
+
+static func is_ranged(weapon: WeaponDef) -> bool:
+	return RANGED.has(weapon.swing)

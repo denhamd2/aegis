@@ -37,6 +37,11 @@ enum State {
 	## scripted path with collision off; appended for the same reason TAUNT
 	## was.
 	ROPE_CROSS,
+	## Doing something with a weapon that is not a swing (No Holds Barred):
+	## pulling one out from under the ring, picking one up off the floor,
+	## throwing it, setting it up (WrestlerController.begin_weapon_action()).
+	## Appended for the same reason as TAUNT.
+	WEAPON_ACTION,
 }
 
 ## Adjacency list of legal transitions. Anything not listed here is illegal.
@@ -44,8 +49,8 @@ const LEGAL_TRANSITIONS := {
 	# GRAPPLE_HOLD from IDLE/LOCOMOTION/RUN: a paired running attack skips the
 	# tie-up -- the runner connects and both men go straight into the move
 	# (WrestlerController._begin_running_paired()).
-	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS],
-	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS],
+	State.IDLE: [State.LOCOMOTION, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION],
+	State.LOCOMOTION: [State.IDLE, State.RUN, State.STRIKE, State.TIE_UP, State.GRAPPLE_HOLD, State.HIT_REACT, State.STUNNED, State.PIN_ATTACKER, State.SUBMISSION_ATTACKER, State.VICTORY, State.TAUNT, State.ROPE_CROSS, State.WEAPON_ACTION],
 	State.RUN: [State.LOCOMOTION, State.RUNNING_ATTACK, State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.STRIKE: [State.IDLE, State.LOCOMOTION, State.HIT_REACT, State.STUNNED, State.VICTORY],
 	State.TIE_UP: [State.GRAPPLE_HOLD, State.IDLE, State.HIT_REACT, State.VICTORY],
@@ -65,6 +70,7 @@ const LEGAL_TRANSITIONS := {
 	State.VICTORY: [],
 	State.TAUNT: [State.IDLE, State.HIT_REACT, State.STUNNED, State.DOWN, State.VICTORY],
 	State.ROPE_CROSS: [State.IDLE, State.VICTORY],
+	State.WEAPON_ACTION: [State.IDLE, State.HIT_REACT, State.STUNNED, State.DOWN, State.VICTORY],
 }
 
 signal state_changed(previous: State, current: State)

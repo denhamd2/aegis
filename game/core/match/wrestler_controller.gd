@@ -484,6 +484,8 @@ const STATE_ANIMATIONS := {
 	# Out through the ropes; begin_rope_cross() swaps in "strikes/roll_in"
 	# for the way back. The same two clips DiveSpot plays, on its own path.
 	WrestlerFSM.State.ROPE_CROSS: "strikes/roll_out_ropes",
+	# Replaced per action by begin_weapon_action(); the kneel is the fallback.
+	WrestlerFSM.State.WEAPON_ACTION: "strikes/getup_rise",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -708,6 +710,7 @@ func _ready() -> void:
 		_build_foot_lock()
 		_build_rope_reach()
 		_build_mat_guard()
+		_build_weapon_grip()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -1629,6 +1632,7 @@ func _physics_process(delta: float) -> void:
 	_read_reversal(input)
 	_tick_stamina()
 	_tick_sell()
+	_tick_weapon()
 	_string_clock += 1
 
 	match fsm.current_state:
@@ -1637,8 +1641,12 @@ func _physics_process(delta: float) -> void:
 				begin_taunt()
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
+			elif _weapon_input(input):
+				pass
 			else:
 				_process_free_movement(delta, input)
+		WrestlerFSM.State.WEAPON_ACTION:
+			_tick_weapon_action(input)
 		WrestlerFSM.State.ROPE_CROSS:
 			_tick_rope_cross()
 		WrestlerFSM.State.TAUNT:
@@ -1886,7 +1894,15 @@ func _poll_live_input() -> Dictionary:
 		"run": Input.is_action_pressed("run"),
 		"submission_hold": Input.is_action_pressed("submission_hold"),
 		"reversal": Input.is_action_just_pressed("reversal"),
+		"weapon": Input.is_action_pressed("weapon"),
+		"throw": Input.is_action_just_pressed("throw"),
+		"weapon_pick": _take_wheel_pick(),
 	}
+
+func _take_wheel_pick() -> StringName:
+	var pick := _wheel_pick
+	_wheel_pick = &""
+	return pick
 
 func _process_free_movement(delta: float, input: Dictionary) -> void:
 	if fsm.current_state == WrestlerFSM.State.RUN and _irish_whip_return_ticks_remaining > 0:
@@ -1938,6 +1954,12 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	_wants_tie_up_this_tick = false
 	if fsm.current_state == WrestlerFSM.State.RUN:
 		_maybe_start_running_attack(input)
+	elif input.get("strike", false) and has_weapon():
+		var swing := WeaponCatalog.swing_move(held_weapon.def)
+		_play_strike_clip(swing)
+		_start_move(WrestlerFSM.State.STRIKE, swing)
+		held_weapon.fire(swing.startup_frames, self)
+		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * swing.total_frames())
 	elif input.get("strike", false) and strike_move:
 		var strike := _pick_string_strike()
 		_play_strike_clip(strike)
@@ -2277,6 +2299,8 @@ func _strike_reaches(move: MoveDef) -> bool:
 	# wrestlers itself, so no limb of theirs is being aimed at anything.
 	if move == null or move.contact_radius <= 0.0:
 		return _in_range(STRIKE_HIT_RANGE)
+	if _is_weapon_swing(move) and WeaponCatalog.is_ranged(held_weapon.def):
+		return _ranged_reaches()
 	var contact := global_transform * move.contact_offset
 	var axis_low := opponent.global_transform * Vector3(0.0, BODY_AXIS_LOW, 0.0)
 	var axis_high := opponent.global_transform * Vector3(0.0, BODY_AXIS_HIGH, 0.0)
@@ -2606,6 +2630,8 @@ func _process_active_move(input: Dictionary) -> void:
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
+	if _is_weapon_swing(move):
+		_weapon_landed()
 	if fsm.current_state == WrestlerFSM.State.STRIKE:
 		_count_string_hit()
 	move_landed.emit(self, opponent, move)
@@ -4511,3 +4537,259 @@ func set_presentation_rate(on: bool) -> void:
 		anim_tree.callback_mode_process = (
 				AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE if on
 				else AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS)
+
+
+# --- weapons (No Holds Barred; gauntlet/refs/weapons_nhb.md) -------------------
+#
+# A weapon is held, not a state: he walks, runs and strikes with it, and a
+# strike with one in hand swings it (WeaponCatalog.swing_move) through the
+# same STRIKE path every strike takes -- contact, reversals, selling. What is
+# not a swing is WEAPON_ACTION:
+#
+#   rummage   knelt at the apron, hand under the ring, the wheel open
+#             (WeaponWheel); the match runs on and he can be hit out of it
+#   retrieve  pulling the one he chose out from under the ring
+#   pickup    one off the floor
+#   throw     at the other man; it flies (WeaponActor) and can hit him
+#   set_up    a table up, a ladder open, tacks poured, in front of him
+#
+# Grapple with one in hand sets a set piece up, or drops anything else.
+# Knocked down, tied up or grabbed, he loses it.
+
+var held_weapon: WeaponActor = null
+var weapon_grip: WeaponGrip
+## The wheel's choice, handed in by WeaponWheel and read out on the next input
+## poll, so it reaches the match through the replay like any other input.
+var _wheel_pick: StringName = &""
+var _weapon_action := ""
+var _weapon_action_ticks := 0
+var _weapon_target: WeaponActor = null
+var _weapon_pick_id: StringName = &""
+
+## Where he can reach under the ring: this far out from the apron, and no
+## nearer a corner than this along the side.
+const RUMMAGE_REACH := 0.45
+const RUMMAGE_LANE := 2.4
+## Each action's length, and the tick on which it happens.
+const WEAPON_ACTION_TICKS := {"rummage": 0, "retrieve": 54, "pickup": 30, "throw": 26, "set_up": 44}
+const WEAPON_ACTION_AT := {"retrieve": 36, "pickup": 16, "throw": 12, "set_up": 30}
+const WEAPON_ACTION_CLIPS := {
+	"rummage": "strikes/weapon_rummage", "retrieve": "strikes/weapon_retrieve",
+	"pickup": "strikes/weapon_pickup", "throw": "strikes/weapon_throw", "set_up": "strikes/weapon_set_up",
+}
+const THROW_SPEED := 7.5
+## States he keeps it through. Anything else -- down, stunned, tied up, in a
+## hold -- and it falls from his hands.
+const KEEP_WEAPON_STATES: Array[WrestlerFSM.State] = [
+	WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN,
+	WrestlerFSM.State.STRIKE, WrestlerFSM.State.WEAPON_ACTION, WrestlerFSM.State.ROPE_CROSS,
+	WrestlerFSM.State.HIT_REACT, WrestlerFSM.State.TAUNT,
+]
+## A ranged weapon fires along his facing, this wide either side.
+const RANGED_CONE_DEG := {WeaponDef.Swing.GUN: 18.0, WeaponDef.Swing.LAUNCHER: 14.0, WeaponDef.Swing.SPRAY: 35.0}
+
+
+## WeaponGrip: last of his modifiers, so the weapon is placed after every
+## other pose has been taken.
+func _build_weapon_grip() -> void:
+	weapon_grip = WeaponGrip.new()
+	weapon_grip.name = "WeaponGrip"
+	for key: String in weapon_grip.bones.keys():
+		weapon_grip.bones[key] = _skeleton_bone_name(key)
+	weapon_grip.wrestler = self
+	skeleton.add_child(weapon_grip)
+
+
+func has_weapon() -> bool:
+	return held_weapon != null and is_instance_valid(held_weapon) \
+			and held_weapon.mode == WeaponActor.Mode.HELD
+
+
+## WeaponWheel's pick, for the next tick.
+func pick_from_wheel(id: StringName) -> void:
+	_wheel_pick = id
+
+
+func is_rummaging() -> bool:
+	return fsm.current_state == WrestlerFSM.State.WEAPON_ACTION and _weapon_action == "rummage"
+
+
+## Outside, by an apron side, empty-handed and free: he can reach under.
+func can_rummage() -> bool:
+	if not MatchRules.no_holds_barred(self) or not outside_ring or has_weapon():
+		return false
+	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		return false
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	var axis := GrappleRig._outside_side(p)
+	var lateral := absf(p.z) if axis.x != 0.0 else absf(p.x)
+	return p.dot(axis) <= DECK_KEEP_OUT + RUMMAGE_REACH and lateral <= RUMMAGE_LANE
+
+
+## The weapon buttons, before free movement: true if they took the tick.
+func _weapon_input(input: Dictionary) -> bool:
+	if not MatchRules.no_holds_barred(self):
+		return false
+	if has_weapon():
+		if input.get("throw", false) and held_weapon.def.throwable:
+			begin_weapon_action("throw")
+			return true
+		if input.get("grapple", false):
+			if held_weapon.def.set_up != "":
+				begin_weapon_action("set_up")
+			else:
+				drop_weapon()
+			return true
+		return false
+	if input.get("weapon", false):
+		if can_rummage():
+			begin_weapon_action("rummage")
+			return true
+		var loose := WeaponStock.of(self).loose_near(global_position)
+		if loose:
+			_weapon_target = loose
+			begin_weapon_action("pickup")
+			return true
+	return false
+
+
+func begin_weapon_action(action: String) -> void:
+	_weapon_action = action
+	_weapon_action_ticks = 0
+	velocity = Vector3.ZERO
+	if action == "rummage":
+		var axis := GrappleRig._outside_side(Vector3(global_position.x, 0.0, global_position.z))
+		look_at(global_position - axis, Vector3.UP)
+	elif action == "pickup" and _weapon_target:
+		var to := _weapon_target.global_position - global_position
+		to.y = 0.0
+		if to.length() > 0.05:
+			look_at(global_position + to, Vector3.UP)
+	_set_state_clip(WrestlerFSM.State.WEAPON_ACTION, WEAPON_ACTION_CLIPS[action])
+	fsm.transition_to(WrestlerFSM.State.WEAPON_ACTION)
+
+
+func _tick_weapon_action(input: Dictionary) -> void:
+	velocity = Vector3.ZERO
+	_weapon_action_ticks += 1
+	var stock := WeaponStock.of(self)
+	match _weapon_action:
+		"rummage":
+			var pick: StringName = input.get("weapon_pick", &"")
+			var def := WeaponCatalog.by_id(pick) if pick != &"" else null
+			if def and stock.in_stock(pick):
+				_weapon_pick_id = pick
+				fsm.transition_to(WrestlerFSM.State.IDLE)
+				begin_weapon_action("retrieve")
+			elif not input.get("weapon", false):
+				fsm.transition_to(WrestlerFSM.State.IDLE)
+			return
+		"retrieve":
+			if _weapon_action_ticks == WEAPON_ACTION_AT["retrieve"]:
+				var def := WeaponCatalog.by_id(_weapon_pick_id)
+				if def:
+					var a := stock.pull(def)
+					a.global_transform = WeaponActor.grip_frame(self) * a.marker("grip_r").affine_inverse()
+					take_weapon(a)
+		"pickup":
+			if _weapon_action_ticks == WEAPON_ACTION_AT["pickup"] and is_instance_valid(_weapon_target) \
+					and _weapon_target.mode == WeaponActor.Mode.FLOOR:
+				take_weapon(_weapon_target)
+		"throw":
+			if _weapon_action_ticks == WEAPON_ACTION_AT["throw"] and has_weapon():
+				_release_throw()
+		"set_up":
+			if _weapon_action_ticks == WEAPON_ACTION_AT["set_up"] and has_weapon():
+				var w := held_weapon
+				_let_go()
+				w.set_up_at(global_position - global_basis.z * 0.95, rotation.y)
+	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+func take_weapon(w: WeaponActor) -> void:
+	if has_weapon():
+		drop_weapon()
+	held_weapon = w
+	w.take(self)
+	if weapon_grip:
+		weapon_grip.weapon = w
+
+
+func _let_go() -> void:
+	if held_weapon and is_instance_valid(held_weapon):
+		held_weapon.release()
+	held_weapon = null
+	if weapon_grip:
+		weapon_grip.weapon = null
+
+
+func drop_weapon() -> void:
+	var w := held_weapon
+	_let_go()
+	if w and is_instance_valid(w) and w.mode != WeaponActor.Mode.BROKEN:
+		w.drop()
+
+
+## At the other man: flat to him at THROW_SPEED, arcing to his chest.
+func _release_throw() -> void:
+	var w := held_weapon
+	_let_go()
+	var start := w.global_position
+	var target := start - global_basis.z * 4.0
+	if opponent:
+		target = opponent.global_position + Vector3.UP * 1.2
+	var flat := Vector3(target.x - start.x, 0.0, target.z - start.z)
+	var dist := maxf(flat.length(), 0.5)
+	var t := clampf(dist / THROW_SPEED, 0.2, 1.1)
+	var vy := (target.y - start.y + 0.5 * WeaponActor.GRAVITY * t * t) / t
+	var launch := flat.normalized() * (dist / t) + Vector3.UP * vy
+	w.throw(launch, Vector3(9.0, 2.0, 0.0), self, [opponent] if opponent else [])
+	w.struck.connect(_on_thrown_weapon_hit, CONNECT_ONE_SHOT)
+
+
+func _on_thrown_weapon_hit(w: WeaponActor, who: Node3D) -> void:
+	var victim := who as WrestlerController
+	if victim == null or victim == self or victim.fsm.current_state in UNHITTABLE_STATES:
+		return
+	var move := WeaponCatalog.throw_move(w.def)
+	combat.apply_momentum(move)
+	move_landed.emit(self, victim, move)
+	victim._pending_hits.append(move)
+	w.hit(Engine.get_physics_frames())
+
+
+## Every tick: the carry pose, and losing it when he is put down or grabbed.
+func _tick_weapon() -> void:
+	if weapon_grip:
+		weapon_grip.advance(fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+				WrestlerFSM.State.RUN]))
+	if held_weapon and not is_instance_valid(held_weapon):
+		held_weapon = null
+	if has_weapon() and not fsm.current_state in KEEP_WEAPON_STATES:
+		drop_weapon()
+
+
+## A swing of the held weapon landed.
+func _weapon_landed() -> void:
+	if held_weapon.hit(Engine.get_physics_frames()):
+		_let_go()
+
+
+func _is_weapon_swing(move: MoveDef) -> bool:
+	return has_weapon() and move != null and move == WeaponCatalog.swing_move(held_weapon.def)
+
+
+## A gun, launcher or spray reaches whoever is in front of him out to its
+## range, rather than at a contact sphere.
+func _ranged_reaches() -> bool:
+	if opponent == null or not is_instance_valid(opponent) or opponent.is_crossing_ropes():
+		return false
+	var def := held_weapon.def
+	var to := opponent.global_position - global_position
+	to.y = 0.0
+	if to.length() > float(WeaponCatalog.RANGED[def.swing]):
+		return false
+	var fwd := -global_basis.z
+	fwd.y = 0.0
+	return rad_to_deg(fwd.normalized().angle_to(to.normalized())) <= float(RANGED_CONE_DEG[def.swing])
