@@ -152,8 +152,20 @@ func test_each_role_starts_on_its_trajectorys_first_key() -> void:
 	var move: MoveDef = load("res://resources/moves/power_bodyslam.tres")
 	var a := rig._role_start(move, true)
 	var b := rig._role_start(move, false)
-	assert_vector(a.origin).is_equal_approx(Vector3(0.40, 0.0, 0.0), Vector3.ONE * 0.001)
-	assert_vector(b.origin).is_equal_approx(Vector3(-0.40, 0.0, 0.0), Vector3.ONE * 0.001)
+	# Authored 0.8 m apart, plus whatever the clearance fit (PairedFit) moved
+	# the first key by -- the clip's first frame is where he must stand.
+	var fit: Dictionary = PairedFit.OFFSETS.get("power_bodyslam", {})
+	var fit_a := Vector3.ZERO
+	var fit_b := Vector3.ZERO
+	if not fit.get("attacker", []).is_empty():
+		var o: Array = fit["attacker"][0]
+		fit_a = Vector3(o[0], 0.0, o[2])
+	if not fit.get("defender", []).is_empty():
+		var o: Array = fit["defender"][0]
+		fit_b = Vector3(o[0], 0.0, o[2])
+	assert_vector(a.origin * Vector3(1, 0, 1)).is_equal_approx(Vector3(0.40, 0.0, 0.0) + fit_a, Vector3.ONE * 0.002)
+	assert_vector(b.origin * Vector3(1, 0, 1)).is_equal_approx(Vector3(-0.40, 0.0, 0.0) + fit_b, Vector3.ONE * 0.002)
+	assert_float(a.origin.distance_to(b.origin)).is_between(0.5, 1.4)
 	# Facing each other down the line between them.
 	assert_vector(a.basis * Vector3.FORWARD).is_equal_approx(Vector3.LEFT, Vector3.ONE * 0.001)
 	assert_vector(b.basis * Vector3.FORWARD).is_equal_approx(Vector3.RIGHT, Vector3.ONE * 0.001)

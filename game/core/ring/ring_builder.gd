@@ -463,6 +463,34 @@ func _ready() -> void:
 	_assert_frozen_dimensions()
 	_build_canvas()
 	_build_model()
+	if MatchRules.no_holds_barred(self):
+		_build_outside_collision()
+
+
+## No Holds Barred takes the fight to the floor: a floor to stand on at
+## ringside-mat height, and the ring's base as a solid block out to the apron
+## so nobody walks in under it. Only in that mode -- the singles match keeps
+## the arena exactly as every ringside walk and dive was measured against.
+func _build_outside_collision() -> void:
+	var floor_top := ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
+	var side := ArenaBuilder.BARRICADE_RADIUS * 2.0 + 1.0
+	_add_box("ArenaFloorCollision", Vector3(side, 0.2, side), Vector3(0.0, floor_top - 0.1, 0.0))
+	var deck_height := -0.1 - floor_top
+	_add_box("RingDeckCollision", Vector3(APRON_OUT * 2.0, deck_height, APRON_OUT * 2.0),
+			Vector3(0.0, floor_top + deck_height * 0.5, 0.0))
+
+
+func _add_box(node_name: String, size: Vector3, centre: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = node_name
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	body.position = _ring.to_local(centre)
+	# The Ring is still setting up its children while this runs.
+	_ring.add_child.call_deferred(body)
 
 
 ## The measurement chain in camera.md / test_camera_framing.gd / grapple_rig.gd

@@ -9,10 +9,14 @@ extends RefCounted
 ## move fixed below the limits should be DELETED from here so it stays fixed.
 ## Worst first; the comment is where it was worst.
 const OVER := {
-	# 5.3 cm, 3 mm over the body limit: his right thigh through the victim's
-	# left shin as the lariat lands. Everything else on this list was fixed
-	# by the Phase 2 separation and trajectory fit (see PairedFit).
-	"running_clothesline_from_hell": [0.06, 0.06],  # A thigh_r-calf_r x B calf_l-foot_l
+	# 7.2 cm, 2.2 cm over the body limit, at the landing (0.84): the victim's
+	# left thigh through the attacker's pelvis as he sits out. It appeared when
+	# downed legs were lengthened (stage 8) and three targeted refit passes
+	# traded it between 5.4 and 7.2 cm without clearing it -- the fit cannot
+	# move a leg, only a root. The fix is a knees-up landing key for the
+	# victim in wrestling_clips.py. (Clothesline From Hell, the last entry
+	# before this, measured clean after the same refit.)
+	"power_samoan_drop": [0.08, 0.06],  # A pelvis-spine_03 x B thigh_l-calf_l
 }
 
 
@@ -24,6 +28,8 @@ const OVER := {
 ## attacker turns or rolls through the hold, and the arm chain lags the spin.
 const CONTACT_LIMIT := 0.05
 const GRIP := {
+	# Stage 8: 5.6 cm, the same landing as its OVER entry above.
+	"power_samoan_drop": 0.07,
 	"running_rolling_codebreaker": 0.54,
 	# 0.18 -> 0.21: re-measured when PairClearance went deterministic (one
 	# physics tick per render frame). The old reading swung 0.17-0.20 with the

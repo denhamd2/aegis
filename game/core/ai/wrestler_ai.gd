@@ -501,6 +501,11 @@ func _poll_input() -> Dictionary:
 		"run": false,
 	}
 	input["reversal"] = _roll_reversal()
+	# No Holds Barred: he went through the ropes, so go after him.
+	if controller.outside_ring != target.outside_ring and not target.is_crossing_ropes() \
+			and controller.can_cross_ropes():
+		input["move"] = _follow_through_ropes()
+		return input
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once
 	# this wrestler is within its cover range and idle/moving.
@@ -777,6 +782,56 @@ func _poll_input() -> Dictionary:
 ## avoid -- and the gate it was serving was the wrong gate.
 ## CombatSystem.can_signature() asks the meter now, and that reason is gone
 ## with it.
+## Where along the ropes he follows the other man through: inside
+## WrestlerController.ROPE_CROSS_LANE, clear of the turnbuckles.
+const FOLLOW_LANE := 1.6
+
+
+## The walk to the ropes on the side the other man is on, then into them
+## until WrestlerController takes him through (ROPE_PUSH_TICKS). Outside and
+## on a different side of the ring, round the corner first -- straight
+## across would be through the ring deck.
+func _follow_through_ropes() -> Vector2:
+	var me := controller.global_position
+	var him := target.global_position
+	var axis := Vector3(signf(him.x), 0.0, 0.0) if absf(him.x) >= absf(him.z) \
+			else Vector3(0.0, 0.0, signf(him.z))
+	if axis == Vector3.ZERO:
+		axis = Vector3.RIGHT
+	var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
+	var lane := clampf(him.dot(lat), -FOLLOW_LANE, FOLLOW_LANE)
+	var goal: Vector3
+	if controller.outside_ring:
+		goal = axis * (WrestlerController.DECK_KEEP_OUT + 0.05) + lat * lane
+		var mine := Vector3(signf(me.x), 0.0, 0.0) if absf(me.x) >= absf(me.z) \
+				else Vector3(0.0, 0.0, signf(me.z))
+		if mine.dot(axis) < 0.5:
+			# Round the corner on his side nearest me -- and from the far
+			# side, round the corner on mine first.
+			var round_by := WrestlerController.DECK_KEEP_OUT + 0.6
+			var side := signf(me.dot(lat))
+			if side == 0.0:
+				side = 1.0
+			goal = (axis + lat * side) * round_by
+			var behind := (-axis + lat * side) * round_by
+			if mine.dot(axis) < -0.5 and Vector2(me.x - behind.x, me.z - behind.z).length() > 0.5:
+				goal = behind
+			elif Vector2(me.x - goal.x, me.z - goal.z).length() < 0.5:
+				goal = axis * (WrestlerController.DECK_KEEP_OUT + 0.05) + lat * lane
+	else:
+		goal = axis * (WrestlerController.RING_KEEP_IN - 0.1) + lat * lane
+	var to_goal := goal - me
+	to_goal.y = 0.0
+	var at_ropes := goal.is_equal_approx(axis * (WrestlerController.DECK_KEEP_OUT + 0.05) + lat * lane) \
+			if controller.outside_ring else true
+	if to_goal.length() < 0.15 and at_ropes:
+		# There: lean into the ropes (in) or the apron (out).
+		var push := -axis if controller.outside_ring else axis
+		return Vector2(push.x, push.z)
+	var dir := to_goal.normalized()
+	return Vector2(dir.x, dir.z)
+
+
 func _wants_tie_up() -> bool:
 	if not _opening_grapple_done():
 		return true

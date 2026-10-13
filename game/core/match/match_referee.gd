@@ -311,7 +311,9 @@ func _check_for_downed_opponent_action() -> void:
 			# Not countable where he lies (head under the bottom rope, out on
 			# the apron): the man covering him drags him toward the middle
 			# first, and the cover starts once it is legal.
-			if not cover_is_legal(attacker.global_position, defender.global_transform):
+			# No Holds Barred: falls count anywhere, the floor included.
+			if not MatchRules.no_holds_barred(self) \
+					and not cover_is_legal(attacker.global_position, defender.global_transform):
 				_drag_toward_centre(defender)
 				return
 			# Every finish is a cover. The submission branch that used to
@@ -423,9 +425,10 @@ func _start_own_hold(attacker: WrestlerController, defender: WrestlerController)
 
 
 ## The rope side `defender` can get to under `attacker`, or ZERO -- never
-## under a finisher.
+## under a finisher, nor in No Holds Barred.
 func _reachable_ropes(attacker: WrestlerController, defender: WrestlerController) -> Vector3:
-	if attacker.last_landed_tier >= CombatSystem.Tier.FINISHER:
+	# No Holds Barred has no rope breaks.
+	if attacker.last_landed_tier >= CombatSystem.Tier.FINISHER or MatchRules.no_holds_barred(self):
 		return Vector3.ZERO
 	return WrestlerController.rope_within_reach(defender)
 

@@ -55,6 +55,9 @@ var _pair_transform: Transform3D = Transform3D()
 ## Half-width of the mat (scenes/ring.tscn's floor is 6m square), minus room
 ## for a body. Clamps where a paired move is allowed to play out.
 const RING_HALF_EXTENT := 2.0
+## Outside (No Holds Barred): how far a move's midpoint stays from the
+## barricade and the ring deck -- room for the bodies either side of it.
+const OUTSIDE_MARGIN := 1.0
 
 ## The mannequin's hip height at scale 1.0, which every paired trajectory was
 ## authored against (tools/probe landmarks: pelvis 0.90 m at scale 0.98).
@@ -262,11 +265,25 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	# Y comes from the anchor, not the pair: a clip's vertical keys are
 	# authored against mat level, and either wrestler may be mid-drift.
 	midpoint.y = anchor.global_position.y if anchor else 0.0
-	# Keep the move inside the ring. A suspended body ignores collision for
-	# the whole clip, so a throw started against the ropes would otherwise
-	# sweep straight through them.
-	midpoint.x = clampf(midpoint.x, -RING_HALF_EXTENT, RING_HALF_EXTENT)
-	midpoint.z = clampf(midpoint.z, -RING_HALF_EXTENT, RING_HALF_EXTENT)
+	if attacker is WrestlerController and (attacker as WrestlerController).outside_ring:
+		# No Holds Barred, on the floor: the same clip, a ring's height lower,
+		# kept off the ring deck and inside the barricade instead.
+		midpoint.y = WrestlerController.FLOOR_LEVEL
+		var limit := ArenaBuilder.BARRICADE_RADIUS - OUTSIDE_MARGIN
+		midpoint.x = clampf(midpoint.x, -limit, limit)
+		midpoint.z = clampf(midpoint.z, -limit, limit)
+		var clear := WrestlerController.DECK_KEEP_OUT + OUTSIDE_MARGIN - WrestlerController.BODY_RADIUS
+		if absf(midpoint.x) < clear and absf(midpoint.z) < clear:
+			if absf(midpoint.x) >= absf(midpoint.z):
+				midpoint.x = signf(midpoint.x) * clear if midpoint.x != 0.0 else clear
+			else:
+				midpoint.z = signf(midpoint.z) * clear if midpoint.z != 0.0 else clear
+	else:
+		# Keep the move inside the ring. A suspended body ignores collision for
+		# the whole clip, so a throw started against the ropes would otherwise
+		# sweep straight through them.
+		midpoint.x = clampf(midpoint.x, -RING_HALF_EXTENT, RING_HALF_EXTENT)
+		midpoint.z = clampf(midpoint.z, -RING_HALF_EXTENT, RING_HALF_EXTENT)
 
 	var facing := defender.global_position - attacker.global_position
 	facing.y = 0.0
