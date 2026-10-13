@@ -294,6 +294,22 @@ def build() -> None:
 		k = load(kenney("impact", f"impactSoft_heavy_00{i}"))
 		save(f"count_slap_{i}", peak_to(fade(trim_tail(k, -40)), -2))
 
+	# Weapons: Kenney's metal, wood and glass hits, each over a body punch --
+	# a chair shot is the clang and the man under it.
+	body = [load(kenney("impact", f"impactPunch_heavy_00{i}")) for i in range(3)]
+	for fam, src in (("hit_metal", "impactMetal_heavy"), ("hit_wood", "impactWood_heavy"),
+			("hit_glass", "impactGlass_heavy")):
+		for i in range(3):
+			k = load(kenney("impact", f"{src}_00{i}"))
+			save(f"{fam}_{i}", peak_to(fade(trim_tail(layer([(0.0, k, 1.0), (0.004, body[i], 0.55)]), -42)), -2))
+	# A table going: the boards cracking, a plank after, and the man on the mat.
+	for i in range(2):
+		crack = load(kenney("impact", f"impactWood_heavy_00{3 + i}"))
+		plank = load(kenney("impact", f"impactPlank_medium_00{i}"))
+		thud = cut(mat, onset(mat, (0.0, 5.66)[i]), 1.2)
+		save(f"table_crack_{i}", peak_to(fade(trim_tail(layer([(0.0, crack, 1.0), (0.05, plank, 0.8),
+				(0.02, thud, 0.9)]), -40), 0.002, 0.15), -1))
+
 	print("pyro")
 	save("pyro_boom", peak_to(fade(trim_tail(load(freesound("251759"), 2), -50), 0.001, 0.4), -1))
 	save("pyro_bang", peak_to(fade(trim_tail(load(freesound("336011"), 2), -50), 0.001, 0.2), -1))

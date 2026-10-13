@@ -147,3 +147,11 @@ func test_every_swing_path_leaves_and_returns_to_the_carry_and_lands_in_front() 
 		assert_float(tip.y).override_failure_message("%s lands at %.2f" % [d.id, tip.y]).is_between(0.9, 1.9)
 		checked += 1
 	assert_int(checked).is_greater(25)
+
+
+func test_every_weapon_has_a_sound_and_its_moves_name_it() -> void:
+	for def: WeaponDef in WeaponCatalog.all():
+		var heard := SfxPool.family_size(def.sound) > 0 or SfxPool.stream(def.sound) != null
+		assert_bool(heard).override_failure_message("%s: no sound '%s'" % [def.id, def.sound]).is_true()
+		assert_object(WeaponCatalog.of_move(WeaponCatalog.swing_move(def))).is_same(WeaponCatalog.by_id(def.id))
+	assert_int(SfxPool.family_size("table_crack")).is_greater(0)

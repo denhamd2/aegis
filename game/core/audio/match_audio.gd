@@ -91,6 +91,7 @@ func _ready() -> void:
 	sfx = SfxPool.new()
 	sfx.name = "Sfx"
 	add_child(sfx)
+	add_to_group(WeaponActor.LISTENERS)
 	_bed = sfx.make_loop("crowd_bed")
 	_walla_a = sfx.make_loop("crowd_walla_a")
 	_walla_b = sfx.make_loop("crowd_walla_b")
@@ -118,6 +119,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction) -> voi
 		w.reversed.connect(func(_r, _s, _m): sfx.play("whoosh", -6.0))
 		w.taunted.connect(func(who): _heat(who, 0.5); sfx.play_any("crowd_pop", -9.0))
 		w.fired_up.connect(func(who): _heat(who, 0.7); sfx.play_any("crowd_pop", -6.0))
+		w.set_piece_landed.connect(_on_set_piece_landed)
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)
@@ -157,6 +159,12 @@ func _on_cue(what: String) -> void:
 static func hit_sound(move: MoveDef) -> String:
 	if move == null:
 		return ""
+	var weapon := WeaponCatalog.of_move(move)
+	if weapon:
+		# a gun, a launcher or a spray is heard as it goes off (on_weapon_event)
+		if weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER, WeaponDef.Swing.SPRAY]:
+			return ""
+		return weapon.sound
 	var file := move.resource_path.get_file().get_basename()
 	if file.contains("kick") or file.contains("stomp") or file.contains("knee"):
 		return "hit_kick"
@@ -229,11 +237,40 @@ func _heat(who: Variant, amount: float) -> void:
 func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 	_heat(attacker, 0.12 + 0.5 * CrowdReaction.move_pop(move))
 	var sound := hit_sound(move)
-	if sound != "":
-		sfx.play_any(sound, hit_volume(move))
+	if sound != "" and not sfx.play_any(sound, hit_volume(move)):
+		sfx.play(sound, hit_volume(move))      # a one-off: the bell, the whoosh
 	var pop := CrowdReaction.move_pop(move)
 	if pop >= POP_MOVE:
 		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
+
+
+## A weapon going off or breaking (WeaponActor.LISTENERS).
+func on_weapon_event(weapon: WeaponActor, event: String) -> void:
+	match event:
+		"flash":
+			sfx.play("pyro_bang", 0.0)
+			sfx.play_any("crowd_ooh", -4.0)
+		"cloud":
+			sfx.play("whoosh", -2.0, 0.7)
+		"rocket":
+			sfx.play("whoosh", 0.0, 0.8)
+			sfx.play("pyro_bang", -6.0, 0.7)
+		"blast":
+			sfx.play("pyro_boom", 0.0)
+			sfx.play_any("crowd_ooh", -2.0)
+		"broke":
+			if weapon.def.id == &"table":
+				sfx.play_any("table_crack", 0.0)
+			elif not sfx.play_any(weapon.def.sound, -1.0):
+				sfx.play(weapon.def.sound, -1.0)
+
+
+## Through a table: the crowd. (The crack itself is the table's "broke".)
+func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: bool) -> void:
+	var by := who.opponent
+	_heat(by, 0.8 if broke else 0.4)
+	sfx.play_any("crowd_pop", -1.0 if broke else -5.0)
+	sfx.play_any("crowd_ooh", -2.0 if broke else -4.0)
 
 
 func _on_match_won(winner: Variant, method: String) -> void:

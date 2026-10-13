@@ -58,11 +58,14 @@ func test_the_table_breaks_the_same_way_every_time() -> void:
 		w.global_position = Vector3(1.0, 0.0, 1.0)
 		await _ticks(2)
 		var table := _set_up(w, &"table", w.global_position)
+		# the launch, as it breaks: where the pieces go after that is
+		# visual, and steered round his limbs as they settle
+		var v := []
+		table.broke.connect(func(t: WeaponActor):
+			for piece: Array in t._pieces:
+				v.append((piece[1] as Vector3).snappedf(0.001)))
 		w._go_down()
 		await _ticks(WrestlerController.LAND_WAIT + 2)
-		var v := []
-		for piece: Array in table._pieces:
-			v.append((piece[1] as Vector3).snappedf(0.001))
 		spreads.append(v)
 		after_test()
 	assert_bool(spreads[0].size() > 0).is_true()

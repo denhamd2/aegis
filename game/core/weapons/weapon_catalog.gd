@@ -267,6 +267,7 @@ static func swing_move(weapon: WeaponDef) -> MoveDef:
 	m.leaves_defender_down = weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER] \
 			or weapon.damage_head >= 12.0
 	m.resource_name = "weapon_" + String(weapon.id)
+	m.set_meta(&"weapon", weapon.id)
 	_moves[weapon.id] = m
 	return m
 
@@ -286,8 +287,17 @@ static func throw_move(weapon: WeaponDef) -> MoveDef:
 	m.momentum_gain = 4.0 + weapon.damage_head * 0.4
 	m.leaves_defender_down = weapon.damage_head >= 13.0
 	m.resource_name = "weapon_thrown_" + String(weapon.id)
+	m.set_meta(&"weapon", weapon.id)
 	_moves[key] = m
 	return m
+
+
+## The weapon a move was made from (swing_move, throw_move, landing_move),
+## or null for a move that is not a weapon's.
+static func of_move(move: MoveDef) -> WeaponDef:
+	if move == null or not move.has_meta(&"weapon"):
+		return null
+	return by_id(move.get_meta(&"weapon"))
 
 
 ## A chair lying on the floor is not a set piece, but landing on one hurts.
@@ -308,6 +318,7 @@ static func landing_move(weapon: WeaponDef) -> MoveDef:
 	m.damage_head = total * 0.2
 	m.damage_torso = total * 0.8
 	m.resource_name = "weapon_landed_on_" + String(weapon.id)
+	m.set_meta(&"weapon", weapon.id)
 	_moves[key] = m
 	return m
 

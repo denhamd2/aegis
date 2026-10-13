@@ -4876,7 +4876,7 @@ func _tick_landing() -> void:
 	if w.mode == WeaponActor.Mode.FLOOR:
 		w.hit(_weapon_seed())
 	elif w.def.broken != "":
-		w.shatter(_weapon_seed())
+		w.shatter(_weapon_seed(), self)
 		_move_ticks_remaining += TABLE_DOWN_TICKS
 		broke = true
 	elif w.def.id == &"thumbtacks":

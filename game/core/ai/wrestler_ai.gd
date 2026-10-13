@@ -225,6 +225,8 @@ func _physics_process(_delta: float) -> void:
 		_signature_retry -= 1
 	if _stall_cooldown > 0:
 		_stall_cooldown -= 1
+	if _weapon_roll > 0:
+		_weapon_roll -= 1
 	_circle_tick += 1
 	# A charge only survives while the man is actually free to run. If he is
 	# struck out of it, poll_input() returns early for the whole of HIT_REACT
@@ -487,6 +489,8 @@ func _poll_input() -> Dictionary:
 		# the holder picks holds, the man in them may reverse.
 		return _chain_input()
 	_chain_plan = -1
+	if controller.is_rummaging():
+		return _rummage_input()
 	if not controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
 		return {}
 
@@ -501,6 +505,10 @@ func _poll_input() -> Dictionary:
 		"run": false,
 	}
 	input["reversal"] = _roll_reversal()
+	# No Holds Barred: out for a weapon, or using the one in his hands.
+	var armed := _weapon_input(input, to_target, distance)
+	if not armed.is_empty():
+		return armed
 	# No Holds Barred: he went through the ropes, so go after him.
 	if controller.outside_ring != target.outside_ring and not target.is_crossing_ropes() \
 			and controller.can_cross_ropes():
@@ -793,8 +801,13 @@ const FOLLOW_LANE := 1.6
 ## on a different side of the ring, round the corner first -- straight
 ## across would be through the ring deck.
 func _follow_through_ropes() -> Vector2:
+	return _through_ropes_toward(target.global_position)
+
+
+## The walk to the ropes on the side of `him` (a point), then into them --
+## out to the floor, or back in.
+func _through_ropes_toward(him: Vector3) -> Vector2:
 	var me := controller.global_position
-	var him := target.global_position
 	var axis := Vector3(signf(him.x), 0.0, 0.0) if absf(him.x) >= absf(him.z) \
 			else Vector3(0.0, 0.0, signf(him.z))
 	if axis == Vector3.ZERO:
@@ -1065,3 +1078,268 @@ func _circle_direction() -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = _match_seed * 6151 + int(_circle_tick / maxi(circle_bout_ticks, 1))
 	return 1.0 if rng.randi() % 2 == 0 else -1.0
+
+
+# --- No Holds Barred: weapons ------------------------------------------------
+#
+# Now and then -- the heel twice as often -- he goes and gets one: out through
+# the ropes, along to the apron, under it, and out with the weapon he favours
+# (WeaponDef.owners: Roman the chair, the steps, the table; Cody the weight
+# belt). Then he uses it until it breaks, he has had his swings, or it is
+# knocked out of his hands. A table or a bed of tacks he sets up beside the
+# man and then works to stand him in front of it, so the next knockdown puts
+# him through it. A few runs a match: it is still a wrestling match.
+enum WeaponPlan { NONE, FETCH, USE }
+## How often the roll comes round, and its chance.
+const WEAPON_ROLL_TICKS := 600
+const WEAPON_CHANCE_HEEL := 0.5
+const WEAPON_CHANCE := 0.25
+## The roll comes round faster with the other man down: that is when you go.
+const WEAPON_ROLL_DOWN_SCALE := 2.0
+const WEAPON_RUNS := 3
+## A man's own weapons are this much likelier to come out.
+const SIGNATURE_WEIGHT := 4.0
+## Swings before he drops it, and how long a fetch may take before he gives up.
+const WEAPON_SWINGS := 4
+const FETCH_GIVE_UP_TICKS := 1500
+const USE_GIVE_UP_TICKS := 1800
+## A throwable thrown from this far, this often.
+const THROW_FROM := Vector2(2.0, 4.0)
+const THROW_CHANCE := 0.3
+## A weapon swing waits this many times the strike cooldown.
+const WEAPON_COOLDOWN_SCALE := 2.0
+## Lining him up in front of a set piece: stand this far past him, from it.
+const LINE_UP_PAST := 1.0
+const LINE_UP_NEAR := 4.0
+var _weapon_plan := WeaponPlan.NONE
+var _weapon_roll := WEAPON_ROLL_TICKS
+var _weapon_runs := 0
+var _weapon_ticks := 0
+var _weapon_swings := 0
+var _weapon_pick: StringName = &""
+var _throw_rolled := false
+## Weapon runs started and weapon swings thrown this match (probes, tests).
+var weapon_runs_started := 0
+var weapon_swings_thrown := 0
+
+
+func _weapon_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 92821 + _player_index * 613 + _circle_tick
+	return rng
+
+
+func _is_heel() -> bool:
+	return Persona.of(controller.display_name) == Persona.Kind.HEEL
+
+
+func _owns(def: WeaponDef) -> bool:
+	var me := controller.display_name.to_lower()
+	for o: StringName in def.owners:
+		if me.contains(String(o)):
+			return true
+	return false
+
+
+## His pick from under the ring: every weapon in stock, his own weighted up.
+## Not the set pieces he has no use for (a ladder, the steps' set-up) --
+## everything in the catalogue can be swung, so all are fair.
+func choose_weapon(rng: RandomNumberGenerator) -> StringName:
+	var stock := WeaponStock.of(controller)
+	var ids: Array[StringName] = []
+	var weights: Array[float] = []
+	var total := 0.0
+	for def: WeaponDef in WeaponCatalog.all():
+		if not stock.in_stock(def.id):
+			continue
+		var w := SIGNATURE_WEIGHT if _owns(def) else 1.0
+		ids.append(def.id)
+		weights.append(w)
+		total += w
+	if ids.is_empty():
+		return &""
+	var r := rng.randf() * total
+	for i in ids.size():
+		r -= weights[i]
+		if r <= 0.0:
+			return ids[i]
+	return ids[ids.size() - 1]
+
+
+## Under the ring: hold the button, then hand the wheel his pick.
+func _rummage_input() -> Dictionary:
+	if _weapon_pick == &"":
+		_weapon_pick = choose_weapon(_weapon_rng())
+	return {"weapon": true, "weapon_pick": _weapon_pick}
+
+
+## The weapon plan's input this tick, or {} to fall through to the match.
+func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
+	if not MatchRules.no_holds_barred(controller):
+		return {}
+	if controller.has_weapon() and _weapon_plan != WeaponPlan.USE:
+		_start_use()
+	match _weapon_plan:
+		WeaponPlan.NONE:
+			if _wants_weapon():
+				_weapon_plan = WeaponPlan.FETCH
+				_weapon_ticks = 0
+				_weapon_pick = &""
+				_weapon_runs += 1
+				weapon_runs_started += 1
+			else:
+				return _line_up_input(input, to_target, distance)
+		WeaponPlan.USE:
+			if not controller.has_weapon():
+				_weapon_plan = WeaponPlan.NONE
+				return {}
+			return _use_input(input, to_target, distance)
+	# FETCH
+	_weapon_ticks += 1
+	if _weapon_ticks > FETCH_GIVE_UP_TICKS:
+		_weapon_plan = WeaponPlan.NONE
+		return {}
+	if WeaponStock.of(controller).loose_near(controller.global_position):
+		input["weapon"] = true          # one lying at his feet will do
+		return input
+	if not controller.outside_ring:
+		if controller.is_crossing_ropes() or not controller.can_cross_ropes():
+			return input
+		input["move"] = _through_ropes_toward(_nearest_apron_out())
+		input["rope_cross"] = true
+		return input
+	if controller.can_rummage():
+		_weapon_pick = &""
+		input["weapon"] = true
+		return input
+	var to := _apron_spot() - controller.global_position
+	to.y = 0.0
+	var dir := to.normalized() if to.length() > 0.05 else Vector3.ZERO
+	input["move"] = Vector2(dir.x, dir.z)
+	return input
+
+
+func _wants_weapon() -> bool:
+	if _weapon_runs >= WEAPON_RUNS or _weapon_roll > 0 or not _opening_grapple_done():
+		return false
+	if controller.combat.can_finisher() and _opponent_is_ripe():
+		return false                    # he has the finish in hand: no detours
+	var down := target.fsm.current_state == WrestlerFSM.State.DOWN
+	_weapon_roll = int(WEAPON_ROLL_TICKS / (WEAPON_ROLL_DOWN_SCALE if down else 1.0))
+	return _weapon_rng().randf() < (WEAPON_CHANCE_HEEL if _is_heel() else WEAPON_CHANCE)
+
+
+## Outside the ropes on the side of the ring nearest him.
+func _nearest_apron_out() -> Vector3:
+	var p := controller.global_position
+	var axis := Vector3(signf(p.x), 0.0, 0.0) if absf(p.x) >= absf(p.z) else Vector3(0.0, 0.0, signf(p.z))
+	if axis == Vector3.ZERO:
+		axis = Vector3.RIGHT
+	return p + axis * 3.0
+
+
+## Where he kneels to reach under: at the apron on his side, inside the lane.
+func _apron_spot() -> Vector3:
+	var p := Vector3(controller.global_position.x, 0.0, controller.global_position.z)
+	var axis := GrappleRig._outside_side(p)
+	var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
+	var lane := clampf(p.dot(lat), -WrestlerController.RUMMAGE_LANE + 0.4, WrestlerController.RUMMAGE_LANE - 0.4)
+	return axis * (WrestlerController.DECK_KEEP_OUT + WrestlerController.RUMMAGE_REACH * 0.5) + lat * lane
+
+
+func _start_use() -> void:
+	_weapon_plan = WeaponPlan.USE
+	_weapon_ticks = 0
+	_weapon_swings = 0
+	_throw_rolled = false
+
+
+func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
+	_weapon_ticks += 1
+	var def := controller.held_weapon.def
+	var dir := to_target.normalized() if distance > 0.001 else Vector3.ZERO
+	# done with it: had his swings, taken too long, or the finish is there
+	if _weapon_swings >= WEAPON_SWINGS or _weapon_ticks > USE_GIVE_UP_TICKS or _wants_signature_tie_up():
+		_weapon_plan = WeaponPlan.NONE
+		input["grapple"] = true          # grapple with it in hand drops it
+		return input
+	# not the time: he went back through the ropes, or he is on the mat
+	if controller.outside_ring != target.outside_ring:
+		return {}
+	if target.fsm.current_state == WrestlerFSM.State.DOWN:
+		if def.set_up != "" and def.set_piece:
+			# a table, the tacks: set it down beside him
+			var spot := target.global_position + _flat(controller.global_position - target.global_position) * 1.6
+			var to_spot := _flat(spot - controller.global_position)
+			if to_spot.length() > 0.25:
+				input["move"] = Vector2(to_spot.normalized().x, to_spot.normalized().z)
+				return input
+			input["grapple"] = true
+			_weapon_plan = WeaponPlan.NONE
+			return input
+		return {}
+	if target.fsm.current_state in WrestlerController.UNHITTABLE_STATES:
+		return {}
+	var ranged := def.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER, WeaponDef.Swing.SPRAY]
+	var swing := WeaponCatalog.swing_move(def)
+	var reach: float = float(WeaponCatalog.RANGED[def.swing]) * 0.85 if ranged \
+			else Vector2(swing.contact_offset.x, swing.contact_offset.z).length() + swing.contact_radius * 0.5
+	# a throw, once an approach, from the right distance
+	if def.throwable and not ranged and not _throw_rolled and distance >= THROW_FROM.x and distance <= THROW_FROM.y:
+		_throw_rolled = true
+		if _weapon_rng().randf() < THROW_CHANCE:
+			input["throw"] = true
+			weapon_swings_thrown += 1
+			return input
+	if distance > reach:
+		input["move"] = Vector2(dir.x, dir.z)
+		return input
+	if _cooldown <= 0:
+		input["move"] = Vector2(dir.x, dir.z) * 0.05      # square to him
+		input["strike"] = true
+		_weapon_swings += 1
+		weapon_swings_thrown += 1
+		_cooldown = int(strike_cooldown_ticks * WEAPON_COOLDOWN_SCALE)
+		return input
+	if distance < min_standoff and not ranged:
+		input["move"] = Vector2(-dir.x, -dir.z)
+	elif ranged and distance < 1.6:
+		input["move"] = Vector2(-dir.x, -dir.z)       # room to aim
+	return input
+
+
+## A set piece standing near him: work round so the other man is between him
+## and it, then fall through to the match -- the next knockdown puts him on
+## it. {} when there is none, or nothing to line up.
+func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
+	if target.fsm.current_state != WrestlerFSM.State.IDLE and target.fsm.current_state != WrestlerFSM.State.LOCOMOTION:
+		return {}
+	if controller.outside_ring != target.outside_ring or distance > tie_up_range * 2.0:
+		return {}
+	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock
+	if stock == null:
+		return {}
+	var piece: WeaponActor = null
+	for a in stock.set_up_pieces():
+		if a.def.set_piece and _flat(a.global_position - target.global_position).length() < LINE_UP_NEAR:
+			piece = a
+			break
+	if piece == null:
+		return {}
+	var away := _flat(target.global_position - piece.global_position)
+	if away.length() < 0.05:
+		return {}
+	var spot := target.global_position + away.normalized() * LINE_UP_PAST
+	var to_spot := _flat(spot - controller.global_position)
+	if to_spot.length() < 0.35:
+		return {}                        # lined up: strike away
+	# round him, not through him: sidestep while closing on the spot
+	var dir := to_spot.normalized()
+	if to_target.length() > 0.001 and dir.dot(to_target.normalized()) > 0.5:
+		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.8).normalized()
+	input["move"] = Vector2(dir.x, dir.z)
+	return input
+
+
+static func _flat(v: Vector3) -> Vector3:
+	return Vector3(v.x, 0.0, v.z)

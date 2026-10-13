@@ -262,11 +262,12 @@ const CAMERA_POST_CLEAR := 1.25
 ## Short cuts to the action, each back to the coverage it cut from. None
 ## lands within MIN_SHOT of the last cut (D1: no shot under 0.8 s), and none
 ## pre-empts a finisher or a pin, which have their own shots.
-enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY }
+enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE }
 const MIN_SHOT := 0.8
 ## A strike worth a cut: the cross, the uppercut, the elbow, the kicks.
 const BIG_STRIKE_DAMAGE := 9.0
-const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6}
+const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6,
+		Cut.WEAPON: 0.9, Cut.TABLE: 1.4}
 ## Trauma (0..1, squared into the shake) per kind of impact.
 ## An ordinary strike no longer shakes the camera (_on_move_landed); kept for
 ## anything that still asks for a light shake.
@@ -274,6 +275,10 @@ const TRAUMA_STRIKE := 0.3
 const TRAUMA_BIG_STRIKE := 0.45
 const TRAUMA_SLAM := 0.55
 const TRAUMA_KNOCKDOWN := 0.3
+## No Holds Barred: a gunshot, a man through a table, the rocket's blast.
+const TRAUMA_SHOT := 0.25
+const TRAUMA_TABLE := 0.7
+const TRAUMA_BLAST := 0.95
 ## Where the crowd cutaway looks: the ringside rows on +X, where the sign
 ## fans sit (SignFans.FANS), from the floor at the far apron.
 const CUTAWAY_AT := Vector3(4.3, 1.3, -0.6)
@@ -389,6 +394,8 @@ func _ready() -> void:
 		wc.taunted.connect(func(who): _try_cut(Cut.HERO, who, null))
 		wc.fired_up.connect(func(who): _try_cut(Cut.FIRE_UP, who, null))
 		wc.knocked_down.connect(func(_who): add_trauma(TRAUMA_KNOCKDOWN))
+		wc.set_piece_landed.connect(_on_set_piece_landed)
+	add_to_group(WeaponActor.LISTENERS)
 
 func _physics_process(delta: float) -> void:
 	if mode == Mode.ENTRANCE:
@@ -1127,6 +1134,29 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 		add_trauma(TRAUMA_BIG_STRIKE)
 	if big and String(move.resource_path).get_file().begins_with("strike"):
 		_try_cut(Cut.STRIKE, defender, attacker)
+	elif big and WeaponCatalog.of_move(move) != null:
+		_try_cut(Cut.WEAPON, defender, attacker)
+
+
+## Through a table: the shake as he goes through, and the landing shot.
+func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: bool) -> void:
+	add_trauma(TRAUMA_TABLE if broke else TRAUMA_SLAM)
+	if broke:
+		_try_cut(Cut.TABLE, who, who.opponent)
+
+
+## A weapon going off (WeaponActor.LISTENERS): the gun cuts to the man shot,
+## the blast shakes everything.
+func on_weapon_event(weapon: WeaponActor, event: String) -> void:
+	match event:
+		"flash":
+			add_trauma(TRAUMA_SHOT)
+			var by := weapon._fire_by
+			var shot: Node3D = by.get("opponent") if by else null
+			if shot:
+				_try_cut(Cut.WEAPON, shot, by)
+		"blast":
+			add_trauma(TRAUMA_BLAST)
 
 
 ## Cuts to `kind` if the shot grammar allows it now.
@@ -1219,6 +1249,18 @@ func _event_shot(delta: float) -> bool:
 			at = CUTAWAY_AT
 			look = CUTAWAY_LOOK
 			lens = CUTAWAY_FOV
+		Cut.WEAPON:
+			# A weapon shot: three-quarter on the man taking it, wider than a
+			# strike's so the weapon is in the frame with the two of them.
+			at = mid + side * 2.9 + line * 1.0 + Vector3.UP * 1.15
+			look = s + Vector3.UP * 1.2
+			lens = 46.0
+			focus = true
+		Cut.TABLE:
+			# Through the table: down at the wreck, low and wide, square to him.
+			at = s + side * 3.2 - line * 0.6 + Vector3.UP * 0.6
+			look = s + Vector3.UP * 0.35
+			lens = 54.0
 		_:
 			return false
 	fov = lens

@@ -22,6 +22,7 @@ anyway.
 | `pyro_bang` | [Sharp Explosion 4](https://freesound.org/people/Rudmer_Rotteveel/sounds/336011/) | Rudmer_Rotteveel | CC0 |
 | `whoosh` | [quick woosh](https://freesound.org/people/florianreichelt/sounds/683101/) | florianreichelt | CC0 |
 | `hit_kick_*`, `count_slap_*` | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
+| `hit_metal_*`, `hit_wood_*`, `hit_glass_*` (over Kenney's heavy punches), `table_crack_*` (with the ring-bump recording above) | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
 | `ui_*` | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney | CC0 |
 
 The entrance music in `music/` is the full soundtrack of the owner-supplied

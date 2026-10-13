@@ -199,8 +199,12 @@ func _shoot_table(roman: WrestlerController, cody: WrestlerController, cam: Came
 	for t in 40:
 		await get_tree().physics_frame
 	await _grab("table_2")
-
-
+	for t in 140:
+		await get_tree().physics_frame
+	# settled, from above and the other side
+	cam.global_position = Vector3(-2.6, 2.6, -3.4)
+	cam.look_at(Vector3(0.0, 0.2, -1.3), Vector3.UP)
+	await _grab("table_3")
 func _grab(name: String) -> void:
 	get_tree().paused = true
 	await RenderingServer.frame_post_draw

@@ -40,6 +40,13 @@ const HIT_RADIUS := 0.55
 const PIECES_LINGER := 6.0
 ## A broken piece whose origin is this near the floor is the legs.
 const LEGS_BELOW := 0.25
+## A broken piece is kept this far (flat) from any of the bones of the man it
+## broke under, below this height over the bone -- the body as a few fat
+## capsules, enough that the steel and the boards land round his limbs.
+const BODY_CLEAR := 0.3
+const BODY_OVER := 0.35
+const BODY_BONES := ["pelvis", "spine_03", "Head", "thigh_l", "thigh_r", "calf_l", "calf_r", "foot_l",
+		"foot_r", "upperarm_l", "upperarm_r", "lowerarm_l", "lowerarm_r", "hand_l", "hand_r"]
 ## Metals in the hall: it carries no reflections (EntranceProps on the
 ## title), so a pure conductor reads near-black between the lights. Capped
 ## here with a trace of its own colour as emission, as the title does.
@@ -59,6 +66,8 @@ var _thrower: Node3D = null
 var _targets: Array = []
 ## Broken pieces: [node, velocity, spin, resting].
 var _pieces: Array = []
+## The man it broke under: its pieces land round him, not through him.
+var _clear_of: Node3D = null
 var _broken_for := 0.0
 var _model: Node3D
 var _roots := {}
@@ -289,6 +298,11 @@ var _effect_to := Vector3.ZERO
 var _effect_velocity := Vector3.ZERO
 
 const EFFECT_LIFE := {"flash": 0.07, "cloud": 0.9, "rocket": 0.0, "blast": 1.3}
+## Who hears about a weapon going off or breaking (MatchAudio, MatchCamera):
+## on_weapon_event(weapon, event) with event "flash", "cloud", "rocket",
+## "blast" or "broke". A group, not a signal: weapons are made mid-match,
+## long after the listeners were set up.
+const LISTENERS := &"weapon_listeners"
 const ROCKET_SPEED := 32.0
 
 
@@ -351,11 +365,18 @@ func _spawn_effect(host: Node, kind: String, at: Transform3D) -> WeaponActor:
 	e.mode = Mode.EFFECT
 	e._effect = kind
 	e._effect_life = float(EFFECT_LIFE[kind])
+	e._fire_by = _fire_by
 	host.add_child(e)
 	e.global_transform = Transform3D(at.basis.orthonormalized(), at.origin)
 	if kind == "cloud":
 		e.scale = Vector3.ONE * 0.2
+	e._announce(kind)
 	return e
+
+
+func _announce(event: String) -> void:
+	if is_inside_tree():
+		get_tree().call_group(LISTENERS, &"on_weapon_event", self, event)
 
 
 func _tick_effect(delta: float) -> void:
@@ -463,12 +484,14 @@ func _worn_root() -> String:
 
 ## Broken: the Broken state's pieces fly from where they are, on a spread
 ## seeded from `seed` (the match tick), so a replay breaks it the same way.
-func shatter(seed: int) -> void:
+func shatter(seed: int, body: Node3D = null) -> void:
+	_clear_of = body
 	if not has_state(def.broken):
 		mode = Mode.BROKEN
 		_broken_for = PIECES_LINGER
 		visible = false
 		broke.emit(self)
+		_announce("broke")
 		return
 	var keep := global_transform
 	show_state(def.broken)
@@ -510,6 +533,7 @@ func shatter(seed: int) -> void:
 			spin = Vector3(rng.randf_range(-9, 9), rng.randf_range(-6, 6), rng.randf_range(-9, 9))
 		_pieces.append([n, v, spin, false])
 	broke.emit(self)
+	_announce("broke")
 
 
 func _tick_pieces(delta: float) -> void:
@@ -525,12 +549,25 @@ func _tick_pieces(delta: float) -> void:
 		var v: Vector3 = piece[1]
 		v.y -= GRAVITY * delta
 		var p := n.global_position + v * delta
+		var push := _clear_of_body(n, p)
+		if push != Vector3.ZERO:
+			p += push
+			# what drove it into him is spent; it slides off him instead
+			var into := -push.normalized()
+			if v.dot(into) > 0.0:
+				v -= into * v.dot(into)
 		var ground := ground_under(p) + 0.01
 		if p.y <= ground:
 			p.y = ground
 			if v.length() < 1.0:
 				piece[3] = true
 				_lie_on_flattest_side(n, ground)
+				# turned flat it may have swung into him: off him again
+				for i in 8:
+					var off := _clear_of_body(n, n.global_position)
+					if off.length() < 0.005:
+						break
+					n.global_position += off
 			v = Vector3(v.x * 0.4, -v.y * 0.2, v.z * 0.4)
 		else:
 			var s: Vector3 = piece[2]
@@ -541,27 +578,79 @@ func _tick_pieces(delta: float) -> void:
 		piece[1] = v
 
 
-## A piece come to rest: turned by quarter turns to whichever way up sits it
-## lowest -- a panel flat, the legs' frame on its side -- with its underside
-## on the floor, nearest the way it landed.
+## A piece come to rest: turned by quarter turns to whichever way up puts its
+## weight lowest -- a panel flat, the legs' frame on its side with its brace
+## up, not propped on it -- with its underside on the floor, nearest the way
+## it landed.
 static func _lie_on_flattest_side(n: Node3D, ground: float) -> void:
 	var mi := n as MeshInstance3D
 	if mi == null or mi.mesh == null:
 		return
-	var box := mi.mesh.get_aabb()
+	var verts := PackedVector3Array()
+	for surface in mi.mesh.get_surface_count():
+		var all: PackedVector3Array = mi.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]
+		var step := maxi(1, all.size() / 300)
+		for i in range(0, all.size(), step):
+			verts.append(all[i])
+	if verts.is_empty():
+		return
 	var yaw := Basis(Vector3.UP, n.global_rotation.y)
 	var landed := n.global_basis
 	var best := Basis()
-	var best_h := INF
+	var best_score := INF
+	var best_low := 0.0
 	for ix in 4:
 		for iz in 4:
 			var b := yaw * Basis(Vector3.RIGHT, ix * PI / 2.0) * Basis(Vector3.BACK, iz * PI / 2.0)
-			var h := (Transform3D(b, Vector3.ZERO) * box).size.y
-			# within a centimetre, the one nearest how it landed
-			h += 0.0001 * (b.x.distance_to(landed.x) + b.y.distance_to(landed.y))
-			if h < best_h - 0.01 or (absf(h - best_h) <= 0.01 and h < best_h):
-				best_h = h
+			var low := INF
+			var sum := 0.0
+			for v in verts:
+				var y := (b * v).y
+				low = minf(low, y)
+				sum += y
+			# its weight's height over the floor; within a centimetre, the
+			# one nearest how it landed
+			var score := sum / verts.size() - low
+			score += 0.001 * (b.x.distance_to(landed.x) + b.y.distance_to(landed.y))
+			if score < best_score:
+				best_score = score
 				best = b
+				best_low = low
 	var at := n.global_position
-	var low := (Transform3D(best, Vector3.ZERO) * box).position.y
-	n.global_transform = Transform3D(best, Vector3(at.x, ground - low, at.z))
+	n.global_transform = Transform3D(best, Vector3(at.x, ground - best_low, at.z))
+
+
+## How far to move a piece at `p` (its origin) to clear the man it broke
+## under: its footprint (the centre and the four corners of its box, flat)
+## pushed out from each of his bones it is over.
+func _clear_of_body(n: Node3D, p: Vector3) -> Vector3:
+	if _clear_of == null or not is_instance_valid(_clear_of) or not _clear_of.has_method("_bone_world"):
+		return Vector3.ZERO
+	var samples: Array[Vector3] = [p]
+	var mi := n as MeshInstance3D
+	if mi and mi.mesh:
+		var box := Transform3D(n.global_basis, p) * mi.mesh.get_aabb()
+		var c := box.get_center()
+		var lo := box.position.y
+		samples = [Vector3(c.x, lo, c.z)]
+		for corner: Vector2 in [Vector2(0, 0), Vector2(1, 0), Vector2(0, 1), Vector2(1, 1)]:
+			samples.append(Vector3(box.position.x + box.size.x * corner.x, lo,
+					box.position.z + box.size.z * corner.y))
+	var push := Vector3.ZERO
+	for bone: String in BODY_BONES:
+		var b: Vector3 = _clear_of._bone_world(bone)
+		if b == Vector3.INF:
+			continue
+		for at in samples:
+			if at.y > b.y + BODY_OVER:
+				continue
+			var d := Vector3(at.x - b.x, 0.0, at.z - b.z) + push
+			var gap := d.length()
+			if gap >= BODY_CLEAR:
+				continue
+			# out the way the piece as a whole lies from him, so the corners
+			# do not push it two ways at once
+			var whole := Vector3(samples[0].x - b.x, 0.0, samples[0].z - b.z)
+			var out := whole.normalized() if whole.length() > 0.001 else (d / gap if gap > 0.001 else Vector3(1, 0, 0))
+			push += out * (BODY_CLEAR - gap)
+	return push
