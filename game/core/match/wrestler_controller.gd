@@ -4565,6 +4565,8 @@ var _weapon_action := ""
 var _weapon_action_ticks := 0
 var _weapon_target: WeaponActor = null
 var _weapon_pick_id: StringName = &""
+var _rummage_released := 0
+const RUMMAGE_RELEASE_TICKS := 3
 
 ## Where he can reach under the ring: this far out from the apron, and no
 ## nearer a corner than this along the side.
@@ -4655,6 +4657,7 @@ func _weapon_input(input: Dictionary) -> bool:
 
 func begin_weapon_action(action: String) -> void:
 	_weapon_action = action
+	_rummage_released = 0
 	_weapon_action_ticks = 0
 	velocity = Vector3.ZERO
 	if action == "rummage":
@@ -4682,7 +4685,13 @@ func _tick_weapon_action(input: Dictionary) -> void:
 				fsm.transition_to(WrestlerFSM.State.IDLE)
 				begin_weapon_action("retrieve")
 			elif not input.get("weapon", false):
-				fsm.transition_to(WrestlerFSM.State.IDLE)
+				# a few ticks' grace: the wheel's pick and the button coming up
+				# can land a tick apart
+				_rummage_released += 1
+				if _rummage_released >= RUMMAGE_RELEASE_TICKS:
+					fsm.transition_to(WrestlerFSM.State.IDLE)
+			else:
+				_rummage_released = 0
 			return
 		"retrieve":
 			if _weapon_action_ticks == WEAPON_ACTION_AT["retrieve"]:

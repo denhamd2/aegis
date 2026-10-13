@@ -15,6 +15,9 @@ extends CanvasLayer
 const BUTTONS := [["strike", "STRIKE", false], ["grapple", "GRAPPLE", false],
 		["reversal", "REVERSE", false], ["run", "RUN", true],
 		["submission_hold", "HOLD", true]]
+## No Holds Barred adds these two above the arc (set by MatchSetup).
+const WEAPON_BUTTONS := [["weapon", "WEAPON", true], ["throw", "THROW", false]]
+static var weapons := false
 const STICK_ACTIONS := ["move_left", "move_right", "move_up", "move_down"]
 ## Fractions of the viewport's height, so it scales to any phone.
 const STICK_RADIUS := 0.13
@@ -51,6 +54,10 @@ static func layout(size: Vector2) -> Dictionary:
 	var buttons := []
 	for i in BUTTONS.size():
 		buttons.append(BUTTONS[i] + [spots[i], r])
+	if weapons:
+		var above := [base + Vector2(-r * 0.9, -r * 4.7), base + Vector2(-r * 3.4, -r * 4.9)]
+		for i in WEAPON_BUTTONS.size():
+			buttons.append(WEAPON_BUTTONS[i] + [above[i], r])
 	return {"buttons": buttons,
 			"stick": [Vector2(u * 0.22, size.y - u * 0.22), STICK_RADIUS * u],
 			"skip": Rect2(size.x - u * 0.2, u * 0.03, u * 0.17, u * 0.08)}

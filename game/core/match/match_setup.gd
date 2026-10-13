@@ -114,10 +114,25 @@ func _ready() -> void:
 			if wc and wc.is_finisher(move):
 				replay_buffer.mark("finisher"))
 	# On a phone, the on-screen stick and buttons -- unless nobody is playing.
+	var nhb := MatchRules.no_holds_barred(self)
+	TouchControls.weapons = nhb
 	if TouchControls.wanted(not wrestler_a.is_ai or not wrestler_b.is_ai):
 		var touch := TouchControls.new()
 		touch.name = "TouchControls"
 		add_child(touch)
+	# No Holds Barred: the weapon wheel, for the man being played.
+	if nhb:
+		for w: WrestlerController in [wrestler_a, wrestler_b]:
+			if not w.is_ai:
+				var layer := CanvasLayer.new()
+				layer.name = "WeaponWheelLayer"
+				layer.layer = 15
+				var wheel := WeaponWheel.new()
+				wheel.name = "WeaponWheel"
+				wheel.wrestler = w
+				layer.add_child(wheel)
+				add_child(layer)
+				break
 	# Big moves replayed mid-match when replays are FREQUENT.
 	var camera_node := get_node_or_null("MatchCamera") as MatchCamera
 	if rig and camera_node:
