@@ -350,8 +350,6 @@ def build_board(root, prefix, wood, nail_steel, rng, broken: bool) -> None:
             nx, nz = 4, 7
             def end_y(i, j, ragged, base):
                 return base + (ragged[i][j] if ragged is not None else 0.0)
-            for ry, yb, sign in ((ragged_top, y1, 1), (ragged_bottom, y0, -1)):
-                pass
             from mathutils import Vector as V
             xs = np.linspace(-D / 2, D / 2, nx + 1)
             zs = np.linspace(-W / 2, W / 2, nz + 1)
@@ -649,15 +647,15 @@ def build_hockey(root, prefix, shaft_mat, blade_mat, knob_mat) -> None:
     pts = []
     for k in range(17):
         f = k / 16
-        pts.append(Vector((0.03 * f ** 2, heel, 0)) + d * (0.31 * f) + Vector((0, 0.04 * f * (1 - f) * 0, 0)))
+        pts.append(Vector((0.03 * f ** 2, heel, 0)) + d * (0.31 * f))   # curving left
     def blade_sect(t, th):
         hgt = 0.075 * (1 - 0.15 * t) * (1.0 if t < 0.85 else math.sqrt(max(1 - ((t - 0.85) / 0.15) ** 2, 0.15)))
         thick = 0.011 - 0.004 * t
         return rounded_rect_section(thick, hgt, 0.003)(t, th)
     # the heel joins the shaft: start a little up inside it
     pts = [Vector((0, heel - 0.04, 0.0))] + pts
-    section_sweep(blade, pts, lambda t, tan: Vector((0, 1, 0)).cross(Vector((1, 0, 0))).cross(tan) * -1
-                  if False else Vector((0, 0.707, -0.707)), blade_sect, sides=24, caps=True)
+    # the blade's height runs across the lie: up the shaft and forward
+    section_sweep(blade, pts, lambda t, tan: Vector((0, 0.707, -0.707)), blade_sect, sides=24, caps=True)
     kit.add_mesh(root, blade, blade_mat, uv_scale=6.0)
     kit.marker(root, "grip_r", Vector((0, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
     kit.marker(root, "grip_l", Vector((0, butt + 0.04, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
@@ -743,7 +741,6 @@ def build_stop_sign(root, prefix, face, alu, post_mat, bolt, dented: bool) -> No
     sheet = kit.WeaponPart(prefix + "_face", dent)
     rings = 10
     verts = [[sheet.vert(centre + Vector((0, 0, -0.001)))]]
-    uvs = []
     for i in range(1, rings + 1):
         rr = R_SIGN * i / rings
         row = []
@@ -754,12 +751,9 @@ def build_stop_sign(root, prefix, face, alu, post_mat, bolt, dented: bool) -> No
             r_oct = rr * math.cos(math.pi / 8) / math.cos(seg)
             row.append(sheet.vert(centre + Vector((math.cos(a) * r_oct, math.sin(a) * r_oct, -0.001))))
         verts.append(row)
-    def uv_of(v):
-        co = v.co
-        return (0.5 + co.x / (2 * R_SIGN), 0.5 + co.z / (2 * R_SIGN) - (centre.y) / (2 * R_SIGN))
     for k in range(32):
         j = (k + 1) % 32
-        f = sheet.bm.faces.new((verts[0][0], verts[1][k], verts[1][j]))
+        sheet.bm.faces.new((verts[0][0], verts[1][k], verts[1][j]))
     for i in range(1, rings):
         for k in range(32):
             j = (k + 1) % 32
@@ -879,10 +873,265 @@ def tape_textures_white(wid: str) -> tuple:
     return b, o, n_
 
 
+# --- batch C: the acoustic guitar -------------------------------------------------
+
+G_LEN = 0.50            # body, tail (y = 0) to the neck joint
+G_DEPTH = 0.10
+G_TOP = -G_DEPTH / 2    # the soundboard faces -Z
+HOLE_C, HOLE_R = 0.335, 0.049
+
+
+def g_half_width(y: float) -> float:
+    """Half the body's width at height y: two bouts and the waist between."""
+    lower = math.sqrt(max(0.19 ** 2 - (y - 0.17) ** 2, 0.0))
+    upper = math.sqrt(max(0.145 ** 2 - (y - 0.375) ** 2, 0.0))
+    w = max(lower, upper)
+    # the tail and the shoulders flatten into the end blocks
+    return w
+
+
+def g_outline(n: int = 72) -> list:
+    """The body outline as (x, y), clockwise from the tail, by ray from the
+    soundhole's centre -- the shape is star-shaped about it."""
+    pts = []
+    for k in range(n):
+        a = -math.pi / 2 + 2 * math.pi * k / n
+        lo, hi = 0.0, 0.6
+        for _ in range(30):
+            mid = (lo + hi) / 2
+            x, y = math.cos(a) * mid, HOLE_C + math.sin(a) * mid
+            if 0.0 <= y <= G_LEN and abs(x) <= g_half_width(y):
+                lo = mid
+            else:
+                hi = mid
+        pts.append((math.cos(a) * lo, HOLE_C + math.sin(a) * lo))
+    return pts
+
+
+def plate(part, outline, z, thick, hole=None, flip=False):
+    """A plate the shape of `outline` at depth z, `thick` thick, with an
+    optional round hole (cx, cy, r) -- built as a ring from the hole (or a
+    centre point) out to the outline, top and bottom, and the edge."""
+    n = len(outline)
+    if hole:
+        cx, cy, r = hole
+        inner = [(cx + (x - cx) * 0 + r * math.cos(math.atan2(y - cy, x - cx)),
+                  cy + r * math.sin(math.atan2(y - cy, x - cx))) for x, y in outline]
+    for zz, out_side in ((z - thick / 2, -1), (z + thick / 2, 1)):
+        ring_o = [part.vert(Vector((x, y, zz))) for x, y in outline]
+        if hole:
+            ring_i = [part.vert(Vector((x, y, zz))) for x, y in inner]
+            for k in range(n):
+                j = (k + 1) % n
+                if (out_side < 0) != flip:
+                    part.quad(ring_i[k], ring_o[k], ring_o[j], ring_i[j])
+                else:
+                    part.quad(ring_i[k], ring_i[j], ring_o[j], ring_o[k])
+        else:
+            cxy = (sum(p[0] for p in outline) / n, sum(p[1] for p in outline) / n)
+            c = part.vert(Vector((cxy[0], cxy[1], zz)))
+            for k in range(n):
+                j = (k + 1) % n
+                try:
+                    part.bm.faces.new((c, ring_o[k], ring_o[j]) if (out_side < 0) != flip else (c, ring_o[j], ring_o[k]))
+                except ValueError:
+                    pass
+    # the plate's edge
+    lo = [part.vert(Vector((x, y, z - thick / 2))) for x, y in outline]
+    hi = [part.vert(Vector((x, y, z + thick / 2))) for x, y in outline]
+    for k in range(n):
+        j = (k + 1) % n
+        part.quad(lo[k], lo[j], hi[j], hi[k])
+
+
+def sides_band(part, outline, z0, z1, idx_from=0, idx_to=None):
+    n = len(outline)
+    idx_to = n if idx_to is None else idx_to
+    for k in range(idx_from, idx_to):
+        j = (k + 1) % n
+        a = outline[k]
+        b = outline[j]
+        va = part.vert(Vector((a[0], a[1], z0)))
+        vb = part.vert(Vector((b[0], b[1], z0)))
+        vc = part.vert(Vector((b[0], b[1], z1)))
+        vd = part.vert(Vector((a[0], a[1], z1)))
+        part.quad(va, vb, vc, vd)
+        # inner face, a rib's thickness in
+        def inset(pt):
+            d = math.hypot(pt[0], pt[1] - HOLE_C) or 1.0
+            return (pt[0] - pt[0] / d * 0.003, pt[1] - (pt[1] - HOLE_C) / d * 0.003)
+        ia, ib = inset(a), inset(b)
+        part.quad(part.vert(Vector((ib[0], ib[1], z0))), part.vert(Vector((ia[0], ia[1], z0))),
+                  part.vert(Vector((ia[0], ia[1], z1))), part.vert(Vector((ib[0], ib[1], z1))))
+
+
+def neck_parts(neck, board, frets, metal):
+    """Neck (D section), fretboard with frets and dots, headstock with
+    tuners. y from the body joint up."""
+    y0, y1 = G_LEN - 0.04, G_LEN + 0.42
+    def d_section(t, th):
+        # a D: flat-ish under the fretboard, rounded behind (b < 0 is +Z)
+        sn = math.sin(th)
+        return (math.cos(th) * (0.022 + 0.004 * (1 - t)), -abs(sn) * 0.020 * (1.0 if sn < 0 else 0.5))
+    section_sweep(neck, _y(y0, y1, 16), lambda t, tan: Vector((0, 0, -1)), d_section, sides=18, caps=True)
+    # the heel down into the body
+    neck.box(Vector((0, G_LEN - 0.02, G_TOP + 0.035)), Vector((0.05, 0.05, 0.05)), bevel=0.01, bevel_segments=2)
+    # headstock: tilted back 13 degrees
+    tilt = math.radians(13)
+    hs_c = Vector((0, y1 + 0.085 * math.cos(tilt), G_TOP + 0.002 + 0.085 * math.sin(tilt)))
+    neck.oriented_box(hs_c, Vector((1, 0, 0)), Vector((0, 0, 1)), Vector((0.085, 0.17, 0.014)), bevel=0.004)
+    # fretboard
+    fb_y0, fb_y1 = G_LEN - 0.10, y1
+    board.box(Vector((0, (fb_y0 + fb_y1) / 2, G_TOP - 0.004)), Vector((0.050, fb_y1 - fb_y0, 0.006)), bevel=0.0015)
+    # frets: spaced by the rule of eighteen from the nut down
+    scale = 0.645
+    for k in range(1, 20):
+        d = scale - scale / (2 ** (k / 12))
+        y = y1 - d
+        if y < fb_y0:
+            break
+        frets.box(Vector((0, y, G_TOP - 0.0075)), Vector((0.050, 0.0022, 0.0018)), bevel=0.0005)
+    frets.box(Vector((0, y1 - 0.002, G_TOP - 0.008)), Vector((0.052, 0.005, 0.004)))      # the nut
+    for k in (3, 5, 7, 9, 12, 15):
+        y = y1 - (scale - scale / (2 ** ((k - 0.5) / 12)))
+        frets.tube([Vector((0, y, G_TOP - 0.0071)), Vector((0, y, G_TOP - 0.0073))], 0.003, 10)
+    # tuners: three a side, buttons out the sides, posts through the face
+    for side in (-1, 1):
+        for k in range(3):
+            yy = y1 + 0.05 + k * 0.045
+            zz = G_TOP + 0.002 + (yy - y1) * math.tan(tilt)
+            metal.tube([Vector((side * 0.030, yy, zz - 0.012)), Vector((side * 0.030, yy, zz - 0.002))], 0.003, 8)
+            metal.tube([Vector((side * 0.040, yy, zz + 0.012)), Vector((side * 0.062, yy, zz + 0.012))], 0.004, 8)
+            metal.box(Vector((side * 0.070, yy, zz + 0.012)), Vector((0.012, 0.018, 0.005)), bevel=0.002)
+    return y1
+
+
+def build_guitar(root, prefix, spruce, mahogany, rosewood, steel, cream_mat, dark, broken: bool) -> None:
+    cream = kit.WeaponPart(prefix + "_trim")
+    outline = g_outline()
+    rng = np.random.RandomState(kit.seed_of("guitar_smash"))
+    pieces = []
+    if not broken:
+        top = kit.WeaponPart(prefix + "_top")
+        plate(top, outline, G_TOP, 0.003, hole=(0, HOLE_C, HOLE_R))
+        kit.add_mesh(root, top, spruce, uv_scale=1.6)
+        body = kit.WeaponPart(prefix + "_body")
+        plate(body, outline, -G_TOP, 0.003)
+        sides_band(body, outline, G_TOP + 0.0015, -G_TOP - 0.0015)
+        kit.add_mesh(root, body, mahogany, uv_scale=1.6)
+        inside = kit.WeaponPart(prefix + "_inside")
+        inside.cylinder(Vector((0, HOLE_C, -G_TOP - 0.003)), Vector((0, 0, -1)), 0.075, 0.001, 32)
+        kit.add_mesh(root, inside, dark, uv_scale=4.0)
+    else:
+        # the body smashed: the top in four shards, the back in two, the
+        # sides torn into three ribbons -- each its own piece, in place
+        cuts_top = [0.10, 0.22, 0.31]
+        def band(y0, y1):
+            return [p for p in outline if y0 <= p[1] < y1]
+        bounds = [0.0] + cuts_top + [G_LEN + 0.01]
+        for k in range(len(bounds) - 1):
+            y0, y1 = bounds[k], bounds[k + 1]
+            jag = lambda x, y=y1: y + 0.02 * math.sin(x * 47 + k) + rng.uniform(-0.008, 0.008)
+            hw0 = g_half_width(max(y0, 0.005)) if y0 > 0 else 0.04
+            hw1 = g_half_width(min(y1, G_LEN - 0.005))
+            pts = [(x, y0 if y0 == 0 else y0 + 0.02 * math.sin(x * 47 + k - 1)) for x in np.linspace(-hw0 * 0.98, hw0 * 0.98, 9)]
+            pts += [p for p in band(y0, y1) if p[0] > 0]
+            pts += [(x, jag(x)) for x in np.linspace(hw1 * 0.98, -hw1 * 0.98, 9)]
+            pts += [p for p in reversed(band(y0, y1)) if p[0] < 0][::1]
+            if len(pts) < 6:
+                continue
+            shard = kit.WeaponPart("%s__piece_%02d" % (prefix, k))
+            cxy = (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+            local = [(x - cxy[0], y - cxy[1]) for x, y in pts]
+            plate(shard, local, 0.0, 0.003)
+            pieces.append((shard, Vector((cxy[0], cxy[1], G_TOP)), spruce,
+                           (rng.uniform(-0.25, 0.25), rng.uniform(-0.3, 0.3))))
+        back = kit.WeaponPart("%s__piece_04" % prefix)
+        plate(back, [(x, y - 0.25) for x, y in outline], 0.0, 0.003)
+        pieces.append((back, Vector((0, 0.25, -G_TOP)), mahogany, (0.0, 0.08)))
+        n = len(outline)
+        for k, (a, b) in enumerate(((0, n // 3), (n // 3, 2 * n // 3), (2 * n // 3, n))):
+            rib = kit.WeaponPart("%s__piece_%02d" % (prefix, 5 + k))
+            sides_band(rib, [(x, y - 0.25) for x, y in outline], G_TOP + 0.0015, -G_TOP - 0.0015, a, b - 1)
+            pieces.append((rib, Vector((0, 0.25, 0)), mahogany, (rng.uniform(-0.15, 0.15), rng.uniform(-0.15, 0.15))))
+    # neck, board, metal
+    neck = kit.WeaponPart(prefix + "_neck" if not broken else prefix + "__piece_08")
+    board = kit.WeaponPart(prefix + "_board")
+    frets = kit.WeaponPart(prefix + "_frets")
+    metal = kit.WeaponPart(prefix + "_tuners")
+    y1 = neck_parts(neck, board, frets, metal)
+    # bridge and strings
+    bridge = kit.WeaponPart(prefix + "_bridge")
+    if not broken:
+        bridge.box(Vector((0, 0.115, G_TOP - 0.004)), Vector((0.15, 0.028, 0.008)), bevel=0.003)
+        frets.box(Vector((0, 0.120, G_TOP - 0.0095)), Vector((0.072, 0.0025, 0.003)))   # saddle
+    strings = kit.WeaponPart(prefix + "_strings")
+    for k in range(6):
+        x_nut = -0.0215 + k * 0.0086
+        x_br = -0.027 + k * 0.0108
+        top_pt = Vector((x_nut, y1 - 0.002, G_TOP - 0.0105))
+        if not broken:
+            strings.tube([Vector((x_br, 0.120, G_TOP - 0.011)), top_pt], 0.0004 + 0.00012 * (5 - k), 4)
+        else:
+            # snapped at the bridge, hanging and curling off the neck's end
+            hang = [top_pt + Vector((0, -d, 0)) for d in np.linspace(0, 0.40, 8)]
+            hang += [hang[-1] + Vector((rng.uniform(-0.06, 0.06), -0.08 * f, 0.04 * math.sin(f * 4 + k)))
+                     for f in np.linspace(0.2, 1.0, 5)]
+            strings.tube(hang, 0.0004 + 0.00012 * (5 - k), 4)
+    if not broken:
+        # binding round both edges, and the rosette rings round the hole
+        for zz in (G_TOP, -G_TOP):
+            cream.tube([Vector((x, y, zz)) for x, y in outline + outline[:1]], 0.0022, 6, caps=False)
+        for rr in (HOLE_R + 0.006, HOLE_R + 0.010, HOLE_R + 0.016):
+            cream.tube([Vector((math.cos(a) * rr, HOLE_C + math.sin(a) * rr, G_TOP - 0.0015))
+                        for a in np.linspace(0, 2 * math.pi, 49)], 0.0011, 4, caps=False)
+    for part, mat in ((neck, mahogany), (board, rosewood), (frets, steel), (metal, steel), (strings, steel)):
+        o = kit.add_mesh(root, part, mat, uv_scale=3.0)
+        if broken and part is neck:
+            o["piece"] = True
+    if not broken:
+        kit.add_mesh(root, bridge, rosewood, uv_scale=3.0)
+        kit.add_mesh(root, cream, cream_mat, uv_scale=3.0)
+    for part, at, mat, tilt in pieces:
+        o = kit.add_mesh(root, part, mat, uv_scale=1.6)
+        o.location = kit.to_blender(at)
+        o.rotation_euler = (tilt[0], tilt[1] * 0.3, tilt[1])
+        o["piece"] = True
+    grip = Vector((0, y1 - 0.10, 0))
+    # the origin at the grip: everything was built body-up; move the root's
+    # children so the grip is at 0
+    for child in root.children:
+        child.location = child.location - kit.to_blender(grip)
+    kit.marker(root, "grip_r", Vector((0, 0, 0)), Vector((0, -1, 0)), Vector((0, 0, 1)))
+    kit.marker(root, "grip_l", Vector((0, -0.08, 0)), Vector((0, -1, 0)), Vector((0, 0, 1)))
+    kit.marker(root, "strike", Vector((0, 0.2, G_TOP)) - grip, Vector((0, -1, 0)), Vector((0, 0, -1)))
+
+
+
+def build_batch_c(report: list) -> None:
+    kit.reset()
+    wid = "guitar"
+    spruce = kit.pbr_material(wid + "_top", *kit.wood_textures(wid + "_top", (0.80, 0.66, 0.44), (0.66, 0.50, 0.30),
+                                                                 140, 0.95, along_rows=False), 0.4)
+    mahog = kit.pbr_material(wid + "_body", *kit.wood_textures(wid + "_body", (0.42, 0.20, 0.09), (0.26, 0.11, 0.04),
+                                                                 90, 0.95, along_rows=False), 0.4)
+    rose = kit.pbr_material(wid + "_board", *kit.wood_textures(wid + "_board", (0.16, 0.09, 0.05), (0.08, 0.04, 0.02),
+                                                                 120, 0.3, along_rows=False), 0.4)
+    steel = kit.flat_material(wid + "_metal", (0.78, 0.78, 0.74), 0.25, 1.0)
+    cream = kit.flat_material(wid + "_binding", (0.80, 0.74, 0.60), 0.35)
+    dark = kit.flat_material(wid + "_inside", (0.03, 0.02, 0.015), 0.9)
+    for state, broken in (("Clean", False), ("Broken", True)):
+        root = kit.state_root("Guitar_" + state)
+        build_guitar(root, root.name, spruce, mahog, rose, steel, cream, dark, broken)
+        report.append("guitar %s: %d triangles" % (state, kit.triangles_under(root)))
+    kit.export(wid)
+
+
 def main() -> None:
     report = []
     build_batch_a(report)
     build_batch_b(report)
+    build_batch_c(report)
     # the bat and the barbed bat
     for weapon_id, root_name, barbed in (("baseball_bat", "BaseballBat_Clean", False),
                                          ("barbed_wire_bat", "BarbedWireBat_Clean", True)):
