@@ -157,6 +157,37 @@ func marker(marker_name: String) -> Transform3D:
 	return Transform3D.IDENTITY
 
 
+func has_marker(marker_name: String) -> bool:
+	var root: Node3D = _roots.get(state_root)
+	if root == null:
+		return false
+	for child in root.get_children():
+		if String(child.name).ends_with("__" + marker_name):
+			return true
+	return false
+
+
+## The shown state's meshes' bounds, relative to this node.
+func local_bounds() -> AABB:
+	var root: Node3D = _roots.get(state_root)
+	var box := AABB()
+	var first := true
+	if root == null:
+		return box
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null or String(mi.name).contains("__piece"):
+			continue
+		var to_me := Transform3D.IDENTITY
+		var n: Node = mi
+		while n != self and n != null:
+			to_me = (n as Node3D).transform * to_me
+			n = n.get_parent()
+		var b := to_me * mi.mesh.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	return box
+
+
 func global_marker(marker_name: String) -> Transform3D:
 	return global_transform * marker(marker_name)
 
@@ -275,7 +306,13 @@ func _tick_fire() -> void:
 	if _fire_in > 0:
 		return
 	_fire_in = -1
-	var at := global_marker("muzzle")
+	var m := global_marker("muzzle")
+	var out := muzzle_out(m)
+	if def.swing == WeaponDef.Swing.SPRAY and _fire_by:
+		# the horn swings on its hose: the cloud goes where he faces, a little down
+		out = (-_fire_by.global_basis.z * Vector3(1, 0, 1)).normalized() + Vector3.DOWN * 0.15
+	# the flash and the cloud stand out of the muzzle along their +Z
+	var at := Transform3D(Basis.looking_at(-out, _up_for(out)), m.origin)
 	var host := get_parent()
 	match def.swing:
 		WeaponDef.Swing.GUN:
@@ -283,15 +320,28 @@ func _tick_fire() -> void:
 		WeaponDef.Swing.SPRAY:
 			_spawn_effect(host, "cloud", at)
 		WeaponDef.Swing.LAUNCHER:
-			var fwd := -at.basis.z.normalized()
+			var fwd := out
 			var reach := float(WeaponCatalog.RANGED[def.swing])
 			var to := at.origin + fwd * reach
 			var opp: Node3D = _fire_by.get("opponent") if _fire_by else null
 			if opp and opp.global_position.distance_to(at.origin) < reach:
 				to = opp.global_position + Vector3.UP * 1.1
-			var r := _spawn_effect(host, "rocket", at)
+			var dir := (to - at.origin).normalized()
+			# the rocket's nose is its -Z
+			var r := _spawn_effect(host, "rocket", Transform3D(Basis.looking_at(dir, _up_for(dir)), at.origin))
 			r._effect_to = to
-			r._effect_velocity = (to - at.origin).normalized() * ROCKET_SPEED
+			r._effect_velocity = dir * ROCKET_SPEED
+
+
+## The way a muzzle marker points out. Markers are authored with their game
+## +Y and +Z (tools/blender/weapons/weapon_kit.py marker()); the glTF export
+## turns an empty's axes so the authored +Z arrives as its +Y.
+static func muzzle_out(m: Transform3D) -> Vector3:
+	return m.basis.y.normalized()
+
+
+static func _up_for(dir: Vector3) -> Vector3:
+	return Vector3.UP if absf(dir.normalized().y) < 0.95 else Vector3.BACK
 
 
 func _spawn_effect(host: Node, kind: String, at: Transform3D) -> WeaponActor:

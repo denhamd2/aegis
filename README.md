@@ -9433,3 +9433,38 @@ in `game/assets/weapons/`, one script per family under
 
 Next: the weapon runtime (pick up, carry, hit, throw, break, from under the
 ring; the weapon wheel) and the animations for each family.
+
+### Weapons, steps 1-3: in his hands, under the ring, and swung
+
+- **Step 1, the weapon in the world** (`game/core/weapons/`): `WeaponDef`
+  and `WeaponCatalog` (all 33 as code, so it diffs), `WeaponActor` (held,
+  thrown on a deterministic 60 Hz arc, on the floor, set up, dented,
+  broken into seeded pieces, firing its effects), `WeaponStock` (each
+  apron's stock, restocked after 45 s). `WeaponGrip` is a skeleton
+  modifier: his right hand onto the weapon's grip with the fist turned to
+  it, the left onto `grip_l` for two-handed weapons, and a carry pose per
+  weapon (bat on the shoulder, gun at low ready, chair in front).
+- **Step 2, getting one** (NHB only): hold WEAPON (U / pad 9 / touch) by
+  an apron outside and he kneels and rummages while the match runs on.
+  The wheel is two rings, the six families then that family's weapons
+  fanned round its slice, with a rendered icon each
+  (`game/assets/weapons/icons/`). Let go on one and he pulls it out. THROW
+  (I / pad 10) throws it at the other man, grapple drops it or sets a set
+  piece up, and he loses it when he is put down.
+- **Step 3, the animations.** Eleven body clips in `wrestling_clips.py`
+  ("No Holds Barred weapons"): overhead, side, thrust, whip, chop, aim,
+  throw, rummage, retrieve, pick up, set up, retimed in `strike_recipes.gd`
+  to each swing's timing. The weapon's own path through each swing (load,
+  contact, follow-through) is keyed in `WeaponCatalog.SWING_PATHS` off his
+  chest and set by `WeaponGrip`, which puts both hands on it, so a chair
+  shot lands the chair's flat on him whichever chair it is. The gun aims
+  and kicks, the extinguisher is pointed and sprays where he faces, the
+  rocket flies nose-first and blows up on the man. The tacks and the bed
+  of nails are laid down rather than swung; the sledgehammer is now an
+  overhead.
+- Reviewed on the bare floor (`tools/probe/weapon_hold_shot --bare
+  --swing`: three frames of each of the 33). Known: the chain and the belt
+  swing rigid.
+
+Next: the set-piece spots (through a table, onto tacks), the AI reaching
+for weapons by personality, camera cuts and the hit sounds.

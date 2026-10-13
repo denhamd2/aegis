@@ -64,6 +64,25 @@ const AUTHORED := "res://assets/animations/wrestling_clips.glb"
 ## yet salvage them.
 
 const RECIPES := {
+	# No Holds Barred weapons: body clips (wrestling_clips.py, "No Holds
+	# Barred weapons"), each cut to its WeaponCatalog.SWINGS length or its
+	# WrestlerController.WEAPON_ACTION_TICKS; the weapon rides WeaponGrip.
+	"weapon_overhead": {"kind": "retime", "source": "Weapon_Overhead", "seconds": 0.8, "file": AUTHORED},
+	"weapon_side": {"kind": "retime", "source": "Weapon_Side", "seconds": 0.7333, "file": AUTHORED},
+	"weapon_thrust": {"kind": "retime", "source": "Weapon_Thrust", "seconds": 0.6, "file": AUTHORED},
+	"weapon_whip": {"kind": "retime", "source": "Weapon_Whip", "seconds": 0.6667, "file": AUTHORED},
+	"weapon_chop": {"kind": "retime", "source": "Weapon_Chop", "seconds": 0.6333, "file": AUTHORED},
+	"weapon_punch": {"kind": "retime", "source": "Strike_Forearm", "seconds": 0.6667, "file": AUTHORED},
+	"weapon_gun": {"kind": "retime", "source": "Weapon_Aim", "seconds": 1.2, "file": AUTHORED},
+	"weapon_launcher": {"kind": "retime", "source": "Weapon_Aim", "seconds": 1.8667, "file": AUTHORED},
+	"weapon_spray": {"kind": "retime", "source": "Weapon_Aim", "seconds": 1.3333, "file": AUTHORED},
+	"weapon_pour": {"kind": "retime", "source": "Weapon_Set_Up", "seconds": 1.1667, "file": AUTHORED},
+	"weapon_rummage": {"kind": "retime", "source": "Weapon_Rummage", "seconds": 2.0, "file": AUTHORED},
+	"weapon_retrieve": {"kind": "retime", "source": "Weapon_Retrieve", "seconds": 0.9, "file": AUTHORED},
+	"weapon_pickup": {"kind": "retime", "source": "Weapon_Pickup", "seconds": 0.5, "file": AUTHORED},
+	"weapon_throw": {"kind": "retime", "source": "Weapon_Throw", "seconds": 0.4333, "file": AUTHORED},
+	"weapon_set_up": {"kind": "retime", "source": "Weapon_Set_Up", "seconds": 0.7333, "file": AUTHORED},
+
 	# BACK to the rig's own Punch_Jab, and the mocap excerpt that replaced it
 	# is gone. Measured with tools/probe/strike_clip_probe.tscn on the BASE
 	# rig -- no retarget in the path at all -- the baked jab put the head

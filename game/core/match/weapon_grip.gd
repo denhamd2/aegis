@@ -31,6 +31,11 @@ var weapon: WeaponActor = null
 var _ids := {}
 var _carry := 0.0
 var _two := 0.0
+## The swing under way (WeaponCatalog.SWING_PATHS), where it is in it at this
+## tick (-1: none), and how far one tick moves it.
+var _path: Array = []
+var _t := -1.0
+var _dt := 0.0
 
 
 func _ready() -> void:
@@ -43,7 +48,10 @@ func _ready() -> void:
 
 ## One physics tick: `carrying` while he stands or moves with it (not mid
 ## swing, not mid throw), so the carry pose lets the swing clip have the arm.
-func advance(carrying: bool) -> void:
+func advance(carrying: bool, path: Array = [], t := -1.0, dt := 0.0) -> void:
+	_path = path
+	_t = t
+	_dt = dt
 	var holding := weapon != null and weapon.mode == WeaponActor.Mode.HELD
 	var has_carry := holding and not (WeaponCatalog.CARRY.get(String(weapon.def.id), []) as Array).is_empty()
 	_carry = move_toward(_carry, 1.0 if holding and carrying and has_carry else 0.0, 1.0 / EASE_TICKS)
@@ -73,10 +81,15 @@ func _process_modification() -> void:
 			var c: Transform3D = carry[0]
 			placed = Transform3D(in_hand.basis.slerp(c.basis.orthonormalized(), w).orthonormalized(),
 					in_hand.origin.lerp(c.origin, w))
+	var on_path := not _path.is_empty() and _t >= 0.0
+	if on_path:
+		var t := clampf(_t + _dt * Engine.get_physics_interpolation_fraction(), 0.0, 1.0)
+		placed = WeaponCatalog.path_transform(weapon, _path, _chest(sk), t, placed)
 	weapon.global_transform = placed
-	if _carry > 0.0:
+	if _carry > 0.0 or on_path:
 		# his right hand onto its grip, the fist turned to it
-		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd, _carry)
+		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd,
+				1.0 if on_path else _carry)
 	if _two > 0.0:
 		_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"], to_sk * weapon.global_marker("grip_l"), fwd, _two)
 
@@ -103,3 +116,13 @@ func _hand_to(sk: Skeleton3D, chain: Array, target: Transform3D, fwd: Vector3, w
 	var pg := sk.get_bone_global_pose(parent) if parent >= 0 else Transform3D()
 	sk.set_bone_pose_rotation(ids[2], (pg.basis.orthonormalized().inverse()
 			* (turn_sk * hg.basis.orthonormalized())).get_rotation_quaternion())
+
+
+## His chest, in the world: at spine_03 as the clip moves it (the step in,
+## the crouch), square to the way he faces. Swing paths ride this. Not the
+## chest's own turn: the clips lean 30-45 degrees and twist 60 into a swing,
+## and a path that leant with them would hit his own knees -- the path keys
+## carry the turn themselves.
+func _chest(sk: Skeleton3D) -> Transform3D:
+	var g := sk.get_bone_global_pose(_ids["spine_03"])
+	return Transform3D(wrestler.global_basis.orthonormalized(), sk.global_transform * g.origin)

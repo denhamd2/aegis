@@ -18,9 +18,13 @@ var _close := false
 ## nothing in the frame but him and the weapon; the arena run is the
 ## materials check.
 var _bare := false
+## --swing: instead of the hold, three frames of a swing -- the load, the
+## contact and the follow-through -- seen from his right (<id>_0/1/2.png).
+var _swing := false
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
 		match args[i]:
@@ -34,6 +38,8 @@ func _ready() -> void:
 				_close = true
 			"--bare":
 				_bare = true
+			"--swing":
+				_swing = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7)
@@ -79,6 +85,10 @@ func _ready() -> void:
 	cam.fov = 32.0 if _close else 40.0
 	var back := 1.7 if _close else 2.6
 	cam.global_position = focus + body.basis * Vector3(back * 0.75, 0.25, -back * 0.75)
+	if _swing:
+		focus = body.origin + body.basis * Vector3(0.0, 1.25, -0.45)
+		cam.fov = 44.0
+		cam.global_position = focus + body.basis * Vector3(3.4, 0.35, -0.6)
 	cam.look_at(focus, Vector3.UP)
 	print("CAM roman %s facing %s cam %s" % [body.origin.snappedf(0.01), (-body.basis.z).snappedf(0.01),
 			cam.global_position.snappedf(0.01)])
@@ -91,6 +101,11 @@ func _ready() -> void:
 			if _walk:
 				roman.velocity = Vector3.ZERO
 			await get_tree().physics_frame
+		if _swing:
+			await _shoot_swing(roman, a, id)
+			roman.drop_weapon()
+			a.queue_free()
+			continue
 		await RenderingServer.frame_post_draw
 		var used := get_viewport().get_camera_3d()
 		print("HEAD %s pelvis %s" % [roman._bone_world("Head").snappedf(0.01), roman._bone_world("pelvis").snappedf(0.01)])
@@ -105,3 +120,37 @@ func _ready() -> void:
 		roman.drop_weapon()
 		a.queue_free()
 	get_tree().quit()
+
+
+## The load, the contact and the follow-through of a swing of `a`.
+func _shoot_swing(roman: WrestlerController, a: WeaponActor, id: String) -> void:
+	var move := WeaponCatalog.swing_move(a.def)
+	var total := move.total_frames()
+	var at := [int(total * 0.22), move.startup_frames, int(total * 0.52)]
+	if a.def.swing == WeaponDef.Swing.POUR:
+		roman.begin_weapon_action("set_up")
+		total = int(WrestlerController.WEAPON_ACTION_TICKS["set_up"])
+		at = [8, 18, 28]
+	else:
+		roman._play_strike_clip(move)
+		roman._start_move(WrestlerFSM.State.STRIKE, move)
+		a.fire(move.startup_frames, roman)
+	var tick := 0
+	for k in at.size():
+		# by his own clock: a slow frame lets several physics ticks through
+		while tick < int(at[k]):
+			await get_tree().physics_frame
+			tick = total - roman._move_ticks_remaining if roman.fsm.current_state == WrestlerFSM.State.STRIKE \
+					else roman._weapon_action_ticks if roman.fsm.current_state == WrestlerFSM.State.WEAPON_ACTION \
+					else total
+		get_tree().paused = true           # held still on this tick while it draws
+		await RenderingServer.frame_post_draw
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s/%s_%d.png" % [_out, id, k])
+		print("SWING %s %d tick %d/%d state %s path %d t %.2f grip %s chest %s" % [id, k, tick, total,
+				roman.fsm.current_state, roman.weapon_grip._path.size(), roman.weapon_grip._t,
+				a.global_marker("grip_r").origin.snappedf(0.01), roman._bone_world("spine_03").snappedf(0.01)])
+		get_tree().paused = false
+	while tick < total + 12:
+		await get_tree().physics_frame
+		tick += 1

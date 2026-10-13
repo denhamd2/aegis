@@ -6497,6 +6497,189 @@ CLIPS["Pickup_Haul"] = [
 ]
 
 
+# --- No Holds Barred weapons (gauntlet/refs/weapons_nhb.md) -------------------
+#
+# Body clips for using a weapon. The WEAPON's path through a swing -- where it
+# is and which way it points at the load, the contact and the follow-through
+# -- is not here: it is keyed in core/weapons/weapon_catalog.gd (SWING_PATHS)
+# and WeaponGrip puts it there and the hands onto its grips, so a chair shot
+# lands the chair's seat flat on the man whatever the wrist does. What these
+# carry is the body: the load, the step in, the turn, the crouch. The hands
+# here are where the weapon's grips will be, so the arm solve has little to
+# do. Contact frames sit at each swing's startup fraction (WeaponCatalog
+# SWINGS) after retiming in strike_recipes.gd.
+
+# kneeling on the right knee, as Kneel has it, leaning in to reach low
+KNEEL_REACH = pose(READY, pelvis=(0.0, 0.04, 0.53), hips=(-10, 0, 0),
+                   spine=(-34, 0, 0), head=(-22, 0, 0),
+                   foot_r=(0.15, -0.40, 0.13), knee_r=(0.2, 1.0, -0.6), ankle_r=(40, 0, 0),
+                   foot_l=(-0.16, 0.40, 0.104), knee_l=(-0.2, 1.0, 0.3),
+                   hand_r=(0.15, 0.58, 0.34), elbow_r=(0.8, 0.2, -0.6), fist_r=0.5,
+                   hand_l=(-0.12, 0.36, 0.62), elbow_l=(-1.0, 0.2, 0.0), fist_l=0.3)
+
+# 24 frames (0.8 s, 48 ticks), contact on frame 9: both hands up over the head,
+# arched back, then brought down onto him with a step in and the trunk folding.
+CLIPS["Weapon_Overhead"] = [
+    (0,  R()),
+    (5,  R(pelvis=(0.0, -0.05, 0.800), hips=(4, 0, 0), spine=(14, 0, 0), head=(10, 0, 0),
+           hand_r=(0.12, 0.04, 1.98), elbow_r=(0.8, -0.3, 0.6),
+           hand_l=(-0.12, 0.04, 1.98), elbow_l=(-0.8, -0.3, 0.6), fist_r=0.9, fist_l=0.9)),
+    (9,  R(pelvis=(0.0, 0.14, 0.740), hips=(-14, 0, 0), spine=(-30, 0, 0), head=(-10, 0, 0),
+           hand_r=(0.10, 0.55, 1.58), elbow_r=(0.7, -0.4, -0.2),
+           hand_l=(-0.10, 0.55, 1.58), elbow_l=(-0.7, -0.4, -0.2), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.22, 0.120), ankle_r=(14, 0, 0))),
+    (13, R(pelvis=(0.0, 0.12, 0.720), hips=(-16, 0, 0), spine=(-38, 0, 0), head=(-14, 0, 0),
+           hand_r=(0.10, 0.50, 1.16), hand_l=(-0.10, 0.50, 1.16), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.22, 0.112), ankle_r=(10, 0, 0))),
+    (24, R()),
+]
+
+# 22 frames (0.733 s, 44 ticks), contact on frame 8: a baseball swing -- the
+# load back over the right shoulder, the lead foot in, the hips then the
+# shoulders round, and on through across him.
+CLIPS["Weapon_Side"] = [
+    (0,  R()),
+    (4,  R(pelvis=(0.04, -0.05, 0.800), hips=(-4, 24, 0), spine=(-8, 30, -4), head=(6, -24, 0),
+           hand_r=(0.40, 0.00, 1.45), elbow_r=(1.0, -0.4, 0.4),
+           hand_l=(0.24, 0.04, 1.40), elbow_l=(-0.4, -0.4, -0.6), fist_r=0.95, fist_l=0.95)),
+    (8,  R(pelvis=(-0.02, 0.12, 0.790), hips=(-8, -28, 0), spine=(-12, -38, 0), head=(8, 22, 0),
+           hand_r=(0.05, 0.55, 1.35), elbow_r=(0.8, -0.2, -0.4),
+           hand_l=(-0.05, 0.50, 1.32), elbow_l=(-0.8, -0.2, -0.4), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (12, R(pelvis=(-0.02, 0.10, 0.790), hips=(-8, -40, 0), spine=(-12, -50, 0), head=(8, 30, 0),
+           hand_r=(-0.30, 0.30, 1.25), hand_l=(-0.35, 0.20, 1.22), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (22, R()),
+]
+
+# 18 frames (0.6 s, 36 ticks), contact on frame 6: drawn back to the hip, then
+# driven straight into his gut off a lunge.
+CLIPS["Weapon_Thrust"] = [
+    (0,  R()),
+    (3,  R(pelvis=(0.0, -0.08, 0.800), hips=(-4, 6, 0), spine=(-10, 8, 0),
+           hand_r=(0.15, 0.10, 1.10), hand_l=(-0.05, 0.16, 1.08), fist_r=0.95, fist_l=0.95)),
+    (6,  R(pelvis=(0.0, 0.18, 0.740), hips=(-16, 0, 0), spine=(-26, 0, 0), head=(-4, 0, 0),
+           hand_r=(0.10, 0.62, 1.12), hand_l=(-0.02, 0.42, 1.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.46, 0.104), foot_r=(0.27, -0.20, 0.130), ankle_r=(16, 0, 0))),
+    (10, R(pelvis=(0.0, 0.16, 0.740), hips=(-14, 0, 0), spine=(-24, 0, 0),
+           hand_r=(0.10, 0.54, 1.12), hand_l=(-0.02, 0.36, 1.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.46, 0.104), foot_r=(0.27, -0.20, 0.118))),
+    (18, R()),
+]
+
+# 20 frames (0.667 s, 40 ticks), contact on frame 7: one-handed overhand lash --
+# the right arm back and high behind the head, then over and down at him.
+CLIPS["Weapon_Whip"] = [
+    (0,  R()),
+    (4,  R(hips=(-4, 20, 0), spine=(-6, 24, 0), head=(6, -16, 0), clav_r=(0, 10, 8),
+           hand_r=(0.40, -0.10, 1.80), elbow_r=(1.0, -0.4, 0.6), fist_r=0.95,
+           hand_l=(-0.15, 0.45, 1.30))),
+    (7,  R(pelvis=(-0.02, 0.10, 0.790), hips=(-8, -20, 0), spine=(-16, -30, 0), head=(8, 18, 0),
+           clav_r=(0, -16, 0), hand_r=(0.15, 0.45, 1.55), elbow_r=(1.0, 0.0, 0.2), fist_r=1.0,
+           hand_l=(-0.22, 0.30, 1.18),
+           foot_l=(-0.21, 0.38, 0.104), foot_r=(0.27, -0.18, 0.124), ankle_r=(14, 0, 0))),
+    (11, R(pelvis=(-0.02, 0.08, 0.790), hips=(-8, -26, 0), spine=(-20, -34, 0),
+           hand_r=(-0.05, 0.40, 1.15), fist_r=1.0, hand_l=(-0.22, 0.30, 1.16),
+           foot_l=(-0.21, 0.38, 0.104))),
+    (20, R()),
+]
+
+# 19 frames (0.633 s, 38 ticks), contact on frame 6: one-handed chop from
+# above the head -- a pan or the bell brought straight down.
+CLIPS["Weapon_Chop"] = [
+    (0,  R()),
+    (4,  R(hips=(2, 10, 0), spine=(8, 14, 0), head=(8, -8, 0), clav_r=(0, 6, 10),
+           hand_r=(0.32, 0.05, 1.95), elbow_r=(1.0, -0.3, 0.7), fist_r=0.95,
+           hand_l=(-0.18, 0.42, 1.28))),
+    (6,  R(pelvis=(0.0, 0.10, 0.770), hips=(-12, -10, 0), spine=(-24, -14, 0), head=(-4, 8, 0),
+           hand_r=(0.12, 0.52, 1.58), elbow_r=(0.9, -0.2, 0.1), fist_r=1.0,
+           hand_l=(-0.20, 0.30, 1.16),
+           foot_l=(-0.21, 0.36, 0.104), foot_r=(0.27, -0.18, 0.120), ankle_r=(12, 0, 0))),
+    (10, R(pelvis=(0.0, 0.08, 0.760), hips=(-14, -12, 0), spine=(-30, -16, 0),
+           hand_r=(0.05, 0.42, 1.20), fist_r=1.0, foot_l=(-0.21, 0.36, 0.104))),
+    (19, R()),
+]
+
+# 36 frames: brought up to aim, held, fired (frame 15), the kick of it, held,
+# lowered. Retimed for the gun (1.2 s), the launcher (1.87 s) and the
+# extinguisher (1.33 s); the weapon itself rides WeaponGrip's path.
+CLIPS["Weapon_Aim"] = [
+    (0,  R()),
+    (10, R(pelvis=(0.0, 0.0, 0.840), hips=(-4, -10, 0), spine=(-6, -12, 0), head=(2, 10, 0),
+           hand_r=(0.12, 0.50, 1.42), elbow_r=(0.9, -0.3, -0.2), fist_r=0.9,
+           hand_l=(0.02, 0.45, 1.38), elbow_l=(-0.9, -0.3, -0.2), fist_l=0.8)),
+    (15, R(pelvis=(0.0, 0.0, 0.840), hips=(-4, -10, 0), spine=(-6, -12, 0), head=(2, 10, 0),
+           hand_r=(0.12, 0.50, 1.42), fist_r=0.9, hand_l=(0.02, 0.45, 1.38), fist_l=0.8)),
+    (17, R(pelvis=(0.0, -0.03, 0.840), hips=(-2, -10, 0), spine=(-1, -12, 0), head=(6, 10, 0),
+           hand_r=(0.12, 0.44, 1.50), fist_r=0.9, hand_l=(0.02, 0.40, 1.46), fist_l=0.8)),
+    (24, R(pelvis=(0.0, 0.0, 0.840), hips=(-4, -10, 0), spine=(-6, -12, 0), head=(2, 10, 0),
+           hand_r=(0.12, 0.50, 1.42), fist_r=0.9, hand_l=(0.02, 0.45, 1.38), fist_l=0.8)),
+    (36, R()),
+]
+
+# 13 frames (0.433 s, 26 ticks), release on frame 6: two hands up behind the
+# head and the whole body behind the throw.
+CLIPS["Weapon_Throw"] = [
+    (0,  R()),
+    (4,  R(pelvis=(0.0, -0.06, 0.800), hips=(6, 0, 0), spine=(16, 0, 0), head=(8, 0, 0),
+           hand_r=(0.15, -0.05, 1.95), hand_l=(-0.10, -0.05, 1.95), fist_r=0.95, fist_l=0.95)),
+    (6,  R(pelvis=(0.0, 0.14, 0.760), hips=(-14, 0, 0), spine=(-30, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.10, 0.50, 1.70), hand_l=(-0.10, 0.50, 1.70), fist_r=0.6, fist_l=0.6,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.22, 0.124), ankle_r=(14, 0, 0))),
+    (9,  R(pelvis=(0.0, 0.12, 0.750), hips=(-16, 0, 0), spine=(-34, 0, 0),
+           hand_r=(0.10, 0.45, 1.20), hand_l=(-0.10, 0.45, 1.20), fist_r=0.3, fist_l=0.3,
+           foot_l=(-0.22, 0.42, 0.104))),
+    (13, R()),
+]
+
+# 60 frames, held: down on one knee at the apron, the right arm in under the
+# skirt feeling about for something.
+CLIPS["Weapon_Rummage"] = [
+    (0,  R()),
+    (12, KNEEL_REACH),
+    (24, pose(KNEEL_REACH, hand_r=(0.04, 0.64, 0.30))),
+    (36, pose(KNEEL_REACH, hand_r=(0.26, 0.60, 0.32), spine=(-36, 4, 0))),
+    (48, pose(KNEEL_REACH, hand_r=(0.10, 0.66, 0.30), spine=(-34, -4, 0))),
+    (60, KNEEL_REACH),
+]
+
+# 27 frames (0.9 s, 54 ticks), the weapon in his hand on frame 18: one more
+# reach, pulled out from under the ring, and up on his feet.
+CLIPS["Weapon_Retrieve"] = [
+    (0,  KNEEL_REACH),
+    (10, pose(KNEEL_REACH, hand_r=(0.10, 0.70, 0.30), spine=(-40, 0, 0))),
+    (18, pose(KNEEL_REACH, spine=(-12, 0, 0), head=(-4, 0, 0),
+              hand_r=(0.22, 0.26, 0.80), elbow_r=(1.0, -0.2, -0.4))),
+    (27, R()),
+]
+
+# 15 frames (0.5 s, 30 ticks), in hand on frame 8: down into a squat for it
+# and back up.
+CLIPS["Weapon_Pickup"] = [
+    (0,  R()),
+    (7,  R(pelvis=(0.0, 0.04, 0.560), hips=(-30, 0, 0), spine=(-40, 0, 0), head=(-14, 0, 0),
+           hand_r=(0.20, 0.46, 0.22), hand_l=(-0.15, 0.44, 0.26),
+           knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    (9,  R(pelvis=(0.0, 0.04, 0.580), hips=(-28, 0, 0), spine=(-36, 0, 0), head=(-12, 0, 0),
+           hand_r=(0.20, 0.42, 0.34), hand_l=(-0.15, 0.42, 0.36),
+           knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    (15, R()),
+]
+
+# 22 frames (0.733 s, 44 ticks), down on frame 15: bent over, both hands
+# setting it in front of him.
+CLIPS["Weapon_Set_Up"] = [
+    (0,  R()),
+    (8,  R(pelvis=(0.0, 0.05, 0.660), hips=(-26, 0, 0), spine=(-44, 0, 0), head=(-10, 0, 0),
+           hand_r=(0.25, 0.70, 0.62), hand_l=(-0.25, 0.70, 0.62),
+           knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    (15, R(pelvis=(0.0, 0.06, 0.640), hips=(-28, 0, 0), spine=(-48, 0, 0), head=(-10, 0, 0),
+           hand_r=(0.25, 0.80, 0.42), hand_l=(-0.25, 0.80, 0.42), fist_r=0.2, fist_l=0.2,
+           knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    (22, R()),
+]
+
+
 def main():
     arm = load_rig()
     clear_actions()

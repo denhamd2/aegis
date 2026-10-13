@@ -1954,6 +1954,8 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 	_wants_tie_up_this_tick = false
 	if fsm.current_state == WrestlerFSM.State.RUN:
 		_maybe_start_running_attack(input)
+	elif input.get("strike", false) and has_weapon() and held_weapon.def.swing == WeaponDef.Swing.POUR:
+		begin_weapon_action("set_up")      # the tacks poured, the bed of nails laid
 	elif input.get("strike", false) and has_weapon():
 		var swing := WeaponCatalog.swing_move(held_weapon.def)
 		_play_strike_clip(swing)
@@ -4771,8 +4773,22 @@ func _on_thrown_weapon_hit(w: WeaponActor, who: Node3D) -> void:
 ## Every tick: the carry pose, and losing it when he is put down or grabbed.
 func _tick_weapon() -> void:
 	if weapon_grip:
-		weapon_grip.advance(fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
-				WrestlerFSM.State.RUN]))
+		var path: Array = []
+		var t := -1.0
+		var dt := 0.0
+		if has_weapon() and fsm.current_state == WrestlerFSM.State.STRIKE and _is_weapon_swing(_active_move):
+			var total := _active_move.total_frames()
+			path = WeaponCatalog.swing_path(held_weapon.def)
+			t = float(total - _move_ticks_remaining) / total
+			dt = 1.0 / total
+		elif has_weapon() and fsm.current_state == WrestlerFSM.State.WEAPON_ACTION and _weapon_action == "throw":
+			path = WeaponCatalog.SWING_PATHS["throw"]
+			t = float(_weapon_action_ticks) / int(WEAPON_ACTION_TICKS["throw"])
+			dt = 1.0 / int(WEAPON_ACTION_TICKS["throw"])
+		# through a swing the carry stays: the path starts and ends on it, and a
+		# swing with none (the launcher, the spray) is fired from it
+		weapon_grip.advance(t >= 0.0 or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+				WrestlerFSM.State.RUN]), path, t, dt)
 	if held_weapon and not is_instance_valid(held_weapon):
 		held_weapon = null
 	if has_weapon() and not fsm.current_state in KEEP_WEAPON_STATES:

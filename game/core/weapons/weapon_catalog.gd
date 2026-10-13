@@ -56,7 +56,7 @@ const TABLE := [
 	["kendo_stick", "Kendo Stick", WeaponDef.Family.SWUNG, "kendo_stick", "KendoStick_Clean", "",
 		"KendoStick_Broken", "", WeaponDef.Swing.SIDE, 8.0, 3.0, 0, 8, true, false, 0.0, "hit_wood", [], {}],
 	["sledgehammer", "Sledgehammer", WeaponDef.Family.SWUNG, "sledgehammer", "Sledgehammer_Clean", "", "", "",
-		WeaponDef.Swing.THRUST, 14.0, 4.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
+		WeaponDef.Swing.OVERHEAD, 14.0, 4.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
 	["lead_pipe", "Lead Pipe", WeaponDef.Family.SWUNG, "lead_pipe", "LeadPipe_Clean", "", "", "",
 		WeaponDef.Swing.SIDE, 10.0, 3.0, 0, 0, false, false, 0.0, "hit_metal", [], {}],
 	["board_with_nails", "2x4 With Nails", WeaponDef.Family.SWUNG, "board_with_nails", "BoardWithNails_Clean",
@@ -307,6 +307,153 @@ static func _frame(up: Vector3, fwd: Vector3) -> Basis:
 	var z := -(fwd - y * fwd.dot(y)).normalized()
 	var x := y.cross(z).normalized()
 	return Basis(x, y, z)
+
+
+## The weapon's own path through each kind of swing, which the body clip
+## (wrestling_clips.py, "No Holds Barred weapons") does not carry: WeaponGrip
+## puts the weapon here and the hands onto its grips. Keys are
+##   [t, grip, S, U]
+## with t over the whole move (contact at startup / total), `grip` where the
+## grip_r marker goes, relative to his chest and in his chest's axes (x right,
+## y up, -z forward: the chest leans and turns with the clip, so the step and
+## the twist carry the weapon), S the way the weapon points (grip to strike)
+## and U the way its face leads (orthogonalised against S). Before the first
+## key and after the last it eases from and back to the carry.
+## A swing with no path (the punch, the launcher on his shoulder, the pour)
+## keeps the carry, or the hand, throughout.
+const SWING_PATHS := {
+	"overhead": [
+		[0.22, Vector3(0.10, 0.52, 0.06), Vector3(0.0, 0.45, 0.9), Vector3(0.0, 0.9, -0.45)],
+		[0.375, Vector3(0.06, 0.36, -0.42), Vector3(0.0, -0.3, -0.95), Vector3(0.0, -0.95, 0.3)],
+		[0.52, Vector3(0.05, -0.02, -0.40), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
+	],
+	"side": [
+		[0.20, Vector3(0.30, 0.24, 0.10), Vector3(0.25, 0.65, 0.7), Vector3(-0.95, 0.2, 0.1)],
+		[0.364, Vector3(0.04, 0.14, -0.42), Vector3(-0.3, 0.05, -0.95), Vector3(-0.95, 0.0, 0.3)],
+		[0.55, Vector3(-0.28, 0.08, -0.22), Vector3(-0.9, 0.15, 0.35), Vector3(0.35, 0.0, 0.9)],
+	],
+	"thrust": [
+		[0.17, Vector3(0.20, -0.14, 0.10), Vector3(-0.1, 0.1, -1.0), Vector3(0.0, 1.0, 0.0)],
+		[0.333, Vector3(0.08, -0.06, -0.45), Vector3(-0.1, 0.05, -1.0), Vector3(0.0, 1.0, 0.0)],
+		[0.50, Vector3(0.08, -0.08, -0.36), Vector3(-0.1, 0.05, -1.0), Vector3(0.0, 1.0, 0.0)],
+	],
+	"whip": [
+		[0.20, Vector3(0.34, 0.46, 0.14), Vector3(0.2, 0.3, 0.9), Vector3(0.0, 1.0, 0.0)],
+		[0.35, Vector3(0.12, 0.26, -0.44), Vector3(-0.1, -0.4, -0.9), Vector3(0.0, -0.9, 0.4)],
+		[0.55, Vector3(-0.04, -0.14, -0.34), Vector3(-0.3, -0.9, -0.2), Vector3(0.0, -0.2, 0.9)],
+	],
+	"chop": [
+		[0.20, Vector3(0.28, 0.54, 0.04), Vector3(0.0, 0.6, 0.8), Vector3(0.0, 0.8, -0.6)],
+		[0.316, Vector3(0.10, 0.30, -0.44), Vector3(0.0, -0.3, -0.95), Vector3(0.0, -0.95, 0.3)],
+		[0.50, Vector3(0.06, -0.04, -0.40), Vector3(0.0, -0.9, -0.4), Vector3(0.0, -0.4, 0.9)],
+	],
+	"gun": [
+		[0.25, Vector3(0.12, 0.14, -0.50), Vector3(0.0, 0.0, -1.0), Vector3(0.0, 1.0, 0.0)],
+		[0.417, Vector3(0.12, 0.14, -0.50), Vector3(0.0, 0.0, -1.0), Vector3(0.0, 1.0, 0.0)],
+		[0.46, Vector3(0.12, 0.19, -0.44), Vector3(0.0, 0.32, -0.95), Vector3(0.0, 0.95, 0.32)],
+		[0.66, Vector3(0.12, 0.14, -0.50), Vector3(0.0, 0.0, -1.0), Vector3(0.0, 1.0, 0.0)],
+	],
+	# the extinguisher brought up and its horn pointed at him for the spray's
+	# 40 ticks (20 to 60 of 80)
+	"spray": [
+		[0.20, Vector3(0.12, -0.12, -0.34), Vector3(0.0, 0.55, -0.85), Vector3(0.0, 0.85, 0.55)],
+		[0.76, Vector3(0.12, -0.12, -0.34), Vector3(0.0, 0.55, -0.85), Vector3(0.0, 0.85, 0.55)],
+	],
+	# the throw (WrestlerController "throw"): up behind his head, let go at 12/26
+	"throw": [
+		[0.30, Vector3(0.08, 0.52, 0.08), Vector3(0.0, 0.5, 0.85), Vector3(0.0, 0.85, -0.5)],
+		[0.47, Vector3(0.06, 0.46, -0.34), Vector3(0.0, 0.3, -0.95), Vector3(0.0, 0.95, 0.3)],
+	],
+}
+
+
+## The path a swing of `weapon` follows (SWING_PATHS), [] if none.
+static func swing_path(weapon: WeaponDef) -> Array:
+	return SWING_PATHS.get(String(SWING_NAMES[weapon.swing]), [])
+
+
+## Where `weapon` (shown as `actor`) is at `t` of path `keys`, given his chest
+## frame and where the carry (or the hand) would put it.
+static func path_transform(actor: WeaponActor, keys: Array, chest: Transform3D, t: float,
+		rest: Transform3D) -> Transform3D:
+	var axes := swing_axes(actor)
+	var grip := actor.marker("grip_r")
+	var first: Array = keys[0]
+	var last: Array = keys[keys.size() - 1]
+	var key_at := func(k: Array) -> Transform3D:
+		var basis := chest.basis.orthonormalized() * _frame_su(k[2], k[3]) * _frame_su(axes[0], axes[1]).inverse()
+		return Transform3D(basis, chest * (k[1] as Vector3) - basis * grip.origin)
+	if t <= float(first[0]):
+		return _blend(rest, key_at.call(first), _ease(t / maxf(float(first[0]), 0.001)))
+	if t >= float(last[0]):
+		var out := (t - float(last[0])) / maxf(1.0 - float(last[0]), 0.001)
+		return _blend(key_at.call(last), rest, _ease(clampf(out * 1.6, 0.0, 1.0)))
+	for i in keys.size() - 1:
+		var a: Array = keys[i]
+		var b: Array = keys[i + 1]
+		if t <= float(b[0]):
+			var u := (t - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.001)
+			return _blend(key_at.call(a), key_at.call(b), _ease(u))
+	return rest
+
+
+static func _ease(u: float) -> float:
+	u = clampf(u, 0.0, 1.0)
+	return u * u * (3.0 - 2.0 * u)
+
+
+static func _blend(a: Transform3D, b: Transform3D, w: float) -> Transform3D:
+	return Transform3D(a.basis.orthonormalized().slerp(b.basis.orthonormalized(), w), a.origin.lerp(b.origin, w))
+
+
+## A frame whose -Z is `s` (the way it points) and +Y is `u` made square to it.
+static func _frame_su(s: Vector3, u: Vector3) -> Basis:
+	var z := -s.normalized()
+	var y := (u - z * u.dot(z))
+	if y.length() < 0.01:
+		y = Vector3.UP - z * z.y if absf(z.y) < 0.95 else Vector3.FORWARD - z * z.z
+	y = y.normalized()
+	return Basis(y.cross(z).normalized(), y, z)
+
+
+static var _axes := {}
+
+## The weapon's own [S, U]: S from its grip to what it hits with (the strike
+## marker, a gun's muzzle, else along its longest side away from the grip);
+## U its flat face -- its thinnest side, signed toward the strike marker's
+## offset (the nails of a 2x4, the blade of a hockey stick) -- or, for a gun,
+## its top.
+static func swing_axes(actor: WeaponActor) -> Array:
+	var key := actor.state_root
+	if _axes.has(key):
+		return _axes[key]
+	var box := actor.local_bounds()
+	var grip := actor.marker("grip_r").origin
+	var s := Vector3.ZERO
+	var u := Vector3.ZERO
+	var strike := actor.marker("strike")
+	var has_strike := actor.has_marker("strike")
+	if actor.def.swing == WeaponDef.Swing.SPRAY:
+		# the canister, top first: its horn hangs on a hose, so it is the
+		# canister he points (the cloud goes where he faces, WeaponActor)
+		s = Vector3.UP
+		u = Vector3.FORWARD
+	elif actor.has_marker("muzzle") and is_ranged(actor.def):
+		s = WeaponActor.muzzle_out(actor.marker("muzzle"))
+		u = Vector3.UP if absf(s.y) < 0.9 else Vector3.BACK
+	else:
+		var long := box.get_longest_axis_index()
+		var to := (strike.origin if has_strike else box.get_center()) - grip
+		s = Vector3.ZERO
+		s[long] = 1.0 if to[long] >= 0.0 else -1.0
+		if has_strike and to.length() > 0.05:
+			s = to.normalized()
+		var thin := box.get_shortest_axis_index()
+		if thin == long:
+			thin = (long + 1) % 3
+		u[thin] = 1.0 if not has_strike or (strike.origin - grip)[thin] >= -0.005 else -1.0
+	_axes[key] = [s.normalized(), u]
+	return _axes[key]
 
 
 static func carry_anchor(weapon: WeaponDef) -> String:

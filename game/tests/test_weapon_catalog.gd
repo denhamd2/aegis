@@ -108,3 +108,42 @@ func test_wear_dents_then_a_breakable_one_breaks() -> void:
 	for i in 400:
 		guitar._physics_process(1.0 / 60.0)
 	assert_bool(guitar.visible).is_false()
+
+
+func test_every_swing_and_weapon_action_has_its_clip() -> void:
+	var lib: AnimationLibrary = load("res://resources/animations/strike_clips.tres")
+	var names := []
+	for d in WeaponCatalog.all():
+		names.append(String(WeaponCatalog.swing_move(d).animation_pair_id))
+	for clip: String in WrestlerController.WEAPON_ACTION_CLIPS.values():
+		names.append(clip.trim_prefix("strikes/"))
+	for n: String in names:
+		assert_bool(lib.has_animation(n)).override_failure_message("no clip %s" % n).is_true()
+
+
+## A swing's path starts on the carry and comes back to it, and at the
+## contact the business end is out in front of him at head-to-chest height.
+func test_every_swing_path_leaves_and_returns_to_the_carry_and_lands_in_front() -> void:
+	var chest := Transform3D(Basis.IDENTITY, Vector3(0.0, 1.25, 0.0))
+	var rest := Transform3D(Basis.IDENTITY, Vector3(0.3, 1.0, -0.3))
+	var checked := 0
+	for d in WeaponCatalog.all():
+		var keys := WeaponCatalog.swing_path(d)
+		if keys.is_empty():
+			continue
+		var a := WeaponActor.make(d, d.held)
+		auto_free(a)
+		add_child(a)
+		var start := WeaponCatalog.path_transform(a, keys, chest, 0.0, rest)
+		var end := WeaponCatalog.path_transform(a, keys, chest, 1.0, rest)
+		assert_float(start.origin.distance_to(rest.origin)).is_less(0.001)
+		assert_float(end.origin.distance_to(rest.origin)).is_less(0.001)
+		var m := WeaponCatalog.swing_move(d)
+		var placed := WeaponCatalog.path_transform(a, keys, chest, float(m.startup_frames) / m.total_frames(), rest)
+		var axes := WeaponCatalog.swing_axes(a)
+		var grip := placed * a.marker("grip_r").origin
+		var tip := grip + placed.basis * (axes[0] as Vector3) * 0.3
+		assert_float(-tip.z).override_failure_message("%s lands behind him" % d.id).is_greater(0.45)
+		assert_float(tip.y).override_failure_message("%s lands at %.2f" % [d.id, tip.y]).is_between(0.9, 1.9)
+		checked += 1
+	assert_int(checked).is_greater(25)
