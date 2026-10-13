@@ -19,11 +19,16 @@ extends Node
 ## is ever heard twice together) riding one slewed intensity, plus a roar on
 ## the excitement and, by who is hurting whom, boos or a cheer. Levels in dB
 ## at intensity 0 and 1; nothing steps, every layer slews to its target.
-const BED_DB := -9.0
-const BED_EXCITED_DB := -3.0
-const WALLA_A_DB := [-26.0, -9.0]
-const WALLA_B_DB := [-32.0, -8.0]
-const ROAR_MAX_DB := 0.0
+##
+## Every loop is cut to the same loudness (build_sfx.CROWD_LUFS, -16 LUFS), so
+## these numbers are the mix: about -21 LUFS of crowd in a quiet minute,
+## -15 at full cry, with chants (CrowdChants) over the top. Read back off a
+## recording by tools/audio/measure_mix.py.
+const BED_DB := -5.0
+const BED_EXCITED_DB := -1.0
+const WALLA_A_DB := [-15.0, -5.0]
+const WALLA_B_DB := [-28.0, -5.0]
+const ROAR_MAX_DB := -3.0
 ## Below this the roar is off; it comes in on a curve so a jab does nothing.
 const ROAR_FLOOR := 0.08
 ## How fast a layer's level closes on its target, per second.
@@ -34,7 +39,7 @@ const PHASE_FULL := 300.0
 const PHASE_FLOOR_MAX := 0.32
 ## Boos and cheers die away by half every this many seconds.
 const HEAT_HALF_LIFE := 4.5
-const HEAT_ON_DB := -6.0
+const HEAT_ON_DB := -4.0
 const HEAT_OFF_DB := -42.0
 
 ## A bump: the pelvis falling faster than this and then stopping, low.
@@ -68,11 +73,16 @@ var cheer := 0.0
 var _clock := 0.0
 var _crowd: CrowdReaction
 var _referee: MatchReferee
+var _director: EntranceDirector
+## When the building chants (CrowdChants).
+var chants: CrowdChants
 ## The winner's theme, once the bell has gone: from his chorus, faded in, with
 ## the crowd beds ducked under it.
 const THEME_DB := -3.0
 const THEME_FADE_IN := 2.5
-const THEME_DUCK_DB := -10.0
+## Under music the crowd dips, it does not vanish: a live room is not turned
+## down for a song.
+const THEME_DUCK_DB := -4.0
 var _theme: AudioStreamPlayer
 var _theme_from := -1.0
 var _theme_fade := 0.0
@@ -92,6 +102,10 @@ func _ready() -> void:
 	sfx.name = "Sfx"
 	add_child(sfx)
 	add_to_group(WeaponActor.LISTENERS)
+	chants = CrowdChants.new()
+	chants.name = "Chants"
+	chants.sfx = sfx
+	add_child(chants)
 	_bed = sfx.make_loop("crowd_bed")
 	_walla_a = sfx.make_loop("crowd_walla_a")
 	_walla_b = sfx.make_loop("crowd_walla_b")
@@ -115,10 +129,18 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction) -> voi
 	_crowd = crowd
 	_wrestlers = wrestlers
 	for w: WrestlerController in wrestlers:
+		match Persona.of(w.display_name):
+			Persona.Kind.FACE:
+				chants.cody_here = chants.cody_here or w.display_name.to_upper().contains("CODY")
+			Persona.Kind.HEEL:
+				chants.roman_here = chants.roman_here or w.display_name.to_upper().contains("ROMAN")
 		w.move_landed.connect(_on_move_landed)
 		w.reversed.connect(func(_r, _s, _m): sfx.play("whoosh", -6.0))
 		w.taunted.connect(func(who): _heat(who, 0.5); sfx.play_any("crowd_pop", -9.0))
-		w.fired_up.connect(func(who): _heat(who, 0.7); sfx.play_any("crowd_pop", -6.0))
+		w.fired_up.connect(func(who):
+			_heat(who, 0.7)
+			sfx.play_any("crowd_pop", -6.0)
+			chants.fired_up(favor_of(who.display_name)))
 		w.set_piece_landed.connect(_on_set_piece_landed)
 		_cooldown[w] = 0.0
 		_falls[w] = []
@@ -128,6 +150,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction) -> voi
 ## The entrances' cues (EntranceDirector.cue): the pyro, and the crowd as a
 ## man's music hits.
 func follow(director: EntranceDirector) -> void:
+	_director = director
 	director.cue.connect(_on_cue)
 
 
@@ -150,7 +173,12 @@ func _on_cue(what: String) -> void:
 		"strobe":
 			sfx.play("pyro_bang", -6.0)
 		"tron_on":
-			sfx.play_any("crowd_pop", -5.0)
+			# The music hits: the building goes up, and sings or boos.
+			sfx.play_any("crowd_pop", -2.0)
+			var who: WrestlerController = _director.entrance_owner() if _director else null
+			if who:
+				_heat(who, 1.0)
+				chants.entrance(who.entrance_style)
 
 
 ## Which sound a landed move makes the moment it lands, if any. Strikes and
@@ -240,6 +268,8 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 	if sound != "" and not sfx.play_any(sound, hit_volume(move)):
 		sfx.play(sound, hit_volume(move))      # a one-off: the bell, the whoosh
 	var pop := CrowdReaction.move_pop(move)
+	if attacker is WrestlerController:
+		chants.moved(favor_of((attacker as WrestlerController).display_name), pop)
 	if pop >= POP_MOVE:
 		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
 
@@ -258,6 +288,9 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 		"blast":
 			sfx.play("pyro_boom", 0.0)
 			sfx.play_any("crowd_ooh", -2.0)
+		"set_up":
+			if weapon.def.id == &"table":
+				chants.table_set_up()
 		"broke":
 			if weapon.def.id == &"table":
 				sfx.play_any("table_crack", 0.0)
@@ -275,11 +308,13 @@ func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: 
 
 func _on_match_won(winner: Variant, method: String) -> void:
 	_over = true
+	chants.match_over(favor_of((winner as WrestlerController).display_name) if winner is WrestlerController else 0.0)
 	# The three lands on the tick the match ends, before _process hears the
 	# count: slap it here so the hand comes down before the bell, not after.
 	if method == "pinfall" and _count_heard < 3:
 		_count_heard = 3
 		sfx.play_any("count_slap", -1.0)
+		chants.count(3, sfx)
 	sfx.play("bell_end", -1.0)
 	sfx.play("crowd_finish", 0.0)
 	var w := winner as WrestlerController
@@ -349,6 +384,7 @@ func _process(delta: float) -> void:
 		var level := clampf((excitement - ROAR_FLOOR) / (1.0 - ROAR_FLOOR), 0.0, 1.0)
 		_roar.volume_db = ROAR_MAX_DB + linear_to_db(maxf(pow(level, 1.5), 0.0001))
 	_hear_the_count()
+	chants.tick(delta, excitement)
 	for w: WrestlerController in _wrestlers:
 		if is_instance_valid(w):
 			_hear_bumps(w, delta)
@@ -371,7 +407,9 @@ func _hear_the_count() -> void:
 	if count > _count_heard:
 		_count_heard = count
 		sfx.play_any("count_slap", -1.0)
+		chants.count(count, sfx)
 	if not pinning and _was_pinning and _count_heard >= 2 and not _over:
+		chants.kicked_out(_count_heard)
 		# A kickout after two: the gasp. (A three is the bell, not this.)
 		sfx.play_any("crowd_ooh", -3.0)
 		sfx.play_any("crowd_pop", -4.0)

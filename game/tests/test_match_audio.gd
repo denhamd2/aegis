@@ -75,7 +75,7 @@ func test_the_crowd_beds_are_out_of_step() -> void:
 	for n: String in ["crowd_bed", "crowd_walla_a", "crowd_walla_b"]:
 		var s := SfxPool.stream(n) as AudioStreamOggVorbis
 		lengths.append(int(round(s.get_length())))
-	assert_array(lengths).is_equal([52, 23, 41])
+	assert_array(lengths).is_equal([52, 41, 47])
 	# Pairwise co-prime: the combined pattern repeats only after the product.
 	for i in lengths.size():
 		for j in range(i + 1, lengths.size()):
@@ -161,4 +161,4 @@ func test_winner_theme_starts_at_the_chorus_not_the_top() -> void:
 	for i in 90:
 		audio._process(0.05)
 	assert_float(p.volume_db).is_greater(MatchAudio.THEME_DB - 1.0)
-	assert_float(audio._duck).is_less(-5.0)
+	assert_float(audio._duck).is_less(MatchAudio.THEME_DUCK_DB * 0.5)

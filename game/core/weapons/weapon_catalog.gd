@@ -151,21 +151,26 @@ const CARRY := {
 		Vector3(0, -1, 0), Vector3(-0.12, 0.72, 0.68), Vector3(0, 0, -1), Vector3(0.0, 0.68, -0.72)],
 	"trash_can": ["grip_r", Vector3(0.26, 1.12, -0.32),
 		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
-	"steel_steps": ["grip_r", Vector3(0.40, 1.05, -0.30),
-		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, 1)],
+	# square in front of him, a hand on each side, the handled edge against
+	# his stomach: how ring steps are carried (two men's work; he manages)
+	"steel_steps": ["grips", Vector3(0.0, 1.0, -0.28),
+		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
 	"ring_bell": ["grip_r", Vector3(0.20, 1.00, -0.32),
 		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
-	"championship_belt": ["grip_r", Vector3(0.26, 1.02, -0.18),
-		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)],
-	"frying_pan": ["grip_r", Vector3(0.24, 1.02, -0.24),
-		Vector3(0, 1, 0), Vector3(0.1, 0.85, -0.5), Vector3(0, 0, -1), Vector3(0.0, 0.5, 0.85)],
+	# by the end of its strap at his side, the plate hanging, face out
+	"championship_belt": ["grip_r", Vector3(0.27, 0.98, -0.10),
+		Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)],
+	# by the handle at his side, the pan hanging -- not held up at his chest
+	"frying_pan": ["grip_r", Vector3(0.27, 0.96, -0.08),
+		Vector3(0, 1, 0), Vector3(0.1, -1, 0.15), Vector3(0, 0, -1), Vector3(-1, 0, 0)],
 	"briefcase": ["grip_r", Vector3(0.30, 0.86, -0.04),
 		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(1, 0, 0)],
-	# folded flat: carried upright in front, the front edge up, top facing out
-	"table": ["grip_r", Vector3(0.30, 1.22, -0.38),
+	# folded flat: carried upright in front by its top edge, a hand at each
+	# end of it, top facing out
+	"table": ["grips", Vector3(0.0, 1.18, -0.36),
 		Vector3(0, 0, -1), Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1)],
 	# closed: under his arm, top end ahead
-	"ladder": ["grip_r", Vector3(0.30, 1.12, -0.05),
+	"ladder": ["grip_r", Vector3(0.50, 1.12, -0.05),
 		Vector3(0, 1, 0), Vector3(0, 0.15, -0.99), Vector3(0, 0, -1), Vector3(1, 0, 0)],
 	"thumbtacks": _HANG_SIDE,
 	"bed_of_nails": ["grip_r", Vector3(0.55, 1.10, -0.38),
@@ -183,6 +188,35 @@ const CARRY := {
 	# on the fist: no carry, it goes where the hand goes
 	"brass_knuckles": [],
 }
+
+## Two-handed to swing, one-handed to carry, as a person does it: a case by
+## its handle, an extinguisher by its grip, a closed ladder under one arm, a
+## belt by its strap. The left hand joins for the swing (WeaponGrip), and
+## hangs free till then.
+const ONE_HAND_CARRY: Array[StringName] = [&"briefcase", &"fire_extinguisher", &"ladder",
+		&"championship_belt"]
+
+## Wide things swung in both hands, a hand at each side: their swing paths
+## steer the point between the hands, not the right hand's grip. Steered by the
+## right hand, the left handle of an 84 cm set of steps ended up past the
+## left arm's reach at the top of the swing (test_weapon_grip_contact).
+const CENTRED_SWING: Array[StringName] = [&"steel_steps", &"table", &"briefcase", &"trash_can",
+		&"barbed_wire_board", &"ladder", &"fire_extinguisher"]
+
+## How it comes up off the floor (WrestlerController's pickup actions): the
+## squat lift for the heavy ones, both hands for the long and the two-handed,
+## one hand for the rest.
+const HEAVY_LIFT: Array[StringName] = [&"steel_steps", &"table", &"trash_can", &"ladder",
+		&"bed_of_nails", &"barbed_wire_board", &"light_tubes", &"rpg", &"fire_extinguisher"]
+
+
+static func pickup_action(def: WeaponDef) -> String:
+	if def.id in HEAVY_LIFT:
+		return "pickup_heavy"
+	if def.two_handed and not def.id in ONE_HAND_CARRY:
+		return "pickup_two"
+	return "pickup"
+
 
 static var _defs: Array[WeaponDef] = []
 static var _moves := {}
@@ -414,7 +448,7 @@ static func swing_path(weapon: WeaponDef) -> Array:
 static func path_transform(actor: WeaponActor, keys: Array, chest: Transform3D, t: float,
 		rest: Transform3D) -> Transform3D:
 	var axes := swing_axes(actor)
-	var grip := actor.marker("grip_r")
+	var grip := actor.marker("grips" if actor.def.id in CENTRED_SWING else "grip_r")
 	var first: Array = keys[0]
 	var last: Array = keys[keys.size() - 1]
 	var key_at := func(k: Array) -> Transform3D:

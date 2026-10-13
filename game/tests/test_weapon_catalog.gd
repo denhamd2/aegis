@@ -141,7 +141,9 @@ func test_every_swing_path_leaves_and_returns_to_the_carry_and_lands_in_front() 
 		var m := WeaponCatalog.swing_move(d)
 		var placed := WeaponCatalog.path_transform(a, keys, chest, float(m.startup_frames) / m.total_frames(), rest)
 		var axes := WeaponCatalog.swing_axes(a)
-		var grip := placed * a.marker("grip_r").origin
+		# the point the path steers: the right grip, or between the hands for
+		# the wide things swung square (WeaponCatalog.CENTRED_SWING)
+		var grip := placed * a.marker("grips" if d.id in WeaponCatalog.CENTRED_SWING else "grip_r").origin
 		var tip := grip + placed.basis * (axes[0] as Vector3) * 0.3
 		assert_float(-tip.z).override_failure_message("%s lands behind him" % d.id).is_greater(0.45)
 		assert_float(tip.y).override_failure_message("%s lands at %.2f" % [d.id, tip.y]).is_between(0.9, 1.9)

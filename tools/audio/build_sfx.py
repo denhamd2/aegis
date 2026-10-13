@@ -28,6 +28,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 OUT = os.path.join(ROOT, "game", "assets", "audio")
 CACHE = os.path.expanduser("~/.cache/aegis_audio")
 SR = 44100
+## Every crowd loop is cut to this integrated loudness; MatchAudio's levels
+## then set the mix (see measure_mix.py for what that comes to).
+CROWD_LUFS = -16.0
 
 # Freesound CC0 uploads: id -> (uploader, preview url). The HQ preview is the
 # 192k Ogg the site streams; the originals need a login and are no better for
@@ -43,6 +46,15 @@ FREESOUND = {
 	"251759": ("misosound", "BOOMING PUNCHY EXPLOSION - close, big"),
 	"336011": ("Rudmer_Rotteveel", "Sharp Explosion 4 (of 5)"),
 	"683101": ("florianreichelt", "quick woosh"),
+	# Indoor arenas and a real wrestling crowd (the crowd round 2 beds).
+	"424297": ("Douglas711", "Boston Garden Celtics Ambience"),
+	"635492": ("kyles", "crowd int large dense arena stadium hall"),
+	"141704": ("felix.blume", "Mexican Lucha Libre: crowd yelling, whistling"),
+	"504621": ("NeoSpica", "Booing Crowd"),
+	"557189": ("Julien_Matthey", "JM_AMB_INT_Crowd Sport 01 - Booing"),
+	"480725": ("craigsmith", "R08-24-Large Crowd Screaming and Whistling"),
+	"764273": ("ShangusBurger", "CRWDCheer_Cheering, Whistling, No Clapping"),
+	"424793": ("johnnyguitar01", "crowd clap rhythmic"),
 }
 # archive.org CC0 field recordings (Red Library crowds): file -> description.
 # The item's licenseurl is checked at download time.
@@ -157,6 +169,45 @@ def rms_to(x: np.ndarray, db: float) -> np.ndarray:
 	return x * (10 ** (db / 20) / r) if r > 0 else x
 
 
+def lufs(x: np.ndarray) -> float:
+	"""Integrated loudness (EBU R128 / ITU BS.1770), measured by ffmpeg."""
+	import re
+	r = subprocess.run(["ffmpeg", "-hide_banner", "-f", "f32le", "-ar", str(SR), "-ac",
+			str(x.shape[1]), "-i", "-", "-af", "ebur128", "-f", "null", "-"],
+			input=np.ascontiguousarray(x, np.float32).tobytes(), capture_output=True).stderr.decode()
+	return float(re.findall(r"I:\s+(-?[\d.]+) LUFS", r)[-1])
+
+
+def lufs_to(x: np.ndarray, target: float, ceiling: float = -1.5) -> np.ndarray:
+	"""Gain to an integrated loudness: how loud it sounds, not its RMS -- but
+	never past `ceiling` dBFS on its peak (the Vorbis encode adds a little)."""
+	gain = (target - lufs(x))
+	gain = min(gain, ceiling - 20 * np.log10(float(np.abs(x).max()) + 1e-12))
+	return x * 10 ** (gain / 20)
+
+
+def even_out(x: np.ndarray, window: float = 1.5, most_db: float = 9.0) -> np.ndarray:
+	"""Takes a dynamic field recording's long swells and lulls out (a slow
+	gain riding the 1.5 s level toward its median) while every yell inside a
+	second stays. MatchAudio makes the swells; the bed must not bring its own."""
+	hop = int(window * SR / 4)
+	n = len(x) // hop
+	env = np.sqrt((x[:n * hop].reshape(n, hop, -1) ** 2).mean(axis=(1, 2))) + 1e-9
+	k = 4
+	env = np.convolve(env, np.ones(k) / k, "same")
+	db = 20 * np.log10(env)
+	gain = np.clip(np.median(db) - db, -most_db, most_db)
+	g = np.interp(np.arange(len(x)), np.arange(n) * hop + hop / 2, 10 ** (gain / 20))
+	return (x * g[:, None]).astype(np.float32)
+
+
+def widen(x: np.ndarray, ms: float = 17.0) -> np.ndarray:
+	"""Mono (or narrow) to wide: the right channel a few ms behind the left."""
+	m = x.mean(axis=1)
+	d = int(ms / 1000 * SR)
+	return np.stack([m, np.concatenate([np.zeros(d, np.float32), m[:-d]])], 1)
+
+
 def trim_tail(x: np.ndarray, below_db: float = -50.0) -> np.ndarray:
 	"""Drops the silence after the sound, relative to its own peak."""
 	env = np.abs(x).max(axis=1)
@@ -233,38 +284,47 @@ def layer(parts: list) -> np.ndarray:
 def build() -> None:
 	os.makedirs(OUT, exist_ok=True)
 	print("crowd")
-	# The bed: an NHL arena between plays -- a big room full of people, no
-	# PA, no organ. Under everything, all night.
-	bed = load(freesound("706497"), 2)
-	save("crowd_bed", rms_to(loop(cut(bed, 0.5, 54.0)), -20))
+	# The crowd, all four layers indoor arena recordings at one loudness, so
+	# MatchAudio's levels are the mix (tools/audio/measure_mix.py reads it back).
+	# Loop lengths 52 / 41 / 47 s, pairwise co-prime: no two seams ever line up.
+	#
+	# The bed: TD Garden, Boston, between plays -- a full arena, no PA.
+	bed = load(freesound("424297"), 2)
+	save("crowd_bed", lufs_to(loop(cut(bed, 108.0, 54.0)), CROWD_LUFS))
+	# The hall: a dense indoor crowd, mirrored left-right so it sits across
+	# the bed rather than on top of it.
+	hall = load(freesound("635492"), 2)[:, ::-1]
+	save("crowd_walla_a", lufs_to(loop(cut(hall, 10.0, 43.0)), CROWD_LUFS))
+	# The wrestling crowd: lucha libre in Mexico City -- yells, whistles, the
+	# odd scream -- with its long swells levelled out. Rides the excitement.
+	lucha = load(freesound("141704"), 2)
+	save("crowd_walla_b", lufs_to(loop(even_out(cut(lucha, 52.0, 49.0))), CROWD_LUFS))
 	# The roar: a sustained full-house cheer, faded up with the excitement
 	# CrowdReaction already tracks.
 	roar = load(freesound("397434"), 2)
-	save("crowd_roar", rms_to(loop(cut(roar, 0.3, 19.0), 1.5), -18))
+	save("crowd_roar", lufs_to(loop(cut(roar, 0.3, 19.0), 1.5), CROWD_LUFS))
+	# Boos for the heel and a cheer for the face: each two indoor recordings
+	# laid together so it is a building, not a section.
+	boo = load(freesound("504621"), 2)
+	boo2 = load(freesound("557189"), 2)
+	boos = cut(boo, 2.0, 26.0)
+	boos[:len(boo2) - int(0.5 * SR)] += 0.7 * cut(boo2, 0.5, 26.0)[:len(boos)]
+	save("crowd_boo", lufs_to(loop(boos, 1.5), CROWD_LUFS))
+	cheer = widen(load(freesound("480725"), 2))
+	cheer2 = load(freesound("764273"), 2)
+	cheers = cut(cheer, 20.0, 23.0)
+	cheers[:len(cheer2)] += 0.6 * cheer2[:len(cheers)]
+	save("crowd_cheer", lufs_to(loop(cheers, 1.5), CROWD_LUFS))
 	# Pops: six separate stadium reactions, each a rise and a long die-away.
 	pops = split_on_silence(load(freesound("829453"), 2), -60.0, 3.0)
 	for i, p in enumerate(pops[:5]):
-		save(f"crowd_pop_{i}", rms_to(fade(trim_tail(p, -45), 0.01, 0.8), -17))
+		save(f"crowd_pop_{i}", lufs_to(fade(trim_tail(p, -45), 0.01, 0.8), CROWD_LUFS + 2))
 	# The longest, loudest one is kept for the finish.
-	save("crowd_finish", rms_to(fade(trim_tail(pops[5], -45), 0.01, 1.5), -15))
+	save("crowd_finish", lufs_to(fade(trim_tail(pops[5], -45), 0.01, 1.5), CROWD_LUFS + 3))
 	# Oohs: the near-fall gasp.
 	oohs = [p for p in split_on_silence(load(freesound("264499"), 2), -40.0, 1.2)]
 	for i, p in enumerate(oohs[:4]):
-		save(f"crowd_ooh_{i}", rms_to(fade(p, 0.02, 0.4), -18))
-
-	# Out-of-sync beds, so no loop point is ever heard: with the 52 s bed above
-	# these run 52 / 23 / 41 s (pairwise co-prime; the cuts are sized so each loop
-	# comes out at exactly that length, the crossfade seam included), slurred and
-	# band-limited so no word in them is intelligible. MatchAudio rides them.
-	walla = load(archive("R08-05-Large Group at Event"), 2)
-	save("crowd_walla_a", rms_to(loop(sweeten(cut(walla, 4.0, 28.0), 1.12), 2.0), -21))
-	rec = load(archive("R28-29-Large Crowd Quiet, Then Big Reaction"), 2)
-	save("crowd_walla_b", rms_to(loop(sweeten(cut(rec, 1.0, 40.42), 0.94), 2.0), -21))
-	# Boos for the heel and a cheer swell for the face, each a held layer.
-	boo = load(archive("R08-09-Large Unhappy Crowd"), 2)
-	save("crowd_boo", rms_to(loop(sweeten(cut(boo, 0.3, 24.0), 1.0, 120.0, 3600.0), 1.5), -17))
-	cheer = load(archive("R25-22-Large Excited Crowd"), 2)
-	save("crowd_cheer", rms_to(loop(sweeten(cut(cheer, 0.2, 21.5), 1.0, 160.0, 6500.0), 1.5), -17))
+		save(f"crowd_ooh_{i}", lufs_to(fade(p, 0.02, 0.4), CROWD_LUFS + 1))
 
 	print("bell")
 	bell = load(freesound("571096"))

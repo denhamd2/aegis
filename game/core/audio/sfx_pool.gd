@@ -37,13 +37,30 @@ func _ready() -> void:
 
 ## A limiter on the master bus, once: a finisher's bump, the crowd pop and the
 ## bell can land in the same frame, and they should squash, not clip.
+##
+## Ahead of it a gentle compressor, the broadcast glue: with the crowd now at
+## its real level, a big pop and a bump stacked would otherwise ride the
+## limiter hard. 3:1 above -12 dB, quick in and slow out, so it holds a pop
+## level rather than pumping on every hit.
 static func guard_master() -> void:
+	var has_limiter := false
+	var has_glue := false
 	for i in AudioServer.get_bus_effect_count(0):
-		if AudioServer.get_bus_effect(0, i) is AudioEffectHardLimiter:
-			return
-	var limiter := AudioEffectHardLimiter.new()
-	limiter.ceiling_db = -0.5
-	AudioServer.add_bus_effect(0, limiter)
+		var e := AudioServer.get_bus_effect(0, i)
+		has_limiter = has_limiter or e is AudioEffectHardLimiter
+		has_glue = has_glue or e is AudioEffectCompressor
+	if not has_glue:
+		var glue := AudioEffectCompressor.new()
+		glue.threshold = -12.0
+		glue.ratio = 3.0
+		glue.attack_us = 8000.0
+		glue.release_ms = 250.0
+		glue.gain = 1.5
+		AudioServer.add_bus_effect(0, glue, 0)
+	if not has_limiter:
+		var limiter := AudioEffectHardLimiter.new()
+		limiter.ceiling_db = -0.5
+		AudioServer.add_bus_effect(0, limiter)
 
 
 static func stream(sound: String) -> AudioStream:

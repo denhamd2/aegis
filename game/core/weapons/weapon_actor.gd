@@ -113,6 +113,18 @@ func _dress_belt() -> void:
 		elif child is Node3D:
 			(child as Node3D).visible = false
 	_model.add_child(root)
+	# Handles, which the prop never had (it was made to be worn and held up,
+	# not swung): the end of the right strap, and a hand's width in from it,
+	# each with +Y running down the strap toward the plate -- so it hangs from
+	# the hand by its strap and swings plate-first. Measured off the meshes:
+	# straps to x = +-0.52, the plate centred at (0, -0.07), the face +Z.
+	var along := Basis(Vector3(0, 1, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1))
+	for m: Array in [["grip_r", Vector3(0.45, -0.08, 0.0)], ["grip_l", Vector3(0.35, -0.08, 0.0)],
+			["strike", Vector3(0.0, -0.07, 0.0)]]:
+		var marker := Node3D.new()
+		marker.name = "ChampionshipBelt_Held__" + String(m[0])
+		marker.transform = Transform3D(along, m[1])
+		root.add_child(marker)
 	for node in root.find_children("", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		var key := String(mi.name)
@@ -158,7 +170,14 @@ func has_state(root_name: String) -> bool:
 
 ## A marker of the shown state (grip_r, grip_l, strike, muzzle, top, seat,
 ## rung_N), as a transform relative to this node; identity if it has none.
+##
+## "grips" is the point halfway between grip_r and grip_l (in grip_r's turn):
+## what a two-handed carry centres on, so the thing is held square in front
+## of him with a hand either side, not hung off one hand.
 func marker(marker_name: String) -> Transform3D:
+	if marker_name == "grips":
+		var r := marker("grip_r")
+		return Transform3D(r.basis, (r.origin + marker("grip_l").origin) * 0.5)
 	var root: Node3D = _roots.get(state_root)
 	if root == null:
 		return Transform3D.IDENTITY
@@ -462,6 +481,7 @@ func set_up_at(at: Vector3, yaw: float) -> void:
 	mode = Mode.SET_UP
 	show_state(def.set_up if def.set_up != "" else _held_root())
 	global_transform = Transform3D(Basis(Vector3.UP, yaw), Vector3(at.x, ground_under(at), at.z))
+	_announce("set_up")
 
 
 # --- wear --------------------------------------------------------------------
