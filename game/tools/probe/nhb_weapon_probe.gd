@@ -102,6 +102,12 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 						b.global_position.snappedf(0.1), b.fsm.current_state,
 						Vector2(b.global_position.x - tb.global_position.x, b.global_position.z - tb.global_position.z).length(),
 						a.outside_ring, b.outside_ring])
+		if OS.get_cmdline_user_args().has("--state") and t % 600 == 0:
+			print("S %d  A st%d plan%d out%s wear%.0f fin%s held%s | B st%d plan%d out%s wear%.0f fin%s held%s" % [t,
+					a.fsm.current_state, a.ai._weapon_plan, a.outside_ring, a.combat.wear, a.combat.can_finisher(),
+					a.held_weapon.def.id if a.has_weapon() else "-",
+					b.fsm.current_state, b.ai._weapon_plan, b.outside_ring, b.combat.wear, b.combat.can_finisher(),
+					b.held_weapon.def.id if b.has_weapon() else "-"])
 		if shots_dir != "" and shoot_at.has(t):
 			await RenderingServer.frame_post_draw
 			var n := DirAccess.get_files_at(shots_dir).size() if DirAccess.dir_exists_absolute(shots_dir) else 0
