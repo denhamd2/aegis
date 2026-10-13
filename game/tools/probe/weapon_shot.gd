@@ -12,7 +12,7 @@ extends Node
 ## --node NAME shows only that root node of the .glb (one state of it: the
 ## folded chair, the broken table); without it every root node is shown,
 ## spread out along X so the states sit side by side.
-## --lift M raises the weapon M metres (a hand-held one reads better at hip
+## --yaw DEG turns it about Y first. --lift M raises the weapon M metres (a hand-held one reads better at hip
 ## height than lying on the floor); default 0.
 ## Writes <out>/<name>_front.png, _three_quarter.png, _side.png, _top.png,
 ## _close.png, and prints each node's bounds and triangle count.
@@ -23,6 +23,8 @@ var _glb := ""
 var _out := "/tmp/weapon"
 var _node := ""
 var _lift := 0.0
+## --yaw DEG turns every shown state about Y (to see a sign's face, say).
+var _yaw := 0.0
 
 
 func _ready() -> void:
@@ -37,6 +39,8 @@ func _ready() -> void:
 				_node = args[i + 1]
 			"--lift":
 				_lift = float(args[i + 1])
+			"--yaw":
+				_yaw = deg_to_rad(float(args[i + 1]))
 	DirAccess.make_dir_recursive_absolute(_out)
 	var packed := load(_glb) as PackedScene
 	if packed == null:
@@ -57,6 +61,7 @@ func _ready() -> void:
 	var x := 0.0
 	for n in shown:
 		n.position = Vector3(x, n.position.y + _lift, n.position.z)
+		n.rotation.y += _yaw
 		var b := _bounds(n)
 		x += b.size.x + 0.4
 	var all := AABB()
@@ -115,6 +120,18 @@ func _set_stage() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(1, 1, 1)
 	env.ambient_light_energy = 0.35
+	# A neutral studio sky for metals to reflect. With nothing to reflect,
+	# every metallic surface rendered black here -- chrome, aluminium, steel
+	# -- which is a probe artefact: the arena gives them a hall to reflect.
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.78, 0.80, 0.83)
+	sky_mat.sky_horizon_color = Color(0.70, 0.71, 0.73)
+	sky_mat.ground_horizon_color = Color(0.55, 0.55, 0.56)
+	sky_mat.ground_bottom_color = Color(0.30, 0.30, 0.31)
+	var sky := Sky.new()
+	sky.sky_material = sky_mat
+	env.sky = sky
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var world := WorldEnvironment.new()
 	world.environment = env
