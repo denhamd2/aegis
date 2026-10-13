@@ -23,6 +23,9 @@ var _bare := false
 var _swing := false
 ## --front: the swing seen from in front of him and to his right instead.
 var _front := false
+## --pickup: each weapon lying on the floor in front of him and picked up:
+## four frames through the pickup (<id>_p0..3.png).
+var _pickup := false
 ## --fall: Cody knocked down by Roman's heavy kick, from the side: frames
 ## through the fall to the mat (fall_0..7.png).
 var _fall := false
@@ -54,6 +57,8 @@ func _ready() -> void:
 				_table = true
 			"--fall":
 				_fall = true
+			"--pickup":
+				_pickup = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7)
@@ -113,6 +118,11 @@ func _ready() -> void:
 		return
 	if _table:
 		await _shoot_table(roman, cody, cam)
+		get_tree().quit()
+		return
+	if _pickup:
+		for id: String in _ids:
+			await _shoot_pickup(roman, cam, id)
 		get_tree().quit()
 		return
 	for id: String in _ids:
@@ -274,3 +284,33 @@ func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camer
 			k += 1
 	for b: String in ["foot_r", "foot_l", "ball_r", "hand_r", "hand_l", "lowerarm_r", "lowerarm_l", "upperarm_r", "upperarm_l"]:
 		print("BONE %s %s" % [b, cody._bone_world(b).snappedf(0.01)])
+
+
+## `id` lying on the floor in front of him: he picks it up.
+func _shoot_pickup(roman: WrestlerController, cam: Camera3D, id: String) -> void:
+	var a := WeaponStock.of(roman).pull(WeaponCatalog.by_id(StringName(id)))
+	var body := roman.global_transform
+	a.global_position = body.origin - body.basis.z * 0.55 + body.basis.x * 0.12 + Vector3.UP * 0.3
+	a.drop()
+	for t in 60:
+		await get_tree().physics_frame
+	var focus := body.origin + body.basis * Vector3(0.0, 0.7, -0.3)
+	cam.fov = 46.0
+	cam.global_position = focus + body.basis * Vector3(2.4, 0.4, -1.4)
+	cam.look_at(focus, Vector3.UP)
+	roman._weapon_target = a
+	roman.begin_weapon_action("pickup")
+	var total := int(WrestlerController.WEAPON_ACTION_TICKS["pickup"])
+	var at := [4, int(WrestlerController.WEAPON_ACTION_AT["pickup"]), 22, total - 2]
+	var tick := 0
+	for k in at.size():
+		while roman._weapon_action_ticks < int(at[k]) and tick < 200:
+			await get_tree().physics_frame
+			tick += 1
+		await _grab("%s_p%d" % [id, k])
+	for t in 20:
+		await get_tree().physics_frame
+	roman.drop_weapon()
+	a.queue_free()
+	for t in 10:
+		await get_tree().physics_frame
