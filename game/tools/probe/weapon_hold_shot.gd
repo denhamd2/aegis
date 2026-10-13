@@ -258,6 +258,8 @@ func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camer
 	var t0 := -1
 	var k := 0
 	var at := [0, 10, 16, 22, 30, 60]
+	if OS.get_cmdline_user_args().has("--close"):
+		at = [60]
 	var tick := 0
 	while k < at.size() and tick < 400:
 		await get_tree().physics_frame

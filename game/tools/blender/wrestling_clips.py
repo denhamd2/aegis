@@ -148,8 +148,8 @@ STANCE = dict(
 # up at 0.37 m still did, and so did both at 0.2 m.
 SUPINE = dict(
     pelvis=(0.0, 0.0, 0.175), hips=(-84, 0, 180), spine=(-6, 0, 0), head=(-14, 0, 0),
-    hand_r=(-0.40, 0.20, 0.10), hand_l=(0.39, 0.16, 0.10),
-    elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
+    hand_r=(-0.37, 0.05, 0.10), hand_l=(0.36, 0.03, 0.10),
+    elbow_r=(-0.7, 0.3, 0.3), elbow_l=(0.7, 0.3, 0.3),
     fist_r=0.2, fist_l=0.2,
     foot_r=(-0.16, -0.86, 0.10), foot_l=(0.15, -0.86, 0.10),
     knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0),
@@ -163,11 +163,14 @@ SUPINE = dict(
     # half a turn, kneecap down. (Facing the knees to their poles instead,
     # in rig_pose, was tried: it doubled the limb flips across the library.)
     free_feet=True, ankle_r=(60, -15, 0), ankle_l=(60, 15, 0),
-    # Arms by his sides: no shrug. The clavicle follow aims from the
+    # The collarbones set, not followed. The clavicle follow aims from the
     # STANDING rest, blind to a chest lying rolled over, and swung each
     # collarbone across his chest -- the shoulders swapped sides and the arms
     # crossed over him, elbows up (David: "the arms still look deformed").
-    clav_follow=False,
+    # Carried at the chest's rest they angled 30 degrees down into the mat
+    # and the skin humped up over the shoulders (David: "his shoulders are
+    # hitting out"); swung forward 30 they lie level on his back.
+    clav_r=(0, -12, 0), clav_l=(0, 12, 0),
 )
 # SUPINE as it was before the legs went out: knees up, soles planted. For a
 # man on his back only on the way through, about to get up.
@@ -1600,7 +1603,7 @@ CLIPS = {
         (0,  S()),
         (13, S(spine=(-9, 0, 0), head=(-11, 0, -4),
                foot_r=(-0.19, -0.85, 0.10), foot_l=(0.14, -0.86, 0.10),
-               hand_r=(-0.41, 0.18, 0.10), hand_l=(0.38, 0.18, 0.10))),
+               hand_r=(-0.38, 0.06, 0.10), hand_l=(0.36, 0.05, 0.10))),
         (26, S(spine=(-4, 0, 0), head=(-16, 0, 5),
                foot_r=(-0.15, -0.87, 0.10), foot_l=(0.18, -0.87, 0.10))),
         (40, S()),

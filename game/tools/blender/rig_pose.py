@@ -247,8 +247,12 @@ class RigPoser:
         # flat on the mat, measured). Only a knee facing squarely away from
         # its pole is turned back round; facing every knee to its pole was
         # tried before and doubled the limb flips across the library.
+        # Only a leg lying out flat and straight: a bent or kneeling leg left
+        # to the arc, so a getup's keys do not flip between twisted and not
+        # and swing the feet through the mat in the blend (PoseLint).
         twist = 0.0
-        if front is not None:
+        lying_flat = abs(direction.z) < 0.35 and dist >= (l1 + l2) * 0.9
+        if front is not None and lying_flat:
             facing = _aim(self.rest_dir[upper], upper_dir) @ front
             if facing.dot(pole) < -0.3:
                 twist = 180.0
