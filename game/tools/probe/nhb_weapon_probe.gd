@@ -16,6 +16,9 @@ var _wrestlers := "roman,cody"
 var _spear := -1.0
 ## --give ID: hand WrestlerA weapon ID at tick 900 (after the opening lock-up).
 var _give := ""
+## --shots DIR: not headless -- a frame through the match's own camera a beat
+## after each weapon hit and each man through a set piece (DIR/shot_NN.png).
+static var shots_dir := ""
 
 
 func _ready() -> void:
@@ -29,6 +32,7 @@ func _ready() -> void:
 			"--wrestlers": _wrestlers = args[i + 1]
 			"--spear": _spear = float(args[i + 1])
 			"--give": _give = args[i + 1]
+			"--shots": shots_dir = args[i + 1]
 	if _spear >= 0.0:
 		await _spear_through(_spear)
 		get_tree().quit()
@@ -56,13 +60,17 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 		if w.ai:
 			w.ai.setup_jitter(seed_value, w.player_index)
 	var r := {"hits": [], "set_pieces": [], "pulled": [], "set_up": [], "won": "", "ticks": 0}
+	var shoot_at := []                  # ticks to take a frame on
 	for w: WrestlerController in [a, b]:
 		w.move_landed.connect(func(by, _d, move):
 			var def := WeaponCatalog.of_move(move)
 			if def:
-				r["hits"].append("%s:%s@%d" % [by.display_name, def.id, r["ticks"]]))
+				r["hits"].append("%s:%s@%d" % [by.display_name, def.id, r["ticks"]])
+				shoot_at.append(int(r["ticks"]) + 3))
 		w.set_piece_landed.connect(func(who, weapon, broke):
-			r["set_pieces"].append("%s:%s%s@%d" % [who.display_name, weapon.def.id, "!" if broke else "", r["ticks"]]))
+			r["set_pieces"].append("%s:%s%s@%d" % [who.display_name, weapon.def.id, "!" if broke else "", r["ticks"]])
+			shoot_at.append(int(r["ticks"]) + 2)
+			shoot_at.append(int(r["ticks"]) + 40))
 	referee.match_won.connect(func(winner, method): r["won"] = "%s by %s" % [winner.display_name if winner else "-", method])
 	var seen := {}
 	for t in budget:
@@ -92,6 +100,11 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 						b.global_position.snappedf(0.1), b.fsm.current_state,
 						Vector2(b.global_position.x - tb.global_position.x, b.global_position.z - tb.global_position.z).length(),
 						a.outside_ring, b.outside_ring])
+		if shots_dir != "" and shoot_at.has(t):
+			await RenderingServer.frame_post_draw
+			var n := DirAccess.get_files_at(shots_dir).size() if DirAccess.dir_exists_absolute(shots_dir) else 0
+			DirAccess.make_dir_recursive_absolute(shots_dir)
+			host.get_viewport().get_texture().get_image().save_png("%s/shot_%02d_t%d.png" % [shots_dir, n, t])
 		if r["won"] != "":
 			break
 	r["runs"] = [a.ai.weapon_runs_started if a.ai else 0, b.ai.weapon_runs_started if b.ai else 0]
