@@ -3959,6 +3959,7 @@ func _lie_down_after_throw() -> void:
 	ground_attacks_taken = 0
 	_move_ticks_remaining = THROWN_DOWN_TICKS
 	_cover_eligible = false
+	_land_on_set_piece()
 
 func _go_down(tier := -1) -> void:
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
@@ -3975,6 +3976,7 @@ func _go_down(tier := -1) -> void:
 	knockdown_tier = tier
 	combat.cut_off_comeback()
 	_cover_eligible = true
+	_land_on_set_piece()
 	knocked_down.emit(self)
 
 ## A man on the mat goes nowhere under his own steam.
@@ -4767,11 +4769,12 @@ func _on_thrown_weapon_hit(w: WeaponActor, who: Node3D) -> void:
 	combat.apply_momentum(move)
 	move_landed.emit(self, victim, move)
 	victim._pending_hits.append(move)
-	w.hit(Engine.get_physics_frames())
+	w.hit(_weapon_seed())
 
 
 ## Every tick: the carry pose, and losing it when he is put down or grabbed.
 func _tick_weapon() -> void:
+	_tick_landing()
 	if weapon_grip:
 		var path: Array = []
 		var t := -1.0
@@ -4797,8 +4800,114 @@ func _tick_weapon() -> void:
 
 ## A swing of the held weapon landed.
 func _weapon_landed() -> void:
-	if held_weapon.hit(Engine.get_physics_frames()):
+	if held_weapon.hit(_weapon_seed()):
 		_let_go()
+
+
+## A seed for a weapon's wear and break: from the match seed and a count of
+## his draws, not the engine's frame count, so a replay breaks it the same.
+func _weapon_seed() -> int:
+	_weapon_draws += 1
+	return match_seed * 8192 + player_index * 131 + _weapon_draws * 977
+
+
+# --- set pieces ---------------------------------------------------------------
+
+## He landed on a set piece: `broke` if it gave way under him (a table).
+signal set_piece_landed(wrestler: WrestlerController, weapon: WeaponActor, broke: bool)
+## Through a table he stays down this much longer.
+const TABLE_DOWN_TICKS := 150
+## Where a man going down lands: his hips, his chest, and -- he goes over
+## backwards -- this far behind him.
+const FALL_BEHIND := 0.9
+## His hips this far below its top, or this near the floor, and he is on it.
+const LAND_SINK := 0.1
+const LAND_LOW := 0.35
+const LAND_WAIT := 45
+var _weapon_draws := 0
+var _tacks_in_back: Node3D = null
+## Coming down on a set piece: [weapon, where, ticks waited].
+var _landing: Array = []
+
+
+## Just put down: if he is coming down on a set piece, it does its work as
+## his hips reach it (_tick_landing), not as he starts to fall.
+func _land_on_set_piece() -> void:
+	_landing = []
+	if not MatchRules.no_holds_barred(self) or skeleton == null:
+		return
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock
+	if stock == null:
+		return
+	var spots: Array[Vector3] = [global_position + global_basis.z * FALL_BEHIND]
+	for bone: String in ["pelvis", "spine_03"]:
+		var p := _bone_world(bone)
+		if p != Vector3.INF:
+			spots.push_front(p)
+	for p in spots:
+		var w := stock.set_piece_under(p)
+		if w == null:
+			w = stock.chair_under(p)
+		if w:
+			_landing = [w, p, 0]
+			_tick_landing()
+			return
+
+
+## Waits for his hips to come down to the set piece's top (or LAND_WAIT
+## ticks), then lands him on it.
+func _tick_landing() -> void:
+	if _landing.is_empty():
+		return
+	var w: WeaponActor = _landing[0]
+	if not is_instance_valid(w) or fsm.current_state != WrestlerFSM.State.DOWN \
+			or not w.mode in [WeaponActor.Mode.SET_UP, WeaponActor.Mode.FLOOR]:
+		_landing = []
+		return
+	_landing[2] += 1
+	var top := (w.global_transform * w.local_bounds()).end.y
+	var hips := _bone_world("pelvis")
+	if hips != Vector3.INF and hips.y > maxf(top - LAND_SINK, LAND_LOW) and int(_landing[2]) < LAND_WAIT:
+		return
+	var at: Vector3 = _landing[1]
+	_landing = []
+	combat.apply_damage(WeaponCatalog.landing_move(w.def))
+	var broke := false
+	if w.mode == WeaponActor.Mode.FLOOR:
+		w.hit(_weapon_seed())
+	elif w.def.broken != "":
+		w.shatter(_weapon_seed())
+		_move_ticks_remaining += TABLE_DOWN_TICKS
+		broke = true
+	elif w.def.id == &"thumbtacks":
+		_stick_tacks(at)
+	set_piece_landed.emit(self, w, broke)
+
+
+## A clump of the tacks he landed on, stuck in his back from now on: the
+## tacks under his spine where he lay, carried on his spine bone.
+func _stick_tacks(at: Vector3) -> void:
+	if _tacks_in_back and is_instance_valid(_tacks_in_back):
+		return
+	var bone := skeleton.find_bone(_skeleton_bone_name("spine_03"))
+	if bone < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "TacksInBack"
+	attach.bone_name = skeleton.get_bone_name(bone)
+	skeleton.add_child(attach)
+	var tacks := WeaponActor.make(WeaponCatalog.by_id(&"thumbtacks"), "Thumbtacks_Scattered")
+	tacks.set_physics_process(false)
+	attach.add_child(tacks)
+	var box := tacks.local_bounds()
+	var spread := maxf(maxf(box.size.x, box.size.z), 0.01)
+	var size := minf(1.0, 0.3 / spread)
+	var floor_y := WeaponActor.ground_under(at)
+	var spot := Transform3D(global_basis.scaled(Vector3.ONE * size),
+			Vector3(at.x, floor_y, at.z) - global_basis.scaled(Vector3.ONE * size) * box.get_center() * Vector3(1, 0, 1))
+	var bone_world := skeleton.global_transform * skeleton.get_bone_global_pose(bone)
+	tacks.transform = bone_world.affine_inverse() * spot
+	_tacks_in_back = attach
 
 
 func _is_weapon_swing(move: MoveDef) -> bool:

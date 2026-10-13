@@ -290,6 +290,28 @@ static func throw_move(weapon: WeaponDef) -> MoveDef:
 	return m
 
 
+## A chair lying on the floor is not a set piece, but landing on one hurts.
+const CHAIR_LANDING_DAMAGE := 6.0
+
+
+## The damage of a man landing on `weapon` set up (a table, the tacks...) or
+## lying on the floor (a chair): mostly his back.
+static func landing_move(weapon: WeaponDef) -> MoveDef:
+	var key := StringName(String(weapon.id) + "_landed_on")
+	if _moves.has(key):
+		return _moves[key]
+	var total := weapon.landing_damage if weapon.landing_damage > 0.0 else CHAIR_LANDING_DAMAGE
+	var m := MoveDef.new()
+	m.startup_frames = 1
+	m.active_frames = 1
+	m.recovery_frames = 1
+	m.damage_head = total * 0.2
+	m.damage_torso = total * 0.8
+	m.resource_name = "weapon_landed_on_" + String(weapon.id)
+	_moves[key] = m
+	return m
+
+
 ## The weapon's carry transform for a man at `body` (his global transform),
 ## given where the anchor marker sits in the weapon (`anchor_local`). Empty
 ## spec (worn on the hand): Transform3D() and false.

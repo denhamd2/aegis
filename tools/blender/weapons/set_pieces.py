@@ -236,11 +236,12 @@ def build(root, prefix: str, state: str, wood, steel, trim_mat) -> None:
              -THICK * 0.3, THICK * 0.3)
         x, z = crack[2 + k * 2]
         pieces.append((part, Vector((x, y0 + THICK / 2, z)), wood))
-    legs = kit.WeaponPart("%s__piece_%02d" % (prefix, 7))
-    for s in (-1, 1):
-        # buckled: the feet kicked out, the leg leaning in under the break
-        u_leg(legs, s * LEG_X, s * (LEG_X + 0.10), 0.0, y0 - TUBE, Vector((s * 0.22, y0 - TUBE - 0.04, 0)))
-    pieces.append((legs, Vector((0, 0, 0)), steel))
+    for k, s in enumerate((-1, 1)):
+        # buckled: the feet kicked out, the leg leaning in under the break --
+        # each U its own piece, around its own hinge, so it can fall flat
+        legs = kit.WeaponPart("%s__piece_%02d" % (prefix, 7 + k))
+        u_leg(legs, 0.0, s * 0.10, 0.0, y0 - TUBE, Vector((s * 0.22 - s * LEG_X, y0 - TUBE - 0.04, 0)))
+        pieces.append((legs, Vector((s * LEG_X, 0, 0)), steel))
     for part, at, mat in pieces:
         obj = kit.add_mesh(root, part, mat, uv_scale=0.55)
         obj.location = kit.to_blender(at)

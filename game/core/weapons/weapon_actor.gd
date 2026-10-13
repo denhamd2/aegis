@@ -38,6 +38,8 @@ const SLIDE_DRAG := 5.0
 const HIT_RADIUS := 0.55
 ## Broken pieces lie this long before they go.
 const PIECES_LINGER := 6.0
+## A broken piece whose origin is this near the floor is the legs.
+const LEGS_BELOW := 0.25
 ## Metals in the hall: it carries no reflections (EntranceProps on the
 ## title), so a pure conductor reads near-black between the lights. Capped
 ## here with a trace of its own colour as emission, as the title does.
@@ -480,6 +482,15 @@ func shatter(seed: int) -> void:
 	var parts := root.find_children("*__piece_*", "Node3D", true, false)
 	if parts.is_empty():
 		parts = root.get_children()
+	# a piece's trim (the table top's edge band) goes with its piece
+	var by_name := {}
+	for node in parts:
+		by_name[String(node.name)] = node
+	for node in parts.duplicate():
+		var base := String(node.name).trim_suffix("_trim")
+		if base != String(node.name) and by_name.has(base):
+			(node as Node3D).reparent(by_name[base])
+			parts.erase(node)
 	for node in parts:
 		var n := node as Node3D
 		if n == null:
@@ -487,8 +498,16 @@ func shatter(seed: int) -> void:
 		var out := (n.global_position - keep.origin)
 		out.y = 0.0
 		out = out.normalized() if out.length() > 0.01 else Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized()
-		var v := out * rng.randf_range(0.8, 2.6) + Vector3.UP * rng.randf_range(1.0, 3.0)
-		var spin := Vector3(rng.randf_range(-9, 9), rng.randf_range(-6, 6), rng.randf_range(-9, 9))
+		var v: Vector3
+		var spin: Vector3
+		if n.global_position.y - keep.origin.y < LEGS_BELOW:
+			# the legs' frame: knocked over where it stood, not thrown
+			v = out * rng.randf_range(0.3, 0.8) + Vector3.UP * rng.randf_range(0.4, 0.8)
+			var over := Vector3.UP.cross(out) * signf(rng.randf_range(-1, 1) + 0.001)
+			spin = over * rng.randf_range(5.0, 8.0)
+		else:
+			v = out * rng.randf_range(0.8, 2.6) + Vector3.UP * rng.randf_range(0.6, 1.8)
+			spin = Vector3(rng.randf_range(-9, 9), rng.randf_range(-6, 6), rng.randf_range(-9, 9))
 		_pieces.append([n, v, spin, false])
 	broke.emit(self)
 
@@ -511,10 +530,38 @@ func _tick_pieces(delta: float) -> void:
 			p.y = ground
 			if v.length() < 1.0:
 				piece[3] = true
+				_lie_on_flattest_side(n, ground)
 			v = Vector3(v.x * 0.4, -v.y * 0.2, v.z * 0.4)
 		else:
 			var s: Vector3 = piece[2]
-			n.rotate_x(s.x * delta)
-			n.rotate_z(s.z * delta)
-		n.global_position = p
+			if s.length() > 0.0:
+				n.global_rotate(s.normalized(), s.length() * delta)
+		if not piece[3]:
+			n.global_position = p
 		piece[1] = v
+
+
+## A piece come to rest: turned by quarter turns to whichever way up sits it
+## lowest -- a panel flat, the legs' frame on its side -- with its underside
+## on the floor, nearest the way it landed.
+static func _lie_on_flattest_side(n: Node3D, ground: float) -> void:
+	var mi := n as MeshInstance3D
+	if mi == null or mi.mesh == null:
+		return
+	var box := mi.mesh.get_aabb()
+	var yaw := Basis(Vector3.UP, n.global_rotation.y)
+	var landed := n.global_basis
+	var best := Basis()
+	var best_h := INF
+	for ix in 4:
+		for iz in 4:
+			var b := yaw * Basis(Vector3.RIGHT, ix * PI / 2.0) * Basis(Vector3.BACK, iz * PI / 2.0)
+			var h := (Transform3D(b, Vector3.ZERO) * box).size.y
+			# within a centimetre, the one nearest how it landed
+			h += 0.0001 * (b.x.distance_to(landed.x) + b.y.distance_to(landed.y))
+			if h < best_h - 0.01 or (absf(h - best_h) <= 0.01 and h < best_h):
+				best_h = h
+				best = b
+	var at := n.global_position
+	var low := (Transform3D(best, Vector3.ZERO) * box).position.y
+	n.global_transform = Transform3D(best, Vector3(at.x, ground - low, at.z))

@@ -23,6 +23,9 @@ var _bare := false
 var _swing := false
 ## --front: the swing seen from in front of him and to his right instead.
 var _front := false
+## --table: Cody put down in front of a table set up behind him, from the
+## side: before, as he goes through it, and the pieces (table_0/1/2.png).
+var _table := false
 
 
 func _ready() -> void:
@@ -44,6 +47,8 @@ func _ready() -> void:
 				_swing = true
 			"--front":
 				_front = true
+			"--table":
+				_table = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7)
@@ -97,6 +102,10 @@ func _ready() -> void:
 	print("CAM roman %s facing %s cam %s" % [body.origin.snappedf(0.01), (-body.basis.z).snappedf(0.01),
 			cam.global_position.snappedf(0.01)])
 	cam.current = true
+	if _table:
+		await _shoot_table(roman, cody, cam)
+		get_tree().quit()
+		return
 	for id: String in _ids:
 		var def := WeaponCatalog.by_id(StringName(id))
 		var a := WeaponStock.of(roman).pull(def)
@@ -158,3 +167,43 @@ func _shoot_swing(roman: WrestlerController, a: WeaponActor, id: String) -> void
 	while tick < total + 12:
 		await get_tree().physics_frame
 		tick += 1
+
+
+## Cody knocked down in front of a table set up behind him.
+func _shoot_table(roman: WrestlerController, cody: WrestlerController, cam: Camera3D) -> void:
+	cody.visible = true
+	roman.visible = false
+	cody.global_position = Vector3(0.0, 0.0, -0.4)
+	cody.look_at(Vector3(0.0, 0.0, 2.0), Vector3.UP)
+	var table := WeaponStock.of(cody).pull(WeaponCatalog.by_id(&"table"))
+	table.set_up_at(Vector3.ZERO, 0.0)
+	var box := table.local_bounds()
+	# his length along the boards
+	var yaw := PI / 2.0 if box.size.x > box.size.z else 0.0
+	table.set_up_at(Vector3(0.0, 0.0, -1.6), yaw)
+	cam.fov = 46.0
+	cam.global_position = Vector3(3.9, 1.6, -1.2)
+	cam.look_at(Vector3(0.0, 0.5, -1.35), Vector3.UP)
+	for t in 10:
+		await get_tree().physics_frame
+	var broke := [false]
+	cody.set_piece_landed.connect(func(_w, _a, b): broke[0] = b)
+	await _grab("table_0")
+	cody._go_down()
+	var waited := 0
+	while not broke[0] and waited < 90:
+		await get_tree().physics_frame
+		waited += 1
+	print("TABLE broke %s after %d ticks hips %s" % [broke[0], waited, cody._bone_world("pelvis").snappedf(0.01)])
+	await _grab("table_1")
+	for t in 40:
+		await get_tree().physics_frame
+	await _grab("table_2")
+
+
+func _grab(name: String) -> void:
+	get_tree().paused = true
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [_out, name])
+	get_tree().paused = false

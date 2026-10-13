@@ -55,6 +55,38 @@ func loose_near(at: Vector3) -> WeaponActor:
 	return best
 
 
+## A man landing on a set piece: this far outside its footprint still
+## counts, and up to this far above its top (his pelvis on a table is well
+## above the boards before they give).
+const LAND_PAD := 0.25
+const LAND_ABOVE := 0.6
+const CHAIRS: Array[StringName] = [&"steel_chair", &"barbed_wire_chair"]
+
+
+## The set piece (a table, the tacks, the bed of nails, the wire board)
+## stood up under `p`, or null.
+func set_piece_under(p: Vector3) -> WeaponActor:
+	for a in set_up_pieces():
+		if a.def.set_piece and _over(a, p):
+			return a
+	return null
+
+
+## A chair lying loose under `p`, or null.
+func chair_under(p: Vector3) -> WeaponActor:
+	for a in actors:
+		if is_instance_valid(a) and a.mode == WeaponActor.Mode.FLOOR and a.def.id in CHAIRS and _over(a, p):
+			return a
+	return null
+
+
+static func _over(a: WeaponActor, p: Vector3) -> bool:
+	# in the world's frame: a chair on the floor lies on its side
+	var box := (a.global_transform * a.local_bounds()).grow(LAND_PAD)
+	return p.x >= box.position.x and p.x <= box.end.x and p.z >= box.position.z \
+			and p.z <= box.end.z and p.y <= box.end.y + LAND_ABOVE
+
+
 ## Set pieces stood up somewhere: [actor, ...].
 func set_up_pieces() -> Array[WeaponActor]:
 	var out: Array[WeaponActor] = []
