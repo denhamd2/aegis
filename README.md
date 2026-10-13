@@ -9409,7 +9409,7 @@ fixed and checked on rendered frames.
 
 ### Weapons, the rest of wave 1
 
-Every weapon on the No Holds Barred list is now modelled: 33 new .glb files
+Every weapon on the No Holds Barred list is now modelled: 32 new .glb files (33 weapons with Roman's belt)
 in `game/assets/weapons/`, one script per family under
 `tools/blender/weapons/`, all rebuilding byte-identical, each reviewed in
 `tools/probe/weapon_shot` beside the mannequin.
