@@ -4230,8 +4230,11 @@ static func cover_approach_spot(victim: WrestlerController, from: Vector3) -> Ve
 	var best_clear := -1.0
 	for s: float in [side, -side]:
 		var spot := chest + out * s
-		spot.x = clampf(spot.x, -STANDABLE_M, STANDABLE_M)
-		spot.z = clampf(spot.z, -STANDABLE_M, STANDABLE_M)
+		if victim.outside_ring:
+			spot = _standable_outside(spot)
+		else:
+			spot.x = clampf(spot.x, -STANDABLE_M, STANDABLE_M)
+			spot.z = clampf(spot.z, -STANDABLE_M, STANDABLE_M)
 		var flat := Vector3(spot.x, 0.0, spot.z)
 		var clear := flat.distance_to(
 				Geometry3D.get_closest_point_to_segment(flat, line[0], line[1]))
@@ -4241,6 +4244,22 @@ static func cover_approach_spot(victim: WrestlerController, from: Vector3) -> Ve
 			best_clear = clear
 			best = spot
 	return best
+
+
+## Outside (No Holds Barred): off the apron and inside the barricade. The
+## spot was clamped into the ring whatever side of the ropes the man lay on,
+## so a man down on the floor was covered from a spot nobody outside could
+## reach -- a finisher outside never got its cover (nhb_weapon_probe seed 2).
+static func _standable_outside(p: Vector3) -> Vector3:
+	var lim := ArenaBuilder.BARRICADE_RADIUS - 0.4
+	p.x = clampf(p.x, -lim, lim)
+	p.z = clampf(p.z, -lim, lim)
+	if absf(p.x) < DECK_KEEP_OUT and absf(p.z) < DECK_KEEP_OUT:
+		if absf(p.x) >= absf(p.z):
+			p.x = signf(p.x if p.x != 0.0 else 1.0) * DECK_KEEP_OUT
+		else:
+			p.z = signf(p.z if p.z != 0.0 else 1.0) * DECK_KEEP_OUT
+	return p
 
 
 ## Where a wrestler can actually stand: the rope colliders stop him short of

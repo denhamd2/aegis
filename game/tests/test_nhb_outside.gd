@@ -117,3 +117,16 @@ func test_no_holds_barred_has_no_rope_breaks() -> void:
 	MatchRules.set_mode(referee, MatchRules.Mode.NO_HOLDS_BARRED)
 	b.global_position = Vector3(2.4, 0.0, 0.0)
 	assert_vector(referee._reachable_ropes(a, b)).is_equal(Vector3.ZERO)
+
+
+func test_a_man_down_outside_is_covered_from_outside() -> void:
+	# The cover spot was clamped into the ring whichever side of the ropes he
+	# lay on: a finisher on the floor never got its cover.
+	var down := _wrestler(true)
+	down.outside_ring = true
+	down.global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.6, WrestlerController.FLOOR_LEVEL, 0.4)
+	await _ticks(2)
+	var spot := WrestlerController.cover_approach_spot(down, down.global_position + Vector3(0.0, 0.0, 2.0))
+	assert_float(maxf(absf(spot.x), absf(spot.z))).is_greater_equal(WrestlerController.DECK_KEEP_OUT)
+	assert_float(Vector2(spot.x - down.global_position.x, spot.z - down.global_position.z).length()) \
+			.is_less(MatchReferee.COVER_RANGE)
