@@ -321,6 +321,9 @@ const FINISH_IMPACT_FOV := 58.0
 const FINISH_CRANE_FOV := Vector2(44.0, 36.0)
 const FINISHER_AFTER_HOLD := 1.6
 const FINISH_AFTER_FOV := 50.0
+## Outside the ring: how far out of the ring (cosine) the camera's bearing
+## must point -- about 40 degrees off square to the ring side.
+const OUTSIDE_BEARING := 0.75
 ## The lens the after shot is focused as (see _after_shot).
 const AFTER_FOCUS_LENS := 24.0
 ## Whether the shot on screen is a close-up the rim light should model.
@@ -433,6 +436,7 @@ func _physics_process(delta: float) -> void:
 		# survived exactly one cut.
 		var gameplay := mode == Mode.RINGSIDE and CameraSettings.gameplay()
 		var bearing := _gameplay_bearing(delta) if gameplay else ringside_bearing.normalized()
+		bearing = _from_the_crowd_side(bearing, midpoint)
 		var to_camera := bearing * distance
 		# Three heights, not two. The finisher cut's low angle is deliberate --
 		# camera.md: "drops lower, closer to mat height, for a grounded,
@@ -453,7 +457,7 @@ func _physics_process(delta: float) -> void:
 			eye_height = GAMEPLAY_HEIGHT
 			aim = 0.85
 		target_position = midpoint + to_camera + Vector3.UP * eye_height
-		if gameplay:
+		if gameplay and not _fight_outside():
 			target_position = _outside_ring(target_position, bearing)
 
 	if mode == _previous_mode and not _snap_next:
@@ -730,9 +734,17 @@ func _update_mode(delta: float) -> void:
 		_kickout_reaction = false
 		_try_cut(Cut.CUTAWAY, wrestler_a, null)
 		return
+	# A fight on the floor across the ring from the hard camera is behind the
+	# ring itself from there: the ringside camera keeps it.
+	var far_side := false
+	if _fight_outside() and wrestler_a and wrestler_b:
+		var mid := (wrestler_a.global_position + wrestler_b.global_position) * 0.5
+		far_side = GrappleRig._outside_side(mid).dot(_flat(hard_cam_position)) < 0.0
 	var hold := shot_hold()
 	if hold > 0.0 and _held >= hold:
 		mode = Mode.RINGSIDE if mode == Mode.HARD_CAM else Mode.HARD_CAM
+	if far_side and mode == Mode.HARD_CAM:
+		mode = Mode.RINGSIDE
 	_reset_clock_on_change(was)
 
 ## Where coverage comes back to after a set piece: the hard camera in
@@ -931,7 +943,11 @@ func _after_shot(_delta: float) -> void:
 		across = _flat(-_finish_attacker.global_transform.basis.z)
 	var side := Vector3.UP.cross(across).normalized()
 	if _finish_side == Vector3.ZERO:
-		_finish_side = side if side.dot(hard_cam_position - a) >= 0.0 else -side
+		var toward := hard_cam_position - a
+		if _fight_outside():
+			# On the floor the ring is on one side: shoot from the other.
+			toward = GrappleRig._outside_side(a)
+		_finish_side = side if side.dot(toward) >= 0.0 else -side
 	side = side if side.dot(_finish_side) >= 0.0 else -side
 	var t := clampf(_held / FINISHER_AFTER_HOLD, 0.0, 1.0)
 	fov = FINISH_AFTER_FOV
@@ -1057,6 +1073,30 @@ static func post_beside(mid: Vector3, bearing: Vector3, distance: float) -> bool
 
 
 ## Pushed back along its bearing until it is outside the ropes.
+## No Holds Barred, on the floor: true while either man is outside the ring.
+func _fight_outside() -> bool:
+	for w: Node3D in [wrestler_a, wrestler_b]:
+		if w is WrestlerController and (w as WrestlerController).outside_ring:
+			return true
+	return false
+
+
+## A fight on the floor is shot from the crowd side, looking back at the
+## ring with the two men in front of it: a bearing that would put the camera
+## over the ring (or the apron, or behind a post) is swung out until it points
+## at least OUTSIDE_BEARING away from the ring, keeping its sense along the
+## ring side so the shot does not flip across the line.
+func _from_the_crowd_side(bearing: Vector3, mid: Vector3) -> Vector3:
+	if not _fight_outside():
+		return bearing
+	var out := GrappleRig._outside_side(mid)
+	if bearing.dot(out) >= OUTSIDE_BEARING:
+		return bearing
+	var along := bearing - out * bearing.dot(out)
+	along = Vector3(-out.z, 0.0, out.x) if along.length() < 0.05 else along.normalized()
+	return (out * OUTSIDE_BEARING + along * sqrt(1.0 - OUTSIDE_BEARING * OUTSIDE_BEARING)).normalized()
+
+
 static func _outside_ring(p: Vector3, bearing: Vector3) -> Vector3:
 	var out := p
 	for i in 80:

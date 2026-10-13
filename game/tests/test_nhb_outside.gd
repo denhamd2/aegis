@@ -104,8 +104,9 @@ func test_a_move_on_the_floor_plays_at_floor_height_off_the_deck() -> void:
 	b.global_position = Vector3(3.7, -1.1, 0.8)
 	var pair := rig._compute_pair_transform(a, b)
 	assert_float(pair.origin.y).is_equal_approx(WrestlerController.FLOOR_LEVEL, 0.001)
-	assert_float(pair.origin.x).is_greater_equal(WrestlerController.DECK_KEEP_OUT)
-	assert_float(pair.origin.x).is_less_equal(ArenaBuilder.BARRICADE_RADIUS - GrappleRig.OUTSIDE_MARGIN)
+	# In the lane between the deck and the barricade, running along the side.
+	assert_float(pair.origin.x).is_equal_approx(GrappleRig.OUTSIDE_LANE, 0.001)
+	assert_float(absf((pair.basis * Vector3.LEFT).x)).is_less(0.01)
 
 
 func test_no_holds_barred_has_no_rope_breaks() -> void:

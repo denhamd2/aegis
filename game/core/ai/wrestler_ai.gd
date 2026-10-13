@@ -505,6 +505,7 @@ func _poll_input() -> Dictionary:
 	if controller.outside_ring != target.outside_ring and not target.is_crossing_ropes() \
 			and controller.can_cross_ropes():
 		input["move"] = _follow_through_ropes()
+		input["rope_cross"] = true
 		return input
 	# Opponent is down: walk in for the cover instead of continuing to
 	# strike/grapple decisions below. MatchReferee triggers the pin once

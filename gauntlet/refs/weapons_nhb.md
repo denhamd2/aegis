@@ -67,7 +67,12 @@ downloaded without a licence recorded in game/assets/weapons/CREDITS.md.
   at 0.74 m high).
 - **Origin**: hand-held weapons at the primary grip, where the right hand
   closes; set pieces (table, ladder, steps, bed of nails) at floor centre.
-- **Markers** (empties, exported as nodes, named exactly):
+- **Markers** (empties, exported as nodes). Blender names are unique per
+  file, so each is named `<StateRoot>__<marker>` (`SteelChair_Folded__grip_r`)
+  and also carries a `marker` extra with the bare name; the runtime finds a
+  state's markers by the `__<marker>` suffix. Shared helpers for all of this
+  -- markers, state roots, procedural PBR textures, barbed wire -- are in
+  `tools/blender/weapons/weapon_kit.py`. The markers:
   - `grip_r` -- the right hand's grip; its +Y runs along the handle toward
     the striking end, +Z out of the back of the hand;
   - `grip_l` -- the left hand's, for anything held two-handed;

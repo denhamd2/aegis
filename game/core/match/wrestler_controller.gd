@@ -2095,7 +2095,10 @@ func rope_side_pushed(move: Vector2) -> Vector3:
 
 
 func _pushing_through_ropes(input: Dictionary) -> bool:
-	if not can_cross_ropes() \
+	# A player goes through by holding into the ropes; the AI only when it
+	# means to (WrestlerAI._follow_through_ropes), never because a walk to a
+	# cover spot happened to lean on the apron.
+	if not can_cross_ropes() or (is_ai and not input.get("rope_cross", false)) \
 			or rope_side_pushed(input.get("move", Vector2.ZERO)) == Vector3.ZERO:
 		_rope_push = 0
 		return false

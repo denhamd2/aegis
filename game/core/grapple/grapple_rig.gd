@@ -55,9 +55,11 @@ var _pair_transform: Transform3D = Transform3D()
 ## Half-width of the mat (scenes/ring.tscn's floor is 6m square), minus room
 ## for a body. Clamps where a paired move is allowed to play out.
 const RING_HALF_EXTENT := 2.0
-## Outside (No Holds Barred): how far a move's midpoint stays from the
-## barricade and the ring deck -- room for the bodies either side of it.
-const OUTSIDE_MARGIN := 1.0
+## Outside (No Holds Barred): a move on the floor is centred in the lane
+## between the ring deck (RingBuilder.APRON_OUT) and the barricade, and kept
+## OUTSIDE_ALONG of the side's middle so it never wraps round a ring post.
+const OUTSIDE_LANE := (RingBuilder.APRON_OUT + ArenaBuilder.BARRICADE_RADIUS) * 0.5
+const OUTSIDE_ALONG := 2.2
 
 ## The mannequin's hip height at scale 1.0, which every paired trajectory was
 ## authored against (tools/probe landmarks: pelvis 0.90 m at scale 0.98).
@@ -260,24 +262,29 @@ func _restore_original_animation() -> void:
 ## tools/probe/paired_shot.tscn, a pair standing 0.9 m apart along the
 ## attacker's facing opened the clip 0.8 m apart ACROSS it, both men having
 ## swung 90 degrees round their midpoint in the lead-in.
+## The ring side (a unit axis) a point on the floor is beside.
+static func _outside_side(p: Vector3) -> Vector3:
+	if absf(p.x) >= absf(p.z):
+		return Vector3(1.0 if p.x >= 0.0 else -1.0, 0.0, 0.0)
+	return Vector3(0.0, 0.0, 1.0 if p.z >= 0.0 else -1.0)
+
+
 func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	var midpoint := (attacker.global_position + defender.global_position) * 0.5
 	# Y comes from the anchor, not the pair: a clip's vertical keys are
 	# authored against mat level, and either wrestler may be mid-drift.
 	midpoint.y = anchor.global_position.y if anchor else 0.0
-	if attacker is WrestlerController and (attacker as WrestlerController).outside_ring:
-		# No Holds Barred, on the floor: the same clip, a ring's height lower,
-		# kept off the ring deck and inside the barricade instead.
+	var outside := attacker is WrestlerController and (attacker as WrestlerController).outside_ring
+	if outside:
+		# No Holds Barred, on the floor: the same clip a ring's height lower,
+		# in the lane between the ring deck and the barricade. A throw is two
+		# metres long and the lane under three wide, so the move runs ALONG
+		# the ring side (see the facing below), centred in the lane.
 		midpoint.y = WrestlerController.FLOOR_LEVEL
-		var limit := ArenaBuilder.BARRICADE_RADIUS - OUTSIDE_MARGIN
-		midpoint.x = clampf(midpoint.x, -limit, limit)
-		midpoint.z = clampf(midpoint.z, -limit, limit)
-		var clear := WrestlerController.DECK_KEEP_OUT + OUTSIDE_MARGIN - WrestlerController.BODY_RADIUS
-		if absf(midpoint.x) < clear and absf(midpoint.z) < clear:
-			if absf(midpoint.x) >= absf(midpoint.z):
-				midpoint.x = signf(midpoint.x) * clear if midpoint.x != 0.0 else clear
-			else:
-				midpoint.z = signf(midpoint.z) * clear if midpoint.z != 0.0 else clear
+		var axis := _outside_side(midpoint)
+		var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
+		var along := clampf(midpoint.dot(lat), -OUTSIDE_ALONG, OUTSIDE_ALONG)
+		midpoint = axis * OUTSIDE_LANE + lat * along + Vector3.UP * midpoint.y
 	else:
 		# Keep the move inside the ring. A suspended body ignores collision for
 		# the whole clip, so a throw started against the ropes would otherwise
@@ -287,6 +294,10 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 
 	var facing := defender.global_position - attacker.global_position
 	facing.y = 0.0
+	if outside:
+		var side := _outside_side(midpoint)
+		var tangent := Vector3(absf(side.z), 0.0, absf(side.x))
+		facing = tangent * (1.0 if facing.dot(tangent) >= 0.0 else -1.0)
 	if facing.length() < 0.001:
 		facing = -attacker.global_transform.basis.z
 		facing.y = 0.0
