@@ -42,6 +42,14 @@ var _carry := 0.0
 const LIFT_TICKS := 10
 var _lift_from := Transform3D()
 var _lift := 1.0
+## The squat lift: a heavy thing comes up level, as it lay, carried up by the
+## point between his hands -- it does not turn with his wrist (the steps, so
+## turned, tipped in between his legs). Held level while _level_on (the lift
+## action), then eased into the carry over EASE_TICKS.
+var _level := 0.0
+var _level_on := false
+var _level_from := Transform3D()
+var _level_mid := Vector3.INF
 var _reach_target: WeaponActor = null
 var _reach := 0.0
 var _reach_both := false
@@ -78,6 +86,19 @@ func lift_from(from: Transform3D) -> void:
 	_lift = 0.0
 
 
+## A heavy thing just taken off the floor from `from`: lifted level (see
+## _level). end_level() when the lift is done.
+func lift_level(from: Transform3D) -> void:
+	_level_from = from
+	_level_on = true
+	_level = 1.0
+	_level_mid = Vector3.INF
+
+
+func end_level() -> void:
+	_level_on = false
+
+
 ## One physics tick: `carrying` while he stands or moves with it (not mid
 ## swing, not mid throw), so the carry pose lets the swing clip have the arm.
 func advance(carrying: bool, path: Array = [], t := -1.0, dt := 0.0) -> void:
@@ -90,6 +111,8 @@ func advance(carrying: bool, path: Array = [], t := -1.0, dt := 0.0) -> void:
 	# a one-hand carry gets its second hand only for the swing itself
 	var swinging := not path.is_empty() and t >= 0.0
 	_lift = minf(_lift + 1.0 / LIFT_TICKS, 1.0)
+	if not _level_on:
+		_level = move_toward(_level, 0.0, 1.0 / EASE_TICKS)
 	var want_two := holding and weapon.def.two_handed \
 			and (swinging or not weapon.def.id in WeaponCatalog.ONE_HAND_CARRY)
 	_two = move_toward(_two, 1.0 if want_two else 0.0, 1.0 / EASE_TICKS)
@@ -133,8 +156,17 @@ func _process_modification() -> void:
 	if on_path:
 		var t := clampf(_t + _dt * Engine.get_physics_interpolation_fraction(), 0.0, 1.0)
 		placed = WeaponCatalog.path_transform(weapon, _path, _chest(sk), t, placed)
-	var lifting := _lift < 1.0
-	if lifting:
+	if _level > 0.0:
+		var mid := (_palm(sk, "r") + _palm(sk, "l")) * 0.5
+		mid = sk.global_transform * mid
+		if _level_mid == Vector3.INF:
+			_level_mid = mid
+		var level := Transform3D(_level_from.basis, _level_from.origin + (mid - _level_mid))
+		var k := _level * _level * (3.0 - 2.0 * _level)
+		placed = Transform3D(placed.basis.orthonormalized().slerp(level.basis.orthonormalized(), k),
+				placed.origin.lerp(level.origin, k))
+	var lifting := _lift < 1.0 or _level > 0.0
+	if _lift < 1.0:
 		var k := _lift * _lift * (3.0 - 2.0 * _lift)
 		placed = Transform3D(_lift_from.basis.orthonormalized().slerp(placed.basis.orthonormalized(), k),
 				_lift_from.origin.lerp(placed.origin, k))
@@ -146,8 +178,9 @@ func _process_modification() -> void:
 		# his right hand onto its grip, the fist turned to it
 		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd,
 				1.0 if on_path else _carry)
-	if _two > 0.0:
-		_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"], to_sk * weapon.global_marker("grip_l"), fwd, _two)
+	if _two > 0.0 or _level > 0.0:
+		_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"], to_sk * weapon.global_marker("grip_l"), fwd,
+				maxf(_two, _level))
 
 
 ## Reaches `chain`'s hand to `target` (skeleton space): its PALM onto the

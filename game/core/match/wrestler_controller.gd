@@ -4699,6 +4699,9 @@ const WEAPON_ACTION_CLIPS := {
 const PICKUP_STAND_OFF := 0.46
 const PICKUP_STEP_TICKS := 8
 const PICKUP_TWO_MIDDLE := 0.6
+## A heavy thing is lifted from its handles' side, his feet this far out from
+## them: square on to it, his knees outside it.
+const PICKUP_HEAVY_STAND_OFF := 0.34
 ## The hands start onto the grips on the floor this tick, and are on them
 ## by the action's AT tick.
 const PICKUP_REACH_FROM := 3
@@ -4807,13 +4810,23 @@ func begin_weapon_action(action: String) -> void:
 			grip = grip.lerp(_weapon_target.global_marker("grips").origin, PICKUP_TWO_MIDDLE)
 		var to := grip - global_position
 		to.y = 0.0
-		if to.length() > 0.05:
+		_pickup_from = global_position
+		_pickup_to = global_position
+		if action == "pickup_heavy":
+			# outside it, on the side its handles are, facing in: walked
+			# straight at its handles he stood inside the steps and bent down
+			# through the top of them
+			var box := _weapon_target.global_transform * _weapon_target.local_bounds()
+			var out := grip - box.get_center()
+			out.y = 0.0
+			if out.length() < 0.05:
+				out = -to
+			out = out.normalized()
+			_pickup_to = Vector3(grip.x, global_position.y, grip.z) + out * PICKUP_HEAVY_STAND_OFF
+			look_at(global_position - out, Vector3.UP)      # facing in at it
+		elif to.length() > 0.05:
 			look_at(global_position + to, Vector3.UP)
-			_pickup_from = global_position
 			_pickup_to = global_position + to.normalized() * (to.length() - PICKUP_STAND_OFF)
-		else:
-			_pickup_from = global_position
-			_pickup_to = global_position
 	_set_state_clip(WrestlerFSM.State.WEAPON_ACTION, WEAPON_ACTION_CLIPS[action])
 	fsm.transition_to(WrestlerFSM.State.WEAPON_ACTION)
 
@@ -4836,7 +4849,9 @@ func _tick_pickup() -> void:
 	if _weapon_action_ticks == at and target_ok:
 		var lay := _weapon_target.global_transform
 		take_weapon(_weapon_target)
-		if weapon_grip:
+		if weapon_grip and _weapon_action == "pickup_heavy":
+			weapon_grip.lift_level(lay)
+		elif weapon_grip:
 			weapon_grip.lift_from(lay)
 
 
@@ -4942,6 +4957,7 @@ func _tick_weapon() -> void:
 	if weapon_grip:
 		if not (fsm.current_state == WrestlerFSM.State.WEAPON_ACTION and _weapon_action.begins_with("pickup")):
 			weapon_grip.reach(null, 0.0, false)     # a pickup cut short lets go of the floor
+			weapon_grip.end_level()                 # and a lift over is carried
 		var path: Array = []
 		var t := -1.0
 		var dt := 0.0

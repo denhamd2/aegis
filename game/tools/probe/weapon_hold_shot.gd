@@ -290,7 +290,9 @@ func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camer
 func _shoot_pickup(roman: WrestlerController, cam: Camera3D, id: String) -> void:
 	var a := WeaponStock.of(roman).pull(WeaponCatalog.by_id(StringName(id)))
 	var body := roman.global_transform
-	a.global_position = body.origin - body.basis.z * 0.55 + body.basis.x * 0.12 + Vector3.UP * 0.3
+	# out of his way: the steps dropped at 0.55 m lay over his feet
+	var ahead := 1.1 if WeaponCatalog.pickup_action(a.def) == "pickup_heavy" else 0.55
+	a.global_position = body.origin - body.basis.z * ahead + body.basis.x * 0.12 + Vector3.UP * 0.3
 	a.drop()
 	for t in 60:
 		await get_tree().physics_frame
