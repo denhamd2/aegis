@@ -24,7 +24,7 @@ const REASON_LIFE := 4.0
 ## What the room cannot let pass -- a near-fall, a table going up -- is not
 ## made to wait out the rest after the last chant (a gasp is not polite), and
 ## is still answered this long after.
-const URGENT: Array[StringName] = [&"chant_this_is_awesome", &"chant_holy_cow", &"chant_tables"]
+const URGENT: Array[StringName] = [&"chant_this_is_awesome", &"chant_holy_shit", &"chant_tables"]
 const URGENT_LIFE := 7.0
 ## A man "has the match" at this many landed moves inside MOMENTUM_WINDOW.
 const MOMENTUM_MOVES := 3
@@ -37,7 +37,7 @@ const STALL_SECONDS := 40.0
 const STALL_AFTER := 150.0
 const BORING_MAX := 1
 ## A near-fall is worth "This is awesome" this far into a match (from the
-## bell); before it, "Holy cow" at most.
+## bell); before it, "Holy shit" at most.
 const AWESOME_AFTER := 240.0
 ## The bell: "You deserve it" for the face at once, "One more match" after a
 ## long one.
@@ -132,7 +132,7 @@ func fired_up(favor: float) -> void:
 func kicked_out(count: int) -> void:
 	if count < 2:
 		return
-	_reason(&"chant_this_is_awesome" if match_time() >= AWESOME_AFTER else &"chant_holy_cow")
+	_reason(&"chant_this_is_awesome" if match_time() >= AWESOME_AFTER else &"chant_holy_shit")
 
 
 ## A table stood up for somebody.

@@ -6,7 +6,7 @@ extends GdUnitTestSuite
 
 const CHANTS := ["chant_cody", "chant_lets_go_cody", "chant_otc",
 		"chant_this_is_awesome", "chant_you_deserve_it", "chant_one_more_match",
-		"chant_holy_cow", "chant_tables", "chant_boring"]
+		"chant_holy_shit", "chant_tables", "chant_boring"]
 
 
 func _chants(cody := true, roman := true, rung := true) -> CrowdChants:
@@ -42,13 +42,13 @@ func test_nothing_is_chanted_without_a_reason() -> void:
 	assert_array(heard).is_empty()
 
 
-func test_a_near_fall_late_in_a_match_is_awesome_and_early_is_holy_cow() -> void:
+func test_a_near_fall_late_in_a_match_is_awesome_and_early_is_holy_shit() -> void:
 	var c := _chants()
 	var heard := _heard(c)
 	c.clock = 30.0
 	c.kicked_out(2)
 	c.tick(0.1, 0.6)
-	assert_array(heard).contains_exactly(["chant_holy_cow"])
+	assert_array(heard).contains_exactly(["chant_holy_shit"])
 	var late := _chants()
 	var heard_late := _heard(late)
 	late.clock = CrowdChants.AWESOME_AFTER + 10.0      # since the bell at 0
@@ -80,7 +80,7 @@ func test_a_near_fall_is_answered_even_straight_after_another_chant() -> void:
 		c.tick(0.1, 0.5)
 	c.kicked_out(2)
 	c.tick(0.1, 0.5)
-	assert_array(heard).contains_exactly(["chant_tables", "chant_holy_cow"])
+	assert_array(heard).contains_exactly(["chant_tables", "chant_holy_shit"])
 
 
 func test_a_one_count_is_not_a_near_fall() -> void:
@@ -112,8 +112,8 @@ func test_the_same_chant_waits_and_a_stale_reason_is_dropped() -> void:
 
 
 func test_the_freshest_reason_wins() -> void:
-	var reasons := {&"chant_tables": 10.0, &"chant_holy_cow": 12.0}
-	assert_str(CrowdChants.pick(reasons, {}, 12.5, 99.0, false)).is_equal("chant_holy_cow")
+	var reasons := {&"chant_tables": 10.0, &"chant_holy_shit": 12.0}
+	assert_str(CrowdChants.pick(reasons, {}, 12.5, 99.0, false)).is_equal("chant_holy_shit")
 
 
 func test_a_run_of_moves_by_the_face_gets_his_name() -> void:

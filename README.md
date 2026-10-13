@@ -9496,11 +9496,11 @@ crowd", before the match and during it; wanted authentic chants (OTC, Cody,
   back as "Go". **Every take is kept only if a speech recogniser (Whisper)
   hears its words in the finished mix**; most takes are rejected. Built:
   Co-dy, Let's go Cody / Cody sucks, O-T-C, This is awesome, You deserve it,
-  One more match, Holy cow, Tables, Boring, the crowd counting ONE / TWO /
+  One more match, Holy shit, Tables, Boring, the crowd counting ONE / TWO /
   THREE, and the WHOA. "Ro-man" never passed and is not in.
 - **When they chant** (`CrowdChants`): for a reason and seldom -- a run of
   moves or a comeback by the face (his name), the heel on top (Let's go
-  Cody, or his people's O-T-C), a near-fall (Holy cow early, This is awesome
+  Cody, or his people's O-T-C), a near-fall (Holy shit early, This is awesome
   past four minutes), a table stood up, a flat room (Boring), the bell (You
   deserve it for the face, One more match after a long one), and the count
   with the referee's hand. One at a time, 22 s of rest after one, 110 s

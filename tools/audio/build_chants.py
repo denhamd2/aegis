@@ -47,7 +47,7 @@ TOKENS = {
 	"otc": ("O. T. C.", 1.2), "roman": ("Roman!", 1.6),
 	"this_is": ("This is", 1.2), "awesome": ("awesome!", 1.3),
 	"you_deserve_it": ("You deserve it!", 1.3), "one_more_match": ("One more match!", 1.3),
-	"ho": ("Hoe", 1.0), "lee": ("lee", 0.9), "cow": ("cow!", 1.1),
+	"ho": ("Hoe", 1.0), "lee": ("lee", 0.9), "holy_shit": ("Holy shit!", 1.4),
 	"oh": ("Oh!", 1.1), "tee": ("Tee!", 1.1), "see": ("See!", 1.1),
 	"roe": ("Roe!", 1.1), "man": ("man!", 1.1), "tables": ("Tables!", 1.6), "boring": ("Boring!", 1.5),
 	"one": ("One!", 1.0), "two": ("Two!", 1.0), "three": ("Three!", 1.0),
@@ -75,7 +75,7 @@ CHANTS = {
 			bar(*CLAP5)] * 3, 64, dict(jitter=0.01)),
 	"chant_you_deserve_it": (112, [bar(("you_deserve_it", (0, 1, 1.5, 2))), bar(*CLAP5)] * 3, 64),
 	"chant_one_more_match": (112, [bar(("one_more_match", (0, 1, 2))), bar(*CLAP5)] * 3, 64),
-	"chant_holy_cow": (112, [bar(("ho", 0), ("lee", 1), ("cow", 2)), bar(*CLAP5)] * 2, 64),
+	"chant_holy_shit": (112, [bar(("holy_shit", (0, 1, 2))), bar(*CLAP5)] * 2, 64),
 	"chant_tables": (116, [bar(("tables", 0), *CLAP3)] * 5, 60),
 	"chant_boring": (96, [bar(("boring", 0), ("boring", 2))] * 3, 36),
 	"chant_whoa": (92, [bar(("whoa", 0), ("whoa_oh", 2.5))] * 4, 80),
@@ -105,7 +105,7 @@ HEARD = {
 	"chant_cody": ("cody", 2), "chant_lets_go_cody": ("lets go cody", 1), "chant_otc": (("otc", "ohtc", "otsee", "ohteesee"), 1),
 "chant_this_is_awesome": ("this is awesome", 1),
 	"chant_you_deserve_it": ("you deserve it", 1), "chant_one_more_match": ("one more match", 1),
-	"chant_holy_cow": ("holy cow", 1), "chant_tables": ("tables", 2), "chant_boring": ("boring", 2),
+	"chant_holy_shit": (("holyshit", "holysh"), 1), "chant_tables": ("tables", 2), "chant_boring": ("boring", 2),
 	# a shouted number comes back as a digit or a homophone, and that is the
 	# number heard
 	"crowd_count_1": (("one", "1", "won"), 1), "crowd_count_2": (("two", "2", "too", "to"), 1),
