@@ -9372,3 +9372,37 @@ fixed and checked on rendered frames.
   - the face sculpt pushed further and contour shading painted on as vertex
     colour off the same landmarks; a little more wet in the hair and sheen
     on the body.
+
+## Round: No Holds Barred, phase 0 -- the floor, and the first weapons
+
+- **Pair clearance after the longer downed legs.** Three targeted refit
+  passes (never the whole library): the Spear, the corner Spear and the
+  Tilt-a-Whirl DDT now clear, and Clothesline From Hell measured clean and
+  left the baseline. The Samoan Drop's landing (2.2 cm thigh through hip)
+  is baselined -- the root fit cannot move a leg; a knees-up landing key
+  will. `test_grapple_rig_placement` now allows for the fitted first key.
+- **Fighting outside (NHB only).** Hold into the ropes for a third of a
+  second and you roll out to the floor (`ROPE_CROSS`, DiveSpot's clips and
+  path); hold into the apron to roll back in. The arena floor and the ring
+  base collide; a man outside is held inside the barricade and out from
+  under the apron. Nobody reaches across the ropes. Moves on the floor play
+  at floor height, along the ring side in the lane between deck and
+  barricade. Pins count anywhere; no rope breaks. The AI follows its
+  opponent through the ropes (round the corner when it has to) and only
+  crosses when it means to. `test_nhb_outside`, `tools/probe/nhb_outside_shot`.
+- **Camera on the floor.** Shot from the crowd side looking back at the
+  ring, raised over the barricade, and never from the hard camera across the
+  ring.
+- **Not yet:** the referee still counts from inside the ring (her climb
+  through needs her own clips); the AI does not take the fight outside on
+  its own.
+- **Weapons, first batch** (`tools/blender/weapons/`, shared
+  `weapon_kit.py`; every .glb rebuilds byte-identical):
+  steel chair (Folded / Open / Bent, the bend in the mesh) and barbed-wire
+  chair; baseball bat, barbed-wire bat, inflatable banana (and deflated);
+  folding table (Up / Folded / Broken in pieces); trash can with lid (Clean
+  / Dented); fire extinguisher and its powder cloud. Procedural PBR
+  throughout -- chipped enamel, ash grain and grip tape, galvanised zinc,
+  vinyl seams, two-strand twisted barbed wire. Built directly rather than by
+  sub-agents: six parallel agents each re-read the repo and rendered every
+  pass, and the first six died at the session limit with nothing saved.
