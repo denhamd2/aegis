@@ -82,20 +82,7 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 		w.pin_started.connect(func(att, _def): r["pins"].append("%s@%d" % [att.display_name, r["ticks"]]))
 	referee.match_won.connect(func(winner, method): r["won"] = "%s by %s" % [winner.display_name if winner else "-", method])
 	var seen := {}
-	# --render-at T,T,...: draw only around those ticks (the rest is
-	# simulated undrawn -- a software-rendered arena runs at ~1 fps)
-	var windows: Array = []
-	var args := OS.get_cmdline_user_args()
-	var ri := args.find("--render-at")
-	if ri >= 0 and ri + 1 < args.size():
-		windows = Array(args[ri + 1].split(",")).map(func(x): return int(x))
-		RenderingServer.render_loop_enabled = false
 	for t in budget:
-		if not windows.is_empty():
-			var on := false
-			for w: int in windows:
-				on = on or (t >= w - 30 and t <= w + 60)
-			RenderingServer.render_loop_enabled = on
 		await host.get_tree().physics_frame
 		r["ticks"] = t
 		if give != "" and t == 900:
@@ -128,7 +115,7 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 					a.held_weapon.def.id if a.has_weapon() else "-",
 					b.fsm.current_state, b.ai._weapon_plan, b.outside_ring, b.combat.wear, b.combat.can_finisher(),
 					b.held_weapon.def.id if b.has_weapon() else "-"])
-		if shots_dir != "" and shoot_at.has(t) and RenderingServer.render_loop_enabled:
+		if shots_dir != "" and shoot_at.has(t):
 			await RenderingServer.frame_post_draw
 			var n := DirAccess.get_files_at(shots_dir).size() if DirAccess.dir_exists_absolute(shots_dir) else 0
 			DirAccess.make_dir_recursive_absolute(shots_dir)
