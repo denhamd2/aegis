@@ -129,7 +129,7 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 	return r
 
 
-func _spear_through(d: float) -> void:
+func _spear_through(_d: float) -> void:
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	var pair := Roster.pair_from_spec("roman,cody")
 	TitleScreen.configure_match(scene, pair[0], pair[1], 1)
@@ -138,28 +138,37 @@ func _spear_through(d: float) -> void:
 	var roman: WrestlerController = scene.get_node("WrestlerA")
 	var cody: WrestlerController = scene.get_node("WrestlerB")
 	(scene.get_node("MatchReferee") as MatchReferee)._tying_up = false
-	for w: WrestlerController in [roman, cody]:
-		w.is_ai = false
-		w.fsm.transition_to(WrestlerFSM.State.IDLE)
-	roman.global_position = Vector3(0.0, 0.0, 1.0)
-	cody.global_position = Vector3(0.0, 0.0, 0.0)
-	roman.look_at(Vector3(0.0, 0.0, -5.0), Vector3.UP)
-	cody.look_at(Vector3(0.0, 0.0, 5.0), Vector3.UP)
-	for t in 10:
-		await get_tree().physics_frame
-	var table := WeaponStock.of(cody).pull(WeaponCatalog.by_id(&"table"))
-	table.set_up_at(Vector3(0.0, 0.0, -d), 0.0)
-	var move := roman._pick_tier_move(roman.running_attack_move, roman.running_attack_move_pool)
-	print("SPEAR move %s paired %s" % [move.resource_path.get_file() if move else "-", roman._can_run_into_paired(move)])
-	roman.fsm.transition_to(WrestlerFSM.State.RUN)
-	roman._begin_running_paired(move)
-	var landed := [""]
-	cody.set_piece_landed.connect(func(_w, _a, b): landed[0] = "broke" if b else "landed")
-	for t in 240:
-		await get_tree().physics_frame
-		if t % 20 == 0 or cody.fsm.current_state == WrestlerFSM.State.DOWN and landed[0] == "":
-			pass
-		if cody.fsm.current_state == WrestlerFSM.State.DOWN and t % 10 == 0:
-			print("t %d cody DOWN root %s pelvis %s table %s" % [t, cody.global_position.snappedf(0.01),
-					cody._bone_world("pelvis").snappedf(0.01), landed[0]])
-	print("SPEAR d %.2f -> %s" % [d, landed[0]])
+	for pair2 in [[roman, cody], [cody, roman]]:
+		var att: WrestlerController = pair2[0]
+		var def: WrestlerController = pair2[1]
+		var moves: Array = [att.running_attack_move] + att.running_attack_move_pool \
+				+ [att.grapple_move] + att.grapple_move_pool + [att.power_move] + att.power_move_pool \
+				+ [att.signature_move] + att.signature_move_pool + [att.finisher_move] + att.finisher_move_pool
+		for move: MoveDef in moves:
+			if move == null:
+				continue
+			for w: WrestlerController in [roman, cody]:
+				w.is_ai = false
+				w.fsm.transition_to(WrestlerFSM.State.IDLE)
+			att.global_position = Vector3(0.0, 0.0, 1.0)
+			def.global_position = Vector3(0.0, 0.0, 0.0)
+			att.look_at(Vector3(0.0, 0.0, -5.0), Vector3.UP)
+			def.look_at(Vector3(0.0, 0.0, 5.0), Vector3.UP)
+			for t in 20:
+				await get_tree().physics_frame
+			if not PairedRecipes.RECIPES.has(String(move.animation_pair_id)):
+				print("RUN %s %s: not paired" % [att.display_name, move.resource_path.get_file()])
+				continue
+			if move in att.running_attack_move_pool or move == att.running_attack_move:
+				att.fsm.transition_to(WrestlerFSM.State.RUN)
+			att._begin_running_paired(move)
+			var down_at := Vector3.INF
+			for t in 200:
+				await get_tree().physics_frame
+				var h := def._bone_world("pelvis")
+				if down_at == Vector3.INF and h.y < 0.4:
+					down_at = h
+			print("RUN %s %s: hips first down at %s, end %s" % [att.display_name, move.resource_path.get_file(),
+					down_at.snappedf(0.01), def._bone_world("pelvis").snappedf(0.01)])
+			for t in 260:
+				await get_tree().physics_frame

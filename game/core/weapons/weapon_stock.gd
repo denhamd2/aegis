@@ -55,6 +55,15 @@ func loose_near(at: Vector3) -> WeaponActor:
 	return best
 
 
+## Every tick, with a set piece standing: anyone coming down on it lands on it.
+func _physics_process(delta: float) -> void:
+	if set_up_pieces().is_empty() or get_parent() == null:
+		return
+	for n in get_parent().get_children():
+		if n is WrestlerController:
+			(n as WrestlerController).tick_fall_onto_set_piece(delta)
+
+
 ## A man landing on a set piece: this far outside its footprint still
 ## counts, and up to this far above its top (his pelvis on a table is well
 ## above the boards before they give).

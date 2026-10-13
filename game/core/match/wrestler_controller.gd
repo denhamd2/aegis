@@ -1708,6 +1708,7 @@ func _physics_process(delta: float) -> void:
 	if _corner_lockout > 0:
 		_corner_lockout -= 1
 	_keep_off_downed_body(delta)
+	_keep_off_set_pieces(delta)
 	_apply_gravity(delta)
 	var stepped_from := global_position
 	move_and_slide()
@@ -3620,6 +3621,9 @@ func _timed_stub(ticks: int) -> MoveDef:
 ## or -1 for whatever the meter affords. Set by WrestlerAI for its working lock-ups;
 ## spent by the hold it applies to.
 var tie_up_rung_cap := -1
+## A move the AI wants off this lock-up if he wins it, whatever the meter
+## says -- set for a spot (the suplex through a table), spent by the hold.
+var prefer_hold_move: MoveDef = null
 
 
 ## The move this hold resolves to: the highest rung the meter affords, or a
@@ -3628,6 +3632,11 @@ func _pick_hold_move() -> MoveDef:
 	var move: MoveDef = null
 	var cap := tie_up_rung_cap
 	tie_up_rung_cap = -1
+	if prefer_hold_move:
+		# the AI's pick for a spot (WrestlerAI: the suplex onto a table)
+		move = prefer_hold_move
+		prefer_hold_move = null
+		return move
 	# A man the story has no big move for (MatchFlow rung "none") throws no
 	# signature or finisher off a lock-up, whatever his meter says.
 	if is_ai and flow != null and flow.rung(self) == "none":
@@ -4294,6 +4303,45 @@ func _keep_off_downed_body(delta: float) -> void:
 	velocity.z += push.z / delta
 
 
+## Standing set pieces he walks round, not through: a table up, a ladder
+## open, the steps, a chair opened -- anything stood up taller than this.
+## (The tacks and the bed of nails lie flat; he can walk on those.)
+const SET_PIECE_SOLID_ABOVE := 0.3
+## Only on his own feet: driven into one by a move, he goes through it.
+const SET_PIECE_SOLID_STATES: Array[WrestlerFSM.State] = [WrestlerFSM.State.IDLE,
+		WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE,
+		WrestlerFSM.State.WEAPON_ACTION, WrestlerFSM.State.TAUNT]
+
+
+## Steers him off any standing set piece, through velocity before
+## move_and_slide(), as _keep_off_downed_body() does: out of its footprint
+## (grown by his radius) the shortest way.
+func _keep_off_set_pieces(delta: float) -> void:
+	if delta <= 0.0 or not fsm.current_state in SET_PIECE_SOLID_STATES:
+		return
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock if get_parent() else null
+	if stock == null:
+		return
+	var next := global_position + velocity * delta
+	for a in stock.set_up_pieces():
+		var box := a.global_transform * a.local_bounds()
+		if box.size.y < SET_PIECE_SOLID_ABOVE:
+			continue
+		box = box.grow(BODY_RADIUS)
+		if next.x <= box.position.x or next.x >= box.end.x or next.z <= box.position.z or next.z >= box.end.z:
+			continue
+		# out through the nearest side
+		var outs := [Vector3(box.position.x - next.x, 0, 0), Vector3(box.end.x - next.x, 0, 0),
+				Vector3(0, 0, box.position.z - next.z), Vector3(0, 0, box.end.z - next.z)]
+		var push: Vector3 = outs[0]
+		for o: Vector3 in outs:
+			if o.length() < push.length():
+				push = o
+		velocity.x += push.x / delta
+		velocity.z += push.z / delta
+		next += push
+
+
 ## The man this wrestler covered, while their capsules ignore each other.
 var _cover_partner: WrestlerController = null
 
@@ -4687,11 +4735,12 @@ func begin_weapon_action(action: String) -> void:
 		var axis := GrappleRig._outside_side(Vector3(global_position.x, 0.0, global_position.z))
 		look_at(global_position - axis, Vector3.UP)
 	elif action == "set_up" and is_ai and opponent:
-		# the AI sets it down between them, to put him through it
+		# the AI sets it down behind himself: he suplexes the man back over
+		# his head onto it (WrestlerAI._line_up_input)
 		var to_him := opponent.global_position - global_position
 		to_him.y = 0.0
 		if to_him.length() > 0.05:
-			look_at(global_position + to_him, Vector3.UP)
+			look_at(global_position - to_him, Vector3.UP)
 	elif action == "pickup" and _weapon_target:
 		var to := _weapon_target.global_position - global_position
 		to.y = 0.0
@@ -4853,13 +4902,26 @@ var _weapon_draws := 0
 var _tacks_in_back: Node3D = null
 ## Coming down on a set piece: [weapon, where, ticks waited].
 var _landing: Array = []
+## Falling this fast (hips, m/s) and within ONTO_ABOVE of a set piece's top,
+## he is coming down on it.
+const FALLING_MPS := 0.8
+const ONTO_ABOVE := 0.15
+## How far a table's break is moved to be under him.
+const BREAK_CENTRE_M := 0.45
+var _hips_were := INF
+## He has landed on a set piece this time down; cleared on his feet.
+var _fell_on := false
+## Ticks more he stays down once he is down, for going through a table.
+var _down_bonus := 0
 
 
 ## Just put down: if he is coming down on a set piece, it does its work as
 ## his hips reach it (_tick_landing), not as he starts to fall.
 func _land_on_set_piece() -> void:
 	_landing = []
-	if not MatchRules.no_holds_barred(self) or skeleton == null:
+	_move_ticks_remaining += _down_bonus
+	_down_bonus = 0
+	if _fell_on or not MatchRules.no_holds_barred(self) or skeleton == null:
 		return
 	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock
 	if stock == null:
@@ -4896,17 +4958,64 @@ func _tick_landing() -> void:
 		return
 	var at: Vector3 = _landing[1]
 	_landing = []
+	_land_on(w, at)
+	_move_ticks_remaining += _down_bonus
+	_down_bonus = 0
+
+
+## He comes down on `w` at `at`: its damage, and it does its thing -- a table
+## breaks under him, the tacks stick, a chair on the floor dents. A table
+## through which he is still falling (a move's own fall) makes him stay down
+## longer once he is down (_down_bonus, spent by _go_down()).
+func _land_on(w: WeaponActor, at: Vector3) -> void:
+	_fell_on = true
 	combat.apply_damage(WeaponCatalog.landing_move(w.def))
 	var broke := false
 	if w.mode == WeaponActor.Mode.FLOOR:
 		w.hit(_weapon_seed())
 	elif w.def.broken != "":
+		# The break centred under him: he comes down near the edge as often as
+		# the middle, and the boards give where he lands, not a step away.
+		# The table is swapped for its pieces this tick, so the shift is never
+		# seen.
+		var off := Vector3(at.x - w.global_position.x, 0.0, at.z - w.global_position.z)
+		w.global_position += off.limit_length(BREAK_CENTRE_M)
 		w.shatter(_weapon_seed(), self)
-		_move_ticks_remaining += TABLE_DOWN_TICKS
+		_down_bonus = TABLE_DOWN_TICKS
 		broke = true
 	elif w.def.id == &"thumbtacks":
 		_stick_tacks(at)
+	if fsm.current_state == WrestlerFSM.State.DOWN:
+		_move_ticks_remaining += _down_bonus
+		_down_bonus = 0
 	set_piece_landed.emit(self, w, broke)
+
+
+## Every tick: falling -- in a move's own fall, or going over from a blow --
+## and his hips come down onto a set piece's top, he lands on it there and
+## then, not once the move is over and he is lying beside it. Called by
+## WeaponStock, which ticks whoever is posing him: in a paired move his own
+## physics tick does not run.
+func tick_fall_onto_set_piece(delta: float) -> void:
+	var hips := _bone_world("pelvis")
+	if hips == Vector3.INF or delta <= 0.0:
+		return
+	var fall := (_hips_were - hips.y) / delta if _hips_were != INF else 0.0
+	_hips_were = hips.y
+	if fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
+		_fell_on = false
+		return
+	if _fell_on or fall < FALLING_MPS or not MatchRules.no_holds_barred(self):
+		return
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock if get_parent() else null
+	if stock == null:
+		return
+	var w := stock.set_piece_under(hips)
+	if w == null:
+		return
+	var top := (w.global_transform * w.local_bounds()).end.y
+	if hips.y <= top + ONTO_ABOVE:
+		_land_on(w, hips)
 
 
 ## A clump of the tacks he landed on, stuck in his back from now on: the

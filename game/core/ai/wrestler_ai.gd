@@ -1108,19 +1108,17 @@ const THROW_FROM := Vector2(2.0, 4.0)
 const THROW_CHANCE := 0.3
 ## A weapon swing waits this many times the strike cooldown.
 const WEAPON_COOLDOWN_SCALE := 2.0
-## Lining him up in front of a set piece: one this far behind him (flat, from
-## its centre), from no further off than LINE_UP_FROM.
-const LINE_UP_NEAR := Vector2(0.4, 1.6)
-const LINE_UP_FROM := 4.5
-## He charges once the other man is between him and it -- within this cone of
-## the line through them, from this far -- and works round to LINE_UP_BACK
-## behind him on that line until he is.
-const LINE_UP_CHARGE := Vector2(1.1, 3.4)
-const LINE_UP_CONE_DEG := 25.0
-const LINE_UP_BACK := 2.2
+## The table spot: one within LINE_UP_FROM of both men; he stands SUPLEX_DROP
+## in front of it (near enough is LINE_UP_THERE), the other man in front of
+## him within LINE_UP_CONE_DEG of the line.
+const LINE_UP_FROM := 4.0
+const SUPLEX_DROP := 1.3
+const LINE_UP_THERE := 0.3
+const LINE_UP_CONE_DEG := 30.0
 ## A set piece is set down from this far from him (it lands 0.95 m in front
-## of the man setting it, so about 0.65 m from him).
-const SET_DOWN_FROM := 1.6
+## of the man setting it, so about 0.95 m from him: clear of him, and where a
+## running attack carries him).
+const SET_DOWN_FROM := 1.9
 var _weapon_plan := WeaponPlan.NONE
 var _weapon_roll := WEAPON_ROLL_TICKS
 var _weapon_runs := 0
@@ -1322,56 +1320,74 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 	return input
 
 
-## A set piece standing near the other man: work round so he is between this
-## man and it, back off to charging distance on that line, and run him
-## through it -- a running attack carries a man 0.8-1.4 m back
-## (nhb_weapon_probe --spear), and a table set across the line catches him
-## anywhere in that. {} when there is none, or once the charge is on.
+## A table standing near them: get between it and the other man with it at
+## his back, lock up, and if he wins it, the vertical suplex -- it drops a man
+## 1.3 m behind the man throwing it (nhb_weapon_probe --spear), on the table.
+## While the other man is down or getting up he waits on that spot. {} when
+## there is no table, or nothing to do about it this tick.
 func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
-	if _charging or _run_cooldown > 0 or not _opening_grapple_done():
+	controller.prefer_hold_move = null
+	if not _opening_grapple_done():
 		return {}
 	var standing := target.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
 	var rising := target.fsm.is_in([WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP])
 	if not standing and not rising:
 		return {}
-	if controller.outside_ring != target.outside_ring or distance > LINE_UP_FROM:
+	if controller.outside_ring != target.outside_ring:
+		return {}
+	var suplex := _suplex()
+	if suplex == null:
 		return {}
 	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock
 	if stock == null:
 		return {}
 	var piece: WeaponActor = null
 	for a in stock.set_up_pieces():
-		var d := _flat(a.global_position - target.global_position).length()
-		if a.def.set_piece and d >= LINE_UP_NEAR.x and d <= LINE_UP_NEAR.y:
+		if a.def.set_piece and a.def.broken != "" \
+				and _flat(a.global_position - target.global_position).length() <= LINE_UP_FROM \
+				and _flat(a.global_position - controller.global_position).length() <= LINE_UP_FROM:
 			piece = a
 			break
 	if piece == null:
 		return {}
-	# the way a charge through him would carry him: on, into it
-	var line := _flat(piece.global_position - target.global_position).normalized()
-	var aim := _flat(target.global_position - controller.global_position)
-	var on_line := aim.length() >= LINE_UP_CHARGE.x and aim.length() <= LINE_UP_CHARGE.y \
-			and aim.normalized().dot(line) >= cos(deg_to_rad(LINE_UP_CONE_DEG))
-	if on_line and standing:
-		_charging = true                 # he is between: through it
+	var out := _flat(target.global_position - piece.global_position)
+	if out.length() < 0.05:
 		return {}
-	# down beside it, or about to be on his feet: to the spot, and wait there
-	var spot := target.global_position - line * LINE_UP_BACK
+	var spot := piece.global_position + out.normalized() * SUPLEX_DROP
 	if not controller.outside_ring:
 		spot.x = clampf(spot.x, -WrestlerController.RING_KEEP_IN, WrestlerController.RING_KEEP_IN)
 		spot.z = clampf(spot.z, -WrestlerController.RING_KEEP_IN, WrestlerController.RING_KEEP_IN)
 	var to_spot := _flat(spot - controller.global_position)
-	if to_spot.length() < 0.2:
+	if to_spot.length() <= LINE_UP_THERE:
 		if rising:
 			input["move"] = Vector2.ZERO  # waiting for him, not covering him
 			return input
-		return {}
+		var facing := _flat(controller.global_position - piece.global_position).normalized()
+		if distance <= tie_up_range and to_target.normalized().dot(facing) >= cos(deg_to_rad(LINE_UP_CONE_DEG)):
+			# him in front, the table at his back: lock up for the suplex
+			input["move"] = Vector2(to_target.x, to_target.z).normalized() * 0.05
+			input["grapple"] = true
+			controller.tie_up_rung_cap = CombatSystem.Tier.GRAPPLE
+			controller.prefer_hold_move = suplex
+			return input
+		# there: hold it, square to him, and let him come -- he closes on
+		# his own, and walking out to meet him would leave the spot
+		input["move"] = Vector2(to_target.x, to_target.z).normalized() * 0.05 if distance > 0.01 else Vector2.ZERO
+		return input
 	# round him, not through him: sidestep while closing on the spot
 	var dir := to_spot.normalized()
-	if to_target.length() > 0.001 and dir.dot(to_target.normalized()) > 0.3:
+	if to_target.length() > 0.001 and dir.dot(to_target.normalized()) > 0.3 and distance < to_spot.length():
 		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.9).normalized()
 	input["move"] = Vector2(dir.x, dir.z)
 	return input
+
+
+## His vertical suplex, or null.
+func _suplex() -> MoveDef:
+	for m: MoveDef in [controller.grapple_move] + controller.grapple_move_pool:
+		if m and String(m.animation_pair_id).contains("vertical_suplex"):
+			return m
+	return null
 
 
 static func _flat(v: Vector3) -> Vector3:

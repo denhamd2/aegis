@@ -169,42 +169,56 @@ func _shoot_swing(roman: WrestlerController, a: WeaponActor, id: String) -> void
 		tick += 1
 
 
-## Cody knocked down in front of a table set up behind him.
+## Roman's running attack into Cody with a table set up behind him, across
+## the line -- the spot as the AI plays it (WrestlerAI._line_up_input): the
+## run in, the impact, the wreck, and the wreck from above.
 func _shoot_table(roman: WrestlerController, cody: WrestlerController, cam: Camera3D) -> void:
 	cody.visible = true
-	roman.visible = false
-	cody.global_position = Vector3(0.0, 0.0, -0.4)
-	cody.look_at(Vector3(0.0, 0.0, 2.0), Vector3.UP)
+	for n in roman.get_parent().find_children("*", "", true, false):
+		if n is RefereeActor:
+			(n as Node3D).visible = false
+	roman.global_position = Vector3(0.0, 0.0, 1.0)
+	cody.global_position = Vector3(0.0, 0.0, 0.0)
+	roman.look_at(Vector3(0.0, 0.0, -5.0), Vector3.UP)
+	cody.look_at(Vector3(0.0, 0.0, 5.0), Vector3.UP)
 	var table := WeaponStock.of(cody).pull(WeaponCatalog.by_id(&"table"))
-	table.set_up_at(Vector3.ZERO, 0.0)
-	var box := table.local_bounds()
-	# his length along the boards
-	var yaw := PI / 2.0 if box.size.x > box.size.z else 0.0
-	table.set_up_at(Vector3(0.0, 0.0, -1.6), yaw)
+	table.set_up_at(Vector3(0.0, 0.0, 2.3), 0.0)
 	cam.fov = 46.0
-	cam.global_position = Vector3(3.9, 1.6, -1.2)
-	cam.look_at(Vector3(0.0, 0.5, -1.35), Vector3.UP)
+	cam.global_position = Vector3(4.0, 1.6, 1.4)
+	cam.look_at(Vector3(0.0, 0.8, 1.2), Vector3.UP)
 	for t in 10:
 		await get_tree().physics_frame
 	var broke := [false]
 	cody.set_piece_landed.connect(func(_w, _a, b): broke[0] = b)
+	var move := roman._pick_tier_move(roman.running_attack_move, roman.running_attack_move_pool)
+	for m: MoveDef in [roman.grapple_move] + roman.grapple_move_pool:
+		if m and String(m.animation_pair_id).contains("vertical_suplex"):
+			move = m
+	roman._begin_running_paired(move)
+	print("TABLE move %s" % move.resource_path.get_file())
+	for t in 50:
+		await get_tree().physics_frame
 	await _grab("table_0")
-	cody._go_down()
 	var waited := 0
-	while not broke[0] and waited < 90:
+	while not broke[0] and waited < 240:
 		await get_tree().physics_frame
 		waited += 1
-	print("TABLE broke %s after %d ticks hips %s" % [broke[0], waited, cody._bone_world("pelvis").snappedf(0.01)])
+		if waited % 6 == 0:
+			print("FALL t %d st %d hips %s were %.2f fell %s" % [waited + 50, cody.fsm.current_state,
+					cody._bone_world("pelvis").snappedf(0.01), cody._hips_were, cody._fell_on])
+	print("TABLE broke %s after %d ticks hips %s" % [broke[0], waited + 50, cody._bone_world("pelvis").snappedf(0.01)])
 	await _grab("table_1")
-	for t in 40:
+	for t in 30:
 		await get_tree().physics_frame
 	await _grab("table_2")
-	for t in 140:
+	for t in 150:
 		await get_tree().physics_frame
 	# settled, from above and the other side
-	cam.global_position = Vector3(-2.6, 2.6, -3.4)
-	cam.look_at(Vector3(0.0, 0.2, -1.3), Vector3.UP)
+	cam.global_position = Vector3(-2.4, 2.8, 4.4)
+	cam.look_at(Vector3(0.0, 0.2, 2.0), Vector3.UP)
 	await _grab("table_3")
+
+
 func _grab(name: String) -> void:
 	get_tree().paused = true
 	await RenderingServer.frame_post_draw

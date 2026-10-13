@@ -113,23 +113,30 @@ func test_under_the_ring_he_hands_the_wheel_a_weapon_in_stock() -> void:
 	assert_bool(WeaponStock.of(roman).in_stock(id)).is_true()
 
 
-func test_with_a_table_behind_him_he_lines_him_up_and_charges() -> void:
+func test_with_a_table_at_his_back_he_locks_up_for_the_suplex() -> void:
 	var pair := _pair(true)
 	var roman := pair[0]
 	var cody := pair[1]
 	roman.combat.tier_reached = 0
-	cody.global_position = Vector3(0.0, 0.0, 0.0)
-	roman.global_position = Vector3(1.2, 0.0, 0.5)
+	# the bare test wrestler carries no move pools: Roman's suplex
+	roman.grapple_move_pool.append(load("res://resources/moves/grapple_vertical_suplex.tres"))
+	cody.global_position = Vector3(0.0, 0.0, -1.0)
+	roman.global_position = Vector3(1.4, 0.0, 1.0)
 	await _ticks(2)
 	var table := WeaponStock.of(cody).pull(WeaponCatalog.by_id(&"table"))
-	table.set_up_at(Vector3(0.0, 0.0, -1.0), 0.0)
+	table.set_up_at(Vector3(0.0, 0.0, 1.3), 0.0)
 	var to := cody.global_position - roman.global_position
 	var input: Dictionary = roman.ai._line_up_input({}, Vector3(to.x, 0, to.z), Vector2(to.x, to.z).length())
-	# not lined up yet: he moves, and not straight at Cody
+	# off the spot: he moves to it, and does not lock up yet
 	assert_bool(input.has("move")).is_true()
-	assert_bool(roman.ai._charging).is_false()
-	# on the spot -- Cody between him and the table, charging distance off
-	roman.global_position = Vector3(0.0, 0.0, roman.ai.run_engage_distance + 0.2)
+	assert_bool(input.get("grapple", false)).is_false()
+	# on it -- the table 1.3 m at his back, Cody in front in reach
+	roman.global_position = Vector3(0.0, 0.0, 0.0)
 	to = cody.global_position - roman.global_position
 	input = roman.ai._line_up_input({}, Vector3(to.x, 0, to.z), Vector2(to.x, to.z).length())
-	assert_bool(roman.ai._charging).is_true()
+	assert_bool(input.get("grapple", false)).is_true()
+	assert_object(roman.prefer_hold_move).is_not_null()
+	assert_str(String(roman.prefer_hold_move.animation_pair_id)).contains("vertical_suplex")
+	# and the hold he wins throws it
+	assert_object(roman._pick_hold_move()).is_same(roman.ai._suplex())
+	assert_object(roman.prefer_hold_move).is_null()
