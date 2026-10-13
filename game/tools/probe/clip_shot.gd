@@ -15,7 +15,8 @@ extends Node
 ##       --glb res://assets/animations/wrestling_clips.glb \
 ##       --clips Win_Celebrate,Strike_Forearm --out /tmp/clips
 ##   add `--hand r` (or l) for a close-up of that hand from three sides, or
-##   `--face` for the face from front, three-quarter and side.
+##   `--face` for the face from front, three-quarter and side, and
+##   `--at 0.2,0.25` for frames at those fractions instead of the default strip.
 
 var _glb := "res://assets/animations/wrestling_clips.glb"
 ## The body to play the clips ON. wrestling_clips.glb ships the skeleton and
@@ -63,6 +64,9 @@ func _ready() -> void:
 			_hand = args[i + 1]
 		elif args[i] == "--model" and i + 1 < args.size():
 			_model = args[i + 1]
+		elif args[i] == "--at" and i + 1 < args.size():
+			# fractions through the clip, comma-separated: "0.2,0.25,0.3"
+			_at = Array(args[i + 1].split(",")).map(func(v: String) -> float: return v.to_float())
 	_run()
 
 

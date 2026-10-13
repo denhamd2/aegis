@@ -1627,33 +1627,36 @@ CLIPS = {
                # a foot 12 cm and a hand 10 cm under the mat (PoseLint).
                hand_r=(0.10, 0.20, 0.30), hand_l=(0.36, 0.10, 0.16),
                elbow_r=(0.4, 0.2, 0.8), elbow_l=(0.7, 0.3, -0.3),
-               foot_r=(0.02, -0.46, 0.24), foot_l=(0.16, -0.44, 0.18),
+               foot_r=(-0.15, -0.70, 0.14), foot_l=(-0.20, -0.65, 0.28),
                ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
-               knee_r=(0.6, 0.2, 0.6), knee_l=(0.8, 0.0, 0.4))),
+               knee_r=(-0.7, 0.5, 0.25), knee_l=(-0.7, 0.5, 0.2))),
         # Rolls toward his front and gets a hand on the mat.
         (10, S(pelvis=(0.06, 0.0, 0.21), hips=(-70, -20, 22),
                spine=(-4, -14, 0), head=(10, -10, 0),
                hand_r=(0.30, 0.14, 0.22), hand_l=(-0.30, -0.18, 0.16),
                fist_r=0.6, fist_l=0.6,
-               foot_r=(0.20, 0.34, 0.15), foot_l=(-0.10, 0.32, 0.16),
+               foot_r=(0.12, -0.80, 0.10), foot_l=(-0.12, -0.80, 0.10),
                ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
-               knee_r=(0.5, 0.3, 0.9), knee_l=(-0.4, 0.4, 0.8))),
-        # Knees drawn up under him, feet off the mat: a breakdown only, the
-        # beats either side stay put. Without it the feet travelled from in
-        # front to behind him through the canvas (0.17 m deep).
+               knee_r=(0.3, 0.0, -1.0), knee_l=(-0.3, 0.0, -1.0))),
+        # Pressed up off the mat, legs still trailing behind him: the knees
+        # only come under once the hips are high enough to fit them (16, 22).
+        # They used to tuck in front of him from frame 10 with the pelvis
+        # 21 cm off the mat, which only fits a thigh folded up his back --
+        # 150-178 degrees of hip, and the hip helpers flipping round it
+        # (test_body_deformation_gate). Measured, the thigh now peaks at 95.
         # Solved, midway between 10 and 16: blended in joint space, the
         # right arm swung down through an arc and put the hand at 5 cm with
         # the fingers 9 cm into the mat at frame 13 (PoseLint; traced frame
         # by frame). The hand is held at 20 cm here.
-        (13, dict(pelvis=(0.045, -0.005, 0.275), hips=(-67, -15, 16),
+        (13, dict(pelvis=(0.045, -0.005, 0.30), hips=(-67, -15, 16),
                   spine=(-7, -10, 0), head=(13, -7, 0),
                   hand_r=(0.28, 0.22, 0.20), hand_l=(-0.28, 0.01, 0.16),
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
                   fist_r=0.65, fist_l=0.65,
-                  foot_r=(0.19, 0.18, 0.18), foot_l=(-0.13, 0.16, 0.19),
+                  foot_r=(0.17, -0.78, 0.12), foot_l=(-0.15, -0.78, 0.12),
                   ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
-                  knee_r=(0.4, 0.6, 0.4), knee_l=(-0.35, 0.65, 0.35), free_feet=True)),
-        (16, dict(pelvis=(0.03, -0.01, 0.34), hips=(-64, -10, 10),
+                  knee_r=(0.3, 0.2, -1.0), knee_l=(-0.3, 0.2, -1.0), free_feet=True)),
+        (16, dict(pelvis=(0.03, -0.01, 0.40), hips=(-64, -10, 10),
                   spine=(-10, -6, 0), head=(16, -4, 0),
                   # Posted on the knuckles at 0.12, not flat at 0.07: open
                   # and that low, his fingers went 9 cm into the mat on the
@@ -1661,8 +1664,9 @@ CLIPS = {
                   hand_r=(0.26, 0.30, 0.12), hand_l=(-0.26, 0.20, 0.12),
                   elbow_r=(0.6, -0.4, -0.7), elbow_l=(-0.6, -0.4, -0.7),
                   fist_r=0.7, fist_l=0.7,
-                  foot_r=(0.18, 0.02, 0.20), foot_l=(-0.16, 0.00, 0.22),
-                  knee_r=(0.3, 0.9, -0.1), knee_l=(-0.3, 0.9, -0.1), free_feet=True)),
+                  foot_r=(0.17, -0.62, 0.12), foot_l=(-0.16, -0.62, 0.12),
+                  ankle_r=(30, 0, 0), ankle_l=(30, 0, 0),
+                  knee_r=(0.3, 0.9, -0.35), knee_l=(-0.3, 0.9, -0.35), free_feet=True)),
         # On all fours: both hands planted, both knees down.
         #
         # This key and the three after it had their leans the wrong way round
