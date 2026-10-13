@@ -4667,6 +4667,12 @@ func begin_weapon_action(action: String) -> void:
 	if action == "rummage":
 		var axis := GrappleRig._outside_side(Vector3(global_position.x, 0.0, global_position.z))
 		look_at(global_position - axis, Vector3.UP)
+	elif action == "set_up" and is_ai and opponent:
+		# the AI sets it down between them, to put him through it
+		var to_him := opponent.global_position - global_position
+		to_him.y = 0.0
+		if to_him.length() > 0.05:
+			look_at(global_position + to_him, Vector3.UP)
 	elif action == "pickup" and _weapon_target:
 		var to := _weapon_target.global_position - global_position
 		to.y = 0.0

@@ -14,6 +14,8 @@ var _wrestlers := "roman,cody"
 ## --spear D: no match -- Roman's running spear into Cody standing with a
 ## table set up D metres behind him; where Cody lands, and the table.
 var _spear := -1.0
+## --give ID: hand WrestlerA weapon ID at tick 900 (after the opening lock-up).
+var _give := ""
 
 
 func _ready() -> void:
@@ -26,18 +28,19 @@ func _ready() -> void:
 			"--budget": _budget = int(args[i + 1])
 			"--wrestlers": _wrestlers = args[i + 1]
 			"--spear": _spear = float(args[i + 1])
+			"--give": _give = args[i + 1]
 	if _spear >= 0.0:
 		await _spear_through(_spear)
 		get_tree().quit()
 		return
 	for s in _seeds:
-		var r: Dictionary = await run(self, s, _budget, _wrestlers)
+		var r: Dictionary = await run(self, s, _budget, _wrestlers, _give)
 		print("SEED %d  %s" % [s, JSON.stringify(r)])
 	get_tree().quit()
 
 
 ## One match; returns what the weapons did. Static so a test can run it.
-static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,cody") -> Dictionary:
+static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,cody", give := "") -> Dictionary:
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	if wrestlers != "mannequin":
 		var pair := Roster.pair_from_spec(wrestlers)
@@ -65,6 +68,11 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 	for t in budget:
 		await host.get_tree().physics_frame
 		r["ticks"] = t
+		if give != "" and t == 900:
+			var g := WeaponStock.of(a).pull(WeaponCatalog.by_id(StringName(give)))
+			g.global_transform = WeaponActor.grip_frame(a) * g.marker("grip_r").affine_inverse()
+			a.take_weapon(g)
+			r["given"] = "%s in state %d" % [give, a.fsm.current_state]
 		var stock := scene.get_node_or_null("WeaponStock") as WeaponStock
 		if stock:
 			for actor in stock.actors:
@@ -74,6 +82,16 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 				if is_instance_valid(actor) and actor.mode == WeaponActor.Mode.SET_UP and not seen.has([actor]):
 					seen[[actor]] = true
 					r["set_up"].append("%s@%d" % [actor.def.id, t])
+		if give != "" and OS.get_cmdline_user_args().has("--trace"):
+			var st := scene.get_node_or_null("WeaponStock") as WeaponStock
+			var pcs: Array = st.set_up_pieces() if st else []
+			if not pcs.is_empty() and t % 30 == 0:
+				var tb: WeaponActor = pcs[0]
+				print("T %d  rc %d plan %d  A %s st%d charge %s  B %s st%d  B-table %.2f  out %s/%s" % [t, a.ai._run_cooldown, a.ai._weapon_plan,
+						a.global_position.snappedf(0.1), a.fsm.current_state, a.ai._charging,
+						b.global_position.snappedf(0.1), b.fsm.current_state,
+						Vector2(b.global_position.x - tb.global_position.x, b.global_position.z - tb.global_position.z).length(),
+						a.outside_ring, b.outside_ring])
 		if r["won"] != "":
 			break
 	r["runs"] = [a.ai.weapon_runs_started if a.ai else 0, b.ai.weapon_runs_started if b.ai else 0]

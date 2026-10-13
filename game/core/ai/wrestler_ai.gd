@@ -1109,11 +1109,18 @@ const THROW_CHANCE := 0.3
 ## A weapon swing waits this many times the strike cooldown.
 const WEAPON_COOLDOWN_SCALE := 2.0
 ## Lining him up in front of a set piece: one this far behind him (flat, from
-## its centre), from no further off than LINE_UP_FROM, and near enough the
-## charging spot is LINE_UP_THERE.
-const LINE_UP_NEAR := Vector2(0.5, 1.5)
+## its centre), from no further off than LINE_UP_FROM.
+const LINE_UP_NEAR := Vector2(0.4, 1.6)
 const LINE_UP_FROM := 4.5
-const LINE_UP_THERE := 0.4
+## He charges once the other man is between him and it -- within this cone of
+## the line through them, from this far -- and works round to LINE_UP_BACK
+## behind him on that line until he is.
+const LINE_UP_CHARGE := Vector2(1.1, 3.4)
+const LINE_UP_CONE_DEG := 25.0
+const LINE_UP_BACK := 2.2
+## A set piece is set down from this far from him (it lands 0.95 m in front
+## of the man setting it, so about 0.65 m from him).
+const SET_DOWN_FROM := 1.6
 var _weapon_plan := WeaponPlan.NONE
 var _weapon_roll := WEAPON_ROLL_TICKS
 var _weapon_runs := 0
@@ -1269,17 +1276,21 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 	# not the time: he went back through the ropes, or he is on the mat
 	if controller.outside_ring != target.outside_ring:
 		return {}
-	if target.fsm.current_state == WrestlerFSM.State.DOWN:
-		if def.set_up != "" and def.set_piece:
-			# a table, the tacks: set it down beside him
-			var spot := target.global_position + _flat(controller.global_position - target.global_position) * 1.6
-			var to_spot := _flat(spot - controller.global_position)
-			if to_spot.length() > 0.25:
-				input["move"] = Vector2(to_spot.normalized().x, to_spot.normalized().z)
-				return input
-			input["grapple"] = true
-			_weapon_plan = WeaponPlan.NONE
+	if def.set_up != "" and def.set_piece and not target.is_crossing_ropes():
+		# a table, the tacks: not swung -- set down close by him, across
+		# the way this man faces him, for _line_up_input to put him through
+		var from_him := _flat(controller.global_position - target.global_position)
+		var spot := target.global_position + (from_him.normalized() if from_him.length() > 0.05 \
+				else Vector3.BACK) * SET_DOWN_FROM
+		var to_spot := _flat(spot - controller.global_position)
+		if to_spot.length() > 0.3:
+			input["move"] = Vector2(to_spot.normalized().x, to_spot.normalized().z)
 			return input
+		input["move"] = Vector2(-from_him.x, -from_him.z).normalized() * 0.05     # square to him
+		input["grapple"] = true
+		_weapon_plan = WeaponPlan.NONE
+		return input
+	if target.fsm.current_state == WrestlerFSM.State.DOWN:
 		return {}
 	if target.fsm.current_state in WrestlerController.UNHITTABLE_STATES:
 		return {}
@@ -1319,7 +1330,9 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
 	if _charging or _run_cooldown > 0 or not _opening_grapple_done():
 		return {}
-	if target.fsm.current_state != WrestlerFSM.State.IDLE and target.fsm.current_state != WrestlerFSM.State.LOCOMOTION:
+	var standing := target.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
+	var rising := target.fsm.is_in([WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP])
+	if not standing and not rising:
 		return {}
 	if controller.outside_ring != target.outside_ring or distance > LINE_UP_FROM:
 		return {}
@@ -1334,11 +1347,24 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 			break
 	if piece == null:
 		return {}
-	var away := _flat(target.global_position - piece.global_position).normalized()
-	var spot := target.global_position + away * (run_engage_distance + 0.2)
+	# the way a charge through him would carry him: on, into it
+	var line := _flat(piece.global_position - target.global_position).normalized()
+	var aim := _flat(target.global_position - controller.global_position)
+	var on_line := aim.length() >= LINE_UP_CHARGE.x and aim.length() <= LINE_UP_CHARGE.y \
+			and aim.normalized().dot(line) >= cos(deg_to_rad(LINE_UP_CONE_DEG))
+	if on_line and standing:
+		_charging = true                 # he is between: through it
+		return {}
+	# down beside it, or about to be on his feet: to the spot, and wait there
+	var spot := target.global_position - line * LINE_UP_BACK
+	if not controller.outside_ring:
+		spot.x = clampf(spot.x, -WrestlerController.RING_KEEP_IN, WrestlerController.RING_KEEP_IN)
+		spot.z = clampf(spot.z, -WrestlerController.RING_KEEP_IN, WrestlerController.RING_KEEP_IN)
 	var to_spot := _flat(spot - controller.global_position)
-	if to_spot.length() < LINE_UP_THERE:
-		_charging = true                 # lined up: through it
+	if to_spot.length() < 0.2:
+		if rising:
+			input["move"] = Vector2.ZERO  # waiting for him, not covering him
+			return input
 		return {}
 	# round him, not through him: sidestep while closing on the spot
 	var dir := to_spot.normalized()
