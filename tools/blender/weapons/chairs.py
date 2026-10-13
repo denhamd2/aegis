@@ -5,8 +5,9 @@ and the barbed-wire chair.
 Run:  python3 tools/blender/weapons/chairs.py
 
   game/assets/weapons/steel_chair.glb
-      SteelChair_Folded  flat, as swung; origin at the right hand's grip on
-                         the top rail, the chair hanging down -Y from it
+      SteelChair_Folded  flat, as swung; origin at the top rail's centre, the
+                         chair hanging down -Y from it; held and swung by
+                         the two front legs (grip_r, grip_l)
       SteelChair_Open    set up on the floor, seat at 0.45 m; origin at
                          floor centre
       SteelChair_Bent    folded, after the shots: seat panel caved in on a
@@ -221,8 +222,8 @@ def build_open(root, prefix: str, paint, rubber, deform=None) -> dict:
 
 def build_folded(root, prefix: str, paint, rubber, deform=None) -> dict:
     """Flat: every tube in two planes a tube apart, the seat folded up flat
-    against the front. Origin at the top rail's centre, where the right hand
-    closes; the chair hangs down -Y; front of the seat faces -Z."""
+    against the front. Origin at the top rail's centre; the chair hangs down
+    -Y; front of the seat faces -Z. Held by the two front legs."""
     frame = kit.WeaponPart(prefix + "_frame", deform)
     panels = kit.WeaponPart(prefix + "_panels", deform)
     feet = kit.WeaponPart(prefix + "_feet", deform)
@@ -259,11 +260,15 @@ def build_folded(root, prefix: str, paint, rubber, deform=None) -> dict:
         "panels": kit.add_mesh(root, panels, paint),
         "feet": kit.add_mesh(root, feet, rubber),
     }
-    # grip_r: +Y along the chair toward the striking end (down it), +Z out of
-    # the back of the hand (the chair's back, +Z)
-    kit.marker(root, "grip_r", Vector((0.06, 0.0, 0.0)), Vector((0, -1, 0)), Vector((0, 0, 1)))
-    kit.marker(root, "grip_l", Vector((-FRAME_HALF, -0.42, 0.0)), Vector((0, -1, 0)), Vector((0, 0, 1)))
-    kit.marker(root, "strike", Vector((0, seat_top - SEAT_D / 2, sz - 0.01)), Vector((0, -1, 0)), Vector((0, 0, -1)))
+    # Swung by the legs, as it is at ringside: a hand round each front leg
+    # just above the rubber feet, so the flat of the seat and back comes down
+    # on him. +Y up the chair toward the striking end, +Z out of the back of
+    # the hand (the chair's back, +Z).
+    grip_y = bottom + 0.07
+    kit.marker(root, "grip_r", Vector((FRAME_HALF, grip_y, 0.0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+    kit.marker(root, "grip_l", Vector((-FRAME_HALF, grip_y, 0.0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+    # the middle of the flat it lands with: the upper seat, on its front face
+    kit.marker(root, "strike", Vector((0, seat_top - 0.08, sz - 0.01)), Vector((0, 1, 0)), Vector((0, 0, -1)))
     return objs
 
 

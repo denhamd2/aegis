@@ -21,6 +21,8 @@ var _bare := false
 ## --swing: instead of the hold, three frames of a swing -- the load, the
 ## contact and the follow-through -- seen from his right (<id>_0/1/2.png).
 var _swing := false
+## --front: the swing seen from in front of him and to his right instead.
+var _front := false
 
 
 func _ready() -> void:
@@ -40,6 +42,8 @@ func _ready() -> void:
 				_bare = true
 			"--swing":
 				_swing = true
+			"--front":
+				_front = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7)
@@ -88,7 +92,7 @@ func _ready() -> void:
 	if _swing:
 		focus = body.origin + body.basis * Vector3(0.0, 1.25, -0.45)
 		cam.fov = 44.0
-		cam.global_position = focus + body.basis * Vector3(3.4, 0.35, -0.6)
+		cam.global_position = focus + body.basis * (Vector3(1.6, 0.3, -2.2) if _front else Vector3(3.4, 0.35, -0.6))
 	cam.look_at(focus, Vector3.UP)
 	print("CAM roman %s facing %s cam %s" % [body.origin.snappedf(0.01), (-body.basis.z).snappedf(0.01),
 			cam.global_position.snappedf(0.01)])

@@ -132,12 +132,16 @@ const TABLE := [
 ## [anchor marker, anchor at, local_up -> world_up, local_fwd -> world_fwd]
 const _SHOULDER := ["grip_r", Vector3(0.20, 1.12, -0.22),
 		Vector3(0, 1, 0), Vector3(-0.12, 0.72, 0.68), Vector3(0, 0, -1), Vector3(0.0, 0.68, -0.72)]
+## A chair by its two front legs, hanging upside down in front of him, the
+## seat facing him: picked up the way it is swung.
+const _CHAIR_BY_THE_LEGS := ["grip_r", Vector3(0.20, 1.08, -0.36),
+		Vector3(0, -1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, 1)]
 const _HANG_FRONT := ["grip_r", Vector3(0.10, 1.25, -0.40),
 		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)]
 const _HANG_SIDE := ["grip_r", Vector3(0.27, 0.98, -0.12),
 		Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, -1)]
 const CARRY := {
-	"steel_chair": _HANG_FRONT, "barbed_wire_chair": _HANG_FRONT,
+	"steel_chair": _CHAIR_BY_THE_LEGS, "barbed_wire_chair": _CHAIR_BY_THE_LEGS,
 	"baseball_bat": _SHOULDER, "barbed_wire_bat": _SHOULDER, "kendo_stick": _SHOULDER,
 	"sledgehammer": _SHOULDER, "lead_pipe": _SHOULDER, "board_with_nails": _SHOULDER,
 	"shovel": _SHOULDER, "hockey_stick": _SHOULDER, "crutch": _SHOULDER, "stop_sign": _SHOULDER,
@@ -324,7 +328,7 @@ static func _frame(up: Vector3, fwd: Vector3) -> Basis:
 const SWING_PATHS := {
 	"overhead": [
 		[0.22, Vector3(0.10, 0.52, 0.06), Vector3(0.0, 0.45, 0.9), Vector3(0.0, 0.9, -0.45)],
-		[0.375, Vector3(0.06, 0.36, -0.42), Vector3(0.0, -0.3, -0.95), Vector3(0.0, -0.95, 0.3)],
+		[0.375, Vector3(0.06, 0.42, -0.40), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
 		[0.52, Vector3(0.05, -0.02, -0.40), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
 	],
 	"side": [
