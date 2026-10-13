@@ -9406,3 +9406,30 @@ fixed and checked on rendered frames.
   vinyl seams, two-strand twisted barbed wire. Built directly rather than by
   sub-agents: six parallel agents each re-read the repo and rendered every
   pass, and the first six died at the session limit with nothing saved.
+
+### Weapons, the rest of wave 1
+
+Every weapon on the No Holds Barred list is now modelled: 33 new .glb files
+in `game/assets/weapons/`, one script per family under
+`tools/blender/weapons/`, all rebuilding byte-identical, each reviewed in
+`tools/probe/weapon_shot` beside the mannequin.
+
+- **Swung** (`swung.py`): baseball bat, barbed-wire bat, inflatable banana,
+  sledgehammer, lead pipe, 2x4 with nails, shovel, kendo stick, hockey
+  stick, crutch, stop sign, acoustic guitar. Broken / dented states where
+  they break: 2x4, kendo stick, banana, stop sign, guitar.
+- **Carried** (`carried.py`): trash can and lid, steel steps (and the top
+  unit alone), ring bell, cookie sheet, frying pan, briefcase. The belt is
+  Roman's existing title.
+- **Set pieces** (`set_pieces.py`): table, ladder, thumbtacks (bag and
+  scattered), bed of nails, light-tube bundle, barbed-wire board.
+- **Sprays and firearms** (`sprays.py`): fire extinguisher and its cloud,
+  handgun and its flash, rocket launcher, its rocket and its blast.
+- **Whips and fists** (`whips.py`): chain (hanging and wrapped round the
+  fist), weight belt, brass knuckles.
+- **The review probe** now has a studio sky: without anything to reflect,
+  every metal rendered black there, which said nothing about the arena.
+  `--yaw` turns a weapon to the camera.
+
+Next: the weapon runtime (pick up, carry, hit, throw, break, from under the
+ring; the weapon wheel) and the animations for each family.
