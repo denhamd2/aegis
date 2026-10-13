@@ -283,6 +283,126 @@ def font(size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default(size=size)
 
 
+def metal_textures(name: str, color: tuple, wear: float, rough: float = 0.38,
+                   rust: float = 0.0, size: int = 512) -> tuple:
+    """Worked metal: a finish (blued, parkerised, painted-black or bare)
+    worn bright where hands and hits go, fine machining scratches, optional
+    rust. Metallic 1 throughout -- a painted finish is a separate call."""
+    rng = np.random.RandomState(seed_of(name + "_metal"))
+    n = size
+    big = fbm(rng, n, 6, 4)
+    fine = fbm(rng, n, 64, 3)
+    scr = scratches(rng, n, 120, 0.12, 1, spread=0.6) * 0.6
+    worn = np.clip((big - (1.0 - wear)) * 6.0, 0, 1)
+    finish = np.array(color, np.float32)
+    bare = np.array([0.62, 0.62, 0.60], np.float32)
+    base = finish[None, None] * (0.9 + 0.2 * fine[..., None])
+    base = base * (1 - worn[..., None]) + bare * worn[..., None]
+    base = base + (bare - base) * scr[..., None] * 0.5
+    r = rough + 0.12 * fine - 0.12 * worn
+    if rust > 0.0:
+        rr = np.clip((fbm(rng, n, 10, 4) - (1.0 - rust)) * 5.0, 0, 1)
+        base = base * (1 - rr[..., None]) + np.array([0.32, 0.17, 0.08]) * rr[..., None]
+        r = r + 0.4 * rr
+    else:
+        rr = np.zeros_like(fine)
+    orm = np.stack([np.ones_like(r), np.clip(r, 0.05, 1), 1.0 - 0.8 * rr], -1)
+    nrm = normal_from_height(fine * 0.2 - scr * 0.3 + rr * 0.3, 3.0)
+    d = TEX_DIR
+    save_rgb(np.clip(base, 0, 0.85), d / f"{name}_metal_base.png")
+    save_rgb(orm, d / f"{name}_metal_orm.png")
+    save_rgb(nrm, d / f"{name}_metal_normal.png")
+    return d / f"{name}_metal_base.png", d / f"{name}_metal_orm.png", d / f"{name}_metal_normal.png"
+
+
+def polymer_textures(name: str, color: tuple, size: int = 512) -> tuple:
+    """Moulded plastic with a stipple: a pistol frame, a grip, a handle."""
+    rng = np.random.RandomState(seed_of(name + "_poly"))
+    n = size
+    stip = fbm(rng, n, 160, 2)
+    wear = fbm(rng, n, 5, 3)
+    base = np.array(color)[None, None] * (0.92 + 0.12 * stip[..., None] + 0.1 * np.clip(wear - 0.6, 0, 1)[..., None])
+    r = 0.62 + 0.15 * stip - 0.2 * np.clip(wear - 0.6, 0, 1)
+    orm = np.stack([np.ones_like(r), r, np.zeros_like(r)], -1)
+    nrm = normal_from_height(stip * 0.6, 4.0)
+    d = TEX_DIR
+    save_rgb(np.clip(base, 0, 0.85), d / f"{name}_poly_base.png")
+    save_rgb(orm, d / f"{name}_poly_orm.png")
+    save_rgb(nrm, d / f"{name}_poly_normal.png")
+    return d / f"{name}_poly_base.png", d / f"{name}_poly_orm.png", d / f"{name}_poly_normal.png"
+
+
+def wood_textures(name: str, light: tuple, dark: tuple, lines: float, varnish: float,
+                  size: int = 1024, along_rows: bool = True) -> tuple:
+    """Plain sawn or turned wood, grain along the map's rows (along_rows) or
+    columns: varnish gives the sheen (0 raw .. 1 glossy)."""
+    rng = np.random.RandomState(seed_of(name + "_wood"))
+    n = size
+    warp = fbm(rng, n, 4, 4)
+    fine = fbm(rng, n, 80, 2)
+    ax = np.linspace(0, 1, n, endpoint=False)
+    ax = ax[:, None].repeat(n, 1) if along_rows else ax[None, :].repeat(n, 0)
+    grain = (0.5 + 0.5 * np.sin(2 * math.pi * (ax * lines + warp * 2.0 + fine * 0.2))) ** 3
+    base = np.array(light)[None, None] * (1 - grain[..., None] * 0.5) + np.array(dark)[None, None] * grain[..., None] * 0.5
+    base *= 0.92 + 0.14 * fine[..., None]
+    dent = scratches(rng, n, 80, 0.1, 1, spread=0.6) * 0.5
+    base = base * (1 - dent[..., None] * 0.3)
+    r = (0.75 - 0.45 * varnish) + 0.12 * fine + 0.2 * dent
+    orm = np.stack([np.ones_like(r), np.clip(r, 0, 1), np.zeros_like(r)], -1)
+    nrm = normal_from_height(grain * 0.25 - dent * 0.4, 3.0)
+    d = TEX_DIR
+    save_rgb(np.clip(base, 0, 0.85), d / f"{name}_wood_base.png")
+    save_rgb(orm, d / f"{name}_wood_orm.png")
+    save_rgb(nrm, d / f"{name}_wood_normal.png")
+    return d / f"{name}_wood_base.png", d / f"{name}_wood_orm.png", d / f"{name}_wood_normal.png"
+
+
+def glow_texture(name: str, kind: str, size: int = 512) -> pathlib.Path:
+    """RGBA for additive-looking effects: 'flash' (a star of hot light),
+    'fire' (billowing orange-to-yellow), 'smoke' (soft grey)."""
+    rng = np.random.RandomState(seed_of(name + "_" + kind))
+    n = size
+    yy, xx = (np.mgrid[0:n, 0:n] + 0.5) / n * 2 - 1
+    rad = np.sqrt(xx ** 2 + yy ** 2)
+    puff = fbm(rng, n, 5, 5)
+    if kind == "flash":
+        ang = np.arctan2(yy, xx)
+        star = np.clip(1 - rad / (0.35 + 0.65 * np.abs(np.cos(ang * 3.0)) ** 8), 0, 1) ** 1.5
+        a = np.clip(star * (0.7 + 0.6 * puff), 0, 1)
+        rgb = np.stack([np.ones_like(a), 0.75 + 0.2 * a, 0.35 + 0.5 * a], -1)
+    elif kind == "fire":
+        a = np.clip((puff - 0.25) * 2.5, 0, 1)
+        heat = np.clip(puff * 1.4 - 0.2, 0, 1)
+        rgb = np.stack([np.ones_like(heat), 0.35 + 0.55 * heat, 0.05 + 0.4 * heat ** 2], -1)
+    else:
+        a = np.clip((puff - 0.30) * 2.2, 0, 1) * 0.8
+        rgb = np.ones((n, n, 3)) * (0.18 + 0.12 * puff[..., None])
+    path = TEX_DIR / f"{name}_{kind}.png"
+    save_rgba(np.concatenate([np.clip(rgb, 0, 1), a[..., None]], -1), path)
+    return path
+
+
+def lumpy_ball(part: "WeaponPart", c: Vector, r: float, seed: int, rings: int = 10,
+               segs: int = 16, lump: float = 0.2, squash: tuple = (1, 1, 1)) -> None:
+    """A billowing puff: a UV sphere pushed in and out by a few sines."""
+    verts = []
+    for i in range(rings + 1):
+        phi = math.pi * i / rings
+        row = []
+        for j in range(segs):
+            th = 2 * math.pi * j / segs
+            k = 1.0 + lump * math.sin(3 * th + seed) * math.sin(2 * phi + seed * 0.7) \
+                + lump * 0.5 * math.sin(5 * th - seed * 1.3) * math.sin(3 * phi)
+            p = Vector((math.sin(phi) * math.cos(th) * squash[0], math.cos(phi) * squash[1],
+                        math.sin(phi) * math.sin(th) * squash[2]))
+            row.append(part.vert(c + p * r * k))
+        verts.append(row)
+    for i in range(rings):
+        for j in range(segs):
+            jj = (j + 1) % segs
+            part.quad(verts[i][j], verts[i][jj], verts[i + 1][jj], verts[i + 1][j])
+
+
 # --- materials -----------------------------------------------------------
 
 def _image(path: pathlib.Path, non_color: bool) -> bpy.types.Image:
@@ -295,7 +415,7 @@ def _image(path: pathlib.Path, non_color: bool) -> bpy.types.Image:
 def pbr_material(name: str, base: pathlib.Path, orm: pathlib.Path | None,
                  normal: pathlib.Path | None, normal_strength: float = 1.0,
                  roughness: float = 0.5, metallic: float = 0.0,
-                 alpha: bool = False) -> bpy.types.Material:
+                 alpha: bool = False, emission: float = 0.0) -> bpy.types.Material:
     """Principled BSDF the glTF exporter maps 1:1: base colour (alpha in A
     when `alpha`), ORM packed (G roughness, B metallic) and a normal map."""
     mat = bpy.data.materials.new(name)
@@ -306,6 +426,10 @@ def pbr_material(name: str, base: pathlib.Path, orm: pathlib.Path | None,
     tex = nodes.new("ShaderNodeTexImage")
     tex.image = _image(base, False)
     links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    if emission > 0.0:
+        # glows its own colour: a muzzle flash, a fireball
+        links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+        bsdf.inputs["Emission Strength"].default_value = emission
     if alpha:
         links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
         mat.blend_method = "CLIP"
