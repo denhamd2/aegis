@@ -151,6 +151,27 @@ const HIT_REACT_TICKS := 20
 ## once (inertialized), so it never costs a player a tick. An AI man waits it
 ## out: his own reversal aside, he does not act until he has sold it.
 const SELL_TICKS := 40
+## How big a hit he sells, from how hard it was and how much he has left
+## (sell_tier). A jab and a chair to the skull used to get the same 20-tick
+## flinch and the same shove, and nothing but accumulated wear ever put a man
+## down from a strike -- a full-strength man and a beaten one sold alike.
+enum Sell { LIGHT, MEDIUM, HEAVY, KNEE, DOWN }
+## The hit's weight (its damage as dealt) past which each tier starts...
+const SELL_MEDIUM := 6.0
+const SELL_HEAVY := 11.0
+const SELL_DOWN := 19.0
+## ...made heavier by what he has already taken: at no health left a hit
+## sells (1 + SELL_WORN) times its size.
+const SELL_WORN := 0.8
+## A weapon lands harder than its numbers: steel, wood, glass.
+const SELL_WEAPON := 1.15
+## Below this much health a heavy hit takes him to a knee.
+const KNEE_HEALTH := 0.3
+## Each tier's reaction length (ticks) and shove (times KNOCKBACK_SPEED).
+const SELL_REACT_TICKS := {Sell.LIGHT: 20, Sell.MEDIUM: 26, Sell.HEAVY: 48, Sell.KNEE: 72}
+const SELL_SHOVE := {Sell.LIGHT: 1.0, Sell.MEDIUM: 1.4, Sell.HEAVY: 2.1, Sell.KNEE: 0.5}
+## A beaten man stays down longer: at no health left, (1 + DOWN_WORN) times.
+const DOWN_WORN := 0.5
 ## The blow in a run that rocks him: hit while still selling the one before,
 ## and the one before that, he staggers (STUNNED) instead of flinching -- the
 ## 2K26 flurry, where the reactions build on each other.
@@ -403,6 +424,8 @@ var _state_clip_override: Dictionary = {}
 ## The sell that follows the hit reaction now playing, and how long is left of
 ## the one being played in IDLE (SELL_TICKS).
 var _sell_clip := ""
+## The last hit's tier (Sell), set as it lands, read by its reaction.
+var _hit_sell := Sell.LIGHT
 var sell_ticks := 0
 ## Blows taken back to back, each landing before he had finished selling the
 ## last; the third rocks him (FLURRY_STUN_AT).
@@ -3360,6 +3383,21 @@ func _tick_stamina() -> void:
 			combat.regen_stamina(CombatSystem.STAMINA_REGEN_DOWN_TICK)
 
 
+## How big a hit to sell (Sell): `dealt` is the damage it did, `health` what
+## he had left before it (0-1), `weapon` whether it was a weapon.
+static func sell_tier(dealt: float, health: float, weapon: bool) -> int:
+	var weight := dealt * (1.0 + SELL_WORN * (1.0 - clampf(health, 0.0, 1.0)))
+	if weapon:
+		weight *= SELL_WEAPON
+	if weight >= SELL_DOWN:
+		return Sell.DOWN
+	if weight >= SELL_HEAVY:
+		return Sell.KNEE if health < KNEE_HEALTH else Sell.HEAVY
+	if weight >= SELL_MEDIUM:
+		return Sell.MEDIUM
+	return Sell.LIGHT
+
+
 ## Whether this hit knocks the wrestler down, rather than staggering him.
 func _would_be_knocked_down() -> bool:
 	return combat.wear - _damage_at_last_knockdown >= KNOCKDOWN_DAMAGE
@@ -3379,8 +3417,12 @@ func _resolve_pending_hits() -> void:
 		return
 	# The only hitter is the other man, so his comeback decides the scale.
 	var hitter_fired_up := opponent != null and opponent.combat.is_fired_up()
+	var health_before := combat.health()
+	var wear_before := combat.wear
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
+	var last_move: MoveDef = moves[moves.size() - 1]
+	_hit_sell = sell_tier(combat.wear - wear_before, health_before, WeaponCatalog.of_move(last_move) != null)
 	_took_moves(moves.size())
 	# Every blow that lands shows on him, whatever he is doing -- mid-punch
 	# included, where the reaction clip has to wait (below). A man fired up
@@ -3393,8 +3435,10 @@ func _resolve_pending_hits() -> void:
 		if stop > 0:
 			hit_stop(stop)
 			opponent.hit_stop(stop)
-	if _would_be_knocked_down():
+	if _would_be_knocked_down() or (_hit_sell == Sell.DOWN and not combat.is_fired_up()
+			and not DOWNED_STATES.has(fsm.current_state)):
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
+		# A hit that big puts him down on its own, whatever he had taken.
 		_pending_hit_reaction = null
 		_bump_down()
 		return
@@ -3465,8 +3509,8 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 			_flurry_hits = 0
 		_start_move(WrestlerFSM.State.STUNNED, _timed_stub(STUNNED_TICKS))
 	else:
-		_play_hit_reaction(move)
-		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(HIT_REACT_TICKS))
+		_play_hit_reaction(move, _hit_sell)
+		_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(int(SELL_REACT_TICKS.get(_hit_sell, HIT_REACT_TICKS))))
 	var away := Vector3.ZERO
 	if opponent:
 		away = global_position - opponent.global_position
@@ -3478,7 +3522,7 @@ func _begin_hit_reaction(move: MoveDef) -> void:
 		away.y = 0.0
 	if away.length() < 0.001:
 		return
-	velocity = away.normalized() * KNOCKBACK_SPEED
+	velocity = away.normalized() * KNOCKBACK_SPEED * float(SELL_SHOVE.get(_hit_sell, 1.0))
 	_knockback_ticks = KNOCKBACK_TICKS
 
 ## Points the STRIKE state at this strike's own clip before entering it.
@@ -3583,8 +3627,14 @@ func _play_strike_clip(move: MoveDef) -> void:
 ## Every hit played Hit_Chest before this -- a jab to the jaw and a
 ## spinebuster to the ribs produced the same flinch -- which is most of why
 ## strikes read as not connecting to anything in particular.
-func _play_hit_reaction(move: MoveDef) -> void:
+func _play_hit_reaction(move: MoveDef, tier := Sell.LIGHT) -> void:
 	var reaction := StrikeRecipes.reaction_for(move)
+	var head := reaction == StrikeRecipes.clip("hit_head")
+	match tier:
+		Sell.HEAVY:
+			reaction = StrikeRecipes.clip("hit_heavy_head" if head else "hit_heavy_gut")
+		Sell.KNEE:
+			reaction = StrikeRecipes.clip("hit_knee")
 	_set_state_clip(WrestlerFSM.State.HIT_REACT, reaction)
 	_sell_clip = StrikeRecipes.sell_for(reaction)
 
@@ -4007,7 +4057,8 @@ func _go_down(tier := -1) -> void:
 	# A knockdown is not undone: what he has taken so far cannot be healed.
 	combat.heal_floor = combat.wear
 	combat.green = 0.0
-	_move_ticks_remaining = down_ticks_for(tier)
+	# a beaten man lies there longer (DOWN_WORN)
+	_move_ticks_remaining = int(down_ticks_for(tier) * (1.0 + DOWN_WORN * (1.0 - combat.health())))
 	knockdown_tier = tier
 	combat.cut_off_comeback()
 	_cover_eligible = true

@@ -1406,6 +1406,116 @@ CLIPS = {
         (12, GUT_HURT),
     ],
 
+    # The heavy end of the scale (WrestlerController.sell_tier): a shot that
+    # does more than snap the head. 24 frames, retimed to 0.8 s. A chair to
+    # the skull, a big boot: the head and chest whip back on the frame it
+    # lands, the hands fly up and out with nothing to do, and the legs go
+    # looking for the floor behind him -- two steps back he does not choose,
+    # the second shorter than the first -- before he folds over it, a hand
+    # to his face. The steps are footwork under the hips; the travel itself
+    # is the controller's shove, so the two never double up. Ends on
+    # HEAD_HURT so Sell_Head carries on from it.
+    "Hit_Heavy_Head": [
+        (0,  R()),
+        (2,  R(pelvis=(0.03, -0.08, 0.806), hips=(6, 10, 0),
+               spine=(18, 18, -8), head=(36, 24, -14),
+               hand_r=(0.42, 0.06, 1.18), hand_l=(-0.40, 0.10, 1.20),
+               elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+               fist_r=0.1, fist_l=0.1)),
+        # First step back: the right foot catches him.
+        (6,  R(pelvis=(0.04, -0.20, 0.790), hips=(8, 12, 2),
+               spine=(20, 16, -10), head=(30, 20, -12),
+               hand_r=(0.44, 0.00, 1.10), hand_l=(-0.40, 0.04, 1.14),
+               elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
+               foot_r=(0.28, -0.52, 0.104), foot_l=(-0.20, 0.10, 0.104),
+               fist_r=0.1, fist_l=0.1)),
+        # Second, shorter: the left foot comes back past it.
+        (11, R(pelvis=(0.03, -0.24, 0.776), hips=(2, 10, 0),
+               spine=(6, 16, -8), head=(20, 22, -10),
+               hand_l=(-0.16, 0.20, 1.40), elbow_l=(-0.9, -0.2, -0.4), fist_l=0.25,
+               hand_r=(0.34, 0.10, 1.02),
+               foot_r=(0.28, -0.50, 0.104), foot_l=(-0.22, -0.30, 0.104))),
+        # Caught: knees bent, folding forward over it, the hand on his face.
+        (17, R(pelvis=(0.03, -0.16, 0.770), hips=(-8, 8, 0),
+               spine=(-20, 14, -5), head=(10, 22, -8),
+               hand_l=(-0.10, 0.26, 1.42), elbow_l=(-0.9, -0.2, -0.4), fist_l=0.2,
+               hand_r=(0.28, 0.24, 1.00),
+               foot_r=(0.28, -0.40, 0.104), foot_l=(-0.20, 0.10, 0.104))),
+        (24, HEAD_HURT),
+    ],
+
+    # 24 frames, retimed to 0.8 s: the heavy body shot. Folded round it far
+    # deeper than Hit_React_Torso -- the air goes out of him, the knees buckle
+    # and he stumbles back a step bent double before he can stand under it.
+    # Ends on GUT_HURT for Sell_Gut.
+    "Hit_Heavy_Gut": [
+        (0,  R()),
+        (2,  R(pelvis=(0.0, -0.06, 0.760), hips=(-18, 0, 0), spine=(-44, 0, 0),
+               head=(-18, 0, 0),
+               hand_r=(0.12, 0.26, 1.00), hand_l=(-0.10, 0.28, 1.02),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
+        (6,  R(pelvis=(0.0, -0.18, 0.680), hips=(-32, 0, 0), spine=(-58, 0, 0),
+               head=(-10, 0, 0),
+               hand_r=(0.10, 0.38, 0.84), hand_l=(-0.08, 0.40, 0.86),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.27, -0.46, 0.104), foot_l=(-0.22, 0.12, 0.104))),
+        (12, R(pelvis=(0.0, -0.20, 0.690), hips=(-30, 0, 0), spine=(-54, 0, 0),
+               head=(-6, 0, 0),
+               hand_r=(0.10, 0.38, 0.86), hand_l=(-0.08, 0.40, 0.88),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.27, -0.44, 0.104), foot_l=(-0.22, -0.18, 0.104))),
+        (18, R(pelvis=(0.0, -0.14, 0.716), hips=(-24, 0, 0), spine=(-50, 0, 0),
+               head=(-6, 0, 0),
+               hand_r=(0.10, 0.34, 0.92), hand_l=(-0.08, 0.36, 0.94),
+               elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
+               fist_r=0.4, fist_l=0.4,
+               foot_r=(0.27, -0.34, 0.104), foot_l=(-0.22, 0.10, 0.104))),
+        (24, GUT_HURT),
+    ],
+
+    # 36 frames, retimed to 1.2 s: a big shot to a man with nothing left. The
+    # legs go and he drops to one knee -- not all the way down, which is a
+    # different and bigger thing -- head hanging, a hand on the mat, then
+    # pushes himself back up off his knee. Lead knee down, as Getup_Rise's
+    # kneel has it, so the feet and knee are where a kneeling man's are.
+    "Hit_Knee": [
+        (0,  R()),
+        (3,  R(pelvis=(0.02, -0.08, 0.780), hips=(4, 8, 0), spine=(10, 14, -6),
+               head=(26, 18, -10),
+               hand_r=(0.38, 0.10, 1.10), hand_l=(-0.36, 0.14, 1.12))),
+        # The legs go: dropping.
+        (8,  dict(pelvis=(0.0, -0.02, 0.640), hips=(-10, 4, 0), spine=(-20, 6, 0),
+                  head=(-10, 4, 0),
+                  hand_r=(0.26, 0.30, 0.62), hand_l=(-0.24, 0.26, 0.70),
+                  foot_r=(0.19, -0.26, 0.09), foot_l=(-0.19, 0.30, 0.104),
+                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+        # Down on the knee, a hand on the mat, head hanging.
+        (12, dict(pelvis=(0.0, 0.0, 0.575), hips=(-18, 0, 0), spine=(-30, 0, 0),
+                  head=(-24, 0, 0),
+                  hand_r=(0.24, 0.40, 0.12), hand_l=(-0.24, 0.20, 0.60),
+                  fist_r=0.0,
+                  foot_r=(0.19, -0.26, 0.09), foot_l=(-0.19, 0.30, 0.104),
+                  ankle_r=(30, 0, 0),
+                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+        # A breath: the back rises and falls.
+        (20, dict(pelvis=(0.0, 0.0, 0.585), hips=(-16, 0, 0), spine=(-24, 0, 0),
+                  head=(-16, 0, 0),
+                  hand_r=(0.24, 0.40, 0.12), hand_l=(-0.24, 0.20, 0.62),
+                  fist_r=0.0,
+                  foot_r=(0.19, -0.26, 0.09), foot_l=(-0.19, 0.30, 0.104),
+                  ankle_r=(30, 0, 0),
+                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+        # Pushing up off the knee, a hand on it.
+        (28, dict(pelvis=(0.0, 0.02, 0.700), hips=(-14, 0, 0), spine=(-22, 0, 0),
+                  head=(4, 0, 0),
+                  hand_r=(0.22, 0.30, 0.66), hand_l=(-0.24, 0.24, 0.66),
+                  foot_r=(0.19, -0.26, 0.104), foot_l=(-0.19, 0.30, 0.104),
+                  knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
+        (36, HEAD_HURT),
+    ],
+
     # 20 frames / 0.667 s: the rest of a head shot, while nobody touches him
     # (WrestlerController.SELL_TICKS). He holds the jaw, works it, shakes it
     # off and squares back up to READY.

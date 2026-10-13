@@ -267,6 +267,14 @@ const RECIPES := {
 	# shot are visibly different things happening to a man.
 	"hit_torso": {"kind": "retime", "source": "Hit_React_Torso",
 		"seconds": 0.333, "file": AUTHORED},
+	# The heavy end (WrestlerController.sell_tier): staggered two steps back,
+	# doubled over and stumbling, dropped to a knee.
+	"hit_heavy_head": {"kind": "retime", "source": "Hit_Heavy_Head",
+		"seconds": 0.8, "file": AUTHORED},
+	"hit_heavy_gut": {"kind": "retime", "source": "Hit_Heavy_Gut",
+		"seconds": 0.8, "file": AUTHORED},
+	"hit_knee": {"kind": "retime", "source": "Hit_Knee",
+		"seconds": 1.2, "file": AUTHORED},
 	# The sells that follow them while he is left alone
 	# (WrestlerController.SELL_TICKS): 20 frames each.
 	"sell_head": {"kind": "retime", "source": "Sell_Head",
@@ -648,9 +656,9 @@ static func total_damage(move: MoveDef) -> float:
 
 ## The sell that carries on from a hit reaction (WrestlerController.SELL_TICKS).
 static func sell_for(reaction: String) -> String:
-	if reaction == clip("hit_head"):
+	if reaction in [clip("hit_head"), clip("hit_heavy_head"), clip("hit_knee")]:
 		return clip("sell_head")
-	if reaction == clip("hit_torso"):
+	if reaction in [clip("hit_torso"), clip("hit_heavy_gut")]:
 		return clip("sell_gut")
 	return ""
 

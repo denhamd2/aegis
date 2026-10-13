@@ -287,6 +287,12 @@ func red() -> float:
 func apply_momentum(move: MoveDef) -> void:
 	momentum = clamp(momentum - move.momentum_cost + move.momentum_gain, 0.0, MOMENTUM_MAX)
 
+## What is left of him, 0-1: the HUD's vitality bar (MatchHUD reads damage
+## against KICKOUT_DAMAGE_REFERENCE, the range matches actually occupy).
+func health() -> float:
+	return 1.0 - clampf(total_damage() / KICKOUT_DAMAGE_REFERENCE, 0.0, 1.0)
+
+
 func total_damage() -> float:
 	var sum := 0.0
 	for v in limb_damage.values():
