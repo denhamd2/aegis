@@ -140,9 +140,9 @@ STANCE = dict(
 # lies, are unchanged -- only which way up he is changes. The roll swaps his
 # sides, so his right hand and foot are at NEGATIVE `right` here; `head` is
 # negative to lift his chin off the mat rather than grind his face into it.
-# Both legs out along the mat, the knees just off straight (fully straight,
-# the knee pole has nothing to bite on and the solver twisted a thigh half
-# round its own axis: test_body_deformation_gate). Both feet were
+# Both legs out along the mat, near straight. (Bent to 0.82 the knees rose
+# into the attacker standing over him in three throws: PairClearance.) Both
+# feet were
 # drawn in to fwd -0.50, both knees ~0.4 m off the mat, and on Cody's loose
 # trousers that read as a body bent into an arch (stage 8 review); one knee
 # up at 0.37 m still did, and so did both at 0.2 m.
@@ -151,7 +151,7 @@ SUPINE = dict(
     hand_r=(-0.40, 0.20, 0.10), hand_l=(0.39, 0.16, 0.10),
     elbow_r=(-0.7, 0.3, -0.3), elbow_l=(0.7, 0.3, -0.3),
     fist_r=0.2, fist_l=0.2,
-    foot_r=(-0.16, -0.82, 0.10), foot_l=(0.15, -0.82, 0.10),
+    foot_r=(-0.16, -0.86, 0.10), foot_l=(0.15, -0.86, 0.10),
     knee_r=(-0.3, 0.0, 1.0), knee_l=(0.3, 0.0, 1.0),
     # Heels on the mat, toes up, relaxed a little toward the end of the
     # bed. rig_pose plants a sole flat on the canvas for a knees-up pose,
@@ -1593,10 +1593,10 @@ CLIPS = {
     "Down_Supine": [
         (0,  S()),
         (13, S(spine=(-9, 0, 0), head=(-11, 0, -4),
-               foot_r=(-0.19, -0.81, 0.10), foot_l=(0.14, -0.82, 0.10),
+               foot_r=(-0.19, -0.85, 0.10), foot_l=(0.14, -0.86, 0.10),
                hand_r=(-0.41, 0.18, 0.10), hand_l=(0.38, 0.18, 0.10))),
         (26, S(spine=(-4, 0, 0), head=(-16, 0, 5),
-               foot_r=(-0.15, -0.83, 0.10), foot_l=(0.18, -0.83, 0.10))),
+               foot_r=(-0.15, -0.87, 0.10), foot_l=(0.18, -0.87, 0.10))),
         (40, S()),
     ],
 
@@ -3286,16 +3286,18 @@ CLIPS["Spear_Attacker"] = [
            foot_r=(0.28, -0.32, 0.104), foot_l=(-0.26, 0.20, 0.104))),
     # Explodes OFF the mat: both feet leave it, torso near flat, shoulder
     # leading. He used to run into the man with a foot down (stage 8 review).
-    (19, P(pelvis=(0.0, 0.22, 0.820), hips=(-58, 0, 0), spine=(-28, 0, 0),
+    # (Driven forward, not up: lifted 14 cm, the hands came off the waist
+    # hold -- PairClearance, 9-11 cm short on all three Spears.)
+    (19, P(pelvis=(0.0, 0.22, 0.750), hips=(-56, 0, 0), spine=(-28, 0, 0),
            head=(30, 0, 0),
            hand_r=(0.30, 0.60, 0.86), hand_l=(-0.30, 0.60, 0.86),
            fist_r=0.4, fist_l=0.4,
            foot_r=(0.20, -0.58, 0.34), foot_l=(-0.18, -0.22, 0.24),
            knee_r=(0.2, 0.6, -0.6), knee_l=(-0.2, 0.8, -0.3), free_feet=True)),
     # Impact, airborne: shoulder in the midsection, arms wrapping the waist.
-    (21, P(pelvis=(0.0, 0.29, 0.860), hips=(-66, 0, 0), spine=(-24, 0, 0),
+    (21, P(pelvis=(0.0, 0.28, 0.800), hips=(-64, 0, 0), spine=(-24, 0, 0),
            head=(20, 0, 0),
-           hand_r=(0.26, 0.74, 0.94), hand_l=(-0.26, 0.74, 0.94),
+           hand_r=(0.26, 0.72, 0.96), hand_l=(-0.26, 0.72, 0.96),
            elbow_r=(0.7, 0.0, -0.4), elbow_l=(-0.7, 0.0, -0.4),
            fist_r=0.6, fist_l=0.6,
            foot_r=(0.20, -0.52, 0.40), foot_l=(-0.18, -0.36, 0.32),
@@ -4533,7 +4535,7 @@ CLIPS["Gamengiri_Defender"] = [(0, pose(STAND)), (9, pose(STAND, head=(4, 0, 0))
 CLIPS["Run_Spear_Attacker"] = [(0, pose(RUN_A)), (4, pose(RUN_B))] + \
     [(k - 12, v) for k, v in CLIPS["Spear_Attacker"] if k >= 16]
 CLIPS["Run_Spear_Defender"] = [(0, pose(STAND))] + \
-    [(k - 12, v) for k, v in CLIPS["Spear_Defender"] if k >= 19]
+    [(k - 12, v) for k, v in CLIPS["Spear_Defender"] if k >= 18]
 
 # Stundog Millionaire, 42 frames. Leaps into a front facelock, hangs from it
 # with his legs swung up (video frames 18-22), and drops to his back, spiking

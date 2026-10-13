@@ -481,6 +481,9 @@ const STATE_ANIMATIONS := {
 	# Replaced per man by begin_taunt() with his own gesture (TAUNTS); this is
 	# the one a man with none of his own throws.
 	WrestlerFSM.State.TAUNT: "strikes/air_punch",
+	# Out through the ropes; begin_rope_cross() swaps in "strikes/roll_in"
+	# for the way back. The same two clips DiveSpot plays, on its own path.
+	WrestlerFSM.State.ROPE_CROSS: "strikes/roll_out_ropes",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -1632,8 +1635,12 @@ func _physics_process(delta: float) -> void:
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN:
 			if input.get("taunt", false) and can_taunt():
 				begin_taunt()
+			elif _pushing_through_ropes(input):
+				begin_rope_cross()
 			else:
 				_process_free_movement(delta, input)
+		WrestlerFSM.State.ROPE_CROSS:
+			_tick_rope_cross()
 		WrestlerFSM.State.TAUNT:
 			_process_timed_state(input, WrestlerFSM.State.IDLE)
 		WrestlerFSM.State.STRIKE:
@@ -1684,6 +1691,9 @@ func _physics_process(delta: float) -> void:
 			# is needed here beyond reading the raw hold state each tick.
 			_submission_defender_input_this_tick = input.get("submission_hold", false)
 
+	if fsm.current_state == WrestlerFSM.State.ROPE_CROSS:
+		# On his scripted path: no gravity, no collision, no clamp.
+		return
 	if rope_reach:
 		rope_reach.advance(fsm.is_in(ROPE_HOLD_STATES))
 	_tick_selling()
@@ -1786,6 +1796,9 @@ const MAT_LEVEL := 0.0
 ## so it satisfies ARCHITECTURE.md's determinism contract while sitting in
 ## the middle of gameplay positioning, which is where it has to be.
 func keep_inside_the_ring() -> void:
+	if outside_ring:
+		keep_on_the_floor()
+		return
 	var p := global_position
 	var fixed := p
 	fixed.x = clampf(p.x, -RING_KEEP_IN, RING_KEEP_IN)
@@ -1821,6 +1834,9 @@ const LYING_STATES: Array = [
 ## through or under them. Position arithmetic only, so it is deterministic.
 func keep_lying_body_inside_the_ropes() -> void:
 	if not LYING_STATES.has(fsm.current_state):
+		return
+	if outside_ring:
+		_keep_lying_body_off_the_deck()
 		return
 	var shift := Vector3.ZERO
 	for point in LYING_BODY_POINTS:
@@ -1994,7 +2010,9 @@ static func _step_angle(from: float, to: float, max_step: float) -> float:
 	return from + signf(diff) * max_step
 
 func _in_range(range_m: float) -> bool:
-	return opponent != null and global_position.distance_to(opponent.global_position) <= range_m
+	return opponent != null and outside_ring == opponent.outside_ring \
+			and not opponent.is_crossing_ropes() \
+			and global_position.distance_to(opponent.global_position) <= range_m
 
 ## The opponent's body as a capsule, read off scenes/wrestler.tscn: radius
 ## 0.4, total height 1.8, sitting at y = 0.9. A capsule's `height` spans the
@@ -2003,6 +2021,179 @@ func _in_range(range_m: float) -> bool:
 const BODY_RADIUS := 0.4
 const BODY_AXIS_LOW := 0.4
 const BODY_AXIS_HIGH := 1.4
+
+
+# --- Outside the ring (No Holds Barred) --------------------------------------
+## True while he is on the floor outside. Set and cleared only by a finished
+## rope cross (begin_rope_cross()), so every clamp knows which side he is on
+## without reading his height -- a man thrown high in a paired move is not
+## outside.
+var outside_ring := false
+
+## Where a man stands on the floor: the arena floor plus the ringside mats on
+## it, the height DiveSpot lands men at and scenes/ring.tscn's ArenaFloor top.
+const FLOOR_LEVEL := ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
+## Nearest his origin comes to the ring from outside: the apron's face plus
+## his capsule. ring.tscn's RingDeck stops a walking man here; this catches
+## anything that is not walking.
+const DECK_KEEP_OUT := RingBuilder.APRON_OUT + BODY_RADIUS
+## Farthest out: the barricade less his capsule and a hand's clearance, with
+## the corners chamfered as ArenaBuilder.barricade_path() cuts them.
+const BARRICADE_KEEP_IN := ArenaBuilder.BARRICADE_RADIUS - BODY_RADIUS - 0.15
+const BARRICADE_CORNER_KEEP_IN := 2.0 * ArenaBuilder.BARRICADE_RADIUS \
+		- ArenaBuilder.BARRICADE_CHAMFER - (BODY_RADIUS + 0.15) * 1.41421356
+## Lying outside, no part of him under the apron.
+const DECK_LYING_LIMIT := RingBuilder.APRON_OUT + 0.05
+
+## Pushing square into the ropes (inside) or the apron (outside) this many
+## ticks takes him through: a third of a second, so a man walking along the
+## ropes, or driven into them, does not tumble out by accident.
+const ROPE_PUSH_TICKS := 20
+const ROPE_PUSH_DOT := 0.7
+## He crosses mid-side, clear of the posts and the steps on the corners.
+const ROPE_CROSS_LANE := 2.0
+## How near the ropes (inside) or the apron (outside) the push counts from.
+## The rope walls hold a walking man at 2.55, the deck at DECK_KEEP_OUT.
+const ROPE_PUSH_REACH := 0.25
+
+var _rope_push := 0
+var _cross_from := Vector3.ZERO
+var _cross_to := Vector3.ZERO
+var _cross_ticks := 1
+var _cross_facing := Vector3.ZERO
+var _crossing_out := true
+
+
+## Whether he may go through the ropes now: No Holds Barred, on his feet and
+## free.
+func can_cross_ropes() -> bool:
+	return MatchRules.no_holds_barred(self) \
+			and fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION])
+
+
+## The rope side (a unit axis, pointing out of the ring) he is pushing
+## through with `move`, or ZERO.
+func rope_side_pushed(move: Vector2) -> Vector3:
+	if move.length() < 0.5:
+		return Vector3.ZERO
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	var axis := Vector3(signf(p.x), 0.0, 0.0) if absf(p.x) >= absf(p.z) \
+			else Vector3(0.0, 0.0, signf(p.z))
+	if axis == Vector3.ZERO:
+		return Vector3.ZERO
+	var lateral := absf(p.z) if axis.x != 0.0 else absf(p.x)
+	if lateral > ROPE_CROSS_LANE:
+		return Vector3.ZERO
+	var dir := Vector3(move.x, 0.0, move.y).normalized()
+	var reach := p.dot(axis)
+	if outside_ring:
+		if dir.dot(-axis) < ROPE_PUSH_DOT or reach > DECK_KEEP_OUT + ROPE_PUSH_REACH:
+			return Vector3.ZERO
+	elif dir.dot(axis) < ROPE_PUSH_DOT or reach < RING_KEEP_IN - ROPE_PUSH_REACH:
+		return Vector3.ZERO
+	return axis
+
+
+func _pushing_through_ropes(input: Dictionary) -> bool:
+	if not can_cross_ropes() \
+			or rope_side_pushed(input.get("move", Vector2.ZERO)) == Vector3.ZERO:
+		_rope_push = 0
+		return false
+	_rope_push += 1
+	return _rope_push >= ROPE_PUSH_TICKS
+
+
+## Out through the ropes to the floor, or back in under the bottom rope,
+## on the side he is nearest. DiveSpot's two clips on DiveSpot's own path --
+## the same travel per clip, so the authored tumble lands where it was keyed
+## -- driven here by the tick, collision and clamps off until he is through.
+func begin_rope_cross() -> bool:
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	var axis := Vector3(signf(p.x), 0.0, 0.0) if absf(p.x) >= absf(p.z) \
+			else Vector3(0.0, 0.0, signf(p.z))
+	if axis == Vector3.ZERO or not can_cross_ropes():
+		return false
+	var lat := Vector3(absf(axis.z), 0.0, absf(axis.x))
+	var lane := clampf(p.dot(lat), -ROPE_CROSS_LANE, ROPE_CROSS_LANE)
+	var reach := p.dot(axis)
+	_crossing_out = not outside_ring
+	var clip := "strikes/roll_out_ropes"
+	if _crossing_out:
+		_cross_from = axis * reach + lat * lane + Vector3.UP * global_position.y
+		_cross_to = axis * (reach + DiveSpot.FLOOR_AT - DiveSpot.TUMBLE_FROM) \
+				+ lat * lane + Vector3.UP * FLOOR_LEVEL
+		_cross_ticks = DiveSpot.ROLL_OUT_TICKS
+		_cross_facing = axis
+	else:
+		clip = "strikes/roll_in"
+		_cross_from = axis * reach + lat * lane + Vector3.UP * global_position.y
+		_cross_to = axis * (reach - DiveSpot.ROLL_IN_FROM + DiveSpot.ROLL_IN_TO) \
+				+ lat * lane + Vector3.UP * MAT_LEVEL
+		_cross_ticks = DiveSpot.ROLL_IN_TICKS
+		_cross_facing = -axis
+	_rope_push = 0
+	velocity = Vector3.ZERO
+	_set_state_clip(WrestlerFSM.State.ROPE_CROSS, clip)
+	fsm.transition_to(WrestlerFSM.State.ROPE_CROSS)
+	return true
+
+
+func _tick_rope_cross() -> void:
+	velocity = Vector3.ZERO
+	var t := clampf(float(fsm.ticks_in_state) / float(_cross_ticks), 0.0, 1.0)
+	global_position = _cross_from.lerp(_cross_to, t)
+	rotation.y = rotate_toward(rotation.y, atan2(-_cross_facing.x, -_cross_facing.z),
+			DiveSpot.TURN_RATE / float(Engine.physics_ticks_per_second))
+	if fsm.ticks_in_state >= _cross_ticks:
+		outside_ring = _crossing_out
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## True while he is going through the ropes: nobody can reach him.
+func is_crossing_ropes() -> bool:
+	return fsm.current_state == WrestlerFSM.State.ROPE_CROSS
+
+
+## keep_inside_the_ring()'s other half, for a man outside: on the floor,
+## inside the barricade, and not under the apron. Same rules as the ring
+## clamp -- one transform, no physics query, only ever pushed up.
+func keep_on_the_floor() -> void:
+	var p := global_position
+	var fixed := p
+	fixed.y = maxf(p.y, FLOOR_LEVEL)
+	fixed.x = clampf(p.x, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
+	fixed.z = clampf(p.z, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
+	var over := absf(fixed.x) + absf(fixed.z) - BARRICADE_CORNER_KEEP_IN
+	if over > 0.0:
+		fixed.x -= signf(fixed.x) * over * 0.5
+		fixed.z -= signf(fixed.z) * over * 0.5
+	if absf(fixed.x) < DECK_KEEP_OUT and absf(fixed.z) < DECK_KEEP_OUT:
+		if absf(fixed.x) >= absf(fixed.z):
+			fixed.x = (1.0 if fixed.x >= 0.0 else -1.0) * DECK_KEEP_OUT
+		else:
+			fixed.z = (1.0 if fixed.z >= 0.0 else -1.0) * DECK_KEEP_OUT
+	if fixed == p:
+		return
+	global_position = fixed
+	if fixed.y > p.y and velocity.y < 0.0:
+		velocity.y = 0.0
+
+
+## A man lying outside: crown, toes and shoulders out from under the apron,
+## pushed straight away from the side he is on.
+func _keep_lying_body_off_the_deck() -> void:
+	var p := global_position
+	var axis := Vector3(signf(p.x), 0.0, 0.0) if absf(p.x) >= absf(p.z) \
+			else Vector3(0.0, 0.0, signf(p.z))
+	if axis == Vector3.ZERO:
+		return
+	var push := 0.0
+	for point in LYING_BODY_POINTS:
+		var q := global_transform * point
+		if absf(q.x) < DECK_LYING_LIMIT and absf(q.z) < DECK_LYING_LIMIT:
+			push = maxf(push, DECK_LYING_LIMIT - q.dot(axis))
+	if push > 0.0:
+		global_position += axis * push
 
 ## How far in front of this wrestler's origin `move` can connect, as a
 ## centre-to-centre distance against a standing opponent.
