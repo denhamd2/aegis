@@ -94,6 +94,46 @@ class WeaponPart(Part):
             self.quad(ring_t[k], ring_t[m], ring_b[m], ring_b[k])
 
 
+def sweep(part: WeaponPart, path: list[Vector], radius, sides: int = 24,
+          caps: bool = True, v_scale: float = 1.0) -> None:
+    """A section swept along `path` whose radius varies: radius(t, theta)
+    with t the 0..1 arc fraction and theta round the section. UVs run u
+    round the section (0..1, seam repeated) and v along it in metres *
+    v_scale -- a lathe's natural unwrap, for grain and seams that follow
+    the object. A straight `path` up +Y is a lathe."""
+    lengths = [0.0]
+    for i in range(1, len(path)):
+        lengths.append(lengths[-1] + (path[i] - path[i - 1]).length)
+    total = lengths[-1] or 1.0
+    rings = []
+    for point, (_, normal, binormal), arc in zip(path, venue._frames(path), lengths):
+        t = arc / total
+        ring = []
+        for k in range(sides + 1):
+            theta = 2.0 * math.pi * k / sides
+            r = radius(t, theta)
+            ring.append(part.vert(point + normal * (math.cos(theta) * r) + binormal * (math.sin(theta) * r)))
+        rings.append(ring)
+    for i in range(len(rings) - 1):
+        v0, v1 = lengths[i] * v_scale, lengths[i + 1] * v_scale
+        for k in range(sides):
+            u0, u1 = k / sides, (k + 1) / sides
+            part.quad(rings[i][k], rings[i][k + 1], rings[i + 1][k + 1], rings[i + 1][k],
+                      [(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
+    if caps:
+        for ring, rev in ((rings[0], True), (rings[-1], False)):
+            ctr = sum((v.co for v in ring[:-1]), Vector()) / sides
+            c = part.bm.verts.new(ctr)
+            for k in range(sides):
+                tri = (c, ring[k + 1], ring[k]) if rev else (c, ring[k], ring[k + 1])
+                try:
+                    f = part.bm.faces.new(tri)
+                    for loop in f.loops:
+                        loop[part.uv].uv = (0.5, 0.0)
+                except ValueError:
+                    pass
+
+
 def rounded_rect(center: Vector, a: Vector, b: Vector, ha: float, hb: float,
                  r: float, per_corner: int = 4) -> list[Vector]:
     """A closed loop (first point repeated last) round a rectangle in the
@@ -327,9 +367,12 @@ def marker(root: bpy.types.Object, name: str, position: Vector,
 
 
 def add_mesh(root: bpy.types.Object, part: WeaponPart, material: bpy.types.Material,
-             smooth: bool = True, uv_scale: float = 2.0, auto_smooth_deg: float = 40.0) -> bpy.types.Object:
+             smooth: bool = True, uv_scale: float = 2.0, auto_smooth_deg: float = 40.0,
+             project: bool = True) -> bpy.types.Object:
     mesh = bpy.data.meshes.new(part.name)
-    bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:], dist=0.00005)
+    if project:
+        # (a swept part keeps its seam: welding it would fold the unwrap)
+        bmesh.ops.remove_doubles(part.bm, verts=part.bm.verts[:], dist=0.00005)
     bmesh.ops.recalc_face_normals(part.bm, faces=part.bm.faces[:])
     part.bm.to_mesh(mesh)
     part.bm.free()
@@ -337,7 +380,8 @@ def add_mesh(root: bpy.types.Object, part: WeaponPart, material: bpy.types.Mater
     if smooth:
         for poly in mesh.polygons:
             poly.use_smooth = True
-    venue.cube_project(mesh, uv_scale)
+    if project:
+        venue.cube_project(mesh, uv_scale)
     obj = bpy.data.objects.new(part.name, mesh)
     bpy.context.collection.objects.link(obj)
     obj.parent = root

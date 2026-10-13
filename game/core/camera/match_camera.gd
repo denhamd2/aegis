@@ -324,6 +324,9 @@ const FINISH_AFTER_FOV := 50.0
 ## Outside the ring: how far out of the ring (cosine) the camera's bearing
 ## must point -- about 40 degrees off square to the ring side.
 const OUTSIDE_BEARING := 0.75
+## Outside the ring: how much higher the camera rides, to see over the
+## barricade (1.2 m) down onto the floor.
+const OUTSIDE_LIFT := 1.4
 ## The lens the after shot is focused as (see _after_shot).
 const AFTER_FOCUS_LENS := 24.0
 ## Whether the shot on screen is a close-up the rim light should model.
@@ -456,6 +459,11 @@ func _physics_process(delta: float) -> void:
 		if gameplay:
 			eye_height = GAMEPLAY_HEIGHT
 			aim = 0.85
+		if _fight_outside():
+			# Over the barricade: from behind it at the usual height a man
+			# lying on the floor is hidden by it.
+			eye_height += OUTSIDE_LIFT
+			aim = minf(aim, 0.5)
 		target_position = midpoint + to_camera + Vector3.UP * eye_height
 		if gameplay and not _fight_outside():
 			target_position = _outside_ring(target_position, bearing)
