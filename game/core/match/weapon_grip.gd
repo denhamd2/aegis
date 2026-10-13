@@ -36,6 +36,12 @@ var wrestler: Node3D
 var weapon: WeaponActor = null
 var _ids := {}
 var _carry := 0.0
+## The take: the weapon eases from where it lay into the closed fist over
+## LIFT_TICKS, the hand held on it, so whatever the reach left between palm
+## and grip closes as a lift and never as a jump.
+const LIFT_TICKS := 10
+var _lift_from := Transform3D()
+var _lift := 1.0
 var _reach_target: WeaponActor = null
 var _reach := 0.0
 var _reach_both := false
@@ -65,6 +71,13 @@ func reach(target: WeaponActor, weight: float, both: bool) -> void:
 	_reach_both = both
 
 
+## The weapon has just been taken off the floor from `from` (its transform
+## where it lay): ease it into the hand from there (see LIFT_TICKS).
+func lift_from(from: Transform3D) -> void:
+	_lift_from = from
+	_lift = 0.0
+
+
 ## One physics tick: `carrying` while he stands or moves with it (not mid
 ## swing, not mid throw), so the carry pose lets the swing clip have the arm.
 func advance(carrying: bool, path: Array = [], t := -1.0, dt := 0.0) -> void:
@@ -76,6 +89,7 @@ func advance(carrying: bool, path: Array = [], t := -1.0, dt := 0.0) -> void:
 	_carry = move_toward(_carry, 1.0 if holding and carrying and has_carry else 0.0, 1.0 / EASE_TICKS)
 	# a one-hand carry gets its second hand only for the swing itself
 	var swinging := not path.is_empty() and t >= 0.0
+	_lift = minf(_lift + 1.0 / LIFT_TICKS, 1.0)
 	var want_two := holding and weapon.def.two_handed \
 			and (swinging or not weapon.def.id in WeaponCatalog.ONE_HAND_CARRY)
 	_two = move_toward(_two, 1.0 if want_two else 0.0, 1.0 / EASE_TICKS)
@@ -91,8 +105,11 @@ func _process_modification() -> void:
 	var to_sk := sk.global_transform.affine_inverse()
 	var fwd := (to_sk.basis * -wrestler.global_transform.basis.z).normalized()
 	if _reach > 0.0 and is_instance_valid(_reach_target):
+		# the palm onto the grip without wrenching the wrist round to the way
+		# the grip lies (for a thing flat on the floor that turn put the hand
+		# out of reach): the take's lift turns the weapon into the fist instead
 		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * _reach_target.global_marker("grip_r"),
-				fwd, _reach)
+				fwd, _reach, false)
 		if _reach_both and _reach_target.has_marker("grip_l"):
 			_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"],
 					to_sk * _reach_target.global_marker("grip_l"), fwd, _reach)
@@ -116,8 +133,16 @@ func _process_modification() -> void:
 	if on_path:
 		var t := clampf(_t + _dt * Engine.get_physics_interpolation_fraction(), 0.0, 1.0)
 		placed = WeaponCatalog.path_transform(weapon, _path, _chest(sk), t, placed)
+	var lifting := _lift < 1.0
+	if lifting:
+		var k := _lift * _lift * (3.0 - 2.0 * _lift)
+		placed = Transform3D(_lift_from.basis.orthonormalized().slerp(placed.basis.orthonormalized(), k),
+				_lift_from.origin.lerp(placed.origin, k))
 	weapon.global_transform = placed
-	if _carry > 0.0 or on_path:
+	if lifting:
+		# the hand stays on it as it comes up into the fist
+		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd, 1.0)
+	elif _carry > 0.0 or on_path:
 		# his right hand onto its grip, the fist turned to it
 		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd,
 				1.0 if on_path else _carry)
@@ -132,7 +157,8 @@ func _process_modification() -> void:
 ## where the palm landed, moves the wrist target by the miss and solves again.
 ## The right fist is also turned so its knuckle line runs along the grip's +Y.
 ## Weighted by `weight` (eased).
-func _hand_to(sk: Skeleton3D, chain: Array, target: Transform3D, fwd: Vector3, weight: float) -> void:
+func _hand_to(sk: Skeleton3D, chain: Array, target: Transform3D, fwd: Vector3, weight: float,
+		turn := true) -> void:
 	var w := weight * weight * (3.0 - 2.0 * weight)
 	var ids := [_ids[chain[0]], _ids[chain[1]], _ids[chain[2]]]
 	var side := "r" if chain[2] == "hand_r" else "l"
@@ -141,7 +167,7 @@ func _hand_to(sk: Skeleton3D, chain: Array, target: Transform3D, fwd: Vector3, w
 	var aim := hand.origin + (goal - _palm(sk, side))
 	for i in PALM_TRIES:
 		FootPlant._solve_leg(sk, ids, Transform3D(hand.basis, aim), fwd)
-		if side == "r":
+		if side == "r" and turn:
 			_turn_fist(sk, ids[2], target, w)
 		var miss := goal - _palm(sk, side)
 		if miss.length() < PALM_CLOSE:

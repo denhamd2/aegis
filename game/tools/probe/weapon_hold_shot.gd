@@ -299,9 +299,11 @@ func _shoot_pickup(roman: WrestlerController, cam: Camera3D, id: String) -> void
 	cam.global_position = focus + body.basis * Vector3(2.4, 0.4, -1.4)
 	cam.look_at(focus, Vector3.UP)
 	roman._weapon_target = a
-	roman.begin_weapon_action("pickup")
-	var total := int(WrestlerController.WEAPON_ACTION_TICKS["pickup"])
-	var at := [4, int(WrestlerController.WEAPON_ACTION_AT["pickup"]), 22, total - 2]
+	var action := WeaponCatalog.pickup_action(a.def)
+	roman.begin_weapon_action(action)
+	var total := int(WrestlerController.WEAPON_ACTION_TICKS[action])
+	var at := [4, int(WrestlerController.WEAPON_ACTION_AT[action]) - 4,
+			int(WrestlerController.WEAPON_ACTION_AT[action]), total - 4]
 	var tick := 0
 	for k in at.size():
 		while roman._weapon_action_ticks < int(at[k]) and tick < 200:

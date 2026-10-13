@@ -157,6 +157,7 @@ func follow(director: EntranceDirector) -> void:
 ## The opening bell, whether after the entrances or on tick one.
 func opening_bell() -> void:
 	sfx.play("bell_start", -2.0)
+	chants.bell()
 
 
 func _on_cue(what: String) -> void:

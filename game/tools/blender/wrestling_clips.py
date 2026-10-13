@@ -6682,17 +6682,72 @@ CLIPS["Weapon_Retrieve"] = [
     (27, R()),
 ]
 
-# 15 frames (0.5 s, 30 ticks), in hand on frame 8: down into a squat for it
-# and back up.
+# The pickups (weapon animation plan, phase 2): how a person actually lifts
+# a thing off the floor, by what it is. The hands here are only where the arm
+# starts from -- WeaponGrip reaches them onto the weapon's own handles on the
+# floor as he goes down, the fist already turned to the grip, so the weapon
+# leaves the floor exactly as it lay and rises with the hand: no snap.
+#
+# 15 frames (0.5 s, 30 ticks), in hand on frame 8: one hand -- a pan, a
+# bell, a pipe. Hinged at the hips and a bend in the knees, the free hand
+# braced on his thigh, as anyone grabs a thing at his feet.
 CLIPS["Weapon_Pickup"] = [
     (0,  R()),
-    (7,  R(pelvis=(0.0, 0.04, 0.560), hips=(-30, 0, 0), spine=(-40, 0, 0), head=(-14, 0, 0),
-           hand_r=(0.20, 0.46, 0.22), hand_l=(-0.15, 0.44, 0.26),
+    # Shoulder at 0.59 m, 0.39 m ahead: an arm's length off a thing lying
+    # flat on the floor half a metre in front of his feet (measured; at the
+    # first cut's 0.87 m his hand stopped 40 cm short and the weapon jumped).
+    (7,  R(pelvis=(0.0, 0.0, 0.440), hips=(-55, 0, 0), spine=(-35, 0, 0), head=(-20, 0, 0),
+           hand_r=(0.16, 0.50, 0.06), hand_l=(-0.20, 0.22, 0.36), elbow_l=(-0.8, -0.2, -0.4),
            knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
-    (9,  R(pelvis=(0.0, 0.04, 0.580), hips=(-28, 0, 0), spine=(-36, 0, 0), head=(-12, 0, 0),
-           hand_r=(0.20, 0.42, 0.34), hand_l=(-0.15, 0.42, 0.36),
+    (9,  R(pelvis=(0.0, 0.0, 0.480), hips=(-50, 0, 0), spine=(-32, 0, 0), head=(-18, 0, 0),
+           hand_r=(0.16, 0.46, 0.20), hand_l=(-0.20, 0.22, 0.42), elbow_l=(-0.8, -0.2, -0.4),
            knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
     (15, R()),
+]
+
+# 15 frames (0.5 s, 30 ticks), in hand on frame 8: both hands -- a bat, a
+# stick, a chair by its legs. Lower, square to it, a hand either side.
+CLIPS["Weapon_Pickup_Two"] = [
+    (0,  R()),
+    (7,  R(pelvis=(0.0, 0.0, 0.430), hips=(-56, 0, 0), spine=(-34, 0, 0), head=(-20, 0, 0),
+           hand_r=(0.20, 0.50, 0.06), hand_l=(-0.20, 0.50, 0.06),
+           knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    (9,  R(pelvis=(0.0, 0.0, 0.470), hips=(-50, 0, 0), spine=(-32, 0, 0), head=(-18, 0, 0),
+           hand_r=(0.20, 0.46, 0.20), hand_l=(-0.20, 0.46, 0.20),
+           knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
+    (15, R()),
+]
+
+# 22 frames (0.733 s, 44 ticks), in hand on frame 12: the squat lift -- the
+# steps, a table, the can. Down with the back straight and the knees out,
+# both hands under it, a beat as he takes the weight, then up through the
+# legs with it held in to his stomach. Lifted with the back bent, a thing
+# that heavy reads as a prop, not a weight. Feet square and shoulder-width,
+# not the fighting stance's staggered ones: in a squat that deep the back foot
+# rolled onto its toes and through the mat (PoseLint).
+CLIPS["Weapon_Pickup_Heavy"] = [
+    (0,  R()),
+    # Down far enough to get his hands under a table lying flat (its grips
+    # 5 cm off the floor), then the back comes up first and the legs drive.
+    (8,  R(pelvis=(0.0, -0.02, 0.390), hips=(-62, 0, 0), spine=(-36, 0, 0), head=(-16, 0, 0),
+           hand_r=(0.24, 0.46, 0.15), hand_l=(-0.24, 0.46, 0.15),
+           foot_r=(0.22, 0.0, 0.104), foot_l=(-0.22, 0.0, 0.104),
+           ankle_r=(10, 0, 0), ankle_l=(10, 0, 0),
+           knee_r=(0.5, 1.0, 0.0), knee_l=(-0.5, 1.0, 0.0))),
+    (12, R(pelvis=(0.0, -0.03, 0.390), hips=(-60, 0, 0), spine=(-34, 0, 0), head=(-14, 0, 0),
+           hand_r=(0.24, 0.44, 0.16), hand_l=(-0.24, 0.44, 0.16),
+           foot_r=(0.22, 0.0, 0.104), foot_l=(-0.22, 0.0, 0.104),
+           ankle_r=(10, 0, 0), ankle_l=(10, 0, 0),
+           knee_r=(0.5, 1.0, 0.0), knee_l=(-0.5, 1.0, 0.0))),
+    (14, R(pelvis=(0.0, -0.05, 0.450), hips=(-26, 0, 0), spine=(-22, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.24, 0.40, 0.30), hand_l=(-0.24, 0.40, 0.30),
+           foot_r=(0.22, 0.0, 0.104), foot_l=(-0.22, 0.0, 0.104),
+           ankle_r=(10, 0, 0), ankle_l=(10, 0, 0),
+           knee_r=(0.5, 1.0, 0.0), knee_l=(-0.5, 1.0, 0.0))),
+    (17, R(pelvis=(0.0, -0.03, 0.680), hips=(-12, 0, 0), spine=(-10, 0, 0), head=(0, 0, 0),
+           hand_r=(0.22, 0.34, 0.80), hand_l=(-0.22, 0.34, 0.80),
+           knee_r=(0.4, 1.0, 0.0), knee_l=(-0.4, 1.0, 0.0))),
+    (22, R()),
 ]
 
 # 22 frames (0.733 s, 44 ticks), down on frame 15: bent over, both hands

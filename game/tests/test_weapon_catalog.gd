@@ -76,7 +76,9 @@ func test_a_thrown_weapon_lands_and_comes_to_rest_on_the_floor() -> void:
 		if a.mode == WeaponActor.Mode.FLOOR:
 			break
 	assert_int(a.mode).is_equal(WeaponActor.Mode.FLOOR)
-	assert_float(a.global_position.y).is_equal_approx(WeaponActor.ground_under(a.global_position) + 0.02, 0.01)
+	# lying on the floor: its lowest point on it, not its origin
+	var box := a.global_transform * a.local_bounds()
+	assert_float(box.position.y).is_equal_approx(WeaponActor.ground_under(a.global_position), 0.02)
 
 
 func test_a_throw_is_the_same_every_time() -> void:

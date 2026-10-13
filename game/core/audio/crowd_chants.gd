@@ -21,15 +21,23 @@ signal chanted(chant: String)
 const MIN_GAP := 22.0
 const SAME_GAP := 110.0
 const REASON_LIFE := 4.0
+## What the room cannot let pass -- a near-fall, a table going up -- is not
+## made to wait out the rest after the last chant (a gasp is not polite), and
+## is still answered this long after.
+const URGENT: Array[StringName] = [&"chant_this_is_awesome", &"chant_holy_cow", &"chant_tables"]
+const URGENT_LIFE := 7.0
 ## A man "has the match" at this many landed moves inside MOMENTUM_WINDOW.
 const MOMENTUM_MOVES := 3
 const MOMENTUM_WINDOW := 9.0
-## A stall: the room this flat for this long, past the opening minute.
+## A stall: the room this flat for this long, past the match's opening
+## minutes -- and once a match at most: a crowd bored twice is a bad match,
+## and the match is not the crowd's to judge that often.
 const STALL_EXCITEMENT := 0.12
-const STALL_SECONDS := 32.0
-const STALL_AFTER := 90.0
-## A near-fall is worth "This is awesome" this far into a match; before it,
-## "Holy cow" at most.
+const STALL_SECONDS := 40.0
+const STALL_AFTER := 150.0
+const BORING_MAX := 1
+## A near-fall is worth "This is awesome" this far into a match (from the
+## bell); before it, "Holy cow" at most.
 const AWESOME_AFTER := 240.0
 ## The bell: "You deserve it" for the face at once, "One more match" after a
 ## long one.
@@ -58,6 +66,11 @@ var _reasons := {}                 # chant -> clock the reason arose
 var _moves := {}                   # favour (-1, 1) -> [clock, ...]
 var _flat := 0.0
 var _after_bell := -1.0
+## When the opening bell went (clock), or -1 before it: nothing but the
+## entrances' own chants is sung before the match starts.
+var _bell_at := -1.0
+var _chant_end := -1.0
+var _boring := 0
 var _winner_favor := 0.0
 var _entrance := ""
 var _entrance_t := 0.0
@@ -80,8 +93,11 @@ func take_of(chant: String) -> String:
 	return "%s_%d" % [chant, _rng.randi_range(0, n - 1)]
 
 
+## Whether a chant is still going: by its take's length from when it started
+## (clock), not by asking the player -- the same answer in a recording, a
+## test with no audio device, and the game.
 func is_chanting() -> bool:
-	return _player.playing
+	return clock < _chant_end
 
 
 # --- what happened --------------------------------------------------------
@@ -116,7 +132,7 @@ func fired_up(favor: float) -> void:
 func kicked_out(count: int) -> void:
 	if count < 2:
 		return
-	_reason(&"chant_this_is_awesome" if clock >= AWESOME_AFTER else &"chant_holy_cow")
+	_reason(&"chant_this_is_awesome" if match_time() >= AWESOME_AFTER else &"chant_holy_cow")
 
 
 ## A table stood up for somebody.
@@ -128,6 +144,18 @@ func table_set_up() -> void:
 func count(n: int, sfx: SfxPool) -> void:
 	if n >= 1 and n <= 3:
 		sfx.play_any("crowd_count_%d" % n, COUNT_DB, 0.02)
+
+
+## The opening bell: the match, and its chants, start.
+func bell() -> void:
+	_bell_at = clock
+	_reasons.clear()
+	_flat = 0.0
+
+
+## Seconds since the opening bell, or -1 before it.
+func match_time() -> float:
+	return clock - _bell_at if _bell_at >= 0.0 else -1.0
 
 
 ## The bell, and who it was for.
@@ -148,7 +176,7 @@ func entrance(style: String) -> void:
 # --- deciding --------------------------------------------------------------
 
 func _reason(chant: StringName) -> void:
-	if not sung_here(String(chant)):
+	if not sung_here(String(chant)) or _bell_at < 0.0:
 		return
 	_reasons[chant] = clock
 
@@ -166,13 +194,16 @@ func sung_here(chant: String) -> bool:
 ## whole rule, without the player, so it can be tested.
 static func pick(reasons: Dictionary, last: Dictionary, now: float, since_end: float,
 		chanting: bool) -> String:
-	if chanting or since_end < MIN_GAP:
+	if chanting:
 		return ""
 	var best := ""
 	var best_at := -INF
 	for chant: StringName in reasons:
 		var at: float = reasons[chant]
-		if now - at > REASON_LIFE:
+		var urgent := chant in URGENT
+		if now - at > (URGENT_LIFE if urgent else REASON_LIFE):
+			continue
+		if since_end < MIN_GAP and not urgent:
 			continue
 		if last.has(chant) and now - float(last[chant]) < SAME_GAP:
 			continue
@@ -189,29 +220,33 @@ static func pick(reasons: Dictionary, last: Dictionary, now: float, since_end: f
 ## known this frame".
 func tick(delta: float, excitement: float) -> void:
 	clock += delta
-	if _player.playing:
+	if is_chanting():
 		_since_end = 0.0
 	else:
 		_since_end += delta
 	if excitement >= 0.0:
 		_flat = _flat + delta if excitement < STALL_EXCITEMENT else 0.0
-		if _flat >= STALL_SECONDS and clock >= STALL_AFTER and _after_bell < 0.0:
+		if _flat >= STALL_SECONDS and match_time() >= STALL_AFTER and _after_bell < 0.0 \
+				and _boring < BORING_MAX:
 			_reason(&"chant_boring")
+			_boring += 1
 			_flat = 0.0
 	if _after_bell >= 0.0:
 		var was := _after_bell
 		_after_bell += delta
 		if _winner_favor > 0.0 and was < DESERVE_DELAY and _after_bell >= DESERVE_DELAY:
 			_start("chant_you_deserve_it")
-		if clock >= ONE_MORE_AFTER and was < ONE_MORE_DELAY and _after_bell >= ONE_MORE_DELAY:
+		# after "You deserve it" has had its say, never over it
+		if match_time() >= ONE_MORE_AFTER and _after_bell >= ONE_MORE_DELAY \
+				and not is_chanting() and not _last.has(&"chant_one_more_match"):
 			_start("chant_one_more_match")
 		return
 	if _entrance != "":
 		_tick_entrance(delta)
 	for chant: StringName in _reasons.keys():
-		if clock - float(_reasons[chant]) > REASON_LIFE:
+		if clock - float(_reasons[chant]) > (URGENT_LIFE if chant in URGENT else REASON_LIFE):
 			_reasons.erase(chant)
-	var chant := pick(_reasons, _last, clock, _since_end, _player.playing)
+	var chant := pick(_reasons, _last, clock, _since_end, is_chanting())
 	if chant != "":
 		_reasons.erase(StringName(chant))
 		_start(chant)
@@ -242,6 +277,7 @@ func _start(chant: String) -> void:
 	_player.stream = SfxPool.stream(take)
 	_player.volume_db = CHANT_DB
 	_player.play()
+	_chant_end = clock + _player.stream.get_length()
 	_since_end = 0.0
 	_last[StringName(chant)] = clock
 	chanted.emit(chant)

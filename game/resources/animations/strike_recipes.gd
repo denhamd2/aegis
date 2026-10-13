@@ -80,6 +80,8 @@ const RECIPES := {
 	"weapon_rummage": {"kind": "retime", "source": "Weapon_Rummage", "seconds": 2.0, "file": AUTHORED},
 	"weapon_retrieve": {"kind": "retime", "source": "Weapon_Retrieve", "seconds": 0.9, "file": AUTHORED},
 	"weapon_pickup": {"kind": "retime", "source": "Weapon_Pickup", "seconds": 0.5, "file": AUTHORED},
+	"weapon_pickup_two": {"kind": "retime", "source": "Weapon_Pickup_Two", "seconds": 0.5, "file": AUTHORED},
+	"weapon_pickup_heavy": {"kind": "retime", "source": "Weapon_Pickup_Heavy", "seconds": 0.7333, "file": AUTHORED},
 	"weapon_throw": {"kind": "retime", "source": "Weapon_Throw", "seconds": 0.4333, "file": AUTHORED},
 	"weapon_set_up": {"kind": "retime", "source": "Weapon_Set_Up", "seconds": 0.7333, "file": AUTHORED},
 	# A strike knockdown's fall (WrestlerController._bump_down).

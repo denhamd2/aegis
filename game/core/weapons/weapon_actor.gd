@@ -280,6 +280,7 @@ func throw(launch: Vector3, spin: Vector3, thrower: Node3D, targets: Array) -> v
 	velocity = launch
 	_spin = spin
 	_bounced = false
+	_rest_y = 0.02
 	_thrower = thrower
 	_targets = targets
 
@@ -444,12 +445,13 @@ func _tick_flight(delta: float) -> void:
 				velocity = Vector3(velocity.x * -0.15, 0.5, velocity.z * -0.15)
 				break
 	var ground := ground_under(p)
-	if p.y <= ground + 0.02:
-		global_position.y = ground + 0.02
+	if p.y <= ground + _rest_y:
+		global_position.y = ground + _rest_y
 		if not _bounced:
 			_bounced = true
 			velocity = Vector3(velocity.x * KEEP_SLIDE, -velocity.y * BOUNCE, velocity.z * KEEP_SLIDE)
 			_lay_flat()
+			_rest_on_floor(ground)
 		else:
 			velocity.y = 0.0
 			var flat := Vector2(velocity.x, velocity.z)
@@ -459,6 +461,59 @@ func _tick_flight(delta: float) -> void:
 			if flat.length() < 0.02:
 				velocity = Vector3.ZERO
 				mode = Mode.FLOOR
+				_rest_on_floor(ground)
+
+
+## On the floor the way the thing itself would lie: of the quarter-turns from
+## how it landed, the one that puts its weight lowest, its lowest point on the
+## floor. Laying the handle flat and the origin on the floor was right for a
+## bat and wrong for anything with breadth: a folded table stood on its edge
+## half through the mat with its handles 36 cm under it, and the can sank.
+var _rest_y := 0.02     # its origin's height over the floor as it lies
+
+
+func _rest_on_floor(ground: float) -> void:
+	var root: Node3D = _roots.get(state_root)
+	if root == null:
+		return
+	var to_local := global_transform.affine_inverse()
+	var verts := PackedVector3Array()
+	for node in root.find_children("", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null or not mi.is_visible_in_tree():
+			continue
+		var into := to_local * mi.global_transform
+		for surface in mi.mesh.get_surface_count():
+			var all: PackedVector3Array = mi.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]
+			var step := maxi(1, all.size() / 200)
+			for i in range(0, all.size(), step):
+				verts.append(into * all[i])
+	if verts.is_empty():
+		return
+	var landed := global_basis.orthonormalized()
+	var yaw := Basis(Vector3.UP, global_rotation.y)
+	var best := landed
+	var best_score := INF
+	var best_low := 0.0
+	for ix in 4:
+		for iz in 4:
+			var b := yaw * Basis(Vector3.RIGHT, ix * PI / 2.0) * Basis(Vector3.BACK, iz * PI / 2.0)
+			var low := INF
+			var sum := 0.0
+			for v in verts:
+				var y := (b * v).y
+				low = minf(low, y)
+				sum += y
+			# its weight's height over the floor; within a centimetre, the
+			# way nearest how it landed
+			var score := sum / verts.size() - low
+			score += 0.001 * (b.x.distance_to(landed.x) + b.y.distance_to(landed.y))
+			if score < best_score:
+				best_score = score
+				best = b
+				best_low = low
+	global_transform = Transform3D(best, Vector3(global_position.x, ground - best_low, global_position.z))
+	_rest_y = -best_low      # it slides on that side, at that height, till it stops
 
 
 ## Down on its side, along the way it was going -- a held weapon's handle

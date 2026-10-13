@@ -22,7 +22,7 @@ const KNOWN_SWING_SLIPS := {
 	&"barbed_wire_board": 0.71, &"ring_bell": 0.08, &"frying_pan": 0.06,
 	# the overhead slam and the thrust with wide things (phase 3), the spray (4)
 	&"steel_steps": 0.12, &"championship_belt": 0.12, &"briefcase": 0.40, &"table": 0.36,
-	&"ladder": 0.58, &"fire_extinguisher": 0.42,
+	&"ladder": 0.68, &"fire_extinguisher": 0.42,
 }
 ## Carries a hand cannot quite close on, by how much: the folded table's far
 ## corner sits at the very end of his left arm's reach (4 cm at every carry

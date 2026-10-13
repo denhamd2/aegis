@@ -4669,6 +4669,8 @@ var _wheel_pick: StringName = &""
 var _weapon_action := ""
 var _weapon_action_ticks := 0
 var _weapon_target: WeaponActor = null
+var _pickup_from := Vector3.ZERO
+var _pickup_to := Vector3.ZERO
 var _weapon_pick_id: StringName = &""
 var _rummage_released := 0
 const RUMMAGE_RELEASE_TICKS := 3
@@ -4678,12 +4680,28 @@ const RUMMAGE_RELEASE_TICKS := 3
 const RUMMAGE_REACH := 0.45
 const RUMMAGE_LANE := 2.4
 ## Each action's length, and the tick on which it happens.
-const WEAPON_ACTION_TICKS := {"rummage": 0, "retrieve": 54, "pickup": 30, "throw": 26, "set_up": 44}
-const WEAPON_ACTION_AT := {"retrieve": 36, "pickup": 16, "throw": 12, "set_up": 30}
+## The three pickups are one action each (WeaponCatalog.pickup_action picks
+## which by what is on the floor): a hand, both hands, the squat lift.
+const WEAPON_ACTION_TICKS := {"rummage": 0, "retrieve": 54, "pickup": 30, "pickup_two": 30,
+		"pickup_heavy": 44, "throw": 26, "set_up": 44}
+const WEAPON_ACTION_AT := {"retrieve": 36, "pickup": 16, "pickup_two": 16, "pickup_heavy": 24,
+		"throw": 12, "set_up": 30}
 const WEAPON_ACTION_CLIPS := {
 	"rummage": "strikes/weapon_rummage", "retrieve": "strikes/weapon_retrieve",
-	"pickup": "strikes/weapon_pickup", "throw": "strikes/weapon_throw", "set_up": "strikes/weapon_set_up",
+	"pickup": "strikes/weapon_pickup", "pickup_two": "strikes/weapon_pickup_two",
+	"pickup_heavy": "strikes/weapon_pickup_heavy", "throw": "strikes/weapon_throw",
+	"set_up": "strikes/weapon_set_up",
 }
+## A pickup: where the weapon's grip ends up in front of his feet (m) once he
+## has stepped to it, and the ticks the step takes. Anywhere in PICKUP_REACH
+## was close enough to start one, and the hand used to cover the rest by
+## jumping the weapon into it.
+const PICKUP_STAND_OFF := 0.46
+const PICKUP_STEP_TICKS := 8
+const PICKUP_TWO_MIDDLE := 0.6
+## The hands start onto the grips on the floor this tick, and are on them
+## by the action's AT tick.
+const PICKUP_REACH_FROM := 3
 const THROW_SPEED := 7.5
 ## States he keeps it through. Anything else -- down, stunned, tied up, in a
 ## hold -- and it falls from his hands.
@@ -4755,7 +4773,7 @@ func _weapon_input(input: Dictionary) -> bool:
 		var loose := WeaponStock.of(self).loose_near(global_position)
 		if loose:
 			_weapon_target = loose
-			begin_weapon_action("pickup")
+			begin_weapon_action(WeaponCatalog.pickup_action(loose.def))
 			return true
 	return false
 
@@ -4775,13 +4793,51 @@ func begin_weapon_action(action: String) -> void:
 		to_him.y = 0.0
 		if to_him.length() > 0.05:
 			look_at(global_position - to_him, Vector3.UP)
-	elif action == "pickup" and _weapon_target:
-		var to := _weapon_target.global_position - global_position
+	elif action.begins_with("pickup") and _weapon_target:
+		# face where the hands will close, and step so they close there
+		# square to the middle of a wide thing; for a long one two-handed,
+		# between its middle and the right hand's grip (stood off the middle,
+		# the top hand came up short of a stick; off the top grip, the bottom
+		# hand did); one-handed, the grip
+		var grip := _weapon_target.global_marker("grip_r").origin
+		if _weapon_target.def.two_handed and (action == "pickup_heavy" \
+				or _weapon_target.def.id in WeaponStock.CHAIRS):     # a chair by both its legs
+			grip = _weapon_target.global_marker("grips").origin
+		elif _weapon_target.def.two_handed and action == "pickup_two":
+			grip = grip.lerp(_weapon_target.global_marker("grips").origin, PICKUP_TWO_MIDDLE)
+		var to := grip - global_position
 		to.y = 0.0
 		if to.length() > 0.05:
 			look_at(global_position + to, Vector3.UP)
+			_pickup_from = global_position
+			_pickup_to = global_position + to.normalized() * (to.length() - PICKUP_STAND_OFF)
+		else:
+			_pickup_from = global_position
+			_pickup_to = global_position
 	_set_state_clip(WrestlerFSM.State.WEAPON_ACTION, WEAPON_ACTION_CLIPS[action])
 	fsm.transition_to(WrestlerFSM.State.WEAPON_ACTION)
+
+
+## A pickup's tick: the step in to it, his hands onto its grips where it lies
+## (WeaponGrip.reach), and the take on the AT tick -- by when the right fist
+## sits on the grip turned as the grip lies, so the weapon is in his hand
+## exactly where it was and leaves the floor with the hand.
+func _tick_pickup() -> void:
+	var at := int(WEAPON_ACTION_AT[_weapon_action])
+	if _weapon_action_ticks <= PICKUP_STEP_TICKS:
+		var u := float(_weapon_action_ticks) / PICKUP_STEP_TICKS
+		global_position = _pickup_from.lerp(_pickup_to, u * u * (3.0 - 2.0 * u))
+	var target_ok := is_instance_valid(_weapon_target) and _weapon_target.mode == WeaponActor.Mode.FLOOR
+	if weapon_grip:
+		# on it a couple of ticks before the take, not arriving on the tick
+		var w := clampf(float(_weapon_action_ticks - PICKUP_REACH_FROM) / (at - 2 - PICKUP_REACH_FROM), 0.0, 1.0)
+		weapon_grip.reach(_weapon_target if target_ok and _weapon_action_ticks < at else null, w,
+				_weapon_action != "pickup")
+	if _weapon_action_ticks == at and target_ok:
+		var lay := _weapon_target.global_transform
+		take_weapon(_weapon_target)
+		if weapon_grip:
+			weapon_grip.lift_from(lay)
 
 
 func _tick_weapon_action(input: Dictionary) -> void:
@@ -4812,10 +4868,8 @@ func _tick_weapon_action(input: Dictionary) -> void:
 					var a := stock.pull(def)
 					a.global_transform = WeaponActor.grip_frame(self) * a.marker("grip_r").affine_inverse()
 					take_weapon(a)
-		"pickup":
-			if _weapon_action_ticks == WEAPON_ACTION_AT["pickup"] and is_instance_valid(_weapon_target) \
-					and _weapon_target.mode == WeaponActor.Mode.FLOOR:
-				take_weapon(_weapon_target)
+		"pickup", "pickup_two", "pickup_heavy":
+			_tick_pickup()
 		"throw":
 			if _weapon_action_ticks == WEAPON_ACTION_AT["throw"] and has_weapon():
 				_release_throw()
@@ -4886,6 +4940,8 @@ func _tick_weapon() -> void:
 		_bumping = false                 # taken out of the fall some other way
 	_tick_landing()
 	if weapon_grip:
+		if not (fsm.current_state == WrestlerFSM.State.WEAPON_ACTION and _weapon_action.begins_with("pickup")):
+			weapon_grip.reach(null, 0.0, false)     # a pickup cut short lets go of the floor
 		var path: Array = []
 		var t := -1.0
 		var dt := 0.0
