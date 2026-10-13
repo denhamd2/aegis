@@ -23,6 +23,9 @@ var _bare := false
 var _swing := false
 ## --front: the swing seen from in front of him and to his right instead.
 var _front := false
+## --fall: Cody knocked down by Roman's heavy kick, from the side: frames
+## through the fall to the mat (fall_0..7.png).
+var _fall := false
 ## --table: Cody put down in front of a table set up behind him, from the
 ## side: before, as he goes through it, and the pieces (table_0/1/2.png).
 var _table := false
@@ -49,6 +52,8 @@ func _ready() -> void:
 				_front = true
 			"--table":
 				_table = true
+			"--fall":
+				_fall = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 7)
@@ -102,6 +107,10 @@ func _ready() -> void:
 	print("CAM roman %s facing %s cam %s" % [body.origin.snappedf(0.01), (-body.basis.z).snappedf(0.01),
 			cam.global_position.snappedf(0.01)])
 	cam.current = true
+	if _fall:
+		await _shoot_fall(roman, cody, cam)
+		get_tree().quit()
+		return
 	if _table:
 		await _shoot_table(roman, cody, cam)
 		get_tree().quit()
@@ -225,3 +234,36 @@ func _grab(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [_out, name])
 	get_tree().paused = false
+
+
+## A real knockdown: Cody one blow from going down, Roman's heavy kick.
+func _shoot_fall(roman: WrestlerController, cody: WrestlerController, cam: Camera3D) -> void:
+	cody.visible = true
+	roman.global_position = Vector3(0.0, 0.0, 1.1)
+	cody.global_position = Vector3(0.0, 0.0, 0.0)
+	roman.look_at(Vector3(0.0, 0.0, -5.0), Vector3.UP)
+	cody.look_at(Vector3(0.0, 0.0, 5.0), Vector3.UP)
+	cam.fov = 46.0
+	cam.global_position = Vector3(3.6, 1.2, 0.2)
+	cam.look_at(Vector3(0.0, 0.7, -0.3), Vector3.UP)
+	for t in 20:
+		await get_tree().physics_frame
+	cody.combat.wear = cody._damage_at_last_knockdown + WrestlerController.KNOCKDOWN_DAMAGE - 1.0
+	var move: MoveDef = load("res://resources/moves/strike_kick_heavy.tres")
+	roman._play_strike_clip(move)
+	roman._start_move(WrestlerFSM.State.STRIKE, move)
+	var t0 := -1
+	var k := 0
+	var at := [0, 8, 14, 20, 26, 34, 50, 90]
+	var tick := 0
+	while k < at.size() and tick < 400:
+		await get_tree().physics_frame
+		tick += 1
+		if t0 < 0 and (cody._bumping or cody.fsm.current_state == WrestlerFSM.State.DOWN):
+			t0 = tick
+		if t0 >= 0 and tick - t0 == int(at[k]):
+			print("FALLF %d +%d state %d hips %s" % [k, at[k], cody.fsm.current_state, cody._bone_world("pelvis").snappedf(0.01)])
+			for b: String in ["thigh_r", "calf_r", "foot_r", "thigh_l", "calf_l", "foot_l"]:
+				print("   %s %s" % [b, cody._bone_world(b).snappedf(0.01)])
+			await _grab("fall_%d" % k)
+			k += 1

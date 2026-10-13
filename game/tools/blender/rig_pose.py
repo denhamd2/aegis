@@ -210,7 +210,7 @@ class RigPoser:
         aim = Quaternion().slerp(rest.rotation_difference(reach), share) @ carried
         self._set(name, aim)
 
-    def _two_bone_ik(self, upper, lower, target, pole):
+    def _two_bone_ik(self, upper, lower, target, pole, front=None):
         """Plant `lower`'s tail on `target`, bending the joint toward `pole`.
 
         Standard law-of-cosines solve. The reach is clamped just short of
@@ -239,8 +239,21 @@ class RigPoser:
         joint = root + upper_dir * l1
         lower_dir = (root + direction * dist - joint).normalized()
 
-        self._set(upper, _aim(self.rest_dir[upper], upper_dir))
-        self._set(lower, _aim(self.rest_dir[lower], lower_dir))
+        # A leg's shortest-arc aim leaves its roll wherever the arc puts it,
+        # and swung up BEHIND him -- a man on his back with his feet past
+        # his hips, Down_Supine and every pin -- that is half a turn: the
+        # kneecap faces the mat, and the skin twisted round the bones drew
+        # the legs as an arch (David: "his legs look broken"; the joints were
+        # flat on the mat, measured). Only a knee facing squarely away from
+        # its pole is turned back round; facing every knee to its pole was
+        # tried before and doubled the limb flips across the library.
+        twist = 0.0
+        if front is not None:
+            facing = _aim(self.rest_dir[upper], upper_dir) @ front
+            if facing.dot(pole) < -0.3:
+                twist = 180.0
+        self._set(upper, _aim(self.rest_dir[upper], upper_dir, twist))
+        self._set(lower, _aim(self.rest_dir[lower], lower_dir, twist))
         return joint
 
     def _curl_fingers(self, side, amount, point=False):
@@ -408,7 +421,7 @@ class RigPoser:
                     else vec(0.25 if side_id == "r" else -0.25, 1.0, 0.05)
                 knee_at = self._two_bone_ik(
                     "thigh_%s" % side_id, "calf_%s" % side_id,
-                    vec(*foot), knee_pole.normalized(),
+                    vec(*foot), knee_pole.normalized(), front=vec(0.0, 1.0, 0.0),
                 )
                 # A planted foot is flat on the canvas. Left to the chain it
                 # inherits the calf's tilt, and in STANCE that dug the right

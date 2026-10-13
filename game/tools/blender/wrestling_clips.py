@@ -3704,6 +3704,15 @@ CLIPS["Knee_Lift_Attacker"] = [
 CLIPS["Knee_Lift_Defender"] = [(0, pose(STAND)), (7, pose(STAND, head=(4, 0, 0)))] \
     + _back_fall(9, 36, pelvis_hit=1.00)
 
+# Knocked down by a blow, on his own (no paired attacker): 30 frames / 1.0 s.
+# The blow lands on frame 0, he is rocked back for two, then the same back
+# bump as the paired moves -- over backward, shoulders slapped flat on frame
+# 9 -- into SUPINE_AWAY, which WrestlerController turns into Down_Supine on
+# the tick he is down. Before this a strike knockdown cross-faded standing
+# straight into lying in six ticks, and the limbs swept through each other
+# on the way (David: "his legs and arms look broken").
+CLIPS["Bump_Back"] = [(0, pose(STAND, head=(4, 0, 0)))] + _back_fall(2, 30, pelvis_hit=0.95)
+
 # Clothesline From Hell, 36 frames. Sprints in with the right arm cocked,
 # swings it through the neck (video frames 2-4); the victim is turned over
 # backward three-quarters of a turn -- feet over his head -- and lands face

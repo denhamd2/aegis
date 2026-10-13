@@ -3396,7 +3396,7 @@ func _resolve_pending_hits() -> void:
 	if _would_be_knocked_down():
 		# Dropped mid-swing: the punch dies with him, so nothing is held over.
 		_pending_hit_reaction = null
-		_go_down()
+		_bump_down()
 		return
 	# A punch already thrown lands. Measured with
 	# tools/probe/strike_connect_probe.tscn over seeds 1-3 before this: of 64
@@ -3445,6 +3445,8 @@ func fire_up() -> void:
 ## velocity leak across states (see _start_move()'s own note) -- used
 ## deliberately here, and decayed to nothing rather than left running.
 func _begin_hit_reaction(move: MoveDef) -> void:
+	if _bumping:
+		return                           # on his way down: the fall plays out
 	# Backed into a corner, the turnbuckle takes it: trapped there, or hit
 	# again while he is.
 	if _try_corner_trap():
@@ -3970,7 +3972,31 @@ func _lie_down_after_throw() -> void:
 	_cover_eligible = false
 	_land_on_set_piece()
 
+## A strike knockdown: the fall first (Bump_Back, BUMP_TICKS, in HIT_REACT),
+## then down. Before this the knockdown went straight into DOWN and the
+## standing pose cross-faded into the lying one in ANIMATION_BLEND_TICKS --
+## a man folding through himself to the mat in a tenth of a second.
+const BUMP_TICKS := 30
+var _bumping := false
+
+
+func _bump_down() -> void:
+	if _bumping:
+		return
+	if not WrestlerFSM.LEGAL_TRANSITIONS[fsm.current_state].has(WrestlerFSM.State.HIT_REACT) \
+			and fsm.current_state != WrestlerFSM.State.HIT_REACT:
+		_go_down()
+		return
+	_stop_dead()
+	_knockback_ticks = 0
+	_sell_clip = ""
+	_set_state_clip(WrestlerFSM.State.HIT_REACT, "strikes/bump_back")
+	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(BUMP_TICKS))
+	_bumping = true
+
+
 func _go_down(tier := -1) -> void:
+	_bumping = false
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
 		fsm.transition_to(WrestlerFSM.State.HIT_REACT)
 	_stop_dead()
@@ -4030,6 +4056,14 @@ func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> v
 		if _knockback_ticks == 0:
 			velocity = Vector3.ZERO
 	_move_ticks_remaining -= 1
+	if _move_ticks_remaining <= 0 and _bumping:
+		# The bump is over, his shoulders on the mat, head away from the man
+		# who hit him: down, turned round onto Down_Supine as the paired
+		# moves' falls are (MoveDef.defender_lands_head_away).
+		_bumping = false
+		_turn_round_on_the_mat()
+		_go_down()
+		return
 	if _move_ticks_remaining <= 0:
 		# Out of a hit reaction into IDLE: sell it (SELL_TICKS).
 		if fsm.current_state == WrestlerFSM.State.HIT_REACT \
@@ -4848,6 +4882,8 @@ func _on_thrown_weapon_hit(w: WeaponActor, who: Node3D) -> void:
 
 ## Every tick: the carry pose, and losing it when he is put down or grabbed.
 func _tick_weapon() -> void:
+	if _bumping and fsm.current_state != WrestlerFSM.State.HIT_REACT:
+		_bumping = false                 # taken out of the fall some other way
 	_tick_landing()
 	if weapon_grip:
 		var path: Array = []

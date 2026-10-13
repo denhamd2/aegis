@@ -82,6 +82,8 @@ const RECIPES := {
 	"weapon_pickup": {"kind": "retime", "source": "Weapon_Pickup", "seconds": 0.5, "file": AUTHORED},
 	"weapon_throw": {"kind": "retime", "source": "Weapon_Throw", "seconds": 0.4333, "file": AUTHORED},
 	"weapon_set_up": {"kind": "retime", "source": "Weapon_Set_Up", "seconds": 0.7333, "file": AUTHORED},
+	# A strike knockdown's fall (WrestlerController._bump_down).
+	"bump_back": {"kind": "retime", "source": "Bump_Back", "seconds": 1.0, "file": AUTHORED},
 
 	# BACK to the rig's own Punch_Jab, and the mocap excerpt that replaced it
 	# is gone. Measured with tools/probe/strike_clip_probe.tscn on the BASE
