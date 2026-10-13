@@ -1108,9 +1108,12 @@ const THROW_FROM := Vector2(2.0, 4.0)
 const THROW_CHANCE := 0.3
 ## A weapon swing waits this many times the strike cooldown.
 const WEAPON_COOLDOWN_SCALE := 2.0
-## Lining him up in front of a set piece: stand this far past him, from it.
-const LINE_UP_PAST := 1.0
-const LINE_UP_NEAR := 4.0
+## Lining him up in front of a set piece: one this far behind him (flat, from
+## its centre), from no further off than LINE_UP_FROM, and near enough the
+## charging spot is LINE_UP_THERE.
+const LINE_UP_NEAR := Vector2(0.5, 1.5)
+const LINE_UP_FROM := 4.5
+const LINE_UP_THERE := 0.4
 var _weapon_plan := WeaponPlan.NONE
 var _weapon_roll := WEAPON_ROLL_TICKS
 var _weapon_runs := 0
@@ -1203,10 +1206,10 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 		input["weapon"] = true          # one lying at his feet will do
 		return input
 	if not controller.outside_ring:
-		if controller.is_crossing_ropes() or not controller.can_cross_ropes():
+		if controller.is_crossing_ropes():
 			return input
 		input["move"] = _through_ropes_toward(_nearest_apron_out())
-		input["rope_cross"] = true
+		input["rope_cross"] = controller.can_cross_ropes()
 		return input
 	if controller.can_rummage():
 		_weapon_pick = &""
@@ -1308,35 +1311,39 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 	return input
 
 
-## A set piece standing near him: work round so the other man is between him
-## and it, then fall through to the match -- the next knockdown puts him on
-## it. {} when there is none, or nothing to line up.
+## A set piece standing near the other man: work round so he is between this
+## man and it, back off to charging distance on that line, and run him
+## through it -- a running attack carries a man 0.8-1.4 m back
+## (nhb_weapon_probe --spear), and a table set across the line catches him
+## anywhere in that. {} when there is none, or once the charge is on.
 func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
+	if _charging or _run_cooldown > 0 or not _opening_grapple_done():
+		return {}
 	if target.fsm.current_state != WrestlerFSM.State.IDLE and target.fsm.current_state != WrestlerFSM.State.LOCOMOTION:
 		return {}
-	if controller.outside_ring != target.outside_ring or distance > tie_up_range * 2.0:
+	if controller.outside_ring != target.outside_ring or distance > LINE_UP_FROM:
 		return {}
 	var stock := controller.get_parent().get_node_or_null("WeaponStock") as WeaponStock
 	if stock == null:
 		return {}
 	var piece: WeaponActor = null
 	for a in stock.set_up_pieces():
-		if a.def.set_piece and _flat(a.global_position - target.global_position).length() < LINE_UP_NEAR:
+		var d := _flat(a.global_position - target.global_position).length()
+		if a.def.set_piece and d >= LINE_UP_NEAR.x and d <= LINE_UP_NEAR.y:
 			piece = a
 			break
 	if piece == null:
 		return {}
-	var away := _flat(target.global_position - piece.global_position)
-	if away.length() < 0.05:
-		return {}
-	var spot := target.global_position + away.normalized() * LINE_UP_PAST
+	var away := _flat(target.global_position - piece.global_position).normalized()
+	var spot := target.global_position + away * (run_engage_distance + 0.2)
 	var to_spot := _flat(spot - controller.global_position)
-	if to_spot.length() < 0.35:
-		return {}                        # lined up: strike away
+	if to_spot.length() < LINE_UP_THERE:
+		_charging = true                 # lined up: through it
+		return {}
 	# round him, not through him: sidestep while closing on the spot
 	var dir := to_spot.normalized()
-	if to_target.length() > 0.001 and dir.dot(to_target.normalized()) > 0.5:
-		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.8).normalized()
+	if to_target.length() > 0.001 and dir.dot(to_target.normalized()) > 0.3:
+		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.9).normalized()
 	input["move"] = Vector2(dir.x, dir.z)
 	return input
 
