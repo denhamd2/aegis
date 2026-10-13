@@ -59,6 +59,8 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 		w.is_ai = true
 		if w.ai:
 			w.ai.setup_jitter(seed_value, w.player_index)
+			if OS.get_cmdline_user_args().has("--no-weapons"):
+				w.ai._weapon_runs = WrestlerAI.WEAPON_RUNS
 	var r := {"hits": [], "set_pieces": [], "pulled": [], "set_up": [], "won": "", "ticks": 0}
 	var shoot_at := []                  # ticks to take a frame on
 	for w: WrestlerController in [a, b]:
