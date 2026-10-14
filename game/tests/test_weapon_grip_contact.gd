@@ -17,7 +17,7 @@ const CONTACT_M := 0.03
 ## and nothing new may join it.
 const KNOWN_SWING_SLIPS := {
 	&"kendo_stick": 0.14,
-	&"board_with_nails": 0.07, &"shovel": 0.16, &"hockey_stick": 0.10, &"crutch": 0.07,
+	&"board_with_nails": 0.07, &"shovel": 0.16, &"crutch": 0.07,
 	&"inflatable_banana": 0.07, &"trash_can": 0.15, &"light_tubes": 0.06,
 	&"barbed_wire_board": 0.71, &"ring_bell": 0.08, &"frying_pan": 0.06,
 	# the overhead slam and the thrust with wide things (phase 3), the spray (4)

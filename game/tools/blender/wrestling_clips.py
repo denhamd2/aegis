@@ -6713,6 +6713,32 @@ CLIPS["Weapon_Bat"] = [
     (24, R()),
 ]
 
+# 22 frames (0.733 s, 44 ticks), contact on frame 8: the hockey stick is
+# loaded low behind the hip, then driven through with a planted lead foot and
+# a fast hip/chest turn. The blade path stays around waist height, unlike the
+# bat's chest-height arc; hands ride the two separated shaft grips throughout.
+CLIPS["Weapon_Slapshot"] = [
+    (0,  R()),
+    (3,  R(pelvis=(0.04, -0.05, 0.800), hips=(-4, 20, 0), spine=(-8, 24, -3), head=(6, -18, 0),
+           hand_r=(0.34, 0.04, 1.18), elbow_r=(0.9, -0.4, 0.3),
+           hand_l=(-0.24, 0.04, 1.16), elbow_l=(-0.7, -0.4, -0.5), fist_r=1.0, fist_l=1.0)),
+    (7,  R(pelvis=(-0.02, 0.10, 0.790), hips=(-8, -28, 0), spine=(-12, -38, 0), head=(8, 22, 0),
+           hand_r=(0.05, 0.48, 1.18), elbow_r=(0.8, -0.2, -0.4),
+           hand_l=(-0.20, 0.44, 1.16), elbow_l=(-0.8, -0.2, -0.4), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (8,  R(pelvis=(-0.02, 0.12, 0.790), hips=(-10, -34, 0), spine=(-14, -44, 0), head=(8, 24, 0),
+           hand_r=(0.03, 0.50, 1.16), elbow_r=(0.8, -0.2, -0.4),
+           hand_l=(-0.22, 0.46, 1.14), elbow_l=(-0.8, -0.2, -0.4), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (12, R(pelvis=(-0.02, 0.10, 0.790), hips=(-8, -42, 0), spine=(-12, -50, 0), head=(8, 30, 0),
+           hand_r=(-0.18, 0.34, 1.12), hand_l=(-0.32, 0.30, 1.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (17, R(pelvis=(-0.02, 0.06, 0.790), hips=(-2, -8, 0), spine=(-3, -10, 0), head=(2, 8, 0),
+           hand_r=(-0.10, 0.30, 1.12), hand_l=(-0.24, 0.26, 1.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.36, 0.104))),
+    (22, R()),
+]
+
 # 18 frames (0.6 s, 36 ticks), contact on frame 6: drawn back to the hip, then
 # driven straight into his gut off a lunge.
 CLIPS["Weapon_Thrust"] = [

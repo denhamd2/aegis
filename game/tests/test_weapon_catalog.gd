@@ -60,6 +60,13 @@ func test_every_swing_has_a_move_with_reach() -> void:
 		assert_bool(String(m.animation_pair_id).begins_with("weapon_")).is_true()
 
 
+func test_hockey_stick_uses_its_slapshot_profile() -> void:
+	var stick := WeaponCatalog.by_id(&"hockey_stick")
+	assert_str(WeaponCatalog.swing_profile(stick)).is_equal("slapshot")
+	assert_str(String(WeaponCatalog.swing_move(stick).animation_pair_id)).is_equal("weapon_slapshot")
+	assert_bool(WeaponCatalog.swing_path(stick).size() >= 3).is_true()
+
+
 func _thrown() -> Array:
 	var a := WeaponActor.make(WeaponCatalog.by_id(&"steel_chair"))
 	add_child(a)

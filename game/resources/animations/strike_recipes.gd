@@ -70,6 +70,7 @@ const RECIPES := {
 	"weapon_overhead": {"kind": "retime", "source": "Weapon_Overhead", "seconds": 0.8, "file": AUTHORED},
 	"weapon_side": {"kind": "retime", "source": "Weapon_Side", "seconds": 0.7333, "file": AUTHORED},
 	"weapon_bat": {"kind": "retime", "source": "Weapon_Bat", "seconds": 0.8, "file": AUTHORED},
+	"weapon_slapshot": {"kind": "retime", "source": "Weapon_Slapshot", "seconds": 0.7333, "file": AUTHORED},
 	"weapon_thrust": {"kind": "retime", "source": "Weapon_Thrust", "seconds": 0.6, "file": AUTHORED},
 	"weapon_whip": {"kind": "retime", "source": "Weapon_Whip", "seconds": 0.6667, "file": AUTHORED},
 	"weapon_chop": {"kind": "retime", "source": "Weapon_Chop", "seconds": 0.6333, "file": AUTHORED},
