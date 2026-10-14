@@ -9,6 +9,9 @@ footage is used only as a *measurement* reference (frame timings, camera
 framing, HUD layout) — no extracted models, textures, audio, or likenesses
 enter this repo.
 
+**What comes next:** [`gauntlet/refs/next_steps.md`](gauntlet/refs/next_steps.md)
+— the roadmap: what is done, the next weapon work, and the open items.
+
 ## Layout
 
 - `game/` — the Godot project. Core systems live in `game/core/`
