@@ -81,6 +81,21 @@ func test_rocket_gun_and_bed_of_nails_are_regular_ai_picks() -> void:
 	assert_int(WrestlerAI.WEAPON_RUNS).is_greater_equal(10)
 
 
+func test_tables_are_a_common_pick_for_both_wrestlers() -> void:
+	var pair := _pair(true)
+	var counts := [0, 0]
+	for i in 200:
+		for wrestler_index in 2:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 31000 + i * 2 + wrestler_index
+			if pair[wrestler_index].ai.choose_weapon(rng) == &"table":
+				counts[wrestler_index] += 1
+	# Roman has a researched table preference; table should still be a regular
+	# option for Cody rather than an accidental once-in-a-match draw.
+	assert_float(float(counts[0]) / 200.0).is_greater(0.25)
+	assert_float(float(counts[1]) / 200.0).is_greater(0.10)
+
+
 func test_never_in_a_singles_match() -> void:
 	var pair := _pair(false)
 	var ai := pair[0].ai

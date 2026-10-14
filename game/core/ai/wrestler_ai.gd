@@ -1065,10 +1065,10 @@ const WEAPON_CHANCE := 0.55
 const WEAPON_ROLL_DOWN_SCALE := 2.0
 const WEAPON_RUNS := 12
 ## A man's own weapons are this much likelier to come out.
-const SIGNATURE_WEIGHT := 4.0
+const SIGNATURE_WEIGHT := 5.0
 ## Firearms, explosives and hazardous set pieces are scarce, so bias them into
 ## the card rather than leaving them to a 1-in-33 flat draw.
-const WILD_WEAPONS: Array[StringName] = [&"handgun", &"rpg", &"bed_of_nails"]
+const WILD_WEAPONS: Array[StringName] = [&"handgun", &"rpg", &"bed_of_nails", &"table"]
 const WILD_WEIGHT := 10.0
 ## Swings before he drops it, and how long a fetch may take before he gives up.
 const WEAPON_SWINGS := 4
