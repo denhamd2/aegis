@@ -6688,6 +6688,31 @@ CLIPS["Weapon_Side"] = [
     (22, R()),
 ]
 
+# 24 frames: a two-handed bat-family swing. The hands load over the right
+# shoulder; the lead foot plants before the hips and chest turn through, then
+# the weight settles over the stance. The weapon's own arc is WeaponCatalog's
+# "bat" profile, so the hand targets and this body turn stay in the same beat.
+CLIPS["Weapon_Bat"] = [
+    (0,  R()),
+    (4,  R(pelvis=(0.04, -0.04, 0.800), hips=(-2, 24, 0), spine=(-8, 32, -4), head=(6, -24, 0),
+           hand_r=(0.40, 0.00, 1.45), elbow_r=(1.0, -0.4, 0.4),
+           hand_l=(0.24, 0.04, 1.40), elbow_l=(-0.4, -0.4, -0.6), fist_r=0.95, fist_l=0.95)),
+    (8,  R(pelvis=(-0.01, 0.06, 0.790), hips=(-6, -24, 0), spine=(-12, -34, 0), head=(8, 20, 0),
+           hand_r=(0.05, 0.55, 1.35), elbow_r=(0.8, -0.2, -0.4),
+           hand_l=(-0.05, 0.50, 1.32), elbow_l=(-0.8, -0.2, -0.4), fist_r=1.0, fist_l=1.0)),
+    (9,  R(pelvis=(-0.02, 0.12, 0.790), hips=(-8, -30, 0), spine=(-14, -40, 0), head=(8, 22, 0),
+           hand_r=(0.05, 0.55, 1.35), elbow_r=(0.8, -0.2, -0.4),
+           hand_l=(-0.05, 0.50, 1.32), elbow_l=(-0.8, -0.2, -0.4), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (14, R(pelvis=(-0.03, 0.10, 0.790), hips=(-8, -42, 0), spine=(-12, -52, 0), head=(8, 30, 0),
+           hand_r=(-0.26, 0.32, 1.25), hand_l=(-0.30, 0.23, 1.22), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (18, R(pelvis=(-0.02, 0.06, 0.790), hips=(-2, -4, 0), spine=(-3, -5, 0), head=(2, 4, 0),
+           hand_r=(-0.10, 0.36, 1.18), hand_l=(-0.15, 0.28, 1.16), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.36, 0.104))),
+    (24, R()),
+]
+
 # 18 frames (0.6 s, 36 ticks), contact on frame 6: drawn back to the hip, then
 # driven straight into his gut off a lunge.
 CLIPS["Weapon_Thrust"] = [

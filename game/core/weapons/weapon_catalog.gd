@@ -35,6 +35,11 @@ const SWING_NAMES := {
 	WeaponDef.Swing.GUN: "gun", WeaponDef.Swing.LAUNCHER: "launcher",
 	WeaponDef.Swing.SPRAY: "spray", WeaponDef.Swing.POUR: "pour",
 }
+## Weapon-specific performances may share gameplay timing while using their
+## own body clip and hand-relative prop path.
+const SWING_PROFILES := {
+	"baseball_bat": "bat", "barbed_wire_bat": "bat", "lead_pipe": "bat", "sledgehammer": "bat",
+}
 ## Ranged: they hit whoever is in front of him out to this far, not at the
 ## contact sphere (WrestlerController resolves them).
 const RANGED := {WeaponDef.Swing.GUN: 9.0, WeaponDef.Swing.LAUNCHER: 14.0, WeaponDef.Swing.SPRAY: 2.4}
@@ -287,7 +292,7 @@ static func swing_move(weapon: WeaponDef) -> MoveDef:
 		return _moves[weapon.id]
 	var s: Array = SWINGS[weapon.swing]
 	var m := MoveDef.new()
-	m.animation_pair_id = StringName("weapon_" + String(SWING_NAMES[weapon.swing]))
+	m.animation_pair_id = StringName("weapon_" + swing_profile(weapon))
 	m.startup_frames = s[0]
 	m.active_frames = s[1]
 	m.recovery_frames = s[2]
@@ -403,6 +408,11 @@ const SWING_PATHS := {
 		[0.364, Vector3(0.04, 0.14, -0.42), Vector3(-0.3, 0.05, -0.95), Vector3(-0.95, 0.0, 0.3)],
 		[0.55, Vector3(-0.28, 0.08, -0.22), Vector3(-0.9, 0.15, 0.35), Vector3(0.35, 0.0, 0.9)],
 	],
+	"bat": [
+		[0.20, Vector3(0.30, 0.24, 0.10), Vector3(0.25, 0.65, 0.7), Vector3(-0.95, 0.2, 0.1)],
+		[0.375, Vector3(0.04, 0.14, -0.42), Vector3(-0.3, 0.05, -0.95), Vector3(-0.95, 0.0, 0.3)],
+		[0.55, Vector3(-0.28, 0.08, -0.22), Vector3(-0.9, 0.15, 0.35), Vector3(0.35, 0.0, 0.9)],
+	],
 	"thrust": [
 		[0.17, Vector3(0.20, -0.14, 0.10), Vector3(-0.1, 0.1, -1.0), Vector3(0.0, 1.0, 0.0)],
 		[0.333, Vector3(0.08, -0.06, -0.45), Vector3(-0.1, 0.05, -1.0), Vector3(0.0, 1.0, 0.0)],
@@ -440,7 +450,11 @@ const SWING_PATHS := {
 
 ## The path a swing of `weapon` follows (SWING_PATHS), [] if none.
 static func swing_path(weapon: WeaponDef) -> Array:
-	return SWING_PATHS.get(String(SWING_NAMES[weapon.swing]), [])
+	return SWING_PATHS.get(swing_profile(weapon), [])
+
+
+static func swing_profile(weapon: WeaponDef) -> String:
+	return String(SWING_PROFILES.get(String(weapon.id), SWING_NAMES[weapon.swing]))
 
 
 ## Where `weapon` (shown as `actor`) is at `t` of path `keys`, given his chest
