@@ -1,5 +1,5 @@
 ---
-description: "Use when the job is fast, isolated debugging: pasting a Godot console error, fixing a GDScript typo or small logic slip, tracing a signal, or writing a small helper function such as camera framing math. Quick triage, not features or refactors."
+description: "Use when the job is fast execution work: repetitive boilerplate GDScript, UI scripts, pasting a Godot console error, fixing a GDScript typo or small logic slip, tracing a signal, or writing a small helper function such as camera framing math. Quick triage and tickets, not features or refactors."
 mode: subagent
 model: opencode/ling-3.1-flash-free
 ---
