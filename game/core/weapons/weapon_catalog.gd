@@ -42,6 +42,8 @@ const SWING_PROFILES := {
 	"steel_chair": "chair_overhead", "barbed_wire_chair": "chair_overhead",
 	"hockey_stick": "slapshot",
 	"kendo_stick": "kendo_chop",
+	"trash_can": "two_hand_slam",
+	"shovel": "shovel_flat",
 }
 ## Ranged: they hit whoever is in front of him out to this far, not at the
 ## contact sphere (WrestlerController resolves them).
@@ -209,7 +211,7 @@ const ONE_HAND_CARRY: Array[StringName] = [&"briefcase", &"fire_extinguisher", &
 ## right hand, the left handle of an 84 cm set of steps ended up past the
 ## left arm's reach at the top of the swing (test_weapon_grip_contact).
 const CENTRED_SWING: Array[StringName] = [&"steel_steps", &"table", &"briefcase", &"trash_can",
-		&"barbed_wire_board", &"ladder", &"fire_extinguisher"]
+		&"barbed_wire_board", &"ladder", &"fire_extinguisher", &"shovel"]
 
 ## How it comes up off the floor (WrestlerController's pickup actions): the
 ## squat lift for the heavy ones, both hands for the long and the two-handed,
@@ -430,6 +432,16 @@ const SWING_PATHS := {
 		[0.20, Vector3(0.18, 0.45, 0.05), Vector3(0.0, 0.85, 0.52), Vector3(0.0, 0.52, -0.85)],
 		[0.364, Vector3(0.06, 0.60, -0.34), Vector3(0.0, -0.45, -0.89), Vector3(0.0, -0.89, 0.45)],
 		[0.52, Vector3(-0.02, 0.51, -0.39), Vector3(0.0, -0.30, -0.99), Vector3(0.0, -0.99, 0.15)],
+	],
+	"two_hand_slam": [
+		[0.22, Vector3(0.10, 0.52, 0.06), Vector3(0.0, 0.45, 0.9), Vector3(0.0, 0.9, -0.45)],
+		[0.375, Vector3(0.06, 0.42, -0.40), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
+		[0.52, Vector3(0.05, -0.02, -0.40), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
+	],
+	"shovel_flat": [
+		[0.22, Vector3(0.10, 0.52, 0.06), Vector3(0.0, 0.45, 0.9), Vector3(0.0, 0.9, -0.45)],
+		[0.375, Vector3(0.06, 0.42, -0.40), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
+		[0.52, Vector3(0.05, -0.02, -0.40), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
 	],
 	"thrust": [
 		[0.17, Vector3(0.20, -0.14, 0.10), Vector3(-0.1, 0.1, -1.0), Vector3(0.0, 1.0, 0.0)],

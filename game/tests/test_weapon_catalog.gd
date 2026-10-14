@@ -109,6 +109,22 @@ func test_chairs_use_their_high_overhead_swing_and_stay_at_head_height() -> void
 		).is_greater(1.45)
 
 
+func test_trash_can_uses_the_centered_two_hand_slam() -> void:
+	var weapon := WeaponCatalog.by_id(&"trash_can")
+	assert_str(WeaponCatalog.swing_profile(weapon)).is_equal("two_hand_slam")
+	assert_str(String(WeaponCatalog.swing_move(weapon).animation_pair_id)).is_equal(
+		"weapon_two_hand_slam")
+	assert_bool(WeaponCatalog.swing_path(weapon).size() >= 3).is_true()
+
+
+func test_shovel_uses_its_centered_flat_blade_swing() -> void:
+	var weapon := WeaponCatalog.by_id(&"shovel")
+	assert_str(WeaponCatalog.swing_profile(weapon)).is_equal("shovel_flat")
+	assert_str(String(WeaponCatalog.swing_move(weapon).animation_pair_id)).is_equal(
+		"weapon_shovel_flat")
+	assert_bool(WeaponCatalog.swing_path(weapon).size() >= 3).is_true()
+
+
 func _thrown() -> Array:
 	var a := WeaponActor.make(WeaponCatalog.by_id(&"steel_chair"))
 	add_child(a)

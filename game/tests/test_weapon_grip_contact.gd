@@ -16,8 +16,8 @@ const CONTACT_M := 0.03
 ## empties this list; until then a weapon may not get WORSE than its entry,
 ## and nothing new may join it.
 const KNOWN_SWING_SLIPS := {
-	&"board_with_nails": 0.07, &"shovel": 0.16, &"crutch": 0.07,
-	&"inflatable_banana": 0.07, &"trash_can": 0.15, &"light_tubes": 0.06,
+	&"board_with_nails": 0.07, &"shovel": 0.10, &"crutch": 0.07,
+	&"inflatable_banana": 0.07, &"light_tubes": 0.06,
 	&"barbed_wire_board": 0.71, &"ring_bell": 0.08, &"frying_pan": 0.06,
 	# the overhead slam and the thrust with wide things (phase 3), the spray (4)
 	&"steel_steps": 0.12, &"championship_belt": 0.12, &"briefcase": 0.40, &"table": 0.36,

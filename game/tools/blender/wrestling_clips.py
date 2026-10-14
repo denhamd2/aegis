@@ -6786,6 +6786,57 @@ CLIPS["Weapon_Kendo_Chop"] = [
     (22, R()),
 ]
 
+# 24 frames (0.8 s, 48 ticks), contact on frame 9: lift a heavy, wide prop
+# square over the crown, plant the lead foot, then drive it down with the
+# legs and trunk. WeaponGrip steers the midpoint between the hands, so a can,
+# ring steps or briefcase stays centered instead of pulling the far handle out
+# of the left arm's reach.
+CLIPS["Weapon_Two_Hand_Slam"] = [
+    (0,  R()),
+    (5,  R(pelvis=(0.0, -0.04, 0.790), hips=(3, 0, 0), spine=(12, 0, 0), head=(6, 0, 0),
+           hand_r=(0.18, 0.02, 1.92), elbow_r=(0.85, -0.35, 0.65),
+           hand_l=(-0.18, 0.02, 1.90), elbow_l=(-0.85, -0.35, 0.65), fist_r=1.0, fist_l=1.0)),
+    (8,  R(pelvis=(0.0, -0.01, 0.790), hips=(1, 0, 0), spine=(5, 0, 0), head=(1, 0, 0),
+           hand_r=(0.18, 0.10, 1.88), elbow_r=(0.85, -0.30, 0.55),
+           hand_l=(-0.18, 0.10, 1.86), elbow_l=(-0.85, -0.30, 0.55), fist_r=1.0, fist_l=1.0)),
+    (9,  R(pelvis=(0.0, 0.12, 0.760), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.18, 0.48, 1.62), elbow_r=(0.85, -0.40, 0.10),
+           hand_l=(-0.18, 0.46, 1.60), elbow_l=(-0.85, -0.40, 0.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (13, R(pelvis=(0.0, 0.10, 0.750), hips=(-14, 0, 0), spine=(-30, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.16, 0.44, 1.48), hand_l=(-0.16, 0.42, 1.46), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (18, R(pelvis=(0.0, 0.04, 0.770), hips=(-4, 0, 0), spine=(-10, 0, 0), head=(-3, 0, 0),
+           hand_r=(0.18, 0.36, 1.32), hand_l=(-0.18, 0.34, 1.30), fist_r=0.95, fist_l=0.95,
+           foot_l=(-0.22, 0.30, 0.104))),
+    (24, R()),
+]
+
+# 24 frames (0.8 s, 48 ticks), contact on frame 9: hands close on the shaft,
+# the flat face of the blade lifts above the crown, and a planted step drives
+# it down in front. The shaft midpoint is the swing pivot so the left hand
+# stays on the upper grip as the blade turns through the strike.
+CLIPS["Weapon_Shovel_Overhead"] = [
+    (0,  R()),
+    (5,  R(pelvis=(0.0, -0.04, 0.790), hips=(3, 0, 0), spine=(12, 0, 0), head=(6, 0, 0),
+           hand_r=(0.18, 0.02, 1.92), elbow_r=(0.85, -0.35, 0.65),
+           hand_l=(-0.18, 0.02, 1.90), elbow_l=(-0.85, -0.35, 0.65), fist_r=1.0, fist_l=1.0)),
+    (8,  R(pelvis=(0.0, -0.01, 0.790), hips=(1, 0, 0), spine=(5, 0, 0), head=(1, 0, 0),
+           hand_r=(0.18, 0.10, 1.88), elbow_r=(0.85, -0.30, 0.55),
+           hand_l=(-0.18, 0.10, 1.86), elbow_l=(-0.85, -0.30, 0.55), fist_r=1.0, fist_l=1.0)),
+    (9,  R(pelvis=(0.0, 0.12, 0.760), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.18, 0.48, 1.62), elbow_r=(0.85, -0.40, 0.10),
+           hand_l=(-0.18, 0.46, 1.60), elbow_l=(-0.85, -0.40, 0.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (13, R(pelvis=(0.0, 0.10, 0.750), hips=(-14, 0, 0), spine=(-30, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.16, 0.44, 1.48), hand_l=(-0.16, 0.42, 1.46), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (18, R(pelvis=(0.0, 0.04, 0.770), hips=(-4, 0, 0), spine=(-10, 0, 0), head=(-3, 0, 0),
+           hand_r=(0.18, 0.36, 1.32), hand_l=(-0.18, 0.34, 1.30), fist_r=0.95, fist_l=0.95,
+           foot_l=(-0.22, 0.30, 0.104))),
+    (24, R()),
+]
+
 # 18 frames (0.6 s, 36 ticks), contact on frame 6: drawn back to the hip, then
 # driven straight into his gut off a lunge.
 CLIPS["Weapon_Thrust"] = [
