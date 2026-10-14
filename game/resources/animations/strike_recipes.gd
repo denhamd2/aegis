@@ -68,6 +68,7 @@ const RECIPES := {
 	# Barred weapons"), each cut to its WeaponCatalog.SWINGS length or its
 	# WrestlerController.WEAPON_ACTION_TICKS; the weapon rides WeaponGrip.
 	"weapon_overhead": {"kind": "retime", "source": "Weapon_Overhead", "seconds": 0.8, "file": AUTHORED},
+	"weapon_chair_overhead": {"kind": "retime", "source": "Weapon_Chair_Overhead", "seconds": 0.8, "file": AUTHORED},
 	"weapon_side": {"kind": "retime", "source": "Weapon_Side", "seconds": 0.7333, "file": AUTHORED},
 	"weapon_bat": {"kind": "retime", "source": "Weapon_Bat", "seconds": 0.8, "file": AUTHORED},
 	"weapon_slapshot": {"kind": "retime", "source": "Weapon_Slapshot", "seconds": 0.7333, "file": AUTHORED},

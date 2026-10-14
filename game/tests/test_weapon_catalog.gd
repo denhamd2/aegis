@@ -86,6 +86,29 @@ func test_kendo_stick_uses_its_overhead_chop_and_stays_at_head_height() -> void:
 		"kendo strike tip falls below head height (%.2f m)" % lowest_tip).is_greater(1.45)
 
 
+func test_chairs_use_their_high_overhead_swing_and_stay_at_head_height() -> void:
+	for id in [&"steel_chair", &"barbed_wire_chair"]:
+		var chair := WeaponCatalog.by_id(id)
+		assert_str(WeaponCatalog.swing_profile(chair)).is_equal("chair_overhead")
+		assert_str(String(WeaponCatalog.swing_move(chair).animation_pair_id)).is_equal(
+			"weapon_chair_overhead")
+		var actor := WeaponActor.make(chair, chair.held)
+		add_child(actor)
+		auto_free(actor)
+		var chest := Transform3D(Basis.IDENTITY, Vector3(0.0, 1.25, 0.0))
+		var rest := Transform3D(Basis.IDENTITY, Vector3(0.3, 1.0, -0.3))
+		var lowest_tip := INF
+		for i in 9:
+			var t := lerpf(0.375, 0.52, float(i) / 8.0)
+			var placed := WeaponCatalog.path_transform(actor,
+				WeaponCatalog.swing_path(chair), chest, t, rest)
+			var tip: Vector3 = placed * actor.marker("strike").origin
+			lowest_tip = minf(lowest_tip, tip.y)
+		assert_float(lowest_tip).override_failure_message(
+			"%s strike tip falls below head height (%.2f m)" % [id, lowest_tip]
+		).is_greater(1.45)
+
+
 func _thrown() -> Array:
 	var a := WeaponActor.make(WeaponCatalog.by_id(&"steel_chair"))
 	add_child(a)

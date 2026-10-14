@@ -6670,6 +6670,28 @@ CLIPS["Weapon_Overhead"] = [
     (24, R()),
 ]
 
+# 24 frames (0.8 s, 48 ticks), contact on frame 9: both hands lift the chair
+# by its legs high above the crown, the lead foot plants, and the seat drives
+# down onto him. The chair stays above head height through the follow-through.
+CLIPS["Weapon_Chair_Overhead"] = [
+    (0,  R()),
+    (5,  R(pelvis=(0.0, -0.04, 0.800), hips=(3, 0, 0), spine=(12, 0, 0), head=(6, 0, 0),
+           hand_r=(0.20, 0.02, 1.94), elbow_r=(0.9, -0.35, 0.65),
+           hand_l=(-0.20, 0.02, 1.92), elbow_l=(-0.9, -0.35, 0.65), fist_r=1.0, fist_l=1.0)),
+    (8,  R(pelvis=(0.0, 0.02, 0.800), hips=(2, 0, 0), spine=(7, 0, 0), head=(2, 0, 0),
+           hand_r=(0.20, 0.12, 1.90), elbow_r=(0.85, -0.30, 0.55),
+           hand_l=(-0.20, 0.12, 1.88), elbow_l=(-0.85, -0.30, 0.55), fist_r=1.0, fist_l=1.0)),
+    (9,  R(pelvis=(0.0, 0.12, 0.770), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.20, 0.50, 1.70), elbow_r=(0.85, -0.40, 0.10),
+           hand_l=(-0.20, 0.48, 1.68), elbow_l=(-0.85, -0.40, 0.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.44, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (13, R(pelvis=(0.0, 0.10, 0.770), hips=(-14, 0, 0), spine=(-30, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.18, 0.46, 1.58), hand_l=(-0.18, 0.44, 1.56), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.44, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (17, R()),
+    (24, R()),
+]
+
 # 22 frames (0.733 s, 44 ticks), contact on frame 8: a baseball swing -- the
 # load back over the right shoulder, the lead foot in, the hips then the
 # shoulders round, and on through across him.

@@ -39,6 +39,7 @@ const SWING_NAMES := {
 ## own body clip and hand-relative prop path.
 const SWING_PROFILES := {
 	"baseball_bat": "bat", "barbed_wire_bat": "bat", "lead_pipe": "bat", "sledgehammer": "bat",
+	"steel_chair": "chair_overhead", "barbed_wire_chair": "chair_overhead",
 	"hockey_stick": "slapshot",
 	"kendo_stick": "kendo_chop",
 }
@@ -404,6 +405,11 @@ const SWING_PATHS := {
 		[0.22, Vector3(0.10, 0.52, 0.06), Vector3(0.0, 0.45, 0.9), Vector3(0.0, 0.9, -0.45)],
 		[0.375, Vector3(0.06, 0.42, -0.40), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
 		[0.52, Vector3(0.05, -0.02, -0.40), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
+	],
+	"chair_overhead": [
+		[0.22, Vector3(0.224, 0.494, 0.246), Vector3(0.0, 0.82, 0.57), Vector3(0.0, 0.57, -0.82)],
+		[0.375, Vector3(0.080, 0.567, -0.317), Vector3(0.0, -0.55, -0.84), Vector3(0.0, -0.84, 0.55)],
+		[0.52, Vector3(0.036, 0.508, -0.323), Vector3(0.0, -0.60, -0.80), Vector3(0.0, -0.80, 0.60)],
 	],
 	"side": [
 		[0.20, Vector3(0.30, 0.24, 0.10), Vector3(0.25, 0.65, 0.7), Vector3(-0.95, 0.2, 0.1)],
