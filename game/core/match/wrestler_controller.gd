@@ -581,6 +581,13 @@ var _submission_minigame: SubmissionMinigame
 ## effect to end-of-tick so both wrestlers' decisions this tick are made
 ## from the same starting state, regardless of node order.
 var _pending_hits: Array[MoveDef] = []
+## A landed handgun shot resolves with the same deferred hit batch as other
+## strikes, so its fatal state is recorded here and applied after damage.
+var _pending_fatal_shot := false
+var _pending_bullet_impact := Vector3.INF
+## Terminal flag for a fatal gunshot. The wrestler remains in DOWN so existing
+## collapse and cover rules still apply, but he cannot get up again.
+var dead := false
 
 ## A hit taken while this wrestler was mid-strike, held until the strike ends.
 ##
@@ -2660,6 +2667,14 @@ func _process_active_move(input: Dictionary) -> void:
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
 	if _is_weapon_swing(move):
+		if held_weapon.def.id == &"handgun":
+			opponent._pending_fatal_shot = true
+			var from_victim := opponent.global_position - global_position
+			from_victim.y = 0.0
+			if from_victim.length() < 0.01:
+				from_victim = Vector3.FORWARD
+			opponent._pending_bullet_impact = opponent.global_position + Vector3.UP * 1.1 \
+					+ from_victim.normalized() * 0.32
 		_weapon_landed()
 	if fsm.current_state == WrestlerFSM.State.STRIKE:
 		_count_string_hit()
@@ -3408,6 +3423,10 @@ func _would_be_knocked_down() -> bool:
 ## Called by MatchReferee once every wrestler has finished its own
 ## _physics_process for this tick.
 func _resolve_pending_hits() -> void:
+	if dead:
+		_pending_hits.clear()
+		_pending_fatal_shot = false
+		return
 	if _pending_hits.is_empty():
 		return
 	# The wrestler may have moved into an unhittable state (e.g. its own
@@ -3417,16 +3436,25 @@ func _resolve_pending_hits() -> void:
 	var moves := _pending_hits.duplicate()
 	_pending_hits.clear()
 	if UNHITTABLE_STATES.has(fsm.current_state):
+		_pending_fatal_shot = false
+		_pending_bullet_impact = Vector3.INF
 		return
 	# The only hitter is the other man, so his comeback decides the scale.
 	var hitter_fired_up := opponent != null and opponent.combat.is_fired_up()
 	var health_before := combat.health()
 	var wear_before := combat.wear
+	var fatal_shot := _pending_fatal_shot
+	_pending_fatal_shot = false
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
+		var weapon := WeaponCatalog.of_move(move)
+		fatal_shot = fatal_shot or (weapon != null and weapon.id == &"handgun")
 	var last_move: MoveDef = moves[moves.size() - 1]
 	_hit_sell = sell_tier(combat.wear - wear_before, health_before, WeaponCatalog.of_move(last_move) != null)
 	_took_moves(moves.size())
+	if fatal_shot:
+		_take_fatal_gunshot()
+		return
 	# Every blow that lands shows on him, whatever he is doing -- mid-punch
 	# included, where the reaction clip has to wait (below). A man fired up
 	# no-sells: he takes it without giving.
@@ -4048,6 +4076,18 @@ func _bump_down() -> void:
 	_bumping = true
 
 
+## A handgun hit is lethal: all vitality is permanently lost and the wrestler
+## collapses into the existing DOWN pose, where he remains for the match.
+func _take_fatal_gunshot() -> void:
+	if dead:
+		return
+	dead = true
+	combat.drain_health_permanently()
+	_pending_bullet_impact = Vector3.INF
+	_move_ticks_remaining = 1 << 30
+	_go_down()
+
+
 func _go_down(tier := -1) -> void:
 	_bumping = false
 	if fsm.current_state == WrestlerFSM.State.HIT_REACT or fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN, WrestlerFSM.State.STRIKE]):
@@ -4086,6 +4126,9 @@ func _stop_dead() -> void:
 
 
 func _process_down(input: Dictionary) -> void:
+	if dead:
+		_stop_dead()
+		return
 	_move_ticks_remaining -= 1
 	# Which of the two measured rises this is depends on who ended the
 	# prone state: a wrestler who pressed his way up gets the fast one, a

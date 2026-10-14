@@ -174,16 +174,18 @@ func _on_damaged(move: MoveDef) -> void:
 	_peak = maxf(_peak, head)
 	if head > before:
 		wet = 1.0
-		_throw_off(head - before)
+		var handgun := weapon != null and weapon.id == &"handgun"
+		_throw_off(head - before, wrestler._pending_bullet_impact if handgun else Vector3.INF)
 
 
 ## Blood off him onto the canvas when a shot lands on an open cut.
-func _throw_off(added: float) -> void:
+func _throw_off(added: float, impact: Vector3 = Vector3.INF) -> void:
 	var canvas := CanvasBlood.of(get_tree())
 	if canvas == null:
 		return
 	var at := bone_at(&"head")
-	var ground := Vector3(at.x, 0.0, at.z)
+	var source := impact if impact != Vector3.INF else at
+	var ground := Vector3(source.x, 0.0, source.z)
 	var dir := Vector3.FORWARD
 	if wrestler.opponent:
 		dir = at - wrestler.opponent.global_position

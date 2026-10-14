@@ -242,6 +242,18 @@ func apply_damage(move: MoveDef, scale: float = 1.0) -> void:
 	damaged.emit(move)
 
 
+## A fatal hit leaves every limb exhausted, removes the recoverable share and
+## fixes the wear floor at zero vitality. Presentation and FSM changes remain
+## with WrestlerController; this only updates combat data.
+func drain_health_permanently() -> void:
+	for limb in limb_damage:
+		limb_damage[limb] = MAX_LIMB_DAMAGE
+	wear = maxf(wear, KICKOUT_DAMAGE_REFERENCE)
+	green = 0.0
+	heal_floor = wear
+	_since_hit = 0
+
+
 # --- vitality: the green and the red -----------------------------------------
 #
 # 2K's health bar has two layers: the recoverable part (green), which comes
