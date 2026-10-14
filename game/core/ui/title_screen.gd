@@ -44,11 +44,12 @@ const MENU_FIGHT := "FIGHT"
 ## build). The same select screen, both cards marked CPU.
 const MENU_WATCH := "WATCH"
 const MENU_CONTROLS := "CONTROLS"
-const MENU_CAMERA := "CAMERA"
+const MENU_CAMERA := "OPTIONS"
 ## The camera options (CameraSettings, camera_aaa_plan.md D2): [label,
 ## the values' names in CameraSettings' enum order].
 const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST"]], ["CUTS", ["ON", "OFF"]],
-		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]]]
+		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]],
+		["BLOOD", ["ON", "OFF"]]]
 var camera_row := 0
 const MENU_QUIT := "QUIT"
 
@@ -681,7 +682,8 @@ static func camera_option(row: int) -> int:
 		0: return CameraSettings.coverage
 		1: return 0 if CameraSettings.cuts else 1
 		2: return CameraSettings.shake
-		_: return CameraSettings.replays
+		3: return CameraSettings.replays
+		_: return 0 if Blood.on() else 1
 
 
 func step_camera_option(dir: int) -> void:
@@ -692,7 +694,10 @@ func step_camera_option(dir: int) -> void:
 		0: CameraSettings.coverage = v as CameraSettings.Coverage
 		1: CameraSettings.cuts = v == 0
 		2: CameraSettings.shake = v as CameraSettings.Shake
-		_: CameraSettings.replays = v as CameraSettings.Replays
+		3: CameraSettings.replays = v as CameraSettings.Replays
+		_:
+			Blood.on()   # reads --blood once, before we override it
+			Blood.enabled = v == 0
 	if _sfx:
 		_sfx.play("ui_move", -8.0)
 
@@ -705,7 +710,7 @@ func _draw_camera(view: Vector2) -> void:
 			maxf(1.0, view.y * 0.0018))
 	TitleArt.draw_tracked(self, _font,
 			panel.position + Vector2(view.x * 0.030, view.y * 0.070),
-			"CAMERA", int(view.y * 0.044), view.y * 0.004, TitleArt.KEY_GOLD)
+			"OPTIONS", int(view.y * 0.044), view.y * 0.004, TitleArt.KEY_GOLD)
 	draw_rect(Rect2(panel.position + Vector2(view.x * 0.030, view.y * 0.085),
 			Vector2(panel.size.x - view.x * 0.060, maxf(1.0, view.y * 0.002))),
 			TitleArt.KEY_GOLD)

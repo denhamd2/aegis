@@ -737,6 +737,9 @@ func _ready() -> void:
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
+		# Blood from the weapons that open a man up (Blood), on the same skin.
+		if model:
+			Blood.attach(self, model)
 		# His eyes on the other man, where the model has eyes that move
 		# (RomanModel; EyeAim). Presentation only.
 		if model and model.has_method("aim_eyes"):

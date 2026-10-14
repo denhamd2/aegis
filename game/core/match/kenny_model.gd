@@ -61,6 +61,7 @@ const SKIN_PORE_TILES := 48.0
 
 ## His skin: SkinLook's subsurface, sheen and pores, as Aubrey's.
 func _dress_skin() -> void:
+	var skin: Array[BaseMaterial3D] = []
 	for mi: MeshInstance3D in find_children("", "MeshInstance3D", true, false):
 		var surfaces := _surfaces_named(mi, SKIN_MATERIAL)
 		if surfaces.is_empty():
@@ -73,6 +74,9 @@ func _dress_skin() -> void:
 			material.subsurf_scatter_transmittance_enabled = false
 			SkinLook.add_pores(material, SKIN_PORE_TILES)
 			mi.set_surface_override_material(surface, material)
+			skin.append(material)
+	# For Sweat and Blood (WrestlerController attaches them), as Roman's and Cody's.
+	set_meta("skin_materials", skin)
 
 
 const EYE_MATERIAL := "MI_KennyEyes"

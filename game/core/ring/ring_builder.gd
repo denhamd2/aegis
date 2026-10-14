@@ -836,6 +836,8 @@ func _build_canvas() -> void:
 
 	floor_mesh.mesh = mesh
 	floor_mesh.set_surface_override_material(0, _canvas_material())
+	# What a bleeding match leaves on the canvas (CanvasBlood).
+	CanvasBlood.attach(floor_mesh)
 	# The apron a wrestler stands on outside the ropes: the same light cloth as
 	# the mat, not the dark lip that used to stand in for it.
 	floor_mesh.set_surface_override_material(1, _resolve("ring_apron",

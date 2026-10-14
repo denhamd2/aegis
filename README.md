@@ -9546,3 +9546,43 @@ round the fist; the hockey stick is a slapshot.
   its lowest point on the floor; the folded table had stood on its edge
   half through the mat.
 
+
+## Round: blood, Holy shit!, and selling to the size of the hit
+
+The owner: bleed from "the most dangerous weapons", the amount set by the
+damage, the canvas stained too, AAA; Holy shit! in place of Holy cow; and
+every hit sold to its size and to what the man has left. Blood is on, with
+an Off switch ("BLOOD" in the title screen's OPTIONS, or `--blood off`),
+at broadcast-heavy intensity.
+
+- **How wrestling and 2K do it, and what we copied.** Blood comes from the
+  hardway shots -- chairs, the steps, barbed wire, glass, nails -- and from
+  damage piled on a man, never from an ordinary strike. It starts as a cut
+  at the hairline, runs in rivulets over the brow, becomes a crimson mask,
+  then streaks the neck and chest. It keeps running once open, and it dries
+  dark. So does ours (`core/materials/blood.gd`).
+- **Damage sets the amount.** Each weapon has a cut weight (barbed wire and
+  glass 1.0, nails 0.9, steps 0.7, chair and pipe 0.6, bat 0.45, kendo
+  0.2, the banana and the extinguisher 0). Below 0.35 a weapon cannot open
+  a man up, only make an open cut run harder. A shot adds its head damage
+  x cut x 0.02, doubled as his health runs out: a chair at the bell is a
+  cut at the hairline; the same chair late in a war is blood to the chin.
+  Landing on the tacks, the nails or the wire board opens his back instead.
+- **On him, not floating over him.** A reveal map is baked per skin
+  surface from where each texel sits on his body
+  (`game/tools/blood/bake_blood_masks.gd`, deterministic), and drawn as a
+  pass over the skin (`blood_overlay.gdshader`). The level shown eases up
+  over 2.5 s, so it runs rather than pops. The wound is found on the mesh
+  at the hairline, not off the head bone (Cody's face sits 9 cm off his
+  rig's bone), and the field is evaluated per texel (per vertex, it came
+  out in blocks on Cody's low-poly chest).
+- **The canvas.** One 1024² stain map over the mat, painted as he bleeds:
+  drips while he stands, a pool where he lies, spatter thrown off a shot,
+  drag smears. Fresh blood is wet and red; it dries dark over three minutes
+  (`core/materials/canvas_blood.gd`). One texture and one pass however
+  much a match bleeds, and no decals, so it works on the web build too.
+- **Tests:** `tests/test_blood.gd` (8): which weapons cut, barbed wire
+  deeper than a chair, a beaten man bleeds more, the tacks open his back,
+  it runs and keeps running, Off bleeds nothing, the canvas stays one map.
+- **Review:** `game/tools/probe/blood_shot.tscn` renders the faces at each
+  level, wet and dried, the backs, and the canvas.
