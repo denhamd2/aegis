@@ -48,6 +48,11 @@ const SWING_PROFILES := {
 ## Ranged: they hit whoever is in front of him out to this far, not at the
 ## contact sphere (WrestlerController resolves them).
 const RANGED := {WeaponDef.Swing.GUN: 9.0, WeaponDef.Swing.LAUNCHER: 14.0, WeaponDef.Swing.SPRAY: 2.4}
+## A clean weapon impact has enough weight to take a wrestler down from this
+## much base head damage. The very light novelty props stay upright; bats,
+## chairs, sticks and metal tools sell as knockdowns even before accumulated
+## wear contributes.
+const WEAPON_KNOCKDOWN_DAMAGE := 8.0
 
 ## id, name, family, glb, held, dented, broken, set_up, swing, head, torso,
 ## hits to dent, hits to break, two-handed, set piece, landing damage, sound,
@@ -309,7 +314,7 @@ static func swing_move(weapon: WeaponDef) -> MoveDef:
 	m.damage_torso = weapon.damage_torso * float(s[5])
 	m.momentum_gain = 6.0 + weapon.damage_head * 0.5
 	m.leaves_defender_down = weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER] \
-			or weapon.damage_head >= 12.0
+			or weapon.damage_head >= WEAPON_KNOCKDOWN_DAMAGE
 	m.resource_name = "weapon_" + String(weapon.id)
 	m.set_meta(&"weapon", weapon.id)
 	_moves[weapon.id] = m
@@ -329,7 +334,7 @@ static func throw_move(weapon: WeaponDef) -> MoveDef:
 	m.damage_head = weapon.damage_head * 0.7
 	m.damage_torso = weapon.damage_torso * 0.7
 	m.momentum_gain = 4.0 + weapon.damage_head * 0.4
-	m.leaves_defender_down = weapon.damage_head >= 13.0
+	m.leaves_defender_down = weapon.damage_head >= WEAPON_KNOCKDOWN_DAMAGE
 	m.resource_name = "weapon_thrown_" + String(weapon.id)
 	m.set_meta(&"weapon", weapon.id)
 	_moves[key] = m

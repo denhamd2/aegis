@@ -224,3 +224,22 @@ func test_every_weapon_has_a_sound_and_its_moves_name_it() -> void:
 		assert_bool(heard).override_failure_message("%s: no sound '%s'" % [def.id, def.sound]).is_true()
 		assert_object(WeaponCatalog.of_move(WeaponCatalog.swing_move(def))).is_same(WeaponCatalog.by_id(def.id))
 	assert_int(SfxPool.family_size("table_crack")).is_greater(0)
+
+
+## Hard-hitting weapons should read as knockdowns, including when thrown;
+## featherweight novelty props and the low-damage sheet remain stagger hits.
+func test_most_weapon_impacts_knock_a_wrestler_down() -> void:
+	var eligible := 0
+	var knockdowns := 0
+	for def: WeaponDef in WeaponCatalog.all():
+		if def.swing == WeaponDef.Swing.POUR or def.damage_head <= 0.0:
+			continue
+		eligible += 1
+		if WeaponCatalog.swing_move(def).leaves_defender_down:
+			knockdowns += 1
+	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"baseball_bat")).leaves_defender_down).is_true()
+	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"kendo_stick")).leaves_defender_down).is_true()
+	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"cookie_sheet")).leaves_defender_down).is_false()
+	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"inflatable_banana")).leaves_defender_down).is_false()
+	assert_bool(WeaponCatalog.throw_move(WeaponCatalog.by_id(&"hockey_stick")).leaves_defender_down).is_true()
+	assert_int(knockdowns).is_greater_equal(int(ceil(float(eligible) * 0.7)))
