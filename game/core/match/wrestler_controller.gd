@@ -4824,13 +4824,16 @@ func _weapon_input(input: Dictionary) -> bool:
 			return true
 		return false
 	if input.get("weapon", false):
-		if can_rummage():
-			begin_weapon_action("rummage")
-			return true
 		var loose := WeaponStock.of(self).loose_near(global_position)
 		if loose:
 			_weapon_target = loose
 			begin_weapon_action(WeaponCatalog.pickup_action(loose.def))
+			return true
+		# Reuse a weapon that is already in play before searching under the ring.
+		# On the apron side both actions can be valid at once; rummaging first
+		# made used weapons on the floor impossible for nearby wrestlers to claim.
+		if can_rummage():
+			begin_weapon_action("rummage")
 			return true
 	return false
 

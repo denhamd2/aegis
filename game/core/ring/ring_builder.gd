@@ -478,6 +478,30 @@ func _build_outside_collision() -> void:
 	var deck_height := -0.1 - floor_top
 	_add_box("RingDeckCollision", Vector3(APRON_OUT * 2.0, deck_height, APRON_OUT * 2.0),
 			Vector3(0.0, floor_top + deck_height * 0.5, 0.0))
+	_build_steps_collision(floor_top, deck_height)
+
+
+## Steel steps are part of the imported ring model, which is visual-only. A
+## compact oriented collision volume keeps NHB bodies from walking through
+## the two corner flights. Entrance choreography is scripted and unaffected.
+func _build_steps_collision(floor_top: float, deck_height: float) -> void:
+	var length := STEP_PLATFORM + STEP_RUN * STEP_TREADS
+	for i in STEP_CORNERS.size():
+		var corner: Vector2 = STEP_CORNERS[i]
+		var out := step_out_dir(corner)
+		var apron_corner := Vector3(corner.x * APRON_OUT, 0.0, corner.y * APRON_OUT)
+		var centre := apron_corner + out * (length * 0.5 + STEP_APRON_GAP)
+		centre.y = floor_top + deck_height * 0.5
+		var body := StaticBody3D.new()
+		body.name = "SteelStepsCollision%d" % i
+		body.position = _ring.to_local(centre)
+		body.rotation.y = atan2(out.x, out.z)
+		var collision := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(STEP_WIDTH, deck_height, length)
+		collision.shape = shape
+		body.add_child(collision)
+		_ring.add_child.call_deferred(body)
 
 
 func _add_box(node_name: String, size: Vector3, centre: Vector3) -> void:

@@ -68,7 +68,7 @@ func test_the_dangerous_weapons_open_him_up_and_the_soft_ones_do_not() -> void:
 	assert_float(b.head).is_equal(0.0)
 	b._on_damaged(_swing(&"steel_chair"))
 	var chair := b.head
-	assert_float(chair).is_between(0.08, 0.2)
+	assert_float(chair).is_between(0.04, 0.12)
 	# open, the kendo stick and the punch make it run harder
 	b._on_damaged(_swing(&"kendo_stick"))
 	assert_float(b.head).is_greater(chair)
@@ -98,14 +98,14 @@ func test_a_beaten_man_bleeds_more_from_the_same_shot() -> void:
 	assert_float(worn_w.combat.health()).is_less(0.6)
 	fresh._on_damaged(_swing(&"steel_chair"))
 	worn._on_damaged(_swing(&"steel_chair"))
-	assert_float(worn.head).is_greater(fresh.head * 1.3)
+	assert_float(worn.head).is_greater(fresh.head * 1.2)
 
 
 func test_landing_on_the_tacks_opens_his_back() -> void:
 	Blood.enabled = true
 	var b := _blood(await _wrestler())
 	b._on_damaged(WeaponCatalog.landing_move(WeaponCatalog.by_id(&"thumbtacks")))
-	assert_float(b.back).is_greater(0.2)
+	assert_float(b.back).is_greater(0.17)
 	assert_float(b.head).is_equal(0.0)
 
 

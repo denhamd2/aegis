@@ -65,6 +65,13 @@ func test_the_standoff_band_is_not_empty() -> void:
 		ai.min_standoff, _armed().shortest_strike_reach())
 
 
+func test_cooldown_footwork_does_not_orbit_the_opponent() -> void:
+	var ai: WrestlerAI = auto_free(AI.new())
+	var to_target := Vector3(0.0, 0.0, -ai.circle_distance)
+	assert_vector(ai._circle_move(to_target, ai.circle_distance)) \
+		.is_equal(Vector2.ZERO)
+
+
 func test_the_cross_out_reaches_the_jab() -> void:
 	# A rear-hand cross thrown off a rotating torso is the longer punch. It
 	# was briefly the shorter one (0.550 m of reach against the jab's 0.655),

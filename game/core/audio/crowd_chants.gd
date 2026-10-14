@@ -46,15 +46,9 @@ const ONE_MORE_DELAY := 17.0
 const ONE_MORE_AFTER := 420.0
 const CHANT_DB := -3.0
 const COUNT_DB := -4.0
-## The sung WHOAs in Cody's entrance music, seconds from its start
-## (EntranceDirector.CODY_WHOA_1 ...): the building sings them with him.
-const CODY_WHOAS := [0.8, 3.6, 6.3, 22.5, 24.0, 43.5]
-## His name once he is in the aisle, and Roman's people once his music hits.
-const CODY_NAME_AT := 48.0
-const ROMAN_OTC_AT := 52.0
-
 var clock := 0.0
-## Who is in the match: a chant for a man who is not there is never sung.
+## Kept as roster metadata for callers that want to distinguish the match;
+## generated wrestler-specific chant files are intentionally never queued.
 var cody_here := false
 var roman_here := false
 var sfx: SfxPool
@@ -104,28 +98,14 @@ func is_chanting() -> bool:
 
 ## A move landed by a man the house is for (+1), against (-1), or neither.
 func moved(favor: float, pop: float) -> void:
-	if favor == 0.0:
-		return
-	var key := int(signf(favor))
-	var list: Array = _moves.get(key, [])
-	list.append(clock)
-	while not list.is_empty() and clock - float(list[0]) > MOMENTUM_WINDOW:
-		list.pop_front()
-	_moves[key] = list
-	if list.size() >= MOMENTUM_MOVES or pop >= 0.8:
-		if key > 0:
-			_reason(&"chant_cody" if _rng.randf() < 0.6 else &"chant_lets_go_cody")
-		else:
-			# The heel on top: half the house rallies the face, his own
-			# people answer for him.
-			_reason(&"chant_lets_go_cody" if _rng.randf() < 0.5 else &"chant_otc")
-		list.clear()
+	# Name chants in this build use generated voice assets. Keep reactions
+	# event based and generic until clean, licensed recordings are selected.
+	pass
 
 
 ## A man fired up on his comeback.
 func fired_up(favor: float) -> void:
-	if favor > 0.0:
-		_reason(&"chant_cody")
+	pass
 
 
 ## The cover broken after `count` (2 is a near-fall).
@@ -166,7 +146,8 @@ func match_over(winner_favor: float) -> void:
 	_reasons.clear()
 
 
-## An entrance started (its music on the wall): "cody", "roman" or other.
+## An entrance started. Music and the crowd bed carry it without generated
+## wrestler-specific chants.
 func entrance(style: String) -> void:
 	_entrance = style
 	_entrance_t = 0.0
@@ -182,6 +163,7 @@ func _reason(chant: StringName) -> void:
 
 
 ## Whether this match has the man `chant` is about (or it is about nobody).
+## Kept for generic API compatibility; name chants are not scheduled.
 func sung_here(chant: String) -> bool:
 	if chant.contains("cody"):
 		return cody_here
@@ -253,24 +235,10 @@ func tick(delta: float, excitement: float) -> void:
 
 
 func _tick_entrance(delta: float) -> void:
-	var was := _entrance_t
 	_entrance_t += delta
-	match _entrance:
-		"cody":
-			for at: float in CODY_WHOAS:
-				if was < at and _entrance_t >= at:
-					if sfx:
-						sfx.play_any("crowd_whoa", -2.0, 0.0)
-			if was < CODY_NAME_AT and _entrance_t >= CODY_NAME_AT:
-				_start("chant_cody")
-		"roman":
-			if was < ROMAN_OTC_AT and _entrance_t >= ROMAN_OTC_AT:
-				_start("chant_otc")
 
 
 func _start(chant: String) -> void:
-	if not sung_here(chant):
-		return
 	var take := take_of(chant)
 	if take == "":
 		return

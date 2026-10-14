@@ -498,6 +498,8 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_rng.seed = PLACEMENT_SEED
 	_build_ringside()
+	if MatchRules.no_holds_barred(self):
+		_build_barricade_collision()
 	_build_bowl()
 	_build_floor_seats()
 	_build_entrance_set()
@@ -920,6 +922,28 @@ func _build_ringside() -> void:
 	_dress(root, "CommentaryDeskLed", _printed_signage_material())
 	_dress(root, "CommentaryScreens", _monitor_screen_material())
 	add_child(root)
+
+
+## The venue model is visual only. NHB wrestlers and props need actual panel
+## colliders, or their CharacterBody motion can pass straight through the
+## barricade even though the rendered wall is present.
+func _build_barricade_collision() -> void:
+	var panels := barricade_panels()
+	for i in panels.size():
+		var panel: Array = panels[i]
+		var centre: Vector3 = panel[0]
+		var along: Vector3 = panel[1]
+		var width: float = panel[3]
+		var body := StaticBody3D.new()
+		body.name = "BarricadeCollision%02d" % i
+		body.position = centre + Vector3.UP * (BARRICADE_HEIGHT * 0.5)
+		body.rotation.y = atan2(-along.z, along.x)
+		var collision := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(width, BARRICADE_HEIGHT, 0.18)
+		collision.shape = shape
+		body.add_child(collision)
+		add_child(body)
 
 
 ## The padded mats round the ring (the owner's AEW arena still), painted by

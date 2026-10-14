@@ -109,6 +109,31 @@ func test_he_loses_it_when_he_goes_down() -> void:
 	assert_int(a.mode).is_equal(WeaponActor.Mode.THROWN)
 
 
+func test_a_used_weapon_on_the_floor_can_be_reused_by_the_other_wrestler() -> void:
+	var arena: Node3D = auto_free(Node3D.new())
+	MatchRules.set_mode(arena, MatchRules.Mode.NO_HOLDS_BARRED)
+	add_child(arena)
+	var first: WrestlerController = WRESTLER_SCENE.instantiate()
+	var second: WrestlerController = WRESTLER_SCENE.instantiate()
+	arena.add_child(first)
+	arena.add_child(second)
+	var stock := WeaponStock.of(first)
+	await _ticks(2)
+	var bat := stock.pull(WeaponCatalog.by_id(&"baseball_bat"))
+	first.take_weapon(bat)
+	first.drop_weapon()
+	await _ticks(60)
+	assert_int(bat.mode).is_equal(WeaponActor.Mode.FLOOR)
+	second.global_position = bat.global_position + Vector3(0.0, 0.0, 0.4)
+	assert_bool(stock.loose_near(second.global_position) == bat).is_true()
+	assert_bool(second._weapon_input({"weapon": true})).is_true()
+	assert_str(second._weapon_action).is_equal(WeaponCatalog.pickup_action(bat.def))
+	for i in int(WrestlerController.WEAPON_ACTION_TICKS[second._weapon_action]):
+		second._tick_weapon_action({})
+	assert_bool(second.has_weapon()).is_true()
+	assert_bool(second.held_weapon == bat).is_true()
+
+
 func test_a_thrown_weapon_flies_at_him_and_lands() -> void:
 	var w := _wrestler(true)
 	var foe := _wrestler(true)

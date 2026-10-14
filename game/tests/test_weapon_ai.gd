@@ -53,10 +53,10 @@ func test_he_favours_his_own_weapons() -> void:
 			roman_own += 1
 		if cody.ai._owns(WeaponCatalog.by_id(cody.ai.choose_weapon(rng))):
 			cody_own += 1
-	# Roman owns 4 of 33: a flat pick is 12%, weighted x4 it is about 35%
-	assert_float(float(roman_own) / draws).is_greater(0.25)
-	# Cody owns the weight belt: 3% flat, about 11% weighted
-	assert_float(float(cody_own) / draws).is_greater(0.06)
+	# Wild-weapon weighting dilutes ownership, but each favourite still wins
+	# more often than a flat 1-in-33 draw.
+	assert_float(float(roman_own) / draws).is_greater(0.18)
+	assert_float(float(cody_own) / draws).is_greater(0.04)
 
 
 func test_the_same_seed_picks_the_same() -> void:
@@ -67,6 +67,18 @@ func test_the_same_seed_picks_the_same() -> void:
 	b.seed = 3
 	for i in 20:
 		assert_str(String(pair[0].ai.choose_weapon(a))).is_equal(String(pair[0].ai.choose_weapon(b)))
+
+
+func test_rocket_gun_and_bed_of_nails_are_regular_ai_picks() -> void:
+	var pair := _pair(true)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 812
+	var wild := 0
+	for i in 200:
+		if pair[0].ai.choose_weapon(rng) in WrestlerAI.WILD_WEAPONS:
+			wild += 1
+	assert_float(float(wild) / 200.0).is_greater(0.35)
+	assert_int(WrestlerAI.WEAPON_RUNS).is_greater_equal(10)
 
 
 func test_never_in_a_singles_match() -> void:

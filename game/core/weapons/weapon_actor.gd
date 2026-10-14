@@ -535,7 +535,23 @@ func set_up_at(at: Vector3, yaw: float) -> void:
 	holder = null
 	mode = Mode.SET_UP
 	show_state(def.set_up if def.set_up != "" else _held_root())
-	global_transform = Transform3D(Basis(Vector3.UP, yaw), Vector3(at.x, ground_under(at), at.z))
+	var place := at
+	# A set piece is wider than the wrestler's root. Clamp its full rotated
+	# footprint inside the barricade line; clamping only the root let tables
+	# visibly hang through the wall when set near ringside.
+	if absf(place.x) > RingBuilder.MAT_HALF or absf(place.z) > RingBuilder.MAT_HALF:
+		var bounds := local_bounds()
+		var basis := Basis(Vector3.UP, yaw)
+		var centre_offset := basis * bounds.get_center()
+		var half := bounds.size * 0.5
+		var extent_x := absf(basis.x.x) * half.x + absf(basis.z.x) * half.z
+		var extent_z := absf(basis.x.z) * half.x + absf(basis.z.z) * half.z
+		var safe_x := ArenaBuilder.BARRICADE_RADIUS - extent_x - 0.22
+		var safe_z := ArenaBuilder.BARRICADE_RADIUS - extent_z - 0.22
+		place.x = clampf(place.x + centre_offset.x, -safe_x, safe_x) - centre_offset.x
+		place.z = clampf(place.z + centre_offset.z, -safe_z, safe_z) - centre_offset.z
+	global_transform = Transform3D(Basis(Vector3.UP, yaw),
+			Vector3(place.x, ground_under(place), place.z))
 	_announce("set_up")
 
 

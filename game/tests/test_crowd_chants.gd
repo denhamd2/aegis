@@ -1,11 +1,11 @@
 extends GdUnitTestSuite
 ## When the building chants (CrowdChants): every chant it can ask for is
 ## built, it waits for a reason, never talks over itself, rests between
-## chants, does not repeat one too soon, drops a stale reason, and never
-## chants a name that is not in the match.
+## chants, does not repeat one too soon, drops a stale reason, and does not
+## play the generated wrestler-name chants or entrance shouts.
 
-const CHANTS := ["chant_cody", "chant_lets_go_cody", "chant_otc",
-		"chant_this_is_awesome", "chant_you_deserve_it", "chant_one_more_match",
+
+const CHANTS := ["chant_this_is_awesome", "chant_you_deserve_it", "chant_one_more_match",
 		"chant_holy_shit", "chant_tables", "chant_boring"]
 
 
@@ -29,7 +29,7 @@ func test_every_chant_and_shout_is_built() -> void:
 	for chant: String in CHANTS:
 		assert_int(SfxPool.family_size(chant)).override_failure_message("no " + chant) \
 				.is_greater_equal(1)
-	for shout: String in ["crowd_count_1", "crowd_count_2", "crowd_count_3", "crowd_whoa"]:
+	for shout: String in ["crowd_count_1", "crowd_count_2", "crowd_count_3"]:
 		assert_int(SfxPool.family_size(shout)).override_failure_message("no " + shout) \
 				.is_greater_equal(2)
 
@@ -116,14 +116,17 @@ func test_the_freshest_reason_wins() -> void:
 	assert_str(CrowdChants.pick(reasons, {}, 12.5, 99.0, false)).is_equal("chant_holy_shit")
 
 
-func test_a_run_of_moves_by_the_face_gets_his_name() -> void:
+func test_combat_events_do_not_schedule_generated_roster_chants() -> void:
 	var c := _chants()
 	var heard := _heard(c)
 	for i in CrowdChants.MOMENTUM_MOVES:
 		c.moved(1.0, 0.2)
 		c.tick(1.0, 0.5)
-	assert_int(heard.size()).is_equal(1)
-	assert_str(String(heard[0])).contains("cody")
+	c.fired_up(1.0)
+	c.entrance("cody")
+	for i in 600:
+		c.tick(0.1, 0.5)
+	assert_array(heard).is_empty()
 
 
 func test_no_name_is_chanted_for_a_man_who_is_not_there() -> void:
@@ -171,8 +174,9 @@ func test_the_heel_winning_is_not_deserved() -> void:
 	assert_array(heard).is_empty()
 
 
-func test_cody_entrance_sings_the_whoas_on_his_music() -> void:
+func test_entrance_does_not_play_generated_roster_chants_or_shouts() -> void:
 	var c := _chants()
+	var heard := _heard(c)
 	var pool: SfxPool = auto_free(SfxPool.new())
 	add_child(pool)
 	c.sfx = pool
@@ -181,4 +185,5 @@ func test_cody_entrance_sings_the_whoas_on_his_music() -> void:
 	c.entrance("cody")
 	for i in 500:
 		c.tick(0.1, 0.5)
-	assert_int(whoas.size()).is_equal(CrowdChants.CODY_WHOAS.size())
+	assert_array(whoas).is_empty()
+	assert_array(heard).is_empty()

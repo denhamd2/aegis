@@ -61,15 +61,15 @@ const BACK_CUT := {
 ## Below this CUT a weapon cannot open a cut, only worsen one.
 const OPENS := 0.35
 ## Bleed level per point of head damage at CUT 1, full health.
-const GAIN := 0.02
+const GAIN := 0.01
 ## The extra share per point of health already lost (health 0.5 -> x1.5).
-const WORN := 1.0
+const WORN := 0.65
 ## A blow of any kind on an open cut: bleed per point of head damage.
-const REOPEN := 0.004
+const REOPEN := 0.002
 ## Bleed added per second while the cut is open, up to CREEP_ABOVE past the
 ## worst it was opened to.
-const CREEP := 0.0025
-const CREEP_ABOVE := 0.22
+const CREEP := 0.0012
+const CREEP_ABOVE := 0.12
 ## Seconds for the blood shown to catch up with the blood bled: a run, not a
 ## pop.
 const RUN := 2.5
@@ -78,11 +78,11 @@ const DRY_SECONDS := 150.0
 const WET_RUNNING := 0.45
 ## Canvas: the bleed level a man has to be past before he drips, and the
 ## fastest and slowest he drips (seconds between drops).
-const DRIP_FROM := 0.12
+const DRIP_FROM := 0.18
 const DRIP_SLOW := 2.4
 const DRIP_FAST := 0.35
 ## Seconds between pool stamps while he lies bleeding.
-const POOL_EVERY := 0.45
+const POOL_EVERY := 0.7
 ## His head within this of the mat counts as lying on it.
 const LYING := 0.42
 const UPDATE_EVERY := 0.05
@@ -158,7 +158,7 @@ func _on_damaged(move: MoveDef) -> void:
 	if weapon != null and String(move.resource_name).begins_with("weapon_landed_on_"):
 		var cut: float = BACK_CUT.get(weapon.id, 0.0)
 		if cut > 0.0:
-			back = minf(1.2, back + cut * (1.0 + 0.5 * (1.0 - health)))
+			back = minf(0.8, back + cut * (0.65 + 0.3 * (1.0 - health)))
 			wet = 1.0
 		return
 	var dealt := move.damage_head

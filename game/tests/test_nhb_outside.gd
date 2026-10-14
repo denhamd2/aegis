@@ -130,3 +130,33 @@ func test_a_man_down_outside_is_covered_from_outside() -> void:
 	assert_float(maxf(absf(spot.x), absf(spot.z))).is_greater_equal(WrestlerController.DECK_KEEP_OUT)
 	assert_float(Vector2(spot.x - down.global_position.x, spot.z - down.global_position.z).length()) \
 			.is_less(MatchReferee.COVER_RANGE)
+
+
+func test_the_steel_steps_have_solid_collision_in_nhb() -> void:
+	var ring: Node3D = auto_free(Node3D.new())
+	add_child(ring)
+	var builder: RingBuilder = auto_free(RingBuilder.new())
+	builder._ring = ring
+	var floor_y := ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
+	var deck_height := -0.1 - floor_y
+	builder._build_steps_collision(floor_y, deck_height)
+	await _ticks(2)
+	var collisions := ring.get_children().filter(
+		func(n): return String(n.name).begins_with("SteelStepsCollision"))
+	assert_int(collisions.size()).is_equal(RingBuilder.STEP_CORNERS.size())
+	for body: StaticBody3D in collisions:
+		var collision := body.get_child(0) as CollisionShape3D
+		assert_object(collision).is_not_null()
+		var shape := collision.shape as BoxShape3D
+		assert_float(shape.size.y).is_equal_approx(deck_height, 0.001)
+
+
+func test_the_barricade_render_panels_also_have_physics_collision() -> void:
+	var arena: ArenaBuilder = auto_free(ArenaBuilder.new())
+	arena._build_barricade_collision()
+	var bodies := arena.get_children().filter(func(n): return n is StaticBody3D)
+	assert_int(bodies.size()).is_equal(ArenaBuilder.barricade_panels().size())
+	for body: StaticBody3D in bodies:
+		var shape := body.get_child(0) as CollisionShape3D
+		assert_object(shape).is_not_null()
+		assert_object(shape.shape).is_not_null()

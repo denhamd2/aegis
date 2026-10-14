@@ -82,6 +82,18 @@ func test_a_table_out_of_reach_stays_up() -> void:
 	assert_int(table.mode).is_equal(WeaponActor.Mode.SET_UP)
 
 
+func test_a_ringside_table_keeps_its_full_footprint_inside_the_barricade() -> void:
+	var w := _wrestler(true)
+	await _ticks(2)
+	var table := _set_up(w, &"table", Vector3(5.7, -1.1, 0.0))
+	var bounds := table.global_transform * table.local_bounds()
+	assert_float(bounds.end.x).override_failure_message(
+		"table edge extends through the barricade").is_less_equal(
+		ArenaBuilder.BARRICADE_RADIUS - 0.15)
+	assert_float(bounds.position.x).is_greater_equal(
+		-ArenaBuilder.BARRICADE_RADIUS + 0.15)
+
+
 func test_not_in_a_singles_match() -> void:
 	var w := _wrestler(false)
 	w.global_position = Vector3(1.0, 0.0, 1.0)

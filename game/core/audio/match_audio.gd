@@ -129,18 +129,12 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction) -> voi
 	_crowd = crowd
 	_wrestlers = wrestlers
 	for w: WrestlerController in wrestlers:
-		match Persona.of(w.display_name):
-			Persona.Kind.FACE:
-				chants.cody_here = chants.cody_here or w.display_name.to_upper().contains("CODY")
-			Persona.Kind.HEEL:
-				chants.roman_here = chants.roman_here or w.display_name.to_upper().contains("ROMAN")
 		w.move_landed.connect(_on_move_landed)
 		w.reversed.connect(func(_r, _s, _m): sfx.play("whoosh", -6.0))
 		w.taunted.connect(func(who): _heat(who, 0.5); sfx.play_any("crowd_pop", -9.0))
 		w.fired_up.connect(func(who):
 			_heat(who, 0.7)
-			sfx.play_any("crowd_pop", -6.0)
-			chants.fired_up(favor_of(who.display_name)))
+			sfx.play_any("crowd_pop", -6.0))
 		w.set_piece_landed.connect(_on_set_piece_landed)
 		_cooldown[w] = 0.0
 		_falls[w] = []
@@ -174,12 +168,11 @@ func _on_cue(what: String) -> void:
 		"strobe":
 			sfx.play("pyro_bang", -6.0)
 		"tron_on":
-			# The music hits: the building goes up, and sings or boos.
+			# The music hits: the building goes up around the entrance.
 			sfx.play_any("crowd_pop", -2.0)
 			var who: WrestlerController = _director.entrance_owner() if _director else null
 			if who:
 				_heat(who, 1.0)
-				chants.entrance(who.entrance_style)
 
 
 ## Which sound a landed move makes the moment it lands, if any. Strikes and
@@ -269,8 +262,6 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 	if sound != "" and not sfx.play_any(sound, hit_volume(move)):
 		sfx.play(sound, hit_volume(move))      # a one-off: the bell, the whoosh
 	var pop := CrowdReaction.move_pop(move)
-	if attacker is WrestlerController:
-		chants.moved(favor_of((attacker as WrestlerController).display_name), pop)
 	if pop >= POP_MOVE:
 		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
 
