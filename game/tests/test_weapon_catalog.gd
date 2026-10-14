@@ -67,6 +67,25 @@ func test_hockey_stick_uses_its_slapshot_profile() -> void:
 	assert_bool(WeaponCatalog.swing_path(stick).size() >= 3).is_true()
 
 
+func test_kendo_stick_uses_its_overhead_chop_and_stays_at_head_height() -> void:
+	var stick := WeaponCatalog.by_id(&"kendo_stick")
+	assert_str(WeaponCatalog.swing_profile(stick)).is_equal("kendo_chop")
+	assert_str(String(WeaponCatalog.swing_move(stick).animation_pair_id)).is_equal("weapon_kendo_chop")
+	var actor := WeaponActor.make(stick, stick.held)
+	add_child(actor)
+	auto_free(actor)
+	var chest := Transform3D(Basis.IDENTITY, Vector3(0.0, 1.25, 0.0))
+	var rest := Transform3D(Basis.IDENTITY, Vector3(0.3, 1.0, -0.3))
+	var lowest_tip := INF
+	for i in 9:
+		var t := lerpf(0.364, 0.52, float(i) / 8.0)
+		var placed := WeaponCatalog.path_transform(actor, WeaponCatalog.swing_path(stick), chest, t, rest)
+		var tip: Vector3 = placed * actor.marker("strike").origin
+		lowest_tip = minf(lowest_tip, tip.y)
+	assert_float(lowest_tip).override_failure_message(
+		"kendo strike tip falls below head height (%.2f m)" % lowest_tip).is_greater(1.45)
+
+
 func _thrown() -> Array:
 	var a := WeaponActor.make(WeaponCatalog.by_id(&"steel_chair"))
 	add_child(a)

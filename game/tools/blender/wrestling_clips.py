@@ -6739,6 +6739,31 @@ CLIPS["Weapon_Slapshot"] = [
     (22, R()),
 ]
 
+# 22 frames (0.733 s, 44 ticks), contact on frame 8: the kendo stick is lifted
+# in both hands above the crown, then chopped down and slightly forward. The
+# grip stays above forehead level at impact, keeping the 0.63 m tip in the
+# head-height strike zone and well clear of the mat.
+CLIPS["Weapon_Kendo_Chop"] = [
+    (0,  R()),
+    (4,  R(pelvis=(0.0, -0.05, 0.800), hips=(4, 8, 0), spine=(10, 10, 0), head=(6, -8, 0),
+           hand_r=(0.12, 0.02, 1.86), elbow_r=(0.75, -0.3, 0.7),
+           hand_l=(-0.10, 0.00, 1.82), elbow_l=(-0.75, -0.3, 0.7), fist_r=1.0, fist_l=1.0)),
+    (7,  R(pelvis=(0.0, 0.06, 0.790), hips=(0, 0, 0), spine=(4, 0, 0), head=(-2, 0, 0),
+           hand_r=(0.10, 0.00, 1.96), elbow_r=(0.8, -0.3, 0.8),
+           hand_l=(-0.10, 0.00, 1.92), elbow_l=(-0.8, -0.3, 0.8), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.21, 0.34, 0.104))),
+    (8,  R(pelvis=(0.0, 0.12, 0.770), hips=(-12, 0, 0), spine=(-26, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.10, 0.48, 1.72), elbow_r=(0.8, -0.4, 0.1),
+           hand_l=(-0.10, 0.46, 1.68), elbow_l=(-0.8, -0.4, 0.1), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.44, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(16, 0, 0))),
+    (12, R(pelvis=(0.0, 0.10, 0.770), hips=(-14, 0, 0), spine=(-30, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.12, 0.42, 1.54), elbow_r=(0.8, -0.4, -0.1),
+           hand_l=(-0.12, 0.40, 1.50), elbow_l=(-0.8, -0.4, -0.1), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.44, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(12, 0, 0))),
+    (17, R()),
+    (22, R()),
+]
+
 # 18 frames (0.6 s, 36 ticks), contact on frame 6: drawn back to the hip, then
 # driven straight into his gut off a lunge.
 CLIPS["Weapon_Thrust"] = [

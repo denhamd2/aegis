@@ -40,6 +40,7 @@ const SWING_NAMES := {
 const SWING_PROFILES := {
 	"baseball_bat": "bat", "barbed_wire_bat": "bat", "lead_pipe": "bat", "sledgehammer": "bat",
 	"hockey_stick": "slapshot",
+	"kendo_stick": "kendo_chop",
 }
 ## Ranged: they hit whoever is in front of him out to this far, not at the
 ## contact sphere (WrestlerController resolves them).
@@ -418,6 +419,11 @@ const SWING_PATHS := {
 		[0.20, Vector3(0.30, 0.12, 0.10), Vector3(0.0, 0.72, 0.69), Vector3(0.92, 0.0, 0.39)],
 		[0.364, Vector3(0.02, -0.05, -0.48), Vector3(0.0, -0.48, -0.88), Vector3(0.88, -0.42, 0.23)],
 		[0.55, Vector3(-0.28, 0.02, -0.34), Vector3(-0.2, -0.78, -0.59), Vector3(0.80, -0.22, 0.56)],
+	],
+	"kendo_chop": [
+		[0.20, Vector3(0.18, 0.45, 0.05), Vector3(0.0, 0.85, 0.52), Vector3(0.0, 0.52, -0.85)],
+		[0.364, Vector3(0.06, 0.60, -0.34), Vector3(0.0, -0.45, -0.89), Vector3(0.0, -0.89, 0.45)],
+		[0.52, Vector3(-0.02, 0.51, -0.39), Vector3(0.0, -0.30, -0.99), Vector3(0.0, -0.99, 0.15)],
 	],
 	"thrust": [
 		[0.17, Vector3(0.20, -0.14, 0.10), Vector3(-0.1, 0.1, -1.0), Vector3(0.0, 1.0, 0.0)],
