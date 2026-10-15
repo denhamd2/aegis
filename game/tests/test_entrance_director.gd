@@ -394,6 +394,43 @@ func test_codys_beats_land_on_the_music() -> void:
 			+ EntranceDirector.WHOA_LOW_WIDE_AT, EntranceDirector.CODY_WHOA_LOW)
 
 
+func test_cody_settles_out_of_his_tunnel_walk_before_the_whoa_pose() -> void:
+	var scene := _match(true, "", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var cody: WrestlerController = scene.get_node("WrestlerB")
+	var emerge := -1
+	for i in director._beats.size():
+		var beat: Dictionary = director._beats[i]
+		if beat.get("who") == cody and beat.get("appear", false):
+			emerge = i
+			break
+	assert_int(emerge).is_greater_equal(0)
+	director._beat = emerge
+	director._start_beat()
+	var beat: Dictionary = director._beats[emerge]
+	var settle_ticks := int(beat["settle_ticks"])
+	var settle_at := int(beat["ticks"]) - settle_ticks
+	assert_str(String(beat["settle_clip"])).is_equal("strikes/cody_stand")
+	assert_str(cody._presentation_clip).is_equal(EntranceDirector.CODY_WALK_CLIP)
+	for _i in settle_at - 1:
+		director._physics_process(1.0 / 60.0)
+	assert_str(cody._presentation_clip).is_equal(EntranceDirector.CODY_WALK_CLIP)
+	# The gait-to-stand blend begins before the walk ends; the timeline and the
+	# following music-synced WHOA beat keep their original tick positions.
+	director._physics_process(1.0 / 60.0)
+	assert_str(cody._presentation_clip).is_equal("strikes/cody_stand")
+	assert_int(director._beat).is_equal(emerge)
+	var progress: Array[float] = []
+	for tick in int(beat["ticks"]) + 1:
+		progress.append(EntranceDirector._walk_distance_fraction(
+				beat, float(tick) / float(beat["ticks"])))
+	assert_float(progress[0]).is_equal_approx(0.0, 0.0001)
+	assert_float(progress[-1]).is_equal_approx(1.0, 0.0001)
+	for i in progress.size() - 1:
+		assert_float(progress[i + 1]).is_greater_equal(progress[i])
+	assert_float(progress[-1] - progress[-2]).is_less(progress[1] - progress[0])
+
+
 ## Roman's finger is in the air on the slam of his music, and the pyro with
 ## it (refs/entrances.md, R-41 and the measured track).
 func test_romans_finger_lands_on_the_slam() -> void:

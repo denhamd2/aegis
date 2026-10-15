@@ -1125,7 +1125,12 @@ func _physics_process(delta: float) -> void:
 		_tick_ramp_card(w)
 	match beat["kind"]:
 		"walk":
-			var at := _along(beat["path"], t * float(beat["length"]))
+			var settle_clip: String = beat.get("settle_clip", "")
+			var settle_ticks: int = int(beat.get("settle_ticks", 0))
+			if settle_clip != "" and _tick == int(beat["ticks"]) - settle_ticks:
+				w.play_presentation_clip(settle_clip)
+			var progress := _walk_distance_fraction(beat, t)
+			var at := _along(beat["path"], progress * float(beat["length"]))
 			_place(w, at[0], at[1], false, delta)
 			_tick_gesture(w, beat)
 		"pose":
@@ -1155,6 +1160,25 @@ func _physics_process(delta: float) -> void:
 			_release_ropes()
 		_beat += 1
 		_start_beat()
+
+
+## Normalized root progress for a walk with a terminal animation settle. The
+## cubic Hermite tail joins the linear path at its current speed and reaches
+## zero speed at the endpoint, preserving both beat duration and total travel.
+static func _walk_distance_fraction(beat: Dictionary, t: float) -> float:
+	var ticks := int(beat.get("settle_ticks", 0))
+	var total := int(beat.get("ticks", 0))
+	if ticks <= 0 or total <= 0:
+		return clampf(t, 0.0, 1.0)
+	var start := 1.0 - float(ticks) / float(total)
+	if t <= start:
+		return clampf(t, 0.0, 1.0)
+	var q := clampf((t - start) / (1.0 - start), 0.0, 1.0)
+	var q2 := q * q
+	var q3 := q2 * q
+	return (2.0 * q3 - 3.0 * q2 + 1.0) * start \
+		+ (q3 - 2.0 * q2 + q) * (1.0 - start) \
+		+ (-2.0 * q3 + 3.0 * q2)
 
 
 ## Skip straight to the bell, both men on their marks.
@@ -1538,7 +1562,11 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"speed": _flat(smoke).distance_to(_flat(mouth))
 					/ (float(_secs(CODY_EMERGE, CODY_WHOA - float(WHOA_WIDE_AT) / TPS))
 					/ TPS) * 1.000001,
-			"walk_clip": CODY_WALK_CLIP, "shot": "portal_long", "portal": mouth,
+			# The exit lands between gait contacts. Ease the last twelve ticks
+			# into his entrance stance while the root decelerates, so the next
+			# beat's stationary WHOA wind-up does not catch him mid-stride.
+			"walk_clip": CODY_WALK_CLIP, "settle_clip": "strikes/cody_stand",
+			"settle_ticks": 12, "shot": "portal_long", "portal": mouth,
 			"push_from": _secs(CODY_SMOKE, CODY_EMERGE),
 			"push_over": _secs(CODY_SMOKE, CODY_WHOA)})
 	# THE WHOA: the wind-up, then the arms wide on the chant and the building
