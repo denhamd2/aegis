@@ -140,6 +140,19 @@ func test_cody_return_commentary_cue_lands_when_he_emerges() -> void:
 	assert_bool(found).override_failure_message("Cody's emergence has no return-call cue").is_true()
 
 
+func test_tension_commentary_cue_lands_at_the_faceoff_stare() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var found := false
+	for beat: Dictionary in director._beats:
+		if beat.get("shot", "") != "faceoff_seq":
+			continue
+		for event: Array in beat.get("events", []):
+			found = found or event[1] == "faceoff_tension"
+	assert_bool(found).override_failure_message(
+			"Tony's tension call is not cued during the faceoff stare").is_true()
+
+
 ## The whole entrance, stepped: nobody jumps except at the broadcast cut (and
 ## on appearing), and it ends with the bell and both men on their marks.
 func test_the_walk_is_continuous_and_ends_on_the_marks() -> void:

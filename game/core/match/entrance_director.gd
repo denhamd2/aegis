@@ -895,6 +895,7 @@ func _add_faceoff() -> void:
 			[_a, a.origin, a_in, face_a, "strikes/entrance_walk"],
 			[_b, b.origin, b_in, face_b, "strikes/entrance_walk"]]})
 	_beats.append({"kind": "pair", "ticks": FACEOFF_STARE_TICKS, "shot": "faceoff_seq",
+			"events": [[1, "faceoff_tension"]],
 			"moves": [[_a, a_in, a_in, face_a, "strikes/face_off"],
 					[_b, b_in, b_in, face_b, "strikes/face_off"]]})
 	# Back to their marks: turned away, walked, turned round.

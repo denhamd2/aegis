@@ -76,16 +76,39 @@ owner-supplied recordings applies.
 
 `commentary/tony_danger_warning.ogg` is the owner-supplied Tony Schiavone
 call, "I don't like the look of this one bit." It plays once when a wrestler
-takes up a dangerous weapon, such as the rocket launcher, handgun, barbed-wire
-weapons, bed of nails, or light tubes. It is transcoded from the supplied MP3
+takes up a dangerous weapon without a dedicated call, such as the rocket
+launcher, handgun, steel chair, baseball bat, ladder, barbed-wire weapons, or
+light tubes. It is transcoded from the supplied MP3 to mono Vorbis q6 at 48 kHz
+with metadata stripped and a -12 LUFS target and -1.5 dBTP peak ceiling. The
+same rights caveat applies.
+
+`commentary/tony_barbed_wire_chair.ogg` is the owner-supplied Tony Schiavone
+call, "Oh my God! He's got a steel chair and it's wrapped in barb wire!!!
+What a sick bastard he is!" It plays instead of the generic danger warning
+when a wrestler picks up the barbed-wire chair. The supplied MP3 is transcoded
 to mono Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS target and
 -1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/excalibur_bed_of_nails.ogg` is the owner-supplied Excalibur call,
+"He's got a bed of nails! Oh my God!" It plays when a wrestler picks up the
+bed-of-nails weapon instead of the generic danger warning. The supplied MP3 is
+transcoded to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS
+target and -1.5 dBTP peak ceiling. The same rights caveat applies.
 
 `commentary/tony_roman_heel.ogg` is the owner-supplied Tony Schiavone call,
 "Hey Roman! Go fuck yourself!" It plays once when Roman uses a dangerous
 weapon or performs his in-match heel pose. It is transcoded from the supplied
 MP3 to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS target and
 -1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/tony_sneaky_heel_easter_egg.ogg` is the owner-supplied Tony
+Schiavone call, "You know, Excalibur, the last time I saw someone act so
+sneaky was when Bernie Foley got Amy Gaffney fired from Workday. How Bernie
+still has a job there is beyond me." It is selected by an independent seeded
+one-in-three match draw and, when selected, plays once after Roman's heel taunt
+or dangerous-weapon attack commentary. The supplied MP3 is transcoded to mono
+Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS target and -1.5 dBTP
+peak ceiling. The same rights caveat applies.
 
 `commentary/tony_title_match.ogg` is the owner-supplied Tony Schiavone call,
 "The championship is on the line, right here, right now." It plays in the
@@ -130,12 +153,35 @@ MatchAudio; the same rights caveat applies:
   existing sign-off.
 - `commentary/tony_crowd_up.ogg`: "This crowd is up on their feet already."
   Tony's reply to Excalibur's pre-match crowd line, before the entrances.
+- `commentary/tony_momentum_shift.ogg`: "He's turning this match around,
+  Excalibur." Tony's response after Excalibur calls a wrestler's comeback.
+- `commentary/tony_tension.ogg`: "You can feel the tension building here."
+  During the face-off stare before the opening bell.
 
 `commentary/excalibur_signoff.ogg` is the owner-supplied Excalibur sign-off,
 "We'll see you right back here next Wednesday — same time, same place." It is
 transcoded from the supplied MP3 to mono Vorbis q6 at 48 kHz with metadata
 stripped and a -12 LUFS target and -1.5 dBTP peak ceiling (the short source
 measures -13.1 LUFS after encoding). The same rights caveat applies.
+
+`commentary/excalibur_strikes.ogg` is the owner-supplied Excalibur call,
+"He's not holding back on those strikes, not one bit." It plays after a hard
+punch connects, with a 75-second minimum repeat gap. The supplied MP3 is
+transcoded to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS
+target and -1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/excalibur_body_kicks.ogg` is the owner-supplied Excalibur call,
+"He's working the body with those kicks, Tony, wearing him down." It plays
+after a body-targeting kick connects, with a 75-second minimum repeat gap. The
+supplied MP3 is transcoded to mono Vorbis q6 at 48 kHz with metadata stripped,
+a -12 LUFS target and -1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/excalibur_unbelievable.ogg` is the owner-supplied Excalibur
+"Unbelievable!" call. It can follow a spectacular spot or late-match two-count
+kickout (after four minutes of match time), with a 75-second repeat cooldown.
+The supplied MP3 is transcoded to mono Vorbis q6 at 48 kHz with metadata
+stripped, a -12 LUFS target and -1.5 dBTP peak ceiling. The same rights caveat
+applies.
 
 The following Excalibur lines are also owner-supplied MP3s, transcoded to
 mono Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS target and

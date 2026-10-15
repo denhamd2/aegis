@@ -61,6 +61,8 @@ const HIT_DAMAGE_LOUD := 12.0
 const COMMENTARY_CLIPS := {
 	"gunshot": ["res://assets/audio/commentary/tony_gunshot.ogg"],
 	"tony_danger_warning": ["res://assets/audio/commentary/tony_danger_warning.ogg"],
+	"tony_barbed_wire_chair": ["res://assets/audio/commentary/tony_barbed_wire_chair.ogg"],
+	"excalibur_bed_of_nails": ["res://assets/audio/commentary/excalibur_bed_of_nails.ogg"],
 	"tony_roman_heel": ["res://assets/audio/commentary/tony_roman_heel.ogg"],
 	"tony_title_match": ["res://assets/audio/commentary/tony_title_match.ogg"],
 	"cody_return": ["res://assets/audio/commentary/tony_cody_return.ogg"],
@@ -68,6 +70,12 @@ const COMMENTARY_CLIPS := {
 	"roman_record": ["res://assets/audio/commentary/tony_roman_record.ogg"],
 	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg"],
 	"excalibur_superman_punch": ["res://assets/audio/commentary/excalibur_superman_punch.ogg"],
+	"excalibur_strikes": ["res://assets/audio/commentary/excalibur_strikes.ogg"],
+	"excalibur_body_kicks": ["res://assets/audio/commentary/excalibur_body_kicks.ogg"],
+	"excalibur_unbelievable": ["res://assets/audio/commentary/excalibur_unbelievable.ogg"],
+	"tony_momentum_shift": ["res://assets/audio/commentary/tony_momentum_shift.ogg"],
+	"tony_tension": ["res://assets/audio/commentary/tony_tension.ogg"],
+	"tony_sneaky_heel_easter_egg": ["res://assets/audio/commentary/tony_sneaky_heel_easter_egg.ogg"],
 	"excalibur_wednesday": ["res://assets/audio/commentary/excalibur_wednesday.ogg"],
 	"excalibur_crowd": ["res://assets/audio/commentary/excalibur_crowd.ogg"],
 	"excalibur_comeback": ["res://assets/audio/commentary/excalibur_comeback.ogg"],
@@ -93,6 +101,9 @@ const ENDA_CUTAWAY_WAIT_MAX := 3.0
 
 ## A move worth a pop of its own (CrowdReaction.move_pop at or over this).
 const POP_MOVE := 0.45
+const UNBELIEVABLE_LATE_MATCH_AFTER := 240.0
+const UNBELIEVABLE_COOLDOWN := 75.0
+const UNBELIEVABLE_SPECTACULAR_POP := 0.8
 
 var sfx: SfxPool
 var _bed: AudioStreamPlayer
@@ -140,6 +151,8 @@ var _commentary_delay := -1.0
 var _commentary_clock := 0.0
 var _enda_easter_egg_selected := false
 var _enda_easter_egg_used := false
+var _sneaky_heel_easter_egg_selected := false
+var _sneaky_heel_easter_egg_used := false
 var _enda_easter_egg_waiting := false
 var _enda_cutaway_hold := 0.0
 var _enda_cutaway_wait := 0.0
@@ -186,6 +199,7 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 	_crowd = crowd
 	_wrestlers = wrestlers
 	_enda_easter_egg_selected = enda_easter_egg_for_seed(match_seed)
+	_sneaky_heel_easter_egg_selected = sneaky_heel_easter_egg_for_seed(match_seed)
 	# Commentary choices are presentation-only, but a seeded stream keeps
 	# replayed broadcasts consistent while still allowing alternate takes.
 	_commentary_rng.seed = match_seed * 32771 + 4619
@@ -218,6 +232,13 @@ func share_voice_lane(announcer: RingAnnouncer) -> void:
 static func enda_easter_egg_for_seed(match_seed: int) -> bool:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = match_seed * 104729 + 8191
+	return rng.randi_range(0, 2) == 0
+
+
+## Separate seeded draw so this gag does not track the sign cutaway's selection.
+static func sneaky_heel_easter_egg_for_seed(match_seed: int) -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 130363 + 2753
 	return rng.randi_range(0, 2) == 0
 
 
@@ -305,6 +326,10 @@ static func commentary_event_for_weapon_ready(weapon_id: StringName) -> String:
 	var weapon := WeaponCatalog.by_id(weapon_id)
 	if weapon == null:
 		return ""
+	if weapon_id == &"barbed_wire_chair":
+		return "tony_barbed_wire_chair"
+	if weapon_id == &"bed_of_nails":
+		return "excalibur_bed_of_nails"
 	var exceptional_risk := weapon_id in [
 		&"steel_chair", &"baseball_bat", &"ladder", &"light_tubes", &"barbed_wire_chair",
 		&"barbed_wire_bat", &"bed_of_nails", &"barbed_wire_board",
@@ -333,6 +358,15 @@ func _on_wrestler_taunted(who: WrestlerController) -> void:
 	var event := commentary_event_for_heel_pose(who.entrance_style)
 	if event != "":
 		_queue_commentary(event)
+		_queue_sneaky_heel_easter_egg(who.entrance_style)
+
+
+func _queue_sneaky_heel_easter_egg(entrance_style: String) -> void:
+	if entrance_style != "roman" or not _sneaky_heel_easter_egg_selected \
+			or _sneaky_heel_easter_egg_used:
+		return
+	_sneaky_heel_easter_egg_used = true
+	_queue_commentary("tony_sneaky_heel_easter_egg")
 
 
 func _on_weapon_taken(_who: WrestlerController, weapon: WeaponActor) -> void:
@@ -353,6 +387,8 @@ static func commentary_event_for_cue(cue: String) -> String:
 			return "tony_title_match"
 		"excalibur_crowd":
 			return "excalibur_crowd"
+		"faceoff_tension":
+			return "tony_tension"
 	return ""
 
 
@@ -360,10 +396,18 @@ static func commentary_event_for_state(state: int) -> String:
 	return "tony_submission" if state == WrestlerFSM.State.SUBMISSION_ATTACKER else ""
 
 
-static func commentary_events_for_kickout(count: int, match_over: bool) -> Array[String]:
+static func commentary_events_for_kickout(count: int, match_over: bool,
+		late_match := false) -> Array[String]:
 	if count >= 2 and not match_over:
+		if late_match:
+			return ["excalibur_unbelievable", "tony_love_this_business"]
 		return ["excalibur_two_count", "tony_love_this_business"]
 	return []
+
+
+static func commentary_event_for_spectacular_spot(move_pop: float, match_time: float) -> String:
+	return "excalibur_unbelievable" if move_pop >= UNBELIEVABLE_SPECTACULAR_POP \
+			and match_time >= UNBELIEVABLE_LATE_MATCH_AFTER else ""
 
 
 func _on_wrestler_state_changed(_previous: int, current: int) -> void:
@@ -380,10 +424,27 @@ static func commentary_event_for_landed_move(entrance_style: String, move_id: St
 	return "roman_spear" if move_id == "finisher_spear" else "roman_record"
 
 
+## Excalibur's strike calls are for committed punches and body kicks, not light
+## jabs or incidental leg strikes.
+static func commentary_event_for_landed_strike(move: MoveDef) -> String:
+	if move == null:
+		return ""
+	var move_id := move.resource_path.get_file().get_basename()
+	if not move_id.begins_with("strike_"):
+		return ""
+	if hit_sound(move) == "hit_punch":
+		var damage := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
+		return "excalibur_strikes" if damage >= 8.0 else ""
+	if hit_sound(move) == "hit_kick" and move.damage_torso >= 6.0:
+		return "excalibur_body_kicks"
+	return ""
+
+
 func _on_wrestler_fired_up(who: Variant) -> void:
 	_heat(who, 0.7)
 	sfx.play_any("crowd_pop", -6.0)
 	_queue_commentary("excalibur_comeback")
+	_queue_commentary("tony_momentum_shift")
 
 
 func _queue_commentary(event: String, once_per_match := true, cooldown_seconds := 0.0) -> void:
@@ -469,10 +530,26 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 		var move_id := move.resource_path.get_file().get_basename()
 		var commentary_event := commentary_event_for_roman_heel_attack(
 				attacker.entrance_style, move)
-		if commentary_event == "":
-			commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
 		if commentary_event != "":
 			_queue_commentary(commentary_event)
+			if commentary_event == "tony_roman_heel":
+				_queue_sneaky_heel_easter_egg(attacker.entrance_style)
+		elif move_id in ["signature_superman_punch", "finisher_spear"]:
+			commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
+			if commentary_event != "":
+				_queue_commentary(commentary_event)
+		else:
+			commentary_event = commentary_event_for_spectacular_spot(pop, chants.match_time())
+			if commentary_event != "":
+				_queue_commentary(commentary_event, false, UNBELIEVABLE_COOLDOWN)
+			else:
+				commentary_event = commentary_event_for_landed_strike(move)
+				if commentary_event != "":
+					_queue_commentary(commentary_event, false, 75.0)
+				else:
+					commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
+					if commentary_event != "":
+						_queue_commentary(commentary_event)
 
 
 ## A weapon going off or breaking (WeaponActor.LISTENERS).
@@ -739,10 +816,14 @@ func _hear_the_count() -> void:
 		# A kickout after two: the gasp. (A three is the bell, not this.)
 		sfx.play_any("crowd_ooh", -3.0)
 		sfx.play_any("crowd_pop", -4.0)
-	var events := commentary_events_for_kickout(_count_heard, _over)
+	var events := commentary_events_for_kickout(_count_heard, _over,
+			chants.match_time() >= UNBELIEVABLE_LATE_MATCH_AFTER)
 	if not pinning and _was_pinning:
 		for event: String in events:
-			_queue_commentary(event)
+			if event == "excalibur_unbelievable":
+				_queue_commentary(event, false, UNBELIEVABLE_COOLDOWN)
+			else:
+				_queue_commentary(event)
 	_was_pinning = pinning
 
 

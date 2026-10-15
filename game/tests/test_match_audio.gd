@@ -30,6 +30,30 @@ func test_enda_sign_gag_is_seeded_and_appears_about_once_in_three_matches() -> v
 	assert_int(selected).is_between(250, 350)
 
 
+func test_sneaky_heel_gag_is_seeded_and_appears_about_once_in_three_matches() -> void:
+	var selected := 0
+	for seed in 900:
+		var first := MatchAudio.sneaky_heel_easter_egg_for_seed(seed)
+		assert_bool(MatchAudio.sneaky_heel_easter_egg_for_seed(seed)).is_equal(first)
+		if first:
+			selected += 1
+	assert_int(selected).is_between(250, 350)
+
+
+func test_sneaky_heel_gag_follows_roman_taunt_once_per_match() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var roman: WrestlerController = auto_free(WrestlerController.new())
+	roman.entrance_style = "roman"
+	audio._sneaky_heel_easter_egg_selected = true
+	audio._on_wrestler_taunted(roman)
+	assert_array(audio._commentary_queue).is_equal([
+		"tony_roman_heel", "tony_sneaky_heel_easter_egg"])
+	audio._on_wrestler_taunted(roman)
+	assert_array(audio._commentary_queue).is_equal([
+		"tony_roman_heel", "tony_sneaky_heel_easter_egg"])
+
+
 func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
@@ -48,6 +72,10 @@ func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 			.is_equal("tony_danger_warning")
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"steel_chair")) \
 			.is_equal("tony_danger_warning")
+	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"barbed_wire_chair")) \
+			.is_equal("tony_barbed_wire_chair")
+	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"bed_of_nails")) \
+			.is_equal("excalibur_bed_of_nails")
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"inflatable_banana")).is_empty()
 
 
@@ -59,6 +87,24 @@ func test_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once() -> void:
 	assert_array(audio._commentary_queue).is_equal(["tony_danger_warning"])
 	audio._on_weapon_taken(null, rpg)
 	assert_array(audio._commentary_queue).is_equal(["tony_danger_warning"])
+
+
+func test_tonys_barbed_wire_chair_call_replaces_the_generic_warning() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var chair: WeaponActor = auto_free(
+			WeaponActor.make(WeaponCatalog.by_id(&"barbed_wire_chair")))
+	audio._on_weapon_taken(null, chair)
+	assert_array(audio._commentary_queue).is_equal(["tony_barbed_wire_chair"])
+
+
+func test_excalibur_bed_of_nails_call_replaces_the_generic_warning() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var bed: WeaponActor = auto_free(
+			WeaponActor.make(WeaponCatalog.by_id(&"bed_of_nails")))
+	audio._on_weapon_taken(null, bed)
+	assert_array(audio._commentary_queue).is_equal(["excalibur_bed_of_nails"])
 
 
 func test_tonys_roman_heel_line_only_routes_to_roman_heel_beats() -> void:
@@ -113,6 +159,15 @@ func test_excalibur_opening_and_crowd_lines_are_queued_on_their_beats() -> void:
 			.is_equal("tony_title_match")
 
 
+func test_tonys_tension_call_routes_from_the_faceoff_cue() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_cue("faceoff_tension")
+	assert_array(audio._commentary_queue).is_equal(["tony_tension"])
+	assert_str(MatchAudio.commentary_event_for_cue("faceoff_tension")) \
+			.is_equal("tony_tension")
+
+
 func test_tonys_submission_call_routes_only_from_a_submission_attack() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
@@ -121,18 +176,26 @@ func test_tonys_submission_call_routes_only_from_a_submission_attack() -> void:
 	assert_str(MatchAudio.commentary_event_for_state(WrestlerFSM.State.IDLE)).is_empty()
 	assert_array(MatchAudio.commentary_events_for_kickout(2, false)).is_equal([
 		"excalibur_two_count", "tony_love_this_business"])
+	assert_array(MatchAudio.commentary_events_for_kickout(2, false, true)).is_equal([
+		"excalibur_unbelievable", "tony_love_this_business"])
 	assert_array(MatchAudio.commentary_events_for_kickout(1, false)).is_empty()
 	assert_array(MatchAudio.commentary_events_for_kickout(2, true)).is_empty()
+	assert_str(MatchAudio.commentary_event_for_spectacular_spot(0.9, 239.0)).is_empty()
+	assert_str(MatchAudio.commentary_event_for_spectacular_spot(0.79, 300.0)).is_empty()
+	assert_str(MatchAudio.commentary_event_for_spectacular_spot(0.9, 240.0)) \
+			.is_equal("excalibur_unbelievable")
 
 
 func test_excalibur_comeback_and_finish_calls_have_match_events() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
 	audio._on_wrestler_fired_up(null)
-	assert_array(audio._commentary_queue).is_equal(["excalibur_comeback"])
+	assert_array(audio._commentary_queue).is_equal([
+		"excalibur_comeback", "tony_momentum_shift"])
 	audio._on_match_won(null, "time_limit")
 	assert_array(audio._commentary_queue).is_equal([
-		"excalibur_comeback", "excalibur_finish", "excalibur_coolest_job"])
+		"excalibur_comeback", "tony_momentum_shift",
+		"excalibur_finish", "excalibur_coolest_job"])
 
 
 func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:
@@ -155,6 +218,21 @@ func test_roman_landed_moves_route_the_history_or_spear_call() -> void:
 			.is_equal("excalibur_superman_punch")
 	assert_str(MatchAudio.commentary_event_for_landed_move("cody", "signature_superman_punch")).is_empty()
 	assert_str(MatchAudio.commentary_event_for_landed_move("cody", "finisher_spear")).is_empty()
+
+
+func test_excalibur_strike_call_only_routes_to_hard_punches() -> void:
+	for id in ["strike_cross", "strike_bionic_elbow", "strike_dropdown_uppercut"]:
+		var move := load("res://resources/moves/%s.tres" % id) as MoveDef
+		assert_str(MatchAudio.commentary_event_for_landed_strike(move)) \
+				.override_failure_message(id).is_equal("excalibur_strikes")
+	for id in ["strike_kick", "strike_kick_heavy"]:
+		var move := load("res://resources/moves/%s.tres" % id) as MoveDef
+		assert_str(MatchAudio.commentary_event_for_landed_strike(move)) \
+				.override_failure_message(id).is_equal("excalibur_body_kicks")
+	for id in ["strike_jab", "strike_gut_punch", "signature_superman_punch"]:
+		var move := load("res://resources/moves/%s.tres" % id) as MoveDef
+		assert_str(MatchAudio.commentary_event_for_landed_strike(move)) \
+				.override_failure_message(id).is_empty()
 
 
 func test_strikes_sound_on_landing_and_slams_do_not() -> void:
