@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://core/ui/match_hud.gd" id="1"]
 
 [node name="MatchHUD" type="CanvasLayer"]
+layer = 4
 
 [node name="Draw" type="Control" parent="."]
 anchors_preset = 15

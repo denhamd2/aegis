@@ -71,6 +71,8 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 	var scene := _match(true)
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
+	var hud: CanvasLayer = scene.get_node("MatchHUD")
+	assert_bool(hud.visible).is_false()
 	var mark_a := a.global_transform
 	var mark_b := b.global_transform
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
@@ -83,6 +85,8 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 	assert_vector(a.global_position).is_equal_approx(mark_a.origin, Vector3.ONE * 0.001)
 	assert_vector(b.global_position).is_equal_approx(mark_b.origin, Vector3.ONE * 0.001)
 	assert_bool(a.visible and b.visible).is_true()
+	assert_bool(hud.visible).override_failure_message(
+			"The match HUD must return when the entrance rings the bell").is_true()
 	assert_bool(a.is_physics_processing()).is_true()
 	assert_bool(scene.get_node("MatchReferee").is_physics_processing()).is_true()
 	assert_bool(scene.get_node("MatchFlow").is_physics_processing()).is_true()

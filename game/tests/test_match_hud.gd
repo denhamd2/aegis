@@ -35,8 +35,20 @@ func test_the_hud_covers_the_whole_viewport() -> void:
 	var hud_root: CanvasLayer = auto_free(HUD_SCENE.instantiate())
 	add_child(hud_root)
 	var hud: MatchHUD = hud_root.get_node("Draw")
+	assert_int(hud_root.layer).is_equal(4)
 	assert_float(hud.anchor_right).is_equal(1.0)
 	assert_float(hud.anchor_bottom).is_equal(1.0)
+
+## A maximized Mac window can have less usable vertical space than the 1080p
+## design canvas. Both bottom plates must stay inset inside that live viewport.
+func test_health_plates_stay_inside_a_laptop_viewport() -> void:
+	var view := Vector2(1600.0, 820.0)
+	for mirrored in [false, true]:
+		var plate := MatchHUD.plate_rect(view, mirrored)
+		assert_float(plate.position.y + plate.size.y) \
+				.is_less_equal(view.y * (1.0 - MatchHUD.BOTTOM_SAFE_FRACTION) + 0.001)
+		assert_float(plate.position.x).is_greater_equal(0.0)
+		assert_float(plate.end.x).is_less_equal(view.x)
 
 ## The vitality bar and the kickout difficulty must not be able to tell the
 ## player different stories, so they share a denominator.

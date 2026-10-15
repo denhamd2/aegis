@@ -22,6 +22,10 @@ extends Control
 const PLATE_WIDTH_FRACTION := 0.18
 const PLATE_ASPECT := 0.34
 const MARGIN_FRACTION := 0.022
+## Extra bottom inset for maximized Mac windows, whose usable content area can
+## end above the physical screen edge. The old margin was based on width and
+## left the plates close enough to that edge to be clipped on some displays.
+const BOTTOM_SAFE_FRACTION := 0.08
 
 ## hud.md's one cross-shot-consistent colour rule: the vitality bar is green
 ## while healthy and damage is a *revealed red segment* at the depleted end,
@@ -146,24 +150,34 @@ func _draw() -> void:
 	var view := size
 	if view.x <= 0.0 or view.y <= 0.0:
 		return
-	var plate := Vector2(view.x * PLATE_WIDTH_FRACTION, 0.0)
-	plate.y = plate.x * PLATE_ASPECT
-	var margin := view.x * MARGIN_FRACTION
 
 	# hud.md: bottom-left for the player-1-side wrestler, bottom-right for
 	# the player-2 side, inset a small margin from the screen edge.
 	if wrestler_a:
-		_draw_plate(Vector2(margin, view.y - plate.y - margin), plate,
+		var left_plate := plate_rect(view, false)
+		_draw_plate(left_plate.position, left_plate.size,
 				wrestler_a, MOMENTUM_A, false)
 	if wrestler_b:
-		_draw_plate(Vector2(view.x - plate.x - margin, view.y - plate.y - margin),
-				plate, wrestler_b, MOMENTUM_B, true)
+		var right_plate := plate_rect(view, true)
+		_draw_plate(right_plate.position, right_plate.size,
+				wrestler_b, MOMENTUM_B, true)
 
 	if referee:
 		_draw_count(view)
 		_draw_hold(view)
 	_draw_popup(view)
 	_draw_controls(view)
+
+
+## Bottom-corner plate rectangle, calculated from the current viewport so the
+## inset scales with a Mac's usable window size rather than a fixed pixel mode.
+static func plate_rect(view: Vector2, mirrored: bool) -> Rect2:
+	var width := view.x * PLATE_WIDTH_FRACTION
+	var plate := Vector2(width, width * PLATE_ASPECT)
+	var x_margin := view.x * MARGIN_FRACTION
+	var y := view.y - plate.y - view.y * BOTTOM_SAFE_FRACTION
+	var x := view.x - width - x_margin if mirrored else x_margin
+	return Rect2(Vector2(x, y), plate)
 
 func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 		fallback_accent: Color, mirrored: bool) -> void:
