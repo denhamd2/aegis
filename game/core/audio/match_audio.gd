@@ -73,10 +73,12 @@ const COMMENTARY_CLIPS := {
 	"excalibur_strikes": ["res://assets/audio/commentary/excalibur_strikes.ogg"],
 	"excalibur_body_kicks": ["res://assets/audio/commentary/excalibur_body_kicks.ogg"],
 	"excalibur_unbelievable": ["res://assets/audio/commentary/excalibur_unbelievable.ogg"],
+	"excalibur_restore_order": ["res://assets/audio/commentary/excalibur_restore_order.ogg"],
 	"tony_momentum_shift": ["res://assets/audio/commentary/tony_momentum_shift.ogg"],
 	"tony_tension": ["res://assets/audio/commentary/tony_tension.ogg"],
 	"tony_sneaky_heel_easter_egg": ["res://assets/audio/commentary/tony_sneaky_heel_easter_egg.ogg"],
 	"excalibur_wednesday": ["res://assets/audio/commentary/excalibur_wednesday.ogg"],
+	"tony_welcome": ["res://assets/audio/commentary/tony_welcome.ogg"],
 	"excalibur_crowd": ["res://assets/audio/commentary/excalibur_crowd.ogg"],
 	"excalibur_comeback": ["res://assets/audio/commentary/excalibur_comeback.ogg"],
 	"excalibur_two_count": [
@@ -102,8 +104,9 @@ const ENDA_CUTAWAY_WAIT_MAX := 3.0
 ## A move worth a pop of its own (CrowdReaction.move_pop at or over this).
 const POP_MOVE := 0.45
 const UNBELIEVABLE_LATE_MATCH_AFTER := 240.0
-const UNBELIEVABLE_COOLDOWN := 75.0
 const UNBELIEVABLE_SPECTACULAR_POP := 0.8
+const CHAOS_COMMENTARY_THRESHOLD := 3.0
+const CHAOS_COMMENTARY_DECAY_PER_SECOND := 0.2
 
 var sfx: SfxPool
 var _bed: AudioStreamPlayer
@@ -145,7 +148,6 @@ var _commentary_voice: AudioStreamPlayer
 var _voice_lane: RingAnnouncer
 var _commentary_rng := RandomNumberGenerator.new()
 var _commentary_events_played := {}
-var _commentary_last_queued := {}
 var _commentary_queue: Array[String] = []
 var _commentary_delay := -1.0
 var _commentary_clock := 0.0
@@ -153,6 +155,7 @@ var _enda_easter_egg_selected := false
 var _enda_easter_egg_used := false
 var _sneaky_heel_easter_egg_selected := false
 var _sneaky_heel_easter_egg_used := false
+var _chaos_activity := 0.0
 var _enda_easter_egg_waiting := false
 var _enda_cutaway_hold := 0.0
 var _enda_cutaway_wait := 0.0
@@ -262,6 +265,9 @@ func _on_cue(what: String) -> void:
 	var commentary_event := commentary_event_for_cue(what)
 	if commentary_event != "":
 		_queue_commentary(commentary_event)
+	if what == "broadcast_open":
+		# Tony follows Excalibur's show-opening call in the same voice lane.
+		_queue_commentary("tony_welcome")
 	if what == "excalibur_crowd":
 		# Tony answers Excalibur's crowd read before either entrance begins.
 		_queue_commentary("tony_crowd_up")
@@ -447,21 +453,19 @@ func _on_wrestler_fired_up(who: Variant) -> void:
 	_queue_commentary("tony_momentum_shift")
 
 
-func _queue_commentary(event: String, once_per_match := true, cooldown_seconds := 0.0) -> void:
+## Each commentary cue can be queued once per MatchAudio instance (one match).
+func _queue_commentary(event: String) -> void:
 	if not COMMENTARY_CLIPS.has(event):
 		return
 	var clips: Array = COMMENTARY_CLIPS[event]
 	if clips.is_empty():
 		return
-	if once_per_match and _commentary_events_played.has(event):
-		return
-	if not once_per_match and _commentary_clock - float(_commentary_last_queued.get(event, -INF)) < cooldown_seconds:
+	if _commentary_events_played.has(event):
 		return
 	if clips.all(func(path: String) -> bool: return not ResourceLoader.exists(path)):
 		return
-	if once_per_match:
-		_commentary_events_played[event] = true
-	_commentary_last_queued[event] = _commentary_clock
+	# Mark on enqueue so duplicate triggers cannot stack while a line waits.
+	_commentary_events_played[event] = true
 	_commentary_queue.append(event)
 
 
@@ -528,6 +532,8 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
 	if attacker is WrestlerController:
 		var move_id := move.resource_path.get_file().get_basename()
+		if WeaponCatalog.of_move(move) != null:
+			_register_chaos_activity(1.0)
 		var commentary_event := commentary_event_for_roman_heel_attack(
 				attacker.entrance_style, move)
 		if commentary_event != "":
@@ -541,11 +547,11 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 		else:
 			commentary_event = commentary_event_for_spectacular_spot(pop, chants.match_time())
 			if commentary_event != "":
-				_queue_commentary(commentary_event, false, UNBELIEVABLE_COOLDOWN)
+				_queue_commentary(commentary_event)
 			else:
 				commentary_event = commentary_event_for_landed_strike(move)
 				if commentary_event != "":
-					_queue_commentary(commentary_event, false, 75.0)
+					_queue_commentary(commentary_event)
 				else:
 					commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
 					if commentary_event != "":
@@ -561,6 +567,7 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 			var commentary_event := commentary_event_for_weapon(weapon.def.id, event)
 			if commentary_event != "":
 				_queue_commentary(commentary_event)
+			_register_chaos_activity(3.0)
 		"cloud":
 			sfx.play("whoosh", -2.0, 0.7)
 		"rocket":
@@ -569,6 +576,7 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 		"blast":
 			sfx.play("pyro_boom", 0.0)
 			sfx.play_any("crowd_ooh", -2.0)
+			_register_chaos_activity(3.0)
 		"set_up":
 			if weapon.def.id == &"table":
 				chants.table_set_up()
@@ -585,6 +593,15 @@ func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: 
 	_heat(by, 0.8 if broke else 0.4)
 	sfx.play_any("crowd_pop", -1.0 if broke else -5.0)
 	sfx.play_any("crowd_ooh", -2.0 if broke else -4.0)
+	_register_chaos_activity(2.0 if broke else 0.5)
+
+
+func _register_chaos_activity(amount: float) -> void:
+	_chaos_activity = minf(_chaos_activity + amount, CHAOS_COMMENTARY_THRESHOLD * 2.0)
+	if _chaos_activity < CHAOS_COMMENTARY_THRESHOLD:
+		return
+	_queue_commentary("excalibur_restore_order")
+	_chaos_activity = 0.0
 
 
 func _on_match_won(winner: Variant, method: String) -> void:
@@ -645,6 +662,7 @@ func theme_player() -> AudioStreamPlayer:
 
 func _process(delta: float) -> void:
 	_commentary_clock += delta
+	_chaos_activity = maxf(0.0, _chaos_activity - delta * CHAOS_COMMENTARY_DECAY_PER_SECOND)
 	var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
 	if not _commentary_queue.is_empty() and not voice_busy:
 		if _commentary_delay < 0.0:
@@ -821,7 +839,7 @@ func _hear_the_count() -> void:
 	if not pinning and _was_pinning:
 		for event: String in events:
 			if event == "excalibur_unbelievable":
-				_queue_commentary(event, false, UNBELIEVABLE_COOLDOWN)
+				_queue_commentary(event)
 			else:
 				_queue_commentary(event)
 	_was_pinning = pinning

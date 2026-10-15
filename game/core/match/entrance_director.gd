@@ -771,11 +771,14 @@ func _freeze(node: Node) -> void:
 func _build_timeline() -> void:
 	_beats.append({"kind": "opening", "ticks": OPENING_TICKS,
 			"events": [[1, "broadcast_open"]]})
-	# "Ladies and gentlemen, your main event of the night...": the
-	# announcer's intro on the wide of the building, before anyone comes out.
+	# Excalibur and Tony open the broadcast. Hold the wide until both finish,
+	# then Justin introduces the main event before anyone enters.
 	if RingAnnouncer.has_call("intro"):
+		var welcome := load("res://assets/audio/commentary/tony_welcome.ogg") as AudioStream
+		var welcome_seconds := welcome.get_length() if welcome else 0.0
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "announce_intro"]],
-				"ticks": int(ceil((RingAnnouncer.length_of("intro") + INTRO_CALL_TAIL) * TPS))})
+				"ticks": opening_announcement_hold_ticks(welcome_seconds,
+						RingAnnouncer.length_of("intro"))})
 	_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "excalibur_crowd"]],
 			"ticks": EXCALIBUR_CROWD_CALL_TICKS})
 	if title_match:
@@ -805,6 +808,13 @@ func _build_timeline() -> void:
 
 ## A beat after the announcer's intro before the first entrance starts.
 const INTRO_CALL_TAIL := 0.6
+
+
+static func opening_announcement_hold_ticks(welcome_seconds: float,
+		intro_seconds: float) -> int:
+	return int(ceil((welcome_seconds + intro_seconds + INTRO_CALL_TAIL) * TPS - 0.0001))
+
+
 ## How long a called name stays on the card (the ramp card's own cap).
 const NAME_CARD_TICKS := RAMP_CARD_TICKS
 

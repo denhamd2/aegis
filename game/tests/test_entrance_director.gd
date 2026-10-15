@@ -118,6 +118,8 @@ func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 	assert_int(EntranceDirector.FACEOFF_STARE_TICKS).is_less_equal(360)
 	assert_str(EntranceDirector.faceoff_shot_at(1.9)).is_equal("profile")
 	assert_str(EntranceDirector.faceoff_shot_at(2.0)).is_equal("ots")
+	assert_int(EntranceDirector.opening_announcement_hold_ticks(12.0, 11.1)) \
+			.is_equal(1422)
 
 
 func test_roman_waits_with_his_hands_clearly_on_his_hips() -> void:

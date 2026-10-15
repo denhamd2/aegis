@@ -101,6 +101,15 @@ weapon or performs his in-match heel pose. It is transcoded from the supplied
 MP3 to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS target and
 -1.5 dBTP peak ceiling. The same rights caveat applies.
 
+`commentary/tony_welcome.ogg` is the owner-supplied Tony Schiavone call,
+"Welcome, everybody, to AEW Dynamite! I'm Tony Schiavone, alongside the voice
+of AEW, Excalibur — and folks, we have a huge night ahead of us here tonight!"
+It follows Excalibur's show-opening line during the establishing shot; the
+opening hold gives Tony and Justin Roberts' main-event introduction time to
+finish before the crowd call and entrances. The supplied MP3 is transcoded to
+mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS target and -1.5
+dBTP peak ceiling. The same rights caveat applies.
+
 `commentary/tony_sneaky_heel_easter_egg.ogg` is the owner-supplied Tony
 Schiavone call, "You know, Excalibur, the last time I saw someone act so
 sneaky was when Bernie Foley got Amy Gaffney fired from Workday. How Bernie
@@ -166,22 +175,29 @@ measures -13.1 LUFS after encoding). The same rights caveat applies.
 
 `commentary/excalibur_strikes.ogg` is the owner-supplied Excalibur call,
 "He's not holding back on those strikes, not one bit." It plays after a hard
-punch connects, with a 75-second minimum repeat gap. The supplied MP3 is
+punch connects, at most once per match. The supplied MP3 is
 transcoded to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS
 target and -1.5 dBTP peak ceiling. The same rights caveat applies.
 
 `commentary/excalibur_body_kicks.ogg` is the owner-supplied Excalibur call,
 "He's working the body with those kicks, Tony, wearing him down." It plays
-after a body-targeting kick connects, with a 75-second minimum repeat gap. The
+after a body-targeting kick connects, at most once per match. The
 supplied MP3 is transcoded to mono Vorbis q6 at 48 kHz with metadata stripped,
 a -12 LUFS target and -1.5 dBTP peak ceiling. The same rights caveat applies.
 
 `commentary/excalibur_unbelievable.ogg` is the owner-supplied Excalibur
 "Unbelievable!" call. It can follow a spectacular spot or late-match two-count
-kickout (after four minutes of match time), with a 75-second repeat cooldown.
+kickout (after four minutes of match time), at most once per match.
 The supplied MP3 is transcoded to mono Vorbis q6 at 48 kHz with metadata
 stripped, a -12 LUFS target and -1.5 dBTP peak ceiling. The same rights caveat
 applies.
+
+`commentary/excalibur_restore_order.ogg` is the owner-supplied Excalibur call,
+"We've got to restore order here!" It plays during a burst of dangerous
+weapon action, on a gunshot or explosion, or after a table spot, at most once
+per match. The supplied MP3 is transcoded to mono Vorbis q6 at 48 kHz
+with metadata stripped, a -12 LUFS target and -1.5 dBTP peak ceiling. The same
+rights caveat applies.
 
 The following Excalibur lines are also owner-supplied MP3s, transcoded to
 mono Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS target and

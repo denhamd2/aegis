@@ -14,10 +14,16 @@ func test_every_sound_it_plays_is_built() -> void:
 		assert_object(SfxPool.stream(s)).override_failure_message("missing " + s).is_not_null()
 	for f: String in FAMILIES:
 		assert_int(SfxPool.family_size(f)).override_failure_message("no " + f).is_greater_equal(2)
+	var clip_events := {}
 	for event: String in MatchAudio.COMMENTARY_CLIPS:
 		for clip: String in MatchAudio.COMMENTARY_CLIPS[event]:
 			assert_object(load(clip) as AudioStream) \
 					.override_failure_message("missing commentary clip " + clip).is_not_null()
+				# Multiple recordings are allowed as variants inside one event, but
+				# the same audio asset must not be routed by separate match cues.
+			assert_bool(clip_events.has(clip)) \
+					.override_failure_message("commentary clip is shared by " + str(clip_events.get(clip, "")) + " and " + event).is_false()
+			clip_events[clip] = event
 
 
 func test_enda_sign_gag_is_seeded_and_appears_about_once_in_three_matches() -> void:
@@ -60,12 +66,13 @@ func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	var gun: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"handgun")))
 	audio.on_weapon_event(gun, "flash")
 	assert_bool(audio._commentary_voice.playing).is_false()
-	assert_array(audio._commentary_queue).is_equal(["gunshot"])
+	assert_array(audio._commentary_queue).is_equal([
+		"gunshot", "excalibur_restore_order"])
 	await get_tree().create_timer(MatchAudio.COMMENTARY_EVENT_DELAY + 0.1).timeout
 	assert_bool(audio._commentary_voice.playing).is_true()
 	audio.on_weapon_event(gun, "flash")
 	assert_bool(audio._commentary_events_played.has("gunshot")).is_true()
-	assert_array(audio._commentary_queue).is_empty()
+	assert_array(audio._commentary_queue).is_equal(["excalibur_restore_order"])
 	assert_float(audio._commentary_delay).is_less(0.0)
 	assert_str(MatchAudio.commentary_event_for_weapon(&"rpg", "flash")).is_empty()
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"rpg")) \
@@ -119,19 +126,33 @@ func test_tonys_roman_heel_line_only_routes_to_roman_heel_beats() -> void:
 	assert_str(MatchAudio.commentary_event_for_roman_heel_attack("roman", jab)).is_empty()
 
 
-func test_recurring_commentary_events_can_repeat_after_their_cooldown() -> void:
+func test_commentary_event_never_repeats_within_match() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
-	audio._queue_commentary("roman_spear", false, 2.0)
+	audio._queue_commentary("roman_spear")
 	assert_array(audio._commentary_queue).is_equal(["roman_spear"])
 	audio._commentary_queue.clear()
-	audio._commentary_clock = 1.99
-	audio._queue_commentary("roman_spear", false, 2.0)
+	audio._commentary_clock = 600.0
+	audio._queue_commentary("roman_spear")
 	assert_array(audio._commentary_queue).is_empty()
-	audio._commentary_clock = 2.01
-	audio._queue_commentary("roman_spear", false, 2.0)
-	assert_array(audio._commentary_queue).is_equal(["roman_spear"])
-	assert_bool(audio._commentary_events_played.has("roman_spear")).is_false()
+	assert_bool(audio._commentary_events_played.has("roman_spear")).is_true()
+
+
+func test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	assert_array(MatchAudio.COMMENTARY_CLIPS["excalibur_restore_order"]).is_equal([
+		"res://assets/audio/commentary/excalibur_restore_order.ogg"])
+	audio._register_chaos_activity(1.0)
+	audio._register_chaos_activity(1.0)
+	assert_array(audio._commentary_queue).is_empty()
+	audio._register_chaos_activity(1.0)
+	assert_array(audio._commentary_queue).is_equal(["excalibur_restore_order"])
+	audio._commentary_queue.clear()
+	audio._chaos_activity = 3.0
+	audio._commentary_clock = 600.0
+	audio._register_chaos_activity(0.1)
+	assert_array(audio._commentary_queue).is_empty()
 
 
 func test_excalibur_signs_off_after_post_match_package_finishes() -> void:
@@ -152,9 +173,11 @@ func test_excalibur_opening_and_crowd_lines_are_queued_on_their_beats() -> void:
 	audio._on_cue("broadcast_open")
 	audio._on_cue("excalibur_crowd")
 	assert_array(audio._commentary_queue).is_equal([
-		"excalibur_wednesday", "excalibur_crowd", "tony_crowd_up"])
+		"excalibur_wednesday", "tony_welcome", "excalibur_crowd", "tony_crowd_up"])
 	assert_str(MatchAudio.commentary_event_for_cue("broadcast_open")) \
 			.is_equal("excalibur_wednesday")
+	assert_str(MatchAudio.COMMENTARY_CLIPS["tony_welcome"][0]) \
+			.is_equal("res://assets/audio/commentary/tony_welcome.ogg")
 	assert_str(MatchAudio.commentary_event_for_cue("title_match")) \
 			.is_equal("tony_title_match")
 
