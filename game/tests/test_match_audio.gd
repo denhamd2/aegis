@@ -86,6 +86,22 @@ func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
 	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"inflatable_banana")).is_empty()
 
 
+func test_gunshot_and_rocket_effects_use_the_louder_signature_mix() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var heard: Array[Dictionary] = []
+	audio.sfx.played.connect(func(sound: String, volume_db: float) -> void:
+		heard.append({"sound": sound, "volume_db": volume_db}))
+	var gun: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"handgun")))
+	var rpg: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"rpg")))
+	audio.on_weapon_event(gun, "flash")
+	audio.on_weapon_event(rpg, "rocket")
+	audio.on_weapon_event(rpg, "blast")
+	assert_array(heard.map(func(entry: Dictionary) -> float: return entry["volume_db"])) \
+		.is_equal([MatchAudio.GUNSHOT_DB, -4.0, MatchAudio.ROCKET_LAUNCH_DB,
+			MatchAudio.ROCKET_IGNITION_DB, MatchAudio.ROCKET_BLAST_DB, -2.0])
+
+
 func test_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)

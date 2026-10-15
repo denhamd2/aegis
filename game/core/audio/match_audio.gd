@@ -44,6 +44,13 @@ const HEAT_HALF_LIFE := 4.5
 const HEAT_ON_DB := -4.0
 const HEAT_OFF_DB := -42.0
 
+## No Holds Barred signature weapons need to cut through the crowd and bumps.
+## The master bus compressor and limiter contain the summed peak safely.
+const GUNSHOT_DB := 6.0
+const ROCKET_LAUNCH_DB := 4.0
+const ROCKET_IGNITION_DB := 0.0
+const ROCKET_BLAST_DB := 6.0
+
 ## A bump: the pelvis falling faster than this and then stopping, low.
 const BUMP_FALL_SPEED := 2.0
 const BUMP_FULL_SPEED := 5.5
@@ -565,7 +572,7 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 	match event:
 		"flash":
-			sfx.play("pyro_bang", 0.0)
+			sfx.play("pyro_bang", GUNSHOT_DB)
 			sfx.play_any("crowd_ooh", -4.0)
 			var commentary_event := commentary_event_for_weapon(weapon.def.id, event)
 			if commentary_event != "":
@@ -574,10 +581,10 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 		"cloud":
 			sfx.play("whoosh", -2.0, 0.7)
 		"rocket":
-			sfx.play("whoosh", 0.0, 0.8)
-			sfx.play("pyro_bang", -6.0, 0.7)
+			sfx.play("whoosh", ROCKET_LAUNCH_DB, 0.8)
+			sfx.play("pyro_bang", ROCKET_IGNITION_DB, 0.7)
 		"blast":
-			sfx.play("pyro_boom", 0.0)
+			sfx.play("pyro_boom", ROCKET_BLAST_DB)
 			sfx.play_any("crowd_ooh", -2.0)
 			_register_chaos_activity(3.0)
 		"set_up":
