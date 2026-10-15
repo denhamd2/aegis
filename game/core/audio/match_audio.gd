@@ -21,9 +21,11 @@ extends Node
 ## at intensity 0 and 1; nothing steps, every layer slews to its target.
 ##
 ## Every loop is cut to the same loudness (build_sfx.CROWD_LUFS, -16 LUFS), so
-## these numbers are the mix: about -21 LUFS of crowd in a quiet minute,
-## -15 at full cry, with chants (CrowdChants) over the top. Read back off a
-## recording by tools/audio/measure_mix.py.
+## these numbers are the mix. This pass lifts the beds and crowd reactions
+## 3 dB over their previous level; chants (CrowdChants) stay as mixed.
+## A modest lift across the crowd layers: the previous broadcast mix read as
+## too quiet during actual play. Keep commentary on its separate voice bus.
+const CROWD_MIX_GAIN_DB := 3.0
 const BED_DB := -5.0
 const BED_EXCITED_DB := -1.0
 const WALLA_A_DB := [-15.0, -5.0]
@@ -493,9 +495,9 @@ static func phase_floor(clock: float) -> float:
 static func bed_levels(i: float) -> Dictionary:
 	i = clampf(i, 0.0, 1.0)
 	return {
-		"bed": lerpf(BED_DB, BED_EXCITED_DB, i),
-		"walla_a": lerpf(WALLA_A_DB[0], WALLA_A_DB[1], i),
-		"walla_b": lerpf(WALLA_B_DB[0], WALLA_B_DB[1], i * i),
+		"bed": lerpf(BED_DB, BED_EXCITED_DB, i) + CROWD_MIX_GAIN_DB,
+		"walla_a": lerpf(WALLA_A_DB[0], WALLA_A_DB[1], i) + CROWD_MIX_GAIN_DB,
+		"walla_b": lerpf(WALLA_B_DB[0], WALLA_B_DB[1], i * i) + CROWD_MIX_GAIN_DB,
 	}
 
 
@@ -503,7 +505,8 @@ static func bed_levels(i: float) -> Dictionary:
 static func heat_db(heat: float) -> float:
 	if heat < 0.02:
 		return -80.0
-	return lerpf(HEAT_OFF_DB, HEAT_ON_DB, clampf(heat, 0.0, 1.0))
+	return lerpf(HEAT_OFF_DB, HEAT_ON_DB, clampf(heat, 0.0, 1.0)) \
+			+ CROWD_MIX_GAIN_DB
 
 
 ## The heat after `delta` more seconds with nothing feeding it.
@@ -706,7 +709,8 @@ func _process(delta: float) -> void:
 	_slew(_cheer_loop, heat_db(cheer), delta)
 	if _roar:
 		var level := clampf((excitement - ROAR_FLOOR) / (1.0 - ROAR_FLOOR), 0.0, 1.0)
-		_roar.volume_db = ROAR_MAX_DB + linear_to_db(maxf(pow(level, 1.5), 0.0001))
+		_roar.volume_db = ROAR_MAX_DB + CROWD_MIX_GAIN_DB \
+				+ linear_to_db(maxf(pow(level, 1.5), 0.0001))
 	_hear_the_count()
 	chants.tick(delta, excitement)
 	for w: WrestlerController in _wrestlers:

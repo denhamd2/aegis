@@ -354,6 +354,9 @@ func test_the_room_warms_over_the_match() -> void:
 func test_the_beds_rise_with_the_intensity_and_the_new_ones_most() -> void:
 	var low := MatchAudio.bed_levels(0.0)
 	var high := MatchAudio.bed_levels(1.0)
+	assert_float(float(low["bed"])).is_equal(MatchAudio.BED_DB + MatchAudio.CROWD_MIX_GAIN_DB)
+	assert_float(float(low["walla_a"])) \
+			.is_equal(MatchAudio.WALLA_A_DB[0] + MatchAudio.CROWD_MIX_GAIN_DB)
 	for k: String in low:
 		assert_float(high[k]).is_greater(low[k])
 	# The added beds swing further than the base one: that is the swell.
@@ -363,7 +366,8 @@ func test_the_beds_rise_with_the_intensity_and_the_new_ones_most() -> void:
 
 func test_heat_is_off_when_cold_and_dies_away() -> void:
 	assert_float(MatchAudio.heat_db(0.0)).is_less(-60.0)
-	assert_float(MatchAudio.heat_db(1.0)).is_equal(MatchAudio.HEAT_ON_DB)
+	assert_float(MatchAudio.heat_db(1.0)) \
+			.is_equal(MatchAudio.HEAT_ON_DB + MatchAudio.CROWD_MIX_GAIN_DB)
 	assert_float(MatchAudio.cool(1.0, MatchAudio.HEAT_HALF_LIFE)).is_equal_approx(0.5, 0.001)
 
 
