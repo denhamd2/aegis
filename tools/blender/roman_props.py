@@ -516,6 +516,10 @@ CENTRE_PX = LAYOUT["centre_x"]
 STRAP_TOP, STRAP_BOTTOM = LAYOUT["strap_y"]
 STRAP_MID = 0.5 * (STRAP_TOP + STRAP_BOTTOM)
 STRAP_HEIGHT = (STRAP_BOTTOM - STRAP_TOP) * MPP
+## The source atlas includes a broad 14 cm strip. For the worn belt, keep the
+## leather band at a more natural 10 cm; leave its plate artwork and the
+## straight, hand-held presentation at the atlas dimensions.
+WORN_STRAP_HEIGHT = 0.10
 ## How far each plate stands off the strap: the centre plate is the deepest.
 PLATE_DEPTH = {"centre": 0.009, "inner_l": 0.007, "inner_r": 0.007}
 PLATE_DEPTH_DEFAULT = 0.005
@@ -541,6 +545,7 @@ def build_belt(parts: dict[str, Part], prefix: str, frame) -> None:
     """The whole belt along a path. `frame(s)` gives (point, along, out) for
     belt coordinate s: the strap's centre line and its outward face."""
     art, gold, strap, snap = (parts[prefix + k] for k in ("Art", "Gold", "Strap", "Snap"))
+    strap_height = WORN_STRAP_HEIGHT if prefix == "Title" else STRAP_HEIGHT
     s_end = _s(0.0)
     # The strap: a band STRAP_HEIGHT tall, 8 mm thick, following the path.
     steps = 64
@@ -552,7 +557,7 @@ def build_belt(parts: dict[str, Part], prefix: str, frame) -> None:
         pm, along, out = frame(0.5 * (s0 + s1))
         up = out.cross(along).normalized()
         framed_box(strap, pm, along, up, out,
-                   Vector(((p1 - p0).length + 0.001, STRAP_HEIGHT, 0.008)))
+                   Vector(((p1 - p0).length + 0.001, strap_height, 0.008)))
     # The plates: a raised slab each, bent along the path in columns, with
     # the art on its face.
     for name, (x0, y0, x1, y1) in sorted(LAYOUT["plates"].items()):
