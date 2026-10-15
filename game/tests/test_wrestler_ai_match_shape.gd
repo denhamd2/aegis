@@ -72,6 +72,50 @@ func test_strikes_are_rate_limited() -> void:
 		"The AI threw two strikes on consecutive ticks."
 	).is_false()
 
+
+func test_ai_strike_cooldown_cannot_create_multi_second_idle_gaps() -> void:
+	var ai := _make_pair(1.0)
+	assert_int(ai.strike_cooldown_ticks).is_less_equal(30)
+	assert_float(WrestlerAI.ACTION_GAP_SCALE).is_less_equal(1.0)
+	assert_float(WrestlerAI.FATIGUE_COOLDOWN_MAX).is_less_equal(1.2)
+
+
+func test_ai_vs_ai_wrestlers_quick_recover_after_a_brief_down_beat() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.is_ai = true
+	ai.target.is_ai = true
+	ai.controller.fsm.current_state = WrestlerFSM.State.DOWN
+	ai.controller.fsm.ticks_in_state = WrestlerAI.AI_DOWN_RECOVERY_DELAY_TICKS - 1
+	assert_bool(ai.poll_input().get("strike", false)).is_false()
+	ai.controller.fsm.ticks_in_state += 1
+	assert_bool(ai.poll_input().get("strike", false)).override_failure_message(
+			"An AI wrestler stayed prone instead of taking the quick recovery "
+			+ "after the short selling beat.").is_true()
+
+
+func test_ai_quick_down_recovery_also_applies_in_human_vs_ai_matches() -> void:
+	var ai := _make_pair(1.0)
+	ai.controller.is_ai = true
+	ai.target.is_ai = false
+	ai.controller.fsm.current_state = WrestlerFSM.State.DOWN
+	ai.controller.fsm.ticks_in_state = WrestlerAI.AI_DOWN_RECOVERY_DELAY_TICKS + 1
+	assert_bool(ai.poll_input().get("strike", false)).is_true()
+
+
+func test_human_controlled_wrestler_gets_the_same_quick_down_recovery() -> void:
+	var ai := _make_pair(1.0)
+	var player := ai.controller
+	player.is_ai = false
+	player.fsm.current_state = WrestlerFSM.State.DOWN
+	player.fsm.ticks_in_state = WrestlerController.QUICK_DOWN_RECOVERY_DELAY_TICKS - 1
+	player._move_ticks_remaining = WrestlerController.DOWN_TICKS_FINISHER
+	player._process_down({})
+	assert_int(player.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	player.fsm.ticks_in_state += 1
+	player._process_down({})
+	assert_int(player.fsm.current_state).is_equal(WrestlerFSM.State.GETUP)
+	assert_int(player._move_ticks_remaining).is_equal(WrestlerController.GETUP_RISE_FAST_TICKS)
+
 ## Out of range it closes, whether or not the opening grapple has happened.
 ## Closing now includes running when there is room for it (see the charge
 ## tests below), but it still throws nothing on the way in -- a strike from

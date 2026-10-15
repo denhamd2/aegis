@@ -194,6 +194,9 @@ const STAGE_FRONT := -30.0
 ## cross. That is the length an entrance ramp is, and it is what the stage
 ## moving back to the end of the building buys: the walk is a walk.
 const RAMP_HALF_WIDTH := 1.8
+## Parallel barricade runs along the ramp leave a 0.65 m audience buffer on
+## each side and meet the opening in the ringside barricade.
+const RAMP_BARRICADE_OFFSET := 2.45
 ## The ramp does not butt into the 16m deck: the deck opens out toward it over
 ## this much of its depth (measured back from STAGE_FRONT) on a smoothstep
 ## S-curve, tangent to the ramp's edge at the mouth and to the deck's side at
@@ -1033,6 +1036,21 @@ static func barricade_panels() -> Array:
 			if normal.z < -0.5 and absf(at.x) - width * 0.5 < BARRICADE_GAP:
 				continue
 			out.append([at, along, normal, width, run, i, count])
+	# Two ramp-side runs, from the stage lip to the entrance gap. Their panel
+	# centres, rendered geometry, LED faces and NHB colliders all share this
+	# same list.
+	var ramp_end := -BARRICADE_RADIUS
+	for side in [-1.0, 1.0]:
+		var length := ramp_end - STAGE_FRONT
+		var count := maxi(1, int(ceil(length / BARRICADE_PANEL - 0.05)))
+		var pitch := length / count
+		var width := pitch - BARRICADE_JOIN
+		var along := Vector3(0, 0, side)
+		var normal := Vector3(side, 0, 0)
+		for i in count:
+			var at := Vector3(side * RAMP_BARRICADE_OFFSET, 0,
+					STAGE_FRONT + pitch * (i + 0.5))
+			out.append([at, along, normal, width, path.size() + int(side + 1), i, count])
 	return out
 
 

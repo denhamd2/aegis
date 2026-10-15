@@ -968,10 +968,9 @@ static func check_spot(man: Vector3) -> Vector3:
 static func _wait_clip(w: WrestlerController) -> String:
 	match w.entrance_style:
 		"roman":
-			# Roman_Stand keeps his hands tight against his waist, which reads as
-			# pockets in the ring two-shot. His authored Hands_Hips pose keeps
-			# them visibly outside his gear and gives him a deliberate stance.
-			return "strikes/hands_hips"
+			# Keep the pre-bell hold consistent with the faceoff: his hands hang
+			# clear of the thighs instead of settling onto his hips or into his gear.
+			return "strikes/roman_stand"
 		"cody":
 			return "strikes/cody_stand"
 	return "strikes/face_off"

@@ -6,7 +6,7 @@ Run:  tools/blender/build_venue.sh ringside
 What this builds
 ----------------
 The event floor slab, the joints between the decking panels laid over the ice,
-and the four runs of barricade around the ring.
+the ringside barricade and the two crowd-control runs that flank the ramp.
 
 What moving it buys
 -------------------
@@ -53,6 +53,7 @@ WANTED = [
     "BOWL_STRAIGHT_X", "BOWL_STRAIGHT_Z",
     "BARRICADE_RADIUS", "BARRICADE_HEIGHT", "BARRICADE_PANEL", "BARRICADE_JOIN",
     "BARRICADE_GAP", "RINGSIDE_MAT_LIFT", "RAMP_HALF_WIDTH",
+    "RAMP_BARRICADE_OFFSET", "STAGE_FRONT",
     "DESK_BAY_FRONT", "DESK_BAY_BACK", "DESK_BAY_Z", "DESK_X", "BARRICADE_CHAMFER",
     "DESK_Z", "DESK_LENGTH", "DESK_HEIGHT", "DESK_DEPTH",
     "DESK_TOP_THICKNESS", "DESK_TOP_OVERHANG", "DESK_LED_HEIGHT", "DESK_RISER",
@@ -330,12 +331,13 @@ def build_commentary_desk(cfg: dict[str, float], parts: dict[str, Part]) -> None
 
 
 def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
-    """Runs of discrete panels, each with a round cap rail and a leg.
+    """Ringside and ramp-side panels, each with a round cap rail and a leg.
 
     The runs are `ArenaBuilder.barricade_panels()`'s, mirrored here: each leg
     of the barricade's line (barricade_path: the ring's sides, its corners
-    cut at 45 degrees, the desk's bay with angled returns on +Z), the
-    entrance GAP on -Z. A leg of length L takes ceil(L / PANEL) panels.
+    cut at 45 degrees, the desk's bay with angled returns on +Z), plus two
+    straight runs alongside the entrance ramp. A leg of length L takes
+    ceil(L / PANEL) panels.
 
     The -Z run's GAP: the ramp's foot lands on this line, and a panel whose
     centre clears the gap by less than its own half-width still puts its end
@@ -346,6 +348,23 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
     height = cfg["BARRICADE_HEIGHT"]
     y = cfg["FLOOR_Y"] + height * 0.5
     top = cfg["FLOOR_Y"] + height
+
+    def add_panel(at: Vector, along: Vector, out: Vector, width: float) -> None:
+        barricade.oriented_box(at + Vector((0.0, y, 0.0)), along, out,
+                               Vector((width, height, 0.14)))
+        rail_y = top - 0.035
+        half = along * (width * 0.5)
+        barricade.tube(
+            [at + Vector((0.0, rail_y, 0.0)) - half,
+             at + Vector((0.0, rail_y, 0.0)) + half],
+            0.048, sides=8,
+        )
+        barricade.tube(
+            [at + Vector((0.0, top - 0.18, 0.0)),
+             at + out * 0.42 + Vector((0.0, cfg["FLOOR_Y"] + 0.02, 0.0))],
+            0.028, sides=6,
+        )
+
     path = [Vector((x, 0.0, z)) for x, z in barricade_path(cfg)]
     for k, a in enumerate(path):
         b = path[(k + 1) % len(path)]
@@ -362,27 +381,24 @@ def build_barricades(cfg: dict[str, float], parts: dict[str, Part]) -> None:
             at = a + step * (pitch * (i + 0.5))
             if out.z < -0.5 and abs(at.x) - width * 0.5 < cfg["BARRICADE_GAP"]:
                 continue
-            barricade.oriented_box(at + Vector((0.0, y, 0.0)), along, out,
-                                   Vector((width, height, 0.14)))
-            # The cap rail: a TUBE, because it is the only horizontal at
-            # ringside at chest height and it runs across the whole wide
-            # shot. A box takes a highlight on one facet; a tube takes one
-            # along its length, which is what reads as steel.
-            rail_y = top - 0.035
-            half = along * (width * 0.5)
-            barricade.tube(
-                [at + Vector((0.0, rail_y, 0.0)) - half,
-                 at + Vector((0.0, rail_y, 0.0)) + half],
-                0.048, sides=8,
-            )
-            # One leg per panel, behind it, raking out to the floor. A tube
-            # again: at ringside distance its silhouette is the whole of what
-            # it contributes, and a round one is never seen edge-on as a line.
-            barricade.tube(
-                [at + Vector((0.0, top - 0.18, 0.0)),
-                 at + out * 0.42 + Vector((0.0, cfg["FLOOR_Y"] + 0.02, 0.0))],
-                0.028, sides=6,
-            )
+            add_panel(at, along, out, width)
+
+    # Crowd-control runs flank the entrance lane from the stage lip to the
+    # central gap in the -Z ringside barricade. The 0.65 m offset beyond the
+    # ramp edge preserves a clear walking and camera lane.
+    start_z = cfg["STAGE_FRONT"]
+    end_z = -cfg["BARRICADE_RADIUS"]
+    length = end_z - start_z
+    count = max(1, math.ceil(length / cfg["BARRICADE_PANEL"] - 0.05))
+    pitch = length / count
+    width = pitch - cfg["BARRICADE_JOIN"]
+    for side in (-1.0, 1.0):
+        along = Vector((0.0, 0.0, side))
+        out = Vector((side, 0.0, 0.0))
+        for i in range(count):
+            at = Vector((side * cfg["RAMP_BARRICADE_OFFSET"], 0.0,
+                         start_z + pitch * (i + 0.5)))
+            add_panel(at, along, out, width)
 
 
 ## The padded mats round the ring (the owner's AEW arena still): grey vinyl
@@ -450,4 +466,8 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    bpy_exit.finish(main(sys.argv[1:]))
+	# Blender keeps its own command-line flags in sys.argv; forward only the
+	# script arguments after its `--` separator. The bpy-module path has no
+	# separator and continues to use ordinary Python argv.
+	argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+	bpy_exit.finish(main(argv))

@@ -26,6 +26,8 @@ const AUTHORED_LENGTHS := {
 	"running_clothesline": 1.150, # both running_attack_*.tres: 69 frames
 	"win_celebrate": 1.300,       # free: VICTORY is terminal
 	"idle_ready": 2.500,          # loops; matches the rig's Idle
+	"roman_stand": 2.000,         # loops for the pre-bell intro hold
+	"face_off": 3.000,             # loops through the stare-down
 	# 0.533s, not the rig's 1.333s Walk. The cycle is generated against
 	# MOVE_SPEED (_gait() in tools/blender/wrestling_clips.py): a planted foot
 	# has to travel backward at exactly the speed the engine carries the body

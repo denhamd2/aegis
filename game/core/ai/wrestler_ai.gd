@@ -25,12 +25,12 @@ extends Node
 @export var controller: WrestlerController
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
-## 40 -> 70 (match flow to 2K26, gauntlet/refs/match_engine_2k26.md): a move
-## landed every 1.1 s against 2K26's 4-6 s. The longer downs carry most of
-## that; this spaces the standing exchange so a blow is sold before the next.
-@export var strike_cooldown_ticks: int = 70
+## Short post-move pause. The move animation and hit selling already create
+## visible recovery; stacking several seconds of AI-only cooldown on top made
+## both wrestlers stand idle between exchanges.
+@export var strike_cooldown_ticks: int = 24
 ## strike_cooldown_ticks during a comeback (CombatSystem.is_fired_up()).
-@export var comeback_strike_cooldown_ticks: int = 12
+@export var comeback_strike_cooldown_ticks: int = 8
 ## Between strikes on a man trapped in a corner (Phase 4, position): he is
 ## worked over while he hangs there, not sized up.
 @export var corner_strike_cooldown_ticks: int = 18
@@ -87,7 +87,7 @@ const CORNER_MOVE_CHANCE := 0.35
 ## attack is 69 ticks committed (18 startup + 5 active + 46 recovery) against a
 ## strike's 31, so without this it would crowd out the strike trading the
 ## match is made of.
-@export var running_attack_cooldown_ticks: int = 90
+@export var running_attack_cooldown_ticks: int = 48
 ## How long after a charge before this AI will back off to make room for
 ## another. Backing off on every getup put 4.5 running attacks in a match and
 ## cut its strikes from 15 to 6 -- the middle of a match is strikes
@@ -107,6 +107,10 @@ var _charged_last_rise := false
 ## a taunt between holds, no oftener than this many ticks.
 const STALL_EVERY_TICKS := 1500
 var _stall_cooldown: int = 600
+## An AI wrestler avoids stacking a long staged getup onto every knockdown.
+## Give him a brief selling beat, then let him trigger the measured quick
+## recovery in either AI-vs-AI or human-vs-AI matches.
+const AI_DOWN_RECOVERY_DELAY_TICKS := WrestlerController.QUICK_DOWN_RECOVERY_DELAY_TICKS
 ## Kickout mashing: reaction delay before the first press attempt, and the
 ## minimum ticks between two presses — a stand-in for physical mash-rate
 ## limits (an engineering judgment call, not a cited realism claim).
@@ -369,16 +373,11 @@ func poll_input() -> Dictionary:
 ## longer he waits between strikes, worn down by `damage` -- BodyLife's
 ## "spent" scale, so he moves as tired as he looks.
 const FATIGUE_WALK_MIN := 0.7
-## How much longer a man waits between strikes than strike_cooldown_ticks says
-## (comeback and corner flurries aside). The measured match was landing a move
-## every 0.7 s against 2K26's 4-6 s between beats (gauntlet/refs/
-## match_engine_2k26.md section 3); a string of three blows is one beat.
-## 2.2 -> 3.2 with the working lock-ups in: beat gap 2.5-2.8 s at 2.2,
-## 3.1-3.6 s at 2.8 (flow_probe seeds 1-4). 3.2 -> 4.0 for the middle of
-## 2K26's range: 3.7-4.0 s at 3.2, 4.0-4.4 at 3.6, 4.4-4.8 at 4.0, matches
-## 7.7-9.6 min, every win a pinfall off the winner's finisher.
-const ACTION_GAP_SCALE := 4.0
-const FATIGUE_COOLDOWN_MAX := 1.5
+## The animation and hit reaction provide the dramatic beat. Keep the extra
+## neutral pause short so AI-vs-AI exchanges maintain Fight Forever's brisk
+## arcade rhythm instead of waiting several seconds between attempts.
+const ACTION_GAP_SCALE := 1.0
+const FATIGUE_COOLDOWN_MAX := 1.15
 
 static func fatigue_of(damage: float) -> float:
 	return clampf(damage / BodyLife.DAMAGE_FULL, 0.0, 1.0)
@@ -481,6 +480,9 @@ func _poll_input() -> Dictionary:
 		# PinMinigame's press-limited fill-meter, so there's no discrete-press
 		# semantic to model here.
 		return {"submission_hold": true}
+	if controller.fsm.current_state == WrestlerFSM.State.DOWN \
+			and controller.is_ai and not controller.dead:
+		return {"strike": controller.fsm.ticks_in_state >= AI_DOWN_RECOVERY_DELAY_TICKS}
 	if controller.fsm.current_state == WrestlerFSM.State.TIE_UP:
 		if _tie_up_tick == 0:
 			_tie_up_attempts += 1
@@ -763,7 +765,7 @@ func _poll_input() -> Dictionary:
 			# In range with nothing to throw: the strike is on cooldown and he
 			# is not reaching for a tie-up. This branch used to issue no input
 			# at all -- no move, no press -- so a strike was followed by
-			# strike_cooldown_ticks (40, two thirds of a second) of a man
+			# strike_cooldown_ticks (24 ticks, 0.4 seconds) of a man
 			# standing perfectly still opposite another man standing perfectly
 			# still. This file said so itself: "a tick spent on the strike
 			# cooldown is a tick of standing squared up".

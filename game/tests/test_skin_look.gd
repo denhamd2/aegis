@@ -10,9 +10,12 @@ func test_sweat_starts_damp_builds_and_caps() -> void:
 		var w := Sweat.target(float(s), 0.0)
 		assert_float(w).is_greater_equal(last)
 		last = w
-	# Time alone gets him wet, not soaked; punishment takes him the rest.
-	assert_float(Sweat.target(1000.0, 0.0)).is_less(0.8)
-	assert_float(Sweat.target(1000.0, 1000.0)).is_equal(1.0)
+	# Time and punishment build a soft sheen, with a firm cap before the
+	# wrestler reads as soaked under the ring lights.
+	assert_float(Sweat.target(1000.0, 0.0)).is_equal(Sweat.MAX_WETNESS)
+	assert_float(Sweat.target(1000.0, 1000.0)).is_equal(Sweat.MAX_WETNESS)
+	for s in range(0, 1000, 20):
+		assert_float(Sweat.target(float(s), float(s * 2))).is_less_equal(Sweat.MAX_WETNESS)
 	assert_float(Sweat.target(60.0, 80.0)).is_greater(Sweat.target(60.0, 0.0))
 
 

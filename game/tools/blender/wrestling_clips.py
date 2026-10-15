@@ -214,8 +214,8 @@ READY = dict(
 # sells it.
 ROMAN_STAND = dict(
     pelvis=(0.0, 0.0, 0.900), hips=(0, 0, 0), spine=(4, 0, 0), head=(2, 0, 0),
-    hand_r=(0.25, -0.02, 0.92), hand_l=(-0.25, -0.02, 0.92),
-    elbow_r=(0.5, -0.4, -1.0), elbow_l=(-0.5, -0.4, -1.0),
+    hand_r=(0.35, -0.02, 0.92), hand_l=(-0.35, -0.02, 0.92),
+    elbow_r=(0.56, -0.4, -1.0), elbow_l=(-0.56, -0.4, -1.0),
     fist_r=0.45, fist_l=0.45,
     foot_r=(0.16, 0.0, 0.104), foot_l=(-0.16, 0.02, 0.104),
 )
@@ -275,7 +275,9 @@ HEAD_HURT = dict(
 )
 GUT_HURT = dict(
     READY, pelvis=(0.0, -0.12, 0.734), hips=(-20, 0, 0), spine=(-46, 0, 0),
-    head=(-6, 0, 0),
+    # The torso folds deeply, but the chin stays slightly lifted so the neck
+    # follows the chest instead of curling forward and stretching the throat.
+    head=(10, 0, 0),
     hand_r=(0.10, 0.28, 0.96), hand_l=(-0.08, 0.30, 0.98),
     elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
     fist_r=0.4, fist_l=0.4,
@@ -1395,11 +1397,11 @@ CLIPS = {
     "Hit_React_Torso": [
         (0,  R()),
         (2,  R(pelvis=(0.0, -0.04, 0.780), hips=(-10, 0, 0), spine=(-30, 0, 0),
-               head=(-14, 0, 0),
+               head=(-2, 0, 0),
                hand_r=(0.14, 0.24, 1.04), hand_l=(-0.12, 0.26, 1.06),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
         (5,  R(pelvis=(0.0, -0.12, 0.730), hips=(-20, 0, 0), spine=(-44, 0, 0),
-               head=(-12, 0, 0),
+               head=(10, 0, 0),
                hand_r=(0.10, 0.26, 0.96), hand_l=(-0.08, 0.28, 0.98),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
                foot_r=(0.27, -0.30, 0.104))),
@@ -1451,23 +1453,23 @@ CLIPS = {
     "Hit_Heavy_Gut": [
         (0,  R()),
         (2,  R(pelvis=(0.0, -0.06, 0.760), hips=(-18, 0, 0), spine=(-44, 0, 0),
-               head=(-18, 0, 0),
+               head=(8, 0, 0),
                hand_r=(0.12, 0.26, 1.00), hand_l=(-0.10, 0.28, 1.02),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8))),
         (6,  R(pelvis=(0.0, -0.18, 0.680), hips=(-32, 0, 0), spine=(-58, 0, 0),
-               head=(-10, 0, 0),
+               head=(14, 0, 0),
                hand_r=(0.10, 0.38, 0.84), hand_l=(-0.08, 0.40, 0.86),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.27, -0.46, 0.104), foot_l=(-0.22, 0.12, 0.104))),
         (12, R(pelvis=(0.0, -0.20, 0.690), hips=(-30, 0, 0), spine=(-54, 0, 0),
-               head=(-6, 0, 0),
+               head=(12, 0, 0),
                hand_r=(0.10, 0.38, 0.86), hand_l=(-0.08, 0.40, 0.88),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
                fist_r=0.4, fist_l=0.4,
                foot_r=(0.27, -0.44, 0.104), foot_l=(-0.22, -0.18, 0.104))),
         (18, R(pelvis=(0.0, -0.14, 0.716), hips=(-24, 0, 0), spine=(-50, 0, 0),
-               head=(-6, 0, 0),
+               head=(10, 0, 0),
                hand_r=(0.10, 0.34, 0.92), hand_l=(-0.08, 0.36, 0.94),
                elbow_r=(0.5, -0.4, -0.8), elbow_l=(-0.5, -0.4, -0.8),
                fist_r=0.4, fist_l=0.4,
@@ -1535,7 +1537,7 @@ CLIPS = {
     "Sell_Gut": [
         (0,  GUT_HURT),
         (7,  pose(GUT_HURT, pelvis=(0.0, -0.10, 0.744), spine=(-40, 0, 0),
-                  head=(-8, 0, 0))),
+                  head=(12, 0, 0))),
         (13, R(pelvis=(0.0, -0.08, 0.766), hips=(-12, -4, 0), spine=(-28, 4, 0),
                head=(4, 4, 0),
                hand_r=(0.18, 0.30, 1.02), hand_l=(-0.16, 0.32, 1.04),
@@ -5536,8 +5538,8 @@ CLIPS["Springboard_DK_Attacker"] = _world_clip(48, (0.85, 0.0), _unified([
 # head settles a touch lower on the exhale. 90 frames, looping.
 FACE_OFF = dict(
     pelvis=(0.0, 0.01, 0.905), hips=(0, 0, 0), spine=(3, 0, 0), head=(-7, 0, 0),
-    hand_r=(0.27, 0.00, 0.93), hand_l=(-0.27, 0.00, 0.93),
-    elbow_r=(0.6, -0.4, -1.0), elbow_l=(-0.6, -0.4, -1.0),
+    hand_r=(0.36, 0.00, 0.93), hand_l=(-0.36, 0.00, 0.93),
+    elbow_r=(0.66, -0.4, -1.0), elbow_l=(-0.66, -0.4, -1.0),
     fist_r=0.55, fist_l=0.55,
     foot_r=(0.17, -0.02, 0.104), foot_l=(-0.17, 0.02, 0.104),
 )

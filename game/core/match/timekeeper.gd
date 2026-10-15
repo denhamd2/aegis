@@ -1,9 +1,9 @@
 class_name Timekeeper
 extends Node3D
-## The timekeeper at ringside: waits by the apron at his table, takes what the
-## referee hands down through the ropes (the title, the ula fala) and sets it
-## on the table, where it stays. Presentation only -- nothing in a match reads
-## him, and he never leaves the ringside floor.
+## The timekeeper at ringside: sits at a compact table beside commentary,
+## collects what the referee hands down through the ropes, and returns to his
+## folding chair between errands. Presentation only -- nothing in a match
+## reads him, and he never leaves the ringside floor.
 ##
 ## He is an AubreyModel in a plain dark polo (her kit is the only official's
 ## body the project has), on the same clips: PropHandoff tells him where to
@@ -19,13 +19,19 @@ const WALK_CLIP := "Walk"
 ## the foot slide caused by the old unmeasured 1.3 m/s assumption.
 const WALK_CLIP_SPEED := 0.78
 const IDLE_CLIP := "strikes/ref_stand"
+const SIT_ENTER_CLIP := "Sitting_Enter"
+const SIT_IDLE_CLIP := "Sitting_Idle"
+const SIT_EXIT_CLIP := "Sitting_Exit"
 const MIN_ANIMATION_RATE := 0.3
 const MAX_ANIMATION_RATE := 2.1
 ## A black polo, not the referee's stripes.
 const POLO := Color(0.05, 0.06, 0.09)
 
-## The table: long side along Z, its ring-side face toward the ring.
-const TABLE_SIZE := Vector3(0.75, 0.95, 1.2)
+## Compact desk with its long side along Z; the ring-side front faces -X.
+const TABLE_SIZE := Vector3(0.65, 0.74, 1.05)
+const TABLE_ROTATION_Y := 0.0
+const CHAIR_SCENE := "res://assets/environment/props/MetalFoldingChair.fbx"
+const CHAIR_AT := Vector3(2.85, -1.1, 5.4)
 const FRONT_ART := "res://assets/environment/materials/ribbon_board.png"
 const FRONT_ART_ASPECT := 7.7236
 
@@ -39,6 +45,8 @@ var _face := Vector3.ZERO
 var _yaw := 0.0
 var _clip := ""
 var _faced := false
+var _sit_when_arrived := false
+var _exiting_seat := false
 
 
 ## Where he stands: `post` on the ringside floor, the table at `table_at`
@@ -47,16 +55,25 @@ func setup(post: Vector3, post_face: Vector3, table_at: Vector3) -> void:
 	model = (load(MODEL) as PackedScene).instantiate()
 	add_child(model)
 	_player = model.get_node("AnimationPlayer") as AnimationPlayer
+	_player.animation_finished.connect(_on_animation_finished)
 	_dress_as_timekeeper()
 	global_position = post
 	_yaw = _yaw_towards(post_face)
 	rotation.y = _yaw
-	_play(IDLE_CLIP)
+	_play(SIT_IDLE_CLIP)
+	var chair_scene := load(CHAIR_SCENE) as PackedScene
+	if chair_scene:
+		var chair := chair_scene.instantiate() as Node3D
+		chair.name = "TimekeeperChair"
+		add_child(chair)
+		chair.global_position = CHAIR_AT
+		chair.global_rotation.y = -PI * 0.5
 	table = _build_table()
 	table.name = "TimekeeperTable"
 	table.top_level = true
 	add_child(table)
 	table.global_position = table_at
+	table.global_rotation.y = TABLE_ROTATION_Y
 
 
 ## Walk to `target` (flattened, y kept), then turn to `face_dir`. `arrived`
@@ -65,6 +82,16 @@ func go(target: Vector3, face_dir: Vector3) -> void:
 	_target = Vector3(target.x, global_position.y, target.z)
 	_face = Vector3(face_dir.x, 0.0, face_dir.z)
 	_faced = false
+	_sit_when_arrived = false
+	if _clip == SIT_IDLE_CLIP:
+		_exiting_seat = true
+		_play(SIT_EXIT_CLIP, 0.15, true)
+
+
+## Return to the folding chair beside the timekeeper's table and sit down.
+func go_to_chair() -> void:
+	go(CHAIR_AT, Vector3(-1.0, 0.0, 0.0))
+	_sit_when_arrived = true
 
 
 ## A one-shot clip, from its first frame.
@@ -86,6 +113,11 @@ func skeleton() -> Skeleton3D:
 
 
 func _process(delta: float) -> void:
+	if _exiting_seat:
+		if _player.is_playing():
+			return
+		_exiting_seat = false
+		_clip = ""
 	if _target == Vector3.INF:
 		return
 	var here := Vector3(global_position.x, 0.0, global_position.z)
@@ -104,6 +136,9 @@ func _process(delta: float) -> void:
 		_faced = true
 		_target = Vector3.INF
 		arrived.emit()
+		if _sit_when_arrived:
+			_sit_when_arrived = false
+			_play(SIT_ENTER_CLIP, 0.2, true)
 
 
 func _turn(yaw: float, delta: float) -> void:
@@ -120,6 +155,13 @@ func _play(clip: String, blend := 0.2, restart := false, speed := 1.0) -> void:
 			_player.seek(0.0, true)
 		_clip = clip
 	_player.speed_scale = clampf(speed, MIN_ANIMATION_RATE, MAX_ANIMATION_RATE)
+
+
+func _on_animation_finished(clip: StringName) -> void:
+	if clip == SIT_ENTER_CLIP:
+		_play(SIT_IDLE_CLIP, 0.18, true)
+	elif clip == SIT_EXIT_CLIP:
+		_clip = ""
 
 
 ## The model faces its node's +Z, like Aubrey's.
@@ -178,7 +220,7 @@ static func _build_table() -> Node3D:
 	brass.metallic = 0.9
 	brass.roughness = 0.3
 	bell.material_override = brass
-	# The back corner, clear of the props laid on the top (PropHandoff.*_SLOT).
+	# Far corner, clear of the belt, coat and necklace slots on the smaller top.
 	bell.position = Vector3(TABLE_SIZE.x * 0.3, TABLE_SIZE.y + 0.04, TABLE_SIZE.z * 0.4)
 	root.add_child(bell)
 	# The ring-side face carries printed art, like the announce desk's front.

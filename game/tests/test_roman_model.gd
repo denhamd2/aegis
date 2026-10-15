@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
 const ROMAN_MODEL := preload("res://scenes/roman_model.tscn")
+const ROMAN_MATCH := preload("res://scenes/roman_match.tscn")
 const MATCH_SCENE := preload("res://scenes/match.tscn")
 const PAIRED_POSES := preload("res://resources/animations/paired_poses.tres")
 
@@ -125,6 +126,70 @@ func test_normal_maps_import_as_normal_maps() -> void:
             "%s is not flagged as a normal map -- its vectors decode as "
             % path + "sRGB colour and every light on it is wrong."
         ).is_true()
+
+func test_pants_crotch_blends_into_the_pelvis_for_forward_bends() -> void:
+    var model := _make_model()
+    await await_millis(20)
+    var bottoms: MeshInstance3D = model.find_child("bottoms_skinned", true, false)
+    assert_object(bottoms).is_not_null()
+    var skeleton := bottoms.get_node(bottoms.skeleton) as Skeleton3D
+    var hips := skeleton.find_bone("J_Hips")
+    var legs := [skeleton.find_bone("J_Leg_L"), skeleton.find_bone("J_Leg_R")]
+    var corrected_inner_vertices := 0
+    var outer_leg_vertices := 0
+    var mesh := bottoms.mesh as ArrayMesh
+    for surface in mesh.get_surface_count():
+        var arrays := mesh.surface_get_arrays(surface)
+        var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+        var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+        var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+        var influences := bones.size() / vertices.size()
+        for i in vertices.size():
+            var p := vertices[i]
+            var hip_weight := 0.0
+            var leg_weight := 0.0
+            for j in influences:
+                var offset := i * influences + j
+                if bones[offset] == hips:
+                    hip_weight += weights[offset]
+                elif legs.has(bones[offset]):
+                    leg_weight += weights[offset]
+            if absf(p.x) < 0.08 and p.y > 0.63 and p.y < 0.72 \
+                    and hip_weight > 0.18 and leg_weight > 0.15:
+                corrected_inner_vertices += 1
+            if absf(p.x) > 0.13 and absf(p.x) < 0.20 \
+                    and p.y > 0.63 and p.y < 0.72 and leg_weight > 0.70:
+                outer_leg_vertices += 1
+    assert_int(corrected_inner_vertices).override_failure_message(
+        "Upper inner-trunks vertices still follow the thighs alone; "
+        + "they need a pelvis blend so the crotch panels stay joined in a fold."
+    ).is_greater(5)
+    assert_int(outer_leg_vertices).override_failure_message(
+        "The crotch corrective spread onto the outer trunks and softened "
+        + "the leg silhouette."
+    ).is_greater(2)
+
+func test_roman_wait_and_faceoff_wrists_clear_the_thighs() -> void:
+    var match: Node = auto_free(ROMAN_MATCH.instantiate())
+    add_child(match)
+    await await_millis(50)
+    var roman := match.get_node("WrestlerA") as WrestlerController
+    roman.anim_tree.active = false
+    var model := roman.anim_player.get_parent() as RomanModel
+    var skeleton := model.get_game_skeleton() as Skeleton3D
+    for clip in ["strikes/roman_stand", "strikes/face_off"]:
+        roman.anim_player.play(clip)
+        roman.anim_player.advance(0.0)
+        await await_millis(20)
+        for side in ["L", "R"]:
+            var wrist := skeleton.get_bone_global_pose(
+                    skeleton.find_bone("J_Wrist_" + side)).origin
+            var thigh := skeleton.get_bone_global_pose(
+                    skeleton.find_bone("J_Leg_" + side)).origin
+            assert_float(absf(wrist.x) - absf(thigh.x)).override_failure_message(
+                "%s puts Roman's %s wrist over his thigh: wrist x %.3f, thigh x %.3f"
+                % [clip, side, wrist.x, thigh.x]
+            ).is_greater(0.14)
 
 ## Every bone a remapped paired-pose track names must exist on the Roman
 ## skeleton. The poses are baked against CC0 bone names and remapped through

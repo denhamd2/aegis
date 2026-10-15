@@ -18,18 +18,18 @@ extends Node
 
 signal job_finished(kind: String)
 
-## Where it all happens: ringside, the +X side, the hard camera's right.
+## The keeper sits on the far side of his compact table beside commentary.
 const FLOOR_Y := -1.1
 ## Aubrey hands through the ropes from inside them, the timekeeper takes from
 ## the floor outside, between the bottom and middle ropes' heights.
 const REF_PASS_X := 2.38
 const KEEPER_PASS_X := 3.68
-const PASS_Z := 0.0
-const KEEPER_POST := Vector3(KEEPER_PASS_X, FLOOR_Y, -1.5)
-## The table sits by the ring corner on the announce-desk side (+Z), as the
-## timekeeper's does at a real show, not mid-side.
-const KEEPER_PLACE := Vector3(3.8, FLOOR_Y, 3.0)
-const TABLE_AT := Vector3(4.4, FLOOR_Y, 3.7)
+const PASS_Z := 2.2
+const KEEPER_POST := Timekeeper.CHAIR_AT
+## Stand behind the table, facing the ring, to set down props before sitting.
+const KEEPER_PLACE := Vector3(2.85, FLOOR_Y, 5.4)
+## On the +Z commentary side, immediately beside the announce desk.
+const TABLE_AT := Vector3(2.25, FLOOR_Y, 5.4)
 
 ## Contact frames of the clips (30 fps): the prop changes hands on these.
 const GIVE_CONTACT := 26.0 / 30.0   # Prop_Hand_Out_*
@@ -301,7 +301,7 @@ func _pass_tick() -> void:
 		step = Step.PLACE
 		_stage = 0
 		_clock = 0.0
-		_keeper.go(KEEPER_PLACE, Vector3(1, 0, 0))
+		_keeper.go(KEEPER_PLACE, Vector3(-1, 0, 0))
 
 
 ## --- PLACE: onto the table --------------------------------------------------
@@ -321,7 +321,7 @@ func _place_tick() -> void:
 		var kind := String(_job["kind"])
 		delivered.append(kind)
 		completed += 1
-		_keeper.go(KEEPER_POST, Vector3(-1, 0, 0))
+		_keeper.go_to_chair()
 		_job = {}
 		step = Step.IDLE
 		job_finished.emit(kind)
@@ -345,8 +345,7 @@ func finish_now() -> void:
 	_job = {}
 	step = Step.IDLE
 	_ref.end_errand()
-	_keeper.idle()
-	_keeper.go(KEEPER_POST, Vector3(-1, 0, 0))
+	_keeper.go_to_chair()
 
 
 ## --- holders ----------------------------------------------------------------

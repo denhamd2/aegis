@@ -69,6 +69,21 @@ func _travel(rig: Dictionary, clip: String, bone: String) -> float:
 	return worst
 
 
+func _head_relative_to_chest(rig: Dictionary, clip: String, fraction: float) -> Quaternion:
+	var player: AnimationPlayer = rig["player"]
+	var skeleton: Skeleton3D = rig["skeleton"]
+	var key := "authored/%s" % clip
+	var animation := player.get_animation(key)
+	player.play(key)
+	player.pause()
+	player.seek(animation.length * fraction, true)
+	var chest := skeleton.get_bone_global_pose(skeleton.find_bone("spine_03")) \
+			.basis.get_rotation_quaternion()
+	var head := skeleton.get_bone_global_pose(skeleton.find_bone("Head")) \
+			.basis.get_rotation_quaternion()
+	return chest.inverse() * head
+
+
 func test_a_wrestler_at_rest_leans_over_his_front_foot() -> void:
 	# Forward is +Z in the rig's own space (the model's PI-Y mount in
 	# WrestlerController._install_character_model() is what turns it into
@@ -130,6 +145,20 @@ func test_a_head_shot_and_a_body_shot_are_different_things() -> void:
 	assert_float(body_deep.z - body_start.z) \
 		.override_failure_message("a body shot is whipping him back, not folding") \
 		.is_greater(0.0)
+
+
+func test_body_shot_does_not_curl_the_head_toward_the_chest() -> void:
+	# The torso folds on a body shot; the neck should stay long and aligned,
+	# rather than adding another forward curl that makes it look stretched.
+	var rig := _rig()
+	var neutral := _head_relative_to_chest(rig, "Idle_Ready", 0.0)
+	for sample: Array in [["Hit_React_Torso", 0.42], ["Hit_Heavy_Gut", 0.25],
+			["Sell_Gut", 0.35]]:
+		var posed := _head_relative_to_chest(rig, sample[0], sample[1])
+		var deviation := rad_to_deg(neutral.angle_to(posed))
+		assert_float(deviation) \
+			.override_failure_message("%s adds %.1f degrees of head curl" % [sample[0], deviation]) \
+			.is_less_equal(20.0)
 
 
 func test_a_punch_leaves_the_guard() -> void:

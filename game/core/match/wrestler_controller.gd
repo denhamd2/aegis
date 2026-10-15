@@ -14,6 +14,7 @@ signal knocked_down(wrestler: WrestlerController)
 signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
 signal weapon_taken(wrestler: WrestlerController, weapon: WeaponActor)
+signal weapon_retrieval_started(wrestler: WrestlerController)
 ## His comeback has started (MatchReferee decides when; see fire_up()).
 signal fired_up(wrestler: WrestlerController)
 ## A strike parried and countered (Phase 4 reversals): `reverser` read it.
@@ -83,6 +84,11 @@ const KNOCKDOWN_DAMAGE := 100.0
 ## most of that was the attacker's taunt playing out rather than a fixed
 ## timer, so this stays a reachability value.
 const GETUP_TICKS := 90 # 1.5s
+## Shared brief sell before taking a quick rise. AI previously supplied this
+## as an automatic strike input, while a player had to press to get up; keep
+## the same match rhythm for both without removing the player's option to
+## recover sooner with input.
+const QUICK_DOWN_RECOVERY_DELAY_TICKS := 48 # 0.8s
 ## How long a man a slam left on the mat (MoveDef.leaves_defender_down) lies
 ## there before rising, when the slam did not also knock him down. Half a
 ## knockdown's GETUP_TICKS: long enough to read as having been dropped,
@@ -3634,6 +3640,19 @@ func celebrate() -> void:
 	fsm.transition_to(WrestlerFSM.State.VICTORY)
 
 
+## The bell ends the match, not his chance to sell the finish. Put the loser
+## into the supine breathing loop before MatchSetup freezes controller input;
+## pinfalls already end there, while count-outs and other finishes may catch
+## him on his feet.
+func lay_out_after_match() -> void:
+	_active_move = null
+	_pending_hit_reaction = null
+	velocity = Vector3.ZERO
+	if ai:
+		ai.set_physics_process(false)
+	play_presentation_clip(clip_for_state(WrestlerFSM.State.DOWN, false), true)
+
+
 ## The winner's arm taken up by the referee: swaps VICTORY's clip for
 ## Win_Arm_Raised (his left wrist in her hand). Only valid once celebrate() has
 ## put him in VICTORY.
@@ -4131,18 +4150,17 @@ func _process_down(input: Dictionary) -> void:
 		_stop_dead()
 		return
 	_move_ticks_remaining -= 1
-	# Which of the two measured rises this is depends on who ended the
-	# prone state: a wrestler who pressed his way up gets the fast one, a
-	# wrestler whose timer simply ran out gets the default.
-	# A man who has just fired up does not lie there: he is up on the fast
-	# rise whether or not anything was pressed.
-	var pressed_up: bool = input.get("strike", false) \
-			or (combat != null and combat.is_fired_up())
-	if pressed_up or _move_ticks_remaining <= 0:
-		if not pressed_up:
+	# A player can still trigger the quick rise early, but both controllers
+	# take it automatically after the shared brief sell beat, as do fired-up
+	# wrestlers. The staged rise remains the fallback when the down timer ends.
+	var quick_recovery: bool = input.get("strike", false) \
+			or (combat != null and combat.is_fired_up()) \
+			or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS
+	if quick_recovery or _move_ticks_remaining <= 0:
+		if not quick_recovery:
 			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")
 		fsm.transition_to(WrestlerFSM.State.GETUP)
-		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if pressed_up else GETUP_STAGED_TICKS
+		_move_ticks_remaining = GETUP_RISE_FAST_TICKS if quick_recovery else GETUP_STAGED_TICKS
 
 func _process_timed_state(input: Dictionary, next_state: WrestlerFSM.State) -> void:
 	# Bleed the hit's shove off. Without the decay the velocity set in
@@ -4930,6 +4948,8 @@ func begin_weapon_action(action: String) -> void:
 			_pickup_to = global_position + to.normalized() * (to.length() - PICKUP_STAND_OFF)
 	_set_state_clip(WrestlerFSM.State.WEAPON_ACTION, WEAPON_ACTION_CLIPS[action])
 	fsm.transition_to(WrestlerFSM.State.WEAPON_ACTION)
+	if action == "retrieve":
+		weapon_retrieval_started.emit(self)
 
 
 ## A pickup's tick: the step in to it, his hands onto its grips where it lies

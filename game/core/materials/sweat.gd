@@ -19,6 +19,9 @@ extends Node
 ## Back down to 0.1 against the owner's 2K26 match (cody_roman_2k26.md):
 ## a soft sheen from the bell, not a gloss.
 const BASE := 0.1
+## Keep the late-match skin damp with a soft sheen instead of letting the
+## clock and damage terms push the wrestlers into a visibly soaked look.
+const MAX_WETNESS := 0.55
 ## Seconds of match for the time share to reach its full TIME_SHARE.
 ##
 ## 100 -> 475. The old number is in the line it replaced: "AI matches here run
@@ -94,4 +97,4 @@ func _process(delta: float) -> void:
 
 static func target(seconds: float, damage: float) -> float:
 	return clampf(BASE + TIME_SHARE * clampf(seconds / FULL_SECONDS, 0.0, 1.0)
-			+ DAMAGE_SHARE * clampf(damage / DAMAGE_FULL, 0.0, 1.0), 0.0, 1.0)
+			+ DAMAGE_SHARE * clampf(damage / DAMAGE_FULL, 0.0, 1.0), 0.0, MAX_WETNESS)

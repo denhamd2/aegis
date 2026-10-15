@@ -246,6 +246,9 @@ func _begin_live() -> void:
 
 func _on_match_won(winner: WrestlerController, method: String) -> void:
 	print("Match won by %s via %s" % [winner.name, method])
+	var loser := wrestler_b if winner == wrestler_a else wrestler_a
+	if loser and loser.has_method("lay_out_after_match"):
+		loser.lay_out_after_match()
 	# The winner celebrates. Done BEFORE the freeze below, because it is a
 	# real FSM transition and the freeze stops the controller processing --
 	# the clip itself keeps playing either way, since the AnimationTree runs

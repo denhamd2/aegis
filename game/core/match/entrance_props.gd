@@ -28,6 +28,9 @@ extends Node3D
 
 const ULA_FALA := "res://assets/props/ula_fala.glb"
 const TITLE := "res://assets/props/aew_title.glb"
+## The hand-held title stays at its authored size. The worn loop gets a small
+## in-plane taper so it hugs Roman's waist instead of reading as loose gear.
+const WORN_TITLE_SCALE := Vector3(0.94, 1.0, 0.94)
 
 ## Part name -> material. Gold is a metal lit by the follow spot and the
 ## stage washes; the hall's ambient carries no reflections (material_library's
@@ -284,7 +287,10 @@ func _follow() -> void:
 		# rotation away from its rest, so at rest it is exactly as authored.
 		var hips := _bone("pelvis")
 		if hips != Vector3.INF:
-			_title.global_transform = Transform3D(_pelvis_turn() * turn, hips)
+			var belt_basis := _pelvis_turn() * turn
+			if _title_state == "worn":
+				belt_basis = belt_basis.scaled(WORN_TITLE_SCALE)
+			_title.global_transform = Transform3D(belt_basis, hips)
 
 
 ## Called after the wrestler's animation and skeleton modifiers have settled.

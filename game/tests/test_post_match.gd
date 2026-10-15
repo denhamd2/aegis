@@ -68,3 +68,22 @@ func test_loser_stays_down_and_winner_arm_goes_up() -> void:
 	var actor: RefereeActor = _scene.referee_actor
 	assert_int(actor.mode).is_equal(RefereeActor.Mode.RAISE)
 	assert_float(actor.raise_hand_gap()).is_less(0.25)
+
+
+func test_a_standing_loser_is_put_on_the_mat_for_the_post_match() -> void:
+	var winner: WrestlerController = _scene.get_node("WrestlerA")
+	var loser: WrestlerController = _scene.get_node("WrestlerB")
+	winner.is_ai = false
+	loser.is_ai = false
+	for i in 20:
+		await get_tree().physics_frame
+	assert_float(_pelvis_y(loser)).is_greater(0.6)
+	_scene._on_match_won(winner, "count_out")
+	assert_object(_scene.post_match).is_not_null()
+	var worst := 0.0
+	for i in 1200:
+		await get_tree().process_frame
+		worst = maxf(worst, _pelvis_y(loser))
+		if _scene.post_match.is_done():
+			break
+	assert_float(worst).is_less(0.6)

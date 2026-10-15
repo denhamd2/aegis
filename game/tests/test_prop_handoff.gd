@@ -104,8 +104,8 @@ func test_both_props_end_on_the_table_in_order() -> void:
 		assert_bool(c.on_table()).override_failure_message("%s is not on the table" % c.kind).is_true()
 		var p := c.pivot.global_position
 		var table: Vector3 = PropHandoff.TABLE_AT
-		assert_float(absf(p.x - table.x)).is_less(Timekeeper.TABLE_SIZE.x * 0.5 + 0.05)
-		assert_float(absf(p.z - table.z)).is_less(Timekeeper.TABLE_SIZE.z * 0.5)
+		assert_float(absf(p.x - table.x)).is_less(Timekeeper.TABLE_SIZE.z * 0.5 + 0.05)
+		assert_float(absf(p.z - table.z)).is_less(Timekeeper.TABLE_SIZE.x * 0.5)
 		assert_float(p.y - (table.y + Timekeeper.TABLE_SIZE.y)).is_between(-0.02, 0.2)
 	assert_bool(handoff.is_idle()).is_true()
 
@@ -127,7 +127,7 @@ func test_one_prop_at_a_time_and_never_hidden_or_popping() -> void:
 					hidden.append("%s hidden" % c.kind)
 			var now := c.pivot.global_position
 			if last.has(c):
-				worst[0] = maxf(worst[0], now.distance_to(last[c]))
+					worst[0] = maxf(worst[0], now.distance_to(last[c]))
 			last[c] = now)
 	assert_int(most[0]).override_failure_message("two props in transit at once").is_equal(1)
 	assert_array(hidden).override_failure_message("%s" % [hidden.slice(0, 3)]).is_empty()
@@ -225,7 +225,7 @@ func test_cody_s_coat_is_handed_on_and_lies_on_the_table() -> void:
 	for c: PropHandoff.Carried in handoff.carried:
 		assert_bool(c.on_table()).override_failure_message("%s is not on the table" % c.kind).is_true()
 		var p := c.pivot.global_position
-		assert_float(absf(p.z - table.z)).is_less(Timekeeper.TABLE_SIZE.z * 0.5)
+		assert_float(absf(p.z - table.z)).is_less(Timekeeper.TABLE_SIZE.x * 0.5)
 		zs[c.kind] = Vector2(p.x, p.z)
 	var coat_c: PropHandoff.Carried = null
 	for c: PropHandoff.Carried in handoff.carried:
@@ -294,6 +294,24 @@ func test_the_timekeeper_has_a_table_with_a_bell() -> void:
 	assert_object(keeper.table).is_not_null()
 	assert_object(keeper.table.get_node_or_null("Bell")).is_not_null()
 	assert_vector(keeper.table.global_position).is_equal_approx(PropHandoff.TABLE_AT, Vector3.ONE * 0.01)
+	assert_object(keeper.get_node_or_null("TimekeeperChair")).is_not_null()
+	assert_float(Timekeeper.TABLE_SIZE.x).is_less(0.7)
+	assert_float(Timekeeper.TABLE_SIZE.y).is_less(0.8)
+	assert_float(Timekeeper.TABLE_SIZE.z).is_less(1.1)
+	assert_float(keeper.table.global_position.distance_to(
+			Vector3(ArenaBuilder.DESK_X, PropHandoff.FLOOR_Y, ArenaBuilder.DESK_Z))) \
+			.is_less(4.0)
+
+
+func test_timekeeper_returns_to_his_chair_and_sits_after_the_entrances() -> void:
+	var m := _both_match()
+	_run(m, func(): pass)
+	var keeper: Timekeeper = m["keeper"]
+	for _tick in 1000:
+		_step(m)
+	assert_vector(keeper.global_position).is_equal_approx(Timekeeper.CHAIR_AT, Vector3.ONE * 0.1)
+	assert_str(keeper._clip).is_equal(Timekeeper.SIT_IDLE_CLIP)
+	assert_bool(keeper._target == Vector3.INF).is_true()
 
 
 ## The necklace is held by its neck: the grip has to be found on the rig it is

@@ -165,10 +165,10 @@ func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 			.is_equal(1422)
 
 
-func test_roman_waits_with_his_hands_clearly_on_his_hips() -> void:
+func test_roman_waits_with_his_arms_at_his_sides_before_the_faceoff() -> void:
 	var roman := WrestlerController.new()
 	roman.entrance_style = "roman"
-	assert_str(EntranceDirector._wait_clip(roman)).is_equal("strikes/hands_hips")
+	assert_str(EntranceDirector._wait_clip(roman)).is_equal("strikes/roman_stand")
 	roman.free()
 
 

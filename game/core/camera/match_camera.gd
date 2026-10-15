@@ -262,12 +262,12 @@ const CAMERA_POST_CLEAR := 1.25
 ## Short cuts to the action, each back to the coverage it cut from. None
 ## lands within MIN_SHOT of the last cut (D1: no shot under 0.8 s), and none
 ## pre-empts a finisher or a pin, which have their own shots.
-enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE }
+enum Cut { STRIKE, SLAM, HERO, FIRE_UP, CUTAWAY, WEAPON, TABLE, WEAPON_RETRIEVE }
 const MIN_SHOT := 0.8
 ## A strike worth a cut: the cross, the uppercut, the elbow, the kicks.
 const BIG_STRIKE_DAMAGE := 9.0
 const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP: 1.3, Cut.CUTAWAY: 1.6,
-		Cut.WEAPON: 0.9, Cut.TABLE: 1.4}
+		Cut.WEAPON: 0.9, Cut.TABLE: 1.4, Cut.WEAPON_RETRIEVE: 1.4}
 ## Trauma (0..1, squared into the shake) per kind of impact.
 ## An ordinary strike no longer shakes the camera (_on_move_landed); kept for
 ## anything that still asks for a light shake.
@@ -399,6 +399,7 @@ func _ready() -> void:
 		wc.fired_up.connect(func(who): _try_cut(Cut.FIRE_UP, who, null))
 		wc.knocked_down.connect(func(_who): add_trauma(TRAUMA_KNOCKDOWN))
 		wc.set_piece_landed.connect(_on_set_piece_landed)
+		wc.weapon_retrieval_started.connect(_on_weapon_retrieval_started)
 	add_to_group(WeaponActor.LISTENERS)
 	add_to_group("match_camera")
 
@@ -1160,6 +1161,30 @@ func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: 
 		_try_cut(Cut.TABLE, who, who.opponent)
 
 
+## A retrieval gets one short broadcast insert, even in the continuous GAMEPLAY
+## camera setting: the wrestler reaches under the apron, reveals the weapon,
+## then coverage cuts back to the exact master/handheld shot that was on air.
+func _on_weapon_retrieval_started(who: WrestlerController) -> void:
+	if not CameraSettings.cuts_enabled() or who == null:
+		return
+	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE:
+		return
+	if _held < MIN_SHOT or (referee != null and referee.is_pin_active()):
+		return
+	_cut_return = mode
+	mode = Mode.EVENT_CUT
+	_cut = Cut.WEAPON_RETRIEVE
+	_cut_subject = who
+	_cut_other = null
+	_cut_hold = CUT_HOLD[Cut.WEAPON_RETRIEVE]
+	_cut_grapple = false
+	_cut_landed = false
+	_cut_side = Vector3.ZERO
+	_cut_facing = Vector3.ZERO
+	_cut_fresh = true
+	_held = 0.0
+
+
 ## A weapon going off (WeaponActor.LISTENERS): the gun cuts to the man shot,
 ## the blast shakes everything.
 func on_weapon_event(weapon: WeaponActor, event: String) -> void:
@@ -1310,6 +1335,13 @@ func _event_shot(delta: float) -> bool:
 			at = mid + side * 2.9 + line * 1.0 + Vector3.UP * 1.15
 			look = s + Vector3.UP * 1.2
 			lens = 46.0
+			focus = true
+		Cut.WEAPON_RETRIEVE:
+			# Low three-quarter insert from the open ringside side: his face,
+			# reaching arm, apron and the weapon reveal stay together in frame.
+			at = s + facing * 1.1 + side * 2.5 + Vector3.UP * 0.9
+			look = s + Vector3.UP * 0.85
+			lens = 38.0
 			focus = true
 		Cut.TABLE:
 			# Through the table: down at the wreck, low and wide, square to him.

@@ -29,8 +29,9 @@ func test_in_the_heat_the_heel_is_barely_marked_and_the_face_takes_it() -> void:
 	var heel: Dictionary = MatchFlow.row(heat, Persona.Kind.HEEL)
 	var face: Dictionary = MatchFlow.row(heat, Persona.Kind.FACE)
 	assert_float(face["takes"]).is_greater(heel["takes"] * 3.0)
-	# The man being worked over rarely answers; the heel works at his own pace.
-	assert_float(face["tempo"]).is_greater(heel["tempo"] * 1.8)
+	# Story asymmetry is carried by damage and move availability, not dead air.
+	assert_float(face["tempo"]).is_less_equal(1.0)
+	assert_float(heel["tempo"]).is_less_equal(1.0)
 
 
 func test_the_face_has_his_hope_spot_and_his_comeback() -> void:
@@ -41,6 +42,21 @@ func test_the_face_has_his_hope_spot_and_his_comeback() -> void:
 		assert_float(face["takes"]).override_failure_message("at %.0f s" % clock) \
 				.is_less(heel["takes"])
 		assert_float(face["tempo"]).is_less(heel["tempo"])
+
+
+func test_no_match_phase_can_slow_ai_action_cadence_below_baseline() -> void:
+	var scene: Node = load(MATCH).instantiate()
+	add_child(scene)
+	auto_free(scene)
+	var flow := scene.get_node("MatchFlow") as MatchFlow
+	for clock in range(0, 480, 10):
+		flow.tick = clock * 60
+		for path in ["WrestlerA", "WrestlerB"]:
+			var w: WrestlerController = scene.get_node(path)
+			w.is_ai = true
+			assert_float(flow.tempo_scale(w)).override_failure_message(
+					"%s phase slowed %s" % [flow.phase()["name"], path]
+			).is_less_equal(1.0)
 
 
 func test_a_finisher_cannot_end_the_match_before_the_story_gets_there() -> void:

@@ -12,8 +12,8 @@ extends Node
 ##  * it scales the damage each man takes (CombatSystem.damage_taken_scale),
 ##    so the man being beaten down is beaten down slowly and the man in
 ##    control is barely marked;
-##  * it scales how often each man acts (tempo_scale(), read by WrestlerAI):
-##    the heel works slow, the man being worked over rarely answers;
+##  * it adds small, bounded cadence variation (tempo_scale(), read by
+##    WrestlerAI) without letting a story phase create long idle gaps;
 ##  * it decides when a finisher can end the match (finish_allowed()): before
 ##    that a finisher is a near-fall, which is also how the match gets its
 ##    kickouts of a finisher.
@@ -27,43 +27,43 @@ extends Node
 
 ## What each phase asks of each man. `takes`: the share of damage he takes
 ## (1.0 = as authored). `tempo`: the multiplier on the wait between his
-## actions (above 1 he is slower). `reverse`: the multiplier on how often he
-## reads and parries a blow. `rung`: the highest move the AI may reach for --
+## actions (above 1 is slower; AI tempo is capped at 1). `reverse`: how often
+## he reads and parries a blow. `rung`: the highest move the AI may reach for --
 ## "none", "signature" or "finisher". `stall`: whether he plays to the crowd
 ## between holds. Keyed by the man's persona; a neutral pair takes the neutral
 ## row on both sides.
 const PHASES := [
 	{"name": "feeling_out", "until": 60.0,
-			"heel": {"takes": 0.30, "tempo": 1.30, "reverse": 1.0, "rung": "none", "stall": false},
-			"face": {"takes": 0.30, "tempo": 1.30, "reverse": 1.0, "rung": "none", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 1.30, "reverse": 1.0, "rung": "none", "stall": false}},
+			"heel": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false},
+			"face": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false}},
 	{"name": "heat", "until": 210.0,
-			"heel": {"takes": 0.10, "tempo": 1.05, "reverse": 1.0, "rung": "signature", "stall": true},
-			"face": {"takes": 0.55, "tempo": 2.4, "reverse": 0.25, "rung": "none", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 1.30, "reverse": 1.0, "rung": "signature", "stall": false}},
+			"heel": {"takes": 0.10, "tempo": 0.90, "reverse": 1.0, "rung": "signature", "stall": true},
+			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.25, "rung": "none", "stall": false},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false}},
 	{"name": "hope", "until": 245.0,
-			"heel": {"takes": 0.45, "tempo": 1.4, "reverse": 0.6, "rung": "none", "stall": false},
+			"heel": {"takes": 0.45, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false},
 			"face": {"takes": 0.20, "tempo": 0.85, "reverse": 1.5, "rung": "signature", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 1.2, "reverse": 1.0, "rung": "signature", "stall": false}},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false}},
 	{"name": "cutoff", "until": 300.0,
-			"heel": {"takes": 0.10, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": true},
-			"face": {"takes": 0.55, "tempo": 2.2, "reverse": 0.3, "rung": "none", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 1.3, "reverse": 1.0, "rung": "signature", "stall": false}},
+			"heel": {"takes": 0.10, "tempo": 0.90, "reverse": 1.0, "rung": "signature", "stall": true},
+			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.3, "rung": "none", "stall": false},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false}},
 	{"name": "comeback", "until": 390.0,
-			"heel": {"takes": 0.60, "tempo": 1.7, "reverse": 0.8, "rung": "signature", "stall": false},
+			"heel": {"takes": 0.60, "tempo": 0.95, "reverse": 0.8, "rung": "signature", "stall": false},
 			"face": {"takes": 0.20, "tempo": 0.8, "reverse": 1.4, "rung": "finisher", "stall": false},
-			"neutral": {"takes": 0.35, "tempo": 1.2, "reverse": 1.0, "rung": "finisher", "stall": false}},
+			"neutral": {"takes": 0.35, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false}},
 	# The finish is the winner's: which of them it is was settled at the bell
 	# (WINNER_ROWS / LOSER_ROW below); these rows are the neutral fallback.
 	{"name": "finish", "until": 1.0e9,
-			"heel": {"takes": 0.60, "tempo": 1.0, "reverse": 1.0, "rung": "finisher", "stall": false},
-			"face": {"takes": 0.60, "tempo": 1.0, "reverse": 1.0, "rung": "finisher", "stall": false},
-			"neutral": {"takes": 0.55, "tempo": 1.0, "reverse": 1.0, "rung": "finisher", "stall": false}},
+			"heel": {"takes": 0.60, "tempo": 0.90, "reverse": 1.0, "rung": "finisher", "stall": false},
+			"face": {"takes": 0.60, "tempo": 0.90, "reverse": 1.0, "rung": "finisher", "stall": false},
+			"neutral": {"takes": 0.55, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false}},
 ]
 ## In the finish the man the story is for gets the finisher and is barely
 ## marked; the other has a signature at most and takes it.
-const WINNER_ROW := {"takes": 0.30, "tempo": 0.9, "reverse": 1.2, "rung": "finisher", "stall": false}
-const LOSER_ROW := {"takes": 0.90, "tempo": 1.7, "reverse": 0.6, "rung": "none", "stall": false}
+const WINNER_ROW := {"takes": 0.30, "tempo": 0.85, "reverse": 1.2, "rung": "finisher", "stall": false}
+const LOSER_ROW := {"takes": 0.90, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false}
 ## A finisher can end the match from this second on (before it, a cover off a
 ## finisher is a near-fall). Matches that run long are ended anyway.
 const FINISH_FROM := 420.0
@@ -148,7 +148,7 @@ func _row_for(w: WrestlerController) -> Dictionary:
 
 ## The multiplier on `w`'s wait between actions right now (1 = as authored).
 func tempo_scale(w: WrestlerController) -> float:
-	return float(_row_for(w)["tempo"])
+	return clampf(float(_row_for(w)["tempo"]), 0.75, 1.0)
 
 
 ## Whether a man pinned under a finisher has no kickout left in him.

@@ -39,6 +39,17 @@ func test_the_hud_covers_the_whole_viewport() -> void:
 	assert_float(hud.anchor_right).is_equal(1.0)
 	assert_float(hud.anchor_bottom).is_equal(1.0)
 
+## The on-screen Mac keyboard legend is read from the same live InputMap as
+## controls, so it remains present and follows rebinds in the exported build.
+func test_player_controls_legend_uses_live_keyboard_bindings() -> void:
+	var hud := MatchHUD.new()
+	auto_free(hud)
+	var text := hud.controls_text()
+	assert_bool(text.contains("MOVE")).is_true()
+	assert_bool(text.contains("STRIKE")).is_true()
+	assert_bool(text.contains("GRAPPLE")).is_true()
+	assert_bool(text.contains("REVERSE")).is_true()
+
 ## A maximized Mac window can have less usable vertical space than the 1080p
 ## design canvas. Both bottom plates must stay inset inside that live viewport.
 func test_health_plates_stay_inside_a_laptop_viewport() -> void:

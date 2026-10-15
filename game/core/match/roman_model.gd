@@ -340,6 +340,7 @@ func _ready() -> void:
 	if not body:
 		push_error("Roman model has no body Skeleton3D")
 		return
+	_stabilize_pants_crotch()
 	# His arms, shoulders and chest to 2K26's build (BodyBulk).
 	BodyBulk.apply(self, body, BodyBulk.ROMAN)
 	# His face to 2K26's (RomanFaceShape), before anything reads the head's
@@ -361,6 +362,101 @@ func _ready() -> void:
 	_volumize_hair()
 	_add_hair_springs()
 	_add_ringlets()
+
+
+## The trunks are skinned separately from Roman's body. At the center of the
+## crotch, the source mesh gives the upper inner-thigh vertices almost all of
+## their influence from the two thigh chains; when the torso folds forward,
+## the two panels pull away from the pelvis and expose a split. Blend a small
+## amount of those local thigh weights onto J_Hips, fading to zero toward the
+## outer legs and the cuffs. Correct a per-instance mesh copy so the supplied
+## GLB stays byte-for-byte intact and two wrestlers do not mutate one shared
+## imported resource.
+func _stabilize_pants_crotch() -> void:
+	var bottoms: MeshInstance3D = null
+	for candidate in find_children("", "MeshInstance3D", true, false):
+		if candidate.name == "bottoms_skinned":
+			bottoms = candidate as MeshInstance3D
+			break
+	if bottoms == null or not (bottoms.mesh is ArrayMesh):
+		return
+	var skeleton := bottoms.get_node_or_null(bottoms.skeleton) as Skeleton3D
+	if skeleton == null:
+		return
+	var hips := skeleton.find_bone("J_Hips")
+	var leg_l := skeleton.find_bone("J_Leg_L")
+	var leg_r := skeleton.find_bone("J_Leg_R")
+	if hips < 0 or leg_l < 0 or leg_r < 0:
+		return
+	var source := bottoms.mesh as ArrayMesh
+	var corrected := ArrayMesh.new()
+	corrected.resource_name = source.resource_name
+	for surface in source.get_surface_count():
+		var arrays := source.surface_get_arrays(surface)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var source_bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+		var source_weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+		if vertices.is_empty() or source_bones.size() != source_weights.size() \
+				or source_bones.size() % vertices.size() != 0:
+			corrected.add_surface_from_arrays(source.surface_get_primitive_type(surface),
+					arrays, source.surface_get_blend_shape_arrays(surface),
+					{}, source.surface_get_format(surface))
+			corrected.surface_set_material(surface, source.surface_get_material(surface))
+			continue
+		var source_influences := source_bones.size() / vertices.size()
+		var bones := PackedInt32Array()
+		var weights := PackedFloat32Array()
+		bones.resize(vertices.size() * 8)
+		weights.resize(vertices.size() * 8)
+		for vertex_index in vertices.size():
+			for influence in source_influences:
+				var source_offset := vertex_index * source_influences + influence
+				var target_offset := vertex_index * 8 + influence
+				bones[target_offset] = source_bones[source_offset]
+				weights[target_offset] = source_weights[source_offset]
+			var point := vertices[vertex_index]
+			if point.y <= 0.60 or point.y >= 0.75 or absf(point.x) >= 0.15:
+				continue
+			var centre := 1.0 - absf(point.x) / 0.15
+			var height := minf((point.y - 0.60) / 0.06,
+					minf((0.75 - point.y) / 0.06, 1.0))
+			var target_hips := 0.28 * _smooth01(centre) * _smooth01(height)
+			var hips_slot := -1
+			var leg_slot := -1
+			var leg_weight := 0.0
+			for influence in 8:
+				var offset := vertex_index * 8 + influence
+				if bones[offset] == hips:
+					if weights[offset] > 0.0:
+						hips_slot = offset
+				elif bones[offset] == leg_l or bones[offset] == leg_r:
+					if weights[offset] > leg_weight:
+						leg_slot = offset
+						leg_weight = weights[offset]
+			if leg_slot < 0:
+				continue
+			if hips_slot < 0:
+				# The supplied mesh uses four influences and has no pelvis slot in
+				# the crotch. Promote it to eight so the corrective can preserve all
+				# original hip-volume and knee-helper weights.
+				hips_slot = vertex_index * 8 + 4
+				bones[hips_slot] = hips
+			var transfer := minf(maxf(0.0, target_hips - weights[hips_slot]), leg_weight)
+			weights[hips_slot] += transfer
+			weights[leg_slot] -= transfer
+		arrays[Mesh.ARRAY_WEIGHTS] = weights
+		arrays[Mesh.ARRAY_BONES] = bones
+		var flags := source.surface_get_format(surface) | Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		corrected.add_surface_from_arrays(source.surface_get_primitive_type(surface),
+				arrays, source.surface_get_blend_shape_arrays(surface),
+				{}, flags)
+		corrected.surface_set_material(surface, source.surface_get_material(surface))
+	bottoms.mesh = corrected
+
+
+func _smooth01(value: float) -> float:
+	var t := clampf(value, 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
 
 
 # ---------------------------------------------------------------------------

@@ -119,3 +119,22 @@ func test_the_gameplay_camera_does_not_cut_on_impacts() -> void:
 	assert_bool(camera._try_cut(MatchCamera.Cut.STRIKE, m["a"], m["b"])).is_false()
 	assert_bool(camera._try_cut(MatchCamera.Cut.HERO, m["a"], null)).is_false()
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.RINGSIDE)
+
+
+## The one requested insert exception: show the wrestler's under-ring retrieve,
+## then return to the active gameplay camera without restarting its shot clock.
+func test_weapon_retrieval_gets_a_broadcast_insert_and_returns_to_gameplay() -> void:
+	var m := _scene()
+	var camera: MatchCamera = m["camera"]
+	var wrestler: WrestlerController = m["a"]
+	camera.mode = MatchCamera.Mode.RINGSIDE
+	camera._held = MatchCamera.MIN_SHOT
+	wrestler.begin_weapon_action("retrieve")
+	assert_int(camera.mode).is_equal(MatchCamera.Mode.EVENT_CUT)
+	assert_int(camera._cut).is_equal(MatchCamera.Cut.WEAPON_RETRIEVE)
+	assert_int(camera._cut_return).is_equal(MatchCamera.Mode.RINGSIDE)
+	assert_bool(camera._event_shot(DT)).is_true()
+	assert_float(camera.fov).is_equal(38.0)
+	camera._held = MatchCamera.CUT_HOLD[MatchCamera.Cut.WEAPON_RETRIEVE]
+	camera._update_mode(DT)
+	assert_int(camera.mode).is_equal(MatchCamera.Mode.RINGSIDE)
