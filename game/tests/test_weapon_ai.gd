@@ -81,6 +81,32 @@ func test_rocket_gun_and_bed_of_nails_are_regular_ai_picks() -> void:
 	assert_int(WrestlerAI.WEAPON_RUNS).is_greater_equal(10)
 
 
+func test_gun_and_rocket_launcher_unlock_only_in_the_late_match() -> void:
+	var pair := _pair(true)
+	var flow := MatchFlow.new()
+	flow.name = "MatchFlow"
+	add_child(flow)
+	var stock := WeaponStock.of(pair[0])
+	flow.tick = int(WeaponStock.LATE_MATCH_UNLOCK_SECONDS * 60.0) - 1
+	assert_bool(stock.in_stock(&"handgun")).is_false()
+	assert_bool(stock.in_stock(&"rpg")).is_false()
+	assert_bool(stock.in_stock(&"bed_of_nails")).is_true()
+	var rng := RandomNumberGenerator.new()
+	for i in 100:
+		rng.seed = i + 1
+		var early_pick: StringName = pair[0].ai.choose_weapon(rng)
+		assert_bool(early_pick in WeaponStock.LATE_MATCH_ONLY).is_false()
+	flow.tick = int(WeaponStock.LATE_MATCH_UNLOCK_SECONDS * 60.0)
+	assert_bool(stock.in_stock(&"handgun")).is_true()
+	assert_bool(stock.in_stock(&"rpg")).is_true()
+	var late_picks := {}
+	for i in 200:
+		rng.seed = i + 101
+		late_picks[pair[0].ai.choose_weapon(rng)] = true
+	assert_bool(late_picks.has(&"handgun")).is_true()
+	assert_bool(late_picks.has(&"rpg")).is_true()
+
+
 func test_tables_are_a_common_pick_for_both_wrestlers() -> void:
 	var pair := _pair(true)
 	var counts := [0, 0]

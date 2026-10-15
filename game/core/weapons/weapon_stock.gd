@@ -11,6 +11,9 @@ extends Node3D
 const RESTOCK_TICKS := 60 * 45
 ## A weapon on the floor this close to his feet can be picked up.
 const PICKUP_REACH := 0.95
+## The gun and launcher are late-match escalation weapons, not opening picks.
+const LATE_MATCH_ONLY: Array[StringName] = [&"handgun", &"rpg"]
+const LATE_MATCH_UNLOCK_SECONDS := 300.0
 
 var _out_until := {}           # id -> physics frame it is back under the ring
 var actors: Array[WeaponActor] = []
@@ -29,7 +32,16 @@ static func of(node: Node) -> WeaponStock:
 
 ## Whether `id` is under the ring now.
 func in_stock(id: StringName) -> bool:
-	return Engine.get_physics_frames() >= int(_out_until.get(id, 0))
+	return is_selectable(id) and Engine.get_physics_frames() >= int(_out_until.get(id, 0))
+
+
+## Whether the match allows this weapon to be selected from under the ring.
+## Matches without a MatchFlow (isolated tests and tools) keep the full stock.
+func is_selectable(id: StringName) -> bool:
+	if id not in LATE_MATCH_ONLY:
+		return true
+	var flow := get_parent().get_node_or_null("MatchFlow") as MatchFlow
+	return flow == null or flow.seconds() >= LATE_MATCH_UNLOCK_SECONDS
 
 
 ## Takes `def` out from under the ring: a new actor in the scene.
