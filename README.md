@@ -9472,11 +9472,11 @@ ring; the weapon wheel) and the animations for each family.
 Next: the set-piece spots (through a table, onto tacks), the AI reaching
 for weapons by personality, camera cuts and the hit sounds.
 
-## Round: the crowd -- a wrestling crowd at broadcast level, and chants
+## Round: the crowd -- a wrestling crowd at broadcast level
 
 The owner: the crowd "sounds very quiet and doesn't sound like a wrestling
-crowd", before the match and during it; wanted authentic chants (OTC, Cody,
-"This is awesome") and AAA loudness; and nothing paid for.
+crowd", before the match and during it; wanted AAA loudness; and nothing paid
+for.
 
 - **Measured first.** The bed was an NHL game cut to -18.4 LUFS and played
   at -9 dB: about -27 LUFS, where a game mix sits near -18 -- half as loud as
@@ -9489,39 +9489,12 @@ crowd", before the match and during it; wanted authentic chants (OTC, Cody,
   numbers in `MatchAudio` are the mix: about -21 LUFS in a quiet minute,
   -15 at full cry. Loops 52 / 41 / 47 s, co-prime. A gentle 3:1 glue
   compressor sits ahead of the master limiter.
-- **Chants, free** (`tools/audio/build_chants.py`). No free recording of a
-  crowd chanting these names exists and broadcast audio is not ours, so the
-  crowd is built: each word spoken by dozens of different people (Piper's
-  LibriTTS-R voice, 904 speakers, CC BY 4.0), shouted, put on the chant's
-  beat a little early or late as a real crowd is, spread across the room,
-  with crowd hand claps and an arena reverb. Whole words split at their
-  syllables, not syllables spoken alone -- "Coh!" by itself, shouted, came
-  back as "Go". **Every take is kept only if a speech recogniser (Whisper)
-  hears its words in the finished mix**; most takes are rejected. Built:
-  Co-dy, Let's go Cody / Cody sucks, O-T-C, This is awesome, You deserve it,
-  One more match, Holy shit, Tables, Boring, the crowd counting ONE / TWO /
-  THREE, and the WHOA. "Ro-man" never passed and is not in.
-- **When they chant** (`CrowdChants`): for a reason and seldom -- a run of
-  moves or a comeback by the face (his name), the heel on top (Let's go
-  Cody, or his people's O-T-C), a near-fall (Holy shit early, This is awesome
-  past four minutes), a table stood up, a flat room (Boring), the bell (You
-  deserve it for the face, One more match after a long one), and the count
-  with the referee's hand. One at a time, 22 s of rest after one, 110 s
-  before the same one again, and a reason 4 s stale is dropped. Never a name
-  that is not in the match.
-- **Entrances.** The building goes up when the music hits; Cody's crowd
-  sings the WHOAs in his music on the measured beats and chants his name
-  once he is in the aisle; Roman's music brings boos and an O-T-C. Under the
-  winner's music the crowd dips 4 dB, not 10.
-- **Measured on a full simulated show** (both entrances and a 9.5-minute
-  match, the sound log rebuilt by `mix_sound_log.py`, read by
-  `tools/audio/measure_mix.py`): -17.3 LUFS integrated (the old crowd alone
-  was about -27), short-term peaks -10.4, true peak -1.0 dBTP. The capture
-  also caught three faults, fixed: Boring during the entrances (chants now
-  wait for the opening bell, and Boring comes once a match at most), a
-  near-fall at 7:31 unanswered because a chant had just ended (a near-fall
-  or a table no longer waits out the rest), and One more match able to cut
-  off You deserve it.
+- **No generated chant audio.** Synthetic chant and referee-count voice files
+  were removed. Match excitement still uses the crowd beds, nonverbal pops and
+  gasps, with the referee's count conveyed by the hand slaps.
+- **Entrances.** The crowd beds rise with the music; the WHOAs in Cody's
+  owner-supplied entrance music remain part of that track. Under the winner's
+  music the crowd dips 4 dB, not 10.
 
 ### Weapons in his hands (animation plan, phases 1 and 2)
 

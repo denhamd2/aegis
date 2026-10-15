@@ -22,7 +22,7 @@ extends Node
 ##
 ## Every loop is cut to the same loudness (build_sfx.CROWD_LUFS, -16 LUFS), so
 ## these numbers are the mix. This pass lifts the beds and crowd reactions
-## 3 dB over their previous level; chants (CrowdChants) stay as mixed.
+## 3 dB over their previous level.
 ## A modest lift across the crowd layers: the previous broadcast mix read as
 ## too quiet during actual play. Keep commentary on its separate voice bus.
 const CROWD_MIX_GAIN_DB := 3.0
@@ -181,7 +181,6 @@ func _ready() -> void:
 	add_to_group(WeaponActor.LISTENERS)
 	chants = CrowdChants.new()
 	chants.name = "Chants"
-	chants.sfx = sfx
 	add_child(chants)
 	_bed = sfx.make_loop("crowd_bed")
 	_walla_a = sfx.make_loop("crowd_walla_a")

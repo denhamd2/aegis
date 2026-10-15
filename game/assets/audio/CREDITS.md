@@ -24,25 +24,6 @@ anyway.
 | `hit_metal_*`, `hit_wood_*`, `hit_glass_*` (over Kenney's heavy punches), `table_crack_*` (with the ring-bump recording above) | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
 | `ui_*` | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney | CC0 |
 
-## Chants
-
-`chant_*`, `crowd_count_*` and `crowd_whoa_*` are built by
-`tools/audio/build_chants.py`: each syllable spoken by dozens of different
-synthetic voices, shouted, placed on the chant's beat and put in an arena-sized
-reverb, with crowd hand claps cut from a CC0 recording. No free recording of a
-crowd chanting these names exists, and broadcast audio is not ours to use.
-
-| Part | Source | Author | Licence |
-| --- | --- | --- | --- |
-| The voices | [Piper](https://github.com/OHF-Voice/piper1-gpl) `en_US-libritts_r-medium` (904 speakers) | Piper / Open Home Foundation; voice trained on [LibriTTS-R](http://www.openslr.org/141/) (Koizumi et al., 2023) | Voice data CC BY 4.0 -- this line is the attribution it requires |
-| The claps | [crowd clap rhythmic](https://freesound.org/people/johnnyguitar01/sounds/424793/) | johnnyguitar01 | CC0 |
-
-Caveat, stated plainly: the Piper `libritts_r` voice was fine-tuned from
-Piper's `lessac` voice, whose source recordings carry their own (research)
-terms. Fine for this project as it stands; check it before any commercial
-release, or replace the voices with recorded ones -- `build_chants.py` mixes
-WAVs dropped in `~/.cache/aegis_audio/chant_takes/real/` straight in.
-
 The entrance music in `music/` is the full soundtrack of the owner-supplied
 entrance videos (Google Drive, 2026-09-26; 3:38 each), cut out by
 `tools/audio/build_entrance_music.py`: the same recordings the titantron

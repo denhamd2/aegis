@@ -1,189 +1,34 @@
 extends GdUnitTestSuite
-## When the building chants (CrowdChants): every chant it can ask for is
-## built, it waits for a reason, never talks over itself, rests between
-## chants, does not repeat one too soon, drops a stale reason, and does not
-## play the generated wrestler-name chants or entrance shouts.
+## The generated chant beds are gone. Match crowd reactions now come from
+## continuous crowd ambience and nonverbal pops, not synthetic voices.
 
 
-const CHANTS := ["chant_this_is_awesome", "chant_you_deserve_it", "chant_one_more_match",
-		"chant_holy_shit", "chant_tables", "chant_boring"]
-
-
-func _chants(cody := true, roman := true, rung := true) -> CrowdChants:
-	var c: CrowdChants = auto_free(CrowdChants.new())
-	c.cody_here = cody
-	c.roman_here = roman
-	add_child(c)
-	if rung:
-		c.bell()
-	return c
-
-
-func _heard(c: CrowdChants) -> Array:
-	var out := []
-	c.chanted.connect(func(name): out.append(name))
-	return out
-
-
-func test_every_chant_and_shout_is_built() -> void:
-	for chant: String in CHANTS:
-		assert_int(SfxPool.family_size(chant)).override_failure_message("no " + chant) \
-				.is_greater_equal(1)
-	for shout: String in ["crowd_count_1", "crowd_count_2", "crowd_count_3"]:
-		assert_int(SfxPool.family_size(shout)).override_failure_message("no " + shout) \
-				.is_greater_equal(2)
-
-
-func test_nothing_is_chanted_without_a_reason() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	for i in 600:
-		c.tick(0.1, 0.5)
-	assert_array(heard).is_empty()
-
-
-func test_a_near_fall_late_in_a_match_is_awesome_and_early_is_holy_shit() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	c.clock = 30.0
-	c.kicked_out(2)
-	c.tick(0.1, 0.6)
-	assert_array(heard).contains_exactly(["chant_holy_shit"])
-	var late := _chants()
-	var heard_late := _heard(late)
-	late.clock = CrowdChants.AWESOME_AFTER + 10.0      # since the bell at 0
-	late.kicked_out(2)
-	late.tick(0.1, 0.6)
-	assert_array(heard_late).contains_exactly(["chant_this_is_awesome"])
-
-
-func test_nothing_but_the_entrances_is_chanted_before_the_bell() -> void:
-	var c := _chants(true, true, false)
-	var heard := _heard(c)
-	c.kicked_out(2)
-	c.table_set_up()
-	for i in CrowdChants.MOMENTUM_MOVES:
-		c.moved(1.0, 0.9)
-	for i in int(CrowdChants.STALL_AFTER + CrowdChants.STALL_SECONDS + 10.0):
-		c.tick(1.0, 0.0)
-	assert_array(heard).is_empty()
-
-
-func test_a_near_fall_is_answered_even_straight_after_another_chant() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	c.table_set_up()
-	c.tick(0.1, 0.5)
-	assert_array(heard).contains_exactly(["chant_tables"])
-	# out the far side of the tables chant, well inside the rest after it
-	for i in int(SfxPool.stream("chant_tables_0").get_length() * 10.0) + 20:
-		c.tick(0.1, 0.5)
-	c.kicked_out(2)
-	c.tick(0.1, 0.5)
-	assert_array(heard).contains_exactly(["chant_tables", "chant_holy_shit"])
-
-
-func test_a_one_count_is_not_a_near_fall() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	c.kicked_out(1)
-	c.tick(0.1, 0.6)
-	assert_array(heard).is_empty()
-
-
-func test_one_chant_at_a_time_and_a_rest_between() -> void:
-	assert_str(CrowdChants.pick({&"chant_cody": 10.0}, {}, 10.0, 99.0, true)).is_empty()
-	assert_str(CrowdChants.pick({&"chant_cody": 10.0}, {}, 10.0,
-			CrowdChants.MIN_GAP - 1.0, false)).is_empty()
-	assert_str(CrowdChants.pick({&"chant_cody": 10.0}, {}, 10.0,
-			CrowdChants.MIN_GAP, false)).is_equal("chant_cody")
-	# a near-fall or a table does not wait out the rest -- but never talks over one
-	assert_str(CrowdChants.pick({&"chant_tables": 10.0}, {}, 10.0, 1.0, false)).is_equal("chant_tables")
-	assert_str(CrowdChants.pick({&"chant_tables": 10.0}, {}, 10.0, 1.0, true)).is_empty()
-
-
-func test_the_same_chant_waits_and_a_stale_reason_is_dropped() -> void:
-	var last := {&"chant_tables": 100.0}
-	assert_str(CrowdChants.pick({&"chant_tables": 150.0}, last, 150.0, 99.0, false)).is_empty()
-	assert_str(CrowdChants.pick({&"chant_tables": 150.0}, last,
-			100.0 + CrowdChants.SAME_GAP + 1.0, 99.0, false)).is_empty()  # stale by then
-	assert_str(CrowdChants.pick({&"chant_tables": 300.0}, last, 300.0, 99.0, false)) \
-			.is_equal("chant_tables")
-
-
-func test_the_freshest_reason_wins() -> void:
-	var reasons := {&"chant_tables": 10.0, &"chant_holy_shit": 12.0}
-	assert_str(CrowdChants.pick(reasons, {}, 12.5, 99.0, false)).is_equal("chant_holy_shit")
-
-
-func test_combat_events_do_not_schedule_generated_roster_chants() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	for i in CrowdChants.MOMENTUM_MOVES:
-		c.moved(1.0, 0.2)
-		c.tick(1.0, 0.5)
-	c.fired_up(1.0)
-	c.entrance("cody")
-	for i in 600:
-		c.tick(0.1, 0.5)
-	assert_array(heard).is_empty()
-
-
-func test_no_name_is_chanted_for_a_man_who_is_not_there() -> void:
-	var c := _chants(false, false)
-	var heard := _heard(c)
-	for i in 3 * CrowdChants.MOMENTUM_MOVES:
-		c.moved(1.0, 0.9)
-		c.moved(-1.0, 0.9)
-		c.tick(0.5, 0.5)
-	assert_array(heard).is_empty()
-
-
-func test_a_flat_room_gets_bored_but_not_in_the_opening_minute() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	for i in int(CrowdChants.STALL_AFTER - 5.0):
-		c.tick(1.0, 0.0)
-	assert_array(heard).is_empty()
-	for i in int(CrowdChants.STALL_SECONDS + 2.0):
-		c.tick(1.0, 0.0)
-	assert_array(heard).contains_exactly(["chant_boring"])
-	# and only the once, however flat the rest of it is
-	for i in 600:
-		c.tick(1.0, 0.0)
-	assert_array(heard).contains_exactly(["chant_boring"])
-
-
-func test_the_face_winning_a_long_match_is_deserved_then_one_more() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	c.clock = CrowdChants.ONE_MORE_AFTER + 5.0
-	c.match_over(1.0)
-	for i in 450:
-		c.tick(0.1, 0.8)
-	assert_array(heard).contains_exactly(["chant_you_deserve_it", "chant_one_more_match"])
-
-
-func test_the_heel_winning_is_not_deserved() -> void:
-	var c := _chants()
-	var heard := _heard(c)
-	c.clock = 60.0
-	c.match_over(-1.0)
-	for i in 250:
-		c.tick(0.1, 0.8)
-	assert_array(heard).is_empty()
-
-
-func test_entrance_does_not_play_generated_roster_chants_or_shouts() -> void:
-	var c := _chants()
-	var heard := _heard(c)
+func test_match_event_hooks_are_silent_and_keep_the_match_clock() -> void:
+	var chants: CrowdChants = auto_free(CrowdChants.new())
 	var pool: SfxPool = auto_free(SfxPool.new())
+	add_child(chants)
 	add_child(pool)
-	c.sfx = pool
-	var whoas := []
-	pool.played.connect(func(s, _db): if s.begins_with("crowd_whoa"): whoas.append(s))
-	c.entrance("cody")
-	for i in 500:
-		c.tick(0.1, 0.5)
-	assert_array(whoas).is_empty()
-	assert_array(heard).is_empty()
+	var played := []
+	pool.played.connect(func(sound: String, _db: float) -> void: played.append(sound))
+	chants.bell()
+	chants.moved(1.0, 1.0)
+	chants.fired_up(1.0)
+	chants.kicked_out(3)
+	chants.table_set_up()
+	chants.count(2, pool)
+	chants.match_over(1.0)
+	chants.entrance("cody")
+	chants.tick(0.5, 1.0)
+	assert_array(played).is_empty()
+	assert_float(chants.match_time()).is_equal_approx(0.5, 0.001)
+
+
+func test_generated_chant_assets_are_not_in_the_game() -> void:
+	for path in [
+		"res://assets/audio/chant_this_is_awesome_0.ogg",
+		"res://assets/audio/chant_cody_0.ogg",
+		"res://assets/audio/chant_otc_0.ogg",
+		"res://assets/audio/crowd_count_1_0.ogg",
+		"res://assets/audio/crowd_whoa_0.ogg",
+	]:
+		assert_bool(ResourceLoader.exists(path)).override_failure_message(path).is_false()
