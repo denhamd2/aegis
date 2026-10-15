@@ -545,12 +545,15 @@ func _poll_input() -> Dictionary:
 		_strut_armed = true
 		_strut_point = Vector3.INF
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
-		if _wants_taunt():
-			input["taunt"] = true
-			return input
-		var strut := _strut_input(input)
-		if not strut.is_empty():
-			return strut
+		# A dead opponent is a finish, not an invitation to play to the crowd.
+		# Walk straight to the cover so the referee can count the pin.
+		if not target.dead:
+			if _wants_taunt():
+				input["taunt"] = true
+				return input
+			var strut := _strut_input(input)
+			if not strut.is_empty():
+				return strut
 		var spot := WrestlerController.cover_approach_spot(target,
 				controller.global_position)
 		var to_spot := spot - controller.global_position

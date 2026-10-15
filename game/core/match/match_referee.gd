@@ -284,20 +284,21 @@ func _check_for_downed_opponent_action() -> void:
 		var defender: WrestlerController = pair[1]
 		# Playing possum (PossumSpot): once a match, the man down sweeps the
 		# legs of the one who has come to stand over them.
-		if PossumSpot.wants(defender, attacker):
+		if not defender.dead and PossumSpot.wants(defender, attacker):
 			_start_possum(defender, attacker)
 			return
 		# Worked before he is covered (Phase 4, position): a stomp or a fist,
 		# by where the standing man is -- up to GROUND_ATTACKS_MAX a knockdown,
 		# never after a finisher, whose knockdown is the cover.
-		if attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
+		if not defender.dead \
+				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.last_landed_tier < CombatSystem.Tier.FINISHER \
 				and attacker.can_ground_attack(defender):
 			attacker.begin_ground_attack(defender)
 			return
 		# Hauled up instead of covered: worked over, not worth a cover, so the
 		# man in control picks him up for more.
-		if not wants_cover(defender) \
+		if not defender.dead and not wants_cover(defender) \
 				and attacker.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]) \
 				and attacker.can_pickup(defender):
 			attacker.begin_pickup(defender)
@@ -343,18 +344,19 @@ func _check_for_downed_opponent_action() -> void:
 			# ropes (a knockdown mid-ring takes the hold instead). Gated
 			# on the hold first, measured over 8 seeds it never came: the
 			# knockdown after the hold is nearly always the finish.
-			if _wants_dive(attacker, defender):
-				_start_dive(attacker, defender)
-				return
-			# His moonsault (TopRopeSpot): once a match, on a man down where a
-			# corner suits the dive -- after his own hold has had its turn.
-			if _wants_top_rope(attacker, defender):
-				_start_top_rope(attacker, defender)
-				return
-			if _wants_own_hold(attacker) \
-					and WrestlerController.has_room_for_figure_four(defender):
-				_start_own_hold(attacker, defender)
-				return
+			if not defender.dead:
+				if _wants_dive(attacker, defender):
+					_start_dive(attacker, defender)
+					return
+				# His moonsault (TopRopeSpot): once a match, on a man down where a
+				# corner suits the dive -- after his own hold has had its turn.
+				if _wants_top_rope(attacker, defender):
+					_start_top_rope(attacker, defender)
+					return
+				if _wants_own_hold(attacker) \
+						and WrestlerController.has_room_for_figure_four(defender):
+					_start_own_hold(attacker, defender)
+					return
 			_pinning = true
 			_pin_ticks = 0
 			_pin_count_shown = 0
@@ -371,6 +373,8 @@ func _check_for_downed_opponent_action() -> void:
 ## cover, kickout, over and over. Late in the match (MatchFlow's finish) any
 ## knockdown is a cover; without a MatchFlow (the bare test scene) every one is.
 func wants_cover(defender: WrestlerController) -> bool:
+	if defender.dead:
+		return true
 	if defender.knockdown_tier >= CombatSystem.Tier.POWER:
 		return true
 	if defender.flow == null:
@@ -515,17 +519,18 @@ func _tick_pin() -> void:
 	# next one (MatchFlow.FINISHER_KICKOUTS_MAX), and the count runs to three.
 	var no_kickout_left: bool = can_be_finished(_pin_defender) and _pin_attacker.flow != null \
 			and _pin_attacker.flow.no_kickout_left()
-	if not no_kickout_left and _pin_defender._pin_minigame \
+	if not _pin_defender.dead and not no_kickout_left and _pin_defender._pin_minigame \
 			and _pin_defender._pin_minigame.tick(_pin_ticks, _pin_defender._kickout_input_this_tick):
 		if can_be_finished(_pin_defender) and _pin_attacker.flow != null:
 			_pin_attacker.flow.finisher_kickouts += 1
 		_end_pin(false)
 		return
-	if _tick_rope_reach(_pin_ticks, ROPE_REACH_START_TICK):
+	if not _pin_defender.dead and _tick_rope_reach(_pin_ticks, ROPE_REACH_START_TICK):
 		_end_pin(false, true)
 		return
 	_update_count()
-	if _pin_ticks >= NEAR_FALL_KICKOUT_TICK and not can_be_finished(_pin_defender):
+	if not _pin_defender.dead and _pin_ticks >= NEAR_FALL_KICKOUT_TICK \
+			and not can_be_finished(_pin_defender):
 		near_falls += 1
 		_end_pin(false)
 		return
