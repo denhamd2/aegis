@@ -69,7 +69,7 @@ func test_a_big_moment_sets_the_cameras_off_and_it_dies_away() -> void:
 	crowd.pop(CrowdReaction.POP_SIGNATURE)
 	assert_float(crowd.burst_level).is_equal(1.0)
 	assert_float(CrowdReaction.published_rate(crowd.flash_rate, crowd.burst_level)) \
-			.is_equal_approx(CrowdReaction.MATCH_FLASH_RATE + CrowdReaction.BURST_RATE, 0.001)
+			.is_equal_approx(CrowdReaction.BURST_RATE, 0.001)
 	# A jab is not a camera moment.
 	var quiet: CrowdReaction = auto_free(CrowdReaction.new())
 	add_child(quiet)
@@ -80,11 +80,25 @@ func test_a_big_moment_sets_the_cameras_off_and_it_dies_away() -> void:
 
 
 func test_the_rest_rate_is_low_and_an_entrance_rate_higher() -> void:
-	# About 0.1-0.3 Hz for an active emitter at rest, per the brief; the
-	# match's rest rate is below it, an entrance's inside it.
-	assert_float(CrowdReaction.MATCH_FLASH_RATE).is_less(0.1)
+	# Matches have no ambient flashes; entrances bring the phones out.
+	assert_float(CrowdReaction.MATCH_FLASH_RATE).is_equal(0.0)
 	assert_float(CrowdReaction.ENTRANCE_FLASH_RATE).is_between(0.1, 0.3)
-	assert_float(CrowdReaction.MATCH_FLASH_RATE).is_greater(0.0)
+	var crowd: CrowdReaction = auto_free(CrowdReaction.new())
+	add_child(crowd)
+	assert_float(crowd.flash_rate).is_equal(0.0)
+	crowd.set_flashes(CrowdReaction.ENTRANCE_FLASH_RATE)
+	assert_float(crowd.flash_rate).is_equal(CrowdReaction.ENTRANCE_FLASH_RATE)
+
+
+func test_only_big_moves_trigger_camera_flash_bursts() -> void:
+	var crowd: CrowdReaction = auto_free(CrowdReaction.new())
+	add_child(crowd)
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	var suplex := load("res://resources/moves/grapple_vertical_suplex.tres") as MoveDef
+	crowd._on_move_landed(null, null, jab)
+	assert_float(crowd.burst_level).is_equal(0.0)
+	crowd._on_move_landed(null, null, suplex)
+	assert_float(crowd.burst_level).is_greater(0.0)
 
 
 ## The people are not all doing the same thing: the baked UVs carry a phase in

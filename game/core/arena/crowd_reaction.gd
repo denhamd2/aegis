@@ -23,6 +23,9 @@ const POP_DAMAGE_FLOOR := 12.0
 const POP_DAMAGE_FULL := 26.0
 const POP_MOVE_MAX := 0.65
 const POP_SIGNATURE := 0.9
+## Only a genuinely hard hit should trigger phones during the match. This keeps
+## routine strikes and crowd reactions from becoming a constant strobe.
+const POP_FLASH_MOVE := 0.5
 ## A cover builds tension with each count; a kickout after two is the loudest
 ## thing in wrestling.
 const PIN_TENSION := 0.22
@@ -34,10 +37,10 @@ const POP_TAUNT := 0.6
 ## The finish: full, held while the winner celebrates.
 const WIN_HOLD := 8.0
 ## Camera flashes, per fully active emitter per second (CrowdFlashes: about
-## 900 emitters, each busier or quieter by where it sits). An entrance has the
-## whole house holding phones up; a match has the odd one. Bursts ride on top.
+## 900 emitters, each busier or quieter by where it sits). Phones are up during
+## entrances; during the match only big moments trigger short bursts.
 const ENTRANCE_FLASH_RATE := 0.26
-const MATCH_FLASH_RATE := 0.07
+const MATCH_FLASH_RATE := 0.0
 ## A burst adds up to this many flashes a second to every emitter, falling away
 ## by half every BURST_HALF_LIFE seconds: pyro, a finisher, a near-fall, a count.
 const BURST_RATE := 1.4
@@ -151,7 +154,10 @@ func _follow_the_cover() -> void:
 
 
 func _on_move_landed(_attacker, _defender, move: MoveDef) -> void:
-	pop(move_pop(move))
+	var amount := move_pop(move)
+	pop(amount)
+	if amount >= POP_FLASH_MOVE:
+		burst(amount / POP_MOVE_MAX)
 
 
 func _on_match_won(_winner, _method) -> void:
