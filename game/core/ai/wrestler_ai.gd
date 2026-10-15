@@ -562,6 +562,14 @@ func _poll_input() -> Dictionary:
 			var dir := to_spot.normalized()
 			input["move"] = Vector2(dir.x, dir.z)
 		return input
+	# If both wrestlers are on the floor, approach along the open ringside lane.
+	# The ring deck blocks a straight path between opposite sides; feeding that
+	# vector to both controllers made them push into the apron indefinitely.
+	# Weapon fetch/use decisions above still take priority, but neutral movement
+	# always closes distance by routing around a clear corner.
+	if controller.outside_ring and target.outside_ring and distance > tie_up_range:
+		input["move"] = _outside_opponent_move(target.global_position)
+		return input
 
 	# Making room for a charge. Once the opening lock-up is done the two never
 	# stand run_engage_distance apart on their own -- measured over twelve
@@ -869,12 +877,12 @@ func _through_ropes_toward(him: Vector3) -> Vector2:
 	return Vector2(dir.x, dir.z)
 
 
-## A weapon approach when both men are on the floor. A straight line between
-## wrestlers on opposite sides runs into the solid ring deck, where both AIs
-## used to push forever without making progress. Walk along the outside edge
-## to the next corner on the shorter safe arc; the entrance steps occupy the
-## (+X, -Z) corner, so prefer the other arc whenever it is available.
-func _outside_weapon_move(him: Vector3) -> Vector2:
+## Approach another wrestler while both are on the floor. A straight line
+## between wrestlers on opposite sides runs into the solid ring deck, where
+## both AIs can push forever without making progress. Walk along the outside
+## edge to the next corner on the shorter safe arc; the entrance steps occupy
+## the (+X, -Z) corner, so prefer the other arc whenever it is available.
+func _outside_opponent_move(him: Vector3) -> Vector2:
 	var me := controller.global_position
 	var my_side := GrappleRig._outside_side(me)
 	var his_side := GrappleRig._outside_side(him)
@@ -912,8 +920,6 @@ func _outside_weapon_move(him: Vector3) -> Vector2:
 	if move.length() < 0.05:
 		move = Vector2(his_side.z, his_side.x)
 	return move.normalized()
-
-
 static func _outside_perimeter_s(point: Vector3, radius: float) -> float:
 	var edge := radius * 2.0
 	var side := GrappleRig._outside_side(point)
@@ -1390,7 +1396,7 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 			weapon_swings_thrown += 1
 			return input
 	if distance > reach:
-		input["move"] = _outside_weapon_move(target.global_position) \
+		input["move"] = _outside_opponent_move(target.global_position) \
 				if controller.outside_ring and target.outside_ring \
 				else Vector2(dir.x, dir.z)
 		return input

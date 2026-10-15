@@ -141,12 +141,49 @@ func test_outside_weapon_approach_routes_around_the_ring() -> void:
 	# ring through the apron.
 	roman.global_position = Vector3(5.0, 0.0, 0.0)
 	cody.global_position = Vector3(-5.0, 0.0, 0.0)
-	var roman_move := roman.ai._outside_weapon_move(cody.global_position)
-	var cody_move := cody.ai._outside_weapon_move(roman.global_position)
+	var roman_move := roman.ai._outside_opponent_move(cody.global_position)
+	var cody_move := cody.ai._outside_opponent_move(roman.global_position)
 	assert_float(roman_move.y).is_greater(0.1)
 	assert_float(cody_move.y).is_greater(0.1)
 	assert_float(roman_move.length()).is_equal_approx(1.0, 0.001)
 	assert_float(cody_move.length()).is_equal_approx(1.0, 0.001)
+
+
+func test_both_outside_ai_close_the_gap_instead_of_walking_into_the_ring() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.outside_ring = true
+	cody.outside_ring = true
+	roman.global_position = Vector3(5.0, WrestlerController.FLOOR_LEVEL, 0.0)
+	cody.global_position = Vector3(-5.0, WrestlerController.FLOOR_LEVEL, 0.0)
+	# Suppress discretionary weapon runs so this exercises the ordinary chase.
+	roman.ai._weapon_runs = WrestlerAI.WEAPON_RUNS
+	cody.ai._weapon_runs = WrestlerAI.WEAPON_RUNS
+	var roman_input: Dictionary = roman.ai._poll_input()
+	var cody_input: Dictionary = cody.ai._poll_input()
+	var roman_move: Vector2 = roman_input["move"]
+	var cody_move: Vector2 = cody_input["move"]
+	# Both route around the deck, rather than sending opposite movement into it.
+	assert_float(absf(roman_move.y)).is_greater(0.1)
+	assert_float(absf(cody_move.y)).is_greater(0.1)
+	assert_float(roman_move.length()).is_equal_approx(1.0, 0.001)
+	assert_float(cody_move.length()).is_equal_approx(1.0, 0.001)
+
+
+func test_same_side_ringside_ai_moves_directly_towards_opponent() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.outside_ring = true
+	cody.outside_ring = true
+	roman.global_position = Vector3(5.0, WrestlerController.FLOOR_LEVEL, -1.25)
+	cody.global_position = Vector3(5.0, WrestlerController.FLOOR_LEVEL, 1.25)
+	roman.ai._weapon_runs = WrestlerAI.WEAPON_RUNS
+	var input: Dictionary = roman.ai._poll_input()
+	var move: Vector2 = input["move"]
+	assert_float(absf(move.x)).is_less(0.1)
+	assert_float(move.y).is_greater(0.9)
 
 
 func test_under_the_ring_he_hands_the_wheel_a_weapon_in_stock() -> void:
