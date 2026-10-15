@@ -54,6 +54,7 @@ import bpy  # noqa: I001  -- the bpy module registers the rest; it imports first
 import bmesh
 from mathutils import Vector
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import crowd as crowd_module
 import bpy_exit
 
@@ -584,7 +585,11 @@ def aisle_indices(cfg: dict[str, float]) -> list[int]:
     """
     per_loop = len(plan_loop(cfg, cfg["BOWL_FIRST_ROW"]))
     aisles = int(cfg["BOWL_AISLES"])
-    return [int(round(k * per_loop / aisles)) % per_loop for k in range(aisles)]
+    picks = {int(round(k * per_loop / aisles)) % per_loop for k in range(aisles)}
+    for start in (0, per_loop // 2):
+        for fraction in (0.25, 0.75):
+            picks.add(start + int(round(cfg["BOWL_STRAIGHT_SEGMENTS"] * fraction)))
+    return sorted(picks)
 
 
 def build_bowl(cfg: dict[str, float], parts: dict[str, Part]) -> list[dict]:
@@ -965,4 +970,5 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    bpy_exit.finish(main(sys.argv[1:]))
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+    bpy_exit.finish(main(argv))

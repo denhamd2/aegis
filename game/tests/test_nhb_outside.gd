@@ -63,6 +63,20 @@ func test_he_rolls_out_to_the_floor_and_back_in() -> void:
 	assert_float(absf(w.global_position.z)).is_less_equal(WrestlerController.RING_KEEP_IN)
 
 
+func test_he_can_carry_a_weapon_back_through_the_ropes() -> void:
+	var w := _wrestler(true)
+	w.outside_ring = true
+	w.global_position = Vector3(0.4, WrestlerController.FLOOR_LEVEL, -2.5)
+	await _ticks(2)
+	var weapon := WeaponStock.of(w).pull(WeaponCatalog.by_id(&"steel_chair"))
+	w.take_weapon(weapon)
+	assert_bool(w.begin_rope_cross()).is_true()
+	await _ticks(DiveSpot.ROLL_IN_TICKS + 5)
+	assert_bool(w.outside_ring).is_false()
+	assert_bool(w.has_weapon()).is_true()
+	assert_str(String(w.held_weapon.def.id)).is_equal("steel_chair")
+
+
 func test_outside_he_stays_on_the_floor_inside_the_barricade() -> void:
 	var w := _wrestler(true)
 	w.outside_ring = true
@@ -79,6 +93,22 @@ func test_outside_he_stays_on_the_floor_inside_the_barricade() -> void:
 		# Never under the apron.
 		assert_bool(absf(p.x) >= WrestlerController.DECK_KEEP_OUT - 0.001 \
 				or absf(p.z) >= WrestlerController.DECK_KEEP_OUT - 0.001).is_true()
+
+
+func test_no_holds_barred_can_walk_up_the_ramp_and_onto_the_stage() -> void:
+	var w := _wrestler(true)
+	w.outside_ring = true
+	w.global_position = Vector3(0.0, -4.0, -20.0)
+	w.keep_inside_the_ring()
+	assert_float(w.global_position.y).is_equal_approx(
+			ArenaBuilder.match_surface_y(w.global_position), 0.001)
+	assert_float(w.global_position.y).is_greater(WrestlerController.FLOOR_LEVEL)
+	w.global_position = Vector3(5.0, -4.0, -32.0)
+	w.keep_inside_the_ring()
+	assert_float(w.global_position.y).is_equal_approx(ArenaBuilder.STAGE_DECK_Y, 0.001)
+	assert_float(absf(w.global_position.x)) \
+			.is_less_equal(ArenaBuilder.STAGE_HALF_WIDTH - WrestlerController.BODY_RADIUS)
+	assert_float(w.global_position.z).is_greater_equal(ArenaBuilder.MATCH_STAGE_BACK_LIMIT)
 
 
 func test_nobody_reaches_across_the_ropes() -> void:

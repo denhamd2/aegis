@@ -67,6 +67,7 @@ const AUTHORED_HIP_HEIGHT := 0.918
 ## How high this attacker carries a man, against the mannequin: his hip
 ## height over AUTHORED_HIP_HEIGHT. See _transform_track_into_pair_frame().
 var _lift_scale := 1.0
+var _attacker_start_height_offset := 0.0
 
 func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	assert(not _active, "GrappleRig.begin() called while a grapple is already active")
@@ -81,6 +82,10 @@ func begin(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	_pair_transform = _compute_pair_transform(attacker, defender)
 	_lift_scale = attacker.hip_height() / AUTHORED_HIP_HEIGHT \
 			if attacker.has_method("hip_height") else 1.0
+	_attacker_start_height_offset = 0.0
+	if move and move.animation_pair_id == &"ladder_aerial":
+		_attacker_start_height_offset = attacker.global_position.y \
+				- _authored_role_start_height(move, true)
 
 	_active = true
 	grapple_started.emit(attacker, defender, move)
@@ -148,13 +153,14 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 	for i in retargeted.get_track_count():
 		var path := retargeted.track_get_path(i)
 		var node_name := String(path.get_name(path.get_name_count() - 1))
+		var is_attacker_role := node_name == "WrestlerA"
 		if node_name == "WrestlerA":
 			retargeted.track_set_path(i, root.get_path_to(attacker))
 		elif node_name == "WrestlerB":
 			retargeted.track_set_path(i, root.get_path_to(defender))
 		else:
 			continue
-		_transform_track_into_pair_frame(retargeted, i)
+		_transform_track_into_pair_frame(retargeted, i, is_attacker_role)
 	_original_anim = source
 	_retargeted_anim_name = anim_name
 	library.remove_animation(anim_name)
@@ -172,7 +178,8 @@ func _play_retargeted(anim_name: StringName, attacker: Node3D, defender: Node3D)
 ## deterministic and needs no per-frame hook -- a post-animation offset would
 ## have to run after the AnimationPlayer child updates, which node order does
 ## not give us.
-func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
+func _transform_track_into_pair_frame(anim: Animation, track: int,
+		is_attacker_role := false) -> void:
 	var track_type := anim.track_get_type(track)
 	if track_type == Animation.TYPE_POSITION_3D:
 		# Size fitting (animation_gap.md Phase 2): the man being thrown is
@@ -187,6 +194,8 @@ func _transform_track_into_pair_frame(anim: Animation, track: int) -> void:
 		for k in anim.track_get_key_count(track):
 			var pos: Vector3 = anim.track_get_key_value(track, k)
 			pos.y *= lift
+			if is_attacker_role:
+				pos.y += _attacker_start_height_offset
 			anim.track_set_key_value(track, k, _pair_transform * pos)
 	elif track_type == Animation.TYPE_ROTATION_3D:
 		var yaw := Quaternion(_pair_transform.basis.orthonormalized())
@@ -338,10 +347,26 @@ func _role_start(move: MoveDef, is_attacker: bool) -> Transform3D:
 				start.origin = value
 				if not is_attacker:
 					start.origin.y *= _lift_scale
+				elif move.animation_pair_id == &"ladder_aerial":
+					start.origin.y += _attacker_start_height_offset
 			Animation.TYPE_ROTATION_3D:
 				var rot: Quaternion = value
 				start.basis = Basis(defender_root_yaw(rot) if not is_attacker else rot)
 	return start
+
+
+func _authored_role_start_height(move: MoveDef, is_attacker: bool) -> float:
+	if not animation_player or not move or not animation_player.has_animation(move.animation_pair_id):
+		return 0.0
+	var anim := animation_player.get_animation(move.animation_pair_id)
+	var role := "WrestlerA" if is_attacker else "WrestlerB"
+	for i in anim.get_track_count():
+		if anim.track_get_type(i) == Animation.TYPE_POSITION_3D \
+				and String(anim.track_get_path(i)).ends_with(role) \
+				and anim.track_get_key_count(i) > 0:
+			var pos: Vector3 = anim.track_get_key_value(i, 0)
+			return pos.y
+	return 0.0
 
 ## The walk-in: how long GrappleRig takes to carry both men from where they
 ## stand into the places the move starts from (gauntlet/refs/animation_gap.md,

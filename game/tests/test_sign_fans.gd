@@ -51,3 +51,6 @@ func test_the_fan_model_has_his_four_clips() -> void:
 	assert_object(player).is_not_null()
 	for clip: String in [SignFan.SEATED, SignFan.RISE, SignFan.HOLD, SignFan.LOWER]:
 		assert_bool(player.has_animation(clip)).override_failure_message("no clip " + clip).is_true()
+	var body := model.find_child("FanBody", true, false) as MeshInstance3D
+	assert_object(body).is_not_null()
+	assert_int(body.mesh.get_surface_count()).is_equal(5)

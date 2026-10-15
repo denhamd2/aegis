@@ -111,13 +111,20 @@ func test_a_big_turn_is_a_pan_that_ends_side_on() -> void:
 	assert_int(camera.bearing_cuts).is_equal(0)
 
 
-## No event cuts in gameplay coverage: a strike, a slam or a taunt keeps the shot.
+## Gameplay coverage stays continuous through impacts, with a short hero cut
+## for a deliberate taunt pose.
 func test_the_gameplay_camera_does_not_cut_on_impacts() -> void:
 	var m := _scene()
 	var camera: MatchCamera = m["camera"]
 	camera._held = 5.0
 	assert_bool(camera._try_cut(MatchCamera.Cut.STRIKE, m["a"], m["b"])).is_false()
-	assert_bool(camera._try_cut(MatchCamera.Cut.HERO, m["a"], null)).is_false()
+	assert_bool(camera._try_cut(MatchCamera.Cut.HERO, m["a"], null)).is_true()
+	assert_int(camera.mode).is_equal(MatchCamera.Mode.EVENT_CUT)
+	assert_bool(camera._event_shot(DT)).is_true()
+	assert_float(camera.fov).is_equal(30.0)
+	assert_bool(camera.is_close_up()).is_true()
+	camera._held = MatchCamera.CUT_HOLD[MatchCamera.Cut.HERO]
+	camera._update_mode(DT)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.RINGSIDE)
 
 
@@ -138,3 +145,25 @@ func test_weapon_retrieval_gets_a_broadcast_insert_and_returns_to_gameplay() -> 
 	camera._held = MatchCamera.CUT_HOLD[MatchCamera.Cut.WEAPON_RETRIEVE]
 	camera._update_mode(DT)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.RINGSIDE)
+
+
+## The sign cutaway is an intentional, once-per-match insert even with the
+## default continuous gameplay camera and camera cuts disabled.
+func test_enda_sign_cutaway_is_allowed_during_gameplay_coverage() -> void:
+	var old_coverage := CameraSettings.coverage
+	var old_cuts := CameraSettings.cuts
+	CameraSettings.coverage = CameraSettings.Coverage.GAMEPLAY
+	CameraSettings.cuts = false
+	var m := _scene()
+	var camera: MatchCamera = m["camera"]
+	camera._held = MatchCamera.MIN_SHOT
+	assert_bool(camera.can_request_enda_sign_cutaway()).is_true()
+	assert_bool(camera.request_enda_sign_cutaway(2.0)).is_true()
+	camera._physics_process(DT)
+	assert_int(camera.mode).is_equal(MatchCamera.Mode.EVENT_CUT)
+	assert_bool(camera._enda_sign_cutaway).is_true()
+	assert_bool(camera._event_shot(DT)).is_true()
+	assert_float(camera.fov).is_equal(42.0)
+	assert_bool(camera.is_close_up()).is_true()
+	CameraSettings.coverage = old_coverage
+	CameraSettings.cuts = old_cuts

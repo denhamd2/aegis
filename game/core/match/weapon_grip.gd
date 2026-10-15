@@ -28,6 +28,8 @@ var bones := {
 	"index_01_r": "index_01_r", "pinky_01_r": "pinky_01_r",
 	"index_01_l": "index_01_l", "pinky_01_l": "pinky_01_l",
 }
+var legs := {"thigh_r": "thigh_r", "calf_r": "calf_r", "foot_r": "foot_r",
+		"thigh_l": "thigh_l", "calf_l": "calf_l", "foot_l": "foot_l"}
 ## Palm solves per hand: the arm is solved for the wrist, so the palm's miss
 ## is measured and the wrist target moved by it, until it is under this.
 const PALM_TRIES := 3
@@ -36,6 +38,12 @@ const HAND_SEAT_EPSILON := 0.01
 var wrestler: Node3D
 var weapon: WeaponActor = null
 var _ids := {}
+var _leg_ids := {}
+var _climb_ladder: WeaponActor
+var _climb_right_target := Transform3D.IDENTITY
+var _climb_left_target := Transform3D.IDENTITY
+var _climb_right_foot_target := Transform3D.IDENTITY
+var _climb_left_foot_target := Transform3D.IDENTITY
 var _carry := 0.0
 ## The take: the weapon eases from where it lay into the closed fist over
 ## LIFT_TICKS, the hand held on it, so whatever the reach left between palm
@@ -68,6 +76,24 @@ func _ready() -> void:
 		return
 	for key: String in bones:
 		_ids[key] = sk.find_bone(bones[key])
+	for key: String in legs:
+		_leg_ids[key] = sk.find_bone(legs[key])
+
+
+## Presentation targets for hands and boots while climbing. Targets are read
+## from authored ladder rungs; the controller never reads IK back.
+func climb_ladder(ladder: WeaponActor, right_target: Transform3D,
+		left_target: Transform3D, right_foot_target: Transform3D,
+		left_foot_target: Transform3D) -> void:
+	_climb_ladder = ladder
+	_climb_right_target = right_target
+	_climb_left_target = left_target
+	_climb_right_foot_target = right_foot_target
+	_climb_left_foot_target = left_foot_target
+
+
+func clear_ladder_climb() -> void:
+	_climb_ladder = null
 
 
 ## A pickup under way: his hands onto `target`'s grips where it lies on the
@@ -128,6 +154,22 @@ func _process_modification() -> void:
 			return
 	var to_sk := sk.global_transform.affine_inverse()
 	var fwd := (to_sk.basis * -wrestler.global_transform.basis.z).normalized()
+	if is_instance_valid(_climb_ladder):
+		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"],
+				to_sk * _climb_right_target, fwd, 1.0, false)
+		_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"],
+				to_sk * _climb_left_target, fwd, 1.0, false)
+		var right_foot := int(_leg_ids.get("foot_r", -1))
+		var left_foot := int(_leg_ids.get("foot_l", -1))
+		if right_foot >= 0:
+			FootPlant._solve_leg(sk,
+					[_leg_ids["thigh_r"], _leg_ids["calf_r"], right_foot],
+					Transform3D(Basis.IDENTITY, to_sk * _climb_right_foot_target.origin), fwd)
+		if left_foot >= 0:
+			FootPlant._solve_leg(sk,
+					[_leg_ids["thigh_l"], _leg_ids["calf_l"], left_foot],
+					Transform3D(Basis.IDENTITY, to_sk * _climb_left_foot_target.origin), fwd)
+		return
 	if _reach > 0.0 and is_instance_valid(_reach_target):
 		# the palm onto the grip without wrenching the wrist round to the way
 		# the grip lies (for a thing flat on the floor that turn put the hand

@@ -34,10 +34,9 @@ signal cue(what: String)
 # --- Pace and the travelling clips (tools/blender/wrestling_clips.py) --------
 ## The speed Entrance_Walk's planted foot travels at. Must match the clip.
 const WALK_SPEED := 1.6
-## Climb_Steps: 1.2 s, the root travelling (fwd 1.26, up 0.86) -- three
-## treads of the ring steps, bottom-of-flight floor to top-tread centre.
+## Climb_Steps: 1.2 s across the measured stair flight, from its outer edge
+## on the ringside floor to the top platform beside the post.
 const CLIMB_SECONDS := 1.2
-const CLIMB_TO := Vector2(1.26, 0.86)
 ## How fast a turn on the spot goes, radians per second.
 const TURN_RATE := 5.0
 
@@ -135,12 +134,21 @@ const RIG_CLEAR_Y := 6.3
 ## stage overlap in perspective instead of reading as a flat elevation. It
 ## trucks slowly across the arena for parallax through the establishing hold.
 const OPENING_AT := Vector3(-7.5, RIG_CLEAR_Y, 15.0)
-const OPENING_AT_END := Vector3(-3.5, RIG_CLEAR_Y + 0.15, 13.0)
 const OPENING_LOOK := Vector3(0.0, 3.0, -28.0)
-const OPENING_LOOK_END := Vector3(0.5, 3.2, -30.0)
 const OPENING_FOV := 52.0
-const OPENING_FOV_END := 48.0
-const OPENING_MOVE_SECONDS := 12.0
+## Timed broadcast montage: stage, crowd, pyro, ring, then a return to the
+## stage before the first wrestler's entrance. [start seconds, camera, look,
+## lens]. The separate positions create actual cuts and arena parallax.
+const OPENING_SHOTS := [
+	[0.0, Vector3(-7.5, RIG_CLEAR_Y, 15.0), Vector3(0.0, 3.0, -28.0), 52.0],
+	[4.0, Vector3(-13.0, 5.4, -7.0), Vector3(-18.0, 3.2, -16.0), 38.0],
+	[8.0, Vector3(-2.8, 2.1, -20.0), Vector3(0.0, 5.0, -31.0), 34.0],
+	[12.0, Vector3(12.0, 5.0, -7.0), Vector3(19.0, 3.0, -18.0), 40.0],
+	[17.0, Vector3(7.0, 7.4, 11.0), Vector3(0.0, 2.8, -1.0), 48.0],
+	[22.0, Vector3(3.8, 2.3, -19.0), Vector3(0.0, 5.0, -31.0), 36.0],
+	[27.0, Vector3(-11.5, 4.8, -6.0), Vector3(-18.0, 2.8, -18.0), 39.0],
+	[32.0, Vector3(0.0, 7.0, 14.0), Vector3(0.0, 3.0, -30.0), 50.0],
+]
 ## The stage: from down the ramp, on a long lens, so the set fills the frame
 ## behind him.
 const STAGE_AT := Vector3(0.0, 1.9, -23.5)
@@ -313,6 +321,10 @@ const ROMAN_INTRO_SHOTS := [
 ## pyro flashes are left alone, so he is what is lit.
 const ROMAN_HOUSE_DIM := 0.50
 const ROMAN_AMBIENT_DIM := 0.55
+## A darker opening gives the gold launch trails real contrast before the
+## house lights return for wrestler entrances.
+const OPENING_HOUSE_DIM := 0.22
+const OPENING_AMBIENT_DIM := 0.32
 ## Cody's walk, after the WHOA brings the house out of the blackout.
 const WALK_HOUSE_DIM := 0.5
 const WALK_AMBIENT_DIM := 0.65
@@ -394,8 +406,8 @@ const WALK_GESTURE_TICKS := 208
 ## Corner_Pose has the arms fully wide by frame 12: the shells burst over the
 ## ring (EntrancePyro "over_ring").
 const CODY_CORNER_PYRO_AT := 24
-## Coat_Off has his arms behind him, the coat sliding off, on frame 36.
-const COAT_OFF_AT := 72
+## Coat_Off: the coat is clear of both sleeves on frame 48.
+const COAT_OFF_AT := 96
 ## Where he stands to climb the corner: this far from the post along the
 ## diagonal, facing out over it (wrestling_clips.py CORNER_FOOT_*).
 const CORNER_ROOT_M := 0.62
@@ -449,7 +461,12 @@ const PUSH_FOV := Vector2(34.0, 28.0)
 ## height (owner: "I don't like the low camera facing up"; cody_roman_2k26.md).
 const HERO_OFFSET := Vector3(0.9, 1.45, 3.0)
 const HERO_FOV := 40.0
-const STAGE_WIDE_AT := Vector3(0.0, 3.2, -15.0)
+## Raised a metre and moved two metres toward the stage: the stage wide now
+## clears the overhead ring truss in perspective so it no longer lays across
+## the LED wall's top edge. Keep the camera below the fixture bodies; moving
+## the truss would disturb calibrated ring lighting, and a pitch-only change
+## would not alter the truss-to-screen sightline.
+const STAGE_WIDE_AT := Vector3(0.0, 4.2, -17.0)
 const STAGE_WIDE_LOOK := Vector3(0.0, 4.0, -33.0)
 const STAGE_WIDE_FOV := 58.0
 const RING_LOW_OFFSET := Vector3(-2.2, 1.45, 1.4)
@@ -601,6 +618,7 @@ var gestures_played: Array[String] = []
 var _beat := 0
 var _tick := 0
 var _opening_elapsed := 0.0
+var _opening_shot_index := -1
 var _done := false
 
 
@@ -770,7 +788,7 @@ func _freeze(node: Node) -> void:
 ## root line; every beat names its camera shot and whether the card is up.
 func _build_timeline() -> void:
 	_beats.append({"kind": "opening", "ticks": OPENING_TICKS,
-			"events": [[1, "broadcast_open"]]})
+			"events": [[1, "broadcast_open"], [1, "pyro_opening"]]})
 	# Excalibur and Tony open the broadcast. Hold the wide until both finish,
 	# then Justin introduces the main event before anyone enters.
 	if RingAnnouncer.has_call("intro"):
@@ -779,7 +797,8 @@ func _build_timeline() -> void:
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "announce_intro"]],
 				"ticks": opening_announcement_hold_ticks(welcome_seconds,
 						RingAnnouncer.length_of("intro"))})
-	_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "excalibur_crowd"]],
+	_beats.append({"kind": "hold", "shot": "opening",
+			"events": [[1, "excalibur_crowd"], [1, "pyro_opening"]],
 			"ticks": EXCALIBUR_CROWD_CALL_TICKS})
 	if title_match:
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "title_match"]],
@@ -1029,7 +1048,10 @@ func _start_beat() -> void:
 	else:
 		_portal_lights("", false)
 	if beat.get("match_card", false):
-		_card.show_card("%s  VS  %s" % [_card_name(_b), _card_name(_a)], MATCH_CARD_SUBTITLE)
+		# Keep this broadcast hold clean: individual wrestler introductions use
+		# their own lower thirds, but the owner does not want a VS matchup plate
+		# over the ring before the bell.
+		_card.hide_card()
 	elif beat.get("ramp_card", false):
 		pass  # shown by _tick_ramp_card once he is half way down the ramp
 	elif beat.get("card", false) and w:
@@ -1697,7 +1719,16 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 		floor_clip := "", floor_ticks := 0) -> Vector3:
 	var out := RingBuilder.step_out_dir(ENTRY_CORNER)
 	var top := RingBuilder.step_top_centre(ENTRY_CORNER)
-	var climb_from := top + out * CLIMB_TO.x
+	# Start on the floor beyond the outermost tread. The old start was only
+	# 1.26 m out from the top platform, which put the wrestler halfway up the
+	# flight while his root was still at floor height. That read as a float
+	# before he even began the climb. Derive the start from the same footprint
+	# used by RingBuilder's steps collision and visual mesh.
+	var apron_corner := Vector3(ENTRY_CORNER.x * RingBuilder.APRON_OUT, 0.0,
+			ENTRY_CORNER.y * RingBuilder.APRON_OUT)
+	var flight_outer_edge := apron_corner + out * (RingBuilder.STEP_APRON_GAP
+			+ RingBuilder.STEP_PLATFORM + RingBuilder.STEP_RUN * RingBuilder.STEP_TREADS)
+	var climb_from := flight_outer_edge
 	var approach := climb_from + out * APPROACH_M
 	var foot := Vector3(0.0, 0.0, -ArenaBuilder.BARRICADE_RADIUS + 0.4)
 	if split_floor:
@@ -1712,13 +1743,14 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	if floor_clip != "":
 		_beats.append({"kind": "pose", "who": w, "ticks": floor_ticks,
 				"clip": floor_clip, "facing": -out, "shot": "bow_close"})
-	var top_at := Vector3(top.x, ArenaBuilder.FLOOR_Y + CLIMB_TO.y, top.z)
+	var top_at := Vector3(top.x, RingBuilder.STEP_TOP_Y, top.z)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
 			"ticks": int(round(CLIMB_SECONDS * TPS)),
 			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, climb_from.z),
 			"to": top_at, "facing": -out, "shot": "ringside"})
 	# Onto the apron, a pace along the side from the post.
-	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.TURNBUCKLE_PAD_XZ - APRON_ALONG_M), 0.0,
+	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.TURNBUCKLE_PAD_XZ - APRON_ALONG_M),
+			RingBuilder.APRON_TOP,
 			ENTRY_CORNER.y * APRON_STAND)
 	var across := _flat(apron - top_at)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/apron_step",
@@ -1731,6 +1763,7 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 		_beats.append({"kind": "clip", "who": w, "clip": survey_clip,
 				"ticks": 60, "from": apron, "to": apron, "facing": into, "shot": "ringside"})
 	var inside := apron + into * APRON_ROPE_TO.x
+	inside.y = 0.0  # the canvas is level with the ring centre; the apron is not.
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/rope_step_through_apron",
 			"ticks": int(round(APRON_ROPE_SECONDS * TPS)),
 			"from": apron, "to": inside, "facing": into, "shot": "rope_wide"})
@@ -1832,6 +1865,18 @@ func _set_backlight(w: WrestlerController, what: String) -> void:
 		_backlight.global_position = w.global_position + Vector3(0.0, 3.4, -2.6)
 		_backlight.look_at(w.global_position + Vector3(0.0, 1.2, 6.0), Vector3.UP)
 	match what:
+		"broadcast_open":
+			_dim_house(true, OPENING_HOUSE_DIM, OPENING_AMBIENT_DIM)
+			if _crowd:
+				_crowd.pop(1.0)
+		"pyro_opening":
+			if _pyro == null:
+				_pyro = EntrancePyro.new()
+				_pyro.name = "EntrancePyro"
+				add_child(_pyro)
+			_pyro.fire("opening")
+			if _crowd:
+				_crowd.pop(1.0)
 		"backlight_on":
 			_backlight.light_energy = BACKLIGHT_ENERGY
 			_backlight.visible = true
@@ -1877,9 +1922,15 @@ func _event(w: WrestlerController, what: String) -> void:
 		"prop_call_fala":
 			if props and _handoff:
 				_handoff.request("fala", w, props, _beat_facing())
-		"prop_pass_title", "prop_pass_fala", "prop_pass_coat":
+		"prop_pass_title":
 			if _handoff:
-				_handoff.giver_begins()
+				_handoff.giver_begins("title")
+		"prop_pass_fala":
+			if _handoff:
+				_handoff.giver_begins("fala")
+		"prop_pass_coat":
+			if _handoff:
+				_handoff.giver_begins("coat")
 		"prop_call_coat":
 			var worn: EntranceCoat = _coats.get(w)
 			if worn and _handoff:
@@ -1998,7 +2049,13 @@ func _heading(path: Array) -> Vector3:
 func _place(w: WrestlerController, at: Vector3, heading: Vector3, snap: bool,
 		delta: float = 1.0 / 60.0) -> void:
 	var p := at
-	p.y = surface_y(at) if absf(at.x) > 3.2 or absf(at.z) > 3.2 else 0.0
+	var edge := maxf(absf(at.x), absf(at.z))
+	if edge > RingBuilder.APRON_OUT:
+		p.y = surface_y(at)
+	elif edge > RingBuilder.APRON_OUT - 0.35:
+		p.y = RingBuilder.APRON_TOP
+	else:
+		p.y = 0.0
 	w.global_position = p
 	var flat := Vector3(heading.x, 0.0, heading.z)
 	if flat.length() < 0.001:
@@ -2033,9 +2090,11 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 	match beat.get("shot", beat["kind"]):
 		"opening":
 			_opening_elapsed += delta
-			var opening := opening_shot_at(_opening_elapsed / OPENING_MOVE_SECONDS)
-			_camera.set_entrance_shot(opening[0], opening[1], opening[2],
-					first and not _was_shot("opening"), delta)
+			var opening := opening_shot_at(_opening_elapsed)
+			var new_shot := int(opening[0]) != _opening_shot_index
+			_opening_shot_index = int(opening[0])
+			_camera.set_entrance_shot(opening[1], opening[2], opening[3],
+					first or new_shot, delta)
 		"stage":
 			_camera.set_entrance_shot(STAGE_AT, w.global_position + Vector3.UP * 1.3,
 					STAGE_FOV, first and not _was_shot("stage"))
@@ -2295,13 +2354,16 @@ static func intro_shot_at(at: float, hold: float) -> Array:
 	return [last, clampf((at - start) / rest, 0.0, 1.0)]
 
 
-## A slow broadcast-style truck across the arena: the near seats shift against
-## the ring and stage, giving the first wide real parallax instead of a static,
-## centered elevation. The helper keeps the move deterministic and testable.
-static func opening_shot_at(progress: float) -> Array:
-	var e := smoothstep(0.0, 1.0, clampf(progress, 0.0, 1.0))
-	return [OPENING_AT.lerp(OPENING_AT_END, e),
-			OPENING_LOOK.lerp(OPENING_LOOK_END, e), lerpf(OPENING_FOV, OPENING_FOV_END, e)]
+## Broadcast-style timed cuts while the announcers open the show. The final
+## stage shot holds until the first wrestler's entrance takes over.
+static func opening_shot_at(seconds: float) -> Array:
+	var selected := 0
+	for i in OPENING_SHOTS.size():
+		if seconds < float(OPENING_SHOTS[i][0]):
+			break
+		selected = i
+	var shot: Array = OPENING_SHOTS[selected]
+	return [selected, shot[1], shot[2], shot[3]]
 
 
 func _camera_intro(pick: Array) -> void:
@@ -2310,15 +2372,6 @@ func _camera_intro(pick: Array) -> void:
 	var e := t * t * (3.0 - 2.0 * t)
 	_camera.set_entrance_shot((shot[0] as Vector3).lerp(shot[1], e),
 			(shot[2] as Vector3).lerp(shot[3], e), lerpf(shot[4], shot[5], e), true)
-
-
-const MATCH_CARD_SUBTITLE := "AEW WORLD CHAMPIONSHIP"
-
-
-static func _card_name(w: WrestlerController) -> String:
-	var n := w.display_name if w.display_name != "" else String(w.name)
-	var parts := n.split(" ")
-	return parts[parts.size() - 1].to_upper()
 
 
 ## A5: close on him in his corner, from the centre of the ring; for the

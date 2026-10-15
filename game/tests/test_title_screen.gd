@@ -125,9 +125,8 @@ func test_the_controls_card_reads_the_live_input_map() -> void:
 	var screen := _screen()
 	assert_str(screen._binding_labels(["strike"])).is_equal("J")
 	assert_str(screen._binding_labels(["move_up", "move_left", "move_down",
-			"move_right"])).is_equal("W A S D")
-	# A modifier-only binding must not render as a chord prefix ("CTRL+").
-	assert_str(screen._binding_labels(["run"])).not_contains("+")
+			"move_right"])).is_equal("UP LEFT DOWN RIGHT")
+	assert_str(screen._binding_labels(["run"])).is_equal("SHIFT")
 
 ## The wiring the whole screen exists to produce.
 func test_configure_match_puts_the_picks_into_the_match() -> void:

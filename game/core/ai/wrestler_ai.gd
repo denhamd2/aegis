@@ -268,6 +268,9 @@ var _reversal_rolls := 0
 var _reversal_roll_frame := -1
 var _reversal_decided := false
 var _reversal_intent := false
+var _guard_rolls := 0
+var _guard_decided := false
+var _guard_intent := false
 
 
 ## Chain wrestling. How many links the opening lock-up runs to -- one to
@@ -354,6 +357,27 @@ func _roll_reversal() -> bool:
 	return _reversal_intent and target.strike_frame() == _reversal_roll_frame
 
 
+## A wrestler sometimes braces for a quick strike instead of trading punches.
+## The read is made once per attack and is more likely when he has the health
+## advantage; committed heavy moves and weapons are deliberately excluded.
+func _roll_guard() -> bool:
+	if target.fsm.current_state != WrestlerFSM.State.STRIKE \
+			or not DefenseSystem.is_guardable_strike(target._active_move,
+					target._is_weapon_swing(target._active_move)) \
+			or not target._strike_reaches(target._active_move):
+		_guard_decided = false
+		_guard_intent = false
+		return false
+	if not _guard_decided:
+		_guard_decided = true
+		var rng := RandomNumberGenerator.new()
+		rng.seed = _match_seed * 15401 + _player_index * 977 + _guard_rolls
+		_guard_rolls += 1
+		_guard_intent = rng.randf() < DefenseSystem.ai_guard_chance(
+				controller.combat.health(), target.combat.health(), controller.combat.stamina)
+	return _guard_intent
+
+
 ## True while he is holding to read the strike coming at him: he does not
 ## throw into it.
 func is_reading() -> bool:
@@ -396,6 +420,7 @@ static func fatigue_cooldown_scale(damage: float) -> float:
 const TAUNT_WINDOW := 12
 var _setup_taunted := false
 var _power_taunted := false
+var _ladder_attempted_for_down := false
 
 
 func _wants_taunt() -> bool:
@@ -469,6 +494,11 @@ func _strut_input(input: Dictionary) -> Dictionary:
 func _poll_input() -> Dictionary:
 	if not controller or not target:
 		return {}
+	if controller.fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
+		if controller.can_start_ladder_aerial():
+			return {"grapple": true}
+		var axis := -1.0 if controller.ladder_climb_progress() < 0.92 else 1.0
+		return {"move": Vector2(0.0, axis)}
 	if controller.fsm.current_state == WrestlerFSM.State.PIN_DEFENDER:
 		_pin_defender_tick += 1
 		return {"strike": _should_press_kickout(_pin_defender_tick, controller._pin_minigame)}
@@ -522,6 +552,10 @@ func _poll_input() -> Dictionary:
 		"run": false,
 	}
 	input["reversal"] = _roll_reversal()
+	if input["reversal"]:
+		return input
+	if _roll_guard():
+		return {"guard": true}
 	# No Holds Barred: out for a weapon, or using the one in his hands.
 	var armed := _weapon_input(input, to_target, distance)
 	if not armed.is_empty():
@@ -544,9 +578,14 @@ func _poll_input() -> Dictionary:
 	# guard in WrestlerController slides him round the legs if the straight
 	# line would clip them.
 	if target.fsm.current_state != WrestlerFSM.State.DOWN:
+		_ladder_attempted_for_down = false
 		_strut_armed = true
 		_strut_point = Vector3.INF
 	if target.fsm.current_state == WrestlerFSM.State.DOWN:
+		if not target.dead and not _ladder_attempted_for_down and not controller.outside_ring \
+				and controller.climbable_ladder_nearby() != null:
+			_ladder_attempted_for_down = true
+			return {"climb_ladder": true}
 		# A dead opponent is a finish, not an invitation to play to the crowd.
 		# Walk straight to the cover so the referee can count the pin.
 		if not target.dead:
@@ -824,9 +863,17 @@ func _poll_input() -> Dictionary:
 ## Where along the ropes he follows the other man through: inside
 ## WrestlerController.ROPE_CROSS_LANE, clear of the turnbuckles.
 const FOLLOW_LANE := 1.6
-## Outside weapon fights must go around the apron, not steer straight through
-## the ring deck. The perimeter stays clear of the deck and the ring steps.
-const OUTSIDE_ROUTE_RADIUS := WrestlerController.DECK_KEEP_OUT + 0.4
+## Outside fights go around the apron on a square route. A waypoint only 0.4m
+## beyond the deck put both corner waypoints in the steel-steps collision
+## boxes; two wrestlers approaching around the ring could meet those boxes and
+## push in place forever. Clear the full diagonal flight plus a body margin,
+## while staying inside the ringside barricade.
+const STEP_ROUTE_CLEARANCE := RingBuilder.APRON_OUT \
+		+ (RingBuilder.STEP_PLATFORM + RingBuilder.STEP_RUN * RingBuilder.STEP_TREADS \
+		+ RingBuilder.STEP_APRON_GAP + 0.15) * sqrt(0.5) \
+		+ RingBuilder.STEP_WIDTH * sqrt(0.5) * 0.5
+const OUTSIDE_ROUTE_RADIUS := minf(WrestlerController.BARRICADE_KEEP_IN - 0.15,
+		maxf(WrestlerController.DECK_KEEP_OUT + 0.4, STEP_ROUTE_CLEARANCE + 0.15))
 
 
 ## The walk to the ropes on the side the other man is on, then into them
@@ -886,6 +933,9 @@ func _through_ropes_toward(him: Vector3) -> Vector2:
 ## the (+X, -Z) corner, so prefer the other arc whenever it is available.
 func _outside_opponent_move(him: Vector3) -> Vector2:
 	var me := controller.global_position
+	var step_escape := _outside_step_escape_move(me)
+	if step_escape.length_squared() > 0.0:
+		return Vector2(step_escape.x, step_escape.z)
 	var my_side := GrappleRig._outside_side(me)
 	var his_side := GrappleRig._outside_side(him)
 	if my_side.dot(his_side) > 0.5:
@@ -922,6 +972,39 @@ func _outside_opponent_move(him: Vector3) -> Vector2:
 	if move.length() < 0.05:
 		move = Vector2(his_side.z, his_side.x)
 	return move.normalized()
+
+
+## If the wrestler is in the steps' expanded footprint, peel him away from
+## the nearest face before chasing. Otherwise move_and_slide can leave him
+## pressed against the step box while the perimeter route is tangent to it.
+static func _outside_step_escape_move(point: Vector3) -> Vector3:
+	var length := RingBuilder.STEP_PLATFORM + RingBuilder.STEP_RUN * RingBuilder.STEP_TREADS
+	var half_length := length * 0.5
+	var half_width := RingBuilder.STEP_WIDTH * 0.5
+	var safe_radius := WrestlerController.BODY_RADIUS + 0.08
+	for corner: Vector2 in RingBuilder.STEP_CORNERS:
+		var out := RingBuilder.step_out_dir(corner)
+		var across := Vector3(out.z, 0.0, -out.x)
+		var apron_corner := Vector3(corner.x * RingBuilder.APRON_OUT, 0.0,
+				corner.y * RingBuilder.APRON_OUT)
+		var centre := apron_corner + out * (half_length + RingBuilder.STEP_APRON_GAP)
+		var delta := Vector3(point.x - centre.x, 0.0, point.z - centre.z)
+		var along := delta.dot(out)
+		var across_distance := delta.dot(across)
+		var clamped_along := clampf(along, -half_length, half_length)
+		var clamped_across := clampf(across_distance, -half_width, half_width)
+		var away := delta - out * clamped_along - across * clamped_across
+		var distance := away.length()
+		if distance >= safe_radius:
+			continue
+		if distance < 0.001:
+			# Already within the box: leave through its nearest side.
+			var end_clearance := half_length - absf(along)
+			var side_clearance := half_width - absf(across_distance)
+			away = out * signf(along) if end_clearance < side_clearance \
+					else across * signf(across_distance)
+		return away.normalized() if away.length_squared() > 0.0 else out
+	return Vector3.ZERO
 static func _outside_perimeter_s(point: Vector3, radius: float) -> float:
 	var edge := radius * 2.0
 	var side := GrappleRig._outside_side(point)
@@ -1186,10 +1269,11 @@ const WEAPON_CHANCE := 0.55
 const WEAPON_ROLL_DOWN_SCALE := 2.0
 const WEAPON_RUNS := 12
 ## A man's own weapons are this much likelier to come out.
-const SIGNATURE_WEIGHT := 5.0
+const SIGNATURE_WEIGHT := 7.0
 ## Firearms, explosives and hazardous set pieces are scarce, so bias them into
 ## the card rather than leaving them to a 1-in-33 flat draw.
-const WILD_WEAPONS: Array[StringName] = [&"handgun", &"rpg", &"bed_of_nails", &"table"]
+const WILD_WEAPONS: Array[StringName] = [
+		&"handgun", &"rpg", &"bed_of_nails", &"table", &"thumbtacks", &"barbed_wire_board"]
 const WILD_WEIGHT := 10.0
 ## Swings before he drops it, and how long a fetch may take before he gives up.
 const WEAPON_SWINGS := 4
@@ -1304,6 +1388,17 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 	if WeaponStock.of(controller).loose_near(controller.global_position):
 		input["weapon"] = true          # one lying at his feet will do
 		return input
+	var stage_weapon := WeaponStock.of(controller).nearest_stage_weapon(
+			controller.global_position)
+	if stage_weapon and controller.outside_ring:
+		var to_stage_weapon := stage_weapon.global_position - controller.global_position
+		to_stage_weapon.y = 0.0
+		if to_stage_weapon.length() > WeaponStock.PICKUP_REACH:
+			var toward := to_stage_weapon.normalized()
+			input["move"] = Vector2(toward.x, toward.z)
+		else:
+			input["weapon"] = true
+		return input
 	if not controller.outside_ring:
 		if controller.is_crossing_ropes():
 			return input
@@ -1369,6 +1464,16 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 	if controller.outside_ring != target.outside_ring:
 		return {}
 	if def.set_up != "" and def.set_piece and not target.is_crossing_ropes():
+		if def.id == &"ladder" and target.fsm.current_state == WrestlerFSM.State.DOWN:
+			var to_ladder := _flat(target.global_position - controller.global_position)
+			if to_ladder.length() > 0.9:
+				input["move"] = Vector2(to_ladder.normalized().x, to_ladder.normalized().z)
+				return input
+			input["move"] = Vector2.ZERO
+			input["grapple"] = true
+			input["set_ladder_upright"] = true
+			_weapon_plan = WeaponPlan.NONE
+			return input
 		# a table, the tacks: not swung -- set down close by him, across
 		# the way this man faces him, for _line_up_input to put him through
 		var from_him := _flat(controller.global_position - target.global_position)
@@ -1439,13 +1544,21 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		return {}
 	var piece: WeaponActor = null
 	for a in stock.set_up_pieces():
-		if a.def.set_piece and a.def.broken != "" \
+		if a.def.set_piece and a.def.landing_damage > 0.0 \
 				and _flat(a.global_position - target.global_position).length() <= LINE_UP_FROM \
 				and _flat(a.global_position - controller.global_position).length() <= LINE_UP_FROM:
 			piece = a
 			break
 	if piece == null:
 		return {}
+	# A ladder uses a distinct MoveDef for its damage/recovery tuning while
+	# reusing the proven paired suplex lift and root arc. Its landing response
+	# is ladder-specific in ImpactSell.
+	var spot_move := suplex
+	if piece.def.id == &"ladder":
+		spot_move = load("res://resources/moves/weapon_ladder_slam.tres") as MoveDef
+		if spot_move == null:
+			return {}
 	var out := _flat(target.global_position - piece.global_position)
 	if out.length() < 0.05:
 		return {}
@@ -1464,7 +1577,7 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 			input["move"] = Vector2(to_target.x, to_target.z).normalized() * 0.05
 			input["grapple"] = true
 			controller.tie_up_rung_cap = CombatSystem.Tier.GRAPPLE
-			controller.prefer_hold_move = suplex
+			controller.prefer_hold_move = spot_move
 			return input
 		# there: hold it, square to him, and let him come -- he closes on
 		# his own, and walking out to meet him would leave the spot

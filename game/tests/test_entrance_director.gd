@@ -165,6 +165,31 @@ func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 			.is_equal(1422)
 
 
+func test_broadcast_open_uses_a_stage_crowd_ring_camera_montage() -> void:
+	var opening := EntranceDirector.opening_shot_at(0.0)
+	var crowd := EntranceDirector.opening_shot_at(5.0)
+	var close_stage := EntranceDirector.opening_shot_at(9.0)
+	var final_stage := EntranceDirector.opening_shot_at(34.0)
+	assert_int(opening[0]).is_equal(0)
+	assert_int(crowd[0]).is_equal(1)
+	assert_int(close_stage[0]).is_equal(2)
+	assert_int(final_stage[0]).is_equal(7)
+	assert_bool(opening[1] != crowd[1]).is_true()
+	assert_bool(crowd[2] != close_stage[2]).is_true()
+	var scene := _match(true)
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var events: Array = director._beats[0].get("events", [])
+	assert_bool(events.any(func(e: Array) -> bool: return e[1] == "broadcast_open")).is_true()
+	assert_bool(events.any(func(e: Array) -> bool: return e[1] == "pyro_opening")).is_true()
+	var rockets := EntrancePyro.opening_rocket_plan()
+	assert_int(rockets.size()).is_equal(5)
+	for rocket: Array in rockets:
+		var from: Vector3 = rocket[0]
+		var to: Vector3 = rocket[1]
+		assert_float(to.y).is_greater(from.y)
+		assert_float(to.y - from.y).is_equal_approx(EntrancePyro.OPENING_ROCKET_RISE, 0.001)
+
+
 func test_roman_waits_with_his_arms_at_his_sides_before_the_faceoff() -> void:
 	var roman := WrestlerController.new()
 	roman.entrance_style = "roman"
@@ -202,6 +227,45 @@ func test_tension_commentary_cue_lands_at_the_faceoff_stare() -> void:
 ## on appearing), and it ends with the bell and both men on their marks.
 func test_the_walk_is_continuous_and_ends_on_the_marks() -> void:
 	_assert_continuous(_match(true))
+
+
+## Both entrance routines start their climb on the actual outer stair edge,
+## then land on the top platform and apron heights. Starting halfway up the
+## collision footprint at floor height caused the visible ringside float.
+func test_both_entrances_climb_from_the_stair_foot_to_the_apron() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var out := RingBuilder.step_out_dir(EntranceDirector.ENTRY_CORNER)
+	var apron_corner := Vector3(EntranceDirector.ENTRY_CORNER.x * RingBuilder.APRON_OUT,
+			0.0, EntranceDirector.ENTRY_CORNER.y * RingBuilder.APRON_OUT)
+	var stair_foot := apron_corner + out * (RingBuilder.STEP_APRON_GAP
+			+ RingBuilder.STEP_PLATFORM + RingBuilder.STEP_RUN * RingBuilder.STEP_TREADS)
+	var climbs := 0
+	var apron_steps := 0
+	var rope_steps := 0
+	for beat: Dictionary in director._beats:
+		if beat.get("clip") == "strikes/climb_steps":
+			climbs += 1
+			var from: Vector3 = beat["from"]
+			var to: Vector3 = beat["to"]
+			assert_vector(Vector3(from.x, 0.0, from.z)).is_equal_approx(stair_foot,
+					Vector3.ONE * 0.001)
+			assert_float(from.y).is_equal_approx(ArenaBuilder.FLOOR_Y, 0.001)
+			assert_float(to.y).is_equal_approx(RingBuilder.STEP_TOP_Y, 0.001)
+		if beat.get("clip") == "strikes/apron_step":
+			apron_steps += 1
+			assert_float((beat["from"] as Vector3).y).is_equal_approx(
+					RingBuilder.STEP_TOP_Y, 0.001)
+			assert_float((beat["to"] as Vector3).y).is_equal_approx(
+					RingBuilder.APRON_TOP, 0.001)
+		if beat.get("clip") == "strikes/rope_step_through_apron":
+			rope_steps += 1
+			assert_float((beat["from"] as Vector3).y).is_equal_approx(
+					RingBuilder.APRON_TOP, 0.001)
+			assert_float((beat["to"] as Vector3).y).is_equal_approx(0.0, 0.001)
+	assert_int(climbs).is_equal(2)
+	assert_int(apron_steps).is_equal(2)
+	assert_int(rope_steps).is_equal(2)
 
 
 ## Roman's own routine holds to the same contract, and his props and pyro are
@@ -258,8 +322,31 @@ func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 	director.bell.connect(func(): rang[0] = true)
 	var last := {a: a.global_position, b: b.global_position}
 	var worst := 0.0
+	var worst_detail := ""
 	var ticks := 0
-	while not rang[0] and ticks < 20000:
+	# Entrance runtimes are authored as beats and can legitimately exceed five
+	# minutes when both full entrances, music holds, and the Dynamite open run.
+	# Bound this probe by the actual timeline plus room for prop handoff instead
+	# of silently timing out halfway through a valid sequence.
+	var max_ticks := 1
+	for beat: Dictionary in director._beats:
+		var kind: String = beat.get("kind", "")
+		var beat_ticks := int(beat.get("ticks", 1))
+		if kind == "walk":
+			var path: Array = beat.get("path", [])
+			var distance := 0.0
+			for i in path.size() - 1:
+				var from: Vector3 = path[i]
+				var to: Vector3 = path[i + 1]
+				distance += Vector2(from.x, from.z).distance_to(Vector2(to.x, to.z))
+			beat_ticks = maxi(1, int(ceil(distance / float(beat.get("speed",
+					EntranceDirector.WALK_SPEED)) * EntranceDirector.TPS)))
+		elif kind == "turn":
+			beat_ticks = EntranceDirector.SETTLE_TICKS if beat.get("settle", false) else 18
+		max_ticks += beat_ticks
+		if beat.get("wait_idle", false):
+			max_ticks += EntranceDirector.HANDOFF_MAX_WAIT
+	while not rang[0] and ticks < max_ticks:
 		var beat_before := director._beat
 		director._physics_process(1.0 / 60.0)
 		_step_actors(scene)
@@ -267,7 +354,8 @@ func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 		if each_tick.is_valid():
 			each_tick.call()
 		for w: WrestlerController in [a, b]:
-			var moved: float = (w.global_position - (last[w] as Vector3)).length()
+			var previous: Vector3 = last[w]
+			var moved: float = (w.global_position - previous).length()
 			last[w] = w.global_position
 			# A beat that starts with a cut or an appearance may place him
 			# anywhere; everything else is walking pace or a clip's root line.
@@ -278,10 +366,21 @@ func _assert_continuous(scene: Node, each_tick := Callable()) -> void:
 					and ((director._beats[director._beat] as Dictionary).get("cut", false)
 						or (director._beats[director._beat] as Dictionary).get("appear", false))
 			if not jump_ok and w.visible:
-				worst = maxf(worst, moved)
-	assert_bool(rang[0]).override_failure_message("no bell after %d ticks" % ticks).is_true()
+				if moved > worst:
+					worst = moved
+					worst_detail = "%s at tick %d after %s/%s: %s -> %s" % [w.name,
+							ticks, started.get("kind", ""), started.get("clip", ""),
+							previous, w.global_position]
+	var handoff := scene.get_node_or_null("PropHandoff") as PropHandoff
+	var final_beat: Dictionary = director._beats[mini(director._beat,
+			director._beats.size() - 1)] if not director._beats.is_empty() else {}
+	var end_state := "no bell after %d ticks at beat %d/%d tick %d (%s), handoff step %d jobs %d" % [
+			ticks, director._beat, director._beats.size(), director._tick,
+			final_beat.get("kind", "none"), handoff.step if handoff else -1,
+			handoff._jobs.size() if handoff else -1]
+	assert_bool(rang[0]).override_failure_message(end_state).is_true()
 	assert_float(worst).override_failure_message(
-			"a wrestler jumped %.3f m in one tick" % worst).is_less(0.1)
+			"a wrestler jumped %.3f m in one tick (%s)" % [worst, worst_detail]).is_less(0.1)
 	assert_vector(a.global_position).is_equal_approx(mark_a, Vector3.ONE * 0.001)
 	assert_vector(b.global_position).is_equal_approx(mark_b, Vector3.ONE * 0.001)
 

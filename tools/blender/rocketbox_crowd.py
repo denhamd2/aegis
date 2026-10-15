@@ -711,12 +711,12 @@ def _add_prop(out: dict, prop: str) -> None:
 ## `far` the upper tier -- sized so the whole bowl stays a committable .glb
 ## (~1.5M crowd triangles; see crowd.py and crowd.optimise_glb). `floor` is the ringside fans, a
 ## few metres from the gameplay camera and instanced, so they can afford
-## ten times the bowl's nearest rows.
+## a denser mesh than the bowl's nearest rows.
 LODS = {
     "near": (480, False),
     "mid": (250, False),
     "far": (230, False),
-    "floor": (1100, True),
+    "floor": (3600, True),
 }
 
 

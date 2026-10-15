@@ -197,6 +197,22 @@ func test_both_outside_ai_close_the_gap_instead_of_walking_into_the_ring() -> vo
 	assert_float(cody_move.length()).is_equal_approx(1.0, 0.001)
 
 
+func test_outside_route_waypoint_clears_the_entrance_steps() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.outside_ring = true
+	cody.outside_ring = true
+	# A wrestler pushed against the (+X, -Z) steps first needs to clear their
+	# expanded collision footprint; following the tangent route kept him pinned.
+	roman.global_position = Vector3(5.2, WrestlerController.FLOOR_LEVEL, -4.2)
+	cody.global_position = Vector3(-5.2, WrestlerController.FLOOR_LEVEL, -4.2)
+	var move := roman.ai._outside_opponent_move(cody.global_position)
+	assert_float(move.x).is_greater(0.7)
+	assert_float(move.y).is_less(-0.1)
+	assert_float(WrestlerAI.OUTSIDE_ROUTE_RADIUS).is_greater(5.0)
+
+
 func test_same_side_ringside_ai_moves_directly_towards_opponent() -> void:
 	var pair := _pair(true)
 	var roman := pair[0]
@@ -210,6 +226,22 @@ func test_same_side_ringside_ai_moves_directly_towards_opponent() -> void:
 	var move: Vector2 = input["move"]
 	assert_float(absf(move.x)).is_less(0.1)
 	assert_float(move.y).is_greater(0.9)
+
+
+func test_an_outside_ai_chooses_a_loose_stage_weapon_and_heads_up_the_ramp() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	roman.outside_ring = true
+	roman.global_position = Vector3(0.0, WrestlerController.FLOOR_LEVEL, -8.0)
+	var stock := WeaponStock.of(roman)
+	var stage_weapon := stock.pull(WeaponCatalog.by_id(&"barbed_wire_bat"))
+	stage_weapon.mode = WeaponActor.Mode.FLOOR
+	stage_weapon.global_position = Vector3(0.0, ArenaBuilder.STAGE_DECK_Y, -32.0)
+	stock.stage_actors.append(stage_weapon)
+	roman.ai._weapon_plan = WrestlerAI.WeaponPlan.FETCH
+	var input := roman.ai._weapon_input({}, Vector3.BACK, 24.0)
+	assert_bool(input.has("move")).is_true()
+	assert_float((input["move"] as Vector2).y).is_less(0.0)
 
 
 func test_under_the_ring_he_hands_the_wheel_a_weapon_in_stock() -> void:
@@ -249,3 +281,49 @@ func test_with_a_table_at_his_back_he_locks_up_for_the_suplex() -> void:
 	# and the hold he wins throws it
 	assert_object(roman._pick_hold_move()).is_same(roman.ai._suplex())
 	assert_object(roman.prefer_hold_move).is_null()
+
+
+func test_tacks_and_barbed_wire_board_are_paired_ai_spots_too() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.combat.tier_reached = 0
+	roman.grapple_move_pool.append(load("res://resources/moves/grapple_vertical_suplex.tres"))
+	cody.global_position = Vector3(0.0, 0.0, -1.0)
+	roman.global_position = Vector3(0.0, 0.0, 0.0)
+	await _ticks(2)
+	cody.global_position = Vector3(0.0, 0.0, -1.0)
+	roman.global_position = Vector3(0.0, 0.0, 0.0)
+	for id: StringName in [&"thumbtacks", &"bed_of_nails", &"barbed_wire_board"]:
+		var piece := WeaponStock.of(cody).pull(WeaponCatalog.by_id(id))
+		piece.set_up_at(Vector3(0.0, 0.0, 1.3), 0.0)
+		var to := cody.global_position - roman.global_position
+		var input: Dictionary = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+		assert_bool(input.get("grapple", false)).override_failure_message(
+				"AI should line up a suplex onto %s" % id).is_true()
+		assert_object(roman.prefer_hold_move).is_same(roman.ai._suplex())
+		roman.prefer_hold_move = null
+		piece.queue_free()
+
+
+func test_a_laid_out_ladder_selects_the_ladder_slam_pair() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.combat.tier_reached = 0
+	roman.grapple_move_pool.append(load("res://resources/moves/grapple_vertical_suplex.tres"))
+	cody.global_position = Vector3(0.0, 0.0, -1.0)
+	roman.global_position = Vector3(0.0, 0.0, 0.0)
+	await _ticks(2)
+	cody.global_position = Vector3(0.0, 0.0, -1.0)
+	roman.global_position = Vector3(0.0, 0.0, 0.0)
+	var ladder := WeaponStock.of(cody).pull(WeaponCatalog.by_id(&"ladder"))
+	ladder.set_up_at(Vector3(0.0, 0.0, 1.3), 0.0)
+	assert_int(ladder.mode).is_equal(WeaponActor.Mode.SET_UP)
+	assert_bool(ladder.def.set_piece).is_true()
+	assert_int(WeaponStock.of(roman).set_up_pieces().size()).is_equal(1)
+	var to := cody.global_position - roman.global_position
+	var input: Dictionary = roman.ai._line_up_input({}, to, Vector2(to.x, to.z).length())
+	assert_bool(input.get("grapple", false)).is_true()
+	assert_object(roman.prefer_hold_move).is_same(
+			load("res://resources/moves/weapon_ladder_slam.tres"))

@@ -52,3 +52,28 @@ func test_the_coat_is_bulked_with_his_arms() -> void:
 		assert_float(out).override_failure_message("surface %d moved %.4f m" % [s, out]) \
 				.is_greater(0.008)
 	coat.queue_free()
+
+
+## The handoff prop remains a recognizable cloth garment and folds in stages
+## instead of replacing the jacket with a box at the removal cue.
+func test_detached_coat_folds_its_sleeves_one_at_a_time() -> void:
+	var prop := FoldingCoatProp.new()
+	add_child(prop)
+	auto_free(prop)
+	await get_tree().process_frame
+	var meshes := prop.find_children("*", "MeshInstance3D", true, false)
+	assert_int(meshes.size()).is_greater_equal(5)
+	for item: Node in meshes:
+		assert_bool((item as MeshInstance3D).mesh is BoxMesh) \
+				.override_failure_message("%s should be cloth geometry, not a block" % item.name) \
+				.is_false()
+	var left: MeshInstance3D = prop.get_node("LeftSleeveCloth")
+	var right: MeshInstance3D = prop.get_node("RightSleeveCloth")
+	assert_float(absf(left.position.x)).is_greater(0.2)
+	assert_float(absf(right.position.x)).is_greater(0.2)
+	prop.advance_fold(FoldingCoatProp.FOLD_SECONDS * 0.5)
+	assert_float(absf(left.position.x)).is_less(0.1)
+	assert_float(absf(right.position.x)).is_greater(0.1)
+	prop.advance_fold(FoldingCoatProp.FOLD_SECONDS)
+	assert_bool(prop.is_folded()).is_true()
+	assert_float(absf(right.position.x)).is_less(0.1)

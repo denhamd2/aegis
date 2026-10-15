@@ -1,0 +1,202 @@
+{
+  "atlas_count": 5,
+  "atlas_size": 2048,
+  "body_triangle_budget": 6000,
+  "source": "https://github.com/microsoft/Microsoft-Rocketbox",
+  "source_commit": "0943055db6ec570bcef9f2c8b41c9e5467c808f9",
+  "variant_budget": 6048,
+  "variants": {
+    "Fan00": {
+      "atlas": 0,
+      "avatar": "Male_Adult_01",
+      "garment_luminance": 0.25477572935074566,
+      "pose": "sit_a",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan01": {
+      "atlas": 0,
+      "avatar": "Male_Adult_04",
+      "garment_luminance": 0.0370629512042635,
+      "pose": "sit_clap",
+      "role": 0.25,
+      "triangles": 6000
+    },
+    "Fan02": {
+      "atlas": 0,
+      "avatar": "Male_Adult_06",
+      "garment_luminance": 0.0911126919856502,
+      "pose": "sit_b",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan03": {
+      "atlas": 0,
+      "avatar": "Male_Adult_07",
+      "garment_luminance": 0.045399152062833306,
+      "pose": "sit_c",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan04": {
+      "atlas": 1,
+      "avatar": "Male_Adult_09",
+      "garment_luminance": 0.01880084147842394,
+      "pose": "sit_phone",
+      "role": 0.0,
+      "triangles": 6023
+    },
+    "Fan05": {
+      "atlas": 1,
+      "avatar": "Male_Adult_10",
+      "garment_luminance": 0.045275629653077985,
+      "pose": "sit_a",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan06": {
+      "atlas": 1,
+      "avatar": "Male_Adult_11",
+      "garment_luminance": 0.023758017732658315,
+      "pose": "sit_cheer",
+      "role": 0.5,
+      "triangles": 6000
+    },
+    "Fan07": {
+      "atlas": 1,
+      "avatar": "Male_Adult_12",
+      "garment_luminance": 0.05308868574847776,
+      "pose": "sit_b",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan08": {
+      "atlas": 2,
+      "avatar": "Male_Adult_14",
+      "garment_luminance": 0.15927189804282454,
+      "pose": "sit_clap",
+      "role": 0.25,
+      "triangles": 6000
+    },
+    "Fan09": {
+      "atlas": 2,
+      "avatar": "Male_Adult_16",
+      "garment_luminance": 0.11208160967131456,
+      "pose": "sit_c",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan10": {
+      "atlas": 2,
+      "avatar": "Male_Adult_17",
+      "garment_luminance": 0.031884524451293854,
+      "pose": "sit_a",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan11": {
+      "atlas": 2,
+      "avatar": "Male_Adult_18",
+      "garment_luminance": 0.16805438613643248,
+      "pose": "sit_b",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan12": {
+      "atlas": 3,
+      "avatar": "Male_Adult_20",
+      "garment_luminance": 0.020894248727709053,
+      "pose": "sit_clap",
+      "role": 0.25,
+      "triangles": 6000
+    },
+    "Fan13": {
+      "atlas": 3,
+      "avatar": "Female_Adult_03",
+      "garment_luminance": 0.09071777229300804,
+      "pose": "sit_a",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan14": {
+      "atlas": 3,
+      "avatar": "Female_Adult_07",
+      "garment_luminance": 0.019055762699287798,
+      "pose": "sit_phone",
+      "role": 0.0,
+      "triangles": 6024
+    },
+    "Fan15": {
+      "atlas": 3,
+      "avatar": "Female_Adult_08",
+      "garment_luminance": 0.20638616621494293,
+      "pose": "sit_c",
+      "role": 0.0,
+      "triangles": 5999
+    },
+    "Fan16": {
+      "atlas": 4,
+      "avatar": "Female_Adult_12",
+      "garment_luminance": 0.012714314856773446,
+      "pose": "sit_clap",
+      "role": 0.25,
+      "triangles": 6000
+    },
+    "Fan17": {
+      "atlas": 4,
+      "avatar": "Female_Adult_13",
+      "garment_luminance": 0.06410104623850849,
+      "pose": "sit_b",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan18": {
+      "atlas": 4,
+      "avatar": "Female_Adult_17",
+      "garment_luminance": 0.3370865579545497,
+      "pose": "sit_cheer",
+      "role": 0.5,
+      "triangles": 6000
+    },
+    "Fan19": {
+      "atlas": 4,
+      "avatar": "Female_Party_02",
+      "garment_luminance": 0.027237333659082645,
+      "pose": "sit_a",
+      "role": 0.0,
+      "triangles": 6000
+    },
+    "Fan20": {
+      "atlas": 1,
+      "avatar": "Male_Adult_09",
+      "garment_luminance": 0.01880084147842394,
+      "pose": "stand_cheer",
+      "role": 0.75,
+      "triangles": 5999
+    },
+    "Fan21": {
+      "atlas": 2,
+      "avatar": "Male_Adult_17",
+      "garment_luminance": 0.031884524451293854,
+      "pose": "stand_clap",
+      "role": 0.75,
+      "triangles": 6000
+    },
+    "Fan22": {
+      "atlas": 0,
+      "avatar": "Male_Adult_04",
+      "garment_luminance": 0.0370629512042635,
+      "pose": "stand",
+      "role": 0.75,
+      "triangles": 6000
+    },
+    "Fan23": {
+      "atlas": 4,
+      "avatar": "Female_Adult_12",
+      "garment_luminance": 0.012714314856773446,
+      "pose": "stand_phone",
+      "role": 0.75,
+      "triangles": 6024
+    }
+  }
+}

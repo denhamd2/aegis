@@ -190,6 +190,9 @@ const STAMINA_GRAPPLE_ATTACKER := 0.06
 const STAMINA_GRAPPLE_DEFENDER := 0.04
 ## Per reversal attempt, landed or not: guessing costs.
 const STAMINA_REVERSAL := 0.04
+## Holding a guard has a small continuous cost; absorbing a strike costs more.
+const STAMINA_GUARD_TICK := 0.0012
+const STAMINA_GUARD_BLOCK := 0.018
 ## Per tick of running.
 const STAMINA_RUN_TICK := 0.0015
 ## Per tick back: standing or moving (0.15/s), and down (a quarter of it).

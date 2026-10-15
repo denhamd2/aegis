@@ -19,6 +19,8 @@ func _roman_match() -> Dictionary:
 	scene.entrances = true
 	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = "roman"
 	(scene.get_node("WrestlerB") as WrestlerController).entrance_style = ""
+	for wrestler: WrestlerController in [scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]:
+		wrestler.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(scene)
 	auto_free(scene)
 	return {"scene": scene,
@@ -35,6 +37,8 @@ func _both_match() -> Dictionary:
 	scene.entrances = true
 	(scene.get_node("WrestlerA") as WrestlerController).entrance_style = "roman"
 	(scene.get_node("WrestlerB") as WrestlerController).entrance_style = "cody"
+	for wrestler: WrestlerController in [scene.get_node("WrestlerA"), scene.get_node("WrestlerB")]:
+		wrestler.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(scene)
 	auto_free(scene)
 	return {"scene": scene,
@@ -48,6 +52,17 @@ func _both_match() -> Dictionary:
 
 func _step(m: Dictionary) -> void:
 	(m["director"] as EntranceDirector)._physics_process(DT)
+	# The director moves the wrestlers kinematically while the match simulation
+	# is frozen, but their presentation clips and skeleton modifiers still run.
+	# Step those visual rigs here too, so hand-held props sample the same frame a
+	# player sees instead of stale pre-entrance bone transforms.
+	for wrestler: WrestlerController in [m["scene"].get_node("WrestlerA"),
+			m["scene"].get_node("WrestlerB")]:
+		wrestler.force_update_transform()
+		if wrestler.anim_tree:
+			wrestler.anim_tree.advance(DT)
+		if wrestler.skeleton:
+			wrestler.skeleton.force_update_all_bone_transforms()
 	(m["ref"] as RefereeActor)._process(DT)
 	(m["keeper"] as Timekeeper)._process(DT)
 	(m["handoff"] as PropHandoff)._process(DT)
@@ -115,6 +130,7 @@ func test_one_prop_at_a_time_and_never_hidden_or_popping() -> void:
 	var handoff: PropHandoff = m["handoff"]
 	var last := {}
 	var worst := [0.0]
+	var worst_detail := [""]
 	var most := [0]
 	var hidden := []
 	_run(m, func():
@@ -127,12 +143,28 @@ func test_one_prop_at_a_time_and_never_hidden_or_popping() -> void:
 					hidden.append("%s hidden" % c.kind)
 			var now := c.pivot.global_position
 			if last.has(c):
-					worst[0] = maxf(worst[0], now.distance_to(last[c]))
+				var moved := now.distance_to(last[c])
+				if moved > worst[0]:
+					worst[0] = moved
+					var holder_actor: Node3D = c.holder.get("actor") as Node3D
+					var skeleton: Skeleton3D = c.holder.get("skeleton") as Skeleton3D
+					var bone_pos := Vector3.ZERO
+					var root_pos := Vector3.ZERO
+					if skeleton:
+						bone_pos = skeleton.get_bone_global_pose(int(c.holder.get("bone", -1))).origin
+						var root_bone := skeleton.find_bone("pelvis")
+						if root_bone >= 0:
+							root_pos = skeleton.get_bone_global_pose(root_bone).origin
+					worst_detail[0] = "%s at step %d holder %s actor %s: %s -> %s (blend %.2f)" % [
+							c.kind, handoff.step, c.holder.get("type", ""),
+							(str(holder_actor.global_position) if holder_actor else "table")
+							+ " bone %s pelvis %s" % [bone_pos, root_pos],
+							last[c], now, c.blend]
 			last[c] = now)
 	assert_int(most[0]).override_failure_message("two props in transit at once").is_equal(1)
 	assert_array(hidden).override_failure_message("%s" % [hidden.slice(0, 3)]).is_empty()
 	assert_float(worst[0]).override_failure_message(
-			"a prop moved %.3f m in one tick" % worst[0]).is_less(MAX_STEP)
+			"a prop moved %.3f m in one tick: %s" % [worst[0], worst_detail[0]]).is_less(MAX_STEP)
 
 
 ## Nobody walks through anybody: the three of them stay a body apart on the
@@ -298,9 +330,19 @@ func test_the_timekeeper_has_a_table_with_a_bell() -> void:
 	assert_float(Timekeeper.TABLE_SIZE.x).is_less(0.7)
 	assert_float(Timekeeper.TABLE_SIZE.y).is_less(0.8)
 	assert_float(Timekeeper.TABLE_SIZE.z).is_less(1.1)
-	assert_float(keeper.table.global_position.distance_to(
-			Vector3(ArenaBuilder.DESK_X, PropHandoff.FLOOR_Y, ArenaBuilder.DESK_Z))) \
-			.is_less(4.0)
+	var announce_centre := Vector3(ArenaBuilder.DESK_X, PropHandoff.FLOOR_Y,
+			ArenaBuilder.DESK_Z)
+	var edge_gap := PropHandoff.TABLE_AT.x - Timekeeper.TABLE_SIZE.x * 0.5 \
+			- ArenaBuilder.DESK_DEPTH * 0.5 - ArenaBuilder.DESK_TOP_OVERHANG
+	assert_float(PropHandoff.TABLE_AT.z).is_between(ArenaBuilder.DESK_Z - ArenaBuilder.DESK_LENGTH * 0.5,
+			ArenaBuilder.DESK_Z + ArenaBuilder.DESK_LENGTH * 0.5)
+	assert_float(PropHandoff.TABLE_AT.x).is_greater(ArenaBuilder.DESK_X)
+	assert_float(edge_gap).override_failure_message(
+			"the timekeeper table needs a visible gap beside commentary").is_greater(0.1)
+	assert_float(PropHandoff.TABLE_AT.z - RingBuilder.APRON_OUT) \
+			.override_failure_message("the timekeeper table is still in the ringside lane") \
+			.is_greater(3.0)
+	assert_float(keeper.table.global_position.distance_to(announce_centre)).is_less(2.0)
 
 
 func test_timekeeper_returns_to_his_chair_and_sits_after_the_entrances() -> void:

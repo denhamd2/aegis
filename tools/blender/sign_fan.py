@@ -175,7 +175,23 @@ def _box(bm, centre, size, mat, layer, group_of, bone, uv_face=None):
     return made
 
 
-def make_mesh(name, boxes, materials, arm, sign=False):
+def _ellipsoid(bm, centre, radii, mat, group_of, bone, segments=12, rings=8):
+    """A small smooth facial/hand form, kept on its owning rig bone."""
+    result = bmesh.ops.create_uvsphere(
+        bm, u_segments=segments, v_segments=rings, radius=1.0)
+    verts = result["verts"]
+    for vert in verts:
+        vert.co.x = centre[0] + vert.co.x * radii[0]
+        vert.co.y = centre[1] + vert.co.y * radii[1]
+        vert.co.z = centre[2] + vert.co.z * radii[2]
+        group_of[vert] = bone
+    faces = {face for vert in verts for face in vert.link_faces}
+    for face in faces:
+        face.material_index = mat
+        face.smooth = True
+
+
+def make_mesh(name, boxes, materials, arm, sign=False, details=()):
     mesh = bpy.data.meshes.new(name)
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
@@ -186,6 +202,8 @@ def make_mesh(name, boxes, materials, arm, sign=False):
     group_of = {}
     for bone, centre, size, mat in boxes:
         _box(bm, centre, size, mat, layer, group_of, bone, uv_face=0 if sign else None)
+    for bone, centre, radii, mat in details:
+        _ellipsoid(bm, centre, radii, mat, group_of, bone)
     bm.verts.index_update()
     order = {v.index: group_of[v] for v in bm.verts}
     bm.to_mesh(mesh)
@@ -374,7 +392,27 @@ def main(argv: list[str]) -> int:
     dark = _material("M_Dark", (0.06, 0.06, 0.07))
     face = _material("M_SignFace", (1.0, 1.0, 1.0))
     back = _material("M_SignBack", (0.72, 0.68, 0.60))
-    make_mesh("FanBody", BOXES, [shirt, skin, dark], arm)
+    eye_white = _material("M_EyeWhite", (0.82, 0.78, 0.69))
+    facial = _material("M_FaceDetail", (0.12, 0.07, 0.055))
+    body_details = [
+        # Eyes, pupils and brows face the ring (-Y); the restrained scale reads
+        # in the broadcast insert without turning the crowd figure into a toy.
+        ("head", (0.047, -0.108, 1.655), (0.022, 0.012, 0.016), 3),
+        ("head", (-0.047, -0.108, 1.655), (0.022, 0.012, 0.016), 3),
+        ("head", (0.047, -0.120, 1.655), (0.008, 0.006, 0.010), 4),
+        ("head", (-0.047, -0.120, 1.655), (0.008, 0.006, 0.010), 4),
+        ("head", (0.047, -0.112, 1.685), (0.028, 0.009, 0.008), 4),
+        ("head", (-0.047, -0.112, 1.685), (0.028, 0.009, 0.008), 4),
+        ("head", (0, -0.125, 1.615), (0.018, 0.018, 0.023), 1),
+        ("head", (0, -0.116, 1.575), (0.034, 0.009, 0.008), 4),
+        ("head", (0.103, 0, 1.615), (0.025, 0.025, 0.040), 1),
+        ("head", (-0.103, 0, 1.615), (0.025, 0.025, 0.040), 1),
+        # Softer, fuller hands around the board edge improve the silhouette.
+        ("forearm_l", (0.24, -0.005, 0.82), (0.052, 0.061, 0.055), 1),
+        ("forearm_r", (-0.24, -0.005, 0.82), (0.052, 0.061, 0.055), 1),
+    ]
+    make_mesh("FanBody", BOXES, [shirt, skin, dark, eye_white, facial], arm,
+              details=body_details)
     make_mesh("FanSign", [("sign", (0, 0, 1.90 + SIGN_UP), (SIGN_W, SIGN_T, SIGN_H), 1)],
               [face, back], arm, sign=True)
     bake(arm)

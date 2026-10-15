@@ -336,7 +336,9 @@ const OUTSIDE_LIFT := 1.4
 const AFTER_FOCUS_LENS := 24.0
 ## Whether the shot on screen is a close-up the rim light should model.
 func is_close_up() -> bool:
-	return mode == Mode.FINISHER_CUT or mode == Mode.FINISHER_AFTER
+	return mode == Mode.FINISHER_CUT or mode == Mode.FINISHER_AFTER \
+			or (mode == Mode.EVENT_CUT and (_cut in [Cut.HERO, Cut.FIRE_UP]
+				or _enda_sign_cutaway))
 var mode: Mode = Mode.HARD_CAM
 ## Seconds the current shot has been held. Advanced off the physics delta, so
 ## it is fixed-step and replays identically; it is never read by anything in
@@ -395,7 +397,9 @@ func _ready() -> void:
 		if wc == null:
 			continue
 		wc.move_landed.connect(_on_move_landed)
-		wc.taunted.connect(func(who): _try_cut(Cut.HERO, who, null))
+		wc.taunted.connect(func(who):
+			var pose_seconds := float(who.taunt_ticks()) / 60.0
+			_try_cut(Cut.HERO, who, null, maxf(CUT_HOLD[Cut.HERO], pose_seconds)))
 		wc.fired_up.connect(func(who): _try_cut(Cut.FIRE_UP, who, null))
 		wc.knocked_down.connect(func(_who): add_trauma(TRAUMA_KNOCKDOWN))
 		wc.set_piece_landed.connect(_on_set_piece_landed)
@@ -753,7 +757,7 @@ func _update_mode(delta: float) -> void:
 		_enda_cutaway_pending = false
 		if (
 				(grapple_rig == null or not grapple_rig.is_active())
-				and _try_cut(Cut.CUTAWAY, _enda_sign_subject, null, _enda_cutaway_hold)
+				and _try_cut(Cut.CUTAWAY, _enda_sign_subject, null, _enda_cutaway_hold, true)
 		):
 			_enda_sign_cutaway = true
 			return
@@ -1154,10 +1158,12 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 		_try_cut(Cut.WEAPON, defender, attacker)
 
 
-## Through a table: the shake as he goes through, and the landing shot.
-func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: bool) -> void:
+## A set-piece landing gets one broadcast insert: the break on a table, or the
+## painful landing on tacks/barbed wire. The event cut returns to the shot it
+## interrupted, just like other weapon coverage.
+func _on_set_piece_landed(who: WrestlerController, weapon: WeaponActor, broke: bool) -> void:
 	add_trauma(TRAUMA_TABLE if broke else TRAUMA_SLAM)
-	if broke:
+	if broke or (weapon != null and weapon.def.set_piece):
 		_try_cut(Cut.TABLE, who, who.opponent)
 
 
@@ -1200,12 +1206,15 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 
 
 ## Cuts to `kind` if the shot grammar allows it now.
-func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0) -> bool:
-	if not CameraSettings.cuts_enabled() or subject == null:
+func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0,
+		enda_exception := false) -> bool:
+	if (not CameraSettings.cuts_enabled() and not enda_exception) or subject == null:
 		return false
-	# 2K26's gameplay camera does not cut on a strike, a slam or a taunt: the
-	# shake carries the impact and the shot stays where it is.
-	if CameraSettings.gameplay():
+	# Gameplay keeps its continuous view through strikes and slams. A taunt is
+	# the exception: the pose is a deliberate character beat, worth a brief
+	# hero close-up before returning to the same ringside camera. The Enda sign
+	# insert is also an explicit editorial cutaway requested by MatchAudio.
+	if CameraSettings.gameplay() and kind != Cut.HERO and not enda_exception:
 		return false
 	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE:
 		return false
@@ -1226,9 +1235,9 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0) 
 	return true
 
 
-## Queue a broadcast cut to the existing Enda sign, only when the regular
-## camera grammar can safely take a cut. MatchAudio waits for the next physics
-## frame to land it, then returns to this shot after the commentary.
+## Queue the Enda sign cutaway as a short editorial insert, including under
+## continuous gameplay coverage. MatchAudio waits for the next physics frame
+## to land it, then returns to the same ringside camera after the commentary.
 func request_enda_sign_cutaway(hold_seconds: float) -> bool:
 	if not can_request_enda_sign_cutaway():
 		return false
@@ -1241,9 +1250,7 @@ func request_enda_sign_cutaway(hold_seconds: float) -> bool:
 
 func can_request_enda_sign_cutaway() -> bool:
 	if (
-			not CameraSettings.cuts_enabled()
-			or CameraSettings.gameplay()
-			or (mode != Mode.HARD_CAM and mode != Mode.RINGSIDE)
+			(mode != Mode.HARD_CAM and mode != Mode.RINGSIDE)
 			or _held < MIN_SHOT
 			or (referee != null and referee.is_pin_active())
 			or (grapple_rig != null and grapple_rig.is_active())
@@ -1321,10 +1328,11 @@ func _event_shot(delta: float) -> bool:
 		Cut.CUTAWAY:
 			if _enda_sign_cutaway and _cut_subject is SignFan:
 				look = _cut_subject.global_position + Vector3.UP * 1.55
-				# Stay on the ring side of the barricade so it cannot obscure the
-				# sign board as it rises; the established crowd behind it fills in.
-				at = look + Vector3(-1.6, 0.55, 0.6)
-				lens = 38.0
+				# Include the board, fan's face and the upgraded nearest row. Stay on
+				# the ring side of the barricade so it cannot cross the sign.
+				at = look + Vector3(-2.15, 0.62, 0.75)
+				lens = 42.0
+				focus = true
 			else:
 				at = CUTAWAY_AT
 				look = CUTAWAY_LOOK

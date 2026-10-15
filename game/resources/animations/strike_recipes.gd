@@ -50,9 +50,9 @@ const LIBRARY := "strikes"
 ## these are.
 const AUTHORED := "res://assets/animations/wrestling_clips.glb"
 
-## No recipe here samples a file any more, so the "file" key the builder
-## still understands is currently unused: every clip below is cut from the
-## rig's own library.
+## Wrestling-specific clips authored in Blender live in this file; the
+## "file" key selects that exported action library while ordinary clips are
+## cut from the rig's own library.
 ##
 ## It used to point at the baked Motifect excerpts under assets/animations/.
 ## Every one of them measured with the head below the hips on most of its
@@ -96,6 +96,8 @@ const RECIPES := {
 	"weapon_pickup_heavy": {"kind": "retime", "source": "Weapon_Pickup_Heavy", "seconds": 0.7333, "file": AUTHORED},
 	"weapon_throw": {"kind": "retime", "source": "Weapon_Throw", "seconds": 0.4333, "file": AUTHORED},
 	"weapon_set_up": {"kind": "retime", "source": "Weapon_Set_Up", "seconds": 0.7333, "file": AUTHORED},
+	"ladder_climb": {"kind": "retime", "source": "Ladder_Climb", "seconds": 1.0667, "file": AUTHORED},
+	"ladder_fall": {"kind": "retime", "source": "Ladder_Fall", "seconds": 0.6, "file": AUTHORED},
 	# A strike knockdown's fall (WrestlerController._bump_down).
 	"bump_back": {"kind": "retime", "source": "Bump_Back", "seconds": 1.0, "file": AUTHORED},
 

@@ -120,6 +120,8 @@ func _ready() -> void:
 	# On a phone, the on-screen stick and buttons -- unless nobody is playing.
 	var nhb := MatchRules.no_holds_barred(self)
 	TouchControls.weapons = nhb
+	if nhb:
+		WeaponStock.of(self).seed_stage_weapons()
 	if TouchControls.wanted(not wrestler_a.is_ai or not wrestler_b.is_ai):
 		var touch := TouchControls.new()
 		touch.name = "TouchControls"

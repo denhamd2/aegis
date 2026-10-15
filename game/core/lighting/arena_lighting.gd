@@ -197,6 +197,14 @@ const TOP_LIGHT_SIZE := 0.18
 @export var rim_energy: float = 2.0
 ## House wash on the seating bowl. Sized against VISUAL_BAR.md's 0.014 crowd.
 @export var house_energy: float = 0.20
+## New.png's front rows receive motivated light, with their photographic
+## materials supplying detail. These outward-facing washes stay off the mat.
+@export var audience_energy: float = 3.6
+const AUDIENCE_COLOR := Color(1.0, 0.95, 0.89)
+const AISLE_COLOR := Color(0.16, 0.33, 1.0)
+const AISLE_ENERGY := 8.0
+var _audience_lights: Array[SpotLight3D] = []
+var _aisle_lights: Array[SpotLight3D] = []
 ## Entrance stage wash.
 @export var stage_energy: float = 2.6
 ## Beam fixtures over the bowl. What they are for is the SHAFT, not the light
@@ -539,6 +547,10 @@ func set_look(p_look: Look) -> void:
 	for light in _stage_wash:
 		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0) \
 				* renderer_gain(light)
+	for light in _audience_lights:
+		light.light_energy = audience_energy * (0.12 if entrance else 1.0) * renderer_gain(light)
+	for light in _aisle_lights:
+		light.light_energy = AISLE_ENERGY * (0.2 if entrance else 1.0) * renderer_gain(light)
 	_dim_set(ENTRANCE_SET_SHARE if entrance else 1.0)
 	if not entrance:
 		# Dark in the match. The owner's 2K26 Cody vs Roman match has no
@@ -633,6 +645,8 @@ func _ready() -> void:
 	_build_top_fill()
 	_build_rim()
 	_build_house()
+	_build_audience_wash()
+	_build_aisle_accents()
 	_build_beams()
 	_build_stage_wash()
 	_build_stage_accents()
@@ -736,6 +750,34 @@ func _build_top_fill() -> void:
 		# the canvas in broadcast footage.
 		light.light_size = TOP_LIGHT_SIZE
 		light.shadow_blur = 1.0
+
+
+func _build_audience_wash() -> void:
+	for axis in [Vector3.RIGHT, Vector3.BACK, Vector3.LEFT, Vector3.FORWARD]:
+		var at: Vector3 = axis * KEY_OFFSET + Vector3.UP * HANG_Y
+		var aim: Vector3 = axis * 10.0 + Vector3.UP * ArenaBuilder.FLOOR_Y
+		var light := _spot("AudienceWash%d" % _audience_lights.size(), at, aim,
+				AUDIENCE_COLOR, audience_energy, 35.0, 0.75, 19.0, false)
+		light.light_size = 0.9
+		light.light_volumetric_fog_energy = 0.0
+		_audience_lights.append(light)
+
+
+func _build_aisle_accents() -> void:
+	# Four fixed aisle heads, independent of the entrance's sweeping beam rig.
+	# They face up/out through the seating and cannot put a blue pool on the ring.
+	var loop := ArenaBuilder._plan_loop(BOWL_INNER + 0.2)
+	for start: int in [0, loop.size() / 2]:
+		for fraction: float in [0.25, 0.75]:
+			var index := start + int(round(ArenaBuilder.BOWL_STRAIGHT_SEGMENTS * fraction))
+			var entry: Array = loop[index]
+			var at: Vector3 = entry[0] + Vector3.UP * 0.5
+			var aim: Vector3 = at + entry[1] * 4.8 + Vector3.UP * 6.2
+			var light := _spot("AisleAccent%d" % _aisle_lights.size(), at, aim,
+					AISLE_COLOR, AISLE_ENERGY, 5.0, 0.25, 13.0, false)
+			light.spot_attenuation = 0.85
+			light.light_volumetric_fog_energy = 12.0
+			_aisle_lights.append(light)
 
 
 ## Back pair, above and behind the entrance side, raking across the ring
@@ -1030,7 +1072,11 @@ func _build_ribbon_spill() -> void:
 ## One low omni in front of each LED panel, in the banner's purple and blue,
 ## short enough to fade out at the mat's edge: the mat's exposure is the
 ## anchored number (VISUAL_BAR.md).
-const BARRICADE_SPILL_ENERGY := 0.7
+const BARRICADE_SPILL_ENERGY := 0.95
+## Match the blue/orange/purple artwork rather than washing every panel blue.
+const BARRICADE_SPILL_COLORS: Array[Color] = [
+	Color(0.24, 0.45, 1.0), Color(1.0, 0.53, 0.22), Color(0.52, 0.25, 1.0),
+]
 const BARRICADE_SPILL_RANGE := 3.0
 ## A spill shared by two adjacent long-side panels (see _build_barricade_leds).
 const BARRICADE_SPILL_PAIR_GAIN := 1.3
@@ -1054,6 +1100,7 @@ func _build_barricade_leds() -> void:
 	var inset := 0.07 + 0.004
 	var h := ArenaBuilder.BARRICADE_HEIGHT - BARRICADE_WALL_FOOT - BARRICADE_WALL_HEAD
 	var n := 0
+	var blanks := 0
 	var spills := 0
 	var corners := 0
 	var side_panels: Array = []
@@ -1078,6 +1125,12 @@ func _build_barricade_leds() -> void:
 			face.material_override = _corner_material((width - 0.04) / h)
 			add_child(face)
 			corners += 1
+			continue
+		if kind == "black":
+			face.name = "BarricadeBlank%02d" % blanks
+			face.material_override = _blank_barricade_material()
+			add_child(face)
+			blanks += 1
 			continue
 		face.name = "BarricadeLed%02d" % n
 		var count := float(panel[6])
@@ -1118,7 +1171,7 @@ func _barricade_spill(index: int, at: Vector3, out: Vector3, inset: float,
 	light.name = "BarricadeSpill%02d" % index
 	light.position = at - out * (inset + BARRICADE_SPILL_IN) \
 			+ Vector3.UP * (top - BARRICADE_SPILL_DROP)
-	light.light_color = RIBBON_SPILL_COLORS[index % RIBBON_SPILL_COLORS.size()]
+	light.light_color = BARRICADE_SPILL_COLORS[index % BARRICADE_SPILL_COLORS.size()]
 	light.light_energy = energy
 	light.omni_range = BARRICADE_SPILL_RANGE
 	light.shadow_enabled = false
@@ -1126,19 +1179,32 @@ func _barricade_spill(index: int, at: Vector3, out: Vector3, inset: float,
 	add_child(light)
 
 
-## What a barricade panel shows: "led" on the two long sides only -- the hard
-## camera's (-X) and the one opposite it (+X), the panels facing +-X -- "corner"
-## (the plain AEW logo) on a cut corner, and "" (plain black barrier) for the
-## rest: the stage end and the announce-desk end (+-Z). The owner's call: the
-## Dynamite banner repeating all the way round read wrong.
+## What a barricade panel shows: "led" on the two long ringside sides only --
+## the hard camera's (-X) and the one opposite it (+X); "black" on the inward
+## faces of the crowd-control panels along the ramp; "corner" (the plain AEW
+## logo) on a cut corner; and "" (the steel barrier itself) on the stage and
+## announce-desk ends (+-Z).
 static func barricade_face(panel: Array) -> String:
 	var out: Vector3 = panel[2]
+	if ArenaBuilder.is_ramp_barricade_panel(panel):
+		return "black"
 	if float(panel[3]) < ArenaBuilder.BARRICADE_PANEL * 0.8 \
 			and absf(out.x) > 0.5 and absf(out.z) > 0.5:
 		return "corner"
 	if absf(out.x) > 0.99:
 		return "led"
 	return ""
+
+
+## Matte, unlit-looking black display face for the ramp crowd-control panels.
+## It reflects the arena just enough to read as a physical panel but carries
+## no artwork or emission.
+func _blank_barricade_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.015, 0.015, 0.018)
+	mat.roughness = 1.0
+	mat.metallic_specular = 0.0
+	return mat
 
 
 func _corner_material(aspect: float) -> StandardMaterial3D:

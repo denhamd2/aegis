@@ -382,22 +382,20 @@ const SPECS := {
 	## enough to read as a pattern painted on a box. 0.45 m puts them at the
 	## fine grid the photograph shows.
 	"ring_steps": {
-		# The owner's ringside still: the steps are a matte cast grey, a little
-		# mottled, not diamond plate all over -- the plate is only on the
-		# treads (ring_steps_tread). Concrete033's normal and roughness carry
-		# the casting's mottle; its colour map is a neutral grey, so it can
-		# stay on and break the flat tint up.
-		"asset": "Concrete033", "tint": Color(0.80, 0.81, 0.82),
-		"tile_metres": 0.9, "roughness": 0.78, "normal_scale": 0.6,
-		"metallic": 0.0,
+		# New.png (15 October): silver tread plate on the sides as well as
+		# the walking faces. The scene now has a ring reflection probe, so
+		# the old concrete/dielectric workaround is no longer appropriate.
+		"asset": "DiamondPlate009", "tint": Color(0.64, 0.65, 0.67),
+		"tile_metres": 0.35, "roughness": 0.62, "normal_scale": 0.65,
+		"metallic": 1.0, "albedo_map": false,
 	},
 	## The walking surface of each tread: a shade under the cast sides and
 	## rougher, the plate's grid in its normal only (DiamondPlate009's colour
 	## map is warm rusted steel; see the note that used to be on ring_steps).
 	"ring_steps_tread": {
 		"asset": "DiamondPlate009", "tint": Color(0.50, 0.51, 0.52),
-		"tile_metres": 0.35, "roughness": 0.7, "normal_scale": 1.0,
-		"metallic": 0.0, "albedo_map": false,
+		"tile_metres": 0.35, "roughness": 0.70, "normal_scale": 0.8,
+		"metallic": 1.0, "albedo_map": false,
 	},
 
 	# --- Arena hall (consumed by core/arena/arena_builder.gd) -------------

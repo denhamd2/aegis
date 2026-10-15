@@ -27,9 +27,9 @@ const KEEPER_PASS_X := 3.68
 const PASS_Z := 2.2
 const KEEPER_POST := Timekeeper.CHAIR_AT
 ## Stand behind the table, facing the ring, to set down props before sitting.
-const KEEPER_PLACE := Vector3(2.85, FLOOR_Y, 5.4)
-## On the +Z commentary side, immediately beside the announce desk.
-const TABLE_AT := Vector3(2.25, FLOOR_Y, 5.4)
+const KEEPER_PLACE := Vector3(1.85, FLOOR_Y, 6.4)
+## Set back in the commentary bay, beside the announce desk with a clear gap.
+const TABLE_AT := Vector3(1.0, FLOOR_Y, 6.4)
 
 ## Contact frames of the clips (30 fps): the prop changes hands on these.
 const GIVE_CONTACT := 26.0 / 30.0   # Prop_Hand_Out_*
@@ -40,7 +40,11 @@ const TAKE_CONTACT := 26.0 / 30.0   # Timekeeper_Take
 const TAKE_SHOULDER := 44.0 / 30.0
 const PLACE_CONTACT := 30.0 / 30.0  # Ref_Place
 ## How long a hand-to-hand move eases for.
-const BLEND := 0.22
+const BLEND := 0.30
+## A fast arm can carry a prop about this far per second. Capping the drawn
+## pivot prevents a one-frame jump if an entrance pose or interpolated bone
+## changes holder position sharply; the next frames catch it smoothly.
+const MAX_CARRIED_SPEED := 11.5
 
 ## Body-frame hand targets (right, forward) the clips reach to, for placing
 ## the two people so the hands meet.
@@ -95,14 +99,22 @@ class Carried:
 		return holder.get("type", "") == "table"
 
 	func drive(delta: float) -> void:
+		for child in pivot.get_children():
+			if child.has_method("advance_fold"):
+				child.advance_fold(delta)
 		if holder.is_empty():
 			return
 		var target := PropHandoff._holder_transform(holder)
+		var next: Transform3D
 		if blend < 1.0:
 			blend = minf(blend + delta / PropHandoff.BLEND, 1.0)
-			pivot.global_transform = from.interpolate_with(target, smoothstep(0.0, 1.0, blend))
+			next = from.interpolate_with(target, smoothstep(0.0, 1.0, blend))
 		else:
-			pivot.global_transform = target
+			next = target
+		var previous := pivot.global_transform
+		next.origin = previous.origin.move_toward(next.origin,
+				PropHandoff.MAX_CARRIED_SPEED * delta)
+		pivot.global_transform = next
 
 
 func setup(referee: RefereeActor, keeper: Timekeeper) -> void:
@@ -142,18 +154,34 @@ func request(kind: String, giver: WrestlerController, props: Node,
 ## or the coat off his shoulders (coat_off): it is a thing in his hand from this moment, not a skinned shape. Called for
 ## whichever job asked for it, current or not.
 func lift(kind: String) -> void:
-	for job: Dictionary in [_job] + _jobs:
-		if not job.is_empty() and job["kind"] == kind and not job.has("carried"):
-			_take_prop(job)
+	# A second entrance prop can begin its removal animation before Aubrey has
+	# finished the first handoff. Record that cue, but keep the prop attached to
+	# its wearer until its job becomes active; otherwise it appears in two sets
+	# of hands at once while the queue waits.
+	if not _job.is_empty() and _job["kind"] == kind and not _job.has("carried"):
+		_take_prop(_job)
+		return
+	for job: Dictionary in _jobs:
+		if job["kind"] == kind and not job.has("carried"):
+			job["lift_requested"] = true
 			return
 
 
 ## The giver's hand-out clip has begun (the director's prop_pass cue).
-func giver_begins() -> void:
-	if step == Step.RECEIVE and _stage == 0:
-		_start_receive()
-	else:
-		_armed = true
+func giver_begins(kind := "") -> void:
+	# The entrance cue can arrive while the preceding prop is still travelling.
+	# Keep the pass cue with its queued job, or that job will wait forever for a
+	# hand-out animation whose event has already fired.
+	if not _job.is_empty() and (kind == "" or _job["kind"] == kind):
+		if step == Step.RECEIVE and _stage == 0:
+			_start_receive()
+		else:
+			_armed = true
+		return
+	for job: Dictionary in _jobs:
+		if kind == "" or job["kind"] == kind:
+			job["pass_requested"] = true
+			return
 
 
 func _next_job() -> void:
@@ -163,9 +191,11 @@ func _next_job() -> void:
 	_job = _jobs.pop_front()
 	step = Step.APPROACH
 	_clock = 0.0
-	_armed = false
+	_armed = _job.get("pass_requested", false)
 	_stage = 0
 	var giver: WrestlerController = _job["giver"]
+	if _job.get("lift_requested", false):
+		_take_prop(_job)
 	_ref.begin_errand()
 	var hand: Vector2 = HAND_L if _job["kind"] == "title" else HAND_R  # coat: right
 	var face: Vector3 = _job["facing"] if (_job["facing"] as Vector3).length() > 0.01 else _facing(giver)
@@ -231,6 +261,10 @@ func _take_prop(job: Dictionary) -> void:
 	var hand := "hand_l" if job["kind"] == "title" else "hand_r"
 	c.holder = _bone_holder(giver.skeleton, giver._skeleton_bone_name(hand), giver, Vector3.ZERO)
 	c.from = c.pivot.global_transform
+	# Moving the prop from its worn socket (waist, neck, or shoulders) into the
+	# wrestler's palm is part of the removal animation. Blend from where it was
+	# instead of snapping the new hand holder on the next frame.
+	c.blend = 0.0
 	job["carried"] = c
 	carried.append(c)
 
@@ -370,7 +404,7 @@ static func _table_holder(kind: String) -> Dictionary:
 		top.y += 0.03
 	if kind == "coat":
 		# Folded flat: its long side along the table, lying on its thickness.
-		top.y += EntranceCoat.FOLDED.y * 0.5 - 0.03
+		top.y += FoldingCoatProp.FOLDED_SIZE.y * 0.5 - 0.03
 		basis = Basis(Vector3.UP, PI * 0.5)
 	return {"type": "table", "xform": Transform3D(basis, top + Vector3(slot.x, 0.0, slot.y))}
 
@@ -383,7 +417,19 @@ static func _holder_transform(holder: Dictionary) -> Transform3D:
 	var bone: int = holder["bone"]
 	if sk == null or bone < 0:
 		return actor.global_transform
-	var origin := (sk.global_transform * sk.get_bone_global_pose(bone)).origin
+	# Use the live actor root plus the skeleton's local hierarchy. During a
+	# kinematic entrance the actor is moved by EntranceDirector while physics
+	# interpolation is enabled; Skeleton3D.global_transform can still describe
+	# the previous rendered position for that frame, which sends a carried prop
+	# metres back toward the tunnel. Compose local transforms from the current
+	# actor root so handoffs stay attached during both entrance cuts and walks.
+	var local_to_actor := Transform3D.IDENTITY
+	var cursor: Node = sk
+	while cursor is Node3D and cursor != actor:
+		local_to_actor = (cursor as Node3D).transform * local_to_actor
+		cursor = cursor.get_parent()
+	var bone_pose: Transform3D = sk.get_bone_global_pose(bone)
+	var origin := (actor.global_transform * local_to_actor * bone_pose).origin
 	# Upright, turned as the holder is: a belt does not tip with a wrist.
 	var yaw := _yaw_of(actor)
 	var basis := Basis(Vector3.UP, yaw)

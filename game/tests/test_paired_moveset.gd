@@ -56,6 +56,8 @@ const SCOPED_RUNNING := 27
 const SHARED_RUNNING_POOL := 25
 ## Chain wrestling's links (Phase 4): headlock, wristlock, waistlock.
 const SCOPED_CHAIN := 3
+## No Holds Barred's top-of-ladder diving elbow.
+const SCOPED_LADDER := 1
 
 func _paired_move_names() -> Array[String]:
 	var names: Array[String] = []
@@ -93,6 +95,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	var finisher := 0
 	var running := 0
 	var chain := 0
+	var ladder := 0
 	var cut: Array[String] = []
 	for name in _paired_move_names():
 		if name.begins_with("grapple_"):
@@ -107,6 +110,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			running += 1
 		elif name.begins_with("chain_"):
 			chain += 1
+		elif name.begins_with("ladder_"):
+			ladder += 1
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
@@ -117,6 +122,7 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 	assert_int(finisher).is_equal(SCOPED_FINISHER)
 	assert_int(running).is_equal(SCOPED_RUNNING)
 	assert_int(chain).is_equal(SCOPED_CHAIN)
+	assert_int(ladder).is_equal(SCOPED_LADDER)
 	# The removed family leaves nothing behind: a reversal clip still in the
 	# library would be an animation no MoveDef names and nothing can play.
 	assert_array(cut).override_failure_message(
@@ -260,6 +266,9 @@ func test_the_match_scene_gives_both_wrestlers_the_whole_moveset() -> void:
 	# Chain wrestling's holds are handed out by the lock-up itself, not a tier.
 	for hold: MoveDef in WrestlerController.CHAIN_HOLDS.values():
 		reachable[String(hold.animation_pair_id)] = true
+	# The ladder aerial is selected directly from the ladder-climb state when
+	# the AI or player requests the top interaction, rather than from a tier.
+	reachable["ladder_aerial"] = true
 	var unreachable: Array[String] = []
 	for name in _paired_move_names():
 		if not reachable.has(name):

@@ -347,3 +347,26 @@ reproducible from the source. 1280x720, 30fps, 77.9s, no audio track, quality
 
 `gauntlet/refs/stage.md` records the photographs of the set this clip belongs
 to, and the same reference-only standing applies to them.
+
+## Photographic near-crowd library (15 October 2026)
+
+`floor_crowd_textured.glb`, `floor_crowd_textured.json` and
+`materials/crowd/crowd_*_color.png` use the same Microsoft Rocketbox adults
+and motion-capture poses as the existing floor crowd. Source:
+https://github.com/microsoft/Microsoft-Rocketbox, pinned to
+`0943055db6ec570bcef9f2c8b41c9e5467c808f9`, MIT licence (see the existing
+Rocketbox entry above). The original photographic UVs survive into five
+shared 2048x2048 atlases. Source assets are retained in the local checkout;
+the runtime does not fetch them.
+
+`tools/blender/textured_crowd.py` reproduces the 24 variants, seat origins,
+photographic atlases and chest-print masks. Body geometry is capped at 6000
+triangles per variant, with up to 48 additional phone triangles; complete
+vertices are welded without erasing UV seams or skin/garment masks. The
+small AEW/WRESTLING shirt prints are project-generated raster lettering
+using DejaVu Sans Bold, following the owner's supplied branded reference.
+They carry the same real-promotion branding exception as the ring artwork.
+
+`materials/ringside_pads_roughness.png` is project-authored linear roughness
+data generated deterministically by `tools/assets/build_ringside_finish.py`.
+It contains surface variation and recessed seams, not painted lighting.

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+animation_pair_id = &"ladder_aerial"
+startup_frames = 0
+active_frames = 42
+recovery_frames = 0
+damage_head = 5.0
+damage_torso = 24.0
+damage_arms = 2.0
+damage_legs = 2.0
+momentum_cost = 12.0
+weight_class_min = 0
+weight_class_max = 2
+leaves_defender_down = true

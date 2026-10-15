@@ -44,6 +44,7 @@ var _dist := 4.2
 var _wrestlers := ""
 var _bare := false
 var _top := false
+var _weapon_id := ""
 
 
 func _ready() -> void:
@@ -67,6 +68,8 @@ func _ready() -> void:
 			_dist = float(args[i + 1])
 		elif args[i] == "--wrestlers" and i + 1 < args.size():
 			_wrestlers = args[i + 1]
+		elif args[i] == "--weapon" and i + 1 < args.size():
+			_weapon_id = args[i + 1]
 		elif args[i] == "--at" and i + 1 < args.size():
 			_at = []
 			for token: String in args[i + 1].split(","):
@@ -102,6 +105,11 @@ func _ready() -> void:
 	attacker.look_at(defender.global_position, Vector3.UP)
 	defender.look_at(attacker.global_position, Vector3.UP)
 	await get_tree().physics_frame
+	var spot_weapon: WeaponActor = null
+	if _weapon_id != "":
+		spot_weapon = WeaponStock.of(attacker).pull(WeaponCatalog.by_id(StringName(_weapon_id)))
+		spot_weapon.set_up_at(attacker.global_position + attacker.global_basis.z * 1.3,
+				attacker.rotation.y)
 
 	var rig: Node = scene.get_node("GrappleRig")
 	# As a match starts one (WrestlerController._begin_running_paired): roles
@@ -117,7 +125,7 @@ func _ready() -> void:
 	print("PAIRED_SHOT %s" % _move_id)
 
 	if _bare:
-		_strip(scene, attacker, defender)
+		_strip(scene, attacker, defender, spot_weapon)
 	var camera := Camera3D.new()
 	scene.add_child(camera)
 	camera.current = true
@@ -167,9 +175,12 @@ func _ready() -> void:
 
 
 ## Everything but the two men, gone; a plain gridded floor and studio light.
-func _strip(scene: Node, attacker: Node3D, defender: Node3D) -> void:
+func _strip(scene: Node, attacker: Node3D, defender: Node3D,
+		keep_weapon: WeaponActor = null) -> void:
 	for child in scene.get_children():
 		if child == attacker or child == defender:
+			continue
+		if keep_weapon != null and (child == keep_weapon or child == keep_weapon.get_parent()):
 			continue
 		if child is Node3D:
 			(child as Node3D).visible = false

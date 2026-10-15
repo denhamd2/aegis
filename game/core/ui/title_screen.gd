@@ -70,7 +70,7 @@ const CONTROL_ROWS := [
 	["RUN", ["run"]],
 	["STRIKE", ["strike"]],
 	["GRAPPLE", ["grapple"]],
-	["REVERSAL", ["reversal"]],
+	["GUARD / REVERSE", ["reversal"]],
 	["SUBMISSION", ["submission_hold"]],
 ]
 
@@ -733,7 +733,7 @@ func _draw_camera(view: Vector2) -> void:
 		y += view.y * 0.070
 
 
-## First keyboard event bound to each action, joined -- e.g. "W A S D".
+## First keyboard event bound to each action, joined -- e.g. "UP LEFT DOWN RIGHT".
 func _binding_labels(actions: Array) -> String:
 	var parts: Array[String] = []
 	for action: String in actions:
@@ -748,10 +748,8 @@ func _binding_labels(actions: Array) -> String:
 	return " ".join(parts)
 
 
-## OS.get_keycode_string() renders a modifier as a CHORD PREFIX, not as a key:
-## KEY_CTRL comes back as "Ctrl+" followed by a control character (U+0015),
-## which on the card printed as "CTRL+" with an invisible tail. Run is bound to
-## Ctrl in project.godot, so that is the row a player actually reads.
+## Strip any chord prefix and non-printable tail so modifier-only keys such as
+## Shift render as a readable key name on the controls card.
 static func _key_label(keycode: int) -> String:
 	var raw := OS.get_keycode_string(keycode)
 	var text := ""

@@ -3,10 +3,10 @@ extends Node
 ##
 ##   godot --headless --path game tools/blood/bake_blood_masks.tscn
 ##
-## A wrestler bleeds a little and then more: a cut at the hairline, rivulets
-## running down the forehead and over the brows, the face covered, then
-## streaks down the neck and the chest -- a crimson mask by the end of a bloody
-## match. That progression is one texture per skin surface, in that surface's
+## A wrestler bleeds a little and then more: a cut at the hairline, a few
+## narrow rivulets running down the forehead and over the brows, then streaks
+## down the neck and chest as the match gets more extreme.
+## That progression is one texture per skin surface, in that surface's
 ## own UV space: each texel holds the bleed level (0-1) at which blood first
 ## shows there, red channel the head wound, green the back (tacks, nails,
 ## barbed wire). The shader (blood_overlay.gdshader) shows blood wherever the
@@ -223,9 +223,8 @@ func _bake_surface(mesh: Mesh, surface: int, to_sk: Transform3D, f: Dictionary) 
 
 
 ## The head wound: the bleed (0-1) at which blood first shows at `p`
-## (skeleton space, rest). A cut at the hairline; rivulets of different
-## widths running straight down from it, wandering a little; a sheet over the
-## middle of the face; past the chin only the rivulets go on, onto the neck and
+## (skeleton space, rest). A cut at the hairline; a few thin rivulets running
+## down the face; past the chin only the rivulets go on, onto the neck and
 ## down the chest. The front only -- blood runs down a standing man's face,
 ## not round to the back of his head.
 static func head_field(p: Vector3, f: Dictionary) -> float:
@@ -249,11 +248,15 @@ static func head_field(p: Vector3, f: Dictionary) -> float:
 	if front < -0.01:
 		return NEVER
 	var s := _rivulets(x, maxf(drop, 0.0))
-	var sheet := exp(-pow(x / 0.04, 2.0))
-	# The rivulets run first and fast; the sheet between them fills in late,
-	# from the middle out. (2.6 / 1.6 / 2.2 covered the whole face by bleed
-	# 0.35 -- the first render read as a red mask, not a cut.)
-	var t := 0.04 + maxf(drop, 0.0) * (3.2 - 2.5 * maxf(s, 0.5 * sheet)) + absf(x) * 5.0 * (1.0 - s)
+	# Keep the visible face to a few narrow streaks. The former broad sheet
+	# filled the gaps between rivulets as a wrestler's bleed accumulated, making
+	# the whole face read as a crimson mask. Cheek and forehead skin now stays
+	# visible; higher bleed can still extend streaks down the neck.
+	var t: float
+	if drop < 0.22:
+		t = 0.08 + drop * (4.2 - 3.3 * s) + absf(x) * 24.0 * (1.0 - s)
+	else:
+		t = 0.08 + drop * (3.2 - 2.5 * s) + absf(x) * 5.0 * (1.0 - s)
 	if drop > 0.22:
 		t += (1.0 - s) * 0.6          # past the chin: the rivulets alone
 	if drop > 0.30:
@@ -262,13 +265,13 @@ static func head_field(p: Vector3, f: Dictionary) -> float:
 
 
 ## Rivulets: how much `x` (across the face, m) is in one, `drop` m below the
-## cut. Five of them, each a little off straight down.
+## cut. Three of them, each a little off straight down.
 static func _rivulets(x: float, drop: float) -> float:
 	var best := 0.0
-	var centres := [-0.045, -0.018, 0.004, 0.026, 0.05]
-	var widths := [0.007, 0.011, 0.009, 0.012, 0.007]
+	var centres := [-0.038, 0.0, 0.038]
+	var widths := [0.0055, 0.007, 0.0055]
 	for i in centres.size():
-		var c: float = centres[i] + 0.010 * sin(drop * 22.0 + i * 1.7) + 0.004 * sin(drop * 61.0 + i)
+		var c: float = centres[i] + 0.008 * sin(drop * 22.0 + i * 1.7) + 0.003 * sin(drop * 61.0 + i)
 		best = maxf(best, exp(-pow((x - c) / float(widths[i]), 2.0)))
 	return best
 

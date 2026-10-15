@@ -20,6 +20,8 @@ const BLEND := 0.12
 const SIGN_TINT := Color(0.78, 0.78, 0.78)
 const SKIN := Color(0.46, 0.34, 0.27)
 const DARK := Color(0.05, 0.05, 0.06)
+const EYE_WHITE := Color(0.78, 0.74, 0.66)
+const FACE_DETAIL := Color(0.12, 0.07, 0.055)
 
 enum Stage { SEATED, RISING, HOLDING, LOWERING }
 
@@ -48,6 +50,8 @@ func setup(picture: Texture2D, shirt: Color, phase: float,
 			mesh.set_surface_override_material(0, _flat(shirt))
 			mesh.set_surface_override_material(1, _flat(SKIN))
 			mesh.set_surface_override_material(2, _flat(DARK))
+			mesh.set_surface_override_material(3, _flat(EYE_WHITE))
+			mesh.set_surface_override_material(4, _flat(FACE_DETAIL))
 	if _player == null:
 		return
 	for loop: String in [SEATED, HOLD]:

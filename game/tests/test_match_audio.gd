@@ -24,16 +24,32 @@ func test_every_sound_it_plays_is_built() -> void:
 			assert_bool(clip_events.has(clip)) \
 					.override_failure_message("commentary clip is shared by " + str(clip_events.get(clip, "")) + " and " + event).is_false()
 			clip_events[clip] = event
+	assert_bool(ResourceLoader.exists(MatchAudio.CODY_CROWD_CHANT)).is_true()
 
 
-func test_enda_sign_gag_is_seeded_and_appears_about_once_in_three_matches() -> void:
-	var selected := 0
+func test_cody_crowd_chant_is_only_enabled_for_a_cody_match() -> void:
+	var cody: WrestlerController = auto_free(WrestlerController.new())
+	cody.entrance_style = "cody"
+	var roman: WrestlerController = auto_free(WrestlerController.new())
+	roman.entrance_style = "roman"
+	assert_bool(MatchAudio.cody_is_in_match([cody, roman])).is_true()
+	assert_bool(MatchAudio.cody_is_in_match([roman])).is_false()
+
+
+func test_opening_and_finish_bells_play_at_double_speed() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio.opening_bell()
+	assert_float(audio.sfx._voices[0].pitch_scale) \
+			.is_equal(MatchAudio.MATCH_BELL_PITCH_SCALE)
+	audio._on_match_won(null, "time_limit")
+	assert_float(audio.sfx._voices[1].pitch_scale) \
+			.is_equal(MatchAudio.MATCH_BELL_PITCH_SCALE)
+
+
+func test_enda_sign_gag_is_scheduled_for_every_match() -> void:
 	for seed in 900:
-		var first := MatchAudio.enda_easter_egg_for_seed(seed)
-		assert_bool(MatchAudio.enda_easter_egg_for_seed(seed)).is_equal(first)
-		if first:
-			selected += 1
-	assert_int(selected).is_between(250, 350)
+		assert_bool(MatchAudio.enda_easter_egg_for_seed(seed)).is_true()
 
 
 func test_sneaky_heel_gag_is_seeded_and_appears_about_once_in_three_matches() -> void:
@@ -102,6 +118,37 @@ func test_gunshot_and_rocket_effects_use_the_louder_signature_mix() -> void:
 			MatchAudio.ROCKET_IGNITION_DB, MatchAudio.ROCKET_BLAST_DB, -2.0])
 
 
+func test_entrance_pyro_is_lifted_six_db_over_its_previous_mix() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var heard: Array[Dictionary] = []
+	audio.sfx.played.connect(func(sound: String, volume_db: float) -> void:
+		heard.append({"sound": sound, "volume_db": volume_db}))
+	for cue in ["pyro_stage", "pyro_roman", "pyro_cody_hit"]:
+		audio._on_cue(cue)
+	assert_array(heard).is_equal([
+		{"sound": "pyro_boom", "volume_db": 5.0},
+		{"sound": "pyro_boom", "volume_db": 4.0},
+		{"sound": "whoosh", "volume_db": 2.0},
+		{"sound": "pyro_bang", "volume_db": 4.0},
+		{"sound": "pyro_boom", "volume_db": -2.0},
+	])
+
+
+func test_nonbreaking_set_piece_landing_plays_its_impact_sound() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var cody: WrestlerController = auto_free(WrestlerController.new())
+	cody.display_name = "CODY RHODES"
+	var tacks: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"thumbtacks")))
+	var heard: Array[String] = []
+	audio.sfx.played.connect(func(sound: String, _volume_db: float) -> void:
+		heard.append(sound))
+	audio._on_set_piece_landed(cody, tacks, false)
+	assert_bool(heard.has("hit_kick_0") or heard.has("hit_kick_1") or heard.has("hit_kick_2")) \
+			.override_failure_message("tacks landing should have an impact cue").is_true()
+
+
 func test_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
@@ -145,13 +192,43 @@ func test_tonys_roman_heel_line_only_routes_to_roman_heel_beats() -> void:
 func test_commentary_event_never_repeats_within_match() -> void:
 	var audio: MatchAudio = auto_free(MatchAudio.new())
 	add_child(audio)
-	audio._queue_commentary("roman_spear")
-	assert_array(audio._commentary_queue).is_equal(["roman_spear"])
+	audio._queue_commentary("tony_title_match")
+	assert_array(audio._commentary_queue).is_equal(["tony_title_match"])
 	audio._commentary_queue.clear()
 	audio._commentary_clock = 600.0
-	audio._queue_commentary("roman_spear")
+	audio._queue_commentary("tony_title_match")
 	assert_array(audio._commentary_queue).is_empty()
-	assert_bool(audio._commentary_events_played.has("roman_spear")).is_true()
+	assert_bool(audio._commentary_events_played.has("tony_title_match")).is_true()
+
+
+func test_move_calls_and_unbelievable_repeat_only_after_cooldowns() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._queue_commentary("excalibur_unbelievable")
+	assert_array(audio._commentary_queue).is_equal(["excalibur_unbelievable"])
+	audio._commentary_queue.clear()
+	audio._commentary_clock = 59.0
+	audio._queue_commentary("excalibur_unbelievable")
+	assert_array(audio._commentary_queue).is_empty()
+	audio._commentary_clock = 60.0
+	audio._queue_commentary("excalibur_unbelievable")
+	assert_array(audio._commentary_queue).is_equal(["excalibur_unbelievable"])
+
+	# A different move call still waits for the shared gap, then can return.
+	audio._commentary_queue.clear()
+	audio._commentary_clock = 71.9
+	audio._queue_commentary("excalibur_strikes")
+	assert_array(audio._commentary_queue).is_empty()
+	audio._commentary_clock = 72.0
+	audio._queue_commentary("excalibur_strikes")
+	assert_array(audio._commentary_queue).is_equal(["excalibur_strikes"])
+
+
+func test_repeatable_commentary_cooldowns_are_long_enough_to_avoid_loops() -> void:
+	assert_float(MatchAudio.COMMENTARY_REPEAT_COOLDOWNS["excalibur_unbelievable"]) \
+			.is_greater(MatchAudio.COMMENTARY_REPEAT_MIN_GAP * 4.0)
+	assert_float(MatchAudio.COMMENTARY_REPEAT_COOLDOWNS["excalibur_strikes"]) \
+			.is_greater(MatchAudio.COMMENTARY_REPEAT_MIN_GAP)
 
 
 func test_excalibur_restore_order_only_fires_after_chaos_and_never_repeats() -> void:
@@ -196,6 +273,22 @@ func test_excalibur_opening_and_crowd_lines_are_queued_on_their_beats() -> void:
 			.is_equal("res://assets/audio/commentary/tony_welcome.ogg")
 	assert_str(MatchAudio.commentary_event_for_cue("title_match")) \
 			.is_equal("tony_title_match")
+
+
+func test_dynamite_theme_plays_under_the_opening_and_fades_at_first_entrance() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_cue("broadcast_open")
+	assert_object(audio._dynamite_theme).is_not_null()
+	assert_bool(audio._dynamite_theme.playing).is_true()
+	assert_float(audio._dynamite_theme.stream.get_length()).is_greater(100.0)
+	assert_float(MatchAudio.DYNAMITE_OPENING_THEME_DB).is_greater(-9.0)
+	audio._tick_opening_theme(0.5)
+	assert_float(audio._dynamite_theme.volume_db).is_greater(-60.0)
+	audio._on_cue("tron_on")
+	assert_bool(audio._opening_theme_fade_out).is_true()
+	audio._tick_opening_theme(MatchAudio.DYNAMITE_OPENING_FADE_OUT)
+	assert_bool(audio._dynamite_theme.playing).is_false()
 
 
 func test_tonys_tension_call_routes_from_the_faceoff_cue() -> void:

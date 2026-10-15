@@ -2298,27 +2298,34 @@ CLIPS = {
         (60, CODY_STAND),
     ],
 
-    # 60 frames / 2.0s: the coat off. Hands to the lapels (12), shoulders
-    # rolled back and the arms swept down behind him as it slides off (24,
-    # 36), then forward as he hands it to the ringside crew (48). The
-    # director takes the coat away on frame 36 (EntranceDirector.
-    # COAT_OFF_AT), when his arms are behind him and it would be falling.
+    # 60 frames / 2.0s: a deliberate coat removal. Hands to the lapels (12),
+    # right sleeve eased off first while the left hand steadies the shoulder
+    # (24), then the left sleeve (36); both hands gather the coat at the waist
+    # (48), fold it over once (54), and present it calmly (60). The director
+    # transfers the detached cloth prop at frame 48, once it is clear of both
+    # shoulders, and its sleeves finish folding during the handoff approach.
     "Coat_Off": [
         (0,  CODY_STAND),
-        (12, pose(CODY_STAND, spine=(-2, 0, 0), head=(-6, 0, 0),
-                  hand_r=(0.12, 0.16, 1.40), hand_l=(-0.12, 0.16, 1.40),
-                  elbow_r=(1.0, -0.4, -0.6), elbow_l=(-1.0, -0.4, -0.6),
-                  fist_r=0.8, fist_l=0.8)),
-        (24, pose(CODY_STAND, spine=(10, 0, 0), head=(6, 0, 0),
-                  hand_r=(0.30, -0.14, 1.04), hand_l=(-0.30, -0.14, 1.04),
-                  elbow_r=(1.0, 0.4, -0.6), elbow_l=(-1.0, 0.4, -0.6),
+        (12, pose(CODY_STAND, spine=(-2, 0, 0), head=(-4, 0, 0),
+                  hand_r=(0.14, 0.20, 1.38), hand_l=(-0.14, 0.20, 1.38),
+                  elbow_r=(0.9, -0.3, -0.5), elbow_l=(-0.9, -0.3, -0.5),
                   fist_r=0.7, fist_l=0.7)),
-        (36, pose(CODY_STAND, spine=(12, 0, 0), head=(8, 0, 0),
-                  hand_r=(0.22, -0.26, 0.96), hand_l=(-0.22, -0.26, 0.96),
-                  elbow_r=(1.0, 0.6, -0.4), elbow_l=(-1.0, 0.6, -0.4),
-                  fist_r=0.8, fist_l=0.8)),
-        (48, pose(CODY_STAND, hand_r=(0.30, 0.40, 1.10),
-                  elbow_r=(0.8, -0.4, -0.6), fist_r=0.8)),
+        (24, pose(CODY_STAND, spine=(3, 0, 0), head=(3, 0, 0),
+                  hand_r=(0.36, 0.04, 1.22), hand_l=(-0.12, 0.18, 1.34),
+                  elbow_r=(1.0, 0.2, -0.4), elbow_l=(-0.8, -0.2, -0.4),
+                  fist_r=0.65, fist_l=0.65)),
+        (36, pose(CODY_STAND, spine=(2, 0, 0), head=(2, 0, 0),
+                  hand_r=(0.18, 0.18, 1.30), hand_l=(-0.36, 0.02, 1.18),
+                  elbow_r=(0.8, -0.2, -0.5), elbow_l=(-1.0, 0.2, -0.4),
+                  fist_r=0.65, fist_l=0.65)),
+        (48, pose(CODY_STAND, spine=(2, 0, 0),
+                  hand_r=(0.24, 0.30, 1.10), hand_l=(-0.20, 0.30, 1.10),
+                  elbow_r=(0.8, -0.2, -0.4), elbow_l=(-0.8, -0.2, -0.4),
+                  fist_r=0.65, fist_l=0.65)),
+        (54, pose(CODY_STAND, spine=(1, 0, 0),
+                  hand_r=(0.22, 0.28, 1.06), hand_l=(-0.08, 0.32, 1.06),
+                  elbow_r=(0.7, -0.2, -0.3), elbow_l=(-0.6, -0.2, -0.3),
+                  fist_r=0.55, fist_l=0.55)),
         (60, CODY_STAND),
     ],
 
@@ -3100,7 +3107,6 @@ CLIPS = {
         (36, S()),
     ],
 }
-
 
 # Signature. A backbreaker, built on the body slam's lift -- which reads --
 # rather than a second one derived from scratch: the same scoop, the same
@@ -6054,7 +6060,7 @@ OVERLAP_ARMS = {"clavicle_l": 1.0, "clavicle_r": 1.0,
 ## MoveDef active frames and contact volume are measured off the hand), a prop
 ## changing hands on a cue -- keep their arms on the authored keys.
 OVERLAP_ARMS_EXCEPT = ("Strike_", "Ground_", "Corner_", "Running_", "Parry_",
-                       "Irish_", "Pickup_", "Pin_", "Finisher_", "Possum",
+                       "Irish_", "Pickup_", "Pin_", "Finisher_", "Ladder_", "Possum",
                        "Prop_", "Ref_", "Timekeeper_", "Title_", "Coat_", "Ula_")
 
 
@@ -7123,6 +7129,88 @@ CLIPS["Weapon_Set_Up"] = [
            hand_r=(0.25, 0.80, 0.42), hand_l=(-0.25, 0.80, 0.42), fist_r=0.2, fist_l=0.2,
            knee_r=(0.3, 1.0, 0.0), knee_l=(-0.3, 1.0, 0.0))),
     (22, R()),
+]
+
+# 32 frames (1.067 s, looped): hands alternate up the ladder while the boots
+# trade rungs. The pelvis stays close to the rails and the knees remain bent;
+# the motion is deliberately small so the rung IK is the contact authority.
+CLIPS["Ladder_Climb"] = [
+    (0,  R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
+           hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20),
+           elbow_r=(0.62, -0.28, 0.28), elbow_l=(-0.62, -0.28, 0.08),
+           foot_r=(0.16, 0.50, 0.38), foot_l=(-0.16, 0.50, 0.12),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+    (8,  R(pelvis=(0.0, 0.04, 0.810), hips=(-14, 0, 0), spine=(-27, 0, 0), head=(9, 0, 0),
+           hand_r=(0.22, 0.50, 1.22), hand_l=(-0.20, 0.56, 1.48),
+           elbow_r=(0.62, -0.28, 0.06), elbow_l=(-0.62, -0.28, 0.30),
+           foot_r=(0.16, 0.50, 0.12), foot_l=(-0.16, 0.50, 0.38),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+    (16, R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
+           hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20),
+           elbow_r=(0.62, -0.28, 0.28), elbow_l=(-0.62, -0.28, 0.08),
+           foot_r=(0.16, 0.50, 0.38), foot_l=(-0.16, 0.50, 0.12),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+    (24, R(pelvis=(0.0, 0.04, 0.810), hips=(-14, 0, 0), spine=(-27, 0, 0), head=(9, 0, 0),
+           hand_r=(0.22, 0.50, 1.22), hand_l=(-0.20, 0.56, 1.48),
+           elbow_r=(0.62, -0.28, 0.06), elbow_l=(-0.62, -0.28, 0.30),
+           foot_r=(0.16, 0.50, 0.12), foot_l=(-0.16, 0.50, 0.38),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+    (32, R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
+           hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20),
+           elbow_r=(0.62, -0.28, 0.28), elbow_l=(-0.62, -0.28, 0.08),
+           foot_r=(0.16, 0.50, 0.38), foot_l=(-0.16, 0.50, 0.12),
+           knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), fist_r=0.2, fist_l=0.2)),
+]
+
+# 18 frames (0.6 s): shoulders peel off first, the hands lose their holds,
+# and the hips tip back into the existing gravity/downed recovery path.
+CLIPS["Ladder_Fall"] = [
+    (0,  R(pelvis=(0.0, 0.02, 0.790), hips=(-12, 0, 0), spine=(-24, 0, 0), head=(8, 0, 0),
+           hand_r=(0.22, 0.54, 1.46), hand_l=(-0.20, 0.50, 1.20), fist_r=0.2, fist_l=0.2)),
+    (4,  R(pelvis=(0.0, -0.08, 0.800), hips=(8, 0, 0), spine=(18, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.42, 0.32, 1.50), hand_l=(-0.42, 0.32, 1.48),
+           elbow_r=(0.7, -0.3, 0.3), elbow_l=(-0.7, -0.3, 0.3),
+           foot_r=(0.20, 0.20, 0.30), foot_l=(-0.20, 0.20, 0.26))),
+    (9,  R(pelvis=(0.0, -0.20, 0.740), hips=(24, 0, 0), spine=(32, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.62, 0.18, 1.34), hand_l=(-0.62, 0.18, 1.32),
+           elbow_r=(0.7, -0.4, 0.3), elbow_l=(-0.7, -0.4, 0.3),
+           foot_r=(0.28, 0.14, 0.48), foot_l=(-0.28, 0.14, 0.48))),
+    (14, R(pelvis=(0.0, -0.22, 0.700), hips=(42, 0, 0), spine=(22, 0, 0), head=(-4, 0, 0),
+           hand_r=(0.64, 0.10, 1.22), hand_l=(-0.64, 0.10, 1.20),
+           foot_r=(0.26, 0.12, 0.38), foot_l=(-0.26, 0.12, 0.38))),
+    (18, S()),
+]
+
+# 42 frames (1.4 s): from the ladder top, a short tucked dive into a forearm
+# drop, then a shoulder roll and quick rise. The victim absorbs the chest
+# impact, protects the ribs and rolls onto his side before settling supine.
+CLIPS["Ladder_Aerial_Attacker"] = [
+    (0,  R(pelvis=(0.0, 0.04, 0.82), hips=(-16, 0, 0), spine=(-18, 0, 0), head=(12, 0, 0),
+           hand_r=(0.20, 0.48, 1.42), hand_l=(-0.24, 0.46, 1.38),
+           foot_r=(0.22, -0.10, 0.46), foot_l=(-0.20, 0.18, 0.42), free_feet=True)),
+    (6,  R(pelvis=(0.0, 0.08, 0.80), hips=(-28, 0, 0), spine=(-24, 0, 0), head=(20, 0, 0),
+           hand_r=(0.38, 0.35, 1.44), hand_l=(-0.22, 0.42, 1.36),
+           foot_r=(0.25, -0.24, 0.36), foot_l=(-0.22, 0.12, 0.30), free_feet=True)),
+    (14, R(pelvis=(0.0, 0.12, 0.76), hips=(-48, 0, 0), spine=(-32, 0, 0), head=(26, 0, 0),
+           hand_r=(0.55, 0.28, 1.14), hand_l=(-0.35, 0.55, 1.26),
+           foot_r=(0.28, -0.30, 0.22), foot_l=(-0.24, 0.12, 0.20), free_feet=True)),
+    (22, R(pelvis=(0.0, -0.04, 0.78), hips=(-28, 0, 0), spine=(-20, 0, 0), head=(12, 0, 0),
+           hand_r=(0.45, 0.18, 0.88), hand_l=(-0.42, 0.22, 0.92),
+           foot_r=(0.24, -0.32, 0.20), foot_l=(-0.20, 0.16, 0.18), free_feet=True)),
+    (30, pose(ONE_KNEE, pelvis=(0.0, 0.02, 0.72), spine=(-8, 0, 0))),
+    (42, P()),
+]
+CLIPS["Ladder_Aerial_Defender"] = [
+    (0,  S()),
+    (12, S(pelvis=(0.0, 0.06, 0.82), hips=(-78, 0, 0), spine=(-8, 0, 0), head=(8, 0, 0),
+           hand_r=(0.40, 0.34, 0.72), hand_l=(-0.40, 0.34, 0.72),
+           elbow_r=(0.7, -0.3, -0.4), elbow_l=(-0.7, -0.3, -0.4))),
+    (17, S(pelvis=(0.0, 0.04, 0.80), hips=(-72, 0, 0), spine=(-14, 0, 0), head=(8, 0, 0),
+           hand_r=(0.30, 0.42, 0.78), hand_l=(-0.18, 0.20, 0.66), fist_r=0.1, fist_l=0.1)),
+    (25, pose(SUPINE, pelvis=(0.0, 0.02, 0.80), hips=(-66, 16, 10), spine=(-10, 8, 4), head=(4, 10, 0),
+           hand_r=(0.18, 0.30, 0.76), hand_l=(-0.22, 0.38, 0.72),
+           foot_r=(0.24, -0.16, 0.14), foot_l=(-0.22, 0.18, 0.14))),
+    (42, S()),
 ]
 
 

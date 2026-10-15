@@ -129,6 +129,12 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.68,
 	},
+	"ladder_aerial": {
+		"authored": {"attacker": "Ladder_Aerial_Attacker", "defender": "Ladder_Aerial_Defender"},
+		"attacker": [{"t": 0.00, "clip": "Jump_Start", "at": 0.30}, {"t": 0.22, "clip": "Jump", "at": 0.50}, {"t": 0.48, "clip": "Jump_Land", "at": 0.20}, {"t": 0.85, "clip": "Jump_Land", "at": 0.50}, {"t": 1.40, "clip": "Idle", "at": 0.00}],
+		"defender": [{"t": 0.00, "clip": "Death01", "at": 1.60}, {"t": 0.48, "clip": "Hit_Chest", "at": 0.15}, {"t": 0.72, "clip": "Roll", "at": 0.40}, {"t": 1.40, "clip": "Death01", "at": 1.60}],
+		"defender_grips_until": 0.0,
+	},
 	# The power rung, and the one throw back in the set. The cut throws were
 	# stitched out of borrowed clips and read as nothing; this one is keyed
 	# in Blender beat for beat against its partner, like the signatures.
@@ -779,6 +785,26 @@ const RECIPES := {
 ## equal its first, so the flip resolves to a full 360 and he lands upright.
 ## That is exactly the bug that put suplex victims half a metre into the mat.
 const TRAJECTORIES := {
+	# The attacker begins at the ladder's top (about 1.55 m), dives forward
+	# and down onto the already-downed opponent, then rolls through to his feet.
+	# The defender stays grounded; the readable impact is in the paired pose and
+	# localized sell rather than a second root-level bounce.
+	"ladder_aerial": {
+		"length": 1.4,
+		"attacker": {
+			"pos": [[0.00, 0.40, 1.55, 0.00], [0.20, 0.25, 1.72, -0.10],
+				[0.48, -0.18, 0.18, -0.12], [0.72, -0.32, 0.00, 0.02],
+				[1.08, -0.18, 0.00, 0.06], [1.40, 0.16, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.20, -12.0, 70.0, 0.0],
+					[0.48, -8.0, 35.0, 0.0], [0.72, 0.0, 20.0, 0.0],
+					[1.08, 0.0, 55.0, 0.0], [1.40, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.48, -0.40, 0.00, 0.00],
+					[0.72, -0.46, 0.00, 0.02], [1.40, -0.48, 0.00, 0.02]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [1.40, 0.0, -90.0, 0.0]],
+		},
+	},
 	# --- chain wrestling (Phase 4) -------------------------------------------
 	# Each link starts from the lock-up marks (attacker +0.40 facing -X,
 	# defender -0.40 facing +X) and ends squared up about 0.9 m apart, facing

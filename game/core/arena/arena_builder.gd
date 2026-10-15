@@ -209,6 +209,11 @@ const STAGE_FLARE_LENGTH := 4.5
 ## steps are under a pixel of rise at any camera in the shotlist and the ramp
 ## reads as the slope it is standing in for.
 const RAMP_STEP_LENGTH := 1.45
+## The walkable ramp ends at the open entrance in the ringside barricade.
+const RAMP_FOOT_Z := -BARRICADE_RADIUS
+## Leave a little clearance from the rear LED wall while keeping the whole
+## stage deck available as a playable surface.
+const MATCH_STAGE_BACK_LIMIT := STAGE_BACK + 1.4
 
 # --- Video wall -------------------------------------------------------------
 ## Chord width and height of the LED wall, 3:1, off the reference photos in
@@ -880,6 +885,7 @@ const DESK_MONITOR_WIDTH := 0.52
 const DESK_MONITOR_HEIGHT := 0.32
 const DESK_MONITOR_DEPTH := 0.04
 const DESK_MONITOR_TILT := 15.0
+const COMMENTATOR_SEAT_PITCH := DESK_LENGTH / DESK_MONITORS
 
 const RINGSIDE_MODEL := "res://assets/environment/ringside.glb"
 
@@ -925,6 +931,23 @@ func _build_ringside() -> void:
 	_dress(root, "CommentaryDeskLed", _printed_signage_material())
 	_dress(root, "CommentaryScreens", _monitor_screen_material())
 	add_child(root)
+	_build_commentators()
+
+
+## Seat the two broadcast voices behind the existing desk. The remaining
+## chair stays available for a guest commentator.
+func _build_commentators() -> void:
+	var row_z := DESK_Z + DESK_DEPTH * 0.5 + 0.42
+	var tony := CommentatorActor.new()
+	tony.name = "TonySchiavone"
+	add_child(tony)
+	if not tony.setup("tony", Vector3(DESK_X - COMMENTATOR_SEAT_PITCH, FLOOR_Y, row_z)):
+		tony.queue_free()
+	var excalibur := CommentatorActor.new()
+	excalibur.name = "Excalibur"
+	add_child(excalibur)
+	if not excalibur.setup("excalibur", Vector3(DESK_X, FLOOR_Y, row_z)):
+		excalibur.queue_free()
 
 
 ## The venue model is visual only. NHB wrestlers and props need actual panel
@@ -954,6 +977,7 @@ func _build_barricade_collision() -> void:
 ## soft seams. The model's UVs are world metres; the tile is PAD_TILE_M.
 const PAD_TEX := "res://assets/environment/materials/ringside_pads.png"
 const PAD_NRM := "res://assets/environment/materials/ringside_pads_nrm.png"
+const PAD_ROUGH := "res://assets/environment/materials/ringside_pads_roughness.png"
 const PAD_TILE_M := 2.44
 const PAD_REACH := 0.6
 ## The ringside floor is dark, so the light pools on the ring: in the owner's
@@ -967,16 +991,21 @@ func _ringside_pads() -> Material:
 	mat.albedo_texture = load(PAD_TEX)
 	mat.normal_enabled = true
 	mat.normal_texture = load(PAD_NRM)
-	mat.normal_scale = 0.8
-	mat.roughness = 0.62
+	mat.normal_scale = 0.6
+	mat.roughness = 1.0
+	mat.roughness_texture = load(PAD_ROUGH)
 	mat.uv1_scale = Vector3.ONE / PAD_TILE_M
 	mat.albedo_color = Color(PAD_SHADE, PAD_SHADE, PAD_SHADE)
-	mat = _house_lit(mat, PAD_REACH)
-	# _house_lit's floor is flat colour; let the mats' own grain carry it.
+	# A low residual floor, with actual light/probe reflections supplying the
+	# visible surface response. The old house-lit gain filled in shadows and
+	# could not create New.png's broad warm/cool reflections on the pad faces.
+	mat.emission_enabled = true
+	mat.emission = Color.WHITE
 	mat.emission_texture = mat.albedo_texture
 	mat.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
-	mat.emission_energy_multiplier *= PAD_SHADE
-	return MaterialLibrary.house_compensate(mat)
+	mat.emission_energy_multiplier = 0.008
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return mat
 
 
 ## The commentary monitors' faces: a dim cool picture, lit from within. Dim
@@ -1052,6 +1081,34 @@ static func barricade_panels() -> Array:
 					STAGE_FRONT + pitch * (i + 0.5))
 			out.append([at, along, normal, width, path.size() + int(side + 1), i, count])
 	return out
+
+
+## Ramp-side panels are appended after the perimeter runs in barricade_panels.
+## Their run index distinguishes them from the long ringside LED barriers.
+static func is_ramp_barricade_panel(panel: Array) -> bool:
+	return int(panel[4]) >= barricade_path().size()
+
+
+## The ramp and stage are visual meshes, so match characters need a stable
+## deterministic ground height of their own while a No Holds Barred fight
+## travels through this part of the venue.
+static func is_match_ramp(point: Vector3) -> bool:
+	return point.z >= RAMP_FOOT_Z and point.z <= STAGE_FRONT \
+			and absf(point.x) <= RAMP_HALF_WIDTH + 0.5
+
+
+static func is_match_stage(point: Vector3) -> bool:
+	return point.z >= MATCH_STAGE_BACK_LIMIT and point.z < STAGE_FRONT \
+			and absf(point.x) <= STAGE_HALF_WIDTH
+
+
+static func match_surface_y(point: Vector3) -> float:
+	if is_match_stage(point):
+		return STAGE_DECK_Y
+	if is_match_ramp(point):
+		var t := inverse_lerp(STAGE_FRONT, RAMP_FOOT_Z, point.z)
+		return lerpf(STAGE_DECK_Y, FLOOR_Y, t)
+	return FLOOR_Y + RINGSIDE_MAT_LIFT
 
 
 ## Whether a floor point is in the desk's bay or the walkway round it.
@@ -1141,6 +1198,7 @@ const FLOOR_STANDING_CHANCE := 0.07
 ## Ringside model: twenty-four Rocketbox people, twenty seated and four on their
 ## feet, built by tools/blender/floor_crowd.py.
 const FLOOR_CROWD_MODEL := "res://assets/environment/floor_crowd.glb"
+const TexturedCrowdLook := preload("res://core/arena/textured_crowd_look.gd")
 ## How many of the ringside chairs have somebody in them.
 ##
 ## Higher than the bowl's 0.86 because these are the seats a camera is nearest
@@ -1195,13 +1253,35 @@ func _build_floor_crowd(near: Array[Transform3D], far: Array[Transform3D]) -> vo
 	var rng := RandomNumberGenerator.new()
 	rng.seed = FLOOR_CROWD_SEED
 	var material := _crowd_material("float(INSTANCE_ID) * 0.6180339887", true)
-	_seat_floor_fans(near, detailed, "FloorCrowd", rng, material)
+	var near_materials: Array[Material] = []
+	var texture_manifest := TexturedCrowdLook.manifest()
+	if ResourceLoader.exists(TexturedCrowdLook.MODEL) and not texture_manifest.is_empty():
+		var textured_root: Node = (load(TexturedCrowdLook.MODEL) as PackedScene).instantiate()
+		var replacements: Array[Mesh] = []
+		for i in detailed.size():
+			var name := "Fan%02d" % i
+			var model := textured_root.find_child(name, true, false) as MeshInstance3D
+			var spec: Dictionary = texture_manifest.get("variants", {}).get(name, {})
+			if model == null or spec.is_empty():
+				push_error("Textured crowd variant missing: " + name)
+				break
+			replacements.append(model.mesh)
+			near_materials.append(TexturedCrowdLook.material(spec))
+		textured_root.free()
+		if replacements.size() == detailed.size():
+			detailed = replacements
+		else:
+			near_materials.clear()
+	else:
+		push_error("Photographic near-crowd assets missing; run tools/blender/textured_crowd.py")
+	_seat_floor_fans(near, detailed, "FloorCrowd", rng, material, near_materials)
 	_seat_floor_fans(far, proxies, "FloorCrowdFar", rng, material)
 
 
 ## One bank of ringside fans: a MultiMesh per variant over `seats`.
 func _seat_floor_fans(seats: Array[Transform3D], meshes: Array[Mesh], prefix: String,
-		rng: RandomNumberGenerator, material: ShaderMaterial) -> void:
+		rng: RandomNumberGenerator, material: ShaderMaterial,
+		variant_materials: Array[Material] = []) -> void:
 	# Which variant each occupied seat gets, and how it is dressed.
 	var buckets: Array[Array] = []
 	var colours: Array[Array] = []
@@ -1235,23 +1315,35 @@ func _seat_floor_fans(seats: Array[Transform3D], meshes: Array[Mesh], prefix: St
 	for i in meshes.size():
 		if buckets[i].is_empty():
 			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		# Per-instance colour is the fan's tee (and print): the meshes keep
-		# their own faces, hair and jeans, and mark the garment for the
-		# shader to re-dress, so two dozen people clothe a few hundred seats.
-		mm.use_custom_data = true
-		mm.mesh = meshes[i]
-		mm.instance_count = buckets[i].size()
+		# MultiMesh culls as a whole. Keep the textured front rows in bounded
+		# sections so a view of one bank does not draw the whole floor's fans.
+		# Split AFTER placement: every RNG draw and selected seat stays identical.
+		var sections := {}
 		for j in buckets[i].size():
-			mm.set_instance_transform(j, buckets[i][j])
-			mm.set_instance_custom_data(j, colours[i][j])
-		var node := MultiMeshInstance3D.new()
-		node.name = "%s%02d" % [prefix, i]
-		node.multimesh = mm
-		node.material_override = material
-		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(node)
+			var at: Vector3 = (buckets[i][j] as Transform3D).origin
+			var key := Vector2i(floori(at.x / 6.0), floori(at.z / 6.0)) \
+					if not variant_materials.is_empty() else Vector2i.ZERO
+			if not sections.has(key):
+				sections[key] = []
+			sections[key].append(j)
+		for key: Vector2i in sections:
+			var picks: Array = sections[key]
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.use_custom_data = true
+			mm.mesh = meshes[i]
+			mm.instance_count = picks.size()
+			for j in picks.size():
+				mm.set_instance_transform(j, buckets[i][picks[j]])
+				mm.set_instance_custom_data(j, colours[i][picks[j]])
+			var node := MultiMeshInstance3D.new()
+			node.name = "%s%02d" % [prefix, i]
+			if not variant_materials.is_empty():
+				node.name += "_%d_%d" % [key.x, key.y]
+			node.multimesh = mm
+			node.material_override = material if variant_materials.is_empty() else variant_materials[i]
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(node)
 
 
 ## A shirt, from the same palette tools/blender/crowd.py dresses the bowl in --
@@ -1716,6 +1808,16 @@ static func _aisle_indices() -> PackedInt32Array:
 	for k: int in BOWL_AISLES:
 		picks.append(int(round(float(k) * float(per_loop) / float(BOWL_AISLES)))
 				% per_loop)
+	# New.png has two readable stair aisles in each long-side seating bank.
+	# Uniform samples round the perimeter landed only at the ends of these
+	# long straights. Add quarter/three-quarter marks on BOTH sides; the
+	# Blender exporter uses this same rule for stairs and crowd exclusions.
+	for start: int in [0, per_loop / 2]:
+		for fraction: float in [0.25, 0.75]:
+			var index := start + int(round(BOWL_STRAIGHT_SEGMENTS * fraction))
+			if not picks.has(index):
+				picks.append(index)
+	picks.sort()
 	return picks
 
 

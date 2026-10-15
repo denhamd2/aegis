@@ -221,6 +221,10 @@ func _load(path: String, mats: Dictionary) -> Node3D:
 func take_title() -> Node3D:
 	if _title == null:
 		return null
+	# Refresh the worn socket on the director's current kinematic root before
+	# detaching it. A stale interpolation transform here becomes the carried
+	# prop's blend origin and looks like a long teleport from the tunnel.
+	_follow()
 	set_title("held")
 	_title_state = "carried"
 	return _title
@@ -324,4 +328,14 @@ func _bone(canonical: String) -> Vector3:
 	var i := sk.find_bone(_w._skeleton_bone_name(canonical))
 	if i < 0:
 		return Vector3.INF
-	return (sk.global_transform * sk.get_bone_global_pose(i)).origin
+	# The entrance director moves the wrestler root kinematically while physics
+	# interpolation draws the last root between frames. A bone's global node
+	# transform can therefore lag behind the root during a cut. Compose the
+	# current wrestler transform with the model and skeleton's local transforms
+	# so the worn belt follows him immediately.
+	var local_to_wrestler := Transform3D.IDENTITY
+	var cursor: Node = sk
+	while cursor is Node3D and cursor != _w:
+		local_to_wrestler = (cursor as Node3D).transform * local_to_wrestler
+		cursor = cursor.get_parent()
+	return (_w.global_transform * local_to_wrestler * sk.get_bone_global_pose(i)).origin

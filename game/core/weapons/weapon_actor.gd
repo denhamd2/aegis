@@ -18,13 +18,17 @@ extends Node3D
 ## Wear (hit()) swaps the shown root Clean -> Dented -> Broken where the
 ## model has those states (WeaponDef.hits_to_dent / hits_to_break).
 
-enum Mode { UNDER_RING, HELD, THROWN, FLOOR, SET_UP, BROKEN, EFFECT }
+enum Mode { UNDER_RING, HELD, THROWN, FLOOR, SET_UP, BROKEN, EFFECT, SLIDING }
 
 signal broke(weapon: WeaponActor)
 ## A thrown weapon reached `who` (WrestlerController) in flight.
 signal struck(weapon: WeaponActor, who: Node3D)
 
 const GRAVITY := 9.8
+## Every weapon drawn from under the ring has a finite match life, including
+## when it is being carried. This makes the weapon pile turn over instead of
+## leaving the first chair or bat available for the entire match.
+const MATCH_LIFETIME_TICKS := 60 * 45
 ## A held weapon's grip sits this far into the palm from the knuckle line,
 ## and this far toward the fingertips.
 const PALM_IN := 0.022
@@ -52,6 +56,7 @@ const BODY_BONES := ["pelvis", "spine_03", "Head", "thigh_l", "thigh_r", "calf_l
 ## here with a trace of its own colour as emission, as the title does.
 const HALL_METALLIC := 0.55
 const HALL_GLOW := 0.05
+const SLIDE_SPEED := 6.0
 
 var def: WeaponDef
 var mode: Mode = Mode.UNDER_RING
@@ -64,11 +69,14 @@ var _spin := Vector3.ZERO
 var _bounced := false
 var _thrower: Node3D = null
 var _targets: Array = []
+var _slide_target := Vector3.ZERO
 ## Broken pieces: [node, velocity, spin, resting].
 var _pieces: Array = []
 ## The man it broke under: its pieces land round him, not through him.
 var _clear_of: Node3D = null
 var _broken_for := 0.0
+var match_lifetime_ticks := 0
+var match_lifetime_limit := MATCH_LIFETIME_TICKS
 var _model: Node3D
 var _roots := {}
 
@@ -323,24 +331,70 @@ func throw(launch: Vector3, spin: Vector3, thrower: Node3D, targets: Array) -> v
 	_targets = targets
 
 
+## Send a weapon flat under the bottom rope to a spot on the canvas. No wrestler
+## follows it: he can choose to climb back in carrying his weapon instead.
+func slide_into_ring(target: Vector3) -> void:
+	holder = null
+	mode = Mode.SLIDING
+	velocity = Vector3.ZERO
+	_targets.clear()
+	_slide_target = target
+	_slide_target.y = ground_under(target) + 0.02
+	global_position.y = ground_under(global_position) + 0.02
+	_bounced = false
+
+
+func _tick_slide(delta: float) -> void:
+	var to_target := _slide_target - global_position
+	var flat := Vector3(to_target.x, 0.0, to_target.z)
+	var step := SLIDE_SPEED * delta
+	if flat.length() <= step:
+		global_position = _slide_target
+		_lay_flat()
+		mode = Mode.FLOOR
+		_rest_on_floor(ground_under(global_position))
+		return
+	global_position += flat.normalized() * step
+	global_position.y = ground_under(global_position) + 0.02
+	_lay_flat()
+
+
 ## The surface under a point: the mat inside the ring, the arena floor
 ## outside it.
 static func ground_under(p: Vector3) -> float:
 	if absf(p.x) < RingBuilder.MAT_HALF and absf(p.z) < RingBuilder.MAT_HALF:
 		return 0.0
-	return ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT
+	return ArenaBuilder.match_surface_y(p)
 
 
 func _physics_process(delta: float) -> void:
+	if mode != Mode.EFFECT:
+		match_lifetime_ticks += 1
+		if match_lifetime_ticks >= match_lifetime_limit:
+			_expire_from_match()
+			return
 	match mode:
 		Mode.THROWN:
 			_tick_flight(delta)
+		Mode.SLIDING:
+			_tick_slide(delta)
 		Mode.BROKEN:
 			_tick_pieces(delta)
 		Mode.EFFECT:
 			_tick_effect(delta)
 		Mode.HELD:
 			_tick_fire()
+
+
+## Release it cleanly from a hand before the actor is removed from the match.
+func _expire_from_match() -> void:
+	if holder is WrestlerController:
+		var wrestler := holder as WrestlerController
+		if wrestler.held_weapon == self:
+			wrestler.drop_weapon()
+	visible = false
+	set_physics_process(false)
+	queue_free()
 
 
 # --- firing: the gun, the launcher, the extinguisher -----------------------------
@@ -569,10 +623,11 @@ func drop() -> void:
 
 
 ## Set down on purpose, upright at `at` facing `yaw`, in its set-up state.
-func set_up_at(at: Vector3, yaw: float) -> void:
+func set_up_at(at: Vector3, yaw: float, state_override := "") -> void:
 	holder = null
 	mode = Mode.SET_UP
-	show_state(def.set_up if def.set_up != "" else _held_root())
+	show_state(state_override if state_override != "" else \
+			(def.set_up if def.set_up != "" else _held_root()))
 	var place := at
 	# A set piece is wider than the wrestler's root. Clamp its full rotated
 	# footprint inside the barricade line; clamping only the root let tables
@@ -591,6 +646,13 @@ func set_up_at(at: Vector3, yaw: float) -> void:
 	global_transform = Transform3D(Basis(Vector3.UP, yaw),
 			Vector3(place.x, ground_under(place), place.z))
 	_announce("set_up")
+
+
+## A standing A-frame ladder is an interactive climbing surface. The laid-out
+## state remains available for the paired ladder-slam spot.
+func is_climbable_ladder() -> bool:
+	return def != null and def.id == &"ladder" and mode == Mode.SET_UP \
+			and state_root == "Ladder_Open" and has_marker("rung_1") and has_marker("rung_9")
 
 
 # --- wear --------------------------------------------------------------------

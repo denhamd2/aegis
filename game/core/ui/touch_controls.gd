@@ -11,12 +11,12 @@ extends CanvasLayer
 ## clicks and the title screen already takes clicks.
 
 ## [action, label, held] -- held buttons stay down while the finger does
-## (run, the submission hold); the rest are taps.
+## (guard, run, the submission hold); the rest are taps.
 const BUTTONS := [["strike", "STRIKE", false], ["grapple", "GRAPPLE", false],
-		["reversal", "REVERSE", false], ["run", "RUN", true],
+		["reversal", "GUARD / REVERSE", true], ["run", "RUN", true],
 		["submission_hold", "HOLD", true]]
 ## No Holds Barred adds these two above the arc (set by MatchSetup).
-const WEAPON_BUTTONS := [["weapon", "WEAPON", true], ["throw", "THROW", false]]
+const WEAPON_BUTTONS := [["weapon", "WEAPON", true], ["throw", "SLIDE / THROW", false]]
 static var weapons := false
 const STICK_ACTIONS := ["move_left", "move_right", "move_up", "move_down"]
 ## Fractions of the viewport's height, so it scales to any phone.

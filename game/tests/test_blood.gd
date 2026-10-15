@@ -5,6 +5,7 @@ extends GdUnitTestSuite
 ## however much a match bleeds.
 
 const WRESTLER_SCENE := preload("res://scenes/wrestler.tscn")
+const BLOOD_BAKER := preload("res://tools/blood/bake_blood_masks.gd")
 const MODELS := ["res://scenes/roman_model.tscn", "res://scenes/cody_model.tscn",
 		"res://scenes/kenny_model.tscn"]
 
@@ -25,6 +26,16 @@ func _wrestler() -> WrestlerController:
 
 func _blood(w: WrestlerController) -> Blood:
 	return w.get_node_or_null("Blood") as Blood
+
+
+func test_face_blood_stays_in_narrow_streaks_as_it_builds() -> void:
+	var frame := {"up": Vector3.UP, "fwd": Vector3.FORWARD, "right": Vector3.RIGHT,
+			"wound": Vector3.ZERO, "chest": Vector3(0, -0.3, 0)}
+	var streak := BLOOD_BAKER.head_field(Vector3(0, -0.12, 0), frame)
+	var skin_between_streaks := BLOOD_BAKER.head_field(Vector3(0.02, -0.12, 0), frame)
+	assert_float(streak).is_less(0.4)
+	assert_float(skin_between_streaks).is_greater(streak * 2.0)
+	assert_float(skin_between_streaks).is_equal(1.0)
 
 
 func _swing(id: StringName) -> MoveDef:
@@ -158,3 +169,18 @@ func test_the_canvas_keeps_one_stain_map_however_much_is_spilt() -> void:
 	for i in 20:
 		c.stamp(Vector3(0.5, 0, -0.4), 0.2, 0.6)
 	assert_float(c.image.get_pixelv(px).r).is_less_equal(1.0)
+
+
+func test_match_ring_canvas_has_a_live_blood_overlay() -> void:
+	var ring: Node3D = auto_free(load("res://scenes/ring.tscn").instantiate())
+	add_child(ring)
+	await _ticks(2)
+	var floor_mesh := ring.get_node("Floor/MeshInstance3D") as MeshInstance3D
+	var canvas := floor_mesh.get_node_or_null("CanvasBlood") as CanvasBlood
+	assert_object(canvas).is_not_null()
+	assert_bool(canvas.mesh == floor_mesh).is_true()
+	assert_bool(canvas.stamp(Vector3.ZERO, 0.08, 0.8)).is_true()
+	canvas.flush()
+	assert_object(canvas.material).is_not_null()
+	assert_object(canvas.texture).is_not_null()
+	assert_bool(canvas.canvas_material.next_pass == canvas.material).is_true()

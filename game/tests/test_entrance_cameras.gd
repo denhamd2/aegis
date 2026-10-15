@@ -21,18 +21,38 @@ func test_high_shots_hang_under_the_rig() -> void:
 func test_high_shots_still_see_over_the_crowd() -> void:
 	# Under the rig, but a high shot all the same: well above a standing head.
 	assert_float(EntranceDirector.RIG_CLEAR_Y).is_greater(5.0)
+	assert_float(EntranceDirector.STAGE_WIDE_AT.y).is_less(RIG_BOTTOM)
 
 
-func test_opening_wide_trucks_off_axis_for_arena_depth() -> void:
-	var start := EntranceDirector.opening_shot_at(0.0)
-	var middle := EntranceDirector.opening_shot_at(0.5)
-	var end := EntranceDirector.opening_shot_at(1.0)
-	assert_vector(start[0]).is_equal(EntranceDirector.OPENING_AT)
-	assert_vector(end[0]).is_equal(EntranceDirector.OPENING_AT_END)
-	assert_float(middle[0].x).is_greater(start[0].x)
-	assert_float(middle[0].z).is_less(start[0].z)
-	assert_float(end[2]).is_less(start[2])
-	assert_float(start[0].x).is_less(-5.0)
+func test_stage_wide_clears_the_ring_truss_from_the_led_top_in_sightline() -> void:
+	# A small downward tilt alone shifts both objects together in frame. Raising
+	# the camera below the fixtures changes the perspective enough to put the
+	# screen top above the near truss in the actual sightline.
+	var camera := EntranceDirector.STAGE_WIDE_AT
+	var screen_top := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5
+	var screen_depth := absf(ArenaBuilder.SCREEN_FACE_Z - camera.z)
+	var truss_front_depth := absf(-ArenaLighting.KEY_OFFSET - camera.z)
+	var screen_elevation := atan2(screen_top - camera.y, screen_depth)
+	var truss_elevation := atan2(ArenaLighting.TRUSS_Y - camera.y, truss_front_depth)
+	var clearance_degrees := rad_to_deg(screen_elevation - truss_elevation)
+	assert_float(clearance_degrees).override_failure_message(
+			"LED top should clear the near truss by a visible margin").is_greater(5.0)
+
+
+func test_opening_montage_cuts_from_arena_to_stage_and_holds_the_last_shot() -> void:
+	var opening := EntranceDirector.opening_shot_at(0.0)
+	var crowd := EntranceDirector.opening_shot_at(5.0)
+	var ring := EntranceDirector.opening_shot_at(9.0)
+	var last := EntranceDirector.opening_shot_at(34.0)
+	assert_int(opening[0]).is_equal(0)
+	assert_int(crowd[0]).is_equal(1)
+	assert_int(ring[0]).is_equal(2)
+	assert_int(last[0]).is_equal(EntranceDirector.OPENING_SHOTS.size() - 1)
+	assert_bool(opening[1] != crowd[1]).is_true()
+	assert_bool(crowd[2] != ring[2]).is_true()
+	assert_float(opening[3]).is_equal(52.0)
+	assert_float(last[3]).is_greater(0.0)
+	assert_int(EntranceDirector.opening_shot_at(60.0)[0]).is_equal(last[0])
 
 
 func test_every_shot_a_beat_uses_can_be_framed() -> void:

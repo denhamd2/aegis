@@ -9598,3 +9598,70 @@ at broadcast-heavy intensity.
   zero failures. `tools/anim/gait_audit.gd` passes, as do 120 Hz Roman and
   Cody cadence probes. The probes are code-side measurements; a Mac build is
   still required to inspect that machine's actual frame pacing.
+
+
+## Round: AI set-piece spots beyond the table
+
+- **The gap.** The weapon director already had a table setup/suplex spot, but
+  its spot scan required a breakable weapon. That excluded the thumbtacks,
+  bed of nails, and barbed-wire board even though their landing damage and
+  collision behavior were already implemented.
+- **AI and broadcast.** Those three pieces now count as common wild-match
+  picks and the AI can line up its paired suplex over them. Their nonbreaking
+  landings get a short hard-camera insert in broadcast coverage and play the
+  weapon's impact family; the table still gets its break shot and crack.
+- **Checks.** Focused gdUnit suites passed: weapon AI (13 cases), set-piece
+  landing (8), match audio (33), and set-piece camera (1). The full suite was
+  started but stopped in the unrelated referee-actor suite after repeated
+  skin-bind diagnostics made that run exceptionally slow; it did not produce
+  a final all-suite summary.
+- **Next.** The remaining set-piece slice is a deliberate ladder spot with
+  paired choreography and its own sell, followed by a rendered review of the
+  full weapon sequence.
+
+## Round: owner's New.png visual target, first environment slice
+
+- **Art direction.** The owner's native Mac `Current.png` and enhanced
+  `New.png` are stored under `gauntlet/refs/visual_target_2026_10_15/` with a
+  measured brief. Framing and canvas brightness are already close. The first
+  pass targets textured nearby fans, local light separation, material response
+  and aisle depth. Global exposure and ring key energies were retained.
+- **Near crowd.** `tools/blender/textured_crowd.py` preserves original Rocketbox
+  photographic UVs in five shared 2K atlases, plus UV-following shirt graphics.
+  The same 24 seeded floor variants now receive real light through a PBR
+  shader. Six-metre MultiMesh sections allow local frustum culling. Far proxies
+  retain their existing pipeline. The library totals 144,069 triangles, with
+  no variant above 6,024; a second export has an identical SHA-256.
+- **Environment.** Added outward audience washes, fixed blue aisle fixtures
+  and visible long-side stairs; entrance sweeps remain separate. Ringside pads
+  have satin faces, rougher seams and restrained self-light. LED spill varies
+  with the artwork, and the steps use neutral metallic diamond plate.
+- **Capture and performance.** `tools/probe/reference_look.tscn` records master,
+  corner, crowd and body views with actual renderer/adapter metadata.
+  `tools/capture/native_reference.sh` runs those views on a Mac and records
+  real-time match frame intervals without screenshot writes during the sample.
+  Software rendering and fixed-time captures cannot establish native speed.
+- **Checks.** 46 crowd/bowl/lighting cases passed. A subsequent 11-case run
+  passed the strengthened visual export checks and seven replay round-trip
+  checks. Python compilation, shell syntax and `git diff --check` passed.
+- **Rendered asset review.** A Forward+ studio sheet verified photographic
+  face/clothing UVs and exposed mirrored shirt lettering, which was corrected
+  and re-rendered. The actual arena fixtures also light a bounded crowd
+  section correctly with screen effects disabled for diagnosis. The cloud's
+  complete post-processing result was invalid, so it was not used to tune
+  shipping effects. The capture helper forces explicit pixel dimensions and
+  distinguishes fixed-time launches using verified process flags.
+- **Acceptance remains open.** Full-scene cloud Forward+ captures exceeded
+  the host's 8 GB limit; asset diagnostics do not establish a full-scene match.
+  No native Mac frame-pacing measurement or AAA-match verdict is claimed.
+  `gauntlet/refs/visual_target_2026_10_15/review.md` tracks evidence and remaining
+  wrestler/cloth polish. The pre-existing ladder-aerial clearance failure is
+  still recorded; the limits were not relaxed.
+- **Mac review candidate.** Exported `build/mac/Aegis-reference-candidate.zip`
+  separately from the existing Mac build. Its universal executable contains
+  both Apple Silicon and Intel architectures. ZIP integrity passed, and an
+  actual load from its packed resources found all 24 near-crowd variants and
+  five colour/print atlas sets. The archive includes the owner references,
+  asset-review evidence and an executable `Review Reference.command` launcher
+  for native captures. Export/packaging verification is not a native Mac run
+  or a release-ready verdict; the sidecar verification JSON records that.

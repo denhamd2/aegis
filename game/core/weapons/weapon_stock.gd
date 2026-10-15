@@ -5,18 +5,26 @@ extends Node3D
 ## a child of the match scene, made the first time anyone reaches for one.
 ##
 ## Under the ring is the whole catalogue, at every apron side. A weapon
-## pulled out is out of the stock for RESTOCK_TICKS, so the same one is not
-## pulled out ten times running.
+## pulled out stays out of stock for 60 seconds, so it is not fetched again
+## while its previous copy is still lying around or being used.
 
-const RESTOCK_TICKS := 60 * 45
+const RESTOCK_TICKS := 60 * 60
 ## A weapon on the floor this close to his feet can be picked up.
 const PICKUP_REACH := 0.95
 ## The gun and launcher are late-match escalation weapons, not opening picks.
 const LATE_MATCH_ONLY: Array[StringName] = [&"handgun", &"rpg"]
 const LATE_MATCH_UNLOCK_SECONDS := 300.0
+## These four props are visible on the entrance deck from the opening bell.
+const STAGE_WEAPONS: Array[StringName] = [
+		&"barbed_wire_chair", &"barbed_wire_bat", &"sledgehammer", &"light_tubes"]
+const STAGE_WEAPON_LIFETIME_TICKS := 60 * 180
+const STAGE_POSITIONS: Array[Vector3] = [
+		Vector3(-6.2, 0.0, -31.6), Vector3(-6.2, 0.0, -33.8),
+		Vector3(6.2, 0.0, -31.6), Vector3(6.2, 0.0, -33.8)]
 
 var _out_until := {}           # id -> physics frame it is back under the ring
 var actors: Array[WeaponActor] = []
+var stage_actors: Array[WeaponActor] = []
 
 
 static func of(node: Node) -> WeaponStock:
@@ -51,6 +59,37 @@ func pull(def: WeaponDef) -> WeaponActor:
 	add_child(a)
 	actors.append(a)
 	return a
+
+
+## Seed the deck once at bell time. Stage weapons are ordinary loose actors:
+## either wrestler can take them and their normal wear/lifetime still applies.
+func seed_stage_weapons() -> void:
+	if not MatchRules.no_holds_barred(self) or not stage_actors.is_empty():
+		return
+	for i in STAGE_WEAPONS.size():
+		var actor := pull(WeaponCatalog.by_id(STAGE_WEAPONS[i]))
+		actor.name = "StageWeapon_" + String(STAGE_WEAPONS[i])
+		actor.mode = WeaponActor.Mode.FLOOR
+		actor.match_lifetime_limit = STAGE_WEAPON_LIFETIME_TICKS
+		actor.global_position = STAGE_POSITIONS[i]
+		actor.global_position.y = WeaponActor.ground_under(actor.global_position) + 0.02
+		actor.rotation.y = float(i % 2) * 0.72
+		stage_actors.append(actor)
+
+
+## The nearest stage prop still lying loose, for an AI making a weapon run.
+func nearest_stage_weapon(at: Vector3) -> WeaponActor:
+	var best: WeaponActor = null
+	var best_d := INF
+	for actor in stage_actors:
+		if not is_instance_valid(actor) or actor.mode != WeaponActor.Mode.FLOOR:
+			continue
+		var d := Vector2(actor.global_position.x - at.x,
+				actor.global_position.z - at.z).length()
+		if d < best_d:
+			best = actor
+			best_d = d
+	return best
 
 
 ## The nearest weapon lying loose within reach of `at`, or null.

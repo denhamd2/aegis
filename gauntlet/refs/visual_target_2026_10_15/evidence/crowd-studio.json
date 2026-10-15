@@ -1,0 +1,19 @@
+{
+	"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+	"content_scale_size": "(1920, 1080)",
+	"driver": "vulkan",
+	"height": 1080,
+	"lighting": "studio diagnostic; production crowd shader",
+	"performance_evidence": false,
+	"pipeline": "forward_plus",
+	"production_arena_capture": false,
+	"variants": [
+		"Fan00",
+		"Fan04",
+		"Fan09",
+		"Fan13",
+		"Fan19"
+	],
+	"width": 1920,
+	"window_size": "(1920, 1080)"
+}

@@ -531,6 +531,18 @@ def build_more(report: list) -> None:
         root = kit.state_root("Ladder_" + state)
         build_ladder(root, root.name, alu, steps, cap, open_)
         report.append("ladder %s: %d triangles" % (state, kit.triangles_under(root)))
+    # A laid-out ladder is a deliberate landing surface for the paired slam.
+    # Rotate the folded ladder onto the mat and centre its long axis at the
+    # state's origin so the AI can line the victim up predictably.
+    root = kit.state_root("Ladder_Laid_Out")
+    build_ladder(root, root.name, alu, steps, cap, False)
+    root.rotation_euler.x = math.radians(90.0)
+    # In this exported state Blender Y becomes game depth, while Blender Z
+    # becomes game height. Keep the length centred and lift the rails just
+    # enough to clear the mat after import.
+    root.location.y = 0.0
+    root.location.z = 0.10
+    report.append("ladder laid out: %d triangles" % kit.triangles_under(root))
     kit.export(wid)
 
     kit.reset()

@@ -39,7 +39,8 @@ func test_put_down_on_a_table_he_goes_through_it() -> void:
 	await _ticks(2)
 	var table := _set_up(w, &"table", w.global_position)
 	var landed := []
-	w.set_piece_landed.connect(func(_who, weapon, broke): landed.append([weapon, broke]))
+	w.set_piece_landed.connect(func(_who, weapon, broke): landed.append(
+			[weapon, broke, w._move_ticks_remaining, w.impact_sell.active_profiles()]))
 	var wear := w.combat.wear
 	w._go_down()
 	await _ticks(WrestlerController.LAND_WAIT + 2)
@@ -48,7 +49,8 @@ func test_put_down_on_a_table_he_goes_through_it() -> void:
 	assert_float(w.combat.wear - wear).is_greater(10.0)
 	assert_int(landed.size()).is_equal(1)
 	assert_bool(landed[0][1]).is_true()
-	assert_int(w._move_ticks_remaining).is_greater(w.down_ticks_for(-1))
+	assert_int(landed[0][2]).is_greater(w.down_ticks_for(-1))
+	assert_array(landed[0][3]).contains("table_rebound")
 
 
 func test_the_table_breaks_the_same_way_every_time() -> void:
@@ -112,11 +114,54 @@ func test_on_the_tacks_they_stay_and_some_stick_in_his_back() -> void:
 	await _ticks(2)
 	var tacks := _set_up(w, &"thumbtacks", w.global_position)
 	var wear := w.combat.wear
+	var sells: Array = []
+	w.set_piece_landed.connect(func(_who, _weapon, _broke):
+		sells.append(w.impact_sell.active_profiles()))
 	w._go_down()
 	await _ticks(WrestlerController.LAND_WAIT + 2)
 	assert_int(tacks.mode).is_equal(WeaponActor.Mode.SET_UP)
 	assert_float(w.combat.wear - wear).is_greater(8.0)
 	assert_object(w._tacks_in_back).is_not_null()
+	assert_array(sells[0]).contains("tack_guard")
+
+
+func test_a_barbed_wire_board_hurts_him_and_stays_set_up() -> void:
+	var w := _wrestler(true)
+	w.global_position = Vector3(1.0, 0.0, 1.0)
+	await _ticks(2)
+	var board := _set_up(w, &"barbed_wire_board", w.global_position)
+	var wear := w.combat.wear
+	var sells: Array = []
+	w.set_piece_landed.connect(func(_who, _weapon, _broke):
+		sells.append(w.impact_sell.active_profiles()))
+	w._go_down()
+	await _ticks(WrestlerController.LAND_WAIT + 2)
+	assert_int(board.mode).is_equal(WeaponActor.Mode.SET_UP)
+	assert_float(w.combat.wear - wear).is_greater(8.0)
+	assert_array(sells[0]).contains("wire_guard")
+
+
+func test_a_laid_out_ladder_is_a_paired_slam_landing_surface() -> void:
+	var w := _wrestler(true)
+	w.global_position = Vector3(1.0, 0.0, 1.0)
+	await _ticks(2)
+	var ladder := _set_up(w, &"ladder", w.global_position)
+	assert_str(ladder.state_root).is_equal("Ladder_Laid_Out")
+	assert_bool(ladder.def.set_piece).is_true()
+	var bounds := ladder.global_transform * ladder.local_bounds()
+	assert_bool(WeaponStock._over(ladder, w.global_position)).is_true()
+	assert_float(bounds.position.y).is_greater_equal(-0.05)
+	assert_float(bounds.end.y).is_less_equal(0.3)
+	assert_bool(bounds.size.x > 0.25 or bounds.size.z > 0.25).is_true()
+	var wear := w.combat.wear
+	var sells: Array = []
+	w.set_piece_landed.connect(func(_who, _weapon, _broke):
+		sells.append(w.impact_sell.active_profiles()))
+	w._go_down()
+	await _ticks(WrestlerController.LAND_WAIT + 2)
+	assert_int(ladder.mode).is_equal(WeaponActor.Mode.SET_UP)
+	assert_float(w.combat.wear - wear).is_greater(8.0)
+	assert_array(sells[0]).contains("ladder_crash")
 
 
 func test_a_chair_on_the_floor_hurts_less_than_a_table() -> void:

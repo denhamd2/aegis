@@ -14,21 +14,25 @@ func _body(at: Vector3, facing: Vector3) -> Node3D:
 
 
 func test_a_blow_toward_a_corner_traps_him_in_it() -> void:
-	var spot := WrestlerController.corner_behind(Vector3(2.2, 0, 2.1), Vector3(1.4, 0, 1.3))
+	var spot := WrestlerController.corner_behind(Vector3(2.7, 0, 2.7), Vector3(2.0, 0, 2.0))
 	assert_bool(spot.is_finite()).is_true()
 	assert_vector(spot).is_equal_approx(Vector3(2.6, 0, 2.6), Vector3.ONE * 1e-4)
 	# Any corner, by the signs of where he stands.
-	spot = WrestlerController.corner_behind(Vector3(-2.0, 0, 2.3), Vector3(-1.2, 0, 1.6))
+	spot = WrestlerController.corner_behind(Vector3(-2.7, 0, 2.7), Vector3(-2.0, 0, 2.0))
 	assert_vector(spot).is_equal_approx(Vector3(-2.6, 0, 2.6), Vector3.ONE * 1e-4)
 
 
 func test_not_trapped_mid_ring_along_one_rope_or_driven_out_of_the_corner() -> void:
 	# Mid-ring.
 	assert_bool(WrestlerController.corner_behind(Vector3(0.5, 0, 0.3), Vector3(0, 0, 0)).is_finite()).is_false()
+	# Deep inside the diagonal, but not actually at the turnbuckle.
+	assert_bool(WrestlerController.corner_behind(Vector3(2.2, 0, 2.1), Vector3(1.4, 0, 1.3)).is_finite()).is_false()
 	# By one rope, not in a corner.
 	assert_bool(WrestlerController.corner_behind(Vector3(2.4, 0, 0.2), Vector3(1.4, 0, 0.2)).is_finite()).is_false()
 	# In the corner's reach but hit from the corner side: driven OUT of it.
-	assert_bool(WrestlerController.corner_behind(Vector3(2.0, 0, 2.0), Vector3(2.7, 0, 2.7)).is_finite()).is_false()
+	assert_bool(WrestlerController.corner_behind(Vector3(2.7, 0, 2.7), Vector3(3.2, 0, 3.2)).is_finite()).is_false()
+	# A wrestler outside the ropes cannot be classified as trapped in a corner.
+	assert_bool(WrestlerController.corner_behind(Vector3(3.4, 0, 2.7), Vector3(2.8, 0, 2.1)).is_finite()).is_false()
 
 
 func test_the_trap_holds_him_as_long_as_its_clips_run() -> void:

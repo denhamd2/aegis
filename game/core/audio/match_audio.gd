@@ -1,5 +1,6 @@
 class_name MatchAudio
 extends Node
+signal commentary_started(speaker: String, duration: float)
 ## What the hall sounds like: the crowd, the bell, the hits, the referee's
 ## hand on the mat, the pyro. The entrance music is not here -- it is the
 ## audio track of each man's titantron video, which StageVideo plays.
@@ -50,6 +51,13 @@ const GUNSHOT_DB := 6.0
 const ROCKET_LAUNCH_DB := 4.0
 const ROCKET_IGNITION_DB := 0.0
 const ROCKET_BLAST_DB := 6.0
+## Entrance pyro needs to read over entrance music and the crowd. A +6 dB
+## lift doubles the signal amplitude; the master compressor and limiter keep
+## stacked bursts from clipping.
+const ENTRANCE_PYRO_BOOST_DB := 6.0
+## The opening and finish bells are short broadcast cues. Double playback
+## speed gives them the quick, bright ring of a live wrestling bell.
+const MATCH_BELL_PITCH_SCALE := 2.0
 
 ## A bump: the pelvis falling faster than this and then stopping, low.
 const BUMP_FALL_SPEED := 2.0
@@ -105,10 +113,22 @@ const COMMENTARY_CLIPS := {
 }
 const COMMENTARY_EVENT_DELAY := 0.18
 const COMMENTARY_VOICE_DB := 0.0
-const ENDA_EASTER_EGG_AFTER := 30.0
-const ENDA_QUIET_HOLD := 1.0
+## These are live-play calls that naturally fit more than one moment in a
+## match. Keep a longer per-line gap for signature calls and the big
+## "Unbelievable" reaction, plus a shared gap so different punch/kick calls
+## do not turn into a constant commentary loop.
+const COMMENTARY_REPEAT_COOLDOWNS := {
+	"roman_spear": 45.0,
+	"excalibur_superman_punch": 35.0,
+	"excalibur_strikes": 22.0,
+	"excalibur_body_kicks": 22.0,
+	"excalibur_unbelievable": 60.0,
+}
+const COMMENTARY_REPEAT_MIN_GAP := 12.0
+const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
+const ENDA_EASTER_EGG_AFTER := 15.0
+const ENDA_QUIET_HOLD := 0.75
 const ENDA_CUTAWAY_TAIL := 0.5
-const ENDA_CUTAWAY_WAIT_MAX := 3.0
 
 ## A move worth a pop of its own (CrowdReaction.move_pop at or over this).
 const POP_MOVE := 0.45
@@ -138,10 +158,19 @@ var chants: CrowdChants
 ## the crowd beds ducked under it.
 const THEME_DB := -3.0
 const THEME_FADE_IN := 2.5
+## The owner-supplied Dynamite broadcast theme starts under the opening
+## announcers; at -3 dB it is 6 dB above its title-screen menu level.
+const DYNAMITE_OPENING_THEME := "res://assets/audio/music/title_theme.ogg"
+const DYNAMITE_OPENING_THEME_DB := -3.0
+const DYNAMITE_OPENING_FADE_IN := 1.0
+const DYNAMITE_OPENING_FADE_OUT := 1.5
 ## Under music the crowd dips, it does not vanish: a live room is not turned
 ## down for a song.
 const THEME_DUCK_DB := -4.0
 var _theme: AudioStreamPlayer
+var _dynamite_theme: AudioStreamPlayer
+var _opening_theme_elapsed := 0.0
+var _opening_theme_fade_out := false
 var _theme_from := -1.0
 var _theme_fade := 0.0
 var _duck := 0.0
@@ -157,9 +186,11 @@ var _commentary_voice: AudioStreamPlayer
 var _voice_lane: RingAnnouncer
 var _commentary_rng := RandomNumberGenerator.new()
 var _commentary_events_played := {}
+var _commentary_event_last_queued := {}
 var _commentary_queue: Array[String] = []
 var _commentary_delay := -1.0
 var _commentary_clock := 0.0
+var _last_repeatable_commentary_at := -INF
 var _enda_easter_egg_selected := false
 var _enda_easter_egg_used := false
 var _sneaky_heel_easter_egg_selected := false
@@ -167,7 +198,6 @@ var _sneaky_heel_easter_egg_used := false
 var _chaos_activity := 0.0
 var _enda_easter_egg_waiting := false
 var _enda_cutaway_hold := 0.0
-var _enda_cutaway_wait := 0.0
 var _enda_down_candidate: WrestlerController
 var _enda_down_seconds := 0.0
 var _sign_fans: SignFans
@@ -214,6 +244,9 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 	# Commentary choices are presentation-only, but a seeded stream keeps
 	# replayed broadcasts consistent while still allowing alternate takes.
 	_commentary_rng.seed = match_seed * 32771 + 4619
+	if cody_is_in_match(wrestlers) and ResourceLoader.exists(CODY_CROWD_CHANT):
+		chants.configure_cody_chant(load(CODY_CROWD_CHANT) as AudioStream,
+				RingAnnouncer.under_bus(), match_seed)
 	for w: WrestlerController in wrestlers:
 		w.move_landed.connect(_on_move_landed)
 		w.weapon_taken.connect(_on_weapon_taken)
@@ -227,6 +260,11 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 	referee.match_won.connect(_on_match_won)
 
 
+static func cody_is_in_match(wrestlers: Array) -> bool:
+	return wrestlers.any(func(w: Variant) -> bool:
+		return w is WrestlerController and (w as WrestlerController).entrance_style == "cody")
+
+
 ## The entrances' cues (EntranceDirector.cue): the pyro, and the crowd as a
 ## man's music hits.
 func follow(director: EntranceDirector) -> void:
@@ -238,12 +276,19 @@ func share_voice_lane(announcer: RingAnnouncer) -> void:
 	_voice_lane = announcer
 
 
-## Stable per match and independent of other commentary RNG draws: roughly one
-## in three matches gets the sign gag, without introducing run-to-run noise.
-static func enda_easter_egg_for_seed(match_seed: int) -> bool:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = match_seed * 104729 + 8191
-	return rng.randi_range(0, 2) == 0
+## The sign gag is scheduled once in every match; its lull trigger, rather than
+## a random match lottery, decides the exact moment it appears.
+static func enda_easter_egg_for_seed(_match_seed: int) -> bool:
+	return true
+
+
+static func commentator_for_event(event: String) -> String:
+	if event.begins_with("tony_") or event in [
+			"gunshot", "cody_return", "roman_record", "roman_spear", "enda_easter_egg"]:
+		return "tony"
+	if event.begins_with("excalibur_"):
+		return "excalibur"
+	return ""
 
 
 ## Separate seeded draw so this gag does not track the sign cutaway's selection.
@@ -265,7 +310,7 @@ func _on_post_match_finished() -> void:
 
 ## The opening bell, whether after the entrances or on tick one.
 func opening_bell() -> void:
-	sfx.play("bell_start", -2.0)
+	sfx.play("bell_start", -2.0, MATCH_BELL_PITCH_SCALE)
 	chants.bell()
 
 
@@ -276,25 +321,42 @@ func _on_cue(what: String) -> void:
 	if what == "broadcast_open":
 		# Tony follows Excalibur's show-opening call in the same voice lane.
 		_queue_commentary("tony_welcome")
+		_start_dynamite_opening()
+		if _crowd:
+			_crowd.pop(1.0)
+		sfx.play_any("crowd_pop", -1.0)
 	if what == "excalibur_crowd":
 		# Tony answers Excalibur's crowd read before either entrance begins.
 		_queue_commentary("tony_crowd_up")
+		if _crowd:
+			_crowd.pop(1.0)
+		sfx.play_any("crowd_pop", -3.0)
+	if what == "announce_intro":
+		# Keep the live-room bed swelling beneath the long welcome exchange.
+		if _crowd:
+			_crowd.pop(0.9)
+		sfx.play_any("crowd_pop", -3.0)
 	if what == "cody_appear":
 		# Excalibur answers Tony's Cody return call during Cody's entrance.
 		_queue_commentary("excalibur_cody_career")
 	match what:
+		"pyro_opening":
+			# A fuller launch-and-burst hit under the entrance-video theme.
+			sfx.play("pyro_bang", 1.0 + ENTRANCE_PYRO_BOOST_DB)
+			sfx.play("pyro_boom", -2.0 + ENTRANCE_PYRO_BOOST_DB)
 		"pyro_stage", "pyro_over_ring":
-			sfx.play("pyro_boom", -1.0)
+			sfx.play("pyro_boom", -1.0 + ENTRANCE_PYRO_BOOST_DB)
 		"pyro_roman":
 			# Flame units: the roar of the fire under the boom.
-			sfx.play("pyro_boom", -2.0)
-			sfx.play("whoosh", -4.0)
+			sfx.play("pyro_boom", -2.0 + ENTRANCE_PYRO_BOOST_DB)
+			sfx.play("whoosh", -4.0 + ENTRANCE_PYRO_BOOST_DB)
 		"pyro_cody_hit", "pyro_cody_punch":
-			sfx.play("pyro_bang", -2.0)
-			sfx.play("pyro_boom", -8.0)
+			sfx.play("pyro_bang", -2.0 + ENTRANCE_PYRO_BOOST_DB)
+			sfx.play("pyro_boom", -8.0 + ENTRANCE_PYRO_BOOST_DB)
 		"strobe":
 			sfx.play("pyro_bang", -6.0)
 		"tron_on":
+			_fade_dynamite_opening()
 			# The music hits: the building goes up around the entrance.
 			sfx.play_any("crowd_pop", -2.0)
 			var who: WrestlerController = _director.entrance_owner() if _director else null
@@ -461,19 +523,32 @@ func _on_wrestler_fired_up(who: Variant) -> void:
 	_queue_commentary("tony_momentum_shift")
 
 
-## Each commentary cue can be queued once per MatchAudio instance (one match).
+## Most story and setup cues are one-shot. Move calls and "Unbelievable" can
+## return when another fitting moment arrives, with per-line and shared gaps
+## to keep them from sounding like a loop.
 func _queue_commentary(event: String) -> void:
 	if not COMMENTARY_CLIPS.has(event):
 		return
 	var clips: Array = COMMENTARY_CLIPS[event]
 	if clips.is_empty():
 		return
-	if _commentary_events_played.has(event):
+	if _commentary_queue.has(event):
 		return
+	var repeat_cooldown := float(COMMENTARY_REPEAT_COOLDOWNS.get(event, 0.0))
+	if repeat_cooldown <= 0.0 and _commentary_events_played.has(event):
+		return
+	if repeat_cooldown > 0.0:
+		var last_queued := float(_commentary_event_last_queued.get(event, -INF))
+		if _commentary_clock - last_queued < repeat_cooldown \
+				or _commentary_clock - _last_repeatable_commentary_at < COMMENTARY_REPEAT_MIN_GAP:
+			return
 	if clips.all(func(path: String) -> bool: return not ResourceLoader.exists(path)):
 		return
 	# Mark on enqueue so duplicate triggers cannot stack while a line waits.
 	_commentary_events_played[event] = true
+	_commentary_event_last_queued[event] = _commentary_clock
+	if repeat_cooldown > 0.0:
+		_last_repeatable_commentary_at = _commentary_clock
 	_commentary_queue.append(event)
 
 
@@ -597,11 +672,13 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 
 
 ## Through a table: the crowd. (The crack itself is the table's "broke".)
-func _on_set_piece_landed(who: WrestlerController, _weapon: WeaponActor, broke: bool) -> void:
+func _on_set_piece_landed(who: WrestlerController, weapon: WeaponActor, broke: bool) -> void:
 	var by := who.opponent
 	_heat(by, 0.8 if broke else 0.4)
 	sfx.play_any("crowd_pop", -1.0 if broke else -5.0)
 	sfx.play_any("crowd_ooh", -2.0 if broke else -4.0)
+	if not broke and weapon != null:
+		sfx.play_any(weapon.def.sound, -3.0)
 	_register_chaos_activity(2.0 if broke else 0.5)
 
 
@@ -622,7 +699,7 @@ func _on_match_won(winner: Variant, method: String) -> void:
 		_count_heard = 3
 		sfx.play_any("count_slap", -1.0)
 		chants.count(3, sfx)
-	sfx.play("bell_end", -1.0)
+	sfx.play("bell_end", -1.0, MATCH_BELL_PITCH_SCALE)
 	sfx.play("crowd_finish", 0.0)
 	_queue_commentary("excalibur_finish")
 	_queue_commentary("excalibur_coolest_job")
@@ -669,8 +746,48 @@ func theme_player() -> AudioStreamPlayer:
 	return _theme
 
 
+## The match opens on the owner-supplied Dynamite theme, as in the show
+## broadcast. It sits below the commentary and cross-fades into the first
+## wrestler's entrance music when the tron comes up.
+func _start_dynamite_opening() -> void:
+	if not ResourceLoader.exists(DYNAMITE_OPENING_THEME):
+		return
+	if _dynamite_theme:
+		_dynamite_theme.stop()
+		_dynamite_theme.queue_free()
+	_dynamite_theme = AudioStreamPlayer.new()
+	_dynamite_theme.name = "DynamiteOpeningTheme"
+	_dynamite_theme.stream = load(DYNAMITE_OPENING_THEME) as AudioStream
+	_dynamite_theme.volume_db = -60.0
+	add_child(_dynamite_theme)
+	_opening_theme_elapsed = 0.0
+	_opening_theme_fade_out = false
+	_dynamite_theme.play()
+
+
+func _fade_dynamite_opening() -> void:
+	if _dynamite_theme and _dynamite_theme.playing:
+		_opening_theme_elapsed = 0.0
+		_opening_theme_fade_out = true
+
+
+func _tick_opening_theme(delta: float) -> void:
+	if not _dynamite_theme or not _dynamite_theme.playing:
+		return
+	_opening_theme_elapsed += delta
+	if _opening_theme_fade_out:
+		var amount := clampf(_opening_theme_elapsed / DYNAMITE_OPENING_FADE_OUT, 0.0, 1.0)
+		_dynamite_theme.volume_db = lerpf(DYNAMITE_OPENING_THEME_DB, -60.0, amount)
+		if amount >= 1.0:
+			_dynamite_theme.stop()
+	else:
+		var amount := clampf(_opening_theme_elapsed / DYNAMITE_OPENING_FADE_IN, 0.0, 1.0)
+		_dynamite_theme.volume_db = lerpf(-60.0, DYNAMITE_OPENING_THEME_DB, amount)
+
+
 func _process(delta: float) -> void:
 	_commentary_clock += delta
+	_tick_opening_theme(delta)
 	_chaos_activity = maxf(0.0, _chaos_activity - delta * CHAOS_COMMENTARY_DECAY_PER_SECOND)
 	var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
 	if not _commentary_queue.is_empty() and not voice_busy:
@@ -687,11 +804,18 @@ func _process(delta: float) -> void:
 			if not available.is_empty():
 				var choice := available[_commentary_rng.randi_range(0, available.size() - 1)]
 				var stream := load(choice) as AudioStream
-				if _voice_lane:
-					_voice_lane.play_commentary(stream)
-				else:
-					_commentary_voice.stream = stream
-					_commentary_voice.play()
+				if stream != null:
+					var speaker := commentator_for_event(event)
+					if not speaker.is_empty():
+						commentary_started.emit(speaker, stream.get_length())
+						for actor: Node in get_tree().get_nodes_in_group("commentators"):
+							if actor.has_method("commentary_started"):
+								actor.call("commentary_started", speaker, stream.get_length())
+					if _voice_lane:
+						_voice_lane.play_commentary(stream)
+					else:
+						_commentary_voice.stream = stream
+						_commentary_voice.play()
 			_commentary_delay = -1.0
 			_commentary_delay = -1.0
 	var excitement := _crowd.excitement if _crowd else 0.0
@@ -756,11 +880,6 @@ func _try_enda_easter_egg(delta: float) -> void:
 			return
 		if enda_fan == null or enda_fan.stage != SignFan.Stage.HOLDING:
 			return
-		_enda_cutaway_wait += delta
-		if _enda_cutaway_wait > ENDA_CUTAWAY_WAIT_MAX:
-			_cancel_enda_easter_egg()
-			_enda_down_seconds = 0.0
-			return
 		var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
 		if not _commentary_queue.is_empty() or voice_busy:
 			_sign_fans.raise_enda_easter_egg(_enda_cutaway_hold)
@@ -810,7 +929,6 @@ func _try_enda_easter_egg(delta: float) -> void:
 	_enda_cutaway_hold = stream.get_length() + COMMENTARY_EVENT_DELAY + ENDA_CUTAWAY_TAIL
 	if not _sign_fans.raise_enda_easter_egg(_enda_cutaway_hold):
 		return
-	_enda_cutaway_wait = 0.0
 	_enda_easter_egg_waiting = true
 
 
@@ -818,7 +936,6 @@ func _cancel_enda_easter_egg() -> void:
 	if _enda_easter_egg_waiting and _sign_fans != null and is_instance_valid(_sign_fans):
 		_sign_fans.cancel_enda_easter_egg()
 	_enda_easter_egg_waiting = false
-	_enda_cutaway_wait = 0.0
 
 
 func _slew(p: AudioStreamPlayer, db: float, delta: float) -> void:

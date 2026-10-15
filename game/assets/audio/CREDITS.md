@@ -34,8 +34,8 @@ it is from a new source; the caveats there apply.
 `music/title_theme.ogg` is the owner-supplied title-screen track ("AEW
 Dynamite theme 2025-present, Sum 41 - You Wanted War", logo loop, 3:29),
 supplied 2026-10-03 and transcoded from the owner's mp3 to Vorbis q6 with
-metadata stripped. It is not wired in yet (Stage 2 of
-`gauntlet/refs/aaa_master_plan.md`). Same caveats as the entrance music:
+metadata stripped. It plays under the Dynamite broadcast opening and is not
+used on the title screen. Same caveats as the entrance music:
 owner-supplied, not a licensed or CC0 source.
 
 `announcer/` holds three ring-announcer calls (Justin Roberts): the main-event
@@ -47,6 +47,13 @@ and the director starts each call so the card goes up on that moment
 owner-supplied, not a licensed or CC0 source.
 
 ## Match commentary
+
+`crowd_cody_chant.ogg` is the owner-supplied Cody Rhodes crowd chant from
+Google Drive (2026-10-15), loudness-normalised to -20 LUFS and transcoded
+from MP3 to Vorbis q5 with metadata stripped. It is mixed under the match
+crowd bed, with a two-second fade-in and three-second fade-out, and can only
+play after the opening bell when Cody Rhodes is in the match. The same rights
+caveat as other owner-supplied recordings applies.
 
 `commentary/tony_gunshot.ogg` is the owner-supplied Tony Schiavone call,
 "Oh my God, he shot him with a gun!" It is transcoded from the MP3 provided

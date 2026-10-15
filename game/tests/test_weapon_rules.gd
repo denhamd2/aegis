@@ -85,6 +85,54 @@ func test_he_pulls_out_what_he_picks() -> void:
 	assert_bool(WeaponStock.of(w).in_stock(&"steel_chair")).is_false()
 
 
+func test_a_ringside_weapon_can_be_slid_under_the_bottom_rope() -> void:
+	var w := _wrestler(true)
+	w.outside_ring = true
+	w.global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.1,
+			WrestlerController.FLOOR_LEVEL, 0.5)
+	await _ticks(2)
+	var weapon := WeaponStock.of(w).pull(WeaponCatalog.by_id(&"steel_chair"))
+	w.take_weapon(weapon)
+	assert_bool(w.can_slide_weapon_into_ring()).is_true()
+	assert_bool(w._weapon_input({"throw": true})).is_true()
+	assert_str(w._weapon_action).is_equal("slide")
+	for i in int(WrestlerController.WEAPON_ACTION_TICKS["slide"]):
+		w._tick_weapon_action({})
+	assert_int(weapon.mode).is_equal(WeaponActor.Mode.SLIDING)
+	await _ticks(40)
+	assert_int(weapon.mode).is_equal(WeaponActor.Mode.FLOOR)
+	assert_float(weapon.global_position.x).is_less(WrestlerController.RING_KEEP_IN)
+	# He can re-enter normally and pick up the same loose weapon from the mat.
+	assert_bool(w.begin_rope_cross()).is_true()
+	await _ticks(DiveSpot.ROLL_IN_TICKS + 5)
+	assert_bool(w.outside_ring).is_false()
+	assert_bool(w._weapon_input({"weapon": true})).is_true()
+	for i in int(WrestlerController.WEAPON_ACTION_TICKS[w._weapon_action]):
+		w._tick_weapon_action({})
+	assert_bool(w.has_weapon()).is_true()
+	assert_str(String(w.held_weapon.def.id)).is_equal("steel_chair")
+
+
+func test_no_holds_barred_seeds_four_pickup_ready_weapons_on_the_stage() -> void:
+	var arena: Node3D = auto_free(Node3D.new())
+	MatchRules.set_mode(arena, MatchRules.Mode.NO_HOLDS_BARRED)
+	add_child(arena)
+	var w: WrestlerController = WRESTLER_SCENE.instantiate()
+	arena.add_child(w)
+	var stock := WeaponStock.of(w)
+	stock.seed_stage_weapons()
+	stock.seed_stage_weapons()
+	assert_int(stock.stage_actors.size()).is_equal(4)
+	for actor in stock.stage_actors:
+		assert_int(actor.mode).is_equal(WeaponActor.Mode.FLOOR)
+		assert_int(actor.match_lifetime_limit) \
+				.is_equal(WeaponStock.STAGE_WEAPON_LIFETIME_TICKS)
+		assert_float(actor.global_position.y).is_equal_approx(
+				ArenaBuilder.STAGE_DECK_Y + 0.02, 0.01)
+		assert_bool(ArenaBuilder.is_match_stage(actor.global_position)).is_true()
+	assert_object(stock.nearest_stage_weapon(Vector3(0.0, 0.0, -33.0))).is_not_null()
+
+
 func test_letting_go_of_the_button_gets_him_up_empty_handed() -> void:
 	var w := _wrestler(true)
 	w.outside_ring = true
@@ -132,6 +180,29 @@ func test_a_used_weapon_on_the_floor_can_be_reused_by_the_other_wrestler() -> vo
 		second._tick_weapon_action({})
 	assert_bool(second.has_weapon()).is_true()
 	assert_bool(second.held_weapon == bat).is_true()
+
+
+func test_weapons_expire_after_a_match_lifetime_on_the_floor_or_in_hand() -> void:
+	var arena: Node3D = auto_free(Node3D.new())
+	add_child(arena)
+	var w: WrestlerController = WRESTLER_SCENE.instantiate()
+	MatchRules.set_mode(w, MatchRules.Mode.NO_HOLDS_BARRED)
+	arena.add_child(w)
+	var stock := WeaponStock.of(w)
+	await _ticks(2)
+	var loose := stock.pull(WeaponCatalog.by_id(&"steel_chair"))
+	loose.mode = WeaponActor.Mode.FLOOR
+	loose.match_lifetime_ticks = WeaponActor.MATCH_LIFETIME_TICKS - 1
+	await _ticks(2)
+	assert_bool(is_instance_valid(loose)).is_false()
+	assert_object(stock.loose_near(w.global_position)).is_null()
+
+	var held := stock.pull(WeaponCatalog.by_id(&"baseball_bat"))
+	w.take_weapon(held)
+	held.match_lifetime_ticks = WeaponActor.MATCH_LIFETIME_TICKS - 1
+	await _ticks(2)
+	assert_bool(w.has_weapon()).is_false()
+	assert_bool(is_instance_valid(held)).is_false()
 
 
 func test_a_thrown_weapon_flies_at_him_and_lands() -> void:

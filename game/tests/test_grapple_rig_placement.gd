@@ -169,3 +169,16 @@ func test_each_role_starts_on_its_trajectorys_first_key() -> void:
 	# Facing each other down the line between them.
 	assert_vector(a.basis * Vector3.FORWARD).is_equal_approx(Vector3.LEFT, Vector3.ONE * 0.001)
 	assert_vector(b.basis * Vector3.FORWARD).is_equal_approx(Vector3.RIGHT, Vector3.ONE * 0.001)
+
+
+func test_ladder_aerial_root_track_preserves_the_climbers_actual_height() -> void:
+	var rig := _make_rig()
+	rig._attacker_start_height_offset = 0.35
+	var anim := Animation.new()
+	var track := anim.add_track(Animation.TYPE_POSITION_3D)
+	anim.track_set_path(track, NodePath("Match/WrestlerB:position"))
+	anim.position_track_insert_key(track, 0.0, Vector3(0.4, 1.55, 0.0))
+	rig._transform_track_into_pair_frame(anim, track, true)
+	assert_vector(anim.track_get_key_value(track, 0)).is_equal_approx(
+		Vector3(0.4, 1.9, 0.0), Vector3.ONE * 0.001
+	)

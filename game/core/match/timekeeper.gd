@@ -31,7 +31,7 @@ const POLO := Color(0.05, 0.06, 0.09)
 const TABLE_SIZE := Vector3(0.65, 0.74, 1.05)
 const TABLE_ROTATION_Y := 0.0
 const CHAIR_SCENE := "res://assets/environment/props/MetalFoldingChair.fbx"
-const CHAIR_AT := Vector3(2.85, -1.1, 5.4)
+const CHAIR_AT := Vector3(2.25, -1.1, 6.4)
 const FRONT_ART := "res://assets/environment/materials/ribbon_board.png"
 const FRONT_ART_ASPECT := 7.7236
 

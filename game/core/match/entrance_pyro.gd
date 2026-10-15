@@ -50,6 +50,12 @@ const SHELL_BLUE := [Color(0.85, 0.9, 1.0), Color(0.2, 0.4, 1.0), Color(0.05, 0.
 const SET_SHELL_XS := [-9.0, -6.0, -3.0, 0.0, 3.0, 6.0, 9.0]
 const SET_SHELL_HEIGHT := 14.0
 const SHELL_STAGGER := 0.09
+## Opening volleys have visible launch trails: they leave the stage deck and
+## travel vertically before bursting above the video wall.
+const OPENING_ROCKET_XS := [-8.0, -4.0, 0.0, 4.0, 8.0]
+const OPENING_ROCKET_RISE := 17.0
+const OPENING_ROCKET_FLIGHT := 0.82
+const OPENING_ROCKET_STAGGER := 0.18
 ## Over the ring: under the rig (TRUSS_Y 7.6), over the four corners.
 const RING_SHELL_HEIGHT := 6.8
 const RING_SHELL_XZ := 2.4
@@ -71,6 +77,8 @@ var _pending: Array = []
 
 func fire(cue: String) -> void:
 	match cue:
+		"opening":
+			_opening_volley()
 		"stage":
 			# A generic entrance: a volley of gold shells over the set.
 			_shell_volley(SET_SHELL_XS, SET_SHELL_HEIGHT, SHELL_GOLD)
@@ -106,6 +114,83 @@ func fire(cue: String) -> void:
 					_later(i * SHELL_STAGGER * 2.0, func() -> void: _burst(at, col, 0.7))
 					i += 1
 			_flash(Vector3(0.0, 4.5, 0.0), 14.0, 16.0, 0.5)
+
+
+## Deterministic launch and burst points for the opening salvo, in stage space.
+static func opening_rocket_plan() -> Array:
+	var plan: Array = []
+	for x: float in OPENING_ROCKET_XS:
+		var from := Vector3(x, ArenaBuilder.STAGE_DECK_Y + 0.25,
+				ArenaBuilder.STAGE_FRONT - 0.8)
+		plan.append([from, from + Vector3(0.0, OPENING_ROCKET_RISE, -2.4)])
+	return plan
+
+
+func _opening_volley() -> void:
+	var plan := opening_rocket_plan()
+	for i in plan.size():
+		var points: Array = plan[i]
+		var order := absi(i - plan.size() / 2)
+		var colours: Array = SHELL_GOLD if i % 2 == 0 else SHELL_WHITE
+		_later(order * OPENING_ROCKET_STAGGER,
+				func() -> void: _launch_rocket(points[0], points[1], colours))
+	_flash(Vector3(0.0, 5.0, ArenaBuilder.STAGE_FRONT - 2.0), 24.0, 34.0, 0.55,
+			STROBE_COLOR)
+
+
+func _launch_rocket(from: Vector3, to: Vector3, colours: Array) -> void:
+	var rocket := Node3D.new()
+	add_child(rocket)
+	rocket.global_position = from
+	var head := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.105
+	mesh.height = 0.21
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(1.0, 0.82, 0.4)
+	material.emission_enabled = true
+	material.emission = Color(1.0, 0.72, 0.28)
+	material.emission_energy_multiplier = 5.0
+	mesh.material = material
+	head.mesh = mesh
+	rocket.add_child(head)
+	var trail := GPUParticles3D.new()
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3(0.0, -1.0, 0.0)
+	process.spread = 28.0
+	process.initial_velocity_min = 0.7
+	process.initial_velocity_max = 2.5
+	process.gravity = Vector3(0.0, -2.8, 0.0)
+	process.scale_min = 0.35
+	process.scale_max = 0.8
+	process.color = Color(1.0, 0.72, 0.32)
+	trail.process_material = process
+	trail.draw_pass_1 = _spark_mesh(0.035)
+	trail.amount = 72
+	trail.lifetime = 0.55
+	trail.fixed_fps = 60
+	trail.local_coords = false
+	trail.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 22, 6))
+	rocket.add_child(trail)
+	trail.emitting = true
+	_flash(from, 3.0, 8.0, 0.22, colours[1])
+	var tween := rocket.create_tween()
+	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(rocket, "global_position", to, OPENING_ROCKET_FLIGHT)
+	tween.tween_callback(_finish_rocket.bind(rocket, to, colours))
+
+
+func _finish_rocket(rocket: Node3D, at: Vector3, colours: Array) -> void:
+	if not is_instance_valid(rocket):
+		return
+	var trail := rocket.get_child(1) as GPUParticles3D
+	if trail:
+		trail.emitting = false
+	_burst(at, colours, 0.9)
+	var cleanup := rocket.create_tween()
+	cleanup.tween_interval(0.65)
+	cleanup.tween_callback(rocket.queue_free)
 
 
 func _later(seconds: float, what: Callable) -> void:

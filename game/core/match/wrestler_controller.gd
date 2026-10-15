@@ -413,6 +413,10 @@ var body_life: BodyLife
 var foot_lock: FootLock
 var rope_reach: RopeReach
 var sell_clutch: SellClutch
+var impact_sell: ImpactSell
+var guard_pose: GuardPose
+var _guarding := false
+var guard_blocks := 0
 ## Shared 0..1 blend applied to both arms' SkeletonIK3D.interpolation.
 var _grip_blend: float = 0.0
 ## The grip targets and blend as they stood on the last two ticks, in the
@@ -516,6 +520,8 @@ const STATE_ANIMATIONS := {
 	WrestlerFSM.State.ROPE_CROSS: "strikes/roll_out_ropes",
 	# Replaced per action by begin_weapon_action(); the kneel is the fallback.
 	WrestlerFSM.State.WEAPON_ACTION: "strikes/getup_rise",
+	WrestlerFSM.State.LADDER_CLIMB: "strikes/ladder_climb",
+	WrestlerFSM.State.LADDER_FALL: "strikes/ladder_fall",
 }
 ## Per-role overrides on top of STATE_ANIMATIONS, looked up first when the
 ## wrestler is in a grapple and its role is known.
@@ -559,6 +565,7 @@ const PAIRED_POSES := preload("res://resources/animations/paired_poses.tres")
 ## state that plays it.
 const StrikeRecipes := preload("res://resources/animations/strike_recipes.gd")
 const STRIKE_CLIPS := preload("res://resources/animations/strike_clips.tres")
+const LADDER_AERIAL_MOVE := preload("res://resources/moves/ladder_aerial.tres") as MoveDef
 ## Ticks (at 60Hz) to cross-fade between clips.
 const ANIMATION_BLEND_TICKS := 6
 ## How long the Inertializer carries the old pose into a new clip, by the state
@@ -744,10 +751,12 @@ func _ready() -> void:
 		_build_body_life()
 		_build_hit_flinch()
 		_build_sell_clutch()
+		_build_impact_sell()
 		_build_foot_lock()
 		_build_rope_reach()
 		_build_mat_guard()
 		_build_weapon_grip()
+		_build_guard_pose()
 		# Sweat over the match, on the skin materials the model registered.
 		if model:
 			Sweat.attach(self, model)
@@ -861,6 +870,8 @@ func _apply_colorway() -> void:
 ## matches WrestlerFSM's state/transition tables instead of drifting from
 ## them by hand.
 func _build_animation_tree() -> void:
+	if anim_player.has_animation("strikes/ladder_climb"):
+		anim_player.get_animation("strikes/ladder_climb").loop_mode = Animation.LOOP_LINEAR
 	var state_machine := AnimationNodeStateMachine.new()
 	for state_id in STATE_ANIMATIONS:
 		var clip_name: String = STATE_ANIMATIONS[state_id]
@@ -1203,6 +1214,26 @@ func _build_sell_clutch() -> void:
 		sell_clutch.bones[key] = _skeleton_bone_name(key)
 	sell_clutch.wrestler = self
 	skeleton.add_child(sell_clutch)
+
+
+## Paired move and surface follow-through. It is ordered after the ordinary
+## clutch so it can layer the immediate impact and the guarded settle on top.
+func _build_impact_sell() -> void:
+	impact_sell = ImpactSell.new()
+	impact_sell.name = "ImpactSell"
+	for key: String in impact_sell.bones.keys():
+		impact_sell.bones[key] = _skeleton_bone_name(key)
+	impact_sell.wrestler = self
+	skeleton.add_child(impact_sell)
+
+
+func _build_guard_pose() -> void:
+	guard_pose = GuardPose.new()
+	guard_pose.name = "GuardPose"
+	for key: String in guard_pose.bones.keys():
+		guard_pose.bones[key] = _skeleton_bone_name(key)
+	guard_pose.wrestler = self
+	skeleton.add_child(guard_pose)
 
 
 ## RopeReach: after FootLock, so a foot reaching for the rope is not pinned
@@ -1670,6 +1701,7 @@ func _physics_process(delta: float) -> void:
 	var input := ReplaySystem.get_input(player_index, live_input) if ReplaySystem else live_input
 	fsm._physics_process(delta)
 	_read_reversal(input)
+	_set_guarding(input.get("guard", false))
 	_tick_stamina()
 	_tick_sell()
 	_tick_weapon()
@@ -1681,12 +1713,18 @@ func _physics_process(delta: float) -> void:
 				begin_taunt()
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
+			elif input.get("climb_ladder", false):
+				begin_ladder_climb(climbable_ladder_nearby())
 			elif _weapon_input(input):
 				pass
 			else:
 				_process_free_movement(delta, input)
 		WrestlerFSM.State.WEAPON_ACTION:
 			_tick_weapon_action(input)
+		WrestlerFSM.State.LADDER_CLIMB:
+			_tick_ladder_climb(input)
+		WrestlerFSM.State.LADDER_FALL:
+			_tick_ladder_fall()
 		WrestlerFSM.State.ROPE_CROSS:
 			_tick_rope_cross()
 		WrestlerFSM.State.TAUNT:
@@ -1752,6 +1790,10 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	var stepped_from := global_position
 	move_and_slide()
+	if fsm.current_state == WrestlerFSM.State.LADDER_FALL \
+			and (is_on_floor() or global_position.y <= FLOOR_LEVEL + 0.04):
+		global_position.y = FLOOR_LEVEL
+		_go_down()
 	if _rope_load_body:
 		# Out in the ropes on purpose -- the clamp would snap him back.
 		_end_rope_load_when_clear()
@@ -1913,6 +1955,9 @@ func keep_lying_body_inside_the_ropes() -> void:
 ## _physics_process off for both bodies, so this never fights a clip that
 ## deliberately puts a wrestler in the air mid-throw.
 func _apply_gravity(delta: float) -> void:
+	if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
+		velocity.y = 0.0
+		return
 	if is_on_floor():
 		# Zero rather than leave it accumulating -- otherwise velocity.y grows
 		# unboundedly while grounded and the first airborne tick launches the
@@ -1924,9 +1969,10 @@ func _apply_gravity(delta: float) -> void:
 func _poll_live_input() -> Dictionary:
 	if is_ai:
 		var decided: Dictionary = ai.poll_input() if ai else {}
-		# Selling a blow, he waits it out; only a reversal comes through.
+		# Selling a blow, he waits it out; only defense can come through.
 		if sell_ticks > 0:
-			return {"reversal": decided.get("reversal", false)}
+			return {"reversal": decided.get("reversal", false),
+					"guard": decided.get("guard", false)}
 		return decided
 	return {
 		"move": Input.get_vector("move_left", "move_right", "move_up", "move_down"),
@@ -1935,6 +1981,7 @@ func _poll_live_input() -> Dictionary:
 		"run": Input.is_action_pressed("run"),
 		"submission_hold": Input.is_action_pressed("submission_hold"),
 		"reversal": Input.is_action_just_pressed("reversal"),
+		"guard": Input.is_action_pressed("reversal"),
 		"weapon": Input.is_action_pressed("weapon"),
 		"throw": Input.is_action_just_pressed("throw"),
 		"weapon_pick": _take_wheel_pick(),
@@ -1951,7 +1998,7 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		return
 
 	var move_vec: Vector2 = input.get("move", Vector2.ZERO)
-	var running: bool = input.get("run", false) and move_vec.length() > 0.1
+	var running: bool = input.get("run", false) and not _guarding and move_vec.length() > 0.1
 	var speed := RUN_SPEED if running else MOVE_SPEED
 	var direction := Vector3(move_vec.x, 0.0, move_vec.y)
 
@@ -1993,22 +2040,22 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 			fsm.transition_to(WrestlerFSM.State.IDLE)
 
 	_wants_tie_up_this_tick = false
-	if fsm.current_state == WrestlerFSM.State.RUN:
+	if fsm.current_state == WrestlerFSM.State.RUN and not _guarding:
 		_maybe_start_running_attack(input)
-	elif input.get("strike", false) and has_weapon() and held_weapon.def.swing == WeaponDef.Swing.POUR:
+	elif not _guarding and input.get("strike", false) and has_weapon() and held_weapon.def.swing == WeaponDef.Swing.POUR:
 		begin_weapon_action("set_up")      # the tacks poured, the bed of nails laid
-	elif input.get("strike", false) and has_weapon():
+	elif not _guarding and input.get("strike", false) and has_weapon():
 		var swing := WeaponCatalog.swing_move(held_weapon.def)
 		_play_strike_clip(swing)
 		_start_move(WrestlerFSM.State.STRIKE, swing)
 		held_weapon.fire(swing.startup_frames, self)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * swing.total_frames())
-	elif input.get("strike", false) and strike_move:
+	elif not _guarding and input.get("strike", false) and strike_move:
 		var strike := _pick_string_strike()
 		_play_strike_clip(strike)
 		_start_move(WrestlerFSM.State.STRIKE, strike)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * strike.total_frames())
-	elif input.get("grapple", false):
+	elif not _guarding and input.get("grapple", false):
 		_wants_tie_up_this_tick = true
 
 ## Yaw toward the opponent while standing still. Facing used to be produced
@@ -2228,6 +2275,22 @@ func is_crossing_ropes() -> bool:
 func keep_on_the_floor() -> void:
 	var p := global_position
 	var fixed := p
+	if MatchRules.no_holds_barred(self) and (ArenaBuilder.is_match_ramp(p) \
+			or ArenaBuilder.is_match_stage(p)):
+		if ArenaBuilder.is_match_stage(p):
+			fixed.x = clampf(p.x, -ArenaBuilder.STAGE_HALF_WIDTH + BODY_RADIUS,
+					ArenaBuilder.STAGE_HALF_WIDTH - BODY_RADIUS)
+			fixed.z = clampf(p.z, ArenaBuilder.MATCH_STAGE_BACK_LIMIT,
+					ArenaBuilder.STAGE_FRONT)
+		if ArenaBuilder.is_match_ramp(p):
+			fixed.x = clampf(p.x, -ArenaBuilder.RAMP_HALF_WIDTH + BODY_RADIUS,
+					ArenaBuilder.RAMP_HALF_WIDTH - BODY_RADIUS)
+		fixed.y = maxf(p.y, ArenaBuilder.match_surface_y(p))
+		if fixed != p:
+			global_position = fixed
+			if fixed.y > p.y and velocity.y < 0.0:
+				velocity.y = 0.0
+		return
 	fixed.y = maxf(p.y, FLOOR_LEVEL)
 	fixed.x = clampf(p.x, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
 	fixed.z = clampf(p.z, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
@@ -2691,7 +2754,42 @@ func _apply_move_to_opponent(move: MoveDef) -> void:
 	# CombatSystem, not shared, so there's no cross-wrestler race here.
 	# The damage itself still goes through the deferred queue below.
 	combat.apply_momentum(move)
+	if opponent._take_guarded_strike(self, move):
+		return
 	opponent._pending_hits.append(move)
+
+
+func _take_guarded_strike(striker: WrestlerController, move: MoveDef) -> bool:
+	if not _guarding or striker == null or not DefenseSystem.is_guardable_strike(
+			move, striker._is_weapon_swing(move)):
+		return false
+	if not CAN_REVERSE.has(fsm.current_state) or held_weapon != null:
+		return false
+	var toward_attacker := striker.global_position - global_position
+	toward_attacker.y = 0.0
+	var facing := -global_basis.z
+	facing.y = 0.0
+	if toward_attacker.length_squared() < 0.001 or facing.normalized().dot(
+			toward_attacker.normalized()) < 0.05:
+		return false
+	var scale := DefenseSystem.blocked_damage_scale(combat.health(),
+			striker.combat.health(), combat.stamina)
+	combat.apply_damage(move, scale)
+	combat.spend_stamina(CombatSystem.STAMINA_GUARD_BLOCK)
+	_took_moves(1)
+	guard_blocks += 1
+	if hit_flinch:
+		hit_flinch.hit(striker.global_position, HitFlinch.zone_of(move),
+				minf(HitFlinch.strength_of(move) * 0.22, 0.38))
+	return true
+
+
+func _set_guarding(requested: bool) -> void:
+	var available := fsm != null and CAN_REVERSE.has(fsm.current_state) \
+			and held_weapon == null and not dead and combat.stamina > 0.01
+	_guarding = requested and available
+	if guard_pose:
+		guard_pose.guarding = _guarding
 
 # --- in-between behaviour (gauntlet/refs/animation_gap.md, Phase 4) ----------
 #
@@ -3001,8 +3099,10 @@ const CHAIN_READ_CLIP := "strikes/tie_up_collar"
 # Deterministic: where he is and where the blow came from decide it, both read
 # off the two bodies' origins, never the skeleton.
 
-## Both |x| and |z| past this, and a man is in a corner's reach.
-const CORNER_ZONE := 1.85
+## Both |x| and |z| past this, and a man is close enough to the corner ropes
+## for the corner slump to read as physical contact. The old 1.85 m threshold
+## covered a broad patch of the ring where a hit should cause an ordinary fall.
+const CORNER_ZONE := 2.45
 ## Where a trapped man's origin is put, on both axes: keep_inside_the_ring()'s
 ## own limit, which backs him into the buckle.
 const CORNER_SPOT := 2.6
@@ -3039,6 +3139,10 @@ func is_corner_trapped() -> bool:
 ## The spot in the corner a blow from `from` drives a man at `pos` into, or a
 ## non-finite vector when it does not drive him into one.
 static func corner_behind(pos: Vector3, from: Vector3) -> Vector3:
+	# A turnbuckle reaction is only valid on the ring deck. Outside-ring hits
+	# must never snap a wrestler back to a corner pose inside the ropes.
+	if absf(pos.x) > RingBuilder.ROPE_SPAN or absf(pos.z) > RingBuilder.ROPE_SPAN:
+		return Vector3.INF
 	if absf(pos.x) < CORNER_ZONE or absf(pos.z) < CORNER_ZONE:
 		return Vector3.INF
 	var away := Vector3(pos.x - from.x, 0.0, pos.z - from.z)
@@ -3403,7 +3507,10 @@ func _tick_stamina() -> void:
 		WrestlerFSM.State.RUN:
 			combat.spend_stamina(CombatSystem.STAMINA_RUN_TICK)
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION:
-			combat.regen_stamina(CombatSystem.STAMINA_REGEN_TICK)
+			if _guarding:
+				combat.spend_stamina(CombatSystem.STAMINA_GUARD_TICK)
+			else:
+				combat.regen_stamina(CombatSystem.STAMINA_REGEN_TICK)
 		WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP:
 			combat.regen_stamina(CombatSystem.STAMINA_REGEN_DOWN_TICK)
 
@@ -3451,16 +3558,27 @@ func _resolve_pending_hits() -> void:
 	var health_before := combat.health()
 	var wear_before := combat.wear
 	var fatal_shot := _pending_fatal_shot
+	var weapon_forces_down := false
 	_pending_fatal_shot = false
 	for move in moves:
 		combat.apply_damage(move, CombatSystem.COMEBACK_DAMAGE_SCALE if hitter_fired_up else 1.0)
 		var weapon := WeaponCatalog.of_move(move)
 		fatal_shot = fatal_shot or (weapon != null and weapon.id == &"handgun")
+		weapon_forces_down = weapon_forces_down or (weapon != null and move.leaves_defender_down)
 	var last_move: MoveDef = moves[moves.size() - 1]
 	_hit_sell = sell_tier(combat.wear - wear_before, health_before, WeaponCatalog.of_move(last_move) != null)
 	_took_moves(moves.size())
 	if fatal_shot:
+		if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
+			dead = true
+			combat.drain_health_permanently()
+			_pending_bullet_impact = Vector3.INF
+			_begin_ladder_fall()
+			return
 		_take_fatal_gunshot()
+		return
+	if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
+		_begin_ladder_fall()
 		return
 	# Every blow that lands shows on him, whatever he is doing -- mid-punch
 	# included, where the reaction clip has to wait (below). A man fired up
@@ -3473,10 +3591,11 @@ func _resolve_pending_hits() -> void:
 		if stop > 0:
 			hit_stop(stop)
 			opponent.hit_stop(stop)
-	if _would_be_knocked_down() or (_hit_sell == Sell.DOWN and not combat.is_fired_up()
+	if weapon_forces_down or _would_be_knocked_down() or (_hit_sell == Sell.DOWN and not combat.is_fired_up()
 			and not DOWNED_STATES.has(fsm.current_state)):
-		# Dropped mid-swing: the punch dies with him, so nothing is held over.
-		# A hit that big puts him down on its own, whatever he had taken.
+		# A weapon explicitly marked as a knockdown hit gets the same immediate
+		# fall as a cumulative knockdown, even when the wrestler is otherwise
+		# fired up. Dropped mid-swing: nothing is held over.
 		_pending_hit_reaction = null
 		_bump_down()
 		return
@@ -3954,6 +4073,10 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	# lockstep) so it must also be in MOVE_EXEC before taking a hit reaction —
 	# GRAPPLE_HOLD -> HIT_REACT/DOWN is not a legal transition on its own.
 	opponent.fsm.transition_to(WrestlerFSM.State.MOVE_EXEC)
+	# Start the additive follow-through only after GrappleRig has played the
+	# entire paired trajectory through contact and handed the bodies back.
+	if opponent.impact_sell:
+		opponent.impact_sell.react_to_move(move)
 	move_landed.emit(self, opponent, move)
 	combat.apply_momentum(move)
 	# Recorded on landing rather than on selection: a grapple that gets
@@ -4785,6 +4908,7 @@ var _wheel_pick: StringName = &""
 var _weapon_action := ""
 var _weapon_action_ticks := 0
 var _weapon_target: WeaponActor = null
+var _weapon_slide_to := Vector3.ZERO
 var _pickup_from := Vector3.ZERO
 var _pickup_to := Vector3.ZERO
 var _weapon_pick_id: StringName = &""
@@ -4795,18 +4919,32 @@ const RUMMAGE_RELEASE_TICKS := 3
 ## nearer a corner than this along the side.
 const RUMMAGE_REACH := 0.45
 const RUMMAGE_LANE := 2.4
+const LADDER_INTERACT_REACH := 1.55
+const LADDER_CLIMB_SPEED := 1.05
+const LADDER_FRONT_OFFSET := 0.72
+const LADDER_TOP_FOOT_GAP := 0.22
+const LADDER_FALL_SHOVE := 1.15
+const LADDER_AERIAL_REACH := 1.8
+var _ladder_actor: WeaponActor
+var _ladder_start := Vector3.ZERO
+var _ladder_climb_height := 0.0
+var _ladder_climb_progress := 0.0
+var _ladder_climb_ticks := 0
+var _ladder_input_armed := true
+var _weapon_setup_root := ""
 ## Each action's length, and the tick on which it happens.
 ## The three pickups are one action each (WeaponCatalog.pickup_action picks
 ## which by what is on the floor): a hand, both hands, the squat lift.
 const WEAPON_ACTION_TICKS := {"rummage": 0, "retrieve": 54, "pickup": 30, "pickup_two": 30,
-		"pickup_heavy": 44, "throw": 26, "set_up": 44}
+		"pickup_heavy": 44, "throw": 26, "slide": 30, "set_up": 44, "set_up_upright": 44}
 const WEAPON_ACTION_AT := {"retrieve": 36, "pickup": 16, "pickup_two": 16, "pickup_heavy": 24,
-		"throw": 12, "set_up": 30}
+		"throw": 12, "slide": 12, "set_up": 30, "set_up_upright": 30}
 const WEAPON_ACTION_CLIPS := {
 	"rummage": "strikes/weapon_rummage", "retrieve": "strikes/weapon_retrieve",
 	"pickup": "strikes/weapon_pickup", "pickup_two": "strikes/weapon_pickup_two",
 	"pickup_heavy": "strikes/weapon_pickup_heavy", "throw": "strikes/weapon_throw",
-	"set_up": "strikes/weapon_set_up",
+	"slide": "strikes/weapon_pickup",
+	"set_up": "strikes/weapon_set_up", "set_up_upright": "strikes/weapon_set_up",
 }
 ## A pickup: where the weapon's grip ends up in front of his feet (m) once he
 ## has stepped to it, and the ticks the step takes. Anywhere in PICKUP_REACH
@@ -4840,6 +4978,8 @@ func _build_weapon_grip() -> void:
 	weapon_grip.name = "WeaponGrip"
 	for key: String in weapon_grip.bones.keys():
 		weapon_grip.bones[key] = _skeleton_bone_name(key)
+	for key: String in weapon_grip.legs.keys():
+		weapon_grip.legs[key] = _skeleton_bone_name(key)
 	weapon_grip.wrestler = self
 	skeleton.add_child(weapon_grip)
 
@@ -4870,34 +5010,259 @@ func can_rummage() -> bool:
 	return p.dot(axis) <= DECK_KEEP_OUT + RUMMAGE_REACH and lateral <= RUMMAGE_LANE
 
 
+## A held weapon can be fed under the bottom rope from the apron lane. The
+## alternative is to carry it through the ropes with the wrestler.
+func can_slide_weapon_into_ring() -> bool:
+	if not MatchRules.no_holds_barred(self) or not outside_ring or not has_weapon():
+		return false
+	if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+		return false
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	var axis := GrappleRig._outside_side(p)
+	var lateral := absf(p.z) if axis.x != 0.0 else absf(p.x)
+	return p.dot(axis) <= DECK_KEEP_OUT + 0.85 and lateral <= ROPE_CROSS_LANE
+
+
+func _weapon_slide_target() -> Vector3:
+	var p := Vector3(global_position.x, 0.0, global_position.z)
+	var axis := GrappleRig._outside_side(p)
+	var lateral_axis := Vector3(absf(axis.z), 0.0, absf(axis.x))
+	var lane := clampf(p.dot(lateral_axis), -ROPE_CROSS_LANE, ROPE_CROSS_LANE)
+	return axis * (RING_KEEP_IN - 0.35) + lateral_axis * lane + Vector3.UP * MAT_LEVEL
+
+
 ## The weapon buttons, before free movement: true if they took the tick.
 func _weapon_input(input: Dictionary) -> bool:
 	if not MatchRules.no_holds_barred(self):
 		return false
 	if has_weapon():
-		if input.get("throw", false) and held_weapon.def.throwable:
-			begin_weapon_action("throw")
-			return true
+		if input.get("throw", false):
+			if can_slide_weapon_into_ring():
+				begin_weapon_action("slide")
+				return true
+			if held_weapon.def.throwable:
+				begin_weapon_action("throw")
+				return true
 		if input.get("grapple", false):
-			if held_weapon.def.set_up != "":
-				begin_weapon_action("set_up")
+			if held_weapon.def.id == &"ladder":
+				# The player's grapple/setup button opens a carried ladder by
+				# default; an explicit laid-out request remains available to AI and
+				# scripted spots. This works on either side of the ropes.
+				var upright := not bool(input.get("set_ladder_laid_out", false)) \
+						or bool(input.get("set_ladder_upright", false))
+				begin_weapon_action("set_up_upright" if upright else "set_up")
 			else:
-				drop_weapon()
+				if held_weapon.def.set_up != "":
+					begin_weapon_action("set_up")
+				else:
+					drop_weapon()
 			return true
 		return false
 	if input.get("weapon", false):
+		var ladder := climbable_ladder_nearby()
+		if ladder and _ladder_input_armed:
+			_ladder_input_armed = false
+			return begin_ladder_climb(ladder)
+		_ladder_input_armed = false
 		var loose := WeaponStock.of(self).loose_near(global_position)
+		if loose == null:
+			loose = set_up_ladder_nearby()
 		if loose:
 			_weapon_target = loose
 			begin_weapon_action(WeaponCatalog.pickup_action(loose.def))
 			return true
-		# Reuse a weapon that is already in play before searching under the ring.
-		# On the apron side both actions can be valid at once; rummaging first
-		# made used weapons on the floor impossible for nearby wrestlers to claim.
 		if can_rummage():
 			begin_weapon_action("rummage")
 			return true
+	else:
+		_ladder_input_armed = true
 	return false
+
+
+## The nearest upright ladder within interaction reach. Only an upright
+## Ladder_Open prop can be climbed; laid-out ladders stay landing surfaces.
+func climbable_ladder_nearby(max_distance := LADDER_INTERACT_REACH) -> WeaponActor:
+	if outside_ring or not MatchRules.no_holds_barred(self) or get_parent() == null:
+		return null
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock
+	if stock == null:
+		return null
+	var best: WeaponActor
+	var best_distance := max_distance
+	for actor: WeaponActor in stock.set_up_pieces():
+		if not actor.is_climbable_ladder():
+			continue
+		var d := Vector2(actor.global_position.x - global_position.x,
+				actor.global_position.z - global_position.z).length()
+		if d <= best_distance:
+			best = actor
+			best_distance = d
+	return best
+
+
+## A stood ladder can be folded down, picked up, and slid under the ropes.
+## Other set pieces keep their existing floor-pickup rules.
+func set_up_ladder_nearby(max_distance := WeaponStock.PICKUP_REACH) -> WeaponActor:
+	if not MatchRules.no_holds_barred(self) or get_parent() == null:
+		return null
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock
+	if stock == null:
+		return null
+	var best: WeaponActor
+	var best_distance := max_distance
+	for actor: WeaponActor in stock.set_up_pieces():
+		if actor.def == null or actor.def.id != &"ladder" or not actor.is_climbable_ladder():
+			continue
+		var d := Vector2(actor.global_position.x - global_position.x,
+				actor.global_position.z - global_position.z).length()
+		if d <= best_distance:
+			best = actor
+			best_distance = d
+	return best
+
+
+func begin_ladder_climb(ladder: WeaponActor) -> bool:
+	if ladder == null or not is_instance_valid(ladder) or not ladder.is_climbable_ladder() \
+			or outside_ring or has_weapon() or not fsm.is_in([
+				WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN]):
+		return false
+	var mount := ladder.global_transform * Vector3(0.0, 0.0, -LADDER_FRONT_OFFSET)
+	var gap := Vector2(mount.x - global_position.x, mount.z - global_position.z).length()
+	if gap > LADDER_INTERACT_REACH:
+		return false
+	_ladder_actor = ladder
+	_ladder_start = Vector3(mount.x, FLOOR_LEVEL, mount.z)
+	_ladder_climb_height = maxf(0.5, ladder.global_marker("top").origin.y \
+			- FLOOR_LEVEL - LADDER_TOP_FOOT_GAP)
+	_ladder_climb_progress = 0.0
+	_ladder_climb_ticks = 0
+	global_position = _ladder_start
+	velocity = Vector3.ZERO
+	look_at(ladder.global_position, Vector3.UP)
+	_update_ladder_climb_ik()
+	_set_state_clip(WrestlerFSM.State.LADDER_CLIMB, "strikes/ladder_climb")
+	fsm.transition_to(WrestlerFSM.State.LADDER_CLIMB)
+	return true
+
+
+func ladder_climb_progress() -> float:
+	return _ladder_climb_progress
+
+
+func _tick_ladder_climb(input: Dictionary) -> void:
+	if not is_instance_valid(_ladder_actor) or not _ladder_actor.is_climbable_ladder():
+		_begin_ladder_fall()
+		return
+	_ladder_climb_ticks += 1
+	var axis := (input.get("move", Vector2.ZERO) as Vector2).y
+	var direction := 1.0 if axis < -0.25 else (-1.0 if axis > 0.25 else 0.0)
+	if input.get("grapple", false):
+		if can_start_ladder_aerial() and begin_ladder_aerial():
+			return
+		direction = -1.0
+	var previous := global_position.y
+	if direction != 0.0:
+		var delta_progress := LADDER_CLIMB_SPEED / maxf(_ladder_climb_height,
+				0.1) / float(Engine.physics_ticks_per_second)
+		_ladder_climb_progress = clampf(_ladder_climb_progress + direction * delta_progress,
+				0.0, 1.0)
+	var wanted_y := FLOOR_LEVEL + _ladder_climb_progress * _ladder_climb_height
+	velocity = Vector3.ZERO
+	velocity.y = (wanted_y - previous) * float(Engine.physics_ticks_per_second)
+	global_position.x = _ladder_start.x
+	global_position.z = _ladder_start.z
+	_update_ladder_climb_ik()
+	if _ladder_climb_progress <= 0.001 and direction < 0.0:
+		global_position.y = FLOOR_LEVEL
+		velocity = Vector3.ZERO
+		_clear_ladder_climb()
+		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## The top interaction is only available over a downed opponent, with both
+## bodies safely inside the ring and close to the ladder's landing side.
+func can_start_ladder_aerial() -> bool:
+	if fsm.current_state != WrestlerFSM.State.LADDER_CLIMB \
+			or _ladder_climb_progress < 0.88 or not is_instance_valid(_ladder_actor) \
+			or not _ladder_actor.is_climbable_ladder() or opponent == null \
+			or opponent.dead or opponent.outside_ring \
+			or opponent.fsm.current_state != WrestlerFSM.State.DOWN \
+			or grapple_rig == null or grapple_rig.is_active():
+		return false
+	var landing_gap := Vector2(opponent.global_position.x - _ladder_actor.global_position.x,
+			opponent.global_position.z - _ladder_actor.global_position.z).length()
+	var on_safe_mat := absf(_ladder_actor.global_position.x) <= RING_KEEP_IN - 0.75 \
+			and absf(_ladder_actor.global_position.z) <= RING_KEEP_IN - 0.75
+	return on_safe_mat and landing_gap <= LADDER_AERIAL_REACH
+
+
+func begin_ladder_aerial() -> bool:
+	if not can_start_ladder_aerial():
+		return false
+	_active_move = LADDER_AERIAL_MOVE
+	_is_grapple_attacker = true
+	opponent._is_grapple_attacker = false
+	_clear_ladder_climb()
+	fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	opponent.fsm.transition_to(WrestlerFSM.State.GRAPPLE_HOLD)
+	grapple_rig.begin(self, opponent, LADDER_AERIAL_MOVE)
+	grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
+	return true
+
+
+func _tick_ladder_fall() -> void:
+	_ladder_climb_ticks += 1
+	velocity.x = move_toward(velocity.x, 0.0, LADDER_FALL_SHOVE * 0.025)
+	velocity.z = move_toward(velocity.z, 0.0, LADDER_FALL_SHOVE * 0.025)
+
+
+func _begin_ladder_fall() -> void:
+	if fsm.current_state != WrestlerFSM.State.LADDER_CLIMB:
+		return
+	var ladder := _ladder_actor
+	_clear_ladder_climb()
+	if is_instance_valid(ladder):
+		ladder.set_up_at(ladder.global_position, ladder.rotation.y, "Ladder_Laid_Out")
+	var away := global_position - (opponent.global_position if opponent else _ladder_start)
+	away.y = 0.0
+	if away.length_squared() < 0.001:
+		away = global_basis.x
+	away = away.normalized()
+	velocity = away * LADDER_FALL_SHOVE + Vector3.UP * -0.35
+	_set_state_clip(WrestlerFSM.State.LADDER_FALL, "strikes/ladder_fall")
+	fsm.transition_to(WrestlerFSM.State.LADDER_FALL)
+
+
+func _clear_ladder_climb() -> void:
+	if weapon_grip:
+		weapon_grip.clear_ladder_climb()
+	_ladder_actor = null
+	_ladder_climb_progress = 0.0
+	_ladder_climb_height = 0.0
+
+
+func _update_ladder_climb_ik() -> void:
+	if not weapon_grip or not is_instance_valid(_ladder_actor):
+		return
+	var rung_coord := 1.0 + _ladder_climb_progress * 8.0
+	var right_hand := _ladder_rung_target(_ladder_actor, rung_coord + 0.45)
+	var left_hand := _ladder_rung_target(_ladder_actor, rung_coord - 0.45)
+	var right_foot := _ladder_rung_target(_ladder_actor, rung_coord - 1.2)
+	var left_foot := _ladder_rung_target(_ladder_actor, rung_coord - 2.0)
+	right_foot.origin += Vector3.UP * 0.02
+	left_foot.origin += Vector3.UP * 0.02
+	weapon_grip.climb_ladder(_ladder_actor, right_hand, left_hand, right_foot, left_foot)
+
+
+func _ladder_rung_target(ladder: WeaponActor, rung: float) -> Transform3D:
+	var clamped := clampf(rung, 1.0, 9.0)
+	var low := int(floor(clamped))
+	var high := mini(low + 1, 9)
+	var a := ladder.global_marker("rung_%d" % low)
+	var b := ladder.global_marker("rung_%d" % high)
+	var weight := clamped - float(low)
+	return Transform3D(a.basis.slerp(b.basis, weight).orthonormalized(),
+			a.origin.lerp(b.origin, weight))
 
 
 func begin_weapon_action(action: String) -> void:
@@ -4907,6 +5272,10 @@ func begin_weapon_action(action: String) -> void:
 	velocity = Vector3.ZERO
 	if action == "rummage":
 		var axis := GrappleRig._outside_side(Vector3(global_position.x, 0.0, global_position.z))
+		look_at(global_position - axis, Vector3.UP)
+	elif action == "slide":
+		var axis := GrappleRig._outside_side(Vector3(global_position.x, 0.0, global_position.z))
+		_weapon_slide_to = _weapon_slide_target()
 		look_at(global_position - axis, Vector3.UP)
 	elif action == "set_up" and is_ai and opponent:
 		# the AI sets it down behind himself: he suplexes the man back over
@@ -4961,7 +5330,11 @@ func _tick_pickup() -> void:
 	if _weapon_action_ticks <= PICKUP_STEP_TICKS:
 		var u := float(_weapon_action_ticks) / PICKUP_STEP_TICKS
 		global_position = _pickup_from.lerp(_pickup_to, u * u * (3.0 - 2.0 * u))
-	var target_ok := is_instance_valid(_weapon_target) and _weapon_target.mode == WeaponActor.Mode.FLOOR
+	var foldable_ladder := is_instance_valid(_weapon_target) \
+			and _weapon_target.def != null and _weapon_target.def.id == &"ladder" \
+			and _weapon_target.is_climbable_ladder()
+	var target_ok := is_instance_valid(_weapon_target) \
+			and (_weapon_target.mode == WeaponActor.Mode.FLOOR or foldable_ladder)
 	if weapon_grip:
 		# on it a couple of ticks before the take, not arriving on the tick
 		var w := clampf(float(_weapon_action_ticks - PICKUP_REACH_FROM) / (at - 2 - PICKUP_REACH_FROM), 0.0, 1.0)
@@ -5009,11 +5382,21 @@ func _tick_weapon_action(input: Dictionary) -> void:
 		"throw":
 			if _weapon_action_ticks == WEAPON_ACTION_AT["throw"] and has_weapon():
 				_release_throw()
+		"slide":
+			if _weapon_action_ticks == WEAPON_ACTION_AT["slide"] and has_weapon():
+				var w := held_weapon
+				_let_go()
+				w.slide_into_ring(_weapon_slide_to)
 		"set_up":
 			if _weapon_action_ticks == WEAPON_ACTION_AT["set_up"] and has_weapon():
 				var w := held_weapon
 				_let_go()
 				w.set_up_at(global_position - global_basis.z * 0.95, rotation.y)
+		"set_up_upright":
+			if _weapon_action_ticks == WEAPON_ACTION_AT["set_up_upright"] and has_weapon():
+				var w := held_weapon
+				_let_go()
+				w.set_up_at(global_position - global_basis.z * 0.95, rotation.y, "Ladder_Open")
 	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):
 		fsm.transition_to(WrestlerFSM.State.IDLE)
 
@@ -5215,6 +5598,8 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 		broke = true
 	elif w.def.id == &"thumbtacks":
 		_stick_tacks(at)
+	if impact_sell:
+		impact_sell.react_to_surface(w.def.id, broke)
 	if fsm.current_state == WrestlerFSM.State.DOWN:
 		_move_ticks_remaining += _down_bonus
 		_down_bonus = 0
