@@ -114,6 +114,46 @@ func test_the_bell_finds_them_facing_each_other() -> void:
 				.is_greater(0.99)
 
 
+## Check the last rendered entrance pose as well as the post-bell match state.
+## The bell is the handoff from the presentation timeline to gameplay, so a
+## final transform correction must not conceal a missed face-off turn.
+func test_roman_faces_cody_on_the_last_pre_bell_frame() -> void:
+	var scene := _match(true, "roman", "cody")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var final_beat := director._beats.size() - 1
+	while director._beat < final_beat:
+		director._physics_process(1.0 / 60.0)
+		_step_actors(scene)
+	var ticks: int = (director._beats[final_beat] as Dictionary)["ticks"]
+	for _i in ticks - 1:
+		director._physics_process(1.0 / 60.0)
+		_step_actors(scene)
+	for pair: Array in [[a, b], [b, a]]:
+		var me: WrestlerController = pair[0]
+		var other: WrestlerController = pair[1]
+		var facing := -me.global_transform.basis.z
+		var to_other := other.global_position - me.global_position
+		facing.y = 0.0
+		to_other.y = 0.0
+		assert_float(facing.normalized().dot(to_other.normalized())) \
+				.override_failure_message("%s is turned away on the final pre-bell frame" \
+				% me.name).is_greater(0.99)
+	# The next tick rings the bell and reasserts the match marks' headings.
+	director._physics_process(1.0 / 60.0)
+	for pair: Array in [[a, b], [b, a]]:
+		var me: WrestlerController = pair[0]
+		var other: WrestlerController = pair[1]
+		var facing := -me.global_transform.basis.z
+		var to_other := other.global_position - me.global_position
+		facing.y = 0.0
+		to_other.y = 0.0
+		assert_float(facing.normalized().dot(to_other.normalized())) \
+				.override_failure_message("%s is turned away at the bell" % me.name) \
+				.is_greater(0.99)
+
+
 func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 	assert_int(EntranceDirector.INTRO_CARD_TICKS).is_less_equal(180)
 	assert_int(EntranceDirector.INTRO_CHECK_TICKS).is_less_equal(120)

@@ -1346,6 +1346,11 @@ func _ring_bell_at_marks(place_on_marks: bool) -> void:
 		# the match start without running his entrance route.
 		if place_on_marks:
 			w.global_transform = _mark[w]
+		else:
+			# The final entrance turn is presentation. Reassert each saved match
+			# heading at the handoff so the bell can never inherit a stale facing
+			# from the last pose or an interrupted turn.
+			w.global_transform.basis = _mark[w].basis
 		MatchSmoothing.snap(w)
 		w.velocity = Vector3.ZERO
 		w.visible = true
