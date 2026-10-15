@@ -308,6 +308,17 @@ func test_the_stage_deck_stays_glossy_enough_for_ssr() -> void:
 	assert_float(spec["metallic"]).is_equal(0.0)
 
 
+func test_arena_floor_uses_generated_concrete_albedo_and_concrete_surface_maps() -> void:
+	var spec := MaterialLibrary.spec("arena_floor")
+	assert_str(spec["asset"]).is_equal("Concrete033")
+	assert_str(spec["color_path"]).is_equal(
+			"res://assets/environment/materials/arena_concrete_color.png")
+	var mat := MaterialLibrary.resolve("arena_floor")
+	assert_object(mat.albedo_texture).is_not_null()
+	assert_str(mat.albedo_texture.resource_path).is_equal(spec["color_path"])
+	assert_object(mat.normal_texture).is_not_null()
+
+
 ## The two portal hues have to stay apart, because which ring is which is the
 ## thing that makes the set recognisable.
 func test_the_two_portal_hues_are_distinct_and_not_green_dominant() -> void:

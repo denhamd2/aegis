@@ -127,6 +127,7 @@ const MAX_ALBEDO_GAIN := 2.2
 const SPEC_DEFAULTS := {
 	"asset": "",              # ambientCG asset id; "" = untextured
 	"suffix": "_1K-PNG_",     # between asset id and map role in the filename
+	"color_path": "",         # optional project-authored albedo texture
 	"tint": Color(1, 1, 1),
 	"tile_metres": 1.0,       # real-world metres one texture tile covers
 	"roughness": 1.0,         # scalar; multiplies the roughness map
@@ -438,16 +439,17 @@ const SPECS := {
 	# The bowl, stage, shell and truss keep their full cool push: they are
 	# outside what the ring reference covers at all.
 
-	## Coverage decision, scored not guessed. Six candidate colour maps were
-	## rescaled to the pixel size their tile actually occupies in
-	## `wide_broadcast` and run through the same Sobel edge count
-	## `compare_frame.py` uses. Four of them -- Rubber004, Concrete034,
-	## Metal032, Fabric063 -- measured 0.000-0.034 at that scale: at match
-	## distance they are not textures, they are flat colours with a file
-	## behind them. PavingStones150 measured 0.862 and DiamondPlate009 0.872.
-	## The venue floor is paved slab; ringside dressing is a later slice's job.
+	## The floor used to show chunky paving stones throughout the audience
+	## bowl and under the ringside mats. It now uses a generated, seamless
+	## poured-concrete albedo with the scanned Concrete033 normal and roughness
+	## maps, keeping the same low floor value while removing the cobblestone
+	## pattern. The 2m tile keeps the fine aggregate visible in the wide shot.
 	"arena_floor": {
-		"asset": "PavingStones150", "tint": Color(0.0826, 0.1000, 0.1283),
+		# The generated albedo is continuous poured concrete rather than the
+		# chunky paving scan. Keep the measured concrete normal and roughness.
+		"asset": "Concrete033",
+		"color_path": "res://assets/environment/materials/arena_concrete_color.png",
+		"tint": Color(0.0826, 0.1000, 0.1283),
 		"tile_metres": 2.0, "roughness": 1.0, "house_lit": true,
 	},
 	## Coverage decision: painted steel crowd barricade. Painted, so it is a
@@ -831,7 +833,9 @@ static func _build(s: Dictionary) -> StandardMaterial3D:
 
 	var color_tex: Texture2D = null
 	if s["albedo_map"]:
-		color_tex = _load_map(asset, suffix, "color")
+		var color_path: String = s["color_path"]
+		color_tex = load(color_path) as Texture2D if color_path != "" \
+				else _load_map(asset, suffix, "color")
 	if color_tex != null:
 		mat.albedo_texture = color_tex
 		if s["preserve_albedo_mean"]:
