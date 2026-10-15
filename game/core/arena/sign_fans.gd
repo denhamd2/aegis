@@ -10,6 +10,8 @@ extends Node3D
 ##     ring at exactly these rows, and back down just after the bell;
 ##   * once or twice more in the match, on a big moment -- a signature landing
 ##     or a near-fall -- no sooner than MATCH_GAP apart.
+##   * on a rare match-selected quiet beat, the Enda sign alone is raised for
+##     Tony Schiavone's easter-egg call and a dedicated camera cutaway.
 ##
 ## Built by ArenaBuilder into two real ringside chairs (those chairs' crowd
 ## figures are left out for them); hooked to the match by MatchSetup.
@@ -45,6 +47,7 @@ const MATCH_HOLD := 4.5
 const STAGGER := 0.35
 
 var fans: Array[SignFan] = []
+var _enda_fan: SignFan
 var match_raises := 0
 var _since_raise := 1.0e9
 var _raised_for_faceoff := false
@@ -89,6 +92,8 @@ func seat(chairs: Array[Transform3D], picked: Array[int]) -> void:
 		fan.transform = chairs[picked[n]]
 		fan.setup(load(spec[0]) as Texture2D, spec[2], 0.37 * n, _region(spec))
 		fans.append(fan)
+		if n == 0:
+			_enda_fan = fan
 
 
 ## The part of a fan's picture his board shows, in UV: the whole picture,
@@ -129,6 +134,24 @@ func _big_moment() -> void:
 		return
 	match_raises += 1
 	_raise_all(MATCH_HOLD)
+
+
+## The sign is a one-person easter egg, separate from the occasional group
+## sign wave. Keep its animation local so the camera knows which fan to frame.
+func enda_easter_egg_fan() -> SignFan:
+	return _enda_fan
+
+
+func raise_enda_easter_egg(hold_seconds: float) -> bool:
+	if _enda_fan == null or not is_instance_valid(_enda_fan):
+		return false
+	_enda_fan.raise(hold_seconds)
+	return true
+
+
+func cancel_enda_easter_egg() -> void:
+	if _enda_fan != null and is_instance_valid(_enda_fan):
+		_enda_fan.sit()
 
 
 ## They are getting up (MatchCamera cuts to them in a quiet moment).

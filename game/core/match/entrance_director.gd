@@ -71,7 +71,13 @@ const RAMP_SHOWN_SECONDS := 6.0
 
 # --- Timing (ticks at 60 Hz) --------------------------------------------------
 const TPS := 60
-const OPENING_TICKS := 150
+const OPENING_TICKS := 300
+## Excalibur's crowd call and Tony's reply, after Justin's main-event
+## introduction and before the entrances. Seven seconds covers both clips
+## and the serialized voice-lane gaps.
+const EXCALIBUR_CROWD_CALL_TICKS := 420
+## Time for Tony's title call to finish before the entrances begin.
+const TITLE_MATCH_CALL_TICKS := 240
 ## The stage pose: Win_Celebrate (1.3 s) and a beat after it.
 const POSE_TICKS := 114
 ## Held at his mark, turned to face the ring, before the next man.
@@ -90,7 +96,7 @@ const FACEOFF_GAP := 0.75
 const FACEOFF_WALK_SPEED := 0.9
 ## Long enough for the stare-down's two held shots (FACEOFF_SEQ): the profile
 ## and the long over-the-shoulder.
-const FACEOFF_STARE_TICKS := 660
+const FACEOFF_STARE_TICKS := 360
 ## Back to the marks: the turn away, and the turn back at the end.
 const FACEOFF_TURN_TICKS := 30
 ## A beat on the marks, facing, before the bell.
@@ -107,16 +113,11 @@ const FACEOFF_CAM_FOV := 34.0
 ## the referee checking the man nearer her; then each man close in his
 ## corner, the one she checked last so she is out of his shot.
 ##
-## Every hold at least five seconds (the owner, after the two-shot stare
-## shipped: still "quick cut western style"). Measured with
-## tools/probe/cut_log.tscn, the run-up to the bell was seven shots in 24 s,
-## none longer than 4 s; 2K26's (270-306 s) is about 36 s with no shot under
-## about four.
-const INTRO_CARD_TICKS := 300
-const INTRO_CHECK_TICKS := 300
-## Each man in his corner is a waist-up medium held five and a half seconds, the
-## camera drifting in (2K26 287-303 s), not a tight head shot cut at 2.5 s.
-const INTRO_CLOSE_TICKS := 330
+## The entrances have already introduced each wrestler, so these are short
+## bridges to the face-off rather than another long round of introductions.
+const INTRO_CARD_TICKS := 180
+const INTRO_CHECK_TICKS := 120
+const INTRO_CLOSE_TICKS := 150
 const INTRO_CARD_AT := Vector3(-8.0, 4.4, 3.4)
 const INTRO_CARD_LOOK := Vector3(0.0, 0.9, 0.0)
 const INTRO_CARD_FOV := 40.0
@@ -130,9 +131,16 @@ const INTRO_CLOSE_PUSH := 0.4
 ## camera is above the light rigging above the ring, which blocks the view --
 ## just underneath it, so we get a clear wide-angle shot".
 const RIG_CLEAR_Y := 6.3
-const OPENING_AT := Vector3(0.0, RIG_CLEAR_Y, 14.0)
-const OPENING_LOOK := Vector3(0.0, 3.0, -30.0)
+## The opening broadcast master starts off-axis so the near seating, ring and
+## stage overlap in perspective instead of reading as a flat elevation. It
+## trucks slowly across the arena for parallax through the establishing hold.
+const OPENING_AT := Vector3(-7.5, RIG_CLEAR_Y, 15.0)
+const OPENING_AT_END := Vector3(-3.5, RIG_CLEAR_Y + 0.15, 13.0)
+const OPENING_LOOK := Vector3(0.0, 3.0, -28.0)
+const OPENING_LOOK_END := Vector3(0.5, 3.2, -30.0)
 const OPENING_FOV := 52.0
+const OPENING_FOV_END := 48.0
+const OPENING_MOVE_SECONDS := 12.0
 ## The stage: from down the ramp, on a long lens, so the set fills the frame
 ## behind him.
 const STAGE_AT := Vector3(0.0, 1.9, -23.5)
@@ -237,8 +245,8 @@ const CODY_BEAT := 0.743
 ## The hard top light on a man posing in the ring (lighting_2k26.md item 12):
 ## narrow, white, straight down from under the grid, with the house dark.
 const POSE_TOP_UP := 5.0
-const POSE_TOP_ENERGY := 110.0
-const POSE_TOP_ANGLE := 13.0
+const POSE_TOP_ENERGY := 95.0
+const POSE_TOP_ANGLE := 28.0
 const POSE_TOP_COLOR := Color(0.92, 0.96, 1.0)
 ## While it is on, the light that was outweighing it goes: the follow spot and
 ## the walk lights out, the ring keys and top fill to POSE_RING_DIM of
@@ -303,8 +311,8 @@ const ROMAN_INTRO_SHOTS := [
 ## harder sources, the key on the subject). The rig drops to this fraction and
 ## the ambient to AMBIENT_DIM; the follow spot, his portal accents and the
 ## pyro flashes are left alone, so he is what is lit.
-const ROMAN_HOUSE_DIM := 0.65
-const ROMAN_AMBIENT_DIM := 0.65
+const ROMAN_HOUSE_DIM := 0.50
+const ROMAN_AMBIENT_DIM := 0.55
 ## Cody's walk, after the WHOA brings the house out of the blackout.
 const WALK_HOUSE_DIM := 0.5
 const WALK_AMBIENT_DIM := 0.65
@@ -531,6 +539,7 @@ const SMOKE_DENSITY := 0.5
 var _match: Node
 var _a: WrestlerController
 var _b: WrestlerController
+var title_match := false
 var _camera: MatchCamera
 var _hud: Node
 var _card: EntranceLowerThird
@@ -541,11 +550,6 @@ var _announcer: RingAnnouncer
 ## the ramp, and ticks left on a called card.
 var _called := {}
 var _name_card_ticks := 0
-## Ticks until a called man's name is said, from the moment his call starts:
-## his card goes up on it. Off the schedule, not the audio clock, so it is the
-## same on every run and every machine (an offline render runs the audio on
-## the wall clock and put the card up 2 s early).
-var _name_due := {}
 var _lights: Node
 var _follow: SpotLight3D
 var _walk_key: SpotLight3D
@@ -596,6 +600,7 @@ var _gesture := {}
 var gestures_played: Array[String] = []
 var _beat := 0
 var _tick := 0
+var _opening_elapsed := 0.0
 var _done := false
 
 
@@ -617,6 +622,7 @@ func begin(match_root: Node) -> void:
 	_announcer = RingAnnouncer.new()
 	_announcer.name = "RingAnnouncer"
 	add_child(_announcer)
+	_announcer.name_called.connect(_on_name_called)
 	var world: WorldEnvironment = null
 	for node in match_root.find_children("*", "WorldEnvironment", true, false):
 		world = node as WorldEnvironment
@@ -747,6 +753,10 @@ func begin(match_root: Node) -> void:
 	_start_beat()
 
 
+func voice_announcer() -> RingAnnouncer:
+	return _announcer
+
+
 func _freeze(node: Node) -> void:
 	_frozen.append([node, node.is_physics_processing()])
 	node.set_physics_process(false)
@@ -759,12 +769,18 @@ func _freeze(node: Node) -> void:
 ## Each beat is {kind, who, ticks, ...}. Walks carry a polyline; clips carry a
 ## root line; every beat names its camera shot and whether the card is up.
 func _build_timeline() -> void:
-	_beats.append({"kind": "opening", "ticks": OPENING_TICKS})
+	_beats.append({"kind": "opening", "ticks": OPENING_TICKS,
+			"events": [[1, "broadcast_open"]]})
 	# "Ladies and gentlemen, your main event of the night...": the
 	# announcer's intro on the wide of the building, before anyone comes out.
 	if RingAnnouncer.has_call("intro"):
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "announce_intro"]],
 				"ticks": int(ceil((RingAnnouncer.length_of("intro") + INTRO_CALL_TAIL) * TPS))})
+	_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "excalibur_crowd"]],
+			"ticks": EXCALIBUR_CROWD_CALL_TICKS})
+	if title_match:
+		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "title_match"]],
+				"ticks": TITLE_MATCH_CALL_TICKS})
 	# The opponent enters first and waits in the ring; the player's man last.
 	for pair: Array in [[_b, ArenaBuilder.PORTAL_OFFSET_X, "E"],
 			[_a, -ArenaBuilder.PORTAL_OFFSET_X, "W"]]:
@@ -856,7 +872,6 @@ func beat_ticks(beat: Dictionary) -> int:
 func _on_name_called(style: String) -> void:
 	for w: WrestlerController in [_a, _b]:
 		if w.entrance_style == style and _called.has(w):
-			_name_due.erase(w)
 			_card.show_card(w.display_name if w.display_name != "" else String(w.name),
 					w.entrance_subtitle)
 			_name_card_ticks = NAME_CARD_TICKS
@@ -942,7 +957,10 @@ static func check_spot(man: Vector3) -> Vector3:
 static func _wait_clip(w: WrestlerController) -> String:
 	match w.entrance_style:
 		"roman":
-			return "strikes/roman_stand"
+			# Roman_Stand keeps his hands tight against his waist, which reads as
+			# pockets in the ring two-shot. His authored Hands_Hips pose keeps
+			# them visibly outside his gear and gives him a deliberate stance.
+			return "strikes/hands_hips"
 		"cody":
 			return "strikes/cody_stand"
 	return "strikes/face_off"
@@ -1087,10 +1105,6 @@ func _physics_process(delta: float) -> void:
 		_name_card_ticks -= 1
 		if _name_card_ticks == 0:
 			_card.hide_card()
-	for due_w: WrestlerController in _name_due.keys():
-		_name_due[due_w] = int(_name_due[due_w]) - 1
-		if int(_name_due[due_w]) <= 0:
-			_on_name_called(due_w.entrance_style)
 	var t := clampf(float(_tick) / float(beat["ticks"]), 0.0, 1.0)
 	var w: WrestlerController = beat.get("who")
 	for cue: Array in beat.get("events", []):
@@ -1215,7 +1229,6 @@ func skip_entrance() -> void:
 	_release_ropes()
 	_card.hide_card()
 	_name_card_ticks = 0
-	_name_due.clear()
 	if _announcer:
 		_announcer.stop()
 	_portal_lights("", false)
@@ -1253,7 +1266,6 @@ func _ring_bell() -> void:
 	_release_ropes()
 	_card.hide_card()
 	_name_card_ticks = 0
-	_name_due.clear()
 	if _announcer:
 		_announcer.stop()
 	_portal_lights("", false)
@@ -1498,6 +1510,7 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 	# Out of it on the first sung WHOA, at the lens.
 	_beats.append({"kind": "walk", "who": w, "appear": true, "coat": true,
 			"no_follow": true, "lights": "RB_LOW", "path": [smoke, mouth],
+			"events": [[1, "cody_appear"]],
 			# A hair over the exact speed, so the tick count rounds to the
 			# measured gap and the WHOA lands on its frame.
 			"speed": _flat(smoke).distance_to(_flat(mouth))
@@ -1795,7 +1808,6 @@ func _event(w: WrestlerController, what: String) -> void:
 		"announce":
 			if _announcer and w:
 				_announcer.play(w.entrance_style)
-				_name_due[w] = int(round(RingAnnouncer.name_at(w.entrance_style) * TPS))
 		"lights_up":
 			_dim_house(false)
 		"title_held":
@@ -1965,7 +1977,10 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 	var first := _tick == 1
 	match beat.get("shot", beat["kind"]):
 		"opening":
-			_camera.set_entrance_shot(OPENING_AT, OPENING_LOOK, OPENING_FOV, true)
+			_opening_elapsed += delta
+			var opening := opening_shot_at(_opening_elapsed / OPENING_MOVE_SECONDS)
+			_camera.set_entrance_shot(opening[0], opening[1], opening[2],
+					first and not _was_shot("opening"), delta)
 		"stage":
 			_camera.set_entrance_shot(STAGE_AT, w.global_position + Vector3.UP * 1.3,
 					STAGE_FOV, first and not _was_shot("stage"))
@@ -2141,10 +2156,10 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 #
 # The owner's 2K26 Cody vs Roman, 270-306 s (gauntlet/refs/match_aaa_plan.md,
 # "The face-off"): there is no ping-pong of close-ups. The building is shown in
-# slow, long holds -- a wide drift on the champion, then ONE over-the-shoulder
-# from behind him onto the challenger across the ring, held for about six
-# seconds, then each man on his ropes, then a high wide and the bell. Every
-# shot moves, slowly; none is shorter than about four seconds.
+# slow holds -- a wide drift on the champion, then ONE over-the-shoulder from
+# behind him onto the challenger across the ring, then each man on his ropes,
+# a high wide, and the bell. The game keeps the two-shot/OTS rhythm but trims
+# the stare to six seconds so the entrances do not stall before the match.
 #
 # Ours used to be the opposite: a profile, two over-the-shoulders, four eye
 # close-ups at 135 mm cut every 0.3-0.45 s, and a 24 mm hero shot up from the
@@ -2155,9 +2170,9 @@ func _frame_shot(beat: Dictionary, delta: float) -> void:
 # F1 (the walk in) is "faceoff_side"; F7 (back to the wide as they part) is
 # "faceoff", the hard camera.
 ##  [ends at (s), shot]
-const FACEOFF_SEQ := [[5.0, "profile"], [99.0, "ots"]]
+const FACEOFF_SEQ := [[2.0, "profile"], [6.0, "ots"]]
 ## When the profile two-shot hands over to the over-the-shoulder, seconds.
-const FACEOFF_PROFILE_END := 5.0
+const FACEOFF_PROFILE_END := 2.0
 const FACEOFF_OTS_FOV := 30.0     # ~70 mm: both heads, one in the foreground
 ## How far the over-the-shoulder drifts round the man it looks past, metres,
 ## over its whole hold.
@@ -2223,6 +2238,15 @@ static func intro_shot_at(at: float, hold: float) -> Array:
 		start += length
 	var rest := maxf(hold - start, float(ROMAN_INTRO_SHOTS[last][6]))
 	return [last, clampf((at - start) / rest, 0.0, 1.0)]
+
+
+## A slow broadcast-style truck across the arena: the near seats shift against
+## the ring and stage, giving the first wide real parallax instead of a static,
+## centered elevation. The helper keeps the move deterministic and testable.
+static func opening_shot_at(progress: float) -> Array:
+	var e := smoothstep(0.0, 1.0, clampf(progress, 0.0, 1.0))
+	return [OPENING_AT.lerp(OPENING_AT_END, e),
+			OPENING_LOOK.lerp(OPENING_LOOK_END, e), lerpf(OPENING_FOV, OPENING_FOV_END, e)]
 
 
 func _camera_intro(pick: Array) -> void:
@@ -2394,8 +2418,14 @@ func _pose_top(w: WrestlerController) -> void:
 		_top.visible = true
 	_iris_top(POSE_TOP_ENERGY)
 	_pose_dim(true)
-	var at := w.global_position + Vector3.UP * POSE_TOP_UP
-	_top.global_transform = Transform3D(Basis(Vector3.RIGHT, -PI / 2.0), at)
+	# The old beam was vertical and only 13 degrees wide. It lit the crown of
+	# his head while his face and raised hand fell outside the cone. Bias it
+	# toward his front and aim at the upper chest; the wider, softer pool still
+	# reads as a top light but catches the face and finger pose together.
+	var forward := _flat(-w.global_transform.basis.z).normalized()
+	var at := w.global_position + Vector3.UP * POSE_TOP_UP + forward * 1.2
+	_top.global_position = at
+	_top.look_at(w.global_position + forward * 0.25 + Vector3.UP * 2.3, Vector3.UP)
 
 
 func _iris_top(energy: float) -> void:

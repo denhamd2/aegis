@@ -9589,3 +9589,39 @@ at broadcast-heavy intensity.
   it runs and keeps running, Off bleeds nothing, the canvas stays one map.
 - **Review:** `game/tools/probe/blood_shot.tscn` renders the faces at each
   level, wet and dried, the backs, and the canvas.
+
+
+## Round: commentary pipeline, AI footwork, and official gait rates
+
+- **Commentary.** `MatchAudio` now supports match-seeded alternate takes for
+  each event and repeatable cues with per-event cooldowns, while keeping
+  story calls one-per-match and leaving a short breath between queued lines.
+  `assets/audio/commentary/README.md` records how to add uploaded MP3 takes,
+  wire event tags and test their triggers. The existing four Tony calls keep
+  their current cues; future lines can be added to the arrays without
+  changing playback code.
+- **AI neutral.** The match AI already gates moves by range, reads strikes,
+  chooses tie-ups and signatures by state, covers a downed opponent, and has
+  separate weapon logic. Its close-range neutral could still freeze after
+  the continuous orbit was removed. A seeded 45% roll now schedules a short
+  8–15 tick lateral step during a strike cooldown, after a 42–76 tick pause.
+  It keeps the opponent in front and does not add a persistent orbit.
+- **Animation measurements.** `motion_cadence` at 120 Hz recorded Roman's
+  and Cody's entrance hand and root moving on all 240 sample frames; a
+  separate match sample recorded moving head poses on all 240 frames (hands
+  held for 1 and 22 frames in the two actors). `gait_audit` measures wrestler
+  walking at
+  3.13/3.46 m/s against the 3.5 m/s controller speed, and running at
+  6.86/6.87 against 7.0 m/s; idle feet remain planted and loop seams are
+  closed. This does not support changing the wrestlers' cycle rate.
+- **Referee and timekeeper.** On Aubrey's retargeted rig, the generic `Walk`
+  clip's planted feet travel at 0.78 m/s and `Jog_Fwd` at 6.04 m/s. Their
+  previous playback assumptions (1.3 and 3.0 m/s) made the feet slide against
+  the node movement. Both actors now use the measured clip rates, and the
+  animation-speed clamp accommodates their 1.4 m/s walk. `ref_stand` and
+  `ref_watch` have stationary feet and clean seams. The audit now checks all
+  of these cycles and poses.
+- **Checks.** The full gdUnit suite passed: 873 cases across 114 suites,
+  zero failures. `tools/anim/gait_audit.gd` passes, as do 120 Hz Roman and
+  Cody cadence probes. The probes are code-side measurements; a Mac build is
+  still required to inspect that machine's actual frame pacing.

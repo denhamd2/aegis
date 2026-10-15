@@ -49,6 +49,7 @@ var _player: AudioStreamPlayer
 var _style := ""
 var _named := false
 var _duck := 0.0
+var _voice_queue: Array[Dictionary] = []
 
 
 ## The bus to route the crowd through so it sits under the voice; made on
@@ -115,11 +116,36 @@ func _ready() -> void:
 func play(style: String) -> bool:
 	if not has_call(style):
 		return false
-	_player.stream = load(CLIPS[style])
-	_style = style
+	_queue_voice(load(CLIPS[style]), style)
+	return true
+
+
+## Commentary shares Justin's voice lane, so neither speaker can talk over
+## another. It joins the same FIFO as his calls and keeps its full recording.
+func play_commentary(stream: AudioStream) -> bool:
+	if stream == null:
+		return false
+	_queue_voice(stream, "")
+	return true
+
+
+func has_voice() -> bool:
+	return (_player != null and _player.playing) or not _voice_queue.is_empty()
+
+
+func _queue_voice(stream: AudioStream, style: String) -> void:
+	_voice_queue.append({"stream": stream, "style": style})
+	_start_next_voice()
+
+
+func _start_next_voice() -> void:
+	if _player == null or _player.playing or _voice_queue.is_empty():
+		return
+	var request: Dictionary = _voice_queue.pop_front()
+	_player.stream = request["stream"]
+	_style = String(request["style"])
 	_named = false
 	_player.play()
-	return true
 
 
 func stop() -> void:
@@ -166,4 +192,6 @@ func _exit_tree() -> void:
 func _on_finished() -> void:
 	var style := _style
 	_style = ""
-	finished.emit(style)
+	if style != "":
+		finished.emit(style)
+	_start_next_voice()

@@ -13,6 +13,7 @@ extends CharacterBody3D
 signal knocked_down(wrestler: WrestlerController)
 signal pin_started(attacker: WrestlerController, defender: WrestlerController)
 signal move_landed(attacker: WrestlerController, defender: WrestlerController, move: MoveDef)
+signal weapon_taken(wrestler: WrestlerController, weapon: WeaponActor)
 ## His comeback has started (MatchReferee decides when; see fire_up()).
 signal fired_up(wrestler: WrestlerController)
 ## A strike parried and countered (Phase 4 reversals): `reverser` read it.
@@ -5004,6 +5005,7 @@ func take_weapon(w: WeaponActor) -> void:
 	w.take(self)
 	if weapon_grip:
 		weapon_grip.weapon = w
+	weapon_taken.emit(self, w)
 
 
 func _let_go() -> void:

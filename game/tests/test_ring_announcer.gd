@@ -77,7 +77,7 @@ func test_the_card_goes_up_when_the_name_is_called() -> void:
 	var cody: WrestlerController = scene.get_node("WrestlerB")
 	director._tick_ramp_card(cody)
 	assert_bool(director._card.is_showing()).is_false()
-	director._on_name_called("cody")
+	director.voice_announcer().name_called.emit("cody")
 	assert_bool(director._card.is_showing()).is_true()
 	assert_int(director._name_card_ticks).is_equal(EntranceDirector.NAME_CARD_TICKS)
 
@@ -114,3 +114,27 @@ func test_justin_is_lifted_over_the_music_not_the_music_ducked() -> void:
 	var music := sv.get_node("EntranceMusic") as AudioStreamPlayer
 	assert_str(music.bus).is_not_equal(RingAnnouncer.UNDER_BUS)
 	music.stop()
+
+
+func test_justin_and_commentary_share_one_serial_voice_lane() -> void:
+	var announcer: RingAnnouncer = auto_free(RingAnnouncer.new())
+	add_child(announcer)
+	var commentary := load(MatchAudio.COMMENTARY_CLIPS["gunshot"][0]) as AudioStream
+	assert_bool(announcer.play("intro")).is_true()
+	assert_bool(announcer.play_commentary(commentary)).is_true()
+	assert_bool(announcer.play("roman")).is_true()
+	assert_bool(announcer._player.playing).is_true()
+	assert_str(announcer._style).is_equal("intro")
+	assert_int(announcer._voice_queue.size()).is_equal(2)
+	assert_str(String(announcer._voice_queue[0]["style"])).is_empty()
+	assert_str(String(announcer._voice_queue[1]["style"])).is_equal("roman")
+	announcer._player.stop()
+	announcer._on_finished()
+	assert_object(announcer._player.stream).is_same(commentary)
+	assert_bool(announcer._player.playing).is_true()
+	assert_bool(announcer.speaking_style().is_empty()).is_true()
+	announcer._player.stop()
+	announcer._on_finished()
+	assert_object(announcer._player.stream).is_same(load(RingAnnouncer.CLIPS["roman"]))
+	assert_bool(announcer._player.playing).is_true()
+	assert_str(announcer._style).is_equal("roman")

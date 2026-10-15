@@ -23,6 +23,18 @@ func test_high_shots_still_see_over_the_crowd() -> void:
 	assert_float(EntranceDirector.RIG_CLEAR_Y).is_greater(5.0)
 
 
+func test_opening_wide_trucks_off_axis_for_arena_depth() -> void:
+	var start := EntranceDirector.opening_shot_at(0.0)
+	var middle := EntranceDirector.opening_shot_at(0.5)
+	var end := EntranceDirector.opening_shot_at(1.0)
+	assert_vector(start[0]).is_equal(EntranceDirector.OPENING_AT)
+	assert_vector(end[0]).is_equal(EntranceDirector.OPENING_AT_END)
+	assert_float(middle[0].x).is_greater(start[0].x)
+	assert_float(middle[0].z).is_less(start[0].z)
+	assert_float(end[2]).is_less(start[2])
+	assert_float(start[0].x).is_less(-5.0)
+
+
 func test_every_shot_a_beat_uses_can_be_framed() -> void:
 	var source := (load("res://core/match/entrance_director.gd") as GDScript).source_code
 	var framed := {}
@@ -178,22 +190,22 @@ func test_codys_walk_gestures_are_each_seen_once() -> void:
 	assert_array(played).contains_exactly_in_any_order(EntranceDirector.CODY_WALK_GESTURES)
 
 
-## The stare-down holds (2K26 270-306 s): every shot at least 4.5 s, no eye
-## close-ups cut back and forth, and the corner intros are held mediums --
-## not the quick close-up cuts of a Western stand-off the owner called cheesy.
-func test_the_face_off_holds_its_shots() -> void:
+## Keep the opening stare on the current short broadcast rhythm: a two-second
+## profile, a four-second OTS, then the concise match-card and referee bridge.
+func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
 	var start := 0.0
 	var stare := float(EntranceDirector.FACEOFF_STARE_TICKS) / EntranceDirector.TPS
 	for step: Array in EntranceDirector.FACEOFF_SEQ:
 		var end := minf(float(step[0]), stare)
 		if start < stare:
 			assert_float(end - start).override_failure_message(
-					"%s holds %.2f s" % [step[1], end - start]).is_greater_equal(4.5)
+					"%s holds %.2f s" % [step[1], end - start]) \
+					.is_equal_approx(EntranceDirector.FACEOFF_PROFILE_END if step[1] == "profile"
+					else stare - EntranceDirector.FACEOFF_PROFILE_END, 0.001)
 		assert_bool(String(step[1]).begins_with("eyes")).is_false()
 		start = end
-	# And the whole run-up to the bell (the owner, again after the two-shot
-	# stare: still quick cuts) -- the card, the check and both corners.
-	for ticks: int in [EntranceDirector.INTRO_CARD_TICKS, EntranceDirector.INTRO_CHECK_TICKS,
-			EntranceDirector.INTRO_CLOSE_TICKS]:
-		assert_float(float(ticks) / EntranceDirector.TPS).is_greater_equal(4.5)
+	# Card, check and corner mediums have distinct short holds before the bell.
+	assert_float(float(EntranceDirector.INTRO_CARD_TICKS) / EntranceDirector.TPS).is_equal(3.0)
+	assert_float(float(EntranceDirector.INTRO_CHECK_TICKS) / EntranceDirector.TPS).is_equal(2.0)
+	assert_float(float(EntranceDirector.INTRO_CLOSE_TICKS) / EntranceDirector.TPS).is_equal(2.5)
 	assert_float(EntranceDirector.INTRO_CLOSE_FOV).is_greater_equal(30.0)

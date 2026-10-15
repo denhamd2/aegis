@@ -14,6 +14,147 @@ func test_every_sound_it_plays_is_built() -> void:
 		assert_object(SfxPool.stream(s)).override_failure_message("missing " + s).is_not_null()
 	for f: String in FAMILIES:
 		assert_int(SfxPool.family_size(f)).override_failure_message("no " + f).is_greater_equal(2)
+	for event: String in MatchAudio.COMMENTARY_CLIPS:
+		for clip: String in MatchAudio.COMMENTARY_CLIPS[event]:
+			assert_object(load(clip) as AudioStream) \
+					.override_failure_message("missing commentary clip " + clip).is_not_null()
+
+
+func test_enda_sign_gag_is_seeded_and_appears_about_once_in_three_matches() -> void:
+	var selected := 0
+	for seed in 900:
+		var first := MatchAudio.enda_easter_egg_for_seed(seed)
+		assert_bool(MatchAudio.enda_easter_egg_for_seed(seed)).is_equal(first)
+		if first:
+			selected += 1
+	assert_int(selected).is_between(250, 350)
+
+
+func test_tonys_gunshot_call_follows_the_handgun_flash_once() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var gun: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"handgun")))
+	audio.on_weapon_event(gun, "flash")
+	assert_bool(audio._commentary_voice.playing).is_false()
+	assert_array(audio._commentary_queue).is_equal(["gunshot"])
+	await get_tree().create_timer(MatchAudio.COMMENTARY_EVENT_DELAY + 0.1).timeout
+	assert_bool(audio._commentary_voice.playing).is_true()
+	audio.on_weapon_event(gun, "flash")
+	assert_bool(audio._commentary_events_played.has("gunshot")).is_true()
+	assert_array(audio._commentary_queue).is_empty()
+	assert_float(audio._commentary_delay).is_less(0.0)
+	assert_str(MatchAudio.commentary_event_for_weapon(&"rpg", "flash")).is_empty()
+	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"rpg")) \
+			.is_equal("tony_danger_warning")
+	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"steel_chair")) \
+			.is_equal("tony_danger_warning")
+	assert_str(MatchAudio.commentary_event_for_weapon_ready(&"inflatable_banana")).is_empty()
+
+
+func test_tonys_danger_warning_queues_on_dangerous_weapon_pickup_once() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var rpg: WeaponActor = auto_free(WeaponActor.make(WeaponCatalog.by_id(&"rpg")))
+	audio._on_weapon_taken(null, rpg)
+	assert_array(audio._commentary_queue).is_equal(["tony_danger_warning"])
+	audio._on_weapon_taken(null, rpg)
+	assert_array(audio._commentary_queue).is_equal(["tony_danger_warning"])
+
+
+func test_tonys_roman_heel_line_only_routes_to_roman_heel_beats() -> void:
+	assert_str(MatchAudio.commentary_event_for_heel_pose("roman")) \
+			.is_equal("tony_roman_heel")
+	assert_str(MatchAudio.commentary_event_for_heel_pose("cody")).is_empty()
+	var sledgehammer := WeaponCatalog.swing_move(WeaponCatalog.by_id(&"sledgehammer"))
+	var jab := load("res://resources/moves/strike_jab.tres") as MoveDef
+	assert_str(MatchAudio.commentary_event_for_roman_heel_attack("roman", sledgehammer)) \
+			.is_equal("tony_roman_heel")
+	assert_str(MatchAudio.commentary_event_for_roman_heel_attack("cody", sledgehammer)).is_empty()
+	assert_str(MatchAudio.commentary_event_for_roman_heel_attack("roman", jab)).is_empty()
+
+
+func test_recurring_commentary_events_can_repeat_after_their_cooldown() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._queue_commentary("roman_spear", false, 2.0)
+	assert_array(audio._commentary_queue).is_equal(["roman_spear"])
+	audio._commentary_queue.clear()
+	audio._commentary_clock = 1.99
+	audio._queue_commentary("roman_spear", false, 2.0)
+	assert_array(audio._commentary_queue).is_empty()
+	audio._commentary_clock = 2.01
+	audio._queue_commentary("roman_spear", false, 2.0)
+	assert_array(audio._commentary_queue).is_equal(["roman_spear"])
+	assert_bool(audio._commentary_events_played.has("roman_spear")).is_false()
+
+
+func test_excalibur_signs_off_after_post_match_package_finishes() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	var post_match: PostMatch = auto_free(PostMatch.new())
+	add_child(post_match)
+	audio.follow_post_match(post_match)
+	assert_array(audio._commentary_queue).is_empty()
+	post_match.finished.emit()
+	assert_array(audio._commentary_queue).is_equal([
+		"tony_what_a_night", "excalibur_signoff"])
+
+
+func test_excalibur_opening_and_crowd_lines_are_queued_on_their_beats() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_cue("broadcast_open")
+	audio._on_cue("excalibur_crowd")
+	assert_array(audio._commentary_queue).is_equal([
+		"excalibur_wednesday", "excalibur_crowd", "tony_crowd_up"])
+	assert_str(MatchAudio.commentary_event_for_cue("broadcast_open")) \
+			.is_equal("excalibur_wednesday")
+	assert_str(MatchAudio.commentary_event_for_cue("title_match")) \
+			.is_equal("tony_title_match")
+
+
+func test_tonys_submission_call_routes_only_from_a_submission_attack() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_wrestler_state_changed(WrestlerFSM.State.IDLE, WrestlerFSM.State.SUBMISSION_ATTACKER)
+	assert_array(audio._commentary_queue).is_equal(["tony_submission"])
+	assert_str(MatchAudio.commentary_event_for_state(WrestlerFSM.State.IDLE)).is_empty()
+	assert_array(MatchAudio.commentary_events_for_kickout(2, false)).is_equal([
+		"excalibur_two_count", "tony_love_this_business"])
+	assert_array(MatchAudio.commentary_events_for_kickout(1, false)).is_empty()
+	assert_array(MatchAudio.commentary_events_for_kickout(2, true)).is_empty()
+
+
+func test_excalibur_comeback_and_finish_calls_have_match_events() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_wrestler_fired_up(null)
+	assert_array(audio._commentary_queue).is_equal(["excalibur_comeback"])
+	audio._on_match_won(null, "time_limit")
+	assert_array(audio._commentary_queue).is_equal([
+		"excalibur_comeback", "excalibur_finish", "excalibur_coolest_job"])
+
+
+func test_cody_return_call_only_queues_on_his_entrance_cue() -> void:
+	var audio: MatchAudio = auto_free(MatchAudio.new())
+	add_child(audio)
+	audio._on_cue("tron_on")
+	assert_array(audio._commentary_queue).is_empty()
+	audio._on_cue("cody_appear")
+	assert_array(audio._commentary_queue).is_equal([
+		"cody_return", "excalibur_cody_career"])
+	assert_str(MatchAudio.commentary_event_for_cue("pyro_cody_hit")).is_empty()
+
+
+func test_roman_landed_moves_route_the_history_or_spear_call() -> void:
+	assert_str(MatchAudio.commentary_event_for_landed_move("roman", "strike_jab")) \
+			.is_equal("roman_record")
+	assert_str(MatchAudio.commentary_event_for_landed_move("roman", "finisher_spear")) \
+			.is_equal("roman_spear")
+	assert_str(MatchAudio.commentary_event_for_landed_move("roman", "signature_superman_punch")) \
+			.is_equal("excalibur_superman_punch")
+	assert_str(MatchAudio.commentary_event_for_landed_move("cody", "signature_superman_punch")).is_empty()
+	assert_str(MatchAudio.commentary_event_for_landed_move("cody", "finisher_spear")).is_empty()
 
 
 func test_strikes_sound_on_landing_and_slams_do_not() -> void:

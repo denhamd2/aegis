@@ -87,6 +87,39 @@ func test_out_of_range_it_only_closes() -> void:
 		assert_vector(input.get("move", Vector2.ZERO)).is_not_equal(Vector2.ZERO)
 
 
+## In the old neutral, both AIs could hold the exact same planted pose all
+## through the strike cooldown. Footwork is now a short lateral step, facing
+## the opponent, with no radial movement and no persistent orbit.
+func test_neutral_footwork_is_a_brief_tangent_step_not_a_circle() -> void:
+	var ai := _make_pair(1.1)
+	var to_target := Vector3(0.0, 0.0, -1.1)
+	assert_vector(ai._circle_move(to_target, 1.1)).is_equal(Vector2.ZERO)
+	ai._footwork_wait = 0
+	ai._footwork_ticks = 10
+	ai._footwork_side = 1.0
+	var step := ai._circle_move(to_target, 1.1)
+	assert_float(step.length()).is_equal_approx(1.0, 0.001)
+	assert_float(step.dot(Vector2(to_target.x, to_target.z))).is_equal_approx(0.0, 0.001)
+	ai._footwork_ticks = 0
+	assert_vector(ai._circle_move(to_target, 1.1)).is_equal(Vector2.ZERO)
+
+
+func test_seeded_neutral_footwork_is_varied_per_ai_and_replayable() -> void:
+	var a := _make_pair(1.1)
+	var b := _make_pair(1.1)
+	a.setup_jitter(42, 0)
+	b.setup_jitter(42, 1)
+	a._schedule_footwork()
+	b._schedule_footwork()
+	var first := [a._footwork_wait, a._footwork_ticks, a._footwork_side]
+	var second := [b._footwork_wait, b._footwork_ticks, b._footwork_side]
+	var replay := _make_pair(1.1)
+	replay.setup_jitter(42, 0)
+	replay._schedule_footwork()
+	assert_array(first).is_equal([replay._footwork_wait, replay._footwork_ticks, replay._footwork_side])
+	assert_array(first).is_not_equal(second)
+
+
 ## --- the charge -------------------------------------------------------------
 ##
 ## RUNNING_ATTACK has two MoveDefs, a reversal window and its own suite, and

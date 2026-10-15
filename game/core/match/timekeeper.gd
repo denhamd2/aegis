@@ -14,8 +14,13 @@ const WALK_SPEED := 1.4
 const TURN_RATE := 7.0
 const ARRIVED := 0.08
 const WALK_CLIP := "Walk"
-const WALK_CLIP_SPEED := 1.3
+## Planted-foot travel in this retargeted cycle, measured by
+## tools/anim/gait_audit.gd. Matching this to the node's actual pace avoids
+## the foot slide caused by the old unmeasured 1.3 m/s assumption.
+const WALK_CLIP_SPEED := 0.78
 const IDLE_CLIP := "strikes/ref_stand"
+const MIN_ANIMATION_RATE := 0.3
+const MAX_ANIMATION_RATE := 2.1
 ## A black polo, not the referee's stripes.
 const POLO := Color(0.05, 0.06, 0.09)
 
@@ -114,7 +119,7 @@ func _play(clip: String, blend := 0.2, restart := false, speed := 1.0) -> void:
 		if restart:
 			_player.seek(0.0, true)
 		_clip = clip
-	_player.speed_scale = clampf(speed, 0.3, 1.6)
+	_player.speed_scale = clampf(speed, MIN_ANIMATION_RATE, MAX_ANIMATION_RATE)
 
 
 ## The model faces its node's +Z, like Aubrey's.

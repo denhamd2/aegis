@@ -611,12 +611,14 @@ def build_belt(parts: dict[str, Part], prefix: str, frame) -> None:
 ## runs from 4 cm under the hips bone to 20 cm over it, up onto his belly)
 ## on every fifth frame of his entrance: his belly stands 0.21 m in front of
 ## the hips bone and his seat 0.15 m behind, and he is 0.21 m to a side.
-## So the belt line is two half-ellipses -- a deeper one in front -- fitted
-## to clear 99.9% of those points by 17 mm (the strap's inner face is 4 mm
-## inside the line); the rest come within 2 mm of it, on single frames.
-WAIST_HALF_X = 0.225
-WAIST_FRONT = 0.225
-WAIST_BACK = 0.165
+## So the belt line is two half-ellipses -- a deeper one in front -- widened
+## after a full-entrance wear_clearance pass found the torso crossing the old
+## curve by 49 mm on the rope step and 23 mm at the back-side hip. The current
+## fit clears the entire sampled entrance by 7 mm at its tightest point; the
+## strap's inner face sits 4 mm inside that line.
+WAIST_HALF_X = 0.270
+WAIST_FRONT = 0.300
+WAIST_BACK = 0.220
 WAIST_LIFT = 0.075
 
 

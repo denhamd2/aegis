@@ -24,6 +24,16 @@ func test_entrances_are_off_unless_asked_for() -> void:
 	assert_bool(a.is_physics_processing()).is_true()
 
 
+func test_the_prematch_crowd_exchange_finishes_before_the_entrances() -> void:
+	var excalibur_stream := load(MatchAudio.COMMENTARY_CLIPS["excalibur_crowd"][0]) as AudioStream
+	var tony_stream := load(MatchAudio.COMMENTARY_CLIPS["tony_crowd_up"][0]) as AudioStream
+	var excalibur := excalibur_stream.get_length()
+	var tony := tony_stream.get_length()
+	var needed := excalibur + tony + MatchAudio.COMMENTARY_EVENT_DELAY * 2.0
+	var available := float(EntranceDirector.EXCALIBUR_CROWD_CALL_TICKS) / EntranceDirector.TPS
+	assert_float(available).is_greater_equal(needed)
+
+
 ## Everything that plays the match waits for the bell, and so does the replay.
 func test_the_match_is_frozen_until_the_bell() -> void:
 	var scene := _match(true)
@@ -99,6 +109,35 @@ func test_the_bell_finds_them_facing_each_other() -> void:
 		assert_float(facing.normalized().dot(to_other.normalized())) \
 				.override_failure_message("%s ends his entrance facing away" % me.name) \
 				.is_greater(0.99)
+
+
+func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
+	assert_int(EntranceDirector.INTRO_CARD_TICKS).is_less_equal(180)
+	assert_int(EntranceDirector.INTRO_CHECK_TICKS).is_less_equal(120)
+	assert_int(EntranceDirector.INTRO_CLOSE_TICKS).is_less_equal(150)
+	assert_int(EntranceDirector.FACEOFF_STARE_TICKS).is_less_equal(360)
+	assert_str(EntranceDirector.faceoff_shot_at(1.9)).is_equal("profile")
+	assert_str(EntranceDirector.faceoff_shot_at(2.0)).is_equal("ots")
+
+
+func test_roman_waits_with_his_hands_clearly_on_his_hips() -> void:
+	var roman := WrestlerController.new()
+	roman.entrance_style = "roman"
+	assert_str(EntranceDirector._wait_clip(roman)).is_equal("strikes/hands_hips")
+	roman.free()
+
+
+func test_cody_return_commentary_cue_lands_when_he_emerges() -> void:
+	var scene := _match(true, "roman", "cody")
+	var director: EntranceDirector = scene.get_node("EntranceDirector")
+	var cody: WrestlerController = scene.get_node("WrestlerB")
+	var found := false
+	for beat: Dictionary in director._beats:
+		if beat.get("who") != cody or not beat.get("appear", false):
+			continue
+		for event: Array in beat.get("events", []):
+			found = found or event[1] == "cody_appear"
+	assert_bool(found).override_failure_message("Cody's emergence has no return-call cue").is_true()
 
 
 ## The whole entrance, stepped: nobody jumps except at the broadcast cut (and
@@ -215,6 +254,7 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var rig := scene.get_node("LightRig")
+	assert_int(rig.look).is_equal(ArenaLighting.Look.MATCH)
 	var light: Light3D = null
 	for child in rig.get_children():
 		if child is Light3D and not String(child.name).begins_with("Accent"):
@@ -231,14 +271,16 @@ func test_roman_waits_for_his_music_under_dimmed_lights() -> void:
 	for _i in 120:
 		director._physics_process(1.0 / 60.0)
 	assert_bool(a.visible).override_failure_message("out before his music hit").is_false()
-	assert_float(light.light_energy).is_equal_approx(before * EntranceDirector.ROMAN_HOUSE_DIM, 0.001)
+	assert_int(rig.look).is_equal(ArenaLighting.Look.ENTRANCE)
+	var entrance_energy: float = rig.key_energy if String(light.name).begins_with("Key") else rig.top_energy
+	assert_float(light.light_energy).is_equal_approx(entrance_energy
+			* ArenaLighting.ENTRANCE_RING_SHARE * EntranceDirector.ROMAN_HOUSE_DIM, 0.001)
 	director.skip()
 	assert_float(light.light_energy).is_equal_approx(_after_bell(rig, light, before), 0.0001)
 
 
 ## What a rig light reads once the bell has rung: the house dim undone, and
-## the ring keys and top fill on the match look (ArenaLighting.set_look),
-## which is brighter than the entrance look they started the show on.
+## the ring keys and top fill on the match look (ArenaLighting.set_look).
 static func _after_bell(rig: Node, light: Light3D, before: float) -> float:
 	var n := String(light.name)
 	if n.begins_with("Key"):

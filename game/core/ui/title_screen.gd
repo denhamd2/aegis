@@ -432,6 +432,7 @@ static func configure_match(scene: Node, player: Roster.Entry,
 		opponent: Roster.Entry, match_seed: int, both_ai := false,
 		mode: int = MatchRules.Mode.ONE_ON_ONE) -> void:
 	MatchRules.set_mode(scene, mode)
+	scene.set("title_match", player.championship != "" or opponent.championship != "")
 	var slots := [
 		[scene.get_node("WrestlerA"), player, both_ai],
 		[scene.get_node("WrestlerB"), opponent, true],

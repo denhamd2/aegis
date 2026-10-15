@@ -56,6 +56,41 @@ const BUMP_WINDOW := 0.2
 const HIT_DAMAGE_QUIET := 3.0
 const HIT_DAMAGE_LOUD := 12.0
 
+## Owner-supplied broadcast calls, cued by match events. Keep a short gap so
+## Tony's reaction follows the handgun's muzzle report rather than masking it.
+const COMMENTARY_CLIPS := {
+	"gunshot": ["res://assets/audio/commentary/tony_gunshot.ogg"],
+	"tony_danger_warning": ["res://assets/audio/commentary/tony_danger_warning.ogg"],
+	"tony_roman_heel": ["res://assets/audio/commentary/tony_roman_heel.ogg"],
+	"tony_title_match": ["res://assets/audio/commentary/tony_title_match.ogg"],
+	"cody_return": ["res://assets/audio/commentary/tony_cody_return.ogg"],
+	"excalibur_cody_career": ["res://assets/audio/commentary/excalibur_cody_career.ogg"],
+	"roman_record": ["res://assets/audio/commentary/tony_roman_record.ogg"],
+	"roman_spear": ["res://assets/audio/commentary/tony_roman_spear.ogg"],
+	"excalibur_superman_punch": ["res://assets/audio/commentary/excalibur_superman_punch.ogg"],
+	"excalibur_wednesday": ["res://assets/audio/commentary/excalibur_wednesday.ogg"],
+	"excalibur_crowd": ["res://assets/audio/commentary/excalibur_crowd.ogg"],
+	"excalibur_comeback": ["res://assets/audio/commentary/excalibur_comeback.ogg"],
+	"excalibur_two_count": [
+		"res://assets/audio/commentary/excalibur_two_count.ogg",
+		"res://assets/audio/commentary/excalibur_kickout_one_seven_eighths.ogg",
+	],
+	"excalibur_finish": ["res://assets/audio/commentary/excalibur_finish.ogg"],
+	"excalibur_coolest_job": ["res://assets/audio/commentary/excalibur_coolest_job.ogg"],
+	"excalibur_signoff": ["res://assets/audio/commentary/excalibur_signoff.ogg"],
+	"enda_easter_egg": ["res://assets/audio/commentary/tony_enda_easter_egg.ogg"],
+	"tony_submission": ["res://assets/audio/commentary/tony_submission.ogg"],
+	"tony_love_this_business": ["res://assets/audio/commentary/tony_love_this_business.ogg"],
+	"tony_what_a_night": ["res://assets/audio/commentary/tony_what_a_night.ogg"],
+	"tony_crowd_up": ["res://assets/audio/commentary/tony_crowd_up.ogg"],
+}
+const COMMENTARY_EVENT_DELAY := 0.18
+const COMMENTARY_VOICE_DB := 0.0
+const ENDA_EASTER_EGG_AFTER := 30.0
+const ENDA_QUIET_HOLD := 1.0
+const ENDA_CUTAWAY_TAIL := 0.5
+const ENDA_CUTAWAY_WAIT_MAX := 3.0
+
 ## A move worth a pop of its own (CrowdReaction.move_pop at or over this).
 const POP_MOVE := 0.45
 
@@ -95,6 +130,23 @@ var _cooldown := {}      # wrestler -> seconds until he can bump again
 var _count_heard := 0
 var _was_pinning := false
 var _over := false
+var _commentary_voice: AudioStreamPlayer
+var _voice_lane: RingAnnouncer
+var _commentary_rng := RandomNumberGenerator.new()
+var _commentary_events_played := {}
+var _commentary_last_queued := {}
+var _commentary_queue: Array[String] = []
+var _commentary_delay := -1.0
+var _commentary_clock := 0.0
+var _enda_easter_egg_selected := false
+var _enda_easter_egg_used := false
+var _enda_easter_egg_waiting := false
+var _enda_cutaway_hold := 0.0
+var _enda_cutaway_wait := 0.0
+var _enda_down_candidate: WrestlerController
+var _enda_down_seconds := 0.0
+var _sign_fans: SignFans
+var _match_camera: MatchCamera
 
 
 func _ready() -> void:
@@ -121,20 +173,29 @@ func _ready() -> void:
 	for p: AudioStreamPlayer in [_bed, _walla_a, _walla_b, _boo_loop, _cheer_loop, _roar]:
 		var length: float = p.stream.get_length()
 		p.seek(fposmod(length * float(hash(String(p.name)) % 1000) / 1000.0, length))
+	_commentary_voice = AudioStreamPlayer.new()
+	_commentary_voice.name = "CommentaryVoice"
+	_commentary_voice.bus = RingAnnouncer.voice_bus()
+	_commentary_voice.volume_db = COMMENTARY_VOICE_DB
+	add_child(_commentary_voice)
 
 
 ## Hooks the match up. Called by match_setup, beside CrowdReaction.watch().
-func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction) -> void:
+func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_seed: int = 0) -> void:
 	_referee = referee
 	_crowd = crowd
 	_wrestlers = wrestlers
+	_enda_easter_egg_selected = enda_easter_egg_for_seed(match_seed)
+	# Commentary choices are presentation-only, but a seeded stream keeps
+	# replayed broadcasts consistent while still allowing alternate takes.
+	_commentary_rng.seed = match_seed * 32771 + 4619
 	for w: WrestlerController in wrestlers:
 		w.move_landed.connect(_on_move_landed)
+		w.weapon_taken.connect(_on_weapon_taken)
+		w.fsm.state_changed.connect(_on_wrestler_state_changed)
 		w.reversed.connect(func(_r, _s, _m): sfx.play("whoosh", -6.0))
-		w.taunted.connect(func(who): _heat(who, 0.5); sfx.play_any("crowd_pop", -9.0))
-		w.fired_up.connect(func(who):
-			_heat(who, 0.7)
-			sfx.play_any("crowd_pop", -6.0))
+		w.taunted.connect(_on_wrestler_taunted)
+		w.fired_up.connect(_on_wrestler_fired_up)
 		w.set_piece_landed.connect(_on_set_piece_landed)
 		_cooldown[w] = 0.0
 		_falls[w] = []
@@ -148,6 +209,28 @@ func follow(director: EntranceDirector) -> void:
 	director.cue.connect(_on_cue)
 
 
+func share_voice_lane(announcer: RingAnnouncer) -> void:
+	_voice_lane = announcer
+
+
+## Stable per match and independent of other commentary RNG draws: roughly one
+## in three matches gets the sign gag, without introducing run-to-run noise.
+static func enda_easter_egg_for_seed(match_seed: int) -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 104729 + 8191
+	return rng.randi_range(0, 2) == 0
+
+
+## Excalibur signs off only after the complete post-match broadcast package.
+func follow_post_match(post_match: PostMatch) -> void:
+	post_match.finished.connect(_on_post_match_finished)
+
+
+func _on_post_match_finished() -> void:
+	_queue_commentary("tony_what_a_night")
+	_queue_commentary("excalibur_signoff")
+
+
 ## The opening bell, whether after the entrances or on tick one.
 func opening_bell() -> void:
 	sfx.play("bell_start", -2.0)
@@ -155,6 +238,15 @@ func opening_bell() -> void:
 
 
 func _on_cue(what: String) -> void:
+	var commentary_event := commentary_event_for_cue(what)
+	if commentary_event != "":
+		_queue_commentary(commentary_event)
+	if what == "excalibur_crowd":
+		# Tony answers Excalibur's crowd read before either entrance begins.
+		_queue_commentary("tony_crowd_up")
+	if what == "cody_appear":
+		# Excalibur answers Tony's Cody return call during Cody's entrance.
+		_queue_commentary("excalibur_cody_career")
 	match what:
 		"pyro_stage", "pyro_over_ring":
 			sfx.play("pyro_boom", -1.0)
@@ -201,6 +293,115 @@ static func hit_volume(move: MoveDef) -> float:
 	var total := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
 	var t := clampf((total - HIT_DAMAGE_QUIET) / (HIT_DAMAGE_LOUD - HIT_DAMAGE_QUIET), 0.0, 1.0)
 	return lerpf(-9.0, 0.0, t)
+
+
+## A gun's muzzle flash is the broadcast cue; other flashes (if added later)
+## must not inherit this line.
+static func commentary_event_for_weapon(weapon_id: StringName, event: String) -> String:
+	return "gunshot" if weapon_id == &"handgun" and event == "flash" else ""
+
+
+static func commentary_event_for_weapon_ready(weapon_id: StringName) -> String:
+	var weapon := WeaponCatalog.by_id(weapon_id)
+	if weapon == null:
+		return ""
+	var exceptional_risk := weapon_id in [
+		&"steel_chair", &"baseball_bat", &"ladder", &"light_tubes", &"barbed_wire_chair",
+		&"barbed_wire_bat", &"bed_of_nails", &"barbed_wire_board",
+	]
+	return "tony_danger_warning" if (
+		weapon.damage_head >= 12.0 or weapon.landing_damage >= 12.0 or exceptional_risk
+	) else ""
+
+
+static func commentary_event_for_heel_pose(entrance_style: String) -> String:
+	return "tony_roman_heel" if entrance_style == "roman" else ""
+
+
+static func commentary_event_for_roman_heel_attack(entrance_style: String, move: MoveDef) -> String:
+	if entrance_style != "roman":
+		return ""
+	var weapon := WeaponCatalog.of_move(move)
+	if weapon == null or commentary_event_for_weapon_ready(weapon.id) == "":
+		return ""
+	return "tony_roman_heel"
+
+
+func _on_wrestler_taunted(who: WrestlerController) -> void:
+	_heat(who, 0.5)
+	sfx.play_any("crowd_pop", -9.0)
+	var event := commentary_event_for_heel_pose(who.entrance_style)
+	if event != "":
+		_queue_commentary(event)
+
+
+func _on_weapon_taken(_who: WrestlerController, weapon: WeaponActor) -> void:
+	if weapon == null or weapon.def == null:
+		return
+	var event := commentary_event_for_weapon_ready(weapon.def.id)
+	if event != "":
+		_queue_commentary(event)
+
+
+static func commentary_event_for_cue(cue: String) -> String:
+	match cue:
+		"cody_appear":
+			return "cody_return"
+		"broadcast_open":
+			return "excalibur_wednesday"
+		"title_match":
+			return "tony_title_match"
+		"excalibur_crowd":
+			return "excalibur_crowd"
+	return ""
+
+
+static func commentary_event_for_state(state: int) -> String:
+	return "tony_submission" if state == WrestlerFSM.State.SUBMISSION_ATTACKER else ""
+
+
+static func commentary_events_for_kickout(count: int, match_over: bool) -> Array[String]:
+	if count >= 2 and not match_over:
+		return ["excalibur_two_count", "tony_love_this_business"]
+	return []
+
+
+func _on_wrestler_state_changed(_previous: int, current: int) -> void:
+	var commentary_event := commentary_event_for_state(current)
+	if commentary_event != "":
+		_queue_commentary(commentary_event)
+
+
+static func commentary_event_for_landed_move(entrance_style: String, move_id: String) -> String:
+	if entrance_style != "roman":
+		return ""
+	if move_id == "signature_superman_punch":
+		return "excalibur_superman_punch"
+	return "roman_spear" if move_id == "finisher_spear" else "roman_record"
+
+
+func _on_wrestler_fired_up(who: Variant) -> void:
+	_heat(who, 0.7)
+	sfx.play_any("crowd_pop", -6.0)
+	_queue_commentary("excalibur_comeback")
+
+
+func _queue_commentary(event: String, once_per_match := true, cooldown_seconds := 0.0) -> void:
+	if not COMMENTARY_CLIPS.has(event):
+		return
+	var clips: Array = COMMENTARY_CLIPS[event]
+	if clips.is_empty():
+		return
+	if once_per_match and _commentary_events_played.has(event):
+		return
+	if not once_per_match and _commentary_clock - float(_commentary_last_queued.get(event, -INF)) < cooldown_seconds:
+		return
+	if clips.all(func(path: String) -> bool: return not ResourceLoader.exists(path)):
+		return
+	if once_per_match:
+		_commentary_events_played[event] = true
+	_commentary_last_queued[event] = _commentary_clock
+	_commentary_queue.append(event)
 
 
 ## Loudness of a bump from how fast he was falling, or NAN for no bump.
@@ -264,6 +465,14 @@ func _on_move_landed(attacker, _defender, move: MoveDef) -> void:
 	var pop := CrowdReaction.move_pop(move)
 	if pop >= POP_MOVE:
 		sfx.play_any("crowd_pop", lerpf(-8.0, -2.0, clampf((pop - POP_MOVE) / (1.0 - POP_MOVE), 0.0, 1.0)))
+	if attacker is WrestlerController:
+		var move_id := move.resource_path.get_file().get_basename()
+		var commentary_event := commentary_event_for_roman_heel_attack(
+				attacker.entrance_style, move)
+		if commentary_event == "":
+			commentary_event = commentary_event_for_landed_move(attacker.entrance_style, move_id)
+		if commentary_event != "":
+			_queue_commentary(commentary_event)
 
 
 ## A weapon going off or breaking (WeaponActor.LISTENERS).
@@ -272,6 +481,9 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 		"flash":
 			sfx.play("pyro_bang", 0.0)
 			sfx.play_any("crowd_ooh", -4.0)
+			var commentary_event := commentary_event_for_weapon(weapon.def.id, event)
+			if commentary_event != "":
+				_queue_commentary(commentary_event)
 		"cloud":
 			sfx.play("whoosh", -2.0, 0.7)
 		"rocket":
@@ -309,6 +521,8 @@ func _on_match_won(winner: Variant, method: String) -> void:
 		chants.count(3, sfx)
 	sfx.play("bell_end", -1.0)
 	sfx.play("crowd_finish", 0.0)
+	_queue_commentary("excalibur_finish")
+	_queue_commentary("excalibur_coolest_job")
 	var w := winner as WrestlerController
 	if w:
 		winner_theme(w.entrance_style)
@@ -353,6 +567,29 @@ func theme_player() -> AudioStreamPlayer:
 
 
 func _process(delta: float) -> void:
+	_commentary_clock += delta
+	var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
+	if not _commentary_queue.is_empty() and not voice_busy:
+		if _commentary_delay < 0.0:
+			_commentary_delay = COMMENTARY_EVENT_DELAY
+		_commentary_delay = maxf(0.0, _commentary_delay - delta)
+		if _commentary_delay <= 0.0:
+			var event: String = _commentary_queue.pop_front()
+			var clips: Array = COMMENTARY_CLIPS[event]
+			var available: Array[String] = []
+			for clip: String in clips:
+				if ResourceLoader.exists(clip):
+					available.append(clip)
+			if not available.is_empty():
+				var choice := available[_commentary_rng.randi_range(0, available.size() - 1)]
+				var stream := load(choice) as AudioStream
+				if _voice_lane:
+					_voice_lane.play_commentary(stream)
+				else:
+					_commentary_voice.stream = stream
+					_commentary_voice.play()
+			_commentary_delay = -1.0
+			_commentary_delay = -1.0
 	var excitement := _crowd.excitement if _crowd else 0.0
 	if not _over:
 		_clock += delta
@@ -380,6 +617,103 @@ func _process(delta: float) -> void:
 	for w: WrestlerController in _wrestlers:
 		if is_instance_valid(w):
 			_hear_bumps(w, delta)
+	_try_enda_easter_egg(delta)
+
+
+## A quiet, sustained knockdown is the setup. Cut only when the camera and
+## shared commentator lane are free, so the sign and Tony's line land together.
+func _try_enda_easter_egg(delta: float) -> void:
+	if (
+			not _enda_easter_egg_selected
+			or _enda_easter_egg_used
+	):
+		return
+	if _over:
+		_cancel_enda_easter_egg()
+		return
+	if _clock < ENDA_EASTER_EGG_AFTER:
+		return
+	if _match_camera == null or not is_instance_valid(_match_camera):
+		_match_camera = get_tree().get_first_node_in_group("match_camera") as MatchCamera
+	if _sign_fans == null or not is_instance_valid(_sign_fans):
+		_sign_fans = get_tree().get_first_node_in_group("sign_fans") as SignFans
+	if _match_camera == null or _sign_fans == null:
+		return
+	if _enda_easter_egg_waiting:
+		var enda_fan := _sign_fans.enda_easter_egg_fan()
+		if (
+				_enda_down_candidate == null
+				or not is_instance_valid(_enda_down_candidate)
+				or _enda_down_candidate.fsm.current_state != WrestlerFSM.State.DOWN
+				or (_referee != null and _referee.is_pin_active())
+		):
+			_cancel_enda_easter_egg()
+			return
+		if enda_fan == null or enda_fan.stage != SignFan.Stage.HOLDING:
+			return
+		_enda_cutaway_wait += delta
+		if _enda_cutaway_wait > ENDA_CUTAWAY_WAIT_MAX:
+			_cancel_enda_easter_egg()
+			_enda_down_seconds = 0.0
+			return
+		var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
+		if not _commentary_queue.is_empty() or voice_busy:
+			_sign_fans.raise_enda_easter_egg(_enda_cutaway_hold)
+			return
+		if _match_camera.request_enda_sign_cutaway(_enda_cutaway_hold):
+			_queue_commentary("enda_easter_egg")
+			_enda_easter_egg_used = true
+			_enda_easter_egg_waiting = false
+		else:
+			_sign_fans.raise_enda_easter_egg(_enda_cutaway_hold)
+		return
+	var down: WrestlerController
+	for candidate: WrestlerController in _wrestlers:
+		if (
+				candidate != null
+				and is_instance_valid(candidate)
+				and candidate.fsm.current_state == WrestlerFSM.State.DOWN
+		):
+			if down != null:
+				_enda_down_candidate = null
+				_enda_down_seconds = 0.0
+				return
+			down = candidate
+	if down == null:
+		_enda_down_candidate = null
+		_enda_down_seconds = 0.0
+		return
+	if down != _enda_down_candidate:
+		_enda_down_candidate = down
+		_enda_down_seconds = 0.0
+	_enda_down_seconds += delta
+	if _enda_down_seconds < ENDA_QUIET_HOLD:
+		return
+	if _referee == null or _referee.is_pin_active() or not _commentary_queue.is_empty():
+		return
+	var voice_busy := _voice_lane.has_voice() if _voice_lane else _commentary_voice.playing
+	if voice_busy:
+		return
+	if (
+			_sign_fans.enda_easter_egg_fan() == null
+			or not _match_camera.can_request_enda_sign_cutaway()
+	):
+		return
+	var stream := load(COMMENTARY_CLIPS["enda_easter_egg"][0]) as AudioStream
+	if stream == null:
+		return
+	_enda_cutaway_hold = stream.get_length() + COMMENTARY_EVENT_DELAY + ENDA_CUTAWAY_TAIL
+	if not _sign_fans.raise_enda_easter_egg(_enda_cutaway_hold):
+		return
+	_enda_cutaway_wait = 0.0
+	_enda_easter_egg_waiting = true
+
+
+func _cancel_enda_easter_egg() -> void:
+	if _enda_easter_egg_waiting and _sign_fans != null and is_instance_valid(_sign_fans):
+		_sign_fans.cancel_enda_easter_egg()
+	_enda_easter_egg_waiting = false
+	_enda_cutaway_wait = 0.0
 
 
 func _slew(p: AudioStreamPlayer, db: float, delta: float) -> void:
@@ -405,6 +739,10 @@ func _hear_the_count() -> void:
 		# A kickout after two: the gasp. (A three is the bell, not this.)
 		sfx.play_any("crowd_ooh", -3.0)
 		sfx.play_any("crowd_pop", -4.0)
+	var events := commentary_events_for_kickout(_count_heard, _over)
+	if not pinning and _was_pinning:
+		for event: String in events:
+			_queue_commentary(event)
 	_was_pinning = pinning
 
 

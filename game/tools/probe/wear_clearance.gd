@@ -20,9 +20,9 @@ extends Node
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 ## Must match tools/blender/roman_props.py.
-const WAIST_HALF_X := 0.225
-const WAIST_FRONT := 0.225
-const WAIST_BACK := 0.165
+const WAIST_HALF_X := 0.270
+const WAIST_FRONT := 0.300
+const WAIST_BACK := 0.220
 ## Body meshes that are not skin or clothing a belt sits over.
 const SKIP := ["hair", "beard", "brow", "eye", "lash", "teeth", "tongue"]
 ## Body parts the belt goes round. Not the arms, which hang in its band

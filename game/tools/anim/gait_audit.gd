@@ -30,12 +30,17 @@ extends SceneTree
 
 const RIG := "res://assets/characters/wrestler_base.glb"
 const LIB := "res://resources/animations/strike_clips.tres"
+const OFFICIAL_SCENE := "res://scenes/aubrey_model.tscn"
 
 ## Clip -> the engine speed it is played at, from WrestlerController.
 const CYCLES := {
 	"walk_stalk": 3.5,   # MOVE_SPEED
 	"run_drive": 7.0,    # RUN_SPEED
 }
+## The official and timekeeper share AubreyModel's retargeted base-rig
+## cycles. These rates are measured from their planted feet after retargeting,
+## not guessed from the source clip's name or nominal speed.
+const OFFICIAL_CYCLES := {"Walk": 0.78, "Jog_Fwd": 6.04}
 ## Clips that loop but carry the body at no speed at all: the feet should not
 ## travel while planted, and the seam still has to close.
 const STATIONARY := ["idle_ready", "tie_up_collar"]
@@ -51,16 +56,17 @@ const RATE_TOLERANCE := 0.15
 ## A seam this size is a visible pop.
 const SEAM_TOLERANCE := 0.005
 
-func _init() -> void:
-	quit(_run())
+func _initialize() -> void:
+	_run.call_deferred()
 
-func _run() -> int:
+func _run() -> void:
 	var model: Node = (load(RIG) as PackedScene).instantiate()
 	var skeleton: Skeleton3D = model.find_child("Skeleton3D", true, false)
 	var lib: AnimationLibrary = load(LIB)
 	if not skeleton or not lib:
 		push_error("missing rig or strike library")
-		return 1
+		quit(1)
+		return
 
 	var failures := 0
 	for clip_name: String in CYCLES:
@@ -69,9 +75,25 @@ func _run() -> int:
 		failures += _audit(skeleton, lib, clip_name, 0.0)
 
 	model.free()
+	var official := (load(OFFICIAL_SCENE) as PackedScene).instantiate() as AubreyModel
+	root.add_child(official)
+	await process_frame
+	var official_skeleton := official.get_game_skeleton()
+	var official_player := official.get_node("AnimationPlayer") as AnimationPlayer
+	var official_library := AnimationLibrary.new()
+	for clip_name: String in OFFICIAL_CYCLES:
+		official_library.add_animation(clip_name, official_player.get_animation(clip_name))
+	official_library.add_animation("ref_stand", official_player.get_animation("strikes/ref_stand"))
+	official_library.add_animation("ref_watch", official_player.get_animation("strikes/ref_watch"))
+	for clip_name: String in OFFICIAL_CYCLES:
+		failures += _audit(official_skeleton, official_library, clip_name,
+				OFFICIAL_CYCLES[clip_name])
+	for clip_name: String in ["ref_stand", "ref_watch"]:
+		failures += _audit(official_skeleton, official_library, clip_name, 0.0)
+	official.free()
 	print("")
 	print("gait audit: %s" % ("PASS" if failures == 0 else "%d FINDING(S)" % failures))
-	return 1 if failures > 0 else 0
+	quit(1 if failures > 0 else 0)
 
 func _audit(skeleton: Skeleton3D, lib: AnimationLibrary, clip_name: String,
 		speed: float) -> int:

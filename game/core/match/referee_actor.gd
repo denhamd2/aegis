@@ -76,11 +76,14 @@ const SLAP_LEAD := 24
 ## Standing beside the winner for the hand raise: on her right (-Z when she
 ## faces the hard camera).
 const WINNER_SIDE := Vector3(0.0, 0.0, 0.48)
-## The two base-rig clips she moves in, and the speeds they were authored at.
+## The two base-rig clips she moves in, and their planted-foot travel rates
+## measured by tools/anim/gait_audit.gd after AubreyModel's retargeting.
 const WALK_CLIP := "Walk"
-const WALK_CLIP_SPEED := 1.3
+const WALK_CLIP_SPEED := 0.78
 const JOG_CLIP := "Jog_Fwd"
-const JOG_CLIP_SPEED := 3.0
+const JOG_CLIP_SPEED := 6.04
+const MIN_ANIMATION_RATE := 0.3
+const MAX_ANIMATION_RATE := 2.1
 
 enum Mode { PARK, FOLLOW, TO_COVER, COUNTING, SUBMISSION, RISE, BELL, TO_WINNER, RAISE, ERRAND }
 
@@ -715,7 +718,7 @@ func _play(clip: String, blend := 0.2, restart := false, speed := 1.0) -> void:
 		if restart:
 			_player.seek(0.0, true)
 		_clip = clip
-	_player.speed_scale = clampf(speed, 0.3, 1.6)
+	_player.speed_scale = clampf(speed, MIN_ANIMATION_RATE, MAX_ANIMATION_RATE)
 
 
 func _clip_length(clip: String) -> float:

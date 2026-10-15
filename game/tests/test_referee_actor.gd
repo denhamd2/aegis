@@ -42,6 +42,21 @@ func test_every_referee_clip_resolves_on_her_skeleton() -> void:
 			assert_int(skeleton.find_bone(path.get_concatenated_subnames())).is_greater_equal(0)
 
 
+func test_referee_and_timekeeper_gait_rates_match_the_measured_cycles() -> void:
+	# gait_audit measures 0.78 m/s for Walk and 6.04 m/s for Jog_Fwd after
+	# AubreyModel retargeting. The constants below are the calibrated clip rates;
+	# every authored movement speed must fit the animator's supported range.
+	assert_float(RefereeActor.WALK_CLIP_SPEED).is_equal_approx(0.78, 0.001)
+	assert_float(RefereeActor.JOG_CLIP_SPEED).is_equal_approx(6.04, 0.001)
+	assert_float(RefereeActor.WALK_SPEED / RefereeActor.WALK_CLIP_SPEED) \
+			.is_between(RefereeActor.MIN_ANIMATION_RATE, RefereeActor.MAX_ANIMATION_RATE)
+	assert_float(RefereeActor.JOG_SPEED / RefereeActor.JOG_CLIP_SPEED) \
+			.is_between(RefereeActor.MIN_ANIMATION_RATE, RefereeActor.MAX_ANIMATION_RATE)
+	assert_float(Timekeeper.WALK_CLIP_SPEED).is_equal(RefereeActor.WALK_CLIP_SPEED)
+	assert_float(Timekeeper.WALK_SPEED / Timekeeper.WALK_CLIP_SPEED) \
+			.is_between(Timekeeper.MIN_ANIMATION_RATE, Timekeeper.MAX_ANIMATION_RATE)
+
+
 func test_only_the_pelvis_keeps_a_position_track() -> void:
 	# Her proportions are her own: the base rig's bone offsets are dropped.
 	var actor: RefereeActor = _scene.get_node("RefereeActor")

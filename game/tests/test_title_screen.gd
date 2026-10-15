@@ -147,6 +147,10 @@ func test_configure_match_puts_the_picks_into_the_match() -> void:
 	assert_object(b.character_model_scene).is_equal(load(STUB_MODEL))
 	assert_that(a.attire_accent).is_equal(player.attire_accent)
 	assert_int(scene.match_seed).is_equal(4242)
+	assert_bool(scene.title_match).is_false()
+	opponent.championship = "AEW CHAMPION"
+	TitleScreen.configure_match(scene, player, opponent, 4243)
+	assert_bool(scene.title_match).is_true()
 
 ## The HUD plate is the only place a player is told who he is fighting, and
 ## the node names ("WrestlerA") are not that.

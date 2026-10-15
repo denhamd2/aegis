@@ -155,6 +155,17 @@ var _work_tie_up_after := 7
 
 
 var _cooldown: int = 0
+## A brief, occasional lateral step after an exchange. The old neutral was
+## either a continuous orbit or a perfectly frozen stare; this gives each AI
+## a small, replayable bit of footwork without turning range-keeping into a
+## circling routine.
+const FOOTWORK_CHANCE := 0.45
+const FOOTWORK_DELAY_TICKS := Vector2i(42, 76)
+const FOOTWORK_DURATION_TICKS := Vector2i(8, 15)
+var _footwork_wait := 0
+var _footwork_ticks := 0
+var _footwork_side := 1.0
+var _footwork_rolls := 0
 ## Latched while closing at a run, from the moment the charge starts until the
 ## running attack fires (or the charge is abandoned).
 ##
@@ -224,6 +235,14 @@ func _physics_process(_delta: float) -> void:
 	if _weapon_roll > 0:
 		_weapon_roll -= 1
 	_circle_tick += 1
+	# Footwork is presentation/gameplay input, so its timer shares the fixed
+	# match tick and pauses through committed moves, hit reactions and grapples.
+	if controller.fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION,
+			WrestlerFSM.State.RUN]):
+		if _footwork_wait > 0:
+			_footwork_wait -= 1
+		elif _footwork_ticks > 0:
+			_footwork_ticks -= 1
 	# A charge only survives while the man is actually free to run. If he is
 	# struck out of it, poll_input() returns early for the whole of HIT_REACT
 	# and the latch would otherwise still be set when he recovers -- resuming
@@ -704,6 +723,8 @@ func _poll_input() -> Dictionary:
 					* (controller.flow.tempo_scale(controller) if controller.flow else 1.0))
 			if cornered:
 				_cooldown = mini(_cooldown, corner_strike_cooldown_ticks)
+			else:
+				_schedule_footwork()
 		elif cornered:
 			# Stay square in front of him between shots rather than circle off.
 			var toward := to_target.normalized()
@@ -1037,6 +1058,10 @@ func _roll_tie_up_timing() -> void:
 func _circle_move(to_target: Vector3, distance: float) -> Vector2:
 	if distance < 0.001:
 		return Vector2.ZERO
+	if _footwork_wait <= 0 and _footwork_ticks > 0:
+		var toward := to_target.normalized()
+		var tangent := Vector3(-toward.z, 0.0, toward.x) * _footwork_side
+		return Vector2(tangent.x, tangent.z)
 	var inward := to_target.normalized()
 	var error := distance - circle_distance
 	# Avoid foot jitter around the preferred distance. Beyond this dead band he
@@ -1045,6 +1070,22 @@ func _circle_move(to_target: Vector3, distance: float) -> Vector2:
 		return Vector2.ZERO
 	var move := inward * signf(error) * circle_radial_pull
 	return Vector2(move.x, move.z)
+
+
+## One short step, on less than half the cooldowns. The roll belongs to this
+## AI's own seeded stream so mirrored opponents do not move in lockstep and a
+## replay keeps the same footwork.
+func _schedule_footwork() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 13007 + _player_index * 7919 + _footwork_rolls
+	_footwork_rolls += 1
+	_footwork_ticks = 0
+	_footwork_wait = 0
+	if rng.randf() >= FOOTWORK_CHANCE:
+		return
+	_footwork_side = -1.0 if rng.randi_range(0, 1) == 0 else 1.0
+	_footwork_wait = rng.randi_range(FOOTWORK_DELAY_TICKS.x, FOOTWORK_DELAY_TICKS.y)
+	_footwork_ticks = rng.randi_range(FOOTWORK_DURATION_TICKS.x, FOOTWORK_DURATION_TICKS.y)
 
 
 # --- No Holds Barred: weapons ------------------------------------------------

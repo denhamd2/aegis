@@ -65,3 +65,103 @@ each was found with an offline speech recogniser (Roman 16.98 s, Cody 7.26 s)
 and the director starts each call so the card goes up on that moment
 (`RingAnnouncer.NAME_AT`). Same caveats as the entrance music:
 owner-supplied, not a licensed or CC0 source.
+
+## Match commentary
+
+`commentary/tony_gunshot.ogg` is the owner-supplied Tony Schiavone call,
+"Oh my God, he shot him with a gun!" It is transcoded from the MP3 provided
+for this project, with a -12 LUFS loudness target and a -1.5 dBTP peak ceiling
+(the source dynamics yield -13 LUFS). The same rights caveat as the other
+owner-supplied recordings applies.
+
+`commentary/tony_danger_warning.ogg` is the owner-supplied Tony Schiavone
+call, "I don't like the look of this one bit." It plays once when a wrestler
+takes up a dangerous weapon, such as the rocket launcher, handgun, barbed-wire
+weapons, bed of nails, or light tubes. It is transcoded from the supplied MP3
+to mono Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS target and
+-1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/tony_roman_heel.ogg` is the owner-supplied Tony Schiavone call,
+"Hey Roman! Go fuck yourself!" It plays once when Roman uses a dangerous
+weapon or performs his in-match heel pose. It is transcoded from the supplied
+MP3 to mono Vorbis q6 at 48 kHz with metadata stripped, a -12 LUFS target and
+-1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/tony_title_match.ogg` is the owner-supplied Tony Schiavone call,
+"The championship is on the line, right here, right now." It plays in the
+pre-match broadcast when a rostered champion is in the bout. It is transcoded
+from the supplied MP3 to mono Vorbis q6 at 48 kHz with metadata stripped, a
+-12 LUFS target and -1.5 dBTP peak ceiling. The same rights caveat applies.
+
+`commentary/tony_cody_return.ogg` is the owner-supplied Tony Schiavone call,
+"Excalibur, I never thought we'd see the day when Cody Rhodes would return to
+an AEW ring. What a prick he turned out to be!" It is transcoded from the
+supplied MP3 with a -12 LUFS target and -1.5 dBTP peak ceiling (the source
+dynamics yield -14.5 LUFS). The same rights caveat applies.
+
+`commentary/tony_roman_record.ogg` is the owner-supplied Tony Schiavone call
+about Roman Reigns' undefeated run and being without The Bloodline tonight. It
+is transcoded from the supplied MP3 with a -12 LUFS target and -1.5 dBTP peak
+ceiling (the source dynamics yield -14.9 LUFS). The same rights caveat applies.
+
+`commentary/tony_roman_spear.ogg` is the owner-supplied Tony Schiavone call,
+"SPEARRRR!!! OH MY GOD!!!" It is transcoded from the supplied MP3 to mono
+Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS target and -1.5 dBTP
+peak ceiling (the short source measures -13.3 LUFS after encoding). The same
+rights caveat applies.
+
+`commentary/tony_enda_easter_egg.ogg` is the owner-supplied Tony Schiavone
+call, "Enda Dowling does indeed fear Omar Anshasi." It is transcoded from the
+supplied MP3 to mono Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS
+target and -1.5 dBTP peak ceiling. It is a rare match cutaway when the Enda
+sign is raised; the same rights caveat applies.
+
+The following new Tony Schiavone lines are owner-supplied recordings,
+transcoded from the supplied MP3s to mono Vorbis q6 at 48 kHz with metadata
+stripped and a -12 LUFS target and -1.5 dBTP peak ceiling. They are cued by
+MatchAudio; the same rights caveat applies:
+
+- `commentary/tony_submission.ogg`: "He's got it locked in tight, and there
+  is nowhere to go!" On the first submission hold.
+- `commentary/tony_love_this_business.ogg`: "This is why we love this
+  business right here." After a wrestler kicks out following a two-count.
+- `commentary/tony_what_a_night.ogg`: "What a night this has been,
+  Excalibur. What a night." After the post-match review, before Excalibur's
+  existing sign-off.
+- `commentary/tony_crowd_up.ogg`: "This crowd is up on their feet already."
+  Tony's reply to Excalibur's pre-match crowd line, before the entrances.
+
+`commentary/excalibur_signoff.ogg` is the owner-supplied Excalibur sign-off,
+"We'll see you right back here next Wednesday — same time, same place." It is
+transcoded from the supplied MP3 to mono Vorbis q6 at 48 kHz with metadata
+stripped and a -12 LUFS target and -1.5 dBTP peak ceiling (the short source
+measures -13.1 LUFS after encoding). The same rights caveat applies.
+
+The following Excalibur lines are also owner-supplied MP3s, transcoded to
+mono Vorbis q6 at 48 kHz with metadata stripped and a -12 LUFS target and
+-1.5 dBTP peak ceiling. Their transcript and cue are in MatchAudio and the
+entrance timeline; the same rights caveat applies:
+
+- `commentary/excalibur_wednesday.ogg`: "It's Wednesday night, and you know
+  what that means!" The show-opening call, over the establishing shot.
+- `commentary/excalibur_crowd.ogg`: "I'll tell you, Tony, this crowd has been
+  buzzing about this one all week!" The pre-match crowd call, after Justin
+  Roberts' main-event introduction and before the entrances.
+- `commentary/excalibur_comeback.ogg`: "He's digging deep, Tony. I don't know
+  how much more he has left." The first earned fired-up comeback of the match.
+- `commentary/excalibur_cody_career.ogg`: "Cody Rhodes has built his entire
+  career on proving people wrong, Tony." Excalibur's response after Tony's
+  Cody-return call, during Cody's entrance.
+- `commentary/excalibur_superman_punch.ogg`: "That Superman Punch came out of
+  nowhere!" After Roman lands his Superman Punch signature move.
+- `commentary/excalibur_two_count.ogg`: "A two-count, maybe two and a half —
+  this is anybody's match." After a wrestler kicks out following a two-count,
+  before Tony's follow-up call.
+- `commentary/excalibur_kickout_one_seven_eighths.ogg`: "A kick-out at one
+  and seven-eighths — somehow he found a way." A randomized alternate for the
+  same two-count kickout beat.
+- `commentary/excalibur_finish.ogg`: "Ring the bell! That's it! It's over!"
+  The match-ending call, after the finish bell.
+- `commentary/excalibur_coolest_job.ogg`: "Sometimes you just have to take a
+  moment and realize we've got the coolest job in the world." A second
+  post-bell call, queued after the finish call.

@@ -5,6 +5,10 @@ extends Node3D
 
 @export var match_seed: int = 1
 
+## Set by the roster launch path when a championship holder is in the match.
+## Entrances use this to add title-match broadcast copy before the walkouts.
+var title_match := false
+
 ## Where to write this match's ReplayResource once it ends. Empty in normal
 ## play; set from the command line by CaptureHarness so a capture can record
 ## the match it is about to replay. Nothing saved a recording before this
@@ -89,7 +93,7 @@ func _ready() -> void:
 	audio = MatchAudio.new()
 	audio.name = "MatchAudio"
 	add_child(audio)
-	audio.watch(referee, [wrestler_a, wrestler_b], crowd)
+	audio.watch(referee, [wrestler_a, wrestler_b], crowd, match_seed)
 	# The two ringside sign fans (SignFans), built with the arena.
 	var sign_fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
 	if sign_fans:
@@ -159,13 +163,19 @@ func _ready() -> void:
 	# its beats are frame-labelled.
 	var capturing := CaptureHarness != null and CaptureHarness.is_capturing()
 	if entrances and not capturing and record_replay_path == "":
-		_set_look(ArenaLighting.Look.ENTRANCE)
+		# The arena establishes the broadcast before it becomes an entrance
+		# concert. Keep the house, bowl and ring readable until the first music
+		# cue, then let the low-key entrance look take over.
+		_set_look(ArenaLighting.Look.MATCH)
 		var director := EntranceDirector.new()
 		director.name = "EntranceDirector"
+		director.title_match = title_match
 		add_child(director)
 		director.bell.connect(_begin_live)
 		# The match look from the introductions on, so the stare-down is lit.
 		director.cue.connect(func(what: String) -> void:
+			if what == "tron_on":
+				_set_look(ArenaLighting.Look.ENTRANCE)
 			if what == "lights_up":
 				_set_look(ArenaLighting.Look.MATCH))
 		audio.follow(director)
@@ -175,6 +185,7 @@ func _ready() -> void:
 		if referee_actor:
 			referee_actor.follow(director)
 		director.begin(self)
+		audio.share_voice_lane(director.voice_announcer())
 	else:
 		_begin_live()
 
@@ -265,6 +276,8 @@ func _on_match_won(winner: WrestlerController, method: String) -> void:
 		post_match.begin(camera, winner, wrestler_b if winner == wrestler_a else wrestler_a,
 				replay_buffer, _stats)
 		# Then the choice of what next: rematch, change wrestlers, title, quit.
+		if audio:
+			audio.follow_post_match(post_match)
 		post_match.finished.connect(func() -> void:
 			var menu := PostMatchMenu.new()
 			menu.name = "PostMatchMenu"

@@ -370,6 +370,10 @@ var _cut_facing := Vector3.ZERO
 var _cut_fresh := false
 var _cutaway_pending := false
 var _sign_fans: Node
+var _enda_cutaway_pending := false
+var _enda_cutaway_hold := 0.0
+var _enda_sign_subject: Node3D
+var _enda_sign_cutaway := false
 var _kickout_reaction := false
 const KICKOUT_REACTION_AFTER := 0.9
 var grapple_rig: GrappleRig
@@ -396,6 +400,7 @@ func _ready() -> void:
 		wc.knocked_down.connect(func(_who): add_trauma(TRAUMA_KNOCKDOWN))
 		wc.set_piece_landed.connect(_on_set_piece_landed)
 	add_to_group(WeaponActor.LISTENERS)
+	add_to_group("match_camera")
 
 func _physics_process(delta: float) -> void:
 	if mode == Mode.ENTRANCE:
@@ -737,10 +742,20 @@ func _update_mode(delta: float) -> void:
 		elif _held >= _cut_hold:
 			mode = _cut_return
 			_cut = -1
+			_enda_sign_cutaway = false
+			_enda_sign_subject = null
 			_held = 0.0
 		return
 
 	_held += delta
+	if _enda_cutaway_pending:
+		_enda_cutaway_pending = false
+		if (
+				(grapple_rig == null or not grapple_rig.is_active())
+				and _try_cut(Cut.CUTAWAY, _enda_sign_subject, null, _enda_cutaway_hold)
+		):
+			_enda_sign_cutaway = true
+			return
 	if _cutaway_pending:
 		_cutaway_pending = false
 		if (grapple_rig == null or not grapple_rig.is_active()) and _try_cut(Cut.CUTAWAY, wrestler_a, null):
@@ -1160,7 +1175,7 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 
 
 ## Cuts to `kind` if the shot grammar allows it now.
-func _try_cut(kind: int, subject: Node3D, other: Node3D) -> bool:
+func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0) -> bool:
 	if not CameraSettings.cuts_enabled() or subject == null:
 		return false
 	# 2K26's gameplay camera does not cut on a strike, a slam or a taunt: the
@@ -1176,13 +1191,46 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D) -> bool:
 	_cut = kind
 	_cut_subject = subject
 	_cut_other = other
-	_cut_hold = CUT_HOLD[kind]
+	_cut_hold = hold_override if hold_override > 0.0 else CUT_HOLD[kind]
 	_cut_grapple = false
 	_cut_landed = false
 	_cut_side = Vector3.ZERO
 	_cut_facing = Vector3.ZERO
 	_cut_fresh = true
 	_held = 0.0
+	return true
+
+
+## Queue a broadcast cut to the existing Enda sign, only when the regular
+## camera grammar can safely take a cut. MatchAudio waits for the next physics
+## frame to land it, then returns to this shot after the commentary.
+func request_enda_sign_cutaway(hold_seconds: float) -> bool:
+	if not can_request_enda_sign_cutaway():
+		return false
+	var fan := _sign_fans.call("enda_easter_egg_fan") as Node3D
+	_enda_sign_subject = fan
+	_enda_cutaway_hold = maxf(hold_seconds, MIN_SHOT)
+	_enda_cutaway_pending = true
+	return true
+
+
+func can_request_enda_sign_cutaway() -> bool:
+	if (
+			not CameraSettings.cuts_enabled()
+			or CameraSettings.gameplay()
+			or (mode != Mode.HARD_CAM and mode != Mode.RINGSIDE)
+			or _held < MIN_SHOT
+			or (referee != null and referee.is_pin_active())
+			or (grapple_rig != null and grapple_rig.is_active())
+	):
+		return false
+	if _sign_fans == null and is_inside_tree():
+		_sign_fans = get_tree().get_first_node_in_group("sign_fans")
+	if _sign_fans == null or not _sign_fans.has_method("enda_easter_egg_fan"):
+		return false
+	var fan := _sign_fans.call("enda_easter_egg_fan") as Node3D
+	if fan == null or not is_instance_valid(fan):
+		return false
 	return true
 
 
@@ -1246,9 +1294,16 @@ func _event_shot(delta: float) -> bool:
 			lens = 32.0
 			focus = true
 		Cut.CUTAWAY:
-			at = CUTAWAY_AT
-			look = CUTAWAY_LOOK
-			lens = CUTAWAY_FOV
+			if _enda_sign_cutaway and _cut_subject is SignFan:
+				look = _cut_subject.global_position + Vector3.UP * 1.55
+				# Stay on the ring side of the barricade so it cannot obscure the
+				# sign board as it rises; the established crowd behind it fills in.
+				at = look + Vector3(-1.6, 0.55, 0.6)
+				lens = 38.0
+			else:
+				at = CUTAWAY_AT
+				look = CUTAWAY_LOOK
+				lens = CUTAWAY_FOV
 		Cut.WEAPON:
 			# A weapon shot: three-quarter on the man taking it, wider than a
 			# strike's so the weapon is in the frame with the two of them.

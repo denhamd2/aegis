@@ -68,6 +68,9 @@ func raise(seconds: float) -> void:
 	if stage == Stage.SEATED:
 		stage = Stage.RISING
 		_player.play(RISE, BLEND)
+	elif stage == Stage.LOWERING:
+		stage = Stage.HOLDING
+		_player.play(HOLD, BLEND)
 
 
 ## Back into his seat as soon as he can.
