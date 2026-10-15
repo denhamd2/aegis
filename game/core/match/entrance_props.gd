@@ -170,7 +170,9 @@ func _wear_fala() -> void:
 	for i in _fala_skeleton.get_bone_count():
 		_fala_map.append(_his.find_bone(_fala_skeleton.get_bone_name(i)))
 	_his.skeleton_updated.connect(_sync_fala)
+	_his.skeleton_updated.connect(_follow_title)
 	_sync_fala()
+	_follow_title()
 
 
 func _sync_fala() -> void:
@@ -187,6 +189,8 @@ func _sync_fala() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(_his) and _his.skeleton_updated.is_connected(_sync_fala):
 		_his.skeleton_updated.disconnect(_sync_fala)
+	if is_instance_valid(_his) and _his.skeleton_updated.is_connected(_follow_title):
+		_his.skeleton_updated.disconnect(_follow_title)
 	# It hangs off his skeleton, not off this node, so it does not go with it.
 	# (Unless it was taken: whoever carries it owns it then.)
 	if is_instance_valid(_fala) and _fala.get_parent() != self and not _fala_taken:
@@ -260,10 +264,6 @@ func set_fala_visible(on: bool) -> void:
 		_fala.visible = on
 
 
-func _process(_delta: float) -> void:
-	_follow()
-
-
 func _follow() -> void:
 	if _w == null or _title_state == "carried":
 		return
@@ -285,6 +285,13 @@ func _follow() -> void:
 		var hips := _bone("pelvis")
 		if hips != Vector3.INF:
 			_title.global_transform = Transform3D(_pelvis_turn() * turn, hips)
+
+
+## Called after the wrestler's animation and skeleton modifiers have settled.
+## Reading a bone from `_process` can use the previous pose on a moving frame,
+## which makes the rigid belt trail his waist at ringside.
+func _follow_title() -> void:
+	_follow()
 
 
 ## The pelvis's rotation away from its rest pose, in world space.

@@ -6837,6 +6837,107 @@ CLIPS["Weapon_Shovel_Overhead"] = [
     (24, R()),
 ]
 
+# 24 frames (0.8 s): the crutch is held by the foot end, loaded above the
+# shoulder and chopped down with a small forward step. Keep its hands closer
+# to the torso than the bat swing; the crutch's offset upper grip otherwise
+# pulls the left wrist past its comfortable reach.
+CLIPS["Weapon_Crutch_Overhead"] = [
+    (0, R()),
+    (5, R(pelvis=(0.0, -0.04, 0.800), hips=(4, 0, 0), spine=(12, 0, 0), head=(6, 0, 0),
+           hand_r=(0.14, 0.04, 1.78), elbow_r=(0.75, -0.32, 0.62),
+           hand_l=(-0.14, 0.04, 1.76), elbow_l=(-0.75, -0.32, 0.62), fist_r=1.0, fist_l=1.0)),
+    (9, R(pelvis=(0.0, 0.10, 0.770), hips=(-10, 0, 0), spine=(-24, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.12, 0.42, 1.54), elbow_r=(0.78, -0.36, 0.12),
+           hand_l=(-0.12, 0.40, 1.52), elbow_l=(-0.78, -0.36, 0.12), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(14, 0, 0))),
+    (14, R(pelvis=(0.0, 0.08, 0.780), hips=(-12, 0, 0), spine=(-28, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.08, 0.35, 1.36), hand_l=(-0.10, 0.33, 1.34), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(10, 0, 0))),
+    (19, R(pelvis=(0.0, 0.03, 0.790), hips=(-3, 0, 0), spine=(-8, 0, 0),
+           hand_r=(0.20, 0.30, 1.24), hand_l=(-0.18, 0.28, 1.22), fist_r=0.95, fist_l=0.95)),
+    (24, R()),
+]
+
+# 22 frames (0.733 s): a compact, single-hand overhand bonk. The off hand
+# guards the ribs; the head and shoulder follow through instead of rotating
+# the whole torso like a baseball swing.
+CLIPS["Weapon_Bonk_Overhand"] = [
+    (0, R()),
+    (4, R(pelvis=(0.02, -0.03, 0.800), hips=(2, 8, 0), spine=(6, 12, 0), head=(2, -8, 0),
+           hand_r=(0.42, 0.16, 1.62), elbow_r=(0.92, -0.34, 0.48),
+           hand_l=(-0.30, 0.18, 1.18), elbow_l=(-0.66, -0.16, 0.12), fist_r=0.95)),
+    (8, R(pelvis=(0.0, 0.10, 0.790), hips=(-8, -12, 0), spine=(-18, -16, 0), head=(-6, 8, 0),
+           hand_r=(0.16, 0.44, 1.50), elbow_r=(0.82, -0.38, 0.12),
+           hand_l=(-0.28, 0.18, 1.16), elbow_l=(-0.62, -0.16, 0.10), fist_r=1.0,
+           foot_l=(-0.20, 0.38, 0.104))),
+    (12, R(pelvis=(0.0, 0.08, 0.790), hips=(-10, -16, 0), spine=(-20, -18, 0), head=(-8, 10, 0),
+           hand_r=(0.12, 0.32, 1.28), elbow_r=(0.76, -0.34, -0.10),
+           hand_l=(-0.24, 0.18, 1.14), elbow_l=(-0.60, -0.14, 0.08), fist_r=1.0,
+           foot_l=(-0.20, 0.38, 0.104))),
+    (17, R()), (22, R()),
+]
+
+# 24 frames (0.8 s): drive a broad flat surface down and forward, then let the
+# hands recoil apart. The flat face remains turned toward the opponent at the
+# hit, so the belt and cookie sheet read as a slap rather than an edge-on club.
+CLIPS["Weapon_Flat_Face"] = [
+    (0, R()),
+    (5, R(pelvis=(0.0, -0.03, 0.800), hips=(3, 0, 0), spine=(10, 0, 0), head=(4, 0, 0),
+           hand_r=(0.22, 0.04, 1.74), elbow_r=(0.88, -0.34, 0.58),
+           hand_l=(-0.22, 0.04, 1.72), elbow_l=(-0.88, -0.34, 0.58), fist_r=1.0, fist_l=1.0)),
+    (9, R(pelvis=(0.0, 0.10, 0.770), hips=(-10, 0, 0), spine=(-22, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.20, 0.42, 1.48), elbow_r=(0.86, -0.38, 0.10),
+           hand_l=(-0.20, 0.40, 1.46), elbow_l=(-0.86, -0.38, 0.10), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(14, 0, 0))),
+    (14, R(pelvis=(0.0, 0.06, 0.780), hips=(-12, 0, 0), spine=(-28, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.18, 0.34, 1.28), hand_l=(-0.18, 0.32, 1.26), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.42, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(10, 0, 0))),
+    (19, R(pelvis=(0.0, 0.02, 0.790), hips=(-3, 0, 0), spine=(-8, 0, 0),
+           hand_r=(0.24, 0.26, 1.18), hand_l=(-0.20, 0.24, 1.16), fist_r=0.95, fist_l=0.95)),
+    (24, R()),
+]
+
+# 20 frames (0.667 s): chain wrapped over the knuckles, loaded beside the
+# shoulder and punched straight through. Short path and tight guard make it
+# read as a fist strike rather than a whip lash.
+CLIPS["Weapon_Chain_Fist"] = [
+    (0, R()),
+    (4, R(pelvis=(0.02, -0.06, 0.800), hips=(-3, 8, 0), spine=(-8, 12, 0), head=(4, -8, 0),
+           hand_r=(0.48, 0.12, 1.34), elbow_r=(0.96, -0.30, 0.32),
+           hand_l=(-0.22, 0.12, 1.18), elbow_l=(-0.58, -0.12, 0.06), fist_r=1.0)),
+    (7, R(pelvis=(0.0, 0.14, 0.770), hips=(-12, 0, 0), spine=(-22, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.12, 0.52, 1.22), elbow_r=(0.82, -0.34, -0.08),
+           hand_l=(-0.20, 0.12, 1.16), elbow_l=(-0.56, -0.12, 0.06), fist_r=1.0,
+           foot_l=(-0.22, 0.42, 0.104))),
+    (11, R(pelvis=(0.0, 0.12, 0.780), hips=(-14, 0, 0), spine=(-24, 0, 0), head=(-8, 0, 0),
+           hand_r=(0.08, 0.48, 1.18), elbow_r=(0.78, -0.30, -0.14),
+           hand_l=(-0.20, 0.12, 1.16), elbow_l=(-0.56, -0.12, 0.06), fist_r=1.0,
+           foot_l=(-0.22, 0.42, 0.104))),
+    (16, R(pelvis=(0.0, 0.04, 0.790), hips=(-4, 0, 0), spine=(-9, 0, 0),
+           hand_r=(0.22, 0.36, 1.12), hand_l=(-0.18, 0.12, 1.16), fist_r=0.95)),
+    (20, R()),
+]
+
+# 24 frames (0.8 s): the ladder is gathered at the torso, raised only as high
+# as the wrestler can control it, and driven down with a planted step. The
+# compact hand spacing avoids wrenching either arm at full extension.
+CLIPS["Weapon_Ladder_Overhead"] = [
+    (0, R()),
+    (5, R(pelvis=(0.0, -0.04, 0.800), hips=(3, 0, 0), spine=(10, 0, 0), head=(5, 0, 0),
+           hand_r=(0.16, 0.02, 1.70), elbow_r=(0.82, -0.34, 0.55),
+           hand_l=(-0.16, 0.02, 1.68), elbow_l=(-0.82, -0.34, 0.55), fist_r=1.0, fist_l=1.0)),
+    (9, R(pelvis=(0.0, 0.08, 0.770), hips=(-8, 0, 0), spine=(-20, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.14, 0.38, 1.48), elbow_r=(0.80, -0.36, 0.08),
+           hand_l=(-0.14, 0.36, 1.46), elbow_l=(-0.80, -0.36, 0.08), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.40, 0.104), foot_r=(0.27, -0.18, 0.130), ankle_r=(14, 0, 0))),
+    (14, R(pelvis=(0.0, 0.06, 0.780), hips=(-10, 0, 0), spine=(-25, 0, 0), head=(-7, 0, 0),
+           hand_r=(0.12, 0.30, 1.30), hand_l=(-0.12, 0.28, 1.28), fist_r=1.0, fist_l=1.0,
+           foot_l=(-0.22, 0.40, 0.104), foot_r=(0.27, -0.18, 0.118), ankle_r=(10, 0, 0))),
+    (19, R(pelvis=(0.0, 0.02, 0.790), hips=(-3, 0, 0), spine=(-8, 0, 0),
+           hand_r=(0.18, 0.24, 1.18), hand_l=(-0.16, 0.22, 1.16), fist_r=0.95, fist_l=0.95)),
+    (24, R()),
+]
+
 # 18 frames (0.6 s, 36 ticks), contact on frame 6: drawn back to the hip, then
 # driven straight into his gut off a lunge.
 CLIPS["Weapon_Thrust"] = [

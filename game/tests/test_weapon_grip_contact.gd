@@ -10,19 +10,9 @@ extends GdUnitTestSuite
 
 const WRESTLER_SCENE := preload("res://scenes/wrestler.tscn")
 const CONTACT_M := 0.03
-## Swings whose left hand still comes off the handle at full extension, and
-## by how much (m) at worst: the old shared baseball swing reaching past the
-## arm. Phase 3 (a swing per real motion) re-authors every one of these and
-## empties this list; until then a weapon may not get WORSE than its entry,
-## and nothing new may join it.
-const KNOWN_SWING_SLIPS := {
-	&"board_with_nails": 0.07, &"shovel": 0.10, &"crutch": 0.07,
-	&"inflatable_banana": 0.07, &"light_tubes": 0.06,
-	&"barbed_wire_board": 0.71, &"ring_bell": 0.08, &"frying_pan": 0.06,
-	# the overhead slam and the thrust with wide things (phase 3), the spray (4)
-	&"steel_steps": 0.12, &"championship_belt": 0.12, &"briefcase": 0.40, &"table": 0.36,
-	&"ladder": 0.68, &"fire_extinguisher": 0.42,
-}
+## The phase-3 gate has no per-weapon exceptions: every swing must keep the
+## palms within CONTACT_M of their grip markers.
+const KNOWN_SWING_SLIPS := {}
 ## Carries a hand cannot quite close on, by how much: the folded table's far
 ## corner sits at the very end of his left arm's reach (4 cm at every carry
 ## height and distance tried). Phase 2's two-hand lift revisits it.
@@ -106,11 +96,10 @@ func test_every_hand_is_on_its_grip() -> void:
 		var m: Array = await _misses(def.id)
 		var carry := maxf(m[0], m[1])
 		var swing := maxf(m[2], m[3])
-		var allowed := maxf(CONTACT_M, float(KNOWN_SWING_SLIPS.get(def.id, 0.0)))
-		var off := carry > maxf(CONTACT_M, float(KNOWN_CARRY_SLIPS.get(def.id, 0.0))) or swing > allowed
+		var off := carry > maxf(CONTACT_M, float(KNOWN_CARRY_SLIPS.get(def.id, 0.0))) or swing > CONTACT_M
 		if off:
 			bad += 1
-		report.append("%-20s carry r %4.0f l %4.0f  swing r %4.0f l %4.0f cm%s" % [
+		report.append("%-20s carry r %5.1f l %5.1f  swing r %5.1f l %5.1f cm%s" % [
 			def.id, m[0] * 100, m[1] * 100, m[2] * 100, m[3] * 100, "  <--" if off else ""])
 	print("\n".join(report))
 	assert_int(bad).override_failure_message("%d weapons with a hand off its grip:\n%s" % [

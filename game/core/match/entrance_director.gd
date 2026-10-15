@@ -916,7 +916,7 @@ func _add_faceoff() -> void:
 			[_a, a_in, a.origin, face_b, "strikes/entrance_walk"],
 			[_b, b_in, b.origin, face_a, "strikes/entrance_walk"]]})
 	_beats.append({"kind": "pair", "ticks": FACEOFF_TURN_TICKS + FACEOFF_SET_TICKS,
-			"shot": "faceoff", "moves": [
+			"shot": "faceoff", "snap_end": true, "moves": [
 			[_a, a.origin, a.origin, face_a, _wait_clip(_a)],
 			[_b, b.origin, b.origin, face_b, _wait_clip(_b)]]})
 
@@ -997,7 +997,7 @@ func _add_entrance(w: WrestlerController, portal_x: float, side: String) -> void
 			"path": [inside, mark.origin],
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true})
+			"shot": "ringside", "settle": true, "snap_end": true})
 
 
 func _start_beat() -> void:
@@ -1131,11 +1131,13 @@ func _physics_process(delta: float) -> void:
 		"pose":
 			_place(w, w.global_position, beat["facing"], false, delta)
 		"turn":
-			_place(w, w.global_position, beat["facing"], false, delta)
+			_place(w, w.global_position, beat["facing"],
+					beat.get("snap_end", false) and _tick >= int(beat["ticks"]), delta)
 		"pair":
 			for move: Array in beat["moves"]:
 				var m: WrestlerController = move[0]
-				_place(m, (move[1] as Vector3).lerp(move[2], t), move[3], false, delta)
+				_place(m, (move[1] as Vector3).lerp(move[2], t), move[3],
+						beat.get("snap_end", false) and _tick >= int(beat["ticks"]), delta)
 		"clip":
 			var from: Vector3 = beat["from"]
 			var to: Vector3 = beat["to"]
@@ -1158,7 +1160,7 @@ func _physics_process(delta: float) -> void:
 ## Skip straight to the bell, both men on their marks.
 func skip() -> void:
 	_beat = _beats.size()
-	_ring_bell()
+	_ring_bell_at_marks(true)
 
 
 ## Small and out of the way, bottom right, above the corner.
@@ -1271,6 +1273,10 @@ func skip_entrance() -> void:
 
 
 func _ring_bell() -> void:
+	_ring_bell_at_marks(false)
+
+
+func _ring_bell_at_marks(place_on_marks: bool) -> void:
 	if _done:
 		return
 	_done = true
@@ -1310,7 +1316,12 @@ func _ring_bell() -> void:
 		_backlight = null
 	_smoke_off()
 	for w: WrestlerController in [_a, _b]:
-		w.global_transform = _mark[w]
+		# The entrance route must deliver him to his mark. Resetting the transform
+		# here hid route errors in tests and appeared as a teleport at the bell.
+		# The explicit skip action is the exception: skip places each wrestler at
+		# the match start without running his entrance route.
+		if place_on_marks:
+			w.global_transform = _mark[w]
 		MatchSmoothing.snap(w)
 		w.velocity = Vector3.ZERO
 		w.visible = true
@@ -1438,7 +1449,7 @@ func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -
 			"speed": ROMAN_WALK_SPEED, "walk_clip": ROMAN_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "end_wide", "settle": true,
+			"shot": "end_wide", "settle": true, "snap_end": true,
 			"events": [[SETTLE_TICKS, "tron_off"], [SETTLE_TICKS, "dim_off"]]})
 	# Nothing moves on until the last prop is on the timekeeper's table.
 	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "end_wide",
@@ -1631,7 +1642,8 @@ func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -
 			"speed": CODY_WALK_SPEED, "walk_clip": CODY_WALK_CLIP,
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "end_wide", "settle": true, "events": [[SETTLE_TICKS, "tron_off"]]})
+			"shot": "end_wide", "settle": true, "snap_end": true,
+			"events": [[SETTLE_TICKS, "tron_off"]]})
 	# Nothing moves on until the coat is on the timekeeper's table.
 	_beats.append({"kind": "hold", "who": w, "ticks": 30, "shot": "end_wide",
 			"wait_idle": true})

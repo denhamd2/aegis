@@ -130,6 +130,25 @@ func test_in_no_holds_barred_he_goes_out_for_one() -> void:
 	assert_bool(started).is_true()
 
 
+func test_outside_weapon_approach_routes_around_the_ring() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	var cody := pair[1]
+	roman.outside_ring = true
+	cody.outside_ring = true
+	# Opponents on opposite sides have the deck between them. Each should
+	# start around the southern (steps-free) side instead of pushing at the
+	# ring through the apron.
+	roman.global_position = Vector3(5.0, 0.0, 0.0)
+	cody.global_position = Vector3(-5.0, 0.0, 0.0)
+	var roman_move := roman.ai._outside_weapon_move(cody.global_position)
+	var cody_move := cody.ai._outside_weapon_move(roman.global_position)
+	assert_float(roman_move.y).is_greater(0.1)
+	assert_float(cody_move.y).is_greater(0.1)
+	assert_float(roman_move.length()).is_equal_approx(1.0, 0.001)
+	assert_float(cody_move.length()).is_equal_approx(1.0, 0.001)
+
+
 func test_under_the_ring_he_hands_the_wheel_a_weapon_in_stock() -> void:
 	var pair := _pair(true)
 	var roman := pair[0]

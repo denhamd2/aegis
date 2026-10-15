@@ -43,7 +43,14 @@ const SWING_PROFILES := {
 	"hockey_stick": "slapshot",
 	"kendo_stick": "kendo_chop",
 	"trash_can": "two_hand_slam",
+	"table": "table_slam",
 	"shovel": "shovel_flat",
+	"crutch": "crutch_overhead",
+	"ring_bell": "bonk_overhand", "frying_pan": "bonk_overhand",
+	"championship_belt": "bonk_overhand", "cookie_sheet": "flat_face", "stop_sign": "flat_face",
+	"briefcase": "flat_face",
+	"ladder": "ladder_overhead",
+	"chain": "chain_fist",
 }
 ## Ranged: they hit whoever is in front of him out to this far, not at the
 ## contact sphere (WrestlerController resolves them).
@@ -97,7 +104,7 @@ const TABLE := [
 	["ring_bell", "Ring Bell", WeaponDef.Family.CARRIED, "ring_bell", "RingBell_Clean", "", "", "",
 		WeaponDef.Swing.CHOP, 9.0, 2.0, 0, 0, false, false, 0.0, "bell_ding", [], {}],
 	["championship_belt", "Championship Belt", WeaponDef.Family.CARRIED, "", "", "", "", "",
-		WeaponDef.Swing.OVERHEAD, 9.0, 2.0, 0, 0, true, false, 0.0, "hit_metal", ["roman"], {}],
+		WeaponDef.Swing.OVERHEAD, 9.0, 2.0, 0, 0, false, false, 0.0, "hit_metal", ["roman"], {}],
 	["cookie_sheet", "Cookie Sheet", WeaponDef.Family.CARRIED, "cookie_sheet", "CookieSheet_Clean",
 		"CookieSheet_Dented", "", "", WeaponDef.Swing.OVERHEAD, 6.0, 1.0, 2, 0, false, false, 0.0, "hit_metal",
 		[], {}],
@@ -448,6 +455,36 @@ const SWING_PATHS := {
 		[0.375, Vector3(0.06, 0.42, -0.40), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
 		[0.52, Vector3(0.05, -0.02, -0.40), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
 	],
+	"crutch_overhead": [
+		[0.22, Vector3(0.02, 0.42, 0.02), Vector3(0.0, 0.40, 0.92), Vector3(0.0, 0.92, -0.40)],
+		[0.375, Vector3(0.00, 0.28, -0.25), Vector3(0.0, -0.12, -0.99), Vector3(0.0, -0.99, 0.12)],
+		[0.52, Vector3(0.00, 0.06, -0.24), Vector3(0.0, -0.82, -0.57), Vector3(0.0, -0.57, 0.82)],
+	],
+	"bonk_overhand": [
+		[0.20, Vector3(0.20, 0.40, 0.02), Vector3(0.0, 0.55, 0.84), Vector3(0.0, 0.84, -0.55)],
+		[0.364, Vector3(0.10, 0.34, -0.30), Vector3(0.0, -0.30, -0.95), Vector3(0.0, -0.95, 0.30)],
+		[0.52, Vector3(0.06, 0.20, -0.28), Vector3(0.0, -0.82, -0.57), Vector3(0.0, -0.57, 0.82)],
+	],
+	"flat_face": [
+		[0.22, Vector3(0.02, 0.30, -0.02), Vector3(0.0, 0.35, 0.94), Vector3(0.0, 0.94, -0.35)],
+		[0.375, Vector3(0.00, 0.20, -0.18), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
+		[0.52, Vector3(0.00, 0.04, -0.20), Vector3(0.0, -0.82, -0.57), Vector3(0.0, -0.57, 0.82)],
+	],
+	"chain_fist": [
+		[0.20, Vector3(0.18, 0.24, 0.02), Vector3(0.2, 0.3, 0.9), Vector3(0.0, 1.0, 0.0)],
+		[0.35, Vector3(0.10, 0.12, -0.32), Vector3(-0.1, -0.2, -0.97), Vector3(0.0, -0.97, 0.2)],
+		[0.55, Vector3(0.02, 0.04, -0.24), Vector3(-0.3, -0.8, -0.5), Vector3(0.0, -0.5, 0.86)],
+	],
+	"ladder_overhead": [
+		[0.22, Vector3(0.00, 0.20, 0.00), Vector3(0.0, 0.35, 0.94), Vector3(0.0, 0.94, -0.35)],
+		[0.375, Vector3(0.00, -0.02, -0.15), Vector3(0.0, -0.12, -0.99), Vector3(0.0, -0.99, 0.12)],
+		[0.52, Vector3(0.00, 0.00, -0.12), Vector3(0.0, -0.82, -0.57), Vector3(0.0, -0.57, 0.82)],
+	],
+	"table_slam": [
+		[0.22, Vector3(0.06, 0.38, 0.02), Vector3(0.0, 0.45, 0.9), Vector3(0.0, 0.9, -0.45)],
+		[0.375, Vector3(0.04, 0.30, -0.28), Vector3(0.0, -0.15, -0.99), Vector3(0.0, -0.99, 0.15)],
+		[0.52, Vector3(0.04, 0.02, -0.30), Vector3(0.0, -0.85, -0.5), Vector3(0.0, -0.5, 0.85)],
+	],
 	"thrust": [
 		[0.17, Vector3(0.20, -0.14, 0.10), Vector3(-0.1, 0.1, -1.0), Vector3(0.0, 1.0, 0.0)],
 		[0.333, Vector3(0.08, -0.06, -0.45), Vector3(-0.1, 0.05, -1.0), Vector3(0.0, 1.0, 0.0)],
@@ -472,8 +509,8 @@ const SWING_PATHS := {
 	# the extinguisher brought up and its horn pointed at him for the spray's
 	# 40 ticks (20 to 60 of 80)
 	"spray": [
-		[0.20, Vector3(0.12, -0.12, -0.34), Vector3(0.0, 0.55, -0.85), Vector3(0.0, 0.85, 0.55)],
-		[0.76, Vector3(0.12, -0.12, -0.34), Vector3(0.0, 0.55, -0.85), Vector3(0.0, 0.85, 0.55)],
+		[0.20, Vector3(0.00, 0.05, -0.30), Vector3(0.0, 0.55, -0.85), Vector3(0.0, 0.85, 0.55)],
+		[0.76, Vector3(0.00, 0.05, -0.30), Vector3(0.0, 0.55, -0.85), Vector3(0.0, 0.85, 0.55)],
 	],
 	# the throw (WrestlerController "throw"): up behind his head, let go at 12/26
 	"throw": [

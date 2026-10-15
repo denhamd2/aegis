@@ -811,6 +811,9 @@ func _poll_input() -> Dictionary:
 ## Where along the ropes he follows the other man through: inside
 ## WrestlerController.ROPE_CROSS_LANE, clear of the turnbuckles.
 const FOLLOW_LANE := 1.6
+## Outside weapon fights must go around the apron, not steer straight through
+## the ring deck. The perimeter stays clear of the deck and the ring steps.
+const OUTSIDE_ROUTE_RADIUS := WrestlerController.DECK_KEEP_OUT + 0.4
 
 
 ## The walk to the ropes on the side the other man is on, then into them
@@ -861,6 +864,72 @@ func _through_ropes_toward(him: Vector3) -> Vector2:
 		return Vector2(push.x, push.z)
 	var dir := to_goal.normalized()
 	return Vector2(dir.x, dir.z)
+
+
+## A weapon approach when both men are on the floor. A straight line between
+## wrestlers on opposite sides runs into the solid ring deck, where both AIs
+## used to push forever without making progress. Walk along the outside edge
+## to the next corner on the shorter safe arc; the entrance steps occupy the
+## (+X, -Z) corner, so prefer the other arc whenever it is available.
+func _outside_weapon_move(him: Vector3) -> Vector2:
+	var me := controller.global_position
+	var my_side := GrappleRig._outside_side(me)
+	var his_side := GrappleRig._outside_side(him)
+	if my_side.dot(his_side) > 0.5:
+		var direct := him - me
+		direct.y = 0.0
+		return Vector2(direct.x, direct.z).normalized()
+
+	var radius := OUTSIDE_ROUTE_RADIUS
+	var edge := radius * 2.0
+	var perimeter := edge * 4.0
+	var from_s := _outside_perimeter_s(me, radius)
+	var to_s := _outside_perimeter_s(him, radius)
+	var clockwise := fposmod(to_s - from_s, perimeter)
+	var counter := perimeter - clockwise
+	var step_corner_s := edge  # (+X, -Z), where the entrance steps sit.
+	var cw_has_steps := _outside_arc_contains(from_s, to_s, step_corner_s,
+			perimeter, true)
+	var ccw_has_steps := _outside_arc_contains(from_s, to_s, step_corner_s,
+			perimeter, false)
+	var use_clockwise := clockwise <= counter
+	if cw_has_steps != ccw_has_steps:
+		use_clockwise = not cw_has_steps
+	var next_s := (floorf(from_s / edge) + 1.0) * edge if use_clockwise \
+			else (ceilf(from_s / edge) - 1.0) * edge
+	var corner := int(roundf(fposmod(next_s, perimeter) / edge)) % 4
+	var points := [Vector2(-radius, -radius), Vector2(radius, -radius),
+			Vector2(radius, radius), Vector2(-radius, radius)]
+	var waypoint: Vector2 = points[corner]
+	var move := waypoint - Vector2(me.x, me.z)
+	if move.length() < 0.22:
+		var next_corner := posmod(corner + (1 if use_clockwise else -1), 4)
+		waypoint = points[next_corner]
+		move = waypoint - Vector2(me.x, me.z)
+	if move.length() < 0.05:
+		move = Vector2(his_side.z, his_side.x)
+	return move.normalized()
+
+
+static func _outside_perimeter_s(point: Vector3, radius: float) -> float:
+	var edge := radius * 2.0
+	var side := GrappleRig._outside_side(point)
+	if side.x > 0.5:
+		return edge + clampf(point.z, -radius, radius) + radius
+	if side.x < -0.5:
+		return edge * 3.0 + radius - clampf(point.z, -radius, radius)
+	if side.z < -0.5:
+		return clampf(point.x, -radius, radius) + radius
+	return edge * 2.0 + radius - clampf(point.x, -radius, radius)
+
+
+static func _outside_arc_contains(from_s: float, to_s: float, point_s: float,
+		perimeter: float, clockwise: bool) -> bool:
+	var distance := fposmod(to_s - from_s, perimeter) if clockwise \
+			else fposmod(from_s - to_s, perimeter)
+	var along := fposmod(point_s - from_s, perimeter) if clockwise \
+			else fposmod(from_s - point_s, perimeter)
+	return along > 0.001 and along <= distance + 0.001
 
 
 func _wants_tie_up() -> bool:
@@ -1318,7 +1387,9 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 			weapon_swings_thrown += 1
 			return input
 	if distance > reach:
-		input["move"] = Vector2(dir.x, dir.z)
+		input["move"] = _outside_weapon_move(target.global_position) \
+				if controller.outside_ring and target.outside_ring \
+				else Vector2(dir.x, dir.z)
 		return input
 	if _cooldown <= 0:
 		input["move"] = Vector2(dir.x, dir.z) * 0.05      # square to him

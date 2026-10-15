@@ -7,8 +7,7 @@ anyway.
 
 | Files | Source | Author | Licence |
 | --- | --- | --- | --- |
-| `crowd_bed` | [Boston Garden Celtics Ambience](https://freesound.org/people/Douglas711/sounds/424297/) (TD Garden) | Douglas711 | CC0 |
-| `crowd_walla_a` | [crowd int large dense arena stadium hall](https://freesound.org/people/kyles/sounds/635492/) | kyles | CC0 |
+| `crowd_bed`, `crowd_walla_a` | [crowd int large dense arena stadium hall](https://freesound.org/people/kyles/sounds/635492/) | kyles | CC0 |
 | `crowd_walla_b` | [Mexican "Lucha Libre": crowd yelling, whistling](https://freesound.org/people/felix.blume/sounds/141704/) | felix.blume | CC0 |
 | `crowd_boo` | [Booing Crowd](https://freesound.org/people/NeoSpica/sounds/504621/), with [JM_AMB_INT_Crowd Sport 01 - Booing](https://freesound.org/people/Julien_Matthey/sounds/557189/) | NeoSpica, Julien_Matthey | CC0 |
 | `crowd_cheer` | [R08-24 Large Crowd Screaming and Whistling](https://freesound.org/people/craigsmith/sounds/480725/), with [CRWDCheer_Cheering, Whistling](https://freesound.org/people/ShangusBurger/sounds/764273/) | craigsmith, ShangusBurger | CC0 |

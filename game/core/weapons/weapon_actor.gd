@@ -99,6 +99,7 @@ func _load_model() -> void:
 			if child is Node3D:
 				_roots[String(child.name)] = child
 	_dress_for_the_hall()
+	_retune_grips()
 
 
 ## The belt's model has no state roots: its Held* parts become one.
@@ -119,7 +120,7 @@ func _dress_belt() -> void:
 	# the hand by its strap and swings plate-first. Measured off the meshes:
 	# straps to x = +-0.52, the plate centred at (0, -0.07), the face +Z.
 	var along := Basis(Vector3(0, 1, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1))
-	for m: Array in [["grip_r", Vector3(0.45, -0.08, 0.0)], ["grip_l", Vector3(0.35, -0.08, 0.0)],
+	for m: Array in [["grip_r", Vector3(0.24, -0.08, 0.0)], ["grip_l", Vector3(-0.06, -0.08, 0.0)],
 			["strike", Vector3(0.0, -0.07, 0.0)]]:
 		var marker := Node3D.new()
 		marker.name = "ChampionshipBelt_Held__" + String(m[0])
@@ -147,6 +148,43 @@ func _dress_for_the_hall() -> void:
 				copy.emission = copy.albedo_color
 				copy.emission_energy_multiplier = HALL_GLOW
 				mi.set_surface_override_material(s, copy)
+
+
+## The source props sometimes put two-hand markers on different rungs or on
+## opposite ends of an object rather than where a wrestler can hold it. Keep
+## these authored contact points ergonomic so WeaponGrip can preserve the
+## silhouette without stretching the arms.
+func _retune_grips() -> void:
+	var grip_l_y := NAN
+	var grip_l_x := NAN
+	match def.id:
+		&"ladder":
+			grip_l_y = 1.211
+			grip_l_x = -0.18
+		&"briefcase":
+			grip_l_y = 0.025
+			grip_l_x = -0.30
+		&"shovel":
+			grip_l_y = -0.14
+		&"fire_extinguisher":
+			grip_l_y = -0.27
+		&"table":
+			grip_l_x = -0.28
+		&"championship_belt":
+			return # its virtual grip markers are authored in _dress_belt
+		_:
+			return
+	for root: Node3D in _roots.values():
+		for child in root.get_children():
+			if child is not Node3D or not String(child.name).ends_with("__grip_l"):
+				continue
+			var marker := child as Node3D
+			var p := marker.position
+			if not is_nan(grip_l_y):
+				p.y = grip_l_y
+			if not is_nan(grip_l_x):
+				p.x = grip_l_x
+			marker.position = p
 
 
 func _held_root() -> String:

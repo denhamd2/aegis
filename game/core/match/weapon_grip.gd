@@ -32,6 +32,7 @@ var bones := {
 ## is measured and the wrist target moved by it, until it is under this.
 const PALM_TRIES := 3
 const PALM_CLOSE := 0.004
+const HAND_SEAT_EPSILON := 0.01
 var wrestler: Node3D
 var weapon: WeaponActor = null
 var _ids := {}
@@ -176,11 +177,32 @@ func _process_modification() -> void:
 		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd, 1.0)
 	elif _carry > 0.0 or on_path:
 		# his right hand onto its grip, the fist turned to it
-		_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"], to_sk * weapon.global_marker("grip_r"), fwd,
-				1.0 if on_path else _carry)
-	if _two > 0.0 or _level > 0.0:
-		_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"], to_sk * weapon.global_marker("grip_l"), fwd,
-				maxf(_two, _level))
+		var hand_weight := 1.0 if on_path else _carry
+		var left_weight := maxf(_two, _level)
+		# The authored path describes where the strike lands. If its handle
+		# targets are outside the arm chains' reach, translate the prop a little
+		# toward the solved palms while preserving its orientation and strike
+		# arc. Averaging both hands keeps long two-handed props centred instead
+		# of fixing one wrist by pulling the other off its grip.
+		for correction in (10 if on_path else 1):
+			_hand_to(sk, ["upperarm_r", "lowerarm_r", "hand_r"],
+					to_sk * weapon.global_marker("grip_r"), fwd, hand_weight)
+			if left_weight > 0.0:
+				_hand_to(sk, ["upperarm_l", "lowerarm_l", "hand_l"],
+						to_sk * weapon.global_marker("grip_l"), fwd, left_weight)
+			if not on_path:
+				break
+			var correction_world := sk.global_transform * _palm(sk, "r") \
+					- weapon.global_marker("grip_r").origin
+			var hands := 1.0
+			if left_weight > 0.0 and weapon.has_marker("grip_l"):
+				correction_world += sk.global_transform * _palm(sk, "l") \
+						- weapon.global_marker("grip_l").origin
+				hands += 1.0
+			correction_world /= hands
+			if correction_world.length() < HAND_SEAT_EPSILON:
+				break
+			weapon.global_position += correction_world * 0.85
 
 
 ## Reaches `chain`'s hand to `target` (skeleton space): its PALM onto the

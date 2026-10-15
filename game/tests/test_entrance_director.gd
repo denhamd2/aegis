@@ -95,10 +95,9 @@ func test_skipping_rings_the_bell_with_both_men_on_their_marks() -> void:
 ## finish with their backs to each other.
 func test_the_bell_finds_them_facing_each_other() -> void:
 	var scene := _match(true, "roman", "cody")
+	_assert_continuous(scene)
 	var a: WrestlerController = scene.get_node("WrestlerA")
 	var b: WrestlerController = scene.get_node("WrestlerB")
-	var director: EntranceDirector = scene.get_node("EntranceDirector")
-	director.skip()
 	for pair: Array in [[a, b], [b, a]]:
 		var me: WrestlerController = pair[0]
 		var other: WrestlerController = pair[1]

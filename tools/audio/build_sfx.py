@@ -36,7 +36,6 @@ CROWD_LUFS = -16.0
 # 192k Ogg the site streams; the originals need a login and are no better for
 # a crowd bed heard under a match.
 FREESOUND = {
-	"706497": ("SEF7", "Rogers Arena - NHL game atmosphere"),
 	"397434": ("FoolBoyMedia", "Crowd Cheer"),
 	"829453": ("itmightgetloud", "Stadium Crowd Reaction Excited 01"),
 	"264499": ("noah0189", "Crowd Ooohs and Ahhhs in Excitement"),
@@ -47,7 +46,6 @@ FREESOUND = {
 	"336011": ("Rudmer_Rotteveel", "Sharp Explosion 4 (of 5)"),
 	"683101": ("florianreichelt", "quick woosh"),
 	# Indoor arenas and a real wrestling crowd (the crowd round 2 beds).
-	"424297": ("Douglas711", "Boston Garden Celtics Ambience"),
 	"635492": ("kyles", "crowd int large dense arena stadium hall"),
 	"141704": ("felix.blume", "Mexican Lucha Libre: crowd yelling, whistling"),
 	"504621": ("NeoSpica", "Booing Crowd"),
@@ -288,13 +286,16 @@ def build() -> None:
 	# MatchAudio's levels are the mix (tools/audio/measure_mix.py reads it back).
 	# Loop lengths 52 / 41 / 47 s, pairwise co-prime: no two seams ever line up.
 	#
-	# The bed: TD Garden, Boston, between plays -- a full arena, no PA.
-	bed = load(freesound("424297"), 2)
-	save("crowd_bed", lufs_to(loop(cut(bed, 108.0, 54.0)), CROWD_LUFS))
-	# The hall: a dense indoor crowd, mirrored left-right so it sits across
-	# the bed rather than on top of it.
+	# The hall: a dense indoor crowd. Use it for the bed too, slowed, filtered
+	# and smeared into non-verbal room tone. The previous Celtics-game bed had
+	# a recognizable "Defense" call in the shipped cut, which does not belong
+	# in a wrestling broadcast.
 	hall = load(freesound("635492"), 2)[:, ::-1]
-	save("crowd_walla_a", lufs_to(loop(cut(hall, 10.0, 43.0)), CROWD_LUFS))
+	hall_cut = cut(hall, 10.0, 43.0)
+	bed = sweeten(hall_cut, speed=43.0 / 54.0, hp=120.0, lp=3600.0)
+	save("crowd_bed", lufs_to(loop(bed), CROWD_LUFS))
+	# The hall walla stays at its original pace and width above the softer bed.
+	save("crowd_walla_a", lufs_to(loop(hall_cut), CROWD_LUFS))
 	# The wrestling crowd: lucha libre in Mexico City -- yells, whistles, the
 	# odd scream -- with its long swells levelled out. Rides the excitement.
 	lucha = load(freesound("141704"), 2)

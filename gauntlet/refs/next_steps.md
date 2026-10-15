@@ -3,7 +3,8 @@
 What is done, what comes next, and in what order. Updated at the end of each
 round; the README is the detailed log of how each piece was built.
 
-Last updated 2026-10-14, after the blood round (main `afd3c06`, Mac build run
+Last updated 2026-10-15, after weapon swing phase 3 (working tree; not yet
+committed or built for Mac). The blood round is on main `afd3c06` (Mac build run
 30 on the `mac-latest` release).
 
 ## Done and on the Mac build
@@ -23,7 +24,7 @@ Last updated 2026-10-14, after the blood round (main `afd3c06`, Mac build run
   then dries. The tacks cut his back. The canvas gets drips, pools, spatter and
   smears. On by default; OPTIONS > BLOOD > OFF to turn it off.
 
-## Next: weapons phase 3, the swings
+## Weapons phase 3: delivered, not yet shipped
 
 Each family gets its own body clip (in `game/tools/blender/wrestling_clips.py`)
 and its own swing path (`WeaponCatalog.SWING_PATHS`), so the weapon travels
@@ -35,21 +36,24 @@ with his hands rather than the hands chasing a generic swing.
 | Slapshot | hockey stick | a slapshot (the owner's pick) |
 | Chop | kendo stick | two-hand overhead chop |
 | Chair | steel chair, barbed-wire chair | held by the legs, high overhead |
-| Two-handed slam | trash can, steel steps, briefcase | overhead, both hands |
+| Two-handed slam | trash can, steel steps | overhead, both hands |
 | Shovel | shovel | flat of the blade, overhead |
 | Crutch | crutch | held by the foot end, overhead |
-| Bonk | ring bell, frying pan | overhand |
-| Flat face | championship belt, cookie sheet | the flat face into him |
+| Bonk | ring bell, frying pan, championship belt | overhand |
+| Flat face | cookie sheet, stop sign, briefcase | the flat face into him |
+| Ladder | ladder | lift high, step through, bring it down |
+| Table | table | two-hand slam |
 | Fist | chain | wrapped round the fist for a punch (the owner's pick) |
 
 - Overhead swings stop at head height, never in the mat.
-- **Done when:** `KNOWN_SWING_SLIPS` in
+- **Phase 3 done:** `KNOWN_SWING_SLIPS` in
   `game/tests/test_weapon_grip_contact.gd` is empty -- every swing keeps
   both palms within 3 cm of the handles -- and the clip gates pass (pose lint,
   body deformation, clip authoring).
-- One review sheet per family, sent to the owner.
+- Review sheets for the new bonk, flat-face, crutch, and chain motions were
+  rendered and checked; ladder/table reuse the two-hand overhead/slam forms.
 
-## Then: weapons phases 4 and 5
+## Next: weapons phases 4 and 5
 
 - **Set-piece spots**: through the table, onto the tacks, the ladder, the
   barbed-wire board, each a paired move with its own bump and sell.
