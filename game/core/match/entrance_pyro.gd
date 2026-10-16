@@ -56,6 +56,13 @@ const OPENING_ROCKET_XS := [-8.0, -4.0, 0.0, 4.0, 8.0]
 const OPENING_ROCKET_RISE := 17.0
 const OPENING_ROCKET_FLIGHT := 0.82
 const OPENING_ROCKET_STAGGER := 0.18
+## A tight, short comet tail: the launch should read as a rocket, never a
+## ground-level spark fountain or a waterfall of falling particles.
+const OPENING_TRAIL_SPREAD := 2.0
+const OPENING_TRAIL_LIFETIME := 0.18
+const OPENING_TRAIL_AMOUNT := 48
+const OPENING_BURST_SIZE := 1.2
+const OPENING_SECONDARY_BURST_SIZE := 0.62
 ## Over the ring: under the rig (TRUSS_Y 7.6), over the four corners.
 const RING_SHELL_HEIGHT := 6.8
 const RING_SHELL_XZ := 2.4
@@ -158,17 +165,17 @@ func _launch_rocket(from: Vector3, to: Vector3, colours: Array) -> void:
 	var trail := GPUParticles3D.new()
 	var process := ParticleProcessMaterial.new()
 	process.direction = Vector3(0.0, -1.0, 0.0)
-	process.spread = 28.0
-	process.initial_velocity_min = 0.7
-	process.initial_velocity_max = 2.5
-	process.gravity = Vector3(0.0, -2.8, 0.0)
+	process.spread = OPENING_TRAIL_SPREAD
+	process.initial_velocity_min = 0.0
+	process.initial_velocity_max = 0.45
+	process.gravity = Vector3.ZERO
 	process.scale_min = 0.35
 	process.scale_max = 0.8
 	process.color = Color(1.0, 0.72, 0.32)
 	trail.process_material = process
 	trail.draw_pass_1 = _spark_mesh(0.035)
-	trail.amount = 72
-	trail.lifetime = 0.55
+	trail.amount = OPENING_TRAIL_AMOUNT
+	trail.lifetime = OPENING_TRAIL_LIFETIME
 	trail.fixed_fps = 60
 	trail.local_coords = false
 	trail.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 22, 6))
@@ -187,7 +194,12 @@ func _finish_rocket(rocket: Node3D, at: Vector3, colours: Array) -> void:
 	var trail := rocket.get_child(1) as GPUParticles3D
 	if trail:
 		trail.emitting = false
-	_burst(at, colours, 0.9)
+	# A large aerial chrysanthemum, then a smaller, brighter core inside it:
+	# broad sky-bursts rather than a fan of falling ground sparks.
+	_burst(at, colours, OPENING_BURST_SIZE)
+	var core_colours: Array = SHELL_WHITE if colours == SHELL_GOLD else SHELL_GOLD
+	_later(0.16, func() -> void:
+		_burst(at + Vector3.UP * 0.35, core_colours, OPENING_SECONDARY_BURST_SIZE))
 	var cleanup := rocket.create_tween()
 	cleanup.tween_interval(0.65)
 	cleanup.tween_callback(rocket.queue_free)

@@ -161,21 +161,23 @@ func test_the_match_intro_and_faceoff_are_kept_brief() -> void:
 	assert_int(EntranceDirector.FACEOFF_STARE_TICKS).is_less_equal(360)
 	assert_str(EntranceDirector.faceoff_shot_at(1.9)).is_equal("profile")
 	assert_str(EntranceDirector.faceoff_shot_at(2.0)).is_equal("ots")
-	assert_int(EntranceDirector.opening_announcement_hold_ticks(12.0, 11.1)) \
-			.is_equal(1422)
 
 
-func test_broadcast_open_uses_a_stage_crowd_ring_camera_montage() -> void:
+func test_broadcast_open_uses_stage_facing_pyro_angles_and_the_sign_cutaway() -> void:
 	var opening := EntranceDirector.opening_shot_at(0.0)
-	var crowd := EntranceDirector.opening_shot_at(5.0)
-	var close_stage := EntranceDirector.opening_shot_at(9.0)
+	var stage_side := EntranceDirector.opening_shot_at(5.0)
+	var sign_fan := EntranceDirector.opening_shot_at(9.0)
+	var sign_fan_alt := EntranceDirector.opening_shot_at(10.0)
 	var final_stage := EntranceDirector.opening_shot_at(34.0)
 	assert_int(opening[0]).is_equal(0)
-	assert_int(crowd[0]).is_equal(1)
-	assert_int(close_stage[0]).is_equal(2)
-	assert_int(final_stage[0]).is_equal(7)
-	assert_bool(opening[1] != crowd[1]).is_true()
-	assert_bool(crowd[2] != close_stage[2]).is_true()
+	assert_int(stage_side[0]).is_equal(1)
+	assert_int(sign_fan[0]).is_equal(EntranceDirector.OPENING_SIGN_SHOT_INDEX)
+	assert_int(sign_fan_alt[0]).is_equal(EntranceDirector.OPENING_SIGN_ALT_SHOT_INDEX)
+	assert_int(final_stage[0]).is_equal(4)
+	assert_float(opening[1].x).is_not_equal(stage_side[1].x)
+	assert_float(stage_side[2].z).is_less(-30.0)
+	assert_float(sign_fan[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
+	assert_float(sign_fan_alt[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
 	var scene := _match(true)
 	var director: EntranceDirector = scene.get_node("EntranceDirector")
 	var events: Array = director._beats[0].get("events", [])
@@ -188,6 +190,11 @@ func test_broadcast_open_uses_a_stage_crowd_ring_camera_montage() -> void:
 		var to: Vector3 = rocket[1]
 		assert_float(to.y).is_greater(from.y)
 		assert_float(to.y - from.y).is_equal_approx(EntrancePyro.OPENING_ROCKET_RISE, 0.001)
+	var opening_hold: Dictionary = director._beats[1]
+	assert_bool(opening_hold.get("events", []).any(
+			func(e: Array) -> bool: return e[1] == EntranceDirector.OPENING_SIGN_CUE)) \
+			.override_failure_message("the Enda-sign fan is not raised for the opening cutaway") \
+			.is_true()
 
 
 func test_roman_waits_with_his_arms_at_his_sides_before_the_faceoff() -> void:

@@ -3,9 +3,9 @@
 What is done, what comes next, and in what order. Updated at the end of each
 round; the README is the detailed log of how each piece was built.
 
-Last reconciled 2026-10-15 against `main` at `1f1bf95` and the current working
-tree. This checkout contains substantial uncommitted work; the status below
-does not imply that those changes are on GitHub or in a Mac release.
+Last reconciled 2026-10-15 against `main` at `645407e` and the current working
+tree. Changes made after that commit are marked as working-tree work and have
+not been published to GitHub or a Mac release.
 
 ## Done and on the Mac build
 
@@ -111,13 +111,21 @@ with his hands rather than the hands chasing a generic swing.
   the supplied references, then make narrowly scoped mesh/weight changes.
   Do not change rig dimensions until paired grips, foot placement, and
   collision assumptions have been remeasured.
-- **Clearance gate:** `test_pair_clearance.gd` currently flags the new
-  `ladder_aerial` landing at about 0.67 of the clip (body overlap 0.065 m,
-  arm overlap 0.051 m), specifically attacker `calf_l-foot_l` against
-  defender `thigh_l-calf_l`. A focused foot-splay trial reduced body overlap
-  only to 0.063 m and was discarded. The ladder gameplay suite passes, but
-  this measured contact needs a stronger authored trajectory/leg-path fix
-  before the full test gate can pass. Keep the clearance limits unchanged.
+- **Ladder clearance (working-tree change):** the `ladder_aerial` attacker now
+  follows a shallow lateral arc through the landing and roll-through, keeping
+  his lower leg clear of the victim's leg. The focused `PairClearance` check
+  passes without changing the limits. `test_ladder_climb`, paired-move and
+  grapple-placement suites also pass. A rendered paired shot is still needed
+  before visual acceptance; this cloud workspace has no X11/Wayland display or
+  Xvfb, so the paired-shot capture helper cannot run here.
+- **Post-match pin test (working-tree change):** the finish test now uses the
+  dead-after-gunshot cover path and confirms the loser stays down after the
+  referee counts three. Both post-match cases pass.
+- **Animation authoring digest gate (pre-existing):** `test_clip_authoring_gate`
+  still fails because the pinned `wrestling_clips.py` digest predates the
+  current source (`9612aaae…` is actual; `1c3a3000…` is pinned). I left the
+  pin unchanged because the required rendered clip review is unavailable in
+  this display-less workspace.
 
 ## Current priority: owner's New.png visual target
 
@@ -138,15 +146,16 @@ choices where they conflict. See
 - **Next:** rendered comparison and tuning, then wrestler skin/attire and
   canvas/apron polish under the accepted light. Target Apple Silicon/16 GB,
   1080p/60 fps; the exact chip and native performance remain unmeasured.
-- **Release gate stays open:** native visual acceptance and the separately
-  recorded ladder-aerial clearance failure still need resolution.
+- **Release gate stays open:** native visual acceptance and the full test suite
+  still need to pass. The ladder-aerial numeric clearance failure is fixed in
+  the working tree, pending rendered confirmation.
 
 ## Order of work
 
 1. Complete the New.png visual comparison and tune the first environment /
    crowd slice. Capture Mac-native appearance and frame pacing.
-2. Finish wrestler skin/attire and canvas/apron polish, then resolve the
-   ladder-aerial clearance failure while preserving impact and recovery.
+2. Finish wrestler skin/attire and canvas/apron polish, then visually review
+   the revised ladder-aerial landing while preserving its impact and recovery.
 3. Tune the ladder broadcast insert and author ladder swing/interruption
    variants from the rendered review.
 4. Complete the Roman/Cody body-morph audit against the reference stills.

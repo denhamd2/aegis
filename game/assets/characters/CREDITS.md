@@ -18,6 +18,12 @@ included animations (locomotion, strikes, hit reactions, death/roll).
 the non-suffixed file has root motion disabled (in-place animations) for
 use where the game code drives displacement instead.
 
+The same CC0 mesh and `Sitting_Talking_Loop` pose are reused by the Tony
+Schiavone and Excalibur ringside models in `assets/environment/`. Their
+seated meshes are baked for low-cost background rendering, then dressed and
+given reference-sheet-specific hair, beard, glasses, mask, and broadcast
+headsets by `tools/blender/commentators.py`.
+
 This is a stand-in reference/base mesh only; the wrestler likenesses,
 movesets and branding built on top of it are original. No WWE-derived
 assets are used here.

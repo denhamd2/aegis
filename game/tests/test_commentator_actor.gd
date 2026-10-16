@@ -16,6 +16,21 @@ func test_both_character_models_load_with_animated_pivots() -> void:
 		assert_float(actor.rotation.y).is_equal_approx(0.0, 0.001)
 
 
+func test_reference_specific_head_meshes_are_present() -> void:
+	var tony: CommentatorActor = auto_free(CommentatorActor.new())
+	add_child(tony)
+	assert_bool(tony.setup("tony", Vector3.ZERO)).is_true()
+	assert_object(tony.find_child("TonySculptedHead", true, false)).is_not_null()
+	assert_object(tony.find_child("TonyGlassesFrame1", true, false)).is_not_null()
+
+	var excalibur: CommentatorActor = auto_free(CommentatorActor.new())
+	add_child(excalibur)
+	assert_bool(excalibur.setup("excalibur", Vector3.ZERO)).is_true()
+	assert_object(excalibur.find_child("ExcaliburSculptedHead", true, false)).is_not_null()
+	assert_object(excalibur.find_child("ExcaliburFullHeadMaskShell", true, false)).is_not_null()
+	assert_object(excalibur.find_child("ExcaliburEyeTrim1", true, false)).is_not_null()
+
+
 func test_recorded_commentary_is_assigned_to_the_correct_voice() -> void:
 	assert_str(MatchAudio.commentator_for_event("gunshot")).is_equal("tony")
 	assert_str(MatchAudio.commentator_for_event("roman_spear")).is_equal("tony")

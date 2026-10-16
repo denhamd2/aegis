@@ -37,6 +37,23 @@ func test_signs_go_up_only_now_and_then() -> void:
 	assert_int(SignFans.MATCH_RAISES_MAX).is_between(1, 2)
 	assert_float(SignFans.MATCH_GAP).is_greater_equal(20.0)
 	assert_float(SignFans.MATCH_HOLD).is_less(10.0)
+	assert_float(SignFans.OPENING_SIGN_HOLD).is_greater(5.0)
+
+
+func test_dynamite_opening_raises_only_enda_sign_without_a_match_cutaway() -> void:
+	var fans := SignFans.new()
+	add_child(fans)
+	var chairs: Array[Transform3D] = [Transform3D.IDENTITY]
+	fans.seat(chairs, [0])
+	var director := EntranceDirector.new()
+	add_child(director)
+	fans.follow(director)
+	var camera_cutaway := [false]
+	fans.raised.connect(func() -> void: camera_cutaway[0] = true)
+	director.cue.emit(EntranceDirector.OPENING_SIGN_CUE)
+	assert_object(fans.enda_easter_egg_fan()).is_not_null()
+	assert_int(fans.enda_easter_egg_fan().stage).is_equal(SignFan.Stage.RISING)
+	assert_bool(camera_cutaway[0]).is_false()
 
 
 func test_both_signs_are_in_the_project() -> void:

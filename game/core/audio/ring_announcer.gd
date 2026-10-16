@@ -1,8 +1,8 @@
 class_name RingAnnouncer
 extends Node
 ## The ring announcer: Justin Roberts' three calls (assets/audio/announcer,
-## owner-supplied) -- the main-event intro before the first entrance, and each
-## man's "From ... weighing ..." call during his entrance.
+## owner-supplied) -- the main-event intro at the start of the first entrance,
+## and each man's "From ... weighing ..." call during his entrance.
 ##
 ## Each man's call is started on a tick counted back from his card's moment
 ## (EntranceDirector._schedule_call), so the name -- NAME_AT seconds in -- is

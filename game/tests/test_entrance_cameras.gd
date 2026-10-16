@@ -39,20 +39,54 @@ func test_stage_wide_clears_the_ring_truss_from_the_led_top_in_sightline() -> vo
 			"LED top should clear the near truss by a visible margin").is_greater(5.0)
 
 
-func test_opening_montage_cuts_from_arena_to_stage_and_holds_the_last_shot() -> void:
-	var opening := EntranceDirector.opening_shot_at(0.0)
-	var crowd := EntranceDirector.opening_shot_at(5.0)
-	var ring := EntranceDirector.opening_shot_at(9.0)
-	var last := EntranceDirector.opening_shot_at(34.0)
-	assert_int(opening[0]).is_equal(0)
-	assert_int(crowd[0]).is_equal(1)
-	assert_int(ring[0]).is_equal(2)
-	assert_int(last[0]).is_equal(EntranceDirector.OPENING_SHOTS.size() - 1)
-	assert_bool(opening[1] != crowd[1]).is_true()
-	assert_bool(crowd[2] != ring[2]).is_true()
-	assert_float(opening[3]).is_equal(52.0)
-	assert_float(last[3]).is_greater(0.0)
-	assert_int(EntranceDirector.opening_shot_at(60.0)[0]).is_equal(last[0])
+func test_opening_montage_sweeps_the_stage_then_cuts_to_the_enda_sign() -> void:
+	var crane_start := EntranceDirector.opening_shot_at(0.0)
+	var crane_end := EntranceDirector.opening_shot_at(3.9)
+	var stage_side := EntranceDirector.opening_shot_at(5.0)
+	var sign_fan := EntranceDirector.opening_shot_at(9.0)
+	var sign_fan_alt := EntranceDirector.opening_shot_at(10.0)
+	var stage_master := EntranceDirector.opening_shot_at(11.5)
+	assert_int(crane_start[0]).is_equal(0)
+	assert_int(crane_end[0]).is_equal(0)
+	assert_int(stage_side[0]).is_equal(1)
+	assert_int(sign_fan[0]).is_equal(EntranceDirector.OPENING_SIGN_SHOT_INDEX)
+	assert_int(sign_fan_alt[0]).is_equal(EntranceDirector.OPENING_SIGN_ALT_SHOT_INDEX)
+	assert_int(stage_master[0]).is_equal(4)
+	assert_float(crane_end[1].x).is_greater(crane_start[1].x + 15.0)
+	for stage_shot: Array in [crane_start, stage_side, stage_master]:
+		assert_float(stage_shot[2].z).is_less(-30.0)
+	assert_float(sign_fan[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
+	assert_float(sign_fan[2].z).is_equal_approx(SignFans.FANS[0][1].z, 0.01)
+	assert_float(sign_fan_alt[2].x).is_equal_approx(SignFans.FANS[0][1].x, 0.01)
+	assert_float(sign_fan_alt[2].z).is_equal_approx(SignFans.FANS[0][1].z, 0.01)
+	assert_float(crane_start[3]).is_equal(64.0)
+	assert_float(stage_side[3]).is_equal(64.0)
+	assert_int(EntranceDirector.opening_shot_at(60.0)[0]).is_equal(stage_master[0])
+
+
+func test_opening_crane_and_stage_angle_fit_every_rocket_burst() -> void:
+	for at_seconds: float in [0.0, 2.0, 3.9, 4.0, 6.0, 8.4]:
+		var shot := EntranceDirector.opening_shot_at(at_seconds)
+		var camera_at: Vector3 = shot[1]
+		var look: Vector3 = shot[2]
+		var fov: float = shot[3]
+		var camera_basis := Basis().looking_at(look - camera_at, Vector3.UP)
+		var view := Transform3D(camera_basis, camera_at).affine_inverse()
+		for rocket: Array in EntrancePyro.opening_rocket_plan():
+			var local: Vector3 = view * rocket[1]
+			var vertical := absf(atan2(local.y, -local.z))
+			var horizontal := absf(atan2(local.x, -local.z))
+			assert_float(vertical).override_failure_message(
+					"rocket at %s is cropped vertically at %.1f s" % [rocket[1], at_seconds]) \
+				.is_less(deg_to_rad(fov) * 0.5)
+			var horizontal_half_fov := atan(tan(deg_to_rad(fov) * 0.5) * 16.0 / 9.0)
+			assert_float(horizontal).override_failure_message(
+					"rocket at %s is cropped horizontally at %.1f s" % [rocket[1], at_seconds]) \
+				.is_less(horizontal_half_fov)
+	assert_float(EntrancePyro.OPENING_TRAIL_SPREAD).is_less_equal(4.0)
+	assert_float(EntrancePyro.OPENING_TRAIL_LIFETIME).is_less_equal(0.25)
+	assert_int(EntrancePyro.OPENING_TRAIL_AMOUNT).is_less_equal(64)
+	assert_float(EntrancePyro.OPENING_BURST_SIZE).is_greater(1.0)
 
 
 func test_every_shot_a_beat_uses_can_be_framed() -> void:

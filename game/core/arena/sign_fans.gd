@@ -43,6 +43,9 @@ const DOWN_AFTER_BELL := 1.2
 const MATCH_RAISES_MAX := 2
 const MATCH_GAP := 25.0
 const MATCH_HOLD := 4.5
+## Keep the Enda sign up for the Dynamite opening's close cut, then lower it
+## when the first entrance starts.
+const OPENING_SIGN_HOLD := 10.0
 ## The second fan is a beat behind the first: two people, not one.
 const STAGGER := 0.35
 
@@ -51,6 +54,7 @@ var _enda_fan: SignFan
 var match_raises := 0
 var _since_raise := 1.0e9
 var _raised_for_faceoff := false
+var _raised_for_opening := false
 var _queued: Array = []   # [seconds from now, fan, hold]
 var _referee: MatchReferee
 var _pin_peak := 0
@@ -123,7 +127,13 @@ func follow(director: EntranceDirector) -> void:
 	director.beat_started.connect(func(shot: String) -> void:
 		if shot == "faceoff_side" and not _raised_for_faceoff:
 			_raised_for_faceoff = true
-			_raise_all(FACEOFF_HOLD))
+			_raise_all(FACEOFF_HOLD)
+		if shot != "opening" and _raised_for_opening:
+			cancel_enda_easter_egg()
+			_raised_for_opening = false)
+	director.cue.connect(func(what: String) -> void:
+		if what == EntranceDirector.OPENING_SIGN_CUE:
+			_raised_for_opening = raise_enda_easter_egg(OPENING_SIGN_HOLD))
 	director.bell.connect(func() -> void:
 		for fan in fans:
 			_queued.append([DOWN_AFTER_BELL, fan, -1.0]))

@@ -28,17 +28,19 @@ func _finish_by_pin() -> Array:
 	b.fsm.transition_to(WrestlerFSM.State.IDLE)
 	b.fsm.transition_to(WrestlerFSM.State.STUNNED)
 	b.fsm.transition_to(WrestlerFSM.State.DOWN)
-	b._move_ticks_remaining = 2000
-	# A signature's knockdown: the referee covers after the big ones (match flow to
-	# 2K26), and this is the pin the test is about.
+	# A gunshot victim cannot recover, so the attacker has time to cover him
+	# and this test exercises the real finish path rather than racing the quick
+	# recovery timer on an ordinary knockdown.
+	b.dead = true
+	b._move_ticks_remaining = 1 << 30
 	b.knockdown_tier = CombatSystem.Tier.SIGNATURE
-	a.global_position = b.global_position + (a.global_position - b.global_position).normalized() * 0.9
+	b.global_position = Vector3.ZERO
+	a.global_position = Vector3(0.0, 0.0, -0.9)
+	b._cover_eligible = true
 	for i in 900:
 		await get_tree().physics_frame
 		if _scene.post_match != null:
 			break
-		if _scene.referee.is_pin_active() and i > 60:
-			_scene.referee._end_pin(true)
 	return [a, b]
 
 
@@ -47,7 +49,7 @@ func _pelvis_y(w: WrestlerController) -> float:
 	return p.y if p != Vector3.INF else w.global_position.y
 
 
-func test_loser_stays_down_and_winner_arm_goes_up() -> void:
+func test_gunshot_victim_is_covered_and_stays_down_after_the_match() -> void:
 	var men := await _finish_by_pin()
 	assert_object(_scene.post_match).is_not_null()
 	var pm: PostMatch = _scene.post_match

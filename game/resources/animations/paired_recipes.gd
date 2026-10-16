@@ -788,13 +788,15 @@ const TRAJECTORIES := {
 	# The attacker begins at the ladder's top (about 1.55 m), dives forward
 	# and down onto the already-downed opponent, then rolls through to his feet.
 	# The defender stays grounded; the readable impact is in the paired pose and
-	# localized sell rather than a second root-level bounce.
+	# localized sell rather than a second root-level bounce. The attacker takes
+	# a shallow lateral arc through the landing and roll-through to clear the
+	# victim's legs (verified by PairClearance at every move tick).
 	"ladder_aerial": {
 		"length": 1.4,
 		"attacker": {
 			"pos": [[0.00, 0.40, 1.55, 0.00], [0.20, 0.25, 1.72, -0.10],
-				[0.48, -0.18, 0.18, -0.12], [0.72, -0.32, 0.00, 0.02],
-				[1.08, -0.18, 0.00, 0.06], [1.40, 0.16, 0.00, 0.00]],
+				[0.48, -0.18, 0.18, 0.10], [0.72, -0.32, 0.00, 0.23],
+				[1.08, -0.18, 0.00, 0.27], [1.40, 0.16, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, 90.0, 0.0], [0.20, -12.0, 70.0, 0.0],
 					[0.48, -8.0, 35.0, 0.0], [0.72, 0.0, 20.0, 0.0],
 					[1.08, 0.0, 55.0, 0.0], [1.40, 0.0, 90.0, 0.0]],

@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## The ring announcer (core/audio/ring_announcer.gd): Justin Roberts' intro
-## before the first entrance, and each man's call with his name said on the
-## moment his card comes up.
+## at the start of the first entrance, and each man's call with his name said
+## on the moment his card comes up.
 
 const MATCH := "res://scenes/match.tscn"
 
@@ -33,15 +33,27 @@ func test_the_three_calls_ship_and_each_name_is_inside_its_call() -> void:
 				.is_less(RingAnnouncer.length_of(style) - 1.0)
 
 
-## The intro is its own beat straight after the opening, long enough for the
-## whole call, before anyone comes out.
-func test_the_intro_plays_before_the_first_entrance() -> void:
-	var director: EntranceDirector = _match("roman", "cody").get_node("EntranceDirector")
-	var intro: Dictionary = director._beats[1]
-	assert_array(intro.get("events", [])).contains([[1, "announce_intro"]])
-	assert_float(float(intro["ticks"]) / EntranceDirector.TPS) \
-			.is_greater_equal(RingAnnouncer.length_of("intro"))
-	assert_object(intro.get("who")).is_null()
+## Justin begins the match-format call on the first beat of the first man's
+## entrance. It must not fire in the broadcast opening or pre-entrance holds.
+func test_justins_intro_starts_with_the_first_entrance() -> void:
+	for styles: Array in [["roman", "cody"], ["cody", "roman"]]:
+		var scene := _match(styles[0], styles[1])
+		var director: EntranceDirector = scene.get_node("EntranceDirector")
+		var first_man: WrestlerController = scene.get_node("WrestlerB")
+		var entrance_index := -1
+		var intro_events: Array[Array] = []
+		for i in director._beats.size():
+			var beat: Dictionary = director._beats[i]
+			if entrance_index < 0 and beat.get("who") == first_man:
+				entrance_index = i
+			for event: Array in beat.get("events", []):
+				if event[1] == "announce_intro":
+					intro_events.append([i, int(event[0])])
+		assert_int(entrance_index).is_greater_equal(0)
+		assert_int(intro_events.size()).is_equal(1)
+		assert_int(intro_events[0][0]).override_failure_message(
+				"Justin's match call is not on the first man's entrance beat").is_equal(entrance_index)
+		assert_int(intro_events[0][1]).is_equal(1)
 
 
 ## Each man's call starts so that his name lands on his card's moment, to

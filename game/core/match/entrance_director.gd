@@ -71,9 +71,8 @@ const RAMP_SHOWN_SECONDS := 6.0
 # --- Timing (ticks at 60 Hz) --------------------------------------------------
 const TPS := 60
 const OPENING_TICKS := 300
-## Excalibur's crowd call and Tony's reply, after Justin's main-event
-## introduction and before the entrances. Seven seconds covers both clips
-## and the serialized voice-lane gaps.
+## Excalibur's crowd call and Tony's reply before the entrances. Seven seconds
+## covers both clips and the serialized voice-lane gaps.
 const EXCALIBUR_CROWD_CALL_TICKS := 420
 ## Time for Tony's title call to finish before the entrances begin.
 const TITLE_MATCH_CALL_TICKS := 240
@@ -130,24 +129,25 @@ const INTRO_CLOSE_PUSH := 0.4
 ## camera is above the light rigging above the ring, which blocks the view --
 ## just underneath it, so we get a clear wide-angle shot".
 const RIG_CLEAR_Y := 6.3
-## The opening broadcast master starts off-axis so the near seating, ring and
-## stage overlap in perspective instead of reading as a flat elevation. It
-## trucks slowly across the arena for parallax through the establishing hold.
-const OPENING_AT := Vector3(-7.5, RIG_CLEAR_Y, 15.0)
-const OPENING_LOOK := Vector3(0.0, 3.0, -28.0)
-const OPENING_FOV := 52.0
-## Timed broadcast montage: stage, crowd, pyro, ring, then a return to the
-## stage before the first wrestler's entrance. [start seconds, camera, look,
-## lens]. The separate positions create actual cuts and arena parallax.
+## A crane just off the ramp, sweeping across the stage and framing the full
+## rocket flight and burst above the video wall.
+const OPENING_AT := Vector3(-12.0, 6.0, 8.0)
+const OPENING_LOOK := Vector3(-1.0, 12.0, -37.0)
+const OPENING_FOV := 64.0
+const OPENING_CRANE_TO := Vector3(12.0, 6.0, 5.0)
+const OPENING_CRANE_LOOK_TO := Vector3(1.0, 12.0, -37.0)
+const OPENING_SIGN_SHOT_INDEX := 2
+const OPENING_SIGN_ALT_SHOT_INDEX := 3
+const OPENING_SIGN_CUE := "opening_enda_sign_raise"
+## Timed broadcast montage: sweeping crane on the stage, a second stage-facing
+## angle for the next rocket volley, two crowd cuts on the raised Enda sign,
+## then a clean stage master. [start seconds, camera, look, lens].
 const OPENING_SHOTS := [
-	[0.0, Vector3(-7.5, RIG_CLEAR_Y, 15.0), Vector3(0.0, 3.0, -28.0), 52.0],
-	[4.0, Vector3(-13.0, 5.4, -7.0), Vector3(-18.0, 3.2, -16.0), 38.0],
-	[8.0, Vector3(-2.8, 2.1, -20.0), Vector3(0.0, 5.0, -31.0), 34.0],
-	[12.0, Vector3(12.0, 5.0, -7.0), Vector3(19.0, 3.0, -18.0), 40.0],
-	[17.0, Vector3(7.0, 7.4, 11.0), Vector3(0.0, 2.8, -1.0), 48.0],
-	[22.0, Vector3(3.8, 2.3, -19.0), Vector3(0.0, 5.0, -31.0), 36.0],
-	[27.0, Vector3(-11.5, 4.8, -6.0), Vector3(-18.0, 2.8, -18.0), 39.0],
-	[32.0, Vector3(0.0, 7.0, 14.0), Vector3(0.0, 3.0, -30.0), 50.0],
+	[0.0, OPENING_AT, OPENING_LOOK, OPENING_FOV],
+	[4.0, Vector3(-10.0, 4.5, 2.0), Vector3(0.0, 12.0, -37.0), 64.0],
+	[8.5, Vector3(4.8, 2.0, -3.8), Vector3(8.05, 1.7, -3.6), 39.0],
+	[9.75, Vector3(4.4, 2.1, -2.8), Vector3(8.05, 1.7, -3.6), 36.0],
+	[11.0, Vector3(0.0, 6.0, 6.0), Vector3(0.0, 12.0, -37.0), 64.0],
 ]
 ## The stage: from down the ramp, on a long lens, so the set fills the frame
 ## behind him.
@@ -789,16 +789,11 @@ func _freeze(node: Node) -> void:
 func _build_timeline() -> void:
 	_beats.append({"kind": "opening", "ticks": OPENING_TICKS,
 			"events": [[1, "broadcast_open"], [1, "pyro_opening"]]})
-	# Excalibur and Tony open the broadcast. Hold the wide until both finish,
-	# then Justin introduces the main event before anyone enters.
-	if RingAnnouncer.has_call("intro"):
-		var welcome := load("res://assets/audio/commentary/tony_welcome.ogg") as AudioStream
-		var welcome_seconds := welcome.get_length() if welcome else 0.0
-		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "announce_intro"]],
-				"ticks": opening_announcement_hold_ticks(welcome_seconds,
-						RingAnnouncer.length_of("intro"))})
+	# Excalibur and Tony open the broadcast. Justin's match announcement is
+	# cued on the first beat of the first wrestler's entrance below.
 	_beats.append({"kind": "hold", "shot": "opening",
-			"events": [[1, "excalibur_crowd"], [1, "pyro_opening"]],
+			"events": [[1, "excalibur_crowd"], [1, "pyro_opening"],
+					[1, OPENING_SIGN_CUE]],
 			"ticks": EXCALIBUR_CROWD_CALL_TICKS})
 	if title_match:
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "title_match"]],
@@ -814,6 +809,12 @@ func _build_timeline() -> void:
 			_add_cody_entrance(w, pair[1], pair[2])
 		else:
 			_add_entrance(w, pair[1], pair[2])
+		if w == _b and RingAnnouncer.has_call("intro"):
+			# Start Justin's "one fall" call with the opening of the first
+			# entrance, rather than holding the show before the entrance begins.
+			var entrance_open: Dictionary = _beats[first_beat]
+			entrance_open["events"] = (entrance_open.get("events", []) as Array).duplicate() \
+					+ [[1, "announce_intro"]]
 		_schedule_call(w, first_beat)
 		if w == _b:
 			# The handover: he is on his mark and his music fades under the
@@ -823,15 +824,6 @@ func _build_timeline() -> void:
 			_beats.append({"kind": "hold", "who": w, "ticks": HANDOVER_TICKS,
 					"shot": "end_wide"})
 	_add_faceoff()
-
-
-## A beat after the announcer's intro before the first entrance starts.
-const INTRO_CALL_TAIL := 0.6
-
-
-static func opening_announcement_hold_ticks(welcome_seconds: float,
-		intro_seconds: float) -> int:
-	return int(ceil((welcome_seconds + intro_seconds + INTRO_CALL_TAIL) * TPS - 0.0001))
 
 
 ## How long a called name stays on the card (the ramp card's own cap).
@@ -1090,6 +1082,10 @@ func _start_beat() -> void:
 		"pair":
 			for move: Array in beat["moves"]:
 				(move[0] as WrestlerController).play_presentation_clip(move[4])
+	# Cut to this beat before the next rendered frame. Otherwise one frame keeps
+	# the prior opening-stage angle while the first entrant is still hidden in
+	# his entrance hold, making the empty portals visible on the cut.
+	_frame_shot(beat, 0.0, true)
 
 
 ## The name card: up once he is half way down the ramp, away at its foot.
@@ -2082,19 +2078,23 @@ static func _flat(v: Vector3) -> Vector3:
 # Camera and lights
 # ---------------------------------------------------------------------------
 
-func _frame_shot(beat: Dictionary, delta: float) -> void:
+func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 	if not _camera:
 		return
 	var w: WrestlerController = beat.get("who")
-	var first := _tick == 1
+	var first := force_cut or _tick == 1
 	match beat.get("shot", beat["kind"]):
 		"opening":
 			_opening_elapsed += delta
 			var opening := opening_shot_at(_opening_elapsed)
 			var new_shot := int(opening[0]) != _opening_shot_index
 			_opening_shot_index = int(opening[0])
-			_camera.set_entrance_shot(opening[1], opening[2], opening[3],
-					first or new_shot, delta)
+			if int(opening[0]) in [OPENING_SIGN_SHOT_INDEX, OPENING_SIGN_ALT_SHOT_INDEX]:
+				_opening_sign_shot(first or new_shot, delta,
+						int(opening[0]) == OPENING_SIGN_ALT_SHOT_INDEX)
+			else:
+				_camera.set_entrance_shot(opening[1], opening[2], opening[3],
+						first or new_shot, delta)
 		"stage":
 			_camera.set_entrance_shot(STAGE_AT, w.global_position + Vector3.UP * 1.3,
 					STAGE_FOV, first and not _was_shot("stage"))
@@ -2363,7 +2363,36 @@ static func opening_shot_at(seconds: float) -> Array:
 			break
 		selected = i
 	var shot: Array = OPENING_SHOTS[selected]
+	if selected == 0:
+		var sweep_length: float = float(OPENING_SHOTS[1][0]) - float(shot[0])
+		var sweep := smoothstep(0.0, 1.0, clampf(seconds / sweep_length, 0.0, 1.0))
+		return [selected, OPENING_AT.lerp(OPENING_CRANE_TO, sweep),
+				OPENING_LOOK.lerp(OPENING_CRANE_LOOK_TO, sweep), shot[3]]
 	return [selected, shot[1], shot[2], shot[3]]
+
+
+## Close on the Enda-sign fan during the opening cutaway. His chair faces the
+## ring (local +Z), so the camera sits on the face side and keeps the crowd
+## behind him in frame.
+func _opening_sign_shot(snap: bool, delta: float, alternate: bool) -> void:
+	var at := Vector3(4.8, 2.0, -3.8)
+	var focus := Vector3(8.05, 1.7, -3.6)
+	var signs := get_tree().get_first_node_in_group("sign_fans") as SignFans
+	var fan := signs.enda_easter_egg_fan() if signs else null
+	var lens := 39.0
+	if fan and is_instance_valid(fan):
+		focus = fan.global_position + Vector3.UP * 1.72
+		var front := fan.global_transform.basis.z
+		front.y = 0.0
+		if front.length() > 0.01:
+			at = focus + front.normalized() * (3.5 if not alternate else 3.2) \
+					+ Vector3.UP * 0.15
+			if alternate:
+				var across := fan.global_transform.basis.x
+				across.y = 0.0
+				at += across.normalized() * 1.25
+		lens = 36.0 if alternate else 39.0
+	_camera.set_entrance_shot(at, focus, lens, snap, delta)
 
 
 func _camera_intro(pick: Array) -> void:
