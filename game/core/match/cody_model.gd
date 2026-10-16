@@ -64,25 +64,14 @@ const PORE_TILES := 48.0
 const HEAD_PORE_TILES := 16.0
 
 
-## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
-## scalp, tall at the front of the top and swept back, short at the sides.
-## Each shell is cut at its own alpha threshold and coloured from a darker
-## ash root (inner) to beige-platinum (outer), so the stack reads as strands.
-## Colours from a visual QA against the owner's references: under arena
-## light his hair measures (210-220, 185, 150-160) with heavy dark streaking;
-## the first pass rendered a clipped cream (255, 253, 211), far too light
-## and too yellow.
-const HAIR := "res://assets/characters/cody_hair.glb"
+## Swept clump cards over a scalp cap (tools/blender/cody_groom.py). Distinct
+## tapered tips break the outline; short side growth stays against the head.
+const HAIR := "res://assets/characters/cody_groom.glb"
 const HAIR_STRANDS := "res://assets/characters/cody_hair_strands.png"
-##
-## The root deepened from (0.56, 0.46, 0.36) with the anisotropic shine (item 7
-## of refs/aaa_gap.md): a lighter root flattened the stack once the shine
-## lifted the outer shells, and bleach-blond hair is darkest at the root.
-const HAIR_ROOT := Color(0.48, 0.38, 0.29)
-const HAIR_TIP := Color(0.86, 0.74, 0.58)
-## Down from 0.5: at 0.5 the stretched highlight spread so wide it was only a
-## general sheen. See HairLook.
-const HAIR_ROUGHNESS := 0.42
+const HAIR_CARDS := "res://assets/characters/cody_groom_cards.png"
+const HAIR_ROOT := Color(0.50, 0.43, 0.34)
+const HAIR_TIP := Color(0.80, 0.74, 0.62)
+const HAIR_ROUGHNESS := 0.50
 
 
 func _ready() -> void:
@@ -146,24 +135,24 @@ func _add_hair() -> void:
 	attach.add_child(holder)
 	var hair: Node = (load(HAIR) as PackedScene).instantiate()
 	holder.add_child(hair)
-	var strands: Texture2D = load(HAIR_STRANDS)
-	var shells := hair.find_children("HairShell*", "MeshInstance3D", true, false)
-	var count := shells.size()
-	for mi: MeshInstance3D in shells:
-		var k := float(String(mi.name).trim_prefix("HairShell").to_int()) / maxf(count - 1, 1)
+	for mi: MeshInstance3D in hair.find_children("Hair*", "MeshInstance3D", true, false):
+		var cap := mi.name == "HairCap"
 		var mat := StandardMaterial3D.new()
-		mat.albedo_texture = strands
-		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, k)
+		mat.albedo_texture = load(HAIR_STRANDS if cap else HAIR_CARDS)
+		mat.albedo_color = HAIR_ROOT.lerp(HAIR_TIP, .6) if cap else HAIR_TIP
+		mat.metallic_specular = .25
 		mat.roughness = HAIR_ROUGHNESS
 		# The highlight as a band across the strands (u runs round the head,
 		# the strands along v), not a round spot.
 		HairLook.apply(mat)
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		# Vertex alpha thins the outer shells towards the patch's edge.
+		# Per-vertex root shading and a clump atlas give depth without closed
+		# overlapping scalp shells. Cards use their own non-tiling atlas UVs.
 		mat.vertex_color_use_as_albedo = true
-		if k > 0.0:
+		if not cap:
+			mat.texture_repeat = false
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-			mat.alpha_scissor_threshold = 0.12 + 0.32 * k
+			mat.alpha_scissor_threshold = 0.22
 			# Alpha to coverage, as Roman's hair cards: with MSAA on
 			# (project.godot) the strand edges resolve to partial coverage
 			# instead of the hard stair-step a bare scissor cuts.
@@ -171,7 +160,8 @@ func _add_hair() -> void:
 					BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
 			mat.alpha_antialiasing_edge = mat.alpha_scissor_threshold
 		mi.material_override = mat
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cap \
+				else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _fix_look() -> void:
@@ -200,7 +190,7 @@ func _fix_look() -> void:
 					if source.resource_name == HEAD_MATERIAL else "res://assets/characters/skin_body_roughness.png")
 			material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
 			material.metallic_specular = SKIN_SPECULAR
-			SkinLook.apply(material)
+			SkinLook.apply(material, source.resource_name == HEAD_MATERIAL)
 			if source.resource_name == HEAD_MATERIAL:
 				material.clearcoat_texture = load("res://assets/characters/cody_skin_head_wet.png")
 			SkinLook.add_pores(material, HEAD_PORE_TILES if source.resource_name == HEAD_MATERIAL else PORE_TILES)

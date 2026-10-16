@@ -136,7 +136,7 @@ CODY = EyeSpec(centre=(0.5, 0.5), mm_per_uv=30.5, size=512, iris_r=6.25,
 ## His eyes are blue (the owner's references): the tint the iris's own
 ## luminance is carried in, and how far the veins are calmed toward a clean
 ## sclera (his texture is badly bloodshot).
-CODY_IRIS_TINT = (0.66, 0.86, 1.18)
+CODY_IRIS_TINT = (0.78, 0.86, 1.00)
 CODY_VEIN_CALM = 0.7
 CODY_TEXTURE = "ximage_bbfc59e63cc5933"
 ## Aubrey: a cartoon eye, 17 mm, its UVs ~82 mm per unit (1 / 12.2 per mm)

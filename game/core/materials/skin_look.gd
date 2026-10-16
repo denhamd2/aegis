@@ -28,7 +28,8 @@ const TRANSMITTANCE_COLOR := Color(0.85, 0.30, 0.20)
 const TRANSMITTANCE_DEPTH := 0.06
 
 
-static func apply(material: BaseMaterial3D) -> void:
+static func apply(material: BaseMaterial3D, face := false) -> void:
+	material.set_meta("skin_face_film", face)
 	material.subsurf_scatter_enabled = true
 	material.subsurf_scatter_skin_mode = true
 	material.subsurf_scatter_strength = STRENGTH
@@ -108,6 +109,10 @@ const WET_FILM := "res://assets/characters/skin_wet_film.png"
 const SWEAT_COAT := 0.7
 const SWEAT_COAT_ROUGHNESS_DRY := 0.42
 const SWEAT_COAT_ROUGHNESS_WET := 0.22
+## Close portraits exposed broad oily patches on cheeks/forehead. Keep the
+## wet layer, with less coverage and a broader lobe than chest/shoulder skin.
+const FACE_FILM_SHARE := 0.18
+const FACE_FILM_ROUGHNESS_GAIN := 2.2
 
 
 ## Sets `material`'s wetness, 0 (dry) to 1 (soaked).
@@ -116,6 +121,7 @@ static func set_wetness(material: BaseMaterial3D, wetness: float) -> void:
 	if material.clearcoat_texture == null:
 		material.clearcoat_texture = load(WET_FILM)
 	material.clearcoat_enabled = w > 0.0
-	material.clearcoat = SWEAT_COAT * w
+	var face: bool = material.get_meta("skin_face_film", false)
+	material.clearcoat = SWEAT_COAT * w * (FACE_FILM_SHARE if face else 1.0)
 	material.clearcoat_roughness = lerpf(SWEAT_COAT_ROUGHNESS_DRY,
-			SWEAT_COAT_ROUGHNESS_WET, w)
+			SWEAT_COAT_ROUGHNESS_WET, w) * (FACE_FILM_ROUGHNESS_GAIN if face else 1.0)

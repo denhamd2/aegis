@@ -79,8 +79,8 @@ static func _on_bone_attachment(node: Node) -> bool:
 	return false
 
 
-## His hair is geometry now (tools/blender/cody_hair.py): shells hung on the
-## Head bone, so it rides his head, with volume above the scalp.
+## The groom rides Head without another skin/skeleton. A cap plus strand
+## cards replaces closed shells; keep its close-up geometry budget bounded.
 func test_hair_rides_the_head_bone() -> void:
 	var model := _model()
 	add_child(model)
@@ -88,8 +88,14 @@ func test_hair_rides_the_head_bone() -> void:
 	var attach := skeleton.get_node_or_null("HairAttachment") as BoneAttachment3D
 	assert_object(attach).is_not_null()
 	assert_str(attach.bone_name).is_equal("Head")
-	var shells := attach.find_children("HairShell*", "MeshInstance3D", true, false)
-	assert_int(shells.size()).is_greater_equal(8)
+	assert_object(attach.find_child("HairCap", true, false)).is_not_null()
+	var cards := attach.find_children("HairCards*", "MeshInstance3D", true, false)
+	assert_int(cards.size()).is_greater_equal(1)
+	var triangles := 0
+	for mesh: MeshInstance3D in attach.find_children("Hair*", "MeshInstance3D", true, false):
+		for surface in mesh.mesh.get_surface_count():
+			triangles += mesh.mesh.surface_get_array_index_len(surface) / 3
+	assert_int(triangles).is_between(500, 18000)
 
 
 ## The base rig's clips must arrive, under their own names, pointing at this

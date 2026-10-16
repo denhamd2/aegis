@@ -124,7 +124,7 @@ const HAIR_FIXES := {
 	"Material.018": "hair_alpha",
 	"Material.019": "hair_4_alpha",
 	"Material.020": "hair_alpha",
-	"beard": "beard_alpha",
+	"beard": "beard_detail",
 }
 
 ## Meshes hidden outright rather than materialled.
@@ -287,8 +287,8 @@ const HAIR_SPECULAR := 0.26
 ## The beard is darker brown than his hair is black: in the reference
 ## (gauntlet/refs/frames/roman_head_reference.jpg) it reads warm brown-black,
 ## and drawn in HAIR_COLOR under the cool key it rendered a flat blue-grey.
-const BEARD_COLOR := Color(0.052, 0.038, 0.030)
-const BEARD_ROUGHNESS := 0.8
+const BEARD_COLOR := Color(0.070, 0.051, 0.039)
+const BEARD_ROUGHNESS := 0.68
 const BEARD_SPECULAR := 0.25
 ## Alpha below this is cut away. Hair cards need a scissor rather than
 ## blending: sorted transparency on overlapping strands produces halos.
@@ -1120,7 +1120,7 @@ func _fix_materials() -> void:
 					material.metallic_texture = surface_map
 					material.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
 				material.metallic_specular = 0.5
-				SkinLook.apply(material)
+				SkinLook.apply(material, key == "Material.001")
 				if key == "Material.001":
 					material.clearcoat_texture = _texture("skin_head_wet")
 				SkinLook.add_pores(material, PORE_TILES[key])
@@ -1140,6 +1140,11 @@ func _fix_materials() -> void:
 				# the mip chain but cannot help a mesh that is no longer there.
 				mesh_instance.lod_bias = HAIR_LOD_BIAS
 				material.albedo_texture = _texture(HAIR_FIXES[key])
+				if key == "beard":
+					material.normal_enabled = true
+					material.normal_texture = _texture("beard_detail_normal")
+					material.normal_scale = 0.4
+					HairLook.apply(material, Vector2(1, 0), 0.35)
 				material.albedo_color = BEARD_COLOR if key == "beard" else HAIR_COLOR
 				# The scalp is wet and slicked; the beard is not, and glossy
 				# it rendered as a black plastic chin.

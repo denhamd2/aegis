@@ -1,0 +1,60 @@
+{
+  "baseline_commit": "fdf97e0",
+  "after_revision": "character checkpoint in the commit containing this manifest",
+  "scope": "isolated_bind_pose_material_study",
+  "performance_evidence": false,
+  "reference_source_manifest": "../source_manifest.json",
+  "studies": [
+    {
+      "actor": "cody",
+      "phase": "before",
+      "metadata": "cody_before.json"
+    },
+    {
+      "actor": "cody",
+      "phase": "after",
+      "metadata": "cody_after.json"
+    },
+    {
+      "actor": "roman",
+      "phase": "before",
+      "metadata": "roman_before.json"
+    },
+    {
+      "actor": "roman",
+      "phase": "after",
+      "metadata": "roman_after.json"
+    }
+  ],
+  "assets": {
+    "cody_groom.glb": "127a12925fe3dacfaa65f4c60927cd667e48c035ccb984e24dab290b004b1a98",
+    "cody_groom_cards.png": "1e1598f25436b1732a85c8337806d90b3cdd2f44b131ca613255dff7a50afc2c",
+    "cody_eye_color.png": "46f8af2fed9db246906371bd900da4f3375d5a09a276dbf1a1e53d102a99b9a9",
+    "roman_reigns_beard_detail.png": "6ad28773e0504a89c548ca841b0c6898fa70104ff13905272f92ceffbd1c6740",
+    "roman_reigns_beard_detail_normal.png": "ddddc99ef87bf0a7d88641f3ced25fe16c5ea85baa3191945b11c536b107533d"
+  },
+  "reproducibility": {
+    "cody_groom.glb": {
+      "repeatable": true,
+      "sha256": "127a12925fe3dacfaa65f4c60927cd667e48c035ccb984e24dab290b004b1a98",
+      "bytes": 782760
+    },
+    "cody_groom_cards.png": {
+      "repeatable": true,
+      "sha256": "1e1598f25436b1732a85c8337806d90b3cdd2f44b131ca613255dff7a50afc2c",
+      "bytes": 309781
+    },
+    "groom_import_matches_source": true,
+    "roman_reigns_beard_detail.png": {
+      "repeatable": true,
+      "sha256": "6ad28773e0504a89c548ca841b0c6898fa70104ff13905272f92ceffbd1c6740",
+      "bytes": 2541164
+    },
+    "roman_reigns_beard_detail_normal.png": {
+      "repeatable": true,
+      "sha256": "ddddc99ef87bf0a7d88641f3ced25fe16c5ea85baa3191945b11c536b107533d",
+      "bytes": 2460038
+    },
+    "beard_opacity_preserved": true
+  }
+}

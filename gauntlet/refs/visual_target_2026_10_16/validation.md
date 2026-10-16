@@ -1,4 +1,4 @@
-# First look pass — validation
+# Look and character checkpoints — validation
 
 **Verdict: NO-SHIP for final visual acceptance.** Character studies were
 reviewed; complete-arena appearance, all eight views and native performance
@@ -68,14 +68,41 @@ The probe therefore remains disabled in normal play.
 
 ## Native follow-up
 
-Local review artifact: `build/mac-visual-preview/Aegis.zip` (876,884,104 bytes).
-SHA-256: `5877aecfdf20bee4bfdf44d0e240041b1f7acc57fa180bdb436e3ff4f76d6ca0`.
-This is a preview for review, not a release candidate. It has not been run on
-the target Mac. The published `mac-latest` release remains at `fb69eae`.
+The first-checkpoint Mac preview was 876,884,104 bytes, SHA-256
+`5877aecfdf20bee4bfdf44d0e240041b1f7acc57fa180bdb436e3ff4f76d6ca0`.
+The character checkpoint refresh replaces that local artifact at
+`build/mac-visual-preview/Aegis.zip`; its current hash and revision live in the
+adjacent `artifact.json`. It is a review preview, not a release candidate.
+It has not been run on the target Mac. The published `mac-latest` release
+remains at `fb69eae`.
 
 Run `tools/capture/native_reference.sh` on the M1 Pro with the preview app.
-It captures the complete arena in the existing four views and the new three
-proof views, then runs a real-time pacing sample. Expand to the remaining
+It captures the complete arena in the existing four views and the three
+entrance proof views, six isolated hero portraits, then a real-time pacing
+sample. Expand to the remaining
 reference cameras and motion sequences before final acceptance. Test the
 optional `--stage-probe` separately; it must not enter the normal build based
 on a numeric test alone.
+
+## Character checkpoint
+
+See the [rendered review](character_review.md) for twelve unchanged images,
+portable metadata, generated asset hashes and remaining defects. Final
+affected character tests passed **32/32**, report `game/reports/report_410`.
+Groom GLB, atlas and beard maps rebuilt byte for byte; beard opacity is exact.
+Invalid portrait/stage diagnostic arguments were rejected with exit code 2.
+Shell syntax, Python compilation and whitespace checks passed. The final
+focused tests, groom renders and Mac export logs have no parse, compile,
+script or engine ERROR lines.
+
+Refreshed Mac preview: **883,669,801 bytes**, SHA-256
+`d49ef6f432ee1ae369e885084fcd0ee35700df254350c72661901330a04b7deb`.
+All seven ZIP file entries passed CRC verification; the executable contains
+arm64 and x86_64. The exported PCK audit passed for the five skin maps, groom
+atlas, two beard maps, four-mesh/16,844-triangle groom, runtime groom path,
+facial wet-layer setting and capture resources. These are package checks on
+Linux, not native execution or appearance acceptance.
+
+The historical full-suite result above is not a full-suite result for this
+character revision. A full round/evidence gate and native M1 Pro appearance,
+motion and frame-time acceptance remain required before final release.

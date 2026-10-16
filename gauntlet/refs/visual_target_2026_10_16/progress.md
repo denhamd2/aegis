@@ -1,6 +1,6 @@
 # October 16 visual target — implementation record
 
-Status: first shared look pass in progress. **NO-SHIP for final visual acceptance.**
+Status: shared-look and first character checkpoints. **NO-SHIP for final visual acceptance.**
 The eight-reference target has not been reached. Published baseline: `fb69eae`.
 
 The owner's confirmed target is an Apple M1 Pro with 16 GB unified memory,
@@ -53,9 +53,16 @@ fit, complete-arena lighting, Metal equivalence or Mac frame rate. Fog/glint
 isolation is recorded in their manifests. Failed or ablated diagnostic shots
 must not be presented as gameplay proofs.
 
-Next: finish native three-shot look comparison, then the character phase
-(likeness, eye/hair/beard construction, anatomy/correctives, coat/belt/necklace),
-ring/audience refinement and the moving-image/performance pass. Do not expand
+The [first character checkpoint](character_review.md) replaces Cody's shell
+hair with a 16,844-triangle cap/card groom, adds Roman beard material detail,
+calms Cody's iris tint and softens facial wet highlights. The same six
+portrait cameras were reviewed before/after. It is an incremental result;
+likeness, root/beard transitions and coat construction remain major gaps.
+
+Next: finish native shared-look/portrait comparisons and continue the character
+phase (facial forms, skin relief, eye/hair/beard construction,
+anatomy/correctives, coat/belt/necklace), ring/audience refinement and the
+moving-image/performance pass. Do not expand
 costly rendering features without measuring the target Mac. The existing
 fixed 60 Hz simulation, paired contact and replay rules remain authoritative.
 

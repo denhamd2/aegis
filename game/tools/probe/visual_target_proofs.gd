@@ -1,6 +1,8 @@
 extends Node
 ## Reproducible proof shots for the owner's eight-pair October 16 reference set.
 ## --bounded uses the actual stage assets without the bowl to fit small hosts.
+## --studio --portrait-view all captures fixed front/three-quarter/profile
+## studies of each hero. Neither study mode measures animation or frame rate.
 ## Software Forward+ is appearance evidence only, never M1 Pro performance.
 
 const WindowCapture := preload("res://tools/probe/capture_window.gd")
@@ -11,6 +13,7 @@ var _only := ""
 var _settle := 24
 var _bounded := false
 var _studio := false
+var _portrait := ""
 
 
 func _ready() -> void:
@@ -22,8 +25,18 @@ func _ready() -> void:
 			"--out": _out = args[i + 1]
 			"--only": _only = args[i + 1]
 			"--settle": _settle = maxi(12, int(args[i + 1]))
-	if (not _only.is_empty() and not SHOTS.has(_only)) or (_studio and _only == "stage"):
+			"--portrait-view": _portrait = args[i + 1]
+	if _portrait not in ["", "front", "threequarter", "profile", "all"]:
+		push_error("Unknown portrait view: " + _portrait)
+		get_tree().quit(2)
+		return
+	if (not _only.is_empty() and not SHOTS.has(_only)) \
+			or ((_studio or not _portrait.is_empty()) and _only == "stage"):
 		push_error("Unknown proof shot: " + _only)
+		get_tree().quit(2)
+		return
+	if (not _portrait.is_empty() or args.has("--dry-skin")) and not (_bounded or _studio):
+		push_error("Portrait and dry-skin diagnostics require --studio or --bounded.")
 		get_tree().quit(2)
 		return
 	WindowCapture.configure(get_window())
@@ -137,7 +150,7 @@ func _study_model(id: String) -> Node3D:
 		model._trim_beard()
 		model._volumize_hair()
 	for material: BaseMaterial3D in model.get_meta("skin_materials", []):
-		SkinLook.set_wetness(material, Sweat.BASE)
+		SkinLook.set_wetness(material, 0.0 if OS.get_cmdline_user_args().has("--dry-skin") else Sweat.BASE)
 	return model
 
 
@@ -195,7 +208,7 @@ func _material_study() -> void:
 	var lights: Array[SpotLight3D] = []
 	var captures: Array[Dictionary] = []
 	for shot: String in SHOTS:
-		if _studio and shot == "stage":
+		if (_studio or not _portrait.is_empty()) and shot == "stage":
 			continue
 		if not _only.is_empty() and _only != shot:
 			continue
@@ -236,17 +249,24 @@ func _material_study() -> void:
 				lights.append(_study_spot(EntranceDirector.walk_back_at(at, Vector3.BACK, Vector3.LEFT), at + Vector3.UP * 1.4,
 					EntranceDirector.WALK_BACK_ENERGY, Color(.88, .93, 1), EntranceDirector.WALK_BACK_RANGE,
 					EntranceDirector.WALK_BACK_ANGLE, .35))
-		for _frame in _settle:
-			await RenderingServer.frame_post_draw
-		print("VISUAL_CAMERA ", get_viewport().get_camera_3d().global_transform, " fov=", get_viewport().get_camera_3d().fov)
-		var picture := get_viewport().get_texture().get_image()
-		var path := _out.path_join(shot + ".png")
-		if picture.save_png(path) != OK:
-			get_tree().quit(1)
-			return
-		captures.append({"shot": shot, "image": path, "width": picture.get_width(), "height": picture.get_height(),
-			"camera_at": str(camera.global_position), "camera_basis": str(camera.global_basis), "fov": camera.fov})
-		print("VISUAL_MATERIAL_STUDY saved ", path)
+		var views := ["front", "threequarter", "profile"] if _portrait == "all" else [_portrait]
+		for view: String in views:
+			if not view.is_empty():
+				var eye := Vector3(0, 1.76, -25.18)
+				if view == "threequarter": eye = Vector3(-.55, 1.80, -25.32)
+				elif view == "profile": eye = Vector3(-.84, 1.76, -26)
+				camera.fov = 30
+				camera.look_at_from_position(eye, Vector3(0, 1.72, -26))
+			for _frame in _settle:
+				await RenderingServer.frame_post_draw
+			var picture := get_viewport().get_texture().get_image()
+			var path := _out.path_join(shot + ("_" + view if not view.is_empty() else "") + ".png")
+			if picture.save_png(path) != OK:
+				get_tree().quit(1)
+				return
+			captures.append({"shot": shot, "view": view, "image": path, "width": picture.get_width(), "height": picture.get_height(),
+				"camera_at": str(camera.global_position), "camera_basis": str(camera.global_basis), "fov": camera.fov})
+			print("VISUAL_MATERIAL_STUDY saved ", path)
 	var file := FileAccess.open(_out.path_join("proof_manifest.json"), FileAccess.WRITE)
 	var manifest := {"captures": captures, "settle_frames": _settle,
 		"scope": "isolated_bind_pose_material_study" if _studio else "bounded_stage_bind_pose_material_study",
@@ -270,6 +290,9 @@ func _render_metadata() -> Dictionary:
 		"runtime_flags": WindowCapture.runtime_flags(),
 		"os": OS.get_name(), "godot": Engine.get_version_info().string,
 		"skin_base_wetness": Sweat.BASE, "skin_max_wetness": Sweat.MAX_WETNESS,
+		"face_film_share": SkinLook.FACE_FILM_SHARE,
+		"face_film_roughness_gain": SkinLook.FACE_FILM_ROUGHNESS_GAIN,
 		"key_energy": EntranceDirector.WALK_KEY_ENERGY, "key_side_m": EntranceDirector.WALK_KEY_SIDE,
 		"camera_fill_energy": EntranceDirector.CAM_KEY_ENERGY,
+		"skin_dry_diagnostic": OS.get_cmdline_user_args().has("--dry-skin"),
 		"stage_probe_requested": OS.get_cmdline_user_args().has("--stage-probe")}

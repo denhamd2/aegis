@@ -1,0 +1,11 @@
+{
+  "cards": 1200,
+  "triangles": {
+    "HairCap": 4844,
+    "HairCardsCrown": 7640,
+    "HairCardsSides": 3430,
+    "HairCardsHairline": 930
+  },
+  "total_triangles": 16844,
+  "seed": 161026
+}

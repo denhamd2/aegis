@@ -13,8 +13,8 @@ class_name HairLook
 ## Godot stretches the highlight along the material's tangent (UV u), or along
 ## a flowmap's direction when one is given. So the tangent has to run ACROSS
 ## the strands:
-##   * Cody's shells (tools/blender/cody_hair.py): u runs round the head and
-##     the strands lie along v -- the tangent is already across them.
+##   * Cody's cap/cards (tools/blender/cody_groom.py): fibres lie along v;
+##     u runs across them, so the tangent already has the required direction.
 ##   * Roman's cards: checked on renders (tools/probe/hair_shot.tscn), see
 ##     RomanModel.HAIR_FLOW.
 

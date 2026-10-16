@@ -50,6 +50,19 @@ func test_sweat_film_has_spatial_breakup_and_bounded_roughness() -> void:
 	assert_float(high - low).override_failure_message("The sweat film became a uniform lacquer.").is_greater(0.3)
 
 
+func test_face_keeps_a_wet_finish_with_softer_highlights_than_the_body() -> void:
+	var face := StandardMaterial3D.new()
+	var body := StandardMaterial3D.new()
+	SkinLook.apply(face, true)
+	SkinLook.apply(body)
+	SkinLook.set_wetness(face, Sweat.BASE)
+	SkinLook.set_wetness(body, Sweat.BASE)
+	assert_bool(face.clearcoat_enabled).is_true()
+	assert_float(face.clearcoat).is_greater(0.0)
+	assert_float(face.clearcoat).is_less(body.clearcoat)
+	assert_float(face.clearcoat_roughness).is_greater(body.clearcoat_roughness)
+
+
 ## The pore layer rides on UV2 and must not tint the skin: white in multiply.
 func test_pores_leave_the_colour_alone() -> void:
 	var m := StandardMaterial3D.new()

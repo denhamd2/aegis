@@ -1,0 +1,69 @@
+{
+  "camera_fill_energy": 0.85,
+  "captures": [
+    {
+      "camera_at": "(0.0, 1.76, -25.18)",
+      "camera_basis": "[X: (1.0, 0.0, 0.0), Y: (0.0, 0.998812, -0.048723), Z: (0.0, 0.048723, 0.998812)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "roman_after_front.png",
+      "shot": "roman_ramp",
+      "view": "front",
+      "width": 960,
+      "sha256": "4009ca5327a06e4cd4a0c4a4226e175fde92c82b2f8edc2ec4f8b9f80fd0ea90"
+    },
+    {
+      "camera_at": "(-0.55, 1.8, -25.32)",
+      "camera_basis": "[X: (0.777511, 0.0, 0.628869), Y: (0.057285, 0.995843, -0.070825), Z: (-0.626255, 0.091091, 0.774279)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "roman_after_threequarter.png",
+      "shot": "roman_ramp",
+      "view": "threequarter",
+      "width": 960,
+      "sha256": "9f5f81ee492f3c81e21dc48c303efc1fd424fcc64980a165bd3712b142ab13c0"
+    },
+    {
+      "camera_at": "(-0.84, 1.76, -26.0)",
+      "camera_basis": "[X: (-0.0, 0.0, 1.0), Y: (0.047565, 0.998868, 0.0), Z: (-0.998868, 0.047565, -0.0)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "roman_after_profile.png",
+      "shot": "roman_ramp",
+      "view": "profile",
+      "width": 960,
+      "sha256": "0a86e345c48b8d074e8952fa8d2be343110c02274e6ff8c91d71e254f976f810"
+    }
+  ],
+  "glints_disabled_for_review": false,
+  "godot": "4.6.3-stable (official)",
+  "key_energy": 6.0,
+  "key_side_m": 2.8,
+  "lighting_scope": "key_and_back_only; no_follow_spot_or_camera_fill",
+  "os": "Linux",
+  "performance_evidence": false,
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "runtime_flags": {
+    "fixed_fps": true,
+    "movie_maker": false,
+    "verified": true
+  },
+  "scope": "isolated_bind_pose_material_study",
+  "settle_frames": 12,
+  "skin_base_wetness": 0.52,
+  "skin_dry_diagnostic": false,
+  "skin_max_wetness": 0.84,
+  "software_rasterised": true,
+  "stage_probe_requested": false,
+  "video_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "volumetric_fog_disabled_for_review": true,
+  "source_revision": "character checkpoint in the commit containing this manifest",
+  "glints_present": false,
+  "interpretation": "Same fixed camera/key/back light; no arena, animation or native Mac performance evidence.",
+  "material_settings_supplement": {
+    "face_film_share": 0.18,
+    "face_film_roughness_gain": 2.2,
+    "origin": "runtime SkinLook values at capture; older manifest writer omitted these fields"
+  }
+}

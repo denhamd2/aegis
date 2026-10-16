@@ -23,6 +23,9 @@ done
 "$binary" --windowed --resolution 1920x1080 --fixed-fps 60 \
     res://tools/probe/visual_target_proofs.tscn -- --out "$output/entrance_proofs" \
     --capture-resolution 1920x1080 --settle 24
+"$binary" --windowed --resolution 1920x1080 --fixed-fps 60 \
+    res://tools/probe/visual_target_proofs.tscn -- --studio --portrait-view all \
+    --out "$output/character_studies" --capture-resolution 1920x1080 --settle 24
 "$binary" --windowed --resolution 1920x1080 \
     res://tools/probe/match_look.tscn -- --out "$output" --frames 1200 --profile \
     --capture-resolution 1920x1080
