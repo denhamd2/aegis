@@ -122,6 +122,8 @@ static func set_wetness(material: BaseMaterial3D, wetness: float) -> void:
 		material.clearcoat_texture = load(WET_FILM)
 	material.clearcoat_enabled = w > 0.0
 	var face: bool = material.get_meta("skin_face_film", false)
-	material.clearcoat = SWEAT_COAT * w * (FACE_FILM_SHARE if face else 1.0)
+	var share: float = material.get_meta("skin_face_film_share", FACE_FILM_SHARE) if face else 1.0
+	var roughness_gain: float = material.get_meta("skin_face_film_roughness_gain", FACE_FILM_ROUGHNESS_GAIN) if face else 1.0
+	material.clearcoat = SWEAT_COAT * w * share
 	material.clearcoat_roughness = lerpf(SWEAT_COAT_ROUGHNESS_DRY,
-			SWEAT_COAT_ROUGHNESS_WET, w) * (FACE_FILM_ROUGHNESS_GAIN if face else 1.0)
+			SWEAT_COAT_ROUGHNESS_WET, w) * roughness_gain

@@ -85,3 +85,17 @@ real-time `match_look` sample is intended for frame pacing; a 60 fps target
 has not yet been verified on the owner's Mac.
 
 Validation results are recorded in [validation.md](validation.md).
+
+## Reference-directed Roman rebuild
+
+The owner rejected the incremental portrait and requested closer likeness.
+The [new review](roman_reference_rebuild.md) retains the supplied target,
+three same-camera A/B views, adapted poses, closed blink, reproducible
+synthetic colour source and hashed test/package evidence. It adds a registered
+colour atlas, compacted midface, independent scalp/brow/beard shading and
+1,800 curved beard clumps, with a Roman-specific bounded wet film.
+The original GLB, rig and animation assets remain unchanged.
+
+The owner subsequently accepted this version for now and requested commit
+and Mac publication. Further likeness refinement is deferred; native M1 Pro
+appearance, motion and 60 fps measurement remain open.

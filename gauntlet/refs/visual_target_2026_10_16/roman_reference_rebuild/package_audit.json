@@ -1,0 +1,18 @@
+{
+  "file": "build/mac-visual-preview/Aegis.zip",
+  "bytes": 891897614,
+  "sha256": "b59dd0a5980e9a5b633b1be5581b2d93d6ace89dc093799beb3ddd67c35dbdb9",
+  "pck_sha256": "b9727c11120e4edabac844a059a9a3ffe97e3dbe20cc5deb22603ed82f3194c7",
+  "universal": [
+    "arm64",
+    "x86_64"
+  ],
+  "zip_entry_crc_checks": 7,
+  "native_validation": "pending",
+  "release_candidate": false,
+  "source_revision": "reference-directed rebuild in the commit containing this audit",
+  "source_branch": "codex/oct16-visual-look",
+  "packed_resource_audit": "PASS: prior assets, final portrait maps, head/hair attachments, curved beard, wet film and capture resources",
+  "export_log_errors": false,
+  "packed_audit_log_errors": false
+}

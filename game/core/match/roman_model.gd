@@ -82,8 +82,8 @@ const BONE_MAP := {
 ## a flat tint chosen to match Roman's actual ring gear rather than an
 ## invented texture. Both cases are called out per entry below.
 const ALBEDO_FIXES := {
-	# The damaged head colour is reconstructed on its measured UVs by
-	# build_roman_portrait.py, with finer brows and restrained pigment zones.
+	# Reference-directed colour registered to the measured head UVs by
+	# build_roman_portrait.py; anatomical relief stays separate.
 	"Material.001": {"texture": "portrait_color", "color": Color.WHITE},
 	# Ring gear. No colour texture for these exists in the asset -- only
 	# tops_nrm/bottoms_nrm. Black matches the gear Roman actually wrestles in,
@@ -234,6 +234,11 @@ const SURFACE_MAPS := {"Material.001": "portrait_rm"}
 ## More relief and less diffusion retain planes under the October wet look.
 const FACE_NORMAL_STRENGTH := 0.65
 const FACE_SCATTER_STRENGTH := 0.18
+const HAIR_UNDERPAINT_TINT := Color(.60, .65, .70)
+## The supplied target has a tighter wet facial highlight. Independent hair
+## masks keep this flesh film off the brows/beard instead of dulling all skin.
+const FACE_FILM_SHARE := 0.45
+const FACE_FILM_ROUGHNESS_GAIN := 1.10
 ## Pore tiles across one UV square (SkinLook.add_pores): the head's own
 ## texture spans about 0.4 m of face and scalp, the body's about 1.2 m, so a
 ## tile is ~2.5 cm on both.
@@ -586,7 +591,7 @@ func _add_hair_springs() -> void:
 # cheek line (build_roman_hair_alpha.py, paint_beard_strands), the cards on
 # the sides are short and at 0.5, and the moustache and chin keep their
 # full cards. BEARD_SIDE_DEG and BEARD_SIDE_Y match the painter's.
-const BEARD_KEEP := 0.70
+const BEARD_KEEP := 0.90
 const BEARD_KEEP_SIDES := 0.20
 const BEARD_ALPHA_SIDES := 0.50
 const BEARD_SIDE_DEG := Vector2(35.0, 62.0)
@@ -667,6 +672,12 @@ func _trim_beard() -> void:
 	var override := beard.get_surface_override_material(beard_surface) as BaseMaterial3D
 	if override:
 		override.vertex_color_use_as_albedo = true
+	# Replace the broad cards with curved fibre clumps on the same fitted,
+	# skinned surface. Keep the source as the fitting/animation authority.
+	if not find_child("BeardGroom", true, false):
+		var groom := RomanBeardGroom.build(beard, beard_surface)
+		if groom:
+			beard.visible = false
 
 
 # ---------------------------------------------------------------------------
@@ -1125,6 +1136,8 @@ func _fix_materials() -> void:
 				material.metallic_specular = 0.5
 				SkinLook.apply(material, key == "Material.001")
 				if key == "Material.001":
+					material.set_meta("skin_face_film_share", FACE_FILM_SHARE)
+					material.set_meta("skin_face_film_roughness_gain", FACE_FILM_ROUGHNESS_GAIN)
 					material.clearcoat_texture = _texture("skin_head_wet")
 					material.normal_scale = FACE_NORMAL_STRENGTH
 					material.subsurf_scatter_strength = FACE_SCATTER_STRENGTH
@@ -1233,7 +1246,7 @@ func _fix_materials() -> void:
 	_add_scalp_roots()
 
 
-## The root underpaint used to share skin's scattering/specular response.
+## Scalp and beard underpaint must not share skin scattering/sweat response.
 ## Give it a thin, nonmetallic layer on the SAME skinned head mesh. Reusing
 ## the actual skin and relative skeleton path keeps it aligned in all poses.
 func _add_scalp_roots() -> void:
@@ -1255,9 +1268,11 @@ func _add_scalp_roots() -> void:
 	roots.skeleton = roots.get_path_to(rig)
 	roots.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := StandardMaterial3D.new()
-	mat.resource_name = "RomanScalpRoots"
+	mat.resource_name = "RomanHairUnderpaint"
 	mat.albedo_texture = _texture("portrait_roots")
-	mat.albedo_color = Color(.028, .025, .022)
+	# Calibrate the generated underpaint to black hair reflectance; otherwise
+	# warm brown fibre pigment reads as exposed tan skin under the walk key.
+	mat.albedo_color = HAIR_UNDERPAINT_TINT
 	mat.metallic_specular = .12
 	mat.roughness = .75
 	mat.normal_enabled = true
@@ -1416,7 +1431,12 @@ const LASH_SCISSOR := 0.3
 
 
 func _fix_eyes() -> void:
-	EyeKit.dress(self, EYE_MATERIAL, EyeKit.eye_material("roman_reigns", EYE_PARALLAX))
+	var eye := EyeKit.eye_material("roman_reigns", EYE_PARALLAX)
+	# Retain a wet catchlight without washing the dark brown iris into a
+	# broad grey ring under the entrance keys. Other roster eyes are untouched.
+	eye.clearcoat = .55
+	eye.metallic_specular = .30
+	EyeKit.dress(self, EYE_MATERIAL, eye)
 	EyeKit.dress(self, LASH_MATERIAL, EyeKit.lash_material(
 			_texture("lash_alpha"), LASH_COLOR, LASH_SCISSOR))
 
@@ -1429,7 +1449,7 @@ const LID_COLOR := Color(0.47, 0.32, 0.23)
 const LID_SEED := 7
 ## The October target keeps an alert stare. The previous -20-degree cap,
 ## combined with the old low brow sculpt, read as half-closed/sleepy.
-const LID_OPEN := -28.0
+const LID_OPEN := -25.0
 ## The eyeball's centre, ahead of its bone along the line of sight. Zero:
 ## the pupil sphere sits 12.2 mm from the bone, which is a human eyeball's
 ## radius exactly, so the bone IS the centre. (6 mm, from the note on

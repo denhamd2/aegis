@@ -1,0 +1,60 @@
+{
+  "baseline_commit": "140d930bf9f3ece8cb05d8fd9cc41745ddf494d3",
+  "after_revision": "the commit containing this review",
+  "target": {
+    "image": "../roman_face_review/reference.png",
+    "sha256": "c8b0be35114427a0a215dad6e0637ecfd9632a255ca6dca6db0469477e5d327f"
+  },
+  "images": {
+    "after_front.png": {
+      "sha256": "ca23592724019b2679c64cc8a5b9704786b638ca064c562292b000af082c736f",
+      "bytes": 200522
+    },
+    "after_profile.png": {
+      "sha256": "86afdcc38ce9a410b9b8342191aecc69c7ab0777af96eda5c56bb4c28bbd2320",
+      "bytes": 168284
+    },
+    "after_threequarter.png": {
+      "sha256": "dc5b8288ab786f9cd89d16e809324c828eecf844888a6d2c369d102dd57e6ff6",
+      "bytes": 184227
+    },
+    "before_front.png": {
+      "sha256": "3ca6134cae09b9ad20d7f6cedc7c73684ccf6425bd8cafbc203637a72c3a285c",
+      "bytes": 187215
+    },
+    "before_profile.png": {
+      "sha256": "8d26edba6bb4f19f9103e075c1e96b03a4f4e6e4339299ba7a8ffd2710fbb4b7",
+      "bytes": 164664
+    },
+    "before_threequarter.png": {
+      "sha256": "c6ef731843441e1c8d74123651074a6bf9514bfc212c0502f51d7246aca4233e",
+      "bytes": 170679
+    },
+    "blink_after.png": {
+      "sha256": "bd1ae9d03c147c1d2930329ed4eeeb44e330b6c4bc2d4b5f324483f5221a0f38",
+      "bytes": 200322
+    },
+    "blink_before.png": {
+      "sha256": "15b58f7420b6d5d0eacb7dc76527bedeb2176787bfdc1711005ea34dd68124c5",
+      "bytes": 187035
+    },
+    "face_comparison.png": {
+      "sha256": "2dfa27a532136b7dca506cc574821c6b5becb157c6d0f9030c857d8e886147db",
+      "bytes": 540122
+    },
+    "pose_Roman_Stand_f34.png": {
+      "sha256": "e22a18e8ce23b947ab3bc1f2a18e8e54aaefab6dd3ee27958e211cee6a869120",
+      "bytes": 252490
+    },
+    "pose_Roman_Stand_ffront.png": {
+      "sha256": "87400a7005ed5930a8ea57264809fb2d971b1c9477c17c6e2db43927fc3bdaa2",
+      "bytes": 287922
+    },
+    "pose_Roman_Stand_fside.png": {
+      "sha256": "bcb07c3b5157f3073ed3c3d2d66285b32ac0e0a22deb6e03758682bb73f2063c",
+      "bytes": 222529
+    }
+  },
+  "visual_verdict": "Improved reference-directed implementation checkpoint; remaining eye/orbital, nose/lip, main-hair and full-arena differences prevent an exact match. Owner accepted this version for now and requested commit/publication.",
+  "native_performance": "M1 Pro steady 60 fps unverified"
+}

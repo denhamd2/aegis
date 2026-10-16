@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-10-16" name="report_1" tests="6" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_state_animations" package="tests" timestamp="2026-10-16T18:31:52" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="0.396">
+		<testcase name="test_every_state_animation_exists_on_the_rig" classname="test_state_animations" time="0.039">
+		</testcase>
+		<testcase name="test_every_role_override_animation_exists_on_the_rig" classname="test_state_animations" time="0.060">
+		</testcase>
+		<testcase name="test_grapple_roles_resolve_to_different_clips" classname="test_state_animations" time="0.010">
+		</testcase>
+		<testcase name="test_states_without_a_role_override_fall_back" classname="test_state_animations" time="0.010">
+		</testcase>
+		<testcase name="test_blend_graph_has_a_node_for_every_mapped_state" classname="test_state_animations" time="0.061">
+		</testcase>
+		<testcase name="test_playback_starts_in_idle" classname="test_state_animations" time="0.114">
+		</testcase>
+	</testsuite>
+</testsuites>

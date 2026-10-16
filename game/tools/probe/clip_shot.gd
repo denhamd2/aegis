@@ -134,7 +134,7 @@ func _run() -> void:
 	_light()
 	var cam := Camera3D.new()
 	add_child(cam)
-	cam.fov = 45.0
+	cam.fov = _face_fov() if _hand == "face" else 45.0
 	cam.make_current()
 
 	for clip_name: String in names:
@@ -163,9 +163,7 @@ func _run() -> void:
 			continue
 		print("  %s  %d/%d tracks resolve on %s"
 				% [clip_name, resolved, anim.get_track_count(), _model.get_file()])
-		var views: Dictionary = VIEWS if _hand == "" else ({
-				"ffront": Vector3(0.0, 0.02, 0.62), "f34": Vector3(-0.42, 0.04, 0.45),
-				"fside": Vector3(-0.62, 0.02, 0.0)} if _hand == "face" else {
+		var views: Dictionary = VIEWS if _hand == "" else (_face_views() if _hand == "face" else {
 				"hfront": Vector3(0.0, 0.05, 0.55), "hout": Vector3(0.55 * (1.0 if _hand == "l" else -1.0), 0.05, 0.1),
 				"hback": Vector3(0.0, 0.1, -0.55)})
 		for view_name: String in views:
@@ -242,3 +240,14 @@ func _light() -> void:
 	e.ambient_light_energy = 1.0
 	env.environment = e
 	add_child(env)
+
+
+## A reference probe may fit its camera to the supplied portrait while the
+## ordinary authoring contact sheets retain their existing views.
+func _face_views() -> Dictionary:
+	return {"ffront": Vector3(0.0, .02, .62), "f34": Vector3(-.42, .04, .45),
+		"fside": Vector3(-.62, .02, 0.0)}
+
+
+func _face_fov() -> float:
+	return 45.0

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-10-16" name="report_1" tests="44" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_roman_face_shape" package="tests" timestamp="2026-10-16T18:08:08" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="14.598">
+		<testcase name="test_nothing_moves_below_the_neck" classname="test_roman_face_shape" time="0.013">
+		</testcase>
+		<testcase name="test_the_sculpt_is_symmetric_bounded_and_does_not_fold_the_face" classname="test_roman_face_shape" time="0.168">
+		</testcase>
+		<testcase name="test_the_eyes_are_left_where_their_bones_are" classname="test_roman_face_shape" time="14.365">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_roman_hair" package="tests" timestamp="2026-10-16T18:08:23" hostname="localhost" tests="9" failures="0" errors="0" skipped="0" flaky="0" time="65.819">
+		<testcase name="test_every_hair_chain_is_simulated_from_the_nape" classname="test_roman_hair" time="15.734">
+		</testcase>
+		<testcase name="test_the_hair_swings_with_a_walk_and_stays_off_his_back" classname="test_roman_hair" time="9.653">
+		</testcase>
+		<testcase name="test_head_surface_map_keeps_the_face_at_skin_roughness" classname="test_roman_hair" time="7.823">
+		</testcase>
+		<testcase name="test_hair_beard_and_scalp_materials" classname="test_roman_hair" time="7.997">
+		</testcase>
+		<testcase name="test_scalp_roots_share_the_head_mesh_skin_and_skeleton" classname="test_roman_hair" time="4.858">
+		</testcase>
+		<testcase name="test_beard_fibres_follow_the_original_skin_without_the_old_shell" classname="test_roman_hair" time="5.011">
+		</testcase>
+		<testcase name="test_wave_map_follows_the_geometry_wave" classname="test_roman_hair" time="4.930">
+		</testcase>
+		<testcase name="test_flyaways_and_the_sheet_cut_stay_in_proportion" classname="test_roman_hair" time="4.999">
+		</testcase>
+		<testcase name="test_ringlets_ride_his_hair_chains" classname="test_roman_hair" time="4.670">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_skin_look" package="tests" timestamp="2026-10-16T18:09:29" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="18.051">
+		<testcase name="test_sweat_starts_damp_builds_and_caps" classname="test_skin_look" time="0.012">
+		</testcase>
+		<testcase name="test_wetness_is_a_clearcoat_film" classname="test_skin_look" time="0.050">
+		</testcase>
+		<testcase name="test_sweat_film_has_spatial_breakup_and_bounded_roughness" classname="test_skin_look" time="0.245">
+		</testcase>
+		<testcase name="test_face_keeps_a_wet_finish_with_softer_highlights_than_the_body" classname="test_skin_look" time="0.011">
+		</testcase>
+		<testcase name="test_pores_leave_the_colour_alone" classname="test_skin_look" time="0.019">
+		</testcase>
+		<testcase name="test_detail_uv_is_added_without_touching_the_mesh" classname="test_skin_look" time="0.011">
+		</testcase>
+		<testcase name="test_roman_and_cody_register_skin_with_pores_and_sweat" classname="test_skin_look" time="17.613">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_broadcast_crowd_eyes" package="tests" timestamp="2026-10-16T18:09:47" hostname="localhost" tests="13" failures="0" errors="0" skipped="0" flaky="0" time="11.456">
+		<testcase name="test_only_close_up_lenses_lose_their_background" classname="test_broadcast_crowd_eyes" time="0.009">
+		</testcase>
+		<testcase name="test_an_entrance_close_up_focuses_on_the_subject_and_the_bell_clears_it" classname="test_broadcast_crowd_eyes" time="0.011">
+		</testcase>
+		<testcase name="test_grain_only_on_a_replay" classname="test_broadcast_crowd_eyes" time="0.047">
+		</testcase>
+		<testcase name="test_big_moves_pop_the_crowd_and_jabs_do_not" classname="test_broadcast_crowd_eyes" time="0.010">
+		</testcase>
+		<testcase name="test_excitement_halves_every_half_life" classname="test_broadcast_crowd_eyes" time="0.012">
+		</testcase>
+		<testcase name="test_a_kickout_after_two_is_a_near_fall_pop" classname="test_broadcast_crowd_eyes" time="0.008">
+		</testcase>
+		<testcase name="test_the_finish_holds_the_crowd_up" classname="test_broadcast_crowd_eyes" time="0.011">
+		</testcase>
+		<testcase name="test_an_eye_turns_to_look_at_its_target" classname="test_broadcast_crowd_eyes" time="0.046">
+		</testcase>
+		<testcase name="test_an_eye_does_not_roll_to_look_behind_him" classname="test_broadcast_crowd_eyes" time="0.008">
+		</testcase>
+		<testcase name="test_a_lock_up_closes_to_chest_to_chest" classname="test_broadcast_crowd_eyes" time="0.011">
+		</testcase>
+		<testcase name="test_cody_has_eye_bones_that_aim" classname="test_broadcast_crowd_eyes" time="3.991">
+		</testcase>
+		<testcase name="test_a_blink_closes_fast_and_opens_slower" classname="test_broadcast_crowd_eyes" time="0.012">
+		</testcase>
+		<testcase name="test_roman_has_two_eyelids" classname="test_broadcast_crowd_eyes" time="7.168">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_wrestler_model_orientation" package="tests" timestamp="2026-10-16T18:09:58" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" flaky="0" time="0.096">
+		<testcase name="test_character_model_cancels_the_rigs_backwards_forward_axis" classname="test_wrestler_model_orientation" time="0.023">
+		</testcase>
+		<testcase name="test_character_model_is_not_offset_or_scaled" classname="test_wrestler_model_orientation" time="0.049">
+		</testcase>
+	</testsuite>
+	<testsuite id="5" name="test_ula_fala" package="tests" timestamp="2026-10-16T18:09:59" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="26.309">
+		<testcase name="test_the_necklace_is_skinned_to_his_bones_and_within_budget" classname="test_ula_fala" time="0.014">
+		</testcase>
+		<testcase name="test_the_keys_are_in_a_collar_on_his_neck_not_a_loose_ring" classname="test_ula_fala" time="0.009">
+		</testcase>
+		<testcase name="test_it_hangs_on_his_skeleton_and_is_posed_from_his_every_frame" classname="test_ula_fala" time="26.262">
+		</testcase>
+	</testsuite>
+	<testsuite id="6" name="test_replay_roundtrip" package="tests" timestamp="2026-10-16T18:10:25" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="19.145">
+		<testcase name="test_recording_without_advancing_keeps_only_one_tick" classname="test_replay_roundtrip" time="0.006">
+		</testcase>
+		<testcase name="test_advancing_the_tick_records_one_frame_per_tick" classname="test_replay_roundtrip" time="0.006">
+		</testcase>
+		<testcase name="test_playback_returns_each_tick_its_own_recorded_input" classname="test_replay_roundtrip" time="0.041">
+		</testcase>
+		<testcase name="test_a_recorded_match_spans_its_whole_run" classname="test_replay_roundtrip" time="4.845">
+		</testcase>
+		<testcase name="test_replaying_a_recorded_match_reproduces_it" classname="test_replay_roundtrip" time="14.076">
+		</testcase>
+		<testcase name="test_the_pin_seed_ignores_how_long_the_process_has_been_running" classname="test_replay_roundtrip" time="0.075">
+		</testcase>
+		<testcase name="test_the_pin_seed_moves_with_the_match_tick" classname="test_replay_roundtrip" time="0.030">
+		</testcase>
+	</testsuite>
+</testsuites>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-10-16" name="report_1" tests="25" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_roman_face_shape" package="tests" timestamp="2026-10-16T18:27:14" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="2.792">
+		<testcase name="test_nothing_moves_below_the_neck" classname="test_roman_face_shape" time="0.007">
+		</testcase>
+		<testcase name="test_the_sculpt_is_symmetric_bounded_and_does_not_fold_the_face" classname="test_roman_face_shape" time="0.054">
+		</testcase>
+		<testcase name="test_the_eyes_are_left_where_their_bones_are" classname="test_roman_face_shape" time="2.703">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_roman_hair" package="tests" timestamp="2026-10-16T18:27:17" hostname="localhost" tests="9" failures="0" errors="0" skipped="0" flaky="0" time="23.069">
+		<testcase name="test_every_hair_chain_is_simulated_from_the_nape" classname="test_roman_hair" time="3.590">
+		</testcase>
+		<testcase name="test_the_hair_swings_with_a_walk_and_stays_off_his_back" classname="test_roman_hair" time="2.869">
+		</testcase>
+		<testcase name="test_head_surface_map_keeps_the_face_at_skin_roughness" classname="test_roman_hair" time="2.687">
+		</testcase>
+		<testcase name="test_hair_beard_and_scalp_materials" classname="test_roman_hair" time="1.811">
+		</testcase>
+		<testcase name="test_scalp_roots_share_the_head_mesh_skin_and_skeleton" classname="test_roman_hair" time="1.759">
+		</testcase>
+		<testcase name="test_beard_fibres_follow_the_original_skin_without_the_old_shell" classname="test_roman_hair" time="1.843">
+		</testcase>
+		<testcase name="test_wave_map_follows_the_geometry_wave" classname="test_roman_hair" time="2.286">
+		</testcase>
+		<testcase name="test_flyaways_and_the_sheet_cut_stay_in_proportion" classname="test_roman_hair" time="3.048">
+		</testcase>
+		<testcase name="test_ringlets_ride_his_hair_chains" classname="test_roman_hair" time="3.078">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_skin_look" package="tests" timestamp="2026-10-16T18:27:40" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="7.085">
+		<testcase name="test_sweat_starts_damp_builds_and_caps" classname="test_skin_look" time="0.008">
+		</testcase>
+		<testcase name="test_wetness_is_a_clearcoat_film" classname="test_skin_look" time="0.008">
+		</testcase>
+		<testcase name="test_sweat_film_has_spatial_breakup_and_bounded_roughness" classname="test_skin_look" time="0.110">
+		</testcase>
+		<testcase name="test_face_keeps_a_wet_finish_with_softer_highlights_than_the_body" classname="test_skin_look" time="0.010">
+		</testcase>
+		<testcase name="test_pores_leave_the_colour_alone" classname="test_skin_look" time="0.021">
+		</testcase>
+		<testcase name="test_detail_uv_is_added_without_touching_the_mesh" classname="test_skin_look" time="0.012">
+		</testcase>
+		<testcase name="test_roman_and_cody_register_skin_with_pores_and_sweat" classname="test_skin_look" time="6.873">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_state_animations" package="tests" timestamp="2026-10-16T18:27:47" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="0.107">
+		<testcase name="test_every_state_animation_exists_on_the_rig" classname="test_state_animations" time="0.019">
+		</testcase>
+		<testcase name="test_every_role_override_animation_exists_on_the_rig" classname="test_state_animations" time="0.012">
+		</testcase>
+		<testcase name="test_grapple_roles_resolve_to_different_clips" classname="test_state_animations" time="0.006">
+		</testcase>
+		<testcase name="test_states_without_a_role_override_fall_back" classname="test_state_animations" time="0.005">
+		</testcase>
+		<testcase name="test_blend_graph_has_a_node_for_every_mapped_state" classname="test_state_animations" time="0.012">
+		</testcase>
+		<testcase name="test_playback_starts_in_idle" classname="test_state_animations" time="0.022">
+		</testcase>
+	</testsuite>
+</testsuites>

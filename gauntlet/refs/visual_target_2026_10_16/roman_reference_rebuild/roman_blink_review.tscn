@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="roman_blink_review.gd" id="1"]
+
+[node name="ReferenceReview" type="Node3D"]
+script = ExtResource("1")

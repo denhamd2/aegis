@@ -1,0 +1,41 @@
+{
+  "clip": "Roman_Stand",
+  "sample_fraction": 0.35,
+  "adapted_tracks": 356,
+  "resolved_tracks": 356,
+  "resolution": [
+    1280,
+    720
+  ],
+  "camera_fov": 22,
+  "offsets": {
+    "ffront": [
+      0.0865,
+      0.1484,
+      1.45
+    ],
+    "f34": [
+      -0.982254,
+      0.093548,
+      1.052415
+    ],
+    "fside": [
+      -1.449994,
+      0.046774,
+      0
+    ]
+  },
+  "lighting": "production walk key/back and camera-fill parameters; match AgX exposure 1.7; ambient energy .12",
+  "omitted": [
+    "arena",
+    "follow spot",
+    "stage lights",
+    "fog"
+  ],
+  "wetness": 0.52,
+  "renderer": "Godot 4.6.3 Forward+/Vulkan llvmpipe LLVM 19",
+  "fixed_clock": 60,
+  "settle_process_frames": 3,
+  "performance_evidence": false,
+  "known_diagnostic": "clip probe reports resource/ObjectDB cleanup diagnostics at exit"
+}

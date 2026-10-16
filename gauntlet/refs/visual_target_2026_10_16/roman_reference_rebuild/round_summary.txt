@@ -1,0 +1,18 @@
+  res://tests/test_state_animations.gd > test_playback_starts_in_idle STARTED
+  res://tests/test_state_animations.gd > test_playback_starts_in_idle FAILED 104ms
+  Expecting:
+ 'IDLEStart'	at 'test_playback_starts_in_idle' in res://tests/test_state_animations.gd:117
+  res://tests/test_clip_authoring_gate.gd > test_the_clip_authoring_surface_has_not_changed_unreviewed STARTED
+  res://tests/test_clip_authoring_gate.gd > test_the_clip_authoring_surface_has_not_changed_unreviewed FAILED 24ms
+  9612aaae0d898529f82bd227c104553ab84af1ee6c417d69d3e7a7195c83e6e8	at 'test_the_clip_authoring_surface_has_not_changed_unreviewed' in res://tests/test_clip_authoring_gate.gd:79
+Overall Summary: 964 test cases | 0 errors | 2 failures | 0 flaky | 0 skipped | 0 orphans |
+
+== round check ==
+  suite                        FAIL  Overall Summary: 964 test cases | 0 errors | 2 failures | 0 flaky | 0 skipped | 0 orphans |
+  gate                         FAIL  round is void -- see /workspace/aegis-visual-audit/roman_reference_round/capture.log
+  art shots                    FAIL  no shots rendered -- see /tmp/tmp.THbVcjm3Kt/shots.log
+
+  measurements (not pass/fail -- the critic reads the deltas)
+                              now  baseline    delta   target/ref
+
+ROUND CHECK: FAIL -- the round is void, not lost. Fix and re-run.

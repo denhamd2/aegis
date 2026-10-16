@@ -113,6 +113,11 @@ func test_hair_beard_and_scalp_materials() -> void:
 				assert_object(m.metallic_texture).is_same(m.roughness_texture)
 				assert_object(m.subsurf_scatter_texture).is_not_null()
 				assert_object(m.subsurf_scatter_transmittance_texture).is_same(m.subsurf_scatter_texture)
+				SkinLook.set_wetness(m, Sweat.BASE)
+				# The reference's wet face keeps a bounded, tighter highlight;
+				# hair underpaint is separate and receives no flesh film.
+				assert_float(m.clearcoat).is_between(.10, .25)
+				assert_float(m.clearcoat_roughness).is_between(.25, .45)
 				seen["head"] = true
 			elif key == "beard":
 				assert_bool(m.albedo_color.is_equal_approx(RomanModel.BEARD_COLOR)).is_true()
@@ -138,6 +143,46 @@ func test_scalp_roots_share_the_head_mesh_skin_and_skeleton() -> void:
 	assert_float(mat.metallic).is_equal(0.0)
 	assert_bool(mat.subsurf_scatter_enabled).is_false()
 	assert_float(mat.grow_amount).is_between(0.0, 0.001)
+	# Painted beard and scalp must not receive the flesh diffusion layer;
+	# exposed forehead and lips still do. This prevents the waxy chin patch.
+	var roots_map := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/roman_reigns_portrait_roots.png"))
+	var scatter := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/roman_reigns_portrait_sss.png"))
+	assert_float(roots_map.get_pixel(512, 666).a).is_greater(.9)
+	assert_float(scatter.get_pixel(512, 666).r).is_less(.1)
+	assert_float(roots_map.get_pixel(512, 235).a).is_less(.1)
+	assert_float(roots_map.get_pixel(512, 594).a).is_less(.1)
+
+
+## New fibre geometry must retain the source skin contract and a bounded
+## close-up budget; invalid bone indices can look fine until the head turns.
+func test_beard_fibres_follow_the_original_skin_without_the_old_shell() -> void:
+	var groom := _model.find_child("BeardGroom", true, false) as MeshInstance3D
+	assert_object(groom).is_not_null()
+	var source: MeshInstance3D = null
+	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		for surface in mesh.mesh.get_surface_count():
+			var material := mesh.mesh.surface_get_material(surface)
+			if material and material.resource_name == "beard":
+				source = mesh
+	assert_object(source).is_not_null()
+	assert_bool(source.visible).is_false()
+	assert_object(groom.skin).is_same(source.skin)
+	assert_object(groom.get_node(groom.skeleton)).is_same(source.get_node(source.skeleton))
+	assert_bool(groom.transform.is_equal_approx(source.transform)).is_true()
+	var arrays := groom.mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	assert_int(vertices.size() / 3).is_between(1000, 12000)
+	var influences := bones.size() / vertices.size()
+	for vertex in range(0, vertices.size(), 29):
+		assert_bool(vertices[vertex].is_finite()).is_true()
+		var sum := 0.0
+		for influence in influences:
+			var offset := vertex * influences + influence
+			assert_int(bones[offset]).is_between(0, groom.skin.get_bind_count() - 1)
+			sum += weights[offset]
+		assert_float(sum).is_equal_approx(1.0, .001)
 
 
 ## The wave map (build_roman_hair_alpha.py, build_wave_normal) and the wave

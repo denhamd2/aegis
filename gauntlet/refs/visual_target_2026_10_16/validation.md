@@ -162,3 +162,36 @@ Review probe resources load after project autoload initialization; viewer
 JavaScript syntax, links and all 15 image/six asset hashes were checked.
 These remain package checks on Linux. The published `mac-latest` release stays
 at `fb69eae`; only the local review preview was refreshed.
+
+## Reference-directed Roman rebuild — current checkpoint
+
+The owner accepted this version for now and requested committing all accumulated
+changes and publishing the Mac build. See the [review](roman_reference_rebuild.md)
+and [hashed evidence](roman_reference_rebuild/manifest.json). Further likeness
+refinement is deferred; final eight-reference and native performance acceptance
+remain open.
+
+- Earlier focused run: **44/44 passed**, zero failures/errors.
+- Final face/hair/skin/state run after the wet-film change: **25/25 passed**.
+- State-start timing test changed from a wall-clock wait to two physics frames:
+  its final suite passed **6/6**. These counts overlap. XML results and exact
+  scopes are retained in [validation runs](roman_reference_rebuild/validation_runs.json).
+- Full round before the last follow-ups: **964 cases, 962 passed, 2 failed**,
+  zero test errors. One was the repaired timing test; the other is the unchanged
+  baseline clip-authoring digest mismatch. No pin or authoring source changed.
+  Capture/art gate remains void because xvfb-run was missing from the round's
+  PATH. Separate manually rendered studies were reviewed.
+- All five new portrait/fibre maps regenerate byte for byte. Python compilation,
+  shell syntax, image/asset hashes, viewer links and patch whitespace checked.
+- Local Mac preview: **891,897,614 bytes**, SHA-256
+  `b59dd0a5980e9a5b633b1be5581b2d93d6ace89dc093799beb3ddd67c35dbdb9`.
+  Seven ZIP entries passed CRC checks; Mach-O includes arm64 and x86_64.
+  The final packed audit passed without compile/script/engine errors for the
+  current maps, head/root mesh bindings, 10,800-triangle beard and wet-face
+  settings. The helper avoids early loading of Sweat's scene dependencies.
+
+These are Linux package and appearance checks. The release workflow will build
+from the committed source when main advances. Its release artifact may have a
+different ZIP/PCK hash; verify the workflow commit and downloadable asset.
+The CPU-rendered studies do not establish native Metal appearance, animation
+quality or steady 60 fps on the M1 Pro.

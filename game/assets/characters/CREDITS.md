@@ -345,3 +345,21 @@ No new external assets are introduced. The separate runtime scalp-root layer
 shares the actual head mesh, skin and skeleton.
 Facial refitting and eyelid corrections are runtime presentation changes;
 the supplied model, its skin weights and animation files remain untouched.
+
+
+## Reference-directed Roman face / curved beard
+
+The follow-up replaces the reconstructed face pigment with image-generated
+source colour guided by the owner's October 16 ramp reference. The retained
+source and provenance live in `tools/assets/sources/`; its native resolution
+is 1254×1254, registered/resampled to the existing 2K UV atlas by
+`build_roman_portrait.py`. It is synthetic artwork, not a photoscan. Nose and
+mouth registration is explicit; the old neck/tattoo islands are retained.
+The supplied anatomical normal, rig, weights and GLB remain unchanged.
+
+`build_roman_groom.py` authors the deterministic 1K fibre coverage/pigment
+atlas. `RomanBeardGroom` samples the already fitted source beard into 1,800
+curved clumps (10,800 triangles), shares its skin/skeleton/transform, and
+replaces its visible cards. No external character asset or runtime ML model
+is introduced. The MediaPipe model used for diagnostic landmark ratios is
+an optional cloud analysis tool and is not included in the game/build.

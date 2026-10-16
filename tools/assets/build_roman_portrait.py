@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""October 16 Roman portrait albedo/roughness from the supplied head sources.
+"""Reference-directed Roman portrait colour/roughness on the supplied UVs.
 
 Keeps the measured UVs, beard underpaint and scalp coverage. Finer brows,
 less baked facial shading and nonmetallic roots complement the mesh refit.
-Reuses the canonical head reconstruction rather than filtering a painted
-output repeatedly. The supplied wrinkle normal stays the primary relief.
+Registers a retained image-generated albedo source, preserves the neck seam
+and retains the supplied anatomical wrinkle normal as relief. --legacy
+rebuilds the earlier damaged-channel reconstruction for historical comparison.
 
 Run: python3 tools/assets/build_roman_portrait.py [--out-dir PATH]
 """
@@ -13,30 +14,46 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from scipy.ndimage import map_coordinates, gaussian_filter
 
 import build_roman_hair_alpha as source
 
 
 def build_scatter_mask(out: Path):
-    # The supplied mask is white on hair and black on skin. SkinLook's
-    # unmasked diffusion otherwise bleeds forehead light through dark roots.
-    hair = Image.open(source.CHARACTERS / "roman_reigns_headhair_mask.png").convert("L")
+    # The independent scalp/beard underpaint mask is white on hair.
+    # Exclude it from flesh diffusion, including the formerly waxy chin.
+    hair = Image.open(out / 'roman_reigns_portrait_roots.png').getchannel('A')
     skin = hair.point(lambda value: 255 - value)
     skin.resize((1024, 1024), Image.Resampling.LANCZOS).save(
         out / "roman_reigns_portrait_sss.png", optimize=True)
 
 
 def build_roots(out: Path):
-    # Existing authored scalp coverage already excludes ears/face. A separate
-    # nonmetallic material can shade these short dark roots independently
-    # from skin, with the same UVs and the same skinned head mesh.
-    coverage = Image.open(source.CHARACTERS / "roman_reigns_head_rm.png").getchannel("G")
-    roots = Image.new("RGBA", (1024, 1024), (255, 255, 255, 0))
-    roots.putalpha(coverage.resize(roots.size, Image.Resampling.LANCZOS))
+    # Existing scalp coverage plus the registered beard pigment separate
+    # hair response from flesh, on the same UVs and skinned head mesh.
+    roots = Image.open(out / 'roman_reigns_portrait_color.png').convert('RGBA').resize((1024,1024), Image.Resampling.LANCZOS)
+    coverage = np.asarray(Image.open(source.CHARACTERS / "roman_reigns_head_rm.png").getchannel("G").resize(roots.size, Image.Resampling.LANCZOS), dtype=np.float32) / 255
+    # The old head mask covered scalp only. Painted beard pigment otherwise
+    # received skin scattering/clearcoat and made a pale waxy chin patch.
+    # Extend the SAME independent hair layer, keeping lips/nostrils flesh.
+    rgb = np.asarray(roots.convert('RGB'), dtype=np.float32)
+    v,u = np.mgrid[0:1024,0:1024].astype(np.float32)/1023
+    luminance = rgb[...,0]*.2126+rgb[...,1]*.7152+rgb[...,2]*.0722
+    beard = np.clip((105-luminance)/45,0,1)*np.clip((v-.48)/.025,0,1)
+    beard *= np.clip((.80-v)/.035,0,1)
+    lip = np.sqrt(((u-.5)/.087)**2+((v-.576)/.028)**2)
+    beard *= np.clip((lip-.85)/.25,0,1)
+    # Dense brows are hair too: the flesh diffusion/wet layer otherwise
+    # turns the black eyebrow pigment grey under the close entrance key.
+    brow_region = np.clip((v-.245)/.012,0,1)*np.clip((.31-v)/.012,0,1)
+    brow_region *= np.clip((u-.26)/.025,0,1)*np.clip((.74-u)/.025,0,1)
+    brows = np.clip((105-luminance)/45,0,1)*brow_region
+    coverage = np.maximum.reduce([coverage,beard,brows])
+    roots.putalpha(Image.fromarray(np.uint8(coverage*255+.5)))
     roots.save(out / "roman_reigns_portrait_roots.png", optimize=True)
 
 
-def build(out: Path):
+def build_legacy(out: Path):
     out.mkdir(parents=True, exist_ok=True)
     colour = out / "roman_reigns_portrait_color.png"
     surface = out / "roman_reigns_portrait_rm.png"
@@ -85,12 +102,57 @@ def build(out: Path):
                                     (source.HEAD_SKIN_ROUGHNESS +
                                      (.88 - source.HEAD_SKIN_ROUGHNESS) * brow_weight) * 255) + .5)
     Image.fromarray(rm).save(surface, optimize=True)
-    build_scatter_mask(out)
     build_roots(out)
+    build_scatter_mask(out)
     print("Roman portrait maps written; original head sources unchanged.")
+
+
+def build(out: Path):
+    """Register the generated, reference-directed colour source to measured UVs.
+
+    Nose/lips are aligned to the supplied anatomical normal, rather than
+    accepting the image model's feature drift. Neck islands retain the prior
+    source colour so the body seam and tattoo remain unchanged. No highlights
+    or shadows are added. Relief/roughness remain separate material inputs.
+    """
+    out.mkdir(parents=True, exist_ok=True)
+    raw = Path(__file__).with_name('sources') / 'roman_portrait_albedo_generated.png'
+    image = np.asarray(Image.open(raw).convert('RGB'), dtype=np.float32)
+    size = 2048
+    v, u = np.mgrid[0:size, 0:size].astype(np.float32) / (size-1)
+    # Destination -> source vertical registration, normalized image UVs.
+    source_v = np.interp(v[:, 0], [0, .28, .35, .47, .57, .60, .72, 1],
+                        [0, .28, .35, .46, .55, .58, .72, 1])[:, None]
+    source_v = np.broadcast_to(source_v, (size,size))
+    colour = np.stack([map_coordinates(image[..., c],
+                         [source_v*(image.shape[0]-1), u*(image.shape[1]-1)],
+                         order=1, mode='nearest') for c in range(3)], axis=2)
+    legacy = np.asarray(Image.open(source.CHARACTERS/'roman_reigns_head_color.png').convert('RGB').resize((size,size)), dtype=np.float32)
+    neck = np.clip((v-.75)/.15, 0, 1)
+    neck = neck*neck*(3-2*neck)
+    colour = colour*(1-neck[..., None]) + legacy*neck[..., None]
+    Image.fromarray(np.uint8(np.clip(colour,0,255)+.5)).save(out/'roman_reigns_portrait_color.png', optimize=True)
+    original = np.asarray(Image.open(source.CHARACTERS/'roman_reigns_head_rm.png').convert('RGB').resize((size,size)), dtype=np.float32)/255
+    roughness = original[...,0]
+    # Fine spatial variation changes the highlight without making the head
+    # metallic or painting specular reflections into colour.
+    rng = np.random.default_rng(161037)
+    grain = gaussian_filter(rng.random((size,size), dtype=np.float32), 1.2)-.5
+    roughness = np.clip(roughness + grain*.05, source.HEAD_SKIN_ROUGHNESS, .95)
+    brow = np.exp(-.5*((v-.278)/.014)**2)*np.maximum(
+        np.exp(-.5*((u-.37)/.07)**2), np.exp(-.5*((u-.63)/.07)**2))
+    roughness = np.maximum(roughness, .58+.30*brow)
+    rm = np.zeros((size,size,3), dtype=np.uint8)
+    rm[...,0] = np.uint8(roughness*255+.5)
+    Image.fromarray(rm).save(out/'roman_reigns_portrait_rm.png', optimize=True)
+    build_roots(out)
+    build_scatter_mask(out)
+    print('Reference-directed portrait maps registered; source GLB/rig unchanged.')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", type=Path, default=source.CHARACTERS)
-    build(parser.parse_args().out_dir)
+    parser.add_argument('--legacy', action='store_true', help='rebuild the prior damaged-channel reconstruction')
+    args = parser.parse_args()
+    (build_legacy if args.legacy else build)(args.out_dir)

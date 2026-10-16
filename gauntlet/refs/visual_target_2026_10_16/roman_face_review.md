@@ -1,5 +1,7 @@
 # Roman portrait refit — October 16
 
+Historical checkpoint. See the [new reference-directed rebuild](roman_reference_rebuild.md) for the current face, beard and publication status.
+
 Status: implementation checkpoint; **final reference likeness and native
 performance acceptance remain open**. Baseline for this comparison: `3405825`.
 The master face target is the owner's “Roman entrance on Ramp - new.png”.

@@ -1,0 +1,35 @@
+{
+  "created_utc": "2026-10-16",
+  "generator": "image_gen.imagegen",
+  "generated_source_dimensions": [
+    1254,
+    1254
+  ],
+  "source_sha256": "13d2958428f76daf6077b0a5ac3f29bf43c78a8ec3bf520c76f8837870ff5443",
+  "purpose": "Reference-directed head base colour on existing UV layout. This is synthetic source material, not a photographic scan.",
+  "inputs": [
+    {
+      "path": "game/assets/characters/roman_reigns_portrait_color.png",
+      "revision": "140d930"
+    },
+    {
+      "path": "gauntlet/refs/visual_target_2026_10_16/roman_face_review/reference.png",
+      "sha256": "c8b0be35114427a0a215dad6e0637ecfd9632a255ca6dca6db0469477e5d327f"
+    }
+  ],
+  "art_direction": "Preserve UV island layout; match supplied Roman target skin/identity, real pores, pigment, dense brows and beard transition. De-lit diffuse colour with no directional light, specular highlights or sweat.",
+  "registration": "tools/assets/build_roman_portrait.py; nose/lip rows aligned to measured source UVs; neck/tattoo seam blended back to supplied head colour. Scalp, brows and beard underpaint use independent hair response; exposed lips retain skin response.",
+  "runtime_maps": "2K colour/RM, supplied anatomical normal; 1K SSS/roots/fibre atlas. No new high-resolution body maps.",
+  "registration_landmarks_model": {
+    "name": "MediaPipe Face Landmarker",
+    "model_url": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task",
+    "model_sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+    "purpose": "Diagnostic 2D landmark ratios, not an identity/quality score or source of game geometry. Beards/lighting/camera can bias measurements."
+  },
+  "construction_notes": [
+    "No face photo is pasted onto screen-space geometry; the generated colour is UV-registered on the existing fully skinned head.",
+    "Skin relief remains the supplied tangent-space anatomical normal plus existing tiled microdetail.",
+    "Beard clumps are generated on the already fitted source geometry and share its skin/skeleton; source card geometry remains available as the fitting authority.",
+    "Neutral and posed captures are full rendered frames. Diagnostic comparison crops will not retouch pixels."
+  ]
+}

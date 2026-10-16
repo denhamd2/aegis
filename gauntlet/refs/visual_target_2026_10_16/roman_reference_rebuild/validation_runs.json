@@ -1,0 +1,40 @@
+{
+  "full_round": {
+    "cases": 964,
+    "passed": 962,
+    "failures": 2,
+    "errors": 0,
+    "full_log_sha256": "8cfe6a5b97f99ab9ee354fda24f8b105a196ce5f09a9127d37a0aaa6477e5cc2",
+    "summary": "round_summary.txt",
+    "failure_details": [
+      "Pre-existing clip-authoring digest mismatch; no authoring source or pin changed.",
+      "State-start test used a 50ms wall-clock wait; changed to wait for two actual physics frames. Its post-fix six tests pass."
+    ],
+    "capture_gate": "void: xvfb-run unavailable on PATH",
+    "revision_scope": "before final film and test synchronization changes"
+  },
+  "focused_runs": [
+    {
+      "file": "focused_results.xml",
+      "sha256": "e9a40a9a9f2998d3f3db925b8b6d2742c5aac3d1913e28d9d385b07f6f643cb9",
+      "tests": 44,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "file": "final_material_results.xml",
+      "sha256": "34b71a7a2a582c89368678ebce9121485b5cae1c984166f1856199c54804b450",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "file": "state_sync_results.xml",
+      "sha256": "25e314ce8acdfb89539319b35acb2ad890ec0c20fca794f1cae1aae74f45ac1a",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "scope": "44 focused checks preceded final film; final 25 cover face/hair/skin/state and final six cover physics-synchronized test. Counts overlap."
+}

@@ -112,7 +112,11 @@ func test_blend_graph_has_a_node_for_every_mapped_state() -> void:
 ## get_current_node() reports it rather than the implicit "Start".
 func test_playback_starts_in_idle() -> void:
 	var wrestler := _make_wrestler()
-	await await_millis(50)
+	# A wall-clock delay need not include a physics update under CPU load.
+	# The signal precedes callbacks; the second signal observes the completed
+	# first update, including the animation tree's queued start.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 	var playback: AnimationNodeStateMachinePlayback = wrestler.anim_tree["parameters/playback"]
 	assert_str(playback.get_current_node()).is_equal(
 		WrestlerFSM.State.keys()[WrestlerFSM.State.IDLE]

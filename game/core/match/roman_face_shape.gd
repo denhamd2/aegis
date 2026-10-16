@@ -37,17 +37,22 @@ const MOVES := [
 	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.020, 0.036), Vector3(-0.0025, 0.0, -0.0015), true],
 	# Broader lower face, retaining the source rig and facial attachments.
 	[Vector3(0.072, 1.675, 0.060), Vector3(0.032, 0.045, 0.065), Vector3(0.0010, 0.0, 0.0), true],
-	[Vector3(0.062, 1.625, 0.060), Vector3(0.030, 0.035, 0.065), Vector3(0.0020, 0.0, 0.0), true],
+	[Vector3(0.062, 1.625, 0.060), Vector3(0.030, 0.035, 0.065), Vector3(0.0040, 0.0, 0.0), true],
 	# The nose: a higher, narrower bridge...
 	[Vector3(0.0, 1.700, 0.150), Vector3(0.012, 0.024, 0.030), Vector3(0.0, 0.0, 0.0018), false],
 	[Vector3(0.013, 1.692, 0.140), Vector3(0.010, 0.030, 0.030), Vector3(-0.0010, 0.0, 0.0), true],
 	# ...narrower wings...
-	[Vector3(0.018, 1.674, 0.138), Vector3(0.012, 0.013, 0.030), Vector3(-0.0005, 0.0, 0.0), true],
+	[Vector3(0.018, 1.674, 0.138), Vector3(0.012, 0.013, 0.030), Vector3(-0.0015, 0.0, 0.0005), true],
 	# ...and longer, the tip lower and further out.
 	[Vector3(0.0, 1.672, 0.160), Vector3(0.022, 0.012, 0.030), Vector3(0.0, -0.0010, 0.0010), false],
 	# Less chin extension; a little lip volume, including the mouth parts.
 	[Vector3(0.0, 1.600, 0.080), Vector3(0.090, 0.050, 0.120), Vector3(0.0, -0.0040, 0.0020), false],
 	[Vector3(0.0, 1.643, 0.120), Vector3(0.026, 0.010, 0.025), Vector3(0.0, 0.0, 0.0015), false],
+	# Landmark review: the midface is too long, the mouth too broad. Lift
+	# nose/mouth together without moving eye centres or the chin/neck seam.
+	[Vector3(0.0, 1.657, 0.130), Vector3(0.120, 0.060, 0.110), Vector3(0.0, 0.0080, 0.0), false],
+	[Vector3(0.028, 1.645, 0.126), Vector3(0.014, 0.013, 0.045), Vector3(-0.0018, 0.0, 0.0), true],
+	[Vector3(0.052, 1.720, 0.120), Vector3(0.012, 0.009, 0.030), Vector3(-0.0010, 0.0, 0.0), true],
 ]
 ## Contour, painted as vertex colour on the face (CONTOUR_MATERIAL) the way a
 ## game face texture carries it -- the shape alone did not read at match

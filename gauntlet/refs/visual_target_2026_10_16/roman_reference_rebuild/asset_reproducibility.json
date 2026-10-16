@@ -1,0 +1,27 @@
+{
+  "roman_reigns_portrait_rm.png": {
+    "sha256": "0bbbffe00aa74b4087188f39b60593b45bdd53fa0f3c24d7bd4ee775c176f3c3",
+    "bytes": 976448,
+    "repeatable": true
+  },
+  "roman_reigns_beard_groom.png": {
+    "sha256": "6c7c3f08292fe39f614bd3af6a915ae53141885786fc4a2d89eefc1c36cfbcc0",
+    "bytes": 269149,
+    "repeatable": true
+  },
+  "roman_reigns_portrait_roots.png": {
+    "sha256": "fd869be4d1d88a025ff19cee5aabc1a04624b8d561cdbdde1ec7c06ef08d521a",
+    "bytes": 1786182,
+    "repeatable": true
+  },
+  "roman_reigns_portrait_sss.png": {
+    "sha256": "aa32dc7884fa0f6c556ce6ca333db758f7da374e515d1bce7d7723294151e085",
+    "bytes": 220385,
+    "repeatable": true
+  },
+  "roman_reigns_portrait_color.png": {
+    "sha256": "b523e9c2396e3752af515efc0b5196ec73afb629a0635322dba137e058b804dd",
+    "bytes": 4349293,
+    "repeatable": true
+  }
+}
