@@ -308,3 +308,14 @@ and height maps are procedural, from nothing but code. `cody_eye_color.png` is
 derived from the eye texture embedded in `cody_rhodes.glb` (iris tinted,
 sclera calmed); `aubrey_eye_color.png` from the kit eye texture embedded in
 `aubrey_edwards.glb` (Quaternius, CC0), with the iris and lids repainted.
+
+## October 16 skin finish maps
+
+`skin_wet_film.png`, `skin_body_roughness.png`,
+`cody_skin_head_roughness.png`, `cody_skin_head_wet.png`, and
+`roman_reigns_skin_head_wet.png` are project-authored procedural material
+data from `tools/assets/build_skin_finish.py` (fixed seed 16102026).
+The Roman scalp exclusion uses the existing credited
+`roman_reigns_head_rm.png` surface mask. No new external assets or services
+are required. Red/green in the wet-film maps are clearcoat amount/roughness;
+all maps are linear data, mipmapped and VRAM-compressed for the desktop/Mac.

@@ -86,6 +86,10 @@ submission_hold={
 ]
 }
 
+[layer_names]
+
+3d_render/layer_2="Static stage reflections"
+
 [physics]
 
 common/physics_ticks_per_second=60

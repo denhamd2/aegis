@@ -1,0 +1,36 @@
+{
+  "camera_fill_energy": 0.85,
+  "captures": [
+    {
+      "height": 540,
+      "image": "roman_after.png",
+      "shot": "roman_ramp",
+      "width": 960,
+      "sha256": "6f16ee02e35aaa7f6118d5afe232295d0c79f7515a0b06ac07ebe78e79ea3d1e"
+    }
+  ],
+  "glints_disabled_for_review": true,
+  "godot": "4.6.3-stable (official)",
+  "key_energy": 6.0,
+  "key_side_m": 2.8,
+  "lighting_scope": "key_and_back_only; no_follow_spot_or_camera_fill",
+  "os": "Linux",
+  "performance_evidence": false,
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "runtime_flags": {
+    "fixed_fps": true,
+    "movie_maker": false,
+    "verified": true
+  },
+  "scope": "bounded_stage_bind_pose_material_study",
+  "settle_frames": 12,
+  "skin_base_wetness": 0.52,
+  "skin_max_wetness": 0.84,
+  "software_rasterised": true,
+  "stage_probe_requested": false,
+  "video_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "volumetric_fog_disabled_for_review": true,
+  "comparison_label": "working_tree_materials",
+  "baseline_revision": "fb69eae8be85d4e78b8aedc99ceb46d100ce152f"
+}

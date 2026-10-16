@@ -56,10 +56,12 @@ const SKIN_TINT := Color(0.8, 0.68, 0.58)
 ## And less of a mirror: a dielectric's default 0.5 specular threw the truss
 ## keys back off his back as a white patch (p95 0.73 against 2K26's 0.52).
 const SKIN_SPECULAR := 0.3
-const SKIN_ROUGHNESS := 0.72
 ## Pore tiles across one UV square of his skin atlases (SkinLook.add_pores):
 ## his torso-and-arms atlas spans about 1.2 m of skin, so ~2.5 cm a tile.
 const PORE_TILES := 48.0
+## His head has a separate, much smaller atlas. Body density here reduced
+## the pores below a pixel even in close-ups; keep facial detail at its scale.
+const HEAD_PORE_TILES := 16.0
 
 
 ## His hair as GEOMETRY (tools/blender/cody_hair.py): shells over the
@@ -84,6 +86,10 @@ const HAIR_ROUGHNESS := 0.42
 
 
 func _ready() -> void:
+	# Review probes can assemble the material adapter after entering the tree
+	# without copying the complete gameplay animation library.
+	if get_meta("material_study", false):
+		return
 	# His arms, shoulders and chest to 2K26's build (BodyBulk), first, so
 	# everything after works on the finished mesh.
 	BodyBulk.apply(self, get_game_skeleton(), BodyBulk.CODY)
@@ -189,10 +195,15 @@ func _fix_look() -> void:
 			if source.resource_name == HEAD_MATERIAL and ResourceLoader.exists(HEAD_BLOND):
 				material.albedo_texture = load(HEAD_BLOND)
 			material.albedo_color = material.albedo_color * SKIN_TINT
-			material.roughness = SKIN_ROUGHNESS
+			material.roughness = 1.0
+			material.roughness_texture = load("res://assets/characters/cody_skin_head_roughness.png"
+					if source.resource_name == HEAD_MATERIAL else "res://assets/characters/skin_body_roughness.png")
+			material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
 			material.metallic_specular = SKIN_SPECULAR
 			SkinLook.apply(material)
-			SkinLook.add_pores(material, PORE_TILES)
+			if source.resource_name == HEAD_MATERIAL:
+				material.clearcoat_texture = load("res://assets/characters/cody_skin_head_wet.png")
+			SkinLook.add_pores(material, HEAD_PORE_TILES if source.resource_name == HEAD_MATERIAL else PORE_TILES)
 			skin.append(material)
 			mesh_instance.set_surface_override_material(surface, material)
 	# For Sweat (WrestlerController attaches it).

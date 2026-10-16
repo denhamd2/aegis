@@ -548,7 +548,7 @@ func set_look(p_look: Look) -> void:
 		light.light_energy = stage_energy * (ENTRANCE_STAGE_SHARE if entrance else 1.0) \
 				* renderer_gain(light)
 	for light in _audience_lights:
-		light.light_energy = audience_energy * (0.12 if entrance else 1.0) * renderer_gain(light)
+		light.light_energy = audience_energy * (0.48 if entrance else 1.0) * renderer_gain(light)
 	for light in _aisle_lights:
 		light.light_energy = AISLE_ENERGY * (0.2 if entrance else 1.0) * renderer_gain(light)
 	_dim_set(ENTRANCE_SET_SHARE if entrance else 1.0)
@@ -656,6 +656,7 @@ func _ready() -> void:
 	_build_ribbon_spill()
 	_build_barricade_leds()
 	_build_fog_volumes()
+	_build_stage_reflections()
 	_hang_fixtures()
 	_apply_compat_environment()
 	_compensate_for_renderer()
@@ -676,6 +677,35 @@ func _ready() -> void:
 		if child is SpotLight3D:
 			_glints.add_for(child)
 	set_look(look)
+
+
+## Layer 2 holds static stage/truss/fixture geometry in addition to layer 1.
+## Actors, props and camera-facing glints stay out of the cached capture.
+const STAGE_REFLECTION_MASK := 2
+## Kept off until the native Metal proof passes. The cloud Vulkan software
+## backend currently renders black with this extra probe; never promote an
+## unverified reflection experiment into normal play.
+@export var stage_reflections := false
+
+
+## The ring probe cannot reach the stage at z=-38. A single cached, boxed
+## capture supplies off-screen set reflections to the deck and upper ramp.
+## A static-only mask prevents freezing a wrestler into the environment even
+## if the first capture occurs after an entrance has begun.
+func _build_stage_reflections() -> void:
+	if not stage_reflections or not _supports_volumetric_fog() or has_node("StageReflections"):
+		return
+	var probe := ReflectionProbe.new()
+	probe.name = "StageReflections"
+	probe.position = Vector3(0.0, 3.0, -30.0)
+	probe.size = Vector3(34.0, 18.0, 44.0)
+	probe.max_distance = 26.0
+	probe.cull_mask = STAGE_REFLECTION_MASK
+	probe.box_projection = true
+	probe.interior = true
+	probe.enable_shadows = false
+	probe.update_mode = ReflectionProbe.UPDATE_ONCE
+	add_child(probe)
 
 
 # ---------------------------------------------------------------------------
@@ -1020,6 +1050,7 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 		var mi := MeshInstance3D.new()
 		mi.name = part
 		mi.mesh = meshes[part]
+		mi.layers |= STAGE_REFLECTION_MASK
 		mi.basis = parts[part]
 		mi.material_override = lens_mat if part == "FixtureLens" else body_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

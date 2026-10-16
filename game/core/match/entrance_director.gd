@@ -170,7 +170,7 @@ const RINGSIDE_FOV := 42.0
 ## ramp in silhouette: nothing in the rig lights the ramp, because nothing in
 ## a match happens there.
 const FOLLOW_SPOT_AT := Vector3(0.0, 17.0, 22.0)
-const FOLLOW_SPOT_ENERGY := 40.0
+const FOLLOW_SPOT_ENERGY := 32.0
 const FOLLOW_SPOT_ANGLE := 3.5
 ## The walk key (blender-lighting: a key from the front at about 45 degrees,
 ## warm, soft, with the video wall behind him as the rim). The follow spot is
@@ -180,16 +180,16 @@ const FOLLOW_SPOT_ANGLE := 3.5
 ## to his right and above, like the front-truss followers a real entrance
 ## hangs, so he is lit from the curtain to the ring.
 const WALK_KEY_AHEAD := 4.2
-const WALK_KEY_SIDE := 1.6
+const WALK_KEY_SIDE := 2.8
 const WALK_KEY_UP := 3.6
-const WALK_KEY_ENERGY := 8.0
+const WALK_KEY_ENERGY := 6.0
 const WALK_KEY_ANGLE := 32.0
 const WALK_KEY_RANGE := 11.0
 ## The camera key (2K26: he is exposed on every angle): a soft front light that
 ## rides the active shot, a little above and to the side of the lens, aimed
 ## at his chest. The walk key and back light are fixed to HIM, so a lens off
 ## their axis -- the side tracks -- saw his far side fall to black.
-const CAM_KEY_ENERGY := 2.5
+const CAM_KEY_ENERGY := 0.85
 const CAM_KEY_UP := 0.7
 const CAM_KEY_SIDE := 0.9
 ## The camera key on a man in the ring, for the corner intros and the
@@ -719,7 +719,7 @@ func begin(match_root: Node) -> void:
 	_follow.global_position = FOLLOW_SPOT_AT
 	_walk_key = SpotLight3D.new()
 	_walk_key.name = "WalkKey"
-	_walk_key.light_color = Color(1.0, 0.94, 0.86)
+	_walk_key.light_color = Color(1.0, 0.98, 0.95)
 	_walk_key.light_energy = WALK_KEY_ENERGY
 	_walk_key.spot_angle = WALK_KEY_ANGLE
 	_walk_key.spot_angle_attenuation = 1.6
@@ -728,13 +728,15 @@ func begin(match_root: Node) -> void:
 	# No beam in the haze: a light hanging in mid-air must not be seen.
 	_walk_key.light_volumetric_fog_energy = 0.0
 	_walk_key.light_specular = 0.35
-	_walk_key.shadow_enabled = false
+	_walk_key.shadow_enabled = true
+	_walk_key.light_size = 0.12
 	_walk_key.visible = false
 	add_child(_walk_key)
 	_walk_back = _walk_key.duplicate() as SpotLight3D
 	_walk_back.name = "WalkBack"
 	_walk_back.light_color = Color(0.88, 0.93, 1.0)
 	_walk_back.light_energy = WALK_BACK_ENERGY
+	_walk_back.shadow_enabled = false
 	_walk_back.spot_angle = WALK_BACK_ANGLE
 	_walk_back.spot_range = WALK_BACK_RANGE
 	add_child(_walk_back)
@@ -742,6 +744,7 @@ func begin(match_root: Node) -> void:
 	_cam_key.name = "CamKey"
 	_cam_key.light_color = Color(1.0, 0.95, 0.88)
 	_cam_key.light_energy = CAM_KEY_ENERGY
+	_cam_key.shadow_enabled = false
 	_cam_key.spot_attenuation = 0.4
 	_cam_key.light_specular = 0.25
 	add_child(_cam_key)

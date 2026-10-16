@@ -18,9 +18,9 @@ class_name SkinLook
 ## through his vest would read as wet cloth.
 
 ## How far light spreads under the surface, as the renderer's 0-1 strength.
-## 0.45: enough that the terminator on a bicep softens by a finger's width at
-## the match camera, not so much that a face goes waxy in a close-up.
-const STRENGTH := 0.45
+## Moderate diffusion retains the cheek/shoulder planes under the wetter
+## October reference finish. Review this together with the entrance keys.
+const STRENGTH := 0.28
 ## Thin parts lit from behind -- ears, fingers, the rim of a nose -- pass a
 ## little red light: blood under skin. Depth is how thick a part can be and
 ## still pass it; boost stays 0 so a whole torso never glows.
@@ -36,6 +36,7 @@ static func apply(material: BaseMaterial3D) -> void:
 	material.subsurf_scatter_transmittance_color = TRANSMITTANCE_COLOR
 	material.subsurf_scatter_transmittance_depth = TRANSMITTANCE_DEPTH
 	material.subsurf_scatter_transmittance_boost = 0.0
+	material.clearcoat_texture = load(WET_FILM)
 
 
 # --- Pores (gauntlet/refs/aaa_gap.md, item 6) ---------------------------------
@@ -100,28 +101,20 @@ static func with_detail_uv(mi: MeshInstance3D, surfaces: Array) -> void:
 
 
 # --- Sweat (gauntlet/refs/aaa_gap.md, item 5) ---------------------------------
-## A man walks out dry and is wet by the end of a long match. Sweat is a film
-## of water ON the skin, which is what BaseMaterial3D's clearcoat models: a
-## second, glossy specular layer over the skin's own. So a wet wrestler keeps
-## his skin's soft sheen underneath and gains a sharp, bright highlight on top
-## -- the look of every late-match close-up -- rather than turning into a
-## uniformly shiny doll, which is what lowering the skin's own roughness does.
-## 0.6 and 0.18, down from a first 0.85 and 0.12: rendered soaked at those
-## (tools/probe/skin_shot.tscn) he read as cling-filmed, a continuous mirror
-## over every muscle. Sweat is beads and streaks, broken up by the pores --
-## bright, but not a lacquer.
-## Halved again (0.35, rough 0.7 -> 0.3) against the owner's 2K26 Cody vs Roman
-## match: there the sheen is a broad soft lift on the skin, and ours threw the
-## truss lights back as a white patch (skin p95 0.88 against 2K26's 0.52,
-## gauntlet/refs/cody_roman_2k26.md).
-const SWEAT_COAT := 0.35
-const SWEAT_COAT_ROUGHNESS_DRY := 0.7
-const SWEAT_COAT_ROUGHNESS_WET := 0.3
+## October 16 target: a visible, broken wet sheen from the entrance onward.
+## R masks the film and G varies its roughness; both are linear data. Reuse
+## one small mask across the body materials rather than adding a draw pass.
+const WET_FILM := "res://assets/characters/skin_wet_film.png"
+const SWEAT_COAT := 0.7
+const SWEAT_COAT_ROUGHNESS_DRY := 0.42
+const SWEAT_COAT_ROUGHNESS_WET := 0.22
 
 
 ## Sets `material`'s wetness, 0 (dry) to 1 (soaked).
 static func set_wetness(material: BaseMaterial3D, wetness: float) -> void:
 	var w := clampf(wetness, 0.0, 1.0)
+	if material.clearcoat_texture == null:
+		material.clearcoat_texture = load(WET_FILM)
 	material.clearcoat_enabled = w > 0.0
 	material.clearcoat = SWEAT_COAT * w
 	material.clearcoat_roughness = lerpf(SWEAT_COAT_ROUGHNESS_DRY,

@@ -10,9 +10,10 @@ func test_sweat_starts_damp_builds_and_caps() -> void:
 		var w := Sweat.target(float(s), 0.0)
 		assert_float(w).is_greater_equal(last)
 		last = w
-	# Time and punishment build a soft sheen, with a firm cap before the
-	# wrestler reads as soaked under the ring lights.
-	assert_float(Sweat.target(1000.0, 0.0)).is_equal(Sweat.MAX_WETNESS)
+	# Entrance wetness targets the reference; exertion adds a modest
+	# amount, and punishment can bring it to the same bounded finish.
+	assert_float(Sweat.target(1000.0, 0.0)).is_greater(Sweat.BASE)
+	assert_float(Sweat.target(1000.0, 0.0)).is_less_equal(Sweat.MAX_WETNESS)
 	assert_float(Sweat.target(1000.0, 1000.0)).is_equal(Sweat.MAX_WETNESS)
 	for s in range(0, 1000, 20):
 		assert_float(Sweat.target(float(s), float(s * 2))).is_less_equal(Sweat.MAX_WETNESS)
@@ -27,6 +28,26 @@ func test_wetness_is_a_clearcoat_film() -> void:
 	assert_bool(m.clearcoat_enabled).is_true()
 	assert_float(m.clearcoat).is_equal_approx(SkinLook.SWEAT_COAT, 0.0001)
 	assert_float(m.clearcoat_roughness).is_equal_approx(SkinLook.SWEAT_COAT_ROUGHNESS_WET, 0.0001)
+	var film := m.clearcoat_texture
+	assert_object(film).is_not_null()
+	SkinLook.set_wetness(m, 0.5)
+	assert_object(m.clearcoat_texture).is_same(film)
+
+
+func test_sweat_film_has_spatial_breakup_and_bounded_roughness() -> void:
+	var texture := load(SkinLook.WET_FILM) as Texture2D
+	var image := texture.get_image()
+	if image.is_compressed():
+		assert_int(image.decompress()).is_equal(OK)
+	var low := 1.0
+	var high := 0.0
+	for y in range(0, image.get_height(), 17):
+		for x in range(0, image.get_width(), 17):
+			var pixel := image.get_pixel(x, y)
+			low = minf(low, pixel.r)
+			high = maxf(high, pixel.r)
+			assert_float(pixel.g).is_between(0.5, 1.0)
+	assert_float(high - low).override_failure_message("The sweat film became a uniform lacquer.").is_greater(0.3)
 
 
 ## The pore layer rides on UV2 and must not tint the skin: white in multiply.

@@ -13,33 +13,13 @@ extends Node
 ## its hash cannot see it. The clock only runs while the wrestler's physics
 ## does -- not through the entrance, not through a frozen capture.
 
-## 0.08 -> 0.22 and the full-wet clock 150 -> 100 s in the 2K26 lighting
-## round (lighting_2k26.md item 5): its wrestlers glisten under the rig from
-## the bell, not only by the end.
-## Back down to 0.1 against the owner's 2K26 match (cody_roman_2k26.md):
-## a soft sheen from the bell, not a gloss.
-const BASE := 0.1
-## Keep the late-match skin damp with a soft sheen instead of letting the
-## clock and damage terms push the wrestlers into a visibly soaked look.
-const MAX_WETNESS := 0.55
-## Seconds of match for the time share to reach its full TIME_SHARE.
-##
-## 100 -> 475. The old number is in the line it replaced: "AI matches here run
-## 30 s to 2.5 min, so a long one ends soaked". They do not any more. The match
-## flow was taken to 2K26's in the same round as this change and a match now
-## runs 474 s (428-518), measured by flow_probe against the reference's 475
-## (gauntlet/refs/match_engine_2k26.md). Against that, a 100 s clock was full a
-## FIFTH of the way in: from 1:40 on, both men sat at BASE + TIME_SHARE = 0.65
-## before damage, and soaked for the remaining six minutes. The owner, playing
-## it: "the wrestlers are sweating way too much during the match".
-##
-## So it is the match's own length, which is what the constant always meant --
-## "a long one ends soaked" is right, it was the length of a long one that
-## moved. A man is damp at the bell and soaked at the finish, and the climb
-## between them is the match.
+## The October 16 references show wet skin during the entrance and faceoff.
+## Begin with that finish, then add a bounded amount for exertion/damage.
+## SkinLook's spatial mask separates beads and film from the base skin.
+const BASE := 0.52
+const MAX_WETNESS := 0.84
 const FULL_SECONDS := 475.0
-## 0.6 -> 0.55 with BASE raised, so time alone still stops short of soaked.
-const TIME_SHARE := 0.55
+const TIME_SHARE := 0.22
 ## Total limb damage that adds the full DAMAGE_SHARE.
 ##
 ## 160 -> 300, for the same reason and in the same proportion: the ceiling is
@@ -52,7 +32,7 @@ const TIME_SHARE := 0.55
 ## equal): the breathing and the slump run off the same scale and were stale
 ## for the same reason.
 const DAMAGE_FULL := 300.0
-const DAMAGE_SHARE := 0.35
+const DAMAGE_SHARE := 0.10
 ## Materials change slowly; four updates a second is plenty.
 const UPDATE_EVERY := 0.25
 

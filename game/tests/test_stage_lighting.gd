@@ -20,10 +20,40 @@ extends GdUnitTestSuite
 const MAT_HALF := 3.0
 
 
-func _rig() -> ArenaLighting:
+func _rig(reflections := false) -> ArenaLighting:
 	var rig: ArenaLighting = auto_free(ArenaLighting.new())
+	rig.stage_reflections = reflections
 	add_child(rig)
 	return rig
+
+
+func test_stage_reflections_stay_disabled_until_native_review() -> void:
+	assert_object(_rig().get_node_or_null("StageReflections")).is_null()
+
+
+func test_stage_reflections_are_cached_and_exclude_the_ring_spawns() -> void:
+	var rig := _rig(true)
+	var probe := rig.get_node_or_null("StageReflections") as ReflectionProbe
+	if not ArenaLighting._supports_volumetric_fog():
+		assert_object(probe).is_null()
+		return
+	assert_object(probe).is_not_null()
+	assert_int(probe.update_mode).is_equal(ReflectionProbe.UPDATE_ONCE)
+	assert_bool(probe.enable_shadows).is_false()
+	assert_bool(probe.box_projection).is_true()
+	# Default actor layer is excluded even when an actor stands on the ramp.
+	assert_int(probe.cull_mask & 1).is_zero()
+	var set_root := Node3D.new()
+	var mesh := MeshInstance3D.new()
+	set_root.add_child(mesh)
+	ArenaBuilder._mark_stage_reflections(set_root)
+	assert_int(mesh.layers & probe.cull_mask).is_not_zero()
+	assert_int(mesh.layers & 1).is_equal(1)
+	set_root.free()
+	var box := AABB(probe.position - probe.size * 0.5, probe.size)
+	assert_bool(box.has_point(Vector3(0, 1, ArenaLighting.STAGE_BACK_Z))).is_true()
+	for point in _mat_corners():
+		assert_float(probe.position.distance_to(point)).is_greater(probe.max_distance)
 
 
 func _mat_corners() -> Array[Vector3]:

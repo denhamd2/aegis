@@ -2046,6 +2046,7 @@ func _build_entrance_set() -> void:
 				% ENTRANCE_MODEL)
 		return
 	var root: Node3D = packed.instantiate()
+	_mark_stage_reflections(root)
 	root.name = "EntranceSet"
 	for part: String in ENTRANCE_MATERIALS:
 		var spec: Array = ENTRANCE_MATERIALS[part]
@@ -2165,6 +2166,7 @@ func _build_overhead_rig() -> void:
 				% RIG_MODEL)
 		return
 	var root: Node3D = packed.instantiate()
+	_mark_stage_reflections(root)
 	root.name = "OverheadRig"
 	for part: String in RIG_MATERIALS:
 		var spec: Array = RIG_MATERIALS[part]
@@ -2177,6 +2179,12 @@ func _build_overhead_rig() -> void:
 	_dress(root, "ParCans", MaterialLibrary.house_compensate(
 			_house_lit(_textured("arena_chair"), 0.6)))
 	add_child(root)
+
+
+## Include only static set geometry in the cached stage environment.
+static func _mark_stage_reflections(root: Node3D) -> void:
+	for geometry: GeometryInstance3D in root.find_children("*", "GeometryInstance3D", true, false):
+		geometry.layers |= ArenaLighting.STAGE_REFLECTION_MASK
 
 
 ## The shell is part of the Blender model now.

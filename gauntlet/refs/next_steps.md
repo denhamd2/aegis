@@ -3,9 +3,12 @@
 What is done, what comes next, and in what order. Updated at the end of each
 round; the README is the detailed log of how each piece was built.
 
-Last reconciled 2026-10-15 against `main` at `645407e` and the current working
-tree. Changes made after that commit are marked as working-tree work and have
-not been published to GitHub or a Mac release.
+Latest published baseline: `fb69eae` (2026-10-16). The active task is the
+owner's eight current/new screenshot pairs, with an Apple M1 Pro / 16 GB,
+steady 60 fps target and the new references' skin finish. Start with
+[`visual_target_2026_10_16/plan.md`](visual_target_2026_10_16/plan.md) and
+[`progress.md`](visual_target_2026_10_16/progress.md). The earlier feature
+history below does not supersede that plan or later user corrections.
 
 ## Done and on the Mac build
 

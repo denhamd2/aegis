@@ -1,0 +1,35 @@
+{
+  "camera_fill_energy": 2.5,
+  "captures": [
+    {
+      "height": 540,
+      "image": "cody_before.png",
+      "shot": "cody_coat",
+      "width": 960,
+      "sha256": "9b2e80e6c6cb4b90dd0be17210421ca715866198abd4dea765387fc2adee8bfa"
+    }
+  ],
+  "glints_disabled_for_review": true,
+  "godot": "4.6.3-stable (official)",
+  "key_energy": 8.0,
+  "key_side_m": 1.6,
+  "lighting_scope": "key_and_back_only; no_follow_spot_or_camera_fill",
+  "os": "Linux",
+  "performance_evidence": false,
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "runtime_flags": {
+    "fixed_fps": true,
+    "movie_maker": false,
+    "verified": true
+  },
+  "scope": "bounded_stage_bind_pose_material_study",
+  "settle_frames": 12,
+  "skin_base_wetness": 0.1,
+  "skin_max_wetness": 0.55,
+  "software_rasterised": true,
+  "video_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "volumetric_fog_disabled_for_review": true,
+  "comparison_label": "published_baseline_materials",
+  "baseline_revision": "fb69eae8be85d4e78b8aedc99ceb46d100ce152f"
+}

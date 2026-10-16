@@ -336,6 +336,8 @@ const HAIR_LOD_BIAS := 16.0
 const SCALP_BLEND := ["Material.018", "Material.020"]
 
 func _ready() -> void:
+	if get_meta("material_study", false):
+		return
 	var body: Skeleton3D = _find_body_skeleton()
 	if not body:
 		push_error("Roman model has no body Skeleton3D")
@@ -1119,6 +1121,8 @@ func _fix_materials() -> void:
 					material.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
 				material.metallic_specular = 0.5
 				SkinLook.apply(material)
+				if key == "Material.001":
+					material.clearcoat_texture = _texture("skin_head_wet")
 				SkinLook.add_pores(material, PORE_TILES[key])
 				skin.append(material)
 			if GROW_FIXES.has(key):

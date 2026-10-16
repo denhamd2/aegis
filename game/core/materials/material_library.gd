@@ -518,14 +518,12 @@ const SPECS := {
 		"asset": "Concrete033", "tint": Color(0.098, 0.130, 0.185),
 		"tile_metres": 4.5, "roughness": 1.0, "house_lit": true,
 	},
-	## Coverage decision: bare aluminium lighting truss. A conductor, so
-	## metallic 1.0 -- and worth saying plainly that with this scene's
-	## Environment (ambient_light_source = COLOR, no radiance map) a conductor
-	## gets no ambient specular and would render black on diffuse alone. What
-	## makes the truss read is its house emission, not its metal.
+	## Bare aluminium truss: directional highlights from the local reflection
+	## environment give the tubes depth. Keep only the hall's residual fill.
 	"arena_truss": {
-		"asset": "Metal032", "tint": Color(0.125, 0.145, 0.185),
-		"tile_metres": 0.45, "roughness": 1.0, "metallic": 1.0,
+		"asset": "Metal032", "tint": Color(0.52, 0.55, 0.60),
+		"tile_metres": 0.45, "roughness": 0.7, "metallic": 1.0,
+		"normal_scale": 0.25,
 		"house_lit": true,
 	},
 	## Coverage decision: the tunnel mouth is meant to read as a recess, so
