@@ -32,15 +32,14 @@ const EYE_TUCK := 0.80
 ## The cap covers every direction within 90 degrees of its pole, so tilted
 ## forward by A its lower edge sits at elevation -A on the front of the eye.
 ## Open (-35) that edge is 35 degrees ABOVE the pupil, under the brow skin;
-## closed (16) it is at the opening's lower rim. It used to travel
-## to 88, covering the whole front of the eyeball -- and below the opening
-## there is no skin in front of the cap to hide it, so a blink swelled out
-## over his cheek.
+## closed (40) its margin clears the fitted opening's lower rim. The true
+## hemisphere and head-space up vector keep the cap seated behind skin.
 const OPEN_ANGLE := -35.0
-const CLOSED_ANGLE := 16.0
+const CLOSED_ANGLE := 40.0
 ## Where this man's lids rest open; OPEN_ANGLE unless his model says
 ## otherwise (RomanModel.LID_OPEN: 2K26's Roman has heavy, hooded lids).
 var open_angle := OPEN_ANGLE
+var draw_margin := false
 ## A blink: close fast, a hold, open a little slower (human blinks run
 ## 100-150 ms), every BLINK_GAP seconds, jittered.
 const CLOSE_SECONDS := 0.06
@@ -57,8 +56,8 @@ var _until_next := 0.0
 var _t := -1.0       # seconds into the current blink, or -1 between blinks
 
 
-## One lid per eye: `eyes` is [[centre, radius, forward, lateral], ...] in
-## this node's space.
+## One lid per eye: [centre, radius, forward, lateral, optional up] in this
+## node's space. Bone-local +Y is not necessarily the character's up axis.
 func build(eyes: Array, material: Material, seed_value: int) -> void:
 	_rng.seed = seed_value
 	_until_next = _rng.randf_range(BLINK_GAP.x, BLINK_GAP.y)
@@ -74,7 +73,8 @@ func build(eyes: Array, material: Material, seed_value: int) -> void:
 		# (Assembled as (lateral, up, up x lateral) the first time, which is a
 		# mirror, not a rotation -- the cap rendered inside out.)
 		var up := lateral.cross(forward).normalized()
-		if up.dot(Vector3.UP) < 0.0:
+		var reference_up: Vector3 = eye[4] if eye.size() > 4 else Vector3.UP
+		if up.dot(reference_up) < 0.0:
 			up = -up
 		var hinge := up.cross(forward).normalized()
 		pivot.transform = Transform3D(Basis(hinge, up, forward), centre)
@@ -82,7 +82,9 @@ func build(eyes: Array, material: Material, seed_value: int) -> void:
 		cap.name = "Cap"
 		var dome := SphereMesh.new()
 		dome.radius = float(eye[1]) * RADIUS_OVER_BALL
-		dome.height = dome.radius * 2.0
+		# Godot's hemisphere height is its full height, not a sphere diameter.
+		# A true hemisphere reaches radius above its equator at y = 0.
+		dome.height = dome.radius
 		dome.is_hemisphere = true
 		dome.radial_segments = 20
 		dome.rings = 8
@@ -91,8 +93,37 @@ func build(eyes: Array, material: Material, seed_value: int) -> void:
 			cap.material_override = material
 		cap.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		pivot.add_child(cap)
+		if draw_margin and material:
+			_add_margin(cap, dome.radius)
 		_lids.append(pivot)
 	_set_closure(0.0)
+
+
+## A narrow upper-lid edge follows the cap. The source lash cards stay on
+## the open socket; without a moving margin a closed lid reads as a blank plug.
+func _add_margin(cap: MeshInstance3D, radius: float) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in 40:
+		var a := TAU * i / 40.0
+		var b := TAU * (i + 1) / 40.0
+		var corners: Array[Vector3] = []
+		for uv: Vector2 in [Vector2(a, 0), Vector2(b, 0), Vector2(b, .028), Vector2(a, .028)]:
+			corners.append(Vector3(cos(uv.x) * cos(uv.y), sin(uv.y), sin(uv.x) * cos(uv.y)))
+		for j in [0, 2, 1, 0, 3, 2]:
+			st.set_normal(corners[j])
+			st.add_vertex(corners[j] * (radius + .00004))
+	var line := MeshInstance3D.new()
+	line.name = "LidMargin"
+	line.mesh = st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(.08, .045, .035)
+	mat.roughness = .85
+	mat.metallic_specular = .1
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	line.material_override = mat
+	line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	cap.add_child(line)
 
 
 ## How closed, 0-1, `t` seconds into a blink; -1 outside one.

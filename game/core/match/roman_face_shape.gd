@@ -1,13 +1,10 @@
 class_name RomanFaceShape
 extends RefCounted
-## Sculpts Roman's face toward 2K26's, at load (the owner: "fix Roman's face
-## shape"; gauntlet/refs/characters/review/roman_face_shape_2k26.jpg).
-##
-## Against the 2K26 close-ups (cody_roman_2k26.mp4, 214-218 s) ours read wide
-## and round: puffy cheeks, a short broad nose, eyes sitting flush under a
-## flat brow, a short jaw. His is long and lean -- a heavy low brow ridge
-## with the eyes deep-set and narrowed under it, high cheekbones with a
-## hollow beneath, a long straight nose and a long chin under the beard.
+## Fits the supplied head to the owner's October 16 ramp portrait, at load.
+## The previous 2K26 pass narrowed the jaw/cheeks, lengthened the chin/nose
+## and lowered the brow heavily. Against the new target it looked pinched
+## and sleepy. Keep a defined brow and cheekbone, restore jaw width and
+## soften the cheek hollow. Reference/evidence: visual_target_2026_10_16.
 ##
 ## Each move is a smooth bump in the model's own rest space (metres; x across
 ## him, y up, z forward; nose tip at (0, 1.674, 0.163), eyes at x +-0.033,
@@ -31,28 +28,26 @@ extends RefCounted
 ## [centre, radii, displacement, mirrored]. A mirrored bump is applied on both
 ## sides, its centre's and displacement's x flipped for the left side.
 const MOVES := [
-	# The brow ridge: forward and down over each eye, and at the glabella --
-	# the heavy, low brow, hooding the eyes under it.
-	# (Pushed a further ~40% in the stage 8 review: in the match the face
-	# still read round and open-eyed beside 2K26's.)
-	[Vector3(0.031, 1.738, 0.125), Vector3(0.032, 0.014, 0.035), Vector3(0.0, -0.0062, 0.0098), true],
-	[Vector3(0.0, 1.735, 0.140), Vector3(0.016, 0.012, 0.030), Vector3(0.0, -0.0028, 0.0062), false],
+	# A firm orbital ridge without folding down onto the upper lids.
+	[Vector3(0.031, 1.738, 0.125), Vector3(0.032, 0.014, 0.035), Vector3(0.0, -0.0025, 0.0045), true],
+	[Vector3(0.0, 1.735, 0.140), Vector3(0.016, 0.012, 0.030), Vector3(0.0, -0.0015, 0.0030), false],
 	# High cheekbones, out and up a little...
 	[Vector3(0.056, 1.699, 0.095), Vector3(0.022, 0.015, 0.032), Vector3(0.0030, 0.0015, 0.0020), true],
 	# ...and the hollow under them.
-	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.020, 0.036), Vector3(-0.0090, 0.0, -0.0052), true],
-	# Less width at the side of the face and the jaw: long and lean, not round.
-	[Vector3(0.072, 1.675, 0.060), Vector3(0.032, 0.045, 0.065), Vector3(-0.0080, 0.0, 0.0), true],
-	[Vector3(0.062, 1.625, 0.060), Vector3(0.030, 0.035, 0.065), Vector3(-0.0060, 0.0, 0.0), true],
+	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.020, 0.036), Vector3(-0.0025, 0.0, -0.0015), true],
+	# Broader lower face, retaining the source rig and facial attachments.
+	[Vector3(0.072, 1.675, 0.060), Vector3(0.032, 0.045, 0.065), Vector3(0.0010, 0.0, 0.0), true],
+	[Vector3(0.062, 1.625, 0.060), Vector3(0.030, 0.035, 0.065), Vector3(0.0020, 0.0, 0.0), true],
 	# The nose: a higher, narrower bridge...
-	[Vector3(0.0, 1.700, 0.150), Vector3(0.012, 0.024, 0.030), Vector3(0.0, 0.0, 0.0035), false],
-	[Vector3(0.013, 1.692, 0.140), Vector3(0.010, 0.030, 0.030), Vector3(-0.0030, 0.0, 0.0), true],
+	[Vector3(0.0, 1.700, 0.150), Vector3(0.012, 0.024, 0.030), Vector3(0.0, 0.0, 0.0018), false],
+	[Vector3(0.013, 1.692, 0.140), Vector3(0.010, 0.030, 0.030), Vector3(-0.0010, 0.0, 0.0), true],
 	# ...narrower wings...
-	[Vector3(0.018, 1.674, 0.138), Vector3(0.012, 0.013, 0.030), Vector3(-0.0035, 0.0, 0.0), true],
+	[Vector3(0.018, 1.674, 0.138), Vector3(0.012, 0.013, 0.030), Vector3(-0.0005, 0.0, 0.0), true],
 	# ...and longer, the tip lower and further out.
-	[Vector3(0.0, 1.672, 0.160), Vector3(0.022, 0.012, 0.030), Vector3(0.0, -0.0035, 0.0025), false],
-	# The long jaw and chin, beard and all.
-	[Vector3(0.0, 1.600, 0.080), Vector3(0.090, 0.050, 0.120), Vector3(0.0, -0.0120, 0.0040), false],
+	[Vector3(0.0, 1.672, 0.160), Vector3(0.022, 0.012, 0.030), Vector3(0.0, -0.0010, 0.0010), false],
+	# Less chin extension; a little lip volume, including the mouth parts.
+	[Vector3(0.0, 1.600, 0.080), Vector3(0.090, 0.050, 0.120), Vector3(0.0, -0.0040, 0.0020), false],
+	[Vector3(0.0, 1.643, 0.120), Vector3(0.026, 0.010, 0.025), Vector3(0.0, 0.0, 0.0015), false],
 ]
 ## Contour, painted as vertex colour on the face (CONTOUR_MATERIAL) the way a
 ## game face texture carries it -- the shape alone did not read at match
@@ -61,11 +56,11 @@ const MOVES := [
 ## darkness 0-1, mirrored], in the same rest space as MOVES (centres before
 ## the sculpt moves them -- the field is applied to the rest positions).
 const CONTOUR := [
-	[Vector3(0.033, 1.722, 0.118), Vector3(0.022, 0.014, 0.030), 0.24, true],
-	[Vector3(0.033, 1.733, 0.124), Vector3(0.024, 0.008, 0.030), 0.12, true],
-	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.022, 0.040), 0.16, true],
-	[Vector3(0.016, 1.690, 0.140), Vector3(0.008, 0.025, 0.030), 0.10, true],
-	[Vector3(0.068, 1.735, 0.070), Vector3(0.020, 0.030, 0.040), 0.08, true],
+	[Vector3(0.033, 1.722, 0.118), Vector3(0.022, 0.014, 0.030), 0.10, true],
+	[Vector3(0.033, 1.733, 0.124), Vector3(0.024, 0.008, 0.030), 0.06, true],
+	[Vector3(0.054, 1.662, 0.095), Vector3(0.024, 0.022, 0.040), 0.05, true],
+	[Vector3(0.016, 1.690, 0.140), Vector3(0.008, 0.025, 0.030), 0.04, true],
+	[Vector3(0.068, 1.735, 0.070), Vector3(0.020, 0.030, 0.040), 0.04, true],
 ]
 ## The face material the contour is written onto, and RomanModel turns
 ## vertex colour on for.

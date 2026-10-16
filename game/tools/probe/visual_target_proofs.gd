@@ -146,7 +146,9 @@ func _study_model(id: String) -> Node3D:
 		RomanFaceShape.apply(model)
 		model._fix_materials()
 		model._fix_eyes()
-		model.build_eye_lids()
+		var lids: EyeLids = model.build_eye_lids()
+		if lids:
+			lids.hold(0.0) # Comparable stills; the separate blink diagnostic overrides it.
 		model._trim_beard()
 		model._volumize_hair()
 	for material: BaseMaterial3D in model.get_meta("skin_materials", []):
@@ -292,6 +294,10 @@ func _render_metadata() -> Dictionary:
 		"skin_base_wetness": Sweat.BASE, "skin_max_wetness": Sweat.MAX_WETNESS,
 		"face_film_share": SkinLook.FACE_FILM_SHARE,
 		"face_film_roughness_gain": SkinLook.FACE_FILM_ROUGHNESS_GAIN,
+		"roman_face_normal_strength": RomanModel.FACE_NORMAL_STRENGTH,
+		"roman_face_scatter_strength": RomanModel.FACE_SCATTER_STRENGTH,
+		"roman_lid_open_degrees": RomanModel.LID_OPEN,
+		"roman_lid_closed_degrees": EyeLids.CLOSED_ANGLE,
 		"key_energy": EntranceDirector.WALK_KEY_ENERGY, "key_side_m": EntranceDirector.WALK_KEY_SIDE,
 		"camera_fill_energy": EntranceDirector.CAM_KEY_ENERGY,
 		"skin_dry_diagnostic": OS.get_cmdline_user_args().has("--dry-skin"),

@@ -1,0 +1,32 @@
+Selected unmodified log lines; full log digest in validation_runs.json.
+
+  res://tests/test_clip_authoring_gate.gd > test_the_clip_authoring_surface_has_not_changed_unreviewed FAILED 38ms
+  Report:
+  res://tools/blender/wrestling_clips.py changed.
+
+Before re-pinning: read .claude/skills/blender-animation/SKILL.md, render what you changed -- tools/anim/contact_sheet.sh OUT Clip_A Clip_B (or --paired move_id) -- and look at the frames. tests/test_pose_lint.gd and test_pair_clearance.gd must pass too; they catch what can be measured.
+
+Then set its entry in PINNED to:
+  9612aaae0d898529f82bd227c104553ab84af1ee6c417d69d3e7a7195c83e6e8	at 'test_the_clip_authoring_surface_has_not_changed_unreviewed' in res://tests/test_clip_authoring_gate.gd:79
+
+  res://tests/test_clip_authoring_gate.gd > test_the_authoring_file_still_points_at_the_skill STARTED
+  res://tests/test_clip_authoring_gate.gd > test_the_authoring_file_still_points_at_the_skill PASSED 28ms
+
+Statistics: 3 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | PASSED 213ms
+
+
+
+Overall Summary: 963 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans |
+Executed test suites: (123/123)
+Executed test cases : (963/963)
+Total execution time: 29min 34s 674ms
+ Open XML Report at: file:///workspace/aegis-checkout/game/reports/report_414/results.xml
+Open HTML Report at: file:///workspace/aegis-checkout/game/reports/report_414/index.html
+Exit code: 100
+Run dispose test resources
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 5 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+ERROR: Pages in use exist at exit in PagedAllocator: N7Variant5Pools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:169)

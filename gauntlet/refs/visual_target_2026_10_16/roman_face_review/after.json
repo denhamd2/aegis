@@ -1,0 +1,68 @@
+{
+  "camera_fill_energy": 0.85,
+  "captures": [
+    {
+      "camera_at": "(0.0, 1.76, -25.18)",
+      "camera_basis": "[X: (1.0, 0.0, 0.0), Y: (0.0, 0.998812, -0.048723), Z: (0.0, 0.048723, 0.998812)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "after_front.png",
+      "shot": "roman_ramp",
+      "view": "front",
+      "width": 960,
+      "sha256": "3ca6134cae09b9ad20d7f6cedc7c73684ccf6425bd8cafbc203637a72c3a285c"
+    },
+    {
+      "camera_at": "(-0.55, 1.8, -25.32)",
+      "camera_basis": "[X: (0.777511, 0.0, 0.628869), Y: (0.057285, 0.995843, -0.070825), Z: (-0.626255, 0.091091, 0.774279)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "after_threequarter.png",
+      "shot": "roman_ramp",
+      "view": "threequarter",
+      "width": 960,
+      "sha256": "c6ef731843441e1c8d74123651074a6bf9514bfc212c0502f51d7246aca4233e"
+    },
+    {
+      "camera_at": "(-0.84, 1.76, -26.0)",
+      "camera_basis": "[X: (-0.0, 0.0, 1.0), Y: (0.047565, 0.998868, 0.0), Z: (-0.998868, 0.047565, -0.0)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "after_profile.png",
+      "shot": "roman_ramp",
+      "view": "profile",
+      "width": 960,
+      "sha256": "8d26edba6bb4f19f9103e075c1e96b03a4f4e6e4339299ba7a8ffd2710fbb4b7"
+    }
+  ],
+  "face_film_roughness_gain": 2.2,
+  "face_film_share": 0.18,
+  "glints_disabled_for_review": false,
+  "godot": "4.6.3-stable (official)",
+  "key_energy": 6.0,
+  "key_side_m": 2.8,
+  "lighting_scope": "key_and_back_only; no_follow_spot_or_camera_fill",
+  "os": "Linux",
+  "performance_evidence": false,
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "roman_face_normal_strength": 0.65,
+  "roman_face_scatter_strength": 0.18,
+  "roman_lid_closed_degrees": 40.0,
+  "roman_lid_open_degrees": -28.0,
+  "runtime_flags": {
+    "fixed_fps": true,
+    "movie_maker": false,
+    "verified": true
+  },
+  "scope": "isolated_bind_pose_material_study",
+  "settle_frames": 12,
+  "skin_base_wetness": 0.52,
+  "skin_dry_diagnostic": false,
+  "skin_max_wetness": 0.84,
+  "software_rasterised": true,
+  "stage_probe_requested": false,
+  "video_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "volumetric_fog_disabled_for_review": true,
+  "interpretation": "Appearance study on software Vulkan; not native Mac appearance or performance acceptance."
+}

@@ -1,0 +1,23 @@
+{
+  "required_round_suite": {
+    "summary": "Overall Summary: 963 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans |",
+    "scope": "Before final eyelid frame/geometry/closing-angle follow-up; report_414 was later overwritten by a focused run, so this saved log is the retained evidence.",
+    "full_log_sha256": "40070c3adbb05bc5771aedf26e86ef0920ae39bac466c0291a28b33e0ad31614"
+  },
+  "final_focused": {
+    "summary": "Overall Summary: 43 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |",
+    "scope": "Final Roman face/lids, skin, hair, orientation, necklace and replay cases; report_417.",
+    "full_log_sha256": "ef8631441af599d0f4c2c6b4ee7a39956013f40e9be499586e520c3caaedf5df"
+  },
+  "final_lids": {
+    "summary": "Overall Summary: 13 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |",
+    "scope": "Final 40-degree closure and lid geometry; report_416.",
+    "full_log_sha256": "01a40b0bdc2252417b85e8e11d7801a22ae6d1ee2e4a46b954ed17a7fd1405ea"
+  },
+  "round_capture": {
+    "result": "void",
+    "reason": "error: xvfb-run not found. A capture must render, so it needs a display.",
+    "art_shots": "none; see round log",
+    "baseline_authoring_files": "wrestling_clips.py and rig_pose.py verified byte-identical to fb69eae; no pin changed"
+  }
+}

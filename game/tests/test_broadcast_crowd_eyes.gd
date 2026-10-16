@@ -157,3 +157,15 @@ func test_roman_has_two_eyelids() -> void:
 	var lids := model.find_child("EyeLids", true, false) as EyeLids
 	assert_object(lids).is_not_null()
 	assert_int(lids.get_child_count()).is_equal(2)
+	# Roman's J_Head local +Y points DOWN in character space. The cap must
+	# open above the eye, not roll from underneath like a lower-eyelid plug.
+	var sk := model.get_game_skeleton() as Skeleton3D
+	var head_rest := sk.get_bone_global_rest(sk.find_bone("J_Head"))
+	for pivot: Node3D in lids.get_children():
+		var up := (head_rest.basis * pivot.basis.y).normalized()
+		assert_float(up.dot(Vector3.UP)).is_greater(.95)
+		var cap := pivot.get_node("Cap") as MeshInstance3D
+		var dome := cap.mesh as SphereMesh
+		for p: Vector3 in dome.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+			assert_float(p.y).is_greater_equal(-.00001)
+			assert_float(p.length()).is_less_equal(dome.radius + .00001)

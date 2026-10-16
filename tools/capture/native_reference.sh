@@ -15,6 +15,23 @@ if [[ ! -x "$binary" ]]; then
 fi
 mkdir -p "$output"
 output="$(cd "$output" && pwd)"
+# Identify the actual app and host, even when a preview was renamed/copied.
+{
+    printf 'captured_at_utc: '
+    date -u '+%Y-%m-%dT%H:%M:%SZ'
+    printf 'architecture: '
+    uname -m
+    printf 'macos: '
+    sw_vers -productVersion
+    printf 'chip: '
+    sysctl -n machdep.cpu.brand_string
+    printf 'memory_bytes: '
+    sysctl -n hw.memsize
+    shasum -a 256 "$binary"
+    for package in "$app"/Contents/Resources/*.pck; do
+        [[ ! -f "$package" ]] || shasum -a 256 "$package"
+    done
+} > "$output/native_environment.txt"
 for shot in master corner crowd bodies; do
     "$binary" --windowed --resolution 1920x1080 --fixed-fps 60 \
         res://tools/probe/reference_look.tscn -- --out "$output" --view "$shot" --settle 48 \

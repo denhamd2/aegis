@@ -1,0 +1,10 @@
+Selected unmodified log lines; full log digest in validation_runs.json.
+
+Overall Summary: 13 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
+Executed test suites: (1/1)
+Executed test cases : (13/13)
+Total execution time: 13s 646ms
+ Open XML Report at: file:///workspace/aegis-checkout/game/reports/report_416/results.xml
+Open HTML Report at: file:///workspace/aegis-checkout/game/reports/report_416/index.html
+Exit code: 0
+Run dispose test resources

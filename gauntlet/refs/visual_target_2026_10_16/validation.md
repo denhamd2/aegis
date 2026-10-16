@@ -106,3 +106,59 @@ Linux, not native execution or appearance acceptance.
 The historical full-suite result above is not a full-suite result for this
 character revision. A full round/evidence gate and native M1 Pro appearance,
 motion and frame-time acceptance remain required before final release.
+
+
+## Roman face checkpoint — latest
+
+See the [comparison viewer](roman_face_review/index.html) and
+[defect review](roman_face_review.md). The verified source target, three A/B
+pairs, forced-closed blink diagnostics and six adapted pose samples are
+copied unchanged with SHA-256 hashes. The posed samples use 1280×720 actual
+viewport output; the neutral studies use 960×540. The initial blank/one-view-late
+pose capture was rejected and the clip probe corrected to pause/settle each
+sample. The replacement six views were all inspected. Both clips resolve
+356/356 animation tracks. The pose probe still emits ObjectDB/resource
+cleanup diagnostics at exit; these studies do not establish a clean round.
+
+- **Final affected checks: 43/43 passed**, zero errors/failures, report
+  `game/reports/report_417`. Includes face deformation/neck/eye preservation,
+  hair/root attachments, skin, lid orientation/geometry, model orientation,
+  necklace and replay roundtrip. The final 40-degree lid setting is covered.
+- Separate final eye/lid run: **13/13 passed**, report `report_416` (overlaps
+  the 43 above; do not add the counts).
+- Required `round_check.sh`: **963 cases, 962 passed, 1 failed, zero test
+  errors**. The sole failure is the same baseline clip-authoring pin described
+  above. Both authoring sources were again verified byte-identical to
+  `fb69eae`; no pin was changed. This full suite predates the final lid
+  frame/hemisphere/closing-angle follow-up; the final 43 cover that change.
+- The full round's capture/art gate is **void**: its runner could not find
+  `xvfb-run` on PATH and rendered no art shots. Manually started Xvfb supports
+  the separate studies, not a passing round. Complete-arena attempts in the
+  earlier checkpoint also exceeded this cloud's practical memory budget.
+- `report_414` was reused by a later focused invocation. The retained full
+  suite log, its digest and selected failure/summary lines are recorded in
+  [validation evidence](roman_face_review/validation_runs.json); do not use
+  the overwritten XML as the full-suite evidence. The final focused XML is
+  [copied here](roman_face_review/focused_results.xml).
+- All four new portrait maps rebuilt byte for byte. They retain the measured
+  UVs; roughness is R with G/B zero, and the roots remain nonmetallic.
+  New source maps are 2K colour/RM and 1K SSS/root masks. Python compilation,
+  shell syntax and patch whitespace checks passed.
+
+This remains **NO-SHIP for final visual acceptance**. The original model,
+weights and animation files are unchanged. Native appearance/motion and the
+M1 Pro 60 fps target remain unverified. The extra shared-head root instance
+and alpha depth pass require native GPU measurement.
+
+
+Latest local Mac preview: **888,236,765 bytes**, SHA-256
+`6f3f8f031124d01296dca21e17f59ff1a64a8ef10b3285d48247108d78e7dc40`.
+All seven ZIP entries passed CRC checks; the Mach-O contains arm64 and x86_64.
+The [exported-package audit](roman_face_review/package_audit.json) passed for
+prior skin/groom/beard assets, all four new portrait maps, face/lid constants,
+the real shared root mesh/skin/skeleton/material and capture resources. Export
+and packed audit logs contain no parse, compile, script or engine ERROR lines.
+Review probe resources load after project autoload initialization; viewer
+JavaScript syntax, links and all 15 image/six asset hashes were checked.
+These remain package checks on Linux. The published `mac-latest` release stays
+at `fb69eae`; only the local review preview was refreshed.

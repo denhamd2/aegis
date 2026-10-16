@@ -333,3 +333,15 @@ all maps are linear data, mipmapped and VRAM-compressed for the desktop/Mac.
   mask. Opacity is preserved byte for byte. RGB adds restrained fibre colour
   variation; the tangent-space normal follows coverage, not painted lighting.
   No skin weights or beard geometry are changed.
+
+## October 16 Roman portrait refit
+
+`roman_reigns_portrait_color.png`, `_portrait_rm.png`, `_portrait_sss.png`
+and `_portrait_roots.png` are authored by `tools/assets/build_roman_portrait.py`
+from the existing credited head sources. They retain the measured UV layout;
+the damaged source colour is still reconstructed from its surviving channel.
+The supplied `roman_reigns_wrinkles_normal.png` remains the anatomical normal.
+No new external assets are introduced. The separate runtime scalp-root layer
+shares the actual head mesh, skin and skeleton.
+Facial refitting and eyelid corrections are runtime presentation changes;
+the supplied model, its skin weights and animation files remain untouched.

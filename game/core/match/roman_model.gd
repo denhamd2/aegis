@@ -82,9 +82,9 @@ const BONE_MAP := {
 ## a flat tint chosen to match Roman's actual ring gear rather than an
 ## invented texture. Both cases are called out per entry below.
 const ALBEDO_FIXES := {
-	# Face. body_color.png is a 4096x2048 atlas holding skin, the tribal
-	# sleeve, the trunks and the mouth interior; the head UVs are in it.
-	"Material.001": {"texture": "head_color", "color": Color.WHITE},
+	# The damaged head colour is reconstructed on its measured UVs by
+	# build_roman_portrait.py, with finer brows and restrained pigment zones.
+	"Material.001": {"texture": "portrait_color", "color": Color.WHITE},
 	# Ring gear. No colour texture for these exists in the asset -- only
 	# tops_nrm/bottoms_nrm. Black matches the gear Roman actually wrestles in,
 	# and the normal maps still carry the fabric detail.
@@ -225,14 +225,15 @@ const GROW_FIXES := {
 const SKIN_ROUGHNESS := {"Material.001": 0.58, "Material": 0.50}
 ## Skin materials whose surface comes from a map instead: roughness in R,
 ## metallic in G, at material roughness and metallic of 1.0. The head's map
-## (build_roman_hair_alpha.py, paint_scalp_cap) is SKIN_ROUGHNESS and no
-## metal on the face, and rough and "metallic" under the painted scalp cap.
-## Where the hairline cards thin the dark cap shows through, and at skin
-## roughness and a dielectric's 4% reflectance it threw the cool key back as
-## a grey-blue band across the top of the forehead; a metal reflects its own
-## albedo, which there is near-black. test_roman_hair holds the map's skin
-## value to SKIN_ROUGHNESS.
-const SURFACE_MAPS := {"Material.001": "head_rm"}
+## (build_roman_portrait.py) holds SKIN_ROUGHNESS on skin, with rougher lips,
+## brows and scalp, and zero metal throughout. The dark root overlay has its
+## own independent response; it no longer uses the old metallic scalp mask.
+## test_roman_hair holds the skin value and nonmetallic contract.
+const SURFACE_MAPS := {"Material.001": "portrait_rm"}
+## Preserve the supplied anatomical wrinkle normal; it was imported at .25.
+## More relief and less diffusion retain planes under the October wet look.
+const FACE_NORMAL_STRENGTH := 0.65
+const FACE_SCATTER_STRENGTH := 0.18
 ## Pore tiles across one UV square (SkinLook.add_pores): the head's own
 ## texture spans about 0.4 m of face and scalp, the body's about 1.2 m, so a
 ## tile is ~2.5 cm on both.
@@ -345,7 +346,7 @@ func _ready() -> void:
 	_stabilize_pants_crotch()
 	# His arms, shoulders and chest to 2K26's build (BodyBulk).
 	BodyBulk.apply(self, body, BodyBulk.ROMAN)
-	# His face to 2K26's (RomanFaceShape), before anything reads the head's
+	# His face to the October portrait (RomanFaceShape), before reading head
 	# vertices: the eyelids, the beard trim and the hair volume all do.
 	RomanFaceShape.apply(self)
 	_fix_materials()
@@ -1087,6 +1088,8 @@ func _fix_materials() -> void:
 		var mesh_instance := node as MeshInstance3D
 		if not mesh_instance or not mesh_instance.mesh:
 			continue
+		if mesh_instance.name == "PortraitRoots":
+			continue
 		# A UV2 on the skin surfaces for the pore layer (SkinLook.add_pores).
 		var skin_surfaces := []
 		for surface in mesh_instance.mesh.get_surface_count():
@@ -1123,6 +1126,10 @@ func _fix_materials() -> void:
 				SkinLook.apply(material, key == "Material.001")
 				if key == "Material.001":
 					material.clearcoat_texture = _texture("skin_head_wet")
+					material.normal_scale = FACE_NORMAL_STRENGTH
+					material.subsurf_scatter_strength = FACE_SCATTER_STRENGTH
+					material.subsurf_scatter_texture = _texture("portrait_sss")
+					material.subsurf_scatter_transmittance_texture = _texture("portrait_sss")
 				SkinLook.add_pores(material, PORE_TILES[key])
 				skin.append(material)
 			if GROW_FIXES.has(key):
@@ -1223,6 +1230,44 @@ func _fix_materials() -> void:
 			mesh_instance.set_surface_override_material(surface, material)
 	# For Sweat (WrestlerController attaches it).
 	set_meta("skin_materials", skin)
+	_add_scalp_roots()
+
+
+## The root underpaint used to share skin's scattering/specular response.
+## Give it a thin, nonmetallic layer on the SAME skinned head mesh. Reusing
+## the actual skin and relative skeleton path keeps it aligned in all poses.
+func _add_scalp_roots() -> void:
+	if find_child("PortraitRoots", true, false):
+		return
+	# The source M_Head mesh is instanced by head_skinned in Godot (audited).
+	var head := find_child("head_skinned", true, false) as MeshInstance3D
+	if head == null or head.mesh == null:
+		return
+	var rig := head.get_node_or_null(head.skeleton)
+	if rig == null:
+		return
+	var roots := MeshInstance3D.new()
+	roots.name = "PortraitRoots"
+	roots.mesh = head.mesh
+	roots.skin = head.skin
+	roots.transform = head.transform
+	head.get_parent().add_child(roots)
+	roots.skeleton = roots.get_path_to(rig)
+	roots.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var mat := StandardMaterial3D.new()
+	mat.resource_name = "RomanScalpRoots"
+	mat.albedo_texture = _texture("portrait_roots")
+	mat.albedo_color = Color(.028, .025, .022)
+	mat.metallic_specular = .12
+	mat.roughness = .75
+	mat.normal_enabled = true
+	mat.normal_texture = _texture("wrinkles_normal")
+	mat.normal_scale = .65
+	mat.grow = true
+	mat.grow_amount = .00025
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	roots.material_override = mat
 
 ## The strand ridges as the base normal map, and the wave as a detail
 ## normal on UV2 (see hair_wave).
@@ -1382,12 +1427,9 @@ func _fix_eyes() -> void:
 ## key (checked on the broadcast_shot close-ups).
 const LID_COLOR := Color(0.47, 0.32, 0.23)
 const LID_SEED := 7
-## His lids at rest: lower than EyeLids' default, over the top of the iris.
-## 2K26's Roman looks out from under heavy, hooded lids (cody_roman_2k26.mp4
-## 214-218 s), where at -35 ours sat wide open -- the round, startled eyes of
-## the faces_2k26_vs_ours side-by-side. With the brow brought down over them
-## (RomanFaceShape) this is most of his stare.
-const LID_OPEN := -20.0
+## The October target keeps an alert stare. The previous -20-degree cap,
+## combined with the old low brow sculpt, read as half-closed/sleepy.
+const LID_OPEN := -28.0
 ## The eyeball's centre, ahead of its bone along the line of sight. Zero:
 ## the pupil sphere sits 12.2 mm from the bone, which is a human eyeball's
 ## radius exactly, so the bone IS the centre. (6 mm, from the note on
@@ -1426,7 +1468,8 @@ func build_eye_lids() -> EyeLids:
 		var forward := (rest.basis * sight).normalized()
 		eyes.append([to_head * centre, radius,
 				(head_rest.basis.inverse() * forward).normalized(),
-				(head_rest.basis.inverse() * Vector3.RIGHT).normalized()])
+				(head_rest.basis.inverse() * Vector3.RIGHT).normalized(),
+				(head_rest.basis.inverse() * Vector3.UP).normalized()])
 	if eyes.size() != 2 or radius <= 0.0:
 		push_warning("RomanModel: eyes not found; no eyelids")
 		return null
@@ -1442,9 +1485,14 @@ func build_eye_lids() -> EyeLids:
 		material = StandardMaterial3D.new()
 		material.albedo_color = LID_COLOR
 		material.roughness = 0.6
-		SkinLook.apply(material)
+		SkinLook.apply(material, true)
+		material.subsurf_scatter_strength = FACE_SCATTER_STRENGTH
+		material.normal_enabled = true
+		material.normal_texture = load(SkinLook.DETAIL_NORMAL)
+		material.normal_scale = .12
 	lids.skeleton = body
 	lids.open_angle = LID_OPEN
+	lids.draw_margin = true
 	lids.eye_bones = PackedStringArray(EYE_TARGETS.keys())
 	lids.build(eyes, material, LID_SEED)
 	return lids

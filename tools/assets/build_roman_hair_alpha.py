@@ -343,6 +343,8 @@ BROW_PROFILE = [(0.011, 1.7332, 0.0060), (0.020, 1.7348, 0.0064),
                 (0.032, 1.7360, 0.0056), (0.044, 1.7363, 0.0045),
                 (0.054, 1.7352, 0.0030), (0.060, 1.7336, 0.0015)]
 BROW_STRANDS = 900
+BROW_WIDTH_PX = 1.6
+BROW_LENGTH = (0.0045, 0.0075)
 ## Opacity of the soft fill under the strands: skin never shows through a
 ## brow this dense at broadcast distance, where single strands filter away.
 BROW_FILL = 165
@@ -403,7 +405,7 @@ def _brow_at(t: float) -> tuple[float, float, float]:
     return tuple(a[j] + (b[j] - a[j]) * k for j in range(3))
 
 
-def paint_brows(model: pathlib.Path, target: pathlib.Path) -> None:
+def paint_brows(model: pathlib.Path, target: pathlib.Path) -> Image.Image:
     import random
     rng = random.Random(BROW_SEED)
     to_uv = _uv_mapper(_glb_attributes(model, "M_Head"))
@@ -421,14 +423,14 @@ def paint_brows(model: pathlib.Path, target: pathlib.Path) -> None:
             # Hairs lean up and out at the head of the brow, flatten along
             # the body, and droop slightly into the tail.
             angle = math.radians(62 - 70 * t + rng.uniform(-9, 9))
-            length = rng.uniform(0.0045, 0.0075) * (1.0 - 0.35 * t)
+            length = rng.uniform(*BROW_LENGTH) * (1.0 - 0.35 * t)
             x2 = x + math.cos(angle) * length
             y2 = y + math.sin(angle) * length
             u0, v0 = to_uv(side * x, y)
             u1, v1 = to_uv(side * x2, y2)
             shade = rng.randint(190, 255)
             draw.line([(u0 * size * ss, v0 * size * ss), (u1 * size * ss, v1 * size * ss)],
-                      fill=shade, width=max(1, round(1.6 * ss)))
+                      fill=shade, width=max(1, round(BROW_WIDTH_PX * ss)))
     # The fill: the same brow shape as a solid band, softened, laid under the
     # strands so the brow reads as a brow and not as scratches once the
     # texture is mip-filtered at camera distance.
@@ -447,6 +449,7 @@ def paint_brows(model: pathlib.Path, target: pathlib.Path) -> None:
     hair = Image.new("RGB", albedo.size, BROW_COLOR)
     Image.composite(hair, albedo, mask).save(target, optimize=True)
     print(f"{'brows':38} -> {target.name:34} {2 * BROW_STRANDS} strands")
+    return mask
 
 
 ## The beard's shadow, painted into the head albedo under the beard cards.

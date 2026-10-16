@@ -127,7 +127,10 @@ class EyeSpec:
     seed: int = 31
 
 
-ROMAN = EyeSpec()
+## October portrait: calmer sclera/corners; keep iris anatomy and other
+## characters' shared defaults unchanged.
+ROMAN = dataclasses.replace(EyeSpec(), sclera=(188, 180, 170),
+                            occlude_from=5.8, occluded_albedo=.52)
 ## Cody: his eyeball is 13.1 mm and his UVs ~30.5 mm per unit, centred. The
 ## iris and veins come from his own texture (build_cody); these set the
 ## occlusion, roughness and depth maps, and the blue the iris is tinted to.

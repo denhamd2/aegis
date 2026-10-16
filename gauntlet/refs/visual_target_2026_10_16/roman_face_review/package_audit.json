@@ -1,0 +1,17 @@
+{
+  "file": "build/mac-visual-preview/Aegis.zip",
+  "bytes": 888236765,
+  "sha256": "6f3f8f031124d01296dca21e17f59ff1a64a8ef10b3285d48247108d78e7dc40",
+  "pck_sha256": "d096be44623e8d97a1caee706379d8b20d1ccf9e158e99a30707fcd9510bbb2c",
+  "universal": [
+    "arm64",
+    "x86_64"
+  ],
+  "zip_entry_crc_checks": 7,
+  "release_candidate": false,
+  "native_validation": "pending",
+  "source_revision": "Roman face checkpoint in the commit containing this audit",
+  "source_branch": "codex/oct16-visual-look",
+  "packed_resource_audit": "passed: skin/groom/beard/portrait maps, runtime face/lid settings, actual shared scalp-root mesh/skin/skeleton/material and capture tools",
+  "export_log_errors": false
+}

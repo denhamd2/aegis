@@ -1,0 +1,46 @@
+{
+  "camera_fill_energy": 0.85,
+  "captures": [
+    {
+      "camera_at": "(0.0, 1.76, -25.18)",
+      "camera_basis": "[X: (1.0, 0.0, 0.0), Y: (0.0, 0.998812, -0.048723), Z: (0.0, 0.048723, 0.998812)]",
+      "fov": 30.0,
+      "height": 540,
+      "image": "blink_before.png",
+      "shot": "roman_ramp",
+      "view": "front",
+      "width": 960,
+      "sha256": "0479185adbd862c90b4194b61b3f951102a3ccd12cdbb27e16daf8b3100ffdea"
+    }
+  ],
+  "face_film_roughness_gain": 2.2,
+  "face_film_share": 0.18,
+  "forced_blink_closure": 1.0,
+  "glints_disabled_for_review": false,
+  "godot": "4.6.3-stable (official)",
+  "key_energy": 6.0,
+  "key_side_m": 2.8,
+  "lighting_scope": "key_and_back_only; no_follow_spot_or_camera_fill",
+  "os": "Linux",
+  "performance_evidence": false,
+  "pipeline": "forward_plus",
+  "rendering_driver": "vulkan",
+  "roman_face_normal_strength": 0.65,
+  "roman_face_scatter_strength": 0.18,
+  "roman_lid_open_degrees": -28.0,
+  "runtime_flags": {
+    "fixed_fps": true,
+    "movie_maker": false,
+    "verified": true
+  },
+  "scope": "isolated_bind_pose_material_study",
+  "settle_frames": 12,
+  "skin_base_wetness": 0.52,
+  "skin_dry_diagnostic": false,
+  "skin_max_wetness": 0.84,
+  "software_rasterised": true,
+  "stage_probe_requested": false,
+  "video_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "volumetric_fog_disabled_for_review": true,
+  "interpretation": "Appearance study on software Vulkan; not native Mac appearance or performance acceptance."
+}

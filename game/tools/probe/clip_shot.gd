@@ -33,6 +33,9 @@ var _at: Array = [0.0, 0.15, 0.3, 0.45, 0.6, 0.8, 1.0]
 ## "l" or "r": frame that hand in close-up instead of the whole body, from
 ## three sides -- a finger or a thumb is a few pixels in the full-body views.
 var _hand := ""
+## Drain threaded rendering after each camera change; otherwise the first
+## capture can be blank and later images can contain the preceding view.
+var _settle_frames := 3
 
 ## Camera positions, as {name: [eye, aim]}.
 ##
@@ -67,6 +70,8 @@ func _ready() -> void:
 		elif args[i] == "--at" and i + 1 < args.size():
 			# fractions through the clip, comma-separated: "0.2,0.25,0.3"
 			_at = Array(args[i + 1].split(",")).map(func(v: String) -> float: return v.to_float())
+		elif args[i] == "--settle" and i + 1 < args.size():
+			_settle_frames = maxi(3, args[i + 1].to_int())
 	_run()
 
 
@@ -130,6 +135,7 @@ func _run() -> void:
 	var cam := Camera3D.new()
 	add_child(cam)
 	cam.fov = 45.0
+	cam.make_current()
 
 	for clip_name: String in names:
 		if not player.has_animation(clip_name):
@@ -167,6 +173,7 @@ func _run() -> void:
 				player.play(clip_name)
 				player.seek(anim.length * frac, true)
 				player.advance(0.0)
+				player.pause()  # settle rendering at this exact authored sample
 				if _hand == "":
 					var spot: Array = views[view_name]
 					cam.global_position = spot[0]
@@ -177,7 +184,9 @@ func _run() -> void:
 					var at := _hand_position(model, anim, anim_root)
 					cam.global_position = at + (views[view_name] as Vector3)
 					cam.look_at(at, Vector3.UP)
-				await RenderingServer.frame_post_draw
+				for frame in _settle_frames:
+					await get_tree().process_frame
+					await RenderingServer.frame_post_draw
 				var img := get_viewport().get_texture().get_image()
 				var path := "%s/%s_%s_%02d.png" % [
 						_out, clip_name.get_file(), view_name, int(frac * 100.0)]

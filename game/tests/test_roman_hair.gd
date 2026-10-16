@@ -69,30 +69,27 @@ static func _clearance(c: Node3D, p: Vector3) -> float:
 	return 1.0
 
 
-## The scalp cap's surface map (build_roman_hair_alpha.py, paint_scalp_cap)
+## The resolved scalp cap's surface map (build_roman_portrait.py)
 ## carries the face's skin roughness as its smoothest value in R, at a
 ## material roughness of 1.0 -- so it and SKIN_ROUGHNESS must agree, or the
-## face changes when the map is rebuilt. It reaches matte under the cap, and
-## G (metallic) is ~zero wherever R is at skin roughness: no metal on the face.
+## face changes when the map is rebuilt. Lips/brows are rougher than skin;
+## the head, including the painted hair roots, must be nonmetallic.
 func test_head_surface_map_keeps_the_face_at_skin_roughness() -> void:
-	var path := "res://assets/characters/roman_reigns_head_rm.png"
+	var path := RomanModel.TEXTURE_DIR % RomanModel.SURFACE_MAPS["Material.001"]
 	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
 	image.convert(Image.FORMAT_RGB8)
 	var skin := roundi(RomanModel.SKIN_ROUGHNESS["Material.001"] * 255.0)
 	var lo := 255
 	var hi := 0
-	var metal_on_skin := 0
+	var metal_on_head := 0
 	var data := image.get_data()
 	for i in range(0, data.size(), 3 * 7):
 		lo = mini(lo, data[i])
 		hi = maxi(hi, data[i])
-		if data[i] == skin:
-			metal_on_skin = maxi(metal_on_skin, data[i + 1])
+		metal_on_head = maxi(metal_on_head, data[i + 1])
 	assert_int(lo).is_equal(skin)
-	assert_int(hi).is_greater(240)
-	# A texel the cap's feather barely reaches rounds to skin roughness with
-	# a 1/255 of metal; under 1% is nothing a render can show.
-	assert_int(metal_on_skin).is_less_equal(2)
+	assert_int(hi - lo).is_greater(40)
+	assert_int(metal_on_head).is_zero()
 
 
 ## The materials the hair pass sets: the head reads its roughness from the
@@ -109,11 +106,13 @@ func test_hair_beard_and_scalp_materials() -> void:
 			if source == null or m == null:
 				continue
 			var key := source.resource_name
-			if key == "Material.001":
+			if key == "Material.001" and mi.name == "head_skinned":
 				assert_float(m.roughness).is_equal(1.0)
 				assert_float(m.metallic).is_equal(1.0)
 				assert_object(m.roughness_texture).is_not_null()
 				assert_object(m.metallic_texture).is_same(m.roughness_texture)
+				assert_object(m.subsurf_scatter_texture).is_not_null()
+				assert_object(m.subsurf_scatter_transmittance_texture).is_same(m.subsurf_scatter_texture)
 				seen["head"] = true
 			elif key == "beard":
 				assert_bool(m.albedo_color.is_equal_approx(RomanModel.BEARD_COLOR)).is_true()
@@ -123,6 +122,22 @@ func test_hair_beard_and_scalp_materials() -> void:
 				assert_float(m.metallic_specular).is_equal_approx(RomanModel.HAIR_SPECULAR, 0.001)
 				seen["hair"] = true
 	assert_int(seen.size()).is_equal(3)
+
+
+## A shading layer must follow the same deformed head, including its foreign
+## rig/height scaling. A separate transform or skin was the old floating-hair bug.
+func test_scalp_roots_share_the_head_mesh_skin_and_skeleton() -> void:
+	var head := _model.find_child("head_skinned", true, false) as MeshInstance3D
+	var roots := _model.find_child("PortraitRoots", true, false) as MeshInstance3D
+	assert_object(roots).is_not_null()
+	assert_object(roots.mesh).is_same(head.mesh)
+	assert_object(roots.skin).is_same(head.skin)
+	assert_object(roots.get_node(roots.skeleton)).is_same(head.get_node(head.skeleton))
+	assert_bool(roots.transform.is_equal_approx(head.transform)).is_true()
+	var mat := roots.material_override as BaseMaterial3D
+	assert_float(mat.metallic).is_equal(0.0)
+	assert_bool(mat.subsurf_scatter_enabled).is_false()
+	assert_float(mat.grow_amount).is_between(0.0, 0.001)
 
 
 ## The wave map (build_roman_hair_alpha.py, build_wave_normal) and the wave

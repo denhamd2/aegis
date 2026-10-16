@@ -1,6 +1,6 @@
 # October 16 visual target — implementation record
 
-Status: shared-look and first character checkpoints. **NO-SHIP for final visual acceptance.**
+Status: shared-look, character and Roman face checkpoints. **NO-SHIP for final visual acceptance.**
 The eight-reference target has not been reached. Published baseline: `fb69eae`.
 
 The owner's confirmed target is an Apple M1 Pro with 16 GB unified memory,
@@ -58,6 +58,14 @@ hair with a 16,844-triangle cap/card groom, adds Roman beard material detail,
 calms Cody's iris tint and softens facial wet highlights. The same six
 portrait cameras were reviewed before/after. It is an incremental result;
 likeness, root/beard transitions and coat construction remain major gaps.
+
+The [Roman face checkpoint](roman_face_review.md) restores lower-face volume,
+reduces heavy brow/chin deformation, refines eyebrows and portrait maps,
+separates nonmetallic scalp-root shading and corrects the lid frame/hemisphere
+construction. Its viewer retains unchanged front/three-quarter/profile A/B
+images and the original target. Simplified facial forms, weak skin detail and
+the main hair/beard cards remain major reference gaps. The clip-shot probe's
+blank/previous-view capture bug was also fixed and re-reviewed.
 
 Next: finish native shared-look/portrait comparisons and continue the character
 phase (facial forms, skin relief, eye/hair/beard construction,

@@ -1,0 +1,229 @@
+{
+  "baseline_commit": "34058258e177493c57517fa19794710b00340731",
+  "after_revision": "Roman face checkpoint in the commit containing this manifest",
+  "performance_evidence": false,
+  "reference_match_accepted": false,
+  "files": {
+    "before_front.png": {
+      "sha256": "4009ca5327a06e4cd4a0c4a4226e175fde92c82b2f8edc2ec4f8b9f80fd0ea90",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "3405825 isolated bind-pose material study"
+    },
+    "after_front.png": {
+      "sha256": "3ca6134cae09b9ad20d7f6cedc7c73684ccf6425bd8cafbc203637a72c3a285c",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "final face checkpoint isolated bind-pose study; eyelids held open"
+    },
+    "before_threequarter.png": {
+      "sha256": "9f5f81ee492f3c81e21dc48c303efc1fd424fcc64980a165bd3712b142ab13c0",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "3405825 isolated bind-pose material study"
+    },
+    "after_threequarter.png": {
+      "sha256": "c6ef731843441e1c8d74123651074a6bf9514bfc212c0502f51d7246aca4233e",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "final face checkpoint isolated bind-pose study; eyelids held open"
+    },
+    "before_profile.png": {
+      "sha256": "0a86e345c48b8d074e8952fa8d2be343110c02274e6ff8c91d71e254f976f810",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "3405825 isolated bind-pose material study"
+    },
+    "after_profile.png": {
+      "sha256": "8d26edba6bb4f19f9103e075c1e96b03a4f4e6e4339299ba7a8ffd2710fbb4b7",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "final face checkpoint isolated bind-pose study; eyelids held open"
+    },
+    "blink_before.png": {
+      "sha256": "0479185adbd862c90b4194b61b3f951102a3ccd12cdbb27e16daf8b3100ffdea",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "earlier face-refit diagnostic BEFORE lid frame/hemisphere fixes; not 3405825 baseline"
+    },
+    "blink_after.png": {
+      "sha256": "15b58f7420b6d5d0eacb7dc76527bedeb2176787bfdc1711005ea34dd68124c5",
+      "pixels": [
+        960,
+        540
+      ],
+      "scope": "final forced-closed blink, CLOSED_ANGLE 40 degrees"
+    },
+    "reference.png": {
+      "sha256": "c8b0be35114427a0a215dad6e0637ecfd9632a255ca6dca6db0469477e5d327f",
+      "pixels": [
+        1730,
+        909
+      ],
+      "scope": "unchanged owner-supplied generated target; framing/lighting differ from isolated studies"
+    },
+    "pose_Roman_Stand_ffront.png": {
+      "sha256": "f980f508950af8bb12e5443692d69dc7052ca4765cb054262e3f70ed62eb7be9",
+      "pixels": [
+        1280,
+        720
+      ],
+      "scope": "full RomanModel, adapted paused clip; diagnostic light; software Forward+; no arena or performance evidence",
+      "clip": "Roman_Stand",
+      "fraction": 0.35,
+      "time_seconds": 0.7,
+      "camera_offset_from_head": [
+        0,
+        0.02,
+        0.62
+      ],
+      "fov_degrees": 45,
+      "settle_frames": 3,
+      "resolved_animation_tracks": "356/356"
+    },
+    "pose_Roman_Stand_f34.png": {
+      "sha256": "84d4719b1860a85173d668d699bdc51de06df783d7219fcf448eacd3e14b3c3f",
+      "pixels": [
+        1280,
+        720
+      ],
+      "scope": "full RomanModel, adapted paused clip; diagnostic light; software Forward+; no arena or performance evidence",
+      "clip": "Roman_Stand",
+      "fraction": 0.35,
+      "time_seconds": 0.7,
+      "camera_offset_from_head": [
+        -0.42,
+        0.04,
+        0.45
+      ],
+      "fov_degrees": 45,
+      "settle_frames": 3,
+      "resolved_animation_tracks": "356/356"
+    },
+    "pose_Roman_Stand_fside.png": {
+      "sha256": "2ca8e26d74a11e39e1feb381da85454283cc20d0a57e518a48adf704c751c08f",
+      "pixels": [
+        1280,
+        720
+      ],
+      "scope": "full RomanModel, adapted paused clip; diagnostic light; software Forward+; no arena or performance evidence",
+      "clip": "Roman_Stand",
+      "fraction": 0.35,
+      "time_seconds": 0.7,
+      "camera_offset_from_head": [
+        -0.62,
+        0.02,
+        0
+      ],
+      "fov_degrees": 45,
+      "settle_frames": 3,
+      "resolved_animation_tracks": "356/356"
+    },
+    "pose_Walk_Slow_Look_ffront.png": {
+      "sha256": "f29e25a718a6b2a64c0120fd2ddce09619fd8b7fd6f9c6937fd88eb0f8972644",
+      "pixels": [
+        1280,
+        720
+      ],
+      "scope": "full RomanModel, adapted paused clip; diagnostic light; software Forward+; no arena or performance evidence",
+      "clip": "Walk_Slow_Look",
+      "fraction": 0.35,
+      "time_seconds": 1.68,
+      "camera_offset_from_head": [
+        0,
+        0.02,
+        0.62
+      ],
+      "fov_degrees": 45,
+      "settle_frames": 3,
+      "resolved_animation_tracks": "356/356"
+    },
+    "pose_Walk_Slow_Look_f34.png": {
+      "sha256": "c468fed319f9c38411b93e5d0f5b7c883f8e7daaa8fb94ba120a22dc50e85d2a",
+      "pixels": [
+        1280,
+        720
+      ],
+      "scope": "full RomanModel, adapted paused clip; diagnostic light; software Forward+; no arena or performance evidence",
+      "clip": "Walk_Slow_Look",
+      "fraction": 0.35,
+      "time_seconds": 1.68,
+      "camera_offset_from_head": [
+        -0.42,
+        0.04,
+        0.45
+      ],
+      "fov_degrees": 45,
+      "settle_frames": 3,
+      "resolved_animation_tracks": "356/356"
+    },
+    "pose_Walk_Slow_Look_fside.png": {
+      "sha256": "420fe903b9108918f65c31b901583736cc91fd1c0b116e6ab26cf43dd932b937",
+      "pixels": [
+        1280,
+        720
+      ],
+      "scope": "full RomanModel, adapted paused clip; diagnostic light; software Forward+; no arena or performance evidence",
+      "clip": "Walk_Slow_Look",
+      "fraction": 0.35,
+      "time_seconds": 1.68,
+      "camera_offset_from_head": [
+        -0.62,
+        0.02,
+        0
+      ],
+      "fov_degrees": 45,
+      "settle_frames": 3,
+      "resolved_animation_tracks": "356/356"
+    }
+  },
+  "asset_maps": {
+    "roman_reigns_portrait_color.png": {
+      "repeatable": true,
+      "bytes": 2774987,
+      "sha256": "b5f11a26542af3c4da2fbf3173f35e480c37bb7a4137a749ddfd788f753f7f22"
+    },
+    "roman_reigns_portrait_rm.png": {
+      "repeatable": true,
+      "bytes": 309581,
+      "sha256": "ed6e040825661e7414dc4aac4ee55f7bdd35abe5003af55f1326ed2a62ea1e1f"
+    },
+    "roman_reigns_portrait_sss.png": {
+      "repeatable": true,
+      "bytes": 213838,
+      "sha256": "21e18c502c122abb77ec173a4eb47914d7416d6758acc613205d3aa6823f01e4"
+    },
+    "roman_reigns_portrait_roots.png": {
+      "repeatable": true,
+      "bytes": 266369,
+      "sha256": "b65d6d5cea8c4c2a4ce3f6ced596dbe03d4405f918bb0b3be2c54d0d4138cadb"
+    },
+    "roman_reigns_eye_color.png": {
+      "sha256": "e7019dc4b8ca14876fc4f4a0447cd41822362ad38aff6b39aef01a983f389588",
+      "bytes": 213574
+    },
+    "roman_reigns_eye_orm.png": {
+      "sha256": "a85aa75b5c1fa156c6364d6c4a96dfdcf37d81dcf900fe1a70a3b8288073916e",
+      "bytes": 72740
+    }
+  },
+  "pose_capture_diagnostics": [
+    "ObjectDB instances leaked at exit",
+    "225 resources still in use at exit"
+  ],
+  "pose_probe": "pose_probe.gd"
+}
