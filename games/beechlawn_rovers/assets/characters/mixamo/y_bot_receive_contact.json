@@ -1,0 +1,7 @@
+{
+  "clip": "AN_Beechlawn_ReceiveRight",
+  "event": "ball_contact",
+  "frame": 20,
+  "fps": 60,
+  "time_seconds": 0.3333333333333333
+}

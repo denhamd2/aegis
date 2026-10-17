@@ -90,11 +90,16 @@ been measured on the owner's Mac.
   GLB exports/imports successfully; Blender and Godot checks confirm its 65
   bones, two skinned surfaces and approximately 1.805 m Y-up height. A reusable
   `scenes/footballer_visual.tscn` blends idle/jog/sprint proxy clips and includes
-  the pass action in an AnimationTree-compatible library; headless checks cover
-  skeleton, clip playback, and the contact event. Remaining: polish gait and
-  foot contacts against football reference, replace the robot shell with the
-  human visual, and extend the set with stop/turn, close control, receive, shot
-  and recovery.
+  pass and first-touch receive actions in an AnimationTree-compatible library.
+  Headless checks cover skeleton, clip playback, and contact events. The receive
+  clip is 42 frames at 60 fps, contacts at 0.333 s, and its toe tip comes within
+  3.7 cm of the incoming ball in the match-scene harness. A Blender pose sheet
+  records ready, contact, and recovery. The proxy render also exposed the
+  Y-Bot front axis facing opposite the game attack direction; its reusable
+  visual now carries a 180-degree local rig correction, with pass and receive
+  arcs measured against that orientation. Remaining: polish gait and foot
+  contacts against football reference, replace the robot shell with the human
+  visual, and extend the set with stop/turn, close control, shot, and recovery.
   Keep primitive blockout actors until these clips pass visual review. The first
     import/check stage is now complete; this BR-003 item stays open.
   **Additional cloud gait pass:** the Blender side-view proxy render showed a
@@ -133,8 +138,8 @@ been measured on the owner's Mac.
     arc moved backward at contact: the toe was 1.14 m from the center ball. I
     corrected the Blender-authored forward arc and regenerated the animation
     library. The integration test now measures the animated toe tip at the event
-    and verifies it is within 0.14 m of the ball center; the proxy measures
-    0.092 m horizontal / 0.026 m vertical (0.095 m total), with the physical
+    and verifies it is within 0.14 m of the ball center; the corrected proxy
+    measures 0.057 m horizontal / 0.001 m vertical (0.057 m total), with the physical
     impulse still fired once at 0.4 s. This validates blockout contact geometry,
     not final human-mesh appearance or match-camera readability. The default
     4v4 scene still uses primitive players; final-mesh contact, live camera

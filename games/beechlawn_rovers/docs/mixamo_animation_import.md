@@ -49,18 +49,43 @@ skeleton at the event frame and compares it with the live ball. That check found
 an axis-sign error in the first Blender pass: the toe travelled away from the
 center ball and was 1.14 m away at contact. The Blender source now drives the
 instep forward; the corrected toe tip is 0.092 m away in the ground plane and
-0.026 m above the ball center at 0.4 s (0.095 m total). The test verifies the
-toe tip stays within 0.14 m of the ball center and still checks that exactly one
-independent physical ball impulse occurs. This fits the current simplified boot
-and 0.22 m ball; recheck it against the final boot mesh and its actual contact
-surface.
+0.026 m above the ball center at 0.4 s (0.095 m total) before the visual-axis
+correction. With the corrected 180-degree rig orientation, the toe tip now
+measures 0.057 m from ball center, and the integration test verifies it stays
+within 0.14 m while checking that exactly one independent physical impulse
+occurs. Recheck this against the final boot mesh and its actual contact surface.
+
+## Original first-touch receive
+
+`tools/blender/author_football_receive.py` authors the in-place
+`AN_Beechlawn_ReceiveRight` action on the same rig. It lasts 42 frames at 60 fps
+(0.7 s), with a cushioned right-foot contact marker at frame 20 (0.333 s). The
+support leg stays planted while the receiving foot reaches, absorbs the ball,
+and returns to a balanced stance. IK is temporary in Blender and baked into the
+clip; there is no runtime IK or root translation. The shared visual exposes
+`play_receive()` and restores its locomotion tree when the clip ends.
+
+The Godot receive contact smoke test places an incoming ball in front of the
+player and measures the evaluated `mixamorig_RightToe_End` at the event. The
+toe tip is 3.7 cm from the ball center, and the action completes with locomotion
+restored. The pose sheet shows the ready, contact, and recovery beats in
+[the proxy render](images/y_bot_receive_pose_sheet.png). Reviewing its facing
+revealed Y-Bot's imported forward axis opposed the game actor's attack axis, so
+`footballer_visual.tscn` rotates the rig 180 degrees locally. Pass and receive
+contact tests now both use that same orientation; no player or ball gameplay
+logic was changed. The receive clip is available to gameplay but is not yet
+automatically selected when a player receives a pass.
+
+To rebuild the combined asset library from the original animation-set source,
+run `author_football_kick.py` first, then `author_football_receive.py`; the kick
+script recreates its source library before the receive script appends its clip.
 
 The CMU take was used only as a timing/arc reference. A direct BVH retarget
 failed its pose review due to rest-pose and bone-axis mismatch, so no CMU-derived
-motion is included in the export. The new clip remains a mannequin blocking
-pass, not a final footballer animation. Godot event synchronization and
-AnimationTree resumption are verified for the proxy; contact height/alignment
-on the final human mesh and live 4v4 play validation are still outstanding.
+motion is included in the export. The pass and receive clips remain mannequin
+blocking studies, not final footballer animations. Godot event synchronization
+and AnimationTree resumption are verified for the proxy; contact alignment on
+the final human mesh and live 4v4 play validation are still outstanding.
 
 ## First clips to bring in
 
