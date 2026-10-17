@@ -11,6 +11,25 @@ This is the durable, project-local archive for the reference material reviewed f
 - `google_captures/street_view/` — the panorama from the shared [Kilmore Drive Street View](https://maps.app.goo.gl/p7TfFiB6Qmqviwsh6), eight headings at 45-degree intervals, the link's original heading, and a contact sheet.
 - `google_captures/satellite/` — browser captures of the shared [Kilmore Drive satellite view](https://maps.app.goo.gl/SPqee19XAk4EQ6qs7): estate overview, pitch view at zoom 19, and close pitch view at zoom 20.
 
+## Direct-upload file index
+
+The numeric prefix below is the attachment order in that upload batch. The two football-reference batches contain the same five source images; both folders are preserved, while this table describes their shared content.
+
+| Attachment filename | Reference |
+|---|---|
+| `character_roster_sheets/1-69014.jpg` | Shane Denham, Beechlawn #8. |
+| `character_roster_sheets/2-69011.jpg` | John O’Rourke, Beechlawn goalkeeper #1. |
+| `character_roster_sheets/3-69006.jpg` | Robbie Roden, Beechlawn #10. |
+| `character_roster_sheets/4-69004.jpg` | David Murray, Beechlawn #5. |
+| `character_roster_sheets/5-69017.jpg` | Des Feeney, Bordeaux #9. |
+| `football_reference_upload_round_1/1-69022.jpg` and `football_reference_upload_round_2/1-69022.jpg` | Broadcast gameplay reference image. |
+| `football_reference_upload_round_1/2-69021.jpg` and `football_reference_upload_round_2/2-69021.jpg` | Bordeaux/local-park environment reference board. |
+| `football_reference_upload_round_1/3-69020.jpg` and `football_reference_upload_round_2/3-69020.jpg` | Weathered football goalpost and net reference sheet. |
+| `football_reference_upload_round_1/4-69019.jpg` and `football_reference_upload_round_2/4-69019.jpg` | Worn match-ball reference sheet. |
+| `football_reference_upload_round_1/5-69014.jpg` and `football_reference_upload_round_2/5-69014.jpg` | Shane Denham, Beechlawn #8; same source image as the roster-sheet upload above. |
+
+When a backlog task needs a reference, use these archived originals first. The Google links below are retained for navigation/rechecking; the local captures preserve what was viewed during the reference review.
+
 ## Drive-folder file index
 
 All files are under `source_uploads/drive_folder/`.
