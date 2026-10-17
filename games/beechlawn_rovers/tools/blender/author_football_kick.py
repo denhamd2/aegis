@@ -38,15 +38,15 @@ LEFT_FOOT = {
     54: (0.095, -0.113, 0.033),
 }
 RIGHT_FOOT = {
-    1: (-0.095, -0.113, 0.033),
-    7: (-0.095, 0.12, 0.08),       # controlled backswing
-    13: (-0.095, 0.24, 0.10),      # loaded, knee flexed
-    18: (-0.085, 0.05, 0.08),      # accelerate toward the ball
-    24: (-0.115, -0.48, 0.14),     # toe-base at ball contact
-    29: (-0.14, -0.68, 0.24),      # follow-through through the ball
-    36: (-0.16, -0.52, 0.36),      # controlled recoil/recovery arc
-    44: (-0.10, -0.18, 0.12),
-    54: (-0.095, -0.113, 0.033),
+    1: (-0.095, 0.113, 0.033),
+    7: (-0.095, -0.12, 0.08),       # controlled backswing
+    13: (-0.095, -0.24, 0.10),      # loaded, knee flexed
+    18: (-0.085, -0.05, 0.08),      # accelerate toward the ball
+    24: (-0.115, 0.55, 0.14),       # toe tip reaches the ball's near surface
+    29: (-0.14, 0.75, 0.24),        # follow-through through the ball
+    36: (-0.16, 0.59, 0.36),        # controlled recoil/recovery arc
+    44: (-0.10, 0.18, 0.12),
+    54: (-0.095, 0.113, 0.033),
 }
 
 # Hands counterbalance the kick without retaining the imported T-pose. Elbows

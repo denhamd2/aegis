@@ -128,10 +128,17 @@ been measured on the owner's Mac.
     method event at that authored time; when the optional Y-Bot visual is
     attached to a `FootballPlayer`, the existing physical pass impulse waits
     for that event. A kickoff integration smoke check verifies there is no
-    early kick, exactly one ball impulse at 0.4 s, and locomotion resumes.
-    This remains a mannequin blocking study and the default 4v4 scene still uses
-    primitive players; final human-mesh contact, live camera review, and M1
-    performance validation remain outstanding.
+    early kick, exactly one ball impulse at 0.4 s, and locomotion resumes. A
+    follow-up Godot skeleton measurement exposed that the authored right-foot
+    arc moved backward at contact: the toe was 1.14 m from the center ball. I
+    corrected the Blender-authored forward arc and regenerated the animation
+    library. The integration test now measures the animated toe tip at the event
+    and verifies it is within 0.14 m of the ball center; the proxy measures
+    0.092 m horizontal / 0.026 m vertical (0.095 m total), with the physical
+    impulse still fired once at 0.4 s. This validates blockout contact geometry,
+    not final human-mesh appearance or match-camera readability. The default
+    4v4 scene still uses primitive players; final-mesh contact, live camera
+    review, and M1 performance validation remain outstanding.
     Keep BR-003 open for locomotion refinement, receive/shot/recovery clips,
     shared-rig validation, and in-match visual QA. Do not ship the raw BVH.
   Check Rokoko's free sports mocap set only as optional supplemental material.

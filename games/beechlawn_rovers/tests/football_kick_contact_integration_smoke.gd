@@ -5,6 +5,9 @@ const MATCH_SCENE := "res://scenes/training_ground.tscn"
 const VISUAL_SCENE := "res://scenes/footballer_visual.tscn"
 var _contact_animation_position := -1.0
 var _visual_under_test: FootballerVisual
+var _pass_ball: FootballBall
+var _right_toe_contact := Vector3.ZERO
+var _ball_contact_position := Vector3.ZERO
 
 
 func _initialize() -> void:
@@ -29,6 +32,11 @@ func _run() -> void:
 	visual.name = "Visual"
 	passer.add_child(visual)
 	_visual_under_test = visual
+	_pass_ball = ball
+	var skeleton := visual.get_node("Rig/YBot_Armature/Skeleton3D") as Skeleton3D
+	if skeleton.find_bone("mixamorig_RightToe_End") < 0:
+		_fail("Y-Bot right toe tip bone is unavailable for contact validation")
+		return
 	passer.bind_footballer_visual(visual)
 	visual.action_contact.connect(_record_contact_position)
 	game.call("_start_kickoff", false)
@@ -59,12 +67,21 @@ func _run() -> void:
 	if absf(_contact_animation_position - 0.4) > 0.06:
 		_fail("Contact event was not aligned to the imported clip (%.3fs)" % _contact_animation_position)
 		return
+	var toe_to_ball := _right_toe_contact.distance_to(_ball_contact_position)
+	var horizontal_contact := Vector2(_right_toe_contact.x - _ball_contact_position.x,
+		_right_toe_contact.z - _ball_contact_position.z).length()
+	var vertical_contact := absf(_right_toe_contact.y - _ball_contact_position.y)
+	if toe_to_ball > 0.14:
+		_fail("Ball impulse is not aligned with the toe tip contact (distance=%.3fm horizontal=%.3fm vertical=%.3fm toe=%s ball=%s)" % [
+			toe_to_ball, horizontal_contact, vertical_contact, str(_right_toe_contact), str(_ball_contact_position)])
+		return
 	for frame in 30:
 		await physics_frame
 	if not visual.animation_tree.active:
 		_fail("Locomotion AnimationTree did not resume after the pass clip")
 		return
-	print("Beechlawn pass integration: no early impulse, one physical pass at the 0.4 s animation contact, locomotion restored")
+	print("Beechlawn pass integration: toe tip is %.3fm from ball center at 0.4 s (horizontal %.3fm, vertical %.3fm); one physical kick, locomotion restored" % [
+		toe_to_ball, horizontal_contact, vertical_contact])
 	quit(0)
 
 
@@ -75,6 +92,10 @@ func _fail(message: String) -> void:
 
 func _record_contact_position(_action: StringName) -> void:
 	_contact_animation_position = visual_position_for_test()
+	var skeleton := _visual_under_test.get_node("Rig/YBot_Armature/Skeleton3D") as Skeleton3D
+	var toe_index := skeleton.find_bone("mixamorig_RightToe_End")
+	_right_toe_contact = skeleton.to_global(skeleton.get_bone_global_pose(toe_index).origin)
+	_ball_contact_position = _pass_ball.global_position
 
 
 func visual_position_for_test() -> float:

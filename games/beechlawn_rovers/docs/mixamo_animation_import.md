@@ -44,6 +44,17 @@ primitive-player path retains its immediate kick behavior. The event integration
 has a headless kickoff smoke test; it does not yet prove contact alignment on
 the final human mesh or replace the default match-scene blockout.
 
+The kickoff test also samples `mixamorig_RightToe_End` from the evaluated Godot
+skeleton at the event frame and compares it with the live ball. That check found
+an axis-sign error in the first Blender pass: the toe travelled away from the
+center ball and was 1.14 m away at contact. The Blender source now drives the
+instep forward; the corrected toe tip is 0.092 m away in the ground plane and
+0.026 m above the ball center at 0.4 s (0.095 m total). The test verifies the
+toe tip stays within 0.14 m of the ball center and still checks that exactly one
+independent physical ball impulse occurs. This fits the current simplified boot
+and 0.22 m ball; recheck it against the final boot mesh and its actual contact
+surface.
+
 The CMU take was used only as a timing/arc reference. A direct BVH retarget
 failed its pose review due to rest-pose and bone-axis mismatch, so no CMU-derived
 motion is included in the export. The new clip remains a mannequin blocking
