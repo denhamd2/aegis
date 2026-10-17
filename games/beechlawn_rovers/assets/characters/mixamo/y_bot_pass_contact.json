@@ -1,0 +1,7 @@
+{
+  "clip": "AN_Beechlawn_PassRight",
+  "event": "ball_contact",
+  "frame": 24,
+  "fps": 60,
+  "time_seconds": 0.4
+}

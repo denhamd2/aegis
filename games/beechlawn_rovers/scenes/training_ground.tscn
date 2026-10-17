@@ -1,0 +1,247 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/training_ground.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/football_player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/football_ball.gd" id="3_ball"]
+[ext_resource type="Script" path="res://scripts/broadcast_camera.gd" id="4_camera"]
+[ext_resource type="PackedScene" path="res://assets/environment/old_used_ball.glb" id="5_ball_visual"]
+
+[sub_resource type="Environment" id="Environment_sky"]
+background_mode = 1
+background_color = Color(0.49, 0.63, 0.78, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.72, 0.76, 0.81, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 2
+
+[sub_resource type="CapsuleShape3D" id="Capsule_player"]
+radius = 0.32
+height = 1.82
+
+[sub_resource type="CapsuleMesh" id="Capsule_torso"]
+radius = 0.32
+height = 0.8
+
+[sub_resource type="SphereMesh" id="Sphere_head"]
+radius = 0.19
+height = 0.38
+
+[sub_resource type="CapsuleMesh" id="Capsule_limb"]
+radius = 0.105
+height = 0.7
+
+[sub_resource type="SphereShape3D" id="SphereShape_ball"]
+radius = 0.11
+
+[sub_resource type="PhysicsMaterial" id="Material_ball_physics"]
+rough = true
+bounce = 0.18
+friction = 0.08
+
+[sub_resource type="StandardMaterial3D" id="Material_jersey"]
+albedo_color = Color(0.025, 0.12, 0.64, 1)
+roughness = 0.82
+
+[sub_resource type="StandardMaterial3D" id="Material_skin"]
+albedo_color = Color(0.69, 0.47, 0.34, 1)
+roughness = 0.82
+
+[sub_resource type="StandardMaterial3D" id="Material_shorts"]
+albedo_color = Color(0.035, 0.04, 0.055, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_boots"]
+albedo_color = Color(0.055, 0.06, 0.065, 1)
+roughness = 0.48
+
+[node name="BeechlawnSundayLeagueMatchPrototype" type="Node3D"]
+script = ExtResource("1_scene")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_sky")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.8, -0.55, 0.0)
+light_color = Color(1.0, 0.91, 0.79, 1)
+light_energy = 1.15
+shadow_enabled = true
+directional_shadow_max_distance = 90.0
+
+[node name="Pitch" type="Node3D" parent="."]
+
+[node name="Goals" type="Node3D" parent="."]
+
+[node name="ParkEdge" type="Node3D" parent="."]
+
+[node name="Ball" type="RigidBody3D" parent="."]
+position = Vector3(-0.7, 0.115, 0.0)
+mass = 0.43
+continuous_cd = true
+can_sleep = false
+script = ExtResource("3_ball")
+physics_material_override = SubResource("Material_ball_physics")
+
+[node name="BallVisual" parent="Ball" instance=ExtResource("5_ball_visual")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ball"]
+shape = SubResource("SphereShape_ball")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+position = Vector3(-1.5, 0.0, 0.0)
+script = ExtResource("2_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+position = Vector3(0.0, 0.91, 0.0)
+shape = SubResource("Capsule_player")
+
+[node name="Visual" type="Node3D" parent="Player"]
+
+[node name="Torso" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(0.0, 1.3, 0.0)
+mesh = SubResource("Capsule_torso")
+surface_material_override/0 = SubResource("Material_jersey")
+
+[node name="Head" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(0.0, 1.9, 0.0)
+mesh = SubResource("Sphere_head")
+surface_material_override/0 = SubResource("Material_skin")
+
+[node name="Hair" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(0.0, 2.02, 0.0)
+mesh = SubResource("Sphere_head")
+scale = Vector3(1.03, 0.53, 1.03)
+surface_material_override/0 = SubResource("Material_shorts")
+
+[node name="LeftArm" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(-0.39, 1.32, 0.0)
+rotation = Vector3(0.0, 0.0, -0.14)
+mesh = SubResource("Capsule_limb")
+surface_material_override/0 = SubResource("Material_jersey")
+
+[node name="RightArm" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(0.39, 1.32, 0.0)
+rotation = Vector3(0.0, 0.0, 0.14)
+mesh = SubResource("Capsule_limb")
+surface_material_override/0 = SubResource("Material_jersey")
+
+[node name="LeftLeg" type="Node3D" parent="Player/Visual"]
+position = Vector3(-0.16, 0.93, 0.0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Player/Visual/LeftLeg"]
+position = Vector3(0.0, -0.31, 0.0)
+mesh = SubResource("Capsule_limb")
+surface_material_override/0 = SubResource("Material_shorts")
+
+[node name="RightLeg" type="Node3D" parent="Player/Visual"]
+position = Vector3(0.16, 0.93, 0.0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Player/Visual/RightLeg"]
+position = Vector3(0.0, -0.31, 0.0)
+mesh = SubResource("Capsule_limb")
+surface_material_override/0 = SubResource("Material_shorts")
+
+[node name="BootLeft" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(-0.16, 0.075, -0.08)
+mesh = SubResource("Sphere_head")
+scale = Vector3(0.65, 0.28, 1.1)
+surface_material_override/0 = SubResource("Material_boots")
+
+[node name="BootRight" type="MeshInstance3D" parent="Player/Visual"]
+position = Vector3(0.16, 0.075, -0.08)
+mesh = SubResource("Sphere_head")
+scale = Vector3(0.65, 0.28, 1.1)
+surface_material_override/0 = SubResource("Material_boots")
+
+[node name="Number8" type="Label3D" parent="Player/Visual"]
+position = Vector3(0.0, 1.31, 0.326)
+rotation = Vector3(0.0, 3.141593, 0.0)
+text = "8"
+font_size = 64
+pixel_size = 0.0025
+modulate = Color(0.93, 0.94, 1.0, 1.0)
+
+[node name="BroadcastCamera" type="Node3D" parent="."]
+script = ExtResource("4_camera")
+
+[node name="Camera3D" type="Camera3D" parent="BroadcastCamera"]
+current = true
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="ColorRect" parent="HUD"]
+offset_left = 28.0
+offset_top = 24.0
+offset_right = 505.0
+offset_bottom = 118.0
+color = Color(0.025, 0.04, 0.055, 0.78)
+
+[node name="League" type="Label" parent="HUD/Panel"]
+offset_left = 14.0
+offset_top = 6.0
+offset_right = 300.0
+offset_bottom = 30.0
+theme_override_font_sizes/font_size = 15
+text = "SUNDAY LEAGUE"
+
+[node name="Score" type="Label" parent="HUD/Panel"]
+offset_left = 14.0
+offset_top = 31.0
+offset_right = 455.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 19
+text = "BEECHLAWN ROVERS   0     0   BORDEAUX"
+
+[node name="Clock" type="Label" parent="HUD/Panel"]
+offset_left = 14.0
+offset_top = 63.0
+offset_right = 140.0
+offset_bottom = 87.0
+theme_override_colors/font_color = Color(0.53, 0.85, 0.59, 1)
+theme_override_font_sizes/font_size = 17
+text = "00:00"
+
+[node name="Message" type="Label" parent="HUD"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 128.0
+offset_bottom = 158.0
+grow_horizontal = 2
+horizontal_alignment = 1
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 19
+
+[node name="Power" type="ProgressBar" parent="HUD"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 650.0
+offset_top = 866.0
+offset_right = -650.0
+offset_bottom = 882.0
+grow_horizontal = 2
+max_value = 100.0
+visible = false
+
+[node name="Debug" type="Label" parent="HUD"]
+offset_left = 28.0
+offset_top = 864.0
+offset_right = 650.0
+offset_bottom = 890.0
+visible = false
+
+[node name="Controls" type="Label" parent="HUD"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -425.0
+offset_top = -96.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+horizontal_alignment = 2
+vertical_alignment = 2
+theme_override_font_sizes/font_size = 14
+text = "WASD Move   Shift Sprint   Ctrl Close Control\nE Pass   Q Through Ball\nHold Space Shoot   F Tackle   Tab Switch"

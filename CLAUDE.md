@@ -7,18 +7,16 @@ where the vendored Blender skills came from and under what licence.
 
 ## Blender in this repo
 
-**There is no Blender application here, and nothing listens on port 9876.**
-What exists is `bpy` 4.2.0 — Blender as an importable Python library. The
-vendored Blender skills are all written for a live Blender driven over
-BlenderMCP, so *none of them can be invoked as a tool here*. (`import-wrestler`
-is the exception: it is this project's own skill, written against this
-container, and it runs.) The vendored ones are read as craft reference, and the
-work is done the way this repo already does it:
+Blender 4.3.2 is installed at `/usr/bin/blender`, with its bundled `bpy`.
+Codex does not have a Blender MCP tool connected in this environment, so the
+vendored guides are read as craft reference and Blender work is done with
+repeatable headless scripts. (`import-wrestler` is project-specific guidance,
+not a separate Blender runtime.) The work follows this repo's asset pipeline:
 
 - an idempotent script committed under `game/tools/blender/` (rig and animation
   work, e.g. `wrestling_clips.py`) or `tools/blender/` (environment, e.g.
   `arena_bowl.py`)
-- run headless: `python3 game/tools/blender/wrestling_clips.py`
+- run headless: `blender -b --python game/tools/blender/wrestling_clips.py`
 - output is a `.glb` committed to `game/assets/`, and it must be
   **deterministic** — the same input table produces a byte-identical file, which
   is what lets it be diffed and reviewed like the `.tres` bakes

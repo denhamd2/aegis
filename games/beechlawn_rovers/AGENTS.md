@@ -30,6 +30,42 @@ requirements do not govern this project.
   hardware validation is blocked, continue with equivalent cloud checks where
   possible and clearly leave hardware-only acceptance pending.
 
+## Opt-in design interview
+
+- The project-local `/grill-me` skill and its `grilling` interview protocol
+  are available under `.agents/skills/`. Use them only when the user explicitly
+  asks to be grilled, stress-tested, or interviewed about a design. Do not turn
+  them into a gate for routine implementation, bug fixes, or continuing an
+  already-approved backlog item.
+- They are most useful before expensive or foundational choices: the football
+  control model, ball/action architecture, AI and formation strategy, the move
+  from 4v4 to 11v11, or a large character/animation production pass. For small
+  tuning decisions, inspect the project and proceed with a stated assumption.
+- Before asking the user, inspect the current code, backlog, and relevant
+  archived references; ask only for decisions that depend on their preference.
+  This workflow can deliberately pause for multiple design rounds, so invoke it
+  only when the user requests that depth. Keep the interview scoped to
+  Beechlawn; it does not apply to Aegis wrestling.
+
+## Engineering skill routing
+
+- For a hard bug or performance regression, use
+  `.agents/skills/diagnosing-bugs/SKILL.md`. Build a repeatable check for the
+  reported symptom, minimize it, then test ranked hypotheses and verify the
+  fix against the original case. Surface hypotheses as a progress update and
+  keep working without waiting unless a user decision is genuinely blocking.
+  If the symptom needs the unavailable Mac, continue with cloud repros and
+  code-level checks while keeping Mac validation explicitly open.
+- When editing agent instructions or skills, read
+  `.agents/skills/writing-for-agents/SKILL.md`; when editing a skill's
+  frontmatter or invocation behavior, also read its sibling
+  `SKILL-MECHANICS.md`. Keep always-loaded guidance brief, route detailed
+  procedures through task-triggered pointers, and keep each rule in one
+  authoritative place.
+- These engineering guides apply only inside Beechlawn. They do not change
+  Aegis wrestling guidance or replace the project-specific Blender, Godot,
+  `gda`, `create-player`, or explicit `grill-me` workflows.
+
 ## Blender and validation
 
 - Use the shared `.claude/skills/` guides through the root `AGENTS.md` routing
@@ -37,6 +73,10 @@ requirements do not govern this project.
   for park scenery, use environment/scene guides; for Godot assets, read
   `godot-export` before exporting. Do not use `import-wrestler` for football
   characters.
+- For creating or substantially refining a footballer, read
+  `.agents/skills/create-player/SKILL.md` first. It is scoped to Beechlawn and
+  routes the shared Blender guides while using the archived player and kit
+  references; it does not change Aegis wrestling workflows.
 - Before any backlog item that changes visual assets, animation, camera, or
   lighting, consult `docs/art_reference_implementation_plan.md` and the
   relevant entries in `references/README.md`; retrieve the archived originals
@@ -67,6 +107,13 @@ requirements do not govern this project.
   start` installs a harness and edits Godot project settings, so run live tests
   in a disposable project copy unless changes to the actual project are
   intentional; inspect and clean up the harness afterward.
+- Put a hard process deadline around every headless Godot test, for example
+  `timeout --signal=TERM --kill-after=3s 45s godot --headless --path .
+  --script res://tests/<test>.gd`. Several `SceneTree` smoke scripts call
+  `quit()` only on success; a failed `assert` can leave Godot idling instead of
+  returning an exit code. Never start a duplicate test while an earlier one is
+  still running. If the deadline expires, capture the final log, terminate the
+  process, diagnose the failing assertion, then rerun once.
 - A passing static scene check does not cover dependencies inside imported
   binary scenes such as GLB. Record that scope limitation and use scene
   preflight/runtime checks to validate startup.

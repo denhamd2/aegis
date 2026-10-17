@@ -40,19 +40,20 @@ question. What remains is MIT on both counts.
 They are still in git history, which is where they should stay: restoring one
 re-opens the licence question, and none of them is worth that.
 
-## None of these run in this container
+## How these run in the current container
 
-All three sets drive a **running Blender application through the BlenderMCP addon on
-port 9876**. This container has no `blender` binary and nothing listening on
-that port — it has `bpy` 4.2.0, which is Blender as a Python *library*, and is
-what `tools/assets/*.py` already uses. The two are not interchangeable: the
-skills issue commands to a live Blender session, `bpy` runs headless in-process.
+The vendored guides were written to drive a **running Blender application
+through the BlenderMCP addon on port 9876**. This environment has Blender 4.3.2
+at `/usr/bin/blender` and can run `bpy` in Blender's embedded Python, but no
+Blender MCP tool is connected to this Codex session. The live-MCP instructions
+therefore need to be adapted to repeatable headless scripts; `bpy` is not a
+remote Blender session.
 
-To make the survivors live, a machine needs Blender >= 4.0 with the BlenderMCP
-addon running and listening on 9876, and that MCP server configured in Claude
-Code. Nothing else: the skills that wanted OpenCV, a `MESHY_API_KEY` or `ffmpeg`
-were all in the deleted set, so no survivor needs a credential or a binary
-beyond Blender itself.
+For Blender-MCP-specific workflows, a machine still needs Blender >= 4.0 with
+the BlenderMCP addon running and listening on 9876, and that MCP server
+configured in the client. The retained headless-compatible guides can instead
+be followed with the installed Blender executable. No survivor needs a
+credential beyond Blender itself.
 
 ## What was checked before installing
 

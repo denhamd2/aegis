@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2_attributes"]
+
+[sub_resource type="Resource" id="NeutralAttributes"]
+script = ExtResource("2_attributes")
+
+[resource]
+script = ExtResource("1_profile")
+player_id = &"bordeaux_outfield_1"
+display_name = "Bordeaux outfield slot 1"
+role = "outfield"
+visual_base = "Des Feeney"
+starting_slot = "left"
+starting_position = Vector2(-20, -8)
+attributes = SubResource("NeutralAttributes")

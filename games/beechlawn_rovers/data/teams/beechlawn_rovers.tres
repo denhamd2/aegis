@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FootballTeam" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/football_team.gd" id="1_team"]
+[ext_resource type="Resource" path="res://data/players/john_orourke.tres" id="2_keeper"]
+[ext_resource type="Resource" path="res://data/players/shane_denham.tres" id="3_left"]
+[ext_resource type="Resource" path="res://data/players/david_murray.tres" id="4_center"]
+[ext_resource type="Resource" path="res://data/players/robbie_roden.tres" id="5_right"]
+
+[resource]
+script = ExtResource("1_team")
+team_id = &"beechlawn_rovers"
+display_name = "Beechlawn Rovers"
+primary_kit_color = Color(0.025, 0.12, 0.64, 1)
+secondary_kit_color = Color(0.035, 0.04, 0.055, 1)
+goalkeeper_kit_color = Color(0.72, 0.78, 0.9, 1)
+roster = Array[ExtResource("2_keeper")]([ExtResource("2_keeper"), ExtResource("3_left"), ExtResource("4_center"), ExtResource("5_right")])

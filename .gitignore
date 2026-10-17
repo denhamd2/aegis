@@ -1,6 +1,10 @@
 # Godot 4
 game/.godot/
+**/.godot/
 *.translation
+
+# Blender backup files are generated beside editable sources.
+*.blend1
 
 # export_presets.cfg is normally ignored because it can carry signing
 # keystore paths and passwords. Ours holds one Web preset and no

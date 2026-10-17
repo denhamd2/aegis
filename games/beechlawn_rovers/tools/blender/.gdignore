@@ -1,0 +1,1 @@
+# Keep editable Blender sources out of Godot's asset importer and runtime scan.

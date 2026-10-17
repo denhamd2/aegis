@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2_attributes"]
+
+[sub_resource type="Resource" id="NeutralAttributes"]
+script = ExtResource("2_attributes")
+
+[resource]
+script = ExtResource("1_profile")
+player_id = &"john_orourke"
+display_name = "John O’Rourke"
+jersey_number = 1
+role = "goalkeeper"
+visual_base = "John O’Rourke"
+starting_slot = "keeper"
+starting_position = Vector2(-48, 0)
+attributes = SubResource("NeutralAttributes")

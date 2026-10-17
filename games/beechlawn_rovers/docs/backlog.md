@@ -37,6 +37,21 @@ been measured on the owner's Mac.
   bounce, goal-frame collisions and HUD readability. Fix issues found before
   adding more systems. Record average and worst-frame time over a repeatable
   60-second run.
+  - Cloud Web smoke pass: added a dedicated Web preset and verified the
+    release export starts in Chromium with the Compatibility renderer. Pressing
+    E starts kickoff, the match clock advances, F3 shows the 60 Hz/player/ball/
+    stamina debug HUD, and holding W+Shift moves the controlled player (8.4 m/s
+    in the captured check). A browser screenshot exposed the kickoff prompt's
+    poor contrast over the scenery; a dark font outline now keeps it readable.
+    The browser test used software WebGL and is
+    functional coverage only; it does not establish M1 frame rate or visual
+    parity. The local export is `build/web/index.html` (about 49 MiB total).
+    Still required: full Mac playtest at 1080p and target-hardware timing.
+  - Research decision: use the Web export only for functional smoke coverage;
+    keep the M1 Pro run at 1080p as the performance and visual acceptance gate.
+    Profile first, then test reduced 3D render scale or Godot 4.6's FSR 2.2 /
+    macOS MetalFX options only if GPU timing shows a need. Do not assume the
+    22-player target is already performance-bound while the playable is 4v4.
 - [ ] **BR-002 — Ball action/contact pass**
   Tune touch distance, sprint touches, rolling resistance, pass/shot power and
   aiming. Buffer pass/shot inputs and prevent actions outside a plausible
@@ -46,9 +61,24 @@ been measured on the owner's Mac.
     limited to 1.12 m; shot charging takes 1.0 s to reach full power; goal aim
     respects the player's attack direction. Smoke checks cover buffered
     pass/shot contact and reject a kick at 1.30 m. A 12 m/s ground pass moved
-    about 11 m over two simulated seconds. Animation-marker synchronization
-    waits for the football clips in BR-003, and the M1 check still needs the
-    target Mac.
+    about 17.8 m over two simulated seconds after reducing excessive rolling
+    resistance; 6 and 18 m/s passes covered 8.3 m and 27.9 m. Close-control,
+    normal, and sprint touch spacing is now distinct, with continuous capped
+    possession assistance and touch events throttled by cooldown. Shot charge
+    and directional aim are covered by the new `ball_fundamentals_smoke.gd`.
+    The optional Y-Bot visual gates a pass impulse on a Godot method track
+    inserted at the Blender-authored contact frame; an integration smoke check
+    confirms no early impulse and one physical pass at 0.4 s. This is a
+    first-pass event hookup, not final human-mesh contact validation, and the
+    M1 check still needs the target Mac.
+  - Research decision: keep the ball physically independent and retain the
+    existing force-assisted dribble. Establish reliable pass/shot trajectories
+    before considering drag or Magnus-force tuning; only add aerodynamic forces
+    if measured ball flight shows a clear need, with coefficients calibrated
+    against observed trajectories. Do not enable a custom rigid-body integrator
+    for this without a specific requirement. If player movement stalls against
+    the ball during contact checks, test collision layer/mask arrangements in a
+    minimal scene before changing the match setup.
 - [ ] **BR-003 — Reusable footballer rig and first animation set**
   Use Mixamo Y-Bot as the replaceable rig/import baseline, then verify one
   shared skeleton can represent the Beechlawn outfielders and goalkeeper.
@@ -59,13 +89,51 @@ been measured on the owner's Mac.
   contact. **Cloud pass:** the owner-supplied Y-Bot FBX is preserved and a clean
   GLB exports/imports successfully; Blender and Godot checks confirm its 65
   bones, two skinned surfaces and approximately 1.805 m Y-up height. A reusable
-  `scenes/footballer_visual.tscn` now blends original idle/jog/sprint proxy clips
-  using an AnimationTree; a smoke test confirms the expected skeleton, imported
-  clips and bone playback. Remaining: polish gait and foot contacts against
-  football reference, then replace the robot shell with the human visual, and
-  extend the set with stop/turn, close control, receive, pass, shot and recovery.
+  `scenes/footballer_visual.tscn` blends idle/jog/sprint proxy clips and includes
+  the pass action in an AnimationTree-compatible library; headless checks cover
+  skeleton, clip playback, and the contact event. Remaining: polish gait and
+  foot contacts against football reference, replace the robot shell with the
+  human visual, and extend the set with stop/turn, close control, receive, shot
+  and recovery.
   Keep primitive blockout actors until these clips pass visual review. The first
-  import/check stage is now complete; this BR-003 item stays open.
+    import/check stage is now complete; this BR-003 item stays open.
+  **Additional cloud gait pass:** the Blender side-view proxy render showed a
+  short, low-knee jog/sprint silhouette. I increased the existing in-place
+  stride and knee drive modestly, added a small torso counterbalance, and kept
+  the existing 2–3 cm pelvis bob. Evaluated foot-bone forward travel increased
+  from 0.359 m to 0.438 m for jog and 0.534 m to 0.629 m for sprint; the Godot
+  animation-tree smoke test still passes with the imported actions. This is a
+  proxy improvement only: the visual scene is not yet integrated into the 4v4
+  match, so foot planting at match speed, blending during turns, and contact
+  with the live ball still need the full in-game pass.
+  - Research decision: keep the current lightweight 1D idle/jog/sprint blend
+    while these clips are being polished and integrated. Add a directional
+    BlendSpace2D only when authored backpedal/strafe/turn clips are available;
+    add upper-body layering only with a tested additive clip and bone mask.
+    Retargeting or bone renaming must be verified against the Y-Bot track names
+    and rest pose before changing import conventions.
+  - Free-motion-source check: CMU subject 10, take 03 (“soccer - kick ball”) is
+    archived with its usage terms in `references/animation_sources/cmu/`.
+    A Blender 4.3.2 60 Hz retarget trial showed unacceptable pose distortion
+    from rest-pose/axis mismatch, so it was discarded before Godot integration.
+    It was retained as timing/arc reference for an original right-foot pass
+    blocking clip. `tools/blender/author_football_kick.py` uses temporary IK
+    for a planted support foot and counterbalancing arms, then bakes and removes
+    those constraints. The resulting `AN_Beechlawn_PassRight` clip is 54 frames
+    at 60 fps (0.9 s), with contact at frame 24 (0.4 s); see
+    `docs/images/y_bot_pass_contact_sheet.png`. The Blender script exports it
+    alongside the existing clips in `y_bot_animation_library.glb`, preserving
+    their durations when sampling the library at 60 fps. It also writes
+    `y_bot_pass_contact.json` from the Blender contact frame. Godot inserts a
+    method event at that authored time; when the optional Y-Bot visual is
+    attached to a `FootballPlayer`, the existing physical pass impulse waits
+    for that event. A kickoff integration smoke check verifies there is no
+    early kick, exactly one ball impulse at 0.4 s, and locomotion resumes.
+    This remains a mannequin blocking study and the default 4v4 scene still uses
+    primitive players; final human-mesh contact, live camera review, and M1
+    performance validation remain outstanding.
+    Keep BR-003 open for locomotion refinement, receive/shot/recovery clips,
+    shared-rig validation, and in-match visual QA. Do not ship the raw BVH.
   Check Rokoko's free sports mocap set only as optional supplemental material.
 - [ ] **BR-004 — Configurable controls and action buffering**
   Keep the first playable match keyboard-only. Put its keyboard mappings in a
@@ -300,6 +368,9 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  Follow the project-local `.agents/skills/create-player/SKILL.md` for each
+  reference-led player build; it requires source-to-feature mapping and fixed
+  front/profile/three-quarter/broadcast review before accepting the asset.
   Replace the proxy with sheet-matched Beechlawn players: Shane Denham (#8),
   Robbie Roden (#10), David Murray (#5) and goalkeeper John O’Rourke (#1).
   Create a reusable roster/kit workflow. For Bordeaux, use Des Feeney (#9) as

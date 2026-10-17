@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FootballTeam" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/football_team.gd" id="1_team"]
+[ext_resource type="Resource" path="res://data/players/bordeaux_goalkeeper.tres" id="2_keeper"]
+[ext_resource type="Resource" path="res://data/players/bordeaux_outfield_1.tres" id="3_left"]
+[ext_resource type="Resource" path="res://data/players/bordeaux_outfield_2.tres" id="4_center"]
+[ext_resource type="Resource" path="res://data/players/bordeaux_outfield_3.tres" id="5_right"]
+
+[resource]
+script = ExtResource("1_team")
+team_id = &"bordeaux"
+display_name = "Bordeaux"
+primary_kit_color = Color(0.44, 0.7, 0.91, 1)
+secondary_kit_color = Color(0.035, 0.04, 0.055, 1)
+goalkeeper_kit_color = Color(0.44, 0.7, 0.91, 1)
+roster = Array[ExtResource("2_keeper")]([ExtResource("2_keeper"), ExtResource("3_left"), ExtResource("4_center"), ExtResource("5_right")])
