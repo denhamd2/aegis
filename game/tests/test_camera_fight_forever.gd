@@ -24,7 +24,9 @@ func _move(startup: int, active: int, recovery: int, file := "") -> MoveDef:
 	m.active_frames = active
 	m.recovery_frames = recovery
 	if file != "":
-		m.resource_path = "res://resources/moves/%s.tres" % file
+		# by its animation's name: a second MoveDef cannot take the path of
+		# one the match has already loaded
+		m.animation_pair_id = StringName(file)
 	return m
 
 

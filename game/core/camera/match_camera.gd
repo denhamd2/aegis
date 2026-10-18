@@ -920,18 +920,25 @@ func _ff_grapple_cut(attacker: Node3D, defender: Node3D, move: MoveDef, special:
 const FF_WIDE_PREFIXES := ["running_", "dive_", "ground_", "possum_", "ladder_"]
 
 
+## A move's name for classifying it: its file, or its animation's name when
+## it has no file (built in code, or a second copy of a loaded move).
+static func _move_key(move: MoveDef) -> String:
+	var file := String(move.resource_path).get_file()
+	return file if file != "" else String(move.animation_pair_id)
+
+
 static func _is_moving_attack(move: MoveDef) -> bool:
 	if move == null:
 		return false
-	var file := String(move.resource_path).get_file()
+	var key := _move_key(move)
 	for prefix: String in FF_WIDE_PREFIXES:
-		if file.begins_with(prefix):
+		if key.begins_with(prefix):
 			return true
 	return false
 
 
 static func _is_signature(move: MoveDef) -> bool:
-	return move != null and String(move.resource_path).get_file().begins_with("signature")
+	return move != null and _move_key(move).begins_with("signature")
 
 
 func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
