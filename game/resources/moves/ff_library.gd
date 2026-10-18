@@ -220,6 +220,7 @@ const MOVES := {
 const EXISTING := {
 	"cross_rhodes": "res://resources/moves/finisher_cross_rhodes.tres",
 	"figure_four_leglock": "res://resources/moves/submission_figure_four.tres",
+	"cody_cutter_4": "res://resources/moves/dive_springboard_cutter.tres",
 }
 
 static var _paired: AnimationLibrary

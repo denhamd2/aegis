@@ -254,6 +254,9 @@ WRESTLERS = {
 EXISTING = {
     "cross_rhodes": "res://resources/moves/finisher_cross_rhodes.tres",
     "figure_four_leglock": "res://resources/moves/submission_figure_four.tres",
+    # The springboard in off the middle rope, the head caught in the air --
+    # Cody's dive spot's cutter ending (DiveSpot), which is FF's Cody Cutter 4.
+    "cody_cutter_4": "res://resources/moves/dive_springboard_cutter.tres",
 }
 
 # Frame data by family, at 60 Hz: (startup, active, recovery). Paced to the
