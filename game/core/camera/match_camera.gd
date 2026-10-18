@@ -292,6 +292,9 @@ const FF_SPECIAL_FOV := 40.0
 const FF_IMPACT_LEAD := 0.03
 ## A signature or special strike's close-up, held over the blow.
 const FF_STRIKE_HOLD := 0.45
+## How far off the close-up's aim, across, the referee may stand nearer the
+## lens than the wrestlers before it cuts round to the other side.
+const FF_REF_CLEAR_DEG := 24.0
 ## Where the stage is: the close-up looks toward it, so the screens are behind
 ## the action as Fight Forever's arena screens are behind its close-ups.
 const FF_STAGE_DIR := Vector3(0, 0, -1)
@@ -411,6 +414,10 @@ var _cut_fresh := false
 ## Fight Forever grapple cut: out wide at this fraction of the paired move.
 var _cut_ff_impact := -1.0
 var _cut_ff_special := false
+## The side the current Fight Forever close-up shoots from, fixed on the cut.
+var _cut_ff_toward := Vector3.ZERO
+## Whether it has already cut round the referee (once a shot, never back).
+var _cut_ff_flipped := false
 var _cutaway_pending := false
 var _sign_fans: Node
 var _enda_cutaway_pending := false
@@ -911,10 +918,26 @@ func _ff_grapple_cut(attacker: Node3D, defender: Node3D, move: MoveDef, special:
 	_cut_facing = Vector3.ZERO
 	_cut_fresh = true
 	_cut_ff_special = special
+	_cut_ff_toward = Vector3.ZERO
+	_cut_ff_flipped = false
 	var total := maxf(float(move.total_frames()), 1.0) if move else 1.0
 	_cut_ff_impact = clampf((move.startup_frames / total) - FF_IMPACT_LEAD, 0.1, 0.95) \
 			if move else 0.5
 	_held = 0.0
+
+
+## Whether the referee stands in the shot from `at` to `look`: nearer the
+## lens than the wrestlers and inside the middle of the frame (within
+## FF_REF_CLEAR_DEG of the aim, across), where she hides one of them.
+func _referee_blocks(at: Vector3, look: Vector3) -> bool:
+	var ref := get_node_or_null(^"../RefereeActor") as Node3D
+	if ref == null or not ref.visible:
+		return false
+	var aim := Vector3(look.x - at.x, 0.0, look.z - at.z)
+	var to_ref := Vector3(ref.global_position.x - at.x, 0.0, ref.global_position.z - at.z)
+	if to_ref.length() > aim.length() - 0.2:
+		return false
+	return rad_to_deg(aim.angle_to(to_ref)) < FF_REF_CLEAR_DEG
 
 
 const FF_WIDE_PREFIXES := ["running_", "dive_", "ground_", "possum_", "ladder_"]
@@ -1450,6 +1473,17 @@ func _event_shot(delta: float) -> bool:
 			if absf(side.dot(FF_STAGE_DIR)) < 0.2:
 				toward = _cut_side
 			var out := FF_SPECIAL_OUT if _cut_ff_special else FF_CLOSE_OUT
+			# The stage side, fixed for the shot -- unless the referee walks
+			# into the lens, and then one hard cut to the far side of the pair.
+			if _cut_ff_toward == Vector3.ZERO:
+				_cut_ff_toward = toward
+			if not _cut_ff_flipped and _referee_blocks(
+					mid + _cut_ff_toward * out + Vector3.UP * FF_CLOSE_HEIGHT,
+					mid + Vector3.UP * FF_CLOSE_AIM):
+				_cut_ff_toward = -_cut_ff_toward
+				_cut_ff_flipped = true
+				_cut_fresh = true
+			toward = _cut_ff_toward
 			at = mid + toward * out + Vector3.UP * FF_CLOSE_HEIGHT
 			look = mid + Vector3.UP * FF_CLOSE_AIM
 			lens = FF_SPECIAL_FOV if _cut_ff_special else FF_CLOSE_FOV

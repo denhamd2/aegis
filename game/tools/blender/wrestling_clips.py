@@ -7214,6 +7214,70 @@ CLIPS["Ladder_Aerial_Defender"] = [
 ]
 
 
+# === AEW Fight Forever move library (resources/moves/ff/, FFMoveLibrary) =====
+# Each wrestler's signatures and specials from the owner's compilation
+# (gauntlet/refs/aew_ff_animation_review.md), paced to its measured tempo:
+# quick set-ups, a held beat at the top of a lift, the drop, and the attacker
+# back up about a second after the landing. Clip names are FF_<move>_Attacker
+# / _Defender; the paired move is ff_<move> (paired_recipes.gd).
+
+# Tiger Driver '98 (Cody Rhodes's special), 72 frames / 2.4 s. The Pedigree's
+# double underhook (shared frames, so the hook-up reads the same), then he
+# heaves the man straight up by the hooked arms: the man pitches forward over
+# his own head and hangs upside down, back against Cody's chest, legs high
+# (video 0.0-0.6 s); a held beat; Cody sits out and drives him down on the
+# back of his neck in front of him, and the man's legs go over: flat on his
+# back, head away. The victim's turn is one direction, pitch falling -60 to
+# -270, in steps of under 60 degrees, in his body frame (_body).
+_TD_LIMBS = dict(spine=(-6, 0, 0), head=(-12, 0, 0),
+                 hand_r=(0.32, 0.12, 0.46), hand_l=(-0.32, 0.12, 0.46),
+                 elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                 fist_r=0.3, fist_l=0.3,
+                 foot_r=(0.12, -0.06, -0.84), foot_l=(-0.12, -0.04, -0.84),
+                 knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+_TD_HOLD = P(pelvis=(0.0, 0.0, 0.880), spine=(6, 0, 0), head=(8, 0, 0),
+             hand_r=(0.20, 0.20, 1.18), hand_l=(-0.20, 0.20, 1.18),
+             elbow_r=(0.8, -0.2, 0.0), elbow_l=(-0.8, -0.2, 0.0),
+             fist_r=0.8, fist_l=0.8,
+             foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["FF_Tiger_Driver_98_Attacker"] = [k for k in CLIPS["Pedigree_Attacker"] if k[0] <= 16] + [
+    # Sits into the heave.
+    (20, P(pelvis=(0.0, 0.08, 0.680), hips=(-14, 0, 0), spine=(-20, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.24, 0.32, 0.82), hand_l=(-0.24, 0.32, 0.82),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.22, 0.14, 0.104))),
+    (26, P(pelvis=(0.0, 0.04, 0.840), hips=(-4, 0, 0), spine=(0, 0, 0),
+           head=(0, 0, 0),
+           hand_r=(0.22, 0.24, 1.10), hand_l=(-0.22, 0.24, 1.10),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.08, 0.104), foot_l=(-0.22, 0.10, 0.104))),
+    # Tall, the man upside down against his chest.
+    (30, dict(_TD_HOLD)),
+    (40, dict(_TD_HOLD, spine=(8, 0, 0), head=(10, 0, 0))),
+    # The sit-out.
+    (43, pose(SIT_DROP, hand_r=(0.20, 0.30, 0.92), hand_l=(-0.20, 0.30, 0.92))),
+    (46, pose(ATK_SEAT, hand_r=(0.24, 0.46, 0.34), hand_l=(-0.24, 0.46, 0.34))),
+    (54, pose(ATK_SEAT)),
+] + _get_up(56, 72, seated=True)
+CLIPS["FF_Tiger_Driver_98_Defender"] = [k for k in CLIPS["Pedigree_Defender"] if k[0] <= 16] + [
+    # Heaved up by the hooked arms, pitching forward over his own head.
+    (20, _body((-105, 0, 0), (0.0, 0.06, 1.150), **_TD_LIMBS)),
+    (26, _body((-150, 0, 0), (0.0, 0.02, 1.600), **_TD_LIMBS)),
+    # Upside down, back to Cody's chest, his head at Cody's belt.
+    (30, _body((-176, 0, 0), (0.0, 0.00, 1.820), **_TD_LIMBS)),
+    (40, _body((-174, 0, 0), (0.0, 0.00, 1.840), **_TD_LIMBS)),
+    # Driven down onto the back of his neck, the legs going over.
+    (43, _body((-205, 0, 0), (0.0, -0.06, 1.150), **_TD_LIMBS)),
+    (46, _body((-240, 0, 0), (0.0, -0.12, 0.420), **dict(_TD_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # Flat on his back, head away from Cody.
+    (49, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.230))),
+    (54, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (72, dict(SUPINE_AWAY)),
+]
+
+
 def main():
     arm = load_rig()
     clear_actions()

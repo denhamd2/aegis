@@ -759,6 +759,20 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.25,
 	},
+	# --- AEW Fight Forever library (FFMoveLibrary) ------------------------
+	# Cody's special -- see FF_Tiger_Driver_98_Attacker in wrestling_clips.py.
+	"ff_tiger_driver_98": {
+		"authored": {"attacker": "FF_Tiger_Driver_98_Attacker", "defender": "FF_Tiger_Driver_98_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 1.40, "clip": "Sitting_Enter", "at": 0.60},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 1.50, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1594,6 +1608,28 @@ const TRAJECTORIES := {
 			"pos": [[0.000, -0.40, 0.00, 0.00], [0.333, -0.40, 0.00, 0.00], [0.433, -0.65, 0.00, 0.00],
 					[0.567, -1.00, 0.00, 0.00], [1.200, -1.00, 0.00, 0.00]],
 			"rot": [[0.000, 0.00, -90.00, 0.00], [1.200, 0.00, -90.00, 0.00]],
+		},
+	},
+	# --- AEW Fight Forever library (FFMoveLibrary) ------------------------
+	# The Pedigree's approach; the man's root comes in under the lift and goes
+	# out in front of Cody's seat as he is driven down and goes over.
+	"ff_tiger_driver_98": {
+		"length": 2.4,
+		"attacker": {
+			# Sits back into the sit-out, his legs shooting out in front.
+			"pos": [[0.00, 0.40, 0.00, 0.00], [1.33, 0.40, 0.00, 0.00],
+					[1.53, 0.58, 0.00, 0.00], [2.40, 0.58, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.40, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			# Driven down and out: he lands a body-length off, his feet by
+			# Cody's (video 0.9-1.9 s), not across Cody's legs.
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.05, 0.00, 0.00],
+					[0.53, 0.10, 0.00, 0.00], [1.00, 0.12, 0.00, 0.00],
+					[1.33, 0.12, 0.00, 0.00], [1.43, -0.22, 0.00, 0.00],
+					[1.53, -0.74, 0.00, 0.00], [1.63, -1.00, 0.00, 0.00],
+					[2.40, -1.08, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.40, 0.0, -90.0, 0.0]],
 		},
 	},
 }

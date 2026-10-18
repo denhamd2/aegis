@@ -68,12 +68,14 @@ func _paired_move_names() -> Array[String]:
 
 func _move_defs() -> Array[MoveDef]:
 	var defs: Array[MoveDef] = []
-	for file in DirAccess.get_files_at(MOVES_DIR):
-		if not file.ends_with(".tres"):
-			continue
-		var res: Resource = load("%s/%s" % [MOVES_DIR, file])
-		if res is MoveDef:
-			defs.append(res)
+	# The Fight Forever library (FFMoveLibrary) keeps its MoveDefs in ff/.
+	for dir: String in [MOVES_DIR, MOVES_DIR + "/ff"]:
+		for file in DirAccess.get_files_at(dir):
+			if not file.ends_with(".tres"):
+				continue
+			var res: Resource = load("%s/%s" % [dir, file])
+			if res is MoveDef:
+				defs.append(res)
 	return defs
 
 func _make_move(id: StringName) -> MoveDef:
@@ -112,6 +114,8 @@ func test_the_moveset_covers_everything_architecture_scopes() -> void:
 			chain += 1
 		elif name.begins_with("ladder_"):
 			ladder += 1
+		elif name.begins_with("ff_") and FFMoveLibrary.MOVES.has(name.trim_prefix("ff_")):
+			pass  # the Fight Forever library, which grows move by move
 		else:
 			cut.append(name)
 	assert_int(grapple).override_failure_message(
@@ -458,7 +462,7 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	assert_array(ids.call(cody.grapple_move, cody.grapple_move_pool)) \
 			.is_equal(["grapple_vertical_suplex"])
 	assert_array(ids.call(cody.power_move, cody.power_move_pool)) \
-			.is_equal(["power_powerslam", "power_alabama_slam"])
+			.is_equal(["power_powerslam", "power_alabama_slam", "ff_tiger_driver_98"])
 	assert_array(ids.call(cody.signature_move, cody.signature_move_pool)) \
 			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter", "signature_pedigree"])
 	assert_str(String(cody.own_signature.animation_pair_id)).is_equal("signature_cody_cutter")

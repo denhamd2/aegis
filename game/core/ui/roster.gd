@@ -202,7 +202,9 @@ static func entries() -> Array:
 		"strike": [M + "strike_jab.tres", M + "strike_bionic_elbow.tres",
 				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
 		"grapple": [M + "grapple_vertical_suplex.tres"],
-		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres"],
+		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres",
+				# Fight Forever library (FFMoveLibrary), his in the game.
+				M + "ff/tiger_driver_98.tres"],
 		"signature": [M + "signature_disaster_kick.tres", M + "signature_pedigree.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],

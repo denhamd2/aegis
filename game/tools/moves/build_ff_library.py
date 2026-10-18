@@ -268,6 +268,12 @@ FAMILY_FRAMES = {
     "hurricanrana": (34, 6, 34), "aerial": (54, 6, 40), "combo": (60, 6, 40),
     "submission": (60, 0, 240), "pin": (36, 6, 30),
 }
+# Once a move is animated its frame data is its clip's: startup to the contact
+# frame, recovery to the clip's end (frames at 60 Hz, clip frames at 30 fps x2).
+CLIP_FRAMES = {
+    "tiger_driver_98": (92, 6, 46),       # 72-frame clip at 30 fps: contact at 46
+}
+
 # Damage by tier: (head, torso, legs). A special is the big one.
 TIER_DAMAGE = {"signature": (10.0, 8.0, 2.0), "special": (16.0, 12.0, 4.0)}
 LEG_FAMILIES = {"submission"}
@@ -286,7 +292,7 @@ def tres(move_id: str) -> str:
     name, family, setup = MOVES[move_id]
     tiers = tiers_of(move_id)
     top = "special" if any("special" in t for t in tiers.values()) else "signature"
-    su, ac, rc = FAMILY_FRAMES[family]
+    su, ac, rc = CLIP_FRAMES.get(move_id, FAMILY_FRAMES[family])
     head, torso, legs = TIER_DAMAGE[top]
     if family in LEG_FAMILIES:
         head, legs = head * 0.4, legs + head * 0.6
