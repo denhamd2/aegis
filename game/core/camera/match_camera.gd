@@ -296,6 +296,12 @@ const FF_STRIKE_HOLD := 0.45
 ## How far off the close-up's aim, across, the referee may stand nearer the
 ## lens than the wrestlers before it cuts round to the other side.
 const FF_REF_CLEAR_DEG := 24.0
+## The close-up frames at least this tall (a standing man and a little), with
+## this much air above the top (the foot bone is the ankle; a boot reaches
+## past it), easing toward a new height at this rate.
+const FF_FRAME_MIN_TOP := 2.0
+const FF_FRAME_MARGIN := 0.4
+const FF_FRAME_EASE := 10.0
 ## Where the stage is: the close-up looks toward it, so the screens are behind
 ## the action as Fight Forever's arena screens are behind its close-ups.
 const FF_STAGE_DIR := Vector3(0, 0, -1)
@@ -419,6 +425,8 @@ var _cut_ff_special := false
 var _cut_ff_toward := Vector3.ZERO
 ## Whether it has already cut round the referee (once a shot, never back).
 var _cut_ff_flipped := false
+## The eased height the current close-up is framing to (-1 until measured).
+var _cut_ff_top := -1.0
 var _cutaway_pending := false
 var _sign_fans: Node
 var _enda_cutaway_pending := false
@@ -921,10 +929,25 @@ func _ff_grapple_cut(attacker: Node3D, defender: Node3D, move: MoveDef, special:
 	_cut_ff_special = special
 	_cut_ff_toward = Vector3.ZERO
 	_cut_ff_flipped = false
+	_cut_ff_top = -1.0
 	var total := maxf(float(move.total_frames()), 1.0) if move else 1.0
 	_cut_ff_impact = clampf((move.startup_frames / total) - FF_IMPACT_LEAD, 0.1, 0.95) \
 			if move else 0.5
 	_held = 0.0
+
+
+## The world height of the highest head, hand or boot of either man in the
+## cut; 0 when neither has a skeleton to read.
+func _pair_top() -> float:
+	var top := 0.0
+	for body: Node3D in [_cut_subject, _cut_other]:
+		if body == null or not is_instance_valid(body) or not body.has_method("_bone_world"):
+			continue
+		for bone: String in ["Head", "hand_l", "hand_r", "foot_l", "foot_r"]:
+			var p: Vector3 = body.call("_bone_world", bone)
+			if p.is_finite():
+				top = maxf(top, p.y)
+	return top
 
 
 ## Whether the referee stands in the shot from `at` to `look`: nearer the
@@ -1485,9 +1508,24 @@ func _event_shot(delta: float) -> bool:
 				_cut_ff_flipped = true
 				_cut_fresh = true
 			toward = _cut_ff_toward
-			at = mid + toward * out + Vector3.UP * FF_CLOSE_HEIGHT
-			look = mid + Vector3.UP * FF_CLOSE_AIM
 			lens = FF_SPECIAL_FOV if _cut_ff_special else FF_CLOSE_FOV
+			# Frame what is there: a man hoisted upside down reaches 2.8 m,
+			# twice a lock-up's height. The highest head, hand or boot of
+			# either man (eased, so the lens rises with a lift instead of
+			# jumping) sets the aim and how far out the lens must sit for the
+			# pair, mat to top, to fit the frame.
+			var floor_y := minf(s.y, o.y)
+			var top := maxf(_pair_top() - floor_y, FF_FRAME_MIN_TOP)
+			_cut_ff_top = top if _cut_ff_top < 0.0 \
+					else lerpf(_cut_ff_top, top, 1.0 - exp(-FF_FRAME_EASE * delta))
+			# Mat to the top plus air above it (the floor needs none).
+			var span := _cut_ff_top + FF_FRAME_MARGIN
+			var half := span * 0.5 + 0.05
+			var aim := maxf(FF_CLOSE_AIM, span * 0.5)
+			out = maxf(out, half / tan(deg_to_rad(lens) * 0.5))
+			var ground := Vector3(mid.x, floor_y, mid.z)
+			at = ground + toward * out + Vector3.UP * (aim + FF_CLOSE_HEIGHT - FF_CLOSE_AIM)
+			look = ground + Vector3.UP * aim
 			focus = _cut_ff_special
 		Cut.SLAM:
 			# Mat level, square to the pair, the lens wide: the landing is

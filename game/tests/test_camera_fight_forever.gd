@@ -84,6 +84,37 @@ func test_a_grapple_cuts_in_close_toward_the_stage_and_out_on_the_impact() -> vo
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.RINGSIDE)
 
 
+func test_the_close_up_pulls_back_for_a_man_held_overhead() -> void:
+	var scene := _match()
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	a.global_position = Vector3(-0.5, 0, 0)
+	b.global_position = Vector3(0.5, 0, 0)
+	await get_tree().process_frame
+	camera.mode = MatchCamera.Mode.RINGSIDE
+	camera._on_grapple_started(a, b, _move(60, 6, 34))
+	camera._event_shot(1.0 / 60.0)
+	var mid := Vector3(0, 0, 0)
+	var standing := camera.global_position.distance_to(mid)
+	# Hoisted: a metre off the mat, as a Tiger Driver holds him; the lens
+	# measures from the lower man's feet.
+	camera._on_grapple_started(a, b, _move(60, 6, 34))
+	b.global_position.y = 1.0
+	await get_tree().process_frame
+	camera._event_shot(1.0 / 60.0)
+	var top := camera._pair_top()
+	assert_float(top).is_greater(2.5)
+	var held := camera.global_position.distance_to(mid)
+	assert_float(held).is_greater(standing + 0.5)
+	# and the top of him is inside the vertical field of view
+	var to_top := Vector3(0.5, top, 0) - camera.global_position
+	var aim := -camera.global_transform.basis.z
+	var up_angle := rad_to_deg(asin(clampf(to_top.normalized().y, -1, 1))) \
+			- rad_to_deg(asin(clampf(aim.y, -1, 1)))
+	assert_float(up_angle).is_less(camera.fov * 0.5)
+
+
 func test_ordinary_strikes_stay_wide_and_a_signature_strike_cuts() -> void:
 	var scene := _match()
 	var camera: MatchCamera = scene.get_node("MatchCamera")
