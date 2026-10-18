@@ -49,7 +49,7 @@ const MENU_CAMERA := "OPTIONS"
 ## the values' names in CameraSettings' enum order].
 const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST", "FIGHT FOREVER"]], ["CUTS", ["ON", "OFF"]],
 		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]],
-		["BLOOD", ["ON", "OFF"]]]
+		["BLOOD", ["ON", "OFF"]], ["MOTION BLUR", ["ON", "OFF"]]]
 var camera_row := 0
 const MENU_QUIT := "QUIT"
 
@@ -684,6 +684,7 @@ static func camera_option(row: int) -> int:
 		1: return 0 if CameraSettings.cuts else 1
 		2: return CameraSettings.shake
 		3: return CameraSettings.replays
+		5: return 0 if CameraSettings.motion_blur_enabled() else 1
 		_: return 0 if Blood.on() else 1
 
 
@@ -696,6 +697,7 @@ func step_camera_option(dir: int) -> void:
 		1: CameraSettings.cuts = v == 0
 		2: CameraSettings.shake = v as CameraSettings.Shake
 		3: CameraSettings.replays = v as CameraSettings.Replays
+		5: CameraSettings.motion_blur = v == 0
 		_:
 			Blood.on()   # reads --blood once, before we override it
 			Blood.enabled = v == 0
@@ -730,7 +732,7 @@ func _draw_camera(view: Vector2) -> void:
 		TitleArt.draw_tracked(self, _font,
 				Vector2(panel.position.x + panel.size.x - view.x * 0.030 - vw, y),
 				value, row_size, view.y * 0.002, TitleArt.STEEL)
-		y += view.y * 0.070
+		y += view.y * 0.058   # six rows inside the panel
 
 
 ## First keyboard event bound to each action, joined -- e.g. "UP LEFT DOWN RIGHT".

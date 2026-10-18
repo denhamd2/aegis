@@ -322,6 +322,10 @@ const CUT_HOLD := {Cut.STRIKE: 0.85, Cut.SLAM: 0.35, Cut.HERO: 1.5, Cut.FIRE_UP:
 const TRAUMA_STRIKE := 0.3
 const TRAUMA_BIG_STRIKE := 0.45
 const TRAUMA_SLAM := 0.55
+## Motion blur shutters (MotionBlur.intensity, the fraction of a frame's
+## motion smeared): light in open play, heavier through a paired move.
+const BLUR_BASE := 0.35
+const BLUR_ACTION := 0.6
 const TRAUMA_KNOCKDOWN := 0.3
 ## No Holds Barred: a gunshot, a man through a table, the rocket's blast.
 const TRAUMA_SHOT := 0.25
@@ -427,6 +431,9 @@ var _cut_ff_toward := Vector3.ZERO
 var _cut_ff_flipped := false
 ## The eased height the current close-up is framing to (-1 until measured).
 var _cut_ff_top := -1.0
+var _cut_guard: MatchSmoothing.CutGuard
+## The compositor's motion blur, on Forward+ only (MotionBlur.supported).
+var motion_blur: MotionBlur
 var _cutaway_pending := false
 var _sign_fans: Node
 var _enda_cutaway_pending := false
@@ -441,7 +448,12 @@ var referee: MatchReferee
 func _ready() -> void:
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	# A cut must not be drawn as a one-tick slide across the arena.
-	add_child(MatchSmoothing.CutGuard.new())
+	_cut_guard = MatchSmoothing.CutGuard.new()
+	add_child(_cut_guard)
+	if MotionBlur.supported(RenderingServer.get_current_rendering_method()):
+		motion_blur = MotionBlur.new()
+		compositor = Compositor.new()
+		compositor.compositor_effects = [motion_blur]
 	wrestler_a = get_node_or_null(wrestler_a_path)
 	wrestler_b = get_node_or_null(wrestler_b_path)
 	grapple_rig = get_node_or_null(grapple_rig_path)
@@ -463,6 +475,25 @@ func _ready() -> void:
 		wc.weapon_retrieval_started.connect(_on_weapon_retrieval_started)
 	add_to_group(WeaponActor.LISTENERS)
 	add_to_group("match_camera")
+
+## The blur's shutter for this frame (MotionBlur.intensity): none when it is
+## off or the frame cut, a light smear in open play, a heavier one through a
+## paired move, where the bodies travel fastest.
+func blur_intensity() -> float:
+	if not CameraSettings.motion_blur_enabled():
+		return 0.0
+	if _cut_guard and _cut_guard.cut_frame >= 0 \
+			and Engine.get_process_frames() - _cut_guard.cut_frame <= 1:
+		return 0.0
+	if grapple_rig and grapple_rig.is_active():
+		return BLUR_ACTION
+	return BLUR_BASE
+
+
+func _process(_delta: float) -> void:
+	if motion_blur:
+		motion_blur.intensity = blur_intensity()
+
 
 func _physics_process(delta: float) -> void:
 	if mode == Mode.ENTRANCE:

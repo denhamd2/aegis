@@ -134,8 +134,20 @@ table and the assessment of Gemini's suggestions are in
   default, pacing, and replays after specials.
 - **Smoothness gap (owner's question, 18 Oct):** FF's moves are denser (a
   pose every frame, likely mocap) and its engine adds motion blur; ours are
-  keyed every 3-10 frames and splined. Candidates: denser in-between keys on
-  the hero moves, and a camera motion-blur pass on cuts and fast moves.
+  keyed every 3-10 frames and splined. Two answers, both on the branch:
+  - *In-between keys on the hero moves.* `tools/anim/clip_speeds.gd` finds
+    where a clip lurches; `test_clip_cadence` scores the 22 hero clips
+    (summed jerk 980.6 -> 951.5 so far) and holds the line. Fixed: the
+    Tiger Driver, Alabama Slam and Vertical Suplex landings (now settled
+    in the body's frame over six frames), two get-ups, and the Superman
+    Punch's crouch. The Powerslam rise kept its keys: an earlier rise put
+    Cody's head through Roman's leg.
+  - *Camera motion blur* (`core/camera/motion_blur.gd`, OPTIONS > MOTION
+    BLUR): a compositor pass along the velocity buffer, Forward+ only (the
+    Mac), off on cut frames. Strength still to be judged on the Mac.
+- **Close-up framing:** the FF close-up frames what is there -- the highest
+  head, hand or boot of either man -- so a man hoisted upside down stays in
+  shot, and cuts round the referee if she steps into the lens.
 
 ## Character shape and animation clearance
 

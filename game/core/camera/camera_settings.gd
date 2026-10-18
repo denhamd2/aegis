@@ -6,7 +6,7 @@ extends RefCounted
 ## and the command line set them once and every camera reads them.
 ##
 ## Command line (after `--`): --camera ff|gameplay|broadcast, --cuts on|off,
-## --shake off|low|high, --replays off|finish|frequent.
+## --shake off|low|high, --replays off|finish|frequent, --motion-blur on|off.
 
 enum Coverage { GAMEPLAY, BROADCAST, FIGHT_FOREVER }
 enum Shake { OFF, LOW, HIGH }
@@ -24,6 +24,8 @@ static var coverage := Coverage.FIGHT_FOREVER
 static var cuts := true
 static var shake := Shake.LOW
 static var replays := Replays.FINISH
+## Camera motion blur (MotionBlur): on, where the renderer supports it.
+static var motion_blur := true
 
 const SHAKE_SCALE := {Shake.OFF: 0.0, Shake.LOW: 1.0, Shake.HIGH: 1.8}
 
@@ -48,6 +50,11 @@ static func fight_forever() -> bool:
 static func gameplay() -> bool:
 	_read_command_line()
 	return coverage == Coverage.GAMEPLAY
+
+
+static func motion_blur_enabled() -> bool:
+	_read_command_line()
+	return motion_blur
 
 
 static func replay_finish() -> bool:
@@ -76,5 +83,7 @@ static func _read_command_line() -> void:
 				cuts = v != "off"
 			"--shake":
 				shake = {"off": Shake.OFF, "high": Shake.HIGH}.get(v, Shake.LOW)
+			"--motion-blur":
+				motion_blur = v != "off"
 			"--replays":
 				replays = {"off": Replays.OFF, "frequent": Replays.FREQUENT}.get(v, Replays.FINISH)
