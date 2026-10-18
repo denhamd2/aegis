@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MoveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/move_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+resource_name = "LeBell Lock 2"
+animation_pair_id = &"ff_lebell_lock_2"
+startup_frames = 60
+active_frames = 0
+recovery_frames = 240
+reversal_window_start = 50
+reversal_window_end = 58
+damage_head = 6.4
+damage_torso = 12.0
+damage_arms = 0.0
+damage_legs = 13.6
+momentum_gain = 14.0
+leaves_defender_down = true
+metadata/ff_name = "LeBell Lock 2"
+metadata/ff_family = "submission"
+metadata/ff_setup = "ground"
+metadata/ff_wrestlers = PackedStringArray("bryan_danielson")
