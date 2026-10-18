@@ -100,3 +100,17 @@ RobLe3's 30 are the OpenCV-dependent reference-matching family, which does not
 run. arjun988's are checklists with no code, so they transfer
 as numbers. kevinbadi's genuinely do not transfer: they automate product shots
 and write to paths this container does not have.
+
+## Other vendored skills
+
+Not Blender, but recorded here so every third-party skill in `.claude/skills/`
+has its source and licence in one place.
+
+| skill | source | commit | licence |
+| --- | --- | --- | --- |
+| `grill-me`, `grilling` | https://github.com/mattpocock/skills (`skills/productivity/grill-me`, `skills/productivity/grilling`) | `49dd158d1076134a641b33efb035946536778336` | MIT, Copyright (c) 2026 Matt Pocock (`LICENSE` in repo root) |
+
+Copied verbatim, byte for byte; only the Codex-only `agents/openai.yaml` files
+were left out. `grill-me` runs only when the owner types `/grill-me` and hands
+over to `grilling`, which holds the interview protocol. The football project
+keeps its own Codex adaptation under `games/beechlawn_rovers/.agents/skills/`.
