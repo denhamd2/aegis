@@ -6,6 +6,8 @@ const SHOOT_RANGE := 18.0
 const CLOSE_SHOT_RANGE := 10.0
 const PRESSURE_RANGE := 3.2
 const MAX_SAFE_PASS_RISK := 0.60
+const SHOT_BLOCK_CHECK_DISTANCE := 6.0
+const SHOT_BLOCK_HALF_WIDTH := 0.8
 
 func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPlayer],
 		opponents: Array[FootballPlayer], ball: FootballBall) -> Dictionary:
@@ -25,11 +27,13 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 		var opponent_position := Vector2(opponent.global_position.x, opponent.global_position.z)
 		nearest_defender = minf(nearest_defender, opponent_position.distance_to(ball_position))
 
-	# Favor a prompt shot from a central, close position. From the outer edge of
-	# range, shoot only when the lane is not immediately crowded.
+	# Pressure behind or beside the carrier does not necessarily block a shot.
+	# Check the immediate goalward corridor rather than vetoing every attempt
+	# whenever any defender is within three metres of the ball.
 	var central_enough := absf(ball_position.y) <= 15.0
 	var can_take_shot := goal_distance <= CLOSE_SHOT_RANGE \
-		or (goal_distance <= SHOOT_RANGE and central_enough and nearest_defender >= 3.0)
+		or (goal_distance <= SHOOT_RANGE and central_enough \
+			and not _has_close_shot_blocker(ball_position, goal_position, opponents))
 	if can_take_shot:
 		return {"type": &"shoot", "charge": 0.42}
 	if teammates.size()==11 and nearest_defender<5.0:
@@ -64,3 +68,21 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 					"receiver_id": receiver.get_instance_id()}
 
 	return {"type": &"carry"}
+
+func _has_close_shot_blocker(ball_position: Vector2, goal_position: Vector2,
+		opponents: Array[FootballPlayer]) -> bool:
+	var path := goal_position - ball_position
+	var distance := path.length()
+	if distance < 0.01:
+		return false
+	var direction := path / distance
+	for opponent in opponents:
+		if opponent == null or opponent.profile == null or opponent.profile.role != "outfield":
+			continue
+		var offset := Vector2(opponent.global_position.x, opponent.global_position.z) - ball_position
+		var ahead := offset.dot(direction)
+		if ahead <= 0.0 or ahead > minf(distance, SHOT_BLOCK_CHECK_DISTANCE):
+			continue
+		if (offset - direction * ahead).length_squared() <= SHOT_BLOCK_HALF_WIDTH * SHOT_BLOCK_HALF_WIDTH:
+			return true
+	return false

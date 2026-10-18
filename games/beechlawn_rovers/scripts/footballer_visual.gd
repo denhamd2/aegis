@@ -30,6 +30,8 @@ var _appearance_profile: FootballerProfile
 var _appearance_team: FootballTeam
 var _human_rig := false
 static var _kit_materials: Dictionary = {}
+@export var jog_reference_speed := 6.0
+@export var sprint_reference_speed := 8.6
 
 
 func _ready() -> void:
@@ -215,7 +217,10 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 	if not animation_player.has_animation(clip):
 		return false
 	if _active_action != &"":
-		if not interrupt_action and (not interrupt_receive or _active_action != &"receive"):
+		var interrupt_locomotion := _active_action in [&"turn", &"stop"] \
+			and action not in [&"turn", &"stop"]
+		if not interrupt_action and not interrupt_locomotion \
+				and (not interrupt_receive or _active_action != &"receive"):
 			return false
 		var interrupted_action := _active_action
 		animation_player.stop()
@@ -235,12 +240,16 @@ func on_action_contact_marker() -> void:
 		action_contact.emit(_active_action)
 
 
-func set_locomotion_speed(speed_mps: float, sprinting: bool = false,
+func set_locomotion_speed(speed_mps: float, _sprinting: bool = false,
 		braking: bool = false, close_control: bool = false,
 		delta: float = 1.0 / 60.0) -> void:
-	var locomotion := clampf(speed_mps / 6.0, 0.0, 1.0)
-	if sprinting:
-		locomotion = maxf(locomotion, 0.72)
+	# The authored blend points are idle=0, jog=0.55 and sprint=1. Intent does
+	# not determine gait: a held sprint still starts at idle and accelerates.
+	var jog_speed := maxf(jog_reference_speed, 0.01)
+	var sprint_speed := maxf(sprint_reference_speed, jog_speed + 0.01)
+	var locomotion := 0.55 * clampf(speed_mps / jog_speed, 0.0, 1.0)
+	if speed_mps > jog_speed:
+		locomotion = lerpf(0.55, 1.0, clampf((speed_mps - jog_speed) / (sprint_speed - jog_speed), 0.0, 1.0))
 	_blend_position = lerpf(_blend_position, locomotion, 1.0 - exp(-10.0 * delta))
 	_close_control_blend = lerpf(_close_control_blend,
 		1.0 if close_control and speed_mps > 0.35 else 0.0,

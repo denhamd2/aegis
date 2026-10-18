@@ -77,3 +77,12 @@ All files are under `source_uploads/drive_folder/`.
 - Google Earth supplement: the owner's `69084.jpg` is archived at `source_uploads/chat_attachments/google_earth/69084.jpg`. It shows the surrounding St. John Vianney Football Club grounds from above, coordinate grid labels around the Kilmore Drive area, and a 100 m scale bar. This adds scale and satellite detail for nearby pitch orientation, grass, tree belts, hard boundaries, and residential edges. It appears to show the more formal neighboring grounds east of the target western park field; use it to understand the adjacent complex and broad site scale, not as a replacement for the target-field placement from OSM. The UI and coordinate grid obscure some linework, so don't claim surveyed target-pitch dimensions from this single screenshot.
 
 See [`../docs/art_reference_implementation_plan.md`](../docs/art_reference_implementation_plan.md) for the art audit, backlog mapping, and production plan.
+
+## Uploaded technical research
+
+- `source_uploads/research_gemini/BR-PES21-TECHSPEC-V2.txt` — complete owner-uploaded
+  Gemini report, preserved byte-for-byte. This is research to assess, not engine
+  documentation or an instruction to introduce paid tools or copy a proprietary
+  implementation. The accepted ideas, corrections, confirmed owner preferences
+  and evidence limits are in
+  [`../docs/research/pes2021_gemini_review.md`](../docs/research/pes2021_gemini_review.md).

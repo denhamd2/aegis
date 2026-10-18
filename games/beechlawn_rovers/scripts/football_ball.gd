@@ -14,6 +14,10 @@ var action_serial := 0
 var goalkeeper_holder: Node3D
 var _dribble_cooldowns: Dictionary[int, float] = {}
 var _holder_collision_exception: PhysicsBody3D
+var _dribble_controller: Node3D
+var _dribble_force_frame := -1
+var _kick_control_release := 0.0
+var _dribble_control_lease := 0.0
 
 func _ready() -> void:
 	if tuning == null:
@@ -27,6 +31,8 @@ func _ready() -> void:
 	angular_damp = 0.035
 
 func _physics_process(delta: float) -> void:
+	_kick_control_release = maxf(0.0, _kick_control_release - delta)
+	_dribble_control_lease = maxf(0.0, _dribble_control_lease - delta)
 	if is_instance_valid(goalkeeper_holder):
 		var forward := -goalkeeper_holder.global_basis.z
 		forward.y = 0.0
@@ -53,6 +59,9 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 		sprint_distance: float) -> bool:
 	if not is_instance_valid(player):
 		return false
+	if is_instance_valid(goalkeeper_holder) \
+			or global_position.y - player.global_position.y > tuning.dribble_max_height:
+		return false
 	var player_id := player.get_instance_id()
 	var can_emit_touch: bool = _dribble_cooldowns.get(player_id, 0.0) <= 0.0
 	var flat_delta := global_position - player.global_position
@@ -60,6 +69,8 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	if flat_delta.length() > 1.38:
 		return false
 	var touch_team := StringName(player.get("team_name"))
+	if _kick_control_release > 0.0 and touch_team == last_touch:
+		return false
 	# A fast shot remains a shot while it is travelling; close control should not
 	# immediately absorb it and erase the goalkeeper's shot read.
 	if last_action == &"shot" and last_touch == touch_team and linear_velocity.length() > 3.0:
@@ -68,6 +79,12 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	# keeps distant touch assistance from acting like an invisible tackle.
 	if last_touch != &"none" and last_touch != touch_team and flat_delta.length() > 0.55:
 		return false
+	if not _claim_dribble_control(player, flat_delta.length()):
+		return false
+	var physics_frame := Engine.get_physics_frames()
+	if _dribble_force_frame == physics_frame:
+		return false
+	_dribble_force_frame = physics_frame
 	var direction := move_direction.normalized() if move_direction.length_squared() > 0.01 else Vector3.ZERO
 	if direction == Vector3.ZERO:
 		direction = -player.global_basis.z
@@ -94,6 +111,48 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	touched.emit(&"dribble", linear_velocity.length())
 	return true
 
+func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
+	# Only one spring may act on the ball in a tick. Keep an established actor
+	# stable; select the nearest plausible actor only when control is released.
+	if _dribble_cooldowns.is_empty() or _dribble_control_lease <= 0.0:
+		_dribble_controller = null
+	if is_instance_valid(_dribble_controller):
+		var owner_offset := global_position - _dribble_controller.global_position
+		owner_offset.y = 0.0
+		if owner_offset.length() > 1.38 or StringName(_dribble_controller.get("team_name")) != last_touch:
+			_dribble_controller = null
+		elif _dribble_controller != player:
+			var same_team: bool = player.get("team_name") == _dribble_controller.get("team_name")
+			if same_team or player_gap + 0.12 >= owner_offset.length():
+				return false
+			_dribble_controller = null
+	if not is_instance_valid(_dribble_controller):
+		var best := player
+		var best_gap := player_gap
+		for node in get_tree().get_nodes_in_group("football_players"):
+			var candidate := node as FootballPlayer
+			if candidate == null or candidate == player:
+				continue
+			var wants_moving_touch := candidate._stick.length_squared() > 0.0025
+			var can_gather_stationary := candidate.velocity.length() < 0.45 and linear_velocity.length() < 0.7
+			if not wants_moving_touch and not can_gather_stationary:
+				continue
+			var offset := global_position - candidate.global_position
+			if offset.y > tuning.dribble_max_height:
+				continue
+			offset.y = 0.0
+			var gap := offset.length()
+			if gap >= best_gap - 0.001:
+				continue
+			if last_touch != &"none" and candidate.team_name != last_touch and gap > 0.55:
+				continue
+			best = candidate
+			best_gap = gap
+		_dribble_controller = best
+	if _dribble_controller == player:
+		_dribble_control_lease = 0.12
+	return _dribble_controller == player
+
 func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 		touch_team: StringName = &"Beechlawn Rovers") -> bool:
 	if direction.length_squared() < 0.01 or speed <= 0.0:
@@ -114,6 +173,8 @@ func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 	last_action = kind
 	action_serial += 1
 	_dribble_cooldowns.clear()
+	_dribble_controller = null
+	_kick_control_release = tuning.kick_control_release_seconds
 	touched.emit(kind, speed)
 	return true
 

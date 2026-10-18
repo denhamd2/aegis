@@ -5,6 +5,7 @@ class_name TeamTacticsController
 
 const FIELD_LENGTH := 105.0
 const FIELD_WIDTH := 68.0
+const CARRIER_CONTROL_RANGE := 1.35
 
 func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPlayer,
 		ball_position: Vector2, interception_position: Vector2,
@@ -15,6 +16,15 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 	var marking_assignments := assign_defensive_marks(team_players, chaser, opponents,
 		ball_position, secondary_presser) if not in_possession else {}
 	var decisions := {}
+	# Last touch survives passes and loose deflections. Press an actual nearby
+	# carrier; otherwise the primary chaser must reach the loose ball itself.
+	var opponent_in_control_range := false
+	if not in_possession:
+		for opponent in opponents:
+			if opponent != null and Vector2(opponent.global_position.x, opponent.global_position.z).distance_squared_to(ball_position) \
+					<= CARRIER_CONTROL_RANGE * CARRIER_CONTROL_RANGE:
+				opponent_in_control_range = true
+				break
 	for actor in team_players:
 		if actor.controlled_by_human or actor.profile == null:
 			continue
@@ -36,11 +46,14 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			target = attacking_support_position(actor, ball_position,
 				actor.team_name == transition_team and transition_time_left > 0.0)
 		elif actor == chaser or actor == secondary_presser:
-			var side := -1.0 if actor.global_position.z < ball_position.y else 1.0
-			var pressure_offset := 0.8 if actor == chaser else 1.6
-			var lateral_offset := 0.65 if actor == chaser else 1.3
-			target = interception_position + Vector2(-actor.attack_sign * pressure_offset,
-				side * lateral_offset)
+			if actor == chaser and not opponent_in_control_range:
+				target = interception_position
+			else:
+				var side := -1.0 if actor.global_position.z < ball_position.y else 1.0
+				var pressure_offset := 0.8 if actor == chaser else 1.6
+				var lateral_offset := 0.65 if actor == chaser else 1.3
+				target = interception_position + Vector2(-actor.attack_sign * pressure_offset,
+					side * lateral_offset)
 		else:
 			target = defensive_shape_position(actor, ball_position,
 				float(context.get("late_lead_depth", 0.0)))

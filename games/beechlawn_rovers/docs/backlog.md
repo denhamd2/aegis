@@ -31,6 +31,35 @@ These are reference-led drafts, not exact likeness or venue acceptance. See
 [`11v11_implementation.md`](11v11_implementation.md) and the release evidence.
 Native Mac appearance and M1 Pro/16 GB 1080p/60 fps are not yet measured.
 
+## Confirmed PES-style direction (2026-10-18)
+
+The owner confirmed gameplay feel first, unmodded PES 2021 at default speed as
+reference, strictly free assets, weighted responsive movement, bounded passing
+assistance and original Blender animation where needed. The complete Gemini
+report and its technical assessment are archived in
+[`research/pes2021_gemini_review.md`](research/pes2021_gemini_review.md). Its paid-tool,
+rig-replacement, literal engine-port and career-mode instructions are not adopted.
+The active follow-on plan is
+[`pes2021_gameplay_plan.md`](pes2021_gameplay_plan.md). It incorporates directional
+locomotion/layers, first-touch and independent-ball control, role-based AI/duels,
+keeper positioning/parries, calibrated airborne drag/spin, reference-led art,
+texture import fixes and measured performance acceptance.
+BR-021/BR-002 (items 21/2 of 25), both in progress, lead with coherent movement,
+reception and contact in the existing full match. Native performance remains
+unverified; the existing 25-item scope is retained. These are planned improvements,
+not new completion claims.
+
+First focused runtime pass is implemented; see
+[`art_briefs/pes_motion_control_pass.md`](art_briefs/pes_motion_control_pass.md).
+Sharp-turn touch alignment, single-controller dribble arbitration and pass
+interruption of turn recovery have passing regressions. The
+[chance/gait follow-up](art_briefs/pes_chance_gait_followup.md) corrects open-shot
+rejection under trailing pressure, loose-ball recovery targets and speed-to-gait
+mapping. The initial zero-shot run exposed these acceptance gaps; focused checks
+now cover both attack directions and the reproduced loose-ball standoff. Source
+stride/plant polish, balanced contested attacking flow and final-mesh motion
+remain open; no complete gameplay or native performance acceptance is implied.
+
 ## Stack-specific practices to carry through the backlog
 
 - Keep the 60 Hz physics loop authoritative and use the existing physics
@@ -88,6 +117,11 @@ Native Mac appearance and M1 Pro/16 GB 1080p/60 fps are not yet measured.
     macOS MetalFX options only if GPU timing shows a need. Do not assume the
     22-player target is already performance-bound while the playable is 4v4.
 - [ ] **BR-002 — Ball action/contact pass**
+  - 2026-10-18 focused follow-up: grounded touches follow eased facing;
+    nearest-eligible-player arbitration prevents competing dribble forces;
+    height and post-kick release gates preserve independent ball travel.
+    Human/AI reversals, competing callers and authored contacts pass. Full-match
+    chance creation still needs assessment; see the motion-control pass above.
   Tune touch distance, sprint touches, rolling resistance, pass/shot power and
   aiming. Buffer pass/shot inputs and prevent actions outside a plausible
   contact window. Synchronize the eventual ball impulse to Blender-authored
@@ -354,6 +388,13 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-18 follow-up: an open goalward shooting corridor is no longer vetoed
+    by a nearby defender behind the ball. Primary defenders chase loose balls
+    into contact range instead of stopping at a possession-pressure offset;
+    support/formation arrival zones are unchanged. Mirrored shot selection and
+    a collision-standoff recovery regression pass. See
+    [`art_briefs/pes_chance_gait_followup.md`](art_briefs/pes_chance_gait_followup.md)
+    for full-match results and remaining tactical-balance limitations.
   Separate team shape, individual decisions and movement execution. Teammates
   offer support and forward runs without clustering; defenders cover lanes,
   mark threats and selectively press. A close-range standing tackle is now
@@ -533,6 +574,23 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-18 release pass: running direction changes retain the locomotion
+    gait instead of playing a planted pivot. Both shared-human pivot clips
+    now reuse relaxed idle arms; all non-arm curves and contact timings are
+    preserved. The source builder, `.blend` and GLB share the fix. Imported-rig
+    pose and moving-turn regression checks pass. See
+    [`art_briefs/shared_turn_polish.md`](art_briefs/shared_turn_polish.md).
+    General stride/stance calibration and native moving-mesh acceptance remain open.
+  - 2026-10-18 gait follow-up: visual blending now matches actual speed to the
+    authored jog/sprint points and no longer forces sprint footwork at rest.
+    Reference speeds come from each player's movement tuning. Source action
+    paths were inspected directly in Blender; stride/plant curves were not
+    changed. Final-mesh movement and source-footwork acceptance remain open.
+  - 2026-10-18 focused follow-up: inspected shared Blender action curves and
+    foot paths; no source curves changed. Pass/shot can interrupt harmless
+    turn/stop recovery. In-place moving-turn foot slide, stride/phase matching,
+    garment deformation and native moving-mesh acceptance remain open. Evidence:
+    [`art_briefs/pes_motion_control_pass.md`](art_briefs/pes_motion_control_pass.md).
   - 2026-10-18: shared-human pass contact checked at 0.075 m from toe to ball;
     idle arms and near-horizontal locomotion arms corrected offline. Keeper set
     and standing save layers share the same 65-bone rig. Full action/deformation

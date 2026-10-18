@@ -43,7 +43,8 @@ for action in ('AN_Beechlawn_KeeperSet','AN_Beechlawn_KeeperSave','AN_Beechlawn_
     assert action in report['actions']
 # Locomotion arms must hang below the shoulder rather than retaining T-pose.
 arm_checks={}
-for name in ('AN_Beechlawn_Idle','AN_Beechlawn_Jog','AN_Beechlawn_Sprint','AN_Beechlawn_CloseControl'):
+for name in ('AN_Beechlawn_Idle','AN_Beechlawn_Jog','AN_Beechlawn_Sprint','AN_Beechlawn_CloseControl',
+             'AN_Beechlawn_Turn90Left','AN_Beechlawn_Turn90Right'):
     rig.animation_data.action=bpy.data.actions[name]
     bpy.context.scene.frame_set(12)
     upper=rig.pose.bones['mixamorig:LeftArm'].matrix.translation

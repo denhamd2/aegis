@@ -14,7 +14,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var packed := load(MATCH_SCENE) as PackedScene
+	var scene_path := OS.get_environment("BEECHLAWN_MATCH_SCENE")
+	var packed := load(scene_path if not scene_path.is_empty() else MATCH_SCENE) as PackedScene
 	assert(packed != null, "Could not load match scene")
 	var game := packed.instantiate()
 	root.add_child(game)
@@ -29,6 +30,12 @@ func _run() -> void:
 	game.call("_set_players_physics_enabled", false)
 	player.controlled_by_human = false
 	player.ai_move_direction = Vector3.ZERO
+	var ai_chance := OS.get_environment("BEECHLAWN_AI_CHANCE") == "1"
+	if ai_chance:
+		player.global_position = Vector3(44.0, 0.0, 0.0)
+		player.rotation.y = -PI / 2.0
+		for defender in game._away_players:
+			defender.global_position = Vector3(-40.0, 0.0, 25.0)
 	_ball.freeze = true
 	_ball.linear_velocity = Vector3.ZERO
 	_ball.angular_velocity = Vector3.ZERO
@@ -48,7 +55,11 @@ func _run() -> void:
 	_visual.animation_tree.active = true
 	await process_frame
 	var starting_serial := _ball.action_serial
-	player.call("_do_shot", 0.55)
+	if ai_chance:
+		_ball.last_touch = player.team_name
+		game._apply_carrier_action(player, game._home_players, game._away_players)
+	else:
+		player.call("_do_shot", 0.55)
 	assert(player.get("_visual_shot_pending"), "Shot did not queue its contact action")
 	assert(_visual.animation_player.current_animation == "AN_Beechlawn_ShotRight",
 		"Shot did not start its Blender-authored animation")

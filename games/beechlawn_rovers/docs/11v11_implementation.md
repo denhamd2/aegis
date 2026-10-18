@@ -4,7 +4,17 @@ Owner confirmed both design-interview rounds on 2026-10-18. This supersedes the
 old requirement to keep all roster work behind the 4v4 gate. Retain 4v4 as a
 regression fixture; the new default target is a three-minute keyboard 11v11 match.
 
-## Decisions and sequence
+## Current follow-on priority
+
+The shared-body/full-team integration below is the original delivery sequence.
+For the next work, follow [`pes2021_gameplay_plan.md`](pes2021_gameplay_plan.md):
+the owner confirmed gameplay first and strictly free assets after the Gemini
+review. BR-021/BR-002 (items 21/2 of 25), both in progress, now lead with core
+locomotion, first touch and contact; further likeness/scenery detail follows.
+The linked plan contains the accepted research recommendations and acceptance
+checks. Existing delivered features remain evidence, not PES-quality acceptance.
+
+## Original integration decisions and sequence
 
 1. BR-022 (22/25): repair the shared garment; use a common body topology,
    skeleton and animation library, modular heads/hair and role-specific kits.

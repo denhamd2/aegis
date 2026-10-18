@@ -12,15 +12,19 @@ func _run() -> void:
 	await process_frame
 	var actors: Array=game._home_players+game._away_players
 	for actor in actors:actor.controlled_by_human=false
+	var kickoff_team := OS.get_environment("BEECHLAWN_KICKOFF_TEAM")
+	if kickoff_team == "Bordeaux":
+		game._prepare_kickoff(&"Bordeaux")
 	var ball := game.get_node("Ball") as FootballBall
 	var last_ball := ball.global_position
 	var travelled := 0.0
 	var max_still := 0
 	var still := 0
 	var samples := 0
-	var home_shots := 0
-	var away_shots := 0
-	var serial := -1
+	# Count actual contacts, including events superseded within the same tick.
+	var shots := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
+	ball.touched.connect(func(kind: StringName, _speed: float):
+		if kind == &"shot": shots[ball.last_touch] = int(shots.get(ball.last_touch, 0)) + 1)
 	while not game._full_time and samples<18000:
 		if game._kickoff_pending:game._start_kickoff(false)
 		await physics_frame
@@ -34,14 +38,9 @@ func _run() -> void:
 		if samples%60==0:
 			still=still+1 if ball.linear_velocity.length()<0.1 and not ball.freeze else 0
 			max_still=maxi(max_still,still)
-		if ball.action_serial!=serial:
-			serial=ball.action_serial
-			if ball.last_action==&"shot":
-				if ball.last_touch==&"Beechlawn Rovers":home_shots+=1
-				else:away_shots+=1
 	assert(game._full_time,"Full short match did not reach full time")
 	assert(ball.freeze,"Ball was not held at full time")
 	assert(travelled>50.0,"AI match did not progress the ball")
-	print("11v11 SOAK PASS seconds=180 ticks=",samples," ball_travel_m=",snappedf(travelled,0.1)," shots=",home_shots,"/",away_shots," goals=",game._home_score,"/",game._away_score," longest_stationary_samples_s=",max_still)
+	print("11v11 SOAK PASS seconds=180 ticks=",samples," ball_travel_m=",snappedf(travelled,0.1)," shots=",shots[&"Beechlawn Rovers"],"/",shots[&"Bordeaux"]," goals=",game._home_score,"/",game._away_score," longest_stationary_samples_s=",max_still)
 	game.free()
 	quit(0)

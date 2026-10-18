@@ -18,6 +18,8 @@ class_name FootballTuning
 @export var dribble_touch_interval := 0.23
 @export var close_touch_distance := 0.48
 @export var sprint_touch_distance := 1.05
+@export var dribble_max_height := 0.45
+@export var kick_control_release_seconds := 0.12
 @export_range(0.0, 0.6, 0.01) var ground_rolling_resistance := 0.18
 @export_range(0.0, 0.8, 0.01) var ground_rolling_force_limit := 0.25
 @export var action_input_buffer := 0.20

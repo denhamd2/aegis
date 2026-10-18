@@ -1,6 +1,6 @@
 """Small baked role layers on the existing rig; no runtime IK or new bones."""
 import bpy,math
-from mathutils import Vector
+from mathutils import Vector,Quaternion
 from shane_leg_retarget import minimum_roll_pose,local_rotation,reset_pose
 
 def polish_idle_arms(rig):
@@ -37,6 +37,7 @@ def author_role_actions(rig):
     scene=bpy.context.scene
     polish_idle_arms(rig)
     polish_locomotion_arms(rig)
+    polish_turn_arms(rig)
     reset_pose(rig);rig.animation_data.action=bpy.data.actions['AN_Beechlawn_Idle'];scene.frame_set(1)
     baseline={b.name:(b.location.copy(),b.rotation_quaternion.copy(),b.scale.copy()) for b in rig.pose.bones}
     def pose_reach(side,amount):
@@ -117,3 +118,38 @@ def polish_locomotion_arms(rig):
         action.update_tag()
     reset_pose(rig);rig.animation_data.action=bpy.data.actions['AN_Beechlawn_Idle'];scene.frame_set(1)
     print('SHARED_LOCOMOTION_ARMS: jog/sprint/close control, existing legs/root unchanged')
+
+def polish_turn_arms(rig):
+    """Reuse the relaxed idle arm motion on the two existing planted pivots.
+
+    Only the four arm/forearm quaternion channels change. Preserve authored
+    hips, feet, spine, action durations and all other football contacts.
+    """
+    idle=bpy.data.actions['AN_Beechlawn_Idle']
+    idle_start,idle_end=idle.frame_range
+    paths=['pose.bones["mixamorig:'+side+part+'"].rotation_quaternion'
+           for side in ('Left','Right') for part in ('Arm','ForeArm')]
+    source={(curve.data_path,curve.array_index):curve for curve in idle.fcurves}
+    for clip in ('AN_Beechlawn_Turn90Left','AN_Beechlawn_Turn90Right'):
+        action=bpy.data.actions[clip]
+        lo,hi=map(int,action.frame_range)
+        for path in paths:
+            quats=[]
+            for frame in range(lo,hi+1):
+                phase=(frame-lo)/max(1,hi-lo)
+                sample=idle_start+phase*(idle_end-idle_start)
+                quat=Quaternion([source[(path,index)].evaluate(sample) for index in range(4)]).normalized()
+                if quats and quats[-1].dot(quat)<0:quat.negate()
+                quats.append(quat)
+            for curve in list(action.fcurves):
+                if curve.data_path==path:action.fcurves.remove(curve)
+            for component in range(4):
+                curve=action.fcurves.new(path,index=component,action_group=path.split('"')[1])
+                curve.keyframe_points.add(len(quats))
+                curve.keyframe_points.foreach_set('co',[v for f,q in enumerate(quats,lo) for v in (f,q[component])])
+                for point in curve.keyframe_points:point.interpolation='LINEAR'
+                curve.update()
+        action.update_tag()
+    reset_pose(rig)
+    rig.animation_data.action=idle
+    bpy.context.scene.frame_set(1)

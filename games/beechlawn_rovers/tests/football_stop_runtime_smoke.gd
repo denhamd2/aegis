@@ -42,12 +42,11 @@ func _run() -> void:
 				await physics_frame
 			player.ai_move_direction = Vector3(0.0, 0.0, -1.0)
 			await physics_frame
-			if visual.animation_player.current_animation != "AN_Beechlawn_Turn90Left" \
-					and visual.animation_player.current_animation != "AN_Beechlawn_Turn90Right":
-				push_error("Sharp in-motion direction change did not start a turn clip: %s" % visual.animation_player.current_animation)
+			if not visual.animation_tree.active or visual._active_action == &"turn":
+				push_error("A running direction change played a planted pivot instead of preserving the moving gait")
 				quit(1)
 				return
-			print("Beechlawn match actor: braking/resume and sharp in-motion direction change trigger their authored clips")
+			print("Beechlawn match actor: braking/resume works; a running direction change preserves the moving gait")
 			quit(0)
 			return
 	push_error("Renewed movement did not return the match actor to locomotion")

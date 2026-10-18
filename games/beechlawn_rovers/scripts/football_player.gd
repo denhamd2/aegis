@@ -75,6 +75,8 @@ func bind_footballer_visual(visual: FootballerVisual) -> void:
 			_footballer_visual.action_finished.disconnect(_on_visual_action_finished)
 	_footballer_visual = visual
 	if is_instance_valid(_footballer_visual):
+		_footballer_visual.jog_reference_speed = tuning.jog_speed
+		_footballer_visual.sprint_reference_speed = tuning.sprint_speed
 		_footballer_visual.action_contact.connect(_on_visual_action_contact)
 		_footballer_visual.action_finished.connect(_on_visual_action_finished)
 
@@ -166,17 +168,18 @@ func _update_locomotion(delta: float) -> void:
 	else:
 		stamina = minf(tuning.stamina_max, stamina + tuning.stamina_recovery * delta)
 	if desired.length_squared() > 0.015:
-		var previous_direction := _flat_direction
-		_flat_direction = desired.normalized()
-		if previous_direction.length_squared() > 0.5 and horizontal.length() > 2.2 \
-				and previous_direction.dot(_flat_direction) < 0.35:
-			var turn_sign := previous_direction.cross(_flat_direction).y
-			var footballer := get_node_or_null("Visual") as FootballerVisual
-			if footballer != null:
-				footballer.play_turn(turn_sign < 0.0)
-		var target_yaw := atan2(-_flat_direction.x, -_flat_direction.z)
+		var intended_direction := desired.normalized()
+		# Keep locomotion cycling through a moving change of direction. The
+		# authored Turn90 clips plant a foot and belong to stationary pivots;
+		# playing them here dragged that planted pose through the moving world.
+		var target_yaw := atan2(-intended_direction.x, -intended_direction.z)
 		var turn_scale := tuning.sprint_turn_scale if sprint_input else 1.0
 		rotation.y = lerp_angle(rotation.y, target_yaw, 1.0 - exp(-tuning.turn_rate * turn_scale * delta))
+	# Input chooses the destination immediately; grounded touches follow the
+	# body's actual facing while its turn catches up, including after stopping.
+	_flat_direction = -global_basis.z
+	_flat_direction.y = 0.0
+	_flat_direction = _flat_direction.normalized()
 	_leg_time += horizontal.length() * delta * (1.15 if sprint_input else 0.85)
 	set_meta("braking", desired.length_squared() <= 0.015 and horizontal.length() > 0.8)
 	set_meta("sprinting", sprint_input)

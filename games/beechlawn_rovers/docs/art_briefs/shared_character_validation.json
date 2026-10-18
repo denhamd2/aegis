@@ -21,7 +21,7 @@
   ],
   "triangles_all_variants": 67902,
   "mesh_parts": 16,
-  "bytes": 11675648,
+  "bytes": 11675472,
   "parts": [
     "Eye_l",
     "Eye_r",
@@ -56,6 +56,12 @@
     },
     "AN_Beechlawn_CloseControl": {
       "shoulder_to_elbow_drop_cm": 26.264
+    },
+    "AN_Beechlawn_Turn90Left": {
+      "shoulder_to_elbow_drop_cm": 26.765
+    },
+    "AN_Beechlawn_Turn90Right": {
+      "shoulder_to_elbow_drop_cm": 26.77
     }
   }
 }

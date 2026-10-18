@@ -1,0 +1,375 @@
+﻿Beechlawn Rovers 3D Football Engine: Technical Specification & Systems Architecture Blueprint (eFootball PES 2021 FOX Engine Replication)
+Document ID: BR-PES21-TECHSPEC-V2 Target Platform: Godot Engine 4.x (Latest Stable) & Blender 4.x Hardware Target Profile: Apple Silicon MacBook (M1 Chip, 16 GB Unified RAM) Intended Stakeholders: Art Director Agent & Principal Developer Agent (HPT6 Sol 6.1)
+1. Hardware Target Infrastructure & Apple Silicon Optimization Matrix
+To ensure that the Beechlawn Rovers 3D match simulation maintains a locked 60 FPS while rendering 22 fully skinned player models, dynamic stadium lighting, PBR garment materials, and real-time fluid physics on an Apple Silicon M1 system with 16 GB unified RAM, both the Blender asset pipeline and Godot runtime must be configured according to strict hardware constraints.
+Blender 4.x Metal API Acceleration
+* Compute Engine: In Blender, navigate to Edit > Preferences > System > Render Devices, select Metal, and check the Apple M1 device GPU.
+* Viewport Sampling: Limit Cycles viewport interactive sampling to 32 samples. This prevents thermal throttling during high-poly muscular sculpting, hair card grooming, and micro-texture baking.
+* Unified Memory Allocation: Because Apple Silicon shares memory between CPU and GPU, texture bake operations (e.g., 4K normal maps, roughness atlases) should be executed in single batch passes to maintain headroom for active mesh operations.
+Godot 4.x Rendering Architecture
+* Forward+ vs. Mobile Backend: The primary match environment should utilize the Forward+ renderer to leverage clustered forward shading, multi-light stadium floodlight shadow maps, and screen-space ambient occlusion (SSAO). If thermal dissipation leads to frame drops during intense 22-player melee animations, the engine fallback must be set to the Mobile renderer.
+* Retina HiDPI Display Resolution Scaling: macOS Retina displays render at dense native pixel counts. Under Project Settings [span_5](start_span)[span_5](end_span)> Rendering > Scaling 3D, configure:
+   * Scaling Mode: FSR 2.1 (FidelityFX Super Resolution).
+   * Render Scale Factor: 0.75 to 0.85. This renders the 3D match viewport at a reduced internal resolution while upscaling crisply to the Retina display, saving significant GPU fill-rate.
+* VRAM Texture Compression: Under Project Settings > Rendering > Textures > VRAM Compression, force BPTC and ASTC compression ON. This optimizes texture bandwidth over the 128-bit memory bus of the M1 chip.
+2. Art Direction, Character Modeling, & Kit Synthesis
+Replicating eFootball PES 2021's visual signature requires anatomically grounded character models, realistic facial edge flow, textured sportswear, and dynamic match-progression shaders.
+                Facial Edge Flow & Anatomical Topology
+                       
+                      (Orbicularis Oculi Loops)
+                            /  O   O  \
+                           /   |   |   \
+                          (   O--O--O   ) <-- (Orbicularis Oris)
+                           \   \   /   /
+                            \   \ /   /
+      (Deltoid Loop) --------> O  O  O <-------- (Deltoid Loop)
+                              |   |   |
+                              O   O   O <-- (Rectus Abdominis)
+                             /    |    \
+    (Quadriceps Loop) ----> O     O     O <---- (Quadriceps Loop)
+                            |     |     |
+                            O     O     O <-- (Gastrocnemius)
+
+Player Geometry & Anatomical Topology
+* Triangle Budget: Standard player models must strictly target 30,000 to 60,000 triangles.
+* Facial Topology: Head meshes require quad-dominant, concentric topology rings surrounding the ocular orbits (orbicularis oculi) and oral cavity (orbicularis oris). This preserves natural volume and prevents geometric tearing during in-game celebrations, referee interactions, and emotional reactions.
+* Muscular Sculpting: High-poly sculpts must emphasize key athletic landmarks: defined shoulder caps (deltoids), abdominal panels (rectus abdominis), quadriceps, and gastrocnemius calf structures. High-flexion joint zones (elbows, knees, hips) require double-loop quad density to prevent mesh collapse during deep tackles or strikes.
+* A-Pose Rest Pose: All base character armatures must be modeled in a standardized A-pose (arms dropped at 45 degrees, palms facing inward). This distributes skin weights evenly across the pectoralis major, deltoids, and latissimus dorsi, preventing armpit mesh pinch typical of T-poses.
+Hair Card Architecture
+Rather than utilizing expensive curve particle simulations, player hair must be authored using a 3-tier Hair Card hierarchy baked from high-poly groom strands:
+1. Tier 1 (Base Scalp): Wide, dense, low-transparency cards fitted tightly against the scalp geometry to occlude underlying skin visibility.
+2. Tier 2 (Volume & Silhouette): Medium-width cards defining primary hairstyle shape, hair partings, and directional flow.
+3. Tier 3 (Breakup & Flyaways): Fine, sparsely placed outer cards with varying rotations to break polygonal outlines and capture specular highlights under stadium lights.
+* Godot Shader Setup: In Godot 4, assign hair textures to Spatial Shaders using Alpha Scissor or Alpha Hash transparency modes to resolve depth-sorting artifacts.
+Garment Synthesis & Dynamic Sweat Shader
+* Kit Authoring: Kits (jersey tops, shorts, compression undershirts, socks) should be pattern-drafted in Marvelous Designer / CLO3D using raglan sleeve patterns and side ventilation panels.
+* PBR Material Maps: Textures exported via Substance Painter must include Albedo, Micro-Weave Normal (simulating polyester knit meshes), Roughness, and Height maps. Club crests and manufacturer badges require dedicated height offsets to simulate thermal-transfer rubber or embroidered patches.
+* Match Progression Sweat Shader: Implement a spatial fragment shader in Godot 4 that modifies roughness and albedo based on match duration:
+// Godot 4 Spatial Fragment Shader Snippet (Kit Sweat Effect)
+shader_type spatial;
+render_mode depth_draw_opaque, cull_back;
+
+uniform sampler2D texture_albedo : source_color;
+uniform sampler2D texture_normal : hint_normal;
+uniform sampler2D texture_roughness : hint_roughness_r;
+uniform sampler2D sweat_mask : hint_default_white; // High sweat zones (chest, spine)
+uniform float match_time_sweat_factor : hint_range(0.0, 1.0) = 0.0; // 0.0 at min 0, 1.0 at min 90
+
+void fragment() {
+   vec4 albedo_tex = texture(texture_albedo, UV);
+   float roughness_tex = texture(texture_roughness, UV).r;
+   float mask = texture(sweat_mask, UV).r;
+   
+   // Sweat darkens albedo and drops roughness to simulate moisture saturation
+   vec3 wet_albedo = albedo_tex.rgb * mix(1.0, 0.75, mask * match_time_sweat_factor);
+   float wet_roughness = mix(roughness_tex, 0.15, mask * match_time_sweat_factor);
+   
+   ALBEDO = wet_albedo;
+   ROUGHNESS = wet_roughness;
+   NORMAL_MAP = texture(texture_normal, UV).rgb;
+}
+
+3. Skeleton Rigging, Auto-Rig Pro, & Root Motion Pipeline
+Armature & Twist Bone Architecture
+* Auto-Rig Pro Integration: Utilize Auto-Rig Pro inside Blender for skeletal construction.
+* Multi-Twist Bone Chains: Enable dual- or quad-twist bone chains along the forearms, upper arms, thighs, and calves. When a player's leg rotates outward during a pass or tackle, the rotational angle is distributed across the twist chain, preventing mesh collapse ("candy-wrapping").
+* Joint Fan Helper Bones: Position fan helper bones at the knee and elbow joint axes to maintain geometric volume during full leg flexion.
+                    Auto-Rig Pro Armature Hierarchy
+                              
+                            [c_root_master]
+                                   |
+                            [c_traj / Root]
+                                   |
+                            [c_pos / Pelvis]
+                            /              \
+             [c_thigh.l]                        [c_thigh.r]
+                  |                                  |
+        [c_thigh_twist_01.l]               [c_thigh_twist_01.r]
+                  |                                  |
+              [c_leg.l]                          [c_leg.r]
+                  |                                  |
+         [c_foot.l / IK]                    [c_foot.r / IK]
+
+Root Motion Export Parameters
+* Root Trajectory (c_traj): Set the root trajectory bone as the primary locomotion driver.
+* glTF 2.0 Export Configuration: Apply all object transformations (Ctrl+A) in Blender to force a uniform scale of 1.0. Export via Auto-Rig Pro using the Godot Root Axes preset to automatically convert Blender’s Z-up orientation to Godot 4’s Y-up standard. Disable "Add Leaf Bones" to keep bone hierarchies clean.
+4. FOX Engine Locomotion Systems & Animation Architecture
+PES 2021's defining mechanical characteristic is momentum-based locomotion, where player mass, turning radius, and acceleration inertia dictate movement, preventing instant direction snapping.
+                         Godot 4 Retargeting & Animati[span_85](start_span)[span_85](end_span)on Architecture
+                        
+                      +-----------------------------------+
+                      |    glTF Character Import (.glb)   |
+                      +-----------------+-----------------+
+                                        |
+                                        v
+                      +-----------------------------------+
+                      |   BoneMap / Humanoid Profile      |
+                      |  - Rename Bones: Enabled          |
+                      |  - Target Skeleton Name: Skeleton |
+                      +-----------------+-----------------+
+                                        |
+                                        v
+                      +-----------------------------------+
+                      |          AnimationTree            |
+                      |  +-----------------------------+  |
+                      |  | BlendSpace2D (8-Way Grid)   |  |
+                      |  +--------------+--------------+  |
+                      |                 |                 |
+                      |                 v                 |
+                      |  +-----------------------------+  |
+                      |  | AnimationNodeAdd2 (Mask)    |  |
+                      |  | (Spine Upward Gesture Overlay)| |
+                      |  +-----------------------------+  |
+                      +-----------------------------------+
+
+Retargeting Pipeline in Godot 4
+1. Import character meshes and animation files (.glb) into Godot 4.
+2. Open the Advanced Import Settings window.
+3. Select Skeleton3D, create a new BoneMap resource, and set its profile to SkeletonProfileHumanoid.
+4. Under Bone Renamer, enable Rename Bones and set the target skeleton name to Skeleton. This normalizes joint indices across all models, allowing animation libraries (.res) to be shared across the entire team roster.
+8-Way Locomotion Blend Tree (AnimationTree)
+Create an AnimationTree node linked to an AnimationNodeBlendTree containing an 8-way BlendSpace2D named Locomotion:
+* (0, 1): Sprint Forward
+* (0.7, 0.7): Diagonal Sprint Right
+* (1, 0): Strafe Right
+* (0, -1): Backpedal / Jog Back
+* (-1, 0): Strafe Left
+* (0, 0): Idle Stance
+                              Sprint Forward (0, 1)
+                                      ^
+                                      |
+   Strafe Left (-1, 0) <--------------+--------------> Strafe Right (1, 0)
+                                      |
+                                      v
+                             Jog Backwards (0, -1)
+
+Upper/Lower Body Decoupling
+To allow players to perform contextual upper-body gestures (appealing to the referee, calling for a pass, shielding off a defender) while running, route the Locomotion output through an AnimationNodeAdd2 node. Enable a Bone Mask Filter isolating joints from Spine upward. This overlays upper-body actions without breaking lower-body stride cycles or root motion tracks.
+5. Ball Physics, Aerodynamics (Magnus Effect), & Touch Control
+RigidBody3D Ball Setup
+The ball mesh must be modeled as a 32-panel truncated icosahedron with baked seam normal maps, paired with a perfectly smooth SphereShape3D collision node in Godot 4.
+* Mass: 0.43 \text{ kg} (FIFA Standard).
+* Continuous Collision Detection (CCD): Enabled.
+                   Aerodynamic Forces Acting on Flight Trajectory
+                  
+                          Aerodynamic Lift Vector
+                                    ^  (F_magnus)
+                                    |
+                     Airflow  ===> [BALL] ===>  Velocity Vector (v)
+                                    |
+                                    v  
+                                  Spin (w)
+
+Flight Dynamics & The Magnus Effect Equation
+To reproduce PES 2021's curving free kicks, dipping long shots, and swerving passes, aerodynamic drag and Magnus lift forces must be calculated during every physics frame:
+\mathbf{F}_{total} = m\mathbf{g} + \mathbf{F}_{drag} + \mathbf{F}_{magnus}
+Where the aerodynamic drag force \mathbf{F}_{drag} and Magnus lift force \mathbf{F}_{magnus} are defined as:
+\mathbf{F}_{drag} = -\frac{1}{2} \rho C_d A \vert{}\mathbf{v}\vert{} \mathbf{v} \mathbf{F}_{magnus} = S (\mathbf{\omega} \times \mathbf{v})
+* \rho = 1.225 \text{ kg/m}^3 (Air density at sea level).
+* C_d \approx 0.25 (Dimensionless drag coefficient).
+* A = \pi r^2 \approx 0.038 \text{ m}^2 (Cross-sectional area for Size 5 ball).
+* S = 0.00065 (Empirical lift scaling coefficient).
+* \mathbf{v} = Linear velocity vector.
+* \mathbf{\omega} = Angular velocity (spin) vector.
+GDScript Implementation (soccer_ball.gd)
+extends RigidBody3D
+
+@export var drag_coefficient: float = 0.0012
+@export var magnus_coefficient: float = 0.00065
+
+func _physics_process(delta: float) -> void:
+        var v: Vector3 = linear_velocity
+        var w: Vector3 = angular_velocity
+        
+        // 1. Calculate Aerodynamic Drag
+        var drag_force: Vector3 = -drag_coefficient * v.length() * v
+        apply_central_force(drag_force)
+        
+        // 2. Calculate Magnus Effect Lift Force via Cross Product
+        if v.length() > 2.0 and w.length() > 1.0:
+                var magnus_force: Vector3 = magnus_coefficient * w.cross(v)
+                apply_central_force(magnus_force)
+
+func strike_ball(kick_impulse: Vector3, spin_torque: Vector3) -> void:
+        apply_central_impulse(kick_impulse)
+        apply_torque_impulse(spin_torque)
+
+Proximity Dribbling Mechanics
+Avoid hard-attaching the ball to the player's foot node. Attach an Area3D proximity trigger (DribbleZone) around the player's boots. When the ball is inside DribbleZone:
+1. Dampen linear ball velocity.
+2. Apply soft central impulses (apply_central_impulse()) pushing the ball toward a target point 0.6 \text{ meters} in front of the player's heading vector.
+3. When the player triggers a sprint-knock or skill move, execute a kick impulse that pushes the ball away into open space, allowing defenders an opportunity to intercept.
+6. Reverse-Engineered FOX Engine Core Systems & AI Logic
+Analysis of reverse-engineered FOX Engine implementations reveals the internal logic governing PES 2021's gameplay. The developer agent must recreate these exact mathematical structures in Godot 4.
+               FOX Engine BallPlayer AI Execution Pipeline
+              
+                      [BallPlayer_MainEval]
+                                |
+             +------------------+------------------+
+             |                                     |
+    [Branch A: Kick Gate]              [Branch B: Non-Kick Actions]
+  - Check Bitmask (0x30000)            - Min Timing (~6 Frames)
+  - Evaluates KickActionDecider        - 5 Evaluation Subsystems
+  - Reads Duration Tables              - Fallback: FREE_RUN (State 2)
+             |
+     [Human Override Check]
+   - Human Controlled? -> Force Tier 5 (0.0s Delay)
+   - Re-triggers instantly on MOVE_STOP (Bit 16)
+
+BallPlayer AI & Duration Lookup Architecture
+The FOX Engine handles player decision-making through BallPlayer_MainEval, which branches into two parallel pipelines:
+* Branch A (Kick Gate): Activated via bitmask check 0x30000. Routes directly to KickActionDecider, which queries duration lookup tables to determine kick windup delays.
+* Branch B (Non-Kick Actions): Processes movement, positioning, and defensive tracking with a mandatory minimum timing threshold of ~6 frames across five evaluation subsystems.
+* Tier System & Controller Overrides:
+   * AI tiers range from 0 to 7 (scaled [span_125](start_span)[span_125](end_span)0 to 700).
+   * Human Controller Override (sub_1414BDC30): Human-controlled players bypass AI delay tables entirely by forcing Tier 5 (0.0 \text{ seconds} duration delay), ensuring immediate input execution.
+* Instant Kick Cycle ("Box-to-Box Ping-Pong"): All kick actions transition into a MOVE_STOP state (bit 16) upon completion. At Tier 5 (0.0\text{s} delay), KickActionDecider re-evaluates instantly, enabling immediate one-touch passes and rapid volley re-shoots. If no kick input is present, execution drops down a fallback chain: \text{MOVE\_STOP\_THINK (8) / FRONT (9)} \longrightarrow \text{TRAP (4)} \longrightarrow \text{FREE\_RUN (2)}
+Action Properties & Kick Gate Network
+Actions in the FOX Engine are cataloged in a 94-entry DWORD bitmask table (0x1426484F0) utilizing 30 defined property bits.
+* Kick Gate Integration: 30 specific action entries trigger Kick Gate checks (bits 16–17) via wrapper su[span_131](start_span)[span_131](end_span)b_140A6E320.
+* Default Ground State: FREE_RUN (Action 2) serves as the universal fallback state across 40 distinct animation transitions.
+* Recovery Transitions: Impact states (STAGGER, FALL_DOWN, OVER_TAKEN) transition through recovery routines back to MOVE_STOP_GOAL or JOSTLE.
+PES15 Legacy Jostle/Physical Duel Framework
+Physical contact and shoulder charges in PES 2021 are governed by a 6-function pipeline inherited from the legacy match::anime::action::Jo[span_134](start_span)[span_134](end_span)stle system:
+1. PES15_FlagDistributor (sub_1409CBF30): Distributes duel participation flags to both colliding players.
+2. PES15_DuelProcessor (sub_140502190): Main duel heartbeat reading parameter table pr[span_136](start_span)[span_136](end_span)oject1vs1.o.
+3. PES15_PreEngageFilter (sub_140931C60): Evaluates duel cooldowns and stance thresholds.
+4. PES15_EngageDecision (sub_1409636D0): Calculates distance-based action intensity and queries the physical engagement attribute (byte offset +143).
+5. PES15_ActionDispatcher (sub_14092A340): Assigns physical duel action states (51: Shield, 52: Shoulder Charge, 58: Match-Up, 17: Jostle Stumble).
+6. PES15_DuelScoreCalc (sub_1405027A0): Computes duel victory outcomes by evaluating player physical contact stats, relative momentum vectors, and spatial proximity to the penalty box (offsets [span_140](start_span)[span_140](end_span)+24, +28).
+Positioning AI & 21 Playing Styles Architecture
+Tactical positioning relies on master function sub_1405E6E80 (evaluating 16 playing styles across 37 positional checks) and secondary function sub_1405DC350 (evaluating 11 playing styles).
+                     21 Authentic Playing Style Matrix
+                    
+  Attacking Styles            Midfield Styles            Defensive Styles
+ ------------------          ------------------         ------------------
+ - Goal Poacher              - Anchor Man               - Build Up
+ - Fox in the Box            - Orchestrator             - Extra Frontman
+ - Target Man                - Box-to-Box               - Defensive Full-back
+ - Deep-Lying Forward        - Hole Player              - Offensive Full-back
+ - Dummy Runner              - Creative Playmaker       - Full-back Finisher
+ - Prolific Winger           - Classic No. 10           - Destroyer
+ - Roaming Flank             - Cross Specialist
+ - Cross Specialist
+
+Core Playing Style Positioning Algorithms
+* Hole Player (AMF/CMF/SS): Reads run profile spaceRun.o. Receives a \times 1.3 run priority multiplier (sub_14060A8D0), a +14.0 run priority bias with gate bypass (sub_14060D210), and a \times 0.7 player selection modifier for penalty box runs (sub_14053E9A0), driving surging late runs into the box.
+* Goal Poacher (CF/SS): Evaluates GP_HP_ChanceScore (sub_140602600) and executes pull-away runs driven by pullAway.o to play off the last defender's shoulder.
+* Dummy Runner (CF/SS/AMF): Validates defender path trajectories and executes diagonal decoy runs driven by diagonalRun.o (sub_140612FC0) to pull center-backs out of position.
+* Anchor Man (DMF): Binds to a rigid spatial coordinate offset in front of the center-backs; restricts horizontal drifting and completely blocks forward runs into the penalty box.
+* Box-to-Box (CMF/DMF/LMF/RMF): Driven by B2B_MarkAssignment (sub_14052F720), dynamically alternating between offensive box-penetration runs and defensive tracking across the pitch.
+Goalkeeper Mechanics & AI
+* Dual Position System: Goalkeepers utilize separate spatial coordinate arrays (Goal_Keep vs standard field nodes).
+* Bisector Positioning: The GK projects a line bisecting the angle between the ball's position and the two goal posts, positioning along this arc based on whether they are classified as an Offensive Goalkeeper (sweeper-keeper) or Defensive Goalkeeper (line-hugger).
+* Parrying AI: Shot-stopping calculations evaluate shot velocity and GK coverage stats. Saves are intentionally directed wide toward corner flags or downward to the turf, preventing central rebounds.
+* 1v1 Spread Stance: When an attacker enters the penalty box, the GK transitions into a wide blocking stance to expand collision volume.
+7. Game Plan, UI Architecture, HUD Design, & Master League Mode
+Game Plan Management Screen
+The pre-match Game Plan interface must mirror PES 2021’s tactical depth:
+* Pitch Layout Display: Interactive 2D pitch view allowing players to drag and drop squad tokens to adjust positions (e.g., converting CMF to AMF).
+* Tactical Sliders:
+   * Support Range (1–10 scale: distance teammates maintain from ball carrier).
+   * Defensive Line Depth (1–10 scale: high press line vs. deep block).
+   * Compactness (1–10 scale: horizontal team squeeze).
+* Advanced Instructions: Enable up to 4 active instructions (2 Attacking, 2 Defensive) toggled via L2 + D-Pad during gameplay:
+   * Anchoring: Prevents selected player from drifting horizontally.
+   * Gegenpress: Triggers immediate multi-player press upon losing possession.
+   * Deep-Lying Fullbacks: Restricts LB/RB from crossing the halfway line.
+                  In-Match HUD Layout (16:9 Screen Space)
+                 
+ +-------------------------------------------------------------------+
+ | [CREST] BEE 1 - 0 ROV [CREST]   84:12 (+3)                        |
+ |                                                                   |
+ |                                                                   |
+ |                            (Active Player)                        |
+ |                                   v                               |
+ |                            [Translucent Cursor]                   |
+ |                                                                   |
+ |                                                                   |
+ |                                                                   |
+ |                      +-------------------+                        |
+ |                      |  2D Radar Minimap |                        |
+ |                      +-------------------+                        |
+ | [Player Name]                                       [Power Gauge] |
+ | [Stamina Bar]                                       [========== ] |
+ +-------------------------------------------------------------------+
+
+In-Match HUD Overlay
+* Scoreboard: Minimalist top-left banner displaying club crests, score, match timer, and added-time indicator.
+* Player Cursor & Stamina Ring: Translucent triangle cursor above the active player, with a circular stamina ring that depletes as sprint ([span_193](start_span)[span_193](end_span)R2) is held.
+* Power Gauge: Contextual charging bar appearing at the player's feet or bottom screen during passes and shots, displaying shot power.
+* 2D Tactical Minimap: Centered at the bottom of the screen, rendering 22 player dots and the ball in real-time.
+Master League (Career Mode) Framework
+Agent Sol 6.1 must construct the data structures for the primary single-player career mode:
+* Menu Hierarchy: Top-level navigation bar split into Office, Squad Management, Negotiations, Training, and Calendar.
+* Transfer Negotiations Algorithm: Player market values scale based on Age, Overall Rating (OVR), Contract Length, and Form.
+* Squad Fatigue & Season Progression: Player stamina limits degrade over consecutive matches in a season calendar, requiring squad rotation.
+8. Technical Specifications & Data Tables
+Asset Standards & Geometry Budgets
+Asset Category
+	Polygon Budget (Tris)
+	Material Maps
+	Texture Resolution
+	Key Engine Feature
+	Player Head/Body
+	30,000 – 60,000
+	Albedo, Normal, Roughness, Subsurface
+	4K UDIM / 2K Sets
+	Quad-dominant face topology
+	Kit (Jersey/Shorts)
+	10,000 – 20,000
+	Albedo, Micro-Weave Normal, Sweat Mask
+	2K Resolution
+	Dynamic match sweat shader
+	Hair Cards
+	5,000 – 15,000
+	Albedo, Alpha, Normal, Depth, Flow
+	2K Texture Atlas
+	Alpha Scissor / Alpha Hash transparency
+	Soccer Ball
+	1,500 – 4,000
+	Albedo, Seam Normal, Roughness
+	2K Resolution
+	Continuous Collision Detection (CCD)
+	Reverse-Engineered FOX Engine Technical Parameters
+Component / Subsystem
+	Internal Address / Offset
+	Core Functionality
+	Engine Impact in Godot 4
+	Kick Gate Bitmask
+	0x1426484F0 (Table)
+	94-entry DWORD bitmask (30 active bits)
+	Evaluates kick trigger states via bits 16–17.
+	Human Controller Override
+	sub_1414BDC30
+	Forces Tier 5 (0.0\text{s} duration delay)
+	Eliminates input lag for human players.
+	Hole Player Run Multiplier
+	sub_14060A8D0
+	Applies \ti[span_144](start_span)[span_144](end_span)mes 1.3 run priority multiplier
+	Drives aggressive central box runs.
+	Legacy Jostle Heartbeat
+	sub_140502190
+	Reads project1vs1.[span_147](start_span)[span_147](end_span)o physical duel parameters
+	Governs physical shoulder charges and shielding.
+	Engagement Stat Offset
+	Byte Offset +143
+	Reads physical engagement stat in duel check
+	Determines physical contest win rates.
+	Godot 4 Apple Silicon M1 Configuration Matrix
+| Project Setting | Target Value / Mode | Architectural Justification | | :--- | :--- | :--- | | Display Scaling Mode | FSR 2.1 | Upscales lower 3D render buffer smoothly to Retina resolutions. | | Scaling 3D Factor | 0.75 – 0.85 | Preserves GPU fill-rate during heavy 22-player scenes. | | VRAM Compression | Force BPTC & ASTC ON | Optimizes texture transfer over Apple Silicon unified memory. | | Blender Compute Device | Metal API (Apple M1) | Accelerates normal map baking and sculpt processing. |
+9. Implementation Roadmap for Agent HPT6 Sol 6.1
+The Art Director Agent and Principal Developer Agent must execute implementation according to the following sequential work plan:
+Phase 1: Art Director Agent Tasks
+1. Base Mesh & Topology Setup: Sculpt base character body in Blender within the 30,000–60,000 triangle budget. Ensure quad-dominant facial loops around eyes and mouth. Lock rest pose to A-pose.
+2. Hair Card Atlas Generation: Bake high-poly strand grooms into 2K texture atlases (Albedo, Alpha, Normal, Depth, Specular Flow). Build 3-tier card geometry.
+3. Kit Pattern Authoring & Texturing: Draft jersey patterns in Marvelous Designer. Author micro-weave normal maps in Substance Painter.
+4. Auto-Rig Pro Rigging & Export: Rig character with multi-twist bone chains. Export using Auto-Rig Pro glTF preset with Godot Root Axes enabled and leaf bones disabled.
+Phase 2: Principal Developer Agent Tasks
+1. Godot 4 Import & Humanoid Retargeting: Import .glb characters. Configure BoneMap to SkeletonProfileHum[span_13](start_span)[span_13](end_span)anoid, enable BoneRenamer, and extract standardized [span_14](start_span)[span_14](end_span).res animation libraries.
+2. Locomotion & BlendTree Setup: Construct 8-way BlendS[span_216](start_span)[span_216](end_span)[span_217](start_span)[span_217](end_span)pace2D grid. Implement upper/lower body decoupling using AnimationNodeAdd2 with spine-upward masking. Incorporate movement momentum and friction dampening.
+3. Ball Aerodynamics & Dribble System: Implement soccer_ball.gd physics script incorporating drag force \mathbf{F}_{drag} and Magnus lift force \mathbf{F}_{magnu[span_1](start_span)[span_1](end_span)[span_3](start_span)[span_3](end_span)s}. Build foot proximity Area3D with soft impulse dribbling.
+4. FOX Engine Gameplay Logic Porting: Implement BallPlayer_MainEval split branches, forcing Tier 5 (0.0\text{s} delay) for human inputs. Recreate the 6-function Jostle duel system reading engagement stats. Program the 21 Playing Style positioning algorithms.
+5. UI, HUD, & Master League Architecture: Build the Game Plan tactical screen with adjustable sliders and Advanced Instructions. Implement the match HUD overlay (scoreboard, cursor, power gauge, 2D minimap). Construct Master League manager flow.
+Works cited
+1. Blender Soccer Ball: Modeling, Texturing & Materials - YouTube, https://www.youtube.com/watch?v=5H-snRwUUIU 2. 3D model of football player I created in Blender as commision. - Reddit, https://www.reddit.com/r/blender/comments/1shwfh1/3d_model_of_football_player_i_created_in_blender/ 3. How to create a Custom Football model in Blender | Elliano_, https://www.youtube.com/watch?v=7oims266q4g 4. How to Make 3D Football Animations for Blender 5.2 in 2 ... - YouTube, https://m.youtube.com/watch?v=g7drQH8JzYA 5. How to make a 3D Cartoon Footballer ⚽️ | Blender Tutorial | Elliano_, https://www.youtube.com/watch?v=0Lw3hkt4wuY 6. Tutorial. Realistic garment in Marvelous Designer for ... - ArtStation, https://www.artstation.com/artwork/baGo8m 7. Creating Animation-Ready Clothes Simulation in Marvelous Designer, https://80.lv/articles/creating-animation-ready-clothes-simulation-in-marvelous-designer 8. ADDING CUSTOM TEXTURES TO 3D JERSEY IN 2026 ... - YouTube, https://www.youtube.com/watch?v=sftKalrp2QI 9. Young Stylized Soccer Player Footballer | Children models | Blendkit, https://www.blendkit.com/asset-gallery-detail/0d18c1d5-b301-49c3-994b-ac97e29cebc4/ 10. Auto-Rig — AutoRigPro Doc documentation, https://lucky3d.fr/auto-rig-pro/doc/auto_rig.html 11. How to build a 3D character - Help - Godot Forum, https://forum.godotengine.org/t/how-to-build-a-3d-character/138479 12. Realistic Hairstyle Tutorial - Games Artist, https://gamesartist.co.uk/realistic-hairstyle/ 13. Creating Hair Cards for Realtime Characters - CG Cookie, https://www.cgcookie.com/courses/creating-hair-cards-for-realtime-characters 14. Game-Ready Hair Tutorial (Ultimate Guide) 3 Hours Real-Time, https://superhivemarket.com/products/game-ready-hair-tutorial-ultimate-guide-3-hours-real-time-tutorial-with-narration-blender 15. Full Workflow For Creating Game-Ready Hair In Blender - 80 Level, https://80.lv/articles/tutorial-create-game-ready-hair-with-hair-cards-in-blender 16. Real-time Hair Creation Workflow - ArtStation, https://www.artstation.com/blogs/marizatorska/40NN/real-time-hair-creation-workflow 17. “Think modeling a football in Blender is difficult? Watch ... - Facebook, https://www.facebook.com/61579241237706/videos/think-modeling-a-football-in-blender-is-difficult-watch-thisfrom-a-simple-sphere/4511372625846076/ 18. Blender x Marvelous Designer: Realistic T-Shirt Tutorial - YouTube, https://m.youtube.com/watch?v=F1HFeyE_294&pp=ugUEEgJoaQ%3D%3D 19. Realistic 3D Clothing with Marvelous designer and Substance 3D, https://www.youtube.com/watch?v=JQJObrT5NJc 20. Game Engine Export — AutoRigPro Doc documentation, https://lucky3d.fr/auto-rig-pro/doc/ge_export_doc.html 21. Auto-Rig Pro - Superhive (formerly Blender Market), https://superhivemarket.com/products/auto-rig-pro 22. Blender Animation Programs & Tools for 3D Artists - MoCap Online, https://mocaponline.com/blogs/mocap-news/blender-animation-programs 23. Bringing Mixamo Animations to Life in Godot: Our Manual Import, https://9to5grind.dev/posts/bringing-mixamo-animations-to-life-in-godot/ 24. Godot 4 ready, pre-built libraries of hundreds of retargetable mixamo, https://www.reddit.com/r/godot/comments/xg2av0/godot_4_ready_prebuilt_libraries_of_hundreds_of/ 25. Let's Roll | Godot Academy, https://godotacademy.io/post/lets-roll 26. godot-soccer-demo/README.md at main - GitHub, https://github.com/ryan-haskell/godot-soccer-demo/blob/main/README.md 27. Mini-project 3 – Trajectory of a soccer ball - Rose-Hulman, https://www.rose-hulman.edu/ME123/Mini-Project-3/Project_3.pdf 28. Create a Soccer Game in Godot! (05/24: Dribbling) - YouTube, https://www.youtube.com/watch?v=gJtl5Fi3jMI 29. Create a Soccer Game in Godot! (04/24: Soccer ball) - YouTube, https://www.youtube.com/watch?v=KhKjiHdE7as 30. User:Aoba/PES2021 Engine Research - Rigged Wiki, https://implyingrigged.info/wiki/User:Aoba/PES2021_Engine_Research 31. eFootball Players Playstyles explained - Inquisitive Universe, https://inquisitiveuniverse.com/2023/02/11/efootball-players-playstyles-explained/ 32. Playing Styles in PES 2021 - PES MyClub Guide, https://pesmyclubguide.com/playing-styles/ 33. PES 2021 Anchoring Strategy - Tactics Room - Operation Sports, https://www.operationsports.com/pes-2021-anchoring-strategy-tactics-room/ 34. Position Maps for EVERY Playing Style in the game (with explanation), https://www.reddit.com/r/pesmobile/comments/acku0i/position_maps_for_every_playing_style_in_the_game/ 35. eFootball Player Skills and Stats Guide | PDF - Scribd, https://www.scribd.com/document/845530593/eFootball-Infosheet 36. eFootball PES 2021 Discussion Thread (PC) | Page 70 - Evo-Web, https://evoweb.uk/threads/efootball-pes-2021-discussion-thread-pc.84053/page-70 37. Full text of "Wireframe - Issue 54 - 2 September 2021", https://archive.org/stream/Wireframe54/Wireframe54_djvu.txt 38. 30+ Free Marketing Tools: The All-in-One Hub For Marketers, https://caocacao.net/free-marketing-tools/

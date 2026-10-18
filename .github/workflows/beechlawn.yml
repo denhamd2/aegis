@@ -32,7 +32,9 @@ jobs:
       - name: Import and verify football project
         run: |
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd football_stop_runtime_smoke.gd shared_pivot_pose_smoke.gd turn_dribble_control_smoke.gd ai_shot_lane_smoke.gd ai_carry_to_shot_smoke.gd loose_ball_recovery_smoke.gd
+          BEECHLAWN_MATCH_SCENE=res://scenes/match_11v11.tscn python3 games/beechlawn_rovers/tools/run_smoke_tests.py football_kick_contact_integration_smoke.gd
+          BEECHLAWN_MATCH_SCENE=res://scenes/match_11v11.tscn BEECHLAWN_AI_CHANCE=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py football_shot_contact_integration_smoke.gd
       - name: Export football only
         run: |
           mkdir -p build/beechlawn/web build/beechlawn/mac

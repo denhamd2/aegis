@@ -34,7 +34,8 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 
 async def capture(output: Path, width: int, height: int, wait_seconds: float,
-                  web_root: Path = WEB_ROOT, query: str = "", ready_expression: str = "", start_match: bool = False) -> None:
+                  web_root: Path = WEB_ROOT, query: str = "", ready_expression: str = "", start_match: bool = False,
+                  motion_check: bool = False) -> None:
     if not (web_root / "index.html").is_file():
         raise FileNotFoundError(f"Web export is missing: {web_root / 'index.html'}")
     chromium = os.environ.get("CHROMIUM_BIN") or shutil.which("chromium") \
@@ -89,6 +90,13 @@ async def capture(output: Path, width: int, height: int, wait_seconds: float,
                     await page.keyboard.down('e')
                     await page.wait_for_function("window.BEECHLAWN_MATCH_STARTED === true",timeout=30000)
                     await page.keyboard.up('e')
+                if motion_check:
+                    # Exercise real movement/reversal input; simulation and
+                    # presentation still run normally in the exported game.
+                    for key in ('d', 'a'):
+                        await page.keyboard.down(key)
+                        await page.wait_for_timeout(850)
+                        await page.keyboard.up(key)
                 await page.wait_for_timeout(max(0.0, wait_seconds) * 1000)
                 await page.evaluate("if (window.BEECHLAWN_FREEZE_FRAME) window.BEECHLAWN_FREEZE_FRAME()")
                 await page.wait_for_timeout(1200)
@@ -121,9 +129,10 @@ def main() -> None:
     parser.add_argument("--query", default="", help="optional review-scene query, e.g. view=portrait")
     parser.add_argument("--ready-expression", default="", help="optional JavaScript first-frame readiness check")
     parser.add_argument("--start-match", action="store_true", help="press the real kickoff key after readiness")
+    parser.add_argument("--motion-check", action="store_true", help="exercise movement and reversal before capture")
     args = parser.parse_args()
     asyncio.run(capture(args.output.resolve(), args.width, args.height, args.wait,
-                        args.web_root.resolve(), args.query, args.ready_expression, args.start_match))
+                        args.web_root.resolve(), args.query, args.ready_expression, args.start_match, args.motion_check))
 
 
 if __name__ == "__main__":

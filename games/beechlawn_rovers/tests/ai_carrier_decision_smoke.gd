@@ -13,6 +13,7 @@ func _run_checks() -> void:
 	var game := packed.instantiate()
 	root.add_child(game)
 	await process_frame
+	game.set_physics_process(false)
 	var home: Array[FootballPlayer] = game.get("_home_players")
 	var away: Array[FootballPlayer] = game.get("_away_players")
 	for actor in home + away:
@@ -31,9 +32,22 @@ func _run_checks() -> void:
 		defender.global_position = Vector3(43.0, 0.0, 5.0)
 	var shot: Dictionary = decisions.choose_carrier_action(carrier, home, away, ball)
 	assert(shot.get("type") == &"shoot", "AI did not take a close, central shot")
+	var shot_serial := ball.action_serial
 	game._apply_carrier_action(carrier, home, away)
+	# AI queues the same authored contact as human input. This decision fixture
+	# does not advance animation time; deliver its event explicitly, as below
+	# for passing. Integration tests cover the real AnimationPlayer timeline.
+	if not carrier.get("_visual_shot_pending") or carrier.ai_action_cooldown <= 1.0 \
+			or ball.action_serial != shot_serial:
+		push_error("AI shot did not queue one gated, contact-timed action")
+		quit(1)
+		return
+	carrier._on_visual_action_contact(&"shot")
 	assert(ball.last_action == &"shot" and carrier.ai_action_cooldown > 1.0,
 		"Match AI did not execute and gate its selected shot")
+	var visual := carrier.get_node("Visual") as FootballerVisual
+	visual.animation_player.stop()
+	visual._on_animation_finished(FootballerVisual.SHOT_CLIP)
 
 	# When pressed, prefer a safe forward runner; an open carrier should keep carrying.
 	carrier.global_position = Vector3.ZERO

@@ -12,6 +12,10 @@ func _run_checks() -> void:
 	await process_frame
 	var ball := game.get_node("Ball") as FootballBall
 	var player := game.get_node("Player") as FootballPlayer
+	# This fixture isolates ball forces/power curves. Authored foot-contact timing
+	# is covered by the separate pass/receive/shot integration checks.
+	player.bind_footballer_visual(null)
+	game.set_physics_process(false)
 	for actor_node in game.get_tree().get_nodes_in_group("football_players"):
 		var actor := actor_node as FootballPlayer
 		actor.set_physics_process(false)

@@ -660,6 +660,9 @@ func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions
 			continue
 		var target: Vector2 = decision["target"]
 		var offset := target - Vector2(actor.global_position.x, actor.global_position.z)
+		# A primary defender collecting a loose ball must reach foot-contact
+		# distance. Formation/support targets retain their broader arrival zone.
+		var arrival_distance := 0.25 if decision["intent"] == "press" else 0.9
 		var direction := Vector3(offset.x, 0.0, offset.y)
 		if team_players.size() == 11:
 			var separation := Vector3.ZERO
@@ -670,8 +673,8 @@ func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions
 				apart.y = 0.0
 				if apart.length_squared() > 0.001 and apart.length_squared() < 3.24:
 					separation += apart.normalized()*(1.8-apart.length())
-			direction = direction.normalized()+separation.limit_length(0.7) if offset.length()>0.9 else separation
-		actor.ai_move_direction = direction.normalized() if offset.length() > 0.9 else Vector3.ZERO
+			direction = direction.normalized()+separation.limit_length(0.7) if offset.length()>arrival_distance else separation
+		actor.ai_move_direction = direction.normalized() if offset.length() > arrival_distance else Vector3.ZERO
 		actor.ai_sprinting = offset.length() > 7.0
 		actor.set_meta("ai_target_position", Vector3(target.x, 0.0, target.y))
 		actor.set_meta("ai_role_intent", decision["intent"])

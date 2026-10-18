@@ -58,9 +58,23 @@ func _run() -> void:
 	await create_timer(0.15).timeout
 	var jog_rotation := skeleton.get_bone_pose_rotation(thigh_index)
 	assert(idle_rotation.angle_to(jog_rotation) > 0.02, "AnimationTree did not drive a locomotion bone")
-	visual.set_locomotion_speed(6.0, true)
+	# Normal running must select jog, and sprint intent alone must not force a
+	# fast gait while the body is stationary or still accelerating.
 	for frame in 20:
-		visual.set_locomotion_speed(6.0, true)
+		visual.set_locomotion_speed(6.0, false)
+		await physics_frame
+	var jog_blend := float(visual.animation_tree.get("parameters/Locomotion/blend_position"))
+	if absf(jog_blend - 0.55) > 0.04:
+		push_error("Normal 6 m/s run selected the wrong gait: blend=%.3f (jog is 0.55)" % jog_blend)
+		quit(1)
+		return
+	for frame in 30:
+		visual.set_locomotion_speed(0.0, true)
+		await physics_frame
+	assert(float(visual.animation_tree.get("parameters/Locomotion/blend_position")) < 0.05,
+		"Held sprint selected running footwork on a stationary body")
+	for frame in 30:
+		visual.set_locomotion_speed(8.6, true)
 		await physics_frame
 	assert(float(visual.animation_tree.get("parameters/Locomotion/blend_position")) > 0.95,
 		"Sprint speed was not mapped to the blend space")
@@ -79,7 +93,7 @@ func _run() -> void:
 		visual.set_locomotion_speed(3.0, false, false, false)
 		await physics_frame
 	assert(float(visual.animation_tree.get("parameters/CloseControl/blend_amount")) < 0.05
-		and float(visual.animation_tree.get("parameters/Locomotion/blend_position")) > 0.4,
+		and float(visual.animation_tree.get("parameters/Locomotion/blend_position")) > 0.2,
 		"Releasing close control did not smoothly return toward jogging")
 	visual.set_locomotion_speed(4.8, false)
 	visual.set_locomotion_speed(4.2, false, true)

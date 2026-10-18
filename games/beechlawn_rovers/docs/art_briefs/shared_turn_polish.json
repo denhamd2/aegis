@@ -1,0 +1,26 @@
+{
+  "applied": true,
+  "bones": 65,
+  "before": {
+    "AN_Beechlawn_Turn90Left": {
+      "seconds": 0.6,
+      "minimum_shoulder_elbow_drop_m": -0.039219
+    },
+    "AN_Beechlawn_Turn90Right": {
+      "seconds": 0.6,
+      "minimum_shoulder_elbow_drop_m": -0.040432
+    }
+  },
+  "after": {
+    "AN_Beechlawn_Turn90Left": {
+      "seconds": 0.6,
+      "minimum_shoulder_elbow_drop_m": 0.267475
+    },
+    "AN_Beechlawn_Turn90Right": {
+      "seconds": 0.6,
+      "minimum_shoulder_elbow_drop_m": 0.267475
+    }
+  },
+  "retained_curves_sha256": "196911484c8aadd7fa510eed3583fa38ca8e075470b36d821a722714af60a843",
+  "preserved": "All other curves, action durations, foot/root tracks and rig rest preserved"
+}
