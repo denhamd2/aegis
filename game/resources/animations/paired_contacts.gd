@@ -88,6 +88,7 @@ const MOVES := {
 	"running_spinning_back_elbow": "none",
 	# AEW Fight Forever library: the double underhook, then the waist through the lift.
 	"ff_tiger_driver_98": "waist",
+	"ff_one_winged_angel": "legs",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the

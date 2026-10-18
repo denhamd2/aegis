@@ -7306,6 +7306,51 @@ CLIPS["FF_Tiger_Driver_98_Defender"] = [k for k in CLIPS["Pedigree_Defender"] if
     (72, dict(SUPINE_AWAY)),
 ]
 
+# One Winged Angel (Kenny Omega's special), 66 frames / 2.2 s. Up across his
+# shoulders as in the Samoan Drop (shared frames, the same fireman's carry,
+# face up); a beat; then Kenny takes the head with his left hand and swings
+# the legs up and over with his right, the man turning head-down toward
+# Kenny's front (video 0.5-0.8 s), and Kenny sits out and drives him down on
+# the back of his neck. His legs fall away from Kenny: flat on his back, head
+# toward Kenny -- SUPINE -- beside Kenny's outstretched legs, not across them
+# (the defender's root moves out to the side through the fall, paired_recipes).
+# The body's turn is slerped between the carry, upside down with the chest to
+# Kenny, and flat: no step over about 35 degrees.
+CLIPS["FF_One_Winged_Angel_Attacker"] = [k for k in CLIPS["Samoan_Drop_Attacker"] if k[0] <= 28] + [
+    # Left hand to the head at his side, right hand under the legs.
+    (32, P(pelvis=(0.0, 0.0, 0.850), spine=(-2, 0, 0), head=(4, 0, 0),
+           hand_r=(0.26, 0.12, 1.50), hand_l=(-0.30, 0.18, 1.38),
+           elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.0),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.26, -0.04, 0.104), foot_l=(-0.24, 0.06, 0.104))),
+    # Dropping as he throws him over.
+    (36, P(pelvis=(0.0, 0.04, 0.620), hips=(-10, 0, 0), spine=(-16, 0, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.26, 0.40, 1.00), hand_l=(-0.26, 0.40, 0.92),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.26, -0.08, 0.104), foot_l=(-0.24, 0.10, 0.104))),
+    # The sit-out: the impact.
+    (40, pose(ATK_SEAT, hand_r=(0.26, 0.46, 0.34), hand_l=(-0.26, 0.46, 0.34))),
+    (48, pose(ATK_SEAT)),
+] + _get_up(53, 66, seated=True)
+CLIPS["FF_One_Winged_Angel_Defender"] = [k for k in CLIPS["Samoan_Drop_Defender"] if k[0] <= 28] + [
+    # Swung over by the head and legs, carried out in front of Kenny: his
+    # root sits on Kenny through the carry, so "toward Kenny" in his own
+    # frame is Kenny's back -- the pelvis goes the other way, out over the
+    # front, and the head comes down there.
+    (32, _body((108.5, 110.0, -14.5), (0.0, -0.10, 1.550), **_SAM_LIMBS)),
+    (35, _body((-46.0, -45.0, -160.1), (-0.05, -0.25, 1.400), **_SAM_LIMBS)),
+    (38, _body((-20.5, -20.0, -165.5), (0.0, -0.30, 1.050), **_SAM_LIMBS)),
+    # Driven down onto the back of his neck, upside down, chest to Kenny.
+    (40, _body((0, 0, 180), (0.0, -0.30, 0.780), **dict(_SAM_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # The legs fall away from Kenny: flat on his back, head toward him.
+    (43, _body((-42, 0, 180), (0.0, -0.15, 0.480), **_SAM_LIMBS)),
+    (46, _body((-84, 0, 180), (0.0, 0.00, 0.220), **dict(_SAM_LIMBS, **_LANDED_FLAT))),
+    (52, dict(SUPINE, pelvis=(0.0, 0.0, 0.190))),
+    (66, dict(SUPINE)),
+]
+
 
 def main():
     arm = load_rig()

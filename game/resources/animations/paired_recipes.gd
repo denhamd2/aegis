@@ -773,6 +773,19 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.60,
 	},
+	# Kenny's special (FFMoveLibrary): the Samoan Drop's carry, then over.
+	"ff_one_winged_angel": {
+		"authored": {"attacker": "FF_One_Winged_Angel_Attacker", "defender": "FF_One_Winged_Angel_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.62,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1630,6 +1643,24 @@ const TRAJECTORIES := {
 					[1.53, -0.74, 0.00, 0.00], [1.63, -1.00, 0.00, 0.00],
 					[2.40, -1.08, 0.00, 0.00]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.40, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Kenny sits back into the sit-out; the man's root goes out and to the
+	# side through the fall, so he lands beside Kenny's legs, head by his hip.
+	"ff_one_winged_angel": {
+		"length": 2.2,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [1.20, 0.40, 0.00, 0.00],
+					[1.40, 0.52, 0.00, 0.00], [2.20, 0.52, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [2.20, 0.0, 90.0, 0.0]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.27, -0.10, 0.00, 0.00],
+					[0.53, 0.34, 0.00, 0.00], [1.07, 0.34, 0.00, 0.00],
+					[1.20, 0.34, 0.00, 0.15], [1.33, 0.34, 0.00, 0.30],
+					[1.43, 0.00, 0.00, 0.40], [1.53, -0.30, 0.00, 0.45],
+					[2.20, -0.35, 0.00, 0.45]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [2.20, 0.0, -90.0, 0.0]],
 		},
 	},
 }

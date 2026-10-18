@@ -151,7 +151,9 @@ static func entries() -> Array:
 			"kenny", "KENNY", "OMEGA", "THE BEST BOUT MACHINE",
 			"res://scenes/kenny_model.tscn",
 			Color(0.12, 0.15, 0.20), Color(0.20, 0.78, 0.72),
-			0.68, 0.88, 0.94),
+			0.68, 0.88, 0.94,
+			# His Fight Forever special (FFMoveLibrary).
+			"res://resources/moves/ff/one_winged_angel.tres"),
 	]
 	# Roman holds the title: the owner's reference for the entrance graphic
 	# is his, captioned AEW CHAMPION. The others walk out under their

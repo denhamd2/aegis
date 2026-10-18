@@ -275,6 +275,7 @@ FAMILY_FRAMES = {
 # frame, recovery to the clip's end (frames at 60 Hz, clip frames at 30 fps x2).
 CLIP_FRAMES = {
     "tiger_driver_98": (92, 6, 46),       # 72-frame clip at 30 fps: contact at 46
+    "one_winged_angel": (80, 6, 46),      # 66 frames: contact at 40
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.

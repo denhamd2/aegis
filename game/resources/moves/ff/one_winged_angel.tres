@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "One Winged Angel"
 animation_pair_id = &"ff_one_winged_angel"
-startup_frames = 48
+startup_frames = 80
 active_frames = 6
-recovery_frames = 38
-reversal_window_start = 38
-reversal_window_end = 46
+recovery_frames = 46
+reversal_window_start = 70
+reversal_window_end = 78
 damage_head = 16.0
 damage_torso = 12.0
 damage_arms = 0.0
