@@ -1,0 +1,125 @@
+{
+  "license": "CC0, same MakeHuman target-data license as parent morph archive",
+  "purpose": "Offline reference-led neutral-face fitting, not factual biometric measurements",
+  "targets": [
+    {
+      "file": "head__head-square.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/head/head-square.target",
+      "source_blob_sha": "8d156ed42db13219844e01bf4ab3185d9205befa",
+      "sha256": "001d0d135d964daf4ad99ba46a0f77c5bc2378f04e53c2b5a20242ab19cbf265",
+      "weight": 0.22
+    },
+    {
+      "file": "head__head-fat-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/head/head-fat-incr.target",
+      "source_blob_sha": "529dac99fe294f54c39d0951ba3e4a8cefe2bf32",
+      "sha256": "075d18cdfea9e781ae0152132bfea97ea9b901ffdece8d5e6866cb1744f10056",
+      "weight": 0.18
+    },
+    {
+      "file": "head__head-age-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/head/head-age-incr.target",
+      "source_blob_sha": "54440c85e23e77fa51bc0585e324806deac24e4f",
+      "sha256": "ff677345bd81e3f439bdf75496bbee620ca3c3f029955a546837afd283abf73a",
+      "weight": 0.28
+    },
+    {
+      "file": "chin__chin-width-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/chin/chin-width-incr.target",
+      "source_blob_sha": "ce13cc1c443cf705c5ef50ac6360a73801315fd7",
+      "sha256": "deef506bfe1883d9d4c38667332c9970785226566efbae4724fd3d60c02efcf4",
+      "weight": 0.28
+    },
+    {
+      "file": "chin__chin-height-decr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/chin/chin-height-decr.target",
+      "source_blob_sha": "abf9afbfc1b45944f3984fa27f0da2f70ffd48c3",
+      "sha256": "acf83b5b7f2d6665f19d0d91205472878c23ab78b3f43d48420f75afe8e82818",
+      "weight": 0.12
+    },
+    {
+      "file": "nose__nose-hump-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/nose/nose-hump-incr.target",
+      "source_blob_sha": "771e672af9cde15ee4065cff688ed9e6a41ba3fd",
+      "sha256": "87f167e76cc908e8f28fed8623cf55e737f59499e8338cfe78f5d635382a5191",
+      "weight": 0.12
+    },
+    {
+      "file": "nose__nose-width1-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/nose/nose-width1-incr.target",
+      "source_blob_sha": "db108799ff4614f32bb33f5e7ae4781a2a82349c",
+      "sha256": "d340bc76601f9061826849d2fc9146ba6fbf7ee0604799849a417c934f53bea0",
+      "weight": 0.38
+    },
+    {
+      "file": "mouth__mouth-scale-horiz-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/mouth/mouth-scale-horiz-incr.target",
+      "source_blob_sha": "d066e8ef5312242765c9ca3dd8cbbb04119da278",
+      "sha256": "ccfc39cca249883ebc46af6f2c96c4130df13a67ebce30a2550af17a48637770",
+      "weight": 0.62
+    },
+    {
+      "file": "mouth__mouth-angles-up.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/mouth/mouth-angles-up.target",
+      "source_blob_sha": "acf41bf7dc58f10bf1bae52e8935ee03712e4f80",
+      "sha256": "8ddc2f53f4264742f4e10ddafd128e059e09c6a4268a2722e9495bad0f274898",
+      "weight": 0.27
+    },
+    {
+      "file": "mouth__mouth-lowerlip-volume-decr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/mouth/mouth-lowerlip-volume-decr.target",
+      "source_blob_sha": "7a7add98ca5e667cb14d1dab09ad67bd95661e2d",
+      "sha256": "45f1fe355546cdaa86581512810ee1cd2c6971ac67ffb46d3391ac438e539d15",
+      "weight": 0.28
+    },
+    {
+      "file": "mouth__mouth-laugh-lines-in.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/mouth/mouth-laugh-lines-in.target",
+      "source_blob_sha": "83034b7d3170069ef99a1247c236bb2275277158",
+      "sha256": "73ffbdf95dfbb2c6b6381d6a78621c9b97a8823c2129f99244bb7535edd055db",
+      "weight": 0.22
+    },
+    {
+      "file": "eyes__l-eye-height1-decr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/eyes/l-eye-height1-decr.target",
+      "source_blob_sha": "c439f4b1225ca14db6456055bf8f83ad334d2f12",
+      "sha256": "d1d9f77ff6efc9ccdfcc88beafc8a3be8170b3ea386b7a44b414df1f41e84daf",
+      "weight": 0.28
+    },
+    {
+      "file": "eyes__l-eye-height2-decr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/eyes/l-eye-height2-decr.target",
+      "source_blob_sha": "8f61d233b9ac805da40315b9ae25f22b55fac605",
+      "sha256": "11f97a658461ab341b75165acc280dd5541a0ebf57d84dab24819a3af8ee5d25",
+      "weight": 0.15
+    },
+    {
+      "file": "eyes__l-eye-bag-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/eyes/l-eye-bag-incr.target",
+      "source_blob_sha": "6903e08158a69eab86cd66428c9a546b2af69d2b",
+      "sha256": "fd3fc50d640d510ffee64862bac239d81495e6f57eae1a5772375f4973ca04cb",
+      "weight": 0.18
+    },
+    {
+      "file": "eyes__r-eye-height1-decr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/eyes/r-eye-height1-decr.target",
+      "source_blob_sha": "25e45fd8b79c39011bf6638e4c67a44b9a090497",
+      "sha256": "0e561d96be0453c209ff7cbffdd86cdd73e790a11fc7c0cc8e2e36a1143c46ef",
+      "weight": 0.28
+    },
+    {
+      "file": "eyes__r-eye-height2-decr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/eyes/r-eye-height2-decr.target",
+      "source_blob_sha": "dc8a8cd33556d89fc4f9436136dcbb40f078fed0",
+      "sha256": "8fbe66bf11786f68697b5ba720f6f76e1a99f0db066249d369e4476e016f3f64",
+      "weight": 0.15
+    },
+    {
+      "file": "eyes__r-eye-bag-incr.target",
+      "url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/eyes/r-eye-bag-incr.target",
+      "source_blob_sha": "84c13a9308ec8fc5a2ac8b2136468be54fe6f1ce",
+      "sha256": "60bdf910850f5cc89bccb2950b5f1a63fa5960e79ec42746cf5f486719e3662f",
+      "weight": 0.18
+    }
+  ]
+}

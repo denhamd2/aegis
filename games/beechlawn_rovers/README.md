@@ -2,14 +2,14 @@
 
 An original 3D association-football game prototype inside the Aegis
 repository. It has its own Godot project, scenes, scripts and assets. Its
-export pipeline can be added independently. Open this directory as a separate
+export pipeline publishes independent Web and universal Mac builds. Open this directory as a separate
 Godot project; the Aegis project remains at `game/`.
 
 The supplied gameplay specification is the product target. Development follows
 its milestones in order; features are marked complete only after they work in
 the build. The setting is a Sunday-league match at a local park. The current
-build is an early 4v4 blockout at the football-fundamentals checkpoint; it
-does not yet implement the complete match loop.
+build defaults to a three-minute keyboard 11v11 prototype. Full rules, final
+likeness/environment art and M1 performance acceptance remain in development.
 
 ## Current checkpoint
 
@@ -21,8 +21,8 @@ does not yet implement the complete match loop.
 - A broadcast-style tracking camera, match goals and basic scoring/reset.
 - A three-minute short-match clock, score display and development telemetry.
 - A worn park-pitch setting with lightweight scene geometry.
-- Four blockout actors per side, assembled from editable roster data, with
-  Tab switching among Beechlawn outfielders and a simple nearest-player chase.
+- Eleven shared human actors per side (one keeper each), editable roster data,
+  all-eleven Tab switching and a separate referee. The old 4v4 scene is retained.
 - Basic off-ball support lanes in possession and goal-side recovery positions
   for non-pressing defenders.
 - Late-game defensive choices: a trailing side can add a second presser high up
@@ -39,14 +39,16 @@ does not yet implement the complete match loop.
   impulse; authored diving, catching and distribution animations remain future
   work.
 
-The actors are low-cost kit-colour blockouts. They do not yet reproduce the
-players' faces or the character-sheet clothing detail. The nearest outfielder
-presses the ball; two wide support lanes and compact defensive recovery targets
-are still simple formation heuristics, not coordinated full-team tactics.
-Complete match rules and authored football animation
-clips remain future work.
-Bordeaux's four slots use Des Feeney's sheet as a visual base, not as four
-separate invented identities.
+The full roster uses a common body, rig, animation set and role kit materials.
+Per-player appearance resources support height/build, names/numbers and future
+individual head/hair variants. Faces still share the Shane-derived draft. These
+are not accepted individual likenesses or final kit tailoring. Full-team 4-4-2
+support/cover is active; additional formations and complete rules remain open.
+
+Play: https://denhamd2.github.io/aegis/beechlawn-rovers/
+Downloads: https://github.com/denhamd2/aegis/releases (Beechlawn releases).
+See `docs/11v11_implementation.md` and `docs/art_briefs/11v11_release_evidence.md`
+for measured checks and visual limitations.
 
 ## Controls
 
@@ -69,9 +71,8 @@ a moving teammate into space. AI receivers make a short run toward their
 assigned pass target. A pass can be queued for a short first-time redirect when
 a friendly ground ball is closing on the player's kick window. AI defenders
 anticipate a reachable point on a moving ball's short path; possession still
-changes only at close physical contact. This remains a lightweight 4v4
-prototype without authored first-touch animations or advanced interception
-decisions.
+changes only at close physical contact. The full-team scene reuses contact-timed pass, receive and shot clips; advanced
+interception decisions remain in development.
 
 Sliding tackles commit the player for a short approach before resolving ball
 contact. The AI can slide from longer range; opponent-first contact raises a
@@ -82,8 +83,8 @@ by the ordinary possession and contact rules.
 
 The first match slice uses keyboard input only. Press E or Q to take
 Beechlawn's kickoff; Bordeaux restarts automatically after a goal pause. The
-clock runs for three minutes of open play and then stops at full time. Throw-ins,
-corners, fouls and the other full match rules are still being built.
+clock runs for three minutes of open play and then stops at full time. Goal kicks/corners and boundary ownership have basic restarts; touchlines use a
+ground-pass placeholder. Authentic throw-ins, fouls and full rules remain open.
 
 ## Blender workflow
 

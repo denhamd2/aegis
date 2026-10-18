@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/training_ground.tscn" id="1"]
+[ext_resource type="Resource" path="res://data/teams/beechlawn_11.tres" id="2"]
+[ext_resource type="Resource" path="res://data/teams/bordeaux_11.tres" id="3"]
+
+[node name="Beechlawn11v11" instance=ExtResource("1")]
+home_team_resource = ExtResource("2")
+away_team_resource = ExtResource("3")
+use_human_visual = true
+referee_enabled = true
+terrain_enabled = true
+
+[node name="Sun" parent="." index="1"]
+light_energy = 0.48
+angular_distance = 5.0

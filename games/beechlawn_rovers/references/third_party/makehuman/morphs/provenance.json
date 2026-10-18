@@ -1,0 +1,31 @@
+{
+  "files": [
+    {
+      "file": "african-male-young.target",
+      "weight": 0.3333333333333333,
+      "source_url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/macrodetails/african-male-young.target",
+      "github_blob_sha": "dd5743e48700267d76596f575bf17b4b5cc3b3e0",
+      "sha256": "894abc1fbb3d28543a51fef16f89d5d4bdf9aa2e1534413339811a3d47818b7d",
+      "bytes": 406170
+    },
+    {
+      "file": "asian-male-young.target",
+      "weight": 0.3333333333333333,
+      "source_url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/macrodetails/asian-male-young.target",
+      "github_blob_sha": "8cd3ef3e9ddb06ee2d166f75f9ac10871251f938",
+      "sha256": "ed2e8c191cb6b87b4a2d97c80486acb2604fa549316c7aa2a738a5d5a14334dc",
+      "bytes": 421040
+    },
+    {
+      "file": "caucasian-male-young.target",
+      "weight": 0.3333333333333333,
+      "source_url": "https://raw.githubusercontent.com/makehumancommunity/makehuman/master/makehuman/data/targets/macrodetails/caucasian-male-young.target",
+      "github_blob_sha": "c3b82f92c5ced85599199cd184b0faf3b3fc6881",
+      "sha256": "70e228ba7164737dae664454394536fc5935fa48d333c1a97d77e2dc6eacc5f5",
+      "bytes": 396479
+    }
+  ],
+  "license": "CC0 1.0, MakeHuman bundled assets; see ../LICENSE.md",
+  "use": "Equal blend of the three supplied male macro targets for a generic adult anatomical base. Individual likeness remains a separate reference-led sculpt.",
+  "base_macro": "The supplied universal-male-young-averagemuscle-averageweight.target contains no vertex deltas; the gender/body form is in the macro targets above."
+}

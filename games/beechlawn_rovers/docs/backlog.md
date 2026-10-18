@@ -12,20 +12,55 @@ and [`../references/README.md`](../references/README.md) before implementation.
 
 ## Current state
 
-The standalone Godot 4.6 project contains an early 4v4 blockout on a local-park
-Sunday-league pitch, with one human-controlled Beechlawn outfielder, basic
-keyboard player switching, a rigid-body ball,
-camera-relative movement, sprint/close-control input, basic dribble assistance,
-pass/through-pass, charged shot, goals and score reset.
-The small-sided AI assigns support, pressure, marking and cover roles; an AI
-carrier can now choose a close shot, a safe forward pass under pressure, or to
-continue carrying.
-The match now waits for a center-spot kickoff, pauses on a goal, restarts with
-the team that conceded, and counts match time only during open play.
-The gameplay ball now renders the owner-supplied worn model (optimized to about
-4.4k triangles) while retaining the independent 22 cm collision sphere. The
-player and park environment are blockout quality. The M1 60 fps target has not
-been measured on the owner's Mac.
+The standalone Godot 4.6.3 project now defaults to a three-minute keyboard
+11v11 match: ten outfield players and one keeper per side, plus a separate
+referee. Shared human body, rig, animation and team/role materials replace the
+proxy in this scene. Individual heads still use the common Shane-derived draft.
+The original 4v4 scene remains the regression fixture.
+
+Role-aware 4-4-2 targets, staggered team decisions, player switching including
+keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
+basic boundary restarts are implemented. A complete accelerated 180-second
+AI-vs-AI simulation produced six shots and one goal without a sampled ball stall.
+Touchlines currently restart with a ground pass; authentic throw-ins, complete
+fouls/offside/cards, substitutions and additional formations remain open.
+
+The close broadcast camera, scoreboard and radar accompany shallow terrain,
+rough chalk, weathered goals/nets, house/tree/car modules and eight spectators.
+These are reference-led drafts, not exact likeness or venue acceptance. See
+[`11v11_implementation.md`](11v11_implementation.md) and the release evidence.
+Native Mac appearance and M1 Pro/16 GB 1080p/60 fps are not yet measured.
+
+## Stack-specific practices to carry through the backlog
+
+- Keep the 60 Hz physics loop authoritative and use the existing physics
+  interpolation setting for presentation. On kickoff and goal-restart
+  teleports, call `reset_physics_interpolation()` for the moved actors and
+  ball so rendering does not blend across the entire field. Godot documents
+  this reset requirement for objects repositioned after they enter the tree
+  ([physics interpolation guide](https://docs.godotengine.org/en/stable/tutorials/physics/interpolation/2d_and_3d_physics_interpolation.html)).
+- Keep tactical target selection separate from movement execution, which the
+  current `TeamTacticsController` and `FootballPlayer` already do. For the
+  flat pitch, prefer formation targets plus cheap local separation over a
+  navigation mesh and 22 continuously avoiding agents; Godot recommends
+  staggering navigation queries when agents are needed
+  ([navigation performance](https://docs.godotengine.org/en/4.4/tutorials/navigation/navigation_optimizing_performance.html)).
+- Preserve shared rigs/material resources and measure before adding per-player
+  detail. Profile skinning and animation cost at 4v4 first; if 11v11 profiling
+  shows animation overhead, reduce update rates for distant or off-screen
+  players before lowering the close players' animation quality
+  ([3D performance](https://docs.godotengine.org/en/stable/tutorials/performance/optimizing_3d_performance.html)).
+- Treat Web Compatibility screenshots as functional/layout checks, not visual
+  parity or performance evidence for the Mac Forward+/Metal build. Use fixed,
+  repeatable gameplay scenarios and event/range assertions in automated tests;
+  Godot physics is not guaranteed deterministic, so tests should not require
+  identical rigid-body trajectories across renderers or devices
+  ([physics introduction](https://docs.godotengine.org/en/stable/tutorials/physics/physics_introduction.html)).
+- Continue authoring football actions in Blender with explicit contact frames,
+  shared rest pose/scale, and in-place movement where Godot owns locomotion.
+  Validate toe/ball contact, player alignment, and clip interruptions in the
+  match scene after proxy checks; a clean standalone animation preview is not
+  sufficient acceptance for a two-player interaction.
 
 ## Recommended order
 
@@ -71,6 +106,18 @@ been measured on the owner's Mac.
     confirms no early impulse and one physical pass at 0.4 s. This is a
     first-pass event hookup, not final human-mesh contact validation, and the
     M1 check still needs the target Mac.
+  - Tuning follow-up: measured close/normal/sprint dribble spacing is
+    0.78/0.91/1.15 m; six/twelve/eighteen m/s ground passes travel
+    8.30/17.76/27.89 m in two seconds; tap/full shot speed is 12.97/30.00 m/s.
+    A first-time pass now starts its authored pass clip when its contact event
+    can meet the predicted incoming-ball window, accelerating the clip up to
+    5x for a fast arrival instead of waiting for the ball to drift past the
+    player. A new live-rigid-body test launches an 8.5 m/s incoming pass and
+    confirms one pass impulse at frame 12 (0.200 s) for an 8.5 m/s ball and
+    frame 6 (0.100 s) for an 18 m/s ball; both contact clips speed up and emit
+    once. Web/headless tests validate this timing path, but animation quality
+    and touch feel still need a Mac playtest. The shot action has since gained
+    its own Blender contact event; see the BR-003 shot pass below.
   - Research decision: keep the ball physically independent and retain the
     existing force-assisted dribble. Establish reliable pass/shot trajectories
     before considering drag or Magnus-force tuning; only add aerodynamic forces
@@ -79,6 +126,19 @@ been measured on the owner's Mac.
     for this without a specific requirement. If player movement stalls against
     the ball during contact checks, test collision layer/mask arrangements in a
     minimal scene before changing the match setup.
+  - Additional cloud pass: the selected ground/through-pass receiver now gets a
+    timed target. When trajectory prediction places the ball at the authored
+    right-toe contact window, an attached `FootballerVisual` starts the receive
+    clip with a small timing correction from its Blender event metadata. At the
+    contact marker, a short mass-scaled impulse cushions the live ball while
+    preserving some player movement intent; it does not reposition or attach
+    the ball. A buffered pass can interrupt the receive settle. The focused
+    receive smoke test verifies intended-receiver triggering, toe/ball gap,
+    contact timing, one physical cushion, locomotion restoration and pass
+    interruption. Passing, ball-fundamentals, AI-carrier and animation-tree
+    smoke checks pass; the Web release export also starts with no page errors.
+    The receive event now runs on the actual 4v4 rigged actors. The M1 playtest
+    remains outstanding.
 - [ ] **BR-003 — Reusable footballer rig and first animation set**
   Use Mixamo Y-Bot as the replaceable rig/import baseline, then verify one
   shared skeleton can represent the Beechlawn outfielders and goalkeeper.
@@ -93,28 +153,109 @@ been measured on the owner's Mac.
   pass and first-touch receive actions in an AnimationTree-compatible library.
   Headless checks cover skeleton, clip playback, and contact events. The receive
   clip is 42 frames at 60 fps, contacts at 0.333 s, and its toe tip comes within
-  3.7 cm of the incoming ball in the match-scene harness. A Blender pose sheet
+  12.3 cm from the incoming ball center (about 1.3 cm beyond its 0.11 m
+  radius) in the match-scene harness. A Blender pose sheet
   records ready, contact, and recovery. The proxy render also exposed the
   Y-Bot front axis facing opposite the game attack direction; its reusable
   visual now carries a 180-degree local rig correction, with pass and receive
   arcs measured against that orientation. Remaining: polish gait and foot
   contacts against football reference, replace the robot shell with the human
-  visual, and extend the set with stop/turn, close control, shot, and recovery.
-  Keep primitive blockout actors until these clips pass visual review. The first
-    import/check stage is now complete; this BR-003 item stays open.
+  visual, author the remaining hit/tackle responses, and validate the existing
+  proxy actions on final player meshes.
+  The verified Y-Bot scene is now the visual rig for all eight 4v4 actors, with
+  team/keeper palette colors and idle/jog/sprint AnimationTrees active in the
+  match. Event-gated pass and receive tests now use the scene's real Visual
+  nodes: the pass toe is 0.057 m from the ball at 0.4 s and receive cushioning
+  triggers once at 0.333 s. A Web play capture shows the rig running in-match;
+  it is a Compatibility/SwiftShader view at broadcast distance, not a final
+  likeness or Mac-renderer quality check. The import/check stage is complete;
+  BR-003 stays open for animation polish and the human visual.
   **Additional cloud gait pass:** the Blender side-view proxy render showed a
   short, low-knee jog/sprint silhouette. I increased the existing in-place
   stride and knee drive modestly, added a small torso counterbalance, and kept
   the existing 2–3 cm pelvis bob. Evaluated foot-bone forward travel increased
   from 0.359 m to 0.438 m for jog and 0.534 m to 0.629 m for sprint; the Godot
-  animation-tree smoke test still passes with the imported actions. This is a
-  proxy improvement only: the visual scene is not yet integrated into the 4v4
-  match, so foot planting at match speed, blending during turns, and contact
-  with the live ball still need the full in-game pass.
+  animation-tree smoke test still passes with the imported actions. This proxy
+  improvement is now integrated into the 4v4 match. Foot planting at match
+  speed and transitions during turns still need a closer visual pass; the Web
+  capture is too distant for judging fine gait quality.
+  **Braking/idle pass:** Blender pose-sheet review exposed that the imported
+  Y-Bot idle left both arms extended in a T-pose. The idle action now bakes a
+  relaxed arm position with slight breathing variation, and a new
+  `AN_Beechlawn_StopFromRun` clip lowers the centre of mass, plants the support
+  foot, catches with the other foot, and settles into the same idle pose. The
+  stop is 36 frames at 60 fps with its brake plant at 0.233 s; Blender IK is
+  baked to bone curves and creates no runtime IK. Godot starts it when movement
+  intent is released above 0.8 m/s, cancels it if movement resumes above
+  1.2 m/s, and otherwise restores the locomotion blend at clip completion.
+  The animation-tree and live-match smoke tests verify the idle arm pose, stop
+  playback, movement interruption, and return to locomotion; pass and receive
+  contact integration tests still pass. A Web capture has no browser errors, but its
+  distant Compatibility view cannot establish fine motion quality. The stop
+  is a first blocking pass; human-mesh proportions, turn transitions, close
+  foot-plant review, and M1 visual/performance validation remain open.
+  **Directional-turn pass:** authored mirrored `AN_Beechlawn_Turn90Left` and
+  `AN_Beechlawn_Turn90Right` actions at 60 fps (36 intervals / 0.6 s). Each
+  starts with a short load, catches on a support foot, counterbalances through
+  hips/torso/arms, and settles through a small recovery step. Temporary Blender
+  IK for the planted foot and ready-arm hand positions is baked to bone curves;
+  the exported clips contain no runtime IK or root motion. In Godot, a turn
+  action starts after a >~69° change in movement direction while horizontal
+  speed exceeds 2.2 m/s; player steering and the root remain physics-owned.
+  Blender proxy renders caught and corrected the initial T-pose arms before
+  export. Animation-tree and live actor smoke tests verify mirrored playback,
+  return to locomotion, and triggering on an in-motion direction change.
+  Human-mesh foot sliding and contact, blend feel under a real controller, and
+  Mac 60 fps validation remain open.
+  **Shot/contact pass:** added `AN_Beechlawn_ShotRight`, a 54-frame in-place
+  instep shot at 60 fps with anticipation, support-foot plant, strike, forward
+  hinge, follow-through, and recovery. Blender validates the support plant and
+  strike-foot target, then bakes temporary foot/hand IK before export. Its
+  contact event is at 0.300 s; `FootballPlayer` now queues direction, charge-
+  derived speed, and lift, then applies exactly one rigid-body kick only when
+  the animation reaches that marker and the ball remains in reach. The new
+  integration check measures a 6 mm toe-to-ball-center gap at contact and
+  confirms there is no early impulse. Milestone 1, pass/receive contacts, shot
+  event, and animation playback checks pass. The proxy action still needs
+  review on the final human mesh and Mac; no player-specific left-foot or
+  finesse/power-shot variants are authored yet.
+  **Close-control pass:** authored a 60-frame (0.983 s) in-place loop with a
+  lowered ready stance, alternating small foot touches, and restrained upper-
+  body counter-motion. Temporary Blender IK for foot/hand placement is baked
+  into the action; the start/end pose seam is checked before export, with no
+  runtime IK or root motion. The clip is a separate AnimationTree layer that
+  blends in only while close control is held and the player is moving, so
+  regular slow locomotion cannot accidentally trigger it. The layer eases in
+  and out at 12/s; the underlying idle/jog/sprint speed blend remains intact.
+  The animation-tree smoke test, milestone-one, braking/turn, pass, receive,
+  and shot contact tests pass. The loop was reviewed on the lightweight Y-Bot
+  proxy only; foot contact and close-control feel on the final player meshes,
+  ball-touch synchronization in a live match, and Mac 60 fps validation remain
+  open.
+  **Prone-recovery pass:** Blender authors `AN_Beechlawn_GetUpFromProne`, a
+  55-frame (0.9 s) in-place transition from a low, hand-supported prone pose
+  through a tucked-knee/half-kneel to an athletic ready stance. Temporary hand
+  and foot IK is baked to ordinary bone curves; keyed Hips motion lowers the
+  body while the armature root remains fixed. Blender proxy renders are saved
+  in `docs/images/y_bot_getup_pose_sheet.png`. Godot exposes this as
+  `FootballerVisual.play_get_up()` and the animation-tree smoke test verifies
+  playback and return to locomotion. Blender now also authors
+  `AN_Beechlawn_GroundedSlideTackle`, a 38-frame (0.617 s) in-place action
+  with a compressed approach, grounded side slide, and prone settle, sharing
+  its end pose with the get-up start. `FootballPlayer` keeps the 0.62 s
+  commitment and 0.18 s ball-contact window authoritative; animation is visual
+  only. The visual driver chains the slide into the 0.9 s get-up and holds
+  locomotion/actions during recovery. The old `AN_Beechlawn_SlideTackle` clip
+  remains in the shared source library but is no longer played for this action.
+  Blender proxy renders are saved in
+  `docs/images/y_bot_grounded_slide_pose_sheet.png`. Final-mesh ground contact,
+  tackle contact alignment, and M1 frame-rate validation remain open.
   - Research decision: keep the current lightweight 1D idle/jog/sprint blend
-    while these clips are being polished and integrated. Add a directional
-    BlendSpace2D only when authored backpedal/strafe/turn clips are available;
-    add upper-body layering only with a tested additive clip and bone mask.
+    and the separately blended close-control loop while these clips
+    are being polished and integrated. Keep the 90-degree
+    turn as a one-shot action; add a directional BlendSpace2D only after
+    backpedal and strafe locomotion clips exist. Add upper-body layering only
+    with a tested additive clip and bone mask.
     Retargeting or bone renaming must be verified against the Y-Bot track names
     and rest pose before changing import conventions.
   - Free-motion-source check: CMU subject 10, take 03 (“soccer - kick ball”) is
@@ -130,9 +271,9 @@ been measured on the owner's Mac.
     alongside the existing clips in `y_bot_animation_library.glb`, preserving
     their durations when sampling the library at 60 fps. It also writes
     `y_bot_pass_contact.json` from the Blender contact frame. Godot inserts a
-    method event at that authored time; when the optional Y-Bot visual is
-    attached to a `FootballPlayer`, the existing physical pass impulse waits
-    for that event. A kickoff integration smoke check verifies there is no
+    method event at that authored time; the `FootballerVisual` instance on each
+    match `FootballPlayer` now gates the physical pass impulse on that event.
+    An integration smoke check verifies there is no
     early kick, exactly one ball impulse at 0.4 s, and locomotion resumes. A
     follow-up Godot skeleton measurement exposed that the authored right-foot
     arc moved backward at contact: the toe was 1.14 m from the center ball. I
@@ -141,9 +282,10 @@ been measured on the owner's Mac.
     and verifies it is within 0.14 m of the ball center; the corrected proxy
     measures 0.057 m horizontal / 0.001 m vertical (0.057 m total), with the physical
     impulse still fired once at 0.4 s. This validates blockout contact geometry,
-    not final human-mesh appearance or match-camera readability. The default
-    4v4 scene still uses primitive players; final-mesh contact, live camera
-    review, and M1 performance validation remain outstanding.
+    not final human-mesh appearance or match-camera readability. The 4v4 scene
+    now uses the shared Y-Bot visual on all eight actors; the primitive shapes
+    remain as gameplay collision bodies only. Final human-mesh contact, live
+    camera review, and M1 performance validation remain outstanding.
     Keep BR-003 open for locomotion refinement, receive/shot/recovery clips,
     shared-rig validation, and in-match visual QA. Do not ship the raw BVH.
   Check Rokoko's free sports mocap set only as optional supplemental material.
@@ -205,9 +347,12 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     selects a reachable point on a moving ball's short path and only takes
     possession on close contact. `passing_smoke.gd` verifies target selection,
     lead, receiver movement, first-time buffer, interception positioning and
-    close-contact possession change. Authored receive/first-touch animation
-    and richer interception decisions remain polish work. Keyboard controls
-    remain WASD + arrows, E ground pass, Q through-ball.
+    close-contact possession change. In the 4v4 scene, an incoming pass starts
+    the rigged receiver's authored receive clip and resolves a velocity-based
+    cushion at its contact marker. Final human player visuals and richer
+    interception decisions remain polish work. Keyboard controls remain WASD +
+    arrows, E ground pass, Q
+    through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
   Separate team shape, individual decisions and movement execution. Teammates
   offer support and forward runs without clustering; defenders cover lanes,
@@ -258,10 +403,10 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
   exported in `assets/characters/mixamo/y_bot_animation_set.glb`, with their
   editable source at `tools/blender/beechlawn/y_bot_animation_set.blend` and
   repeatable authoring script at `tools/blender/beechlawn/author_defensive_clips.py`.
-  They use the verified 65-bone proxy and are not yet wired into the match:
-  current 4v4 actors still use primitive visuals, and contact/timing remain
-  controlled by Godot. Human playtest, authored-clip visual polish on the final
-  footballer mesh, and tuning under match conditions remain.
+  They use the verified 65-bone proxy but are not yet wired to slide/tackle
+  events. The 4v4 actors now use this rig for locomotion/pass/receive; contact
+  and movement remain controlled by Godot. Human playtest, authored-clip polish
+  on the final footballer mesh, and tuning under match conditions remain.
   - Additional cloud pass: an individual carrier decision layer now lets an AI
     take a close central shot, release a safe forward through-pass when tightly
     pressed, or keep carrying when neither option is justified. Decisions only
@@ -324,6 +469,8 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
 ### P2 — Scale the validated systems to 11v11
 
 - [ ] **BR-011 — Formation and role positioning**
+  - 2026-10-18: full 4-4-2 team-relative slots and role-aware support/cover are
+    active in 11v11. Additional formations and tactical tuning remain open.
   Add 4-4-2, 4-3-3, 4-2-3-1 and 4-5-1 using team-relative coordinates. Implement
   goalkeeper, centre-back, fullback, defensive/central/attacking midfielder,
   winger and striker responsibilities.
@@ -332,6 +479,10 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   shape to the ball, preserve cover, create passing triangles, counterpress
   selectively and make late-game score-aware adjustments.
 - [ ] **BR-013 — Efficient 22-player simulation**
+  - 2026-10-18: 22 shared human actors plus separate referee validated; teams
+    alternate 5 Hz tactical decisions, movement/ball remain fixed 60 Hz. Shared
+    mesh/material propagation and independent playback are tested. Native
+    frame-time, draw-call and memory budgets remain unmeasured.
   Expand from the validated 4v4 architecture, not a monolithic AI function. Stagger
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
@@ -339,6 +490,10 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   Tune the elevated sideline camera to the supplied screenshot; predict long
   passes, keep relevant players visible and frame goalmouth action. Add score,
   clock, phase, controlled-player feedback and a team-coloured tactical radar.
+  **Current camera pass:** 12 m high / 26 m offset, smooth predictive tracking
+  and up to 35% widening for long passes. Added a continuously updated tactical
+  radar and debug-only touchline, goal and corner capture cameras. Native M1
+  camera/input QA remains open.
 
 **P2 exit check:** both full teams preserve recognizable shape, support attacks,
 recover on loss, create and defend chances, and remain readable from the camera.
@@ -346,10 +501,15 @@ recover on loss, create and defend chances, and remain readable from the camera.
 ### P3 — Complete match rules and team management
 
 - [ ] **BR-015 — Match state machine and boundaries**
+  - 2026-10-18: whole-ball boundary ownership, goal kicks and corners have
+    smoke coverage. A short ground-pass restart substitutes for throw-ins.
+    Half-time and complete regulation restart presentation remain open.
   Implement pre-match, kickoff, open play, stoppages, half-time and full-time.
   Detect the whole ball over touchlines and goal lines; award throw-ins, corners
   and goal kicks to the correct side.
 - [ ] **BR-016 — Fouls, offside and referee**
+  - 2026-10-18: a separate black-kit referee follows play diagonally and stays
+    outside player selection/possession/tackle groups. Adjudication is still open.
   Judge tackle timing/contact, advantage and cards. Evaluate offside at the
   teammate's ball-play moment and penalize only involvement. Add visible referee
   reactions and restart placement.
@@ -373,6 +533,10 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-18: shared-human pass contact checked at 0.075 m from toe to ball;
+    idle arms and near-horizontal locomotion arms corrected offline. Keeper set
+    and standing save layers share the same 65-bone rig. Full action/deformation
+    and target-Mac review remain open.
   Refine foot planting, turning, acceleration/deceleration, action interruption,
   first touch, contact timing and transitions across the animation set. Validate
   at gameplay camera distance with the final rig and moving ball.
@@ -380,6 +544,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-18 roster integration supersedes the prototype-only note below:
+    a modular shared body/65-bone rig, 17 clips, six role atlases, small identity
+    prints, editable height/build and topology-checked head sculpt deltas now
+    drive the default 11v11 scene. 67,902 triangles include both sleeve variants;
+    this is not a per-actor measured rendering budget. Collar/hem polish,
+    individual face/hair likeness and exact keeper graphics remain open.
   Follow the project-local `.agents/skills/create-player/SKILL.md` for each
   reference-led player build; it requires source-to-feature mapping and fixed
   front/profile/three-quarter/broadcast review before accepting the asset.
@@ -391,15 +561,81 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   hair, number, crest, fabric and skin tone; validate close and broadcast
   views. Build one shared animation rig and vary only mesh/material/kit data
   where practical.
-- [ ] **BR-023 — Bordeaux park environment**
+  - Cloud progress: the current Y-Bot 4v4 rig uses the archived team and keeper
+    palette values. An earlier primitive-visual pass tested sponsor/crest
+    placement, numbers, socks and gloves against the kit object sheets. A
+    reference-led Shane Denham #8 Blender/GLB draft now uses a licensed
+    anatomical base and geometry-based face without a portrait texture. It
+    passes the body/rig coordinate, normalized-weight, shared-neck-boundary
+    and authored export-timing checks. The 2026-10-18 body/face/kit pass adds
+    compact head/full torso shaping, anatomical facial targets, curved textured
+    eyes, opaque short hair, a 2K anatomical head map and complete 2K panel kit.
+    S. DENHAM / 8 and the enlarged sponsor are retained. Garments have sewn
+    boundaries, loose shorts, cuffs and fitted socks; final counts and captures
+    are in `docs/art_briefs/br022_shane_body_face_tailored_pass.md` and the
+    checksum-bearing validation JSON. The subsequent likeness/deformation
+    cleanup corrects the reversed neck normals, adds a clean CC0 skin bake and
+    alpha-tested short hair, and replaces shorts with a fitted quad pattern.
+    It removes a measured 125-degree thigh-roll mismatch in the prototype's
+    six leg rotation tracks while preserving sampled contact paths. The rig
+    stays at 65 bones with 15 clips; all other curves are unchanged. Current
+    export: 51,022 triangles / six surfaces. See
+    `docs/art_briefs/br022_shane_likeness_cleanup.md`.
+    Blender pose/clay captures, Godot import smoke and fresh Web idle/portrait
+    captures pass their structural checks. Visual review still exposes jagged
+    collar/shoulder edges, a sleeve join and an uneven shirt hem. The prototype
+    is still outside the roster: facial likeness/hair, garment cleanup, complete
+    motion coverage, gameplay contact and M1 frame-time gates remain open.
+    Follow `docs/art_briefs/br022_shane_likeness_and_kit_plan.md`; the next
+    acceptance check is the reference-matched face/hair and full-clip garment
+    review, before roster integration or duplicating the process to others.
+- [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-18: added shallow matched heightfield/render terrain (under 6 cm),
+    broken-width chalk, weathered regulation goals with sagging alpha-test nets
+    and a cheap impact ripple, leaf-card trees, textured houses/cars/walls and
+    eight human spectators. Roadside is open rather than ringed by a wall.
+    Heights and placement are inferred, not surveyed; individual houses/trees
+    and precise reference matching remain open.
   Replace the flat pitch/backdrop blockout with locally appropriate worn grass,
   irregular chalk, weathered goal/net, residential houses, hedges, trees,
-  roadside/park details, subdued crowd and overcast/evening lighting. Prefer
-  free assets or original Blender work and retain source files/licenses.
+  roadside/park details, subdued crowd and overcast/evening lighting. Establish
+  a reusable Godot venue setup around the Kilmore Drive reference: keep pitch
+  dimensions/layout, ground and marking materials, boundary/backdrop dressing,
+  and lighting/weather settings separable so later grounds can be assembled
+  without duplicating the whole scene. Finish and validate this baseline before
+  producing additional venues. Prefer free, properly licensed assets or original
+  Blender work; record each asset's source and license. PES-specific stadium
+  exporters do not produce Godot-ready assets and are not part of this pipeline.
+  - Cloud progress: `scripts/kilmore_drive_venue.gd` now assembles the park
+    backdrop around the existing 105 m × 68 m field, with original low-cost
+    Blender house, tree and car modules plus wall, hedge, path, road and lamp
+    dressing. The editable Blender source and reproducible builder are in
+    `tools/blender/beechlawn/`; the imported GLBs are in
+    `assets/environment/kilmore/`. This is a first modular blockout, not the
+    finished reference-matched environment or an M1-validated render. A first
+    web capture exposed and helped fix houses facing away from the pitch; the
+    capture now shows their facades, CC0 grass/asphalt textures blended with
+    broad wear, roadside and softer overcast light. Tree, car and house assets
+    remain visibly stylized and surface/goal wear needs another pass. Asset
+    sources/licenses are recorded under `assets/environment/surfaces/ambientcg/`.
+    A 4v4 scene smoke test checks module loading, inward-facing facades, licensed
+    surface maps, site dressing and kit variants.
 - [ ] **BR-024 — Audio and match feedback**
   Add distinct ball/player contact, referee, crowd, goal and UI sounds; tune the
-  mix so key events remain audible without overwhelming play.
+  mix so key events remain audible without overwhelming play. Route feedback
+  from typed match events rather than screen capture or OCR. Give events the
+  context needed by listeners (event type, players involved, match time, score,
+  and urgency), then use an audio/commentary director to prioritize important
+  moments, select relevant recorded lines, apply per-line and event cooldowns,
+  prevent commentary overlap, and duck crowd audio where appropriate. Start
+  with gameplay events and audio hooks; add recorded commentary only when
+  suitable, properly licensed recordings are available. Verify event routing,
+  timing, priority, cooldowns, and mix behavior with test clips before content
+  production.
 - [ ] **BR-025 — M1 performance and Mac delivery**
+  - 2026-10-18: separate football universal Mac/Web exports and release workflow
+    added, preserving the wrestling Pages root and its Mac release. Package
+    structure checks do not substitute for native playtesting or 60 fps profiling.
   Profile the full 11v11 build at 1080p on the M1 Pro/16 GB. Target stable 60
   fps; identify CPU/GPU frame-time spikes, memory growth, shader stutter and
   input latency. Optimize only measured bottlenecks. Add a separate Beechlawn
@@ -411,10 +647,15 @@ without touching Aegis artifacts.
 
 ## Risks and scope guardrails
 
-- Keep 11v11 behind the 4v4 acceptance gate; more players amplify broken
-  movement, AI and performance problems.
+- The approved 11v11 pass supersedes the old 4v4-only gate. Retain 4v4
+  regression checks and validate full-team movement, AI and performance separately.
 - Use original code, rigs, animation and art. The commercial-game references
   guide general feel and camera/control conventions, not copied assets or code.
+  Apply a clean-room workflow: use observed behavior and high-level design
+  principles as references, while implementing Beechlawn's systems independently.
+  Do not make the project depend on PES binaries, extracted PES content, or
+  PES-specific archive/export tools. Track provenance and license terms for
+  third-party assets before they enter the project.
 - Do not add detailed faces, crowds or expensive animation before profiling the
   playable match loop. Use LODs, shared materials, instancing and simple
   collision geometry for the distant park setting.
@@ -423,7 +664,7 @@ without touching Aegis artifacts.
 
 ## Confirmed first-slice format
 
-- Start with a short playable 4v4 match.
+- Initial 4v4 slice is retained for regression; the approved default is now 11v11.
 - Keyboard controls only for the first playable; gamepad support is deferred.
 
 ## Confirmed character and animation sourcing decision

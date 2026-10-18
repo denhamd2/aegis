@@ -11,7 +11,8 @@ func _run_checks() -> void:
 	root.add_child(game)
 	await process_frame
 	await physics_frame
-	game._start_kickoff(false)
+	game.set("_kickoff_pending", false)
+	game._set_players_physics_enabled(true)
 
 	var passer := game.get_node("Player") as FootballPlayer
 	var ball := game.get_node("Ball") as FootballBall
@@ -34,13 +35,20 @@ func _run_checks() -> void:
 	var chosen := passer._choose_pass_target(Vector3.RIGHT, true)
 	assert(chosen.get("receiver") == receiver, "Pass did not select the teammate in the aimed lane")
 	passer._do_pass(true)
+	for _frame in 27:
+		await physics_frame
 	assert(ball.last_touch == passer.team_name, "Pass did not register the passing team's touch")
 	assert(receiver.receive_target_time > 0.0, "AI receiver did not receive a timed movement target")
-	var target_x_before := receiver.global_position.x
+	var target_gap_before := receiver.global_position.distance_to(receiver.receive_target)
 	for _frame in 24:
 		await physics_frame
-	assert(receiver.global_position.x > target_x_before + 0.25,
+	var target_gap_after := receiver.global_position.distance_to(receiver.receive_target)
+	assert(target_gap_after < target_gap_before - 0.25,
 		"AI receiver did not move toward the pass target")
+	# Let the authored pass finish before issuing another action; the second
+	# request intentionally tests buffering rather than interrupting the kick.
+	for _frame in 36:
+		await physics_frame
 
 	# A leading pass should place the target ahead of a moving runner.
 	ball.freeze = true
@@ -67,6 +75,11 @@ func _run_checks() -> void:
 	assert(passer._pending_pass > 0.8, "Incoming pass did not receive the extended first-time buffer")
 	ball.global_position = passer.global_position + Vector3(0.9, FootballBall.RADIUS, 0.0)
 	passer._update_actions(0.016)
+	assert(passer.get("_visual_pass_pending"),
+		"Buffered first-time pass did not start its contact-timed pass animation")
+	# The match scene receives this from the authored AnimationPlayer marker;
+	# invoke the same callback directly in this deterministic smoke test.
+	passer._on_visual_action_contact(&"pass")
 	assert(ball.last_touch == passer.team_name, "Buffered first-time pass did not execute on arrival")
 	assert(first_time_result["kind"] == &"pass", "Buffered first-time pass did not produce a pass action")
 	ball.last_touch = &"Bordeaux"

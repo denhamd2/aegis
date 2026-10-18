@@ -1,30 +1,30 @@
 # Beechlawn Rovers — Reference Art Implementation Plan
 
-**Reviewed:** 2026-10-17  
+**Reviewed:** 2026-10-18
 **Source folder:** [Beechlawn Game reference folder](https://drive.google.com/drive/folders/1GUh4bQDTKJY7-44wLtbsKZAWq6SyIotm); [Kilmore Drive Street View](https://maps.app.goo.gl/p7TfFiB6Qmqviwsh6); [Kilmore Drive satellite view](https://maps.app.goo.gl/SPqee19XAk4EQ6qs7)  
 **Archived copies:** [`references/README.md`](../references/README.md)  
-**Scope:** Plan only. No Blender source, Godot scene, roster resource, or shipped asset was changed during this review.
+**Scope:** Reference map and production direction. The first scoped kit/backdrop prototype is tracked separately in [`art_briefs/br022_br023_first_pass.md`](art_briefs/br022_br023_first_pass.md); it does not approve final character or environment art.
 
 ## Backlog placement
 
-The work belongs primarily to **BR-022 — Character and kit production (item 22 of 25)** and **BR-023 — Bordeaux park environment (item 23 of 25)**. It depends on the current playable systems and should be brought forward only as a small, representative visual slice is needed to validate the game.
+The work belongs primarily to **BR-022 — Character and kit production (item 22 of 25)** and **BR-023 — Kilmore Drive park environment (item 23 of 25)**. It depends on the current playable systems and should be brought forward only as a small, representative visual slice is needed to validate the game.
 
 Related work is staged across the existing backlog:
 
 | Backlog item | Relationship to these references | Current state in `docs/backlog.md` |
 |---|---|---|
-| **BR-003 — Reusable footballer rig and first animation set (3/25)** | Replace the Y-Bot shell after the shared rig, import convention, and proxy locomotion are sound. The final mesh is the target for the first authored football clips. | In progress; proxy rig and idle/jog/sprint blend pass, final human mesh and football actions remain. |
+| **BR-003 — Reusable footballer rig and first animation set (3/25)** | Replace the Y-Bot shell after the shared rig, import convention, and proxy locomotion are sound. The final mesh is the target for the first authored football clips. | Y-Bot rig and locomotion/pass/receive clips now run on all eight 4v4 actors; final human mesh and authored action polish remain. |
 | **BR-005 — Player/team data and tuning (5/25)** | The currently populated four-player rosters cover the short match. The new sheets provide a full Beechlawn identity set for a later roster expansion. | Marked complete for the current four-slot data; do not treat that as full-roster art. |
 | **BR-009 — First goalkeeper (9/25)** | John O’Rourke’s #1 keeper identity, gloves, kit, and keeper-specific animation references. | In progress; movement/save logic smoke checked, authored keeper motion and match tuning remain. |
 | **BR-013 — Efficient 22-player simulation (13/25)** | Later visual scale-up. Only one Bordeaux face/identity is supplied, so this folder cannot provide a distinct 11-player Bordeaux team. | Not started. |
 | **BR-016 — Fouls, offside and referee (16/25)** | Des Feeney Sr. character/kit and referee actions. | Not started. |
 | **BR-019 — Shooting and aerial actions (19/25)** | Later headers, volleys, jumps, crosses, and keeper aerial interactions. | Not started. |
 | **BR-021 — Animation contact and blending pass (21/25)** | Final foot planting, transitions, contact markers, and camera-distance review against the finished players. | Not started. |
-| **BR-022 — Character and kit production (22/25)** | Main destination for all player/referee likeness and kit work. | Not started. |
-| **BR-023 — Bordeaux park environment (23/25)** | Main destination for pitch, goal/net, local boundary, vegetation, houses, and lighting. | Not started. |
+| **BR-022 — Character and kit production (22/25)** | Main destination for all player/referee likeness and kit work. | Shane #8's [body/face/kit pass](art_briefs/br022_shane_body_face_tailored_pass.md) builds on the rig/weight/timing foundation with anatomical facial targets, UV skin, opaque short hair, fitted garments and a complete 2K panel atlas. Facial likeness/hair, complete animation coverage and gameplay/Mac acceptance remain open under the [Shane plan](art_briefs/br022_shane_likeness_and_kit_plan.md). The [cleanup pass](art_briefs/br022_shane_likeness_cleanup.md) adds the measured normal/retarget corrections, clean skin bake, short hair cards and fitted shorts. The prototype remains out of the roster. |
+| **BR-023 — Kilmore Drive park environment (23/25)** | Main destination for pitch, goal/net, local boundary, vegetation, houses, and lighting. | Reusable backdrop now includes inward-facing house facades, variant trees/cars, roadway and a more varied grass shader; Web Compatibility review still reads as a stylized blockout. |
 | **BR-025 — M1 performance and Mac delivery (25/25)** | Final target-device 1080p/60 fps validation after the authored assets enter the 4v4 and 11v11 scenes. | Not started; M1 Pro/16 GB hardware profiling is still required. |
 
-The practical order is: **finish the BR-001/002 playable checks; keep BR-003 animation authoring on the verified Y-Bot proxy; create the first final-human/kit/keeper/referee visual sample under BR-022; integrate and tune those assets with BR-009/016/021; finish the park under BR-023; only then expand the art load for BR-013 and profile under BR-025.** This keeps the first 4v4 match useful and avoids making a full roster before contact, camera, and performance constraints are known.
+The practical order is: **continue the BR-001/002 playable checks and BR-003 animation work; advance only the reference-backed venue blockout under BR-023 and one roster/keeper kit prototype under BR-022 in parallel; establish the shared human mesh/rig convention before producing final identities; integrate and tune those assets with BR-009/016/021; then expand the art load for BR-013 and profile under BR-025.** The small early passes provide visual test context without treating the full park or roster as approved before camera, contact, and performance constraints are known.
 
 ## Reference-to-backlog map and required source-of-truth workflow
 
@@ -107,7 +107,7 @@ Face work should prioritize recognisable silhouette and proportions: head shape,
 
 Create fitted, separately manageable jersey/short/sock/glove pieces over the shared body, with weights transferred then manually cleaned at shoulders, hips, elbows, knees, and cuffs. Preserve the selected sleeve variant per player sheet. Put team stripes, sponsor, crest, names, and numbers in clean UV/decal assets rather than floating geometry; use the same UV layout and material for all Beechlawn outfielders, swapping player name/number data. Keep Bordeaux outfield and keeper uniform masters separate. Match the reference’s skin tone and facial texture with calibrated base-color/roughness/normal maps; use subdued rough skin, natural facial variation, and realistic eye response. Use woven fabric micro-normal/roughness and modest cloth sheen; boots, sock elastic, glove latex, and printed marks need distinct but restrained material response. Use Principled BSDF/glTF-compatible materials only.
 
-Texture size and detail should follow the final camera test: start with a 2K head/face set for the near players and shared 1K–2K team kit textures, then validate memory/draw calls in Godot before duplicating for 22 characters. Use mipmaps, shared materials, atlas repeated details, and LODs; no runtime cloth simulation for the first release.
+Texture size and detail should follow the final camera test: start with a 2K head/face set for the near players and shared 1K–2K team kit textures, then validate memory/draw calls in Godot before duplicating for 22 characters. Shane's rejected portrait projection has been removed. The current head uses a 2K anatomical pigment map, the body a 512 map and restrained baked micro-normals. The tailored 2K kit atlas includes the supplied marks, S. DENHAM / 8, sleeve, shorts and sock charts. Reference-level skin/hair detail and cloth deformation still require visual acceptance under the [current Shane plan](art_briefs/br022_shane_likeness_and_kit_plan.md). Use mipmaps, shared materials, atlas repeated details, and LODs; no runtime cloth simulation for the first release.
 
 ### 4. Author motion against a lightweight mannequin before final-mesh validation
 
@@ -154,3 +154,13 @@ These skills are repository-local production guides in `.claude/skills/`, rather
 | Godot-ready asset handoff and QA | `asset-optimization`; `godot-export`; `blender-export`; `qa-review`; the project-scoped `.agents/skills/gda/SKILL.md` before using `gda`. |
 
 The project guide says Blender 4.3.2 and `bpy` are available headlessly, with no Blender MCP connected. Therefore inspect/edit `.blend` files through small repeatable scripts, save editable sources under `tools/blender/beechlawn/`, export only into this Godot project, and test imports/visual results in Godot. Never claim MCP/UI access that is not available. Preserve the intended reference even when optimizing for the M1 Pro; if a detail is too costly at broadcast distance, record the tradeoff and use a cheaper screen-space equivalent rather than silently changing identity or setting.
+
+## Approved 11v11 integration update
+
+The owner approved the shared-body/full-team/environment pass on 2026-10-18.
+`11v11_implementation.md` records the revised order: BR-022 common asset/role
+kits, BR-011/013 complete lineups, BR-014 camera/radar, BR-023 terrain/park,
+then BR-021/025 engine and performance acceptance. This supersedes earlier
+prototype-only/4v4-only ordering. Assets are now integrated drafts; reference
+likeness, precise site reconstruction and native performance are still open.
+See `art_briefs/11v11_release_evidence.md` for actual screenshots and checks.

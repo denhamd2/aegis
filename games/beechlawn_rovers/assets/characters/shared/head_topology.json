@@ -1,0 +1,7 @@
+{
+  "mesh": "Skin_Head",
+  "vertices": 4326,
+  "topology_sha256": "7f899a713458f82c50a7ce62ead430226e1c66581d9151140666037ccfaffce5",
+  "units": "armature-local centimetres",
+  "source": "tools/blender/beechlawn/footballer_shared.blend"
+}

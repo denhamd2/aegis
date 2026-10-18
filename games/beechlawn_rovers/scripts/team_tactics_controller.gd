@@ -88,6 +88,8 @@ func assign_defensive_marks(team_players: Array[FootballPlayer], chaser: Footbal
 		for opponent in available:
 			var distance := defender.global_position.distance_to(opponent.global_position)
 			var slot_lane := defender.profile.starting_position.y
+			if team_players.size() == 11 and (distance > 18.0 or absf(opponent.global_position.z-slot_lane)>14.0):
+				continue
 			var lane_cost := absf(opponent.global_position.z - slot_lane) * 0.28
 			var danger_reward := maxf(0.0, ball_position.x * defender.attack_sign
 				- opponent.global_position.x * defender.attack_sign) * 0.08
@@ -125,6 +127,8 @@ func marking_position(defender: FootballPlayer, opponent: FootballPlayer,
 
 func attacking_support_position(actor: FootballPlayer, ball_position: Vector2,
 		transition_push := false) -> Vector2:
+	if actor.profile.starting_slot not in ["left", "center", "right", "keeper"]:
+		return formation_position(actor, ball_position, true, transition_push)
 	var slot := actor.profile.starting_slot
 	var forward_ball := ball_position.x * actor.attack_sign
 	var base_forward := actor.profile.starting_position.x
@@ -141,6 +145,8 @@ func attacking_support_position(actor: FootballPlayer, ball_position: Vector2,
 
 func defensive_shape_position(actor: FootballPlayer, ball_position: Vector2,
 		late_lead_depth: float) -> Vector2:
+	if actor.profile.starting_slot not in ["left", "center", "right", "keeper"]:
+		return formation_position(actor, ball_position, false, false, late_lead_depth)
 	var slot := actor.profile.starting_slot
 	var forward_ball := ball_position.x * actor.attack_sign
 	var base_forward := actor.profile.starting_position.x
@@ -155,3 +161,26 @@ func defensive_shape_position(actor: FootballPlayer, ball_position: Vector2,
 		lateral = lerpf(lateral, 0.0, 0.28)
 	lateral = clampf(lateral, -FIELD_WIDTH * 0.5 + 4.0, FIELD_WIDTH * 0.5 - 4.0)
 	return Vector2(forward * actor.attack_sign, lateral)
+
+func formation_position(actor: FootballPlayer, ball: Vector2, attacking: bool,
+		transition: bool, lead_depth := 0.0) -> Vector2:
+	var base := actor.profile.starting_position
+	var role := actor.profile.tactical_role
+	var forward_ball := ball.x * actor.attack_sign
+	var shift := clampf(forward_ball * 0.38, -16.0, 21.0)
+	var forward := base.x + shift
+	var lane := base.y + ball.y * 0.16
+	if attacking:
+		match role:
+			"centre_back": forward = minf(forward, forward_ball - 13.0)
+			"fullback": forward = minf(forward + 7.0, forward_ball - 6.0)
+			"central_midfielder": forward = lerpf(base.x + shift, forward_ball - 4.5, 0.55)
+			"winger":
+				forward = maxf(forward, forward_ball + (9.0 if transition else 5.0))
+				lane = base.y * 0.94 + ball.y * 0.06
+			"striker": forward = maxf(forward, forward_ball + (12.0 if transition else 8.0))
+	else:
+		var role_gap := 16.0 if role in ["centre_back", "fullback"] else 7.0 if role != "striker" else 1.5
+		forward = minf(forward - lead_depth, forward_ball - role_gap)
+		lane = base.y * 0.78 + ball.y * 0.22
+	return Vector2(clampf(forward, -46.0, 46.0) * actor.attack_sign, clampf(lane, -29.0, 29.0))

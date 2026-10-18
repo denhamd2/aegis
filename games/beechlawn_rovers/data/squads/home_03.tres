@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=6 format=3]
+[ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="3"]
+[sub_resource type="Resource" id="Attributes"]
+script = ExtResource("2")
+[sub_resource type="Resource" id="Appearance"]
+script = ExtResource("3")
+kit = "beechlawn_outfield"
+print_name = "DEREK MITCHELL"
+[resource]
+script = ExtResource("1")
+player_id = &"derek_mitchell"
+display_name = "Derek Mitchell"
+jersey_number = 3
+role = "outfield"
+visual_base = "Shane base; individual likeness pending"
+starting_slot = "left_back"
+tactical_role = "fullback"
+starting_position = Vector2(-29, -23)
+appearance = SubResource("Appearance")
+attributes = SubResource("Attributes")

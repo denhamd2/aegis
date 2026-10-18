@@ -7,6 +7,7 @@ signal touched(kind: StringName, speed: float)
 
 const RADIUS := 0.11
 @export var tuning: FootballTuning
+@export var use_terrain := false
 var last_touch: StringName = &"none"
 var last_action: StringName = &"none"
 var action_serial := 0
@@ -37,7 +38,8 @@ func _physics_process(delta: float) -> void:
 		_release_goalkeeper_holder()
 	# Editable ground resistance. The PhysicsMaterial handles surface collision,
 	# bounce and contact friction; this small force prevents endless coasting.
-	if global_position.y <= RADIUS + 0.035:
+	var ground_height := PitchSurface.height_at(global_position.x,global_position.z) if use_terrain else 0.0
+	if global_position.y <= ground_height + RADIUS + 0.035:
 		var horizontal := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
 		if horizontal.length_squared() > 0.0025:
 			apply_central_force(-horizontal.normalized() * minf(
@@ -125,6 +127,39 @@ func tackle_touch(player: Node3D, direction: Vector3, speed: float) -> bool:
 	action_serial += 1
 	_dribble_cooldowns.clear()
 	touched.emit(&"tackle", speed)
+	return true
+
+func receive_touch(player: Node3D, contact_position: Vector3,
+		preferred_direction: Vector3) -> bool:
+	if not is_instance_valid(player) or last_action not in [&"pass", &"through_pass"]:
+		return false
+	var touch_team := StringName(player.get("team_name"))
+	if last_touch != touch_team or global_position.distance_to(contact_position) > 0.20 \
+			or global_position.y > RADIUS + 0.16:
+		return false
+	var incoming := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
+	if incoming.length() < 0.35:
+		return false
+	var actor_velocity := Vector3.ZERO
+	if player is CharacterBody3D:
+		actor_velocity = Vector3((player as CharacterBody3D).velocity.x, 0.0,
+			(player as CharacterBody3D).velocity.z)
+	var outlet := preferred_direction
+	if outlet.length_squared() > 0.01:
+		outlet = outlet.normalized() * 0.65
+	else:
+		outlet = Vector3.ZERO
+	# A first touch cushions the pass while preserving some travel and the
+	# player's intent. It changes velocity through an impulse; the ball stays
+	# independent and the animation marker never sets its position.
+	var target_velocity := (incoming * 0.28 + actor_velocity * 0.32 + outlet).limit_length(4.2)
+	target_velocity.y = clampf(linear_velocity.y * 0.12, -0.45, 0.25)
+	apply_central_impulse((target_velocity - linear_velocity) * mass)
+	last_touch = touch_team
+	last_action = &"first_touch"
+	action_serial += 1
+	_dribble_cooldowns.clear()
+	touched.emit(&"first_touch", target_velocity.length())
 	return true
 
 func goalkeeper_save(player: Node3D, direction: Vector3, speed: float, lift: float) -> bool:

@@ -10,40 +10,223 @@ const PASS_CLIP: StringName = &"AN_Beechlawn_PassRight"
 const PASS_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_pass_contact.json"
 const RECEIVE_CLIP: StringName = &"AN_Beechlawn_ReceiveRight"
 const RECEIVE_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_receive_contact.json"
+const STOP_CLIP: StringName = &"AN_Beechlawn_StopFromRun"
+const TURN_LEFT_CLIP: StringName = &"AN_Beechlawn_Turn90Left"
+const TURN_RIGHT_CLIP: StringName = &"AN_Beechlawn_Turn90Right"
+const SHOT_CLIP: StringName = &"AN_Beechlawn_ShotRight"
+const SLIDE_TACKLE_CLIP: StringName = &"AN_Beechlawn_GroundedSlideTackle"
+const GET_UP_CLIP: StringName = &"AN_Beechlawn_GetUpFromProne"
+const SHOT_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_shot_contact.json"
 
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_player: AnimationPlayer = $Rig/AnimationPlayer
-@onready var surface: MeshInstance3D = $Rig/YBot_Armature/Skeleton3D/YBot_Surface
-@onready var joints: MeshInstance3D = $Rig/YBot_Armature/Skeleton3D/YBot_Joints
-
-var _last_blend := -1.0
+var _blend_position := 0.0
 var _active_action: StringName = &""
 var _active_clip: StringName = &""
+var _action_contact_times: Dictionary = {}
+var _stop_latched := false
+var _close_control_blend := 0.0
+var _appearance_profile: FootballerProfile
+var _appearance_team: FootballTeam
+var _human_rig := false
+static var _kit_materials: Dictionary = {}
 
 
 func _ready() -> void:
+	_build_locomotion_tree()
 	animation_tree.active = true
 	animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
 	animation_player.animation_finished.connect(_on_animation_finished)
-	_install_action_contact_marker(PASS_CLIP, PASS_EVENT_METADATA)
-	_install_action_contact_marker(RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
+	_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
+	_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
+	_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
+	if _appearance_profile != null:
+		configure_appearance(_appearance_profile, _appearance_team)
 
 
-func play_pass() -> bool:
-	return _play_action(&"pass", PASS_CLIP)
+func configure_appearance(profile: FootballerProfile, team: FootballTeam = null) -> void:
+	_appearance_profile = profile
+	_appearance_team = team
+	if not is_node_ready():
+		return
+	if not _human_rig:
+		animation_tree.active = false
+		var old := get_node("Rig")
+		remove_child(old)
+		old.free()
+		var shared := load("res://assets/characters/shared/footballer_base.glb") as PackedScene
+		var rig := shared.instantiate() as Node3D
+		rig.name = "Rig"
+		rig.rotation.y = PI
+		add_child(rig)
+		animation_player = rig.get_node("AnimationPlayer") as AnimationPlayer
+		animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
+		animation_player.animation_finished.connect(_on_animation_finished)
+		_human_rig = true
+		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
+		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
+		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
+		animation_tree.active = true
+	var appearance := profile.appearance
+	if appearance == null:
+		appearance = FootballAppearance.new()
+	var short_sleeves := appearance.kit in ["bordeaux_outfield", "referee", "spectator"]
+	if appearance.kit.ends_with("keeper") and animation_player.has_animation(&"AN_Beechlawn_KeeperSet"):
+		animation_tree.tree_root = animation_tree.tree_root.duplicate(true)
+		var tree := animation_tree.tree_root as AnimationNodeBlendTree
+		var movement := tree.get_node("Locomotion") as AnimationNodeBlendSpace1D
+		var keeper_idle := AnimationNodeAnimation.new()
+		keeper_idle.animation = &"AN_Beechlawn_KeeperSet"
+		keeper_idle.loop_mode = Animation.LOOP_LINEAR
+		movement.set_blend_point_node(0,keeper_idle)
+	var kit_material := _shared_kit_material(appearance.kit)
+	for node in get_node("Rig").find_children("*", "MeshInstance3D", true, false):
+		var part := node as MeshInstance3D
+		if part.name == "YBot_Surface":
+			part.visible = not short_sleeves
+		elif part.name == "Kit_Shirt_ShortSleeve":
+			part.visible = short_sleeves
+		elif part.name == "Kit_shirt_BoundHems":
+			part.visible = not short_sleeves
+		if part.name == "Skin_Hands" and appearance.kit.ends_with("keeper"):
+			var glove := StandardMaterial3D.new()
+			glove.albedo_color = Color(0.78,0.76,0.58)
+			glove.roughness = 0.82
+			part.material_override = glove
+		for index in part.mesh.get_surface_count():
+			var material := part.mesh.surface_get_material(index)
+			if material != null and String(material.resource_name).begins_with("MAT_Beechlawn_HomeKit"):
+				part.set_surface_override_material(index, kit_material)
+		if part.name == "Skin_Head" and appearance.head_variant != null:
+			var variant := appearance.head_variant.instantiate()
+			var candidates := variant.find_children("Skin_Head", "MeshInstance3D", true, false)
+			if candidates.size() == 1:
+				part.mesh = (candidates[0] as MeshInstance3D).mesh
+			variant.free()
+		if part.name == "Skin_Head" and (appearance.head_albedo != null or appearance.skin_tint != Color.WHITE):
+			var skin := part.mesh.surface_get_material(0).duplicate() as StandardMaterial3D
+			if appearance.head_albedo != null:
+				skin.albedo_texture = appearance.head_albedo
+			skin.albedo_color = appearance.skin_tint
+			part.set_surface_override_material(0,skin)
+		if String(part.name).begins_with("Hair") and appearance.hair_variant != null:
+			var variant := appearance.hair_variant.instantiate()
+			var candidates := variant.find_children("*", "MeshInstance3D", true, false)
+			if candidates.size() == 1:
+				part.mesh = (candidates[0] as MeshInstance3D).mesh
+			variant.free()
+	var rig_node := get_node("Rig") as Node3D
+	rig_node.scale = Vector3(appearance.build_scale, appearance.height_scale, appearance.build_scale)
+	_add_back_print(profile, appearance)
 
 
-func play_receive() -> bool:
-	return _play_action(&"receive", RECEIVE_CLIP)
+static func _shared_kit_material(kit: String) -> StandardMaterial3D:
+	if _kit_materials.has(kit):
+		return _kit_materials[kit]
+	var material := StandardMaterial3D.new()
+	material.resource_name = "SharedKit_" + kit
+	material.albedo_texture = load("res://assets/characters/textures/shared/%s.png" % kit)
+	material.roughness = 0.86
+	material.normal_enabled = true
+	material.normal_texture = load("res://assets/characters/textures/beechlawn_home_knit_normal.png")
+	material.normal_scale = 0.22
+	_kit_materials[kit] = material
+	return material
 
 
-func _play_action(action: StringName, clip: StringName) -> bool:
-	if _active_action != &"" or not animation_player.has_animation(clip):
+func _add_back_print(profile: FootballerProfile, appearance: FootballAppearance) -> void:
+	if profile.jersey_number <= 0:
+		return
+	var skeletons := get_node("Rig").find_children("*", "Skeleton3D", true, false)
+	if skeletons.is_empty():
+		return
+	var skeleton := skeletons[0] as Skeleton3D
+	if skeleton.has_node("IdentityPrint"):
+		skeleton.get_node("IdentityPrint").free()
+	var bone := skeleton.find_bone("mixamorig_Spine2")
+	if bone < 0:
+		return
+	var attachment := BoneAttachment3D.new()
+	attachment.name = "IdentityPrint"
+	attachment.bone_name = skeleton.get_bone_name(bone)
+	skeleton.add_child(attachment)
+	for index in 2:
+		var label := Label3D.new()
+		label.name = "PlayerName" if index == 0 else "SquadNumber"
+		label.text = appearance.print_name if index == 0 else str(profile.jersey_number)
+		label.font_size = 48 if index == 0 else 140
+		label.pixel_size = 0.001 if index == 0 else 0.0016
+		label.outline_size = 0
+		label.modulate = Color(0.02, 0.03, 0.04) if appearance.kit == "bordeaux_outfield" else Color(0.94, 0.94, 0.92)
+		label.double_sided = false
+		attachment.add_child(label)
+		var height := 1.40 if index == 0 else 1.20
+		var desired := global_transform * Transform3D(Basis.IDENTITY, Vector3(0.0, height, 0.17))
+		label.transform = (skeleton.global_transform * skeleton.get_bone_global_rest(bone)).affine_inverse() * desired
+
+
+func play_pass(playback_speed: float = 1.0) -> bool:
+	# A buffered first-time pass must take priority over a receive settle.
+	return _play_action(&"pass", PASS_CLIP, playback_speed, true)
+
+
+func play_receive(playback_speed: float = 1.0) -> bool:
+	return _play_action(&"receive", RECEIVE_CLIP, playback_speed)
+
+func play_keeper_save() -> bool:
+	if not animation_player.has_animation(&"AN_Beechlawn_KeeperSave"):
 		return false
+	return _play_action(&"keeper_save",&"AN_Beechlawn_KeeperSave",1.0,true)
+
+
+func play_stop() -> bool:
+	return _play_action(&"stop", STOP_CLIP, 1.0)
+
+
+func play_turn(turn_right: bool) -> bool:
+	var clip := TURN_RIGHT_CLIP if turn_right else TURN_LEFT_CLIP
+	return _play_action(&"turn", clip, 1.0)
+
+
+func play_shot(playback_speed: float = 1.0) -> bool:
+	return _play_action(&"shot", SHOT_CLIP, playback_speed)
+
+
+func play_get_up() -> bool:
+	return _play_action(&"get_up", GET_UP_CLIP)
+
+
+func play_slide_tackle() -> bool:
+	if is_recovery_active():
+		return false
+	return _play_action(&"slide_tackle", SLIDE_TACKLE_CLIP, 1.0, false, true)
+
+
+func is_recovery_active() -> bool:
+	return _active_action == &"get_up"
+
+
+func action_contact_time(action: StringName) -> float:
+	return float(_action_contact_times.get(action, -1.0))
+
+
+func _play_action(action: StringName, clip: StringName, playback_speed: float = 1.0,
+		interrupt_receive: bool = false, interrupt_action: bool = false) -> bool:
+	if not animation_player.has_animation(clip):
+		return false
+	if _active_action != &"":
+		if not interrupt_action and (not interrupt_receive or _active_action != &"receive"):
+			return false
+		var interrupted_action := _active_action
+		animation_player.stop()
+		_active_action = &""
+		_active_clip = &""
+		animation_tree.active = true
+		action_finished.emit(interrupted_action)
 	_active_action = action
 	_active_clip = clip
 	animation_tree.active = false
-	animation_player.play(clip)
+	animation_player.play(clip, 0.08, playback_speed)
 	return true
 
 
@@ -52,17 +235,64 @@ func on_action_contact_marker() -> void:
 		action_contact.emit(_active_action)
 
 
-func set_locomotion_speed(speed_mps: float, sprinting: bool = false) -> void:
+func set_locomotion_speed(speed_mps: float, sprinting: bool = false,
+		braking: bool = false, close_control: bool = false,
+		delta: float = 1.0 / 60.0) -> void:
 	var locomotion := clampf(speed_mps / 6.0, 0.0, 1.0)
 	if sprinting:
 		locomotion = maxf(locomotion, 0.72)
-	if absf(locomotion - _last_blend) < 0.015:
+	_blend_position = lerpf(_blend_position, locomotion, 1.0 - exp(-10.0 * delta))
+	_close_control_blend = lerpf(_close_control_blend,
+		1.0 if close_control and speed_mps > 0.35 else 0.0,
+		1.0 - exp(-12.0 * delta))
+	if absf(float(animation_tree.get("parameters/Locomotion/blend_position")) - _blend_position) >= 0.005:
+		animation_tree.set("parameters/Locomotion/blend_position", _blend_position)
+	if absf(float(animation_tree.get("parameters/CloseControl/blend_amount")) - _close_control_blend) >= 0.005:
+		animation_tree.set("parameters/CloseControl/blend_amount", _close_control_blend)
+	if _active_action == &"stop" and not braking and speed_mps > 1.2:
+		animation_player.stop()
+		_active_action = &""
+		_active_clip = &""
+		animation_tree.active = true
+	if not braking:
+		_stop_latched = false
+	elif not _stop_latched and speed_mps > 0.8 and _active_action == &"":
+		_stop_latched = play_stop()
+
+
+func _build_locomotion_tree() -> void:
+	# Packed-scene instances may share the AnimationTree's generated root resource.
+	# Reuse it when a previous actor in the same scene already built the layers.
+	if animation_tree.tree_root is AnimationNodeBlendTree:
 		return
-	_last_blend = locomotion
-	animation_tree.set("parameters/blend_position", locomotion)
+	var source := animation_tree.tree_root as AnimationNodeBlendSpace1D
+	if source == null or source.get_blend_point_count() < 4:
+		push_error("Footballer visual requires idle, jog, sprint and close-control blend nodes")
+		return
+	var locomotion := AnimationNodeBlendSpace1D.new()
+	locomotion.min_space = source.min_space
+	locomotion.max_space = source.max_space
+	locomotion.blend_mode = source.blend_mode
+	for point_index in range(3):
+		locomotion.add_blend_point(source.get_blend_point_node(point_index),
+			source.get_blend_point_position(point_index))
+	var close_animation := source.get_blend_point_node(3) as AnimationNodeAnimation
+	var tree := AnimationNodeBlendTree.new()
+	tree.add_node("Locomotion", locomotion, Vector2(0, 0))
+	tree.add_node("CloseControlAnimation", close_animation, Vector2(0, 180))
+	tree.add_node("CloseControl", AnimationNodeBlend2.new(), Vector2(260, 80))
+	tree.connect_node("CloseControl", 0, "Locomotion")
+	tree.connect_node("CloseControl", 1, "CloseControlAnimation")
+	tree.connect_node("output", 0, "CloseControl")
+	animation_tree.tree_root = tree
 
 
 func set_team_color(team_color: Color) -> void:
+	var surface := get_node_or_null("Rig/YBot_Armature/Skeleton3D/YBot_Surface") as MeshInstance3D
+	var joints := get_node_or_null("Rig/YBot_Armature/Skeleton3D/YBot_Joints") as MeshInstance3D
+	if surface == null or joints == null:
+		push_warning("Y-Bot visual is missing its expected skinned body surfaces")
+		return
 	var body_material := StandardMaterial3D.new()
 	body_material.albedo_color = team_color
 	body_material.roughness = 0.78
@@ -77,13 +307,20 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != _active_clip or _active_action == &"":
 		return
 	var finished_action := _active_action
+	if finished_action == &"slide_tackle" and animation_player.has_animation(GET_UP_CLIP):
+		_active_action = &"get_up"
+		_active_clip = GET_UP_CLIP
+		animation_player.play(GET_UP_CLIP, 0.06, 1.0)
+		action_finished.emit(finished_action)
+		return
 	_active_action = &""
 	_active_clip = &""
 	animation_tree.active = true
 	action_finished.emit(finished_action)
 
 
-func _install_action_contact_marker(clip_name: StringName, metadata_path: String) -> void:
+func _install_action_contact_marker(action: StringName, clip_name: StringName,
+		metadata_path: String) -> void:
 	var library := animation_player.get_animation_library(&"")
 	if library == null or not library.has_animation(clip_name):
 		push_error("Y-Bot animation library is missing %s" % clip_name)
@@ -103,6 +340,7 @@ func _install_action_contact_marker(clip_name: StringName, metadata_path: String
 	if contact_time <= 0.0:
 		push_error("Invalid action contact frame/fps metadata for %s" % clip_name)
 		return
+	_action_contact_times[action] = contact_time
 	var clip := library.get_animation(clip_name).duplicate() as Animation
 	var marker_path := NodePath("..:on_action_contact_marker")
 	var legacy_marker_path := NodePath("..:on_pass_contact_marker")

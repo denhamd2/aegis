@@ -15,6 +15,10 @@ loop_mode = 1
 animation = "AN_Beechlawn_Sprint"
 loop_mode = 1
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_close_control"]
+animation = "AN_Beechlawn_CloseControl"
+loop_mode = 1
+
 [sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_locomotion"]
 blend_point_0/node = SubResource("AnimationNodeAnimation_idle")
 blend_point_0/pos = 0.0
@@ -22,6 +26,8 @@ blend_point_1/node = SubResource("AnimationNodeAnimation_jog")
 blend_point_1/pos = 0.55
 blend_point_2/node = SubResource("AnimationNodeAnimation_sprint")
 blend_point_2/pos = 1.0
+blend_point_3/node = SubResource("AnimationNodeAnimation_close_control")
+blend_point_3/pos = 0.28
 min_space = 0.0
 max_space = 1.0
 

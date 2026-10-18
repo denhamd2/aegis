@@ -36,6 +36,8 @@ on:
     # this workflow, sharing this concurrency group and this deploy job.
     branches:
       - main
+    paths:
+      - "game/**"
   workflow_dispatch:
 
 # GITHUB_TOKEN needs to mint an OIDC token for the Pages deployment.
@@ -44,14 +46,14 @@ permissions:
   pages: write
   id-token: write
 
-# Never let two deploys race; let a newer commit supersede an in-flight one.
+# Serialize wrestling and football Pages publishing to preserve both builds.
 # Scoped by ref as well as name: a bare "pages" group is what let a run on
 # another ref cancel the one on main, and it is also the name GitHub's own
 # Jekyll starter workflow uses, so an unscoped group collides with anything
 # added from the Pages settings screen.
 concurrency:
   group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -89,6 +91,18 @@ jobs:
               exit 1
             fi
           done
+
+      # Preserve the separately released football game on later wrestling deploys.
+      - name: Include latest Beechlawn Web release when available
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --limit 100 --json tagName --jq '[.[] | select(.tagName | startswith("beechlawn-"))][0].tagName // empty')
+          if [ -n "$tag" ]; then
+            mkdir -p build/web/beechlawn-rovers
+            gh release download "$tag" --pattern Beechlawn-Rovers-Web.zip --dir build/football-download
+            unzip -q build/football-download/Beechlawn-Rovers-Web.zip -d build/web/beechlawn-rovers
+          fi
 
       # Keep the build BEFORE anything that can fail on repo settings. The
       # first two runs of this workflow exported a perfectly good build and

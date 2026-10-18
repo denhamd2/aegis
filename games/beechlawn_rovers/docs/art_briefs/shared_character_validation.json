@@ -1,0 +1,61 @@
+{
+  "bones": 65,
+  "actions": [
+    "AN_Beechlawn_CloseControl",
+    "AN_Beechlawn_GetUpFromProne",
+    "AN_Beechlawn_GetUpFromSide",
+    "AN_Beechlawn_GroundedSlideTackle",
+    "AN_Beechlawn_Idle",
+    "AN_Beechlawn_Jog",
+    "AN_Beechlawn_KeeperSave",
+    "AN_Beechlawn_KeeperSet",
+    "AN_Beechlawn_PassRight",
+    "AN_Beechlawn_ReceiveRight",
+    "AN_Beechlawn_ShotRight",
+    "AN_Beechlawn_ShoulderImpactSell",
+    "AN_Beechlawn_SlideTackle",
+    "AN_Beechlawn_Sprint",
+    "AN_Beechlawn_StopFromRun",
+    "AN_Beechlawn_Turn90Left",
+    "AN_Beechlawn_Turn90Right"
+  ],
+  "triangles_all_variants": 67902,
+  "mesh_parts": 16,
+  "bytes": 11675648,
+  "parts": [
+    "Eye_l",
+    "Eye_r",
+    "Hair_Shane_ShortCropCards",
+    "Hair_Shane_ShortCropRoots",
+    "Kit_Boots",
+    "Kit_Shane_ContinuousVBinding",
+    "Kit_shirt_BoundHems",
+    "YBot_Surface.002",
+    "Kit_Shorts.001",
+    "Kit_Shorts_FoldedHems",
+    "Kit_Socks.001",
+    "Kit_socks_BoundHems",
+    "YBot_Joints.001",
+    "Skin_Head",
+    "YBot_Joints",
+    "YBot_Surface.001"
+  ],
+  "topology_sha256": "7f899a713458f82c50a7ce62ead430226e1c66581d9151140666037ccfaffce5",
+  "sculpt_delta_roundtrip": true,
+  "incompatible_topology_rejected": true,
+  "limits": "Includes both sleeve variants. Not an M1 timing result or likeness acceptance.",
+  "locomotion_arm_pose_checks": {
+    "AN_Beechlawn_Idle": {
+      "shoulder_to_elbow_drop_cm": 26.976
+    },
+    "AN_Beechlawn_Jog": {
+      "shoulder_to_elbow_drop_cm": 26.281
+    },
+    "AN_Beechlawn_Sprint": {
+      "shoulder_to_elbow_drop_cm": 26.366
+    },
+    "AN_Beechlawn_CloseControl": {
+      "shoulder_to_elbow_drop_cm": 26.264
+    }
+  }
+}

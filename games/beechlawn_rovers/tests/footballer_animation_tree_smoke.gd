@@ -19,11 +19,16 @@ func _run() -> void:
 	assert(is_equal_approx(absf(visual.get_node("Rig").rotation.y), PI),
 		"Y-Bot visual forward axis was not aligned to the player's attack direction")
 	assert(visual.animation_tree.active, "Locomotion AnimationTree is inactive")
-	assert(visual.animation_tree.tree_root is AnimationNodeBlendSpace1D, "Expected a one-dimensional locomotion blend space")
+	assert(visual.animation_tree.tree_root is AnimationNodeBlendTree, "Expected a layered locomotion blend tree")
 	var player := visual.get_node("Rig/AnimationPlayer") as AnimationPlayer
 	for clip_name in ["AN_Beechlawn_Idle", "AN_Beechlawn_Jog", "AN_Beechlawn_Sprint",
-			"AN_Beechlawn_PassRight", "AN_Beechlawn_ReceiveRight"]:
+			"AN_Beechlawn_PassRight", "AN_Beechlawn_ReceiveRight",
+			"AN_Beechlawn_StopFromRun", "AN_Beechlawn_Turn90Left",
+			"AN_Beechlawn_Turn90Right", "AN_Beechlawn_ShotRight",
+			"AN_Beechlawn_GroundedSlideTackle", "AN_Beechlawn_GetUpFromProne"]:
 		assert(player.has_animation(clip_name), "Missing shared Y-Bot clip: %s" % clip_name)
+	assert(absf(player.get_animation("AN_Beechlawn_GetUpFromProne").length - 0.9) < 0.02,
+		"Prone get-up clip duration changed from its 60 fps timing")
 	var previous_rig := (load(PREVIOUS_LIBRARY) as PackedScene).instantiate()
 	root.add_child(previous_rig)
 	var previous_player := previous_rig.get_node("AnimationPlayer") as AnimationPlayer
@@ -40,6 +45,13 @@ func _run() -> void:
 			return
 	var thigh_index := skeleton.find_bone("mixamorig_LeftUpLeg")
 	assert(thigh_index >= 0, "Could not locate Mixamo thigh bone")
+	var upper_arm_index := skeleton.find_bone("mixamorig_LeftArm")
+	assert(upper_arm_index >= 0, "Could not locate Mixamo upper-arm bone")
+	await process_frame
+	var idle_arm_pose := skeleton.get_bone_pose_rotation(upper_arm_index)
+	var idle_arm_rest := skeleton.get_bone_rest(upper_arm_index).basis.get_rotation_quaternion()
+	assert(idle_arm_pose.angle_to(idle_arm_rest) > 0.08,
+		"Relaxed idle arm animation did not override the imported T-pose")
 	await create_timer(0.15).timeout
 	var idle_rotation := skeleton.get_bone_pose_rotation(thigh_index)
 	visual.set_locomotion_speed(4.8, false)
@@ -47,6 +59,57 @@ func _run() -> void:
 	var jog_rotation := skeleton.get_bone_pose_rotation(thigh_index)
 	assert(idle_rotation.angle_to(jog_rotation) > 0.02, "AnimationTree did not drive a locomotion bone")
 	visual.set_locomotion_speed(6.0, true)
-	assert(is_equal_approx(visual.animation_tree.get("parameters/blend_position"), 1.0), "Sprint speed was not mapped to the blend space")
-	print("Beechlawn reusable Y-Bot visual: 65-bone aligned rig, preserved timing, pass/receive clips, active blend and bone playback verified")
+	for frame in 20:
+		visual.set_locomotion_speed(6.0, true)
+		await physics_frame
+	assert(float(visual.animation_tree.get("parameters/Locomotion/blend_position")) > 0.95,
+		"Sprint speed was not mapped to the blend space")
+	var tree := visual.animation_tree.tree_root as AnimationNodeBlendTree
+	var close_node := tree.get_node("CloseControlAnimation") as AnimationNodeAnimation
+	assert(close_node != null and close_node.animation == "AN_Beechlawn_CloseControl" and close_node.loop_mode == Animation.LOOP_LINEAR,
+		"Close-control clip is missing from the layered blend tree or is not looped")
+	visual.set_locomotion_speed(1.5, false, false, true)
+	for frame in 20:
+		visual.set_locomotion_speed(1.5, false, false, true)
+		await physics_frame
+	assert(float(visual.animation_tree.get("parameters/CloseControl/blend_amount")) > 0.95,
+		"Close-control input did not select the close-footwork loop")
+	visual.set_locomotion_speed(3.0, false, false, false)
+	for frame in 20:
+		visual.set_locomotion_speed(3.0, false, false, false)
+		await physics_frame
+	assert(float(visual.animation_tree.get("parameters/CloseControl/blend_amount")) < 0.05
+		and float(visual.animation_tree.get("parameters/Locomotion/blend_position")) > 0.4,
+		"Releasing close control did not smoothly return toward jogging")
+	visual.set_locomotion_speed(4.8, false)
+	visual.set_locomotion_speed(4.2, false, true)
+	assert(player.current_animation == "AN_Beechlawn_StopFromRun",
+		"Braking did not start the Blender-authored stop clip")
+	visual.set_locomotion_speed(3.2, false, false)
+	assert(visual.animation_tree.active and visual._active_action == &"",
+		"Resuming movement did not restore locomotion from the stop clip")
+	visual.set_locomotion_speed(4.2, false, true)
+	await create_timer(0.68).timeout
+	assert(visual.animation_tree.active and visual._active_action == &"",
+		"Stop clip did not settle back into the locomotion blend")
+	assert(visual.play_turn(true), "Right 90-degree turn clip did not start")
+	assert(player.current_animation == "AN_Beechlawn_Turn90Right",
+		"Right turn selected the wrong animation")
+	await create_timer(0.68).timeout
+	assert(visual.play_turn(false), "Left 90-degree turn clip did not start")
+	assert(player.current_animation == "AN_Beechlawn_Turn90Left",
+		"Left turn selected the wrong animation")
+	await create_timer(0.68).timeout
+	assert(visual.animation_tree.active and visual._active_action == &"",
+		"Turn clips did not return to locomotion")
+	assert(visual.play_slide_tackle(), "Grounded slide tackle did not start")
+	assert(player.current_animation == "AN_Beechlawn_GroundedSlideTackle",
+		"Grounded slide selected the wrong animation")
+	await create_timer(0.66).timeout
+	assert(visual._active_action == &"get_up" and player.current_animation == "AN_Beechlawn_GetUpFromProne",
+		"Grounded slide did not chain into its prone get-up action")
+	await create_timer(0.98).timeout
+	assert(visual.animation_tree.active and visual._active_action == &"",
+		"Grounded slide/get-up sequence did not complete and return to locomotion")
+	print("Beechlawn Y-Bot: locomotion, close-control loop, ball-action events, braking stop, mirrored turns, grounded slide-to-get-up playback and locomotion resume verified")
 	quit(0)

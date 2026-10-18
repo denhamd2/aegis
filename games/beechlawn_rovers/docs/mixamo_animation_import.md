@@ -17,10 +17,14 @@ Blender: `AN_Beechlawn_Idle`, `AN_Beechlawn_Jog`,
 proxy GLB is `assets/characters/mixamo/y_bot_animation_set.glb`. A reusable
 scene at `scenes/footballer_visual.tscn` blends idle, jog, and sprint with a
 one-dimensional AnimationTree. Import, blend-space, and playback checks pass.
-The clips remain blocking studies: rendered review showed they need more pose
-and foot-contact polish before replacing the match's primitive fallback.
-Horizontal movement, tackle contact, and ball response remain under Godot
-authority; only small vertical pelvis motion is animated in place.
+The clips remain blocking studies: they now drive the actual 4v4 actors, but
+still need pose and foot-contact polish. A separately callable prone get-up is
+now included; it is not triggered until a grounded/downed gameplay state is
+implemented. Review of the existing slide-tackle action found that it stays
+upright with arms spread, so it is not a suitable fall pose. The segmented Y-Bot body is only a
+rig/motion proxy, not a human footballer base. Horizontal movement, tackle
+contact, and ball response remain under Godot authority; only small vertical
+pelvis motion is animated in place.
 
 ## Original right-foot pass/contact study
 
@@ -38,11 +42,10 @@ review is available at [the contact sheet](images/y_bot_pass_contact_sheet.png).
 The Blender source also writes
 `assets/characters/mixamo/y_bot_pass_contact.json` from the frame-24 timeline
 marker. `FootballerVisual` adds that event as a Godot AnimationPlayer method
-track, and an optional `FootballerVisual` child on `FootballPlayer` defers the
-physical pass impulse until the event fires. Without that visual, the existing
-primitive-player path retains its immediate kick behavior. The event integration
-has a headless kickoff smoke test; it does not yet prove contact alignment on
-the final human mesh or replace the default match-scene blockout.
+track, and the match-scene `FootballerVisual` on each `FootballPlayer` defers
+the physical pass impulse until the event fires. The event test measures the
+actual match-scene toe within 5.7 cm of the ball at contact. It does not yet
+prove alignment on the final human mesh or boot.
 
 The kickoff test also samples `mixamorig_RightToe_End` from the evaluated Godot
 skeleton at the event frame and compares it with the live ball. That check found
@@ -67,14 +70,49 @@ clip; there is no runtime IK or root translation. The shared visual exposes
 
 The Godot receive contact smoke test places an incoming ball in front of the
 player and measures the evaluated `mixamorig_RightToe_End` at the event. The
-toe tip is 3.7 cm from the ball center, and the action completes with locomotion
-restored. The pose sheet shows the ready, contact, and recovery beats in
+toe tip is 12.3 cm from the ball center, roughly 1.3 cm beyond the 11 cm ball
+radius, and the action completes with locomotion restored. The pose sheet shows the ready, contact, and recovery beats in
 [the proxy render](images/y_bot_receive_pose_sheet.png). Reviewing its facing
 revealed Y-Bot's imported forward axis opposed the game actor's attack axis, so
 `footballer_visual.tscn` rotates the rig 180 degrees locally. Pass and receive
-contact tests now both use that same orientation; no player or ball gameplay
-logic was changed. The receive clip is available to gameplay but is not yet
-automatically selected when a player receives a pass.
+contact tests now both use that same orientation. The match controller now
+automatically starts the receive clip for an intended incoming pass and applies
+a short physical cushion at its marker; it does not attach or reposition the
+ball.
+
+## Braking and relaxed idle
+
+The imported Y-Bot idle action left its arms in the source T-pose. The repeatable
+script `tools/blender/author_football_stop.py` corrects the existing idle pose
+using temporary hand IK, then bakes the result into the shared 65-bone action.
+It also authors `AN_Beechlawn_StopFromRun`, a 36-frame/60 Hz braking clip with
+the support foot planted through its 0.233 s brake pose and a settle matching the
+relaxed idle. All constraints are removed before saving/export; Godot adds no
+runtime IK. `FootballerVisual` triggers the stop when movement intent releases
+while speed is above 0.8 m/s, and interrupts it if movement resumes above
+1.2 m/s. The animation-tree smoke test checks the relaxed idle arm, stop action,
+resume interruption, and return to locomotion. Blender pose sheets are in
+`docs/art_briefs/br003_idle_pose_sheet.png` and
+`docs/art_briefs/br003_stop_pose_sheet.png`. These remain proxy blocking poses;
+close review with the final human player mesh and the M1 game build is pending.
+
+## Prone recovery
+
+`tools/blender/author_football_getup.py` authors
+`AN_Beechlawn_GetUpFromProne` as a 55-frame/60 Hz (0.9 s) in-place transition.
+It starts with the chest and hands supported near the ground, shifts through a
+tucked knee and half-kneel, then drives back into a ready stance. Blender hand
+and foot IK is temporary and baked into the action; the armature object has no
+root motion. The proxy sequence is in
+[`the get-up pose sheet`](images/y_bot_getup_pose_sheet.png). Godot exposes
+`FootballerVisual.play_get_up()` and tests that the action returns to the
+locomotion tree. `AN_Beechlawn_GroundedSlideTackle` now settles on the same
+prone pose, and the visual driver chains into get-up automatically at the end
+of the committed slide clip. The slide window and ball-contact time remain
+owned by `FootballPlayer`; the in-place animations do not determine gameplay
+movement. The action pair is currently invoked by a valid slide tackle, while
+final-mesh ground contact and match-scene contact alignment remain to be
+verified.
 
 To rebuild the combined asset library from the original animation-set source,
 run `author_football_kick.py` first, then `author_football_receive.py`; the kick
@@ -84,8 +122,9 @@ The CMU take was used only as a timing/arc reference. A direct BVH retarget
 failed its pose review due to rest-pose and bone-axis mismatch, so no CMU-derived
 motion is included in the export. The pass and receive clips remain mannequin
 blocking studies, not final footballer animations. Godot event synchronization
-and AnimationTree resumption are verified for the proxy; contact alignment on
-the final human mesh and live 4v4 play validation are still outstanding.
+and AnimationTree resumption are verified on the proxy in the 4v4 scene; contact
+alignment on the final human mesh and a close visual review of match play remain
+outstanding.
 
 ## First clips to bring in
 
@@ -125,11 +164,15 @@ validated. Do not treat this raw capture as a drop-in game animation.
 1. Compare bone names, hierarchy, and rest pose against `y_bot_source.blend`.
 2. Reject clips with missing/renamed bones, unintended root translation, or
    large foot drift during an in-place cycle.
-3. Rename reviewed clips `AN_Idle`, `AN_Walk`, `AN_Jog`, and `AN_Run`; preserve
-   discrete pass and shot clips for future contact-marker hookup.
+3. Rename reviewed clips `AN_Idle`, `AN_Walk`, `AN_Jog`, and `AN_Run`; keep
+   discrete pass, receive, and shot clips separate from the locomotion blend.
 4. Export a GLB animation library and verify the imported AnimationPlayer,
    AnimationTree transitions, playback speed, and looping in Godot.
-5. Test one actor at the broadcast camera before replacing the match-scene
+5. For every ball-action clip, store an explicit Blender contact frame in a
+   sidecar manifest and apply ball impulses from a Godot animation event at
+   that frame. Validate toe-to-ball distance and one-shot impulse behavior in
+   the match scene.
+6. Test one actor at the broadcast camera before replacing the match-scene
    blockout; only then repeat the same rig for the first 4v4 slice.
 
 The Mixamo robot shell remains a rig/animation proxy. The visual target is a

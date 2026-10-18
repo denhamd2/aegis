@@ -81,6 +81,9 @@ func _run_checks() -> void:
 	ball.last_touch = defender.team_name
 	assert(home_player._attempt_slide_tackle(), "Human slide tackle did not commit at valid range")
 	assert(home_player._slide_tackle_time > 0.0, "Slide did not enter its committed movement window")
+	assert(is_instance_valid(home_player._footballer_visual)
+		and home_player._footballer_visual._active_action == &"slide_tackle",
+		"Committed human slide did not take over the player presentation action")
 	assert(home_player._resolve_slide_tackle_contact(), "Clean ball-first slide failed to win the ball")
 	assert(ball.last_touch == home_player.team_name, "Successful slide did not transfer ball touch")
 	assert(home_player.get_meta("last_tackle_result") == &"won", "Successful slide result was not recorded")

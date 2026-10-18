@@ -1,0 +1,95 @@
+{
+  "images": [
+    {
+      "name": "shane_head_detail_normal_1k",
+      "size": [
+        1024,
+        1024
+      ],
+      "rgba8_mib": 4.0
+    },
+    {
+      "name": "shane_head_anatomical_albedo_2k",
+      "size": [
+        2048,
+        2048
+      ],
+      "rgba8_mib": 16.0
+    },
+    {
+      "name": "shane_skin_micro_normal",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    },
+    {
+      "name": "shane_body_anatomical_albedo",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    },
+    {
+      "name": "beechlawn_home_knit_normal",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    },
+    {
+      "name": "beechlawn_home_tailored_2k_albedo",
+      "size": [
+        2048,
+        2048
+      ],
+      "rgba8_mib": 16.0
+    },
+    {
+      "name": "beechlawn_home_cloth_roughness",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    },
+    {
+      "name": "shane_brown_hazel_eyes_albedo",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    },
+    {
+      "name": "shane_crop_strand_normal",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    },
+    {
+      "name": "shane_short_crop_cards_rgba",
+      "size": [
+        512,
+        512
+      ],
+      "rgba8_mib": 1.0
+    }
+  ],
+  "estimated_rgba8_with_mips_mib": 57.33,
+  "file_bytes": 10978324,
+  "materials": [
+    "MAT_Skin_Shane_Baked",
+    "MAT_Skin_FairNatural",
+    "MAT_Beechlawn_HomeKit_Atlas",
+    "MAT_Boot_BlackLeather",
+    "MAT_Eye_OffWhite",
+    "MAT_Hair_ShortBrown"
+  ],
+  "assumption": "Conservative RGBA8 plus full mip chain, not measured GPU residency or imported compression."
+}

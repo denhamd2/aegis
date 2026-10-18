@@ -8,12 +8,17 @@ const GOAL_HEIGHT := 2.44
 const GOAL_DEPTH := 1.8
 const SECOND_PRESS_RANGE := 18.0
 @export_range(30.0, 600.0, 30.0) var short_match_seconds := 180.0
+@export var home_team_resource: FootballTeam = preload("res://data/teams/beechlawn_rovers.tres")
+@export var away_team_resource: FootballTeam = preload("res://data/teams/bordeaux.tres")
+@export var use_human_visual := false
+@export var referee_enabled := false
+@export var terrain_enabled := false
 
 @onready var ball: FootballBall = $Ball
 @onready var player: FootballPlayer = $Player
 @onready var camera_rig: Node3D = $BroadcastCamera
-@onready var score_label: Label = $HUD/Panel/Score
-@onready var clock_label: Label = $HUD/Panel/Clock
+@onready var score_label: Label = $HUD/Score
+@onready var clock_label: Label = $HUD/Clock
 @onready var message_label: Label = $HUD/Message
 @onready var power_bar: ProgressBar = $HUD/Power
 @onready var debug_label: Label = $HUD/Debug
@@ -39,15 +44,48 @@ var _transition_time_left := 0.0
 var _team_tactics := TeamTacticsController.new()
 const PlayerDecisionController = preload("res://scripts/player_decision_controller.gd")
 var _player_decisions = PlayerDecisionController.new()
+var _kit_material_cache: Dictionary = {}
+var _next_home_ai := true
+var _net_impacts: Dictionary = {}
+var _boundary_pending := false
+var _boundary_team: StringName = &"none"
+var _boundary_spot := Vector3.ZERO
+var _boundary_kind := ""
+var _capture_callback: JavaScriptObject
 
 func _ready() -> void:
+	if OS.has_feature("web") and OS.has_feature("debug"):
+		var software_capture = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")
+		if software_capture != null and str(software_capture)=="1":
+			$Sun.shadow_enabled=false
+			Engine.max_fps=8
+		_capture_callback=JavaScriptBridge.create_callback(_freeze_capture)
+		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME=_capture_callback
 	_remaining_time = short_match_seconds
-	_home_team = load("res://data/teams/beechlawn_rovers.tres") as FootballTeam
-	_away_team = load("res://data/teams/bordeaux.tres") as FootballTeam
+	_home_team = home_team_resource
+	_away_team = away_team_resource
+	for team in [_home_team, _away_team]:
+		var errors: PackedStringArray = team.validate_roster()
+		if not errors.is_empty():
+			push_error("Invalid match lineup: %s" % errors)
+			return
 	_assemble_teams()
 	build_pitch()
 	build_goals()
 	build_park_edge()
+	ball.use_terrain = terrain_enabled
+	if use_human_visual:
+		var radar := Control.new()
+		radar.set_script(load("res://scripts/tactical_radar.gd"))
+		radar.name = "TacticalRadar"
+		radar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		radar.position = Vector2(-112,-152)
+		radar.size = Vector2(224,132)
+		$HUD.add_child(radar)
+	if referee_enabled:
+		var official := load("res://scenes/referee.tscn").instantiate() as CharacterBody3D
+		official.name = "Referee"
+		add_child(official)
 	$Goals/PositiveEnd/GoalDetector.goal_scored.connect(_on_goal)
 	$Goals/NegativeEnd/GoalDetector.goal_scored.connect(_on_goal)
 	_setup_kickoff_positions(_kickoff_team)
@@ -57,17 +95,34 @@ func _ready() -> void:
 	_update_score()
 	_update_clock()
 	_set_message("KICK OFF  ·  E pass  /  Q through-ball")
+	if OS.has_feature("web"):
+		await RenderingServer.frame_post_draw
+		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_READY = true")
+	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size())
 
-func _process(delta: float) -> void:
+func _freeze_capture(_arguments: Array) -> void:
+	# Debug export only: hold actual scene state while browser reads the canvas.
+	get_tree().paused=true
+	Engine.max_fps=1
+
+func _physics_process(delta: float) -> void:
+	for entry in _net_impacts.values():
+		entry["age"] = minf(2.0,float(entry["age"])+delta)
+		(entry["material"] as ShaderMaterial).set_shader_parameter("impact_age",entry["age"])
 	if not _full_time:
 		if _goal_pause_timer > 0.0:
 			_goal_pause_timer = maxf(0.0, _goal_pause_timer - delta)
 			if _goal_pause_timer == 0.0:
-				_prepare_kickoff(_kickoff_team)
+				if _boundary_pending:
+					_resume_boundary_restart()
+				else:
+					_prepare_kickoff(_kickoff_team)
 		elif _kickoff_pending:
 			_update_kickoff_input(delta)
 		else:
 			_update_ai(delta)
+			if terrain_enabled:
+				_check_boundary_restart()
 			_remaining_time = maxf(0.0, _remaining_time - delta)
 			if _remaining_time <= 0.0:
 				_finish_match()
@@ -99,6 +154,9 @@ func _setup_kickoff_positions(kicking_team: StringName) -> void:
 	var kicking_players := _home_players if kicking_team == &"Beechlawn Rovers" else _away_players
 	var defending_players := _away_players if kicking_team == &"Beechlawn Rovers" else _home_players
 	var kickoff_sign := 1.0 if kicking_team == &"Beechlawn Rovers" else -1.0
+	if kicking_players.size() == 11:
+		_setup_full_kickoff(kicking_players, defending_players, kickoff_sign)
+		return
 	for actor in kicking_players:
 		actor.receive_target_time = 0.0
 		actor.velocity = Vector3.ZERO
@@ -131,6 +189,36 @@ func _setup_kickoff_positions(kicking_team: StringName) -> void:
 	ball.linear_velocity = Vector3.ZERO
 	ball.angular_velocity = Vector3.ZERO
 	ball.global_position = Vector3(0.0, FootballBall.RADIUS + 0.025, 0.0)
+	# Kickoff and goal restarts reposition physics-driven nodes directly. Clear
+	# interpolation history so the enabled render interpolation does not sweep
+	# players or the ball across the pitch between their old and new positions.
+	for actor in _home_players + _away_players:
+		actor.reset_physics_interpolation()
+	ball.reset_physics_interpolation()
+	ball.last_touch = &"none"
+
+func _setup_full_kickoff(kicking: Array[FootballPlayer], defending: Array[FootballPlayer], direction: float) -> void:
+	var taker := _kickoff_taker(kicking)
+	for actor in kicking + defending:
+		var local_position := actor.profile.starting_position
+		local_position.x = minf(local_position.x, -10.5) if defending.has(actor) else minf(local_position.x, -2.0)
+		if actor == taker:
+			local_position = Vector2(-0.65, 0.0)
+		elif kicking.has(actor) and actor.profile.tactical_role == "striker":
+			local_position = Vector2(-2.0, 4.0)
+		actor.position = Vector3(local_position.x * actor.attack_sign, 0.0, local_position.y)
+		actor.position.y = PitchSurface.height_at(actor.position.x, actor.position.z) + 0.015 if terrain_enabled else 0.0
+		actor.velocity = Vector3.ZERO
+		actor.receive_target_time = 0.0
+		actor.ai_move_direction = Vector3.ZERO
+		actor.ai_sprinting = false
+		actor.rotation.y = -PI * 0.5 * actor.attack_sign
+		actor.reset_physics_interpolation()
+	ball.freeze = true
+	ball.linear_velocity = Vector3.ZERO
+	ball.angular_velocity = Vector3.ZERO
+	ball.global_position = Vector3(0.0, FootballBall.RADIUS + 0.025, 0.0)
+	ball.reset_physics_interpolation()
 	ball.last_touch = &"none"
 
 func _prepare_kickoff(kicking_team: StringName) -> void:
@@ -149,8 +237,9 @@ func _prepare_kickoff(kicking_team: StringName) -> void:
 		_set_message("Bordeaux ready to kick off")
 
 func _kickoff_taker(team_players: Array[FootballPlayer]) -> FootballPlayer:
+	var slot := _home_team.kickoff_slot if team_players == _home_players else _away_team.kickoff_slot
 	for actor in team_players:
-		if actor.profile != null and actor.profile.role == "outfield" and actor.profile.starting_slot == "center":
+		if actor.profile != null and actor.profile.role == "outfield" and actor.profile.starting_slot == slot:
 			return actor
 	return _nearest_outfielder(team_players, Vector2.ZERO)
 
@@ -182,6 +271,8 @@ func _start_kickoff(through: bool) -> void:
 	if taker.controlled_by_human and (Input.is_action_pressed("pass") or Input.is_action_pressed("through_pass")):
 		taker.consume_pass_input_until_released()
 	_set_message("KICK OFF")
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_STARTED = true")
 
 func _set_players_physics_enabled(enabled: bool) -> void:
 	for actor in _home_players + _away_players:
@@ -191,6 +282,10 @@ func _set_controlled_player(next_player: FootballPlayer) -> void:
 	if next_player == null or next_player == player:
 		return
 	var old_player := player
+	if old_player.status_changed.is_connected(_set_message):
+		old_player.status_changed.disconnect(_set_message)
+	if old_player.shot_charge_changed.is_connected(_set_power):
+		old_player.shot_charge_changed.disconnect(_set_power)
 	old_player.controlled_by_human = false
 	player = next_player
 	player.controlled_by_human = true
@@ -206,7 +301,7 @@ func _assemble_teams() -> void:
 	if _home_team == null or _away_team == null:
 		push_error("Could not load Beechlawn team resources")
 		return
-	var home_control_profile := _profile_for_slot(_home_team, "center")
+	var home_control_profile := _profile_for_slot(_home_team, _home_team.kickoff_slot)
 	_configure_player(player, home_control_profile, _home_team, 1.0, true)
 	_home_players.append(player)
 	for profile in _home_team.roster:
@@ -246,23 +341,156 @@ func _configure_player(actor: FootballPlayer, profile: FootballerProfile,
 	actor.ai_sprinting = false
 	actor.position = Vector3(profile.starting_position.x * direction, 0.0, profile.starting_position.y)
 	actor.rotation.y = -PI * 0.5 * direction
+	if use_human_visual and profile.appearance != null:
+		var collision := actor.get_node("CollisionShape3D") as CollisionShape3D
+		var capsule := collision.shape.duplicate() as CapsuleShape3D
+		capsule.height = 1.82 * profile.appearance.height_scale
+		capsule.radius = 0.32 * profile.appearance.build_scale
+		collision.shape = capsule
+		collision.position.y = capsule.height * 0.5
 	var visual := actor.get_node_or_null("Visual") as Node3D
 	if visual == null:
 		return
-	var shirt_color := team.goalkeeper_kit_color if profile.role == "goalkeeper" else team.primary_kit_color
-	for node_path in ["Torso", "LeftArm", "RightArm"]:
-		var mesh := visual.get_node_or_null(node_path) as MeshInstance3D
-		if mesh:
-			var material := StandardMaterial3D.new()
-			material.albedo_color = shirt_color
-			material.roughness = 0.82
-			mesh.material_override = material
+	if visual is FootballerVisual:
+		if use_human_visual:
+			(visual as FootballerVisual).configure_appearance(profile, team)
+			if profile.role == "goalkeeper":
+				_add_keeper_glove(visual, "Left")
+				_add_keeper_glove(visual, "Right")
+		else:
+			var kit_color := team.goalkeeper_kit_color if profile.role == "goalkeeper" else team.primary_kit_color
+			(visual as FootballerVisual).set_team_color(kit_color)
+	else:
+		_apply_reference_kit(visual, profile, team)
 	var number_label := visual.get_node_or_null("Number8") as Label3D
 	if number_label:
 		number_label.text = str(profile.jersey_number) if profile.jersey_number > 0 else ""
 		number_label.visible = profile.jersey_number > 0
 		if direction < 0.0:
 			number_label.rotation.y = 0.0
+
+func _apply_reference_kit(visual: Node3D, profile: FootballerProfile,
+		team: FootballTeam) -> void:
+	var is_keeper := profile.role == "goalkeeper"
+	var is_beechlawn := team.team_id == &"beechlawn_rovers"
+	var kit_key := "%s_%s" % [String(team.team_id), "keeper" if is_keeper else "outfield"]
+	var jersey := _kit_material_cache.get(kit_key) as ShaderMaterial
+	if jersey == null:
+		jersey = ShaderMaterial.new()
+		jersey.shader = Shader.new()
+		jersey.shader.code = """
+	shader_type spatial;
+	uniform vec4 base_tint : source_color = vec4(0.04, 0.04, 0.05, 1.0);
+	uniform vec4 accent_tint : source_color = vec4(0.10, 0.34, 0.78, 1.0);
+	uniform int pattern = 0;
+	void fragment() {
+		vec2 uv = UV;
+		float stripe = step(0.5, fract(uv.x * 8.0));
+		float keeper_graphic = step(0.66, fract(uv.x * 4.0 + uv.y * 2.2));
+		vec3 color = base_tint.rgb;
+		if (pattern == 0) { color = mix(base_tint.rgb, accent_tint.rgb, stripe); }
+		if (pattern == 1) { color = mix(base_tint.rgb, accent_tint.rgb, step(0.84, uv.y)); }
+		if (pattern == 2) { color = mix(base_tint.rgb, accent_tint.rgb, keeper_graphic * step(0.12, uv.y) * step(uv.y, 0.88)); }
+		ALBEDO = color;
+		ROUGHNESS = 0.84;
+	}
+	"""
+		var pattern := 0
+		var base_color := Color(0.035, 0.035, 0.045)
+		var accent_color := Color(0.08, 0.31, 0.78)
+		if is_beechlawn and is_keeper:
+			pattern = 2
+			base_color = Color(0.77, 0.79, 0.83)
+			accent_color = Color(0.08, 0.27, 0.68)
+		elif is_beechlawn:
+			pattern = 0
+		elif is_keeper:
+			pattern = 2
+			base_color = Color(0.10, 0.11, 0.13)
+			accent_color = Color(0.34, 0.37, 0.40)
+		else:
+			pattern = 1
+			base_color = Color(0.27, 0.59, 0.83)
+			accent_color = Color(0.08, 0.17, 0.29)
+		jersey.set_shader_parameter("base_tint", base_color)
+		jersey.set_shader_parameter("accent_tint", accent_color)
+		jersey.set_shader_parameter("pattern", pattern)
+		_kit_material_cache[kit_key] = jersey
+	for node_path in ["Torso", "LeftArm", "RightArm"]:
+		var mesh := visual.get_node_or_null(node_path) as MeshInstance3D
+		if mesh:
+			mesh.material_override = jersey
+	var socks := _mat(Color(0.06, 0.28, 0.78) if is_beechlawn and not is_keeper else
+		Color(0.88, 0.89, 0.84), 0.9)
+	if is_keeper and is_beechlawn:
+		socks.albedo_color = Color(0.88, 0.89, 0.84)
+	for side in ["Left", "Right"]:
+		var shin_name := "Sock%s" % side
+		var shin := visual.get_node_or_null(shin_name) as MeshInstance3D
+		if shin == null:
+			shin = MeshInstance3D.new()
+			shin.name = shin_name
+			var sock_mesh := CapsuleMesh.new()
+			sock_mesh.radius = 0.105
+			sock_mesh.height = 0.56
+			shin.mesh = sock_mesh
+			shin.position = Vector3(-0.16 if side == "Left" else 0.16, 0.29, 0.0)
+			visual.add_child(shin)
+		shin.material_override = socks
+	_add_kit_label(visual, "SponsorFront", "THOMAS LOOMES\n& CO" if is_beechlawn else "Boards.ie",
+		Vector3(0.0, 1.28, -0.333), 0.0020,
+		Color.WHITE if is_beechlawn or is_keeper else Color(0.025, 0.035, 0.045))
+	_add_kit_label(visual, "CrestMark", "BR" if is_beechlawn else "B",
+		Vector3(-0.20, 1.48, -0.335), 0.00155,
+		Color(0.9, 0.95, 1.0) if is_beechlawn else Color(0.04, 0.10, 0.18))
+	if is_keeper:
+		_add_keeper_glove(visual, "Left")
+		_add_keeper_glove(visual, "Right")
+		var hair := visual.get_node_or_null("Hair") as MeshInstance3D
+		if hair:
+			hair.material_override = _mat(Color(0.40, 0.19, 0.09) if is_beechlawn else Color(0.16, 0.12, 0.10), 0.84)
+	var head := visual.get_node_or_null("Head") as MeshInstance3D
+	if head:
+		var skin := _mat(Color(0.73, 0.55, 0.43), 0.68)
+		skin.subsurf_scatter_enabled = true
+		skin.subsurf_scatter_strength = 0.08
+		head.material_override = skin
+
+func _add_kit_label(visual: Node3D, node_name: String, label_text: String,
+		at: Vector3, pixel_size: float, color: Color) -> void:
+	var label := visual.get_node_or_null(node_name) as Label3D
+	if label == null:
+		label = Label3D.new()
+		label.name = node_name
+		label.font_size = 22
+		label.pixel_size = pixel_size
+		label.outline_size = 2
+		label.outline_modulate = Color(0.02, 0.025, 0.03, 1.0)
+		label.position = at
+		visual.add_child(label)
+	label.text = label_text
+	label.modulate = color
+
+func _add_keeper_glove(visual: Node3D, side: String) -> void:
+	if use_human_visual:
+		# The human asset's skinned hand part uses the keeper glove material;
+		# fixed decorative spheres belong only to the older primitive fixture.
+		return
+	var glove_name := "KeeperGlove%s" % side
+	var glove := visual.get_node_or_null(glove_name) as MeshInstance3D
+	if glove == null:
+		glove = MeshInstance3D.new()
+		glove.name = glove_name
+		var shape := SphereMesh.new()
+		shape.radius = 0.115
+		shape.height = 0.22
+		glove.mesh = shape
+		glove.scale = Vector3(0.82, 1.0, 0.62)
+		glove.position = Vector3(-0.44 if side == "Left" else 0.44, 1.0, 0.0)
+		visual.add_child(glove)
+	var material := _mat(Color(0.86, 0.82, 0.66), 0.68)
+	material.metallic = 0.0
+	glove.material_override = material
 
 func _create_control_marker(actor: FootballPlayer, enabled: bool) -> void:
 	var marker := MeshInstance3D.new()
@@ -293,22 +521,12 @@ func _bind_controlled_player() -> void:
 func _cycle_controlled_player() -> void:
 	var outfield: Array[FootballPlayer] = []
 	for teammate in _home_players:
-		if teammate.profile != null and teammate.profile.role == "outfield":
+		if teammate.profile != null and (teammate.profile.role == "outfield" or _home_players.size() == 11):
 			outfield.append(teammate)
 	if outfield.size() < 2:
 		return
-	var old_player := player
 	_home_control_index = (outfield.find(player) + 1) % outfield.size()
-	player.controlled_by_human = false
-	player = outfield[_home_control_index]
-	player.controlled_by_human = true
-	player.ai_move_direction = Vector3.ZERO
-	player.ai_sprinting = false
-	_set_power(0.0)
-	_set_marker_visibility(old_player, false)
-	_set_marker_visibility(player, true)
-	camera_rig.set("player", player)
-	_bind_controlled_player()
+	_set_controlled_player(outfield[_home_control_index])
 	_set_message("Selected %s  ·  %d" % [player.profile.display_name, player.profile.jersey_number])
 
 func _set_marker_visibility(actor: FootballPlayer, enabled: bool) -> void:
@@ -329,6 +547,16 @@ func _update_ai(delta: float) -> void:
 	if _home_players.is_empty() or _away_players.is_empty():
 		return
 	var ball_position := Vector2(ball.global_position.x, ball.global_position.z)
+	if _home_players.size() == 11:
+		# Each team receives a 5 Hz decision budget on alternate physics ticks.
+		_ai_tick = 0.10
+		var actors := _home_players if _next_home_ai else _away_players
+		var opposition := _away_players if _next_home_ai else _home_players
+		var intercept := _best_interception_position(actors,ball_position)
+		_update_team_ai(actors,_nearest_outfielder(actors,intercept),ball_position,intercept,
+			opposition,_transition_team,_transition_time_left)
+		_next_home_ai = not _next_home_ai
+		return
 	var home_intercept := _best_interception_position(_home_players, ball_position)
 	var away_intercept := _best_interception_position(_away_players, ball_position)
 	var home_chaser := _nearest_outfielder(_home_players, home_intercept)
@@ -419,6 +647,9 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 		&"through_pass":
 			carrier._do_pass(true, action.get("direction", Vector3.RIGHT))
 			carrier.ai_action_cooldown = 0.85
+		&"short_pass":
+			carrier._do_pass(false,action.get("direction",Vector3.RIGHT))
+			carrier.ai_action_cooldown=0.85
 
 func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions: Dictionary) -> void:
 	for actor in team_players:
@@ -430,6 +661,16 @@ func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions
 		var target: Vector2 = decision["target"]
 		var offset := target - Vector2(actor.global_position.x, actor.global_position.z)
 		var direction := Vector3(offset.x, 0.0, offset.y)
+		if team_players.size() == 11:
+			var separation := Vector3.ZERO
+			for neighbour in team_players:
+				if neighbour == actor:
+					continue
+				var apart := actor.global_position-neighbour.global_position
+				apart.y = 0.0
+				if apart.length_squared() > 0.001 and apart.length_squared() < 3.24:
+					separation += apart.normalized()*(1.8-apart.length())
+			direction = direction.normalized()+separation.limit_length(0.7) if offset.length()>0.9 else separation
 		actor.ai_move_direction = direction.normalized() if offset.length() > 0.9 else Vector3.ZERO
 		actor.ai_sprinting = offset.length() > 7.0
 		actor.set_meta("ai_target_position", Vector3(target.x, 0.0, target.y))
@@ -503,6 +744,11 @@ func _on_goal(team_name: String, _side: int) -> void:
 		_away_score += 1
 	_update_score()
 	_set_message("GOAL  ·  %s" % team_name)
+	_boundary_pending = false
+	if _net_impacts.has(_side):
+		var impact: Dictionary = _net_impacts[_side]
+		impact["age"] = 0.0
+		(impact["material"] as ShaderMaterial).set_shader_parameter("impact_point",(impact["mesh"] as Node3D).to_local(ball.global_position))
 	_kickoff_team = &"Bordeaux" if team_name == "Beechlawn Rovers" else &"Beechlawn Rovers"
 	_kickoff_pending = false
 	_goal_pause_timer = 1.1
@@ -525,6 +771,57 @@ func _finish_match() -> void:
 	for actor in _home_players + _away_players:
 		actor.set_physics_process(false)
 	_set_message("FULL TIME")
+
+func _check_boundary_restart() -> void:
+	var p := ball.global_position
+	var end_out := absf(p.x)>52.5+FootballBall.RADIUS
+	var side_out := absf(p.z)>34.0+FootballBall.RADIUS
+	if not end_out and not side_out:
+		return
+	# Leave mouth crossings to GoalDetector's swept whole-ball test.
+	if end_out and absf(p.z)+FootballBall.RADIUS<=GOAL_WIDTH*0.5 and p.y+FootballBall.RADIUS<=GOAL_HEIGHT:
+		return
+	_boundary_team = &"Bordeaux" if ball.last_touch==&"Beechlawn Rovers" else &"Beechlawn Rovers"
+	_boundary_spot = Vector3(clampf(p.x,-51.0,51.0),0,signf(p.z)*33.6)
+	_boundary_kind = "TOUCHLINE RESTART"
+	if end_out:
+		var attacking: StringName = &"Beechlawn Rovers" if p.x>0 else &"Bordeaux"
+		var defending: StringName = &"Bordeaux" if p.x>0 else &"Beechlawn Rovers"
+		if ball.last_touch==defending:
+			_boundary_team=attacking
+			_boundary_spot=Vector3(signf(p.x)*51.9,0,33.6 if p.z>=0 else -33.6)
+			_boundary_kind="CORNER RESTART"
+		else:
+			_boundary_team=defending
+			_boundary_spot=Vector3(signf(p.x)*47.0,0,0)
+			_boundary_kind="GOAL KICK"
+	_boundary_pending=true
+	_goal_pause_timer=0.7
+	ball.freeze=true
+	ball.linear_velocity=Vector3.ZERO
+	ball.angular_velocity=Vector3.ZERO
+	_set_players_physics_enabled(false)
+	_set_message(_boundary_kind)
+
+func _resume_boundary_restart() -> void:
+	_boundary_pending=false
+	var team := _home_players if _boundary_team==&"Beechlawn Rovers" else _away_players
+	var taker := _nearest_outfielder(team,Vector2(_boundary_spot.x,_boundary_spot.z))
+	if _boundary_kind=="GOAL KICK":
+		taker=team[0]
+	_boundary_spot.y=PitchSurface.height_at(_boundary_spot.x,_boundary_spot.z)+FootballBall.RADIUS+0.02
+	ball.global_position=_boundary_spot
+	ball.reset_physics_interpolation()
+	var inward := Vector3(taker.attack_sign,0,-signf(_boundary_spot.z)*0.6).normalized()
+	taker.global_position=_boundary_spot-inward*0.5
+	taker.global_position.y=PitchSurface.height_at(taker.global_position.x,taker.global_position.z)+0.01
+	taker.velocity=Vector3.ZERO
+	taker.reset_physics_interpolation()
+	ball.last_touch=_boundary_team
+	ball.freeze=false
+	_set_players_physics_enabled(true)
+	taker._do_pass(false,inward)
+	_set_message(_boundary_kind+" · "+String(_boundary_team))
 
 func _update_score() -> void:
 	score_label.text = "BEECHLAWN ROVERS   %d     %d   BORDEAUX" % [_home_score, _away_score]
@@ -564,12 +861,26 @@ func _box(parent: Node3D, name: String, size: Vector3, at: Vector3,
 	return instance
 
 func _add_line_segment(tool: SurfaceTool, a: Vector2, b: Vector2, width: float) -> void:
+	if terrain_enabled and a.distance_to(b)>0.85:
+		var steps := ceili(a.distance_to(b)/0.8)
+		for index in steps:
+			_add_line_segment(tool,a.lerp(b,float(index)/steps),a.lerp(b,float(index+1)/steps),width)
+		return
 	var direction := (b - a).normalized()
 	var normal := Vector2(-direction.y, direction.x) * width * 0.5
+	if terrain_enabled:
+		a += normal.normalized()*sin(a.x*2.3+a.y*1.7)*0.009
+		b += normal.normalized()*sin(b.x*2.3+b.y*1.7)*0.009
+		normal *= 0.91+0.13*sin((a.x+a.y)*4.1)
 	var a1 := Vector3(a.x + normal.x, 0.014, a.y + normal.y)
 	var a2 := Vector3(a.x - normal.x, 0.014, a.y - normal.y)
 	var b1 := Vector3(b.x - normal.x, 0.014, b.y - normal.y)
 	var b2 := Vector3(b.x + normal.x, 0.014, b.y + normal.y)
+	if terrain_enabled:
+		a1.y = PitchSurface.height_at(a1.x,a1.z)+0.008
+		a2.y = PitchSurface.height_at(a2.x,a2.z)+0.008
+		b1.y = PitchSurface.height_at(b1.x,b1.z)+0.008
+		b2.y = PitchSurface.height_at(b2.x,b2.z)+0.008
 	tool.add_vertex(a1)
 	tool.add_vertex(a2)
 	tool.add_vertex(b1)
@@ -615,6 +926,8 @@ func build_pitch() -> void:
 	grass.shader = turf_shader
 	grass.set_shader_parameter("field_length", FIELD_LENGTH)
 	grass.set_shader_parameter("field_width", FIELD_WIDTH)
+	grass.set_shader_parameter("grass_albedo",
+		load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Color.jpg"))
 	var pitch := MeshInstance3D.new()
 	pitch.name = "SundayLeagueTurf"
 	var plane := PlaneMesh.new()
@@ -622,13 +935,21 @@ func build_pitch() -> void:
 	plane.subdivide_width = 6
 	plane.subdivide_depth = 4
 	pitch.mesh = plane
+	if terrain_enabled:
+		pitch.mesh = PitchSurface.make_mesh()
 	pitch.material_override = grass
 	pitch.position.y = -0.06
+	if terrain_enabled:
+		pitch.position.y = 0.0
 	$Pitch.add_child(pitch)
 	var lines := MeshInstance3D.new()
 	lines.name = "FadedChalk"
 	lines.mesh = _build_line_mesh()
-	lines.material_override = _mat(Color(0.82, 0.82, 0.72, 0.84))
+	lines.material_override = _mat(Color(0.72, 0.72, 0.64, 0.78))
+	if terrain_enabled:
+		var paint := ShaderMaterial.new()
+		paint.shader = load("res://shaders/chalk_paint.gdshader")
+		lines.material_override = paint
 	$Pitch.add_child(lines)
 	var ground := StaticBody3D.new()
 	ground.name = "PitchCollision"
@@ -637,6 +958,9 @@ func build_pitch() -> void:
 	box_shape.size = Vector3(FIELD_LENGTH+6.0,0.15,FIELD_WIDTH+6.0)
 	shape.shape = box_shape
 	shape.position.y = -0.14
+	if terrain_enabled:
+		shape.shape = PitchSurface.make_collision()
+		shape.position.y = 0.0
 	ground.add_child(shape)
 	$Pitch.add_child(ground)
 
@@ -650,12 +974,22 @@ func _build_goal(goal_name: String, end_sign: float) -> void:
 	root.position.x = end_sign * FIELD_LENGTH * 0.5
 	root.rotation.y = 0.0 if end_sign > 0.0 else PI
 	$Goals.add_child(root)
-	var goal_asset := load("res://assets/environment/football_goal.glb") as PackedScene
+	var goal_path := "res://assets/environment/kilmore/park_goal.glb" if terrain_enabled else "res://assets/environment/football_goal.glb"
+	var goal_asset := load(goal_path) as PackedScene
 	if goal_asset:
 		var visual := goal_asset.instantiate() as Node3D
 		visual.name = "BlenderGoalModel"
-		visual.rotation.y = PI * 0.5 * end_sign
+		visual.rotation.y = -PI * 0.5 if terrain_enabled else PI * 0.5 * end_sign
 		root.add_child(visual)
+		if terrain_enabled:
+			for node in visual.find_children("SaggingNet", "MeshInstance3D", true, false):
+				var net := node as MeshInstance3D
+				var original := net.mesh.surface_get_material(0) as StandardMaterial3D
+				var net_material := ShaderMaterial.new()
+				net_material.shader=load("res://shaders/goal_net.gdshader")
+				net_material.set_shader_parameter("net_texture",original.albedo_texture)
+				net.material_override=net_material
+				_net_impacts[int(end_sign)]={"mesh":net,"material":net_material,"age":2.0}
 	var frame := StaticBody3D.new()
 	frame.name = "FrameCollision"
 	root.add_child(frame)
@@ -683,34 +1017,4 @@ func _add_goal_collider(body: StaticBody3D, at: Vector3, size: Vector3) -> void:
 	body.add_child(collision)
 
 func build_park_edge() -> void:
-	var fence_material := _mat(Color(0.24,0.28,0.24),0.95)
-	var house_materials := [_mat(Color(0.60,0.48,0.37)),_mat(Color(0.72,0.68,0.57)),_mat(Color(0.54,0.59,0.55))]
-	for side in [-1.0,1.0]:
-		var fence := _box($ParkEdge,"BoundaryWall_%s" % side,Vector3(FIELD_LENGTH+8,.8,.22),Vector3(0,.4,side*39.0),fence_material)
-		for index in 9:
-			var house := Node3D.new()
-			house.name = "House_%s_%02d" % [side,index]
-			house.position = Vector3(-46.0+index*11.5,0,side*(47.0+(index%3)*2.0))
-			house.rotation.y = PI if side < 0.0 else 0.0
-			$ParkEdge.add_child(house)
-			_box(house,"Facade",Vector3(8.6,4.2,5.0),Vector3(0,2.1,0),house_materials[index%house_materials.size()])
-			_box(house,"Roof",Vector3(9.0,.42,5.8),Vector3(0,4.4,0),_mat(Color(0.28,0.24,0.22)))
-			for window_side in [-1.0,1.0]:
-				_box(house,"Window",Vector3(1.05,1.1,.08),Vector3(window_side*2.5,2.6,-2.55),_mat(Color(.14,.23,.27),.32))
-			_box(house,"FrontDoor",Vector3(.95,2.05,.12),Vector3(0,1.02,-2.57),_mat(Color(.26,.20,.16)))
-	# Primitive vegetation and architecture stay instanced and unshadowed where
-	# possible; the park edge is a distant backdrop, not a foreground set.
-	for side in [-1.0,1.0]:
-		for index in 11:
-			var tree := Node3D.new()
-			tree.position = Vector3(-50.0+index*10.0,0,side*(42.0+(index%2)*2.5))
-			$ParkEdge.add_child(tree)
-			_box(tree,"Trunk",Vector3(.42,4.0,.42),Vector3(0,2,0),_mat(Color(.25,.19,.13)))
-			var crown := MeshInstance3D.new()
-			var crown_mesh := SphereMesh.new()
-			crown_mesh.radius = 2.4
-			crown_mesh.height = 4.8
-			crown.mesh = crown_mesh
-			crown.position.y = 5.2
-			crown.material_override = _mat(Color(.15,.27,.16))
-			tree.add_child(crown)
+	KilmoreDriveVenue.build($ParkEdge, FIELD_LENGTH, FIELD_WIDTH, use_human_visual)

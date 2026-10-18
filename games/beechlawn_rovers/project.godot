@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Beechlawn Rovers"
 config/description="A Sunday-league football game, developed as a separate project from Aegis."
-run/main_scene="res://scenes/training_ground.tscn"
+run/main_scene="res://scenes/match_11v11.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
 [autoload]

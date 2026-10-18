@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FootballTeam" load_steps=13 format=3]
+[ext_resource type="Script" path="res://scripts/data/football_team.gd" id="1"]
+[ext_resource type="Resource" path="res://data/squads/away_01.tres" id="2"]
+[ext_resource type="Resource" path="res://data/squads/away_02.tres" id="3"]
+[ext_resource type="Resource" path="res://data/squads/away_03.tres" id="4"]
+[ext_resource type="Resource" path="res://data/squads/away_04.tres" id="5"]
+[ext_resource type="Resource" path="res://data/squads/away_05.tres" id="6"]
+[ext_resource type="Resource" path="res://data/squads/away_06.tres" id="7"]
+[ext_resource type="Resource" path="res://data/squads/away_07.tres" id="8"]
+[ext_resource type="Resource" path="res://data/squads/away_08.tres" id="9"]
+[ext_resource type="Resource" path="res://data/squads/away_09.tres" id="10"]
+[ext_resource type="Resource" path="res://data/squads/away_10.tres" id="11"]
+[ext_resource type="Resource" path="res://data/squads/away_11.tres" id="12"]
+
+[resource]
+script = ExtResource("1")
+team_id = &"bordeaux"
+display_name = "Bordeaux"
+primary_kit_color = Color(0.30, 0.61, 0.82, 1)
+formation = "4-4-2"
+kickoff_slot = "striker_left"
+active_player_count = 11
+roster = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12")])

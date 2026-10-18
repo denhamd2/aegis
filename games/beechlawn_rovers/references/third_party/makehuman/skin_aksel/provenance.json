@@ -1,0 +1,21 @@
+{
+  "author": "Mindfront",
+  "asset": "Aksel skin",
+  "license": "CC0",
+  "license_evidence": "https://static.makehumancommunity.org/assets/assetpacks/skins02.html",
+  "archive_url": "https://files.makehumancommunity.org/asset_packs/skins02/skins02_cc0.zip",
+  "files": [
+    {
+      "file": "Aksel_Skin_diffuse.png",
+      "bytes": 4247107,
+      "sha256": "268ee6d1ea9665f8050d040c7b47971884428628021418ae52f68912859f5e60",
+      "archive_member": "skins/mindfront_aksel_skin/Aksel_Skin_diffuse.png"
+    },
+    {
+      "file": "Aksel_Skin_NRM.png",
+      "bytes": 4706189,
+      "sha256": "2bf3632a4bfb1631d9ae15568c7de5c7254c780e5168f1546827f32d50f5212d",
+      "archive_member": "skins/mindfront_aksel_skin/Aksel_Skin_NRM.png"
+    }
+  ]
+}

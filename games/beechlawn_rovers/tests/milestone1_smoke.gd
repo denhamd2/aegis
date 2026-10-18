@@ -68,11 +68,18 @@ func _run_checks() -> void:
 	ball.freeze = false
 	for _frame in 2:
 		await physics_frame
+	assert(player.get("_visual_pass_pending"),
+		"Buffered pass did not begin its contact-timed animation")
+	# The authored animation marker calls this at foot contact in the running game.
+	player._on_visual_action_contact(&"pass")
+	await physics_frame
 	assert(ball.linear_velocity.length() > player.tuning.short_pass_speed * 0.7,
 		"Buffered pass did not apply a playable ball impulse")
+	for _frame in 60:
+		await physics_frame
 
 	# A quick shot tap receives the same short contact buffer and remains a
-	# grounded strike when the ball reaches the player's contact window.
+	# grounded strike when the authored foot reaches the contact window.
 	ball.freeze = true
 	ball.linear_velocity = Vector3.ZERO
 	ball.angular_velocity = Vector3.ZERO
@@ -85,6 +92,16 @@ func _run_checks() -> void:
 	ball.freeze = false
 	for _frame in 2:
 		await physics_frame
+	assert(player.get("_visual_shot_pending"),
+		"Buffered shot did not start its authored contact animation")
+	var shot_serial := ball.action_serial
+	for _frame in 22:
+		await physics_frame
+	assert(ball.action_serial > shot_serial and ball.last_action == &"shot",
+		"Buffered shot did not apply its impulse at the authored contact marker (serial=%d start=%d action=%s pending=%s clip=%s time=%.3f)" % [
+			ball.action_serial, shot_serial, String(ball.last_action), str(player.get("_visual_shot_pending")),
+			player.get_node("Visual/Rig/AnimationPlayer").current_animation,
+			player.get_node("Visual/Rig/AnimationPlayer").current_animation_position])
 	assert(ball.linear_velocity.length() > player.tuning.shot_min_speed * 0.7,
 		"Buffered shot did not apply a playable ball impulse")
 

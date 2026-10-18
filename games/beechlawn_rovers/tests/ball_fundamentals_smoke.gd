@@ -54,6 +54,8 @@ func _run_checks() -> void:
 		"Sprint touch did not push the ball farther ahead")
 	assert(touch_offsets["close"] > 0.55 and touch_offsets["sprint"] < 1.35,
 		"Dribble touch spacing escaped a playable foot-control range")
+	print("Dribble spacing close/normal/sprint: %.2f / %.2f / %.2f m" % [
+		touch_offsets["close"], touch_offsets["normal"], touch_offsets["sprint"]])
 
 	# Measure ground-pass travel in the actual match collision/physics scene.
 	# At 60 Hz, a 12 m/s pass should cover a useful midfield distance in 2 s;
@@ -116,6 +118,8 @@ func _run_checks() -> void:
 		"A full-power shot did not meaningfully exceed a tap shot")
 	assert(ball.linear_velocity.x > 0.0,
 		"Lateral shot aim removed the attack-direction goal assistance")
+	print("Shot speed tap/full: %.2f / %.2f m/s; lateral aim retained forward component %.2f m/s" % [
+		shot_speeds[0], shot_speeds[1], ball.linear_velocity.x])
 
 	print("Beechlawn ball fundamentals checks passed")
 	quit(0)

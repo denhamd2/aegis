@@ -2,7 +2,6 @@ extends SceneTree
 ## Verifies the Y-Bot pass contact event gates the existing live ball-kick path.
 
 const MATCH_SCENE := "res://scenes/training_ground.tscn"
-const VISUAL_SCENE := "res://scenes/footballer_visual.tscn"
 var _contact_animation_position := -1.0
 var _visual_under_test: FootballerVisual
 var _pass_ball: FootballBall
@@ -15,29 +14,26 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var match_packed := load(MATCH_SCENE) as PackedScene
-	var visual_packed := load(VISUAL_SCENE) as PackedScene
-	if match_packed == null or visual_packed == null:
-		_fail("Could not load match or reusable footballer visual scene")
+	var scene_path := OS.get_environment("BEECHLAWN_MATCH_SCENE")
+	var match_packed := load(scene_path if not scene_path.is_empty() else MATCH_SCENE) as PackedScene
+	if match_packed == null:
+		_fail("Could not load match scene")
 		return
 	var game := match_packed.instantiate()
 	root.add_child(game)
 	await process_frame
 	var passer := game.get_node("Player") as FootballPlayer
 	var ball := game.get_node("Ball") as FootballBall
-	var visual := visual_packed.instantiate() as FootballerVisual
+	var visual := passer.get_node_or_null("Visual") as FootballerVisual
 	if passer == null or ball == null or visual == null:
 		_fail("Match player, ball, or footballer visual was not created")
 		return
-	visual.name = "Visual"
-	passer.add_child(visual)
 	_visual_under_test = visual
 	_pass_ball = ball
 	var skeleton := visual.get_node("Rig/YBot_Armature/Skeleton3D") as Skeleton3D
 	if skeleton.find_bone("mixamorig_RightToe_End") < 0:
 		_fail("Y-Bot right toe tip bone is unavailable for contact validation")
 		return
-	passer.bind_footballer_visual(visual)
 	visual.action_contact.connect(_record_contact_position)
 	game.call("_start_kickoff", false)
 	game.call("_set_players_physics_enabled", false)

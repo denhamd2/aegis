@@ -55,6 +55,10 @@ func _run_checks() -> void:
 	assert(pass_decision.get("receiver_id") == receiver.get_instance_id(),
 		"AI pressure pass did not select the available forward runner")
 	game._apply_carrier_action(carrier, home, away)
+	assert(carrier.get("_visual_pass_pending"),
+		"AI pressure pass did not enter the contact-timed pass animation")
+	# Exercise the same event used by the authored AnimationPlayer marker.
+	carrier._on_visual_action_contact(&"pass")
 	assert(ball.last_action == &"through_pass" and receiver.receive_target_time > 0.0,
 		"Match AI did not execute the pressure pass and assign the receiver run")
 

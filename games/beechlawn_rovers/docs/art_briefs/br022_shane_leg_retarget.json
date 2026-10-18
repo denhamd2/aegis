@@ -1,0 +1,180 @@
+{
+  "scope": "prototype only",
+  "fps": 60,
+  "changed_rotation_bones": [
+    "mixamorig:LeftUpLeg",
+    "mixamorig:LeftLeg",
+    "mixamorig:LeftFoot",
+    "mixamorig:RightUpLeg",
+    "mixamorig:RightLeg",
+    "mixamorig:RightFoot"
+  ],
+  "preserved": "all other curves; original joint paths and foot orientation",
+  "actions": {
+    "AN_Beechlawn_CloseControl": {
+      "frames": 60,
+      "joint_path_max_error_cm": 1.1533152220199417e-05,
+      "foot_orientation_max_error_degrees": 0.03956468205889273,
+      "thigh_twist_before_degrees": 132.67019549497465,
+      "thigh_twist_after_degrees": 8.334439987275532e-07,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_GetUpFromProne": {
+      "frames": 55,
+      "joint_path_max_error_cm": 3.5987782028414166e-05,
+      "foot_orientation_max_error_degrees": 0.05595291023658669,
+      "thigh_twist_before_degrees": 118.27178789437258,
+      "thigh_twist_after_degrees": 3.327303866377797e-05,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_GetUpFromSide": {
+      "frames": 55,
+      "joint_path_max_error_cm": 1.9752803017814617e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 3.846969580660397,
+      "thigh_twist_after_degrees": 2.4334359747894988e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_GroundedSlideTackle": {
+      "frames": 38,
+      "joint_path_max_error_cm": 3.5987782028414166e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 125.12944808522712,
+      "thigh_twist_after_degrees": 2.4973751998841466e-05,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_Idle": {
+      "frames": 89,
+      "joint_path_max_error_cm": 1.9073486328125e-06,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 125.12944808522712,
+      "thigh_twist_after_degrees": 5.418135966522985e-08,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_Jog": {
+      "frames": 49,
+      "joint_path_max_error_cm": 1.1601948795887412e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 0.0,
+      "thigh_twist_after_degrees": 7.395299159262646e-08,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_PassRight": {
+      "frames": 54,
+      "joint_path_max_error_cm": 1.5793318902663418e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 132.5346299003282,
+      "thigh_twist_after_degrees": 2.036696128267485e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_ReceiveRight": {
+      "frames": 42,
+      "joint_path_max_error_cm": 1.1757686620653107e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 129.36251246485588,
+      "thigh_twist_after_degrees": 1.3366200135539332e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_ShotRight": {
+      "frames": 54,
+      "joint_path_max_error_cm": 1.206313194339134e-05,
+      "foot_orientation_max_error_degrees": 0.05595291023658669,
+      "thigh_twist_before_degrees": 133.07676933550883,
+      "thigh_twist_after_degrees": 1.3756797694860504e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_ShoulderImpactSell": {
+      "frames": 43,
+      "joint_path_max_error_cm": 4.978326086478496e-06,
+      "foot_orientation_max_error_degrees": 0.05595291023658669,
+      "thigh_twist_before_degrees": 0.1047862209357167,
+      "thigh_twist_after_degrees": 1.2027286611282378e-07,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_SlideTackle": {
+      "frames": 59,
+      "joint_path_max_error_cm": 1.1757686620653107e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 0.8372295406996478,
+      "thigh_twist_after_degrees": 7.33096531638756e-07,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_Sprint": {
+      "frames": 33,
+      "joint_path_max_error_cm": 1.1796299816945058e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 0.0,
+      "thigh_twist_after_degrees": 1.093827995501174e-07,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_StopFromRun": {
+      "frames": 36,
+      "joint_path_max_error_cm": 1.0446978712180445e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 129.46283428338504,
+      "thigh_twist_after_degrees": 1.3916804530886821e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_Turn90Left": {
+      "frames": 37,
+      "joint_path_max_error_cm": 1.1454021596397699e-05,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 125.12944808522712,
+      "thigh_twist_after_degrees": 2.566203217413015e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    },
+    "AN_Beechlawn_Turn90Right": {
+      "frames": 37,
+      "joint_path_max_error_cm": 8.795674679611547e-06,
+      "foot_orientation_max_error_degrees": 0.0,
+      "thigh_twist_before_degrees": 67.3585401229112,
+      "thigh_twist_after_degrees": 3.3408285823053274e-06,
+      "retargeted_sides": [
+        "Left",
+        "Right"
+      ]
+    }
+  }
+}

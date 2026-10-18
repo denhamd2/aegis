@@ -11,13 +11,13 @@ requirements do not govern this project.
 - Open and run `games/beechlawn_rovers/project.godot` as its own Godot 4.6
   project. Keep code, scenes, imported assets, and exports under this project
   unless a genuinely shared Blender utility belongs in `tools/blender/`.
-- The intended setting is a Sunday-league match at a local park. The current
-  build has an early 4v4 blockout and player switching; do not claim passing AI,
-  goalkeeper behavior, a complete match, or 11v11 systems until implemented
-  and verified.
-- Follow `docs/backlog.md` for the planned order and acceptance checks. The
-  first team match is a 4v4 slice: three outfield players and a goalkeeper per
-  side. Apply the supplied Beechlawn and Bordeaux character sheets only here.
+- The default scene is a three-minute keyboard 11v11 Sunday-league prototype,
+  with a separate referee and shared human visuals. The old 4v4 scene remains a
+  regression fixture. Treat native M1 performance, facial likeness, exact venue
+  matching and full football rules as open acceptance gates.
+- Follow `docs/backlog.md` and the approved `docs/11v11_implementation.md`.
+  The owner authorized scaling to 11v11 before individual face production;
+  do not reinstate the obsolete 4v4-only gate.
 - Keep gameplay authoritative in Godot's fixed physics loop; animation presents
   actions and must not independently drive the ball. Prefer simple collision
   shapes and measured CPU/GPU work.
@@ -68,8 +68,11 @@ requirements do not govern this project.
 
 ## Blender and validation
 
-- Use the shared `.claude/skills/` guides through the root `AGENTS.md` routing
-  table. For footballer and kit work, use the character/rig/material guides;
+- Use the shared Blender skills through the root `AGENTS.md` routing table.
+  Codex discovers their root `.agents/skills/` aliases when this project is
+  the working directory; `.claude/skills/` remains their canonical source.
+  Keep football-only skills in this project's own `.agents/skills/` directory.
+  For footballer and kit work, use the character/rig/material guides;
   for park scenery, use environment/scene guides; for Godot assets, read
   `godot-export` before exporting. Do not use `import-wrestler` for football
   characters.
@@ -114,6 +117,11 @@ requirements do not govern this project.
   returning an exit code. Never start a duplicate test while an earlier one is
   still running. If the deadline expires, capture the final log, terminate the
   process, diagnose the failing assertion, then rerun once.
+- Prefer `python3 tools/run_smoke_tests.py [test.gd ...]`: it runs checks
+  serially, applies a 45-second per-test deadline, terminates the process group
+  on timeout, and prints the captured tail so a failed assertion is diagnosable.
+  Do not launch overlapping Godot smoke suites or leave a session running after
+  the test's useful output has completed.
 - A passing static scene check does not cover dependencies inside imported
   binary scenes such as GLB. Record that scope limitation and use scene
   preflight/runtime checks to validate startup.

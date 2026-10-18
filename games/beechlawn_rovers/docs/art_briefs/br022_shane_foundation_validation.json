@@ -1,0 +1,877 @@
+{
+  "rig_bones_unchanged": 65,
+  "animation_action_names_preserved": 15,
+  "all_other_animation_curves_unchanged": true,
+  "retargeted_rotation_bones": [
+    "mixamorig:LeftUpLeg",
+    "mixamorig:LeftLeg",
+    "mixamorig:LeftFoot",
+    "mixamorig:RightUpLeg",
+    "mixamorig:RightLeg",
+    "mixamorig:RightFoot"
+  ],
+  "forward": "+Z local, matching foot/toe bones",
+  "joint_fit_max_endpoint_error_cm": 1.5986494650116168e-05,
+  "meshes": {
+    "Skin_Head": {
+      "used_vertices": 4326,
+      "bad_weight_sums": 0,
+      "max_positive_influences": 4,
+      "materials": 1
+    },
+    "YBot_Joints": {
+      "used_vertices": 3502,
+      "bad_weight_sums": 0,
+      "max_positive_influences": 4,
+      "materials": 1
+    },
+    "YBot_Surface": {
+      "used_vertices": 21412,
+      "bad_weight_sums": 0,
+      "max_positive_influences": 4,
+      "materials": 4
+    }
+  },
+  "pose_probes": {
+    "AN_Beechlawn_CloseControl": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.844384073399806e-06,
+        "body_bounds_cm": [
+          [
+            -38.393699645996094,
+            41.48630142211914,
+            -8.121399879455566
+          ],
+          [
+            45.817501068115234,
+            151.24899291992188,
+            18.257099151611328
+          ]
+        ]
+      },
+      {
+        "frame": 30,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.844384073399806e-06,
+        "body_bounds_cm": [
+          [
+            -38.393699645996094,
+            41.48630142211914,
+            -8.121399879455566
+          ],
+          [
+            45.817501068115234,
+            151.24899291992188,
+            18.257099151611328
+          ]
+        ]
+      },
+      {
+        "frame": 60,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.932099938981686e-06,
+        "body_bounds_cm": [
+          [
+            -38.393699645996094,
+            41.48630142211914,
+            -8.121399879455566
+          ],
+          [
+            45.817501068115234,
+            151.24899291992188,
+            18.257099151611328
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_GetUpFromProne": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.5987782028414166e-05,
+        "body_bounds_cm": [
+          [
+            -49.69919967651367,
+            -5.070000171661377,
+            -13.791999816894531
+          ],
+          [
+            47.00529861450195,
+            50.836700439453125,
+            51.14619827270508
+          ]
+        ]
+      },
+      {
+        "frame": 28,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 8.58306884765625e-06,
+        "body_bounds_cm": [
+          [
+            -41.321800231933594,
+            29.830699920654297,
+            -16.481000900268555
+          ],
+          [
+            30.93910026550293,
+            130.56260681152344,
+            21.446199417114258
+          ]
+        ]
+      },
+      {
+        "frame": 55,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.898149908472529e-06,
+        "body_bounds_cm": [
+          [
+            -45.02560043334961,
+            41.45840072631836,
+            -8.80370044708252
+          ],
+          [
+            43.5797004699707,
+            151.16099548339844,
+            15.027400016784668
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_GetUpFromSide": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.753470993823709e-05,
+        "body_bounds_cm": [
+          [
+            -45.79100036621094,
+            -4.18720006942749,
+            -58.42279815673828
+          ],
+          [
+            45.2510986328125,
+            57.454898834228516,
+            51.14630126953125
+          ]
+        ]
+      },
+      {
+        "frame": 28,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.3947966093944364e-06,
+        "body_bounds_cm": [
+          [
+            -37.8291015625,
+            24.058300018310547,
+            -34.22200012207031
+          ],
+          [
+            30.90959930419922,
+            130.5625,
+            16.93320083618164
+          ]
+        ]
+      },
+      {
+        "frame": 55,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 4.76837158203125e-07,
+        "body_bounds_cm": [
+          [
+            -44.23699951171875,
+            42.88059997558594,
+            -10.156700134277344
+          ],
+          [
+            43.63890075683594,
+            151.24899291992188,
+            13.887499809265137
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_GroundedSlideTackle": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.9073486328125e-06,
+        "body_bounds_cm": [
+          [
+            -46.38679885864258,
+            41.48619842529297,
+            -18.614999771118164
+          ],
+          [
+            41.13959884643555,
+            151.2489013671875,
+            16.88050079345703
+          ]
+        ]
+      },
+      {
+        "frame": 19,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.5987782028414166e-05,
+        "body_bounds_cm": [
+          [
+            -49.699100494384766,
+            -5.070099830627441,
+            -13.791899681091309
+          ],
+          [
+            47.00529861450195,
+            50.836700439453125,
+            51.14619827270508
+          ]
+        ]
+      },
+      {
+        "frame": 38,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.5987782028414166e-05,
+        "body_bounds_cm": [
+          [
+            -49.699100494384766,
+            -5.070099830627441,
+            -13.791899681091309
+          ],
+          [
+            47.00529861450195,
+            50.836700439453125,
+            51.14619827270508
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_Idle": [
+      {
+        "frame": 2,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.9073486328125e-06,
+        "body_bounds_cm": [
+          [
+            -46.38679885864258,
+            41.48630142211914,
+            -18.614999771118164
+          ],
+          [
+            41.13949966430664,
+            151.24899291992188,
+            16.88050079345703
+          ]
+        ]
+      },
+      {
+        "frame": 46,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.9073486328125e-06,
+        "body_bounds_cm": [
+          [
+            -46.38679885864258,
+            41.48630142211914,
+            -18.614999771118164
+          ],
+          [
+            41.13959884643555,
+            151.24899291992188,
+            16.88050079345703
+          ]
+        ]
+      },
+      {
+        "frame": 90,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.9073486328125e-06,
+        "body_bounds_cm": [
+          [
+            -46.38679885864258,
+            41.48630142211914,
+            -18.614999771118164
+          ],
+          [
+            41.13949966430664,
+            151.24899291992188,
+            16.88050079345703
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_Jog": [
+      {
+        "frame": 2,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.814697265625e-06,
+        "body_bounds_cm": [
+          [
+            -88.31580352783203,
+            42.8838996887207,
+            -35.60820007324219
+          ],
+          [
+            88.30750274658203,
+            160.00390625,
+            21.843399047851562
+          ]
+        ]
+      },
+      {
+        "frame": 26,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.814697265625e-06,
+        "body_bounds_cm": [
+          [
+            -88.11930084228516,
+            42.884498596191406,
+            -24.287900924682617
+          ],
+          [
+            88.11139678955078,
+            157.10299682617188,
+            28.140199661254883
+          ]
+        ]
+      },
+      {
+        "frame": 50,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.814697265625e-06,
+        "body_bounds_cm": [
+          [
+            -88.31580352783203,
+            42.8838996887207,
+            -35.60820007324219
+          ],
+          [
+            88.30750274658203,
+            160.00390625,
+            21.843399047851562
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_PassRight": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 4.074098465594068e-06,
+        "body_bounds_cm": [
+          [
+            -59.29930114746094,
+            41.494998931884766,
+            -8.844499588012695
+          ],
+          [
+            57.21080017089844,
+            151.37750244140625,
+            25.963300704956055
+          ]
+        ]
+      },
+      {
+        "frame": 27,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.478441854990033e-06,
+        "body_bounds_cm": [
+          [
+            -66.98719787597656,
+            41.49079895019531,
+            -4.986499786376953
+          ],
+          [
+            76.12770080566406,
+            151.6002960205078,
+            51.65639877319336
+          ]
+        ]
+      },
+      {
+        "frame": 54,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 4.264961199760036e-06,
+        "body_bounds_cm": [
+          [
+            -59.637298583984375,
+            41.48540115356445,
+            -7.233099937438965
+          ],
+          [
+            57.46620178222656,
+            151.38340759277344,
+            24.149999618530273
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_ReceiveRight": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.337860107421875e-06,
+        "body_bounds_cm": [
+          [
+            -59.356300354003906,
+            41.48630142211914,
+            -9.634900093078613
+          ],
+          [
+            57.0443000793457,
+            151.35760498046875,
+            25.568599700927734
+          ]
+        ]
+      },
+      {
+        "frame": 21,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 7.64428116888113e-06,
+        "body_bounds_cm": [
+          [
+            -77.09709930419922,
+            41.494300842285156,
+            -12.000300407409668
+          ],
+          [
+            81.3916015625,
+            151.52110290527344,
+            26.863500595092773
+          ]
+        ]
+      },
+      {
+        "frame": 42,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.0532475649990313e-06,
+        "body_bounds_cm": [
+          [
+            -59.356300354003906,
+            41.48630142211914,
+            -9.634900093078613
+          ],
+          [
+            57.0443000793457,
+            151.35760498046875,
+            25.568700790405273
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_ShotRight": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 2.037049232797034e-06,
+        "body_bounds_cm": [
+          [
+            -43.58769989013672,
+            41.48630142211914,
+            -8.139900207519531
+          ],
+          [
+            42.605499267578125,
+            151.24899291992188,
+            14.615099906921387
+          ]
+        ]
+      },
+      {
+        "frame": 27,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 2.384185791015625e-06,
+        "body_bounds_cm": [
+          [
+            -49.192901611328125,
+            41.49959945678711,
+            -7.272299766540527
+          ],
+          [
+            48.099098205566406,
+            151.63450622558594,
+            37.4900016784668
+          ]
+        ]
+      },
+      {
+        "frame": 54,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 4.3702847432669066e-06,
+        "body_bounds_cm": [
+          [
+            -43.58769989013672,
+            41.48630142211914,
+            -8.139900207519531
+          ],
+          [
+            42.605499267578125,
+            151.24899291992188,
+            14.615099906921387
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_ShoulderImpactSell": [
+      {
+        "frame": 2,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.960464477539063e-08,
+        "body_bounds_cm": [
+          [
+            -95.29930114746094,
+            42.88059997558594,
+            -11.842499732971191
+          ],
+          [
+            95.2938003540039,
+            151.24940490722656,
+            8.257100105285645
+          ]
+        ]
+      },
+      {
+        "frame": 23,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 7.539457464619588e-07,
+        "body_bounds_cm": [
+          [
+            -90.07730102539062,
+            42.18159866333008,
+            -11.303299903869629
+          ],
+          [
+            84.95819854736328,
+            172.4219970703125,
+            14.79419994354248
+          ]
+        ]
+      },
+      {
+        "frame": 44,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.960464477539063e-08,
+        "body_bounds_cm": [
+          [
+            -95.29930114746094,
+            42.88059997558594,
+            -11.842499732971191
+          ],
+          [
+            95.2938003540039,
+            151.24940490722656,
+            8.257100105285645
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_SlideTackle": [
+      {
+        "frame": 2,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.960464477539063e-08,
+        "body_bounds_cm": [
+          [
+            -95.29930114746094,
+            42.88059997558594,
+            -11.842499732971191
+          ],
+          [
+            95.2938003540039,
+            151.24940490722656,
+            8.257100105285645
+          ]
+        ]
+      },
+      {
+        "frame": 31,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.478441854990033e-06,
+        "body_bounds_cm": [
+          [
+            -81.25160217285156,
+            5.5721001625061035,
+            -26.402599334716797
+          ],
+          [
+            92.1395034790039,
+            131.36720275878906,
+            27.414600372314453
+          ]
+        ]
+      },
+      {
+        "frame": 60,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.960464477539063e-08,
+        "body_bounds_cm": [
+          [
+            -95.29930114746094,
+            42.88059997558594,
+            -11.842499732971191
+          ],
+          [
+            95.2938003540039,
+            151.24940490722656,
+            8.257100105285645
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_Sprint": [
+      {
+        "frame": 2,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 8.58306884765625e-06,
+        "body_bounds_cm": [
+          [
+            -81.00779724121094,
+            45.71080017089844,
+            -39.54560089111328
+          ],
+          [
+            80.99739837646484,
+            170.87989807128906,
+            29.58329963684082
+          ]
+        ]
+      },
+      {
+        "frame": 18,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 8.529922399520072e-06,
+        "body_bounds_cm": [
+          [
+            -80.61900329589844,
+            45.71139907836914,
+            -30.144899368286133
+          ],
+          [
+            80.61039733886719,
+            162.00399780273438,
+            39.45130157470703
+          ]
+        ]
+      },
+      {
+        "frame": 34,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 8.58306884765625e-06,
+        "body_bounds_cm": [
+          [
+            -81.00779724121094,
+            45.71080017089844,
+            -39.54560089111328
+          ],
+          [
+            80.99739837646484,
+            170.87989807128906,
+            29.58329963684082
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_StopFromRun": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 2.384185791015625e-06,
+        "body_bounds_cm": [
+          [
+            -45.765899658203125,
+            41.48630142211914,
+            -18.614999771118164
+          ],
+          [
+            41.360801696777344,
+            151.24899291992188,
+            16.199800491333008
+          ]
+        ]
+      },
+      {
+        "frame": 18,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 5.478441854990033e-06,
+        "body_bounds_cm": [
+          [
+            -56.463600158691406,
+            41.551700592041016,
+            -7.0971999168396
+          ],
+          [
+            58.51850128173828,
+            151.3397979736328,
+            18.927499771118164
+          ]
+        ]
+      },
+      {
+        "frame": 36,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 3.844384073399806e-06,
+        "body_bounds_cm": [
+          [
+            -45.76580047607422,
+            41.48630142211914,
+            -8.129799842834473
+          ],
+          [
+            41.360801696777344,
+            151.24899291992188,
+            16.199800491333008
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_Turn90Left": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.430511474609375e-06,
+        "body_bounds_cm": [
+          [
+            -48.71220016479492,
+            41.48630142211914,
+            -10.155599594116211
+          ],
+          [
+            45.57279968261719,
+            151.24899291992188,
+            16.73430061340332
+          ]
+        ]
+      },
+      {
+        "frame": 19,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.966049969490843e-06,
+        "body_bounds_cm": [
+          [
+            -55.567298889160156,
+            41.55849838256836,
+            -13.232600212097168
+          ],
+          [
+            56.70309829711914,
+            151.44180297851562,
+            15.090900421142578
+          ]
+        ]
+      },
+      {
+        "frame": 37,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 4.074098465594068e-06,
+        "body_bounds_cm": [
+          [
+            -48.71220016479492,
+            41.48630142211914,
+            -10.155599594116211
+          ],
+          [
+            45.572898864746094,
+            151.24899291992188,
+            16.73430061340332
+          ]
+        ]
+      }
+    ],
+    "AN_Beechlawn_Turn90Right": [
+      {
+        "frame": 1,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 9.830249847454215e-07,
+        "body_bounds_cm": [
+          [
+            -48.70930099487305,
+            42.68550109863281,
+            -10.154000282287598
+          ],
+          [
+            45.35660171508789,
+            151.24899291992188,
+            16.71660041809082
+          ]
+        ]
+      },
+      {
+        "frame": 19,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 4.428428559543302e-06,
+        "body_bounds_cm": [
+          [
+            -53.242801666259766,
+            42.85150146484375,
+            -15.037799835205078
+          ],
+          [
+            58.80780029296875,
+            151.439697265625,
+            14.99269962310791
+          ]
+        ]
+      },
+      {
+        "frame": 37,
+        "neck_gap_cm": 0.0,
+        "retarget_joint_path_error_cm": 1.018524616398517e-06,
+        "body_bounds_cm": [
+          [
+            -48.70930099487305,
+            42.68550109863281,
+            -10.154000282287598
+          ],
+          [
+            45.35660171508789,
+            151.24899291992188,
+            16.71660041809082
+          ]
+        ]
+      }
+    ]
+  },
+  "animation_source_fps": 60.0,
+  "zero_area_kit_uv_triangles": 0,
+  "printed_chest_faces_sampling_plain_trim": 0,
+  "head_texture": "2K anatomical skin from CC0 source and authored pigment; no portrait overlay",
+  "face_and_toes_share_forward_axis": true,
+  "rest_boot_sole_height_cm": 0.15000000596046448,
+  "shared_neck_boundary_vertices": 30,
+  "neck_shading_normal_max_gap_degrees": 0.004293622320243605,
+  "shorts_rest_vertices_crossing_anatomical_side": 0,
+  "hair_alpha_mode": "MASK",
+  "exported_animation_durations_seconds": {
+    "AN_Beechlawn_CloseControl": 0.9833333333333333,
+    "AN_Beechlawn_GetUpFromProne": 0.8999999999999999,
+    "AN_Beechlawn_GetUpFromSide": 0.8999999999999999,
+    "AN_Beechlawn_GroundedSlideTackle": 0.6166666666666666,
+    "AN_Beechlawn_Idle": 1.4666666666666666,
+    "AN_Beechlawn_Jog": 0.8,
+    "AN_Beechlawn_PassRight": 0.8833333333333333,
+    "AN_Beechlawn_ReceiveRight": 0.6833333333333332,
+    "AN_Beechlawn_ShotRight": 0.8833333333333333,
+    "AN_Beechlawn_ShoulderImpactSell": 0.7,
+    "AN_Beechlawn_SlideTackle": 0.9666666666666667,
+    "AN_Beechlawn_Sprint": 0.5333333333333333,
+    "AN_Beechlawn_StopFromRun": 0.5833333333333333,
+    "AN_Beechlawn_Turn90Left": 0.6,
+    "AN_Beechlawn_Turn90Right": 0.6
+  },
+  "export": {
+    "triangles": 51022,
+    "material_surfaces": 6,
+    "explicit_skin_base_color": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "baked_skin_texture": true,
+    "sha256": "ba0e76978dc277af5e638c724859698ed9ff0f97f7618f32c78595a0c19cf450"
+  },
+  "limitations": [
+    "Facial likeness and hair still require visual approval against the sheets",
+    "Garment coverage requires full-clip and gameplay review, beyond sparse pose probes",
+    "No M1 frame-time claim",
+    "Pose probes test structure; renders test appearance"
+  ]
+}

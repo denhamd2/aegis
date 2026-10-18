@@ -2,9 +2,11 @@
 
 ## Blender skills and tools
 
-The shared skill guides live in `.claude/skills/`. They are repo-local
-instructions, not skills automatically registered with Codex: open the relevant
-`SKILL.md` before specialized art work and follow its useful workflow guidance.
+The shared skill guides live in `.claude/skills/`, with Codex-discoverable
+directory aliases under `.agents/skills/`. Open the relevant `SKILL.md` before
+specialized art work and follow its useful workflow guidance. Keep edits in
+the canonical `.claude/skills/` directories; the aliases share those files.
+See `.agents/README.md` for discovery scope, invocation and client limits.
 There are 38 retained guides; `.claude/skills/BLENDER_SKILLS.md` records their
 provenance and the reason some earlier candidates were removed.
 

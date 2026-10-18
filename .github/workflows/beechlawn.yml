@@ -1,0 +1,88 @@
+name: Release Beechlawn Rovers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'games/beechlawn_rovers/**'
+      - '.github/workflows/beechlawn.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.3-stable
+          use-dotnet: false
+          include-templates: true
+      - name: Import and verify football project
+        run: |
+          timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd
+      - name: Export football only
+        run: |
+          mkdir -p build/beechlawn/web build/beechlawn/mac
+          timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release Web "$PWD/build/beechlawn/web/index.html"
+          timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
+          mkdir -p build/beechlawn/web/screenshots
+          cp games/beechlawn_rovers/docs/art_briefs/match_11v11_{broadcast,touchline,goal,corner}.png build/beechlawn/web/screenshots/
+          cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
+          python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
+          printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt
+          (cd build/beechlawn/web && zip -q -r ../Beechlawn-Rovers-Web.zip .)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beechlawn-builds
+          path: build/beechlawn
+          retention-days: 30
+      - name: Publish separate football release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="beechlawn-${GITHUB_SHA:0:12}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" build/beechlawn/Beechlawn-Rovers-Web.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --clobber
+          else
+            gh release create "$tag" build/beechlawn/Beechlawn-Rovers-Web.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
+          fi
+      - name: Preserve existing wrestling Pages site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh run list --workflow pages.yml --status success --branch main --limit 1 --json databaseId --jq '.[0].databaseId')
+          if ! gh run download "$run_id" --name aegis-web-build --dir build/site; then
+            # Old Actions artifacts expire; rebuild that project only as a fallback.
+            mkdir -p build/site
+            timeout --kill-after=5s 300s godot --headless --editor --path game --import
+            timeout --kill-after=5s 300s godot --headless --path game --export-release Web "$PWD/build/site/index.html"
+          fi
+          test -s build/site/index.html
+          rm -rf build/site/beechlawn-rovers
+          cp -r build/beechlawn/web build/site/beechlawn-rovers
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}beechlawn-rovers/
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
