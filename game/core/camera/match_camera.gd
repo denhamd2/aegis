@@ -279,14 +279,15 @@ const FF_MAX_DISTANCE := 9.5
 const FF_HEIGHT := 4.4
 const FF_AIM := 0.55
 const FF_FOV := 42.0
-## The grapple close-up: chest height, under three metres, a normal lens.
-const FF_CLOSE_OUT := 2.7
-const FF_CLOSE_HEIGHT := 1.15
-const FF_CLOSE_AIM := 0.95
+## The grapple close-up: shoulder height, about three metres, a normal lens --
+## both heads, and an inverted man's legs, inside the frame.
+const FF_CLOSE_OUT := 3.1
+const FF_CLOSE_HEIGHT := 1.35
+const FF_CLOSE_AIM := 1.25
 const FF_CLOSE_FOV := 46.0
 ## A special gets the same shot a little tighter.
-const FF_SPECIAL_OUT := 2.3
-const FF_SPECIAL_FOV := 40.0
+const FF_SPECIAL_OUT := 2.9
+const FF_SPECIAL_FOV := 44.0
 ## Out on the impact: a touch before the clip's own contact frame, so the cut
 ## and the landing arrive together (a cut lands on the next rendered frame).
 const FF_IMPACT_LEAD := 0.03

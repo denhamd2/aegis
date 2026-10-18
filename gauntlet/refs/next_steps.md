@@ -107,6 +107,36 @@ with his hands rather than the hands chasing a generic swing.
   authored ladder swings and a few readable climb-interruption variants only
   after the current spot is visually approved.
 
+## Fight Forever style (the owner's 17 Oct direction)
+
+In-match animation and camera now follow AEW Fight Forever, which replaces
+the 2K26 reference for in-match work. The measurements, the 52-wrestler move
+table and the assessment of Gemini's suggestions are in
+[`aew_ff_animation_review.md`](aew_ff_animation_review.md).
+
+- **Step 1, camera and pace (on the branch):** FIGHT FOREVER is the default
+  coverage (OPTIONS > COVERAGE): a high hard camera on one side, a low
+  close-up cut for grapples, signatures and specials, and a hard cut wide on
+  the impact. The close-up cuts round to the far side once if the referee
+  walks into the lens. Running attacks, dives and ground moves stay wide. The
+  tie-up is quicker (about 0.3 s). Remaining: the full suite, then main.
+- **Move library:** every wrestler's signatures and specials from the video,
+  tagged to the wrestlers who use them (`FFMoveLibrary`,
+  `game/resources/moves/ff/`). Each move becomes playable once its clips are
+  authored; `test_ff_library` prints the count (3 of 146).
+- **Built so far:** Cody's Tiger Driver '98 (in his power pool), plus the
+  existing Cross Rhodes and Figure Four. Review sheets:
+  [`ff_review/`](ff_review/).
+- **Next:** Cody Cutter 4; Kenny's V-Triggers, Snap Dragons, Powerbomb/V-
+  Trigger combo and One Winged Angel; then the other wrestlers by family.
+  After that: per-move frame data for the running attacks, the SIGNATURE /
+  SPECIAL banner, Kenny's own moveset, the standard Cross Rhodes as Cody's
+  default, pacing, and replays after specials.
+- **Smoothness gap (owner's question, 18 Oct):** FF's moves are denser (a
+  pose every frame, likely mocap) and its engine adds motion blur; ours are
+  keyed every 3-10 frames and splined. Candidates: denser in-between keys on
+  the hero moves, and a camera motion-blur pass on cuts and fast moves.
+
 ## Character shape and animation clearance
 
 - **Body morph audit remains open.** Keep the existing skeletons and rest

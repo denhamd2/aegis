@@ -7261,19 +7261,32 @@ CLIPS["FF_Tiger_Driver_98_Attacker"] = [k for k in CLIPS["Pedigree_Attacker"] if
     (54, pose(ATK_SEAT)),
 ] + _get_up(56, 72, seated=True)
 CLIPS["FF_Tiger_Driver_98_Defender"] = [k for k in CLIPS["Pedigree_Defender"] if k[0] <= 16] + [
-    # Heaved up by the hooked arms, pitching forward over his own head.
-    (20, _body((-105, 0, 0), (0.0, 0.06, 1.150), **_TD_LIMBS)),
+    # Heaved up by the hooked arms, pitching forward over his own head --
+    # eased in over six frames, not snapped up in four (test_clip_cadence).
+    (19, _body((-55, 0, 0), (0.0, 0.07, 0.960), **_TD_LIMBS)),
+    (22, _body((-110, 0, 0), (0.0, 0.05, 1.250), **_TD_LIMBS)),
     (26, _body((-150, 0, 0), (0.0, 0.02, 1.600), **_TD_LIMBS)),
     # Upside down, back to Cody's chest, his head at Cody's belt.
     (30, _body((-176, 0, 0), (0.0, 0.00, 1.820), **_TD_LIMBS)),
-    (40, _body((-174, 0, 0), (0.0, 0.00, 1.840), **_TD_LIMBS)),
-    # Driven down onto the back of his neck, the legs going over.
-    (43, _body((-205, 0, 0), (0.0, -0.06, 1.150), **_TD_LIMBS)),
+    (37, _body((-174, 0, 0), (0.0, 0.00, 1.840), **_TD_LIMBS)),
+    # Driven down onto the back of his neck, the legs going over: the drop
+    # gathers from frame 37, so the impact is the fastest frame of a ramp
+    # rather than a lone spike.
+    (41, _body((-195, 0, 0), (0.0, -0.03, 1.400), **_TD_LIMBS)),
+    (44, _body((-222, 0, 0), (0.0, -0.08, 0.820), **_TD_LIMBS)),
     (46, _body((-240, 0, 0), (0.0, -0.12, 0.420), **dict(_TD_LIMBS,
                hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
-    # Flat on his back, head away from Cody.
-    (49, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.230))),
-    (54, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (48, _body((-258, 0, 0), (0.0, -0.16, 0.280), **dict(_TD_LIMBS,
+               hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
+    # Flat on his back, head away from Cody -- still in the body's own frame,
+    # legs straightening and arms falling out, so landing is a turn of ten
+    # degrees and not every limb re-laid in three frames. Then he settles
+    # into the stock lying pose over the next seven, already still.
+    (51, _body((-268, 0, 0), (0.0, -0.18, 0.215), **dict(_TD_LIMBS,
+               hand_r=(0.42, 0.04, 0.02), hand_l=(-0.42, 0.04, 0.02),
+               foot_r=(0.14, 0.02, -0.86), foot_l=(-0.14, 0.02, -0.86),
+               knee_r=(0.1, 1.0, 0.2), knee_l=(-0.1, 1.0, 0.2)))),
+    (58, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
     (72, dict(SUPINE_AWAY)),
 ]
 
