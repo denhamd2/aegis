@@ -217,7 +217,10 @@ func test_a_finisher_cut_ends_when_the_grapple_does() -> void:
 ## is still the camera's rule, so the finisher here is a synthetic MoveDef
 ## dropped into that slot: what is under test is "a finisher cuts and a
 ## grapple does not", not which .tres is wired where.
+## Broadcast coverage: only the finisher is directed. (Fight Forever coverage,
+## the default, cuts every grapple -- test_camera_fight_forever.gd.)
 func test_only_a_finisher_cuts() -> void:
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var scene := _match()
 	var camera: MatchCamera = scene.get_node("MatchCamera")
 	var a: WrestlerController = scene.get_node("WrestlerA")
@@ -228,6 +231,7 @@ func test_only_a_finisher_cuts() -> void:
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.HARD_CAM)
 	camera._on_grapple_started(a, scene.get_node("WrestlerB"), finisher)
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.FINISHER_CUT)
+	CameraSettings.coverage = CameraSettings.Coverage.FIGHT_FOREVER
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +302,7 @@ func test_the_hard_camera_looks_down_at_the_ring() -> void:
 ## the hard camera is a wide-angle shot from the back of the bowl, which
 ## frames the building rather than the match.
 func test_each_shot_carries_its_own_lens() -> void:
+	CameraSettings.coverage = CameraSettings.Coverage.BROADCAST
 	var camera: MatchCamera = _match().get_node("MatchCamera")
 	assert_float(camera.hard_cam_fov) \
 		.override_failure_message(
@@ -311,6 +316,7 @@ func test_each_shot_carries_its_own_lens() -> void:
 	assert_float(camera.shot_fov()).is_equal_approx(camera.ringside_fov, 0.001)
 	camera.mode = MatchCamera.Mode.THREE_COUNT_CUT
 	assert_float(camera.shot_fov()).is_equal_approx(camera.three_count_fov, 0.001)
+	CameraSettings.coverage = CameraSettings.Coverage.FIGHT_FOREVER
 
 ## THE HARD CAMERA HOLDS BOTH WRESTLERS, corner to corner.
 ##

@@ -10,7 +10,12 @@ extends RefCounted
 ## before the reference clip cuts away, unresolved) — this first-pass value
 ## lands in that neighborhood, not a precise measurement; confirm/retune via
 ## test_tie_up_minigame.gd and a live probe.
-const PROGRESS_THRESHOLD := 10.0
+##
+## 10 -> 4 for Fight Forever's tempo (gauntlet/refs/aew_ff_animation_review.md):
+## its tie-up reads in about 0.3 s and the move follows straight from it. At
+## 10 presses on the AI's 8-tick cadence the lock-up ran 1.2-1.7 s before the
+## move began; at 4 on a 6-tick cadence it is about 0.4 s.
+const PROGRESS_THRESHOLD := 4.0
 
 var a_progress: float = 0.0
 var b_progress: float = 0.0

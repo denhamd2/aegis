@@ -47,7 +47,7 @@ const MENU_CONTROLS := "CONTROLS"
 const MENU_CAMERA := "OPTIONS"
 ## The camera options (CameraSettings, camera_aaa_plan.md D2): [label,
 ## the values' names in CameraSettings' enum order].
-const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST"]], ["CUTS", ["ON", "OFF"]],
+const CAMERA_ROWS := [["COVERAGE", ["GAMEPLAY", "BROADCAST", "FIGHT FOREVER"]], ["CUTS", ["ON", "OFF"]],
 		["SHAKE", ["OFF", "LOW", "HIGH"]], ["REPLAYS", ["OFF", "FINISH", "FREQUENT"]],
 		["BLOOD", ["ON", "OFF"]]]
 var camera_row := 0

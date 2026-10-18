@@ -258,6 +258,44 @@ const POST_CLEAR := 0.45
 ## Cody match (seed 7), it was within 0.9 m of a post for 11% of the match.
 const CAMERA_POST_CLEAR := 1.25
 
+# --- Fight Forever coverage (CameraSettings.Coverage.FIGHT_FOREVER) -----------
+## The owner's direction, 18 October: in-match coverage to AEW Fight Forever's,
+## measured off his compilation (gauntlet/refs/aew_ff_animation_review.md).
+##
+## The game is played on a HIGH, WIDE camera on one side of the ring, following
+## the pair sideways and never swinging round them. Every grapple -- and every
+## signature or special -- cuts to a LOW, CLOSE ringside shot for the lock-up
+## and the lift, with the big screens behind, and cuts back out wide ON THE
+## IMPACT: across five measured impacts the picture never freezes; the hard
+## cut is the hit. A signature or special strike gets a short close-up on the
+## blow instead (about 0.4 s on Kenny's V-Trigger).
+##
+## Where the wide camera sits: about 7.5 m out on the hard camera's side and
+## 4.4 m up -- some 30 degrees down onto the canvas, the whole ring width in
+## frame, as Fight Forever's default view has it.
+const FF_DISTANCE := 7.0
+const FF_DISTANCE_PER_M := 0.55
+const FF_MAX_DISTANCE := 9.5
+const FF_HEIGHT := 4.4
+const FF_AIM := 0.55
+const FF_FOV := 42.0
+## The grapple close-up: chest height, under three metres, a normal lens.
+const FF_CLOSE_OUT := 2.7
+const FF_CLOSE_HEIGHT := 1.15
+const FF_CLOSE_AIM := 0.95
+const FF_CLOSE_FOV := 46.0
+## A special gets the same shot a little tighter.
+const FF_SPECIAL_OUT := 2.3
+const FF_SPECIAL_FOV := 40.0
+## Out on the impact: a touch before the clip's own contact frame, so the cut
+## and the landing arrive together (a cut lands on the next rendered frame).
+const FF_IMPACT_LEAD := 0.03
+## A signature or special strike's close-up, held over the blow.
+const FF_STRIKE_HOLD := 0.45
+## Where the stage is: the close-up looks toward it, so the screens are behind
+## the action as Fight Forever's arena screens are behind its close-ups.
+const FF_STAGE_DIR := Vector3(0, 0, -1)
+
 # --- Event cuts (B3), shake (B4), focus (B5), cutaways (B6) ------------------
 ## Short cuts to the action, each back to the coverage it cut from. None
 ## lands within MIN_SHOT of the last cut (D1: no shot under 0.8 s), and none
@@ -338,7 +376,7 @@ const AFTER_FOCUS_LENS := 24.0
 func is_close_up() -> bool:
 	return mode == Mode.FINISHER_CUT or mode == Mode.FINISHER_AFTER \
 			or (mode == Mode.EVENT_CUT and (_cut in [Cut.HERO, Cut.FIRE_UP]
-				or _enda_sign_cutaway))
+				or _enda_sign_cutaway or _cut_ff_impact >= 0.0))
 var mode: Mode = Mode.HARD_CAM
 ## Seconds the current shot has been held. Advanced off the physics delta, so
 ## it is fixed-step and replays identically; it is never read by anything in
@@ -370,6 +408,9 @@ var _cut_landed := false
 var _cut_side := Vector3.ZERO
 var _cut_facing := Vector3.ZERO
 var _cut_fresh := false
+## Fight Forever grapple cut: out wide at this fraction of the paired move.
+var _cut_ff_impact := -1.0
+var _cut_ff_special := false
 var _cutaway_pending := false
 var _sign_fans: Node
 var _enda_cutaway_pending := false
@@ -455,8 +496,15 @@ func _physics_process(delta: float) -> void:
 		# the off-axis 3/4 angle that match.tscn was placed for would have
 		# survived exactly one cut.
 		var gameplay := mode == Mode.RINGSIDE and CameraSettings.gameplay()
+		var ff := mode == Mode.RINGSIDE and CameraSettings.fight_forever()
 		var bearing := _gameplay_bearing(delta) if gameplay else ringside_bearing.normalized()
-		bearing = _from_the_crowd_side(bearing, midpoint)
+		if ff:
+			# One side of the ring, always: the hard camera's. It slides with
+			# the pair and never walks round them.
+			bearing = _flat(hard_cam_position).normalized()
+			distance = minf(FF_DISTANCE + FF_DISTANCE_PER_M * separation, FF_MAX_DISTANCE)
+		else:
+			bearing = _from_the_crowd_side(bearing, midpoint)
 		var to_camera := bearing * distance
 		# Three heights, not two. The finisher cut's low angle is deliberate --
 		# camera.md: "drops lower, closer to mat height, for a grounded,
@@ -476,6 +524,9 @@ func _physics_process(delta: float) -> void:
 		if gameplay:
 			eye_height = GAMEPLAY_HEIGHT
 			aim = 0.85
+		if ff:
+			eye_height = FF_HEIGHT
+			aim = FF_AIM
 		if _fight_outside():
 			# Over the barricade: from behind it at the usual height a man
 			# lying on the floor is hidden by it.
@@ -612,12 +663,21 @@ func shot_fov() -> float:
 		Mode.THREE_COUNT_CUT:
 			return three_count_fov
 		_:
+			if mode == Mode.RINGSIDE and CameraSettings.fight_forever():
+				return FF_FOV
 			return ringside_fov
 
 ## How long the current shot holds before the clock cuts away from it.
 ## Returns 0 for the cut modes, which are held by their own event rather than
 ## by the clock.
 func shot_hold() -> float:
+	if CameraSettings.fight_forever():
+		# One camera the match is played on, and no clock cutting away from it.
+		match mode:
+			Mode.HARD_CAM:
+				return GAMEPLAY_OPENING_HOLD
+			Mode.RINGSIDE:
+				return INF
 	if CameraSettings.gameplay():
 		# 2K-style: the gameplay camera is what the match is played on; the
 		# master is the cutaway to the wide.
@@ -741,6 +801,14 @@ func _update_mode(delta: float) -> void:
 		return
 	if mode == Mode.EVENT_CUT:
 		_held += delta
+		if _cut_ff_impact >= 0.0 and (grapple_rig == null or not grapple_rig.is_active()
+				or grapple_rig.progress() >= _cut_ff_impact):
+			# Out wide on the hit.
+			mode = _cut_return
+			_cut = -1
+			_cut_ff_impact = -1.0
+			_held = 0.0
+			return
 		var bound := _cut_grapple and grapple_rig != null and grapple_rig.is_active()
 		if bound:
 			_held = minf(_held, 0.0)
@@ -786,7 +854,8 @@ func _update_mode(delta: float) -> void:
 ## BROADCAST, the gameplay camera in GAMEPLAY (2K26 comes out of a near-fall
 ## straight back onto the camera the match is played on).
 func master_mode() -> Mode:
-	return Mode.RINGSIDE if CameraSettings.gameplay() else Mode.HARD_CAM
+	return Mode.RINGSIDE if CameraSettings.gameplay() or CameraSettings.fight_forever() \
+			else Mode.HARD_CAM
 
 func _reset_clock_on_change(was: Mode) -> void:
 	if mode != was:
@@ -794,6 +863,14 @@ func _reset_clock_on_change(was: Mode) -> void:
 
 func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	var wrestler := attacker as WrestlerController
+	if CameraSettings.fight_forever():
+		var special := wrestler != null and (wrestler.is_finisher(move) or _is_signature(move))
+		# Running attacks, dives and the moves on a man already down stay on
+		# the wide: in the reference a spear or a lariat plays out from the
+		# game camera; the close-up is for the lock-up and the lift.
+		if special or not _is_moving_attack(move):
+			_ff_grapple_cut(attacker, defender, move, special)
+		return
 	if wrestler and wrestler.is_finisher(move):
 		mode = Mode.FINISHER_CUT
 		_finish_attacker = attacker
@@ -811,6 +888,51 @@ func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> v
 		_finish_over_shoulder = move.animation_pair_id in FINISH_OVER_SHOULDER
 	elif _try_cut(Cut.SLAM, attacker, defender):
 		_cut_grapple = true
+
+## Fight Forever: in close for the lock-up and the lift, out wide on the
+## impact. The cut is bound to the paired move (held while it plays) and ends
+## at its contact fraction, not on a timer.
+func _ff_grapple_cut(attacker: Node3D, defender: Node3D, move: MoveDef, special: bool) -> void:
+	if not CameraSettings.cuts_enabled() or attacker == null:
+		return
+	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE and mode != Mode.EVENT_CUT:
+		return
+	if referee != null and referee.is_pin_active():
+		return
+	_cut_return = master_mode()
+	mode = Mode.EVENT_CUT
+	_cut = Cut.SLAM
+	_cut_subject = attacker
+	_cut_other = defender
+	_cut_hold = CUT_HOLD[Cut.SLAM]
+	_cut_grapple = true
+	_cut_landed = false
+	_cut_side = Vector3.ZERO
+	_cut_facing = Vector3.ZERO
+	_cut_fresh = true
+	_cut_ff_special = special
+	var total := maxf(float(move.total_frames()), 1.0) if move else 1.0
+	_cut_ff_impact = clampf((move.startup_frames / total) - FF_IMPACT_LEAD, 0.1, 0.95) \
+			if move else 0.5
+	_held = 0.0
+
+
+const FF_WIDE_PREFIXES := ["running_", "dive_", "ground_", "possum_", "ladder_"]
+
+
+static func _is_moving_attack(move: MoveDef) -> bool:
+	if move == null:
+		return false
+	var file := String(move.resource_path).get_file()
+	for prefix: String in FF_WIDE_PREFIXES:
+		if file.begins_with(prefix):
+			return true
+	return false
+
+
+static func _is_signature(move: MoveDef) -> bool:
+	return move != null and String(move.resource_path).get_file().begins_with("signature")
+
 
 func _on_grapple_finished(attacker: Node3D, defender: Node3D) -> void:
 	if mode == Mode.FINISHER_CUT and _finish_shot >= 0 and _finish_shot_t < MIN_SHOT:
@@ -1152,6 +1274,12 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 	# read as the camera flinching, not the man.
 	if big:
 		add_trauma(TRAUMA_BIG_STRIKE)
+	if CameraSettings.fight_forever():
+		if attacker != null and (attacker.is_finisher(move) or _is_signature(move)):
+			_try_cut(Cut.STRIKE, defender, attacker, FF_STRIKE_HOLD)
+		elif big and WeaponCatalog.of_move(move) != null:
+			_try_cut(Cut.WEAPON, defender, attacker)
+		return
 	if big and String(move.resource_path).get_file().begins_with("strike"):
 		_try_cut(Cut.STRIKE, defender, attacker)
 	elif big and WeaponCatalog.of_move(move) != null:
@@ -1216,11 +1344,18 @@ func _try_cut(kind: int, subject: Node3D, other: Node3D, hold_override := -1.0,
 	# insert is also an explicit editorial cutaway requested by MatchAudio.
 	if CameraSettings.gameplay() and kind != Cut.HERO and not enda_exception:
 		return false
+	# Fight Forever stays wide through ordinary strikes; the close-ups are the
+	# grapples (_ff_grapple_cut), the signature and special strikes
+	# (_on_move_landed), the taunt, and the set pieces.
+	if CameraSettings.fight_forever() and kind == Cut.CUTAWAY and not enda_exception:
+		return false
 	if mode != Mode.HARD_CAM and mode != Mode.RINGSIDE:
 		return false
 	if _held < MIN_SHOT or (referee != null and referee.is_pin_active()):
 		return false
-	_cut_return = Mode.RINGSIDE if CameraSettings.gameplay() else Mode.HARD_CAM
+	_cut_return = master_mode()
+	_cut_ff_impact = -1.0
+	_cut_ff_special = false
 	mode = Mode.EVENT_CUT
 	_cut = kind
 	_cut_subject = subject
@@ -1300,6 +1435,18 @@ func _event_shot(delta: float) -> bool:
 			look = s + Vector3.UP * 1.35
 			lens = 40.0
 			focus = true
+		Cut.SLAM when _cut_ff_impact >= 0.0:
+			# Fight Forever's grapple close-up: chest height, close, square to
+			# the pair, on whichever side looks toward the stage so the screens
+			# fill the background.
+			var toward := side if side.dot(-FF_STAGE_DIR) >= 0.0 else -side
+			if absf(side.dot(FF_STAGE_DIR)) < 0.2:
+				toward = _cut_side
+			var out := FF_SPECIAL_OUT if _cut_ff_special else FF_CLOSE_OUT
+			at = mid + toward * out + Vector3.UP * FF_CLOSE_HEIGHT
+			look = mid + Vector3.UP * FF_CLOSE_AIM
+			lens = FF_SPECIAL_FOV if _cut_ff_special else FF_CLOSE_FOV
+			focus = _cut_ff_special
 		Cut.SLAM:
 			# Mat level, square to the pair, the lens wide: the landing is
 			# the payoff. The shake lands with the body.

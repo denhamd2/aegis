@@ -125,8 +125,10 @@ const AI_DOWN_RECOVERY_DELAY_TICKS := WrestlerController.QUICK_DOWN_RECOVERY_DEL
 ## so two identical AI opponents don't mash in lockstep, and
 ## _roll_tie_up_timing() then re-rolls around them at every tie-up -- see
 ## its doc comment for why once per match was not enough.
-@export var tie_up_reaction_ticks: int = 10
-@export var tie_up_press_interval_ticks: int = 8
+## 10/8 -> 6/6 with the tie-up's threshold (TieUpMinigame), for Fight
+## Forever's quick lock-up.
+@export var tie_up_reaction_ticks: int = 6
+@export var tie_up_press_interval_ticks: int = 6
 
 ## This tie-up's actual reaction delay and press interval, rolled fresh at
 ## each tie-up by _roll_tie_up_timing(). -1 means "not rolled" and the
