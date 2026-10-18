@@ -86,11 +86,14 @@ const HOUSE_DROP := 1.4
 const STAGE_WASH_X := 4.2
 const STAGE_WASH_Y := 10.0
 const STAGE_WASH_DZ := 21.0
-## Portal accents, on booms off the deck.
-const ACCENT_Y := 6.2
-const ACCENT_DZ := 3.4
-const ACCENT_NEAR_X := 3.7
-const ACCENT_FAR_X := 6.3
+## The 2026 set's deck moving heads (the owner's 18 October stills): on the
+## deck in front of the LED walls, firing narrow beams up and out through the
+## haze. Still named Accent* -- EntranceDirector tints and boosts each man's
+## side of them on his cues.
+const ACCENT_Y := ArenaBuilder.STAGE_DECK_Y + 0.35
+const ACCENT_DZ := 2.2
+const ACCENT_NEAR_X := 3.1
+const ACCENT_FAR_X := 6.9
 ## Rim pair, off the upstage line of the ring grid.
 const RIM_X := 6.4
 const RIM_Y := 6.9
@@ -98,11 +101,6 @@ const RIM_Z := -7.2
 ## Height of a fixture's clamp face above its head's tilt axis -- where the
 ## steel starts. `tools/blender/overhead_rig.py` builds to the same number.
 const FIXTURE_TOP := 0.32
-## Backdrop uplights, on floor stands either side of the set.
-const UPLIGHT_NEAR_X := 9.4
-const UPLIGHT_FAR_X := 12.6
-const UPLIGHT_Y := 0.4
-const UPLIGHT_DZ := 2.6
 
 # --- Levels -----------------------------------------------------------------
 ## Ring key. Four fixtures on the truss corners, cross-aimed so each covers
@@ -274,48 +272,31 @@ const HOUSE_COLOR := Color(0.78, 0.84, 1.0)
 ## that moves the level by a lot still fails.
 const STAGE_COLOR := Color(0.66, 0.75, 1.0)
 
-## The two accent hues off the reference photographs in
-## `gauntlet/refs/stage.md`: magenta on the frame-left portal, amber on the
-## frame-right one. Warm and cool at the same time is the whole look -- the
-## rings are the source, and these fixtures are what put their colour onto the
-## deck, the slats and the backdrop so the rings read as fixtures rather than
-## as glowing decals.
-##
-## Neither is green-dominant, which matters beyond taste: `capture_harness.gd`
-## records that a green-dominant element inside the HUD corner probes blinds
-## the evidence gate.
-const ACCENT_MAGENTA := Color(0.92, 0.22, 0.66)
-const ACCENT_AMBER := Color(1.0, 0.62, 0.24)
-
 ## RANGE IS THE SAFETY MECHANISM HERE, NOT THE AIMING.
 ##
 ## `gauntlet/refs/VISUAL_BAR.md`'s exposure anchor is the mat at 0.43-0.49
 ## relative luminance, and every fixture that reaches the mat spends that
-## budget. The nearest mat corner to an accent fixture at (+-4.6, 6.2, -20.6)
-## is 18.7m away, so a range of 12m cannot reach it by more than six metres.
+## budget. The stage stands at the -Z end of the building (STAGE_BACK -38),
+## so everything built on it is over 30 m from the nearest mat corner:
 ##
-## THAT IS TRUE OF THE ACCENTS AND THE UPLIGHTS AND NOT OF THE STAGE WASH, and
-## an earlier version of this comment claimed it of "every fixture built for
-## the entrance set", which was wrong. Measured over the fixtures this file
-## actually builds behind the stage line:
+##   Accent x4     deck heads, range 24.0    safe by RANGE (and aimed up)
+##   StageSpot x8  truss spots, range 20.0   safe by RANGE
+##   Stage x2      range 28.0                safe by CONE ONLY
 ##
-##   Accent x4    range 12.0   nearest mat corner 18.68m   safe by RANGE
-##   Uplight x4   range 16.0   nearest mat corner 18.97m   safe by RANGE
-##   Stage x2     range 28.0   nearest mat corner 17.25m   safe by CONE ONLY
-##
-## The stage wash out-ranges the mat by eleven metres. What keeps it off the
-## canvas is that it is aimed away: the nearest corner sits 77.5 degrees off
-## its axis against a 44-degree cone. That is a real guarantee but a weaker
-## and more fragile one than range, because re-aiming a fixture is a smaller
-## edit than re-ranging it.
+## The stage wash out-ranges the mat. What keeps it off the canvas is that it
+## is aimed away -- a real guarantee but a weaker and more fragile one than
+## range, because re-aiming a fixture is a smaller edit than re-ranging it.
 ##
 ## `test_stage_lighting.gd` asserts the disjunction -- every stage-side fixture
 ## is out of range of the mat OR aimed off it -- and prints which one each
 ## fixture relies on, so a later fixture cannot re-introduce the spill simply
 ## by being added without the thought.
-const ACCENT_RANGE := 12.0
-@export var accent_energy: float = 3.2
-@export var uplight_energy: float = 2.8
+##
+## (The magenta and amber of the old portals, their tunnel fills and the
+## backdrop uplights went with the portals: the 2026 set is black beyond its
+## LED walls, and its beams are white.)
+const ACCENT_RANGE := 24.0
+@export var accent_energy: float = 40.0
 
 ## The beam fixtures' colours, cycled around the grid. Off the four AEW stills
 ## in gauntlet/refs/lighting/: their saturated pixels fall at hue 210 (cyan-
@@ -650,8 +631,7 @@ func _ready() -> void:
 	_build_beams()
 	_build_stage_wash()
 	_build_stage_accents()
-	_build_tunnel_lights()
-	_build_backdrop_uplights()
+	_build_stage_spots()
 	_build_roof_wash()
 	_build_ribbon_spill()
 	_build_barricade_leds()
@@ -1315,73 +1295,66 @@ func _build_stage_wash() -> void:
 ## cheapest part of this whole set and the part that carries it.
 func _build_stage_accents() -> void:
 	for sx: float in [-1.0, 1.0]:
-		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
 		var label := "W" if sx < 0.0 else "E"
 		for i: int in 2:
 			var shoulder := ACCENT_NEAR_X if i == 0 else ACCENT_FAR_X
-			var at := Vector3(sx * shoulder, ACCENT_Y, STAGE_BACK_Z + ACCENT_DZ)
-			var aim := Vector3(sx * ArenaBuilder.PORTAL_OFFSET_X, 3.25, STAGE_BACK_Z + 1.1)
-			_spot("Accent%s%d" % [label, i], at, aim, color, accent_energy,
-					34.0, 0.6, ACCENT_RANGE, false) \
-					.light_volumetric_fog_energy = 2.0
+			# The far head stands further forward: the walls toe in toward the
+			# ring, so their feet run forward as they run out.
+			var at := Vector3(sx * shoulder, ACCENT_Y,
+					STAGE_BACK_Z + ACCENT_DZ + (shoulder - ACCENT_NEAR_X) * ACCENT_TOE)
+			# Up and out, the inner pair steeper: the fan of shafts the stills
+			# show crossing above the walls.
+			var aim := at + Vector3(sx * (ACCENT_SPREAD + i * ACCENT_SPREAD), ACCENT_RISE, ACCENT_LEAN)
+			var light := _spot("Accent%s%d" % [label, i], at, aim, ACCENT_WHITE,
+					accent_energy, ACCENT_ANGLE, 0.3, ACCENT_RANGE, false)
+			light.spot_attenuation = BEAM_ATTENUATION
+			light.light_volumetric_fog_energy = accent_fog_energy
 
 
-## A light inside each tunnel, in its ring's colour: what the LED bars and the
-## ring throw on the tunnel's glossy wall and its floor, and on a man walking
-## out of it (gauntlet/refs/stage/dynamite_portals_close.jpg). No shadows: it
-## is a fill, inside a cylinder, and a shadow map there costs a frame for
-## nothing a camera sees.
-const TUNNEL_LIGHT_ENERGY := 1.4
-const TUNNEL_LIGHT_RANGE := 3.4
-## How far back into the tunnel, and how high above the deck.
-const TUNNEL_LIGHT_BACK := 1.3
-const TUNNEL_LIGHT_UP := 1.5
-const TUNNEL_LIGHT_OUT := 0.9
+## The deck heads' throw: how far out and how far toward the ring each aims
+## per ACCENT_RISE of height, and the walls' toe-in that sets them forward.
+const ACCENT_SPREAD := 2.6
+const ACCENT_RISE := 12.0
+const ACCENT_LEAN := 2.5
+const ACCENT_TOE := 0.21
+## A moving head in beam mode, as the bowl's beams are (BEAM_ANGLE).
+const ACCENT_ANGLE := 7.0
+## The 2026 stills' beams are white with a cool edge; the entrance cues
+## recolour each man's side (EntranceDirector._portal_lights).
+const ACCENT_WHITE := Color(0.84, 0.9, 1.0)
+@export var accent_fog_energy: float = 220.0
 
 
-func _build_tunnel_lights() -> void:
-	for sx: float in [-1.0, 1.0]:
-		var light := OmniLight3D.new()
-		light.name = "TunnelLight%s" % ("W" if sx < 0.0 else "E")
-		light.light_color = ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
-		light.light_energy = TUNNEL_LIGHT_ENERGY
-		light.omni_range = TUNNEL_LIGHT_RANGE
-		light.shadow_enabled = false
-		# A fill, not a lamp: no hot specular spot on the glossy wall.
-		light.light_specular = 0.0
-		# No haze: in the fog it drew a glowing ball in the tunnel's mouth.
-		light.light_volumetric_fog_energy = 0.0
-		add_child(light)
-		# Toward the outboard wall, where the bars are: spill from them.
-		light.position = Vector3(sx * (ArenaBuilder.PORTAL_OFFSET_X + TUNNEL_LIGHT_OUT),
-				ArenaBuilder.STAGE_DECK_Y + TUNNEL_LIGHT_UP,
-				ArenaBuilder.PORTAL_FACE_Z - TUNNEL_LIGHT_BACK)
+## A row of white spots on the truss above the video wall, angled down onto
+## the walkway (the owner's 2026 stills: a line of hard white lamps over the
+## screens, their shafts coming down through the haze onto the stage). They
+## light the man walking out of the gap from above. Range keeps them off the
+## mat by construction: the nearest mat corner is over 30 m from the stage.
+const STAGE_SPOT_COUNT := 8
+const STAGE_SPOT_HALF_SPAN := 8.0
+const STAGE_SPOT_ABOVE_SCREEN := 1.3
+const STAGE_SPOT_RANGE := 20.0
+const STAGE_SPOT_ANGLE := 11.0
+const STAGE_SPOT_COLOR := Color(0.95, 0.96, 1.0)
+@export var stage_spot_energy: float = 3.0
+@export var stage_spot_fog_energy: float = 12.0
 
 
-## Floor-mounted washes up the perforated backdrop, two either side, each in
-## its own half's accent colour.
-##
-## Without them the backdrop is the one large surface on the stage lit only by
-## house emission, and it reads as a flat card behind a lit set -- the
-## reference photographs have a wall of colour there and it is what the
-## silhouettes of the set read against. Uplighting a perforated panel is also
-## what makes the perforation visible at all: the grazing angle is what casts
-## the texture.
-##
-## Placed OUTBOARD of the portals, at |x| 9.4 and 12.6. The obvious spot --
-## either side of the ramp -- is inside the portal rings, whose
-## outer edge is at 7.67, so a fixture there lights the inside of a ring and
-## the panel behind it gets nothing. That was the first attempt and the
-## backdrop stayed black.
-func _build_backdrop_uplights() -> void:
-	for sx: float in [-1.0, 1.0]:
-		var color := ACCENT_MAGENTA if sx < 0.0 else ACCENT_AMBER
-		for i: int in 2:
-			var x := sx * (UPLIGHT_NEAR_X if i == 0 else UPLIGHT_FAR_X)
-			var at := Vector3(x, UPLIGHT_Y, STAGE_BACK_Z + UPLIGHT_DZ)
-			_spot("Uplight%s%d" % ["W" if sx < 0.0 else "E", i], at,
-					Vector3(x, 10.0, STAGE_BACK_Z), color, uplight_energy,
-					52.0, 0.4, 16.0, false).light_volumetric_fog_energy = 1.6
+func _build_stage_spots() -> void:
+	var y := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5 \
+			+ STAGE_SPOT_ABOVE_SCREEN
+	var z := ArenaBuilder.SCREEN_FACE_Z + 0.6
+	for i: int in STAGE_SPOT_COUNT:
+		var x := lerpf(-STAGE_SPOT_HALF_SPAN, STAGE_SPOT_HALF_SPAN,
+				float(i) / float(STAGE_SPOT_COUNT - 1))
+		# Fanning in toward the walkway but landing spread along the deck, not
+		# on one point: converged, the eight pooled into a hot white spot.
+		var aim := Vector3(x * 0.7, ArenaBuilder.STAGE_DECK_Y,
+				lerpf(ArenaBuilder.STAGE_FRONT - 4.5, ArenaBuilder.STAGE_FRONT - 1.0,
+						absf(x) / STAGE_SPOT_HALF_SPAN))
+		var light := _spot("StageSpot%02d" % i, Vector3(x, y, z), aim, STAGE_SPOT_COLOR,
+				stage_spot_energy, STAGE_SPOT_ANGLE, 0.4, STAGE_SPOT_RANGE, false)
+		light.light_volumetric_fog_energy = stage_spot_fog_energy
 
 
 # ---------------------------------------------------------------------------

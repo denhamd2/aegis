@@ -26,6 +26,25 @@ Plus the graphics-package clip that plays on the wall, supplied with them and
 committed as `game/assets/environment/video/dynamite_tron.ogv`. See
 `game/assets/environment/CREDITS.md` for its provenance.
 
+## The 2026 set (the owner, 18 October 2026) -- supersedes the portals
+
+Eight stills of the updated AEW *Dynamite* set, committed as
+`gauntlet/refs/stage/dynamite_2026_1.jpg` .. `_8.jpg`. They replace the
+portal set below wherever the two disagree.
+
+| property | reference | build |
+| --- | --- | --- |
+| entrances | **no portals**: the men walk out of the centre, in front of the centre screen | `ArenaBuilder.ENTRANCE_X/Z`; every entrance routine starts there |
+| side walls | two tall LED walls either side of the centre screen, toed in toward the ring, playing the video wall's picture | `StageSideScreens` (`SIDE_SCREEN_*`), 4.9 m wide, 5.4 m tall, 12 degrees of toe-in; `StageVideo.mirror` crops the clip to their shape at 0.6 of the wall's level |
+| video wall, centre screen | unchanged | unchanged |
+| ramp | plain black, no coloured edge strips | `RampLeds` removed |
+| beyond the walls | black | LED dot columns and lit side panels removed; drape from the walls outward |
+| floor | a row of small red cans along each wall's foot | `StageFloorCans`, red, over the glow threshold |
+| beams | white shafts fanning up and out from the deck around the walls | four deck moving heads (`Accent*`), 7-degree beams; the entrance cues still tint each man's side |
+| spots | a line of hard white lamps on the truss over the screens, shafts down onto the stage | eight `StageSpot*` on the truss, range-limited off the mat |
+
+The portal notes that follow are kept as the record of the set this replaced.
+
 ## What the photographs establish
 
 Proportions, read off `dynamite_stage_wide.jpg` and

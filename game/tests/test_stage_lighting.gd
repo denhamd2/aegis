@@ -84,8 +84,8 @@ func _stage_side(rig: ArenaLighting) -> Array[SpotLight3D]:
 ##
 ## The guarantee is a disjunction, not the single range rule an earlier comment
 ## claimed: a fixture is safe if the mat is beyond its range OR outside its
-## cone. Eight of the ten are range-safe; the two stage-wash fixtures out-range
-## the mat by eleven metres and are safe only because they are aimed away.
+## cone. The deck heads and truss spots are range-safe; the two stage-wash
+## fixtures out-range the mat and are safe only because they are aimed away.
 func test_no_entrance_fixture_can_reach_the_mat() -> void:
 	var rig := _rig()
 	var fixtures := _stage_side(rig)
@@ -123,7 +123,10 @@ func test_the_stage_wash_is_the_one_kept_off_the_mat_by_its_aim() -> void:
 	var rig := _rig()
 	var wash: Array[SpotLight3D] = []
 	for light in _stage_side(rig):
-		if String(light.name).begins_with("Stage"):
+		# The wash, not the 2026 set's truss spots (StageSpot*), which are
+		# range-safe and covered by the rule above.
+		if String(light.name).begins_with("Stage") \
+				and not String(light.name).begins_with("StageSpot"):
 			wash.append(light)
 	assert_int(wash.size()).is_equal(2)
 	for light in wash:

@@ -802,8 +802,10 @@ func _build_timeline() -> void:
 		_beats.append({"kind": "hold", "shot": "opening", "events": [[1, "title_match"]],
 				"ticks": TITLE_MATCH_CALL_TICKS})
 	# The opponent enters first and waits in the ring; the player's man last.
-	for pair: Array in [[_b, ArenaBuilder.PORTAL_OFFSET_X, "E"],
-			[_a, -ArenaBuilder.PORTAL_OFFSET_X, "W"]]:
+	# Both walk out of the centre of the 2026 set, between the LED walls; the
+	# side still picks which half of the deck heads his cues tint.
+	for pair: Array in [[_b, ArenaBuilder.ENTRANCE_X, "E"],
+			[_a, ArenaBuilder.ENTRANCE_X, "W"]]:
 		var w: WrestlerController = pair[0]
 		var first_beat := _beats.size()
 		if w.entrance_style == "roman":
@@ -990,9 +992,9 @@ static func _wait_clip(w: WrestlerController) -> String:
 	return "strikes/face_off"
 
 
-func _add_entrance(w: WrestlerController, portal_x: float, side: String) -> void:
+func _add_entrance(w: WrestlerController, entrance_x: float, side: String) -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
-	var emerge := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 1.2)
+	var emerge := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	_beats.append({"kind": "walk", "who": w, "path": [emerge, lip],
 			"shot": "stage", "lights": side, "appear": true})
@@ -1399,9 +1401,9 @@ func _ring_bell_at_marks(place_on_marks: bool) -> void:
 ## look over his shoulder. At ringside, head bowed, eyes shut; up the steps
 ## and in; the finger to the hard camera, hands on hips, the ula fala off.
 ## No title: the OTC era.
-func _add_roman_entrance(w: WrestlerController, portal_x: float, side: String) -> void:
+func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String) -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
-	var emerge := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 1.2)
+	var emerge := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	var blue := {"lights": side, "light_color": ROMAN_BLUE}
 	# Backward from the slam: the finger's arm arrives FINGER_PYRO_AT ticks
@@ -1540,9 +1542,9 @@ func _add_walk_cut(w: WrestlerController, from: Vector3, to: Vector3, speed: flo
 ## crowd. Down the ramp working both sides, the WHOA again low in the aisle,
 ## round to the steps and in over the ropes with the camera low behind him in
 ## the ring. Every beat to the hit is on the measured music (CODY_*).
-func _add_cody_entrance(w: WrestlerController, portal_x: float, _side: String) -> void:
+func _add_cody_entrance(w: WrestlerController, entrance_x: float, _side: String) -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
-	var mouth := Vector3(portal_x, deck, ArenaBuilder.PORTAL_FACE_Z + 0.5)
+	var mouth := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
 	var foot_of_ramp := Vector3(0.0, 0.0, CUT_TO_Z)
 	# He walks out of the smoke at his own pace: far enough back in it that

@@ -57,8 +57,7 @@ func _verts(part: String) -> PackedVector3Array:
 func test_every_part_the_builder_dresses_exists_in_the_model() -> void:
 	var root := _model()
 	var wanted: Array = ArenaBuilder.ENTRANCE_MATERIALS.keys() \
-			+ ArenaBuilder.ENTRANCE_EMISSIVE.keys() \
-			+ ["StageScreen", "StageSidePanels", "StageCentreScreen"]
+			+ ["StageScreen", "StageSideScreens", "StageCentreScreen", "StageFloorCans"]
 	for part: String in wanted:
 		assert_object(root.find_child(part, true, false)) \
 				.override_failure_message("%s has no '%s' object" % [MODEL, part]) \
@@ -248,53 +247,71 @@ func test_the_barrier_opens_for_the_entrance() -> void:
 			.is_equal(0)
 
 
-## Almost all of the circle survives the cut. A shallow cut is what keeps it
-## reading as a circle: take too much and it becomes an arch instead.
-func test_the_cut_removes_only_the_bottom_of_the_circle() -> void:
-	var cut := ArenaBuilder._portal_cut_angle()
-	var swept := PI - cut * 2.0
-	assert_float(rad_to_deg(swept)).is_between(280.0, 330.0)
-	# The deck crossing is below the horizontal on both sides, i.e. the tube
-	# comes down past its own widest point before it stops. An arch does not.
-	assert_float(cut).is_less(0.0)
-
-
-## The centre is placed so the circle sinks exactly PORTAL_CUT_DEPTH into the
-## deck. Derived, not typed, so moving one number cannot leave the ends
-## floating above the floor or buried under it.
-func test_the_circle_sinks_the_stated_depth_into_the_deck() -> void:
-	var lowest_point := ArenaBuilder.PORTAL_CENTER_Y - ArenaBuilder.PORTAL_MAJOR
-	assert_float(ArenaBuilder.STAGE_DECK_Y - lowest_point) \
-			.is_equal_approx(ArenaBuilder.PORTAL_CUT_DEPTH, 0.001)
-
-
-## The portal is a CIRCLE with the bottom cut off by the deck -- not a ring
-## (no doorway), not an arch on legs, and not an omega (whose ends turn back
-## inward and need outward feet). It was built as each of those first, which
-## is why the shape is asserted rather than left to the render.
-func test_the_portal_tube_stops_where_the_deck_cuts_it() -> void:
-	var lowest := INF
-	for v: Vector3 in _verts("PortalRingWest"):
-		lowest = minf(lowest, v.y)
-	# The centreline ends on the deck, so the tube's skin reaches
-	# PORTAL_MINOR below it.
-	assert_float(lowest).is_equal_approx(
-			ArenaBuilder.STAGE_DECK_Y - ArenaBuilder.PORTAL_MINOR, 0.05)
-
-
-## Every vertex of the tube lies on the tube: its distance from the ring's
-## own centre circle is the minor radius, everywhere.
-func test_the_portal_tube_has_a_constant_minor_radius() -> void:
-	var verts := _verts("PortalRingWest")
+## The 2026 set (the owner's 18 October stills): an LED wall either side of
+## the centre screen, standing on the deck between the stated edges, its top
+## under the video wall's bottom edge, clear of the centre screen.
+func test_the_led_walls_stand_either_side_of_the_centre_screen() -> void:
+	var verts := _verts("StageSideScreens")
 	assert_int(verts.size()).is_greater(0)
-	var centre := Vector3(-ArenaBuilder.PORTAL_OFFSET_X,
-			ArenaBuilder.PORTAL_CENTER_Y, ArenaBuilder.PORTAL_FACE_Z)
+	var screen_bottom := ArenaBuilder.SCREEN_CENTER_Y - ArenaBuilder.SCREEN_HEIGHT * 0.5
+	var left := 0
+	var right := 0
 	for v: Vector3 in verts:
-		var local := v - centre
-		var radial := Vector3(local.x, local.y, 0.0).normalized() \
-				* ArenaBuilder.PORTAL_MAJOR
-		assert_float(local.distance_to(radial)) \
-				.is_equal_approx(ArenaBuilder.PORTAL_MINOR, 0.03)
+		assert_float(absf(v.x)).is_between(ArenaBuilder.SIDE_SCREEN_INNER_X - TOLERANCE,
+				ArenaBuilder.SIDE_SCREEN_OUTER_X + TOLERANCE)
+		assert_float(v.y).is_between(
+				ArenaBuilder.STAGE_DECK_Y + ArenaBuilder.SIDE_SCREEN_BOTTOM - TOLERANCE,
+				ArenaBuilder.STAGE_DECK_Y + ArenaBuilder.SIDE_SCREEN_TOP + TOLERANCE)
+		assert_float(v.y).is_less(screen_bottom)
+		if v.x < 0.0:
+			left += 1
+		else:
+			right += 1
+	assert_int(left).is_equal(right)
+	var centre_half := 0.0
+	for v: Vector3 in _verts("StageCentreScreen"):
+		centre_half = maxf(centre_half, absf(v.x))
+	assert_float(centre_half).is_less(ArenaBuilder.SIDE_SCREEN_INNER_X)
+
+
+## Both walls toe in toward the ring by the stated angle -- outer edge forward
+## of the inner -- and both face the ring: a wall wound the wrong way is culled
+## and renders as its black cabinet (the first build lost the east one so).
+func test_the_led_walls_toe_in_and_face_the_ring() -> void:
+	var rise := (ArenaBuilder.SIDE_SCREEN_OUTER_X - ArenaBuilder.SIDE_SCREEN_INNER_X) \
+			* tan(deg_to_rad(ArenaBuilder.SIDE_SCREEN_TOE_DEG))
+	for v: Vector3 in _verts("StageSideScreens"):
+		var t := (absf(v.x) - ArenaBuilder.SIDE_SCREEN_INNER_X) \
+				/ (ArenaBuilder.SIDE_SCREEN_OUTER_X - ArenaBuilder.SIDE_SCREEN_INNER_X)
+		assert_float(v.z).is_equal_approx(ArenaBuilder.side_screen_inner_z() + rise * t, 0.03)
+	for n: Vector3 in _arrays("StageSideScreens")[Mesh.ARRAY_NORMAL]:
+		assert_float(n.z).is_greater(0.9)
+
+
+## The pictures carry normalised UVs (StageVideo crops the clip onto them):
+## projected at world-metre density, the video would tile across each wall.
+func test_the_led_walls_carry_normalised_uvs() -> void:
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for uv: Vector2 in _arrays("StageSideScreens")[Mesh.ARRAY_TEX_UV]:
+		lo = Vector2(minf(lo.x, uv.x), minf(lo.y, uv.y))
+		hi = Vector2(maxf(hi.x, uv.x), maxf(hi.y, uv.y))
+	assert_vector(lo).is_equal_approx(Vector2.ZERO, Vector2(0.01, 0.01))
+	assert_vector(hi).is_equal_approx(Vector2.ONE, Vector2(0.01, 0.01))
+
+
+## The wrestlers walk out of the gap between the walls: nothing of the walls,
+## their cabinets or the floor cans stands in the walkway, and the entrance
+## point is in front of the centre screen and inside the playable stage.
+func test_the_walkway_between_the_walls_is_clear() -> void:
+	for part in ["StageSideScreens", "StageSideScreenFrame", "StageFloorCans"]:
+		for v: Vector3 in _verts(part):
+			assert_float(absf(v.x)).override_failure_message(
+					"%s stands in the walkway at x %.2f" % [part, v.x]) \
+					.is_greater(ArenaBuilder.RAMP_HALF_WIDTH)
+	assert_float(ArenaBuilder.ENTRANCE_Z).is_greater(ArenaBuilder.STAGE_BACK)
+	assert_float(ArenaBuilder.ENTRANCE_Z).is_greater_equal(ArenaBuilder.MATCH_STAGE_BACK_LIMIT)
+	assert_float(ArenaBuilder.ENTRANCE_X).is_equal(0.0)
 
 
 ## SSR shows nothing on a matte floor, so the deck's gloss is not a taste
@@ -319,16 +336,15 @@ func test_arena_floor_uses_generated_concrete_albedo_and_concrete_surface_maps()
 	assert_object(mat.normal_texture).is_not_null()
 
 
-## The two portal hues have to stay apart, because which ring is which is the
-## thing that makes the set recognisable.
-func test_the_two_portal_hues_are_distinct_and_not_green_dominant() -> void:
-	var magenta: Color = MaterialLibrary.spec("arena_portal_magenta")["tint"]
-	var amber: Color = MaterialLibrary.spec("arena_portal_amber")["tint"]
-	assert_float(absf(magenta.h - amber.h)).is_greater(0.1)
-	# capture_harness.gd records that a green-dominant element inside the HUD
-	# corner probes blinds the evidence gate.
-	for tint: Color in [magenta, amber]:
-		assert_bool(tint.g > tint.r * 1.4 and tint.g > tint.b * 1.4).is_false()
+## The 2026 set has no coloured LED strips down the ramp and no portals: the
+## owner asked for the pink ramp lighting to go with the tunnels.
+func test_the_old_portals_and_ramp_strips_are_gone() -> void:
+	var root := _model()
+	for part in ["RampLeds", "PortalRingWest", "PortalRingEast", "PortalRecess",
+			"PortalBack", "PortalPods", "StageLedDots", "StageSidePanels"]:
+		assert_object(root.find_child(part, true, false)) \
+				.override_failure_message("%s still has '%s'" % [MODEL, part]).is_null()
+	root.free()
 
 
 ## ARCHITECTURE.md's condition for a cosmetic system, asserted rather than
@@ -465,31 +481,17 @@ func test_the_backdrop_is_wider_than_the_screen_and_the_wings_flank_it() -> void
 	assert_bool(ResourceLoader.exists(ArenaBuilder.STAGE_SCREEN_WING)).is_true()
 
 
-## Stage 1 of the AAA plan: the portals stand about one diameter apart with
-## their outer edges near the video wall's ends, and the deck carries them.
-func test_the_portals_are_one_diameter_apart_under_the_screen() -> void:
-	var diameter := ArenaBuilder.PORTAL_MAJOR * 2.0
-	var gap := 2.0 * (ArenaBuilder.PORTAL_OFFSET_X - ArenaBuilder.PORTAL_MAJOR
-			- ArenaBuilder.PORTAL_MINOR)
-	assert_float(gap).is_between(diameter * 0.85, diameter * 1.15)
-	var outer := ArenaBuilder.PORTAL_OFFSET_X + ArenaBuilder.PORTAL_MAJOR \
-			+ ArenaBuilder.PORTAL_MINOR
-	# Outer edges under the screen (18m wide), within two metres of its ends.
+## The two walls together span about the video wall above them, as in the
+## owner's stills, and the deck carries them.
+func test_the_led_walls_sit_under_the_screen_on_the_deck() -> void:
+	var outer := ArenaBuilder.SIDE_SCREEN_OUTER_X
 	assert_float(outer).is_less(ArenaBuilder.SCREEN_WIDTH * 0.5)
-	assert_float(outer).is_greater(ArenaBuilder.SCREEN_WIDTH * 0.5 - 2.0)
-	# The deck carries both rings.
+	assert_float(outer).is_greater(ArenaBuilder.SCREEN_WIDTH * 0.5 - 2.5)
 	assert_float(outer).is_less(ArenaBuilder.STAGE_HALF_WIDTH)
 	var widest := 0.0
 	for v: Vector3 in _verts("EntranceStage"):
 		widest = maxf(widest, absf(v.x))
 	assert_float(widest).is_equal_approx(ArenaBuilder.STAGE_HALF_WIDTH, TOLERANCE)
-	# The centre panel between them is about a portal wide, and clear of both.
-	var panel := _verts("StageCentreScreen")
-	var half := 0.0
-	for v: Vector3 in panel:
-		half = maxf(half, absf(v.x))
-	assert_float(half * 2.0).is_between(diameter * 0.8, diameter * 1.0)
-	assert_float(half).is_less(ArenaBuilder.PORTAL_OFFSET_X - ArenaBuilder.PORTAL_MAJOR)
 
 
 ## The ramp opens out into the deck: the deck's width at each depth never
@@ -521,7 +523,7 @@ func test_the_deck_flares_into_the_ramp() -> void:
 
 
 ## The backdrop is a built thing now: a truss frame behind and above the wall,
-## lit perforated panels beside the portals (clear of them), pleated drape.
+## and pleated drape beside the LED walls (clear of them).
 func test_the_back_of_stage_is_built_not_a_flat_box() -> void:
 	var screen_top := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5
 	var truss_top := -INF
@@ -532,18 +534,15 @@ func test_the_back_of_stage_is_built_not_a_flat_box() -> void:
 	assert_float(truss_top).is_greater(screen_top + ArenaBuilder.SCREEN_BEZEL)
 	# Behind the picture's centre (which is its furthest-back point).
 	assert_float(truss_front).is_less(ArenaBuilder.SCREEN_FACE_Z)
-	var outer := ArenaBuilder.PORTAL_OFFSET_X + ArenaBuilder.PORTAL_MAJOR \
-			+ ArenaBuilder.PORTAL_MINOR
-	var panel_inner := INF
-	for v: Vector3 in _verts("StageSidePanels"):
-		panel_inner = minf(panel_inner, absf(v.x))
-	assert_float(panel_inner).is_greater(outer)
+	var drape_inner := INF
+	for v: Vector3 in _verts("StageDrape"):
+		drape_inner = minf(drape_inner, absf(v.x))
+	assert_float(drape_inner).is_greater(ArenaBuilder.SIDE_SCREEN_OUTER_X)
 	var folds := {}
 	for v: Vector3 in _verts("StageDrape"):
 		folds[snappedf(v.z, 0.005)] = true
 	# Pleated: many distinct depths, not a single plane.
 	assert_int(folds.size()).is_greater(3)
-	assert_bool(ResourceLoader.exists(ArenaBuilder.STAGE_SIDE_PANEL)).is_true()
 	# Within budget: the whole set stays well under a standard prop's ceiling.
 	var triangles := 0
 	var root := _model()
@@ -554,48 +553,28 @@ func test_the_back_of_stage_is_built_not_a_flat_box() -> void:
 	assert_int(triangles).is_less(15000)
 
 
-## The tunnels (owner: "more realistic"; gauntlet/refs/stage/
-## dynamite_portals_close.jpg). Each ends in front of the backdrop: bored
-## through it (PORTAL_RECESS_DEPTH 3.2), its far end was hidden behind the
-## backdrop and the inside read as a black void.
-func test_each_tunnel_ends_in_front_of_the_backdrop() -> void:
-	var verts := _verts("PortalBack")
-	assert_int(verts.size()).is_greater(0)
-	for v: Vector3 in verts:
-		assert_float(v.z).is_greater(ArenaBuilder.STAGE_BACK)
-	for v: Vector3 in _verts("PortalRecess"):
-		assert_float(v.z).is_greater(ArenaBuilder.STAGE_BACK)
-
-
-## The rings carry UVs running the length of the tube, which is what their
-## two-tone gradient is read along; projected at world-metre density, as the
-## rest of the set is, the gradient would tile round the ring.
-func test_the_rings_carry_their_gradient_uvs() -> void:
-	for part in ["PortalRingWest", "PortalRingEast"]:
-		var uvs: PackedVector2Array = _arrays(part)[Mesh.ARRAY_TEX_UV]
-		var lo := INF
-		var hi := -INF
-		for uv: Vector2 in uvs:
-			lo = minf(lo, uv.x)
-			hi = maxf(hi, uv.x)
-		assert_float(lo).is_equal_approx(0.0, 0.01)
-		assert_float(hi).is_equal_approx(1.0, 0.01)
-
-
-## Dressed in a match: each ring shows its gradient (on a black emission
-## colour -- the texture is added to it), and each tunnel has its own light.
-func test_the_tunnels_are_dressed_and_lit() -> void:
+## Dressed in a match: both walls carry the video wall's picture material
+## (blank until a frame binds), the floor cans glow red, and the deck heads
+## and truss spots that light the set are built.
+func test_the_led_walls_are_dressed_and_lit() -> void:
 	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
 	add_child(scene)
-	for side in ["West", "East"]:
-		var ring := scene.find_child("PortalRing" + side, true, false) as MeshInstance3D
-		var mat := ring.material_override as StandardMaterial3D
-		assert_object(mat.emission_texture).is_not_null()
-		assert_str(mat.emission_texture.resource_path).contains(side.to_lower())
-		assert_bool(mat.emission == Color.BLACK).is_true()
-	for part in ["PortalBack", "PortalPods"]:
-		assert_object(scene.find_child(part, true, false)).is_not_null()
-	for light in ["TunnelLightW", "TunnelLightE"]:
-		var l := scene.find_child(light, true, false) as OmniLight3D
-		assert_object(l).is_not_null()
-		assert_float(l.light_volumetric_fog_energy).is_equal(0.0)
+	var walls := scene.find_child("StageSideScreens", true, false) as MeshInstance3D
+	assert_object(walls).is_not_null()
+	var mat := walls.material_override as StandardMaterial3D
+	assert_object(mat).is_not_null()
+	assert_bool(mat.emission_enabled).is_true()
+	# Headless binds the wall's still (StageVideo._bind_still): the walls get
+	# the same picture, cropped narrower than the 3:1 wall to fit their shape.
+	var wall := scene.find_child("StageScreen", true, false) as MeshInstance3D
+	var wall_mat := wall.material_override as StandardMaterial3D
+	if wall_mat.emission_texture:
+		assert_object(mat.emission_texture).is_same(wall_mat.emission_texture)
+		assert_float(mat.uv1_scale.x).is_less(wall_mat.uv1_scale.x)
+	var cans := scene.find_child("StageFloorCans", true, false) as MeshInstance3D
+	var can_mat := cans.material_override as StandardMaterial3D
+	assert_float(can_mat.emission.r).is_greater(can_mat.emission.g * 3.0)
+	for light in ["AccentW0", "AccentE1", "StageSpot00", "StageSpot07"]:
+		assert_object(scene.find_child(light, true, false)).is_not_null()
+	for gone in ["TunnelLightW", "TunnelLightE", "UplightW0"]:
+		assert_object(scene.find_child(gone, true, false)).is_null()
