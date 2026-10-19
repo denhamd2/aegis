@@ -682,6 +682,11 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - Satellite-footprint follow-up: added the tapered western green, inset
+    back-garden edge, western road/path continuation and nine reused roadside
+    houses. Blender/Godot geometry preserves the open 105 x 68 m playing area
+    and grass buffer. Property/vegetation realism remains open; see
+    [`art_briefs/kilmore_site_footprint.md`](art_briefs/kilmore_site_footprint.md).
   - Pitch-paint follow-up: softened the chalk pigment and reduced specular
     highlights while retaining uneven widths and worn edges. See
     [`art_briefs/chalk_fade.md`](art_briefs/chalk_fade.md) for the broadcast comparison.

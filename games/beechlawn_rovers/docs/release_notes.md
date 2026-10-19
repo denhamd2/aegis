@@ -59,6 +59,8 @@ General foot planting, transition polish and balanced AI chance creation remain 
 Touchlines currently use a prototype ground-pass restart, not a throw-in animation.
 
 Park placement correction (19 October 2026):
+- Added the satellite-informed tapered western green, continuing road and
+  footpaths, matching boundary outline and reused roadside house instances.
 - Softened pitch paint to a faded, matte off-white, retaining the existing
   uneven widths and worn edges for the Sunday-league setting.
 - Reviewed the uploaded and archived satellite views; the pitch now sits within

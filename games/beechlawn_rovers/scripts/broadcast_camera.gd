@@ -48,9 +48,9 @@ func _site_review(arguments: Array) -> void:
 	if not arguments.is_empty() and str(arguments[0]) == "overhead":
 		# Debug-only whole-site view; gameplay presets and preferences stay intact.
 		_review_view = true
-		global_position = Vector3(0, 180, -KilmoreDriveVenue.ROAD_CONTEXT_SHIFT * 0.5)
+		global_position = Vector3(-76, 180, -15)
 		camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-		camera.size = 185.0
+		camera.size = 200.0
 		camera.look_at(Vector3(global_position.x, 0, global_position.z), Vector3.FORWARD)
 	else:
 		_review_view = false

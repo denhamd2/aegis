@@ -101,3 +101,12 @@ Use that band when placing the roadway, houses, cars and services; the street
 must not sit directly beside the touchline. The current 35 m grass / 37.75 m
 road-edge settings are authored approximations, not measurements of the site.
 See `../docs/art_briefs/kilmore_road_setback.md` for the comparison and limits.
+
+## Traced park footprint
+
+`research/kilmore_site/site_trace.json` preserves the manual boundary pixel picks,
+image hash and transformation into the authored 105 m pitch coordinate system.
+It informs the tapered western green and continuing roadside. It is an
+approximate modelling alignment, not a survey. See
+`../docs/art_briefs/kilmore_site_footprint.md`; original imagery stays unedited
+and is excluded from game exports.

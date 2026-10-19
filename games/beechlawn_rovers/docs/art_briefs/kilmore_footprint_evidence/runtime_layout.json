@@ -1,0 +1,1475 @@
+{
+  "grass_buffer_m": 35.0,
+  "objects": [
+    {
+      "bounds_min": [
+        -220.539993286133,
+        0.0,
+        -70.3000030517578
+      ],
+      "bounds_size": [
+        304.799987792969,
+        0.00000999999974737875,
+        121.240005493164
+      ],
+      "module": "",
+      "name": "ParkTurf",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -405.0,
+        -0.25,
+        -175.0
+      ],
+      "bounds_size": [
+        650.0,
+        0.0999999940395355,
+        300.0
+      ],
+      "module": "",
+      "name": "DistantGround",
+      "position": [
+        -80.0,
+        -0.200000002980232,
+        -25.0
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_west_road.glb",
+      "name": "WesternRoad",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -69.5,
+        -0.119999997317791,
+        -71.5
+      ],
+      "bounds_size": [
+        139.0,
+        0.159999996423721,
+        2.5
+      ],
+      "module": "",
+      "name": "Footpath",
+      "position": [
+        0.0,
+        -0.0399999991059303,
+        -70.25
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -74.5,
+        -0.0999999940395355,
+        -78.75
+      ],
+      "bounds_size": [
+        149.0,
+        0.11999998986721,
+        7.0
+      ],
+      "module": "",
+      "name": "Road",
+      "position": [
+        0.0,
+        -0.0399999991059303,
+        -75.25
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -69.5,
+        -0.109999999403954,
+        -81.1999969482422
+      ],
+      "bounds_size": [
+        139.0,
+        0.140000000596046,
+        1.69999694824219
+      ],
+      "module": "",
+      "name": "FootpathOuter",
+      "position": [
+        0.0,
+        -0.0399999991059303,
+        -80.3499984741211
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -69.5,
+        -0.0900000035762787,
+        -71.870002746582
+      ],
+      "bounds_size": [
+        139.0,
+        0.219999998807907,
+        0.240005493164062
+      ],
+      "module": "",
+      "name": "RoadsideCurb",
+      "position": [
+        0.0,
+        0.0199999995529652,
+        -71.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -69.5,
+        -0.057499997317791,
+        -82.375
+      ],
+      "bounds_size": [
+        139.0,
+        0.0349999964237213,
+        1.25
+      ],
+      "module": "",
+      "name": "GrassVerge",
+      "position": [
+        0.0,
+        -0.0399999991059303,
+        -81.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        78.0802001953125,
+        0.0,
+        -70.3073654174805
+      ],
+      "bounds_size": [
+        6.31961059570312,
+        1.60000002384186,
+        114.674728393555
+      ],
+      "module": "",
+      "name": "BoundaryWall_05",
+      "position": [
+        81.2400054931641,
+        0.800000011920929,
+        -12.9700012207031
+      ],
+      "rotation_y": 0.0526288449764252,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        37.0181274414062,
+        0.0,
+        44.2205085754395
+      ],
+      "bounds_size": [
+        47.2537460327148,
+        1.60000002384186,
+        4.29898834228516
+      ],
+      "module": "",
+      "name": "BoundaryWall_06",
+      "position": [
+        60.6450004577637,
+        0.800000011920929,
+        46.370002746582
+      ],
+      "rotation_y": -1.48588562011719,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        36.9875946044922,
+        1.04999995231628,
+        43.8618049621582
+      ],
+      "bounds_size": [
+        47.314811706543,
+        1.20000004768372,
+        5.01639556884766
+      ],
+      "module": "",
+      "name": "BoundaryHedge_06",
+      "position": [
+        60.6450004577637,
+        1.64999997615814,
+        46.370002746582
+      ],
+      "rotation_y": -1.48588562011719,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -48.0140953063965,
+        0.0,
+        48.240062713623
+      ],
+      "bounds_size": [
+        85.0481872558594,
+        1.60000002384186,
+        2.76987457275391
+      ],
+      "module": "",
+      "name": "BoundaryWall_07",
+      "position": [
+        -5.48999977111816,
+        0.800000011920929,
+        49.625
+      ],
+      "rotation_y": -1.5415244102478,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -48.0246315002441,
+        1.04999995231628,
+        47.8802146911621
+      ],
+      "bounds_size": [
+        85.0692596435547,
+        1.20000004768372,
+        3.48957061767578
+      ],
+      "module": "",
+      "name": "BoundaryHedge_07",
+      "position": [
+        -5.48999977111816,
+        1.64999997615814,
+        49.625
+      ],
+      "rotation_y": -1.5415244102478,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -93.7102127075195,
+        0.0,
+        50.7299995422363
+      ],
+      "bounds_size": [
+        45.7004241943359,
+        1.60000002384186,
+        0.349998474121094
+      ],
+      "module": "",
+      "name": "BoundaryWall_08",
+      "position": [
+        -70.8600006103516,
+        0.800000011920929,
+        50.9049987792969
+      ],
+      "rotation_y": -1.56926465034485,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -93.7107620239258,
+        1.04999995231628,
+        50.3699989318848
+      ],
+      "bounds_size": [
+        45.7015228271484,
+        1.20000004768372,
+        1.06999969482422
+      ],
+      "module": "",
+      "name": "BoundaryHedge_08",
+      "position": [
+        -70.8600006103516,
+        1.64999997615814,
+        50.9049987792969
+      ],
+      "rotation_y": -1.56926465034485,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -107.754875183105,
+        0.0,
+        0.912469863891602
+      ],
+      "bounds_size": [
+        14.1797485351562,
+        1.60000002384186,
+        50.0650634765625
+      ],
+      "module": "",
+      "name": "BoundaryWall_09",
+      "position": [
+        -100.665000915527,
+        0.800000011920929,
+        25.9449996948242
+      ],
+      "rotation_y": -2.87020206451416,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -131.481872558594,
+        0.0,
+        -13.400146484375
+      ],
+      "bounds_size": [
+        23.9337463378906,
+        1.60000002384186,
+        14.4702930450439
+      ],
+      "module": "",
+      "name": "BoundaryWall_10",
+      "position": [
+        -119.514999389648,
+        0.800000011920929,
+        -6.16499996185303
+      ],
+      "rotation_y": -2.10985469818115,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -174.220428466797,
+        0.0,
+        -13.5499982833862
+      ],
+      "bounds_size": [
+        42.8108520507812,
+        1.60000002384186,
+        0.409997940063477
+      ],
+      "module": "",
+      "name": "BoundaryWall_11",
+      "position": [
+        -152.815002441406,
+        0.800000011920929,
+        -13.3449993133545
+      ],
+      "rotation_y": -1.57383298873901,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -203.700057983398,
+        0.0,
+        -22.3341484069824
+      ],
+      "bounds_size": [
+        29.5201110839844,
+        1.60000002384186,
+        9.05829620361328
+      ],
+      "module": "",
+      "name": "BoundaryWall_12",
+      "position": [
+        -188.940002441406,
+        0.800000011920929,
+        -17.8050003051758
+      ],
+      "rotation_y": -1.86094379425049,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -220.665161132812,
+        0.0,
+        -55.9327430725098
+      ],
+      "bounds_size": [
+        17.1303100585938,
+        1.60000002384186,
+        33.7954864501953
+      ],
+      "module": "",
+      "name": "BoundaryWall_13",
+      "position": [
+        -212.100006103516,
+        0.800000011920929,
+        -39.0349998474121
+      ],
+      "rotation_y": -2.67687654495239,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_00_-1_0",
+      "position": [
+        -64.5,
+        0.0,
+        -85.0500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.805000007152557,
+        0.805000007152557,
+        0.805000007152557
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_b.glb",
+      "name": "ResidentialHouse_01_-1_0",
+      "position": [
+        -48.375,
+        0.0,
+        -91.6500015258789
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.12999999523163,
+        1.12999999523163,
+        1.12999999523163
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_02_-1_0",
+      "position": [
+        -32.25,
+        0.0,
+        -89.4499969482422
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.904999971389771,
+        0.904999971389771,
+        0.904999971389771
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_03_-1_0",
+      "position": [
+        -16.125,
+        0.0,
+        -87.25
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.954999983310699,
+        0.954999983310699,
+        0.954999983310699
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_b.glb",
+      "name": "ResidentialHouse_04_-1_0",
+      "position": [
+        0.0,
+        0.0,
+        -93.8499984741211
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.00499999523163,
+        1.00499999523163,
+        1.00499999523163
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_05_-1_0",
+      "position": [
+        16.125,
+        0.0,
+        -91.6500015258789
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.05499994754791,
+        1.05499994754791,
+        1.05499994754791
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_06_-1_0",
+      "position": [
+        32.25,
+        0.0,
+        -89.4499969482422
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.10500001907349,
+        1.10500001907349,
+        1.10500001907349
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_b.glb",
+      "name": "ResidentialHouse_07_-1_0",
+      "position": [
+        48.375,
+        0.0,
+        -87.25
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.879999995231628,
+        0.879999995231628,
+        0.879999995231628
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_08_-1_0",
+      "position": [
+        64.5,
+        0.0,
+        -93.8499984741211
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.930000007152557,
+        0.930000007152557,
+        0.930000007152557
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_b.glb",
+      "name": "ResidentialHouse_West_00",
+      "position": [
+        -83.0,
+        0.0,
+        -88.8333358764648
+      ],
+      "rotation_y": 0.0308544021099806,
+      "scale": [
+        0.920000016689301,
+        0.920000016689301,
+        0.920000016689301
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_West_01",
+      "position": [
+        -99.0,
+        0.0,
+        -88.3395080566406
+      ],
+      "rotation_y": 0.0308544021099806,
+      "scale": [
+        0.944999992847443,
+        0.944999992847443,
+        0.944999992847443
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_West_02",
+      "position": [
+        -115.0,
+        0.0,
+        -87.5588226318359
+      ],
+      "rotation_y": 0.0880073755979538,
+      "scale": [
+        0.970000028610229,
+        0.970000028610229,
+        0.970000028610229
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_b.glb",
+      "name": "ResidentialHouse_West_03",
+      "position": [
+        -131.0,
+        0.0,
+        -86.1470565795898
+      ],
+      "rotation_y": 0.0880073755979538,
+      "scale": [
+        0.995000004768372,
+        0.995000004768372,
+        0.995000004768372
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_West_04",
+      "position": [
+        -147.0,
+        0.0,
+        -84.7352905273438
+      ],
+      "rotation_y": 0.0880073755979538,
+      "scale": [
+        0.920000016689301,
+        0.920000016689301,
+        0.920000016689301
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_West_05",
+      "position": [
+        -163.0,
+        0.0,
+        -83.2457656860352
+      ],
+      "rotation_y": 0.126440495252609,
+      "scale": [
+        0.944999992847443,
+        0.944999992847443,
+        0.944999992847443
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_b.glb",
+      "name": "ResidentialHouse_West_06",
+      "position": [
+        -179.0,
+        0.0,
+        -81.2118606567383
+      ],
+      "rotation_y": 0.126440495252609,
+      "scale": [
+        0.970000028610229,
+        0.970000028610229,
+        0.970000028610229
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_West_07",
+      "position": [
+        -195.0,
+        0.0,
+        -79.1779632568359
+      ],
+      "rotation_y": 0.126440495252609,
+      "scale": [
+        0.995000004768372,
+        0.995000004768372,
+        0.995000004768372
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_house_a.glb",
+      "name": "ResidentialHouse_West_08",
+      "position": [
+        -211.0,
+        0.0,
+        -77.1440658569336
+      ],
+      "rotation_y": 0.126440495252609,
+      "scale": [
+        0.920000016689301,
+        0.920000016689301,
+        0.920000016689301
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_00_01",
+      "position": [
+        -174.0,
+        0.0,
+        -59.9474563598633
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.990000009536743,
+        0.990000009536743,
+        0.990000009536743
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_00_02",
+      "position": [
+        -143.0,
+        0.0,
+        -62.7882347106934
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.870000004768372,
+        0.870000004768372,
+        0.870000004768372
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_00_03",
+      "position": [
+        -112.0,
+        0.0,
+        -66.1235275268555
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.03999996185303,
+        1.03999996185303,
+        1.03999996185303
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_b.glb",
+      "name": "ParkTree_00_04",
+      "position": [
+        -81.0,
+        0.0,
+        -66.7950592041016
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.920000016689301,
+        0.920000016689301,
+        0.920000016689301
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_00_05",
+      "position": [
+        -50.0,
+        0.0,
+        -67.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0900000333786,
+        1.0900000333786,
+        1.0900000333786
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_00_06",
+      "position": [
+        -19.0,
+        0.0,
+        -67.3499984741211
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.970000028610229,
+        0.970000028610229,
+        0.970000028610229
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_b.glb",
+      "name": "ParkTree_00_08",
+      "position": [
+        43.0,
+        0.0,
+        -67.5500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.01999998092651,
+        1.01999998092651,
+        1.01999998092651
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_00_09",
+      "position": [
+        74.0,
+        0.0,
+        -67.1500015258789
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.899999976158142,
+        0.899999976158142,
+        0.899999976158142
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_01_00",
+      "position": [
+        -185.0,
+        0.0,
+        -25.3999996185303
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.930000007152557,
+        0.930000007152557,
+        0.930000007152557
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_01_01",
+      "position": [
+        -157.0,
+        0.0,
+        -29.0
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.10000002384186,
+        1.10000002384186,
+        1.10000002384186
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_b.glb",
+      "name": "ParkTree_01_03",
+      "position": [
+        -101.0,
+        0.0,
+        -24.2000007629395
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.860000014305115,
+        0.860000014305115,
+        0.860000014305115
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_00",
+      "position": [
+        -67.5,
+        0.0,
+        48.2000007629395
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.03999996185303,
+        1.03999996185303,
+        1.03999996185303
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_01",
+      "position": [
+        -52.5,
+        0.0,
+        50.5999984741211
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.920000016689301,
+        0.920000016689301,
+        0.920000016689301
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_b.glb",
+      "name": "ParkTree_02_02",
+      "position": [
+        -37.5,
+        0.0,
+        47.0
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0900000333786,
+        1.0900000333786,
+        1.0900000333786
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_04",
+      "position": [
+        -7.5,
+        0.0,
+        51.7999992370605
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.850000023841858,
+        0.850000023841858,
+        0.850000023841858
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_05",
+      "position": [
+        7.5,
+        0.0,
+        48.2000007629395
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.01999998092651,
+        1.01999998092651,
+        1.01999998092651
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_b.glb",
+      "name": "ParkTree_02_06",
+      "position": [
+        22.5,
+        0.0,
+        50.5999984741211
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.899999976158142,
+        0.899999976158142,
+        0.899999976158142
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_07",
+      "position": [
+        37.5,
+        0.0,
+        47.0
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.07000005245209,
+        1.07000005245209,
+        1.07000005245209
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_08",
+      "position": [
+        52.5,
+        0.0,
+        49.4000015258789
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.949999988079071,
+        0.949999988079071,
+        0.949999988079071
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_tree_a.glb",
+      "name": "ParkTree_02_09",
+      "position": [
+        67.5,
+        0.0,
+        51.7999992370605
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.829999983310699,
+        0.829999983310699,
+        0.829999983310699
+      ]
+    },
+    {
+      "module": "",
+      "name": "RoadsideLamp_-44",
+      "position": [
+        -44.0999984741211,
+        0.0,
+        -71.5500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "UtilityPole_-50",
+      "position": [
+        -49.5999984741211,
+        0.0,
+        -83.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "RoadsideLamp_-22",
+      "position": [
+        -22.0499992370605,
+        0.0,
+        -71.5500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "RoadsideLamp_0",
+      "position": [
+        0.0,
+        0.0,
+        -71.5500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "UtilityPole_-6",
+      "position": [
+        -5.5,
+        0.0,
+        -83.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "RoadsideLamp_22",
+      "position": [
+        22.0499992370605,
+        0.0,
+        -71.5500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "RoadsideLamp_44",
+      "position": [
+        44.0999984741211,
+        0.0,
+        -71.5500030517578
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "",
+      "name": "UtilityPole_39",
+      "position": [
+        38.5999984741211,
+        0.0,
+        -83.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -66.0,
+        6.13250017166138,
+        -82.4674987792969
+      ],
+      "bounds_size": [
+        132.0,
+        0.0349998474121094,
+        0.035003662109375
+      ],
+      "module": "",
+      "name": "OverheadCable_0",
+      "position": [
+        0.0,
+        6.15000009536743,
+        -82.4499969482422
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -66.0,
+        5.9524998664856,
+        -82.7075042724609
+      ],
+      "bounds_size": [
+        132.0,
+        0.0349998474121094,
+        0.035003662109375
+      ],
+      "module": "",
+      "name": "OverheadCable_1",
+      "position": [
+        0.0,
+        5.96999979019165,
+        -82.6900024414062
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bounds_min": [
+        -66.0,
+        5.77250003814697,
+        -82.9475021362305
+      ],
+      "bounds_size": [
+        132.0,
+        0.0349998474121094,
+        0.035003662109375
+      ],
+      "module": "",
+      "name": "OverheadCable_2",
+      "position": [
+        0.0,
+        5.78999996185303,
+        -82.9300003051758
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_hatchback_a.glb",
+      "name": "ParkedCar_00",
+      "position": [
+        -45.1500015258789,
+        0.0,
+        -72.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.939999997615814,
+        0.939999997615814,
+        0.939999997615814
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_hatchback_b.glb",
+      "name": "ParkedCar_01",
+      "position": [
+        -27.2999992370605,
+        0.0,
+        -72.75
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        0.975000023841858,
+        0.975000023841858,
+        0.975000023841858
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_hatchback_c.glb",
+      "name": "ParkedCar_02",
+      "position": [
+        -9.44999980926514,
+        0.0,
+        -72.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        1.00999999046326,
+        1.00999999046326,
+        1.00999999046326
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_hatchback_d.glb",
+      "name": "ParkedCar_03",
+      "position": [
+        8.39999961853027,
+        0.0,
+        -72.75
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        0.939999997615814,
+        0.939999997615814,
+        0.939999997615814
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_hatchback_a.glb",
+      "name": "ParkedCar_04",
+      "position": [
+        26.25,
+        0.0,
+        -72.75
+      ],
+      "rotation_y": 0.0,
+      "scale": [
+        0.975000023841858,
+        0.975000023841858,
+        0.975000023841858
+      ]
+    },
+    {
+      "module": "res://assets/environment/kilmore/kilmore_hatchback_b.glb",
+      "name": "ParkedCar_05",
+      "position": [
+        44.0999984741211,
+        0.0,
+        -72.75
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.00999999046326,
+        1.00999999046326,
+        1.00999999046326
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_00",
+      "position": [
+        -28.0,
+        0.0,
+        -36.0
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_01",
+      "position": [
+        -20.0,
+        0.0,
+        -36.7000007629395
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_02",
+      "position": [
+        -12.0,
+        0.0,
+        -36.0
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_03",
+      "position": [
+        -4.0,
+        0.0,
+        -36.7000007629395
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_04",
+      "position": [
+        4.0,
+        0.0,
+        -36.0
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_05",
+      "position": [
+        12.0,
+        0.0,
+        -36.7000007629395
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_06",
+      "position": [
+        20.0,
+        0.0,
+        -36.0
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "module": "res://scenes/footballer_visual.tscn",
+      "name": "Spectator_07",
+      "position": [
+        28.0,
+        0.0,
+        -36.7000007629395
+      ],
+      "rotation_y": 3.14159274101257,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "pitch_m": [
+    105,
+    68
+  ],
+  "road_near_m": 37.75
+}

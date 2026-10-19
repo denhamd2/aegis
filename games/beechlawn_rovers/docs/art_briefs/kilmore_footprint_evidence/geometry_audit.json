@@ -1,0 +1,30 @@
+{
+  "outline_area_m2": 27231.9414,
+  "playing_area_m2": 7140,
+  "apron_area_m2": 20091.941400000003,
+  "apron_triangles": 18,
+  "road_triangles": 32,
+  "road_path_xz_m": [
+    [
+      -69.5,
+      -75.25
+    ],
+    [
+      -110,
+      -74
+    ],
+    [
+      -161,
+      -69.5
+    ],
+    [
+      -220,
+      -62
+    ],
+    [
+      -235,
+      -59
+    ]
+  ],
+  "surveyed": false
+}

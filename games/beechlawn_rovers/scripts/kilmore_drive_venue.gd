@@ -7,6 +7,9 @@ class_name KilmoreDriveVenue
 # captures show a broad open lawn between the pitch and the residential street.
 const ROAD_FACING_GRASS_BUFFER := 35.0
 const ROAD_CONTEXT_SHIFT := ROAD_FACING_GRASS_BUFFER - 5.75
+const SITE_LAYOUT: KilmoreSiteLayout = preload("res://assets/environment/kilmore/kilmore_site_layout.tres")
+const SITE_APRON: PackedScene = preload("res://assets/environment/kilmore/kilmore_site_apron.glb")
+const WEST_ROAD: PackedScene = preload("res://assets/environment/kilmore/kilmore_west_road.glb")
 
 const HOUSE_MODULE: PackedScene = preload("res://assets/environment/kilmore/kilmore_house_a.glb")
 const HOUSE_MODULE_B: PackedScene = preload("res://assets/environment/kilmore/kilmore_house_b.glb")
@@ -55,6 +58,16 @@ static func build(parent: Node3D, field_length: float, field_width: float, detai
 	# prevents this flat park surface from hiding the authored pitch relief.
 	park_turf.position = Vector3.ZERO
 	park_turf.mesh = _park_apron_mesh(field_length, field_width)
+	if detailed:
+		park_turf.mesh = _site_apron_mesh()
+		var distant_ground := _box(root, "DistantGround", Vector3(650.0, 0.1, 300.0),
+			Vector3(-80.0, -0.2, -25.0), grass)
+		distant_ground.material_override = park_grass_material
+		var west := WEST_ROAD.instantiate() as Node3D
+		west.name = "WesternRoad"
+		root.add_child(west)
+		for surface in west.find_children("*", "MeshInstance3D", true, false):
+			(surface as MeshInstance3D).material_override = road_material if "Asphalt" in str(surface.name) else concrete
 	# Keep a substantial open lawn before the pavement/road cluster.
 	_box(root, "Footpath", Vector3(field_length + 34.0, 0.16, 2.5),
 		Vector3(0.0, -0.04, far_side_sign * (field_width * 0.5 + 7.0 + ROAD_CONTEXT_SHIFT)), concrete)
@@ -71,7 +84,7 @@ static func build(parent: Node3D, field_length: float, field_width: float, detai
 
 	# Kilmore Drive's long, weathered wall and hedge form the far boundary layer.
 	for end_sign in [-1.0, 1.0]:
-		if detailed and end_sign < 0.0:
+		if detailed:
 			continue
 		_box(root, "EndWall_%s" % end_sign, Vector3(0.28, 1.55, field_width + 12.0 + ROAD_FACING_GRASS_BUFFER),
 			Vector3(end_sign * (field_length * 0.5 + 10.0), 0.77, (12.0 - ROAD_FACING_GRASS_BUFFER) * 0.5), wall_light)
@@ -79,11 +92,26 @@ static func build(parent: Node3D, field_length: float, field_width: float, detai
 			var z := -field_width * 0.5 - ROAD_FACING_GRASS_BUFFER + 1.0 + float(joint) * (field_width + ROAD_FACING_GRASS_BUFFER + 10.0) / 17.0
 			_box(root, "WallJoint", Vector3(0.31, 1.62, 0.06),
 				Vector3(end_sign * (field_length * 0.5 + 9.84), 0.79, z), wall_dark)
-	var boundary_sign := 1.0
-	_box(root, "FarBoundaryWall", Vector3(field_length + 20.0, 1.65, 0.32),
-		Vector3(0.0, 0.825, boundary_sign*(field_width * 0.5 + 10.0)), wall_light)
-	_box(root, "FarBoundaryHedge", Vector3(field_length + 20.0, 1.8, 1.1),
-		Vector3(0.0, 1.7, boundary_sign*(field_width * 0.5 + 11.1)), hedge)
+	if detailed:
+		# Neighboring grounds to the east; back gardens follow the irregular
+		# southern/western edge. No wall closes the open roadside green.
+		for index in range(5, SITE_LAYOUT.outline.size()):
+			var a := SITE_LAYOUT.outline[index]
+			var b := SITE_LAYOUT.outline[(index + 1) % SITE_LAYOUT.outline.size()]
+			var delta := b - a
+			var centre := (a + b) * 0.5
+			var wall := _box(root, "BoundaryWall_%02d" % index,
+				Vector3(0.28, 1.6, delta.length()), Vector3(centre.x, 0.8, centre.y), wall_light)
+			wall.rotation.y = atan2(delta.x, delta.y)
+			if index in [6, 7, 8]:
+				var greenery := _box(root, "BoundaryHedge_%02d" % index,
+					Vector3(1.0, 1.2, delta.length()), Vector3(centre.x, 1.65, centre.y), hedge)
+				greenery.rotation.y = wall.rotation.y
+	else:
+		_box(root, "FarBoundaryWall", Vector3(field_length + 20.0, 1.65, 0.32),
+			Vector3(0.0, 0.825, field_width * 0.5 + 10.0), wall_light)
+		_box(root, "FarBoundaryHedge", Vector3(field_length + 20.0, 1.8, 1.1),
+			Vector3(0.0, 1.7, field_width * 0.5 + 11.1), hedge)
 
 	# Houses sit beyond the road/path on the residential edge. Alternate two
 	# facades, vary their scale/setback, and leave broad gaps for mature trees so
@@ -101,6 +129,14 @@ static func build(parent: Node3D, field_length: float, field_width: float, detai
 				Vector3(x, 0.0, side * depth), Vector3(0.0, PI if side > 0.0 else 0.0, 0.0))
 			var house_scale := 0.88 + float((index * 13 + int(side) * 3) % 11) * 0.025
 			house.scale = Vector3(house_scale, house_scale, house_scale)
+	if detailed:
+		for index in 9:
+			var x := -83.0 - float(index) * 16.0
+			var slope := (SITE_LAYOUT.road_z_at(x + 1.0) - SITE_LAYOUT.road_z_at(x - 1.0)) * 0.5
+			var house := _add_module(root, "ResidentialHouse_West_%02d" % index,
+				HOUSE_MODULE_B if index % 3 == 0 else HOUSE_MODULE,
+				Vector3(x, 0.0, SITE_LAYOUT.road_z_at(x) - 14.0), Vector3(0.0, atan2(-slope, 1.0), 0.0))
+			house.scale = Vector3.ONE * (0.92 + float(index % 4) * 0.025)
 
 	# Existing trees and a few roadside specimens create irregular skyline breaks.
 	for row in range(3):
@@ -119,6 +155,12 @@ static func build(parent: Node3D, field_length: float, field_width: float, detai
 			elif row == 1:
 				# Sparse western park specimens, leaving the central apron open.
 				z = -(field_width * 0.5 + 16.0 + variation * 1.5)
+			if detailed and row == 0:
+				x = -205.0 + float(index) * 31.0
+				z = SITE_LAYOUT.road_z_at(x) + 7.5 + variation * 0.2
+			elif detailed and row == 1:
+				x = -185.0 + float(index) * 28.0
+				z = -29.0 + variation * 1.2
 			var tree_module := TREE_MODULE_B if (index + row) % 4 == 0 else TREE_MODULE
 			var tree := _add_module(root, "ParkTree_%02d_%02d" % [row, index], tree_module,
 				Vector3(x, 0.0, z), Vector3.ZERO)
@@ -252,3 +294,15 @@ static func _park_apron_mesh(length: float, width: float) -> ArrayMesh:
 			tool.set_uv(Vector2(point.x,point.z)/8.0)
 			tool.add_vertex(point)
 	return tool.commit()
+
+static func _site_apron_mesh() -> Mesh:
+	var imported := SITE_APRON.instantiate()
+	var source := imported as MeshInstance3D
+	if source == null:
+		for child in imported.find_children("*", "MeshInstance3D", true, false):
+			source = child as MeshInstance3D
+			break
+	assert(source != null, "Site apron GLB has no surface mesh")
+	var mesh := source.mesh
+	imported.free()
+	return mesh

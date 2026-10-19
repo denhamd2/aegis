@@ -191,3 +191,9 @@ edge or in sparse western clusters. See the [comparison, Blender layout study
 and actual engine captures](art_briefs/kilmore_road_setback.md). The park's
 irregular outline, westward extent, street bends and final asset fidelity
 remain open; do not describe this spacing correction as an exact site rebuild.
+
+The subsequent [site-footprint pass](art_briefs/kilmore_site_footprint.md)
+traces the western taper/inset and continues the road through reusable Blender
+GLBs plus a Godot layout resource. Source pixels and calibration are archived
+in `references/research/kilmore_site/site_trace.json`. This advances the outline
+and western extent, not surveyed accuracy or individual property matching.

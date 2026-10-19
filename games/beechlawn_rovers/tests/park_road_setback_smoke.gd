@@ -18,18 +18,29 @@ func _run() -> void:
 	assert(road_near > path_near + 2.0, "Road belongs beyond the grass and pedestrian path")
 	var turf := park.get_node("ParkTurf") as MeshInstance3D
 	var terrain_bounds := turf.global_transform * turf.get_aabb()
-	assert(terrain_bounds.position.z < road.position.z - 10.0, "Extended park ground must reach the residential layer")
+	assert(terrain_bounds.position.z <= path.position.z + 1.35, "Park lawn must reach the roadside path")
+	var distant := park.get_node("DistantGround") as MeshInstance3D
+	var distant_bounds := distant.global_transform * distant.get_aabb()
+	assert(distant_bounds.position.z < road.position.z - 10.0 and distant_bounds.end.y < -0.1,
+		"Distant backdrop must reach houses without hiding pitch relief")
 	var apron_arrays := turf.mesh.surface_get_arrays(0)
 	var apron_vertices: PackedVector3Array = apron_arrays[Mesh.ARRAY_VERTEX]
-	for index in range(0,apron_vertices.size(),3):
-		assert((apron_vertices[index+1]-apron_vertices[index]).cross(apron_vertices[index+2]-apron_vertices[index]).y < 0.0, "Grass apron must face the above-ground camera")
-		var centre := (apron_vertices[index]+apron_vertices[index+1]+apron_vertices[index+2])/3.0
+	var apron_indices: PackedInt32Array = apron_arrays[Mesh.ARRAY_INDEX]
+	if apron_indices.is_empty():
+		for index in apron_vertices.size():apron_indices.append(index)
+	for index in range(0,apron_indices.size(),3):
+		var a := apron_vertices[apron_indices[index]]
+		var b := apron_vertices[apron_indices[index+1]]
+		var c := apron_vertices[apron_indices[index+2]]
+		assert((b-a).cross(c-a).y < 0.0, "Grass apron must face the above-ground camera")
+		var centre := (a+b+c)/3.0
 		assert(absf(centre.x)>=52.5 or absf(centre.z)>=34.0, "Flat apron must not obscure pitch relief")
 	for child in park.get_children():
 		if str(child.name).begins_with("ParkedCar_"):
 			assert(absf(child.position.z - road.position.z) < 3.0, "Parked car separated from the shifted street")
 		if str(child.name).begins_with("ResidentialHouse_") and child.position.z < 0.0:
-			assert(child.position.z < road.position.z - 7.0, "Roadside houses must stay beyond the road")
+			var street_z := KilmoreDriveVenue.SITE_LAYOUT.road_z_at(child.position.x) if "_West_" in str(child.name) else road.position.z
+			assert(child.position.z < street_z - 7.0, "Roadside houses must stay beyond the road")
 		if str(child.name).begins_with("ParkTree_"):
 			assert(absf(child.position.z-road.position.z) > 4.0, "Tree trunk placed in the asphalt corridor")
 		if str(child.name).begins_with("RoadsideLamp_"):
@@ -63,7 +74,7 @@ func _run() -> void:
 		assert((b-a).cross(c-a).y < 0.0, "Relief terrain must face the above-ground camera")
 	assert(normals[0].y > 0.9, "Pitch lighting normal must point upward")
 	print("TERRAIN_FRONT_FACES clockwise, normal_y=",normals[0].y)
-	var file := FileAccess.open("res://docs/art_briefs/kilmore_setback_evidence/runtime_layout.json",FileAccess.WRITE)
+	var file := FileAccess.open("res://docs/art_briefs/kilmore_footprint_evidence/runtime_layout.json",FileAccess.WRITE)
 	file.store_string(JSON.stringify({"pitch_m":[105,68],"grass_buffer_m":path_near,"road_near_m":road_near,"objects":layout},"  ")+"\n")
 	file.close()
 	print("PASS: park grass buffer, coherent residential placement, tree/street clearance, touchline fans, 11v11 unchanged")
