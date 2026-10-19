@@ -243,6 +243,16 @@ func _physics_process(_delta: float) -> void:
 		_stall_cooldown -= 1
 	if _weapon_roll > 0:
 		_weapon_roll -= 1
+	if controller.outside_ring:
+		_outside_ticks += 1
+	else:
+		if _outside_ticks > 0 and (_heading_in or _use_in_ring or _fetch_inside):
+			_hold_ring_ticks = HOLD_RING_TICKS      # he brought it in here: wait for him
+		_outside_ticks = 0
+		_outside_spell = -1
+		_heading_in = false
+	if _hold_ring_ticks > 0:
+		_hold_ring_ticks -= 1
 	_circle_tick += 1
 	# Footwork is presentation/gameplay input, so its timer shares the fixed
 	# match tick and pauses through committed moves, hit reactions and grapples.
@@ -565,6 +575,9 @@ func _poll_input() -> Dictionary:
 	var armed := _weapon_input(input, to_target, distance)
 	if not armed.is_empty():
 		return armed
+	# He took it back into the ring: there he waits for the other man.
+	if _hold_ring_ticks > 0 and not controller.outside_ring and target.outside_ring:
+		return input
 	# No Holds Barred: he went through the ropes, so go after him.
 	if controller.outside_ring != target.outside_ring and not target.is_crossing_ropes() \
 			and controller.can_cross_ropes():
@@ -607,12 +620,18 @@ func _poll_input() -> Dictionary:
 		if to_spot.length() > 0.12:
 			var dir := to_spot.normalized()
 			input["move"] = Vector2(dir.x, dir.z)
+			if controller.outside_ring:
+				var up := _entrance_way_move(controller.global_position, spot)
+				if up != Vector2.ZERO and to_spot.length() > 1.5:
+					input["move"] = up
 		return input
 	# If both wrestlers are on the floor, approach along the open ringside lane.
 	# The ring deck blocks a straight path between opposite sides; feeding that
 	# vector to both controllers made them push into the apron indefinitely.
 	# Weapon fetch/use decisions above still take priority, but neutral movement
 	# always closes distance by routing around a clear corner.
+	if controller.outside_ring and target.outside_ring and _back_in_the_ring_now():
+		return _into_the_ring(input)
 	if controller.outside_ring and target.outside_ring and distance > tie_up_range:
 		input["move"] = _outside_opponent_move(target.global_position)
 		return input
@@ -938,6 +957,64 @@ func _through_ropes_toward(him: Vector3) -> Vector2:
 ## the (+X, -Z) corner, so prefer the other arc whenever it is available.
 func _outside_opponent_move(him: Vector3) -> Vector2:
 	var me := controller.global_position
+	var up := _entrance_way_move(me, him)
+	if up != Vector2.ZERO:
+		return up
+	return _ringside_move(me, him)
+
+
+## Whether he takes the floor fight back into the ring: both out a spell,
+## him empty-handed and free, and the other man on his feet to follow.
+func _back_in_the_ring_now() -> bool:
+	if not controller.outside_ring or controller.has_weapon() or _weapon_plan != WeaponPlan.NONE:
+		return false
+	if _heading_in:
+		return true
+	if _outside_spell < 0:
+		_outside_spell = _weapon_rng().randi_range(OUTSIDE_SPELL.x, OUTSIDE_SPELL.y)
+	if _outside_ticks < _outside_spell:
+		return false
+	if target.fsm.current_state in [WrestlerFSM.State.DOWN, WrestlerFSM.State.GETUP] \
+			or target.is_crossing_ropes():
+		return false
+	_heading_in = true
+	return true
+
+
+## Up the ramp and back down it: through the barricade's gap at the ramp
+## foot, and onto the deck's wide back by way of its lip, never straight at
+## a barricade. ZERO when neither end is up the entrance way.
+func _entrance_way_move(me: Vector3, goal: Vector3) -> Vector2:
+	var me_up := ArenaBuilder.in_entrance_way(me)
+	var goal_up := ArenaBuilder.in_entrance_way(goal)
+	if not me_up and not goal_up:
+		return Vector2.ZERO
+	var lane := ArenaBuilder.RAMP_HALF_WIDTH - WrestlerController.BODY_RADIUS - 0.25
+	var gap_z := -ArenaBuilder.BARRICADE_RADIUS
+	var lip := Vector3(0.0, 0.0, ArenaBuilder.STAGE_FRONT - 1.2)
+	var me_deck := ArenaBuilder.is_match_stage(me)
+	var goal_deck := ArenaBuilder.is_match_stage(goal)
+	var via := goal
+	if me_up and goal_up:
+		if me_deck != goal_deck and absf((me if me_deck else goal).x) > lane:
+			via = lip
+	elif goal_up:
+		# on the ringside floor: round the ring to the gap, then through it
+		if me.z < -WrestlerController.DECK_KEEP_OUT - 0.3 and absf(me.x) < lane + 0.3:
+			via = Vector3(clampf(goal.x, -lane, lane), 0.0, gap_z - 1.5)
+		else:
+			return _ringside_move(me, Vector3(0.0, 0.0, gap_z + 1.1))
+	else:
+		# up there, going back down: off the deck by its lip, then down the
+		# ramp to its foot
+		via = lip if me_deck and absf(me.x) > lane else Vector3(clampf(me.x, -lane, lane) * 0.5,
+				0.0, gap_z + 0.8)
+	var move := Vector2(via.x - me.x, via.z - me.z)
+	return move.normalized() if move.length() > 0.01 else Vector2(0.0, signf(goal.z - me.z))
+
+
+## Round the ring on the ringside floor to `him`.
+func _ringside_move(me: Vector3, him: Vector3) -> Vector2:
 	var step_escape := _outside_step_escape_move(me)
 	if step_escape.length_squared() > 0.0:
 		return Vector2(step_escape.x, step_escape.z)
@@ -1276,7 +1353,8 @@ const WEAPON_RUNS := 12
 ## A man's own weapons are this much likelier to come out.
 const SIGNATURE_WEIGHT := 7.0
 ## Firearms, explosives and hazardous set pieces are scarce, so bias them into
-## the card rather than leaving them to a 1-in-33 flat draw.
+## the card rather than leaving them to a 1-in-35 flat draw. (The knives and
+## swords are laid out on the stage several deep, WeaponStock.STAGE_LAYOUT.)
 const WILD_WEAPONS: Array[StringName] = [
 		&"handgun", &"rpg", &"bed_of_nails", &"table", &"thumbtacks", &"barbed_wire_board"]
 const WILD_WEIGHT := 10.0
@@ -1300,7 +1378,37 @@ const LINE_UP_CONE_DEG := 30.0
 ## of the man setting it, so about 0.95 m from him: clear of him, and where a
 ## running attack carries him).
 const SET_DOWN_FROM := 1.9
+## No Holds Barred is mostly a fight IN the ring (the owner, 19 Oct: the AI
+## spent nine-tenths of a match on the ringside floor, nhb_weapon_probe's
+## zones). A weapon picked up outside is taken back in this often to be used
+## there -- carried through the ropes, or slid under the bottom one first
+## SLIDE_IN_SHARE of those times -- and one fetched from the stage less
+## often, so the walk back down the ramp is where that fight happens.
+const IN_RING_USE := 0.65
+const IN_RING_USE_FROM_STAGE := 0.3
+const SLIDE_IN_SHARE := 0.45
+## A weapon run goes up to the stage's layout this often (when there is one);
+## otherwise he reaches under the ring.
+const STAGE_RUN_CHANCE := 0.4
+## A loose weapon on his side of the ropes this near is picked up rather than
+## fetched from anywhere else.
+const LOOSE_FETCH_REACH := 6.0
+## With both men out, empty-handed and standing, the one who gets a moment
+## takes the fight back into the ring after this long on the floor (ticks).
+const OUTSIDE_SPELL := Vector2i(600, 1080)
+## Having taken it back in, he waits this long in the ring for the other man
+## to follow rather than going straight back out after him.
+const HOLD_RING_TICKS := 240
+var _heading_in := false
+var _hold_ring_ticks := 0
+var _slid_in := false
 var _weapon_plan := WeaponPlan.NONE
+var _use_in_ring := false
+var _slide_in := false
+var _fetch_inside := false
+var _fetch_from_stage := false
+var _outside_ticks := 0
+var _outside_spell := -1
 var _weapon_roll := WEAPON_ROLL_TICKS
 var _weapon_runs := 0
 var _weapon_ticks := 0
@@ -1376,12 +1484,22 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 				_weapon_plan = WeaponPlan.FETCH
 				_weapon_ticks = 0
 				_weapon_pick = &""
+				_fetch_inside = false
+				_fetch_from_stage = _weapon_rng().randf() < STAGE_RUN_CHANCE
 				_weapon_runs += 1
 				weapon_runs_started += 1
 			else:
 				return _line_up_input(input, to_target, distance)
 		WeaponPlan.USE:
 			if not controller.has_weapon():
+				if _slid_in:
+					# slid in under the bottom rope: in after it, and pick it up
+					_slid_in = false
+					_slide_in = false
+					_weapon_plan = WeaponPlan.FETCH
+					_weapon_ticks = 0
+					_fetch_inside = true
+					return input
 				_weapon_plan = WeaponPlan.NONE
 				return {}
 			return _use_input(input, to_target, distance)
@@ -1393,14 +1511,25 @@ func _weapon_input(input: Dictionary, to_target: Vector3, distance: float) -> Di
 	if WeaponStock.of(controller).loose_near(controller.global_position):
 		input["weapon"] = true          # one lying at his feet will do
 		return input
+	if _fetch_inside and controller.outside_ring:
+		return _into_the_ring(input)
+	var loose := WeaponStock.of(controller).nearest_loose(controller.global_position,
+			not controller.outside_ring, LOOSE_FETCH_REACH * (2.0 if _fetch_inside else 1.0))
+	if loose:
+		var to_loose := _flat(loose.global_position - controller.global_position)
+		var toward := to_loose.normalized()
+		input["move"] = Vector2(toward.x, toward.z)
+		return input
+	if _fetch_inside:
+		_weapon_plan = WeaponPlan.NONE
+		return {}
 	var stage_weapon := WeaponStock.of(controller).nearest_stage_weapon(
-			controller.global_position)
+			controller.global_position) if _fetch_from_stage else null
 	if stage_weapon and controller.outside_ring:
 		var to_stage_weapon := stage_weapon.global_position - controller.global_position
 		to_stage_weapon.y = 0.0
 		if to_stage_weapon.length() > WeaponStock.PICKUP_REACH:
-			var toward := to_stage_weapon.normalized()
-			input["move"] = Vector2(toward.x, toward.z)
+			input["move"] = _outside_opponent_move(stage_weapon.global_position)
 		else:
 			input["weapon"] = true
 		return input
@@ -1454,6 +1583,25 @@ func _start_use() -> void:
 	_weapon_ticks = 0
 	_weapon_swings = 0
 	_throw_rolled = false
+	var rng := _weapon_rng()
+	var from_stage := ArenaBuilder.in_entrance_way(controller.global_position)
+	_use_in_ring = controller.outside_ring and rng.randf() \
+			< (IN_RING_USE_FROM_STAGE if from_stage else IN_RING_USE)
+	_slide_in = _use_in_ring and rng.randf() < SLIDE_IN_SHARE
+
+
+## Back into the ring: down off the ramp first if he is up it, then to the
+## apron on his side and through the ropes.
+func _into_the_ring(input: Dictionary) -> Dictionary:
+	if controller.is_crossing_ropes():
+		return input
+	var me := controller.global_position
+	if ArenaBuilder.in_entrance_way(me):
+		input["move"] = _entrance_way_move(me, Vector3(0.0, 0.0, -WrestlerController.DECK_KEEP_OUT))
+		return input
+	input["move"] = _through_ropes_toward(me)
+	input["rope_cross"] = controller.can_cross_ropes()
+	return input
 
 
 func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dictionary:
@@ -1465,6 +1613,19 @@ func _use_input(input: Dictionary, to_target: Vector3, distance: float) -> Dicti
 		_weapon_plan = WeaponPlan.NONE
 		input["grapple"] = true          # grapple with it in hand drops it
 		return input
+	# into the ring with it, to use it there: slid under the bottom rope
+	# first, or carried through
+	if _use_in_ring and not controller.outside_ring:
+		_use_in_ring = false                # in: from here it is used wherever he is
+	if _use_in_ring and controller.outside_ring:
+		if _slide_in and controller.can_slide_weapon_into_ring():
+			_slid_in = true
+			input["throw"] = true
+			return input
+		var lane_in := _into_the_ring(input)
+		if _slide_in:
+			lane_in.erase("rope_cross")         # to the apron, not through it yet
+		return lane_in
 	# not the time: he went back through the ropes, or he is on the mat
 	if controller.outside_ring != target.outside_ring:
 		return {}

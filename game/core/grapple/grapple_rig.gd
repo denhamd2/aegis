@@ -60,6 +60,10 @@ const RING_HALF_EXTENT := 2.0
 ## OUTSIDE_ALONG of the side's middle so it never wraps round a ring post.
 const OUTSIDE_LANE := (RingBuilder.APRON_OUT + ArenaBuilder.BARRICADE_RADIUS) * 0.5
 const OUTSIDE_ALONG := 2.2
+## Up the ramp the move runs along it, so only its width needs room: a body's
+## half-width either side of the walkway's centre stays on it. On the deck
+## the move keeps a throw's half-length off the edge.
+const ENTRANCE_WAY_MARGIN := 1.2
 
 ## The mannequin's hip height at scale 1.0, which every paired trajectory was
 ## authored against (tools/probe landmarks: pelvis 0.90 m at scale 0.98).
@@ -284,7 +288,13 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 	# authored against mat level, and either wrestler may be mid-drift.
 	midpoint.y = anchor.global_position.y if anchor else 0.0
 	var outside := attacker is WrestlerController and (attacker as WrestlerController).outside_ring
-	if outside:
+	var up_the_ramp := outside and ArenaBuilder.in_entrance_way(midpoint)
+	if up_the_ramp:
+		# Up the ramp or on the deck: played where they stand, at the height
+		# of what they stand on, kept a throw's length inside the walkway.
+		midpoint = ArenaBuilder.entrance_way_point(midpoint, ENTRANCE_WAY_MARGIN)
+		midpoint.y = ArenaBuilder.match_surface_y(midpoint)
+	elif outside:
 		# No Holds Barred, on the floor: the same clip a ring's height lower,
 		# in the lane between the ring deck and the barricade. A throw is two
 		# metres long and the lane under three wide, so the move runs ALONG
@@ -303,7 +313,10 @@ func _compute_pair_transform(attacker: Node3D, defender: Node3D) -> Transform3D:
 
 	var facing := defender.global_position - attacker.global_position
 	facing.y = 0.0
-	if outside:
+	if up_the_ramp and ArenaBuilder.is_match_ramp(midpoint):
+		# the ramp is a corridor: the move runs along it
+		facing = Vector3(0.0, 0.0, 1.0 if facing.z >= 0.0 else -1.0)
+	elif outside and not up_the_ramp:
 		var side := _outside_side(midpoint)
 		var tangent := Vector3(absf(side.z), 0.0, absf(side.x))
 		facing = tangent * (1.0 if facing.dot(tangent) >= 0.0 else -1.0)

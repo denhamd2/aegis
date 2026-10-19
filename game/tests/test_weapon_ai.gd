@@ -54,7 +54,7 @@ func test_he_favours_his_own_weapons() -> void:
 		if cody.ai._owns(WeaponCatalog.by_id(cody.ai.choose_weapon(rng))):
 			cody_own += 1
 	# Wild-weapon weighting dilutes ownership, but each favourite still wins
-	# more often than a flat 1-in-33 draw.
+	# more often than a flat 1-in-35 draw.
 	assert_float(float(roman_own) / draws).is_greater(0.18)
 	assert_float(float(cody_own) / draws).is_greater(0.04)
 
@@ -81,30 +81,23 @@ func test_rocket_gun_and_bed_of_nails_are_regular_ai_picks() -> void:
 	assert_int(WrestlerAI.WEAPON_RUNS).is_greater_equal(10)
 
 
-func test_gun_and_rocket_launcher_unlock_only_in_the_late_match() -> void:
+func test_gun_and_rocket_launcher_are_open_from_the_bell() -> void:
+	# the owner, 19 Oct: no late-match lock -- they can come out at any time
 	var pair := _pair(true)
 	var flow := MatchFlow.new()
 	flow.name = "MatchFlow"
 	add_child(flow)
 	var stock := WeaponStock.of(pair[0])
-	flow.tick = int(WeaponStock.LATE_MATCH_UNLOCK_SECONDS * 60.0) - 1
-	assert_bool(stock.in_stock(&"handgun")).is_false()
-	assert_bool(stock.in_stock(&"rpg")).is_false()
-	assert_bool(stock.in_stock(&"bed_of_nails")).is_true()
-	var rng := RandomNumberGenerator.new()
-	for i in 100:
-		rng.seed = i + 1
-		var early_pick: StringName = pair[0].ai.choose_weapon(rng)
-		assert_bool(early_pick in WeaponStock.LATE_MATCH_ONLY).is_false()
-	flow.tick = int(WeaponStock.LATE_MATCH_UNLOCK_SECONDS * 60.0)
+	flow.tick = 0
 	assert_bool(stock.in_stock(&"handgun")).is_true()
 	assert_bool(stock.in_stock(&"rpg")).is_true()
-	var late_picks := {}
+	var rng := RandomNumberGenerator.new()
+	var early_picks := {}
 	for i in 200:
-		rng.seed = i + 101
-		late_picks[pair[0].ai.choose_weapon(rng)] = true
-	assert_bool(late_picks.has(&"handgun")).is_true()
-	assert_bool(late_picks.has(&"rpg")).is_true()
+		rng.seed = i + 1
+		early_picks[pair[0].ai.choose_weapon(rng)] = true
+	assert_bool(early_picks.has(&"handgun")).is_true()
+	assert_bool(early_picks.has(&"rpg")).is_true()
 
 
 func test_tables_are_a_common_pick_for_both_wrestlers() -> void:
@@ -239,6 +232,7 @@ func test_an_outside_ai_chooses_a_loose_stage_weapon_and_heads_up_the_ramp() -> 
 	stage_weapon.global_position = Vector3(0.0, ArenaBuilder.STAGE_DECK_Y, -32.0)
 	stock.stage_actors.append(stage_weapon)
 	roman.ai._weapon_plan = WrestlerAI.WeaponPlan.FETCH
+	roman.ai._fetch_from_stage = true      # this run is for the stage's layout
 	var input := roman.ai._weapon_input({}, Vector3.BACK, 24.0)
 	assert_bool(input.has("move")).is_true()
 	assert_float((input["move"] as Vector2).y).is_less(0.0)
@@ -327,3 +321,43 @@ func test_a_laid_out_ladder_selects_the_ladder_slam_pair() -> void:
 	assert_bool(input.get("grapple", false)).is_true()
 	assert_object(roman.prefer_hold_move).is_same(
 			load("res://resources/moves/weapon_ladder_slam.tres"))
+
+
+func test_a_weapon_fetched_outside_is_often_taken_back_into_the_ring() -> void:
+	# the owner, 19 Oct: more of No Holds Barred in the ring
+	var pair := _pair(true)
+	var roman := pair[0]
+	roman.outside_ring = true
+	roman.global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.6, WrestlerController.FLOOR_LEVEL, 0.5)
+	pair[1].outside_ring = true
+	pair[1].global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.6, WrestlerController.FLOOR_LEVEL, 3.0)
+	await _ticks(2)
+	var in_ring := 0
+	for i in 100:
+		roman.ai._circle_tick = i * 7
+		roman.ai._start_use()
+		if roman.ai._use_in_ring:
+			in_ring += 1
+	assert_int(in_ring).is_between(50, 80)
+	# and heading in, he walks to the ropes on his side and goes through
+	roman.ai._use_in_ring = true
+	roman.ai._slide_in = false
+	var weapon := WeaponStock.of(roman).pull(WeaponCatalog.by_id(&"steel_chair"))
+	roman.take_weapon(weapon)
+	roman.ai._weapon_plan = WrestlerAI.WeaponPlan.USE
+	var input := roman.ai._weapon_input({}, Vector3(0, 0, 2.5), 2.5)
+	assert_float((input["move"] as Vector2).x).is_less(0.0)
+	assert_bool(input.get("rope_cross", false)).is_true()
+
+
+func test_both_out_too_long_he_takes_the_fight_back_in() -> void:
+	var pair := _pair(true)
+	var roman := pair[0]
+	for w in pair:
+		w.outside_ring = true
+	roman.global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.4, WrestlerController.FLOOR_LEVEL, 0.5)
+	pair[1].global_position = Vector3(WrestlerController.DECK_KEEP_OUT + 0.6, WrestlerController.FLOOR_LEVEL, 2.5)
+	roman.ai._outside_ticks = WrestlerAI.OUTSIDE_SPELL.y
+	assert_bool(roman.ai._back_in_the_ring_now()).is_true()
+	roman.ai._outside_ticks = 0
+	assert_bool(roman.ai._back_in_the_ring_now()).is_true()      # latched till he is in

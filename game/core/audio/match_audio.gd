@@ -408,7 +408,8 @@ static func commentary_event_for_weapon_ready(weapon_id: StringName) -> String:
 		return "excalibur_bed_of_nails"
 	var exceptional_risk := weapon_id in [
 		&"steel_chair", &"baseball_bat", &"ladder", &"light_tubes", &"barbed_wire_chair",
-		&"barbed_wire_bat", &"bed_of_nails", &"barbed_wire_board",
+		&"barbed_wire_bat", &"bed_of_nails", &"barbed_wire_board", &"knife", &"sword",
+		&"handgun", &"rpg",
 	]
 	return "tony_danger_warning" if (
 		weapon.damage_head >= 12.0 or weapon.landing_damage >= 12.0 or exceptional_risk

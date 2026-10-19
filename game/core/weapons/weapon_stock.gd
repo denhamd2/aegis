@@ -4,25 +4,29 @@ extends Node3D
 ## is out -- held, thrown, lying on the floor, set up, broken. One per match,
 ## a child of the match scene, made the first time anyone reaches for one.
 ##
-## Under the ring is the whole catalogue, at every apron side. A weapon
-## pulled out stays out of stock for 60 seconds, so it is not fetched again
-## while its previous copy is still lying around or being used.
+## Under the ring is the whole catalogue, at every apron side, and as many
+## of each as anyone wants: a second chair can come out while the first is
+## still lying in the ring (the owner, 19 Oct).
 
-const RESTOCK_TICKS := 60 * 60
 ## A weapon on the floor this close to his feet can be picked up.
 const PICKUP_REACH := 0.95
-## The gun and launcher are late-match escalation weapons, not opening picks.
-const LATE_MATCH_ONLY: Array[StringName] = [&"handgun", &"rpg"]
-const LATE_MATCH_UNLOCK_SECONDS := 300.0
-## These four props are visible on the entrance deck from the opening bell.
-const STAGE_WEAPONS: Array[StringName] = [
-		&"barbed_wire_chair", &"barbed_wire_bat", &"sledgehammer", &"light_tubes"]
+## Laid out on the entrance deck from the opening bell: the most dangerous
+## things in the building, several of each -- the guns, the launchers, the
+## knives and the swords (the owner, 19 Oct) -- with the wire and the hammer
+## that were here first. Either side of the walkway, on the deck's full
+## width behind its flare (ArenaBuilder.stage_half_width).
+const STAGE_LAYOUT := [
+	[&"handgun", Vector3(-3.0, 0.0, -35.6)], [&"knife", Vector3(-4.6, 0.0, -35.6)],
+	[&"sword", Vector3(-6.2, 0.0, -35.6)], [&"rpg", Vector3(-3.2, 0.0, -33.9)],
+	[&"knife", Vector3(-4.8, 0.0, -33.9)], [&"barbed_wire_chair", Vector3(-6.4, 0.0, -33.9)],
+	[&"sledgehammer", Vector3(-2.6, 0.0, -32.2)], [&"knife", Vector3(-3.9, 0.0, -32.2)],
+	[&"rpg", Vector3(3.0, 0.0, -35.6)], [&"sword", Vector3(4.6, 0.0, -35.6)],
+	[&"handgun", Vector3(6.2, 0.0, -35.6)], [&"knife", Vector3(3.2, 0.0, -33.9)],
+	[&"sword", Vector3(4.8, 0.0, -33.9)], [&"light_tubes", Vector3(6.4, 0.0, -33.9)],
+	[&"barbed_wire_bat", Vector3(2.6, 0.0, -32.2)], [&"handgun", Vector3(3.9, 0.0, -32.2)],
+]
 const STAGE_WEAPON_LIFETIME_TICKS := 60 * 180
-const STAGE_POSITIONS: Array[Vector3] = [
-		Vector3(-6.2, 0.0, -31.6), Vector3(-6.2, 0.0, -33.8),
-		Vector3(6.2, 0.0, -31.6), Vector3(6.2, 0.0, -33.8)]
 
-var _out_until := {}           # id -> physics frame it is back under the ring
 var actors: Array[WeaponActor] = []
 var stage_actors: Array[WeaponActor] = []
 
@@ -38,23 +42,14 @@ static func of(node: Node) -> WeaponStock:
 	return s
 
 
-## Whether `id` is under the ring now.
+## Whether `id` is under the ring: anything in the catalogue, at any point
+## in the match -- the gun and the launcher included (the owner, 19 Oct).
 func in_stock(id: StringName) -> bool:
-	return is_selectable(id) and Engine.get_physics_frames() >= int(_out_until.get(id, 0))
-
-
-## Whether the match allows this weapon to be selected from under the ring.
-## Matches without a MatchFlow (isolated tests and tools) keep the full stock.
-func is_selectable(id: StringName) -> bool:
-	if id not in LATE_MATCH_ONLY:
-		return true
-	var flow := get_parent().get_node_or_null("MatchFlow") as MatchFlow
-	return flow == null or flow.seconds() >= LATE_MATCH_UNLOCK_SECONDS
+	return WeaponCatalog.by_id(id) != null
 
 
 ## Takes `def` out from under the ring: a new actor in the scene.
 func pull(def: WeaponDef) -> WeaponActor:
-	_out_until[def.id] = Engine.get_physics_frames() + RESTOCK_TICKS
 	var a := WeaponActor.make(def)
 	add_child(a)
 	actors.append(a)
@@ -66,14 +61,17 @@ func pull(def: WeaponDef) -> WeaponActor:
 func seed_stage_weapons() -> void:
 	if not MatchRules.no_holds_barred(self) or not stage_actors.is_empty():
 		return
-	for i in STAGE_WEAPONS.size():
-		var actor := pull(WeaponCatalog.by_id(STAGE_WEAPONS[i]))
-		actor.name = "StageWeapon_" + String(STAGE_WEAPONS[i])
+	for i in STAGE_LAYOUT.size():
+		var id: StringName = STAGE_LAYOUT[i][0]
+		var actor := pull(WeaponCatalog.by_id(id))
+		actor.name = "StageWeapon%02d_%s" % [i, id]
 		actor.mode = WeaponActor.Mode.FLOOR
 		actor.match_lifetime_limit = STAGE_WEAPON_LIFETIME_TICKS
-		actor.global_position = STAGE_POSITIONS[i]
-		actor.global_position.y = WeaponActor.ground_under(actor.global_position) + 0.02
-		actor.rotation.y = float(i % 2) * 0.72
+		actor.global_position = STAGE_LAYOUT[i][1]
+		actor.rotation.y = float(i % 3) * 0.61 - 0.4
+		# laid down on its side, as a thrown one comes to rest: a sword
+		# stood on its point is not laid out
+		actor._rest_on_floor(WeaponActor.ground_under(actor.global_position))
 		stage_actors.append(actor)
 
 
@@ -88,6 +86,26 @@ func nearest_stage_weapon(at: Vector3) -> WeaponActor:
 				actor.global_position.z - at.z).length()
 		if d < best_d:
 			best = actor
+			best_d = d
+	return best
+
+
+## The nearest weapon lying loose on one side of the ropes (`inside` the
+## ring or out of it) within `reach` of `at`, or null: one slid in, dropped,
+## or knocked out of a man's hands, for an AI to go and pick up.
+func nearest_loose(at: Vector3, inside: bool, reach: float) -> WeaponActor:
+	var best: WeaponActor = null
+	var best_d := reach
+	for a in actors:
+		if not is_instance_valid(a) or a.mode != WeaponActor.Mode.FLOOR:
+			continue
+		var p := a.global_position
+		var in_ring := absf(p.x) < RingBuilder.MAT_HALF and absf(p.z) < RingBuilder.MAT_HALF
+		if in_ring != inside:
+			continue
+		var d := Vector2(p.x - at.x, p.z - at.z).length()
+		if d < best_d:
+			best = a
 			best_d = d
 	return best
 

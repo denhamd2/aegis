@@ -48,7 +48,7 @@ func test_every_weapon_can_be_reached_on_the_wheel() -> void:
 			var deg := WeaponWheel.item_angle(f * 60.0, i, items.size())
 			var got := WeaponWheel.pick_at(Vector2(sin(deg_to_rad(deg)), -cos(deg_to_rad(deg))), f)
 			reached[items[got[1]].id] = true
-	assert_int(reached.size()).is_equal(33)
+	assert_int(reached.size()).is_equal(35)
 
 
 # --- the rules -----------------------------------------------------------------
@@ -82,7 +82,8 @@ func test_he_pulls_out_what_he_picks() -> void:
 		w._tick_weapon_action({})
 	assert_bool(w.has_weapon()).is_true()
 	assert_str(String(w.held_weapon.def.id)).is_equal("steel_chair")
-	assert_bool(WeaponStock.of(w).in_stock(&"steel_chair")).is_false()
+	# as many of each as he wants: a second chair is still under there
+	assert_bool(WeaponStock.of(w).in_stock(&"steel_chair")).is_true()
 
 
 func test_a_ringside_weapon_can_be_slid_under_the_bottom_rope() -> void:
@@ -113,7 +114,7 @@ func test_a_ringside_weapon_can_be_slid_under_the_bottom_rope() -> void:
 	assert_str(String(w.held_weapon.def.id)).is_equal("steel_chair")
 
 
-func test_no_holds_barred_seeds_four_pickup_ready_weapons_on_the_stage() -> void:
+func test_no_holds_barred_lays_out_the_dangerous_weapons_on_the_stage() -> void:
 	var arena: Node3D = auto_free(Node3D.new())
 	MatchRules.set_mode(arena, MatchRules.Mode.NO_HOLDS_BARRED)
 	add_child(arena)
@@ -122,13 +123,23 @@ func test_no_holds_barred_seeds_four_pickup_ready_weapons_on_the_stage() -> void
 	var stock := WeaponStock.of(w)
 	stock.seed_stage_weapons()
 	stock.seed_stage_weapons()
-	assert_int(stock.stage_actors.size()).is_equal(4)
+	assert_int(stock.stage_actors.size()).is_equal(WeaponStock.STAGE_LAYOUT.size())
+	# several of each of the guns, the launchers, the knives and the swords
+	var counts := {}
+	for actor in stock.stage_actors:
+		counts[actor.def.id] = int(counts.get(actor.def.id, 0)) + 1
+	for id: StringName in [&"handgun", &"rpg", &"knife", &"sword"]:
+		assert_int(int(counts.get(id, 0))).is_greater_equal(2)
 	for actor in stock.stage_actors:
 		assert_int(actor.mode).is_equal(WeaponActor.Mode.FLOOR)
 		assert_int(actor.match_lifetime_limit) \
 				.is_equal(WeaponStock.STAGE_WEAPON_LIFETIME_TICKS)
-		assert_float(actor.global_position.y).is_equal_approx(
-				ArenaBuilder.STAGE_DECK_Y + 0.02, 0.01)
+		# lying on the deck: its origin no lower than the deck, and no part
+		# of it standing tall
+		assert_float(actor.global_position.y).is_between(ArenaBuilder.STAGE_DECK_Y - 0.01,
+				ArenaBuilder.STAGE_DECK_Y + 0.35)
+		var top := (actor.global_transform * actor.local_bounds()).end.y
+		assert_float(top).is_less(ArenaBuilder.STAGE_DECK_Y + 0.6)
 		assert_bool(ArenaBuilder.is_match_stage(actor.global_position)).is_true()
 	assert_object(stock.nearest_stage_weapon(Vector3(0.0, 0.0, -33.0))).is_not_null()
 
@@ -221,3 +232,17 @@ func test_a_thrown_weapon_flies_at_him_and_lands() -> void:
 	assert_bool(w.has_weapon()).is_false()
 	assert_int(a.mode).is_equal(WeaponActor.Mode.THROWN)
 	assert_float(a.velocity.z).is_less(0.0)       # toward him
+
+
+func test_the_match_seeds_the_stage_into_the_stock_the_wrestlers_search() -> void:
+	# match_setup seeded WeaponStock.of(the scene), which is the scene's
+	# PARENT's stock: the props were drawn but no wrestler could find them.
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	MatchRules.set_mode(scene, MatchRules.Mode.NO_HOLDS_BARRED)
+	add_child(scene)
+	await get_tree().process_frame
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var stock := WeaponStock.of(a)
+	assert_object(stock.get_parent()).is_same(scene)
+	assert_int(stock.stage_actors.size()).is_equal(WeaponStock.STAGE_LAYOUT.size())
+	assert_object(stock.nearest_stage_weapon(Vector3(0.0, 0.0, -20.0))).is_not_null()

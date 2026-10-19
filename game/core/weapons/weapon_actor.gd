@@ -515,14 +515,22 @@ func _tick_effect(delta: float) -> void:
 func _tick_flight(delta: float) -> void:
 	velocity.y -= GRAVITY * delta
 	var p := global_position + velocity * delta
-	# kept inside the barricade
+	# kept inside the barricade, or up the ramp and on the deck
 	var lim := ArenaBuilder.BARRICADE_RADIUS - 0.3
-	if absf(p.x) > lim:
-		p.x = signf(p.x) * lim
-		velocity.x *= -0.3
-	if absf(p.z) > lim:
-		p.z = signf(p.z) * lim
-		velocity.z *= -0.3
+	if ArenaBuilder.in_entrance_way(p):
+		var way := ArenaBuilder.entrance_way_point(p, 0.2)
+		if way.x != p.x:
+			velocity.x *= -0.3
+		if way.z != p.z:
+			velocity.z *= -0.3
+		p = way
+	else:
+		if absf(p.x) > lim:
+			p.x = signf(p.x) * lim
+			velocity.x *= -0.3
+		if absf(p.z) > lim:
+			p.z = signf(p.z) * lim
+			velocity.z *= -0.3
 	global_position = p
 	if not _bounced:
 		rotate_object_local(Vector3.RIGHT, _spin.x * delta)
@@ -632,7 +640,14 @@ func set_up_at(at: Vector3, yaw: float, state_override := "") -> void:
 	# A set piece is wider than the wrestler's root. Clamp its full rotated
 	# footprint inside the barricade line; clamping only the root let tables
 	# visibly hang through the wall when set near ringside.
-	if absf(place.x) > RingBuilder.MAT_HALF or absf(place.z) > RingBuilder.MAT_HALF:
+	if ArenaBuilder.in_entrance_way(place):
+		# up the ramp or on the deck: its footprint kept on the walkway
+		var b := local_bounds()
+		var reach := maxf(b.size.x, b.size.z) * 0.5
+		var on := ArenaBuilder.entrance_way_point(place, minf(reach, 1.2))
+		place.x = on.x
+		place.z = on.z
+	elif absf(place.x) > RingBuilder.MAT_HALF or absf(place.z) > RingBuilder.MAT_HALF:
 		var bounds := local_bounds()
 		var basis := Basis(Vector3.UP, yaw)
 		var centre_offset := basis * bounds.get_center()

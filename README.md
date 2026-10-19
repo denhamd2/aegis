@@ -9665,3 +9665,28 @@ at broadcast-heavy intensity.
   asset-review evidence and an executable `Review Reference.command` launcher
   for native captures. Export/packaging verification is not a native Mac run
   or a release-ready verdict; the sidecar verification JSON records that.
+
+## 19 Oct — No Holds Barred: ramp, stage weapons, the fight in the ring
+
+- **LED side walls** dimmed again, 0.4 → 0.28 of the video wall's level.
+- **Gun and rocket launcher** can come out at any time (the 5-minute lock is
+  gone), and there are as many of every weapon under the ring as anyone wants.
+- **The ramp works.** `ArenaBuilder.is_match_ramp` had its range back to
+  front, so no point was ever "on the ramp" and the barricade stopped every
+  walk up it. Men now walk through the barricade gap, up the ramp and round
+  the whole deck (its curved flare, `stage_half_width`); thrown weapons,
+  set pieces, cover spots and paired moves all stay on the ramp and deck, and
+  the AI routes through the gap instead of into the barricade.
+- **Stage weapons.** Two new models (`tools/blender/weapons/blades.py`): a
+  fighting knife and a sword. The deck carries 16 props laid flat: three
+  handguns, two rocket launchers, five knives, three swords, the barbed-wire
+  chair and bat, the sledgehammer and the light tubes. They had been seeded
+  into a second `WeaponStock` that no wrestler ever searched, so none could be
+  picked up; `match_setup` now seeds the wrestlers' own.
+- **More of the match in the ring.** A weapon fetched outside is taken back
+  in 65% of the time (carried through the ropes or slid under the bottom one
+  first), and two men brawling on the floor take it back in after 10–18 s.
+  `nhb_weapon_probe` seed 1, 5 minutes: ring 4% → 76%, floor 91% → 7%,
+  ramp 4% → 11%, stage 0% → 6%.
+- Review: `gauntlet/refs/nhb/review/step1_stage_weapons_ramp_ring.png`.
+  Full suite 991 cases green.

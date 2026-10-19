@@ -42,6 +42,7 @@ const MASKS := "res://assets/characters/blood/"
 ## Barbed wire, glass and nails cut; heavy steel splits the skin; wood and
 ## light metal sometimes; foam and fire extinguisher powder never.
 const CUT := {
+	&"knife": 1.0, &"sword": 1.0,
 	&"barbed_wire_bat": 1.0, &"barbed_wire_chair": 1.0, &"barbed_wire_board": 1.0,
 	&"light_tubes": 1.0, &"board_with_nails": 0.9, &"bed_of_nails": 0.9,
 	&"handgun": 0.7, &"steel_steps": 0.7, &"brass_knuckles": 0.6, &"chain": 0.6,

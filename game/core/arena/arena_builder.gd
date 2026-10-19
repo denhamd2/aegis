@@ -280,8 +280,9 @@ const SIDE_SCREEN_DEPTH := 0.3
 ## The LED walls' brightness against the video wall's. They stand at deck
 ## height, metres from every stage camera where the wall is twice as far and
 ## above the frame; at the wall's level the close stage shots bloomed them to
-## white. 0.6 still read too bright beside the wall (the owner, 19 Oct).
-const SIDE_SCREEN_LEVEL := 0.4
+## white. 0.6, then 0.4, still read too bright beside the wall (the owner,
+## 19 Oct).
+const SIDE_SCREEN_LEVEL := 0.28
 ## Where an entrance begins: the centre of the gap, a step in front of the
 ## centre screen and just inside the playable stage (MATCH_STAGE_BACK_LIMIT).
 const ENTRANCE_X := 0.0
@@ -1075,14 +1076,50 @@ static func is_ramp_barricade_panel(panel: Array) -> bool:
 ## The ramp and stage are visual meshes, so match characters need a stable
 ## deterministic ground height of their own while a No Holds Barred fight
 ## travels through this part of the venue.
+##
+## The ramp runs from the barricade gap (RAMP_FOOT_Z, -6) back to the deck's
+## lip (STAGE_FRONT, -30): z DEcreases up it. This read `z >= RAMP_FOOT_Z and
+## z <= STAGE_FRONT` until 19 Oct, a range no point is in, so nobody was ever
+## on the ramp and the barricade stopped every walk up it (the owner).
 static func is_match_ramp(point: Vector3) -> bool:
-	return point.z >= RAMP_FOOT_Z and point.z <= STAGE_FRONT \
+	return point.z <= RAMP_FOOT_Z and point.z >= STAGE_FRONT \
 			and absf(point.x) <= RAMP_HALF_WIDTH + 0.5
 
 
 static func is_match_stage(point: Vector3) -> bool:
 	return point.z >= MATCH_STAGE_BACK_LIMIT and point.z < STAGE_FRONT \
-			and absf(point.x) <= STAGE_HALF_WIDTH
+			and absf(point.x) <= stage_half_width(point.z)
+
+
+## Half the deck's width at depth `z`: full width from the back wall, closing
+## to the ramp's width at the lip along tools/blender/entrance_set.py's
+## smoothstep (`flare_half_width`), which built the deck mesh.
+static func stage_half_width(z: float) -> float:
+	var t := clampf((z - (STAGE_FRONT - STAGE_FLARE_LENGTH)) / STAGE_FLARE_LENGTH, 0.0, 1.0)
+	var ease := t * t * (3.0 - 2.0 * t)
+	return RAMP_HALF_WIDTH + (STAGE_HALF_WIDTH - RAMP_HALF_WIDTH) * (1.0 - ease)
+
+
+## Whether a point is past the ringside barricade, up the entrance way.
+static func in_entrance_way(point: Vector3) -> bool:
+	return point.z < -BARRICADE_RADIUS + 0.3
+
+
+## The nearest point to `p` in the ground plan where a body `radius` across
+## can stand up the entrance way: on the ramp's walkway (which starts inside
+## the barricade gap, so it joins the ringside floor) or on the deck. The
+## caller picks between this and its own ringside clamp by distance, so a man
+## walks from one onto the other with nothing in between.
+static func entrance_way_point(p: Vector3, radius: float) -> Vector3:
+	var lane := RAMP_HALF_WIDTH - radius
+	var ramp := Vector3(clampf(p.x, -lane, lane), p.y,
+			clampf(p.z, STAGE_FRONT, -BARRICADE_RADIUS + radius + 0.15))
+	var z := clampf(p.z, MATCH_STAGE_BACK_LIMIT, STAGE_FRONT)
+	var half := maxf(stage_half_width(z) - radius, 0.0)
+	var deck := Vector3(clampf(p.x, -half, half), p.y, z)
+	var to_ramp := Vector2(ramp.x - p.x, ramp.z - p.z).length()
+	var to_deck := Vector2(deck.x - p.x, deck.z - p.z).length()
+	return ramp if to_ramp <= to_deck else deck
 
 
 static func match_surface_y(point: Vector3) -> float:
@@ -1090,7 +1127,7 @@ static func match_surface_y(point: Vector3) -> float:
 		return STAGE_DECK_Y
 	if is_match_ramp(point):
 		var t := inverse_lerp(STAGE_FRONT, RAMP_FOOT_Z, point.z)
-		return lerpf(STAGE_DECK_Y, FLOOR_Y, t)
+		return lerpf(STAGE_DECK_Y, FLOOR_Y + RINGSIDE_MAT_LIFT, t)
 	return FLOOR_Y + RINGSIDE_MAT_LIFT
 
 

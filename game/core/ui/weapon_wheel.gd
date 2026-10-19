@@ -4,7 +4,7 @@ extends Control
 ## can pull out from under the ring, while he is down on one knee reaching
 ## for it. The match runs on behind it -- he can be hit out of it.
 ##
-## Two rings, because there are 33 weapons and a wheel of 33 is a wheel of
+## Two rings, because there are 35 weapons and a wheel of 35 is a wheel of
 ## slivers:
 ##   inner  the six families (chairs, swung, carried, set pieces, sprays and
 ##          guns, whips and fists), chosen by the stick's angle;

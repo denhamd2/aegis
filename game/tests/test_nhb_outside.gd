@@ -80,7 +80,9 @@ func test_he_can_carry_a_weapon_back_through_the_ropes() -> void:
 func test_outside_he_stays_on_the_floor_inside_the_barricade() -> void:
 	var w := _wrestler(true)
 	w.outside_ring = true
-	for put: Vector3 in [Vector3(9.0, -3.0, 0.0), Vector3(0.0, -1.0, -9.0),
+	# (0, -9) is up the ramp, which is walkable: off it, to the side of the
+	# barricade gap, is the barricade
+	for put: Vector3 in [Vector3(9.0, -3.0, 0.0), Vector3(-4.5, -1.0, -6.5),
 			Vector3(7.0, -1.0, 7.0), Vector3(2.0, -1.0, 0.5)]:
 		w.global_position = put
 		w.keep_inside_the_ring()
@@ -100,6 +102,8 @@ func test_no_holds_barred_can_walk_up_the_ramp_and_onto_the_stage() -> void:
 	w.outside_ring = true
 	w.global_position = Vector3(0.0, -4.0, -20.0)
 	w.keep_inside_the_ring()
+	assert_bool(ArenaBuilder.is_match_ramp(w.global_position)).is_true()
+	assert_float(w.global_position.z).is_equal_approx(-20.0, 0.001)
 	assert_float(w.global_position.y).is_equal_approx(
 			ArenaBuilder.match_surface_y(w.global_position), 0.001)
 	assert_float(w.global_position.y).is_greater(WrestlerController.FLOOR_LEVEL)

@@ -121,7 +121,11 @@ func _ready() -> void:
 	var nhb := MatchRules.no_holds_barred(self)
 	TouchControls.weapons = nhb
 	if nhb:
-		WeaponStock.of(self).seed_stage_weapons()
+		# The wrestlers' own stock (WeaponStock.of takes the node's PARENT):
+		# seeded through the match scene itself it went to a second stock one
+		# level up, which drew the props but which neither man ever searched,
+		# so nobody could pick a stage weapon up.
+		WeaponStock.of(wrestler_a).seed_stage_weapons()
 	if TouchControls.wanted(not wrestler_a.is_ai or not wrestler_b.is_ai):
 		var touch := TouchControls.new()
 		touch.name = "TouchControls"

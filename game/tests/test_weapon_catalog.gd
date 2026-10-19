@@ -8,8 +8,9 @@ const HAND_HELD_BUDGET := 15000
 const SET_PIECE_BUDGET := 20000
 
 
-func test_there_are_33_weapons_in_six_families() -> void:
-	assert_int(WeaponCatalog.all().size()).is_equal(33)
+func test_there_are_35_weapons_in_six_families() -> void:
+	# 33, then the knife and the sword for the stage (the owner, 19 Oct)
+	assert_int(WeaponCatalog.all().size()).is_equal(35)
 	for f in WeaponDef.Family.values():
 		assert_int(WeaponCatalog.in_family(f).size()).is_greater(0)
 

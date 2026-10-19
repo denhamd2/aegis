@@ -38,7 +38,7 @@ const SWING_NAMES := {
 ## Weapon-specific performances may share gameplay timing while using their
 ## own body clip and hand-relative prop path.
 const SWING_PROFILES := {
-	"baseball_bat": "bat", "barbed_wire_bat": "bat", "lead_pipe": "bat", "sledgehammer": "bat",
+	"baseball_bat": "bat", "barbed_wire_bat": "bat", "sword": "bat", "lead_pipe": "bat", "sledgehammer": "bat",
 	"steel_chair": "chair_overhead", "barbed_wire_chair": "chair_overhead",
 	"hockey_stick": "slapshot",
 	"kendo_stick": "kendo_chop",
@@ -93,6 +93,10 @@ const TABLE := [
 		"", WeaponDef.Swing.OVERHEAD, 9.0, 3.0, 3, 0, true, false, 0.0, "hit_metal", [], {}],
 	["guitar", "Guitar", WeaponDef.Family.SWUNG, "guitar", "Guitar_Clean", "", "Guitar_Broken", "",
 		WeaponDef.Swing.OVERHEAD, 13.0, 2.0, 0, 1, true, false, 0.0, "hit_wood", [], {}],
+	["knife", "Knife", WeaponDef.Family.SWUNG, "knife", "Knife_Clean", "", "", "",
+		WeaponDef.Swing.SIDE, 15.0, 6.0, 0, 0, false, false, 0.0, "hit_kick", [], {}],
+	["sword", "Sword", WeaponDef.Family.SWUNG, "sword", "Sword_Clean", "", "", "",
+		WeaponDef.Swing.SIDE, 17.0, 7.0, 0, 0, true, false, 0.0, "hit_metal", [], {}],
 	["inflatable_banana", "Inflatable Banana", WeaponDef.Family.SWUNG, "inflatable_banana",
 		"InflatableBanana_Clean", "", "InflatableBanana_Broken", "", WeaponDef.Swing.SIDE, 1.0, 0.5, 0, 3,
 		true, false, 0.0, "whoosh", [], {}],
@@ -168,6 +172,10 @@ const CARRY := {
 	"sledgehammer": _SHOULDER, "lead_pipe": _SHOULDER, "board_with_nails": _SHOULDER,
 	"shovel": _SHOULDER, "hockey_stick": _SHOULDER, "crutch": _SHOULDER, "stop_sign": _SHOULDER,
 	"inflatable_banana": _SHOULDER, "light_tubes": _SHOULDER, "cookie_sheet": _SHOULDER,
+	"sword": _SHOULDER,
+	# low at his side, the blade ahead and the edge down
+	"knife": ["grip_r", Vector3(0.26, 1.0, -0.16),
+		Vector3(0, 1, 0), Vector3(0, 0.26, -0.97), Vector3(1, 0, 0), Vector3(0, -0.97, -0.26)],
 	# the guitar's grip is on the neck with the body below it (-Y)
 	"guitar": ["grip_r", Vector3(0.20, 1.12, -0.22),
 		Vector3(0, -1, 0), Vector3(-0.12, 0.72, 0.68), Vector3(0, 0, -1), Vector3(0.0, 0.68, -0.72)],
@@ -609,6 +617,9 @@ static func swing_axes(actor: WeaponActor) -> Array:
 		if thin == long:
 			thin = (long + 1) % 3
 		u[thin] = 1.0 if not has_strike or (strike.origin - grip)[thin] >= -0.005 else -1.0
+		if actor.has_marker("edge"):
+			# a blade leads with its edge, not the flat
+			u = actor.marker("edge").basis.z.normalized()
 	_axes[key] = [s.normalized(), u]
 	return _axes[key]
 

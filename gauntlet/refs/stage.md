@@ -35,7 +35,7 @@ portal set below wherever the two disagree.
 | property | reference | build |
 | --- | --- | --- |
 | entrances | **no portals**: the men walk out of the centre, in front of the centre screen | `ArenaBuilder.ENTRANCE_X/Z`; every entrance routine starts there |
-| side walls | two tall LED walls either side of the centre screen, splayed slightly away from the ring (inner edges nearest the camera, per the Omega and Copeland close-ups), playing the video wall's picture | `StageSideScreens` (`SIDE_SCREEN_*`), 4.9 m wide, 5.4 m tall, splayed 10 degrees (`SIDE_SCREEN_TOE_DEG` -10), inner edges 1.2 m off the back wall; `StageVideo.mirror` crops the clip to their shape at 0.6 of the wall's level |
+| side walls | two tall LED walls either side of the centre screen, splayed slightly away from the ring (inner edges nearest the camera, per the Omega and Copeland close-ups), playing the video wall's picture | `StageSideScreens` (`SIDE_SCREEN_*`), 4.9 m wide, 5.4 m tall, splayed 10 degrees (`SIDE_SCREEN_TOE_DEG` -10), inner edges 1.2 m off the back wall; `StageVideo.mirror` crops the clip to their shape at 0.28 of the wall's level |
 | video wall, centre screen | unchanged | unchanged |
 | ramp | plain black, no coloured edge strips | `RampLeds` removed |
 | beyond the walls | black | LED dot columns and lit side panels removed; drape from the walls outward |

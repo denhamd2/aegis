@@ -4,6 +4,9 @@ extends Node3D
 ##
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 1600x900 tools/probe/stage_wide_shot.tscn -- --out /tmp/stage.png
+##
+## --nhb lays the No Holds Barred stage weapons out on the deck
+## (WeaponStock.STAGE_LAYOUT), as the bell does.
 
 const MATCH_SCENE := "res://scenes/play.tscn"
 var _out := "/tmp/stage_wide.png"
@@ -25,6 +28,12 @@ func _ready() -> void:
 			_fov = float(args[i + 1])
 	add_child(load(MATCH_SCENE).instantiate())
 	await get_tree().process_frame
+	if args.has("--nhb"):
+		MatchRules.set_mode(self, MatchRules.Mode.NO_HOLDS_BARRED)
+		var stock := WeaponStock.new()
+		stock.name = "WeaponStock"
+		add_child(stock)
+		stock.seed_stage_weapons()
 	var cam := Camera3D.new()
 	add_child(cam)
 	cam.current = true

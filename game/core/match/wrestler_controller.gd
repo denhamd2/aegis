@@ -2274,23 +2274,26 @@ func is_crossing_ropes() -> bool:
 ## clamp -- one transform, no physics query, only ever pushed up.
 func keep_on_the_floor() -> void:
 	var p := global_position
-	var fixed := p
-	if MatchRules.no_holds_barred(self) and (ArenaBuilder.is_match_ramp(p) \
-			or ArenaBuilder.is_match_stage(p)):
-		if ArenaBuilder.is_match_stage(p):
-			fixed.x = clampf(p.x, -ArenaBuilder.STAGE_HALF_WIDTH + BODY_RADIUS,
-					ArenaBuilder.STAGE_HALF_WIDTH - BODY_RADIUS)
-			fixed.z = clampf(p.z, ArenaBuilder.MATCH_STAGE_BACK_LIMIT,
-					ArenaBuilder.STAGE_FRONT)
-		if ArenaBuilder.is_match_ramp(p):
-			fixed.x = clampf(p.x, -ArenaBuilder.RAMP_HALF_WIDTH + BODY_RADIUS,
-					ArenaBuilder.RAMP_HALF_WIDTH - BODY_RADIUS)
-		fixed.y = maxf(p.y, ArenaBuilder.match_surface_y(p))
-		if fixed != p:
-			global_position = fixed
-			if fixed.y > p.y and velocity.y < 0.0:
-				velocity.y = 0.0
+	var fixed := ringside_floor_point(p)
+	if MatchRules.no_holds_barred(self):
+		# Up the ramp and onto the stage, through the barricade's gap: the
+		# nearer of the two standable areas, so the walk from one onto the
+		# other is seamless.
+		var way := ArenaBuilder.entrance_way_point(p, BODY_RADIUS)
+		if Vector2(way.x - p.x, way.z - p.z).length() \
+				< Vector2(fixed.x - p.x, fixed.z - p.z).length():
+			fixed = way
+		fixed.y = maxf(p.y, ArenaBuilder.match_surface_y(fixed))
+	if fixed == p:
 		return
+	global_position = fixed
+	if fixed.y > p.y and velocity.y < 0.0:
+		velocity.y = 0.0
+
+
+## `p` held on the ringside floor: inside the barricade, not under the apron.
+static func ringside_floor_point(p: Vector3) -> Vector3:
+	var fixed := p
 	fixed.y = maxf(p.y, FLOOR_LEVEL)
 	fixed.x = clampf(p.x, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
 	fixed.z = clampf(p.z, -BARRICADE_KEEP_IN, BARRICADE_KEEP_IN)
@@ -2303,11 +2306,7 @@ func keep_on_the_floor() -> void:
 			fixed.x = (1.0 if fixed.x >= 0.0 else -1.0) * DECK_KEEP_OUT
 		else:
 			fixed.z = (1.0 if fixed.z >= 0.0 else -1.0) * DECK_KEEP_OUT
-	if fixed == p:
-		return
-	global_position = fixed
-	if fixed.y > p.y and velocity.y < 0.0:
-		velocity.y = 0.0
+	return fixed
 
 
 ## A man lying outside: crown, toes and shoulders out from under the apron,
@@ -4552,6 +4551,8 @@ static func cover_approach_spot(victim: WrestlerController, from: Vector3) -> Ve
 ## so a man down on the floor was covered from a spot nobody outside could
 ## reach -- a finisher outside never got its cover (nhb_weapon_probe seed 2).
 static func _standable_outside(p: Vector3) -> Vector3:
+	if ArenaBuilder.in_entrance_way(p):
+		return ArenaBuilder.entrance_way_point(p, BODY_RADIUS)
 	var lim := ArenaBuilder.BARRICADE_RADIUS - 0.4
 	p.x = clampf(p.x, -lim, lim)
 	p.z = clampf(p.z, -lim, lim)
@@ -5083,6 +5084,8 @@ func _weapon_input(input: Dictionary) -> bool:
 			_ladder_input_armed = false
 			return begin_ladder_climb(ladder)
 		_ladder_input_armed = false
+		if not fsm.is_in([WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION]):
+			return false                # not off a run: he stops first
 		var loose := WeaponStock.of(self).loose_near(global_position)
 		if loose == null:
 			loose = set_up_ladder_nearby()

@@ -82,9 +82,17 @@ static func run(host: Node, seed_value: int, budget: int, wrestlers := "roman,co
 		w.pin_started.connect(func(att, _def): r["pins"].append("%s@%d" % [att.display_name, r["ticks"]]))
 	referee.match_won.connect(func(winner, method): r["won"] = "%s by %s" % [winner.display_name if winner else "-", method])
 	var seen := {}
+	# where the fight is: ticks each man spends in the ring, on the ringside
+	# floor, up the ramp and on the deck
+	r["zones"] = [{"ring": 0, "floor": 0, "ramp": 0, "stage": 0}, {"ring": 0, "floor": 0, "ramp": 0, "stage": 0}]
 	for t in budget:
 		await host.get_tree().physics_frame
 		r["ticks"] = t
+		for k in 2:
+			var w: WrestlerController = [a, b][k]
+			var zone := "ring" if not w.outside_ring else ("stage" if ArenaBuilder.is_match_stage(w.global_position) \
+					else ("ramp" if ArenaBuilder.in_entrance_way(w.global_position) else "floor"))
+			r["zones"][k][zone] += 1
 		if give != "" and t == 900:
 			var g := WeaponStock.of(a).pull(WeaponCatalog.by_id(StringName(give)))
 			g.global_transform = WeaponActor.grip_frame(a) * g.marker("grip_r").affine_inverse()
