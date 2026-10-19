@@ -5101,7 +5101,7 @@ const WEAPON_ACTION_CLIPS := {
 	"pickup_heavy": "strikes/weapon_pickup_heavy", "throw": "strikes/weapon_throw",
 	"slide": "strikes/weapon_pickup",
 	"set_up": "strikes/weapon_set_up", "set_up_upright": "strikes/weapon_set_up",
-	"light": "strikes/weapon_aim",
+	"light": "strikes/weapon_spray",
 }
 ## A pickup: where the weapon's grip ends up in front of his feet (m) once he
 ## has stepped to it, and the ticks the step takes. Anywhere in PICKUP_REACH
