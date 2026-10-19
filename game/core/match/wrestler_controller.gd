@@ -3568,6 +3568,21 @@ func _resolve_pending_hits() -> void:
 		weapon_forces_down = weapon_forces_down or (weapon != null and move.leaves_defender_down)
 	var last_move: MoveDef = moves[moves.size() - 1]
 	_hit_sell = sell_tier(combat.wear - wear_before, health_before, WeaponCatalog.of_move(last_move) != null)
+	# in proportion to the weapon (WeaponCatalog.Impact): a stick rocks him,
+	# a blade takes him to a knee, the heaviest put him down harder and longer
+	var weapon_def := WeaponCatalog.of_move(last_move)
+	_down_scale = 1.0
+	_bump_shove = 1.0
+	if weapon_def:
+		match WeaponCatalog.impact_of(weapon_def):
+			WeaponCatalog.Impact.ROCK:
+				_hit_sell = maxi(_hit_sell, Sell.KNEE if health_before < KNEE_HEALTH * 1.6 else Sell.HEAVY)
+			WeaponCatalog.Impact.BLADE:
+				_hit_sell = Sell.KNEE
+			WeaponCatalog.Impact.DROP, WeaponCatalog.Impact.WIPEOUT:
+				var impact := WeaponCatalog.impact_of(weapon_def)
+				_down_scale = float(WeaponCatalog.IMPACT_DOWN_SCALE[impact])
+				_bump_shove = float(WeaponCatalog.IMPACT_SHOVE[impact])
 	_took_moves(moves.size())
 	if fatal_shot:
 		if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
@@ -4224,6 +4239,12 @@ const BUMP_TICKS := 30
 var _bumping := false
 
 
+## The weapon that dropped him: how much longer he stays down, and how far
+## the bump carries him (WeaponCatalog.IMPACT_DOWN_SCALE, IMPACT_SHOVE).
+var _down_scale := 1.0
+var _bump_shove := 1.0
+
+
 func _bump_down() -> void:
 	if _bumping:
 		return
@@ -4237,6 +4258,14 @@ func _bump_down() -> void:
 	_set_state_clip(WrestlerFSM.State.HIT_REACT, "strikes/bump_back")
 	_start_move(WrestlerFSM.State.HIT_REACT, _timed_stub(BUMP_TICKS))
 	_bumping = true
+	if _bump_shove > 1.0 and opponent:
+		# the heaviest weapons carry him back as he goes over
+		var away := global_position - opponent.global_position
+		away.y = 0.0
+		if away.length() > 0.001:
+			velocity = away.normalized() * KNOCKBACK_SPEED * (_bump_shove - 1.0) * 1.5
+			_knockback_ticks = KNOCKBACK_TICKS
+	_bump_shove = 1.0
 
 
 ## A handgun hit is lethal: all vitality is permanently lost and the wrestler
@@ -4264,7 +4293,9 @@ func _go_down(tier := -1) -> void:
 	combat.heal_floor = combat.wear
 	combat.green = 0.0
 	# a beaten man lies there longer (DOWN_WORN)
-	_move_ticks_remaining = int(down_ticks_for(tier) * (1.0 + DOWN_WORN * (1.0 - combat.health())))
+	_move_ticks_remaining = int(down_ticks_for(tier) * (1.0 + DOWN_WORN * (1.0 - combat.health()))
+			* _down_scale)
+	_down_scale = 1.0
 	knockdown_tier = tier
 	combat.cut_off_comeback()
 	_cover_eligible = true

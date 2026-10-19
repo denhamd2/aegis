@@ -35,10 +35,19 @@ const SWING_NAMES := {
 	WeaponDef.Swing.GUN: "gun", WeaponDef.Swing.LAUNCHER: "launcher",
 	WeaponDef.Swing.SPRAY: "spray", WeaponDef.Swing.POUR: "pour",
 }
+## Fight Forever's weapon swings are quick and committed: a short wind-up, a
+## hard stop on contact, a quick recovery (gauntlet/refs/nhb/weapon_review.md).
+## Every swing but the genuinely heavy ones runs at FF_PACE of the SWINGS
+## numbers, its body clip retimed to match (StrikeRecipes); the heavy ones
+## keep their weight.
+const FF_PACE := 0.78
+const HEAVY_SWING: Array[StringName] = [&"sledgehammer", &"steel_steps", &"table", &"ladder",
+		&"barbed_wire_board", &"guitar"]
 ## Weapon-specific performances may share gameplay timing while using their
 ## own body clip and hand-relative prop path.
 const SWING_PROFILES := {
-	"baseball_bat": "bat", "barbed_wire_bat": "bat", "sword": "bat", "lead_pipe": "bat", "sledgehammer": "bat",
+	"baseball_bat": "bat", "barbed_wire_bat": "bat", "sword": "bat", "lead_pipe": "bat",
+	"sledgehammer": "bat_heavy",
 	"steel_chair": "chair_overhead", "barbed_wire_chair": "chair_overhead",
 	"hockey_stick": "slapshot",
 	"kendo_stick": "kendo_chop",
@@ -60,6 +69,52 @@ const RANGED := {WeaponDef.Swing.GUN: 9.0, WeaponDef.Swing.LAUNCHER: 14.0, Weapo
 ## chairs, sticks and metal tools sell as knockdowns even before accumulated
 ## wear contributes.
 const WEAPON_KNOCKDOWN_DAMAGE := 8.0
+
+## How a weapon lands on the man it hits, in proportion to what it is
+## (gauntlet/refs/nhb/weapon_review.md; the owner, 19 Oct). Until then every
+## weapon from a frying pan to the steel steps dropped him the same way.
+##   LIGHT    a flinch: the banana, a cookie sheet, the extinguisher's powder
+##   ROCK     rocks him -- a heavy stagger, hand to the head, a knee when he is
+##            hurt -- down only on the build-up: sticks, belts, a pan, a bell
+##   DROP     the back bump: chairs, pipes, wood, glass, wire
+##   WIPEOUT  a hard spill, further back and longer down: the sledgehammer,
+##            the steps, a rocket
+##   BLADE    he clutches the cut and drops to a knee, bleeding hard
+##   FATAL    the gun
+enum Impact { LIGHT, ROCK, DROP, WIPEOUT, BLADE, FATAL }
+const BLADES: Array[StringName] = [&"knife", &"sword"]
+## The lighter, flexier or one-handed implements: they rock a man rather than
+## fold him. Everything else from IMPACT_DROP_AT up -- a bat, a sign, a chair,
+## a pipe, a table -- puts him down, as it does on a broadcast.
+const ROCKS: Array[StringName] = [&"kendo_stick", &"hockey_stick", &"crutch", &"weight_belt",
+		&"briefcase", &"frying_pan", &"ring_bell", &"championship_belt", &"chain", &"trash_can"]
+const IMPACT_DROP_AT := 8.0
+const IMPACT_WIPEOUT_AT := 14.0
+## Time down after the bump, against an ordinary knockdown's.
+const IMPACT_DOWN_SCALE := {Impact.DROP: 1.0, Impact.WIPEOUT: 1.6, Impact.FATAL: 1.0}
+## How far the bump carries him back, against an ordinary one's.
+const IMPACT_SHOVE := {Impact.DROP: 1.0, Impact.WIPEOUT: 1.8}
+
+
+static func impact_of(weapon: WeaponDef) -> int:
+	if weapon == null:
+		return Impact.LIGHT
+	if weapon.id == &"handgun":
+		return Impact.FATAL
+	if weapon.id in BLADES:
+		return Impact.BLADE
+	if weapon.swing == WeaponDef.Swing.LAUNCHER or weapon.damage_head >= IMPACT_WIPEOUT_AT:
+		return Impact.WIPEOUT
+	if weapon.id in ROCKS:
+		return Impact.ROCK
+	if weapon.damage_head >= IMPACT_DROP_AT:
+		return Impact.DROP
+	return Impact.LIGHT
+
+
+## Whether a hit with `weapon` puts the man down on its own.
+static func drops_him(weapon: WeaponDef) -> bool:
+	return impact_of(weapon) in [Impact.DROP, Impact.WIPEOUT, Impact.FATAL]
 
 ## id, name, family, glb, held, dented, broken, set_up, swing, head, torso,
 ## hits to dent, hits to break, two-handed, set piece, landing damage, sound,
@@ -318,18 +373,21 @@ static func swing_move(weapon: WeaponDef) -> MoveDef:
 	var s: Array = SWINGS[weapon.swing]
 	var m := MoveDef.new()
 	m.animation_pair_id = StringName("weapon_" + swing_profile(weapon))
-	m.startup_frames = s[0]
+	# the whole swing to FF_PACE, the contact never earlier in it than the
+	# retimed clip's (so the hand is through before the hit lands)
+	var pace := ff_pace(weapon)
+	var total := roundi((int(s[0]) + int(s[1]) + int(s[2])) * pace)
+	m.startup_frames = maxi(1, ceili(int(s[0]) * pace))
 	m.active_frames = s[1]
-	m.recovery_frames = s[2]
-	m.reversal_window_start = maxi(0, int(s[0]) - 6)
-	m.reversal_window_end = int(s[0]) - 1
+	m.recovery_frames = maxi(1, total - m.startup_frames - int(s[1]))
+	m.reversal_window_start = maxi(0, m.startup_frames - 6)
+	m.reversal_window_end = m.startup_frames - 1
 	m.contact_offset = s[3]
 	m.contact_radius = s[4]
 	m.damage_head = weapon.damage_head * float(s[5])
 	m.damage_torso = weapon.damage_torso * float(s[5])
 	m.momentum_gain = 6.0 + weapon.damage_head * 0.5
-	m.leaves_defender_down = weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER] \
-			or weapon.damage_head >= WEAPON_KNOCKDOWN_DAMAGE
+	m.leaves_defender_down = drops_him(weapon)
 	m.resource_name = "weapon_" + String(weapon.id)
 	m.set_meta(&"weapon", weapon.id)
 	_moves[weapon.id] = m
@@ -349,7 +407,7 @@ static func throw_move(weapon: WeaponDef) -> MoveDef:
 	m.damage_head = weapon.damage_head * 0.7
 	m.damage_torso = weapon.damage_torso * 0.7
 	m.momentum_gain = 4.0 + weapon.damage_head * 0.4
-	m.leaves_defender_down = weapon.damage_head >= WEAPON_KNOCKDOWN_DAMAGE
+	m.leaves_defender_down = drops_him(weapon) and impact_of(weapon) != Impact.FATAL
 	m.resource_name = "weapon_thrown_" + String(weapon.id)
 	m.set_meta(&"weapon", weapon.id)
 	_moves[key] = m
@@ -530,7 +588,18 @@ const SWING_PATHS := {
 
 ## The path a swing of `weapon` follows (SWING_PATHS), [] if none.
 static func swing_path(weapon: WeaponDef) -> Array:
-	return SWING_PATHS.get(swing_profile(weapon), [])
+	var profile := swing_profile(weapon)
+	# the heavy bat swing is the bat's path, slower
+	return SWING_PATHS.get(profile, SWING_PATHS.get(profile.trim_suffix("_heavy"), []))
+
+
+## How a weapon's swing is paced against SWINGS: FF_PACE, or 1 for the heavy
+## ones, the guns, the launcher, the spray and the pour.
+static func ff_pace(weapon: WeaponDef) -> float:
+	if weapon.id in HEAVY_SWING or weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER,
+			WeaponDef.Swing.SPRAY, WeaponDef.Swing.POUR]:
+		return 1.0
+	return FF_PACE
 
 
 static func swing_profile(weapon: WeaponDef) -> String:

@@ -227,8 +227,12 @@ func test_every_weapon_has_a_sound_and_its_moves_name_it() -> void:
 	assert_int(SfxPool.family_size("table_crack")).is_greater(0)
 
 
-## Hard-hitting weapons should read as knockdowns, including when thrown;
-## featherweight novelty props and the low-damage sheet remain stagger hits.
+## Hard-hitting weapons read as knockdowns, including when thrown; the lighter
+## implements rock a man instead (WeaponCatalog.ROCKS -- a heavy stagger, a
+## knee when he is hurt, down on the build-up), and the featherweight novelty
+## props and the sheet stay flinches. Before the owner's 19 Oct review asked
+## for reactions in proportion to the weapon, everything from 8 damage up
+## dropped him, the kendo stick included.
 func test_most_weapon_impacts_knock_a_wrestler_down() -> void:
 	var eligible := 0
 	var knockdowns := 0
@@ -239,8 +243,10 @@ func test_most_weapon_impacts_knock_a_wrestler_down() -> void:
 		if WeaponCatalog.swing_move(def).leaves_defender_down:
 			knockdowns += 1
 	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"baseball_bat")).leaves_defender_down).is_true()
-	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"kendo_stick")).leaves_defender_down).is_true()
+	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"kendo_stick")).leaves_defender_down).is_false()
 	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"cookie_sheet")).leaves_defender_down).is_false()
 	assert_bool(WeaponCatalog.swing_move(WeaponCatalog.by_id(&"inflatable_banana")).leaves_defender_down).is_false()
-	assert_bool(WeaponCatalog.throw_move(WeaponCatalog.by_id(&"hockey_stick")).leaves_defender_down).is_true()
-	assert_int(knockdowns).is_greater_equal(int(ceil(float(eligible) * 0.7)))
+	assert_bool(WeaponCatalog.throw_move(WeaponCatalog.by_id(&"steel_chair")).leaves_defender_down).is_true()
+	assert_bool(WeaponCatalog.throw_move(WeaponCatalog.by_id(&"hockey_stick")).leaves_defender_down).is_false()
+	# half or more still put a man down on their own
+	assert_int(knockdowns).is_greater_equal(int(ceil(float(eligible) * 0.5)))
