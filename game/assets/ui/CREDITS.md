@@ -24,6 +24,19 @@ dark interior could not be eaten), eroding one pixel, feathering 0.8 px, and
 cropping to the plate: 2103x455. No other processing. Ships with no licence
 or author, on the same terms as the key art above.
 
+## matchup_arena.jpg — THIRD-PARTY MARKS, supplied by the project owner
+
+The match-up screen's backdrop (`core/ui/match_stinger.gd`, `ARENA`): a wide
+of a Dynamite arena, stage and ring, 1672x941. Supplied by the owner on
+19 Oct 2026 ("replace the vs screen background image with the attached"),
+in place of a generated wide used for one build round.
+
+It carries **third-party trademarks** -- the AEW and Dynamite marks on the
+screens, the apron and the barricade. It ships with no licence, author or
+provenance, on the same terms as `title_key_art.png` above: fine for a
+prototype and internal capture, **not cleared for distribution**. The only
+processing is a re-save as JPEG, quality 92.
+
 # Fonts
 
 ## Teko (assets/fonts/Teko-Variable.ttf)

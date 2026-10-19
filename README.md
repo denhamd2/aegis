@@ -9891,3 +9891,38 @@ sense". Researched and measured in `gauntlet/refs/ff_ai_flow.md`.
   - Each Fight Forever move is thrown once.
   - Roman throws 55–63% of the moves in the heat (was 47–53%).
 - `flow_probe --moves 1` now also lists covers and rope breaks.
+
+## 19 Oct — The match-up screen: the arena, the names, a loading bar, the music on
+
+The owner: the black card with just the names "stays on the screen for a
+while and the music stops. I want the music to continue playing whilst on
+that screen ... a slick designed screen ... with their names ... and also a
+loading bar". The background is the owner's own Dynamite arena image
+(`assets/ui/matchup_arena.jpg`). A generated wide was tried first and then
+replaced on request.
+
+- **Why it stuck, measured** (`tools/probe/launch_timing.tscn`):
+  - The black card was the stinger's cover, held while the match was built
+    underneath in one call: load, make, enter the tree.
+  - Then come the arena's first frames, which are the long ones (shader
+    compiles).
+  - The theme was faded the moment the scene entered the tree, so the card
+    then sat there in silence through those first frames.
+- **The screen** (`MatchStinger`).
+  - The covering band now carries the arena photo, pushing in slowly, graded
+    dark toward the foot.
+  - The match type sits under a gold rule. Each man's title or nickname sits
+    over his name, with VS in gold between them.
+  - The loading bar runs along the foot, reading LOADING n% and then READY.
+  - Review: `gauntlet/refs/hud/matchup_screen.png`.
+- **A bar that moves.** `TitleScreen` builds the match one step a frame under
+  that screen: the background loads, then the scene made and dressed, then
+  into the tree. The bar fills between the stalls instead of the screen
+  freezing on one.
+  - The VS card is now a 1.5 s beat. The waiting happens on the match-up
+    screen, so its own bar is gone.
+- **The music plays on** through the whole load and fades only as the arena
+  is revealed (`MatchStinger.revealing`).
+  - Measured end to end: the theme stays at its full -9 dB through every
+    build stall while the bar climbs 70, 78, 86, 94, 100%. It starts its fade
+    on the reveal.

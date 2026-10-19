@@ -162,18 +162,44 @@ func _process(delta: float) -> void:
 	_listen()
 	if phase == Phase.VERSUS:
 		_versus_time += delta
-		# The card holds until the match has loaded, its bar filling, so the
-		# wipe into the match never lands on a frozen screen.
-		if _versus_time >= VERSUS_HOLD and _preloads_ready():
+		# The VS card is a beat, not the wait: the loading happens on the
+		# match-up screen the stinger covers with, its bar filling.
+		if _versus_time >= VERSUS_HOLD:
 			phase = Phase.LAUNCH
 	elif phase == Phase.LAUNCH:
 		if _stinger == null:
 			_start_stinger()
-		elif _stinger_covered and _preloads_ready():
-			set_process(false)
-			_launch()
-			_stinger.reveal()
+		elif _stinger_covered:
+			_build_step()
 	queue_redraw()
+
+
+## The match is built one step a frame under the match-up screen, so its bar
+## moves between the stalls instead of the screen freezing on one long one:
+## the background loads, then the scene made and dressed, then into the tree
+## (the arena's set-up). The stinger settles and reveals it after that.
+## Shares of the bar, measured on the launch (tools/probe/launch_timing.tscn).
+const BUILD_SHARES := [0.70, 0.80, 0.92]
+var _build := 0
+var _built: Node
+
+
+func _build_step() -> void:
+	match _build:
+		0:
+			_stinger.progress = BUILD_SHARES[0] * load_progress()
+			if _preloads_ready():
+				_build = 1
+				_stinger.progress = BUILD_SHARES[0]
+		1:
+			_built = _make_match()
+			_stinger.progress = BUILD_SHARES[1]
+			_build = 2
+		2:
+			set_process(false)
+			_stinger.progress = BUILD_SHARES[2]
+			_enter_match(_built)
+			_stinger.reveal()
 
 
 ## --- Input -----------------------------------------------------------------
@@ -366,11 +392,17 @@ func _start_stinger() -> void:
 		_music.reparent(get_tree().root, false)
 	_stinger = MatchStinger.new()
 	_stinger.setup(picks[0], picks[1])
+	_stinger.mode_label = MatchRules.label(match_mode) + "  MAIN EVENT"
 	_stinger.covered.connect(func() -> void: _stinger_covered = true)
 	get_tree().root.add_child(_stinger)
 
 
+## The whole hand-off in one go (probes, tests): built and entered.
 func _launch() -> void:
+	_enter_match(_make_match())
+
+
+func _make_match() -> Node:
 	# Collect the background loads: they are in the resource cache now, and
 	# the load() calls below and in configure_match() pick them up from it.
 	for path: String in _preloads:
@@ -386,14 +418,28 @@ func _launch() -> void:
 	# rather than in configure_match(), which the headless probes call to set
 	# up matches they need live on tick 1.
 	scene.entrances = true
+	return scene
+
+
+func _enter_match(scene: Node) -> void:
 	var tree := get_tree()
 	var old := tree.current_scene
 	tree.root.add_child(scene)
 	tree.current_scene = scene
 	old.queue_free()
-	# Built: now the theme gives way to the entrances.
+	# The theme plays on under the match-up screen and gives way to the
+	# entrances as the arena is revealed (the owner, 19 Oct: "I want the
+	# music to continue playing whilst on that screen"). Before this it faded
+	# here, the moment the scene was in the tree -- but the first frames of
+	# a new arena are the long ones, so the screen held on in silence.
 	if is_instance_valid(_music):
-		_music.release(tree.root, MUSIC_FADE)
+		if is_instance_valid(_stinger) and not _stinger.is_queued_for_deletion():
+			var music := _music
+			_stinger.revealing.connect(func() -> void:
+				if is_instance_valid(music):
+					music.release(tree.root, MUSIC_FADE))
+		else:
+			_music.release(tree.root, MUSIC_FADE)
 
 
 ## The same two men again, a new seed, entrances and all (PostMatchMenu).
@@ -1009,20 +1055,3 @@ func _draw_versus(view: Vector2) -> void:
 	TitleArt.draw_tracked(self, _font,
 			Vector2((view.x - mw) * 0.5, view.y * 0.5 - band_h * 0.5 - ms * 0.6),
 			mode_label, ms, view.y * 0.004, Color(TitleArt.KEY_GOLD, vt))
-	_draw_loading(view, vt)
-
-
-## The loading bar under the VS band: thin, gold on dark, with a label.
-func _draw_loading(view: Vector2, alpha: float) -> void:
-	var p := load_progress()
-	var w := view.x * 0.36
-	var h := maxf(4.0, view.y * 0.008)
-	var at := Vector2((view.x - w) * 0.5, view.y * 0.5 + view.y * 0.16)
-	draw_rect(Rect2(at, Vector2(w, h)), Color(0, 0, 0, 0.6 * alpha))
-	draw_rect(Rect2(at, Vector2(w * p, h)), Color(TitleArt.KEY_GOLD, alpha))
-	var label := "LOADING  %d%%" % int(round(p * 100.0)) if p < 1.0 else "READY"
-	var size := int(view.y * 0.022)
-	var lw := TitleArt.tracked_width(_font, label, size, view.y * 0.002)
-	TitleArt.draw_tracked(self, _font, Vector2((view.x - lw) * 0.5,
-			at.y + h + size * 1.4), label, size, view.y * 0.002,
-			Color(TitleArt.STEEL, 0.85 * alpha))
