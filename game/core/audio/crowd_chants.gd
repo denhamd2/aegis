@@ -2,6 +2,13 @@ class_name CrowdChants
 extends Node
 ## Recorded crowd chants, timed only from the opening bell. No chant is played
 ## over entrances; the match bed continues underneath each faded-in sample.
+##
+## The owner's recordings, one at a time: Cody's chant with Cody in the match;
+## "O-T-C!" and the building turning on Roman with Roman in it; "This is
+## awesome!" once the match has had time to earn it (the owner, 19 Oct: "same
+## volume as Cody's one, also have a fade in and fade out"). Every recording
+## is loudness-matched to the Cody chant (tools/audio/build_owner_chants.py)
+## and played at the same level, faded in and out.
 
 const CODY_CHANT_FADE_IN := 2.0
 const CODY_CHANT_FADE_OUT := 3.0
@@ -22,6 +29,13 @@ var _chant_active := false
 var _ending_elapsed := -1.0
 var _match_finished := false
 var _ending_base_db := CODY_CHANT_LEVEL_DB
+## The chants this match can have: {id, stream, from} -- `from` the match
+## time before which it is not chanted.
+var _library: Array[Dictionary] = []
+var _seed := 0
+var _last_id := ""
+## The ids chanted this match, in order (tests, probes).
+var chanted: Array[String] = []
 
 
 func _ready() -> void:
@@ -33,19 +47,50 @@ func _ready() -> void:
 
 ## Called by MatchAudio with the supplied recording and a per-match seed.
 func configure_cody_chant(stream: AudioStream, bus: String, match_seed: int) -> void:
+	configure(bus, match_seed)
+	add_chant("cody", stream)
+
+
+## The bus and the per-match seed the chants are scheduled and picked on.
+func configure(bus: String, match_seed: int) -> void:
 	if _chant_player == null:
 		return
 	_chant_player.bus = bus
-	_chant_player.stream = stream
-	_chant_length = stream.get_length() if stream else 0.0
-	_chant_schedule = schedule_for_seed(match_seed) if stream else []
+	_seed = match_seed
+	_chant_schedule = schedule_for_seed(match_seed)
 	_next_chant = 0
 
 
-## Five potential slots, independently seeded per match: the first soon after
-## the bell, then one every minute or so -- the 36 s chant and a breather.
-## Short matches naturally end before the later slots are reached.
-const CHANT_SLOTS := 5
+## One more chant this match can have, not before `from` seconds in.
+func add_chant(id: String, stream: AudioStream, from := 0.0) -> void:
+	if stream == null:
+		return
+	if _chant_schedule.is_empty():
+		_chant_schedule = schedule_for_seed(_seed)
+	_library.append({"id": id, "stream": stream, "from": from})
+
+
+## The chant for slot `slot` at match time `at`: one of those whose time has
+## come, picked on the match's seed, not the one just chanted while there is
+## another. {} for none.
+func pick_for(slot: int, at: float) -> Dictionary:
+	var ready: Array[Dictionary] = []
+	for c: Dictionary in _library:
+		if at >= float(c["from"]):
+			ready.append(c)
+	if ready.size() > 1:
+		ready = ready.filter(func(c: Dictionary) -> bool: return c["id"] != _last_id)
+	if ready.is_empty():
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _seed * 7919 + slot * 104729 + 17
+	return ready[rng.randi_range(0, ready.size() - 1)]
+
+
+## Six potential slots, independently seeded per match: the first soon after
+## the bell, then one every minute or so -- the longest chant (Cody's, 36 s)
+## and a breather. Short matches naturally end before the later slots.
+const CHANT_SLOTS := 6
 const FIRST_CHANT := Vector2(20.0, 28.0)
 const CHANT_GAP := Vector2(62.0, 76.0)
 
@@ -64,8 +109,10 @@ static func chant_gain_db(elapsed: float, length: float, ending := false,
 	if ending:
 		var end_gain := 1.0 - clampf(ending_elapsed / MATCH_END_FADE, 0.0, 1.0)
 		return ending_base_db + linear_to_db(maxf(end_gain, 0.0001))
-	var fade_in := smoothstep(0.0, CODY_CHANT_FADE_IN, elapsed)
-	var fade_out := smoothstep(0.0, CODY_CHANT_FADE_OUT,
+	# a short chant (O-T-C is 7 s) fades over a share of itself, so it is
+	# heard at full for a while rather than all fade
+	var fade_in := smoothstep(0.0, minf(CODY_CHANT_FADE_IN, length * 0.22), elapsed)
+	var fade_out := smoothstep(0.0, minf(CODY_CHANT_FADE_OUT, length * 0.3),
 			maxf(length - elapsed, 0.0))
 	return CODY_CHANT_LEVEL_DB + linear_to_db(maxf(minf(fade_in, fade_out), 0.0001))
 
@@ -97,7 +144,14 @@ func tick(delta: float, _excitement: float) -> void:
 		_chant_player.volume_db = chant_gain_db(_chant_elapsed, _chant_length)
 		return
 	if match_time() >= _chant_schedule[_next_chant]:
+		var chant := pick_for(_next_chant, match_time())
 		_next_chant += 1
+		if chant.is_empty():
+			return
+		_last_id = chant["id"]
+		chanted.append(_last_id)
+		_chant_player.stream = chant["stream"]
+		_chant_length = (chant["stream"] as AudioStream).get_length()
 		_chant_elapsed = 0.0
 		_chant_active = true
 		_chant_player.volume_db = chant_gain_db(0.0, _chant_length)

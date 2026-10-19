@@ -73,3 +73,46 @@ func test_match_finish_cancels_any_later_chant_slots() -> void:
 	chants.tick(300.0, 0.0)
 	assert_int(chants._next_chant).is_equal(0)
 	assert_bool(chants._chant_player.playing).is_false()
+
+
+## The owner's other chants (19 Oct): O-T-C and the building turning on Roman
+## with Roman in the match, "This is awesome!" only once it has had time to
+## earn it, each loudness-matched to Cody's and faded in and out.
+func test_roman_and_this_is_awesome_chants_join_codys() -> void:
+	for path: String in MatchAudio.ROMAN_CROWD_CHANTS.values() + [MatchAudio.THIS_IS_AWESOME_CHANT]:
+		assert_bool(ResourceLoader.exists(path)).override_failure_message(path).is_true()
+	var chants: CrowdChants = auto_free(CrowdChants.new())
+	add_child(chants)
+	chants.configure(RingAnnouncer.under_bus(), 77)
+	chants.add_chant("cody", load(MatchAudio.CODY_CROWD_CHANT))
+	for id: String in MatchAudio.ROMAN_CROWD_CHANTS:
+		chants.add_chant(id, load(MatchAudio.ROMAN_CROWD_CHANTS[id]))
+	chants.add_chant("this_is_awesome", load(MatchAudio.THIS_IS_AWESOME_CHANT),
+			MatchAudio.THIS_IS_AWESOME_FROM)
+	chants.bell()
+	var schedule := CrowdChants.schedule_for_seed(77)
+	var t := 0.0
+	for at: float in schedule:
+		while t < at + 0.05:
+			chants.tick(0.25, 0.0)
+			t += 0.25
+		chants._chant_player.stop()            # let the next slot start
+		chants._chant_active = false
+	assert_int(chants.chanted.size()).is_equal(CrowdChants.CHANT_SLOTS)
+	for i in chants.chanted.size():
+		if chants.chanted[i] == "this_is_awesome":
+			assert_float(schedule[i]).is_greater_equal(MatchAudio.THIS_IS_AWESOME_FROM)
+		if i > 0:
+			assert_str(chants.chanted[i]).is_not_equal(chants.chanted[i - 1])
+	# the 7 s O-T-C is heard at full, not all fade
+	assert_float(CrowdChants.chant_gain_db(3.4, 6.78)).is_equal_approx(CrowdChants.CODY_CHANT_LEVEL_DB, 0.01)
+	assert_float(CrowdChants.chant_gain_db(0.0, 6.78)).is_less(-70.0)
+	assert_float(CrowdChants.chant_gain_db(6.78, 6.78)).is_less(-70.0)
+
+
+func test_no_roman_chants_without_roman() -> void:
+	var cody := WrestlerController.new()
+	cody.entrance_style = "cody"
+	assert_bool(MatchAudio.is_in_match([cody], "roman")).is_false()
+	assert_bool(MatchAudio.is_in_match([cody], "cody")).is_true()
+	cody.free()

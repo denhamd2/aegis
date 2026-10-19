@@ -128,6 +128,12 @@ const COMMENTARY_REPEAT_COOLDOWNS := {
 }
 const COMMENTARY_REPEAT_MIN_GAP := 12.0
 const CODY_CROWD_CHANT := "res://assets/audio/crowd_cody_chant.ogg"
+## The owner's other chants (CrowdChants): Roman's two, and the building's
+## "This is awesome!" -- not before THIS_IS_AWESOME_FROM seconds in.
+const ROMAN_CROWD_CHANTS := {"otc": "res://assets/audio/crowd_otc_chant.ogg",
+		"fu_roman": "res://assets/audio/crowd_fu_roman_chant.ogg"}
+const THIS_IS_AWESOME_CHANT := "res://assets/audio/crowd_this_is_awesome_chant.ogg"
+const THIS_IS_AWESOME_FROM := 150.0
 const ENDA_EASTER_EGG_AFTER := 15.0
 const ENDA_QUIET_HOLD := 0.75
 const ENDA_CUTAWAY_TAIL := 0.5
@@ -246,9 +252,16 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 	# Commentary choices are presentation-only, but a seeded stream keeps
 	# replayed broadcasts consistent while still allowing alternate takes.
 	_commentary_rng.seed = match_seed * 32771 + 4619
+	chants.configure(RingAnnouncer.under_bus(), match_seed)
 	if cody_is_in_match(wrestlers) and ResourceLoader.exists(CODY_CROWD_CHANT):
-		chants.configure_cody_chant(load(CODY_CROWD_CHANT) as AudioStream,
-				RingAnnouncer.under_bus(), match_seed)
+		chants.add_chant("cody", load(CODY_CROWD_CHANT) as AudioStream)
+	if is_in_match(wrestlers, "roman"):
+		for id: String in ROMAN_CROWD_CHANTS:
+			if ResourceLoader.exists(ROMAN_CROWD_CHANTS[id]):
+				chants.add_chant(id, load(ROMAN_CROWD_CHANTS[id]) as AudioStream)
+	if ResourceLoader.exists(THIS_IS_AWESOME_CHANT):
+		chants.add_chant("this_is_awesome", load(THIS_IS_AWESOME_CHANT) as AudioStream,
+				THIS_IS_AWESOME_FROM)
 	for w: WrestlerController in wrestlers:
 		w.move_landed.connect(_on_move_landed)
 		w.weapon_taken.connect(_on_weapon_taken)
@@ -260,6 +273,11 @@ func watch(referee: MatchReferee, wrestlers: Array, crowd: CrowdReaction, match_
 		_cooldown[w] = 0.0
 		_falls[w] = []
 	referee.match_won.connect(_on_match_won)
+
+
+static func is_in_match(wrestlers: Array, style: String) -> bool:
+	return wrestlers.any(func(w: Variant) -> bool:
+		return w is WrestlerController and (w as WrestlerController).entrance_style == style)
 
 
 static func cody_is_in_match(wrestlers: Array) -> bool:

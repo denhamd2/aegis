@@ -69,6 +69,17 @@ crowd bed, with a two-second fade-in and three-second fade-out, and can only
 play after the opening bell when Cody Rhodes is in the match. The same rights
 caveat as other owner-supplied recordings applies.
 
+`crowd_otc_chant.ogg` ("O-T-C!", 6.8 s), `crowd_this_is_awesome_chant.ogg`
+("This is awesome!", 16.7 s) and `crowd_fu_roman_chant.ogg` (the crowd turning
+on Roman Reigns, 11.7 s) are owner-supplied crowd chants (2026-10-19), made by
+`tools/audio/build_owner_chants.py`: loudness-matched to -20 LUFS (the Cody
+chant's level, measured -20.6), a 20 ms edge fade, Vorbis q5 stereo 48 kHz,
+metadata stripped. An offline speech recogniser found no talking in any of
+them, so they are used whole. `CrowdChants` plays them at the Cody chant's
+level with the same fades (shortened to a share of a short chant): Roman's two
+only with Roman in the match, "This is awesome!" not before 150 s. Same
+rights caveat as the other owner-supplied recordings.
+
 `commentary/tony_gunshot.ogg` is the owner-supplied Tony Schiavone call,
 "Oh my God, he shot him with a gun!" It is transcoded from the MP3 provided
 for this project, with a -12 LUFS loudness target and a -1.5 dBTP peak ceiling

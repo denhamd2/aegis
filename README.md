@@ -9954,3 +9954,23 @@ LED wall, and fire breathing". First, the table.
 - Review: `gauntlet/refs/nhb/review/carnage_1_flaming_table.png`, made with
   `tools/probe/carnage_shot.tscn --spot table`. Tests:
   `tests/test_carnage_spots.gd`.
+
+## 19 Oct — More crowd chants: O-T-C, the crowd on Roman, This is awesome
+
+The owner sent three chant recordings: "Add OTC! crowd chants during the
+match for Roman Reigns, similar to the Cody Rhodes ones, same volume ... fade
+in and fade out", then "This is awesome!", then the crowd turning on Roman.
+
+- `tools/audio/build_owner_chants.py` loudness-matches each recording to
+  -20 LUFS, the Cody chant's level: they measure -20.2 to -20.3 against
+  Cody's -20.6. An offline speech recogniser found no talking in any of
+  them, so they are used whole.
+- `CrowdChants` now holds several chants and plays one at a time.
+  - It has six slots, one about every minute from 20–28 s after the bell.
+  - Each slot picks, on the match's seed, a chant whose time has come, and
+    never the same one twice running.
+  - Roman's two play only with Roman in the match, Cody's only with Cody.
+    "This is awesome!" plays anywhere, but not before 150 s.
+  - Every chant plays at the Cody chant's +3 dB with the same fade in and
+    out, shortened to a share of a short chant. O-T-C is 7 s, so it is heard
+    at full for a few seconds instead of fading the whole way.
