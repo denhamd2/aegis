@@ -2048,7 +2048,9 @@ func _process_free_movement(delta: float, input: Dictionary) -> void:
 		var swing := WeaponCatalog.swing_move(held_weapon.def)
 		_play_strike_clip(swing)
 		_start_move(WrestlerFSM.State.STRIKE, swing)
-		held_weapon.fire(swing.startup_frames, self)
+		_launcher_miss = _launcher_miss_roll() if held_weapon.def.swing == WeaponDef.Swing.LAUNCHER \
+				else Vector2.ZERO
+		held_weapon.fire(swing.startup_frames, self, _launcher_miss)
 		combat.spend_stamina(CombatSystem.STAMINA_PER_STRIKE_TICK * swing.total_frames())
 	elif not _guarding and input.get("strike", false) and strike_move:
 		var strike := _pick_string_strike()
@@ -4987,6 +4989,28 @@ const KEEP_WEAPON_STATES: Array[WrestlerFSM.State] = [
 	WrestlerFSM.State.STRIKE, WrestlerFSM.State.WEAPON_ACTION, WrestlerFSM.State.ROPE_CROSS,
 	WrestlerFSM.State.HIT_REACT, WrestlerFSM.State.TAUNT,
 ]
+## A rocket goes wide this often -- past him and into whatever is behind him:
+## a post, a barricade, the desk, a screen, the crowd (VenueDamage). Off his
+## aim by LAUNCHER_MISS_YAW either way and LAUNCHER_MISS_PITCH up or down.
+## Rolled per shot from the match seed, so a replay misses the same shots.
+const LAUNCHER_MISS_CHANCE := 0.4
+const LAUNCHER_MISS_YAW := Vector2(7.0, 22.0)
+const LAUNCHER_MISS_PITCH := Vector2(-7.0, 6.0)
+var _launcher_shots := 0
+var _launcher_miss := Vector2.ZERO
+
+
+func _launcher_miss_roll() -> Vector2:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 8192 + player_index * 131 + _launcher_shots * 4099 + 71
+	_launcher_shots += 1
+	if rng.randf() >= LAUNCHER_MISS_CHANCE:
+		return Vector2.ZERO
+	var yaw := rng.randf_range(LAUNCHER_MISS_YAW.x, LAUNCHER_MISS_YAW.y)
+	return Vector2(yaw if rng.randf() < 0.5 else -yaw,
+			rng.randf_range(LAUNCHER_MISS_PITCH.x, LAUNCHER_MISS_PITCH.y))
+
+
 ## A ranged weapon fires along his facing, this wide either side.
 const RANGED_CONE_DEG := {WeaponDef.Swing.GUN: 18.0, WeaponDef.Swing.LAUNCHER: 14.0, WeaponDef.Swing.SPRAY: 35.0}
 
@@ -5691,6 +5715,8 @@ func _ranged_reaches() -> bool:
 	if opponent == null or not is_instance_valid(opponent) or opponent.is_crossing_ropes():
 		return false
 	var def := held_weapon.def
+	if def.swing == WeaponDef.Swing.LAUNCHER and _launcher_miss != Vector2.ZERO:
+		return false                    # it went wide: into the building, not him
 	var to := opponent.global_position - global_position
 	to.y = 0.0
 	if to.length() > float(WeaponCatalog.RANGED[def.swing]):

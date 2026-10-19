@@ -904,6 +904,7 @@ func _build_ringside() -> void:
 		return
 	var root: Node3D = packed.instantiate()
 	root.name = "Ringside"
+	root.add_to_group(VenueDamage.RINGSIDE_GROUP)     # what a rocket can wreck
 	for part: String in RINGSIDE_MATERIALS:
 		var spec: Array = RINGSIDE_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
@@ -2043,6 +2044,7 @@ func _build_entrance_set() -> void:
 	var root: Node3D = packed.instantiate()
 	_mark_stage_reflections(root)
 	root.name = "EntranceSet"
+	root.add_to_group(VenueDamage.ENTRANCE_GROUP)
 	for part: String in ENTRANCE_MATERIALS:
 		var spec: Array = ENTRANCE_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(

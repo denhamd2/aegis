@@ -1090,7 +1090,7 @@ func _start_beat() -> void:
 	# Cut to this beat before the next rendered frame. Otherwise one frame keeps
 	# the prior opening-stage angle while the first entrant is still hidden in
 	# his entrance hold, making the empty portals visible on the cut.
-	_frame_shot(beat, 0.0, true)
+	_frame(beat, 0.0, true)
 
 
 ## The name card: up once he is half way down the ramp, away at its foot.
@@ -1172,7 +1172,7 @@ func _physics_process(delta: float) -> void:
 			w.global_transform.basis = _facing_basis(beat["facing"])
 			if beat["clip"] == "strikes/rope_step_through_apron":
 				_part_ropes(w, t, beat["facing"])
-	_frame_shot(beat, delta)
+	_frame(beat, delta)
 	_aim_follow_spot(w)
 	_aim_tron_rim(w)
 	var waiting: bool = beat.get("wait_idle", false) and _handoff != null \
@@ -1876,6 +1876,7 @@ func _set_backlight(w: WrestlerController, what: String) -> void:
 				_pyro.name = "EntrancePyro"
 				add_child(_pyro)
 			_pyro.fire("opening")
+			_pyro_wide("opening")
 			if _crowd:
 				_crowd.pop(1.0)
 		"backlight_on":
@@ -1974,6 +1975,8 @@ func _event(w: WrestlerController, what: String) -> void:
 				_pyro.name = "EntrancePyro"
 				add_child(_pyro)
 			_pyro.fire(what.trim_prefix("pyro_"))
+			if what != "strobe":
+				_pyro_wide(what.trim_prefix("pyro_"))
 			if _crowd:
 				_crowd.pop(CROWD_PYRO_POP)
 		"house_walk":
@@ -2003,6 +2006,7 @@ func _event(w: WrestlerController, what: String) -> void:
 				_pyro.name = "EntrancePyro"
 				add_child(_pyro)
 			_pyro.fire(what.trim_prefix("pyro_"))
+			_pyro_wide(what.trim_prefix("pyro_"))
 			if _crowd:
 				_crowd.pop(CROWD_PYRO_POP)
 
@@ -2082,6 +2086,59 @@ static func _flat(v: Vector3) -> Vector3:
 # ---------------------------------------------------------------------------
 # Camera and lights
 # ---------------------------------------------------------------------------
+
+## The owner, 19 Oct: whenever pyro goes off, the camera goes wide enough to
+## take all of it in -- the barrage over the set and the seats, or the shells
+## over the ring -- and holds there while it bursts, then cuts back to the
+## beat's own shot. Seconds per cue: the barrage's waves and the last burst's
+## fade (EntrancePyro.VOLLEYS, WHOA_VOLLEYS).
+const PYRO_WIDE_SECONDS := {"opening": 4.5, "stage": 4.5, "roman": 5.0, "cody_hit": 6.5,
+		"cody_punch": 4.5, "over_ring": 4.0}
+## Over the set: from high over the ring's stage-side ropes, down the ramp, the
+## deck at the bottom of frame and the bursts 20 m up at the top.
+const PYRO_SET_WIDE_AT := Vector3(0.0, 4.5, -3.6)
+const PYRO_SET_WIDE_LOOK := Vector3(0.0, 9.0, -31.0)
+const PYRO_SET_WIDE_FOV := 64.0
+## Over the ring: from the hard-camera side, high, the four corners' shells in.
+const PYRO_RING_WIDE_AT := Vector3(0.0, 5.5, 13.0)
+const PYRO_RING_WIDE_LOOK := Vector3(0.0, 4.0, 0.0)
+const PYRO_RING_WIDE_FOV := 60.0
+var _pyro_wide_ticks := 0
+var _pyro_wide_ring := false
+var _pyro_wide_cut := false
+
+
+func _pyro_wide(cue: String) -> void:
+	var ring := cue == "over_ring"
+	_pyro_wide_cut = _pyro_wide_ticks <= 0 or ring != _pyro_wide_ring
+	_pyro_wide_ring = ring
+	_pyro_wide_ticks = maxi(_pyro_wide_ticks if not _pyro_wide_cut else 0,
+			int(float(PYRO_WIDE_SECONDS.get(cue, 4.5)) * TPS))
+
+
+## Whether the pyro wide holds the camera now (tests, probes).
+func pyro_wide_on() -> bool:
+	return _pyro_wide_ticks > 0
+
+
+## The beat's shot -- or, while pyro is going off, the pyro wide.
+func _frame(beat: Dictionary, delta: float, force_cut := false) -> void:
+	if _pyro_wide_ticks <= 0 or not _camera:
+		_frame_shot(beat, delta, force_cut)
+		return
+	if delta > 0.0:
+		_pyro_wide_ticks -= 1
+	if _pyro_wide_ticks <= 0:
+		_frame_shot(beat, delta, true)   # back to his shot on a cut
+		return
+	if _pyro_wide_ring:
+		_camera.set_entrance_shot(PYRO_RING_WIDE_AT, PYRO_RING_WIDE_LOOK, PYRO_RING_WIDE_FOV,
+				_pyro_wide_cut, delta)
+	else:
+		_camera.set_entrance_shot(PYRO_SET_WIDE_AT, PYRO_SET_WIDE_LOOK, PYRO_SET_WIDE_FOV,
+				_pyro_wide_cut, delta)
+	_pyro_wide_cut = false
+
 
 func _frame_shot(beat: Dictionary, delta: float, force_cut := false) -> void:
 	if not _camera:

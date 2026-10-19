@@ -401,6 +401,9 @@ func _expire_from_match() -> void:
 
 var _fire_in := -1
 var _fire_by: Node3D = null
+## A launcher shot that goes wide: degrees off his aim, (yaw, pitch); ZERO for
+## one that flies at the man in front of him (WrestlerController rolls it).
+var _fire_miss := Vector2.ZERO
 ## EFFECT state: which, how long it has run, how long it lasts, and where the
 ## rocket is going.
 var _effect := ""
@@ -408,6 +411,10 @@ var _effect_t := 0.0
 var _effect_life := 0.0
 var _effect_to := Vector3.ZERO
 var _effect_velocity := Vector3.ZERO
+## A rocket at the man (it flies to him and goes off on him), or wide of him
+## (it flies on until it runs into something: VenueDamage.ray).
+var _effect_homing := false
+var _effect_travelled := 0.0
 
 const EFFECT_LIFE := {"flash": 0.07, "cloud": 0.9, "rocket": 0.0, "blast": 1.3}
 ## Who hears about a weapon going off or breaking (MatchAudio, MatchCamera):
@@ -416,15 +423,21 @@ const EFFECT_LIFE := {"flash": 0.07, "cloud": 0.9, "rocket": 0.0, "blast": 1.3}
 ## long after the listeners were set up.
 const LISTENERS := &"weapon_listeners"
 const ROCKET_SPEED := 32.0
+## A rocket that hits nothing goes off in the air this far out.
+const ROCKET_MAX_RANGE := 70.0
+## It flies at the man only inside this much of his aim (the launcher's
+## RANGED_CONE_DEG, with a little give).
+const ROCKET_HOMING_CONE_DEG := 20.0
 
 
 ## A swing has started: if this weapon fires something, it goes off when the
 ## swing's startup is over.
-func fire(after_ticks: int, by: Node3D) -> void:
+func fire(after_ticks: int, by: Node3D, miss := Vector2.ZERO) -> void:
 	if def.effects.is_empty():
 		return
 	_fire_in = after_ticks
 	_fire_by = by
+	_fire_miss = miss
 
 
 func _tick_fire() -> void:
@@ -450,15 +463,33 @@ func _tick_fire() -> void:
 		WeaponDef.Swing.LAUNCHER:
 			var fwd := out
 			var reach := float(WeaponCatalog.RANGED[def.swing])
-			var to := at.origin + fwd * reach
 			var opp: Node3D = _fire_by.get("opponent") if _fire_by else null
-			if opp and opp.global_position.distance_to(at.origin) < reach:
+			var homing := false
+			var to := at.origin + fwd * ROCKET_MAX_RANGE
+			if opp and _fire_miss == Vector2.ZERO and opp.global_position.distance_to(at.origin) < reach:
+				var flat_fwd := Vector3(fwd.x, 0.0, fwd.z)
+				var flat_to := opp.global_position - at.origin
+				flat_to.y = 0.0
+				homing = flat_fwd.length() < 0.01 or rad_to_deg(flat_fwd.angle_to(flat_to)) \
+						<= ROCKET_HOMING_CONE_DEG
+			var dir := fwd
+			if homing:
 				to = opp.global_position + Vector3.UP * 1.1
-			var dir := (to - at.origin).normalized()
+				dir = (to - at.origin).normalized()
+			else:
+				# wide of him: off his aim by the miss, and on until it runs
+				# into something -- a post, a panel, the desk, a screen, the
+				# crowd (the owner, 19 Oct)
+				dir = fwd.rotated(Vector3.UP, deg_to_rad(_fire_miss.x))
+				var right := dir.cross(Vector3.UP)
+				if right.length() > 0.01:
+					dir = dir.rotated(right.normalized(), deg_to_rad(_fire_miss.y))
+				dir = dir.normalized()
 			# the rocket's nose is its -Z
 			var r := _spawn_effect(host, "rocket", Transform3D(Basis.looking_at(dir, _up_for(dir)), at.origin))
 			r._effect_to = to
 			r._effect_velocity = dir * ROCKET_SPEED
+			r._effect_homing = homing
 
 
 ## The way a muzzle marker points out. Markers are authored with their game
@@ -498,18 +529,41 @@ func _tick_effect(delta: float) -> void:
 			var f := clampf(_effect_t / _effect_life, 0.0, 1.0)
 			scale = Vector3.ONE * lerpf(0.2, 1.0, sqrt(f))
 		"rocket":
-			global_position += _effect_velocity * delta
-			if global_position.distance_to(_effect_to) < ROCKET_SPEED * delta * 1.5:
-				var blast := _spawn_effect(get_parent(), "blast",
-						Transform3D(Basis(), Vector3(_effect_to.x, ground_under(_effect_to), _effect_to.z)))
-				blast.scale = Vector3.ONE * 0.3
-				queue_free()
+			var step := _effect_velocity * delta
+			if _effect_homing:
+				global_position += step
+				if global_position.distance_to(_effect_to) < ROCKET_SPEED * delta * 1.5:
+					_rocket_blast(Vector3(_effect_to.x, VenueDamage.surface_under(_effect_to), _effect_to.z),
+							Vector3.UP, null, false)
+				return
+			var damage := VenueDamage.of(self)
+			var hit := damage.ray(global_position, global_position + step) if damage else {}
+			if not hit.is_empty():
+				_rocket_blast(hit["point"], hit["normal"], hit.get("target"), bool(hit.get("crowd", false)))
+				return
+			global_position += step
+			_effect_travelled += step.length()
+			if _effect_travelled >= ROCKET_MAX_RANGE:
+				_rocket_blast(global_position, -step.normalized(), null, false)
 			return
 		"blast":
 			var f := clampf(_effect_t / _effect_life, 0.0, 1.0)
 			scale = Vector3.ONE * lerpf(0.3, 1.0, sqrt(f))
 	if _effect_t >= _effect_life:
 		queue_free()
+
+
+## Where a rocket goes off: the fireball (on the floor under it, or at the
+## height of what it hit), and the damage it does to the building.
+func _rocket_blast(at: Vector3, normal: Vector3, target: Variant, crowd: bool) -> void:
+	var floor_y := VenueDamage.surface_under(at)
+	var base := Vector3(at.x, floor_y if at.y - floor_y < 1.2 else at.y - 0.6, at.z)
+	var blast := _spawn_effect(get_parent(), "blast", Transform3D(Basis(), base))
+	blast.scale = Vector3.ONE * 0.3
+	var damage := VenueDamage.of(self)
+	if damage:
+		damage.blast(at, normal, target as VenueDamage.Target, crowd)
+	queue_free()
 
 
 func _tick_flight(delta: float) -> void:

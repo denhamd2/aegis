@@ -73,11 +73,37 @@ func test_flames_carry_a_sustained_light() -> void:
 	for f: Array in pyro._flashes:
 		if f[4]:
 			sustained += 1
-	# The first pulse: four flame units, each lit while it burns; the room's
-	# red flash is a pop. Two more pulses follow on the beat.
-	assert_int(sustained).is_equal(4)
-	assert_int(pyro._flashes.size()).is_equal(5)
-	assert_int(pyro._pending.size()).is_equal(EntrancePyro.FLAME_PULSES - 1)
+	# The first pulse: ten flame units, the four original ones lit while they
+	# burn; the room's red flash is a pop. Four more pulses follow on the
+	# beat, and the barrage over the set (the owner, 19 Oct: five times the
+	# pyro).
+	assert_int(sustained).is_equal(EntrancePyro.FLAME_LIT_XS.size())
+	assert_int(pyro._flashes.size()).is_equal(EntrancePyro.FLAME_LIT_XS.size() + 1)
+	assert_int(pyro._pending.size()).is_equal(EntrancePyro.FLAME_PULSES)
+	assert_int(pyro.find_children("", "GPUParticles3D", false, false).size()) \
+			.is_equal(EntrancePyro.FLAME_DECK_XS.size() + EntrancePyro.FLAME_HIGH_XS.size())
+
+
+## Five times the fireworks: every volley cue is VOLLEYS waves, and Cody's
+## WHOA twice that plus the shells down the ramp.
+func test_every_volley_is_a_five_wave_barrage() -> void:
+	var pyro: EntrancePyro = auto_free(EntrancePyro.new())
+	add_child(pyro)
+	pyro.fire("stage")
+	for i in 240:
+		pyro._physics_process(1.0 / 60.0)
+	var stage_shells := pyro.find_children("", "GPUParticles3D", false, false).size()
+	assert_int(stage_shells).is_equal(EntrancePyro.SET_SHELL_XS.size() * EntrancePyro.VOLLEYS)
+	var whoa: EntrancePyro = auto_free(EntrancePyro.new())
+	add_child(whoa)
+	whoa.fire("cody_hit")
+	for i in 360:
+		whoa._physics_process(1.0 / 60.0)
+	var whoa_shells := whoa.find_children("", "GPUParticles3D", false, false).size()
+	assert_int(whoa_shells).is_equal(EntrancePyro.WHOA_VOLLEYS
+			* (EntrancePyro.SET_SHELL_XS.size() + EntrancePyro.RAMP_SHELL_ZS.size() * 2))
+	# and not a light per shell
+	assert_int(whoa._flashes.size()).is_less(whoa_shells / 3)
 
 
 ## The owner: no sparkler or waterfall pyro for either man -- fire for
@@ -105,3 +131,17 @@ func test_no_sparkler_or_waterfall_pyro() -> void:
 				and ((p.draw_pass_1 as QuadMesh).material as StandardMaterial3D).albedo_texture != null
 		assert_bool(shell or flame).override_failure_message("an emitter that is neither a shell nor a flame").is_true()
 	assert_int(emitters).is_greater(10)
+
+
+## Rocket pyro, not a waterfall (the owner, 19 Oct): every shell goes up on a
+## trail from its mortar and bursts where it stops; nothing bursts first.
+func test_every_shell_goes_up_as_a_rocket() -> void:
+	var pyro: EntrancePyro = auto_free(EntrancePyro.new())
+	add_child(pyro)
+	for cue: String in ["stage", "cody_hit", "over_ring"]:
+		pyro.fire(cue)
+	pyro._physics_process(1.0 / 60.0)
+	assert_int(pyro._rockets.size()).is_greater(0)
+	assert_int(pyro.find_children("", "GPUParticles3D", false, false).size()).is_equal(0)
+	for r: Array in pyro._rockets:
+		assert_float((r[2] as Vector3).y - (r[1] as Vector3).y).is_greater(4.0)

@@ -7,6 +7,8 @@ extends Node3D
 ##
 ## --nhb lays the No Holds Barred stage weapons out on the deck
 ## (WeaponStock.STAGE_LAYOUT), as the bell does.
+## --pyro CUE --wait SECONDS fires EntrancePyro's CUE (opening, cody_hit, roman,
+## ...) and holds that long before the frame.
 
 const MATCH_SCENE := "res://scenes/play.tscn"
 var _out := "/tmp/stage_wide.png"
@@ -40,6 +42,19 @@ func _ready() -> void:
 	cam.fov = _fov
 	cam.global_position = _pos
 	cam.look_at(_look, Vector3.UP)
+	var cue := ""
+	var wait := 0.0
+	for i in args.size():
+		if args[i] == "--pyro" and i + 1 < args.size():
+			cue = args[i + 1]
+		elif args[i] == "--wait" and i + 1 < args.size():
+			wait = float(args[i + 1])
+	if cue != "":
+		var pyro := EntrancePyro.new()
+		add_child(pyro)
+		pyro.fire(cue)
+		for _i in int(wait * 60.0):
+			await get_tree().physics_frame
 	for _i in 8:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

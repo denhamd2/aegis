@@ -9690,3 +9690,28 @@ at broadcast-heavy intensity.
   ramp 4% → 11%, stage 0% → 6%.
 - Review: `gauntlet/refs/nhb/review/step1_stage_weapons_ramp_ring.png`.
   Full suite 991 cases green.
+
+## 19 Oct — Rocket pyro ×5, wide on every cue, rocket-launcher damage
+
+- **Pyro is rockets.** Every shell now launches from a mortar (the deck, the
+  ramp's edges, the ring posts) on a visible rising trail and opens as a round
+  starburst that hangs and fades, not a shower of falling sparks. Flown in
+  `EntrancePyro._physics_process`, so a cue replays frame for frame.
+- **Five times the pyro.** Every volley is a five-wave barrage; the Dynamite
+  open fires 25 rockets; Roman's slam has ten flame units over five pulses
+  plus a red-and-white barrage; Cody's WHOA is a ten-wave barrage over the set
+  with pairs of rockets down both sides of the ramp. Only a few shells per
+  wave carry a light.
+- **The camera goes wide for it.** Any pyro cue cuts the entrance camera to a
+  wide that frames every burst (`EntranceDirector.PYRO_SET_WIDE_*`, or
+  `PYRO_RING_WIDE_*` over the ring) for the barrage's length, then cuts back.
+- **Rocket launcher damage** (`core/arena/venue_damage.gd`). 40% of rockets
+  go wide (rolled from the match seed) and fly on until they hit something.
+  A hit wrecks the piece for the rest of the match: barricade panels, the
+  announce desk, the ring posts and steps are cut out of the venue mesh and
+  replaced by damaged models (`tools/blender/venue_damage.py` →
+  `assets/environment/venue_damage.glb`); the apron skirt and the LED walls
+  get a blown hole / smashed patch over them. Rockets into the crowd or a
+  screen start fires that burn until the match ends. Every blast leaves a
+  scorch mark, and rubble at floor level.
+- Review: `gauntlet/refs/nhb/review/step2_rocket_pyro_and_damage.png`.

@@ -1179,6 +1179,7 @@ func _build_model() -> void:
 		return
 	var root: Node3D = packed.instantiate()
 	root.name = "RingMeshes"
+	root.add_to_group(VenueDamage.RING_GROUP)         # what a rocket can wreck
 	holder.add_child(root)
 	var materials := _model_materials()
 	for part: String in materials:

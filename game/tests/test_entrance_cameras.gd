@@ -83,9 +83,11 @@ func test_opening_crane_and_stage_angle_fit_every_rocket_burst() -> void:
 			assert_float(horizontal).override_failure_message(
 					"rocket at %s is cropped horizontally at %.1f s" % [rocket[1], at_seconds]) \
 				.is_less(horizontal_half_fov)
+	# A comet tail, not a fountain: tight and short. Long enough, since the
+	# owner asked for rocket pyro (19 Oct), to draw each rocket's climb.
 	assert_float(EntrancePyro.OPENING_TRAIL_SPREAD).is_less_equal(4.0)
-	assert_float(EntrancePyro.OPENING_TRAIL_LIFETIME).is_less_equal(0.25)
-	assert_int(EntrancePyro.OPENING_TRAIL_AMOUNT).is_less_equal(64)
+	assert_float(EntrancePyro.OPENING_TRAIL_LIFETIME).is_less_equal(0.45)
+	assert_int(EntrancePyro.OPENING_TRAIL_AMOUNT).is_less_equal(120)
 	assert_float(EntrancePyro.OPENING_BURST_SIZE).is_greater(1.0)
 
 
@@ -261,3 +263,33 @@ func test_the_face_off_and_match_intro_use_broadcast_pacing() -> void:
 	assert_float(float(EntranceDirector.INTRO_CHECK_TICKS) / EntranceDirector.TPS).is_equal(2.0)
 	assert_float(float(EntranceDirector.INTRO_CLOSE_TICKS) / EntranceDirector.TPS).is_equal(2.5)
 	assert_float(EntranceDirector.INTRO_CLOSE_FOV).is_greater_equal(30.0)
+
+
+
+## Whenever pyro goes off the camera goes wide enough to take it all in (the
+## owner, 19 Oct): every shell the set barrage, the WHOA's ramp shells and the
+## opening rockets burst inside the pyro wide.
+func test_the_pyro_wide_frames_every_burst() -> void:
+	var bursts: Array[Vector3] = []
+	for v in EntrancePyro.WHOA_VOLLEYS:
+		var shift := EntrancePyro._wave_shift(v)
+		for x: float in EntrancePyro.SET_SHELL_XS:
+			bursts.append(Vector3(x, EntrancePyro.SET_SHELL_HEIGHT + 2.5 + 1.2,
+					ArenaBuilder.STAGE_FRONT - 4.0) + shift)
+		for z: float in EntrancePyro.RAMP_SHELL_ZS:
+			for sx: float in [-1.0, 1.0]:
+				bursts.append(Vector3(sx * (EntrancePyro.RAMP_SHELL_X + 1.0),
+						EntrancePyro.RAMP_SHELL_HEIGHT + 1.6, z))
+	for rocket: Array in EntrancePyro.opening_rocket_plan():
+		bursts.append(rocket[1] + Vector3(1.8, 2.2, -1.5))
+	var fov := EntranceDirector.PYRO_SET_WIDE_FOV
+	var at := EntranceDirector.PYRO_SET_WIDE_AT
+	var view := Transform3D(Basis().looking_at(EntranceDirector.PYRO_SET_WIDE_LOOK - at, Vector3.UP),
+			at).affine_inverse()
+	for p: Vector3 in bursts:
+		var local := view * p
+		assert_float(absf(atan2(local.y, -local.z))).override_failure_message(
+				"a burst at %s is cropped vertically" % p).is_less(deg_to_rad(fov) * 0.5)
+		assert_float(absf(atan2(local.x, -local.z))).override_failure_message(
+				"a burst at %s is cropped horizontally" % p) \
+				.is_less(atan(tan(deg_to_rad(fov) * 0.5) * 16.0 / 9.0))
