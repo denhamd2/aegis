@@ -201,3 +201,9 @@ and western extent, not surveyed accuracy or individual property matching.
 ## Original-photo identity update — 19 October 2026
 
 BR-022 (22/25) now uses the owner-uploaded Shane photo `shane_face_photo/69012.jpg` for facial identity, with sheet profiles treated as secondary estimates. See `art_briefs/shane_photo_likeness/brief.md` for the neutral sculpt/expression distinction, independent head integration and review evidence. Future player work starts with the revised `/create-player` workflow and its task-specific production checks. The landing art uses photorealistic David/owner portraits; it does not demonstrate gameplay mesh fidelity.
+
+The approved shared-head follow-up promotes that neutral into the common
+`footballer_head_master.blend`, with independent roster sculpt offsets and
+separate hair selections. Follow [shared head production](art_briefs/shared_head_pipeline.md)
+for edits and regeneration. Other player identities remain starting heads;
+this does not establish their facial likeness or unseen profiles.

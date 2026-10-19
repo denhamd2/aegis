@@ -49,8 +49,12 @@ checks. Existing delivered features remain evidence, not PES-quality acceptance.
   Team kit changes never tint skin/eyes/hair.
 - Team/role kit resources reference shared source art. Individual name/number
   prints are separate small overlays, not copies of a complete 2K shirt atlas.
-- Individual head edits use a base topology fingerprint and sparse local vertex
-  offsets. Export fails if topology changes; it does not silently discard edits.
+- Individual head edits use sparse local offsets with topology, coordinate-Basis
+  and UV/weight fingerprints. Compatible common edits rebase against recorded
+  master snapshots; unknown bases or changed topology/layout fail explicitly.
+  Head/eyes and hairstyles are independent selections. See
+  [shared head production](art_briefs/shared_head_pipeline.md) for the authoritative
+  source and regeneration commands.
 - One neutral profile per unknown identity. Player-specific ratings, surnames
   and exact proportions must come from supplied evidence or be labeled provisional.
 

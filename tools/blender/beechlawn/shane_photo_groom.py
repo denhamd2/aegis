@@ -64,7 +64,9 @@ def build_groom(head, rig, texture_directory):
     mat.node_tree.links.new(alpha.outputs[0],bsdf.inputs["Alpha"])
     mat.surface_render_method="DITHERED"
     for name in ("Hair_Shane_ShortCropRoots","Hair_Shane_ShortCropCards"):
-        bpy.data.objects.remove(bpy.data.objects[name],do_unlink=True)
+        existing = bpy.data.objects.get(name)
+        if existing is not None:
+            bpy.data.objects.remove(existing,do_unlink=True)
 
     def hairline(p):
         angle=abs(math.atan2(p.x,p.z+1))

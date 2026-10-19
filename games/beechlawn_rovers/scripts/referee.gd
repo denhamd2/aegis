@@ -7,11 +7,7 @@ var _target := Vector3.ZERO
 var _decision_left := 0.0
 
 func _ready() -> void:
-	var identity := FootballerProfile.new()
-	identity.player_id = &"des_feeney_sr"
-	identity.display_name = "Des Feeney Sr."
-	identity.appearance = FootballAppearance.new()
-	identity.appearance.kit = "referee"
+	var identity := preload("res://data/officials/referee.tres")
 	visual.configure_appearance(identity)
 	position = Vector3(-5.0, 0.0, 9.0)
 	add_to_group("match_officials")

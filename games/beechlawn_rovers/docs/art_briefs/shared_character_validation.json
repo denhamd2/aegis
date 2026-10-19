@@ -17,11 +17,13 @@
     "AN_Beechlawn_Sprint",
     "AN_Beechlawn_StopFromRun",
     "AN_Beechlawn_Turn90Left",
-    "AN_Beechlawn_Turn90Right"
+    "AN_Beechlawn_Turn90Right",
+    "AN_Beechlawn_WalkOn",
+    "AN_Beechlawn_WarmupJog"
   ],
   "triangles_all_variants": 67902,
   "mesh_parts": 16,
-  "bytes": 11675472,
+  "bytes": 11790936,
   "parts": [
     "Eye_l",
     "Eye_r",

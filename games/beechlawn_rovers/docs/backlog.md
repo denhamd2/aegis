@@ -636,6 +636,14 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-19 shared-head follow-up: Shane's neutral head/eyes/skin are now the
+    common starting master for both teams and referee. Each identity has an
+    independent sculpt slot; compatible common changes regenerate with personal
+    offsets retained. Separate hair selection preserves Shane's groom and bald
+    identities without copying the groom to everyone. See
+    `art_briefs/shared_head_pipeline.md` for source, commands and acceptance
+    evidence. This completes the shared-head pipeline subtask; individual
+    likeness, hair and garment approval remain open under this item.
   - 2026-10-19: Shane original-photo pass adds a separate head/eye/hair package
     on the unchanged shared rig, with a neutral identity and editable restrained
     smile. Integrated into both roster and retained 4v4 profile; likeness remains

@@ -87,7 +87,9 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		keeper_idle.loop_mode = Animation.LOOP_LINEAR
 		movement.set_blend_point_node(0,keeper_idle)
 	var kit_material := _shared_kit_material(appearance.kit)
-	var head_parts := _head_parts(appearance.head_variant)
+	var head_parts := _head_parts(preload("res://assets/characters/shared/heads/master.glb")).duplicate()
+	head_parts.merge(_head_parts(appearance.head_variant), true)
+	var hair_parts := _head_parts(appearance.hair_variant)
 	for node in get_node("Rig").find_children("*", "MeshInstance3D", true, false):
 		var part := node as MeshInstance3D
 		var part_name := String(part.name)
@@ -97,6 +99,9 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 			# Reuse this actor's skin/skeleton; the package supplies compatible
 			# head, eye and hair meshes without another live animated rig.
 			part.mesh = head_parts.get(part_name, _base_head_parts[part_name])
+			if part_name.begins_with("Hair_"):
+				part.mesh = hair_parts.get(part_name, part.mesh)
+				part.visible = appearance.hair_style != "bald"
 			for surface in part.mesh.get_surface_count():
 				part.set_surface_override_material(surface, null)
 		if part.name == "YBot_Surface":
@@ -120,12 +125,6 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 				skin.albedo_texture = appearance.head_albedo
 			skin.albedo_color = appearance.skin_tint
 			part.set_surface_override_material(0,skin)
-		if String(part.name).begins_with("Hair") and appearance.hair_variant != null:
-			var variant := appearance.hair_variant.instantiate()
-			var candidates := variant.find_children("*", "MeshInstance3D", true, false)
-			if candidates.size() == 1:
-				part.mesh = (candidates[0] as MeshInstance3D).mesh
-			variant.free()
 	var rig_node := get_node("Rig") as Node3D
 	rig_node.scale = Vector3(appearance.build_scale, appearance.height_scale, appearance.build_scale)
 	_add_back_print(profile, appearance)

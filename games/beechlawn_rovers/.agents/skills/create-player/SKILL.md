@@ -36,7 +36,7 @@ Use available headless Blender/bpy directly when MCP is absent. Store editable s
 
 Work from silhouette to facial planes to detail. Check neutral clay front/profile/three-quarter before tuning skin. Fit skull, jaw, cheek, brow/orbit, nose, lips, ears and neck as geometry. Keep lids fitted to curved eyeballs; iris placement cannot repair a wrong aperture. Treat a smile as a separate editable expression from neutral identity. Use proper oral geometry for an open smile; skin pigment cannot stand in for teeth or mouth depth. A single portrait cannot establish an exact hidden profile.
 
-Preserve the common skeleton, rest transforms, bone names, animation timing and body/kit interfaces. Use an independent head variant for individual likeness so one player's edits do not change the squad. Keep topology-compatible sculpt deltas fingerprinted; preserve the neck's positions, weights **and normals**. See [production checks](production-checks.md) for seams, skin binding and safe exports.
+Preserve the common skeleton, rest transforms, bone names, animation timing and body/kit interfaces. For common-head updates or individual likeness edits, follow [the shared head pipeline](../../../docs/art_briefs/shared_head_pipeline.md): the authoritative source is `footballer_head_master.blend`; individual sculpts are revisioned offsets. Preserve the neck's positions, weights **and normals**. See [production checks](production-checks.md) for seams, skin binding and safe exports.
 
 Hair needs scalp coverage, a reference-shaped hairline/crown and directional clumps before flyaways. Inspect root edges and card ends from several angles. Bound transparency, shadow cost and strand count to the football camera.
 

@@ -1,0 +1,26 @@
+{
+  "result": "PASS",
+  "regenerated_variants": [
+    {
+      "identity": "first",
+      "common_edit_propagated": true,
+      "personal_offsets_retained": true,
+      "neck_uv_weights_and_expression_offsets_preserved": true
+    },
+    {
+      "identity": "second",
+      "common_edit_propagated": true,
+      "personal_offsets_retained": true,
+      "neck_uv_weights_and_expression_offsets_preserved": true
+    }
+  ],
+  "rejected": [
+    "stale same-topology Basis",
+    "different topology",
+    "legacy Basis-free delta",
+    "changed UV registration"
+  ],
+  "promoted_neutral_matches_shane": true,
+  "master_unchanged": true,
+  "limits": "Structural regeneration tests; not individual likeness or native performance approval"
+}

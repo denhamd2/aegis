@@ -7,8 +7,9 @@ func _part(rig: Node, name: String) -> MeshInstance3D:
 	return rig.find_child(name, true, false) as MeshInstance3D
 
 func _run() -> void:
-	var packed := load("res://assets/characters/shane/shane_photo_head.glb") as PackedScene
+	var packed := load("res://assets/characters/shared/heads/master.glb") as PackedScene
 	var package := packed.instantiate()
+	var hair_package := (load("res://assets/characters/shared/heads/shane_crop.glb") as PackedScene).instantiate()
 	var game := (load("res://scenes/match_11v11.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame
@@ -26,12 +27,12 @@ func _run() -> void:
 	var rig := visual.get_node("Rig")
 	var other_rig := other.get_node("Visual/Rig")
 	var base_head := _part(other_rig, "Skin_Head").mesh
-	assert(_part(rig, "Skin_Head").mesh != base_head, "Shane must use his individual sculpt")
+	assert(_part(rig, "Skin_Head").mesh == base_head, "Unedited identities share the promoted neutral master")
 	assert(_part(rig, "YBot_Surface").mesh == _part(other_rig, "YBot_Surface").mesh, "Body remains shared")
 	var part_names := ["Skin_Head", "Eye_l", "Eye_r", "Hair_Shane_ShortCropRoots", "Hair_Shane_ShortCropCards"]
 	for name in part_names:
 		var live := _part(rig, name)
-		var source := _part(package, name)
+		var source := _part(hair_package if name.begins_with("Hair_") else package, name)
 		assert(live.mesh == source.mesh, "Head package part missing: " + name)
 		assert(live.skin.get_bind_count() == source.skin.get_bind_count())
 		for index in live.skin.get_bind_count():
@@ -40,7 +41,7 @@ func _run() -> void:
 		assert(live.mesh.get_aabb().size.is_finite())
 	var head := _part(rig, "Skin_Head")
 	assert(head.mesh.get_blend_shape_count() == 1)
-	assert(head.mesh.get_blend_shape_name(0) == &"Shane_Smile")
+	assert(head.mesh.get_blend_shape_name(0) == &"Smile")
 	assert(is_zero_approx(head.get_blend_shape_value(0)), "Neutral identity is independent of smile")
 	for actor in game._home_players + game._away_players:
 		assert(actor.get_node("Visual/Rig").find_children("*", "Skeleton3D", true, false).size() == 1)
@@ -62,7 +63,8 @@ func _run() -> void:
 	assert(_part(other_rig, "Skin_Head").mesh == base_head, "A teammate's identity changed")
 	var fixture := load("res://data/players/shane_denham.tres") as FootballerProfile
 	assert(fixture.appearance.head_variant == packed, "Retained 4v4 profile must use the same head")
-	print("PASS: Shane head/eyes/hair, inverse binds, neutral smile, pose samples, shared body and roster isolation")
+	print("PASS: shared neutral head/eyes, separate Shane hair, inverse binds, smile, pose samples and shared body")
+	hair_package.free()
 	package.free()
 	game.free()
 	quit(0)

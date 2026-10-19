@@ -6,8 +6,8 @@ Read the relevant branch when editing or validating that system. These lessons c
 
 - Inspect the currently shipped `.blend` and GLB before invoking a generator. Keep source hashes or curve/rest-pose digests for systems meant to survive unchanged. Older base generators may omit later shared role, presentation or turn corrections.
 - A mesh with the same bone names can still have different JOINTS indices, bind ordering or inverse binds. Compare the actual imported Skin against the live skeleton before swapping it. Exercise head/neck motion, not just a neutral still.
-- A new skull or eye layout may require matching eyeball and hair meshes. Package those parts together, keeping the shared body and animation library single. Apply the override by player identity; verify another teammate and the opposition retain the base.
-- Sculpt deltas require matching topology fingerprints. Changing topology needs an explicit transfer and a new version; silent index reuse corrupts heads. Preserve the seam region and its weights.
+- A new skull or eye layout may require matching eyeballs and refitted hair. The head package carries head/eyes; hair selection is independent. Keep the shared body and animation library single. Verify another teammate and the opposition retain their assigned head/hair.
+- Sculpt deltas require topology, coordinate-Basis and UV/weight fingerprints. A topology hash alone accepts stale sculpts after a common edit. Rebase compatible offsets against recorded master snapshots; transfer changed topology or UV/weights explicitly. Translate all expression keys with each identity offset so expression deltas remain intact. See the shared head pipeline linked by the main skill for source/build commands.
 
 ## Geometry and deformation
 

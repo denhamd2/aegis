@@ -1,0 +1,23 @@
+{
+  "result": "PASS",
+  "smoke_tests": [
+    "shane_head_variant_smoke.gd",
+    "shared_head_roster_smoke.gd",
+    "shared_roster_resources_smoke.gd",
+    "shared_pose_safety_smoke.gd",
+    "pre_match_intro_smoke.gd",
+    "eleven_v_eleven_smoke.gd",
+    "title_screen_smoke.gd"
+  ],
+  "authoring_roundtrip": "Generated John editable source, captured without edits, rebuilt: empty offsets; only deliberately changed Paddy hair profile differed",
+  "shared_sources_unchanged": {
+    "tools/blender/beechlawn/footballer_shared.blend": "04884b693629b45474b6f79f7c8effecef2d452fff695946d66ec0a2025bc9a5",
+    "games/beechlawn_rovers/assets/characters/shared/footballer_base.glb": "381e4eef33b10eb03d07953fc0df668ed498b782aafa60e7baee68bbfcc4b78b"
+  },
+  "limits": [
+    "Placeholder faces remain unapproved likenesses",
+    "Native M1 performance and Metal rendering unmeasured",
+    "Existing collar/shoulder geometry still requires refinement"
+  ],
+  "repeat_build": "PASS: profile and exported GLB bytes unchanged"
+}

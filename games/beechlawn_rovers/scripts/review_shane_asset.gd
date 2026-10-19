@@ -38,7 +38,16 @@ func _ready() -> void:
 	player = PLAYER.instantiate()
 	add_child(player)
 	var visual := player as FootballerVisual
-	visual.configure_appearance(PROFILE)
+	var profile := PROFILE
+	if OS.has_feature("web"):
+		var requested = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('player')")
+		# Explicit review-only allowlist; use the real roster appearance path.
+		match str(requested):
+			"john": profile = load("res://data/squads/home_01.tres")
+			"des": profile = load("res://data/squads/away_09.tres")
+			"referee": profile = load("res://data/officials/referee.tres")
+			"paddy": profile = load("res://data/squads/home_69.tres")
+	visual.configure_appearance(profile)
 	visual.animation_tree.active = false
 	player.rotation.y = PI
 	animation = visual.animation_player
@@ -62,7 +71,7 @@ func _ready() -> void:
 			animation.pause()
 	_set_view(view)
 	var label := Label.new()
-	label.text = "Shane Denham #8 — production head variant review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nShared body/rig; individual photo-led head"
+	label.text = profile.display_name + " — shared head pipeline review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nShared body/rig; individual likeness remains in review"
 	label.position = Vector2(20, 20)
 	label.add_theme_color_override("font_shadow_color", Color.BLACK)
 	label.add_theme_constant_override("shadow_offset_x", 2)

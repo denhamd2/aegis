@@ -32,7 +32,7 @@ jobs:
       - name: Import and verify football project
         run: |
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd shared_head_roster_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py title_screen_smoke.gd shared_pose_safety_smoke.gd broadcast_camera_smoke.gd pre_match_intro_smoke.gd venue_leaf_uv_smoke.gd park_road_setback_smoke.gd park_site_footprint_smoke.gd eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd football_stop_runtime_smoke.gd shared_pivot_pose_smoke.gd turn_dribble_control_smoke.gd ai_shot_lane_smoke.gd ai_carry_to_shot_smoke.gd ai_midfield_to_shot_smoke.gd loose_ball_recovery_smoke.gd
           BEECHLAWN_FULL_OPPOSITION=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
           BEECHLAWN_ATTACK_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
@@ -54,7 +54,10 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_intro_venue.png build/beechlawn/web/screenshots/current_venue.png
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_site_overhead.png build/beechlawn/web/screenshots/current_overhead.png
           cp games/beechlawn_rovers/docs/art_briefs/title_photoreal_evidence/title_screen.png build/beechlawn/web/screenshots/current_title.png
-          cp games/beechlawn_rovers/docs/art_briefs/shane_photo_likeness/godot_portrait.png build/beechlawn/web/screenshots/current_shane.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
           cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
           printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt
