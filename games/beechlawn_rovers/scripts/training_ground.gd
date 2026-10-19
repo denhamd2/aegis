@@ -61,8 +61,9 @@ func _ready() -> void:
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		var software_capture = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")
 		if software_capture != null and str(software_capture)=="1":
-			$Sun.shadow_enabled=false
-			Engine.max_fps=8
+			var shadow_review = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('shadows')")) == "1"
+			$Sun.shadow_enabled = shadow_review
+			Engine.max_fps = 1 if shadow_review else 8
 		_capture_callback=JavaScriptBridge.create_callback(_freeze_capture)
 		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME=_capture_callback
 	_remaining_time = short_match_seconds

@@ -697,6 +697,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-19 sky/light pass: owner requested brighter, less-overcast weather.
+    A CC0 4K partly-cloudy panorama replaces the blank gradient, with sky fill,
+    a matching warm directional sun and cast shadows. Shared editable daylight
+    settings serve match and player-review scenes. See
+    [`art_briefs/kilmore_sky.md`](art_briefs/kilmore_sky.md) for source, before/after
+    captures and validation. Native M1 lighting/performance approval remains open.
   - Satellite-footprint follow-up: added the tapered western green, inset
     back-garden edge, western road/path continuation and nine reused roadside
     houses. Blender/Godot geometry preserves the open 105 x 68 m playing area
