@@ -103,6 +103,11 @@ func _ready() -> void:
 	referee_actor.name = "RefereeActor"
 	add_child(referee_actor)
 	referee_actor.watch(referee, [wrestler_a, wrestler_b])
+	# Aubrey puts out a man who catches fire (FireCrew, ManFire)
+	var fire_crew := FireCrew.new()
+	fire_crew.name = "FireCrew"
+	add_child(fire_crew)
+	fire_crew.watch(referee_actor, [wrestler_a, wrestler_b])
 	# The title waits on the timekeeper's table for whoever wins (the owner,
 	# 19 Oct: no belt on the walk; Aubrey presents it after the match).
 	if has_node("Arena"):

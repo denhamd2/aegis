@@ -188,6 +188,24 @@ func errand_clip_length(clip: String) -> float:
 	return _clip_length(clip)
 
 
+## A live errand (FireCrew): from following the match, she leaves it for the
+## extinguisher, and goes back to following it when it is done. Only from
+## FOLLOW (the match is on); never during a count or a submission.
+func begin_live_errand() -> bool:
+	if mode != Mode.FOLLOW:
+		return false
+	_separating = false
+	_checking = false
+	_set_mode(Mode.ERRAND)
+	return true
+
+
+func end_live_errand() -> void:
+	_errand_target = Vector3.INF
+	if mode == Mode.ERRAND:
+		_set_mode(Mode.FOLLOW)
+
+
 ## The errand is over: back to her spot by the ropes.
 func end_errand() -> void:
 	_errand_target = Vector3.INF

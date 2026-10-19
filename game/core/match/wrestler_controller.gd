@@ -763,6 +763,9 @@ func _ready() -> void:
 		# Blood from the weapons that open a man up (Blood), on the same skin.
 		if model:
 			Blood.attach(self, model)
+		# Fire: a man who walks into one catches it, and burn marks stay
+		# (ManFire, put out by FireCrew). Presentation and the one signal.
+		ManFire.attach(self, model)
 		# His eyes on the other man, where the model has eyes that move
 		# (RomanModel; EyeAim). Presentation only.
 		if model and model.has_method("aim_eyes"):
