@@ -4014,6 +4014,11 @@ func _count_string_hit() -> void:
 	_string_last = _string_clock
 
 
+## How many of this wrestler's last tier picks are held back from the next.
+const RECENT_PICKS := 2
+var _recent_picks: Array[StringName] = []
+
+
 func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	if pool.is_empty():
 		return primary
@@ -4028,10 +4033,24 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 		choices.append(candidate)
 	if choices.size() == 1:
 		return primary
+	# Not the same move twice running from one pool (the owner, 19 Oct: AI
+	# matches "into a repetition of moves"): the last RECENT_PICKS picks are
+	# left out while anything else in the tier is still on offer. Seeded and
+	# replayed like every other draw.
+	var fresh: Array[MoveDef] = []
+	for candidate: MoveDef in choices:
+		if not _recent_picks.has(candidate.animation_pair_id):
+			fresh.append(candidate)
+	if not fresh.is_empty():
+		choices = fresh
 	var rng := RandomNumberGenerator.new()
 	rng.seed = match_seed * 8192 + player_index * 131 + _tier_draws
 	_tier_draws += 1
-	return choices[rng.randi_range(0, choices.size() - 1)]
+	var pick := choices[rng.randi_range(0, choices.size() - 1)]
+	_recent_picks.append(pick.animation_pair_id)
+	while _recent_picks.size() > RECENT_PICKS:
+		_recent_picks.pop_front()
+	return pick
 
 ## Breaks a grapple hold that produced no move, returning both wrestlers to
 ## a legal free state. GRAPPLE_HOLD -> IDLE is already legal for both sides

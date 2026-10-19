@@ -154,8 +154,11 @@ var _power_attempt_spent: bool = false
 ## capped there (WrestlerController.tie_up_rung_cap), so a meter that could
 ## afford a signature does not throw one in the middle of the match.
 const WORK_POWER_SHARE := 0.5
-const WORK_TIE_UP_MIN := 5
-const WORK_TIE_UP_MAX := 9
+## 5-9 -> 3-5 (the owner, 19 Oct: AI v AI was "a lot of repetitive punching
+## and kicking"). Fight Forever's matches are grapple-led: a short exchange of
+## strikes, then a lock-up.
+const WORK_TIE_UP_MIN := 3
+const WORK_TIE_UP_MAX := 5
 var _blows_since_lock_up := 0
 var _work_tie_up_after := 7
 

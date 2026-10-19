@@ -207,7 +207,11 @@ static func entries() -> Array:
 		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres",
 				# Fight Forever library (FFMoveLibrary), his in the game.
 				M + "ff/tiger_driver_98.tres"],
-		"signature": [M + "signature_disaster_kick.tres", M + "signature_pedigree.tres"],
+		# The Cody Cutter stands in his signature draw again: this table used
+		# to replace the Entry's own signature with these two, so off the
+		# springboard was the only Cody Cutter he had.
+		"signature": [M + "signature_disaster_kick.tres", M + "signature_pedigree.tres",
+				M + "signature_cody_cutter.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
