@@ -551,36 +551,20 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.10,
 	},
-	# Cody's Cross Rhodes from behind (wrestling_clips.py
-	# "Cross_Rhodes_Behind_*"), the 2K26 finish.
-	"finisher_cross_rhodes_behind": {
-		"authored": {"attacker": "Cross_Rhodes_Behind_Attacker", "defender": "Cross_Rhodes_Behind_Defender"},
-		"attacker": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 1.73, "clip": "Sitting_Enter", "at": 0.60},
-			{"t": 2.53, "clip": "Idle", "at": 0.00},
-		],
-		"defender": [
-			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 1.80, "clip": "Death01", "at": 0.90},
-			{"t": 2.53, "clip": "Death01", "at": 1.60},
-		],
-		"defender_grips_until": 0.08,
-	},
 	# Cody's finisher -- see Cross_Rhodes_Attacker.
 	"finisher_cross_rhodes": {
 		"authored": {"attacker": "Cross_Rhodes_Attacker", "defender": "Cross_Rhodes_Defender"},
 		"attacker": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.80, "clip": "Sitting_Enter", "at": 0.60},
-			{"t": 1.60, "clip": "Idle", "at": 0.00},
+			{"t": 0.75, "clip": "Sitting_Enter", "at": 0.60},
+			{"t": 1.90, "clip": "Idle", "at": 0.00},
 		],
 		"defender": [
 			{"t": 0.00, "clip": "Push", "at": 0.80},
-			{"t": 0.87, "clip": "Death01", "at": 0.90},
-			{"t": 1.60, "clip": "Death01", "at": 1.60},
+			{"t": 0.83, "clip": "Death01", "at": 0.90},
+			{"t": 1.90, "clip": "Death01", "at": 1.60},
 		],
-		"defender_grips_until": 0.15,
+		"defender_grips_until": 0.30,
 	},
 	# Roman's finisher -- see Spear_Attacker in tools/blender/wrestling_clips.py.
 	"finisher_spear": {
@@ -1336,43 +1320,6 @@ const TRAJECTORIES := {
 		},
 	},
 
-	# Cody's Cross Rhodes from behind. The victim never turns (yaw -90
-	# throughout, rocked a step back); Cody circles round him on the +Z side
-	# (yaw 90 -> 0 -> -90, always facing him) to 0.44 m behind him by t1.0 --
-	# the spacing the Cross Rhodes hooks the head at -- and from there it is
-	# the Cross Rhodes' keys mirrored along X and shifted 0.4 s
-	# (CROSS_BEHIND_SHIFT): Cody leaps forward 1.31 m spinning a half-turn
-	# the same way round, the victim is driven 0.5 m forward.
-	# The hook is held 1.00-1.33 s, the leap is at 1.53 and the impact at
-	# 1.80 (Cross_Rhodes_Behind_*: frames 30, 40, 46, 54). It went hook at
-	# 1.00 to face-down at 1.27, too quick to see (stage 8 review). He lands
-	# beside Cody, his head by Cody's shoulder, not across his lap: there the
-	# separation held him 0.3 m off the mat.
-	"finisher_cross_rhodes_behind": {
-		"length": 2.533,
-		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.25, 0.25, 0.00, 0.45],
-					[0.50, -0.25, 0.00, 0.62], [0.75, -0.75, 0.00, 0.32],
-					[1.00, -0.98, 0.00, 0.00], [1.333, -0.80, 0.00, 0.00],
-					[1.533, -0.18, 0.00, 0.00], [1.80, 0.47, 0.00, 0.00],
-					[2.533, 0.47, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [0.25, 0.0, 60.0, 0.0],
-					[0.50, 0.0, 0.0, 0.0], [0.75, 0.0, -50.0, 0.0],
-					[1.00, 0.0, -90.0, 0.0], [1.333, 0.0, -90.0, 0.0],
-					[1.533, 0.0, -180.0, 0.0], [1.80, 0.0, -270.0, 0.0],
-					[2.533, 0.0, -270.0, 0.0]],
-		},
-		"defender": {
-			# A key at 0.80 as Cody passes behind him: the fit's correction
-			# for that contact belongs there, and without one it landed on
-			# the 1.00 key and shoved him 0.8 m off through the hook.
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.30, -0.48, 0.00, 0.00],
-					[0.80, -0.44, 0.00, 0.00],
-					[1.00, -0.40, 0.00, 0.00], [1.333, -0.40, 0.00, 0.00],
-					[1.80, 0.10, 0.00, 0.45], [2.533, 0.10, 0.00, 0.45]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [2.533, 0.0, -90.0, 0.0]],
-		},
-	},
 
 	# Cody's Cross Rhodes. The victim is spun a half-turn by the wrist
 	# (t0.20-0.47, his root yawing -90 -> +90, so his back is to Cody) and
@@ -1380,23 +1327,34 @@ const TRAJECTORIES := {
 	# half-turn himself (yaw 90 -> -90), and lands seated with the head behind
 	# his right shoulder, while the victim is driven face-first 0.5 m forward
 	# of where he stood. Roots stay at y = 0.
+	# Fight Forever's Cross Rhodes (wrestling_clips.py): the clinch closes in to
+	# 0.30 m, then the men orbit a half-turn about Cody (t0.30-0.63, theta 180
+	# -> 0 in 45-degree keys so no turn goes the short way round), both
+	# yawing +180 and staying face to face; the man is driven down and out in
+	# front of Cody's seat, landing a body-length off as the Tiger Driver '98's
+	# victim does, clear of Cody's legs.
 	"finisher_cross_rhodes": {
-		"length": 1.6,
+		"length": 1.9,
 		"attacker": {
-			"pos": [[0.00, 0.40, 0.00, 0.00], [0.33, 0.36, 0.00, 0.00],
-					[0.60, 0.36, 0.00, 0.00], [0.73, -0.30, 0.00, 0.00],
-					[0.87, -0.95, 0.00, 0.00], [1.60, -0.95, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, 90.0, 0.0], [0.60, 0.0, 90.0, 0.0],
-					[0.73, 0.0, 0.0, 0.0], [0.87, 0.0, -90.0, 0.0],
-					[1.60, 0.0, -90.0, 0.0]],
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.70, 0.40, 0.00, 0.00],
+					[0.77, 0.31, 0.00, 0.00], [0.83, 0.22, 0.00, 0.00],
+					[1.90, 0.22, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, 90.0, 0.0], [0.30, 0.0, 90.0, 0.0],
+					[0.40, 0.0, 135.0, 0.0], [0.47, 0.0, 180.0, 0.0],
+					[0.57, 0.0, 225.0, 0.0], [0.63, 0.0, 270.0, 0.0],
+					[1.90, 0.0, 270.0, 0.0]],
 		},
 		"defender": {
-			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.36, 0.00, 0.00],
-					[0.47, -0.08, 0.00, 0.00], [0.60, -0.08, 0.00, 0.00],
-					[0.87, -0.58, 0.00, 0.00], [1.60, -0.58, 0.00, 0.00]],
-			"rot": [[0.00, 0.0, -90.0, 0.0], [0.20, 0.0, -90.0, 0.0],
-					[0.33, 0.0, 0.0, 0.0], [0.47, 0.0, 90.0, 0.0],
-					[1.60, 0.0, 90.0, 0.0]],
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.13, -0.10, 0.00, 0.00],
+					[0.30, 0.10, 0.00, 0.00], [0.40, 0.188, 0.00, 0.212],
+					[0.47, 0.40, 0.00, 0.30], [0.57, 0.612, 0.00, 0.212],
+					[0.63, 0.70, 0.00, 0.00], [0.70, 0.86, 0.00, 0.00],
+					[0.77, 1.11, 0.00, 0.00], [0.83, 1.54, 0.00, 0.00],
+					[0.93, 1.80, 0.00, 0.00], [1.90, 1.88, 0.00, 0.00]],
+			"rot": [[0.00, 0.0, -90.0, 0.0], [0.30, 0.0, -90.0, 0.0],
+					[0.40, 0.0, -45.0, 0.0], [0.47, 0.0, 0.0, 0.0],
+					[0.57, 0.0, 45.0, 0.0], [0.63, 0.0, 90.0, 0.0],
+					[1.90, 0.0, 90.0, 0.0]],
 		},
 	},
 

@@ -3488,101 +3488,6 @@ CLIPS["Spear_Defender"] = [
               knee_r=(0.3, 0.8, 0.4), knee_l=(-0.3, 0.8, 0.4))),
 ] + _back_fall(21, 42, skip_hit=True, fall_z=0.76)
 
-# Cross Rhodes, 48 frames / 1.6s. Cody takes the victim's right wrist in his
-# left hand and spins him a half-turn so his back is to Cody (the victim's
-# ROOT does the spin -- finisher_cross_rhodes's trajectory); hooks the head
-# from behind; then leaps, spins a half-turn himself and drops to a seat,
-# pulling the head down with him so the victim is driven face-first into the
-# mat just behind Cody's shoulder.
-CLIPS["Cross_Rhodes_Attacker"] = [
-    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
-           fist_r=0.6, fist_l=0.6)),
-    # Takes the wrist.
-    (6,  P(spine=(-8, 0, 0),
-           hand_r=(0.20, 0.30, 1.10), hand_l=(-0.04, 0.56, 1.10),
-           fist_r=0.5, fist_l=0.7)),
-    # Whips him round by it.
-    (10, P(pelvis=(0.0, -0.03, 0.830), spine=(-4, -14, 0),
-           hand_r=(0.22, 0.28, 1.08), hand_l=(-0.16, 0.34, 1.02),
-           fist_r=0.5, fist_l=0.7)),
-    (14, P(spine=(-8, 0, 0),
-           hand_r=(0.20, 0.34, 1.20), hand_l=(-0.18, 0.36, 1.18),
-           fist_r=0.5, fist_l=0.5)),
-    # Hooks the head from behind.
-    (18, P(spine=(-12, 0, 0), head=(-6, 0, 0),
-           hand_r=(0.06, 0.44, 1.44), hand_l=(-0.14, 0.40, 1.40),
-           elbow_r=(0.6, -0.4, -0.6), elbow_l=(-0.6, -0.4, -0.6),
-           fist_r=0.6, fist_l=0.6)),
-    # The leap: off his feet, tucked, spinning (the root turns under this).
-    (22, dict(pelvis=(0.0, 0.0, 1.000), hips=(-10, 0, 0), spine=(-14, 0, 0),
-              head=(-6, 0, 0),
-              hand_r=(0.10, 0.34, 1.20), hand_l=(-0.14, 0.32, 1.18),
-              fist_r=0.6, fist_l=0.6,
-              foot_r=(0.20, 0.10, 0.50), foot_l=(-0.18, 0.14, 0.54),
-              knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0))),
-    # Seated, the head trapped behind his right shoulder, driven into the mat.
-    (26, dict(pelvis=(0.0, 0.0, 0.200), hips=(12, 0, 0), spine=(6, 0, 0),
-              head=(-6, 0, 0),
-              hand_r=(0.14, -0.26, 0.24), hand_l=(-0.24, -0.06, 0.08),
-              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
-              fist_r=0.6, fist_l=0.0,
-              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
-              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
-    (31, dict(pelvis=(0.0, 0.0, 0.200), hips=(8, 0, 0), spine=(0, 0, 0),
-              head=(-10, 0, 0),
-              hand_r=(0.16, -0.20, 0.20), hand_l=(-0.24, -0.06, 0.08),
-              elbow_r=(0.7, 0.0, 0.7), elbow_l=(-0.6, 0.0, -0.8),
-              fist_r=0.3, fist_l=0.0,
-              foot_r=(0.18, 0.58, 0.104), foot_l=(-0.18, 0.52, 0.104),
-              knee_r=(0.2, 0.3, 1.0), knee_l=(-0.2, 0.3, 1.0))),
-    # Feet drawn in, up onto a knee, then up.
-    (34, pose(GATHER)),
-    (38, dict(pelvis=(0.0, 0.02, 0.565), hips=(-6, 0, 0), spine=(-14, 0, 0),
-              head=(-8, 0, 0),
-              hand_r=(0.22, 0.30, 0.66), hand_l=(-0.26, 0.20, 0.60),
-              fist_r=0.2, fist_l=0.2,
-              foot_r=(0.20, -0.26, 0.09), foot_l=(-0.20, 0.28, 0.104),
-              knee_r=(0.3, 0.9, -0.2), knee_l=(-0.2, 1.0, 0.1))),
-    (43, P(pelvis=(0.0, 0.02, 0.760), hips=(-10, 0, 0), spine=(-18, 0, 0),
-           hand_r=(0.22, 0.30, 0.94), hand_l=(-0.20, 0.30, 0.96),
-           fist_r=0.5, fist_l=0.5)),
-    (48, P()),
-]
-
-# The victim, root-relative throughout: his root is spun a half-turn by the
-# wrist (frames 6-14), so after that "forward" is away from Cody. He is
-# pulled forward and down by the head, lands face-first -- SUPINE's forward
-# pitch without its roll -- and rolls onto his back, the roll SUPINE is built
-# from, with a 90-degree key so it goes the short way.
-CLIPS["Cross_Rhodes_Defender"] = [
-    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
-           fist_r=0.6, fist_l=0.6)),
-    # Wrist taken: right arm drawn out toward Cody.
-    (6,  P(spine=(-10, 0, 0),
-           hand_r=(0.08, 0.52, 1.12), hand_l=(-0.22, 0.30, 1.06),
-           fist_r=0.4, fist_l=0.5)),
-    # Spinning: arms flung, the held one trailing.
-    (10, P(pelvis=(0.0, 0.0, 0.830), spine=(-4, 14, 0), head=(0, 10, 0),
-           hand_r=(0.40, -0.10, 1.12), hand_l=(-0.40, 0.10, 1.08),
-           fist_r=0.4, fist_l=0.3)),
-    # Stopped with his back to Cody, off balance.
-    (14, P(pelvis=(0.0, 0.0, 0.840), spine=(-2, 0, 0), head=(4, 0, 0),
-           hand_r=(0.30, 0.10, 1.00), hand_l=(-0.28, 0.12, 0.98),
-           fist_r=0.3, fist_l=0.3)),
-    # Head hooked from behind: chin pulled up, hands to the arm at his neck.
-    (18, P(pelvis=(0.0, -0.04, 0.830), spine=(6, 0, 0), head=(22, 0, 0),
-           hand_r=(0.10, 0.12, 1.44), hand_l=(-0.10, 0.12, 1.44),
-           elbow_r=(0.7, 0.3, -0.4), elbow_l=(-0.7, 0.3, -0.4),
-           fist_r=0.5, fist_l=0.5)),
-    # Yanked forward and down by the head.
-    (22, dict(pelvis=(0.0, 0.08, 0.740), hips=(-40, 0, 0), spine=(-14, 0, 0),
-              head=(14, 0, 0),
-              hand_r=(0.24, 0.40, 1.00), hand_l=(-0.22, 0.42, 1.00),
-              fist_r=0.3, fist_l=0.3,
-              foot_r=(0.20, -0.18, 0.12), foot_l=(-0.18, -0.10, 0.16))),
-] + _face_first_then_roll(26, 48)
 
 # --- per-wrestler signatures ---------------------------------------------------
 #
@@ -6267,79 +6172,6 @@ CLIPS["Superman_Spear_Defender"] = (
 )
 
 
-# --- Cross Rhodes from behind (Cody's 2K26 finish) -----------------------------
-#
-# gauntlet/refs/moveset_audit_2k26.md: every Cross Rhodes in the 2K26 match --
-# the winner included -- is set up from BEHIND: the victim rocked and facing
-# away, Cody stepping in behind him and hooking the head. The front version
-# spins the man round by the wrist; this one does not touch him until the
-# hook. Cody circles round him (the root does the walking:
-# finisher_cross_rhodes_behind's trajectory, on the far side of the pair line
-# so the two never meet), and from the hook on it is the Cross Rhodes as
-# authored -- its frames from 18 shifted by CROSS_BEHIND_SHIFT.
-CROSS_BEHIND_SHIFT = 12
-
-
-def _cross_behind_tail(keys):
-    """The front Cross Rhodes from the hook on (frame 18), re-timed for the
-    finish the camera dwells on. Shifted, it went hook (30) -> leap (34) ->
-    face in the mat (38): the man was stood with his head hooked on one
-    drawn frame and flat on his face four later, and the spin and drop that
-    make it a Cross Rhodes were never on screen (stage 8 review). 2K26 holds
-    the hook in a tight two-shot and takes the drop over half a second
-    (gauntlet/refs/raw, 494-500 s). So: the hook is held to 40, the leap is
-    at 46 and the impact at 54, and everything after moves 16 frames on.
-    finisher_cross_rhodes_behind's trajectory and MoveDef keep the same
-    clock (CROSS_BEHIND_HOLD .. CROSS_BEHIND_IMPACT)."""
-    def remap(f):
-        f += CROSS_BEHIND_SHIFT
-        if f <= 30:
-            return f
-        if f <= 34:
-            return int(round(40 + (f - 30) * 1.5))
-        if f <= 38:
-            return 46 + (f - 34) * 2
-        return f + 16
-    tail = [(f, p) for f, p in keys if f >= 18]
-    hook = tail[0][1]
-    out = [(remap(f), p) for f, p in tail]
-    return out[:1] + [(40, dict(hook))] + out[1:]
-
-CLIPS["Cross_Rhodes_Behind_Attacker"] = [
-    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
-           fist_r=0.6, fist_l=0.6)),
-    # Stepping round him, eyes on him, hands loose.
-    (6,  P(pelvis=(0.0, 0.0, 0.830), spine=(-8, 0, 0), head=(4, 0, 0),
-           hand_r=(0.26, 0.24, 1.04), hand_l=(-0.24, 0.26, 1.04),
-           foot_r=(0.23, -0.10, 0.16), foot_l=(-0.19, 0.12, 0.104),
-           fist_r=0.4, fist_l=0.4)),
-    (12, P(pelvis=(0.0, 0.0, 0.830), spine=(-8, 0, 0), head=(4, 0, 0),
-           hand_r=(0.26, 0.24, 1.04), hand_l=(-0.24, 0.26, 1.04),
-           foot_r=(0.23, 0.10, 0.104), foot_l=(-0.19, -0.10, 0.16),
-           fist_r=0.4, fist_l=0.4)),
-    (18, P(pelvis=(0.0, 0.0, 0.830), spine=(-8, 0, 0), head=(4, 0, 0),
-           hand_r=(0.26, 0.24, 1.04), hand_l=(-0.24, 0.26, 1.04),
-           foot_r=(0.23, -0.10, 0.16), foot_l=(-0.19, 0.12, 0.104),
-           fist_r=0.4, fist_l=0.4)),
-    # Set behind him, reaching.
-    (24, P(spine=(-10, 0, 0),
-           hand_r=(0.10, 0.40, 1.30), hand_l=(-0.14, 0.38, 1.28),
-           fist_r=0.5, fist_l=0.5)),
-] + _cross_behind_tail(CLIPS["Cross_Rhodes_Attacker"])
-
-CLIPS["Cross_Rhodes_Behind_Defender"] = [
-    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
-           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
-           fist_r=0.6, fist_l=0.6)),
-    # Rocked: a step back, swaying, not sure where Cody went.
-    (8,  HEAD_HURT),
-    (16, pose(HEAD_HURT, pelvis=(0.02, -0.08, 0.800), spine=(-12, -6, 2),
-              head=(10, -10, 2))),
-    (24, P(pelvis=(0.0, -0.02, 0.832), spine=(-4, 0, 0), head=(4, 0, 0),
-           hand_r=(0.28, 0.14, 1.00), hand_l=(-0.26, 0.16, 0.98),
-           fist_r=0.3, fist_l=0.3)),
-] + _cross_behind_tail(CLIPS["Cross_Rhodes_Defender"])
 
 
 # --- Roman's corner clotheslines -------------------------------------------------
@@ -7304,6 +7136,99 @@ CLIPS["FF_Tiger_Driver_98_Defender"] = [k for k in CLIPS["Pedigree_Defender"] if
     (51, _body((-268, 0, 0), (0.0, -0.18, 0.215), **dict(_TD_LIMBS, **_LANDED_FLAT))),
     (58, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
     (72, dict(SUPINE_AWAY)),
+]
+
+# Cross Rhodes, Fight Forever's (the owner, 19 Oct: "the hold, the spin, and
+# it spikes his opponent's head on the ground ... quicker than ours"). Read
+# off the owner's FF compilation at 20 fps (277.3 s): a front clinch held a
+# beat (0.0-0.3 s); Cody spins them both a half-turn (0.3-0.55 s) and the man
+# is flipped over his own head as they turn, upside down by 0.65 s; Cody drops
+# to a seat and the head is spiked into the mat at 0.83 s; the legs go over
+# (0.9-1.2 s) and Cody sits up and rises. 57 frames / 1.9 s.
+#
+# The spin is the ROOTS orbiting each other (finisher_cross_rhodes's
+# trajectory: a half-turn about Cody, frames 9-19); the flip is the man's
+# own body frame, the Tiger Driver '98's tested inversion path (pitch falling
+# in steps under 60 degrees), so the turn reads as one motion, not a cut.
+_CR_HOLD = P(pelvis=(0.0, 0.02, 0.830), hips=(-4, 0, 0), spine=(-10, 0, 0),
+             head=(-6, 0, 0),
+             hand_r=(0.06, 0.40, 1.30), hand_l=(-0.10, 0.44, 1.10),
+             elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.6, -0.3, -0.4),
+             fist_r=0.7, fist_l=0.7,
+             foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["Cross_Rhodes_Attacker"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.12, 0.50, 1.40), hand_l=(-0.26, 0.46, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # The hold: right arm round the head, left hand on the wrist.
+    (4,  dict(_CR_HOLD, spine=(-14, 0, 0))),
+    (9,  dict(_CR_HOLD)),
+    # Spinning, leaning back against the man's weight as he comes over.
+    (13, P(pelvis=(0.0, 0.04, 0.800), hips=(-8, 0, 0), spine=(-2, -10, 0),
+           head=(-4, 0, 0),
+           hand_r=(0.10, 0.34, 1.20), hand_l=(-0.12, 0.36, 1.06),
+           elbow_r=(0.7, -0.3, -0.4), elbow_l=(-0.6, -0.3, -0.4),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.22, 0.12, 0.104))),
+    (16, P(pelvis=(0.0, 0.04, 0.840), hips=(-4, 0, 0), spine=(2, -6, 0),
+           head=(0, 0, 0),
+           hand_r=(0.20, 0.22, 1.12), hand_l=(-0.20, 0.24, 1.10),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.08, 0.104), foot_l=(-0.22, 0.10, 0.104))),
+    # Tall, the man upside down against his chest -- a heartbeat, no more.
+    (19, dict(_TD_HOLD)),
+    (21, dict(_TD_HOLD, spine=(8, 0, 0), head=(10, 0, 0))),
+    # Drops to the seat: the spike lands with him (frame 25, 0.83 s).
+    (23, pose(SIT_DROP, hand_r=(0.20, 0.30, 0.92), hand_l=(-0.20, 0.30, 0.92))),
+    (25, pose(ATK_SEAT, hand_r=(0.24, 0.46, 0.34), hand_l=(-0.24, 0.46, 0.34))),
+    (30, pose(ATK_SEAT)),
+    (38, pose(ATK_SEAT)),
+] + _get_up(42, 57, seated=True)
+
+# The victim: bent into the hold, flipped over his own head through the
+# spin, driven down on the back of his head and neck, legs over -- flat on
+# his back, head away from Cody (as the Tiger Driver '98 leaves him).
+CLIPS["Cross_Rhodes_Defender"] = [
+    (0,  P(pelvis=(0.0, 0.0, 0.845), hips=(6, 0, 0), spine=(-14, 0, 0),
+           hand_r=(0.22, 0.46, 1.32), hand_l=(-0.20, 0.48, 1.30),
+           fist_r=0.6, fist_l=0.6)),
+    # Head trapped, bent forward into Cody's chest; the held arm drawn out.
+    (4,  P(pelvis=(0.0, -0.04, 0.800), hips=(-18, 0, 0), spine=(-26, 0, 0),
+           head=(-14, 0, 0),
+           hand_r=(0.18, 0.40, 0.98), hand_l=(-0.24, 0.30, 0.92),
+           fist_r=0.3, fist_l=0.3,
+           foot_r=(0.22, -0.10, 0.104), foot_l=(-0.20, 0.06, 0.104))),
+    (9,  P(pelvis=(0.0, -0.04, 0.790), hips=(-24, 0, 0), spine=(-30, 0, 0),
+           head=(-16, 0, 0),
+           hand_r=(0.18, 0.42, 0.94), hand_l=(-0.24, 0.32, 0.88),
+           fist_r=0.3, fist_l=0.3,
+           foot_r=(0.22, -0.12, 0.104), foot_l=(-0.20, 0.08, 0.104))),
+    # Over his own head as they turn.
+    (12, _body((-45, 0, 0), (0.0, 0.06, 0.920), **_TD_LIMBS)),
+    (14, _body((-85, 0, 0), (0.0, 0.05, 1.120), **_TD_LIMBS)),
+    # One key a frame through the steepest part of the flip: two frames apart
+    # the limbs swung through it in one frame (test_clip_cadence, frame 17).
+    (15, _body((-105, 0, 0), (0.0, 0.04, 1.270), **_TD_LIMBS)),
+    (16, _body((-125, 0, 0), (0.0, 0.03, 1.420), **_TD_LIMBS)),
+    (17, _body((-143, 0, 0), (0.0, 0.02, 1.565), **_TD_LIMBS)),
+    (18, _body((-160, 0, 0), (0.0, 0.01, 1.700), **_TD_LIMBS)),
+    (20, _body((-176, 0, 0), (0.0, 0.00, 1.800), **_TD_LIMBS)),
+    # Spiked: the drop gathers from 20 and eases out after the impact, so the
+    # impact is the fastest frame of an even ramp rather than a lone jump.
+    (22, _body((-198, 0, 0), (0.0, -0.03, 1.300), **_TD_LIMBS)),
+    (23, _body((-212, 0, 0), (0.0, -0.05, 0.950), **_TD_LIMBS)),
+    (24, _body((-226, 0, 0), (0.0, -0.08, 0.620), **dict(_TD_LIMBS,
+               hand_r=(0.45, 0.00, 0.45), hand_l=(-0.45, 0.00, 0.45)))),
+    (25, _body((-240, 0, 0), (0.0, -0.12, 0.400), **dict(_TD_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    (26, _body((-251, 0, 0), (0.0, -0.14, 0.300), **dict(_TD_LIMBS,
+               hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
+    # The legs go over.
+    (28, _body((-262, 0, 0), (0.0, -0.16, 0.240), **dict(_TD_LIMBS,
+               hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
+    (31, _body((-268, 0, 0), (0.0, -0.18, 0.215), **dict(_TD_LIMBS, **_LANDED_FLAT))),
+    (38, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (57, dict(SUPINE_AWAY)),
 ]
 
 # One Winged Angel (Kenny Omega's special), 66 frames / 2.2 s. Up across his

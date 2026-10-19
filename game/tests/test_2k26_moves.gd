@@ -31,7 +31,7 @@ func _ticks(n: int) -> void:
 
 func test_the_variants_are_finishers() -> void:
 	var sms: MoveDef = load("res://resources/moves/finisher_superman_spear.tres")
-	var crb: MoveDef = load("res://resources/moves/finisher_cross_rhodes_behind.tres")
+	var crb: MoveDef = load("res://resources/moves/finisher_cross_rhodes.tres")
 	assert_bool(_roman.is_finisher(sms)).is_true()
 	assert_bool(_cody.is_finisher(crb)).is_true()
 	assert_bool(_cody.is_finisher(sms)).is_false()

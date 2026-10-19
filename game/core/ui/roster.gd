@@ -211,8 +211,10 @@ static func entries() -> Array:
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],
 		"submission": [M + "submission_figure_four.tres"],
-		# Beside the Cross Rhodes: the 2K26 finish, set up from behind.
-		"finisher": [M + "finisher_cross_rhodes_behind.tres"],
+		# The Cross Rhodes as Fight Forever does it (the owner, 19 Oct): the
+		# hold, the spin and the spike, 0.83 s to impact. It replaces the
+		# 2K26 from-behind set-up, which ran 2.5 s.
+		"finisher": [M + "finisher_cross_rhodes.tres"],
 		"dive": [M + "dive_tope_suicida.tres", M + "dive_springboard_disaster_kick.tres",
 				M + "dive_springboard_cutter.tres"],
 		# Off the top onto a man down mid-ring (TopRopeSpot), as in 2K26.

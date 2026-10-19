@@ -65,10 +65,9 @@ const MOVES := {
 	"running_corner_spear": "none",
 	"running_fallaway_moonsault_slam": "legs",
 	# The wrist-clutch.
-	"finisher_cross_rhodes": "wrist",
+	"finisher_cross_rhodes": "facelock",
 	# From behind: his hands go round the head from behind (the neck family's
 	# behind side).
-	"finisher_cross_rhodes_behind": "neck",
 	# Strikes, kicks and dives: nothing to hold.
 	"signature_superman_punch": "none",
 	"signature_disaster_kick": "none",

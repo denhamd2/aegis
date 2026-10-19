@@ -20,10 +20,8 @@ func test_follow_through_is_presentation_only_and_wired_on_wrestlers() -> void:
 func test_paired_finishers_get_distinct_follow_through_profiles() -> void:
 	var suplex := load("res://resources/moves/grapple_vertical_suplex.tres") as MoveDef
 	var cross_rhodes := load("res://resources/moves/finisher_cross_rhodes.tres") as MoveDef
-	var cross_behind := load("res://resources/moves/finisher_cross_rhodes_behind.tres") as MoveDef
 	assert_str(ImpactSell.move_profile(suplex)).is_equal("suplex")
 	assert_str(ImpactSell.move_profile(cross_rhodes)).is_equal("cross_rhodes")
-	assert_str(ImpactSell.move_profile(cross_behind)).is_equal("cross_rhodes")
 	assert_str(ImpactSell.move_profile(null)).is_empty()
 
 

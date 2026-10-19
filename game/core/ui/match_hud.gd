@@ -61,9 +61,15 @@ const HOLD_ATTACKER := Color(0.80, 0.18, 0.16)
 const HOLD_DEFENDER := Color(0.22, 0.46, 0.86)
 const HOLD_BG := Color(0.06, 0.06, 0.08, 0.82)
 
-@export var wrestler_a_path: NodePath
-@export var wrestler_b_path: NodePath
-@export var referee_path: NodePath
+## Defaulted to where match.tscn puts them, from the Draw control under the
+## MatchHUD layer. They used to be set only as an override in match.tscn, on
+## this child of the instanced match_hud.tscn -- and the exported build (the
+## Mac app) came up with all three unresolved: no health plates, while the
+## controls strip, which needs no wrestler, still drew (the owner, 19 Oct).
+## _resolve() also finds them from the match root when a path misses.
+@export var wrestler_a_path := NodePath("../../WrestlerA")
+@export var wrestler_b_path := NodePath("../../WrestlerB")
+@export var referee_path := NodePath("../../MatchReferee")
 
 var wrestler_a: WrestlerController
 var wrestler_b: WrestlerController
@@ -84,13 +90,37 @@ var _popup_left := 0.0
 var _audio: MatchAudio
 
 func _ready() -> void:
-	wrestler_a = get_node_or_null(wrestler_a_path)
-	wrestler_b = get_node_or_null(wrestler_b_path)
-	referee = get_node_or_null(referee_path)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for w: WrestlerController in [wrestler_a, wrestler_b]:
-		if w:
-			w.move_landed.connect(_on_move_landed)
+	_resolve()
+
+
+## Finds the two men and the referee: by path first, then by name under the
+## match root (the MatchHUD layer's parent). Called again from _process
+## until all three are found, so an unresolved path can never leave the
+## plates undrawn for a whole match.
+func _resolve() -> void:
+	var root: Node = get_parent().get_parent() if get_parent() else null
+	if wrestler_a == null:
+		wrestler_a = _find(wrestler_a_path, root, "WrestlerA") as WrestlerController
+		if wrestler_a:
+			wrestler_a.move_landed.connect(_on_move_landed)
+	if wrestler_b == null:
+		wrestler_b = _find(wrestler_b_path, root, "WrestlerB") as WrestlerController
+		if wrestler_b:
+			wrestler_b.move_landed.connect(_on_move_landed)
+	if referee == null:
+		referee = _find(referee_path, root, "MatchReferee") as MatchReferee
+
+
+func _find(path: NodePath, root: Node, fallback: String) -> Node:
+	var node := get_node_or_null(path) if not path.is_empty() else null
+	if node == null and root:
+		node = root.get_node_or_null(fallback)
+	return node
+
+
+func is_resolved() -> bool:
+	return wrestler_a != null and wrestler_b != null and referee != null
 
 ## How long the winning count stays up once the match is decided. It used to
 ## stay for good -- over the replay, the celebration, the rating card and the
@@ -99,6 +129,8 @@ const FINISH_COUNT_HOLD := 2.5
 var _since_decided := 0.0
 
 func _process(delta: float) -> void:
+	if not is_resolved():
+		_resolve()
 	_popup_left = maxf(_popup_left - delta, 0.0)
 	if referee and referee.is_match_over():
 		_since_decided += delta
@@ -111,7 +143,6 @@ func _process(delta: float) -> void:
 ## Variants named for what they are on screen, not their file.
 const TITLES := {
 	"finisher_superman_spear": "SUPERMAN PUNCH, SPEAR",
-	"finisher_cross_rhodes_behind": "CROSS RHODES",
 }
 
 

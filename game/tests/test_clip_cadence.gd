@@ -87,7 +87,6 @@ static func snaps(speed: PackedFloat32Array) -> int:
 ## (gauntlet/refs/next_steps.md, Fight Forever smoothness).
 const HERO := [
 	"Cross_Rhodes_Attacker", "Cross_Rhodes_Defender",
-	"Cross_Rhodes_Behind_Attacker", "Cross_Rhodes_Behind_Defender",
 	"Pedigree_Attacker", "Pedigree_Defender",
 	"FF_Tiger_Driver_98_Attacker", "FF_Tiger_Driver_98_Defender",
 	"Cody_Cutter_Attacker", "Cody_Cutter_Defender",

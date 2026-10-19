@@ -145,6 +145,14 @@ table and the assessment of Gemini's suggestions are in
   - *Camera motion blur* (`core/camera/motion_blur.gd`, OPTIONS > MOTION
     BLUR): a compositor pass along the velocity buffer, Forward+ only (the
     Mac), off on cut frames. Strength still to be judged on the Mac.
+- **Cross Rhodes, FF's (19 Oct):** the hold, the spin (the men orbit a half-
+  turn), the man flipped upside down and spiked on his head at 0.83 s, 1.9 s
+  in all. It is Cody's finisher now; the 2.5 s 2K26 version from behind is
+  retired. Review: [`ff_review/cross_rhodes_ff.png`](ff_review/cross_rhodes_ff.png).
+- **Mac HUD (19 Oct):** reproduced on a local release export of the same
+  preset: the HUD came up with no link to either man (a node-path override in
+  match.tscn did not reach the exported build), so no health plates in human
+  or AI games. MatchHUD now defaults its paths and finds the men by name.
 - **Close-up framing:** the FF close-up frames what is there -- the highest
   head, hand or boot of either man -- so a man hoisted upside down stays in
   shot, and cuts round the referee if she steps into the lens.

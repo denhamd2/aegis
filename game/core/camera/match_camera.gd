@@ -366,10 +366,10 @@ const FINISH_IMPACT_AT := 0.6
 ## move's own impact (MoveDef.startup_frames), FINISH_LEAD before it.
 const FINISH_LEAD := 0.5
 ## Moves whose setup is framed over the attacker's shoulder onto the
-## defender's face rather than on the attacker's: from behind, Cody's face
-## is behind Roman's head, and the shot 2K26 holds is Roman's face with
-## Cody hooking it (gauntlet/refs/raw, 494-500 s).
-const FINISH_OVER_SHOULDER := [&"finisher_cross_rhodes_behind"]
+## defender's face rather than on the attacker's. Empty since the 2K26 Cross
+## Rhodes from behind gave way to Fight Forever's front one (19 Oct); kept
+## for the next move set up from behind.
+const FINISH_OVER_SHOULDER: Array[StringName] = []
 const FINISH_SHAKE := 0.09
 const FINISH_SHAKE_DECAY := 3.5
 const FINISH_SETUP_FOV := Vector2(24.0, 19.0)

@@ -43,7 +43,7 @@ static func move_profile(move: MoveDef) -> StringName:
 	match move.animation_pair_id:
 		&"grapple_vertical_suplex":
 			return &"suplex"
-		&"finisher_cross_rhodes", &"finisher_cross_rhodes_behind":
+		&"finisher_cross_rhodes":
 			return &"cross_rhodes"
 		&"ladder_aerial":
 			return &"ladder_aerial"
