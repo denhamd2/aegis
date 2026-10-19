@@ -88,6 +88,15 @@ const MOVES := {
 	# AEW Fight Forever library: the double underhook, then the waist through the lift.
 	"ff_tiger_driver_98": "waist",
 	"ff_one_winged_angel": "legs",
+	# Batch 1: the waist through each lift; the chokeslam's hand on the
+	# throat is its own (authored), so nothing pulls it elsewhere.
+	"ff_powerbomb_1": "waist",
+	"ff_sit_out_powerbomb_2": "waist",
+	"ff_spinebuster_5": "waist",
+	# The facelock is authored hand by hand; drawn in by "neck", the man was
+	# pulled back down onto Cody's head as both fell.
+	"ff_brainbuster_1": "none",
+	"ff_chokeslam_1": "none",
 }
 
 ## Moves the contact pull (GrappleRig._pull_into_reach) leaves alone: the

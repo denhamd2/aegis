@@ -45,3 +45,31 @@ func test_the_moves_we_already_animate_are_built() -> void:
 	var p := FFMoveLibrary.progress()
 	assert_int(p.y).is_equal(FFMoveLibrary.MOVES.size())
 	print("FF library built: %d / %d" % [p.x, p.y])
+
+
+## Batch 1 (19 Oct): five new paired moves and three of ours under their FF
+## names, all built and all reachable by the men who should have them.
+func test_batch_one_is_built() -> void:
+	for m: String in ["powerbomb_1", "sit_out_powerbomb_2", "spinebuster_5", "brainbuster_1",
+			"chokeslam_1", "spear_2", "cody_cutter_5", "scoop_slam_2"]:
+		assert_bool(FFMoveLibrary.is_built(m)).override_failure_message(m).is_true()
+	assert_int(FFMoveLibrary.progress().x).is_greater_equal(13)
+	# the reused ones are ours, not a second copy of the move
+	assert_str(FFMoveLibrary.move("spear_2").resource_path).is_equal("res://resources/moves/finisher_spear.tres")
+
+
+## The owner asked for good fits for Cody and Roman to be tagged, built or
+## not: every fit is a library move, and the built ones are in their hands.
+func test_cody_and_roman_have_fits() -> void:
+	for id: String in ["cody", "roman"]:
+		var fits := FFMoveLibrary.fits_of(id)
+		assert_int(fits.size()).is_greater_equal(8)
+		for m: String in fits:
+			assert_bool(FFMoveLibrary.MOVES.has(m)).override_failure_message(m).is_true()
+	assert_array(FFMoveLibrary.fits_of("roman")).contains(["powerbomb_1", "spinebuster_5", "spear_2"])
+	assert_array(FFMoveLibrary.fits_of("cody")).contains(["brainbuster_1", "sit_out_powerbomb_2", "cross_rhodes"])
+	var roman := Roster.by_id("roman")
+	assert_array(roman.moveset["power"]).contains(["res://resources/moves/ff/powerbomb_1.tres",
+			"res://resources/moves/ff/spinebuster_5.tres"])
+	var cody := Roster.by_id("cody")
+	assert_array(cody.moveset["grapple"]).contains(["res://resources/moves/ff/brainbuster_1.tres"])

@@ -770,6 +770,84 @@ const RECIPES := {
 		],
 		"defender_grips_until": 0.62,
 	},
+	# Batch 1 (FFMoveLibrary) -- see FF_Powerbomb_1_Attacker: up on the shoulders, thrown down.
+	"ff_powerbomb_1": {
+		"authored": {"attacker": "FF_Powerbomb_1_Attacker", "defender": "FF_Powerbomb_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+		# He lets go as he throws: the grip's pull (GrappleRig) no longer
+		# draws the man back to his hands once he is falling away.
+		"attacker_grips_until": 0.52,
+	},
+	# The same lift, and a sit-out under the throw.
+	"ff_sit_out_powerbomb_2": {
+		"authored": {"attacker": "FF_Sit_Out_Powerbomb_2_Attacker", "defender": "FF_Sit_Out_Powerbomb_2_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Sitting_Enter", "at": 0.60},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.60,
+		# He lets go as he throws: the grip's pull (GrappleRig) no longer
+		# draws the man back to his hands once he is falling away.
+		"attacker_grips_until": 0.52,
+	},
+	# Lifted at the waist, a half-turn, and down on top of him.
+	"ff_spinebuster_5": {
+		"authored": {"attacker": "FF_Spinebuster_5_Attacker", "defender": "FF_Spinebuster_5_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.55,
+		# He lets go as he throws: the grip's pull (GrappleRig) no longer
+		# draws the man back to his hands once he is falling away.
+		"attacker_grips_until": 0.42,
+	},
+	# The suplex lift, a beat, and straight down on his head -- past Cody's,
+	# which goes back with him: the man's root travels over Cody as he falls.
+	"ff_brainbuster_1": {
+		"authored": {"attacker": "FF_Brainbuster_1_Attacker", "defender": "FF_Brainbuster_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.65,
+		# He lets go as he throws: the grip's pull (GrappleRig) no longer
+		# draws the man back to his hands once he is falling away.
+		"attacker_grips_until": 0.52,
+	},
+	# Up by the throat, and slammed down in front.
+	"ff_chokeslam_1": {
+		"authored": {"attacker": "FF_Chokeslam_1_Attacker", "defender": "FF_Chokeslam_1_Defender"},
+		"attacker": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "PickUp_Table", "at": 0.45},
+		],
+		"defender": [
+			{"t": 0.00, "clip": "Push", "at": 0.80},
+			{"t": 0.60, "clip": "Death01", "at": 1.60},
+		],
+		"defender_grips_until": 0.55,
+	},
 }
 
 ## Root-transform trajectories for the moves authored after the original
@@ -1619,6 +1697,93 @@ const TRAJECTORIES := {
 					[1.43, 0.00, 0.00, 0.40], [1.53, -0.30, 0.00, 0.45],
 					[2.20, -0.35, 0.00, 0.45]],
 			"rot": [[0.00, 0.0, -90.0, 0.0], [2.20, 0.0, -90.0, 0.0]],
+		},
+	},
+	# Batch 1 (FFMoveLibrary). The Liger Bomb's path without the run: the man's root comes in under the lift and goes out in front as he is thrown down.
+	"ff_powerbomb_1": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [2.00, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, 90.00, 0.00], [2.00, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.20, 0.00, 0.00],
+					[0.67, 0.10, 0.00, 0.00], [1.00, 0.10, 0.00, 0.00],
+					[1.10, -0.50, 0.00, 0.00], [1.23, -1.05, 0.00, 0.00],
+					[2.00, -1.08, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, -90.00, 0.00], [2.00, 0.00, -90.00, 0.00]],
+		},
+	},
+	# The same, Roman sitting out a little behind where he stood.
+	"ff_sit_out_powerbomb_2": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [1.00, 0.40, 0.00, 0.00],
+					[1.23, 0.55, 0.00, 0.00], [2.00, 0.55, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, 90.00, 0.00], [2.00, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.20, 0.00, 0.00],
+					[0.67, 0.10, 0.00, 0.00], [1.00, 0.10, 0.00, 0.00],
+					[1.10, -0.35, 0.00, 0.00], [1.23, -0.75, 0.00, 0.00],
+					[2.00, -0.78, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, -90.00, 0.00], [2.00, 0.00, -90.00, 0.00]],
+		},
+	},
+	# Lifted chest to chest, the man orbits a half-turn about the attacker (t0.30-0.63, the Cross Rhodes' orbit and 45-degree keys), both yawing +180; then he goes over backward, away, the attacker down on top of him.
+	"ff_spinebuster_5": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [0.63, 0.40, 0.00, 0.00],
+					[0.73, 0.45, 0.00, 0.00], [0.87, 0.48, 0.00, 0.00],
+					[1.80, 0.48, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, 90.00, 0.00], [0.30, 0.00, 90.00, 0.00],
+					[0.40, 0.00, 135.00, 0.00], [0.47, 0.00, 180.00, 0.00],
+					[0.57, 0.00, 225.00, 0.00], [0.63, 0.00, 270.00, 0.00],
+					[1.80, 0.00, 270.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.13, -0.10, 0.00, 0.00],
+					[0.30, 0.10, 0.00, 0.00], [0.40, 0.188, 0.00, 0.212],
+					[0.47, 0.40, 0.00, 0.30], [0.57, 0.612, 0.00, 0.212],
+					[0.63, 0.70, 0.00, 0.00], [0.73, 1.05, 0.00, 0.00],
+					[0.87, 1.60, 0.00, 0.00], [1.80, 1.62, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, -90.00, 0.00], [0.30, 0.00, -90.00, 0.00],
+					[0.40, 0.00, -45.00, 0.00], [0.47, 0.00, 0.00, 0.00],
+					[0.57, 0.00, 45.00, 0.00], [0.63, 0.00, 90.00, 0.00],
+					[1.80, 0.00, 90.00, 0.00]],
+		},
+	},
+	# The vertical suplex's path to the hold; then the man comes straight down behind the attacker's head as he falls back, and folds over beyond it.
+	"ff_brainbuster_1": {
+		"length": 2.0,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [2.00, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, 90.00, 0.00], [2.00, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.28, 0.00, 0.00],
+					[0.53, 0.05, 0.00, 0.00], [0.67, 0.20, 0.00, 0.00],
+					[1.00, 0.20, 0.00, 0.00], [1.10, 0.60, 0.00, 0.00],
+					[1.20, 1.30, 0.00, 0.00], [1.30, 1.75, 0.00, 0.00],
+					[1.43, 2.15, 0.00, 0.00], [1.57, 2.40, 0.00, 0.00],
+					[2.00, 2.45, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, -90.00, 0.00], [2.00, 0.00, -90.00, 0.00]],
+		},
+	},
+	# Drawn in by the throat, held up at arm's length, and slammed down in front.
+	"ff_chokeslam_1": {
+		"length": 1.8,
+		"attacker": {
+			"pos": [[0.00, 0.40, 0.00, 0.00], [1.80, 0.40, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, 90.00, 0.00], [1.80, 0.00, 90.00, 0.00]],
+		},
+		"defender": {
+			"pos": [[0.00, -0.40, 0.00, 0.00], [0.20, -0.18, 0.00, 0.00],
+					[0.60, -0.12, 0.00, 0.00], [0.90, -0.12, 0.00, 0.00],
+					[1.00, -0.40, 0.00, 0.00], [1.13, -0.85, 0.00, 0.00],
+					[1.80, -0.88, 0.00, 0.00]],
+			"rot": [[0.00, 0.00, -90.00, 0.00], [1.80, 0.00, -90.00, 0.00]],
 		},
 	},
 }

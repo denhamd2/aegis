@@ -183,7 +183,10 @@ static func entries() -> Array:
 		"grapple": [M + "grapple_clinch_knee.tres", M + "grapple_vertical_suplex.tres",
 				M + "grapple_guillotine.tres"],
 		"power": [M + "power_samoan_drop.tres", M + "power_bodyslam.tres",
-				M + "power_powerslam.tres"],
+				M + "power_powerslam.tres",
+				# Fight Forever library, batch 1 (FFMoveLibrary.FITS): a big
+				# man's powerbomb and spinebuster.
+				M + "ff/powerbomb_1.tres", M + "ff/spinebuster_5.tres"],
 		"signature": [M + "signature_superman_punch.tres", M + "signature_backbreaker.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_clothesline_from_hell.tres", M + "running_knee_lift.tres",
@@ -203,10 +206,12 @@ static func entries() -> Array:
 	(list[1] as Entry).moveset = {
 		"strike": [M + "strike_jab.tres", M + "strike_bionic_elbow.tres",
 				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
-		"grapple": [M + "grapple_vertical_suplex.tres"],
+		"grapple": [M + "grapple_vertical_suplex.tres",
+				# FF batch 1: the suplex lift, dropped on the head.
+				M + "ff/brainbuster_1.tres"],
 		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres",
 				# Fight Forever library (FFMoveLibrary), his in the game.
-				M + "ff/tiger_driver_98.tres"],
+				M + "ff/tiger_driver_98.tres", M + "ff/sit_out_powerbomb_2.tres"],
 		# The Cody Cutter stands in his signature draw again: this table used
 		# to replace the Entry's own signature with these two, so off the
 		# springboard was the only Cody Cutter he had.

@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="Script" path="res://core/match/match_setup.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ring.tscn" id="2"]
@@ -10,6 +10,7 @@
 [ext_resource type="Resource" path="res://resources/moves/strike_jab.tres" id="7"]
 [ext_resource type="Resource" path="res://resources/moves/signature_backbreaker.tres" id="9"]
 [ext_resource type="Resource" path="res://resources/moves/power_bodyslam.tres" id="40"]
+[ext_resource type="Resource" path="res://resources/moves/ff/chokeslam_1.tres" id="ffc1"]
 [ext_resource type="Resource" path="res://resources/moves/running_bicycle_knee.tres" id="rv0"]
 [ext_resource type="Resource" path="res://resources/moves/running_cave_in.tres" id="rv1"]
 [ext_resource type="Resource" path="res://resources/moves/running_claymore.tres" id="rv2"]
@@ -264,6 +265,7 @@ running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30"), ExtResource("rv0"), ExtResource("rv1"), ExtResource("rv2"), ExtResource("rv3"), ExtResource("rv4"), ExtResource("rv5"), ExtResource("rv6"), ExtResource("rv7"), ExtResource("rv8"), ExtResource("rv9"), ExtResource("rv10"), ExtResource("rv11"), ExtResource("rv12"), ExtResource("rv13"), ExtResource("rv14"), ExtResource("rv15"), ExtResource("rv16"), ExtResource("rv17"), ExtResource("rv18"), ExtResource("rv19"), ExtResource("rv20"), ExtResource("rv21"), ExtResource("rv22"), ExtResource("rv23"), ExtResource("rv24")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
 grapple_move_pool = Array[Resource]([ExtResource("15")])
+power_move_pool = Array[Resource]([ExtResource("ffc1")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerB")
 grapple_rig_path = NodePath("../GrappleRig")
@@ -297,6 +299,7 @@ running_attack_move = ExtResource("13")
 running_attack_move_pool = Array[Resource]([ExtResource("30"), ExtResource("rv0"), ExtResource("rv1"), ExtResource("rv2"), ExtResource("rv3"), ExtResource("rv4"), ExtResource("rv5"), ExtResource("rv6"), ExtResource("rv7"), ExtResource("rv8"), ExtResource("rv9"), ExtResource("rv10"), ExtResource("rv11"), ExtResource("rv12"), ExtResource("rv13"), ExtResource("rv14"), ExtResource("rv15"), ExtResource("rv16"), ExtResource("rv17"), ExtResource("rv18"), ExtResource("rv19"), ExtResource("rv20"), ExtResource("rv21"), ExtResource("rv22"), ExtResource("rv23"), ExtResource("rv24")])
 strike_move_pool = Array[Resource]([ExtResource("29"), ExtResource("33"), ExtResource("34")])
 grapple_move_pool = Array[Resource]([ExtResource("15")])
+power_move_pool = Array[Resource]([ExtResource("ffc1")])
 signature_move_pool = Array[Resource]([ExtResource("21")])
 opponent_path = NodePath("../WrestlerA")
 grapple_rig_path = NodePath("../GrappleRig")

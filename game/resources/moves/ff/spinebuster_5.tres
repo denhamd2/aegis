@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Spinebuster 5"
 animation_pair_id = &"ff_spinebuster_5"
-startup_frames = 34
+startup_frames = 52
 active_frames = 6
-recovery_frames = 34
-reversal_window_start = 24
-reversal_window_end = 32
+recovery_frames = 50
+reversal_window_start = 42
+reversal_window_end = 50
 damage_head = 16.0
 damage_torso = 12.0
 damage_arms = 0.0

@@ -7332,6 +7332,235 @@ CLIPS["FF_One_Winged_Angel_Defender"] = [k for k in CLIPS["Samoan_Drop_Defender"
 ]
 
 
+# --- Fight Forever library, batch 1 (the owner, 19 Oct: Cody and Roman's
+# fits first). Paced to the compilation's tempo: a short tie-up, the lift, a
+# held beat at the top, the drop, and the attacker up about a second after.
+
+def _key(clip, frame):
+    """The pose a clip already keys at `frame`, so a new move can start from
+    the same hook-up or lift another one reads with."""
+    return dict(dict(CLIPS[clip])[frame])
+
+
+_LOCK_ATK = _key("Samoan_Drop_Attacker", 0)
+_LOCK_DEF = _key("Samoan_Drop_Defender", 0)
+
+# Powerbomb 1 (Wardlow's special), 60 frames / 2.0 s. He bends the man over,
+# head between his thighs, arms round his waist (0.2-0.4 s); heaves him up
+# to sit on his shoulders, face to face, legs down Roman's back (0.67 s); a
+# beat; then throws him down in front, bending with him, and the man lands
+# flat on his back, head away (1.23 s). The lift and the man on the
+# shoulders are the Liger Bomb's (shared keys), without the run or the
+# sit-out: he stays on his feet.
+_PB_BEND = dict(pelvis=(0.0, 0.12, 0.660), hips=(-40, 0, 0), spine=(-36, 0, 0),
+                head=(-14, 0, 0),
+                hand_r=(0.26, 0.62, 0.50), hand_l=(-0.26, 0.62, 0.50),
+                elbow_r=(0.6, -0.2, -0.6), elbow_l=(-0.6, -0.2, -0.6),
+                fist_r=0.5, fist_l=0.5,
+                foot_r=(0.26, -0.12, 0.104), foot_l=(-0.24, 0.16, 0.104))
+# At the top: the man sits on Roman's shoulders facing him, a thigh either
+# side of Roman's head and his calves down Roman's back -- wide enough that
+# neither body passes through the other (PairClearance), which the Liger
+# Bomb's legs-together carry could not be (its fit floats him half a metre
+# out in front).
+_PB_TOP_ATK = P(pelvis=(0.0, 0.0, 0.860), spine=(4, 0, 0), head=(-10, 0, 0),
+                hand_r=(0.20, 0.30, 1.60), hand_l=(-0.20, 0.30, 1.60),
+                elbow_r=(0.8, -0.2, 0.0), elbow_l=(-0.8, -0.2, 0.0),
+                fist_r=0.7, fist_l=0.7,
+                foot_r=(0.26, -0.06, 0.104), foot_l=(-0.24, 0.08, 0.104))
+_PB_TOP_DEF = dict(pelvis=(0.0, 0.00, 1.640), hips=(10, 0, 0), spine=(6, 0, 0), head=(8, 0, 0),
+                   hand_r=(0.32, 0.14, 1.96), hand_l=(-0.32, 0.14, 1.96),
+                   elbow_r=(0.8, -0.3, -0.2), elbow_l=(-0.8, -0.3, -0.2),
+                   fist_r=0.3, fist_l=0.3,
+                   foot_r=(0.27, 0.54, 1.18), foot_l=(-0.27, 0.54, 1.18),
+                   knee_r=(0.5, 1.0, 0.3), knee_l=(-0.5, 1.0, 0.3), free_feet=True)
+_PB_LIFT_ATK = [
+    (0,  dict(_LOCK_ATK)),
+    # Over him, the head tucked between his thighs.
+    (6,  _key("Liger_Bomb_Attacker", 10)),
+    (12, _key("Liger_Bomb_Attacker", 22)),
+    # Sits into it and heaves.
+    (16, P(pelvis=(0.0, 0.04, 0.700), hips=(-18, 0, 0), spine=(-14, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.22, 0.32, 1.10), hand_l=(-0.22, 0.32, 1.10),
+           fist_r=0.6, fist_l=0.6)),
+    # Up: the man sitting on his shoulders, held round the waist.
+    (20, dict(_PB_TOP_ATK)),
+    (30, dict(_PB_TOP_ATK, spine=(6, 0, 0), head=(-12, 0, 0))),
+]
+_PB_LIFT_DEF = [
+    (0,  dict(_LOCK_DEF)),
+    (6,  _key("Liger_Bomb_Defender", 12)),
+    (12, _key("Liger_Bomb_Defender", 22)),
+    (20, dict(_PB_TOP_DEF)),
+    (30, dict(_PB_TOP_DEF, hips=(14, 0, 0), spine=(10, 0, 0), head=(12, 0, 0))),
+]
+CLIPS["FF_Powerbomb_1_Attacker"] = _PB_LIFT_ATK + [
+    # Throwing him down in front, bending with him.
+    (33, P(pelvis=(0.0, 0.08, 0.800), hips=(-16, 0, 0), spine=(-20, 0, 0),
+           head=(-10, 0, 0),
+           hand_r=(0.24, 0.46, 1.20), hand_l=(-0.24, 0.46, 1.20),
+           fist_r=0.6, fist_l=0.6)),
+    # The impact: bent double over him.
+    (37, dict(_PB_BEND)),
+    (44, dict(_PB_BEND, pelvis=(0.0, 0.10, 0.680), spine=(-32, 0, 0), head=(-8, 0, 0))),
+    (51, P(pelvis=(0.0, 0.06, 0.800), hips=(-12, 0, 0), spine=(-14, 0, 0))),
+    (60, P()),
+]
+CLIPS["FF_Powerbomb_1_Defender"] = _PB_LIFT_DEF + _back_fall(30, 60, skip_hit=True, fall_z=1.00)
+
+# Sit-Out Powerbomb 2 (Dax Harwood's, PAC's), 60 frames / 2.0 s. The same
+# lift and beat; then he sits out under the throw, legs shooting out in
+# front, and drives the man down back first between his feet.
+CLIPS["FF_Sit_Out_Powerbomb_2_Attacker"] = _PB_LIFT_ATK + [
+    (33, pose(SIT_DROP, hand_r=(0.24, 0.36, 1.24), hand_l=(-0.24, 0.36, 1.24))),
+    (37, pose(ATK_SEAT, hand_r=(0.24, 0.50, 0.30), hand_l=(-0.24, 0.50, 0.30))),
+    (44, pose(ATK_SEAT)),
+] + _get_up(48, 60, seated=True)
+CLIPS["FF_Sit_Out_Powerbomb_2_Defender"] = _PB_LIFT_DEF + _back_fall(30, 60, skip_hit=True,
+                                                                     fall_z=1.00)
+
+# Spinebuster 5 (Cash Wheeler's, Jade Cargill's, Powerhouse Hobbs's), 54
+# frames / 1.8 s. Arms round the man's waist, he lifts him off his feet
+# chest to chest and pivots a half-turn with him (0.30-0.63 s: the roots
+# orbit, paired_recipes.gd), then falls forward with him and lands on top,
+# chest on chest, as the Powerslam does. The man goes straight over
+# backward: flat on his back, head away (_back_fall).
+_SB_LIFT = P(pelvis=(0.0, 0.04, 0.860), hips=(-4, 0, 0), spine=(0, 0, 0), head=(-4, 0, 0),
+             hand_r=(0.20, 0.30, 1.24), hand_l=(-0.20, 0.30, 1.24),
+             elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.7, -0.3, -0.5),
+             fist_r=0.8, fist_l=0.8,
+             foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+_SB_HELD = dict(pelvis=(0.0, 0.00, 1.100), hips=(6, 0, 0), spine=(6, 0, 0), head=(10, 0, 0),
+                hand_r=(0.30, 0.26, 1.56), hand_l=(-0.30, 0.26, 1.56),
+                elbow_r=(0.8, -0.2, 0.0), elbow_l=(-0.8, -0.2, 0.0),
+                fist_r=0.3, fist_l=0.3,
+                foot_r=(0.20, 0.04, 0.360), foot_l=(-0.18, 0.00, 0.400),
+                knee_r=(0.2, 1.0, 0.0), knee_l=(-0.2, 1.0, 0.0), free_feet=True)
+_SB_DRIVE = pose(CROUCH, pelvis=(0.0, 0.10, 0.480), hips=(-40, 0, 0), spine=(-30, 0, 0),
+                 head=(-10, 0, 0),
+                 hand_r=(0.24, 0.66, 0.40), hand_l=(-0.24, 0.66, 0.40),
+                 fist_r=0.3, fist_l=0.3)
+CLIPS["FF_Spinebuster_5_Attacker"] = [
+    (0,  dict(_LOCK_ATK)),
+    # Arms round his waist.
+    (6,  P(pelvis=(0.0, 0.10, 0.760), hips=(-14, 0, 0), spine=(-18, 0, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.20, 0.36, 1.12), hand_l=(-0.20, 0.36, 1.12),
+           elbow_r=(0.7, -0.3, -0.5), elbow_l=(-0.7, -0.3, -0.5),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.14, 0.104))),
+    # Off his feet, and the pivot (the roots turn).
+    (10, dict(_SB_LIFT)),
+    (19, dict(_SB_LIFT, hips=(2, 0, 0), spine=(4, 0, 0))),
+    # Falling forward with him.
+    (22, _key("Powerslam_Attacker", 27)),
+    # Driven down with him, into a crouch over him, hands on his chest.
+    # Lying across him, chest on chest, put the bodies through each other,
+    # and the fit (PairedFit) threw the man a metre clear to undo it.
+    (26, dict(_SB_DRIVE)),
+    (36, dict(_SB_DRIVE, pelvis=(0.0, 0.08, 0.520), spine=(-24, 0, 0), head=(-4, 0, 0))),
+    (44, pose(CROUCH)),
+    (54, P()),
+]
+CLIPS["FF_Spinebuster_5_Defender"] = [
+    (0,  dict(_LOCK_DEF)),
+    # Hands on his shoulders as the arms go round him.
+    (6,  P(pelvis=(0.0, 0.02, 0.860), spine=(4, 0, 0), head=(8, 0, 0),
+           hand_r=(0.30, 0.30, 1.30), hand_l=(-0.30, 0.30, 1.30),
+           fist_r=0.3, fist_l=0.3)),
+    (10, dict(_SB_HELD)),
+    # Legs swinging out behind as he is turned.
+    (19, dict(_SB_HELD, foot_r=(0.20, -0.14, 0.380), foot_l=(-0.18, -0.18, 0.420))),
+] + _back_fall(19, 54, skip_hit=True, fall_z=0.80)
+
+# Brainbuster 1 (Dax Harwood's, Malakai Black's), 60 frames / 2.0 s. The
+# vertical suplex's facelock and lift (shared keys), held upside down only a
+# beat (0.33 s, not the delayed suplex's second); then he falls straight back
+# and the man comes down vertically, the top of his head and neck into the
+# mat (1.30 s), before his body folds over onto his back beyond Cody's head.
+CLIPS["FF_Brainbuster_1_Attacker"] = [k for k in CLIPS["Vertical_Suplex_Attacker"] if k[0] <= 21] + [
+    (30, dict(_SUPLEX_ATK_HOLD, pelvis=(0.0, -0.05, 0.895), spine=(14, 0, 0))),
+    # Straight back, taking him down with him.
+    (35, dict(pelvis=(0.0, -0.20, 0.620), hips=(40, 0, 0), spine=(10, 0, 0),
+              head=(-20, 0, 0),
+              hand_r=(0.20, -0.10, 1.30), hand_l=(-0.20, -0.10, 1.30),
+              fist_r=0.6, fist_l=0.6,
+              foot_r=(0.18, 0.40, 0.104), foot_l=(-0.18, 0.36, 0.104))),
+    (39, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
+    (44, pose(ATK_BACK)),
+] + _get_up(47, 60, lying=True)
+CLIPS["FF_Brainbuster_1_Defender"] = [k for k in CLIPS["Vertical_Suplex_Defender"] if k[0] <= 20] + [
+    (30, _body((-168, 0, 0), (0.0, 0.10, 2.060), **_SUPLEX_LIMBS)),
+    # Dropped straight down, still upside down.
+    (35, _body((-176, 0, 0), (0.0, 0.00, 1.400), **_SUPLEX_LIMBS)),
+    # The top of the head into the mat.
+    (39, _body((-184, 0, 0), (0.0, -0.10, 0.780), **dict(_SUPLEX_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # Folding over onto his back, beyond Cody's head.
+    (43, _body((-226, 0, 0), (0.0, -0.08, 0.520), **dict(_SUPLEX_LIMBS,
+               hand_r=(0.50, 0.00, 0.30), hand_l=(-0.50, 0.00, 0.30)))),
+    (47, _body((-268, 0, 0), (0.0, -0.04, 0.220), **dict(_SUPLEX_LIMBS, **_LANDED_FLAT))),
+    (53, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.200))),
+    (60, dict(SUPINE_AWAY)),
+]
+
+# Chokeslam 1 (Lance Archer's), 54 frames / 1.8 s. A hand round the man's
+# throat, the other in his tights; he hoists him straight up, arm locked out
+# over his head (0.6 s), a beat with him up there, and slams him down in
+# front, back first, following through bent over him (1.1 s).
+_CS_UP_ATK = P(pelvis=(0.0, 0.00, 0.880), hips=(4, 0, 0), spine=(6, 0, 0), head=(10, 0, 0),
+               hand_r=(0.12, 0.34, 1.98), hand_l=(-0.18, 0.30, 1.66),
+               elbow_r=(0.8, -0.2, 0.2), elbow_l=(-0.8, -0.2, 0.0),
+               fist_r=0.7, fist_l=0.7,
+               foot_r=(0.26, -0.08, 0.104), foot_l=(-0.24, 0.10, 0.104))
+_CS_UP_DEF = dict(pelvis=(0.0, 0.00, 1.420), hips=(4, 0, 0), spine=(6, 0, 0), head=(20, 0, 0),
+                  hand_r=(0.08, 0.30, 1.98), hand_l=(-0.10, 0.30, 1.94),
+                  elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                  fist_r=0.6, fist_l=0.6,
+                  foot_r=(0.14, 0.06, 0.560), foot_l=(-0.14, 0.12, 0.600),
+                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+CLIPS["FF_Chokeslam_1_Attacker"] = [
+    (0,  dict(_LOCK_ATK)),
+    # Right hand to the throat, left in his tights.
+    (6,  P(pelvis=(0.0, 0.04, 0.800), hips=(-4, 0, 0), spine=(-6, 0, 0), head=(0, 0, 0),
+           hand_r=(0.10, 0.50, 1.46), hand_l=(-0.16, 0.42, 1.04),
+           elbow_r=(0.7, -0.3, -0.4), elbow_l=(-0.7, -0.3, -0.5),
+           fist_r=0.6, fist_l=0.6)),
+    # Sits into the lift.
+    (12, P(pelvis=(0.0, 0.04, 0.700), hips=(-10, 0, 0), spine=(-6, 0, 0), head=(0, 0, 0),
+           hand_r=(0.10, 0.42, 1.40), hand_l=(-0.16, 0.38, 0.96),
+           fist_r=0.7, fist_l=0.7,
+           foot_r=(0.26, -0.10, 0.104), foot_l=(-0.24, 0.12, 0.104))),
+    # Up, arm locked out.
+    (18, dict(_CS_UP_ATK)),
+    (27, dict(_CS_UP_ATK, spine=(8, 0, 0), head=(12, 0, 0))),
+    # Down with him.
+    (30, P(pelvis=(0.0, 0.06, 0.800), hips=(-12, 0, 0), spine=(-14, 0, 0), head=(-6, 0, 0),
+           hand_r=(0.12, 0.58, 1.30), hand_l=(-0.20, 0.50, 1.10),
+           fist_r=0.6, fist_l=0.6)),
+    (34, dict(_PB_BEND, hand_r=(0.14, 0.72, 0.50), hand_l=(-0.22, 0.60, 0.70))),
+    (41, dict(_PB_BEND, pelvis=(0.0, 0.10, 0.700), spine=(-30, 0, 0), head=(-8, 0, 0))),
+    (47, P(pelvis=(0.0, 0.06, 0.800), hips=(-12, 0, 0), spine=(-14, 0, 0))),
+    (54, P()),
+]
+CLIPS["FF_Chokeslam_1_Defender"] = [
+    (0,  dict(_LOCK_DEF)),
+    # Grabbed by the throat, chin forced up, both hands on the arm.
+    (6,  P(pelvis=(0.0, 0.00, 0.860), spine=(8, 0, 0), head=(16, 0, 0),
+           hand_r=(0.10, 0.30, 1.44), hand_l=(-0.06, 0.30, 1.40),
+           elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+           fist_r=0.6, fist_l=0.6)),
+    # Up on his toes.
+    (12, P(pelvis=(0.0, 0.00, 0.940), spine=(8, 0, 0), head=(18, 0, 0),
+           hand_r=(0.10, 0.30, 1.56), hand_l=(-0.08, 0.30, 1.52),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.14, 0.00, 0.160), foot_l=(-0.14, 0.04, 0.160))),
+    (18, dict(_CS_UP_DEF)),
+    (27, dict(_CS_UP_DEF, foot_r=(0.14, 0.00, 0.560), foot_l=(-0.14, 0.06, 0.580))),
+] + _back_fall(27, 54, skip_hit=True, fall_z=1.10)
+
+
 def main():
     arm = load_rig()
     clear_actions()

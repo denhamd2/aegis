@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Sit-Out Powerbomb 2"
 animation_pair_id = &"ff_sit_out_powerbomb_2"
-startup_frames = 48
+startup_frames = 74
 active_frames = 6
-recovery_frames = 38
-reversal_window_start = 38
-reversal_window_end = 46
+recovery_frames = 40
+reversal_window_start = 64
+reversal_window_end = 72
 damage_head = 10.0
 damage_torso = 8.0
 damage_arms = 0.0

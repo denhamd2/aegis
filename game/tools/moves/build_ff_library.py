@@ -257,6 +257,27 @@ EXISTING = {
     # The springboard in off the middle rope, the head caught in the air --
     # Cody's dive spot's cutter ending (DiveSpot), which is FF's Cody Cutter 4.
     "cody_cutter_4": "res://resources/moves/dive_springboard_cutter.tres",
+    # Batch 1 (19 Oct): the same moves as ones we already animate. FF's Spear
+    # 2 is the running spear Roman finishes with; Cody Cutter 5 is the
+    # standing cutter, Cody's own signature; Scoop Slam 2 is the body slam.
+    "spear_2": "res://resources/moves/finisher_spear.tres",
+    "cody_cutter_5": "res://resources/moves/signature_cody_cutter.tres",
+    "scoop_slam_2": "res://resources/moves/power_bodyslam.tres",
+}
+
+# The owner's ask (19 Oct): tag the library moves that suit our two men, built
+# or not, so the batches know what to animate next. Keyed by OUR roster ids
+# (Roman is not in Fight Forever). Cody's are his own FF set and the moves of
+# his real ring style (the cutters, suplexes, the moonsault, the figure four);
+# Roman's are a big man's power moves -- powerbombs, spinebuster, Samoan
+# drops, the spear, the lariat.
+FITS = {
+    "cody": ["cody_cutter_4", "cody_cutter_5", "figure_four_leglock", "tiger_driver_98",
+             "cross_rhodes", "scoop_slam_2", "brainbuster_1", "sit_out_powerbomb_2",
+             "springboard_moonsault_3", "code_breaker_1", "inverted_ddt_1"],
+    "roman": ["spear_2", "powerbomb_1", "sit_out_powerbomb_2", "spinebuster_5",
+              "squatting_samoan_drop", "scoop_slam_2", "casualty_of_war",
+              "fireman_carry_bomb_2", "buckle_bomb", "oklahoma_stampede"],
 }
 
 # Frame data by family, at 60 Hz: (startup, active, recovery). Paced to the
@@ -276,6 +297,11 @@ FAMILY_FRAMES = {
 CLIP_FRAMES = {
     "tiger_driver_98": (92, 6, 46),       # 72-frame clip at 30 fps: contact at 46
     "one_winged_angel": (80, 6, 46),      # 66 frames: contact at 40
+    "powerbomb_1": (74, 6, 40),           # 60 frames: contact at 37
+    "sit_out_powerbomb_2": (74, 6, 40),   # 60 frames: contact at 37
+    "spinebuster_5": (52, 6, 50),         # 54 frames: contact at 26
+    "brainbuster_1": (78, 6, 36),         # 60 frames: contact at 39
+    "chokeslam_1": (68, 6, 34),           # 54 frames: contact at 34
 }
 
 # Damage by tier: (head, torso, legs). A special is the big one.
@@ -344,6 +370,7 @@ def library() -> str:
         m_items.append('"%s": {"name": "%s", "family": "%s", "setup": "%s", "wrestlers": [%s]}' % (
             m, name.replace('"', '\\"'), family, setup, ", ".join('"%s"' % w for w in sorted(tiers_of(m)))))
     ex_items = ['"%s": "%s"' % (k, v) for k, v in EXISTING.items()]
+    fit_items = ['"%s": [%s]' % (k, ", ".join('"%s"' % m for m in v)) for k, v in FITS.items()]
     return "\n".join([
         "class_name FFMoveLibrary",
         "extends RefCounted",
@@ -365,6 +392,10 @@ def library() -> str:
         "",
         "## Moves we already animate under our own names.",
         "const EXISTING := " + gd_dict(ex_items),
+        "",
+        "## Library moves that suit our own men, built or not, by roster id: what",
+        "## the batches animate first.",
+        "const FITS := " + gd_dict(fit_items),
         "",
         "static var _paired: AnimationLibrary",
         "",
@@ -403,6 +434,11 @@ def library() -> str:
         "\treturn _paired != null and _paired.has_animation(StringName(\"ff_\" + move_id))",
         "",
         "",
+        "## The library moves that suit one of our men (FITS), by roster id.",
+        "static func fits_of(roster_id: String) -> Array:",
+        "\treturn FITS.get(roster_id, [])",
+        "",
+        "",
         "## Built moves over all moves: how far the animation batches have got.",
         "static func progress() -> Vector2i:",
         "\tvar built := 0",
@@ -421,6 +457,8 @@ def main() -> int:
     orphan = MOVES.keys() - used
     assert not missing, "undefined moves: %s" % sorted(missing)
     assert not orphan, "moves nobody uses: %s" % sorted(orphan)
+    unfit = {m for v in FITS.values() for m in v} - MOVES.keys()
+    assert not unfit, "fits that are not library moves: %s" % sorted(unfit)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for m in MOVES:
         if m in EXISTING:

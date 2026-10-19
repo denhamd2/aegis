@@ -6,11 +6,11 @@
 script = ExtResource("1")
 resource_name = "Chokeslam 1"
 animation_pair_id = &"ff_chokeslam_1"
-startup_frames = 40
+startup_frames = 68
 active_frames = 6
-recovery_frames = 36
-reversal_window_start = 30
-reversal_window_end = 38
+recovery_frames = 34
+reversal_window_start = 58
+reversal_window_end = 66
 damage_head = 10.0
 damage_torso = 8.0
 damage_arms = 0.0

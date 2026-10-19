@@ -221,6 +221,16 @@ const EXISTING := {
 	"cross_rhodes": "res://resources/moves/finisher_cross_rhodes.tres",
 	"figure_four_leglock": "res://resources/moves/submission_figure_four.tres",
 	"cody_cutter_4": "res://resources/moves/dive_springboard_cutter.tres",
+	"spear_2": "res://resources/moves/finisher_spear.tres",
+	"cody_cutter_5": "res://resources/moves/signature_cody_cutter.tres",
+	"scoop_slam_2": "res://resources/moves/power_bodyslam.tres",
+}
+
+## Library moves that suit our own men, built or not, by roster id: what
+## the batches animate first.
+const FITS := {
+	"cody": ["cody_cutter_4", "cody_cutter_5", "figure_four_leglock", "tiger_driver_98", "cross_rhodes", "scoop_slam_2", "brainbuster_1", "sit_out_powerbomb_2", "springboard_moonsault_3", "code_breaker_1", "inverted_ddt_1"],
+	"roman": ["spear_2", "powerbomb_1", "sit_out_powerbomb_2", "spinebuster_5", "squatting_samoan_drop", "scoop_slam_2", "casualty_of_war", "fireman_carry_bomb_2", "buckle_bomb", "oklahoma_stampede"],
 }
 
 static var _paired: AnimationLibrary
@@ -258,6 +268,11 @@ static func is_built(move_id: String) -> bool:
 	if _paired == null and ResourceLoader.exists(PAIRED_LIBRARY):
 		_paired = load(PAIRED_LIBRARY)
 	return _paired != null and _paired.has_animation(StringName("ff_" + move_id))
+
+
+## The library moves that suit one of our men (FITS), by roster id.
+static func fits_of(roster_id: String) -> Array:
+	return FITS.get(roster_id, [])
 
 
 ## Built moves over all moves: how far the animation batches have got.

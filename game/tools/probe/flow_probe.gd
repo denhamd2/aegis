@@ -6,6 +6,10 @@ extends Node
 ##
 ##   godot4 --headless --path game --fixed-fps 60 tools/probe/flow_probe.tscn \
 ##       -- --seeds 1,2,3 [--wrestlers roman,cody|mannequin] [--budget 40000] [--strip 120]
+##       [--moves 1]
+##
+## --moves 1 lists every move that lands, in order: the second, who threw it,
+## and the move -- the repetition in a match, read as a list.
 ##
 ## `mannequin` fights match.tscn's box men: the same AI and referee, several
 ## times cheaper to simulate than the skinned roster.
@@ -25,6 +29,7 @@ var _seeds: Array = [1, 2, 3]
 var _wrestlers := "roman,cody"
 var _budget := 40000
 var _strip := 0
+var _moves := false
 var _rows: Array = []
 
 
@@ -38,6 +43,7 @@ func _ready() -> void:
 			"--wrestlers": _wrestlers = args[i + 1]
 			"--budget": _budget = int(args[i + 1])
 			"--strip": _strip = int(args[i + 1])
+			"--moves": _moves = args[i + 1] == "1"
 	for s in _seeds:
 		_rows.append(await _run(s))
 	_summary()
@@ -89,8 +95,13 @@ func _run(seed_value: int) -> Dictionary:
 	var landed_at: Array = []   # [tick, attacker index]
 	# The mix: landed moves by kind, and lock-ups.
 	var mix := {}
+	var t0 := [0]   # the bell's tick, for --moves (set below, read by the lambda)
 	var lander := func(attacker: WrestlerController, _d, m: MoveDef) -> void:
 		landed_at.append([Engine.get_physics_frames(), 0 if attacker == a else 1])
+		if _moves:
+			print("  move %6.1f s  %s  %s" % [(Engine.get_physics_frames() - t0[0]) / 60.0,
+					attacker.entrance_style if attacker.entrance_style != "" else attacker.name,
+					m.resource_path.get_file().get_basename()])
 		last_move[attacker] = m
 		var t := attacker.tier_of(m)
 		var k: String = ["grapple", "power", "signature", "finisher"][t] if t >= 0 and t <= 3 else "other"
@@ -101,6 +112,7 @@ func _run(seed_value: int) -> Dictionary:
 		if to == WrestlerFSM.State.TIE_UP:
 			mix["tie_ups"] = mix.get("tie_ups", 0) + 1)
 	var start := Engine.get_physics_frames()
+	t0[0] = start
 	var per_tick: Array = []    # [kind a, kind b]
 	var tick := 0
 	while tick < _budget and won[0] == "":

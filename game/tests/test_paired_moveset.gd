@@ -460,9 +460,10 @@ func test_cody_fights_with_his_own_moveset() -> void:
 	assert_array(ids.call(cody.strike_move, cody.strike_move_pool)).contains(
 			["strike_bionic_elbow", "strike_dropdown_uppercut"])
 	assert_array(ids.call(cody.grapple_move, cody.grapple_move_pool)) \
-			.is_equal(["grapple_vertical_suplex"])
+			.is_equal(["grapple_vertical_suplex", "ff_brainbuster_1"])
 	assert_array(ids.call(cody.power_move, cody.power_move_pool)) \
-			.is_equal(["power_powerslam", "power_alabama_slam", "ff_tiger_driver_98"])
+			.is_equal(["power_powerslam", "power_alabama_slam", "ff_tiger_driver_98",
+					"ff_sit_out_powerbomb_2"])
 	assert_array(ids.call(cody.signature_move, cody.signature_move_pool)) \
 			.contains_exactly_in_any_order(["signature_disaster_kick", "signature_cody_cutter", "signature_pedigree"])
 	assert_str(String(cody.own_signature.animation_pair_id)).is_equal("signature_cody_cutter")

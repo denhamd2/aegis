@@ -9819,3 +9819,32 @@ at broadcast-heavy intensity.
   and the review sheet `gauntlet/refs/nhb/review/step5_sound.png`.
 - **Still to judge by ear:** the punches and forearms measure bass-heavy
   (centroid 100–230 Hz), which is in range for game punches.
+
+## 19 Oct — Fight Forever moves, batch 1 (Roman and Cody first)
+
+- **Five new paired moves**, authored on the base rig (`wrestling_clips.py`),
+  root paths in `paired_recipes.gd`, fitted (`fit_paired`) and through every
+  move gate (pair clearance, pose lint, cadence):
+  - **Powerbomb 1** (Roman): head between the thighs, up on the shoulders, a
+    beat, thrown down in front. The carry sits a thigh either side of his
+    head; the man still sits a little forward of the shoulders, as the Liger
+    Bomb's does.
+  - **Spinebuster 5** (Roman): lifted chest to chest, a half-turn, driven
+    down. Roman crouches over him rather than lying on top — lying on top put
+    the bodies through each other and the fit threw the man a metre clear.
+  - **Sit-Out Powerbomb 2** (Cody): the same lift, a sit-out under the throw.
+  - **Brainbuster 1** (Cody): the suplex lift, a beat, and straight down on
+    his head beyond Cody's. No stored fit: the fit pulled him back onto
+    Cody's face, so the root path itself carries him over.
+  - **Chokeslam 1**: up by the throat and slammed; in the shared big-man pool
+    (Kenny and anyone without a moveset), not Roman's or Cody's.
+- **Three of ours under their FF names** (`FFMoveLibrary.EXISTING`): Spear 2
+  is Roman's spear, Cody Cutter 5 is Cody's standing cutter, Scoop Slam 2 is
+  the body slam.
+- **Cody and Roman fits** (`FFMoveLibrary.FITS`, `fits_of()`): the library
+  moves that suit each man, built or not — what the next batches animate.
+- **In their hands:** Roman's power tier gains Powerbomb 1 and Spinebuster 5;
+  Cody's gains the Sit-Out Powerbomb, his grapple tier the Brainbuster.
+- The heaviest throws let go as they throw (`attacker_grips_until`).
+- **13 of 146** library moves built. Review sheet:
+  `gauntlet/refs/ff_review/batch1.png`.
