@@ -51,6 +51,7 @@ static func attach(w: WrestlerController, model: Node) -> ManFire:
 	m._rng.seed = hash(w.name)
 	w.add_child(m)
 	m._flames = _flame_particles()
+	_as_tongues(m._flames)
 	m._flames.position = Vector3(0.0, FLAME_HEIGHT, 0.0)
 	m.add_child(m._flames)
 	m._light = OmniLight3D.new()
@@ -96,6 +97,11 @@ func _process(delta: float) -> void:
 	if _wet > 0.0:
 		_wet = maxf(0.0, _wet - delta)
 	if burning:
+		# on his body wherever it is: standing, down, or bent over
+		var chest := wrestler._bone_world("spine_03")
+		if chest != Vector3.INF:
+			_flames.global_position = chest
+			_light.global_position = chest
 		var before := burn
 		burn = minf(MAX_BURN, burn + BURN_RATE * delta)
 		if burn != before:
@@ -148,6 +154,33 @@ func extinguish() -> void:
 func _set_burn() -> void:
 	for o in _overlays:
 		o.set_shader_parameter("burn", burn)
+
+
+## His flames drawn as tongues (WeaponActor.flame_tongue) over his body,
+## not round dots: the dots piled up over his chest into one white ball.
+static func _as_tongues(p: GPUParticles3D) -> void:
+	p.amount = 46
+	var m := p.process_material as ParticleProcessMaterial
+	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	m.emission_box_extents = Vector3(0.22, 0.45, 0.16)
+	m.scale_min = 0.45
+	m.scale_max = 0.85
+	m.angle_min = -12.0
+	m.angle_max = 12.0
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.3, 0.75, 1.0])
+	grad.colors = PackedColorArray([Color(FIRE_HOT, 0.6), Color(FIRE_ORANGE, 0.55),
+			Color(FIRE_RED, 0.3), Color(FIRE_RED, 0.0)])
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = grad
+	m.color_ramp = ramp
+	var quad := (p.draw_pass_1 as QuadMesh).duplicate() as QuadMesh
+	quad.size = Vector2(0.24, 0.6)
+	quad.center_offset = Vector3(0.0, 0.2, 0.0)
+	var mat := (quad.material as StandardMaterial3D).duplicate() as StandardMaterial3D
+	mat.albedo_texture = WeaponActor.flame_tongue()
+	quad.material = mat
+	p.draw_pass_1 = quad
 
 
 static func _flame_particles() -> GPUParticles3D:

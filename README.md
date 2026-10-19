@@ -9926,3 +9926,31 @@ replaced on request.
   - Measured end to end: the theme stays at its full -9 dB through every
     build stall while the bar climbs 70, 78, 86, 94, 100%. It starts its fade
     on the reveal.
+
+## 19 Oct — Carnage 1: the flaming table
+
+The owner: "build the flaming table, ladder bridge, pane of glass, through
+LED wall, and fire breathing". First, the table.
+
+- **Lighting it.** In No Holds Barred, a taunt beside a table standing up,
+  empty-handed, sets it alight (`WrestlerController.begin_light`).
+  - He holds a lighter flame to the edge of the top. On the action's tick the
+    top goes up (`WeaponActor.set_ablaze`), with a whoosh and the crowd
+    reacting (`MatchAudio` "ignite").
+  - One fire per table.
+- **Through it.** A man who comes down through a burning table catches fire
+  (`ManFire.ignite`), and the referee's extinguisher run starts as usual. The
+  burning top's flames carry onto every broken piece and go when the pieces
+  do. A cold table still does not set anyone alight.
+- **The AI.** A heel with a table up and the other man down sometimes lights
+  it first: rolled once per table, a 60% chance (`WrestlerAI._wants_to_light`).
+  He then goes on to line the man up for the suplex through it as before.
+- **Flames that read as flames.** The table and the man burning are drawn
+  with a flame-tongue sprite (`WeaponActor.flame_tongue`): tall, tapering and
+  broken at the tip. Before this, the round dots piled into one white glare
+  along a table top, and into a ball over a man's chest.
+  - A man's flames now follow his chest bone, so they stay on him when he is
+    down instead of hanging in the air where his chest would be standing.
+- Review: `gauntlet/refs/nhb/review/carnage_1_flaming_table.png`, made with
+  `tools/probe/carnage_shot.tscn --spot table`. Tests:
+  `tests/test_carnage_spots.gd`.

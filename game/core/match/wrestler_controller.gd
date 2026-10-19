@@ -1718,7 +1718,9 @@ func _physics_process(delta: float) -> void:
 
 	match fsm.current_state:
 		WrestlerFSM.State.IDLE, WrestlerFSM.State.LOCOMOTION, WrestlerFSM.State.RUN:
-			if input.get("taunt", false) and can_taunt():
+			if input.get("taunt", false) and table_to_light() != null:
+				begin_light(table_to_light())
+			elif input.get("taunt", false) and can_taunt():
 				begin_taunt()
 			elif _pushing_through_ropes(input):
 				begin_rope_cross()
@@ -5090,15 +5092,16 @@ var _weapon_setup_root := ""
 ## The three pickups are one action each (WeaponCatalog.pickup_action picks
 ## which by what is on the floor): a hand, both hands, the squat lift.
 const WEAPON_ACTION_TICKS := {"rummage": 0, "retrieve": 54, "pickup": 30, "pickup_two": 30,
-		"pickup_heavy": 44, "throw": 26, "slide": 30, "set_up": 44, "set_up_upright": 44}
+		"pickup_heavy": 44, "throw": 26, "slide": 30, "set_up": 44, "set_up_upright": 44, "light": 76}
 const WEAPON_ACTION_AT := {"retrieve": 36, "pickup": 16, "pickup_two": 16, "pickup_heavy": 24,
-		"throw": 12, "slide": 12, "set_up": 30, "set_up_upright": 30}
+		"throw": 12, "slide": 12, "set_up": 30, "set_up_upright": 30, "light": 48}
 const WEAPON_ACTION_CLIPS := {
 	"rummage": "strikes/weapon_rummage", "retrieve": "strikes/weapon_retrieve",
 	"pickup": "strikes/weapon_pickup", "pickup_two": "strikes/weapon_pickup_two",
 	"pickup_heavy": "strikes/weapon_pickup_heavy", "throw": "strikes/weapon_throw",
 	"slide": "strikes/weapon_pickup",
 	"set_up": "strikes/weapon_set_up", "set_up_upright": "strikes/weapon_set_up",
+	"light": "strikes/weapon_aim",
 }
 ## A pickup: where the weapon's grip ends up in front of his feet (m) once he
 ## has stepped to it, and the ticks the step takes. Anywhere in PICKUP_REACH
@@ -5575,8 +5578,80 @@ func _tick_weapon_action(input: Dictionary) -> void:
 				var w := held_weapon
 				_let_go()
 				w.set_up_at(global_position - global_basis.z * 0.95, rotation.y, "Ladder_Open")
+		"light":
+			_tick_light()
 	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):
 		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## --- The flaming table (the owner, 19 Oct) ---------------------------------
+## Taunt beside a table standing up and he sets it alight: a lighter flame in
+## his hand held to the edge of the top, and the top goes up
+## (WeaponActor.set_ablaze). Whoever goes through it after catches fire.
+## No Holds Barred only, empty-handed, and only a table not already burning.
+const LIGHT_REACH := 1.7
+## The lighter's flame is out from this tick of the action until AT + this.
+const LIGHTER_FROM := 12
+const LIGHTER_AFTER := 8
+var _light_target: WeaponActor = null
+var _lighter: GPUParticles3D = null
+
+
+## The table he would set alight if he taunted now, or null.
+func table_to_light() -> WeaponActor:
+	if has_weapon() or not MatchRules.no_holds_barred(self) or get_parent() == null:
+		return null
+	var stock := get_parent().get_node_or_null("WeaponStock") as WeaponStock
+	if stock == null:
+		return null
+	var best: WeaponActor = null
+	var best_d := LIGHT_REACH
+	for a in stock.set_up_pieces():
+		if not a.can_set_ablaze():
+			continue
+		var d := _flat_distance(a.global_position, global_position)
+		if d < best_d:
+			best_d = d
+			best = a
+	return best
+
+
+func begin_light(table: WeaponActor) -> void:
+	_light_target = table
+	var to := table.global_position - global_position
+	to.y = 0.0
+	if to.length() > 0.05:
+		look_at(global_position + to, Vector3.UP)
+	begin_weapon_action("light")
+
+
+func _tick_light() -> void:
+	var at := int(WEAPON_ACTION_AT["light"])
+	var lit := _weapon_action_ticks >= LIGHTER_FROM and _weapon_action_ticks <= at + LIGHTER_AFTER
+	if lit and _lighter == null:
+		_lighter = ManFire._flame_particles()
+		_lighter.name = "Lighter"
+		_lighter.amount = 14
+		_lighter.lifetime = 0.25
+		(_lighter.process_material as ParticleProcessMaterial).emission_sphere_radius = 0.02
+		(_lighter.process_material as ParticleProcessMaterial).scale_min = 0.05
+		(_lighter.process_material as ParticleProcessMaterial).scale_max = 0.09
+		add_child(_lighter)
+	if _lighter:
+		_lighter.emitting = lit
+		var hand := _bone_world("hand_r")
+		if hand != Vector3.INF:
+			_lighter.global_position = hand + global_basis.z * -0.08 + Vector3.UP * 0.04
+	if _weapon_action_ticks == at and is_instance_valid(_light_target) and _light_target.can_set_ablaze():
+		_light_target.set_ablaze()
+	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS["light"]):
+		_light_target = null
+		if _lighter:
+			_lighter.emitting = false
+
+
+static func _flat_distance(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 func take_weapon(w: WeaponActor) -> void:
@@ -5637,6 +5712,9 @@ func _tick_weapon() -> void:
 	if _bumping and fsm.current_state != WrestlerFSM.State.HIT_REACT:
 		_bumping = false                 # taken out of the fall some other way
 	_tick_landing()
+	if _lighter and _lighter.emitting and not (fsm.current_state == WrestlerFSM.State.WEAPON_ACTION \
+			and _weapon_action == "light"):
+		_lighter.emitting = false        # knocked out of it: the lighter goes out
 	if weapon_grip:
 		if not (fsm.current_state == WrestlerFSM.State.WEAPON_ACTION and _weapon_action.begins_with("pickup")):
 			weapon_grip.reach(null, 0.0, false)     # a pickup cut short lets go of the floor
@@ -5771,9 +5849,14 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 		# seen.
 		var off := Vector3(at.x - w.global_position.x, 0.0, at.z - w.global_position.z)
 		w.global_position += off.limit_length(BREAK_CENTRE_M)
+		var burning := w.ablaze
 		w.shatter(_weapon_seed(), self)
 		_down_bonus = TABLE_DOWN_TICKS
 		broke = true
+		if burning:
+			var fire := get_node_or_null("ManFire") as ManFire
+			if fire:
+				fire.ignite()
 	elif w.def.id == &"thumbtacks":
 		_stick_tacks(at)
 	if impact_sell:

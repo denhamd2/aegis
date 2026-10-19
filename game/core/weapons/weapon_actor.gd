@@ -724,6 +724,125 @@ func is_climbable_ladder() -> bool:
 			and state_root == "Ladder_Open" and has_marker("rung_1") and has_marker("rung_9")
 
 
+# --- fire --------------------------------------------------------------------
+
+## Set alight (the owner, 19 Oct: "the flaming table"): a set-up table burns
+## along its top until a man goes through it, and its pieces burn on the floor
+## until they go. A man who lands on it catches fire (WrestlerController
+## _land_on, ManFire.ignite). Only a set-up table: anything else stays as it is.
+var ablaze := false
+var _fire: Node3D = null
+## The flames along a burning top: how many, how big, and how far up off it.
+const ABLAZE_FLAMES := 70
+const ABLAZE_LIFT := 0.04
+## A burning table's flames: orange tongues, not a white sheet. The man's own
+## flames (ManFire) start near white, which is right on a body but piled up
+## additively along a whole table top read as one blown-out glare.
+const TABLE_FLAME_RAMP := [Color(1.0, 0.70, 0.30, 0.55), Color(1.0, 0.42, 0.08, 0.45),
+		Color(0.70, 0.10, 0.02, 0.25), Color(0.30, 0.04, 0.01, 0.0)]
+
+
+## A set piece that can be set alight: the table, standing.
+func can_set_ablaze() -> bool:
+	return def != null and def.id == &"table" and mode == Mode.SET_UP and not ablaze
+
+
+func set_ablaze() -> void:
+	if ablaze:
+		return
+	ablaze = true
+	var box := local_bounds()
+	_fire = Node3D.new()
+	_fire.name = "TableFire"
+	add_child(_fire)
+	_fire.position = Vector3(box.get_center().x, box.end.y + ABLAZE_LIFT, box.get_center().z)
+	var flames := _table_flames(ABLAZE_FLAMES)
+	flames.lifetime = 0.7
+	var m := flames.process_material as ParticleProcessMaterial
+	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	m.emission_box_extents = Vector3(box.size.x * 0.46, 0.02, box.size.z * 0.42)
+	m.initial_velocity_min = 0.5
+	m.initial_velocity_max = 1.2
+	m.scale_min = 0.55
+	m.scale_max = 1.0
+	flames.visibility_aabb = AABB(Vector3(-1.5, -0.3, -1.0), Vector3(3.0, 2.2, 2.0))
+	flames.emitting = true
+	_fire.add_child(flames)
+	var glow := OmniLight3D.new()
+	glow.name = "Glow"
+	glow.light_color = ManFire.FIRE_HOT
+	glow.light_energy = 1.3
+	glow.omni_range = 4.0
+	glow.position = Vector3.UP * 0.4
+	_fire.add_child(glow)
+	_announce("ignite")
+
+
+## The burning top's flames, carried onto each broken piece: smaller, and they
+## go with the piece when it goes.
+func _burn_pieces() -> void:
+	if _fire:
+		_fire.queue_free()
+		_fire = null
+	for entry: Array in _pieces:
+		var n: Node3D = entry[0]
+		var flames := _table_flames(12)
+		(flames.process_material as ParticleProcessMaterial).scale_max = 0.6
+		flames.emitting = true
+		n.add_child(flames)
+
+
+## ManFire's flames with the table's darker ramp and a tongue for a sprite:
+## tall and tapering, so a burning top reads as flames licking up off it
+## rather than ManFire's round dots, which piled along a table into a haze.
+static func _table_flames(amount: int) -> GPUParticles3D:
+	var flames := ManFire._flame_particles()
+	flames.amount = amount
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.3, 0.75, 1.0])
+	grad.colors = PackedColorArray(TABLE_FLAME_RAMP)
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = grad
+	var m := flames.process_material as ParticleProcessMaterial
+	m.color_ramp = ramp
+	m.angle_min = -12.0
+	m.angle_max = 12.0
+	var quad := (flames.draw_pass_1 as QuadMesh).duplicate() as QuadMesh
+	quad.size = Vector2(0.22, 0.55)
+	quad.center_offset = Vector3(0.0, 0.2, 0.0)
+	var mat := (quad.material as StandardMaterial3D).duplicate() as StandardMaterial3D
+	mat.albedo_texture = flame_tongue()
+	quad.material = mat
+	flames.draw_pass_1 = quad
+	return flames
+
+
+static var _tongue: ImageTexture
+
+
+## A flame tongue, white on clear (the ramp colours it): wide and solid at
+## the root, narrowing and breaking up toward the tip.
+static func flame_tongue() -> ImageTexture:
+	if _tongue:
+		return _tongue
+	var w := 48
+	var h := 112
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in h:
+		var up := 1.0 - float(y) / float(h - 1)          # 0 at the root, 1 at the tip
+		var half := 0.46 * pow(1.0 - up, 0.55) * (1.0 + 0.08 * sin(up * 19.0))
+		var lean := 0.05 * sin(up * 6.3)
+		for x in w:
+			var u := float(x) / float(w - 1) - 0.5 - lean
+			var edge := 1.0 - smoothstep(half * 0.35, half, absf(u))
+			var a := edge * smoothstep(0.0, 0.10, up) * (1.0 - smoothstep(0.62, 1.0, up))
+			var core := 1.0 - smoothstep(0.0, half * 0.6, absf(u))
+			var v := clampf(0.75 + 0.25 * core, 0.0, 1.0)
+			img.set_pixel(x, y, Color(v, v, v, a))
+	_tongue = ImageTexture.create_from_image(img)
+	return _tongue
+
+
 # --- wear --------------------------------------------------------------------
 
 ## One hit landed with it (or on it). Returns true if it broke.
@@ -792,6 +911,8 @@ func shatter(seed: int, body: Node3D = null) -> void:
 			v = out * rng.randf_range(0.8, 2.6) + Vector3.UP * rng.randf_range(0.6, 1.8)
 			spin = Vector3(rng.randf_range(-9, 9), rng.randf_range(-6, 6), rng.randf_range(-9, 9))
 		_pieces.append([n, v, spin, false])
+	if ablaze:
+		_burn_pieces()
 	broke.emit(self)
 	_announce("broke")
 

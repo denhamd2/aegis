@@ -1809,6 +1809,20 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 	# A ladder uses a distinct MoveDef for its damage/recovery tuning while
 	# reusing the proven paired suplex lift and root arc. Its landing response
 	# is ladder-specific in ImpactSell.
+	# A heel with a table up and the other man down sometimes sets it alight
+	# first (the owner, 19 Oct: "the flaming table"): to its side, and a
+	# taunt there lights it (WrestlerController.begin_light). Rolled once a
+	# table.
+	if piece.can_set_ablaze() and rising and _wants_to_light(piece):
+		var side := piece.global_position + _flat(controller.global_position - piece.global_position).normalized() \
+				* LIGHT_FROM
+		var to_side := _flat(side - controller.global_position)
+		if to_side.length() > 0.25 and controller.table_to_light() != piece:
+			input["move"] = Vector2(to_side.normalized().x, to_side.normalized().z)
+			return input
+		input["move"] = Vector2.ZERO
+		input["taunt"] = true
+		return input
 	var spot_move := suplex
 	if piece.def.id == &"ladder":
 		spot_move = load("res://resources/moves/weapon_ladder_slam.tres") as MoveDef
@@ -1844,6 +1858,23 @@ func _line_up_input(input: Dictionary, to_target: Vector3, distance: float) -> D
 		dir = (dir + Vector3.UP.cross(to_target.normalized()) * 0.9).normalized()
 	input["move"] = Vector2(dir.x, dir.z)
 	return input
+
+
+## How often a heel lights a table he has up, and how far from it he stands
+## to do it.
+const LIGHT_CHANCE := 0.6
+const LIGHT_FROM := 1.1
+## Tables rolled for lighting: instance id -> lights it.
+var _light_rolls := {}
+
+
+func _wants_to_light(table: WeaponActor) -> bool:
+	if not _is_heel():
+		return false
+	var id := table.get_instance_id()
+	if not _light_rolls.has(id):
+		_light_rolls[id] = _weapon_rng().randf() < LIGHT_CHANCE
+	return bool(_light_rolls[id])
 
 
 ## His vertical suplex, or null.

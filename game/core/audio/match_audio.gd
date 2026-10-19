@@ -678,6 +678,12 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 		"set_up":
 			if weapon.def.id == &"table":
 				chants.table_set_up()
+		"ignite":
+			# the table going up: the whoosh of the fuel catching, and the hall
+			sfx.play("whoosh", -1.0, 0.6)
+			sfx.play("pyro_boom", -10.0, 1.3)
+			sfx.play_any("crowd_ooh", -2.0)
+			_register_chaos_activity(2.0)
 		"broke":
 			if weapon.def.id == &"table":
 				sfx.play_any("table_crack", 0.0)
