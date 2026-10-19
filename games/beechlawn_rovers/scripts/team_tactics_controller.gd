@@ -33,7 +33,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 		if actor.profile.role == "goalkeeper":
 			var goal_x := -FIELD_LENGTH * 0.5 * actor.attack_sign + actor.attack_sign * 3.0
 			target = Vector2(goal_x, clampf(ball_position.y * 0.14, -3.2, 3.2))
-		elif actor.receive_target_time > 0.0:
+		elif in_possession and actor.receive_target_time > 0.0:
 			target = Vector2(actor.receive_target.x, actor.receive_target.z)
 		elif in_possession and actor == chaser:
 			var ball_gap := Vector2(actor.global_position.x, actor.global_position.z).distance_to(ball_position)

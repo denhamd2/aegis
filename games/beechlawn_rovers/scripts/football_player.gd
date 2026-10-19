@@ -82,6 +82,8 @@ func bind_footballer_visual(visual: FootballerVisual) -> void:
 
 func _physics_process(delta: float) -> void:
 	receive_target_time = maxf(0.0, receive_target_time - delta)
+	if receive_target_time > 0.0 and ball != null and ball.last_touch != team_name:
+		receive_target_time = 0.0
 	ai_action_cooldown = maxf(0.0, ai_action_cooldown - delta)
 	_tackle_cooldown = maxf(0.0, _tackle_cooldown - delta)
 	_shoulder_cooldown = maxf(0.0, _shoulder_cooldown - delta)
@@ -191,15 +193,20 @@ func _update_dribble(delta: float) -> void:
 		return
 	var flat_distance := Vector2(ball.global_position.x - global_position.x,
 		ball.global_position.z - global_position.z).length()
+	var control_touch := false
 	if flat_distance <= tuning.control_radius and _stick.length() > 0.05:
-		ball.dribble_touch(self, _flat_direction, bool(get_meta("sprinting", false)),
+		control_touch = ball.dribble_touch(self, _flat_direction, bool(get_meta("sprinting", false)),
 			bool(get_meta("close_control", false)), tuning.dribble_touch_interval,
 			tuning.close_touch_distance, tuning.sprint_touch_distance)
 	elif flat_distance <= tuning.control_radius and velocity.length() < 0.45 and ball.linear_velocity.length() < 0.7:
 		# Gentle recovery to a playable foot distance, still applied as force.
-		ball.dribble_touch(self, _flat_direction, false, true,
+		control_touch = ball.dribble_touch(self, _flat_direction, false, true,
 			tuning.dribble_touch_interval, tuning.close_touch_distance,
 			tuning.sprint_touch_distance)
+	if control_touch:
+		# The arrival point served its purpose. Carrying must follow current
+		# intent rather than send a successful receiver back to an old target.
+		receive_target_time = 0.0
 
 func _update_actions(delta: float) -> void:
 	if not controlled_by_human:
@@ -593,6 +600,7 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 func _on_visual_action_contact(action: StringName) -> void:
 	if action == &"receive":
 		if ball.receive_touch(self, _receive_contact_position(), _flat_direction):
+			receive_target_time = 0.0
 			status_changed.emit("First touch")
 		return
 	if action == &"shot":
@@ -719,7 +727,9 @@ func _choose_pass_target(intended_direction: Vector3, through: bool) -> Dictiona
 		if through:
 			var forward_gain := (predicted.x - global_position.x) * attack_sign
 			score -= clampf(forward_gain, -4.0, 12.0) * 0.10
-		score += _pass_lane_risk(candidate.global_position, predicted) * 1.8
+		# Score the ball's complete path. The receiver-to-prediction segment only
+		# measures its short lead-in and misses defenders between passer and runner.
+		score += _pass_lane_risk(ball.global_position, predicted) * 1.8
 		if score < best_score:
 			best_score = score
 			best = candidate

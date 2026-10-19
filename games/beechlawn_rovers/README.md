@@ -1,4 +1,4 @@
-# Beechlawn Rovers
+# Beechlawn Rovers 27
 
 An original 3D association-football game prototype inside the Aegis
 repository. It has its own Godot project, scenes, scripts and assets. Its
@@ -8,7 +8,9 @@ Godot project; the Aegis project remains at `game/`.
 The supplied gameplay specification is the product target. Development follows
 its milestones in order; features are marked complete only after they work in
 the build. The setting is a Sunday-league match at a local park. The current
-build defaults to a three-minute keyboard 11v11 prototype. Full rules, final
+build opens on a title screen: select Play or Watch AI vs AI, then Start Game
+for the three-minute 11v11 prototype. Options saves master volume and native
+fullscreen, gameplay camera and pre-match intro preferences, and displays keyboard controls. Full rules, final
 likeness/environment art and M1 performance acceptance remain in development.
 
 ## Current checkpoint
@@ -18,7 +20,9 @@ likeness/environment art and M1 performance acceptance remain in development.
   sprint stamina and close-control modifier.
 - An independent regulation-size rigid-body ball, grounded dribble touches,
   buffered short and through-pass commands, and a variable-power shot.
-- A broadcast-style tracking camera, match goals and basic scoring/reset.
+- Nine gameplay cameras with saved height/zoom/angle tuning, match goals and basic scoring/reset.
+- An optional, skippable pre-match broadcast: original walk-on/warm-up clips,
+  lineup and player, keeper, pitch, goal/net, fan and ball detail shots.
 - A three-minute short-match clock, score display and development telemetry.
 - A worn park-pitch setting with lightweight scene geometry.
 - Eleven shared human actors per side (one keeper each), editable roster data,
@@ -55,6 +59,8 @@ for measured checks and visual limitations.
 | Action | Keyboard |
 | --- | --- |
 | Move | WASD |
+| Cycle gameplay camera | C |
+| Skip pre-match intro | Space / Enter |
 | Sprint | Shift |
 | Close control | Ctrl |
 | Ground pass | E |
@@ -65,6 +71,7 @@ for measured checks and visual limitations.
 | Switch Beechlawn player | Tab |
 | Directional aim | Arrow keys |
 | Debug telemetry | F3 |
+| Return to title screen | Esc |
 
 Arrow keys set the pass lane; E selects a teammate for a ground pass and Q leads
 a moving teammate into space. AI receivers make a short run toward their
@@ -111,9 +118,10 @@ Open `games/beechlawn_rovers/project.godot` in Godot 4.6.3, or run:
 godot --path games/beechlawn_rovers
 ```
 
-The Mac M1 Pro 60 fps target is not yet measured. This first checkpoint uses
-one CharacterBody3D, one RigidBody3D, low-cost static pitch geometry and a
-single directional light. It avoids runtime IK and per-player tactical loops.
+The Mac M1 Pro 60 fps target is not yet measured. The menu uses one static
+background illustration and native Controls; match actors load only after
+Start Game. The match uses 22 CharacterBody3D players, a separate official,
+one rigid-body ball, shared rig/material resources and staggered tactical AI.
 
 See [`docs/roadmap.md`](docs/roadmap.md) for the staged plan and remaining
 acceptance checks, and [`docs/backlog.md`](docs/backlog.md) for the ordered

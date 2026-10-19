@@ -68,6 +68,10 @@ zero-shot full match led to corrections for trailing-pressure shot rejection
 and loose-ball recovery. Moving carry-to-shot execution and authored contact
 pass. Contested attacking flow still needs broader assessment before accepting
 the combined gameplay pass; see the follow-up evidence above.
+The [attacking-flow continuation](art_briefs/attacking_flow_followup.md) now
+covers full-lane targeting, current-carrier priority and receipt-to-carry/
+turnover cleanup. Both kickoff variants pass the physical-shot regression;
+balanced chance creation and final-mesh animation acceptance remain open.
 
 Incorporate independent-ball touch control, prompt human intent and bounded
 assistance without replacing the existing ball/contact architecture:
@@ -162,3 +166,13 @@ No required commercial authoring tools, literal FOX address/bitmask/table port,
 forced A-pose or wholesale re-rig, automatic thermal renderer fallback, blanket
 4K/triangle mandates, or career/transfer mode expansion. None is necessary to
 perform the accepted gameplay-focused work above.
+
+### Original camera and pre-match presentation slice (18 October 2026)
+
+BR-014/021/024: [production/research brief](art_briefs/broadcast_presentation_plan.md),
+[archived PES camera/walk-on/crowd/formation references](../references/research/pes2021_presentation/README.md).
+Nine camera families and a skippable Sunday-league broadcast intro are implemented.
+Team spawning now uses a clean scene instead of duplicating a configured rig.
+One-rig/startup-pose, camera-relative input/preferences, original walk/jog and
+Play/Watch intro restoration checks pass. Final-mesh gait, cloth deformation,
+likeness, venue fidelity and native M1 profiling remain open.

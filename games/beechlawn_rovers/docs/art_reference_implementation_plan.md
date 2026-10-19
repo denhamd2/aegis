@@ -164,3 +164,30 @@ then BR-021/025 engine and performance acceptance. This supersedes earlier
 prototype-only/4v4-only ordering. Assets are now integrated drafts; reference
 likeness, precise site reconstruction and native performance are still open.
 See `art_briefs/11v11_release_evidence.md` for actual screenshots and checks.
+
+## Broadcast integration validation — 19 October 2026
+
+BR-014/021/024 now use the existing archived player/kit, pitch, goal/net, ball
+and Kilmore Drive references in an original pre-match sequence. See the
+[broadcast production brief and actual render gallery](art_briefs/broadcast_presentation_plan.md).
+The shared player-spawning defect is corrected (one rig per actor), and the
+Blender source includes original walk-on/warm-up loops and relaxed braking arms.
+Both tree modules now export their leaf coordinates in material UV0; the
+source builder preserves this when joining bark and leaf meshes. Goal-net mip
+coverage and distant chalk filtering are corrected. These are integration
+and rendering fixes, not acceptance of likeness, clothing seams, terrain
+accuracy or final venue fidelity. Those reference-to-asset gates remain open.
+
+## Roadside grass setback — 19 October 2026
+
+The target western field sits inside the park: do not place the road or path
+beside its touchline. The original Drive satellite upload and the three Google
+Maps zoom captures show a broad open grassy band on the road-facing side.
+BR-023 now authors 35 m of grass before the footpath and 37.75 m to the nearest
+asphalt edge, with the housing/street props set back together. Those are
+approximate layout choices, not surveyed dimensions. Keep spectators beside
+the playing area and the central apron open. Trees sit at the distant park
+edge or in sparse western clusters. See the [comparison, Blender layout study
+and actual engine captures](art_briefs/kilmore_road_setback.md). The park's
+irregular outline, westward extent, street bends and final asset fidelity
+remain open; do not describe this spacing correction as an exact site rebuild.

@@ -7,6 +7,8 @@ This is the durable, project-local archive for the reference material reviewed f
 - `source_uploads/drive_folder/` — all 27 files downloaded from the owner's shared Drive folder, retaining their original downloaded filenames: 26 PNG reference boards and the satellite-map screenshot.
 - `source_uploads/source_assets/` — original owner-supplied Y-Bot and worn-ball ZIP packages, retained alongside the visual references because they are the source inputs for the footballer rig and ball asset.
 - `source_uploads/chat_attachments/character_roster_sheets/` — the five directly uploaded character sheets from the roster upload.
+- `source_uploads/chat_attachments/title_player_photos/` — original photos supplied for the title-screen revisions: `1-69003.jpg` (David Murray), `2-69005.jpg` (Robbie Roden, prior art iteration), `3-69001.jpg` (Derek Mitchell, former art iteration), and `4-title-player-selfie.jpg` (owner likeness used for Derek Mitchell, #3). Use David and the owner selfie for current promotional art; Uhlsport is the confirmed kit manufacturer.
+- `source_uploads/chat_attachments/club_crest/69032.jpg` — authoritative later club logo upload: tall navy/white oval, leafless green tree, EST 2004 and green/white lower stripes. Preserve its approximately 0.71 width/height ratio rather than the round generated chest badges.
 - `source_uploads/chat_attachments/openstreetmap/` — the owner-uploaded OpenStreetMap screenshot `69078.jpg`, showing the park blocks, adjacent streets, and mapped green field footprints near Kilmore Drive.
 - `source_uploads/chat_attachments/google_earth/` — the owner-uploaded Google Earth screenshot `69084.jpg`, showing satellite imagery, coordinate grid, and a 100 m scale bar over the nearby St. John Vianney Football Club grounds.
 - `source_uploads/chat_attachments/football_reference_upload_round_1/` and `...round_2/` — both direct uploads of the five football/gameplay reference JPGs. These uploads are byte-identical duplicates where they share a checksum; both occurrences are retained to preserve provenance.
@@ -86,3 +88,16 @@ See [`../docs/art_reference_implementation_plan.md`](../docs/art_reference_imple
   implementation. The accepted ideas, corrections, confirmed owner preferences
   and evidence limits are in
   [`../docs/research/pes2021_gemini_review.md`](../docs/research/pes2021_gemini_review.md).
+
+## PES 2021 camera and pre-match study
+
+See [archived source notes and three research stills](research/pes2021_presentation/README.md). Used for BR-014/021/024 camera and presentation work; not game assets.
+
+## Road-facing placement constraint
+
+The original uploaded satellite view and `google_captures/satellite/` show
+substantial park grass between the target pitch and Kilmore Drive's pavement.
+Use that band when placing the roadway, houses, cars and services; the street
+must not sit directly beside the touchline. The current 35 m grass / 37.75 m
+road-edge settings are authored approximations, not measurements of the site.
+See `../docs/art_briefs/kilmore_road_setback.md` for the comparison and limits.

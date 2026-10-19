@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode cull_disabled;
+render_mode blend_mix, depth_prepass_alpha, cull_disabled;
 uniform sampler2D net_texture : source_color, repeat_enable, filter_linear_mipmap;
 uniform float impact_age=2.0;
 uniform vec3 impact_point=vec3(0.0);
@@ -10,7 +10,9 @@ void vertex() {
 }
 void fragment() {
 	vec4 sample_color=texture(net_texture,UV);
-	if(sample_color.a<0.4){discard;}
+	// Preserve mipmapped rope coverage. A hard 0.4 cutoff erased thin
+	// strands at broadcast distance and left only the thicker knots.
+	ALPHA=sample_color.a;
 	ALBEDO=sample_color.rgb;
 	ROUGHNESS=0.96;
 }

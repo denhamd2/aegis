@@ -13,7 +13,8 @@ static func make_mesh() -> ArrayMesh:
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for z in range(68):
 		for x in range(105):
-			for corner in [Vector2(0,0),Vector2(1,1),Vector2(1,0),Vector2(0,0),Vector2(0,1),Vector2(1,1)]:
+			# Godot uses clockwise front faces when viewed from above.
+			for corner in [Vector2(0,0),Vector2(1,0),Vector2(1,1),Vector2(0,0),Vector2(1,1),Vector2(0,1)]:
 				var point: Vector2 = Vector2(float(x),float(z))+corner
 				tool.set_uv(Vector2(point.x/LENGTH,point.y/WIDTH))
 				tool.add_vertex(Vector3(point.x-52.5,height_at(point.x-52.5,point.y-34.0),point.y-34.0))

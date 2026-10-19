@@ -36,25 +36,10 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 			and not _has_close_shot_blocker(ball_position, goal_position, opponents))
 	if can_take_shot:
 		return {"type": &"shoot", "charge": 0.42}
-	if teammates.size()==11 and nearest_defender<5.0:
-		var best: FootballPlayer
-		var best_score := INF
-		for candidate in teammates:
-			if candidate==carrier or candidate.profile.role=="goalkeeper":continue
-			var offset := candidate.global_position-carrier.global_position
-			var distance := offset.length()
-			if distance<5.0 or distance>30.0:continue
-			var risk := carrier._pass_lane_risk(ball.global_position,candidate.global_position)
-			if risk>0.6:continue
-			var score := distance*0.12+risk*9.0-offset.x*carrier.attack_sign*0.2
-			if score<best_score:
-				best=candidate
-				best_score=score
-		if best!=null:
-			return {"type":&"short_pass","direction":best.global_position-carrier.global_position}
-
 	# Under pressure, release the ball into a forward run if a teammate and lane
-	# are available. Otherwise keep carrying; do not force a speculative pass.
+	# Evaluate a progressive pass before the generic safe outlet. The outlet
+	# condition below also matches high pressure, so checking it first otherwise
+	# starves this branch whenever any safe teammate is available.
 	if nearest_defender <= PRESSURE_RANGE:
 		var forward := Vector3(carrier.attack_sign, 0.0, 0.0)
 		var pass_option := carrier._choose_pass_target(forward, true)
@@ -66,6 +51,26 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 			if forward_gain >= 2.0 and lane_risk <= MAX_SAFE_PASS_RISK:
 				return {"type": &"through_pass", "direction": forward,
 					"receiver_id": receiver.get_instance_id()}
+
+	if teammates.size() == 11 and nearest_defender < 5.0:
+		var best: FootballPlayer
+		var best_score := INF
+		for candidate in teammates:
+			if candidate == carrier or candidate.profile.role == "goalkeeper":
+				continue
+			var offset := candidate.global_position - carrier.global_position
+			var distance := offset.length()
+			if distance < 5.0 or distance > 30.0:
+				continue
+			var risk := carrier._pass_lane_risk(ball.global_position, candidate.global_position)
+			if risk > 0.6:
+				continue
+			var score := distance * 0.12 + risk * 9.0 - offset.x * carrier.attack_sign * 0.2
+			if score < best_score:
+				best = candidate
+				best_score = score
+		if best != null:
+			return {"type": &"short_pass", "direction": best.global_position - carrier.global_position}
 
 	return {"type": &"carry"}
 

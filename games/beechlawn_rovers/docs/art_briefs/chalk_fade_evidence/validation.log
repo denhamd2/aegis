@@ -1,0 +1,7 @@
+CAPTURED intro venue
+CAPTURED intro fans
+CAPTURED broadcast
+CAPTURED whole site
+/workspace/aegis-checkout/games/beechlawn_rovers/tools/check_park_setback_web.py:50: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  pixels=list(image.crop((50,380,1230,590)).getdata())
+{"result": "PASS", "renderer": "Godot Compatibility / Chromium SwiftShader", "checks": ["22 player rigs", "intro venue composition", "touchline spectator composition", "AI kickoff after skip", "close broadcast preserved", "whole-site debug review"], "grass_pixel_fraction": 0.907, "console_errors": [], "native_M1_performance": "not measured", "scope": "grass setback and placement; final venue fidelity remains open"}

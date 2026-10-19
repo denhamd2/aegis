@@ -1,0 +1,24 @@
+{
+  "AN_Beechlawn_WalkOn": {
+    "seconds": 1.0,
+    "nominal_speed_mps": 1.2,
+    "maximum_ankle_target_error_m": 1.890585628365802e-07,
+    "stance_fraction": 0.55,
+    "swing_clearance_m": 0.065,
+    "frames": 61,
+    "maximum_loop_channel_delta": 0.0
+  },
+  "AN_Beechlawn_WarmupJog": {
+    "seconds": 0.75,
+    "nominal_speed_mps": 2.2,
+    "maximum_ankle_target_error_m": 1.5900928142409376e-07,
+    "stance_fraction": 0.4,
+    "swing_clearance_m": 0.12,
+    "frames": 46,
+    "maximum_loop_channel_delta": 0.0
+  },
+  "preserved_original_curves_sha256": "13c8fde6a76d19422ab4d76e2228c347da6e69a2f2976ba0581c9d03ea7886fa",
+  "fps": 60,
+  "bones": 65,
+  "scope": "Stop arm quaternion tracks and two new in-place clips; original contacts/rest/meshes preserved"
+}

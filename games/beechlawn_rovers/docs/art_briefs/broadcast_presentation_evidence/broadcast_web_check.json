@@ -1,0 +1,31 @@
+{
+  "result": "PASS",
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "checks": [
+    "one visible skeleton per player",
+    "rendered intro venue",
+    "rendered intro walk",
+    "rendered intro goal",
+    "rendered intro net",
+    "rendered intro fans",
+    "rendered intro lineup",
+    "rendered intro portrait",
+    "rendered intro keeper",
+    "rendered intro pitch",
+    "rendered intro ball",
+    "rendered intro warmup",
+    "rendered intro handoff",
+    "skip and AI kickoff",
+    "rendered camera close_broadcast",
+    "rendered camera dynamic_wide",
+    "rendered camera stadium",
+    "rendered camera live_broadcast",
+    "rendered camera fan_view",
+    "rendered camera blimp",
+    "rendered camera vertical",
+    "rendered camera player",
+    "rendered camera field_side"
+  ],
+  "native_M1_performance": "not measured",
+  "console_errors": []
+}

@@ -33,7 +33,7 @@ func _run_checks() -> void:
 	for child in park.get_children():
 		if String(child.name).begins_with("ParkTree_"):
 			tree_count += 1
-	assert(tree_count == 26, "Expected irregularly spaced park tree instances")
+	assert(tree_count >= 18 and tree_count <= 26, "Keep a bounded set of instanced park trees with an open grass apron")
 	assert(park.find_children("UtilityPole*", "Node3D", true, false).size() == 3,
 		"Residential-road context must include utility poles")
 	assert(park.get_node("OverheadCable_0") != null,

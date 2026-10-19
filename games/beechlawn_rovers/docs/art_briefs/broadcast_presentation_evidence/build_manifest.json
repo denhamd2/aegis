@@ -1,0 +1,19 @@
+{
+  "kind": "local review builds; not deployed",
+  "date": "2026-10-19",
+  "godot": "4.6.3",
+  "mac": "debug; universal arm64/x86_64; package verified, native execution not tested",
+  "web": "debug; Compatibility; Chromium SwiftShader integration checked",
+  "git_head": "04a087c3966e210cca7cc8e3a5fe7de2548b8aec",
+  "worktree": "uncommitted changes included",
+  "files": {
+    "Beechlawn-Rovers-27-Mac-Review.zip": {
+      "bytes": 109520852,
+      "sha256": "8f8ec03137ce02125f33cc9c1a9213ee062e5b25b4ad9e430cdb54c74da2b9da"
+    },
+    "Beechlawn-Rovers-27-Web-Review.zip": {
+      "bytes": 52839575,
+      "sha256": "f939c6cd24edb635c827a5c09f2318305429572aef3d274b0407c69fec011e9f"
+    }
+  }
+}

@@ -10,14 +10,15 @@ config_version=5
 
 [application]
 
-config/name="Beechlawn Rovers"
+config/name="Beechlawn Rovers 27"
 config/description="A Sunday-league football game, developed as a separate project from Aegis."
-run/main_scene="res://scenes/match_11v11.tscn"
+run/main_scene="res://scenes/title_screen.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
 [autoload]
 
 InputBindings="*res://scripts/game_input.gd"
+MatchSession="*res://scripts/match_session.gd"
 
 [display]
 

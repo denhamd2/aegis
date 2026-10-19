@@ -12,16 +12,18 @@ and [`../references/README.md`](../references/README.md) before implementation.
 
 ## Current state
 
-The standalone Godot 4.6.3 project now defaults to a three-minute keyboard
-11v11 match: ten outfield players and one keeper per side, plus a separate
+The standalone Godot 4.6.3 project opens on the Beechlawn Rovers 27 title
+screen, offering Play (keyboard vs AI) or Watch (AI vs AI), then launches a
+three-minute 11v11 match: ten outfield players and one keeper per side, plus a separate
 referee. Shared human body, rig, animation and team/role materials replace the
 proxy in this scene. Individual heads still use the common Shane-derived draft.
 The original 4v4 scene remains the regression fixture.
 
 Role-aware 4-4-2 targets, staggered team decisions, player switching including
 keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
-basic boundary restarts are implemented. A complete accelerated 180-second
-AI-vs-AI simulation produced six shots and one goal without a sampled ball stall.
+basic boundary restarts are implemented. Current paired 180-second AI-vs-AI
+replays produce three shots/two goals and one shot/no goals respectively,
+without a sampled ball stall; attacking frequency and balance remain open.
 Touchlines currently restart with a ground pass; authentic throw-ins, complete
 fouls/offside/cards, substitutions and additional formations remain open.
 
@@ -59,6 +61,13 @@ mapping. The initial zero-shot run exposed these acceptance gaps; focused checks
 now cover both attack directions and the reproduced loose-ball standoff. Source
 stride/plant polish, balanced contested attacking flow and final-mesh motion
 remain open; no complete gameplay or native performance acceptance is implied.
+The 2026-10-18 full-formation buildup follow-up also removes safe-pass
+starvation of through-ball decisions. Controlled tests now verify forward pass
+progression. The subsequent [attacking-flow corrections](art_briefs/attacking_flow_followup.md)
+fix complete-lane scoring, current-carrier selection and stale receiver targets.
+Both kickoff variants now pass the physical-shot gate, including a 1–1 result
+from Boardeaux's kickoff. Chance frequency and team balance remain open under
+BR-008; a single shot in the other fixture is a regression floor.
 
 ## Stack-specific practices to carry through the backlog
 
@@ -388,6 +397,13 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - Attacking-flow continuation: full-path pass scoring preserves open diagonal
+    runs; actual kicking reach takes priority over future interception when
+    selecting a carrier; successful control and turnovers retire reception
+    targets. Three mirrored regressions failed before their respective fixes
+    and now pass. Both 180-second kickoff variants pass a physical-shot gate,
+    while balanced chance creation remains open. See
+    [`art_briefs/attacking_flow_followup.md`](art_briefs/attacking_flow_followup.md).
   - 2026-10-18 follow-up: an open goalward shooting corridor is no longer vetoed
     by a nearby defender behind the ball. Primary defenders chase loose balls
     into contact range instead of stopping at a possession-pressure offset;
@@ -531,6 +547,11 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   Tune the elevated sideline camera to the supplied screenshot; predict long
   passes, keep relevant players visible and frame goalmouth action. Add score,
   clock, phase, controlled-player feedback and a team-coloured tactical radar.
+  - 2026-10-18 camera/presentation slice: nine original camera presets, saved
+    height/zoom/angle tuning and C cycling. Camera-relative input and invalid
+    preference fallback are covered by `broadcast_camera_smoke.gd`. Close
+    Broadcast remains the default; see
+    [`art_briefs/broadcast_presentation_plan.md`](art_briefs/broadcast_presentation_plan.md).
   **Current camera pass:** 12 m high / 26 m offset, smooth predictive tracking
   and up to 35% widening for long passes. Added a continuously updated tactical
   radar and debug-only touchline, goal and corner capture cameras. Native M1
@@ -574,6 +595,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-18 T-pose fix: spawning now instantiates a clean player scene;
+    duplicating the configured live player reproduced two skeletons per clone.
+    Added a one-rig-per-player and immediate startup-pose regression, primed
+    the replacement rig before its first frame, and relaxed StopFromRun arms
+    in Blender without changing existing leg/root/contact curves. Added shared
+    original 60 fps WalkOn/WarmupJog clips for the broadcast intro.
+    See `art_briefs/presentation_source_audit.json` and the presentation brief.
   - 2026-10-18 release pass: running direction changes retain the locomotion
     gait instead of playing a planted pivot. Both shared-human pivot clips
     now reuse relaxed idle arms; all non-arm curves and contact timings are
@@ -648,6 +676,17 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - Pitch-paint follow-up: softened the chalk pigment and reduced specular
+    highlights while retaining uneven widths and worn edges. See
+    [`art_briefs/chalk_fade.md`](art_briefs/chalk_fade.md) for the broadcast comparison.
+  - 2026-10-19 satellite placement correction: a 35 m authored grassy apron
+    now separates the road-facing touchline from the footpath; the near road
+    edge is 37.75 m away instead of 8.5 m. Street, houses, cars and service
+    details move together, trees concentrate near the distant park edge, and
+    spectators remain by the touchline. Ground meets the field at grade while
+    leaving its terrain relief unobscured. Exact site outline and road bends
+    remain open. These distances are reference-led approximations, not survey
+    measurements. See [`art_briefs/kilmore_road_setback.md`](art_briefs/kilmore_road_setback.md).
   - 2026-10-18: added shallow matched heightfield/render terrain (under 6 cm),
     broken-width chalk, weathered regulation goals with sagging alpha-test nets
     and a cheap impact ripple, leaf-card trees, textured houses/cars/walls and
@@ -679,6 +718,19 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     A 4v4 scene smoke test checks module loading, inward-facing facades, licensed
     surface maps, site dressing and kit variants.
 - [ ] **BR-024 — Audio and match feedback**
+  - 2026-10-18 pre-match slice: approximately 40-second original TV-style intro
+    with walk-on, lineup, roster-labelled player/keeper portraits, venue,
+    goal/net, fan, chalk/grass, ball and warm-up shots. Options toggle and
+    Space/Enter skip; no intro after goals. Play/Watch freeze, restoration and
+    kickoff checks pass. Final animation/art polish and the audio/event
+    director below remain open. See
+    [`art_briefs/broadcast_presentation_plan.md`](art_briefs/broadcast_presentation_plan.md).
+  - Title/presentation slice: reference-led GPT Image key art, supplied-kit
+    crest, native keyboard/mouse menu, Play/Watch launch modes and saved master
+    volume/native fullscreen preferences. Spectator mode keeps all 22 players
+    autonomous through either team's goal restart. See
+    [`art_briefs/title_screen.md`](art_briefs/title_screen.md). This does not
+    complete the remaining audio/event-director work below.
   Add distinct ball/player contact, referee, crowd, goal and UI sounds; tune the
   mix so key events remain audible without overwhelming play. Route feedback
   from typed match events rather than screen capture or OCR. Give events the

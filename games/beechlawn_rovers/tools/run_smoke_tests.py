@@ -22,6 +22,9 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[1]
 GODOT = os.environ.get("GODOT_BIN", "godot")
 TIMEOUT = float(os.environ.get("BEECHLAWN_TEST_TIMEOUT_SECONDS", "45"))
+# The full match permits 300 simulated seconds including stoppages at 6x speed:
+# its 50-second wall-clock ceiling before CPU overhead exceeds the short tests.
+LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 75.0}
 DEFAULT_TESTS = [
     "footballer_animation_tree_smoke.gd",
     "milestone1_smoke.gd",
@@ -61,7 +64,8 @@ def main() -> int:
             print(f"Smoke test not found: {test_path}", file=sys.stderr)
             return 2
         command = [GODOT, "--headless", "--path", str(PROJECT), "--script", f"res://tests/{name}"]
-        print(f"\n[smoke] {name} (timeout {TIMEOUT:g}s)", flush=True)
+        timeout = TIMEOUT if "BEECHLAWN_TEST_TIMEOUT_SECONDS" in os.environ else LONG_TEST_TIMEOUTS.get(name, TIMEOUT)
+        print(f"\n[smoke] {name} (timeout {timeout:g}s)", flush=True)
         process = subprocess.Popen(
             command,
             cwd=PROJECT,
@@ -72,13 +76,13 @@ def main() -> int:
             errors="replace",
         )
         try:
-            output, _ = process.communicate(timeout=TIMEOUT)
+            output, _ = process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             stop_process_group(process)
             output, _ = process.communicate()
             if output:
                 print("\n".join(output.splitlines()[-60:]))
-            print(f"[timeout] {name} exceeded {TIMEOUT:g}s; process group terminated", file=sys.stderr)
+            print(f"[timeout] {name} exceeded {timeout:g}s; process group terminated", file=sys.stderr)
             return 124
         if output:
             print(output, end="" if output.endswith("\n") else "\n")
