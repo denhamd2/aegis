@@ -138,6 +138,11 @@ func _update_locomotion(delta: float) -> void:
 	var recovering := is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()
 	var sliding := _slide_tackle_time > 0.0
 	var desired := Vector3.ZERO if recovering else (_slide_tackle_direction if sliding else (ai_move_direction if not controlled_by_human else (camera_right * _stick.x - camera_forward * _stick.y)))
+	var ai_shot_preparing := not controlled_by_human and _visual_shot_pending
+	if ai_shot_preparing:
+		# Keep the established approach until foot contact. A fresh tactical
+		# carry lane must not turn an AI kicker away mid-preparation.
+		desired = Vector3(velocity.x, 0.0, velocity.z).normalized()
 	desired.y = 0.0
 	if desired.length_squared() > 1.0:
 		desired = desired.normalized()
@@ -147,6 +152,8 @@ func _update_locomotion(delta: float) -> void:
 	var speed_scale := 0.56 if close_control else 1.0
 	var is_ai_goalkeeper := not controlled_by_human and profile != null and profile.role == "goalkeeper"
 	var target_speed := 0.0 if recovering else (4.8 if sliding else (tuning.goalkeeper_move_speed if is_ai_goalkeeper else (tuning.sprint_speed if sprint_input else tuning.jog_speed)))
+	if ai_shot_preparing:
+		target_speed = minf(target_speed, Vector3(velocity.x, 0.0, velocity.z).length())
 	if _balance_stagger_time > 0.0:
 		target_speed *= lerpf(0.68, 1.0, 1.0 - _balance_stagger_time / 0.38)
 	if sprint_requested and not is_ai_goalkeeper:

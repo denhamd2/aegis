@@ -24,6 +24,8 @@ Pre-match broadcast and cameras:
   frame times and final likeness/garment/environment polish remain open.
 
 Movement/contact update:
+- Wide AI carriers gradually improve their shooting angle in the final third,
+  instead of always dribbling straight toward the byline.
 - Grounded dribble direction follows body turns; nearby players no longer apply competing assistance.
 - Pass/shot inputs can interrupt harmless turn recovery; kicked balls get a brief release window.
 - Gait blending follows actual speed; running turns preserve moving footwork.
@@ -32,8 +34,9 @@ Movement/contact update:
 - Pass targeting scores the complete ball path; reachable carriers retain their
   actions instead of yielding to a future interception runner. Successful
   reception resumes carrying, and turnovers cancel obsolete arrival targets.
-- Paired three-minute AI replays pass the physical-shot gate; attacking balance
-  and chance frequency remain in development. See `art_briefs/attacking_flow_followup.md`.
+- Repeatable midfield attacks for both teams pass the physical-shot gate.
+  Full matches pass stability checks and report shots; some natural replays
+  still contain zero shots. Attacking balance and chance frequency remain open. See `art_briefs/attacking_flow_followup.md`.
 - Gemini's reviewed recommendations and the updated implementation backlog are archived with the project.
 
 - 10 outfield players and one goalkeeper per team; a separate referee.

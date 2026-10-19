@@ -39,7 +39,17 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			var ball_gap := Vector2(actor.global_position.x, actor.global_position.z).distance_to(ball_position)
 			if ball_gap <= 1.7:
 				var carry_push := 4.5 if actor.team_name == transition_team and transition_time_left > 0.0 else 3.0
-				target = ball_position + Vector2(actor.attack_sign * carry_push, 0.0)
+				var carry_direction := Vector2(actor.attack_sign, 0.0)
+				if team_players.size() == 11 and absf(ball_position.y) > 12.0:
+					# Preserve width in build-up, then improve the shooting angle.
+					# Straight-ahead wide carries otherwise finish at the byline.
+					var goalward := Vector2(actor.attack_sign * FIELD_LENGTH * 0.5, 0.0) - ball_position
+					var turn_in := smoothstep(12.0, 35.0, ball_position.x * actor.attack_sign)
+					turn_in *= smoothstep(12.0, 18.0, absf(ball_position.y))
+					carry_direction = carry_direction.lerp(goalward.normalized(), turn_in).normalized()
+				if team_players.size() == 11:
+					carry_direction = _open_carry_direction(ball_position, carry_direction, opponents)
+				target = ball_position + carry_direction * carry_push
 			else:
 				target = interception_position
 		elif in_possession:
@@ -75,6 +85,30 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			"assigned_mark": mark.profile.player_id if mark != null else &"",
 		}
 	return decisions
+
+func _open_carry_direction(origin: Vector2, preferred: Vector2,
+		opponents: Array[FootballPlayer]) -> Vector2:
+	var best := preferred
+	var best_score := -INF
+	for angle in [0.0, 0.65, -0.65]:
+		var direction := preferred.rotated(angle)
+		var destination := origin + direction * 4.0
+		var clearance := 4.0
+		for opponent in opponents:
+			if opponent == null or opponent.profile == null or opponent.profile.role != "outfield":
+				continue
+			var offset := Vector2(opponent.global_position.x, opponent.global_position.z) - origin
+			var ahead := offset.dot(direction)
+			if ahead < 0.0:
+				continue
+			clearance = minf(clearance, (offset - direction * clampf(ahead, 0.0, 4.0)).length())
+		var score := direction.dot(preferred) * 2.0 + clearance * 1.5
+		if absf(destination.x) > FIELD_LENGTH * 0.5 - 1.0 or absf(destination.y) > FIELD_WIDTH * 0.5 - 2.0:
+			score -= 10.0
+		if score > best_score:
+			best = direction
+			best_score = score
+	return best
 
 func assign_defensive_marks(team_players: Array[FootballPlayer], chaser: FootballPlayer,
 		opponents: Array[FootballPlayer], ball_position: Vector2,

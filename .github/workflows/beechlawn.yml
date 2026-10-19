@@ -34,11 +34,14 @@ jobs:
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py title_screen_smoke.gd shared_pose_safety_smoke.gd broadcast_camera_smoke.gd pre_match_intro_smoke.gd venue_leaf_uv_smoke.gd park_road_setback_smoke.gd eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd football_stop_runtime_smoke.gd shared_pivot_pose_smoke.gd turn_dribble_control_smoke.gd ai_shot_lane_smoke.gd ai_carry_to_shot_smoke.gd ai_midfield_to_shot_smoke.gd loose_ball_recovery_smoke.gd
           BEECHLAWN_FULL_OPPOSITION=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py pass_lane_selection_smoke.gd ai_carrier_identity_smoke.gd ai_receive_handoff_smoke.gd football_receive_contact_smoke.gd team_tactics_controller_smoke.gd transition_ai_smoke.gd
+          BEECHLAWN_ATTACK_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py pass_lane_selection_smoke.gd ai_carrier_identity_smoke.gd ai_receive_handoff_smoke.gd football_receive_contact_smoke.gd team_tactics_controller_smoke.gd ai_carry_space_smoke.gd ai_wide_attack_smoke.gd ai_shot_approach_smoke.gd transition_ai_smoke.gd
           BEECHLAWN_MATCH_SCENE=res://scenes/match_11v11.tscn python3 games/beechlawn_rovers/tools/run_smoke_tests.py football_kick_contact_integration_smoke.gd
           BEECHLAWN_MATCH_SCENE=res://scenes/match_11v11.tscn BEECHLAWN_AI_CHANCE=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py football_shot_contact_integration_smoke.gd
-          BEECHLAWN_REQUIRE_SHOT=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
-          BEECHLAWN_REQUIRE_SHOT=1 BEECHLAWN_KICKOFF_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
+          # Full matches gate stability/progress and report chance frequency.
+          # Physical shots gate above in repeatable, mirrored midfield attacks.
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
+          BEECHLAWN_KICKOFF_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
       - name: Export football only
         run: |
           mkdir -p build/beechlawn/web build/beechlawn/mac

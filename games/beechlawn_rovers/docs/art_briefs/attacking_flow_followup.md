@@ -79,7 +79,10 @@ visible in CI and must not be presented as a complete contested attack sequence.
   decisions, team tactics, possession transitions, reversals, single-controller
   dribbling and loose-ball recovery pass.
 
-The release workflow runs the new checks and both whole-match shot gates.
+Release follow-up: cross-host whole-match outcomes did not reproduce these
+local shot totals. Current CI gates repeatable physical attacks in both
+directions and whole-match stability, and reports natural match shot totals.
+See [the follow-up](ai_wide_carry_release_fix.md); chance frequency is open.
 The runner retains a 45-second deadline for short tests and gives the full
 match a dedicated 75-second bound. A 300-simulated-second hard loop limit at
 6x speed can need 50 wall seconds before CPU overhead, so its old 45-second

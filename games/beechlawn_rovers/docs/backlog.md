@@ -65,7 +65,7 @@ The 2026-10-18 full-formation buildup follow-up also removes safe-pass
 starvation of through-ball decisions. Controlled tests now verify forward pass
 progression. The subsequent [attacking-flow corrections](art_briefs/attacking_flow_followup.md)
 fix complete-lane scoring, current-carrier selection and stale receiver targets.
-Both kickoff variants now pass the physical-shot gate, including a 1–1 result
+Earlier local kickoff variants passed the physical-shot check, including a 1–1 result
 from Boardeaux's kickoff. Chance frequency and team balance remain open under
 BR-008; a single shot in the other fixture is a regression floor.
 
@@ -397,11 +397,17 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - Release follow-up: a mirrored tactical regression exposed straight-ahead
+    wide carriers running to the byline. Full 11v11 carriers now gradually
+    turn goalward in the final third, retaining width during build-up. Both
+    mirrored controlled-attack contact gates now complement full-match stability
+    and reported chance metrics; sparse natural-match shooting remains open. See
+    [`art_briefs/ai_wide_carry_release_fix.md`](art_briefs/ai_wide_carry_release_fix.md).
   - Attacking-flow continuation: full-path pass scoring preserves open diagonal
     runs; actual kicking reach takes priority over future interception when
     selecting a carrier; successful control and turnovers retire reception
     targets. Three mirrored regressions failed before their respective fixes
-    and now pass. Both 180-second kickoff variants pass a physical-shot gate,
+    and now pass. Earlier local 180-second kickoff variants passed a physical-shot check,
     while balanced chance creation remains open. See
     [`art_briefs/attacking_flow_followup.md`](art_briefs/attacking_flow_followup.md).
   - 2026-10-18 follow-up: an open goalward shooting corridor is no longer vetoed

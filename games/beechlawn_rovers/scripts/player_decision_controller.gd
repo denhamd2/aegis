@@ -21,11 +21,15 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	var goal_position := Vector2(carrier.attack_sign * 52.5, 0.0)
 	var goal_distance := ball_position.distance_to(goal_position)
 	var nearest_defender := INF
+	var nearest_forward_defender := INF
+	var goalward := (goal_position - ball_position).normalized()
 	for opponent in opponents:
 		if opponent == null or opponent.profile == null or opponent.profile.role != "outfield":
 			continue
 		var opponent_position := Vector2(opponent.global_position.x, opponent.global_position.z)
 		nearest_defender = minf(nearest_defender, opponent_position.distance_to(ball_position))
+		if (opponent_position - ball_position).dot(goalward) >= 0.0:
+			nearest_forward_defender = minf(nearest_forward_defender, opponent_position.distance_to(ball_position))
 
 	# Pressure behind or beside the carrier does not necessarily block a shot.
 	# Check the immediate goalward corridor rather than vetoing every attempt
@@ -52,7 +56,10 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 				return {"type": &"through_pass", "direction": forward,
 					"receiver_id": receiver.get_instance_id()}
 
-	if teammates.size() == 11 and nearest_defender < 5.0:
+	# An outlet is an escape from pressure, not a reason to abandon free space.
+	# Retain early release for a defender ahead, but do not recycle solely
+	# because a trailing defender is four metres behind.
+	if teammates.size() == 11 and (nearest_defender <= PRESSURE_RANGE or nearest_forward_defender < 5.0):
 		var best: FootballPlayer
 		var best_score := INF
 		for candidate in teammates:
@@ -70,7 +77,11 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 				best = candidate
 				best_score = score
 		if best != null:
-			return {"type": &"short_pass", "direction": best.global_position - carrier.global_position}
+			var forward_gain := (best.global_position.x - carrier.global_position.x) * carrier.attack_sign
+			# Recycle backward when a challenge is imminent; otherwise try the
+			# tactical controller's open carry lane before giving up progress.
+			if forward_gain >= 1.0 or nearest_defender <= 2.0:
+				return {"type": &"short_pass", "direction": best.global_position - carrier.global_position}
 
 	return {"type": &"carry"}
 
