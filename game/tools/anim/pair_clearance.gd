@@ -32,15 +32,17 @@ const SEGMENTS := [
 
 
 ## Every MoveDef that has an authored two-man performance.
+## Ids are paths under resources/moves/ without the extension, so the Fight
+## Forever library's animated moves come back as "ff/<move>".
 static func paired_move_ids() -> Array[String]:
 	var out: Array[String] = []
-	var dir := DirAccess.open("res://resources/moves")
-	for file in dir.get_files():
-		if not file.ends_with(".tres"):
-			continue
-		var move := load("res://resources/moves/" + file) as MoveDef
-		if move and PairedRecipes.RECIPES.has(move.animation_pair_id):
-			out.append(file.get_basename())
+	for sub: String in ["", "ff/"]:
+		for file in DirAccess.get_files_at("res://resources/moves/" + sub):
+			if not file.ends_with(".tres"):
+				continue
+			var move := load("res://resources/moves/" + sub + file) as MoveDef
+			if move and PairedRecipes.RECIPES.has(move.animation_pair_id):
+				out.append(sub + file.get_basename())
 	out.sort()
 	return out
 

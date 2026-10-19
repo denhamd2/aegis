@@ -3612,8 +3612,16 @@ CLIPS["Superman_Punch_Attacker"] = [
     (6,  P(pelvis=(0.0, -0.04, 0.840), spine=(-6, 0, 0),
            hand_r=(0.18, 0.52, 1.28), hand_l=(-0.18, 0.52, 1.26),
            fist_r=0.1, fist_l=0.1)),
+    # Sinking: the breakdown between the shove and the crouch -- three frames
+    # used to carry the whole drop, the widest stance change and the left
+    # hand's fall to the mat (one frame at 3.2x its neighbours).
+    (8,  P(pelvis=(0.0, -0.04, 0.720), hips=(-12, 0, 0), spine=(-16, 0, 0),
+           head=(10, 0, 0),
+           hand_r=(0.26, 0.30, 1.20), hand_l=(-0.26, 0.42, 0.86),
+           fist_r=0.7, fist_l=0.3,
+           foot_r=(0.24, -0.16, 0.104), foot_l=(-0.22, 0.12, 0.104))),
     # Drops to a crouch, right fist cocked high.
-    (9,  P(pelvis=(0.0, -0.04, 0.600), hips=(-24, 0, 0), spine=(-24, 0, 0),
+    (10, P(pelvis=(0.0, -0.04, 0.600), hips=(-24, 0, 0), spine=(-24, 0, 0),
            head=(20, 0, 0),
            hand_r=(0.30, 0.10, 1.10), hand_l=(-0.30, 0.30, 0.50),
            fist_r=1.0, fist_l=0.4,
@@ -4882,10 +4890,16 @@ CLIPS["Vertical_Suplex_Attacker"] = [
               fist_r=0.6, fist_l=0.6,
               foot_r=(0.18, 0.40, 0.104), foot_l=(-0.18, 0.36, 0.104))),
     (59, pose(ATK_BACK, hand_r=(0.20, -0.60, 0.40), hand_l=(-0.20, -0.60, 0.40))),
-] + _get_up(64, 72, lying=True)
+] + _get_up(61, 72, lying=True)  # three frames a stage, not two
 
 # The victim's arms and legs while he is carried upside down: hugging round
 # Cody, legs long -- given in the BODY frame, so they turn with him.
+# A body flat on its back in its own frame (_body pitch -268 / +88): arms
+# fallen out, legs straight. The landing key between a flip and the stock
+# SUPINE_AWAY, so the flip ends on a small turn instead of every limb moving.
+_LANDED_FLAT = dict(hand_r=(0.42, 0.04, 0.02), hand_l=(-0.42, 0.04, 0.02),
+                    foot_r=(0.14, 0.02, -0.86), foot_l=(-0.14, 0.02, -0.86),
+                    knee_r=(0.1, 1.0, 0.2), knee_l=(-0.1, 1.0, 0.2))
 _SUPLEX_LIMBS = dict(spine=(-6, 0, 0), head=(-8, 0, 0),
                      hand_r=(0.30, 0.30, 0.30), hand_l=(-0.30, 0.30, 0.30),
                      elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
@@ -4912,8 +4926,10 @@ CLIPS["Vertical_Suplex_Defender"] = [
     (57, _body((-250, 0, 0), (0.0, 0.00, 0.900), **dict(_SUPLEX_LIMBS,
                hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
     # Flat on his back beyond Cody's head -- head toward him, which is
-    # SUPINE_AWAY (MoveDef.defender_lands_head_away).
-    (59, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.220))),
+    # SUPINE_AWAY (MoveDef.defender_lands_head_away). Landed in the body's
+    # frame first, then settled into it (see the Alabama Slam).
+    (59, _body((-268, 0, 0), (0.0, -0.04, 0.220), **dict(_SUPLEX_LIMBS, **_LANDED_FLAT))),
+    (65, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.200))),
     (72, dict(SUPINE_AWAY)),
 ]
 
@@ -4981,9 +4997,12 @@ CLIPS["Alabama_Slam_Defender"] = [
                hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
     (39, _body((60, 0, 0), (0.0, -0.10, 1.050), **dict(_ALA_LIMBS,
                hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
-    # Back first, head away from Cody: SUPINE_AWAY.
-    (41, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.230))),
-    (46, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    # Back first, head away from Cody -- landed in the body's own frame (a
+    # turn of under thirty degrees, legs straightening), then settled into
+    # SUPINE_AWAY over six frames, already still: the old two-frame cut
+    # straight to it re-laid every limb at once (test_clip_cadence).
+    (41, _body((88, 0, 0), (0.0, -0.12, 0.225), **dict(_ALA_LIMBS, **_LANDED_FLAT))),
+    (47, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
     (60, dict(SUPINE_AWAY)),
 ]
 
@@ -7211,6 +7230,125 @@ CLIPS["Ladder_Aerial_Defender"] = [
            hand_r=(0.18, 0.30, 0.76), hand_l=(-0.22, 0.38, 0.72),
            foot_r=(0.24, -0.16, 0.14), foot_l=(-0.22, 0.18, 0.14))),
     (42, S()),
+]
+
+
+# === AEW Fight Forever move library (resources/moves/ff/, FFMoveLibrary) =====
+# Each wrestler's signatures and specials from the owner's compilation
+# (gauntlet/refs/aew_ff_animation_review.md), paced to its measured tempo:
+# quick set-ups, a held beat at the top of a lift, the drop, and the attacker
+# back up about a second after the landing. Clip names are FF_<move>_Attacker
+# / _Defender; the paired move is ff_<move> (paired_recipes.gd).
+
+# Tiger Driver '98 (Cody Rhodes's special), 72 frames / 2.4 s. The Pedigree's
+# double underhook (shared frames, so the hook-up reads the same), then he
+# heaves the man straight up by the hooked arms: the man pitches forward over
+# his own head and hangs upside down, back against Cody's chest, legs high
+# (video 0.0-0.6 s); a held beat; Cody sits out and drives him down on the
+# back of his neck in front of him, and the man's legs go over: flat on his
+# back, head away. The victim's turn is one direction, pitch falling -60 to
+# -270, in steps of under 60 degrees, in his body frame (_body).
+_TD_LIMBS = dict(spine=(-6, 0, 0), head=(-12, 0, 0),
+                 hand_r=(0.32, 0.12, 0.46), hand_l=(-0.32, 0.12, 0.46),
+                 elbow_r=(0.8, -0.3, -0.3), elbow_l=(-0.8, -0.3, -0.3),
+                 fist_r=0.3, fist_l=0.3,
+                 foot_r=(0.12, -0.06, -0.84), foot_l=(-0.12, -0.04, -0.84),
+                 knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), free_feet=True)
+_TD_HOLD = P(pelvis=(0.0, 0.0, 0.880), spine=(6, 0, 0), head=(8, 0, 0),
+             hand_r=(0.20, 0.20, 1.18), hand_l=(-0.20, 0.20, 1.18),
+             elbow_r=(0.8, -0.2, 0.0), elbow_l=(-0.8, -0.2, 0.0),
+             fist_r=0.8, fist_l=0.8,
+             foot_r=(0.24, -0.06, 0.104), foot_l=(-0.22, 0.08, 0.104))
+CLIPS["FF_Tiger_Driver_98_Attacker"] = [k for k in CLIPS["Pedigree_Attacker"] if k[0] <= 16] + [
+    # Sits into the heave.
+    (20, P(pelvis=(0.0, 0.08, 0.680), hips=(-14, 0, 0), spine=(-20, 0, 0),
+           head=(-8, 0, 0),
+           hand_r=(0.24, 0.32, 0.82), hand_l=(-0.24, 0.32, 0.82),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.10, 0.104), foot_l=(-0.22, 0.14, 0.104))),
+    (26, P(pelvis=(0.0, 0.04, 0.840), hips=(-4, 0, 0), spine=(0, 0, 0),
+           head=(0, 0, 0),
+           hand_r=(0.22, 0.24, 1.10), hand_l=(-0.22, 0.24, 1.10),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.24, -0.08, 0.104), foot_l=(-0.22, 0.10, 0.104))),
+    # Tall, the man upside down against his chest.
+    (30, dict(_TD_HOLD)),
+    (40, dict(_TD_HOLD, spine=(8, 0, 0), head=(10, 0, 0))),
+    # The sit-out.
+    (43, pose(SIT_DROP, hand_r=(0.20, 0.30, 0.92), hand_l=(-0.20, 0.30, 0.92))),
+    (46, pose(ATK_SEAT, hand_r=(0.24, 0.46, 0.34), hand_l=(-0.24, 0.46, 0.34))),
+    (51, pose(ATK_SEAT)),
+] + _get_up(56, 72, seated=True)  # five frames seated before the feet draw in
+CLIPS["FF_Tiger_Driver_98_Defender"] = [k for k in CLIPS["Pedigree_Defender"] if k[0] <= 16] + [
+    # Heaved up by the hooked arms, pitching forward over his own head --
+    # eased in over six frames, not snapped up in four (test_clip_cadence).
+    (19, _body((-55, 0, 0), (0.0, 0.07, 0.960), **_TD_LIMBS)),
+    (22, _body((-110, 0, 0), (0.0, 0.05, 1.250), **_TD_LIMBS)),
+    (26, _body((-150, 0, 0), (0.0, 0.02, 1.600), **_TD_LIMBS)),
+    # Upside down, back to Cody's chest, his head at Cody's belt.
+    (30, _body((-176, 0, 0), (0.0, 0.00, 1.820), **_TD_LIMBS)),
+    (37, _body((-174, 0, 0), (0.0, 0.00, 1.840), **_TD_LIMBS)),
+    # Driven down onto the back of his neck, the legs going over: the drop
+    # gathers from frame 37, so the impact is the fastest frame of a ramp
+    # rather than a lone spike.
+    (41, _body((-195, 0, 0), (0.0, -0.03, 1.400), **_TD_LIMBS)),
+    (44, _body((-222, 0, 0), (0.0, -0.08, 0.820), **_TD_LIMBS)),
+    (46, _body((-240, 0, 0), (0.0, -0.12, 0.420), **dict(_TD_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    (48, _body((-258, 0, 0), (0.0, -0.16, 0.280), **dict(_TD_LIMBS,
+               hand_r=(0.55, 0.00, 0.30), hand_l=(-0.55, 0.00, 0.30)))),
+    # Flat on his back, head away from Cody -- still in the body's own frame,
+    # legs straightening and arms falling out, so landing is a turn of ten
+    # degrees and not every limb re-laid in three frames. Then he settles
+    # into the stock lying pose over the next seven, already still.
+    (51, _body((-268, 0, 0), (0.0, -0.18, 0.215), **dict(_TD_LIMBS, **_LANDED_FLAT))),
+    (58, dict(SUPINE_AWAY, pelvis=(0.0, 0.0, 0.190))),
+    (72, dict(SUPINE_AWAY)),
+]
+
+# One Winged Angel (Kenny Omega's special), 66 frames / 2.2 s. Up across his
+# shoulders as in the Samoan Drop (shared frames, the same fireman's carry,
+# face up); a beat; then Kenny takes the head with his left hand and swings
+# the legs up and over with his right, the man turning head-down toward
+# Kenny's front (video 0.5-0.8 s), and Kenny sits out and drives him down on
+# the back of his neck. His legs fall away from Kenny: flat on his back, head
+# toward Kenny -- SUPINE -- beside Kenny's outstretched legs, not across them
+# (the defender's root moves out to the side through the fall, paired_recipes).
+# The body's turn is slerped between the carry, upside down with the chest to
+# Kenny, and flat: no step over about 35 degrees.
+CLIPS["FF_One_Winged_Angel_Attacker"] = [k for k in CLIPS["Samoan_Drop_Attacker"] if k[0] <= 28] + [
+    # Left hand to the head at his side, right hand under the legs.
+    (32, P(pelvis=(0.0, 0.0, 0.850), spine=(-2, 0, 0), head=(4, 0, 0),
+           hand_r=(0.26, 0.12, 1.50), hand_l=(-0.30, 0.18, 1.38),
+           elbow_r=(0.8, -0.3, 0.2), elbow_l=(-0.8, -0.3, 0.0),
+           fist_r=0.8, fist_l=0.8,
+           foot_r=(0.26, -0.04, 0.104), foot_l=(-0.24, 0.06, 0.104))),
+    # Dropping as he throws him over.
+    (36, P(pelvis=(0.0, 0.04, 0.620), hips=(-10, 0, 0), spine=(-16, 0, 0),
+           head=(-6, 0, 0),
+           hand_r=(0.26, 0.40, 1.00), hand_l=(-0.26, 0.40, 0.92),
+           fist_r=0.6, fist_l=0.6,
+           foot_r=(0.26, -0.08, 0.104), foot_l=(-0.24, 0.10, 0.104))),
+    # The sit-out: the impact.
+    (40, pose(ATK_SEAT, hand_r=(0.26, 0.46, 0.34), hand_l=(-0.26, 0.46, 0.34))),
+    (48, pose(ATK_SEAT)),
+] + _get_up(53, 66, seated=True)
+CLIPS["FF_One_Winged_Angel_Defender"] = [k for k in CLIPS["Samoan_Drop_Defender"] if k[0] <= 28] + [
+    # Swung over by the head and legs, carried out in front of Kenny: his
+    # root sits on Kenny through the carry, so "toward Kenny" in his own
+    # frame is Kenny's back -- the pelvis goes the other way, out over the
+    # front, and the head comes down there.
+    (32, _body((108.5, 110.0, -14.5), (0.0, -0.10, 1.550), **_SAM_LIMBS)),
+    (35, _body((-46.0, -45.0, -160.1), (-0.05, -0.25, 1.400), **_SAM_LIMBS)),
+    (38, _body((-20.5, -20.0, -165.5), (0.0, -0.30, 1.050), **_SAM_LIMBS)),
+    # Driven down onto the back of his neck, upside down, chest to Kenny.
+    (40, _body((0, 0, 180), (0.0, -0.30, 0.780), **dict(_SAM_LIMBS,
+               hand_r=(0.50, 0.00, 0.40), hand_l=(-0.50, 0.00, 0.40)))),
+    # The legs fall away from Kenny: flat on his back, head toward him.
+    (43, _body((-42, 0, 180), (0.0, -0.15, 0.480), **_SAM_LIMBS)),
+    (46, _body((-84, 0, 180), (0.0, 0.00, 0.220), **dict(_SAM_LIMBS, **_LANDED_FLAT))),
+    (52, dict(SUPINE, pelvis=(0.0, 0.0, 0.190))),
+    (66, dict(SUPINE)),
 ]
 
 

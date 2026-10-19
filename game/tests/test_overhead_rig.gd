@@ -95,3 +95,22 @@ func test_the_rig_has_lamps_and_no_led_strips() -> void:
 	assert_object(lenses).is_not_null()
 	assert_int(lenses.mesh.get_faces().size() / 3).is_greater(1000)
 	root.free()
+
+
+## No rigging in the wide shots (the owner, 18 Oct): the steel and the lamp
+## bodies overhead are not drawn, only the lenses; the stage deck's heads
+## keep their bodies.
+func test_only_the_lamps_show_overhead() -> void:
+	var builder: ArenaBuilder = auto_free(ArenaBuilder.new())
+	builder._build_overhead_rig()
+	var root := builder.get_node("OverheadRig")
+	for part: String in ArenaBuilder.RIG_HIDDEN:
+		assert_bool((root.find_child(part, true, false) as Node3D).visible) \
+				.override_failure_message("%s is drawn" % part).is_false()
+	assert_bool((root.find_child("ParLenses", true, false) as Node3D).visible).is_true()
+	var rig := _rig()
+	for light in _lights(rig):
+		var body := rig.get_node("Body" + String(light.name)) as Node3D
+		var on_deck := light.position.y < ArenaLighting.BODY_SHOWN_BELOW
+		assert_bool((body.get_node("FixtureLens") as Node3D).visible).is_true()
+		assert_bool((body.get_node("FixtureHead") as Node3D).visible).is_equal(on_deck)

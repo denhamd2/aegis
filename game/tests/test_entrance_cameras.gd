@@ -214,8 +214,9 @@ func test_the_walk_is_mostly_at_eye_level() -> void:
 
 
 
-## Whether either portal's mouth is in a camera's 16:9 frame from closer
-## than PORTAL_CLOSE -- a shot of the tunnel, as opposed to the far wide of
+## Whether the entrance -- the gap between the 2026 set's LED walls, where
+## the men walk out -- is in a camera's 16:9 frame from closer than
+## PORTAL_CLOSE: a shot of the empty doorway, as opposed to the far wide of
 ## the whole hall, where the stage is a detail.
 const PORTAL_CLOSE := 25.0
 
@@ -223,15 +224,12 @@ const PORTAL_CLOSE := 25.0
 static func portal_in_shot(camera: Camera3D) -> bool:
 	var half_v := deg_to_rad(camera.fov) * 0.5
 	var half_h := atan(tan(half_v) * 16.0 / 9.0)
-	for sx: float in [-1.0, 1.0]:
-		var p := Vector3(sx * ArenaBuilder.PORTAL_OFFSET_X, ArenaBuilder.STAGE_DECK_Y + 1.2,
-				ArenaBuilder.PORTAL_FACE_Z)
-		var local := camera.global_transform.affine_inverse() * p
-		if local.z >= 0.0 or local.length() > PORTAL_CLOSE:
-			continue
-		if absf(atan2(local.x, -local.z)) < half_h and absf(atan2(local.y, -local.z)) < half_v:
-			return true
-	return false
+	var p := Vector3(ArenaBuilder.ENTRANCE_X, ArenaBuilder.STAGE_DECK_Y + 1.2,
+			ArenaBuilder.ENTRANCE_Z)
+	var local := camera.global_transform.affine_inverse() * p
+	if local.z >= 0.0 or local.length() > PORTAL_CLOSE:
+		return false
+	return absf(atan2(local.x, -local.z)) < half_h and absf(atan2(local.y, -local.z)) < half_v
 
 
 ## The owner: Cody "raises his finger a few times" on the ramp -- the old

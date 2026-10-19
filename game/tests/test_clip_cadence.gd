@@ -23,7 +23,7 @@ const HOLD_FRAMES := 4
 const SNAP := 3.5
 const SNAP_WINDOW := 5
 const HOLD_BUDGET := 9
-const SNAP_BUDGET := 27
+const SNAP_BUDGET := 25
 
 
 func _player() -> AnimationPlayer:
@@ -81,6 +81,55 @@ static func snaps(speed: PackedFloat32Array) -> int:
 		if med > 2.0 and speed[f] > SNAP * med:
 			n += 1
 	return n
+
+
+## The moves seen most in a match, whose in-between keys are worked by hand
+## (gauntlet/refs/next_steps.md, Fight Forever smoothness).
+const HERO := [
+	"Cross_Rhodes_Attacker", "Cross_Rhodes_Defender",
+	"Cross_Rhodes_Behind_Attacker", "Cross_Rhodes_Behind_Defender",
+	"Pedigree_Attacker", "Pedigree_Defender",
+	"FF_Tiger_Driver_98_Attacker", "FF_Tiger_Driver_98_Defender",
+	"Cody_Cutter_Attacker", "Cody_Cutter_Defender",
+	"Disaster_Kick_Attacker", "Disaster_Kick_Defender",
+	"Vertical_Suplex_Attacker", "Vertical_Suplex_Defender",
+	"Powerslam_Attacker", "Powerslam_Defender",
+	"Alabama_Slam_Attacker", "Alabama_Slam_Defender",
+	"Run_Spear_Attacker", "Run_Spear_Defender",
+	"Superman_Punch_Attacker", "Superman_Punch_Defender",
+]
+## Ceiling on the hero clips' summed jerk, set at today's figure; lower it as
+## the in-between passes land.
+const HERO_JERK_BUDGET := 952.0
+
+
+## Mean change in whole-body angular speed from one frame to the next,
+## degrees per frame per frame: how unevenly a clip moves. Fight Forever's
+## captured moves change speed a little every frame; a clip that coasts
+## between sparse keys and lurches through them scores high.
+static func jerk(speed: PackedFloat32Array) -> float:
+	if speed.size() < 2:
+		return 0.0
+	var total := 0.0
+	for f in range(1, speed.size()):
+		total += absf(speed[f] - speed[f - 1])
+	return total / float(speed.size() - 1)
+
+
+func test_the_hero_moves_move_evenly() -> void:
+	var player := _player()
+	var total := 0.0
+	var lines: Array[String] = []
+	for clip: String in HERO:
+		assert_bool(player.has_animation(clip)).override_failure_message(
+			"no clip %s" % clip).is_true()
+		if not player.has_animation(clip):
+			continue
+		var j := jerk(speeds(player.get_animation(clip)))
+		total += j
+		lines.append("%s %.1f" % [clip, j])
+	print("CLIP_JERK total %.1f -- %s" % [total, ", ".join(lines)])
+	assert_float(total).is_less_equal(HERO_JERK_BUDGET)
 
 
 func test_the_clips_neither_freeze_nor_jerk() -> void:

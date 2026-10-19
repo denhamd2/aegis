@@ -33,6 +33,10 @@ static func snap(node: Node3D) -> void:
 class CutGuard extends Node:
 	var _last := Transform3D()
 	var _has_last := false
+	## The process frame of the last cut it caught (-1 none): MotionBlur
+	## draws nothing then, since that frame's velocity reprojects against the
+	## shot before the cut.
+	var cut_frame := -1
 
 	func _ready() -> void:
 		name = "CutGuard"
@@ -50,5 +54,6 @@ class CutGuard extends Node:
 					_last.basis.get_rotation_quaternion()))
 			if moved > CUT_DISTANCE or turned > CUT_ANGLE_DEG:
 				MatchSmoothing.snap(parent)
+				cut_frame = Engine.get_process_frames()
 		_last = now
 		_has_last = true

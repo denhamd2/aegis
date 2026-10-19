@@ -147,6 +147,8 @@ const ENTRANCE_VOLUME_DB := 0.0
 const ENTRANCE_FADE_SECONDS := 2.0
 
 var _player: VideoStreamPlayer = null
+## Other screens playing the wall's picture: [material, aspect, level] (mirror()).
+var _mirrors: Array = []
 var _screen: MeshInstance3D = null
 var _material: StandardMaterial3D = null
 var _bound := false
@@ -162,6 +164,7 @@ var _entrance_bound := false
 var _fading: Array = []
 ## His music while it is up, and outgoing ones fading.
 var _music: AudioStreamPlayer = null
+var _music_style := ""
 var _music_fading: Array = []
 
 
@@ -178,6 +181,25 @@ static func attach(screen: MeshInstance3D, mat: StandardMaterial3D,
 	node._material = mat
 	node._video_path = video_path
 	return node
+
+
+## Plays the wall's picture on another screen too -- the 2026 set's LED walls
+## either side of the centre screen. Each mirror keeps the wall's vertical
+## band and takes a centred crop of the width that matches its own shape
+## (`aspect`, width over height), so a near-square wall shows the picture
+## whole rather than squashed, for the loop and every entrance video alike.
+## `level` scales its brightness against the wall's.
+func mirror(mat: StandardMaterial3D, aspect: float, level := 1.0) -> void:
+	_mirrors.append([mat, aspect, level])
+
+
+## The UV scale and offset a mirror of shape `aspect` takes from a frame of
+## shape `video_aspect`, given the wall's own crop.
+static func mirror_crop(aspect: float, video_aspect: float, uv_scale: Vector2,
+		uv_offset: Vector2) -> Array:
+	var fx := clampf(aspect * uv_scale.y / maxf(video_aspect, 0.01), 0.0, 1.0)
+	return [Vector2(fx, uv_scale.y),
+			Vector2(clampf(uv_offset.x + (uv_scale.x - fx) * 0.5, 0.0, 1.0 - fx), uv_offset.y)]
 
 
 ## True when this run has to be frame-identical round to round.
@@ -309,6 +331,22 @@ func _bind(tex: Texture2D, source: String, uv_scale := VIDEO_UV_SCALE,
 	_material.uv1_scale = Vector3(uv_scale.x, uv_scale.y, 1.0)
 	_material.uv1_offset = Vector3(uv_offset.x, uv_offset.y, 0.0)
 	_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	var video_aspect := 16.0 / 9.0
+	if tex.get_height() > 0:
+		video_aspect = float(tex.get_width()) / float(tex.get_height())
+	for m: Array in _mirrors:
+		var mat: StandardMaterial3D = m[0]
+		var crop := mirror_crop(float(m[1]), video_aspect, uv_scale, uv_offset)
+		mat.albedo_texture = tex
+		mat.albedo_color = _material.albedo_color
+		mat.emission_enabled = true
+		mat.emission = _material.emission
+		mat.emission_texture = tex
+		mat.emission_operator = _material.emission_operator
+		mat.emission_energy_multiplier = _material.emission_energy_multiplier * float(m[2])
+		mat.uv1_scale = Vector3(crop[0].x, crop[0].y, 1.0)
+		mat.uv1_offset = Vector3(crop[1].x, crop[1].y, 0.0)
+		mat.texture_filter = _material.texture_filter
 	if OS.is_stdout_verbose():
 		print("StageVideo: bound %s to the wall." % source)
 
@@ -404,8 +442,13 @@ func is_bound() -> bool:
 func play_entrance(style: String) -> bool:
 	if not ENTRANCES.has(style):
 		return false
+	# His song already up: carry on. Restarting would lay a second copy over
+	# the first while it faded -- the echo the owner asked never to hear.
+	if style == _music_style and is_music_playing():
+		return is_playing_entrance()
 	var entry: Dictionary = ENTRANCES[style]
 	end_entrance()
+	_music_style = style
 	_play_music(entry)
 	if _player == null or not ResourceLoader.exists(entry["video"]):
 		return false
@@ -460,6 +503,7 @@ static func music_path(style: String) -> String:
 
 ## Back to the Dynamite loop; the music fades rather than cuts.
 func end_entrance() -> void:
+	_music_style = ""
 	if _music:
 		_music_fading.append(_music)
 		_music = null

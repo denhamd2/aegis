@@ -151,7 +151,9 @@ static func entries() -> Array:
 			"kenny", "KENNY", "OMEGA", "THE BEST BOUT MACHINE",
 			"res://scenes/kenny_model.tscn",
 			Color(0.12, 0.15, 0.20), Color(0.20, 0.78, 0.72),
-			0.68, 0.88, 0.94),
+			0.68, 0.88, 0.94,
+			# His Fight Forever special (FFMoveLibrary).
+			"res://resources/moves/ff/one_winged_angel.tres"),
 	]
 	# Roman holds the title: the owner's reference for the entrance graphic
 	# is his, captioned AEW CHAMPION. The others walk out under their
@@ -202,7 +204,9 @@ static func entries() -> Array:
 		"strike": [M + "strike_jab.tres", M + "strike_bionic_elbow.tres",
 				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
 		"grapple": [M + "grapple_vertical_suplex.tres"],
-		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres"],
+		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres",
+				# Fight Forever library (FFMoveLibrary), his in the game.
+				M + "ff/tiger_driver_98.tres"],
 		"signature": [M + "signature_disaster_kick.tres", M + "signature_pedigree.tres"],
 		"running": [M + "running_attack_clothesline.tres",
 				M + "running_single_leg_dropkick.tres"],

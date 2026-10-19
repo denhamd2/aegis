@@ -23,6 +23,10 @@ extends Node
 ## reads as two silhouettes without it. Neither changes the move.
 ## --dist M sets how far the side camera sits (default 4.2); moves that travel,
 ## like the Spear, need more.
+## --match-cam: shoot through the game's own MatchCamera (Fight Forever coverage
+## by default) instead of the probe's side camera -- a frame before the move,
+## then the move as the player sees it: the cut in for the lock-up and the cut
+## back out on the impact.
 ## --bare: the two men alone -- arena, crowd, ring, HUD and referee hidden,
 ## a plain floor gridded every 0.5 m, studio light, the defender tinted blue.
 ## For judging a move's mechanics with nothing else in the frame. --top looks
@@ -43,6 +47,7 @@ var _dist := 4.2
 ## --wrestlers roman,kenny: the real men at their real sizes, attacker first.
 var _wrestlers := ""
 var _bare := false
+var _match_cam := false
 var _top := false
 var _weapon_id := ""
 
@@ -62,6 +67,8 @@ func _ready() -> void:
 			_lit = true
 		elif args[i] == "--bare":
 			_bare = true
+		elif args[i] == "--match-cam":
+			_match_cam = true
 		elif args[i] == "--top":
 			_top = true
 		elif args[i] == "--dist" and i + 1 < args.size():
@@ -75,6 +82,8 @@ func _ready() -> void:
 			for token: String in args[i + 1].split(","):
 				_at.append(float(token))
 	DirAccess.make_dir_recursive_absolute(_out)
+	# A library move ("ff/tiger_driver_98") names its frames by the move alone.
+	var shot := _move_id.get_file()
 
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	if _wrestlers != "":
@@ -111,6 +120,17 @@ func _ready() -> void:
 		spot_weapon.set_up_at(attacker.global_position + attacker.global_basis.z * 1.3,
 				attacker.rotation.y)
 
+	# Settled under the match camera before the hold, not during it: two men
+	# left in GRAPPLE_HOLD for 90 ticks pick a move of their own.
+	var match_camera: MatchCamera = scene.get_node_or_null("MatchCamera")
+	if _match_cam and match_camera:
+		match_camera.current = true
+		match_camera.mode = match_camera.master_mode()
+		match_camera._held = 5.0
+		for i in 90:
+			await get_tree().physics_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s/%s_pre.png" % [_out, shot])
 	var rig: Node = scene.get_node("GrappleRig")
 	# As a match starts one (WrestlerController._begin_running_paired): roles
 	# set and both in GRAPPLE_HOLD, or the grip IK -- the hands -- never runs.
@@ -128,7 +148,7 @@ func _ready() -> void:
 		_strip(scene, attacker, defender, spot_weapon)
 	var camera := Camera3D.new()
 	scene.add_child(camera)
-	camera.current = true
+	camera.current = not (_match_cam and match_camera)
 	var focus := attacker.global_position + Vector3(0.0, 0.9, 0.0)
 	camera.global_position = focus + Vector3(3.2, 1.4, 3.2)
 	if _side:
@@ -161,13 +181,14 @@ func _ready() -> void:
 	for frame in int(total * maxf(last, 1.0)) + 4:
 		await get_tree().physics_frame
 		# MatchCamera takes `current` back when it cuts; hold the probe's.
-		camera.current = true
+		if not _match_cam:
+			camera.current = true
 		var fraction := float(frame) / float(total)
 		if grabbed >= _at.size() or fraction < _at[grabbed]:
 			continue
 		await RenderingServer.frame_post_draw
 		var image := get_viewport().get_texture().get_image()
-		image.save_png("%s/%s_%02d.png" % [_out, _move_id, int(_at[grabbed] * 100)])
+		image.save_png("%s/%s_%02d.png" % [_out, shot, int(_at[grabbed] * 100)])
 		print("  t=%.2f  defender y=%.2f  attacker y=%.2f"
 				% [fraction, defender.global_position.y, attacker.global_position.y])
 		grabbed += 1

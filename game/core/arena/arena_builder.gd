@@ -170,10 +170,9 @@ const FLOOR_CHAIR_DETAIL_ROWS := 5
 ## the bowl at frame center -- both halves of the hall earn their polygons,
 ## the stage via stage_wide/entrance framings as well as the broadcast edge.
 ##
-## 6.0 -> 8.0 with the portals' respacing (Stage 1 of the AAA plan): the two
-## rings now stand one diameter apart with their outer edges near the video
-## wall's ends (|x| = PORTAL_OFFSET_X + PORTAL_MAJOR + PORTAL_MINOR = 7.67), so
-## the deck has to carry them. The bowl's opening and the overhead rig's
+## 6.0 -> 8.0 with the old portals' respacing (Stage 1 of the AAA plan); the
+## 2026 set's LED walls stand on the same width (SIDE_SCREEN_OUTER_X 7.45), so
+## the deck still carries them. The bowl's opening and the overhead rig's
 ## accent boom read this number too and were rebuilt with it.
 const STAGE_HALF_WIDTH := 8.0
 const STAGE_DECK_Y := 0.35
@@ -248,77 +247,61 @@ const SCREEN_FACE_Z := STAGE_BACK + SCREEN_FACE_OFFSET
 ## and blew the screen out).
 const SCREEN_BLANK_EMISSION := 0.35
 
-# --- Entrance portals -------------------------------------------------------
-## The two lit rings the entrance comes out of. Outer edge lands at
-## |x| = PORTAL_OFFSET_X + PORTAL_MAJOR + PORTAL_MINOR = 7.67, just inside
-## STAGE_HALF_WIDTH, so the deck still reads as wider than the set dressed on
-## it.
+# --- LED side walls (the 2026 Dynamite set) --------------------------------
+## The set the owner supplied on 18 October 2026 (gauntlet/refs/stage/
+## dynamite_2026_*.jpg): the two circular portals are gone. In their place
+## stand two tall LED walls either side of the centre screen, splayed away
+## from the ring (the outer edges set back), playing the video wall's picture; the wrestlers walk out of the
+## gap between them, in front of the centre screen. The curved wall above and
+## the centre screen below it are unchanged.
 ##
-## Spaced 3.3 -> 5.0: at 3.3 the gap between the rings was 1.26m, where the
-## reference's gap is about one ring diameter (here 2 * (5.0 - 2.45 - 0.22) =
-## 4.66m against a 4.9m ring) and the outer edges sit under the video wall's
-## ends (|x| 9.22) rather than inside its middle third. The centre LED panel
-## the rings now frame is entrance_set.py's CENTRE_SCREEN_HALF_W.
-const PORTAL_MAJOR := 2.45
-const PORTAL_MINOR := 0.22
-const PORTAL_OFFSET_X := 5.0
-## How far the circle's lowest point sits BELOW the deck.
-##
-## This is the whole shape: the portal is a circle, and the deck cuts the
-## bottom off it. Nothing else defines where the tube stops -- the two ends
-## are wherever the circle crosses the deck, which is why this is the constant
-## and the cut angle is derived rather than typed.
-##
-## 0.25 leaves a 2.2m opening at deck level. Larger cuts a wider doorway and
-## less circle; at about 0.9 it stops reading as a circle at all and starts
-## reading as an arch, which is a different piece of set.
-const PORTAL_CUT_DEPTH := 0.25
-const PORTAL_CENTER_Y := STAGE_DECK_Y + PORTAL_MAJOR - PORTAL_CUT_DEPTH
-const PORTAL_FACE_OFFSET := 1.3
-const PORTAL_FACE_Z := STAGE_BACK + PORTAL_FACE_OFFSET
-const PORTAL_RING_SEGMENTS := 48
-const PORTAL_TUBE_SIDES := 16
-## The angle, measured from +X counter-clockwise, at which the portal circle
-## crosses the deck on its right-hand side. Negative: it is below the
-## horizontal. The left-hand crossing is its mirror, PI minus this.
-##
-## Derived from PORTAL_CUT_DEPTH rather than typed, so the tube always stops
-## exactly where the deck is and moving one number cannot leave the ends
-## floating above the floor or buried under it.
-static func _portal_cut_angle() -> float:
-	return asin(clampf((STAGE_DECK_Y - PORTAL_CENTER_Y) / PORTAL_MAJOR,
-			-1.0, 1.0))
-## How deep each tunnel runs behind its ring: to just in front of the
-## backdrop (PORTAL_FACE_OFFSET, 1.3, behind the ring), which closes it. It was 3.2,
-## through the backdrop, so the tunnel's far end was hidden behind it and the
-## inside read as a black void.
-const PORTAL_RECESS_DEPTH := 1.26
-## The tunnel round (owner: "more realistic"; gauntlet/refs/stage/
-## dynamite_portals_close.jpg). The fan became LED bars from the tunnel wall at
-## the ring back and in toward the lattice: thin and set into the dark, so they carry
-## more than the flat fan did and still sit under the ring.
-const PORTAL_BAR_EMISSION := 0.75
-## Each ring is a two-tone gradient round the tube, as the set's LED rings are
-## programmed, not one flat colour: u runs from its right-hand foot over the
-## top to its left (entrance_set.ring_tube). The level puts the saturated
-## channel just over the glow threshold, so the ring blooms in its colour; a
-## flat colour at the old level bloomed to pastel pink and peach.
-const PORTAL_GRADIENT_WEST := "res://assets/environment/materials/portal_gradient_west.png"
-const PORTAL_GRADIENT_EAST := "res://assets/environment/materials/portal_gradient_east.png"
-const PORTAL_RING_LEVEL := 1.2
-## The lattice at the back of each tunnel, seen through the ring
-## (entrance_set.paint_tunnel_lattice): a pale perforated sheet lit from
-## behind, under the ring -- it is the far wall of a dark tunnel. The side
-## panels' dotted picture was tried first and vanished 4 m back in the dark.
-const PORTAL_LATTICE := "res://assets/environment/materials/tunnel_lattice.png"
-const PORTAL_BACK_LEVEL := 0.3
-## The small blue LED pods on the deck at each ring's foot: lamps, over the
-## glow threshold.
-const PORTAL_POD_COLOR := Color(0.28, 0.52, 1.0)
-const PORTAL_POD_LEVEL := 2.2
-## The tunnel's wall: dark and glossy, so the bars and the ring reflect in it
-## and it reads as a lit tunnel rather than a hole.
-const PORTAL_RECESS_ROUGHNESS := 0.22
+## Inner edges just outside the centre screen (entrance_set.py
+## CENTRE_SCREEN_HALF_W, 2.3), outer edges under the video wall's ends: in
+## the reference the two walls together span about the wall's width, and
+## their tops stop just under its bottom edge (SCREEN_CENTER_RISE -
+## SCREEN_HEIGHT / 2 = 6.0 above the deck).
+const SIDE_SCREEN_INNER_X := 2.55
+const SIDE_SCREEN_OUTER_X := 7.45
+## Above the deck: a hand of air under the picture for the floor cans, and the
+## top just under the video wall's bottom edge.
+const SIDE_SCREEN_BOTTOM := 0.25
+const SIDE_SCREEN_TOP := 5.65
+## How far the inner edges stand in front of the back wall. The centre screen
+## stays on the wall, so the gap between the two walls is a recess a man steps
+## out of; 1.2 keeps the inner edges behind MATCH_STAGE_BACK_LIMIT (1.4), and
+## leaves room for the set-back outer edges in front of the back wall.
+const SIDE_SCREEN_FACE_OFFSET := 1.2
+## The walls' angle about their inner edges, positive toward the ring. The
+## owner's close-ups (Omega, Copeland, 18 Oct) show them splayed: inner edges
+## nearest the camera, outer edges turned slightly away, so this is negative.
+const SIDE_SCREEN_TOE_DEG := -10.0
+## The LED cabinet's depth behind the picture.
+const SIDE_SCREEN_DEPTH := 0.3
+## The LED walls' brightness against the video wall's. They stand at deck
+## height, metres from every stage camera where the wall is twice as far and
+## above the frame; at the wall's level the close stage shots bloomed them to
+## white. 0.6 still read too bright beside the wall (the owner, 19 Oct).
+const SIDE_SCREEN_LEVEL := 0.4
+## Where an entrance begins: the centre of the gap, a step in front of the
+## centre screen and just inside the playable stage (MATCH_STAGE_BACK_LIMIT).
+const ENTRANCE_X := 0.0
+const ENTRANCE_Z := STAGE_BACK + 1.5
+## The red floor cans along the foot of each wall (the reference's row of PAR
+## lamps on the deck): lamps, over the glow threshold.
+const STAGE_FLOOR_CAN_COLOR := Color(1.0, 0.16, 0.12)
+const STAGE_FLOOR_CAN_LEVEL := 2.4
+
+
+static func side_screen_inner_z() -> float:
+	return STAGE_BACK + SIDE_SCREEN_FACE_OFFSET
+
+
+## Where a wall's outer edge stands: rotated SIDE_SCREEN_TOE_DEG about its
+## inner edge (negative: set back, away from the ring).
+static func side_screen_outer_z() -> float:
+	return side_screen_inner_z() + (SIDE_SCREEN_OUTER_X - SIDE_SCREEN_INNER_X) \
+			* tan(deg_to_rad(SIDE_SCREEN_TOE_DEG))
+
 
 # --- The rink ---------------------------------------------------------------
 ## The hall is built around a REGULATION ICE RINK, in metres, because the
@@ -1994,7 +1977,8 @@ const ENTRANCE_MODEL := "res://assets/environment/entrance_set.glb"
 const ENTRANCE_MATERIALS := {
 	"EntranceStage": ["arena_stage_deck", 0.8],
 	"StageBackdrop": ["arena_stage_panel", 1.1],
-	"PortalRecess": ["arena_tunnel", 0.35],
+	# The LED walls' cabinets: black steel round and behind the picture.
+	"StageSideScreenFrame": ["arena_tunnel", 0.5],
 	"StageScreenBezel": ["arena_tunnel", 0.5],
 	# Black pleated drape either side of the lit side panels: the darkest
 	# cloth in the set, under the bezel, so the folds read as folds against
@@ -2006,37 +1990,11 @@ const ENTRANCE_MATERIALS := {
 	"StageTruss": ["arena_truss", 3.6],
 }
 
-## The parts that light themselves: part name -> [material key, level].
-const ENTRANCE_EMISSIVE := {
-	# The ramp's edge strips, in the portals' magenta. That colour is
-	# MEASURED, not chosen: sampling the lit strip along the deck's leading
-	# edge in gauntlet/refs/stage/dynamite_stage_low_angle.jpg, 67 of 136
-	# sampled columns come back violet-magenta at hue 287-295 degrees against
-	# 9 blue and 5 cyan, with the rest blown to white at the strip's core.
-	#
-	# Level 0.72 rather than the portals' 1.12: the strips run the whole 24m
-	# of the ramp and sit far closer to the broadcast camera than the portals
-	# do, so the same level puts two hard magenta lines through the middle of
-	# every wide shot. This is under the Environment's glow threshold at the
-	# tube's centre and over it on the bloom, so they still flare.
-	"RampLeds": ["arena_portal_magenta", 0.72],
-	"PortalFanWest": ["arena_portal_magenta", PORTAL_BAR_EMISSION],
-	"PortalFanEast": ["arena_portal_amber", PORTAL_BAR_EMISSION],
-}
-## The backdrop's LED dot columns (entrance_set.py LED_*, the owner's AEW
-## arena still): teal, hot enough to bloom as points.
-const STAGE_LED_DOT_COLOR := Color(0.25, 0.85, 0.92)
-const STAGE_LED_DOT_LEVEL := 2.6
 const STAGE_CENTRE_SCREEN := "res://assets/environment/materials/stage_centre_screen.png"
 const STAGE_CENTRE_SCREEN_LEVEL := 0.9
 ## The chevron wings at each end of the video wall (entrance_set.py WING_*).
 const STAGE_SCREEN_WING := "res://assets/environment/materials/stage_screen_wing.png"
 const STAGE_SCREEN_WING_LEVEL := 1.1
-## The perforated side panels flanking the portals (entrance_set.py SIDE_PANEL_*).
-## Subtle on purpose: a lit surface 3m x 6m beside the rings must not compete
-## with them, so this sits under the centre screen's level.
-const STAGE_SIDE_PANEL := "res://assets/environment/materials/stage_side_panel.png"
-const STAGE_SIDE_PANEL_LEVEL := 1.1
 
 
 func _build_entrance_set() -> void:
@@ -2052,12 +2010,9 @@ func _build_entrance_set() -> void:
 		var spec: Array = ENTRANCE_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
-	for part: String in ENTRANCE_EMISSIVE:
-		var spec: Array = ENTRANCE_EMISSIVE[part]
-		_dress(root, part, _self_emissive(MaterialLibrary.resolve(spec[0]), spec[1]))
-	var dot := StandardMaterial3D.new()
-	dot.albedo_color = STAGE_LED_DOT_COLOR
-	_dress(root, "StageLedDots", _self_emissive(dot, STAGE_LED_DOT_LEVEL))
+	var can := StandardMaterial3D.new()
+	can.albedo_color = STAGE_FLOOR_CAN_COLOR
+	_dress(root, "StageFloorCans", _self_emissive(can, STAGE_FLOOR_CAN_LEVEL))
 	var centre := StandardMaterial3D.new()
 	centre.albedo_color = Color(0.02, 0.02, 0.025)
 	centre.emission_enabled = true
@@ -2071,42 +2026,8 @@ func _build_entrance_set() -> void:
 	wing.emission_texture = load(STAGE_SCREEN_WING)
 	wing.emission_energy_multiplier = STAGE_SCREEN_WING_LEVEL * _emissive_gain()
 	_dress(root, "StageScreenWings", wing)
-	var panel := centre.duplicate() as StandardMaterial3D
-	panel.emission_texture = load(STAGE_SIDE_PANEL)
-	panel.emission_energy_multiplier = STAGE_SIDE_PANEL_LEVEL * _emissive_gain()
-	_dress(root, "StageSidePanels", panel)
-	_dress_portals(root, panel)
 	add_child(root)
 	_attach_stage_video(root)
-
-
-## The tunnels: gradient rings, the lattice at the back, the LED pods, and a
-## glossy wall.
-func _dress_portals(root: Node3D, panel: StandardMaterial3D) -> void:
-	for side: String in ["West", "East"]:
-		var ring := StandardMaterial3D.new()
-		ring.albedo_color = Color(0.03, 0.03, 0.035)
-		ring.roughness = 0.35
-		ring.emission_enabled = true
-		# Black: the texture is ADDED to the emission colour (Godot's default
-		# operator), so white here rendered both rings plain white.
-		ring.emission = Color.BLACK
-		ring.emission_texture = load(PORTAL_GRADIENT_WEST if side == "West" else PORTAL_GRADIENT_EAST)
-		ring.emission_energy_multiplier = PORTAL_RING_LEVEL * _emissive_gain()
-		_dress(root, "PortalRing" + side, ring)
-	var back := panel.duplicate() as StandardMaterial3D
-	back.emission_texture = load(PORTAL_LATTICE)
-	back.emission_energy_multiplier = PORTAL_BACK_LEVEL * _emissive_gain()
-	_dress(root, "PortalBack", back)
-	var pod := StandardMaterial3D.new()
-	pod.albedo_color = PORTAL_POD_COLOR
-	_dress(root, "PortalPods", _self_emissive(pod, PORTAL_POD_LEVEL))
-	var recess := root.find_child("PortalRecess", true, false) as MeshInstance3D
-	if recess and recess.material_override is StandardMaterial3D:
-		var wall := recess.material_override as StandardMaterial3D
-		wall.roughness = PORTAL_RECESS_ROUGHNESS
-		wall.roughness_texture = null
-		wall.metallic_specular = 0.7
 
 
 ## The video wall, dressed last and separately.
@@ -2129,7 +2050,25 @@ func _attach_stage_video(root: Node3D) -> void:
 	screen_mat.uv1_scale = Vector3.ONE
 	screen.material_override = _self_emissive(screen_mat, SCREEN_BLANK_EMISSION)
 	screen.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(StageVideo.attach(screen, screen_mat))
+	var video := StageVideo.attach(screen, screen_mat)
+	# The LED walls either side of the centre screen play the same picture,
+	# each on its own material so StageVideo can crop it to the wall's shape
+	# (StageVideo.mirror). Blank like the wall until a picture binds.
+	var sides := root.find_child("StageSideScreens", true, false) as MeshInstance3D
+	if sides:
+		var side_mat := MaterialLibrary.resolve("arena_screen")
+		side_mat.uv1_scale = Vector3.ONE
+		sides.material_override = _self_emissive(side_mat, SCREEN_BLANK_EMISSION)
+		sides.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		video.mirror(side_mat, side_screen_aspect(), SIDE_SCREEN_LEVEL)
+	add_child(video)
+
+
+## A side wall's picture, width over height.
+static func side_screen_aspect() -> float:
+	var width := (SIDE_SCREEN_OUTER_X - SIDE_SCREEN_INNER_X) \
+			/ cos(deg_to_rad(SIDE_SCREEN_TOE_DEG))
+	return width / (SIDE_SCREEN_TOP - SIDE_SCREEN_BOTTOM)
 
 
 ## The overhead rig: `tools/blender/overhead_rig.py`'s model.
@@ -2157,6 +2096,11 @@ const RIG_MATERIALS := {
 ## across the rig. Light of their own: none -- they are the look of lamps;
 ## the rig's fixtures carry the measured light.
 const PAR_LENS_LEVEL := 3.2
+## Rig parts dressed but not drawn. The owner (18 Oct): no light rigging in the
+## wide shots -- on a broadcast the roof is black and the rig reads only as its
+## lamps, so the steel, the speakers and the PAR cans' bodies go dark and the
+## lenses (ParLenses) hang in the black on their own.
+const RIG_HIDDEN := ["RigTruss", "RoofSteel", "SpeakerArrays", "ParCans"]
 
 
 func _build_overhead_rig() -> void:
@@ -2178,6 +2122,10 @@ func _build_overhead_rig() -> void:
 	_dress(root, "ParLenses", _self_emissive(lens, PAR_LENS_LEVEL))
 	_dress(root, "ParCans", MaterialLibrary.house_compensate(
 			_house_lit(_textured("arena_chair"), 0.6)))
+	for part: String in RIG_HIDDEN:
+		var node := root.find_child(part, true, false) as Node3D
+		if node:
+			node.visible = false
 	add_child(root)
 
 

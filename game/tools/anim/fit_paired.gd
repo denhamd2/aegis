@@ -30,11 +30,14 @@ func _ready() -> void:
 		if not only.is_empty() and not (String(move_id) in only):
 			continue
 		var move: MoveDef = load("res://resources/moves/%s.tres" % move_id)
-		var spec: Dictionary = PairedRecipes.TRAJECTORIES.get(String(move.animation_pair_id), {})
+		# Stored by pair id, which build_paired_moves.gd reads it back by --
+		# the file name for every move but the library's ("ff/<move>").
+		var pair_id := String(move.animation_pair_id)
+		var spec: Dictionary = PairedRecipes.TRAJECTORIES.get(pair_id, {})
 		if spec.is_empty():
 			continue
 		var samples: Array = await _record(move_id)
-		var entry: Dictionary = fit.get(move_id, {})
+		var entry: Dictionary = fit.get(pair_id, {})
 		for role: String in ["attacker", "defender"]:
 			var keys: Array = spec[role]["pos"]
 			var old: Array = entry.get(role, [])
@@ -51,7 +54,7 @@ func _ready() -> void:
 			# Existing inserted keys move by the separation at their time too;
 			# then the worst uncovered correction in each gap gets a new one.
 			var index := 1 if role == "attacker" else 2
-			var ins: Array = inserts.get(move_id, {}).get(role, [])
+			var ins: Array = inserts.get(pair_id, {}).get(role, [])
 			for k: Array in ins:
 				var add := _separation_at(samples, float(k[0]), role)
 				k[1] = snappedf(float(k[1]) + add.x, 0.001)
@@ -83,10 +86,10 @@ func _ready() -> void:
 						snappedf(at.y, 0.001), snappedf(at.z, 0.001)])
 				ins.sort_custom(func(x, y): return float(x[0]) < float(y[0]))
 			if not ins.is_empty():
-				if not inserts.has(move_id):
-					inserts[move_id] = {}
-				inserts[move_id][role] = ins
-		fit[move_id] = entry
+				if not inserts.has(pair_id):
+					inserts[pair_id] = {}
+				inserts[pair_id][role] = ins
+		fit[pair_id] = entry
 		print("FIT %-36s D max %.3f  A max %.3f" % [move_id, _peak(samples, "defender"),
 				_peak(samples, "attacker")])
 	_write(fit, inserts)
