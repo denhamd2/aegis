@@ -605,3 +605,9 @@ func test_the_led_walls_are_dressed_and_lit() -> void:
 		assert_object(scene.find_child(light, true, false)).is_not_null()
 	for gone in ["TunnelLightW", "TunnelLightE", "UplightW0"]:
 		assert_object(scene.find_child(gone, true, false)).is_null()
+
+
+func test_the_side_walls_are_widescreen_so_a_16_9_clip_is_not_cropped() -> void:
+	# the owner, 19 Oct: the square walls cropped the video; a 16:9 clip now
+	# fills them, and the picture is cropped to exactly the wall's shape
+	assert_float(ArenaBuilder.side_screen_aspect()).is_between(1.72, 1.84)

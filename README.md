@@ -9781,3 +9781,12 @@ at broadcast-heavy intensity.
   probe ends on the time cap with no winner, on the committed code as well);
   fire and extinguisher, sound, Cody's face and neck, select-screen portraits,
   ladder dives, the table powerbomb, and the full Fight Forever move library.
+
+## 19 Oct — The LED walls are widescreen
+
+- **The two side LED walls are 16:9** (`SIDE_SCREEN_TOP` 3.05, was 5.65): the
+  square 0.92 walls cropped every widescreen clip to a strip. Their width and
+  splay are unchanged, so only the top edge moves. `entrance_set.glb` is
+  rebuilt from the same constants. The fire spread steps up a wall by a
+  fraction of its height (`SPREAD_TALL_HALF`), so a short wall keeps its fire
+  inside its edges.

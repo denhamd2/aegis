@@ -263,9 +263,12 @@ const SCREEN_BLANK_EMISSION := 0.35
 const SIDE_SCREEN_INNER_X := 2.55
 const SIDE_SCREEN_OUTER_X := 7.45
 ## Above the deck: a hand of air under the picture for the floor cans, and the
-## top just under the video wall's bottom edge.
+## top 2.8 m up. The walls are 16:9 landscape now (the owner, 19 Oct: the
+## square walls cropped every widescreen clip to a strip). Their width is
+## (OUTER - INNER) / cos(toe) = 4.98 m, so 4.98 / 2.8 = 1.78. side_screen_aspect()
+## reads this, so the clip is cropped to the wall's real shape and nothing else.
 const SIDE_SCREEN_BOTTOM := 0.25
-const SIDE_SCREEN_TOP := 5.65
+const SIDE_SCREEN_TOP := 3.05
 ## How far the inner edges stand in front of the back wall. The centre screen
 ## stays on the wall, so the gap between the two walls is a recess a man steps
 ## out of; 1.2 keeps the inner edges behind MATCH_STAGE_BACK_LIMIT (1.4), and

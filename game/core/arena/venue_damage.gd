@@ -471,6 +471,8 @@ const SPREAD_EVERY := 14.0
 const SPREAD_MAX := 10
 ## Patch to patch, along the wall or the row.
 const SPREAD_STEP := 2.3
+## The half-height the vertical step was tuned on: the old side walls, 5.4 m.
+const SPREAD_TALL_HALF := 2.7
 ## [along, up] in steps, in the order the tiles go.
 const SPREAD_PATTERN := [[1, 0], [-1, 0], [0, 1], [2, 0], [-2, 0], [1, 1], [-1, 1],
 		[0, -1], [3, 0], [-3, 0]]
@@ -521,8 +523,11 @@ func _spread(delta: float) -> void:
 			s["n"] = int(s["n"]) + 1
 			var t: Target = s["target"]
 			if t:
+				# up a step is a fraction of the target's height, so a short wall
+				# (the 16:9 side walls) keeps its fire inside its edges
+				var rise := SPREAD_STEP * 0.7 * clampf(t.half.y / SPREAD_TALL_HALF, 0.3, 1.0)
 				var local: Vector3 = s["origin"] + Vector3(float(step[0]) * SPREAD_STEP,
-						float(step[1]) * SPREAD_STEP * 0.7, 0.0)
+						float(step[1]) * rise, 0.0)
 				if absf(local.x) <= t.half.x - 0.5 and absf(local.y) <= t.half.y - 0.5:
 					_smash_skin(t, local, false, false)
 
