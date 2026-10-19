@@ -91,6 +91,8 @@ Basis rejection and unchanged master. These synthetic sculpts are test fixtures,
 not invented player likenesses. `build.json` records all 28 recipes and the
 24 independent slots. A no-edit John authoring/capture round trip also produced
 empty offsets without changing other profiles.
+The sculpt build preserves the neck's custom corner normals while recalculating
+the changed facial surface; the regeneration check verifies that shading seam.
 
 Run the mesh check, then import and the production roster checks:
 

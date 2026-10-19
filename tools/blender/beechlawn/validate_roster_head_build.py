@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(Path(__file__).parent))
 from shane_head_variants import (delta_data, apply_data, rebase_data, basis_fingerprint,
                                  layout_fingerprint, fingerprint)
-from build_roster_heads import open_master
+from build_roster_heads import open_master, apply_sculpt_part
 
 open_master()
 head=bpy.data.objects['Skin_Head']
@@ -53,7 +53,9 @@ for identity,data in [('first',first),('second',second)]:
     obj=head.copy();obj.data=new_base.copy()
     expression_before=[key.data[a].co-obj.data.shape_keys.key_blocks['Basis'].data[a].co
                        for key in obj.data.shape_keys.key_blocks]
-    apply_data(obj,rebased)
+    seam_normals={i:normal.vector.copy() for i,normal in enumerate(obj.data.corner_normals)
+                  if obj.data.vertices[obj.data.loops[i].vertex_index].co.y<154}
+    apply_sculpt_part(obj,rebased,protect_neck=True)
     for vertex in obj.data.vertices:
         expected=new_base.vertices[vertex.index].co+Vector(data['offsets'].get(str(vertex.index),(0,0,0)))
         assert (vertex.co-expected).length<1e-5
@@ -64,8 +66,10 @@ for identity,data in [('first',first),('second',second)]:
     for before,key in zip(expression_before,keys):
         assert (before-(key.data[a].co-keys['Basis'].data[a].co)).length<1e-5, 'Identity edit distorted an expression'
     assert layout_fingerprint(obj.data)==layout_fingerprint(base)
+    assert all((obj.data.corner_normals[i].vector-normal).length<1e-4
+               for i,normal in seam_normals.items()), 'Sculpt changed neck shading normals'
     results.append({'identity':identity,'common_edit_propagated':True,'personal_offsets_retained':True,
-                    'neck_uv_weights_and_expression_offsets_preserved':True})
+                    'neck_uv_weights_and_expression_offsets_preserved':True,'neck_corner_normals_preserved':True})
 assert basis_fingerprint(base)==original,'Regeneration changed the authoritative master'
 
 # Compare the promoted neutral to Shane's actually shipped sculpt, not a new fit.

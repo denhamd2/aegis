@@ -145,13 +145,28 @@ def resolve_sculpt(entry, current):
     return data
 
 
+def apply_sculpt_part(obj, data, protect_neck=False):
+    mesh = obj.data
+    # Custom split normals live on corners, not vertex.normal. Retain the
+    # actual seam shading before editing/recalculating the facial surface.
+    original = [normal.vector.copy() for normal in mesh.corner_normals]
+    apply_data(obj, data)
+    if data['offsets']:
+        if mesh.has_custom_normals:
+            with bpy.context.temp_override(object=obj, active_object=obj):
+                bpy.ops.mesh.customdata_custom_splitnormals_clear()
+        mesh.update()
+        normals = [normal.vector.copy() for normal in mesh.corner_normals]
+        if protect_neck:
+            for index, loop in enumerate(mesh.loops):
+                if mesh.vertices[loop.vertex_index].co.y < 154:
+                    normals[index] = original[index]
+        mesh.normals_split_custom_set(normals)
+
+
 def apply_sculpt(data):
     for name in PARTS:
-        apply_data(bpy.data.objects[name], data["parts"][name])
-        mesh = bpy.data.objects[name].data
-        if any(data["parts"][name]["offsets"].values()):
-            from refine_shane_photo_head import rebuild_normals
-            rebuild_normals(bpy.data.objects[name], [v.normal.copy() for v in mesh.vertices])
+        apply_sculpt_part(bpy.data.objects[name], data['parts'][name], name == 'Skin_Head')
 
 
 def export(path, names):
