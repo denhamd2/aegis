@@ -1,0 +1,25 @@
+{
+  "source_shared_blend_sha256_unchanged": "04884b693629b45474b6f79f7c8effecef2d452fff695946d66ec0a2025bc9a5",
+  "head_vertices": 4326,
+  "topology_sha256": "7f899a713458f82c50a7ce62ead430226e1c66581d9151140666037ccfaffce5",
+  "moved_head_vertices": 3958,
+  "largest_sculpt_offset_cm": 0.9437038713709596,
+  "bones": 65,
+  "parts": [
+    "Skin_Head",
+    "Eye_l",
+    "Eye_r",
+    "Hair_Shane_ShortCropRoots",
+    "Hair_Shane_ShortCropCards"
+  ],
+  "expression": "Shane_Smile (neutral default 0; closed mouth)",
+  "hair": "1800 curved, tapered tufts with geometric normals over close roots",
+  "limits": "Single-photo reconstruction; profile depth estimated; no teeth photo projection",
+  "glb_bytes": 9258052,
+  "head_package_triangles": 47236,
+  "base_head_package_triangles": 13504,
+  "surfaces": 5,
+  "additional_animation_libraries": 0,
+  "joint_order_matches_shared": true,
+  "base_glb_sha256_unchanged": "381e4eef33b10eb03d07953fc0df668ed498b782aafa60e7baee68bbfcc4b78b"
+}

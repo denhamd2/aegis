@@ -110,3 +110,7 @@ It informs the tapered western green and continuing roadside. It is an
 approximate modelling alignment, not a survey. See
 `../docs/art_briefs/kilmore_site_footprint.md`; original imagery stays unedited
 and is excluded from game exports.
+
+## Shane original portrait, 19 October 2026
+
+`source_uploads/chat_attachments/shane_face_photo/69012.jpg` is the original smiling Shane Denham photo supplied for the latest likeness pass. Use it for facial identity ahead of the generated character-sheet face; keep the sheet as secondary profile evidence. The photo has indoor lighting, slight yaw and an expression; it is not a neutral scan. Its provenance and hash are recorded alongside the unchanged original. See `../docs/art_briefs/shane_photo_likeness/brief.md`.

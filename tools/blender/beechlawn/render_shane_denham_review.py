@@ -11,8 +11,24 @@ SCENE = ROOT / "tools/blender/beechlawn/shane_denham_08.blend"
 shared_preview = "--shared" in sys.argv
 if shared_preview:
     SCENE = SCENE.with_name("footballer_shared.blend")
+scene_override = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--scene=")), None)
+if scene_override:
+    SCENE = Path(scene_override).resolve()
 OUT = ROOT / "games/beechlawn_rovers/docs/art_briefs/shane_denham_08_first_pass.png"
+output_override = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--out-dir=")), None)
+if output_override:
+    OUT = Path(output_override).resolve() / OUT.name
 bpy.ops.wm.open_mainfile(filepath=str(SCENE))
+variant_path = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--variant=")), None)
+if variant_path:
+    # Append head meshes only into this disposable shared-body review session.
+    names = ["Skin_Head", "Eye_l", "Eye_r", "Hair_Shane_ShortCropRoots", "Hair_Shane_ShortCropCards"]
+    originals = {name: bpy.data.objects[name] for name in names}
+    with bpy.data.libraries.load(str(Path(variant_path).resolve()), link=False) as (source, target):
+        target.objects = list(names)
+    for name, obj in zip(names, target.objects):
+        originals[name].data = obj.data
+        bpy.data.objects.remove(obj, do_unlink=True)
 scene = bpy.context.scene
 if shared_preview:
     short = bpy.data.objects.get("Kit_Shirt_ShortSleeve")
@@ -26,6 +42,10 @@ neutral_preview = "--neutral" in sys.argv
 clay_preview = "--clay" in sys.argv
 albedo_preview = "--albedo" in sys.argv
 hide_hair = "--no-hair" in sys.argv
+if "--smile" in sys.argv:
+    head = bpy.data.objects.get("Skin_Head")
+    if head and head.data.shape_keys:
+        head.data.shape_keys.key_blocks["Shane_Smile"].value = 1.0
 if armature:
     armature.animation_data_create()
     if idle_preview or clip:
@@ -97,7 +117,10 @@ scene.render.image_settings.file_format = "PNG"
 if hide_hair:
     for obj in list(scene.objects):
         if obj.type!="MESH":continue
-        slots={i for i,m in enumerate(obj.data.materials) if m and m.name=="MAT_Hair_ShortBrown"}
+        if obj.name.startswith("Hair_"):
+            obj.hide_render = True
+            continue
+        slots={i for i,m in enumerate(obj.data.materials) if m and m.name.startswith("MAT_Hair_")}
         if slots:
             bm=bmesh.new();bm.from_mesh(obj.data)
             bmesh.ops.delete(bm,geom=[f for f in bm.faces if f.material_index in slots],context="FACES")
@@ -139,6 +162,8 @@ views = [
     ("back", (0.0, 4.7, .92), 68),
     ("portrait", (0.0, -1.25, 1.69), 95),
 ]
+if "--face-views" in sys.argv:
+    views.append(("threequarter_portrait", (.75, -1.10, 1.69), 95))
 motion_review = "--motion-check" in sys.argv
 if motion_review:
     views = [("idle_f44_front", (0, -4.7, .92), 68),

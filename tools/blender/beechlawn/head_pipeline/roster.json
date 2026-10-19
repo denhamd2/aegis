@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "master_source": "tools/blender/beechlawn/footballer_head_master.blend",
+  "players": {
+    "bordeaux_01": {
+      "display_name": "Bordeaux goalkeeper 1",
+      "profiles": [
+        "data/squads/away_01.tres"
+      ],
+      "sculpt": "deltas/bordeaux_01.json",
+      "hair": "bald",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_02": {
+      "display_name": "Bordeaux player 2",
+      "profiles": [
+        "data/squads/away_02.tres"
+      ],
+      "sculpt": "deltas/bordeaux_02.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_03": {
+      "display_name": "Bordeaux player 3",
+      "profiles": [
+        "data/squads/away_03.tres"
+      ],
+      "sculpt": "deltas/bordeaux_03.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_04": {
+      "display_name": "Bordeaux player 4",
+      "profiles": [
+        "data/squads/away_04.tres"
+      ],
+      "sculpt": "deltas/bordeaux_04.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_05": {
+      "display_name": "Bordeaux player 5",
+      "profiles": [
+        "data/squads/away_05.tres"
+      ],
+      "sculpt": "deltas/bordeaux_05.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_06": {
+      "display_name": "Bordeaux player 6",
+      "profiles": [
+        "data/squads/away_06.tres"
+      ],
+      "sculpt": "deltas/bordeaux_06.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_07": {
+      "display_name": "Bordeaux player 7",
+      "profiles": [
+        "data/squads/away_07.tres"
+      ],
+      "sculpt": "deltas/bordeaux_07.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_08": {
+      "display_name": "Bordeaux player 8",
+      "profiles": [
+        "data/squads/away_08.tres"
+      ],
+      "sculpt": "deltas/bordeaux_08.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_09": {
+      "display_name": "Des Feeney",
+      "profiles": [
+        "data/squads/away_09.tres"
+      ],
+      "sculpt": "deltas/bordeaux_09.json",
+      "hair": "bald",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_10": {
+      "display_name": "Bordeaux player 10",
+      "profiles": [
+        "data/squads/away_10.tres"
+      ],
+      "sculpt": "deltas/bordeaux_10.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_11": {
+      "display_name": "Bordeaux player 11",
+      "profiles": [
+        "data/squads/away_11.tres"
+      ],
+      "sculpt": "deltas/bordeaux_11.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "john_orourke": {
+      "display_name": "John O’Rourke",
+      "profiles": [
+        "data/squads/home_01.tres",
+        "data/players/john_orourke.tres"
+      ],
+      "sculpt": "deltas/john_orourke.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "colly_roden": {
+      "display_name": "Colly Roden",
+      "profiles": [
+        "data/squads/home_02.tres"
+      ],
+      "sculpt": "deltas/colly_roden.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "derek_mitchell": {
+      "display_name": "Derek Mitchell",
+      "profiles": [
+        "data/squads/home_03.tres"
+      ],
+      "sculpt": "deltas/derek_mitchell.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "kev_mullen": {
+      "display_name": "Kev Mullen",
+      "profiles": [
+        "data/squads/home_04.tres"
+      ],
+      "sculpt": "deltas/kev_mullen.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "david_murray": {
+      "display_name": "David Murray",
+      "profiles": [
+        "data/squads/home_05.tres",
+        "data/players/david_murray.tres"
+      ],
+      "sculpt": "deltas/david_murray.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "deco_mccabe": {
+      "display_name": "Deco McCabe",
+      "profiles": [
+        "data/squads/home_06.tres"
+      ],
+      "sculpt": "deltas/deco_mccabe.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "david_denham": {
+      "display_name": "David Denham",
+      "profiles": [
+        "data/squads/home_07.tres"
+      ],
+      "sculpt": "deltas/david_denham.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "shane_denham": {
+      "display_name": "Shane Denham",
+      "profiles": [
+        "data/squads/home_08.tres",
+        "data/players/shane_denham.tres"
+      ],
+      "sculpt": "deltas/shane_denham.json",
+      "hair": "shane_crop",
+      "likeness": "photo-led reconstruction; review in progress"
+    },
+    "damo_murphy": {
+      "display_name": "Damo Murphy",
+      "profiles": [
+        "data/squads/home_09.tres"
+      ],
+      "sculpt": "deltas/damo_murphy.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "robbie_roden": {
+      "display_name": "Robbie Roden",
+      "profiles": [
+        "data/squads/home_10.tres",
+        "data/players/robbie_roden.tres"
+      ],
+      "sculpt": "deltas/robbie_roden.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "michael_mccabe": {
+      "display_name": "Michael McCabe",
+      "profiles": [
+        "data/squads/home_11.tres"
+      ],
+      "sculpt": "deltas/michael_mccabe.json",
+      "hair": "legacy_crop",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "paddy_mason": {
+      "display_name": "Paddy Mason",
+      "profiles": [
+        "data/squads/home_69.tres"
+      ],
+      "sculpt": "deltas/paddy_mason.json",
+      "hair": "bald",
+      "likeness": "starting head; individual likeness pending"
+    },
+    "bordeaux_goalkeeper": {
+      "display_name": "bordeaux_goalkeeper",
+      "profiles": [
+        "data/players/bordeaux_goalkeeper.tres"
+      ],
+      "identity_source": "bordeaux_09",
+      "hair": "bald",
+      "likeness": "legacy fixture explicitly reuses Des Feeney"
+    },
+    "bordeaux_outfield_1": {
+      "display_name": "bordeaux_outfield_1",
+      "profiles": [
+        "data/players/bordeaux_outfield_1.tres"
+      ],
+      "identity_source": "bordeaux_09",
+      "hair": "bald",
+      "likeness": "legacy fixture explicitly reuses Des Feeney"
+    },
+    "bordeaux_outfield_2": {
+      "display_name": "bordeaux_outfield_2",
+      "profiles": [
+        "data/players/bordeaux_outfield_2.tres"
+      ],
+      "identity_source": "bordeaux_09",
+      "hair": "bald",
+      "likeness": "legacy fixture explicitly reuses Des Feeney"
+    },
+    "bordeaux_outfield_3": {
+      "display_name": "bordeaux_outfield_3",
+      "profiles": [
+        "data/players/bordeaux_outfield_3.tres"
+      ],
+      "identity_source": "bordeaux_09",
+      "hair": "bald",
+      "likeness": "legacy fixture explicitly reuses Des Feeney"
+    },
+    "des_feeney_sr": {
+      "display_name": "Des Feeney Sr.",
+      "profiles": [
+        "data/officials/referee.tres"
+      ],
+      "sculpt": "deltas/des_feeney_sr.json",
+      "hair": "bald",
+      "likeness": "starting head; referee likeness pending"
+    }
+  }
+}

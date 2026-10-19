@@ -1,0 +1,27 @@
+{
+  "player_id": "bordeaux_11",
+  "master_revision": "7a688a2e4bb86c1798369fb1d4d5ae7ce3a1a33585affc467604d1c68b2628c6",
+  "parts": {
+    "Skin_Head": {
+      "schema_version": 2,
+      "topology_sha256": "7f899a713458f82c50a7ce62ead430226e1c66581d9151140666037ccfaffce5",
+      "basis_sha256": "2c90bbca35803f2ae80b4a4a1c33a363caf01d287a432504c2e9f14668f17724",
+      "layout_sha256": "5c86779de6a6e71d003d87c01276618abe3c053e4f554f8bee15bbc5baac81e9",
+      "offsets": {}
+    },
+    "Eye_l": {
+      "schema_version": 2,
+      "topology_sha256": "19a9b2533be6b9fc0988150c41e567a05219761d37063c8d3830762379d3141c",
+      "basis_sha256": "c40cdca8c1c0d6942531e277caee07c0b0d589e2db51175a74425cca7d5c8d87",
+      "layout_sha256": "15852c7b1c8a7ff3f9bc72213ce5e273386ca633abddf1d0341b070760199242",
+      "offsets": {}
+    },
+    "Eye_r": {
+      "schema_version": 2,
+      "topology_sha256": "9e37acfa4b1ba9ed0224c4ae3d6723801d5abab90ed1cbb705febe5fa38feb54",
+      "basis_sha256": "b95c0a0c6dbac2ed975c9894769443a2f566d12c2d58b5c51f16708083825eb7",
+      "layout_sha256": "6cbcc781e07af7a8df1961ae9d0724009d88aeb3e0ccbc1a6319a9874c4aca6a",
+      "offsets": {}
+    }
+  }
+}

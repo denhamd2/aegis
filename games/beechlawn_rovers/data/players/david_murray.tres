@@ -1,10 +1,19 @@
-[gd_resource type="Resource" script_class="FootballerProfile" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1_profile"]
 [ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2_attributes"]
 
+[ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="head_pipeline_appearance"]
+[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/master.glb" id="head_pipeline_head"]
 [sub_resource type="Resource" id="NeutralAttributes"]
 script = ExtResource("2_attributes")
+
+[sub_resource type="Resource" id="HeadAppearance"]
+script = ExtResource("head_pipeline_appearance")
+kit = "beechlawn_outfield"
+head_variant = ExtResource("head_pipeline_head")
+hair_style = "legacy_crop"
+
 
 [resource]
 script = ExtResource("1_profile")
@@ -16,3 +25,5 @@ visual_base = "David Murray"
 starting_slot = "center"
 starting_position = Vector2(-1.5, 0)
 attributes = SubResource("NeutralAttributes")
+
+appearance = SubResource("HeadAppearance")

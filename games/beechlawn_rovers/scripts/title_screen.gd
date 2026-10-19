@@ -27,10 +27,17 @@ var selected_mode := 0
 func _ready() -> void:
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		Engine.max_fps = 0
+	var background := ColorRect.new()
+	background.color = INK
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(background)
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var art := TextureRect.new()
 	art.texture = preload("res://assets/ui/title_key_art.png")
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	# Fit the complete campaign image to the same aspect as the menu canvas:
+	# covered cropping cut off the second portrait in 4:3 windows.
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(art)
 	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -90,7 +97,7 @@ func _build_main() -> void:
 	_label(canvas,"BEECHLAWN",Vector2(59,190),77,DISPLAY)
 	_label(canvas,"ROVERS",Vector2(59,278),105,DISPLAY)
 	var year_lockup := Panel.new()
-	year_lockup.position = Vector2(346,298)
+	year_lockup.position = Vector2(395,298)
 	year_lockup.size = Vector2(112,70)
 	year_lockup.add_theme_stylebox_override("panel",_style(Color(0.025,0.05,0.1,0.88),LIME))
 	canvas.add_child(year_lockup)

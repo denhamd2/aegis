@@ -1,0 +1,13 @@
+{
+  "tool": "OpenAI image generation, reference-led edit",
+  "date": "2026-10-19",
+  "runtime_asset": "assets/ui/title_key_art.png",
+  "sha256": "4875cfba782c0173707bae4211b1ed3869c401d5c80d4c3e72bada22cfa18640",
+  "references": [
+    "references/source_uploads/chat_attachments/title_player_photos/1-69003.jpg",
+    "references/source_uploads/chat_attachments/title_player_photos/4-title-player-selfie.jpg",
+    "assets/ui/club_crest_source.jpg"
+  ],
+  "direction": "Photorealistic natural-light portraits of David Murray and the owner, matching cloth and skin style, centred uhlsport, THOMAS LOOMES & CO, oval crest; quiet left space for native UI",
+  "limits": "Generated promotional art; not in-game character evidence. Chest marks are generated approximations; native menu crest uses original uploaded pixels."
+}

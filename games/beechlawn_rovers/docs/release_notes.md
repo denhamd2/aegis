@@ -1,3 +1,29 @@
+Shared head production update (19 October 2026):
+- Both teams and the referee now start from Shane's updated neutral head/eyes
+  on the existing shared body and animation rig. Per-player sculpt recipes
+  retain personal changes when compatible common improvements are rebuilt.
+- Head and hair selection are independent. Shane keeps his groom; Des, his
+  reused keeper, the referee and reserve Paddy use interim bald silhouettes.
+  Other crop hairstyles and all unedited faces remain placeholders.
+- Versioned master snapshots reject stale Basis/topology/UV/weight data.
+  The create-player guide now routes common and individual edits through this
+  pipeline. Assembled 23-actor, pose, intro and Play/Watch checks pass in Godot.
+- Individual likeness, facial hair, collars/shoulders and native M1 visual and
+  performance acceptance remain open. This is a reusable production foundation.
+
+Previous photo-led character and menu update:
+- Photorealistic landing portraits for David Murray and the owner, with clear
+  natural-light faces and matching kit style. Existing Play/Watch modes remain.
+- Shane has an independent photo-led head/eye/hair package on the shared body
+  and animation rig. Refined jaw/chin, cheek, eyelid, nose and mouth forms;
+  anatomical skin UVs retained, with a separate restrained smile shape.
+  Replaced flat-looking cap hair with a dense curved short groom, geometric
+  tuft normals and restrained highlights; other players keep the shared base.
+- Both 11v11 and retained 4v4 Shane resources use the same head. Other identities
+  and shared body/animations remain intact. Facial likeness remains in review;
+  hidden profile shape is estimated from secondary references.
+- Updated create-player workflow and production checks for future roster work.
+
 A three-minute keyboard 11v11 Sunday-league prototype at Kilmore Drive.
 
 Beechlawn Rovers 27 title screen:

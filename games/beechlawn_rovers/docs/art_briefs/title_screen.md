@@ -103,3 +103,14 @@ THOMAS LOOMES & CO and manufacturer remains Uhlsport.
   keyboard movement/Tab must not claim a player. Both keepers remain AI.
 - Let the match reach full time; Escape returns to menu. Launch the other mode.
   Repeat after a goal and boundary restart; actors/officials must not accumulate.
+
+## Photorealistic artwork revision — 19 October 2026
+
+Replaced the illustrated key art with photographic styling from the original David Murray and owner portraits. Both faces are clear, naturally lit and unobscured. Cloth and skin share the same photographic treatment; the manufacturer, sponsor spelling, oval crest, title and native controls remain. Provenance is in `assets/ui/title_key_art.provenance.json`. Fresh actual Web menu captures are in `title_photoreal_evidence/`; generated artwork does not certify in-game player realism.
+
+The latest browser checks distinguish release-menu evidence from debug match
+evidence. Full SwiftShader match captures need the debug-only software shadow/FPS
+and freeze hooks; a release build deliberately retains full rendering. The checker
+now fails with a clear message if a release is used for those full software
+captures. Run `check_title_web.py <release-web> <evidence> --menu-only` for the
+actual shipped menu, and the normal command against a debug export for Play/Watch.

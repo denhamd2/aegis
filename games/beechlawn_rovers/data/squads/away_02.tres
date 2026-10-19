@@ -1,13 +1,18 @@
-[gd_resource type="Resource" script_class="FootballerProfile" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=7 format=3]
 [ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="3"]
+[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/master.glb" id="head_pipeline_head"]
 [sub_resource type="Resource" id="Attributes"]
 script = ExtResource("2")
 [sub_resource type="Resource" id="Appearance"]
 script = ExtResource("3")
 kit = "bordeaux_outfield"
 print_name = "BORDEAUX 2"
+head_variant = ExtResource("head_pipeline_head")
+hair_style = "legacy_crop"
+
+
 [resource]
 script = ExtResource("1")
 player_id = &"bordeaux_02"

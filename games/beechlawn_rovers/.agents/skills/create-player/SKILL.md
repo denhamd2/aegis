@@ -1,50 +1,59 @@
 ---
 name: create-player
-description: Create or substantially refine a Beechlawn Rovers footballer in Blender from the project's archived character sheet and kit references. Use for identity, body proportions, face, hair, kit, materials, rig fit, and Godot-ready validation. This skill is specific to Beechlawn Rovers.
+description: Create or refine a Beechlawn footballer's likeness, body, hair, kit, UV textures, or shared-rig integration from archived references; validate the exported player in Godot.
 ---
 
-# Create a Beechlawn football player
+# Create a Beechlawn player
 
-Deliver a recognizable, reference-faithful, game-ready footballer on the first serious pass by resolving reference conflicts and likeness at blockout, then validating geometry, materials, and kit in consistent views before adding small detail. “First pass” means a disciplined, evidence-led build that avoids preventable rework; it does not mean skipping review or promising a one-shot AAA result.
+Scope: Beechlawn Rovers only. Keep wrestling assets and rules separate. Aim for recognisable, reference-faithful players through measured iteration; a first pass is a review gate, not a promise of an exact or AAA likeness.
 
-## Scope and routing
+Paths below are relative to the **repository root**. Preserve the current production asset and improve it in place. Inspect the current source and runtime wiring before choosing a generator: rebuilding an older source can discard later animation, tailoring and material fixes.
 
-This skill applies only inside `games/beechlawn_rovers/`. Do not apply its roster, kit, proportions, or output rules to Aegis wrestling characters. Use the project reference archive as the source of truth. Before modeling, also read the relevant repo guides:
+## 1. Establish the reference and baseline
 
-- `../../../../../.claude/skills/blender-director/SKILL.md`
-- `../../../../../.claude/skills/character-artist/SKILL.md`
-- `../../../../../.claude/skills/blender-materials/SKILL.md`
-- `../../../../../.claude/skills/realistic-style/SKILL.md`
-- Add `rigging`, `hair-groom`, `uv-workflow`, `blender-uv-texturing`, or `retopology` only for work actually in scope.
+Read `games/beechlawn_rovers/docs/art_reference_implementation_plan.md` and `references/README.md` within that project. Retrieve archived originals; copy new uploads unchanged into its reference archive with provenance and SHA256. For face identity, use the owner's latest original portrait ahead of generated character-sheet faces; retain sheet profiles as secondary evidence and label unseen anatomy as an estimate. Resolve conflicting kit marks through recorded owner corrections.
 
-Follow `../../../docs/art_reference_implementation_plan.md` and `../../../references/README.md`. Retrieve untouched source files from `../../../references/source_uploads/`; do not rely on chat history, preview thumbnails, or generated reconstructions as the only source. Keep Blender sources and repeatable build scripts in `../../../tools/blender/beechlawn/`, and export game assets only into this Godot project.
+Write a short feature/gap brief: player and number, evidence filenames, head/body silhouette, facial landmarks, hairline, garment construction, graphics and five largest current mismatches. Separate expression, perspective and indoor lighting from identity. Decide fixed front/profile/three-quarter/back, portrait and gameplay review views before editing. Preserve before captures with the same camera, pose, light, exposure and render settings used after.
 
-## Reference analysis before modeling
+Read these specialists when their branch applies:
 
-1. Identify the exact player, squad number, role, character-sheet source, and matching kit board. Record source filenames in a short asset brief.
-2. Separate evidence by purpose: full-body front/side/back views establish silhouette and garment fit; portrait and expression views establish face, hair, and skin; kit close-ups establish crest, number, trim, fabric, collar, and sleeve construction. Use the individual character sheet for that player's fit and appearance, and the shared kit sheet for garment/graphic construction.
-3. Make a feature map before editing: height/build and proportions; head shape and facial landmarks; hairline, hairstyle, facial hair; shirt silhouette and sleeve length; crest, number, sponsors/marks if shown; shorts, socks, boots, and goalkeeper-specific equipment. Link each decision to its source image or label it as an assumption.
-4. Resolve disagreements explicitly in the brief. Follow the project's decisions in `art_reference_implementation_plan.md` (including the current sleeve and crest-date notes); do not silently invent a crest date, number, identity, body feature, or kit mark. Measurements read from generated sheets are visual estimates, not authoritative biometric data.
-5. Define review views and target scale before adding detail: neutral front, side/profile, three-quarter, and back; portrait close-up; and the expected Godot broadcast view. Keep camera, focal length, lighting, exposure, pose, and color management fixed for before/after comparisons.
+| Work | Repository guide |
+| --- | --- |
+| Reference-led production | `.claude/skills/blender-director/SKILL.md` and its reference-image-match workflow |
+| Anatomy, face or clothing | `.claude/skills/character-artist/SKILL.md` |
+| Mesh edits and source organisation | `.claude/skills/blender-modeler/SKILL.md`; add `.claude/skills/blender-modeling/SKILL.md` for mesh-operation detail |
+| Skin/cloth response | `.claude/skills/blender-materials/SKILL.md`, `.claude/skills/realistic-style/SKILL.md` |
+| Hair silhouette/cards | `.claude/skills/hair-groom/SKILL.md` |
+| UV layout or image registration | `.claude/skills/uv-workflow/SKILL.md`, `.claude/skills/blender-uv-texturing/SKILL.md` |
+| Changed weights, rest pose or rig | `.claude/skills/rigging/SKILL.md` |
+| Godot delivery | `.claude/skills/godot-export/SKILL.md` |
 
-## Build order
+Use available headless Blender/bpy directly when MCP is absent. Store editable sources and repeatable scripts in `tools/blender/beechlawn/`; exported assets belong to the football project. No Blender dependency at game startup.
 
-1. **Proportions and silhouette.** Start at the project's metre scale and use the supplied Y-Bot as a rig/import baseline only, not as the final human likeness. Match total height, head-to-body ratio, shoulder/torso/hip mass, limb lengths, and stance to the character sheet. Confirm the silhouette in front, profile, and back before facial or cloth detail.
-2. **Body and face.** Fit the human body to the shared skeleton and preserve its usable bone names/rest pose unless a measured rig problem requires a change. Establish skull, jaw, cheek, brow/orbit, nose, lips, ears, neck, and facial hair as distinct readable forms. Correct broad shape before painting detail. Compare face landmarks in front, profile, and three-quarter views; use image measurements as diagnostics only, with the rendered likeness and source sheet deciding the result. Keep eyelids, mouth, jaw, and shoulder/hip deformation topology suitable for animation.
-3. **Hair and facial hair.** Match silhouette, hairline, direction, and clump scale from the sheet. Build clean root coverage and tapered flow; avoid broad flat card ends, hard scalp seams, uniform plastic shine, and beard edges that read as a cutout. Use a scalp/base layer plus restrained cards or clumps appropriate to camera distance. Keep hair and beard shading out of skin-only subsurface, sweat, and wetness masks. Do not copy a hero-character strand count or triangle increase without measuring the football camera, overdraw, and 4v4/22-player cost.
-4. **Kit construction.** Model jersey, shorts, socks, boots, and keeper gloves as clean, appropriately layered clothing pieces. Match garment fit, sleeve length, collar, stripe/block layout, cuff and sock bands, boot silhouette, crest placement, and front/back/shorts numbers to the references. Keep logos and typography crisp and correctly oriented; use exact supplied designs, not guessed text. Use separate material regions or atlases so roster variants share materials where practical. Do not let the cloth hide or distort the player's body silhouette.
-5. **UVs and materials.** Keep UV islands aligned to anatomy and garment panels; inspect seams and mirrored areas. Use base-color/albedo for pigment and graphics, normal maps for restrained pores/weave/stitch relief, and roughness variation for skin, hair, and cloth. Treat color textures as sRGB and data maps (normal/roughness/masks) as linear. If image-generation or projection is used to create pigment/detail, register it to the model's actual UV anatomy, preserve source detail on untouched islands, and inspect seams; the generated atlas is texture source art, never a substitute for the actual model in-engine. Keep skin response subtle and controllable: pores and micro-normal should not become noise at gameplay distance; subsurface scattering should be modest and restricted to exposed skin; wetness should be bounded and optional, never a global glossy layer. Prevent hair pigment from receiving flesh scattering. Avoid baking scene lighting or shadows into base color.
-6. **Rig and export.** Keep the gameplay skeleton reusable across the roster where proportions allow; use per-player mesh/material data rather than duplicating a full rig or unique shader for every player. Check applied transforms, metre scale, Y-up orientation, clean hierarchy, weights, seams, and extreme shoulder raise, sprint, kick, crouch, and fall poses. Export GLB with packed/relative textures and stable material/action names. Retain the editable `.blend`, source textures, and deterministic build script.
+**Gate:** original evidence, current production source, baseline views and prioritised gap list are recorded.
 
-## Reference-led quality loop
+## 2. Fix form, then surfaces
 
-- Create a simple material/lighting lookdev scene and produce neutral front, side, three-quarter, and back renders plus a face close-up. Match the source views as closely as possible in camera and pose before judging likeness; do not use post-processing to hide a geometry or texture mismatch.
-- Compare the same fixed views side by side and record the largest remaining gaps by category: silhouette, face, hair, kit construction/graphics, material response, or rig fit. Fix the largest structural mismatch first. A texture cannot repair wrong facial planes; extra polygons cannot fix a wrong silhouette; more hair cards cannot fix a bad hairline.
-- Use Aegis's recent Roman/Cody work only as transferable method: separate geometry corrections from UV pigment, preserve a known-good rig when possible, mask hair independently from flesh shading, use bounded character-specific material tuning, compare identical multi-view captures, and report measured costs. Those reviews still identified face-plane, pore, hairline, and clump-end gaps after the passes; a better texture or lower triangle count is not proof of a finished likeness. Do not copy its wrestlers, art, exact material values, groom density, or hero close-up budget into football.
-- Inspect the actual exported asset in Godot after Blender approval. Verify face and kit in the broadcast camera, texture import/color-space, material slots, bone/rest pose, scale/orientation, and deformations with the production rig. A Blender mannequin or studio render is an iteration gate, not final validation.
+Work from silhouette to facial planes to detail. Check neutral clay front/profile/three-quarter before tuning skin. Fit skull, jaw, cheek, brow/orbit, nose, lips, ears and neck as geometry. Keep lids fitted to curved eyeballs; iris placement cannot repair a wrong aperture. Treat a smile as a separate editable expression from neutral identity. Use proper oral geometry for an open smile; skin pigment cannot stand in for teeth or mouth depth. A single portrait cannot establish an exact hidden profile.
 
-## Performance and quality gates
+Preserve the common skeleton, rest transforms, bone names, animation timing and body/kit interfaces. For common-head updates or individual likeness edits, follow [the shared head pipeline](../../../docs/art_briefs/shared_head_pipeline.md): the authoritative source is `footballer_head_master.blend`; individual sculpts are revisioned offsets. Preserve the neck's positions, weights **and normals**. See [production checks](production-checks.md) for seams, skin binding and safe exports.
 
-Prioritize likeness and construction at the intended camera distance, then optimize without losing the reference match. Share materials and rig data; limit unique transparent hair layers and shadow casters; use mipmapped, compressed textures and suitable LODs. Measure triangle count, texture memory, alpha overdraw, and shadow cost rather than assuming fewer polygons alone means faster rendering. Review one representative player in the 4v4 scene, then test the assembled roster. The M1 Pro/16 GB 1080p/60 fps target is unverified until measured on the target Mac; cloud renders do not establish it.
+Hair needs scalp coverage, a reference-shaped hairline/crown and directional clumps before flyaways. Inspect root edges and card ends from several angles. Bound transparency, shadow cost and strand count to the football camera.
 
-Do not call a player reference-matched until the front/profile/three-quarter/back and portrait comparisons show no major identity or kit mismatch, and the exported Godot character remains readable in the broadcast view and expected poses. Record unresolved source conflicts and the exact remaining visual gaps instead of presenting assumptions as completed facts.
+Match garment silhouette before texture polish: torso and shoulder mass, collar, sleeve joins, cuffs, shorts leg openings, sock bands and boots. Map supplied complete panel graphics onto the constructed garment, including crest, sponsor, manufacturer and trim. Keep text size and placement reference-led. Check front and back with folded limbs, not only a bind pose.
+
+Preserve anatomical UV islands and register pigment to them. Base colour carries pigment; geometry and restrained normal/roughness maps carry form and relief. Keep photographic illumination out of albedo. A rectangular portrait overlay is not a facial texture solution. Colour maps are sRGB; normal/roughness/masks are linear. Mask hair separately from skin scattering/wetness. Use exporter-supported PBR nodes and inspect the saved image after reload to catch colour-space changes.
+
+**Gate:** matched clay and textured views show the structural changes; record remaining likeness, garment and texture gaps before export.
+
+## 3. Integrate and prove
+
+Export compatible GLB with stable part/material/action names and editable source. For a head package, reuse the live body skeleton and animation player; validate joint-index/bind compatibility and swap the matching eyes/hair when needed. Hook the variant into the actual player resources, including retained small-sided fixtures. An isolated prototype render alone does not update the match.
+
+Inspect the actual Godot import in portrait and broadcast views, then representative idle, sprint, kick and turn poses. If shoulders, legs or clothing changed, extend checks to crouch, slide/get-up and keeper poses. Test transitions and contact timing where affected. Use bounded, serial Godot checks through the project runner; diagnose a timeout before starting another copy.
+
+Count active rigs, mesh surfaces, triangles, texture dimensions/mips and transparent layers. Shared resources should propagate body/kit/animation updates while per-player sculpt and playback stay independent. Validate the assembled 22 players plus referee, not just the isolated asset. Cloud/Web captures establish integration and layout; native M1 Pro 1080p/60 fps remains a target until measured there.
+
+Save before/after evidence, export/import results and unresolved gaps beside the asset brief. Generated promotional artwork is source art, not evidence of the playable mesh. Report the exact asset and backlog ID/ordinal changed; keep likeness approval separate from technical validation.
+
+**Gate:** the intended roster player uses the reviewed export, common assets remain intact, relevant runtime checks pass and evidence/limitations are recorded.
