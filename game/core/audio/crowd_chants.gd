@@ -5,7 +5,10 @@ extends Node
 
 const CODY_CHANT_FADE_IN := 2.0
 const CODY_CHANT_FADE_OUT := 3.0
-const CODY_CHANT_LEVEL_DB := -4.0
+## Loud: the building chanting is the loudest thing in the room while it
+## lasts (the owner, 19 Oct: louder, especially the chants). +3 dB over unity;
+## the master bus compressor and limiter hold the peaks.
+const CODY_CHANT_LEVEL_DB := 3.0
 const MATCH_END_FADE := 1.25
 
 var clock := 0.0
@@ -39,15 +42,21 @@ func configure_cody_chant(stream: AudioStream, bus: String, match_seed: int) -> 
 	_next_chant = 0
 
 
-## Three potential slots, independently seeded per match and at least 90 s
-## apart. Short matches naturally end before the later slots are reached.
+## Five potential slots, independently seeded per match: the first soon after
+## the bell, then one every minute or so -- the 36 s chant and a breather.
+## Short matches naturally end before the later slots are reached.
+const CHANT_SLOTS := 5
+const FIRST_CHANT := Vector2(20.0, 28.0)
+const CHANT_GAP := Vector2(62.0, 76.0)
+
+
 static func schedule_for_seed(match_seed: int) -> Array[float]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = match_seed * 15485863 + 32452843
-	var first := rng.randf_range(28.0, 38.0)
-	var second := first + rng.randf_range(90.0, 105.0)
-	var third := second + rng.randf_range(90.0, 105.0)
-	return [first, second, third]
+	var out: Array[float] = [rng.randf_range(FIRST_CHANT.x, FIRST_CHANT.y)]
+	for i in CHANT_SLOTS - 1:
+		out.append(out[out.size() - 1] + rng.randf_range(CHANT_GAP.x, CHANT_GAP.y))
+	return out
 
 
 static func chant_gain_db(elapsed: float, length: float, ending := false,

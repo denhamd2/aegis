@@ -1,13 +1,18 @@
 class_name SignFan
 extends Node3D
-## One ringside spectator with a sign (tools/blender/sign_fan.py): sat with the
+## One ringside spectator with a sign (tools/blender/sign_fan.py): a real
+## person -- a textured Rocketbox avatar on his own skeleton, one per seat
+## (MODELS) -- sat with the
 ## board face-down on his knees, and on raise() up on his feet holding it over
 ## his head, pumping it, until he sits back down. SignFans decides when.
 ##
 ## Presentation only (ARCHITECTURE.md): he reads nothing in the match and
 ## nothing reads him.
 
-const MODEL := "res://assets/environment/sign_fan.glb"
+## One person per seat in SignFans.FANS: the ENDA FEARS OMAR fan first.
+const MODELS := ["res://assets/environment/sign_fan_0.glb", "res://assets/environment/sign_fan_1.glb",
+		"res://assets/environment/sign_fan_2.glb", "res://assets/environment/sign_fan_3.glb"]
+const MODEL: String = MODELS[0]
 const SEATED := "Fan_Seated"
 const RISE := "Fan_Rise"
 const HOLD := "Fan_Hold"
@@ -18,10 +23,6 @@ const BLEND := 0.12
 ## The picture on the board is paper under arena light, not a screen: taken
 ## down so it sits with the crowd rather than glowing out of it.
 const SIGN_TINT := Color(0.78, 0.78, 0.78)
-const SKIN := Color(0.46, 0.34, 0.27)
-const DARK := Color(0.05, 0.05, 0.06)
-const EYE_WHITE := Color(0.78, 0.74, 0.66)
-const FACE_DETAIL := Color(0.12, 0.07, 0.055)
 
 enum Stage { SEATED, RISING, HOLDING, LOWERING }
 
@@ -30,11 +31,12 @@ var _player: AnimationPlayer
 var _hold_left := 0.0
 
 
-## Builds him in his chair, in `shirt`, with `picture` on the board. `phase`
-## (0-1) staggers his seated sway against anyone else's.
-func setup(picture: Texture2D, shirt: Color, phase: float,
-		region := Rect2(0.0, 0.0, 1.0, 1.0)) -> void:
-	var packed := load(MODEL) as PackedScene
+## Builds him in his chair with `picture` on the board: `model` is which
+## person (MODELS), in his own clothes. `phase` (0-1) staggers his seated sway
+## against anyone else's.
+func setup(picture: Texture2D, phase: float, region := Rect2(0.0, 0.0, 1.0, 1.0),
+		model_path: String = MODEL) -> void:
+	var packed := load(model_path) as PackedScene
 	if packed == null:
 		push_error("SignFan: %s failed to load. Run tools/blender/sign_fan.py." % MODEL)
 		return
@@ -46,12 +48,6 @@ func setup(picture: Texture2D, shirt: Color, phase: float,
 		if mesh.name.begins_with("FanSign"):
 			mesh.set_surface_override_material(0, _board(picture, region))
 			mesh.set_surface_override_material(1, _flat(Color(0.62, 0.58, 0.51)))
-		else:
-			mesh.set_surface_override_material(0, _flat(shirt))
-			mesh.set_surface_override_material(1, _flat(SKIN))
-			mesh.set_surface_override_material(2, _flat(DARK))
-			mesh.set_surface_override_material(3, _flat(EYE_WHITE))
-			mesh.set_surface_override_material(4, _flat(FACE_DETAIL))
 	if _player == null:
 		return
 	for loop: String in [SEATED, HOLD]:

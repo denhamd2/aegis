@@ -178,3 +178,32 @@ func test_a_post_hit_takes_the_post_and_its_pads_out_of_the_ring_model() -> void
 		assert_int((ring.find_child(part, true, false) as MeshInstance3D).mesh.get_faces().size()) \
 				.override_failure_message("%s untouched" % part).is_less(int(before[part]))
 	assert_object(d.get_node_or_null("Damaged_PostES")).is_not_null()
+
+
+
+func test_a_fire_spreads_across_the_board_and_the_seats_as_the_match_goes_on() -> void:
+	# the owner, 19 Oct: not just the hot spot, and one fire spreading, not
+	# a row of separate ones
+	var scene := _match()
+	await get_tree().process_frame
+	var d := VenueDamage.of(scene.get_node("WrestlerA"))
+	d.ensure_targets()
+	var wall := _target(d, "SideScreenR")
+	d.blast(wall.box * Vector3(0.0, 0.0, wall.half.z), wall.box.basis.z, wall)
+	d.blast(Vector3(-13.0, ArenaBuilder.FLOOR_Y + 1.0, 4.0), Vector3.UP, null, true)
+	var fires_at_hit := d.fires.size()
+	var patches_at_hit := wall.overlays.size()
+	var start := d.sheet_sizes()
+	assert_int(start.size()).is_equal(2)
+	d._spread(VenueDamage.SPREAD_EVERY * 4.0)
+	var later := d.sheet_sizes()
+	for i in 2:
+		assert_float(later[i].x).is_greater(start[i].x + 2.0)     # it grows, as one sheet
+	assert_int(d.fires.size()).is_equal(fires_at_hit)            # not new campfires
+	assert_int(wall.overlays.size()).is_greater(patches_at_hit)  # the board goes with it
+	d._spread(VenueDamage.SPREAD_EVERY * 40.0)
+	for n: int in d.spread_counts():
+		assert_int(n).is_equal(VenueDamage.SPREAD_MAX)
+	for size: Vector2 in d.sheet_sizes():
+		assert_vector(size).is_equal(VenueDamage.SHEET_MAX)
+	assert_int(d.find_children("FireSheet*", "", false, false).size()).is_equal(2)

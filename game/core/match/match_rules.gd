@@ -11,8 +11,10 @@ extends RefCounted
 
 enum Mode { ONE_ON_ONE, NO_HOLDS_BARRED }
 
-## As the select screen and the VS card print them, by Mode.
-const LABELS := ["1 ON 1", "NO HOLDS BARRED"]
+## As the select screen and the VS card print them, by Mode. The anything-goes
+## match is billed as a LIGHTS OUT match, AEW's name for it (the owner,
+## 19 Oct); in the code it stays NO_HOLDS_BARRED, the rules it plays by.
+const LABELS := ["1 ON 1", "LIGHTS OUT"]
 const META := &"match_mode"
 
 

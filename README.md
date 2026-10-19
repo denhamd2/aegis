@@ -9715,3 +9715,29 @@ at broadcast-heavy intensity.
   screen start fires that burn until the match ends. Every blast leaves a
   scorch mark, and rubble at floor level.
 - Review: `gauntlet/refs/nhb/review/step2_rocket_pyro_and_damage.png`.
+
+## 19 Oct — Fires spread; real people holding the signs
+
+- **Fires spread.** A rocket fire no longer stays on its hot spot: every 14 s
+  each hit's fire catches the next patch beside it, out to ten patches --
+  across the LED wall it hit (smashing and burning that part of the wall as it
+  goes) or along the row and up the rows of seats (`VenueDamage._spread`).
+  Only one spread fire in three carries a light.
+- **Sign fans are real people.** The four sign fans were box figures; each is
+  now a textured Microsoft Rocketbox avatar (MIT, as the crowd) on its own
+  80-bone skeleton, a different man per seat (`sign_fan_0..3.glb`), posed by
+  the same board-lifting IK as before: hands solved onto the board's edges
+  every frame, feet planted, spine and head following.
+  `tools/blender/sign_fan.py` needs the Rocketbox checkout from
+  `fetch_rocketbox.sh`.
+- **Fire spreads as one fire.** Each hit's fire is a single sheet of flame and
+  smoke (a growing box emitter) whose edges creep across the LED wall or along
+  and up the seats, denser and brighter as it widens -- not a row of separate
+  fires.
+- **Lights Out.** The anything-goes match is billed as a LIGHTS OUT match on
+  the select screen and VS card (`MatchRules.LABELS`).
+- **Louder crowd.** The crowd layers are +4 dB (`CROWD_MIX_GAIN_DB` 7), the
+  recorded chants +7 dB (`CODY_CHANT_LEVEL_DB` +3) and come round about once a
+  minute, up to five times a match.
+- Weapon review and plan: `gauntlet/refs/nhb/weapon_review.md`.
+  Review: `gauntlet/refs/nhb/review/step3_fans_fire_spread.png`.

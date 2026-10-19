@@ -8,6 +8,8 @@ extends Node3D
 ##       --resolution 1280x720 tools/probe/venue_damage_shot.tscn -- --out /tmp/damage
 ##
 ## Writes <out>/<view>.png for each view below.
+## --spread SECONDS lets the fires spread that long first; --views a,b renders
+## only those views.
 
 const MATCH_SCENE := "res://scenes/match.tscn"
 ## [name, camera at, looking at] -- the barricade, post, apron and steps views
@@ -67,6 +69,15 @@ func _ready() -> void:
 					t.place.origin + Vector3.UP * 0.3)
 			break
 	d.blast(Vector3(-13.0, ArenaBuilder.FLOOR_Y + 1.0, 4.0), Vector3.UP, null, true)
+	var spread := 0.0
+	var only: PackedStringArray = []
+	for i in args.size():
+		if args[i] == "--spread" and i + 1 < args.size():
+			spread = float(args[i + 1])
+		elif args[i] == "--views" and i + 1 < args.size():
+			only = args[i + 1].split(",")
+	if spread > 0.0:
+		d._spread(spread)
 	print("damaged: ", d.history.size(), " fires: ", d.fires.size())
 	for _i in 150:
 		await get_tree().process_frame
@@ -75,6 +86,8 @@ func _ready() -> void:
 	cam.current = true
 	cam.fov = 55.0
 	for v: Array in VIEWS:
+		if not only.is_empty() and not only.has(String(v[0])):
+			continue
 		cam.global_position = v[1]
 		cam.look_at(v[2], Vector3.UP)
 		for _i in 6:

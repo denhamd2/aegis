@@ -37,7 +37,8 @@ const RING_GROUP := &"venue_ring"
 
 ## A blast damages every piece whose box comes within this of it.
 const BLAST_RADIUS := 1.4
-const MAX_FIRES := 10
+## Every hit's own fire and everything it spreads to.
+const MAX_FIRES := 60
 const FIRE_MERGE := 2.2
 ## Overlays (a hole in the apron, a smashed patch of LED wall) nearer than
 ## this to one already there add to it rather than stack.
@@ -389,6 +390,9 @@ func blast(at: Vector3, normal := Vector3.UP, hit: Target = null, crowd := false
 		_damage(t, at)
 	if crowd or in_crowd(at):
 		start_fire(at, 1.0)
+		var spread := {"target": null, "origin": at, "n": 0, "t": 0.0, "age": 0.0}
+		_spreads.append(spread)
+		_shape_sheet(spread)
 		history.append(["crowd", "Crowd", at])
 		damaged.emit(-1, "Crowd", at)
 	_scorch(at, normal)
@@ -424,22 +428,174 @@ func _damage(t: Target, at: Vector3) -> void:
 					start_fire(o, 0.8)
 				history.append([Kind.keys()[t.kind], t.name, at])
 				return
-		t.overlays.append(on_face)
-		t.damaged = true
-		var facing := t.box.basis * t.face_normal(local.x)
-		var place := Transform3D(Basis(Vector3.UP.cross(facing).normalized(), Vector3.UP, facing), on_face)
-		if t.kind == Kind.RING_APRON:
-			# the skirt's section stands on the floor
-			place.origin = t.box * Vector3(local.x, -t.half.y, t.half.z + 0.012)
-		var overlay := _place(KIND_MODEL[t.kind], place, "%s_%d" % [t.name, t.overlays.size()])
-		if overlay and t.kind == Kind.SCREEN:
-			# an LED wall is metres across: a smashed patch the size of a
-			# man's reach read as a scuff from the hard camera
-			overlay.scale = Vector3.ONE * SCREEN_PATCH_SCALE
+		_smash_skin(t, local)
 		if t.kind == Kind.SCREEN:
-			start_fire(on_face + facing * 0.15, 0.8)
+			var spread := {"target": t, "origin": local, "n": 0, "t": 0.0, "age": 0.0}
+			_spreads.append(spread)
+			_shape_sheet(spread)
 	history.append([Kind.keys()[t.kind], t.name, at])
 	damaged.emit(t.kind, t.name, at)
+
+
+## The damage laid over a skin at `local` (box-local, x and y on its face):
+## a blown hole in the apron, a smashed patch of LED wall with a fire in it.
+func _smash_skin(t: Target, local: Vector3, lit := true, fire := true) -> void:
+	var on_face := t.box * Vector3(local.x, local.y, t.face_z(local.x) + 0.012)
+	t.overlays.append(on_face)
+	t.damaged = true
+	var facing := t.box.basis * t.face_normal(local.x)
+	var place := Transform3D(Basis(Vector3.UP.cross(facing).normalized(), Vector3.UP, facing), on_face)
+	if t.kind == Kind.RING_APRON:
+		# the skirt's section stands on the floor
+		place.origin = t.box * Vector3(local.x, -t.half.y, t.half.z + 0.012)
+	var overlay := _place(KIND_MODEL[t.kind], place, "%s_%d" % [t.name, t.overlays.size()])
+	if overlay and t.kind == Kind.SCREEN:
+		# an LED wall is metres across: a smashed patch the size of a man's
+		# reach read as a scuff from the hard camera
+		overlay.scale = Vector3.ONE * SCREEN_PATCH_SCALE
+	if t.kind == Kind.SCREEN and fire:
+		start_fire(on_face + facing * 0.15, 0.8, false, lit)
+
+
+# --- the fire spreading -----------------------------------------------------------
+
+## A fire does not stay where the rocket went in (the owner, 19 Oct: "spread
+## the fire in that area as the match goes on ... it shouldn't just stay
+## localised to the hot spot"), and it spreads as ONE fire, not a row of
+## campfires: each hit's fire is a sheet of flame and smoke (a box emitter)
+## whose edges creep outward -- across the LED wall it is on, or along the row
+## and up the rows of seats -- getting denser and brighter as it widens. On a
+## wall the tiles go as the fire reaches them: every SPREAD_EVERY seconds
+## another smashed patch in the burning area, out to SPREAD_MAX.
+const SPREAD_EVERY := 14.0
+const SPREAD_MAX := 10
+## Patch to patch, along the wall or the row.
+const SPREAD_STEP := 2.3
+## [along, up] in steps, in the order the tiles go.
+const SPREAD_PATTERN := [[1, 0], [-1, 0], [0, 1], [2, 0], [-2, 0], [1, 1], [-1, 1],
+		[0, -1], [3, 0], [-3, 0]]
+## Up the bowl, a step is two rows: out ROW_RUN and up ROW_RISE each.
+const ROWS_PER_STEP := 2.0
+## The sheet's half-size: where it starts, how fast each edge moves (m/s), and
+## how far it gets -- [along, up].
+const SHEET_START := Vector2(0.6, 0.5)
+const SHEET_RATE := Vector2(0.05, 0.022)
+const SHEET_MAX := Vector2(6.9, 3.0)
+## Flames and smoke at full size; a small sheet runs a share of them.
+const SHEET_FLAMES := 420
+const SHEET_SMOKE := 150
+
+var _spreads: Array = []    # {"target", "origin", "n", "t", "age", "sheet"}
+
+
+## How many tiles each hit's fire has taken (tests, probes).
+func spread_counts() -> Array[int]:
+	var out: Array[int] = []
+	for s: Dictionary in _spreads:
+		out.append(int(s["n"]))
+	return out
+
+
+## Each hit's fire sheet's half-size now, [along, up] (tests, probes).
+func sheet_sizes() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for s: Dictionary in _spreads:
+		out.append(_sheet_half(s))
+	return out
+
+
+func _sheet_half(s: Dictionary) -> Vector2:
+	var age := float(s.get("age", 0.0))
+	return Vector2(minf(SHEET_START.x + SHEET_RATE.x * age, SHEET_MAX.x),
+			minf(SHEET_START.y + SHEET_RATE.y * age, SHEET_MAX.y))
+
+
+func _spread(delta: float) -> void:
+	for s: Dictionary in _spreads:
+		s["t"] = float(s["t"]) + delta
+		s["age"] = float(s.get("age", 0.0)) + delta
+		_shape_sheet(s)
+		while float(s["t"]) >= SPREAD_EVERY and int(s["n"]) < SPREAD_MAX:
+			s["t"] = float(s["t"]) - SPREAD_EVERY
+			var step: Array = SPREAD_PATTERN[int(s["n"])]
+			s["n"] = int(s["n"]) + 1
+			var t: Target = s["target"]
+			if t:
+				var local: Vector3 = s["origin"] + Vector3(float(step[0]) * SPREAD_STEP,
+						float(step[1]) * SPREAD_STEP * 0.7, 0.0)
+				if absf(local.x) <= t.half.x - 0.5 and absf(local.y) <= t.half.y - 0.5:
+					_smash_skin(t, local, false, false)
+
+
+## The sheet's frame and its extent along/up: on a wall, the wall's face,
+## clamped to the wall; in the crowd, along the row and up the rake.
+func _shape_sheet(s: Dictionary) -> void:
+	var half := _sheet_half(s)
+	var t: Target = s["target"]
+	var origin: Vector3 = s["origin"]
+	var frame: Transform3D
+	var extents: Vector3
+	if t:
+		var x0 := maxf(origin.x - half.x, -t.half.x + 0.3)
+		var x1 := minf(origin.x + half.x, t.half.x - 0.3)
+		var y0 := maxf(origin.y - half.y, -t.half.y + 0.3)
+		var y1 := minf(origin.y + half.y, t.half.y - 0.3)
+		var cx := (x0 + x1) * 0.5
+		var facing := t.box.basis * t.face_normal(cx)
+		var centre := t.box * Vector3(cx, (y0 + y1) * 0.5, t.face_z(cx)) + facing * 0.2
+		frame = Transform3D(Basis(Vector3.UP.cross(facing).normalized(), Vector3.UP, facing), centre)
+		extents = Vector3((x1 - x0) * 0.5, (y1 - y0) * 0.5, 0.15)
+	else:
+		var out := Vector3(signf(origin.x), 0.0, 0.0) if absf(origin.x) >= absf(origin.z) \
+				else Vector3(0.0, 0.0, signf(origin.z))
+		var along := Vector3(out.z, 0.0, -out.x)
+		var rows := half.y / ArenaBuilder.ROW_RISE * ArenaBuilder.ROW_RUN
+		# the sheet leans back up the rake: half its depth out, and its height
+		# the rise over that depth
+		var centre := origin + out * rows * 0.5 + Vector3.UP * half.y * 0.5
+		frame = Transform3D(Basis(along, Vector3.UP, out), centre)
+		extents = Vector3(half.x, maxf(half.y * 0.5, 0.3), maxf(rows * 0.5, 0.4))
+	var sheet: Node3D = s.get("sheet")
+	if sheet == null or not is_instance_valid(sheet):
+		sheet = _sheet()
+		s["sheet"] = sheet
+	sheet.global_transform = frame
+	var area := clampf(extents.x * maxf(extents.y, extents.z) / (SHEET_MAX.x * SHEET_MAX.y), 0.0, 1.0)
+	for p: GPUParticles3D in [sheet.get_node("Flames"), sheet.get_node("Smoke")]:
+		(p.process_material as ParticleProcessMaterial).emission_box_extents = extents
+		p.amount_ratio = clampf(0.12 + area, 0.12, 1.0)
+	var light := sheet.get_node("Glow") as OmniLight3D
+	light.omni_range = 6.0 + maxf(extents.x, extents.y) * 1.6
+	sheet.set_meta("glow", 3.0 + 6.0 * area)
+
+
+## One spreading fire: flames and smoke from a box that grows, one light.
+func _sheet() -> Node3D:
+	var sheet := Node3D.new()
+	sheet.name = "FireSheet%02d" % _spreads.size()
+	add_child(sheet)
+	var flames := _flames()
+	flames.amount = SHEET_FLAMES
+	var fm := flames.process_material as ParticleProcessMaterial
+	fm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	var smoke := _smoke()
+	smoke.amount = SHEET_SMOKE
+	smoke.position = Vector3.ZERO
+	var sm := smoke.process_material as ParticleProcessMaterial
+	sm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	for p: GPUParticles3D in [flames, smoke]:
+		p.visibility_aabb = AABB(Vector3(-10, -4, -6), Vector3(20, 18, 12))
+		sheet.add_child(p)
+	var light := OmniLight3D.new()
+	light.name = "Glow"
+	light.light_color = FIRE_HOT
+	light.light_energy = 3.0
+	light.omni_attenuation = 1.2
+	light.light_volumetric_fog_energy = 1.5
+	light.shadow_enabled = false
+	light.position = Vector3.FORWARD * -0.6
+	sheet.add_child(light)
+	return sheet
 
 
 ## The damaged model `root_name` out of venue_damage.glb, standing at `where`.
@@ -521,9 +677,9 @@ const FIRE_RED := Color(0.80, 0.14, 0.04)
 
 ## A fire at `at` that burns for the rest of the match. Beside one already
 ## burning, that one grows instead.
-func start_fire(at: Vector3, size := 1.0) -> Node3D:
+func start_fire(at: Vector3, size := 1.0, merge := true, lit := true) -> Node3D:
 	for f: Node3D in fires:
-		if f.global_position.distance_to(at) < FIRE_MERGE:
+		if merge and f.global_position.distance_to(at) < FIRE_MERGE:
 			f.scale = Vector3.ONE * minf(f.scale.x + 0.25 * size, 2.0)
 			return f
 	if fires.size() >= MAX_FIRES:
@@ -549,6 +705,9 @@ func start_fire(at: Vector3, size := 1.0) -> Node3D:
 	light.light_volumetric_fog_energy = 1.5
 	light.shadow_enabled = false
 	light.position = Vector3.UP * 0.8
+	# a spread fire lights the room only now and then: forty lights at once
+	# is no brighter, only slower
+	light.visible = lit
 	fire.add_child(light)
 	fires.append(fire)
 	fire_started.emit(at)
@@ -651,13 +810,19 @@ func _smoke() -> GPUParticles3D:
 
 
 func _process(delta: float) -> void:
+	_spread(delta)
 	# every fire's light flickers, each on its own phase
 	_flicker_t += delta
 	for f: Node3D in fires:
 		var light := f.get_node_or_null("Glow") as OmniLight3D
-		if light:
+		if light and light.visible:
 			light.light_energy = 3.0 * f.scale.x * EntrancePyro.flicker(_flicker_t,
 					fposmod(f.global_position.x * 12.9898 + f.global_position.z * 78.233, TAU))
+	for s: Dictionary in _spreads:
+		var sheet: Node3D = s.get("sheet")
+		if sheet and is_instance_valid(sheet):
+			(sheet.get_node("Glow") as OmniLight3D).light_energy = float(sheet.get_meta("glow", 3.0)) \
+					* EntrancePyro.flicker(_flicker_t, float(_spreads.find(s)) * 1.7)
 
 
 static var _scorch_tex: ImageTexture

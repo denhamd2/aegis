@@ -94,7 +94,8 @@ func seat(chairs: Array[Transform3D], picked: Array[int]) -> void:
 		fan.name = "SignFan%d" % n
 		add_child(fan)
 		fan.transform = chairs[picked[n]]
-		fan.setup(load(spec[0]) as Texture2D, spec[2], 0.37 * n, _region(spec))
+		fan.setup(load(spec[0]) as Texture2D, 0.37 * n, _region(spec),
+				SignFan.MODELS[n % SignFan.MODELS.size()])
 		fans.append(fan)
 		if n == 0:
 			_enda_fan = fan

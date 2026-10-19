@@ -59,15 +59,28 @@ func test_dynamite_opening_raises_only_enda_sign_without_a_match_cutaway() -> vo
 func test_both_signs_are_in_the_project() -> void:
 	for spec: Array in SignFans.FANS:
 		assert_object(load(spec[0])).is_not_null()
-	assert_object(load(SignFan.MODEL)).is_not_null()
+	for path: String in SignFan.MODELS:
+		assert_object(load(path)).is_not_null()
+	assert_int(SignFan.MODELS.size()).is_greater_equal(SignFans.FANS.size())
 
 
-func test_the_fan_model_has_his_four_clips() -> void:
-	var model: Node = auto_free((load(SignFan.MODEL) as PackedScene).instantiate())
-	var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	assert_object(player).is_not_null()
-	for clip: String in [SignFan.SEATED, SignFan.RISE, SignFan.HOLD, SignFan.LOWER]:
-		assert_bool(player.has_animation(clip)).override_failure_message("no clip " + clip).is_true()
-	var body := model.find_child("FanBody", true, false) as MeshInstance3D
-	assert_object(body).is_not_null()
-	assert_int(body.mesh.get_surface_count()).is_equal(5)
+## Real people, not boxes (the owner, 19 Oct): each fan a textured avatar of
+## thousands of triangles on a full skeleton, with his four clips.
+func test_every_fan_model_is_a_real_person_with_his_four_clips() -> void:
+	for path: String in SignFan.MODELS:
+		var model: Node = auto_free((load(path) as PackedScene).instantiate())
+		var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		assert_object(player).is_not_null()
+		for clip: String in [SignFan.SEATED, SignFan.RISE, SignFan.HOLD, SignFan.LOWER]:
+			assert_bool(player.has_animation(clip)).override_failure_message("no clip " + clip).is_true()
+		var body := model.find_child("FanBody", true, false) as MeshInstance3D
+		assert_object(body).is_not_null()
+		assert_int(body.mesh.get_faces().size() / 3).is_greater(5000)
+		var textured := 0
+		for i in body.mesh.get_surface_count():
+			var m := body.mesh.surface_get_material(i) as BaseMaterial3D
+			if m and m.albedo_texture:
+				textured += 1
+		assert_int(textured).is_equal(body.mesh.get_surface_count())
+		var skeleton := model.find_child("Skeleton3D", true, false) as Skeleton3D
+		assert_int(skeleton.get_bone_count()).is_greater(50)

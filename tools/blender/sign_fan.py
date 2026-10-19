@@ -1,38 +1,38 @@
 #!/usr/bin/env python3
-"""Export the sign fan: one ringside spectator who stands and holds up a sign.
+"""Export the sign fans: ringside spectators who stand and hold up a sign.
 
-    python3 tools/blender/sign_fan.py [--out game/assets/environment/sign_fan.glb]
+    python3 tools/blender/sign_fan.py        # needs tools/blender/fetch_rocketbox.sh's checkout
 
-Two of these sit in the ringside rows opposite the hard camera
-(core/arena/sign_fans.gd), each with his own sign: ENDA FEARS OMAR and CODY
-SUCKS (game/assets/environment/signs/). They sit for most of the match and get
-up and hold the sign over their heads now and then -- for the stare-down
-before the bell, and once or twice more -- the way the owner's two reference
-photographs of a WWE crowd show it done: up on their feet, the board over the
-head at arm's length, a hand on each side edge, pumped.
+Four of these sit in the ringside rows opposite the hard camera
+(core/arena/sign_fans.gd), each with his own sign (game/assets/environment/
+signs/). They sit for most of the match and get up and hold the sign over
+their heads now and then -- for the stare-down before the bell, the opening's
+ENDA FEARS OMAR cutaway, and once or twice more -- the way the owner's two
+reference photographs of a WWE crowd show it done: up on their feet, the board
+over the head at arm's length, a hand on each side edge, pumped.
 
-What this is, and why it is rigged
-----------------------------------
-The rest of the crowd is baked, unrigged Rocketbox figures (crowd.py / floor_crowd.py)
--- animated if at all by a vertex shader, because
-thousands of skinned characters is not a thing that runs. Two people who have
-to stand up, lift a board over their heads and sit back down cannot be a
-vertex shader. So this is a figure built like the old procedural crowd's -- the same boxes, the same
-proportions, the same flat shirt-and-skin dressing -- on a 14-bone armature,
-every box weighted 100% to one bone, which is as cheap as skinning gets.
+Real people, not boxes (the owner, 19 Oct: "The fan holding the Enda Fears
+Omar sign is blocky ... make him very realistic"). Each fan is a Microsoft
+Rocketbox avatar (MIT; the same library the crowd is built from, see
+game/assets/environment/CREDITS.md) with his own textures and his own full
+skeleton. The opening cutaway frames the ENDA fan alone at a few metres, so he
+is the avatar at full resolution, not the crowd's baked point colour.
 
-The board is its own bone. Its path is keyed (lifted off the lap, up past the
-chest, over the head, pumped), and the arms are SOLVED to it every frame --
-two-bone IK from each shoulder to a point on each side edge -- so the hands are
-on the sign in every frame by construction rather than by keyframe luck. The
-legs are solved the same way to feet that stay planted while he stands up.
+How he is posed
+---------------
+The board is a bone of its own. Its path is keyed (lifted off the lap, up past
+the chest, over the head, pumped), and the body is SOLVED to it every frame:
+two-bone IK from each shoulder to a wrist just under each side edge, the hand
+turned up along the edge; the legs to feet that stay planted while he stands
+up; the spine leaning and the head nodding by the few numbers in `Pose`. The
+hands are on the sign in every frame by construction rather than by keyframe
+luck. Fingers, face and toes keep the avatar's own rest shapes.
 
 Frame
 -----
-Built facing Blender -Y, which glTF's Y-up conversion turns into Godot +Z --
-the frame floor_crowd.py builds in and the one a ringside chair's transform
-expects. Seated, his backside is at the chair's 0.45 m seat height
-(crowd.CHAIR_SEAT_HEIGHT), so he drops onto a chair transform unchanged.
+Rocketbox avatars face Blender -Y, which glTF's Y-up conversion turns into
+Godot +Z -- the frame a ringside chair's transform expects. Seated, his
+backside is at the chair's 0.45 m seat height.
 
 Clips (30 fps; names as they come out of the .glb)
 -----------------------------------------------------
@@ -41,80 +41,47 @@ Clips (30 fps; names as they come out of the .glb)
   Fan_Hold    60 f  loop   board over his head, pumped twice, rocked side to side
   Fan_Lower   30 f         the board down and back into the chair
 
-Materials: M_Shirt, M_Skin, M_Dark (trousers, shoes, hair), M_SignFace (UVs
-0-1 across the front), M_SignBack (bare board). The game dresses the shirt and
-puts the picture on the face per fan.
-
-Deterministic: no randomness anywhere, so the same script writes the same file.
+Output: game/assets/environment/sign_fan_<n>.glb, one per seat in
+SignFans.FANS. Materials: the avatar's (textured), M_SignFace (UVs 0-1 across
+the front) and M_SignBack. Deterministic: no randomness; textures resized and
+written by PIL with fixed settings.
 """
 
 from __future__ import annotations
 
-import argparse
 import math
 import pathlib
 import sys
 
 import bpy
-import bmesh
 from mathutils import Matrix, Quaternion, Vector
+import numpy as np
+from PIL import Image
 
 import bpy_exit
 
-REPO = pathlib.Path(__file__).resolve().parents[2]
-DEFAULT_OUT = REPO / "game" / "assets" / "environment" / "sign_fan.glb"
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import rocketbox_crowd  # noqa: E402  -- the checkout's location and pinned commit
+
+REPO = HERE.parents[1]
+OUT_DIR = REPO / "game" / "assets" / "environment"
+TEX_DIR = OUT_DIR / "sign_fan_textures"
 
 FPS = 30
-
-# --- Rest skeleton (standing, facing -Y), metres ---------------------------
-# name: (head, tail, parent)
-BONES = {
-    "root": ((0, 0, 0), (0, 0, 0.1), None),
-    "pelvis": ((0, 0, 0.95), (0, 0, 1.05), "root"),
-    "spine": ((0, 0, 1.0), (0, 0, 1.45), "pelvis"),
-    "head": ((0, 0, 1.47), (0, 0, 1.75), "spine"),
-    "upperarm_l": ((0.24, 0, 1.42), (0.24, 0, 1.13), "spine"),
-    "forearm_l": ((0.24, 0, 1.13), (0.24, 0, 0.80), "upperarm_l"),
-    "upperarm_r": ((-0.24, 0, 1.42), (-0.24, 0, 1.13), "spine"),
-    "forearm_r": ((-0.24, 0, 1.13), (-0.24, 0, 0.80), "upperarm_r"),
-    "thigh_l": ((0.10, 0, 0.93), (0.10, 0, 0.50), "pelvis"),
-    "shin_l": ((0.10, 0, 0.50), (0.10, 0, 0.06), "thigh_l"),
-    "thigh_r": ((-0.10, 0, 0.93), (-0.10, 0, 0.50), "pelvis"),
-    "shin_r": ((-0.10, 0, 0.50), (-0.10, 0, 0.06), "thigh_r"),
-    "sign": ((0, 0, 1.90), (0, 0, 2.00), "root"),
-}
-UPPER_ARM = 0.29
-FOREARM = 0.33
-THIGH = 0.43
-SHIN = 0.44
+## One per seat in SignFans.FANS, in order: the ENDA FEARS OMAR fan first.
+AVATARS = ("Male_Adult_04", "Male_Adult_10", "Male_Adult_06", "Male_Adult_12")
+## Body and head textures at this size (the cutaway frames him at a few metres).
+TEX_SIZE = 1024
 
 # The board: a sheet of poster board at the pictures' 3:2.
 SIGN_W = 0.84
 SIGN_H = 0.56
 SIGN_T = 0.012
-# The board's centre above its bone's head.
-SIGN_UP = 0.05
+SIGN_BONE = "FanSign"
+SIGN_REST = Vector((0.0, 0.0, 1.90))
 
-# (bone, centre, size, material) -- material 0 shirt, 1 skin, 2 dark.
-BOXES = [
-    ("pelvis", (0, 0, 0.93), (0.34, 0.22, 0.20), 2),
-    ("spine", (0, 0, 1.22), (0.38, 0.24, 0.46), 0),
-    ("head", (0, 0, 1.50), (0.12, 0.12, 0.08), 1),
-    ("head", (0, 0, 1.62), (0.19, 0.21, 0.22), 1),
-    ("head", (0, 0.01, 1.74), (0.20, 0.22, 0.05), 2),
-    ("upperarm_l", (0.24, 0, 1.28), (0.11, 0.12, 0.30), 0),
-    ("forearm_l", (0.24, 0, 0.98), (0.09, 0.09, 0.28), 1),
-    ("forearm_l", (0.24, 0, 0.82), (0.08, 0.10, 0.10), 1),
-    ("upperarm_r", (-0.24, 0, 1.28), (0.11, 0.12, 0.30), 0),
-    ("forearm_r", (-0.24, 0, 0.98), (0.09, 0.09, 0.28), 1),
-    ("forearm_r", (-0.24, 0, 0.82), (0.08, 0.10, 0.10), 1),
-    ("thigh_l", (0.10, 0, 0.72), (0.15, 0.17, 0.44), 2),
-    ("shin_l", (0.10, 0, 0.29), (0.13, 0.14, 0.44), 2),
-    ("shin_l", (0.10, -0.04, 0.04), (0.11, 0.26, 0.08), 2),
-    ("thigh_r", (-0.10, 0, 0.72), (0.15, 0.17, 0.44), 2),
-    ("shin_r", (-0.10, 0, 0.29), (0.13, 0.14, 0.44), 2),
-    ("shin_r", (-0.10, -0.04, 0.04), (0.11, 0.26, 0.08), 2),
-]
+SPINE = ["Bip01 Spine", "Bip01 Spine1", "Bip01 Spine2"]
 
 
 def reset_scene() -> None:
@@ -122,104 +89,120 @@ def reset_scene() -> None:
     bpy.context.scene.render.fps = FPS
 
 
-def make_armature():
-    data = bpy.data.armatures.new("SignFanRig")
-    arm = bpy.data.objects.new("SignFanRig", data)
-    bpy.context.collection.objects.link(arm)
-    bpy.context.view_layer.objects.active = arm
-    bpy.ops.object.mode_set(mode="EDIT")
-    for name, (head, tail, parent) in BONES.items():
-        b = data.edit_bones.new(name)
-        b.head = head
-        b.tail = tail
-        # Roll fixed so every bone's local X is world X at rest: the boxes'
-        # widths stay square to the body whatever the solve does.
-        b.align_roll(Vector((0, -1, 0)))
-        if parent:
-            b.parent = data.edit_bones[parent]
-    bpy.ops.object.mode_set(mode="OBJECT")
-    return arm
+# --- the avatar --------------------------------------------------------------
+
+def _image(path: pathlib.Path, size: int, alpha: bool, out_name: str) -> bpy.types.Image:
+    """A Rocketbox colour map, resized and saved beside the export (JPEG for
+    opaque colour, PNG where the alpha cuts hair and lashes)."""
+    TEX_DIR.mkdir(parents=True, exist_ok=True)
+    (TEX_DIR / ".gdignore").write_text("")
+    img = Image.open(path)
+    img = img.convert("RGBA" if alpha else "RGB").resize((size, size), Image.LANCZOS)
+    out = TEX_DIR / (out_name + (".png" if alpha else ".jpg"))
+    if alpha:
+        img.save(out, optimize=False)
+    else:
+        img.save(out, quality=90, optimize=False, subsampling=0)
+    return bpy.data.images.load(str(out))
 
 
-def _material(name: str, colour) -> bpy.types.Material:
+def _material(name: str, image: bpy.types.Image, alpha: bool, roughness: float) -> bpy.types.Material:
     m = bpy.data.materials.new(name)
     m.use_nodes = True
-    bsdf = m.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (*colour, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.9
+    nodes = m.node_tree.nodes
+    bsdf = nodes["Principled BSDF"]
+    tex = nodes.new("ShaderNodeTexImage")
+    tex.image = image
+    m.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = roughness
+    if alpha:
+        m.node_tree.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
+        m.blend_method = "CLIP"
+        m.alpha_threshold = 0.45
     return m
 
 
-def _box(bm, centre, size, mat, layer, group_of, bone, uv_face=None):
-    cx, cy, cz = centre
-    sx, sy, sz = (s * 0.5 for s in size)
-    verts = [bm.verts.new((cx + x * sx, cy + y * sy, cz + z * sz))
-             for x, y, z in ((-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1),
-                             (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1))]
-    faces = [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (3, 2, 1, 0), (4, 5, 6, 7)]
-    made = []
-    for f in faces:
-        face = bm.faces.new([verts[i] for i in f])
-        face.material_index = mat
-        made.append(face)
-    for v in verts:
-        group_of[v] = bone
-    if uv_face is not None:
-        # The front (-Y) face carries the picture, 0-1 across it: +X is the
-        # viewer's right, +Z the top.
-        front = made[0]
-        front.material_index = uv_face
-        for loop in front.loops:
-            co = loop.vert.co
-            loop[layer].uv = ((co.x - (cx - sx)) / (2 * sx), (co.z - (cz - sz)) / (2 * sz))
-    return made
+def load_avatar(avatar: str, n: int):
+    folder = rocketbox_crowd.rocketbox_root() / "Assets" / "Avatars" / "Adults" / avatar
+    bpy.ops.import_scene.fbx(filepath=str(folder / "Export" / (avatar + ".fbx")))
+    arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    body = next(o for o in bpy.data.objects if o.type == "MESH")
+    for o in list(bpy.data.objects):
+        if o.type not in ("ARMATURE", "MESH"):
+            bpy.data.objects.remove(o)
+    # bake the FBX's centimetre scale into the rig and the mesh: posing below
+    # works in metres, in the armature's own space
+    for o in (arm, body):
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    # the FBX's own take is in the old centimetre space: drop it, and parent
+    # the mesh to the rig afresh so no centimetre parent-inverse rides along
+    if arm.animation_data:
+        arm.animation_data.action = None
+    for action in list(bpy.data.actions):
+        bpy.data.actions.remove(action)
+    world = body.matrix_world.copy()
+    body.parent = arm
+    body.matrix_parent_inverse.identity()
+    body.matrix_world = world
+    for pb in arm.pose.bones:
+        pb.location = (0, 0, 0)
+        pb.rotation_quaternion = (1, 0, 0, 0)
+        pb.scale = (1, 1, 1)
+    arm.name = "SignFanRig"
+    body.name = "FanBody"
+    # its own colour maps, not the dangling paths the FBX carries
+    colours = {p.stem.split("_")[1]: p for p in sorted((folder / "Textures").glob("*_color.tga"))}
+    for slot in body.material_slots:
+        kind = slot.material.name.split("_")[-1]
+        alpha = kind == "opacity"
+        size = 512 if alpha else TEX_SIZE
+        image = _image(colours[kind], size, alpha, "fan%d_%s" % (n, kind))
+        slot.material = _material("M_Fan%d_%s" % (n, kind), image, alpha,
+                                  0.55 if kind == "head" else 0.8)
+    return arm, body
 
 
-def _ellipsoid(bm, centre, radii, mat, group_of, bone, segments=12, rings=8):
-    """A small smooth facial/hand form, kept on its owning rig bone."""
-    result = bmesh.ops.create_uvsphere(
-        bm, u_segments=segments, v_segments=rings, radius=1.0)
-    verts = result["verts"]
-    for vert in verts:
-        vert.co.x = centre[0] + vert.co.x * radii[0]
-        vert.co.y = centre[1] + vert.co.y * radii[1]
-        vert.co.z = centre[2] + vert.co.z * radii[2]
-        group_of[vert] = bone
-    faces = {face for vert in verts for face in vert.link_faces}
-    for face in faces:
-        face.material_index = mat
-        face.smooth = True
-
-
-def make_mesh(name, boxes, materials, arm, sign=False, details=()):
-    mesh = bpy.data.meshes.new(name)
-    obj = bpy.data.objects.new(name, mesh)
+def add_sign(arm) -> bpy.types.Object:
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    b = arm.data.edit_bones.new(SIGN_BONE)
+    b.head = SIGN_REST
+    b.tail = SIGN_REST + Vector((0.0, 0.0, 0.1))
+    b.align_roll(Vector((0, -1, 0)))
+    bpy.ops.object.mode_set(mode="OBJECT")
+    mesh = bpy.data.meshes.new("FanSign")
+    obj = bpy.data.objects.new("FanSign", mesh)
     bpy.context.collection.objects.link(obj)
-    for m in materials:
-        mesh.materials.append(m)
-    bm = bmesh.new()
-    layer = bm.loops.layers.uv.new("UVMap")
-    group_of = {}
-    for bone, centre, size, mat in boxes:
-        _box(bm, centre, size, mat, layer, group_of, bone, uv_face=0 if sign else None)
-    for bone, centre, radii, mat in details:
-        _ellipsoid(bm, centre, radii, mat, group_of, bone)
-    bm.verts.index_update()
-    order = {v.index: group_of[v] for v in bm.verts}
-    bm.to_mesh(mesh)
-    bm.free()
-    groups = {}
-    for i, bone in sorted(order.items()):
-        if bone not in groups:
-            groups[bone] = obj.vertex_groups.new(name=bone)
-        groups[bone].add([i], 1.0, "REPLACE")
+    hx, hy, hz = SIGN_W * 0.5, SIGN_T * 0.5, SIGN_H * 0.5
+    c = SIGN_REST
+    v = [(c.x + x * hx, c.y + y * hy, c.z + z * hz)
+         for x, y, z in ((-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1),
+                         (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1))]
+    faces = [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (3, 2, 1, 0), (4, 5, 6, 7)]
+    mesh.from_pydata(v, [], faces)
+    face = bpy.data.materials.new("M_SignFace")
+    back = bpy.data.materials.new("M_SignBack")
+    mesh.materials.append(face)
+    mesh.materials.append(back)
+    uv = mesh.uv_layers.new(name="UVMap")
+    for poly in mesh.polygons:
+        poly.material_index = 0 if poly.index == 0 else 1
+    # the front (-Y) face carries the picture, 0-1 across it: +X is the
+    # viewer's right, +Z the top
+    for li in mesh.polygons[0].loop_indices:
+        co = mesh.vertices[mesh.loops[li].vertex_index].co
+        uv.data[li].uv = ((co.x - (c.x - hx)) / SIGN_W, (co.z - (c.z - hz)) / SIGN_H)
+    g = obj.vertex_groups.new(name=SIGN_BONE)
+    g.add(list(range(8)), 1.0, "REPLACE")
     obj.parent = arm
     mod = obj.modifiers.new("Armature", "ARMATURE")
     mod.object = arm
     return obj
 
 
-# --- Posing ------------------------------------------------------------------
+# --- posing ------------------------------------------------------------------
 
 def rot_x(a: float) -> Quaternion:
     return Quaternion((1, 0, 0), a)
@@ -263,71 +246,105 @@ class Pose:
                     self.arm_pole.lerp(other.arm_pole, s))
 
 
-def _rest(arm, name):
-    bone = arm.data.bones[name]
-    return bone.matrix_local.copy(), Vector(BONES[name][0]), \
-        (Vector(BONES[name][1]) - Vector(BONES[name][0])).normalized()
+class Rig:
+    """The avatar's skeleton at rest, and how to put a bone somewhere."""
+
+    def __init__(self, arm):
+        self.arm = arm
+        self.rest = {b.name: b.matrix_local.copy() for b in arm.data.bones}
+        self.head = {b.name: b.head_local.copy() for b in arm.data.bones}
+        self.tail = {b.name: b.tail_local.copy() for b in arm.data.bones}
+        self.moved: list[str] = []
+
+    def length(self, a: str, b: str) -> float:
+        return (self.head[b] - self.head[a]).length
+
+    def place(self, name: str, head: Vector, rot: Quaternion) -> None:
+        """Bone `name` with its head at `head`, turned by `rot` from rest."""
+        self.arm.pose.bones[name].matrix = (Matrix.Translation(head) @ rot.to_matrix().to_4x4()
+                                            @ Matrix.Translation(-self.head[name]) @ self.rest[name])
+        if name not in self.moved:
+            self.moved.append(name)
+        bpy.context.view_layer.update()
+
+    def aim(self, name: str, head: Vector, toward: Vector, child: str | None = None) -> Quaternion:
+        """Bone `name` at `head`, turned so its rest line to `child`'s head
+        (or its own tail) points at `toward`. Returns the turn."""
+        end = self.head[child] if child else self.tail[name]
+        rest_dir = (end - self.head[name]).normalized()
+        rot = rest_dir.rotation_difference((toward - head).normalized())
+        self.place(name, head, rot)
+        return rot
 
 
-def _place(arm, name, head: Vector, rot: Quaternion) -> None:
-    rest, rest_head, _ = _rest(arm, name)
-    arm.pose.bones[name].matrix = (Matrix.Translation(head) @ rot.to_matrix().to_4x4()
-                                   @ Matrix.Translation(-rest_head) @ rest)
-    bpy.context.view_layer.update()
-
-
-def _aim(arm, name, head: Vector, toward: Vector) -> None:
-    _, _, rest_dir = _rest(arm, name)
-    _place(arm, name, head, rest_dir.rotation_difference((toward - head).normalized()))
-
-
-def apply(arm, p: Pose) -> None:
-    ident = Quaternion()
-    _place(arm, "root", Vector((0, 0, 0)), ident)
-    r_pelvis = rot_x(p.tilt)
-    _place(arm, "pelvis", p.pelvis, r_pelvis)
-    spine_head = p.pelvis + r_pelvis @ Vector((0, 0, 0.05))
-    r_spine = rot_x(p.lean)
-    _place(arm, "spine", spine_head, r_spine)
-    _place(arm, "head", spine_head + r_spine @ Vector((0, 0, 0.47)), rot_x(p.lean + p.nod))
-    # The board: its bone sits SIGN_UP below the centre, along the board.
-    _place(arm, "sign", p.sign_at - p.sign_rot @ Vector((0, 0, SIGN_UP)), p.sign_rot)
+def apply(rig: Rig, p: Pose) -> None:
+    h = rig.head
+    # the pelvis, then the spine bending by `lean` over its three joints
+    r = rot_x(p.tilt)
+    rig.place("Bip01 Pelvis", p.pelvis, r)
+    at = p.pelvis + r @ (h[SPINE[0]] - h["Bip01 Pelvis"])
+    for k, name in enumerate(SPINE):
+        r = rot_x(p.tilt * (1.0 - (k + 1) / 3.0) + p.lean * (k + 1) / 3.0)
+        rig.place(name, at, r)
+        nxt = SPINE[k + 1] if k + 1 < len(SPINE) else "Bip01 Neck"
+        at = at + r @ (h[nxt] - h[name])
+    chest = r
+    neck_r = rot_x(p.lean + p.nod * 0.5)
+    rig.place("Bip01 Neck", at, neck_r)
+    head_at = at + neck_r @ (h["Bip01 Head"] - h["Bip01 Neck"])
+    rig.place("Bip01 Head", head_at, rot_x(p.lean + p.nod))
+    # the board: its bone at the centre
+    rig.place(SIGN_BONE, p.sign_at, p.sign_rot)
     for side in (1.0, -1.0):
-        s = "l" if side > 0 else "r"
-        shoulder = spine_head + r_spine @ Vector((0.24 * side, 0, 0.42))
-        # A hand on each side edge, from behind, a little below the middle.
-        grip = p.sign_at + p.sign_rot @ Vector((0.40 * side, 0.03, -0.05))
+        s = "L" if side > 0 else "R"
+        clav = "Bip01 %s Clavicle" % s
+        upper, fore, hand = "Bip01 %s UpperArm" % s, "Bip01 %s Forearm" % s, "Bip01 %s Hand" % s
+        clav_at = at + neck_r @ (h[clav] - h["Bip01 Neck"])
+        rig.place(clav, clav_at, chest)
+        shoulder = clav_at + chest @ (h[upper] - h[clav])
+        # a hand on each side edge, from behind: the wrist just under the
+        # edge, the hand turned up along it
+        edge = p.sign_at + p.sign_rot @ Vector((0.41 * side, 0.03, -0.04))
+        wrist_target = edge + p.sign_rot @ Vector((0.0, 0.035, -0.075))
         pole = Vector((p.arm_pole.x * side, p.arm_pole.y, p.arm_pole.z))
-        elbow, wrist = _two_bone(shoulder, grip, UPPER_ARM, FOREARM, pole)
-        _aim(arm, "upperarm_" + s, shoulder, elbow)
-        _aim(arm, "forearm_" + s, elbow, wrist)
-        hip = p.pelvis + r_pelvis @ Vector((0.10 * side, 0, -0.02))
-        ankle = Vector((0.13 * side, p.feet_y, 0.06))
-        knee, foot = _two_bone(hip, ankle, THIGH, SHIN, Vector((0, -1, 0.1)))
-        _aim(arm, "thigh_" + s, hip, knee)
-        _aim(arm, "shin_" + s, knee, foot)
+        elbow, wrist = _two_bone(shoulder, wrist_target, rig.length(upper, fore),
+                                 rig.length(fore, hand), pole)
+        rig.aim(upper, shoulder, elbow, fore)
+        rig.aim(fore, elbow, wrist, hand)
+        rig.aim(hand, wrist, edge + p.sign_rot @ Vector((0.0, 0.0, 0.05)), "Bip01 %s Finger2" % s)
+        # the legs to planted feet
+        thigh, calf, foot = "Bip01 %s Thigh" % s, "Bip01 %s Calf" % s, "Bip01 %s Foot" % s
+        pr = rot_x(p.tilt)
+        hip = p.pelvis + pr @ (h[thigh] - h["Bip01 Pelvis"])
+        ankle = Vector((h[foot].x * 1.15, p.feet_y, h[foot].z))
+        knee, ankle = _two_bone(hip, ankle, rig.length(thigh, calf), rig.length(calf, foot),
+                                Vector((0, -1, 0.1)))
+        rig.aim(thigh, hip, knee, calf)
+        rig.aim(calf, knee, ankle, foot)
+        rig.place(foot, ankle, Quaternion())          # flat on the floor
 
 
-# The poses, as numbers. Face-down on the knees; lifted; over the head.
+# The poses, as numbers. Face-down on the knees; lifted; over the head. Sized
+# to a 1.87 m avatar whose hip joints stand at 0.895 m.
 FLAT = rot_x(math.radians(90))   # face (-Y) turned to the floor
 UP = Quaternion()                # face to the ring
-SEATED = Pose((0, 0.02, 0.57), -0.10, 0.12, 0.08, (0, -0.24, 0.67), FLAT, -0.40, (1, 0.8, -0.3))
-PUSH_UP = Pose((0, -0.10, 0.66), 0.10, 0.50, -0.10, (0, -0.36, 0.86), rot_x(math.radians(45)),
-               -0.40, (1, 0.6, -0.4))
-RISING = Pose((0, -0.30, 0.88), 0.0, 0.16, 0.0, (0, -0.38, 1.26), rot_x(math.radians(8)),
-              -0.40, (1, 0.5, -0.5))
-LIFTING = Pose((0, -0.36, 0.945), 0.0, 0.0, -0.05, (0, -0.30, 1.72), UP, -0.40, (1, 0.4, -0.2))
-OVERHEAD = Pose((0, -0.37, 0.95), 0.0, -0.04, -0.10, (0, -0.22, 2.02), UP, -0.40, (1, 0.35, 0.0))
+SEATED = Pose((0, 0.04, 0.56), -0.12, 0.10, 0.08, (0, -0.30, 0.66), FLAT, -0.42, (1, 0.8, -0.3))
+PUSH_UP = Pose((0, -0.08, 0.64), 0.10, 0.48, -0.10, (0, -0.40, 0.86), rot_x(math.radians(45)),
+               -0.42, (1, 0.6, -0.4))
+RISING = Pose((0, -0.26, 0.84), 0.0, 0.16, 0.0, (0, -0.40, 1.24), rot_x(math.radians(8)),
+              -0.42, (1, 0.5, -0.5))
+LIFTING = Pose((0, -0.32, 0.885), 0.0, 0.0, -0.05, (0, -0.33, 1.66), UP, -0.42, (1, 0.4, -0.2))
+OVERHEAD = Pose((0, -0.33, 0.89), 0.0, -0.04, -0.12, (0, -0.25, 1.92), UP, -0.42, (1, 0.35, 0.0))
 
 
 def _hold(t: float) -> Pose:
     """Fan_Hold at `t` of its loop: pumped twice, rocked once each way."""
     phase = 2.0 * math.pi * t
-    pump = 0.06 * max(0.0, math.sin(2.0 * phase))
+    pump = 0.05 * max(0.0, math.sin(2.0 * phase))
     rock = math.radians(5.0) * math.sin(phase)
     at = OVERHEAD.sign_at + Vector((0.05 * math.sin(phase), 0, pump))
     rot = Quaternion((0, 1, 0), rock)
-    return Pose(OVERHEAD.pelvis + Vector((0, 0, -0.01 * pump / 0.06)), 0.0,
+    return Pose(OVERHEAD.pelvis + Vector((0, 0, -0.01 * pump / 0.05)), 0.0,
                 OVERHEAD.lean, OVERHEAD.nod, at, rot, OVERHEAD.feet_y, OVERHEAD.arm_pole)
 
 
@@ -360,13 +377,17 @@ CLIPS = [
 
 
 def bake(arm) -> None:
+    rig = Rig(arm)
+    for pb in arm.pose.bones:
+        pb.rotation_mode = "QUATERNION"
     arm.animation_data_create()
+    apply(rig, SEATED)                  # learn which bones move
     for name, frames, pose_at in CLIPS:
         action = bpy.data.actions.new(name)
         arm.animation_data.action = action
         for f in range(frames + 1):
-            apply(arm, pose_at(f / frames))
-            for bone in BONES:
+            apply(rig, pose_at(f / frames))
+            for bone in rig.moved:
                 pb = arm.pose.bones[bone]
                 pb.keyframe_insert("location", frame=f)
                 pb.keyframe_insert("rotation_quaternion", frame=f)
@@ -375,49 +396,17 @@ def bake(arm) -> None:
                 kp.interpolation = "LINEAR"
         action.use_fake_user = True
     arm.animation_data.action = None
-    for bone in BONES:
-        pb = arm.pose.bones[bone]
+    for pb in arm.pose.bones:
         pb.location = (0, 0, 0)
         pb.rotation_quaternion = (1, 0, 0, 0)
 
 
-def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", default=str(DEFAULT_OUT))
-    args = parser.parse_args(argv)
+def build(n: int, avatar: str) -> pathlib.Path:
     reset_scene()
-    arm = make_armature()
-    shirt = _material("M_Shirt", (0.8, 0.8, 0.8))
-    skin = _material("M_Skin", (0.55, 0.40, 0.32))
-    dark = _material("M_Dark", (0.06, 0.06, 0.07))
-    face = _material("M_SignFace", (1.0, 1.0, 1.0))
-    back = _material("M_SignBack", (0.72, 0.68, 0.60))
-    eye_white = _material("M_EyeWhite", (0.82, 0.78, 0.69))
-    facial = _material("M_FaceDetail", (0.12, 0.07, 0.055))
-    body_details = [
-        # Eyes, pupils and brows face the ring (-Y); the restrained scale reads
-        # in the broadcast insert without turning the crowd figure into a toy.
-        ("head", (0.047, -0.108, 1.655), (0.022, 0.012, 0.016), 3),
-        ("head", (-0.047, -0.108, 1.655), (0.022, 0.012, 0.016), 3),
-        ("head", (0.047, -0.120, 1.655), (0.008, 0.006, 0.010), 4),
-        ("head", (-0.047, -0.120, 1.655), (0.008, 0.006, 0.010), 4),
-        ("head", (0.047, -0.112, 1.685), (0.028, 0.009, 0.008), 4),
-        ("head", (-0.047, -0.112, 1.685), (0.028, 0.009, 0.008), 4),
-        ("head", (0, -0.125, 1.615), (0.018, 0.018, 0.023), 1),
-        ("head", (0, -0.116, 1.575), (0.034, 0.009, 0.008), 4),
-        ("head", (0.103, 0, 1.615), (0.025, 0.025, 0.040), 1),
-        ("head", (-0.103, 0, 1.615), (0.025, 0.025, 0.040), 1),
-        # Softer, fuller hands around the board edge improve the silhouette.
-        ("forearm_l", (0.24, -0.005, 0.82), (0.052, 0.061, 0.055), 1),
-        ("forearm_r", (-0.24, -0.005, 0.82), (0.052, 0.061, 0.055), 1),
-    ]
-    make_mesh("FanBody", BOXES, [shirt, skin, dark, eye_white, facial], arm,
-              details=body_details)
-    make_mesh("FanSign", [("sign", (0, 0, 1.90 + SIGN_UP), (SIGN_W, SIGN_T, SIGN_H), 1)],
-              [face, back], arm, sign=True)
+    arm, _body = load_avatar(avatar, n)
+    add_sign(arm)
     bake(arm)
-    out = pathlib.Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
+    out = OUT_DIR / ("sign_fan_%d.glb" % n)
     bpy.ops.export_scene.gltf(
         filepath=str(out),
         export_format="GLB",
@@ -427,8 +416,15 @@ def main(argv: list[str]) -> int:
         export_yup=True,
         export_cameras=False,
         export_lights=False,
+        export_image_format="AUTO",
     )
-    print("sign_fan: %d bones, %d clips, %s" % (len(BONES), len(CLIPS), out))
+    return out
+
+
+def main(argv: list[str]) -> int:
+    for n, avatar in enumerate(AVATARS):
+        out = build(n, avatar)
+        print("sign_fan: %s, %d clips -> %s" % (avatar, len(CLIPS), out.relative_to(REPO)))
     return 0
 
 

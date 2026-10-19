@@ -9,6 +9,9 @@ extends Node3D
 ## (WeaponStock.STAGE_LAYOUT), as the bell does.
 ## --pyro CUE --wait SECONDS fires EntrancePyro's CUE (opening, cody_hit, roman,
 ## ...) and holds that long before the frame.
+## --sign SECONDS raises the ENDA FEARS OMAR fan and frames him the way the
+## opening's sign cutaway does (EntranceDirector.opening_shot_at), that long
+## after he starts up.
 
 const MATCH_SCENE := "res://scenes/play.tscn"
 var _out := "/tmp/stage_wide.png"
@@ -49,6 +52,27 @@ func _ready() -> void:
 			cue = args[i + 1]
 		elif args[i] == "--wait" and i + 1 < args.size():
 			wait = float(args[i + 1])
+	var sign_wait := -1.0
+	for i in args.size():
+		if args[i] == "--sign" and i + 1 < args.size():
+			sign_wait = float(args[i + 1])
+	if sign_wait >= 0.0:
+		var fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
+		if fans:
+			fans.raise_enda_easter_egg(60.0)
+		var fan: SignFan = fans.enda_easter_egg_fan() if fans else null
+		if fan:
+			# from the ring side, a few metres off, at his chest
+			var at := fan.global_position
+			var to_ring := Vector3(-signf(at.x), 0.0, 0.0)
+			_look = at + Vector3.UP * 1.25
+			_pos = _look + to_ring * 3.2 + Vector3.UP * 0.15 + Vector3(0.0, 0.0, 0.6)
+			_fov = 40.0
+		for _i in int(sign_wait * 60.0):
+			await get_tree().physics_frame
+		cam.fov = _fov
+		cam.global_position = _pos
+		cam.look_at(_look, Vector3.UP)
 	if cue != "":
 		var pyro := EntrancePyro.new()
 		add_child(pyro)

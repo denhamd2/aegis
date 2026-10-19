@@ -24,9 +24,11 @@ signal commentary_started(speaker: String, duration: float)
 ## Every loop is cut to the same loudness (build_sfx.CROWD_LUFS, -16 LUFS), so
 ## these numbers are the mix. This pass lifts the beds and crowd reactions
 ## 3 dB over their previous level.
-## A modest lift across the crowd layers: the previous broadcast mix read as
-## too quiet during actual play. Keep commentary on its separate voice bus.
-const CROWD_MIX_GAIN_DB := 3.0
+## A lift across the crowd layers: the broadcast mix read as too quiet during
+## actual play -- +3 dB, and another +4 dB on the owner's word (19 Oct: "I want
+## the crowd noise to be louder during the match"). Commentary stays on its
+## separate voice bus; the master compressor and limiter hold the sum.
+const CROWD_MIX_GAIN_DB := 7.0
 const BED_DB := -5.0
 const BED_EXCITED_DB := -1.0
 const WALLA_A_DB := [-15.0, -5.0]
