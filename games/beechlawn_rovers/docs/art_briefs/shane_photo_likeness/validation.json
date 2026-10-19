@@ -1,0 +1,15 @@
+{
+  "engine": "Godot 4.6.3",
+  "tests": [
+    "shane_head_variant_smoke.gd",
+    "title_screen_smoke.gd",
+    "shared_roster_resources_smoke.gd",
+    "shared_pose_safety_smoke.gd",
+    "pre_match_intro_smoke.gd"
+  ],
+  "result": "PASS",
+  "scope": "Head/eyes/hair skin bind compatibility, shared body and identity isolation, pose samples, menu modes and intro; no likeness approval or native M1 performance claim",
+  "release_browser_menu": "PASS; release menu/options and uncropped 640x480 layout, no console errors",
+  "debug_browser_match": "PASS; zero-human AI Watch, return to title, one-human Play and keyboard kickoff, no console errors",
+  "capture_fix": "Debug software mode and dedicated review freeze hook; release quality remains separate"
+}

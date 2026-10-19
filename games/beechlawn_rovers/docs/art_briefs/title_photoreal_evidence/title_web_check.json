@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "checks": [
+    "release menu",
+    "options open/close",
+    "640x480 uncropped layout"
+  ],
+  "console_errors": []
+}

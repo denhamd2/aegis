@@ -30,7 +30,9 @@ var _appearance_profile: FootballerProfile
 var _appearance_team: FootballTeam
 var _human_rig := false
 var _presentation_active := false
+var _base_head_parts: Dictionary = {}
 static var _kit_materials: Dictionary = {}
+static var _head_variant_meshes: Dictionary = {}
 @export var jog_reference_speed := 6.0
 @export var sprint_reference_speed := 8.6
 
@@ -85,8 +87,18 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		keeper_idle.loop_mode = Animation.LOOP_LINEAR
 		movement.set_blend_point_node(0,keeper_idle)
 	var kit_material := _shared_kit_material(appearance.kit)
+	var head_parts := _head_parts(appearance.head_variant)
 	for node in get_node("Rig").find_children("*", "MeshInstance3D", true, false):
 		var part := node as MeshInstance3D
+		var part_name := String(part.name)
+		if part_name == "Skin_Head" or part_name.begins_with("Eye_") or part_name.begins_with("Hair_"):
+			if not _base_head_parts.has(part_name):
+				_base_head_parts[part_name] = part.mesh
+			# Reuse this actor's skin/skeleton; the package supplies compatible
+			# head, eye and hair meshes without another live animated rig.
+			part.mesh = head_parts.get(part_name, _base_head_parts[part_name])
+			for surface in part.mesh.get_surface_count():
+				part.set_surface_override_material(surface, null)
 		if part.name == "YBot_Surface":
 			part.visible = not short_sleeves
 		elif part.name == "Kit_Shirt_ShortSleeve":
@@ -102,12 +114,6 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 			var material := part.mesh.surface_get_material(index)
 			if material != null and String(material.resource_name).begins_with("MAT_Beechlawn_HomeKit"):
 				part.set_surface_override_material(index, kit_material)
-		if part.name == "Skin_Head" and appearance.head_variant != null:
-			var variant := appearance.head_variant.instantiate()
-			var candidates := variant.find_children("Skin_Head", "MeshInstance3D", true, false)
-			if candidates.size() == 1:
-				part.mesh = (candidates[0] as MeshInstance3D).mesh
-			variant.free()
 		if part.name == "Skin_Head" and (appearance.head_albedo != null or appearance.skin_tint != Color.WHITE):
 			var skin := part.mesh.surface_get_material(0).duplicate() as StandardMaterial3D
 			if appearance.head_albedo != null:
@@ -124,6 +130,22 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 	rig_node.scale = Vector3(appearance.build_scale, appearance.height_scale, appearance.build_scale)
 	_add_back_print(profile, appearance)
 	_prime_locomotion_pose()
+
+
+static func _head_parts(packed: PackedScene) -> Dictionary:
+	if packed == null:
+		return {}
+	if _head_variant_meshes.has(packed):
+		return _head_variant_meshes[packed]
+	var variant := packed.instantiate()
+	var parts: Dictionary = {}
+	for node in variant.find_children("*", "MeshInstance3D", true, false):
+		var name := String(node.name)
+		if name == "Skin_Head" or name.begins_with("Eye_") or name.begins_with("Hair_"):
+			parts[name] = (node as MeshInstance3D).mesh
+	variant.free()
+	_head_variant_meshes[packed] = parts
+	return parts
 
 
 func _prime_locomotion_pose() -> void:

@@ -54,3 +54,7 @@ TextureRect; no scene rendering, shader animation, runtime cloth or IK.
   regular and semibold menu text.
 
 The full license notices accompany the font files. No paid assets were added.
+
+## Photorealistic revision, 19 October 2026
+
+The current key art replaces the illustrated treatment with natural-light, photographic styling for David Murray and the owner. Both faces are unobscured and sharp, based on their archived original photos. Skin and kit share the same photographic treatment. Centred uhlsport, THOMAS LOOMES & CO, the oval crest, native title and Play/Watch controls are retained. See `title_key_art.provenance.json` for inputs and hash. This remains generated promotional artwork, separate from playable character likeness.

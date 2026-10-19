@@ -1,7 +1,15 @@
-[gd_resource type="Resource" script_class="FootballerProfile" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1_profile"]
 [ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2_attributes"]
+[ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="3_appearance"]
+[ext_resource type="PackedScene" path="res://assets/characters/shane/shane_photo_head.glb" id="4_head"]
+
+[sub_resource type="Resource" id="ShaneAppearance"]
+script = ExtResource("3_appearance")
+kit = "beechlawn_outfield"
+print_name = "S. DENHAM"
+head_variant = ExtResource("4_head")
 
 [sub_resource type="Resource" id="NeutralAttributes"]
 script = ExtResource("2_attributes")
@@ -16,3 +24,4 @@ visual_base = "Shane Denham"
 starting_slot = "left"
 starting_position = Vector2(-20, -8)
 attributes = SubResource("NeutralAttributes")
+appearance = SubResource("ShaneAppearance")

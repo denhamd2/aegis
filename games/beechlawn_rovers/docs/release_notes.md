@@ -1,3 +1,16 @@
+Photo-led character and menu update (19 October 2026):
+- Photorealistic landing portraits for David Murray and the owner, with clear
+  natural-light faces and matching kit style. Existing Play/Watch modes remain.
+- Shane has an independent photo-led head/eye/hair package on the shared body
+  and animation rig. Refined jaw/chin, cheek, eyelid, nose and mouth forms;
+  anatomical skin UVs retained, with a separate restrained smile shape.
+  Replaced flat-looking cap hair with a dense curved short groom, geometric
+  tuft normals and restrained highlights; other players keep the shared base.
+- Both 11v11 and retained 4v4 Shane resources use the same head. Other identities
+  and shared body/animations remain intact. Facial likeness remains in review;
+  hidden profile shape is estimated from secondary references.
+- Updated create-player workflow and production checks for future roster work.
+
 A three-minute keyboard 11v11 Sunday-league prototype at Kilmore Drive.
 
 Beechlawn Rovers 27 title screen:

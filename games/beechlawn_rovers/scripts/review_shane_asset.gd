@@ -1,19 +1,27 @@
 extends Node3D
 ## Isolated exported-asset review with the match's light/environment settings.
-## Does not replace roster meshes or run football simulation.
+## Uses the production appearance path without running football simulation.
 
-const PLAYER: PackedScene = preload("res://assets/characters/_prototypes/shane_denham_08_prototype.glb")
+const PLAYER: PackedScene = preload("res://scenes/footballer_visual.tscn")
+const PROFILE = preload("res://data/squads/home_08.tres")
 const MATCH_SCENE: PackedScene = preload("res://scenes/training_ground.tscn")
 const VENUE = preload("res://scripts/kilmore_drive_venue.gd")
 var camera: Camera3D
 var player: Node3D
 var animation: AnimationPlayer
+var _capture_callback: JavaScriptObject
 
 func _ready() -> void:
 	var source := MATCH_SCENE.instantiate()
 	add_child(source.get_node("WorldEnvironment").duplicate())
 	add_child(source.get_node("Sun").duplicate())
 	source.free()
+	if OS.has_feature("web") and OS.has_feature("debug"):
+		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")) == "1":
+			$Sun.shadow_enabled = false
+			Engine.max_fps = 8
+		_capture_callback = JavaScriptBridge.create_callback(_freeze_capture)
+		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME = _capture_callback
 	# Close asset review shares the match's sky, sun and pitch shader. Full park
 	# shadow-caster cost overwhelms software WebGL and is a separate scene gate.
 	if not OS.has_feature("web"):
@@ -29,7 +37,11 @@ func _ready() -> void:
 	add_child(ground)
 	player = PLAYER.instantiate()
 	add_child(player)
-	animation = player.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var visual := player as FootballerVisual
+	visual.configure_appearance(PROFILE)
+	visual.animation_tree.active = false
+	player.rotation.y = PI
+	animation = visual.animation_player
 	_neutral_pose()
 	camera = Camera3D.new()
 	add_child(camera)
@@ -50,7 +62,7 @@ func _ready() -> void:
 			animation.pause()
 	_set_view(view)
 	var label := Label.new()
-	label.text = "Shane Denham #8 — exported asset review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nPrototype; roster integration remains separate"
+	label.text = "Shane Denham #8 — production head variant review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nShared body/rig; individual photo-led head"
 	label.position = Vector2(20, 20)
 	label.add_theme_color_override("font_shadow_color", Color.BLACK)
 	label.add_theme_constant_override("shadow_offset_x", 2)
@@ -62,6 +74,10 @@ func _ready() -> void:
 	await RenderingServer.frame_post_draw
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_READY = true")
+
+func _freeze_capture(_arguments: Array) -> void:
+	get_tree().paused = true
+	Engine.max_fps = 1
 
 func _neutral_pose() -> void:
 	animation.stop()
@@ -92,6 +108,11 @@ func _set_view(view: String) -> void:
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 25.0
 			camera.position = Vector3(0, 1.67, 1.20)
+			target = Vector3(0, 1.67, 0)
+		"threequarter_portrait", "profile_portrait":
+			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
+			camera.fov = 25.0
+			camera.position = Vector3(.78, 1.67, .95) if view == "threequarter_portrait" else Vector3(1.20, 1.67, 0)
 			target = Vector3(0, 1.67, 0)
 		"broadcast":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE

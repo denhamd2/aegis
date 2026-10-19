@@ -1,20 +1,22 @@
-[gd_resource type="Resource" script_class="FootballerProfile" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="FootballerProfile" load_steps=7 format=3]
 [ext_resource type="Script" path="res://scripts/data/footballer_profile.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="3"]
+[ext_resource type="PackedScene" path="res://assets/characters/shane/shane_photo_head.glb" id="4_head"]
 [sub_resource type="Resource" id="Attributes"]
 script = ExtResource("2")
 [sub_resource type="Resource" id="Appearance"]
 script = ExtResource("3")
 kit = "beechlawn_outfield"
 print_name = "S. DENHAM"
+head_variant = ExtResource("4_head")
 [resource]
 script = ExtResource("1")
 player_id = &"shane_denham"
 display_name = "Shane Denham"
 jersey_number = 8
 role = "outfield"
-visual_base = "Shane base; individual likeness pending"
+visual_base = "Shane photo-led head on shared body; likeness review in progress"
 starting_slot = "right_midfield"
 tactical_role = "central_midfielder"
 starting_position = Vector2(-12, 8)

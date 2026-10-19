@@ -636,6 +636,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-19: Shane original-photo pass adds a separate head/eye/hair package
+    on the unchanged shared rig, with a neutral identity and editable restrained
+    smile. Integrated into both roster and retained 4v4 profile; likeness remains
+    in review. See `art_briefs/shane_photo_likeness/brief.md`. The `/create-player`
+    workflow now includes current production checks and removes stale first-pass
+    and prototype-only assumptions. Photorealistic title portraits use the
+    original David/owner photos and remain separate promotional artwork.
   - 2026-10-18 roster integration supersedes the prototype-only note below:
     a modular shared body/65-bone rig, 17 clips, six role atlases, small identity
     prints, editable height/build and topology-checked head sculpt deltas now

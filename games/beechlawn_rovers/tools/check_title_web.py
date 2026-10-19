@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Exercise the actual Godot menu and both modes in Chromium software WebGL.
 
-Usage: python3 tools/check_title_web.py <web-export-directory> <evidence-directory>
+Usage: python3 tools/check_title_web.py <web-export-directory> <evidence-directory> [--menu-only]
+Full software match checks need --export-debug Web for its frame-freeze hook.
+Use --menu-only against the release export to verify its actual UI.
 Functional/layout coverage only. This does not measure native M1 performance.
 """
 import asyncio
@@ -21,7 +23,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
-async def run(web: Path, evidence: Path):
+async def run(web: Path, evidence: Path, menu_only: bool = False):
     evidence.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(web)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -41,7 +43,10 @@ async def run(web: Path, evidence: Path):
                 await page.screenshot(path=str(evidence/"title_screen.png"))
                 # Menu uses a 1600x900 logical canvas, scaled to fit the viewport.
                 async def click(x, y):
-                    await page.mouse.click(x*0.8,y*0.8)
+                    viewport = page.viewport_size
+                    factor = min(viewport["width"]/1600, viewport["height"]/900)
+                    await page.mouse.click((viewport["width"]-1600*factor)/2+x*factor,
+                                           (viewport["height"]-900*factor)/2+y*factor)
                     await page.wait_for_timeout(200)
                 await click(300,750)
                 await page.screenshot(path=str(evidence/"title_options.png"))
@@ -50,11 +55,22 @@ async def run(web: Path, evidence: Path):
                 await page.set_viewport_size({"width":640,"height":480})
                 await page.wait_for_timeout(300)
                 await page.screenshot(path=str(evidence/"title_small.png"))
-                await page.set_viewport_size({"width":1280,"height":720})
+                if menu_only:
+                    if errors:
+                        raise RuntimeError("Browser errors: " + "\n".join(errors))
+                    report = {"result":"PASS", "checks":["release menu", "options open/close", "640x480 uncropped layout"], "console_errors":errors}
+                    (evidence/"title_web_check.json").write_text(json.dumps(report,indent=2)+"\n")
+                    print(json.dumps(report),flush=True)
+                    return
+                # Keep full-resolution menu evidence above; use a smaller
+                # canvas for functional 23-rig match checks on software WebGL.
+                # This bounds render cost without changing simulation or actors.
+                await page.set_viewport_size({"width":640,"height":360})
                 await page.wait_for_timeout(300)
                 await click(450,546)
                 await click(300,670)
                 await page.wait_for_function("window.BEECHLAWN_MATCH_READY === true", timeout=90000)
+                assert await page.evaluate("typeof window.BEECHLAWN_FREEZE_FRAME === 'function'"), "Full software match captures need a debug Web export; use --menu-only for release UI checks"
                 assert await page.evaluate("window.BEECHLAWN_MATCH_MODE === 'watch' && window.BEECHLAWN_HUMAN_PLAYERS === 0")
                 await page.keyboard.press("Space")
                 await page.wait_for_function("window.BEECHLAWN_MATCH_STARTED === true",timeout=30000)
@@ -75,7 +91,7 @@ async def run(web: Path, evidence: Path):
                 await page.screenshot(path=str(evidence/"title_play_match.png"))
                 if errors:
                     raise RuntimeError("Browser errors: " + "\n".join(errors))
-                report = {"result":"PASS","checks":["native menu", "options open/close", "640x480 layout", "AI auto kickoff", "zero spectator humans", "return to title", "Play has one human", "keyboard kickoff"],"renderer":"Compatibility / Chromium SwiftShader", "native_M1_performance":"not measured", "console_errors":errors}
+                report = {"result":"PASS","checks":["native menu", "options open/close", "640x480 layout", "AI auto kickoff", "zero spectator humans", "return to title", "Play has one human", "keyboard kickoff"],"renderer":"Compatibility / Chromium SwiftShader", "menu_viewport":[1280,720], "match_viewport":[640,360], "native_M1_performance":"not measured", "console_errors":errors}
                 (evidence/"title_web_check.json").write_text(json.dumps(report,indent=2)+"\n")
                 print(json.dumps(report),flush=True)
             finally:
@@ -87,4 +103,4 @@ async def run(web: Path, evidence: Path):
 
 
 if __name__ == "__main__":
-    asyncio.run(run(Path(sys.argv[1]).resolve(),Path(sys.argv[2]).resolve()))
+    asyncio.run(run(Path(sys.argv[1]).resolve(),Path(sys.argv[2]).resolve(),"--menu-only" in sys.argv[3:]))

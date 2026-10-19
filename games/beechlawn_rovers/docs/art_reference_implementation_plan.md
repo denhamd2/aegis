@@ -197,3 +197,7 @@ traces the western taper/inset and continues the road through reusable Blender
 GLBs plus a Godot layout resource. Source pixels and calibration are archived
 in `references/research/kilmore_site/site_trace.json`. This advances the outline
 and western extent, not surveyed accuracy or individual property matching.
+
+## Original-photo identity update — 19 October 2026
+
+BR-022 (22/25) now uses the owner-uploaded Shane photo `shane_face_photo/69012.jpg` for facial identity, with sheet profiles treated as secondary estimates. See `art_briefs/shane_photo_likeness/brief.md` for the neutral sculpt/expression distinction, independent head integration and review evidence. Future player work starts with the revised `/create-player` workflow and its task-specific production checks. The landing art uses photorealistic David/owner portraits; it does not demonstrate gameplay mesh fidelity.
