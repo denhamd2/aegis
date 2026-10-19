@@ -19,6 +19,9 @@ signal weapon_retrieval_started(wrestler: WrestlerController)
 signal fired_up(wrestler: WrestlerController)
 ## A strike parried and countered (Phase 4 reversals): `reverser` read it.
 signal reversed(reverser: WrestlerController, striker: WrestlerController, move: MoveDef)
+## He has just been hit and sells it at `sell` (Sell) -- what WrestlerVoice
+## grunts or yells at. Presentation only.
+signal hurt(sell: int, move: MoveDef)
 
 const MOVE_SPEED := 3.5
 const RUN_SPEED := 7.0
@@ -765,7 +768,10 @@ func _ready() -> void:
 			Blood.attach(self, model)
 		# Fire: a man who walks into one catches it, and burn marks stay
 		# (ManFire, put out by FireCrew). Presentation and the one signal.
-		ManFire.attach(self, model)
+		var fire := ManFire.attach(self, model)
+		# His voice: grunts on a blow, a groan on the mat, a scream while he
+		# burns (WrestlerVoice). Presentation only.
+		WrestlerVoice.attach(self, fire)
 		# His eyes on the other man, where the model has eyes that move
 		# (RomanModel; EyeAim). Presentation only.
 		if model and model.has_method("aim_eyes"):
@@ -3590,6 +3596,7 @@ func _resolve_pending_hits() -> void:
 				_down_scale = float(WeaponCatalog.IMPACT_DOWN_SCALE[impact])
 				_bump_shove = float(WeaponCatalog.IMPACT_SHOVE[impact])
 	_took_moves(moves.size())
+	hurt.emit(_hit_sell, last_move)
 	if fatal_shot:
 		if fsm.current_state == WrestlerFSM.State.LADDER_CLIMB:
 			dead = true

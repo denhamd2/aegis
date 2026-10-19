@@ -41,7 +41,6 @@ FREESOUND = {
 	"264499": ("noah0189", "Crowd Ooohs and Ahhhs in Excitement"),
 	"571096": ("TRP", "Boxing bell, various rings dings pulses"),
 	"454221": ("kyles", "thud impact wrestling ring heavy wrestler fall on mat"),
-	"208791": ("uEffects", "Punch Sounds"),
 	"251759": ("misosound", "BOOMING PUNCHY EXPLOSION - close, big"),
 	"336011": ("Rudmer_Rotteveel", "Sharp Explosion 4 (of 5)"),
 	"683101": ("florianreichelt", "quick woosh"),
@@ -53,6 +52,31 @@ FREESOUND = {
 	"480725": ("craigsmith", "R08-24-Large Crowd Screaming and Whistling"),
 	"764273": ("ShangusBurger", "CRWDCheer_Cheering, Whistling, No Clapping"),
 	"424793": ("johnnyguitar01", "crowd clap rhythmic"),
+	# Round 3 (the owner, 19 Oct: every hit as real as it can be, and the men
+	# heard): two layers to a body shot, the ring, the weapons by what they are,
+	# and the voices. Picked by measurement (attack, centroid, low-end share).
+	"853588": ("Wigglesworth", "Punches/hits"),
+	"478155": ("bspiller5", "BPS-BOXING-PUNCHES-Realistic-Various Body Hits"),
+	"460509": ("florianreichelt", "Hitting in a Face"),
+	"444407": ("MootMcnoodles", "Slap"),
+	"564230": ("njjjjjjjjjjjjjjjjjjjjjjjj", "Huge Slap in the Face"),
+	"128103": ("Project_Trident", "Wooden Floor Body Slams"),
+	"125137": ("connersaw8", "Chair Hit 2"),
+	"115918": ("issalcake", "Chair Thrown, Crash, bolt fell out after crash"),
+	"115923": ("issalcake", "Single Chair hits floor, bounce"),
+	"512218": ("Mateusz_Chenc", "Breaking wooden table"),
+	"434146": ("NeoSpica", "Table Smash"),
+	"115917": ("issalcake", "Weak table crash, break"),
+	"114683": ("Qat", "whack02"),
+	"44871": ("stomachache", "trashcan"),
+	"706979": ("JesterWhoo", "Hitting a brick with a sledgehammer"),
+	"372877": ("Hakren", "Iron-Wood Slam"),
+	"54850": ("qubodup", "Rubber Metal Wood Impact Collision Bang"),
+	"442288": ("rockittt", "male pain sound effects"),
+	"218895": ("Halgrimm", "human grunts 3"),
+	"556976": ("marc3122", "Male Screams [1]"),
+	"325548": ("Archeos", "Man screaming"),
+	"166943": ("qubodup", "Moans and screams of agony of military soldiers"),
 }
 # archive.org CC0 field recordings (Red Library crowds): file -> description.
 # The item's licenseurl is checked at download time.
@@ -267,6 +291,15 @@ def split_on_silence(x: np.ndarray, floor_db: float, min_len: float = 0.6) -> li
 	return parts
 
 
+def ff_filter(x: np.ndarray, af: str) -> np.ndarray:
+	"""Run `x` through an ffmpeg audio filter chain (e.g. "highpass=f=90")."""
+	ch = x.shape[1]
+	raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-f", "f32le", "-ar", str(SR), "-ac", str(ch),
+			"-i", "-", "-af", af, "-f", "f32le", "-"], input=x.astype(np.float32).tobytes(),
+			capture_output=True, check=True).stdout
+	return np.frombuffer(raw, dtype=np.float32).reshape(-1, ch).copy()
+
+
 def layer(parts: list) -> np.ndarray:
 	"""[(seconds, clip, gain)] mixed onto one timeline."""
 	end = max(int(t * SR) + len(c) for t, c, _ in parts)
@@ -338,13 +371,51 @@ def build() -> None:
 	save("bell_end", peak_to(layer([(i * 0.36, ding, 1.0 - 0.04 * i) for i in range(8)]), -1.0))
 
 	print("impacts")
-	# Strikes: close punches, plus Kenney's heavier body punches.
-	punch = load(freesound("208791"))
-	for i, t in enumerate((0.37, 1.66, 2.71, 3.43, 4.00, 5.48)):
-		save(f"hit_punch_{i}", peak_to(fade(trim_tail(cut(punch, onset(punch, t), 0.45), -40)), -3))
+	# Strikes, two layers to every body shot (the owner, 19 Oct): the hand or
+	# boot on skin, close and bright, over the thump of the body under it.
+	# Wigglesworth's punches are the hand (300-500 Hz, 2-15 ms attack),
+	# bspiller5's boxing body hits the thump (80-150 Hz, under 1 ms), the
+	# slaps the skin of a chop. Takes measured, not guessed.
+	hand = load(freesound("853588"))
+	thump = load(freesound("478155"))
+	face = load(freesound("460509"))
+	slap = load(freesound("444407"))
+	big_slap = load(freesound("564230"))
+
+	def take(x, t, n):
+		# Each layer peak-matched before it is mixed, so a gain below is the
+		# layer's share of the hit: the thump source peaks 10 dB over the
+		# hand's, and unmatched it buried the hand (centroid 75-120 Hz on
+		# every punch). onset() can land a hair before zero on a first take.
+		return peak_to(cut(x, max(0.0, onset(x, t)), n), 0.0)
+
+	hands = (0.96, 2.05, 3.26, 8.41, 9.57, 10.74, 12.00, 13.17)
+	thumps = (0.09, 1.68, 3.43, 4.84, 6.18, 7.69, 9.16, 10.53, 12.32, 14.18)
+	# The thump is short -- a body thud is over in a seventh of a second; left
+	# at 0.28 s its boom outweighed the hand, which then read as a dull thud.
+	# A trace of slap on top is the knuckles on skin.
+	skin = ff_filter(take(slap, 0.0, 0.08), "highpass=f=1500")
+	for i in range(6):
+		h = take(hand, hands[i], 0.32)
+		b = fade(take(thump, thumps[i], 0.14), 0.002, 0.08)
+		save(f"hit_punch_{i}", peak_to(fade(trim_tail(layer([(0.0, h, 1.0), (0.003, b, 0.2),
+				(0.0, skin, 0.15)]), -42)), -3))
+	# A kick: the boot's weight -- the thump leads, the face hit on it.
+	for i, t in enumerate((0.39, 1.68, 2.97)):
+		b = fade(take(thump, thumps[6 + i], 0.18), 0.002, 0.1)
+		f = take(face, t, 0.28)
+		save(f"hit_kick_{i}", peak_to(fade(trim_tail(layer([(0.0, b, 0.6), (0.002, f, 1.0)]), -42)), -2))
+	# A chop: the open hand across the chest, the slap on top.
+	for i, (sk, hk) in enumerate(((slap, 3), (big_slap, 4), (slap, 5))):
+		st = 0.0 if sk is slap else 0.22
+		sl = take(sk, st, 0.25)
+		h = take(hand, hands[hk], 0.25)
+		save(f"hit_chop_{i}", peak_to(fade(trim_tail(layer([(0.0, sl, 1.0), (0.004, h, 0.35)]), -42)), -2))
+	# A forearm or an elbow: the heavier hand takes and a full thump.
 	for i in range(3):
-		k = load(kenney("impact", f"impactPunch_heavy_00{i}"))
-		save(f"hit_kick_{i}", peak_to(fade(trim_tail(k, -40)), -2))
+		h = take(hand, hands[5 + i], 0.32)
+		b = fade(take(thump, thumps[7 + i], 0.16), 0.002, 0.09)
+		save(f"hit_forearm_{i}", peak_to(fade(trim_tail(layer([(0.0, h, 1.0), (0.002, b, 0.3)]), -42)), -2))
 	# Bumps: a wrestler landing flat on a ring -- canvas over boards, the
 	# thud and the breath knocked out of him.
 	mat = load(freesound("454221"))
@@ -363,13 +434,78 @@ def build() -> None:
 		for i in range(3):
 			k = load(kenney("impact", f"{src}_00{i}"))
 			save(f"{fam}_{i}", peak_to(fade(trim_tail(layer([(0.0, k, 1.0), (0.004, body[i], 0.55)]), -42)), -2))
-	# A table going: the boards cracking, a plank after, and the man on the mat.
-	for i in range(2):
-		crack = load(kenney("impact", f"impactWood_heavy_00{3 + i}"))
-		plank = load(kenney("impact", f"impactPlank_medium_00{i}"))
-		thud = cut(mat, onset(mat, (0.0, 5.66)[i]), 1.2)
-		save(f"table_crack_{i}", peak_to(fade(trim_tail(layer([(0.0, crack, 1.0), (0.05, plank, 0.8),
-				(0.02, thud, 0.9)]), -40), 0.002, 0.15), -1))
+	# More of the ring: a man landing on boards, Project_Trident's wooden-floor
+	# body slams (300-500 Hz, the deck's boom).
+	slams = load(freesound("128103"))
+	for i, t in enumerate((0.42, 4.38, 9.99, 18.82, 21.19, 27.80)):
+		save(f"bump_{6 + i}", peak_to(fade(trim_tail(take(slams, t, 1.2), -38), 0.002, 0.15), -1))
+
+	print("weapons by what they are")
+	# A chair shot: the hollow clang and the man under it.
+	for i, (sid, t, n) in enumerate((("125137", 0.0, 0.5), ("115918", 3.25, 0.9), ("115923", 3.25, 0.9))):
+		c = take(load(freesound(sid)), t, n)
+		b = take(thump, thumps[i], 0.3)
+		save(f"hit_chair_{i}", peak_to(fade(trim_tail(layer([(0.0, c, 1.0), (0.003, b, 0.45)]), -42)), -2))
+	# A kendo stick: a sharp crack across the back.
+	whack = load(freesound("114683"))
+	for i, (gain, sk) in enumerate(((0.35, slap), (0.5, big_slap))):
+		w = take(whack, 0.07, 0.36)
+		sl = take(sk, 0.0 if sk is slap else 0.22, 0.2)
+		save(f"hit_kendo_{i}", peak_to(fade(trim_tail(layer([(0.0, w, 1.0), (0.002, sl, gain)]), -42)), -2))
+	# A trash can: tin, and the body under it.
+	can = take(load(freesound("44871")), 0.0, 1.2)
+	save("hit_can_0", peak_to(fade(trim_tail(layer([(0.0, can, 1.0), (0.004, take(thump, thumps[3], 0.3), 0.5)]),
+			-42)), -2))
+	# A sledgehammer: a dead, heavy hit.
+	sledge = load(freesound("706979"))
+	for i, t in enumerate((0.99, 3.06, 5.05)):
+		save(f"hit_sledge_{i}", peak_to(fade(trim_tail(layer([(0.0, take(sledge, t, 0.25), 1.0),
+				(0.002, fade(take(thump, thumps[4 + i], 0.2), 0.002, 0.1), 0.45)]), -42)), -2))
+	# A ladder: aluminium and the slam of it.
+	slam = take(load(freesound("372877")), 0.05, 1.0)
+	bang = load(freesound("54850"))
+	for i, t in enumerate((0.18, 1.49)):
+		save(f"hit_ladder_{i}", peak_to(fade(trim_tail(layer([(0.0, take(bang, t, 0.3), 1.0),
+				(0.01, slam, 0.8)]), -42)), -2))
+	# A table going: the boards cracking and splintering, the man on the boards.
+	# 115917's splinter swells in over 25 ms, so the sharp 512218 crack goes
+	# first and the splinter rides on it.
+	snap = take(load(freesound("512218")), 0.02, 0.6)
+	for i, (sid, t, n) in enumerate((("512218", 0.02, 0.6), ("434146", 0.0, 0.6), ("115917", 1.82, 0.9))):
+		crack = take(load(freesound(sid)), t, n)
+		body = take(slams, (0.42, 9.99, 21.19)[i], 1.0)
+		lead = [(0.0, snap, 0.8)] if sid == "115917" else []
+		save(f"table_crack_{i}", peak_to(fade(trim_tail(layer(lead + [(0.012 if lead else 0.0, crack, 1.0),
+				(0.02, body, 0.5)]), -40), 0.002, 0.15), -1))
+	# The announce desk: heavier -- the top giving, the monitors, the glass.
+	desk_top = take(load(freesound("115917")), 1.82, 0.9)
+	glass = load(kenney("impact", "impactGlass_heavy_000"))
+	save("desk_crash_0", peak_to(fade(trim_tail(layer([(0.0, snap, 0.9), (0.012, desk_top, 1.0),
+			(0.01, take(bang, 4.34, 0.3), 0.8),
+			(0.05, peak_to(glass, 0.0), 0.5), (0.02, take(slams, 18.82, 1.1), 0.55)]), -40), 0.002, 0.2), -1))
+
+	print("voices")
+	# The men heard (the owner, 19 Oct): a grunt on a blow, a groan when it
+	# hurts, a yell for the worst of it, and a burning man screaming until he
+	# is put out. All CC0 performers; no wrestler's or commentator's voice.
+	pain = load(freesound("442288"))
+	grunts = ff_filter(load(freesound("218895")), "highpass=f=90")
+	screams = load(freesound("556976"))
+	for i, (t, n) in enumerate(((0.16, 0.26), (3.43, 0.25), (6.42, 0.27), (1.37, 0.33))):
+		save(f"grunt_light_{i}", peak_to(fade(trim_tail(take(pain, t, n), -42)), -4))
+	for i, (t, n) in enumerate(((1.22, 0.63), (2.64, 0.43), (5.79, 0.42), (9.75, 0.56))):
+		save(f"grunt_heavy_{i}", peak_to(fade(trim_tail(take(grunts, t, n), -42)), -3))
+	for i, (t, n) in enumerate(((1.97, 0.56), (4.53, 0.63), (5.35, 0.74), (6.81, 0.65))):
+		save(f"groan_{i}", peak_to(fade(trim_tail(take(pain, t, n), -42), 0.004, 0.12), -3))
+	for i, (t, n) in enumerate(((7.93, 0.5), (9.51, 0.55), (10.96, 0.59), (12.54, 0.53))):
+		save(f"yell_{i}", peak_to(fade(trim_tail(take(screams, t, n), -42), 0.004, 0.12), -2))
+	burn = [(screams, 0.62, 2.4), (screams, 4.04, 2.3)]
+	archeos = load(freesound("325548"))
+	burn += [(archeos, 1.07, 1.9), (archeos, 4.65, 2.2), (archeos, 19.17, 2.6)]
+	agony = load(freesound("166943"))
+	burn += [(agony, 0.0, 4.7)]
+	for i, (src, t, n) in enumerate(burn):
+		save(f"burn_scream_{i}", peak_to(fade(trim_tail(take(src, t, n), -42), 0.01, 0.25), -2))
 
 	print("pyro")
 	save("pyro_boom", peak_to(fade(trim_tail(load(freesound("251759"), 2), -50), 0.001, 0.4), -1))

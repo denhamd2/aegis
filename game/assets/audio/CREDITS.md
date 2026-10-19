@@ -16,12 +16,26 @@ anyway.
 | `crowd_ooh_*` | [Crowd Ooohs and Ahhhs in Excitement](https://freesound.org/people/noah0189/sounds/264499/) | noah0189 | CC0 |
 | `bell_*` | [Boxing bell, various rings](https://freesound.org/people/TRP/sounds/571096/) | TRP | CC0 |
 | `bump_*` | [Heavy wrestler fall on mat](https://freesound.org/people/kyles/sounds/454221/) | kyles | CC0 |
-| `hit_punch_*` | [Punch Sounds](https://freesound.org/people/uEffects/sounds/208791/) | uEffects | CC0 |
 | `pyro_boom` | [Booming punchy explosion](https://freesound.org/people/misosound/sounds/251759/) | misosound | CC0 |
 | `pyro_bang` | [Sharp Explosion 4](https://freesound.org/people/Rudmer_Rotteveel/sounds/336011/) | Rudmer_Rotteveel | CC0 |
 | `whoosh` | [quick woosh](https://freesound.org/people/florianreichelt/sounds/683101/) | florianreichelt | CC0 |
-| `hit_kick_*`, `count_slap_*` | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
-| `hit_metal_*`, `hit_wood_*`, `hit_glass_*` (over Kenney's heavy punches), `table_crack_*` (with the ring-bump recording above) | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
+| `count_slap_*` | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
+| `hit_metal_*`, `hit_wood_*`, `hit_glass_*` (over Kenney's heavy punches), and the glass in `desk_crash_0` | [Impact Sounds](https://kenney.nl/assets/impact-sounds) | Kenney | CC0 |
+| `hit_punch_*`, `hit_forearm_*`, `hit_chop_*` (the hand) | [Punches/hits](https://freesound.org/people/Wigglesworth/sounds/853588/) | Wigglesworth | CC0 |
+| `hit_punch_*`, `hit_forearm_*`, `hit_kick_*`, `hit_chair_*`, `hit_can_0`, `hit_sledge_*` (the body thump) | [BPS-BOXING-PUNCHES-Realistic-Various Body Hits](https://freesound.org/people/bspiller5/sounds/478155/) | bspiller5 | CC0 |
+| `hit_kick_*` | [Hitting in a Face](https://freesound.org/people/florianreichelt/sounds/460509/) | florianreichelt | CC0 |
+| `hit_chop_*`, `hit_kendo_*`, `hit_punch_*` (the slap) | [Slap](https://freesound.org/people/MootMcnoodles/sounds/444407/), with [Huge Slap in the Face](https://freesound.org/people/njjjjjjjjjjjjjjjjjjjjjjjj/sounds/564230/) | MootMcnoodles, njjjjjjjjjjjjjjjjjjjjjjjj | CC0 |
+| `bump_6`-`bump_11`, and the man on the boards in `table_crack_*`, `desk_crash_0` | [Wooden Floor Body Slams](https://freesound.org/people/Project_Trident/sounds/128103/) | Project_Trident | CC0 |
+| `hit_chair_*` | [Chair Hit 2](https://freesound.org/people/connersaw8/sounds/125137/), [Chair Thrown, Crash, bolt fell out after crash](https://freesound.org/people/issalcake/sounds/115918/), [Single Chair hits floor, bounce](https://freesound.org/people/issalcake/sounds/115923/) | connersaw8, issalcake | CC0 |
+| `table_crack_*`, `desk_crash_0` | [Breaking wooden table](https://freesound.org/people/Mateusz_Chenc/sounds/512218/), [Table Smash](https://freesound.org/people/NeoSpica/sounds/434146/), [Weak table crash, break](https://freesound.org/people/issalcake/sounds/115917/) | Mateusz_Chenc, NeoSpica, issalcake | CC0 |
+| `hit_kendo_*` | [whack02](https://freesound.org/people/Qat/sounds/114683/) | Qat | CC0 |
+| `hit_can_0` | [trashcan](https://freesound.org/people/stomachache/sounds/44871/) | stomachache | CC0 |
+| `hit_sledge_*` | [Hitting a brick with a sledgehammer](https://freesound.org/people/JesterWhoo/sounds/706979/) | JesterWhoo | CC0 |
+| `hit_ladder_*`, `desk_crash_0` | [Rubber Metal Wood Impact Collision Bang](https://freesound.org/people/qubodup/sounds/54850/), with [Iron-Wood Slam](https://freesound.org/people/Hakren/sounds/372877/) | qubodup, Hakren | CC0 |
+| `grunt_light_*`, `groan_*` | [male pain sound effects](https://freesound.org/people/rockittt/sounds/442288/) | rockittt | CC0 |
+| `grunt_heavy_*` | [human grunts 3](https://freesound.org/people/Halgrimm/sounds/218895/) | Halgrimm | CC0 |
+| `yell_*`, `burn_scream_*` | [Male Screams [1]](https://freesound.org/people/marc3122/sounds/556976/) | marc3122 | CC0 |
+| `burn_scream_*` | [Man screaming](https://freesound.org/people/Archeos/sounds/325548/), [Moans and screams of agony of military soldiers](https://freesound.org/people/qubodup/sounds/166943/) | Archeos, qubodup | CC0 |
 | `ui_*` | [Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney | CC0 |
 
 The entrance music in `music/` is the full soundtrack of the owner-supplied

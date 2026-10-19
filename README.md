@@ -9790,3 +9790,32 @@ at broadcast-heavy intensity.
   rebuilt from the same constants. The fire spread steps up a wall by a
   fraction of its height (`SPREAD_TALL_HALF`), so a short wall keeps its fire
   inside its edges.
+
+## 19 Oct — Hits that sound like what they are; men who feel them
+
+- **Every strike in two layers** (`tools/audio/build_sfx.py`): the hand or
+  boot on skin over a short body thump, each peak-matched before mixing so the
+  slap leads. New families: `hit_chop` (open hand), `hit_forearm` (forearms,
+  elbows, clotheslines, lariats), and rebuilt `hit_punch` and `hit_kick`.
+  `MatchAudio.hit_sound` picks by what lands.
+- **Weapons by what they are.** A chair clangs hollow (`hit_chair`), a kendo
+  or hockey stick cracks (`hit_kendo`), a trash can or cookie sheet is tin
+  (`hit_can`), a sledgehammer lands dead (`hit_sledge`), a ladder rings
+  (`hit_ladder`). Tables now crack and splinter from real table-break
+  recordings over a body landing on boards (`table_crack`). Six more bumps
+  from a wooden-floor body-slam recording. `desk_crash_0` is built for the
+  announce desk, ready for the table powerbomb.
+- **Pain voices** (`WrestlerVoice`, one per man, at his head). A light blow
+  is grunted half the time, a hard one always; a chair or stick draws a hard
+  grunt; a blade, a wipeout, a signature or a finisher draws a yell; he groans
+  as he lands from a knockdown. Never more than once in 0.6 s, never the same
+  take twice running, seeded from the match seed. Roman's voice is pitched a
+  little lower than Cody's.
+- **A man on fire screams** take after take, a breath between, until Aubrey
+  puts him out; the scream fades and he ends on a groan.
+- **All CC0**, every recording credited in `game/assets/audio/CREDITS.md`.
+  The build is byte-for-byte repeatable. `tools/audio/listening_reel.py`
+  renders a listening reel over the crowd bed (−18 LUFS, peaks −2.6 dBTP)
+  and the review sheet `gauntlet/refs/nhb/review/step5_sound.png`.
+- **Still to judge by ear:** the punches and forearms measure bass-heavy
+  (centroid 100–230 Hz), which is in range for game punches.

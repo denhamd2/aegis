@@ -378,14 +378,25 @@ static func hit_sound(move: MoveDef) -> String:
 		if weapon.swing in [WeaponDef.Swing.GUN, WeaponDef.Swing.LAUNCHER, WeaponDef.Swing.SPRAY]:
 			return ""
 		return weapon.sound
+	# By what lands (the owner, 19 Oct: each strike should sound like what it
+	# is): an open hand slaps, a boot thuds, a forearm or an arm across the
+	# chest is heavier than a fist.
 	var file := move.resource_path.get_file().get_basename()
+	if file.contains("chop"):
+		return "hit_chop"
 	if file.contains("kick") or file.contains("stomp") or file.contains("knee"):
 		return "hit_kick"
-	if file.begins_with("strike_") or file.begins_with("ground_") \
-			or file.contains("punch") or file.contains("elbow") \
+	if file.contains("elbow") or file.contains("forearm") \
 			or file.contains("clothesline") or file.contains("lariat"):
+		return "hit_forearm"
+	if file.begins_with("strike_") or file.begins_with("ground_") or file.contains("punch"):
 		return "hit_punch"
 	return ""
+
+
+## A hand or an arm landing, rather than a boot or a weapon.
+static func is_hand_strike(sound: String) -> bool:
+	return sound in ["hit_punch", "hit_chop", "hit_forearm"]
 
 
 static func hit_volume(move: MoveDef) -> float:
@@ -511,7 +522,7 @@ static func commentary_event_for_landed_strike(move: MoveDef) -> String:
 	var move_id := move.resource_path.get_file().get_basename()
 	if not move_id.begins_with("strike_"):
 		return ""
-	if hit_sound(move) == "hit_punch":
+	if is_hand_strike(hit_sound(move)):
 		var damage := move.damage_head + move.damage_torso + move.damage_arms + move.damage_legs
 		return "excalibur_strikes" if damage >= 8.0 else ""
 	if hit_sound(move) == "hit_kick" and move.damage_torso >= 6.0:

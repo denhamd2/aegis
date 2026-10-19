@@ -6,7 +6,9 @@ extends GdUnitTestSuite
 const NAMED := ["crowd_bed", "crowd_walla_a", "crowd_walla_b", "crowd_boo",
 		"crowd_cheer", "crowd_roar", "crowd_finish", "bell_start", "bell_end",
 		"bell_ding", "pyro_boom", "pyro_bang", "whoosh", "ui_move", "ui_select", "ui_back"]
-const FAMILIES := ["crowd_pop", "crowd_ooh", "hit_punch", "hit_kick", "bump", "count_slap"]
+const FAMILIES := ["crowd_pop", "crowd_ooh", "hit_punch", "hit_kick", "hit_chop", "hit_forearm", "bump",
+		"count_slap", "hit_chair", "hit_kendo", "hit_sledge", "hit_ladder", "table_crack", "grunt_light",
+		"grunt_heavy", "groan", "yell", "burn_scream"]
 
 
 func test_every_sound_it_plays_is_built() -> void:
@@ -371,7 +373,8 @@ func test_strikes_sound_on_landing_and_slams_do_not() -> void:
 	var cases := {
 		"strike_jab": "hit_punch", "strike_kick_heavy": "hit_kick",
 		"ground_stomp_body": "hit_kick", "ground_fist": "hit_punch",
-		"signature_superman_punch": "hit_punch", "strike_bionic_elbow": "hit_punch",
+		"signature_superman_punch": "hit_punch", "strike_bionic_elbow": "hit_forearm",
+		"strike_corner_clothesline": "hit_forearm",
 		"power_bodyslam": "", "grapple_vertical_suplex": "", "finisher_spear": "",
 	}
 	for id: String in cases:
@@ -517,3 +520,25 @@ func test_winner_theme_starts_at_the_chorus_not_the_top() -> void:
 		audio._process(0.05)
 	assert_float(p.volume_db).is_greater(MatchAudio.THEME_DB - 1.0)
 	assert_float(audio._duck).is_less(MatchAudio.THEME_DUCK_DB * 0.5)
+
+
+## Each weapon sounds like what it is (the owner, 19 Oct): a chair clangs
+## hollow, a kendo stick cracks, a sledgehammer lands dead, a ladder rings.
+func test_weapons_sound_like_what_they_are() -> void:
+	var cases := {&"steel_chair": "hit_chair", &"kendo_stick": "hit_kendo", &"sledgehammer": "hit_sledge",
+			&"ladder": "hit_ladder", &"trash_can": "hit_can", &"baseball_bat": "hit_wood",
+			&"lead_pipe": "hit_metal"}
+	for id: StringName in cases:
+		var def := WeaponCatalog.by_id(id)
+		assert_str(MatchAudio.hit_sound(WeaponCatalog.swing_move(def))).override_failure_message(String(id)) \
+				.is_equal(cases[id])
+
+
+## Every take the new round built loads and has a body to it.
+func test_every_new_take_has_a_length() -> void:
+	for f: String in FAMILIES:
+		for i in SfxPool.family_size(f):
+			var s := SfxPool.stream("%s_%d" % [f, i])
+			assert_float(s.get_length()).override_failure_message("%s_%d" % [f, i]).is_greater(0.05)
+	assert_float(SfxPool.stream("hit_can_0").get_length()).is_greater(0.05)
+	assert_float(SfxPool.stream("desk_crash_0").get_length()).is_greater(0.3)
