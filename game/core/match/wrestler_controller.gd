@@ -3902,7 +3902,8 @@ func _pick_hold_move() -> MoveDef:
 	if cap >= 0 and cap <= CombatSystem.Tier.POWER:
 		# A working lock-up (WrestlerAI): a grapple, or the power move when the
 		# meter has earned it -- never the big ones.
-		if cap == CombatSystem.Tier.POWER and combat.can_power() and power_move:
+		if cap == CombatSystem.Tier.POWER and combat.can_power() and power_move \
+				and _story_has(power_move, power_move_pool):
 			move = _pick_tier_move(power_move, power_move_pool)
 		else:
 			move = _pick_tier_move(grapple_move, grapple_move_pool)
@@ -3916,11 +3917,28 @@ func _pick_hold_move() -> MoveDef:
 			_own_signature_thrown = true
 		else:
 			move = _pick_tier_move(signature_move, signature_move_pool)
-	elif combat.can_power() and power_move:
+	elif combat.can_power() and power_move and _story_has(power_move, power_move_pool):
 		move = _pick_tier_move(power_move, power_move_pool)
 	else:
 		move = _pick_tier_move(grapple_move, grapple_move_pool)
 	return move
+
+
+## Whether the AI's story (MatchFlow.story_place, MovePlaybook) has a move
+## for it in this tier yet: early in a match a man whose every power move is
+## a big one locks up for a grapple instead, and so does one who has shown
+## every power move the match allows. Always true off the controller.
+func _story_has(primary: MoveDef, pool: Array[MoveDef]) -> bool:
+	if not is_ai or flow == null:
+		return true
+	var place := flow.story_place(self)
+	for candidate: MoveDef in [primary] + pool:
+		if candidate == null or MovePlaybook.place_of(candidate) > place:
+			continue
+		var cap := MovePlaybook.max_uses(candidate)
+		if cap == 0 or int(_move_uses.get(candidate.animation_pair_id, 0)) < cap:
+			return true
+	return false
 
 
 func _process_grapple_hold(input: Dictionary) -> void:
@@ -4052,6 +4070,9 @@ func _count_string_hit() -> void:
 
 ## How many of this wrestler's last tier picks are held back from the next.
 const RECENT_PICKS := 2
+## How many times this match each move has been picked, by pair id
+## (_pick_tier_move): what MovePlaybook's allowances count against.
+var _move_uses := {}
 var _recent_picks: Array[StringName] = []
 
 
@@ -4069,6 +4090,40 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 		choices.append(candidate)
 	if choices.size() == 1:
 		return primary
+	# The story first (MovePlaybook, MatchFlow.story_place): the AI keeps the
+	# big moves for late and throws each only as often as a match shows it.
+	# Whatever survives, it is still a pick from this tier: if the story has
+	# nothing left here, the least-used of what there is.
+	if is_ai and flow != null:
+		var place := flow.story_place(self)
+		var in_story: Array[MoveDef] = []
+		for candidate: MoveDef in choices:
+			var cap := MovePlaybook.max_uses(candidate)
+			if MovePlaybook.place_of(candidate) <= place \
+					and (cap == 0 or int(_move_uses.get(candidate.animation_pair_id, 0)) < cap):
+				in_story.append(candidate)
+		if in_story.is_empty():
+			# All of what the story allows has been seen as often as a match
+			# shows it: then any of the ordinary ones again, least-used first
+			# (weighted below) -- never a special a second time while there is
+			# anything else.
+			for candidate: MoveDef in choices:
+				var at := MovePlaybook.place_of(candidate)
+				if at <= place and at < MovePlaybook.Place.LATE:
+					in_story.append(candidate)
+			if in_story.is_empty():
+				for candidate: MoveDef in choices:
+					if MovePlaybook.place_of(candidate) <= place:
+						in_story.append(candidate)
+		if in_story.is_empty():
+			# Nothing here is the story's yet: the earliest of what there is.
+			var lowest := MovePlaybook.Place.LATE
+			for candidate: MoveDef in choices:
+				lowest = mini(lowest, MovePlaybook.place_of(candidate))
+			for candidate: MoveDef in choices:
+				if MovePlaybook.place_of(candidate) == lowest:
+					in_story.append(candidate)
+		choices = in_story
 	# Not the same move twice running from one pool (the owner, 19 Oct: AI
 	# matches "into a repetition of moves"): the last RECENT_PICKS picks are
 	# left out while anything else in the tier is still on offer. Seeded and
@@ -4082,7 +4137,23 @@ func _pick_tier_move(primary: MoveDef, pool: Array[MoveDef]) -> MoveDef:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = match_seed * 8192 + player_index * 131 + _tier_draws
 	_tier_draws += 1
-	var pick := choices[rng.randi_range(0, choices.size() - 1)]
+	# Weighted away from what he has already thrown: the move he has used
+	# least is the likeliest, so a tier is worked through rather than one
+	# favourite thrown forty times (the Bionic Elbow, 44 in one match).
+	var weights: Array[float] = []
+	var total := 0.0
+	for candidate: MoveDef in choices:
+		var wgt := 1.0 / (1.0 + 2.0 * float(_move_uses.get(candidate.animation_pair_id, 0)))
+		weights.append(wgt)
+		total += wgt
+	var roll := rng.randf() * total
+	var pick := choices[choices.size() - 1]
+	for i in choices.size():
+		roll -= weights[i]
+		if roll <= 0.0:
+			pick = choices[i]
+			break
+	_move_uses[pick.animation_pair_id] = int(_move_uses.get(pick.animation_pair_id, 0)) + 1
 	_recent_picks.append(pick.animation_pair_id)
 	while _recent_picks.size() > RECENT_PICKS:
 		_recent_picks.pop_front()
@@ -4161,7 +4232,12 @@ func _resolve_grapple_move(move: MoveDef) -> void:
 	fsm.transition_to(WrestlerFSM.State.IDLE)
 	if move and move.defender_lands_head_away:
 		opponent._turn_round_on_the_mat()
-	var knocked_down := opponent._would_be_knocked_down()
+	# A finisher always puts him down, whatever he has taken since his last
+	# knockdown: measured, Roman landed four Spears in a finish and each left
+	# Cody lying for a moment rather than down, so none could be covered and
+	# the match ran out with no winner (flow_probe seed 2).
+	var knocked_down := opponent._would_be_knocked_down() \
+			or tier_of(move) == CombatSystem.Tier.FINISHER
 	if knocked_down:
 		opponent._go_down(tier_of(move))
 	elif move and move.leaves_defender_down:
@@ -4347,9 +4423,14 @@ func _process_down(input: Dictionary) -> void:
 	# A player can still trigger the quick rise early, but both controllers
 	# take it automatically after the shared brief sell beat, as do fired-up
 	# wrestlers. The staged rise remains the fallback when the down timer ends.
-	var quick_recovery: bool = input.get("strike", false) \
-			or (combat != null and combat.is_fired_up()) \
-			or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS
+	# Not off a signature or a finisher: a man put down by one stays down
+	# for the cover. Rising 0.8 s after everything, a finisher could almost
+	# never be pinned in time -- measured, Roman's Spears in the finish were
+	# covered after Cody was already back up, and the match never ended.
+	var big_one := knockdown_tier >= CombatSystem.Tier.SIGNATURE
+	var quick_recovery: bool = (combat != null and combat.is_fired_up()) \
+			or not big_one and (input.get("strike", false)
+					or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS)
 	if quick_recovery or _move_ticks_remaining <= 0:
 		if not quick_recovery:
 			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")

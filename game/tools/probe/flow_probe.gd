@@ -107,6 +107,17 @@ func _run(seed_value: int) -> Dictionary:
 		var k: String = ["grapple", "power", "signature", "finisher"][t] if t >= 0 and t <= 3 else "other"
 		mix[k] = mix.get(k, 0) + 1
 	a.move_landed.connect(lander)
+	if _moves:
+		# Covers and rope breaks too: how a finish was (or was not) reached.
+		var pinner := func(att: WrestlerController, _d) -> void:
+			print("  pin  %6.1f s  %s covers  (finisher mark: %s)" % [
+					(Engine.get_physics_frames() - t0[0]) / 60.0, att.entrance_style,
+					referee.can_be_finished(att.opponent)])
+		a.pin_started.connect(pinner)
+		b.pin_started.connect(pinner)
+		referee.rope_break.connect(func(d: WrestlerController, was_pin: bool) -> void:
+			print("  rope %6.1f s  %s reaches the ropes (pin %s)" % [
+					(Engine.get_physics_frames() - t0[0]) / 60.0, d.entrance_style, was_pin]))
 	b.move_landed.connect(lander)
 	a.fsm.state_changed.connect(func(_f: int, to: int) -> void:
 		if to == WrestlerFSM.State.TIE_UP:

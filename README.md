@@ -9848,3 +9848,46 @@ at broadcast-heavy intensity.
 - The heaviest throws let go as they throw (`attacker_grips_until`).
 - **13 of 146** library moves built. Review sheet:
   `gauntlet/refs/ff_review/batch1.png`.
+
+## 19 Oct — AI matches told as a story
+
+The owner: "lots of repetition of moves between Roman and Cody, it needs to
+apply the expanded moveset ... the flow of the match has to make logical
+sense". Researched and measured in `gauntlet/refs/ff_ai_flow.md`.
+
+- **Each move has a place in the story** (`MovePlaybook`). Opening moves
+  (strikes, grapples, the body slam) come first; the slams of the middle
+  (powerslam, Samoan Drop, Alabama Slam, Powerbomb, Spinebuster) come from the
+  heat. The Fight Forever specials (Tiger Driver, Brainbuster, Sit-Out
+  Powerbomb) are held for the comeback and the finish.
+  - Each move also has a per-match allowance: a special once, a slam twice,
+    a grapple three times.
+  - Picks are weighted towards what he has used least, and a used-up tier
+    falls back to the most ordinary moves, never a second special.
+- **The man the phase is for leads** (`MatchFlow.initiative`). Roman leads
+  the heat and cut-off; Cody leads his hope spot and the comeback.
+  - The other man mostly squares up rather than starting exchanges.
+  - Lock-ups lean the same way: the leader mashes faster.
+- **Rest holds.** The heel in control turns some lock-ups into a headlock
+  held for two or three links. Cody's escape is his hope spot.
+- **Strings and resets.** Three strikes, then a 1–2 s reset with footwork.
+- **Cody's standard moves.** The body slam and swinging neckbreaker join his
+  suplex and the Brainbuster. In measured matches the suplex fell from 15–24
+  to 3–6.
+- **Finishes that finish.**
+  - A man put down by a signature or finisher no longer rises 0.8 s later.
+  - A landed finisher always puts him down. Before, one that came soon
+    after another knockdown only left him lying for a moment, which could
+    not be covered: Roman landed four Spears in seed 2 and never pinned.
+  - The AI covers straight off its finisher, with no taunt or strut first.
+  - The finish phase starts when a finisher may end the match (420 s).
+  - Before this, Roman's Spears were covered after Cody was already up, and
+    two seeds in three ran out with no winner.
+- **Measured** (`flow_probe --moves 1`, Roman v Cody, seeds 1–3):
+  - Every seed has a winner, the one the story picked (Cody, Roman, Roman),
+    at 7.1 minutes, each off a finisher.
+  - Pace is 26–29 moves a minute, down from 38. That is still above the
+    15–20 target, and strikes are still 77–79% of moves.
+  - Each Fight Forever move is thrown once.
+  - Roman throws 55–63% of the moves in the heat (was 47–53%).
+- `flow_probe --moves 1` now also lists covers and rope breaks.

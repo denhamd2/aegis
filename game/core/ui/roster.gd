@@ -208,7 +208,11 @@ static func entries() -> Array:
 				M + "strike_dropdown_uppercut.tres", M + "strike_cross.tres"],
 		"grapple": [M + "grapple_vertical_suplex.tres",
 				# FF batch 1: the suplex lift, dropped on the head.
-				M + "ff/brainbuster_1.tres"],
+				M + "ff/brainbuster_1.tres",
+				# His standard moves beside the suplex (the owner, 19 Oct: "Cody
+				# doing so many suplexes is crazy"): the body slam and the
+				# swinging neckbreaker. MovePlaybook keeps each to a couple.
+				M + "power_bodyslam.tres", M + "signature_neckbreaker.tres"],
 		"power": [M + "power_powerslam.tres", M + "power_alabama_slam.tres",
 				# Fight Forever library (FFMoveLibrary), his in the game.
 				M + "ff/tiger_driver_98.tres", M + "ff/sit_out_powerbomb_2.tres"],

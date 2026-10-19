@@ -30,40 +30,42 @@ extends Node
 ## actions (above 1 is slower; AI tempo is capped at 1). `reverse`: how often
 ## he reads and parries a blow. `rung`: the highest move the AI may reach for --
 ## "none", "signature" or "finisher". `stall`: whether he plays to the crowd
-## between holds. Keyed by the man's persona; a neutral pair takes the neutral
-## row on both sides.
+## between holds. `lead`: his share of the offence (initiative()). Keyed by
+## the man's persona; a neutral pair takes the neutral row on both sides.
 const PHASES := [
 	{"name": "feeling_out", "until": 60.0,
-			"heel": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false},
-			"face": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false}},
+			"heel": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false, "lead": 0.6},
+			"face": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false, "lead": 0.6},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "none", "stall": false, "lead": 1.0}},
 	{"name": "heat", "until": 210.0,
-			"heel": {"takes": 0.10, "tempo": 0.90, "reverse": 1.0, "rung": "signature", "stall": true},
-			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.25, "rung": "none", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false}},
+			"heel": {"takes": 0.10, "tempo": 0.90, "reverse": 1.0, "rung": "signature", "stall": true, "lead": 1.0},
+			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.25, "rung": "none", "stall": false, "lead": 0.3},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false, "lead": 1.0}},
 	{"name": "hope", "until": 245.0,
-			"heel": {"takes": 0.45, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false},
-			"face": {"takes": 0.20, "tempo": 0.85, "reverse": 1.5, "rung": "signature", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false}},
+			"heel": {"takes": 0.45, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false, "lead": 0.4},
+			"face": {"takes": 0.20, "tempo": 0.85, "reverse": 1.5, "rung": "signature", "stall": false, "lead": 1.0},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false, "lead": 1.0}},
 	{"name": "cutoff", "until": 300.0,
-			"heel": {"takes": 0.10, "tempo": 0.90, "reverse": 1.0, "rung": "signature", "stall": true},
-			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.3, "rung": "none", "stall": false},
-			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false}},
-	{"name": "comeback", "until": 390.0,
-			"heel": {"takes": 0.60, "tempo": 0.95, "reverse": 0.8, "rung": "signature", "stall": false},
-			"face": {"takes": 0.20, "tempo": 0.8, "reverse": 1.4, "rung": "finisher", "stall": false},
-			"neutral": {"takes": 0.35, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false}},
+			"heel": {"takes": 0.10, "tempo": 0.90, "reverse": 1.0, "rung": "signature", "stall": true, "lead": 1.0},
+			"face": {"takes": 0.55, "tempo": 1.0, "reverse": 0.3, "rung": "none", "stall": false, "lead": 0.3},
+			"neutral": {"takes": 0.30, "tempo": 0.95, "reverse": 1.0, "rung": "signature", "stall": false, "lead": 1.0}},
+	{"name": "comeback", "until": 420.0,
+			"heel": {"takes": 0.60, "tempo": 0.95, "reverse": 0.8, "rung": "signature", "stall": false, "lead": 0.3},
+			"face": {"takes": 0.20, "tempo": 0.8, "reverse": 1.4, "rung": "finisher", "stall": false, "lead": 1.0},
+			"neutral": {"takes": 0.35, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false, "lead": 1.0}},
 	# The finish is the winner's: which of them it is was settled at the bell
 	# (WINNER_ROWS / LOSER_ROW below); these rows are the neutral fallback.
 	{"name": "finish", "until": 1.0e9,
-			"heel": {"takes": 0.60, "tempo": 0.90, "reverse": 1.0, "rung": "finisher", "stall": false},
-			"face": {"takes": 0.60, "tempo": 0.90, "reverse": 1.0, "rung": "finisher", "stall": false},
-			"neutral": {"takes": 0.55, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false}},
+			"heel": {"takes": 0.60, "tempo": 0.90, "reverse": 1.0, "rung": "finisher", "stall": false, "lead": 0.8},
+			"face": {"takes": 0.60, "tempo": 0.90, "reverse": 1.0, "rung": "finisher", "stall": false, "lead": 0.8},
+			"neutral": {"takes": 0.55, "tempo": 0.95, "reverse": 1.0, "rung": "finisher", "stall": false, "lead": 1.0}},
 ]
 ## In the finish the man the story is for gets the finisher and is barely
 ## marked; the other has a signature at most and takes it.
-const WINNER_ROW := {"takes": 0.30, "tempo": 0.85, "reverse": 1.2, "rung": "finisher", "stall": false}
-const LOSER_ROW := {"takes": 0.90, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false}
+const WINNER_ROW := {"takes": 0.30, "tempo": 0.85, "reverse": 1.2, "rung": "finisher", "stall": false,
+		"lead": 1.0}
+const LOSER_ROW := {"takes": 0.90, "tempo": 0.95, "reverse": 0.6, "rung": "none", "stall": false,
+		"lead": 0.25}
 ## A finisher can end the match from this second on (before it, a cover off a
 ## finisher is a near-fall). Matches that run long are ended anyway.
 const FINISH_FROM := 420.0
@@ -166,6 +168,30 @@ func wants_stall(w: WrestlerController) -> bool:
 	return bool(_row_for(w)["stall"])
 
 
+## How much of the offence is `w`'s right now (0-1): the share of his
+## chances to strike or lock up that the AI takes. The man the phase is for
+## works; the other sells and fights back in bursts (the heel's heat, the
+## face's hope and comeback; gauntlet/refs/ff_ai_flow.md). Measured before
+## this, Cody threw 240 moves to Roman's 103 in a match whose heat is Roman's,
+## and nobody held control for more than three moves.
+func initiative(w: WrestlerController) -> float:
+	return float(_row_for(w).get("lead", 1.0))
+
+
+## How far into the story the AI may reach for a move (MovePlaybook.Place):
+## the opening's moves at first, the slams of the middle from the heat, the
+## big moves for the comeback and the finish.
+func story_place(w: WrestlerController) -> int:
+	if not w.is_ai:
+		return MovePlaybook.Place.LATE
+	match String(phase()["name"]):
+		"feeling_out":
+			return MovePlaybook.Place.BASIC
+		"heat", "hope", "cutoff":
+			return MovePlaybook.Place.MID
+	return MovePlaybook.Place.LATE
+
+
 ## The highest rung (move tier) the AI may reach for now: "none",
 ## "signature" or "finisher".
 func rung(w: WrestlerController) -> String:
@@ -177,7 +203,20 @@ func finish_allowed() -> bool:
 	return seconds() >= FINISH_FROM
 
 
+## Into the finish this long without his finisher, the man the story is for
+## is handed it: the meter to the signature and the finisher lit, as a taunt
+## would (CombatSystem.taunted). Measured, the winner could otherwise spend
+## four minutes in control without the meter coming round, and the match ran
+## out with no winner (flow_probe seed 2).
+const FINISH_NUDGE_AFTER := 30.0
+
+
 func _apply() -> void:
+	if winner != null and winner.is_ai and finish_allowed() \
+			and seconds() >= FINISH_FROM + FINISH_NUDGE_AFTER \
+			and not winner.combat.can_finisher() and not winner.combat.finisher_resting():
+		winner.combat.momentum = maxf(winner.combat.momentum, CombatSystem.SIGNATURE_THRESHOLD)
+		winner.combat.finisher_lit = true
 	for w: WrestlerController in _wrestlers:
 		w.combat.damage_taken_scale = damage_taken_scale(w)
 		# What the AI may reach for. A human is never held back from a move he

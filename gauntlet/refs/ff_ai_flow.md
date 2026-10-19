@@ -151,3 +151,23 @@ Rules that make it hang together:
 - No strike more than 15% of a man's moves.
 - Roman throws at least 65% of the moves in the heat.
 - At least two rest holds and at least two near-falls each match.
+
+## After the rework (19 Oct, same probe, seeds 1–3)
+
+| | Before | After |
+| --- | --- | --- |
+| Winner | seeds 1 only (2 ran out) | **all three**, the man the story picked |
+| Length | 9.1–11.1 min | 7.1 min, each off a finisher |
+| Pace | 37.7 / min | 26–29 / min (target 15–20 not yet met) |
+| Strikes | 74–77% | 77–79% |
+| Cody's vertical suplex | 8–24 a match | 3–5 |
+| Specials (Tiger Driver, Brainbuster, Sit-Out Powerbomb) | up to 11 each, from 10 s in | once each, comeback and finish only |
+| Roman's share of the heat | 47–53% | 55–63% |
+
+Still open:
+- **Pace and strike share.** Holding the leader's strikes back without
+  creating idle gaps needs more of what a match spends its time on: longer
+  rest holds, covers after big moves, corner and rope spots (task #84).
+- **Cody's other grapples repeat once his tier is used up.** Body slam and
+  neckbreaker reached five each in seed 2; more moves in the tier is the fix.
+- **Limb work and the Figure Four.**

@@ -25,6 +25,33 @@ extends Node
 @export var controller: WrestlerController
 @export var target: WrestlerController
 @export var tie_up_range: float = 1.3
+## The man the story is not for passes on a chance to lead (initiative()):
+## he waits this share of a strike cooldown, moving, before the next chance.
+const PASS_COOLDOWN_SCALE := 1.0
+var _initiative_rolls := 0
+
+
+## Whether he takes this chance to lead the exchange: always when the phase
+## is his or he has fired up, otherwise MatchFlow.initiative()'s share of the
+## time. Seeded per man and per roll, like every other choice here.
+func _takes_initiative() -> bool:
+	if controller.flow == null or controller.combat.is_fired_up():
+		return true
+	var lead := controller.flow.initiative(controller)
+	if lead >= 1.0:
+		return true
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _match_seed * 52711 + _player_index * 389 + _initiative_rolls
+	_initiative_rolls += 1
+	return rng.randf() < lead
+
+
+## A string is this many blows; then a reset of RESET_TICKS, moving.
+const STRING_BLOWS := 3
+const RESET_TICKS := Vector2i(60, 110)
+var _string_blows := 0
+
+
 ## Short post-move pause. The move animation and hit selling already create
 ## visible recovery; stacking several seconds of AI-only cooldown on top made
 ## both wrestlers stand idle between exchanges.
@@ -301,6 +328,10 @@ const CHAIN_READ_TICK := 8
 const CHAIN_REVERSAL_CHANCE := 0.3
 ## How often a hold the AI has the better of ends in an Irish whip.
 const WHIP_CHANCE := 0.18
+## How often the heel in control turns a lock-up into a rest hold: a
+## headlock held two or three links (MatchFlow.wants_stall).
+const REST_HOLD_CHANCE := 0.45
+var _rest_hold := false
 var _chain_plan := -1
 var _chain_rolls := 0
 
@@ -329,10 +360,19 @@ func _chain_input() -> Dictionary:
 		return {} # a reversal already chose it; let the read run out
 	if _chain_plan < 0:
 		_chain_plan = 0
+		_rest_hold = false
+		# The heel in control slows it down: a headlock, held link after
+		# link, the man in it fighting to get out -- the rest hold of the
+		# heat (gauntlet/refs/ff_ai_flow.md). His hope spot is the reversal.
+		if _opening_grapple_done() and controller.flow \
+				and controller.flow.wants_stall(controller) \
+				and _chain_rng().randf() < REST_HOLD_CHANCE:
+			_rest_hold = true
+			_chain_plan = _chain_rng().randi_range(2, WrestlerController.CHAIN_LINKS_MAX)
 		# Now and then, with a man in his hands after the opening, he sends him
 		# into the ropes instead (the Irish whip) -- and is waiting when he
 		# comes off them. Seeded, like every other roll.
-		if _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
+		elif _opening_grapple_done() and _chain_rng().randf() < WHIP_CHANCE:
 			return {"run": true}
 		if not _opening_grapple_done():
 			var roll := _chain_rng().randi_range(1, 5)
@@ -342,6 +382,8 @@ func _chain_input() -> Dictionary:
 		return {"chain": "none"}
 	if c._chain_read != CHAIN_PICK_TICK:
 		return {} # picked once; the controller holds on to it
+	if _rest_hold:
+		return {"chain": "headlock"}
 	var holds := WrestlerController.CHAIN_HOLDS.keys()
 	return {"chain": holds[_chain_rng().randi_range(0, holds.size() - 1)]}
 
@@ -610,7 +652,11 @@ func _poll_input() -> Dictionary:
 			return {"climb_ladder": true}
 		# A dead opponent is a finish, not an invitation to play to the crowd.
 		# Walk straight to the cover so the referee can count the pin.
-		if not target.dead:
+		# Off his own finisher he covers at once: no taunt, no strut. Measured,
+		# Roman's Spear in the finish went unpinned while he played to the
+		# crowd, and the match ran out with no winner.
+		var off_finisher := controller.last_landed_tier >= CombatSystem.Tier.FINISHER
+		if not target.dead and not off_finisher:
 			if _wants_taunt():
 				input["taunt"] = true
 				return input
@@ -773,6 +819,12 @@ func _poll_input() -> Dictionary:
 			# limbs' damage cap knock nobody down (reversal_tally seed 1 ran
 			# its whole budget).
 			pass
+		elif wants_tie_up and _is_work_tie_up() and _cooldown <= 0 and not _takes_initiative():
+			# Not his part of the match to lead: no lock-up of his own just now.
+			_cooldown = int(strike_cooldown_ticks * PASS_COOLDOWN_SCALE)
+			input["move"] = _circle_move(to_target, distance)
+		elif wants_tie_up and _is_work_tie_up() and _cooldown > 0:
+			input["move"] = _circle_move(to_target, distance)
 		elif wants_tie_up:
 			input["grapple"] = true
 			# A working lock-up stays a grapple, whoever wins it.
@@ -785,6 +837,12 @@ func _poll_input() -> Dictionary:
 			controller.tie_up_rung_cap = cap
 			if target.is_ai:
 				target.tie_up_rung_cap = cap
+		elif _cooldown <= 0 and distance <= reach and not is_reading() and not cornered \
+				and not _takes_initiative():
+			# Not his part of the match to lead (MatchFlow.initiative): he
+			# squares up and lets the other man come, and answers in his bursts.
+			_cooldown = int(strike_cooldown_ticks * PASS_COOLDOWN_SCALE)
+			input["move"] = _circle_move(to_target, distance)
 		elif _cooldown <= 0 and distance <= reach and not is_reading():
 			# Hanging in the corner, with a corner move to hand: sometimes
 			# the flurry gives way to the run-in instead of another blow.
@@ -794,6 +852,7 @@ func _poll_input() -> Dictionary:
 				return input
 			input["strike"] = true
 			_blows_since_lock_up += 1
+			_string_blows += 1
 			# Fired up, he does not wait between shots: the comeback is a
 			# flurry, and the other man is staggered for most of it.
 			_cooldown = comeback_strike_cooldown_ticks \
@@ -805,6 +864,13 @@ func _poll_input() -> Dictionary:
 				_cooldown = mini(_cooldown, corner_strike_cooldown_ticks)
 			else:
 				_schedule_footwork()
+			# A string of blows, then a reset: he steps off, squares up and
+			# goes again, the way an exchange breathes. Not when fired up --
+			# the comeback is a flurry.
+			if _string_blows >= STRING_BLOWS and not controller.combat.is_fired_up():
+				_string_blows = 0
+				var rng := _chain_rng()
+				_cooldown = maxi(_cooldown, rng.randi_range(RESET_TICKS.x, RESET_TICKS.y))
 		elif cornered:
 			# Stay square in front of him between shots rather than circle off.
 			var toward := to_target.normalized()
@@ -1131,6 +1197,12 @@ var _signature_retry := 0
 
 
 func _wants_signature_tie_up() -> bool:
+	# The finish is his (MatchFlow.winner) and the match may end: with the
+	# finisher in hand he goes for it, ripe or not.
+	var flow := controller.flow
+	if flow and flow.winner == controller and flow.finish_allowed() \
+			and controller.combat.can_finisher() and controller.finisher_move:
+		return true
 	if not _opponent_is_ripe():
 		return false
 	# The finisher is never held back: it is how the match ends.
@@ -1154,6 +1226,13 @@ func _wants_work_tie_up() -> bool:
 	if controller.combat.can_finisher() and controller.finisher_move:
 		return false
 	if controller.grapple_move == null and controller.grapple_move_pool.is_empty():
+		return false
+	# Nothing left that the story will show again (MovePlaybook): he keeps
+	# working with what is left -- strikes, the corner, the ropes -- rather
+	# than lock up to throw the same slam a fifth time.
+	if not controller._story_has(controller.grapple_move, controller.grapple_move_pool) \
+			and not (controller.power_move and controller._story_has(controller.power_move,
+					controller.power_move_pool)):
 		return false
 	return not controller.combat.is_fired_up() and not target.is_corner_trapped()
 
@@ -1299,6 +1378,12 @@ func _roll_tie_up_timing() -> void:
 		tie_up_reaction_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
 	_this_tie_up_interval = maxi(1,
 		tie_up_press_interval_ticks + rng.randi_range(-TIE_UP_JITTER_TICKS, TIE_UP_JITTER_TICKS))
+	# The story leans the contest: the man whose part of the match it is
+	# wins most of the lock-ups (MatchFlow.initiative). Measured before this,
+	# Cody won lock-up after lock-up in Roman's heat and threw his slams.
+	if controller and controller.flow:
+		var lead := controller.flow.initiative(controller)
+		_this_tie_up_interval = maxi(1, int(round(_this_tie_up_interval * lerpf(1.6, 1.0, lead))))
 
 
 ## Make only a small radial correction when outside the striking band. The old
