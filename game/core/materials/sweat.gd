@@ -16,10 +16,12 @@ extends Node
 ## The October 16 references show wet skin during the entrance and faceoff.
 ## Begin with that finish, then add a bounded amount for exertion/damage.
 ## SkinLook's spatial mask separates beads and film from the base skin.
-const BASE := 0.52
-const MAX_WETNESS := 0.84
+## Toned right down on 19 Oct: at 0.52 -> 0.84 the owner saw "baby oil".
+## A light glow at the bell, a satin sweat by the end, never a gloss.
+const BASE := 0.15
+const MAX_WETNESS := 0.42
 const FULL_SECONDS := 475.0
-const TIME_SHARE := 0.22
+const TIME_SHARE := 0.17
 ## Total limb damage that adds the full DAMAGE_SHARE.
 ##
 ## 160 -> 300, for the same reason and in the same proportion: the ceiling is

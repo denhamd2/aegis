@@ -107,7 +107,7 @@ const FIXTURE_TOP := 0.32
 ## the far half of the mat; that overlap is what keeps the mat's luminance
 ## flat enough to be an exposure ANCHOR rather than a hot spot with a number
 ## attached.
-@export var key_energy: float = 9.0
+@export var key_energy: float = 6.8
 ## The key fixture's emitting size, in metres, for PCSS soft shadows. A large
 ## truss wash or profile has a 0.3-0.4 m front lens. From 7.25 m up that
 ## makes a penumbra about 9 cm wide under a shoulder 1.5 m off the mat
@@ -166,7 +166,7 @@ const TOP_LIGHT_SIZE := 0.18
 ## onto the bodies. Measured on the gameplay and hard cameras (match_look.tscn,
 ## Vulkan): mat 0.65 -> 0.45, skin p75 0.24 -> 0.29 (2K26 0.31), frame above
 ## 0.5 from 22% -> 4-8% (2K26 7%), white balance B/G 1.09 -> 1.17 (2K26 1.16).
-@export var top_energy: float = 29.0
+@export var top_energy: float = 18.5
 ## Cool back/rim pair.
 ##
 ## THE CLAIM BELOW IS WRONG, and it is left standing with its correction
@@ -197,7 +197,7 @@ const TOP_LIGHT_SIZE := 0.18
 @export var house_energy: float = 0.20
 ## New.png's front rows receive motivated light, with their photographic
 ## materials supplying detail. These outward-facing washes stay off the mat.
-@export var audience_energy: float = 3.6
+@export var audience_energy: float = 6.2
 const AUDIENCE_COLOR := Color(1.0, 0.95, 0.89)
 const AISLE_COLOR := Color(0.16, 0.33, 1.0)
 const AISLE_ENERGY := 8.0
@@ -424,7 +424,9 @@ const MATCH_RING_HAZE := 0.45
 ## full density lit up by the follow spot was a white glare round the ring.
 const ENTRANCE_RING_HAZE := 0.6
 ## The crowd shader's light (`crowd_light` global) in each look (items 2, 7).
-const CROWD_LIGHT_MATCH := 3.5
+## Raised 3.5 -> 9.0 (19 Oct): the broadcast's crowd sits at luminance 0.18
+## beside a 0.54 canvas; ours was 0.09 beside 0.62, a ring floating in the dark.
+const CROWD_LIGHT_MATCH := 9.0
 const CROWD_LIGHT_ENTRANCE := 0.3
 ## The ring keys and top fill in the entrance look (item 7): a concert, the
 ## ring a pool under the rig, not the studio's even field -- and what bloomed
@@ -492,6 +494,8 @@ var _stage_wash: Array[SpotLight3D] = []
 const MATCH_BEAM_SHARE := 0.0
 var _beams: Array[SpotLight3D] = []
 var _beam_rest := {}     # SpotLight3D -> rest Transform3D
+## The stage's beam lights (is_stage_beam): Accent* deck heads, StageSpot*.
+var _stage_beams: Array[SpotLight3D] = []
 var _bodies := {}        # SpotLight3D -> fixture body root
 var _glints: StarGlints
 var _shafts: BeamShafts
@@ -533,6 +537,19 @@ func set_look(p_look: Look) -> void:
 		light.light_energy = audience_energy * (0.48 if entrance else 1.0) * renderer_gain(light)
 	for light in _aisle_lights:
 		light.light_energy = AISLE_ENERGY * (0.2 if entrance else 1.0) * renderer_gain(light)
+	for light in _ring_tint:
+		light.light_energy = ring_tint_energy * (ENTRANCE_RING_SHARE if entrance else 1.0) \
+				* renderer_gain(light)
+	# The stage's beams are show lighting (the owner, 19 Oct: "check when
+	# these come on"). On a Dynamite broadcast the deck movers and the truss
+	# spots fire for the open and the entrances, chasing the music, and are
+	# dark and parked once the bell goes: the match is lit by the ring and the
+	# house. EntranceDirector tints and boosts them on his cues in between.
+	for light in _stage_beams:
+		light.transform = _beam_rest[light]
+		var base := accent_energy if String(light.name).begins_with("Accent") else stage_spot_energy
+		light.light_energy = base * renderer_gain(light) if entrance else 0.0
+		_pose_body(light)
 	_dim_set(ENTRANCE_SET_SHARE if entrance else 1.0)
 	if not entrance:
 		# Dark in the match. The owner's 2K26 Cody vs Roman match has no
@@ -609,6 +626,29 @@ func _move_beams(delta: float) -> void:
 			_glints.aim(beam)
 
 
+## The deck heads fan and cross on the music while the entrance look is up
+## (the 2026 stills: shafts crossing over the walls, never still). Their
+## energy and colour stay the director's (_portal_lights); only the aim moves.
+## Each side mirrors the other so the fan stays symmetric about the walkway.
+## The truss spots hold their pools on the walk-out.
+const STAGE_SWEEP_PAN := 0.32
+const STAGE_SWEEP_TILT := 0.16
+
+
+func _move_stage_beams() -> void:
+	for i in _stage_beams.size():
+		var light := _stage_beams[i]
+		if not String(light.name).begins_with("Accent"):
+			continue
+		var rest: Transform3D = _beam_rest[light]
+		var side := signf(rest.origin.x) if rest.origin.x != 0.0 else 1.0
+		var pan := STAGE_SWEEP_PAN * side * sin(_sweep_phase * 1.5 + (i % 2) * 1.2)
+		var tilt := STAGE_SWEEP_TILT * sin(_sweep_phase * 0.75 + (i % 2) * 2.1)
+		light.transform = Transform3D(Basis(Vector3.UP, pan) * rest.basis
+				* Basis(Vector3.RIGHT, tilt), rest.origin)
+		_pose_body(light)
+
+
 func _pose_body(light: SpotLight3D) -> void:
 	var root: Node3D = _bodies.get(light)
 	if root == null:
@@ -625,6 +665,7 @@ func _ready() -> void:
 	add_to_group("arena_lighting")
 	_build_ring_key()
 	_build_top_fill()
+	_build_ring_tint()
 	_build_rim()
 	_build_house()
 	_build_audience_wash()
@@ -650,6 +691,9 @@ func _ready() -> void:
 				_stage_wash.append(child)
 			elif n.begins_with("Beam"):
 				_beams.append(child)
+				_beam_rest[child] = (child as SpotLight3D).transform
+			elif is_stage_beam(n):
+				_stage_beams.append(child)
 				_beam_rest[child] = (child as SpotLight3D).transform
 	_glints = StarGlints.new()
 	_glints.name = "StarGlints"
@@ -747,6 +791,32 @@ func _build_ring_key() -> void:
 			# fixture's lens is a wide source, so a shadow is sharp where a
 			# boot meets the mat and opens up with distance from the body.
 			light.light_size = KEY_LIGHT_SIZE
+
+
+## A low wash of the show's colour across the canvas (the owner's 19 Oct
+## broadcast frame, gauntlet/refs/stage/dynamite_2026_beams.jpg). Measured
+## there: the canvas sits at luminance 0.54 with saturation 0.15 -- the LED
+## spill and the side washes tint it -- where ours was 0.62 and 0.03, a hot
+## neutral-white island against a crowd half as bright as the broadcast's.
+## The keys and tops came down, the audience washes up, and these two put
+## the tint back: violet from one side, blue from the other, wide and soft,
+## no shadows (the keys carry the shadows).
+const RING_TINT_COLORS: Array[Color] = [Color(0.78, 0.42, 1.0), Color(0.36, 0.56, 1.0)]
+const RING_TINT_HEIGHT := 9.0
+const RING_TINT_OUT := 9.0
+@export var ring_tint_energy: float = 20.0
+var _ring_tint: Array[SpotLight3D] = []
+
+
+func _build_ring_tint() -> void:
+	for i: int in 2:
+		var sx := 1.0 if i == 0 else -1.0
+		var at := Vector3(sx * RING_TINT_OUT, RING_TINT_HEIGHT, 0.0)
+		var light := _spot("RingTint%s" % ("E" if sx > 0.0 else "W"), at,
+				Vector3(-sx * 1.0, 0.0, 0.0), RING_TINT_COLORS[i], ring_tint_energy,
+				38.0, 0.8, 18.0, false)
+		light.light_volumetric_fog_energy = 0.2
+		_ring_tint.append(light)
 
 
 ## Two wide fixtures pointing straight down the ring's long axis. Their job is
@@ -1535,6 +1605,8 @@ var _compat_env: Environment
 func _process(_delta: float) -> void:
 	if look == Look.ENTRANCE and not _beams.is_empty():
 		_move_beams(_delta)
+	if look == Look.ENTRANCE:
+		_move_stage_beams()
 	_light_close_ups(_delta)
 	if _compat_env == null:
 		return

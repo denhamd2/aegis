@@ -412,7 +412,13 @@ const CANVAS_SEED := 20260903
 ## Back up to 0.73 against the owner's 2K26 Cody vs Roman match: there the
 ## mat is the brightest thing in frame at 0.60-0.63 and ours measured 0.55
 ## (gauntlet/refs/cody_roman_2k26.md).
-const CANVAS_WHITE := Color(0.73, 0.73, 0.73)
+## Down to 0.66 against the owner's AEW broadcast frame (19 Oct,
+## gauntlet/refs/stage/dynamite_2026_beams.jpg): there the canvas is 0.54, a
+## light grey carrying the show's colour, and ours read 0.76 on the hard camera
+## -- a white sheet. The cloth comes down, not the lights, so the men stay lit.
+## 0.66 rather than 0.6 holds the silhouette guard (test_wrestler_colorway:
+## the mat stays 0.10 above Cody's skin albedo) and lands the wide at 0.53.
+const CANVAS_WHITE := Color(0.66, 0.66, 0.66)
 ## The supplied AEW canvas artwork, mapped 1:1 over the 6m mat.
 ##
 ## Surface 0 of the floor mesh already carries a full 0..1 UV across the square

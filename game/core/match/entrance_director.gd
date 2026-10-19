@@ -2746,7 +2746,11 @@ func _portal_lights(side: String, on: bool, tint: Color = Color.TRANSPARENT) -> 
 			light.set_meta("base_energy", light.light_energy)
 		if not light.has_meta("base_color"):
 			light.set_meta("base_color", light.light_color)
-		var base: float = light.get_meta("base_energy")
+		# The rig's own figure, not the energy found on the light: the match
+		# look parks the stage beams at zero (ArenaLighting.set_look).
+		var rig := _lights as ArenaLighting
+		var base: float = rig.accent_energy * rig.renderer_gain(light) if rig \
+				else float(light.get_meta("base_energy"))
 		var name := String(light.name)
 		if on and side == "OFF":
 			light.light_energy = 0.0

@@ -106,9 +106,10 @@ static func with_detail_uv(mi: MeshInstance3D, surfaces: Array) -> void:
 ## R masks the film and G varies its roughness; both are linear data. Reuse
 ## one small mask across the body materials rather than adding a draw pass.
 const WET_FILM := "res://assets/characters/skin_wet_film.png"
-const SWEAT_COAT := 0.7
-const SWEAT_COAT_ROUGHNESS_DRY := 0.42
-const SWEAT_COAT_ROUGHNESS_WET := 0.22
+## A thin, broad coat: 0.7 at roughness 0.22 read as oil (the owner, 19 Oct).
+const SWEAT_COAT := 0.22
+const SWEAT_COAT_ROUGHNESS_DRY := 0.5
+const SWEAT_COAT_ROUGHNESS_WET := 0.42
 ## Close portraits exposed broad oily patches on cheeks/forehead. Keep the
 ## wet layer, with less coverage and a broader lobe than chest/shoulder skin.
 const FACE_FILM_SHARE := 0.18

@@ -41,3 +41,34 @@ func test_a_cone_runs_lens_to_end() -> void:
 	assert_float(aabb.position.z).is_equal_approx(-10.0, 0.001)
 	assert_float(aabb.end.z).is_equal_approx(0.0, 0.001)
 	assert_float(aabb.size.x).is_equal_approx(1.0, 0.01)
+
+
+## Show lighting, as a Dynamite broadcast runs it (the owner, 19 Oct): the
+## stage's beams are up for the entrances and dark, parked, once the bell goes.
+func test_the_stage_beams_are_up_for_entrances_and_dark_for_the_match() -> void:
+	var rig := _rig()
+	rig.set_look(ArenaLighting.Look.MATCH)
+	for light in rig._stage_beams:
+		assert_float(light.light_energy).override_failure_message(
+				"%s lit in the match" % light.name).is_equal(0.0)
+	rig.set_look(ArenaLighting.Look.ENTRANCE)
+	for light in rig._stage_beams:
+		assert_float(light.light_energy).is_greater(0.0)
+
+
+## And the deck heads move with the music while they are up.
+func test_the_deck_heads_sweep_in_the_entrance_look() -> void:
+	var rig := _rig()
+	rig.set_look(ArenaLighting.Look.ENTRANCE)
+	var head: SpotLight3D = null
+	for light in rig._stage_beams:
+		if String(light.name).begins_with("Accent"):
+			head = light
+			break
+	var before := -head.transform.basis.z
+	rig._sweep_phase = 1.3
+	rig._move_stage_beams()
+	assert_float(before.angle_to(-head.transform.basis.z)).is_greater(0.05)
+	# parked again for the match
+	rig.set_look(ArenaLighting.Look.MATCH)
+	assert_vector(-head.transform.basis.z).is_equal_approx(before, Vector3.ONE * 0.001)

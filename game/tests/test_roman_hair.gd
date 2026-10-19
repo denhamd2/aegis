@@ -114,10 +114,11 @@ func test_hair_beard_and_scalp_materials() -> void:
 				assert_object(m.subsurf_scatter_texture).is_not_null()
 				assert_object(m.subsurf_scatter_transmittance_texture).is_same(m.subsurf_scatter_texture)
 				SkinLook.set_wetness(m, Sweat.BASE)
-				# The reference's wet face keeps a bounded, tighter highlight;
-				# hair underpaint is separate and receives no flesh film.
-				assert_float(m.clearcoat).is_between(.10, .25)
-				assert_float(m.clearcoat_roughness).is_between(.25, .45)
+				# At the bell the face is barely damp: the owner found the
+				# old wet sheen read as baby oil (19 Oct), so the film is a
+				# faint, broad lobe. Hair underpaint receives no flesh film.
+				assert_float(m.clearcoat).is_between(.0, .05)
+				assert_float(m.clearcoat_roughness).is_between(.45, .65)
 				seen["head"] = true
 			elif key == "beard":
 				assert_bool(m.albedo_color.is_equal_approx(RomanModel.BEARD_COLOR)).is_true()
