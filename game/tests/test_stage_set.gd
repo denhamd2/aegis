@@ -274,16 +274,17 @@ func test_the_led_walls_stand_either_side_of_the_centre_screen() -> void:
 	assert_float(centre_half).is_less(ArenaBuilder.SIDE_SCREEN_INNER_X)
 
 
-## Both walls toe in toward the ring by the stated angle -- outer edge forward
-## of the inner -- and both face the ring: a wall wound the wrong way is culled
+## Both walls splay away from the ring by the stated angle -- outer edge set
+## back behind the inner (the owner's 18 Oct close-ups) -- and both face the ring: a wall wound the wrong way is culled
 ## and renders as its black cabinet (the first build lost the east one so).
-func test_the_led_walls_toe_in_and_face_the_ring() -> void:
+func test_the_led_walls_splay_and_face_the_ring() -> void:
 	var rise := (ArenaBuilder.SIDE_SCREEN_OUTER_X - ArenaBuilder.SIDE_SCREEN_INNER_X) \
 			* tan(deg_to_rad(ArenaBuilder.SIDE_SCREEN_TOE_DEG))
 	for v: Vector3 in _verts("StageSideScreens"):
 		var t := (absf(v.x) - ArenaBuilder.SIDE_SCREEN_INNER_X) \
 				/ (ArenaBuilder.SIDE_SCREEN_OUTER_X - ArenaBuilder.SIDE_SCREEN_INNER_X)
 		assert_float(v.z).is_equal_approx(ArenaBuilder.side_screen_inner_z() + rise * t, 0.03)
+	assert_float(rise).is_less(0.0)
 	for n: Vector3 in _arrays("StageSideScreens")[Mesh.ARRAY_NORMAL]:
 		assert_float(n.z).is_greater(0.9)
 

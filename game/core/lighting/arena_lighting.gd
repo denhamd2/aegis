@@ -91,7 +91,7 @@ const STAGE_WASH_DZ := 21.0
 ## haze. Still named Accent* -- EntranceDirector tints and boosts each man's
 ## side of them on his cues.
 const ACCENT_Y := ArenaBuilder.STAGE_DECK_Y + 0.35
-const ACCENT_DZ := 2.2
+const ACCENT_DZ := 2.4
 const ACCENT_NEAR_X := 3.1
 const ACCENT_FAR_X := 6.9
 ## Rim pair, off the upstage line of the ring grid.
@@ -494,6 +494,7 @@ var _beams: Array[SpotLight3D] = []
 var _beam_rest := {}     # SpotLight3D -> rest Transform3D
 var _bodies := {}        # SpotLight3D -> fixture body root
 var _glints: StarGlints
+var _shafts: BeamShafts
 var _beat := 0.5
 var _beat_clock := 0.0
 ## The sweep's own phase, integrated so a change of pace never jumps a beam,
@@ -656,6 +657,12 @@ func _ready() -> void:
 	for child in get_children():
 		if child is SpotLight3D:
 			_glints.add_for(child)
+	_shafts = BeamShafts.new()
+	_shafts.name = "BeamShafts"
+	add_child(_shafts)
+	for child in get_children():
+		if child is SpotLight3D and is_stage_beam(child.name):
+			_shafts.add_for(child)
 	set_look(look)
 
 
@@ -1014,6 +1021,11 @@ static func _lens_material(color: Color) -> StandardMaterial3D:
 	return mat
 
 
+## Fixture bodies are drawn only below this height: the deck's moving heads.
+## Everything in the roof is a lens in the black (the owner, 18 Oct).
+const BODY_SHOWN_BELOW := 4.0
+
+
 ## One articulated body for one light. Split out so a test can build one
 ## against a known light and check the lens lands on its beam.
 static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
@@ -1034,6 +1046,9 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 		mi.basis = parts[part]
 		mi.material_override = lens_mat if part == "FixtureLens" else body_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# A lamp in the roof shows only its lens, like the rig it hangs in
+		# (ArenaBuilder.RIG_HIDDEN); the deck's heads keep their bodies.
+		mi.visible = light.position.y < BODY_SHOWN_BELOW or part == "FixtureLens"
 		root.add_child(mi)
 	return root
 
@@ -1298,8 +1313,8 @@ func _build_stage_accents() -> void:
 		var label := "W" if sx < 0.0 else "E"
 		for i: int in 2:
 			var shoulder := ACCENT_NEAR_X if i == 0 else ACCENT_FAR_X
-			# The far head stands further forward: the walls toe in toward the
-			# ring, so their feet run forward as they run out.
+			# The far head stands further back: the walls splay away from the
+			# ring, so their feet run back as they run out.
 			var at := Vector3(sx * shoulder, ACCENT_Y,
 					STAGE_BACK_Z + ACCENT_DZ + (shoulder - ACCENT_NEAR_X) * ACCENT_TOE)
 			# Up and out, the inner pair steeper: the fan of shafts the stills
@@ -1312,17 +1327,21 @@ func _build_stage_accents() -> void:
 
 
 ## The deck heads' throw: how far out and how far toward the ring each aims
-## per ACCENT_RISE of height, and the walls' toe-in that sets them forward.
+## per ACCENT_RISE of height, and the walls' splay that sets the far ones back
+## (tan of ArenaBuilder.SIDE_SCREEN_TOE_DEG).
 const ACCENT_SPREAD := 2.6
 const ACCENT_RISE := 12.0
 const ACCENT_LEAN := 2.5
-const ACCENT_TOE := 0.21
-## A moving head in beam mode, as the bowl's beams are (BEAM_ANGLE).
-const ACCENT_ANGLE := 7.0
+const ACCENT_TOE := -0.18
+## A moving head in beam mode, tighter than the bowl's beams (BEAM_ANGLE): the
+## owner's 2026 stills (18 Oct) show pencils, not wedges. The shaft is drawn
+## (BeamShafts); the fog carries only a faint halo round it, because the fog
+## grid is far coarser than the beam and smears it broad.
+const ACCENT_ANGLE := 3.5
 ## The 2026 stills' beams are white with a cool edge; the entrance cues
 ## recolour each man's side (EntranceDirector._portal_lights).
 const ACCENT_WHITE := Color(0.84, 0.9, 1.0)
-@export var accent_fog_energy: float = 220.0
+@export var accent_fog_energy: float = 6.0
 
 
 ## A row of white spots on the truss above the video wall, angled down onto
@@ -1334,10 +1353,16 @@ const STAGE_SPOT_COUNT := 8
 const STAGE_SPOT_HALF_SPAN := 8.0
 const STAGE_SPOT_ABOVE_SCREEN := 1.3
 const STAGE_SPOT_RANGE := 20.0
-const STAGE_SPOT_ANGLE := 11.0
+## Narrow, like the accents (ACCENT_ANGLE): a tight beam, drawn by BeamShafts.
+const STAGE_SPOT_ANGLE := 4.0
 const STAGE_SPOT_COLOR := Color(0.95, 0.96, 1.0)
 @export var stage_spot_energy: float = 3.0
-@export var stage_spot_fog_energy: float = 12.0
+@export var stage_spot_fog_energy: float = 0.5
+
+
+## The stage's beam lights, which get drawn shafts (BeamShafts).
+static func is_stage_beam(light_name: String) -> bool:
+	return light_name.begins_with("Accent") or light_name.begins_with("StageSpot")
 
 
 func _build_stage_spots() -> void:

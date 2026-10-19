@@ -250,8 +250,8 @@ const SCREEN_BLANK_EMISSION := 0.35
 # --- LED side walls (the 2026 Dynamite set) --------------------------------
 ## The set the owner supplied on 18 October 2026 (gauntlet/refs/stage/
 ## dynamite_2026_*.jpg): the two circular portals are gone. In their place
-## stand two tall LED walls either side of the centre screen, toed in toward
-## the ring, playing the video wall's picture; the wrestlers walk out of the
+## stand two tall LED walls either side of the centre screen, splayed away
+## from the ring (the outer edges set back), playing the video wall's picture; the wrestlers walk out of the
 ## gap between them, in front of the centre screen. The curved wall above and
 ## the centre screen below it are unchanged.
 ##
@@ -268,11 +268,13 @@ const SIDE_SCREEN_BOTTOM := 0.25
 const SIDE_SCREEN_TOP := 5.65
 ## How far the inner edges stand in front of the back wall. The centre screen
 ## stays on the wall, so the gap between the two walls is a recess a man steps
-## out of; 1.0 keeps the inner edges behind MATCH_STAGE_BACK_LIMIT (1.4).
-const SIDE_SCREEN_FACE_OFFSET := 1.0
-## Toe-in: the outer edge comes this far round toward the ring, as the
-## reference's walls angle in to frame the walkway.
-const SIDE_SCREEN_TOE_DEG := 12.0
+## out of; 1.2 keeps the inner edges behind MATCH_STAGE_BACK_LIMIT (1.4), and
+## leaves room for the set-back outer edges in front of the back wall.
+const SIDE_SCREEN_FACE_OFFSET := 1.2
+## The walls' angle about their inner edges, positive toward the ring. The
+## owner's close-ups (Omega, Copeland, 18 Oct) show them splayed: inner edges
+## nearest the camera, outer edges turned slightly away, so this is negative.
+const SIDE_SCREEN_TOE_DEG := -10.0
 ## The LED cabinet's depth behind the picture.
 const SIDE_SCREEN_DEPTH := 0.3
 ## The LED walls' brightness against the video wall's. They stand at deck
@@ -295,7 +297,7 @@ static func side_screen_inner_z() -> float:
 
 
 ## Where a wall's outer edge stands: rotated SIDE_SCREEN_TOE_DEG about its
-## inner edge, toward the ring.
+## inner edge (negative: set back, away from the ring).
 static func side_screen_outer_z() -> float:
 	return side_screen_inner_z() + (SIDE_SCREEN_OUTER_X - SIDE_SCREEN_INNER_X) \
 			* tan(deg_to_rad(SIDE_SCREEN_TOE_DEG))
@@ -2094,6 +2096,11 @@ const RIG_MATERIALS := {
 ## across the rig. Light of their own: none -- they are the look of lamps;
 ## the rig's fixtures carry the measured light.
 const PAR_LENS_LEVEL := 3.2
+## Rig parts dressed but not drawn. The owner (18 Oct): no light rigging in the
+## wide shots -- on a broadcast the roof is black and the rig reads only as its
+## lamps, so the steel, the speakers and the PAR cans' bodies go dark and the
+## lenses (ParLenses) hang in the black on their own.
+const RIG_HIDDEN := ["RigTruss", "RoofSteel", "SpeakerArrays", "ParCans"]
 
 
 func _build_overhead_rig() -> void:
@@ -2115,6 +2122,10 @@ func _build_overhead_rig() -> void:
 	_dress(root, "ParLenses", _self_emissive(lens, PAR_LENS_LEVEL))
 	_dress(root, "ParCans", MaterialLibrary.house_compensate(
 			_house_lit(_textured("arena_chair"), 0.6)))
+	for part: String in RIG_HIDDEN:
+		var node := root.find_child(part, true, false) as Node3D
+		if node:
+			node.visible = false
 	add_child(root)
 
 

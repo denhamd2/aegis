@@ -540,8 +540,8 @@ def build_side_screens(cfg: dict[str, float], d: dict[str, float],
     Each is a flat picture (normalised UVs, the whole frame left to right as
     the ring sees it -- StageVideo crops the clip to fit) on a black cabinet,
     standing on the deck with its inner edge SIDE_SCREEN_FACE_OFFSET in front
-    of the back wall and turned SIDE_SCREEN_TOE_DEG about that edge toward the
-    ring. A row of red floor cans stands along its foot.
+    of the back wall and turned SIDE_SCREEN_TOE_DEG about that edge (negative: the
+    outer edge set back, the walls splayed away from the ring). A row of red floor cans stands along its foot.
     """
     deck = cfg["STAGE_DECK_Y"]
     y0, y1 = deck + cfg["SIDE_SCREEN_BOTTOM"], deck + cfg["SIDE_SCREEN_TOP"]
@@ -641,7 +641,7 @@ def main(argv: list[str]) -> int:
                  # Two sheets facing different ways: recalc would pick a side
                  # per quad and lose one (face_toward's note). Authored
                  # counter-clockwise from the ring, as the screen is.
-                 # The two LED walls too: toed in opposite ways.
+                 # The two LED walls too: splayed opposite ways.
                  keep_winding=frozenset({"StageScreenWings", "StageSideScreens"}))
 
     out = pathlib.Path(args.out)
