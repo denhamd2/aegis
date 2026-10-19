@@ -84,7 +84,12 @@ const DRIP_SLOW := 2.4
 const DRIP_FAST := 0.35
 ## Seconds between pool stamps while he lies bleeding.
 const POOL_EVERY := 0.7
-## His head within this of the mat counts as lying on it.
+## The bleed level past which lying on the mat marks it at all: any open cut
+## does (the owner, 19 Oct: a bloodied man laid out leaves blood where he
+## lay), well below the level he drips at standing up.
+const POOL_FROM := 0.06
+## His head within this of his feet' level counts as lying -- measured from
+## where he stands, so the floor outside (1.1 m under the mat) is not lying.
 const LYING := 0.42
 const UPDATE_EVERY := 0.05
 
@@ -218,27 +223,30 @@ func _process(delta: float) -> void:
 
 ## Drips while he stands, a pool where he lies.
 func _on_canvas(delta: float) -> void:
-	if shown_head < DRIP_FROM and shown_back < DRIP_FROM:
+	if shown_head < POOL_FROM and shown_back < POOL_FROM:
 		return
 	var canvas := CanvasBlood.of(get_tree())
 	if canvas == null:
 		return
 	var h := bone_at(&"head")
-	var lying := h.y < LYING
+	var lying := h.y - wrestler.global_position.y < LYING
 	if lying:
 		_pool += delta
 		if _pool >= POOL_EVERY:
 			_pool = 0.0
 			var jitter := Vector3(_rng.randf_range(-1, 1), 0, _rng.randf_range(-1, 1)) * 0.03
-			if shown_head >= DRIP_FROM:
+			if shown_head >= POOL_FROM:
 				canvas.stamp(Vector3(h.x, 0, h.z) + jitter, 0.03 + 0.09 * shown_head,
 						0.05 + 0.10 * shown_head, 0.45)
-			if shown_back >= DRIP_FROM:
+			if shown_back >= POOL_FROM:
 				var c := bone_at(&"chest")
 				canvas.stamp(Vector3(c.x, 0, c.z) + jitter, 0.04 + 0.10 * shown_back,
 						0.04 + 0.08 * shown_back, 0.5)
 		return
-	_pool = POOL_EVERY * 0.5
+	# the moment he lands, the first of it is on the mat
+	_pool = POOL_EVERY
+	if shown_head < DRIP_FROM:
+		return
 	_drip += delta
 	var every := lerpf(DRIP_SLOW, DRIP_FAST, clampf((shown_head - DRIP_FROM) / 0.7, 0.0, 1.0))
 	if _drip < every * _rng.randf_range(0.7, 1.3):

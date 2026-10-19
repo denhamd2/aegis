@@ -184,3 +184,41 @@ func test_match_ring_canvas_has_a_live_blood_overlay() -> void:
 	assert_object(canvas.material).is_not_null()
 	assert_object(canvas.texture).is_not_null()
 	assert_bool(canvas.canvas_material.next_pass == canvas.material).is_true()
+
+
+## The most blood on the canvas anywhere his head lay while he was down.
+func _pool_under(w: WrestlerController, bleed: float) -> float:
+	var blood := _blood(w)
+	blood.head = bleed
+	blood._peak = bleed
+	blood.shown_head = bleed
+	w._go_down()
+	var canvas := CanvasBlood.of(get_tree())
+	var lay: Array[Vector3] = []
+	for i in 60:
+		await _ticks(1)
+		var h := blood.bone_at(&"head")
+		if h.y - w.global_position.y < Blood.LYING:
+			lay.append(Vector3(h.x, 0.0, h.z))
+	canvas.flush()
+	var most := 0.0
+	for p: Vector3 in lay:
+		if canvas.image:
+			most = maxf(most, canvas.image.get_pixelv(canvas.texel(p)).r)
+	return most
+
+
+func test_a_bloodied_man_laid_out_on_the_canvas_stains_it() -> void:
+	# the owner, 19 Oct: blood where a bleeding man lies -- from a light cut
+	# too, not only once he is pouring
+	var ring: Node3D = auto_free(load("res://scenes/ring.tscn").instantiate())
+	add_child(ring)
+	var w := await _wrestler()
+	w.global_position = Vector3(0.6, 0.0, 0.8)
+	var light := await _pool_under(w, 0.1)
+	assert_float(light).override_failure_message("a light cut left nothing where he lay").is_greater(0.04)
+	w._move_ticks_remaining = 0
+	await _ticks(2)
+	w.global_position = Vector3(-0.8, 0.0, -0.6)
+	var heavy := await _pool_under(w, 0.7)
+	assert_float(heavy).is_greater(light)

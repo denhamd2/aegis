@@ -18,8 +18,15 @@ uniform float wet : hint_range(0.0, 1.0) = 1.0;
 // Linear albedo. Blood is dark: whole blood reflects little but red, and
 // under arena light even a fresh run reads deep crimson, not paint red (the
 // first pass used 0.36 here and every render looked like red paint).
-const vec3 FRESH = vec3(0.150, 0.006, 0.007);
-const vec3 THICK = vec3(0.060, 0.002, 0.003);
+//
+// The 19 Oct review (gauntlet/refs/nhb/weapon_review.md): at a full bleed the
+// face read as a coat of red gloss -- opaque, one colour, mirror-shiny, runs
+// of even width. Fresh blood under the hard light is a translucent film the
+// skin shows through, dark only where it pools, sheened rather than glassy,
+// and its runs wander and thin out. So a little darker again, the thin film
+// thinner, the gloss satin, and the edges broken up at two scales.
+const vec3 FRESH = vec3(0.120, 0.007, 0.007);
+const vec3 THICK = vec3(0.045, 0.002, 0.003);
 const vec3 DRIED = vec3(0.045, 0.010, 0.007);
 // how far past its threshold a texel takes to go from the first trace to
 // fully covered, and to fully thick
@@ -75,7 +82,9 @@ void fragment() {
 	vec2 t = texture(reveal, UV).rg;
 	// ragged edges: the threshold wanders a little texel to texel
 	float n = noise(UV * 220.0);
-	float h = coverage(t.r + (n - 0.5) * 0.03, bleed_head);
+	// and wanders at a coarser scale too, so a run narrows and widens
+	float w = noise(UV * 48.0 + 11.0);
+	float h = coverage(t.r + (n - 0.5) * 0.03 + (w - 0.5) * 0.06, bleed_head);
 	float b = coverage(t.g + (n - 0.5) * 0.05, bleed_back);
 	// the back starts as punctures and only joins up as it bleeds more
 	float joined = smoothstep(0.12, 0.35, bleed_back - t.g);
@@ -90,9 +99,11 @@ void fragment() {
 	vec3 col = mix(FRESH, THICK, thick);
 	col = mix(DRIED, col, wet);
 	ALBEDO = col;
-	ROUGHNESS = mix(0.6, mix(0.3, 0.12, thick), wet);
-	SPECULAR = 0.5;
+	ROUGHNESS = mix(0.6, mix(0.4, 0.22, thick), wet);
+	SPECULAR = 0.35;
 	METALLIC = 0.0;
 	// a thin first film tints the skin; a run of it hides it
-	ALPHA = c * mix(0.5, 0.95, thick);
+	// mottled, so the skin's own pores and tone come through the film
+	float film = mix(0.7, 1.0, noise(UV * 140.0 + 5.0));
+	ALPHA = c * mix(0.35 * film, 0.92, thick);
 }

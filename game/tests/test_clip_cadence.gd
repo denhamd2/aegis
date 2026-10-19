@@ -131,6 +131,33 @@ func test_the_hero_moves_move_evenly() -> void:
 	assert_float(total).is_less_equal(HERO_JERK_BUDGET)
 
 
+## The weapon swings (gauntlet/refs/nhb/weapon_review.md): their in-between
+## pass in wrestling_clips.py (SWING_INBETWEENS) took the 17 from 1212 to
+## 1118 (today's figure); the worst, the chair, from 88 to 56. A swing is fast by
+## nature and scores above a slam, so this holds the line rather than asks
+## for the hero moves' evenness.
+const SWINGS := [
+	"Weapon_Overhead", "Weapon_Chair_Overhead", "Weapon_Side", "Weapon_Bat",
+	"Weapon_Slapshot", "Weapon_Kendo_Chop", "Weapon_Two_Hand_Slam",
+	"Weapon_Shovel_Overhead", "Weapon_Crutch_Overhead", "Weapon_Bonk_Overhand",
+	"Weapon_Flat_Face", "Weapon_Chain_Fist", "Weapon_Ladder_Overhead",
+	"Weapon_Thrust", "Weapon_Whip", "Weapon_Chop", "Weapon_Throw",
+]
+const SWING_JERK_BUDGET := 1118.0
+
+
+func test_the_weapon_swings_move_evenly() -> void:
+	var player := _player()
+	var total := 0.0
+	for clip: String in SWINGS:
+		assert_bool(player.has_animation(clip)).override_failure_message(
+			"no clip %s" % clip).is_true()
+		if player.has_animation(clip):
+			total += jerk(speeds(player.get_animation(clip)))
+	print("SWING_JERK total %.1f" % total)
+	assert_float(total).is_less_equal(SWING_JERK_BUDGET)
+
+
 func test_the_clips_neither_freeze_nor_jerk() -> void:
 	var player := _player()
 	var total_holds := 0

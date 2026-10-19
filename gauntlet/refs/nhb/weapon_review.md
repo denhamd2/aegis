@@ -60,3 +60,31 @@ contact sheet.
    fixing anything that reads wrong.
 4. Blood: close frames after blade and barbed-wire hits against broadcast
    reference; tune colour, wetness, run and canvas stains.
+
+## Done (19 Oct) -- review sheet `review/step4_weapon_review.png`
+
+1. **Reaction tiers** shipped as `WeaponCatalog.Impact` (table above, as
+   planned; the blade reaction is a knee and the heavy bleed, the extra x1.4
+   down time was not needed once he is on a knee). The old rule "everything
+   at 8+ drops him" is gone: a kendo stick or a thrown hockey stick now
+   rocks him instead.
+2. **Swings**: paced to 0.78 of their length (contact fraction kept), the
+   sledgehammer on its own heavier profile. In-betweens by measurement, not
+   by spline: a per-frame spline was tried first and was *worse* (jerk 1212
+   -> 1694) because it threw away the overlap lag the sparse keys carry. The
+   fix that worked is `SWING_INBETWEENS` in `wrestling_clips.py`: the cocked
+   key a frame earlier where contact was a one-frame snap, and the return run
+   to the end where clips froze in the stance for their last five frames.
+   1212 -> 1118 across the 17; chair 88 -> 56, thrust 99 -> 74, kendo 85 ->
+   69. Gated in `test_clip_cadence` (`SWING_JERK_BUDGET`).
+3. **Model pass**: not yet -- the five-angle sheet of all 35 is still to do.
+4. **Blood**: the full bleed read as red gloss. Darker, satin, a film the
+   skin shows through, edges broken at two scales
+   (`blood_overlay.gdshader`). The canvas pool read as pink watercolour: now
+   a dark core with a lighter wicked halo along the weave, satin, and a drag
+   is a band with streaks in it (`canvas_blood.gdshader`, `smear`). A
+   bleeding man laid out marks the mat from any open cut, the moment he
+   lands (`Blood.POOL_FROM`), and "lying" is measured from his feet so the
+   floor outside does not count.
+   Still open: the runs down the chest keep an even width -- that shape is
+   the baked reveal map's, not the shader's.

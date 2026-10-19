@@ -170,7 +170,15 @@ func smear(a: Vector3, b: Vector3, width: float, amount := 0.35) -> void:
 	var dir := b - a
 	dir.y = 0.0
 	var side := dir.normalized().cross(Vector3.UP) if dir.length() > 0.001 else Vector3.RIGHT
-	var streaks := maxi(1, int(width / 0.018))
+	# the band of it first, thin and thinning out (the 19 Oct review: a drag
+	# was a fan of separate stripes; a body pulled through blood paints a
+	# broad film with darker streaks combed into it)
+	var band_steps := maxi(2, int(a.distance_to(b) / maxf(width * 0.25, 0.004)))
+	for i in band_steps + 1:
+		var k := float(i) / band_steps
+		stamp(a.lerp(b, k) + side * sin(k * 3.0) * width * 0.15, width * 0.55 * (1.0 - 0.35 * k),
+				amount * 0.16 * (1.0 - 0.6 * k), 0.3)
+	var streaks := maxi(1, int(width / 0.025))
 	for j in streaks:
 		var across := (float(j) / maxf(streaks - 1, 1) - 0.5) * width
 		var reach := _rng.randf_range(0.55, 1.0)

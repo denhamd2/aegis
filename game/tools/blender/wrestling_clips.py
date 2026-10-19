@@ -6880,6 +6880,61 @@ CLIPS["Weapon_Throw"] = [
     (13, R()),
 ]
 
+# The swings' in-between pass (gauntlet/refs/nhb/weapon_review.md; the owner,
+# 19 Oct: Fight Forever style, very smooth). Measured on the cadence gate's
+# jerk (tools/probe/weapon_jerk.gd), the swings above lurched in two places:
+#
+#   a one-frame snap onto contact -- the cocked key a single frame before the
+#     hit, so the body sat almost still at the top and then moved 270 degrees
+#     in one frame. The cocked key moves a frame earlier: the same contact
+#     frame, reached over two frames.
+#   back at the stance early, then standing there -- the clips that returned
+#     to READY at frame 17 of 22-24 froze for the last five. The return runs
+#     to the end instead, through a breakdown that settles into the stance.
+#
+# The contact frames are untouched (WeaponCatalog.SWINGS' startup fractions).
+
+def _key_at(clip, frame):
+    for f, spec in clip:
+        if f == frame:
+            return spec
+    raise KeyError(frame)
+
+
+def inbetween(clip, frame, t):
+    """A breakdown at `frame`, `t` of the way from the key before it to the
+    key after it. t above the time fraction front-loads the move, so it
+    settles into the next key rather than arriving at speed."""
+    before = max(f for f, _ in clip if f < frame)
+    after = min(f for f, _ in clip if f > frame)
+    a, b = _key_at(clip, before), _key_at(clip, after)
+    spec = {k: _lerp_value(a[k], b.get(k, a[k]), t) for k in a}
+    return sorted(clip + [(frame, spec)], key=lambda e: e[0])
+
+
+def rekey(clip, old, new):
+    return sorted([(new if f == old else f, spec) for f, spec in clip], key=lambda e: e[0])
+
+
+def unkey(clip, frame):
+    return [(f, spec) for f, spec in clip if f != frame]
+
+
+SWING_INBETWEENS = {
+    "Weapon_Chair_Overhead": [("rekey", 8, 7), ("unkey", 17), ("inbetween", 18, 0.6)],
+    "Weapon_Bat": [("unkey", 8)],
+    "Weapon_Slapshot": [("rekey", 3, 4), ("unkey", 17), ("inbetween", 16, 0.55)],
+    "Weapon_Thrust": [("unkey", 14), ("inbetween", 13, 0.45)],
+    "Weapon_Kendo_Chop": [("rekey", 7, 6), ("unkey", 17), ("inbetween", 17, 0.6)],
+    "Weapon_Two_Hand_Slam": [("rekey", 8, 7)],
+    "Weapon_Shovel_Overhead": [("rekey", 8, 7)],
+    "Weapon_Bonk_Overhand": [("unkey", 17), ("inbetween", 16, 0.6)],
+}
+for _name, _steps in SWING_INBETWEENS.items():
+    for _step in _steps:
+        CLIPS[_name] = {"rekey": rekey, "unkey": unkey, "inbetween": inbetween}[_step[0]](
+            CLIPS[_name], *_step[1:])
+
 # 60 frames, held: down on one knee at the apron, the right arm in under the
 # skirt feeling about for something.
 CLIPS["Weapon_Rummage"] = [

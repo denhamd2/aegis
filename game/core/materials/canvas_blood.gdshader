@@ -24,6 +24,22 @@ const vec3 THICK = vec3(0.032, 0.001, 0.002);
 const vec3 DRIED = vec3(0.060, 0.014, 0.010);
 const vec3 SOAKED = vec3(0.160, 0.030, 0.025);
 
+// Canvas weave and the way blood wicks along it (the 19 Oct review: the
+// pools read as flat pink watercolour cut-outs). Blood on canvas is two
+// things: a dark core where it stands, and round it a lighter rust halo
+// where the cloth has drunk it, ragged along the weave.
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float noise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+			mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
 void vertex() {
 	// a hair above the mat, so the pass never loses the depth test to it
 	VERTEX += NORMAL * 0.0015;
@@ -31,20 +47,29 @@ void vertex() {
 
 void fragment() {
 	vec2 s = texture(stains, UV).rg;
-	float amount = s.r;
+	// the weave: fine threads both ways, and a coarser blotch the cloth soaks
+	float weave = noise(UV * vec2(1400.0, 90.0)) * 0.5 + noise(UV * vec2(90.0, 1400.0)) * 0.5;
+	float blotch = noise(UV * 160.0 + 4.0);
+	float amount = s.r * mix(0.8, 1.15, blotch) + (weave - 0.5) * 0.05;
 	if (amount < 0.04) {
 		discard;
 	}
 	float age = max(now - s.g * time_span, 0.0);
 	float wet = 1.0 - clamp(age / dry, 0.0, 1.0);
 	// thin film soaks in pink-brown; a run or a pool stands on the cloth
-	float thick = smoothstep(0.06, 0.45, amount);
+	float thick = smoothstep(0.08, 0.32, amount);
 	vec3 wet_col = mix(FRESH, THICK, thick);
 	vec3 dry_col = mix(SOAKED, DRIED, thick);
-	ALBEDO = mix(dry_col, wet_col, wet);
-	ROUGHNESS = mix(0.85, mix(0.5, 0.32, thick), wet);
-	SPECULAR = 0.25;
+	vec3 col = mix(dry_col, wet_col, wet);
+	// the wicked halo: thin, lighter and rustier than the pool it came from
+	float halo = 1.0 - smoothstep(0.04, 0.14, amount);
+	col = mix(col, SOAKED * mix(0.8, 1.1, weave), halo * 0.7);
+	ALBEDO = col;
+	// satin, not a mirror: at the hard camera's grazing angle a glassy pool
+	// took the whole key light and read pink
+	ROUGHNESS = mix(0.85, mix(0.65, 0.45, thick), wet * (1.0 - halo));
+	SPECULAR = 0.12;
 	// crisp edges from a bilinear amount: the shape is the 0.1-0.25 contour
-	float edge = smoothstep(0.05, 0.11, amount);
-	ALPHA = edge * mix(0.88, 0.97, thick);
+	float edge = smoothstep(0.035, 0.09, amount);
+	ALPHA = edge * mix(mix(0.55, 0.8, 1.0 - halo), 0.97, thick);
 }

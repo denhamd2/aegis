@@ -5,6 +5,7 @@ extends Node
 ##
 ##   xvfb-run -a godot --path game --rendering-driver vulkan \
 ##       --resolution 1280x720 tools/probe/blood_shot.tscn -- --out /tmp/blood
+##   add `--canvas-only` for just the two canvas frames.
 ##
 ## Frozen face-off under the match rig, like face_shot.tscn. The bleed is
 ## set on Blood directly (shown and bled), so a level is a level, not a
@@ -15,6 +16,7 @@ const LEVELS := [0.0, 0.15, 0.35, 0.6, 1.0]
 var _out := "/tmp/blood"
 var _a := "roman"
 var _b := "cody"
+var _canvas_only := false
 
 
 func _ready() -> void:
@@ -24,6 +26,7 @@ func _ready() -> void:
 			"--out": _out = args[i + 1]
 			"--a": _a = args[i + 1]
 			"--b": _b = args[i + 1]
+	_canvas_only = args.has("--canvas-only")
 	DirAccess.make_dir_recursive_absolute(_out)
 	Blood.enabled = true
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
@@ -55,7 +58,7 @@ func _ready() -> void:
 	for _i in 20:
 		await RenderingServer.frame_post_draw
 
-	for pair: Array in [[_a, a, b, Vector3(1, 0, 0)], [_b, b, a, Vector3(-1, 0, 0)]]:
+	for pair: Array in ([] if _canvas_only else [[_a, a, b, Vector3(1, 0, 0)], [_b, b, a, Vector3(-1, 0, 0)]]):
 		var w: WrestlerController = pair[1]
 		var other: WrestlerController = pair[2]
 		var fwd: Vector3 = pair[3]

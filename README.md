@@ -9741,3 +9741,22 @@ at broadcast-heavy intensity.
   minute, up to five times a match.
 - Weapon review and plan: `gauntlet/refs/nhb/weapon_review.md`.
   Review: `gauntlet/refs/nhb/review/step3_fans_fire_spread.png`.
+
+## 19 Oct — Weapons in proportion, smoother swings, realistic blood
+
+- **Each weapon lands as hard as it is** (`WeaponCatalog.Impact`). A kendo
+  stick, pan or belt rocks him -- a heavy stagger, a knee when he is hurt --
+  chairs, pipes and wire drop him, the sledgehammer, steps and a rocket wipe
+  him out further back and longer, and a blade takes him to a knee, bleeding.
+  Swings run at Fight Forever pace (0.78 of their old length, contact kept).
+- **Smoother swings.** Measured frame by frame, the swings snapped onto
+  contact in one frame and froze in the stance at the end. Re-keyed where
+  they lurched (`SWING_INBETWEENS`): 8% smoother overall, the chair 36%, the
+  thrust 25%. `tools/probe/weapon_jerk.gd` measures it; the cadence test
+  holds the line.
+- **Blood looks like blood.** Darker, satin rather than glassy, thin enough
+  for the skin to show through, with broken edges; on the canvas a dark pool
+  with a lighter soaked halo, and drags that read as a smeared band.
+- **The canvas stains where a bloodied man lies**, from any open cut and the
+  moment he lands.
+- Review: `gauntlet/refs/nhb/review/step4_weapon_review.png`.
