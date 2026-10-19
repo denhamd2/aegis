@@ -1,0 +1,31 @@
+{
+  "asset": "Kloofendal 48d Partly Cloudy (Pure Sky)",
+  "authors": {
+    "original": "Greg Zaal",
+    "sky_edits": "Jarod Guest"
+  },
+  "source": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+  "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/kloofendal_48d_partly_cloudy_puresky_4k.hdr",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "retrieved": "2026-10-19",
+  "original_sha256": "3061c00a16ecae748e84fd6c44c04804f539c118bb66325db858bad87b11bf88",
+  "dimensions": [
+    4096,
+    2048
+  ],
+  "changes": "Original HDR bytes unchanged; Godot import clamps extreme HDR exposure; energy is editable.",
+  "sun_source_pixel": {
+    "x": 2437,
+    "y_from_top": 479,
+    "width": 4096,
+    "height": 2048
+  },
+  "godot_sun_rotation_radians": [
+    -0.83525,
+    -0.59748,
+    0
+  ],
+  "sun_alignment": "Derived from brightest upper-hemisphere HDR pixel using Godot spherical sky mapping; unrotated sky.",
+  "reference_use": "Owner requested a sunnier partly-cloudy match; photographic sky is not Kilmore Drive."
+}

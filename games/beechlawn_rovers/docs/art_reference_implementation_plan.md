@@ -207,3 +207,13 @@ The approved shared-head follow-up promotes that neutral into the common
 separate hair selections. Follow [shared head production](art_briefs/shared_head_pipeline.md)
 for edits and regeneration. Other player identities remain starting heads;
 this does not establish their facial likeness or unseen profiles.
+
+## Sky and direct daylight — 19 October 2026
+
+The owner requested a sunnier partly-cloudy match after the initial overcast
+direction. BR-023 (23/25) now uses the broadcast reference's brighter mood while
+retaining natural cloud/horizon cues from the local park references. A CC0 pure
+sky photograph provides the background and ambient radiance; a matching real
+directional light casts shadows. See [sky/light review](art_briefs/kilmore_sky.md)
+for provenance, shared editable settings and renderer evidence. Volumetric fog
+is disabled; exact venue geometry and native M1 timing remain open.

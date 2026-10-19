@@ -10,7 +10,3 @@ away_team_resource = ExtResource("3")
 use_human_visual = true
 referee_enabled = true
 terrain_enabled = true
-
-[node name="Sun" parent="." index="1"]
-light_energy = 0.48
-angular_distance = 5.0

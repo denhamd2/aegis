@@ -1,4 +1,14 @@
-Shared head production update (19 October 2026):
+Partly cloudy daylight update (19 October 2026):
+- A free CC0 photographic 4K sky replaces the featureless gradient, following
+  the owner's preference for less overcast weather and direct sunlight.
+- Blue openings and detailed clouds, balanced sky colour, slightly warm sun
+  aligned to the panorama and cool ambient fill. Real directional shadows
+  cover the pitch and nearby surroundings; very light distance haze retains
+  clear match visibility. Volumetric fog is disabled for Web compatibility.
+- Shared daylight settings serve match and player reviews. Native M1 lighting
+  and performance acceptance remain pending; venue/character art is unfinished.
+
+Shared head production update:
 - Both teams and the referee now start from Shane's updated neutral head/eyes
   on the existing shared body and animation rig. Per-player sculpt recipes
   retain personal changes when compatible common improvements are rebuilt.

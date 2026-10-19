@@ -58,6 +58,8 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
+          cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_touchline.png build/beechlawn/web/screenshots/current_daylight_touchline.png
+          cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_broadcast.png build/beechlawn/web/screenshots/current_daylight_broadcast.png
           cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
           printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt

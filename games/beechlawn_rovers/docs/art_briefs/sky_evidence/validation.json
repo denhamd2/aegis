@@ -1,0 +1,36 @@
+{
+  "result": "PASS",
+  "godot_checks": [
+    "eleven_v_eleven_smoke.gd",
+    "broadcast_camera_smoke.gd",
+    "pre_match_intro_smoke.gd"
+  ],
+  "captures": [
+    "before_broadcast.png",
+    "before_touchline.png",
+    "after_broadcast.png",
+    "after_touchline.png",
+    "sunlit_broadcast.png",
+    "sunlit_touchline.png"
+  ],
+  "resolution": [
+    960,
+    540
+  ],
+  "match_state": "Frozen kickoff; same broadcast/touchline cameras",
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "shadow_comparisons": "before/after disable shadows equally; sunlit captures explicitly enable real directional shadows",
+  "console_errors": [],
+  "sky_seam_probe": {
+    "before_median_rgb_contrast": 93.333,
+    "after_median_rgb_contrast": 0.667,
+    "method": "960x540 touchline, median RGB difference of column 536 against adjacent 535/538 over rows 10..144",
+    "fix": "Bilinear panorama sampling avoids implicit mip gradients across longitude wrap"
+  },
+  "source_hash_verified": true,
+  "limits": [
+    "No native M1 performance or Metal visual approval",
+    "Static sky; no moving volumetric clouds or cloud shadows",
+    "Existing venue and characters remain unfinished"
+  ]
+}
