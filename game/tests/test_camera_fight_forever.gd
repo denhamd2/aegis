@@ -146,3 +146,32 @@ func test_running_attacks_and_dives_stay_wide() -> void:
 	# a standing grapple cuts in
 	camera._on_grapple_started(a, b, _move(60, 6, 34, "power_bodyslam"))
 	assert_int(camera.mode).is_equal(MatchCamera.Mode.EVENT_CUT)
+
+
+func test_a_signature_and_a_finisher_shake_the_camera_on_their_impact_only() -> void:
+	# the owner, 19 Oct: Fight Forever shakes a little on its high-impact
+	# signatures and finishers -- on the landing, not through the lift
+	var scene := _match()
+	var camera: MatchCamera = scene.get_node("MatchCamera")
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	camera.mode = MatchCamera.Mode.RINGSIDE
+	var sig := _move(60, 6, 34)
+	a.signature_move_pool.append(sig)
+	camera._on_grapple_started(a, b, sig)
+	assert_float(camera._impact_shake_at).is_equal_approx(0.6, 0.001)
+	camera._impact_shake_due()
+	assert_float(camera._trauma).is_equal(0.0)    # the rig is not on the impact yet
+	var plain := _move(60, 6, 34)
+	camera._on_grapple_started(a, b, plain)
+	assert_float(camera._impact_shake_at).is_equal(-1.0)
+	# struck: the finisher shakes harder than the signature
+	camera._trauma = 0.0
+	camera._on_move_landed(a, b, sig)
+	var after_sig := camera._trauma
+	assert_float(after_sig).is_greater_equal(MatchCamera.TRAUMA_SIGNATURE)
+	camera._trauma = 0.0
+	a.finisher_move = sig
+	a.signature_move_pool.clear()
+	camera._on_move_landed(a, b, sig)
+	assert_float(camera._trauma).is_equal(1.0)

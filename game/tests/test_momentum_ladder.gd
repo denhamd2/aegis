@@ -137,3 +137,54 @@ func test_every_wired_move_reports_the_tier_it_was_wired_into() -> void:
 		# advance it -- the meter it feeds is shared, the chain is not.
 		assert_int(w.tier_of(w.strike_move)).is_equal(-1)
 		assert_int(w.tier_of(w.running_attack_move)).is_equal(-1)
+
+
+## Fight Forever's meter (the owner, 19 Oct): a taunt in the signature state
+## fires him up to the finisher; a hit costs momentum; the same move twice
+## running earns less.
+func test_a_taunt_at_full_meter_fires_him_up_to_the_finisher() -> void:
+	var c := CombatSystem.new()
+	c.momentum = CombatSystem.SIGNATURE_THRESHOLD - 6.0
+	c.taunted()                                   # not yet in the signature state
+	assert_bool(c.finisher_lit).is_false()
+	assert_float(c.momentum).is_equal(CombatSystem.SIGNATURE_THRESHOLD - 1.0)
+	c.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	assert_bool(c.can_finisher()).is_false()      # no signature landed, no taunt
+	c.taunted()
+	assert_bool(c.can_finisher()).is_true()
+	assert_str(MatchHUD.meter_state(c)).is_equal("FINISHER!")
+	c.spend_finisher()
+	assert_bool(c.finisher_lit).is_false()
+
+
+func test_being_hit_costs_momentum_and_can_put_the_finisher_out() -> void:
+	var c := CombatSystem.new()
+	c.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	c.taunted()
+	var hit := MoveDef.new()
+	hit.damage_torso = 20.0
+	c.apply_damage(hit)
+	assert_float(c.momentum).is_less(CombatSystem.SIGNATURE_THRESHOLD + CombatSystem.TAUNT_MOMENTUM)
+	assert_bool(c.can_finisher()).is_true()       # one blow does not take it
+	# a long beating does put it out: the drain is small, so it takes many blows
+	for i in 40:
+		c.apply_damage(hit)
+	assert_bool(c.finisher_lit).is_false()
+
+
+func test_the_same_move_twice_running_earns_less() -> void:
+	var c := CombatSystem.new()
+	var jab := _move("strike_jab")
+	c.apply_momentum(jab)
+	var first := c.momentum
+	c.apply_momentum(jab)
+	assert_float(c.momentum - first).is_less(first)
+
+
+func test_the_meter_reads_full_at_the_signature_state() -> void:
+	var c := CombatSystem.new()
+	c.momentum = CombatSystem.SIGNATURE_THRESHOLD
+	assert_float(MatchHUD.meter_fill(c)).is_equal(1.0)
+	assert_str(MatchHUD.meter_state(c)).is_equal("SIGNATURE")
+	c.momentum = 0.0
+	assert_str(MatchHUD.meter_state(c)).is_equal("")

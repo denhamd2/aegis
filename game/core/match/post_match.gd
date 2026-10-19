@@ -26,6 +26,11 @@ const REPLAY_TAIL := 0.9     # after the cover starts
 const REPLAY_SPEED := 0.5
 const CELEBRATION := [["close", 2.2], ["ringside", 2.0], ["arena", 2.6], ["hero", 2.4]]
 const RATING_HOLD := 3.6
+## The title presented (TitlePresentation): the celebration holds on him and
+## Aubrey until he has it up, then a last close shot of him with it.
+const TITLE_HOLD := 2.6
+var _title: TitlePresentation
+var _title_t := 0.0
 
 var camera: MatchCamera
 var winner: WrestlerController
@@ -106,6 +111,8 @@ func _process(delta: float) -> void:
 			if _stage_t >= WINNER_HOLD:
 				_card.hide_card()
 				_next("replay" if _replay_from >= 0.0 else "celebrate")
+				if _stage == "celebrate":
+					_present_title()
 				if _stage == "replay":
 					replay.begin_playback()
 					_badge.visible = true
@@ -118,6 +125,7 @@ func _process(delta: float) -> void:
 				replay.restore()
 				_badge.visible = false
 				_next("celebrate")
+				_present_title()
 		"celebrate":
 			var step: Array = CELEBRATION[_celeb]
 			_shot_celebration(String(step[0]), delta)
@@ -125,6 +133,18 @@ func _process(delta: float) -> void:
 				_celeb += 1
 				_stage_t = 0.0
 				if _celeb >= CELEBRATION.size():
+					if _title != null and not _title.is_done():
+						_celeb = CELEBRATION.size() - 1
+						_next("title")
+					else:
+						_next("rating")
+						_rating.visible = true
+		"title":
+			# held on him and Aubrey as she brings it, then on him with it up
+			_shot_celebration("ringside" if not _title.is_done() else "close", delta)
+			if _title.is_done():
+				_title_t += delta
+				if _title_t >= TITLE_HOLD:
 					_next("rating")
 					_rating.visible = true
 		"rating":
@@ -133,6 +153,14 @@ func _process(delta: float) -> void:
 				_rating.visible = false
 				_done = true
 				finished.emit()
+
+
+## The belt to the winner, once the replay is done with everybody's poses.
+func _present_title() -> void:
+	_title = TitlePresentation.of(self)
+	var ref := get_parent().get_node_or_null("RefereeActor") as RefereeActor if get_parent() else null
+	if _title and ref and _title.step == TitlePresentation.Step.ON_TABLE:
+		_title.present(winner, ref)
 
 
 func _next(stage: String) -> void:

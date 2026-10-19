@@ -103,6 +103,10 @@ func _ready() -> void:
 	referee_actor.name = "RefereeActor"
 	add_child(referee_actor)
 	referee_actor.watch(referee, [wrestler_a, wrestler_b])
+	# The title waits on the timekeeper's table for whoever wins (the owner,
+	# 19 Oct: no belt on the walk; Aubrey presents it after the match).
+	if has_node("Arena"):
+		TitlePresentation.set_on_table(self)
 	# What the finish replay is cut from, and what the match rating is
 	# scored on (PostMatch). Presentation only.
 	replay_buffer = ReplayBuffer.new()

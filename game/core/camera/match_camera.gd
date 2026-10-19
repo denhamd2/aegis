@@ -331,6 +331,16 @@ const TRAUMA_KNOCKDOWN := 0.3
 const TRAUMA_SHOT := 0.25
 const TRAUMA_TABLE := 0.7
 const TRAUMA_BLAST := 0.95
+## Fight Forever shakes the camera a little on the impact of a signature or a
+## finisher, whatever shot it is on (the owner, 19 Oct). Fired on the move's
+## own contact frame (MoveDef.startup_frames), once a move. The BROADCAST
+## finisher sequence keeps its own shake (_finish_impact).
+const TRAUMA_SIGNATURE := 0.75
+const TRAUMA_FINISHER := 1.0
+## Where in the paired move the shake is due (its progress), and how hard;
+## -1 when none is.
+var _impact_shake_at := -1.0
+var _impact_shake := 0.0
 ## Where the crowd cutaway looks: the ringside rows on +X, where the sign
 ## fans sit (SignFans.FANS), from the floor at the far apron.
 const CUTAWAY_AT := Vector3(4.3, 1.3, -0.6)
@@ -503,6 +513,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_update_mode(delta)
 	fov = shot_fov()
+	_impact_shake_due()
 	_shake(delta)
 	if mode == Mode.FINISHER_CUT and _finisher_shot(delta):
 		_previous_mode = mode
@@ -910,6 +921,7 @@ func _reset_clock_on_change(was: Mode) -> void:
 
 func _on_grapple_started(attacker: Node3D, defender: Node3D, move: MoveDef) -> void:
 	var wrestler := attacker as WrestlerController
+	_arm_impact_shake(wrestler, move)
 	if CameraSettings.fight_forever():
 		var special := wrestler != null and (wrestler.is_finisher(move) or _is_signature(move))
 		# Running attacks, dives and the moves on a man already down stay on
@@ -1218,6 +1230,35 @@ func _shake(delta: float) -> void:
 	_trauma = maxf(0.0, _trauma - FINISH_SHAKE_DECAY * delta)
 
 
+## A signature or finisher: the shake waits for its contact frame.
+func _arm_impact_shake(wrestler: WrestlerController, move: MoveDef) -> void:
+	_impact_shake_at = -1.0
+	if wrestler == null or move == null:
+		return
+	var tier := wrestler.tier_of(move)
+	if tier == CombatSystem.Tier.FINISHER:
+		if not CameraSettings.fight_forever() and not CameraSettings.gameplay():
+			return    # the finisher sequence shakes on its own impact
+		_impact_shake = TRAUMA_FINISHER
+	elif tier == CombatSystem.Tier.SIGNATURE or _is_signature(move):
+		_impact_shake = TRAUMA_SIGNATURE
+	else:
+		return
+	var total := maxf(float(move.total_frames()), 1.0)
+	_impact_shake_at = clampf(move.startup_frames / total, 0.05, 0.98)
+
+
+func _impact_shake_due() -> void:
+	if _impact_shake_at < 0.0:
+		return
+	if grapple_rig == null or not grapple_rig.is_active():
+		_impact_shake_at = -1.0
+		return
+	if grapple_rig.progress() >= _impact_shake_at:
+		add_trauma(_impact_shake)
+		_impact_shake_at = -1.0
+
+
 ## Kick the shake from outside (a big bump).
 func add_trauma(amount: float) -> void:
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
@@ -1359,6 +1400,14 @@ func _on_move_landed(attacker: WrestlerController, defender: WrestlerController,
 	# read as the camera flinching, not the man.
 	if big:
 		add_trauma(TRAUMA_BIG_STRIKE)
+	# a struck signature or finisher (a Superman Punch, a kick) shakes as the
+	# paired ones do, on the blow
+	if attacker != null:
+		var tier := attacker.tier_of(move)
+		if tier == CombatSystem.Tier.FINISHER:
+			add_trauma(TRAUMA_FINISHER)
+		elif tier == CombatSystem.Tier.SIGNATURE:
+			add_trauma(TRAUMA_SIGNATURE)
 	if CameraSettings.fight_forever():
 		if attacker != null and (attacker.is_finisher(move) or _is_signature(move)):
 			_try_cut(Cut.STRIKE, defender, attacker, FF_STRIKE_HOLD)

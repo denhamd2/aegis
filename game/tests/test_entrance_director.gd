@@ -294,10 +294,9 @@ func test_romans_entrance_is_continuous_and_cleans_up() -> void:
 			saw["pyro"] = true)
 	assert_bool(fired[1]).is_true()
 	assert_bool(fired[0]).override_failure_message("props or pyro outlived the bell").is_true()
-	# The owner's call: he walks out with the AEW title round his waist,
-	# raises it in the ring and hands it off -- worn, held, then carried away
-	# (PropHandoff), never just gone.
-	for k in ["worn", "held", "carried", "pyro"]:
+	# The owner's call: no belt on the walk (it waits on the timekeeper's
+	# table for the winner, TitlePresentation). His pyro and the fala remain.
+	for k in ["pyro"]:
 		assert_bool(saw.has(k)).override_failure_message("never saw %s" % k).is_true()
 
 

@@ -442,7 +442,11 @@ func _wants_taunt() -> bool:
 	if not controller.can_taunt() or target.fsm.current_state != WrestlerFSM.State.DOWN \
 			or target.fsm.ticks_in_state > TAUNT_WINDOW:
 		return false
-	if controller.combat.can_finisher() and controller.finisher_move and not _setup_taunted:
+	# Fight Forever: full meter, he plays to the crowd to fire up to the
+	# finisher (CombatSystem.taunted) -- or, already lit, to set it up
+	var combat := controller.combat
+	if controller.finisher_move and (combat.can_signature() and not combat.finisher_lit
+			or combat.can_finisher() and not _setup_taunted):
 		_setup_taunted = true
 		return true
 	if controller.last_landed_tier == CombatSystem.Tier.POWER and not _power_taunted:

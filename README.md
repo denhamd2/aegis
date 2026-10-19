@@ -9760,3 +9760,24 @@ at broadcast-heavy intensity.
 - **The canvas stains where a bloodied man lies**, from any open cut and the
   moment he lands.
 - Review: `gauntlet/refs/nhb/review/step4_weapon_review.png`.
+
+## 19 Oct — Shake on big moves, the meter, the belt on the table
+
+- **Camera shake on big moves.** A signature or finisher shakes the camera a
+  little on its contact frame (`MatchCamera._arm_impact_shake`), as Fight
+  Forever does; the broadcast finisher keeps its own shake.
+- **Momentum meter as Fight Forever has it.** The plate's meter colours run
+  blue, green, yellow, orange, red and it names the state when it's full:
+  SIGNATURE at the signature state, FINISHER! once he has fired up. A taunt
+  in the signature state lights the finisher (`CombatSystem.taunted`), a hit
+  costs a little momentum, and the same move twice running earns half
+  (`CombatSystem.apply_momentum`). Finishers still come from a full meter
+  without a taunt.
+- **The AEW title waits on the timekeeper's table.** Roman no longer carries
+  it to the ring. After the match the timekeeper lifts it, passes it through
+  the ropes to Aubrey, and she hands it to the winner, who raises it
+  (`TitlePresentation`, run after the replay and celebration).
+- **Still to do:** the AI-match finish check is not conclusive (the mannequin
+  probe ends on the time cap with no winner, on the committed code as well);
+  fire and extinguisher, sound, Cody's face and neck, select-screen portraits,
+  ladder dives, the table powerbomb, and the full Fight Forever move library.

@@ -649,11 +649,15 @@ func begin(match_root: Node) -> void:
 	# The timekeeper and the way a man's props reach his table. Both live on
 	# in the match: the table, with whatever was set on it.
 	var ref := match_root.get_node_or_null("RefereeActor") as RefereeActor
-	if ref and match_root.get_node_or_null("Timekeeper") == null:
-		_keeper = Timekeeper.new()
-		_keeper.name = "Timekeeper"
-		match_root.add_child(_keeper)
-		_keeper.setup(PropHandoff.KEEPER_POST, Vector3(-1, 0, 0), PropHandoff.TABLE_AT)
+	if ref:
+		# MatchSetup has usually built him already, with the title on his
+		# table (TitlePresentation)
+		_keeper = match_root.get_node_or_null("Timekeeper") as Timekeeper
+		if _keeper == null:
+			_keeper = Timekeeper.new()
+			_keeper.name = "Timekeeper"
+			match_root.add_child(_keeper)
+			_keeper.setup(PropHandoff.KEEPER_POST, Vector3(-1, 0, 0), PropHandoff.TABLE_AT)
 		_handoff = PropHandoff.new()
 		_handoff.name = "PropHandoff"
 		match_root.add_child(_handoff)
@@ -1036,10 +1040,10 @@ func _start_beat() -> void:
 	if beat.get("coat", false) and w and not _coats.has(w):
 		_coats[w] = EntranceCoat.dress(w)
 	if beat.get("props", false) and w and not _props.has(w):
-		# The OTC carries no title (refs/entrances.md): the ula fala only.
-		# Roman walks out with the AEW title round his waist (the owner's
-		# ask): worn on the pelvis, so it turns and tips with his hips.
-		_props[w] = EntranceProps.dress(w, true)
+		# The ula fala only. He wore the AEW title round his waist for a
+		# while; it read clunky on the walk (the owner, 19 Oct), so it waits
+		# on the timekeeper's table for the winner (TitlePresentation).
+		_props[w] = EntranceProps.dress(w, false)
 	if beat.has("lights"):
 		_portal_lights(beat["lights"], true, beat.get("light_color", Color.TRANSPARENT))
 	else:
@@ -1467,20 +1471,6 @@ func _add_roman_entrance(w: WrestlerController, entrance_x: float, side: String)
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": Vector3.BACK,
 			"shot": "ring_low"})
-	# The title off his waist and up over his head, the camera low on the
-	# mat looking up at it.
-	_beats.append({"kind": "pose", "who": w, "ticks": 90,
-			"clip": "strikes/title_unbuckle", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[1, "prop_call_title"],
-					[TITLE_UNBUCKLED_AT, "title_held"]]})
-	_beats.append({"kind": "pose", "who": w, "ticks": 120,
-			"clip": "strikes/title_raise", "facing": Vector3.BACK,
-			"shot": "hero_low"})
-	# The belt, handed on: Aubrey is at his side by now; the pass is on the
-	# 26th frame of his hand-out (PropHandoff.GIVE_CONTACT).
-	_beats.append({"kind": "pose", "who": w, "ticks": _secs(0.0, HAND_OUT_SECONDS),
-			"clip": "strikes/prop_hand_out_l", "facing": Vector3.BACK,
-			"shot": "ring_low", "events": [[1, "prop_pass_title"]]})
 	# The finger to the hard camera, then hands on hips, staring, close.
 	_beats.append({"kind": "pose", "who": w, "ticks": 240,
 			"clip": "strikes/finger_hold", "facing": Vector3.BACK,

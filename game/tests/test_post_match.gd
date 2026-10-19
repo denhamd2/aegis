@@ -59,17 +59,24 @@ func test_gunshot_victim_is_covered_and_stays_down_after_the_match() -> void:
 		await get_tree().process_frame
 	assert_float(_pelvis_y(loser)).is_less(0.6)
 	assert_int(winner.fsm.current_state).is_equal(WrestlerFSM.State.VICTORY)
-	# Run the whole post-match; the loser never gets up.
+	# Run the whole post-match; the loser never gets up. The referee raises
+	# the winner's hand, then the title is presented (TitlePresentation), which
+	# takes her off it, so the raise is checked on the frames it is held.
 	var worst := 0.0
+	var actor: RefereeActor = _scene.referee_actor
+	var raised := false
+	var gap := INF
 	for i in 2400:
 		await get_tree().process_frame
 		worst = maxf(worst, _pelvis_y(loser))
+		if actor.mode == RefereeActor.Mode.RAISE:
+			raised = true
+			gap = minf(gap, actor.raise_hand_gap())
 		if pm.is_done():
 			break
 	assert_float(worst).is_less(0.6)
-	var actor: RefereeActor = _scene.referee_actor
-	assert_int(actor.mode).is_equal(RefereeActor.Mode.RAISE)
-	assert_float(actor.raise_hand_gap()).is_less(0.25)
+	assert_bool(raised).is_true()
+	assert_float(gap).is_less(0.25)
 
 
 func test_a_standing_loser_is_put_on_the_mat_for_the_post_match() -> void:

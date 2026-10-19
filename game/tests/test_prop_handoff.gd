@@ -111,10 +111,15 @@ func test_both_props_end_on_the_table_in_order() -> void:
 			print("HANDOFF step ", key, " at tick ", tick[0], " beat ", (m["director"] as EntranceDirector)._beat,
 					" ref ", (m["ref"] as RefereeActor).global_position, " mode ", (m["ref"] as RefereeActor).mode,
 					" roman ", (m["roman"] as WrestlerController).global_position))
-	assert_array(handoff.delivered).is_equal(["title", "fala"])
+	# The title is no longer worn to the ring (the owner, 19 Oct): it is on
+	# the table from the start (TitlePresentation), so the fala alone is passed.
+	assert_array(handoff.delivered).is_equal(["fala"])
 	# By the whole sequence, not by the bell cutting it short.
-	assert_int(handoff.completed).is_equal(2)
-	assert_int(handoff.carried.size()).is_equal(2)
+	assert_int(handoff.completed).is_equal(1)
+	assert_int(handoff.carried.size()).is_equal(1)
+	var title := TitlePresentation.of(m["scene"])
+	assert_object(title).is_not_null()
+	assert_bool(title.on_table()).is_true()
 	for c: PropHandoff.Carried in handoff.carried:
 		assert_bool(c.on_table()).override_failure_message("%s is not on the table" % c.kind).is_true()
 		var p := c.pivot.global_position
@@ -199,7 +204,7 @@ func test_skipping_the_entrance_puts_the_props_on_the_table_not_nowhere() -> voi
 	var m := _roman_match()
 	var director: EntranceDirector = m["director"]
 	var handoff: PropHandoff = m["handoff"]
-	# Run until the belt is taken, then skip.
+	# Run until the necklace is taken, then skip.
 	var ticks := 0
 	while handoff.carried.is_empty() and ticks < 20000:
 		_step(m)
@@ -242,8 +247,8 @@ func test_cody_s_coat_is_handed_on_and_lies_on_the_table() -> void:
 	# One at a time, each by the whole sequence (the order is the card's).
 	var sorted := handoff.delivered.duplicate()
 	sorted.sort()
-	assert_array(sorted).is_equal(["coat", "fala", "title"])
-	assert_int(handoff.completed).is_equal(3)
+	assert_array(sorted).is_equal(["coat", "fala"])
+	assert_int(handoff.completed).is_equal(2)
 	assert_int(most[0]).override_failure_message("two props in transit at once").is_equal(1)
 	assert_float(worst[0]).override_failure_message(
 			"the coat moved %.3f m in one tick" % worst[0]).is_less(MAX_STEP)
@@ -266,7 +271,6 @@ func test_cody_s_coat_is_handed_on_and_lies_on_the_table() -> void:
 	assert_object(coat_c).is_not_null()
 	# The coat is flat on the top, and clear of the belt and the necklace.
 	assert_float(coat_c.pivot.global_position.y - (table.y + Timekeeper.TABLE_SIZE.y)).is_between(0.0, 0.1)
-	assert_float((zs["coat"] as Vector2).distance_to(zs["title"])).is_greater(0.3)
 	assert_float((zs["coat"] as Vector2).distance_to(zs["fala"])).is_greater(0.3)
 	# Their footprints on the table do not overlap, nor cover the bell.
 	var spans := {}
@@ -285,7 +289,7 @@ func test_cody_s_coat_is_handed_on_and_lies_on_the_table() -> void:
 	for kind: String in spans:
 		assert_bool((spans[kind] as Rect2).intersects(bell)).override_failure_message(
 				"%s %s covers the bell %s" % [kind, spans[kind], bell]).is_false()
-	for pair: Array in [["coat", "title"], ["coat", "fala"], ["title", "fala"]]:
+	for pair: Array in [["coat", "fala"]]:
 		var a: Rect2 = spans[pair[0]]
 		var b: Rect2 = spans[pair[1]]
 		assert_bool(not a.intersects(b)).override_failure_message(
@@ -364,13 +368,13 @@ func test_the_necklace_is_carried_by_its_neck() -> void:
 	var handoff: PropHandoff = m["handoff"]
 	var props: EntranceProps
 	var guard := 0
-	while handoff.carried.size() < 2 and guard < 40000:
+	while handoff.carried.size() < 1 and guard < 40000:
 		_step(m)
 		guard += 1
 		for p in director._props.values():
 			props = p
 	assert_float(props.fala_neck_rest().y).is_greater(0.8)
-	var fala: PropHandoff.Carried = handoff.carried[1]
+	var fala: PropHandoff.Carried = handoff.carried[0]
 	assert_str(fala.kind).is_equal("fala")
 	# Its mesh sits within a metre of the point it is held by, not 1.4 m above.
 	for mi: MeshInstance3D in fala.pivot.find_children("*", "MeshInstance3D", true, false):

@@ -157,8 +157,10 @@ func follow(director: EntranceDirector) -> void:
 ## An errand for PropHandoff, during the entrances: she leaves her spot, walks
 ## where she is told, plays the clips she is given, and goes back to her spot
 ## when it is over (the PARK branch walks her there).
-func begin_errand() -> void:
-	if mode == Mode.PARK:
+## `after_match`: the title presentation (TitlePresentation) takes her off
+## the winner's raised hand, which no errand during a match may.
+func begin_errand(after_match := false) -> void:
+	if mode == Mode.PARK or after_match:
 		_separating = false
 		_checking = false
 		_set_mode(Mode.ERRAND)

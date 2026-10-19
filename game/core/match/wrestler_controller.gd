@@ -2814,7 +2814,8 @@ const TAUNTS := {
 	"cody": ["strikes/whoa_low", 140],
 	"": ["strikes/air_punch", 90],
 }
-const TAUNTS_MAX := 2
+## Raised from 2 when a taunt became the way to the finisher (CombatSystem.taunted).
+const TAUNTS_MAX := 4
 ## Selling: coming up off the mat he holds the part that has taken at least
 ## SELL_GETUP_MIN, for SELL_GETUP_TICKS; standing, one that has taken
 ## SELL_IDLE_MIN, for SELL_IDLE_TICKS, every SELL_EVERY ticks or so (seeded
@@ -2877,6 +2878,8 @@ func can_taunt() -> bool:
 func begin_taunt() -> void:
 	var t: Array = TAUNTS.get(entrance_style, TAUNTS[""])
 	taunts_used += 1
+	if combat:
+		combat.taunted()
 	_set_state_clip(WrestlerFSM.State.TAUNT, String(t[0]))
 	_start_move(WrestlerFSM.State.TAUNT, _timed_stub(int(t[1])))
 	taunted.emit(self)
@@ -3792,14 +3795,21 @@ func lay_out_after_match() -> void:
 ## Win_Arm_Raised (his left wrist in her hand). Only valid once celebrate() has
 ## put him in VICTORY.
 func raise_arm() -> void:
+	play_victory_clip("strikes/win_arm_raised")
+
+
+## After the match, what the winner does next (the arm raised, the title
+## taken and held up): VICTORY's clip swapped and started from its top.
+func play_victory_clip(clip: String) -> void:
 	if fsm.current_state != WrestlerFSM.State.VICTORY or not anim_tree \
-			or not anim_player.has_animation("strikes/win_arm_raised"):
+			or not anim_player.has_animation(clip):
 		return
 	var machine := anim_tree.tree_root as AnimationNodeStateMachine
 	var node := machine.get_node("VICTORY") as AnimationNodeAnimation
-	if node == null or node.animation == "strikes/win_arm_raised":
+	if node == null or node.animation == clip:
 		return
-	node.animation = "strikes/win_arm_raised"
+	node.animation = clip
+	_inertialize("VICTORY")
 	_anim_playback.start("VICTORY", true)
 
 

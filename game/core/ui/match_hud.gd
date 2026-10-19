@@ -80,6 +80,30 @@ var referee: MatchReferee
 const PIP_SIGNATURE := Color(0.95, 0.80, 0.25)
 const PIP_FINISHER := Color(0.95, 0.30, 0.22)
 const PIP_OFF := Color(1, 1, 1, 0.16)
+## Fight Forever's meter (the AKI games' colours): it reads FULL at the
+## signature state, not at a ceiling no match reaches, and climbs blue
+## ("danger"), green, yellow, orange, red as it fills; full, it names the
+## state on the plate -- SIGNATURE, then FINISHER once he has fired up.
+const METER_LEVELS: Array[Color] = [Color(0.25, 0.45, 0.95), Color(0.30, 0.80, 0.35),
+		Color(0.95, 0.85, 0.25), Color(0.98, 0.55, 0.15), Color(0.92, 0.20, 0.15)]
+
+
+## What the meter shows: 0..1 of the way to the signature state.
+static func meter_fill(combat: CombatSystem) -> float:
+	return clampf(combat.momentum / CombatSystem.SIGNATURE_THRESHOLD, 0.0, 1.0)
+
+
+static func meter_colour(fill: float) -> Color:
+	return METER_LEVELS[mini(int(fill * METER_LEVELS.size()), METER_LEVELS.size() - 1)]
+
+
+## The state the plate names, or "" below it.
+static func meter_state(combat: CombatSystem) -> String:
+	if combat.can_finisher():
+		return "FINISHER!"
+	if combat.can_signature():
+		return "SIGNATURE"
+	return ""
 ## How long a landed big move's name stays up, seconds.
 const POPUP_SECONDS := 1.6
 ## Move families that earn a name on screen. A jab does not.
@@ -263,24 +287,22 @@ func _draw_plate(origin: Vector2, plate: Vector2, wrestler: WrestlerController,
 
 	var mom_y := vit_y + vit_h + plate.y * 0.07
 	var mom_h := plate.y * 0.13
-	var momentum: float = wrestler.combat.momentum / CombatSystem.MOMENTUM_MAX \
-			if wrestler.combat else 0.0
-	_draw_momentum(Rect2(bar_x, mom_y, bar_w, mom_h), clampf(momentum, 0.0, 1.0),
-			accent, mirrored)
+	var fill := meter_fill(wrestler.combat) if wrestler.combat else 0.0
+	_draw_momentum(Rect2(bar_x, mom_y, bar_w, mom_h), fill, meter_colour(fill), mirrored)
 
-	# Two pips at the plate's outer top corner: lit when his signature, then
-	# his finisher, can be thrown. Read from the same gates the AI and the
-	# controller use, so a lit pip is a promise.
-	var pip := plate.y * 0.07
+	# The state, named and pulsing on the plate's top corner, as Fight
+	# Forever flashes it: read from the same gates the AI and the controller
+	# use, so a lit name is a promise.
 	if wrestler.combat:
-		var pip_y := origin.y + pad + pip
-		var right_edge := origin.x + content_w - pad
-		var sig_x := right_edge - pip * 3.6
-		var fin_x := right_edge - pip
-		draw_circle(Vector2(sig_x, pip_y), pip,
-				PIP_SIGNATURE if wrestler.combat.can_signature() else PIP_OFF)
-		draw_circle(Vector2(fin_x, pip_y), pip,
-				PIP_FINISHER if wrestler.combat.can_finisher() else PIP_OFF)
+		var state := meter_state(wrestler.combat)
+		if state != "":
+			var finisher := state != "SIGNATURE"
+			var pulse := 0.6 + 0.4 * absf(sin(Time.get_ticks_msec() * (0.012 if finisher else 0.007)))
+			var size_px := int(maxf(10.0, plate.y * 0.2))
+			var col := PIP_FINISHER if finisher else PIP_SIGNATURE
+			draw_string(TitleArt.teko(700), Vector2(origin.x + pad, origin.y + pad + size_px * 0.8),
+					state, HORIZONTAL_ALIGNMENT_LEFT if mirrored else HORIZONTAL_ALIGNMENT_RIGHT,
+					content_w - pad * 2.0, size_px, Color(col, pulse))
 
 	# The comeback, named on his plate for as long as it runs. The story
 	# beat has to be readable by someone who has never seen the game: the
@@ -308,11 +330,9 @@ func _draw_momentum(rect: Rect2, fill: float, accent: Color, mirrored: bool) -> 
 	if filled > 0.0:
 		var x := rect.position.x + (rect.size.x - filled) if mirrored else rect.position.x
 		draw_rect(Rect2(x, rect.position.y, filled, rect.size.y), accent)
-	# The three rungs of the move ladder, so a player can see which tier is
-	# unlocked rather than inferring it from what the wrestler does.
-	for threshold: float in [CombatSystem.POWER_THRESHOLD,
-			CombatSystem.SIGNATURE_THRESHOLD, CombatSystem.FINISHER_THRESHOLD]:
-		var t := threshold / CombatSystem.MOMENTUM_MAX
+	# the level marks, one per colour step
+	for i in range(1, METER_LEVELS.size()):
+		var t := float(i) / METER_LEVELS.size()
 		var tx := rect.position.x + (rect.size.x * (1.0 - t) if mirrored else rect.size.x * t)
 		draw_line(Vector2(tx, rect.position.y),
 				Vector2(tx, rect.position.y + rect.size.y), THRESHOLD_TICK, 1.0)

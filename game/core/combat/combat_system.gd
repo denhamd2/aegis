@@ -242,6 +242,9 @@ func apply_damage(move: MoveDef, scale: float = 1.0) -> void:
 	limb_damage[Limb.TORSO] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.TORSO] + move.damage_torso * scale)
 	limb_damage[Limb.ARMS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.ARMS] + move.damage_arms * scale)
 	limb_damage[Limb.LEGS] = min(MAX_LIMB_DAMAGE, limb_damage[Limb.LEGS] + move.damage_legs * scale)
+	momentum = maxf(0.0, momentum - taken * HIT_MOMENTUM_LOSS)
+	if momentum < SIGNATURE_THRESHOLD * UNLIT_BELOW:
+		finisher_lit = false
 	damaged.emit(move)
 
 
@@ -300,7 +303,10 @@ func red() -> float:
 	return maxf(wear - green, 0.0)
 
 func apply_momentum(move: MoveDef) -> void:
-	momentum = clamp(momentum - move.momentum_cost + move.momentum_gain, 0.0, MOMENTUM_MAX)
+	var key := String(move.resource_path) if move.resource_path != "" else String(move.animation_pair_id)
+	var gain := move.momentum_gain * (REPEAT_GAIN_SCALE if key != "" and key == _last_move_key else 1.0)
+	_last_move_key = key
+	momentum = clamp(momentum - move.momentum_cost + gain, 0.0, MOMENTUM_MAX)
 
 ## What is left of him, 0-1: the HUD's vitality bar (MatchHUD reads damage
 ## against KICKOUT_DAMAGE_REFERENCE, the range matches actually occupy).
@@ -348,9 +354,40 @@ func can_power() -> bool:
 func can_signature() -> bool:
 	return momentum >= SIGNATURE_THRESHOLD and not signature_blocked
 
+## Fight Forever's meter (the owner, 19 Oct: signatures and finishers to
+## become available as they do there). From the guides: the meter climbs on
+## moves and taunts and drops when he is hit; full, it is the SIGNATURE
+## state; a taunt in that state fires him up to the FINISHER state; spamming
+## the same move is penalised. So, here:
+##   - a taunt adds TAUNT_MOMENTUM, and in the signature state lights the
+##     finisher (finisher_lit) -- FF's route to it;
+##   - landing the signature and climbing on to FINISHER_THRESHOLD still
+##     reaches it too, so a man who never taunts is not shut out;
+##   - every point of damage taken costs HIT_MOMENTUM_LOSS, and a lit
+##     finisher goes out if the meter falls well back below the signature
+##     (UNLIT_BELOW of it);
+##   - the same move landed twice running earns REPEAT_GAIN_SCALE of its gain.
+const TAUNT_MOMENTUM := 5.0
+const HIT_MOMENTUM_LOSS := 0.02
+const UNLIT_BELOW := 0.75
+const REPEAT_GAIN_SCALE := 0.5
+var finisher_lit := false
+var _last_move_key := ""
+
+
 func can_finisher() -> bool:
-	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE \
-			and not finisher_blocked and _finisher_rest <= 0
+	if finisher_blocked or _finisher_rest > 0:
+		return false
+	if finisher_lit and momentum >= SIGNATURE_THRESHOLD * UNLIT_BELOW:
+		return true
+	return momentum >= FINISHER_THRESHOLD and tier_reached >= Tier.SIGNATURE
+
+
+## He played to the crowd: momentum, and in the signature state, the finisher.
+func taunted() -> void:
+	if can_signature():
+		finisher_lit = true
+	momentum = minf(momentum + TAUNT_MOMENTUM, MOMENTUM_MAX)
 
 ## A man who has just hit his finisher has spent it: his meter empties and it
 ## is a long while before he can reach for another (FINISHER_REST ticks), so a
@@ -362,6 +399,7 @@ var _finisher_rest := 0
 func spend_finisher() -> void:
 	_finisher_rest = FINISHER_REST
 	momentum = 0.0
+	finisher_lit = false
 
 func finisher_resting() -> bool:
 	return _finisher_rest > 0
