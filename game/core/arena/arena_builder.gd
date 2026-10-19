@@ -280,8 +280,8 @@ const SIDE_SCREEN_DEPTH := 0.3
 ## The LED walls' brightness against the video wall's. They stand at deck
 ## height, metres from every stage camera where the wall is twice as far and
 ## above the frame; at the wall's level the close stage shots bloomed them to
-## white.
-const SIDE_SCREEN_LEVEL := 0.6
+## white. 0.6 still read too bright beside the wall (the owner, 19 Oct).
+const SIDE_SCREEN_LEVEL := 0.4
 ## Where an entrance begins: the centre of the gap, a step in front of the
 ## centre screen and just inside the playable stage (MATCH_STAGE_BACK_LIMIT).
 const ENTRANCE_X := 0.0

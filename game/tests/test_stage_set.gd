@@ -452,6 +452,32 @@ func test_the_entrance_titantron_is_there_and_never_breaks_the_wall() -> void:
 	screen.free()
 
 
+## Three screens, one sound (the owner, 19 Oct): the LED walls mirror the
+## wall's picture by sharing its texture, so they add no players. His music
+## plays once, on one AudioStreamPlayer, and the video feeds are silent.
+func test_three_screens_play_the_entrance_audio_once() -> void:
+	var screen := MeshInstance3D.new()
+	var video := StageVideo.attach(screen, StandardMaterial3D.new())
+	video.mirror(StandardMaterial3D.new(), 1.0, ArenaBuilder.SIDE_SCREEN_LEVEL)
+	video.mirror(StandardMaterial3D.new(), 1.0, ArenaBuilder.SIDE_SCREEN_LEVEL)
+	add_child(video)
+	video.play_entrance("cody")
+	assert_int(_count_of_type(video, "AudioStreamPlayer")).is_equal(1)
+	assert_int(_count_of_type(video, "AudioStreamPlayer3D")).is_equal(0)
+	# a second cue for the same man replaces his music, never stacks it
+	video.play_entrance("cody")
+	var playing := 0
+	for p: AudioStreamPlayer in video.find_children("*", "AudioStreamPlayer", true, false):
+		if p != null and p.playing and p.volume_db > -40.0:
+			playing += 1
+	assert_int(playing).is_less_equal(1)
+	var feed := StageVideo._make_feed(null)
+	assert_float((feed.get_node("Feed") as VideoStreamPlayer).volume_db).is_less_equal(-80.0)
+	feed.free()
+	video.queue_free()
+	screen.free()
+
+
 ## The owner's AEW stills: the set's black wall runs wider than the video
 ## wall above it, so no seats show either side of the portals, and the
 ## screen sits in a chevron frame -- an LED wing at each end, both lit, one

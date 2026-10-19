@@ -164,6 +164,7 @@ var _entrance_bound := false
 var _fading: Array = []
 ## His music while it is up, and outgoing ones fading.
 var _music: AudioStreamPlayer = null
+var _music_style := ""
 var _music_fading: Array = []
 
 
@@ -441,8 +442,13 @@ func is_bound() -> bool:
 func play_entrance(style: String) -> bool:
 	if not ENTRANCES.has(style):
 		return false
+	# His song already up: carry on. Restarting would lay a second copy over
+	# the first while it faded -- the echo the owner asked never to hear.
+	if style == _music_style and is_music_playing():
+		return is_playing_entrance()
 	var entry: Dictionary = ENTRANCES[style]
 	end_entrance()
+	_music_style = style
 	_play_music(entry)
 	if _player == null or not ResourceLoader.exists(entry["video"]):
 		return false
@@ -497,6 +503,7 @@ static func music_path(style: String) -> String:
 
 ## Back to the Dynamite loop; the music fades rather than cuts.
 func end_entrance() -> void:
+	_music_style = ""
 	if _music:
 		_music_fading.append(_music)
 		_music = null
