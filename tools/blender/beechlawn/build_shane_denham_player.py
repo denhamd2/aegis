@@ -1159,6 +1159,8 @@ def main():
     if modular:
         from shared_role_actions import author_role_actions
         author_role_actions(armature)
+        from presentation_actions import author_presentation_actions
+        author_presentation_actions(armature)
     # Retain the animation library's authored FPS (currently 60). Forcing 30
     # doubled clip durations relative to their football-contact metadata.
     bpy.context.scene.frame_set(1)

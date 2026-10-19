@@ -115,6 +115,51 @@ disabled. It confirms functional/layout coverage; arm silhouettes and footwork
 still need improvement. It is neither Mac-renderer parity nor temporal animation
 or frame-rate acceptance. No build was published by this pass.
 
+## Full-formation buildup follow-up — 2026-10-18
+
+The opposite-kickoff soak was rerun with an optional zero-shot failure gate and
+added exact ball-to-goal distance tracking. With the Bordeaux kickoff it
+completed 180 simulated seconds, travelled 976.9 m, recorded no shots, and
+produced no stationary-ball spell. The closest possession ball came within
+24.1 m of goal at a 16.0 m lateral offset; neither side entered the current
+18 m central shooting zone. This localizes the remaining short-match weakness
+to progression and central chance creation, rather than a missing shot-contact
+event or the previous loose-ball standoff.
+
+In `choose_carrier_action`, the progressive through-pass decision was evaluated
+after a generic safe-pass option using an overlapping pressure condition. The
+safe option commonly returned first, starving forward runs of a through ball.
+The through-pass check now runs first under that same pressure and still
+requires forward gain and a safe lane. The existing short-pass fallback is
+unchanged. A full-formation midfield scenario now produces progressive
+through-pass contacts and advances the ball, while the isolated trailing-
+defender scenario still delivers a shot at its authored contact. Both are
+included in CI as separate controlled and full-opposition checks.
+
+This correction improves one buildup decision only. The 180-second Bordeaux
+soak still recorded zero shots, so it remains a failing diagnostic when run
+with `BEECHLAWN_REQUIRE_SHOT=1`; no balanced full-match chance quality is
+claimed. The next gameplay investigation is central support/run geometry and
+pass reception under pressure. No Blender asset or animation curve was changed:
+the isolated scenario already proved that its shot action can reach ball
+contact, and this run's measured bottleneck is before the shooting zone.
+
+A paired Beechlawn-kickoff replay also produced 0/0 physical shots, despite
+1,067.3 m of ball travel; its closest x-z approach was 5.4 m from goal at the
+centre. That distance alone does not prove a valid shot opportunity because
+the ball may be airborne or outside an eligible player's contact window. The
+Bordeaux-kickoff rerun remained at 0/0 with 976.9 m travel and a 24.1 m closest
+x-z approach. In the latter run the full-match diagnostic recorded no shot
+status events, confirming that shot contact/animation was never attempted.
+Both runs reached full time without a stationary-ball spell. These results
+keep chance creation unresolved despite the improved forward-pass behavior.
+
+The subsequent [attacking-flow continuation](attacking_flow_followup.md) fixes
+complete-lane scoring, selection of the current reachable carrier and stale
+receiver targets. Both kickoff variants now pass the physical-shot gate; the
+earlier zero-shot figures above describe the pre-correction build. Chance
+frequency and team balance remain open.
+
 ## Performance and remaining acceptance
 
 The corridor adds at most ten short vector checks for an eligible AI shooter

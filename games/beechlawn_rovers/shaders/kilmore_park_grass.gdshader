@@ -1,6 +1,10 @@
 shader_type spatial;
 render_mode cull_back;
 uniform sampler2D grass_albedo : source_color, repeat_enable;
+uniform vec2 playing_size = vec2(105.0,68.0);
+#include "res://shaders/grass_surface_common.gdshaderinc"
+varying vec3 park_world_position;
+void vertex() { park_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 
 // Low-cost, world-space park turf. Two broad noise scales produce the uneven
 // public-park ground and localized worn/muddy traffic patches in the saved refs.
@@ -17,13 +21,13 @@ float noise(vec2 p) {
 }
 
 void fragment() {
-	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	vec2 p = world.xz;
+	vec2 p = park_world_position.xz;
 	float broad = noise(p * 0.032);
 	float patch = noise(p * 0.13 + vec2(8.1, 19.4));
 	float fine = noise(p * 1.15);
 	float blade = noise(vec2(p.x * 5.6 + p.y * 0.8, p.y * 22.0));
-	vec3 turf = texture(grass_albedo, p / 8.0).rgb;
+	vec2 field_p = p + playing_size * 0.5;
+	vec3 turf = texture(grass_albedo, field_p / 8.0).rgb;
 	vec3 tint = mix(vec3(0.69, 0.78, 0.57), vec3(0.94, 0.97, 0.80),
 		clamp(broad * 0.48 + patch * 0.32 + fine * 0.12 + blade * 0.08, 0.0, 1.0));
 	vec3 grass = turf * tint * 0.50;
@@ -36,7 +40,9 @@ void fragment() {
 	float damp = smoothstep(0.51, 0.79, patch) * worn;
 	vec3 soil = mix(dry_soil, damp_soil, damp);
 	float wear_amount = clamp(worn * 0.42 + traffic * 0.22, 0.0, 0.58);
-	ALBEDO = mix(grass, soil, wear_amount);
-	ROUGHNESS = 0.98;
-	SPECULAR = 0.08;
+	vec3 park_colour = mix(grass, soil, wear_amount);
+	float outside_field = length(max(abs(p)-playing_size*0.5,vec2(0.0)));
+	ALBEDO = mix(br_pitch_colour(field_p,playing_size,turf),park_colour,smoothstep(0.0,10.0,outside_field));
+	ROUGHNESS = 0.96;
+	SPECULAR = 0.5;
 }

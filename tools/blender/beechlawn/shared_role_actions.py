@@ -119,7 +119,7 @@ def polish_locomotion_arms(rig):
     reset_pose(rig);rig.animation_data.action=bpy.data.actions['AN_Beechlawn_Idle'];scene.frame_set(1)
     print('SHARED_LOCOMOTION_ARMS: jog/sprint/close control, existing legs/root unchanged')
 
-def polish_turn_arms(rig):
+def polish_turn_arms(rig, clips=('AN_Beechlawn_Turn90Left', 'AN_Beechlawn_Turn90Right')):
     """Reuse the relaxed idle arm motion on the two existing planted pivots.
 
     Only the four arm/forearm quaternion channels change. Preserve authored
@@ -130,7 +130,7 @@ def polish_turn_arms(rig):
     paths=['pose.bones["mixamorig:'+side+part+'"].rotation_quaternion'
            for side in ('Left','Right') for part in ('Arm','ForeArm')]
     source={(curve.data_path,curve.array_index):curve for curve in idle.fcurves}
-    for clip in ('AN_Beechlawn_Turn90Left','AN_Beechlawn_Turn90Right'):
+    for clip in clips:
         action=bpy.data.actions[clip]
         lo,hi=map(int,action.frame_range)
         for path in paths:

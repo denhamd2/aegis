@@ -1,0 +1,16 @@
+{
+  "result": "PASS",
+  "checks": [
+    "native menu",
+    "options open/close",
+    "640x480 layout",
+    "AI auto kickoff",
+    "zero spectator humans",
+    "return to title",
+    "Play has one human",
+    "keyboard kickoff"
+  ],
+  "renderer": "Compatibility / Chromium SwiftShader",
+  "native_M1_performance": "not measured",
+  "console_errors": []
+}

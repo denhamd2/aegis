@@ -337,6 +337,13 @@ def build_wall():
 def export_module(root_name, filename):
     root = bpy.data.objects[root_name]
     mesh_children = [obj for obj in root.children_recursive if obj.type == "MESH"]
+    # Join retains UV layer names. Unify the material UV0 first so leaf
+    # cards do not acquire the bark's empty UVMap and disappear at alpha=0.
+    for obj in mesh_children:
+        if obj.data.uv_layers:
+            obj.data.uv_layers[0].name = "UVMap"
+            obj.data.uv_layers.active_index = 0
+            obj.data.uv_layers[0].active_render = True
     if len(mesh_children) > 1:
         bpy.ops.object.select_all(action="DESELECT")
         for obj in mesh_children:

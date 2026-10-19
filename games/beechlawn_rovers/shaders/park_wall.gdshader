@@ -1,9 +1,10 @@
 shader_type spatial;
 varying vec3 p;
-void vertex() { p=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; }
+varying vec3 world_normal;
+void vertex() { p=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; world_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL); }
 float hash(vec2 v) { return fract(sin(dot(v,vec2(127.1,311.7)))*43758.5453); }
 void fragment() {
-	vec2 q=vec2(abs(NORMAL.x)>0.6?p.z:p.x,p.y);
+	vec2 q=vec2(abs(world_normal.x)>0.6?p.z:p.x,p.y);
 	float row=floor(q.y/0.225);
 	vec2 block=vec2(fract(q.x/0.45+mod(row,2.0)*0.5),fract(q.y/0.225));
 	float mortar=1.0-smoothstep(0.015,0.045,min(min(block.x,1.0-block.x),min(block.y,1.0-block.y)));

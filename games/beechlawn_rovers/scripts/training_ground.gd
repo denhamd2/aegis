@@ -52,8 +52,12 @@ var _boundary_team: StringName = &"none"
 var _boundary_spot := Vector3.ZERO
 var _boundary_kind := ""
 var _capture_callback: JavaScriptObject
+var _spectator_mode := false
+var _intro_active := false
+var _pre_match: Node
 
 func _ready() -> void:
+	_spectator_mode = MatchSession.is_spectator()
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		var software_capture = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")
 		if software_capture != null and str(software_capture)=="1":
@@ -70,6 +74,14 @@ func _ready() -> void:
 			push_error("Invalid match lineup: %s" % errors)
 			return
 	_assemble_teams()
+	if _spectator_mode:
+		for actor in _home_players + _away_players:
+			actor.controlled_by_human = false
+			_set_marker_visibility(actor, false)
+		_kickoff_ai_delay = 1.0
+		$HUD/Controls.text = "WATCHING AI vs AI\nC  Camera   Esc  Title screen"
+	else:
+		$HUD/Controls.text += "\nC  Camera   Esc  Title screen"
 	build_pitch()
 	build_goals()
 	build_park_edge()
@@ -94,11 +106,38 @@ func _ready() -> void:
 	_bind_controlled_player()
 	_update_score()
 	_update_clock()
-	_set_message("KICK OFF  ·  E pass  /  Q through-ball")
+	_set_message("AI vs AI  ·  Kickoff shortly" if _spectator_mode else "KICK OFF  ·  E pass  /  Q through-ball")
+	if MatchSession.launched_from_menu and MatchSession.show_intro:
+		_intro_active = true
+		_pre_match = preload("res://scripts/pre_match_director.gd").new()
+		_pre_match.name = "PreMatchDirector"
+		add_child(_pre_match)
+		_pre_match.start(self)
 	if OS.has_feature("web"):
 		await RenderingServer.frame_post_draw
+		var humans := 0
+		var rigs := 0
+		for actor in _home_players + _away_players:
+			rigs += actor.get_node("Visual").find_children("*", "Skeleton3D", true, false).size()
+			if actor.controlled_by_human:
+				humans += 1
+		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_MODE = '%s'; window.BEECHLAWN_HUMAN_PLAYERS = %d; window.BEECHLAWN_PLAYER_RIGS = %d" % ["watch" if _spectator_mode else "play",humans,rigs])
 		JavaScriptBridge.eval("window.BEECHLAWN_MATCH_READY = true")
 	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size())
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if _intro_active and event.keycode in [KEY_ENTER, KEY_SPACE]:
+			_pre_match.finish()
+			get_viewport().set_input_as_handled()
+			return
+		if not _intro_active and event.keycode == KEY_C:
+			_set_message("Camera: %s" % camera_rig.cycle_preset())
+			get_viewport().set_input_as_handled()
+			return
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		get_viewport().set_input_as_handled()
+		MatchSession.return_to_title()
 
 func _freeze_capture(_arguments: Array) -> void:
 	# Debug export only: hold actual scene state while browser reads the canvas.
@@ -106,6 +145,8 @@ func _freeze_capture(_arguments: Array) -> void:
 	Engine.max_fps=1
 
 func _physics_process(delta: float) -> void:
+	if _intro_active:
+		return
 	for entry in _net_impacts.values():
 		entry["age"] = minf(2.0,float(entry["age"])+delta)
 		(entry["material"] as ShaderMaterial).set_shader_parameter("impact_age",entry["age"])
@@ -135,12 +176,14 @@ func _physics_process(delta: float) -> void:
 	if debug_label.visible:
 		debug_label.text = "60 Hz physics  |  Player %.1f m/s  |  Ball %.1f m/s  |  Stamina %d%%" % [
 			float(player.get_meta("move_speed", 0.0)), ball.linear_velocity.length(), roundi(player.stamina)]
-	if not _full_time and not _kickoff_pending and _goal_pause_timer <= 0.0 \
+	if not _spectator_mode and not _full_time and not _kickoff_pending and _goal_pause_timer <= 0.0 \
 			and Input.is_action_just_pressed("switch_player"):
 		_cycle_controlled_player()
 
 func _update_kickoff_input(delta: float) -> void:
-	if _kickoff_team == &"Beechlawn Rovers":
+	if _intro_active:
+		return
+	if _kickoff_team == &"Beechlawn Rovers" and not _spectator_mode:
 		if Input.is_action_just_pressed("pass"):
 			_start_kickoff(false)
 		elif Input.is_action_just_pressed("through_pass"):
@@ -227,7 +270,10 @@ func _prepare_kickoff(kicking_team: StringName) -> void:
 	_kickoff_pending = true
 	_goal_pause_timer = 0.0
 	_kickoff_ai_delay = 0.0
-	if kicking_team == &"Beechlawn Rovers":
+	if _spectator_mode:
+		_kickoff_ai_delay = 1.0
+		_set_message("AI vs AI  ·  %s kickoff" % kicking_team)
+	elif kicking_team == &"Beechlawn Rovers":
 		var taker := _kickoff_taker(_home_players)
 		if taker != null and taker != player:
 			_set_controlled_player(taker)
@@ -244,6 +290,8 @@ func _kickoff_taker(team_players: Array[FootballPlayer]) -> FootballPlayer:
 	return _nearest_outfielder(team_players, Vector2.ZERO)
 
 func _start_kickoff(through: bool) -> void:
+	if _intro_active:
+		return
 	if not _kickoff_pending or _full_time:
 		return
 	var kicking_players := _home_players if _kickoff_team == &"Beechlawn Rovers" else _away_players
@@ -279,7 +327,7 @@ func _set_players_physics_enabled(enabled: bool) -> void:
 		actor.set_physics_process(enabled)
 
 func _set_controlled_player(next_player: FootballPlayer) -> void:
-	if next_player == null or next_player == player:
+	if _spectator_mode or next_player == null or next_player == player:
 		return
 	var old_player := player
 	if old_player.status_changed.is_connected(_set_message):
@@ -306,9 +354,9 @@ func _assemble_teams() -> void:
 	_home_players.append(player)
 	for profile in _home_team.roster:
 		if profile != home_control_profile:
-			_home_players.append(_spawn_player(player, profile, _home_team, 1.0))
+			_home_players.append(_spawn_player(profile, _home_team, 1.0))
 	for profile in _away_team.roster:
-		_away_players.append(_spawn_player(player, profile, _away_team, -1.0))
+		_away_players.append(_spawn_player(profile, _away_team, -1.0))
 	_create_control_marker(player, true)
 	_home_control_index = _home_players.find(player)
 	camera_rig.set("player", player)
@@ -319,9 +367,11 @@ func _profile_for_slot(team: FootballTeam, slot: String) -> FootballerProfile:
 			return profile
 	return team.roster[0] if not team.roster.is_empty() else null
 
-func _spawn_player(template: FootballPlayer, profile: FootballerProfile,
+func _spawn_player(profile: FootballerProfile,
 		team: FootballTeam, direction: float) -> FootballPlayer:
-	var actor := template.duplicate() as FootballPlayer
+	# Instantiate an unconfigured actor. Duplicating the live template also
+	# duplicated its runtime-added human Rig beside the source proxy Rig.
+	var actor := preload("res://scenes/football_player.tscn").instantiate() as FootballPlayer
 	actor.name = String(profile.player_id)
 	_configure_player(actor, profile, team, direction, false)
 	add_child(actor)
@@ -513,12 +563,16 @@ func _create_control_marker(actor: FootballPlayer, enabled: bool) -> void:
 	actor.add_child(marker)
 
 func _bind_controlled_player() -> void:
+	if _spectator_mode:
+		return
 	if not player.status_changed.is_connected(_set_message):
 		player.status_changed.connect(_set_message)
 	if not player.shot_charge_changed.is_connected(_set_power):
 		player.shot_charge_changed.connect(_set_power)
 
 func _cycle_controlled_player() -> void:
+	if _spectator_mode:
+		return
 	var outfield: Array[FootballPlayer] = []
 	for teammate in _home_players:
 		if teammate.profile != null and (teammate.profile.role == "outfield" or _home_players.size() == 11):
@@ -616,6 +670,12 @@ func _update_team_ai(team_players: Array[FootballPlayer], chaser: FootballPlayer
 		return
 	var team_name: StringName = team_players[0].team_name
 	var in_possession := ball.last_touch == team_name
+	if in_possession:
+		# Prediction selects a runner for a travelling ball. A teammate who can
+		# already play it owns the current action and carry target instead.
+		var contact_player := _nearest_outfielder(team_players, ball_position)
+		if contact_player != null and contact_player._can_kick():
+			chaser = contact_player
 	var context := _team_tactical_context(team_name, ball_position)
 	var secondary_presser: FootballPlayer
 	var counterpress_requested := not in_possession and transition_time_left > 0.0 \
@@ -773,7 +833,7 @@ func _finish_match() -> void:
 	ball.angular_velocity = Vector3.ZERO
 	for actor in _home_players + _away_players:
 		actor.set_physics_process(false)
-	_set_message("FULL TIME")
+	_set_message("FULL TIME  ·  Esc to title screen")
 
 func _check_boundary_restart() -> void:
 	var p := ball.global_position

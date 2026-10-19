@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="KilmoreSiteLayout" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/kilmore_site_layout.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+outline = PackedVector2Array(-220.54, -55.87, -161.2, -63.86, -108.93, -68.01, -45.25, -68.68, 15.28, -69.9, 78.22, -70.3, 84.26, 44.36, 37.03, 48.38, -48.01, 50.87, -93.71, 50.94, -107.62, 0.95, -131.41, -13.28, -174.22, -13.41, -203.66, -22.2)
+west_road = PackedVector2Array(-69.5, -75.25, -110, -74, -161, -69.5, -220, -62, -235, -59)
+reference_note = "Manual satellite outline aligned to the authored 105 m field; not surveyed. Regenerate from build_kilmore_site_footprint.py."

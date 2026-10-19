@@ -76,6 +76,9 @@ func _run() -> void:
 	if not _first_touch_seen:
 		_fail("Receive contact marker did not resolve the physical first touch")
 		return
+	if receiver.receive_target_time > 0.0:
+		_fail("Successful first touch retained its obsolete reception target")
+		return
 	if _speed_after_first_touch >= _initial_pass_speed:
 		_fail("First touch did not cushion the incoming pass")
 		return

@@ -29,6 +29,7 @@ var _close_control_blend := 0.0
 var _appearance_profile: FootballerProfile
 var _appearance_team: FootballTeam
 var _human_rig := false
+var _presentation_active := false
 static var _kit_materials: Dictionary = {}
 @export var jog_reference_speed := 6.0
 @export var sprint_reference_speed := 8.6
@@ -44,6 +45,8 @@ func _ready() -> void:
 	_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
 	if _appearance_profile != null:
 		configure_appearance(_appearance_profile, _appearance_team)
+	else:
+		_prime_locomotion_pose()
 
 
 func configure_appearance(profile: FootballerProfile, team: FootballTeam = null) -> void:
@@ -120,6 +123,45 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 	var rig_node := get_node("Rig") as Node3D
 	rig_node.scale = Vector3(appearance.build_scale, appearance.height_scale, appearance.build_scale)
 	_add_back_print(profile, appearance)
+	_prime_locomotion_pose()
+
+
+func _prime_locomotion_pose() -> void:
+	if _active_action != &"" or _presentation_active:
+		return
+	# The proxy Rig is replaced by the shared human Rig during configuration.
+	# Rebind caches and evaluate idle now, before a rendered bind-pose frame.
+	animation_tree.anim_player = animation_tree.get_path_to(animation_player)
+	animation_tree.clear_caches()
+	animation_tree.active = true
+	animation_tree.advance(0.0)
+
+
+func play_presentation(clip: StringName, phase_seconds := 0.0) -> bool:
+	if not animation_player.has_animation(clip):
+		return false
+	var animation := animation_player.get_animation(clip)
+	if animation.loop_mode != Animation.LOOP_LINEAR:
+		var loop := animation.duplicate() as Animation
+		loop.loop_mode = Animation.LOOP_LINEAR
+		var library := animation_player.get_animation_library(&"")
+		library.remove_animation(clip)
+		library.add_animation(clip, loop)
+	_presentation_active = true
+	_active_action = &""
+	_active_clip = &""
+	animation_tree.active = false
+	animation_player.play(clip, 0.0)
+	animation_player.seek(fposmod(phase_seconds, maxf(animation.length, 0.01)), true)
+	return true
+
+
+func end_presentation() -> void:
+	_presentation_active = false
+	animation_player.stop()
+	_active_action = &""
+	_active_clip = &""
+	_prime_locomotion_pose()
 
 
 static func _shared_kit_material(kit: String) -> StandardMaterial3D:

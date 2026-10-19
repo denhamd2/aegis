@@ -2,6 +2,8 @@ shader_type spatial;
 render_mode cull_back;
 
 uniform sampler2D asphalt_albedo : source_color, repeat_enable;
+varying vec3 road_world_position;
+void vertex() { road_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -16,7 +18,7 @@ float noise(vec2 p) {
 }
 
 void fragment() {
-	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	vec3 world = road_world_position;
 	vec2 uv = world.xz / 4.0;
 	vec3 asphalt = texture(asphalt_albedo, uv).rgb;
 	float damp = smoothstep(0.52, 0.78, noise(world.xz * 0.08 + vec2(21.8, 4.3)));

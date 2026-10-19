@@ -1,0 +1,54 @@
+
+[smoke] park_site_footprint_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SITE_FOOTPRINT_PASS apron_m2=20091.962677002 triangles=18 western_houses=9 bounds=[P: (-220.54, 0.0, -70.3), S: (304.8, 0.00001, 121.24)]
+[passed] park_site_footprint_smoke.gd
+
+[smoke] park_road_setback_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PARK_SETBACK grass_to_path_m=35.0 touchline_to_road_m=37.75
+TERRAIN_FRONT_FACES clockwise, normal_y=0.99999994039536
+PASS: park grass buffer, coherent residential placement, tree/street clearance, touchline fans, 11v11 unchanged
+[passed] park_road_setback_smoke.gd
+
+[smoke] park_and_kit_visual_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Kilmore park dressing and rigged 4v4 kit-color integration checks passed
+[passed] park_and_kit_visual_smoke.gd
+
+[smoke] eleven_v_eleven_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+11v11 PASS: 22 humans, 2 keepers, separate referee, shared head, independent playback, all-player switching, terrain and restart
+[passed] eleven_v_eleven_smoke.gd
+
+[smoke] broadcast_camera_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CAMERA_CHECK close_broadcast position=(0.0, 12.0, 26.0) fov=50.0
+CAMERA_CHECK dynamic_wide position=(0.0, 16.0, 32.0) fov=52.0
+CAMERA_CHECK stadium position=(0.0, 19.0, 43.0) fov=55.0
+CAMERA_CHECK live_broadcast position=(0.0, 11.0, 37.0) fov=42.0
+CAMERA_CHECK fan_view position=(0.0, 22.0, 40.0) fov=58.0
+CAMERA_CHECK blimp position=(0.0, 65.0, 0.05) fov=60.0
+CAMERA_CHECK vertical position=(-24.0, 16.0, 0.0) fov=55.0
+CAMERA_CHECK player position=(-7.0, 4.5, 0.0) fov=64.0
+CAMERA_CHECK field_side position=(0.0, 4.5, 22.0) fov=60.0
+Camera presets/settings/movement checks failures=0
+[passed] broadcast_camera_smoke.gd
+
+CAPTURED intro venue
+CAPTURED intro fans
+CAPTURED broadcast
+CAPTURED whole site
+/workspace/aegis-checkout/games/beechlawn_rovers/tools/check_park_setback_web.py:50: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  pixels=list(image.crop((50,380,1230,590)).getdata())
+{"result": "PASS", "renderer": "Godot Compatibility / Chromium SwiftShader", "checks": ["22 player rigs", "intro venue composition", "touchline spectator composition", "AI kickoff after skip", "close broadcast preserved", "whole-site debug review"], "grass_pixel_fraction": 0.907, "console_errors": [], "native_M1_performance": "not measured", "scope": "grass setback and placement; final venue fidelity remains open"}
