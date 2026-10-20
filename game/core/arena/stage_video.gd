@@ -130,6 +130,19 @@ const ENTRANCES := {
 		"uv_scale": Vector2(1.0, 0.72),
 		"uv_offset": Vector2(0.0, 0.14),
 	},
+	# Kenny's (owner-supplied, 2026-10-19, same caveats): blue energy, then
+	# the KENNY OMEGA lockup from about 15 s, its lettering between 15% and
+	# 78% of the frame. A 70% band holds it; residual stretch 3.0 / (1.78 /
+	# 0.70) = 1.18.
+	"kenny": {
+		"video": "res://assets/environment/video/kenny_entrance.ogv",
+		"music": "res://assets/audio/music/kenny_entrance.ogg",
+		"still": "res://assets/environment/video/kenny_entrance_still.png",
+		# The track lifts after its one dip, at 35-36 s (per-second RMS).
+		"chorus": 37.0,
+		"uv_scale": Vector2(1.0, 0.70),
+		"uv_offset": Vector2(0.0, 0.11),
+	},
 }
 ## His music, at the level the hall hears it; faded out over this when the
 ## wall goes back to the loop.

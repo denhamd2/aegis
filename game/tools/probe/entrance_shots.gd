@@ -33,6 +33,7 @@ var _from_event := ""
 ## Isolates which node draws an artefact, one render per suspect.
 var _kill := ""
 ## --who STYLE: with --from-shot, only that man's beat (roman / cody).
+## --wrestlers a,b: the pair (Roster.pair_from_spec), default Roman v Cody.
 var _who := ""
 
 
@@ -57,8 +58,12 @@ func _ready() -> void:
 			_from_event = args[i + 1]
 		elif args[i] == "--from-shot" and i + 1 < args.size():
 			_from_shot = args[i + 1]
+	var spec := ""
+	for i in args.size() - 1:
+		if args[i] == "--wrestlers":
+			spec = args[i + 1]
 	DirAccess.make_dir_recursive_absolute(_out)
-	var pair := Roster.pair_from_spec("")
+	var pair := Roster.pair_from_spec(spec)
 	var scene: Node = load(MATCH_SCENE).instantiate()
 	TitleScreen.configure_match(scene, pair[0], pair[1], 7)
 	scene.entrances = true

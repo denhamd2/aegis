@@ -323,6 +323,31 @@ commercial song, neither licensed to this project. A standing exception to
 the README's "fully original" claim; the music must not ship in any build
 distributed outside the owner's own machine.
 
+## Kenny Omega entrance video — PROVENANCE UNVERIFIED, CONTAINS MUSIC
+
+`video/kenny_entrance.ogv` and `video/kenny_entrance_still.png` — his
+titantron, swapped onto the wall for his entrance by
+`StageVideo.play_entrance("kenny")` (silent; his music is its own file), and
+a 480x270 frame of it (25 s) used only to solve the wall's glow colour.
+
+Supplied by the project owner (a Google Drive link, 2026-10-19) as a 1280x720
+29.97 fps H.264/AAC mp4, 3:24: blue energy, then the KENNY OMEGA lockup from
+about 15 s. Committed as the first 80 s, re-encoded to 960x540 30 fps Theora
+with Vorbis audio and a 3 s fade, as Cody's was:
+
+    ffmpeg -t 80 -i kenny_entrance.mp4 -vf "scale=960:540:flags=lanczos,fps=30" \
+        -c:v libtheora -q:v 5 -af "afade=t=out:st=77:d=3" \
+        -c:a libvorbis -q:a 4 -ar 44100 kenny_entrance.ogv
+
+His music, `assets/audio/music/kenny_entrance.ogg`, is the full song cut from
+the same video by `tools/audio/build_entrance_music.py`, 1.7 dB down to sit at
+Cody's level (-12.0 LUFS).
+
+Same caveats as Roman's and Cody's: a real wrestler's graphics and a
+commercial song, neither licensed to this project. A standing exception to
+the README's "fully original" claim; the music must not ship in any build
+distributed outside the owner's own machine.
+
 ## Entrance-set video — PROVENANCE UNVERIFIED
 
 `video/dynamite_tron.ogv` and `video/dynamite_tron_still.png` — the graphics

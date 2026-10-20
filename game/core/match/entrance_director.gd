@@ -1000,8 +1000,10 @@ func _add_entrance(w: WrestlerController, entrance_x: float, side: String) -> vo
 	var deck := ArenaBuilder.STAGE_DECK_Y
 	var emerge := Vector3(entrance_x, deck, ArenaBuilder.ENTRANCE_Z)
 	var lip := Vector3(0.0, deck, ArenaBuilder.STAGE_FRONT - 0.6)
+	# His own titantron and music if he has them (StageVideo.ENTRANCES:
+	# Kenny's, the owner's 19 Oct video), from the moment he walks out.
 	_beats.append({"kind": "walk", "who": w, "path": [emerge, lip],
-			"shot": "stage", "lights": side, "appear": true})
+			"shot": "stage", "lights": side, "appear": true, "events": [[1, "tron_on"]]})
 	_beats.append({"kind": "pose", "who": w, "ticks": POSE_TICKS,
 			"clip": "strikes/win_celebrate", "facing": Vector3.BACK,
 			"shot": "stage", "lights": side})
@@ -1016,7 +1018,8 @@ func _add_entrance(w: WrestlerController, entrance_x: float, side: String) -> vo
 			"path": [inside, mark.origin],
 			"shot": "ringside", "on_mat": true})
 	_beats.append({"kind": "turn", "who": w, "facing": -mark.basis.z,
-			"shot": "ringside", "settle": true, "snap_end": true})
+			"shot": "ringside", "settle": true, "snap_end": true,
+			"events": [[SETTLE_TICKS, "tron_off"]]})
 
 
 func _start_beat() -> void:

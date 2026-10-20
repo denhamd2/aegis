@@ -4,9 +4,10 @@ full-length entrance videos.
 
     python3 tools/audio/build_entrance_music.py --source DIR
 
-DIR holds the two mp4s the owner supplied (Google Drive, 2026-09-26; see
-game/assets/environment/CREDITS.md), saved as cody_entrance.mp4 and
-roman_entrance.mp4. They are not committed: 256 MB of video for two songs.
+DIR holds the mp4s the owner supplied (Google Drive, 2026-09-26 and, for
+Kenny, 2026-10-19; see game/assets/environment/CREDITS.md), saved as
+cody_entrance.mp4, roman_entrance.mp4 and kenny_entrance.mp4; any missing
+is skipped. They are not committed: 256 MB of video for two songs.
 
 Why the music is its own file. It used to be the audio of the wall's
 titantron clips (game/assets/environment/video/*.ogv), which were committed
@@ -36,7 +37,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 OUT = os.path.join(ROOT, "game", "assets", "audio", "music")
 SR = 44100
 FADE = 2.0
-TRACKS = ("cody_entrance", "roman_entrance")
+TRACKS = ("cody_entrance", "roman_entrance", "kenny_entrance")
+## Per-track gain (dB). Kenny's video (Google Drive, 2026-10-19) is mastered
+## 1.7 dB hotter than Cody's (-10.2 against -11.9 LUFS): brought down to
+## match, so one man's music is not louder than the next's.
+GAIN_DB = {"kenny_entrance": -1.7}
 
 
 def load(path: str) -> np.ndarray:
@@ -67,7 +72,11 @@ def main() -> None:
 	args = parser.parse_args()
 	os.makedirs(OUT, exist_ok=True)
 	for name in TRACKS:
-		x = trim_tail(load(os.path.join(args.source, name + ".mp4")))
+		src = os.path.join(args.source, name + ".mp4")
+		if not os.path.exists(src):
+			print(f"  {name}.mp4 not in --source; skipped")
+			continue
+		x = trim_tail(load(src)) * 10 ** (GAIN_DB.get(name, 0.0) / 20)
 		n = int(FADE * SR)
 		x[-n:] *= np.linspace(1.0, 0.0, n)[:, None] ** 2
 		save(name, x)

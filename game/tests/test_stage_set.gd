@@ -611,3 +611,17 @@ func test_the_side_walls_are_widescreen_so_a_16_9_clip_is_not_cropped() -> void:
 	# the owner, 19 Oct: the square walls cropped the video; a 16:9 clip now
 	# fills them, and the picture is cropped to exactly the wall's shape
 	assert_float(ArenaBuilder.side_screen_aspect()).is_between(1.72, 1.84)
+
+
+## Kenny's titantron and music (the owner's video, 19 Oct): there, and his
+## generic entrance turns the wall over to it when he walks out and back
+## when he is in the ring.
+func test_kenny_has_his_titantron_and_his_entrance_uses_it() -> void:
+	var entry: Dictionary = StageVideo.ENTRANCES["kenny"]
+	for key: String in ["video", "music", "still"]:
+		assert_bool(ResourceLoader.exists(entry[key])).override_failure_message(key).is_true()
+	assert_float(float(entry["chorus"])).is_greater(0.0)
+	var src := (load("res://core/match/entrance_director.gd") as GDScript).source_code
+	var generic := src.substr(src.find("func _add_entrance("), 2400)
+	assert_str(generic).contains("\"tron_on\"")
+	assert_str(generic).contains("\"tron_off\"")

@@ -9974,3 +9974,24 @@ in and fade out", then "This is awesome!", then the crowd turning on Roman.
   - Every chant plays at the Cody chant's +3 dB with the same fade in and
     out, shortened to a share of a short chant. O-T-C is 7 s, so it is heard
     at full for a few seconds instead of fading the whole way.
+
+## 20 Oct — Kenny Omega's entrance video and music
+
+The owner: "Add Kenny Omega entrance video from here" (a Google Drive link).
+
+- **The wall.** `video/kenny_entrance.ogv` is the first 80 s of the owner's
+  3:24 video, encoded the way Cody's was. `StageVideo.ENTRANCES["kenny"]`
+  crops it to the walls with a 70% band that holds the KENNY OMEGA lockup.
+- **The music.** `kenny_entrance.ogg` is the full song cut from the same
+  video by `tools/audio/build_entrance_music.py`. It is brought down 1.7 dB
+  to Cody's level (-12.0 LUFS).
+  - His winner's theme starts at 37 s, where the track lifts after its one
+    dip.
+- **When it plays.** Kenny walks the generic entrance, which now turns the
+  wall over to a man's own titantron when he walks out (`tron_on`) and back
+  once he is on his mark in the ring (`tron_off`), as Roman's and Cody's
+  entrances do. A man with no titantron is unchanged.
+- `tools/probe/entrance_shots.tscn` takes `--wrestlers a,b`. Review:
+  `gauntlet/refs/stage/review/kenny_entrance_video.png`.
+- The same rights caveats as Roman's and Cody's videos apply
+  (`assets/environment/CREDITS.md`).
