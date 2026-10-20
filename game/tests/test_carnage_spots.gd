@@ -31,6 +31,11 @@ func after_test() -> void:
 	var stock := get_node_or_null("WeaponStock")
 	if stock:
 		stock.free()
+	# the venue a wrestler here looked for fire in sits on this suite, and
+	# would be found by the next test's match (VenueDamage.of takes the first)
+	var venue := get_node_or_null("VenueDamage")
+	if venue:
+		venue.free()
 
 
 # --- the flaming table ---------------------------------------------------------
@@ -209,6 +214,8 @@ func test_whipped_into_a_side_led_wall_he_goes_through_it_and_it_dies() -> void:
 	assert_object(venue.get_node_or_null("%s_Dead" % screen.name)).is_not_null()
 	# a rocket's fire, not his: no fire from going through it
 	assert_int(venue.fires.size()).is_equal(0)
+	scene.queue_free()
+	await get_tree().process_frame
 
 
 func test_no_led_wall_off_the_stage_or_in_a_singles_match() -> void:
@@ -221,6 +228,8 @@ func test_no_led_wall_off_the_stage_or_in_a_singles_match() -> void:
 	MatchRules.set_mode(scene, MatchRules.Mode.ONE_ON_ONE)
 	b.global_position = Vector3(-3.15, ArenaBuilder.STAGE_DECK_Y, ArenaBuilder.MATCH_STAGE_BACK_LIMIT + 0.05)
 	assert_bool(b._whipped_into_screen()).is_false()
+	scene.queue_free()
+	await get_tree().process_frame
 
 
 # --- fire breathing ----------------------------------------------------------

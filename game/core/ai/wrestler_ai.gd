@@ -1445,9 +1445,12 @@ const SIGNATURE_WEIGHT := 7.0
 ## the card rather than leaving them to a 1-in-35 flat draw. (The knives and
 ## swords are laid out on the stage several deep, WeaponStock.STAGE_LAYOUT.)
 const WILD_WEAPONS: Array[StringName] = [
-		&"handgun", &"rpg", &"bed_of_nails", &"table", &"glass_pane", &"thumbtacks", &"barbed_wire_board",
-		&"fire_torch"]
+		&"handgun", &"rpg", &"bed_of_nails", &"table", &"thumbtacks", &"barbed_wire_board"]
 const WILD_WEIGHT := 10.0
+## The carnage pieces (the owner, 19 Oct): out more often than an ordinary
+## weapon, less than the wild ones, so the table stays the common set piece.
+const CARNAGE_WEAPONS: Array[StringName] = [&"glass_pane", &"fire_torch"]
+const CARNAGE_WEIGHT := 3.0
 ## Swings before he drops it, and how long a fetch may take before he gives up.
 const WEAPON_SWINGS := 4
 const FETCH_GIVE_UP_TICKS := 1500
@@ -1542,6 +1545,8 @@ func choose_weapon(rng: RandomNumberGenerator) -> StringName:
 		var w := SIGNATURE_WEIGHT if _owns(def) else 1.0
 		if def.id in WILD_WEAPONS:
 			w *= WILD_WEIGHT
+		elif def.id in CARNAGE_WEAPONS:
+			w *= CARNAGE_WEIGHT
 		ids.append(def.id)
 		weights.append(w)
 		total += w

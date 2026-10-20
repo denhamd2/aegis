@@ -48,7 +48,7 @@ func test_every_weapon_can_be_reached_on_the_wheel() -> void:
 			var deg := WeaponWheel.item_angle(f * 60.0, i, items.size())
 			var got := WeaponWheel.pick_at(Vector2(sin(deg_to_rad(deg)), -cos(deg_to_rad(deg))), f)
 			reached[items[got[1]].id] = true
-	assert_int(reached.size()).is_equal(35)
+	assert_int(reached.size()).is_equal(WeaponCatalog.all().size())
 
 
 # --- the rules -----------------------------------------------------------------
