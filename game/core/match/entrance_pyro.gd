@@ -425,21 +425,12 @@ func _flame(at: Vector3, height: float, lit := true) -> void:
 	grow_tex.curve = grow
 	m.scale_curve = grow_tex
 	m.color_ramp = _ramp([FIRE_HOT, FIRE_ORANGE, FIRE_RED])
+	ManFire.flicker(m)
 	p.process_material = m
-	var quad := QuadMesh.new()
-	quad.size = Vector2(1.6, 1.6)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.vertex_color_use_as_albedo = true
-	# Just over 1, so the core blooms but the body of the fireball stays
-	# orange -- at 2.4 the overlapping puffs summed to a white jet.
-	mat.albedo_color = Color(1.25, 1.1, 1.0)
-	mat.albedo_texture = _puff()
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	quad.material = mat
-	p.draw_pass_1 = quad
+	# Tongues of flame (ManFire.tongue_pass), the game's one fire sprite, not
+	# round puffs. Just over 1, so the core blooms but the body of the column
+	# stays orange -- at 2.4 the overlapping sprites summed to a white jet.
+	p.draw_pass_1 = ManFire.tongue_pass(Vector2(1.1, 2.6), Color(1.25, 1.1, 1.0))
 	p.amount = 55
 	p.lifetime = 0.9
 	p.one_shot = true

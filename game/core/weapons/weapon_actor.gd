@@ -904,15 +904,7 @@ static func _table_flames(amount: int) -> GPUParticles3D:
 	ramp.gradient = grad
 	var m := flames.process_material as ParticleProcessMaterial
 	m.color_ramp = ramp
-	m.angle_min = -12.0
-	m.angle_max = 12.0
-	var quad := (flames.draw_pass_1 as QuadMesh).duplicate() as QuadMesh
-	quad.size = Vector2(0.22, 0.55)
-	quad.center_offset = Vector3(0.0, 0.2, 0.0)
-	var mat := (quad.material as StandardMaterial3D).duplicate() as StandardMaterial3D
-	mat.albedo_texture = flame_tongue()
-	quad.material = mat
-	flames.draw_pass_1 = quad
+	flames.draw_pass_1 = ManFire.tongue_pass(Vector2(0.22, 0.55))
 	return flames
 
 

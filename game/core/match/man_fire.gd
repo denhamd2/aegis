@@ -156,8 +156,36 @@ func _set_burn() -> void:
 		o.set_shader_parameter("burn", burn)
 
 
-## His flames drawn as tongues (WeaponActor.flame_tongue) over his body,
-## not round dots: the dots piled up over his chest into one white ball.
+## Every fire in the game is drawn with this (the owner, 20 Oct: "ensure all
+## the other fire in the game follows this same style, and not the round
+## balls"): a billboard of WeaponActor.flame_tongue -- tall, tapering, broken
+## at the tip -- `size` across and up, its root a little below the particle
+## so a tongue stands up off where it was born. Additive and tinted by the
+## particle's colour ramp, the way the round puffs were.
+static func tongue_pass(size: Vector2, tint := Color.WHITE) -> QuadMesh:
+	var quad := QuadMesh.new()
+	quad.size = size
+	quad.center_offset = Vector3(0.0, size.y * 0.36, 0.0)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_color = tint
+	mat.albedo_texture = WeaponActor.flame_tongue()
+	quad.material = mat
+	return quad
+
+
+## A fire's particles leaning a little this way and that, as flames do.
+static func flicker(m: ParticleProcessMaterial) -> void:
+	m.angle_min = -12.0
+	m.angle_max = 12.0
+
+
+## His flames over his body: a box over his chest of softer tongues than the
+## stock flame, so they sit on him rather than piling into one white ball.
 static func _as_tongues(p: GPUParticles3D) -> void:
 	p.amount = 46
 	var m := p.process_material as ParticleProcessMaterial
@@ -174,13 +202,7 @@ static func _as_tongues(p: GPUParticles3D) -> void:
 	var ramp := GradientTexture1D.new()
 	ramp.gradient = grad
 	m.color_ramp = ramp
-	var quad := (p.draw_pass_1 as QuadMesh).duplicate() as QuadMesh
-	quad.size = Vector2(0.24, 0.6)
-	quad.center_offset = Vector3(0.0, 0.2, 0.0)
-	var mat := (quad.material as StandardMaterial3D).duplicate() as StandardMaterial3D
-	mat.albedo_texture = WeaponActor.flame_tongue()
-	quad.material = mat
-	p.draw_pass_1 = quad
+	p.draw_pass_1 = tongue_pass(Vector2(0.24, 0.6))
 
 
 static func _flame_particles() -> GPUParticles3D:
@@ -215,21 +237,12 @@ static func _flame_particles() -> GPUParticles3D:
 	ramp.gradient = grad
 	m.color_ramp = ramp
 	p.process_material = m
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.5, 0.5)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.vertex_color_use_as_albedo = true
-	mat.albedo_texture = _soft_dot()
-	quad.material = mat
-	p.draw_pass_1 = quad
+	flicker(m)
+	p.draw_pass_1 = tongue_pass(Vector2(0.2, 0.5))
 	return p
 
 
-## A soft round dot, for the flame and foam sprites.
+## A soft round dot, for the foam and spark sprites (fire is tongues).
 static func _soft_dot() -> GradientTexture2D:
 	var g := Gradient.new()
 	g.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0)])

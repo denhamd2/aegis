@@ -10090,3 +10090,26 @@ The owner: "Add Kenny Omega entrance video from here" (a Google Drive link).
   no effect state, which would have made the torch a dud.
 - Review: `gauntlet/refs/nhb/review/carnage_5_fire_breathing.png`
   (`carnage_shot --spot breath`).
+
+## 20 Oct — One fire style: flame tongues everywhere
+
+The owner: "ensure all the other fire in the game follows this same style, and
+not the round balls".
+
+- `ManFire.tongue_pass` is now the one way fire is drawn: a billboard of the
+  flame-tongue sprite (`WeaponActor.flame_tongue`), additive and tinted by
+  each fire's own colour ramp, with a little lean either way
+  (`ManFire.flicker`).
+- **Already tongues:** a man burning, the burning table and its wreck, the
+  torch's flame.
+- **Changed from round puffs or dots:**
+  - every rocket fire in the building, on the LED walls, the video wall and in
+    the crowd, including the spreading sheets of flame (`VenueDamage._flames`)
+  - the entrance flame units (`EntrancePyro._flame`)
+  - the lighter flame
+  - the fire-breathing fireball
+- Smoke keeps its soft round puffs, and the sparks and the extinguisher's
+  foam keep their dots: none of them is fire.
+- Guarded by `test_every_fire_is_drawn_with_flame_tongues`. Review:
+  `gauntlet/refs/nhb/review/fire_style_all.png` (entrance pyro, a screen fire,
+  a crowd fire, the fireball).

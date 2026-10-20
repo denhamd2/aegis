@@ -260,3 +260,30 @@ func test_breathing_fire_at_him_sets_him_alight() -> void:
 	assert_bool(fire.burning).is_false()
 	a._apply_move_to_opponent(swing)
 	assert_bool(fire.burning).is_true()
+
+
+# --- one fire style ------------------------------------------------------------
+
+## Every fire in the game is drawn with the flame tongue, never the round puffs
+## (the owner, 20 Oct: "ensure all the other fire in the game follows this same
+## style, and not the round balls"): a man burning, the lighter and the
+## fireball (ManFire's flames), a burning table, the building on fire, and the
+## entrance flame units.
+func test_every_fire_is_drawn_with_flame_tongues() -> void:
+	var tongue := WeaponActor.flame_tongue()
+	var fires: Array[GPUParticles3D] = [ManFire._flame_particles(), WeaponActor._table_flames(8)]
+	var venue := VenueDamage.new()
+	auto_free(venue)
+	fires.append(venue._flames())
+	var pyro := EntrancePyro.new()
+	add_child(pyro)
+	pyro._flame(Vector3.ZERO, 3.0, false)
+	for child in pyro.get_children():
+		if child is GPUParticles3D:
+			fires.append(child)
+	assert_int(fires.size()).is_equal(4)
+	for p: GPUParticles3D in fires:
+		var mat := (p.draw_pass_1 as QuadMesh).material as StandardMaterial3D
+		assert_object(mat.albedo_texture).override_failure_message(p.name).is_same(tongue)
+		auto_free(p)
+	pyro.queue_free()

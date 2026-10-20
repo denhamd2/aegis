@@ -903,19 +903,10 @@ func _flames() -> GPUParticles3D:
 	var ramp := GradientTexture1D.new()
 	ramp.gradient = grad
 	m.color_ramp = ramp
+	ManFire.flicker(m)
 	p.process_material = m
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.9, 0.9)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.vertex_color_use_as_albedo = true
-	mat.albedo_color = Color(1.2, 1.05, 1.0)
-	mat.albedo_texture = EntrancePyro._puff()
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	quad.material = mat
-	p.draw_pass_1 = quad
+	# tongues licking up, the shared fire sprite (ManFire.tongue_pass)
+	p.draw_pass_1 = ManFire.tongue_pass(Vector2(0.75, 1.8), Color(1.2, 1.05, 1.0))
 	p.amount = 64
 	p.lifetime = 0.9
 	p.fixed_fps = 60
