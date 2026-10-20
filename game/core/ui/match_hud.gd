@@ -388,28 +388,39 @@ func _draw_hold(view: Vector2) -> void:
 const CONTROLS := [["MOVE", ["move_up", "move_left", "move_down", "move_right"]],
 		["STRIKE", ["strike"]], ["GRAPPLE", ["grapple"]], ["REVERSE", ["reversal"]],
 		["RUN", ["run"]], ["ESCAPE / KICK OUT", ["submission_hold"]]]
-var _controls_text := ""
+## No Holds Barred adds the weapon keys (the owner, 20 Oct: "I don't see the
+## weapon wheel ... how do I trigger it?"): the wheel opens only outside the
+## ring, by an apron, empty-handed, with WEAPON held.
+const NHB_CONTROLS := [["WEAPON (BY THE APRON)", ["weapon"]], ["SLIDE / THROW", ["throw"]]]
+var _controls_text := {}
 var _controls_font: Font
 
 
-func controls_text() -> String:
-	if _controls_text == "":
+func controls_text(nhb := false) -> String:
+	if not _controls_text.has(nhb):
 		var parts: Array[String] = []
-		for row: Array in CONTROLS:
+		for row: Array in CONTROLS + (NHB_CONTROLS if nhb else []):
 			var keys: Array[String] = []
 			for action: String in row[1]:
-				if not InputMap.has_action(action):
-					continue
-				for event: InputEvent in InputMap.action_get_events(action):
-					if event is InputEventKey:
-						var code: int = event.physical_keycode if event.physical_keycode != 0 \
-								else event.keycode
-						keys.append(TitleScreen._key_label(code))
-						break
+				var key := key_for(action)
+				if key != "":
+					keys.append(key)
 			if not keys.is_empty():
 				parts.append("%s %s" % ["".join(keys) if keys.size() > 1 else keys[0], row[0]])
-		_controls_text = "   ·   ".join(parts)
-	return _controls_text
+		_controls_text[nhb] = "   ·   ".join(parts)
+	return _controls_text[nhb]
+
+
+## The first keyboard key bound to `action`, as the title screen labels it.
+static func key_for(action: String) -> String:
+	if not InputMap.has_action(action):
+		return ""
+	for event: InputEvent in InputMap.action_get_events(action):
+		if event is InputEventKey:
+			var code: int = event.physical_keycode if event.physical_keycode != 0 \
+					else event.keycode
+			return TitleScreen._key_label(code)
+	return ""
 
 
 func _draw_controls(view: Vector2) -> void:
@@ -418,7 +429,21 @@ func _draw_controls(view: Vector2) -> void:
 	if _controls_font == null:
 		_controls_font = TitleArt.teko(500)
 	var size_px := int(view.y * 0.020)
-	var text := controls_text()
+	var nhb := MatchRules.no_holds_barred(wrestler_a)
+	var text := controls_text(nhb)
+	# Where he can reach under the ring, say so: the wheel is otherwise
+	# invisible until it is open.
+	for w: WrestlerController in [wrestler_a, wrestler_b]:
+		if nhb and not w.is_ai and w.can_rummage():
+			var prompt := "HOLD %s  ·  WEAPONS" % key_for("weapon")
+			var pw := _controls_font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1,
+					size_px * 2).x
+			var pat := Vector2((view.x - pw) * 0.5, view.y * 0.80)
+			draw_rect(Rect2(pat.x - size_px, pat.y - size_px * 1.9, pw + size_px * 2,
+					size_px * 2.6), Color(0, 0, 0, 0.55))
+			draw_string(_controls_font, pat, prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px * 2,
+					Color(1.0, 0.86, 0.35))
+			break
 	var w := _controls_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x
 	var at := Vector2((view.x - w) * 0.5, view.y - view.y * 0.022)
 	draw_rect(Rect2(at.x - size_px * 0.6, at.y - size_px * 0.95, w + size_px * 1.2,

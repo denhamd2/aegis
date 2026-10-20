@@ -49,6 +49,10 @@ func test_player_controls_legend_uses_live_keyboard_bindings() -> void:
 	assert_bool(text.contains("STRIKE")).is_true()
 	assert_bool(text.contains("GRAPPLE")).is_true()
 	assert_bool(text.contains("REVERSE")).is_true()
+	assert_bool(text.contains("WEAPON")).is_false()
+	# No Holds Barred names the weapon key, with where it works.
+	var nhb := hud.controls_text(true)
+	assert_bool(nhb.contains("%s WEAPON" % MatchHUD.key_for("weapon"))).is_true()
 
 ## A maximized Mac window can have less usable vertical space than the 1080p
 ## design canvas. Both bottom plates must stay inset inside that live viewport.

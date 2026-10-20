@@ -26,6 +26,9 @@ var _b := "cody"
 var _only := ""
 var _clips: Array = []
 var _at := 0.5
+## --body: frame the pose's head, shoulders and arms (2.6 m back, the whole
+## upper body) instead of the neck, from the front, the side and behind.
+var _body := false
 
 
 func _ready() -> void:
@@ -40,6 +43,8 @@ func _ready() -> void:
 			"--only": _only = args[i + 1]
 			"--clips": _clips = Array(args[i + 1].split(","))
 			"--at": _at = float(args[i + 1])
+	if args.has("--body"):
+		_body = true
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id(_a), Roster.by_id(_b), 1)
@@ -109,14 +114,23 @@ func _ready() -> void:
 				await get_tree().process_frame
 			man.anim_tree.active = false
 			var head := _head(man)
-			for view: Array in [["front", face], ["side", side]]:
+			var views := [["front", face], ["side", side]]
+			if _body:
+				views.append(["back", -face])
+				views.append(["three_quarter", (face + side).normalized()])
+			for view: Array in views:
 				cam.fov = 30.0
-				cam.look_at_from_position(head + (view[1] as Vector3) * 1.1 + Vector3.UP * 0.05,
-						head + Vector3.DOWN * 0.12)
+				if _body:
+					var chest := head + Vector3.DOWN * 0.25
+					cam.look_at_from_position(chest + (view[1] as Vector3) * 2.6 + Vector3.UP * 0.2,
+							chest)
+				else:
+					cam.look_at_from_position(head + (view[1] as Vector3) * 1.1 + Vector3.UP * 0.05,
+							head + Vector3.DOWN * 0.12)
 				for _i in 20:
 					await RenderingServer.frame_post_draw
-				get_viewport().get_texture().get_image().save_png("%s/neck_%s_%s.png" % [
-						_out, clip.get_file(), view[0]])
+				get_viewport().get_texture().get_image().save_png("%s/%s_%s_%s.png" % [_out,
+						"body" if _body else "neck", clip.get_file(), view[0]])
 			man.anim_tree.active = true
 	print("FACE_SHOT done")
 	get_tree().quit()

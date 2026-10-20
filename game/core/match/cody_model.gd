@@ -81,9 +81,15 @@ func _ready() -> void:
 		return
 	# His arms, shoulders and chest to 2K26's build (BodyBulk), first, so
 	# everything after works on the finished mesh.
+	# The mirror seam down his centre line first, so it shades and inflates
+	# as one surface (BodyBulk.mend_flipped_seams).
+	BodyBulk.mend_flipped_seams(self)
 	BodyBulk.apply(self, get_game_skeleton(), BodyBulk.CODY)
 	# Before the animations: they add the helpers' tracks if the bones exist.
 	HipHelpers.install(get_game_skeleton())
+	# The same fix at the shoulders: an arm raised overhead (the win, the
+	# title) caved the top of the shoulder in and ballooned the deltoid.
+	ShoulderHelpers.install(get_game_skeleton())
 	_install_animations()
 	_fix_look()
 	_fix_eyes()
@@ -297,6 +303,7 @@ func adapt_animation_library(source: AnimationLibrary,
 			animation.track_set_path(track,
 					NodePath("%s:%s" % [skeleton_path, bone]))
 		HipHelpers.add_tracks(animation, skeleton, skeleton_path)
+		ShoulderHelpers.add_tracks(animation, skeleton, skeleton_path)
 		target.add_animation(name, animation)
 	return target
 

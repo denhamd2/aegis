@@ -3677,6 +3677,7 @@ func _resolve_pending_hits() -> void:
 	var weapon_def := WeaponCatalog.of_move(last_move)
 	_down_scale = 1.0
 	_bump_shove = 1.0
+	_pending_weapon_impact = -1
 	if weapon_def:
 		match WeaponCatalog.impact_of(weapon_def):
 			WeaponCatalog.Impact.ROCK:
@@ -3687,6 +3688,8 @@ func _resolve_pending_hits() -> void:
 				var impact := WeaponCatalog.impact_of(weapon_def)
 				_down_scale = float(WeaponCatalog.IMPACT_DOWN_SCALE[impact])
 				_bump_shove = float(WeaponCatalog.IMPACT_SHOVE[impact])
+				_pending_weapon_impact = impact
+				_pending_weapon_frame = Engine.get_physics_frames()
 	_took_moves(moves.size())
 	hurt.emit(_hit_sell, last_move)
 	if fatal_shot:
@@ -4431,6 +4434,20 @@ var _bumping := false
 ## the bump carries him (WeaponCatalog.IMPACT_DOWN_SCALE, IMPACT_SHOVE).
 var _down_scale := 1.0
 var _bump_shove := 1.0
+## Put down by a weapon (the owner, 20 Oct: "they'll pose, but then get
+## attacked during their pose because the victim is already back up"): no
+## quick rise -- not the automatic one, not his own button, not fired up --
+## for this long, by how hard the weapon puts a man down. Longer than any
+## taunt (TAUNTS, 90-140 ticks) plus the walk to it; the full down time still
+## runs from down_ticks_for() * IMPACT_DOWN_SCALE as before.
+const WEAPON_DOWN_HOLD := {WeaponCatalog.Impact.DROP: 200, WeaponCatalog.Impact.WIPEOUT: 360}
+var _pending_weapon_impact := -1
+var _pending_weapon_frame := 0
+## The bump between the hit and the mat is BUMP_TICKS; a knockdown later than
+## this is something else's, not the weapon's.
+const WEAPON_DOWN_WITHIN := 90
+## The weapon impact that put him down this time, or -1.
+var weapon_down_impact := -1
 
 
 func _bump_down() -> void:
@@ -4484,6 +4501,9 @@ func _go_down(tier := -1) -> void:
 	_move_ticks_remaining = int(down_ticks_for(tier) * (1.0 + DOWN_WORN * (1.0 - combat.health()))
 			* _down_scale)
 	_down_scale = 1.0
+	weapon_down_impact = _pending_weapon_impact \
+			if Engine.get_physics_frames() - _pending_weapon_frame <= WEAPON_DOWN_WITHIN else -1
+	_pending_weapon_impact = -1
 	knockdown_tier = tier
 	combat.cut_off_comeback()
 	_cover_eligible = true
@@ -4520,9 +4540,10 @@ func _process_down(input: Dictionary) -> void:
 	# never be pinned in time -- measured, Roman's Spears in the finish were
 	# covered after Cody was already back up, and the match never ended.
 	var big_one := knockdown_tier >= CombatSystem.Tier.SIGNATURE
-	var quick_recovery: bool = (combat != null and combat.is_fired_up()) \
+	var held := fsm.ticks_in_state < int(WEAPON_DOWN_HOLD.get(weapon_down_impact, 0))
+	var quick_recovery: bool = not held and ((combat != null and combat.is_fired_up()) \
 			or not big_one and (input.get("strike", false)
-					or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS)
+					or fsm.ticks_in_state >= QUICK_DOWN_RECOVERY_DELAY_TICKS))
 	if quick_recovery or _move_ticks_remaining <= 0:
 		if not quick_recovery:
 			_set_state_clip(WrestlerFSM.State.GETUP, "strikes/getup_staged")

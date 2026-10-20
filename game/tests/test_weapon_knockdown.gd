@@ -60,3 +60,35 @@ func test_each_weapon_lands_in_proportion_to_what_it_is() -> void:
 	# and the heaviest keep him down longest
 	assert_float(float(WeaponCatalog.IMPACT_DOWN_SCALE[WeaponCatalog.Impact.WIPEOUT])) \
 			.is_greater(float(WeaponCatalog.IMPACT_DOWN_SCALE[WeaponCatalog.Impact.DROP]))
+
+
+## Put down by a weapon, he stays down for the man who did it to play to the
+## crowd (the owner, 20 Oct: the victim was up and attacking him mid-pose).
+## No quick rise -- automatic, mashed or fired up -- inside the hold, which is
+## longer than any taunt, and longer for the heavier weapons.
+func test_a_weapon_victim_stays_down_through_the_attackers_taunt() -> void:
+	var longest_taunt := 0
+	for t: Array in WrestlerController.TAUNTS.values():
+		longest_taunt = maxi(longest_taunt, int(t[1]))
+	assert_int(int(WrestlerController.WEAPON_DOWN_HOLD[WeaponCatalog.Impact.DROP])) \
+			.is_greater(longest_taunt)
+	assert_int(int(WrestlerController.WEAPON_DOWN_HOLD[WeaponCatalog.Impact.WIPEOUT])) \
+			.is_greater(int(WrestlerController.WEAPON_DOWN_HOLD[WeaponCatalog.Impact.DROP]))
+	for id: StringName in [&"steel_chair", &"sledgehammer"]:
+		var victim := await _wrestler()
+		victim._pending_hits.append(WeaponCatalog.swing_move(WeaponCatalog.by_id(id)))
+		victim._resolve_pending_hits()
+		var guard := 0
+		while victim.fsm.current_state != WrestlerFSM.State.DOWN and guard < 200:
+			victim._physics_process(1.0 / 60.0)
+			guard += 1
+		assert_int(victim.fsm.current_state).override_failure_message(String(id)) \
+				.is_equal(WrestlerFSM.State.DOWN)
+		var impact := WeaponCatalog.impact_of(WeaponCatalog.by_id(id))
+		assert_int(victim.weapon_down_impact).is_equal(impact)
+		# mashing the whole time, and fired up for good measure
+		var hold := int(WrestlerController.WEAPON_DOWN_HOLD[impact])
+		for i in hold - 2:
+			victim._process_down({"strike": true})
+		assert_int(victim.fsm.current_state).override_failure_message(
+				"%s rose inside the hold" % id).is_equal(WrestlerFSM.State.DOWN)

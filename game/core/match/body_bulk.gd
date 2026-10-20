@@ -84,6 +84,145 @@ static func apply(root: Node, skeleton: Skeleton3D, gains: Dictionary,
 	return moved
 
 
+## Mends a mirror seam: vertices that share a position inside one surface but
+## carry normals pointing opposite ways (dot below FLIPPED). Cody's head-and-
+## torso surface has 208 of them down his centre line (x ~ 0) -- the supplied
+## statue was modelled as a half and mirrored, and one side's seam normals
+## were left facing in. Lit, the flipped copy drew a bright line down the
+## middle of his back; inflated, the two copies went opposite ways and the
+## seam opened (the owner, 20 Oct, the celebration close-ups). Each such
+## group takes the one normal that faces out from the surface's centre, so it
+## shades as one surface and inflates as one. Returns how many vertices were
+## mended. Run before apply().
+const FLIPPED := 0.0
+const WELD_GRID := 2000.0
+## Only on the mirror line: a flipped pair anywhere else (inside the mouth,
+## round an eyelid) faces in on purpose.
+const MIRROR_BAND := 0.03
+
+
+static func mend_flipped_seams(root: Node) -> int:
+	var mended := 0
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var source := mi.mesh as ArrayMesh
+		if source == null or source.get_blend_shape_count() > 0:
+			continue
+		var surfaces: Array = []
+		var any := false
+		for si in source.get_surface_count():
+			var arrays := source.surface_get_arrays(si)
+			var n := _mend_surface(arrays)
+			mended += n
+			any = any or n > 0
+			surfaces.append(arrays)
+		if any:
+			var mesh := rebuilt(source, surfaces)
+			mesh.custom_aabb = source.custom_aabb
+			mi.mesh = mesh
+	return mended
+
+
+static func _mend_surface(arrays: Array) -> int:
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals = arrays[Mesh.ARRAY_NORMAL]
+	var tangents = arrays[Mesh.ARRAY_TANGENT]
+	var bones = arrays[Mesh.ARRAY_BONES]
+	var weights = arrays[Mesh.ARRAY_WEIGHTS]
+	if normals == null or verts.is_empty():
+		return 0
+	var per := 0
+	if bones != null and weights != null and (bones as PackedInt32Array).size() % verts.size() == 0:
+		per = (bones as PackedInt32Array).size() / verts.size()
+	var groups := {}
+	var centre := Vector3.ZERO
+	for v in verts.size():
+		centre += verts[v]
+		var key := Vector3i(roundi(verts[v].x * WELD_GRID), roundi(verts[v].y * WELD_GRID),
+				roundi(verts[v].z * WELD_GRID))
+		if groups.has(key):
+			(groups[key] as Array).append(v)
+		else:
+			groups[key] = [v]
+	centre /= float(verts.size())
+	var mended := 0
+	for key in groups:
+		var members: Array = groups[key]
+		if members.size() < 2 or absf((verts[members[0]] as Vector3).x) > MIRROR_BAND:
+			continue
+		# One set of weights for the copies: each half's copy took its weights
+		# off its own side of the mannequin, so a raised arm or a turned
+		# shoulder pulled the halves apart and the crowd showed through his
+		# back. Averaged, the copies move as one vertex.
+		if per > 0 and _unify_weights(bones, weights, members, per):
+			mended += members.size()
+		var flipped := false
+		for a in members.size():
+			for b in range(a + 1, members.size()):
+				if (normals[members[a]] as Vector3).dot(normals[members[b]]) < FLIPPED:
+					flipped = true
+		if not flipped:
+			continue
+		# Out from the surface's middle, level: a torso's sides and back.
+		var at: Vector3 = verts[members[0]]
+		var out := Vector3(at.x - centre.x, 0.0, at.z - centre.z)
+		var pick: int = members[0]
+		for m: int in members:
+			if (normals[m] as Vector3).dot(out) > (normals[pick] as Vector3).dot(out):
+				pick = m
+		for m: int in members:
+			if m == pick or (normals[m] as Vector3).is_equal_approx(normals[pick]):
+				continue
+			normals[m] = normals[pick]
+			if tangents != null and (tangents as PackedFloat32Array).size() >= verts.size() * 4:
+				for c in 4:
+					tangents[m * 4 + c] = tangents[pick * 4 + c]
+			mended += 1
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	if tangents != null:
+		arrays[Mesh.ARRAY_TANGENT] = tangents
+	if per > 0:
+		arrays[Mesh.ARRAY_BONES] = bones
+		arrays[Mesh.ARRAY_WEIGHTS] = weights
+	return mended
+
+
+## Gives every vertex in `members` the same skin: the mean of their weights,
+## the strongest `per` bones of it, renormalised. Returns whether any changed.
+static func _unify_weights(bones: PackedInt32Array, weights: PackedFloat32Array,
+		members: Array, per: int) -> bool:
+	var sum := {}
+	for m: int in members:
+		for k in per:
+			var w := weights[m * per + k]
+			if w > 0.0:
+				sum[bones[m * per + k]] = float(sum.get(bones[m * per + k], 0.0)) + w
+	var order := sum.keys()
+	order.sort_custom(func(a, b): return sum[a] > sum[b] or (sum[a] == sum[b] and a < b))
+	order = order.slice(0, per)
+	var total := 0.0
+	for b in order:
+		total += sum[b]
+	if total <= 0.0:
+		return false
+	var changed := false
+	for m: int in members:
+		# Already this skin, in any slot order?
+		var same := true
+		for k in per:
+			var w := weights[m * per + k]
+			var want: float = sum[bones[m * per + k]] / total \
+					if order.has(bones[m * per + k]) else 0.0
+			if absf(w - want) > 1e-4:
+				same = false
+		if same:
+			continue
+		changed = true
+		for k in per:
+			bones[m * per + k] = order[k] if k < order.size() else 0
+			weights[m * per + k] = sum[order[k]] / total if k < order.size() else 0.0
+	return changed
+
+
 ## Moves each vertex of one surface's arrays out along its normal; returns how
 ## many moved. Public for the test.
 static func inflate(arrays: Array, bind_gain: Dictionary, direction := 1.0) -> int:

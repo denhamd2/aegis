@@ -30,10 +30,11 @@ func test_skeleton_is_the_base_rigs_bones() -> void:
 		break
 	assert_object(base_skeleton).is_not_null()
 
-	# Every base bone, plus the two eye bones rig_cody_eyes.py adds and the two
-	# hip helpers HipHelpers builds at load.
+	# Every base bone, plus the two eye bones rig_cody_eyes.py adds and the
+	# hip and shoulder helpers HipHelpers and ShoulderHelpers build at load.
 	assert_int(skeleton.get_bone_count()).is_equal(
-			base_skeleton.get_bone_count() + CodyModel.EYE_BONES.size() + HipHelpers.SIDES.size())
+			base_skeleton.get_bone_count() + CodyModel.EYE_BONES.size() + HipHelpers.SIDES.size()
+			+ ShoulderHelpers.SIDES.size())
 	for index in base_skeleton.get_bone_count():
 		var name := base_skeleton.get_bone_name(index)
 		assert_int(skeleton.find_bone(name)) \

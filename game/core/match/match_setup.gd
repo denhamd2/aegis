@@ -98,6 +98,11 @@ func _ready() -> void:
 	var sign_fans := get_tree().get_first_node_in_group("sign_fans") as SignFans
 	if sign_fans:
 		sign_fans.watch(referee, [wrestler_a, wrestler_b])
+	# A follow spot on whoever takes the fight up the ramp (RampFollowSpot).
+	var ramp_spot := RampFollowSpot.new()
+	ramp_spot.name = "RampFollowSpot"
+	add_child(ramp_spot)
+	ramp_spot.watch([wrestler_a, wrestler_b])
 	# The referee in the ring (RefereeActor), off the same signals.
 	referee_actor = RefereeActor.new()
 	referee_actor.name = "RefereeActor"

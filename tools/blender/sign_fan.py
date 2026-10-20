@@ -304,7 +304,7 @@ def apply(rig: Rig, p: Pose) -> None:
         shoulder = clav_at + chest @ (h[upper] - h[clav])
         # a hand on each side edge, from behind: the wrist just under the
         # edge, the hand turned up along it
-        edge = p.sign_at + p.sign_rot @ Vector((0.41 * side, 0.03, -0.04))
+        edge = p.sign_at + p.sign_rot @ Vector((0.41 * side, 0.03, GRIP_DOWN))
         wrist_target = edge + p.sign_rot @ Vector((0.0, 0.035, -0.075))
         pole = Vector((p.arm_pole.x * side, p.arm_pole.y, p.arm_pole.z))
         elbow, wrist = _two_bone(shoulder, wrist_target, rig.length(upper, fore),
@@ -324,8 +324,17 @@ def apply(rig: Rig, p: Pose) -> None:
         rig.place(foot, ankle, Quaternion())          # flat on the floor
 
 
+# Where each hand takes the board's side edge, below its centre. Held by the
+# middle of the edges (-0.04) the board could not clear his head: the arms are
+# 0.56 m from a 1.43 m shoulder, so its centre topped out at head height and
+# the board sat level with his crown -- "behind his head" (the owner, 20 Oct).
+# Low on the edges, as fans really hold one up, the board rides above him.
+GRIP_DOWN = -0.20
+
 # The poses, as numbers. Face-down on the knees; lifted; over the head. Sized
-# to a 1.87 m avatar whose hip joints stand at 0.895 m.
+# to a 1.87 m avatar whose hip joints stand at 0.895 m (crown 1.87): OVERHEAD
+# puts the board's bottom edge 2 cm over his crown, straight above him, so the
+# picture is up in the air and his face is clear under it.
 FLAT = rot_x(math.radians(90))   # face (-Y) turned to the floor
 UP = Quaternion()                # face to the ring
 SEATED = Pose((0, 0.04, 0.56), -0.12, 0.10, 0.08, (0, -0.30, 0.66), FLAT, -0.42, (1, 0.8, -0.3))
@@ -334,7 +343,7 @@ PUSH_UP = Pose((0, -0.08, 0.64), 0.10, 0.48, -0.10, (0, -0.40, 0.86), rot_x(math
 RISING = Pose((0, -0.26, 0.84), 0.0, 0.16, 0.0, (0, -0.40, 1.24), rot_x(math.radians(8)),
               -0.42, (1, 0.5, -0.5))
 LIFTING = Pose((0, -0.32, 0.885), 0.0, 0.0, -0.05, (0, -0.33, 1.66), UP, -0.42, (1, 0.4, -0.2))
-OVERHEAD = Pose((0, -0.33, 0.89), 0.0, -0.04, -0.12, (0, -0.25, 1.92), UP, -0.42, (1, 0.35, 0.0))
+OVERHEAD = Pose((0, -0.33, 0.89), 0.0, -0.04, -0.12, (0, -0.34, 2.16), UP, -0.42, (1, 0.35, 0.0))
 
 
 def _hold(t: float) -> Pose:

@@ -10174,3 +10174,35 @@ ring, not off the stage, not off the floor. The wheel greys it out until
 then. The launcher is still open from the bell. Guarded by
 `test_the_gun_is_only_there_for_the_finish` and
 `test_the_launcher_is_open_from_the_bell_and_the_gun_from_the_finish`.
+
+## 20 Oct — Cody's shoulders and back, weapon knockdowns, the ramp spot, the sign, the weapon key
+
+The owner raised six things:
+
+1. "When Cody wins the match and is celebrating, one of his shoulders and arm gets deformed … review this and any other body deformities."
+2. Weapon victims "already back up" while the attacker poses.
+3. Roman floating into the ring as well.
+4. The ramp staying dark mid-match.
+5. "How do I trigger" the weapon wheel?
+6. The ENDA FEARS OMAR fan holding his sign behind his head.
+
+**Cody's body.** Rendered in his win clips from four sides (`face_shot --body --clips ...`), two faults showed:
+
+- **A caved shoulder.** With his arm raised overhead (`win_arm_raised`, `win_celebrate`, `title_raise`), the deltoid ballooned into a ball and the top of the shoulder caved in. His shoulder is two bones (clavicle and upper arm), carrying a weight transfer from the base mannequin.
+  - Fix: `ShoulderHelpers` does for the shoulder what `HipHelpers` does for the hip. It adds a bone per side under the clavicle that turns half the upper arm's swing (through `HipHelpers.scaled_turn`), carrying half the upper-arm weight round the joint. That weight fades out 16 cm down the arm and 8 cm onto the body.
+- **A split down his back.** The statue was modelled as a half and mirrored, so its centre line is two copies of every vertex. Each copy had taken its bone weights from its own side of the mannequin, so when his shoulders moved the two halves pulled apart and the crowd showed through his spine. Some copies' normals also faced in, which drew a bright line from neck to belt.
+  - Fix: `BodyBulk.mend_flipped_seams` runs first and gives every copy on the centre line one blended skin and one outward normal (745 vertices). The split is closed on the render, and a second pass changes nothing.
+- Guarded by `tests/test_shoulder_helpers.gd`: helper bones, weights summing to one, helpers keyed at half the arm and never past it, and the seam mended once with its copies sharing one skin.
+- Review: `gauntlet/refs/characters/review/cody_win_body.png`.
+
+**Weapon knockdowns.** A weapon knockdown counted as a plain strike, so after 0.8 s the automatic quick rise stood the man up, mid-pose for the man who hit him.
+- `WrestlerController.WEAPON_DOWN_HOLD` now blocks any quick rise after a weapon knockdown: automatic, mashed or fired up. The hold is 200 ticks (3.3 s) for chairs, pipes, tables and glass, and 360 ticks (6 s) for the sledgehammer, the steps and a rocket. Both are longer than any taunt.
+- Guarded by `test_a_weapon_victim_stays_down_through_the_attackers_taunt`.
+
+**Roman's way in.** The fix to the entry clips (the steps, the apron, the bake timing, the ringside lighting) is shared, so it is his too. The contact probe has his boots within 2 cm on the steps. On the 0.2 m apron his wider stance still leaves a boot a few centimetres over the canvas edge for a moment.
+
+**The ramp at night.** `RampFollowSpot` puts the entrance's long-throw spot, plus a soft front key, on whoever goes past the ramp's foot mid-match, faded in and out over half a second. It is off during the entrances, which have their own. Guarded by `tests/test_ramp_follow_spot.gd`.
+
+**The weapon key.** In No Holds Barred the controls strip now lists it: `U WEAPON (BY THE APRON)` and `SLIDE / THROW`. "HOLD U · WEAPONS" comes up whenever you stand where the wheel will open: outside, by an apron, empty-handed. On a pad it is LB.
+
+**The sign.** `sign_fan.py` now takes the board low on its side edges (`GRIP_DOWN`) and lifts it 0.24 m higher, so the board's bottom edge clears the fan's crown. Held by the middle of its edges, it could not clear his head with 0.56 m arms from a 1.43 m shoulder. Review: `gauntlet/refs/stage/review/sign_fan_overhead.png`.
