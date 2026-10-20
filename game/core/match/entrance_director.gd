@@ -34,18 +34,32 @@ signal cue(what: String)
 # --- Pace and the travelling clips (tools/blender/wrestling_clips.py) --------
 ## The speed Entrance_Walk's planted foot travels at. Must match the clip.
 const WALK_SPEED := 1.6
-## Climb_Steps: 1.2 s across the measured stair flight, from its outer edge
-## on the ringside floor to the top platform beside the post.
-const CLIMB_SECONDS := 1.2
+## Climb_Steps: 55 frames up the four-tier flight, from the floor beyond its
+## bottom tread to the platform beside the post.
+const CLIMB_SECONDS := 55.0 / 30.0
 ## How fast a turn on the spot goes, radians per second.
 const TURN_RATE := 5.0
 
-## Apron_Step: 1.0 s, off the top tread and up onto the apron beside the
-## post, (fwd 1.0, up 0.24). Rope_Step_Through_Apron: 1.33 s, from the apron
-## edge through the ropes onto the mat, (fwd 0.62, up 0).
-const APRON_STEP_SECONDS := 1.0
+## Apron_Step: 1.2 s, off the platform and onto the apron beside the post.
+## Rope_Step_Through_Apron: 1.33 s, from the apron edge through the ropes
+## onto the mat.
+const APRON_STEP_SECONDS := 1.2
 const APRON_ROPE_SECONDS := 1.333
-const APRON_ROPE_TO := Vector2(0.62, 0.0)
+
+## How far each of those clips carries the root, (along, up) -- the route
+## _add_route_in builds MUST move him exactly this far, or the boots miss
+## the treads: the steps once grew a tier and the clips did not, and he
+## floated up them and dropped onto the apron. wrestling_clips.py reads
+## these, checks them against the ring's own constants, and keys the boots
+## on the treads; test_entrance_route.gd checks the route against them.
+## Plain numbers so the clip script can read them.
+const CLIMB_FWD := 1.541
+const CLIMB_UP := 0.954
+const APRON_STEP_FWD := 1.066
+const APRON_STEP_UP := 0.04
+const APRON_ROPE_FWD := 0.62
+const APRON_ROPE_UP := 0.10
+const APRON_ROPE_TO := Vector2(APRON_ROPE_FWD, APRON_ROPE_UP)
 
 # --- Where things are ---------------------------------------------------------
 ## The flight every entrance climbs: the one on the corner diagonal at the
@@ -1090,7 +1104,8 @@ func _start_beat() -> void:
 		"turn":
 			beat["ticks"] = SETTLE_TICKS if beat.get("settle", false) else 18
 			_end_gestures(w)
-			w.play_presentation_clip(_wait_clip(w))
+			if not beat.get("keep_clip", false):
+				w.play_presentation_clip(_wait_clip(w))
 		"pair":
 			for move: Array in beat["moves"]:
 				(move[0] as WrestlerController).play_presentation_clip(move[4])
@@ -1176,7 +1191,12 @@ func _physics_process(delta: float) -> void:
 			var from: Vector3 = beat["from"]
 			var to: Vector3 = beat["to"]
 			w.global_position = from.lerp(to, t)
-			w.global_transform.basis = _facing_basis(beat["facing"])
+			# Into the clip's heading at the walk's turn rate, not in one
+			# frame: the apron step starts ~60 degrees off the climb, and
+			# the snap read as a glitch on the way in.
+			var face: Vector3 = beat["facing"]
+			w.rotation.y = rotate_toward(w.rotation.y, atan2(-face.x, -face.z),
+					TURN_RATE * delta)
 			if beat["clip"] == "strikes/rope_step_through_apron":
 				_part_ropes(w, t, beat["facing"])
 	_frame(beat, delta)
@@ -1740,7 +1760,7 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	var top_at := Vector3(top.x, RingBuilder.STEP_TOP_Y, top.z)
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/climb_steps",
 			"ticks": int(round(CLIMB_SECONDS * TPS)),
-			"from": Vector3(climb_from.x, ArenaBuilder.FLOOR_Y, climb_from.z),
+			"from": Vector3(climb_from.x, surface_y(climb_from), climb_from.z),
 			"to": top_at, "facing": -out, "shot": "ringside"})
 	# Onto the apron, a pace along the side from the post.
 	var apron := Vector3(ENTRY_CORNER.x * (RingBuilder.TURNBUCKLE_PAD_XZ - APRON_ALONG_M),
@@ -1750,9 +1770,12 @@ func _add_route_in(w: WrestlerController, cut: Vector3, speed: float,
 	_beats.append({"kind": "clip", "who": w, "clip": "strikes/apron_step",
 			"ticks": int(round(APRON_STEP_SECONDS * TPS)),
 			"from": top_at, "to": apron, "facing": across, "shot": "ringside"})
-	# Square to the ropes: facing into the ring across the -Z side.
+	# Square to the ropes: facing into the ring across the -Z side -- in the
+	# apron step's close stance, not the wait clip's: its staggered feet do
+	# not fit on the 0.2 m apron (one boot off the edge, one in the canvas).
 	var into := Vector3(0.0, 0.0, -ENTRY_CORNER.y)
-	_beats.append({"kind": "turn", "who": w, "facing": into, "shot": "ringside"})
+	_beats.append({"kind": "turn", "who": w, "facing": into, "shot": "ringside",
+			"keep_clip": true})
 	if survey_clip != "":
 		_beats.append({"kind": "clip", "who": w, "clip": survey_clip,
 				"ticks": 60, "from": apron, "to": apron, "facing": into, "shot": "ringside"})
@@ -2662,6 +2685,15 @@ static func _in_ring(w: WrestlerController) -> bool:
 	return absf(p.x) < 3.2 and absf(p.z) < 3.2 and p.y > -0.2
 
 
+## Inside the barricade: ringside, the steps, the apron or the ring. There the
+## ring's own rig lights him; the stage's follow spot at full and the tron's
+## rim from 20 m behind burned his white coat into a glowing silhouette up
+## the steps -- the "ghost" the owner saw go in through the ropes.
+static func _at_ring(w: WrestlerController) -> bool:
+	var p := w.global_position
+	return maxf(absf(p.x), absf(p.z)) < ArenaBuilder.BARRICADE_RADIUS
+
+
 ## Keeps the follow spot on whoever is walking; off when nobody is.
 func _aim_follow_spot(w: WrestlerController) -> void:
 	if not _follow:
@@ -2680,7 +2712,7 @@ func _aim_follow_spot(w: WrestlerController) -> void:
 	_follow.visible = true
 	# In the ring the long-throw spot is a glare in the haze and burns his
 	# gear white on the low shots (lighting_2k26.md item 10): a third of it.
-	_follow.light_energy = FOLLOW_SPOT_ENERGY * (0.35 if _in_ring(w) else 1.0)
+	_follow.light_energy = FOLLOW_SPOT_ENERGY * (0.35 if _at_ring(w) else 1.0)
 	var target := w.global_position + Vector3.UP * 1.1
 	if _follow.global_position.distance_to(target) > 0.1:
 		_follow.look_at(target, Vector3.UP)
@@ -2740,7 +2772,7 @@ func _aim_ramp_wash(w: WrestlerController) -> void:
 ## Out while the wall is on the loop, while he is in the ring (the wall is
 ## 35 m off) and while Cody's own backlight has the dark.
 func _aim_tron_rim(w: WrestlerController) -> void:
-	var on := _tron_on and w != null and w.visible and not _in_ring(w) \
+	var on := _tron_on and w != null and w.visible and not _at_ring(w) \
 			and not (_backlight and _backlight.visible)
 	if not on:
 		if _tron_rim:

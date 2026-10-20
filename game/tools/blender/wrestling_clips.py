@@ -886,8 +886,236 @@ ROPE_STEP_KEYS = [
 ]
 
 
+# --- The way into the ring, measured off the ring itself --------------------
+#
+# Climb_Steps was authored for a three-tread flight (0.36 run, 0.287 rise)
+# that the ring no longer has: the steps grew a fourth tier and a V-notched
+# platform (ring_builder.gd "Steel steps"), the director's route moved with
+# them, and the clips did not. The root travelled 1.54 m and 0.96 m up while
+# the boots were keyed for 1.26 and 0.86, so they missed every tread; and
+# Apron_Step lifted him 0.24 onto an apron 0.04 above the platform, so he
+# hovered and dropped. Read out of the .gd files here, never retyped, so the
+# clips and the route cannot drift apart again; and each root travel is
+# checked against the one EntranceDirector declares (CLIMB_FWD and the rest),
+# which test_entrance_director.gd checks against the beats it builds.
+
+_GD_CONST = None
+
+
+def _gd_constants(rel_path, names):
+    """Plain numeric `const NAME := <number>` values out of a .gd file."""
+    import re
+    rx = re.compile(r"^const\s+(\w+)\s*:=\s*(-?[0-9]+(?:\.[0-9]+)?)\s*(?:#.*)?$")
+    found = {}
+    with open(os.path.join(REPO, rel_path)) as handle:
+        for line in handle:
+            match = rx.match(line.strip())
+            if match and match.group(1) in names:
+                found[match.group(1)] = float(match.group(2))
+    missing = [n for n in names if n not in found]
+    if missing:
+        raise SystemExit("wrestling_clips.py: %s has no plain numeric %s"
+                         % (rel_path, ", ".join(missing)))
+    return found
+
+
+def _entry_geometry():
+    """The ring-entry route in each clip's own frame (fwd, up), from the
+    same constants and formulas EntranceDirector._add_route_in uses."""
+    ring = _gd_constants("core/ring/ring_builder.gd", [
+        "STEP_APRON_GAP", "STEP_PLATFORM", "STEP_RUN", "STEP_TREADS",
+        "STEP_TOP_Y", "STEP_FLOOR_Y", "APRON_OUT", "APRON_TOP",
+        "TURNBUCKLE_PAD_XZ"])
+    arena = _gd_constants("core/arena/arena_builder.gd",
+                          ["FLOOR_Y", "RINGSIDE_MAT_LIFT"])
+    director = _gd_constants("core/match/entrance_director.gd", [
+        "APRON_ALONG_M", "APRON_STAND", "CLIMB_FWD", "CLIMB_UP",
+        "APRON_STEP_FWD", "APRON_STEP_UP", "APRON_ROPE_FWD", "APRON_ROPE_UP"])
+    treads = int(ring["STEP_TREADS"])
+    run = ring["STEP_RUN"]
+    rise = (ring["STEP_TOP_Y"] - ring["STEP_FLOOR_Y"]) / treads
+    floor = arena["FLOOR_Y"] + arena["RINGSIDE_MAT_LIFT"]
+    apex = ring["STEP_APRON_GAP"] * math.sqrt(2.0)
+    top_front = apex + ring["STEP_PLATFORM"]
+    # Out along the diagonal from the apron's corner: where the climb starts
+    # (beyond the bottom tread) and the platform spot it ends on.
+    start_o = ring["STEP_APRON_GAP"] + ring["STEP_PLATFORM"] + run * treads
+    end_o = apex + ring["STEP_PLATFORM"] * 0.55
+    # Each tread's centre and top, bottom first; the platform last.
+    surfaces = []
+    for i in range(treads - 1):
+        front = top_front + run * (treads - 1 - i)
+        surfaces.append((start_o - (front - run * 0.5),
+                         ring["STEP_FLOOR_Y"] + rise * (i + 1) - floor))
+    surfaces.append((start_o - end_o, ring["STEP_TOP_Y"] - floor))
+    # Platform to apron: from the platform spot to the apron spot beside
+    # the post (EntranceDirector: x pad - along, z -stand, on the -Z side).
+    c = ring["APRON_OUT"]
+    top_x = c + end_o / math.sqrt(2.0)
+    top_z = -c - end_o / math.sqrt(2.0)
+    apron_x = ring["TURNBUCKLE_PAD_XZ"] - director["APRON_ALONG_M"]
+    apron_z = -director["APRON_STAND"]
+    step_fwd = math.hypot(apron_x - top_x, apron_z - top_z)
+    # Where on that line he is over the apron, not the platform: the apron
+    # is |x|, |z| <= APRON_OUT, and z is the one that gets there last.
+    on_apron = step_fwd * (top_z + c) / (top_z - apron_z)
+    geo = {
+        "surfaces": surfaces,
+        "climb": surfaces[-1],
+        "apron_step": (step_fwd, ring["APRON_TOP"] - ring["STEP_TOP_Y"]),
+        "on_apron": on_apron,
+        "apron_rope": (director["APRON_ROPE_FWD"], 0.0 - ring["APRON_TOP"]),
+    }
+    for key, names in (("climb", ("CLIMB_FWD", "CLIMB_UP")),
+                       ("apron_step", ("APRON_STEP_FWD", "APRON_STEP_UP")),
+                       ("apron_rope", ("APRON_ROPE_FWD", "APRON_ROPE_UP"))):
+        for got, name in zip(geo[key], names):
+            if abs(got - director[name]) > 0.01:
+                raise SystemExit("wrestling_clips.py: the ring says %s %.3f, "
+                                 "EntranceDirector.%s says %.3f -- update it"
+                                 % (key, got, name, director[name]))
+    return geo
+
+
+def _entry():
+    global _GD_CONST
+    if _GD_CONST is None:
+        _GD_CONST = _entry_geometry()
+    return _GD_CONST
+
+
+## The ankle over the sole, and a man's pelvis over a planted ankle standing
+## (STANCE-ish: 0.88 at rest over a 0.104 ankle).
+_ANKLE = 0.104
+_STAND = 0.776
+## How far a swinging boot clears the higher of the two treads it moves
+## between, at mid-swing (the toe runs ~0.15 ahead of the ankle, so this is
+## what carries it over the nose).
+_SWING_CLEAR = 0.16
+CLIMB_FRAMES_PER_STEP = 11
+
+
+def _climb_keys():
+    """Up the flight a tread a step, right foot leading, the left joining
+    it on the platform: one move per surface plus the join. Per move: the
+    pelvis waits over the planted foot while the other swings (over the
+    nose of the tread it is going to), then the boot lands on the tread's
+    centre and the weight transfers -- the wait is what reads as climbing
+    rather than floating up."""
+    geo = _entry()
+    surfaces = geo["surfaces"]
+    end_fwd, end_up = geo["climb"]
+    feet = {"r": (0.0, 0.0), "l": (0.0, 0.0)}   # (fwd, surface up)
+    x = {"r": 0.14, "l": -0.13}
+
+    def key(pelvis, swing=None, swing_at=None, lean=-10):
+        hand_sw = {"r": 0.0, "l": 0.0}
+        if swing:
+            # The arm opposite the swinging leg comes forward.
+            hand_sw["l" if swing == "r" else "r"] = 0.14
+        p = dict(
+            pelvis=(0.0, pelvis[0], pelvis[1]), hips=(lean, 0, 0),
+            spine=(-8, 0, 0), head=(5, 0, 0),
+            hand_r=(0.25, pelvis[0] - 0.02 + hand_sw["r"], pelvis[1] - 0.02),
+            hand_l=(-0.23, pelvis[0] - 0.02 + hand_sw["l"], pelvis[1] - 0.02),
+            fist_r=0.5, fist_l=0.5,
+            knee_r=(0.1, 1.0, 0.3 if swing == "r" else 0.0),
+            knee_l=(-0.1, 1.0, 0.3 if swing == "l" else 0.0))
+        for side in ("r", "l"):
+            if side == swing:
+                p["foot_" + side] = (x[side], swing_at[0], swing_at[1])
+            else:
+                f, u = feet[side]
+                p["foot_" + side] = (x[side], f, u + _ANKLE)
+        return pose(STANCE, **p)
+
+    keys = [(0, key((0.0, _ANKLE + _STAND), lean=-4))]
+    moves = [("r" if k % 2 == 0 else "l") for k in range(len(surfaces) + 1)]
+    frame = 0
+    for k, side in enumerate(moves):
+        other = "l" if side == "r" else "r"
+        # The last two moves both land on the platform spot.
+        target = (end_fwd, end_up) if k >= len(surfaces) - 1 else surfaces[k]
+        start = feet[side]
+        support = feet[other]
+        # Mid-swing: the pelvis over the planted foot, up on it.
+        pelvis = (min(support[0] + 0.05, end_fwd), support[1] + _ANKLE + _STAND)
+        swing_at = ((start[0] + target[0]) * 0.5 + 0.05,
+                    max(start[1], target[1]) + _ANKLE + _SWING_CLEAR)
+        keys.append((frame + 6, key(pelvis, side, swing_at)))
+        feet[side] = target
+        frame += CLIMB_FRAMES_PER_STEP
+        if k == len(moves) - 1:
+            break
+        # Planted: between the two feet, as high as the lower leg allows.
+        low, high = sorted((feet["r"], feet["l"]), key=lambda s: s[1])
+        mid_fwd = (low[0] + high[0]) * 0.5
+        reach = math.sqrt(max(0.80 ** 2 - (mid_fwd - low[0]) ** 2, 0.0))
+        keys.append((frame, key((mid_fwd, low[1] + _ANKLE + min(reach, _STAND)))))
+    keys.append((frame, _shifted(dict(STANCE, pelvis=(0.0, 0.0, _ANKLE + _STAND),
+                                      hips=(-6, 0, 0), spine=(-8, 0, 0), head=(4, 0, 0),
+                                      hand_r=(0.25, -0.02, _ANKLE + _STAND - 0.02),
+                                      hand_l=(-0.23, -0.02, _ANKLE + _STAND - 0.02),
+                                      fist_r=0.5, fist_l=0.5,
+                                      foot_r=(0.14, 0.0, _ANKLE), foot_l=(-0.13, 0.0, _ANKLE),
+                                      knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0)),
+                                 end_fwd, end_up)))
+    return frame, keys
+
+
+def _climb_clip():
+    frames, keys = _climb_keys()
+    return _world_clip(frames, _entry()["climb"], keys)
+
+
+def _apron_step_keys():
+    """Platform to apron, beside the post: three level paces (right, left,
+    right joining it), the last two up the 4 cm onto the apron. 36 frames."""
+    geo = _entry()
+    fwd, up = geo["apron_step"]
+    edge = geo["on_apron"]
+    stand = dict(STANCE, pelvis=(0.0, 0.0, _ANKLE + _STAND), hips=(-4, 0, 0),
+                 spine=(-6, 0, 0), head=(4, 0, 0),
+                 hand_r=(0.25, -0.02, 0.86), hand_l=(-0.23, -0.02, 0.86),
+                 fist_r=0.5, fist_l=0.5,
+                 foot_r=(0.14, 0.0, _ANKLE), foot_l=(-0.13, 0.0, _ANKLE),
+                 knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))
+    r1 = min(fwd * 0.42, edge - 0.12)       # still on the platform
+    l1 = max(fwd * 0.88, edge + 0.12)       # on the apron
+    # The apron is a 0.2 m strip (mat edge 3.0 to APRON_OUT 3.2) and he
+    # walks along it: boots planted on it go in close (+-0.07), or one hangs
+    # off the edge and the other sinks into the canvas.
+    narrow = {"r": 0.07, "l": -0.07}
+    wide = {"r": 0.14, "l": -0.13}
+
+    def foot_x(side, f):
+        return (narrow if f >= edge else wide)[side]
+
+    def at(pelvis_fwd, pelvis_up, r, l, swing=None):
+        return dict(_shifted(stand, pelvis_fwd, pelvis_up),
+                    foot_r=(foot_x("r", r[0]), r[0], r[1] + _ANKLE),
+                    foot_l=(foot_x("l", l[0]), l[0], l[1] + _ANKLE),
+                    hand_r=(0.25, pelvis_fwd - 0.02 + (0.12 if swing == "l" else 0.0),
+                            pelvis_up + 0.86),
+                    hand_l=(-0.23, pelvis_fwd - 0.02 + (0.12 if swing == "r" else 0.0),
+                            pelvis_up + 0.86),
+                    knee_r=(0.1, 1.0, 0.3 if swing == "r" else 0.0),
+                    knee_l=(-0.1, 1.0, 0.3 if swing == "l" else 0.0))
+    return [
+        (0, _shifted(stand, 0.0, 0.0)),
+        (7, at(0.08, 0.0, (r1 * 0.5, 0.10), (0.0, 0.0), "r")),
+        (13, at(r1 * 0.55, 0.0, (r1, 0.0), (0.0, 0.0))),
+        (20, at(r1 + 0.04, 0.0, (r1, 0.0), (l1 * 0.5 + 0.05, up + 0.10), "l")),
+        (26, at((r1 + l1) * 0.5, up * 0.5, (r1, 0.0), (l1, up))),
+        (31, at(l1, up, ((r1 + fwd) * 0.5, up + 0.10), (l1, up), "r")),
+        (36, _shifted(dict(stand, foot_r=(narrow["r"], 0.0, _ANKLE),
+                           foot_l=(narrow["l"], 0.0, _ANKLE)), fwd, up)),
+    ]
+
+
 ## Rope_Step_Through_Apron's world keys: fwd from where he stands on the
-## apron, square to the ropes, up from the apron (which is mat height). The
+## apron, square to the ropes, up from the apron (the mat is APRON_ROPE_UP
+## above it, so a boot planted inside is that much higher). The
 ## rope line is at fwd +0.02 (EntranceDirector.APRON_STAND 3.12 against the
 ## ropes' 3.1), the top rope 1.10 above his feet, the middle 0.75.
 ##
@@ -907,7 +1135,7 @@ ROPE_STEP_KEYS = [
 def _apron_rope_keys():
     top, mid = 1.10, 0.75
     lift = dict(fist_r=0.8, fist_l=0.9)
-    return [
+    keys = [
         # On the apron, both hands on the top rope, sitting back off it --
         # he stands 2 cm outside the rope line, so an upright chest is
         # already against the top rope unless his hips are back.
@@ -954,9 +1182,25 @@ def _apron_rope_keys():
                   hand_r=(0.26, 0.74, 1.12), hand_l=(-0.24, 0.52, 1.10),
                   foot_r=(0.16, 0.50, 0.104), foot_l=(-0.13, 0.62, 0.104),
                   knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0), fist_r=0.6, fist_l=0.6)),
-        # Up, inside, in the stance -- so the walk that follows cuts on.
-        (40, _shifted(STANCE, 0.62, 0.0)),
     ]
+    # The mat is APRON_ROPE_UP above the apron: a boot planted inside (past
+    # the rope line) stands that much higher, and the pelvis rises with his
+    # weight as it goes in. (Keyed level, the inside boot sank 0.10 into the
+    # canvas and he rose out of it on the last frame.)
+    fwd, up = _entry()["apron_rope"]
+    raised = []
+    for frame, p in keys:
+        p = dict(p)
+        for side in ("foot_r", "foot_l"):
+            fx, ff, fz = p[side]
+            if ff > 0.15:
+                p[side] = (fx, ff, fz + up)
+        px, pf, pz = p["pelvis"]
+        p["pelvis"] = (px, pf, pz + up * min(max(pf / fwd, 0.0), 1.0))
+        raised.append((frame, p))
+    # Up, inside, in the stance -- so the walk that follows cuts on.
+    raised.append((40, _shifted(STANCE, fwd, up)))
+    return raised
 
 
 CLIPS = {
@@ -1906,66 +2150,12 @@ CLIPS = {
         hand_fwd=(-0.14, 0.16), hand_up=(0.84, 0.90),
         hand_x={"r": 0.25, "l": -0.23}, elbow=None), curl=0.5),
 
-    # 36 frames / 1.2s: up the three treads of the ring steps, right foot
-    # leading, one tread a step. World keys: fwd from the floor spot in front
-    # of the bottom tread, up from the floor. The treads (ring.py
-    # build_steps, 0.36 m run, 0.287 rise) put the foot targets at fwd
-    # 0.54 / 0.90 / 1.26 and tread tops at 0.29 / 0.57 / 0.86, so the root
-    # travels (1.26, 0.86): EntranceDirector.CLIMB_TO.
-    #
-    # Every key keeps both feet inside the 0.829 m leg: the pelvis waits over
-    # the trailing foot until the lead one is down, then transfers -- that
-    # wait is most of what makes it read as climbing rather than floating up.
-    "Climb_Steps": _world_clip(36, (1.26, 0.86), [
-        (0,  pose(STANCE, pelvis=(0.0, 0.0, 0.90), hips=(-4, 0, 0),
-                  spine=(-6, 0, 0), head=(4, 0, 0),
-                  hand_r=(0.25, 0.04, 0.88), hand_l=(-0.23, 0.02, 0.88),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 0.0, 0.104), foot_l=(-0.13, 0.0, 0.104),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        (5,  pose(STANCE, pelvis=(0.0, 0.08, 0.90), hips=(-10, 0, 0),
-                  spine=(-10, 0, 0), head=(6, 0, 0),
-                  hand_r=(0.25, -0.05, 0.90), hand_l=(-0.23, 0.22, 0.92),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 0.30, 0.50), foot_l=(-0.13, 0.0, 0.104),
-                  knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.0))),
-        (10, pose(STANCE, pelvis=(0.0, 0.24, 0.85), hips=(-12, 0, 0),
-                  spine=(-10, 0, 0), head=(6, 0, 0),
-                  hand_r=(0.25, 0.10, 0.92), hand_l=(-0.23, 0.36, 0.96),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 0.54, 0.394), foot_l=(-0.13, 0.0, 0.104),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        (15, pose(STANCE, pelvis=(0.0, 0.46, 1.10), hips=(-10, 0, 0),
-                  spine=(-8, 0, 0), head=(5, 0, 0),
-                  hand_r=(0.25, 0.62, 1.20), hand_l=(-0.23, 0.38, 1.10),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 0.54, 0.394), foot_l=(-0.13, 0.60, 0.80),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.3))),
-        (20, pose(STANCE, pelvis=(0.0, 0.60, 1.20), hips=(-12, 0, 0),
-                  spine=(-10, 0, 0), head=(6, 0, 0),
-                  hand_r=(0.25, 0.66, 1.26), hand_l=(-0.23, 0.90, 1.34),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 0.54, 0.394), foot_l=(-0.13, 0.90, 0.674),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        (25, pose(STANCE, pelvis=(0.0, 0.84, 1.45), hips=(-10, 0, 0),
-                  spine=(-8, 0, 0), head=(5, 0, 0),
-                  hand_r=(0.25, 1.12, 1.62), hand_l=(-0.23, 0.86, 1.52),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 1.05, 1.08), foot_l=(-0.13, 0.90, 0.674),
-                  knee_r=(0.1, 1.0, 0.3), knee_l=(-0.1, 1.0, 0.0))),
-        (30, pose(STANCE, pelvis=(0.0, 0.94, 1.49), hips=(-10, 0, 0),
-                  spine=(-8, 0, 0), head=(5, 0, 0),
-                  hand_r=(0.25, 1.00, 1.60), hand_l=(-0.23, 1.22, 1.66),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 1.26, 0.964), foot_l=(-0.13, 0.90, 0.674),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-        (36, pose(STANCE, pelvis=(0.0, 1.26, 1.74), hips=(-6, 0, 0),
-                  spine=(-8, 0, 0), head=(4, 0, 0),
-                  hand_r=(0.25, 1.30, 1.74), hand_l=(-0.23, 1.28, 1.74),
-                  fist_r=0.5, fist_l=0.5,
-                  foot_r=(0.14, 1.26, 0.964), foot_l=(-0.13, 1.26, 0.964),
-                  knee_r=(0.1, 1.0, 0.0), knee_l=(-0.1, 1.0, 0.0))),
-    ]),
+    # 55 frames / 1.83s: up the ring's four-tier flight, a tread a step,
+    # right foot leading, the left joining it on the platform -- from the
+    # floor beyond the bottom tread to the platform beside the post. Keys
+    # and root travel are measured off ring_builder.gd (_climb_keys);
+    # EntranceDirector.CLIMB_FWD / CLIMB_UP / CLIMB_SECONDS.
+    "Climb_Steps": _climb_clip(),
 
     # 48 frames / 1.6s: from the top tread through the ropes onto the mat.
     # World keys: fwd from the top tread's centre, up from its top. The rope
@@ -1985,24 +2175,15 @@ CLIPS = {
     # where the diagonal steps leave him (ring_builder.gd "Steel steps"). The
     # keys are Rope_Step_Through's from the moment he is up on the apron
     # (its frame 8), moved back 0.28 and down 0.24 so they start on the
-    # apron edge, with both feet already on it. The root travels (0.62, 0):
-    # EntranceDirector.APRON_ROPE_TO.
-    "Rope_Step_Through_Apron": _world_clip(40, (0.62, 0.0), _apron_rope_keys()),
+    # apron edge, with both feet already on it. The root travels 0.62 in and
+    # 0.10 up, apron to mat: EntranceDirector.APRON_ROPE_FWD / _UP.
+    "Rope_Step_Through_Apron": _world_clip(40, _entry()["apron_rope"], _apron_rope_keys()),
 
-    # 30 frames / 1.0s: off the top tread of the diagonal steps and up onto
-    # the apron beside the post: the right boot up (14), the left follows
-    # (22), standing on the apron (30), 1.0 along and 0.24 up. The root
-    # travels (1.0, 0.24): EntranceDirector.APRON_STEP_TO.
-    "Apron_Step": _world_clip(30, (1.0, 0.24), [
-        (0,  _shifted(STANCE, 0.0, 0.0)),
-        (8,  dict(_shifted(STANCE, 0.10, 0.0), foot_r=(0.23, 0.30, 0.40),
-                  foot_l=(-0.19, 0.18, 0.104))),
-        (14, dict(_shifted(STANCE, 0.34, 0.08), foot_r=(0.23, 0.50, 0.344),
-                  foot_l=(-0.19, 0.18, 0.104))),
-        (22, dict(_shifted(STANCE, 0.66, 0.20), foot_r=(0.23, 0.50, 0.344),
-                  foot_l=(-0.19, 0.80, 0.50))),
-        (30, _shifted(STANCE, 1.0, 0.24)),
-    ]),
+    # 36 frames / 1.2s: off the platform of the diagonal steps and onto
+    # the apron beside the post -- three paces, near level (the apron is
+    # 0.04 above the platform; it was keyed 0.24, a step up onto a box that
+    # is not there). Root travel: EntranceDirector.APRON_STEP_FWD / _UP.
+    "Apron_Step": _world_clip(36, _entry()["apron_step"], _apron_step_keys()),
 
     # === Roman's entrance (gauntlet/refs/entrances.md) =====================
     #
@@ -2185,6 +2366,9 @@ CLIPS = {
     # the next phrase. A held pose is never a frozen one: he breathes, the
     # head goes back to drink it in, the hands drift. It drops to the stand on
     # its last frames, which is the cock Fists_Down punches out of.
+    # The head goes back to 60% of what it was (owner, 20 Oct, "check his
+    # neck"): on top of the spine's lean and the arms above the shoulders,
+    # the full tilt folded his head down into his traps -- no neck at all.
     "Whoa_Arms": [
         (0,  CODY_STAND),
         (5,  pose(CODY_STAND, pelvis=(0.0, 0.0, 0.86), spine=(-6, 0, 0),
@@ -2194,44 +2378,44 @@ CLIPS = {
                   fist_r=0.8, fist_l=0.8)),
         # Thrown: a touch past the hold, and it settles back.
         (11, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.92), spine=(16, 0, 0),
-                  head=(22, 0, 0),
+                  head=(13, 0, 0),
                   hand_r=(0.84, 0.06, 1.77), hand_l=(-0.84, 0.06, 1.77),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.15, fist_l=0.15)),
         (17, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(14, 0, 0),
-                  head=(22, 0, 0),
+                  head=(13, 0, 0),
                   hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
         # Breathing it in, head going back.
         (44, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.905), spine=(17, 0, 0),
-                  head=(28, 0, 0),
+                  head=(17, 0, 0),
                   hand_r=(0.83, 0.04, 1.75), hand_l=(-0.83, 0.04, 1.75),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
         (62, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.905), spine=(14, 0, 0),
-                  head=(24, 0, 0),
+                  head=(14, 0, 0),
                   hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
         # The pyro: the chest lifts to it.
         (72, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.93), spine=(20, 0, 0),
-                  head=(30, 0, 0),
+                  head=(18, 0, 0),
                   hand_r=(0.85, 0.04, 1.80), hand_l=(-0.85, 0.04, 1.80),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
         (96, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(16, 0, 0),
-                  head=(24, 0, 4),
+                  head=(14, 0, 4),
                   hand_r=(0.83, 0.05, 1.74), hand_l=(-0.83, 0.05, 1.74),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.2, fist_l=0.2)),
         (130, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.91), spine=(15, 0, 0),
-                   head=(20, 0, -3),
+                   head=(12, 0, -3),
                    hand_r=(0.82, 0.06, 1.72), hand_l=(-0.82, 0.06, 1.72),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.3, fist_l=0.3)),
         (141, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.90), spine=(12, 0, 0),
-                   head=(14, 0, 0),
+                   head=(8, 0, 0),
                    hand_r=(0.78, 0.08, 1.66), hand_l=(-0.78, 0.08, 1.66),
                    elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                    fist_r=0.6, fist_l=0.6)),
@@ -2413,42 +2597,42 @@ CLIPS = {
     "Whoa_Low": [
         (0,  CODY_STAND),
         (10, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.780), spine=(10, 0, 0),
-                  head=(16, 0, 0),
+                  head=(10, 0, 0),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.80, 0.08, 1.32), hand_l=(-0.80, 0.08, 1.32),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
         (18, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.760), spine=(12, 0, 0),
-                  head=(18, 0, 0),
+                  head=(11, 0, 0),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.81, 0.08, 1.30), hand_l=(-0.81, 0.08, 1.30),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
         (44, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.765), spine=(14, 0, 0),
-                  head=(22, 0, 0),
+                  head=(13, 0, 0),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.81, 0.08, 1.33), hand_l=(-0.81, 0.08, 1.33),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
         (62, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.770), spine=(11, 0, 0),
-                  head=(18, 0, -4),
+                  head=(11, 0, -4),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.80, 0.08, 1.31), hand_l=(-0.80, 0.08, 1.31),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.1, fist_l=0.1)),
         (70, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.750), spine=(16, 0, 0),
-                  head=(26, 0, 0),
+                  head=(16, 0, 0),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.84, 0.08, 1.40), hand_l=(-0.84, 0.08, 1.40),
                   elbow_r=(1.0, -0.2, 0.2), elbow_l=(-1.0, -0.2, 0.2),
                   fist_r=0.0, fist_l=0.0)),
         (90, pose(CODY_STAND, pelvis=(0.0, 0.0, 0.765), spine=(12, 0, 0),
-                  head=(18, 0, 3),
+                  head=(11, 0, 3),
                   foot_r=(0.33, 0.0, 0.104), foot_l=(-0.33, 0.0, 0.104),
                   knee_r=(0.6, 1.0, 0.0), knee_l=(-0.6, 1.0, 0.0),
                   hand_r=(0.81, 0.08, 1.32), hand_l=(-0.81, 0.08, 1.32),

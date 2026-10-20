@@ -42,12 +42,32 @@ static func of(node: Node) -> WeaponStock:
 	return s
 
 
-## Whether `id` is under the ring: anything in the catalogue, at any point
-## in the match -- the gun and the launcher included (the owner, 19 Oct).
+## Out of reach until the finish (MatchFlow.finish_allowed, seven minutes
+## in): the owner, 20 Oct -- with the gun there from the bell, matches ended
+## too soon. Under the ring, on the stage and loose on the floor alike.
+const LATE_ONLY: Array[StringName] = [&"handgun"]
+
+
+## Whether `id` is under the ring: anything in the catalogue -- the launcher
+## from the bell (the owner, 19 Oct), the gun once the finish is on.
 func in_stock(id: StringName) -> bool:
-	return WeaponCatalog.by_id(id) != null
+	return WeaponCatalog.by_id(id) != null and available(id)
 
 
+## Whether `id` may be taken now: always, but for LATE_ONLY before the
+## finish. A match without a MatchFlow (tests, shots) has no clock to wait on.
+func available(id: StringName) -> bool:
+	if not id in LATE_ONLY:
+		return true
+	var flow := get_parent().get_node_or_null("MatchFlow") as MatchFlow if get_parent() else null
+	return flow == null or flow.finish_allowed()
+
+
+func _takeable(a: Variant) -> bool:
+	if not is_instance_valid(a):
+		return false
+	var actor := a as WeaponActor
+	return actor.mode == WeaponActor.Mode.FLOOR and (actor.def == null or available(actor.def.id))
 ## Takes `def` out from under the ring: a new actor in the scene.
 func pull(def: WeaponDef) -> WeaponActor:
 	var a := WeaponActor.make(def)
@@ -80,7 +100,7 @@ func nearest_stage_weapon(at: Vector3) -> WeaponActor:
 	var best: WeaponActor = null
 	var best_d := INF
 	for actor in stage_actors:
-		if not is_instance_valid(actor) or actor.mode != WeaponActor.Mode.FLOOR:
+		if not _takeable(actor):
 			continue
 		var d := Vector2(actor.global_position.x - at.x,
 				actor.global_position.z - at.z).length()
@@ -97,7 +117,7 @@ func nearest_loose(at: Vector3, inside: bool, reach: float) -> WeaponActor:
 	var best: WeaponActor = null
 	var best_d := reach
 	for a in actors:
-		if not is_instance_valid(a) or a.mode != WeaponActor.Mode.FLOOR:
+		if not _takeable(a):
 			continue
 		var p := a.global_position
 		var in_ring := absf(p.x) < RingBuilder.MAT_HALF and absf(p.z) < RingBuilder.MAT_HALF
@@ -115,7 +135,7 @@ func loose_near(at: Vector3) -> WeaponActor:
 	var best: WeaponActor = null
 	var best_d := PICKUP_REACH
 	for a in actors:
-		if not is_instance_valid(a) or a.mode != WeaponActor.Mode.FLOOR:
+		if not _takeable(a):
 			continue
 		var d := Vector2(a.global_position.x - at.x, a.global_position.z - at.z).length()
 		if d < best_d:

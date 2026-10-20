@@ -106,12 +106,29 @@ const EYE_PARALLAX := 4.0
 ## stare -- a bright white sclera all round a saturated iris. Real eyes sit
 ## darker than paper white in shadowed sockets; this takes the whole eye down
 ## to EYE_TONE, the sclera to a soft off-white and the blue with it.
-const EYE_TONE := Color(0.74, 0.74, 0.76)
+const EYE_TONE := Color(0.80, 0.79, 0.78)
+## The wet film, softer than the kit's glass (1.0 at 0.03): on his eyes that
+## mirrored every truss key as its own hard white point, two per eye with a
+## glow halo round them -- the owner's "face needs improving" close-up read
+## as a glassy stare. A thin, rougher coat and a dielectric's lower
+## reflectance: one small catchlight, under the glow threshold.
+const EYE_COAT := 0.3
+const EYE_COAT_ROUGHNESS := 0.3
+const EYE_SPECULAR := 0.25
+## And the cornea is not mirror-smooth: the kit's roughness map takes it
+## to ~0, which turns each truss light into a point over the bloom
+## threshold however low the reflectance. One even, slightly soft surface.
+const EYE_ROUGHNESS := 0.3
 
 
 func _fix_eyes() -> void:
 	var eye := EyeKit.eye_material("cody", EYE_PARALLAX)
 	eye.albedo_color = EYE_TONE
+	eye.clearcoat = EYE_COAT
+	eye.clearcoat_roughness = EYE_COAT_ROUGHNESS
+	eye.metallic_specular = EYE_SPECULAR
+	eye.roughness_texture = null
+	eye.roughness = EYE_ROUGHNESS
 	EyeKit.dress(self, EYE_MATERIAL, eye)
 
 

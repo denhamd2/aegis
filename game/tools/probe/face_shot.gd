@@ -7,7 +7,12 @@ extends Node
 ##
 ##   xvfb-run -a godot4 --path game --rendering-driver vulkan \
 ##       --resolution 1280x720 tools/probe/face_shot.tscn -- \
-##       --a kenny --b cody --out /tmp/faces [--only kenny]
+##       --a kenny --b cody --out /tmp/faces [--only kenny] \
+##       [--clips strikes/whoa_arms,strikes/kneel --at 0.5]
+##
+## --clips: after the face-off shots, each listed clip played on the --only
+## man (or --b), held at --at through it, and his head and neck framed from
+## the front and the side -- for neck stretch in the bigger poses.
 ##
 ## Framing is off the head bone (whatever the rig calls it): the eyes sit
 ## EYE_UP above it and EYE_AHEAD in front, near enough on every model here.
@@ -19,6 +24,8 @@ var _out := "/tmp/faces"
 var _a := "kenny"
 var _b := "cody"
 var _only := ""
+var _clips: Array = []
+var _at := 0.5
 
 
 func _ready() -> void:
@@ -31,6 +38,8 @@ func _ready() -> void:
 			"--a": _a = args[i + 1]
 			"--b": _b = args[i + 1]
 			"--only": _only = args[i + 1]
+			"--clips": _clips = Array(args[i + 1].split(","))
+			"--at": _at = float(args[i + 1])
 	DirAccess.make_dir_recursive_absolute(_out)
 	var scene: Node = load("res://scenes/match.tscn").instantiate()
 	TitleScreen.configure_match(scene, Roster.by_id(_a), Roster.by_id(_b), 1)
@@ -63,7 +72,7 @@ func _ready() -> void:
 		subjects.append(["referee", ref, Vector3.ZERO])
 	for subject: Array in subjects:
 		var id: String = subject[0]
-		if _only != "" and id != _only:
+		if (_only != "" and id != _only) or not _clips.is_empty():
 			continue
 		var node: Node3D = subject[1]
 		var forward: Vector3 = subject[2]
@@ -86,6 +95,29 @@ func _ready() -> void:
 			for _i in 30:
 				await RenderingServer.frame_post_draw
 			get_viewport().get_texture().get_image().save_png("%s/%s_%s.png" % [_out, id, shot[0]])
+	if not _clips.is_empty():
+		var man: WrestlerController = a if _only == _a else b
+		for other: Array in subjects:
+			(other[1] as Node3D).visible = other[1] == man
+		var face: Vector3 = Vector3(1, 0, 0) if man == a else Vector3(-1, 0, 0)
+		var side := face.cross(Vector3.UP)
+		for clip: String in _clips:
+			man.play_presentation_clip(clip, true)
+			var anim: Animation = man.anim_player.get_animation(clip)
+			var hold := int(anim.length * _at * 60.0) if anim else 30
+			for _i in maxi(hold, 2):
+				await get_tree().process_frame
+			man.anim_tree.active = false
+			var head := _head(man)
+			for view: Array in [["front", face], ["side", side]]:
+				cam.fov = 30.0
+				cam.look_at_from_position(head + (view[1] as Vector3) * 1.1 + Vector3.UP * 0.05,
+						head + Vector3.DOWN * 0.12)
+				for _i in 20:
+					await RenderingServer.frame_post_draw
+				get_viewport().get_texture().get_image().save_png("%s/neck_%s_%s.png" % [
+						_out, clip.get_file(), view[0]])
+			man.anim_tree.active = true
 	print("FACE_SHOT done")
 	get_tree().quit()
 

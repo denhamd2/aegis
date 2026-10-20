@@ -340,14 +340,17 @@ const RECIPES := {
 	# ROPE_SECONDS), and a retime here would slide the planted feet.
 	"entrance_walk": {"kind": "retime", "source": "Entrance_Walk",
 		"seconds": 0.800, "file": AUTHORED, "loop": true},
+	# The entry clips play at their authored length: the director moves the
+	# root over exactly these seconds, so a retime here slides the boots off
+	# the treads (it did: the 55-frame climb baked into 1.2 s).
 	"climb_steps": {"kind": "retime", "source": "Climb_Steps",
-		"seconds": 1.200, "file": AUTHORED},
+		"seconds": 55.0 / 30.0, "file": AUTHORED},
 	"rope_step_through": {"kind": "retime", "source": "Rope_Step_Through",
 		"seconds": 1.600, "file": AUTHORED},
 	"rope_step_through_apron": {"kind": "retime", "source": "Rope_Step_Through_Apron",
 		"seconds": 1.333, "file": AUTHORED},
 	"apron_step": {"kind": "retime", "source": "Apron_Step",
-		"seconds": 1.000, "file": AUTHORED},
+		"seconds": 1.200, "file": AUTHORED},
 	# Roman's entrance (gauntlet/refs/entrances.md). Own lengths, as above.
 	"walk_slow": {"kind": "retime", "source": "Walk_Slow",
 		"seconds": 1.000, "file": AUTHORED, "loop": true},

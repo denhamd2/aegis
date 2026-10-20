@@ -257,8 +257,29 @@ func test_both_entrances_climb_from_the_stair_foot_to_the_apron() -> void:
 			var to: Vector3 = beat["to"]
 			assert_vector(Vector3(from.x, 0.0, from.z)).is_equal_approx(stair_foot,
 					Vector3.ONE * 0.001)
-			assert_float(from.y).is_equal_approx(ArenaBuilder.FLOOR_Y, 0.001)
+			# On the ringside mat, where the walk before it put him.
+			assert_float(from.y).is_equal_approx(
+					ArenaBuilder.FLOOR_Y + ArenaBuilder.RINGSIDE_MAT_LIFT, 0.001)
 			assert_float(to.y).is_equal_approx(RingBuilder.STEP_TOP_Y, 0.001)
+		# Each travelling clip moves the root exactly as far as its boots
+		# were keyed for (wrestling_clips.py reads the same numbers): the
+		# float up the steps was a route 0.28 m longer than the clip.
+		var travel: Dictionary = {
+			"strikes/climb_steps": Vector2(EntranceDirector.CLIMB_FWD, EntranceDirector.CLIMB_UP),
+			"strikes/apron_step": Vector2(EntranceDirector.APRON_STEP_FWD,
+					EntranceDirector.APRON_STEP_UP),
+			"strikes/rope_step_through_apron": Vector2(EntranceDirector.APRON_ROPE_FWD,
+					EntranceDirector.APRON_ROPE_UP),
+		}
+		if travel.has(beat.get("clip", "")):
+			var want: Vector2 = travel[beat["clip"]]
+			var a: Vector3 = beat["from"]
+			var b: Vector3 = beat["to"]
+			assert_float(Vector2(a.x, a.z).distance_to(Vector2(b.x, b.z))) \
+					.override_failure_message("%s travels along" % beat["clip"]) \
+					.is_equal_approx(want.x, 0.02)
+			assert_float(b.y - a.y).override_failure_message("%s travels up" % beat["clip"]) \
+					.is_equal_approx(want.y, 0.02)
 		if beat.get("clip") == "strikes/apron_step":
 			apron_steps += 1
 			assert_float((beat["from"] as Vector3).y).is_equal_approx(

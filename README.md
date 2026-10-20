@@ -10113,3 +10113,64 @@ not the round balls".
 - Guarded by `test_every_fire_is_drawn_with_flame_tongues`. Review:
   `gauntlet/refs/nhb/review/fire_style_all.png` (entrance pyro, a screen fire,
   a crowd fire, the fireball).
+
+## 20 Oct — Cody into the ring without the float, his eyes, his neck, and the gun
+
+The owner: "I need Cody's face improved, check his neck, and also review his
+entrance animation as it doesn't look smooth. He also glitches from outside the
+ring during the entrance to inside the ring." Then: "The gun should only be
+available at the end of a match."
+
+**The way into the ring.** Four separate faults, each measured with the new
+`tools/probe/entry_contact.tscn`, which logs the lower boot's height over
+whatever it stands on and the root's turn rate, tick by tick (run it with
+`--fixed-fps 60`).
+
+1. **The steps clip was for a different flight.** `Climb_Steps` had been
+   keyed for three 0.36 m treads. The ring's flight is now four tiers with a
+   notched platform, and the route had moved with them: 1.54 m along and
+   0.95 m up, against the clip's 1.26 m and 0.86 m. His boots missed every
+   tread. The clip is re-authored as one boot per tread, 55 frames, from
+   `ring_builder.gd`'s own constants (`_entry_geometry` reads them).
+2. **The bake squeezed every entry clip back to its old length.**
+   `strike_recipes.gd` retimed `climb_steps` to 1.2 s and `apron_step` to
+   1.0 s, whatever their authored length. The animation ran ahead of the
+   root, so the planted boot drifted 10 cm and then popped. They now play at
+   their authored length.
+3. **The apron step lifted him onto a box that isn't there.** `Apron_Step`
+   stepped 0.24 m up onto an apron that is 0.04 m above the platform. It is
+   now three near-level paces. The feet go in close on the apron (±0.07),
+   which is only a 0.2 m strip, and he keeps that stance as he turns to the
+   ropes instead of the staggered wait stance. The rope step now accounts for
+   the 0.10 m rise from the apron to the mat.
+4. **The ghost.** At ringside, the stage's follow spot was still at full
+   strength and the tron's rim light was still on him from 20 m behind. Up the
+   steps that burned his white coat into a glowing figure. Inside the
+   barricade (`EntranceDirector._at_ring`), both now behave as they do in the
+   ring.
+- Clip beats now ease his facing at the walk's turn rate instead of snapping
+  (it was a 59° snap at the apron step).
+- The travel numbers live once, in `EntranceDirector.CLIMB_FWD` and the rest.
+  `wrestling_clips.py` checks them against the ring and stops if they
+  disagree, and `test_both_entrances_climb_from_the_stair_foot_to_the_apron`
+  checks the route against them.
+- Measured result for Cody: the lower boot stays within 2 cm of the tread,
+  apron or mat through the whole climb, step and rope.
+- Roman shares the route. His rig's wider stance still leaves up to 9 cm at
+  moments on the apron, down from 20–30 cm.
+
+**His eyes.** Each eye threw two hard white glints with a bloom halo, which
+gave him a glassy stare. The wet film is now thinner and rougher, and the
+eyes' reflectance is lower (`CodyModel.EYE_COAT`, `EYE_SPECULAR`), so there
+is one small catchlight per eye.
+
+**His neck.** In the WHOA poses, the spine's lean, his arms above his
+shoulders and a 22–30° head tilt folded his head down into his traps. The
+head tilt in `Whoa_Arms` and `Whoa_Low` is now 60% of what it was.
+
+**The gun waits for the finish.** `WeaponStock.LATE_ONLY` holds the handgun
+back until `MatchFlow.finish_allowed()` (seven minutes in): not under the
+ring, not off the stage, not off the floor. The wheel greys it out until
+then. The launcher is still open from the bell. Guarded by
+`test_the_gun_is_only_there_for_the_finish` and
+`test_the_launcher_is_open_from_the_bell_and_the_gun_from_the_finish`.

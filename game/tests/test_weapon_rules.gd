@@ -144,6 +144,37 @@ func test_no_holds_barred_lays_out_the_dangerous_weapons_on_the_stage() -> void:
 	assert_object(stock.nearest_stage_weapon(Vector3(0.0, 0.0, -33.0))).is_not_null()
 
 
+## The gun waits for the finish (the owner, 20 Oct: out from the bell, it
+## ended matches too soon): not under the ring, not off the stage, not off the
+## floor until MatchFlow says the match may end; everything else from the bell.
+func test_the_gun_is_only_there_for_the_finish() -> void:
+	var arena: Node3D = auto_free(Node3D.new())
+	MatchRules.set_mode(arena, MatchRules.Mode.NO_HOLDS_BARRED)
+	add_child(arena)
+	var flow := MatchFlow.new()
+	flow.name = "MatchFlow"
+	flow.set_physics_process(false)
+	arena.add_child(flow)
+	var w: WrestlerController = WRESTLER_SCENE.instantiate()
+	arena.add_child(w)
+	var stock := WeaponStock.of(w)
+	stock.seed_stage_weapons()
+	assert_bool(stock.in_stock(&"handgun")).is_false()
+	assert_bool(stock.in_stock(&"rpg")).is_true()
+	assert_bool(stock.in_stock(&"steel_chair")).is_true()
+	for actor in stock.stage_actors:
+		if actor.def.id == &"handgun":
+			assert_object(stock.loose_near(actor.global_position)).is_not_equal(actor)
+			assert_object(stock.nearest_stage_weapon(actor.global_position)).is_not_equal(actor)
+	flow.tick = int(MatchFlow.FINISH_FROM * 60.0)
+	assert_bool(stock.in_stock(&"handgun")).is_true()
+	var gun: WeaponActor = null
+	for actor in stock.stage_actors:
+		if actor.def.id == &"handgun":
+			gun = actor
+	assert_object(stock.loose_near(gun.global_position)).is_equal(gun)
+
+
 func test_letting_go_of_the_button_gets_him_up_empty_handed() -> void:
 	var w := _wrestler(true)
 	w.outside_ring = true

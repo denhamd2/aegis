@@ -81,23 +81,30 @@ func test_rocket_gun_and_bed_of_nails_are_regular_ai_picks() -> void:
 	assert_int(WrestlerAI.WEAPON_RUNS).is_greater_equal(10)
 
 
-func test_gun_and_rocket_launcher_are_open_from_the_bell() -> void:
-	# the owner, 19 Oct: no late-match lock -- they can come out at any time
+func test_the_launcher_is_open_from_the_bell_and_the_gun_from_the_finish() -> void:
+	# the owner, 19 Oct: the launcher at any time; 20 Oct: the gun only for
+	# the finish -- out from the bell, it ended matches too soon
 	var pair := _pair(true)
 	var flow := MatchFlow.new()
 	flow.name = "MatchFlow"
 	add_child(flow)
 	var stock := WeaponStock.of(pair[0])
 	flow.tick = 0
-	assert_bool(stock.in_stock(&"handgun")).is_true()
+	assert_bool(stock.in_stock(&"handgun")).is_false()
 	assert_bool(stock.in_stock(&"rpg")).is_true()
 	var rng := RandomNumberGenerator.new()
 	var early_picks := {}
 	for i in 200:
 		rng.seed = i + 1
 		early_picks[pair[0].ai.choose_weapon(rng)] = true
-	assert_bool(early_picks.has(&"handgun")).is_true()
+	assert_bool(early_picks.has(&"handgun")).is_false()
 	assert_bool(early_picks.has(&"rpg")).is_true()
+	flow.tick = int(MatchFlow.FINISH_FROM * 60.0)
+	var late_picks := {}
+	for i in 200:
+		rng.seed = i + 1
+		late_picks[pair[0].ai.choose_weapon(rng)] = true
+	assert_bool(late_picks.has(&"handgun")).is_true()
 
 
 func test_tables_are_a_common_pick_for_both_wrestlers() -> void:
