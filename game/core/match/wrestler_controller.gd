@@ -2834,6 +2834,11 @@ func _process_active_move(input: Dictionary) -> void:
 
 func _apply_move_to_opponent(move: MoveDef) -> void:
 	if _is_weapon_swing(move):
+		if held_weapon.def.id == &"fire_torch":
+			# the fireball reached him: he goes up (ManFire, put out by the crew)
+			var fire := opponent.get_node_or_null("ManFire") as ManFire
+			if fire:
+				fire.ignite()
 		if held_weapon.def.id == &"handgun":
 			opponent._pending_fatal_shot = true
 			var from_victim := opponent.global_position - global_position

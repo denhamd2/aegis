@@ -9,6 +9,8 @@ extends Node
 ##                  down through it as it folds
 ##   --spot wall    Cody whipped across the stage into the left LED wall: the
 ##                  smash, the sparks, the wall dead
+##   --spot breath  Roman with the fire torch spits a fireball over it, and
+##                  Cody goes up
 ##
 ##   xvfb-run -a godot --path game --rendering-driver vulkan --resolution 1280x720 \
 ##       --fixed-fps 30 tools/probe/carnage_shot.tscn -- --spot table --out /tmp/carnage
@@ -57,6 +59,8 @@ func _ready() -> void:
 			await _bridge()
 		"wall":
 			await _wall()
+		"breath":
+			await _breath()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -171,6 +175,30 @@ func _wall() -> void:
 	await _save("wall_2_sparks.png")
 	await _frames(70)
 	await _save("wall_3_dead.png")
+
+
+func _breath() -> void:
+	_a.global_position = Vector3(-0.8, 0.0, 0.0)
+	_b.global_position = Vector3(0.7, 0.0, 0.0)
+	_a.look_at(_b.global_position, Vector3.UP)
+	_b.look_at(_a.global_position, Vector3.UP)
+	var torch := WeaponStock.of(_a).pull(WeaponCatalog.by_id(&"fire_torch"))
+	_a.take_weapon(torch)
+	_cam.global_position = Vector3(0.2, 1.9, 3.6)
+	_cam.look_at(Vector3(0.0, 1.35, 0.0))
+	_cam.fov = 48.0
+	await _frames(20)
+	await _save("breath_0_torch.png")
+	var swing := WeaponCatalog.swing_move(torch.def)
+	_a.play_presentation_clip("strikes/weapon_spray", false)
+	torch.fire(1, _a)
+	await _frames(6)
+	await _save("breath_1_fireball.png")
+	await _frames(6)
+	_a._apply_move_to_opponent(swing)
+	await _save("breath_2_reaches.png")
+	await _frames(40)
+	await _save("breath_3_alight.png")
 
 
 func _frames(n: int) -> void:

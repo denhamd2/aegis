@@ -221,3 +221,33 @@ func test_no_led_wall_off_the_stage_or_in_a_singles_match() -> void:
 	MatchRules.set_mode(scene, MatchRules.Mode.ONE_ON_ONE)
 	b.global_position = Vector3(-3.15, ArenaBuilder.STAGE_DECK_Y, ArenaBuilder.MATCH_STAGE_BACK_LIMIT + 0.05)
 	assert_bool(b._whipped_into_screen()).is_false()
+
+
+# --- fire breathing ----------------------------------------------------------
+
+func test_the_fire_torch_is_a_spray_that_burns_and_carries_its_flame() -> void:
+	var def := WeaponCatalog.by_id(&"fire_torch")
+	assert_object(def).is_not_null()
+	assert_int(def.swing).is_equal(WeaponDef.Swing.SPRAY)
+	assert_bool(WeaponCatalog.is_ranged(def)).is_true()
+	var a := WeaponActor.make(def)
+	auto_free(a)
+	assert_object(a.get_node_or_null("TorchFlame")).is_not_null()
+
+
+func test_breathing_fire_at_him_sets_him_alight() -> void:
+	var a := _wrestler(true)
+	var b := _wrestler(true, 8)
+	a.opponent = b
+	b.opponent = a
+	a.global_position = Vector3(0.0, 0.0, 0.0)
+	b.global_position = Vector3(0.0, 0.0, -1.4)
+	a.look_at(b.global_position, Vector3.UP)
+	await _ticks(2)
+	a.take_weapon(WeaponStock.of(a).pull(WeaponCatalog.by_id(&"fire_torch")))
+	var swing := WeaponCatalog.swing_move(a.held_weapon.def)
+	assert_bool(a._strike_reaches(swing)).is_true()
+	var fire := b.get_node("ManFire") as ManFire
+	assert_bool(fire.burning).is_false()
+	a._apply_move_to_opponent(swing)
+	assert_bool(fire.burning).is_true()

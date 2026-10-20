@@ -693,6 +693,12 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 			_register_chaos_activity(3.0)
 		"cloud":
 			sfx.play("whoosh", -2.0, 0.7)
+		"breath":
+			# the fuel going up out of his mouth: a roar of flame, and the hall
+			sfx.play("whoosh", 0.0, 0.5)
+			sfx.play("pyro_boom", -8.0, 1.5)
+			sfx.play_any("crowd_ooh", -1.0)
+			_register_chaos_activity(2.5)
 		"rocket":
 			sfx.play("whoosh", ROCKET_LAUNCH_DB, 0.8)
 			sfx.play("pyro_bang", ROCKET_IGNITION_DB, 0.7)

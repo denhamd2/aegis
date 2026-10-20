@@ -193,6 +193,11 @@ const TABLE := [
 	["fire_extinguisher", "Fire Extinguisher", WeaponDef.Family.SPRAYS, "fire_extinguisher",
 		"FireExtinguisher_Clean", "", "", "", WeaponDef.Swing.SPRAY, 2.0, 0.0, 0, 0, true, false, 0.0,
 		"whoosh", [], {"cloud": "FireExtinguisher_Cloud"}],
+	# Fire breathing (the owner, 19 Oct): the torch held up, and the
+	# fireball spat over it sets the man in front of him alight
+	# (WeaponActor._breathe_fire, WrestlerController._apply_move_to_opponent).
+	["fire_torch", "Fire Torch", WeaponDef.Family.SPRAYS, "fire_torch", "FireTorch_Clean", "", "", "",
+		WeaponDef.Swing.SPRAY, 6.0, 2.0, 0, 0, false, false, 0.0, "whoosh", [], {}],
 	["handgun", "Handgun", WeaponDef.Family.SPRAYS, "handgun", "Handgun_Clean", "", "", "",
 		WeaponDef.Swing.GUN, 22.0, 8.0, 0, 0, false, false, 0.0, "pyro_bang", [],
 		{"flash": "Handgun_Flash"}],

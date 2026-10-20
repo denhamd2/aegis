@@ -1445,7 +1445,8 @@ const SIGNATURE_WEIGHT := 7.0
 ## the card rather than leaving them to a 1-in-35 flat draw. (The knives and
 ## swords are laid out on the stage several deep, WeaponStock.STAGE_LAYOUT.)
 const WILD_WEAPONS: Array[StringName] = [
-		&"handgun", &"rpg", &"bed_of_nails", &"table", &"glass_pane", &"thumbtacks", &"barbed_wire_board"]
+		&"handgun", &"rpg", &"bed_of_nails", &"table", &"glass_pane", &"thumbtacks", &"barbed_wire_board",
+		&"fire_torch"]
 const WILD_WEIGHT := 10.0
 ## Swings before he drops it, and how long a fetch may take before he gives up.
 const WEAPON_SWINGS := 4

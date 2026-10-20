@@ -10069,3 +10069,24 @@ The owner: "Add Kenny Omega entrance video from here" (a Google Drive link).
   (`WrestlerController.wants_screen_whip`).
 - Review: `gauntlet/refs/nhb/review/carnage_4_led_wall.png`
   (`carnage_shot --spot wall`).
+
+## 20 Oct — Carnage 5: fire breathing
+
+- **The torch.** A new weapon, the Fire Torch: a turned hardwood handle with a
+  rag wired round its head, charred (`tools/blender/weapons/fire_torch.py` ->
+  `fire_torch.glb`, 628 triangles, deterministic). Its own flame burns on the
+  head the whole time it is out (`WeaponActor._light_torch`).
+- **The spit.** It is a spray (`Swing.SPRAY`, 2.4 m reach in the spray's
+  cone), so it is picked up, carried and used the way the extinguisher is.
+  - On the swing he breathes the fire: a fireball out of his mouth, over the
+    torch and on along where he faces, growing as it goes, with its flash of
+    light (`WeaponActor._breathe_fire`) and a roar of flame and the crowd
+    (`MatchAudio` "breath").
+  - If it reaches the man in front of him, that man goes up (`ManFire.ignite`)
+    and the referee's extinguisher run starts as usual.
+- **The AI.** It is one of the heel's wild picks, so it comes out of the stock
+  in No Holds Barred.
+- Fixed on the way: `WeaponActor.fire()` returned early for any weapon with
+  no effect state, which would have made the torch a dud.
+- Review: `gauntlet/refs/nhb/review/carnage_5_fire_breathing.png`
+  (`carnage_shot --spot breath`).

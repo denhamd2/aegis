@@ -88,6 +88,7 @@ static func make(weapon_def: WeaponDef, state := "") -> WeaponActor:
 	a.name = "Weapon_" + String(weapon_def.id)
 	a._load_model()
 	a.show_state(state if state != "" else a._held_root())
+	a._light_torch()
 	return a
 
 
@@ -449,7 +450,8 @@ const ROCKET_HOMING_CONE_DEG := 20.0
 ## A swing has started: if this weapon fires something, it goes off when the
 ## swing's startup is over.
 func fire(after_ticks: int, by: Node3D, miss := Vector2.ZERO) -> void:
-	if def.effects.is_empty():
+	# the torch has no effect state of its own: its fireball is drawn here
+	if def.effects.is_empty() and def.id != &"fire_torch":
 		return
 	_fire_in = after_ticks
 	_fire_by = by
@@ -475,7 +477,10 @@ func _tick_fire() -> void:
 		WeaponDef.Swing.GUN:
 			_spawn_effect(host, "flash", at)
 		WeaponDef.Swing.SPRAY:
-			_spawn_effect(host, "cloud", at)
+			if def.id == &"fire_torch":
+				_breathe_fire(host)
+			else:
+				_spawn_effect(host, "cloud", at)
 		WeaponDef.Swing.LAUNCHER:
 			var fwd := out
 			var reach := float(WeaponCatalog.RANGED[def.swing])
@@ -741,6 +746,84 @@ func is_climbable_ladder() -> bool:
 
 
 # --- fire --------------------------------------------------------------------
+
+## The fireball (the owner, 19 Oct: "fire breathing"): out of his mouth over
+## the torch and on along where he faces, a billow that grows as it goes and a
+## flash of its light. It sets alight the man it reaches (WrestlerController);
+## this is what it looks like.
+const BREATH_REACH := 2.4
+const BREATH_SPEED := 6.5
+
+
+func _breathe_fire(host: Node) -> void:
+	var by := _fire_by as WrestlerController
+	if by == null:
+		return
+	var mouth := by._bone_world("Head")
+	if mouth == Vector3.INF:
+		mouth = by.global_position + Vector3.UP * 1.7
+	var fwd := -by.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized() if fwd.length() > 0.01 else Vector3.FORWARD
+	var ball := Node3D.new()
+	ball.name = "FireBreath"
+	host.add_child(ball)
+	ball.global_transform = Transform3D(Basis.looking_at(fwd, Vector3.UP), mouth + fwd * 0.12)
+	var p := ManFire._flame_particles()
+	p.amount = 160
+	p.lifetime = BREATH_REACH / BREATH_SPEED + 0.25
+	p.one_shot = true
+	p.explosiveness = 0.15
+	var m := p.process_material as ParticleProcessMaterial
+	m.direction = Vector3(0, 0, -1)
+	m.spread = 11.0
+	m.initial_velocity_min = BREATH_SPEED * 0.8
+	m.initial_velocity_max = BREATH_SPEED
+	m.gravity = Vector3(0, 0.8, 0)
+	m.damping_min = 1.0
+	m.damping_max = 2.0
+	m.emission_sphere_radius = 0.05
+	m.scale_min = 0.25
+	m.scale_max = 0.5
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.25))
+	grow.add_point(Vector2(0.5, 1.0))
+	grow.add_point(Vector2(1.0, 1.6))
+	var grow_tex := CurveTexture.new()
+	grow_tex.curve = grow
+	m.scale_curve = grow_tex
+	p.local_coords = false
+	p.visibility_aabb = AABB(Vector3(-2, -2, -4), Vector3(4, 4, 5))
+	p.emitting = true
+	ball.add_child(p)
+	var glow := OmniLight3D.new()
+	glow.light_color = ManFire.FIRE_HOT
+	glow.light_energy = 4.0
+	glow.omni_range = 5.0
+	glow.position = Vector3(0, 0, -1.0)
+	ball.add_child(glow)
+	var fade := ball.create_tween()
+	fade.tween_property(glow, "light_energy", 0.0, 0.7)
+	fade.tween_interval(0.6)
+	fade.tween_callback(ball.queue_free)
+	_announce("breath")
+
+
+## The torch's own flame, on its head, all the time it is out.
+func _light_torch() -> void:
+	if def == null or def.id != &"fire_torch" or not has_marker("muzzle"):
+		return
+	var flame := ManFire._flame_particles()
+	ManFire._as_tongues(flame)
+	flame.name = "TorchFlame"
+	flame.amount = 18
+	var m := flame.process_material as ParticleProcessMaterial
+	m.emission_box_extents = Vector3(0.03, 0.03, 0.03)
+	m.scale_min = 0.18
+	m.scale_max = 0.3
+	flame.emitting = true
+	add_child(flame)
+	flame.transform = Transform3D(Basis(), marker("muzzle").origin)
 
 ## Set alight (the owner, 19 Oct: "the flaming table"): a set-up table burns
 ## along its top until a man goes through it, and its pieces burn on the floor
