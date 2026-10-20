@@ -33,6 +33,7 @@ func _ready() -> void:
 	var turf := ShaderMaterial.new()
 	turf.shader = load("res://shaders/park_grass.gdshader")
 	turf.set_shader_parameter("grass_albedo", load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Color.jpg"))
+	MatchWeather.configure_surface(turf, true, 0.65)
 	ground.material_override = turf
 	add_child(ground)
 	player = PLAYER.instantiate()
@@ -61,8 +62,13 @@ func _ready() -> void:
 		if requested != null:
 			view = str(requested)
 		var posed = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('pose')")
-		if posed != null and str(posed) == "idle":
-			animation.play("AN_Beechlawn_Idle")
+		var review_clips := {
+			"idle":"Idle", "sprint":"Sprint", "pass":"PassRight", "shot":"ShotRight",
+			"turn":"Turn90Right", "slide":"GroundedSlideTackle",
+			"get_up":"GetUpFromProne", "keeper_set":"KeeperSet", "keeper_save":"KeeperSave",
+		}
+		if posed != null and review_clips.has(str(posed)):
+			animation.play("AN_Beechlawn_"+str(review_clips[str(posed)]))
 			animation.advance(0.0)
 			var requested_frame = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('frame')")
 			if requested_frame != null:
@@ -111,6 +117,10 @@ func _set_view(view: String) -> void:
 	camera.size = 2.1
 	var target := Vector3(0, 0.94, 0)
 	match view:
+		"kit":
+			camera.size = 1.05
+			camera.position = Vector3(0,1.45,4.7)
+			target = Vector3(0,1.45,0)
 		"back": camera.position = Vector3(0, 0.94, -4.7)
 		"profile": camera.position = Vector3(4.7, 0.94, 0)
 		"portrait":

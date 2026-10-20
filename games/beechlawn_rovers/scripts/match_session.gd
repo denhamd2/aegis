@@ -13,6 +13,7 @@ var camera_height := 0.0
 var camera_zoom := 0.0
 var camera_angle := 0.0
 var show_intro := true
+var weather_preset: StringName = &"sunny"
 
 func _ready() -> void:
 	load_preferences()
@@ -29,6 +30,7 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 	camera_zoom = clampf(float(config.get_value("camera", "zoom", 0.0)), -1.0, 1.0)
 	camera_angle = clampf(float(config.get_value("camera", "angle", 0.0)), -20.0, 20.0)
 	show_intro = bool(config.get_value("presentation", "intro", true))
+	weather_preset = MatchWeather.valid_id(StringName(str(config.get_value("presentation", "weather", "sunny"))))
 
 func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	var config := ConfigFile.new()
@@ -39,6 +41,7 @@ func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	config.set_value("camera", "zoom", camera_zoom)
 	config.set_value("camera", "angle", camera_angle)
 	config.set_value("presentation", "intro", show_intro)
+	config.set_value("presentation", "weather", str(weather_preset))
 	return config.save(path)
 
 func apply_preferences() -> void:

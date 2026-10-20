@@ -1,0 +1,55 @@
+{
+  "renderer": "Godot 4.6.3 Compatibility / Chromium SwiftShader",
+  "manual_review": "Real ball, player and post cast shadows visible; lower-bias skin-banding trial rejected",
+  "shadow_bias": 0.04,
+  "shadow_normal_bias": 0.8,
+  "shadow_max_distance_m": 150,
+  "regions": [
+    {
+      "caster": "ball",
+      "roi_xywh": [
+        460,
+        305,
+        42,
+        18
+      ],
+      "pixels_darker_with_shadow_by_over_5": 451,
+      "max_darkening_rgb_mean": 88.667,
+      "images": [
+        "ball_shadow_on.png",
+        "ball_shadow_off.png"
+      ]
+    },
+    {
+      "caster": "player",
+      "roi_xywh": [
+        545,
+        247,
+        85,
+        38
+      ],
+      "pixels_darker_with_shadow_by_over_5": 1351,
+      "max_darkening_rgb_mean": 60.333,
+      "images": [
+        "ball_shadow_on.png",
+        "ball_shadow_off.png"
+      ]
+    },
+    {
+      "caster": "goal frame",
+      "roi_xywh": [
+        675,
+        280,
+        80,
+        90
+      ],
+      "pixels_darker_with_shadow_by_over_5": 595,
+      "max_darkening_rgb_mean": 34.667,
+      "images": [
+        "sunny_goalmouth.png",
+        "sunny_shadows_off.png"
+      ]
+    }
+  ],
+  "limitations": "Image regions quantify visible differences, not target Mac timing or complete visual acceptance. World/skin/kit/backdrop refinement remains open."
+}

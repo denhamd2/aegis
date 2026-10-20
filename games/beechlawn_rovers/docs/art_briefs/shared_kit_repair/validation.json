@@ -1,0 +1,18 @@
+{
+  "preserved_sha256": "b5ce0ab7b92545ca2199b622f3b82acb98729e48d7f8cc5878ccbb8615132825",
+  "bones": 65,
+  "clips": 19,
+  "garments": {
+    "YBot_Surface": {
+      "removed_throat_scrap_vertices": 33,
+      "clearance_vertices": 372,
+      "max_clearance_shift_cm": 1.9355
+    },
+    "Kit_Shirt_ShortSleeve": {
+      "removed_throat_scrap_vertices": 33,
+      "clearance_vertices": 372,
+      "max_clearance_shift_cm": 1.9355
+    }
+  },
+  "applied": true
+}

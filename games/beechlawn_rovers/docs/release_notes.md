@@ -1,3 +1,27 @@
+Shared shirt fit update (20 October 2026):
+- Softer shoulder slope, smoother arm/torso weight transitions and a flatter
+  back drape across both sleeve variants. The front chest tear and associated
+  scalloped stripe registration are corrected locally.
+- Existing collar/cuffs, kit images, independent heads, 65-bone rest rig and
+  all 19 clips are retained. Nine fixed poses improve the fold diagnostic;
+  rear-armhole pinching remains an open art acceptance item.
+- Actual roster Web reviews and assembled 11v11 Play/Watch checks accompany
+  the source evidence. Native Mac playtesting and M1 timing remain pending.
+
+Wet pitch, weather and shared kit update (20 October 2026):
+- Muddy goalmouths and irregular shallow puddles at both goals, with free CC0
+  scanned soil, wet reflections and subtle ripples. Grounded balls physically
+  lose speed in water; airborne balls retain their normal flight.
+- Options saves Sunny (damp pitch), Cloudy, Light rain and Morning mist.
+  Rain includes local precipitation. All builds use inexpensive distance haze;
+  clear-weather broadcasts keep the pitch crisp without volumetric fog.
+- Shared shirts remove the disconnected throat scrap and repair neck-side
+  clearance/weights. Existing kit graphics, individual heads, 65-bone rig and
+  all 19 clips remain. Shoulder/underarm refinement and likeness remain open.
+- Actual WebGL reviews and bounded physics/menu/11v11 regression checks are
+  recorded with the art briefs. Native Mac playtesting and M1 performance
+  acceptance remain pending.
+
 Partly cloudy daylight update (19 October 2026):
 - A free CC0 photographic 4K sky replaces the featureless gradient, following
   the owner's preference for less overcast weather and direct sunlight.
