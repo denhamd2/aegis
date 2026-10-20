@@ -125,3 +125,46 @@ func test_through_the_glass_he_is_cut_open_front_and_back() -> void:
 	# heavier than going through a table
 	assert_float(WeaponCatalog.landing_move(pane.def).damage_torso).is_greater(
 			WeaponCatalog.landing_move(WeaponCatalog.by_id(&"table")).damage_torso)
+
+
+# --- the ladder bridge -------------------------------------------------------
+
+func test_a_ladder_set_down_outside_goes_across_from_apron_to_barricade() -> void:
+	var w := _wrestler(true)
+	w.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 0.5)
+	w.outside_ring = true
+	await _ticks(2)
+	var span := w.bridge_span()
+	assert_int(span.size()).is_equal(2)
+	assert_float((span[0] as Vector3).x).is_less(RingBuilder.APRON_OUT)
+	assert_float((span[1] as Vector3).x).is_greater(ArenaBuilder.BARRICADE_RADIUS)
+	# not in the ring, and not at a corner
+	w.outside_ring = false
+	assert_array(w.bridge_span()).is_empty()
+	w.outside_ring = true
+	w.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 3.4)
+	assert_array(w.bridge_span()).is_empty()
+	MatchRules.set_mode(w, MatchRules.Mode.ONE_ON_ONE)
+	w.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 0.5)
+	assert_array(w.bridge_span()).is_empty()
+
+
+func test_put_down_on_the_bridge_it_folds_under_him_and_stays_folded() -> void:
+	var w := _wrestler(true)
+	w.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 0.5)
+	w.outside_ring = true
+	await _ticks(2)
+	var ladder := WeaponStock.of(w).pull(WeaponCatalog.by_id(&"ladder"))
+	var span := w.bridge_span()
+	ladder.set_bridge(span[0], span[1])
+	assert_bool(ladder.bridge).is_true()
+	var top := (ladder.global_transform * ladder.local_bounds()).end.y
+	assert_float(top).is_between(-0.15, 0.25)          # level with the apron and the wall
+	var landed := []
+	w.set_piece_landed.connect(func(_who, weapon, broke): landed.append([weapon, broke]))
+	w._land_on(ladder, w.global_position + Vector3.UP * 0.1)
+	assert_bool(ladder.folded).is_true()
+	assert_object(ladder.get_node_or_null("Bent")).is_not_null()
+	assert_bool(landed[0][1]).is_true()
+	# folded, it is not a set piece any more: nobody lands on it twice
+	assert_bool(WeaponStock.of(w).set_up_pieces().has(ladder)).is_false()

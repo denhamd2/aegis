@@ -10020,3 +10020,28 @@ The owner: "Add Kenny Omega entrance video from here" (a Google Drive link).
   fetch it (one of the wild picks).
 - Review: `gauntlet/refs/nhb/review/carnage_2_glass_pane.png`
   (`carnage_shot --spot glass`).
+
+## 20 Oct — Carnage 3: the ladder bridge
+
+- **Making it.** In No Holds Barred, a ladder set down outside on the floor
+  between the apron and the barricade goes across from one to the other at
+  his side (`WrestlerController.bridge_span`, `WeaponActor.set_bridge`).
+  - It rests 12 cm onto each end, its rails level with the apron and the top
+    of the wall.
+  - It is not made in the ring, at a corner (no straight run to the wall), or
+    at the ramp's gap, where there is no barricade to reach.
+  - The AI makes one whenever it sets a ladder down outside. Ringside is only
+    2.8 m deep, so that is most of the time.
+- **Through it.** A man put down on the bridge folds it under him and goes on
+  through to the floor (`WeaponActor.fold_bridge`). The laid-out ladder is
+  swapped for a bent one hanging in a V into the gap, its ends still on the
+  apron and the wall. He stays down as long as after a table, and sells it
+  as the ladder crash. Folded, it is not a set piece any more.
+- **The model.** The bent ladder is its own file
+  (`tools/blender/weapons/ladder_bent.py` -> `ladder_bent.glb`). It is the
+  set pieces' own closed ladder, laid flat and folded 40 degrees each side of
+  the middle, so `ladder.glb` is not rebuilt. (Rebuilding it with this
+  container's `bpy` does not reproduce the committed bytes; it is
+  pre-existing and untouched here.)
+- Review: `gauntlet/refs/nhb/review/carnage_3_ladder_bridge.png`
+  (`carnage_shot --spot bridge`).

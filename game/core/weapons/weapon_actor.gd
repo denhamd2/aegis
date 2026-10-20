@@ -859,6 +859,49 @@ static func flame_tongue() -> ImageTexture:
 	return _tongue
 
 
+# --- the ladder bridge --------------------------------------------------------
+
+## Laid across from the apron to the barricade (the owner, 19 Oct: "ladder
+## bridge"): a set piece a man is put through, and it folds under him -- the
+## laid-out ladder swapped for the bent one (ladder_bent.glb), hanging in a V
+## into the gap, where it stays. Folded, it is no longer a set piece.
+const BENT_LADDER := "res://assets/weapons/ladder_bent.glb"
+var bridge := false
+var folded := false
+
+
+## Across from `from` (the apron's edge) to `to` (the barricade's top), the
+## rails level with the higher of the two.
+func set_bridge(from: Vector3, to: Vector3) -> void:
+	holder = null
+	mode = Mode.SET_UP
+	show_state("Ladder_Laid_Out")
+	bridge = true
+	var along := Vector3(to.x - from.x, 0.0, to.z - from.z).normalized()
+	var mid := (from + to) * 0.5
+	# Ladder_Laid_Out lies along its Z, its rails 0.10 over its origin
+	global_transform = Transform3D(Basis(Vector3.UP, atan2(along.x, along.z)),
+			Vector3(mid.x, maxf(from.y, to.y) - 0.10, mid.z))
+	_announce("set_up")
+
+
+## Under him: the bent ladder in place of the bridge, from now on.
+func fold_bridge() -> void:
+	if folded:
+		return
+	folded = true
+	for root: Node3D in _roots.values():
+		root.visible = false
+	var packed := load(BENT_LADDER) as PackedScene
+	if packed:
+		var bent := packed.instantiate() as Node3D
+		bent.name = "Bent"
+		add_child(bent)
+		# the bent model's origin is the bridge's middle at its rails
+		bent.position = Vector3(0.0, 0.10, 0.0)
+	_announce("broke")
+
+
 # --- wear --------------------------------------------------------------------
 
 ## One hit landed with it (or on it). Returns true if it broke.

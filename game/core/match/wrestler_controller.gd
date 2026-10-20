@@ -5571,8 +5571,12 @@ func _tick_weapon_action(input: Dictionary) -> void:
 		"set_up":
 			if _weapon_action_ticks == WEAPON_ACTION_AT["set_up"] and has_weapon():
 				var w := held_weapon
+				var span := bridge_span() if w.def.id == &"ladder" else []
 				_let_go()
-				w.set_up_at(global_position - global_basis.z * 0.95, rotation.y)
+				if not span.is_empty():
+					w.set_bridge(span[0], span[1])
+				else:
+					w.set_up_at(global_position - global_basis.z * 0.95, rotation.y)
 		"set_up_upright":
 			if _weapon_action_ticks == WEAPON_ACTION_AT["set_up_upright"] and has_weapon():
 				var w := held_weapon
@@ -5582,6 +5586,36 @@ func _tick_weapon_action(input: Dictionary) -> void:
 			_tick_light()
 	if _weapon_action_ticks >= int(WEAPON_ACTION_TICKS[_weapon_action]):
 		fsm.transition_to(WrestlerFSM.State.IDLE)
+
+
+## --- The ladder bridge (the owner, 19 Oct) ----------------------------------
+## A ladder set down outside on the floor between the apron and the barricade
+## goes across from one to the other at his side: [apron end, barricade end],
+## or [] where there is no bridge to make -- in the ring, at a corner, at the
+## ramp's gap in the barricade.
+const BRIDGE_BITE := 0.12          # it rests this far onto each end
+
+
+func bridge_span() -> Array:
+	if not MatchRules.no_holds_barred(self) or not outside_ring:
+		return []
+	var p := global_position
+	var on_x := absf(p.x) >= absf(p.z)
+	var out := absf(p.x) if on_x else absf(p.z)
+	var across := absf(p.z) if on_x else absf(p.x)
+	if out < RingBuilder.APRON_OUT or out > ArenaBuilder.BARRICADE_RADIUS:
+		return []
+	if across > RingBuilder.MAT_HALF - 0.4:
+		return []                      # a corner: no straight run to the wall
+	if not on_x and p.z < 0.0 and across < ArenaBuilder.RAMP_HALF_WIDTH + 0.6:
+		return []                      # the ramp's gap: no barricade to reach
+	var side := signf(p.x if on_x else p.z)
+	var axis := Vector3(side, 0.0, 0.0) if on_x else Vector3(0.0, 0.0, side)
+	var lane := Vector3(0.0, 0.0, p.z) if on_x else Vector3(p.x, 0.0, 0.0)
+	var apron := lane + axis * (RingBuilder.APRON_OUT - BRIDGE_BITE) + Vector3.UP * RingBuilder.APRON_TOP
+	var wall := lane + axis * (ArenaBuilder.BARRICADE_RADIUS + BRIDGE_BITE) \
+			+ Vector3.UP * (ArenaBuilder.FLOOR_Y + ArenaBuilder.BARRICADE_HEIGHT)
+	return [apron, wall]
 
 
 ## --- The flaming table (the owner, 19 Oct) ---------------------------------
@@ -5842,6 +5876,11 @@ func _land_on(w: WeaponActor, at: Vector3) -> void:
 	var broke := false
 	if w.mode == WeaponActor.Mode.FLOOR:
 		w.hit(_weapon_seed())
+	elif w.bridge:
+		# the bridge folds under him and he goes on down through it to the floor
+		w.fold_bridge()
+		_down_bonus = TABLE_DOWN_TICKS
+		broke = true
 	elif w.def.broken != "":
 		# The break centred under him: he comes down near the edge as often as
 		# the middle, and the boards give where he lands, not a step away.

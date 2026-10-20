@@ -169,6 +169,6 @@ static func _over(a: WeaponActor, p: Vector3) -> bool:
 func set_up_pieces() -> Array[WeaponActor]:
 	var out: Array[WeaponActor] = []
 	for a in actors:
-		if is_instance_valid(a) and a.mode == WeaponActor.Mode.SET_UP:
+		if is_instance_valid(a) and a.mode == WeaponActor.Mode.SET_UP and not a.folded:
 			out.append(a)
 	return out

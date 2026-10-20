@@ -5,6 +5,8 @@ extends Node
 ##                  down through it and catches fire
 ##   --spot glass   a pane of glass set up in the ring, Cody down through it,
 ##                  the shards, and the blood
+##   --spot bridge  a ladder across from the apron to the barricade, and Cody
+##                  down through it as it folds
 ##
 ##   xvfb-run -a godot --path game --rendering-driver vulkan --resolution 1280x720 \
 ##       --fixed-fps 30 tools/probe/carnage_shot.tscn -- --spot table --out /tmp/carnage
@@ -49,6 +51,8 @@ func _ready() -> void:
 			await _table()
 		"glass":
 			await _glass()
+		"bridge":
+			await _bridge()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -110,6 +114,33 @@ func _glass() -> void:
 	_cam.look_at(head + Vector3.DOWN * 0.25)
 	_cam.fov = 40.0
 	await _save("glass_3_blood.png")
+
+
+func _bridge() -> void:
+	var stock := WeaponStock.of(_a)
+	var ladder := stock.pull(WeaponCatalog.by_id(&"ladder"))
+	_b.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 0.4)
+	_b.outside_ring = true
+	var span := _b.bridge_span()
+	ladder.set_bridge(span[0], span[1])
+	_b.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 2.4)
+	_a.global_position = Vector3(4.4, WrestlerController.FLOOR_LEVEL, -1.6)
+	_a.outside_ring = true
+	_cam.global_position = Vector3(8.6, 1.4, 4.2)
+	_cam.look_at(Vector3(4.4, -0.5, 0.2))
+	_cam.fov = 52.0
+	await _frames(20)
+	await _save("bridge_0_across.png")
+	_b.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 0.4)
+	_b.rotation.y = 0.0
+	_b._go_down()
+	await _frames(14)
+	await _save("bridge_1_through.png")
+	await _frames(30)
+	await _save("bridge_2_folded.png")
+	_cam.global_position = Vector3(4.6, 0.9, 3.4)
+	_cam.look_at(Vector3(4.6, -0.8, 0.4))
+	await _save("bridge_3_close.png")
 
 
 func _frames(n: int) -> void:
