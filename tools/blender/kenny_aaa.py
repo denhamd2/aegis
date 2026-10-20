@@ -291,6 +291,40 @@ HAIR_TIP = (214, 182, 124)
 ## upper chest (spine_03) by HAIR_BODY_Z[1], up to HAIR_BODY_SHARE of it.
 HAIR_BODY_Z = (1.58, 1.44)
 HAIR_BODY_SHARE = 0.7
+## The crown (kenny_aaa_plan.md gap 1; the owner, 20 Oct: his model "doesn't
+## look good or realistic"). In game the top of his head was the cap alone --
+## a slicked, painted helmet -- with curls only from the ears back. The sheet
+## has curly volume over the whole crown off a part a little left of centre,
+## so these clumps grow from either side of the part, sweep out and back over
+## the scalp, and turn down into the mass at the sides and back.
+## PART_X: the part, to his left (+X) of the midline. CROWN_SPAN: where along
+## it (m, front to back of the head centre); CROWN_OFF: how far out from it.
+PART_X = 0.016
+CROWN_COUNT = 140
+CROWN_SPAN = (-0.10, 0.07)
+CROWN_OFF = (0.004, 0.08)
+## The heading each starts on: back over the crown near the part, turning out
+## to the side with distance from it (CROWN_SWEEP: sideways at the edge,
+## back); how quickly it turns down (per metre of strand), where it ends
+## (world height) and how long it may run, and its standoff off the scalp --
+## clear of the cap's 0.032. A strand slides along the scalp only above
+## CROWN_SLIDE_Z: below it, on the shoulders, it drapes as the curls do.
+CROWN_SWEEP = (0.75, 0.6)
+CROWN_GRAVITY = 7.5
+CROWN_END = (1.46, 1.60)
+CROWN_LENGTH = 0.46
+CROWN_SLIDE_Z = 1.62
+CROWN_STANDOFF = (0.030, 0.048)
+CROWN_WIDTH = (0.024, 0.038)
+## Wet strands framing his face (the sheet: falling at the temples and in
+## front of the ears): FACE_STRANDS each side, round the head between
+## FACE_ANGLES (clear of the eyes), ending FACE_END below the eyes.
+FACE_STRANDS = 5
+FACE_ANGLES = (36.0, 62.0)
+FACE_END = (-0.115, -0.045)
+FACE_STANDOFF = (0.012, 0.022)
+FACE_WIDTH = (0.012, 0.020)
+FACE_SEED = 1013
 
 
 def mpfb(module: str, name: str):
@@ -1203,6 +1237,143 @@ def make_hair_cap(old_arm, body, eyes):
     return cap
 
 
+def _curl_cards(pts, d, rng, verts, faces, uvs, weights, radius=None, pitch=None,
+                widths=None) -> None:
+    """One curl clump along the line `pts` (CURL_STEP apart): two crossed
+    strand cards round a helix about it, the first card facing out along
+    `d`. `radius`, `pitch` and `widths` (top, tip) default to the CURL_*
+    ranges."""
+    for _ in range(3):
+        pts = [pts[0]] + [(pts[k - 1] + pts[k] * 2 + pts[k + 1]) / 4 for k in range(1, len(pts) - 1)] + [pts[-1]]
+    if len(pts) < 5:
+        return
+    radius = float(rng.uniform(*CURL_RADIUS)) if radius is None else radius
+    pitch = float(rng.uniform(*CURL_PITCH)) if pitch is None else pitch
+    phase = float(rng.uniform(0.0, 2.0 * math.pi))
+    w_top, w_tip = (float(rng.uniform(*CURL_WIDTH[0])), CURL_WIDTH[1]) if widths is None else widths
+    column = int(rng.integers(0, CURL_COLUMNS))
+    cols = (column, (column + 1) % CURL_COLUMNS)
+    total = (len(pts) - 1) * CURL_STEP
+    tan0 = (pts[1] - pts[0]).normalized()
+    n1 = (d - tan0 * d.dot(tan0)).normalized()
+    base = len(verts)
+    for k, c in enumerate(pts):
+        tan = (pts[min(k + 1, len(pts) - 1)] - pts[max(k - 1, 0)]).normalized()
+        n1 = (n1 - tan * n1.dot(tan)).normalized()
+        n2 = tan.cross(n1)
+        s_ = k * CURL_STEP
+        rel = s_ / total
+        phi = 2.0 * math.pi * s_ / pitch + phase
+        ctr = c + (n1 * math.cos(phi) + n2 * math.sin(phi)) * radius * _s01(0.0, 0.03, s_)
+        width = (w_top + (w_tip - w_top) * rel ** 1.5) * (0.5 + 0.5 * _s01(0.0, 0.02, s_))
+        body_w = HAIR_BODY_SHARE * (1.0 - _s01(HAIR_BODY_Z[1], HAIR_BODY_Z[0], c.z))
+        wts = [("Head", 1.0 - body_w)] + ([("spine_03", body_w)] if body_w > 0 else [])
+        for card, direction in enumerate((n1, n2)):
+            for sd in (-0.5, 0.5):
+                verts.append(ctr + direction * (width * sd))
+                uvs.append(((cols[card] + sd + 0.5) / CURL_COLUMNS, 1.0 - rel))
+                weights.append(wts)
+    for k in range(len(pts) - 1):
+        for card in range(2):
+            q = base + k * 4 + card * 2
+            r_ = base + (k + 1) * 4 + card * 2
+            faces.append((q, q + 1, r_ + 1, r_))
+
+
+def _sweep(start, heading, bvh, standoff, end_z, gravity, length, slide_z=-1.0):
+    """A strand's line from `start`: on `heading`, turning down by `gravity`
+    per metre, kept `standoff` off the body -- sliding along it where it
+    meets it above `slide_z`, pushed straight out below -- until it falls
+    below `end_z` or runs `length`."""
+    pts = [start.copy()]
+    p = start.copy()
+    v = heading.normalized()
+    run = 0.0
+    while p.z > end_z and run < length:
+        v = (v + Vector((0.0, 0.0, -gravity * CURL_STEP))).normalized()
+        p = p + v * CURL_STEP
+        near = bvh.find_nearest(p)
+        if near[0] is not None:
+            gap = (p - near[0]).length
+            n = (p - near[0]).normalized() if gap > 1e-6 else near[1]
+            if gap < standoff:
+                z_next = p.z
+                p = near[0] + n * standoff
+                if p.z > slide_z:
+                    # Along the scalp, not into it.
+                    into = v.dot(n)
+                    if into < 0.0:
+                        v = (v - n * into).normalized()
+                else:
+                    # Over the shoulders: out of the body, never back up.
+                    p.z = min(p.z, z_next)
+        pts.append(p.copy())
+        run += CURL_STEP
+    return pts
+
+
+def _crown_curls(body, cap, eyes, bvh, cap_bvh, verts, faces, uvs, weights) -> None:
+    """CROWN_COUNT clumps off the part, over the crown (see the CROWN note)."""
+    import numpy as np
+    rng = np.random.default_rng(CURL_SEED + 7)
+    e = (eyes["l"][0] + eyes["r"][0]) / 2.0
+    centre = e + Vector((0.0, 0.08, 0.02))
+    made = 0
+    for i in range(CROWN_COUNT):
+        side = 1.0 if i % 2 == 0 else -1.0
+        along = centre.y + float(rng.uniform(*CROWN_SPAN))
+        # Denser near the part, where the volume is.
+        off = CROWN_OFF[0] + (CROWN_OFF[1] - CROWN_OFF[0]) * float(rng.beta(1.3, 1.8))
+        x = PART_X + side * off
+        hit, normal = cap_bvh.ray_cast(Vector((x, along, e.z + 0.4)), Vector((0.0, 0.0, -1.0)), 0.6)[:2]
+        if hit is None:
+            continue
+        standoff = float(rng.uniform(*CROWN_STANDOFF))
+        near = bvh.find_nearest(hit)
+        out = (hit - near[0]).normalized() if near[0] is not None else normal
+        start = near[0] + out * standoff if near[0] is not None else hit
+        out_frac = (off - CROWN_OFF[0]) / (CROWN_OFF[1] - CROWN_OFF[0])
+        heading = Vector((side * CROWN_SWEEP[0] * (0.15 + out_frac) * float(rng.uniform(0.7, 1.3)),
+                          CROWN_SWEEP[1] * float(rng.uniform(0.6, 1.4)), 0.15))
+        pts = _sweep(start, heading, bvh, standoff, float(rng.uniform(*CROWN_END)),
+                     CROWN_GRAVITY * float(rng.uniform(0.8, 1.2)), CROWN_LENGTH, CROWN_SLIDE_Z)
+        w = float(rng.uniform(*CROWN_WIDTH))
+        before = len(faces)
+        _curl_cards(pts, out, rng, verts, faces, uvs, weights, widths=(w, CURL_WIDTH[1]))
+        made += len(faces) > before
+    print(f"crown curls: {made}")
+
+
+def _face_strands(cap, eyes, bvh, cap_bvh, verts, faces, uvs, weights) -> None:
+    """FACE_STRANDS loose wet strands each side, from the hairline at the
+    temple down in front of the ear."""
+    import numpy as np
+    rng = np.random.default_rng(FACE_SEED)
+    e = (eyes["l"][0] + eyes["r"][0]) / 2.0
+    centre = e + Vector((0.0, 0.08, 0.02))
+    made = 0
+    for side in (1.0, -1.0):
+        for k in range(FACE_STRANDS):
+            ang = FACE_ANGLES[0] + (FACE_ANGLES[1] - FACE_ANGLES[0]) * (k + float(rng.uniform(0.0, 1.0))) / FACE_STRANDS
+            a = math.radians(ang)
+            d = Vector((side * math.sin(a), -math.cos(a), 0.0))
+            top = e.z + _lerp_table(HAIRLINE, ang) + float(rng.uniform(0.0, 0.02))
+            hit = cap_bvh.ray_cast(Vector((centre.x, centre.y, top)) + d * 0.3, -d, 0.4)[0]
+            if hit is None:
+                continue
+            standoff = float(rng.uniform(*FACE_STANDOFF))
+            heading = Vector((d.x * 0.25, d.y * 0.15, -1.0))
+            pts = _sweep(hit + d * 0.006, heading, bvh, standoff,
+                         e.z + float(rng.uniform(*FACE_END)), 0.0, 0.4)
+            w = float(rng.uniform(*FACE_WIDTH))
+            before = len(faces)
+            _curl_cards(pts, d, rng, verts, faces, uvs, weights,
+                        radius=float(rng.uniform(0.003, 0.006)),
+                        pitch=float(rng.uniform(0.05, 0.08)), widths=(w, w * 0.55))
+            made += len(faces) > before
+    print(f"face strands: {made}")
+
+
 def make_curls(old_arm, body, cap, eyes):
     """CURL_COUNT curl clumps (see the HAIR note) hanging from under the cap
     over his head, neck and shoulders."""
@@ -1248,41 +1419,9 @@ def make_curls(old_arm, body, cap, eyes):
                     p = near[0] + n * standoff
                     p.z = min(p.z, z_next)
             pts.append(p.copy())
-        for _ in range(3):
-            pts = [pts[0]] + [(pts[k - 1] + pts[k] * 2 + pts[k + 1]) / 4 for k in range(1, len(pts) - 1)] + [pts[-1]]
-        if len(pts) < 5:
-            continue
-        radius = float(rng.uniform(*CURL_RADIUS))
-        pitch = float(rng.uniform(*CURL_PITCH))
-        phase = float(rng.uniform(0.0, 2.0 * math.pi))
-        w_top = float(rng.uniform(*CURL_WIDTH[0]))
-        column = int(rng.integers(0, CURL_COLUMNS))
-        cols = (column, (column + 1) % CURL_COLUMNS)
-        total = (len(pts) - 1) * CURL_STEP
-        tan0 = (pts[1] - pts[0]).normalized()
-        n1 = (d - tan0 * d.dot(tan0)).normalized()
-        base = len(verts)
-        for k, c in enumerate(pts):
-            tan = (pts[min(k + 1, len(pts) - 1)] - pts[max(k - 1, 0)]).normalized()
-            n1 = (n1 - tan * n1.dot(tan)).normalized()
-            n2 = tan.cross(n1)
-            s_ = k * CURL_STEP
-            rel = s_ / total
-            phi = 2.0 * math.pi * s_ / pitch + phase
-            ctr = c + (n1 * math.cos(phi) + n2 * math.sin(phi)) * radius * _s01(0.0, 0.03, s_)
-            width = (w_top + (CURL_WIDTH[1] - w_top) * rel ** 1.5) * (0.5 + 0.5 * _s01(0.0, 0.02, s_))
-            body_w = HAIR_BODY_SHARE * (1.0 - _s01(HAIR_BODY_Z[1], HAIR_BODY_Z[0], c.z))
-            wts = [("Head", 1.0 - body_w)] + ([("spine_03", body_w)] if body_w > 0 else [])
-            for card, direction in enumerate((n1, n2)):
-                for sd in (-0.5, 0.5):
-                    verts.append(ctr + direction * (width * sd))
-                    uvs.append(((cols[card] + sd + 0.5) / CURL_COLUMNS, 1.0 - rel))
-                    weights.append(wts)
-        for k in range(len(pts) - 1):
-            for card in range(2):
-                q = base + k * 4 + card * 2
-                r_ = base + (k + 1) * 4 + card * 2
-                faces.append((q, q + 1, r_ + 1, r_))
+        _curl_cards(pts, d, rng, verts, faces, uvs, weights)
+    _crown_curls(body, cap, eyes, bvh, cap_bvh, verts, faces, uvs, weights)
+    _face_strands(cap, eyes, bvh, cap_bvh, verts, faces, uvs, weights)
     mesh = bpy.data.meshes.new(HAIR_CURLS)
     mesh.from_pydata([tuple(v) for v in verts], [], faces)
     uv = mesh.uv_layers.new(name="UVMap")

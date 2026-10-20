@@ -118,3 +118,28 @@ func test_model_is_the_right_way_up() -> void:
 	assert_float(head_y) \
 		.override_failure_message("head is below the pelvis: the scan is upside down") \
 		.is_greater(pelvis_y)
+
+
+## The owner, 20 Oct: Kenny's model "doesn't look good or realistic" -- the top
+## of his head was the hair cap alone, a slicked painted helmet, with curls
+## only from the ears back (kenny_aaa_plan.md gap 1). The crown curls cover it:
+## curl cards reach the cap's top on both sides of the part.
+func test_curls_cover_the_crown() -> void:
+	var model := _model()
+	var cap := model.find_child("Kenny_HairCap", true, false) as MeshInstance3D
+	var curls := model.find_child("Kenny_Curls", true, false) as MeshInstance3D
+	assert_object(cap).is_not_null()
+	assert_object(curls).is_not_null()
+	var top := -INF
+	for v: Vector3 in cap.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+		top = maxf(top, v.y)
+	var left := 0
+	var right := 0
+	for v: Vector3 in curls.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+		if v.y > top - 0.03:
+			if v.x > 0.0:
+				left += 1
+			else:
+				right += 1
+	assert_int(left).is_greater(200)
+	assert_int(right).is_greater(200)

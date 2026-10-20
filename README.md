@@ -10244,3 +10244,19 @@ The owner: the lights near the top "look a bit 2 dimensional, unrealistic".
 - **Open.** Four large soft glows over the stage end are still there. They are not the beams' haze, the house fixtures or the roof washes: hiding each group left them in place. Still being traced.
 - **Guard.** `test_roof_lenses_fall_off_the_beam_and_stars_stay_small`, plus `test_only_the_lamps_show_overhead`, updated for the cans.
 - **Review.** `gauntlet/refs/stage/review/roof_lamps.png`.
+
+## 20 Oct — Kenny pass 1: hair over the crown
+
+This is the first step of `gauntlet/refs/kenny_aaa_plan.md`. Gap 1 was the hair: the top of his head was the hair cap alone, a slicked painted helmet, with curls only from the ears back. The sheet shows curly volume over the whole crown, off a part a little to his left.
+
+- **Crown curls.** `kenny_aaa.py` adds `_crown_curls`: 140 clumps, 114 of which land. They grow either side of `PART_X` (0.016, to his left), so the side and back curls stay as they were.
+  - Near the part a clump heads back over the crown; further out it turns to the side.
+  - Each one turns down under `CROWN_GRAVITY` and stands 30–48 mm off the scalp, clear of the cap.
+  - It slides along the scalp only above `CROWN_SLIDE_Z`. Below that, on the shoulders, it drapes the way the old curls do. The first build let strands slide out sideways along his shoulders.
+- **Face strands.** `_face_strands` adds 5 loose wet strands a side at the temples, falling in front of the ears to the jaw and clear of the eyes.
+- **Refactor.** The card builder is split out (`_curl_cards`) with its random draws in the same order, so the original curls are byte-for-byte the same lines.
+- **Budget.** Hair goes from 31.6k to 60.4k triangles, and Kenny from 58.2k to 87.0k: inside the 50–100k hero budget (`references/polycount-budgets.md`).
+- **Determinism.** `kenny_aaa.glb` rebuilt byte-identical on a second run.
+- **Guard.** `test_curls_cover_the_crown`: curl vertices at the cap's top on both sides of the part. That is 0 and 0 on the old model, about 4k and 4.8k now.
+- **Review.** `gauntlet/refs/characters/review/kenny_hair_pass1.png`.
+- **Next.** The face shape, the beard (a flat brown block on the jaw today), the skin and the eyes, per the plan.
