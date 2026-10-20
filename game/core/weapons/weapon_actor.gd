@@ -610,9 +610,11 @@ func _tick_flight(delta: float) -> void:
 	if not _bounced:
 		rotate_object_local(Vector3.RIGHT, _spin.x * delta)
 		rotate_object_local(Vector3.UP, _spin.y * delta)
-		for who: Node3D in _targets:
-			if who == _thrower:
+		for target in _targets:
+			# a man gone from the match (a scene torn down mid-flight) is no target
+			if not is_instance_valid(target) or target == _thrower:
 				continue
+			var who := target as Node3D
 			var chest := who.global_position + Vector3.UP * 1.2
 			if chest.distance_to(p) < HIT_RADIUS:
 				struck.emit(self, who)
