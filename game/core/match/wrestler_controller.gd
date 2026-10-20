@@ -2495,6 +2495,38 @@ func _begin_running_paired(move: MoveDef) -> void:
 	grapple_rig.begin(self, opponent, move)
 	grapple_rig.grapple_finished.connect(_on_grapple_finished, CONNECT_ONE_SHOT)
 
+## The AI with the better of a tie-up on the stage, the other man's back to a
+## side LED wall: whip him into it. Rolled once a tie-up (SCREEN_WHIP_CHANCE,
+## the heel's higher), on the match's seed.
+const SCREEN_WHIP_CHANCE := Vector2(0.8, 0.55)     # heel, face
+var _screen_whip_rolled := -1
+
+
+func wants_screen_whip() -> bool:
+	if not MatchRules.no_holds_barred(self) or opponent == null:
+		return false
+	if not ArenaBuilder.is_match_stage(global_position):
+		return false
+	var venue := VenueDamage.of(self)
+	if venue == null:
+		return false
+	var dir := opponent.global_position - global_position
+	dir.y = 0.0
+	if dir.length() < 0.05:
+		return false
+	var behind := opponent.global_position + Vector3.UP * 1.15 + dir.normalized() * 2.2
+	if venue.side_screen_near(behind) == null:
+		return false
+	var hold := Engine.get_physics_frames() - fsm.ticks_in_state
+	if _screen_whip_rolled == hold:
+		return false
+	_screen_whip_rolled = hold
+	var rng := RandomNumberGenerator.new()
+	rng.seed = match_seed * 4099 + player_index * 37 + hold
+	var heel := Persona.of(display_name) == Persona.Kind.HEEL
+	return rng.randf() < (SCREEN_WHIP_CHANCE.x if heel else SCREEN_WHIP_CHANCE.y)
+
+
 ## Called by the attacker's own _process_grapple_hold() when it chooses to
 ## whip instead of resolving a normal grapple move. Launches the defender
 ## (this call's `opponent`, from the defender's own perspective once we
@@ -2526,6 +2558,8 @@ func _begin_irish_whip() -> void:
 func _process_irish_whip() -> void:
 	if _irish_whip_rebounded:
 		return
+	if _whipped_into_screen():
+		return
 	if _rope_load_tick >= 0:
 		_tick_rope_load()
 		return
@@ -2543,6 +2577,57 @@ func _process_irish_whip() -> void:
 	if fsm.ticks_in_state >= IRISH_WHIP_MAX_TICKS:
 		_irish_whip_rebounded = true
 		fsm.transition_to(WrestlerFSM.State.RUN)
+
+## Through the LED wall (the owner, 19 Oct): whipped across the stage in No
+## Holds Barred and he reaches a side LED wall, he goes through its face --
+## the cabinets smashed in, sparks, the wall dead (VenueDamage.smash_screen)
+## -- and down, hurt and cut. The stage keeps him SCREEN_REACH short of the
+## walls' toed-back outer ends, so the reach is from his chest, ahead.
+signal smashed_into_screen(wrestler: WrestlerController)
+const LED_WALL_DAMAGE := Vector2(7.0, 13.0)       # head, torso
+static var _led_wall_move: MoveDef
+
+
+static func led_wall_move() -> MoveDef:
+	if _led_wall_move == null:
+		_led_wall_move = MoveDef.new()
+		_led_wall_move.resource_name = "led_wall_crash"
+		_led_wall_move.startup_frames = 1
+		_led_wall_move.active_frames = 1
+		_led_wall_move.recovery_frames = 1
+		_led_wall_move.damage_head = LED_WALL_DAMAGE.x
+		_led_wall_move.damage_torso = LED_WALL_DAMAGE.y
+	return _led_wall_move
+
+
+func _whipped_into_screen() -> bool:
+	if not MatchRules.no_holds_barred(self) or not ArenaBuilder.is_match_stage(global_position):
+		return false
+	var venue := VenueDamage.of(self)
+	if venue == null:
+		return false
+	var dir := Vector3(velocity.x, 0.0, velocity.z)
+	if dir.length() < 1.0:
+		return false
+	dir = dir.normalized()
+	var chest := global_position + Vector3.UP * 1.15
+	var screen: VenueDamage.Target = null
+	var hit := chest
+	for ahead: float in [0.0, 0.4, 0.8]:
+		hit = chest + dir * ahead
+		screen = venue.side_screen_near(hit)
+		if screen:
+			break
+	if screen == null:
+		return false
+	venue.smash_screen(screen, hit)
+	_irish_whip_rebounded = true
+	velocity = -dir * 1.2
+	combat.apply_damage(led_wall_move())
+	_go_down(CombatSystem.Tier.POWER)
+	smashed_into_screen.emit(self)
+	return true
+
 
 ## THE ROPE LOAD (gauntlet/refs/ropes.md). A body does not bounce off the
 ## ropes the tick it reaches them; it carries on INTO them, and they stop it
@@ -3955,7 +4040,7 @@ func _process_grapple_hold(input: Dictionary) -> void:
 	# to a body whose physics processing had just been switched off.
 	if grapple_rig and grapple_rig.is_active():
 		return
-	if input.get("run", false):
+	if input.get("run", false) or (is_ai and wants_screen_whip()):
 		_begin_irish_whip()
 		return
 	# Chain wrestling first: the read, and the holds it strings together.

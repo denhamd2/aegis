@@ -181,6 +181,13 @@ func _on_damaged(move: MoveDef) -> void:
 	var dealt := move.damage_head
 	if dealt <= 0.0:
 		return
+	# through an LED wall: the cabinets' edges cut like glass
+	if move.resource_name == "led_wall_crash":
+		head = minf(1.3, head + 0.45 * worn)
+		_peak = maxf(_peak, head)
+		wet = 1.0
+		_throw_off(head - before)
+		return
 	if weapon != null:
 		var c: float = CUT.get(weapon.id, 0.0)
 		if c >= OPENS or head > 0.0:

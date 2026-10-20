@@ -168,3 +168,56 @@ func test_put_down_on_the_bridge_it_folds_under_him_and_stays_folded() -> void:
 	assert_bool(landed[0][1]).is_true()
 	# folded, it is not a set piece any more: nobody lands on it twice
 	assert_bool(WeaponStock.of(w).set_up_pieces().has(ladder)).is_false()
+
+
+# --- through the LED wall ----------------------------------------------------
+
+func _stage_scene() -> Node:
+	var scene: Node = auto_free(load("res://scenes/match.tscn").instantiate())
+	scene.entrances = false
+	TitleScreen.configure_match(scene, Roster.by_id("roman"), Roster.by_id("cody"), 3, true,
+			MatchRules.Mode.NO_HOLDS_BARRED)
+	add_child(scene)
+	return scene
+
+
+func test_whipped_into_a_side_led_wall_he_goes_through_it_and_it_dies() -> void:
+	var scene := _stage_scene()
+	await _ticks(2)
+	var a: WrestlerController = scene.get_node("WrestlerA")
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	for w: WrestlerController in [a, b]:
+		w.is_ai = false
+		if w.ai:
+			w.ai.set_physics_process(false)
+	var venue := VenueDamage.of(b)
+	# on the deck in front of the left wall, running at it
+	var x := -(ArenaBuilder.SIDE_SCREEN_INNER_X + 0.6)
+	b.global_position = Vector3(x, ArenaBuilder.STAGE_DECK_Y, ArenaBuilder.MATCH_STAGE_BACK_LIMIT + 0.05)
+	b.velocity = Vector3(0.0, 0.0, -WrestlerController.IRISH_WHIP_LAUNCH_SPEED)
+	b._irish_whip_rebounded = false
+	var health := b.combat.health()
+	var smashed := []
+	b.smashed_into_screen.connect(func(who): smashed.append(who))
+	assert_bool(b._whipped_into_screen()).is_true()
+	assert_int(smashed.size()).is_equal(1)
+	assert_float(b.combat.health()).is_less(health)
+	assert_int(b.fsm.current_state).is_equal(WrestlerFSM.State.DOWN)
+	var screen := venue.side_screen_near(b.global_position + Vector3.UP * 1.15)
+	assert_object(screen).is_not_null()
+	assert_bool(screen.dead).is_true()
+	assert_object(venue.get_node_or_null("%s_Dead" % screen.name)).is_not_null()
+	# a rocket's fire, not his: no fire from going through it
+	assert_int(venue.fires.size()).is_equal(0)
+
+
+func test_no_led_wall_off_the_stage_or_in_a_singles_match() -> void:
+	var scene := _stage_scene()
+	await _ticks(2)
+	var b: WrestlerController = scene.get_node("WrestlerB")
+	b.global_position = Vector3(4.6, WrestlerController.FLOOR_LEVEL, 0.5)
+	b.velocity = Vector3(0.0, 0.0, -9.0)
+	assert_bool(b._whipped_into_screen()).is_false()
+	MatchRules.set_mode(scene, MatchRules.Mode.ONE_ON_ONE)
+	b.global_position = Vector3(-3.15, ArenaBuilder.STAGE_DECK_Y, ArenaBuilder.MATCH_STAGE_BACK_LIMIT + 0.05)
+	assert_bool(b._whipped_into_screen()).is_false()

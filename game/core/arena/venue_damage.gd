@@ -77,6 +77,8 @@ class Target:
 	var damaged := false
 	var hits := 0
 	var overlays: Array[Vector3] = []
+	## A side LED wall a man was put through: black from then on.
+	var dead := false
 	## The video wall is curved, concave to the crowd: its face is this much
 	## nearer at the ends than at the middle (ArenaBuilder.SCREEN_SAGITTA),
 	## and a rocket finds it by that curve rather than by the box.
@@ -457,6 +459,160 @@ func _smash_skin(t: Target, local: Vector3, lit := true, fire := true) -> void:
 		start_fire(on_face + facing * 0.15, 0.8, false, lit)
 
 
+# --- through the LED wall -------------------------------------------------------
+
+## A man whipped into a side LED wall on the stage (the owner, 19 Oct:
+## "through the LED wall"): the cabinets smashed in where he hit, sparks
+## showering out of them, and the wall dead -- its picture gone to black but
+## for a few cabinets still flickering. No fire: that is a rocket's.
+signal screen_smashed(target_name: String, at: Vector3)
+## A side wall is this near his chest (or the point ahead of it) to be hit.
+const SCREEN_REACH := 1.15
+const SPARKS := 140
+const DEAD_FLICKERS := 6
+
+
+## The side LED wall within SCREEN_REACH of `p`, or null.
+func side_screen_near(p: Vector3) -> Target:
+	ensure_targets()
+	var best: Target = null
+	var best_d := SCREEN_REACH
+	for t: Target in targets:
+		if t.kind != Kind.SCREEN or not t.name.begins_with("SideScreen"):
+			continue
+		var d := _distance_to_box(t, p)
+		if d < best_d:
+			best_d = d
+			best = t
+	return best
+
+
+## `t` smashed where `p` meets its face: the patch, the sparks, and the wall
+## dead.
+func smash_screen(t: Target, p: Vector3) -> void:
+	var local := t.box.affine_inverse() * p
+	local.x = clampf(local.x, -t.half.x + 0.9, t.half.x - 0.9)
+	local.y = clampf(local.y, -t.half.y + 0.9, t.half.y - 0.9)
+	var on_face := t.box * Vector3(local.x, local.y, t.face_z(local.x) + 0.012)
+	var facing := t.box.basis * t.face_normal(local.x)
+	if not t.dead:
+		t.dead = true
+		_kill_screen(t)
+	t.hits += 1
+	_smash_skin(t, local, true, false)
+	_sparks(on_face, facing)
+	history.append([Kind.keys()[t.kind], t.name, p])
+	damaged.emit(t.kind, t.name, p)
+	screen_smashed.emit(t.name, on_face)
+
+
+## Black glass over the wall's face, a few cabinets left flickering on it.
+func _kill_screen(t: Target) -> void:
+	var dead := MeshInstance3D.new()
+	dead.name = "%s_Dead" % t.name
+	var quad := QuadMesh.new()
+	quad.size = Vector2(t.half.x * 2.0, t.half.y * 2.0)
+	dead.mesh = quad
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.012, 0.012, 0.016)
+	mat.roughness = 0.25
+	mat.metallic = 0.3
+	dead.material_override = mat
+	dead.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(dead)
+	# in front of the cabinets' faces, which stand a little proud of the box
+	dead.global_transform = Transform3D(t.box.basis, t.box * Vector3(0.0, 0.0, t.half.z + 0.03))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(t.name) + 7
+	for i in DEAD_FLICKERS:
+		var cab := MeshInstance3D.new()
+		cab.name = "Flicker%d" % i
+		var q := QuadMesh.new()
+		q.size = Vector2(rng.randf_range(0.25, 0.6), rng.randf_range(0.05, 0.3))
+		cab.mesh = q
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		var hue: Color = [Color(0.55, 0.3, 1.0), Color(0.2, 0.9, 0.85), Color(1, 1, 1)][i % 3]
+		m.albedo_color = hue * rng.randf_range(0.25, 0.7)
+		cab.material_override = m
+		cab.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		dead.add_child(cab)
+		cab.position = Vector3(rng.randf_range(-t.half.x + 0.4, t.half.x - 0.4),
+				rng.randf_range(-t.half.y + 0.3, t.half.y - 0.3), 0.004)
+		_flickers.append([cab, rng.randf_range(4.0, 11.0), rng.randf_range(0.0, 6.28)])
+
+
+var _flickers: Array = []    # [cabinet, rate, phase]
+var _flicker_clock := 0.0
+
+
+func _tick_dead_screens(delta: float) -> void:
+	if _flickers.is_empty():
+		return
+	_flicker_clock += delta
+	for f: Array in _flickers:
+		var cab: MeshInstance3D = f[0]
+		if is_instance_valid(cab):
+			cab.visible = sin(_flicker_clock * float(f[1]) + float(f[2])) > 0.2
+
+
+## A shower of sparks out of the smashed cabinets, and the flash of the short.
+func _sparks(at: Vector3, facing: Vector3) -> void:
+	var host := Node3D.new()
+	host.name = "ScreenSparks"
+	add_child(host)
+	host.global_transform = Transform3D(Basis.looking_at(-facing, Vector3.UP), at)
+	var p := GPUParticles3D.new()
+	p.amount = SPARKS
+	p.lifetime = 1.3
+	p.one_shot = true
+	p.explosiveness = 0.85
+	var m := ParticleProcessMaterial.new()
+	m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	m.emission_sphere_radius = 0.35
+	m.direction = Vector3(0, 0.3, 1)
+	m.spread = 55.0
+	m.initial_velocity_min = 2.0
+	m.initial_velocity_max = 6.5
+	m.gravity = Vector3(0, -9.8, 0)
+	# pin-points, not puffs: tiny and hot, cooling to orange as they fall
+	m.scale_min = 0.5
+	m.scale_max = 1.0
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.4, 1.0])
+	grad.colors = PackedColorArray([Color(1, 0.95, 0.8, 1.0), Color(1.0, 0.65, 0.25, 0.85),
+			Color(1.0, 0.35, 0.08, 0.0)])
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = grad
+	m.color_ramp = ramp
+	p.process_material = m
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.07, 0.07)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = ManFire._soft_dot()
+	quad.material = mat
+	p.draw_pass_1 = quad
+	p.local_coords = false
+	p.visibility_aabb = AABB(Vector3(-4, -4, -1), Vector3(8, 6, 8))
+	p.emitting = true
+	host.add_child(p)
+	var flash := OmniLight3D.new()
+	flash.light_color = Color(0.85, 0.9, 1.0)
+	flash.light_energy = 6.0
+	flash.omni_range = 6.0
+	flash.position = Vector3(0, 0, 0.5)
+	host.add_child(flash)
+	var tw := host.create_tween()
+	tw.tween_property(flash, "light_energy", 0.0, 0.35)
+	tw.tween_interval(1.4)
+	tw.tween_callback(host.queue_free)
+
+
 # --- the fire spreading -----------------------------------------------------------
 
 ## A fire does not stay where the rocket went in (the owner, 19 Oct: "spread
@@ -815,6 +971,7 @@ func _smoke() -> GPUParticles3D:
 
 
 func _process(delta: float) -> void:
+	_tick_dead_screens(delta)
 	_spread(delta)
 	# every fire's light flickers, each on its own phase
 	_flicker_t += delta

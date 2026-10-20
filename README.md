@@ -10045,3 +10045,27 @@ The owner: "Add Kenny Omega entrance video from here" (a Google Drive link).
   pre-existing and untouched here.)
 - Review: `gauntlet/refs/nhb/review/carnage_3_ladder_bridge.png`
   (`carnage_shot --spot bridge`).
+
+## 20 Oct — Carnage 4: through the LED wall
+
+- **The spot.** In No Holds Barred on the stage, a man Irish-whipped into one
+  of the side LED walls goes through its face (`_whipped_into_screen`). The
+  stage keeps him out of the walls' toed-back outer ends, so the reach is from
+  his chest and up to 0.8 m ahead of it.
+  - `VenueDamage.smash_screen` smashes the cabinets in where he hit (the
+    rocket's smashed-tile patch), with a shower of sparks and a flash of the
+    short.
+  - The wall goes dead: black glass over its face, six cabinets left
+    flickering at random rates (`_kill_screen`). It stays that way for the
+    match.
+  - No fire: that is the rocket's.
+  - He takes 7 to the head and 13 to the body, goes down, and is cut: the
+    cabinets' edges open him up like glass (Blood, `led_wall_crash`).
+  - Glass, cabinet metal, the bang of the short and the crowd
+    (`MatchAudio`).
+- **The AI.** With the better of a tie-up on the stage and the other man's
+  back to a side wall, it whips him into it. Rolled once per tie-up on the
+  match's seed: 80% for the heel, 55% for the face
+  (`WrestlerController.wants_screen_whip`).
+- Review: `gauntlet/refs/nhb/review/carnage_4_led_wall.png`
+  (`carnage_shot --spot wall`).

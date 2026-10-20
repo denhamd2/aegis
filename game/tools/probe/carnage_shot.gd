@@ -7,6 +7,8 @@ extends Node
 ##                  the shards, and the blood
 ##   --spot bridge  a ladder across from the apron to the barricade, and Cody
 ##                  down through it as it folds
+##   --spot wall    Cody whipped across the stage into the left LED wall: the
+##                  smash, the sparks, the wall dead
 ##
 ##   xvfb-run -a godot --path game --rendering-driver vulkan --resolution 1280x720 \
 ##       --fixed-fps 30 tools/probe/carnage_shot.tscn -- --spot table --out /tmp/carnage
@@ -53,6 +55,8 @@ func _ready() -> void:
 			await _glass()
 		"bridge":
 			await _bridge()
+		"wall":
+			await _wall()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -141,6 +145,32 @@ func _bridge() -> void:
 	_cam.global_position = Vector3(4.6, 0.9, 3.4)
 	_cam.look_at(Vector3(4.6, -0.8, 0.4))
 	await _save("bridge_3_close.png")
+
+
+func _wall() -> void:
+	var deck := ArenaBuilder.STAGE_DECK_Y
+	var x := -(ArenaBuilder.SIDE_SCREEN_INNER_X + 0.9)
+	var z := ArenaBuilder.MATCH_STAGE_BACK_LIMIT
+	for w: WrestlerController in [_a, _b]:
+		w.outside_ring = true
+	_b.global_position = Vector3(x, deck, z + 1.6)
+	_b.rotation.y = 0.0
+	_a.global_position = Vector3(x + 0.3, deck, z + 3.0)
+	_a.rotation.y = 0.0
+	_cam.global_position = Vector3(x + 3.2, deck + 2.0, z + 6.5)
+	_cam.look_at(Vector3(x - 0.6, deck + 1.4, z - 0.4))
+	_cam.fov = 55.0
+	await _frames(20)
+	await _save("wall_0_before.png")
+	_b.global_position = Vector3(x, deck, z + 0.05)
+	_b.velocity = Vector3(0.0, 0.0, -WrestlerController.IRISH_WHIP_LAUNCH_SPEED)
+	_b._whipped_into_screen()
+	await _frames(4)
+	await _save("wall_1_smash.png")
+	await _frames(26)
+	await _save("wall_2_sparks.png")
+	await _frames(70)
+	await _save("wall_3_dead.png")
 
 
 func _frames(n: int) -> void:
