@@ -1,3 +1,13 @@
+Shared shirt fit update (20 October 2026):
+- Softer shoulder slope, smoother arm/torso weight transitions and a flatter
+  back drape across both sleeve variants. The front chest tear and associated
+  scalloped stripe registration are corrected locally.
+- Existing collar/cuffs, kit images, independent heads, 65-bone rest rig and
+  all 19 clips are retained. Nine fixed poses improve the fold diagnostic;
+  rear-armhole pinching remains an open art acceptance item.
+- Actual roster Web reviews and assembled 11v11 Play/Watch checks accompany
+  the source evidence. Native Mac playtesting and M1 timing remain pending.
+
 Wet pitch, weather and shared kit update (20 October 2026):
 - Muddy goalmouths and irregular shallow puddles at both goals, with free CC0
   scanned soil, wet reflections and subtle ripples. Grounded balls physically

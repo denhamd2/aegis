@@ -636,6 +636,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-20 shoulder/underarm pass: smoother shared arm weights, lower raglan
+    yoke and continuous chest surface replace the inflated cap/chest tearing.
+    A local UV patch keeps stripe registration; neck interfaces, kit images,
+    rig and 19 clips remain. Nine-pose diagnostics improve, with rear axilla
+    folds, hem and short-sleeve arm coverage still open. Web Play/Watch pass.
+    See `art_briefs/shared_shoulder_fit/brief.md`.
   - 2026-10-20 shared neckline repair: removes disconnected throat scraps and
     the redundant collar ring, fits neck/shoulder cloth clearance and matches
     garment/skin weights while preserving the 65-bone rig and all 19 clips.

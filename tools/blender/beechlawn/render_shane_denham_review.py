@@ -178,6 +178,8 @@ elif "--kit-detail" in sys.argv:
     views = [("kit_detail", (0.0, -2.1, 1.45), 82)]
 elif "--front-only" in sys.argv:
     views = [view for view in views if view[0] == "front"]
+elif "--back-only" in sys.argv:
+    views = [view for view in views if view[0] == "back"]
 elif "--jersey-views" in sys.argv:
     views = [view for view in views if view[0] in ("front", "back")]
 elif "--profile-only" in sys.argv:

@@ -231,3 +231,12 @@ presets. The same mask drives visible water and BR-004 ball resistance.
 [Wet weather and atmosphere research](art_briefs/kilmore_wet_weather.md) records
 why light depth haze is appropriate for the clear broadcast, while geometry,
 vegetation, PBR materials and cast shadows remain the main realism work.
+
+
+### BR-022 shared shoulder/underarm fit follow-up
+
+The current 23-actor roster uses the shared production body; old prototype-only
+notes above are historical. The [shoulder/underarm fit](art_briefs/shared_shoulder_fit/brief.md)
+reduces the inflated yoke, repairs the chest tear and improves nine sampled
+poses while preserving heads, the neck interface, rig, clips and kit artwork.
+Rear armhole deformation, final tailoring and individual likeness remain open.
