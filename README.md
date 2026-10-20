@@ -10260,3 +10260,17 @@ This is the first step of `gauntlet/refs/kenny_aaa_plan.md`. Gap 1 was the hair:
 - **Guard.** `test_curls_cover_the_crown`: curl vertices at the cap's top on both sides of the part. That is 0 and 0 on the old model, about 4k and 4.8k now.
 - **Review.** `gauntlet/refs/characters/review/kenny_hair_pass1.png`.
 - **Next.** The face shape, the beard (a flat brown block on the jaw today), the skin and the eyes, per the plan.
+
+## 20 Oct — Kenny pass 2: the jaw, the eyes, the brows
+
+This is the second step of `kenny_aaa_plan.md` (gaps 3, 5 and 7).
+
+- **The brown block on his jaw.** The source skin (jartur69's, CC0) has a dark beard painted in, and ours went over it in a darker brown still.
+  - `paint_skin` now lifts the source's beard 80% of the way back toward his own cheek tone first. The tone is the median of a band just above the beard line.
+  - It then lays fine-grained stubble over it: `BEARD` colour (116, 76, 44), strength 0.8, grain blur 0.45 px.
+  - An intermediate (150, 100, 58) at 0.62 sat so close to his skin that the beard vanished.
+- **Eyes.** `eye-scale-decr` 0.35 is gone and `eye-height2-decr` drops from 0.4 to 0.1. They were slits; the hood stays in the eyefold.
+- **Brows.** (132, 98, 62) at ×1.15, where (104, 78, 50) at ×1.6 made two dark painted slabs.
+- **Still open.** The beard is still fainter than the sheet's. The face shape (brow ridge, cheekbones, jaw), skin detail and the cap's slick front are next.
+- **Determinism.** Byte-identical on a second run.
+- **Review.** `gauntlet/refs/characters/review/kenny_face_pass2.png`.

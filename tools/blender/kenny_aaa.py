@@ -112,7 +112,10 @@ FACE = {
     "forehead-scale-vert-incr": 0.15, "forehead-nubian-incr": 0.3,
     # brows and eyes
     "eyebrows-trans-forward": 0.6, "eyebrows-trans-down": 0.3, "eyebrows-angle-down": 0.3,
-    "eye-scale-decr": 0.35, "eye-height2-decr": 0.4, "eye-bag-incr": 0.4,
+    # (Pass 2, 20 Oct: at eye-scale-decr 0.35 and eye-height2-decr 0.4 his
+    # eyes were slits in game; the sheet's are deep-set and hooded, not small.
+    # The hood is the eyefold; the eye itself goes back to MPFB's size.)
+    "eye-height2-decr": 0.1, "eye-bag-incr": 0.3,
     "eye-push1-in": 0.3, "eye-eyefold-down": 0.4, "eye-corner2-down": 0.2,
     # nose
     "nose-scale-horiz-incr": 0.35, "nose-point-width-incr": 0.5, "nose-volume-incr": 0.4,
@@ -214,7 +217,8 @@ EYE_COLOR = ROOT / "game/assets/characters/kenny_eye_color.png"
 BROWS = "eyebrow001"
 LASHES = "eyelashes01"
 CARD_TEXTURES = {
-    BROWS: (ROOT / "game/assets/characters/kenny_aaa_brows.png", (104, 78, 50), 1.6),
+    # (Pass 2: at (104, 78, 50) x1.6 the brows were two dark painted slabs.)
+    BROWS: (ROOT / "game/assets/characters/kenny_aaa_brows.png", (132, 98, 62), 1.15),
     LASHES: (ROOT / "game/assets/characters/kenny_aaa_lashes.png", (60, 44, 32), 1.0),
 }
 ## His skin: a CC0 MakeHuman skin with stubble -- jartur69's middle-aged
@@ -225,10 +229,18 @@ SKIN_SOURCE = (MPFB_ASSETS / "unpacked_skins02/skins/jartur69_middleage_slavic_m
 SKIN_OUT = ROOT / "game/assets/characters/kenny_aaa_skin.jpg"
 SKIN_GRADE = (0.94, 0.64, 0.50)
 SKIN_QUALITY = 92
-## His beard (the sheet's head references): a short, full, ginger-brown
+## His beard (the sheet's head references): a short, full, blond-ginger
 ## beard and moustache, painted from 3D position relative to his eyes (m):
 ## down to the top of the neck, back to just in front of the ears.
-BEARD = dict(color=(104, 66, 36), strength=0.85, neck=-0.155, behind=0.045, seed=1974)
+## Pass 2 (20 Oct): in game it was a flat brown block over his jaw. The
+## source skin has a dark beard of its own painted in, and ours went on top
+## of it in a darker brown still. Now the source's beard is first lifted back
+## toward his own cheek tone (`lift`), then stubble goes on: lighter, redder,
+## and in fine grain (`grain_px`), so it reads as hair over skin.
+## (First try at (150, 100, 58) x0.62: the colour sat so close to his
+## skin's that the beard all but vanished.)
+BEARD = dict(color=(116, 76, 44), strength=0.8, neck=-0.155, behind=0.045, seed=1974,
+             lift=0.8, grain_px=0.45)
 
 # --- Hair (stage 3) ----------------------------------------------------------
 ## His hair (the sheet's head and hair references): shoulder length, a mass of
@@ -538,11 +550,17 @@ def paint_skin(body, eyes) -> None:
     nose = (x < 0.026) & (z > -0.058) & (y < -0.05)
     beard *= ~nose
     beard *= 1.0 - _smooth(0.55, 0.85, lips)
+    beard = np.clip(beard, 0.0, 1.0)
+    # His own cheek tone: the median of the face just above the beard line.
+    cheek = hit & (z > cheek_line + 0.012) & (z < cheek_line + 0.04) & (x > 0.03) & (x < 0.055) & (y < 0.0)
+    tone = np.median(base[cheek], axis=0) if cheek.any() else base[hit].mean(axis=0)
+    lifted = base + (tone - base) * (beard * BEARD["lift"])[..., None]
     grain = np.asarray(Image.fromarray((np.random.default_rng(BEARD["seed"]).random((size, size)) * 255)
-                                       .astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255.0
-    k = (np.clip(beard, 0, 1) * (BEARD["strength"] * (0.25 + 1.5 * grain ** 1.5)))[..., None]
-    k = np.clip(k, 0.0, 0.95)
-    img = base * (1.0 - k) + np.array(BEARD["color"], np.float32) * k
+                                       .astype(np.uint8)).filter(ImageFilter.GaussianBlur(BEARD["grain_px"])),
+                       np.float32) / 255.0
+    k = (beard * (BEARD["strength"] * (0.2 + 1.4 * grain ** 1.8)))[..., None]
+    k = np.clip(k, 0.0, 0.9)
+    img = lifted * (1.0 - k) + np.array(BEARD["color"], np.float32) * k
     Image.fromarray(np.clip(np.round(img), 0, 255).astype(np.uint8), "RGB").save(
         SKIN_OUT, quality=SKIN_QUALITY, optimize=True)
     body.data.materials.clear()
