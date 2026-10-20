@@ -26,6 +26,7 @@ TIMEOUT = float(os.environ.get("BEECHLAWN_TEST_TIMEOUT_SECONDS", "45"))
 # its 50-second wall-clock ceiling before CPU overhead exceeds the short tests.
 LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 75.0}
 DEFAULT_TESTS = [
+    "wet_weather_smoke.gd",
     "footballer_animation_tree_smoke.gd",
     "milestone1_smoke.gd",
     "football_kick_contact_integration_smoke.gd",

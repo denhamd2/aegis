@@ -33,6 +33,7 @@ func _ready() -> void:
 	var turf := ShaderMaterial.new()
 	turf.shader = load("res://shaders/park_grass.gdshader")
 	turf.set_shader_parameter("grass_albedo", load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Color.jpg"))
+	MatchWeather.configure_surface(turf, true, 0.65)
 	ground.material_override = turf
 	add_child(ground)
 	player = PLAYER.instantiate()

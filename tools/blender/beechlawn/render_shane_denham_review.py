@@ -174,6 +174,8 @@ elif "--face-views" in sys.argv:
                    key=lambda view: view[0] != "portrait")
 elif "--portrait-only" in sys.argv:
     views = [view for view in views if view[0] == "portrait"]
+elif "--kit-detail" in sys.argv:
+    views = [("kit_detail", (0.0, -2.1, 1.45), 82)]
 elif "--front-only" in sys.argv:
     views = [view for view in views if view[0] == "front"]
 elif "--jersey-views" in sys.argv:
@@ -196,9 +198,11 @@ for view_name, position, lens in views:
     scene.collection.objects.link(camera)
     camera.location = position
     target = Vector((0, 0, 1.69)) if "portrait" in view_name else Vector((0, 0, .92))
+    if view_name == "kit_detail":
+        target = Vector((0, 0, 1.45))
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     camera_data.lens = lens
-    if "portrait" not in view_name:
+    if "portrait" not in view_name and view_name != "kit_detail":
         # Matched-height orthographic body views isolate shape from lens tilt.
         camera_data.type = "ORTHO"
         camera_data.ortho_scale = 2.1

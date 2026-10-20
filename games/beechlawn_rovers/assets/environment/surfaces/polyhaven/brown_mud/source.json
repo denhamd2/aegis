@@ -1,0 +1,34 @@
+{
+  "asset": "brown_mud",
+  "source": "https://polyhaven.com/a/brown_mud",
+  "license": "CC0",
+  "license_url": "https://polyhaven.com/license",
+  "authors": {
+    "Rob Tuytel": "All"
+  },
+  "scale": "1,3",
+  "downloaded": "2026-10-20",
+  "files": [
+    {
+      "channel": "Diffuse",
+      "file": "brown_mud_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_mud/brown_mud_diff_1k.jpg",
+      "sha256": "df3f135c899f10a3b018738343b222cbc67d13e7c76c5d8da834a3d34c984417",
+      "bytes": 501955
+    },
+    {
+      "channel": "nor_gl",
+      "file": "brown_mud_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_mud/brown_mud_nor_gl_1k.jpg",
+      "sha256": "ac517ca39eb507ae0f27e2b3db431c60888f9b5c3c52bec49d2c0775da0920cb",
+      "bytes": 1011780
+    },
+    {
+      "channel": "Rough",
+      "file": "brown_mud_rough_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_mud/brown_mud_rough_1k.jpg",
+      "sha256": "ae9fb57c1173ccb4579f40edf8321a30bdca815042ffd72015a2a707c7e2e7ba",
+      "bytes": 340815
+    }
+  ]
+}

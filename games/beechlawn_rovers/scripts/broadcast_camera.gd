@@ -34,6 +34,8 @@ func _ready() -> void:
 		var views := {
 			"touchline": [Vector3(4, 2.4, 37), Vector3(0, 0.9, 0), 55.0],
 			"goal": [Vector3(59, 3.2, 11), Vector3(43, 1, 0), 62.0],
+			"goalmouth": [Vector3(55, 1.9, 7), Vector3(50, 0.4, 0), 62.0],
+			"ball_shadow": [Vector3(52.4, 0.7, -4.1), Vector3(50.9, 0.15, -1.5), 42.0],
 			"corner": [Vector3(-56, 6, 37), Vector3(-27, 0.7, 0), 60.0],
 			"player": [Vector3(-1, 1.4, 3), Vector3(-0.65, 1, 0), 42.0],
 		}

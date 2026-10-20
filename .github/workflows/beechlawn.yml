@@ -33,6 +33,7 @@ jobs:
         run: |
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd shared_head_roster_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py wet_weather_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py title_screen_smoke.gd shared_pose_safety_smoke.gd broadcast_camera_smoke.gd pre_match_intro_smoke.gd venue_leaf_uv_smoke.gd park_road_setback_smoke.gd park_site_footprint_smoke.gd eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd football_stop_runtime_smoke.gd shared_pivot_pose_smoke.gd turn_dribble_control_smoke.gd ai_shot_lane_smoke.gd ai_carry_to_shot_smoke.gd ai_midfield_to_shot_smoke.gd loose_ball_recovery_smoke.gd
           BEECHLAWN_FULL_OPPOSITION=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
           BEECHLAWN_ATTACK_TEAM=Bordeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
@@ -60,6 +61,9 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
           cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_touchline.png build/beechlawn/web/screenshots/current_daylight_touchline.png
           cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_broadcast.png build/beechlawn/web/screenshots/current_daylight_broadcast.png
+          cp games/beechlawn_rovers/docs/art_briefs/wet_weather_evidence/{sunny_goalmouth,sunny_broadcast,cloudy_broadcast,rain_goalmouth,mist_broadcast,ball_shadow_on,ball_shadow_off}.png build/beechlawn/web/screenshots/
+          cp games/beechlawn_rovers/docs/art_briefs/shared_kit_repair/godot_shane.png build/beechlawn/web/screenshots/current_kit.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_kit_repair/pose_sheet.jpg build/beechlawn/web/screenshots/shared_kit_poses.jpg
           cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
           printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt

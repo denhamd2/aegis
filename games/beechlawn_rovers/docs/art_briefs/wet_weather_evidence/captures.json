@@ -1,0 +1,82 @@
+[
+  {
+    "file": "cloudy_broadcast.png",
+    "weather": "cloudy",
+    "sun_shadows": false,
+    "query": "software=1&weather=cloudy&view=broadcast&surface_review=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "mist_broadcast.png",
+    "weather": "mist",
+    "sun_shadows": false,
+    "query": "software=1&weather=mist&view=broadcast&surface_review=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "ball_shadow_on.png",
+    "weather": "sunny",
+    "sun_shadows": true,
+    "query": "software=1&weather=sunny&view=ball_shadow&surface_review=1&shadows=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "ball_shadow_off.png",
+    "weather": "sunny",
+    "sun_shadows": false,
+    "query": "software=1&weather=sunny&view=ball_shadow&surface_review=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "rain_goalmouth.png",
+    "weather": "rain",
+    "sun_shadows": false,
+    "query": "software=1&weather=rain&view=goalmouth&surface_review=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "sunny_goalmouth.png",
+    "weather": "sunny",
+    "sun_shadows": true,
+    "query": "software=1&weather=sunny&view=goalmouth&surface_review=1&shadows=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "sunny_shadows_off.png",
+    "weather": "sunny",
+    "sun_shadows": false,
+    "query": "software=1&weather=sunny&view=goalmouth&surface_review=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  },
+  {
+    "file": "sunny_broadcast.png",
+    "weather": "sunny",
+    "sun_shadows": true,
+    "query": "software=1&weather=sunny&view=broadcast&surface_review=1&shadows=1",
+    "width": 960,
+    "height": 540,
+    "browser_errors": false,
+    "staged_ball": true
+  }
+]

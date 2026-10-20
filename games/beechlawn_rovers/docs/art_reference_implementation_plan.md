@@ -217,3 +217,17 @@ sky photograph provides the background and ambient radiance; a matching real
 directional light casts shadows. See [sky/light review](art_briefs/kilmore_sky.md)
 for provenance, shared editable settings and renderer evidence. Volumetric fog
 is disabled; exact venue geometry and native M1 timing remain open.
+
+
+### 20 October 2026 — shared neckline and wet weather follow-up
+
+BR-022 (22/25) repairs the live shared collar/neck junction using the archived
+home kit sheets, preserving identity and animation resources. See
+[shared kit repair](art_briefs/shared_kit_repair/brief.md). Further shoulder,
+underarm and per-player likeness review remains open.
+
+BR-023 (23/25) adds owner-requested mud/puddles at both goals and match-weather
+presets. The same mask drives visible water and BR-004 ball resistance.
+[Wet weather and atmosphere research](art_briefs/kilmore_wet_weather.md) records
+why light depth haze is appropriate for the clear broadcast, while geometry,
+vegetation, PBR materials and cast shadows remain the main realism work.

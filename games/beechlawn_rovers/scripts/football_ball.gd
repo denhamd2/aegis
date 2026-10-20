@@ -8,6 +8,8 @@ signal touched(kind: StringName, speed: float)
 const RADIUS := 0.11
 @export var tuning: FootballTuning
 @export var use_terrain := false
+var wet_surface: WetPitchSurface
+var surface_wetness := 0.0
 var last_touch: StringName = &"none"
 var last_action: StringName = &"none"
 var action_serial := 0
@@ -47,6 +49,8 @@ func _physics_process(delta: float) -> void:
 	var ground_height := PitchSurface.height_at(global_position.x,global_position.z) if use_terrain else 0.0
 	if global_position.y <= ground_height + RADIUS + 0.035:
 		var horizontal := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
+		if wet_surface != null and not is_instance_valid(goalkeeper_holder):
+			apply_central_force(wet_surface.drag_force(global_position, horizontal, mass, surface_wetness, delta))
 		if horizontal.length_squared() > 0.0025:
 			apply_central_force(-horizontal.normalized() * minf(
 				horizontal.length() * tuning.ground_rolling_resistance,

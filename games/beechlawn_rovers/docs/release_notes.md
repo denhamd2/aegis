@@ -1,3 +1,17 @@
+Wet pitch, weather and shared kit update (20 October 2026):
+- Muddy goalmouths and irregular shallow puddles at both goals, with free CC0
+  scanned soil, wet reflections and subtle ripples. Grounded balls physically
+  lose speed in water; airborne balls retain their normal flight.
+- Options saves Sunny (damp pitch), Cloudy, Light rain and Morning mist.
+  Rain includes local precipitation. All builds use inexpensive distance haze;
+  clear-weather broadcasts keep the pitch crisp without volumetric fog.
+- Shared shirts remove the disconnected throat scrap and repair neck-side
+  clearance/weights. Existing kit graphics, individual heads, 65-bone rig and
+  all 19 clips remain. Shoulder/underarm refinement and likeness remain open.
+- Actual WebGL reviews and bounded physics/menu/11v11 regression checks are
+  recorded with the art briefs. Native Mac playtesting and M1 performance
+  acceptance remain pending.
+
 Partly cloudy daylight update (19 October 2026):
 - A free CC0 photographic 4K sky replaces the featureless gradient, following
   the owner's preference for less overcast weather and direct sunlight.

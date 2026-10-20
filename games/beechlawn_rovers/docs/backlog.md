@@ -636,6 +636,11 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-20 shared neckline repair: removes disconnected throat scraps and
+    the redundant collar ring, fits neck/shoulder cloth clearance and matches
+    garment/skin weights while preserving the 65-bone rig and all 19 clips.
+    See `art_briefs/shared_kit_repair/brief.md`. Collar/shoulder silhouette,
+    underarm folds and individual likeness approval remain open.
   - 2026-10-19 shared-head follow-up: Shane's neutral head/eyes/skin are now the
     common starting master for both teams and referee. Each identity has an
     independent sculpt slot; compatible common changes regenerate with personal
@@ -697,6 +702,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-20 wet goalmouth/weather pass: shared mud/water masks at both goals,
+    physical ground-ball resistance and persisted Sunny/Cloudy/Light rain/Mist
+    options. Sunny remains sunlit with damp ground. Depth haze is used across
+    Web/native; volumetric fog is not a clear-weather requirement. See
+    `art_briefs/kilmore_wet_weather.md` for implementation, research and checks.
+    Native shadow/performance and faithful backdrop/vegetation approval remain open.
   - 2026-10-19 sky/light pass: owner requested brighter, less-overcast weather.
     A CC0 4K partly-cloudy panorama replaces the blank gradient, with sky fill,
     a matching warm directional sun and cast shadows. Shared editable daylight

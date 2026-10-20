@@ -87,6 +87,15 @@ func _ready() -> void:
 	build_goals()
 	build_park_edge()
 	ball.use_terrain = terrain_enabled
+	var weather := MatchWeather.new()
+	weather.name = "MatchWeather"
+	add_child(weather)
+	var weather_id: StringName = MatchSession.weather_preset
+	if OS.has_feature("web") and OS.has_feature("debug"):
+		var requested = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('weather')")
+		if requested != null:
+			weather_id = MatchWeather.valid_id(StringName(str(requested)))
+	weather.setup(self, weather_id)
 	if use_human_visual:
 		var radar := Control.new()
 		radar.set_script(load("res://scripts/tactical_radar.gd"))
@@ -102,6 +111,10 @@ func _ready() -> void:
 	$Goals/PositiveEnd/GoalDetector.goal_scored.connect(_on_goal)
 	$Goals/NegativeEnd/GoalDetector.goal_scored.connect(_on_goal)
 	_setup_kickoff_positions(_kickoff_team)
+	if OS.has_feature("web") and OS.has_feature("debug"):
+		# Explicit stationary inspection fixture; never used by normal matches.
+		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('surface_review')")) == "1":
+			ball.position = Vector3(50.9,PitchSurface.height_at(50.9,-1.5)+FootballBall.RADIUS,-1.5)
 	ball.freeze = true
 	_set_players_physics_enabled(false)
 	_bind_controlled_player()

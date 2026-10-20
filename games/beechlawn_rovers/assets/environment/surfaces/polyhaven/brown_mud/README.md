@@ -1,0 +1,1 @@
+Original free CC0 Brown Mud scan from Poly Haven. See source.json for author, source, license and unchanged download checksums. Colour is sRGB; OpenGL normals and roughness are linear data. Used at approximately two-metre repeats in the authored muddy goalmouths.

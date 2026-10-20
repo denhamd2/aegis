@@ -1,0 +1,6 @@
+{
+  "sunny": {"name":"Sunny · damp pitch", "wetness":0.65, "sun":0.8, "ambient":0.5, "sky":1.0, "overcast":0.0, "fog":0.00015, "rain":0.0},
+  "cloudy": {"name":"Cloudy", "wetness":0.8, "sun":0.25, "ambient":0.58, "sky":0.8, "overcast":0.72, "fog":0.0005, "rain":0.0},
+  "rain": {"name":"Light rain", "wetness":1.0, "sun":0.12, "ambient":0.48, "sky":0.58, "overcast":0.94, "fog":0.0018, "rain":1.0},
+  "mist": {"name":"Morning mist", "wetness":0.95, "sun":0.48, "ambient":0.56, "sky":0.85, "overcast":0.3, "fog":0.006, "rain":0.0}
+}

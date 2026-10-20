@@ -174,7 +174,19 @@ func _build_options() -> void:
 	intro_toggle.button_pressed = MatchSession.show_intro
 	intro_toggle.toggled.connect(func(enabled: bool): MatchSession.show_intro = enabled)
 	options_layer.add_child(intro_toggle)
-	_label(options_layer,"Walk-on, lineup, player and pitch close-ups.\nSpace or Enter skips straight to kickoff.",Vector2(100,505),21,BODY,MUTED)
+	_label(options_layer,"Space or Enter skips the intro.",Vector2(100,497),19,BODY,MUTED)
+	var weather_select := OptionButton.new()
+	weather_select.name = "MatchWeather"
+	weather_select.position = Vector2(100,540)
+	weather_select.size = Vector2(610,48)
+	weather_select.add_theme_font_override("font",BOLD)
+	weather_select.add_theme_font_size_override("font_size",22)
+	var weather_ids := MatchWeather.PRESETS.keys()
+	for id in weather_ids:
+		weather_select.add_item(str(MatchWeather.PRESETS[id]["name"]))
+	weather_select.select(weather_ids.find(str(MatchSession.weather_preset)))
+	weather_select.item_selected.connect(func(index: int): MatchSession.weather_preset = StringName(weather_ids[index]))
+	options_layer.add_child(weather_select)
 	_label(options_layer,"GAMEPLAY CAMERA",Vector2(820,194),20,BOLD,LIME)
 	camera_select = OptionButton.new()
 	camera_select.name = "GameplayCamera"

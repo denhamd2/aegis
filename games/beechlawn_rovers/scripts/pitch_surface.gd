@@ -19,6 +19,7 @@ static func make_mesh() -> ArrayMesh:
 				tool.set_uv(Vector2(point.x/LENGTH,point.y/WIDTH))
 				tool.add_vertex(Vector3(point.x-52.5,height_at(point.x-52.5,point.y-34.0),point.y-34.0))
 	tool.generate_normals()
+	tool.generate_tangents()
 	tool.index()
 	return tool.commit()
 

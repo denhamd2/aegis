@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="WetPitchSurface" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/wet_pitch_surface.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/environment/surfaces/kilmore_goalmouth_masks.png" id="2"]
+[resource]
+script = ExtResource("1")
+masks = ExtResource("2")
+puddle_drag = 2.6
+mud_drag = 0.22
