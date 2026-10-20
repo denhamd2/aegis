@@ -29,6 +29,10 @@ func test_stage_wide_clears_the_ring_truss_from_the_led_top_in_sightline() -> vo
 	# the camera below the fixtures changes the perspective enough to put the
 	# screen top above the near truss in the actual sightline.
 	var camera := EntranceDirector.STAGE_WIDE_AT
+	# Past the ring truss, looking away from it: it cannot cross the wall.
+	if -ArenaLighting.KEY_OFFSET > camera.z \
+			and EntranceDirector.STAGE_WIDE_LOOK.z < camera.z:
+		return
 	var screen_top := ArenaBuilder.SCREEN_CENTER_Y + ArenaBuilder.SCREEN_HEIGHT * 0.5
 	var screen_depth := absf(ArenaBuilder.SCREEN_FACE_Z - camera.z)
 	var truss_front_depth := absf(-ArenaLighting.KEY_OFFSET - camera.z)

@@ -235,7 +235,12 @@ const SCREEN_BEZEL := 0.22
 ## clear of the back wall. Declared as plain numbers so
 ## tools/blender/entrance_set.py can read them: that exporter reproduces the
 ## two sums below, but it must not re-type either measurement.
-const SCREEN_CENTER_RISE := 9.0
+## 6.4: the wall's bezel sits just over the three screens below it (the
+## owner, 20 Oct: "just the large screen and the three LED screens directly
+## below it" -- no banner, no gap). SIDE_SCREEN_TOP 3.05, the walls' lip 0.06,
+## a hand's 0.07 clear, the bezel 0.22, half the wall 3.0. It was 9.0, which
+## left 2.9 m of black between them.
+const SCREEN_CENTER_RISE := 6.4
 const SCREEN_FACE_OFFSET := 1.1
 const SCREEN_CENTER_Y := STAGE_DECK_Y + SCREEN_CENTER_RISE
 const SCREEN_FACE_Z := STAGE_BACK + SCREEN_FACE_OFFSET
@@ -259,7 +264,7 @@ const SCREEN_BLANK_EMISSION := 0.35
 ## CENTRE_SCREEN_HALF_W, 2.3), outer edges under the video wall's ends: in
 ## the reference the two walls together span about the wall's width, and
 ## their tops stop just under its bottom edge (SCREEN_CENTER_RISE -
-## SCREEN_HEIGHT / 2 = 6.0 above the deck).
+## SCREEN_HEIGHT / 2 less the bezel: 3.18 above the deck).
 const SIDE_SCREEN_INNER_X := 2.55
 const SIDE_SCREEN_OUTER_X := 7.45
 ## Above the deck: a hand of air under the picture for the floor cans, and the
@@ -2035,12 +2040,6 @@ const STAGE_CENTRE_SCREEN := "res://assets/environment/materials/stage_centre_sc
 const STAGE_CENTRE_SCREEN_LEVEL := 0.9
 ## The chevron wings at each end of the video wall (entrance_set.py WING_*).
 const STAGE_SCREEN_WING := "res://assets/environment/materials/stage_screen_wing.png"
-## The banner across the top of the three screens (entrance_set.py
-## build_banner; the owner, 20 Oct): a dark LED fascia carrying the house
-## ribbon. Lit below the walls (SIDE_SCREEN_LEVEL is 0.28, the centre 0.9)
-## because it is mostly the ribbon's white type on black.
-const STAGE_BANNER := "res://assets/environment/materials/stage_banner.png"
-const STAGE_BANNER_LEVEL := 0.45
 const STAGE_SCREEN_WING_LEVEL := 1.1
 
 
@@ -2074,10 +2073,6 @@ func _build_entrance_set() -> void:
 	wing.emission_texture = load(STAGE_SCREEN_WING)
 	wing.emission_energy_multiplier = STAGE_SCREEN_WING_LEVEL * _emissive_gain()
 	_dress(root, "StageScreenWings", wing)
-	var banner := centre.duplicate() as StandardMaterial3D
-	banner.emission_texture = load(STAGE_BANNER)
-	banner.emission_energy_multiplier = STAGE_BANNER_LEVEL * _emissive_gain()
-	_dress(root, "StageBanner", banner)
 	add_child(root)
 	_attach_stage_video(root)
 

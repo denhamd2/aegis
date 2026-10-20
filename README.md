@@ -10219,3 +10219,16 @@ The owner's call: keep the LED walls 16:9, shorten the centre screen to match th
 - **The side screens show the whole picture.** They are 16:9, as the clips are, but they used to take the big wall's own vertical crop (66-72% of the frame) and then trim the width to match, so the logo ran off both edges. `StageVideo.mirror_crop` now fits the whole frame to each screen's shape, so a 16:9 clip plays on them uncropped. Guarded by `test_the_led_walls_show_the_whole_frame`.
 - The rebuild is byte-identical run to run.
 - Guarded by `test_the_three_screens_match_and_the_banner_closes_the_gap`. Review: `gauntlet/refs/stage/review/stage_banner.png`.
+
+## 20 Oct — No banner: the video wall sits right on the three screens
+
+The owner: "I don't want the ribbon LED in the stage area at all, it should just be the large screen and the three LED screens directly below it."
+
+- **Banner out.** `build_banner`, `paint_banner`, the `StageBanner` part, `stage_banner.png` and `ArenaBuilder`'s banner dressing are gone. Everything is recoverable from git history.
+- **Video wall down.** `SCREEN_CENTER_RISE` goes from 9.0 to 6.4. The wall's bezel now sits 0.07 m over the LED screens' lip, so there is no gap. The truss, wings and spots follow it, because they all read `SCREEN_CENTER_Y`.
+- **Video-intro camera.** `TRON_SHOT_AT` moves back over the barricade to (0, 5.4, -8.0), with FOV 30. Framing the lower wall from the old crane spot put the empty stage centre in a close-up. This angle frames the whole set and keeps the stage centre far off, all through the push-in.
+- **Truss check.** `test_stage_wide_clears_the_ring_truss…` passes outright when the camera is past the ring truss and looking away from it. In that case the truss cannot cross the wall, which the render confirms.
+- **Unchanged.** The side screens still show the full, uncropped frame (`StageVideo.mirror_crop`).
+- **Guard.** `test_the_three_screens_match_and_the_video_wall_sits_right_on_them`.
+- **Determinism.** `entrance_set.glb` rebuilt byte-identical on two runs.
+- **Review.** `gauntlet/refs/stage/review/stage_screens_no_banner.png`.

@@ -628,10 +628,10 @@ func test_kenny_has_his_titantron_and_his_entrance_uses_it() -> void:
 
 
 ## The owner, 20 Oct: the three screens the same height, the walls kept 16:9,
-## and the gap up to the video wall closed with a banner. So the centre
-## screen spans exactly the walls' height, and the banner runs from just over
-## their tops to just under the video wall's bezel, as wide as the walls.
-func test_the_three_screens_match_and_the_banner_closes_the_gap() -> void:
+## and then "just the large screen and the three LED screens directly below
+## it" -- no banner. So the centre screen spans exactly the walls' height, and
+## the video wall's bezel sits a hand's width over their tops.
+func test_the_three_screens_match_and_the_video_wall_sits_right_on_them() -> void:
 	var deck := ArenaBuilder.STAGE_DECK_Y
 	var lo := INF
 	var hi := -INF
@@ -640,18 +640,16 @@ func test_the_three_screens_match_and_the_banner_closes_the_gap() -> void:
 		hi = maxf(hi, v.y)
 	assert_float(lo).is_equal_approx(deck + ArenaBuilder.SIDE_SCREEN_BOTTOM, 0.01)
 	assert_float(hi).is_equal_approx(deck + ArenaBuilder.SIDE_SCREEN_TOP, 0.01)
-	var b_lo := INF
-	var b_hi := -INF
-	var b_x := 0.0
-	for v: Vector3 in _verts("StageBanner"):
-		b_lo = minf(b_lo, v.y)
-		b_hi = maxf(b_hi, v.y)
-		b_x = maxf(b_x, absf(v.x))
-	assert_float(b_lo - (deck + ArenaBuilder.SIDE_SCREEN_TOP)).is_between(0.0, 0.1)
+	var root := _model()
+	assert_object(root.find_child("StageBanner", true, false)).is_null()
+	root.free()
 	var wall_bottom := deck + ArenaBuilder.SCREEN_CENTER_RISE - ArenaBuilder.SCREEN_HEIGHT * 0.5 \
 			- ArenaBuilder.SCREEN_BEZEL
-	assert_float(wall_bottom - b_hi).is_between(0.0, 0.1)
-	assert_float(b_x).is_equal_approx(ArenaBuilder.SIDE_SCREEN_OUTER_X, 0.02)
+	assert_float(wall_bottom - (deck + ArenaBuilder.SIDE_SCREEN_TOP)).is_between(0.05, 0.2)
+	var wall_lo := INF
+	for v: Vector3 in _verts("StageScreen"):
+		wall_lo = minf(wall_lo, v.y)
+	assert_float(wall_lo).is_greater(deck + ArenaBuilder.SIDE_SCREEN_TOP)
 
 
 ## The LED walls are 16:9 and so are the clips: a wall shows the whole frame,

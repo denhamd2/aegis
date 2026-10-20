@@ -80,18 +80,17 @@ PART_COLORS = {
     "StageScreenWings": (0.60, 0.20, 0.55, 1.0),
     "StageSideScreens": (0.10, 0.08, 0.16, 1.0),
     "StageSideScreenFrame": (0.03, 0.03, 0.035, 1.0),
-    "StageBanner": (0.08, 0.06, 0.14, 1.0),
     "StageFloorCans": (1.00, 0.16, 0.12, 1.0),
     "StageDrape": (0.02, 0.02, 0.025, 1.0),
     "StageTruss": (0.45, 0.46, 0.50, 1.0),
 }
 EMISSIVE = frozenset({"StageScreen", "StageCentreScreen", "StageScreenWings",
-                      "StageSideScreens", "StageFloorCans", "StageBanner"})
+                      "StageSideScreens", "StageFloorCans"})
 SMOOTH = frozenset({"StageFloorCans"})
 # The screen faces author their own normalised UVs; everything else takes the
 # world-metre projection the MaterialLibrary's surfaces are authored for.
 PROJECTED = frozenset(PART_COLORS) - {"StageScreen", "StageCentreScreen",
-                                      "StageScreenWings", "StageSideScreens", "StageBanner"}
+                                      "StageScreenWings", "StageSideScreens"}
 
 ## The backdrop's run past each end of the video wall (backdrop_half).
 BACKDROP_PAST_SCREEN = 3.8
@@ -599,101 +598,6 @@ def build_side_screens(cfg: dict[str, float], d: dict[str, float],
                       FLOOR_CAN_RADIUS, sides=12)
 
 
-## The banner across the top of the three screens (the owner, 20 Oct: "close
-## the gap with a banner strip"): an LED fascia from the screens' tops up to
-## just under the video wall's bezel, in three panels on the three screens'
-## own planes -- the centre one on the centre screen's, each side one on its
-## splayed wall's -- so from the ring it reads as one wall of LED. Dark, with
-## the house ribbon (AEW / DYNAMITE, ribbon_board.png) running along its foot,
-## directly on top of the screens.
-BANNER_TEX = venue.REPO / "game/assets/environment/materials/stage_banner.png"
-RIBBON_ART = venue.REPO / "game/assets/environment/materials/ribbon_board.png"
-## The ribbon's height on the banner, metres (the bowl's ribbons are 0.90).
-BANNER_RIBBON_H = 1.0
-## Clear of the video wall's bezel above it.
-BANNER_TOP_GAP = 0.06
-BANNER_DEPTH = 0.25
-
-
-def build_banner(cfg: dict[str, float], d: dict[str, float], parts: dict[str, Part]) -> None:
-    deck = cfg["STAGE_DECK_Y"]
-    y0 = deck + cfg["SIDE_SCREEN_TOP"] + SIDE_SCREEN_LIP
-    y1 = d["SCREEN_CENTER_Y"] - cfg["SCREEN_HEIGHT"] * 0.5 - cfg["SCREEN_BEZEL"] - BANNER_TOP_GAP
-    pic, frame = parts["StageBanner"], parts["StageSideScreenFrame"]
-    toe = math.radians(cfg["SIDE_SCREEN_TOE_DEG"])
-    span = cfg["SIDE_SCREEN_OUTER_X"] - cfg["SIDE_SCREEN_INNER_X"]
-    z_in = d["SIDE_SCREEN_INNER_Z"]
-    z_out = z_in + span * math.tan(toe)
-    face_z = cfg["STAGE_BACK"] - 0.2 + 0.012
-    w = CENTRE_SCREEN_HALF_W
-    # Left to right as the ring sees it: the -X wall (outer to inner), the
-    # centre panel, the +X wall (inner to outer).
-    segments = [
-        (Vector((-cfg["SIDE_SCREEN_OUTER_X"], 0.0, z_out)), Vector((-cfg["SIDE_SCREEN_INNER_X"], 0.0, z_in))),
-        (Vector((-w, 0.0, face_z)), Vector((w, 0.0, face_z))),
-        (Vector((cfg["SIDE_SCREEN_INNER_X"], 0.0, z_in)), Vector((cfg["SIDE_SCREEN_OUTER_X"], 0.0, z_out))),
-    ]
-    total = sum((b - a).length for a, b in segments)
-    at = 0.0
-    for left, right in segments:
-        along = right - left
-        normal = Vector((-along.z, 0.0, along.x)).normalized()
-        if normal.z < 0.0:
-            normal = -normal
-        off = normal * SIDE_SCREEN_STANDOFF
-        u0, u1 = at / total, (at + along.length) / total
-        at += along.length
-        v = [pic.vert(p + off) for p in (left + Vector((0, y0, 0)), right + Vector((0, y0, 0)),
-                                         right + Vector((0, y1, 0)), left + Vector((0, y1, 0)))]
-        pic.quad(*v, uvs=[(u0, 0.0), (u1, 0.0), (u1, 1.0), (u0, 1.0)])
-        # A black cabinet behind it, so no oblique shot sees through the gap.
-        back = -normal * BANNER_DEPTH
-        c = [left + Vector((0, y0, 0)), right + Vector((0, y0, 0)),
-             right + Vector((0, y1, 0)), left + Vector((0, y1, 0))]
-        f = [frame.vert(p) for p in c]
-        b = [frame.vert(p + back) for p in c]
-        frame.quad(b[1], b[0], b[3], b[2])          # back
-        frame.quad(f[3], f[2], b[2], b[3])          # top
-        frame.quad(b[0], b[1], f[1], f[0])          # bottom
-        frame.quad(b[0], f[0], f[3], b[3])          # left end
-        frame.quad(f[1], b[1], b[2], f[2])          # right end
-    paint_banner(total, y1 - y0)
-
-
-def paint_banner(width_m: float, height_m: float) -> None:
-    """The banner's picture: a deep violet-black LED field under a fine pixel
-    grid, the ribbon artwork tiled along a band at its foot -- just above the
-    three screens -- at its own proportions, and a thin pink and blue rule
-    either side of the band (the set's stripe colours)."""
-    import numpy as np
-    from PIL import Image
-    px_per_m = 160
-    w, h = int(round(width_m * px_per_m)), int(round(height_m * px_per_m))
-    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
-    v = y / h
-    field = np.stack([0.05 + 0.03 * (1 - v), 0.03 + 0.01 * (1 - v), 0.10 + 0.05 * (1 - v)], -1)
-    band_h = int(round(BANNER_RIBBON_H * px_per_m))
-    # Right on top of the screens (the owner, 20 Oct: "just above them", not
-    # up in the gap under the video wall): the image's bottom rows are the
-    # banner's bottom edge, so the band sits there with only its blue rule
-    # beneath it.
-    rule = max(2, px_per_m // 40)
-    gap = px_per_m // 16
-    top = h - band_h - 2 * gap - rule
-    art = Image.open(RIBBON_ART).convert("RGB")
-    tile_w = int(round(art.width * band_h / art.height))
-    tile = np.asarray(art.resize((tile_w, band_h), Image.LANCZOS), np.float32) / 255.0
-    reps = int(np.ceil(w / tile_w)) + 1
-    strip = np.concatenate([tile] * reps, axis=1)
-    off = (strip.shape[1] - w) // 2
-    field[top:top + band_h] = strip[:, off:off + w]
-    field[top - gap - rule:top - gap] = (1.0, 0.25, 0.65)
-    field[top + band_h + gap:top + band_h + gap + rule] = (0.25, 0.45, 1.0)
-    grid = ((x % 6 < 5) & (y % 6 < 5)).astype(np.float32) * 0.25 + 0.75
-    rgb = np.clip(field * grid[..., None], 0, 1) * 255
-    Image.fromarray(np.round(rgb).astype(np.uint8), "RGB").save(BANNER_TEX, optimize=True)
-
-
 def paint_centre_screen() -> None:
     """The centre screen's picture: a violet LED field with the set's pink and
     orange chevrons coming in from the corners, under a fine pixel grid."""
@@ -728,7 +632,6 @@ def main(argv: list[str]) -> int:
     build_screen(cfg, d, parts)
     build_centre_screen(cfg, parts)
     build_side_screens(cfg, d, parts)
-    build_banner(cfg, d, parts)
     build_screen_wings(cfg, d, parts)
     build_truss_frame(cfg, d, parts)
     # The picture faces are open sheets and must look at the ring (+Z).
@@ -741,7 +644,7 @@ def main(argv: list[str]) -> int:
                  # per quad and lose one (face_toward's note). Authored
                  # counter-clockwise from the ring, as the screen is.
                  # The two LED walls too: splayed opposite ways.
-                 keep_winding=frozenset({"StageScreenWings", "StageSideScreens", "StageBanner"}))
+                 keep_winding=frozenset({"StageScreenWings", "StageSideScreens"}))
 
     out = pathlib.Path(args.out)
     venue.export_glb(out)

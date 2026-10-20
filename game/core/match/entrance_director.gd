@@ -443,8 +443,11 @@ const CODY_DARK_FOV := 50.0
 ## His video starting on the big screen: from a crane over the floor, square
 ## to the wall, the whole screen and the dark stage under it (owner: the old
 ## cut "stays too long on the crowd" -- the 2K26 intro shows the video).
-const TRON_SHOT_AT := Vector3(0.0, 4.5, -17.0)
-const TRON_SHOT_FOV := 34.0
+## Back over the barricade since the wall came down onto the LED screens (20
+## Oct): the whole set fits a long lens from there, and the empty stage
+## centre stays a far-off part of it, not a close-up, through the push-in.
+const TRON_SHOT_AT := Vector3(0.0, 5.4, -8.0)
+const TRON_SHOT_FOV := 30.0
 const PORTAL_LONG_FOV := Vector2(19.0, 14.0)
 const STEADICAM_FOV := 32.0
 const CORNER_LOW_AT := Vector3(1.2, 1.25, -1.2)
