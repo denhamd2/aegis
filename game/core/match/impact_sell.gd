@@ -53,7 +53,7 @@ static func move_profile(move: MoveDef) -> StringName:
 ## A table's collapsing rebound is additive to the move sell. Barbed wire and
 ## tacks get a sharp first flinch followed by a protective, localized curl.
 static func surface_profile(weapon_id: StringName, broke: bool) -> StringName:
-	if weapon_id == &"table" and broke:
+	if weapon_id in [&"table", &"glass_pane"] and broke:
 		return &"table_rebound"
 	if weapon_id == &"barbed_wire_board":
 		return &"wire_guard"

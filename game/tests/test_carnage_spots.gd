@@ -93,3 +93,35 @@ func test_through_a_cold_table_he_does_not() -> void:
 	w._go_down()
 	await _ticks(WrestlerController.LAND_WAIT + 2)
 	assert_bool((w.get_node("ManFire") as ManFire).burning).is_false()
+
+
+# --- the pane of glass -------------------------------------------------------
+
+func test_the_pane_of_glass_sets_up_like_a_table_and_shatters_into_shards() -> void:
+	var def := WeaponCatalog.by_id(&"glass_pane")
+	assert_object(def).is_not_null()
+	assert_bool(def.set_piece).is_true()
+	var a := WeaponActor.make(def)
+	auto_free(a)
+	for state: String in ["GlassPane_Carried", "GlassPane_Up", "GlassPane_Broken"]:
+		assert_bool(a.has_state(state)).override_failure_message(state).is_true()
+	var shards := (a._roots["GlassPane_Broken"] as Node3D).find_children("*__piece_*", "Node3D", true, false)
+	assert_int(shards.size()).is_greater(30)
+
+
+func test_through_the_glass_he_is_cut_open_front_and_back() -> void:
+	var w := _wrestler(true)
+	w.global_position = Vector3(1.0, 0.0, 1.0)
+	await _ticks(2)
+	var pane := _set_up(w, &"glass_pane", w.global_position)
+	var blood := w.get_node_or_null("Blood") as Blood
+	w._go_down()
+	await _ticks(WrestlerController.LAND_WAIT + 2)
+	assert_int(pane.mode).is_equal(WeaponActor.Mode.BROKEN)
+	assert_str(pane.state_root).is_equal("GlassPane_Broken")
+	if blood:
+		assert_float(blood.back).is_greater(0.5)
+		assert_float(blood.head).is_greater(0.5)
+	# heavier than going through a table
+	assert_float(WeaponCatalog.landing_move(pane.def).damage_torso).is_greater(
+			WeaponCatalog.landing_move(WeaponCatalog.by_id(&"table")).damage_torso)

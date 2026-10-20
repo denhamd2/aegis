@@ -3,6 +3,8 @@ extends Node
 ##
 ##   --spot table   Roman lights a table standing in the ring, and Cody goes
 ##                  down through it and catches fire
+##   --spot glass   a pane of glass set up in the ring, Cody down through it,
+##                  the shards, and the blood
 ##
 ##   xvfb-run -a godot --path game --rendering-driver vulkan --resolution 1280x720 \
 ##       --fixed-fps 30 tools/probe/carnage_shot.tscn -- --spot table --out /tmp/carnage
@@ -45,6 +47,8 @@ func _ready() -> void:
 	match _spot:
 		"table":
 			await _table()
+		"glass":
+			await _glass()
 	print("CARNAGE SHOT DONE ", _spot)
 	get_tree().quit()
 
@@ -72,6 +76,40 @@ func _table() -> void:
 	await _save("table_2_through.png")
 	await _frames(45)
 	await _save("table_3_on_fire.png")
+
+
+func _glass() -> void:
+	var stock := WeaponStock.of(_a)
+	var pane := stock.pull(WeaponCatalog.by_id(&"glass_pane"))
+	pane.set_up_at(Vector3(0.4, 0.0, 0.0), 0.0)
+	_a.global_position = Vector3(-1.4, 0.0, 1.9)
+	_b.global_position = Vector3(-2.2, 0.0, -1.6)
+	_cam.global_position = Vector3(3.6, 2.5, 3.6)
+	_cam.look_at(Vector3(0.3, 0.9, 0.0))
+	await _frames(20)
+	await _save("glass_0_set_up.png")
+	# on it, as the tests put him: he goes down where he stands
+	_b.global_position = Vector3(0.4, 0.0, 0.0)
+	_b.rotation.y = PI * 0.5
+	_b._go_down()
+	await _frames(14)
+	await _save("glass_1_through.png")
+	await _frames(40)
+	await _save("glass_2_shards.png")
+	await _frames(20)
+	var blood := _b.get_node_or_null("Blood") as Blood
+	print("GLASS BLOOD head %.2f back %.2f" % [blood.head, blood.back] if blood else "GLASS BLOOD none")
+	var head := _b._bone_world("Head")
+	if head == Vector3.INF:
+		head = _b.global_position + Vector3.UP * 0.3
+	# from in front of him, a little above: his face and chest
+	var front := -_b.global_basis.z
+	front.y = 0.0
+	front = front.normalized()
+	_cam.global_position = head + front * 1.1 + Vector3.UP * 0.35
+	_cam.look_at(head + Vector3.DOWN * 0.25)
+	_cam.fov = 40.0
+	await _save("glass_3_blood.png")
 
 
 func _frames(n: int) -> void:

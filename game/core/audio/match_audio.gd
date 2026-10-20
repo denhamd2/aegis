@@ -705,6 +705,12 @@ func on_weapon_event(weapon: WeaponActor, event: String) -> void:
 		"broke":
 			if weapon.def.id == &"table":
 				sfx.play_any("table_crack", 0.0)
+			elif weapon.def.id == &"glass_pane":
+				# the sheet going: glass, over the thud of him and the frame
+				sfx.play_any("hit_glass", 2.0)
+				sfx.play_any("hit_glass", -2.0)
+				sfx.play_any("table_crack", -8.0)
+				sfx.play_any("crowd_ooh", 0.0)
 			elif not sfx.play_any(weapon.def.sound, -1.0):
 				sfx.play(weapon.def.sound, -1.0)
 

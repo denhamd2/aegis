@@ -142,11 +142,27 @@ func _dress_belt() -> void:
 	_roots[root.name] = root
 
 
+## The pane's glass as glass in the hall: under the ring's white key a
+## glossy sheet at the export's 28% read as milky white board. Mostly clear,
+## a green edge-tint, a low sheen: the lights catch it, the canvas shows
+## through.
+const GLASS_TINT := Color(0.78, 0.9, 0.88, 0.1)
+
+
 func _dress_for_the_hall() -> void:
 	for node in _model.find_children("", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		for s in mi.get_surface_override_material_count():
 			var m := mi.get_active_material(s)
+			if m is BaseMaterial3D and m.resource_name.ends_with("_glass") and def.id == &"glass_pane":
+				var glass := (m as BaseMaterial3D).duplicate() as BaseMaterial3D
+				glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				glass.albedo_color = GLASS_TINT
+				glass.roughness = 0.05
+				glass.metallic_specular = 0.25
+				glass.cull_mode = BaseMaterial3D.CULL_DISABLED
+				mi.set_surface_override_material(s, glass)
+				continue
 			if m is BaseMaterial3D and (m as BaseMaterial3D).metallic > HALL_METALLIC:
 				var copy := (m as BaseMaterial3D).duplicate() as BaseMaterial3D
 				copy.metallic = HALL_METALLIC
@@ -176,7 +192,7 @@ func _retune_grips() -> void:
 			grip_l_y = -0.14
 		&"fire_extinguisher":
 			grip_l_y = -0.27
-		&"table":
+		&"table", &"glass_pane":
 			grip_l_x = -0.28
 		&"championship_belt":
 			return # its virtual grip markers are authored in _dress_belt

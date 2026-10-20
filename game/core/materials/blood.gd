@@ -44,7 +44,7 @@ const MASKS := "res://assets/characters/blood/"
 const CUT := {
 	&"knife": 1.0, &"sword": 1.0,
 	&"barbed_wire_bat": 1.0, &"barbed_wire_chair": 1.0, &"barbed_wire_board": 1.0,
-	&"light_tubes": 1.0, &"board_with_nails": 0.9, &"bed_of_nails": 0.9,
+	&"light_tubes": 1.0, &"glass_pane": 1.0, &"board_with_nails": 0.9, &"bed_of_nails": 0.9,
 	&"handgun": 0.7, &"steel_steps": 0.7, &"brass_knuckles": 0.6, &"chain": 0.6,
 	&"sledgehammer": 0.6, &"steel_chair": 0.6, &"lead_pipe": 0.6, &"ring_bell": 0.55,
 	&"shovel": 0.55, &"ladder": 0.5, &"rpg": 0.5, &"guitar": 0.5, &"stop_sign": 0.45,
@@ -57,8 +57,12 @@ const CUT := {
 ## adds at full health): the tacks, the nails, the wire, the splinters.
 const BACK_CUT := {
 	&"thumbtacks": 0.30, &"bed_of_nails": 0.42, &"barbed_wire_board": 0.55,
-	&"light_tubes": 0.5, &"table": 0.06,
+	&"light_tubes": 0.5, &"table": 0.06, &"glass_pane": 1.0,
 }
+## Set pieces that cut his face open too when he goes through them, not only
+## his back (the owner, 19 Oct: the pane of glass "with heavy blood"): the
+## head bleed level it adds at full health, more the more he has lost.
+const LANDING_HEAD_CUT := {&"glass_pane": 0.6}
 ## Below this CUT a weapon cannot open a cut, only worsen one.
 const OPENS := 0.35
 ## Bleed level per point of head damage at CUT 1, full health.
@@ -166,6 +170,13 @@ func _on_damaged(move: MoveDef) -> void:
 		if cut > 0.0:
 			back = minf(0.8, back + cut * (0.65 + 0.3 * (1.0 - health)))
 			wet = 1.0
+		var face: float = LANDING_HEAD_CUT.get(weapon.id, 0.0)
+		if face > 0.0:
+			var was := head
+			head = minf(1.3, head + face * worn)
+			_peak = maxf(_peak, head)
+			wet = 1.0
+			_throw_off(head - was)
 		return
 	var dealt := move.damage_head
 	if dealt <= 0.0:

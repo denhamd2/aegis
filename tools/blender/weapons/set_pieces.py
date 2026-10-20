@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Family 4, set pieces (gauntlet/refs/weapons_nhb.md): the table, the
-ladder, thumbtacks, the bed of nails, the light-tube bundle and the
-barbed-wire board.
+ladder, thumbtacks, the bed of nails, the light-tube bundle, the
+barbed-wire board and the pane of glass.
 
 Run:  python3 tools/blender/weapons/set_pieces.py
 
@@ -515,6 +515,130 @@ def build_wire_board(root, prefix, wood, wire) -> None:
     kit.marker(root, "grip_l", Vector((-0.45, 0.80, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
 
 
+# --- the pane of glass ----------------------------------------------------------------
+
+GLASS_LEN, GLASS_WID, GLASS_THICK = 1.60, 0.90, 0.006
+GLASS_TOP_Y = 0.82        # the pane's top face, set up on its trestles
+FRAME_W = 0.022           # the steel channel round its edge
+
+
+def trestle(part, x: float, top_y: float) -> None:
+    """A steel A-trestle across the pane's width at `x`: a top bar and two
+    splayed legs each side."""
+    half = GLASS_WID / 2 + 0.04
+    bar_y = top_y - GLASS_THICK - FRAME_W
+    part.tube([Vector((x, bar_y, -half)), Vector((x, bar_y, half))], 0.016, 8)
+    for z in (-half + 0.06, half - 0.06):
+        for dx in (-0.16, 0.16):
+            part.tube([Vector((x, bar_y, z)), Vector((x + dx, 0.0, z))], 0.013, 8)
+        part.tube([Vector((x - 0.12, 0.22, z)), Vector((x + 0.12, 0.22, z))], 0.010, 6)
+
+
+def frame(part, y: float, half_l: float, half_w: float) -> None:
+    """The steel channel round the pane, at height `y`."""
+    for a, b_ in (((-half_l, -half_w), (half_l, -half_w)), ((half_l, -half_w), (half_l, half_w)),
+                  ((half_l, half_w), (-half_l, half_w)), ((-half_l, half_w), (-half_l, -half_w))):
+        part.box(Vector(((a[0] + b_[0]) / 2, y, (a[1] + b_[1]) / 2)),
+                 Vector((abs(b_[0] - a[0]) + FRAME_W, FRAME_W, abs(b_[1] - a[1]) + FRAME_W)), bevel=0.002)
+
+
+def shatter_cells(rng) -> list:
+    """The pane's break as cells (x, z outlines, counter-clockwise from above):
+    radial cracks out of where he lands (the middle), crossed by two rings --
+    small shards at the centre, long daggers to the frame."""
+    hl, hw = GLASS_LEN / 2, GLASS_WID / 2
+    n = 11
+    angles = sorted(rng.uniform(0, 2 * math.pi) for _ in range(n))
+    rings = [0.10, 0.30]
+
+    def edge_hit(a: float) -> tuple:
+        dx, dz = math.cos(a), math.sin(a)
+        s = min(hl / abs(dx) if abs(dx) > 1e-6 else 1e9, hw / abs(dz) if abs(dz) > 1e-6 else 1e9)
+        return dx * s, dz * s
+
+    def at(a: float, r: float) -> tuple:
+        ex, ez = edge_hit(a)
+        full = math.hypot(ex, ez)
+        r = min(r * (1.0 + rng.uniform(-0.15, 0.15)), full * 0.9)
+        return math.cos(a) * r, math.sin(a) * r
+
+    corners = [(hl, hw), (-hl, hw), (-hl, -hw), (hl, -hw)]
+    corner_angles = [math.atan2(c[1], c[0]) % (2 * math.pi) for c in corners]
+    pts = {}
+    for i, a in enumerate(angles):
+        pts[i] = [at(a, rings[0]), at(a, rings[1]), edge_hit(a)]
+    cells = []
+    for i in range(n):
+        a0, a1 = angles[i], angles[(i + 1) % n] + (2 * math.pi if i == n - 1 else 0)
+        p0, p1 = pts[i], pts[(i + 1) % n]
+        cells.append([(0.0, 0.0), p0[0], p1[0]])
+        cells.append([p0[0], p0[1], p1[1], p1[0]])
+        outer = [p0[1], p0[2]]
+        for ca, c in sorted(zip(corner_angles, corners)):
+            for wrap in (0, 2 * math.pi):
+                if a0 < ca + wrap < a1:
+                    outer.append(c)
+        outer += [p1[2], p1[1]]
+        cells.append(outer)
+    return cells
+
+
+def build_glass(root, prefix, glass, steel, state: str) -> None:
+    """A sheet of 6 mm glass in a steel channel. Up: across two A-trestles,
+    its top at GLASS_TOP_Y, the length along X, origin at the floor centre.
+    Carried: the framed sheet alone, lying flat. Broken: the sheet shattered
+    radially from the middle, each shard a piece_NN round its own centre, the
+    frame snapped into its four bars, the trestles knocked over."""
+    hl, hw = GLASS_LEN / 2, GLASS_WID / 2
+    rng = np.random.RandomState(kit.seed_of("glass_pane_break"))
+    if state in ("Up", "Carried"):
+        y1 = GLASS_TOP_Y if state == "Up" else 0.03
+        pane = kit.WeaponPart(prefix + "_glass")
+        slab(pane, [(-hl, -hw), (hl, -hw), (hl, hw), (-hl, hw)], y1 - GLASS_THICK, y1)
+        kit.add_mesh(root, pane, glass, uv_scale=1.0, smooth=False)
+        fr = kit.WeaponPart(prefix + "_frame")
+        frame(fr, y1 - GLASS_THICK / 2, hl, hw)
+        if state == "Up":
+            for s in (-1, 1):
+                trestle(fr, s * (hl - 0.22), y1)
+        kit.add_mesh(root, fr, steel, uv_scale=4.0)
+        kit.marker(root, "top", Vector((0, y1, 0)))
+        kit.marker(root, "grip_r", Vector((0.35, y1, -hw)), Vector((1, 0, 0)), Vector((0, 1, 0)))
+        kit.marker(root, "grip_l", Vector((-0.35, y1, -hw)), Vector((1, 0, 0)), Vector((0, 1, 0)))
+        return
+    y1 = GLASS_TOP_Y
+    pieces = []
+    for idx, cell in enumerate(shatter_cells(rng)):
+        cx = sum(p[0] for p in cell) / len(cell)
+        cz = sum(p[1] for p in cell) / len(cell)
+        local = [(x - cx, z - cz) for x, z in cell]
+        area = sum(local[i][0] * local[(i + 1) % len(local)][1] - local[(i + 1) % len(local)][0] * local[i][1]
+                   for i in range(len(local)))
+        if abs(area) < 1e-5:
+            continue
+        if area < 0:
+            local = list(reversed(local))
+        part = kit.WeaponPart("%s__piece_%02d" % (prefix, len(pieces)))
+        slab(part, local, -GLASS_THICK / 2, GLASS_THICK / 2)
+        pieces.append((part, Vector((cx, y1 - GLASS_THICK / 2, cz)), glass, False))
+    for (a, b_) in (((-hl, -hw), (hl, -hw)), ((hl, -hw), (hl, hw)), ((hl, hw), (-hl, hw)), ((-hl, hw), (-hl, -hw))):
+        part = kit.WeaponPart("%s__piece_%02d" % (prefix, len(pieces)))
+        ln = math.hypot(b_[0] - a[0], b_[1] - a[1])
+        along_x = abs(b_[0] - a[0]) > abs(b_[1] - a[1])
+        part.box(Vector((0, 0, 0)), Vector((ln if along_x else FRAME_W, FRAME_W, FRAME_W if along_x else ln)),
+                 bevel=0.002)
+        pieces.append((part, Vector(((a[0] + b_[0]) / 2, y1 - GLASS_THICK / 2, (a[1] + b_[1]) / 2)), steel, True))
+    for s in (-1, 1):
+        part = kit.WeaponPart("%s__piece_%02d" % (prefix, len(pieces)))
+        trestle(part, 0.0, y1)
+        pieces.append((part, Vector((s * (hl - 0.22), 0, 0)), steel, True))
+    for part, at, mat, solid in pieces:
+        obj = kit.add_mesh(root, part, mat, uv_scale=1.0 if mat is glass else 4.0, smooth=not (mat is glass))
+        obj.location = kit.to_blender(at)
+        obj["piece"] = True
+    kit.marker(root, "top", Vector((0, y1, 0)))
+
+
 def plywood_textures(name: str) -> tuple:
     return kit.wood_textures(name, (0.74, 0.60, 0.42), (0.60, 0.45, 0.28), 30, 0.0, along_rows=False)
 
@@ -590,6 +714,19 @@ def build_more(report: list) -> None:
     root = kit.state_root("BarbedWireBoard_Clean")
     build_wire_board(root, root.name, wood, wire)
     report.append("barbed_wire_board: %d triangles" % kit.triangles_under(root))
+    kit.export(wid)
+
+    kit.reset()
+    wid = "glass_pane"
+    glass = kit.flat_material(wid + "_glass", (0.80, 0.90, 0.88), 0.04, 0.0)
+    glass.blend_method = "BLEND"
+    bsdf = glass.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Alpha"].default_value = 0.28
+    steel = kit.pbr_material(wid + "_steel", *kit.metal_textures(wid, (0.55, 0.56, 0.57), 0.12, 0.35, size=256), 0.5)
+    for state in ("Up", "Carried", "Broken"):
+        root = kit.state_root("GlassPane_" + state)
+        build_glass(root, root.name, glass, steel, state)
+        report.append("glass_pane %s: %d triangles" % (state, kit.triangles_under(root)))
     kit.export(wid)
 
 

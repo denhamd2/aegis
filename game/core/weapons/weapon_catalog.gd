@@ -41,7 +41,7 @@ const SWING_NAMES := {
 ## numbers, its body clip retimed to match (StrikeRecipes); the heavy ones
 ## keep their weight.
 const FF_PACE := 0.78
-const HEAVY_SWING: Array[StringName] = [&"sledgehammer", &"steel_steps", &"table", &"ladder",
+const HEAVY_SWING: Array[StringName] = [&"sledgehammer", &"steel_steps", &"table", &"glass_pane", &"ladder",
 		&"barbed_wire_board", &"guitar"]
 ## Weapon-specific performances may share gameplay timing while using their
 ## own body clip and hand-relative prop path.
@@ -52,7 +52,7 @@ const SWING_PROFILES := {
 	"hockey_stick": "slapshot",
 	"kendo_stick": "kendo_chop",
 	"trash_can": "two_hand_slam",
-	"table": "table_slam",
+	"table": "table_slam", "glass_pane": "table_slam",
 	"shovel": "shovel_flat",
 	"crutch": "crutch_overhead",
 	"ring_bell": "bonk_overhand", "frying_pan": "bonk_overhand",
@@ -173,6 +173,12 @@ const TABLE := [
 		WeaponDef.Swing.OVERHEAD, 8.0, 3.0, 0, 0, true, false, 0.0, "hit_kick", [], {}],
 	["table", "Table", WeaponDef.Family.SET_PIECES, "table", "Table_Folded", "", "Table_Broken", "Table_Up",
 		WeaponDef.Swing.OVERHEAD, 10.0, 4.0, 0, 0, true, true, 14.0, "hit_wood", ["roman", "kenny"], {}],
+	# The pane of glass (the owner, 19 Oct): set up across its trestles like
+	# a table, and through it a man is cut to ribbons (Blood.LANDING_HEAD_CUT).
+	# Swung, it goes on the first hit.
+	["glass_pane", "Pane of Glass", WeaponDef.Family.SET_PIECES, "glass_pane", "GlassPane_Carried", "",
+		"GlassPane_Broken", "GlassPane_Up", WeaponDef.Swing.OVERHEAD, 8.0, 3.0, 0, 1, true, true, 16.0,
+		"hit_glass", [], {}],
 	["ladder", "Ladder", WeaponDef.Family.SET_PIECES, "ladder", "Ladder_Closed", "", "", "Ladder_Laid_Out",
 		WeaponDef.Swing.THRUST, 11.0, 5.0, 0, 0, true, true, 14.0, "hit_ladder", [], {}],
 	["thumbtacks", "Thumbtacks", WeaponDef.Family.SET_PIECES, "thumbtacks", "Thumbtacks_Bag", "", "",
@@ -254,6 +260,9 @@ const CARRY := {
 	# end of it, top facing out
 	"table": ["grips", Vector3(0.0, 1.18, -0.36),
 		Vector3(0, 0, -1), Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1)],
+	# the framed sheet carried the way the folded table is
+	"glass_pane": ["grips", Vector3(0.0, 1.18, -0.36),
+		Vector3(0, 0, -1), Vector3(0, 1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1)],
 	# closed: under his arm, top end ahead
 	"ladder": ["grip_r", Vector3(0.50, 1.12, -0.05),
 		Vector3(0, 1, 0), Vector3(0, 0.15, -0.99), Vector3(0, 0, -1), Vector3(1, 0, 0)],
@@ -285,13 +294,13 @@ const ONE_HAND_CARRY: Array[StringName] = [&"briefcase", &"fire_extinguisher", &
 ## steer the point between the hands, not the right hand's grip. Steered by the
 ## right hand, the left handle of an 84 cm set of steps ended up past the
 ## left arm's reach at the top of the swing (test_weapon_grip_contact).
-const CENTRED_SWING: Array[StringName] = [&"steel_steps", &"table", &"briefcase", &"trash_can",
+const CENTRED_SWING: Array[StringName] = [&"steel_steps", &"table", &"glass_pane", &"briefcase", &"trash_can",
 		&"barbed_wire_board", &"ladder", &"fire_extinguisher", &"shovel"]
 
 ## How it comes up off the floor (WrestlerController's pickup actions): the
 ## squat lift for the heavy ones, both hands for the long and the two-handed,
 ## one hand for the rest.
-const HEAVY_LIFT: Array[StringName] = [&"steel_steps", &"table", &"trash_can", &"ladder",
+const HEAVY_LIFT: Array[StringName] = [&"steel_steps", &"table", &"glass_pane", &"trash_can", &"ladder",
 		&"bed_of_nails", &"barbed_wire_board", &"light_tubes", &"rpg", &"fire_extinguisher"]
 
 

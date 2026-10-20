@@ -9995,3 +9995,28 @@ The owner: "Add Kenny Omega entrance video from here" (a Google Drive link).
   `gauntlet/refs/stage/review/kenny_entrance_video.png`.
 - The same rights caveats as Roman's and Cody's videos apply
   (`assets/environment/CREDITS.md`).
+
+## 20 Oct — Carnage 2: the pane of glass
+
+- **The piece.** A 1.6 x 0.9 m sheet of 6 mm glass in a steel channel,
+  resting across two steel A-trestles with its top at 0.82 m
+  (`tools/blender/weapons/set_pieces.py` -> `glass_pane.glb`, deterministic
+  across runs). It comes out of the stock carried flat like the folded table
+  and is set up the same way, so every table spot works with it.
+  - In the hall the glass is mostly clear with a green edge tint
+  (`WeaponActor.GLASS_TINT`). The exported 28% opacity read as a milky white
+  board under the ring's key light.
+- **The break.** It shatters radially from where he lands: 33 shards, small at
+  the centre and long daggers out to the frame, plus the four frame bars and
+  the two trestles, each its own piece thrown out from the break. Swung, the
+  pane goes on the first hit.
+- **The blood.** Glass cuts the deepest of anything (Blood `CUT` 1.0,
+  `BACK_CUT` 1.0), and going through it is the one landing that also opens
+  his face (`Blood.LANDING_HEAD_CUT`). Measured off the review run: head 0.61,
+  back 0.66. That is blood down the face and chest, his back cut, and spatter
+  on the canvas.
+- **Sound and selling.** Two layers of breaking glass over a low crack, and
+  the crowd. He sells it with the table's collapsing rebound. The heel AI can
+  fetch it (one of the wild picks).
+- Review: `gauntlet/refs/nhb/review/carnage_2_glass_pane.png`
+  (`carnage_shot --spot glass`).
