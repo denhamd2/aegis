@@ -10274,3 +10274,14 @@ This is the second step of `kenny_aaa_plan.md` (gaps 3, 5 and 7).
 - **Still open.** The beard is still fainter than the sheet's. The face shape (brow ridge, cheekbones, jaw), skin detail and the cap's slick front are next.
 - **Determinism.** Byte-identical on a second run.
 - **Review.** `gauntlet/refs/characters/review/kenny_face_pass2.png`.
+
+## 20 Oct — Kenny pass 3: a beard you can see, a heavier face
+
+- **Beard.** `BEARD` goes to (98, 62, 36) at 0.92. Pass 2's beard was still fainter than the sheet's; the lift onto his cheek tone stays, so this is stubble over skin, not the old block.
+- **Face shape.**
+  - `eyebrows-trans-forward` 0.6 → 1.0, for the brow ridge.
+  - `chin-width-incr` and `chin-bones-incr` → 1.0, and new `chin-jaw-drop-incr` 0.25, for the square jaw.
+  - `cheek-bones-incr` 0.6 → 0.9.
+  - `head-fat-incr` 0.35 → 0.2. The face read soft and smooth.
+- **Determinism.** Byte-identical on a second run.
+- **Review.** `gauntlet/refs/characters/review/kenny_face_pass3.png`.

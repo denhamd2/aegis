@@ -108,10 +108,10 @@ BODY = {
 FACE = {
     # head and forehead
     "head-square": 0.5, "head-scale-horiz-incr": 0.5, "head-scale-vert-decr": 0.25, "head-age-incr": 0.3,
-    "head-fat-incr": 0.35,
+    "head-fat-incr": 0.2,
     "forehead-scale-vert-incr": 0.15, "forehead-nubian-incr": 0.3,
     # brows and eyes
-    "eyebrows-trans-forward": 0.6, "eyebrows-trans-down": 0.3, "eyebrows-angle-down": 0.3,
+    "eyebrows-trans-forward": 1.0, "eyebrows-trans-down": 0.3, "eyebrows-angle-down": 0.3,
     # (Pass 2, 20 Oct: at eye-scale-decr 0.35 and eye-height2-decr 0.4 his
     # eyes were slits in game; the sheet's are deep-set and hooded, not small.
     # The hood is the eyefold; the eye itself goes back to MPFB's size.)
@@ -124,8 +124,13 @@ FACE = {
     "mouth-upperlip-volume-decr": 0.4, "mouth-scale-horiz-incr": 0.3,
     "mouth-lowerlip-volume-incr": 0.2,
     # jaw, chin and cheeks
-    "chin-width-incr": 0.8, "chin-bones-incr": 0.7, "chin-prominent-incr": 0.3,
-    "cheek-bones-incr": 0.6,
+    "chin-width-incr": 1.0, "chin-bones-incr": 1.0, "chin-prominent-incr": 0.3,
+    "chin-jaw-drop-incr": 0.25,
+    "cheek-bones-incr": 0.9,
+    # (Pass 3, 20 Oct: in game the face still read long, soft and smooth
+    # against the sheet's heavy brow ridge, broad cheekbones and square jaw,
+    # so the brow comes forward, the jaw and cheekbones go wider and the
+    # fat comes off.)
 }
 ## MPFB bone -> his bone, where the names differ.
 BONE_NAMES = {"head": "Head"}
@@ -239,7 +244,8 @@ SKIN_QUALITY = 92
 ## and in fine grain (`grain_px`), so it reads as hair over skin.
 ## (First try at (150, 100, 58) x0.62: the colour sat so close to his
 ## skin's that the beard all but vanished.)
-BEARD = dict(color=(116, 76, 44), strength=0.8, neck=-0.155, behind=0.045, seed=1974,
+## (Pass 3: at (116, 76, 44) x0.8 it was still fainter than the sheet's.)
+BEARD = dict(color=(98, 62, 36), strength=0.92, neck=-0.155, behind=0.045, seed=1974,
              lift=0.8, grain_px=0.45)
 
 # --- Hair (stage 3) ----------------------------------------------------------
