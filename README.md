@@ -10206,3 +10206,16 @@ The owner raised six things:
 **The weapon key.** In No Holds Barred the controls strip now lists it: `U WEAPON (BY THE APRON)` and `SLIDE / THROW`. "HOLD U · WEAPONS" comes up whenever you stand where the wheel will open: outside, by an apron, empty-handed. On a pad it is LB.
 
 **The sign.** `sign_fan.py` now takes the board low on its side edges (`GRIP_DOWN`) and lifts it 0.24 m higher, so the board's bottom edge clears the fan's crown. Held by the middle of its edges, it could not clear his head with 0.56 m arms from a 1.43 m shoulder. Review: `gauntlet/refs/stage/review/sign_fan_overhead.png`.
+
+## 20 Oct — The three stage screens the same height, a banner across the gap
+
+The owner's call: keep the LED walls 16:9, shorten the centre screen to match them, and close the gap with a banner strip.
+
+- **Centre screen.** It now spans the walls' own height (`SIDE_SCREEN_BOTTOM` to `SIDE_SCREEN_TOP`, read in `entrance_set.py`). It was 0.4 to 5.2 m.
+- **Banner.** `build_banner` closes the gap from the screens' tops to just under the video wall's bezel.
+  - It is three LED panels on the three screens' own planes (the centre one flat, the side ones splayed with their walls), so it reads as one wall, with a black cabinet behind.
+  - Its picture is `stage_banner.png`, painted by `paint_banner`: a dark LED field with the house ribbon art (AEW / DYNAMITE) along a 1 m band at its foot, directly on top of the three screens (the owner: "just above them", not up in the gap), and the set's pink and blue rules either side.
+  - It is lit at `STAGE_BANNER_LEVEL` 0.45.
+- **The side screens show the whole picture.** They are 16:9, as the clips are, but they used to take the big wall's own vertical crop (66-72% of the frame) and then trim the width to match, so the logo ran off both edges. `StageVideo.mirror_crop` now fits the whole frame to each screen's shape, so a 16:9 clip plays on them uncropped. Guarded by `test_the_led_walls_show_the_whole_frame`.
+- The rebuild is byte-identical run to run.
+- Guarded by `test_the_three_screens_match_and_the_banner_closes_the_gap`. Review: `gauntlet/refs/stage/review/stage_banner.png`.

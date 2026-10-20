@@ -197,22 +197,27 @@ static func attach(screen: MeshInstance3D, mat: StandardMaterial3D,
 
 
 ## Plays the wall's picture on another screen too -- the 2026 set's LED walls
-## either side of the centre screen. Each mirror keeps the wall's vertical
-## band and takes a centred crop of the width that matches its own shape
-## (`aspect`, width over height), so a near-square wall shows the picture
-## whole rather than squashed, for the loop and every entrance video alike.
+## either side of the centre screen. Each mirror shows the WHOLE frame, fitted
+## to its own shape (`aspect`, width over height): the walls are 16:9, as the
+## clips are, so a clip plays on them uncropped. (They used to keep the big
+## wall's vertical band -- 66-72% of the frame, the wall being 3:1 -- and crop
+## the width to match, so the logo ran off both edges: the owner, 20 Oct.)
 ## `level` scales its brightness against the wall's.
 func mirror(mat: StandardMaterial3D, aspect: float, level := 1.0) -> void:
 	_mirrors.append([mat, aspect, level])
 
 
 ## The UV scale and offset a mirror of shape `aspect` takes from a frame of
-## shape `video_aspect`, given the wall's own crop.
-static func mirror_crop(aspect: float, video_aspect: float, uv_scale: Vector2,
-		uv_offset: Vector2) -> Array:
-	var fx := clampf(aspect * uv_scale.y / maxf(video_aspect, 0.01), 0.0, 1.0)
-	return [Vector2(fx, uv_scale.y),
-			Vector2(clampf(uv_offset.x + (uv_scale.x - fx) * 0.5, 0.0, 1.0 - fx), uv_offset.y)]
+## shape `video_aspect`: all of it if the shapes match, else a centred crop of
+## whichever side is too long.
+static func mirror_crop(aspect: float, video_aspect: float, _uv_scale := Vector2.ONE,
+		_uv_offset := Vector2.ZERO) -> Array:
+	var va := maxf(video_aspect, 0.01)
+	if aspect >= va:
+		var fy := clampf(va / aspect, 0.0, 1.0)
+		return [Vector2(1.0, fy), Vector2(0.0, (1.0 - fy) * 0.5)]
+	var fx := clampf(aspect / va, 0.0, 1.0)
+	return [Vector2(fx, 1.0), Vector2((1.0 - fx) * 0.5, 0.0)]
 
 
 ## True when this run has to be frame-identical round to round.

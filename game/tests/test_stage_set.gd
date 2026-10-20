@@ -625,3 +625,46 @@ func test_kenny_has_his_titantron_and_his_entrance_uses_it() -> void:
 	var generic := src.substr(src.find("func _add_entrance("), 2400)
 	assert_str(generic).contains("\"tron_on\"")
 	assert_str(generic).contains("\"tron_off\"")
+
+
+## The owner, 20 Oct: the three screens the same height, the walls kept 16:9,
+## and the gap up to the video wall closed with a banner. So the centre
+## screen spans exactly the walls' height, and the banner runs from just over
+## their tops to just under the video wall's bezel, as wide as the walls.
+func test_the_three_screens_match_and_the_banner_closes_the_gap() -> void:
+	var deck := ArenaBuilder.STAGE_DECK_Y
+	var lo := INF
+	var hi := -INF
+	for v: Vector3 in _verts("StageCentreScreen"):
+		lo = minf(lo, v.y)
+		hi = maxf(hi, v.y)
+	assert_float(lo).is_equal_approx(deck + ArenaBuilder.SIDE_SCREEN_BOTTOM, 0.01)
+	assert_float(hi).is_equal_approx(deck + ArenaBuilder.SIDE_SCREEN_TOP, 0.01)
+	var b_lo := INF
+	var b_hi := -INF
+	var b_x := 0.0
+	for v: Vector3 in _verts("StageBanner"):
+		b_lo = minf(b_lo, v.y)
+		b_hi = maxf(b_hi, v.y)
+		b_x = maxf(b_x, absf(v.x))
+	assert_float(b_lo - (deck + ArenaBuilder.SIDE_SCREEN_TOP)).is_between(0.0, 0.1)
+	var wall_bottom := deck + ArenaBuilder.SCREEN_CENTER_RISE - ArenaBuilder.SCREEN_HEIGHT * 0.5 \
+			- ArenaBuilder.SCREEN_BEZEL
+	assert_float(wall_bottom - b_hi).is_between(0.0, 0.1)
+	assert_float(b_x).is_equal_approx(ArenaBuilder.SIDE_SCREEN_OUTER_X, 0.02)
+
+
+## The LED walls are 16:9 and so are the clips: a wall shows the whole frame,
+## whatever band the big wall crops for itself (the owner, 20 Oct: the logo
+## ran off both edges of the side screens).
+func test_the_led_walls_show_the_whole_frame() -> void:
+	var aspect := ArenaBuilder.side_screen_aspect()
+	for crop_y in [1.0, 0.72, 0.66]:
+		var crop := StageVideo.mirror_crop(aspect, 16.0 / 9.0, Vector2(1.0, crop_y),
+				Vector2(0.0, (1.0 - crop_y) * 0.5))
+		var scale: Vector2 = crop[0]
+		assert_float(scale.x * scale.y).is_greater(0.99)
+	# A wider frame is cropped at the sides, centred; a taller one top and bottom.
+	var wide := StageVideo.mirror_crop(16.0 / 9.0, 3.0)
+	assert_float((wide[0] as Vector2).x).is_equal_approx((16.0 / 9.0) / 3.0, 0.001)
+	assert_float((wide[1] as Vector2).x).is_equal_approx((1.0 - (16.0 / 9.0) / 3.0) * 0.5, 0.001)

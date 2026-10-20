@@ -2035,6 +2035,12 @@ const STAGE_CENTRE_SCREEN := "res://assets/environment/materials/stage_centre_sc
 const STAGE_CENTRE_SCREEN_LEVEL := 0.9
 ## The chevron wings at each end of the video wall (entrance_set.py WING_*).
 const STAGE_SCREEN_WING := "res://assets/environment/materials/stage_screen_wing.png"
+## The banner across the top of the three screens (entrance_set.py
+## build_banner; the owner, 20 Oct): a dark LED fascia carrying the house
+## ribbon. Lit below the walls (SIDE_SCREEN_LEVEL is 0.28, the centre 0.9)
+## because it is mostly the ribbon's white type on black.
+const STAGE_BANNER := "res://assets/environment/materials/stage_banner.png"
+const STAGE_BANNER_LEVEL := 0.45
 const STAGE_SCREEN_WING_LEVEL := 1.1
 
 
@@ -2068,6 +2074,10 @@ func _build_entrance_set() -> void:
 	wing.emission_texture = load(STAGE_SCREEN_WING)
 	wing.emission_energy_multiplier = STAGE_SCREEN_WING_LEVEL * _emissive_gain()
 	_dress(root, "StageScreenWings", wing)
+	var banner := centre.duplicate() as StandardMaterial3D
+	banner.emission_texture = load(STAGE_BANNER)
+	banner.emission_energy_multiplier = STAGE_BANNER_LEVEL * _emissive_gain()
+	_dress(root, "StageBanner", banner)
 	add_child(root)
 	_attach_stage_video(root)
 
