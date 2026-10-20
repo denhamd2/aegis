@@ -2146,8 +2146,10 @@ const PAR_LENS_LEVEL := 3.2
 ## Rig parts dressed but not drawn. The owner (18 Oct): no light rigging in the
 ## wide shots -- on a broadcast the roof is black and the rig reads only as its
 ## lamps, so the steel, the speakers and the PAR cans' bodies go dark and the
-## lenses (ParLenses) hang in the black on their own.
-const RIG_HIDDEN := ["RigTruss", "RoofSteel", "SpeakerArrays", "ParCans"]
+## lenses (ParLenses) hang in the black. Each keeps its can (ParCans, the
+## owner, 20 Oct: a lens alone read "2 dimensional"); it is black in the black
+## and shows only as the housing round a lamp turned away.
+const RIG_HIDDEN := ["RigTruss", "RoofSteel", "SpeakerArrays"]
 
 
 func _build_overhead_rig() -> void:
@@ -2163,10 +2165,10 @@ func _build_overhead_rig() -> void:
 		var spec: Array = RIG_MATERIALS[part]
 		_dress(root, part, MaterialLibrary.house_compensate(
 				_house_lit(_textured(spec[0]), spec[1])))
-	var lens := StandardMaterial3D.new()
-	lens.albedo_color = Color(1.0, 0.98, 0.94)
-	lens.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_dress(root, "ParLenses", _self_emissive(lens, PAR_LENS_LEVEL))
+	# Hot only down the beam (LensLook): a row of PARs aimed past the
+	# camera falls away along its length instead of reading as a strip of
+	# identical stickers.
+	_dress(root, "ParLenses", LensLook.material(Color(1.0, 0.98, 0.94), PAR_LENS_LEVEL, 1.0))
 	_dress(root, "ParCans", MaterialLibrary.house_compensate(
 			_house_lit(_textured("arena_chair"), 0.6)))
 	for part: String in RIG_HIDDEN:

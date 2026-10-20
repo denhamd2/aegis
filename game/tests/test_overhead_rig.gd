@@ -98,8 +98,8 @@ func test_the_rig_has_lamps_and_no_led_strips() -> void:
 
 
 ## No rigging in the wide shots (the owner, 18 Oct): the steel and the lamp
-## bodies overhead are not drawn, only the lenses; the stage deck's heads
-## keep their bodies.
+## yokes overhead are not drawn, only the lamps -- each lens in its can (20
+## Oct); the stage deck's heads keep their whole bodies.
 func test_only_the_lamps_show_overhead() -> void:
 	var builder: ArenaBuilder = auto_free(ArenaBuilder.new())
 	builder._build_overhead_rig()
@@ -113,4 +113,18 @@ func test_only_the_lamps_show_overhead() -> void:
 		var body := rig.get_node("Body" + String(light.name)) as Node3D
 		var on_deck := light.position.y < ArenaLighting.BODY_SHOWN_BELOW
 		assert_bool((body.get_node("FixtureLens") as Node3D).visible).is_true()
-		assert_bool((body.get_node("FixtureHead") as Node3D).visible).is_equal(on_deck)
+		# Every lamp keeps its can (the owner, 20 Oct); the yoke only on the deck.
+		assert_bool((body.get_node("FixtureHead") as Node3D).visible).is_true()
+		assert_bool((body.get_node("FixtureYoke") as Node3D).visible).is_equal(on_deck)
+
+
+## The owner, 20 Oct: the roof lights "look a bit 2 dimensional". A lens is
+## hot only down its beam (LensLook), and a star is the moment a beam looks
+## down the camera, not a sticker on every lamp.
+func test_roof_lenses_fall_off_the_beam_and_stars_stay_small() -> void:
+	var mat := ArenaLighting._lens_material(Color(0.3, 0.6, 1.0)) as ShaderMaterial
+	assert_object(mat).is_not_null()
+	assert_float(float(mat.get_shader_parameter("radius"))).is_equal(ArenaLighting.LENS_RADIUS)
+	assert_float(LensLook.FLOOR).is_less(0.25)
+	assert_float(StarGlints.POWER).is_greater_equal(25.0)
+	assert_float(StarGlints.SIZE).is_less_equal(0.06)

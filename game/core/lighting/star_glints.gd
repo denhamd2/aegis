@@ -11,10 +11,14 @@ extends Node3D
 ## global `glint_strength`, set per look by ArenaLighting.set_look.
 
 ## Screen size of a star, as a fraction of the camera's distance to it.
-const SIZE := 0.09
+## 0.05: at 0.09 a star was wider than the lamp's whole bloom and read as a
+## sticker over the roof (the owner, 20 Oct: "2 dimensional").
+const SIZE := 0.05
 ## How tightly a glint follows the beam: cos^POWER of the angle between the
-## beam and the line to the camera. 10 keeps it to roughly a 30-degree cone.
-const POWER := 10.0
+## beam and the line to the camera. 30 keeps it to a cone of about 17 degrees,
+## so a star is the moment a beam looks down the lens, not a fixture's
+## permanent decoration.
+const POWER := 30.0
 
 const SHADER := """
 shader_type spatial;

@@ -10232,3 +10232,15 @@ The owner: "I don't want the ribbon LED in the stage area at all, it should just
 - **Guard.** `test_the_three_screens_match_and_the_video_wall_sits_right_on_them`.
 - **Determinism.** `entrance_set.glb` rebuilt byte-identical on two runs.
 - **Review.** `gauntlet/refs/stage/review/stage_screens_no_banner.png`.
+
+## 20 Oct — Roof lamps: a can round each lens, hot only down the beam
+
+The owner: the lights near the top "look a bit 2 dimensional, unrealistic".
+
+- **`LensLook` (new).** A lens shader replaces the flat emissive disc. Brightness follows how squarely the lens faces the camera: `FLOOR` 0.12 edge-on, rising as cos³ to full on the beam axis. The moving head's lens (`LENS_RADIUS` 0.11) also gets a hot white core, a reflector ring and a dark bezel lip.
+- **The PAR rows.** They use the same shader with the falloff only, because their lenses are one merged mesh. Before, they were unshaded albedo: identical white ovals from every angle.
+- **Housings.** Each roof lamp keeps its can. `FixtureHead` is drawn on every fixture, with yokes and bases still deck-only. `ParCans` comes off `RIG_HIDDEN`. The truss, roof steel and speakers stay hidden, per the 18 Oct call.
+- **Stars.** `StarGlints.SIZE` goes from 0.09 to 0.05 and `POWER` from 10 to 30. A star is now the moment a beam looks down the lens, not a sticker on every lamp.
+- **Open.** Four large soft glows over the stage end are still there. They are not the beams' haze, the house fixtures or the roof washes: hiding each group left them in place. Still being traced.
+- **Guard.** `test_roof_lenses_fall_off_the_beam_and_stars_stay_small`, plus `test_only_the_lamps_show_overhead`, updated for the cans.
+- **Review.** `gauntlet/refs/stage/review/roof_lamps.png`.

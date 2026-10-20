@@ -1081,19 +1081,23 @@ func _hang_fixtures() -> void:
 		_bodies[light] = body
 
 
-static func _lens_material(color: Color) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.02, 0.02, 0.02)
-	mat.emission_enabled = true
-	mat.emission = color.lerp(Color.WHITE, LENS_WHITENESS)
-	mat.emission_energy_multiplier = LENS_LEVEL
-	mat.metallic_specular = 0.0
-	return mat
+## The lens's radius in moving_head.glb (overhead_rig.py build_fixture).
+const LENS_RADIUS := 0.11
 
 
-## Fixture bodies are drawn only below this height: the deck's moving heads.
-## Everything in the roof is a lens in the black (the owner, 18 Oct).
+## Hot down the beam, dim off it, a core and reflector ring across it
+## (LensLook): the owner, 20 Oct, found the flat discs "2 dimensional".
+static func _lens_material(color: Color) -> Material:
+	return LensLook.material(color, LENS_LEVEL, LENS_WHITENESS, LENS_RADIUS)
+
+
+## Fixture bases and yokes are drawn only below this height: the deck's
+## moving heads. In the roof the rigging stays black (the owner, 18 Oct) but
+## each lamp keeps its can (the owner, 20 Oct: a lens alone in the black read
+## as a flat sticker), so a lamp turned away shows its housing, not a disc.
 const BODY_SHOWN_BELOW := 4.0
+## The parts a roof lamp keeps: the can and the glass.
+const ROOF_PARTS := ["FixtureHead", "FixtureLens"]
 
 
 ## One articulated body for one light. Split out so a test can build one
@@ -1116,9 +1120,9 @@ static func _fixture_for(light: SpotLight3D, meshes: Dictionary,
 		mi.basis = parts[part]
 		mi.material_override = lens_mat if part == "FixtureLens" else body_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		# A lamp in the roof shows only its lens, like the rig it hangs in
+		# A lamp in the roof shows its can and lens, not the yoke and clamp
 		# (ArenaBuilder.RIG_HIDDEN); the deck's heads keep their bodies.
-		mi.visible = light.position.y < BODY_SHOWN_BELOW or part == "FixtureLens"
+		mi.visible = light.position.y < BODY_SHOWN_BELOW or ROOF_PARTS.has(part)
 		root.add_child(mi)
 	return root
 
