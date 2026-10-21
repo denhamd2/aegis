@@ -52,7 +52,7 @@ jobs:
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
           mkdir -p build/beechlawn/web/screenshots
           cp games/beechlawn_rovers/docs/art_briefs/match_11v11_{broadcast,touchline,goal,corner}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_broadcast.png build/beechlawn/web/screenshots/current_broadcast.png
+          cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/broadcast.png build/beechlawn/web/screenshots/current_broadcast.png
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_intro_venue.png build/beechlawn/web/screenshots/current_venue.png
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_site_overhead.png build/beechlawn/web/screenshots/current_overhead.png
           cp games/beechlawn_rovers/docs/art_briefs/title_photoreal_evidence/title_screen.png build/beechlawn/web/screenshots/current_title.png

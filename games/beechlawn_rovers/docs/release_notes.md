@@ -1,3 +1,9 @@
+# Opposite-touchline broadcast
+
+The default Close Broadcast and the other sideline camera presets now view the
+match from the opposite side. Their close framing, tracking and editable
+height/zoom settings are retained. Keyboard movement remains screen-relative.
+
 Gameplay contact, chance and keeper update (21 October 2026):
 - Moving passes/shots use a short setup stride and live boot reach at the
   authored marker; a bounded contact window prevents remote kicks.

@@ -1,0 +1,16 @@
+{
+  "result": "PASS",
+  "checks": [
+    "actual 22-player match",
+    "intro skip to AI kickoff",
+    "opposite-side Close Broadcast capture"
+  ],
+  "viewport": [
+    960,
+    540
+  ],
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "console_errors": [],
+  "sun_shadows": false,
+  "native_M1_performance": "not measured"
+}

@@ -575,6 +575,11 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - 2026-10-21: moved all six sideline presets to the opposite touchline while
+    retaining their height, distance and FOV. Existing camera-relative keyboard
+    control follows the flipped view. Both goal-end/touchline extremes and
+    preset switching are covered by the camera regression; see
+    [`art_briefs/opposite_broadcast/brief.md`](art_briefs/opposite_broadcast/brief.md).
   Tune the elevated sideline camera to the supplied screenshot; predict long
   passes, keep relevant players visible and frame goalmouth action. Add score,
   clock, phase, controlled-player feedback and a team-coloured tactical radar.

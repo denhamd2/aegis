@@ -38,7 +38,10 @@ func _case(kind: StringName, speed: float, human := false, off_axis := false) ->
 	player.velocity = Vector3.RIGHT * speed
 	player.ai_move_direction = Vector3.RIGHT if speed > 0.0 else Vector3.ZERO
 	player.ai_sprinting = speed > player.tuning.jog_speed
-	if human and speed > 0.0: Input.action_press("move_right")
+	# This fixture travels world-right; choose the matching screen direction
+	# so it also exercises the opposite-touchline broadcast orientation.
+	var move_action: StringName = &"move_right" if player.camera.global_basis.x.x > 0.0 else &"move_left"
+	if human and speed > 0.0: Input.action_press(move_action)
 	if human and speed > player.tuning.jog_speed: Input.action_press("sprint")
 	ball.global_position = player.global_position + (Vector3(0, 0.13, 0.95) if off_axis else Vector3(0.65, 0.13, 0.0))
 	ball.linear_velocity = Vector3.RIGHT * speed
@@ -66,7 +69,7 @@ func _case(kind: StringName, speed: float, human := false, off_axis := false) ->
 		failures.append("A stationary kick struck a ball beside the player, outside the actual foot window")
 	elif not off_axis and (contacts != 1 or kicks != 1 or contact_gap > 0.30):
 		failures.append("%s at %.1f m/s: expected one close physical contact; markers=%d kicks=%d gap=%.3f" % [kind, speed, contacts, kicks, contact_gap])
-	Input.action_release("move_right")
+	Input.action_release(move_action)
 	Input.action_release("sprint")
 	game.free()
 	await process_frame
