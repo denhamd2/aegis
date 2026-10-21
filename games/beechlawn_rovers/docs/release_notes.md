@@ -4,7 +4,9 @@ Pitch-side player previews (21 October 2026):
   portrait views. Web gallery captures show footballers on the pitch instead
   of against a sky-only backdrop.
 - A clean capture mode hides diagnostic text; soft daylight keeps real
-  shadows without an artificial ground shadow. This changes presentation,
+  shadows without an artificial ground shadow. A lighter blue-grey sky in
+  these portraits corrects the overly dark blue source; match weather keeps
+  its existing settings. This changes presentation,
   not match physics. BR-022 (22/25) remains open for gloves, individual
   likeness, save motion and native M1 review.
 

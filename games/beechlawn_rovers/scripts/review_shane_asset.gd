@@ -20,6 +20,19 @@ func _ready() -> void:
 	add_child(source.get_node("WorldEnvironment").duplicate())
 	add_child(source.get_node("Sun").duplicate())
 	source.free()
+	# Keep the photographed clouds, but give pitch-side portraits a lighter,
+	# less saturated Dublin daylight than the dark blue source panorama.
+	var review_world := $WorldEnvironment as WorldEnvironment
+	var review_environment := review_world.environment.duplicate(true) as Environment
+	review_world.environment = review_environment
+	var review_sky := review_environment.sky.duplicate(true) as Sky
+	review_environment.sky = review_sky
+	var review_sky_material := review_sky.sky_material.duplicate(true) as ShaderMaterial
+	review_sky.sky_material = review_sky_material
+	review_sky_material.set_shader_parameter("sky_saturation", 0.52)
+	review_sky_material.set_shader_parameter("sky_energy", 1.16)
+	review_sky_material.set_shader_parameter("horizon_haze", 0.24)
+	review_sky_material.set_shader_parameter("dark_sky_lift", 0.6)
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")) == "1":
 			$Sun.shadow_enabled = false

@@ -638,8 +638,9 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 - [ ] **BR-022 — Character and kit production**
   - 2026-10-21 pitch-side preview correction: Web and desktop roster reviews
     now use the Kilmore Drive park, match pitch surface, faded markings and
-    low perspective cameras. Current gallery images show players standing on
-    the pitch; the isolated cloud/sky fixture is retained only as historical
+    low perspective cameras. The preview sky is locally lifted to a lighter
+    daylight; match weather remains unchanged. Current gallery images show
+    players standing on the pitch; the old fixture is retained only as historical
     diagnostic evidence. See `art_briefs/pitch_review_stage/brief.md`. This
     does not close goalkeeper gloves, individual likeness, save motion or
     native M1 acceptance. BR-022 remains in progress (22/25).
