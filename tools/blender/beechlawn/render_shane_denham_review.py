@@ -28,6 +28,13 @@ if runtime_kit:
             base = material.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
             if base.links and base.links[0].from_node.type == "TEX_IMAGE":
                 base.links[0].from_node.image = pigment
+            roughness = material.node_tree.nodes["Principled BSDF"].inputs["Roughness"]
+            if roughness.links and roughness.links[0].from_node.type == "TEX_IMAGE":
+                mask_path = ROOT / "games/beechlawn_rovers/assets/characters/textures/shared" / (runtime_kit + "_roughness.png")
+                if mask_path.is_file():
+                    mask = bpy.data.images.load(str(mask_path), check_existing=True)
+                    mask.colorspace_settings.name = "Non-Color"
+                    roughness.links[0].from_node.image = mask
 variant_path = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--variant=")), None)
 if variant_path:
     # Append head meshes only into this disposable shared-body review session.

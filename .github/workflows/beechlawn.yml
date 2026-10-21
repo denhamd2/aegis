@@ -58,7 +58,11 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_fabric_response/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
+          cp games/beechlawn_rovers/docs/art_briefs/keeper_kit_graphics/after_john.png build/beechlawn/web/screenshots/keeper_john_front.png
+          cp games/beechlawn_rovers/docs/art_briefs/keeper_kit_graphics/after_john_back.png build/beechlawn/web/screenshots/keeper_john_back.png
+          cp games/beechlawn_rovers/docs/art_briefs/keeper_kit_graphics/after_away_keeper.png build/beechlawn/web/screenshots/keeper_bordeaux_front.png
+          cp games/beechlawn_rovers/docs/art_briefs/keeper_kit_graphics/after_away_keeper_back.png build/beechlawn/web/screenshots/keeper_bordeaux_back.png
+          cp games/beechlawn_rovers/docs/art_briefs/keeper_kit_graphics/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
           cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_touchline.png build/beechlawn/web/screenshots/current_daylight_touchline.png
           cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_broadcast.png build/beechlawn/web/screenshots/current_daylight_broadcast.png
           cp games/beechlawn_rovers/docs/art_briefs/wet_weather_evidence/{sunny_goalmouth,sunny_broadcast,cloudy_broadcast,rain_goalmouth,mist_broadcast,ball_shadow_on,ball_shadow_off}.png build/beechlawn/web/screenshots/

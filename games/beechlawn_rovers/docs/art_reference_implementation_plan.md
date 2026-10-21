@@ -296,3 +296,14 @@ timing/lighting and bright pale-area response remain open. BR-022 (22/25)
 stays in progress; next reconstruct both keeper kit graphics from their
 archived object sheets and check front/back/save poses before expanding
 individual identities.
+
+### BR-022 keeper kit graphics — 21 October
+
+The [keeper kit pass](art_briefs/keeper_kit_graphics/brief.md) adds original
+reference-led shirt patterns for John O'Rourke and the Bordeaux keeper while
+applying the archived crest and lettering separately. Role-specific sock
+binding UVs let John's cuffs stay white and Bordeaux's stay dark. Actual
+11v11 profiles render both kits with editable back prints; the common 65-bone
+rig and 19 clips remain. Flat motif art is an approximation of the supplied
+boards. Glove construction, individual likeness, a convincing save motion,
+and native M1 approval remain open. BR-022 remains item 22/25.

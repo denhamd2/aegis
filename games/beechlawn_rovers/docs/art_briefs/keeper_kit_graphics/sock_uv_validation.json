@@ -1,0 +1,9 @@
+{
+  "applied": true,
+  "changed_part": "Kit_socks_BoundHems",
+  "uv_corners": 896,
+  "change": "Blue trim chart -> top 12px of role sock chart",
+  "protected_state_checked_with_original_uv_restored": "e05a5bb1c4e0320cbbbe8189fdc7be46a7074888b2e9251c20a1ce33565c5982",
+  "bones": 65,
+  "clips": 19
+}

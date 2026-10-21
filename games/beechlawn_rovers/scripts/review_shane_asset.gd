@@ -63,6 +63,7 @@ func _ready() -> void:
 		# Explicit review-only allowlist; use the real roster appearance path.
 		match str(requested):
 			"john": profile = load("res://data/squads/home_01.tres")
+			"away_keeper": profile = load("res://data/squads/away_01.tres")
 			"des": profile = load("res://data/squads/away_09.tres")
 			"referee": profile = load("res://data/officials/referee.tres")
 			"paddy": profile = load("res://data/squads/home_69.tres")

@@ -13,6 +13,28 @@ func _run() -> void:
 	var mat_b := home_b.get_surface_override_material(0) as StandardMaterial3D
 	var mat_away := away_a.get_surface_override_material(0) as StandardMaterial3D
 	assert(mat_a != null and mat_b==mat_a and mat_away != mat_a)
+	# Both goalkeeper slots must load their own atlas through the real 11v11
+	# profile path, including the cloth data map used by the shared body.
+	var home_keeper: FootballPlayer = null
+	var away_keeper: FootballPlayer = null
+	for actor in home:
+		if actor.profile.role == "goalkeeper": home_keeper = actor
+	for actor in away:
+		if actor.profile.role == "goalkeeper": away_keeper = actor
+	assert(home_keeper != null and away_keeper != null)
+	for entry in [[home_keeper, "beechlawn_keeper"], [away_keeper, "bordeaux_keeper"]]:
+		var keeper: FootballPlayer = entry[0]
+		var kit_name: String = entry[1]
+		assert(keeper.profile.appearance.kit == kit_name)
+		var shirt := keeper.get_node("Visual/Rig").find_children("YBot_Surface", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		var kit := shirt.get_surface_override_material(0) as StandardMaterial3D
+		assert(kit != null and kit.resource_name == "SharedKit_" + kit_name)
+		assert(kit.albedo_texture != null and kit.roughness_texture != null)
+		assert(kit.normal_texture == mat_a.normal_texture)
+		assert(kit.albedo_texture.get_image().has_mipmaps())
+		assert(kit.roughness_texture.get_image().has_mipmaps())
+	assert(home_keeper.profile.appearance.print_name == "J. O’ROURKE")
+	assert(away_keeper.profile.appearance.print_name == "FEENEY")
 	assert(mat_a.normal_texture == mat_away.normal_texture, "Roles must reuse one knit normal resource")
 	# Actual replacement path must retain portable, mipmapped PBR data. A
 	# flat roughness scalar or sRGB sampling of this mask loses the print/cloth

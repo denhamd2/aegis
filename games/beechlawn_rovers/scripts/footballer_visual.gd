@@ -226,7 +226,11 @@ func _add_back_print(profile: FootballerProfile, appearance: FootballAppearance)
 		label.text = appearance.print_name if index == 0 else str(profile.jersey_number)
 		label.font_size = 48 if index == 0 else 140
 		label.pixel_size = 0.001 if index == 0 else 0.0016
-		label.outline_size = 0
+		# John's white number crosses pale cutouts in the keeper back graphic.
+		# A narrow dark edge matches the reference print and keeps it readable.
+		label.outline_size = (3 if index == 0 else 7) if appearance.kit == "beechlawn_keeper" else 0
+		if appearance.kit == "beechlawn_keeper":
+			label.outline_modulate = Color(0.10, 0.13, 0.19)
 		label.modulate = Color(0.02, 0.03, 0.04) if appearance.kit == "bordeaux_outfield" else Color(0.94, 0.94, 0.92)
 		label.double_sided = false
 		attachment.add_child(label)

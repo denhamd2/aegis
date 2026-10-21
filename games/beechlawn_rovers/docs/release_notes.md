@@ -1,3 +1,15 @@
+Goalkeeper kit graphics update (21 October 2026):
+- John O'Rourke's grey/blue/gold keeper shirt and Bordeaux's charcoal shard
+  shirt now use original flat pattern artwork based on the archived kit sheets.
+  Supplied crest and lettering are applied separately; roster names and numbers
+  remain editable. John's number gets a narrow dark edge for legibility.
+- Both kits have reference-led sleeves, black shorts and role-coloured socks.
+  The common sock binding UV now follows each role's sock chart. The 65-bone
+  rig, geometry, skin weights and 19 clips remain.
+- Front/back/save views use both real 11v11 roster paths in Godot. The save
+  animation, goalkeeper gloves, individual faces and native Mac rendering
+  remain under review within BR-022 (22/25).
+
 Shared fabric response update (21 October 2026):
 - Shared kit materials now distinguish cloth, elastic socks and front printing
   through original roughness/knit maps. Pigment/data mip filtering reduces

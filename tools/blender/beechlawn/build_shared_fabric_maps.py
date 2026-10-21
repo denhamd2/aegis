@@ -81,17 +81,30 @@ def build():
         if kit not in ('referee', 'spectator'):
             # Restrict ink detection to authored front artwork. Never classify
             # a white sock or pale keeper panel as sponsor print.
-            for box in ((382,247,567,304), (162,462,862,704)):
+            keeper_layout = OUT/'keeper_atlas_layout.json'
+            role = json.loads(keeper_layout.read_text()).get(kit) if keeper_layout.is_file() else None
+            prints = [(box, 'dark' if kit == 'bordeaux_outfield' else 'light')
+                      for box in ((382,247,567,304), (162,462,862,704))]
+            if role:
+                prints = []
+                for mark in ('manufacturer','sponsor'):
+                    x,y,w,h=role[mark]['box']
+                    prints.append(((x,y,x+w,y+h),role[mark]['ink']))
+            for box, ink_type in prints:
                 x0,y0,x1,y1 = box
                 rgb = pigment[y0:y1, x0:x1]
                 white = np.clip((rgb.min(axis=-1)-.88)/.08, 0, 1)
                 ink = white
-                if kit == 'bordeaux_outfield':
+                if ink_type == 'dark':
                     ink = np.clip((.18-rgb.max(axis=-1))/.10, 0, 1)
                 patch = r[y0:y1, x0:x1]
                 r[y0:y1, x0:x1] = patch*(1-ink) + (.60+.006*variation[y0:y1,x0:x1])*ink
             # Existing badge is oval; retain cloth at the rectangle's corners.
-            badge = ((xx-769.5)/72.5)**2 + ((yy-299)/87)**2 <= 1
+            if role:
+                x,y,w,h=role['crest']['box']
+                badge = ((xx-x-w/2)/(w/2))**2 + ((yy-y-h/2)/(h/2))**2 <= 1
+            else:
+                badge = ((xx-769.5)/72.5)**2 + ((yy-299)/87)**2 <= 1
             r[badge] = .70+.008*variation[badge]
         image = Image.fromarray(np.round(np.clip(r,0,1)*255).astype(np.uint8))
         image = image.resize((1024,1024), Image.Resampling.BOX)
