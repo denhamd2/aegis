@@ -76,7 +76,7 @@ requirements do not govern this project.
   for park scenery, use environment/scene guides; for Godot assets, read
   `godot-export` before exporting. Do not use `import-wrestler` for football
   characters.
-- For creating or substantially refining a footballer, read
+- For creating or refining a footballer, its kit, animations or retargeting, read
   `.agents/skills/create-player/SKILL.md` first. It is scoped to Beechlawn and
   routes the shared Blender guides while using the archived player and kit
   references; it does not change Aegis wrestling workflows.
