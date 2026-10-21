@@ -191,10 +191,15 @@ static func _shared_kit_material(kit: String) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.resource_name = "SharedKit_" + kit
 	material.albedo_texture = load("res://assets/characters/textures/shared/%s.png" % kit)
-	material.roughness = 0.86
+	# Atlas-aligned cloth, elastic and print response. Data maps stay linear;
+	# the shared pigment remains sRGB and player identity stays separate.
+	material.roughness = 1.0
+	material.roughness_texture = load("res://assets/characters/textures/shared/%s_roughness.png" % kit)
+	material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
 	material.normal_enabled = true
-	material.normal_texture = load("res://assets/characters/textures/beechlawn_home_knit_normal.png")
-	material.normal_scale = 0.22
+	material.normal_texture = load("res://assets/characters/textures/shared/fabric_knit_normal.png")
+	material.normal_scale = 0.35
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_kit_materials[kit] = material
 	return material
 

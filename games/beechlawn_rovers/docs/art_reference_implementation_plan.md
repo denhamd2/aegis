@@ -281,3 +281,18 @@ passes all nine fixed poses on the new one. See the brief for the rejected
 projection trial, final source/Web evidence and remaining limitations. BR-022
 (22/25) stays open; next check fabric normal/roughness response under match
 sunlight before expanding individual identities and exact keeper patterns.
+
+### BR-022 shared fabric response — 21 October
+
+The [fabric pass](art_briefs/shared_fabric_response/brief.md) makes the shared
+Godot role materials use atlas-aligned linear roughness, restrained original
+knit normals and mip-filtered pigment/data textures. The Blender source uses
+the same recipe. Supplied graphics, all geometry, weights, custom normals,
+bone rests and 19 clips are retained. Fixed sun/shade Web comparisons use real
+shadowing with unchanged sky/exposure; source and actual roster evidence cover
+both sleeves, keeper, referee, pass and broadcast views. Existing 11v11,
+resource-sharing and Play/Watch checks pass. Texture memory rises; native M1
+timing/lighting and bright pale-area response remain open. BR-022 (22/25)
+stays in progress; next reconstruct both keeper kit graphics from their
+archived object sheets and check front/back/save poses before expanding
+individual identities.

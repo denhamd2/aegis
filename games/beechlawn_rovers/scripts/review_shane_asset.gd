@@ -10,6 +10,7 @@ var camera: Camera3D
 var player: Node3D
 var animation: AnimationPlayer
 var _capture_callback: JavaScriptObject
+var review_lighting := "default"
 
 func _ready() -> void:
 	var source := MATCH_SCENE.instantiate()
@@ -20,6 +21,23 @@ func _ready() -> void:
 		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")) == "1":
 			$Sun.shadow_enabled = false
 			Engine.max_fps = 8
+		var requested_lighting = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('lighting')"))
+		if requested_lighting in ["sun", "shade"]:
+			review_lighting = requested_lighting
+			# Deliberate material QA: keep real shadowing even on SwiftShader.
+			$Sun.shadow_enabled = true
+			$Sun.directional_shadow_max_distance = 48.0
+			if review_lighting == "shade":
+				var occluder := MeshInstance3D.new()
+				occluder.name = "ReviewShadeCaster"
+				var box := BoxMesh.new()
+				box.size = Vector3(8.0, 0.2, 8.0)
+				occluder.mesh = box
+				# +Z points towards the directional light. Cast shade across the
+				# whole player while keeping sky illumination/exposure unchanged.
+				occluder.position = Vector3(0, 1.0, 0) + $Sun.global_basis.z * 8.0
+				occluder.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+				add_child(occluder)
 		_capture_callback = JavaScriptBridge.create_callback(_freeze_capture)
 		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME = _capture_callback
 	# Close asset review shares the match's sky, sun and pitch shader. Full park
@@ -77,7 +95,7 @@ func _ready() -> void:
 			animation.pause()
 	_set_view(view)
 	var label := Label.new()
-	label.text = profile.display_name + " — shared head pipeline review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nShared body/rig; individual likeness remains in review"
+	label.text = profile.display_name + " — shared asset review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nLighting: " + review_lighting + " · sun shadows: " + str($Sun.shadow_enabled) + " · likeness in review"
 	label.position = Vector2(20, 20)
 	label.add_theme_color_override("font_shadow_color", Color.BLACK)
 	label.add_theme_constant_override("shadow_offset_x", 2)
@@ -88,6 +106,7 @@ func _ready() -> void:
 	print("SHANE_ASSET_REVIEW_READY view=", view, " renderer=", RenderingServer.get_current_rendering_method())
 	await RenderingServer.frame_post_draw
 	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_LIGHTING = " + JSON.stringify({"preset":review_lighting, "sun_shadows":$Sun.shadow_enabled, "occluder":has_node("ReviewShadeCaster")}))
 		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_READY = true")
 
 func _freeze_capture(_arguments: Array) -> void:

@@ -1,0 +1,9 @@
+{
+  "protected_geometry_rig_animation_before": "e05a5bb1c4e0320cbbbe8189fdc7be46a7074888b2e9251c20a1ce33565c5982",
+  "protected_geometry_rig_animation_after": "e05a5bb1c4e0320cbbbe8189fdc7be46a7074888b2e9251c20a1ce33565c5982",
+  "same_geometry_rig_animation": true,
+  "bones": 65,
+  "clips": 19,
+  "source": "tools/blender/beechlawn/footballer_shared.blend",
+  "applied": true
+}

@@ -1,3 +1,12 @@
+Shared fabric response update (21 October 2026):
+- Shared kit materials now distinguish cloth, elastic socks and front printing
+  through original roughness/knit maps. Pigment/data mip filtering reduces
+  jagged distant details. Existing kit artwork, rig, meshes and 19 clips remain.
+- Matched source and real-shadow Web sun/shade reviews, role/pose/11v11 checks
+  and Play/Watch startup pass. Texture memory increases; native Mac execution
+  and M1 performance remain pending. Keeper graphic fidelity and likeness stay
+  open under BR-022 (22/25).
+
 Shared garment construction update (21 October 2026):
 - Restored missing forearms beneath short sleeves from the existing CC0 anatomy
   on the shared rig. Existing neck skin, heads and animation curves are retained.

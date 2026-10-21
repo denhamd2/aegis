@@ -1,0 +1,78 @@
+{
+  "result": "PASS",
+  "backlog": "BR-022",
+  "ordinal": "22/25",
+  "item_status": "in progress",
+  "headless_checks": [
+    "shared_roster_resources_smoke.gd",
+    "shared_head_roster_smoke.gd",
+    "shared_pose_safety_smoke.gd",
+    "eleven_v_eleven_smoke.gd"
+  ],
+  "source_general_validator": "PASS; existing skin/waist/head delta/locomotion gates",
+  "geometry_rig_animation_preserved": true,
+  "normal_quantized_max_length_error": 0.00436168909072876,
+  "web_views": [
+    "godot_des_front_idle.png",
+    "godot_john_front_keeper_save.png",
+    "godot_referee_front_idle.png",
+    "godot_shane_broadcast_idle.png",
+    "godot_shane_kit_pass.png",
+    "after_sun.png",
+    "after_shade.png"
+  ],
+  "web_renderer": "Godot Compatibility / Chromium SwiftShader",
+  "lighting_comparison": {
+    "sun_shadows": true,
+    "same_sky_exposure": true,
+    "shade": "physical shadow-only occluder, not disabled light"
+  },
+  "menu_match": {
+    "result": "PASS",
+    "checks": [
+      "native menu",
+      "options open/close",
+      "640x480 layout",
+      "AI auto kickoff",
+      "zero spectator humans",
+      "return to title",
+      "Play has one human",
+      "keyboard kickoff"
+    ],
+    "renderer": "Compatibility / Chromium SwiftShader",
+    "menu_viewport": [
+      1280,
+      720
+    ],
+    "match_viewport": [
+      640,
+      360
+    ],
+    "native_M1_performance": "not measured",
+    "console_errors": []
+  },
+  "normal_image_payload_bytes_with_mips": 16777215,
+  "roughness_image_payload_bytes_with_mips_per_role": 1398101,
+  "memory_scope": "Uncompressed imported data only, excludes pigments/default embedded copies; no measured total VRAM",
+  "native_Mac_execution": "not run",
+  "M1_performance": "not measured",
+  "likeness_approval": "open",
+  "remaining": [
+    "keeper graphic matching",
+    "individual identities",
+    "residual cloth folds",
+    "bright pale-area response",
+    "native M1 lighting/performance"
+  ],
+  "blue_cloth_ROI_mean_RGB_0_255": {
+    "before": {
+      "sun": 155.770751953125,
+      "shade": 95.49662017822266
+    },
+    "after": {
+      "sun": 156.765869140625,
+      "shade": 96.13555908203125
+    }
+  },
+  "all_six_pigments_unchanged": true
+}

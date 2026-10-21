@@ -636,6 +636,15 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-21 fabric response: original shared knit normal and role roughness
+    masks now distinguish shirt/short cloth, socks and front prints, with mip
+    filtering on pigment/data maps. Supplied graphics, geometry, rig and all
+    19 clips are retained. Matched Blender and real-shadow Web sun/shade checks,
+    roster resource/pose checks and Play/Watch pass; see
+    `art_briefs/shared_fabric_response/brief.md`. This is incremental; bright
+    pale areas, native M1 response and full likeness remain open. Next match
+    both keeper kit graphics to the archived object sheets and inspect their
+    front/back/save poses. BR-022 remains in progress (22/25).
   - 2026-10-21 collar/raglan finish: a smooth V opening and supporting yoke
     replace the uneven neckline. Narrow fitted raglan strips use the existing
     role-atlas trim colours, and the Blender default pigment now matches the
