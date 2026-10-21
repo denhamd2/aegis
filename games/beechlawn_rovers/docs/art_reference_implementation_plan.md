@@ -314,3 +314,12 @@ binding UVs let John's cuffs stay white and Boardeaux's stay dark. Actual
 rig and 19 clips remain. Flat motif art is an approximation of the supplied
 boards. Glove construction, individual likeness, a convincing save motion,
 and native M1 approval remain open. BR-022 remains item 22/25.
+
+### BR-024 supplied wordmark and menu palette — 21 October
+
+The owner-supplied `69668.jpg` supersedes the native Anton/lime title treatment.
+Use its original white/red title ink and a red/black/white landing/Options
+palette, keeping the existing photorealistic players and their blue/black kits.
+The [menu revision brief](art_briefs/title_red_black_evidence/brief.md) records
+the direct-source treatment and Web comparison. This belongs to BR-024 (24/25);
+it does not change character/kit production or match broadcast graphics.

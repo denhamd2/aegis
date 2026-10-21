@@ -1,5 +1,10 @@
 # Opposite-touchline broadcast
 
+The landing screen now uses the owner's supplied Beechlawn Rovers 27 wordmark
+with red/black/white menu and Options controls. The original photographic player
+art and blue/black kits are retained. Play, Watch and keyboard navigation keep
+their existing behavior.
+
 During the walkout, TV-style face graphics introduce Beechlawn Rovers first,
 then Boardeaux, each in a 4-4-2 with its crest and player-manager. Robbie Roden
 manages Beechlawn; Des Feeney fills every Boardeaux slot and manages that side.

@@ -56,7 +56,7 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/broadcast.png build/beechlawn/web/screenshots/current_broadcast.png
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_intro_venue.png build/beechlawn/web/screenshots/current_venue.png
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_site_overhead.png build/beechlawn/web/screenshots/current_overhead.png
-          cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/title.png build/beechlawn/web/screenshots/current_title.png
+          cp games/beechlawn_rovers/docs/art_briefs/title_red_black_evidence/title_screen.png build/beechlawn/web/screenshots/current_title.png
           cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/lineup.png build/beechlawn/web/screenshots/current_lineup.png
           cp games/beechlawn_rovers/docs/art_briefs/lineup_graphics/lineup_{home,away}.png build/beechlawn/web/screenshots/
           cp games/beechlawn_rovers/docs/art_briefs/referee_intro/referee_closeup.png build/beechlawn/web/screenshots/current_referee_intro.png

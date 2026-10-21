@@ -878,6 +878,11 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     autonomous through either team's goal restart. See
     [`art_briefs/title_screen.md`](art_briefs/title_screen.md). This does not
     complete the remaining audio/event-director work below.
+  - 2026-10-21 title refresh: the supplied white/red wordmark replaces the
+    native title; red/black/white controls also cover Options. Existing player
+    photography and blue/black kits are unchanged. Godot Play/Watch and Web
+    1280×720/640×480 checks pass; see
+    [`art_briefs/title_red_black_evidence/brief.md`](art_briefs/title_red_black_evidence/brief.md).
   Add distinct ball/player contact, referee, crowd, goal and UI sounds; tune the
   mix so key events remain audible without overwhelming play. Route feedback
   from typed match events rather than screen capture or OCR. Give events the
