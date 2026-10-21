@@ -14,7 +14,7 @@ from shane_head_variants import fingerprint,save_delta,apply_delta
 bpy.ops.wm.open_mainfile(filepath=str(ROOT/'tools/blender/beechlawn/footballer_shared.blend'))
 rig=bpy.data.objects['YBot_Armature']
 assert len(rig.data.bones)==65
-for name in ('Skin_Head','YBot_Joints','Skin_Hands','YBot_Surface','Kit_Shirt_ShortSleeve','Kit_Shorts','Kit_Socks'):
+for name in ('Skin_Head','YBot_Joints','Skin_Hands','YBot_Surface','Kit_Shirt_ShortSleeve','Kit_Shorts','Kit_Socks','Kit_Shane_ContinuousVBinding'):
     obj=bpy.data.objects[name]
     assert any(m.type=='ARMATURE' and m.object==rig for m in obj.modifiers),(name,'rig binding')
     for vertex in obj.data.vertices:

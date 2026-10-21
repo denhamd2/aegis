@@ -636,6 +636,14 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-21 collar/raglan finish: a smooth V opening and supporting yoke
+    replace the uneven neckline. Narrow fitted raglan strips use the existing
+    role-atlas trim colours, and the Blender default pigment now matches the
+    runtime home atlas. Actual collar skin regressions fail on the previous
+    source and pass in all nine fixed poses; trim inversions are zero.
+    Rig/19 clips/skin/head packages are retained. Both sleeve pose sheets and
+    actual roster Web evidence are in `art_briefs/shared_collar_raglan/`.
+    Fabric/material fidelity, keeper graphics and individual likeness stay open.
   - 2026-10-21 shared shirt silhouette follow-up: fills the anatomical upper-back
     hollow on both sleeve variants and modestly tapers the long forearms with
     skin clearance. Same-cohort fold diagnostics improve overall (994 → 975);

@@ -1,0 +1,56 @@
+{
+  "result": "PASS",
+  "headless_checks": [
+    "shared_head_roster_smoke.gd",
+    "shared_roster_resources_smoke.gd",
+    "shared_pose_safety_smoke.gd",
+    "eleven_v_eleven_smoke.gd"
+  ],
+  "web_asset_captures": 6,
+  "browser_errors": [],
+  "long_sleeve_poses": 9,
+  "short_sleeve_poses": 9,
+  "match": {
+    "result": "PASS",
+    "checks": [
+      "native menu",
+      "options open/close",
+      "640x480 layout",
+      "AI auto kickoff",
+      "zero spectator humans",
+      "return to title",
+      "Play has one human",
+      "keyboard kickoff"
+    ],
+    "renderer": "Compatibility / Chromium SwiftShader",
+    "menu_viewport": [
+      1280,
+      720
+    ],
+    "match_viewport": [
+      640,
+      360
+    ],
+    "native_M1_performance": "not measured",
+    "console_errors": []
+  },
+  "geometry": {
+    "bones": 65,
+    "clips": 19,
+    "mesh_parts": 16,
+    "triangles_all_variants": 68244,
+    "triangle_increase": 960
+  },
+  "source_glb_sha256": "cfe4674da350374b45b105ab2eff26ba0a2a3e28d6fcb432e67f468f3f6f5dad",
+  "review_export_storage": {
+    "old_failure": "No space left on device copying import cache in /tmp",
+    "fix": "Disposable review staging under ignored project build/review-scratch; finally cleanup",
+    "export_result": "PASS"
+  },
+  "limits": [
+    "Blender base heads are garment diagnostics; Web uses current roster heads.",
+    "The tool label native menu means Godot UI in Chromium; native Mac was not run.",
+    "Software WebGL uses 960x540 asset views without sun shadows and a 640x360 match.",
+    "No final likeness, exact-kit or M1-performance acceptance."
+  ]
+}

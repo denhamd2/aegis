@@ -266,3 +266,17 @@ change. The current fixed 11,878-triangle upper-shirt cohort improves from
 to pre-hem-topology reports and is not an all-pose cloth approval. Further
 raglan/collar finish, fabric material and individual identity work remain
 under BR-022 (22/25). Native M1 timing remains pending.
+
+### BR-022 collar and raglan construction — 21 October
+
+The [collar/raglan pass](art_briefs/shared_collar_raglan/brief.md) fits a regular
+V binding and smooth supporting cloth rows on both shirt variants. The default
+Blender pigment now uses the existing runtime home atlas; older source renders
+had shown piping that was absent after Godot's role-material replacement.
+Surface-skinned trim geometry resolves that mismatch with the existing colour
+swatches and one retained mesh/material slot. No supplied image is repainted.
+A source validator reproduces collar skin penetration in the old mesh, then
+passes all nine fixed poses on the new one. See the brief for the rejected
+projection trial, final source/Web evidence and remaining limitations. BR-022
+(22/25) stays open; next check fabric normal/roughness response under match
+sunlight before expanding individual identities and exact keeper patterns.

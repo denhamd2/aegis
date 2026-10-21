@@ -156,3 +156,23 @@ See `art_briefs/shared_sleeve_fit/brief.md` for matched clay/Web evidence,
 both sleeve-variant pose sheets and validation scope. This is a local garment
 improvement; collar/raglan finishing, individual likeness and native M1
 1080p/60 performance acceptance remain open.
+
+## 2026-10-21 — smooth V collar and shared raglan trim
+
+BR-022 (22/25, in progress): both sleeve variants use a smoother V opening and
+supporting yoke, plus a fitted collar and shoulder trim. The existing role
+atlas supplies each team's trim colour, so the detail now appears in Godot
+as well as Blender. Bone rests, all 19 clips, skin/neck normals, independent
+head packages and supplied kit images remain unchanged. The source default
+pigment is aligned with the actual home-role atlas.
+
+A regression check reproduces collar/skin intersections on the old source
+and clears all sampled collar vertices in nine fixed poses on the new one;
+trim triangles remain nondegenerate and uninverted in those poses. Geometry
+is 68,244 triangles across all variants, up by 960, with 16 mesh parts. This
+is not a measured per-actor render budget or native M1 performance result.
+See `art_briefs/shared_collar_raglan/brief.md` for evidence and open art gates.
+
+Review exports now stage their large import-cache copies under the football
+project's ignored build directory, after accumulated disposable outputs filled
+the cloud runner's smaller `/tmp` filesystem. Per-process deadlines remain.
