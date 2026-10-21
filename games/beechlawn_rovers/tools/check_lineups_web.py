@@ -46,6 +46,14 @@ async def run(web: Path, out: Path):
                     states.append(state)
                     await page.screenshot(path=str(out/f"lineup_{suffix}.png"))
                     print("CAPTURED lineup", suffix, flush=True)
+                await page.evaluate("window.BEECHLAWN_INTRO_SHOT('referee')")
+                await page.wait_for_function("window.BEECHLAWN_REFEREE_STATE?.visible === true", timeout=15000)
+                await page.wait_for_timeout(800)
+                referee_state = await page.evaluate("window.BEECHLAWN_REFEREE_STATE")
+                assert referee_state["name"] == "DES FEENEY" and "REFEREE" in referee_state["role"], referee_state
+                assert referee_state["alpha"] > 0.99, referee_state
+                await page.screenshot(path=str(out/"referee_closeup.png"))
+                print("CAPTURED referee", flush=True)
                 await page.set_viewport_size({"width":640, "height":480})
                 await page.evaluate("window.BEECHLAWN_INTRO_SHOT('teams_home')")
                 await page.wait_for_timeout(800)
@@ -58,7 +66,7 @@ async def run(web: Path, out: Path):
                 await page.wait_for_timeout(1000)
                 await page.screenshot(path=str(out/"broadcast_after_intro.png"))
                 assert not errors, errors
-                report = {"result":"PASS", "teams":states, "checks":["home before away", "eleven portraits per 4-4-2", "player-managers", "retired home #2 replaced by #14", "all away identities Des Feeney", "640x480 review", "skip to opposite-side match kickoff"], "renderer":"Godot Compatibility / Chromium SwiftShader", "sun_shadows":False, "console_errors":errors, "native_M1_performance":"not measured"}
+                report = {"result":"PASS", "teams":states, "referee":referee_state, "checks":["home before away", "eleven portraits per 4-4-2", "player-managers", "retired home #2 replaced by #14", "all away identities Des Feeney", "referee close-up and fading lower third", "640x480 review", "skip to opposite-side match kickoff"], "renderer":"Godot Compatibility / Chromium SwiftShader", "sun_shadows":False, "console_errors":errors, "native_M1_performance":"not measured"}
                 (out/"web_review.json").write_text(json.dumps(report, indent=2)+"\n")
                 print(json.dumps(report), flush=True)
             finally:

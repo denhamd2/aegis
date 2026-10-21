@@ -6,6 +6,7 @@ const IDLE := &"AN_Beechlawn_Idle"
 const BOLD := preload("res://assets/ui/fonts/BarlowSemiCondensed-SemiBold.ttf")
 const REGULAR := preload("res://assets/ui/fonts/BarlowSemiCondensed-Regular.ttf")
 const LINEUP_GRAPHIC := preload("res://scripts/ui/lineup_graphic.gd")
+const REFEREE_GRAPHIC := preload("res://assets/ui/lineups/referee_lower_third.png")
 var match_scene: Node3D
 var camera: Camera3D
 var overlay: CanvasLayer
@@ -29,6 +30,9 @@ var _keeper: FootballPlayer
 var _review_callback: JavaScriptObject
 var _lineup_graphic: Control
 var _lower_third: Panel
+var _referee_lower_third: Control
+var _referee_name: Label
+var _referee_role: Label
 
 func start(game: Node3D) -> void:
 	match_scene = game
@@ -87,6 +91,10 @@ func _build_shots() -> void:
 	# their right and retain the authored 1.2 m/s player walking speed.
 	_add_shot("walk", "HERE COME THE TEAMS", "Beechlawn Rovers  /  Boardeaux", 22.0,
 		Vector3(10.8, 1.65, 26), Vector3(10.8, 1.65, -0.4), Vector3(6, 1.15, 31), Vector3(6, 1.15, 4.6), 52)
+	# A close, face-forward official reveal follows the home/away lineup cards.
+	_add_shot("referee", "DES FEENEY", "MATCH OFFICIAL  /  REFEREE", 4.2,
+		Vector3(0.58, 1.73, 7.7), Vector3(0.48, 1.73, 7.55),
+		Vector3(0, 1.62, 5.0), Vector3(0, 1.62, 5.0), 19)
 	_add_shot("goal", "THE FRAME", "Weathered steel. Seven metres of possibility.", 3.0,
 		Vector3(49.2, 2.1, 5), Vector3(50.0, 1.8, 4.6), Vector3(52.5, 1.7, 2.5), Vector3(52.5, 1.7, 2.3), 45)
 	_add_shot("net", "EVERY GOAL STARTS HERE", "Kilmore Drive  ·  Matchday details", 2.8,
@@ -126,6 +134,7 @@ func _place(actor: Node3D, position: Vector3, yaw: float) -> void:
 func _stage_lineup() -> void:
 	for index in _actors.size():
 		var actor := _actors[index]
+		actor.show()
 		_place(actor, _lineup[actor.get_instance_id()], PI)
 		(actor.get_node("Visual") as FootballerVisual).play_presentation(IDLE, float(index % 7) * 0.17)
 	if _referee != null:
@@ -137,7 +146,9 @@ func _enter_shot(index: int) -> void:
 	shot_time = 0.0
 	var shot := shots[index]
 	_lineup_graphic.hide()
-	_lower_third.visible = shot["id"] != "walk"
+	match_scene.ball.visible = shot["id"] != "referee"
+	_lower_third.visible = shot["id"] not in ["walk", "referee"]
+	_referee_lower_third.visible = shot["id"] == "referee"
 	title_label.text = str(shot["title"])
 	subtitle_label.text = str(shot["subtitle"])
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
@@ -153,6 +164,12 @@ func _enter_shot(index: int) -> void:
 				(_referee.get_node("Visual") as FootballerVisual).play_presentation(WALK if shot["id"] == "walk" else IDLE)
 		"goal", "lineup", "portrait", "keeper":
 			_stage_lineup()
+		"referee":
+			for actor in _actors:
+				actor.hide()
+			if _referee != null:
+				_place(_referee, Vector3(0, 0, 5), PI)
+				(_referee.get_node("Visual") as FootballerVisual).play_presentation(IDLE)
 		"warmup":
 			# Clear the running lane before the camera retreats toward kickoff.
 			# The lineup's old z=5 row would intersect the runners at shot end.
@@ -211,13 +228,22 @@ func _update_shot(time: float) -> void:
 			_place(actor, (_entry[actor.get_instance_id()] as Vector3) + Vector3(0, 0, -1.2 * time), 0.0)
 		if _referee != null:
 			_place(_referee, Vector3(0, 0, 29 - 1.2 * time), 0.0)
+	elif shot["id"] == "referee":
+		var duration := float(shot["duration"])
+		_referee_lower_third.modulate.a = smoothstep(0.0, 0.42, time) * (1.0 - smoothstep(duration - 0.38, duration, time))
+		if OS.has_feature("web") and OS.has_feature("debug"):
+			JavaScriptBridge.eval("window.BEECHLAWN_REFEREE_STATE = " + JSON.stringify({
+				"visible": _referee_lower_third.visible, "alpha": _referee_lower_third.modulate.a,
+				"name": _referee_name.text, "role": _referee_role.text}))
 	elif shot["id"] == "warmup":
 		for index in _warmup.size():
 			_place(_warmup[index], Vector3(-2.4 if index == 0 else 3.5, 0, 14 - 2.2 * time), 0.0)
 	fade.color.a = maxf(0.0, 1.0 - time / 0.16)
 
 func _restore_kickoff() -> void:
+	match_scene.ball.show()
 	for actor in _actors:
+		actor.show()
 		(actor.get_node("Visual") as FootballerVisual).end_presentation()
 		actor.velocity = Vector3.ZERO
 		actor.ai_action_cooldown = 0.0
@@ -331,6 +357,42 @@ func _build_overlay() -> void:
 	subtitle_label.add_theme_font_size_override("font_size", 18)
 	subtitle_label.modulate = Color(0.76, 0.83, 0.93)
 	panel.add_child(subtitle_label)
+	_referee_lower_third = Control.new()
+	_referee_lower_third.name = "RefereeLowerThird"
+	_referee_lower_third.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_referee_lower_third.position = Vector2(26, -164)
+	_referee_lower_third.size = Vector2(1086, 140)
+	_referee_lower_third.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_referee_lower_third.hide()
+	screen.add_child(_referee_lower_third)
+	var referee_plate := TextureRect.new()
+	var referee_atlas := AtlasTexture.new()
+	referee_atlas.atlas = REFEREE_GRAPHIC
+	referee_atlas.region = Rect2(0, 210, 2172, 275)
+	referee_atlas.filter_clip = true
+	referee_plate.texture = referee_atlas
+	referee_plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	referee_plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	referee_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_referee_lower_third.add_child(referee_plate)
+	_referee_name = Label.new()
+	_referee_name.text = "DES FEENEY"
+	_referee_name.position = Vector2(202, 34)
+	_referee_name.size = Vector2(640, 50)
+	_referee_name.add_theme_font_override("font", BOLD)
+	_referee_name.add_theme_font_size_override("font_size", 36)
+	_referee_name.modulate = Color.WHITE
+	_referee_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_referee_lower_third.add_child(_referee_name)
+	_referee_role = Label.new()
+	_referee_role.text = "MATCH OFFICIAL  ·  REFEREE"
+	_referee_role.position = Vector2(205, 79)
+	_referee_role.size = Vector2(650, 35)
+	_referee_role.add_theme_font_override("font", REGULAR)
+	_referee_role.add_theme_font_size_override("font_size", 23)
+	_referee_role.modulate = Color(0.76, 0.86, 0.98)
+	_referee_role.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_referee_lower_third.add_child(_referee_role)
 	var skip := Button.new()
 	skip.text = "SKIP INTRO  [SPACE / ENTER]"
 	skip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)

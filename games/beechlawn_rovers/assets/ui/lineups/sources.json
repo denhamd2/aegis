@@ -70,5 +70,12 @@
     "source": "GPT Images",
     "original": "/workspace/generated_images/exec-08051a5e-d1c2-49a9-8403-8ec8d19c2873.png",
     "purpose": "Original broadcast panel background; Godot renders text, faces and crests."
+  },
+  "graphics": {
+    "referee_lower_third": {
+      "source": "GPT Image generation, styled from assets/ui/lineups/panel.png",
+      "sha256": "17965bef9e90287fcb6d02c6f9b954a6cb29ca661184c5af82afa3760e79d8b4",
+      "note": "Original transparent geometric navy/blue football lower-third plate; live referee and typeset wording are composed in Godot."
+    }
   }
 }

@@ -580,6 +580,11 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
     The original GPT Images panel sits beside the live walk. Each card has
     eleven seconds; skip/natural completion restore kickoff normally. See
     [`art_briefs/lineup_graphics/brief.md`](art_briefs/lineup_graphics/brief.md).
+  - 2026-10-21: added a 4.2-second referee reveal directly after the team
+    cards, with a close-up of the in-game Des Feeney official and a matching
+    GPT-generated blue lower third. It fades in/out and clears correctly on
+    the next shot or intro skip; Web capture is saved at
+    [`art_briefs/referee_intro/`](art_briefs/referee_intro/).
   - 2026-10-21 follow-up: the starting-lineup camera sweep now lasts 12 seconds
     instead of 4.2, retaining eased starts/stops. Team text is Boardeaux across
     title, scoreboard, restarts and roster shirts; canonical match ownership

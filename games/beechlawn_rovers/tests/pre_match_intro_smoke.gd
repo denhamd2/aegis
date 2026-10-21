@@ -29,6 +29,18 @@ func _run() -> void:
 			director.shot_time = float(director.shots[index]["duration"]) * 0.5
 			director._update_shot(director.shot_time)
 			check(director.camera.global_transform.is_finite(), "Finite intro camera")
+			if director.shots[index]["id"] == "referee":
+				check(director._referee_lower_third.visible, "Referee lower third follows team graphics")
+				check(director._referee_name.text == "DES FEENEY", "Official name is typeset in lower third")
+				check(director._referee_role.text.contains("REFEREE"), "Official role is typeset in lower third")
+				check(director._referee_lower_third.modulate.a > 0.99, "Referee lower third fades in smoothly")
+				var referee_head: Vector3 = director._referee.global_position + Vector3.UP * 1.58
+				check(director.camera.global_position.distance_to(referee_head) < 4.5, "Referee is shown in a face close-up")
+				check(director.camera.fov <= 20.0 and not game.ball.visible, "Tight referee portrait keeps kickoff ball out of frame")
+				check(director._actors.all(func(actor: FootballPlayer): return not actor.visible), "Referee close-up keeps lineup players out of frame")
+			if director.shots[index]["id"] == "goal":
+				check(not director._referee_lower_third.visible, "Referee card clears on the next intro cut")
+				check(director._actors.all(func(actor: FootballPlayer): return actor.visible), "Lineup actors return after the referee close-up")
 			if director.shots[index]["id"] == "lineup":
 				var duration := float(director.shots[index]["duration"])
 				var distance := (director.shots[index]["to"] as Vector3).distance_to(director.shots[index]["from"])

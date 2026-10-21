@@ -10,6 +10,11 @@ and roster shirt prints. The pre-match starting-lineup pan now takes 12 seconds
 instead of 4.2, with its smooth start and stop retained.
 The intro-to-gameplay handoff also starts on the selected camera's side.
 
+After the home and away walkout graphics, a close-up of referee Des Feeney now
+gets a short matching navy/blue lower third. The generated geometric plate is
+paired with live Godot text and the in-game referee model, then fades cleanly
+into the next pitch-detail shot.
+
 The default Close Broadcast and the other sideline camera presets now view the
 match from the opposite side. Their close framing, tracking and editable
 height/zoom settings are retained. Keyboard movement remains screen-relative.
