@@ -33,7 +33,10 @@ scene = bpy.context.scene
 if shared_preview:
     short = bpy.data.objects.get("Kit_Shirt_ShortSleeve")
     if short:
-        short.hide_render = True
+        short_sleeves = "--short-sleeves" in sys.argv
+        short.hide_render = not short_sleeves
+        bpy.data.objects["YBot_Surface"].hide_render = short_sleeves
+        bpy.data.objects["Kit_shirt_BoundHems"].hide_render = short_sleeves
 armature = bpy.data.objects.get("YBot_Armature")
 idle_preview = "--idle" in sys.argv
 clip = next((arg.split("=", 1)[1] for arg in sys.argv if arg.startswith("--clip=")), None)

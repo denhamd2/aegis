@@ -1,3 +1,14 @@
+Shared garment construction update (21 October 2026):
+- Restored missing forearms beneath short sleeves from the existing CC0 anatomy
+  on the shared rig. Existing neck skin, heads and animation curves are retained.
+- Connected quad rows and a folded edge replace the torn-looking lower shirt
+  and disconnected hem ribbons. Both sleeve variants retain the kit atlas.
+- A reshaped rear underarm gusset improves all nine sampled pose diagnostics.
+  The source remains at 65 bones, 19 clips and 16 mesh parts, with fewer total
+  triangles across variants. Garment fit and individual likeness remain open.
+- Actual roster Web reviews and Play/Watch checks accompany the source evidence.
+  Native Mac execution and M1 performance remain pending.
+
 Shared shirt fit update (20 October 2026):
 - Softer shoulder slope, smoother arm/torso weight transitions and a flatter
   back drape across both sleeve variants. The front chest tear and associated

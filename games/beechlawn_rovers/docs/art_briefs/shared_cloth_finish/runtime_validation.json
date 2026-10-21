@@ -1,0 +1,76 @@
+{
+  "result": "PASS",
+  "scope": "Shared garment construction and runtime integration; individual likeness/final fit remain open",
+  "baseline": "39ba9fd0d5c48c371ac00c79299df40c48382ff0",
+  "headless_checks": [
+    "shared_head_roster_smoke.gd",
+    "shared_roster_resources_smoke.gd",
+    "shared_pose_safety_smoke.gd",
+    "eleven_v_eleven_smoke.gd"
+  ],
+  "source_regressions": {
+    "bare_arm_missing_before": [
+      -42,
+      -48,
+      -54,
+      -60,
+      42,
+      48,
+      54,
+      60
+    ],
+    "bare_arm_missing_after": [],
+    "skin_sample_count": 12,
+    "idle_waist_overlap_samples": 20,
+    "before_waist_failures_cm": [
+      [
+        -8,
+        102
+      ],
+      [
+        -4,
+        102
+      ]
+    ],
+    "after_waist_failures": [],
+    "assertion_exit_code_before_fix": 1
+  },
+  "asset_browser_errors": [],
+  "captures": [
+    "godot_shane.png",
+    "godot_des.png",
+    "godot_des_full.png",
+    "godot_john_save.png",
+    "godot_referee.png"
+  ],
+  "web_match": {
+    "result": "PASS",
+    "checks": [
+      "native menu",
+      "options open/close",
+      "640x480 layout",
+      "AI auto kickoff",
+      "zero spectator humans",
+      "return to title",
+      "Play has one human",
+      "keyboard kickoff"
+    ],
+    "renderer": "Compatibility / Chromium SwiftShader",
+    "menu_viewport": [
+      1280,
+      720
+    ],
+    "match_viewport": [
+      640,
+      360
+    ],
+    "native_M1_performance": "not measured",
+    "console_errors": []
+  },
+  "limits": [
+    "Software WebGL; asset sun shadows disabled",
+    "Source pose renders use base diagnostic head",
+    "Native Mac execution and M1 timing not measured",
+    "Further shoulder/sleeve fit, fabric detail and individual likeness remain open"
+  ]
+}

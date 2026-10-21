@@ -21,9 +21,24 @@
     "AN_Beechlawn_WalkOn",
     "AN_Beechlawn_WarmupJog"
   ],
-  "triangles_all_variants": 67710,
+  "bare_arm_coverage_samples_cm": [
+    -42,
+    -48,
+    -54,
+    -60,
+    -66,
+    -70,
+    42,
+    48,
+    54,
+    60,
+    66,
+    70
+  ],
+  "waist_overlap_samples": 20,
+  "triangles_all_variants": 67284,
   "mesh_parts": 16,
-  "bytes": 11789052,
+  "bytes": 11756684,
   "parts": [
     "Eye_l",
     "Eye_r",
@@ -39,7 +54,7 @@
     "Kit_socks_BoundHems",
     "YBot_Joints.001",
     "Skin_Head",
-    "YBot_Joints",
+    "Shared_Skin_With_Continuous_Arms",
     "YBot_Surface.001"
   ],
   "topology_sha256": "7f899a713458f82c50a7ce62ead430226e1c66581d9151140666037ccfaffce5",

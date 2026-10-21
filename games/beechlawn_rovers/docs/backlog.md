@@ -636,6 +636,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-21 shared garment construction: restores missing forearm skin
+    beneath short sleeves, replaces the folded lower-shirt strip and separate
+    ribbons with connected quad rows/hem, and reshapes the rear underarm gusset.
+    The same nine-pose fold diagnostic improves in every pose; all 12 bare-arm
+    probes pass. Rig, 19 clips, head packages and supplied kit images remain.
+    Further shoulder/sleeve fit and individual likeness remain open. See
+    `art_briefs/shared_cloth_finish/brief.md`.
   - 2026-10-20 shoulder/underarm pass: smoother shared arm weights, lower raglan
     yoke and continuous chest surface replace the inflated cap/chest tearing.
     A local UV patch keeps stripe registration; neck interfaces, kit images,

@@ -240,3 +240,15 @@ notes above are historical. The [shoulder/underarm fit](art_briefs/shared_should
 reduces the inflated yoke, repairs the chest tear and improves nine sampled
 poses while preserving heads, the neck interface, rig, clips and kit artwork.
 Rear armhole deformation, final tailoring and individual likeness remain open.
+
+
+### 21 October 2026 — exposed skin and garment construction
+
+BR-022 (22/25) now repairs missing forearm skin inherited from the long-sleeve
+body mask, a folded/torn-looking lower shirt strip and rear-underarm collapse.
+The [construction brief](art_briefs/shared_cloth_finish/brief.md) maps the home
+and Bordeaux kit references to local geometry repairs and fixed-pose evidence.
+The archived CC0 anatomical source supplies only missing skin, preserving the
+current neck, heads, shared rig, 19 actions and kit images. Further garment
+fidelity and individual likeness remain open; this does not accept the art as
+an exact reference match or establish native M1 performance.
