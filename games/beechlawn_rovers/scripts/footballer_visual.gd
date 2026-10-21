@@ -23,6 +23,7 @@ const SHOT_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_shot_contact.
 var _blend_position := 0.0
 var _active_action: StringName = &""
 var _active_clip: StringName = &""
+var _action_has_contact := false
 var _action_contact_times: Dictionary = {}
 var _stop_latched := false
 var _close_control_blend := 0.0
@@ -263,7 +264,7 @@ func play_turn(turn_right: bool) -> bool:
 
 
 func play_shot(playback_speed: float = 1.0) -> bool:
-	return _play_action(&"shot", SHOT_CLIP, playback_speed)
+	return _play_action(&"shot", SHOT_CLIP, playback_speed, true)
 
 
 func play_get_up() -> bool:
@@ -279,6 +280,10 @@ func play_slide_tackle() -> bool:
 func is_recovery_active() -> bool:
 	return _active_action == &"get_up"
 
+func can_start_ball_action() -> bool:
+	return _active_action in [&"", &"turn", &"stop", &"receive"] \
+		or (_action_has_contact and _active_action in [&"pass", &"shot"])
+
 
 func action_contact_time(action: StringName) -> float:
 	return float(_action_contact_times.get(action, -1.0))
@@ -291,7 +296,10 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 	if _active_action != &"":
 		var interrupt_locomotion := _active_action in [&"turn", &"stop"] \
 			and action not in [&"turn", &"stop"]
-		if not interrupt_action and not interrupt_locomotion \
+		var interrupt_follow_through := _action_has_contact \
+			and _active_action in [&"pass", &"shot", &"receive"] \
+			and action in [&"pass", &"shot"]
+		if not interrupt_action and not interrupt_locomotion and not interrupt_follow_through \
 				and (not interrupt_receive or _active_action != &"receive"):
 			return false
 		var interrupted_action := _active_action
@@ -302,13 +310,27 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 		action_finished.emit(interrupted_action)
 	_active_action = action
 	_active_clip = clip
+	_action_has_contact = false
 	animation_tree.active = false
-	animation_player.play(clip, 0.08, playback_speed)
+	var start_time := 0.0
+	var blend_seconds := 0.08
+	if action in [&"pass", &"shot"] and playback_speed > 1.5:
+		# A fast first-time return skips redundant anticipation instead of
+		# racing the entire swing and follow-through at five to ten times speed.
+		var marker := action_contact_time(action)
+		var arrival := marker / playback_speed
+		playback_speed = 1.5
+		start_time = maxf(0.0, marker - arrival * playback_speed)
+		blend_seconds = minf(blend_seconds, arrival * 0.35)
+	animation_player.play(clip, blend_seconds, playback_speed)
+	if start_time > 0.0:
+		animation_player.seek(start_time, true)
 	return true
 
 
 func on_action_contact_marker() -> void:
-	if _active_action != &"":
+	if _active_action != &"" and not _action_has_contact:
+		_action_has_contact = true
 		action_contact.emit(_active_action)
 
 

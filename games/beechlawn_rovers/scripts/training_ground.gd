@@ -714,16 +714,20 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 		opponents: Array[FootballPlayer]) -> void:
 	var action: Dictionary = _player_decisions.choose_carrier_action(carrier,
 		team_players, opponents, ball)
+	var previous_serial := ball.action_serial
 	match action.get("type", &"none"):
 		&"shoot":
-			carrier._do_shot(float(action.get("charge", 0.42)))
-			carrier.ai_action_cooldown = 1.1
+			carrier._do_shot(float(action.get("charge", 0.42)), 1.0, action.get("direction", Vector3.ZERO))
+			if carrier._visual_shot_pending or ball.action_serial != previous_serial:
+				carrier.ai_action_cooldown = 1.1
 		&"through_pass":
 			carrier._do_pass(true, action.get("direction", Vector3.RIGHT))
-			carrier.ai_action_cooldown = 0.85
+			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
+				carrier.ai_action_cooldown = 0.85
 		&"short_pass":
 			carrier._do_pass(false,action.get("direction",Vector3.RIGHT))
-			carrier.ai_action_cooldown=0.85
+			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
+				carrier.ai_action_cooldown = 0.85
 
 func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions: Dictionary) -> void:
 	for actor in team_players:

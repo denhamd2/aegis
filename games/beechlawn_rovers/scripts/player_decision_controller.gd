@@ -2,7 +2,7 @@ extends RefCounted
 ## Chooses low-cost, short-horizon actions for an AI-controlled ball carrier.
 ## Team shape stays in TeamTacticsController; this only decides shoot/pass/carry.
 
-const SHOOT_RANGE := 18.0
+const SHOOT_RANGE := 22.0
 const CLOSE_SHOT_RANGE := 10.0
 const PRESSURE_RANGE := 3.2
 const MAX_SAFE_PASS_RISK := 0.60
@@ -14,7 +14,8 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	if carrier == null or carrier.controlled_by_human or carrier.profile == null \
 			or carrier.profile.role != "outfield" or carrier.ai_action_cooldown > 0.0 \
 			or ball == null or ball.last_touch != carrier.team_name \
-			or ball.global_position.y > 0.62 or not carrier._can_kick():
+			or ball.global_position.y > 0.62 or not carrier._can_kick() \
+			or not carrier._can_start_ball_action():
 		return {"type": &"none"}
 
 	var ball_position := Vector2(ball.global_position.x, ball.global_position.z)
@@ -34,12 +35,11 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	# Pressure behind or beside the carrier does not necessarily block a shot.
 	# Check the immediate goalward corridor rather than vetoing every attempt
 	# whenever any defender is within three metres of the ball.
-	var central_enough := absf(ball_position.y) <= 15.0
-	var can_take_shot := goal_distance <= CLOSE_SHOT_RANGE \
-		or (goal_distance <= SHOOT_RANGE and central_enough \
-			and not _has_close_shot_blocker(ball_position, goal_position, opponents))
-	if can_take_shot:
-		return {"type": &"shoot", "charge": 0.42}
+	var shot_range := carrier.tuning.ai_shot_range if carrier.tuning != null else SHOOT_RANGE
+	if goal_distance <= CLOSE_SHOT_RANGE or (goal_distance <= shot_range and absf(ball_position.y) <= 15.0):
+		var shot := _best_shot_lane(ball_position, carrier.attack_sign, opponents)
+		if not shot.is_empty():
+			return shot
 	# Under pressure, release the ball into a forward run if a teammate and lane
 	# Evaluate a progressive pass before the generic safe outlet. The outlet
 	# condition below also matches high pressure, so checking it first otherwise
@@ -78,12 +78,35 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 				best_score = score
 		if best != null:
 			var forward_gain := (best.global_position.x - carrier.global_position.x) * carrier.attack_sign
-			# Recycle backward when a challenge is imminent; otherwise try the
+			# Recycle backward when a frontal challenge is imminent; otherwise try the
 			# tactical controller's open carry lane before giving up progress.
-			if forward_gain >= 1.0 or nearest_defender <= 2.0:
+			if forward_gain >= 1.0 or nearest_forward_defender <= 2.0:
 				return {"type": &"short_pass", "direction": best.global_position - carrier.global_position}
 
 	return {"type": &"carry"}
+
+func _best_shot_lane(ball_position: Vector2, attack_sign: float,
+		opponents: Array[FootballPlayer]) -> Dictionary:
+	var best := {}
+	var best_score := -INF
+	# A central defender may cover the centre while a corner remains open.
+	# Keep endpoints safely inside the posts, and reject every lane covered by
+	# an immediate body; pressure alone never manufactures an open shot.
+	for lateral in [0.0, -2.65, 2.65, -1.35, 1.35]:
+		var target := Vector2(52.5 * attack_sign, lateral)
+		if _has_close_shot_blocker(ball_position, target, opponents):
+			continue
+		var score := -absf(lateral) * 0.02
+		for opponent in opponents:
+			if opponent != null and opponent.profile != null and opponent.profile.role == "goalkeeper":
+				score += minf(absf(lateral - opponent.global_position.z), 5.0) * 0.16
+		if score > best_score:
+			best_score = score
+			var direction := (target - ball_position).normalized()
+			var charge := clampf(0.42 + maxf(0.0, target.distance_to(ball_position) - 16.0) * 0.008, 0.42, 0.5)
+			best = {"type": &"shoot", "charge": charge,
+				"direction": Vector3(direction.x, 0.0, direction.y)}
+	return best
 
 func _has_close_shot_blocker(ball_position: Vector2, goal_position: Vector2,
 		opponents: Array[FootballPlayer]) -> bool:

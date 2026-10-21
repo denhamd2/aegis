@@ -31,7 +31,13 @@ class_name FootballTuning
 @export var shot_min_speed := 13.0
 @export var shot_max_speed := 30.0
 @export var kick_assist_radius := 1.12
+@export_range(0.4, 0.8, 0.01) var kick_setup_touch_distance := 0.60
+@export_range(0.15, 0.3, 0.01) var kick_foot_contact_radius := 0.28
+@export_range(0.0, 0.1, 0.005) var kick_contact_grace_seconds := 0.065
 @export_range(1.5, 2.8, 0.1) var slide_tackle_reach := 2.2
+
+@export_group("AI decisions")
+@export_range(16.0, 28.0, 0.5) var ai_shot_range := 22.0
 
 @export_group("Goalkeeper")
 @export_range(0.05, 0.6, 0.01) var goalkeeper_reaction_seconds := 0.22

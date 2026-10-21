@@ -15,6 +15,8 @@ var _shot_active := false
 var _predicted_intercept := Vector3.ZERO
 var _has_intercept := false
 var _distribution_remaining := 0.0
+var _intercept_seconds := 0.0
+var _save_animation_started := false
 
 func configure(player: FootballPlayer, match_ball: FootballBall) -> void:
 	keeper = player
@@ -30,20 +32,20 @@ func update_before_move(delta: float) -> void:
 		if _distribution_remaining <= 0.0:
 			_distribute_to_teammate()
 		return
-	if keeper.controlled_by_human:
-		return
-	if ball.action_serial != _observed_action_serial:
-		_observed_action_serial = ball.action_serial
-		_shot_active = ball.last_action == &"shot" and ball.last_touch != keeper.team_name
-		_reaction_remaining = _reaction_time() if _shot_active else 0.0
-		_has_intercept = false
+	_observe_action()
 	if _shot_active:
 		_has_intercept = _predict_goalmouth_intercept()
-		if _has_intercept:
-			_reaction_remaining = maxf(0.0, _reaction_remaining - delta)
+		_reaction_remaining = maxf(0.0, _reaction_remaining - delta)
+	if _shot_active and _has_intercept and _reaction_remaining <= 0.0 \
+			and _intercept_seconds <= 0.24 and not _save_animation_started:
+		keeper._start_goalkeeper_save_pose()
+		_save_animation_started = true
+	if keeper.controlled_by_human:
+		return
 
 	var target := _goal_line_position()
 	if _shot_active and _has_intercept and _reaction_remaining <= 0.0:
+		target.x = keeper.global_position.x
 		target.z = clampf(_predicted_intercept.z, -GOAL_WIDTH * 0.5 + 0.45,
 			GOAL_WIDTH * 0.5 - 0.45)
 	var offset := target - keeper.global_position
@@ -57,12 +59,21 @@ func try_save() -> bool:
 		return false
 	if ball.last_action != &"shot" or ball.last_touch == keeper.team_name:
 		return false
+	_observe_action()
+	if _reaction_remaining > 0.0:
+		return false
+	var to_keeper := keeper.global_position - ball.global_position
+	to_keeper.y = 0.0
+	if ball.linear_velocity.x * keeper.attack_sign >= -0.2 \
+			or to_keeper.dot(Vector3(ball.linear_velocity.x, 0, ball.linear_velocity.z)) <= 0.0:
+		return false
 	var torso_center := keeper.global_position + Vector3.UP * 1.0
 	var separation := ball.global_position - torso_center
 	var flat_separation := Vector2(separation.x, separation.z).length()
 	var reach := keeper.tuning.goalkeeper_save_reach if keeper.tuning != null else 0.95
 	# A close physical contact window avoids remote or full-field save assistance.
-	if flat_separation > reach or absf(separation.y) > 1.25:
+	var height := ball.global_position.y - keeper.global_position.y
+	if flat_separation > reach or height < 0.04 or height > 1.85:
 		return false
 	var handling := 50.0
 	if keeper.profile != null and keeper.profile.attributes != null:
@@ -70,23 +81,56 @@ func try_save() -> bool:
 	var catch_speed := lerpf(4.5, 8.0, clampf(handling / 100.0, 0.0, 1.0))
 	if ball.linear_velocity.length() <= catch_speed and ball.goalkeeper_claim(keeper):
 		_distribution_remaining = 0.58
-		keeper._start_goalkeeper_save_pose()
+		_begin_save_pose()
 		keeper.status_changed.emit("Goalkeeper claims the ball")
 		_shot_active = false
 		_has_intercept = false
 		return true
-	var side := signf(ball.global_position.z - keeper.global_position.z)
-	if is_zero_approx(side):
-		side = 1.0 if keeper.global_position.z <= 0.0 else -1.0
-	var parry_direction := Vector3(keeper.attack_sign, 0.0, side * 0.45).normalized()
+	var side := _safe_parry_side()
+	var parry_direction := Vector3(keeper.attack_sign, 0.0, side * 1.15).normalized()
 	var parry_speed := keeper.tuning.goalkeeper_parry_speed if keeper.tuning != null else 8.0
+	parry_speed = clampf(ball.linear_velocity.length() * 0.42, parry_speed * 0.65, parry_speed * 1.25)
 	if not ball.goalkeeper_save(keeper, parry_direction, parry_speed, 1.2):
 		return false
-	keeper._start_goalkeeper_save_pose()
+	_begin_save_pose()
 	keeper.status_changed.emit("Goalkeeper parries the shot")
 	_shot_active = false
 	_has_intercept = false
 	return true
+
+func _observe_action() -> void:
+	if ball.action_serial == _observed_action_serial:
+		return
+	_observed_action_serial = ball.action_serial
+	_shot_active = ball.last_action == &"shot" and ball.last_touch != keeper.team_name
+	_reaction_remaining = _reaction_time() if _shot_active else 0.0
+	_has_intercept = false
+	_save_animation_started = false
+
+func _begin_save_pose() -> void:
+	if not _save_animation_started:
+		keeper._start_goalkeeper_save_pose()
+		_save_animation_started = true
+
+func _safe_parry_side() -> float:
+	var natural_side := signf(ball.global_position.z - keeper.global_position.z)
+	if is_zero_approx(natural_side): natural_side = 1.0 if keeper.global_position.z <= 0.0 else -1.0
+	var best_side := natural_side
+	var best_risk := INF
+	for side in [natural_side, -natural_side]:
+		var target := keeper.global_position + Vector3(keeper.attack_sign * 2.0, 0, side * 4.0)
+		var risk := 0.0 if side == natural_side else 0.03
+		for node in keeper.get_tree().get_nodes_in_group("football_players"):
+			var opponent := node as FootballPlayer
+			if opponent == null or opponent.team_name == keeper.team_name \
+					or opponent.profile == null or opponent.profile.role != "outfield":
+				continue
+			var distance := Vector2(opponent.global_position.x - target.x, opponent.global_position.z - target.z).length()
+			if distance < 12.0: risk += 1.0 / maxf(distance, 0.75)
+		if risk < best_risk:
+			best_risk = risk
+			best_side = side
+	return best_side
 
 func _distribute_to_teammate() -> void:
 	var best: FootballPlayer
@@ -134,26 +178,40 @@ func _distribute_to_teammate() -> void:
 		_distribution_remaining = 0.0
 
 func _goal_line_position() -> Vector3:
-	var goal_x := -FIELD_LENGTH * 0.5 * keeper.attack_sign + keeper.attack_sign * 3.0
-	return Vector3(goal_x, keeper.global_position.y,
-		clampf(ball.global_position.z * 0.14, -3.2, 3.2))
+	var goal_x := -FIELD_LENGTH * 0.5 * keeper.attack_sign
+	var distance_from_goal := maxf((ball.global_position.x - goal_x) * keeper.attack_sign, 1.0)
+	var depth := minf(3.0, distance_from_goal * 0.45)
+	return Vector3(goal_x + keeper.attack_sign * depth, keeper.global_position.y,
+		clampf(ball.global_position.z * depth / distance_from_goal, -3.2, 3.2))
 
 func _predict_goalmouth_intercept() -> bool:
 	var velocity := ball.linear_velocity
 	if velocity.x * keeper.attack_sign >= -1.5:
 		return false
-	var goal_line := -FIELD_LENGTH * 0.5 * keeper.attack_sign + keeper.attack_sign * 3.0
+	var goal_plane := -FIELD_LENGTH * 0.5 * keeper.attack_sign
+	var time_to_goal := (goal_plane - ball.global_position.x) / velocity.x
+	if time_to_goal <= 0.0 or absf(ball.global_position.z + velocity.z * time_to_goal) > GOAL_WIDTH * 0.5 + FootballBall.RADIUS \
+			or _shot_height(time_to_goal) > GOAL_HEIGHT + FootballBall.RADIUS:
+		return false
+	var goal_line := keeper.global_position.x
 	var time_to_line := (goal_line - ball.global_position.x) / velocity.x
 	if time_to_line <= 0.02 or time_to_line > 1.65:
 		return false
-	var predicted_y := ball.global_position.y + velocity.y * time_to_line \
-		- 0.5 * GRAVITY * time_to_line * time_to_line
+	var predicted_y := _shot_height(time_to_line)
 	var predicted_z := ball.global_position.z + velocity.z * time_to_line
 	if predicted_y < -0.3 or predicted_y > GOAL_HEIGHT + 0.2 \
 			or absf(predicted_z) > GOAL_WIDTH * 0.5 + 0.6:
 		return false
 	_predicted_intercept = Vector3(goal_line, maxf(predicted_y, FootballBall.RADIUS), predicted_z)
+	_intercept_seconds = time_to_line
 	return true
+
+func _shot_height(seconds: float) -> float:
+	var ground := PitchSurface.height_at(ball.global_position.x, ball.global_position.z) if ball.use_terrain else 0.0
+	var floor_y := ground + FootballBall.RADIUS
+	if ball.global_position.y <= floor_y + 0.04 and ball.linear_velocity.y <= 0.3:
+		return floor_y
+	return maxf(floor_y, ball.global_position.y + ball.linear_velocity.y * seconds - 0.5 * GRAVITY * seconds * seconds)
 
 func _reaction_time() -> float:
 	var base := keeper.tuning.goalkeeper_reaction_seconds if keeper.tuning != null else 0.22

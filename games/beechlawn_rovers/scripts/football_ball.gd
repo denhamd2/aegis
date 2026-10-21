@@ -72,6 +72,8 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	flat_delta.y = 0.0
 	if flat_delta.length() > 1.38:
 		return false
+	if not _within_dribble_touch_arc(player, flat_delta):
+		return false
 	var touch_team := StringName(player.get("team_name"))
 	if _kick_control_release > 0.0 and touch_team == last_touch:
 		return false
@@ -115,6 +117,16 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	touched.emit(&"dribble", linear_velocity.length())
 	return true
 
+func _within_dribble_touch_arc(player: Node3D, offset: Vector3) -> bool:
+	# A ball beneath the feet can be gathered from either side. Farther away,
+	# the body must turn before a forward touch can reach behind it; otherwise
+	# the spring pulls the ball through the capsule during a 180-degree turn.
+	if offset.length_squared() <= 0.42 * 0.42:
+		return true
+	var forward := -player.global_basis.z
+	forward.y = 0.0
+	return offset.dot(forward.normalized()) >= -0.10
+
 func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 	# Only one spring may act on the ball in a tick. Keep an established actor
 	# stable; select the nearest plausible actor only when control is released.
@@ -147,6 +159,8 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 			offset.y = 0.0
 			var gap := offset.length()
 			if gap >= best_gap - 0.001:
+				continue
+			if not _within_dribble_touch_arc(candidate, offset):
 				continue
 			if last_touch != &"none" and candidate.team_name != last_touch and gap > 0.55:
 				continue
@@ -236,6 +250,10 @@ func goalkeeper_save(player: Node3D, direction: Vector3, speed: float, lift: flo
 	last_action = &"goalkeeper_save"
 	action_serial += 1
 	_dribble_cooldowns.clear()
+	_dribble_controller = null
+	# Let a parry escape the keeper's close-control spring. Opponents may still
+	# attack the rebound immediately, just as after an ordinary physical kick.
+	_kick_control_release = tuning.kick_control_release_seconds
 	touched.emit(&"goalkeeper_save", speed)
 	return true
 

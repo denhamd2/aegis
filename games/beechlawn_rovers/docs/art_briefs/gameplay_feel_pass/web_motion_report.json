@@ -1,0 +1,427 @@
+{
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "scenarios": {
+    "pass": [
+      {
+        "action": "pass",
+        "ball": [
+          33.2608299255371,
+          0.119558408856392,
+          0.000398926204070449
+        ],
+        "clip_time": 0.0833333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.430027037858963,
+        "scenario": "pass",
+        "tick": 6
+      },
+      {
+        "action": "pass",
+        "ball": [
+          33.7240715026855,
+          0.118464827537537,
+          0.00185837340541184
+        ],
+        "clip_time": 0.183333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.976093471050262,
+        "scenario": "pass",
+        "tick": 12
+      },
+      {
+        "action": "pass",
+        "ball": [
+          34.0173263549805,
+          0.117498464882374,
+          0.00364964548498392
+        ],
+        "clip_time": 0.283333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.985641658306122,
+        "scenario": "pass",
+        "tick": 18
+      },
+      {
+        "action": "pass",
+        "ball": [
+          34.179012298584,
+          0.116966567933559,
+          0.00592867843806744
+        ],
+        "clip_time": 0.383333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.262950450181961,
+        "scenario": "pass",
+        "tick": 24
+      },
+      {
+        "action": "pass",
+        "ball": [
+          35.0596504211426,
+          0.112972989678383,
+          0.00722490902990103
+        ],
+        "clip_time": 0.483333333333333,
+        "done": false,
+        "events": [
+          {
+            "event": "pass",
+            "speed": 10.56,
+            "tick": 25
+          }
+        ],
+        "foot_gap": 0.527190387248993,
+        "scenario": "pass",
+        "tick": 30
+      },
+      {
+        "action": "pass",
+        "ball": [
+          35.9181137084961,
+          0.107751324772835,
+          0.00850175693631172
+        ],
+        "clip_time": 0.583333333333333,
+        "done": false,
+        "events": [
+          {
+            "event": "pass",
+            "speed": 10.56,
+            "tick": 25
+          }
+        ],
+        "foot_gap": 1.07905697822571,
+        "scenario": "pass",
+        "tick": 36
+      },
+      {
+        "action": "pass",
+        "ball": [
+          36.7547874450684,
+          0.101613961160183,
+          0.00980468560010195
+        ],
+        "clip_time": 0.683333333333334,
+        "done": false,
+        "events": [
+          {
+            "event": "pass",
+            "speed": 10.56,
+            "tick": 25
+          }
+        ],
+        "foot_gap": 1.58001399040222,
+        "scenario": "pass",
+        "tick": 42
+      },
+      {
+        "action": "pass",
+        "ball": [
+          37.5700302124023,
+          0.0949430018663406,
+          0.0111716846004128
+        ],
+        "clip_time": 0.783333333333334,
+        "done": true,
+        "events": [
+          {
+            "event": "pass",
+            "speed": 10.56,
+            "tick": 25
+          }
+        ],
+        "foot_gap": 1.78524923324585,
+        "scenario": "pass",
+        "tick": 48
+      }
+    ],
+    "shot": [
+      {
+        "action": "shot",
+        "ball": [
+          33.2608299255371,
+          0.119558624923229,
+          0.000541140150744468
+        ],
+        "clip_time": 0.0833333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.512069940567017,
+        "scenario": "shot",
+        "tick": 6
+      },
+      {
+        "action": "shot",
+        "ball": [
+          33.7240676879883,
+          0.118465267121792,
+          0.00245392788201571
+        ],
+        "clip_time": 0.183333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.964447140693665,
+        "scenario": "shot",
+        "tick": 12
+      },
+      {
+        "action": "shot",
+        "ball": [
+          34.0172996520996,
+          0.117499135434628,
+          0.00449503026902676
+        ],
+        "clip_time": 0.283333333333333,
+        "done": false,
+        "events": [],
+        "foot_gap": 0.431986838579178,
+        "scenario": "shot",
+        "tick": 18
+      },
+      {
+        "action": "shot",
+        "ball": [
+          35.8925895690918,
+          0.208486095070839,
+          0.00514612998813391
+        ],
+        "clip_time": 0.383333333333333,
+        "done": false,
+        "events": [
+          {
+            "event": "shot",
+            "speed": 22.77075,
+            "tick": 19
+          }
+        ],
+        "foot_gap": 1.67059481143951,
+        "scenario": "shot",
+        "tick": 24
+      },
+      {
+        "action": "shot",
+        "ball": [
+          37.7413101196289,
+          0.230520367622375,
+          0.00578800262883306
+        ],
+        "clip_time": 0.483333333333333,
+        "done": false,
+        "events": [
+          {
+            "event": "shot",
+            "speed": 22.77075,
+            "tick": 19
+          }
+        ],
+        "foot_gap": 3.29045343399048,
+        "scenario": "shot",
+        "tick": 30
+      },
+      {
+        "action": "shot",
+        "ball": [
+          39.5639839172363,
+          0.184573248028755,
+          0.00642083352431655
+        ],
+        "clip_time": 0.583333333333333,
+        "done": false,
+        "events": [
+          {
+            "event": "shot",
+            "speed": 22.77075,
+            "tick": 19
+          }
+        ],
+        "foot_gap": 4.85506963729858,
+        "scenario": "shot",
+        "tick": 36
+      },
+      {
+        "action": "shot",
+        "ball": [
+          41.3608207702637,
+          0.0716023519635201,
+          0.00704469392076135
+        ],
+        "clip_time": 0.683333333333334,
+        "done": false,
+        "events": [
+          {
+            "event": "shot",
+            "speed": 22.77075,
+            "tick": 19
+          }
+        ],
+        "foot_gap": 6.15494441986084,
+        "scenario": "shot",
+        "tick": 42
+      },
+      {
+        "action": "shot",
+        "ball": [
+          43.1157836914062,
+          0.0624872371554375,
+          0.00782488100230694
+        ],
+        "clip_time": 0.783333333333334,
+        "done": true,
+        "events": [
+          {
+            "event": "shot",
+            "speed": 22.77075,
+            "tick": 19
+          }
+        ],
+        "foot_gap": 7.18158149719238,
+        "scenario": "shot",
+        "tick": 48
+      }
+    ],
+    "keeper": [
+      {
+        "action": "",
+        "ball": [
+          44.6567878723145,
+          1.32457590103149,
+          0.25
+        ],
+        "clip_time": 0,
+        "done": false,
+        "events": [],
+        "foot_gap": 5.1119966506958,
+        "scenario": "keeper",
+        "tick": 6
+      },
+      {
+        "action": "",
+        "ball": [
+          45.7972793579102,
+          1.37972593307495,
+          0.25
+        ],
+        "clip_time": 0,
+        "done": false,
+        "events": [],
+        "foot_gap": 4.04252767562866,
+        "scenario": "keeper",
+        "tick": 12
+      },
+      {
+        "action": "keeper_save",
+        "ball": [
+          46.921703338623,
+          1.36642801761627,
+          0.25
+        ],
+        "clip_time": 0.0166666666666667,
+        "done": false,
+        "events": [],
+        "foot_gap": 3.00593495368958,
+        "scenario": "keeper",
+        "tick": 18
+      },
+      {
+        "action": "keeper_save",
+        "ball": [
+          48.0302925109863,
+          1.28564655780792,
+          0.25
+        ],
+        "clip_time": 0.116666666666667,
+        "done": false,
+        "events": [],
+        "foot_gap": 2.02858853340149,
+        "scenario": "keeper",
+        "tick": 24
+      },
+      {
+        "action": "keeper_save",
+        "ball": [
+          48.5668792724609,
+          1.23685264587402,
+          0.389218896627426
+        ],
+        "clip_time": 0.216666666666667,
+        "done": false,
+        "events": [
+          {
+            "event": "goalkeeper_save",
+            "speed": 5.55836860656738,
+            "tick": 27
+          }
+        ],
+        "foot_gap": 1.63723528385162,
+        "scenario": "keeper",
+        "tick": 30
+      },
+      {
+        "action": "keeper_save",
+        "ball": [
+          48.267219543457,
+          1.2678120136261,
+          0.733829438686371
+        ],
+        "clip_time": 0.316666666666667,
+        "done": false,
+        "events": [
+          {
+            "event": "goalkeeper_save",
+            "speed": 5.55836860656738,
+            "tick": 27
+          }
+        ],
+        "foot_gap": 2.0043523311615,
+        "scenario": "keeper",
+        "tick": 36
+      },
+      {
+        "action": "keeper_save",
+        "ball": [
+          47.9717788696289,
+          1.23066413402557,
+          1.0735856294632
+        ],
+        "clip_time": 0.416666666666667,
+        "done": false,
+        "events": [
+          {
+            "event": "goalkeeper_save",
+            "speed": 5.55836860656738,
+            "tick": 27
+          }
+        ],
+        "foot_gap": 2.46084499359131,
+        "scenario": "keeper",
+        "tick": 42
+      },
+      {
+        "action": "keeper_save",
+        "ball": [
+          47.6805000305176,
+          1.12636864185333,
+          1.40855574607849
+        ],
+        "clip_time": 0.516666666666667,
+        "done": true,
+        "events": [
+          {
+            "event": "goalkeeper_save",
+            "speed": 5.55836860656738,
+            "tick": 27
+          }
+        ],
+        "foot_gap": 2.97700834274292,
+        "scenario": "keeper",
+        "tick": 48
+      }
+    ]
+  },
+  "errors": [],
+  "result": "PASS"
+}

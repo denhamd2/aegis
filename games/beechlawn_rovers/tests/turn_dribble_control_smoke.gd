@@ -37,6 +37,17 @@ func _run() -> void:
 			_fail(game,"Touch direction jumped across the body during a reversal");return
 		if player.velocity.x<=0 or player.velocity.x>=6.0:
 			_fail(game,"Reversal must start braking promptly while retaining momentum");return
+	player.global_position = Vector3.ZERO
+	player.rotation.y = -PI / 2.0
+	ball.freeze = true
+	ball.global_position = Vector3(-0.7, FootballBall.RADIUS, 0)
+	ball.last_touch = &"none"
+	ball.last_action = &"none"
+	ball._dribble_cooldowns.clear()
+	ball._dribble_controller = null
+	await physics_frame
+	if ball.dribble_touch(player, Vector3.RIGHT, false, false, 0.23, 0.48, 1.05):
+		_fail(game,"A forward touch pulled a ball from behind the player through the body");return
 	for reverse_order in [false,true]:
 		player.global_position=Vector3(-0.5,0,0)
 		teammate.global_position=Vector3(0.85,0,0)

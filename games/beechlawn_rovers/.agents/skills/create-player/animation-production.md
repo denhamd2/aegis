@@ -44,6 +44,16 @@ The marker signals contact; the fixed-tick gameplay code validates reach and app
 
 Measure the evaluated toe/boot against the live ball in the actual 11v11 scene. A proxy's acceptable toe distance does not prove the final boot contacts correctly after body scale, retargeting or clothing changes. Recheck pass, receive and shot on the actual visual orientation. A full match reaching full time or moving the ball does not by itself prove realistic contact or healthy attacking flow.
 
+Distinguish root approach reach from the live boot contact window. Check standing,
+jogging and sprinting contacts for human and AI actors: long sprint touches and
+post-collision speed caps can lose the ball during wind-up. For a fast first-time
+return, shorten anticipation while preserving contact and follow-through timing.
+When interrupting an old action, arm new pending gameplay state after its
+synchronous cleanup. Fixtures with movement disabled must still tick the contact
+window; a frozen-ball pose check alone misses these failures. When selecting a
+new dribble controller, consider facing and reach alongside distance; preserve
+the existing short lease and release rules for established control.
+
 **Gate:** the final mesh reaches a plausible ball contact at the authored event, gameplay impulses occur once at the intended time, and action recovery remains responsive.
 
 ## 5. Select verification by change
@@ -55,6 +65,7 @@ Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py
 | Startup, shared playback, relaxed poses | `shared_pose_safety_smoke.gd`, `shared_roster_resources_smoke.gd`, `shared_head_roster_smoke.gd` |
 | Gait, braking, pivots, reversal | `footballer_animation_tree_smoke.gd`, `football_stop_runtime_smoke.gd`, `shared_pivot_pose_smoke.gd`, `turn_dribble_control_smoke.gd` |
 | Marker-gated contact | `football_kick_contact_integration_smoke.gd`, `football_receive_contact_smoke.gd`, `football_shot_contact_integration_smoke.gd`; select the actual 11v11 fixture where supported |
+| Moving contact and combinations | `moving_kick_contact_smoke.gd`, `first_time_pass_timing_smoke.gd`, `first_time_shot_smoke.gd`, `ai_shot_approach_smoke.gd` |
 
 Sample whole changed clips, not only beginning/middle/end. Use a fixed nine-pose garment sheet as an additional deformation check, then inspect moving close and broadcast playback. Stills and skeleton proxies cannot establish animation smoothness or final-mesh quality. Preserve the main skill's Web/native distinction and report unmeasured hardware performance.
 

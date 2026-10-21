@@ -26,6 +26,13 @@ ideas below are work to perform, not implemented features or parity claims.
 
 ## Execution order and acceptance
 
+The 21 October [contact/chance/keeper pass](art_briefs/gameplay_feel_pass/brief.md)
+implements moving kick setup, actual-toe contact assistance, buffered first-time
+shots and follow-through interruption. AI selects among goal lanes, and keepers
+use grounded prediction, reaction-gated contact and advance standing-save poses.
+The mirrored focused cases pass. Full-match chance counts still vary markedly;
+stride/plant polish, diving saves, human feel and native M1 acceptance remain open.
+
 ### 1. Core locomotion and action presentation — BR-021 (21/25), BR-003 (3/25)
 
 **In progress.** The first runtime coordination pass and direct Blender source

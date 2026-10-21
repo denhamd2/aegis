@@ -20,6 +20,7 @@ func _run_checks() -> void:
 		actor.set_physics_process(false)
 		actor.controlled_by_human = false
 	var carrier: FootballPlayer = game.get_node("Player")
+	var visual := carrier.get_node("Visual") as FootballerVisual
 	var ball: FootballBall = game.get_node("Ball")
 	var decisions = DECISION_SCRIPT.new()
 
@@ -42,10 +43,11 @@ func _run_checks() -> void:
 		push_error("AI shot did not queue one gated, contact-timed action")
 		quit(1)
 		return
-	carrier._on_visual_action_contact(&"shot")
+	visual.animation_player.seek(visual.action_contact_time(&"shot"), true)
+	ball.global_position = carrier._receive_contact_position() + Vector3.UP * 0.06
+	visual.on_action_contact_marker()
 	assert(ball.last_action == &"shot" and carrier.ai_action_cooldown > 1.0,
 		"Match AI did not execute and gate its selected shot")
-	var visual := carrier.get_node("Visual") as FootballerVisual
 	visual.animation_player.stop()
 	visual._on_animation_finished(FootballerVisual.SHOT_CLIP)
 
@@ -72,7 +74,9 @@ func _run_checks() -> void:
 	assert(carrier.get("_visual_pass_pending"),
 		"AI pressure pass did not enter the contact-timed pass animation")
 	# Exercise the same event used by the authored AnimationPlayer marker.
-	carrier._on_visual_action_contact(&"pass")
+	visual.animation_player.seek(visual.action_contact_time(&"pass"), true)
+	ball.global_position = carrier._receive_contact_position() + Vector3.UP * 0.06
+	visual.on_action_contact_marker()
 	assert(ball.last_action == &"through_pass" and receiver.receive_target_time > 0.0,
 		"Match AI did not execute the pressure pass and assign the receiver run")
 

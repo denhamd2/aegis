@@ -50,7 +50,7 @@ func _run_checks() -> void:
 	ball.action_serial += 1
 	controller.update_before_move(0.35)
 	var wide_target: Vector3 = home_keeper.get_meta("goalkeeper_target")
-	assert(is_equal_approx(wide_target.z, 1.12),
+	assert(is_equal_approx(wide_target.z, controller._goal_line_position().z),
 		"Keeper chased a shot projected outside the goal frame")
 
 	# A save must be close enough to the keeper and must physically parry the ball.
@@ -62,6 +62,8 @@ func _run_checks() -> void:
 	assert(not controller.try_save(), "Keeper made a save from outside contact reach")
 	assert(ball.last_touch == &"Bordeaux", "Out-of-reach save changed the ball touch")
 	ball.global_position = Vector3(-49.0, 1.0, 0.0)
+	ball.action_serial += 1
+	controller.update_before_move(0.35)
 	assert(controller.try_save(), "Keeper failed to parry a shot at close contact")
 	assert(ball.last_touch == home_keeper.team_name, "Save did not register keeper possession touch")
 	assert(ball.last_action == &"goalkeeper_save", "Save action was not recorded")
@@ -76,6 +78,7 @@ func _run_checks() -> void:
 	ball.last_touch = &"Bordeaux"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
+	controller.update_before_move(0.35)
 	assert(controller.try_save(), "Keeper failed to claim a slow close-range shot")
 	assert(ball.goalkeeper_is_holding(home_keeper), "Claim did not establish keeper possession")
 	assert(ball.last_action == &"goalkeeper_catch", "Claim was not recorded as a catch")

@@ -21,9 +21,9 @@ The original 4v4 scene remains the regression fixture.
 
 Role-aware 4-4-2 targets, staggered team decisions, player switching including
 keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
-basic boundary restarts are implemented. Current paired 180-second AI-vs-AI
-replays produce three shots/two goals and one shot/no goals respectively,
-without a sampled ball stall; attacking frequency and balance remain open.
+basic boundary restarts are implemented. Full 180-second AI-vs-AI replays
+record physical shots, contested attempts, saves, goals and ball stalls;
+attacking frequency and balance remain open.
 Touchlines currently restart with a ground pass; authentic throw-ins, complete
 fouls/offside/cards, substitutions and additional formations remain open.
 
@@ -32,6 +32,12 @@ rough chalk, weathered goals/nets, house/tree/car modules and eight spectators.
 These are reference-led drafts, not exact likeness or venue acceptance. See
 [`11v11_implementation.md`](11v11_implementation.md) and the release evidence.
 Native Mac appearance and M1 Pro/16 GB 1080p/60 fps are not yet measured.
+
+The latest [contact/chance/keeper pass](art_briefs/gameplay_feel_pass/brief.md)
+adds bounded moving kick setup, live boot-contact windows, buffered first-time
+shots, interruptible follow-through, multiple AI shot lanes and grounded keeper
+prediction/reaction. The brief retains all relevant match counts and limitations;
+sustained attacking balance remains open.
 
 ## Confirmed PES-style direction (2026-10-18)
 
@@ -126,6 +132,13 @@ BR-008; a single shot in the other fixture is a regression floor.
     macOS MetalFX options only if GPU timing shows a need. Do not assume the
     22-player target is already performance-bound while the playable is 4v4.
 - [ ] **BR-002 — Ball action/contact pass**
+  - 2026-10-21: standing/jog/sprint pass and shot contacts each execute once
+    within 0.081–0.166 m in the moving regression. Setup touches and approach
+    speed preserve boot reach; the marker opens a bounded 65 ms contact window
+    with a 0.28 m live-toe limit. An off-axis remote kick is rejected. Incoming
+    shots now buffer through arrival and can fire without a trap. See the
+    [gameplay pass](art_briefs/gameplay_feel_pass/brief.md). Feel/stride/native
+    acceptance remain open; this is progress on item 2/25.
   - 2026-10-18 focused follow-up: grounded touches follow eased facing;
     nearest-eligible-player arbitration prevents competing dribble forces;
     height and post-kick release gates preserve independent ball travel.
@@ -397,6 +410,12 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-21: the carrier evaluates five goal endpoints so a central blocker
+    does not veto a free corner. Immediate full-lane blocks still discourage a
+    shot. Both mirrored controlled scenarios deliver physical contested shots;
+    clear edge-of-area attempts use an editable range and unavailable actions
+    preserve the cooldown. Balanced sustained chance creation remains open
+    under item 8/25. See the gameplay pass above for full-match counts.
   - Release follow-up: a mirrored tactical regression exposed straight-ahead
     wide carriers running to the byline. Full 11v11 carriers now gradually
     turn goalward in the final third, retaining width during build-up. Both
@@ -504,6 +523,12 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     deterministic action choice/execution remains covered by
     `ai_carrier_decision_smoke.gd`.
 - [ ] **BR-009 — First goalkeeper**
+  - 2026-10-21: rolling-shot prediction stays above the turf, reaction delays
+    gate real saves, and behind/away/unsupported-high contacts are rejected.
+    Goal-angle positioning, ball-facing shuffles, advance standing-save pose
+    timing and safer parry-side selection pass mirrored 11v11 checks. Existing
+    catch/distribution coverage remains. Low/diving clips and broad match/native
+    validation remain open under item 9/25; see the gameplay pass above.
   Position between ball and goal, predict shot crossing, react with a readable
   delay, move to reachable saves, and catch/parry/deflect without teleporting.
   Add simple distribution after possession.
@@ -601,6 +626,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-21: first-time pass/shot starts can skip redundant anticipation
+    while keeping accelerated playback at 1.5×. Shots can interrupt receive
+    settle and new ball actions can interrupt completed contact follow-through.
+    Pending pass state is armed after synchronous prior-action cleanup. The
+    shared rig and all 19 source clips are unchanged; general stride/plant and
+    native final-mesh acceptance remain open under item 21/25.
   - 2026-10-18 T-pose fix: spawning now instantiates a clean player scene;
     duplicating the configured live player reproduced two skeletons per clone.
     Added a one-rig-per-player and immediate startup-pose regression, primed

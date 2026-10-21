@@ -52,6 +52,8 @@ var _visual_shot_pending := false
 var _visual_shot_direction := Vector3.ZERO
 var _visual_shot_speed := 0.0
 var _visual_shot_lift := 0.0
+var _contact_wait_action: StringName = &""
+var _contact_wait_remaining := 0.0
 var _last_receive_action_serial := -1
 
 func _ready() -> void:
@@ -106,6 +108,7 @@ func _physics_process(delta: float) -> void:
 		global_position.x=clampf(global_position.x,-55.0,55.0)
 		global_position.z=clampf(global_position.z,-36.0,36.0)
 	_update_dribble(delta)
+	_resolve_pending_kick_contact(delta)
 	_try_shoulder_challenge()
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.try_save()
@@ -138,11 +141,12 @@ func _update_locomotion(delta: float) -> void:
 	var recovering := is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()
 	var sliding := _slide_tackle_time > 0.0
 	var desired := Vector3.ZERO if recovering else (_slide_tackle_direction if sliding else (ai_move_direction if not controlled_by_human else (camera_right * _stick.x - camera_forward * _stick.y)))
-	var ai_shot_preparing := not controlled_by_human and _visual_shot_pending
-	if ai_shot_preparing:
-		# Keep the established approach until foot contact. A fresh tactical
-		# carry lane must not turn an AI kicker away mid-preparation.
-		desired = Vector3(velocity.x, 0.0, velocity.z).normalized()
+	if not controlled_by_human and (_visual_pass_pending or _visual_shot_pending):
+		# A staggered tactical lane change must not turn the kicking body away
+		# during its short setup. Ball-relative speed still adjusts every tick.
+		desired = ball.global_position - global_position
+		desired.y = 0.0
+		desired = desired.normalized()
 	desired.y = 0.0
 	if desired.length_squared() > 1.0:
 		desired = desired.normalized()
@@ -152,8 +156,6 @@ func _update_locomotion(delta: float) -> void:
 	var speed_scale := 0.56 if close_control else 1.0
 	var is_ai_goalkeeper := not controlled_by_human and profile != null and profile.role == "goalkeeper"
 	var target_speed := 0.0 if recovering else (4.8 if sliding else (tuning.goalkeeper_move_speed if is_ai_goalkeeper else (tuning.sprint_speed if sprint_input else tuning.jog_speed)))
-	if ai_shot_preparing:
-		target_speed = minf(target_speed, Vector3(velocity.x, 0.0, velocity.z).length())
 	if _balance_stagger_time > 0.0:
 		target_speed *= lerpf(0.68, 1.0, 1.0 - _balance_stagger_time / 0.38)
 	if sprint_requested and not is_ai_goalkeeper:
@@ -163,6 +165,8 @@ func _update_locomotion(delta: float) -> void:
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
 	var rate := tuning.acceleration if target_speed > horizontal.length() else tuning.braking
 	var target_velocity := desired * target_speed
+	if _visual_pass_pending or _visual_shot_pending:
+		target_velocity = _kick_setup_velocity(target_velocity)
 	if _balance_stagger_time > 0.0:
 		target_velocity += _balance_stagger_direction * 0.75
 	horizontal = horizontal.move_toward(target_velocity, rate * delta)
@@ -176,8 +180,12 @@ func _update_locomotion(delta: float) -> void:
 		stamina = maxf(0.0, stamina - tuning.sprint_drain * delta)
 	else:
 		stamina = minf(tuning.stamina_max, stamina + tuning.stamina_recovery * delta)
-	if desired.length_squared() > 0.015:
-		var intended_direction := desired.normalized()
+	var facing_intent := desired
+	if is_ai_goalkeeper:
+		facing_intent = ball.global_position - global_position
+		facing_intent.y = 0.0
+	if facing_intent.length_squared() > 0.015:
+		var intended_direction := facing_intent.normalized()
 		# Keep locomotion cycling through a moving change of direction. The
 		# authored Turn90 clips plant a foot and belong to stationary pivots;
 		# playing them here dragged that planted pose through the moving world.
@@ -195,6 +203,29 @@ func _update_locomotion(delta: float) -> void:
 	set_meta("close_control", close_control)
 	set_meta("move_speed", horizontal.length())
 
+func _kick_setup_velocity(requested_velocity: Vector3) -> Vector3:
+	# Match the final setup stride to the independently rolling ball. Reusing
+	# post-collision speed as a shot speed cap could permanently stop a kicker
+	# after one capsule contact and let the ball roll past the authored marker.
+	if not is_instance_valid(_footballer_visual) or requested_velocity.length_squared() < 0.1:
+		return requested_velocity
+	var action: StringName = &"shot" if _visual_shot_pending else &"pass"
+	var remaining := _footballer_visual.action_contact_time(action) \
+		- _footballer_visual.animation_player.current_animation_position
+	remaining /= maxf(absf(_footballer_visual.animation_player.get_playing_speed()), 0.01)
+	var offset := ball.global_position - global_position
+	offset.y = 0.0
+	var ball_velocity := Vector3(ball.linear_velocity.x, 0.0, ball.linear_velocity.z)
+	# Incoming first-time passes keep their existing arrival timing. Do not
+	# pull a stationary player around, or chase a ball outside physical reach.
+	if remaining <= 0.0 or offset.length() > tuning.kick_assist_radius + 0.2 \
+			or ball.global_position.y - global_position.y > 0.62 \
+			or ball_velocity.dot(offset) < -0.5:
+		return requested_velocity
+	var contact_offset := -global_basis.z * tuning.kick_setup_touch_distance - global_basis.x * 0.032
+	var correction := (offset - contact_offset) / maxf(remaining, 0.12)
+	return (ball_velocity + correction).limit_length(requested_velocity.length())
+
 func _update_dribble(delta: float) -> void:
 	if ball == null:
 		return
@@ -202,9 +233,13 @@ func _update_dribble(delta: float) -> void:
 		ball.global_position.z - global_position.z).length()
 	var control_touch := false
 	if flat_distance <= tuning.control_radius and _stick.length() > 0.05:
-		control_touch = ball.dribble_touch(self, _flat_direction, bool(get_meta("sprinting", false)),
-			bool(get_meta("close_control", false)), tuning.dribble_touch_interval,
-			tuning.close_touch_distance, tuning.sprint_touch_distance)
+		var preparing_kick := _visual_pass_pending or _visual_shot_pending
+		control_touch = ball.dribble_touch(self, _flat_direction,
+			bool(get_meta("sprinting", false)) and not preparing_kick,
+			bool(get_meta("close_control", false)) or preparing_kick,
+			tuning.dribble_touch_interval,
+			tuning.kick_setup_touch_distance if preparing_kick else tuning.close_touch_distance,
+			tuning.sprint_touch_distance)
 	elif flat_distance <= tuning.control_radius and velocity.length() < 0.45 and ball.linear_velocity.length() < 0.7:
 		# Gentle recovery to a playable foot distance, still applied as force.
 		control_touch = ball.dribble_touch(self, _flat_direction, false, true,
@@ -246,33 +281,41 @@ func _update_actions(delta: float) -> void:
 	if _pending_pass > 0.0 and (_can_kick() or first_time_contact_ready):
 		var playback_speed := 1.0
 		if first_time_contact_ready:
-			playback_speed = clampf(pass_contact_time / maxf(receive_eta, 0.04), 1.0, 5.0)
+			playback_speed = clampf(pass_contact_time / maxf(receive_eta, 0.04), 1.0, 10.0)
 		_do_pass(_pending_through, Vector3.ZERO, false, playback_speed)
 		_pending_pass = 0.0
 		_pending_through = false
 	elif _pending_pass <= 0.0:
 		_pending_through = false
 	if Input.is_action_just_pressed("shoot"):
-		_pending_shot = tuning.action_input_buffer
+		_pending_shot = tuning.first_time_pass_buffer if _ball_will_reach_kick_window() else tuning.action_input_buffer
 	var shot_buffer_was_active := _pending_shot > 0.0
 	_pending_shot = maxf(0.0, _pending_shot - delta)
-	if _shot_charge < 0.0 and _pending_shot > 0.0 and _can_kick():
+	if _shot_charge < 0.0 and _pending_shot > 0.0 and (_can_kick() or _ball_will_reach_kick_window()):
 		_shot_charge = 0.0
-		_pending_shot = 0.0
+		if _can_kick(): _pending_shot = 0.0
 	elif shot_buffer_was_active and _pending_shot <= 0.0 and _shot_charge < 0.0:
 		status_changed.emit("Shot input expired: get closer to the ball")
 	if _shot_charge >= 0.0:
 		if Input.is_action_pressed("shoot"):
 			_shot_charge = minf(1.0, _shot_charge + delta / tuning.shot_charge_duration)
 			shot_charge_changed.emit(_shot_charge)
-		elif _can_kick():
-			_do_shot(_shot_charge)
-			_shot_charge = -1.0
-			shot_charge_changed.emit(0.0)
 		else:
-			_shot_charge = -1.0
-			shot_charge_changed.emit(0.0)
-			status_changed.emit("Shot lost: ball moved out of reach")
+			var shot_eta := _time_to_kick_window()
+			var shot_contact := _footballer_visual.action_contact_time(&"shot") \
+				if is_instance_valid(_footballer_visual) else -1.0
+			if _can_kick() or (shot_eta > 0.0 and shot_eta <= shot_contact):
+				var playback_speed := clampf(shot_contact / maxf(shot_eta, 0.04), 1.0, 10.0) \
+					if shot_eta > 0.0 else 1.0
+				_do_shot(_shot_charge, playback_speed)
+				_shot_charge = -1.0
+				_pending_shot = 0.0
+				shot_charge_changed.emit(0.0)
+			elif shot_eta <= 0.0 or _pending_shot <= 0.0:
+				_shot_charge = -1.0
+				_pending_shot = 0.0
+				shot_charge_changed.emit(0.0)
+				status_changed.emit("Shot lost: ball moved out of reach")
 
 func _can_kick() -> bool:
 	if ball == null:
@@ -281,13 +324,18 @@ func _can_kick() -> bool:
 	flat.y = 0.0
 	return flat.length() <= tuning.kick_assist_radius and ball.global_position.y < 0.62
 
+func _can_start_ball_action() -> bool:
+	return _slide_tackle_time <= 0.0 and (not is_instance_valid(_footballer_visual) \
+		or _footballer_visual.can_start_ball_action())
+
 func _ball_will_reach_kick_window() -> bool:
 	return _time_to_kick_window() > 0.0
 
 func _time_to_kick_window() -> float:
 	if ball == null or ball.last_touch != team_name or ball.linear_velocity.length_squared() < 1.0 or ball.global_position.y > 0.62:
 		return -1.0
-	var offset := ball.global_position - global_position
+	var contact_target := global_position - global_basis.z * tuning.kick_setup_touch_distance
+	var offset := ball.global_position - contact_target
 	offset.y = 0.0
 	var relative_velocity := ball.linear_velocity - Vector3(velocity.x, 0.0, velocity.z)
 	relative_velocity.y = 0.0
@@ -573,10 +621,12 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 			and _time_to_kick_window() > 0.0
 		if _visual_pass_pending or (not _can_kick() and not predicted_first_time_contact):
 			return
-		_visual_pass_pending = true
 		_visual_pass_through = through
-		_visual_pass_direction = requested_direction
-		if _footballer_visual.play_pass(playback_speed):
+		_visual_pass_direction = requested_direction if requested_direction.length_squared() > 0.01 else _action_direction()
+		# Interrupting a previous pass emits action_finished synchronously.
+		# Arm the new contact afterward so that cleanup cannot erase it.
+		_visual_pass_pending = _footballer_visual.play_pass(playback_speed)
+		if _visual_pass_pending:
 			return
 		_visual_pass_pending = false
 		status_changed.emit("Pass action unavailable: animation is busy or missing")
@@ -610,29 +660,44 @@ func _on_visual_action_contact(action: StringName) -> void:
 			receive_target_time = 0.0
 			status_changed.emit("First touch")
 		return
+	if (action == &"shot" and _visual_shot_pending) or (action == &"pass" and _visual_pass_pending):
+		_contact_wait_action = action
+		_contact_wait_remaining = tuning.kick_contact_grace_seconds
+		_resolve_pending_kick_contact(0.0)
+
+func _resolve_pending_kick_contact(delta: float) -> void:
+	if _contact_wait_action == &"":
+		return
+	var action := _contact_wait_action
+	# A marker opens a short contact window, rather than authorizing a kick
+	# anywhere inside the much wider root/approach radius. The live boot must
+	# actually reach the live ball; neither object is repositioned.
+	var touching := _can_kick() and ball.global_position.distance_to(_receive_contact_position()) <= tuning.kick_foot_contact_radius
+	_contact_wait_remaining -= delta
+	if not touching and _contact_wait_remaining > 0.0:
+		return
+	_contact_wait_action = &""
 	if action == &"shot":
-		if not _visual_shot_pending:
-			return
 		_visual_shot_pending = false
-		if not _can_kick():
-			status_changed.emit("Shot cancelled: ball left the contact window")
-			return
+	else:
+		_visual_pass_pending = false
+	if not touching:
+		status_changed.emit(("Shot" if action == &"shot" else "Pass") + " cancelled: ball left the contact window")
+		return
+	if action == &"shot":
 		if ball.kick(_visual_shot_direction, _visual_shot_speed, _visual_shot_lift,
 				&"shot", team_name):
 			status_changed.emit("Shot fired")
 		return
-	if action != &"pass" or not _visual_pass_pending:
-		return
 	var through := _visual_pass_through
 	var requested_direction := _visual_pass_direction
-	_visual_pass_pending = false
-	if not _can_kick():
-		status_changed.emit("Pass cancelled: ball left the contact window")
-		return
 	_do_pass(through, requested_direction, true)
 
 
 func _on_visual_action_finished(action: StringName) -> void:
+	if _contact_wait_action == action:
+		_contact_wait_action = &""
+		_contact_wait_remaining = 0.0
 	if action == &"pass":
 		_visual_pass_pending = false
 	elif action == &"shot":
@@ -765,14 +830,15 @@ func _pass_lane_risk(start: Vector3, finish: Vector3) -> float:
 const FIELD_LENGTH_LIMIT := 51.0
 const FIELD_WIDTH_LIMIT := 32.5
 
-func _do_shot(charge: float) -> void:
+func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vector3.ZERO) -> void:
 	var direction := _action_direction()
 	var target := Vector3(attack_sign * (tuning.field_length * 0.5 + 3.0), 0.7, 0.0)
 	var goal_direction := target - ball.global_position
 	goal_direction.y = 0.0
 	goal_direction = goal_direction.normalized()
 	# Gentle aim help bends intent toward the goal while preserving lateral stick input.
-	direction = (direction * 0.56 + goal_direction * 0.44).normalized()
+	direction = requested_direction.normalized() if requested_direction.length_squared() > 0.01 \
+		else (direction * 0.56 + goal_direction * 0.44).normalized()
 	var speed := lerpf(tuning.shot_min_speed, tuning.shot_max_speed, smoothstep(0.0, 1.0, charge))
 	var lift := lerpf(0.55, 2.45, charge)
 	if is_instance_valid(_footballer_visual):
@@ -781,7 +847,7 @@ func _do_shot(charge: float) -> void:
 		_visual_shot_direction = direction
 		_visual_shot_speed = speed
 		_visual_shot_lift = lift
-		_visual_shot_pending = _footballer_visual.play_shot()
+		_visual_shot_pending = _footballer_visual.play_shot(playback_speed)
 		if not _visual_shot_pending:
 			status_changed.emit("Shot action unavailable: animation is busy or missing")
 		return

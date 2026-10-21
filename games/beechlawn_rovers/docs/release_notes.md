@@ -1,3 +1,18 @@
+Gameplay contact, chance and keeper update (21 October 2026):
+- Moving passes/shots use a short setup stride and live boot reach at the
+  authored marker; a bounded contact window prevents remote kicks.
+- Ground control waits until a turning player can reach a rear ball, preventing
+  the spring from pulling it through his body.
+- First-time shots buffer across an incoming pass. Fast returns skip redundant
+  anticipation, and completed contact follow-through allows the next ball action.
+- AI can shoot into an open corner beside a central blocker. Immediate fully
+  covered lanes still discourage a shot. Trailing pressure no longer forces a
+  blind backward outlet into a clear attacking route. Clear edge-of-area looks
+  use an editable 22 m default; blocked actions preserve their cooldown.
+- Keepers read rolling shots above the turf, respect reaction time, prepare
+  their standing save before impact, face the ball and choose safer parry sides.
+  Low/diving save clips and native M1 playtesting remain pending.
+
 Pitch-side player previews (21 October 2026):
 - The isolated roster-review scene now includes Kilmore Drive's static park,
   pitch surface and faded markings, with low perspective cameras for kit and

@@ -15,6 +15,7 @@ func _run_checks() -> void:
 
 	var ball := game.get_node("Ball") as FootballBall
 	var player := game.get_node("Player") as FootballPlayer
+	var visual := player.get_node("Visual") as FootballerVisual
 	var ball_visual := game.get_node("Ball/BallVisual") as Node3D
 	var ball_bounds := _mesh_bounds(ball_visual, ball_visual)
 	assert(absf(ball_bounds.size.x - 0.22) < 0.015, "Imported worn ball visual is not regulation diameter")
@@ -70,8 +71,10 @@ func _run_checks() -> void:
 		await physics_frame
 	assert(player.get("_visual_pass_pending"),
 		"Buffered pass did not begin its contact-timed animation")
-	# The authored animation marker calls this at foot contact in the running game.
-	player._on_visual_action_contact(&"pass")
+	# Buffer eligibility uses root reach; execution still needs the real boot.
+	visual.animation_player.seek(visual.action_contact_time(&"pass"), true)
+	ball.global_position = player._receive_contact_position() + Vector3.UP * 0.06
+	visual.on_action_contact_marker()
 	await physics_frame
 	assert(ball.linear_velocity.length() > player.tuning.short_pass_speed * 0.7,
 		"Buffered pass did not apply a playable ball impulse")
@@ -88,7 +91,7 @@ func _run_checks() -> void:
 	Input.action_press("shoot")
 	await physics_frame
 	Input.action_release("shoot")
-	ball.global_position = player.global_position + Vector3(0.98, FootballBall.RADIUS, 0.0)
+	ball.global_position = player.global_position + Vector3(0.65, FootballBall.RADIUS, 0.0)
 	ball.freeze = false
 	for _frame in 2:
 		await physics_frame

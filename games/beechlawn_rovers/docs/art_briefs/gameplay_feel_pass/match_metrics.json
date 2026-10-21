@@ -1,0 +1,116 @@
+{
+  "scope": "Four actual 180-second 11v11 AI-vs-AI replays; fixed 60 Hz simulation dt. These are observed runs, not statistical balance or native performance acceptance.",
+  "contested_definition": "Opposing outfielder within 5 m at physical shot impulse.",
+  "runs": [
+    {
+      "fixture": "ranged-home",
+      "kickoff": "Beechlawn Rovers",
+      "repeat": false,
+      "shots": {
+        "Beechlawn Rovers": 0,
+        "Bordeaux": 2
+      },
+      "contested_shots": {
+        "Beechlawn Rovers": 0,
+        "Bordeaux": 2
+      },
+      "saves": {
+        "Beechlawn Rovers": 1,
+        "Bordeaux": 0
+      },
+      "goals": {
+        "Beechlawn Rovers": 0,
+        "Bordeaux": 1
+      },
+      "stationary_ball_samples_seconds": 0,
+      "physics_ticks": 10993
+    },
+    {
+      "fixture": "ranged-away",
+      "kickoff": "Bordeaux",
+      "repeat": false,
+      "shots": {
+        "Beechlawn Rovers": 5,
+        "Bordeaux": 2
+      },
+      "contested_shots": {
+        "Beechlawn Rovers": 4,
+        "Bordeaux": 1
+      },
+      "saves": {
+        "Beechlawn Rovers": 1,
+        "Bordeaux": 2
+      },
+      "goals": {
+        "Beechlawn Rovers": 1,
+        "Bordeaux": 0
+      },
+      "stationary_ball_samples_seconds": 0,
+      "physics_ticks": 11119
+    },
+    {
+      "fixture": "ranged-home-repeat",
+      "kickoff": "Beechlawn Rovers",
+      "repeat": true,
+      "shots": {
+        "Beechlawn Rovers": 0,
+        "Bordeaux": 2
+      },
+      "contested_shots": {
+        "Beechlawn Rovers": 0,
+        "Bordeaux": 2
+      },
+      "saves": {
+        "Beechlawn Rovers": 1,
+        "Bordeaux": 0
+      },
+      "goals": {
+        "Beechlawn Rovers": 0,
+        "Bordeaux": 1
+      },
+      "stationary_ball_samples_seconds": 0,
+      "physics_ticks": 10993
+    },
+    {
+      "fixture": "ranged-away-repeat",
+      "kickoff": "Bordeaux",
+      "repeat": true,
+      "shots": {
+        "Beechlawn Rovers": 5,
+        "Bordeaux": 2
+      },
+      "contested_shots": {
+        "Beechlawn Rovers": 4,
+        "Bordeaux": 1
+      },
+      "saves": {
+        "Beechlawn Rovers": 1,
+        "Bordeaux": 2
+      },
+      "goals": {
+        "Beechlawn Rovers": 1,
+        "Bordeaux": 0
+      },
+      "stationary_ball_samples_seconds": 0,
+      "physics_ticks": 11119
+    }
+  ],
+  "totals": {
+    "shots": {
+      "Beechlawn Rovers": 10,
+      "Bordeaux": 8
+    },
+    "contested_shots": {
+      "Beechlawn Rovers": 8,
+      "Bordeaux": 6
+    },
+    "saves": {
+      "Beechlawn Rovers": 4,
+      "Bordeaux": 4
+    },
+    "goals": {
+      "Beechlawn Rovers": 2,
+      "Bordeaux": 2
+    }
+  }
+}

@@ -15,6 +15,7 @@ func _run_checks() -> void:
 	game._set_players_physics_enabled(true)
 
 	var passer := game.get_node("Player") as FootballPlayer
+	var visual := passer.get_node("Visual") as FootballerVisual
 	var ball := game.get_node("Ball") as FootballBall
 	var home: Array = game.get("_home_players")
 	var receiver: FootballPlayer
@@ -26,7 +27,7 @@ func _run_checks() -> void:
 	passer.global_position = Vector3.ZERO
 	passer.velocity = Vector3.ZERO
 	ball.freeze = true
-	ball.global_position = Vector3(0.0, FootballBall.RADIUS, 0.0)
+	ball.global_position = Vector3(0.60, FootballBall.RADIUS, 0.0)
 	ball.last_touch = passer.team_name
 	for actor in home:
 		if actor != passer:
@@ -77,9 +78,11 @@ func _run_checks() -> void:
 	passer._update_actions(0.016)
 	assert(passer.get("_visual_pass_pending"),
 		"Buffered first-time pass did not start its contact-timed pass animation")
-	# The match scene receives this from the authored AnimationPlayer marker;
-	# invoke the same callback directly in this deterministic smoke test.
-	passer._on_visual_action_contact(&"pass")
+	# Evaluate the real boot pose before emitting the authored marker. Root
+	# approach eligibility alone no longer authorizes a remote pass impulse.
+	visual.animation_player.seek(visual.action_contact_time(&"pass"), true)
+	ball.global_position = passer._receive_contact_position() + Vector3.UP * 0.06
+	visual.on_action_contact_marker()
 	assert(ball.last_touch == passer.team_name, "Buffered first-time pass did not execute on arrival")
 	assert(first_time_result["kind"] == &"pass", "Buffered first-time pass did not produce a pass action")
 	ball.last_touch = &"Bordeaux"

@@ -27,6 +27,8 @@ func _run() -> void:
 	var samples := 0
 	# Count actual contacts, including events superseded within the same tick.
 	var shots := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
+	var contested_shots := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
+	var saves := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
 	var shot_decisions := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
 	var max_attack_progress := {&"Beechlawn Rovers": 0.0, &"Bordeaux": 0.0}
 	var closest_goal_distance := {&"Beechlawn Rovers": INF, &"Bordeaux": INF}
@@ -36,7 +38,15 @@ func _run() -> void:
 		&"Bordeaux": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
 	}
 	ball.touched.connect(func(kind: StringName, _speed: float):
-		if kind == &"shot": shots[ball.last_touch] = int(shots.get(ball.last_touch, 0)) + 1)
+		if kind == &"shot":
+			shots[ball.last_touch] = int(shots.get(ball.last_touch, 0)) + 1
+			for actor in actors:
+				if actor.team_name != ball.last_touch and actor.profile.role == "outfield" \
+						and actor.global_position.distance_to(ball.global_position) <= 5.0:
+					contested_shots[ball.last_touch] += 1
+					break
+		elif kind in [&"goalkeeper_save", &"goalkeeper_catch"]:
+			saves[ball.last_touch] += 1)
 	while not game._full_time and samples<18000:
 		if game._kickoff_pending:game._start_kickoff(false)
 		await physics_frame
@@ -79,6 +89,8 @@ func _run() -> void:
 	print("11v11 SOAK match_seconds=", game.short_match_seconds, " physics_ticks=", samples,
 		" ball_travel_m=", snappedf(travelled, 0.1),
 		" shots=", shots[&"Beechlawn Rovers"], "/", shots[&"Bordeaux"],
+		" contested_shots=", contested_shots[&"Beechlawn Rovers"], "/", contested_shots[&"Bordeaux"],
+		" saves=", saves[&"Beechlawn Rovers"], "/", saves[&"Bordeaux"],
 		" shot_status=", shot_status_counts,
 		" sampled_options=", decision_counts,
 		" sampled_shot_options=", shot_decisions[&"Beechlawn Rovers"], "/", shot_decisions[&"Bordeaux"],
