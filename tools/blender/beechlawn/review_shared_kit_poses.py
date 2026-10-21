@@ -5,8 +5,11 @@ ROOT=Path(__file__).resolve().parents[3]
 parser=argparse.ArgumentParser()
 parser.add_argument('--scene',default=str(ROOT/'tools/blender/beechlawn/footballer_shared.blend'))
 parser.add_argument('--out-dir',default=str(ROOT/'games/beechlawn_rovers/docs/art_briefs/shared_kit_repair/poses'))
+parser.add_argument('--short-sleeves',action='store_true')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 sys.argv=[sys.argv[0],'--shared','--scene='+str(Path(args.scene).resolve())]
+if args.short_sleeves:
+ sys.argv.append('--short-sleeves')
 # Reuse the established neutral material/light/camera calibration.
 setup=(Path(__file__).with_name('render_shane_denham_review.py')).read_text().split('views = [')[0]
 exec(compile(setup,str(Path(__file__).with_name('render_shane_denham_review.py')),'exec'))

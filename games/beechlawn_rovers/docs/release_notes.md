@@ -143,3 +143,16 @@ Park placement correction (19 October 2026):
   the 105 x 68 m gameplay pitch remain unchanged.
 - Layout distances are approximate; exact boundaries, road bends, venue art
   fidelity and native M1 profiling remain open.
+
+## 2026-10-21 — shared upper-back cloth and sleeve silhouette
+
+BR-022 (22/25, in progress): the common shirts now span the upper-back hollow
+instead of copying the paired anatomical ridges. Long forearms are tapered
+by at most 6.7 mm while retaining skin clearance and the cuff join. The same
+geometry feeds both teams, keepers and referee. Skin, 65 bone rests, all 19
+clips, UVs, kit images, head packages and mesh counts are unchanged.
+
+See `art_briefs/shared_sleeve_fit/brief.md` for matched clay/Web evidence,
+both sleeve-variant pose sheets and validation scope. This is a local garment
+improvement; collar/raglan finishing, individual likeness and native M1
+1080p/60 performance acceptance remain open.

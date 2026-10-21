@@ -252,3 +252,17 @@ The archived CC0 anatomical source supplies only missing skin, preserving the
 current neck, heads, shared rig, 19 actions and kit images. Further garment
 fidelity and individual likeness remain open; this does not accept the art as
 an exact reference match or establish native M1 performance.
+
+### BR-022 upper-back cloth envelope and long-sleeve taper — 21 October
+
+The [shared sleeve-fit pass](art_briefs/shared_sleeve_fit/brief.md) continues the
+current production source, using the home/Shane/Bordeaux sheets. It fills the
+central anatomical upper-back hollow on both shirts and reduces excess long
+forearm volume without changing skin, neck normals, cuff join, rig, clips, UVs
+or supplied graphics. Matched clay before/after views, both nine-pose sheets
+and actual Godot roster captures are the acceptance evidence for this local
+change. The current fixed 11,878-triangle upper-shirt cohort improves from
+994 to 975 inverted samples across nine poses; this cohort is not identical
+to pre-hem-topology reports and is not an all-pose cloth approval. Further
+raglan/collar finish, fabric material and individual identity work remain
+under BR-022 (22/25). Native M1 timing remains pending.

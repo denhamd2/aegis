@@ -1,0 +1,52 @@
+{
+  "result": "PASS",
+  "source_validation": {
+    "bare_arm_skin_probes": 12,
+    "posed_waist_overlap_samples": 20,
+    "bones": 65,
+    "clips": 19,
+    "triangles_all_variants": 67284,
+    "mesh_parts": 16
+  },
+  "headless_checks": [
+    "shared_head_roster_smoke.gd",
+    "shared_roster_resources_smoke.gd",
+    "shared_pose_safety_smoke.gd",
+    "eleven_v_eleven_smoke.gd"
+  ],
+  "web_captures": 7,
+  "web_console_errors": [],
+  "long_sleeve_poses": 9,
+  "short_sleeve_poses": 9,
+  "web_match": {
+    "result": "PASS",
+    "checks": [
+      "native menu",
+      "options open/close",
+      "640x480 layout",
+      "AI auto kickoff",
+      "zero spectator humans",
+      "return to title",
+      "Play has one human",
+      "keyboard kickoff"
+    ],
+    "renderer": "Compatibility / Chromium SwiftShader",
+    "menu_viewport": [
+      1280,
+      720
+    ],
+    "match_viewport": [
+      640,
+      360
+    ],
+    "native_M1_performance": "not measured",
+    "console_errors": []
+  },
+  "source_glb_sha256": "e89e60417df3470b3dd8fc68a5e7ba1c9df9b08751465bde02036c5a4c02ce2e",
+  "limits": [
+    "Blender base heads are garment diagnostics; Web uses roster heads.",
+    "The tool label native menu means Godot UI in the browser; no native Mac test occurred.",
+    "Software WebGL match at 640x360; asset captures at 960x540 without sun shadows.",
+    "No M1 performance or final likeness acceptance."
+  ]
+}

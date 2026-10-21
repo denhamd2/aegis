@@ -58,14 +58,15 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
           cp games/beechlawn_rovers/docs/art_briefs/shared_head_evidence/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_cloth_finish/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_sleeve_fit/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
           cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_touchline.png build/beechlawn/web/screenshots/current_daylight_touchline.png
           cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_broadcast.png build/beechlawn/web/screenshots/current_daylight_broadcast.png
           cp games/beechlawn_rovers/docs/art_briefs/wet_weather_evidence/{sunny_goalmouth,sunny_broadcast,cloudy_broadcast,rain_goalmouth,mist_broadcast,ball_shadow_on,ball_shadow_off}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/shared_cloth_finish/godot_shane.png build/beechlawn/web/screenshots/current_kit.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_cloth_finish/pose_sheet.jpg build/beechlawn/web/screenshots/shared_kit_poses.jpg
-          cp games/beechlawn_rovers/docs/art_briefs/shared_cloth_finish/before_after.jpg build/beechlawn/web/screenshots/shared_kit_comparison.jpg
-          cp games/beechlawn_rovers/docs/art_briefs/shared_cloth_finish/godot_des_full.png build/beechlawn/web/screenshots/current_short_sleeves.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_sleeve_fit/godot_shane.png build/beechlawn/web/screenshots/current_kit.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_sleeve_fit/pose_sheet.jpg build/beechlawn/web/screenshots/shared_kit_poses.jpg
+          cp games/beechlawn_rovers/docs/art_briefs/shared_sleeve_fit/before_after.jpg build/beechlawn/web/screenshots/shared_kit_comparison.jpg
+          cp games/beechlawn_rovers/docs/art_briefs/shared_sleeve_fit/godot_des_full.png build/beechlawn/web/screenshots/current_short_sleeves.png
+          cp games/beechlawn_rovers/docs/art_briefs/shared_sleeve_fit/short_pose_sheet.jpg build/beechlawn/web/screenshots/shared_short_poses.jpg
           cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
           printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt
