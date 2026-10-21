@@ -1,3 +1,13 @@
+Pitch-side player previews (21 October 2026):
+- The isolated roster-review scene now includes Kilmore Drive's static park,
+  pitch surface and faded markings, with low perspective cameras for kit and
+  portrait views. Web gallery captures show footballers on the pitch instead
+  of against a sky-only backdrop.
+- A clean capture mode hides diagnostic text; soft daylight keeps real
+  shadows without an artificial ground shadow. This changes presentation,
+  not match physics. BR-022 (22/25) remains open for gloves, individual
+  likeness, save motion and native M1 review.
+
 Goalkeeper kit graphics update (21 October 2026):
 - John O'Rourke's grey/blue/gold keeper shirt and Bordeaux's charcoal shard
   shirt now use original flat pattern artwork based on the archived kit sheets.

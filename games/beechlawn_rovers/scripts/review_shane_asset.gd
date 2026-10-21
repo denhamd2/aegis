@@ -6,6 +6,7 @@ const PLAYER: PackedScene = preload("res://scenes/footballer_visual.tscn")
 const PROFILE = preload("res://data/squads/home_08.tres")
 const MATCH_SCENE: PackedScene = preload("res://scenes/training_ground.tscn")
 const VENUE = preload("res://scripts/kilmore_drive_venue.gd")
+const REVIEW_SPOT := Vector3(-14.0, 0.0, 19.0)
 var camera: Camera3D
 var player: Node3D
 var animation: AnimationPlayer
@@ -14,6 +15,8 @@ var review_lighting := "default"
 
 func _ready() -> void:
 	var source := MATCH_SCENE.instantiate()
+	source.set("terrain_enabled", true)
+	var markings_mesh: Mesh = source.call("_build_line_mesh")
 	add_child(source.get_node("WorldEnvironment").duplicate())
 	add_child(source.get_node("Sun").duplicate())
 	source.free()
@@ -22,11 +25,16 @@ func _ready() -> void:
 			$Sun.shadow_enabled = false
 			Engine.max_fps = 8
 		var requested_lighting = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('lighting')"))
-		if requested_lighting in ["sun", "shade"]:
+		if requested_lighting in ["sun", "shade", "soft"]:
 			review_lighting = requested_lighting
 			# Deliberate material QA: keep real shadowing even on SwiftShader.
 			$Sun.shadow_enabled = true
 			$Sun.directional_shadow_max_distance = 48.0
+			if review_lighting == "soft":
+				# Partly cloudy match daylight preserves pale kit details in a
+				# preview without placing an artificial shade box in the image.
+				$Sun.light_energy = 0.42
+				$Sun.light_angular_distance = 2.5
 			if review_lighting == "shade":
 				var occluder := MeshInstance3D.new()
 				occluder.name = "ReviewShadeCaster"
@@ -35,27 +43,33 @@ func _ready() -> void:
 				occluder.mesh = box
 				# +Z points towards the directional light. Cast shade across the
 				# whole player while keeping sky illumination/exposure unchanged.
-				occluder.position = Vector3(0, 1.0, 0) + $Sun.global_basis.z * 8.0
+				occluder.position = REVIEW_SPOT + Vector3(0, 1.0, 0) + $Sun.global_basis.z * 8.0
 				occluder.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 				add_child(occluder)
 		_capture_callback = JavaScriptBridge.create_callback(_freeze_capture)
 		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME = _capture_callback
-	# Close asset review shares the match's sky, sun and pitch shader. Full park
-	# shadow-caster cost overwhelms software WebGL and is a separate scene gate.
-	if not OS.has_feature("web"):
-		VENUE.build(self, 105.0, 68.0)
+	# Show footballers on the actual Kilmore park, on Web as well as desktop.
+	# This is the static non-detailed park layout; it avoids match simulation.
+	VENUE.build(self, 105.0, 68.0)
 	var ground := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(105.0, 68.0)
-	ground.mesh = plane
+	ground.name = "ReviewPitch"
+	ground.mesh = PitchSurface.make_mesh()
 	var turf := ShaderMaterial.new()
 	turf.shader = load("res://shaders/park_grass.gdshader")
 	turf.set_shader_parameter("grass_albedo", load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Color.jpg"))
 	MatchWeather.configure_surface(turf, true, 0.65)
 	ground.material_override = turf
 	add_child(ground)
+	var paint := MeshInstance3D.new()
+	paint.name = "ReviewPitchMarkings"
+	paint.mesh = markings_mesh
+	var paint_material := ShaderMaterial.new()
+	paint_material.shader = load("res://shaders/chalk_paint.gdshader")
+	paint.material_override = paint_material
+	add_child(paint)
 	player = PLAYER.instantiate()
 	add_child(player)
+	player.position = REVIEW_SPOT + Vector3(0, PitchSurface.height_at(REVIEW_SPOT.x, REVIEW_SPOT.z), 0)
 	var visual := player as FootballerVisual
 	var profile := PROFILE
 	if OS.has_feature("web"):
@@ -95,15 +109,17 @@ func _ready() -> void:
 				animation.seek(minf(seconds,animation.current_animation_length),true)
 			animation.pause()
 	_set_view(view)
-	var label := Label.new()
-	label.text = profile.display_name + " — shared asset review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nLighting: " + review_lighting + " · sun shadows: " + str($Sun.shadow_enabled) + " · likeness in review"
-	label.position = Vector2(20, 20)
-	label.add_theme_color_override("font_shadow_color", Color.BLACK)
-	label.add_theme_constant_override("shadow_offset_x", 2)
-	label.add_theme_constant_override("shadow_offset_y", 2)
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	layer.add_child(label)
+	var clean_capture := OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('clean')")) == "1"
+	if not clean_capture:
+		var label := Label.new()
+		label.text = profile.display_name + " — shared asset review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nLighting: " + review_lighting + " · sun shadows: " + str($Sun.shadow_enabled) + " · likeness in review"
+		label.position = Vector2(20, 20)
+		label.add_theme_color_override("font_shadow_color", Color.BLACK)
+		label.add_theme_constant_override("shadow_offset_x", 2)
+		label.add_theme_constant_override("shadow_offset_y", 2)
+		var layer := CanvasLayer.new()
+		add_child(layer)
+		layer.add_child(label)
 	print("SHANE_ASSET_REVIEW_READY view=", view, " renderer=", RenderingServer.get_current_rendering_method())
 	await RenderingServer.frame_post_draw
 	if OS.has_feature("web"):
@@ -133,32 +149,32 @@ func _neutral_pose() -> void:
 		skeleton.set_bone_pose_rotation(index, rotation.get_rotation_quaternion())
 
 func _set_view(view: String) -> void:
-	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 2.1
-	var target := Vector3(0, 0.94, 0)
+	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
+	camera.fov = 26.0
+	var target := REVIEW_SPOT + Vector3(0, 0.94, 0)
 	match view:
 		"kit":
-			camera.size = 1.05
-			camera.position = Vector3(0,1.45,4.7)
-			target = Vector3(0,1.45,0)
-		"back": camera.position = Vector3(0, 0.94, -4.7)
-		"profile": camera.position = Vector3(4.7, 0.94, 0)
+			camera.fov = 13.0
+			camera.position = REVIEW_SPOT + Vector3(0,1.60,4.7)
+			target = REVIEW_SPOT + Vector3(0,1.45,0)
+		"back": camera.position = REVIEW_SPOT + Vector3(0, 1.45, -5.5)
+		"profile": camera.position = REVIEW_SPOT + Vector3(5.5, 1.45, 0)
 		"portrait":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 25.0
-			camera.position = Vector3(0, 1.67, 1.20)
-			target = Vector3(0, 1.67, 0)
+			camera.position = REVIEW_SPOT + Vector3(0, 1.67, 1.20)
+			target = REVIEW_SPOT + Vector3(0, 1.67, 0)
 		"threequarter_portrait", "profile_portrait":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 25.0
-			camera.position = Vector3(.78, 1.67, .95) if view == "threequarter_portrait" else Vector3(1.20, 1.67, 0)
-			target = Vector3(0, 1.67, 0)
+			camera.position = REVIEW_SPOT + (Vector3(.78, 1.67, .95) if view == "threequarter_portrait" else Vector3(1.20, 1.67, 0))
+			target = REVIEW_SPOT + Vector3(0, 1.67, 0)
 		"broadcast":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 50.0
-			camera.position = Vector3(0, 17, 36)
-			target = Vector3.ZERO
-		_: camera.position = Vector3(0, 0.94, 4.7)
+			camera.position = REVIEW_SPOT + Vector3(0, 17, 36)
+			target = REVIEW_SPOT
+		_: camera.position = REVIEW_SPOT + Vector3(0, 1.45, 5.5)
 	camera.look_at(target)
 
 func _unhandled_key_input(event: InputEvent) -> void:

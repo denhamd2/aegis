@@ -299,6 +299,13 @@ individual identities.
 
 ### BR-022 keeper kit graphics — 21 October
 
+The [pitch-side review correction](art_briefs/pitch_review_stage/brief.md)
+places the Web and desktop roster preview on the Kilmore Drive pitch and
+shows the static park beyond it. The current gallery no longer uses sky-only
+character captures. This is a camera/scene staging correction; the archived
+environment sheets remain the visual reference and individual likeness work
+is still open.
+
 The [keeper kit pass](art_briefs/keeper_kit_graphics/brief.md) adds original
 reference-led shirt patterns for John O'Rourke and the Bordeaux keeper while
 applying the archived crest and lettering separately. Role-specific sock

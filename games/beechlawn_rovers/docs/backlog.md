@@ -636,6 +636,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-21 pitch-side preview correction: Web and desktop roster reviews
+    now use the Kilmore Drive park, match pitch surface, faded markings and
+    low perspective cameras. Current gallery images show players standing on
+    the pitch; the isolated cloud/sky fixture is retained only as historical
+    diagnostic evidence. See `art_briefs/pitch_review_stage/brief.md`. This
+    does not close goalkeeper gloves, individual likeness, save motion or
+    native M1 acceptance. BR-022 remains in progress (22/25).
   - 2026-10-21 keeper graphics pass: the two actual 11v11 goalkeeper roles
     now use reference-led blue/grey/gold and charcoal shard shirt atlases,
     archived crest/manufacturer/sponsor lettering, role-correct sock binding,
