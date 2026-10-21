@@ -35,6 +35,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd shared_head_roster_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_kick_contact_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd contested_shot_smoke.gd goalkeeper_response_smoke.gd goalkeeper_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py wet_weather_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py lineup_graphic_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py title_screen_smoke.gd shared_pose_safety_smoke.gd broadcast_camera_smoke.gd pre_match_intro_smoke.gd venue_leaf_uv_smoke.gd park_road_setback_smoke.gd park_site_footprint_smoke.gd eleven_v_eleven_smoke.gd full_match_restarts_smoke.gd shared_roster_resources_smoke.gd hud_layout_smoke.gd football_stop_runtime_smoke.gd shared_pivot_pose_smoke.gd turn_dribble_control_smoke.gd ai_shot_lane_smoke.gd ai_carry_to_shot_smoke.gd ai_midfield_to_shot_smoke.gd loose_ball_recovery_smoke.gd
           BEECHLAWN_FULL_OPPOSITION=1 python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
           BEECHLAWN_ATTACK_TEAM=Boardeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py ai_midfield_to_shot_smoke.gd
@@ -57,6 +58,7 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_site_overhead.png build/beechlawn/web/screenshots/current_overhead.png
           cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/title.png build/beechlawn/web/screenshots/current_title.png
           cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/lineup.png build/beechlawn/web/screenshots/current_lineup.png
+          cp games/beechlawn_rovers/docs/art_briefs/lineup_graphics/lineup_{home,away}.png build/beechlawn/web/screenshots/
           cp games/beechlawn_rovers/docs/art_briefs/gameplay_feel_pass/{contact_pass,contact_shot,keeper_response}.gif build/beechlawn/web/screenshots/
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/des_portrait.png build/beechlawn/web/screenshots/shared_des.png

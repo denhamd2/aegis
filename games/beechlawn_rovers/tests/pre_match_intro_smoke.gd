@@ -67,7 +67,11 @@ func _run() -> void:
 			# final completion. Match simulation stays frozen throughout.
 			director._enter_shot(0)
 			var steps := 0
-			while director.active and steps < 200:
+			var duration := 0.0
+			for shot in director.shots: duration += float(shot["duration"])
+			var max_steps: int = ceili(duration / 0.25) + director.shots.size() + 4
+			check(duration <= 80.0, "Broadcast intro remains a skippable short sequence")
+			while director.active and steps < max_steps:
 				game._physics_process(0.25)
 				director._process(0.25)
 				steps += 1

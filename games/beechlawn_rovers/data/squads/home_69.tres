@@ -25,3 +25,5 @@ tactical_role = "central_midfielder"
 starting_position = Vector2(-12, 0)
 appearance = SubResource("Appearance")
 attributes = SubResource("Attributes")
+
+lineup_portrait_path = "res://assets/ui/lineups/portraits/paddy_mason.png"

@@ -8,7 +8,7 @@ script = ExtResource("2")
 [sub_resource type="Resource" id="Appearance"]
 script = ExtResource("3")
 kit = "bordeaux_outfield"
-print_name = "BOARDEAUX 10"
+print_name = "FEENEY"
 head_variant = ExtResource("head_pipeline_head")
 hair_style = "legacy_crop"
 
@@ -16,7 +16,7 @@ hair_style = "legacy_crop"
 [resource]
 script = ExtResource("1")
 player_id = &"bordeaux_10"
-display_name = "Boardeaux player 10"
+display_name = "Des Feeney"
 jersey_number = 10
 role = "outfield"
 visual_base = "Generic common head"
@@ -25,3 +25,5 @@ tactical_role = "striker"
 starting_position = Vector2(-3, 6)
 appearance = SubResource("Appearance")
 attributes = SubResource("Attributes")
+
+lineup_portrait_path = "res://assets/ui/lineups/portraits/des_feeney.png"

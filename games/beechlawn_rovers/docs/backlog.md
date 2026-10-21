@@ -575,6 +575,11 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - Walkout lineup graphics: home first, then Boardeaux, with eleven reference
+    portraits in a 4-4-2, club crests and player-managers Robbie Roden/Des Feeney.
+    The original GPT Images panel sits beside the live walk. Each card has
+    eleven seconds; skip/natural completion restore kickoff normally. See
+    [`art_briefs/lineup_graphics/brief.md`](art_briefs/lineup_graphics/brief.md).
   - 2026-10-21 follow-up: the starting-lineup camera sweep now lasts 12 seconds
     instead of 4.2, retaining eased starts/stops. Team text is Boardeaux across
     title, scoreboard, restarts and roster shirts; canonical match ownership

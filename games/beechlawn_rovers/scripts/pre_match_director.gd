@@ -5,6 +5,7 @@ const JOG := &"AN_Beechlawn_WarmupJog"
 const IDLE := &"AN_Beechlawn_Idle"
 const BOLD := preload("res://assets/ui/fonts/BarlowSemiCondensed-SemiBold.ttf")
 const REGULAR := preload("res://assets/ui/fonts/BarlowSemiCondensed-Regular.ttf")
+const LINEUP_GRAPHIC := preload("res://scripts/ui/lineup_graphic.gd")
 var match_scene: Node3D
 var camera: Camera3D
 var overlay: CanvasLayer
@@ -26,6 +27,8 @@ var _hud_visible := true
 var _shane: FootballPlayer
 var _keeper: FootballPlayer
 var _review_callback: JavaScriptObject
+var _lineup_graphic: Control
+var _lower_third: Panel
 
 func start(game: Node3D) -> void:
 	match_scene = game
@@ -80,8 +83,10 @@ func start(game: Node3D) -> void:
 func _build_shots() -> void:
 	_add_shot("venue", "KILMORE DRIVE", "Dublin  ·  Sunday league football", 2.8,
 		Vector3(12, 5.2, 40), Vector3(7, 5.0, 38), Vector3(0, 0.7, 0), Vector3(0, 0.7, 0), 53)
-	_add_shot("walk", "HERE COME THE TEAMS", "Beechlawn Rovers  /  Boardeaux", 7.5,
-		Vector3(4.8, 1.65, 26), Vector3(4.8, 1.65, 17), Vector3(0, 1.15, 31), Vector3(0, 1.15, 22), 52)
+	# Two readable eleven-second team cards; keep the live walk visible to
+	# their right and retain the authored 1.2 m/s player walking speed.
+	_add_shot("walk", "HERE COME THE TEAMS", "Beechlawn Rovers  /  Boardeaux", 22.0,
+		Vector3(10.8, 1.65, 26), Vector3(10.8, 1.65, -0.4), Vector3(6, 1.15, 31), Vector3(6, 1.15, 4.6), 52)
 	_add_shot("goal", "THE FRAME", "Weathered steel. Seven metres of possibility.", 3.0,
 		Vector3(49.2, 2.1, 5), Vector3(50.0, 1.8, 4.6), Vector3(52.5, 1.7, 2.5), Vector3(52.5, 1.7, 2.3), 45)
 	_add_shot("net", "EVERY GOAL STARTS HERE", "Kilmore Drive  ·  Matchday details", 2.8,
@@ -131,6 +136,8 @@ func _enter_shot(index: int) -> void:
 	shot_index = index
 	shot_time = 0.0
 	var shot := shots[index]
+	_lineup_graphic.hide()
+	_lower_third.visible = shot["id"] != "walk"
 	title_label.text = str(shot["title"])
 	subtitle_label.text = str(shot["subtitle"])
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
@@ -199,6 +206,7 @@ func _update_shot(time: float) -> void:
 	# Walk/jog paths stay linear at their authored nominal speed. Only camera
 	# dollies ease; easing actor translation would introduce visible foot slip.
 	if shot["id"] == "walk":
+		_lineup_graphic.present_walk(time, float(shot["duration"]))
 		for actor in _actors:
 			_place(actor, (_entry[actor.get_instance_id()] as Vector3) + Vector3(0, 0, -1.2 * time), 0.0)
 		if _referee != null:
@@ -245,10 +253,13 @@ func finish() -> void:
 func _review_shot(arguments: Array) -> void:
 	if arguments.is_empty() or not active:
 		return
+	var requested := str(arguments[0])
+	var fraction := 0.25 if requested == "teams_home" else (0.75 if requested == "teams_away" else 0.5)
+	if requested in ["teams_home", "teams_away"]: requested = "walk"
 	for index in shots.size():
-		if shots[index]["id"] == str(arguments[0]):
+		if shots[index]["id"] == requested:
 			_enter_shot(index)
-			shot_time = float(shots[index]["duration"]) * 0.5
+			shot_time = float(shots[index]["duration"]) * fraction
 			_update_shot(shot_time)
 			# Debug-only composition review. Freeze the director, not the tree:
 			# callbacks can still select another shot and Escape can exit.
@@ -297,6 +308,7 @@ func _build_overlay() -> void:
 	crest.material = material
 	top.add_child(crest)
 	var panel := Panel.new()
+	_lower_third = panel
 	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	panel.offset_left = 26
 	panel.offset_right = -26
@@ -330,6 +342,10 @@ func _build_overlay() -> void:
 	skip.add_theme_font_override("font", BOLD)
 	skip.pressed.connect(finish)
 	screen.add_child(skip)
+	_lineup_graphic = LINEUP_GRAPHIC.new()
+	_lineup_graphic.name = "StartingElevens"
+	screen.add_child(_lineup_graphic)
+	_lineup_graphic.configure(match_scene._home_team, match_scene._away_team)
 	fade = ColorRect.new()
 	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	fade.color = Color.BLACK

@@ -25,3 +25,5 @@ tactical_role = "goalkeeper"
 starting_position = Vector2(-49.5, 0)
 appearance = SubResource("Appearance")
 attributes = SubResource("Attributes")
+
+lineup_portrait_path = "res://assets/ui/lineups/portraits/john_orourke.png"

@@ -1,5 +1,10 @@
 # Opposite-touchline broadcast
 
+During the walkout, TV-style face graphics introduce Beechlawn Rovers first,
+then Boardeaux, each in a 4-4-2 with its crest and player-manager. Robbie Roden
+manages Beechlawn; Des Feeney fills every Boardeaux slot and manages that side.
+Colly Roden now wears 14; Beechlawn's retired number 2 cannot be reassigned.
+
 The opponent is named Boardeaux throughout the title, scoreboard, match messages
 and roster shirt prints. The pre-match starting-lineup pan now takes 12 seconds
 instead of 4.2, with its smooth start and stop retained.

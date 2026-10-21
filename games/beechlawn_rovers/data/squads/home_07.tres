@@ -25,3 +25,5 @@ tactical_role = "winger"
 starting_position = Vector2(-10, 25)
 appearance = SubResource("Appearance")
 attributes = SubResource("Attributes")
+
+lineup_portrait_path = "res://assets/ui/lineups/portraits/david_denham.png"

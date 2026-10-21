@@ -25,3 +25,5 @@ tactical_role = "centre_back"
 starting_position = Vector2(-32, -8)
 appearance = SubResource("Appearance")
 attributes = SubResource("Attributes")
+
+lineup_portrait_path = "res://assets/ui/lineups/portraits/david_murray.png"
