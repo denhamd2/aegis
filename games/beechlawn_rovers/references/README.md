@@ -114,3 +114,22 @@ and is excluded from game exports.
 ## Shane original portrait, 19 October 2026
 
 `source_uploads/chat_attachments/shane_face_photo/69012.jpg` is the original smiling Shane Denham photo supplied for the latest likeness pass. Use it for facial identity ahead of the generated character-sheet face; keep the sheet as secondary profile evidence. The photo has indoor lighting, slight yaw and an expression; it is not a neutral scan. Its provenance and hash are recorded alongside the unchanged original. See `../docs/art_briefs/shane_photo_likeness/brief.md`.
+
+## Boardeaux player Des Feeney portrait, 21 October 2026
+
+`source_uploads/chat_attachments/boardeaux_des_photo/69016.jpg` is the
+owner-supplied low-resolution, near-frontal portrait for the Boardeaux player
+Des Feeney (#9). It is a separate identity from Des Feeney Sr., the referee.
+Use this as the primary evidence for the player's face; the earlier Boardeaux
+character sheet is secondary outfit/turnaround evidence. The photo gives no
+reliable profile view and has soft indoor lighting. Its unchanged original,
+provenance and SHA256 are recorded here. See
+`../docs/art_briefs/des_feeney_player_likeness/brief.md`.
+
+## Supplied landing-screen wordmark, 21 October 2026
+
+`source_uploads/chat_attachments/title_logo/69668.jpg` is the authoritative
+Beechlawn Rovers 27 title wordmark and red/black/white menu direction. Preserve
+the original white italic lettering and red 27. This changes the landing and
+Options theme; the players keep their blue/black kits and the oval club crest
+keeps its authentic colours. See `../docs/art_briefs/title_red_black_evidence/brief.md`.
