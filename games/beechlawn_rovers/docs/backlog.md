@@ -363,12 +363,12 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
   positions as editable Godot resources. Populate Beechlawn with Shane Denham
   (#8), Robbie Roden (#10), David Murray (#5) and John O’Rourke (#1, goalkeeper)
   from their supplied character sheets. Use Des Feeney (#9) as the visual base
-  for Bordeaux’s three outfield slots and goalkeeper because only his sheet is
+  for Boardeaux’s three outfield slots and goalkeeper because only his sheet is
   available; distinguish slots by role/kit details where useful, but do not
   invent names, facial identities or player-specific ratings. Use balanced
   editable defaults until ratings are supplied.
   - Complete: editable player, attributes and team resources now define both
-    four-slot rosters. Beechlawn uses the supplied names/numbers; Bordeaux's
+    four-slot rosters. Beechlawn uses the supplied names/numbers; Boardeaux's
     four slots reference Des Feeney as the visual base and leave unsupported
     identities/numbers blank. Attributes stay at neutral 50 placeholders.
     Starting positions are generic 4v4 slots, not claimed real-world player
@@ -378,7 +378,7 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
 - [x] **BR-006 — Build a 4v4 vertical slice**
   Add two sides with three outfield players and a goalkeeper each. Use the
   supplied Beechlawn roster and the Des Feeney visual base for all four
-  Bordeaux slots. Start the first playable as a short match, with the human in
+  Boardeaux slots. Start the first playable as a short match, with the human in
   control of one Beechlawn outfielder.
   Implement manual/automatic player switching, a visible controlled-player
   marker, and possession changes.
@@ -575,6 +575,10 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - 2026-10-21 follow-up: the starting-lineup camera sweep now lasts 12 seconds
+    instead of 4.2, retaining eased starts/stops. Team text is Boardeaux across
+    title, scoreboard, restarts and roster shirts; canonical match ownership
+    labels and fixtures use that spelling too. Asset filenames/IDs are stable.
   - 2026-10-21: moved all six sideline presets to the opposite touchline while
     retaining their height, distance and FOV. Existing camera-relative keyboard
     control follows the flipped view. Both goal-end/touchline extremes and
@@ -757,7 +761,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   front/profile/three-quarter/broadcast review before accepting the asset.
   Replace the proxy with sheet-matched Beechlawn players: Shane Denham (#8),
   Robbie Roden (#10), David Murray (#5) and goalkeeper John O’Rourke (#1).
-  Create a reusable roster/kit workflow. For Bordeaux, use Des Feeney (#9) as
+  Create a reusable roster/kit workflow. For Boardeaux, use Des Feeney (#9) as
   the supplied visual base for three outfield slots and the goalkeeper; keep
   those slots generic until more references arrive. Match face, proportions,
   hair, number, crest, fabric and skin tone; validate close and broadcast
@@ -921,7 +925,7 @@ without touching Aegis artifacts.
   motion is relevant; availability of a suitable football action is not
   assumed.
 - The intended final characters remain the supplied-sheet-matched Beechlawn
-  players on a reusable shared rig, with the Bordeaux visual-base approach
+  players on a reusable shared rig, with the Boardeaux visual-base approach
   defined above. Temporary assets must not replace those likeness targets.
 - Import/retarget through Blender and Godot's glTF pipeline, checking bone rest
   poses, scale, root motion, foot sliding and action contact timing. The
@@ -944,8 +948,8 @@ Research references:
 | Beechlawn Rovers | Outfield 2 | Robbie Roden, #10 | Supplied full character sheet |
 | Beechlawn Rovers | Outfield 3 | David Murray, #5 | Supplied full character sheet |
 | Beechlawn Rovers | Goalkeeper | John O’Rourke, #1 | Supplied goalkeeper sheet |
-| Bordeaux | Three outfield slots | Des Feeney, #9 sheet | Shared visual base; identities/ratings remain generic |
-| Bordeaux | Goalkeeper | Des Feeney sheet | Shared visual base with generic keeper kit/slot data |
+| Boardeaux | Three outfield slots | Des Feeney, #9 sheet | Shared visual base; identities/ratings remain generic |
+| Boardeaux | Goalkeeper | Des Feeney sheet | Shared visual base with generic keeper kit/slot data |
 
 The first team-versus-team gameplay milestone is therefore **4v4**, not a
 full 11v11 match. This keeps the prototype small enough to validate passing,

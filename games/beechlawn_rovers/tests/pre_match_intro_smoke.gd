@@ -29,6 +29,12 @@ func _run() -> void:
 			director.shot_time = float(director.shots[index]["duration"]) * 0.5
 			director._update_shot(director.shot_time)
 			check(director.camera.global_transform.is_finite(), "Finite intro camera")
+			if director.shots[index]["id"] == "lineup":
+				var duration := float(director.shots[index]["duration"])
+				var distance := (director.shots[index]["to"] as Vector3).distance_to(director.shots[index]["from"])
+				# Smoothstep's peak speed is 1.5 times the average. Protect a
+				# readable pan through the faces, including its fastest midpoint.
+				check(distance * 1.5 / duration <= 2.2, "Lineup camera peak speed stays readable")
 			if director.shots[index]["id"] in ["walk", "warmup"]:
 				var expected: StringName = director.WALK if director.shots[index]["id"] == "walk" else director.JOG
 				var actor: FootballPlayer = director._actors[0] if expected == director.WALK else director._warmup[0]
@@ -48,6 +54,10 @@ func _run() -> void:
 			game.camera_rig.preset_id = preset
 			game.camera_rig.apply_settings()
 			director._enter_shot(director.shots.size() - 1)
+			if preset != &"blimp":
+				var start: Vector3 = director.shots[-1]["from"]
+				var finish: Vector3 = director.shots[-1]["to"]
+				check(Vector2(start.x, start.z).dot(Vector2(finish.x, finish.z)) > 0.0, "Handoff stays on selected camera side " + str(preset))
 			director._update_shot(2.0)
 			check(director.camera.global_basis.z.dot(game.camera_rig.camera.global_basis.z) > 0.999, "Handoff preserves selected camera orientation " + str(preset))
 		game.camera_rig.preset_id = initial_preset

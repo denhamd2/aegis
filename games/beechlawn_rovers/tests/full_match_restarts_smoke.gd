@@ -12,13 +12,13 @@ func _run() -> void:
 	ball.global_position=Vector3(12,0.3,34.2)
 	ball.last_touch=&"Beechlawn Rovers"
 	game._check_boundary_restart()
-	assert(game._boundary_pending and game._boundary_team==&"Bordeaux")
+	assert(game._boundary_pending and game._boundary_team==&"Boardeaux")
 	game._physics_process(0.8)
 	assert(not game._boundary_pending and not ball.freeze)
 	assert(absf(ball.global_position.z)<34.0)
 	game._set_players_physics_enabled(false)
 	ball.global_position=Vector3(52.7,0.4,8.0)
-	ball.last_touch=&"Bordeaux"
+	ball.last_touch=&"Boardeaux"
 	game._check_boundary_restart()
 	assert(game._boundary_kind=="CORNER RESTART" and game._boundary_team==&"Beechlawn Rovers")
 	game._physics_process(0.8)
@@ -26,7 +26,7 @@ func _run() -> void:
 	ball.global_position=Vector3(52.7,0.4,9.0)
 	ball.last_touch=&"Beechlawn Rovers"
 	game._check_boundary_restart()
-	assert(game._boundary_kind=="GOAL KICK" and game._boundary_team==&"Bordeaux")
+	assert(game._boundary_kind=="GOAL KICK" and game._boundary_team==&"Boardeaux")
 	game._physics_process(0.8)
 	assert(ball.global_position.x<52.5)
 	print("Full-match boundary ownership and restart placement PASS (touchline uses prototype ground restart)")

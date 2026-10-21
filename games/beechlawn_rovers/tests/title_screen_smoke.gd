@@ -67,7 +67,7 @@ func _run() -> void:
 	game._cycle_controlled_player()
 	game._set_controlled_player(actors[3])
 	check(game.player == old_player,"Player-switch routes must not claim a spectator actor")
-	for scoring_team in ["Bordeaux","Beechlawn Rovers"]:
+	for scoring_team in ["Boardeaux","Beechlawn Rovers"]:
 		game._on_goal(scoring_team,1)
 		game._physics_process(1.2)
 		check(game._kickoff_pending,"Goal should prepare a restart")

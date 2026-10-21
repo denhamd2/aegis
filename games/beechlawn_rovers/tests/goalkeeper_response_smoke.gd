@@ -94,6 +94,6 @@ func _shot(ball: FootballBall, keeper: FootballPlayer, offset: Vector3, speed_x:
 	ball.angular_velocity = Vector3.ZERO
 	await physics_frame
 	ball.linear_velocity = Vector3(speed_x, 0, 0)
-	ball.last_touch = &"Bordeaux" if keeper.team_name == &"Beechlawn Rovers" else &"Beechlawn Rovers"
+	ball.last_touch = &"Boardeaux" if keeper.team_name == &"Beechlawn Rovers" else &"Beechlawn Rovers"
 	ball.last_action = &"shot"
 	ball.action_serial += 1

@@ -88,7 +88,8 @@ func _build_shots() -> void:
 		Vector3(55.1, 1.6, 2.8), Vector3(54.8, 1.4, 2.6), Vector3(53.4, 1.3, 1.3), Vector3(53.4, 1.3, 1.1), 43)
 	_add_shot("fans", "THE TOUCHLINE", "Local football. Familiar faces.", 2.8,
 		Vector3(-18.4, 1.6, -31.8), Vector3(-19.4, 1.6, -32.2), Vector3(-20, 1.3, -36.7), Vector3(-20, 1.3, -36.7), 43)
-	_add_shot("lineup", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Starting elevens  ·  Kilmore Drive", 4.2,
+	# Keep the full team sweep readable instead of racing past the faces.
+	_add_shot("lineup", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Starting elevens  ·  Kilmore Drive", 12.0,
 		Vector3(-9, 1.65, 10), Vector3(8, 1.65, 10), Vector3(-7, 1.35, 5), Vector3(10, 1.35, 5), 52)
 	var shane_pos: Vector3 = _lineup[_shane.get_instance_id()]
 	_add_shot("portrait", _shane.profile.display_name.to_upper(), "BEECHLAWN ROVERS  /  %d" % _shane.profile.jersey_number, 3.0,
@@ -162,7 +163,11 @@ func _enter_shot(index: int) -> void:
 			match_scene.camera_rig.reset_tracking()
 			var gameplay := match_scene.camera_rig.get_node("Camera3D") as Camera3D
 			shots[index]["to"] = gameplay.global_position
-			shots[index]["from"] = gameplay.global_position - Vector3(0, 10, 0) if gameplay.projection == Camera3D.PROJECTION_ORTHOGONAL else Vector3(0, 5, 16)
+			# Approach from the selected camera's side instead of crossing the
+			# whole pitch from the old fixed positive-Z broadcast location.
+			shots[index]["from"] = gameplay.global_position - Vector3(0, 10, 0) \
+				if gameplay.projection == Camera3D.PROJECTION_ORTHOGONAL \
+				else Vector3(gameplay.global_position.x * 0.6, maxf(2.0, gameplay.global_position.y - 7.0), gameplay.global_position.z * 0.6)
 			shots[index]["look_to"] = gameplay.global_position - gameplay.global_basis.z * 20.0
 			camera.projection = gameplay.projection
 			camera.size = gameplay.size

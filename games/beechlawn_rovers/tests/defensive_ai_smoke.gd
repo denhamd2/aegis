@@ -47,7 +47,7 @@ func _run_checks() -> void:
 			"right":
 				away_right = actor
 	assert(away_left != null and away_center != null and away_right != null,
-		"Bordeaux attacking roles missing")
+		"Boardeaux attacking roles missing")
 
 	presser.controlled_by_human = false
 	presser.global_position = Vector3(9.0, 0.0, 0.0)

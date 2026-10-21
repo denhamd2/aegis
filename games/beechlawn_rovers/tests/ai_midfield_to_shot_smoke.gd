@@ -11,7 +11,7 @@ var _touch_counts: Dictionary = {}
 var _shot_status: Dictionary = {}
 var _decision_counts: Dictionary = {
 	&"Beechlawn Rovers": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
-	&"Bordeaux": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
+	&"Boardeaux": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
 }
 
 func _initialize() -> void:
@@ -33,7 +33,7 @@ func _run() -> void:
 	game._ai_tick = 0.0
 	game._next_home_ai = true
 	var ball := game.get_node("Ball") as FootballBall
-	_attack_sign = -1.0 if OS.get_environment("BEECHLAWN_ATTACK_TEAM") == "Bordeaux" else 1.0
+	_attack_sign = -1.0 if OS.get_environment("BEECHLAWN_ATTACK_TEAM") == "Boardeaux" else 1.0
 	var attackers: Array[FootballPlayer] = game._home_players if _attack_sign > 0.0 else game._away_players
 	var defenders: Array[FootballPlayer] = game._away_players if _attack_sign > 0.0 else game._home_players
 	_attacking_team = attackers[0].team_name
@@ -100,7 +100,7 @@ func _run() -> void:
 		await physics_frame
 		_max_ball_x = maxf(_max_ball_x, ball.global_position.x * _attack_sign)
 		if OS.get_environment("BEECHLAWN_FULL_OPPOSITION") == "1" and tick % 12 == 0 \
-				and ball.last_touch in [&"Beechlawn Rovers", &"Bordeaux"]:
+				and ball.last_touch in [&"Beechlawn Rovers", &"Boardeaux"]:
 			var team: Array[FootballPlayer] = game._home_players if ball.last_touch == &"Beechlawn Rovers" else game._away_players
 			var opposition: Array[FootballPlayer] = game._away_players if ball.last_touch == &"Beechlawn Rovers" else game._home_players
 			var nearest: FootballPlayer = game._nearest_outfielder(team, Vector2(ball.global_position.x, ball.global_position.z))

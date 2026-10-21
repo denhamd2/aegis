@@ -33,10 +33,10 @@ func _run_checks() -> void:
 	game.set("_transition_time_left", 0.0)
 	game.set("_ai_tick", 0.0)
 	ball.global_position = Vector3(10.0, FootballBall.RADIUS, 0.0)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	game._update_ai(0.016)
-	assert(game.get("_possession_team") == &"Bordeaux"
-		and game.get("_transition_team") == &"Bordeaux",
+	assert(game.get("_possession_team") == &"Boardeaux"
+		and game.get("_transition_team") == &"Boardeaux",
 		"Possession change was not recorded")
 	assert(is_equal_approx(float(game.get("_transition_time_left")), 1.35),
 		"Turnover did not start the transition timer")

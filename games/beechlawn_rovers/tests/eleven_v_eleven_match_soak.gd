@@ -17,8 +17,8 @@ func _run() -> void:
 		actor.controlled_by_human=false
 		actor.status_changed.connect(_on_player_status)
 	var kickoff_team := OS.get_environment("BEECHLAWN_KICKOFF_TEAM")
-	if kickoff_team == "Bordeaux":
-		game._prepare_kickoff(&"Bordeaux")
+	if kickoff_team == "Boardeaux":
+		game._prepare_kickoff(&"Boardeaux")
 	var ball := game.get_node("Ball") as FootballBall
 	var last_ball := ball.global_position
 	var travelled := 0.0
@@ -26,16 +26,16 @@ func _run() -> void:
 	var still := 0
 	var samples := 0
 	# Count actual contacts, including events superseded within the same tick.
-	var shots := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
-	var contested_shots := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
-	var saves := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
-	var shot_decisions := {&"Beechlawn Rovers": 0, &"Bordeaux": 0}
-	var max_attack_progress := {&"Beechlawn Rovers": 0.0, &"Bordeaux": 0.0}
-	var closest_goal_distance := {&"Beechlawn Rovers": INF, &"Bordeaux": INF}
-	var closest_goal_lateral := {&"Beechlawn Rovers": 0.0, &"Bordeaux": 0.0}
+	var shots := {&"Beechlawn Rovers": 0, &"Boardeaux": 0}
+	var contested_shots := {&"Beechlawn Rovers": 0, &"Boardeaux": 0}
+	var saves := {&"Beechlawn Rovers": 0, &"Boardeaux": 0}
+	var shot_decisions := {&"Beechlawn Rovers": 0, &"Boardeaux": 0}
+	var max_attack_progress := {&"Beechlawn Rovers": 0.0, &"Boardeaux": 0.0}
+	var closest_goal_distance := {&"Beechlawn Rovers": INF, &"Boardeaux": INF}
+	var closest_goal_lateral := {&"Beechlawn Rovers": 0.0, &"Boardeaux": 0.0}
 	var decision_counts := {
 		&"Beechlawn Rovers": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
-		&"Bordeaux": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
+		&"Boardeaux": {&"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0},
 	}
 	ball.touched.connect(func(kind: StringName, _speed: float):
 		if kind == &"shot":
@@ -54,7 +54,7 @@ func _run() -> void:
 		var distance := ball.global_position.distance_to(last_ball)
 		travelled+=distance
 		last_ball=ball.global_position
-		if ball.last_touch in [&"Beechlawn Rovers", &"Bordeaux"]:
+		if ball.last_touch in [&"Beechlawn Rovers", &"Boardeaux"]:
 			var attack_sign := 1.0 if ball.last_touch == &"Beechlawn Rovers" else -1.0
 			var goal_distance := Vector2(ball.global_position.x - attack_sign * 52.5,
 				ball.global_position.z).length()
@@ -69,7 +69,7 @@ func _run() -> void:
 			max_still=maxi(max_still,still)
 		# Observe available options at 5 Hz without changing the live simulation.
 		# These samples are not executed-action counts; touched counts contacts.
-		if samples%12==0 and ball.last_touch in [&"Beechlawn Rovers", &"Bordeaux"]:
+		if samples%12==0 and ball.last_touch in [&"Beechlawn Rovers", &"Boardeaux"]:
 			var attacking: Array[FootballPlayer] = game._home_players if ball.last_touch == &"Beechlawn Rovers" else game._away_players
 			var defending: Array[FootballPlayer] = game._away_players if ball.last_touch == &"Beechlawn Rovers" else game._home_players
 			var ball_position := Vector2(ball.global_position.x, ball.global_position.z)
@@ -88,22 +88,22 @@ func _run() -> void:
 	assert(travelled>50.0,"AI match did not progress the ball")
 	print("11v11 SOAK match_seconds=", game.short_match_seconds, " physics_ticks=", samples,
 		" ball_travel_m=", snappedf(travelled, 0.1),
-		" shots=", shots[&"Beechlawn Rovers"], "/", shots[&"Bordeaux"],
-		" contested_shots=", contested_shots[&"Beechlawn Rovers"], "/", contested_shots[&"Bordeaux"],
-		" saves=", saves[&"Beechlawn Rovers"], "/", saves[&"Bordeaux"],
+		" shots=", shots[&"Beechlawn Rovers"], "/", shots[&"Boardeaux"],
+		" contested_shots=", contested_shots[&"Beechlawn Rovers"], "/", contested_shots[&"Boardeaux"],
+		" saves=", saves[&"Beechlawn Rovers"], "/", saves[&"Boardeaux"],
 		" shot_status=", shot_status_counts,
 		" sampled_options=", decision_counts,
-		" sampled_shot_options=", shot_decisions[&"Beechlawn Rovers"], "/", shot_decisions[&"Bordeaux"],
+		" sampled_shot_options=", shot_decisions[&"Beechlawn Rovers"], "/", shot_decisions[&"Boardeaux"],
 		" sampled_max_attack_x=", snappedf(max_attack_progress[&"Beechlawn Rovers"], 0.1), "/",
-		snappedf(max_attack_progress[&"Bordeaux"], 0.1),
+		snappedf(max_attack_progress[&"Boardeaux"], 0.1),
 		" closest_goal_xz_m=", snappedf(closest_goal_distance[&"Beechlawn Rovers"], 0.1), "/",
-		snappedf(closest_goal_distance[&"Bordeaux"], 0.1),
+		snappedf(closest_goal_distance[&"Boardeaux"], 0.1),
 		" at_lateral=", snappedf(closest_goal_lateral[&"Beechlawn Rovers"], 0.1), "/",
-		snappedf(closest_goal_lateral[&"Bordeaux"], 0.1),
+		snappedf(closest_goal_lateral[&"Boardeaux"], 0.1),
 		" goals=", game._home_score, "/", game._away_score,
 		" longest_stationary_samples_s=", max_still)
 	if OS.get_environment("BEECHLAWN_REQUIRE_SHOT") == "1":
-		if shots[&"Beechlawn Rovers"] + shots[&"Bordeaux"] == 0:
+		if shots[&"Beechlawn Rovers"] + shots[&"Boardeaux"] == 0:
 			push_error("AI match produced zero physical shot contacts in 180 seconds")
 			game.free()
 			quit(1)

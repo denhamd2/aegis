@@ -18,7 +18,7 @@ hair_style = "bald"
 [resource]
 script = ExtResource("1_profile")
 player_id = &"bordeaux_outfield_3"
-display_name = "Bordeaux outfield slot 3"
+display_name = "Boardeaux outfield slot 3"
 role = "outfield"
 visual_base = "Des Feeney"
 starting_slot = "right"

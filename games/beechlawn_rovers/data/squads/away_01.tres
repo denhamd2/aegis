@@ -16,7 +16,7 @@ hair_style = "bald"
 [resource]
 script = ExtResource("1")
 player_id = &"bordeaux_01"
-display_name = "Bordeaux goalkeeper 1"
+display_name = "Boardeaux goalkeeper 1"
 jersey_number = 1
 role = "goalkeeper"
 visual_base = "Generic common head"

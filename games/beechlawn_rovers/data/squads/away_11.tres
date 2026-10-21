@@ -8,7 +8,7 @@ script = ExtResource("2")
 [sub_resource type="Resource" id="Appearance"]
 script = ExtResource("3")
 kit = "bordeaux_outfield"
-print_name = "BORDEAUX 11"
+print_name = "BOARDEAUX 11"
 head_variant = ExtResource("head_pipeline_head")
 hair_style = "legacy_crop"
 
@@ -16,7 +16,7 @@ hair_style = "legacy_crop"
 [resource]
 script = ExtResource("1")
 player_id = &"bordeaux_11"
-display_name = "Bordeaux player 11"
+display_name = "Boardeaux player 11"
 jersey_number = 11
 role = "outfield"
 visual_base = "Generic common head"

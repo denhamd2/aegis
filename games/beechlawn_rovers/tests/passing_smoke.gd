@@ -85,7 +85,7 @@ func _run_checks() -> void:
 	visual.on_action_contact_marker()
 	assert(ball.last_touch == passer.team_name, "Buffered first-time pass did not execute on arrival")
 	assert(first_time_result["kind"] == &"pass", "Buffered first-time pass did not produce a pass action")
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	assert(not passer._ball_will_reach_kick_window(), "First-time pass buffer accepted an opponent ball")
 
 	# AI should choose a reachable point ahead on a moving ball's path.

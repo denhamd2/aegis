@@ -121,7 +121,7 @@ func _build_main() -> void:
 	_label(canvas,"DAVID MURRAY  /  5",Vector2(1160,766),19,BOLD)
 	_label(canvas,"DEREK MITCHELL  /  3",Vector2(1160,794),17,BODY,MUTED)
 	_rect(canvas,Rect2(64,826,1472,1),Color(0.7,0.8,0.9,0.22))
-	_label(canvas,"BEECHLAWN ROVERS   vs   BORDEAUX",Vector2(64,845),18,BOLD)
+	_label(canvas,"BEECHLAWN ROVERS   vs   BOARDEAUX",Vector2(64,845),18,BOLD)
 	_label(canvas,"11 v 11   ·   3 MINUTE MATCH",Vector2(602,845),17,BODY,MUTED)
 	_label(canvas,"ARROWS  Navigate     ENTER  Select",Vector2(1230,845),17,BODY,MUTED)
 	# Explicit keyboard order works independently of directional heuristics.

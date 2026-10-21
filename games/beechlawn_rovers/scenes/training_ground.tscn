@@ -95,7 +95,7 @@ offset_top = 55.0
 offset_right = 483.0
 offset_bottom = 84.0
 theme_override_font_sizes/font_size = 19
-text = "BEECHLAWN ROVERS   0     0   BORDEAUX"
+text = "BEECHLAWN ROVERS   0     0   BOARDEAUX"
 
 [node name="Clock" type="Label" parent="HUD"]
 offset_left = 42.0

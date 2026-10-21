@@ -3,7 +3,9 @@
   "checks": [
     "actual 22-player match",
     "intro skip to AI kickoff",
-    "opposite-side Close Broadcast capture"
+    "opposite-side Close Broadcast capture",
+    "starting-lineup composition",
+    "Boardeaux spelling"
   ],
   "viewport": [
     960,

@@ -15,7 +15,7 @@
 [resource]
 script = ExtResource("1")
 team_id = &"bordeaux"
-display_name = "Bordeaux"
+display_name = "Boardeaux"
 primary_kit_color = Color(0.30, 0.61, 0.82, 1)
 formation = "4-4-2"
 kickoff_slot = "striker_left"

@@ -32,3 +32,18 @@ natural/skip handoff and kickoff. The actual Web match capture is
 [web_review.json](web_review.json). Software WebGL capture has sun shadows
 disabled; native Mac lighting, performance and human playtesting remain open.
 Venue and player art fidelity are unchanged by this framing adjustment.
+
+Follow-up: the lineup sweep lasts 12 seconds rather than 4.2. Its unchanged
+17 m eased dolly peaks at about 2.13 m/s instead of 6.07 m/s. The intro regression
+checks that speed, natural completion, skip and kickoff restoration. The final
+handoff now begins on the selected gameplay camera's side, avoiding a fast
+cross-pitch move from the previous hard-coded side. Boardeaux is the confirmed
+team spelling across runtime ownership labels, UI, messages and shirt prints;
+lowercase legacy resource filenames/IDs remain stable, and archived evidence
+retains its original captured text.
+
+The refreshed title, lineup and broadcast captures show the corrected spelling.
+Capture checks completed without game console errors. The one-off capture
+driver timed out during its final `about:blank` cleanup navigation afterward;
+the Playwright context exited and no live browser processes remained. This
+cleanup result is separate from the recorded rendering/intro checks.

@@ -35,7 +35,7 @@ func _physics_process(delta: float) -> void:
 				and absf(crossing_z) + FootballBall.RADIUS <= goal_width * 0.5:
 			_scored = true
 			_score_cooldown = 1.7
-			goal_scored.emit("Beechlawn Rovers" if defending_end == 1 else "Bordeaux", defending_end)
+			goal_scored.emit("Beechlawn Rovers" if defending_end == 1 else "Boardeaux", defending_end)
 	if progress < 0.0:
 		_scored = false
 	_previous_progress = progress

@@ -35,7 +35,7 @@ func _run_checks() -> void:
 	right.global_position = Vector3(0.0, 0.0, 8.0)
 	var ball_position := Vector2(10.0, 0.0)
 	ball.global_position = Vector3(ball_position.x, FootballBall.RADIUS, ball_position.y)
-	ball.last_touch = &"Bordeaux"
+	ball.last_touch = &"Boardeaux"
 	game.set("_remaining_time", 20.0)
 	game.set("_home_score", 0)
 	game.set("_away_score", 1)

@@ -294,7 +294,7 @@ func _prepare_kickoff(kicking_team: StringName) -> void:
 		_set_message("KICK OFF  ·  E pass  /  Q through-ball")
 	else:
 		_kickoff_ai_delay = 1.0
-		_set_message("Bordeaux ready to kick off")
+		_set_message("Boardeaux ready to kick off")
 
 func _kickoff_taker(team_players: Array[FootballPlayer]) -> FootballPlayer:
 	var slot := _home_team.kickoff_slot if team_players == _home_players else _away_team.kickoff_slot
@@ -830,7 +830,7 @@ func _on_goal(team_name: String, _side: int) -> void:
 		var impact: Dictionary = _net_impacts[_side]
 		impact["age"] = 0.0
 		(impact["material"] as ShaderMaterial).set_shader_parameter("impact_point",(impact["mesh"] as Node3D).to_local(ball.global_position))
-	_kickoff_team = &"Bordeaux" if team_name == "Beechlawn Rovers" else &"Beechlawn Rovers"
+	_kickoff_team = &"Boardeaux" if team_name == "Beechlawn Rovers" else &"Beechlawn Rovers"
 	_kickoff_pending = false
 	_goal_pause_timer = 1.1
 	_kickoff_ai_delay = 0.0
@@ -862,12 +862,12 @@ func _check_boundary_restart() -> void:
 	# Leave mouth crossings to GoalDetector's swept whole-ball test.
 	if end_out and absf(p.z)+FootballBall.RADIUS<=GOAL_WIDTH*0.5 and p.y+FootballBall.RADIUS<=GOAL_HEIGHT:
 		return
-	_boundary_team = &"Bordeaux" if ball.last_touch==&"Beechlawn Rovers" else &"Beechlawn Rovers"
+	_boundary_team = &"Boardeaux" if ball.last_touch==&"Beechlawn Rovers" else &"Beechlawn Rovers"
 	_boundary_spot = Vector3(clampf(p.x,-51.0,51.0),0,signf(p.z)*33.6)
 	_boundary_kind = "TOUCHLINE RESTART"
 	if end_out:
-		var attacking: StringName = &"Beechlawn Rovers" if p.x>0 else &"Bordeaux"
-		var defending: StringName = &"Bordeaux" if p.x>0 else &"Beechlawn Rovers"
+		var attacking: StringName = &"Beechlawn Rovers" if p.x>0 else &"Boardeaux"
+		var defending: StringName = &"Boardeaux" if p.x>0 else &"Beechlawn Rovers"
 		if ball.last_touch==defending:
 			_boundary_team=attacking
 			_boundary_spot=Vector3(signf(p.x)*51.9,0,33.6 if p.z>=0 else -33.6)
@@ -905,7 +905,7 @@ func _resume_boundary_restart() -> void:
 	_set_message(_boundary_kind+" · "+String(_boundary_team))
 
 func _update_score() -> void:
-	score_label.text = "BEECHLAWN ROVERS   %d     %d   BORDEAUX" % [_home_score, _away_score]
+	score_label.text = "BEECHLAWN ROVERS   %d     %d   BOARDEAUX" % [_home_score, _away_score]
 
 func _update_clock() -> void:
 	var display_time := ceili(_remaining_time)

@@ -1,5 +1,10 @@
 # Opposite-touchline broadcast
 
+The opponent is named Boardeaux throughout the title, scoreboard, match messages
+and roster shirt prints. The pre-match starting-lineup pan now takes 12 seconds
+instead of 4.2, with its smooth start and stop retained.
+The intro-to-gameplay handoff also starts on the selected camera's side.
+
 The default Close Broadcast and the other sideline camera presets now view the
 match from the opposite side. Their close framing, tracking and editable
 height/zoom settings are retained. Keyboard movement remains screen-relative.
