@@ -19,6 +19,10 @@ their own viewing conventions. Existing camera-relative movement and aiming
 use the live camera basis, so screen-right now means the corresponding
 opposite world direction. The moving-contact fixture chooses that screen
 direction explicitly instead of assuming that world-right is screen-right.
+The reversal fixture does the same for world-left; its old hard-coded
+screen-left command correctly accelerated from this side rather than braking.
+The isolated aim fixture now requests a genuinely lateral screen-up shot from
+either touchline when checking goal assistance.
 
 Validation: `broadcast_camera_smoke.gd` checks every preset's visibility and
 screen-relative keyboard movement, opposite touchline placement, and default

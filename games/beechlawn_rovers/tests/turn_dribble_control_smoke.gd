@@ -20,6 +20,8 @@ func _run() -> void:
 	var player := game.get_node("Player") as FootballPlayer
 	var teammate: FootballPlayer=game._home_players[2]
 	var ball := game.get_node("Ball") as FootballBall
+	# Reverse the world-right run using the current camera's screen direction.
+	var reverse_action: StringName = &"move_left" if player.camera.global_basis.x.x > 0.0 else &"move_right"
 	for human in [false,true]:
 		player.global_position=Vector3.ZERO
 		player.rotation.y=-PI/2
@@ -27,10 +29,10 @@ func _run() -> void:
 		player.velocity=Vector3.RIGHT*6.0
 		player.controlled_by_human=human
 		player.ai_move_direction=Vector3.LEFT
-		if human:Input.action_press("move_left")
+		if human:Input.action_press(reverse_action)
 		player._sample_input()
 		player._update_locomotion(1.0/60.0)
-		Input.action_release("move_left")
+		Input.action_release(reverse_action)
 		var heading_gap := rad_to_deg((-player.global_basis.z).angle_to(player._flat_direction))
 		print("REVERSAL human=",human," touch_heading_gap_degrees=",snappedf(heading_gap,0.01))
 		if heading_gap>35.0:
