@@ -119,11 +119,13 @@ func _physics_process(delta: float) -> void:
 		global_position.x=clampf(global_position.x,-55.0,55.0)
 		global_position.z=clampf(global_position.z,-36.0,36.0)
 	set_meta("move_speed", Vector2(velocity.x, velocity.z).length())
+	# Resolve legal hand contacts before foot assistance can relabel a slow
+	# own rebound as a dribble. Both still use the post-movement position.
+	if _goalkeeper_controller != null:
+		_goalkeeper_controller.try_save()
 	_update_dribble(delta)
 	_resolve_pending_kick_contact(delta)
 	_try_shoulder_challenge()
-	if _goalkeeper_controller != null:
-		_goalkeeper_controller.try_save()
 	if not controlled_by_human:
 		_try_ai_tackle()
 		if step_version!=_stoppage_version: return
@@ -152,7 +154,7 @@ func _update_locomotion(delta: float) -> void:
 	camera_forward.y = 0.0
 	camera_right = camera_right.normalized()
 	camera_forward = camera_forward.normalized()
-	var recovering := is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()
+	var recovering := _keeper_is_recovering() or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active())
 	var sliding := _slide_tackle_time > 0.0
 	var desired := Vector3.ZERO if recovering else (_slide_tackle_direction if sliding else (ai_move_direction if not controlled_by_human else (camera_right * _stick.x - camera_forward * _stick.y)))
 	if not controlled_by_human and (_visual_pass_pending or _visual_shot_pending):
@@ -240,8 +242,11 @@ func _kick_setup_velocity(requested_velocity: Vector3) -> Vector3:
 	var correction := (offset - contact_offset) / maxf(remaining, 0.12)
 	return (ball_velocity + correction).limit_length(requested_velocity.length())
 
+func _keeper_is_recovering() -> bool:
+	return _goalkeeper_controller != null and _goalkeeper_controller.is_recovering()
+
 func _update_dribble(delta: float) -> void:
-	if ball == null:
+	if ball == null or _keeper_is_recovering():
 		return
 	var flat_distance := Vector2(ball.global_position.x - global_position.x,
 		ball.global_position.z - global_position.z).length()
@@ -268,7 +273,7 @@ func _update_actions(delta: float) -> void:
 	var action_version := _stoppage_version
 	if not controlled_by_human:
 		return
-	if _slide_tackle_time > 0.0 or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()):
+	if _keeper_is_recovering() or _slide_tackle_time > 0.0 or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()):
 		return
 	if _ignore_pass_until_released:
 		if not Input.is_action_pressed("pass") and not Input.is_action_pressed("through_pass"):
@@ -370,7 +375,7 @@ func _queue_pass(through: bool) -> void:
 	_pending_through = through
 
 func _try_ai_tackle() -> void:
-	if _tackle_cooldown > 0.0 or ball == null or ball.last_touch == team_name \
+	if _keeper_is_recovering() or _tackle_cooldown > 0.0 or ball == null or ball.last_touch == team_name \
 			or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active()):
 		return
 	var offset := ball.global_position - global_position
@@ -940,6 +945,9 @@ func _update_visual_pose(delta: float) -> void:
 
 func reset_for_stoppage() -> void:
 	_stoppage_version+=1
+	if _goalkeeper_controller != null:
+		_goalkeeper_controller.reset_for_stoppage()
+	_save_pose_time=0.0
 	velocity=Vector3.ZERO
 	ai_move_direction=Vector3.ZERO
 	ai_sprinting=false

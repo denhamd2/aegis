@@ -1,3 +1,19 @@
+# Goalkeeper handling and recovery
+
+Keepers now reserve two-handed catches for slower body-supported balls, parry
+wide contacts, and handle only inside their own penalty area. A bounded
+standing/stretch recovery prevents immediate second saves, movement and dribble
+assistance. Once recovered, they can approach and physically gather a slow own
+parry; teammate back-passes do not qualify. Hand contacts resolve before foot
+control so a slow rebound is not silently converted into a dribble.
+
+Mirrored regressions cover these outcomes on both teams, alongside existing
+reaction, reach, catch/hold/distribution and manual-selection checks. Both teams
+passed all six full-match chance scenarios (31/34 shots). Native Forward+
+fixtures show both physical parries and recovery. The current
+standing-save animation is retained; directional low/diving saves, hand-contact
+polish and native Mac feel/performance remain open under BR-009 (9/25).
+
 # More purposeful AI attacks
 
 Both sides now distinguish actual control from a loose ball or travelling pass,

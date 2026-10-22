@@ -43,11 +43,17 @@ These are reference-led drafts, not exact likeness or venue acceptance. See
 [`11v11_implementation.md`](11v11_implementation.md) and the release evidence.
 Native Mac appearance and M1 Pro/16 GB 1080p/60 fps are not yet measured.
 
-The latest [contact/chance/keeper pass](art_briefs/gameplay_feel_pass/brief.md)
+The earlier [contact/chance/keeper pass](art_briefs/gameplay_feel_pass/brief.md)
 adds bounded moving kick setup, live boot-contact windows, buffered first-time
 shots, interruptible follow-through, multiple AI shot lanes and grounded keeper
 prediction/reaction. The brief retains all relevant match counts and limitations;
 sustained attacking balance remains open.
+
+The [keeper handling/recovery pass](art_briefs/keeper_handling_2026_10_22/brief.md)
+fixes legal handling, supported catch selection, committed recovery and slow
+own-rebound collection. BR-009 (9/25) stays in progress: original directional
+low-save/dive/catch motion and measured hand contact are the next acceptance
+check, followed by native Mac play-feel/performance validation.
 
 ## Confirmed PES-style direction (2026-10-18)
 
@@ -543,6 +549,16 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     deterministic action choice/execution remains covered by
     `ai_carrier_decision_smoke.gd`.
 - [ ] **BR-009 — First goalkeeper**
+  - 2026-10-22 handling/recovery pass: mirrored regressions reproduce and fix
+    speed-only catches at full lateral stretch, handling outside the keeper's
+    own area, instant second saves during recovery and failed own-rebound
+    gathering. Catch width, standing/stretch recovery and slow-gather speed are
+    editable for both teams. Recovery gates locomotion, foot assistance and
+    actions; legal hand contacts run before dribbling. Existing reach/reaction
+    and neutral ratings remain. See [evidence and open motion gates](art_briefs/keeper_handling_2026_10_22/brief.md).
+    This is a mechanics pass using the existing standing-save clip. Directional
+    low/dive/catch motion, measured hand contact, distribution animation and
+    human/M1 acceptance keep BR-009 (9/25) **in progress**.
   - 2026-10-21: rolling-shot prediction stays above the turf, reaction delays
     gate real saves, and behind/away/unsupported-high contacts are rejected.
     Goal-angle positioning, ball-facing shuffles, advance standing-save pose

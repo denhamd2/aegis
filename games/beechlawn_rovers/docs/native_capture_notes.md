@@ -69,3 +69,19 @@ python3 games/beechlawn_rovers/tools/capture_native.py \
 ffmpeg -framerate 10 -i games/beechlawn_rovers/build/native-movement/frame_%03d.png \
   -c:v libx264 -pix_fmt yuv420p games/beechlawn_rovers/build/native-movement/review.mp4
 ```
+
+## Goalkeeper handling/recovery review
+
+`--review-mode keeper_home|keeper_away` isolates the actual John/Boardeaux
+keeper in the 11v11 scene. A rolling shot starts five metres in front; physical
+ball travel, reaction, movement, save and recovery run through production code.
+The goal-side camera stays close enough to see keeper, ball and net, with the
+pitch filling the frame. Other actors are parked for this fixture; these clips
+are not evidence of natural full-match chance creation. The manifest records
+ball action/velocity, keeper position/recovery and actual save/catch events.
+The current standing-save animation remains; low/dive motion is an open gate.
+
+```sh
+python3 games/beechlawn_rovers/tools/capture_native.py build/keeper-home \
+  --review-mode keeper_home --resolution 640x360 --deadline 220
+```

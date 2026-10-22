@@ -50,6 +50,12 @@ class_name FootballTuning
 @export_range(3.0, 10.0, 0.1) var goalkeeper_move_speed := 6.8
 @export_range(0.5, 1.5, 0.05) var goalkeeper_save_reach := 0.95
 @export_range(4.0, 12.0, 0.1) var goalkeeper_parry_speed := 8.0
+@export_range(0.2, 0.6, 0.01) var goalkeeper_catch_half_width := 0.42
+
+@export_range(0.1, 0.5, 0.01) var goalkeeper_standing_recovery_seconds := 0.24
+@export_range(0.4, 1.2, 0.01) var goalkeeper_stretch_recovery_seconds := 0.65
+
+@export_range(0.5, 5.0, 0.1) var goalkeeper_rebound_gather_speed := 3.0
 
 @export_group("Pitch")
 @export var field_length := 105.0

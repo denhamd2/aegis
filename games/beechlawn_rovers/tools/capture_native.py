@@ -69,7 +69,7 @@ def run_bounded(command, env, deadline, log, ready_files=()):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--review-mode', choices=['movement','throw','net','montage','attack_home','attack_away'], help='Capture a native moving repair review')
+    parser.add_argument('--review-mode', choices=['movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away'], help='Capture a native moving repair review')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
                         default=['shane','john','des','referee'])

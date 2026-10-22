@@ -30,7 +30,7 @@ jobs:
         run: |
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd shared_head_roster_smoke.gd
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_kick_contact_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd contested_shot_smoke.gd goalkeeper_response_smoke.gd goalkeeper_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_kick_contact_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd contested_shot_smoke.gd goalkeeper_response_smoke.gd goalkeeper_smoke.gd goalkeeper_outcomes_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py dribble_grounding_runtime_smoke.gd discipline_rules_smoke.gd pitch_presentation_repairs_smoke.gd goal_net_contact_smoke.gd match_flow_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py wet_weather_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py lineup_graphic_smoke.gd

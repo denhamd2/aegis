@@ -73,6 +73,8 @@ func _run() -> void:
 			failures.append("%s missed a reachable grounded shot after its reaction delay" % keeper.team_name)
 		elif ball.dribble_touch(keeper, Vector3.RIGHT * sign_value, false, false, 0.23, 0.48, 1.05):
 			failures.append("%s immediately absorbed its low parry with dribble assistance" % keeper.team_name)
+		# Independent manual-selection scenario, after the prior low save.
+		controller.reset_for_stoppage()
 		keeper.controlled_by_human = true
 		keeper.ai_move_direction = Vector3.BACK
 		await _shot(ball, keeper, Vector3(sign_value * 0.9, 1.0, 0), -sign_value * 12.0)
