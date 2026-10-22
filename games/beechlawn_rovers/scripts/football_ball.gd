@@ -154,6 +154,7 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 	if not is_instance_valid(_dribble_controller):
 		var best := player
 		var best_gap := player_gap
+		var team_gaps := {StringName(player.get("team_name")): player_gap}
 		for node in get_tree().get_nodes_in_group("football_players"):
 			var candidate := node as FootballPlayer
 			if candidate == null or candidate == player:
@@ -162,20 +163,32 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 			var can_gather_stationary := candidate.velocity.length() < 0.45 and linear_velocity.length() < 0.7
 			if not wants_moving_touch and not can_gather_stationary:
 				continue
+			if candidate.team_name == last_touch and (_kick_control_release > 0.0 \
+					or (last_action == &"shot" and linear_velocity.length() > 3.0)):
+				continue
 			var offset := global_position - candidate.global_position
 			if offset.y > tuning.dribble_max_height:
 				continue
 			offset.y = 0.0
 			var gap := offset.length()
-			if gap >= best_gap - 0.001:
-				continue
 			if not _within_dribble_touch_arc(candidate, offset):
 				continue
 			if last_touch != &"none" and candidate.team_name != last_touch and gap > 0.55:
 				continue
-			best = candidate
-			best_gap = gap
+			team_gaps[candidate.team_name] = minf(float(team_gaps.get(candidate.team_name, INF)),gap)
+			var same_team_tie := candidate.team_name == StringName(best.get("team_name")) and absf(gap-best_gap) < .001
+			var best_footballer := best as FootballPlayer
+			var candidate_slot := candidate.profile.starting_slot if candidate.profile != null else str(candidate.name)
+			var best_slot := best_footballer.profile.starting_slot if best_footballer != null and best_footballer.profile != null else str(best.name)
+			if gap < best_gap - .001 or (same_team_tie and candidate_slot < best_slot):
+				best = candidate;best_gap = gap
+		# Equal opposing reaches are a contest, not an award to the first node
+		# processed. Physical contact/tackles or separation must resolve it.
+		for team in team_gaps:
+			if team != StringName(best.get("team_name")) and absf(float(team_gaps[team])-best_gap) <= .03:
+				return false
 		_dribble_controller = best
+
 	if _dribble_controller == player:
 		_dribble_control_lease = 0.12
 	return _dribble_controller == player

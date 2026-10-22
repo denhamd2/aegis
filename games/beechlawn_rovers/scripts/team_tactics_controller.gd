@@ -16,6 +16,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 	var marking_assignments := assign_defensive_marks(team_players, chaser, opponents,
 		ball_position, secondary_presser) if not in_possession else {}
 	var decisions := {}
+	var support_plan := _support_targets(team_players, chaser, ball_position, opponents) if in_possession and team_players.size() >= 7 else {}
 	# Last touch survives passes and loose deflections. Press an actual nearby
 	# carrier; otherwise the primary chaser must reach the loose ball itself.
 	var opponent_in_control_range := false
@@ -37,7 +38,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			target = Vector2(actor.receive_target.x, actor.receive_target.z)
 		elif in_possession and actor == chaser:
 			var ball_gap := Vector2(actor.global_position.x, actor.global_position.z).distance_to(ball_position)
-			if ball_gap <= 1.7:
+			if ball_gap <= 1.7 and context.get("possession_state", &"controlled") == &"controlled":
 				var carry_push := 4.5 if actor.team_name == transition_team and transition_time_left > 0.0 else 3.0
 				var carry_direction := Vector2(actor.attack_sign, 0.0)
 				if team_players.size() >= 7 and absf(ball_position.y) > 12.0:
@@ -53,8 +54,9 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			else:
 				target = interception_position
 		elif in_possession:
-			target = attacking_support_position(actor, ball_position,
-				actor.team_name == transition_team and transition_time_left > 0.0)
+			target = support_plan.get(actor.get_instance_id(), {}).get("target",
+				attacking_support_position(actor, ball_position,
+					actor.team_name == transition_team and transition_time_left > 0.0))
 		elif actor == chaser or actor == secondary_presser:
 			if actor == chaser and not opponent_in_control_range:
 				target = interception_position
@@ -71,6 +73,8 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			if mark != null:
 				target = marking_position(actor, mark, ball_position, target)
 		var intent := "support" if in_possession else "cover"
+		if in_possession and support_plan.has(actor.get_instance_id()) and actor != chaser:
+			intent = support_plan[actor.get_instance_id()].intent
 		if in_possession and actor == chaser:
 			intent = "carry"
 		elif not in_possession and actor == chaser:
@@ -86,12 +90,60 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 		}
 	return decisions
 
+func _support_targets(team: Array[FootballPlayer], carrier: FootballPlayer,
+		ball: Vector2, opponents: Array[FootballPlayer]) -> Dictionary:
+	if carrier == null:
+		return {}
+	var result := {}
+	var candidates: Array[FootballPlayer] = []
+	for actor in team:
+		if actor != carrier and actor.profile.role == "outfield" and actor.receive_target_time <= 0.0:
+			candidates.append(actor)
+	candidates.sort_custom(func(a, b): return a.profile.starting_slot < b.profile.starting_slot)
+	var outlet: FootballPlayer
+	var outlet_target := Vector2.ZERO
+	var best_cost := INF
+	var gap := carrier.tuning.ai_support_distance
+	for actor in candidates:
+		if actor.profile.tactical_role == "centre_back":
+			continue
+		for side in [-1.0, 1.0]:
+			var target := ball + Vector2(-3.5 * carrier.attack_sign, side * gap)
+			target = Vector2(clampf(target.x,-46,46),clampf(target.y,-29,29))
+			var cost := Vector2(actor.position.x,actor.position.z).distance_to(target)
+			for defender in opponents:
+				if defender.profile.role == "outfield":
+					cost += maxf(0, 4.0-Vector2(defender.position.x,defender.position.z).distance_to(target)) * 2.0
+			if cost < best_cost:
+				outlet = actor;outlet_target = target;best_cost = cost
+	if outlet != null:
+		result[outlet.get_instance_id()] = {"target": outlet_target,"intent": "outlet"}
+	var runner: FootballPlayer
+	var runner_target := Vector2.ZERO
+	best_cost = INF
+	for actor in candidates:
+		if actor == outlet or actor.profile.tactical_role not in ["striker", "winger"]:
+			continue
+		var lane := clampf(actor.profile.starting_position.y, -14.0,14.0)
+		var target := ball + Vector2(carrier.attack_sign * carrier.tuning.ai_forward_run_distance, 0)
+		target.y = clampf(lerpf(lane,ball.y,.25),-25,25)
+		target.x = clampf(target.x,-46,46)
+		var cost := Vector2(actor.position.x,actor.position.z).distance_to(target)
+		for defender in opponents:
+			if defender.profile.role == "outfield":
+				cost += maxf(0, 4.0-Vector2(defender.position.x,defender.position.z).distance_to(target)) * 2.0
+		if cost < best_cost:
+			runner = actor;runner_target = target;best_cost = cost
+	if runner != null:
+		result[runner.get_instance_id()] = {"target": runner_target,"intent": "forward_run"}
+	return result
+
 func _open_carry_direction(origin: Vector2, preferred: Vector2,
 		opponents: Array[FootballPlayer]) -> Vector2:
 	var best := preferred
 	var best_score := -INF
 	for angle in [0.0, 0.65, -0.65]:
-		var direction := preferred.rotated(angle)
+		var direction := preferred.rotated(angle * (1.0 if preferred.x >= 0.0 else -1.0))
 		var destination := origin + direction * 4.0
 		var clearance := 4.0
 		for opponent in opponents:
@@ -128,6 +180,9 @@ func assign_defensive_marks(team_players: Array[FootballPlayer], chaser: Footbal
 				or actor.profile == null or actor.profile.role != "outfield":
 			continue
 		defenders.append(actor)
+	# Stable role slots make greedy assignment independent of actor creation/order.
+	defenders.sort_custom(func(a, b): return a.profile.starting_slot < b.profile.starting_slot)
+	available.sort_custom(func(a, b): return a.profile.starting_slot < b.profile.starting_slot)
 	var assignments := {}
 	for defender in defenders:
 		var best: FootballPlayer
@@ -156,7 +211,7 @@ func nearest_outfielder(team_players: Array[FootballPlayer], target: Vector2) ->
 		if actor.profile == null or actor.profile.role != "outfield":
 			continue
 		var distance := Vector2(actor.global_position.x, actor.global_position.z).distance_squared_to(target)
-		if distance < nearest_distance:
+		if distance < nearest_distance - .0001 or (absf(distance-nearest_distance) < .0001 and nearest != null and actor.profile.starting_slot < nearest.profile.starting_slot):
 			nearest = actor
 			nearest_distance = distance
 	return nearest

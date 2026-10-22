@@ -1,3 +1,16 @@
+# More purposeful AI attacks
+
+Both sides now distinguish actual control from a loose ball or travelling pass,
+keep the intended AI recipient through kick contact, offer an outlet and forward
+run, and carry into open space despite a trailing pursuer. Equal opposing
+reaches no longer grant dribble control to the first actor processed.
+
+Six complete short-match scenarios pass chance-creation targets for both teams:
+32/31 physical shots overall, with contested shots from both in every match.
+The goalkeeper, movement speeds, shot range and neutral ratings are unchanged.
+These cloud checks do not establish Mac feel or performance. See
+[AI pass evidence](art_briefs/ai_attacking_flow_2026_10_22/brief.md).
+
 # Match behaviour and broadcast repairs
 
 Fixed reproduced dribble launches and skating after locomotion clips stopped.

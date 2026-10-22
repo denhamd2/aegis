@@ -49,6 +49,7 @@ var _footballer_visual: FootballerVisual
 var _visual_pass_pending := false
 var _visual_pass_through := false
 var _visual_pass_direction := Vector3.ZERO
+var _visual_pass_receiver_id := 0
 var _visual_shot_pending := false
 var _visual_shot_direction := Vector3.ZERO
 var _visual_shot_speed := 0.0
@@ -616,7 +617,8 @@ func _action_direction() -> Vector3:
 	return direction.normalized()
 
 func _do_pass(through: bool, requested_direction := Vector3.ZERO,
-		at_animation_contact := false, playback_speed := 1.0) -> void:
+		at_animation_contact := false, playback_speed := 1.0,
+		requested_receiver: FootballPlayer = null) -> void:
 	if not at_animation_contact and is_instance_valid(_footballer_visual):
 		var predicted_first_time_contact := _pending_pass > 0.0 \
 			and _time_to_kick_window() > 0.0
@@ -628,12 +630,16 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 		# Arm the new contact afterward so that cleanup cannot erase it.
 		_visual_pass_pending = _footballer_visual.play_pass(playback_speed)
 		if _visual_pass_pending:
+			_visual_pass_receiver_id = requested_receiver.get_instance_id() if is_instance_valid(requested_receiver) else 0
 			return
 		_visual_pass_pending = false
 		status_changed.emit("Pass action unavailable: animation is busy or missing")
 		return
 	var intended_direction := requested_direction.normalized() if requested_direction.length_squared() > 0.01 else _action_direction()
-	var option := _choose_pass_target(intended_direction, through)
+	var option := _pass_option_for_receiver(requested_receiver, through) if requested_receiver != null else _choose_pass_target(intended_direction, through)
+	if requested_receiver != null and option.is_empty():
+		status_changed.emit("Pass cancelled: recipient unavailable")
+		return
 	var target: FootballPlayer = option.get("receiver") as FootballPlayer
 	var target_position: Vector3 = option.get("position", ball.global_position + intended_direction * 12.0)
 	var direction := target_position - ball.global_position
@@ -692,7 +698,11 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 		return
 	var through := _visual_pass_through
 	var requested_direction := _visual_pass_direction
-	_do_pass(through, requested_direction, true)
+	var receiver := instance_from_id(_visual_pass_receiver_id) as FootballPlayer if _visual_pass_receiver_id != 0 else null
+	if _visual_pass_receiver_id != 0 and not is_instance_valid(receiver):
+		status_changed.emit("Pass cancelled: recipient unavailable")
+		return
+	_do_pass(through, requested_direction, true, 1.0, receiver)
 
 
 func _on_visual_action_finished(action: StringName) -> void:
@@ -701,6 +711,7 @@ func _on_visual_action_finished(action: StringName) -> void:
 		_contact_wait_remaining = 0.0
 	if action == &"pass":
 		_visual_pass_pending = false
+		_visual_pass_receiver_id = 0
 	elif action == &"shot":
 		_visual_shot_pending = false
 	elif action == &"slide_tackle":
@@ -787,15 +798,7 @@ func _choose_pass_target(intended_direction: Vector3, through: bool) -> Dictiona
 		var alignment := direct.dot(intended)
 		if alignment < 0.30:
 			continue
-		var predicted := candidate.global_position
-		var travel_time := distance / maxf(tuning.through_pass_speed if through else tuning.short_pass_speed, 1.0)
-		if through:
-			var receiver_velocity := candidate.velocity
-			receiver_velocity.y = 0.0
-			var run_direction := receiver_velocity.normalized() if receiver_velocity.length() > 0.5 else Vector3(attack_sign, 0.0, 0.0)
-			predicted += run_direction * minf(travel_time, 0.8) * (2.2 if receiver_velocity.length() < 0.5 else receiver_velocity.length())
-			predicted.x = clampf(predicted.x, -FIELD_LENGTH_LIMIT, FIELD_LENGTH_LIMIT)
-			predicted.z = clampf(predicted.z, -FIELD_WIDTH_LIMIT, FIELD_WIDTH_LIMIT)
+		var predicted: Vector3 = _pass_option_for_receiver(candidate, through).get("position", candidate.global_position)
 		var score := (1.0 - alignment) * 5.0 + distance * (0.055 if through else 0.025)
 		if through:
 			var forward_gain := (predicted.x - global_position.x) * attack_sign
@@ -808,6 +811,23 @@ func _choose_pass_target(intended_direction: Vector3, through: bool) -> Dictiona
 			best = candidate
 			best_position = predicted
 	return {"receiver": best, "position": best_position} if best != null else {}
+
+func _pass_option_for_receiver(receiver: FootballPlayer, through: bool) -> Dictionary:
+	if not is_instance_valid(receiver) or not receiver.is_inside_tree() or receiver == self \
+			or receiver.team_name != team_name or receiver.profile == null or receiver.profile.role == "goalkeeper":
+		return {}
+	var distance := Vector2(receiver.global_position.x - global_position.x, receiver.global_position.z - global_position.z).length()
+	if distance < 2.0 or distance > 34.0:
+		return {}
+	var predicted := receiver.global_position
+	if through:
+		var run_velocity := Vector3(receiver.velocity.x, 0, receiver.velocity.z)
+		var run_direction := run_velocity.normalized() if run_velocity.length() > 0.5 else Vector3(attack_sign,0,0)
+		var travel_time := distance / maxf(tuning.through_pass_speed, 1.0)
+		predicted += run_direction * minf(travel_time, 0.8) * (run_velocity.length() if run_velocity.length() > 0.5 else 2.2)
+		predicted.x = clampf(predicted.x, -FIELD_LENGTH_LIMIT, FIELD_LENGTH_LIMIT)
+		predicted.z = clampf(predicted.z, -FIELD_WIDTH_LIMIT, FIELD_WIDTH_LIMIT)
+	return {"receiver": receiver, "position": predicted}
 
 func _pass_lane_risk(start: Vector3, finish: Vector3) -> float:
 	var segment := finish - start
@@ -926,6 +946,7 @@ func reset_for_stoppage() -> void:
 	receive_target_time=0
 	_pending_pass=0; _pending_shot=0; _shot_charge=-1
 	_visual_pass_pending=false; _visual_shot_pending=false
+	_visual_pass_receiver_id=0
 	_slide_contact_pending=false; _slide_tackle_time=0
 	_balance_stagger_time=0
 	set_meta("move_speed",0.0)

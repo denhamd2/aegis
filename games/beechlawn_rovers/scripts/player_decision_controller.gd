@@ -21,15 +21,20 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	var ball_position := Vector2(ball.global_position.x, ball.global_position.z)
 	var goal_position := Vector2(carrier.attack_sign * 52.5, 0.0)
 	var goal_distance := ball_position.distance_to(goal_position)
-	var nearest_defender := INF
 	var nearest_forward_defender := INF
+	var nearest_action_pressure := INF
 	var goalward := (goal_position - ball_position).normalized()
 	for opponent in opponents:
 		if opponent == null or opponent.profile == null or opponent.profile.role != "outfield":
 			continue
 		var opponent_position := Vector2(opponent.global_position.x, opponent.global_position.z)
-		nearest_defender = minf(nearest_defender, opponent_position.distance_to(ball_position))
-		if (opponent_position - ball_position).dot(goalward) >= 0.0:
+		var offset := opponent_position - ball_position
+		# A trailing pursuer is pressure, but an open goalward lane is still
+		# usable. Side/front pressure can justify a pass; chasing from directly
+		# behind must not force a needless release before shooting range.
+		if offset.dot(goalward) >= -0.5 * offset.length():
+			nearest_action_pressure = minf(nearest_action_pressure, offset.length())
+		if offset.dot(goalward) >= 0.0:
 			nearest_forward_defender = minf(nearest_forward_defender, opponent_position.distance_to(ball_position))
 
 	# Pressure behind or beside the carrier does not necessarily block a shot.
@@ -44,7 +49,7 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	# Evaluate a progressive pass before the generic safe outlet. The outlet
 	# condition below also matches high pressure, so checking it first otherwise
 	# starves this branch whenever any safe teammate is available.
-	if nearest_defender <= PRESSURE_RANGE:
+	if nearest_action_pressure <= PRESSURE_RANGE:
 		var forward := Vector3(carrier.attack_sign, 0.0, 0.0)
 		var pass_option := carrier._choose_pass_target(forward, true)
 		var receiver := pass_option.get("receiver") as FootballPlayer
@@ -59,7 +64,7 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	# An outlet is an escape from pressure, not a reason to abandon free space.
 	# Retain early release for a defender ahead, but do not recycle solely
 	# because a trailing defender is four metres behind.
-	if teammates.size() >= 7 and (nearest_defender <= PRESSURE_RANGE or nearest_forward_defender < 5.0):
+	if teammates.size() >= 7 and (nearest_action_pressure <= PRESSURE_RANGE or nearest_forward_defender < 5.0):
 		var best: FootballPlayer
 		var best_score := INF
 		for candidate in teammates:
@@ -72,8 +77,10 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 			var risk := carrier._pass_lane_risk(ball.global_position, candidate.global_position)
 			if risk > 0.6:
 				continue
-			var score := distance * 0.12 + risk * 9.0 - offset.x * carrier.attack_sign * 0.2
-			if score < best_score:
+			var score := distance * carrier.tuning.ai_pass_distance_weight \
+				+ risk * carrier.tuning.ai_pass_risk_weight \
+				- offset.x * carrier.attack_sign * carrier.tuning.ai_pass_progress_weight
+			if score < best_score - 0.0001 or (absf(score-best_score) < 0.0001 and best != null and candidate.profile.starting_slot < best.profile.starting_slot):
 				best = candidate
 				best_score = score
 		if best != null:
@@ -81,7 +88,8 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 			# Recycle backward when a frontal challenge is imminent; otherwise try the
 			# tactical controller's open carry lane before giving up progress.
 			if forward_gain >= 1.0 or nearest_forward_defender <= 2.0:
-				return {"type": &"short_pass", "direction": best.global_position - carrier.global_position}
+				return {"type": &"short_pass", "direction": best.global_position - carrier.global_position,
+					"receiver_id": best.get_instance_id()}
 
 	return {"type": &"carry"}
 

@@ -25,11 +25,13 @@ referee. Shared human body, rig, animation and team/role materials replace the
 proxy in this scene. Individual heads still use the common Shane-derived draft.
 The original 4v4 scene remains the regression fixture.
 
-Role-aware 4-4-2 targets, staggered team decisions, player switching including
+Role-aware 4-4-2 targets, shared-snapshot tactical decisions, player switching including
 keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
 basic boundary restarts are implemented. Full 180-second AI-vs-AI replays
 record physical shots, contested attempts, saves, goals and ball stalls;
-attacking frequency and balance remain open.
+the [22 October attacking-flow pass](art_briefs/ai_attacking_flow_2026_10_22/brief.md)
+now passes six full-match chance scenarios for both teams (32/31 total shots).
+Human play-quality and native Mac acceptance remain open.
 The [22 October match repair pass](match_repairs_2026-10-22.md) replaces touchline
 ground passes with overhead throw-ins and adds aim/power restarts, basic
 contact-evaluated fouls, penalties, cards and reduced teams. Full laws,
@@ -419,6 +421,15 @@ playtest has no stuck bodies or unreported frame-rate failure on the target Mac.
     arrows, E ground pass, Q
     through-ball.
 - [ ] **BR-008 — Small-sided attacking/defending AI**
+  - 2026-10-22: read-only tactical possession, committed AI pass recipients,
+    role-based outlet/run/cover support, shared decision timing, neutral
+    opposing dribble ties and carrying through trailing pressure now pass
+    targeted regressions. Six fixed complete matches qualify both teams in
+    6/6 scenarios, with 32/31 physical shots and contested shots for both
+    sides in every match. No runtime quotas, attribute boosts or keeper nerfs.
+    See [full diagnosis and evidence](art_briefs/ai_attacking_flow_2026_10_22/brief.md).
+    Item 8/25 remains in progress for human play-quality/animation acceptance;
+    next gameplay priority is BR-009 (9/25), save/parry/recovery refinement.
   - 2026-10-21: the carrier evaluates five goal endpoints so a central blocker
     does not veto a free corner. Immediate full-lane blocks still discourage a
     shot. Both mirrored controlled scenarios deliver physical contested shots;

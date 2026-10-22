@@ -37,6 +37,12 @@ class_name FootballTuning
 @export_range(1.5, 2.8, 0.1) var slide_tackle_reach := 2.2
 
 @export_group("AI decisions")
+@export_range(0.1, 0.4, 0.01) var ai_decision_interval := 0.20
+@export_range(0.05, 0.5, 0.01) var ai_pass_progress_weight := 0.20
+@export_range(0.0, 0.3, 0.01) var ai_pass_distance_weight := 0.12
+@export_range(1.0, 15.0, 0.5) var ai_pass_risk_weight := 9.0
+@export_range(4.0, 12.0, 0.5) var ai_support_distance := 7.0
+@export_range(5.0, 14.0, 0.5) var ai_forward_run_distance := 8.0
 @export_range(16.0, 28.0, 0.5) var ai_shot_range := 22.0
 
 @export_group("Goalkeeper")

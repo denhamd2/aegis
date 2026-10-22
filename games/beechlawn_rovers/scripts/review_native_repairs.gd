@@ -7,6 +7,7 @@ var sequence: Array[Dictionary]=[]
 var tick:=0
 var output: String
 var mode: String
+var shot_contacts: Array[Dictionary] = []
 func _initialize() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--") and argument.contains("="):
@@ -15,6 +16,7 @@ func _initialize() -> void:
 	call_deferred("_capture")
 func _physics_step() -> void:
 	tick+=1
+	if mode.begins_with("attack_"):game._update_ai(1.0/60.0)
 	if game.restart.active():game.restart.update(1.0/60.0)
 	for impact in game._net_impacts.values():
 		impact.age=minf(2,impact.age+1.0/60.0)
@@ -26,7 +28,7 @@ func _save(label: String) -> void:
 	assert(image.save_png(output.path_join(filename))==OK)
 	sequence.append({"file":filename,"label":label,"tick":tick,
 		"ball":str(game.ball.position),"player":str(game.player.position),
-		"player_velocity":str(game.player.velocity),"score":[game._home_score,game._away_score]})
+		"player_velocity":str(game.player.velocity),"shot_contacts":shot_contacts.duplicate(true),"score":[game._home_score,game._away_score]})
 	print("REPAIR_FRAME ",filename," ",label)
 func _capture() -> void:
 	assert(RenderingServer.get_current_rendering_method()=="forward_plus")
@@ -35,6 +37,8 @@ func _capture() -> void:
 	DirAccess.make_dir_recursive_absolute(output)
 	var session:=root.get_node("MatchSession")
 	session.launched_from_menu=false;session.weather_preset=&"sunny"
+	if mode.begins_with("attack_"):
+		session.mode=session.MatchMode.WATCH;session.launched_from_menu=true;session.show_intro=false
 	game=load("res://scenes/match_11v11.tscn").instantiate()
 	root.add_child(game);current_scene=game
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
@@ -51,7 +55,28 @@ func _capture() -> void:
 				await _save(str(director.shots[index].id)+" %.2f"%time)
 	else:
 		for actor in game._home_players+game._away_players:actor.position=Vector3(150,0,150)
-		if mode=="movement":
+		if mode.begins_with("attack_"):
+			var team: Array[FootballPlayer] = game._home_players if mode=="attack_home" else game._away_players
+			var opposition: Array[FootballPlayer] = game._away_players if mode=="attack_home" else game._home_players
+			var actor: FootballPlayer
+			for candidate in team:
+				if candidate.profile.starting_slot=="striker_left":actor=candidate
+			var sx:=actor.attack_sign
+			for candidate in game._home_players+game._away_players:
+				candidate.controlled_by_human=false
+				candidate.position=Vector3(candidate.profile.starting_position.x*candidate.attack_sign,0,candidate.profile.starting_position.y)
+			actor.position=Vector3(35*sx,0,6);actor.rotation.y=-PI/2*sx
+			var defender: FootballPlayer=game._nearest_outfielder(opposition,Vector2(35*sx,6))
+			defender.position=Vector3(32*sx,0,6.5)
+			game.ball.position=Vector3(35.6*sx,.14,6);game.ball.freeze=false
+			game.ball.last_touch=actor.team_name;game.ball.last_touch_player=actor
+			game.ball.last_action=&"dribble";game._kickoff_pending=false
+			game._set_players_physics_enabled(true)
+			camera.queue_free();camera=game.camera_rig.camera
+			game.camera_rig.presentation_override=false;camera.make_current();game.camera_rig.reset_tracking()
+			game.ball.touched.connect(func(kind: StringName, _speed: float):
+				if kind==&"shot":shot_contacts.append({"tick":tick,"team":str(game.ball.last_touch),"ball":str(game.ball.position)}))
+		elif mode=="movement":
 			var actor: FootballPlayer=game.player
 			actor.position=Vector3.ZERO;actor.rotation.y=-PI/2
 			actor.controlled_by_human=false;actor.ai_move_direction=Vector3.RIGHT
@@ -81,6 +106,9 @@ func _capture() -> void:
 				camera.look_at(game.player.position+Vector3(.3,.85,0))
 			await _save(mode)
 		physics_frame.disconnect(_physics_step)
+	if mode.begins_with("attack_") and shot_contacts.is_empty():
+		push_error("Native attack fixture produced no physical AI shot contact")
+		quit(1);return
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
 	paused=true
 	var first:=Image.load_from_file(output.path_join(sequence[1 if mode=="montage" else 0].file))
@@ -90,7 +118,7 @@ func _capture() -> void:
 		"api":RenderingServer.get_video_adapter_api_version(),"display_server":DisplayServer.get_name(),
 		"godot":Engine.get_version_info().string,"resolution":[first.get_width(),first.get_height()],
 		"msaa_3d":root.msaa_3d,"home_players":game._home_players.size(),"away_players":game._away_players.size(),
-		"officials":get_nodes_in_group("match_officials").size(),"review_mode":mode,"frames":sequence,
+		"officials":get_nodes_in_group("match_officials").size(),"review_mode":mode,"frames":sequence,"shot_contacts":shot_contacts,
 		"scope":"Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim."}
 	var file:=FileAccess.open(output.path_join("match_broadcast.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"  ")+"\n")

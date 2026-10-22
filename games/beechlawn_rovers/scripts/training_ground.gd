@@ -7,6 +7,8 @@ const GOAL_WIDTH := 7.32
 const GOAL_HEIGHT := 2.44
 const GOAL_DEPTH := 1.8
 const SECOND_PRESS_RANGE := 18.0
+signal ai_action_chosen(carrier: FootballPlayer, action: StringName)
+
 @export_range(30.0, 600.0, 30.0) var short_match_seconds := 180.0
 @export var home_team_resource: FootballTeam = preload("res://data/teams/beechlawn_rovers.tres")
 @export var away_team_resource: FootballTeam = preload("res://data/teams/bordeaux.tres")
@@ -46,6 +48,8 @@ const PlayerDecisionController = preload("res://scripts/player_decision_controll
 var _player_decisions = PlayerDecisionController.new()
 var _kit_material_cache: Dictionary = {}
 var _next_home_ai := true
+var _possession_reader = preload("res://scripts/tactical_possession.gd").new()
+var _tactical_possession := {}
 var _net_impacts: Dictionary = {}
 var _boundary_pending := false
 var _boundary_team: StringName = &"none"
@@ -622,35 +626,32 @@ func _set_marker_visibility(actor: FootballPlayer, enabled: bool) -> void:
 
 func _update_ai(delta: float) -> void:
 	_transition_time_left = maxf(0.0, _transition_time_left - delta)
-	if ball.last_touch != &"none" and ball.last_touch != _possession_team:
-		_possession_team = ball.last_touch
-		_transition_team = ball.last_touch
+	_tactical_possession = _possession_reader.sample(ball, _home_players + _away_players,
+		_full_time or _goal_pause_timer > 0.0)
+	var controlling_team: StringName = _tactical_possession.team
+	# A deflection or pass flight is not a possession win. Keep the previous
+	# controlled team through loose phases so only an actual turnover resets it.
+	if _tactical_possession.state == &"controlled" and controlling_team != _possession_team:
+		_possession_team = controlling_team
+		_transition_team = controlling_team
 		_transition_time_left = 1.35
 	_ai_tick -= delta
-	if _ai_tick > 0.0:
+	if _ai_tick > 0.0 or _home_players.is_empty() or _away_players.is_empty():
 		return
-	_ai_tick = 0.20
-	if _home_players.is_empty() or _away_players.is_empty():
+	_ai_tick = ball.tuning.ai_decision_interval
+	if _tactical_possession.state == &"stopped":
 		return
 	var ball_position := Vector2(ball.global_position.x, ball.global_position.z)
-	if use_human_visual:
-		# Each team receives a 5 Hz decision budget on alternate physics ticks.
-		_ai_tick = 0.10
-		var actors := _home_players if _next_home_ai else _away_players
-		var opposition := _away_players if _next_home_ai else _home_players
-		var intercept := _best_interception_position(actors,ball_position)
-		_update_team_ai(actors,_nearest_outfielder(actors,intercept),ball_position,intercept,
-			opposition,_transition_team,_transition_time_left)
-		_next_home_ai = not _next_home_ai
-		return
-	var home_intercept := _best_interception_position(_home_players, ball_position)
-	var away_intercept := _best_interception_position(_away_players, ball_position)
-	var home_chaser := _nearest_outfielder(_home_players, home_intercept)
-	var away_chaser := _nearest_outfielder(_away_players, away_intercept)
-	_update_team_ai(_home_players, home_chaser, ball_position, home_intercept,
-		_away_players, _transition_team, _transition_time_left)
-	_update_team_ai(_away_players, away_chaser, ball_position, away_intercept,
-		_home_players, _transition_team, _transition_time_left)
+	# Both sides read one physics snapshot at the same 5 Hz budget. Alternate
+	# execution order, never grant one team a 100 ms-old view of the opponent.
+	var teams := [_home_players, _away_players] if _next_home_ai else [_away_players, _home_players]
+	for index in 2:
+		var actors: Array[FootballPlayer] = teams[index]
+		var opposition: Array[FootballPlayer] = teams[1-index]
+		var intercept := _best_interception_position(actors, ball_position)
+		_update_team_ai(actors, _nearest_outfielder(actors, intercept), ball_position, intercept,
+			opposition, _transition_team, _transition_time_left, _tactical_possession)
+	_next_home_ai = not _next_home_ai
 
 func _best_interception_position(team_players: Array[FootballPlayer], ball_position: Vector2) -> Vector2:
 	var horizontal_velocity := Vector2(ball.linear_velocity.x, ball.linear_velocity.z)
@@ -689,7 +690,7 @@ func _nearest_outfielder(team_players: Array[FootballPlayer], target: Vector2) -
 		if actor.profile == null or actor.profile.role != "outfield":
 			continue
 		var distance := Vector2(actor.global_position.x, actor.global_position.z).distance_squared_to(target)
-		if distance < nearest_distance:
+		if distance < nearest_distance - 0.0001 or (absf(distance-nearest_distance) < 0.0001 and nearest != null and actor.profile.starting_slot < nearest.profile.starting_slot):
 			nearest = actor
 			nearest_distance = distance
 	return nearest
@@ -697,18 +698,20 @@ func _nearest_outfielder(team_players: Array[FootballPlayer], target: Vector2) -
 func _update_team_ai(team_players: Array[FootballPlayer], chaser: FootballPlayer,
 		ball_position: Vector2, interception_position: Vector2,
 		opponents: Array[FootballPlayer] = [], transition_team: StringName = &"none",
-		transition_time_left := 0.0) -> void:
+		transition_time_left := 0.0, possession: Dictionary = {}) -> void:
 	if team_players.is_empty():
 		return
 	var team_name: StringName = team_players[0].team_name
-	var in_possession := ball.last_touch == team_name
-	if in_possession:
+	var snapshot: Dictionary = possession if not possession.is_empty() else _possession_reader.sample(ball, _home_players + _away_players)
+	var in_possession: bool = snapshot.team == team_name
+	if snapshot.state == &"controlled" and in_possession:
 		# Prediction selects a runner for a travelling ball. A teammate who can
 		# already play it owns the current action and carry target instead.
-		var contact_player := _nearest_outfielder(team_players, ball_position)
+		var contact_player := snapshot.carrier as FootballPlayer
 		if contact_player != null and contact_player._can_kick():
 			chaser = contact_player
 	var context := _team_tactical_context(team_name, ball_position)
+	context["possession_state"] = snapshot.state
 	var secondary_presser: FootballPlayer
 	var counterpress_requested := not in_possession and transition_time_left > 0.0 \
 		and transition_team != &"none" and team_name != transition_team \
@@ -721,7 +724,7 @@ func _update_team_ai(team_players: Array[FootballPlayer], chaser: FootballPlayer
 				candidate.global_position.z - ball_position.y).length() <= SECOND_PRESS_RANGE:
 			secondary_presser = candidate
 	var counterpress_active := counterpress_requested and secondary_presser != null
-	if in_possession:
+	if in_possession and snapshot.state == &"controlled":
 		_apply_carrier_action(chaser, team_players, opponents)
 	var decisions := _team_tactics.update_team_targets(team_players, chaser, ball_position,
 		interception_position, opponents, transition_team, transition_time_left,
@@ -733,17 +736,22 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 	var action: Dictionary = _player_decisions.choose_carrier_action(carrier,
 		team_players, opponents, ball)
 	var previous_serial := ball.action_serial
+	var action_type: StringName = action.get("type", &"none")
+	if action_type not in [&"none", &"carry"]:
+		ai_action_chosen.emit(carrier, action_type)
 	match action.get("type", &"none"):
 		&"shoot":
 			carrier._do_shot(float(action.get("charge", 0.42)), 1.0, action.get("direction", Vector3.ZERO))
 			if carrier._visual_shot_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 1.1
 		&"through_pass":
-			carrier._do_pass(true, action.get("direction", Vector3.RIGHT))
+			carrier._do_pass(true, action.get("direction", Vector3.RIGHT), false, 1.0,
+				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null)
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 0.85
 		&"short_pass":
-			carrier._do_pass(false,action.get("direction",Vector3.RIGHT))
+			carrier._do_pass(false, action.get("direction", Vector3.RIGHT), false, 1.0,
+				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null)
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 0.85
 
