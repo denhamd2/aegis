@@ -1,3 +1,15 @@
+# Native Forward+ visual-review workflow
+
+Football now has a separate native Godot Forward+ capture runner using
+Vulkan/Xvfb on cloud Linux and the native graphics driver on macOS. New
+960x540 portraits and the actual 11v11 broadcast kickoff view record renderer,
+adapter, antialiasing, shadows, actor counts and image hashes. These become
+the primary cloud appearance evidence; browser checks still cover the Web
+build and headless checks cover logic. Process deadlines, live logs and
+bounded post-readback cleanup prevent the observed software Vulkan teardown
+hang from leaving capture commands running. Native Mac appearance and frame
+rate still need hardware validation. Gameplay and wrestling assets are unchanged.
+
 # Four-player head and skin refinement
 
 Shane Denham, John O'Rourke, Boardeaux player Des Feeney and referee Des Feeney

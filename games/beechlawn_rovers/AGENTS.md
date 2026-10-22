@@ -103,6 +103,12 @@ requirements do not govern this project.
 
 ## Godot automation
 
+- For appearance approval, use this project's native Forward+ capture runner
+  `tools/capture_native.py` and `docs/web_capture_notes.md`. Browser Compatibility
+  captures cover the Web build; they cannot approve the Mac's Forward+ look.
+  Headless smoke checks cover logic/structure. Record adapter, resolution and
+  software-rendering limits; native M1 graphics/performance still need the Mac.
+
 - The project-scoped `gda` Agent Skill is installed at
   `.agents/skills/gda/SKILL.md`; read it before using the `gda` CLI for project
   validation or live runtime inspection.

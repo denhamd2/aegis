@@ -1,0 +1,40 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "john_portrait.png",
+      "report": "john_portrait.json",
+      "sha256": "10ffccf795b24822bc4332a900c2981bf6b0df0c9ad9d80e8852c7725733f357",
+      "process_cleanup": "terminated_after_saved_capture",
+      "capture_seconds": 33.27,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "960x540",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "res://scenes/review/shane_asset_review.tscn",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/native_forward_plus",
+        "--player=john",
+        "--view=portrait",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

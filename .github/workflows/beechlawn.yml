@@ -52,6 +52,7 @@ jobs:
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release Web "$PWD/build/beechlawn/web/index.html"
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
           mkdir -p build/beechlawn/web/screenshots
+          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/match/match_broadcast.png build/beechlawn/web/screenshots/native_broadcast.png
           cp games/beechlawn_rovers/docs/art_briefs/match_11v11_{broadcast,touchline,goal,corner}.png build/beechlawn/web/screenshots/
           cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/broadcast.png build/beechlawn/web/screenshots/current_broadcast.png
           cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_intro_venue.png build/beechlawn/web/screenshots/current_venue.png
@@ -61,10 +62,10 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/lineup_graphics/lineup_{home,away}.png build/beechlawn/web/screenshots/
           cp games/beechlawn_rovers/docs/art_briefs/referee_intro/referee_closeup.png build/beechlawn/web/screenshots/current_referee_intro.png
           cp games/beechlawn_rovers/docs/art_briefs/gameplay_feel_pass/{contact_pass,contact_shot,keeper_response}.gif build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/shane/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
-          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/des/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
-          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/john/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
-          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/referee/referee_portrait.png build/beechlawn/web/screenshots/current_referee.png
+          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
+          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
+          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
+          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/referee_portrait.png build/beechlawn/web/screenshots/current_referee.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_front.png build/beechlawn/web/screenshots/keeper_john_front.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_back.png build/beechlawn/web/screenshots/keeper_john_back.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/bordeaux_keeper_front.png build/beechlawn/web/screenshots/keeper_bordeaux_front.png

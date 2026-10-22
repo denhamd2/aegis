@@ -686,6 +686,16 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-22 native look checks: football now uses its own bounded
+    Forward+/Vulkan/Xvfb still runner for primary appearance evidence, adapting
+    the wrestling capture principle without touching that project. Four native
+    roster portraits and the actual 22-player/referee Close Broadcast scene
+    record adapter, quality settings and hashes in
+    [the native capture brief](art_briefs/native_forward_plus/brief.md).
+    Browser checks remain Web-specific; software Vulkan stills do not close
+    the Mac hardware, likeness or 60 fps gates. BR-022 remains in progress
+    (22/25); next: use these native portraits for the remaining face/hair form
+    corrections, then validate on the Mac when available.
   - 2026-10-22 four-head finishing pass: Shane now has an independent captured
     delta alongside John and the two distinct Des identities. Portrait-guided
     proportions, monotonic lip closure, fitted eyes, separate roughness and

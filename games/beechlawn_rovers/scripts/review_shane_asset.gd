@@ -13,8 +13,10 @@ var animation: AnimationPlayer
 var _capture_callback: JavaScriptObject
 var review_lighting := "default"
 var review_normal_maps := true
+var _native_options: Dictionary = {}
 
 func _ready() -> void:
+	_load_native_options()
 	var source := MATCH_SCENE.instantiate()
 	source.set("terrain_enabled", true)
 	var markings_mesh: Mesh = source.call("_build_line_mesh")
@@ -30,15 +32,16 @@ func _ready() -> void:
 	review_environment.sky = review_sky
 	var review_sky_material := review_sky.sky_material.duplicate(true) as ShaderMaterial
 	review_sky.sky_material = review_sky_material
-	review_sky_material.set_shader_parameter("sky_saturation", 0.52)
-	review_sky_material.set_shader_parameter("sky_energy", 1.16)
-	review_sky_material.set_shader_parameter("horizon_haze", 0.24)
-	review_sky_material.set_shader_parameter("dark_sky_lift", 0.6)
-	if OS.has_feature("web") and OS.has_feature("debug"):
-		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")) == "1":
+	if str(_option("sky")) != "match":
+		review_sky_material.set_shader_parameter("sky_saturation", 0.52)
+		review_sky_material.set_shader_parameter("sky_energy", 1.16)
+		review_sky_material.set_shader_parameter("horizon_haze", 0.24)
+		review_sky_material.set_shader_parameter("dark_sky_lift", 0.6)
+	if OS.has_feature("debug") and (OS.has_feature("web") or not _native_options.is_empty()):
+		if str(_option("software")) == "1":
 			$Sun.shadow_enabled = false
 			Engine.max_fps = 8
-		var requested_lighting = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('lighting')"))
+		var requested_lighting = str(_option("lighting"))
 		if requested_lighting in ["sun", "shade", "soft"]:
 			review_lighting = requested_lighting
 			# Deliberate material QA: keep real shadowing even on SwiftShader.
@@ -62,15 +65,16 @@ func _ready() -> void:
 				add_child(occluder)
 		# Review-only ablations isolate shading defects without changing match
 		# presentation. Keep the light energy identical to the chosen preset.
-		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('shadows')")) == "0":
+		if str(_option("shadows")) == "0":
 			$Sun.shadow_enabled = false
 		for parameter in {"shadow_bias":"shadow_bias", "normal_bias":"shadow_normal_bias", "shadow_distance":"directional_shadow_max_distance"}:
-			var value = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('" + parameter + "')")
+			var value = _option(parameter)
 			if value != null and str(value).is_valid_float():
 				$Sun.set({"shadow_bias":"shadow_bias", "normal_bias":"shadow_normal_bias", "shadow_distance":"directional_shadow_max_distance"}[parameter], maxf(0.0, str(value).to_float()))
-		review_normal_maps = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('normal_maps')")) != "0"
-		_capture_callback = JavaScriptBridge.create_callback(_freeze_capture)
-		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME = _capture_callback
+		review_normal_maps = str(_option("normal_maps")) != "0"
+		if OS.has_feature("web"):
+			_capture_callback = JavaScriptBridge.create_callback(_freeze_capture)
+			JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME = _capture_callback
 	# Show footballers on the actual Kilmore park, on Web as well as desktop.
 	# This is the static non-detailed park layout; it avoids match simulation.
 	VENUE.build(self, 105.0, 68.0)
@@ -95,8 +99,8 @@ func _ready() -> void:
 	player.position = REVIEW_SPOT + Vector3(0, PitchSurface.height_at(REVIEW_SPOT.x, REVIEW_SPOT.z), 0)
 	var visual := player as FootballerVisual
 	var profile := PROFILE
-	if OS.has_feature("web"):
-		var requested = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('player')")
+	if OS.has_feature("web") or not _native_options.is_empty():
+		var requested = _option("player")
 		# Explicit review-only allowlist; use the real roster appearance path.
 		match str(requested):
 			"john": profile = load("res://data/squads/home_01.tres")
@@ -105,9 +109,9 @@ func _ready() -> void:
 			"referee": profile = load("res://data/officials/referee.tres")
 			"paddy": profile = load("res://data/squads/home_69.tres")
 	visual.configure_appearance(profile)
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('msaa')")) == "4":
+	if str(_option("msaa")) == "4":
 		get_viewport().msaa_3d = Viewport.MSAA_4X
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('hair_shadows')")) == "0":
+	if str(_option("hair_shadows")) == "0":
 		for part in player.find_children("Hair_*Cards", "MeshInstance3D", true, false):
 			part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if not review_normal_maps:
@@ -124,11 +128,11 @@ func _ready() -> void:
 	add_child(camera)
 	camera.current = true
 	var view := "front"
-	if OS.has_feature("web"):
-		var requested = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('view')")
+	if OS.has_feature("web") or not _native_options.is_empty():
+		var requested = _option("view")
 		if requested != null:
 			view = str(requested)
-		var posed = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('pose')")
+		var posed = _option("pose")
 		var review_clips := {
 			"idle":"Idle", "sprint":"Sprint", "pass":"PassRight", "shot":"ShotRight",
 			"turn":"Turn90Right", "slide":"GroundedSlideTackle",
@@ -137,13 +141,13 @@ func _ready() -> void:
 		if posed != null and review_clips.has(str(posed)):
 			animation.play("AN_Beechlawn_"+str(review_clips[str(posed)]))
 			animation.advance(0.0)
-			var requested_frame = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('frame')")
+			var requested_frame = _option("frame")
 			if requested_frame != null:
 				var seconds := maxf(0.0, (str(requested_frame).to_float()-1.0)/60.0)
 				animation.seek(minf(seconds,animation.current_animation_length),true)
 			animation.pause()
 	_set_view(view)
-	var clean_capture := OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('clean')")) == "1"
+	var clean_capture := str(_option("clean")) == "1"
 	if not clean_capture:
 		var label := Label.new()
 		label.text = profile.display_name + " — shared asset review\n1 front · 2 back · 3 profile · 4 face · 5 broadcast · Space idle/reset\nLighting: " + review_lighting + " · sun shadows: " + str($Sun.shadow_enabled) + " · likeness in review"
@@ -156,9 +160,69 @@ func _ready() -> void:
 		layer.add_child(label)
 	print("SHANE_ASSET_REVIEW_READY view=", view, " renderer=", RenderingServer.get_current_rendering_method())
 	await RenderingServer.frame_post_draw
+	if _native_options.has("capture-dir"):
+		print("NATIVE_FIRST_DRAW_COMPLETE")
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_LIGHTING = " + JSON.stringify({"msaa_3d":get_viewport().msaa_3d, "preset":review_lighting, "sun_shadows":$Sun.shadow_enabled, "shadow_bias":$Sun.shadow_bias, "normal_bias":$Sun.shadow_normal_bias, "shadow_distance":$Sun.directional_shadow_max_distance, "normal_maps":review_normal_maps, "occluder":has_node("ReviewShadeCaster")}))
 		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_READY = true")
+	elif _native_options.has("capture-dir"):
+		await _capture_native(profile, view)
+
+
+func _load_native_options() -> void:
+	if OS.has_feature("web"):
+		return
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--") and argument.contains("="):
+			var pair := argument.substr(2).split("=", true, 1)
+			_native_options[pair[0]] = pair[1]
+
+func _option(key: String) -> Variant:
+	if OS.has_feature("web"):
+		return JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('" + key + "')")
+	return _native_options.get(key)
+
+func _capture_native(profile: FootballerProfile, view: String) -> void:
+	# A real display/render device is required. --headless uses a dummy renderer.
+	var method := RenderingServer.get_current_rendering_method()
+	if method != "forward_plus":
+		push_error("Native look review requires Forward+, got " + method)
+		get_tree().quit(2)
+		return
+	for _frame in range(2):
+		await RenderingServer.frame_post_draw
+		print("NATIVE_WARMUP_FRAME ", _frame + 1)
+	var output := str(_native_options["capture-dir"])
+	if DirAccess.make_dir_recursive_absolute(output) != OK:
+		push_error("Cannot create native capture directory: " + output)
+		get_tree().quit(2)
+		return
+	var image := get_viewport().get_texture().get_image()
+	var filename := str(_option("player")) + "_" + view
+	if image.save_png(output.path_join(filename + ".png")) != OK:
+		get_tree().quit(2)
+		return
+	var report := {
+		"player_id":String(profile.player_id), "name":profile.display_name,
+		"view":view, "rendering_method":method,
+		"adapter":RenderingServer.get_video_adapter_name(),
+		"vendor":RenderingServer.get_video_adapter_vendor(),
+		"api":RenderingServer.get_video_adapter_api_version(),
+		"display_server":DisplayServer.get_name(), "godot":Engine.get_version_info().string,
+		"resolution":[image.get_width(),image.get_height()],
+		"msaa_3d":get_viewport().msaa_3d, "sun_shadows":$Sun.shadow_enabled,
+		"sky":"match" if str(_option("sky")) == "match" else "review",
+		"lighting":review_lighting, "pose":str(_option("pose")),
+		"normal_maps":review_normal_maps, "warmup_frames":2,
+		"scope":"Native Forward+ still; hardware-specific Mac appearance and performance remain unmeasured.",
+	}
+	var file := FileAccess.open(output.path_join(filename + ".json"), FileAccess.WRITE)
+	if file == null:
+		get_tree().quit(2)
+		return
+	file.store_string(JSON.stringify(report,"  ") + "\n")
+	print("BEECHLAWN_NATIVE_CAPTURE ", JSON.stringify(report))
+	get_tree().quit()
 
 func _freeze_capture(_arguments: Array) -> void:
 	get_tree().paused = true

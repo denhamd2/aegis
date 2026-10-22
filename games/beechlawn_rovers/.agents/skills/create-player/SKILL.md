@@ -58,6 +58,12 @@ For clip authoring/import, retargeting, locomotion, transitions or T-pose defect
 
 Export compatible GLB with stable part/material/action names and editable source. For a head package, reuse the live body skeleton and animation player; validate joint-index/bind compatibility and swap the matching eyes/hair when needed. Hook the variant into the actual player resources, including retained small-sided fixtures. An isolated prototype render alone does not update the match.
 
+Use `games/beechlawn_rovers/tools/capture_native.py` for primary cloud appearance
+reviews on native Forward+, following `docs/web_capture_notes.md`. Keep browser
+captures for the Web renderer and functional checks; headless tests establish
+structure and logic. Software Vulkan stills do not establish Mac GPU parity or
+performance.
+
 Inspect the actual Godot import in pitch-side portrait, three-quarter/profile, full-body and actual broadcast views, then representative idle, sprint, kick and turn poses. Confirm the review selects the intended roster profile and exported variant; a screenshot label or fallback Shane profile is insufficient. If shoulders, legs or clothing changed, extend checks to crouch, slide/get-up and keeper poses. Test transitions and contact timing where affected; sample complete changed clips and action boundaries, rather than treating a few pose stills as animation approval. Use bounded, serial Godot checks through the project runner; diagnose a timeout before starting another copy.
 
 Count active rigs, mesh surfaces, triangles, texture dimensions/mips and transparent layers. Shared resources should propagate body/kit/animation updates while per-player sculpt and playback stay independent. Validate the assembled 22 players plus referee, not just the isolated asset. Cloud/Web captures establish integration and layout; native M1 Pro 1080p/60 fps remains a target until measured there.
