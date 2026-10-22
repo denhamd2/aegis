@@ -190,8 +190,9 @@ def patch_profile(path, head_path, hair):
             '[sub_resource type="Resource" id="Appearance"]\nscript = ExtResource("3")\nkit = "referee"\n'
             '[resource]\nscript = ExtResource("1")\nplayer_id = &"des_feeney_sr"\ndisplay_name = "Des Feeney Sr."\nappearance = SubResource("Appearance")\n')
     text = path.read_text()
-    text = re.sub(r'^\[ext_resource[^\n]*(?:id="head_pipeline_(?:head|hair)"|path="res://assets/characters/shane/shane_photo_head.glb")[^\n]*\]\n', '', text, flags=re.M)
+    text = re.sub(r'^\[ext_resource[^\n]*(?:id="head_pipeline_(?:head|hair|skin)"|path="res://assets/characters/(?:shane/shane_photo_head|shared/heads/des_side_hair)\.glb")[^\n]*\]\n', '', text, flags=re.M)
     text = re.sub(r'^(?:head_variant|hair_variant|hair_style) = .*\n', '', text, flags=re.M)
+    text = re.sub(r'^head_albedo = ExtResource\("head_pipeline_skin"\)\n', '', text, flags=re.M)
     match = re.search(r'appearance = SubResource\("([^"]+)"\)', text)
     if match:
         appearance = match[1]
@@ -203,11 +204,13 @@ def patch_profile(path, head_path, hair):
         text += '\nappearance = SubResource("HeadAppearance")\n'
         text = text.replace('[sub_resource', '[ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="head_pipeline_appearance"]\n[sub_resource', 1)
     declarations = '[ext_resource type="PackedScene" path="res://' + str(head_path.relative_to(PROJECT)) + '" id="head_pipeline_head"]\n'
-    if hair == "shane_crop":
-        declarations += '[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/shane_crop.glb" id="head_pipeline_hair"]\n'
+    hair_packages = {"shane_crop": "shane_crop.glb", "des_side_hair": "des_side_hair.glb",
+                     "john_swept": "john_swept.glb", "referee_grey": "referee_grey.glb"}
+    if hair in hair_packages:
+        declarations += '[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/' + hair_packages[hair] + '" id="head_pipeline_hair"]\n'
     text = text.replace('[sub_resource', declarations + '[sub_resource', 1)
-    fields = '\nhead_variant = ExtResource("head_pipeline_head")\nhair_style = "' + ('custom' if hair == 'shane_crop' else hair) + '"\n'
-    if hair == "shane_crop":
+    fields = '\nhead_variant = ExtResource("head_pipeline_head")\nhair_style = "' + ('custom' if hair in hair_packages else hair) + '"\n'
+    if hair in hair_packages:
         fields += 'hair_variant = ExtResource("head_pipeline_hair")\n'
     pattern = r'(\[sub_resource[^\n]*id="' + re.escape(appearance) + r'"\][\s\S]*?)(?=\n\[|\Z)'
     text, count = re.subn(pattern, lambda m: m[1].rstrip() + fields + '\n', text, count=1)
@@ -284,14 +287,21 @@ def main():
         outputs[identity] = ASSETS / 'master.glb'
         if changed:
             open_master();apply_sculpt(data)
+            from player_head_finish import IDENTITIES, finish_head
+            if identity in IDENTITIES:
+                finish_head(bpy.data.objects['Skin_Head'], identity)
             outputs[identity] = ASSETS / 'players' / (identity + '.glb')
             export(outputs[identity], PARTS)
         write_json(PIPE / entries[identity]['sculpt'], data)
     # Hair uses the same master/identity build, but remains a separate selection.
-    open_master();apply_sculpt(sculpts['shane_denham'])
-    from shane_photo_groom import build_groom
-    build_groom(bpy.data.objects['Skin_Head'], bpy.data.objects['YBot_Armature'], Path(__file__).parent / 'textures')
-    export(ASSETS / 'shane_crop.glb', ('Hair_Shane_ShortCropRoots', 'Hair_Shane_ShortCropCards'))
+    from player_head_groom import build_groom
+    for identity, filename in (('shane_denham', 'shane_crop.glb'),
+                               ('bordeaux_09', 'des_side_hair.glb'),
+                               ('john_orourke', 'john_swept.glb'),
+                               ('des_feeney_sr', 'referee_grey.glb')):
+        open_master();apply_sculpt(sculpts[identity])
+        build_groom(bpy.data.objects['Skin_Head'], bpy.data.objects['YBot_Armature'], identity)
+        export(ASSETS / filename, ('Hair_Shane_ShortCropRoots', 'Hair_Shane_ShortCropCards'))
     for identity, entry in entries.items():
         output = outputs[entry.get('identity_source', identity)]
         for profile in entry['profiles']:

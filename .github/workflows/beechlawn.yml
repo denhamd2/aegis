@@ -61,9 +61,10 @@ jobs:
           cp games/beechlawn_rovers/docs/art_briefs/lineup_graphics/lineup_{home,away}.png build/beechlawn/web/screenshots/
           cp games/beechlawn_rovers/docs/art_briefs/referee_intro/referee_closeup.png build/beechlawn/web/screenshots/current_referee_intro.png
           cp games/beechlawn_rovers/docs/art_briefs/gameplay_feel_pass/{contact_pass,contact_shot,keeper_response}.gif build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
+          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/shane/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
+          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/des/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
+          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/john/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
+          cp games/beechlawn_rovers/docs/art_briefs/four_head_finish/web_final/referee/referee_portrait.png build/beechlawn/web/screenshots/current_referee.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_front.png build/beechlawn/web/screenshots/keeper_john_front.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_back.png build/beechlawn/web/screenshots/keeper_john_back.png
           cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/bordeaux_keeper_front.png build/beechlawn/web/screenshots/keeper_bordeaux_front.png

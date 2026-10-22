@@ -1,0 +1,83 @@
+{
+  "result": "PASS",
+  "player": "Boardeaux Des Feeney #9",
+  "source": "tools/blender/beechlawn/des_feeney_head.blend",
+  "asset": "games/beechlawn_rovers/assets/characters/shared/heads/players/bordeaux_09.glb",
+  "asset_sha256": "16d8c460fdb06a982905c40969ccb3d8ff12a5c8c77f1213d60a2d9f0aafdd8a",
+  "parts": {
+    "Skin_Head": {
+      "source_vertices": 4326,
+      "exported_vertices": 4519,
+      "max_source_difference_m": 1.794337407545754e-07,
+      "bounds_m": [
+        [
+          -0.10723499208688736,
+          1.4536494016647339,
+          -0.11016401648521423
+        ],
+        [
+          0.10715345293283463,
+          1.780016303062439,
+          0.1227155551314354
+        ]
+      ]
+    },
+    "Eye_l": {
+      "source_vertices": 72,
+      "exported_vertices": 72,
+      "max_source_difference_m": 1.7393556106526376e-07,
+      "bounds_m": [
+        [
+          0.019275927916169167,
+          1.6659274101257324,
+          0.05686364322900772
+        ],
+        [
+          0.04823087900876999,
+          1.69755220413208,
+          0.09136146306991577
+        ]
+      ]
+    },
+    "Eye_r": {
+      "source_vertices": 72,
+      "exported_vertices": 72,
+      "max_source_difference_m": 1.7393556106526376e-07,
+      "bounds_m": [
+        [
+          -0.04834119230508804,
+          1.6659237146377563,
+          0.05686405673623085
+        ],
+        [
+          -0.019376644864678383,
+          1.697548508644104,
+          0.09136183559894562
+        ]
+      ]
+    }
+  },
+  "embedded_textures": [
+    {
+      "name": "des_feeney_player_eyes_albedo",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "des_feeney_player_head_detail_normal_1k",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "name": "des_feeney_player_head_anatomical_albedo_2k",
+      "width": 2048,
+      "height": 2048
+    }
+  ],
+  "shared_neck_albedo": {
+    "samples": 158,
+    "median_linear_difference": 0.0,
+    "p99_linear_difference": 0.00784313678741455
+  },
+  "scope": "Neutral source/export geometry, direct player-only textures and preserved neck pigment; runtime skin binds and poses checked separately"
+}

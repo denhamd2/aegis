@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "player": "des",
+  "captures": [
+    {
+      "file": "des_portrait.png",
+      "view": "portrait",
+      "lighting": {
+        "normal_maps": false,
+        "occluder": false,
+        "preset": "soft",
+        "sun_shadows": true
+      }
+    }
+  ],
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "console_errors": [],
+  "native_M1_performance": "not measured"
+}

@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/data/football_attributes.gd" id="2_attributes"]
 [ext_resource type="Script" path="res://scripts/data/football_appearance.gd" id="3_appearance"]
 
-[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/master.glb" id="head_pipeline_head"]
+[ext_resource type="PackedScene" path="res://assets/characters/shared/heads/players/shane_denham.glb" id="head_pipeline_head"]
 [ext_resource type="PackedScene" path="res://assets/characters/shared/heads/shane_crop.glb" id="head_pipeline_hair"]
 [sub_resource type="Resource" id="ShaneAppearance"]
 script = ExtResource("3_appearance")

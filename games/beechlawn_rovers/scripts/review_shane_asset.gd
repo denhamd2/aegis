@@ -12,6 +12,7 @@ var player: Node3D
 var animation: AnimationPlayer
 var _capture_callback: JavaScriptObject
 var review_lighting := "default"
+var review_normal_maps := true
 
 func _ready() -> void:
 	var source := MATCH_SCENE.instantiate()
@@ -59,6 +60,15 @@ func _ready() -> void:
 				occluder.position = REVIEW_SPOT + Vector3(0, 1.0, 0) + $Sun.global_basis.z * 8.0
 				occluder.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 				add_child(occluder)
+		# Review-only ablations isolate shading defects without changing match
+		# presentation. Keep the light energy identical to the chosen preset.
+		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('shadows')")) == "0":
+			$Sun.shadow_enabled = false
+		for parameter in {"shadow_bias":"shadow_bias", "normal_bias":"shadow_normal_bias", "shadow_distance":"directional_shadow_max_distance"}:
+			var value = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('" + parameter + "')")
+			if value != null and str(value).is_valid_float():
+				$Sun.set({"shadow_bias":"shadow_bias", "normal_bias":"shadow_normal_bias", "shadow_distance":"directional_shadow_max_distance"}[parameter], maxf(0.0, str(value).to_float()))
+		review_normal_maps = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('normal_maps')")) != "0"
 		_capture_callback = JavaScriptBridge.create_callback(_freeze_capture)
 		JavaScriptBridge.get_interface("window").BEECHLAWN_FREEZE_FRAME = _capture_callback
 	# Show footballers on the actual Kilmore park, on Web as well as desktop.
@@ -95,6 +105,17 @@ func _ready() -> void:
 			"referee": profile = load("res://data/officials/referee.tres")
 			"paddy": profile = load("res://data/squads/home_69.tres")
 	visual.configure_appearance(profile)
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('msaa')")) == "4":
+		get_viewport().msaa_3d = Viewport.MSAA_4X
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('hair_shadows')")) == "0":
+		for part in player.find_children("Hair_*Cards", "MeshInstance3D", true, false):
+			part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if not review_normal_maps:
+		var head := player.find_child("Skin_Head", true, false) as MeshInstance3D
+		for surface in head.mesh.get_surface_count():
+			var material := head.get_active_material(surface).duplicate() as StandardMaterial3D
+			material.normal_enabled = false
+			head.set_surface_override_material(surface, material)
 	visual.animation_tree.active = false
 	player.rotation.y = PI
 	animation = visual.animation_player
@@ -136,7 +157,7 @@ func _ready() -> void:
 	print("SHANE_ASSET_REVIEW_READY view=", view, " renderer=", RenderingServer.get_current_rendering_method())
 	await RenderingServer.frame_post_draw
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_LIGHTING = " + JSON.stringify({"preset":review_lighting, "sun_shadows":$Sun.shadow_enabled, "occluder":has_node("ReviewShadeCaster")}))
+		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_LIGHTING = " + JSON.stringify({"msaa_3d":get_viewport().msaa_3d, "preset":review_lighting, "sun_shadows":$Sun.shadow_enabled, "shadow_bias":$Sun.shadow_bias, "normal_bias":$Sun.shadow_normal_bias, "shadow_distance":$Sun.directional_shadow_max_distance, "normal_maps":review_normal_maps, "occluder":has_node("ReviewShadeCaster")}))
 		JavaScriptBridge.eval("window.BEECHLAWN_REVIEW_READY = true")
 
 func _freeze_capture(_arguments: Array) -> void:

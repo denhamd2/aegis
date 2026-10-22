@@ -126,6 +126,17 @@ reliable profile view and has soft indoor lighting. Its unchanged original,
 provenance and SHA256 are recorded here. See
 `../docs/art_briefs/des_feeney_player_likeness/brief.md`.
 
+## Beechlawn goalkeeper John O’Rourke portrait, 21 October 2026
+
+`source_uploads/chat_attachments/john_orourke_photo/69010.jpg` is the
+owner-supplied close portrait for John O’Rourke (#1). It supplements the
+earlier character sheet, which remains the source for side/back head shape,
+hair and goalkeeper presentation. Use the close portrait to guide the facial
+sculpt and expression; do not project the photo onto the face. The current
+Godot preview is a work in progress and does not yet meet the requested AAA
+likeness standard. The original and provenance/hash are preserved unchanged.
+See `../docs/art_briefs/john_orourke_likeness/brief.md`.
+
 ## Supplied landing-screen wordmark, 21 October 2026
 
 `source_uploads/chat_attachments/title_logo/69668.jpg` is the authoritative
@@ -133,3 +144,7 @@ Beechlawn Rovers 27 title wordmark and red/black/white menu direction. Preserve
 the original white italic lettering and red 27. This changes the landing and
 Options theme; the players keep their blue/black kits and the oval club crest
 keeps its authentic colours. See `../docs/art_briefs/title_red_black_evidence/brief.md`.
+
+## Referee likeness
+
+Use the preserved `des_feeney_referee_likeness/69015.jpg` and `69018.jpg` sources for the referee head task. The portrait informs the sculpt and procedural UV pigment only; never paste the photo onto the model. See `../docs/art_briefs/des_feeney_referee_likeness/brief.md` for current status and known likeness gaps.

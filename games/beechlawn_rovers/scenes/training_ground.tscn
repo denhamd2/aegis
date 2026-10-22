@@ -34,7 +34,7 @@ light_energy = 0.8
 shadow_enabled = true
 directional_shadow_max_distance = 150.0
 shadow_bias = 0.04
-shadow_normal_bias = 0.8
+shadow_normal_bias = 1.8
 angular_distance = 0.8
 
 [node name="Pitch" type="Node3D" parent="."]

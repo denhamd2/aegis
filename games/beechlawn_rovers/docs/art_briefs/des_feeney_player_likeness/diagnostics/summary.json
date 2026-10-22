@@ -1,0 +1,125 @@
+{
+  "cause": "Directional sun self-shadow banding with shadow_normal_bias 0.8 in the Compatibility review",
+  "fix": "Use normal bias 1.8 on the shared match sun; retain cast shadows and the head normal map",
+  "before": {
+    "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/web/des_portrait.png",
+    "forehead_patch": [
+      615,
+      240,
+      665,
+      285
+    ],
+    "band_rms_8bit": 1.8185551564752873,
+    "maximum_band_rms_8bit": 1.3,
+    "result": "FAIL",
+    "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+  },
+  "after": {
+    "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/web/des_portrait.png",
+    "forehead_patch": [
+      615,
+      240,
+      665,
+      285
+    ],
+    "band_rms_8bit": 0.803563492024299,
+    "maximum_band_rms_8bit": 1.3,
+    "result": "PASS",
+    "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+  },
+  "isolations": {
+    "no_shadows": {
+      "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/no_shadows/des_portrait.png",
+      "forehead_patch": [
+        615,
+        240,
+        665,
+        285
+      ],
+      "band_rms_8bit": 0.48697315854455175,
+      "maximum_band_rms_8bit": 1.3,
+      "result": "PASS",
+      "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+    },
+    "no_normals": {
+      "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/no_normals/des_portrait.png",
+      "forehead_patch": [
+        615,
+        240,
+        665,
+        285
+      ],
+      "band_rms_8bit": 1.8158036394783599,
+      "maximum_band_rms_8bit": 1.3,
+      "result": "FAIL",
+      "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+    },
+    "neither": {
+      "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/neither/des_portrait.png",
+      "forehead_patch": [
+        615,
+        240,
+        665,
+        285
+      ],
+      "band_rms_8bit": 0.4855041562276122,
+      "maximum_band_rms_8bit": 1.3,
+      "result": "PASS",
+      "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+    },
+    "bias_012": {
+      "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/bias_012/des_portrait.png",
+      "forehead_patch": [
+        615,
+        240,
+        665,
+        285
+      ],
+      "band_rms_8bit": 1.4377561883514385,
+      "maximum_band_rms_8bit": 1.3,
+      "result": "FAIL",
+      "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+    },
+    "normal_bias_18": {
+      "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/normal_bias_18/des_portrait.png",
+      "forehead_patch": [
+        615,
+        240,
+        665,
+        285
+      ],
+      "band_rms_8bit": 0.803563492024299,
+      "maximum_band_rms_8bit": 1.3,
+      "result": "PASS",
+      "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+    },
+    "distance_12": {
+      "image": "games/beechlawn_rovers/docs/art_briefs/des_feeney_player_likeness/diagnostics/distance_12/des_portrait.png",
+      "forehead_patch": [
+        615,
+        240,
+        665,
+        285
+      ],
+      "band_rms_8bit": 1.4106735979665885,
+      "maximum_band_rms_8bit": 1.3,
+      "result": "FAIL",
+      "scope": "Fixed Des portrait lighting/camera; repeated forehead-band regression only"
+    }
+  },
+  "exported_mesh_normals": {
+    "maximum_difference_from_Blender_degrees": 0.03426402009603798,
+    "note": "Independent direct GLB/source comparison; geometry unchanged by the shading fix"
+  },
+  "neck_join": {
+    "samples": 158,
+    "median_linear_difference": 0.0,
+    "p99_linear_difference": 0.003921568393707275
+  },
+  "contact_shadow_review": {
+    "captures": "diagnostics/contact_shadows/",
+    "reference": "../wet_weather_evidence/ball_shadow_on.png",
+    "finding": "Ball and goal-frame shadows remain visible; the staged ball shadow shows no noticeable new detachment against the archived same-view baseline."
+  },
+  "limits": "Fixed-camera visual QA and cloud renderer checks; not a native Mac performance or exact likeness claim"
+}

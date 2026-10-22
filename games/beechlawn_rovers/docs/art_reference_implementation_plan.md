@@ -51,6 +51,12 @@ File-level audit: 12 Beechlawn player sheets; two overlapping Beechlawn home-kit
 
 ### Characters and kits
 
+**Owner complexion direction (2026-10-22):** the football roster should have
+fair, untanned skin. Preserve reference-specific redness, freckles and age;
+match faces, necks, exposed arms, hands and legs together under fixed daylight.
+Use the editable [skin palette and review](art_briefs/fair_skin_review/brief.md)
+when regenerating assets. Nationality is not a pigment measurement.
+
 The Beechlawn player sheets identify **11 outfield players** and **one goalkeeper**. All show front/profile/back views and face expressions; most include a height guide and example skin, normal, roughness, and hair maps. Those map panels communicate the intended surface treatment, but they are examples, not UV-ready texture maps for a game mesh.
 
 Only John O’Rourke is explicitly marked as a goalkeeper; the sheets do not establish the other players’ positions or gameplay ratings. Keep those values editable/defaulted instead of inferring them from numbers or appearance.

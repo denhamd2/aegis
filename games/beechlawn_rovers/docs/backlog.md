@@ -686,6 +686,47 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-22 four-head finishing pass: Shane now has an independent captured
+    delta alongside John and the two distinct Des identities. Portrait-guided
+    proportions, monotonic lip closure, fitted eyes, separate roughness and
+    directional opaque grooms replace the earlier local variants. John's scalp
+    has blonde highlights while his beard retains its warm brown palette.
+    [Source/export audits and pitch-side review](art_briefs/four_head_finish/brief.md)
+    cover the four heads and protected body/rig/animation payloads. This is
+    BR-022, item 22 of 25, in progress: detailed likeness, expression and native
+    M1 appearance/performance remain acceptance work; the pass is not an AAA
+    certification. Next acceptance: review the actual on-pitch front/turned
+    portraits against the original photos, then address the remaining forms.
+  - 2026-10-22 production workflow review: `create-player` now requires early
+    face-form/runtime comparison, source-to-export agreement, continuous neck
+    pigment, fitted grooms and explicit final-quality evidence. Its detailed
+    head branch records Des/player, referee, skin, shadow and capture lessons;
+    kit checks cover actual PBR/role UVs. [The review](art_briefs/create_player_workflow_review.md)
+    maps recent findings to the skill and prioritizes Des's remaining facial
+    anatomy and hair work. This guidance update does not finish the current
+    heads. BR-022 remains in progress (22/25), with polished final players as
+    the delivery target and native Mac acceptance still open.
+  - 2026-10-22 fair complexion correction: shared body/master and all authored
+    head variants now follow the owner's untanned skin direction, with
+    individual pink undertones and preserved common neck pigment. Editable
+    palette, unchanged body/animation payload audit, anatomical UV checks and
+    fixed-light evidence live in [the skin review](art_briefs/fair_skin_review/brief.md).
+    Four roster/resource/pose checks pass; final likeness and native Mac
+    appearance remain open. BR-022 remains in progress (22/25).
+  - 2026-10-22 Des #9 runtime follow-up: removed Compatibility self-shadow
+    banding by tuning the shared sun normal bias (0.8 → 1.8), retained the head
+    normal map, and preserved common skin texels at the neck interface. The
+    failing/passing fixed-camera band check, source/GLB neck comparison,
+    portrait/profile/full-body views and ball/goal shadow comparison are in
+    `art_briefs/des_feeney_player_likeness/`. Five roster/pose/weather checks
+    pass. Individual likeness and native Mac acceptance remain open (22/25).
+  - 2026-10-21 Boardeaux Des #9 face/head refinement: player-only sculpt,
+    fitted eyes, anatomical UV skin and receded hair/goatee now export together.
+    The source/export audit catches the stale captured-delta problem; runtime
+    roster/resource/pose checks and actual Web captures are recorded in
+    [the Des brief](art_briefs/des_feeney_player_likeness/brief.md). All away
+    slots intentionally share this identity; referee Des Sr. stays separate.
+    Exact/AAA likeness approval and native M1 validation remain open (22/25).
   - 2026-10-21 pitch-side preview correction: Web and desktop roster reviews
     now use the Kilmore Drive park, match pitch surface, faded markings and
     low perspective cameras. The preview sky is locally lifted to a lighter

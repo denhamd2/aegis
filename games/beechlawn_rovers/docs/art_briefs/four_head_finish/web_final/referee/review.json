@@ -1,0 +1,23 @@
+{
+  "result": "PASS",
+  "player": "referee",
+  "captures": [
+    {
+      "file": "referee_portrait.png",
+      "view": "portrait",
+      "lighting": {
+        "msaa_3d": 2,
+        "normal_bias": 1.79999995231628,
+        "normal_maps": true,
+        "occluder": false,
+        "preset": "soft",
+        "shadow_bias": 0.0399999991059303,
+        "shadow_distance": 48,
+        "sun_shadows": true
+      }
+    }
+  ],
+  "renderer": "Godot Compatibility / Chromium SwiftShader",
+  "console_errors": [],
+  "native_M1_performance": "not measured"
+}

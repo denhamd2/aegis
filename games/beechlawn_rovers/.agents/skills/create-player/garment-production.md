@@ -23,6 +23,23 @@ Map the complete supplied garment layout: stripes, trim, crest, manufacturer, sp
 
 Compare the material actually assigned by `scripts/footballer_visual.gd` with Blender's source material. The older studio atlas showed raglan piping that vanished when Godot replaced it with a role atlas. Use the same pigment for matched reviews, or document an intentional difference. Verify keeper/opponent/referee variants; a good home-kit render does not validate them.
 
+Validate the material data, not just its connection. The earlier roughness map
+was constant, so wiring it could not distinguish cloth from print. Keep shared
+knit detail separate from role-specific roughness masks, sample the imported
+print/shirt/sock response, and verify normal/roughness colour spaces and mips.
+The canonical mask can use red while glTF packs roughness into green; inspect
+the actual exported/imported channel. Check distant graphics and hair for mip
+aliasing, retaining shared maps instead of per-player texture copies.
+
+For keeper patterns, use flat panel artwork rather than folds/shadows from a
+posed torso. Record generated-pattern provenance and remaining approximation;
+apply supplied crests, manufacturer and sponsor marks separately with checked
+lettering. Shared sleeve/collar/sock UVs must sample the correct role swatch:
+John's white socks previously inherited blue cuffs from the collar region.
+Check both keeper front/back/save views through their real roster profiles.
+Glove geometry, palm/cuff detail and save deformation are separate finishing
+work; a flat glove-coloured hand is not a finished goalkeeper glove.
+
 Keep UV chart names expected by the material nodes, including `JerseyUV` where used. Inspect exported triangles for zero-area UVs, mirrored lettering, seam interpolation and mip bleed. Repair cut-edge UVs within appropriate fabric swatches; printed chest faces must retain their local artwork sample. Inspect saved/reloaded textures with correct colour spaces.
 
 ## Prove the local change

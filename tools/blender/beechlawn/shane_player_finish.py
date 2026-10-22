@@ -14,7 +14,8 @@ from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[3]
 TEXTURES = ROOT / "games/beechlawn_rovers/assets/characters/textures"
-SKIN_PIGMENT = np.array([.68,.43,.345],dtype=np.float32)
+from skin_palette import SHARED_SKIN
+SKIN_PIGMENT = np.array(SHARED_SKIN,dtype=np.float32)
 
 
 def smoothstep(a, b, x):
@@ -184,11 +185,38 @@ def reference_skin_relief(points,eyes):
     return height
 
 
-def bake_skin(head, body, material, eyes, *, head_only=False):
+def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None):
     """Rasterize anatomical pigment onto the original licensed body UVs."""
     size = 2048 if head_only else 512
     from shane_skin_source import sample_skin,skin_tint
-    photo=sample_skin("albedo",size,head if head_only else None)*skin_tint(SKIN_PIGMENT)
+    retained=None
+    if retained_neck_albedo is not None:
+        assert head_only and tuple(retained_neck_albedo.size)==(size,size), 'Neck retention requires the matching head atlas'
+        pixels=np.empty(size*size*4,dtype=np.float32)
+        retained_neck_albedo.pixels.foreach_get(pixels)
+        retained=pixels.reshape(size,size,4)[:,:,:3]
+    if neutral_base:
+        # Player-specific face UVs can come from a different starting mesh than
+        # the licensed source skin. Keep the surface clean instead of carrying
+        # another model's eye/nose/mouth markings into this identity atlas.
+        photo=np.tile(SKIN_PIGMENT,(size,size,1)).astype(np.float32)
+    else:
+        photo=sample_skin("albedo",size,head if head_only else None)*skin_tint(SKIN_PIGMENT)
+    if detail_only:
+        # Keep the licensed skin's small surface variation without inheriting
+        # its broad face colour, lip/eye shading or another identity's marks.
+        def box_blur(array, radius):
+            for axis in (0, 1):
+                padding=[(0,0)]*3; padding[axis]=(radius,radius)
+                padded=np.pad(array,padding,mode="edge")
+                zero_shape=list(padded.shape);zero_shape[axis]=1
+                sums=np.concatenate((np.zeros(zero_shape,dtype=np.float32),np.cumsum(padded,axis=axis,dtype=np.float32)),axis=axis)
+                left=[slice(None)]*3;right=[slice(None)]*3
+                left[axis]=slice(0,array.shape[axis]);right[axis]=slice(radius*2+1,None)
+                array=(sums[tuple(right)]-sums[tuple(left)])/(radius*2+1)
+            return array
+        low=box_blur(box_blur(photo,8),8)
+        photo=SKIN_PIGMENT*np.clip(photo/np.maximum(low,.025),.85,1.15)**.5
     atlas = np.tile(SKIN_PIGMENT, (size, size, 1))
     relief=np.zeros((size,size),dtype=np.float32) if head_only else None
     filled = np.zeros((size, size), dtype=bool)
@@ -214,9 +242,18 @@ def bake_skin(head, body, material, eyes, *, head_only=False):
             points = np.array([mesh.vertices[i].co[:] for i in triangle.vertices])
             samples = a[..., None]*points[0] + b[..., None]*points[1] + c[..., None]*points[2]
             colors = skin_colour(samples.reshape(-1, 3), eyes).reshape(samples.shape)
+            if color_overlay is not None:
+                colors=color_overlay(samples.reshape(-1,3),colors.reshape(-1,3)).reshape(samples.shape)
             # Preserve the source skin's registered fine detail and local
             # pigmentation, with bounded reference-specific pigment tuning.
             colors=np.clip(photo[lo[1]:hi[1]+1,lo[0]:hi[0]+1]*colors/SKIN_PIGMENT,0,1)
+            if retained is not None:
+                # The head keeps the master's anatomical UVs. Preserve the
+                # shared skin exactly at the protected neck, then transition
+                # over 3 cm into the individual face rather than a hard seam.
+                blend=np.clip((samples[:,:,1]-154.0)/3.0,0,1)
+                blend=(blend*blend*(3-2*blend))[:,:,None]
+                colors=retained[lo[1]:hi[1]+1,lo[0]:hi[0]+1]*(1-blend)+colors*blend
             atlas[lo[1]:hi[1]+1, lo[0]:hi[0]+1][mask] = colors[mask]
             if head_only:
                 heights=reference_skin_relief(samples.reshape(-1,3),eyes).reshape(samples.shape[:2])
@@ -233,7 +270,7 @@ def bake_skin(head, body, material, eyes, *, head_only=False):
         filled = new
     rng = np.random.default_rng(8)
     atlas = np.clip(atlas + rng.normal(0, .002, (size, size, 1)), 0, 1)
-    filename="shane_head_anatomical_albedo_2k" if head_only else "shane_body_anatomical_albedo"
+    filename=f"{image_prefix}_head_anatomical_albedo_2k" if head_only else "shane_body_anatomical_albedo"
     image_node(material, image_from_array(filename, atlas), "Base Color")
     bsdf = material.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Roughness"].default_value = .58
@@ -250,7 +287,7 @@ def bake_skin(head, body, material, eyes, *, head_only=False):
         vectors[:,:,:2]+=base[:,:,:2]*.65
         vectors/=np.linalg.norm(vectors,axis=2,keepdims=True)
         normal=vectors*.5+.5
-        normal_image=image_from_array("shane_head_detail_normal_1k",normal,"Non-Color")
+        normal_image=image_from_array(f"{image_prefix}_head_detail_normal_1k",normal,"Non-Color")
     else:
         noise = rng.normal(0, .025, (512, 512))
         dx, dy = np.gradient(noise)

@@ -1,0 +1,61 @@
+{
+  "method": "Eye-line-normalized portrait landmark ratios guide bounded sculpt corrections; expressions and hidden depth remain estimates",
+  "players": {
+    "shane_denham": {
+      "ratios": {
+        "face_width": 0.9208419523205873,
+        "jaw_width": 0.8993526282332824,
+        "mouth_width": 0.8978950233243448,
+        "nose_width": 0.9081424275375849,
+        "mouth_y": 0.9861651525376179,
+        "chin_y": 1.053351524741808,
+        "nose_y": 0.9756273280048693
+      },
+      "weight": 0.8,
+      "reference_sha256": "6649633b8e0e6697352e863f107ddab8b20196dde905b39d70076e2e668adb27",
+      "model_sha256": "4d6fa4c9bb535683f03fed885470d42032be8a97ef8b79ba6a751a2a65b291bc"
+    },
+    "john_orourke": {
+      "ratios": {
+        "face_width": 0.8498125822002043,
+        "jaw_width": 0.8573680354666281,
+        "mouth_width": 0.8222070710604645,
+        "nose_width": 0.8182745879395932,
+        "mouth_y": 0.8865942461736155,
+        "chin_y": 0.9688034682689617,
+        "nose_y": 0.7488287630389463
+      },
+      "weight": 0.8,
+      "reference_sha256": "114bc417c7e1fb29945a2664a7a95189f63b83bc4011168255313a8c967a8d2d",
+      "model_sha256": "7386d61ef5f08cd6b85e5d8b68010f0feca03bf5412a89dcaab0a9cd1e323ce8"
+    },
+    "bordeaux_09": {
+      "ratios": {
+        "face_width": 0.9431020869867867,
+        "jaw_width": 0.8896100821312947,
+        "mouth_width": 0.6848840057293915,
+        "nose_width": 0.8128730013525585,
+        "mouth_y": 1.1160834685942624,
+        "chin_y": 1.1283452690429232,
+        "nose_y": 1.029485551142727
+      },
+      "weight": 0.8,
+      "reference_sha256": "e57a40a15b33a8fe4f9da1ae38945fb5c52f8a7e85eb1f6b889da86ffd68101b",
+      "model_sha256": "ad9712aedc58cab7cac01cf38028d914987d65c08f1f6357563e861cf0178ef1"
+    },
+    "des_feeney_sr": {
+      "ratios": {
+        "face_width": 0.8830483077212707,
+        "jaw_width": 0.7983781229195064,
+        "mouth_width": 0.6113227964577035,
+        "nose_width": 0.8242284255102492,
+        "mouth_y": 0.9790918465317214,
+        "chin_y": 1.0530896001513608,
+        "nose_y": 0.8152741254180398
+      },
+      "weight": 0.55,
+      "reference_sha256": "7aa05a728244587ba89ce8d35f2211601393303f34bd51d07eb9aa5cf1edb2f0",
+      "model_sha256": "ba57e24577917af3950a2a83e29c2fbe5cbac14a9e87b7c7123d05482f5a6a8f"
+    }
+  }
+}

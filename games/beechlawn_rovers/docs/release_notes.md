@@ -1,3 +1,22 @@
+# Four-player head and skin refinement
+
+Shane Denham, John O'Rourke, Boardeaux player Des Feeney and referee Des Feeney
+Sr. now have independent reference-led head/eye packages on the shared body,
+rig and animation library. The pass refines facial proportions, repairs the
+lip-closing deformation, adds individual roughness and fitted directional
+scalp/facial-hair grooms, and retains continuous fair skin at the neck.
+John's scalp uses blonde highlights; his warm brown beard stays unchanged.
+4x MSAA reduces fine-strand and geometry aliasing while retaining shadows.
+All eleven Boardeaux actors intentionally reuse their player's Des identity;
+the referee remains a separate older face with a grey moustache.
+
+The create-player workflow now records source/export, neck, lip-winding,
+material and shared-animation checks, with repeatable four-head authoring.
+The earlier skin and daylight-shadow corrections are included. No gameplay
+rules or wrestling project assets change in this release. Individual likeness
+and facial expression remain in development; native Mac rendering and M1
+performance have not been validated by the cloud/Web checks.
+
 # Opposite-touchline broadcast
 
 The landing screen now uses the owner's supplied Beechlawn Rovers 27 wordmark

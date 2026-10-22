@@ -1,0 +1,24 @@
+{
+  "result": "PASS",
+  "fixed_crop_xyxy": [
+    570,
+    410,
+    700,
+    480
+  ],
+  "measurements": {
+    "baseline": {
+      "adjacent_pixel_rms": 44.834738161400495,
+      "dark_fraction": 0.06087912087912088
+    },
+    "shadows_off": {
+      "adjacent_pixel_rms": 44.80679493089618,
+      "dark_fraction": 0.06054945054945055
+    },
+    "msaa4": {
+      "adjacent_pixel_rms": 22.682017629144937,
+      "dark_fraction": 0.004615384615384616
+    }
+  },
+  "finding": "Subpixel strand aliasing dominates this capture; shadow ablation leaves it unchanged, 4x MSAA reduces high-frequency contrast. Hair materials and shadows retained. Native M1 frame cost remains unmeasured."
+}

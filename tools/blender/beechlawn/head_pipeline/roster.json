@@ -8,7 +8,8 @@
         "data/squads/away_01.tres"
       ],
       "sculpt": "deltas/bordeaux_01.json",
-      "hair": "bald",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_02": {
@@ -17,7 +18,8 @@
         "data/squads/away_02.tres"
       ],
       "sculpt": "deltas/bordeaux_02.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_03": {
@@ -26,7 +28,8 @@
         "data/squads/away_03.tres"
       ],
       "sculpt": "deltas/bordeaux_03.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_04": {
@@ -35,7 +38,8 @@
         "data/squads/away_04.tres"
       ],
       "sculpt": "deltas/bordeaux_04.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_05": {
@@ -44,7 +48,8 @@
         "data/squads/away_05.tres"
       ],
       "sculpt": "deltas/bordeaux_05.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_06": {
@@ -53,7 +58,8 @@
         "data/squads/away_06.tres"
       ],
       "sculpt": "deltas/bordeaux_06.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_07": {
@@ -62,7 +68,8 @@
         "data/squads/away_07.tres"
       ],
       "sculpt": "deltas/bordeaux_07.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_08": {
@@ -71,7 +78,8 @@
         "data/squads/away_08.tres"
       ],
       "sculpt": "deltas/bordeaux_08.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_09": {
@@ -80,8 +88,8 @@
         "data/squads/away_09.tres"
       ],
       "sculpt": "deltas/bordeaux_09.json",
-      "hair": "bald",
-      "likeness": "starting head; individual likeness pending"
+      "hair": "des_side_hair",
+      "likeness": "Reference finishing pass: independent facial forms, fitted eyes, anatomical UV skin and dimensional groom; visual/hardware acceptance recorded in four_head_finish brief"
     },
     "bordeaux_10": {
       "display_name": "Bordeaux player 10",
@@ -89,7 +97,8 @@
         "data/squads/away_10.tres"
       ],
       "sculpt": "deltas/bordeaux_10.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "bordeaux_11": {
@@ -98,7 +107,8 @@
         "data/squads/away_11.tres"
       ],
       "sculpt": "deltas/bordeaux_11.json",
-      "hair": "legacy_crop",
+      "identity_source": "bordeaux_09",
+      "hair": "des_side_hair",
       "likeness": "starting head; individual likeness pending"
     },
     "john_orourke": {
@@ -108,8 +118,8 @@
         "data/players/john_orourke.tres"
       ],
       "sculpt": "deltas/john_orourke.json",
-      "hair": "legacy_crop",
-      "likeness": "starting head; individual likeness pending"
+      "hair": "john_swept",
+      "likeness": "Reference finishing pass: independent facial forms, fitted eyes, anatomical UV skin and dimensional groom; visual/hardware acceptance recorded in four_head_finish brief"
     },
     "colly_roden": {
       "display_name": "Colly Roden",
@@ -174,7 +184,7 @@
       ],
       "sculpt": "deltas/shane_denham.json",
       "hair": "shane_crop",
-      "likeness": "photo-led reconstruction; review in progress"
+      "likeness": "Reference finishing pass: independent facial forms, fitted eyes, anatomical UV skin and dimensional groom; visual/hardware acceptance recorded in four_head_finish brief"
     },
     "damo_murphy": {
       "display_name": "Damo Murphy",
@@ -219,7 +229,7 @@
         "data/players/bordeaux_goalkeeper.tres"
       ],
       "identity_source": "bordeaux_09",
-      "hair": "bald",
+      "hair": "des_side_hair",
       "likeness": "legacy fixture explicitly reuses Des Feeney"
     },
     "bordeaux_outfield_1": {
@@ -228,7 +238,7 @@
         "data/players/bordeaux_outfield_1.tres"
       ],
       "identity_source": "bordeaux_09",
-      "hair": "bald",
+      "hair": "des_side_hair",
       "likeness": "legacy fixture explicitly reuses Des Feeney"
     },
     "bordeaux_outfield_2": {
@@ -237,7 +247,7 @@
         "data/players/bordeaux_outfield_2.tres"
       ],
       "identity_source": "bordeaux_09",
-      "hair": "bald",
+      "hair": "des_side_hair",
       "likeness": "legacy fixture explicitly reuses Des Feeney"
     },
     "bordeaux_outfield_3": {
@@ -246,7 +256,7 @@
         "data/players/bordeaux_outfield_3.tres"
       ],
       "identity_source": "bordeaux_09",
-      "hair": "bald",
+      "hair": "des_side_hair",
       "likeness": "legacy fixture explicitly reuses Des Feeney"
     },
     "des_feeney_sr": {
@@ -255,8 +265,8 @@
         "data/officials/referee.tres"
       ],
       "sculpt": "deltas/des_feeney_sr.json",
-      "hair": "bald",
-      "likeness": "starting head; referee likeness pending"
+      "hair": "referee_grey",
+      "likeness": "Reference finishing pass: independent facial forms, fitted eyes, anatomical UV skin and dimensional groom; visual/hardware acceptance recorded in four_head_finish brief"
     }
   }
 }

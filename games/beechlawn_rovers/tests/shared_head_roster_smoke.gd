@@ -9,6 +9,19 @@ func _part(rig: Node, name: String) -> MeshInstance3D:
 func _run() -> void:
 	var package := (load("res://assets/characters/shared/heads/master.glb") as PackedScene).instantiate()
 	var master := _part(package, "Skin_Head").mesh
+	var shane_package := (load("res://assets/characters/shared/heads/players/shane_denham.glb") as PackedScene).instantiate()
+	var des_package := (load("res://assets/characters/shared/heads/players/bordeaux_09.glb") as PackedScene).instantiate()
+	var des_head := _part(des_package, "Skin_Head").mesh
+	var des_hair_package := (load("res://assets/characters/shared/heads/des_side_hair.glb") as PackedScene).instantiate()
+	var des_hair := _part(des_hair_package, "Hair_Shane_ShortCropCards").mesh
+	var john_package := (load("res://assets/characters/shared/heads/players/john_orourke.glb") as PackedScene).instantiate()
+	var john_head := _part(john_package, "Skin_Head").mesh
+	var john_hair_package := (load("res://assets/characters/shared/heads/john_swept.glb") as PackedScene).instantiate()
+	var john_hair := _part(john_hair_package, "Hair_Shane_ShortCropCards").mesh
+	var referee_package := (load("res://assets/characters/shared/heads/players/des_feeney_sr.glb") as PackedScene).instantiate()
+	var referee_head := _part(referee_package, "Skin_Head").mesh
+	var referee_hair_package := (load("res://assets/characters/shared/heads/referee_grey.glb") as PackedScene).instantiate()
+	var referee_hair := _part(referee_hair_package, "Hair_Shane_ShortCropCards").mesh
 	var game := (load("res://scenes/match_11v11.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame
@@ -23,13 +36,32 @@ func _run() -> void:
 	actors.append(officials[0])
 	var common_body: Mesh
 	var bald_count := 0
+	var des_away_count := 0
 	for actor in actors:
 		var visual := actor.get_node("Visual") as FootballerVisual
 		var rig := visual.get_node("Rig")
 		assert(rig.find_children("*", "Skeleton3D", true, false).size() == 1)
-		assert(_part(rig, "Skin_Head").mesh == master, "Unedited roster head must share master")
+		var is_bordeaux: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id).begins_with("bordeaux_")
+		var is_john: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id) == "john_orourke"
+		var is_shane: bool = actor is FootballPlayer and String((actor as FootballPlayer).profile.player_id) == "shane_denham"
+		var is_referee: bool = actor == officials[0]
+		var expected_head_package := des_package if is_bordeaux else (john_package if is_john else (referee_package if is_referee else (shane_package if is_shane else package)))
+		if is_bordeaux:
+			des_away_count += 1
+			assert(_part(rig, "Skin_Head").mesh == des_head, "Boardeaux players must reuse Des Feeney's individual head")
+			assert(_part(rig, "Hair_Shane_ShortCropCards").mesh == des_hair, "Boardeaux players must use Des's receded side groom")
+		elif is_john:
+			assert(_part(rig, "Skin_Head").mesh == john_head, "John O’Rourke must use his independent goalkeeper likeness")
+			assert(_part(rig, "Hair_Shane_ShortCropCards").mesh == john_hair, "John O’Rourke must use his swept highlighted blonde groom")
+		elif is_referee:
+			assert(_part(rig, "Skin_Head").mesh == referee_head, "Des Feeney Sr. referee must use his independent likeness")
+			assert(_part(rig, "Hair_Shane_ShortCropCards").mesh == referee_hair, "Referee must retain his separate grey moustache/side groom")
+		elif is_shane:
+			assert(_part(rig, "Skin_Head").mesh == _part(shane_package, "Skin_Head").mesh, "Shane must use his independent refined head")
+		else:
+			assert(_part(rig, "Skin_Head").mesh == master, "Unedited players must share master")
 		for eye in ["Eye_l", "Eye_r"]:
-			assert(_part(rig, eye).mesh == _part(package, eye).mesh)
+			assert(_part(rig, eye).mesh == _part(expected_head_package, eye).mesh)
 		var body := _part(rig, "YBot_Surface").mesh
 		if common_body == null:
 			common_body = body
@@ -39,7 +71,8 @@ func _run() -> void:
 			assert(_part(rig, name).visible == (appearance.hair_style != "bald"))
 		if appearance.hair_style == "bald":
 			bald_count += 1
-	assert(bald_count == 3, "Des, reused Des keeper and referee use bald selection")
+	assert(des_away_count == 11, "All eleven Boardeaux players use the same Des identity")
+	assert(bald_count == 0, "All active identities now have fitted grooms, including the bald-crown referee's grey moustache")
 	var first: FootballPlayer = game._home_players[2]
 	var other: FootballPlayer = game._home_players[3]
 	var visual := first.get_node("Visual") as FootballerVisual
@@ -62,11 +95,19 @@ func _run() -> void:
 	assert(_part(other.get_node("Visual/Rig"), "Skin_Head").mesh == master)
 	assert(visual.get_node("Rig").find_children("*", "Skeleton3D", true, false).size() == 1)
 	visual.configure_appearance(load("res://data/squads/away_09.tres"))
-	assert(not _part(visual.get_node("Rig"), "Hair_Shane_ShortCropCards").visible)
+	assert(_part(visual.get_node("Rig"), "Skin_Head").mesh == des_head)
+	assert(_part(visual.get_node("Rig"), "Hair_Shane_ShortCropCards").mesh == des_hair)
 	visual.configure_appearance(first.profile)
 	assert(_part(visual.get_node("Rig"), "Skin_Head").mesh == master)
 	assert(_part(visual.get_node("Rig"), "Hair_Shane_ShortCropCards").visible)
-	print("PASS: 22 players + referee, shared head/body/eyes, bald selection, local override and reconfiguration")
+	print("PASS: 22 players + referee, distinct Boardeaux and referee Des heads, independent John keeper head, shared body, local override and reconfiguration")
 	package.free()
+	shane_package.free()
+	des_package.free()
+	des_hair_package.free()
+	john_package.free()
+	john_hair_package.free()
+	referee_package.free()
+	referee_hair_package.free()
 	game.free()
 	quit(0)
