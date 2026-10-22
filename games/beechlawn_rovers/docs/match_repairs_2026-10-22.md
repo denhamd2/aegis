@@ -86,7 +86,7 @@ Recorded first complete Watch match: full 180-second clock, 12,461 fixed ticks,
 1,340.2 m ball travel, shots 7/5, contested shots 5/4, saves 4/5, score 1/1,
 zero stationary samples. Counts describe that run, not guaranteed balance.
 
-Final checks: **28 distinct regression scripts pass** across
+Final checks: **47 distinct regression scripts pass** across
 the recorded suites, including actual 11v11 kick/shot contacts and mirrored
 midfield attacks with full opposition. The final two complete Watch matches
 produced shots 9/2 and 6/2, contested shots 7/2 and 6/1, saves 2/6 and 2/4,
@@ -98,3 +98,10 @@ consistent scoring. The earlier 1/1 run is retained above for transparency.
 and [validation manifest](art_briefs/match_repairs_2026_10_22/validation.json)
 record the renderer and package scope. The universal Mac archive was exported
 and verified after the final code checks. No Mac device execution occurred.
+
+The broader release gate exposed an obsolete AI fixture assumption: it stopped
+at the first valid shot, then demanded x>34 despite the unchanged 22 m shot
+range allowing x>=30.5 on the central lane. The reproduced shot at x=33.28
+was in range. The corrected check requires carrying into the configured goal
+range and an actual forward physical shot, without changing gameplay tuning.
+The legacy goal-flow check also now verifies continued flight before kickoff.

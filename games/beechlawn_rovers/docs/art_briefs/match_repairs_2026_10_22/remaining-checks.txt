@@ -1,0 +1,94 @@
+
+[smoke] ai_carry_to_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+AI carry-to-shot: shots=1 furthest_ball_x=33.28
+AI_SHOT_CONTACT range=19.5700130462646 speed=20.9771347045898
+[passed] ai_carry_to_shot_smoke.gd
+
+[smoke] loose_ball_recovery_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+Loose-ball recovery: opponent_touches=1 ball_travel=0.03
+[passed] loose_ball_recovery_smoke.gd
+
+[smoke] pass_lane_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS_LANE team=Beechlawn Rovers selected=Derek Mitchell decision=through_pass
+PASS_LANE team=Boardeaux selected=Des Feeney decision=through_pass
+PASS: ground and through passes select the open lane in both directions
+[passed] pass_lane_selection_smoke.gd
+
+[smoke] ai_carrier_identity_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CARRIER_ID team=Beechlawn Rovers carrier_intent=carry shot_queued=true
+CARRIER_ID team=Boardeaux carrier_intent=carry shot_queued=true
+PASS: current ball contact takes priority over future interception in both directions
+[passed] ai_carrier_identity_smoke.gd
+
+[smoke] ai_receive_handoff_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+PASS: receipt resumes carrying, and turnover resumes defending, in both directions
+[passed] ai_receive_handoff_smoke.gd
+
+[smoke] ai_carry_space_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+CARRY_SPACE team=Beechlawn Rovers defender_distance=-4.0 choice=carry
+CARRY_SPACE team=Beechlawn Rovers defender_distance=4.0 choice=carry
+CARRY_SPACE team=Beechlawn Rovers defender_distance=1.8 choice=short_pass
+CARRY_SPACE team=Boardeaux defender_distance=-4.0 choice=carry
+CARRY_SPACE team=Boardeaux defender_distance=4.0 choice=carry
+CARRY_SPACE team=Boardeaux defender_distance=1.8 choice=short_pass
+[passed] ai_carry_space_smoke.gd
+
+[smoke] ai_wide_attack_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, -23.0) target=(3.0, -23.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, -23.0) target=(41.43254, -20.36413) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, -8.0) target=(3.0, -8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, -8.0) target=(43.0, -8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, 0.0) target=(3.0, 0.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, 0.0) target=(43.0, 0.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, 8.0) target=(3.0, 8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, 8.0) target=(43.0, 8.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(0.0, 23.0) target=(3.0, 23.0) correct=true
+WIDE_CARRY team=Beechlawn Rovers ball=(40.0, 23.0) target=(41.43254, 20.36413) correct=true
+CARRY_ESCAPE team=Beechlawn Rovers target=(22.38825, 1.815559)
+WIDE_CARRY team=Boardeaux ball=(0.0, -23.0) target=(-3.0, -23.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, -23.0) target=(-41.43254, -20.36413) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, -8.0) target=(-3.0, -8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, -8.0) target=(-43.0, -8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, 0.0) target=(-3.0, 0.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, 0.0) target=(-43.0, 0.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, 8.0) target=(-3.0, 8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, 8.0) target=(-43.0, 8.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(0.0, 23.0) target=(-3.0, 23.0) correct=true
+WIDE_CARRY team=Boardeaux ball=(-40.0, 23.0) target=(-41.43254, 20.36413) correct=true
+CARRY_ESCAPE team=Boardeaux target=(-22.38825, -1.815559)
+[passed] ai_wide_attack_smoke.gd
+
+[smoke] ai_shot_approach_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+SHOT_APPROACH queued=true preparation_lateral_speed=0.00470504676923 yaw_change=0.0 contact=true steering_resumed=true
+[passed] ai_shot_approach_smoke.gd
+
+[smoke] match_flow_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=8 officials=0
+Beechlawn kickoff and goal-restart checks passed
+[passed] match_flow_smoke.gd

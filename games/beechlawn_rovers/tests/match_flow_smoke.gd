@@ -37,9 +37,11 @@ func _run_checks() -> void:
 	assert(player.is_physics_processing(), "Player movement did not resume after kickoff")
 
 	game._on_goal("Beechlawn Rovers", 1)
-	assert(ball.freeze, "Ball should stop during the goal pause")
+	assert(not ball.freeze, "Scored ball should continue physically into the net")
 	assert(not player.is_physics_processing(), "Players should stop during the goal pause")
 	assert(game.get("_kickoff_team") == &"Boardeaux", "Conceding team was not awarded the restart")
+	game._physics_process(.5)
+	assert(not ball.freeze and not game._kickoff_pending,"Goal follow-through must precede kickoff")
 	game._physics_process(1.2)
 	assert(bool(game.get("_kickoff_pending")), "Goal pause did not prepare a new kickoff")
 	assert(ball.freeze, "Ball should remain still while AI lines up its kickoff")
