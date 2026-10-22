@@ -4,6 +4,12 @@ class_name FootballBall
 ## never parents or teleports the authoritative ball to a player's foot.
 
 signal touched(kind: StringName, speed: float)
+signal actor_touched(actor: Node3D, serial: int)
+signal net_contact(body: Node3D, point: Vector3, velocity: Vector3)
+var last_touch_player: Node3D
+var _last_physical_actor: Node3D
+var _last_net_frame := -100
+var _velocity_before_contact := Vector3.ZERO
 
 const RADIUS := 0.11
 @export var tuning: FootballTuning
@@ -22,6 +28,8 @@ var _kick_control_release := 0.0
 var _dribble_control_lease := 0.0
 
 func _ready() -> void:
+	collision_layer = 2
+	collision_mask = 5
 	if tuning == null:
 		tuning = FootballTuning.new()
 	mass = 0.43
@@ -114,6 +122,7 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	last_touch = touch_team
 	last_action = &"dribble"
 	action_serial += 1
+	record_touch(player)
 	touched.emit(&"dribble", linear_velocity.length())
 	return true
 
@@ -172,7 +181,7 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 	return _dribble_controller == player
 
 func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
-		touch_team: StringName = &"Beechlawn Rovers") -> bool:
+		touch_team: StringName = &"Beechlawn Rovers", actor: Node3D = null) -> bool:
 	if direction.length_squared() < 0.01 or speed <= 0.0:
 		return false
 	var velocity_before := linear_velocity
@@ -189,6 +198,8 @@ func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 	apply_torque_impulse(roll_axis * sphere_inertia * (speed / RADIUS))
 	last_touch = touch_team
 	last_action = kind
+	if actor != null: record_touch(actor)
+	else: last_touch_player = null
 	action_serial += 1
 	_dribble_cooldowns.clear()
 	_dribble_controller = null
@@ -205,6 +216,7 @@ func tackle_touch(player: Node3D, direction: Vector3, speed: float) -> bool:
 	last_action = &"tackle"
 	action_serial += 1
 	_dribble_cooldowns.clear()
+	record_touch(player)
 	touched.emit(&"tackle", speed)
 	return true
 
@@ -238,6 +250,7 @@ func receive_touch(player: Node3D, contact_position: Vector3,
 	last_action = &"first_touch"
 	action_serial += 1
 	_dribble_cooldowns.clear()
+	record_touch(player)
 	touched.emit(&"first_touch", target_velocity.length())
 	return true
 
@@ -254,6 +267,7 @@ func goalkeeper_save(player: Node3D, direction: Vector3, speed: float, lift: flo
 	# Let a parry escape the keeper's close-control spring. Opponents may still
 	# attack the rebound immediately, just as after an ordinary physical kick.
 	_kick_control_release = tuning.kick_control_release_seconds
+	record_touch(player)
 	touched.emit(&"goalkeeper_save", speed)
 	return true
 
@@ -269,6 +283,7 @@ func goalkeeper_claim(player: PhysicsBody3D) -> bool:
 	last_action = &"goalkeeper_catch"
 	action_serial += 1
 	_dribble_cooldowns.clear()
+	record_touch(player)
 	touched.emit(&"goalkeeper_catch", linear_velocity.length())
 	return true
 
@@ -280,10 +295,38 @@ func goalkeeper_distribute(player: PhysicsBody3D, direction: Vector3, speed: flo
 	if not goalkeeper_is_holding(player):
 		return false
 	_release_goalkeeper_holder()
-	return kick(direction, speed, lift, &"goalkeeper_distribution", StringName(player.get("team_name")))
+	return kick(direction, speed, lift, &"goalkeeper_distribution", StringName(player.get("team_name")),player)
 
 func _release_goalkeeper_holder() -> void:
 	if is_instance_valid(_holder_collision_exception):
 		remove_collision_exception_with(_holder_collision_exception)
 	_holder_collision_exception = null
 	goalkeeper_holder = null
+
+func record_touch(actor: Node3D) -> void:
+	last_touch_player=actor
+	last_touch=StringName(actor.get("team_name"))
+	actor_touched.emit(actor,action_serial)
+
+func release_for_restart() -> void:
+	_release_goalkeeper_holder()
+	linear_velocity=Vector3.ZERO; angular_velocity=Vector3.ZERO
+	_dribble_controller=null; _dribble_cooldowns.clear()
+	_dribble_control_lease=0; _kick_control_release=0
+	last_touch_player=null; _last_physical_actor=null
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	var physical_actor: Node3D
+	for index in state.get_contact_count():
+		var body := state.get_contact_collider_object(index) as Node3D
+		if body == null: continue
+		if body.has_meta("goal_net_end") and Engine.get_physics_frames()-_last_net_frame>3:
+			_last_net_frame=Engine.get_physics_frames()
+			net_contact.emit(body,state.get_contact_collider_position(index),_velocity_before_contact)
+		elif body is FootballPlayer:
+			physical_actor=body
+			if body!=_last_physical_actor and (body!=last_touch_player or _kick_control_release<=0):
+				action_serial+=1
+				record_touch(body)
+	_last_physical_actor=physical_actor
+	_velocity_before_contact=state.linear_velocity

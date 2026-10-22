@@ -27,6 +27,7 @@ var _interpolation_modes: Dictionary = {}
 var _hud_visible := true
 var _shane: FootballPlayer
 var _keeper: FootballPlayer
+var _des: FootballPlayer
 var _review_callback: JavaScriptObject
 var _lineup_graphic: Control
 var _lower_third: Panel
@@ -66,6 +67,9 @@ func start(game: Node3D) -> void:
 				_keeper = actor
 	_shane = home[1] if _shane == null else _shane
 	_keeper = home[0] if _keeper == null else _keeper
+	for actor in away:
+		if actor.profile.jersey_number == 9: _des=actor
+	_des=away[1] if _des==null else _des
 	_warmup = [_shane, away[away.size() - 1]]
 	camera = Camera3D.new()
 	camera.name = "PreMatchCamera"
@@ -85,6 +89,23 @@ func start(game: Node3D) -> void:
 			JavaScriptBridge.get_interface("window").BEECHLAWN_INTRO_SHOT = _review_callback
 
 func _build_shots() -> void:
+	# A directed eighteen-second cold open, before the teams enter the pitch.
+	_add_shot("montage_goal", "KILMORE DRIVE", "Sunday league football", 3.0,
+		Vector3(49.3,2.7,4.4), Vector3(49.8,2.5,4.0), Vector3(52.5,2.2,2.8), Vector3(52.5,2.2,2.7), 39)
+	_add_shot("montage_net", "MATCHDAY", "Weathered posts. Familiar ground.", 3.0,
+		Vector3(55.0,.8,1.5),Vector3(54.8,.9,1.2),Vector3(53.9,.8,.2),Vector3(53.9,.9,0),38)
+	_add_shot("montage_ball", "BEECHLAWN ROVERS 27", "The match ball", 3.0,
+		Vector3(.65,.3,.65),Vector3(.5,.25,.55),Vector3(0,.11,0),Vector3(0,.11,0),35)
+	var keeper_pos := Vector3(-47,0,-1)
+	var des_pos := Vector3(6,0,10)
+	_add_shot("montage_john", _keeper.profile.display_name.to_upper(), "BEECHLAWN ROVERS · GOALKEEPER", 3.0,
+		keeper_pos+Vector3(.35,1.68,2.35),keeper_pos+Vector3(.15,1.68,2.2),keeper_pos+Vector3(0,1.62,0),keeper_pos+Vector3(0,1.62,0),19)
+	_add_shot("montage_des", _des.profile.display_name.to_upper(), "BOARDEAUX · PLAYER MANAGER", 3.0,
+		des_pos+Vector3(-.35,1.67,2.35),des_pos+Vector3(-.15,1.67,2.2),des_pos+Vector3(0,1.59,0),des_pos+Vector3(0,1.59,0),19)
+	var puddle := _puddle_target()
+	var wet: bool = match_scene.ball.surface_wetness > .05
+	_add_shot("montage_puddles", "THE GOALMOUTH", "Mud, water and Sunday football" if wet else "Worn grass and Sunday football", 3.0,
+		puddle+Vector3(-1.2,.4,1.0),puddle+Vector3(-.8,.3,.9),puddle,puddle+Vector3(.25,0,0),43)
 	_add_shot("venue", "KILMORE DRIVE", "Dublin  ·  Sunday league football", 2.8,
 		Vector3(12, 5.2, 40), Vector3(7, 5.0, 38), Vector3(0, 0.7, 0), Vector3(0, 0.7, 0), 53)
 	# Two readable eleven-second team cards; keep the live walk visible to
@@ -95,10 +116,6 @@ func _build_shots() -> void:
 	_add_shot("referee", "DES FEENEY", "MATCH OFFICIAL  /  REFEREE", 4.2,
 		Vector3(0.58, 1.73, 7.7), Vector3(0.48, 1.73, 7.55),
 		Vector3(0, 1.62, 5.0), Vector3(0, 1.62, 5.0), 19)
-	_add_shot("goal", "THE FRAME", "Weathered steel. Seven metres of possibility.", 3.0,
-		Vector3(49.2, 2.1, 5), Vector3(50.0, 1.8, 4.6), Vector3(52.5, 1.7, 2.5), Vector3(52.5, 1.7, 2.3), 45)
-	_add_shot("net", "EVERY GOAL STARTS HERE", "Kilmore Drive  ·  Matchday details", 2.8,
-		Vector3(55.1, 1.6, 2.8), Vector3(54.8, 1.4, 2.6), Vector3(53.4, 1.3, 1.3), Vector3(53.4, 1.3, 1.1), 43)
 	_add_shot("fans", "THE TOUCHLINE", "Local football. Familiar faces.", 2.8,
 		Vector3(-18.4, 1.6, -31.8), Vector3(-19.4, 1.6, -32.2), Vector3(-20, 1.3, -36.7), Vector3(-20, 1.3, -36.7), 43)
 	# Keep the full team sweep readable instead of racing past the faces.
@@ -108,14 +125,6 @@ func _build_shots() -> void:
 	_add_shot("portrait", _shane.profile.display_name.to_upper(), "BEECHLAWN ROVERS  /  %d" % _shane.profile.jersey_number, 3.0,
 		shane_pos + Vector3(0.6, 1.55, 2.4), shane_pos + Vector3(0.15, 1.57, 2.2),
 		shane_pos + Vector3(0, 1.45, 0), shane_pos + Vector3(0, 1.45, 0), 31)
-	var keeper_pos: Vector3 = _lineup[_keeper.get_instance_id()]
-	_add_shot("keeper", _keeper.profile.display_name.to_upper(), "GOALKEEPER  /  %d" % _keeper.profile.jersey_number, 2.8,
-		keeper_pos + Vector3(-0.6, 1.35, 3), keeper_pos + Vector3(-0.1, 1.4, 2.7),
-		keeper_pos + Vector3(0, 1.1, 0), keeper_pos + Vector3(0, 1.1, 0), 40)
-	_add_shot("pitch", "SUNDAY LEAGUE. PROPER FOOTBALL.", "Grass, chalk and the details that make a home ground.", 2.4,
-		Vector3(1.2, 0.32, 1.6), Vector3(0.8, 0.28, 1.3), Vector3(0, 0.02, 0), Vector3(0, 0.02, 0), 43)
-	_add_shot("ball", "READY TO ROLL", "Beechlawn Rovers 27", 2.4,
-		Vector3(0.7, 0.28, 0.6), Vector3(0.55, 0.26, 0.5), Vector3(0, 0.11, 0), Vector3(0, 0.11, 0), 37)
 	_add_shot("warmup", "FINAL PREPARATIONS", "The short match is about to begin.", 4.0,
 		Vector3(0.1, 1.5, 10), Vector3(0.1, 1.5, 1.2), Vector3(-2.4, 1.0, 14), Vector3(-2.4, 1.0, 5.2), 51)
 	_add_shot("handoff", "BEECHLAWN ROVERS  vs  BOARDEAUX", "Three minutes. All to play for.", 2.0,
@@ -154,7 +163,20 @@ func _enter_shot(index: int) -> void:
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	camera.fov = float(shot["fov"])
 	match str(shot["id"]):
+		"montage_goal", "montage_net", "montage_ball", "montage_john", "montage_des", "montage_puddles":
+			for actor in _actors: actor.hide()
+			if _referee!=null: _referee.hide()
+			if shot["id"]=="montage_john":
+				_keeper.show()
+				_place(_keeper,Vector3(-47,0,-1),PI)
+				(_keeper.get_node("Visual") as FootballerVisual).play_presentation(&"AN_Beechlawn_KeeperSet")
+			elif shot["id"]=="montage_des":
+				_des.show()
+				_place(_des,Vector3(6,0,10),PI)
+				(_des.get_node("Visual") as FootballerVisual).play_presentation(IDLE)
 		"venue", "walk":
+			for actor in _actors: actor.show()
+			if _referee!=null: _referee.show()
 			for rank in _actors.size():
 				var actor := _actors[rank]
 				_place(actor, _entry[actor.get_instance_id()], 0.0)
@@ -165,6 +187,7 @@ func _enter_shot(index: int) -> void:
 		"goal", "lineup", "portrait", "keeper":
 			_stage_lineup()
 		"referee":
+			if _referee!=null: _referee.show()
 			for actor in _actors:
 				actor.hide()
 			if _referee != null:
@@ -251,6 +274,7 @@ func _restore_kickoff() -> void:
 	match_scene._setup_kickoff_positions(match_scene._kickoff_team)
 	match_scene._set_players_physics_enabled(false)
 	if _referee != null:
+		_referee.show()
 		(_referee.get_node("Visual") as FootballerVisual).end_presentation()
 		_referee.global_transform = _referee_transform
 		_referee.velocity = Vector3.ZERO
@@ -413,3 +437,15 @@ func _build_overlay() -> void:
 	fade.color = Color.BLACK
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	screen.add_child(fade)
+
+func _puddle_target() -> Vector3:
+	var best := Vector3(49,0,2)
+	var coverage := -1.0
+	if match_scene.ball.wet_surface!=null:
+		for x in range(46,52):
+			for z in range(-5,6):
+				var point := Vector3(x,0,z)
+				var value: float = match_scene.ball.wet_surface.sample_at(point).y
+				if value>coverage: coverage=value; best=point
+	best.y=PitchSurface.height_at(best.x,best.z)+.015 if match_scene.terrain_enabled else .015
+	return best

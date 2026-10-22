@@ -69,6 +69,8 @@ func _run() -> void:
 	check(game.player == old_player,"Player-switch routes must not claim a spectator actor")
 	for scoring_team in ["Boardeaux","Beechlawn Rovers"]:
 		game._on_goal(scoring_team,1)
+		game._physics_process(.5)
+		check(not game.ball.freeze and not game._kickoff_pending,"Scored ball continues into net before restart")
 		game._physics_process(1.2)
 		check(game._kickoff_pending,"Goal should prepare a restart")
 		game._update_kickoff_input(1.2)

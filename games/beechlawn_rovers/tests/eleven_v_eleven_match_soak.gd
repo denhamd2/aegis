@@ -6,6 +6,10 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	var session := root.get_node("MatchSession")
+	session.launched_from_menu=true
+	session.mode=session.MatchMode.WATCH
+	session.show_intro=false
 	Engine.time_scale=6.0
 	Engine.physics_ticks_per_second=360
 	Engine.max_physics_steps_per_frame=64

@@ -39,6 +39,8 @@ static var _head_variant_meshes: Dictionary = {}
 
 
 func _ready() -> void:
+	_prepare_looping_motion()
+	_install_restart_actions()
 	_build_locomotion_tree()
 	animation_tree.active = true
 	animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
@@ -50,6 +52,21 @@ func _ready() -> void:
 		configure_appearance(_appearance_profile, _appearance_team)
 	else:
 		_prime_locomotion_pose()
+
+
+func _prepare_looping_motion() -> void:
+	# AnimationNodeAnimation.loop_mode alone does not override imported clips.
+	# Own the library before changing motion; one-shot actions stay one-shot.
+	var library := animation_player.get_animation_library(&"").duplicate() as AnimationLibrary
+	for name in [&"AN_Beechlawn_Idle", &"AN_Beechlawn_Jog", &"AN_Beechlawn_Sprint",
+			&"AN_Beechlawn_CloseControl", &"AN_Beechlawn_KeeperSet", &"AN_Beechlawn_WalkOn", &"AN_Beechlawn_WarmupJog"]:
+		if library.has_animation(name):
+			var motion := library.get_animation(name).duplicate() as Animation
+			motion.loop_mode = Animation.LOOP_LINEAR
+			library.remove_animation(name)
+			library.add_animation(name, motion)
+	animation_player.remove_animation_library(&"")
+	animation_player.add_animation_library(&"", library)
 
 
 func configure_appearance(profile: FootballerProfile, team: FootballTeam = null) -> void:
@@ -71,6 +88,8 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
 		animation_player.animation_finished.connect(_on_animation_finished)
 		_human_rig = true
+		_prepare_looping_motion()
+		_install_restart_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -464,3 +483,21 @@ func _install_action_contact_marker(action: StringName, clip_name: StringName,
 			{"method": "on_action_contact_marker", "args": []})
 	library.remove_animation(clip_name)
 	library.add_animation(clip_name, clip)
+
+func _install_restart_actions() -> void:
+	var scene := load("res://assets/characters/shared/restart_actions.glb") as PackedScene
+	var source := scene.instantiate()
+	var source_player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	for name in [&"AN_Beechlawn_ThrowIn", &"AN_Beechlawn_ShowCard"]:
+		if not library.has_animation(name): library.add_animation(name,source_player.get_animation(name).duplicate())
+	source.free()
+	_install_action_contact_marker(&"restart_throw", &"AN_Beechlawn_ThrowIn", "res://assets/characters/shared/throw_contact.json")
+
+func reset_to_idle() -> void:
+	end_presentation()
+	_blend_position=0.0
+	_close_control_blend=0.0
+	animation_tree.set("parameters/Locomotion/blend_position",0.0)
+	animation_tree.set("parameters/CloseControl/blend_amount",0.0)
+	animation_tree.advance(0.0)

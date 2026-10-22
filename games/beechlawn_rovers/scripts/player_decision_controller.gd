@@ -59,7 +59,7 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 	# An outlet is an escape from pressure, not a reason to abandon free space.
 	# Retain early release for a defender ahead, but do not recycle solely
 	# because a trailing defender is four metres behind.
-	if teammates.size() == 11 and (nearest_defender <= PRESSURE_RANGE or nearest_forward_defender < 5.0):
+	if teammates.size() >= 7 and (nearest_defender <= PRESSURE_RANGE or nearest_forward_defender < 5.0):
 		var best: FootballPlayer
 		var best_score := INF
 		for candidate in teammates:

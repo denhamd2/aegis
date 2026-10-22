@@ -1,5 +1,5 @@
 extends Node3D
-## 4v4 blockout for the Sunday-league match prototype.
+## Sunday-league match orchestration; simulation, rules and presentation are separate.
 
 const FIELD_LENGTH := 105.0
 const FIELD_WIDTH := 68.0
@@ -55,6 +55,8 @@ var _capture_callback: JavaScriptObject
 var _spectator_mode := false
 var _intro_active := false
 var _pre_match: Node
+var restart = preload("res://scripts/football_restart_controller.gd").new()
+var rules = preload("res://scripts/football_rules_controller.gd").new()
 
 func _ready() -> void:
 	_spectator_mode = MatchSession.is_spectator()
@@ -75,6 +77,11 @@ func _ready() -> void:
 			push_error("Invalid match lineup: %s" % errors)
 			return
 	_assemble_teams()
+	restart.name="RestartController"
+	add_child(restart)
+	restart.setup(self)
+	rules.setup(self)
+	ball.net_contact.connect(_on_net_contact)
 	if _spectator_mode:
 		for actor in _home_players + _away_players:
 			actor.controlled_by_human = false
@@ -164,6 +171,14 @@ func _physics_process(delta: float) -> void:
 	for entry in _net_impacts.values():
 		entry["age"] = minf(2.0,float(entry["age"])+delta)
 		(entry["material"] as ShaderMaterial).set_shader_parameter("impact_age",entry["age"])
+	if restart.active() and not _full_time:
+		restart.update(delta)
+		if restart.released and restart.active():
+			_update_ai(delta)
+			_remaining_time=maxf(0,_remaining_time-delta)
+			if _remaining_time<=0: _finish_match()
+		_update_clock()
+		return
 	if not _full_time:
 		if _goal_pause_timer > 0.0:
 			_goal_pause_timer = maxf(0.0, _goal_pause_timer - delta)
@@ -211,7 +226,7 @@ func _setup_kickoff_positions(kicking_team: StringName) -> void:
 	var kicking_players := _home_players if kicking_team == &"Beechlawn Rovers" else _away_players
 	var defending_players := _away_players if kicking_team == &"Beechlawn Rovers" else _home_players
 	var kickoff_sign := 1.0 if kicking_team == &"Beechlawn Rovers" else -1.0
-	if kicking_players.size() == 11:
+	if use_human_visual:
 		_setup_full_kickoff(kicking_players, defending_players, kickoff_sign)
 		return
 	for actor in kicking_players:
@@ -279,6 +294,8 @@ func _setup_full_kickoff(kicking: Array[FootballPlayer], defending: Array[Footba
 	ball.last_touch = &"none"
 
 func _prepare_kickoff(kicking_team: StringName) -> void:
+	rules.restart_taker=null
+	rules.restart_kind=""
 	_kickoff_team = kicking_team
 	_setup_kickoff_positions(kicking_team)
 	_kickoff_pending = true
@@ -559,14 +576,15 @@ func _add_keeper_glove(visual: Node3D, side: String) -> void:
 func _create_control_marker(actor: FootballPlayer, enabled: bool) -> void:
 	var marker := MeshInstance3D.new()
 	marker.name = "ControlMarker"
+	marker.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var ring := TorusMesh.new()
 	ring.inner_radius = 0.39
 	ring.outer_radius = 0.47
 	ring.rings = 8
 	ring.ring_segments = 20
 	marker.mesh = ring
-	marker.position.y = 0.025
-	marker.rotation.x = PI * 0.5
+	marker.position.y = 0.075
+	# TorusMesh already lies in the XZ plane. Rotating it buried half the ring.
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_color = Color(0.95, 0.82, 0.18, 1.0)
@@ -589,7 +607,7 @@ func _cycle_controlled_player() -> void:
 		return
 	var outfield: Array[FootballPlayer] = []
 	for teammate in _home_players:
-		if teammate.profile != null and (teammate.profile.role == "outfield" or _home_players.size() == 11):
+		if teammate.profile != null and (teammate.profile.role == "outfield" or use_human_visual):
 			outfield.append(teammate)
 	if outfield.size() < 2:
 		return
@@ -615,7 +633,7 @@ func _update_ai(delta: float) -> void:
 	if _home_players.is_empty() or _away_players.is_empty():
 		return
 	var ball_position := Vector2(ball.global_position.x, ball.global_position.z)
-	if _home_players.size() == 11:
+	if use_human_visual:
 		# Each team receives a 5 Hz decision budget on alternate physics ticks.
 		_ai_tick = 0.10
 		var actors := _home_players if _next_home_ai else _away_players
@@ -742,7 +760,7 @@ func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions
 		# distance. Formation/support targets retain their broader arrival zone.
 		var arrival_distance := 0.25 if decision["intent"] == "press" else 0.9
 		var direction := Vector3(offset.x, 0.0, offset.y)
-		if team_players.size() == 11:
+		if team_players.size() >= 7:
 			var separation := Vector3.ZERO
 			for neighbour in team_players:
 				if neighbour == actor:
@@ -819,6 +837,8 @@ func _late_lead_depth(team_name: StringName) -> float:
 func _on_goal(team_name: String, _side: int) -> void:
 	if _full_time:
 		return
+	if rules.direct_throw_goal(_side): return
+	restart.cancel()
 	if team_name == "Beechlawn Rovers":
 		_home_score += 1
 	else:
@@ -826,20 +846,15 @@ func _on_goal(team_name: String, _side: int) -> void:
 	_update_score()
 	_set_message("GOAL  ·  %s" % team_name)
 	_boundary_pending = false
-	if _net_impacts.has(_side):
-		var impact: Dictionary = _net_impacts[_side]
-		impact["age"] = 0.0
-		(impact["material"] as ShaderMaterial).set_shader_parameter("impact_point",(impact["mesh"] as Node3D).to_local(ball.global_position))
 	_kickoff_team = &"Boardeaux" if team_name == "Beechlawn Rovers" else &"Beechlawn Rovers"
 	_kickoff_pending = false
-	_goal_pause_timer = 1.1
+	_goal_pause_timer = 1.6
 	_kickoff_ai_delay = 0.0
 	_possession_team = &"none"
 	_transition_team = &"none"
 	_transition_time_left = 0.0
-	ball.freeze = true
-	ball.linear_velocity = Vector3.ZERO
-	ball.angular_velocity = Vector3.ZERO
+	# The scored ball continues into the physical net during the celebration.
+	ball.freeze = false
 	_set_players_physics_enabled(false)
 
 func _finish_match() -> void:
@@ -863,8 +878,8 @@ func _check_boundary_restart() -> void:
 	if end_out and absf(p.z)+FootballBall.RADIUS<=GOAL_WIDTH*0.5 and p.y+FootballBall.RADIUS<=GOAL_HEIGHT:
 		return
 	_boundary_team = &"Boardeaux" if ball.last_touch==&"Beechlawn Rovers" else &"Beechlawn Rovers"
-	_boundary_spot = Vector3(clampf(p.x,-51.0,51.0),0,signf(p.z)*33.6)
-	_boundary_kind = "TOUCHLINE RESTART"
+	_boundary_spot = Vector3(clampf(p.x,-52.4,52.4),0,signf(p.z)*34.0)
+	_boundary_kind = "THROW-IN"
 	if end_out:
 		var attacking: StringName = &"Beechlawn Rovers" if p.x>0 else &"Boardeaux"
 		var defending: StringName = &"Boardeaux" if p.x>0 else &"Beechlawn Rovers"
@@ -876,33 +891,11 @@ func _check_boundary_restart() -> void:
 			_boundary_team=defending
 			_boundary_spot=Vector3(signf(p.x)*47.0,0,0)
 			_boundary_kind="GOAL KICK"
-	_boundary_pending=true
-	_goal_pause_timer=0.7
-	ball.freeze=true
-	ball.linear_velocity=Vector3.ZERO
-	ball.angular_velocity=Vector3.ZERO
-	_set_players_physics_enabled(false)
-	_set_message(_boundary_kind)
+	restart.begin(_boundary_kind,_boundary_team,_boundary_spot)
 
 func _resume_boundary_restart() -> void:
-	_boundary_pending=false
-	var team := _home_players if _boundary_team==&"Beechlawn Rovers" else _away_players
-	var taker := _nearest_outfielder(team,Vector2(_boundary_spot.x,_boundary_spot.z))
-	if _boundary_kind=="GOAL KICK":
-		taker=team[0]
-	_boundary_spot.y=PitchSurface.height_at(_boundary_spot.x,_boundary_spot.z)+FootballBall.RADIUS+0.02
-	ball.global_position=_boundary_spot
-	ball.reset_physics_interpolation()
-	var inward := Vector3(taker.attack_sign,0,-signf(_boundary_spot.z)*0.6).normalized()
-	taker.global_position=_boundary_spot-inward*0.5
-	taker.global_position.y=PitchSurface.height_at(taker.global_position.x,taker.global_position.z)+0.01
-	taker.velocity=Vector3.ZERO
-	taker.reset_physics_interpolation()
-	ball.last_touch=_boundary_team
-	ball.freeze=false
-	_set_players_physics_enabled(true)
-	taker._do_pass(false,inward)
-	_set_message(_boundary_kind+" · "+String(_boundary_team))
+	# Kept for older debug callers; all actual restarts use the same controller.
+	restart.begin(_boundary_kind,_boundary_team,_boundary_spot)
 
 func _update_score() -> void:
 	score_label.text = "BEECHLAWN ROVERS   %d     %d   BOARDEAUX" % [_home_score, _away_score]
@@ -915,9 +908,8 @@ func _set_message(message: String) -> void:
 	message_label.text = message
 	_message_time = 1.6
 
-func _on_foul_committed(_tackler: FootballPlayer, opponent: FootballPlayer) -> void:
-	var player_name := opponent.profile.display_name if opponent.profile != null else "opponent"
-	_set_message("FOUL  ·  Late slide challenge on %s" % player_name)
+func _on_foul_committed(tackler: FootballPlayer, opponent: FootballPlayer) -> void:
+	rules.adjudicate(tackler,opponent,tackler.get_meta("last_challenge",{}))
 
 func _set_power(value: float) -> void:
 	power_bar.value = value * 100.0
@@ -992,12 +984,15 @@ func _build_line_mesh() -> ArrayMesh:
 		var a1 := TAU * float(i+1) / 64.0
 		_add_line_segment(tool, Vector2(cos(a0),sin(a0))*9.15,
 			Vector2(cos(a1),sin(a1))*9.15,width)
-	for x in [-hx+11.0, hx-11.0]:
-		for j in 8:
-			var a0 := deg_to_rad(48.0 + float(j)*12.0)
-			var a1 := deg_to_rad(60.0 + float(j)*12.0)
-			_add_line_segment(tool, Vector2(x,0)+Vector2(cos(a0),sin(a0))*9.15,
-				Vector2(x,0)+Vector2(cos(a1),sin(a1))*9.15,width)
+	# Only the 9.15 m penalty-spot circle outside the 16.5 m area is painted.
+	var half_angle := acos(5.5 / 9.15)
+	for end_sign in [-1.0, 1.0]:
+		var centre := Vector2(end_sign * (hx - 11.0), 0)
+		for j in 32:
+			var a0 := -half_angle + 2.0 * half_angle * float(j) / 32.0
+			var a1 := -half_angle + 2.0 * half_angle * float(j+1) / 32.0
+			_add_line_segment(tool, centre + Vector2(-end_sign*cos(a0), sin(a0))*9.15,
+				centre + Vector2(-end_sign*cos(a1), sin(a1))*9.15, width)
 	tool.generate_normals()
 	return tool.commit()
 
@@ -1078,8 +1073,19 @@ func _build_goal(goal_name: String, end_sign: float) -> void:
 	_add_goal_collider(frame,Vector3(0,(GOAL_HEIGHT+0.06)*0.5,-post_half_span),Vector3(.15,GOAL_HEIGHT+0.06,.12))
 	_add_goal_collider(frame,Vector3(0,(GOAL_HEIGHT+0.06)*0.5,post_half_span),Vector3(.15,GOAL_HEIGHT+0.06,.12))
 	_add_goal_collider(frame,Vector3(0,GOAL_HEIGHT+0.06,0),Vector3(.15,.12,GOAL_WIDTH+0.12))
-	_add_goal_collider(frame,Vector3(GOAL_DEPTH,GOAL_HEIGHT*0.5,0),Vector3(.12,GOAL_HEIGHT,GOAL_WIDTH))
-	_add_goal_collider(frame,Vector3(GOAL_DEPTH*0.5,GOAL_HEIGHT+0.06,0),Vector3(GOAL_DEPTH,.08,GOAL_WIDTH+0.12))
+	# Net surfaces have their own bodies and contact identity, separate from posts.
+	var net_body := StaticBody3D.new()
+	net_body.name="NetCollision"
+	net_body.set_meta("goal_net_end",int(end_sign))
+	root.add_child(net_body)
+	_add_goal_collider(net_body,Vector3(GOAL_DEPTH,GOAL_HEIGHT*0.5,0),Vector3(.12,GOAL_HEIGHT,GOAL_WIDTH))
+	_add_goal_collider(net_body,Vector3(GOAL_DEPTH*0.5,GOAL_HEIGHT+0.06,0),Vector3(GOAL_DEPTH,.08,GOAL_WIDTH+0.12))
+	for side in [-1.0,1.0]:
+		_add_goal_collider(net_body,Vector3(GOAL_DEPTH*.5,GOAL_HEIGHT*.5,side*GOAL_WIDTH*.5),Vector3(GOAL_DEPTH,GOAL_HEIGHT,.06))
+	var net_physics := PhysicsMaterial.new()
+	net_physics.bounce=.05
+	net_physics.friction=.75
+	net_body.physics_material_override=net_physics
 	var detector := GoalDetector.new()
 	detector.name = "GoalDetector"
 	detector.defending_end = int(end_sign)
@@ -1099,3 +1105,15 @@ func _add_goal_collider(body: StaticBody3D, at: Vector3, size: Vector3) -> void:
 
 func build_park_edge() -> void:
 	KilmoreDriveVenue.build($ParkEdge, FIELD_LENGTH, FIELD_WIDTH, use_human_visual)
+
+func _on_net_contact(body: Node3D, point: Vector3, impact_velocity: Vector3) -> void:
+	var end_sign: int = body.get_meta("goal_net_end",0)
+	if not _net_impacts.has(end_sign) or impact_velocity.length()<.6: return
+	var impact: Dictionary = _net_impacts[end_sign]
+	var mesh := impact.mesh as MeshInstance3D
+	impact.age=0.0
+	var material := impact.material as ShaderMaterial
+	material.set_shader_parameter("impact_point",mesh.to_local(point))
+	material.set_shader_parameter("impact_vector",mesh.global_basis.inverse()*impact_velocity.normalized()*clampf(impact_velocity.length()*.022,.05,.42))
+	material.set_shader_parameter("impact_age",0.0)
+	ball.touched.emit(&"net",impact_velocity.length())

@@ -30,8 +30,10 @@ keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
 basic boundary restarts are implemented. Full 180-second AI-vs-AI replays
 record physical shots, contested attempts, saves, goals and ball stalls;
 attacking frequency and balance remain open.
-Touchlines currently restart with a ground pass; authentic throw-ins, complete
-fouls/offside/cards, substitutions and additional formations remain open.
+The [22 October match repair pass](match_repairs_2026-10-22.md) replaces touchline
+ground passes with overhead throw-ins and adds aim/power restarts, basic
+contact-evaluated fouls, penalties, cards and reduced teams. Full laws,
+advantage/offside, substitutions and additional formations remain open.
 
 The close broadcast camera, scoreboard and radar accompany shallow terrain,
 rough chalk, weathered goals/nets, house/tree/car modules and eight spectators.
@@ -138,6 +140,7 @@ BR-008; a single shot in the other fixture is a regression floor.
     macOS MetalFX options only if GPU timing shows a need. Do not assume the
     22-player target is already performance-bound while the playable is 4v4.
 - [ ] **BR-002 — Ball action/contact pass**
+  - 2026-10-22: Fixed reproduced rolling-ball capsule launches with collision-layer separation; see the [match repair evidence](match_repairs_2026-10-22.md).
   - 2026-10-21: standing/jog/sprint pass and shot contacts each execute once
     within 0.081–0.166 m in the moving regression. Setup touches and approach
     speed preserve boot reach; the marker opens a bounded 65 ms contact window
@@ -581,6 +584,7 @@ without AI stalls. Validate the same actions with human-vs-AI and AI-vs-AI.
   tactical decisions, use primitive collisions and shared resources, and
   measure physics, animation, draw calls and memory before adding detail.
 - [ ] **BR-014 — Broadcast camera, HUD and radar**
+  - 2026-10-22: Added the eighteen-second asset/player montage before walkout and fixed the horizontal active-player torus. Native sequence review supplements the existing intro checks.
   - Walkout lineup graphics: home first, then Boardeaux, with eleven reference
     portraits in a 4-4-2, club crests and player-managers Robbie Roden/Des Feeney.
     The original GPT Images panel sits beside the live walk. Each card has
@@ -619,6 +623,7 @@ recover on loss, create and defend chances, and remain readable from the camera.
 ### P3 — Complete match rules and team management
 
 - [ ] **BR-015 — Match state machine and boundaries**
+  - 2026-10-22: Added genuine throw-ins and shared aim/power restart preparation, release and recovery; manual and AI paths replace the former ground-pass placeholder.
   - 2026-10-18: whole-ball boundary ownership, goal kicks and corners have
     smoke coverage. A short ground-pass restart substitutes for throw-ins.
     Half-time and complete regulation restart presentation remain open.
@@ -626,12 +631,14 @@ recover on loss, create and defend chances, and remain readable from the camera.
   Detect the whole ball over touchlines and goal lines; award throw-ins, corners
   and goal kicks to the correct side.
 - [ ] **BR-016 — Fouls, offside and referee**
+  - 2026-10-22: Added contact-based free kicks, penalties, yellows, second yellows and straight reds. Advanced advantage/offside remain open.
   - 2026-10-18: a separate black-kit referee follows play diagonally and stays
     outside player selection/possession/tackle groups. Adjudication is still open.
   Judge tackle timing/contact, advantage and cards. Evaluate offside at the
   teammate's ball-play moment and penalize only involvement. Add visible referee
   reactions and restart placement.
 - [ ] **BR-017 — Substitutions and reduced teams**
+  - 2026-10-22: Dismissals now remove active actors, update selection/AI/shape and replace a dismissed keeper in role; substitution menus remain open.
   Select eligible substitutes, replace players, refresh role assignments and
   player switching, and keep playing with a dismissed player removed.
 - [ ] **BR-018 — Tactical controls and match awareness**
@@ -651,6 +658,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-22: Fixed long-run skating: imported motion resources explicitly loop independently of node settings, with a sustained live-dribble regression.
   - 2026-10-21: first-time pass/shot starts can skip redundant anticipation
     while keeping accelerated playback at 1.5×. Shots can interrupt receive
     settle and new ball actions can interrupt completed contact follow-through.
@@ -863,6 +871,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-22: Mirrored the exterior penalty arcs and connected physical net impacts to a visible anchored bulge; scored balls keep moving into the net.
   - 2026-10-20 wet goalmouth/weather pass: shared mud/water masks at both goals,
     physical ground-ball resistance and persisted Sunny/Cloudy/Light rain/Mist
     options. Sunny remains sunlit with damp ground. Depth haze is used across

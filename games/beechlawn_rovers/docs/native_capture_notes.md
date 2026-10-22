@@ -51,3 +51,21 @@ Vulkan, 960x540 stills and fixed-time playback do not establish exact Mac
 GPU output, Retina/1080p detail, animation feel or 60 fps. Native hardware
 appearance/performance remains an acceptance gate. Football delivery is Mac-only. Use headless tests for logic and native captures
 for appearance; the Web game and deployment have been retired.
+
+## Match repair sequences
+
+`--review-mode movement|throw|net|montage` records numbered native PNG frames
+plus metadata in `match_broadcast.json`. Movement/throw/net use six real 60 Hz
+simulation steps per draw; assemble at 10 fps to review simulated timing, not
+cloud rendering throughput. The montage samples the start/middle/end of each
+of its six three-second shots; its primary still is a midpoint because the
+first instant intentionally fades from black. These sequences use existing
+match assets/controllers. They do not replace real-time human playtesting.
+
+```
+python3 games/beechlawn_rovers/tools/capture_native.py \
+  games/beechlawn_rovers/build/native-movement --review-mode movement \
+  --resolution 640x360 --deadline 220
+ffmpeg -framerate 10 -i games/beechlawn_rovers/build/native-movement/frame_%03d.png \
+  -c:v libx264 -pix_fmt yuv420p games/beechlawn_rovers/build/native-movement/review.mp4
+```

@@ -22,7 +22,8 @@ likeness/environment art and M1 performance acceptance remain in development.
   buffered short and through-pass commands, and a variable-power shot.
 - Nine gameplay cameras with saved height/zoom/angle tuning, match goals and basic scoring/reset.
 - An optional, skippable pre-match broadcast: original walk-on/warm-up clips,
-  lineup and player, keeper, pitch, goal/net, fan and ball detail shots.
+  an eighteen-second object/player montage before walkout, team graphics,
+  referee reveal and a slow lineup pan.
 - A three-minute short-match clock, score display and development telemetry.
 - A worn park-pitch setting with lightweight scene geometry.
 - Eleven shared human actors per side (one keeper each), editable roster data,
@@ -83,15 +84,18 @@ interception decisions remain in development.
 
 Sliding tackles commit the player for a short approach before resolving ball
 contact. The AI can slide from longer range; opponent-first contact raises a
-foul call and does not change possession. Free-kick restarts are not implemented
-yet. Running players also have a brief, attribute-weighted shoulder response
+foul call and does not change possession. Opponent-first challenges now feed the referee/free-kick/card system. Running players also have a brief, attribute-weighted shoulder response
 when they contest an opponent-held ball side by side; the ball remains governed
 by the ordinary possession and contact rules.
 
 The first match slice uses keyboard input only. Press E or Q to take
-Beechlawn's kickoff; Bordeaux restarts automatically after a goal pause. The
-clock runs for three minutes of open play and then stops at full time. Goal kicks/corners and boundary ownership have basic restarts; touchlines use a
-ground-pass placeholder. Authentic throw-ins, fouls and full rules remain open.
+Beechlawn's kickoff; Boardeaux restarts automatically after a goal pause. The
+clock runs for three minutes of open play and then stops at full time. Throw-ins use an overhead animation and independent ball release. Free kicks,
+penalties, yellows, second yellows and straight reds stop/restart play; dismissed
+players leave the active team. Manual restarts use WASD aim, hold/release E for
+throw/pass and Space for shooting. Watch takes them automatically. Full laws,
+advantage/offside and substitutions remain open. See
+[the repair pass](docs/match_repairs_2026-10-22.md).
 
 ## Blender workflow
 

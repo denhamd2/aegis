@@ -17,7 +17,9 @@ Read before choosing tools for any player task. Detailed face/skin/hair checks l
 
 - Label the actual source, head variant, material/atlas and renderer used for each capture. Shared-body Blender reviews can still use an older diagnostic head while the roster uses separate current head packages. Compare equivalent assets, views and lighting; promotional artwork cannot certify the playable mesh.
 - A passing weight/import check proves structural compatibility, not artistic approval. Use the main skill's final-quality gate and record visible finishing tasks. Software rendering does not establish native Metal appearance, Mac fullscreen or M1 frame times.
-- For cloud screenshots, use Playwright with the scene's first-draw/ready **and freeze** hooks. Ready alone did not prevent readback starvation on a continuously drawing SwiftShader canvas. Use `tools/capture/capture_beechlawn_web.py` or the isolated review helper; keep startup, screenshot and cleanup bounded. Test release menu/layout separately from debug software capture.
+- Use native Forward+ moving captures for motion approval; retained browser
+  captures are historical. The football Web build is retired. Headless checks
+  establish logic/pose constraints, not visual motion quality.
 
 ## Safe editing and bounded tools
 

@@ -53,6 +53,8 @@ func _run() -> void:
 		assert(not hit.is_empty())
 		assert(absf(hit.position.y-PitchSurface.height_at(point.x,point.y))<0.004,"Visible terrain and collision disagree")
 	match_scene._on_goal("Beechlawn Rovers",1)
+	match_scene._physics_process(.5)
+	assert(not match_scene.ball.freeze,"Scored ball continues into net")
 	match_scene._physics_process(1.2)
 	assert(match_scene._kickoff_team==&"Boardeaux" and match_scene._kickoff_pending)
 	print("11v11 PASS: 22 humans, 2 keepers, separate referee, shared head, independent playback, all-player switching, terrain and restart")

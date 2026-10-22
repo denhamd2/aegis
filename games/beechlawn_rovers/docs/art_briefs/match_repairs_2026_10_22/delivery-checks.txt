@@ -1,0 +1,66 @@
+
+[smoke] discipline_rules_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+DISCIPLINE free kicks, penalties, yellow/second yellow/red, keeper replacement, direct throw goals failures=0
+[passed] discipline_rules_smoke.gd
+
+[smoke] full_match_restarts_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+RESTARTS whole-ball ownership, overhead release, corners, goal kicks, free-kick contact and paused preparation failures=0
+[passed] full_match_restarts_smoke.gd
+
+[smoke] dribble_grounding_runtime_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+DRIBBLE_RUNTIME human=false height=0.00134055133327 late_leg_motion=166
+DRIBBLE_RUNTIME human=true height=0.00135110443869 late_leg_motion=164
+[passed] dribble_grounding_runtime_smoke.gd
+
+[smoke] goal_net_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+NET_CONTACT end=-1 point=(0.0, 0.817646, -1.739998) vector=(0.0, -0.049391, -0.380578)
+NET_CONTACT end=1 point=(0.0, 0.817646, -1.739998) vector=(-0.0, -0.049391, -0.380578)
+GOAL_NET actual ball impacts, bulge parameters, continued flight and one score at both ends PASS
+[passed] goal_net_contact_smoke.gd
+
+[smoke] football_kick_contact_integration_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+Beechlawn pass integration: toe tip is 0.075m from ball center at 0.4 s (horizontal 0.049m, vertical 0.057m); one physical kick, locomotion restored
+[passed] football_kick_contact_integration_smoke.gd
+
+[smoke] football_shot_contact_integration_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+Beechlawn shot integration: Blender toe contact at 0.300 s (gap 0.010 m), one physical shot, no early impulse
+[passed] football_shot_contact_integration_smoke.gd
+
+[smoke] ai_midfield_to_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+AI midfield-to-shot team=Beechlawn Rovers: shots=1 max_attack_progress=33.0 carrier_x=32.2 last_action=shot last_touch=Beechlawn Rovers action_counts={ &"dribble": 9, &"shot": 1 } shot_status={ "Shot fired": 1 }
+AI full-opposition decision samples={ &"Beechlawn Rovers": { &"none": 1, &"carry": 8, &"short_pass": 0, &"through_pass": 0, &"shoot": 1 }, &"Boardeaux": { &"none": 0, &"carry": 0, &"short_pass": 0, &"through_pass": 0, &"shoot": 0 } }
+PASS: full-formation attack progression
+[passed] ai_midfield_to_shot_smoke.gd
+
+[smoke] ai_midfield_to_shot_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+AI midfield-to-shot team=Boardeaux: shots=1 max_attack_progress=34.3 carrier_x=-38.5 last_action=shot last_touch=Boardeaux action_counts={ &"dribble": 12, &"pass": 1, &"shot": 1 } shot_status={ "Shot fired": 1 }
+PASS: midfield-to-shot under trailing pressure
+[passed] ai_midfield_to_shot_smoke.gd
+MAC_DELIVERY import
+MAC_DELIVERY export
+Mac bundle PASS: universal arm64/x86_64, football identifier, resources, ZIP CRC
+Scope: package checks only; no native Mac execution or performance acceptance.

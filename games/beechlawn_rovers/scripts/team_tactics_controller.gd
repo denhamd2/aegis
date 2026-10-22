@@ -40,14 +40,14 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 			if ball_gap <= 1.7:
 				var carry_push := 4.5 if actor.team_name == transition_team and transition_time_left > 0.0 else 3.0
 				var carry_direction := Vector2(actor.attack_sign, 0.0)
-				if team_players.size() == 11 and absf(ball_position.y) > 12.0:
+				if team_players.size() >= 7 and absf(ball_position.y) > 12.0:
 					# Preserve width in build-up, then improve the shooting angle.
 					# Straight-ahead wide carries otherwise finish at the byline.
 					var goalward := Vector2(actor.attack_sign * FIELD_LENGTH * 0.5, 0.0) - ball_position
 					var turn_in := smoothstep(12.0, 35.0, ball_position.x * actor.attack_sign)
 					turn_in *= smoothstep(12.0, 18.0, absf(ball_position.y))
 					carry_direction = carry_direction.lerp(goalward.normalized(), turn_in).normalized()
-				if team_players.size() == 11:
+				if team_players.size() >= 7:
 					carry_direction = _open_carry_direction(ball_position, carry_direction, opponents)
 				target = ball_position + carry_direction * carry_push
 			else:
@@ -135,7 +135,7 @@ func assign_defensive_marks(team_players: Array[FootballPlayer], chaser: Footbal
 		for opponent in available:
 			var distance := defender.global_position.distance_to(opponent.global_position)
 			var slot_lane := defender.profile.starting_position.y
-			if team_players.size() == 11 and (distance > 18.0 or absf(opponent.global_position.z-slot_lane)>14.0):
+			if team_players.size() >= 7 and (distance > 18.0 or absf(opponent.global_position.z-slot_lane)>14.0):
 				continue
 			var lane_cost := absf(opponent.global_position.z - slot_lane) * 0.28
 			var danger_reward := maxf(0.0, ball_position.x * defender.attack_sign

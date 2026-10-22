@@ -24,6 +24,14 @@ func _run() -> void:
 		check(is_equal_approx(game._remaining_time, elapsed) and game._kickoff_pending, "Intro cannot consume clock/kickoff")
 		for actor in game._home_players + game._away_players:
 			check(not actor.is_physics_processing(), "Actor physics frozen")
+		var expected_open := ["montage_goal","montage_net","montage_ball","montage_john","montage_des","montage_puddles"]
+		var opening_seconds := 0.0
+		for opening_index in 6:
+			check(director.shots[opening_index]["id"]==expected_open[opening_index], "Six directed object/player shots precede walkout")
+			opening_seconds+=float(director.shots[opening_index]["duration"])
+		check(is_equal_approx(opening_seconds,18.0),"Cold open lasts eighteen seconds")
+		check(director._keeper.profile.player_id==&"john_orourke", "John uses actual keeper identity")
+		check(director._des.profile.player_id==&"bordeaux_09", "Des montage uses player, not referee")
 		for index in director.shots.size():
 			director._enter_shot(index)
 			director.shot_time = float(director.shots[index]["duration"]) * 0.5

@@ -1,3 +1,17 @@
+# Match behaviour and broadcast repairs
+
+Fixed reproduced dribble launches and skating after locomotion clips stopped.
+Both penalty arcs face midfield and the complete selection ring lies on grass.
+Real overhead throw-ins replace touchline ground passes. Aim/power restarts,
+free kicks, penalties, yellow/second-yellow/red cards and dismissals are added.
+Goal-net contact now drives a local bulge while the scored ball keeps moving.
+A new eighteen-second opening montage shows posts, net, ball, John O'Rourke,
+Boardeaux player Des Feeney and the goalmouth before walkout.
+
+Keyboard restarts: WASD aim; hold/release E throw/pass; Space shoot. Watch mode
+restarts automatically. Full advantage/offside laws, final visual polish and
+M1 hardware validation remain open. See [repair details](match_repairs_2026-10-22.md).
+
 # Mac-only delivery
 
 The owner retired the football Web version. Releases now contain only the

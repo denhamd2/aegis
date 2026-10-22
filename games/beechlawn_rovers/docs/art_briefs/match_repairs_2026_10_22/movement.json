@@ -1,0 +1,308 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "ball": "(0.544673, 0.114974, -0.000026)",
+      "file": "frame_000.png",
+      "label": "movement",
+      "player": "(0.069921, 0.001036, -0.000002)",
+      "player_velocity": "(1.2, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 6
+    },
+    {
+      "ball": "(0.788723, 0.117106, -0.000107)",
+      "file": "frame_001.png",
+      "label": "movement",
+      "player": "(0.25988, 0.002664, -0.000004)",
+      "player_velocity": "(2.4, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 12
+    },
+    {
+      "ball": "(1.105986, 0.119877, -0.000211)",
+      "file": "frame_002.png",
+      "label": "movement",
+      "player": "(0.569829, 0.006168, -0.000009)",
+      "player_velocity": "(3.600001, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 18
+    },
+    {
+      "ball": "(1.465731, 0.123019, -0.000346)",
+      "file": "frame_003.png",
+      "label": "movement",
+      "player": "(0.999785, 0.009923, -0.000014)",
+      "player_velocity": "(4.8, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 24
+    },
+    {
+      "ball": "(1.876664, 0.126153, -0.000528)",
+      "file": "frame_004.png",
+      "label": "movement",
+      "player": "(1.549732, 0.014656, -0.00002)",
+      "player_velocity": "(5.999999, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 30
+    },
+    {
+      "ball": "(2.427353, 0.130298, -0.001174)",
+      "file": "frame_005.png",
+      "label": "movement",
+      "player": "(2.149685, 0.019177, -0.000025)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 36
+    },
+    {
+      "ball": "(3.041372, 0.133948, -0.002108)",
+      "file": "frame_006.png",
+      "label": "movement",
+      "player": "(2.74965, 0.021435, -0.000028)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 42
+    },
+    {
+      "ball": "(3.660897, 0.137163, -0.002388)",
+      "file": "frame_007.png",
+      "label": "movement",
+      "player": "(3.349603, 0.026108, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 48
+    },
+    {
+      "ball": "(4.277054, 0.1394, -0.001739)",
+      "file": "frame_008.png",
+      "label": "movement",
+      "player": "(3.94957, 0.028446, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 54
+    },
+    {
+      "ball": "(4.885705, 0.140807, -0.000749)",
+      "file": "frame_009.png",
+      "label": "movement",
+      "player": "(4.549542, 0.030627, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 60
+    },
+    {
+      "ball": "(5.487014, 0.141736, 0.000145)",
+      "file": "frame_010.png",
+      "label": "movement",
+      "player": "(5.149533, 0.030627, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 66
+    },
+    {
+      "ball": "(6.083649, 0.141641, 0.000705)",
+      "file": "frame_011.png",
+      "label": "movement",
+      "player": "(5.749522, 0.032644, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 72
+    },
+    {
+      "ball": "(6.678715, 0.141318, 0.000923)",
+      "file": "frame_012.png",
+      "label": "movement",
+      "player": "(6.349521, 0.032644, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 78
+    },
+    {
+      "ball": "(7.274633, 0.140517, 0.00125)",
+      "file": "frame_013.png",
+      "label": "movement",
+      "player": "(6.949524, 0.031472, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 84
+    },
+    {
+      "ball": "(7.872478, 0.139564, 0.001686)",
+      "file": "frame_014.png",
+      "label": "movement",
+      "player": "(7.549527, 0.0303, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 90
+    },
+    {
+      "ball": "(8.472221, 0.13852, 0.001591)",
+      "file": "frame_015.png",
+      "label": "movement",
+      "player": "(8.149531, 0.029129, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 96
+    },
+    {
+      "ball": "(9.073147, 0.137667, 0.001168)",
+      "file": "frame_016.png",
+      "label": "movement",
+      "player": "(8.749537, 0.029129, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 102
+    },
+    {
+      "ball": "(9.674435, 0.136956, 0.000707)",
+      "file": "frame_017.png",
+      "label": "movement",
+      "player": "(9.349541, 0.027957, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 108
+    },
+    {
+      "ball": "(10.27541, 0.136763, 0.000573)",
+      "file": "frame_018.png",
+      "label": "movement",
+      "player": "(9.949543, 0.027957, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 114
+    },
+    {
+      "ball": "(10.87583, 0.137016, 0.000615)",
+      "file": "frame_019.png",
+      "label": "movement",
+      "player": "(10.54955, 0.027957, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 120
+    },
+    {
+      "ball": "(11.47569, 0.137714, 0.000514)",
+      "file": "frame_020.png",
+      "label": "movement",
+      "player": "(11.14954, 0.027957, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 126
+    },
+    {
+      "ball": "(12.07518, 0.139223, 0.000456)",
+      "file": "frame_021.png",
+      "label": "movement",
+      "player": "(11.74953, 0.027957, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 132
+    },
+    {
+      "ball": "(12.67458, 0.141042, 0.000568)",
+      "file": "frame_022.png",
+      "label": "movement",
+      "player": "(12.34951, 0.030169, -0.00003)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 138
+    },
+    {
+      "ball": "(13.27402, 0.143583, 0.000819)",
+      "file": "frame_023.png",
+      "label": "movement",
+      "player": "(12.94948, 0.032341, -0.000031)",
+      "player_velocity": "(6.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "tick": 144
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "msaa_3d": 2,
+  "officials": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "movement",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "vendor": "Unknown"
+}

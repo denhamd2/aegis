@@ -31,7 +31,7 @@ func _physics_process(delta: float) -> void:
 		var fraction := clampf((FootballBall.RADIUS - _previous_progress) / maxf(progress - _previous_progress, 0.0001), 0.0, 1.0)
 		var crossing_y := lerpf(_previous_position.y, ball.global_position.y, fraction)
 		var crossing_z := lerpf(_previous_position.z, ball.global_position.z, fraction)
-		if crossing_y - FootballBall.RADIUS <= goal_height \
+		if crossing_y + FootballBall.RADIUS <= goal_height \
 				and absf(crossing_z) + FootballBall.RADIUS <= goal_width * 0.5:
 			_scored = true
 			_score_cooldown = 1.7

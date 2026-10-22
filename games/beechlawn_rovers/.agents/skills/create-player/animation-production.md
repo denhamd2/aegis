@@ -36,6 +36,27 @@ Share immutable meshes/materials/animation content while keeping each actor's pl
 
 **Gate:** complete changed clips and boundary transitions look correct on the final mesh; no first-frame T-pose, translating planted pivot or coupled actor playback.
 
+### Sustained runtime failures
+
+Inspect the imported Animation resource's loop mode, not only its
+AnimationNodeAnimation setting. In Godot 4.6, nodes marked linear still froze
+at the end of non-looping imported jog/sprint clips. Copy/configure the actual
+motion resources as looping; preserve one-shot pass/shot/throw/card actions.
+Holding a one-shot preparation pose must not change that clip into a loop.
+Test several cycles after constant speed, not only the first pose transition.
+
+For apparent jumps, measure CharacterBody height/vertical velocity separately
+from hips and boot motion. A capsule climbing its independently rolling ball
+caused a 1.128 m launch; animation edits could not fix that. Keep ball collision
+response against players while excluding the ball from the player's kinematic
+floor/platform mask. Test actual sustained dribbling on terrain with contacts.
+
+Animation-only additions can export the existing rig plus new actions in a
+small GLB without rewriting shared body/kit/head exports. Retain the exact
+rest transform and imported track paths. Prove marker timing and recovery on
+the real actor. Dead-ball hand holding is separate from open-play possession;
+release the independent rigid body at the authored throw marker.
+
 ## 4. Contact belongs to gameplay
 
 Store authored contact markers in the existing metadata contract and verify its clip name, time origin, frame and FPS against the export. Install the Godot event once on an appropriate clip copy. Repeated setup must not add duplicate markers, and cancellation/interruptions must not leave a stale pending action.
