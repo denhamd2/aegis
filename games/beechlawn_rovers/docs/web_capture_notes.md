@@ -1,4 +1,9 @@
-# Beechlawn render and capture notes
+# Archived Beechlawn Web capture notes
+
+**Archived:** the owner retired the football Web version on 2026-10-22.
+Do not resume Web exports/deployments. Current capture instructions are in
+[native_capture_notes.md](native_capture_notes.md). The records below explain
+historical evidence and do not define current delivery requirements.
 
 The Web export uses Godot's **Compatibility** renderer (`renderer/rendering_method.web="gl_compatibility"`). Chromium reports WebGL 2 / Compatibility when it starts the export. This path is useful for checking startup, gameplay input, rough composition and browser errors; it does not reproduce the Mac build's Forward+ renderer or Metal lighting.
 

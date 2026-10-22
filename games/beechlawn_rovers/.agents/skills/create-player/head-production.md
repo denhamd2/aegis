@@ -148,7 +148,7 @@ goalkeeper and referee to catch accidental shared-material/identity changes.
 | Eyes, beard or hair miss the sculpt | Current source versus captured head/eye delta, mask coordinate space, matching groom revision | Matching source/export geometry and turned views |
 | Colour shifts or looks chalky | Saved PNG versus packed/imported image, colour spaces, source cast/tint limits and channel clipping | Matched daylight before/after with visible skin variation |
 | Fine fibres look like dark speckles | Fixed-crop shadow ablation versus multisample antialiasing, keeping pigment unchanged | Retain strand colour/shadows, record sampling and measure target GPU cost |
-| A ready Web scene times out on screenshot | Confirm the first draw and invoke its existing `BEECHLAWN_FREEZE_FRAME` hook before bounded readback | Fresh image, clean browser log and no leftover process |
+| Historical Web scene times out on screenshot | Confirm the first draw and invoke its existing `BEECHLAWN_FREEZE_FRAME` hook before bounded readback | Fresh image, clean browser log and no leftover process |
 
 Des's shadow normal-bias adjustment worked for one camera/renderer; its exact
 value and forehead-band crop are not universal presets. Preserve before and

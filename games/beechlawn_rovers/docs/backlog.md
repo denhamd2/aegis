@@ -12,6 +12,12 @@ and [`../references/README.md`](../references/README.md) before implementation.
 
 ## Current state
 
+Delivery is **Mac-only** as of 2026-10-22. The owner retired the football Web
+version, its export preset, release downloads and Pages deployment. Native
+Forward+ captures and headless checks replace ongoing browser validation.
+Historical Web evidence below is retained as a record, not an active backlog
+requirement. The separate wrestling Web game is unaffected.
+
 The standalone Godot 4.6.3 project opens on the Beechlawn Rovers 27 title
 screen, offering Play (keyboard vs AI) or Watch (AI vs AI), then launches a
 three-minute 11v11 match: ten outfield players and one keeper per side, plus a separate

@@ -8,6 +8,11 @@ requirements do not govern this project.
 
 ## Scope and project state
 
+- Delivery is Mac-only. The owner retired the football Web version on
+  2026-10-22: do not build, deploy or restore its Web export or Pages subsite.
+  Preserve archived references/evidence and leave the separate wrestling Web
+  game intact. Validate through native Forward+ captures and headless tests.
+
 - Open and run `games/beechlawn_rovers/project.godot` as its own Godot 4.6
   project. Keep code, scenes, imported assets, and exports under this project
   unless a genuinely shared Blender utility belongs in `tools/blender/`.
@@ -104,8 +109,8 @@ requirements do not govern this project.
 ## Godot automation
 
 - For appearance approval, use this project's native Forward+ capture runner
-  `tools/capture_native.py` and `docs/web_capture_notes.md`. Browser Compatibility
-  captures cover the Web build; they cannot approve the Mac's Forward+ look.
+  `tools/capture_native.py` and `docs/native_capture_notes.md`. Archived browser
+  captures are historical evidence; new appearance checks use Forward+.
   Headless smoke checks cover logic/structure. Record adapter, resolution and
   software-rendering limits; native M1 graphics/performance still need the Mac.
 

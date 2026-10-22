@@ -1,4 +1,4 @@
-name: Release Beechlawn Rovers
+name: Release Beechlawn Rovers Mac
 
 on:
   push:
@@ -10,12 +10,9 @@ on:
 
 permissions:
   contents: write
-  actions: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: beechlawn-mac-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -46,45 +43,14 @@ jobs:
           # Physical shots gate above in repeatable, mirrored midfield attacks.
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
           BEECHLAWN_KICKOFF_TEAM=Boardeaux python3 games/beechlawn_rovers/tools/run_smoke_tests.py eleven_v_eleven_match_soak.gd
-      - name: Export football only
+      - name: Export and verify universal Mac build
         run: |
-          mkdir -p build/beechlawn/web build/beechlawn/mac
-          timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release Web "$PWD/build/beechlawn/web/index.html"
+          mkdir -p build/beechlawn/mac
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
-          mkdir -p build/beechlawn/web/screenshots
-          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/match/match_broadcast.png build/beechlawn/web/screenshots/native_broadcast.png
-          cp games/beechlawn_rovers/docs/art_briefs/match_11v11_{broadcast,touchline,goal,corner}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/broadcast.png build/beechlawn/web/screenshots/current_broadcast.png
-          cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_intro_venue.png build/beechlawn/web/screenshots/current_venue.png
-          cp games/beechlawn_rovers/docs/art_briefs/kilmore_footprint_evidence/after_site_overhead.png build/beechlawn/web/screenshots/current_overhead.png
-          cp games/beechlawn_rovers/docs/art_briefs/title_red_black_evidence/title_screen.png build/beechlawn/web/screenshots/current_title.png
-          cp games/beechlawn_rovers/docs/art_briefs/opposite_broadcast/lineup.png build/beechlawn/web/screenshots/current_lineup.png
-          cp games/beechlawn_rovers/docs/art_briefs/lineup_graphics/lineup_{home,away}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/referee_intro/referee_closeup.png build/beechlawn/web/screenshots/current_referee_intro.png
-          cp games/beechlawn_rovers/docs/art_briefs/gameplay_feel_pass/{contact_pass,contact_shot,keeper_response}.gif build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/shane_portrait.png build/beechlawn/web/screenshots/current_shane.png
-          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/des_portrait.png build/beechlawn/web/screenshots/shared_des.png
-          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/john_portrait.png build/beechlawn/web/screenshots/shared_john.png
-          cp games/beechlawn_rovers/docs/art_briefs/native_forward_plus/heads/referee_portrait.png build/beechlawn/web/screenshots/current_referee.png
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_front.png build/beechlawn/web/screenshots/keeper_john_front.png
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/john_back.png build/beechlawn/web/screenshots/keeper_john_back.png
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/bordeaux_keeper_front.png build/beechlawn/web/screenshots/keeper_bordeaux_front.png
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/bordeaux_keeper_back.png build/beechlawn/web/screenshots/keeper_bordeaux_back.png
-          cp games/beechlawn_rovers/docs/art_briefs/keeper_kit_graphics/match/title_play_match.png build/beechlawn/web/screenshots/current_roster.png
-          cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_touchline.png build/beechlawn/web/screenshots/current_daylight_touchline.png
-          cp games/beechlawn_rovers/docs/art_briefs/sky_evidence/sunlit_broadcast.png build/beechlawn/web/screenshots/current_daylight_broadcast.png
-          cp games/beechlawn_rovers/docs/art_briefs/wet_weather_evidence/{sunny_goalmouth,sunny_broadcast,cloudy_broadcast,rain_goalmouth,mist_broadcast,ball_shadow_on,ball_shadow_off}.png build/beechlawn/web/screenshots/
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/shane_kit.png build/beechlawn/web/screenshots/current_kit.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_collar_raglan/pose_sheet.jpg build/beechlawn/web/screenshots/shared_kit_poses.jpg
-          cp games/beechlawn_rovers/docs/art_briefs/pitch_review_stage/des_front.png build/beechlawn/web/screenshots/current_short_sleeves.png
-          cp games/beechlawn_rovers/docs/art_briefs/shared_collar_raglan/short_pose_sheet.jpg build/beechlawn/web/screenshots/shared_short_poses.jpg
-          cp games/beechlawn_rovers/docs/screenshot_gallery.html build/beechlawn/web/screenshots/index.html
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn
-          printf '%s\n' "$GITHUB_SHA" > build/beechlawn/web/build.txt
-          (cd build/beechlawn/web && zip -q -r ../Beechlawn-Rovers-Web.zip .)
       - uses: actions/upload-artifact@v4
         with:
-          name: beechlawn-builds
+          name: beechlawn-mac-build
           path: build/beechlawn
           retention-days: 30
       - name: Publish separate football release
@@ -93,34 +59,7 @@ jobs:
         run: |
           tag="beechlawn-${GITHUB_SHA:0:12}"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" build/beechlawn/Beechlawn-Rovers-Web.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --clobber
+            gh release upload "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --clobber
           else
-            gh release create "$tag" build/beechlawn/Beechlawn-Rovers-Web.zip build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
+            gh release create "$tag" build/beechlawn/mac/Beechlawn-Rovers-Mac.zip --target "$GITHUB_SHA" --title "Beechlawn Rovers — 11v11 (${GITHUB_SHA:0:7})" --notes-file games/beechlawn_rovers/docs/release_notes.md --prerelease
           fi
-      - name: Preserve existing wrestling Pages site
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          run_id=$(gh run list --workflow pages.yml --status success --branch main --limit 1 --json databaseId --jq '.[0].databaseId')
-          if ! gh run download "$run_id" --name aegis-web-build --dir build/site; then
-            # Old Actions artifacts expire; rebuild that project only as a fallback.
-            mkdir -p build/site
-            timeout --kill-after=5s 300s godot --headless --editor --path game --import
-            timeout --kill-after=5s 300s godot --headless --path game --export-release Web "$PWD/build/site/index.html"
-          fi
-          test -s build/site/index.html
-          rm -rf build/site/beechlawn-rovers
-          cp -r build/beechlawn/web build/site/beechlawn-rovers
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/site
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}beechlawn-rovers/
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

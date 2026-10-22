@@ -1,3 +1,11 @@
+# Mac-only delivery
+
+The owner retired the football Web version. Releases now contain only the
+universal Mac app; football Web exports and Pages publishing are disabled.
+Native Forward+ captures and headless logic checks remain the validation path.
+Historical Web evidence is retained in the repository. The wrestling Web game
+and its Godot export stay separate and unchanged.
+
 # Native Forward+ visual-review workflow
 
 Football now has a separate native Godot Forward+ capture runner using
@@ -223,7 +231,6 @@ Movement/contact update:
 Controls: WASD move, Shift sprint, Ctrl close control, E pass/start, Q through ball,
 hold/release Space shoot, F tackle, G slide, Tab switch player, C camera, Space/Enter skip intro. Select the canvas first on Web.
 
-Web: https://denhamd2.github.io/aegis/beechlawn-rovers/
 Mac: download Beechlawn-Rovers-Mac.zip, extract and open the app. The app is ad-hoc
 signed, not Apple-notarized; macOS may require Open Anyway in Privacy & Security.
 

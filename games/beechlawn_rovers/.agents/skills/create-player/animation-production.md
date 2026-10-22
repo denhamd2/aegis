@@ -67,6 +67,6 @@ Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py
 | Marker-gated contact | `football_kick_contact_integration_smoke.gd`, `football_receive_contact_smoke.gd`, `football_shot_contact_integration_smoke.gd`; select the actual 11v11 fixture where supported |
 | Moving contact and combinations | `moving_kick_contact_smoke.gd`, `first_time_pass_timing_smoke.gd`, `first_time_shot_smoke.gd`, `ai_shot_approach_smoke.gd` |
 
-Sample whole changed clips, not only beginning/middle/end. Use a fixed nine-pose garment sheet as an additional deformation check, then inspect moving close and broadcast playback. Stills and skeleton proxies cannot establish animation smoothness or final-mesh quality. Preserve the main skill's Web/native distinction and report unmeasured hardware performance.
+Sample whole changed clips, not only beginning/middle/end. Use a fixed nine-pose garment sheet as an additional deformation check, then inspect moving close and broadcast playback. Stills and skeleton proxies cannot establish animation smoothness or final-mesh quality. Preserve the main skill's logic/native-appearance/hardware distinction and report unmeasured hardware performance.
 
 Evidence/rationale: `games/beechlawn_rovers/docs/art_briefs/br022_shane_foundation_pass.md`, `br022_shane_body_face_tailored_pass.md`, `pes_motion_control_pass.md`, `pes_chance_gait_followup.md` and `shared_turn_polish.md`.

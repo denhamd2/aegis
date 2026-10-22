@@ -2,7 +2,7 @@
 
 An original 3D association-football game prototype inside the Aegis
 repository. It has its own Godot project, scenes, scripts and assets. Its
-export pipeline publishes independent Web and universal Mac builds. Open this directory as a separate
+export pipeline publishes universal Mac builds. The football Web version is retired. Open this directory as a separate
 Godot project; the Aegis project remains at `game/`.
 
 The supplied gameplay specification is the product target. Development follows
@@ -49,8 +49,8 @@ individual head/hair variants. Faces still share the Shane-derived draft. These
 are not accepted individual likenesses or final kit tailoring. Full-team 4-4-2
 support/cover is active; additional formations and complete rules remain open.
 
-Play: https://denhamd2.github.io/aegis/beechlawn-rovers/
-Downloads: https://github.com/denhamd2/aegis/releases (Beechlawn releases).
+Mac downloads: https://github.com/denhamd2/aegis/releases (Beechlawn releases).
+Appearance checks use native Godot Forward+ captures; headless tests cover logic.
 See `docs/11v11_implementation.md` and `docs/art_briefs/11v11_release_evidence.md`
 for measured checks and visual limitations.
 

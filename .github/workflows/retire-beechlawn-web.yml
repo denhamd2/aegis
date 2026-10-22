@@ -1,0 +1,64 @@
+name: Remove retired Beechlawn Web site
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Pages artifact run matching the currently deployed site
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  remove-football:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check retirement safeguards
+        run: python3 -m unittest discover -s games/beechlawn_rovers/tools/tests -p 'test_retire_web_site.py' -v
+      - name: Retrieve the currently deployed Pages artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          gh run download "$SOURCE_RUN_ID" --name github-pages --dir build/current-pages
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil, tarfile
+          archives = list(Path('build/current-pages').glob('*.tar'))
+          assert len(archives) == 1, 'Expected one saved Pages tarball'
+          with tarfile.open(archives[0]) as archive:
+              archive.extractall('build/site', filter='data')
+          shutil.rmtree('build/current-pages')
+          PY
+      - name: Remove football and verify wrestling files are unchanged
+        run: |
+          python3 games/beechlawn_rovers/tools/retire_web_site.py build/site build/web-retirement.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beechlawn-web-retirement-proof
+          path: build/web-retirement.json
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+  deploy:
+    needs: remove-football
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
