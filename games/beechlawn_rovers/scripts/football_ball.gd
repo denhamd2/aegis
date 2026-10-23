@@ -5,6 +5,8 @@ class_name FootballBall
 
 signal touched(kind: StringName, speed: float)
 signal actor_touched(actor: Node3D, serial: int)
+signal post_contact(point: Vector3, velocity: Vector3)
+var _last_post_frame := -100
 signal net_contact(body: Node3D, point: Vector3, velocity: Vector3)
 var last_touch_player: Node3D
 var _last_physical_actor: Node3D
@@ -389,6 +391,9 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 		if body.has_meta("goal_net_end") and Engine.get_physics_frames()-_last_net_frame>3:
 			_last_net_frame=Engine.get_physics_frames()
 			net_contact.emit(body,state.get_contact_collider_position(index),_velocity_before_contact)
+		elif body.has_meta("goal_frame") and Engine.get_physics_frames()-_last_post_frame>6:
+			_last_post_frame=Engine.get_physics_frames()
+			post_contact.emit(state.get_contact_collider_position(index),_velocity_before_contact)
 		elif body is FootballPlayer:
 			physical_actor=body
 			if body!=_last_physical_actor and (body!=last_touch_player or _kick_control_release<=0):

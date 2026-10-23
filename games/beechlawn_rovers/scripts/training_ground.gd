@@ -60,6 +60,8 @@ var _spectator_mode := false
 var _intro_active := false
 var _pre_match: Node
 var restart = preload("res://scripts/football_restart_controller.gd").new()
+var events: FootballMatchEvents
+var grass_detail: PitchGrassDetail
 var rules = preload("res://scripts/football_rules_controller.gd").new()
 
 func _ready() -> void:
@@ -99,6 +101,11 @@ func _ready() -> void:
 	add_child(restart)
 	restart.setup(self)
 	rules.setup(self)
+	events = FootballMatchEvents.new()
+	events.name = "MatchEvents"
+	add_child(events)
+	events.setup(self)
+	get_node("/root/GameAudio").bind_match(self,events)
 	ball.net_contact.connect(_on_net_contact)
 	if _spectator_mode:
 		for actor in _home_players + _away_players:
@@ -121,6 +128,11 @@ func _ready() -> void:
 		if requested != null:
 			weather_id = MatchWeather.valid_id(StringName(str(requested)))
 	weather.setup(self, weather_id)
+	if terrain_enabled:
+		grass_detail = PitchGrassDetail.new()
+		grass_detail.name = "PitchGrassDetail"
+		add_child(grass_detail)
+		grass_detail.setup(self)
 	if use_human_visual:
 		var radar := Control.new()
 		radar.set_script(load("res://scripts/tactical_radar.gd"))
@@ -148,6 +160,7 @@ func _ready() -> void:
 	_set_message("AI vs AI  ·  Kickoff shortly" if _spectator_mode else "KICK OFF  ·  E pass  /  Q through-ball")
 	if MatchSession.launched_from_menu and MatchSession.show_intro:
 		_intro_active = true
+		get_node("/root/GameAudio").set_music(true)
 		_pre_match = preload("res://scripts/pre_match_director.gd").new()
 		_pre_match.name = "PreMatchDirector"
 		add_child(_pre_match)
@@ -896,6 +909,7 @@ func _on_goal(team_name: String, _side: int) -> void:
 	else:
 		_away_score += 1
 	_update_score()
+	events.emit_event(FootballMatchEvent.Kind.GOAL,StringName(team_name),ball.last_touch_player,ball.position)
 	_set_message("GOAL  ·  %s" % team_name)
 	_boundary_pending = false
 	_kickoff_team = &"Boardeaux" if team_name == "Beechlawn Rovers" else &"Beechlawn Rovers"
@@ -913,6 +927,7 @@ func _finish_match() -> void:
 	if _full_time:
 		return
 	_full_time = true
+	events.emit_event(FootballMatchEvent.Kind.FULL_TIME,&"full_time",null,ball.position)
 	ball.freeze = true
 	ball.linear_velocity = Vector3.ZERO
 	ball.angular_velocity = Vector3.ZERO
@@ -1120,6 +1135,7 @@ func _build_goal(goal_name: String, end_sign: float) -> void:
 				_net_impacts[int(end_sign)]={"mesh":net,"material":net_material,"age":2.0}
 	var frame := StaticBody3D.new()
 	frame.name = "FrameCollision"
+	frame.set_meta("goal_frame",int(end_sign))
 	root.add_child(frame)
 	var post_half_span := GOAL_WIDTH * 0.5 + 0.06
 	_add_goal_collider(frame,Vector3(0,(GOAL_HEIGHT+0.06)*0.5,-post_half_span),Vector3(.15,GOAL_HEIGHT+0.06,.12))

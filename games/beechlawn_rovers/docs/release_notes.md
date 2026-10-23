@@ -1,3 +1,14 @@
+# Pitch detail and audio — bundle 4
+
+Camera-local curved grass geometry follows terrain and excludes puddles; bounded
+at 40,000 tufts. Physical net close views checked. Original CC0 menu/intro music,
+football/whistle/post/net/step/crowd/rain/UI sounds use typed match events, bounded
+voices and separate saved Music/Match/UI volume controls. Music stops in play.
+Native mixed-audio output is audible, unclipped and silent when buses are muted.
+M1 performance and remaining celebration/replay acceptance remain open.
+
+---
+
 # Attacks and restarts — bundle 3
 
 More powerful/elevated standard shots, wider attacking runs and near/far box

@@ -942,6 +942,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-23: camera-local curved grass tufts follow terrain and shared mud/water masks, capped at 40k tufts / 240k triangles; native close grass/net views inspected. Exact environment likeness and M1 frame time remain open. See `art_briefs/pitch_audio_2026_10_23/brief.md`.
   - 2026-10-22: Mirrored the exterior penalty arcs and connected physical net impacts to a visible anchored bulge; scored balls keep moving into the net.
   - 2026-10-20 wet goalmouth/weather pass: shared mud/water masks at both goals,
     physical ground-ball resistance and persisted Sunny/Cloudy/Light rain/Mist
@@ -1002,6 +1003,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     A 4v4 scene smoke test checks module loading, inward-facing facades, licensed
     surface maps, site dressing and kit variants.
 - [ ] **BR-024 — Audio and match feedback**
+  - 2026-10-23: original CC0 menu/intro music and eleven Foley/ambience/UI clips, typed match events, bounded voices and saved Music/Match/UI buses. Native Movie Maker verifies nonzero unclipped output and bus mute. Blue HUD/intro cleanup and title build identity shipped; native M1 mix/feel approval remains open.
   - 2026-10-18 pre-match slice: approximately 40-second original TV-style intro
     with walk-on, lineup, roster-labelled player/keeper portraits, venue,
     goal/net, fan, chalk/grass, ball and warm-up shots. Options toggle and

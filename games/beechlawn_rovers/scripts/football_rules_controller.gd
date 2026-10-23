@@ -29,6 +29,7 @@ func adjudicate(tackler: FootballPlayer, victim: FootballPlayer, event: Dictiona
 	var decision := classify_challenge(event)
 	if decision == "clean": return decision
 	_last_challenge_tick=tick
+	game.events.emit_event(FootballMatchEvent.Kind.FOUL,StringName(decision),tackler,victim.position)
 	var position: Vector3 = event.get("position",victim.global_position)
 	var is_penalty := position.x*tackler.attack_sign <= -36.0 and position.x*tackler.attack_sign >= -52.5 and absf(position.z) <= 20.16
 	if decision in ["yellow","red"]: issue_card(tackler,decision)
@@ -42,6 +43,7 @@ func adjudicate(tackler: FootballPlayer, victim: FootballPlayer, event: Dictiona
 func issue_card(actor: FootballPlayer, colour: String) -> void:
 	var id := actor.get_instance_id()
 	if dismissed.has(id): return
+	game.events.emit_event(FootballMatchEvent.Kind.CARD,StringName(colour),actor,actor.position)
 	var second := false
 	if colour == "yellow":
 		yellows[id]=int(yellows.get(id,0))+1

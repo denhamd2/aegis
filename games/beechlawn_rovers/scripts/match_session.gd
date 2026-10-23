@@ -6,6 +6,9 @@ const SETTINGS_PATH := "user://presentation.cfg"
 var mode: MatchMode = MatchMode.PLAY
 var launched_from_menu := false
 var master_volume := 0.8
+var music_volume := .45
+var match_volume := .8
+var ui_volume := .65
 var fullscreen := false
 const CameraPresets := preload("res://scripts/gameplay_camera_presets.gd")
 var camera_preset: StringName = CameraPresets.DEFAULT
@@ -24,6 +27,8 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 	if config.load(path) != OK:
 		return
 	master_volume = clampf(float(config.get_value("audio", "master_volume", 0.8)), 0.0, 1.0)
+	for field in ["music_volume","match_volume","ui_volume"]:
+		set(field, clampf(float(config.get_value("audio",field,get(field))),0,1))
 	fullscreen = bool(config.get_value("display", "fullscreen", false))
 	camera_preset = CameraPresets.valid_id(StringName(str(config.get_value("camera", "preset", CameraPresets.DEFAULT))))
 	camera_height = clampf(float(config.get_value("camera", "height", 0.0)), -4.0, 12.0)
@@ -35,6 +40,7 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	var config := ConfigFile.new()
 	config.set_value("audio", "master_volume", master_volume)
+	for field in ["music_volume","match_volume","ui_volume"]: config.set_value("audio",field,get(field))
 	config.set_value("display", "fullscreen", fullscreen)
 	config.set_value("camera", "preset", camera_preset)
 	config.set_value("camera", "height", camera_height)
@@ -46,6 +52,8 @@ func save_preferences(path: String = SETTINGS_PATH) -> Error:
 
 func apply_preferences() -> void:
 	AudioServer.set_bus_volume_linear(0, master_volume)
+	for bus in ["Music","Match","UI"]:
+		AudioServer.set_bus_volume_linear(AudioServer.get_bus_index(bus),float(get(bus.to_lower()+"_volume")))
 	if not OS.has_feature("web") and not DisplayServer.get_name() == "headless":
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 

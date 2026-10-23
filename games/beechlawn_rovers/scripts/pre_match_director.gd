@@ -294,6 +294,7 @@ func finish() -> void:
 	if not active:
 		return
 	active = false
+	get_node("/root/GameAudio").set_music(false)
 	_restore_kickoff()
 	match_scene._intro_active = false
 	match_scene._kickoff_ai_delay = 1.0 if match_scene._spectator_mode else 0.0

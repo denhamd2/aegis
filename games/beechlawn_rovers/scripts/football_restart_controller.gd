@@ -84,6 +84,7 @@ func begin(restart_kind: String, awarded_team: StringName, position: Vector3) ->
 	_create_reticle()
 	_draw_aim()
 	_prompt()
+	game.events.emit_event(FootballMatchEvent.Kind.RESTART,StringName(kind),taker,spot)
 
 func _place_players() -> void:
 	for actor in game._home_players + game._away_players:

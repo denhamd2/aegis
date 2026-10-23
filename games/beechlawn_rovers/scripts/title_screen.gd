@@ -55,6 +55,8 @@ func _build_menu_theme() -> void:
 	theme = menu_theme
 
 func _ready() -> void:
+	get_node("/root/GameAudio").stop_match()
+	get_node("/root/GameAudio").set_music(true)
 	_build_menu_theme()
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		Engine.max_fps = 0
@@ -246,7 +248,19 @@ func _build_options() -> void:
 	_presentation_slider("ANGLE", "camera_angle", 500, -20.0, 20.0, 1.0, 1.0, "°")
 	_rect(options_layer,Rect2(100,610,1400,1),Color(1,1,1,0.20))
 	_label(options_layer,"KEYBOARD CONTROLS",Vector2(100,638),19,BOLD,RED)
-	_label(options_layer,"W A S D  Move    SHIFT  Sprint    CTRL  Close control    E  Pass    Q  Through ball    SPACE  Shoot\nF  Tackle    G  Slide    TAB  Switch player    C  Camera    ESC  Title    F3  Debug",Vector2(100,676),22,BODY,PAPER)
+	_label(options_layer,"WASD Move · Shift Sprint · Ctrl Close control / Jockey\nE Pass · Q Through · R Loft · T Cross · Space Shoot\nF Tackle · G Slide · J Contain · H Pressure · Tab Switch\nC Camera · Esc Title · F3 Debug",Vector2(100,674),18,BODY,PAPER)
+	for index in 3:
+		var bus: String = ["Music","Match","UI"][index]
+		var field := bus.to_lower()+"_volume"
+		var x := 820+index*230
+		_label(options_layer,bus.to_upper(),Vector2(x,638),19,BOLD,RED)
+		var slider := HSlider.new()
+		slider.name = bus+"Volume"; slider.position = Vector2(x,680); slider.size = Vector2(200,32)
+		slider.min_value=0; slider.max_value=100; slider.step=5; slider.value=float(MatchSession.get(field))*100
+		slider.value_changed.connect(func(value: float):
+			MatchSession.set(field,value/100)
+			AudioServer.set_bus_volume_linear(AudioServer.get_bus_index(bus),value/100))
+		options_layer.add_child(slider)
 	close_button = _button(options_layer,"SAVE & BACK",Rect2(100,790,1400,62),true)
 	close_button.name = "SaveOptions"
 	close_button.pressed.connect(close_options)
@@ -352,6 +366,7 @@ func _button(parent: Node, text: String, rect: Rect2, primary := false) -> Butto
 	focus.expand_margin_top = 5
 	focus.expand_margin_bottom = 5
 	button.add_theme_stylebox_override("focus",focus)
+	button.pressed.connect(get_node("/root/GameAudio").play_ui)
 	parent.add_child(button)
 	return button
 
