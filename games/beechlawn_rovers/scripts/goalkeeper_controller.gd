@@ -69,7 +69,7 @@ func try_save() -> bool:
 		return false
 	if _try_gather_rebound():
 		return true
-	if ball.last_action != &"shot" or ball.last_touch == keeper.team_name:
+	if ball.last_action not in [&"shot", &"cross", &"lofted_pass"] or ball.last_touch == keeper.team_name:
 		return false
 	_observe_action()
 	if _reaction_remaining > 0.0:
@@ -171,7 +171,7 @@ func _observe_action() -> void:
 	if ball.action_serial == _observed_action_serial:
 		return
 	_observed_action_serial = ball.action_serial
-	_shot_active = ball.last_action == &"shot" and ball.last_touch != keeper.team_name
+	_shot_active = ball.last_action in [&"shot", &"cross", &"lofted_pass"] and ball.last_touch != keeper.team_name
 	_reaction_remaining = _reaction_time() if _shot_active else 0.0
 	_has_intercept = false
 	_save_animation_started = false

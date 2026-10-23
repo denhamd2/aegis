@@ -85,3 +85,15 @@ The current standing-save animation remains; low/dive motion is an open gate.
 python3 games/beechlawn_rovers/tools/capture_native.py build/keeper-home \
   --review-mode keeper_home --resolution 640x360 --deadline 220
 ```
+
+## Aerial contact and broadcast review
+
+`--review-mode header_close|chest_close|cross_home|cross_away` records physical
+contact sequences at six 60 Hz simulation steps per draw (assemble at 10 fps).
+Close modes select actual roster Shane and script an incoming ball, explicitly
+labelled in JSON; they isolate the authored animation and independent contact.
+Cross modes use a winger's production foot marker, receiving AI, a central
+marker, wide presser and live keeper, viewed through Close Broadcast. Unrelated
+actors are parked. These are controlled integration fixtures, not full-match
+chance evidence. JSON records head/chest/foot contact points and distances,
+actor identity, ball velocity and renderer. A missing aerial contact fails.

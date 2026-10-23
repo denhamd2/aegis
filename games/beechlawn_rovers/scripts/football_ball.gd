@@ -18,6 +18,7 @@ var wet_surface: WetPitchSurface
 var surface_wetness := 0.0
 var last_touch: StringName = &"none"
 var last_action: StringName = &"none"
+var last_strike_part: StringName = &"foot"
 var action_serial := 0
 var goalkeeper_holder: Node3D
 var _dribble_cooldowns: Dictionary[int, float] = {}
@@ -121,6 +122,7 @@ func dribble_touch(player: Node3D, move_direction: Vector3, sprinting: bool,
 	_dribble_cooldowns[player_id] = interval * (1.35 if sprinting else (0.8 if close_control else 1.0))
 	last_touch = touch_team
 	last_action = &"dribble"
+	last_strike_part = &"foot"
 	action_serial += 1
 	record_touch(player)
 	touched.emit(&"dribble", linear_velocity.length())
@@ -194,7 +196,8 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 	return _dribble_controller == player
 
 func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
-		touch_team: StringName = &"Beechlawn Rovers", actor: Node3D = null) -> bool:
+		touch_team: StringName = &"Beechlawn Rovers", actor: Node3D = null,
+		part: StringName = &"foot") -> bool:
 	if direction.length_squared() < 0.01 or speed <= 0.0:
 		return false
 	var velocity_before := linear_velocity
@@ -211,6 +214,7 @@ func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 	apply_torque_impulse(roll_axis * sphere_inertia * (speed / RADIUS))
 	last_touch = touch_team
 	last_action = kind
+	last_strike_part = part
 	if actor != null: record_touch(actor)
 	else: last_touch_player = null
 	action_serial += 1
@@ -220,6 +224,23 @@ func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 	touched.emit(kind, speed)
 	return true
 
+func kick_velocity(target_velocity: Vector3, kind: StringName, touch_team: StringName,
+		actor: Node3D, part: StringName = &"foot") -> bool:
+	if not target_velocity.is_finite() or target_velocity.length() > 38.0:
+		return false
+	# The ballistic solver specifies absolute launch velocity. Compensate for
+	# the inherited-momentum term in kick(), retaining its single real impulse,
+	# ownership, rules, audio and control-release path without repositioning.
+	var strike := target_velocity - linear_velocity * 0.16
+	var flat := Vector3(strike.x, 0, strike.z)
+	if not kick(flat.normalized(), flat.length(), strike.y, kind, touch_team, actor, part):
+		return false
+	# Air strikes carry modest spin rather than the ground kick's no-slip roll.
+	var axis := Vector3(target_velocity.z, 0, -target_velocity.x).normalized()
+	var inertia := 0.4 * mass * RADIUS * RADIUS
+	apply_torque_impulse((axis * (28.0 if part == &"foot" else 8.0) - angular_velocity) * inertia)
+	return true
+
 func tackle_touch(player: Node3D, direction: Vector3, speed: float) -> bool:
 	if not is_instance_valid(player) or direction.length_squared() < 0.01 or speed <= 0.0:
 		return false
@@ -227,6 +248,7 @@ func tackle_touch(player: Node3D, direction: Vector3, speed: float) -> bool:
 	apply_central_impulse((target_velocity - linear_velocity) * mass)
 	last_touch = StringName(player.get("team_name"))
 	last_action = &"tackle"
+	last_strike_part = &"foot"
 	action_serial += 1
 	_dribble_cooldowns.clear()
 	record_touch(player)
@@ -235,7 +257,7 @@ func tackle_touch(player: Node3D, direction: Vector3, speed: float) -> bool:
 
 func receive_touch(player: Node3D, contact_position: Vector3,
 		preferred_direction: Vector3) -> bool:
-	if not is_instance_valid(player) or last_action not in [&"pass", &"through_pass"]:
+	if not is_instance_valid(player) or last_action not in [&"pass", &"through_pass", &"lofted_pass", &"cross", &"header_clearance"]:
 		return false
 	var touch_team := StringName(player.get("team_name"))
 	if last_touch != touch_team or global_position.distance_to(contact_position) > 0.20 \
@@ -261,6 +283,7 @@ func receive_touch(player: Node3D, contact_position: Vector3,
 	apply_central_impulse((target_velocity - linear_velocity) * mass)
 	last_touch = touch_team
 	last_action = &"first_touch"
+	last_strike_part = &"foot"
 	action_serial += 1
 	_dribble_cooldowns.clear()
 	record_touch(player)
@@ -274,6 +297,7 @@ func goalkeeper_save(player: Node3D, direction: Vector3, speed: float, lift: flo
 	apply_central_impulse((target_velocity - linear_velocity) * mass)
 	last_touch = StringName(player.get("team_name"))
 	last_action = &"goalkeeper_save"
+	last_strike_part = &"hands"
 	action_serial += 1
 	_dribble_cooldowns.clear()
 	_dribble_controller = null
@@ -294,6 +318,7 @@ func goalkeeper_claim(player: PhysicsBody3D) -> bool:
 	apply_torque_impulse(-angular_velocity * mass * 0.65)
 	last_touch = StringName(player.get("team_name"))
 	last_action = &"goalkeeper_catch"
+	last_strike_part = &"hands"
 	action_serial += 1
 	_dribble_cooldowns.clear()
 	record_touch(player)

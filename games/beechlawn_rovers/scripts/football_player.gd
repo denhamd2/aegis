@@ -39,17 +39,21 @@ var _balance_stagger_time := 0.0
 var _balance_stagger_direction := Vector3.ZERO
 var _save_pose_time := 0.0
 var _goalkeeper_controller: GoalkeeperController
+var _aerial_controller: PlayerAerialController
 var ai_move_direction := Vector3.ZERO
 var ai_sprinting := false
 var ai_action_cooldown := 0.0
 var receive_target := Vector3.ZERO
 var receive_target_time := 0.0
+var receive_target_kind: StringName = &"ground"
 var _ignore_pass_until_released := false
 var _footballer_visual: FootballerVisual
 var _visual_pass_pending := false
 var _visual_pass_through := false
 var _visual_pass_direction := Vector3.ZERO
 var _visual_pass_receiver_id := 0
+var _visual_pass_kind: StringName = &"ground"
+var _visual_pass_power := 0.5
 var _visual_shot_pending := false
 var _visual_shot_direction := Vector3.ZERO
 var _visual_shot_speed := 0.0
@@ -68,6 +72,8 @@ func _ready() -> void:
 	floor_snap_length = 0.12
 	if tuning == null:
 		tuning = FootballTuning.new()
+	_aerial_controller = PlayerAerialController.new()
+	_aerial_controller.configure(self, ball)
 	if profile == null:
 		rotation.y = -PI * 0.5 * attack_sign
 	elif profile.role == "goalkeeper":
@@ -113,7 +119,9 @@ func _physics_process(delta: float) -> void:
 		_goalkeeper_controller.update_before_move(delta)
 		if ball.goalkeeper_is_holding(self):
 			_stick = Vector2.ZERO
+	_aerial_controller.before_move(delta)
 	_update_locomotion(delta)
+	_aerial_controller.after_locomotion()
 	move_and_slide()
 	if ball.use_terrain:
 		global_position.x=clampf(global_position.x,-55.0,55.0)
@@ -123,6 +131,7 @@ func _physics_process(delta: float) -> void:
 	# own rebound as a dribble. Both still use the post-movement position.
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.try_save()
+	_aerial_controller.resolve_contact(delta)
 	_update_dribble(delta)
 	_resolve_pending_kick_contact(delta)
 	_try_shoulder_challenge()
@@ -197,6 +206,8 @@ func _update_locomotion(delta: float) -> void:
 	else:
 		stamina = minf(tuning.stamina_max, stamina + tuning.stamina_recovery * delta)
 	var facing_intent := desired
+	if _aerial_controller.facing.length_squared() > .01:
+		facing_intent = _aerial_controller.facing
 	if is_ai_goalkeeper:
 		facing_intent = ball.global_position - global_position
 		facing_intent.y = 0.0
@@ -246,7 +257,7 @@ func _keeper_is_recovering() -> bool:
 	return _goalkeeper_controller != null and _goalkeeper_controller.is_recovering()
 
 func _update_dribble(delta: float) -> void:
-	if ball == null or _keeper_is_recovering():
+	if ball == null or _keeper_is_recovering() or _aerial_controller.committed():
 		return
 	var flat_distance := Vector2(ball.global_position.x - global_position.x,
 		ball.global_position.z - global_position.z).length()
@@ -278,6 +289,8 @@ func _update_actions(delta: float) -> void:
 	if _ignore_pass_until_released:
 		if not Input.is_action_pressed("pass") and not Input.is_action_pressed("through_pass"):
 			_ignore_pass_until_released = false
+		return
+	if _aerial_controller.handle_input(delta):
 		return
 	if Input.is_action_just_pressed("pass"):
 		_queue_pass(false)
@@ -623,7 +636,8 @@ func _action_direction() -> Vector3:
 
 func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 		at_animation_contact := false, playback_speed := 1.0,
-		requested_receiver: FootballPlayer = null) -> void:
+		requested_receiver: FootballPlayer = null, pass_kind: StringName = &"ground",
+		power := 0.5) -> void:
 	if not at_animation_contact and is_instance_valid(_footballer_visual):
 		var predicted_first_time_contact := _pending_pass > 0.0 \
 			and _time_to_kick_window() > 0.0
@@ -636,11 +650,28 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 		_visual_pass_pending = _footballer_visual.play_pass(playback_speed)
 		if _visual_pass_pending:
 			_visual_pass_receiver_id = requested_receiver.get_instance_id() if is_instance_valid(requested_receiver) else 0
+			_visual_pass_kind = pass_kind
+			_visual_pass_power = power
+			if pass_kind in [&"lofted_pass", &"cross"]:
+				var preparation := LoftedPassPlanner.plan(self, pass_kind, _visual_pass_direction, power, requested_receiver)
+				if not preparation.is_empty():
+					var runner := preparation.get("receiver") as FootballPlayer
+					_visual_pass_receiver_id = runner.get_instance_id() if runner != null else 0
+					LoftedPassPlanner.assign_runs(self, preparation, true)
 			return
 		_visual_pass_pending = false
 		status_changed.emit("Pass action unavailable: animation is busy or missing")
 		return
 	var intended_direction := requested_direction.normalized() if requested_direction.length_squared() > 0.01 else _action_direction()
+	if pass_kind in [&"lofted_pass", &"cross"]:
+		var aerial := LoftedPassPlanner.plan(self, pass_kind, intended_direction, power, requested_receiver)
+		if aerial.is_empty():
+			status_changed.emit("Aerial pass cancelled: no reachable target in the aimed lane")
+			return
+		if ball.kick_velocity(aerial.velocity, pass_kind, team_name, self):
+			LoftedPassPlanner.assign_runs(self, aerial)
+			status_changed.emit("Cross" if pass_kind == &"cross" else "Lofted pass")
+		return
 	var option := _pass_option_for_receiver(requested_receiver, through) if requested_receiver != null else _choose_pass_target(intended_direction, through)
 	if requested_receiver != null and option.is_empty():
 		status_changed.emit("Pass cancelled: recipient unavailable")
@@ -659,6 +690,7 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 	if ball.kick(direction, speed, lift, &"through_pass" if through else &"pass", team_name, self):
 		if is_instance_valid(target):
 			target.receive_target = target_position
+			target.receive_target_kind = &"ground"
 			target.receive_target_time = clampf(distance / maxf(speed, 1.0) + 0.75, 1.0, 3.5)
 		status_changed.emit(("Through ball to " if through else "Pass to ") +
 			(target.profile.display_name if is_instance_valid(target) and target.profile != null else "space"))
@@ -667,6 +699,9 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 
 
 func _on_visual_action_contact(action: StringName) -> void:
+	if action in [&"header", &"chest_control"]:
+		_aerial_controller.on_marker(action)
+		return
 	if action == &"receive":
 		if ball.receive_touch(self, _receive_contact_position(), _flat_direction):
 			receive_target_time = 0.0
@@ -707,16 +742,18 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 	if _visual_pass_receiver_id != 0 and not is_instance_valid(receiver):
 		status_changed.emit("Pass cancelled: recipient unavailable")
 		return
-	_do_pass(through, requested_direction, true, 1.0, receiver)
+	_do_pass(through, requested_direction, true, 1.0, receiver, _visual_pass_kind, _visual_pass_power)
 
 
 func _on_visual_action_finished(action: StringName) -> void:
+	_aerial_controller.on_finished(action)
 	if _contact_wait_action == action:
 		_contact_wait_action = &""
 		_contact_wait_remaining = 0.0
 	if action == &"pass":
 		_visual_pass_pending = false
 		_visual_pass_receiver_id = 0
+		_visual_pass_kind = &"ground"
 	elif action == &"shot":
 		_visual_shot_pending = false
 	elif action == &"slide_tackle":
@@ -727,7 +764,7 @@ func _try_play_receive_animation(delta: float) -> void:
 	if not is_instance_valid(_footballer_visual) or receive_target_time <= 0.0 \
 			or ball == null or ball.action_serial == _last_receive_action_serial \
 			or ball.last_touch != team_name \
-			or ball.last_action not in [&"pass", &"through_pass"] \
+			or ball.last_action not in [&"pass", &"through_pass", &"lofted_pass", &"cross", &"header_clearance"] \
 			or _pending_pass > 0.0 or _pending_shot > 0.0 or _shot_charge >= 0.0 \
 			or _visual_pass_pending or _slide_tackle_time > 0.0:
 		return
@@ -945,6 +982,7 @@ func _update_visual_pose(delta: float) -> void:
 
 func reset_for_stoppage() -> void:
 	_stoppage_version+=1
+	_aerial_controller.reset()
 	if _goalkeeper_controller != null:
 		_goalkeeper_controller.reset_for_stoppage()
 	_save_pose_time=0.0

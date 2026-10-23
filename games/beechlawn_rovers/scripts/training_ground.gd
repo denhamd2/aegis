@@ -365,6 +365,7 @@ func _set_controlled_player(next_player: FootballPlayer) -> void:
 	if _spectator_mode or next_player == null or next_player == player:
 		return
 	var old_player := player
+	old_player._aerial_controller.cancel_input()
 	if old_player.status_changed.is_connected(_set_message):
 		old_player.status_changed.disconnect(_set_message)
 	if old_player.shot_charge_changed.is_connected(_set_power):
@@ -654,6 +655,12 @@ func _update_ai(delta: float) -> void:
 	_next_home_ai = not _next_home_ai
 
 func _best_interception_position(team_players: Array[FootballPlayer], ball_position: Vector2) -> Vector2:
+	if ball.position.y > .7:
+		var contact := FootballBallFlight.descending_contact(ball, 1.97, 2.7)
+		if contact.is_empty(): contact = FootballBallFlight.descending_contact(ball, .35, 3.0)
+		if not contact.is_empty():
+			var point: Vector3 = contact.position
+			return Vector2(clampf(point.x, -51.5, 51.5), clampf(point.z, -33, 33))
 	var horizontal_velocity := Vector2(ball.linear_velocity.x, ball.linear_velocity.z)
 	if horizontal_velocity.length() < 1.25:
 		return ball_position
@@ -754,6 +761,12 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null)
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 0.85
+		&"lofted_pass", &"cross":
+			carrier._do_pass(false, action.direction, false, 1.0,
+				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null,
+				action_type, float(action.get("power", .65)))
+			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
+				carrier.ai_action_cooldown = 1.0
 
 func _apply_ai_movement_decisions(team_players: Array[FootballPlayer], decisions: Dictionary) -> void:
 	for actor in team_players:

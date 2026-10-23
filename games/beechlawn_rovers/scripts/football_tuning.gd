@@ -36,6 +36,14 @@ class_name FootballTuning
 @export_range(0.0, 0.1, 0.005) var kick_contact_grace_seconds := 0.065
 @export_range(1.5, 2.8, 0.1) var slide_tackle_reach := 2.2
 
+@export_group("Aerial play")
+@export_range(25.0, 55.0, 1.0) var lofted_pass_max_range := 48.0
+@export_range(0.3, 1.2, 0.05) var lofted_pass_charge_seconds := 0.75
+@export_range(1.8, 2.2, 0.01) var header_contact_height := 1.97
+@export_range(0.15, 0.26, 0.01) var aerial_contact_radius := 0.20
+@export_range(2.5, 4.0, 0.1) var header_jump_speed := 3.4
+@export_range(8.0, 18.0, 0.5) var header_speed := 14.0
+
 @export_group("AI decisions")
 @export_range(0.1, 0.4, 0.01) var ai_decision_interval := 0.20
 @export_range(0.05, 0.5, 0.01) var ai_pass_progress_weight := 0.20

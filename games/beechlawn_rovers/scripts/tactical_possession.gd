@@ -40,7 +40,7 @@ func sample(ball: FootballBall, actors: Array[FootballPlayer], stopped := false)
 		var closest: FootballPlayer = nearest[0].actor
 		return {"state": &"controlled", "team": closest.team_name, "carrier": closest}
 	# A pass in flight gives the receiving side support runs, not a ball carrier.
-	if ball.last_action in [&"pass", &"through_pass"] and ball.linear_velocity.length() > 0.7:
+	if ball.last_action in [&"pass", &"through_pass", &"lofted_pass", &"cross"] and ball.linear_velocity.length() > 0.7:
 		for actor in actors:
 			if actor.team_name == ball.last_touch and actor.receive_target_time > 0.0:
 				var to_target := actor.receive_target - ball.global_position

@@ -45,6 +45,14 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 		var shot := _best_shot_lane(ball_position, carrier.attack_sign, opponents)
 		if not shot.is_empty():
 			return shot
+	# Wide delivery is useful only when an attacker can meet it in the area.
+	if ball_position.x * carrier.attack_sign >= 26.0 and absf(ball_position.y) >= 15.0:
+		var toward_box := Vector3(carrier.attack_sign * 43.0, ball.position.y, 0) - ball.position
+		var crossing := LoftedPassPlanner.plan(carrier, &"cross", toward_box, .72)
+		var receiver := crossing.get("receiver") as FootballPlayer
+		if receiver != null and teammates.has(receiver):
+			return {"type": &"cross", "direction": toward_box, "power": .72,
+				"receiver_id": receiver.get_instance_id()}
 	# Under pressure, release the ball into a forward run if a teammate and lane
 	# Evaluate a progressive pass before the generic safe outlet. The outlet
 	# condition below also matches high pressure, so checking it first otherwise
@@ -91,6 +99,16 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 				return {"type": &"short_pass", "direction": best.global_position - carrier.global_position,
 					"receiver_id": best.get_instance_id()}
 
+	# Lift over an obstructed ground lane toward an open progressive teammate.
+	# Existing useful short/through options retain priority.
+	if nearest_forward_defender < 4.5:
+		var option := LoftedPassPlanner.plan(carrier, &"lofted_pass", Vector3(carrier.attack_sign, 0, 0), .8)
+		var receiver := option.get("receiver") as FootballPlayer
+		if receiver != null and teammates.has(receiver) \
+				and (receiver.position.x - carrier.position.x) * carrier.attack_sign >= 8.0 \
+				and carrier._pass_lane_risk(ball.position, receiver.position) > .6:
+			return {"type": &"lofted_pass", "direction": receiver.position - carrier.position,
+				"power": .8, "receiver_id": receiver.get_instance_id()}
 	return {"type": &"carry"}
 
 func _best_shot_lane(ball_position: Vector2, attack_sign: float,

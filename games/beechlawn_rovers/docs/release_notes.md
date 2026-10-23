@@ -1,3 +1,23 @@
+# Lofted passes, crosses and aerial contact
+
+Keyboard R charges a lofted pass; T charges a cross. Both release through the
+existing foot marker with bounded target assistance and independent ball flight.
+Receivers anticipate deliveries; wide AI carriers can cross and blocked ground
+lanes can prompt a lob. Space requests a header when an incoming ball is nearby
+in the air, retaining the normal shot on the ground. Suitable receptions use
+chest control. Headers and chest touches validate actual anatomical proximity
+through original shared-rig Blender motion and a short physical jump.
+
+Mirrored tests cover keyboard charge/release, flight, contact, misses,
+interruption cleanup, opposing-lob interceptions and contested cross-to-header
+sequences. Ground contacts, movement and keeper handling regressions pass.
+Native Forward+ footage records both teams and actual contact distances.
+The six-match chance gate passes at 23/27 shots (46%/54% share); Beechlawn
+qualifies in 5/6 scenarios, Boardeaux in 6/6.
+BR-019 (19/25) remains in progress: advanced shot/cross variants, volleys,
+dedicated keeper high claims and Mac input/performance validation are open.
+See [aerial-play evidence](art_briefs/aerial_play_2026_10_22/brief.md).
+
 # Goalkeeper handling and recovery
 
 Keepers now reserve two-handed catches for slower body-supported balls, parry

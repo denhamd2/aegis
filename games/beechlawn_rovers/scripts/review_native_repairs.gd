@@ -10,6 +10,8 @@ var mode: String
 var shot_contacts: Array[Dictionary] = []
 var keeper_contacts: Array[Dictionary] = []
 var review_keeper: FootballPlayer
+var review_actor: FootballPlayer
+var aerial_events: Array[Dictionary] = []
 func _initialize() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--") and argument.contains("="):
@@ -18,7 +20,7 @@ func _initialize() -> void:
 	call_deferred("_capture")
 func _physics_step() -> void:
 	tick+=1
-	if mode.begins_with("attack_"):game._update_ai(1.0/60.0)
+	if mode.begins_with("attack_") or mode.begins_with("cross_"):game._update_ai(1.0/60.0)
 	if game.restart.active():game.restart.update(1.0/60.0)
 	for impact in game._net_impacts.values():
 		impact.age=minf(2,impact.age+1.0/60.0)
@@ -33,6 +35,7 @@ func _save(label: String) -> void:
 		"keeper":str(review_keeper.position) if is_instance_valid(review_keeper) else "",
 		"keeper_recovering":review_keeper._keeper_is_recovering() if is_instance_valid(review_keeper) else false,
 		"ball_action":str(game.ball.last_action),"ball_velocity":str(game.ball.linear_velocity),
+		"aerial_actor":str(review_actor.position) if is_instance_valid(review_actor) else "",
 		"player_velocity":str(game.player.velocity),"shot_contacts":shot_contacts.duplicate(true),"score":[game._home_score,game._away_score]})
 	print("REPAIR_FRAME ",filename," ",label)
 func _capture() -> void:
@@ -42,7 +45,7 @@ func _capture() -> void:
 	DirAccess.make_dir_recursive_absolute(output)
 	var session:=root.get_node("MatchSession")
 	session.launched_from_menu=false;session.weather_preset=&"sunny"
-	if mode.begins_with("attack_"):
+	if mode.begins_with("attack_") or mode.begins_with("cross_") or mode in ["header_close", "chest_close"]:
 		session.mode=session.MatchMode.WATCH;session.launched_from_menu=true;session.show_intro=false
 	game=load("res://scenes/match_11v11.tscn").instantiate()
 	root.add_child(game);current_scene=game
@@ -81,6 +84,53 @@ func _capture() -> void:
 			game.camera_rig.presentation_override=false;camera.make_current();game.camera_rig.reset_tracking()
 			game.ball.touched.connect(func(kind: StringName, _speed: float):
 				if kind==&"shot":shot_contacts.append({"tick":tick,"team":str(game.ball.last_touch),"ball":str(game.ball.position)}))
+		elif mode.begins_with("cross_"):
+			var team: Array[FootballPlayer] = game._home_players if mode=="cross_home" else game._away_players
+			var opponents: Array[FootballPlayer] = game._away_players if mode=="cross_home" else game._home_players
+			var passer: FootballPlayer = team[2]
+			for actor in team:
+				if actor.profile.starting_slot=="striker_left":review_actor=actor
+			var sx:=passer.attack_sign
+			passer.position=Vector3(33*sx,PitchSurface.height_at(33*sx,21)+.005,21)
+			review_actor.position=Vector3(42*sx,PitchSurface.height_at(42*sx,2)+.005,2)
+			review_actor.rotation.y=-PI/2*sx;review_actor.controlled_by_human=false
+			review_actor.set_physics_process(true)
+			var defender: FootballPlayer=opponents[2]
+			defender.position=Vector3(44*sx,PitchSurface.height_at(44*sx,2.9)+.005,2.9)
+			defender.set_physics_process(true)
+			opponents[3].position=passer.position+Vector3(sx,0,1.8)
+			for actor in opponents:
+				if actor.profile.role=="goalkeeper":
+					actor.position=Vector3(49.5*sx,0,0);actor.set_physics_process(true)
+			var toward:=review_actor.position-passer.position;toward.y=0
+			passer.rotation.y=atan2(-toward.x,-toward.z)
+			game.ball.position=passer.position+toward.normalized()*.6+Vector3.UP*.13
+			game.ball.freeze=false;game.ball.last_action=&"dribble"
+			game.ball.last_touch=passer.team_name;game.ball.last_touch_player=passer
+			game._kickoff_pending=false
+			game.player=review_actor;game.camera_rig.set("player",review_actor)
+			camera.queue_free();camera=game.camera_rig.camera
+			game.camera_rig.presentation_override=false;camera.make_current();game.camera_rig.reset_tracking()
+			game.ball.touched.connect(_record_aerial)
+			passer._do_pass(false,toward,false,1.0,review_actor,&"cross",.72)
+		elif mode in ["header_close", "chest_close"]:
+			for actor in game._home_players:
+				if actor.profile.player_id==&"shane_denham":review_actor=actor
+			review_actor.position=Vector3(32,PitchSurface.height_at(32,0)+.005,0)
+			review_actor.rotation.y=-PI/2;review_actor.controlled_by_human=true
+			game.player=review_actor;game._kickoff_pending=false
+			game.ball.position=review_actor.position+Vector3(2.5,2.2 if mode=="header_close" else 1.7,0)
+			var destination:=review_actor.position+Vector3(.14,review_actor.tuning.header_contact_height,0) if mode=="header_close" else review_actor._aerial_controller.chest_point()
+			game.ball.freeze=false
+			# Isolated incoming-ball setup. Full winger kicks are reviewed in the
+			# separate cross modes, not inferred from this scripted launch.
+			game.ball.kick_velocity(FootballBallFlight.launch(game.ball,destination,.31 if mode=="header_close" else .235),&"cross" if mode=="header_close" else &"lofted_pass",review_actor.team_name,null)
+			game.ball.touched.connect(_record_aerial)
+			if mode=="header_close":review_actor._aerial_controller.request_header(Vector3.RIGHT)
+			else:review_actor.receive_target_time=1.0
+			review_actor.set_physics_process(true)
+			camera.position=review_actor.position+Vector3(2.7,1.6,2.6)
+			camera.look_at(review_actor.position+Vector3(.1,1.05,0));camera.fov=45
 		elif mode.begins_with("keeper_"):
 			var team: Array[FootballPlayer] = game._home_players if mode=="keeper_home" else game._away_players
 			for candidate in team:
@@ -123,7 +173,8 @@ func _capture() -> void:
 		# with recorded simulated timing rather than a performance claim.
 		Engine.time_scale=6;Engine.physics_ticks_per_second=360
 		Engine.max_physics_steps_per_frame=64
-		for index in 24:
+		var frames:=30 if mode.begins_with("cross_") else (12 if mode in ["header_close", "chest_close"] else 24)
+		for index in frames:
 			for f in 6:await physics_frame
 			if mode=="movement":
 				camera.position=game.player.position+Vector3(-3.4,1.6,-5.7)
@@ -136,18 +187,45 @@ func _capture() -> void:
 	if mode.begins_with("keeper_") and keeper_contacts.is_empty():
 		push_error("Native keeper fixture produced no physical save/catch contact")
 		quit(1);return
+	if mode.begins_with("cross_") or mode in ["header_close", "chest_close"]:
+		var valid:=false
+		for event in aerial_events:
+			if event.part in ["head", "chest"]:valid=true
+		if not valid:
+			push_error("Native aerial fixture produced no validated head/chest contact")
+			quit(1);return
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
 	paused=true
-	var first:=Image.load_from_file(output.path_join(sequence[1 if mode=="montage" else 0].file))
+	var primary:=1 if mode=="montage" else 0
+	for event in aerial_events:
+		if event.part in ["head","chest"]:
+			for index in sequence.size():
+				if sequence[index].tick>=event.tick:primary=index;break
+			break
+	var first:=Image.load_from_file(output.path_join(sequence[primary].file))
 	assert(first.save_png(output.path_join("match_broadcast.png"))==OK)
 	var report:={"rendering_method":RenderingServer.get_current_rendering_method(),
 		"adapter":RenderingServer.get_video_adapter_name(),"vendor":RenderingServer.get_video_adapter_vendor(),
 		"api":RenderingServer.get_video_adapter_api_version(),"display_server":DisplayServer.get_name(),
 		"godot":Engine.get_version_info().string,"resolution":[first.get_width(),first.get_height()],
 		"msaa_3d":root.msaa_3d,"home_players":game._home_players.size(),"away_players":game._away_players.size(),
-		"officials":get_nodes_in_group("match_officials").size(),"review_mode":mode,"frames":sequence,"shot_contacts":shot_contacts,"keeper_contacts":keeper_contacts,
+		"officials":get_nodes_in_group("match_officials").size(),"review_mode":mode,"frames":sequence,"shot_contacts":shot_contacts,"keeper_contacts":keeper_contacts,"aerial_events":aerial_events,
+		"fixture_setup":"scripted incoming ball" if mode in ["header_close", "chest_close"] else ("winger delivery through foot marker" if mode.begins_with("cross_") else mode),
 		"scope":"Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim."}
 	var file:=FileAccess.open(output.path_join("match_broadcast.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"  ")+"\n")
 	print("BEECHLAWN_NATIVE_CAPTURE ",JSON.stringify(report))
 	quit()
+
+func _record_aerial(kind: StringName, _speed: float) -> void:
+	var ball: FootballBall=game.ball
+	if kind not in [&"lofted_pass", &"cross", &"aerial_control", &"shot", &"header_clearance"]:return
+	if kind==&"shot" and ball.last_strike_part!=&"head":return
+	var actor:=ball.last_touch_player as FootballPlayer
+	var point:=ball.position
+	if actor!=null and ball.last_strike_part==&"head":point=actor._aerial_controller.forehead_point()
+	elif actor!=null and ball.last_strike_part==&"chest":point=actor._aerial_controller.chest_point()
+	elif actor!=null and ball.last_strike_part==&"foot":point=actor._receive_contact_position()
+	aerial_events.append({"tick":tick,"kind":str(kind),"part":str(ball.last_strike_part),
+		"team":str(ball.last_touch),"player_id":str(actor.profile.player_id) if actor!=null else "",
+		"ball":str(ball.position),"contact":str(point),"gap":point.distance_to(ball.position)})

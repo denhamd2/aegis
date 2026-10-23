@@ -55,6 +55,13 @@ own-rebound collection. BR-009 (9/25) stays in progress: original directional
 low-save/dive/catch motion and measured hand contact are the next acceptance
 check, followed by native Mac play-feel/performance validation.
 
+The [22–23 October aerial-play pass](art_briefs/aerial_play_2026_10_22/brief.md)
+brings forward BR-019 (19/25): keyboard R lofts, T crosses and contextual Space
+headers, with bounded assistance, receiving runs, chest control and original
+shared-rig aerial clips. Contacts validate actual head/chest proximity; the ball
+remains independent. Advanced shot/cross variants, volleys and dedicated keeper
+cross-claim motion remain open. See the linked evidence for validation scope.
+
 ## Confirmed PES-style direction (2026-10-18)
 
 The owner confirmed gameplay feel first, unmodded PES 2021 at default speed as
@@ -680,6 +687,16 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 - [ ] **BR-019 — Shooting and aerial actions**
   Add driven, finesse, low, first-time and contextual shots; headers, volleys,
   jumps, aerial contests, crosses, lofted passes and goalkeeper cross claims.
+  - 2026-10-23 **in progress**: R/T charge-release loft/cross, assisted forward
+    recipient selection, near/far-post support, damped airborne prediction,
+    AI deliveries, automatic chest receiving and contextual Space headers.
+    Original 60 fps Blender clips share the unchanged rig/body; physical jump
+    and ≤20 cm anatomical contact checks gate head/chest impulses. Mirrored
+    keyboard, flight, contact, miss/cancellation and contested-cross regressions
+    pass. Native sequences and full-match results are recorded in
+    [aerial-play evidence](art_briefs/aerial_play_2026_10_22/brief.md).
+    Next acceptance: native Mac input/motion review, then driven/lofted cross
+    variants, volleys and dedicated goalkeeper high-claim motion (BR-009).
 - [ ] **BR-020 — Defending and skill moves**
   Add jockeying, shielding, teammate pressure, ball roll, step-over, body feint,
   fake shot, drag-back and directional skill turn. Each move must affect control

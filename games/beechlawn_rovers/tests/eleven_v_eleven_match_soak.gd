@@ -12,17 +12,21 @@ func _observe_touch(ball: FootballBall, kind: StringName) -> void:
 	if actor == null or not metrics.has(str(actor.team_name)):
 		return
 	var entry: Dictionary = metrics[str(actor.team_name)]
-	if kind in [&"pass", &"through_pass"]:
+	if kind == &"cross": entry.crosses += 1
+	if kind == &"lofted_pass": entry.lofted_passes += 1
+	if kind == &"aerial_control": entry.chest_controls += 1
+	if ball.last_strike_part == &"head" and kind in [&"shot", &"header_clearance"]: entry.headers += 1
+	if kind in [&"pass", &"through_pass", &"lofted_pass", &"cross"]:
 		entry.passes += 1
 		pending_pass = {"team": str(actor.team_name), "passer": actor}
-	elif not pending_pass.is_empty() and kind in [&"dribble", &"first_touch", &"tackle", &"deflection", &"goalkeeper_catch"]:
+	elif not pending_pass.is_empty() and (kind in [&"dribble", &"first_touch", &"tackle", &"deflection", &"goalkeeper_catch", &"aerial_control", &"header_clearance"] or (kind == &"shot" and ball.last_strike_part == &"head")):
 		if str(actor.team_name) != pending_pass.team:
 			metrics[pending_pass.team].intercepted_passes += 1
 			pending_pass = {}
 		elif actor != pending_pass.passer:
 			entry.completed_passes += 1
 			pending_pass = {}
-	if kind in [&"dribble", &"first_touch", &"goalkeeper_catch"]:
+	if kind in [&"dribble", &"first_touch", &"goalkeeper_catch", &"aerial_control"]:
 		if actor != possession_owner:
 			entry.controls += 1
 			possession_owner = actor
@@ -53,6 +57,7 @@ func _run() -> void:
 	seed(8008 + starting_variation)
 	for team in ["Beechlawn Rovers", "Boardeaux"]:
 		metrics[team] = {"passes": 0, "completed_passes": 0, "intercepted_passes": 0,
+			"crosses": 0, "lofted_passes": 0, "headers": 0, "chest_controls": 0,
 			"controls": 0, "final_third_entries": 0, "in_final_third": false,
 			"action_decisions": {}, "cancelled_contacts": 0}
 	var session := root.get_node("MatchSession")
@@ -147,7 +152,7 @@ func _run() -> void:
 			if chaser != null:
 				var choice: Dictionary = game._player_decisions.choose_carrier_action(chaser, attacking, defending, ball)
 				var action_type: StringName = choice.get("type", &"none")
-				decision_counts[ball.last_touch][action_type] = int(decision_counts[ball.last_touch][action_type]) + 1
+				decision_counts[ball.last_touch][action_type] = int(decision_counts[ball.last_touch].get(action_type, 0)) + 1
 				if action_type == &"shoot":
 					shot_decisions[ball.last_touch] = int(shot_decisions[ball.last_touch]) + 1
 			var attack_sign := 1.0 if ball.last_touch == &"Beechlawn Rovers" else -1.0

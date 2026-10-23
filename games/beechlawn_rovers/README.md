@@ -67,6 +67,9 @@ for measured checks and visual limitations.
 | Ground pass | E |
 | Through pass | Q |
 | Charge and shoot | Hold/release Space |
+| Lofted pass | Hold/release R |
+| Cross into the area | Hold/release T |
+| Request a header near an incoming aerial ball | Space; arrow keys aim |
 | Standing tackle | F |
 | Slide tackle | G |
 | Switch Beechlawn player | Tab |
@@ -130,3 +133,14 @@ one rigid-body ball, shared rig/material resources and staggered tactical AI.
 See [`docs/roadmap.md`](docs/roadmap.md) for the staged plan and remaining
 acceptance checks, and [`docs/backlog.md`](docs/backlog.md) for the ordered
 development backlog.
+
+### Aerial passing (BR-019, in progress)
+
+Hold/release **R** for a lofted pass or **T** for a cross; aim with the existing
+movement/aim controls. Crosses without directional input target the central
+attacking area. Assistance stays within the intended direction and available
+power range. AI receivers anticipate delivery, chest-control suitable lobs and
+attack crosses with headers. **Space** requests a timed header when the ball is
+airborne nearby; it remains the charged shot control on the ground. A missed
+contact stays loose. Driven cross variants, volleys and dedicated high keeper
+claims remain open. See [aerial-play evidence](docs/art_briefs/aerial_play_2026_10_22/brief.md).

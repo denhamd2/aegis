@@ -77,6 +77,35 @@ the existing short lease and release rules for established control.
 
 **Gate:** the final mesh reaches a plausible ball contact at the authored event, gameplay impulses occur once at the intended time, and action recovery remains responsive.
 
+### Aerial contact lessons (2026-10-23)
+
+Keep the short physical jump in CharacterBody movement and the authored clip
+in place. Verify measured root height, landing and recovery separately from
+head/chest pose. Restore the exact baseline pose at clip endpoints; review bent
+balancing elbows throughout, rather than accepting a single contact still.
+
+For aerial clips on the physics animation path, prime playback at time zero
+and dispatch contact methods immediately; restore the previous deferred policy
+on finish/reset. Delayed callbacks plus unprimed playback missed the short
+anatomical window. Sample fixture poses with `seek(..., update_only=true)` so
+review setup cannot trigger the marker it is supposed to test.
+
+A coarse standing capsule can repel the incoming ball before chest/forehead
+contact. Probe the trajectory first. The current solution temporarily exempts
+only the predicted receiving actor during a narrow contact approach and restores
+collision after success, miss, cancellation or stoppage. Keep the real anatomical
+reach check; increasing reach to hide the capsule fault weakens contact quality.
+
+Reserve a receiver's run during the foot wind-up and allow its forecast before
+the ball enters local reach. Otherwise tactical updates can turn the intended
+striker into an outlet before delivery. Test the whole foot-to-flight-to-header
+sequence, including a nearby opponent and both attack directions. Keyboard
+press/release tests use normal 60 Hz cadence; accelerated physics bursts can
+coalesce queued synthetic input. Confirm actual roster identity in native
+metadata instead of assuming array slot zero is Shane.
+
+Evidence and remaining limitations: `docs/art_briefs/aerial_play_2026_10_22/brief.md`.
+
 ## 5. Select verification by change
 
 Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py`; inspect test fixtures and supported environment switches first. Relevant existing cases include:

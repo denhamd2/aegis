@@ -17,6 +17,7 @@ const SHOT_CLIP: StringName = &"AN_Beechlawn_ShotRight"
 const SLIDE_TACKLE_CLIP: StringName = &"AN_Beechlawn_GroundedSlideTackle"
 const GET_UP_CLIP: StringName = &"AN_Beechlawn_GetUpFromProne"
 const SHOT_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_shot_contact.json"
+const AERIAL_CLIPS := {&"header": &"AN_Beechlawn_Header", &"chest_control": &"AN_Beechlawn_ChestControl"}
 
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_player: AnimationPlayer = $Rig/AnimationPlayer
@@ -41,6 +42,7 @@ static var _head_variant_meshes: Dictionary = {}
 func _ready() -> void:
 	_prepare_looping_motion()
 	_install_restart_actions()
+	_install_aerial_actions()
 	_build_locomotion_tree()
 	animation_tree.active = true
 	animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
@@ -90,6 +92,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_human_rig = true
 		_prepare_looping_motion()
 		_install_restart_actions()
+		_install_aerial_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -267,6 +270,15 @@ func play_pass(playback_speed: float = 1.0) -> bool:
 func play_receive(playback_speed: float = 1.0) -> bool:
 	return _play_action(&"receive", RECEIVE_CLIP, playback_speed)
 
+func play_aerial(action: StringName, playback_speed := 1.0) -> bool:
+	var started := _play_action(action, AERIAL_CLIPS.get(action, &""), playback_speed, true)
+	if started:
+		# Airborne contacts pass in a few physics ticks. Flush the new action now
+		# and call its marker in the physics animation update, not a later frame.
+		animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE
+		animation_player.advance(0.0)
+	return started
+
 func play_keeper_save() -> bool:
 	if not animation_player.has_animation(&"AN_Beechlawn_KeeperSave"):
 		return false
@@ -297,7 +309,7 @@ func play_slide_tackle() -> bool:
 
 
 func is_recovery_active() -> bool:
-	return _active_action == &"get_up"
+	return _active_action in [&"get_up", &"header", &"chest_control"]
 
 func can_start_ball_action() -> bool:
 	return _active_action in [&"", &"turn", &"stop", &"receive"] \
@@ -317,7 +329,7 @@ func _play_action(action: StringName, clip: StringName, playback_speed: float = 
 			and action not in [&"turn", &"stop"]
 		var interrupt_follow_through := _action_has_contact \
 			and _active_action in [&"pass", &"shot", &"receive"] \
-			and action in [&"pass", &"shot"]
+			and action in [&"pass", &"shot", &"header", &"chest_control"]
 		if not interrupt_action and not interrupt_locomotion and not interrupt_follow_through \
 				and (not interrupt_receive or _active_action != &"receive"):
 			return false
@@ -429,6 +441,8 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != _active_clip or _active_action == &"":
 		return
 	var finished_action := _active_action
+	if finished_action in AERIAL_CLIPS:
+		animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	if finished_action == &"slide_tackle" and animation_player.has_animation(GET_UP_CLIP):
 		_active_action = &"get_up"
 		_active_clip = GET_UP_CLIP
@@ -494,8 +508,20 @@ func _install_restart_actions() -> void:
 	source.free()
 	_install_action_contact_marker(&"restart_throw", &"AN_Beechlawn_ThrowIn", "res://assets/characters/shared/throw_contact.json")
 
+func _install_aerial_actions() -> void:
+	var scene := load("res://assets/characters/shared/aerial_actions.glb") as PackedScene
+	var source := scene.instantiate()
+	var source_player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	for name in AERIAL_CLIPS.values():
+		if not library.has_animation(name): library.add_animation(name, source_player.get_animation(name).duplicate())
+	source.free()
+	_install_action_contact_marker(&"header", AERIAL_CLIPS[&"header"], "res://assets/characters/shared/header_contact.json")
+	_install_action_contact_marker(&"chest_control", AERIAL_CLIPS[&"chest_control"], "res://assets/characters/shared/chest_contact.json")
+
 func reset_to_idle() -> void:
 	end_presentation()
+	animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	_blend_position=0.0
 	_close_control_blend=0.0
 	animation_tree.set("parameters/Locomotion/blend_position",0.0)
