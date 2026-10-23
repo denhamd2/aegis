@@ -1,3 +1,14 @@
+# Attacks and restarts — bundle 3
+
+More powerful/elevated standard shots, wider attacking runs and near/far box
+support; legal free-kick walls and goal reticle, varied AI penalty placement,
+short/long restart decisions and actual keeper selection for goal kicks.
+Standing-tackle opponent contact is now adjudicated at its animation marker.
+Focused integration checks and native software captures pass; M1 playtest and
+remaining pitch/audio/celebration/replay work remain open.
+
+---
+
 # Shared movement and defending — bundle 2
 
 Running arms stay forward without replacing shipping leg/root animation keys.

@@ -183,6 +183,16 @@ func _capture() -> void:
 				if kind in [&"goalkeeper_save", &"goalkeeper_catch", &"goalkeeper_distribution"]:
 					keeper_contacts.append({"tick":tick,"kind":str(kind),"team":str(game.ball.last_touch),"ball":str(game.ball.position)}))
 			game.ball.kick(Vector3(-sx,0,0),12,0,&"shot",&"Boardeaux" if sx>0 else &"Beechlawn Rovers")
+		elif mode=="free_kick":
+			game.restart.begin("FREE KICK",&"Beechlawn Rovers",Vector3(28,0,3))
+			game.restart._target_z = -2.7
+			game.restart._target_height = 2.1
+			game.restart._shot_style = &"finesse"
+			camera.position = Vector3(20,2.8,9)
+			camera.look_at(Vector3(39,1.0,1));camera.fov=60
+			game.ball.touched.connect(func(kind: StringName, _speed: float):
+				if kind==&"shot": shot_contacts.append({"tick":tick,"ball":str(game.ball.position)}))
+			game.restart.take(.8,true)
 		elif mode=="movement":
 			var actor: FootballPlayer=game.player
 			actor.position=Vector3.ZERO;actor.rotation.y=-PI/2

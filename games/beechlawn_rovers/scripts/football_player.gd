@@ -168,7 +168,7 @@ func _update_locomotion(delta: float) -> void:
 	camera_forward.y = 0.0
 	camera_right = camera_right.normalized()
 	camera_forward = camera_forward.normalized()
-	var recovering := _keeper_is_recovering() or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active())
+	var recovering := Engine.get_physics_frames() < int(get_meta("wall_until_tick",0)) or _keeper_is_recovering() or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active())
 	var defending := ball != null and ball.last_touch != team_name and not ball.goalkeeper_is_holding(self)
 	var jockey := controlled_by_human and defending and Input.is_action_pressed("close_control")
 	var contain := controlled_by_human and defending and Input.is_action_pressed("contain")
@@ -590,7 +590,7 @@ func _attempt_tackle() -> bool:
 	var to_ball := ball.global_position - global_position
 	to_ball.y = 0.0
 	var distance := to_ball.length()
-	if distance > _tackle_reach() or ball.global_position.y > 0.8:
+	if distance > _tackle_reach() + .45 or ball.global_position.y > 0.8:
 		status_changed.emit("Tackle missed: get closer to the ball")
 		return false
 	if distance > 0.001:
@@ -609,9 +609,10 @@ func _attempt_tackle() -> bool:
 
 func _resolve_standing_tackle() -> bool:
 	_standing_pending = false
-	if ball == null or ball.global_position.distance_to(global_position) > _tackle_reach() or ball.position.y > .8: return false
-	if is_instance_valid(_footballer_visual) and ball.global_position.distance_to(_receive_contact_position()) > .48: return false
+	if ball == null: return false
 	if _challenge_foul(false): return false
+	if ball.global_position.distance_to(global_position) > _tackle_reach() or ball.position.y > .8: return false
+	if is_instance_valid(_footballer_visual) and ball.global_position.distance_to(_receive_contact_position()) > .48: return false
 	var clearance := _action_direction()
 	if clearance.length_squared() < 0.01:
 		clearance = Vector3(attack_sign, 0.0, 0.0)

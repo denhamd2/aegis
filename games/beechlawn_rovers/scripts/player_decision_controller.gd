@@ -46,7 +46,7 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 		if not shot.is_empty():
 			return shot
 	# Wide delivery is useful only when an attacker can meet it in the area.
-	if ball_position.x * carrier.attack_sign >= 26.0 and absf(ball_position.y) >= 15.0:
+	if ball_position.x * carrier.attack_sign >= 24.0 and absf(ball_position.y) >= 13.0:
 		var toward_box := Vector3(carrier.attack_sign * 43.0, ball.position.y, 0) - ball.position
 		var crossing := LoftedPassPlanner.plan(carrier, &"cross", toward_box, .72)
 		var receiver := crossing.get("receiver") as FootballPlayer
@@ -130,7 +130,7 @@ func _best_shot_lane(ball_position: Vector2, attack_sign: float,
 		if score > best_score:
 			best_score = score
 			var direction := (target - ball_position).normalized()
-			var charge := clampf(0.42 + maxf(0.0, target.distance_to(ball_position) - 16.0) * 0.008, 0.42, 0.5)
+			var charge := clampf(.50 + target.distance_to(ball_position) * .006 + .07 * sin(ball_position.x * .37 + ball_position.y), .48, .82)
 			best = {"type": &"shoot", "charge": charge,
 				"direction": Vector3(direction.x, 0.0, direction.y)}
 	return best

@@ -45,7 +45,7 @@ func update_team_targets(team_players: Array[FootballPlayer], chaser: FootballPl
 					# Preserve width in build-up, then improve the shooting angle.
 					# Straight-ahead wide carries otherwise finish at the byline.
 					var goalward := Vector2(actor.attack_sign * FIELD_LENGTH * 0.5, 0.0) - ball_position
-					var turn_in := smoothstep(12.0, 35.0, ball_position.x * actor.attack_sign)
+					var turn_in := smoothstep(30.0, 46.0, ball_position.x * actor.attack_sign)
 					turn_in *= smoothstep(12.0, 18.0, absf(ball_position.y))
 					carry_direction = carry_direction.lerp(goalward.normalized(), turn_in).normalized()
 				if team_players.size() >= 7:
@@ -136,6 +136,12 @@ func _support_targets(team: Array[FootballPlayer], carrier: FootballPlayer,
 			runner = actor;runner_target = target;best_cost = cost
 	if runner != null:
 		result[runner.get_instance_id()] = {"target": runner_target,"intent": "forward_run"}
+	# Wide deliveries need runners in the area before a cross can be selected.
+	if ball.x * carrier.attack_sign > 22 and absf(ball.y) > 13:
+		var forwards := candidates.filter(func(a): return a.profile.tactical_role == "striker")
+		for index in forwards.size():
+			var forward: FootballPlayer = forwards[index]
+			result[forward.get_instance_id()] = {"target": Vector2(43 * carrier.attack_sign, signf(ball.y) * (3.5 if index == 0 else -5.0)), "intent":"box_run"}
 	return result
 
 func _open_carry_direction(origin: Vector2, preferred: Vector2,

@@ -39,6 +39,15 @@ static func plan(actor: FootballPlayer, charge: float, direction: Vector3,
 		&"half_volley":
 			speed *= .96
 			lift = lerpf(.7, 2.2, power)
+	if style in [&"standard", &"power", &"finesse"] and aim.x * actor.attack_sign > .2:
+		# Solve height at the actual goal plane. Old fixed ~1–2 m/s lifts
+		# landed almost every shot before it reached goal.
+		var distance := clampf((actor.attack_sign * 52.5 - actor.ball.position.x) / aim.x, 1, 45)
+		var travel := distance / maxf(speed, 1)
+		travel *= 1.0 + .035 * travel
+		var target_height := lerpf(.35, 2.7, power)
+		if style == &"finesse": target_height = lerpf(.8, 2.65, power)
+		lift = clampf((target_height - actor.ball.position.y + 4.905 * travel * travel) / travel, .7, 13)
 	# Neutral attributes preserve the baseline strike. Attribute deviations and
 	# difficult special-shot conditions add bounded, reproducible placement error.
 	var rating := (actor._attribute_value(&"shooting") + actor._attribute_value(&"finishing")) * .5

@@ -19,6 +19,9 @@ func _run() -> void:
 	game.ball.position=Vector3(1.5,FootballBall.RADIUS,0)
 	game.ball.freeze=true
 	tackler._attempt_tackle()
+	check(not game.restart.active(),"Foul waits for standing tackle contact")
+	tackler._footballer_visual.animation_player.advance(.25)
+	await process_frame
 	check(game.restart.active() and game.restart.kind=="FREE KICK","Actual opponent-first standing tackle awards a free kick")
 	game.restart.cancel()
 	rules._last_challenge_tick=-1000
