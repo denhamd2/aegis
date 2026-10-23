@@ -19,7 +19,10 @@ func _run() -> void:
 	current_scene = menu
 	await process_frame
 	check(get_nodes_in_group("football_players").is_empty(),"Title screen must not instantiate the 23 skinned match characters")
-	check(menu.canvas.get_node("BuildStamp").text.contains("v0.2.1"), "Visible build identity")
+	var build_info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	var stamp: String = menu.canvas.get_node("BuildStamp").text
+	check(stamp.contains("v" + String(build_info.version)), "Visible version matches build metadata")
+	check(stamp.contains(String(build_info.source_sha).left(7)) and stamp.contains(String(build_info.packaged_utc)), "Visible source and update time match build metadata")
 	check(menu.start_button.has_focus(),"Start Game needs initial keyboard focus")
 	menu.open_options()
 	check(menu.options_layer.visible and menu.volume_slider.has_focus(),"Options should open and receive keyboard focus")

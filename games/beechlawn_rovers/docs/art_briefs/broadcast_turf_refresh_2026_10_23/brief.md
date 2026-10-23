@@ -87,3 +87,8 @@ individual sculpt/hair/skin finishing against the originals. Hidden side/rear
 anatomy remains estimated. BR-022 remains open; those artistic gaps cannot be
 closed by an import audit. Exact venue realism and M1 acceptance also remain
 open. The final validation manifest records completed checks and release status.
+
+The title regression reads version, source ID and packaging UTC from build_info
+and verifies each is visible. Recorded-face replay coverage explicitly varies
+blink weights in the source history and checks both ghost interpolation and
+unchanged/restored live expression weights.

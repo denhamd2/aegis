@@ -1,0 +1,9 @@
+
+[smoke] recorded_face_replay_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+RECORDED_FACES PASS: recorded blink interpolation and exact live weight restoration
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] recorded_face_replay_smoke.gd (6.8s)

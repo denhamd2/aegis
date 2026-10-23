@@ -15,7 +15,9 @@
     "source/export four-head audit",
     "unskipped full match reaches results",
     "12 native player views",
-    "native intro/UI/turf and directed outro"
+    "native intro/UI/turf and directed outro",
+    "Title version/source/UTC match build metadata",
+    "Recorded facial pose interpolation and exact live expression restoration"
   ],
   "full_unskipped_match": {
     "ball_travel_m": 1843.58362148708,
