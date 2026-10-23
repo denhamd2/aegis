@@ -12,6 +12,12 @@ func _observe_touch(ball: FootballBall, kind: StringName) -> void:
 	if actor == null or not metrics.has(str(actor.team_name)):
 		return
 	var entry: Dictionary = metrics[str(actor.team_name)]
+	if kind == &"shot":
+		var style := str(ball.last_strike_style)
+		entry.shot_styles[style] = int(entry.shot_styles.get(style, 0)) + 1
+	if kind == &"cross":
+		var style := str(ball.last_strike_style)
+		entry.cross_styles[style] = int(entry.cross_styles.get(style, 0)) + 1
 	if kind == &"cross": entry.crosses += 1
 	if kind == &"lofted_pass": entry.lofted_passes += 1
 	if kind == &"aerial_control": entry.chest_controls += 1
@@ -57,7 +63,7 @@ func _run() -> void:
 	seed(8008 + starting_variation)
 	for team in ["Beechlawn Rovers", "Boardeaux"]:
 		metrics[team] = {"passes": 0, "completed_passes": 0, "intercepted_passes": 0,
-			"crosses": 0, "lofted_passes": 0, "headers": 0, "chest_controls": 0,
+			"crosses": 0, "lofted_passes": 0, "headers": 0, "chest_controls": 0, "shot_styles": {}, "cross_styles": {},
 			"controls": 0, "final_third_entries": 0, "in_final_third": false,
 			"action_decisions": {}, "cancelled_contacts": 0}
 	var session := root.get_node("MatchSession")
@@ -141,6 +147,12 @@ func _run() -> void:
 		if samples%60==0:
 			still=still+1 if ball.linear_velocity.length()<0.1 and not ball.freeze else 0
 			max_still=maxi(max_still,still)
+			if still == 12:
+				var nearby: Array = []
+				for actor in actors:
+					if actor.position.distance_to(ball.position) < 5:
+						nearby.append({"id":str(actor.profile.player_id),"team":str(actor.team_name),"p":str(actor.position),"v":str(actor.velocity),"move":str(actor.ai_move_direction),"intent":actor.get_meta("ai_role_intent", ""),"air":str(actor._aerial_controller._active),"visual":str(actor._footballer_visual._active_action),"recover":actor._footballer_visual.is_recovery_active(),"receive":actor.receive_target_time,"target":str(actor.receive_target),"pass_pending":actor._visual_pass_pending,"shot_pending":actor._visual_shot_pending})
+				print("AI_STALL_DIAGNOSTIC ",JSON.stringify({"seconds":still,"tick":samples,"p":str(ball.position),"v":str(ball.linear_velocity),"action":str(ball.last_action),"style":str(ball.last_strike_style),"last":str(ball.last_touch),"holder":str(ball.goalkeeper_holder),"controller":str(ball._dribble_controller),"serial":ball.action_serial,"nearby":nearby}))
 		# Observe available options at 5 Hz without changing the live simulation.
 		# These samples are not executed-action counts; touched counts contacts.
 		if samples%12==0 and ball.last_touch in [&"Beechlawn Rovers", &"Boardeaux"]:
@@ -160,7 +172,6 @@ func _run() -> void:
 	assert(game._full_time,"Full short match did not reach full time")
 	assert(ball.freeze,"Ball was not held at full time")
 	assert(travelled>50.0,"AI match did not progress the ball")
-	assert(max_still < 12, "AI left the live ball stationary for twelve seconds")
 	print("11v11 SOAK match_seconds=", game.short_match_seconds, " physics_ticks=", samples,
 		" ball_travel_m=", snappedf(travelled, 0.1),
 		" shots=", shots[&"Beechlawn Rovers"], "/", shots[&"Boardeaux"],
@@ -186,6 +197,9 @@ func _run() -> void:
 	print("AI_MATCH_METRICS ", JSON.stringify({"kickoff": kickoff_team if kickoff_team != "" else "Beechlawn Rovers",
 		"variation": starting_variation, "weather": str(session.weather_preset), "teams": metrics, "statuses": shot_status_counts,
 		"ball_travel_m": travelled, "longest_stationary_s": max_still, "goals": [game._home_score, game._away_score]}))
+	if max_still >= 12:
+		push_error("AI left the live ball stationary for twelve seconds")
+		game.free(); quit(1); return
 	if OS.get_environment("BEECHLAWN_REQUIRE_SHOT") == "1":
 		if shots[&"Beechlawn Rovers"] + shots[&"Boardeaux"] == 0:
 			push_error("AI match produced zero physical shot contacts in 180 seconds")

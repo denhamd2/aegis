@@ -104,7 +104,31 @@ press/release tests use normal 60 Hz cadence; accelerated physics bursts can
 coalesce queued synthetic input. Confirm actual roster identity in native
 metadata instead of assuming array slot zero is Shane.
 
-Evidence and remaining limitations: `docs/art_briefs/aerial_play_2026_10_22/brief.md`.
+Evidence and remaining limitations:
+`games/beechlawn_rovers/docs/art_briefs/aerial_play_2026_10_22/brief.md`.
+
+### Fast boot strikes and export origins
+
+When metadata subtracts the first source frame, explicitly export the GLB with
+`export_anim_slide_to_zero=True`. The default exporter retained a first key at
+1/60 s while metadata assumed zero. Check the actual GLB key ranges, imported
+clip duration and evaluated toe pose at the marker; authoring FPS alone cannot
+prove timing. The new volley clips have source frames 1–49, export 0–0.8 s and
+contact at 0.30 s. Preserve existing libraries during a scoped clip addition.
+
+Fast driven crosses need a matching fixed-tick launch and contact forecast;
+continuous flight error can move a low contact point by half a metre. Reserve
+preparation at the striker's body position behind the intended boot contact,
+lead according to flight time minus wind-up, and account for braking distance.
+Measure actual marker/tick/ball/toe traces before changing timing or reach.
+Half-volleys require a recorded upward ground-contact rebound; inspect normals
+in the physics API's reported frame rather than rotating them a second time.
+Keep half-volley bounce timing separate from fast volley tick scheduling.
+For grounded recovery on uneven turf, compare the ball with the surface under
+it. A player root in a shallow rut can otherwise misclassify an adjacent
+stationary cross as airborne and reverse the tactical pursuit direction.
+
+Evidence: `games/beechlawn_rovers/docs/art_briefs/advanced_shots_2026_10_23/brief.md`.
 
 ## 5. Select verification by change
 

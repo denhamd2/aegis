@@ -1,0 +1,1335 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "aerial_events": [
+    {
+      "ball": "(32.96581, 0.131195, 0.089836)",
+      "bounce_age": 0.0166666666666667,
+      "contact": "(33.06517, 0.208281, 0.09)",
+      "gap": 0.125760287046432,
+      "kind": "shot",
+      "part": "foot",
+      "player_id": "shane_denham",
+      "style": "half_volley",
+      "team": "Beechlawn Rovers",
+      "tick": 17
+    }
+  ],
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "fixture_setup": "scripted incoming ball",
+  "frames": [
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.76766, 1.725882, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.96039, -5.297911, 0.0)",
+      "file": "frame_000.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 1
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.65198, 1.635111, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.940669, -5.446234, 0.0)",
+      "file": "frame_001.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 2
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.53663, 1.541876, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.921003, -5.594136, 0.0)",
+      "file": "frame_002.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 3
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.42161, 1.446182, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.901394, -5.74162, 0.0)",
+      "file": "frame_003.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 4
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.30691, 1.348037, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.88184, -5.888685, 0.0)",
+      "file": "frame_004.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 5
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.19254, 1.247448, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.862342, -6.035334, 0.0)",
+      "file": "frame_005.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 6
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.07849, 1.144422, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.842899, -6.181568, 0.0)",
+      "file": "frame_006.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 7
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.96477, 1.038966, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.823511, -6.327387, 0.0)",
+      "file": "frame_007.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 8
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.85136, 0.931086, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.804178, -6.472793, 0.0)",
+      "file": "frame_008.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 9
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.73828, 0.820789, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.784899, -6.617786, 0.0)",
+      "file": "frame_009.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 10
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.62552, 0.708083, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.765676, -6.76237, 0.0)",
+      "file": "frame_010.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 11
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.51308, 0.592974, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.746506, -6.906543, 0.0)",
+      "file": "frame_011.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 12
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.40096, 0.475469, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.727391, -7.050308, 0.0)",
+      "file": "frame_012.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 13
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.28915, 0.355575, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.708331, -7.193666, 0.0)",
+      "file": "frame_013.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 14
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.17766, 0.233298, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.689324, -7.336617, 0.0)",
+      "file": "frame_014.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 15
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.06649, 0.108645, 0.09)",
+      "ball_action": "cross",
+      "ball_velocity": "(-6.670371, -7.479164, 0.0)",
+      "file": "frame_015.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 16
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(32.96581, 0.131195, 0.089836)",
+      "ball_action": "shot",
+      "ball_velocity": "(-6.040948, 1.353015, -0.009818)",
+      "file": "frame_016.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 17
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.32927, 0.153818, 0.090546)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.80763, 1.357346, 0.042566)",
+      "file": "frame_017.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 18
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(33.69154, 0.173654, 0.091253)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.73615, 1.190167, 0.042426)",
+      "file": "frame_018.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 19
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.05278, 0.190711, 0.091958)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.67457, 1.023461, 0.042306)",
+      "file": "frame_019.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 20
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.413, 0.204998, 0.092661)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.61316, 0.857228, 0.042186)",
+      "file": "frame_020.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 21
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(34.7722, 0.216523, 0.093362)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.55192, 0.691466, 0.042067)",
+      "file": "frame_021.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 22
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(35.13038, 0.225292, 0.094061)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.49086, 0.526174, 0.041948)",
+      "file": "frame_022.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 23
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(35.48755, 0.231315, 0.094758)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.42997, 0.36135, 0.041829)",
+      "file": "frame_023.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 24
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(35.8437, 0.234598, 0.095454)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.36925, 0.196992, 0.04171)",
+      "file": "frame_024.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 25
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(36.19885, 0.23515, 0.096147)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.3087, 0.033101, 0.041592)",
+      "file": "frame_025.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 26
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(36.55299, 0.232978, 0.096838)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.24833, -0.130326, 0.041474)",
+      "file": "frame_026.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 27
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(36.90612, 0.22809, 0.097527)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.18813, -0.29329, 0.041357)",
+      "file": "frame_027.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 28
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(37.25826, 0.220493, 0.098215)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.1281, -0.455793, 0.04124)",
+      "file": "frame_028.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 29
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(37.60939, 0.210196, 0.0989)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.06823, -0.617835, 0.041123)",
+      "file": "frame_029.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 30
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(37.95954, 0.197206, 0.099584)",
+      "ball_action": "shot",
+      "ball_velocity": "(21.00854, -0.779417, 0.041006)",
+      "file": "frame_030.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 31
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(38.30869, 0.18153, 0.100265)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.94902, -0.940542, 0.04089)",
+      "file": "frame_031.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 32
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(38.65685, 0.163176, 0.100945)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.88966, -1.101211, 0.040774)",
+      "file": "frame_032.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 33
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(39.00402, 0.142153, 0.101622)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.83047, -1.261424, 0.040659)",
+      "file": "frame_033.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 34
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(39.35022, 0.118466, 0.102298)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.77146, -1.421183, 0.040543)",
+      "file": "frame_034.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 35
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(39.69543, 0.092125, 0.102972)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.7126, -1.58049, 0.040429)",
+      "file": "frame_035.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 36
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(40.03725, 0.093968, 0.103692)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.50953, 0.110587, 0.043198)",
+      "file": "frame_036.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 37
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(40.37794, 0.093083, 0.104409)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.44173, -0.053059, 0.043055)",
+      "file": "frame_037.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 38
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(40.71751, 0.089479, 0.105125)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.37412, -0.216242, 0.042913)",
+      "file": "frame_038.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 39
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(41.05596, 0.083163, 0.105837)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.3067, -0.378963, 0.042771)",
+      "file": "frame_039.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 40
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(41.39328, 0.074143, 0.106548)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.23948, -0.541223, 0.042629)",
+      "file": "frame_040.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 41
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(41.7292, 0.066144, 0.107244)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.15487, -0.479915, 0.041779)",
+      "file": "frame_041.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 42
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(42.06332, 0.064333, 0.107938)",
+      "ball_action": "shot",
+      "ball_velocity": "(20.0471, -0.108689, 0.041648)",
+      "file": "frame_042.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 43
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(42.39606, 0.063296, 0.10863)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.9645, -0.062203, 0.041512)",
+      "file": "frame_043.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 44
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(42.72746, 0.062576, 0.109317)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.88407, -0.043182, 0.041205)",
+      "file": "frame_044.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 45
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(43.05751, 0.062303, 0.109998)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.803, -0.01639, 0.040892)",
+      "file": "frame_045.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 46
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(43.38625, 0.062031, 0.110675)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.72427, -0.016325, 0.040605)",
+      "file": "frame_046.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 47
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(43.71368, 0.06176, 0.111347)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.64577, -0.01626, 0.040318)",
+      "file": "frame_047.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 48
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(44.03975, 0.062154, 0.112011)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.56391, 0.023652, 0.039823)",
+      "file": "frame_048.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 49
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(44.36451, 0.062547, 0.112668)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.48553, 0.023557, 0.039401)",
+      "file": "frame_049.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 50
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(44.68796, 0.062938, 0.113317)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.40737, 0.023462, 0.03898)",
+      "file": "frame_050.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 51
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(45.01007, 0.063806, 0.113957)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.32681, 0.052057, 0.038391)",
+      "file": "frame_051.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 52
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(45.33089, 0.06467, 0.114588)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.24881, 0.051846, 0.037872)",
+      "file": "frame_052.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 53
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(45.65038, 0.065533, 0.115211)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.16974, 0.051813, 0.037353)",
+      "file": "frame_053.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 54
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(45.96855, 0.06663, 0.115823)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.09009, 0.065801, 0.036752)",
+      "file": "frame_054.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 55
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(46.28539, 0.067722, 0.116427)",
+      "ball_action": "shot",
+      "ball_velocity": "(19.01005, 0.065523, 0.036188)",
+      "file": "frame_055.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 56
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(46.60077, 0.068809, 0.11702)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.92319, 0.065223, 0.035613)",
+      "file": "frame_056.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 57
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(46.91462, 0.069879, 0.117604)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.83077, 0.064216, 0.035045)",
+      "file": "frame_057.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 58
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(47.22676, 0.070947, 0.118178)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.72848, 0.064046, 0.034459)",
+      "file": "frame_058.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 59
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(47.53705, 0.072008, 0.118743)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.6174, 0.063665, 0.03386)",
+      "file": "frame_059.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 60
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(47.84539, 0.073931, 0.119297)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.5002, 0.115381, 0.033224)",
+      "file": "frame_060.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 61
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(48.15179, 0.075839, 0.119841)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.38405, 0.114476, 0.032696)",
+      "file": "frame_061.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 62
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(48.4562, 0.077737, 0.120378)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.2647, 0.113912, 0.032164)",
+      "file": "frame_062.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 63
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(48.75866, 0.079361, 0.120907)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.14721, 0.097399, 0.031795)",
+      "file": "frame_063.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 64
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(49.05902, 0.082186, 0.121429)",
+      "ball_action": "shot",
+      "ball_velocity": "(18.02182, 0.169508, 0.031318)",
+      "file": "frame_064.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 65
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(49.35741, 0.084992, 0.121945)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.90361, 0.168396, 0.030935)",
+      "file": "frame_065.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 66
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(49.65385, 0.087781, 0.122454)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.78601, 0.16729, 0.030554)",
+      "file": "frame_066.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 67
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(49.94832, 0.090641, 0.12296)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.6685, 0.171622, 0.030318)",
+      "file": "frame_067.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 68
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(50.24086, 0.093483, 0.123461)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.55208, 0.170491, 0.030086)",
+      "file": "frame_068.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 69
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(50.53146, 0.096305, 0.123959)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.43627, 0.169366, 0.029854)",
+      "file": "frame_069.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 70
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(50.82019, 0.09864, 0.124453)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.32381, 0.140066, 0.029691)",
+      "file": "frame_070.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 71
+    },
+    {
+      "aerial_actor": "(32.46518, 0.010873, 0.0)",
+      "ball": "(51.10701, 0.100956, 0.124946)",
+      "ball_action": "shot",
+      "ball_velocity": "(17.20947, 0.138962, 0.029531)",
+      "file": "frame_071.png",
+      "keeper": "",
+      "keeper_recovering": false,
+      "label": "half_volley_close",
+      "player": "(32.46518, 0.010873, 0.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 72
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "keeper_contacts": [],
+  "msaa_3d": 2,
+  "officials": 1,
+  "physics_steps_per_draw": 1,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "half_volley_close",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 60.0,
+  "shot_contacts": [],
+  "vendor": "Unknown"
+}

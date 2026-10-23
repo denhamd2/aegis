@@ -52,7 +52,8 @@ func choose_carrier_action(carrier: FootballPlayer, teammates: Array[FootballPla
 		var receiver := crossing.get("receiver") as FootballPlayer
 		if receiver != null and teammates.has(receiver):
 			return {"type": &"cross", "direction": toward_box, "power": .72,
-				"receiver_id": receiver.get_instance_id()}
+				"receiver_id": receiver.get_instance_id(),
+				"variant": ShotPlanner.ai_cross_style(carrier, receiver)}
 	# Under pressure, release the ball into a forward run if a teammate and lane
 	# Evaluate a progressive pass before the generic safe outlet. The outlet
 	# condition below also matches high pressure, so checking it first otherwise

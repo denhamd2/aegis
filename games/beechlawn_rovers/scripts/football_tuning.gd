@@ -36,6 +36,14 @@ class_name FootballTuning
 @export_range(0.0, 0.1, 0.005) var kick_contact_grace_seconds := 0.065
 @export_range(1.5, 2.8, 0.1) var slide_tackle_reach := 2.2
 
+@export_group("Advanced strikes")
+@export_range(1.0, 1.25, .01) var power_shot_multiplier := 1.12
+@export_range(10.0, 45.0, 1.0) var finesse_spin := 30.0
+@export_range(0.0, .008, .0005) var finesse_magnus := .003
+@export_range(0.0, .3, .01) var special_shot_error_radians := .10
+@export_range(.5, 1.1, .01) var volley_contact_height := .78
+@export_range(.12, .4, .01) var half_volley_contact_height := .20
+
 @export_group("Aerial play")
 @export_range(25.0, 55.0, 1.0) var lofted_pass_max_range := 48.0
 @export_range(0.3, 1.2, 0.05) var lofted_pass_charge_seconds := 0.75

@@ -12,6 +12,7 @@ var keeper_contacts: Array[Dictionary] = []
 var review_keeper: FootballPlayer
 var review_actor: FootballPlayer
 var aerial_events: Array[Dictionary] = []
+var frame_steps := 6
 func _initialize() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--") and argument.contains("="):
@@ -45,7 +46,7 @@ func _capture() -> void:
 	DirAccess.make_dir_recursive_absolute(output)
 	var session:=root.get_node("MatchSession")
 	session.launched_from_menu=false;session.weather_preset=&"sunny"
-	if mode.begins_with("attack_") or mode.begins_with("cross_") or mode in ["header_close", "chest_close"]:
+	if mode.begins_with("attack_") or mode.begins_with("cross_") or mode.begins_with("shot_") or mode in ["header_close", "chest_close", "volley_close", "half_volley_close"]:
 		session.mode=session.MatchMode.WATCH;session.launched_from_menu=true;session.show_intro=false
 	game=load("res://scenes/match_11v11.tscn").instantiate()
 	root.add_child(game);current_scene=game
@@ -85,18 +86,19 @@ func _capture() -> void:
 			game.ball.touched.connect(func(kind: StringName, _speed: float):
 				if kind==&"shot":shot_contacts.append({"tick":tick,"team":str(game.ball.last_touch),"ball":str(game.ball.position)}))
 		elif mode.begins_with("cross_"):
-			var team: Array[FootballPlayer] = game._home_players if mode=="cross_home" else game._away_players
-			var opponents: Array[FootballPlayer] = game._away_players if mode=="cross_home" else game._home_players
+			var team: Array[FootballPlayer] = game._home_players if mode.ends_with("_home") else game._away_players
+			var opponents: Array[FootballPlayer] = game._away_players if mode.ends_with("_home") else game._home_players
 			var passer: FootballPlayer = team[2]
 			for actor in team:
 				if actor.profile.starting_slot=="striker_left":review_actor=actor
 			var sx:=passer.attack_sign
-			passer.position=Vector3(33*sx,PitchSurface.height_at(33*sx,21)+.005,21)
+			var cross_x:=24.0 if mode.contains("early") else 33.0
+			passer.position=Vector3(cross_x*sx,PitchSurface.height_at(cross_x*sx,21)+.005,21)
 			review_actor.position=Vector3(42*sx,PitchSurface.height_at(42*sx,2)+.005,2)
 			review_actor.rotation.y=-PI/2*sx;review_actor.controlled_by_human=false
 			review_actor.set_physics_process(true)
 			var defender: FootballPlayer=opponents[2]
-			defender.position=Vector3(44*sx,PitchSurface.height_at(44*sx,2.9)+.005,2.9)
+			defender.position=Vector3(46*sx,PitchSurface.height_at(46*sx,6)+.005,6) if mode.contains("driven") else Vector3(44*sx,PitchSurface.height_at(44*sx,2.9)+.005,2.9)
 			defender.set_physics_process(true)
 			opponents[3].position=passer.position+Vector3(sx,0,1.8)
 			for actor in opponents:
@@ -112,25 +114,56 @@ func _capture() -> void:
 			camera.queue_free();camera=game.camera_rig.camera
 			game.camera_rig.presentation_override=false;camera.make_current();game.camera_rig.reset_tracking()
 			game.ball.touched.connect(_record_aerial)
-			passer._do_pass(false,toward,false,1.0,review_actor,&"cross",.72)
-		elif mode in ["header_close", "chest_close"]:
+			var variant: StringName = &"driven_cross" if mode.contains("driven") else &"lofted_cross" if mode.contains("lofted") else &"early_cross" if mode.contains("early") else &"standard"
+			passer._do_pass(false,toward,false,1.0,review_actor,&"cross",.72,variant)
+		elif mode in ["header_close", "chest_close", "volley_close", "half_volley_close"]:
 			for actor in game._home_players:
 				if actor.profile.player_id==&"shane_denham":review_actor=actor
 			review_actor.position=Vector3(32,PitchSurface.height_at(32,0)+.005,0)
 			review_actor.rotation.y=-PI/2;review_actor.controlled_by_human=true
 			game.player=review_actor;game._kickoff_pending=false
-			game.ball.position=review_actor.position+Vector3(2.5,2.2 if mode=="header_close" else 1.7,0)
-			var destination:=review_actor.position+Vector3(.14,review_actor.tuning.header_contact_height,0) if mode=="header_close" else review_actor._aerial_controller.chest_point()
-			game.ball.freeze=false
-			# Isolated incoming-ball setup. Full winger kicks are reviewed in the
-			# separate cross modes, not inferred from this scripted launch.
-			game.ball.kick_velocity(FootballBallFlight.launch(game.ball,destination,.31 if mode=="header_close" else .235),&"cross" if mode=="header_close" else &"lofted_pass",review_actor.team_name,null)
-			game.ball.touched.connect(_record_aerial)
-			if mode=="header_close":review_actor._aerial_controller.request_header(Vector3.RIGHT)
-			else:review_actor.receive_target_time=1.0
+			if mode in ["volley_close", "half_volley_close"]:
+				var action: StringName = &"volley" if mode=="volley_close" else &"half_volley"
+				var destination:=review_actor.position+Vector3(.60,review_actor.tuning.volley_contact_height,.09)
+				game.ball.position=destination+Vector3(2,.7,0) if action==&"volley" else Vector3(35,1.9,.09)
+				game.ball.freeze=false
+				var launch:=FootballBallFlight.launch(game.ball,destination,.31) if action==&"volley" else Vector3(-7,-5,0)
+				game.ball.kick_velocity(launch,&"cross",review_actor.team_name,null)
+				if action==&"half_volley":
+					await physics_frame
+					var forecast:=FootballBallFlight.after_bounce_contact(game.ball,review_actor.position.y+review_actor.tuning.half_volley_contact_height)
+					assert(not forecast.is_empty())
+					review_actor.position.x=forecast.position.x-.60
+				game.ball.touched.connect(_record_aerial)
+				review_actor._aerial_controller.request_strike(action,Vector3.RIGHT)
+			else:
+				game.ball.position=review_actor.position+Vector3(2.5,2.2 if mode=="header_close" else 1.7,0)
+				var destination:=review_actor.position+Vector3(.14,review_actor.tuning.header_contact_height,0) if mode=="header_close" else review_actor._aerial_controller.chest_point()
+				game.ball.freeze=false
+				game.ball.kick_velocity(FootballBallFlight.launch(game.ball,destination,.31 if mode=="header_close" else .235),&"cross" if mode=="header_close" else &"lofted_pass",review_actor.team_name,null)
+				game.ball.touched.connect(_record_aerial)
+				if mode=="header_close":review_actor._aerial_controller.request_header(Vector3.RIGHT)
+				else:review_actor.receive_target_time=1.0
 			review_actor.set_physics_process(true)
 			camera.position=review_actor.position+Vector3(2.7,1.6,2.6)
 			camera.look_at(review_actor.position+Vector3(.1,1.05,0));camera.fov=45
+		elif mode.begins_with("shot_"):
+			for actor in game._home_players:
+				if actor.profile.player_id==&"shane_denham":review_actor=actor
+			review_actor.position=Vector3(38,PitchSurface.height_at(38,6)+.005,6)
+			review_actor.controlled_by_human=false;review_actor.ai_move_direction=Vector3.ZERO
+			var aim:=Vector3(52.5,review_actor.position.y,0)-review_actor.position;aim.y=0;aim=aim.normalized()
+			review_actor.rotation.y=atan2(-aim.x,-aim.z);review_actor._flat_direction=aim
+			game.player=review_actor;game._kickoff_pending=false
+			game.ball.position=review_actor.position+aim*.6+Vector3.UP*.13
+			game.ball.freeze=false;game.ball.last_touch=review_actor.team_name;game.ball.last_action=&"dribble"
+			for actor in game._away_players:
+				if actor.profile.role=="goalkeeper":
+					actor.position=Vector3(49.5,0,0);actor.set_physics_process(true)
+			game.ball.touched.connect(_record_aerial)
+			review_actor.set_physics_process(true)
+			review_actor._do_shot(.65,1.0,aim,StringName(mode.trim_prefix("shot_")))
+			camera.position=Vector3(43,7,17);camera.look_at(Vector3(44,.7,2));camera.fov=54
 		elif mode.begins_with("keeper_"):
 			var team: Array[FootballPlayer] = game._home_players if mode=="keeper_home" else game._away_players
 			for candidate in team:
@@ -171,11 +204,12 @@ func _capture() -> void:
 		physics_frame.connect(_physics_step)
 		# Six real 60 Hz steps per draw: useful slow software rendering evidence,
 		# with recorded simulated timing rather than a performance claim.
-		Engine.time_scale=6;Engine.physics_ticks_per_second=360
+		frame_steps=1 if mode in ["volley_close", "half_volley_close"] else 6
+		Engine.time_scale=frame_steps;Engine.physics_ticks_per_second=60*frame_steps
 		Engine.max_physics_steps_per_frame=64
-		var frames:=30 if mode.begins_with("cross_") else (12 if mode in ["header_close", "chest_close"] else 24)
+		var frames:=72 if mode in ["volley_close", "half_volley_close"] else (30 if mode.begins_with("cross_") or mode.begins_with("shot_") else (12 if mode in ["header_close", "chest_close"] else 24))
 		for index in frames:
-			for f in 6:await physics_frame
+			for f in frame_steps:await physics_frame
 			if mode=="movement":
 				camera.position=game.player.position+Vector3(-3.4,1.6,-5.7)
 				camera.look_at(game.player.position+Vector3(.3,.85,0))
@@ -187,18 +221,25 @@ func _capture() -> void:
 	if mode.begins_with("keeper_") and keeper_contacts.is_empty():
 		push_error("Native keeper fixture produced no physical save/catch contact")
 		quit(1);return
-	if mode.begins_with("cross_") or mode in ["header_close", "chest_close"]:
+	if mode.begins_with("cross_") or mode in ["header_close", "chest_close", "volley_close", "half_volley_close"]:
 		var valid:=false
 		for event in aerial_events:
-			if event.part in ["head", "chest"]:valid=true
+			if event.part in ["head", "chest"] or (event.kind=="shot" and event.style in ["volley", "half_volley"]):valid=true
 		if not valid:
-			push_error("Native aerial fixture produced no validated head/chest contact")
+			push_error("Native aerial fixture produced no validated anatomical contact")
+			quit(1);return
+	if mode.begins_with("shot_"):
+		var valid := false
+		for event in aerial_events:
+			if event.kind == "shot" and event.style == mode.trim_prefix("shot_"): valid = true
+		if not valid:
+			push_error("Native special-shot fixture produced no physical shot contact")
 			quit(1);return
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
 	paused=true
 	var primary:=1 if mode=="montage" else 0
 	for event in aerial_events:
-		if event.part in ["head","chest"]:
+		if event.part in ["head","chest"] or (event.kind=="shot" and event.style in ["volley","half_volley"]):
 			for index in sequence.size():
 				if sequence[index].tick>=event.tick:primary=index;break
 			break
@@ -209,8 +250,9 @@ func _capture() -> void:
 		"api":RenderingServer.get_video_adapter_api_version(),"display_server":DisplayServer.get_name(),
 		"godot":Engine.get_version_info().string,"resolution":[first.get_width(),first.get_height()],
 		"msaa_3d":root.msaa_3d,"home_players":game._home_players.size(),"away_players":game._away_players.size(),
+		"sequence_fps":60.0/frame_steps,"physics_steps_per_draw":frame_steps,
 		"officials":get_nodes_in_group("match_officials").size(),"review_mode":mode,"frames":sequence,"shot_contacts":shot_contacts,"keeper_contacts":keeper_contacts,"aerial_events":aerial_events,
-		"fixture_setup":"scripted incoming ball" if mode in ["header_close", "chest_close"] else ("winger delivery through foot marker" if mode.begins_with("cross_") else mode),
+		"fixture_setup":"scripted incoming ball" if mode in ["header_close", "chest_close", "volley_close", "half_volley_close"] else ("winger delivery through foot marker" if mode.begins_with("cross_") else mode),
 		"scope":"Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim."}
 	var file:=FileAccess.open(output.path_join("match_broadcast.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"  ")+"\n")
@@ -220,12 +262,12 @@ func _capture() -> void:
 func _record_aerial(kind: StringName, _speed: float) -> void:
 	var ball: FootballBall=game.ball
 	if kind not in [&"lofted_pass", &"cross", &"aerial_control", &"shot", &"header_clearance"]:return
-	if kind==&"shot" and ball.last_strike_part!=&"head":return
 	var actor:=ball.last_touch_player as FootballPlayer
 	var point:=ball.position
 	if actor!=null and ball.last_strike_part==&"head":point=actor._aerial_controller.forehead_point()
 	elif actor!=null and ball.last_strike_part==&"chest":point=actor._aerial_controller.chest_point()
 	elif actor!=null and ball.last_strike_part==&"foot":point=actor._receive_contact_position()
 	aerial_events.append({"tick":tick,"kind":str(kind),"part":str(ball.last_strike_part),
+		"style":str(ball.last_strike_style),"bounce_age":actor.get_meta("last_air_contact_bounce_age",99) if actor!=null else 99,
 		"team":str(ball.last_touch),"player_id":str(actor.profile.player_id) if actor!=null else "",
 		"ball":str(ball.position),"contact":str(point),"gap":point.distance_to(ball.position)})

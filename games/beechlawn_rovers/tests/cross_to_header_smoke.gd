@@ -2,8 +2,10 @@ extends SceneTree
 ## Wing delivery -> AI run -> forehead contact, including an actual close defender.
 var failures: Array[String] = []
 var contacts: Array[Dictionary] = []
+var variant: StringName = &"standard"
 func _initialize() -> void: call_deferred("_run")
 func _run() -> void:
+	variant = StringName(OS.get_environment("BEECHLAWN_CROSS_VARIANT")) if not OS.get_environment("BEECHLAWN_CROSS_VARIANT").is_empty() else &"standard"
 	Engine.time_scale = 4
 	Engine.physics_ticks_per_second = 240
 	Engine.max_physics_steps_per_frame = 64
@@ -16,14 +18,14 @@ func _run() -> void:
 	game._set_players_physics_enabled(false)
 	var ball: FootballBall = game.ball
 	ball.touched.connect(func(kind: StringName, _speed: float):
-		if kind in [&"cross", &"aerial_control"] or ball.last_strike_part == &"head":
+		if kind in [&"cross", &"aerial_control"] or ball.last_strike_part == &"head" or (kind == &"shot" and ball.last_strike_style in [&"volley", &"half_volley"]):
 			var gap := INF
 			for other in game._home_players + game._away_players:
 				if other.team_name != ball.last_touch and other.profile.role == "outfield":
 					gap = minf(gap, other.position.distance_to(ball.position))
-			contacts.append({"kind":kind,"part":ball.last_strike_part,"team":ball.last_touch,"opponent_gap":gap,"tick":Engine.get_physics_frames()}))
+			contacts.append({"kind":kind,"part":ball.last_strike_part,"style":ball.last_strike_style,"team":ball.last_touch,"opponent_gap":gap,"tick":Engine.get_physics_frames()}))
 	for sx: float in [1.0, -1.0]:
-		for contested: bool in [false, true]:
+		for contested: bool in ([false] if variant == &"driven_cross" else [false, true]):
 			game._set_players_physics_enabled(false)
 			for actor in game._home_players + game._away_players:
 				actor.reset_for_stoppage()
@@ -63,7 +65,7 @@ func _run() -> void:
 			ball.freeze = false
 			receiver.set_physics_process(true)
 			var before := contacts.size()
-			passer._do_pass(false, toward, false, 1, receiver, &"cross", .72)
+			passer._do_pass(false, toward, false, 1, receiver, &"cross", .72, variant)
 			for frame in 155:
 				if frame % 12 == 0:
 					game._update_ai(.2)
@@ -73,13 +75,13 @@ func _run() -> void:
 			var close_contest := false
 			for event in contacts.slice(before):
 				if event.kind == &"cross": cross_count += 1
-				if event.part == &"head":
+				if event.part == &"head" or (variant == &"driven_cross" and event.style == &"volley"):
 					head_count += 1
 					if event.opponent_gap < 2.5: close_contest = true
 			_check(cross_count == 1, "Cross did not leave the actual animated boot")
-			_check(head_count >= 1, "Cross produced no aerial header; side=" + str(sx) + " contested=" + str(contested))
+			_check(head_count >= 1, "Cross produced no expected aerial reception; side=" + str(sx) + " contested=" + str(contested))
 			if contested: _check(close_contest, "Contested fixture had no opponent near the actual header")
-			print("CROSS_HEADER side=",sx," contested=",contested," contacts=",contacts.slice(before)," receiver=",receiver.position," ball=",ball.position)
+			print("CROSS_RECEPTION variant=",variant," side=",sx," contested=",contested," contacts=",contacts.slice(before)," receiver=",receiver.position," ball=",ball.position)
 			ball.freeze = true
 	for message in failures: push_error(message)
 	print("CROSS_HEADER failures=",failures.size())

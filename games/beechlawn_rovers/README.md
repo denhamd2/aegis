@@ -67,9 +67,11 @@ for measured checks and visual limitations.
 | Ground pass | E |
 | Through pass | Q |
 | Charge and shoot | Hold/release Space |
+| Finesse / power / low shot in open play | Hold Z / X / V as Space charging begins |
+| Lofted / driven / early cross | Hold Z / X / V as T charging begins |
 | Lofted pass | Hold/release R |
 | Cross into the area | Hold/release T |
-| Request a header near an incoming aerial ball | Space; arrow keys aim |
+| Header / volley / half-volley | Space near the incoming ball; arrow keys aim |
 | Standing tackle | F |
 | Slide tackle | G |
 | Switch Beechlawn player | Tab |
@@ -134,13 +136,23 @@ See [`docs/roadmap.md`](docs/roadmap.md) for the staged plan and remaining
 acceptance checks, and [`docs/backlog.md`](docs/backlog.md) for the ordered
 development backlog.
 
-### Aerial passing (BR-019, in progress)
+### Advanced shots and aerial play (BR-019, in progress)
 
-Hold/release **R** for a lofted pass or **T** for a cross; aim with the existing
-movement/aim controls. Crosses without directional input target the central
-attacking area. Assistance stays within the intended direction and available
-power range. AI receivers anticipate delivery, chest-control suitable lobs and
-attack crosses with headers. **Space** requests a timed header when the ball is
-airborne nearby; it remains the charged shot control on the ground. A missed
-contact stays loose. Driven cross variants, volleys and dedicated high keeper
-claims remain open. See [aerial-play evidence](docs/art_briefs/aerial_play_2026_10_22/brief.md).
+Hold/release **R** for a lofted pass or **T** for a cross. Hold **Z**, **X** or
+**V** when beginning a ground Space charge for finesse, power or low shots;
+with T they select lofted, driven or early crosses. The chosen variant stays
+with the command when its modifier is released. Aim with movement/arrow keys.
+Crosses without directional input target the central attacking area.
+
+**Space** near an incoming aerial ball requests a contextual header or volley.
+Prepare the command before a low rebound for a half-volley; actual ground
+contact is required. Holding Space during the aerial approach adds power;
+the authored contact timing determines the strike. AI can use these strikes,
+chest-control suitable lobs and prepare near/far-post support. Contact misses
+leave the independent ball loose. Assistance stays bounded by aim/range and
+actual boot/head reach. Finesse uses bounded spin-driven force in the air.
+
+See [advanced-shot evidence](docs/art_briefs/advanced_shots_2026_10_23/brief.md)
+and the [earlier aerial pass](docs/art_briefs/aerial_play_2026_10_22/brief.md).
+Dedicated goalkeeper high claims, left-foot strike variants, richer aerial
+contests, action/foot-plant polish and M1 play-feel/performance remain open.

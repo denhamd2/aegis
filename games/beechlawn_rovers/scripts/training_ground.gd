@@ -748,7 +748,7 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 		ai_action_chosen.emit(carrier, action_type)
 	match action.get("type", &"none"):
 		&"shoot":
-			carrier._do_shot(float(action.get("charge", 0.42)), 1.0, action.get("direction", Vector3.ZERO))
+			carrier._do_shot(float(action.get("charge", 0.42)), 1.0, action.get("direction", Vector3.ZERO), ShotPlanner.ai_style(carrier))
 			if carrier._visual_shot_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 1.1
 		&"through_pass":
@@ -764,7 +764,7 @@ func _apply_carrier_action(carrier: FootballPlayer, team_players: Array[Football
 		&"lofted_pass", &"cross":
 			carrier._do_pass(false, action.direction, false, 1.0,
 				instance_from_id(int(action.receiver_id)) as FootballPlayer if action.has("receiver_id") else null,
-				action_type, float(action.get("power", .65)))
+				action_type, float(action.get("power", .65)), action.get("variant", &"standard"))
 			if carrier._visual_pass_pending or ball.action_serial != previous_serial:
 				carrier.ai_action_cooldown = 1.0
 

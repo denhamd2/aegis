@@ -21,6 +21,9 @@ var _stick := Vector2.ZERO
 var _aim := Vector2.ZERO
 var _flat_direction := Vector3(1.0, 0.0, 0.0)
 var _shot_charge := -1.0
+var _shot_style: StringName = &"standard"
+var _visual_shot_style: StringName = &"standard"
+var _visual_shot_spin := Vector3.ZERO
 var _pending_pass: float = 0.0
 var _pending_through := false
 var _pending_shot: float = 0.0
@@ -54,6 +57,7 @@ var _visual_pass_direction := Vector3.ZERO
 var _visual_pass_receiver_id := 0
 var _visual_pass_kind: StringName = &"ground"
 var _visual_pass_power := 0.5
+var _visual_pass_variant: StringName = &"standard"
 var _visual_shot_pending := false
 var _visual_shot_direction := Vector3.ZERO
 var _visual_shot_speed := 0.0
@@ -322,6 +326,7 @@ func _update_actions(delta: float) -> void:
 	elif _pending_pass <= 0.0:
 		_pending_through = false
 	if Input.is_action_just_pressed("shoot"):
+		_shot_style = ShotPlanner.input_style()
 		_pending_shot = tuning.first_time_pass_buffer if _ball_will_reach_kick_window() else tuning.action_input_buffer
 	var shot_buffer_was_active := _pending_shot > 0.0
 	_pending_shot = maxf(0.0, _pending_shot - delta)
@@ -341,7 +346,7 @@ func _update_actions(delta: float) -> void:
 			if _can_kick() or (shot_eta > 0.0 and shot_eta <= shot_contact):
 				var playback_speed := clampf(shot_contact / maxf(shot_eta, 0.04), 1.0, 10.0) \
 					if shot_eta > 0.0 else 1.0
-				_do_shot(_shot_charge, playback_speed)
+				_do_shot(_shot_charge, playback_speed, Vector3.ZERO, _shot_style)
 				_shot_charge = -1.0
 				_pending_shot = 0.0
 				shot_charge_changed.emit(0.0)
@@ -637,7 +642,7 @@ func _action_direction() -> Vector3:
 func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 		at_animation_contact := false, playback_speed := 1.0,
 		requested_receiver: FootballPlayer = null, pass_kind: StringName = &"ground",
-		power := 0.5) -> void:
+		power := 0.5, variant: StringName = &"standard") -> void:
 	if not at_animation_contact and is_instance_valid(_footballer_visual):
 		var predicted_first_time_contact := _pending_pass > 0.0 \
 			and _time_to_kick_window() > 0.0
@@ -652,8 +657,9 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 			_visual_pass_receiver_id = requested_receiver.get_instance_id() if is_instance_valid(requested_receiver) else 0
 			_visual_pass_kind = pass_kind
 			_visual_pass_power = power
+			_visual_pass_variant = variant
 			if pass_kind in [&"lofted_pass", &"cross"]:
-				var preparation := LoftedPassPlanner.plan(self, pass_kind, _visual_pass_direction, power, requested_receiver)
+				var preparation := LoftedPassPlanner.plan(self, pass_kind, _visual_pass_direction, power, requested_receiver, variant)
 				if not preparation.is_empty():
 					var runner := preparation.get("receiver") as FootballPlayer
 					_visual_pass_receiver_id = runner.get_instance_id() if runner != null else 0
@@ -664,11 +670,11 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 		return
 	var intended_direction := requested_direction.normalized() if requested_direction.length_squared() > 0.01 else _action_direction()
 	if pass_kind in [&"lofted_pass", &"cross"]:
-		var aerial := LoftedPassPlanner.plan(self, pass_kind, intended_direction, power, requested_receiver)
+		var aerial := LoftedPassPlanner.plan(self, pass_kind, intended_direction, power, requested_receiver, variant)
 		if aerial.is_empty():
 			status_changed.emit("Aerial pass cancelled: no reachable target in the aimed lane")
 			return
-		if ball.kick_velocity(aerial.velocity, pass_kind, team_name, self):
+		if ball.kick_velocity(aerial.velocity, pass_kind, team_name, self, &"foot", variant):
 			LoftedPassPlanner.assign_runs(self, aerial)
 			status_changed.emit("Cross" if pass_kind == &"cross" else "Lofted pass")
 		return
@@ -699,7 +705,7 @@ func _do_pass(through: bool, requested_direction := Vector3.ZERO,
 
 
 func _on_visual_action_contact(action: StringName) -> void:
-	if action in [&"header", &"chest_control"]:
+	if action in [&"header", &"chest_control", &"volley", &"half_volley"]:
 		_aerial_controller.on_marker(action)
 		return
 	if action == &"receive":
@@ -733,7 +739,7 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 		return
 	if action == &"shot":
 		if ball.kick(_visual_shot_direction, _visual_shot_speed, _visual_shot_lift,
-				&"shot", team_name, self):
+				&"shot", team_name, self, &"foot", _visual_shot_style, _visual_shot_spin):
 			status_changed.emit("Shot fired")
 		return
 	var through := _visual_pass_through
@@ -742,7 +748,7 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 	if _visual_pass_receiver_id != 0 and not is_instance_valid(receiver):
 		status_changed.emit("Pass cancelled: recipient unavailable")
 		return
-	_do_pass(through, requested_direction, true, 1.0, receiver, _visual_pass_kind, _visual_pass_power)
+	_do_pass(through, requested_direction, true, 1.0, receiver, _visual_pass_kind, _visual_pass_power, _visual_pass_variant)
 
 
 func _on_visual_action_finished(action: StringName) -> void:
@@ -893,7 +899,8 @@ func _pass_lane_risk(start: Vector3, finish: Vector3) -> float:
 const FIELD_LENGTH_LIMIT := 51.0
 const FIELD_WIDTH_LIMIT := 32.5
 
-func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vector3.ZERO) -> void:
+func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vector3.ZERO,
+		style: StringName = &"standard") -> void:
 	var direction := _action_direction()
 	var target := Vector3(attack_sign * (tuning.field_length * 0.5 + 3.0), 0.7, 0.0)
 	var goal_direction := target - ball.global_position
@@ -902,11 +909,15 @@ func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vecto
 	# Gentle aim help bends intent toward the goal while preserving lateral stick input.
 	direction = requested_direction.normalized() if requested_direction.length_squared() > 0.01 \
 		else (direction * 0.56 + goal_direction * 0.44).normalized()
-	var speed := lerpf(tuning.shot_min_speed, tuning.shot_max_speed, smoothstep(0.0, 1.0, charge))
-	var lift := lerpf(0.55, 2.45, charge)
+	var strike := ShotPlanner.plan(self, charge, direction, style)
+	direction = strike.direction
+	var speed: float = strike.speed
+	var lift: float = strike.lift
 	if is_instance_valid(_footballer_visual):
 		if _visual_shot_pending:
 			return
+		_visual_shot_style = style
+		_visual_shot_spin = strike.spin
 		_visual_shot_direction = direction
 		_visual_shot_speed = speed
 		_visual_shot_lift = lift
@@ -914,7 +925,7 @@ func _do_shot(charge: float, playback_speed := 1.0, requested_direction := Vecto
 		if not _visual_shot_pending:
 			status_changed.emit("Shot action unavailable: animation is busy or missing")
 		return
-	if ball.kick(direction, speed, lift, &"shot", team_name, self):
+	if ball.kick(direction, speed, lift, &"shot", team_name, self, &"foot", style, strike.spin):
 		status_changed.emit("Shot  %d%%" % roundi(charge * 100.0))
 		_start_kick_pose(true)
 

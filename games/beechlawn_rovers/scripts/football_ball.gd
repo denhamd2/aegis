@@ -19,6 +19,10 @@ var surface_wetness := 0.0
 var last_touch: StringName = &"none"
 var last_action: StringName = &"none"
 var last_strike_part: StringName = &"foot"
+var last_strike_style: StringName = &"standard"
+var seconds_since_bounce := 99.0
+var _curve_seconds := 0.0
+var _curve_airborne := false
 var action_serial := 0
 var goalkeeper_holder: Node3D
 var _dribble_cooldowns: Dictionary[int, float] = {}
@@ -42,6 +46,8 @@ func _ready() -> void:
 	angular_damp = 0.035
 
 func _physics_process(delta: float) -> void:
+	seconds_since_bounce = minf(99, seconds_since_bounce + delta)
+	_curve_seconds = maxf(0, _curve_seconds - delta)
 	_kick_control_release = maxf(0.0, _kick_control_release - delta)
 	_dribble_control_lease = maxf(0.0, _dribble_control_lease - delta)
 	if is_instance_valid(goalkeeper_holder):
@@ -56,7 +62,12 @@ func _physics_process(delta: float) -> void:
 	# Editable ground resistance. The PhysicsMaterial handles surface collision,
 	# bounce and contact friction; this small force prevents endless coasting.
 	var ground_height := PitchSurface.height_at(global_position.x,global_position.z) if use_terrain else 0.0
+	if global_position.y > ground_height + RADIUS + .035 and _curve_seconds > 0.0 and last_action == &"shot":
+		_curve_airborne = true
+		var curve_acceleration := (angular_velocity.cross(linear_velocity) * tuning.finesse_magnus).limit_length(3.5)
+		apply_central_force(curve_acceleration * mass)
 	if global_position.y <= ground_height + RADIUS + 0.035:
+		if _curve_airborne: _curve_seconds = 0.0
 		var horizontal := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
 		if wet_surface != null and not is_instance_valid(goalkeeper_holder):
 			apply_central_force(wet_surface.drag_force(global_position, horizontal, mass, surface_wetness, delta))
@@ -197,7 +208,8 @@ func _claim_dribble_control(player: Node3D, player_gap: float) -> bool:
 
 func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 		touch_team: StringName = &"Beechlawn Rovers", actor: Node3D = null,
-		part: StringName = &"foot") -> bool:
+		part: StringName = &"foot", style: StringName = &"standard",
+		spin: Vector3 = Vector3.ZERO) -> bool:
 	if direction.length_squared() < 0.01 or speed <= 0.0:
 		return false
 	var velocity_before := linear_velocity
@@ -214,6 +226,13 @@ func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 	apply_torque_impulse(roll_axis * sphere_inertia * (speed / RADIUS))
 	last_touch = touch_team
 	last_action = kind
+	last_strike_style = style
+	seconds_since_bounce = 99.0
+	_curve_seconds = 2.0 if style == &"finesse" else 0.0
+	_curve_airborne = false
+	_velocity_before_contact = target_velocity
+	if spin.length_squared() > .01:
+		apply_torque_impulse((spin - angular_velocity) * sphere_inertia)
 	last_strike_part = part
 	if actor != null: record_touch(actor)
 	else: last_touch_player = null
@@ -225,7 +244,7 @@ func kick(direction: Vector3, speed: float, lift: float, kind: StringName,
 	return true
 
 func kick_velocity(target_velocity: Vector3, kind: StringName, touch_team: StringName,
-		actor: Node3D, part: StringName = &"foot") -> bool:
+		actor: Node3D, part: StringName = &"foot", style: StringName = &"standard") -> bool:
 	if not target_velocity.is_finite() or target_velocity.length() > 38.0:
 		return false
 	# The ballistic solver specifies absolute launch velocity. Compensate for
@@ -233,7 +252,7 @@ func kick_velocity(target_velocity: Vector3, kind: StringName, touch_team: Strin
 	# ownership, rules, audio and control-release path without repositioning.
 	var strike := target_velocity - linear_velocity * 0.16
 	var flat := Vector3(strike.x, 0, strike.z)
-	if not kick(flat.normalized(), flat.length(), strike.y, kind, touch_team, actor, part):
+	if not kick(flat.normalized(), flat.length(), strike.y, kind, touch_team, actor, part, style):
 		return false
 	# Air strikes carry modest spin rather than the ground kick's no-slip roll.
 	var axis := Vector3(target_velocity.z, 0, -target_velocity.x).normalized()
@@ -347,6 +366,8 @@ func record_touch(actor: Node3D) -> void:
 	actor_touched.emit(actor,action_serial)
 
 func release_for_restart() -> void:
+	_curve_seconds = 0.0
+	seconds_since_bounce = 99.0
 	_release_goalkeeper_holder()
 	linear_velocity=Vector3.ZERO; angular_velocity=Vector3.ZERO
 	_dribble_controller=null; _dribble_cooldowns.clear()
@@ -354,6 +375,13 @@ func release_for_restart() -> void:
 	last_touch_player=null; _last_physical_actor=null
 
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	var ground := PitchSurface.height_at(global_position.x, global_position.z) if use_terrain else 0.0
+	var ground_contact := false
+	for index in state.get_contact_count():
+		var normal := state.get_contact_local_normal(index)
+		if normal.y > .6: ground_contact = true
+	if ground_contact and global_position.y < ground + RADIUS + .12 and _velocity_before_contact.y < -1.0 and state.linear_velocity.y > .2:
+		seconds_since_bounce = 0.0
 	var physical_actor: Node3D
 	for index in state.get_contact_count():
 		var body := state.get_contact_collider_object(index) as Node3D

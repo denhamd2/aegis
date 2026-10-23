@@ -8,6 +8,7 @@ const KEYS := {
 	"pass": [KEY_E], "through_pass": [KEY_Q], "tackle": [KEY_F],
 	"slide_tackle": [KEY_G], "shoot": [KEY_SPACE],
 	"lofted_pass": [KEY_R], "cross": [KEY_T],
+	"finesse_modifier": [KEY_Z], "power_modifier": [KEY_X], "low_modifier": [KEY_V],
 	"aim_left": [KEY_LEFT], "aim_right": [KEY_RIGHT],
 	"aim_up": [KEY_UP], "aim_down": [KEY_DOWN], "debug": [KEY_F3],
 	"switch_player": [KEY_TAB],

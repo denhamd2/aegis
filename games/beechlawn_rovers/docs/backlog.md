@@ -695,8 +695,18 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     keyboard, flight, contact, miss/cancellation and contested-cross regressions
     pass. Native sequences and full-match results are recorded in
     [aerial-play evidence](art_briefs/aerial_play_2026_10_22/brief.md).
-    Next acceptance: native Mac input/motion review, then driven/lofted cross
-    variants, volleys and dedicated goalkeeper high-claim motion (BR-009).
+    Follow-up below adds the shot/cross variants and contextual boot strikes.
+  - 2026-10-23 advanced pass **in progress**: keyboard Z/X/V select finesse,
+    power and low ground shots, or lofted/driven/early T crosses. Independent
+    finesse spin, charged strength and bounded attribute/pressure error affect
+    flight. Original shared-rig volley/half-volley clips validate actual boot
+    proximity; half-volleys require a real ground bounce. AI selects contextual
+    strikes and deliveries. A zero-based export plus imported contact-pose
+    checks align the new clips with their markers. See
+    [implementation/evidence](art_briefs/advanced_shots_2026_10_23/brief.md).
+    Next acceptance: final native/M1 input and motion review; dedicated high
+    keeper claims depend on BR-009 (9/25). Left-foot variants, broader aerial
+    duels and source stride/plant polish remain open under BR-019/BR-021.
 - [ ] **BR-020 — Defending and skill moves**
   Add jockeying, shielding, teammate pressure, ball roll, step-over, body feint,
   fake shot, drag-back and directional skill turn. Each move must affect control

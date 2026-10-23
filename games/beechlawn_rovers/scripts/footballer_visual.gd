@@ -18,6 +18,7 @@ const SLIDE_TACKLE_CLIP: StringName = &"AN_Beechlawn_GroundedSlideTackle"
 const GET_UP_CLIP: StringName = &"AN_Beechlawn_GetUpFromProne"
 const SHOT_EVENT_METADATA := "res://assets/characters/mixamo/y_bot_shot_contact.json"
 const AERIAL_CLIPS := {&"header": &"AN_Beechlawn_Header", &"chest_control": &"AN_Beechlawn_ChestControl"}
+const VOLLEY_CLIPS := {&"volley": &"AN_Beechlawn_Volley", &"half_volley": &"AN_Beechlawn_HalfVolley"}
 
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_player: AnimationPlayer = $Rig/AnimationPlayer
@@ -43,6 +44,7 @@ func _ready() -> void:
 	_prepare_looping_motion()
 	_install_restart_actions()
 	_install_aerial_actions()
+	_install_volley_actions()
 	_build_locomotion_tree()
 	animation_tree.active = true
 	animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
@@ -93,6 +95,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_prepare_looping_motion()
 		_install_restart_actions()
 		_install_aerial_actions()
+		_install_volley_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -271,7 +274,7 @@ func play_receive(playback_speed: float = 1.0) -> bool:
 	return _play_action(&"receive", RECEIVE_CLIP, playback_speed)
 
 func play_aerial(action: StringName, playback_speed := 1.0) -> bool:
-	var started := _play_action(action, AERIAL_CLIPS.get(action, &""), playback_speed, true)
+	var started := _play_action(action, AERIAL_CLIPS.get(action, VOLLEY_CLIPS.get(action, &"")), playback_speed, true)
 	if started:
 		# Airborne contacts pass in a few physics ticks. Flush the new action now
 		# and call its marker in the physics animation update, not a later frame.
@@ -309,7 +312,7 @@ func play_slide_tackle() -> bool:
 
 
 func is_recovery_active() -> bool:
-	return _active_action in [&"get_up", &"header", &"chest_control"]
+	return _active_action in [&"get_up", &"header", &"chest_control", &"volley", &"half_volley"]
 
 func can_start_ball_action() -> bool:
 	return _active_action in [&"", &"turn", &"stop", &"receive"] \
@@ -441,7 +444,7 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != _active_clip or _active_action == &"":
 		return
 	var finished_action := _active_action
-	if finished_action in AERIAL_CLIPS:
+	if finished_action in AERIAL_CLIPS or finished_action in VOLLEY_CLIPS:
 		animation_player.callback_mode_method = AnimationMixer.ANIMATION_CALLBACK_MODE_METHOD_DEFERRED
 	if finished_action == &"slide_tackle" and animation_player.has_animation(GET_UP_CLIP):
 		_active_action = &"get_up"
@@ -518,6 +521,17 @@ func _install_aerial_actions() -> void:
 	source.free()
 	_install_action_contact_marker(&"header", AERIAL_CLIPS[&"header"], "res://assets/characters/shared/header_contact.json")
 	_install_action_contact_marker(&"chest_control", AERIAL_CLIPS[&"chest_control"], "res://assets/characters/shared/chest_contact.json")
+
+func _install_volley_actions() -> void:
+	var scene := load("res://assets/characters/shared/advanced_actions.glb") as PackedScene
+	var source := scene.instantiate()
+	var source_player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	for name in VOLLEY_CLIPS.values():
+		if not library.has_animation(name): library.add_animation(name, source_player.get_animation(name).duplicate())
+	source.free()
+	for action in VOLLEY_CLIPS:
+		_install_action_contact_marker(action, VOLLEY_CLIPS[action], "res://assets/characters/shared/" + str(action) + "_contact.json")
 
 func reset_to_idle() -> void:
 	end_presentation()

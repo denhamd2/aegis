@@ -97,3 +97,19 @@ marker, wide presser and live keeper, viewed through Close Broadcast. Unrelated
 actors are parked. These are controlled integration fixtures, not full-match
 chance evidence. JSON records head/chest/foot contact points and distances,
 actor identity, ball velocity and renderer. A missing aerial contact fails.
+
+## Advanced strikes
+
+The review runner also accepts `volley_close`, `half_volley_close`,
+`cross_driven_home`, `cross_driven_away`, `cross_lofted_home`, `cross_early_home`
+and `shot_finesse|shot_power|shot_low`. Close boot-strike fixtures use actual
+Shane with a scripted incoming ball; half-volley setup waits for integration
+before forecasting. Physical bounce and real authored boot contact are required.
+Cross modes use a production foot delivery and receiving AI. Ground-shot modes
+use Shane's normal shot marker with a live goalkeeper. Other players are parked;
+these are controlled integration views, separate from natural full-match tests.
+JSON records variant, strike part and half-volley bounce age as well as renderer,
+ball velocity and actor identity. Close volley/half-volley sequences capture
+one 60 Hz step per draw (72 frames, assembled at 60 fps). Wide cross and ground
+shot sequences capture six 60 Hz steps per draw (30 frames, assembled at 10 fps).
+Use each report's `sequence_fps`; software throughput is not a Mac FPS result.

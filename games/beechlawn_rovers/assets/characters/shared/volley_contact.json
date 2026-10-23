@@ -1,0 +1,10 @@
+{
+  "clip": "AN_Beechlawn_Volley",
+  "event": "ball_contact",
+  "frame": 18,
+  "fps": 60,
+  "time_seconds": 0.3,
+  "contact_height_m": 0.78,
+  "forward_m": 0.6,
+  "lateral_m": 0.09
+}

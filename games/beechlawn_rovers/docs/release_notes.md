@@ -1,3 +1,21 @@
+# Advanced shots and cross variants
+
+In open play, hold Z/X/V when starting a Space charge for finesse/power/low
+shots, or a T charge for lofted/driven/early crosses. Space near an incoming
+ball selects a header, volley or half-volley; prepare before the bounce for
+a low rebound strike. Holding Space during an aerial approach adds power.
+Variants use physical trajectories and current player attributes; finesse has
+bounded airborne spin. Original shared-rig Blender boot-strike clips preserve
+the current bodies, heads, kits and earlier motion library.
+
+Mirrored tests validate actual boot contact, a required real rebound for
+half-volleys, keyboard modifier retention, complete cross-to-header/volley
+sequences and grounded recovery on rutted turf. The six-match chance gate
+passes at 34/21 shots; Boardeaux has one low-chance scenario documented for
+future tuning. Dedicated high keeper claims, left-foot variants, finer body
+motion and native Mac feel/performance remain open. See
+[advanced-shot evidence](art_briefs/advanced_shots_2026_10_23/brief.md).
+
 # Lofted passes, crosses and aerial contact
 
 Keyboard R charges a lofted pass; T charges a cross. Both release through the
@@ -14,8 +32,8 @@ sequences. Ground contacts, movement and keeper handling regressions pass.
 Native Forward+ footage records both teams and actual contact distances.
 The six-match chance gate passes at 23/27 shots (46%/54% share); Beechlawn
 qualifies in 5/6 scenarios, Boardeaux in 6/6.
-BR-019 (19/25) remains in progress: advanced shot/cross variants, volleys,
-dedicated keeper high claims and Mac input/performance validation are open.
+This earlier slice is extended by the advanced-shot section above. BR-019
+(19/25) remains in progress; high keeper claims and Mac validation are open.
 See [aerial-play evidence](art_briefs/aerial_play_2026_10_22/brief.md).
 
 # Goalkeeper handling and recovery
