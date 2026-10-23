@@ -19,6 +19,7 @@ func _run() -> void:
 	current_scene = menu
 	await process_frame
 	check(get_nodes_in_group("football_players").is_empty(),"Title screen must not instantiate the 23 skinned match characters")
+	check(menu.canvas.get_node("BuildStamp").text.contains("v0.2.0"), "Visible build identity")
 	check(menu.start_button.has_focus(),"Start Game needs initial keyboard focus")
 	menu.open_options()
 	check(menu.options_layer.visible and menu.volume_slider.has_focus(),"Options should open and receive keyboard focus")

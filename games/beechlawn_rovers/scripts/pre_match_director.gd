@@ -7,6 +7,7 @@ const BOLD := preload("res://assets/ui/fonts/BarlowSemiCondensed-SemiBold.ttf")
 const REGULAR := preload("res://assets/ui/fonts/BarlowSemiCondensed-Regular.ttf")
 const LINEUP_GRAPHIC := preload("res://scripts/ui/lineup_graphic.gd")
 const REFEREE_GRAPHIC := preload("res://assets/ui/lineups/referee_lower_third.png")
+const BROADCAST := preload("res://scripts/ui/broadcast_style.gd")
 var match_scene: Node3D
 var camera: Camera3D
 var overlay: CanvasLayer
@@ -91,7 +92,7 @@ func start(game: Node3D) -> void:
 func _build_shots() -> void:
 	# A directed eighteen-second cold open, before the teams enter the pitch.
 	_add_shot("montage_goal", "KILMORE DRIVE", "Sunday league football", 3.0,
-		Vector3(49.3,2.7,4.4), Vector3(49.8,2.5,4.0), Vector3(52.5,2.2,2.8), Vector3(52.5,2.2,2.7), 39)
+		Vector3(49.3,.55,4.4), Vector3(49.8,.60,4.0), Vector3(52.5,1.12,2.0), Vector3(52.5,1.12,1.8), 48)
 	_add_shot("montage_net", "MATCHDAY", "Weathered posts. Familiar ground.", 3.0,
 		Vector3(55.0,.8,1.5),Vector3(54.8,.9,1.2),Vector3(53.9,.8,.2),Vector3(53.9,.9,0),38)
 	_add_shot("montage_ball", "BEECHLAWN ROVERS 27", "The match ball", 3.0,
@@ -105,7 +106,7 @@ func _build_shots() -> void:
 	var puddle := _puddle_target()
 	var wet: bool = match_scene.ball.surface_wetness > .05
 	_add_shot("montage_puddles", "THE GOALMOUTH", "Mud, water and Sunday football" if wet else "Worn grass and Sunday football", 3.0,
-		puddle+Vector3(-1.2,.4,1.0),puddle+Vector3(-.8,.3,.9),puddle,puddle+Vector3(.25,0,0),43)
+		puddle+Vector3(-1.6,.20,1.5),puddle+Vector3(-1.3,.23,1.4),puddle+Vector3(.2,.03,0),puddle+Vector3(.35,.03,0),48)
 	_add_shot("venue", "KILMORE DRIVE", "Dublin  ·  Sunday league football", 2.8,
 		Vector3(12, 5.2, 40), Vector3(7, 5.0, 38), Vector3(0, 0.7, 0), Vector3(0, 0.7, 0), 53)
 	# Two readable eleven-second team cards; keep the live walk visible to
@@ -156,10 +157,10 @@ func _enter_shot(index: int) -> void:
 	var shot := shots[index]
 	_lineup_graphic.hide()
 	match_scene.ball.visible = shot["id"] != "referee"
-	_lower_third.visible = shot["id"] not in ["walk", "referee"]
+	_lower_third.visible = shot["id"] in ["venue", "lineup"]
 	_referee_lower_third.visible = shot["id"] == "referee"
-	title_label.text = str(shot["title"])
-	subtitle_label.text = str(shot["subtitle"])
+	title_label.text = "KILMORE DRIVE" if shot["id"] == "venue" else "BEECHLAWN ROVERS"
+	subtitle_label.hide()
 	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	camera.fov = float(shot["fov"])
 	match str(shot["id"]):
@@ -236,6 +237,14 @@ func _process(delta: float) -> void:
 
 func _update_shot(time: float) -> void:
 	var shot := shots[shot_index]
+	if _lower_third.visible:
+		var caption_time := time
+		var caption_duration := float(shot["duration"])
+		if shot["id"] == "lineup":
+			caption_duration *= 0.5
+			title_label.text = "BEECHLAWN ROVERS" if time < caption_duration else "BOARDEAUX"
+			caption_time = fmod(time, caption_duration)
+		_lower_third.modulate.a = smoothstep(0.0, 0.4, caption_time) * (1.0 - smoothstep(caption_duration - 0.4, caption_duration, caption_time))
 	var linear := clampf(time / float(shot["duration"]), 0.0, 1.0)
 	var eased := smoothstep(0.0, 1.0, linear)
 	camera.global_position = (shot["from"] as Vector3).lerp(shot["to"], eased)
@@ -359,21 +368,20 @@ func _build_overlay() -> void:
 	top.add_child(crest)
 	var panel := Panel.new()
 	_lower_third = panel
-	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	panel.offset_left = 26
-	panel.offset_right = -26
+	panel.offset_right = 876
 	panel.offset_top = -137
 	panel.offset_bottom = -52
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.045, 0.085, 0.94)
-	style.border_color = Color(0.35, 0.62, 1.0)
-	style.border_width_left = 5
+	style.bg_color = Color.TRANSPARENT
 	panel.add_theme_stylebox_override("panel", style)
 	screen.add_child(panel)
+	BROADCAST.background(panel)
 	title_label = Label.new()
-	title_label.position = Vector2(22, 10)
+	title_label.position = Vector2(154, 24)
 	title_label.add_theme_font_override("font", BOLD)
-	title_label.add_theme_font_size_override("font_size", 27)
+	title_label.add_theme_font_size_override("font_size", 31)
 	panel.add_child(title_label)
 	subtitle_label = Label.new()
 	subtitle_label.position = Vector2(23, 49)

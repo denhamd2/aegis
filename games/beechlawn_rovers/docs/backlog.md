@@ -10,6 +10,13 @@ items, use the archived references and skill workflow in
 [`art_reference_implementation_plan.md`](art_reference_implementation_plan.md)
 and [`../references/README.md`](../references/README.md) before implementation.
 
+## Approved Mac playtest improvement pass — 23 October 2026
+
+27 primary items retain their original IDs. The five delivery bundles, evidence
+requirements and remaining hardware gates are tracked in
+[mac_playtest_improvements.md](mac_playtest_improvements.md). Existing mechanical
+smoke passes do not close the owner's visible match-quality findings.
+
 ## Current state
 
 Delivery is **Mac-only** as of 2026-10-22. The owner retired the football Web
@@ -1036,6 +1043,15 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 **P5 exit check:** the complete match is legible and attractive at broadcast
 distance, stays within the Mac frame-time budget, and can be built/released
 without touching Aegis artifacts.
+
+- [ ] **BR-026 — Goal and full-time presentation**
+  Scorer/teammate reactions, own goals, winner/draw treatment, handshakes and
+  a usable Rematch/Title results screen. Original shared animations; skippable,
+  clock/rules isolated and valid with reduced teams.
+- [ ] **BR-027 — Incident replays**
+  Collision-free ghost playback from bounded pose/ball snapshots. Goals and
+  major incidents replay automatically at natural stoppages; Space/Enter skips.
+  Restore the exact pending restart without duplicate events or scores.
 
 ## Risks and scope guardrails
 

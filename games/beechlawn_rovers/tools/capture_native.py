@@ -69,7 +69,7 @@ def run_bounded(command, env, deadline, log, ready_files=()):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--review-mode', choices=['movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
+    parser.add_argument('--review-mode', choices=['presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
                         default=['shane','john','des','referee'])
@@ -136,7 +136,7 @@ def main():
                        '--audio-driver','Dummy']
             if linux:
                 command += ['--display-driver','x11','--rendering-driver','vulkan']
-            command += (['--script','res://scripts/review_native_repairs.gd' if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
+            command += (['--script',('res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
             command += ['--',
                 '--capture-dir='+str(args.output),'--player='+player,'--view='+view,
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']

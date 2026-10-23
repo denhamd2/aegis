@@ -51,6 +51,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/check_ai_chances.py build/beechlawn/ai-chances
       - name: Export and verify universal Mac build
         run: |
+          python3 games/beechlawn_rovers/tools/stamp_build.py --source "$GITHUB_SHA"
           mkdir -p build/beechlawn/mac
           timeout --kill-after=5s 180s godot --headless --path games/beechlawn_rovers --export-release macOS "$PWD/build/beechlawn/mac/Beechlawn-Rovers-Mac.zip"
           python3 games/beechlawn_rovers/tools/verify_release.py build/beechlawn

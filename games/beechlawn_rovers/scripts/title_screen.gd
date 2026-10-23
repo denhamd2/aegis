@@ -121,11 +121,8 @@ func _build_main() -> void:
 	crest.size = Vector2(68,78)
 	canvas.add_child(crest)
 	_label(canvas,"BEECHLAWN ROVERS",Vector2(150,53),23,BOLD)
-	_label(canvas,"ROOTED IN DUBLIN.  READY FOR SUNDAY.",Vector2(150,87),16,BODY,MUTED)
 	_rect(canvas,Rect2(1224,52,312,40),Color(0.025,0.025,0.03,0.7))
 	_label(canvas,"KILMORE DRIVE  /  DUBLIN",Vector2(1240,60),19,BOLD)
-	_rect(canvas,Rect2(64,169,46,4),RED)
-	_label(canvas,"SUNDAY LEAGUE FOOTBALL",Vector2(126,157),19,BOLD,MUTED)
 	var title_logo := TextureRect.new()
 	title_logo.name = "TitleLogo"
 	var title_atlas := AtlasTexture.new()
@@ -146,7 +143,6 @@ func _build_main() -> void:
 	logo_material.shader = preload("res://assets/ui/title_logo_mask.gdshader")
 	title_logo.material = logo_material
 	canvas.add_child(title_logo)
-	_label(canvas,"Your club. Your pitch. Your match.",Vector2(65,413),26,BODY,MUTED)
 	_label(canvas,"CHOOSE YOUR MATCH",Vector2(65,477),17,BOLD,MUTED)
 	play_button = _button(canvas,"PLAY",Rect2(64,513,253,66))
 	watch_button = _button(canvas,"WATCH AI vs AI",Rect2(331,513,253,66))
@@ -161,8 +157,9 @@ func _build_main() -> void:
 	options_button = _button(canvas,"OPTIONS",Rect2(64,726,520,48))
 	options_button.name = "Options"
 	options_button.pressed.connect(open_options)
-	_label(canvas,"DAVID MURRAY  /  5",Vector2(1160,766),19,BOLD)
-	_label(canvas,"DEREK MITCHELL  /  3",Vector2(1160,794),17,BODY,MUTED)
+	var build_info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	var stamp := _label(canvas,"v%s  ·  %s  ·  %s" % [build_info.version, build_info.source_sha, build_info.packaged_utc],Vector2(65,794),15,BODY,MUTED)
+	stamp.name = "BuildStamp"
 	_rect(canvas,Rect2(64,826,1472,1),Color(1,1,1,0.22))
 	_label(canvas,"BEECHLAWN ROVERS   vs   BOARDEAUX",Vector2(64,845),18,BOLD)
 	_label(canvas,"11 v 11   ·   3 MINUTE MATCH",Vector2(602,845),17,BODY,MUTED)

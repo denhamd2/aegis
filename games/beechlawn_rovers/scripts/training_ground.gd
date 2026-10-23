@@ -63,6 +63,20 @@ var restart = preload("res://scripts/football_restart_controller.gd").new()
 var rules = preload("res://scripts/football_rules_controller.gd").new()
 
 func _ready() -> void:
+	var broadcast := preload("res://scripts/ui/broadcast_style.gd")
+	$HUD/Panel.hide()
+	var plate := TextureRect.new()
+	plate.name = "BlueScoreboard"
+	plate.texture = broadcast.plate()
+	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.position = Vector2(26, 24)
+	plate.size = Vector2(479, 94)
+	$HUD.add_child(plate)
+	$HUD.move_child(plate, 0)
+	broadcast.label(score_label)
+	broadcast.label(clock_label, true)
+	broadcast.label($HUD/League, true)
 	_spectator_mode = MatchSession.is_spectator()
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		var software_capture = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('software')")

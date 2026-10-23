@@ -37,6 +37,8 @@ func _run() -> void:
 			director.shot_time = float(director.shots[index]["duration"]) * 0.5
 			director._update_shot(director.shot_time)
 			check(director.camera.global_transform.is_finite(), "Finite intro camera")
+			check(director._lower_third.visible == (director.shots[index]["id"] in ["venue", "lineup"]), "Only venue and team-name generic lower thirds")
+			if index == 0: check(director.camera.position.y < .7, "Opening goal shot is near ground level")
 			if director.shots[index]["id"] == "referee":
 				check(director._referee_lower_third.visible, "Referee lower third follows team graphics")
 				check(director._referee_name.text == "DES FEENEY", "Official name is typeset in lower third")

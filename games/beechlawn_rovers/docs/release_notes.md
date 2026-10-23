@@ -1,3 +1,15 @@
+# Beechlawn Rovers 27 — v0.2.0
+
+Mac-only presentation update: build version/source/packaging UTC on title,
+photographic Murray/Denham artwork, promotional/name captions removed, matching
+blue scoreboard and venue/team/referee captions, lower goal/puddle intro views.
+
+Title/intro/HUD smoke checks and native Forward+ software captures pass.
+Gameplay improvements from the latest Mac playtest remain in progress; this
+release does not claim to close those findings or M1 performance acceptance.
+
+---
+
 # Advanced shots and cross variants
 
 In open play, hold Z/X/V when starting a Space charge for finesse/power/low
