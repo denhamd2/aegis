@@ -28,7 +28,7 @@ func _run() -> void:
 		var controller := keeper._goalkeeper_controller
 		controller.reset_for_stoppage()
 		_shot(ball, keeper, Vector3(.3 * sx, 1, .8), -4 * sx)
-		controller.update_before_move(.35)
+		_prepare(controller, .35)
 		_check(controller.try_save() and ball.last_action == &"goalkeeper_save", keeper,
 			"wide slow ball caught at full stretch instead of parried")
 		ball.release_for_restart()
@@ -40,18 +40,18 @@ func _run() -> void:
 			controller.reset_for_stoppage()
 			keeper.position.x = placement.x * sx
 			_shot(ball, keeper, Vector3((placement.y - placement.x) * sx, 1, 0), -4 * sx)
-			controller.update_before_move(.35)
+			_prepare(controller, .35)
 			_check(not controller.try_save(), keeper, "illegal handling outside own penalty area")
 		keeper.position = Vector3(-49.5 * sx, 0, 20.0)
 		controller.reset_for_stoppage()
 		_shot(ball, keeper, Vector3(.3 * sx, 1, .4), -4 * sx)
-		controller.update_before_move(.35)
+		_prepare(controller, .35)
 		_check(not controller.try_save(), keeper, "handling beyond the penalty-area side")
 		keeper.position.z = 0
 
 		controller.reset_for_stoppage()
-		_shot(ball, keeper, Vector3(.3 * sx, 1, .8), -18 * sx)
-		controller.update_before_move(.35)
+		_shot(ball, keeper, Vector3(.55 * sx, 1, .8), -18 * sx)
+		_prepare(controller, .35)
 		_check(controller.try_save(), keeper, "first reachable parry failed")
 		_check(controller.is_recovering(), keeper, "stretch save did not commit recovery")
 		_shot(ball, keeper, Vector3(.5 * sx, 1, -.45), -18 * sx)
@@ -101,7 +101,7 @@ func _run() -> void:
 			"distant slow rebound was remotely claimed or not approached")
 		controller.reset_for_stoppage()
 		_shot(ball, keeper, Vector3(.45 * sx, 1, 0), -2 * sx)
-		controller.update_before_move(.35)
+		_prepare(controller, .35)
 		_check(controller.try_save() and ball.goalkeeper_is_holding(keeper), keeper,
 			"body-supported slow catch regressed")
 		controller.reset_for_stoppage()
@@ -124,3 +124,9 @@ func _shot(ball: FootballBall, keeper: FootballPlayer, offset: Vector3, speed: f
 	ball.last_touch = &"Boardeaux" if keeper.team_name == &"Beechlawn Rovers" else &"Beechlawn Rovers"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
+
+func _prepare(controller: GoalkeeperController, delta: float) -> void:
+	controller.update_before_move(delta)
+	var visual := controller.keeper.get_node("Visual") as FootballerVisual
+	if controller._save_animation_started:
+		visual.animation_player.advance(.25 / maxf(absf(visual.animation_player.get_playing_speed()), .01))

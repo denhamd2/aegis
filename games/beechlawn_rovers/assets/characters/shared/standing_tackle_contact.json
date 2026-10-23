@@ -1,0 +1,7 @@
+{
+  "clip": "AN_Beechlawn_StandingTackle",
+  "event": "ball_contact",
+  "frame": 15,
+  "fps": 60,
+  "time_seconds": 0.25
+}

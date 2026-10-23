@@ -158,7 +158,7 @@ func _build_main() -> void:
 	options_button.name = "Options"
 	options_button.pressed.connect(open_options)
 	var build_info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
-	var stamp := _label(canvas,"v%s  ·  %s  ·  %s" % [build_info.version, build_info.source_sha, build_info.packaged_utc],Vector2(65,794),15,BODY,MUTED)
+	var stamp := _label(canvas,"v%s  ·  %s  ·  %s" % [build_info.version, String(build_info.source_sha).left(7), build_info.packaged_utc],Vector2(65,794),15,BODY,MUTED)
 	stamp.name = "BuildStamp"
 	_rect(canvas,Rect2(64,826,1472,1),Color(1,1,1,0.22))
 	_label(canvas,"BEECHLAWN ROVERS   vs   BOARDEAUX",Vector2(64,845),18,BOLD)

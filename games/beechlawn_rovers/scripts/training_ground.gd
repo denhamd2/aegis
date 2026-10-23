@@ -107,7 +107,7 @@ func _ready() -> void:
 		_kickoff_ai_delay = 1.0
 		$HUD/Controls.text = "WATCHING AI vs AI\nC  Camera   Esc  Title screen"
 	else:
-		$HUD/Controls.text += "\nC  Camera   Esc  Title screen"
+		$HUD/Controls.text += "\nCtrl Jockey   J Contain   H Teammate pressure\nC  Camera   Esc  Title screen"
 	build_pitch()
 	build_goals()
 	build_park_edge()
@@ -186,6 +186,7 @@ func _freeze_capture(_arguments: Array) -> void:
 func _physics_process(delta: float) -> void:
 	if _intro_active:
 		return
+	_update_teammate_pressure()
 	for entry in _net_impacts.values():
 		entry["age"] = minf(2.0,float(entry["age"])+delta)
 		(entry["material"] as ShaderMaterial).set_shader_parameter("impact_age",entry["age"])
@@ -667,6 +668,22 @@ func _update_ai(delta: float) -> void:
 		_update_team_ai(actors, _nearest_outfielder(actors, intercept), ball_position, intercept,
 			opposition, _transition_team, _transition_time_left, _tactical_possession)
 	_next_home_ai = not _next_home_ai
+
+func _update_teammate_pressure() -> void:
+	if _spectator_mode or not Input.is_action_pressed("teammate_pressure") or ball.last_touch == player.team_name: return
+	var helper: FootballPlayer
+	var distance := 18.0
+	for actor in _home_players:
+		if actor == player or actor.profile.role == "goalkeeper": continue
+		var gap := actor.position.distance_to(ball.position)
+		if gap < distance:
+			distance = gap
+			helper = actor
+	if helper != null:
+		var offset := ball.position - helper.position
+		offset.y = 0
+		helper.ai_move_direction = offset.normalized() if offset.length() > 1.0 else Vector3.ZERO
+		helper.ai_sprinting = distance > 3.0 and helper.stamina > 15.0
 
 func _best_interception_position(team_players: Array[FootballPlayer], ball_position: Vector2) -> Vector2:
 	if ball.position.y > .7:

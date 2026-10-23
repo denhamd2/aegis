@@ -45,6 +45,7 @@ func _ready() -> void:
 	_install_restart_actions()
 	_install_aerial_actions()
 	_install_volley_actions()
+	_install_match_motion()
 	_build_locomotion_tree()
 	# Reception/kick setup reads this skeleton's boot pose in physics. Idle
 	# evaluation held the running pose for several ticks on slow renders.
@@ -99,6 +100,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_install_restart_actions()
 		_install_aerial_actions()
 		_install_volley_actions()
+		_install_match_motion()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -285,10 +287,8 @@ func play_aerial(action: StringName, playback_speed := 1.0) -> bool:
 		animation_player.advance(0.0)
 	return started
 
-func play_keeper_save() -> bool:
-	if not animation_player.has_animation(&"AN_Beechlawn_KeeperSave"):
-		return false
-	return _play_action(&"keeper_save",&"AN_Beechlawn_KeeperSave",1.0,true)
+func play_keeper_save(style: StringName = &"KeeperCatch", preparation: float = .25) -> bool:
+	return _play_action(&"keeper_save", StringName("AN_Beechlawn_" + String(style)), clampf(.25 / maxf(preparation,.09),1,2.8), true, true)
 
 
 func play_stop() -> bool:
@@ -503,6 +503,46 @@ func _install_action_contact_marker(action: StringName, clip_name: StringName,
 			{"method": "on_action_contact_marker", "args": []})
 	library.remove_animation(clip_name)
 	library.add_animation(clip_name, clip)
+
+func _install_match_motion() -> void:
+	var source := (load("res://assets/characters/shared/match_motion.glb") as PackedScene).instantiate()
+	var source_player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	for clip in source_player.get_animation_list():
+		if clip == "RESET": continue
+		var target := StringName(String(clip).trim_suffix("_Arms"))
+		var motion := source_player.get_animation(clip).duplicate() as Animation
+		if String(clip).ends_with("_Arms") and library.has_animation(target):
+			# Runtime export has leg-retarget corrections absent from early source
+			# actions. Replace only arm tracks; keep all shipping leg/root keys.
+			var arms := motion
+			motion = library.get_animation(target).duplicate() as Animation
+			for index in range(motion.get_track_count()-1, -1, -1):
+				if _arm_track(motion.track_get_path(index)): motion.remove_track(index)
+			for index in arms.get_track_count():
+				if _arm_track(arms.track_get_path(index)): arms.copy_track(index, motion)
+			motion.loop_mode = Animation.LOOP_LINEAR
+		if library.has_animation(target): library.remove_animation(target)
+		library.add_animation(target, motion)
+	source.free()
+	_install_action_contact_marker(&"standing_tackle", &"AN_Beechlawn_StandingTackle", "res://assets/characters/shared/standing_tackle_contact.json")
+
+static func _arm_track(path: NodePath) -> bool:
+	if path.get_subname_count() == 0: return false
+	return String(path.get_subname(0)) in ["mixamorig_LeftArm", "mixamorig_LeftForeArm", "mixamorig_LeftHand", "mixamorig_RightArm", "mixamorig_RightForeArm", "mixamorig_RightHand"]
+
+func play_standing_tackle() -> bool:
+	return _play_action(&"standing_tackle", &"AN_Beechlawn_StandingTackle", 1.0, true, true)
+
+func hand_positions() -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	var skeletons := get_node("Rig").find_children("*", "Skeleton3D", true, false)
+	if skeletons.is_empty(): return result
+	var skeleton := skeletons[0] as Skeleton3D
+	for side in ["Left", "Right"]:
+		var id := skeleton.find_bone("mixamorig_" + side + "Hand")
+		if id >= 0: result.append(skeleton.to_global(skeleton.get_bone_global_pose(id).origin))
+	return result
 
 func _install_restart_actions() -> void:
 	var scene := load("res://assets/characters/shared/restart_actions.glb") as PackedScene

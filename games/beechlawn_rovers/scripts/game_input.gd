@@ -6,6 +6,7 @@ const KEYS := {
 	"move_up": [KEY_W], "move_down": [KEY_S],
 	"sprint": [KEY_SHIFT], "close_control": [KEY_CTRL],
 	"pass": [KEY_E], "through_pass": [KEY_Q], "tackle": [KEY_F],
+	"contain": [KEY_J], "teammate_pressure": [KEY_H],
 	"slide_tackle": [KEY_G], "shoot": [KEY_SPACE],
 	"lofted_pass": [KEY_R], "cross": [KEY_T],
 	"finesse_modifier": [KEY_Z], "power_modifier": [KEY_X], "low_modifier": [KEY_V],

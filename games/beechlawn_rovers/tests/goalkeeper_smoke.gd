@@ -34,7 +34,7 @@ func _run_checks() -> void:
 	ball.last_action = &"shot"
 	ball.action_serial += 1
 	var original_position := home_keeper.global_position
-	controller.update_before_move(0.35)
+	_prepare(controller, .35)
 	assert(home_keeper.global_position == original_position,
 		"Goalkeeper teleported instead of receiving a movement target")
 	var shot_target: Vector3 = home_keeper.get_meta("goalkeeper_target")
@@ -48,7 +48,7 @@ func _run_checks() -> void:
 	ball.last_touch = &"Boardeaux"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
-	controller.update_before_move(0.35)
+	_prepare(controller, .35)
 	var wide_target: Vector3 = home_keeper.get_meta("goalkeeper_target")
 	assert(is_equal_approx(wide_target.z, controller._goal_line_position().z),
 		"Keeper chased a shot projected outside the goal frame")
@@ -63,7 +63,7 @@ func _run_checks() -> void:
 	assert(ball.last_touch == &"Boardeaux", "Out-of-reach save changed the ball touch")
 	ball.global_position = Vector3(-49.0, 1.0, 0.0)
 	ball.action_serial += 1
-	controller.update_before_move(0.35)
+	_prepare(controller, .35)
 	assert(controller.try_save(), "Keeper failed to parry a shot at close contact")
 	assert(ball.last_touch == home_keeper.team_name, "Save did not register keeper possession touch")
 	assert(ball.last_action == &"goalkeeper_save", "Save action was not recorded")
@@ -78,7 +78,7 @@ func _run_checks() -> void:
 	ball.last_touch = &"Boardeaux"
 	ball.last_action = &"shot"
 	ball.action_serial += 1
-	controller.update_before_move(0.35)
+	_prepare(controller, .35)
 	assert(controller.try_save(), "Keeper failed to claim a slow close-range shot")
 	assert(ball.goalkeeper_is_holding(home_keeper), "Claim did not establish keeper possession")
 	assert(ball.last_action == &"goalkeeper_catch", "Claim was not recorded as a catch")
@@ -92,3 +92,9 @@ func _run_checks() -> void:
 
 	print("Beechlawn goalkeeper reaction, catch and distribution checks passed")
 	quit(0)
+
+func _prepare(controller: GoalkeeperController, delta: float) -> void:
+	controller.update_before_move(delta)
+	var visual := controller.keeper.get_node("Visual") as FootballerVisual
+	if controller._save_animation_started:
+		visual.animation_player.advance(.25 / maxf(absf(visual.animation_player.get_playing_speed()), .01))

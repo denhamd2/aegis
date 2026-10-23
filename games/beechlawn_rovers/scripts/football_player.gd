@@ -32,6 +32,7 @@ var _debug := false
 var _kick_time := -1.0
 var _kick_duration := 0.0
 var _kick_side := 1.0
+var _standing_pending := false
 var _tackle_cooldown := 0.0
 var _slide_tackle_time := 0.0
 var _slide_contact_time := 0.0
@@ -168,8 +169,16 @@ func _update_locomotion(delta: float) -> void:
 	camera_right = camera_right.normalized()
 	camera_forward = camera_forward.normalized()
 	var recovering := _keeper_is_recovering() or (is_instance_valid(_footballer_visual) and _footballer_visual.is_recovery_active())
+	var defending := ball != null and ball.last_touch != team_name and not ball.goalkeeper_is_holding(self)
+	var jockey := controlled_by_human and defending and Input.is_action_pressed("close_control")
+	var contain := controlled_by_human and defending and Input.is_action_pressed("contain")
 	var sliding := _slide_tackle_time > 0.0
 	var desired := Vector3.ZERO if recovering else (_slide_tackle_direction if sliding else (ai_move_direction if not controlled_by_human else (camera_right * _stick.x - camera_forward * _stick.y)))
+	if contain:
+		var offset := ball.global_position - global_position
+		offset.y = 0
+		desired = offset.normalized() if offset.length() > 1.7 else Vector3.ZERO
+		_stick = Vector2.RIGHT if desired.length_squared() > 0 else Vector2.ZERO
 	if not controlled_by_human and (_visual_pass_pending or _visual_shot_pending):
 		# A staggered tactical lane change must not turn the kicking body away
 		# during its short setup. Ball-relative speed still adjusts every tick.
@@ -182,7 +191,7 @@ func _update_locomotion(delta: float) -> void:
 	var sprint_requested := not recovering and (Input.is_action_pressed("sprint") if controlled_by_human else ai_sprinting) and _stick.length() > 0.1
 	var sprint_input := sprint_requested
 	var close_control := Input.is_action_pressed("close_control") if controlled_by_human else false
-	var speed_scale := 0.56 if close_control else 1.0
+	var speed_scale := .52 if jockey or contain else (.56 if close_control else 1.0)
 	var is_ai_goalkeeper := not controlled_by_human and profile != null and profile.role == "goalkeeper"
 	var target_speed := 0.0 if recovering else (4.8 if sliding else (tuning.goalkeeper_move_speed if is_ai_goalkeeper else (tuning.sprint_speed if sprint_input else tuning.jog_speed)))
 	if _balance_stagger_time > 0.0:
@@ -212,7 +221,7 @@ func _update_locomotion(delta: float) -> void:
 	var facing_intent := desired
 	if _aerial_controller.facing.length_squared() > .01:
 		facing_intent = _aerial_controller.facing
-	if is_ai_goalkeeper:
+	if is_ai_goalkeeper or jockey or contain:
 		facing_intent = ball.global_position - global_position
 		facing_intent.y = 0.0
 	if facing_intent.length_squared() > 0.015:
@@ -578,7 +587,6 @@ func _attribute_value(attribute_name: StringName) -> float:
 func _attempt_tackle() -> bool:
 	if ball == null or _tackle_cooldown > 0.0:
 		return false
-	if _challenge_foul(false): return false
 	var to_ball := ball.global_position - global_position
 	to_ball.y = 0.0
 	var distance := to_ball.length()
@@ -591,6 +599,19 @@ func _attempt_tackle() -> bool:
 		if forward.normalized().dot(to_ball / distance) < -0.25:
 			status_changed.emit("Tackle missed: turn toward the ball")
 			return false
+	if is_instance_valid(_footballer_visual) and not _standing_pending:
+		if not _footballer_visual.play_standing_tackle(): return false
+		_standing_pending = true
+		_tackle_cooldown = .85
+		status_changed.emit("Standing tackle")
+		return true
+	return _resolve_standing_tackle()
+
+func _resolve_standing_tackle() -> bool:
+	_standing_pending = false
+	if ball == null or ball.global_position.distance_to(global_position) > _tackle_reach() or ball.position.y > .8: return false
+	if is_instance_valid(_footballer_visual) and ball.global_position.distance_to(_receive_contact_position()) > .48: return false
+	if _challenge_foul(false): return false
 	var clearance := _action_direction()
 	if clearance.length_squared() < 0.01:
 		clearance = Vector3(attack_sign, 0.0, 0.0)
@@ -622,9 +643,9 @@ func _start_tackle_pose() -> void:
 	_kick_duration = 0.36
 	_kick_side = -1.0
 
-func _start_goalkeeper_save_pose() -> void:
+func _start_goalkeeper_save_pose(style: StringName = &"KeeperCatch", preparation: float = .25) -> void:
 	if is_instance_valid(_footballer_visual):
-		_footballer_visual.play_keeper_save()
+		_footballer_visual.play_keeper_save(style, preparation)
 	_save_pose_time = 0.36
 
 func _action_direction() -> Vector3:
@@ -708,6 +729,9 @@ func _on_visual_action_contact(action: StringName) -> void:
 	if action in [&"header", &"chest_control", &"volley", &"half_volley"]:
 		_aerial_controller.on_marker(action)
 		return
+	if action == &"standing_tackle":
+		_resolve_standing_tackle()
+		return
 	if action == &"receive":
 		if ball.receive_touch(self, _receive_contact_position(), _flat_direction):
 			receive_target_time = 0.0
@@ -753,6 +777,7 @@ func _resolve_pending_kick_contact(delta: float) -> void:
 
 func _on_visual_action_finished(action: StringName) -> void:
 	_aerial_controller.on_finished(action)
+	if action == &"standing_tackle": _standing_pending = false
 	if _contact_wait_action == action:
 		_contact_wait_action = &""
 		_contact_wait_remaining = 0.0
@@ -1005,6 +1030,7 @@ func reset_for_stoppage() -> void:
 	_visual_pass_pending=false; _visual_shot_pending=false
 	_visual_pass_receiver_id=0
 	_slide_contact_pending=false; _slide_tackle_time=0
+	_standing_pending = false
 	_balance_stagger_time=0
 	set_meta("move_speed",0.0)
 	if is_instance_valid(_footballer_visual):

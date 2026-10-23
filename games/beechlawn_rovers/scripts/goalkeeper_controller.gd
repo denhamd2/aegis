@@ -17,6 +17,7 @@ var _has_intercept := false
 var _distribution_remaining := 0.0
 var _intercept_seconds := 0.0
 var _save_animation_started := false
+var _save_elapsed := 0.0
 var _recovery_remaining := 0.0
 
 func configure(player: FootballPlayer, match_ball: FootballBall) -> void:
@@ -35,13 +36,21 @@ func update_before_move(delta: float) -> void:
 			_distribute_to_teammate()
 		return
 	_observe_action()
+	if _save_animation_started and _shot_active:
+		_save_elapsed += delta
+		if _save_elapsed > 1.3:
+			_shot_active = false
+			_recovery_remaining = .2
 	if _shot_active:
 		_has_intercept = _predict_goalmouth_intercept()
 		_reaction_remaining = maxf(0.0, _reaction_remaining - delta)
 	if not is_recovering() and _shot_active and _has_intercept and _reaction_remaining <= 0.0 \
-			and _intercept_seconds <= 0.24 and not _save_animation_started:
-		keeper._start_goalkeeper_save_pose()
+			and _intercept_seconds <= 0.45 and not _save_animation_started:
+		keeper._start_goalkeeper_save_pose(_save_style(), maxf(.09,_intercept_seconds-.04))
 		_save_animation_started = true
+	if _save_animation_started and _shot_active and not _has_intercept and ball.position.x * keeper.attack_sign < keeper.position.x * keeper.attack_sign:
+		_shot_active = false
+		_recovery_remaining = .35
 	if is_recovering():
 		keeper.ai_move_direction = Vector3.ZERO
 		keeper.ai_sprinting = false
@@ -65,7 +74,7 @@ func update_before_move(delta: float) -> void:
 func try_save() -> bool:
 	if not is_instance_valid(keeper) or not is_instance_valid(ball):
 		return false
-	if is_recovering() or not _inside_handling_area():
+	if _recovery_remaining > 0 or not _inside_handling_area():
 		return false
 	if _try_gather_rebound():
 		return true
@@ -85,8 +94,9 @@ func try_save() -> bool:
 	var reach := keeper.tuning.goalkeeper_save_reach if keeper.tuning != null else 0.95
 	# A close physical contact window avoids remote or full-field save assistance.
 	var height := ball.global_position.y - keeper.global_position.y
-	if flat_separation > reach or height < 0.04 or height > 1.85:
+	if flat_separation > reach + .5 or height < 0.04 or height > 2.25:
 		return false
+	if not _hands_reach_ball(): return false
 	var handling := 50.0
 	if keeper.profile != null and keeper.profile.attributes != null:
 		handling = keeper.profile.attributes.goalkeeper_handling
@@ -94,7 +104,7 @@ func try_save() -> bool:
 	var catch_width := keeper.tuning.goalkeeper_catch_half_width if keeper.tuning != null else 0.42
 	# A two-handed catch needs the ball supported in front of the body. A slow
 	# ball at full lateral stretch is still a parry, not a secure catch.
-	if absf(separation.z) <= catch_width and height >= 0.55 and height <= 1.55 \
+	if absf(separation.z) <= catch_width and height >= 0.55 and height <= 2.15 \
 			and ball.linear_velocity.length() <= catch_speed and ball.goalkeeper_claim(keeper):
 		_commit_recovery(false)
 		_distribution_remaining = 0.58
@@ -115,6 +125,31 @@ func try_save() -> bool:
 	_shot_active = false
 	_has_intercept = false
 	return true
+
+func _save_style() -> StringName:
+	var target := _predicted_intercept if _has_intercept else ball.global_position
+	var local := keeper.to_local(target)
+	var height := target.y - keeper.global_position.y
+	if height > 1.65: return &"KeeperHigh"
+	if height < .55:
+		if absf(local.x) < .35: return &"KeeperLowCenter"
+		return &"KeeperLowLeft" if local.x < 0 else &"KeeperLowRight"
+	if absf(local.x) > .45:
+		return &"KeeperDiveLeft" if local.x < 0 else &"KeeperDiveRight"
+	return &"KeeperCatch"
+
+func _hands_reach_ball() -> bool:
+	var visual := keeper.get_node_or_null("Visual") as FootballerVisual
+	if visual == null: return true # Retained physics-only fixture.
+	if not _save_animation_started: return false
+	var hands := visual.hand_positions()
+	for hand in hands:
+		# A bounded swept contact catches a fast ball crossing a glove between
+		# fixed ticks. No body-radius save or relocation of keeper/ball.
+		var from := ball.global_position - ball.linear_velocity / 60.0
+		var near := Geometry3D.get_closest_point_to_segment(hand, from, ball.global_position)
+		if hand.distance_to(near) <= .34: return true
+	return false
 
 func _can_follow_rebound() -> bool:
 	# Own physical parries only. A teammate's deliberate back-pass must never
@@ -139,6 +174,7 @@ func _try_gather_rebound() -> bool:
 	_commit_recovery(false)
 	_distribution_remaining = 0.58
 	_save_animation_started = false
+	_save_elapsed = 0.0
 	_begin_save_pose()
 	_shot_active = false
 	_has_intercept = false
@@ -146,13 +182,14 @@ func _try_gather_rebound() -> bool:
 	return true
 
 func is_recovering() -> bool:
-	return _recovery_remaining > 0.0
+	return _recovery_remaining > 0.0 or (_save_animation_started and _shot_active)
 
 func reset_for_stoppage() -> void:
 	_recovery_remaining = 0.0
 	_shot_active = false
 	_has_intercept = false
 	_save_animation_started = false
+	_save_elapsed = 0.0
 	_distribution_remaining = 0.0
 	_observed_action_serial = ball.action_serial if is_instance_valid(ball) else -1
 
@@ -175,10 +212,11 @@ func _observe_action() -> void:
 	_reaction_remaining = _reaction_time() if _shot_active else 0.0
 	_has_intercept = false
 	_save_animation_started = false
+	_save_elapsed = 0.0
 
 func _begin_save_pose() -> void:
 	if not _save_animation_started:
-		keeper._start_goalkeeper_save_pose()
+		keeper._start_goalkeeper_save_pose(_save_style(), maxf(.09,_intercept_seconds-.04))
 		_save_animation_started = true
 
 func _safe_parry_side() -> float:

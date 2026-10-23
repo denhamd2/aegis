@@ -1,3 +1,15 @@
+# Shared movement and defending — bundle 2
+
+Running arms stay forward without replacing shipping leg/root animation keys.
+F uses an authored standing tackle; G slides. Ctrl jockeys in defence, J contains,
+H requests one nearby teammate's pressure. Keepers use new shared save poses,
+observed arrival-time preparation and actual glove reach for shot contact.
+Mirrored live low-save, legal handling/recovery, arm/pose and keyboard checks pass;
+native Forward+ low-save captures pass. Full-body dive polish and M1 feel remain
+open. Attacking/set-piece and celebration/replay work continues in later bundles.
+
+---
+
 # Beechlawn Rovers 27 — v0.2.0
 
 Mac-only presentation update: build version/source/packaging UTC on title,

@@ -1,0 +1,146 @@
+{
+  "source_sha256": "5c61518d38f9bd0e9c4aa4e60e2d04719c6487b2dfc13f96e485af860739ebd4",
+  "fps": 60,
+  "clips": {
+    "AN_Beechlawn_Jog_Arms": {
+      "minimum_wrist_forward_cm": 7.000001907348633,
+      "duration": 0.8
+    },
+    "AN_Beechlawn_Sprint_Arms": {
+      "minimum_wrist_forward_cm": 7.000006675720215,
+      "duration": 0.5333333333333333
+    },
+    "AN_Beechlawn_WarmupJog_Arms": {
+      "minimum_wrist_forward_cm": 7.009756088256836,
+      "duration": 0.75
+    },
+    "AN_Beechlawn_StandingTackle": {
+      "contact_seconds": 0.25,
+      "duration": 0.9,
+      "wrists_cm": {
+        "Left": [
+          28.999996185302734,
+          116.00000762939453,
+          24.999996185302734
+        ],
+        "Right": [
+          -29.00002670288086,
+          116.0000228881836,
+          25.0000057220459
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperCatch": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          10.000005722045898,
+          114.00000762939453,
+          32.99998474121094
+        ],
+        "Right": [
+          -10.000022888183594,
+          114.0000228881836,
+          33.00000762939453
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperLowCenter": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          7.448568344116211,
+          25.295867919921875,
+          31.634971618652344
+        ],
+        "Right": [
+          -7.447904586791992,
+          25.29472541809082,
+          31.63620948791504
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperLowLeft": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          52.84535217285156,
+          32.619380950927734,
+          23.899906158447266
+        ],
+        "Right": [
+          23.398054122924805,
+          38.21421813964844,
+          18.41429901123047
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperLowRight": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          -23.39200210571289,
+          38.21596908569336,
+          18.41250991821289
+        ],
+        "Right": [
+          -52.84114456176758,
+          32.621395111083984,
+          23.897851943969727
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperDiveLeft": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          62.999996185302734,
+          111.99999237060547,
+          32.999996185302734
+        ],
+        "Right": [
+          46.4117431640625,
+          112.65110778808594,
+          30.623910903930664
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperDiveRight": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          -46.41261291503906,
+          112.65066528320312,
+          30.624717712402344
+        ],
+        "Right": [
+          -62.99999237060547,
+          112.00003051757812,
+          32.9999885559082
+        ]
+      }
+    },
+    "AN_Beechlawn_KeeperHigh": {
+      "contact_seconds": 0.25,
+      "duration": 1.3,
+      "wrists_cm": {
+        "Left": [
+          11.084831237792969,
+          185.39698791503906,
+          28.670108795166016
+        ],
+        "Right": [
+          -11.08559799194336,
+          185.39633178710938,
+          28.66960906982422
+        ]
+      }
+    }
+  }
+}

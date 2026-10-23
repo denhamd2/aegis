@@ -37,5 +37,6 @@ BR-026 and BR-027 are appended (27 total).
 
 - Baseline: ground/aerial controls, cross/header/volley, tackling and physical
   net contact tests pass, but do not establish visible match quality.
-- Bundle 1: implementation in progress; evidence/release pending.
-- Bundles 2–5: approved, pending implementation and acceptance.
+- Bundle 1: completed presentation scope, native evidence in `art_briefs/mac_presentation_2026_10_23/`; released source caddc00f1f47, universal Mac package verified by CI run 39934686896; public download HTTP 200.
+- Bundle 2: implementation and focused contact/pose/control checks pass; native mirrored low-save sequences pass. Further full-body diving polish and native M1 feel remain open. Release gate pending.
+- Bundles 3–5: approved, pending implementation and acceptance.
