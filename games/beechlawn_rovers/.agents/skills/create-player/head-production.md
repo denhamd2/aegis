@@ -93,6 +93,12 @@ as linear and retain the registered neck interface.
 
 ## 3. Fit dimensional hair and facial hair
 
+Treat the visible eyelid opening separately from the globe and iris. Compare
+its height/width and corner curvature with the original portrait; rounder eyes
+need fitted lid geometry, not larger iris artwork or a protruding globe. Retain
+eye centres/gaze and age-specific brow folds. Check neutral, partial and full
+blink again after changing the aperture.
+
 Fit scalp, receding hairline, sides/back, crown and parting to this skull.
 Review the root shell alone, strands alone and both together. A smooth cap
 with sparse tufts reads as painted hair; uniform thick clumps read as a
@@ -113,6 +119,13 @@ polygons, and project entire curved fibres onto the fitted facial surface to
 avoid jagged roots or floating jaw spikes. Preserve deterministic strand
 placement when changing pigment alone.
 
+An opaque facial undercoat made a solid black chin shape in native review;
+use soft anatomical pigment and fitted fibres there. For scalp undergrowth,
+feather the coverage and check mip stability: binary random alpha can become
+obvious black dots. Use continuous coverage and directional colour grain,
+then clipped/coverage-antialiased roots beneath dimensional strands. A bald
+crown can still have dense side/back hair; use original side views to fit it.
+
 **Gate:** head turns and close/profile views show fitted dimensional hair and
 readable facial hair, without exposed cap edges or coarse repeated clumps.
 Count groom geometry/alpha over the full roster: Des's single groom is used
@@ -122,6 +135,20 @@ negative examples; validate the latest exported groom rather than inheriting
 approval from the corrected generator.
 
 ## 4. Prove the complete source-to-runtime chain
+
+The current saved individual sculpt owns its painted surfaces and expression
+shapes. Normal regeneration verifies its captured geometry, then copies that
+finish; it must reject a newer uncaptured sculpt instead of rebaking an older
+recipe over it. The legacy bootstrap refuses to overwrite an existing source.
+Edit/capture current sources and use narrow surface/groom rebuilds as needed.
+Keep live material references for a clay review; appending from the same
+currently open `.blend` crashed this Blender version's library loader.
+
+For per-player body fullness, deform body, garments, head/neck and groom with
+the same field on the shared rig. Preserve the neutral mesh and validate the
+collar and jaw in poses. Copy named morph weights and individual material
+overrides when swapping distance meshes; reuse atlases across LODs. A smoother
+derived mesh alone does not establish better likeness or a sealed neckline.
 
 Saving a `.blend` does not update its sculpt delta. Capture the edited neutral
 head **and both eyes**, validate the master revision/identity, rebuild the

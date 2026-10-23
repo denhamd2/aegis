@@ -64,7 +64,11 @@ func sample(delta: float, recording: bool) -> void:
 		offset=_write(data,offset,actor.global_position,actor.global_basis.get_rotation_quaternion())
 		var skeleton := skeletons[index]
 		if skeleton != null:
-			for bone in skeleton.get_bone_count(): offset=_write(data,offset,skeleton.get_bone_pose_position(bone),skeleton.get_bone_pose_rotation(bone))
+			var visual := actor.get_node("Visual") as FootballerVisual
+			var pose := visual.pose_presentation
+			for bone in skeleton.get_bone_count():
+				var retained := is_instance_valid(pose) and pose.tick_positions.size() == skeleton.get_bone_count()
+				offset=_write(data,offset,pose.tick_positions[bone] if retained else skeleton.get_bone_pose_position(bone),pose.tick_rotations[bone] if retained else skeleton.get_bone_pose_rotation(bone))
 		for shape in morph_counts[index]:
 			data[offset] = heads[index].get_blend_shape_value(shape); offset += 1
 	assert(offset==stride)

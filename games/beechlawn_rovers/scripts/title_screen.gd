@@ -197,12 +197,13 @@ func _build_options() -> void:
 	fullscreen_toggle = CheckButton.new()
 	fullscreen_toggle.text = "FULLSCREEN"
 	fullscreen_toggle.position = Vector2(100,352)
-	fullscreen_toggle.size = Vector2(610,52)
+	fullscreen_toggle.size = Vector2(290,52)
 	fullscreen_toggle.add_theme_font_override("font",BOLD)
 	fullscreen_toggle.add_theme_font_size_override("font_size",23)
 	fullscreen_toggle.button_pressed = MatchSession.fullscreen
 	options_layer.add_child(fullscreen_toggle)
 	fullscreen_toggle.toggled.connect(_fullscreen_changed)
+	_graphics_toggle("TEMPORAL ANTIALIASING", "temporal_aa", Vector2(420,356), Vector2(300,42))
 	if OS.has_feature("web"):
 		fullscreen_toggle.hide()
 		_label(options_layer,"Use your browser's fullscreen control",Vector2(100,368),21,BODY,MUTED)
@@ -246,6 +247,8 @@ func _build_options() -> void:
 	_presentation_slider("HEIGHT", "camera_height", 324, -4.0, 12.0, 0.5, 1.0, " m")
 	_presentation_slider("ZOOM", "camera_zoom", 412, -100.0, 100.0, 5.0, 100.0, "%")
 	_presentation_slider("ANGLE", "camera_angle", 500, -20.0, 20.0, 1.0, 1.0, "°")
+	_graphics_toggle("CINEMATIC FOCUS", "cinematic_depth_of_field", Vector2(820,568), Vector2(325,36))
+	_graphics_toggle("CINEMATIC MOTION BLUR", "cinematic_motion_blur", Vector2(1150,568), Vector2(355,36))
 	_rect(options_layer,Rect2(100,610,1400,1),Color(1,1,1,0.20))
 	_label(options_layer,"KEYBOARD CONTROLS",Vector2(100,638),19,BOLD,RED)
 	_label(options_layer,"WASD Move · Shift Sprint · Ctrl Close control / Jockey\nE Pass · Q Through · R Loft · T Cross · Space Shoot\nF Tackle · G Slide · J Contain · H Pressure · Tab Switch\nC Camera · Esc Title · F3 Debug",Vector2(100,674),18,BODY,PAPER)
@@ -344,6 +347,20 @@ func _start_match() -> void:
 		start_button.text = "RETRY START GAME"
 		for button in [play_button,watch_button,start_button,options_button]:
 			button.disabled = false
+
+func _graphics_toggle(text: String, field: String, position: Vector2, size: Vector2) -> void:
+	var toggle := CheckButton.new()
+	toggle.name = field.to_pascal_case()
+	toggle.text = text
+	toggle.position = position; toggle.size = size
+	toggle.add_theme_font_override("font", BOLD)
+	toggle.add_theme_font_size_override("font_size", 17)
+	toggle.button_pressed = bool(MatchSession.get(field))
+	toggle.toggled.connect(func(value: bool):
+		MatchSession.set(field,value)
+		MatchSession.apply_preferences())
+	options_layer.add_child(toggle)
+
 
 func _button(parent: Node, text: String, rect: Rect2, primary := false) -> Button:
 	var button := Button.new()

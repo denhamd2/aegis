@@ -77,8 +77,15 @@ func _run() -> void:
 			common_body = body
 		assert(body == common_body, "Head selection must preserve common body")
 		var appearance := visual._appearance_profile.appearance
+		# SceneTree.process_frame resumes before each Node's first _process.
+		# Evaluate the real tier before checking distance-dependent visibility.
+		visual._update_detail_level()
 		for name in ["Hair_Shane_ShortCropRoots", "Hair_Shane_ShortCropCards"]:
-			assert(_part(rig, name).visible == (appearance.hair_style != "bald"))
+			var expected_visible := appearance.hair_style != "bald"
+			if name.ends_with("Cards"):
+				var camera := visual.get_viewport().get_camera_3d()
+				expected_visible = expected_visible and camera.global_position.distance_to(_part(rig,"Skin_Head").global_position+Vector3.UP*1.6)<18
+			assert(_part(rig, name).visible == expected_visible,"Hair visibility must respect the active distance tier: "+String(visual._appearance_profile.player_id)+"/"+name)
 		if appearance.hair_style == "bald":
 			bald_count += 1
 	assert(des_away_count == 11, "All eleven Boardeaux players use the same Des identity")

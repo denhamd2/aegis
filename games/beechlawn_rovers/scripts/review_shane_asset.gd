@@ -17,6 +17,8 @@ var _native_options: Dictionary = {}
 
 func _ready() -> void:
 	_load_native_options()
+	FootballCharacterLook.scattering_enabled = str(_option("ablation")) != "scattering"
+	if str(_option("ablation")) == "transmittance": FootballCharacterLook.transmittance_enabled = false
 	var source := MATCH_SCENE.instantiate()
 	source.set("terrain_enabled", true)
 	var markings_mesh: Mesh = source.call("_build_line_mesh")
@@ -149,6 +151,14 @@ func _ready() -> void:
 				animation.seek(minf(seconds,animation.current_animation_length),true)
 			animation.pause()
 	_set_view(view)
+	_apply_ablation()
+	if _native_options.has("capture-dir"):
+		# Fixed expressions make matched head/aperture reviews reproducible.
+		visual.set_process(false)
+		for name in ["Blink","Smile"]:
+			var index := visual._face_mesh.find_blend_shape_by_name(name)
+			if index >= 0:
+				visual._face_mesh.set_blend_shape_value(index,1.0 if str(_option("expression")).to_lower()==name.to_lower() else 0.0)
 	var clean_capture := str(_option("clean")) == "1"
 	if not clean_capture:
 		var label := Label.new()
@@ -179,6 +189,22 @@ func _load_native_options() -> void:
 			var pair := argument.substr(2).split("=", true, 1)
 			_native_options[pair[0]] = pair[1]
 
+func _apply_ablation() -> void:
+	var ablation := str(_option("ablation"))
+	var visual := player as FootballerVisual
+	if ablation == "near_heads": visual._near_head_parts = {}
+	if ablation == "pose" and is_instance_valid(visual.pose_presentation): visual.pose_presentation.enabled = false
+	visual._update_detail_level()
+	if ablation == "morphs":
+		for node in player.find_children("*", "MeshInstance3D",true,false):
+			var part := node as MeshInstance3D
+			if part.mesh.get_blend_shape_count()==0: continue
+			var plain := ArrayMesh.new()
+			for surface in part.mesh.get_surface_count():
+				plain.add_surface_from_arrays(part.mesh.surface_get_primitive_type(surface),part.mesh.surface_get_arrays(surface))
+				plain.surface_set_material(surface,part.mesh.surface_get_material(surface))
+			part.mesh = plain
+
 func _option(key: String) -> Variant:
 	if OS.has_feature("web"):
 		return JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('" + key + "')")
@@ -191,7 +217,8 @@ func _capture_native(profile: FootballerProfile, view: String) -> void:
 		push_error("Native look review requires Forward+, got " + method)
 		get_tree().quit(2)
 		return
-	for _frame in range(2):
+	var warmup_frames := 24 if get_viewport().use_taa else 4
+	for _frame in range(warmup_frames):
 		await RenderingServer.frame_post_draw
 		print("NATIVE_WARMUP_FRAME ", _frame + 1)
 	var output := str(_native_options["capture-dir"])
@@ -204,6 +231,8 @@ func _capture_native(profile: FootballerProfile, view: String) -> void:
 	if image.save_png(output.path_join(filename + ".png")) != OK:
 		get_tree().quit(2)
 		return
+	var actual_face := player.find_child("Skin_Head",true,false) as MeshInstance3D
+	var actual_material := actual_face.get_active_material(0) as StandardMaterial3D
 	var report := {
 		"player_id":String(profile.player_id), "name":profile.display_name,
 		"view":view, "rendering_method":method,
@@ -215,7 +244,15 @@ func _capture_native(profile: FootballerProfile, view: String) -> void:
 		"msaa_3d":get_viewport().msaa_3d, "sun_shadows":$Sun.shadow_enabled,
 		"sky":"match" if str(_option("sky")) == "match" else "review",
 		"lighting":review_lighting, "pose":str(_option("pose")),
-		"normal_maps":review_normal_maps, "warmup_frames":2,
+		"expression":str(_option("expression")),
+		"normal_maps":review_normal_maps, "warmup_frames":warmup_frames,
+		"temporal_aa":get_viewport().use_taa,
+		"runtime_head_mesh":actual_face.mesh.resource_path,
+		"closeup_detail":(player as FootballerVisual)._near_view,
+		"body_fullness":(player as FootballerVisual)._appearance_profile.appearance.body_fullness,
+		"skin_scattering":actual_material.subsurf_scatter_enabled,
+		"skin_transmittance":actual_material.subsurf_scatter_transmittance_enabled,
+		"ablation":str(_option("ablation")),
 		"scope":"Native Forward+ still; hardware-specific Mac appearance and performance remain unmeasured.",
 	}
 	var file := FileAccess.open(output.path_join(filename + ".json"), FileAccess.WRITE)
@@ -264,10 +301,12 @@ func _set_view(view: String) -> void:
 			camera.fov = 25.0
 			camera.position = REVIEW_SPOT + Vector3(0, 1.67, 1.20)
 			target = REVIEW_SPOT + Vector3(0, 1.67, 0)
-		"threequarter_portrait", "profile_portrait":
+		"threequarter_portrait", "profile_portrait", "rear_portrait":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 25.0
 			camera.position = REVIEW_SPOT + (Vector3(.78, 1.67, .95) if view == "threequarter_portrait" else Vector3(1.20, 1.67, 0))
+			if view == "rear_portrait":
+				camera.position = REVIEW_SPOT + Vector3(.65, 1.70, -1.05)
 			target = REVIEW_SPOT + Vector3(0, 1.67, 0)
 		"broadcast":
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE

@@ -256,6 +256,7 @@ func _update_shot(time: float) -> void:
 	if shot["id"] == "handoff":
 		up = (match_scene.camera_rig.get_node("Camera3D") as Camera3D).global_basis.y
 	camera.look_at((shot["look_from"] as Vector3).lerp(shot["look_to"], eased), up)
+	FootballCameraOptics.for_camera(camera).shot(StringName(shot["id"]), (shot["look_from"] as Vector3).lerp(shot["look_to"], eased), float(shot["fov"]), 1.0/60)
 	# Walk/jog paths stay linear at their authored nominal speed. Only camera
 	# dollies ease; easing actor translation would introduce visible foot slip.
 	if shot["id"] == "walk":
@@ -299,6 +300,7 @@ func finish() -> void:
 	if not active:
 		return
 	active = false
+	FootballCameraOptics.for_camera(camera).clear()
 	get_node("/root/GameAudio").set_music(false)
 	_restore_kickoff()
 	match_scene._intro_active = false

@@ -169,6 +169,36 @@ def apply_sculpt(data):
         apply_sculpt_part(bpy.data.objects[name], data['parts'][name], name == 'Skin_Head')
 
 
+def saved_finish(identity):
+    """Use the current artist's materials/expressions after proving the cage.
+
+    Rebuilding geometry must not discard newer painted skin or regenerate all
+    atlases. Source/delta disagreement is an error requiring explicit capture.
+    """
+    from author_four_head_finish import SOURCES
+    source = Path(__file__).parent/SOURCES[identity]
+    if not source.exists():
+        from player_head_finish import finish_head
+        finish_head(bpy.data.objects['Skin_Head'],identity)
+        return
+    with bpy.data.libraries.load(str(source),link=False) as (_,target):
+        target.objects=list(PARTS)
+    for name,original in zip(PARTS,target.objects):
+        obj=bpy.data.objects[name]
+        assert layout_fingerprint(obj.data)==layout_fingerprint(original.data), 'Capture/transfer source layout before export: '+identity
+        assert len(obj.data.vertices)==len(original.data.vertices)
+        assert max((a.co-b.co).length for a,b in zip(obj.data.vertices,original.data.vertices))<1e-5, 'Capture the newer source sculpt before export: '+identity
+        obj.data.materials.clear()
+        for material in original.data.materials: obj.data.materials.append(material)
+        if original.data.shape_keys:
+            if not obj.data.shape_keys: obj.shape_key_add(name='Basis')
+            for shape in original.data.shape_keys.key_blocks:
+                key=obj.data.shape_keys.key_blocks.get(shape.name) or obj.shape_key_add(name=shape.name)
+                for point,value in zip(key.data,shape.data): point.co=value.co
+                key.value=0
+    for obj in target.objects: bpy.data.objects.remove(obj,do_unlink=True)
+
+
 def export(path, names):
     path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
@@ -287,9 +317,9 @@ def main():
         outputs[identity] = ASSETS / 'master.glb'
         if changed:
             open_master();apply_sculpt(data)
-            from player_head_finish import IDENTITIES, finish_head
+            from player_head_finish import IDENTITIES
             if identity in IDENTITIES:
-                finish_head(bpy.data.objects['Skin_Head'], identity)
+                saved_finish(identity)
             outputs[identity] = ASSETS / 'players' / (identity + '.glb')
             export(outputs[identity], PARTS)
         write_json(PIPE / entries[identity]['sculpt'], data)

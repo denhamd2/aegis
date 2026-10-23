@@ -4,6 +4,7 @@ Run after build_roster_heads.py with Blender --python-exit-code 1. This is an
 asset integrity gate, not a likeness or native performance certification.
 """
 import hashlib
+import argparse
 import json
 from pathlib import Path
 import struct
@@ -17,7 +18,12 @@ from mathutils.kdtree import KDTree
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 PROJECT = ROOT/'games/beechlawn_rovers'
-OUT = PROJECT/'docs/art_briefs/four_head_finish'
+BASE_EVIDENCE = PROJECT/'docs/art_briefs/four_head_finish'
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--output',type=Path,default=BASE_EVIDENCE)
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+OUT=args.output
+OUT.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0, str(HERE))
 from author_four_head_finish import SOURCES
 
@@ -96,7 +102,7 @@ for identity, source in SOURCES.items():
         'parts': parts, 'textures': textures, 'protected_neck_vertices': len(neck),
         'frontal_lip_triangles': len(lip_triangles), 'inverted_frontal_lip_triangles': flips}
 
-protected = json.loads((OUT/'protected_before.json').read_text())
+protected = json.loads((BASE_EVIDENCE/'protected_before.json').read_text())
 for path, expected in protected.items():
     assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest() == expected, path
 report['protected_shared_assets'] = protected

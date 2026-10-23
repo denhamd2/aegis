@@ -42,7 +42,7 @@ def run_bounded(command, env, deadline, log, ready_files=()):
         started, completed = time.monotonic(), None
         cleanup = 'normal'
         while process.poll() is None:
-            if time.monotonic()-started > deadline:
+            if completed is None and time.monotonic()-started > deadline:
                 stop(process)
                 raise RuntimeError(f'Native render exceeded {deadline}s; see {log}')
             # llvmpipe can hang during teardown after a successful synchronous
@@ -90,12 +90,14 @@ def main():
     parser.add_argument('output', type=Path)
     parser.add_argument('--review-mode', choices=['keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
     parser.add_argument('--verbose', action='store_true', help='Include engine resource diagnostics')
+    parser.add_argument('--ablation', choices=['none','scattering','transmittance','near_heads','pose','morphs'], default='none', help='Explicit portrait-only diagnostic; recorded in evidence')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
                         default=['shane','john','des','referee'])
     parser.add_argument('--views', nargs='+', default=['portrait'], choices=[
-        'portrait','threequarter_portrait','profile_portrait','front','back','profile','kit'])
+        'portrait','threequarter_portrait','profile_portrait','rear_portrait','front','back','profile','kit'])
     parser.add_argument('--pose', choices=['idle','sprint','pass','shot','turn','slide','get_up','keeper_set','keeper_save'])
+    parser.add_argument('--expression',choices=['neutral','blink','smile'],default='neutral')
     parser.add_argument('--frame', type=int, default=1)
     parser.add_argument('--resolution', default='1280x720')
     parser.add_argument('--godot', default=shutil.which('godot'))
@@ -159,6 +161,8 @@ def main():
             command += ['--',
                 '--capture-dir='+str(args.output),'--player='+player,'--view='+view,
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']
+            command += ['--ablation='+args.ablation]
+            command += ['--expression='+args.expression]
             if args.pose and not args.match:
                 command += ['--pose='+args.pose,'--frame='+str(args.frame)]
             if args.review_mode:

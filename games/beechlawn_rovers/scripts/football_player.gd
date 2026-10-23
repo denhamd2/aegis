@@ -844,7 +844,7 @@ func _receive_contact_position() -> Vector3:
 		if skeleton != null:
 			var toe_index := skeleton.find_bone("mixamorig_RightToe_End")
 			if toe_index >= 0:
-				return skeleton.to_global(skeleton.get_bone_global_pose(toe_index).origin)
+				return _footballer_visual.bone_world_position(&"mixamorig_RightToe_End")
 	var forward := -global_basis.z
 	forward.y = 0.0
 	return global_position + forward.normalized() * 0.55 + Vector3.UP * 0.05

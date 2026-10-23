@@ -311,7 +311,7 @@ func forehead_point() -> Vector3:
 	if skeleton != null:
 		var index := skeleton.find_bone("mixamorig_Head")
 		if index >= 0:
-			return skeleton.to_global(skeleton.get_bone_global_pose(index).origin) + Vector3.UP * .14 - actor.global_basis.z * .10
+			return actor._footballer_visual.bone_world_position(skeleton.get_bone_name(index)) + Vector3.UP * .14 - actor.global_basis.z * .10
 	return actor.position + Vector3.UP * 1.74 - actor.global_basis.z * .10
 
 func chest_point() -> Vector3:
@@ -319,7 +319,7 @@ func chest_point() -> Vector3:
 	if skeleton != null:
 		var index := skeleton.find_bone("mixamorig_Spine2")
 		if index >= 0:
-			return skeleton.to_global(skeleton.get_bone_global_pose(index).origin) - actor.global_basis.z * .16
+			return actor._footballer_visual.bone_world_position(skeleton.get_bone_name(index)) - actor.global_basis.z * .16
 	return actor.position + Vector3.UP * 1.32 - actor.global_basis.z * .16
 
 func _skeleton() -> Skeleton3D:

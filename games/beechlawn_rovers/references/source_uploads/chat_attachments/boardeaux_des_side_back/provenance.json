@@ -1,0 +1,24 @@
+{
+  "received": "2026-10-23",
+  "identity": "bordeaux_09",
+  "display_name": "Des Feeney, Boardeaux player (not referee)",
+  "source": "Owner-supplied original reference photos; unchanged",
+  "use": "Hairline, side/back coverage, complexion and lower-face shape",
+  "files": [
+    {
+      "file": "69911.jpg",
+      "source_attachment": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/a8fbbcad-91f1-4c4a-a330-d1e1b7c56308/1-69911.jpg",
+      "sha256": "0d3ee013455e23c71b1136715788824529dd64bc40beb135fb5187c4cf82979d"
+    },
+    {
+      "file": "69910.jpg",
+      "source_attachment": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/a8fbbcad-91f1-4c4a-a330-d1e1b7c56308/2-69910.jpg",
+      "sha256": "c58b026c30361e2c6ef8ac3bfb8446d31dabf7cd780db74a84b65e962d0a46dc"
+    },
+    {
+      "file": "69909.jpg",
+      "source_attachment": "/tmp/codex-remote-attachments/01a13b9d-131c-7348-b4e2-2d07a6b17042/a8fbbcad-91f1-4c4a-a330-d1e1b7c56308/3-69909.jpg",
+      "sha256": "2f2c48b2a022979af40c71c6a9c04b72b3ce1c99a16a88dbd5507997bacc41c5"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "des_portrait.png",
+      "report": "des_portrait.json",
+      "sha256": "51e9757372ed32bbe2314df902dd4b7689cfe17b5f1191bd5226b4a5e29c8ac2",
+      "process_cleanup": "terminated_after_saved_capture",
+      "capture_seconds": 58.08,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "960x540",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "res://scenes/review/shane_asset_review.tscn",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/games/beechlawn_rovers/docs/art_briefs/realism_finish/feeney_blink_native",
+        "--player=des",
+        "--view=portrait",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--ablation=none",
+        "--expression=blink"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

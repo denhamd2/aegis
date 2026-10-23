@@ -12,6 +12,7 @@ script = ExtResource("2_attributes")
 [sub_resource type="Resource" id="HeadAppearance"]
 script = ExtResource("head_pipeline_appearance")
 kit = "beechlawn_keeper"
+body_fullness = 0.42
 head_variant = ExtResource("head_pipeline_head")
 hair_style = "custom"
 hair_variant = ExtResource("head_pipeline_hair")

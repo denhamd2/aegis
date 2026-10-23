@@ -1,28 +1,29 @@
-# Shared updated head — BR-022 (22/25, in progress)
+# Shared updated head — BR-022 (22/27, in progress)
 
 Owner approved using Shane's updated neutral head as the shared starting point,
 with independent player likeness changes and hairstyles. This is pipeline and
 roster integration, not approval of all players as finished likenesses.
 
-Promote the current `shane_photo_head.blend` neutral head, eyes, skin UV/material
-and reusable smile into `footballer_head_master.blend`. Preserve the 65-bone
+The initial `shane_photo_head.blend` neutral head, eyes, skin UV/material
+and reusable smile were promoted into `footballer_head_master.blend`. Preserve the 65-bone
 production bind pose, neck seam, body and animation library. Store a revision
 snapshot, topology and coordinate fingerprints; apply each player's sparse
 sculpt changes during the offline build. A topology fingerprint alone cannot
 identify a changed Basis, so stale coordinate deltas must fail or explicitly
 rebase against a recorded compatible revision.
 
-All existing distinct geometry is accounted for: Shane is the only authored
-individual head. The other players remain generic placeholders based on the
-updated master, with their names, numbers, roles, kits and reference mapping
-retained. Every roster identity gets a separate editable recipe/delta slot.
+Shane, John, player Des and referee Des now have independent saved sources
+and nonempty captured sculpts. Their ongoing likeness work is recorded in
+[the current finish brief](realism_finish/brief.md). Other identities retain
+the common starting head, names, numbers, roles, kits and reference mapping.
+Every roster identity has a separate editable recipe/delta slot.
 Unchanged heads share the same runtime mesh; create unique exports only when
 individual offsets exist. Keep expressions independent from identity.
 
-Hair is selected separately. Shane retains his new short groom. Des Feeney and
-the supplied bald referee use the bald setting; other current crop placeholders
-remain until their reference-led individual groom work. Do not give the entire
-squad Shane's dense groom or claim placeholder hairstyles match the sheets.
+Hair is selected separately: Shane's crop, John's swept blonde-highlighted
+hair, player Des's side/back horseshoe and the referee's sparse grey hair and
+moustache. The eleven away aliases deliberately share player Des. Other crop
+placeholders remain until individual work; they are not approved likenesses.
 
 Acceptance: demonstrate a compatible common Basis edit propagating to two
 independently sculpted heads while retaining both sets of personal offsets;
@@ -48,16 +49,16 @@ including its shading normals. Then regenerate:
 blender -b --python-exit-code 1 --python tools/blender/beechlawn/build_roster_heads.py
 ```
 
-For an **individual likeness**, make an editable source from that player's
-current recipe, edit its Basis, and capture it:
+For an **individual likeness**, open its existing production source first.
+Only create a work source when no newer artist source exists. Edit its neutral
+Basis and capture it (substitute that actual source path in the second command):
 
 ```sh
-blender -b --python-exit-code 1 --python tools/blender/beechlawn/build_roster_heads.py -- --edit-player john_orourke
-# Edit head_pipeline/work/john_orourke.blend in Blender; keep the file for review.
-blender -b --python-exit-code 1 --python tools/blender/beechlawn/build_roster_heads.py -- --capture-player john_orourke --sculpt tools/blender/beechlawn/head_pipeline/work/john_orourke.blend
+# Edit the neutral Basis in the current john_orourke_head.blend in Blender.
+blender -b --python-exit-code 1 --python tools/blender/beechlawn/build_roster_heads.py -- --capture-player john_orourke --sculpt tools/blender/beechlawn/john_orourke_head.blend
 ```
 
-The second command captures head and eyeball offsets and rebuilds all recipes.
+This captures head and eyeball offsets and rebuilds all recipes.
 Editable sources record player and master revision; capture rejects a stale
 revision or the wrong player. Existing work files are never overwritten by
 `--edit-player`. After a common master change, archive the old work file and
@@ -75,13 +76,13 @@ including reserve Paddy, plus the referee). `master.json` and immutable
 common position changes. Topology or UV/weight changes require an explicit
 transfer, not automatic index reuse. New shared materials export on every build.
 
-Hair choices are `legacy_crop`, `shane_crop` and `bald` in the build recipe;
-runtime `custom` hair selects a separate compatible package. Shane's groom is
-regenerated against his resulting head. A new individual skull/hairline needs
-its own groom fit and visual review; copying a head does not establish hairstyle
-likeness. Des/referee bald settings are interim silhouettes: their reference
-short side hair and facial hair still need authoring. Paddy's reserve profile
-also uses bald.
+`roster.json` holds the current hair choices; runtime `custom` hair selects a
+separate compatible package. Refit the groom after a skull/hairline edit.
+Paddy's reserve profile uses bald. `build_roster_heads.py` verifies current
+saved source coordinates against the captured delta and copies its materials
+and expressions. Uncaptured newer edits fail; existing artist sources are not
+silently replaced by the legacy bootstrap. Geometry-only close-up packages
+reuse normal-package atlases; shared Fullness morphs retain per-instance values.
 
 ## Verification and limits
 
@@ -107,14 +108,15 @@ clips. The roster test checks all 22 players plus referee, shared meshes,
 independent overrides, bald selection and appearance reconfiguration. The other
 checks preserve common kits, independent playback and pose safety. The release
 workflow includes the head/roster checks; Blender is only an offline authoring
-dependency. Portrait captures use the real `FootballerVisual` profile path in a
-debug Web review; they do not establish Metal rendering or M1 frame times.
+dependency. New portraits use the real `FootballerVisual` profile path through
+native Forward+ (`tools/capture_native.py`). The following Web evidence is
+historical; football Web delivery is retired. Neither establishes M1 frame times.
 The saved Shane, Des and John portraits confirm the head/hair/kit selections.
 `shared_head_evidence/match/title_web_check.json` records a real Chromium
 Play/Watch run with keyboard kickoff, zero/one human control, return to title
 and no console errors; both assembled match frames are saved beside it.
 
-Shane's neutral geometry is unchanged by promotion. Other players now start
-from that improved base but have no individual facial offsets yet. The shared
-pipeline subtask is complete; BR-022 stays in progress for reference-led
+Shane's neutral geometry was unchanged by the initial promotion; subsequent
+individual sculpts are independent offsets. The shared pipeline subtask is
+complete; BR-022 stays in progress for reference-led
 likeness, hair, kit/collar polish and native performance/visual acceptance.

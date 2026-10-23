@@ -8,6 +8,7 @@ func _initialize() -> void:
 func save_frame(filename: String) -> void:
 	for frame in 2: await RenderingServer.frame_post_draw
 	assert(root.get_texture().get_image().save_png(output.path_join(filename)) == OK)
+	print("BROADCAST_REVIEW_FRAME ",filename)
 func _run() -> void:
 	assert(not output.is_empty())
 	var menu = load("res://scenes/title_screen.tscn").instantiate()
@@ -37,7 +38,7 @@ func _run() -> void:
 	director.camera.look_at(Vector3(15, .02, 9.5))
 	game.grass_detail.prewarm(director.camera.global_position)
 	await save_frame("turf_close.png")
-	var turf_report := {"active_crowns":game.grass_detail.tuft_count(),"active_triangles":game.grass_detail.tuft_count()*6,"active_chunks":game.grass_detail.chunks.size(),"prepared_chunks":game.grass_detail.prepared.size(),"blade_height_m":[.0153,.0288],"cell_m":game.grass_detail.CELL}
+	var turf_report := {"active_crowns":game.grass_detail.tuft_count(),"active_triangles":game.grass_detail.draw_triangle_count(),"triangle_budget":game.grass_detail.triangle_budget,"active_chunks":game.grass_detail.chunks.size(),"intermediate_chunks":game.grass_detail.mid_chunks.size(),"prepared_chunks":game.grass_detail.prepared.size(),"blade_height_m":[.0119,.0242],"cell_m":game.grass_detail.CELL}
 	director.finish()
 	game.camera_rig.set_process(false)
 	await save_frame("match_broadcast.png")

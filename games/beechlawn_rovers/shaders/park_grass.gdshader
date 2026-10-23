@@ -3,7 +3,7 @@ render_mode cull_back;
 
 uniform float field_length = 105.0;
 uniform float field_width = 68.0;
-uniform sampler2D grass_albedo : source_color, repeat_enable;
+uniform sampler2D grass_albedo : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D grass_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D grass_roughness : filter_linear_mipmap_anisotropic, repeat_enable;
 varying vec3 world_point;
@@ -35,7 +35,7 @@ void fragment() {
 	// Small capillary ripples; wet mud stays rougher than standing water.
 	vec3 ripples = normalize(vec3(0.025*sin(p.x*27.0+p.y*13.0+TIME*1.8),
 		0.025*cos(p.y*31.0-p.x*9.0+TIME*1.4),1.0))*0.5+0.5;
-	vec3 turf_normal = mix(vec3(.5,.5,1.0),texture(grass_normal,p/1.4).rgb,close*.65);
+	vec3 turf_normal = mix(vec3(.5,.5,1.0),texture(grass_normal,p/1.4).rgb,.25+close*.40);
 	NORMAL_MAP = mix(mix(turf_normal,texture(mud_normal,p/1.3).rgb,mud*0.7),ripples,water);
 	METALLIC = 0.0;
 }

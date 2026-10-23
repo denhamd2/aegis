@@ -741,6 +741,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
   fake shot, drag-back and directional skill turn. Each move must affect control
   or ball position, not just play a cosmetic clip.
 - [ ] **BR-021 — Animation contact and blending pass**
+  - 2026-10-23 realism follow-up: render-time skeleton interpolation retains
+    authoritative tick poses for live contact and replay capture; staged
+    presentation clips evaluate each drawn frame. Contact/replay invariance,
+    animation and full-presentation match checks pass. Source gait/contact
+    keys are unchanged. Native stride/plant quality and M1 timing remain open.
+    See `art_briefs/realism_finish/brief.md`.
   - 2026-10-22: Fixed long-run skating: imported motion resources explicitly loop independently of node settings, with a sustained live-dribble regression.
   - 2026-10-21: first-time pass/shot starts can skip redundant anticipation
     while keeping accelerated playback at 1.5×. Shots can interrupt receive
@@ -783,6 +789,14 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-23 current pass (22/27): saved individual anatomy/surfaces, shared
+    body/garment Fullness (John 0.42, player Des 0.58), matching head/groom
+    deformation and close-up geometry reuse the live rig and atlases.
+    New original Des side/back photos guide his short horseshoe groom with
+    bare crown; both Feeney identities have rounder lid apertures and fitted
+    closure. Source/export, independent appearance and native checks accompany
+    `art_briefs/realism_finish/`. Individual AAA likeness, collar/shoulder
+    openings and target-Mac acceptance remain open; these are not final heads.
   - 2026-10-23: four independent form/groom/roughness/blink/smile refinements have source/export and grounded native checks; exact/AAA likeness and M1 approval remain open. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-22 native look checks: football now uses its own bounded
     Forward+/Vulkan/Xvfb still runner for primary appearance evidence, adapting
@@ -955,6 +969,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-23 field-detail follow-up (23/27): curved 12–24 mm near blades
+    and intermediate fins are selected across the field using projected size
+    and frustum-prioritised chunks, with shared mud/puddle/paint masks. Default
+    drawn detail is bounded at 205,568 triangles (240k resource budget), with
+    cut preparation and distant surface detail. Native appearance and M1 frame
+    timing are separate gates; see `art_briefs/realism_finish/brief.md`.
   - 2026-10-23: the weed-like tufts are replaced by dense short camera-local turf and matching CC0 normal/roughness detail; bounded residency, mud/water masks and native close views checked. Venue likeness/M1 remain open. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-23: camera-local curved grass tufts follow terrain and shared mud/water masks, capped at 40k tufts / 240k triangles; native close grass/net views inspected. Exact environment likeness and M1 frame time remain open. See `art_briefs/pitch_audio_2026_10_23/brief.md`.
   - 2026-10-22: Mirrored the exterior penalty arcs and connected physical net impacts to a visible anchored bulge; scored balls keep moving into the net.
@@ -1061,6 +1081,11 @@ distance, stays within the Mac frame-time budget, and can be built/released
 without touching Aegis artifacts.
 
 - [x] **BR-026 — Goal and full-time presentation**
+  - 2026-10-23 optics follow-up: camera-local cinematic depth of field and
+    short motion-vector blur, with cut suppression and exact wide/skip/exit
+    restoration, have logic/native Forward+ checks. Optional TAA stays off by
+    default; crisp live gameplay retains MSAA. Moving/M1 optical polish remains
+    under BR-025; see `art_briefs/realism_finish/validation.json`.
   - 2026-10-23: wide/medium/scorer close cuts, centered blue captions and directed full-time reactions/handshakes now have mirrored/runtime/native checks. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-23: original shared celebrations/handshakes, winners/draws, own-goal handling, reduced teams, automatic results with Rematch/Title and Space/Enter skip pass logic/native checks. M1 feel remains under BR-025.
   Scorer/teammate reactions, own goals, winner/draw treatment, handshakes and

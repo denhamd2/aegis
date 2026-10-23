@@ -148,3 +148,13 @@ keeps its authentic colours. See `../docs/art_briefs/title_red_black_evidence/br
 ## Referee likeness
 
 Use the preserved `des_feeney_referee_likeness/69015.jpg` and `69018.jpg` sources for the referee head task. The portrait informs the sculpt and procedural UV pigment only; never paste the photo onto the model. See `../docs/art_briefs/des_feeney_referee_likeness/brief.md` for current status and known likeness gaps.
+
+## Boardeaux player Des: side/back originals, 23 October 2026
+
+`source_uploads/chat_attachments/boardeaux_des_side_back/69911.jpg`,
+`69910.jpg` and `69909.jpg` add side and three-quarter evidence for player
+Des Feeney. They show short dark-brown hair around the sides and back, a
+high temporal wedge, short sideburns and a largely bare top/crown. The chin
+goatee is stronger than the upper-lip stubble. Use these alongside 69016 for
+player Des; do not transfer this groom to referee Des Feeney Sr. Originals
+are unchanged; provenance and SHA256 are recorded beside them.

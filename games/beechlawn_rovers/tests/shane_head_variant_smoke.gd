@@ -40,7 +40,7 @@ func _run() -> void:
 			assert(live.skin.get_bind_pose(index).is_equal_approx(source.skin.get_bind_pose(index)), "Inverse bind changed")
 		assert(live.mesh.get_aabb().size.is_finite())
 	var head := _part(rig, "Skin_Head")
-	assert(head.mesh.get_blend_shape_count() == 2)
+	assert(head.mesh.get_blend_shape_count() >= 2)
 	assert(head.mesh.get_blend_shape_name(1) == &"Blink")
 	assert(head.mesh.get_blend_shape_name(0) == &"Smile")
 	assert(is_zero_approx(head.get_blend_shape_value(0)), "Neutral identity is independent of smile")

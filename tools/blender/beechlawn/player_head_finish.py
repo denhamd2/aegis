@@ -252,6 +252,18 @@ def hair_regions(points, identity):
     elif identity == 'john_orourke':
         line = 170.75+.55*_smooth(0, 3, -x)-.28*_smooth(0, 3, x)-3.1*side-2.5*rear+.09*np.sin(x*2.8)
         scalp = _smooth(line-.17, line+.22, y)
+    elif identity == 'bordeaux_09':
+        # Original side views 69911/69910: a high temporal wedge joins the
+        # occipital band. Recession exposes the crown, not the entire skull.
+        lower = 168.5-2.0*side-4.6*rear
+        upper = 170.6+1.9*np.exp(-((angle-1.23)/.56)**2)
+        edge = .07*np.sin(y*5.1+x*3.7)
+        band = _smooth(.72, 1.05, angle)*_smooth(lower-.35, lower+.30, y)
+        band *= 1-_smooth(upper-.35+edge, upper+.28+edge, y)
+        sideburn = _smooth(.76, .95, angle)*(1-_smooth(1.18, 1.40, angle))
+        sideburn *= _smooth(162.5, 164., y)*(1-_smooth(166.8, 168., y))
+        sideburn *= 1-_smooth(7.0, 7.7, ax)
+        scalp = np.maximum(band, sideburn*.85)
     else:
         line = 169.7-3.1*side-2.0*rear
         scalp = _smooth(1.00, 1.5, angle)*_smooth(line-.3, line+.7, y)*(1-_smooth(172.2, 174., y))
@@ -260,14 +272,14 @@ def hair_regions(points, identity):
     ax = abs(x)
     face = front*(1-_smooth(11.15, 11.65, z))
     arch = 160.83-.12*(ax/2.8)**2
-    moustache_height = .51 if identity == 'des_feeney_sr' else .37
+    moustache_height = .72 if identity == 'des_feeney_sr' else .37
     moustache = np.exp(-(x/2.85)**6-((y-arch)/moustache_height)**4)*face
     moustache *= (1-.28*np.exp(-(x/.30)**2))
     if identity == 'bordeaux_09':
-        beard = np.exp(-(x/3.15)**4-((y-156.5)/1.65)**4)*front
+        beard = np.exp(-(x/3.15)**2-((y-156.7)/1.65)**2)*front
         connectors = np.exp(-((ax-2.45)/.30)**2-((y-158.65)/1.05)**2)*face*.48
         soul = np.exp(-(x/.8)**6-((y-158.85)/.45)**4)*face*.6
-        facial = np.maximum.reduce((beard, moustache*.9, connectors, soul))
+        facial = np.maximum.reduce((beard, moustache*.28, connectors*.55, soul))
     elif identity == 'john_orourke':
         jaw = _smooth(154.5, 155.3, y)*(1-_smooth(159.8, 160.8, y))
         cheeks = _smooth(158.0, 159.0, y)*(1-_smooth(162.1, 163.1, y))*_smooth(2.7, 3.5, ax)
@@ -308,17 +320,17 @@ def finish_head(head, identity):
         result = np.tile(pigment, (len(points), 1))
         cheek = np.exp(-((ax-4.3)/2.3)**2-((y-163.2)/1.9)**2)*front
         nose = np.exp(-(x/1.5)**4-((y-162.1)/1.5)**2)*front
-        result += cheek[:, None]*np.array([.016, -.008, -.005])
-        result += nose[:, None]*np.array([.014, -.008, -.006])
+        result += cheek[:, None]*np.array([.025, -.014, -.010])
+        result += nose[:, None]*np.array([.020, -.012, -.010])
         lip = np.exp(-(x/3.1)**6-((y-159.85)/.38)**2)*front
-        result += lip[:, None]*np.array([.008, -.040, -.024])
+        result += lip[:, None]*np.array([.020, -.052, -.032])
         under = np.exp(-((ax-3.45)/1.75)**4-((y-165.4)/.55)**2)*front
         result -= under[:, None]*np.array([.014, .016, .012])
         regions = hair_regions(points, identity)
         # Root pigment is subdued; the actual groom supplies dimensional hair.
         tones = {'shane_denham': (.17, .12, .08), 'john_orourke': (.32, .22, .15),
                  'bordeaux_09': (.10, .075, .055), 'des_feeney_sr': (.38, .36, .32)}
-        root = np.maximum(regions[:, 1]*.40, regions[:, 2]*.72)
+        root = np.maximum(regions[:, 1]*(.60 if identity in ('bordeaux_09','john_orourke') else .40), regions[:, 2]*.62)
         result = result*(1-root[:, None])+np.asarray(tones[identity])*root[:, None]
         # Sparse original pigment variation; no source portrait illumination.
         freckles = np.maximum(0, np.sin(x*71+y*37)*np.sin(y*43+z*57)-.89)*front
@@ -331,7 +343,7 @@ def finish_head(head, identity):
     def relief(points, eye_centres):
         x, y, z = points.T
         front = _smooth(4., 8., z)
-        age = 1.0 if identity == 'des_feeney_sr' else .35
+        age = 2.0 if identity == 'des_feeney_sr' else .50
         value = np.zeros_like(x)
         for cy, depth in ((170.6, .012), (171.6, .010), (172.45, .007)):
             line = cy+.08*np.cos(x*.5)
@@ -339,6 +351,10 @@ def finish_head(head, identity):
         for slope in (-.28, .25):
             line = 166.35+slope*(abs(x)-4.6)
             value -= age*.006*np.exp(-((y-line)/.085)**2-((abs(x)-5.25)/.9)**4)*front
+        if identity == 'des_feeney_sr':
+            fold = 2.1+.45*(162-y)
+            value -= .023*np.exp(-((abs(x)-fold)/.16)**2-((y-160.3)/1.6)**4)*front
+            value -= .014*np.exp(-((y-165.05)/.12)**2-((abs(x)-3.5)/1.7)**4)*front
         return value
 
     def roughness(points):
@@ -348,7 +364,7 @@ def finish_head(head, identity):
         forehead = np.exp(-(x/5.0)**6-((y-170.0)/2.1)**4)*front
         cheeks = np.exp(-((abs(x)-4.3)/2.0)**4-((y-162.4)/2.0)**4)*front
         fine = np.sin(x*53+y*31)*np.sin(y*47-z*59)*.008
-        return np.clip(.64-.12*nose-.07*forehead+.035*cheeks+fine,.48,.72)
+        return np.clip(.58-.13*nose-.055*forehead+.045*cheeks+fine,.43,.68)
 
     previous = (skin.SKIN_PIGMENT.copy(), skin.skin_colour, skin.reference_skin_relief)
     skin.SKIN_PIGMENT = pigment
@@ -363,7 +379,7 @@ def finish_head(head, identity):
     bsdf = mat.node_tree.nodes['Principled BSDF']
     bsdf.inputs['Roughness'].default_value = .60
     bsdf.inputs['Specular IOR Level'].default_value = .30
-    mat.node_tree.nodes['Normal Map'].inputs['Strength'].default_value = .24 if identity == 'des_feeney_sr' else .16
+    mat.node_tree.nodes['Normal Map'].inputs['Strength'].default_value = .55 if identity == 'des_feeney_sr' else .34
     # A smaller anatomical iris leaves sclera visible. Des's old oversized
     # iris filled the whole lid aperture and read as a black oval.
     yy, xx = np.mgrid[0:512, 0:512]
@@ -402,12 +418,20 @@ def facial_shapes(head):
     basis = head.data.shape_keys.key_blocks[0]
     smile = head.data.shape_keys.key_blocks.get('Smile') or head.shape_key_add(name='Smile')
     blink = head.data.shape_keys.key_blocks.get('Blink') or head.shape_key_add(name='Blink')
+    fullness = head.data.shape_keys.key_blocks.get('Fullness') or head.shape_key_add(name='Fullness')
+    from build_body_fullness import fullness as body_fullness
     centres = {side: sum((v.co for v in bpy.data.objects['Eye_'+side].data.vertices), Vector()) /
                len(bpy.data.objects['Eye_'+side].data.vertices) for side in ('l', 'r')}
+    from mathutils.bvhtree import BVHTree
+    globes={side:BVHTree.FromPolygons([v.co for v in bpy.data.objects['Eye_'+side].data.vertices],
+            [list(p.vertices) for p in bpy.data.objects['Eye_'+side].data.polygons]) for side in centres}
     for index, point in enumerate(basis.data):
         x, y, z = point.co
         smile.data[index].co = point.co
         blink.data[index].co = point.co
+        # The same field drives the shared collar/skin meshes. Its neutral
+        # Basis and the master neck interface remain unchanged.
+        fullness.data[index].co = body_fullness(point.co)
         if y < 154:
             continue
         front = smooth(5., 8., z)
@@ -415,10 +439,16 @@ def facial_shapes(head):
         cheek = field(x, y, 4.0, 161.7, 2.0, 1.5) * front
         smile.data[index].co += Vector((math.copysign(.11*corner, x), .23*corner+.09*cheek, .08*cheek))
         # Choose the nearer globe rather than depending on rig-side naming.
-        centre = min(centres.values(), key=lambda eye: abs(eye.x-x))
+        side=min(centres,key=lambda side:abs(centres[side].x-x))
+        centre=centres[side]
         dx, dy = x-centre.x, y-centre.y
-        if abs(dx) < 1.65 and abs(dy) < .90 and z > centre.z+.2:
-            weight = math.exp(-(dx/1.25)**6) * (1-smooth(.65, .90, abs(dy)))
-            blink.data[index].co.y += (centre.y-.035-y) * weight
-            blink.data[index].co.z += .13 * weight
-    smile.value = blink.value = 0
+        if abs(dx)<1.75 and abs(dy)<1.35 and z>centre.z-2.1:
+            weight=(1-smooth(1.25,1.75,abs(dx)))*(1-smooth(.65,1.35,abs(dy)))
+            lid=blink.data[index].co
+            lid.y+=(centre.y-.035-y)*weight*.75
+            hit,_,_,_=globes[side].ray_cast(Vector((x,lid.y,30)),Vector((0,0,-1)))
+            if hit is not None:
+                # Include the inset orbital surface behind the globe: only
+                # moving the outer rim leaves an exposed central slit.
+                lid.z+=max(0,hit.z+.12-z)*weight
+    smile.value = blink.value = fullness.value = 0

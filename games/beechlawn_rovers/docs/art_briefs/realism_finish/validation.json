@@ -1,0 +1,250 @@
+{
+  "date": "2026-10-23",
+  "result": "Technical checks pass; art finish and target hardware gates open",
+  "checks": {
+    "realism_systems_smoke.gd": {
+      "result": "PASS",
+      "seconds": 7.5,
+      "log": "realism_final_assets.log"
+    },
+    "footballer_animation_tree_smoke.gd": {
+      "result": "PASS",
+      "seconds": 7.9,
+      "log": "realism_integration.log"
+    },
+    "football_kick_contact_integration_smoke.gd": {
+      "result": "PASS",
+      "seconds": 3.7,
+      "log": "realism_integration.log"
+    },
+    "football_receive_contact_smoke.gd": {
+      "result": "PASS",
+      "seconds": 4.4,
+      "log": "realism_integration.log"
+    },
+    "football_shot_contact_integration_smoke.gd": {
+      "result": "PASS",
+      "seconds": 3.2,
+      "log": "realism_integration.log"
+    },
+    "aerial_contact_smoke.gd": {
+      "result": "PASS",
+      "seconds": 22.0,
+      "log": "realism_integration.log"
+    },
+    "volley_contact_smoke.gd": {
+      "result": "PASS",
+      "seconds": 9.5,
+      "log": "realism_integration.log"
+    },
+    "goalkeeper_response_smoke.gd": {
+      "result": "PASS",
+      "seconds": 7.8,
+      "log": "realism_integration.log"
+    },
+    "pre_match_intro_smoke.gd": {
+      "result": "PASS",
+      "seconds": 21.3,
+      "log": "realism_integration.log"
+    },
+    "pitch_presentation_repairs_smoke.gd": {
+      "result": "PASS",
+      "seconds": 8.0,
+      "log": "realism_integration.log"
+    },
+    "title_screen_smoke.gd": {
+      "result": "PASS",
+      "seconds": 21.5,
+      "log": "realism_integration.log"
+    },
+    "recorded_face_replay_smoke.gd": {
+      "result": "PASS",
+      "seconds": 6.0,
+      "log": "realism_final_roster.log"
+    },
+    "replay_results_smoke.gd": {
+      "result": "PASS",
+      "seconds": 24.7,
+      "log": "realism_integration.log"
+    },
+    "handshake_contact_smoke.gd": {
+      "result": "PASS",
+      "seconds": 13.8,
+      "log": "realism_integration.log"
+    },
+    "goal_net_contact_smoke.gd": {
+      "result": "PASS",
+      "seconds": 12.9,
+      "log": "realism_integration.log"
+    },
+    "unready_scene_cleanup_smoke.gd": {
+      "result": "PASS",
+      "seconds": 3.3,
+      "log": "realism_integration.log"
+    },
+    "shane_head_variant_smoke.gd": {
+      "result": "PASS",
+      "seconds": 8.1,
+      "log": "realism_final_roster.log"
+    },
+    "keeper_live_contact_smoke.gd": {
+      "result": "PASS",
+      "seconds": 10.7,
+      "log": "realism_final_checks.log"
+    },
+    "full_presentation_match_soak.gd": {
+      "result": "PASS",
+      "seconds": 162.2,
+      "log": "realism_final_checks.log"
+    },
+    "shared_head_roster_smoke.gd": {
+      "result": "PASS",
+      "seconds": 6.7,
+      "log": "realism_final_roster.log"
+    },
+    "pitch_audio_smoke.gd": {
+      "result": "PASS",
+      "seconds": 6.0,
+      "log": "realism_final_roster.log"
+    }
+  },
+  "unique_smoke_tests": 21,
+  "capture_runner_unit_tests": 1,
+  "source_export_audit": "PASS",
+  "native": {
+    "des_groom": {
+      "result": "PASS",
+      "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance.",
+      "captures": 3
+    },
+    "feeney_native": {
+      "result": "PASS",
+      "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance.",
+      "captures": 2
+    },
+    "feeney_blink_native": {
+      "result": "PASS",
+      "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance.",
+      "captures": 1
+    },
+    "presentation_native": {
+      "result": "PASS",
+      "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance.",
+      "captures": 1
+    }
+  },
+  "runtime_assets_sha256": {
+    "assets/characters/shared/advanced_actions.glb": "b8d020cfc7a2aebf4bfae0935c1b8050deff7d1a371a91592c97800d9eac6b88",
+    "assets/characters/shared/aerial_actions.glb": "8d79f0709c634f7d67d6ba1f4ae7a17390223e097babacfffee1b031358244d0",
+    "assets/characters/shared/body_shapes.glb": "6be77b64be4468f8a79b59c7b5c4b8d7b06548c92f2b66303f6e210f09e3a753",
+    "assets/characters/shared/footballer_base.glb": "605440e6f6f6458f4d11c311d2d79583995ca03f313da71177de8000e16e801a",
+    "assets/characters/shared/heads/des_side_hair.glb": "be39a64679f56c89c9d183cf881474941c8783f03ffd96d902bb697ff389737d",
+    "assets/characters/shared/heads/john_swept.glb": "827cb9c9aab3b674f87f627dfc6cf2f3818861396c20622602f45ef360f4bdd7",
+    "assets/characters/shared/heads/master.glb": "408121137cc4d411851da3b59a3d3baca521424c73645a11440503c49d9bd55e",
+    "assets/characters/shared/heads/near/bordeaux_09.glb": "f422584fbd7ba34c128e9f5b0f35f532c87323f1a969294ce1f6bcaa28bc68d5",
+    "assets/characters/shared/heads/near/des_feeney_sr.glb": "9c22d0f772cbe5fc135877a6b6a5b9777554ef2849c6a937690a4fa1244ddef1",
+    "assets/characters/shared/heads/near/john_orourke.glb": "f204fab85323e41374a197c80727421f8e72d4bed746c88d7cd7ffdd0d36f93a",
+    "assets/characters/shared/heads/near/shane_denham.glb": "30276d49497d6d07fb1fab92968711454787dfa2995c94a5ecd9e20ca056a396",
+    "assets/characters/shared/heads/players/bordeaux_09.glb": "b04b06781dab2c4f95be3cd84980a49dc0235cc0307a114e250eeec52f475fab",
+    "assets/characters/shared/heads/players/des_feeney_sr.glb": "a1a4a34b72161be13f1aa520c3c328418a8090b38df03d30bb8f119ff3451424",
+    "assets/characters/shared/heads/players/john_orourke.glb": "83f83c07f19cd56984173fa84d15a672f6b9b4026c4d4f64aeac4eeac8e64cc6",
+    "assets/characters/shared/heads/players/shane_denham.glb": "9a7d53c8ca4c1ada689ec197cfb62fe20fd7739d28e82b6bcb897e3aa23b5671",
+    "assets/characters/shared/heads/referee_grey.glb": "3b94351fa058aba60205e8d4c597d91c11836e1a7530ffb0689de2675ce9a189",
+    "assets/characters/shared/heads/shane_crop.glb": "3871f16f10d3d6691fdc8958caf9a0068aa4b2dde0113f8ac3c37b1170d70a19",
+    "assets/characters/shared/match_motion.glb": "d26db6de1a4e11551b1a09e8a3cc09e1d101f7b4b4a8d9f42e7267be0f8c8e3e",
+    "assets/characters/shared/match_presentation.glb": "6cd224b56b53d87a397cead173be4fa22bd965ad2c27ff5d42e1aab7c50e60d4",
+    "assets/characters/shared/restart_actions.glb": "b938f197e849221058ece50f0af066a882ed27952630c3933dbd085be2872e97"
+  },
+  "owner_original_photos_verified": true,
+  "soak_metrics": {
+    "ball_travel_m": 1843.58362148708,
+    "goals": [
+      6,
+      5
+    ],
+    "kickoff": "Beechlawn Rovers",
+    "longest_stationary_s": 3,
+    "statuses": {
+      "Shot fired": 11
+    },
+    "teams": {
+      "Beechlawn Rovers": {
+        "action_decisions": {
+          "cross": 1,
+          "shoot": 6,
+          "short_pass": 11,
+          "through_pass": 7
+        },
+        "cancelled_contacts": 2,
+        "chest_controls": 0,
+        "completed_passes": 8,
+        "contested_shots": 6,
+        "controls": 32,
+        "cross_styles": {
+          "early_cross": 1
+        },
+        "crosses": 1,
+        "final_third_entries": 7,
+        "headers": 0,
+        "intercepted_passes": 7,
+        "lofted_passes": 0,
+        "passes": 19,
+        "sampled_decisions": {
+          "carry": 232,
+          "cross": 1,
+          "none": 735,
+          "shoot": 2,
+          "short_pass": 8,
+          "through_pass": 8
+        },
+        "saves": 0,
+        "shot_styles": {
+          "finesse": 1,
+          "power": 5
+        },
+        "shots": 6
+      },
+      "Boardeaux": {
+        "action_decisions": {
+          "shoot": 5,
+          "short_pass": 18,
+          "through_pass": 5
+        },
+        "cancelled_contacts": 0,
+        "chest_controls": 0,
+        "completed_passes": 12,
+        "contested_shots": 4,
+        "controls": 39,
+        "cross_styles": {},
+        "crosses": 0,
+        "final_third_entries": 5,
+        "headers": 0,
+        "intercepted_passes": 10,
+        "lofted_passes": 0,
+        "passes": 25,
+        "sampled_decisions": {
+          "carry": 201,
+          "none": 653,
+          "shoot": 4,
+          "short_pass": 12,
+          "through_pass": 5
+        },
+        "saves": 0,
+        "shot_styles": {
+          "power": 5
+        },
+        "shots": 5
+      }
+    },
+    "variation": 1,
+    "weather": "sunny"
+  },
+  "notes": [
+    "Final head/roster/material/morph checks follow the rounded-eye export. Gameplay/contact/soak checks cover unchanged authoritative systems before the final lid-only edit.",
+    "The des_groom gallery records scalp coverage before the later eye edit; feeney_native and feeney_blink_native use the final head/groom exports.",
+    "Software Vulkan/native Forward+ at 960x540 is appearance evidence, not an M1 frame-rate result.",
+    "Some short headless tests intermittently report ObjectDB/resource shutdown warnings; the verbose volley isolation exited cleanly. Full presentation soak and native captures completed. These warnings are not treated as proof of leak-free runtime.",
+    "One deterministic soak produced 6/5 goals, 6/4 contested shots and no saves. Scripted keeper-contact checks pass; balanced live goalkeeper/wing-play outcomes remain open.",
+    "AAA facial likeness and the inherited collar/shoulder openings remain open. TAA preference persistence is tested; native evidence uses the baseline MSAA setting. Moving visual polish and Mac profiling remain open."
+  ]
+}

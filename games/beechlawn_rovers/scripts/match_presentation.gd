@@ -127,7 +127,7 @@ func cancel_for_restart() -> void:
 	if active():
 		for actor in buffer.actors: actor.get_node("Visual").end_presentation()
 		game.camera_rig.presentation_override=false;game.camera_rig.camera.make_current()
-		camera.current=false;panel.hide()
+		FootballCameraOptics.for_camera(camera).clear();camera.current=false;panel.hide()
 		_restore_match_prompts()
 	phase=Phase.IDLE;game._presentation_active=false
 	_pending_goal="";_pending_incident=&"";_incident_ready=false;_incident_entry={}
@@ -219,7 +219,7 @@ func _finish_goal() -> void:
 		actor.get_node("Visual").end_presentation()
 	phase=Phase.IDLE;game._presentation_active=false;game._goal_pause_timer=0
 	_pending_goal="";_pending_incident=&"";_incident_ready=false
-	panel.hide();_restore_match_prompts();camera.current=false;game.camera_rig.presentation_override=false
+	panel.hide();_restore_match_prompts();FootballCameraOptics.for_camera(camera).clear();camera.current=false;game.camera_rig.presentation_override=false
 	game.camera_rig.camera.make_current();game._prepare_kickoff(game._kickoff_team)
 	game.camera_rig.reset_tracking()
 	for actor in game._home_players+game._away_players: game._set_marker_visibility(actor,not game._spectator_mode and actor==game.player)
@@ -271,6 +271,7 @@ func _animate_full_time(delta: float) -> void:
 	if is_instance_valid(_focus):_camera_on(_focus.position,delta)
 func _show_results() -> void:
 	phase=Phase.RESULTS;panel.hide()
+	FootballCameraOptics.for_camera(camera).clear()
 	results=ColorRect.new();results.name="MatchResults";(results as ColorRect).color=Color(0.015,.025,.055,.90)
 	layer.add_child(results);results.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var box:=VBoxContainer.new();results.add_child(box)
@@ -386,6 +387,7 @@ func _restore_replay() -> void:
 		impact.age=saved.age;impact.material.set_shader_parameter("impact_age",saved.age)
 		impact.material.set_shader_parameter("impact_point",saved.point);impact.material.set_shader_parameter("impact_vector",saved.force)
 	game.camera_rig.presentation_override=_saved.camera_override
+	FootballCameraOptics.for_camera(camera).clear()
 	game.camera_rig.camera.global_transform=_saved.camera_transform;game.camera_rig.camera.make_current()
 	game.restart._ignore_buttons=true
 	_entry={};_saved={};_actor_states.clear();_detector_states.clear()
@@ -394,4 +396,4 @@ func _finish_replay() -> void:
 	phase=Phase.IDLE
 	if _after_replay==&"goal": _finish_goal()
 	else:
-		phase=Phase.IDLE;game._presentation_active=false;panel.hide();_restore_match_prompts();camera.current=false
+		phase=Phase.IDLE;game._presentation_active=false;panel.hide();_restore_match_prompts();FootballCameraOptics.for_camera(camera).clear();camera.current=false

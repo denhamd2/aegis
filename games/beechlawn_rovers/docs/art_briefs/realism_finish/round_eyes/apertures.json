@@ -1,0 +1,98 @@
+{
+  "bordeaux_09": {
+    "before": {
+      "Eye_l": {
+        "width_cm": 2.49,
+        "height_cm": 0.78,
+        "height_width": 0.3133,
+        "visible_samples": 1653
+      },
+      "Eye_r": {
+        "width_cm": 2.49,
+        "height_cm": 0.78,
+        "height_width": 0.3133,
+        "visible_samples": 1655
+      }
+    },
+    "after": {
+      "Eye_l": {
+        "width_cm": 2.4,
+        "height_cm": 0.99,
+        "height_width": 0.4125,
+        "visible_samples": 1974
+      },
+      "Eye_r": {
+        "width_cm": 2.4,
+        "height_cm": 0.99,
+        "height_width": 0.4125,
+        "visible_samples": 1977
+      }
+    },
+    "revision": "feeney-rounded-apertures-v1",
+    "source_before_sha256": "f44e2f7c442c2a9fc3bbae76ecfe5da8c8a01dfedddae8ea37e4f25ba16f0da9",
+    "limits": "Front aperture measurement; native likeness and blink review remain separate gates.",
+    "blink": {
+      "Eye_l": {
+        "width_cm": 1.83,
+        "height_cm": 0.18,
+        "height_width": 0.0984,
+        "visible_samples": 75
+      },
+      "Eye_r": {
+        "width_cm": 1.83,
+        "height_cm": 0.18,
+        "height_width": 0.0984,
+        "visible_samples": 76
+      }
+    },
+    "source_after_sha256": "d4695cda66ea35735217dc21b637fe70bd9220e84fd5d160da4afb7d7b6605c6"
+  },
+  "des_feeney_sr": {
+    "before": {
+      "Eye_l": {
+        "width_cm": 2.43,
+        "height_cm": 0.6,
+        "height_width": 0.2469,
+        "visible_samples": 1316
+      },
+      "Eye_r": {
+        "width_cm": 2.43,
+        "height_cm": 0.6,
+        "height_width": 0.2469,
+        "visible_samples": 1317
+      }
+    },
+    "after": {
+      "Eye_l": {
+        "width_cm": 2.37,
+        "height_cm": 0.78,
+        "height_width": 0.3291,
+        "visible_samples": 1556
+      },
+      "Eye_r": {
+        "width_cm": 2.37,
+        "height_cm": 0.78,
+        "height_width": 0.3291,
+        "visible_samples": 1560
+      }
+    },
+    "revision": "feeney-rounded-apertures-v1",
+    "source_before_sha256": "d01df284cd89f00786ccfe874f750c3ba80b18e2c55b08799e93a6070c96b452",
+    "limits": "Front aperture measurement; native likeness and blink review remain separate gates.",
+    "blink": {
+      "Eye_l": {
+        "width_cm": 0.3,
+        "height_cm": 0.09,
+        "height_width": 0.3,
+        "visible_samples": 31
+      },
+      "Eye_r": {
+        "width_cm": 0.3,
+        "height_cm": 0.09,
+        "height_width": 0.3,
+        "visible_samples": 31
+      }
+    },
+    "source_after_sha256": "ff7ae554eea0a0b6cfb63cdea5aaaacfe9a36682a1123b016379b408e186e423"
+  }
+}

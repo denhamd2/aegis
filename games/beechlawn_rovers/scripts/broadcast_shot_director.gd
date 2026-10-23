@@ -52,13 +52,15 @@ func frame(camera: Camera3D, id: StringName, target: Vector3, station: Vector3,
 	elif _alternate_side:
 		station = target + (station-target) * Vector3(1,1,-1)
 		station.z = clampf(station.z,-40,40)
-	if id != current_shot:
+	var cut := id != current_shot
+	if cut:
 		current_shot = id
 		cuts += 1
 		camera.global_position = station
 		camera.fov = fov
 		camera.reset_physics_interpolation()
-		if game.grass_detail != null: game.grass_detail.prewarm(station)
 	else:
 		camera.global_position = camera.global_position.lerp(station, 1 - exp(-delta * 3))
 	camera.look_at(target)
+	if cut and game.grass_detail != null: game.grass_detail.prewarm(station)
+	FootballCameraOptics.for_camera(camera).shot(id, target, fov, delta)

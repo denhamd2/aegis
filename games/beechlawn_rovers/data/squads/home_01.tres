@@ -9,6 +9,7 @@ script = ExtResource("2")
 [sub_resource type="Resource" id="Appearance"]
 script = ExtResource("3")
 kit = "beechlawn_keeper"
+body_fullness = 0.42
 print_name = "J. O’ROURKE"
 head_variant = ExtResource("head_pipeline_head")
 hair_style = "custom"

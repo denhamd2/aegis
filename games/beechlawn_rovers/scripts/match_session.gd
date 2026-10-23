@@ -17,6 +17,9 @@ var camera_zoom := 0.0
 var camera_angle := 0.0
 var show_intro := true
 var weather_preset: StringName = &"sunny"
+var cinematic_depth_of_field := true
+var cinematic_motion_blur := true
+var temporal_aa := false
 
 func _ready() -> void:
 	if "--print-build-info" in OS.get_cmdline_user_args():
@@ -45,6 +48,9 @@ func load_preferences(path: String = SETTINGS_PATH) -> void:
 	camera_angle = clampf(float(config.get_value("camera", "angle", 0.0)), -20.0, 20.0)
 	show_intro = bool(config.get_value("presentation", "intro", true))
 	weather_preset = MatchWeather.valid_id(StringName(str(config.get_value("presentation", "weather", "sunny"))))
+	cinematic_depth_of_field = bool(config.get_value("graphics", "cinematic_depth_of_field", true))
+	cinematic_motion_blur = bool(config.get_value("graphics", "cinematic_motion_blur", true))
+	temporal_aa = bool(config.get_value("graphics", "temporal_aa", false))
 
 func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	var config := ConfigFile.new()
@@ -57,9 +63,13 @@ func save_preferences(path: String = SETTINGS_PATH) -> Error:
 	config.set_value("camera", "angle", camera_angle)
 	config.set_value("presentation", "intro", show_intro)
 	config.set_value("presentation", "weather", str(weather_preset))
+	for field in ["cinematic_depth_of_field", "cinematic_motion_blur", "temporal_aa"]:
+		config.set_value("graphics", field, get(field))
 	return config.save(path)
 
 func apply_preferences() -> void:
+	get_viewport().use_taa = temporal_aa and RenderingServer.get_current_rendering_method() == "forward_plus"
+	get_viewport().msaa_3d = Viewport.MSAA_2X if get_viewport().use_taa else Viewport.MSAA_4X
 	AudioServer.set_bus_volume_linear(0, master_volume)
 	for bus in ["Music","Match","UI"]:
 		AudioServer.set_bus_volume_linear(AudioServer.get_bus_index(bus),float(get(bus.to_lower()+"_volume")))

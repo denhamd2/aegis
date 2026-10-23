@@ -84,6 +84,8 @@ def main():
     parser.add_argument('--view', choices=('front', 'threequarter', 'profile'))
     args = parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
     for identity in (IDENTITIES if args.player is None else (args.player,)):
+        if args.apply and not args.expressions_only and (HERE/SOURCES[identity]).exists():
+            raise RuntimeError('Preserve the current artist source: '+SOURCES[identity]+'. Open/edit/capture it, then use build_roster_heads.py; this bootstrap would overwrite later anatomy and materials.')
         if args.expressions_only:
             from player_head_finish import facial_shapes
             bpy.ops.wm.open_mainfile(filepath=str(HERE/SOURCES[identity]))

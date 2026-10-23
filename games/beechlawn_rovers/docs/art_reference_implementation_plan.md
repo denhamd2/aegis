@@ -1,5 +1,13 @@
 # Beechlawn Rovers — Reference Art Implementation Plan
 
+Current finishing work: [23 October realism pass](art_briefs/realism_finish/brief.md),
+BR-022 (22/27), with shared-body fullness, individual heads and cinematic/turf
+presentation. Player Des now has additional original side/back photographs
+69911/69910/69909 in the [reference archive](../references/README.md).
+Use their temporal wedge, sideburns and rear horseshoe ahead of the generated
+sheet's groom; retain the bare crown. Referee Des remains a separate identity.
+Technical export checks do not close the AAA likeness or M1 hardware gates.
+
 **Reviewed:** 2026-10-18
 **Source folder:** [Beechlawn Game reference folder](https://drive.google.com/drive/folders/1GUh4bQDTKJY7-44wLtbsKZAWq6SyIotm); [Kilmore Drive Street View](https://maps.app.goo.gl/p7TfFiB6Qmqviwsh6); [Kilmore Drive satellite view](https://maps.app.goo.gl/SPqee19XAk4EQ6qs7)  
 **Archived copies:** [`references/README.md`](../references/README.md)  
