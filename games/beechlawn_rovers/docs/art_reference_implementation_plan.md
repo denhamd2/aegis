@@ -329,3 +329,14 @@ palette, keeping the existing photorealistic players and their blue/black kits.
 The [menu revision brief](art_briefs/title_red_black_evidence/brief.md) records
 the direct-source treatment and Web comparison. This belongs to BR-024 (24/25);
 it does not change character/kit production or match broadcast graphics.
+
+## Turf, directed broadcasts and four-head finish — 23 October 2026
+
+The current [follow-up brief](art_briefs/broadcast_turf_refresh_2026_10_23/brief.md)
+tracks BR-023 (23/27), BR-026/027 (26/27, 27/27) and BR-022 (22/27).
+The owner chose dense short turf near cameras and the existing textured surface
+at broadcast distance. Wider blue lower thirds are centered and responsive;
+goal, replay and full-time coverage uses deliberate camera stations and cuts.
+Shane/John/player Des/referee Des retain separate portraits, sculpts and grooms.
+New form/roughness/expression work is an improvement pass, not owner approval
+of AAA likeness. Native M1 graphics and performance remain unmeasured.

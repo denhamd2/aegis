@@ -62,6 +62,16 @@ func _run() -> void:
 			assert(_part(rig, "Skin_Head").mesh == master, "Unedited players must share master")
 		for eye in ["Eye_l", "Eye_r"]:
 			assert(_part(rig, eye).mesh == _part(expected_head_package, eye).mesh)
+		if is_bordeaux or is_john or is_shane or is_referee:
+			var face := _part(rig, "Skin_Head")
+			assert(face.find_blend_shape_by_name("Blink") >= 0 and face.find_blend_shape_by_name("Smile") >= 0)
+			var shift := float(absi(hash(visual._appearance_profile.player_id)) % 310) / 100.0
+			visual._face_clock = 4.16 - shift
+			visual._process(0)
+			assert(face.get_blend_shape_value(face.find_blend_shape_by_name("Blink")) > .95, "Live fitted eyelids close")
+			visual._face_clock = 1.0 - shift
+			visual._process(0)
+			assert(is_zero_approx(face.get_blend_shape_value(face.find_blend_shape_by_name("Blink"))), "Blink returns to neutral")
 		var body := _part(rig, "YBot_Surface").mesh
 		if common_body == null:
 			common_body = body

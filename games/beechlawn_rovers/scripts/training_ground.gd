@@ -59,7 +59,7 @@ var _capture_callback: JavaScriptObject
 var _spectator_mode := false
 var _intro_active := false
 var _pre_match: Node
-var restart = preload("res://scripts/football_restart_controller.gd").new()
+var restart # Created and parented together in _ready; unready review copies own no node.
 var presentation: FootballMatchPresentation
 var _presentation_active := false
 var events: FootballMatchEvents
@@ -99,6 +99,7 @@ func _ready() -> void:
 			push_error("Invalid match lineup: %s" % errors)
 			return
 	_assemble_teams()
+	restart = preload("res://scripts/football_restart_controller.gd").new()
 	restart.name="RestartController"
 	add_child(restart)
 	restart.setup(self)
@@ -1089,6 +1090,8 @@ func build_pitch() -> void:
 	grass.set_shader_parameter("field_width", FIELD_WIDTH)
 	grass.set_shader_parameter("grass_albedo",
 		load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Color.jpg"))
+	grass.set_shader_parameter("grass_normal",load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_NormalGL.jpg"))
+	grass.set_shader_parameter("grass_roughness",load("res://assets/environment/surfaces/ambientcg/Grass005/Grass005_1K-JPG_Roughness.jpg"))
 	var pitch := MeshInstance3D.new()
 	pitch.name = "SundayLeagueTurf"
 	var plane := PlaneMesh.new()

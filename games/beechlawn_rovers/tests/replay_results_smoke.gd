@@ -63,7 +63,7 @@ func _run() -> void:
 	game._on_goal("Beechlawn Rovers",1)
 	check(game._home_score==1,"Celebration cannot award a duplicate goal")
 	check(manager.phase==manager.Phase.GOAL and manager._focus.team_name==&"Beechlawn Rovers","Own-goal focus belongs to scoring team")
-	for tick in 241: manager.update(1.0/60)
+	for tick in 361: manager.update(1.0/60)
 	check(manager.phase==manager.Phase.REPLAY,"Goal automatically enters its recorded replay")
 	check(manager.handle_key(skip),"Goal replay skips to kickoff")
 	check(game._kickoff_pending and game._home_score==1 and not game._presentation_active,"Goal restart and score preserved")

@@ -1,0 +1,11 @@
+
+[smoke] unready_scene_cleanup_smoke.gd (timeout 45s)
+[failed] unready_scene_cleanup_smoke.gd reported a script/assertion failure; stopped immediately
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+UNREADY_SCENE_ORPHANS before=0 after=4
+SCRIPT ERROR: Assertion failed: An asset-review source must not leak an unparented restart controller
+          at: _run (res://tests/unready_scene_cleanup_smoke.gd:11)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://tests/unready_scene_cleanup_smoke.gd:11)
+

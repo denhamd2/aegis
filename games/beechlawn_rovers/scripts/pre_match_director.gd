@@ -220,6 +220,9 @@ func _enter_shot(index: int) -> void:
 			camera.projection = gameplay.projection
 			camera.size = gameplay.size
 			camera.fov = gameplay.fov
+	if match_scene.grass_detail != null:
+		match_scene.grass_detail.prewarm(shot["from"])
+		if index + 1 < shots.size(): match_scene.grass_detail.prepare(shots[index + 1]["from"])
 	_update_shot(0.0)
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.BEECHLAWN_INTRO_SHOT_ID = '%s'" % str(shot["id"]))
@@ -244,7 +247,8 @@ func _update_shot(time: float) -> void:
 			caption_duration *= 0.5
 			title_label.text = "BEECHLAWN ROVERS" if time < caption_duration else "BOARDEAUX"
 			caption_time = fmod(time, caption_duration)
-		_lower_third.modulate.a = smoothstep(0.0, 0.4, caption_time) * (1.0 - smoothstep(caption_duration - 0.4, caption_duration, caption_time))
+		(_lower_third as FootballLowerThird).reveal(caption_time)
+		_lower_third.modulate.a *= 1.0 - smoothstep(caption_duration - 0.4, caption_duration, caption_time)
 	var linear := clampf(time / float(shot["duration"]), 0.0, 1.0)
 	var eased := smoothstep(0.0, 1.0, linear)
 	camera.global_position = (shot["from"] as Vector3).lerp(shot["to"], eased)
@@ -262,7 +266,8 @@ func _update_shot(time: float) -> void:
 			_place(_referee, Vector3(0, 0, 29 - 1.2 * time), 0.0)
 	elif shot["id"] == "referee":
 		var duration := float(shot["duration"])
-		_referee_lower_third.modulate.a = smoothstep(0.0, 0.42, time) * (1.0 - smoothstep(duration - 0.38, duration, time))
+		(_referee_lower_third as FootballLowerThird).reveal(time)
+		_referee_lower_third.modulate.a *= 1.0 - smoothstep(duration - 0.38, duration, time)
 		if OS.has_feature("web") and OS.has_feature("debug"):
 			JavaScriptBridge.eval("window.BEECHLAWN_REFEREE_STATE = " + JSON.stringify({
 				"visible": _referee_lower_third.visible, "alpha": _referee_lower_third.modulate.a,
@@ -367,65 +372,20 @@ func _build_overlay() -> void:
 	material.shader = preload("res://assets/ui/club_crest_mask.gdshader")
 	crest.material = material
 	top.add_child(crest)
-	var panel := Panel.new()
+	var panel := FootballLowerThird.new()
 	_lower_third = panel
-	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	panel.offset_left = 26
-	panel.offset_right = 876
-	panel.offset_top = -137
-	panel.offset_bottom = -52
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color.TRANSPARENT
-	panel.add_theme_stylebox_override("panel", style)
 	screen.add_child(panel)
-	BROADCAST.background(panel)
-	title_label = Label.new()
-	title_label.position = Vector2(154, 24)
-	title_label.add_theme_font_override("font", BOLD)
-	title_label.add_theme_font_size_override("font_size", 31)
-	panel.add_child(title_label)
-	subtitle_label = Label.new()
-	subtitle_label.position = Vector2(23, 49)
-	subtitle_label.add_theme_font_override("font", REGULAR)
-	subtitle_label.add_theme_font_size_override("font_size", 18)
-	subtitle_label.modulate = Color(0.76, 0.83, 0.93)
-	panel.add_child(subtitle_label)
-	_referee_lower_third = Control.new()
-	_referee_lower_third.name = "RefereeLowerThird"
-	_referee_lower_third.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	_referee_lower_third.position = Vector2(26, -164)
-	_referee_lower_third.size = Vector2(1086, 140)
-	_referee_lower_third.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_referee_lower_third.hide()
-	screen.add_child(_referee_lower_third)
-	var referee_plate := TextureRect.new()
-	var referee_atlas := AtlasTexture.new()
-	referee_atlas.atlas = REFEREE_GRAPHIC
-	referee_atlas.region = Rect2(0, 210, 2172, 275)
-	referee_atlas.filter_clip = true
-	referee_plate.texture = referee_atlas
-	referee_plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	referee_plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	referee_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_referee_lower_third.add_child(referee_plate)
-	_referee_name = Label.new()
+	title_label = panel.title
+	subtitle_label = panel.subtitle
+	var referee_banner := FootballLowerThird.new()
+	referee_banner.name = "RefereeLowerThird"
+	screen.add_child(referee_banner)
+	_referee_lower_third = referee_banner
+	_referee_name = referee_banner.title
 	_referee_name.text = "DES FEENEY"
-	_referee_name.position = Vector2(202, 34)
-	_referee_name.size = Vector2(640, 50)
-	_referee_name.add_theme_font_override("font", BOLD)
-	_referee_name.add_theme_font_size_override("font_size", 36)
-	_referee_name.modulate = Color.WHITE
-	_referee_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_referee_lower_third.add_child(_referee_name)
-	_referee_role = Label.new()
+	_referee_role = referee_banner.subtitle
 	_referee_role.text = "MATCH OFFICIAL  ·  REFEREE"
-	_referee_role.position = Vector2(205, 79)
-	_referee_role.size = Vector2(650, 35)
-	_referee_role.add_theme_font_override("font", REGULAR)
-	_referee_role.add_theme_font_size_override("font_size", 23)
-	_referee_role.modulate = Color(0.76, 0.86, 0.98)
-	_referee_role.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_referee_lower_third.add_child(_referee_role)
+	_referee_lower_third.hide()
 	var skip := Button.new()
 	skip.text = "SKIP INTRO  [SPACE / ENTER]"
 	skip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)

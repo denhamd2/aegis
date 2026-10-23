@@ -39,7 +39,10 @@ for style in ['Celebrate','Handshake']:
   if style=='Celebrate':
    for side,sign in [('Left',1),('Right',-1)]:
     arm(side,(sign*(28+7*amount),132+37*amount,12),(sign*(20+7*amount),118+82*amount,35-23*amount))
-  else:handshake(amount)
+  else:
+   handshake(amount)
+   arm('Left',(28,135,5),(20,108,5))
+   point('LeftHand',(20,96,7))
   for b in rig.pose.bones:
    for prop in ['location','rotation_quaternion']:b.keyframe_insert(prop,frame=frame,group=b.name)
  for fc in action.fcurves:

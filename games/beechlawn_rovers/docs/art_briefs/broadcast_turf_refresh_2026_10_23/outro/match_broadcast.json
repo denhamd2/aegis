@@ -1,0 +1,139 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "camera": "(36.54, 2.95389, 6.0)",
+      "elapsed": 1.25,
+      "file": "goal_celebration.png",
+      "fov": 48.0,
+      "obstruction": "",
+      "phase": 1,
+      "playhead": 0.0,
+      "score": [
+        1,
+        0
+      ],
+      "shot": "celebration_wide"
+    },
+    {
+      "camera": "(46.74, 1.75389, 0.6)",
+      "elapsed": 2.75,
+      "file": "goal_medium.png",
+      "fov": 40.0,
+      "obstruction": "",
+      "phase": 1,
+      "playhead": 0.0,
+      "score": [
+        1,
+        0
+      ],
+      "shot": "scorer_medium"
+    },
+    {
+      "camera": "(45.04, 1.60389, -1.65)",
+      "elapsed": 4.74999999999999,
+      "file": "goal_close.png",
+      "fov": 28.0,
+      "obstruction": "",
+      "phase": 1,
+      "playhead": 0.0,
+      "score": [
+        1,
+        0
+      ],
+      "shot": "scorer_close"
+    },
+    {
+      "camera": "(27.03672, 4.355114, 10.0)",
+      "elapsed": 1.31666666666667,
+      "file": "goal_replay.png",
+      "fov": 48.0,
+      "obstruction": "",
+      "phase": 2,
+      "playhead": 2.78333333333332,
+      "score": [
+        1,
+        0
+      ],
+      "shot": "replay_sideline"
+    },
+    {
+      "camera": "(56.0, 1.5, -9.390934)",
+      "elapsed": 6.29999999999998,
+      "file": "goal_replay_detail.png",
+      "fov": 38.0,
+      "obstruction": "FrameCollision",
+      "phase": 2,
+      "playhead": 6.11666666666664,
+      "score": [
+        1,
+        0
+      ],
+      "shot": "replay_goal_detail"
+    },
+    {
+      "camera": "(-16.5, 2.994055, 2.0)",
+      "elapsed": 2.41666666666666,
+      "file": "full_time_winners.png",
+      "fov": 48.0,
+      "obstruction": "",
+      "phase": 3,
+      "playhead": 6.11666666666664,
+      "score": [
+        2,
+        1
+      ],
+      "shot": "full_time_wide"
+    },
+    {
+      "camera": "(1.602258, 1.698295, 2.957356)",
+      "elapsed": 4.08333333333332,
+      "file": "full_time_medium.png",
+      "fov": 40.0,
+      "obstruction": "",
+      "phase": 3,
+      "playhead": 6.11666666666664,
+      "score": [
+        2,
+        1
+      ],
+      "shot": "full_time_medium"
+    },
+    {
+      "camera": "(0.325, 1.602959, 3.2)",
+      "elapsed": 8.33333333333333,
+      "file": "handshakes.png",
+      "fov": 38.0,
+      "obstruction": "",
+      "phase": 3,
+      "playhead": 6.11666666666664,
+      "score": [
+        2,
+        1
+      ],
+      "shot": "handshake_close"
+    },
+    {
+      "camera": "(0.325, 1.602959, 3.2)",
+      "elapsed": 12.0000000000002,
+      "file": "match_broadcast.png",
+      "fov": 38.0,
+      "obstruction": "",
+      "phase": 4,
+      "playhead": 6.11666666666664,
+      "score": [
+        2,
+        1
+      ],
+      "shot": "handshake_close"
+    }
+  ],
+  "ghost_physics_bodies": 0,
+  "home_players": 11,
+  "officials": 1,
+  "pose_data_bytes": 10107408,
+  "rendering_method": "forward_plus",
+  "scope": "Scripted native celebration/replay/results fixture using actual roster poses; not natural match or M1 performance evidence"
+}

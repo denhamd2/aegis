@@ -134,10 +134,14 @@ def build_groom(head, rig, identity):
                     length, width, lift, rows = rng.uniform(.20, .42), rng.uniform(.012, .024), .035, 3
                 else:
                     length = rng.uniform(1.2, 2.4) if top else rng.uniform(.35, .80)
+                    if identity == 'shane_denham':
+                        length = rng.uniform(.65, 1.15) if top else rng.uniform(.25, .55)
                     if identity == 'john_orourke' and top:
                         length *= 1.25
                     width = rng.uniform(.055, .095) if top else rng.uniform(.018, .038)
                     lift = rng.uniform(.34, .70) if top else rng.uniform(.04, .12)
+                    if identity == 'shane_denham' and top:
+                        lift = rng.uniform(.14, .30)
                     if identity == 'john_orourke' and top:
                         lift *= 1.35
                     rows = 5
@@ -153,7 +157,7 @@ def build_groom(head, rig, identity):
                     lift = rng.uniform(.07, .20)
             else:
                 flow = Vector((math.copysign(1, root.x), .12, 0))
-                length, width, lift, rows = rng.uniform(.16, .32), rng.uniform(.008, .016), .018, 3
+                length, width, lift, rows = rng.uniform(.19, .36), rng.uniform(.011, .020), .018, 3
             tangent = flow-normal*flow.dot(normal)
             if tangent.length < 1e-7:
                 continue
@@ -195,6 +199,6 @@ def build_groom(head, rig, identity):
         polygon.material_index = index
     cards['groom_guides'] = sum(emitted_counts)
     cards['groom_regions'] = 'scalp, fitted facial hair, eyebrows'
-    cards['finish_revision'] = 'four-head-reference-v1'
+    cards['finish_revision'] = 'four-head-reference-v2'
     print('FITTED_GROOM', identity, emitted_counts, len(faces)*2, 'fibre triangles', flush=True)
     return roots, cards

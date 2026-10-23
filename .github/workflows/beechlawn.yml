@@ -29,9 +29,10 @@ jobs:
       - name: Import and verify football project
         run: |
           python3 games/beechlawn_rovers/tools/test_native_display_pipe.py
+          python3 games/beechlawn_rovers/tools/test_smoke_monitor.py
           timeout --kill-after=5s 180s godot --headless --editor --path games/beechlawn_rovers --import
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py shane_head_variant_smoke.gd shared_head_roster_smoke.gd
-          python3 games/beechlawn_rovers/tools/run_smoke_tests.py shared_gait_integrity_smoke.gd defensive_controls_smoke.gd keeper_live_contact_smoke.gd set_piece_variety_smoke.gd pitch_audio_smoke.gd keeper_diving_high_smoke.gd replay_results_smoke.gd
+          python3 games/beechlawn_rovers/tools/run_smoke_tests.py shared_gait_integrity_smoke.gd defensive_controls_smoke.gd keeper_live_contact_smoke.gd set_piece_variety_smoke.gd pitch_audio_smoke.gd keeper_diving_high_smoke.gd replay_results_smoke.gd broadcast_direction_smoke.gd handshake_contact_smoke.gd unready_scene_cleanup_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py moving_kick_contact_smoke.gd first_time_pass_timing_smoke.gd first_time_shot_smoke.gd contested_shot_smoke.gd goalkeeper_response_smoke.gd goalkeeper_smoke.gd goalkeeper_outcomes_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py aerial_flight_smoke.gd aerial_contact_smoke.gd aerial_safety_smoke.gd aerial_controls_smoke.gd cross_to_header_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py advanced_shots_smoke.gd advanced_controls_smoke.gd cross_variants_smoke.gd volley_contact_smoke.gd grounded_aerial_recovery_smoke.gd

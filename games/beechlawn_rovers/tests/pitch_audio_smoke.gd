@@ -8,7 +8,9 @@ func _run() -> void:
 	game.set_physics_process(false);game._set_players_physics_enabled(false)
 	var detail: PitchGrassDetail = game.grass_detail
 	assert(detail != null)
-	for tick in 10: detail._process(0)
+	assert(detail.tuft.get_aabb().size.y<=.025 and detail.CELL==.75,"Short dense turf replaces tall isolated tufts")
+	detail._queue_cells(Vector3.ZERO)
+	while not detail._pending.is_empty(): detail._build_cell(detail._pending.pop_front())
 	assert(detail.chunks.size()<=16 and detail.tuft_count()>1000 and detail.tuft_count()<=40000)
 	var checked := 0
 	for chunk in detail.chunks.values():

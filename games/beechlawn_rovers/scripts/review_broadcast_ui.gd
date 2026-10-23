@@ -30,12 +30,21 @@ func _run() -> void:
 				director._enter_shot(index)
 				director._update_shot(float(director.shots[index].duration)*.4)
 				await save_frame(id+".png")
+	director._lower_third.hide()
+	director._referee_lower_third.hide()
+	director.camera.global_position = Vector3(15, .16, 12)
+	director.camera.fov = 48
+	director.camera.look_at(Vector3(15, .02, 9.5))
+	game.grass_detail.prewarm(director.camera.global_position)
+	await save_frame("turf_close.png")
+	var turf_report := {"active_crowns":game.grass_detail.tuft_count(),"active_triangles":game.grass_detail.tuft_count()*6,"active_chunks":game.grass_detail.chunks.size(),"prepared_chunks":game.grass_detail.prepared.size(),"blade_height_m":[.0153,.0288],"cell_m":game.grass_detail.CELL}
 	director.finish()
 	game.camera_rig.set_process(false)
 	await save_frame("match_broadcast.png")
 	var report := {"rendering_method":RenderingServer.get_current_rendering_method(),
 		"adapter":RenderingServer.get_video_adapter_name(),"display_server":DisplayServer.get_name(),
 		"home_players":game._home_players.size(),"away_players":game._away_players.size(),"officials":1,
+		"turf":turf_report,
 		"scope":"Actual title/intro/HUD; software Vulkan stills do not certify M1 performance"}
 	var file := FileAccess.open(output.path_join("match_broadcast.json"),FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"  "))

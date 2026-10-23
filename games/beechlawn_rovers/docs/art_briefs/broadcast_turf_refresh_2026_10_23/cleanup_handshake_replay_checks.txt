@@ -1,0 +1,34 @@
+
+[smoke] unready_scene_cleanup_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+UNREADY_SCENE_ORPHANS before=0 after=0
+[passed] unready_scene_cleanup_smoke.gd (2.1s)
+
+[smoke] handshake_contact_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+HANDSHAKE_POSE {"a":"(0.78, 0.007104, 0.0)","a_clip":"AN_Beechlawn_Handshake","a_hands":"[(0.827309, 0.981446, -0.197956), (1.120465, 1.060383, 0.001661)]","b":"(1.634999, 0.014417, 0.0)","b_clip":"AN_Beechlawn_Handshake","b_hands":"[(1.58769, 0.988759, 0.197956), (1.294534, 1.067696, -0.001661)]"}
+HANDSHAKE_WRIST_GAP 0.17425402998924
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] handshake_contact_smoke.gd (6.6s)
+
+[smoke] broadcast_direction_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+BROADCAST_DIRECTION PASS: centered safe layouts, mirrored cuts, incident metadata, half-speed poses, exact restart
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] broadcast_direction_smoke.gd (6.7s)
+
+[smoke] replay_results_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1
+BEECHLAWN_MATCH_READY actors=22 officials=1
+BEECHLAWN_MENU_READY
+REPLAY_RESULTS failures=0
+[passed] replay_results_smoke.gd (12.3s)

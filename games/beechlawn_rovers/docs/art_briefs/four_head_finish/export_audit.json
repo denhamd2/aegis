@@ -3,7 +3,7 @@
   "heads": {
     "shane_denham": {
       "source": "shane_denham_head.blend",
-      "sha256": "05d0890fb1343bd4337abf72503189b39323fef8a06a242e57c2656e638a1960",
+      "sha256": "4cd27b36b52ad9e1471e234af372b41c6b8c7cdf536b1e99d0b19275c2bb3eb8",
       "parts": {
         "Skin_Head": {
           "source_vertices": 4326,
@@ -57,7 +57,7 @@
     },
     "john_orourke": {
       "source": "john_orourke_head.blend",
-      "sha256": "2b78d43dcf9fc5c0966bcdfdc345c6e5d3db6e3c295ed9094422900b9722c4af",
+      "sha256": "b0de6f3eadd233b808a8076881c75fa98ee365555f2a064b1f3d453b6bb2c86f",
       "parts": {
         "Skin_Head": {
           "source_vertices": 4326,
@@ -111,7 +111,7 @@
     },
     "bordeaux_09": {
       "source": "des_feeney_head.blend",
-      "sha256": "6488c7db66490944595160352d58f202d4e5fbc262cc15426159ebfb2ea7792c",
+      "sha256": "05736c6a5cd0376445c60e5a3b5d06156e990037aa45f3bd4d4505453d77c521",
       "parts": {
         "Skin_Head": {
           "source_vertices": 4326,
@@ -165,7 +165,7 @@
     },
     "des_feeney_sr": {
       "source": "referee_des_feeney_head.blend",
-      "sha256": "abd09dd33fe1b52bfbe1097bbd6458856ab34f2cb0d95e512aece99bfdc19751",
+      "sha256": "eee8d495b76124ce9862e63f68ab25a6f9e12445cd1daece27a31fc3315813c3",
       "parts": {
         "Skin_Head": {
           "source_vertices": 4326,

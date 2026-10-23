@@ -106,3 +106,10 @@ captures with normal maps and sun shadows enabled and MSAA enum 2 (4x),
 recorded in each report. The earlier multi-angle `web/` set is retained as
 pre-antialiasing evidence. All four new portrait logs are free of browser
 errors. The cloud validates appearance/integration, not native Mac parity.
+
+## Current follow-up
+
+The [23 October broadcast/turf/four-head follow-up](../broadcast_turf_refresh_2026_10_23/brief.md)
+supersedes the old no-blink and uniform-roughness status above. It retains this
+pass's historical images and limitations; new evidence has its own directory.
+Reference-driven finishing and native M1 visual acceptance remain open.

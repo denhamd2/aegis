@@ -113,3 +113,18 @@ ball velocity and actor identity. Close volley/half-volley sequences capture
 one 60 Hz step per draw (72 frames, assembled at 60 fps). Wide cross and ground
 shot sequences capture six 60 Hz steps per draw (30 frames, assembled at 10 fps).
 Use each report's `sequence_fps`; software throughput is not a Mac FPS result.
+
+## Directed presentation and reference-led heads
+
+The current follow-up is documented in
+[its evidence brief](art_briefs/broadcast_turf_refresh_2026_10_23/brief.md).
+`--review-mode outro` now records wide/medium/close celebration views, two
+replay angles and full-time reactions/handshakes/results. Its JSON identifies
+shot stations, FOV, playback time and any occlusion fallback. This remains a
+scripted integration fixture. `--review-mode presentation` adds a dry near-turf
+view beside the real venue/team/referee graphics and goalmouth shots.
+
+Use `--verbose` only to diagnose engine teardown or rendering issues; normal
+captures remain strict about script, shader and engine errors. Review scenes
+can instantiate an unstarted match for light/line references; its restart Node
+must be created and parented in _ready so these temporary sources can be freed.

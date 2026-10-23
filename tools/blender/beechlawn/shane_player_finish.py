@@ -185,7 +185,7 @@ def reference_skin_relief(points,eyes):
     return height
 
 
-def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None):
+def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shane", color_overlay=None, neutral_base=False, detail_only=False, retained_neck_albedo=None, roughness_callback=None):
     """Rasterize anatomical pigment onto the original licensed body UVs."""
     size = 2048 if head_only else 512
     from shane_skin_source import sample_skin,skin_tint
@@ -220,6 +220,7 @@ def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shan
     atlas = np.tile(SKIN_PIGMENT, (size, size, 1))
     relief=np.zeros((size,size),dtype=np.float32) if head_only else None
     filled = np.zeros((size, size), dtype=bool)
+    roughness = np.full((size,size), .64, dtype=np.float32) if roughness_callback else None
     for obj in ((head,) if head_only else (body,)):
         mesh = obj.data
         mesh.calc_loop_triangles()
@@ -259,6 +260,9 @@ def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shan
                 heights=reference_skin_relief(samples.reshape(-1,3),eyes).reshape(samples.shape[:2])
                 relief[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask]=heights[mask]
             filled[lo[1]:hi[1]+1, lo[0]:hi[0]+1][mask] = True
+            if roughness is not None:
+                response = roughness_callback(samples.reshape(-1,3)).reshape(samples.shape[:2])
+                roughness[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask] = response[mask]
     # Eight-pixel island gutter, keeping mipmaps from pulling in unrelated art.
     for _ in range(8):
         new = filled.copy()
@@ -266,6 +270,7 @@ def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shan
             valid = np.roll(filled, step, axis) & ~new
             atlas[valid] = np.roll(atlas, step, axis)[valid]
             if head_only:relief[valid]=np.roll(relief,step,axis)[valid]
+            if roughness is not None: roughness[valid]=np.roll(roughness,step,axis)[valid]
             new |= valid
         filled = new
     rng = np.random.default_rng(8)
@@ -274,6 +279,9 @@ def bake_skin(head, body, material, eyes, *, head_only=False, image_prefix="shan
     image_node(material, image_from_array(filename, atlas), "Base Color")
     bsdf = material.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Roughness"].default_value = .58
+    if roughness is not None:
+        response = roughness.reshape(1024,2,1024,2).mean(axis=(1,3))
+        image_node(material,image_from_array(image_prefix+'_skin_roughness',np.repeat(response[:,:,None],3,axis=2),"Non-Color"),"Roughness")
     # A reusable baked micro-normal, no procedural shader dependency in Godot.
     if head_only:
         # Downsample the sculpt-relief bake to 1K, then add restrained pores.

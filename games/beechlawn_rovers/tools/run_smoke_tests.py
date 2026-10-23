@@ -14,17 +14,20 @@ from __future__ import annotations
 
 import os
 import signal
+import selectors
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
 PROJECT = Path(__file__).resolve().parents[1]
 GODOT = os.environ.get("GODOT_BIN", "godot")
 TIMEOUT = float(os.environ.get("BEECHLAWN_TEST_TIMEOUT_SECONDS", "45"))
-# The full match permits 300 simulated seconds including stoppages at 6x speed:
-# its 50-second wall-clock ceiling before CPU overhead exceeds the short tests.
-LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 75.0, "full_presentation_match_soak.gd": 135.0}
+# Full 23-actor pose evaluation takes about 64 s on this cloud CPU before
+# cold-start/host-load variation. These remain hard deadlines; progress logs
+# distinguish simulation stalls from a healthy slower-than-real-time run.
+LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 120.0, "full_presentation_match_soak.gd": 180.0}
 DEFAULT_TESTS = [
     "wet_weather_smoke.gd",
     "footballer_animation_tree_smoke.gd",
@@ -54,6 +57,39 @@ def stop_process_group(process: subprocess.Popen[str]) -> None:
         pass
 
 
+def monitor_process(process, timeout):
+    """Detect a failed GDScript immediately: assert() need not exit SceneTree."""
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ)
+    deadline = time.monotonic() + timeout
+    output = bytearray()
+    status = 'complete'
+    fatal = (b'SCRIPT ERROR:', b'Assertion failed', b'ERROR: Failed to load')
+    try:
+        while True:
+            if time.monotonic() >= deadline:
+                if status == 'complete':
+                    status = 'timeout'
+                    stop_process_group(process)
+                break
+            ready = selector.select(min(.25, max(0, deadline-time.monotonic())))
+            if not ready:
+                continue
+            chunk = os.read(process.stdout.fileno(), 65536)
+            if not chunk:
+                break
+            output.extend(chunk)
+            if status == 'complete' and any(marker in output for marker in fatal):
+                status = 'error'
+                stop_process_group(process)
+                deadline = time.monotonic() + 1
+        process.wait(timeout=3)
+    finally:
+        selector.close()
+        process.stdout.close()
+    return output.decode(errors='replace'), status
+
+
 def main() -> int:
     names = sys.argv[1:] or DEFAULT_TESTS
     for name in names:
@@ -73,6 +109,7 @@ def main() -> int:
         print(f"\n[smoke] {name} (timeout {timeout:g}s)", flush=True)
         if name in {"eleven_v_eleven_match_soak.gd", "full_presentation_match_soak.gd"}:
             print("[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s", flush=True)
+        started = time.monotonic()
         process = subprocess.Popen(
             command,
             cwd=PROJECT,
@@ -82,15 +119,16 @@ def main() -> int:
             text=True,
             errors="replace",
         )
-        try:
-            output, _ = process.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            stop_process_group(process)
-            output, _ = process.communicate()
+        output, state = monitor_process(process, timeout)
+        if state == 'timeout':
             if output:
                 print("\n".join(output.splitlines()[-60:]))
             print(f"[timeout] {name} exceeded {timeout:g}s; process group terminated", file=sys.stderr)
             return 124
+        if state == 'error':
+            print(output[-8000:])
+            print(f"[failed] {name} reported a script/assertion failure; stopped immediately", file=sys.stderr)
+            return 1
         if output:
             print(output, end="" if output.endswith("\n") else "\n")
         result = process.returncode
@@ -101,7 +139,7 @@ def main() -> int:
         if any(marker in output for marker in failure_markers):
             print(f"[failed] {name} reported a Godot script/load error", file=sys.stderr)
             return 1
-        print(f"[passed] {name}", flush=True)
+        print(f"[passed] {name} ({time.monotonic()-started:.1f}s)", flush=True)
     return 0
 
 

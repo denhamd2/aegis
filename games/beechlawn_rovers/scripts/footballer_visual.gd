@@ -34,6 +34,8 @@ var _appearance_team: FootballTeam
 var _human_rig := false
 var _presentation_active := false
 var _base_head_parts: Dictionary = {}
+var _face_mesh: MeshInstance3D
+var _face_clock := 0.0
 static var _kit_materials: Dictionary = {}
 static var _head_variant_meshes: Dictionary = {}
 @export var jog_reference_speed := 6.0
@@ -61,6 +63,21 @@ func _ready() -> void:
 		configure_appearance(_appearance_profile, _appearance_team)
 	else:
 		_prime_locomotion_pose()
+
+
+func _process(delta: float) -> void:
+	if not is_instance_valid(_face_mesh): return
+	_face_clock += delta
+	var offset := float(absi(hash(_appearance_profile.player_id)) % 310) / 100.0 if _appearance_profile != null else 0.0
+	var phase := fmod(_face_clock + offset, 4.3)
+	var blink := _face_mesh.find_blend_shape_by_name("Blink")
+	if blink >= 0:
+		var amount := sin(clampf((phase - 4.05) / .22, 0, 1) * PI) if phase > 4.05 else 0.0
+		_face_mesh.set_blend_shape_value(blink, amount)
+	var smile := _face_mesh.find_blend_shape_by_name("Smile")
+	if smile >= 0:
+		var target := .65 if _presentation_active and animation_player.current_animation == &"AN_Beechlawn_Celebrate" else 0.0
+		_face_mesh.set_blend_shape_value(smile, move_toward(_face_mesh.get_blend_shape_value(smile), target, delta * 2))
 
 
 func _prepare_looping_motion() -> void:
@@ -126,6 +143,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 	for node in get_node("Rig").find_children("*", "MeshInstance3D", true, false):
 		var part := node as MeshInstance3D
 		var part_name := String(part.name)
+		if part_name == "Skin_Head": _face_mesh = part
 		if part_name == "Skin_Head" or part_name.begins_with("Eye_") or part_name.begins_with("Hair_"):
 			if not _base_head_parts.has(part_name):
 				_base_head_parts[part_name] = part.mesh

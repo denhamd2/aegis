@@ -17,6 +17,17 @@ requirements and remaining hardware gates are tracked in
 [mac_playtest_improvements.md](mac_playtest_improvements.md). Existing mechanical
 smoke passes do not close the owner's visible match-quality findings.
 
+## Approved turf and broadcast follow-up — 23 October 2026
+
+BR-023 (23/27): remove the old sparse weed-like geometry; deliver dense short
+near-camera turf with a matching PBR surface, bounded instancing and puddle/mud
+exclusion. BR-026/027 (26/27 and 27/27): directed celebration/full-time camera
+cuts and alternate slow replay angles; all caption plates share a wider,
+centered blue layout. BR-022 (22/27) follows with individual form, groom,
+roughness and expression work for Shane, John and both Des identities.
+See [the current implementation evidence](art_briefs/broadcast_turf_refresh_2026_10_23/brief.md).
+Character likeness and M1 appearance/performance remain separate acceptance gates.
+
 ## Current state
 
 Delivery is **Mac-only** as of 2026-10-22. The owner retired the football Web
@@ -29,7 +40,8 @@ The standalone Godot 4.6.3 project opens on the Beechlawn Rovers 27 title
 screen, offering Play (keyboard vs AI) or Watch (AI vs AI), then launches a
 three-minute 11v11 match: ten outfield players and one keeper per side, plus a separate
 referee. Shared human body, rig, animation and team/role materials replace the
-proxy in this scene. Individual heads still use the common Shane-derived draft.
+proxy in this scene. Shane, John and both Des identities have independent editable heads; other
+Beechlawn identities retain the common starting head. Final likeness remains open.
 The original 4v4 scene remains the regression fixture.
 
 Role-aware 4-4-2 targets, shared-snapshot tactical decisions, player switching including
@@ -771,6 +783,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 ### P5 — Art direction, presentation and shipping
 
 - [ ] **BR-022 — Character and kit production**
+  - 2026-10-23: four independent form/groom/roughness/blink/smile refinements have source/export and grounded native checks; exact/AAA likeness and M1 approval remain open. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-22 native look checks: football now uses its own bounded
     Forward+/Vulkan/Xvfb still runner for primary appearance evidence, adapting
     the wrestling capture principle without touching that project. Four native
@@ -942,6 +955,7 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive park environment**
+  - 2026-10-23: the weed-like tufts are replaced by dense short camera-local turf and matching CC0 normal/roughness detail; bounded residency, mud/water masks and native close views checked. Venue likeness/M1 remain open. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-23: camera-local curved grass tufts follow terrain and shared mud/water masks, capped at 40k tufts / 240k triangles; native close grass/net views inspected. Exact environment likeness and M1 frame time remain open. See `art_briefs/pitch_audio_2026_10_23/brief.md`.
   - 2026-10-22: Mirrored the exterior penalty arcs and connected physical net impacts to a visible anchored bulge; scored balls keep moving into the net.
   - 2026-10-20 wet goalmouth/weather pass: shared mud/water masks at both goals,
@@ -1047,11 +1061,13 @@ distance, stays within the Mac frame-time budget, and can be built/released
 without touching Aegis artifacts.
 
 - [x] **BR-026 — Goal and full-time presentation**
+  - 2026-10-23: wide/medium/scorer close cuts, centered blue captions and directed full-time reactions/handshakes now have mirrored/runtime/native checks. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-23: original shared celebrations/handshakes, winners/draws, own-goal handling, reduced teams, automatic results with Rematch/Title and Space/Enter skip pass logic/native checks. M1 feel remains under BR-025.
   Scorer/teammate reactions, own goals, winner/draw treatment, handshakes and
   a usable Rematch/Title results screen. Original shared animations; skippable,
   clock/rules isolated and valid with reduced teams.
 - [x] **BR-027 — Incident replays**
+  - 2026-10-23: recorded incident metadata and facial poses support sideline then slow alternate-angle replay; opaque-obstruction selection, gameplay isolation and exact restart restoration pass. See `art_briefs/broadcast_turf_refresh_2026_10_23/brief.md`.
   - 2026-10-23: bounded root/bone/ball/net snapshots, actual runtime head/kit ghosts, rule/audio/clock isolation, natural-stoppage autoplay and exact skip/restore checks pass. Full unskipped match reaches results; native fixture evidence is in `art_briefs/match_outro_replays_2026_10_23/`.
   Collision-free ghost playback from bounded pose/ball snapshots. Goals and
   major incidents replay automatically at natural stoppages; Space/Enter skips.

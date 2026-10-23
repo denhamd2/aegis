@@ -122,7 +122,61 @@ def sculpt(point, identity):
     # Bound ear projection while retaining pinna topology and asymmetry.
     ear = smooth(8.0, 9.7, abs(x))*(1-smooth(3.5, 6.5, abs(z)))
     x -= math.copysign(.16*ear, x)
-    return calibrate((x, y, z), identity)
+    return portrait_form(calibrate((x, y, z), identity), identity)
+
+
+def portrait_form(point, identity):
+    """Reference silhouette pass: skull height, fleshy cheeks and individual lids.
+
+    The previous four heads retained the same long crown and hollow angular
+    muzzle. These centimetre-space fields change structure, not a portrait decal.
+    They deliberately leave the neck and eyeball centres unchanged.
+    """
+    x, y, z = point
+    if y < 154:
+        return Vector(point)
+    front = smooth(3., 8., z)
+    neck = smooth(154., 157., y)
+    crown, cheek_fill, jaw_softness = {
+        'shane_denham': (.86, .62, .34),
+        'john_orourke': (.83, .76, .48),
+        'bordeaux_09': (.76, .94, .63),
+        'des_feeney_sr': (.78, .82, .74),
+    }[identity]
+    cheek = field(x, y, 4.5, 161.0, 2.5, 2.6) * front
+    z += cheek_fill * cheek
+    # Remove the inherited razor-straight cheek hollow and square jaw corner.
+    z += .32 * field(x, y, 5.6, 159.2, 2.3, 2.0) * front * neck
+    x -= math.copysign(jaw_softness * field(x, y, 6.8, 157.7, 1.5, 2.0) * neck, x)
+    z += .24 * field(x, y, 0, 156.6, 3.4, 1.5) * front * neck
+    # Residual landmark gaps from the archived front-view measurements:
+    # John's snub nose sits higher; the two Des portraits have narrower mouths.
+    nose = math.exp(-((y-162.25)/1.25)**4) * (1-smooth(2.8, 3.6, abs(x))) * front
+    x *= 1-{'shane_denham':.06,'john_orourke':.12,'bordeaux_09':.12,'des_feeney_sr':.10}[identity]*nose
+    y += {'shane_denham':.05,'john_orourke':.38,'bordeaux_09':.12,'des_feeney_sr':.30}[identity]*nose
+    mouth = math.exp(-(x/5.2)**6-((y-159.85)/1.45)**2) * front
+    x *= 1-{'shane_denham':.025,'john_orourke':.07,'bordeaux_09':.14,'des_feeney_sr':.18}[identity]*mouth
+    if identity in ('bordeaux_09', 'des_feeney_sr'):
+        # Both portraits have soft lower cheeks; the referee has older jowls.
+        x += math.copysign(.42 * field(x, y, 5.1, 158.2, 2.2, 2.7) * neck, x)
+        z += .35 * field(x, y, 3.5, 157.3, 3.0, 1.9) * front * neck
+    # Subtle natural bilateral difference rather than identical mirrored planes.
+    z += .075 * math.sin(x * .32) * field(x, y, 3.8, 162.3, 3.2, 3.2) * front
+    if identity == 'shane_denham':
+        z += .18 * field(x, y, 3.5, 167.6, 2.0, .7) * front
+        z -= .16 * field(x, y, 0, 162.7, 1.2, 1.8) * front
+    elif identity == 'john_orourke':
+        z += .16 * field(x, y, 3.5, 165.4, 1.7, .6) * front
+    elif identity == 'des_feeney_sr':
+        # Structural bags and nasolabial folds remain visible without normals.
+        z += .22 * field(x, y, 3.4, 165.0, 1.8, .55) * front
+        fold_x = 2.0 + .32 * (162.0 - y)
+        z -= .13 * math.exp(-((abs(x)-fold_x)/.34)**2-((y-160.1)/1.8)**4) * front
+        for line in (169.3, 170.2):
+            z -= .055 * math.exp(-((y-line-.08*math.cos(x*.5))/.14)**2-(x/5.2)**6) * front
+    # Keep the facial landmarks below the brow; shorten the excessive crown.
+    y -= (1-crown) * max(0., y-168.) * smooth(168., 170., y)
+    return Vector((x, y, z))
 
 
 def eye_sculpt(point, centre, identity):
@@ -130,6 +184,28 @@ def eye_sculpt(point, centre, identity):
             'bordeaux_09': (.95, .91), 'des_feeney_sr': (.95, .88)}[identity]
     p = point-centre
     return calibrate(centre+Vector((p.x*size[0], p.y*size[1], p.z*.96-.12)), identity)
+
+
+def soften_cheek_planes(mesh):
+    """Relax broad inherited cheek facets, protecting apertures and the neck."""
+    neighbours = [set() for _ in mesh.vertices]
+    for edge in mesh.edges:
+        a, b = edge.vertices
+        neighbours[a].add(b)
+        neighbours[b].add(a)
+    weights = []
+    for vertex in mesh.vertices:
+        x, y, z = vertex.co
+        weight = .42 * field(x, y, 5.1, 161.1, 2.9, 3.1) * smooth(4., 7., z)
+        weight *= smooth(154., 157., y)
+        weight *= 1 - .95 * field(x, y, 3.1, 159.9, 1.2, .75)
+        weights.append(weight)
+    for _ in range(5):
+        before = [vertex.co.copy() for vertex in mesh.vertices]
+        for index, vertex in enumerate(mesh.vertices):
+            if weights[index] > .002 and neighbours[index]:
+                average = sum((before[n] for n in neighbours[index]), Vector()) / len(neighbours[index])
+                vertex.co = before[index].lerp(average, weights[index])
 
 
 def _smooth(a, b, x):
@@ -188,7 +264,7 @@ def hair_regions(points, identity):
     moustache = np.exp(-(x/2.85)**6-((y-arch)/moustache_height)**4)*face
     moustache *= (1-.28*np.exp(-(x/.30)**2))
     if identity == 'bordeaux_09':
-        beard = np.exp(-(x/2.55)**6-((y-156.7)/1.75)**6)*front
+        beard = np.exp(-(x/3.15)**4-((y-156.5)/1.65)**4)*front
         connectors = np.exp(-((ax-2.45)/.30)**2-((y-158.65)/1.05)**2)*face*.48
         soul = np.exp(-(x/.8)**6-((y-158.85)/.45)**4)*face*.6
         facial = np.maximum.reduce((beard, moustache*.9, connectors, soul))
@@ -208,6 +284,7 @@ def hair_regions(points, identity):
 
 
 def finish_head(head, identity):
+    facial_shapes(head)
     import shane_player_finish as skin
     from skin_palette import SHARED_SKIN, JOHN_SKIN, DES_PLAYER_SKIN, DES_REFEREE_SKIN
     pigments = {'shane_denham': SHARED_SKIN, 'john_orourke': JOHN_SKIN,
@@ -241,11 +318,14 @@ def finish_head(head, identity):
         # Root pigment is subdued; the actual groom supplies dimensional hair.
         tones = {'shane_denham': (.17, .12, .08), 'john_orourke': (.32, .22, .15),
                  'bordeaux_09': (.10, .075, .055), 'des_feeney_sr': (.38, .36, .32)}
-        root = np.maximum(regions[:, 1]*.40, regions[:, 2]*.48)
+        root = np.maximum(regions[:, 1]*.40, regions[:, 2]*.72)
         result = result*(1-root[:, None])+np.asarray(tones[identity])*root[:, None]
         # Sparse original pigment variation; no source portrait illumination.
         freckles = np.maximum(0, np.sin(x*71+y*37)*np.sin(y*43+z*57)-.89)*front
         result -= freckles[:, None]*np.array([.030, .024, .018])
+        # Low-amplitude vascular/pigment variation; no baked directional light.
+        mottling = (np.sin(x*2.1+y*1.7)*np.sin(z*2.9-y*.8)) * front
+        result += mottling[:, None]*np.array([.009, -.003, -.002])
         return np.clip(result, 0, 1)
 
     def relief(points, eye_centres):
@@ -261,29 +341,29 @@ def finish_head(head, identity):
             value -= age*.006*np.exp(-((y-line)/.085)**2-((abs(x)-5.25)/.9)**4)*front
         return value
 
+    def roughness(points):
+        x, y, z = pigment_coordinates(points, identity).T
+        front = _smooth(3, 7, z)
+        nose = np.exp(-(x/1.6)**4-((y-163.2)/2.5)**4)*front
+        forehead = np.exp(-(x/5.0)**6-((y-170.0)/2.1)**4)*front
+        cheeks = np.exp(-((abs(x)-4.3)/2.0)**4-((y-162.4)/2.0)**4)*front
+        fine = np.sin(x*53+y*31)*np.sin(y*47-z*59)*.008
+        return np.clip(.64-.12*nose-.07*forehead+.035*cheeks+fine,.48,.72)
+
     previous = (skin.SKIN_PIGMENT.copy(), skin.skin_colour, skin.reference_skin_relief)
     skin.SKIN_PIGMENT = pigment
     skin.skin_colour = colour
     skin.reference_skin_relief = relief
     try:
         skin.bake_skin(head, None, mat, eyes, head_only=True, image_prefix=identity+'_finish',
-                       detail_only=True, retained_neck_albedo=shared_neck)
+                       detail_only=True, retained_neck_albedo=shared_neck,
+                       roughness_callback=roughness)
     finally:
         skin.SKIN_PIGMENT, skin.skin_colour, skin.reference_skin_relief = previous
     bsdf = mat.node_tree.nodes['Principled BSDF']
     bsdf.inputs['Roughness'].default_value = .60
     bsdf.inputs['Specular IOR Level'].default_value = .30
     mat.node_tree.nodes['Normal Map'].inputs['Strength'].default_value = .24 if identity == 'des_feeney_sr' else .16
-    # Region-varying roughness in the same anatomical UVs. Fine colour detail
-    # remains independent of response, and glTF packs the linear data correctly.
-    albedo = next(n.image for n in mat.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image and 'albedo' in n.image.name)
-    data = np.empty(2048*2048*4, dtype=np.float32)
-    albedo.pixels.foreach_get(data)
-    data = data.reshape(2048, 2048, 4)[:, :, :3]
-    variation = data.reshape(1024, 2, 1024, 2, 3).mean(axis=(1, 3)).mean(axis=2)
-    rough = np.clip(.60+(variation-variation.mean())*.08, .54, .65)
-    image = skin.image_from_array(identity+'_finish_skin_roughness', np.repeat(rough[:, :, None], 3, axis=2), colorspace='Non-Color')
-    skin.image_node(mat, image, 'Roughness')
     # A smaller anatomical iris leaves sclera visible. Des's old oversized
     # iris filled the whole lid aperture and read as a black oval.
     yy, xx = np.mgrid[0:512, 0:512]
@@ -310,6 +390,35 @@ def finish_head(head, identity):
         eye_bsdf = eye_mat.node_tree.nodes['Principled BSDF']
         eye_bsdf.inputs['Roughness'].default_value = .17
         eye_bsdf.inputs['Specular IOR Level'].default_value = .48
-    head['finish_revision'] = 'four-head-reference-v1'
+    head['finish_revision'] = 'four-head-reference-v2'
     head['pigment_policy'] = 'anatomical UV pigment and original groom; no projected portrait'
     return mat
+
+
+def facial_shapes(head):
+    """Small closed-mouth smile and fitted eyelid closure on the same topology."""
+    if not head.data.shape_keys:
+        head.shape_key_add(name='Basis')
+    basis = head.data.shape_keys.key_blocks[0]
+    smile = head.data.shape_keys.key_blocks.get('Smile') or head.shape_key_add(name='Smile')
+    blink = head.data.shape_keys.key_blocks.get('Blink') or head.shape_key_add(name='Blink')
+    centres = {side: sum((v.co for v in bpy.data.objects['Eye_'+side].data.vertices), Vector()) /
+               len(bpy.data.objects['Eye_'+side].data.vertices) for side in ('l', 'r')}
+    for index, point in enumerate(basis.data):
+        x, y, z = point.co
+        smile.data[index].co = point.co
+        blink.data[index].co = point.co
+        if y < 154:
+            continue
+        front = smooth(5., 8., z)
+        corner = field(x, y, 2.8, 159.9, 1.2, .85) * front
+        cheek = field(x, y, 4.0, 161.7, 2.0, 1.5) * front
+        smile.data[index].co += Vector((math.copysign(.11*corner, x), .23*corner+.09*cheek, .08*cheek))
+        # Choose the nearer globe rather than depending on rig-side naming.
+        centre = min(centres.values(), key=lambda eye: abs(eye.x-x))
+        dx, dy = x-centre.x, y-centre.y
+        if abs(dx) < 1.65 and abs(dy) < .90 and z > centre.z+.2:
+            weight = math.exp(-(dx/1.25)**6) * (1-smooth(.65, .90, abs(dy)))
+            blink.data[index].co.y += (centre.y-.035-y) * weight
+            blink.data[index].co.z += .13 * weight
+    smile.value = blink.value = 0

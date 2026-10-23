@@ -138,6 +138,7 @@ func _run() -> void:
 			_apply_start_variation(game)
 		await physics_frame
 		samples+=1
+		if samples%1800==0: print("SOAK_PROGRESS ticks=",samples," remaining=",game._remaining_time," phase=",game.presentation.phase," elapsed=",game.presentation.elapsed," host_ms=",Time.get_ticks_msec())
 		var distance := ball.global_position.distance_to(last_ball)
 		travelled+=distance
 		last_ball=ball.global_position

@@ -38,6 +38,13 @@ front/three-quarter/profile and an early actual Godot portrait. Correct a
 generic silhouette, protruding eyes, malformed mouth or pinched cheek before
 fine skin/hair work. Technical import success does not pass this gate.
 
+Use the eye-line-to-crown ratio and lower-cheek planes as explicit silhouette
+checks. A shared tall crown and hollow angular muzzle can make distinct
+identities read as the same generic head even after feature-width fitting.
+Relax broad cheek planes with apertures and the neck protected; rerun lip
+winding and turned-view checks after mouth/nose corrections. Assess a neutral
+face separately from the photographed smile.
+
 ## 2. Bake individual pigment with a continuous neck
 
 Use `tools/blender/beechlawn/skin_palette.py` for the owner's fair, untanned
@@ -78,6 +85,11 @@ UVs in the exported skin; unused atlas background is not evidence. Use
 `audit_roster_skin.py` as an example and extend its identity/UV probes for a
 new head. Its current thresholds are scoped regression guards, not measures
 of ethnicity, likeness or universal skin realism.
+
+Bake anatomical roughness independently of albedo brightness: restrained oil
+response on nose/forehead, drier cheeks, and fine variation. A brightness-derived
+map with almost no range still renders like uniform wax. Validate the data map
+as linear and retain the registered neck interface.
 
 ## 3. Fit dimensional hair and facial hair
 
@@ -138,6 +150,12 @@ current action inventory rather than hard-coding a historical clip count.
 **Gate:** source, captured recipe, export, import and real roster selection
 agree; unchanged assets retain their proofs. Exercise a teammate, opposition,
 goalkeeper and referee to catch accidental shared-material/identity changes.
+
+Validate fitted blink closure and a restrained smile on each edited head.
+Keep neutral Basis, eyes and neck fixed while creating expressions; inspect
+closed and intermediate lids for globe penetration. Runtime expressions belong
+to each actor instance, and recorded replays must preserve their weights along
+with bone poses. Shared-body, rig and clip hashes remain protected.
 
 ## 5. Diagnose engine differences before changing the sculpt
 

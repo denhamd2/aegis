@@ -1,0 +1,162 @@
+{
+  "local_status": "PASS",
+  "version": "0.2.2",
+  "renderer": "Godot 4.6.3 Forward+ / Linux llvmpipe",
+  "resolution": [
+    960,
+    540
+  ],
+  "checks": [
+    "12 focused integration checks",
+    "handshake wrist contact",
+    "unready scene cleanup (0 -> 0 orphan nodes)",
+    "script/assertion fail-fast monitor",
+    "Xvfb split-write readiness",
+    "source/export four-head audit",
+    "unskipped full match reaches results",
+    "12 native player views",
+    "native intro/UI/turf and directed outro"
+  ],
+  "full_unskipped_match": {
+    "ball_travel_m": 1843.58362148708,
+    "goals": [
+      6,
+      5
+    ],
+    "kickoff": "Beechlawn Rovers",
+    "longest_stationary_s": 3,
+    "statuses": {
+      "Shot fired": 11
+    },
+    "teams": {
+      "Beechlawn Rovers": {
+        "action_decisions": {
+          "cross": 1,
+          "shoot": 6,
+          "short_pass": 11,
+          "through_pass": 7
+        },
+        "cancelled_contacts": 2,
+        "chest_controls": 0,
+        "completed_passes": 8,
+        "contested_shots": 6,
+        "controls": 32,
+        "cross_styles": {
+          "early_cross": 1
+        },
+        "crosses": 1,
+        "final_third_entries": 7,
+        "headers": 0,
+        "intercepted_passes": 7,
+        "lofted_passes": 0,
+        "passes": 19,
+        "sampled_decisions": {
+          "carry": 232,
+          "cross": 1,
+          "none": 735,
+          "shoot": 2,
+          "short_pass": 8,
+          "through_pass": 8
+        },
+        "saves": 0,
+        "shot_styles": {
+          "finesse": 1,
+          "power": 5
+        },
+        "shots": 6
+      },
+      "Boardeaux": {
+        "action_decisions": {
+          "shoot": 5,
+          "short_pass": 18,
+          "through_pass": 5
+        },
+        "cancelled_contacts": 0,
+        "chest_controls": 0,
+        "completed_passes": 12,
+        "contested_shots": 4,
+        "controls": 39,
+        "cross_styles": {},
+        "crosses": 0,
+        "final_third_entries": 5,
+        "headers": 0,
+        "intercepted_passes": 10,
+        "lofted_passes": 0,
+        "passes": 25,
+        "sampled_decisions": {
+          "carry": 201,
+          "none": 653,
+          "shoot": 4,
+          "short_pass": 12,
+          "through_pass": 5
+        },
+        "saves": 0,
+        "shot_styles": {
+          "power": 5
+        },
+        "shots": 5
+      }
+    },
+    "variation": 1,
+    "weather": "sunny"
+  },
+  "pose_storage_bytes": 37089048,
+  "head_assets": {
+    "shane_denham": "4cd27b36b52ad9e1471e234af372b41c6b8c7cdf536b1e99d0b19275c2bb3eb8",
+    "john_orourke": "b0de6f3eadd233b808a8076881c75fa98ee365555f2a064b1f3d453b6bb2c86f",
+    "bordeaux_09": "05736c6a5cd0376445c60e5a3b5d06156e990037aa45f3bd4d4505453d77c521",
+    "des_feeney_sr": "eee8d495b76124ce9862e63f68ab25a6f9e12445cd1daece27a31fc3315813c3"
+  },
+  "images": {
+    "ui/montage_puddles.png": "e4a636d0a251923a5c1c487334a6090d8d8e1f274166a4ca118168022c5b7bc3",
+    "ui/title.png": "741996a4ec5cdca51097609e4167ab0ab0c6db976c36a4c1f6f25023b98d0e17",
+    "ui/turf_close.png": "385c622682f74f8d654446a1a14624e937f464b2832c42c241502708a42ae907",
+    "ui/lineup.png": "1ac5e8a1cf8a34aef9398d86809ffaf269cd4a31a3c81e320aba75a9fe2c2743",
+    "ui/montage_goal.png": "ac8ab98b3e4d7b129c5180f8692e1e6781a39ce915a0b6d3f30020b004a3ebd6",
+    "ui/venue.png": "6a5074f9ea3611f1aaf0562c18ca908463fcc8d4e84a02bc77ce9af5dd9c583b",
+    "ui/match_broadcast.png": "52b8b8f0eb3ec710454a1f5ff6b8a95ab74dc832353a3ae474708a2979869cbd",
+    "ui/referee.png": "affbd3c74a2d34edc741b97d4c7dbfc9a0a530ca945e57306960ade226ab977a",
+    "native_heads/john_portrait.png": "54dc615eacac47763e2cf77726fa7763d0ec65d83e0854fbda923b3d0c9a5eb7",
+    "native_heads/shane_threequarter_portrait.png": "46a3108d45a55a86e018a3a8eb75841580385a48f7395433d8f1a86a4bd5f4ed",
+    "native_heads/shane_profile_portrait.png": "cffea3ae519ab0e02ad4c389e165b1493fab095f08359f4a562e247a56677629",
+    "native_heads/referee_threequarter_portrait.png": "7a4bed779aa58b489d55d201964670fb63ff293155edb57f971812d50ddb9eea",
+    "native_heads/referee_profile_portrait.png": "b3df29c8d6417ccef5d63d53b3b130f82681fd3d6177af04726d56ff3e2c1794",
+    "native_heads/des_threequarter_portrait.png": "76173e90aaf82a83c555234335b2ab7e9f9ef988fb1fdab41d7d6bdd8bf17de5",
+    "native_heads/shane_portrait.png": "ec9fe48e694b68900654ec6be509e0deb5fe4a798696fa18d63051771c90c5c3",
+    "native_heads/referee_portrait.png": "b5ba0c1d2829f5e2398b92ef079d86f7055872daecc6a4a36d734763efe9c716",
+    "native_heads/des_portrait.png": "56a59fa1beb766ac4ec4b2e5720797a460653d29881c66d287a9cfc404f708ed",
+    "native_heads/des_profile_portrait.png": "f058892e368be60cb62729af4867eee5e06a1fe17af858db484cd25168690424",
+    "native_heads/john_threequarter_portrait.png": "5e9126439982f3ba942d1a11cca6135ff56dfdbc2894317183b1143f16cb86d3",
+    "native_heads/john_profile_portrait.png": "877e3092c61054ca57350630e6c313aaa0e066a780998b40cb17c8b8876a8fee",
+    "outro/goal_celebration.png": "6432e66cf6993593a1c2d94350202f65f42bdeeebb5d630ace1eb5ea7433082a",
+    "outro/goal_close.png": "055a65827e0f80f078411f71918011df40f771dc81a2252f66aa90b08f96e410",
+    "outro/goal_replay.png": "29fd8108b6f8f60474a0792f3e1db803a2046ae46df11372765ca7084a7afb52",
+    "outro/goal_medium.png": "ac43ae48ddf3d27ac589b9d0b3c727680d306afbe22f62cede413c5f9cb60408",
+    "outro/match_broadcast.png": "1222ab0300a1d7ef8824e1c7f90054e7c252e2fbdef55663d12c775572c208af",
+    "outro/full_time_winners.png": "e874aaf5d2dd6ec56a3b019d92d18341e405f482a100beb876ba805b4d439258",
+    "outro/goal_replay_detail.png": "e61783ec44500bd85e5c9b1c10d3e8a7bbd1c6e490c1bf28723bcceec5d60541",
+    "outro/handshakes.png": "68176fdae15eb31efcd21e9594926f8c512dbb15ea32f2b68a80ca737d0bf84a",
+    "outro/full_time_medium.png": "54104e0ee9eb035a01d70e698c00b3c82a455f2bc20bd18ec3cb17bb6b680a0f",
+    "blinks/shane_denham/front.png": "578c99452bf217d4f948cae6f2d80beaad4e619352785ac4c377eb75738510dc",
+    "blinks/bordeaux_09/front.png": "77c54c545197cade115e886ff69c680f006b46370ccfef69e39fe47c1920017d",
+    "blinks/des_feeney_sr/front.png": "9318ba4492fee522766ef8b23ec1c873e1cf4a7259fe64e8d0e8704557bad6de",
+    "blinks/john_orourke/front.png": "dc2fdcf749e187c80ae25771cba341e12d4b188c602155998c4d4c36dcb503ff",
+    "blender/shane_denham/profile.png": "0901a3f088acd00710fe541b28cb02c928d9f5b7960fa3a3e7fe768d55d99a4a",
+    "blender/shane_denham/threequarter.png": "14a126ae68ce8f86fb4cafcdec956714b2f8da4af7dea703bd0616837abac67a",
+    "blender/shane_denham/front.png": "50b6e887fc13911cf267780042431fe115e22d568c9d14730cbae3bd5e53058b",
+    "blender/bordeaux_09/profile.png": "36302a5fbdb7e2f595f5fd62042bc48d6f4aeee6ef2fac3e23681c4dc8eaea64",
+    "blender/bordeaux_09/threequarter.png": "55cda2eb3f65bb470af03582e21ebc1e8a160c1add4168f0e0e488f5d225f0d8",
+    "blender/bordeaux_09/front.png": "e23242498cbc967458bf6ad2acec799d2eba3a382f8f22edb21f410c3b2d8912",
+    "blender/des_feeney_sr/profile.png": "e621681d0eac5948435a3edf4ba4fdeeb8e0bd4dc763c71883fe4f0ea33ca2c2",
+    "blender/des_feeney_sr/threequarter.png": "c37b0dcf2da314bdc2c4814718630e20b76361b16b7e3877f0fb0f5bfb182eac",
+    "blender/des_feeney_sr/front.png": "27d1b3e41d71c96b680ccb3f27e9be40e2c5e19b15ea1b341af80fdf930b97a7",
+    "blender/john_orourke/profile.png": "c0bf2e8b20ff70732e1b1b4aadfefe144efe31be47062674d0a72ada4090ec81",
+    "blender/john_orourke/threequarter.png": "af6c48968883779a76efe52be3a40f299c0381c0ee054fa8e7e7b16fcad088da",
+    "blender/john_orourke/front.png": "4f52388377ed47d1d28006572745762bd546f34d66c20c8162039bf8fd1c30cb"
+  },
+  "release_gate": "GitHub Actions requires broader gameplay/chance checks and universal Mac package/resource-pack verification before publication.",
+  "open_gates": [
+    "Final/AAA individual likeness and exact environment appearance",
+    "Native M1 appearance, human control feel and 1080p60 performance"
+  ]
+}

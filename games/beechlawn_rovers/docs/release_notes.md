@@ -1,3 +1,24 @@
+# Beechlawn Rovers 27 — v0.2.2
+
+Wider centered blue lower thirds now share responsive spacing, protected end
+artwork and smooth entrances across the intro, referee and match presentations.
+Short dense near-camera ribbons replace the sparse tufts; matching CC0 grass
+normal/roughness maps improve close-up surface response. Puddles remain clear
+and muddy areas thin the turf. Geometry is instanced and bounded.
+
+Goals cut from a wide shot to the scorer and a close-up. Replays switch from
+sideline coverage to a slow alternate angle, and full time cuts through team
+reactions and handshakes. Recorded face expressions accompany bone/ball/net
+poses; playback retains its gameplay isolation and exact restart restoration.
+
+Four editable heads receive structural, groom and material refinements plus
+fitted blinks and restrained smiles. These are improved assets, not a claim of
+exact/AAA likeness approval. Native M1 appearance, play feel and 1080p60 remain
+hardware gates. Test assertions now stop immediately instead of idling until
+the deadline; full-match CPU runs retain bounded, progress-reported timeouts.
+
+---
+
 # Beechlawn Rovers 27 — v0.2.1
 
 Completes the Mac playtest improvement pass: contact-timed standing tackles,

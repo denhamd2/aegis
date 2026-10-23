@@ -17,6 +17,12 @@ var _goal_team := ""
 var _focus: Node3D
 var _celebrators: Array[FootballPlayer] = []
 var _pairs: Array[Dictionary] = []
+var director := FootballShotDirector.new()
+var _replay_duration := 0.0
+var _wide_duration := 0.0
+var _replay_start := 0.0
+var _detail_start := 0.0
+var _playhead := 0.0
 var camera: Camera3D
 var layer: CanvasLayer
 var panel: Panel
@@ -35,23 +41,21 @@ var _detector_states: Array[Dictionary] = []
 func setup(match_scene: Node3D) -> void:
 	game=match_scene;buffer.setup(game)
 	game.events.occurred.connect(_on_event)
-	camera=Camera3D.new();camera.name="IncidentCamera";camera.fov=52
+	camera=Camera3D.new();camera.name="IncidentCamera";camera.fov=52;camera.near=.04
+	camera.physics_interpolation_mode=Node.PHYSICS_INTERPOLATION_MODE_OFF
 	game.add_child(camera)
 	layer=CanvasLayer.new();layer.layer=12;add_child(layer)
-	panel=Panel.new();layer.add_child(panel)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	panel.offset_left=26;panel.offset_right=780;panel.offset_top=-113;panel.offset_bottom=-28
-	var blank:=StyleBoxEmpty.new();panel.add_theme_stylebox_override("panel",blank)
-	preload("res://scripts/ui/broadcast_style.gd").background(panel)
-	caption=Label.new();caption.position=Vector2(46,14);caption.add_theme_font_size_override("font_size",28);panel.add_child(caption)
-	preload("res://scripts/ui/broadcast_style.gd").label(caption)
-	hint=Label.new();hint.position=Vector2(46,52);hint.text="SPACE / ENTER  Skip";hint.add_theme_font_size_override("font_size",17);panel.add_child(hint)
-	preload("res://scripts/ui/broadcast_style.gd").label(hint,true)
+	var banner := FootballLowerThird.new()
+	panel=banner;layer.add_child(panel)
+	caption=banner.title
+	hint=banner.subtitle;hint.text="SPACE / ENTER  Skip"
 	panel.hide()
 func active() -> bool: return phase != Phase.IDLE
 func replaying() -> bool: return phase == Phase.REPLAY
 func _on_event(event: FootballMatchEvent) -> void:
 	if active(): return
+	if event.kind in [FootballMatchEvent.Kind.GOAL, FootballMatchEvent.Kind.CARD, FootballMatchEvent.Kind.POST] or event.action in [&"goalkeeper_save", &"goalkeeper_catch"]:
+		buffer.mark_incident(event)
 	match event.kind:
 		FootballMatchEvent.Kind.GOAL:
 			_pending_goal=String(event.action)
@@ -72,9 +76,10 @@ func update(delta: float) -> bool:
 	if phase == Phase.RESULTS: return true
 	if phase == Phase.REPLAY:
 		elapsed+=delta
-		buffer.apply_frame(_entry,elapsed,ghosts,ghost_ball,ghost_skeletons)
+		_playhead = _replay_start + elapsed if elapsed < _wide_duration else _detail_start + (elapsed - _wide_duration) * .5
+		buffer.apply_frame(_entry,_playhead,ghosts,ghost_ball,ghost_skeletons)
 		_track_replay(delta)
-		if elapsed>=float(_entry.duration): _finish_replay()
+		if elapsed>=_replay_duration: _finish_replay()
 		return true
 	if not _pending_goal.is_empty():
 		_start_goal(_pending_goal);_pending_goal=""
@@ -84,7 +89,7 @@ func update(delta: float) -> bool:
 		elapsed+=delta
 		buffer.sample(delta,elapsed<.9)
 		_animate_celebration(delta)
-		if elapsed>=4:
+		if elapsed>=6:
 			var entry := buffer.bookmark(&"goal")
 			if entry.is_empty(): _finish_goal()
 			else: start_replay(entry,&"goal")
@@ -142,15 +147,38 @@ func _restore_match_prompts() -> void:
 func _set_caption(text: String) -> void:
 	_hide_match_prompts()
 	caption.text=text;panel.show();panel.modulate.a=0
-func _camera_on(target: Vector3,delta: float,offset := Vector3(3.5,1.7,4.0)) -> void:
-	var desired:=target+offset
-	desired.x=clampf(desired.x,-55,55);desired.z=clampf(desired.z,-40,40)
-	camera.position=camera.position.lerp(desired,1-exp(-delta*4))
-	camera.look_at(target+Vector3.UP*1.0)
-	panel.modulate.a=minf(1,elapsed/.35)
+func _camera_on(target: Vector3, delta: float, offset := Vector3(3.5,1.7,4.0)) -> void:
+	var subject := _focus
+	var id: StringName = &"celebration_wide"
+	var look := target + Vector3.UP
+	var station := target + Vector3(-6, 3.0, 8)
+	var lens := 48.0
+	if phase == Phase.GOAL:
+		if elapsed >= 4:
+			id = &"scorer_close"; lens = 28
+			look = target + Vector3.UP * 1.56
+			station = target + subject.global_basis * Vector3(.35, 1.65, -2.5)
+		elif elapsed >= 2:
+			id = &"scorer_medium"; lens = 40
+			station = target + subject.global_basis * Vector3(2.6, 1.8, -4.2)
+	else:
+		id = &"full_time_wide"
+		if elapsed >= 7 and not _pairs.is_empty():
+			id = &"handshake_close"; lens = 38
+			var pair: Dictionary = _pairs[0]
+			look = (pair.home.position + pair.away.position) * .5 + Vector3.UP * 1.25
+			station = look + pair.line.cross(Vector3.UP) * 3.2 + Vector3.UP * .35
+		elif elapsed >= 3:
+			id = &"full_time_medium"; lens = 40
+			station = target + offset
+	director.frame(camera, id, look, station, lens, delta, game, subject)
+	if phase == Phase.GOAL and game.grass_detail != null:
+		game.grass_detail.prepare(target + subject.global_basis * (Vector3(2.6, 1.8, -4.2) if elapsed < 2 else Vector3(.35, 1.65, -2.5)))
+	(panel as FootballLowerThird).reveal(elapsed)
 func _start_goal(team: String) -> void:
+	director.reset()
 	phase=Phase.GOAL;elapsed=0;_goal_team=team;game._presentation_active=true
-	game._goal_pause_timer=4
+	game._goal_pause_timer=6
 	game._set_players_physics_enabled(false)
 	var players: Array=game._home_players if team=="Beechlawn Rovers" else game._away_players
 	_focus=game.ball.last_touch_player if is_instance_valid(game.ball.last_touch_player) and game.ball.last_touch_player.team_name==StringName(team) else null
@@ -178,7 +206,7 @@ func _animate_celebration(delta: float) -> void:
 	_camera_on(_focus.position,delta)
 func _walk(actor: FootballPlayer,target: Vector3,delta: float) -> bool:
 	var offset:=target-actor.position;offset.y=0
-	if offset.length()<.08:return true
+	if offset.length()<.015:return true
 	actor.position+=offset.normalized()*minf(offset.length(),delta*1.35)
 	actor.position.y=PitchSurface.height_at(actor.position.x,actor.position.z) if game.terrain_enabled else 0
 	actor.rotation.y=lerp_angle(actor.rotation.y,atan2(-offset.x,-offset.z),1-exp(-delta*8))
@@ -198,6 +226,7 @@ func _finish_goal() -> void:
 	buffer.clear_history()
 func _start_full_time() -> void:
 	if phase==Phase.REPLAY:_restore_replay()
+	director.reset()
 	phase=Phase.FULL_TIME;elapsed=0;game._presentation_active=true
 	game._set_players_physics_enabled(false)
 	var winner: StringName=&"none"
@@ -260,6 +289,8 @@ func _show_results() -> void:
 func start_replay(entry: Dictionary, after: StringName = &"incident") -> bool:
 	if entry.is_empty() or phase not in [Phase.IDLE,Phase.GOAL]:return false
 	_entry=entry;_after_replay=after
+	director.reset()
+	_plan_replay()
 	_save_replay_state()
 	phase=Phase.REPLAY;elapsed=0;game._presentation_active=true
 	ghost_world=Node3D.new();ghost_world.name="ReplayGhosts";game.add_child(ghost_world)
@@ -271,6 +302,8 @@ func start_replay(entry: Dictionary, after: StringName = &"incident") -> bool:
 		# proxy scene or rerunning FootballerVisual appearance initialization.
 		visual.process_mode=Node.PROCESS_MODE_DISABLED
 		ghost.add_child(visual)
+		var face := visual.find_child("Skin_Head",true,false) as MeshInstance3D
+		if face != null: ghost.set_meta("replay_head",face)
 		var tree:=visual.get_node_or_null("AnimationTree") as AnimationTree
 		if tree!=null:tree.active=false
 		var player:=visual.get_node_or_null("Rig/AnimationPlayer") as AnimationPlayer
@@ -279,7 +312,7 @@ func start_replay(entry: Dictionary, after: StringName = &"incident") -> bool:
 		ghost_skeletons.append(found[0] as Skeleton3D if not found.is_empty() else null)
 	ghost_ball=Node3D.new();ghost_world.add_child(ghost_ball)
 	ghost_ball.add_child(game.ball.get_node("BallVisual").duplicate())
-	buffer.apply_frame(_entry,0,ghosts,ghost_ball,ghost_skeletons)
+	buffer.apply_frame(_entry,_replay_start,ghosts,ghost_ball,ghost_skeletons)
 	game.camera_rig.presentation_override=true;camera.position=ghost_ball.position+Vector3(-8,4.2,12);camera.look_at(ghost_ball.position);camera.make_current()
 	_set_caption("REPLAY · "+String(entry.kind).replace("_"," ").to_upper())
 	return true
@@ -299,13 +332,43 @@ func _save_replay_state() -> void:
 	for detector in game.get_node("Goals").find_children("GoalDetector","Node3D",true,false):
 		_detector_states.append({"node":detector,"physics":detector.is_physics_processing()});detector.set_physics_process(false)
 	game.ball.freeze=true;game.ball.hide();game.ball.set_physics_process(false)
+func _plan_replay() -> void:
+	var duration := float(_entry.duration)
+	var incident: Dictionary = _entry.get("incident", {})
+	var impact := clampf(float(incident.get("time", float(_entry.frames[-1].time) - .4)) - float(_entry.frames[0].time), 0, duration)
+	var end := minf(duration, impact + .5)
+	_wide_duration = minf(6 if _after_replay == &"goal" else 4, end)
+	_replay_start = maxf(0, end - _wide_duration)
+	_detail_start = maxf(0, end - 1.5)
+	_replay_duration = _wide_duration + (end - _detail_start) * 2
+	_playhead = _replay_start
+
 func _track_replay(delta: float) -> void:
-	var target:=ghost_ball.position
-	var direction:=1.0 if _goal_team!="Boardeaux" else -1.0
-	var desired:=target+Vector3(-8*direction,4.2,12)
-	desired.x=clampf(desired.x,-55,55);desired.z=clampf(desired.z,-40,40)
-	camera.position=camera.position.lerp(desired,1-exp(-delta*4));camera.look_at(target)
-	panel.modulate.a=minf(1,elapsed/.3)
+	var target := ghost_ball.position
+	var incident: Dictionary = _entry.get("incident", {})
+	var team := _goal_team if _after_replay == &"goal" else String(incident.get("team", _goal_team))
+	var direction := -1.0 if team == "Boardeaux" else 1.0
+	var station := target + Vector3(-8 * direction, 4.2, 12)
+	var lens := 48.0
+	var id: StringName = &"replay_sideline"
+	if elapsed >= _wide_duration:
+		id = &"replay_goal_detail"; lens = 38
+		station = Vector3(direction * 56, 1.5, 5.6)
+		if _entry.kind == &"save":
+			id = &"replay_keeper_detail"
+			# The keeper's team attacks away from the goal they are defending.
+			station.x = -direction * 55
+		elif _entry.kind == &"card":
+			id = &"replay_referee_detail"; lens = 30
+			var actor_index := buffer.official_index if buffer.official_index >= 0 else int(incident.get("actor_index", -1))
+			if actor_index >= 0 and actor_index < ghosts.size():
+				target = ghosts[actor_index].position + Vector3.UP * 1.35
+			station = target + Vector3(2, .4, 3)
+		elif _entry.kind == &"post": id = &"replay_post_detail"
+		# A short source recording away from goal still gets a useful contact view.
+		if absf(target.x) < 30 and _entry.kind != &"card": station = target + Vector3(-3 * direction, 1.3, 4)
+	director.frame(camera, id, target, station, lens, delta, game)
+	(panel as FootballLowerThird).reveal(elapsed)
 func _restore_replay() -> void:
 	if _saved.is_empty(): return
 	if is_instance_valid(ghost_world):ghost_world.free()

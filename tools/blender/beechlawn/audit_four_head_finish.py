@@ -61,7 +61,7 @@ report = {'result': 'PASS', 'heads': {}, 'scope': 'Neutral source/export geometr
 for identity, source in SOURCES.items():
     bpy.ops.wm.open_mainfile(filepath=str(HERE/source))
     assert bpy.context.scene['head_player_id'] == identity
-    assert bpy.context.scene['head_finish_revision'] == 'four-head-reference-v1'
+    assert bpy.context.scene['head_finish_revision'] == 'four-head-reference-v2'
     asset = PROJECT/f'assets/characters/shared/heads/players/{identity}.glb'
     raw, document, binary = load_glb(asset)
     parts = {}

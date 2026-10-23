@@ -18,7 +18,7 @@ PROJECT = ROOT/'games/beechlawn_rovers'
 sys.path.insert(0, str(HERE))
 from build_roster_heads import open_master, snapshot, apply_sculpt_part, write_json, PARTS
 from shane_head_variants import delta_data
-from player_head_finish import IDENTITIES, sculpt, eye_sculpt, finish_head
+from player_head_finish import IDENTITIES, sculpt, eye_sculpt, finish_head, soften_cheek_planes
 
 SOURCES = {'shane_denham':'shane_denham_head.blend', 'john_orourke':'john_orourke_head.blend',
            'bordeaux_09':'des_feeney_head.blend', 'des_feeney_sr':'referee_des_feeney_head.blend'}
@@ -77,11 +77,22 @@ def render(head, output, clay=False, views=('front', 'threequarter', 'profile'))
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--expressions-only', action='store_true')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--player', choices=IDENTITIES)
+    parser.add_argument('--output', type=Path)
     parser.add_argument('--view', choices=('front', 'threequarter', 'profile'))
     args = parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
     for identity in (IDENTITIES if args.player is None else (args.player,)):
+        if args.expressions_only:
+            from player_head_finish import facial_shapes
+            bpy.ops.wm.open_mainfile(filepath=str(HERE/SOURCES[identity]))
+            facial_shapes(bpy.data.objects['Skin_Head'])
+            bpy.context.scene['head_finish_revision'] = 'four-head-reference-v2'
+            bpy.context.preferences.filepaths.save_version = 0
+            for path in (HERE/SOURCES[identity], HERE/'head_pipeline/work'/f'{identity}.blend'):
+                bpy.ops.wm.save_as_mainfile(filepath=str(path), compress=True)
+            continue
         open_master()
         revision = snapshot()['revision']
         parts = {}
@@ -92,6 +103,8 @@ def main():
             centre = sum((v.co for v in base.vertices), Vector())/len(base.vertices)
             for vertex in edited.vertices:
                 vertex.co = sculpt(vertex.co, identity) if name == 'Skin_Head' else eye_sculpt(vertex.co, centre, identity)
+            if name == 'Skin_Head':
+                soften_cheek_planes(edited)
             data = delta_data(base, edited)
             if name == 'Skin_Head':
                 assert all(base.vertices[int(i)].co.y>=154 for i in data['offsets']), 'Neck moved'
@@ -102,7 +115,7 @@ def main():
         head = bpy.data.objects['Skin_Head']
         bpy.context.scene['head_master_revision'] = revision
         bpy.context.scene['head_player_id'] = identity
-        bpy.context.scene['head_finish_revision'] = 'four-head-reference-v1'
+        bpy.context.scene['head_finish_revision'] = 'four-head-reference-v2'
         bpy.context.preferences.filepaths.save_version = 0
         if args.apply:
             write_json(HERE/'head_pipeline/deltas'/f'{identity}.json', recipe)
@@ -117,7 +130,7 @@ def main():
             if args.apply:
                 from player_head_groom import build_groom
                 build_groom(head, bpy.data.objects['YBot_Armature'], identity)
-            output = PROJECT/'docs/art_briefs/four_head_finish'/('blender' if args.apply else 'clay')/identity
+            output = (args.output if args.output else PROJECT/'docs/art_briefs/four_head_finish'/('blender' if args.apply else 'clay'))/identity
             render(head, output, clay=not args.apply, views=(args.view,) if args.view else ('front', 'threequarter', 'profile'))
         print('HEAD_FINISH_SOURCE', identity, 'applied' if args.apply else 'preview', flush=True)
 
