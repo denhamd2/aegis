@@ -46,6 +46,9 @@ func _ready() -> void:
 	_install_aerial_actions()
 	_install_volley_actions()
 	_build_locomotion_tree()
+	# Reception/kick setup reads this skeleton's boot pose in physics. Idle
+	# evaluation held the running pose for several ticks on slow renders.
+	animation_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
 	animation_tree.active = true
 	animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
 	animation_player.animation_finished.connect(_on_animation_finished)

@@ -63,6 +63,14 @@ Store authored contact markers in the existing metadata contract and verify its 
 
 The marker signals contact; the fixed-tick gameplay code validates reach and applies the independent ball impulse. Preserve aim/power, input buffering and action-priority behavior. Check no early impulse, exactly one valid impulse, correct cancellation and locomotion recovery. Keep raw ball-physics fixtures separate from marker-gated action tests.
 
+When gameplay samples the live skeleton, both the locomotion AnimationTree and
+action AnimationPlayer must evaluate on the physics clock. Setting only the
+player left running poses stale for five ticks at 10 Hz rendering. Exercise a
+slow draw cadence against 60 Hz physics, then ordinary marker/contact checks.
+Seeded full-match replays also need an explicit fixed draw cadence; a seed
+alone does not make wall-clock-driven replays repeatable across hosts. Keep
+the gameplay timestep and chance thresholds unchanged when fixing the harness.
+
 Measure the evaluated toe/boot against the live ball in the actual 11v11 scene. A proxy's acceptable toe distance does not prove the final boot contacts correctly after body scale, retargeting or clothing changes. Recheck pass, receive and shot on the actual visual orientation. A full match reaching full time or moving the ball does not by itself prove realistic contact or healthy attacking flow.
 
 Distinguish root approach reach from the live boot contact window. Check standing,

@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: chickensoft-games/setup-godot@v2
@@ -34,6 +34,7 @@ jobs:
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py aerial_flight_smoke.gd aerial_contact_smoke.gd aerial_safety_smoke.gd aerial_controls_smoke.gd cross_to_header_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py advanced_shots_smoke.gd advanced_controls_smoke.gd cross_variants_smoke.gd volley_contact_smoke.gd grounded_aerial_recovery_smoke.gd
           BEECHLAWN_CROSS_VARIANT=driven_cross python3 games/beechlawn_rovers/tools/run_smoke_tests.py cross_to_header_smoke.gd
+          timeout --kill-after=3s 45s godot --headless --fixed-fps 10 --path games/beechlawn_rovers --script res://tests/locomotion_physics_clock_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py dribble_grounding_runtime_smoke.gd discipline_rules_smoke.gd pitch_presentation_repairs_smoke.gd goal_net_contact_smoke.gd match_flow_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py wet_weather_smoke.gd
           python3 games/beechlawn_rovers/tools/run_smoke_tests.py lineup_graphic_smoke.gd
@@ -58,6 +59,13 @@ jobs:
           name: beechlawn-mac-build
           path: build/beechlawn
           retention-days: 30
+      - name: Preserve failed match diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beechlawn-failed-match-diagnostics
+          path: build/beechlawn/ai-chances
+          retention-days: 14
       - name: Publish separate football release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -65,8 +65,14 @@ def main() -> int:
             print(f"Smoke test not found: {test_path}", file=sys.stderr)
             return 2
         command = [GODOT, "--headless", "--path", str(PROJECT), "--script", f"res://tests/{name}"]
+        if name == "eleven_v_eleven_match_soak.gd":
+            # Replay with six 60 Hz simulation steps per draw, independent of
+            # host wall-clock throughput. Keep gameplay dt and chance gates.
+            command[2:2] = ["--fixed-fps", "60"]
         timeout = TIMEOUT if "BEECHLAWN_TEST_TIMEOUT_SECONDS" in os.environ else LONG_TEST_TIMEOUTS.get(name, TIMEOUT)
         print(f"\n[smoke] {name} (timeout {timeout:g}s)", flush=True)
+        if name == "eleven_v_eleven_match_soak.gd":
+            print("[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s", flush=True)
         process = subprocess.Popen(
             command,
             cwd=PROJECT,

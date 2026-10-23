@@ -704,6 +704,8 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     strikes and deliveries. A zero-based export plus imported contact-pose
     checks align the new clips with their markers. See
     [implementation/evidence](art_briefs/advanced_shots_2026_10_23/brief.md).
+    Follow-up: low-render gait poses now update on the physics clock. Fixed-
+    cadence six-match tests pass at 34/27 shots, both teams qualifying 6/6.
     Next acceptance: final native/M1 input and motion review; dedicated high
     keeper claims depend on BR-009 (9/25). Left-foot variants, broader aerial
     duels and source stride/plant polish remain open under BR-019/BR-021.

@@ -106,7 +106,7 @@ on BR-009 (9/25). Left-foot/weak-foot-specific clips, richer aerial physical
 contests, finer shot-body motion and native M1 play-feel/performance remain
 open; generic source-clay or a passing headless check is not final art approval.
 
-## Final automated match gate
+## Initial local automated match gate
 
 The grounded-recovery regression first fails for both teams (see the archived
 red log), then passes with the turf-based guard. Final assets pass the imported
@@ -162,3 +162,49 @@ native M1 review. No AAA animation or final gameplay-feel approval is claimed.
 All four protected rig/body/older-animation hashes remain unchanged. Source
 and evidence are committed with the implementation; CI must repeat the full
 70-check suite and six-match gate before publishing the universal Mac build.
+
+## Release follow-up: physics pose and replay clocks
+
+The initial release job [39916789968](https://github.com/denhamd2/aegis/actions/runs/39916789968)
+passed all 70 smoke checks but failed the unchanged match gate: 40/12 shots,
+qualifying scenarios 6/6 and 4/6. Publication was held. A second local replay
+before the correction passed at 29/17 but differed from the initial 34/21
+with the same seeds; seed alone had not made wall-clock replay repeatable.
+
+A separate low-cadence runtime regression reproduces locomotion poses held
+for five physics ticks between idle frames. Only AnimationPlayer had been set
+to physics; gameplay also reads the AnimationTree-driven skeleton. Setting
+the tree to the physics clock reduces the longest stale run to two ticks at
+both 10 and 60 Hz drawing (red/green logs alongside). No body, rig, clip or
+contact reach was changed. Deferred action markers were a hypothesis, not a
+proven cause; their existing policy remains unchanged.
+
+The full-match runner now uses an explicit 60 Hz draw cadence, six physics
+steps per draw at 6× simulation speed, preserving 1/60 s gameplay dt and all
+chance/stall criteria. The corrected six-match gate records **34/27 shots**,
+55.7%/44.3% share, both teams qualifying **6/6**, and no 12-second stalls.
+The first scenario repeats with **exactly equal complete metric JSON**, not
+just equal shot totals. This confirms repeatability on this host; cross-machine
+agreement still needs the new CI run. These results supersede the initial
+local counts as the current release candidate; old evidence is retained.
+
+The release job now permits 30 minutes for slow dependency downloads and the
+full checks, and preserves match diagnostics on failure. The initial failure
+was the chance criterion, not a job timeout; cache-egress warnings also delayed
+setup but do not explain the gameplay result. All 70 smoke checks plus a
+10 Hz draw/60 Hz physics pose test precede packaging.
+
+The corrected source passes eleven focused contact/keeper/gait/pose regressions.
+A further 10 Hz render run covers standing/jogging/sprinting pass and shot
+contacts for human and AI, each exactly once, plus rejection of an off-axis
+ball. All cases pass; the largest measured valid boot gap is 27.3 cm within
+the existing ground contact limit. The previous 70-check CI pass preceded this
+clock correction; the new CI run must repeat it before publication.
+
+Fresh native Forward+ captures after the clock correction pass for
+[volley preparation/contact/recovery](clock_followup/volley_close/sequence.mp4)
+and [winger cross → AI volley](clock_followup/cross_driven_home/sequence.mp4).
+Their reports/manifests and full-sequence contact sheets are in `clock_followup`.
+The earlier four clips remain evidence for the preceding implementation;
+these two verify the changed clock on the current source. Same llvmpipe,
+640×360, close 60 fps/wide 10 fps simulated-time limits apply.
