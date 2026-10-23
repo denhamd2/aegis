@@ -6,7 +6,7 @@ Blender source axes are centimetres, Y up and Z forward. Run bounded with
 """
 import bpy, math, sys, json, hashlib
 from pathlib import Path
-from mathutils import Vector, Quaternion
+from mathutils import Vector, Quaternion, Matrix
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from shane_leg_retarget import minimum_roll_pose, local_rotation
 ROOT=Path(__file__).resolve().parents[3]
@@ -86,21 +86,28 @@ for style in ['StandingTackle','KeeperCatch','KeeperLowCenter','KeeperLowLeft','
         else:
             low='Low' in style;dive='Dive' in style;high='High' in style
             sign=1 if 'Left' in style else -1
-            hips=rig.pose.bones['mixamorig:Hips'];hips.location.y-=(80 if low else 23 if dive else 0)*amount
+            hips=rig.pose.bones['mixamorig:Hips'];hips.location.y-=(80 if low else 50 if dive else 0)*amount
             bpy.context.view_layer.update()
             if dive:
-                bone=rig.pose.bones['mixamorig:Spine']
-                target=bone.matrix.copy();rot=Quaternion((0,0,1),math.radians(-sign*40*amount))
-                target=(rot@target.to_quaternion()).to_matrix().to_4x4();target.translation=bone.matrix.translation
-                bone.rotation_quaternion=local_rotation(bone,target,bone.parent.matrix)[0];bpy.context.view_layer.update()
+                hips.location.x += sign*20*amount
+                bpy.context.view_layer.update()
+                target=hips.matrix.copy()
+                target=(Quaternion((0,0,1),math.radians(-sign*75*amount))@target.to_quaternion()).to_matrix().to_4x4()
+                target.translation=hips.matrix.translation
+                hips.rotation_quaternion=hips.bone.convert_local_to_pose(target,hips.bone.matrix_local,invert=True).to_quaternion().normalized()
+                bpy.context.view_layer.update()
             for side,ss in [('Left',1),('Right',-1)]:
-                initial=Vector((ss*20,118,35));target=Vector(((0 if 'Center' in style else sign*56)+ss*7 if low or dive else ss*10,24 if low else 112 if dive else 191 if high else 114,33))
+                initial=Vector((ss*20,118,35));target=Vector(((sign*112+ss*5 if dive else (0 if 'Center' in style else sign*56)+ss*7) if low or dive else ss*10,24 if low else 105 if dive else 191 if high else 114,10 if high else 33))
                 arms(side,initial.lerp(target,amount))
-            plant('Left');plant('Right')
+            if not dive: plant('Left');plant('Right')
         keys(frame)
     for fc in action.fcurves:
         for k in fc.keyframe_points:k.interpolation='BEZIER';k.handle_left_type='AUTO_CLAMPED';k.handle_right_type='AUTO_CLAMPED'
     scene.frame_set(16);audit['clips'][action.name]={'contact_seconds':.25,'duration':(end-1)/60,'wrists_cm':{s:list(rig.pose.bones['mixamorig:'+s+'Hand'].matrix.translation) for s in ['Left','Right']}}
+    if 'Dive' in style:
+        joints={n:list(rig.pose.bones['mixamorig:'+n].matrix.translation) for n in ['Hips','Head','LeftFoot','RightFoot']}
+        audit['clips'][action.name]['body_joints_cm']=joints
+        assert joints['Head'][1]<110 and min(joints['LeftFoot'][1],joints['RightFoot'][1])>0,joints
     new.append(action)
 rig.animation_data.action=new[0]
 for track in list(rig.animation_data.nla_tracks):rig.animation_data.nla_tracks.remove(track)

@@ -165,7 +165,7 @@ func _capture() -> void:
 			review_actor._do_shot(.65,1.0,aim,StringName(mode.trim_prefix("shot_")))
 			camera.position=Vector3(43,7,17);camera.look_at(Vector3(44,.7,2));camera.fov=54
 		elif mode.begins_with("keeper_"):
-			var team: Array[FootballPlayer] = game._home_players if mode=="keeper_home" else game._away_players
+			var team: Array[FootballPlayer] = game._home_players if mode.ends_with("_home") else game._away_players
 			for candidate in team:
 				if candidate.profile.role=="goalkeeper":review_keeper=candidate
 			var sx:=review_keeper.attack_sign
@@ -175,14 +175,14 @@ func _capture() -> void:
 			review_keeper._goalkeeper_controller.reset_for_stoppage()
 			review_keeper.set_physics_process(true)
 			game._kickoff_pending=false
-			game.ball.position=review_keeper.position+Vector3(5*sx,.16,.6)
+			game.ball.position=review_keeper.position+Vector3(5*sx,2.1 if mode.contains("high") else 1.1 if mode.contains("dive") else .16,0 if mode.contains("high") else 1.6 if mode.contains("dive") else .6)
 			game.ball.freeze=false
 			camera.position=review_keeper.position+Vector3(6*sx,2.0,5.5)
 			camera.look_at(review_keeper.position+Vector3(1.4*sx,.7,0));camera.fov=52
 			game.ball.touched.connect(func(kind: StringName, _speed: float):
 				if kind in [&"goalkeeper_save", &"goalkeeper_catch", &"goalkeeper_distribution"]:
 					keeper_contacts.append({"tick":tick,"kind":str(kind),"team":str(game.ball.last_touch),"ball":str(game.ball.position)}))
-			game.ball.kick(Vector3(-sx,0,0),12,0,&"shot",&"Boardeaux" if sx>0 else &"Beechlawn Rovers")
+			game.ball.kick(Vector3(-sx,0,0),6 if mode.contains("high") else 14 if mode.contains("dive") else 12,4 if mode.contains("high") else 2 if mode.contains("dive") else 0,&"cross" if mode.contains("high") else &"shot",&"Boardeaux" if sx>0 else &"Beechlawn Rovers")
 		elif mode=="free_kick":
 			game.restart.begin("FREE KICK",&"Beechlawn Rovers",Vector3(28,0,3))
 			game.restart._target_z = -2.7

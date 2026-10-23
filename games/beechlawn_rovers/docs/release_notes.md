@@ -1,3 +1,24 @@
+# Beechlawn Rovers 27 — v0.2.1
+
+Completes the Mac playtest improvement pass: contact-timed standing tackles,
+contain/jockey/teammate pressure, corrected running arms, powerful elevated
+shots, wide crosses/headers/volleys, varied penalties and short/long restarts,
+legal free-kick walls, near-camera grass, physical net impacts and original
+audio with saved Music/Match/UI levels. Intro/title/HUD changes are retained.
+
+New original full-body keeper dives, high catches and physical glove/rebound
+handling accompany goal celebrations, full-time winners/draws/handshakes,
+working Rematch/Title results and recorded incident/goal replays. Space/Enter
+skips presentation. Playback cannot run physics, score, consume match time or
+re-emit gameplay sounds; it restores the pending restart.
+
+Logic/contact/identity checks, native Forward+ software captures and a complete
+unskipped 180-second match pass locally. CI gates natural shot balance and the
+universal Mac package, including actual exported build version/source/UTC.
+Native M1 appearance, control feel and 1080p60 performance remain unmeasured.
+
+---
+
 # Pitch detail and audio — bundle 4
 
 Camera-local curved grass geometry follows terrain and excludes puddles; bounded

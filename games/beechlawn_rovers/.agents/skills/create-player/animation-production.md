@@ -138,6 +138,32 @@ stationary cross as airborne and reverse the tactical pursuit direction.
 
 Evidence: `games/beechlawn_rovers/docs/art_briefs/advanced_shots_2026_10_23/brief.md`.
 
+### Runtime assets, keeper motion and presentation
+
+For a partial gait edit, compare the imported shipping clip with the Blender
+source first. Runtime leg-retarget corrections may be absent from an older
+source action. Merge only changed arm tracks and assert untouched leg/root keys
+are equal; a moving-but-tiny leg rotation does not prove a useful stride.
+
+Keeper motion needs travelling-ball tests after reaction delay. Adapt preparation
+to observed arrival time, then restore ordinary follow-through speed. Validate
+actual glove reach, whole-body dive/low collision proxy, legal handling, recovery
+and collider restoration. A standing body-radius save or frozen contact pose is
+insufficient. Held balls should follow the evaluated hands physically, including
+gravity compensation; a fixed chest offset can leave a high catch floating away
+from the gloves. Rebounds need a lowering/glove contact before a claim.
+
+For pose replays, copy the runtime visual tree without scene reconstruction or
+scripts (`duplicate(0)`), freeze animation evaluation and apply recorded bone
+poses. Reinstantiating the packed proxy loses individual heads and kit overrides.
+Assert mesh/material identity, no physics bodies, no gameplay events, and exactly
+one state restore on finish/skip. Check a native view with both team kits.
+
+Run Blender with `--python-exit-code 1` and make dependent shell steps fail fast;
+a later successful import/test must never hide a failed asset generation. Helpers
+written for child bones may not handle Hips without a parent; use the root bone's
+local-to-pose conversion and validate exported full-body joint positions.
+
 ## 5. Select verification by change
 
 Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py`; inspect test fixtures and supported environment switches first. Relevant existing cases include:
@@ -147,6 +173,8 @@ Run bounded, serial checks with `games/beechlawn_rovers/tools/run_smoke_tests.py
 | Startup, shared playback, relaxed poses | `shared_pose_safety_smoke.gd`, `shared_roster_resources_smoke.gd`, `shared_head_roster_smoke.gd` |
 | Gait, braking, pivots, reversal | `footballer_animation_tree_smoke.gd`, `football_stop_runtime_smoke.gd`, `shared_pivot_pose_smoke.gd`, `turn_dribble_control_smoke.gd` |
 | Marker-gated contact | `football_kick_contact_integration_smoke.gd`, `football_receive_contact_smoke.gd`, `football_shot_contact_integration_smoke.gd`; select the actual 11v11 fixture where supported |
+| Keeper contact and recovery | `keeper_live_contact_smoke.gd`, `keeper_diving_high_smoke.gd`, `goalkeeper_outcomes_smoke.gd` |
+| Replay appearance and state | `replay_results_smoke.gd`, native `--review-mode outro` |
 | Moving contact and combinations | `moving_kick_contact_smoke.gd`, `first_time_pass_timing_smoke.gd`, `first_time_shot_smoke.gd`, `ai_shot_approach_smoke.gd` |
 
 Sample whole changed clips, not only beginning/middle/end. Use a fixed nine-pose garment sheet as an additional deformation check, then inspect moving close and broadcast playback. Stills and skeleton proxies cannot establish animation smoothness or final-mesh quality. Preserve the main skill's logic/native-appearance/hardware distinction and report unmeasured hardware performance.

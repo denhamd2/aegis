@@ -101,6 +101,9 @@ func _run() -> void:
 	var max_still := 0
 	var still := 0
 	var samples := 0
+	var complete_presentation := OS.get_environment("BEECHLAWN_REPLAY_COMPLETE")=="1"
+	var presentation_skips := 0
+	var skip := InputEventKey.new();skip.keycode=KEY_SPACE;skip.pressed=true
 	# Count actual contacts, including events superseded within the same tick.
 	var shots := {&"Beechlawn Rovers": 0, &"Boardeaux": 0}
 	var contested_shots := {&"Beechlawn Rovers": 0, &"Boardeaux": 0}
@@ -125,7 +128,11 @@ func _run() -> void:
 		elif kind in [&"goalkeeper_save", &"goalkeeper_catch"]:
 			saves[ball.last_touch] += 1)
 	game.set_physics_process(true)
-	while not game._full_time and samples<18000:
+	while not game._full_time and samples<(36000 if complete_presentation else 18000):
+		# Chance tests exercise the same public skip control a viewer can use;
+		# one separate full-presentation soak retains every sequence to results.
+		if not complete_presentation and game.presentation.active() and game.presentation.elapsed>1.0:
+			if game.presentation.handle_key(skip): presentation_skips+=1
 		if game._kickoff_pending:
 			game._start_kickoff(false)
 			_apply_start_variation(game)
@@ -169,6 +176,12 @@ func _run() -> void:
 					shot_decisions[ball.last_touch] = int(shot_decisions[ball.last_touch]) + 1
 			var attack_sign := 1.0 if ball.last_touch == &"Beechlawn Rovers" else -1.0
 			max_attack_progress[ball.last_touch] = maxf(float(max_attack_progress[ball.last_touch]), ball_position.x * attack_sign)
+	if complete_presentation:
+		for tick in 900:
+			if game.presentation.phase==game.presentation.Phase.RESULTS:break
+			await physics_frame
+		assert(game.presentation.phase==game.presentation.Phase.RESULTS,"Unskipped full match reaches results")
+	print("PRESENTATION_SOAK complete=",complete_presentation," auto_skips=",presentation_skips," pose_data_bytes=",game.presentation.buffer.data_bytes())
 	assert(game._full_time,"Full short match did not reach full time")
 	assert(ball.freeze,"Ball was not held at full time")
 	assert(travelled>50.0,"AI match did not progress the ball")

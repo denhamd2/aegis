@@ -1,0 +1,58 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "away_players": 11,
+  "display_server": "X11",
+  "frames": [
+    {
+      "elapsed": 1.25,
+      "file": "goal_celebration.png",
+      "phase": 1,
+      "score": [
+        1,
+        0
+      ]
+    },
+    {
+      "elapsed": 1.31666666666667,
+      "file": "goal_replay.png",
+      "phase": 2,
+      "score": [
+        1,
+        0
+      ]
+    },
+    {
+      "elapsed": 2.41666666666666,
+      "file": "full_time_winners.png",
+      "phase": 3,
+      "score": [
+        2,
+        1
+      ]
+    },
+    {
+      "elapsed": 8.33333333333333,
+      "file": "handshakes.png",
+      "phase": 3,
+      "score": [
+        2,
+        1
+      ]
+    },
+    {
+      "elapsed": 12.0000000000002,
+      "file": "match_broadcast.png",
+      "phase": 4,
+      "score": [
+        2,
+        1
+      ]
+    }
+  ],
+  "ghost_physics_bodies": 0,
+  "home_players": 11,
+  "officials": 1,
+  "pose_data_bytes": 10072480,
+  "rendering_method": "forward_plus",
+  "scope": "Scripted native celebration/replay/results fixture using actual roster poses; not natural match or M1 performance evidence"
+}

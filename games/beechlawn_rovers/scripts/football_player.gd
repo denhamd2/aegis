@@ -221,7 +221,7 @@ func _update_locomotion(delta: float) -> void:
 	var facing_intent := desired
 	if _aerial_controller.facing.length_squared() > .01:
 		facing_intent = _aerial_controller.facing
-	if is_ai_goalkeeper or jockey or contain:
+	if not recovering and (is_ai_goalkeeper or jockey or contain):
 		facing_intent = ball.global_position - global_position
 		facing_intent.y = 0.0
 	if facing_intent.length_squared() > 0.015:

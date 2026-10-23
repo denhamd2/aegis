@@ -86,7 +86,7 @@ func _process(delta: float) -> void:
 	if not is_instance_valid(game):
 		if crowd.playing: stop_match()
 		return
-	if game._intro_active or game._full_time or game._kickoff_pending or game._goal_pause_timer > 0 or game.restart.active(): return
+	if game._intro_active or game._presentation_active or game._full_time or game._kickoff_pending or game._goal_pause_timer > 0 or game.restart.active(): return
 	_tick += delta
 	if _tick < .08: return
 	var elapsed := _tick; _tick = 0

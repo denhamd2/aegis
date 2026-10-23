@@ -9,6 +9,8 @@ func _run() -> void:
 	for actor in game._home_players+game._away_players:actor.position=Vector3(200,0,200)
 	var ball: FootballBall=game.ball
 	for side in [-1,1]:
+		game.presentation.cancel_for_restart()
+		game._goal_pause_timer=0
 		ball.freeze=true
 		ball.position=Vector3.ZERO
 		for f in 3:await physics_frame

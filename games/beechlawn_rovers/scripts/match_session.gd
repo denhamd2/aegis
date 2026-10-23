@@ -19,6 +19,15 @@ var show_intro := true
 var weather_preset: StringName = &"sunny"
 
 func _ready() -> void:
+	if "--print-build-info" in OS.get_cmdline_user_args():
+		var info = JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+		if not info is Dictionary:
+			push_error("Packaged build identity is missing or invalid")
+			get_tree().quit(1)
+		else:
+			print("BEECHLAWN_BUILD_INFO ",JSON.stringify(info))
+			get_tree().quit()
+		return
 	load_preferences()
 	apply_preferences()
 

@@ -71,6 +71,7 @@ func _run_checks() -> void:
 	assert(ball.linear_velocity.x > 0.0, "Parry did not redirect the ball into the field")
 	assert(home_keeper._save_pose_time > 0.0, "Save reaction pose was not triggered")
 
+	controller.reset_for_stoppage() # The next fixture is a separate shot; recovery is covered in outcomes.
 	# A slower close-range shot is gathered, briefly held and distributed to a
 	# teammate through the same physical ball impulse used by ordinary passes.
 	ball.global_position = home_keeper.global_position + Vector3(0.45, 1.0, 0.0)

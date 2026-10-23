@@ -73,10 +73,13 @@ func _run() -> void:
 		_check(ball.last_action == &"goalkeeper_save", keeper,
 			"dribble assistance erased a parry while recovering")
 		_check(not controller.try_save(), keeper, "gathered a rebound before recovery finished")
-		controller.update_before_move(.8)
+		controller.update_before_move(1.2)
 		_check(not controller.is_recovering(), keeper, "recovery failed to elapse")
-		ball._physics_process(.8)
+		ball._physics_process(1.2)
 		keeper._physics_process(1.0 / 60.0)
+		_check(not ball.goalkeeper_is_holding(keeper),keeper,"rebound claimed before gloves lowered")
+		keeper._footballer_visual.animation_player.advance(.25/maxf(absf(keeper._footballer_visual.animation_player.get_playing_speed()),.01))
+		controller.try_save()
 		_check(ball.goalkeeper_is_holding(keeper), keeper, "failed to gather slow own rebound after recovery")
 		ball.release_for_restart()
 

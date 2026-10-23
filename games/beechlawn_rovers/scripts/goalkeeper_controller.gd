@@ -18,6 +18,11 @@ var _distribution_remaining := 0.0
 var _intercept_seconds := 0.0
 var _save_animation_started := false
 var _save_elapsed := 0.0
+var _save_facing := 0.0
+var _gather_pending := false
+var _gather_elapsed := 0.0
+var _original_shape: Shape3D
+var _original_shape_position := Vector3.ZERO
 var _recovery_remaining := 0.0
 
 func configure(player: FootballPlayer, match_ball: FootballBall) -> void:
@@ -28,6 +33,7 @@ func update_before_move(delta: float) -> void:
 	if not is_instance_valid(keeper) or not is_instance_valid(ball):
 		return
 	_recovery_remaining = maxf(0.0, _recovery_remaining - delta)
+	if not is_recovering(): _restore_dive_shape()
 	if ball.goalkeeper_is_holding(keeper):
 		keeper.ai_move_direction = Vector3.ZERO
 		keeper.ai_sprinting = false
@@ -36,17 +42,25 @@ func update_before_move(delta: float) -> void:
 			_distribute_to_teammate()
 		return
 	_observe_action()
+	if _gather_pending:
+		_gather_elapsed+=delta
+		if _gather_elapsed>.7: _gather_pending=false;_save_animation_started=false
 	if _save_animation_started and _shot_active:
 		_save_elapsed += delta
+		if _save_elapsed<.2: keeper.rotation.y=lerp_angle(keeper.rotation.y,_save_facing,1-exp(-delta*24))
 		if _save_elapsed > 1.3:
 			_shot_active = false
 			_recovery_remaining = .2
 	if _shot_active:
 		_has_intercept = _predict_goalmouth_intercept()
+		if not _has_intercept and ball.last_action in [&"cross",&"lofted_pass"]: _has_intercept = _predict_cross_claim()
 		_reaction_remaining = maxf(0.0, _reaction_remaining - delta)
 	if not is_recovering() and _shot_active and _has_intercept and _reaction_remaining <= 0.0 \
 			and _intercept_seconds <= 0.45 and not _save_animation_started:
-		keeper._start_goalkeeper_save_pose(_save_style(), maxf(.09,_intercept_seconds-.04))
+		_save_facing=atan2(ball.linear_velocity.x,ball.linear_velocity.z)
+		var style := _save_style()
+		_set_dive_shape(style)
+		keeper._start_goalkeeper_save_pose(style, maxf(.09,_intercept_seconds-.04))
 		_save_animation_started = true
 	if _save_animation_started and _shot_active and not _has_intercept and ball.position.x * keeper.attack_sign < keeper.position.x * keeper.attack_sign:
 		_shot_active = false
@@ -62,9 +76,9 @@ func update_before_move(delta: float) -> void:
 	if _can_follow_rebound() and keeper.global_position.distance_to(ball.global_position) < 3.0:
 		target = Vector3(ball.global_position.x, keeper.global_position.y, ball.global_position.z)
 	if _shot_active and _has_intercept and _reaction_remaining <= 0.0:
-		target.x = keeper.global_position.x
-		target.z = clampf(_predicted_intercept.z, -GOAL_WIDTH * 0.5 + 0.45,
-			GOAL_WIDTH * 0.5 - 0.45)
+		target.x = keeper.global_position.x if ball.last_action == &"shot" else _predicted_intercept.x
+		var width := GOAL_WIDTH*.5-.45 if ball.last_action == &"shot" else 18.0
+		target.z = clampf(_predicted_intercept.z,-width,width)
 	var offset := target - keeper.global_position
 	offset.y = 0.0
 	keeper.ai_move_direction = offset.normalized() if offset.length() > 0.18 else Vector3.ZERO
@@ -101,6 +115,7 @@ func try_save() -> bool:
 	if keeper.profile != null and keeper.profile.attributes != null:
 		handling = keeper.profile.attributes.goalkeeper_handling
 	var catch_speed := lerpf(4.5, 8.0, clampf(handling / 100.0, 0.0, 1.0))
+	if ball.last_action in [&"cross",&"lofted_pass"]: catch_speed+=2.0
 	var catch_width := keeper.tuning.goalkeeper_catch_half_width if keeper.tuning != null else 0.42
 	# A two-handed catch needs the ball supported in front of the body. A slow
 	# ball at full lateral stretch is still a parry, not a secure catch.
@@ -162,6 +177,7 @@ func _can_follow_rebound() -> bool:
 
 func _try_gather_rebound() -> bool:
 	if not _can_follow_rebound():
+		_gather_pending=false
 		return false
 	var offset := ball.global_position - keeper.global_position
 	var reach := keeper.tuning.goalkeeper_save_reach if keeper.tuning != null else 0.95
@@ -169,22 +185,27 @@ func _try_gather_rebound() -> bool:
 	if Vector2(offset.x, offset.z).length() > reach or absf(offset.z) > width \
 			or offset.x * keeper.attack_sign < 0.0:
 		return false
-	if not ball.goalkeeper_claim(keeper):
+	if not _gather_pending:
+		_gather_pending=true;_gather_elapsed=0;_save_animation_started=true
+		keeper._start_goalkeeper_save_pose(&"KeeperLowCenter",.2)
 		return false
+	if not _hands_reach_ball() or not ball.goalkeeper_claim(keeper): return false
+	_gather_pending=false
 	_commit_recovery(false)
 	_distribution_remaining = 0.58
-	_save_animation_started = false
+	_save_animation_started = true
 	_save_elapsed = 0.0
-	_begin_save_pose()
 	_shot_active = false
 	_has_intercept = false
 	keeper.status_changed.emit("Goalkeeper gathers the rebound")
 	return true
 
 func is_recovering() -> bool:
-	return _recovery_remaining > 0.0 or (_save_animation_started and _shot_active)
+	return _recovery_remaining > 0.0 or _gather_pending or (_save_animation_started and _shot_active)
 
 func reset_for_stoppage() -> void:
+	_gather_pending=false
+	_restore_dive_shape()
 	_recovery_remaining = 0.0
 	_shot_active = false
 	_has_intercept = false
@@ -197,6 +218,32 @@ func _commit_recovery(stretched: bool) -> void:
 	_recovery_remaining = 0.65 if stretched else 0.24
 	if keeper.tuning != null:
 		_recovery_remaining = keeper.tuning.goalkeeper_stretch_recovery_seconds if stretched else keeper.tuning.goalkeeper_standing_recovery_seconds
+	var visual := keeper.get_node_or_null("Visual") as FootballerVisual
+	if visual != null: _recovery_remaining = maxf(_recovery_remaining,visual.sustain_keeper_recovery())
+
+func _set_dive_shape(style: StringName) -> void:
+	if not String(style).begins_with("KeeperDive"): return
+	var collider := keeper.get_node("CollisionShape3D") as CollisionShape3D
+	if _original_shape == null:
+		_original_shape=collider.shape;_original_shape_position=collider.position
+	var shape := CapsuleShape3D.new();shape.radius=.34;shape.height=.8
+	collider.shape=shape
+	collider.position=Vector3(-.4 if style==&"KeeperDiveLeft" else .4,.4,-.05)
+func _restore_dive_shape() -> void:
+	if _original_shape == null: return
+	var collider := keeper.get_node("CollisionShape3D") as CollisionShape3D
+	collider.shape=_original_shape;collider.position=_original_shape_position
+	_original_shape=null
+func _predict_cross_claim() -> bool:
+	for step in range(2,16):
+		var seconds := step*.1
+		var point := ball.position+ball.linear_velocity*seconds-Vector3.UP*4.905*seconds*seconds
+		var depth := (point.x+52.5*keeper.attack_sign)*keeper.attack_sign
+		if depth<0 or depth>16.5 or absf(point.z)>20 or point.y<.65 or point.y>2.25: continue
+		var distance := Vector2(point.x-keeper.position.x,point.z-keeper.position.z).length()
+		if distance>seconds*keeper.tuning.goalkeeper_move_speed+.65: continue
+		_predicted_intercept=point;_intercept_seconds=seconds;return true
+	return false
 
 func _inside_handling_area() -> bool:
 	# Handling legality follows the ball, not the keeper's feet. Use mirrored

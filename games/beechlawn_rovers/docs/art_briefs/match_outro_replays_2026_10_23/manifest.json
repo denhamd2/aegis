@@ -1,0 +1,42 @@
+{
+  "result": "PASS",
+  "captures": [
+    {
+      "image": "match_broadcast.png",
+      "report": "match_broadcast.json",
+      "sha256": "40172fcdfd0fe9bf5690f41acad1c3d528088f59ca9448326baa4a2c7baa258d",
+      "process_cleanup": "normal",
+      "capture_seconds": 26.86,
+      "command": [
+        "/usr/local/bin/godot",
+        "--path",
+        "/workspace/aegis-checkout/games/beechlawn_rovers",
+        "--rendering-method",
+        "forward_plus",
+        "--resolution",
+        "640x360",
+        "--fixed-fps",
+        "60",
+        "--disable-vsync",
+        "--audio-driver",
+        "Dummy",
+        "--display-driver",
+        "x11",
+        "--rendering-driver",
+        "vulkan",
+        "--script",
+        "res://scripts/review_match_outro.gd",
+        "--",
+        "--capture-dir=/workspace/aegis-checkout/build/br-final-outro",
+        "--player=match",
+        "--view=broadcast",
+        "--lighting=match",
+        "--sky=match",
+        "--clean=1",
+        "--review-mode=outro"
+      ]
+    }
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "scope": "Forward+ appearance stills; software Vulkan does not measure Mac performance."
+}

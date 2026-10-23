@@ -56,8 +56,12 @@ func _physics_process(delta: float) -> void:
 		var forward := -goalkeeper_holder.global_basis.z
 		forward.y = 0.0
 		var hold_target := goalkeeper_holder.global_position + Vector3.UP * 1.05 \
-			+ forward.normalized() * 0.32
-		var spring_force := ((hold_target - global_position) * 28.0 - linear_velocity * 9.0) * mass
+			+ forward.normalized() * 0.45
+		var visual := goalkeeper_holder.get_node_or_null("Visual") as FootballerVisual
+		if visual != null:
+			var hands := visual.hand_positions()
+			if hands.size()==2: hold_target=(hands[0]+hands[1])*.5+forward.normalized()*.10+Vector3.UP*.05
+		var spring_force := ((hold_target - global_position) * 40.0 - linear_velocity * 12.0 + Vector3.UP*9.81) * mass
 		apply_central_force(spring_force.limit_length(20.0))
 	elif goalkeeper_holder != null:
 		_release_goalkeeper_holder()

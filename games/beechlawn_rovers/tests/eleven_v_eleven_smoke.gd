@@ -55,7 +55,9 @@ func _run() -> void:
 	match_scene._on_goal("Beechlawn Rovers",1)
 	match_scene._physics_process(.5)
 	assert(not match_scene.ball.freeze,"Scored ball continues into net")
-	match_scene._physics_process(1.2)
+	var goal_skip := InputEventKey.new()
+	goal_skip.keycode=KEY_SPACE;goal_skip.pressed=true
+	match_scene.presentation.handle_key(goal_skip)
 	assert(match_scene._kickoff_team==&"Boardeaux" and match_scene._kickoff_pending)
 	print("11v11 PASS: 22 humans, 2 keepers, separate referee, shared head, independent playback, all-player switching, terrain and restart")
 	match_scene.free()

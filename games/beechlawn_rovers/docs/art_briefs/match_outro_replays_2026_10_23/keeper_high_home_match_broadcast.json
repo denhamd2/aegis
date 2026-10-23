@@ -1,0 +1,471 @@
+{
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "aerial_events": [],
+  "api": "1.4.305",
+  "away_players": 11,
+  "display_server": "X11",
+  "fixture_setup": "keeper_high_home",
+  "frames": [
+    {
+      "aerial_actor": "",
+      "ball": "(-45.09408, 2.439155, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.89872, 2.959396, 0.0)",
+      "file": "frame_000.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 6
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-45.67813, 2.675276, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.799151, 1.936356, 0.0)",
+      "file": "frame_001.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 12
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-46.25232, 2.810103, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.701262, 0.930587, 0.0)",
+      "file": "frame_002.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 18
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-46.81682, 2.845346, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.605026, -0.058206, 0.0)",
+      "file": "frame_003.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 24
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-47.37178, 2.782685, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.510414, -1.030308, 0.0)",
+      "file": "frame_004.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 30
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-47.91739, 2.623773, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.417398, -1.986001, 0.0)",
+      "file": "frame_005.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 36
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-48.45378, 2.370236, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.325953, -2.925563, 0.0)",
+      "file": "frame_006.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 42
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-48.98112, 2.02367, 0.0)",
+      "ball_action": "cross",
+      "ball_velocity": "(-5.236053, -3.849265, 0.0)",
+      "file": "frame_007.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 48
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-49.19114, 1.861221, -0.0)",
+      "ball_action": "goalkeeper_catch",
+      "ball_velocity": "(-0.45029, -0.175658, -0.000002)",
+      "file": "frame_008.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 54
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-49.20383, 1.850967, -0.000001)",
+      "ball_action": "goalkeeper_catch",
+      "ball_velocity": "(0.07565, -0.208405, -0.000015)",
+      "file": "frame_009.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 60
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-49.19224, 1.807428, -0.000002)",
+      "ball_action": "goalkeeper_catch",
+      "ball_velocity": "(0.101758, -0.548815, -0.000003)",
+      "file": "frame_010.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 66
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-49.18265, 1.748976, -0.000002)",
+      "ball_action": "goalkeeper_catch",
+      "ball_velocity": "(0.103615, -0.586244, 0.000006)",
+      "file": "frame_011.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 72
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-49.16869, 1.692267, -0.000001)",
+      "ball_action": "goalkeeper_catch",
+      "ball_velocity": "(0.171135, -0.554726, 0.000005)",
+      "file": "frame_012.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 78
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-49.14691, 1.636806, -0.000001)",
+      "ball_action": "goalkeeper_catch",
+      "ball_velocity": "(0.248185, -0.562391, 0.000001)",
+      "file": "frame_013.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 84
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-48.2145, 1.657979, 0.69598)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(11.07426, 0.039123, 8.30444)",
+      "file": "frame_014.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 90
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-47.118, 1.604955, 1.518227)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(10.88733, -0.934622, 8.164263)",
+      "file": "frame_015.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 96
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-46.04002, 1.455518, 2.326596)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(10.70355, -1.89193, 8.02645)",
+      "file": "frame_016.png",
+      "keeper": "(-49.5, 0.022037, 0.0)",
+      "keeper_recovering": true,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 102
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-44.98022, 1.211295, 3.121319)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(10.52287, -2.83308, 7.890965)",
+      "file": "frame_017.png",
+      "keeper": "(-49.5, 0.022037, 0.010002)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 108
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-43.93832, 0.873885, 3.902627)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(10.34525, -3.758342, 7.757766)",
+      "file": "frame_018.png",
+      "keeper": "(-49.5, 0.022037, 0.120002)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 114
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-42.91401, 0.444863, 4.670747)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(10.17062, -4.667987, 7.626816)",
+      "file": "frame_019.png",
+      "keeper": "(-49.5, 0.022037, 0.350002)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 120
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-41.95144, 0.145871, 5.390484)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(9.66379, 0.507293, 7.184499)",
+      "file": "frame_020.png",
+      "keeper": "(-49.5, 0.022037, 0.700001)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 126
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-40.99731, 0.139202, 6.099829)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(9.454338, -0.474355, 7.028783)",
+      "file": "frame_021.png",
+      "keeper": "(-49.5, 0.022037, 1.170001)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 132
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-40.0686, 0.123726, 6.789507)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(9.176999, -0.093892, 6.81098)",
+      "file": "frame_022.png",
+      "keeper": "(-49.5, 0.022037, 1.7175)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 138
+    },
+    {
+      "aerial_actor": "",
+      "ball": "(-39.16586, 0.116101, 7.459017)",
+      "ball_action": "goalkeeper_distribution",
+      "ball_velocity": "(8.92117, -0.067585, 6.612971)",
+      "file": "frame_023.png",
+      "keeper": "(-49.5, 0.022037, 2.145)",
+      "keeper_recovering": false,
+      "label": "keeper_high_home",
+      "player": "(150.0, 0.0, 150.0)",
+      "player_velocity": "(0.0, 0.0, 0.0)",
+      "score": [
+        0,
+        0
+      ],
+      "shot_contacts": [],
+      "tick": 144
+    }
+  ],
+  "godot": "4.6.3-stable (official)",
+  "home_players": 11,
+  "keeper_contacts": [
+    {
+      "ball": "(-49.15491, 1.887747, 0.0)",
+      "kind": "goalkeeper_catch",
+      "team": "Beechlawn Rovers",
+      "tick": 50
+    },
+    {
+      "ball": "(-49.14261, 1.627323, -0.000001)",
+      "kind": "goalkeeper_distribution",
+      "team": "Beechlawn Rovers",
+      "tick": 85
+    }
+  ],
+  "msaa_3d": 2,
+  "officials": 1,
+  "physics_steps_per_draw": 6,
+  "rendering_method": "forward_plus",
+  "resolution": [
+    640,
+    360
+  ],
+  "review_mode": "keeper_high_home",
+  "scope": "Actual native Forward+ controllers and assets; accelerated simulated time, software GPU, no Mac performance claim.",
+  "sequence_fps": 10.0,
+  "shot_contacts": [],
+  "vendor": "Unknown"
+}

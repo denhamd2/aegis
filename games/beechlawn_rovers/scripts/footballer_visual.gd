@@ -46,6 +46,7 @@ func _ready() -> void:
 	_install_aerial_actions()
 	_install_volley_actions()
 	_install_match_motion()
+	_install_presentation_actions()
 	_build_locomotion_tree()
 	# Reception/kick setup reads this skeleton's boot pose in physics. Idle
 	# evaluation held the running pose for several ticks on slow renders.
@@ -101,6 +102,7 @@ func configure_appearance(profile: FootballerProfile, team: FootballTeam = null)
 		_install_aerial_actions()
 		_install_volley_actions()
 		_install_match_motion()
+		_install_presentation_actions()
 		_install_action_contact_marker(&"pass", PASS_CLIP, PASS_EVENT_METADATA)
 		_install_action_contact_marker(&"receive", RECEIVE_CLIP, RECEIVE_EVENT_METADATA)
 		_install_action_contact_marker(&"shot", SHOT_CLIP, SHOT_EVENT_METADATA)
@@ -290,6 +292,14 @@ func play_aerial(action: StringName, playback_speed := 1.0) -> bool:
 func play_keeper_save(style: StringName = &"KeeperCatch", preparation: float = .25) -> bool:
 	return _play_action(&"keeper_save", StringName("AN_Beechlawn_" + String(style)), clampf(.25 / maxf(preparation,.09),1,2.8), true, true)
 
+
+func sustain_keeper_recovery() -> float:
+	if _active_action != &"keeper_save": return 0
+	var remaining := animation_player.current_animation_length-animation_player.current_animation_position
+	# Updating the same playing clip preserves its time while restoring normal
+	# follow-through speed after accelerated short-range preparation.
+	animation_player.play(_active_clip,0,1)
+	return maxf(0,remaining)
 
 func play_stop() -> bool:
 	return _play_action(&"stop", STOP_CLIP, 1.0)
@@ -543,6 +553,14 @@ func hand_positions() -> Array[Vector3]:
 		var id := skeleton.find_bone("mixamorig_" + side + "Hand")
 		if id >= 0: result.append(skeleton.to_global(skeleton.get_bone_global_pose(id).origin))
 	return result
+
+func _install_presentation_actions() -> void:
+	var source := (load("res://assets/characters/shared/match_presentation.glb") as PackedScene).instantiate()
+	var source_player := source.get_node("AnimationPlayer") as AnimationPlayer
+	var library := animation_player.get_animation_library(&"")
+	for name in [&"AN_Beechlawn_Celebrate",&"AN_Beechlawn_Handshake"]:
+		if not library.has_animation(name): library.add_animation(name,source_player.get_animation(name).duplicate())
+	source.free()
 
 func _install_restart_actions() -> void:
 	var scene := load("res://assets/characters/shared/restart_actions.glb") as PackedScene

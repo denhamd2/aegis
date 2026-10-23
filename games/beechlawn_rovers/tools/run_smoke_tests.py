@@ -24,7 +24,7 @@ GODOT = os.environ.get("GODOT_BIN", "godot")
 TIMEOUT = float(os.environ.get("BEECHLAWN_TEST_TIMEOUT_SECONDS", "45"))
 # The full match permits 300 simulated seconds including stoppages at 6x speed:
 # its 50-second wall-clock ceiling before CPU overhead exceeds the short tests.
-LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 75.0}
+LONG_TEST_TIMEOUTS = {"eleven_v_eleven_match_soak.gd": 75.0, "full_presentation_match_soak.gd": 135.0}
 DEFAULT_TESTS = [
     "wet_weather_smoke.gd",
     "footballer_animation_tree_smoke.gd",
@@ -65,13 +65,13 @@ def main() -> int:
             print(f"Smoke test not found: {test_path}", file=sys.stderr)
             return 2
         command = [GODOT, "--headless", "--path", str(PROJECT), "--script", f"res://tests/{name}"]
-        if name == "eleven_v_eleven_match_soak.gd":
+        if name in {"eleven_v_eleven_match_soak.gd", "full_presentation_match_soak.gd"}:
             # Replay with six 60 Hz simulation steps per draw, independent of
             # host wall-clock throughput. Keep gameplay dt and chance gates.
             command[2:2] = ["--fixed-fps", "60"]
         timeout = TIMEOUT if "BEECHLAWN_TEST_TIMEOUT_SECONDS" in os.environ else LONG_TEST_TIMEOUTS.get(name, TIMEOUT)
         print(f"\n[smoke] {name} (timeout {timeout:g}s)", flush=True)
-        if name == "eleven_v_eleven_match_soak.gd":
+        if name in {"eleven_v_eleven_match_soak.gd", "full_presentation_match_soak.gd"}:
             print("[replay] fixed render cadence 60 Hz; gameplay dt 1/60 s", flush=True)
         process = subprocess.Popen(
             command,

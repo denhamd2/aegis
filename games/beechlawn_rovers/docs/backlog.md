@@ -1046,11 +1046,13 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
 distance, stays within the Mac frame-time budget, and can be built/released
 without touching Aegis artifacts.
 
-- [ ] **BR-026 — Goal and full-time presentation**
+- [x] **BR-026 — Goal and full-time presentation**
+  - 2026-10-23: original shared celebrations/handshakes, winners/draws, own-goal handling, reduced teams, automatic results with Rematch/Title and Space/Enter skip pass logic/native checks. M1 feel remains under BR-025.
   Scorer/teammate reactions, own goals, winner/draw treatment, handshakes and
   a usable Rematch/Title results screen. Original shared animations; skippable,
   clock/rules isolated and valid with reduced teams.
-- [ ] **BR-027 — Incident replays**
+- [x] **BR-027 — Incident replays**
+  - 2026-10-23: bounded root/bone/ball/net snapshots, actual runtime head/kit ghosts, rule/audio/clock isolation, natural-stoppage autoplay and exact skip/restore checks pass. Full unskipped match reaches results; native fixture evidence is in `art_briefs/match_outro_replays_2026_10_23/`.
   Collision-free ghost playback from bounded pose/ball snapshots. Goals and
   major incidents replay automatically at natural stoppages; Space/Enter skips.
   Restore the exact pending restart without duplicate events or scores.

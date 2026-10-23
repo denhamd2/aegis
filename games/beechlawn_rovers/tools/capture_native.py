@@ -17,7 +17,6 @@ import signal
 import subprocess
 import time
 
-from PIL import Image, ImageStat
 
 PROJECT = Path(__file__).resolve().parents[1]
 IDENTITIES = {'shane':'shane_denham', 'john':'john_orourke', 'des':'bordeaux_09',
@@ -66,10 +65,30 @@ def run_bounded(command, env, deadline, log, ready_files=()):
     return cleanup
 
 
+def read_display_number(fd, timeout=8):
+    # Xvfb can write digits and the newline separately. Closing the read end
+    # after only digits gives its next write EPIPE and kills the ready server.
+    deadline = time.monotonic()+timeout
+    line = b''
+    while b'\n' not in line:
+        remaining = deadline-time.monotonic()
+        if remaining <= 0 or not select.select([fd],[],[],remaining)[0]:
+            raise RuntimeError('Xvfb did not provide a complete display line within 8s')
+        chunk = os.read(fd,64)
+        if not chunk:
+            raise RuntimeError('Xvfb closed its display pipe before readiness; see display.log')
+        line += chunk
+    number = line.split(b'\n',1)[0].decode().strip()
+    if not number.isdigit():
+        raise RuntimeError('Xvfb provided an invalid display; see display.log')
+    return ':'+number
+
+
 def main():
+    from PIL import Image, ImageStat
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--review-mode', choices=['audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
+    parser.add_argument('--review-mode', choices=['keeper_dive_home','keeper_dive_away','keeper_high_home','outro','audio','free_kick','presentation','movement','throw','net','montage','attack_home','attack_away','keeper_home','keeper_away','cross_home','cross_away','header_close','chest_close','volley_close','half_volley_close','cross_driven_home','cross_driven_away','cross_lofted_home','cross_early_home','shot_finesse','shot_power','shot_low'], help='Capture a native moving repair review')
     parser.add_argument('--match',action='store_true',help='Capture the actual 22-player match and broadcast camera')
     parser.add_argument('--players', nargs='+', choices=['shane','john','des','referee','away_keeper','paddy'],
                         default=['shane','john','des','referee'])
@@ -119,12 +138,7 @@ def main():
             finally:
                 os.close(write_fd)
             try:
-                if not select.select([read_fd],[],[],8)[0]:
-                    raise RuntimeError('Xvfb did not provide a display within 8s')
-                number = os.read(read_fd,64).decode().strip()
-                if not number.isdigit():
-                    raise RuntimeError('Xvfb failed; see display.log')
-                env['DISPLAY'] = ':'+number
+                env['DISPLAY'] = read_display_number(read_fd)
             finally:
                 os.close(read_fd)
         captures = []
@@ -138,7 +152,7 @@ def main():
                 command += ['--write-movie',str(args.output/'audio_review.avi')]
             if linux:
                 command += ['--display-driver','x11','--rendering-driver','vulkan']
-            command += (['--script',('res://scripts/review_audio_mix.gd' if args.review_mode == 'audio' else 'res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
+            command += (['--script',('res://scripts/review_match_outro.gd' if args.review_mode == 'outro' else 'res://scripts/review_audio_mix.gd' if args.review_mode == 'audio' else 'res://scripts/review_broadcast_ui.gd' if args.review_mode == 'presentation' else 'res://scripts/review_native_repairs.gd') if args.review_mode else 'res://scripts/review_native_match.gd'] if args.match else ['res://scenes/review/shane_asset_review.tscn'])
             command += ['--',
                 '--capture-dir='+str(args.output),'--player='+player,'--view='+view,
                 '--lighting='+args.lighting,'--sky='+args.sky,'--clean=1']

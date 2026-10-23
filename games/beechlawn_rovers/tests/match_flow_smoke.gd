@@ -42,7 +42,9 @@ func _run_checks() -> void:
 	assert(game.get("_kickoff_team") == &"Boardeaux", "Conceding team was not awarded the restart")
 	game._physics_process(.5)
 	assert(not ball.freeze and not game._kickoff_pending,"Goal follow-through must precede kickoff")
-	game._physics_process(1.2)
+	var goal_skip := InputEventKey.new()
+	goal_skip.keycode=KEY_SPACE;goal_skip.pressed=true
+	game.presentation.handle_key(goal_skip)
 	assert(bool(game.get("_kickoff_pending")), "Goal pause did not prepare a new kickoff")
 	assert(ball.freeze, "Ball should remain still while AI lines up its kickoff")
 	game._physics_process(1.1)

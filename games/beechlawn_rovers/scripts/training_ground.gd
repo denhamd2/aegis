@@ -60,6 +60,8 @@ var _spectator_mode := false
 var _intro_active := false
 var _pre_match: Node
 var restart = preload("res://scripts/football_restart_controller.gd").new()
+var presentation: FootballMatchPresentation
+var _presentation_active := false
 var events: FootballMatchEvents
 var grass_detail: PitchGrassDetail
 var rules = preload("res://scripts/football_rules_controller.gd").new()
@@ -148,6 +150,10 @@ func _ready() -> void:
 	$Goals/PositiveEnd/GoalDetector.goal_scored.connect(_on_goal)
 	$Goals/NegativeEnd/GoalDetector.goal_scored.connect(_on_goal)
 	_setup_kickoff_positions(_kickoff_team)
+	presentation = FootballMatchPresentation.new()
+	presentation.name = "MatchPresentation"
+	add_child(presentation)
+	presentation.setup(self)
 	if OS.has_feature("web") and OS.has_feature("debug"):
 		# Explicit stationary inspection fixture; never used by normal matches.
 		if str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('surface_review')")) == "1":
@@ -178,12 +184,15 @@ func _ready() -> void:
 	print("BEECHLAWN_MATCH_READY actors=",_home_players.size()+_away_players.size()," officials=",get_tree().get_nodes_in_group("match_officials").size())
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and presentation != null and presentation.handle_key(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if _intro_active and event.keycode in [KEY_ENTER, KEY_SPACE]:
 			_pre_match.finish()
 			get_viewport().set_input_as_handled()
 			return
-		if not _intro_active and event.keycode == KEY_C:
+		if not _intro_active and not _presentation_active and event.keycode == KEY_C:
 			_set_message("Camera: %s" % camera_rig.cycle_preset())
 			get_viewport().set_input_as_handled()
 			return
@@ -199,10 +208,17 @@ func _freeze_capture(_arguments: Array) -> void:
 func _physics_process(delta: float) -> void:
 	if _intro_active:
 		return
+	if presentation != null and presentation.replaying():
+		presentation.update(delta)
+		_update_clock()
+		return
 	_update_teammate_pressure()
 	for entry in _net_impacts.values():
 		entry["age"] = minf(2.0,float(entry["age"])+delta)
 		(entry["material"] as ShaderMaterial).set_shader_parameter("impact_age",entry["age"])
+	if presentation != null and presentation.update(delta):
+		_update_clock()
+		return
 	if restart.active() and not _full_time:
 		restart.update(delta)
 		if restart.released and restart.active():
@@ -326,6 +342,8 @@ func _setup_full_kickoff(kicking: Array[FootballPlayer], defending: Array[Footba
 	ball.last_touch = &"none"
 
 func _prepare_kickoff(kicking_team: StringName) -> void:
+	if presentation != null: presentation.cancel_for_restart()
+	for actor in _home_players+_away_players: actor.reset_for_stoppage()
 	rules.restart_taker=null
 	rules.restart_kind=""
 	_kickoff_team = kicking_team
@@ -900,7 +918,7 @@ func _late_lead_depth(team_name: StringName) -> float:
 	return 5.0 * clampf(1.0 - _remaining_time / 45.0, 0.0, 1.0)
 
 func _on_goal(team_name: String, _side: int) -> void:
-	if _full_time:
+	if _full_time or _goal_pause_timer > 0 or _presentation_active:
 		return
 	if rules.direct_throw_goal(_side): return
 	restart.cancel()
@@ -933,7 +951,7 @@ func _finish_match() -> void:
 	ball.angular_velocity = Vector3.ZERO
 	for actor in _home_players + _away_players:
 		actor.set_physics_process(false)
-	_set_message("FULL TIME  ·  Esc to title screen")
+	_set_message("FULL TIME")
 
 func _check_boundary_restart() -> void:
 	var p := ball.global_position
@@ -969,7 +987,7 @@ func _update_score() -> void:
 
 func _update_clock() -> void:
 	var display_time := ceili(_remaining_time)
-	clock_label.text = "%02d:%02d" % [int(display_time / 60), display_time % 60]
+	clock_label.text = "FT" if _full_time else "%02d:%02d" % [int(display_time / 60), display_time % 60]
 
 func _set_message(message: String) -> void:
 	message_label.text = message
