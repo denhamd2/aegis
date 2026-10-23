@@ -11,7 +11,8 @@ the current bodies, heads, kits and earlier motion library.
 Mirrored tests validate actual boot contact, a required real rebound for
 half-volleys, keyboard modifier retention, complete cross-to-header/volley
 sequences and grounded recovery on rutted turf. The six-match chance gate
-passes at 34/27 shots with both teams qualifying in all six scenarios.
+passes locally at 34/27 shots (both qualifying 6/6) and in CI at 27/20
+(qualifying 5/6 and 6/6). Cross-machine counts vary.
 Locomotion now evaluates on the physics clock; fixed-cadence replay metrics
 repeat exactly on the local host. Dedicated high keeper claims, left-foot variants, finer body
 motion and native Mac feel/performance remain open. See

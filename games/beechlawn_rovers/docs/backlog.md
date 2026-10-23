@@ -29,8 +29,10 @@ Role-aware 4-4-2 targets, shared-snapshot tactical decisions, player switching i
 keepers, contact-timed passing/shooting, kickoff/goal/full-time behavior and
 basic boundary restarts are implemented. Full 180-second AI-vs-AI replays
 record physical shots, contested attempts, saves, goals and ball stalls;
-the [22 October attacking-flow pass](art_briefs/ai_attacking_flow_2026_10_22/brief.md)
-now passes six full-match chance scenarios for both teams (32/31 total shots).
+the [23 October advanced-action follow-up](art_briefs/advanced_shots_2026_10_23/brief.md)
+passes the six-match chance gate locally (34/27 shots) and in CI (27/20).
+Local qualifiers are 6/6 each; CI qualifiers are 5/6 and 6/6. Counts vary across
+machines, so chance consistency and cross-machine replay determinism remain open.
 Human play-quality and native Mac acceptance remain open.
 The [22 October match repair pass](match_repairs_2026-10-22.md) replaces touchline
 ground passes with overhead throw-ins and adds aim/power restarts, basic
@@ -59,8 +61,11 @@ The [22–23 October aerial-play pass](art_briefs/aerial_play_2026_10_22/brief.m
 brings forward BR-019 (19/25): keyboard R lofts, T crosses and contextual Space
 headers, with bounded assistance, receiving runs, chest control and original
 shared-rig aerial clips. Contacts validate actual head/chest proximity; the ball
-remains independent. Advanced shot/cross variants, volleys and dedicated keeper
-cross-claim motion remain open. See the linked evidence for validation scope.
+remains independent. Advanced shot/cross variants and contextual volleys/real-bounce half-volleys
+now have original shared-rig clips and passing contact/keyboard/native checks;
+see the [advanced follow-up](art_briefs/advanced_shots_2026_10_23/brief.md).
+Dedicated keeper cross-claim motion, richer aerial contests, left-foot/body
+polish and native Mac acceptance remain open.
 
 ## Confirmed PES-style direction (2026-10-18)
 
@@ -705,7 +710,10 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     checks align the new clips with their markers. See
     [implementation/evidence](art_briefs/advanced_shots_2026_10_23/brief.md).
     Follow-up: low-render gait poses now update on the physics clock. Fixed-
-    cadence six-match tests pass at 34/27 shots, both teams qualifying 6/6.
+    cadence six-match tests pass locally at 34/27 shots, both qualifying 6/6;
+    CI passes at 27/20, qualifying 5/6 and 6/6. All 70 regressions, low-render
+    pose testing and universal Mac packaging pass; the Mac release is published.
+    Cross-machine counts vary; bitwise replay determinism remains unproven.
     Next acceptance: final native/M1 input and motion review; dedicated high
     keeper claims depend on BR-009 (9/25). Left-foot variants, broader aerial
     duels and source stride/plant polish remain open under BR-019/BR-021.

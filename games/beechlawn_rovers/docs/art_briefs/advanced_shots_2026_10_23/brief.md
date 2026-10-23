@@ -208,3 +208,33 @@ Their reports/manifests and full-sequence contact sheets are in `clock_followup`
 The earlier four clips remain evidence for the preceding implementation;
 these two verify the changed clock on the current source. Same llvmpipe,
 640×360, close 60 fps/wide 10 fps simulated-time limits apply.
+
+## Published Mac release
+
+[CI run 39921098008](https://github.com/denhamd2/aegis/actions/runs/39921098008)
+passes all 70 regressions, the 10 Hz render/60 Hz physics pose check (longest
+stale run two ticks), the six-match chance gate and universal Mac package
+verification. The exact committed source also passes all 70 checks locally.
+Package verification covers arm64/x86_64, the football identifier, resources
+and ZIP CRC. The published 205,075,430-byte download returns HTTP 200; its URL
+and source SHA are recorded in `release_verification.json`.
+
+CI observed 27/20 shots (57.4%/42.6%), qualifying scenarios 5/6 and 6/6:
+
+| Kickoff / variation | Beechlawn shots (contested) | Boardeaux shots (contested) |
+| --- | --- | --- |
+| Home / 0 | 6 (5) | 2 (2) |
+| Home / 1 | 10 (4) | 2 (1) |
+| Home / 2 | 3 (2) | 2 (1) |
+| Away / 0 | 1 (1) | 8 (6) |
+| Away / 1 | 3 (3) | 3 (2) |
+| Away / 2 | 4 (3) | 3 (3) |
+
+Both teams have contested shots in every scenario. Beechlawn's one-shot away-0
+case remains a consistency limitation under BR-008. The local repeated scenario
+is exactly reproducible, while CI counts differ from local 34/27. Cross-machine
+bitwise physics/replay determinism remains unproven. The fixed cadence and pose
+clock correction improve test control and pass the same acceptance criteria;
+these results do not establish perfect determinism, final animation quality,
+native Mac play-feel or M1 1080p60 performance. BR-019 remains in progress with
+high claims depending on BR-009, plus the previously listed polish gates.
