@@ -3,7 +3,7 @@
   "source": "tools/blender/beechlawn/author_rovers_arena.py",
   "units": "metres",
   "shell_triangles": 6764,
-  "seat_positions": 49370,
+  "seat_positions": 50032,
   "seating_sections": 24,
   "materials": 10,
   "imported_third_party_models": false

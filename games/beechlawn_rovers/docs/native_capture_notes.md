@@ -128,3 +128,12 @@ Use `--verbose` only to diagnose engine teardown or rendering issues; normal
 captures remain strict about script, shader and engine errors. Review scenes
 can instantiate an unstarted match for light/line references; its restart Node
 must be created and parented in _ready so these temporary sources can be freed.
+
+
+Arena placement checks also audit the native MultiMesh buffers after rendering:
+look for `seating_audit` in match capture JSON. The headless dummy RenderingServer
+returns identity from `get_instance_transform`, so it cannot prove GPU chair
+placement. The seating smoke check exercises the production placement function;
+native Forward+ readback separately checks actual near/far transforms, upright
+chairs, inward facing, aligned columns and clear aisles. Do not treat dummy
+MultiMesh readback as visual evidence.

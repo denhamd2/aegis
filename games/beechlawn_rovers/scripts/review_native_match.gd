@@ -49,6 +49,11 @@ func _capture() -> void:
 	for _frame in range(3):
 		await RenderingServer.frame_post_draw
 		print("NATIVE_MATCH_DRAW ", _frame + 1)
+	var seating_audit := _audit_stadium_seating(game) if game.venue.id == &"rovers_arena" else {}
+	if seating_audit.get("errors",0) > 0:
+		push_error("Native stadium seating buffer audit failed: "+JSON.stringify(seating_audit))
+		quit(2)
+		return
 	paused = true
 	var output := str(options["capture-dir"])
 	DirAccess.make_dir_recursive_absolute(output)
@@ -84,7 +89,7 @@ func _capture() -> void:
 		"scene":"res://scenes/match_11v11.tscn", "camera":"close_broadcast",
 		"weather":"sunny", "sun_shadows":game.get_node("Sun").shadow_enabled,
 		"home_players":home.size(), "away_players":away.size(), "officials":official_count,
-		"venue":str(game.venue.id), "venue_view":view, "extra_views":extra_views, "phase":"stationary kickoff",
+		"seating_audit":seating_audit, "venue":str(game.venue.id), "venue_view":view, "extra_views":extra_views, "phase":"stationary kickoff",
 		"draw_calls":primary_draw_calls,
 		"primitives":primary_primitives, "warmup_frames":3,
 		"scope":"Actual Forward+ match still; no native Mac timing or graphics parity claim.",
@@ -97,3 +102,28 @@ func _capture() -> void:
 	file.store_string(JSON.stringify(report,"  ") + "\n")
 	print("BEECHLAWN_NATIVE_CAPTURE ", JSON.stringify(report))
 	quit()
+
+func _audit_stadium_seating(game: Node3D) -> Dictionary:
+	var arena := game.get_node("ParkEdge/RoversArena")
+	var diagonal := sqrt(.5)
+	var outward: Array[Vector3] = [Vector3(diagonal,0,diagonal),Vector3.RIGHT,
+		Vector3(diagonal,0,-diagonal),Vector3.FORWARD,Vector3(-diagonal,0,-diagonal),
+		Vector3.LEFT,Vector3(-diagonal,0,diagonal),Vector3.BACK]
+	var checked := 0
+	var errors := 0
+	for section in 24:
+		var near := (arena.get_node("SeatsNear%02d"%section) as MultiMeshInstance3D).multimesh
+		var far := (arena.get_node("SeatsFar%02d"%section) as MultiMeshInstance3D).multimesh
+		var side := section%8
+		for index in range(0,near.instance_count,13):
+			var pose := near.get_instance_transform(index)
+			var aligned := pose.basis.y.dot(Vector3.UP) > .9999 \
+				and (-pose.basis.z).dot(-outward[side]) > .999 \
+				and pose.is_equal_approx(far.get_instance_transform(index))
+			if side in [1,3,5,7]:
+				var lateral := pose.origin.z if side in [1,5] else pose.origin.x
+				aligned = aligned and absf(lateral-roundf(lateral/.6)*.6) < .002 \
+					and absf(lateral-roundf(lateral/13.2)*13.2) > 1.15
+			if not aligned: errors += 1
+			checked += 1
+	return {"sampled_seats":checked,"errors":errors,"scope":"Native GPU MultiMesh readback: upright, inward, fixed columns/aisles, identical LOD transforms"}

@@ -1,3 +1,14 @@
+# Beechlawn Rovers 27 — v0.3.1
+
+Corrected the diagonal seat/aisle drift in Rovers Arena's stands. Seats now
+line up in regular columns with continuous stair aisles, and all chair banks
+face into the pitch. The normal rise between rows is preserved. Near/far LODs
+share the corrected placement, verified through native Forward+ buffer readback
+and matching broadcast/wide views. Gameplay, Kilmore Drive and camera settings
+are unchanged.
+
+---
+
 # Beechlawn Rovers 27 — v0.3.0
 
 Assisted player switching follows real passes and selects appropriate defenders,

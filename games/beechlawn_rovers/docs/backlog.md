@@ -23,7 +23,7 @@ identity/stamina strips, distinct shot power and central radar follow archived
 `70060.jpg`. F1 opens controls; the original blue intro graphics are independent.
 
 BR-023 (23/27, in progress): Options selects Kilmore Drive or Rovers Arena.
-The original Blender arena has 49,370 seat positions, section LOD and instanced
+The original Blender arena has 50,032 seat positions, section LOD and instanced
 crowd, a maintained striped field, functional shared goals/net impacts and four
 corner flags. Venue-owned surface profiles keep park relief/puddles exclusive
 to Kilmore. The free BlendSwap model was account-gated; the approved original
@@ -1103,6 +1103,12 @@ goals, fouls, offside, cards, substitutions, half-time and full-time.
     acceptance check is the reference-matched face/hair and full-clip garment
     review, before roster integration or duplicating the process to others.
 - [ ] **BR-023 — Kilmore Drive and selectable Rovers Arena**
+  - 2026-10-24, v0.3.1: fixed the slanted seat/aisle appearance in the opposing
+    stand. Bank-centred columns and continuous stair aisles replace row-relative
+    drift; Blender/Godot conversion and inward bank-normal yaw correct all
+    chair directions. Original terrace rise and gameplay camera are preserved.
+    Exported-data, runtime placement and native GPU readback/captures cover the
+    correction; see `art_briefs/arena_seating_alignment_2026_10_24/brief.md`.
   - 2026-10-24: owner-approved large second venue, original modular Blender
     source and GLBs; instanced seating/crowd LOD; maintained field and flags;
     shared functional goals/nets. Persisted venue selection and match-owned

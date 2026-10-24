@@ -1,0 +1,7 @@
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.038s
+
+OK
+SEATING_ALIGNMENT wrong_facing= 0 of 50032
+SEATING_ALIGNMENT columns_off_grid= 0 max_drift_m= 0 aisle_obstructions= 0

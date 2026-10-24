@@ -39,12 +39,21 @@ for tier,rows in enumerate([18,20,20]):
   ring_surface(f'Tier{tier+1}_Row{r+1}_Riser',b,b,h,h+.43,concrete)
   for side in range(8):
    v1=Vector(a[side]);v2=Vector(a[(side+1)%8]);d=v2-v1;length=d.length
-   n=max(1,int(length/.60));mid=(v1+v2)/2;fwd=-mid.normalized();yaw=math.atan2(fwd.x,-fwd.y)
-   for i in range(n):
-    # Regular radial stair aisles and vomitory breaks, not uninterrupted seating.
-    if i%22 in [0,1,2]:continue
-    pos=v1.lerp(v2,(i+.5)/n)+ (Vector(b[side])-v1)*.48
-    seats.append([round(pos.x,4),round(h+.02,4),round(pos.y,4),round(yaw,5),tier*8+side])
+   tangent=d.normalized();outward=Vector((-tangent.y,tangent.x));mid=(v1+v2)/2
+   # Fixed, bank-centred columns: growing each row must not shift its aisles.
+   tread_depth=(Vector(b[side])-v1).dot(outward)
+   centre=mid+outward*tread_depth*.5
+   last_column=math.floor((length*.5-.30)/.60)
+   # Chair front is local -Z in Godot. Inward Blender (-nx,-ny)
+   # becomes Godot (-nx,+ny), hence this yaw around upright +Y.
+   yaw=math.atan2(outward.x,-outward.y)
+   for column in range(-last_column,last_column+1):
+    slot=column%22
+    if min(slot,22-slot)<=1:continue
+    pos=centre+tangent*column*.60
+    # Explicit Blender XY -> Godot XZ conversion, matching glTF +Y-up.
+    godot_side=(2-side)%8
+    seats.append([round(pos.x,4),round(h+.02,4),round(-pos.y,4),round(yaw,5),tier*8+godot_side])
   row_number+=1;last=(x+.76,z+.76,h+.43)
  # Wide promenade and metal guardrail between tiers.
  a=ring(last[0],last[1]);b=ring(last[0]+3.6,last[1]+3.6)
@@ -123,6 +132,8 @@ bpy.context.scene.camera=camera
 bpy.ops.object.light_add(type='SUN',location=(0,0,40));sun=bpy.context.object;sun.rotation_euler=(.45,-.35,-.5);sun.data.energy=2.5;sun.data.angle=.025
 scene=bpy.context.scene;scene.world.color=(.35,.42,.50);scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=16;scene.cycles.use_denoising=False
 scene.render.resolution_x=640;scene.render.resolution_y=360;scene.render.resolution_percentage=100
-scene.render.image_settings.file_format='PNG';scene.render.filepath=str(ROOT/'games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/blender_structure.png')
+scene.render.image_settings.file_format='PNG'
+preview_path=next((arg.split('=',1)[1] for arg in sys.argv if arg.startswith('--preview-output=')),str(ROOT/'games/beechlawn_rovers/docs/art_briefs/match_presentation_2026_10_24/blender_structure.png'))
+scene.render.filepath=preview_path
 bpy.ops.wm.save_as_mainfile(filepath=str(Path(__file__).with_name('rovers_arena.blend')))
 if '--render-preview' in sys.argv:bpy.ops.render.render(write_still=True)

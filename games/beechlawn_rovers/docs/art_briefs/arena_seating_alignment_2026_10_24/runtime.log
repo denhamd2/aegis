@@ -1,0 +1,35 @@
+
+[smoke] stadium_seating_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+STADIUM_SEATING PASS: 50032 upright, inward-facing seats; 464 level bank rows; aligned columns/aisles; identical near/far transforms
+[passed] stadium_seating_smoke.gd (0.8s)
+
+[smoke] venue_selection_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=rovers_arena
+BEECHLAWN_MENU_READY
+VENUE_SELECTION PASS: persistence, invalid fallback, both grounds, flat/uneven physics, goals/nets/flags, section LOD, independent wet surfaces and menu bindings
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] venue_selection_smoke.gd (18.0s)
+
+[smoke] broadcast_camera_smoke.gd (timeout 45s)
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+BEECHLAWN_MATCH_READY actors=22 officials=1 venue=kilmore_drive
+CAMERA_CHECK close_broadcast position=(0.0, 12.0, -26.0) fov=50.0
+CAMERA_CHECK dynamic_wide position=(0.0, 16.0, -32.0) fov=52.0
+CAMERA_CHECK stadium position=(0.0, 19.0, -43.0) fov=55.0
+CAMERA_CHECK live_broadcast position=(0.0, 11.0, -37.0) fov=42.0
+CAMERA_CHECK fan_view position=(0.0, 22.0, -40.0) fov=58.0
+CAMERA_CHECK blimp position=(0.0, 65.0, 0.05) fov=60.0
+CAMERA_CHECK vertical position=(-24.0, 16.0, 0.0) fov=55.0
+CAMERA_CHECK player position=(-7.0, 4.5, 0.0) fov=64.0
+CAMERA_CHECK field_side position=(0.0, 4.5, -22.0) fov=60.0
+Camera presets/settings/movement checks failures=0
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[passed] broadcast_camera_smoke.gd (7.2s)

@@ -1,0 +1,42 @@
+{
+  "result": "PASS",
+  "version": "0.3.1",
+  "backlog": "BR-023 (23/27, in progress)",
+  "root_causes": [
+    "Each row divided its changing width into a new spacing and restarted aisle indices at its expanding edge",
+    "Inward yaw did not account for Blender XY / Godot XZ handedness and used radial facing instead of bank normals"
+  ],
+  "before": {
+    "seats": 49370,
+    "off_grid_seats": 43982,
+    "max_lateral_drift_m": 0.3,
+    "aisle_obstructions": 7834,
+    "misoriented_chairs": 24064
+  },
+  "after": {
+    "seats": 50032,
+    "off_grid_seats": 0,
+    "max_lateral_drift_m": 0,
+    "aisle_obstructions": 0,
+    "misoriented_chairs": 0,
+    "bank_rows": 464
+  },
+  "python_checks": 3,
+  "runtime_checks": [
+    "stadium_seating_smoke.gd",
+    "venue_selection_smoke.gd",
+    "broadcast_camera_smoke.gd"
+  ],
+  "native_readback": {
+    "errors": 0,
+    "sampled_seats": 3858,
+    "scope": "Native GPU MultiMesh readback: upright, inward, fixed columns/aisles, identical LOD transforms"
+  },
+  "renderer": "forward_plus",
+  "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "camera_preserved": true,
+  "terrace_rise_m": 0.43,
+  "terrace_tread_m": 0.76,
+  "draw_calls": 908,
+  "scope": "Original geometry bug fixed, explicit export/runtime transforms and native GPU readback verified. No player/ball/pitch physics change; no target-Mac performance claim."
+}

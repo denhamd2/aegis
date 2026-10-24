@@ -1,0 +1,23 @@
+F.F
+======================================================================
+FAIL: test_chairs_face_into_the_pitch (__main__.SeatingAlignment.test_chairs_face_into_the_pitch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/aegis-checkout/games/beechlawn_rovers/tools/test_arena_seating_alignment.py", line 40, in test_chairs_face_into_the_pitch
+    self.assertEqual(len(wrong),0,'Some banks have chairs facing outward or diagonally across their rows')
+AssertionError: 24064 != 0 : Some banks have chairs facing outward or diagonally across their rows
+
+======================================================================
+FAIL: test_straight_bank_columns_and_aisles_align (__main__.SeatingAlignment.test_straight_bank_columns_and_aisles_align)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/aegis-checkout/games/beechlawn_rovers/tools/test_arena_seating_alignment.py", line 28, in test_straight_bank_columns_and_aisles_align
+    self.assertEqual(len(bad_columns),0,'Seating columns drift sideways between rows')
+AssertionError: 43982 != 0 : Seating columns drift sideways between rows
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.081s
+
+FAILED (failures=2)
+SEATING_ALIGNMENT wrong_facing= 24064 of 49370
+SEATING_ALIGNMENT columns_off_grid= 43982 max_drift_m= 0.3 aisle_obstructions= 7834

@@ -1,0 +1,15 @@
+F..
+======================================================================
+FAIL: test_chairs_face_into_the_pitch (__main__.SeatingAlignment.test_chairs_face_into_the_pitch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/aegis-checkout/games/beechlawn_rovers/tools/test_arena_seating_alignment.py", line 40, in test_chairs_face_into_the_pitch
+    self.assertEqual(len(wrong),0,'Some banks have chairs facing outward or diagonally across their rows')
+AssertionError: 50032 != 0 : Some banks have chairs facing outward or diagonally across their rows
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.054s
+
+FAILED (failures=1)
+SEATING_ALIGNMENT wrong_facing= 50032 of 50032
+SEATING_ALIGNMENT columns_off_grid= 0 max_drift_m= 0 aisle_obstructions= 0

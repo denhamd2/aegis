@@ -59,7 +59,7 @@ static func _instances(parent: Node3D, label: String, mesh: Mesh, entries: Array
  var coats := [Color(.04,.07,.12),Color(.10,.20,.35),Color(.66,.68,.69),Color(.22,.23,.25),Color(.05,.12,.22)]
  for i in chosen.size():
   var entry: Array = chosen[i]
-  mm.set_instance_transform(i,Transform3D(Basis(Vector3.UP,float(entry[3])),Vector3(entry[0],entry[1],entry[2])))
+  mm.set_instance_transform(i,seat_transform(entry))
   if crowd:
    var c: Color = coats[(i*7+label.hash())%coats.size()]
    c.a = float(i%97)/97
@@ -73,6 +73,10 @@ static func _instances(parent: Node3D, label: String, mesh: Mesh, entries: Array
  node.visibility_range_begin_margin = 2
  node.visibility_range_end_margin = 2
  parent.add_child(node)
+
+static func seat_transform(entry: Array) -> Transform3D:
+ # Shared by both chair LODs and crowds; imported data is already Godot Y-up.
+ return Transform3D(Basis(Vector3.UP,float(entry[3])),Vector3(entry[0],entry[1],entry[2]))
 
 static func _flag(parent: Node3D, at: Vector3) -> void:
  var pole := MeshInstance3D.new()
